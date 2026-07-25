@@ -76,7 +76,15 @@ BASELINE = {
     # three now share `_svg_wrap`, which also folds `_svg_role` in — a call site
     # can no longer emit a container without the content-driven role. Ratcheted
     # DOWN, not sanctioned: the dedupe repaid both bumps above and one line more.
-    "gen_trajectory.py": 4632,
+    # +97 (4632 -> 4729), WI-292/294/295/299 (119-CRITIQUE): new behaviour, not
+    # bloat — `_ring_ink`/`_ring_style` compute a per-fill contrast-safe
+    # highlight colour (one shared mechanism used by all four SVG emitters,
+    # replacing two independently-drifting hardcoded hues), the reassigned
+    # STATUS_FILL/TIER_FILL/OKF_TYPE_FILL/SW_NODE_FILL/PHASE_ACCENTS palette
+    # carries the WHY-not-WHAT rationale for each de-collision, and the new
+    # `--nhead` token gets its one documented-scale-step comment. Reviewed
+    # bump, reason in docs/log.md 2026-07-25.
+    "gen_trajectory.py": 4729,
     # +11 (3452 -> 3463), WI-284: _regenerate_disposition_artifacts also runs
     # `gen_trajectory.py --status` at integrate/blocked-disposition so a closed
     # id drops from the generated frontier automatically (and the disposition

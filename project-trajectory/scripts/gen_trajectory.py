@@ -233,7 +233,13 @@ def read_sns(root):
     return [(r["id"], r["need"]) for r in _sn_rows(root)]
 
 
-TIER_FILL = {"sn": "#4338ca", "sr": "#0e7490", "llr": "#64748b", "tc": "#047857"}
+# WI-292 (U5 de-collision, 119-CRITIQUE): `tc` was `#047857`, byte-identical to
+# STATUS_FILL["done"] — two different concepts (a TC/Test-Case tier vs a done
+# status) reading as one colour wherever both appear (the icicle TC lane sits one
+# tab from the status legend). `#0f766e` clears the same >=4.5:1 white-text floor
+# and stays paired with OKF_TYPE_FILL["Test Case"] below (that mirror IS
+# intentional — one concept, two label systems).
+TIER_FILL = {"sn": "#4338ca", "sr": "#0e7490", "llr": "#64748b", "tc": "#0f766e"}
 TIER_COL = {"sn": 0, "sr": 1, "llr": 2, "tc": 3}
 ICICLE_UNIT = 18  # px of height per TC leaf
 
@@ -430,11 +436,20 @@ def arch_icicle(root):
             )
         tip = nid + (" — " + title if title else "")
         cells.append(
-            '<g class="cell {}" data-id="{}" tabindex="0">'
+            '<g class="cell {}" data-id="{}" tabindex="0"{}>'
             "<title>{}</title>"
             '<rect x="{}" y="{:.1f}" width="{}" height="{:.1f}" rx="3" '
             'fill="{}"></rect>{}</g>'.format(
-                t, esc(nid), esc(tip), x, y, col_w, max(h - 1, 1), TIER_FILL[t], txt
+                t,
+                esc(nid),
+                _ring_style(TIER_FILL[t]),
+                esc(tip),
+                x,
+                y,
+                col_w,
+                max(h - 1, 1),
+                TIER_FILL[t],
+                txt,
             )
         )
         cur = y
@@ -775,12 +790,13 @@ def dag_svg(wis):
         )
         tip = "{} — {} ({})".format(w["id"], title, st)
         nodes.append(
-            '<g class="wi {}" data-id="{}" tabindex="0">'
+            '<g class="wi {}" data-id="{}" tabindex="0"{}>'
             "<title>{}</title>"
             '<rect x="{:.1f}" y="{:.1f}" width="{}" height="{}" rx="7" '
             'fill="{}"></rect>{}</g>'.format(
                 st,
                 esc(w["id"]),
+                _ring_style(STATUS_FILL[st]),
                 esc(tip),
                 x,
                 y,
@@ -808,7 +824,12 @@ def dag_svg(wis):
 
 # --- the How-SW interface graph (WI-056), reusing the WI-DAG layouter -----------
 
-SW_NODE_FILL = {"module": "#0e7490", "file": "#7c3aed", "external": "#64748b"}
+# WI-292 (U5 de-collision, 119-CRITIQUE): all three used to reuse another
+# vocabulary's hex for an unrelated concept — module `#0e7490` = TIER_FILL["sr"]/
+# OKF_TYPE_FILL["System Requirement"] (a source module misread as an SR), file
+# `#7c3aed` = OKF_TYPE_FILL["Interface"], external `#64748b` = TIER_FILL["llr"].
+# Reassigned to hexes not used by STATUS_FILL/TIER_FILL/OKF_TYPE_FILL/PHASE_ACCENTS.
+SW_NODE_FILL = {"module": "#2563eb", "file": "#a21caf", "external": "#334155"}
 SW_COL_W = 168
 SW_COL_GAP = 64
 SW_ROW_H = 40
@@ -1284,15 +1305,65 @@ def _wi_st(w):
 #   These must NOT collide with the OTHER colour vocabularies on the When/DAG page
 # (REVIEW-A MAJOR): every value is byte-distinct from STATUS_FILL (done #047857,
 # active #b45309, queued #94a3b8 — the status legend on the same tab) and from
-# TIER_FILL (#4338ca/#0e7490/#64748b/#047857), and each sits >= 11 deltaE from the
-# three same-tab status hues, so a phase block never reads as a status. Excluding the
+# TIER_FILL/OKF_TYPE_FILL/SW_NODE_FILL, and each sits >= 11 deltaE from the three
+# same-tab status hues, so a phase block never reads as a status. Excluding the
 # emerald/orange/slate status families leaves the cool + magenta + one-red arc — hence
 # the cool lean; distinct hues are preferred over same-hue lightness shades (the very
 # jitter WI-247 removes), which caps CVD below the old maroon-free 20+.
+#   WI-292 (U5 de-collision, 119-CRITIQUE): three of the eight were replaced.
+# `#4f46e5` was byte-identical to the CSS `--accent` token, so the focus/hover ring
+# painted in `var(--accent)` (WI-258) vanished on whichever phase happened to draw
+# that slot — `#4d7c0f` replaces it. `#6d28d9` sat only 7.4 deltaE from `#7e22ce`
+# (both violet, indistinguishable side by side in the phase legend) and `#1d4ed8`
+# was byte-identical to `SW_NODE_FILL["module"]` (a phase block misread as a
+# How-SW module) — `#1e40af`/`#155e75` replace them. Pairwise (not merely
+# adjacent) deltaE across the full set is now >= 15 (`test_u5_...` asserts this).
 PHASE_ACCENTS = (
-    "#0369a1", "#6d28d9", "#991b1b", "#1d4ed8",
-    "#be123c", "#4f46e5", "#be185d", "#7e22ce",
+    "#0369a1", "#1e40af", "#991b1b", "#155e75",
+    "#be123c", "#4d7c0f", "#be185d", "#7e22ce",
 )  # fmt: skip
+
+
+def _ring_ink(fill):
+    """The higher-contrast of pure white/near-black against `fill` (WI-294a/
+    WI-299, 119-CRITIQUE BLOCKER+MAJOR): the focus/hover ring used to be a single
+    hue per emitter (`var(--accent)` in the drill views, `#f59e0b` amber in the
+    icicle/flat-DAG/knowledge views) — a hue picked once cannot clear 3:1 against
+    EVERY node fill (it vanished at 1.00:1 on the phase-3 block, whose fill IS
+    `--accent`), and the two hues also read as two different idioms for the same
+    "this node is highlighted" concept (uniformity U3/U4). Every node fill here
+    is a small, enumerable, THEME-INVARIANT set (STATUS_FILL/TIER_FILL/
+    OKF_TYPE_FILL/SW_NODE_FILL/PHASE_ACCENTS), so the ink can be computed once
+    per fill at generation time instead of hard-coded: by the WCAG relative-
+    luminance formula, whichever of white/black contrasts less against a given
+    fill still clears >= 4.58:1 in the worst case (the point where white and
+    black tie), comfortably above the 3:1 UI-boundary floor for every fill in
+    use. Emitted as an inline `--ring` custom property the shared CSS rules read
+    with a safe fallback, so a fill this helper never saw (a future emitter) does
+    not silently regress — it just falls back to the old single-hue behaviour."""
+
+    def lum(hexval):
+        h = hexval.lstrip("#")
+        chan = [int(h[i : i + 2], 16) / 255 for i in (0, 2, 4)]
+        lin = [
+            c / 12.92 if c <= 0.03928 else ((c + 0.055) / 1.055) ** 2.4 for c in chan
+        ]
+        return 0.2126 * lin[0] + 0.7152 * lin[1] + 0.0722 * lin[2]
+
+    fill_lum = lum(fill)
+    white = 1.05 / (fill_lum + 0.05)
+    black = (fill_lum + 0.05) / 0.05
+    return "#ffffff" if white >= black else "#0f172a"
+
+
+def _ring_style(fill):
+    """`style="--ring:…"` for a node `<g>`/`<rect>` given its fill, or "" when
+    `fill` is not a concrete hex (e.g. `var(--surface)`) — those keep the CSS
+    fallback since a theme-varying token can't be resolved at generation time."""
+    if not fill or not fill.startswith("#"):
+        return ""
+    return ' style="--ring:{}"'.format(_ring_ink(fill))
+
 
 # --- SR-089..SR-092 (WI-141): the Simulink-style drill renderer ---------------
 #
@@ -1346,9 +1417,12 @@ def _tier_col_width(blocks):
 
 DRILL_STYLE = (
     "<style>"
-    "#dag span.ph,#sw span.ph{display:inline-block;width:.55rem;height:.55rem;"
-    "border-radius:2px;vertical-align:-1px;margin-right:.4rem;}"
-    "#dag .phaselegend,#sw .phaselegend{margin:.3rem 0 .6rem;}"
+    # WI-294b (119-CRITIQUE U1/U3): the phase-accent key used to be its own
+    # inline `span.ph` chip idiom (.55rem swatch, "Phase accent:" prefix, inside
+    # the drill summary paragraph) — visibly smaller and differently placed than
+    # every other legend in the document. It now renders through the SAME
+    # `.legend`/`<i>` component the status/type/module legends use (see the
+    # `.legend i` rule below), so no per-emitter style rule is needed here.
     ".drill nav.crumbs{display:flex;flex-wrap:wrap;align-items:center;gap:.1rem;"
     "margin:.1rem 0 .6rem;font-size:.85rem;}"
     ".drill nav.crumbs .crumb{appearance:none;background:none;border:none;"
@@ -1362,15 +1436,20 @@ DRILL_STYLE = (
     ".drill .block[data-descend]{cursor:pointer;}"
     ".drill .block[data-descend] rect{stroke-width:1.5;}"
     ".drill .block:focus{outline:none;}"
-    # 080-CRITIQUE #5 (WI-258): the focus/highlight ring paints the --accent hue, NOT
-    # the status-orange #b45309 it used to — that value is byte-identical to --active
-    # ("active — you are here"), so a focused-but-not-active block misread as active.
-    # --accent is the dashboard's focus language (cf. `.view:focus-visible`) and a
-    # clearly different hue from active in BOTH themes; stroke-width 2.5 keeps it visible.
-    ".drill .block:focus rect{stroke:var(--accent);stroke-width:2.5;}"
+    # WI-294a/WI-299 (119-CRITIQUE): a single hue (--accent, then amber elsewhere)
+    # cannot clear 3:1 against every node fill — it vanished at 1.00:1 on the
+    # phase-3 block, whose fill IS --accent (080-CRITIQUE #5 / WI-258's fix only
+    # solved the status-orange collision, not the phase-3 one). `_ring_style`
+    # now emits a per-node `--ring` custom property (white or near-black,
+    # whichever clears more contrast against THAT node's own fill), shared
+    # identically across every SVG emitter (the icicle/flat-DAG/knowledge rules
+    # below read the same property) — one highlight idiom, not two, and one that
+    # cannot fail regardless of which fill it lands on. The static fallback keeps
+    # today's behaviour for any node a future emitter doesn't tag with --ring.
+    ".drill .block:focus rect{stroke:var(--ring,var(--accent));stroke-width:2.5;}"
     # SR-056: the hover/focus highlight persists on the last-hovered block until
     # another takes it (the shared .hl idiom — cf. the icicle/DAG/knowledge views).
-    ".drill .block.hl rect{stroke:var(--accent);stroke-width:2.5;}"
+    ".drill .block.hl rect{stroke:var(--ring,var(--accent));stroke-width:2.5;}"
     ".drill .block .blab{font-size:var(--nlabel);font-weight:700;}"
     ".drill .block .bsub{font-size:var(--nsub);}"
     ".drill .port{fill:var(--surface);stroke:var(--muted);stroke-width:1.2;}"
@@ -1898,6 +1977,10 @@ def _drill_layer_svg(blocks, edges):
         # wire single-click + focus to the detail aside (the sw drill sets no `wi`).
         if b.get("wi"):
             attrs += ' data-wi="{}"'.format(esc(b["wi"]))
+        # WI-294a/WI-299: appended last, same reason as data-node above — keeps
+        # every existing adjacency assertion (`data-tier="…" data-descend="…"`)
+        # intact for tests that don't know this attribute exists.
+        attrs += _ring_style(b.get("fill"))
         nodes.append(
             "<g {}><title>{}</title>"
             '<rect x="{:.1f}" y="{:.1f}" width="{}" height="{}" rx="8" '
@@ -2090,8 +2173,12 @@ def when_view(root, wis):
     ]
     root_id = build(wis, tiers)
 
+    # WI-294b (119-CRITIQUE U1/U3): rendered through the shared `.legend`/`<i>`
+    # component (see sw_view's node-kind legend) instead of a bespoke smaller
+    # inline chip idiom, so the phase key matches every other legend's size,
+    # placement, and styling.
     legend = "".join(
-        '<span class="ph" style="background:{}"></span>{}'.format(color[p], esc(p))
+        '<span><i style="background:{}"></i>{}</span>'.format(color[p], esc(p))
         for p in sorted(phases)
     )
     summary = (
@@ -2101,9 +2188,7 @@ def when_view(root, wis):
         "block — or focus it and press Enter — to <strong>descend</strong> a layer; "
         "the <strong>breadcrumb</strong> returns. A block’s ports carry the aggregated "
         "dependency edges (the deduped union of its members’ crossing edges).</p>"
-        '<div class="legend phaselegend"><strong>Phase accent:</strong>{}</div>'.format(
-            len(phases), len(workstreams), legend
-        )
+        '<div class="legend">{}</div>'.format(len(phases), len(workstreams), legend)
     )
     return DRILL_STYLE + summary + _render_drill("when", root_id, "Roadmap", layers)
 
@@ -2129,6 +2214,13 @@ HTML_TEMPLATE = string.Template("""<!doctype html>
     /* U1: one shared node-label / sub-label type scale across every SVG emitter
        (icicle, drill, knowledge) — no per-emitter font-size overrides. */
     --nlabel:10px; --nsub:8.5px; --small:.85rem; --xsmall:.8rem;
+    /* U1 (WI-295, 119-CRITIQUE): the Process "working loops" diagram's hub title
+       is a HEADLINE label (one per diagram, not a per-node label), so it is not
+       the same role as --nlabel — but it still needs to be ONE documented scale
+       step, not the ad-hoc 13px `.hooplab`/`.hubname` used to duplicate
+       independently (a 12px/9.5px `.stgt`/`.stgn` pair ALSO drifted from
+       --nlabel/--nsub for no reason and are fixed to reuse those directly). */
+    --nhead:13px;
     --shadow:0 1px 3px rgba(15,23,42,.06),0 1px 2px rgba(15,23,42,.04);
   }
   @media (prefers-color-scheme: dark) {
@@ -2229,7 +2321,7 @@ HTML_TEMPLATE = string.Template("""<!doctype html>
   #ice .cell .sub { font-size:var(--nsub); }
   #ice .lane-head { fill:var(--muted); font-size:11px; font-weight:700; letter-spacing:.06em; }
   .cell.dim, .wi.dim, .edge.dim { opacity:.15; }
-  #ice .cell.hl rect { stroke:#f59e0b; stroke-width:2.5; }
+  #ice .cell.hl rect { stroke:var(--ring,#f59e0b); stroke-width:2.5; }
   .cell:focus, .wi:focus { outline:none; }
   #dag .wi rect { stroke:rgba(15,23,42,.15); stroke-width:1; cursor:pointer;
         transition:opacity .1s ease; }
@@ -2237,7 +2329,7 @@ HTML_TEMPLATE = string.Template("""<!doctype html>
   #dag .wi .wid { font-size:var(--nlabel); font-weight:700; }
   #dag .wi .sub { font-size:var(--nsub); }
   #dag .wi.queued text { fill:#0f172a; }
-  #dag .wi.hl rect { stroke:#f59e0b; stroke-width:2.5; }
+  #dag .wi.hl rect { stroke:var(--ring,#f59e0b); stroke-width:2.5; }
   #dag .edge { fill:none; stroke:var(--muted); stroke-width:1.4; opacity:.85; }
   #dag .edge.soft { stroke-dasharray:5 4; opacity:.65; }
   #dag .edge.hl { stroke:#f59e0b; stroke-width:2; opacity:1; }
@@ -2662,14 +2754,18 @@ OKF_TIER_ORDER = {
 }
 
 # Node fill keyed by the OKF `type` (the icicle tier palette, extended for the
-# two off-spine concept kinds the bundle also carries).
+# two off-spine concept kinds the bundle also carries). SN/SR/LLR/TC intentionally
+# mirror TIER_FILL — one concept, two label systems (a tier code vs a type name).
+# `Test Case` mirrors TIER_FILL["tc"]; `Process Guide` used to reuse
+# STATUS_FILL["active"]'s `#b45309` for an unrelated concept (WI-292, U5
+# de-collision, 119-CRITIQUE) and is reassigned below.
 OKF_TYPE_FILL = {
     "Stakeholder Need": "#4338ca",
     "System Requirement": "#0e7490",
     "Low-Level Requirement": "#64748b",
-    "Test Case": "#047857",
+    "Test Case": "#0f766e",
     "Interface": "#7c3aed",
-    "Process Guide": "#b45309",
+    "Process Guide": "#9a3412",
 }
 
 # The dashboard's native tier code per OKF type (the same SN/SR/LLR/TC vocabulary
@@ -2844,12 +2940,13 @@ def know_graph(root):
         kt = (info.get("title") or "").strip()
         tip = k + (" — " + kt if kt else "") + " ({})".format(info["type"])
         node_svg.append(
-            '<g class="knode" data-id="{}" tabindex="0">'
+            '<g class="knode" data-id="{}" tabindex="0"{}>'
             "<title>{}</title>"
             '<rect x="{:.1f}" y="{:.1f}" width="{}" height="{}" rx="6" '
             'fill="{}"></rect><text x="{:.1f}" y="{:.1f}" text-anchor="middle" '
             'dominant-baseline="central">{}</text></g>'.format(
                 esc(k),
+                _ring_style(fill),
                 esc(tip),
                 x,
                 y,
@@ -3035,7 +3132,7 @@ def _know_panel(root, svg, details):
         "cursor:pointer;transition:opacity .1s ease;}"
         "#knowgraph .knode text{fill:#fff;font-size:var(--nlabel);pointer-events:none;}"
         "#knowgraph .knode.dim,#knowgraph .kedge.dim{opacity:.15;}"
-        "#knowgraph .knode.hl rect{stroke:#f59e0b;stroke-width:2.5;}"
+        "#knowgraph .knode.hl rect{stroke:var(--ring,#f59e0b);stroke-width:2.5;}"
         # U3 (dashboard-uniformity): the directed-dependency edge shares the drill
         # `.wire` idiom — one `--muted` stroke token (was a hardcoded #94a3b8 that
         # diverged from `.wire` in light mode) at the same 1.5 width.
@@ -3571,7 +3668,7 @@ def process_panel(root, wis, stats):
         "margin:0 auto;font-family:inherit;}"
         "#process .hoop{fill:var(--accent);opacity:.05;stroke:var(--accent);"
         "stroke-opacity:.35;stroke-width:1.5;}"
-        "#process .hooplab{fill:var(--accent);font-size:13px;font-weight:700;"
+        "#process .hooplab{fill:var(--accent);font-size:var(--nhead);font-weight:700;"
         "letter-spacing:.01em;}"
         "#process .floop{fill:none;stroke:var(--muted);stroke-width:1.8;"
         "opacity:.9;}"
@@ -3582,11 +3679,11 @@ def process_panel(root, wis, stats):
         "#process a.stg:hover rect,#process a.stg:focus rect{stroke:var(--accent);"
         "stroke-width:2;}"
         "#process .stg:focus{outline:none;}"
-        "#process .stgt{fill:var(--text);font-size:12px;font-weight:700;}"
-        "#process .stgn{fill:var(--muted);font-size:9.5px;}"
+        "#process .stgt{fill:var(--text);font-size:var(--nlabel);font-weight:700;}"
+        "#process .stgn{fill:var(--muted);font-size:var(--nsub);}"
         "#process .hub rect{fill:var(--hub);stroke:var(--hub);"
         "filter:drop-shadow(0 2px 5px rgba(15,23,42,.28));}"
-        "#process .hubname{fill:#fff;font-size:13px;font-weight:800;}"
+        "#process .hubname{fill:#fff;font-size:var(--nhead);font-weight:800;}"
         # A4 (WI-293): no fill-opacity discount on hub sub-labels — the same rule
         # `.sub`/`.bsub` already follow. At .85 the effective ink dropped to
         # 2.57:1 in dark theme; at full opacity on --hub it is 6.29:1.

@@ -112,3 +112,7 @@ resource: "generated"
 | [LLR-099](LLR-099.md) | Default-density start-collapse (T2 core) |
 | [LLR-100](LLR-100.md) | Detail-in-context breadcrumb (T3 core) |
 | [LLR-101](LLR-101.md) | Non-pruning SVG container roles (A2 core) |
+| [LLR-102](LLR-102.md) | One-concept-per-colour de-collision (U5 core) |
+| [LLR-103](LLR-103.md) | Uniform node/edge/legend/highlight styling (U3 core) |
+| [LLR-104](LLR-104.md) | Process-tab node-label type scale (U1 core) |
+| [LLR-105](LLR-105.md) | Interactive-control contrast in both themes (T5 core) |

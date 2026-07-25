@@ -208,7 +208,11 @@ def test_drill_focus_ring_is_distinct_from_the_active_accent(tmp_path):
     """080-CRITIQUE #5 (WI-258): the drill keyboard-focus ring used #b45309 — byte-
     identical to the `active — you are here` status accent (--active) — so a focused-
     but-not-active block misread as active. The focus + persistent-highlight ring must
-    paint a colour clearly distinct from the active accent in BOTH themes."""
+    paint a colour clearly distinct from the active accent in BOTH themes. WI-294a/
+    WI-299 layered a per-node `--ring` property on top (a static hue can't clear 3:1
+    against every fill), keeping `var(--accent)` as the CSS fallback — so the CSS
+    RULE now reads `var(--ring,var(--accent))`; the fallback is what this test's
+    active/accent distinctness still applies to."""
     gt = load_script("gen_trajectory")
     active = gt.STATUS_FILL[
         "active"
@@ -221,7 +225,7 @@ def test_drill_focus_ring_is_distinct_from_the_active_accent(tmp_path):
     assert len(strokes) == 2, strokes
     for stroke in strokes:
         assert stroke != active, stroke
-        assert stroke == "var(--accent)", stroke
+        assert stroke == "var(--ring,var(--accent))", stroke
     # resolve --accent (light :root + dark media) and --active from the emitted CSS,
     # and confirm the focus hue is clearly distinct from active in BOTH themes
     make_repo(tmp_path)
@@ -1020,7 +1024,9 @@ def test_when_view_tiers_by_phase_above_threshold(tmp_path):
     assert view.count('data-tier="phase"') == 4  # one block per phase
     # each phase block is a descend container (double-click / Enter to drill in)
     assert view.count('data-tier="phase" data-descend=') == 4
-    assert '<span class="ph"' in view  # the per-phase color accent legend renders
+    # the per-phase colour accent legend renders through the shared component
+    # (WI-294b: no longer a bespoke `span.ph` chip idiom)
+    assert '<div class="legend"><span><i style="background:' in view
 
 
 def test_when_view_parent_edge_is_deduped_union_of_child_edges(tmp_path):
@@ -1636,8 +1642,11 @@ def test_every_multifill_panel_emits_a_palette_bijection_legend(tmp_path):
     tiered_repo(tmp_path, TIER_UNION_WIS)
     assert gen(tmp_path).returncode == 0
     page = html_of(tmp_path)
-    legend = page.split('class="legend phaselegend"', 1)[1].split("</div>", 1)[0]
-    swatches = re.findall(r'class="ph" style="background:(#[0-9a-f]{6})"', legend)
+    # WI-294b: the phase legend is the `.legend` div immediately following the
+    # When drill's summary paragraph (no more bespoke `phaselegend` marker class).
+    anchor = "crossing edges).</p>"
+    legend = page.split(anchor, 1)[1].split("</div>", 1)[0]
+    swatches = re.findall(r'<i style="background:(#[0-9a-f]{6})">', legend)
     assert set(swatches) == set(gt.PHASE_ACCENTS[: len(swatches)])
     assert swatches
     assert len(swatches) == len(set(swatches))
@@ -1744,6 +1753,52 @@ def test_u3_sw_drill_has_a_legend_and_a_wired_detail_aside(tmp_path):
     assert ".block[data-node]" in sw  # the detail wiring targets the sw blocks
 
 
+def test_u3_phase_legend_renders_through_the_shared_legend_component(tmp_path):
+    """dashboard-uniformity.md U1/U3 (WI-294b, 119-CRITIQUE): the When tab's
+    phase-accent key used to be a bespoke `span.ph`/`.phaselegend` idiom — a
+    smaller swatch (.55rem vs .8rem), an inline "Phase accent:" prefix, and
+    placement inside the drill's summary paragraph rather than below the card
+    like every other legend (the status legend on the SAME tab, and the
+    Knowledge/How-SW legends). It now renders through the identical
+    `.legend`/`<i>` component those use."""
+    tiered_repo(tmp_path, TIER_UNION_WIS)
+    assert gen(tmp_path).returncode == 0
+    page = html_of(tmp_path)
+    # the bespoke idiom is gone: no per-emitter swatch rule, no chip markup
+    assert "span.ph" not in page
+    assert "phaselegend" not in page
+    assert 'class="ph"' not in page
+    # the phase key now emits the shared component's exact markup shape
+    assert re.search(
+        r'<div class="legend">(<span><i style="background:#[0-9a-f]{6}"></i>[^<]+</span>)+</div>',
+        page,
+    )
+
+
+def test_u1_process_tab_type_scale_matches_the_shared_tokens(tmp_path):
+    """dashboard-uniformity.md U1 (WI-295, 119-CRITIQUE MINOR): the Process tab's
+    "working loops" SVG (`.stgt`/`.stgn`/`.hooplab`/`.hubname`) used to hardcode
+    12px/9.5px/13px/13px, deviating from the --nlabel:10px/--nsub:8.5px every
+    other emitter (icicle/dag/knowledge) shares. `.stgt`/`.stgn` are the same
+    per-node-label role as --nlabel/--nsub and now reuse them directly;
+    `.hooplab`/`.hubname` are a once-per-diagram HEADLINE label, a genuinely
+    different role, so they get the ONE documented scale step --nhead (not two
+    independently drifting magic numbers)."""
+    with_gate(tmp_path, "G2")  # the Process tab's render condition
+    assert gen(tmp_path).returncode == 0
+    css = html_of(tmp_path)
+    assert "--nhead:" in css
+    assert "#process .stgt{fill:var(--text);font-size:var(--nlabel)" in css
+    assert "#process .stgn{fill:var(--muted);font-size:var(--nsub)" in css
+    assert "#process .hooplab{fill:var(--accent);font-size:var(--nhead)" in css
+    assert "#process .hubname{fill:#fff;font-size:var(--nhead)" in css
+    # no ad-hoc px sizes remain on these four selectors
+    for selector in (".stgt", ".stgn", ".hooplab", ".hubname"):
+        rule = re.search(r"#process " + re.escape(selector) + r"\{([^}]*)\}", css)
+        assert rule, selector
+        assert "px" not in rule.group(1), (selector, rule.group(1))
+
+
 def test_u1_node_labels_share_one_type_scale(tmp_path):
     # dashboard-uniformity.md U1: one shared node-label / sub-label size across the
     # emitters — declared once as CSS vars, referenced (no per-emitter px override).
@@ -1762,6 +1817,137 @@ def test_u1_node_labels_share_one_type_scale(tmp_path):
     tiered_repo(tmp_path / "drill", TIER_UNION_WIS)
     assert gen(tmp_path / "drill").returncode == 0
     assert ".blab{font-size:var(--nlabel)" in html_of(tmp_path / "drill")
+
+
+def _lab(hexcolor):
+    """CIE L*a*b* for a `#rrggbb` string, sRGB D65 (matches the palette comment's
+    deltaE convention). Pure-Python — no numpy dependency for one small check."""
+    h = hexcolor.lstrip("#")
+    rgb = [int(h[i : i + 2], 16) / 255 for i in (0, 2, 4)]
+    rgb = [((c + 0.055) / 1.055) ** 2.4 if c > 0.04045 else c / 12.92 for c in rgb]
+    r, g, b = [c * 100 for c in rgb]
+    x = r * 0.4124 + g * 0.3576 + b * 0.1805
+    y = r * 0.2126 + g * 0.7152 + b * 0.0722
+    z = r * 0.0193 + g * 0.1192 + b * 0.9505
+    xn, yn, zn = 95.047, 100.0, 108.883
+
+    def f(t):
+        return t ** (1 / 3) if t > 0.008856 else (7.787 * t + 16 / 116)
+
+    fx, fy, fz = f(x / xn), f(y / yn), f(z / zn)
+    return (116 * fy - 16, 500 * (fx - fy), 200 * (fy - fz))
+
+
+def _delta_e76(h1, h2):
+    l1, a1, b1 = _lab(h1)
+    l2, a2, b2 = _lab(h2)
+    return ((l1 - l2) ** 2 + (a1 - a2) ** 2 + (b1 - b2) ** 2) ** 0.5
+
+
+def test_u5_no_hex_reused_across_unrelated_colour_vocabularies():
+    """dashboard-uniformity.md U5 (WI-292, 119-CRITIQUE BLOCKER): one hue must
+    carry one meaning across the whole document. Hex-collision half of the core:
+    no value may repeat across STATUS_FILL / TIER_FILL / OKF_TYPE_FILL /
+    SW_NODE_FILL / PHASE_ACCENTS EXCEPT the intentional TIER_FILL<->OKF_TYPE_FILL
+    SN/SR/LLR/TC mirror (one concept, two label systems) and the CSS `--accent`
+    token, which PHASE_ACCENTS must also never equal (the focus/hover ring is
+    painted in `--accent`, so a phase sharing it makes that phase's ring
+    invisible — 119-CRITIQUE A4/T5)."""
+    gt = load_script("gen_trajectory")
+    tier_to_type = {
+        "sn": "Stakeholder Need",
+        "sr": "System Requirement",
+        "llr": "Low-Level Requirement",
+        "tc": "Test Case",
+    }
+    for tier, type_name in tier_to_type.items():
+        assert gt.TIER_FILL[tier] == gt.OKF_TYPE_FILL[type_name], (
+            tier,
+            type_name,
+        )  # the mirror must pair the SAME concept, not merely reuse the same set
+    mirror = set(gt.TIER_FILL[t] for t in tier_to_type)
+
+    vocabs = {
+        "status": set(gt.STATUS_FILL.values()),
+        "tier+type": mirror
+        | {gt.OKF_TYPE_FILL["Interface"], gt.OKF_TYPE_FILL["Process Guide"]},
+        "sw": set(gt.SW_NODE_FILL.values()),
+        "phase": set(gt.PHASE_ACCENTS),
+    }
+    names = list(vocabs)
+    for i in range(len(names)):
+        for j in range(i + 1, len(names)):
+            collide = vocabs[names[i]] & vocabs[names[j]]
+            assert not collide, (names[i], names[j], collide)
+
+    accent_light, accent_dark = "#4f46e5", "#818cf8"
+    for fill in gt.PHASE_ACCENTS:
+        assert fill.lower() not in (accent_light, accent_dark), fill
+
+
+def test_u5_phase_accents_clear_a_pairwise_deltae_floor():
+    """U5 core, pairwise half: PHASE_ACCENTS is judged as a rendered legend where
+    every swatch can sit beside every other one, so the floor is PAIRWISE, not
+    merely adjacent-in-declaration-order — the exact metric gap (WI-247's
+    validator checked adjacent pairs only) that let two indistinguishable violets
+    ship (075-CRITIQUE T5 / 119-CRITIQUE precursor)."""
+    gt = load_script("gen_trajectory")
+    accents = gt.PHASE_ACCENTS
+    worst = min(
+        _delta_e76(accents[i], accents[j])
+        for i in range(len(accents))
+        for j in range(i + 1, len(accents))
+    )
+    assert worst >= 15, worst
+
+
+def test_a4_ring_ink_clears_the_3to1_floor_against_every_node_fill():
+    """dashboard-accessibility.md A4 (WI-299, 119-CRITIQUE BLOCKER) +
+    dashboard-usability.md T5: `_ring_ink` picks whichever of white/near-black
+    contrasts more against a fill, so it must clear the 3:1 UI-boundary floor for
+    EVERY fill the dashboard actually uses — not just the ones a hand-picked
+    example happened to check."""
+    gt = load_script("gen_trajectory")
+    fills = (
+        set(gt.STATUS_FILL.values())
+        | set(gt.TIER_FILL.values())
+        | set(gt.OKF_TYPE_FILL.values())
+        | set(gt.SW_NODE_FILL.values())
+        | set(gt.PHASE_ACCENTS)
+    )
+    for fill in sorted(fills):
+        ink = gt._ring_ink(fill)
+        assert ink in ("#ffffff", "#0f172a"), (fill, ink)
+        assert _wcag(ink, fill) >= 3, (fill, ink, _wcag(ink, fill))
+
+
+def test_u3_ring_token_is_the_one_highlight_idiom_across_every_emitter(tmp_path):
+    """dashboard-uniformity.md U3/U4 (WI-294a, 119-CRITIQUE): the hover/focus
+    highlight ring used to be `var(--accent)` in the drill emitters (When/How-SW)
+    but a hardcoded `#f59e0b` amber in the icicle/flat-DAG/knowledge emitters —
+    two idioms for the same "this node is highlighted" concept. All four now
+    read the SAME `--ring` custom property (with each emitter's old hue kept
+    only as the CSS fallback), and each node carries its own computed `--ring`
+    value inline so the ring clears contrast against ITS fill specifically."""
+    tiered_repo(tmp_path / "drill", TIER_UNION_WIS)
+    assert gen(tmp_path / "drill").returncode == 0
+    css = html_of(tmp_path / "drill")
+    assert ".drill .block:focus rect{stroke:var(--ring,var(--accent))" in css
+    assert ".drill .block.hl rect{stroke:var(--ring,var(--accent))" in css
+    assert "#ice .cell.hl rect { stroke:var(--ring,#f59e0b)" in css
+    assert "#dag .wi.hl rect { stroke:var(--ring,#f59e0b)" in css
+    # every emitter actually stamps a per-node --ring value, not just the CSS
+    assert re.search(r'class="cell [^"]*"[^>]*style="--ring:#[0-9a-f]{6}"', css)
+    assert re.search(r'class="block [^"]*"[^>]*style="--ring:#[0-9a-f]{6}"', css)
+
+    # the Knowledge tab's top-view `.knode` flat graph only renders for a
+    # <= 3-type OKF bundle (_flat_bundle) — with_bundle's SN/SR/LLR/TC spans 4
+    # types, which earns the tiered drill above the threshold instead (T2).
+    _flat_bundle(tmp_path / "flat")
+    assert gen(tmp_path / "flat").returncode == 0
+    know_css = html_of(tmp_path / "flat")
+    assert "#knowgraph .knode.hl rect{stroke:var(--ring,#f59e0b)" in know_css
+    assert re.search(r'class="knode"[^>]*style="--ring:#[0-9a-f]{6}"', know_css)
 
 
 def test_a3_flat_dag_fallback_also_prefixes_the_status_glyph(tmp_path):

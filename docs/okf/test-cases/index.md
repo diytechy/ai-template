@@ -115,3 +115,7 @@ resource: "generated"
 | [TC-102](TC-102.md) | Generate the dashboard against two fixture registries and assert the SR-089 '>3' rule mec… |
 | [TC-103](TC-103.md) | Generate the dashboard from a tiered fixture registry and assert the drill emits <nav cla… |
 | [TC-104](TC-104.md) | Three complementary checks. (1) Unit: _svg_role classifies a native <a href> body, and ta… |
+| [TC-105](TC-105.md) | Assert the U5 palette-decollision invariants directly against the declared Python constan… |
+| [TC-106](TC-106.md) | Generate the dashboard from a tiered fixture registry and a flat OKF bundle and assert: (… |
+| [TC-107](TC-107.md) | Generate the dashboard with the Process tab enabled (G2 gate) and assert --nhead is decla… |
+| [TC-108](TC-108.md) | Compute _ring_ink for every fill declared in STATUS_FILL/TIER_FILL/OKF_TYPE_FILL/SW_NODE_… |

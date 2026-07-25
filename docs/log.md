@@ -12672,3 +12672,92 @@ Bars: full suite **1499 passed, 3 skipped** (measured after the rework; the earl
 1497 figure was taken from a run that also had a failure); `check_dupes` OK; ruff clean. The `dupes` G3 step is green; the G3
 harness's remaining failure is `trajectory --strict` (`perceptual-stale`), which needs
 a fresh family-heterogeneous CRITIQUE and is unchanged by this work.
+
+## 2026-07-25 (later) — 119/120-CRITIQUE: WI-292/294/295/299 all delivered (fix + mechanized anchor + child LLR/TC bound); 3 new WIs filed (WI-305/306/307)
+
+**Origin.** Corrected the wrap-up plan's family-heterogeneous CRITIQUE mandate
+from an absolute ("Claude can never satisfy SR-084") to what SR-084/
+`agent_route.py` actually specify — *preferred, not required*, with a legal
+`DEGRADED` same-family fallback (fresh context, not family, is SN-024's real
+invariant). That correction unblocked dispatching a fresh same-family critique
+to clear the fail-closed `perceptual-stale` finding and continue WI-300's
+render-row queue.
+
+**119-CRITIQUE** (fresh Claude Opus subagent, isolated sandbox, DEGRADED):
+CHANGES-REQUESTED findings=8. Reconfirmed the already-queued WI-292 (U5) and
+WI-299 (A4/T5 descend-affordance contrast) BLOCKERs/MAJORs; surfaced 3 new
+findings with no owning WI (T1 no next-work surface, T2 landing icicle not
+start-collapsed, T7 viewport reflow) — filed as **WI-305/306/307**.
+
+**Built all four originally-queued render rows, each as fix + the check that
+owns its anchor + a child LLR/TC binding that check in `Evidence`:**
+
+- **WI-292 (U5 palette de-collision).** `STATUS_FILL`/`TIER_FILL`/
+  `OKF_TYPE_FILL`/`SW_NODE_FILL`/`PHASE_ACCENTS` reassigned to remove every
+  cross-vocabulary hex collision (TC tier no longer `#047857`==`done`; Process
+  Guide no longer `#b45309`==`active`; How-SW module/file/external no longer
+  reuse SR/Interface/LLR's hexes) and the `PHASE_ACCENTS[5]==--accent`
+  collision that made the focus ring vanish on phase-3. Verified
+  mathematically before touching the generator (a scratch CIE76/WCAG script)
+  so the replacement palette hit pairwise ΔE>=15, zero collisions, and the
+  4.5:1 white-text floor on the first try. **LLR-102/TC-105** bind the core
+  (`test_u5_no_hex_reused_across_unrelated_colour_vocabularies`,
+  `test_u5_phase_accents_clear_a_pairwise_deltae_floor`).
+- **WI-299 + WI-294(a) (focus-ring contrast + cross-emitter idiom).** New
+  `_ring_ink`/`_ring_style` helpers compute, per node fill, whichever of white/
+  near-black clears more WCAG contrast (worst case ~4.58:1, comfortably above
+  the 3:1 UI-boundary floor) — one shared mechanism used identically by all
+  four SVG emitters (drill/icicle/flat-DAG/knowledge), replacing the old
+  `var(--accent)`-vs-hardcoded-`#f59e0b` split. The per-node `--ring` custom
+  property is appended LAST in each emitter's attribute string (after
+  `data-wi`), preserving every existing adjacency assertion
+  (`data-tier="…" data-descend="…"`) other tests depend on — the first attempt
+  inserted it mid-string and broke three unrelated tests, caught by the full
+  suite, not by the new tests. **LLR-105/TC-108** bind T5's core
+  (`test_a4_ring_ink_clears_the_3to1_floor_against_every_node_fill`);
+  **LLR-103/TC-106** bind U3's ring half
+  (`test_u3_ring_token_is_the_one_highlight_idiom_across_every_emitter`).
+- **WI-294(b) (phase-key legend).** The When tab's phase-accent key now
+  renders through the shared `.legend`/`<i>` component every other legend uses
+  (26x26 swatch, below-card placement, no inline prefix), retiring the bespoke
+  `span.ph`/`.phaselegend` idiom (.55rem swatch, inline "Phase accent:"
+  prefix). **LLR-103/TC-106** also bind this half
+  (`test_u3_phase_legend_renders_through_the_shared_legend_component`).
+- **WI-295 (Process-tab type scale).** `.stgt`/`.stgn` now reuse the shared
+  `--nlabel`/`--nsub` tokens directly; `.hooplab`/`.hubname` — a once-per-
+  diagram headline label, a genuinely different role — take one new documented
+  `--nhead` scale step instead of two independently-drifting magic numbers.
+  **LLR-104/TC-107** bind the core
+  (`test_u1_process_tab_type_scale_matches_the_shared_tokens`).
+
+**120-CRITIQUE** (fresh Claude Opus subagent, DEGRADED, re-dispatched because
+the four builds above re-touched `gen_trajectory.py` past 119-CRITIQUE):
+CHANGES-REQUESTED findings=3 — confirms the fixes landed (A4 worst pair now
+4.98:1, was 1.00:1; no more U1/U3 legend-styling MINORs) and surfaces nothing
+new: T8 reconfirms the pre-existing, already-tracked WI-253 port-fan-crossing
+gap the usability rubric names as a known open finding; T1 reconfirms
+WI-305 independently; U5 residue is near-duplicate (non-identical) hue-family
+reuse across vocabularies — exactly the perceptual residue LLR-102's own scope
+note anticipated staying under SR-053's coarse critique TC, not a bug in the
+exact-hex-collision check.
+
+**Housekeeping caught by the full suite, not by design:** the module-size
+ratchet needed a reviewed bump (`gen_trajectory.py` 4632 -> 4729 lines — new
+behaviour: the ring-ink helpers, palette rationale comments, and the `--nhead`
+token, not bloat); `docs/gate` needed a re-stamp after LLR 101->105/TC 104->108
+(derive_gate --check); and the fix commits needed `ruff format`/`ruff check`
+(an ambiguous `l` variable in `_ring_ink`, renamed `fill_lum`).
+
+**What this does NOT do: neither SR-052 nor SR-053 flips to `Verification=Test`
+yet.** SR-053 now has U1/U3/U5 bound but **U2 and U4 still have no child
+LLR/TC** — both already pass structurally (single-sourced from the same
+palette dicts / the shared drill emitter) but were never bound, because no
+defect WI owns them; binding them is net-new test-authoring, not a fix, and is
+WI-300's own remaining work, not delegated to WI-292/294/295/299. SR-052 needs
+A1 (blocked on WI-273's attest/ratify), A3, and A4's broader arithmetic core
+(beyond just the ring) bound — A2 is already done (LLR-101/TC-104, delivered
+by WI-297 earlier).
+
+**Verified:** full suite **1502 passed, 6 skipped**, coverage 92.15%;
+`check.py --gate G3 --jobs 0` **RESULT: PASS** (all 17 steps) after the ratchet
+re-stamp, gate re-stamp, and format/lint fixes above.
