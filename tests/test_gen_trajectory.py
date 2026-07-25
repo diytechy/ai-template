@@ -1796,9 +1796,32 @@ def test_a1_drill_leaf_blocks_are_keyboard_focusable(tmp_path):
 
 
 def _svg_subtrees(text):
-    """(open-tag, body) for every emitted <svg>. The views nest no <svg> inside
-    another, so a non-greedy split is exact here."""
-    return re.findall(r"(<svg\b[^>]*>)(.*?)</svg>", text, re.S)
+    """(open-tag, body) for every EMITTED <svg> — the views nest no <svg> inside
+    another, so a non-greedy split is exact once the decoys are gone.
+
+    Two decoys, both found by adversarial review of the first draft. The embedded
+    JSON <script> blobs carry registry prose that can contain a literal `<svg>`
+    (LLR-101's own text does), which both invents a phantom subtree and greedily
+    swallows ~112 KB up to the next real `</svg>` — hiding a real container from
+    the walk. So strip <script> regions first, and require the tag to carry at
+    least one attribute (every emitted svg has viewBox/class; a bare `<svg>` in
+    prose has none)."""
+    text = re.sub(r"<script\b.*?</script>", "", text, flags=re.S)
+    return re.findall(r"(<svg\s[^>]*>)(.*?)</svg>", text, re.S)
+
+
+def _focusable_count(body):
+    """Focusable descendants of an svg body: `tabindex` in any quoting, plus SVG
+    `<a href>`, which is natively tab-ordered and so carries no tabindex."""
+    return len(re.findall(r"tabindex\s*=|<a\s[^>]*href\s*=", body, re.I))
+
+
+def _named(tag, body):
+    """Does this svg have an accessible name? `aria-label` on the element, or a
+    FIRST-DIRECT-CHILD <title> — per SVG-AAM a <title> nested inside a <g> names
+    that <g>, not the svg, so accepting any descendant <title> would pass an
+    unnamed graphic."""
+    return "aria-label=" in tag or re.match(r"\s*<title[\s>]", body) is not None
 
 
 def test_a2_no_focusable_node_sits_inside_a_children_presentational_svg(tmp_path):
@@ -1817,19 +1840,66 @@ def test_a2_no_focusable_node_sits_inside_a_children_presentational_svg(tmp_path
     text = html_of(tmp_path)
     subtrees = _svg_subtrees(text)
     assert subtrees, "no <svg> emitted"
-    assert 'tabindex="' in text, "fixture emitted no focusable nodes — vacuous pass"
+    assert _focusable_count(text), "fixture emitted no focusable nodes — vacuous pass"
     for tag, body in subtrees:
         if 'role="img"' in tag:
-            assert 'tabindex="' not in body, (
+            assert not _focusable_count(body), (
                 "role=img (children-presentational) over focusable descendants: " + tag
             )
             # a genuinely non-interactive graphic still owes its own name
-            assert "aria-label=" in tag or "<title" in body, (
-                "role=img with no accessible name: " + tag
-            )
-        else:
-            # every other emitted container is an exposed group, not a generic
-            assert 'role="group"' in tag, tag
+            assert _named(tag, body), "role=img with no accessible name: " + tag
+
+
+def test_a2_role_predicate_counts_native_links_as_focusable():
+    # The unit half, and the regression guard for the defect adversarial review
+    # found in the first draft: focusability is NOT only `tabindex`. An SVG <a> with
+    # an href is natively tab-ordered and so carries none, and a tabindex-only
+    # predicate classified the loops diagram (9 linked stage cards, each with a
+    # <title>) as a non-interactive graphic — leaving role="img" over exactly the
+    # elements A2 protects. Also pins the quoting-agnostic and no-false-positive
+    # halves, since `esc()` renders prose links as `&lt;a href`.
+    gt = load_script("gen_trajectory")
+    assert (
+        gt._svg_role('<a href="docs/status.md" class="stg"><title>x</title></a>')
+        != "img"
+    )
+    assert gt._svg_role('<g tabindex="0"><title>n</title></g>') != "img"
+    assert gt._svg_role("<g tabindex=0></g>") != "img"
+    assert gt._svg_role("<g tabindex = '0'></g>") != "img"
+    # a genuinely static graphic still earns img, and escaped prose cannot forge a hit
+    assert (
+        gt._svg_role('<path d="M0 0"/><text>&lt;a href="x"&gt; in prose</text>')
+        == "img"
+    )
+
+
+def test_a2_the_repos_own_shipped_dashboard_holds_the_invariant():
+    # The document walk above can only judge the emitters its FIXTURE renders —
+    # adversarial review measured that at 2 of 6, and the one genuine violation
+    # lived in an emitter the fixture never rendered. This asserts the same
+    # invariant over the artifact this repo actually ships, which exercises every
+    # emitter that really renders (the loops diagram among them).
+    #
+    # The invariant is "not children-presentational", NOT "is role=group": dropping
+    # the role (inheriting the SVG-AAM graphics-document default) or declaring
+    # role="graphics-document" satisfies A2 equally, and the test must not pin one
+    # implementation when LLR-101 does not.
+    shipped = ROOT / "PROJECT_STATE.html"
+    if not shipped.is_file():
+        import pytest
+
+        pytest.skip("no committed dashboard in this checkout")
+    subtrees = _svg_subtrees(shipped.read_text(encoding="utf-8"))
+    assert len(subtrees) >= 10, "decoy-stripping went wrong: {}".format(len(subtrees))
+    offenders = [
+        (tag[:80], _focusable_count(body))
+        for tag, body in subtrees
+        if 'role="img"' in tag and _focusable_count(body)
+    ]
+    assert not offenders, "children-presentational role over focusables: {}".format(
+        offenders
+    )
+    assert sum(_focusable_count(b) for _, b in subtrees), "vacuous — no focusables"
 
 
 def test_t1_hero_names_the_active_work_item(tmp_path):

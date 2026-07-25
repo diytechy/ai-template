@@ -12486,3 +12486,82 @@ Guard recorded in the brief: a lax classification silently retires an anchor not
 enforces, so every `mechanized` mark must name its test, and a removed or skipped
 test reverts the anchor to `perceptual`. The ~12–13 of 17 estimate is explicitly
 flagged as an estimate to be *replaced* by the classification, not assumed by it.
+
+## 2026-07-25 — WI-301, OI-9 RULED (f), WI-300 slice 1, WI-297 DONE (corrected on review)
+
+**WI-301 — the toolchain prereq.** Running the suite under a below-floor Python
+produced 49 failures across the six `agent_loop_*` modules and `test_onboard_devsetup`
+— reds that read like branch defects but were environmental (a stash-and-rerun on the
+clean tree gave a byte-identical failure set). `conftest.seed_venv` builds each
+dispatch fixture's `.venv` from this process's base, so below the floor the
+dispatcher's own WI-286 harness gate correctly refuses it. Now named once: two hard
+failures (`test_prereq_toolchain.py`) split because the preconditions genuinely differ
+— `seed_venv` depends on the RUNNING interpreter, `_harness_floor_failures` probes the
+ROOT `.venv`. 49 failed → 2 failed. The 104 skips are the 49 former failures plus 55
+that passed despite a below-floor venv. Re-tiered to `SLOW_MODULES` on the
+`test_session_stdin` precedent: designed to red below the floor, so in the commit bar
+it would make that bar unpassable on the machine needing the fix; the sessionstart
+banner still fires in smoke, so the bar keeps the warning and loses only the hard stop.
+
+**OI-9 RULED — option (f).** See the Decisions log entry above. The brief is deleted
+from `open-items.md` per the pending-only rule; WI-300 → queued, `strong`, `spine`,
+`Priority 1`, SpecRef `docs/specs/WI-300.md`.
+
+**WI-300 slice 1.** Surveying before writing anything new produced the finding that
+most changes the plan: the anchors are ALREADY largely mechanized — owning tests exist,
+several already named after their anchor (`test_a1_…`, `test_a4_…`, `test_u1_…`,
+`test_u3_…`). What was never done is the REGISTRY BINDING, so the critique kept
+re-judging what a test already enforced every commit. Bound where a test exists AND no
+defect is open: T2 → LLR-099/TC-102, T3 → LLR-100/TC-103. NOT bound (would be the lax
+classification the ruling warns of): A2/A4/U1/U3 have tests but open defects; A1/A3
+are partly covered. LLR-055 narrowed so an anchor lives in exactly one row.
+**Harness constraint found:** a child row cannot land ahead of its test behind
+`Status: Draft` — `Draft` escapes `--require-verified`, but `derive_gate` returns G0
+for a draft, dropping the gate off G3. Tests-first is enforced, not merely advised.
+
+**WI-297 DONE — and corrected after adversarial review refuted the first pass.**
+`_svg_role(body)` picks each `<svg>`'s container role from the emitted content across
+all six sites. The first pass tested focusability as `tabindex=` only. That is wrong:
+a native SVG `<a href>` is tab-ordered without one, so the loops diagram — 9 linked
+stage cards, each with a `<title>` — kept `role="img"` over exactly the elements A2
+protects. The defect this WI exists to close survived **in the one container the
+commit called non-interactive**. Two further findings: the walk's regex matched literal
+`<svg>` text inside the embedded JSON (LLR-101's own prose), inventing a phantom
+subtree and swallowing a real one — so the reported "1,146 → 0" was itself
+mis-measured; and the fixture exercised 2 of 6 emitters, with the genuine violation in
+an emitter it never rendered.
+
+Corrected: predicate widened to `tabindex` (any quoting) OR `<a href`; the walk strips
+`<script>` regions and requires an attributed tag; the name check demands `aria-label`
+or a FIRST-DIRECT-CHILD `<title>` (SVG-AAM); the assertion is "not
+children-presentational" rather than "is `role=group`", so dropping the role or using
+`graphics-document` also passes — the test must not pin what LLR-101 leaves open; and
+a third test asserts the invariant over **this repo's own shipped dashboard**, which
+exercises every emitter that really renders. Measured after correction: 44 containers,
+0 `role=img`, 0 focusables in a children-presentational subtree, 1171 focusables total.
+Regression-probed both times — reverting the predicate fails on the loops diagram with
+its 9 links.
+
+**The reviewable lesson.** LLR-101 first claimed scope "over the whole emitted
+document" while TC-104 proved it over a 2-of-6 fixture, and TC-104's Evidence asserted
+the loops diagram was non-interactive — which the registry *already* contradicted
+(WI-298's retirement note records those same `<a class="stg">` elements as controls).
+That is precisely the WI-300 failure mode: a classification broader than its
+enforcement. `trace.py` could confirm TC-104 existed and named tests; nothing
+mechanical could tell that its Evidence described the artifact wrongly. **Under (f) a
+binding is only as honest as the review that lands it** — an argument for holding the
+per-slice review cadence (OI-7) while this rolls out. Scope now states what is proven
+and disclaims proof over unrendered emitter configurations.
+
+**Reviewer-family note.** The review was Anthropic-family (Opus) and therefore CANNOT
+satisfy SR-084/SR-085's family-heterogeneous CRITIQUE requirement; it is engineering
+review only and is NOT recorded as a CRITIQUE verdict. SR-052 stays
+`Verification=Critique`. WI-299 was deliberately left unbuilt: its fix is a
+palette-independent focus ring whose correctness is genuinely visual, and shipping a
+render change no critic can judge is the SN-024 failure mode.
+
+Bars: smoke 405 passed; `test_gen_trajectory` 104 passed; check_docs 252 docs / 742
+links / 0 broken; trace `orphans=0 integrity=0`; gate holds G3 (`drafts=0`). The full
+suite is NOT a valid gate result on this machine — `.venv` is Python 3.9.6, below the
+3.11 floor, and no 3.11+ interpreter exists here. Module-size ratchet: 4615 → 4624 →
+4633, two reviewed bumps, reasons at the baseline.

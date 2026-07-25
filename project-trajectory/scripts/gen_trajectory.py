@@ -238,15 +238,24 @@ TIER_COL = {"sn": 0, "sr": 1, "llr": 2, "tc": 3}
 ICICLE_UNIT = 18  # px of height per TC leaf
 
 
+# A focusable descendant, for `_svg_role`. Two shapes, because focusability is NOT
+# only `tabindex`: an SVG `<a>` with an href is in the sequential tab order natively
+# and therefore carries none. A `tabindex`-only predicate reported the loops diagram
+# (9 linked stage cards) as a non-interactive graphic and left it `role="img"` — the
+# exact defect WI-297 set out to close. Matching raw `<` is safe: `esc()` renders
+# registry prose as `&lt;a href`, so document text cannot forge a hit.
+_FOCUSABLE = re.compile(r"tabindex\s*=|<a\s[^>]*href\s*=", re.I)
+
+
 def _svg_role(body):
     """The ARIA role for an emitted `<svg>`, chosen from its CONTENT: `group` when
-    the body holds any focusable node, else `img` (which then owes an aria-label).
+    the body holds any focusable descendant, else `img` (which then owes a name).
 
     `role="img"` is children-presentational, so declaring it over an interactive
     graph prunes the very `<title>`s the A2 anchor rests on. Deciding from the body
     rather than per call site keeps a future emitter from reintroducing that
     silently. Full rationale + the measured before/after: LLR-101 / TC-104 (WI-297)."""
-    return "group" if 'tabindex="' in body else "img"
+    return "group" if _FOCUSABLE.search(body) else "img"
 
 
 def arch_icicle(root):

@@ -65,7 +65,13 @@ BASELINE = {
     # "decompose, don't bump" preference is met by not duplicating: the full
     # rationale lives in LLR-101, not in the docstring. Reviewed bump, reason in
     # docs/log.md 2026-07-25. Re-stamp down with WI-280.
-    "gen_trajectory.py": 4624,
+    # +9 (4624 -> 4633), WI-297 correction: adversarial review refuted the first
+    # pass — focusability is not only `tabindex`, since a native SVG <a href> is
+    # tab-ordered without one, so the loops diagram kept role=img over 9 links.
+    # The bump is the `_FOCUSABLE` pattern plus the comment recording WHY the
+    # predicate has two shapes, which is the part a successor would otherwise
+    # "simplify" straight back into the defect. Reviewed bump, log 2026-07-25.
+    "gen_trajectory.py": 4633,
     # +11 (3452 -> 3463), WI-284: _regenerate_disposition_artifacts also runs
     # `gen_trajectory.py --status` at integrate/blocked-disposition so a closed
     # id drops from the generated frontier automatically (and the disposition
