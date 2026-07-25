@@ -316,6 +316,40 @@ why (one bullet each; cite ids)._
   **definition-only**: the sole remaining enablement gate is the owner's
   `opencode auth login` for Moonshot/xAI (or OpenRouter) keys — agents.csv
   Notes carry the updated state.
+- **2026-07-25 — OI-9 RULED (WI-300): option (f), decompose the LLR/TC layer.**
+  A mechanizable rubric anchor becomes a **child LLR bound to a TC with
+  `Automated: Yes`** and a pytest node id in `Evidence`; an SR keeps
+  `Verification=Critique` only while a **perceptual** child remains under it.
+  The owner's question drove the reframe: *why wouldn't these produce new LLRs
+  under the corresponding SR, tied to a TC that performs these actions?* They
+  would — and the spine already models it. `TC-053` is `Verifies: SR-052;LLR-053`,
+  `Level: Critique`, `Automated: No`, the same columns `TC-051` fills with
+  `Automated: Yes` and seven pytest node ids. The critique was never a parallel
+  system; it is a TC method. **The real defect is that `LLR-053`/`054`/`055` each
+  near-verbatim restate their SR** — a paraphrase, not a decomposition — so all
+  four A-anchors collapse into one all-or-nothing TC. *That* is why a train had to
+  pass the whole rubric; the gate-shape debate was a symptom. Per-anchor pass:
+  [specs/WI-300.md](specs/WI-300.md) — **13 of 17 mechanize**, and the perceptual
+  residue is **entirely inside SR-054** (four narrow clauses: is the entry point
+  *obvious*, does the reader stay *oriented*, does a truncation read as
+  *more-available*, are crossings *tolerable*). SR-052 and SR-053 have none, so
+  both flip to `Verification=Test` and all seven queued/blocked render rows stop
+  owing a CRITIQUE dispatch. Alternatives passed over: **(e)** anchor
+  classification in the rubric — same goal, but a second registry restating what
+  `LLR→TC` already expresses, against the kit's single-source rule and the rubric
+  README's own "not a second source of truth" · **(a)** accept as designed (pays
+  the perceptual debt down but leaves the recurring cost) · **(b)** scope the
+  critique to the changed surface (cannot see the cross-view collisions SR-053
+  exists to catch) · **(c)** known-defect waiver at the gate (made unnecessary —
+  the five queued findings *are* the child TCs) · **(d)** blocking vs advisory
+  anchors (choosing leniently recreates the SN-024 failure). Costs accepted with
+  the ruling: U3/U4 mechanize only by **narrowing** "uniform" to token/attribute
+  parity, and flipping two SRs to `Test` narrows the independent eye's veto —
+  mitigated because SR-054's critique still judges the whole dashboard cold every
+  dispatch. Hard sequencing constraint: **land every child TC with real
+  `Evidence` BEFORE flipping an SR's `Verification`**, never the reverse. Needs no
+  gate change (an SR leaves `_load_critique_srs` on its own) and no new checker
+  (`trace.py` coverage already enforces "the anchor names its test").
 
 ## Audit log
 
