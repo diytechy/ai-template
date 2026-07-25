@@ -644,3 +644,71 @@ def test_no_setup_script_pipes_a_remote_script_into_a_shell():
             assert not hit, "{}:{}: pipes a downloaded script into a shell: {}".format(
                 rel, n, hit.group(0)
             )
+
+
+# --- WI-303: the macOS single-click runtime rung -------------------------------
+# dev-setup.command may fetch a Python because the double-click path otherwise
+# dead-ends on a fresh Mac (CLT ships 3.9, below the floor; macOS ships no
+# first-party 3.11+). It is the ONLY place in the kit that fetches a runtime, and
+# it earns that by verifying the artifact TWICE before executing anything. These
+# tests pin the properties that make it defensible, because they are exactly what
+# a later "simplify" would quietly drop.
+
+_COMMAND_SH = "scripts/dev-setup.command"
+
+
+def _command_text():
+    return (REPO_ROOT / _COMMAND_SH).read_text(encoding="utf-8")
+
+
+def test_runtime_pin_is_wellformed_and_self_consistent():
+    text = _command_text()
+    ver = re.search(r'^PY_VER="([\d.]+)"', text, re.M)
+    url = re.search(r'^PY_PKG_URL="([^"]+)"', text, re.M)
+    sha = re.search(r'^PY_PKG_SHA256="([0-9a-f]{64})"', text, re.M)
+    team = re.search(r'^PY_TEAM_ID="([A-Z0-9]{10})"', text, re.M)
+    assert ver and url and sha and team, "the runtime pin must be complete"
+    assert url.group(1).startswith("https://"), "the pin must be fetched over TLS"
+    # the URL must actually name the pinned version — a stale URL with a fresh
+    # version string would install something other than what was verified
+    assert "${PY_VER}" in url.group(1) or ver.group(1) in url.group(1)
+    major, minor = (int(p) for p in ver.group(1).split(".")[:2])
+    assert (major, minor) >= (3, 11), "the pinned runtime must satisfy the floor"
+
+
+def test_artifact_is_verified_before_anything_is_executed():
+    # The whole security argument is ORDER: hash and signature are checked, and the
+    # script exits, BEFORE `installer` is ever invoked. If a refactor moved the
+    # install above the checks, every other assertion here would still pass.
+    text = _command_text()
+    sha_at = text.index("shasum -a 256 -c")
+    sig_at = text.index("pkgutil --check-signature")
+    install_at = text.index("installer -pkg")
+    assert sha_at < install_at, "checksum must be verified before installing"
+    assert sig_at < install_at, "signature must be verified before installing"
+
+
+def test_each_verification_gate_fails_closed():
+    text = _command_text()
+    for marker in ("CHECKSUM MISMATCH", "SIGNATURE CHECK FAILED", "NOT NOTARIZED"):
+        assert marker in text, "missing the " + marker + " gate"
+        # each gate refuses rather than warning-and-continuing
+        tail = text.split(marker, 1)[1].split("esac", 1)[0]
+        assert "exit 1" in tail, marker + " must fail closed, not warn"
+    assert "trusted by the Apple notary service" in text, "notarization unchecked"
+
+
+def test_the_shipped_template_does_not_fetch_a_runtime():
+    # Owner ruling 2026-07-25 (blast radius): auto-provisioning stays in THIS repo
+    # until proven. Adopters must not inherit a network-fetching setup script.
+    for rel in (
+        "project-trajectory/scripts/dev-setup.template.command",
+        "project-trajectory/scripts/dev-setup.template.sh",
+        "scripts/dev-setup.sh",
+    ):
+        p = REPO_ROOT / rel
+        if not p.is_file():
+            continue
+        text = p.read_text(encoding="utf-8")
+        assert "PY_PKG_URL" not in text, rel + " must stay detect-only"
+        assert "installer -pkg" not in text, rel + " must not install a runtime"
