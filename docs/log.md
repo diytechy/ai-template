@@ -12397,3 +12397,58 @@ red until a fresh critique post-dates it. (It read clean *before* the commit onl
 because the staleness check is vacuous on an uncommitted render surface — the same
 trap recorded earlier today.) The three WIs in this sitting were chosen precisely
 because they do not need the OI-9 ruling; this one still owes a critique re-dispatch.
+
+## 2026-07-25 — OI-9 reframed: the critique is a discovery instrument, not a gate
+
+Owner question, stepping back from the render backlog: the critique keeps coming
+back — should it be a specialized test that runs when content changes, rather than
+work items that recur? Is there a missing *recurring work item* type?
+
+**The answer is that the recurring thing is not the work item.** Three surfaces
+were conflated: the **staleness gate** (recurs by design, and is *already* exactly
+the path-triggered check the question describes — never a WI), the **findings**
+(ordinary one-time defects), and the **judgement act** (a non-deterministic
+sampling process). No new WI type is needed; the miscategorised thing is the
+judgement.
+
+**What the session's own data showed.** Of the eleven findings across the five
+2026-07-24 critique runs, roughly ten were mechanically checkable — hex equality
+and pairwise ΔE for the U5 collisions, token/scale comparison for U3 and U1,
+contrast arithmetic for both A4 findings, a structural HTML check for A2 — and one
+was **wrong and was refuted by a mechanical check**. Even T8, the anchor a critic
+verified most rigorously, was verified *by mechanizing it*: parsing all 43 emitted
+SVGs and sampling wire paths for through-box hits. One anchor is already mechanized
+(`test_a4_theme_token_fills_behind_white_text_meet_the_floor`, shipped with WI-293).
+
+So the critique's contribution was **noticing what to check**, not judging it — and
+as a judge it is demonstrably unreliable: GROK and SOL split on both contested
+anchors, and SOL passed A2 against one tree while failing it against another on
+byte-identical evidence.
+
+**OI-9 rewritten around that.** The lead recommendation is now to classify each of
+the 17 anchors `mechanized` (a **named** test owns it and the critique stops
+blocking on it) or `perceptual` (keeps blocking), so the blocking surface *shrinks*
+over time — the same ever-tightening ratchet shape the complexity and module-size
+sensors already use. The four original options survive as fallbacks, with the
+known-defect waiver as the interim. This **dissolves** the original question rather
+than answering it: WI-273 was blocked by A2 and A4-boundaries, both mechanizable —
+as tests they would have fired on their own diff and never blocked a train that did
+not touch them.
+
+Half the bridge was already in the repo and unused: `critique_ratchet_findings`
+(WI-068) already says *"the fix must land in the chain, not just the artifact"* —
+but it is warn-only and binds no anchor to a check. That binding is the missing
+piece, not a new work-item type.
+
+**Applied ahead of the ruling** (owner-directed): each open render row now names the
+check that would own its anchor — WI-292 a cross-vocabulary hex-collision check plus
+a **pairwise** ΔE floor (adjacent-only is the exact metric gap that let 7.4 ship),
+WI-294 cross-emitter token equality, WI-295 shared node-label tokens, WI-297 a
+`role="img"`-over-focusable structural check, WI-299 a focus-ring contrast floor in
+both themes. Each builds as *fix + owning check*, which is what lets the anchor
+leave the critique's blocking set.
+
+Guard recorded in the brief: a lax classification silently retires an anchor nothing
+enforces, so every `mechanized` mark must name its test, and a removed or skipped
+test reverts the anchor to `perceptual`. The ~12–13 of 17 estimate is explicitly
+flagged as an estimate to be *replaced* by the classification, not assumed by it.
