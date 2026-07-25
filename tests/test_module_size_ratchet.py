@@ -87,7 +87,16 @@ BASELINE = {
     # C901 11 and this ratchet's sibling says SIMPLIFY, don't bump — so the size
     # cost here bought a complexity baseline that stayed empty. New behaviour,
     # reviewed bump; reason in docs/log.md 2026-07-24. Re-stamp down with WI-280.
-    "agent_dispatch.py": 3768,
+    # +121 (3768 -> 3889), WI-289: the two per-train RE-STAMPED data-file
+    # resolvers — `_regen_dupes_census` (regenerate the fingerprinted census
+    # from the merged tree via --emit-census, keeping the hand-authored header)
+    # and `_restamp_linecount_baselines` (rewrite ONLY the numbers to the
+    # merged actuals, preserving every rationale comment), plus the in-process
+    # regen dispatch. These files conflict on EVERY parallel compose and both
+    # sides are stale once merged, so taking a side is always wrong — this is
+    # what forced the hand-integration of WI-274/276/282. New behaviour,
+    # reviewed bump; reason in docs/log.md 2026-07-24. Re-stamp down w/ WI-280.
+    "agent_dispatch.py": 3889,
     "agent_loop.py": 3042,
     "trace.py": 2206,
     "check_trajectory.py": 1926,

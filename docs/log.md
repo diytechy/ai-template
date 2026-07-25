@@ -12307,3 +12307,50 @@ Bar: commit tier **405 passed / 14.0 s** (smoke budget is ≤ 60 s), `check_docs
 broken links, full suite **1476 passed, 7 skipped** (484.8 s). No byte-budgeted doc
 touched. Deviation from the row: one rule instead of the three regexes it named —
 same outcome, fewer places to drift.
+
+## 2026-07-24 — WI-289 DONE: compose auto-resolution owns the re-stamped data files
+
+`_resolve_composition_conflict` parked on any non-generated conflict, but two files
+are deterministically derivable from the composed tree *and* re-stamped by every
+train against its own base — the module-size ratchet baselines and the fingerprinted
+dupes census. So parallel trains **always** conflicted there. That is what forced
+the hand-integration of WI-274/276/282 on 2026-07-24, and it hit again composing
+WI-273 (the train had stamped 4511→4573 off its own base while HEAD sat at 4598).
+
+**Why these are a different category from the four existing kinds.** Those
+regenerate a *document* from sources. These fix *derived data* where a merge leaves
+**both sides stale** — the composed tree is bigger than either — so taking a side is
+not a judgement call, it is always wrong. The only correct value is measured from
+the merged tree. That reasoning is recorded in `stack.ini.template` rather than left
+implicit, because it is the whole justification for auto-resolving them.
+
+**Two new kinds on the existing declarative mechanism, not a special case.**
+`dupes` regenerates the census via `check_dupes.py --emit-census`, preserving the
+hand-authored comment header (it documents the fingerprint format) and replacing
+only the body. `linecounts` re-stamps `"<module>.py": <int>` baselines to the merged
+actuals, rewriting **only the numbers** so every rationale comment survives — those
+comments are the ratchet's audit trail. Both run **in-process**
+(`_INPROCESS_REGEN`), because neither has a generator that writes the file:
+`--emit-census` prints to stdout, and a baseline re-stamp is a text transform.
+
+**The one design decision worth flagging.** `tests/test_module_size_ratchet.py` is
+**declared in `docs/stack.ini`, not built in.** `tests/` is this repo's own suite and
+never ships downstream, so hardcoding that path into `agent_dispatch.py` — a script
+the kit *ships* — would have baked a meta-repo detail into every adopter. The kit
+ships the mechanism; a repo declares its paths. `stack.ini.template` now documents
+both kinds with opt-in examples.
+
+**Four tests.** The merged-actuals re-stamp asserts it lands on *neither* side's
+value, that rationale comments survive verbatim, and that a baseline naming an
+absent module is left alone rather than guessed. Plus CRLF preservation, census
+header-kept/stale-body-dropped, and an end-to-end declaration+resolve that was
+**confirmed to PARK** with the new kinds removed (`unknown regenerator kind
+'dupes'`) — so the fail-closed path still works.
+
+**Deliberately not taken:** the row's open design call. Both-add **import-block**
+conflicts still park for human eyes. A code conflict is not derived data, and the
+justification above does not extend to it.
+
+Bar: commit tier **405 passed / 15.0 s**, `check_docs` 0 broken, dogfood-sync 23
+passed, full suite **1480 passed, 7 skipped** (500.3 s). Size ratchet re-stamped
+**3768 → 3889**; complexity ratchet untouched (both new functions under 10).

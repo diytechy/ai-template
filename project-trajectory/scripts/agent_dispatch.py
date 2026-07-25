@@ -1571,9 +1571,120 @@ DEFAULT_GENERATED_ARTIFACTS = (
     ),
 )
 
-# The regenerator kinds a [generated] row may name (each maps to a generator argv
-# in _generated_regen_argv); an unknown kind is a malformed row.
-_GENERATED_KINDS = ("trajectory", "okf", "status", "archmap")
+# The regenerator kinds a [generated] row may name; an unknown kind is a malformed
+# row. Most map to a generator argv (_generated_regen_argv); the two WI-289 kinds
+# are handled IN-PROCESS (_INPROCESS_REGEN) because neither has a generator that
+# writes the file: `--emit-census` prints to stdout, and a line-count baseline is a
+# text re-stamp, not a generated document.
+_GENERATED_KINDS = (
+    "trajectory",
+    "okf",
+    "status",
+    "archmap",
+    "dupes",
+    "linecounts",
+)
+
+# `"<module>.py": <int>` — a line-count baseline entry (WI-289). Group 1 is the
+# whole `"name": ` prefix so the replacement only ever rewrites the NUMBER.
+_LINECOUNT_BASELINE_RE = re.compile(r'("([A-Za-z0-9_.\-]+\.py)"\s*:\s*)(\d+)')
+
+
+def _leading_comment_header(path):
+    """The file's leading `#` comment/blank block, as lines without terminators —
+    the hand-authored preamble a regenerated data file must keep. Stops at the
+    first content line. Raises OSError to the caller."""
+    header = []
+    with path.open("r", encoding="utf-8", newline="") as fh:
+        for line in fh:
+            if line.strip() and not line.lstrip().startswith("#"):
+                break
+            header.append(line.rstrip("\r\n"))
+    return header
+
+
+def _regen_dupes_census(wt, rels):
+    """Regenerate the fingerprinted duplication census from the MERGED tree
+    (WI-289). Every train re-stamps this file off its own base, so parallel trains
+    ALWAYS conflict here — it forced the hand-integration of WI-274/276/282 on
+    2026-07-24. The census is deterministically derivable, so regenerating it is
+    exactly 'accept the merged state each train's REVIEW-A already approved'.
+
+    The hand-authored comment header is preserved (it documents the format); only
+    the fingerprint body is re-emitted, from `check_dupes.py --emit-census` against
+    the merged tree's own declared `[paths] src`."""
+    scripts = Path(__file__).resolve().parent
+    proc = subprocess.run(
+        [
+            sys.executable,
+            str(scripts / "check_dupes.py"),
+            "--emit-census",
+            "--src",
+            _declared_src(wt),
+        ],
+        cwd=str(wt),
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        stdin=subprocess.DEVNULL,
+    )
+    if proc.returncode != 0:
+        tail = ((proc.stdout or "") + (proc.stderr or "")).strip()[-300:]
+        return False, tail or "exit {}".format(proc.returncode)
+    body = [ln for ln in proc.stdout.splitlines() if ln.strip()]
+    for rel in rels:
+        path = Path(wt) / rel
+        try:
+            header = _leading_comment_header(path)
+            content = "\n".join(header).rstrip("\n") + "\n\n" + "\n".join(body) + "\n"
+            with path.open("w", encoding="utf-8", newline="\n") as fh:
+                fh.write(content)
+        except OSError as exc:
+            return False, "{}: {}".format(rel, exc)
+    return True, ""
+
+
+def _restamp_linecount_baselines(wt, rels):
+    """Re-stamp `"<module>.py": <int>` line-count baselines to the MERGED tree's
+    ACTUAL counts (WI-289). The module-size ratchet is re-stamped by every train
+    against its own base, so parallel trains always conflict on it — and both sides
+    are stale the moment the merge lands, because the merged file is longer than
+    either. Taking a side is therefore always wrong; the only correct value is
+    measured from the composed tree.
+
+    Only the NUMBER is rewritten — every rationale comment on either side survives,
+    which matters because those comments are the ratchet's audit trail. A baseline
+    naming a module that does not exist under the declared `[paths] src` is left
+    alone rather than guessed at. Line endings preserved (WI-234)."""
+    src = _declared_src(wt)
+    for rel in rels:
+        path = Path(wt) / rel
+
+        def _stamp(m, _src=src):
+            target = Path(wt) / _src / m.group(2)
+            if not target.is_file():
+                return m.group(0)
+            text = target.read_text(encoding="utf-8", errors="replace")
+            return m.group(1) + str(len(text.splitlines()))
+
+        try:
+            with path.open("r", encoding="utf-8", newline="") as fh:
+                original = fh.read()
+            restamped = _LINECOUNT_BASELINE_RE.sub(_stamp, original)
+            if restamped != original:
+                with path.open("w", encoding="utf-8", newline="") as fh:
+                    fh.write(restamped)
+        except OSError as exc:
+            return False, "{}: {}".format(rel, exc)
+    return True, ""
+
+
+# Kinds regenerated IN-PROCESS rather than by a generator argv (WI-289).
+_INPROCESS_REGEN = {
+    "dupes": _regen_dupes_census,
+    "linecounts": _restamp_linecount_baselines,
+}
 
 
 def _parse_generated_row(matcher, value):
@@ -1847,13 +1958,23 @@ def _union_registry(wt, rel):
 def _regenerate_generated(wt, paths, artifacts):
     """Re-run the sibling generators for the conflicted generated `paths`
     (deduplicated by kind) IN the integrate worktree against its merged tree.
-    Returns (ok, detail)."""
-    kinds = []
+    Returns (ok, detail).
+
+    A kind in `_INPROCESS_REGEN` (WI-289) is handled in-process and receives the
+    conflicted paths of that kind, since those regenerators write a specific file
+    rather than regenerating a whole document from sources."""
+    kinds = {}
     for rel in paths:
         entry = _generated_entry(rel, artifacts)
-        if entry and entry[2] not in kinds:
-            kinds.append(entry[2])
-    for kind in kinds:
+        if entry:
+            kinds.setdefault(entry[2], []).append(rel)
+    for kind, rels in kinds.items():
+        handler = _INPROCESS_REGEN.get(kind)
+        if handler is not None:
+            ok, detail = handler(wt, rels)
+            if not ok:
+                return False, "conflict regen failed ({}): {}".format(kind, detail)
+            continue
         argv = _generated_regen_argv(kind, wt)
         if argv is None:
             continue

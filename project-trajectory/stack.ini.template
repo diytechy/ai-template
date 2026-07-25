@@ -80,15 +80,32 @@ mode = symbols
 # than forking vendored kit code. Each row:
 #   <path> = <kind> [| <BEGIN marker> | <END marker>]
 # `path` is an exact repo-relative path or a "/"-terminated directory prefix.
-# `kind` selects the regenerator: trajectory | okf | status | archmap. OMIT the
-# marker pair for a FULLY generated artifact (any conflict is regenerable); NAME
-# the (BEGIN, END) pair for a PARTIALLY generated file where only the marked
-# region regenerates and a conflict OUTSIDE it must still park (status.md's and
-# architecture.md's hand-authored prose). An ABSENT section => these built-in
-# defaults (byte-identical). A MALFORMED row => the integrator FAILS CLOSED and
-# parks (an unparseable declaration must never widen auto-resolution). The skills
-# index is deliberately absent: its neutral source lives only in the kit repo and
-# its per-agent copies are hand-authored source that must PARK, not regenerate.
+# `kind` selects the regenerator: trajectory | okf | status | archmap, plus the two
+# RE-STAMPED DATA kinds below. OMIT the marker pair for a FULLY generated artifact
+# (any conflict is regenerable); NAME the (BEGIN, END) pair for a PARTIALLY
+# generated file where only the marked region regenerates and a conflict OUTSIDE it
+# must still park (status.md's and architecture.md's hand-authored prose). An ABSENT
+# section => these built-in defaults (byte-identical). A MALFORMED row => the
+# integrator FAILS CLOSED and parks (an unparseable declaration must never widen
+# auto-resolution). The skills index is deliberately absent: its neutral source
+# lives only in the kit repo and its per-agent copies are hand-authored source that
+# must PARK, not regenerate.
+#   The re-stamped DATA kinds (WI-289) exist for a different reason from the four
+# above. Those regenerate a document from sources; these fix files that every
+# parallel train re-stamps against its OWN base, so a merge leaves BOTH sides stale
+# (the composed tree is bigger than either) and taking a side is always wrong — the
+# only correct value is measured from the merged tree:
+#   dupes      regenerate a fingerprinted duplication census via
+#              `check_dupes.py --emit-census`, preserving the file's hand-authored
+#              comment header and replacing only the fingerprint body.
+#   linecounts re-stamp `"<module>.py": <int>` line-count baselines to the merged
+#              tree's actual counts, rewriting ONLY the numbers so every rationale
+#              comment survives (those comments are the ratchet's audit trail).
+# Declare them if you keep such files, e.g.:
+#   docs/dupes-allow = dupes
+#   tests/test_module_size_ratchet.py = linecounts
+# Neither is a built-in default: whether you keep a census or a size ratchet at all
+# is your choice, and the kit ships the MECHANISM, not your paths.
 [generated]
 PROJECT_STATE.html = trajectory
 docs/okf/ = okf

@@ -2303,6 +2303,105 @@ def test_removed_default_generated_artifact_parks_again(tmp_path, monkeypatch):
     assert detail and "PROJECT_STATE.html" in detail
 
 
+def _restamp_repo(tmp_path, name, src_lines, baseline_text):
+    """A worktree declaring `[paths] src = scripts`, one script of `src_lines`
+    lines, and a ratchet-shaped baseline file."""
+    wt = tmp_path / name
+    (wt / "scripts").mkdir(parents=True)
+    (wt / "docs").mkdir(parents=True)
+    (wt / "docs" / "stack.ini").write_text("[paths]\nsrc = scripts\n", encoding="utf-8")
+    (wt / "scripts" / "big.py").write_text(
+        "".join("x = {}\n".format(i) for i in range(src_lines)), encoding="utf-8"
+    )
+    (wt / "ratchet.py").write_text(baseline_text, encoding="utf-8")
+    return wt
+
+
+def test_wi289_linecounts_restamp_uses_the_merged_actuals_not_either_side(tmp_path):
+    """WI-289: the module-size ratchet is re-stamped by every train against its own
+    base, so on a merge BOTH sides are stale — the composed tree is longer than
+    either. Taking a side is therefore always wrong; only a measurement from the
+    merged tree is right, which is why this regenerates rather than parks.
+
+    Every rationale comment must survive: those comments are the ratchet's audit
+    trail, and only the NUMBER may be rewritten.
+    """
+    baseline = (
+        "BASELINE = {\n"
+        "    # +76 (4511 -> 4587), WI-284: reviewed bump, reason in the log.\n"
+        '    "big.py": 4587,\n'
+        '    "gone.py": 999,\n'
+        "}\n"
+    )
+    wt = _restamp_repo(tmp_path, "restamp", 250, baseline)
+    ok, detail = agent_dispatch._restamp_linecount_baselines(wt, ["ratchet.py"])
+    assert ok, detail
+    out = (wt / "ratchet.py").read_text(encoding="utf-8")
+    # measured from the merged tree — not 4587 (ours) and not any theirs value
+    assert '"big.py": 250,' in out
+    # the audit trail survives verbatim
+    assert "# +76 (4511 -> 4587), WI-284: reviewed bump, reason in the log." in out
+    # a baseline naming a module that does not exist is left alone, not guessed
+    assert '"gone.py": 999,' in out
+
+
+def test_wi289_linecounts_restamp_preserves_crlf(tmp_path):
+    """The re-stamp must not relay a CRLF checkout to LF (WI-234 splice
+    discipline) — it edits numbers in place, it does not rewrite the file's form."""
+    wt = _restamp_repo(tmp_path, "crlf", 12, "placeholder\n")
+    with (wt / "ratchet.py").open("w", encoding="utf-8", newline="") as fh:
+        fh.write('BASELINE = {\r\n    "big.py": 1,\r\n}\r\n')
+    ok, _ = agent_dispatch._restamp_linecount_baselines(wt, ["ratchet.py"])
+    assert ok
+    raw = (wt / "ratchet.py").read_bytes()
+    assert b'"big.py": 12,' in raw
+    assert b"\r\n" in raw and b"\n" not in raw.replace(b"\r\n", b"")
+
+
+def test_wi289_dupes_census_replaces_a_stale_body_and_keeps_the_header(tmp_path):
+    """The census body is regenerated from the MERGED tree; the hand-authored
+    comment header (which documents the fingerprint format) is preserved. A stale
+    fingerprint line from either side must not survive."""
+    wt = _restamp_repo(tmp_path, "dupes", 5, "unused\n")
+    census = wt / "docs" / "dupes-allow"
+    census.write_text(
+        "# census header — documents the format, must survive\n"
+        "# second header line\n"
+        "\n"
+        "deadbeefcafe  stale.py == alsostale.py\n",
+        encoding="utf-8",
+    )
+    ok, detail = agent_dispatch._regen_dupes_census(wt, ["docs/dupes-allow"])
+    assert ok, detail
+    out = census.read_text(encoding="utf-8")
+    assert "# census header — documents the format, must survive" in out
+    assert "# second header line" in out
+    assert "deadbeefcafe" not in out  # the stale body is gone
+
+
+def test_wi289_declared_restamp_kinds_parse_and_resolve_instead_of_parking(tmp_path):
+    """End to end: the two WI-289 kinds are accepted by the declaration reader and a
+    conflict confined to a declared re-stamp path RESOLVES rather than parking —
+    the behaviour whose absence forced the hand-integration of WI-274/276/282."""
+    ini = (
+        _DEFAULT_GENERATED_INI
+        + "docs/dupes-allow = dupes\ntests/ratchet.py = linecounts\n"
+    )
+    wt = tmp_path / "decl"
+    wt.mkdir()
+    (wt / "docs").mkdir()
+    (wt / "docs" / "stack.ini").write_text(ini, encoding="utf-8")
+    arts, err = agent_dispatch._generated_artifacts(str(wt))
+    assert err is None, err
+    kinds = {matcher: kind for matcher, _block, kind in arts}
+    assert kinds["docs/dupes-allow"] == "dupes"
+    assert kinds["tests/ratchet.py"] == "linecounts"
+    # and a conflict on the declared path auto-resolves (does not park)
+    repo = _generated_conflict_repo(tmp_path, "restamp-e2e", "tests/ratchet.py", ini)
+    detail = _compose_theirs(repo)
+    assert detail is None, detail
+
+
 def test_malformed_generated_section_fails_closed_to_park(tmp_path):
     # Regression 3: an unparseable [generated] row must NEVER widen resolution —
     # the integrator fails closed and parks with a non-blank reason naming it.
