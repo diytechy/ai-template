@@ -111,3 +111,4 @@ resource: "generated"
 | [LLR-098](LLR-098.md) | Per-module coverage-floor comparator |
 | [LLR-099](LLR-099.md) | Default-density start-collapse (T2 core) |
 | [LLR-100](LLR-100.md) | Detail-in-context breadcrumb (T3 core) |
+| [LLR-101](LLR-101.md) | Non-pruning SVG container roles (A2 core) |

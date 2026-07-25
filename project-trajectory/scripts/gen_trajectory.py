@@ -238,6 +238,17 @@ TIER_COL = {"sn": 0, "sr": 1, "llr": 2, "tc": 3}
 ICICLE_UNIT = 18  # px of height per TC leaf
 
 
+def _svg_role(body):
+    """The ARIA role for an emitted `<svg>`, chosen from its CONTENT: `group` when
+    the body holds any focusable node, else `img` (which then owes an aria-label).
+
+    `role="img"` is children-presentational, so declaring it over an interactive
+    graph prunes the very `<title>`s the A2 anchor rests on. Deciding from the body
+    rather than per call site keeps a future emitter from reintroducing that
+    silently. Full rationale + the measured before/after: LLR-101 / TC-104 (WI-297)."""
+    return "group" if 'tabindex="' in body else "img"
+
+
 def arch_icicle(root):
     """SVG icicle (partition) of the SN->SR->LLR->TC spine + (details, descendants).
 
@@ -419,10 +430,11 @@ def arch_icicle(root):
         )
         for t in ("sn", "sr", "llr", "tc")
     )
+    body = heads + "".join(cells)
     svg = (
         '<svg viewBox="0 -22 {} {:.0f}" width="{}" '
-        'preserveAspectRatio="xMinYMin meet" role="img">{}{}</svg>'.format(
-            width, y + 22, width, heads, "".join(cells)
+        'preserveAspectRatio="xMinYMin meet" role="{}">{}</svg>'.format(
+            width, y + 22, width, _svg_role(body), body
         )
     )
     return svg, details, desc
@@ -766,10 +778,11 @@ def dag_svg(wis):
         }
 
     defs = _arrow_markers(("arrow", "arrowhead"))
+    body = defs + "".join(edges) + "".join(nodes)
     svg = (
         '<svg viewBox="0 0 {:.0f} {:.0f}" width="{:.0f}" '
-        'preserveAspectRatio="xMinYMin meet" role="img">{}{}{}</svg>'.format(
-            width, height, width, defs, "".join(edges), "".join(nodes)
+        'preserveAspectRatio="xMinYMin meet" role="{}">{}</svg>'.format(
+            width, height, width, _svg_role(body), body
         )
     )
     return svg, details
@@ -906,10 +919,11 @@ def sw_graph(root, mods):
         "#sw .swarrow-head{fill:var(--muted);}"
         "#sw .swlab{fill:var(--muted);font-size:9px;}</style>"
     )
+    body = defs + style + "".join(edge_svg) + "".join(node_svg)
     return (
         '<svg viewBox="0 0 {:.0f} {:.0f}" width="{:.0f}" '
-        'preserveAspectRatio="xMinYMin meet" role="img">{}{}{}{}</svg>'.format(
-            width, height, width, defs, style, "".join(edge_svg), "".join(node_svg)
+        'preserveAspectRatio="xMinYMin meet" role="{}">{}</svg>'.format(
+            width, height, width, _svg_role(body), body
         )
     )
 
@@ -1889,12 +1903,11 @@ def _drill_layer_svg(blocks, edges):
         )
 
     defs = _arrow_markers(("drillarrow", "warrow"), ("cedgearrow", "cedgehead", 8))
+    body = defs + "".join(wires) + "".join(nodes)
     return (
         '<svg viewBox="0 0 {w:.0f} {h:.0f}" width="{w:.0f}" '
-        'preserveAspectRatio="xMinYMin meet" role="img" class="drillsvg">'
-        "{d}{wi}{no}</svg>".format(
-            w=width, h=height, d=defs, wi="".join(wires), no="".join(nodes)
-        )
+        'preserveAspectRatio="xMinYMin meet" role="{r}" class="drillsvg">'
+        "{b}</svg>".format(w=width, h=height, r=_svg_role(body), b=body)
     )
 
 
@@ -2843,10 +2856,11 @@ def know_graph(root):
             "fill": fill,
         }
     defs = _arrow_markers(("knowarrow", "knowarrow-head"))
+    body = defs + "".join(edge_svg) + "".join(node_svg)
     svg = (
         '<svg viewBox="0 0 {:.0f} {:.0f}" width="{:.0f}" '
-        'preserveAspectRatio="xMinYMin meet" role="img">{}{}{}</svg>'.format(
-            width, height, width, defs, "".join(edge_svg), "".join(node_svg)
+        'preserveAspectRatio="xMinYMin meet" role="{}">{}</svg>'.format(
+            width, height, width, _svg_role(body), body
         )
     )
     return svg, details
@@ -3328,18 +3342,13 @@ def _loop_svg(hub_xy, loops):
         )
     )
     defs = _arrow_markers(("floparrow", "floparrow-head"))
+    body = defs + "".join(region_layer + edge_layer + card_layer) + hub
     return (
         '<svg class="loopsvg" viewBox="0 0 {:.0f} {:.0f}" '
-        'preserveAspectRatio="xMidYMid meet" role="img" '
+        'preserveAspectRatio="xMidYMid meet" role="{}" '
         'aria-label="The two working loops drawn as intersecting hoops sharing '
-        'one central entry hub">{}{}{}{}{}</svg>'.format(
-            g["width"],
-            g["height"],
-            defs,
-            "".join(region_layer),
-            "".join(edge_layer),
-            "".join(card_layer),
-            hub,
+        'one central entry hub">{}</svg>'.format(
+            g["width"], g["height"], _svg_role(body), body
         )
     )
 

@@ -55,7 +55,17 @@ BASELINE = {
     # the `.wi`/`.edge` sets the controller walks are empty. Most of the bump is
     # the comment recording that the flat path is LIVE (the small-project
     # default) and must not be deleted. Reviewed bump, log 2026-07-24.
-    "gen_trajectory.py": 4615,
+    # +9 (4615 -> 4624), WI-297: `_svg_role` picks each emitted <svg>'s container
+    # role from its BODY — group when it holds a focusable node, img only for a
+    # genuinely non-interactive graphic — closing the children-presentational
+    # role=img over 1,146 focusable descendants (A2). The +9 IS the helper; the
+    # six call sites are a net wash (each gained a `body =` line and lost format
+    # args). Deciding once from content, rather than hand-setting the role at six
+    # sites, is what stops a future emitter reintroducing it — so the rule's
+    # "decompose, don't bump" preference is met by not duplicating: the full
+    # rationale lives in LLR-101, not in the docstring. Reviewed bump, reason in
+    # docs/log.md 2026-07-25. Re-stamp down with WI-280.
+    "gen_trajectory.py": 4624,
     # +11 (3452 -> 3463), WI-284: _regenerate_disposition_artifacts also runs
     # `gen_trajectory.py --status` at integrate/blocked-disposition so a closed
     # id drops from the generated frontier automatically (and the disposition

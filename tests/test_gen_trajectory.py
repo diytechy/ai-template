@@ -1795,6 +1795,43 @@ def test_a1_drill_leaf_blocks_are_keyboard_focusable(tmp_path):
     assert re.search(r'tabindex="0"[^>]*data-wi="WI-\d+"', leaf)
 
 
+def _svg_subtrees(text):
+    """(open-tag, body) for every emitted <svg>. The views nest no <svg> inside
+    another, so a non-greedy split is exact here."""
+    return re.findall(r"(<svg\b[^>]*>)(.*?)</svg>", text, re.S)
+
+
+def test_a2_no_focusable_node_sits_inside_a_children_presentational_svg(tmp_path):
+    # dashboard-accessibility A2 (WI-297): role="img" is CHILDREN-PRESENTATIONAL —
+    # ARIA expects the subtree pruned — so a graph holding focusable nodes must not
+    # declare it, or the per-node <title>s A2 rests on may never reach a screen
+    # reader and the nodes may be unreachable. Measured before the fix: 1,146 of the
+    # document's 1,150 tabindex elements sat inside a role="img" subtree.
+    #
+    # This is the mechanized core of A2 and the reason the 116/004/118 critiques
+    # split: they argued about container NAMING while the ROLE was pruning the
+    # children. It asserts the invariant over the WHOLE emitted document, so any
+    # future emitter that adds focusable nodes under role="img" fails here.
+    tiered_repo(tmp_path, TIER_UNION_WIS)
+    assert gen(tmp_path).returncode == 0
+    text = html_of(tmp_path)
+    subtrees = _svg_subtrees(text)
+    assert subtrees, "no <svg> emitted"
+    assert 'tabindex="' in text, "fixture emitted no focusable nodes — vacuous pass"
+    for tag, body in subtrees:
+        if 'role="img"' in tag:
+            assert 'tabindex="' not in body, (
+                "role=img (children-presentational) over focusable descendants: " + tag
+            )
+            # a genuinely non-interactive graphic still owes its own name
+            assert "aria-label=" in tag or "<title" in body, (
+                "role=img with no accessible name: " + tag
+            )
+        else:
+            # every other emitted container is an exposed group, not a generic
+            assert 'role="group"' in tag, tag
+
+
 def test_t1_hero_names_the_active_work_item(tmp_path):
     # dashboard-usability T1 (048): the landing hero names the in-flight work item
     # (id + title) so finding "the next work" costs zero tab switches. WI-002 is
