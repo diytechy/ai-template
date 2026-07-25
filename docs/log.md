@@ -12048,3 +12048,61 @@ patch, the prior verdict for the R5 re-drive, and the three critique briefs
 (including a lean 9-shot accessibility variant). Worktrees `stage-WI-273` and
 `review-WI-273` are left in place with Playwright junctioned in. Re-dispatch when
 `opencode run -m opencode-go/kimi-k3` answers a PONG probe again.
+
+## 2026-07-24 (late) — the WI-273 verdicts, via OPENAI after the OpenCode outage
+
+The gateway outage recorded above was routed around by **provider**, not by
+lowering the bar: `docs/agents-enabled` lists the OPENAI family too, the builder
+was `opus` (Anthropic), and the rule is *non-Anthropic* — so `codex` gives the
+same cross-family independence OpenCode did. Probed first (`PONG`, and a vision
+check on a dashboard PNG) before planning around it, which is the lesson the
+outage taught. Three verdicts landed that OpenCode could not deliver.
+
+**REVIEW-A at the composed head — `OPENAI-TERRA`, CHANGES-REQUESTED f=1, and the
+code half is SOUND.** This is a model R2 review: it wrote a live keyboard probe
+and drove the emitted dashboard through click, Left/Right wraparound, Up/Down,
+Home/End, Space and Enter, asserting on every transition that exactly one tab was
+selected, one panel visible, and the selected tab the sole `tabindex=0` stop. It
+generated a **second** artifact (physical-CMP) to exercise the dynamically-added
+tabs rather than only the two always-present ones, shot the 36-cell matrix, and
+checked whether the document's duplicate SVG-marker IDs were introduced here (they
+are pre-existing versus `662bc87`). Full suite 1479. Its single finding is the
+same *process* gap `003-REVIEW-A` raised — the missing critique.
+
+**CRITIQUE at the composed head — `OPENAI-SOL`, CHANGES-REQUESTED f=2** on A2 (41
+of 43 `role="img"` containers unnamed) and A4 (`--border` at 1.18–1.29:1 against
+its four adjacent surfaces, floor 3:1). Both re-verified independently. Neither
+belongs to WI-273 or WI-293; SOL confirmed WI-293's hub at 6.29:1. Recorded on
+`stage/WI-273` (`bd7f90f`), not here — they judged the tree that would exist *if*
+the train integrated, which is not this branch's render.
+
+**CRITIQUE at branch HEAD — `OPENAI-SOL`, CHANGES-REQUESTED f=1** →
+[118-CRITIQUE](reviews/118-CRITIQUE.md), which re-dates the perceptual evidence
+past WI-293 and **returns the trajectory gate to clean**. Its finding is the
+**focus indicator**: `.drill .block:focus rect` strokes in `var(--accent)`, and
+`--accent` *is* the phase-3 block fill, so focusing that block yields a **1.00:1
+ring — no visible focus at all** for a keyboard user (dark 2.11:1; the icicle's
+amber ring 2.49/2.22/2.55 on SR/LLR/TC). Filed **WI-299**.
+
+**What this round actually established.**
+
+1. **WI-273's code is ready and its train still cannot close.** Three different
+   anchors have now blocked it — A4-hub, then A2 + A4-boundaries — none of them
+   its own. Fixing a blocker exposed the next one. With a whole-document rubric
+   and an all-anchors bar, "fix the blocker, then land the train" is not
+   guaranteed to terminate. That is a question about the gate's shape, and it is
+   the owner's to answer.
+2. **Critic agreement is weaker than one verdict makes it look.** GROK passed
+   both A2 and the sub-3:1 borders; SOL failed both. Worse, **SOL passed A2
+   against branch HEAD and failed it against the composed tree on byte-identical
+   evidence** — 41 of 43 unnamed in both, verified directly. Same model, same
+   rubric, opposite verdicts. So **WI-297/WI-298 ask for an owner ruling rather
+   than another dispatch**: a third opinion is not obviously worth more than the
+   two that already disagree, and the answer decides whether *any* render train
+   can close.
+3. **The best-corroborated defect is the focus ring** (WI-299) — found three times
+   independently at three severities (KIMI MINOR under U5, GROK saw-and-declined,
+   SOL MAJOR under A4). Where the critics converge, they converge hard; where the
+   rubric is ambiguous, they scatter. That contrast is the useful signal.
+
+Registry 297 WIs. Gate clean at `8895ba1`.
