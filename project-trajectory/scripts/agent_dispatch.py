@@ -26,6 +26,7 @@ import datetime
 import io
 import json
 import os
+import posixpath
 import re
 import shutil
 import subprocess
@@ -1189,6 +1190,85 @@ def _wi_specrefs(reg_path, wids):
     return out
 
 
+# Inline markdown link target, e.g. `](specs/WI-1.md)` — no whitespace inside the
+# target, which is this repo's convention and keeps titled links (`](p "T")`) out
+# of the rewrite rather than risking mangling them (WI-288).
+_MD_LINK_TARGET_RE = re.compile(r"(\]\()([^)\s]+)(\))")
+_URL_SCHEME_RE = re.compile(r"^(?:[a-z][a-z0-9+.-]*:|//)", re.I)
+
+
+def _redirected_link_target(target, doc_dir, remap):
+    """The rewritten target for ONE inline markdown link, or None to leave it
+    alone (WI-288). Split out of `_relink_archived_specs` so each half stays under
+    the C901 ratchet — the per-link decision is the branchy part.
+
+    `doc_dir` is the posix directory of the file holding the link, so the target
+    resolves the way a reader's browser would. Left alone: a bare `#fragment`, any
+    scheme-ish or protocol-relative URL (an external link that merely *contains*
+    the archived path must not be rewritten), and anything whose resolved path is
+    not in `remap`. A `#fragment` on a redirected link is carried over."""
+    if target.startswith("#") or _URL_SCHEME_RE.match(target):
+        return None
+    base, sep, frag = target.partition("#")
+    if not base:
+        return None
+    dest = remap.get(posixpath.normpath(posixpath.join(doc_dir, base)))
+    if dest is None:
+        return None
+    return posixpath.relpath(dest, doc_dir or ".") + sep + frag
+
+
+def _relink_archived_specs(wt, moves):
+    """Redirect inbound markdown links to specs that `_archive_closed_specs` just
+    moved (WI-288). Without this, archival strands a DANGLING link: a train whose
+    own `docs/log.md` entry links its live spec (`[WI-n](specs/WI-n.md)`) breaks the
+    moment the disposition archives it, and the break only surfaces on the composed
+    tree as a red `check_docs` — after the parallel work is done.
+
+    Resolution is by PATH, not by pattern: each link target is resolved relative to
+    the file containing it and compared against the moved source, so
+    `](specs/WI-n.md)` from `docs/log.md`, `](docs/specs/WI-n.md)` from the root,
+    and `](../specs/WI-n.md)` from `docs/reviews/` are all caught by one rule
+    instead of three regexes. The replacement is re-relativised to the linking
+    file's own directory, and the repo convention is honoured: the link TEXT is
+    untouched and only the TARGET is redirected. Any `#fragment` survives.
+
+    Line endings are preserved (read and write with `newline=""`) so a CRLF
+    checkout is not silently rewritten to LF — the WI-234 splice discipline.
+    Returns the repo-relative paths whose links were rewritten."""
+    if not moves:
+        return []
+    remap = {src: dest for src, dest in moves}
+    root = Path(wt)
+    touched = []
+    for path in sorted(root.rglob("*.md")):
+        parts = path.relative_to(root).parts
+        if ".git" in parts or "node_modules" in parts:
+            continue
+        rel = path.relative_to(root).as_posix()
+        doc_dir = posixpath.dirname(rel)
+
+        def _redirect(m, _dir=doc_dir):
+            new = _redirected_link_target(m.group(2), _dir, remap)
+            return m.group(0) if new is None else m.group(1) + new + m.group(3)
+
+        try:
+            with path.open("r", encoding="utf-8", newline="") as fh:
+                text = fh.read()
+        except (OSError, UnicodeDecodeError):
+            continue
+        new_text = _MD_LINK_TARGET_RE.sub(_redirect, text)
+        if new_text == text:
+            continue
+        try:
+            with path.open("w", encoding="utf-8", newline="") as fh:
+                fh.write(new_text)
+        except OSError:
+            continue
+        touched.append(rel)
+    return touched
+
+
 def _archive_closed_specs(wt, specrefs, stamp):
     """Run the docs/specs/README.md close-ritual for each just-`done` WI (WI-287):
     a live `docs/specs/<file>.md` SpecRef is moved to
@@ -1201,7 +1281,12 @@ def _archive_closed_specs(wt, specrefs, stamp):
     live spec. `git mv` inside the staging worktree so the caller's `git add -A`
     stages it; a plain rename is the fallback for an as-yet-untracked file.
     Returns the moved [(src, dest)] for the integration log. Pure of clocks —
-    `stamp` (YYYY-MM-DD) is supplied by the caller."""
+    `stamp` (YYYY-MM-DD) is supplied by the caller.
+
+    Moving the file is only half the ritual: `_relink_archived_specs` then redirects
+    every inbound markdown link to the new path (WI-288), because a train's own
+    log entry commonly links the spec it is closing and archival would otherwise
+    strand it. Both halves run here so no caller can do one without the other."""
     moved = []
     archive_rel = Path("docs") / "archive" / "specs"
     for wid, ref in sorted(specrefs.items()):
@@ -1220,6 +1305,7 @@ def _archive_closed_specs(wt, specrefs, stamp):
             except OSError:
                 continue
         moved.append((path_part, str(dest_rel).replace("\\", "/")))
+    _relink_archived_specs(wt, moved)
     return moved
 
 

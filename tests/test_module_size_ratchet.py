@@ -78,7 +78,16 @@ BASELINE = {
     # lack the pinned requirements-dev tools (a false green). The extra branch +
     # explicit message replace the old ambient-fallthrough. Reviewed bump. Re-stamp
     # downward with WI-280.
-    "agent_dispatch.py": 3682,
+    # +86 (3682 -> 3768), WI-288: `_relink_archived_specs` +
+    # `_redirected_link_target` — archival now redirects inbound markdown links to
+    # the moved spec, resolving each link by PATH relative to its own file so one
+    # rule covers every link depth. Without it archival strands a dangling link
+    # (live 2026-07-24 on WI-281, WI-274 identical) that only surfaces on the
+    # composed tree. Split into two functions because the single version measured
+    # C901 11 and this ratchet's sibling says SIMPLIFY, don't bump — so the size
+    # cost here bought a complexity baseline that stayed empty. New behaviour,
+    # reviewed bump; reason in docs/log.md 2026-07-24. Re-stamp down with WI-280.
+    "agent_dispatch.py": 3768,
     "agent_loop.py": 3042,
     "trace.py": 2206,
     "check_trajectory.py": 1926,

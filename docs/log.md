@@ -12263,3 +12263,47 @@ reaches it first" — and I filed it without doing that myself. A caveat written
 a row is not a substitute for checking. Two of the three non-critique rows survived
 scrutiny unchanged; the one sourced from a critic's *note* rather than a scored
 finding did not.
+
+## 2026-07-24 — WI-288 DONE: integrator spec-archival is link-aware
+
+`_archive_closed_specs` moved a closed WI's spec to `docs/archive/specs/` without
+touching inbound links, so a train whose own `docs/log.md` entry linked the spec it
+was closing stranded a dangling link the moment the disposition archived it — and
+only on the *composed* tree, as a red `check_docs`, after the parallel work was
+done. Live on WI-281 during the 2026-07-24 hand-integration, with WI-274 identical.
+
+**The fix resolves by PATH, not by pattern.** The row proposed three regexes
+(`](specs/…)`, `](docs/specs/…)`, `](../specs/…)`). Instead each inline link target
+is resolved relative to the file that holds it and compared against the moved
+source, so all three depths — and any future one — are caught by one rule, with the
+replacement re-relativised to each linking file's own directory. `_relink_archived_specs`
+is called from inside `_archive_closed_specs`, so moving a file and redirecting its
+links are one indivisible ritual: no caller can perform half of it.
+
+Deliberately narrow: link **text** is untouched and only the **target** redirected
+(the repo's own convention), `#fragment`s carry over, and two classes are left
+strictly alone — a bare `#anchor`, and an external URL that merely *contains* the
+archived path (`https://example.com/specs/WI-900.md` must not be rewritten). Line
+endings are preserved by reading and writing with `newline=""`, so a CRLF checkout
+is not silently relaid to LF (WI-234 splice discipline).
+
+**Two tests, both driven against the defect.**
+`test_wi288_archival_relinks_inbound_links_from_every_depth` reproduces the live
+WI-281 shape plus all three link depths, the fragment case and both must-not-touch
+cases; it was **confirmed to fail** with the relink call removed.
+`test_wi288_relink_preserves_crlf_and_skips_unrelated_files` asserts CRLF survives
+and that a file with no matching link stays **byte-identical**. (My first CRLF
+assertion was convoluted and wrong — the behaviour was right; the assertion was
+rewritten to state the property plainly.)
+
+**Complexity: simplified, not baselined.** The single-function draft measured C901
+**11** against `MAX_COMPLEXITY = 10`. The complexity ratchet's own instruction is
+*simplify, don't bump*, so the per-link decision was extracted into
+`_redirected_link_target` — leaving `tests/test_complexity_ratchet.py`'s census
+untouched and paying the cost in lines instead. Size ratchet re-stamped
+**3682 → 3768** with that reason recorded inline.
+
+Bar: commit tier **405 passed / 14.0 s** (smoke budget is ≤ 60 s), `check_docs` 0
+broken links, full suite **1476 passed, 7 skipped** (484.8 s). No byte-budgeted doc
+touched. Deviation from the row: one rule instead of the three regexes it named —
+same outcome, fewer places to drift.

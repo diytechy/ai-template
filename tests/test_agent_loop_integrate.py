@@ -2392,6 +2392,81 @@ def test_wi287_archive_closed_specs_moves_live_spec_and_skips_the_rest(tmp_path)
     assert (repo / "docs" / "archive" / "specs" / "WI-900.2026-07-23.md").is_file()
 
 
+def test_wi288_archival_relinks_inbound_links_from_every_depth(tmp_path):
+    """WI-288: archival must redirect inbound markdown links, or it strands a
+    dangling link — the live 2026-07-24 failure, where a train's own docs/log.md
+    entry linked the spec it was closing and the break only showed up on the
+    composed tree as a red check_docs.
+
+    Resolution is by resolved PATH, so all three depths are covered by one rule,
+    and each replacement is re-relativised to its own file's directory.
+    """
+    repo = tmp_path / "repo"
+    (repo / "docs" / "specs").mkdir(parents=True)
+    (repo / "docs" / "reviews").mkdir(parents=True)
+    (repo / "docs" / "specs" / "WI-900.md").write_text("# spec\n", encoding="utf-8")
+    # the live case: the train's own log entry links its still-live spec
+    (repo / "docs" / "log.md").write_text(
+        "WI-900 landed, spec [WI-900](specs/WI-900.md) refers.\n"
+        "With a fragment too: [anchor](specs/WI-900.md#done-when).\n",
+        encoding="utf-8",
+    )
+    (repo / "docs" / "reviews" / "001-REVIEW-A.md").write_text(
+        "Judged against [the spec](../specs/WI-900.md).\n", encoding="utf-8"
+    )
+    (repo / "README.md").write_text(
+        "Root link: [spec](docs/specs/WI-900.md)\n"
+        "Untouched: [ext](https://example.com/specs/WI-900.md) [frag](#specs)\n",
+        encoding="utf-8",
+    )
+    moved = agent_dispatch._archive_closed_specs(
+        repo, {"WI-900": "docs/specs/WI-900.md"}, "2026-07-23"
+    )
+    assert moved == [
+        ("docs/specs/WI-900.md", "docs/archive/specs/WI-900.2026-07-23.md")
+    ]
+
+    log = (repo / "docs" / "log.md").read_text(encoding="utf-8")
+    # link TEXT preserved, only the TARGET redirected (the repo convention)
+    assert "[WI-900](archive/specs/WI-900.2026-07-23.md)" in log
+    assert "[anchor](archive/specs/WI-900.2026-07-23.md#done-when)" in log
+    # one level deeper: re-relativised, not copied verbatim
+    review = (repo / "docs" / "reviews" / "001-REVIEW-A.md").read_text(encoding="utf-8")
+    assert "[the spec](../archive/specs/WI-900.2026-07-23.md)" in review
+    # from the repo root the target keeps its docs/ prefix
+    readme = (repo / "README.md").read_text(encoding="utf-8")
+    assert "[spec](docs/archive/specs/WI-900.2026-07-23.md)" in readme
+    # an external URL that merely *contains* the path, and a bare fragment, are
+    # left exactly alone
+    assert "[ext](https://example.com/specs/WI-900.md)" in readme
+    assert "[frag](#specs)" in readme
+
+
+def test_wi288_relink_preserves_crlf_and_skips_unrelated_files(tmp_path):
+    """The rewrite must not convert a CRLF checkout to LF (WI-234 splice
+    discipline), and a file with no matching link must not be rewritten at all."""
+    repo = tmp_path / "repo"
+    (repo / "docs" / "specs").mkdir(parents=True)
+    (repo / "docs" / "specs" / "WI-900.md").write_text("# spec\n", encoding="utf-8")
+    crlf = repo / "docs" / "crlf.md"
+    with crlf.open("w", encoding="utf-8", newline="") as fh:
+        fh.write("line one\r\nsee [s](specs/WI-900.md)\r\n")
+    other = repo / "docs" / "other.md"
+    with other.open("w", encoding="utf-8", newline="") as fh:
+        fh.write("nothing here\r\nlinks [x](other.md)\r\n")
+    before = other.read_bytes()
+
+    touched = agent_dispatch._relink_archived_specs(
+        repo, [("docs/specs/WI-900.md", "docs/archive/specs/WI-900.2026-07-23.md")]
+    )
+    assert touched == ["docs/crlf.md"]  # only the file that actually linked it
+    raw = crlf.read_bytes()
+    assert b"[s](archive/specs/WI-900.2026-07-23.md)" in raw
+    # every newline is still CRLF: strip the CRLFs and no bare LF may remain
+    assert b"\r\n" in raw and b"\n" not in raw.replace(b"\r\n", b"")
+    assert other.read_bytes() == before  # byte-identical, not rewritten
+
+
 def test_wi287_done_flip_update_clears_specref(tmp_path):
     """The done-flip update dict carries SpecRef='' so a terminal WI clears its
     SpecRef in the same surgical rewrite (the cell half of the ritual)."""
