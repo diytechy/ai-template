@@ -12220,3 +12220,46 @@ not critique-gated). Corrected in `open-items.md` OI-9, the WI-300 row, and
 
 **Open-row census by gating:** 25 open rows — **7 critique-gated** (6 queued +
 1 blocked), **18 non-critique** (3 queued + 15 deferred).
+
+## 2026-07-24 (close) — WI-296 re-scoped: the "dead flat-DAG wiring" is NOT dead
+
+Describing the three non-critique queued rows in detail meant reading the code
+behind each, and that overturned WI-296's premise.
+
+**What 117-CRITIQUE saw, and why it generalised wrongly.** KIMI's note observed
+`dag.querySelectorAll('.wi')` matching 0 elements and `class="wi"` occurring 0
+times **in this repo's artifact**, and concluded the flat-DAG emitter, its CSS and
+its JS were retired dead code to delete. The observation was correct; the
+conclusion was not.
+
+**The `.wi` path is live — it is the DEFAULT for small projects.** `dag_svg()`
+(gen_trajectory.py:742) emits `<g class="wi {status}" …>`, and the When view keeps
+the flat DAG below the SR-089 `>3` rule (≤ 3 phases **and** ≤ 3 workstreams).
+Rendering a minimal scaffold produces **8 `class="wi"` nodes and 0
+`class="drill"`**; `test_when_view_below_thresholds_returns_none_flat_dag` and
+`test_a3_flat_dag_fallback_also_prefixes_the_status_glyph` both assert that path.
+This repo has **12 workstreams**, so it takes the tiered drill branch and never
+emits `.wi` — which is the whole of what the critic saw.
+
+**Why acting on it would have been a downstream-breaking change.** The kit *ships*.
+A freshly-scaffolded adopter repo has few phases and workstreams, so the flat DAG
+is the default rendering for precisely the copy-ready starting state the kit exists
+to provide. Deleting that emitter and its CSS would have broken the When tab for
+every new downstream project — while this repo's own suite stayed green, because
+this repo never renders it. A perfect instance of the trap `CLAUDE.md` warns about:
+*"flag anything that would force downstream repos to migrate."*
+
+**The residual defect is real, and inverted.** `HTML_TEMPLATE` (line 2312) emits
+"**Hover** a work item to highlight its neighbourhood" **unconditionally**, but the
+neighbourhood controller reads `.wi`/`.edge`. In tiered mode `wiNodes`/`wiEdges`
+are empty, so any project of real size shows a promise its render does not keep.
+(The JS is already guarded — `dag ? [...] : []` — so nothing errors; it just does
+nothing.) WI-296 now carries that, with the wrong premise recorded inline so nobody
+re-derives the deletion, and the fix being to make the sentence conditional on the
+emitter or to give drill blocks neighbourhood logic.
+
+**Method note.** My own WI-296 text told the builder to "confirm no render path
+reaches it first" — and I filed it without doing that myself. A caveat written into
+a row is not a substitute for checking. Two of the three non-critique rows survived
+scrutiny unchanged; the one sourced from a critic's *note* rather than a scored
+finding did not.
