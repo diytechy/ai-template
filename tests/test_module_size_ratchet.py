@@ -71,7 +71,12 @@ BASELINE = {
     # The bump is the `_FOCUSABLE` pattern plus the comment recording WHY the
     # predicate has two shapes, which is the part a successor would otherwise
     # "simplify" straight back into the defect. Reviewed bump, log 2026-07-25.
-    "gen_trajectory.py": 4633,
+    # -1 (4633 -> 4632), WI-297 dedupe: the G3 `dupes` step flagged the per-site
+    # svg wrapper the WI-297 edits had left duplicated across dag/sw/know, so the
+    # three now share `_svg_wrap`, which also folds `_svg_role` in — a call site
+    # can no longer emit a container without the content-driven role. Ratcheted
+    # DOWN, not sanctioned: the dedupe repaid both bumps above and one line more.
+    "gen_trajectory.py": 4632,
     # +11 (3452 -> 3463), WI-284: _regenerate_disposition_artifacts also runs
     # `gen_trajectory.py --status` at integrate/blocked-disposition so a closed
     # id drops from the generated frontier automatically (and the disposition

@@ -247,6 +247,21 @@ ICICLE_UNIT = 18  # px of height per TC leaf
 _FOCUSABLE = re.compile(r"tabindex\s*=|<a\s[^>]*href\s*=", re.I)
 
 
+def _svg_wrap(width, height, body):
+    """The `<svg>` wrapper shared by the graph emitters (dag / sw / know), which
+    differ only in their content. Folding `_svg_role` in makes the WI-297
+    invariant STRUCTURAL, not a rule each emitter must remember: a call site
+    cannot emit a container without the content-driven role, because it never
+    writes the tag. The per-site `role=` interpolation this replaced is the shape
+    that let a children-presentational role sit over focusable nodes."""
+    return (
+        '<svg viewBox="0 0 {:.0f} {:.0f}" width="{:.0f}" '
+        'preserveAspectRatio="xMinYMin meet" role="{}">{}</svg>'.format(
+            width, height, width, _svg_role(body), body
+        )
+    )
+
+
 def _svg_role(body):
     """The ARIA role for an emitted `<svg>`, chosen from its CONTENT: `group` when
     the body holds any focusable descendant, else `img` (which then owes a name).
@@ -787,13 +802,7 @@ def dag_svg(wis):
         }
 
     defs = _arrow_markers(("arrow", "arrowhead"))
-    body = defs + "".join(edges) + "".join(nodes)
-    svg = (
-        '<svg viewBox="0 0 {:.0f} {:.0f}" width="{:.0f}" '
-        'preserveAspectRatio="xMinYMin meet" role="{}">{}</svg>'.format(
-            width, height, width, _svg_role(body), body
-        )
-    )
+    svg = _svg_wrap(width, height, defs + "".join(edges) + "".join(nodes))
     return svg, details
 
 
@@ -928,12 +937,8 @@ def sw_graph(root, mods):
         "#sw .swarrow-head{fill:var(--muted);}"
         "#sw .swlab{fill:var(--muted);font-size:9px;}</style>"
     )
-    body = defs + style + "".join(edge_svg) + "".join(node_svg)
-    return (
-        '<svg viewBox="0 0 {:.0f} {:.0f}" width="{:.0f}" '
-        'preserveAspectRatio="xMinYMin meet" role="{}">{}</svg>'.format(
-            width, height, width, _svg_role(body), body
-        )
+    return _svg_wrap(
+        width, height, defs + style + "".join(edge_svg) + "".join(node_svg)
     )
 
 
@@ -2865,13 +2870,7 @@ def know_graph(root):
             "fill": fill,
         }
     defs = _arrow_markers(("knowarrow", "knowarrow-head"))
-    body = defs + "".join(edge_svg) + "".join(node_svg)
-    svg = (
-        '<svg viewBox="0 0 {:.0f} {:.0f}" width="{:.0f}" '
-        'preserveAspectRatio="xMinYMin meet" role="{}">{}</svg>'.format(
-            width, height, width, _svg_role(body), body
-        )
-    )
+    svg = _svg_wrap(width, height, defs + "".join(edge_svg) + "".join(node_svg))
     return svg, details
 
 

@@ -9,5 +9,5 @@
 # read the first non-comment line below, exactly as before.
 #
 # basis: SN=25 SR=110 LLR=101 TC=104 drafts=0 computed=G3 phase=4 per-phase=1=G3;2=G3;3=G3;4=G3
-# computed 2026-07-25 (as-of b3a15c6)
+# computed 2026-07-25 (as-of 6ba9643)
 G3
