@@ -12158,3 +12158,39 @@ another dispatch. Prefer verification over a tie-breaker critic.
 blocked by three anchors it never touched, each fix exposing the next. Under a
 whole-document rubric with an all-anchors bar and a fail-closed gate, a narrow
 render fix cannot close on its own merits. That is a design decision, not a defect.
+
+## 2026-07-24 (close) — OI-9/WI-300 filed; stale WI-272 reservation cleared
+
+An audit of the open surfaces, prompted by the owner asking whether everything was
+tracked, found one real gap and one loose end.
+
+**The gap was mine.** The render-gate-shape question had been escalated three
+times in prose this session and filed **nowhere** — not in `open-items.md`, not in
+`work-items.csv`. That is exactly the failure the registry exists to prevent: a
+decision that lives only in narrative is invisible to the ready frontier, the
+dashboard, and the next session. It was also the highest-leverage item open, since
+**7 of the 9 queued WIs are render rows gated behind it**. Now filed as **OI-9**
+(the decision brief: whether a render train must pass the WHOLE rubric to close,
+with blast radius, four options, and a recommendation) backed by **WI-300**
+(`deferred` — a decision, not build work; when ruled it either closes or spawns
+the implementing WI). The generated Open-items projection picked it up
+automatically.
+
+Recommendation recorded there, not decided here: keep the whole-document critique
+but let the **gate** waive findings already matched to an open WI, so only NEW
+defects block. It is the only option preserving whole-document judgment *and* full
+critic independence (the waiver lives in the integrator, so nothing leaks into the
+critique session) *and* incremental delivery — with the honest caveat that
+finding-to-WI matching is a weak key and must fail CLOSED.
+
+**Loose end cleared:** `refs/llm/reservations/WI-272` was still held from the
+stopped dispatcher run, on a row that is merely `queued`. A future `agent-resume`
+would have silently skipped WI-272 — the same stale-state class that cost time
+earlier today. Deleted; zero reservations remain, and the machine-local advisory
+block in `open-items.md` regenerated clean.
+
+**Audit result for the record:** 3 OI briefs → now 4, each backed by a WI row
+(OI-4/WI-097, OI-7/WI-123, OI-8/WI-278, OI-9/WI-300). 298 registry rows: 271 done,
+2 retired, 9 queued, 1 blocked, 15 deferred. `merge-to-main` was **not** an
+untracked item — it is WI-278/OI-8, which owns the branch-integration decision;
+earlier session summaries listed it loosely as though it were separate.

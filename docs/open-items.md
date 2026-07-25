@@ -72,6 +72,44 @@ decisions._
      the harness status-map step. The hand-authored briefs ABOVE this comment are
      byte-untouched by regeneration; each line here is a pointer, not a brief. -->
 
+## OI-9 — WI-300: does a render train have to pass the WHOLE rubric to close?
+
+- **One-line:** rule WI-300 (render-gate shape) — rec: keep the whole-document
+  critique, but let the GATE waive findings already tracked by an open WI, so
+  only NEW defects block.
+- **Decision:** a `Verification=Critique` SR is judged across the whole document
+  and "APPROVE requires every anchor satisfied", while the fail-closed perceptual
+  gate needs a CRITIQUE **APPROVE** at the train's reviewed head. Together these
+  mean a narrow render fix can never close on its own merits — any unrelated
+  failing anchor blocks it. Is that the intended behaviour?
+- **Evidence (2026-07-24):** WI-273 has been blocked by **three** anchors it never
+  touched — A4-hub, then A2 and A4-boundaries — each fix exposing the next, while
+  an adversarial REVIEW-A drove its code through every worst-class hunt and found
+  nothing. Its code is ready; the gate's shape is what holds it.
+- **Blast radius:** **7 of the 9 queued WIs** are render rows sitting behind this
+  (WI-272/292/294/295/296/297/299) plus blocked WI-273. Also downstream: the
+  critique-loop contract ships in
+  [PROCESS_OPTIONS.md](../project-trajectory/PROCESS_OPTIONS.md) *"Critique
+  verification"*, so whatever is ruled here is inherited by adopting repos.
+- **Options:** **(a) accept as designed** — perceptual debt is paid down first;
+  deliver the render backlog as ONE batch closed by a single critique (no process
+  change; costs incremental delivery, and the batch grows as each critique finds
+  more) · **(b) scope the critique to the changed surface** — restores
+  incremental delivery but structurally cannot see cross-view collisions, which
+  is exactly what SR-053 exists to catch · **(c) known-defect waiver at the GATE**
+  — the critic stays fully independent and reports everything; the integrator
+  blocks only on findings not already matched to an open WI · **(d) split anchors
+  into blocking vs advisory** — proportionate, but choosing leniently recreates
+  the "shipped it because nothing judged it" failure SN-024 exists to prevent.
+- **Recommendation:** **(c)**. It is the only option that keeps whole-document
+  judgment *and* full critic independence (the waiver lives in the gate, not the
+  brief — nothing leaks into the critique session) *and* restores incremental
+  delivery. Its real risk is finding-to-WI matching: anchor id + location is a
+  weak key, and a mis-match silently waives a new defect — so the matching must
+  fail CLOSED (unmatched ⇒ block) and every waived finding must carry an open WI.
+  If that machinery looks like too much, **(a)** is the honest fallback: it
+  changes nothing and simply admits render WIs are batch-delivered.
+
 ## Pending owner actions (generated)
 
 <!-- BEGIN GENERATED PENDING -->
@@ -81,5 +119,5 @@ _Pending owner actions — a generated projection of durable, committed-tree sta
 
 _Machine-local advisory — source conflicts, reservations, quarantines, and stranded-train attestations re-derived from `refs/llm/*` as of the dispatch machine at generation time. These refs do not transport with clone/push, so this section is regenerated every dispatch loop and is NOT part of the `--status --check` freshness gate (M-10/WI-266); a second clone (CI, another machine) may show it empty._
 
-- **WI-272** — awaiting owner attestation/ratification on train `1-g3-WI-272-230f`: the frozen plan at commit `e5bb2a735f7e` (`git show e5bb2a735f7e`); attest, amend, or park the row.
+_None currently observed on this machine._
 <!-- END GENERATED PENDING -->
