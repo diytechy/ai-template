@@ -125,6 +125,15 @@ SLOW_MODULES = frozenset(
         # its healthy in-process units still run at close + CI. The reviewer named
         # this the in-scope alternative to landing WI-275's fix from this WI.
         "test_session_stdin",  # run_session subprocess/shim transport (WI-275 reds)
+        # The toolchain prereq, re-tiered on the SAME precedent as test_session_stdin
+        # directly above: it is DESIGNED to red on a below-floor checkout, so leaving
+        # it in the bar would make the commit bar unpassable on such a machine — a
+        # developer could then never commit the very fix that installs the floor.
+        # Nothing is weakened: the `pytest_sessionstart` banner still fires on EVERY
+        # run including `-m smoke`, so the commit bar keeps the loud warning and
+        # loses only the hard stop; the hard failure lands at slice/phase close and
+        # in CI, which is where a gate result is claimed.
+        "test_prereq_toolchain",  # designed to red below the declared Python floor
     }
 )
 
@@ -158,6 +167,82 @@ def load_script(name):
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
     return mod
+
+
+# --- The interpreter-floor preflight -----------------------------------------
+# The kit declares ONE Python floor (`agent_common.MIN_PYTHON`) and dev-setup
+# provisions ./.venv to satisfy it. Run this suite under a BELOW-floor
+# interpreter and ~50 tests fail deep inside machinery that is working exactly as
+# designed: `seed_venv` builds its fixture venv from *this* process's base, so
+# the dispatcher's own WI-286 harness-floor gate refuses it ("agent_loop:
+# preflight failed"), and dev-setup's PATH probe finds no 3.11+ to offer. Those
+# reds read like branch defects but are purely environmental — measured
+# 2026-07-25 on a CLT-Python 3.9.6 .venv: 49 failures, a byte-identical set on a
+# clean tree. The guards below turn that into one loud, correct diagnosis plus
+# honest skips. The floor itself is READ from the source of truth, never
+# restated here, so a floor bump flows through untouched.
+
+
+def declared_python_floor():
+    """The kit's declared interpreter floor as a `(major, minor)` tuple, read
+    from `agent_common.MIN_PYTHON` — the same constant the dispatcher preflight
+    and dev-setup enforce."""
+    return tuple(load_script("agent_common").MIN_PYTHON)
+
+
+def floor_shortfall(exe=None):
+    """A one-line "running X, floor is Y" string when `exe` (default: this
+    process) is below the declared floor, else None.
+
+    The single predicate every floor guard and the prereq test share, so they can
+    never disagree about what "below floor" means. Probing is delegated to
+    `agent_common.interpreter_version`, which reads `sys.version_info` for this
+    process and RUNS any other path — so a stale .venv reports its own version.
+    Returns None (not a shortfall) when a foreign interpreter cannot be run at
+    all; that shape is the dispatcher preflight's to report, not this one's."""
+    floor = declared_python_floor()
+    ver = load_script("agent_common").interpreter_version(exe)
+    if ver is None or ver >= floor:
+        return None
+    return "running Python {} but the kit's declared floor is {}+".format(
+        ".".join(str(p) for p in ver), ".".join(str(p) for p in floor)
+    )
+
+
+def skip_below_floor(what):
+    """`pytest.skip` with the shortfall and the remedy when this interpreter
+    cannot satisfy the declared floor; a no-op otherwise.
+
+    For tests whose PRECONDITION is a floor-satisfying toolchain — not tests that
+    merely happen to fail without one. Skipping is the honest verdict there: the
+    behaviour under test genuinely cannot be exercised, so a red would be
+    reporting the environment as a defect. `test_prereq_toolchain.py` fails hard
+    in the same run, so a below-floor session can never read as green."""
+    short = floor_shortfall()
+    if short:
+        pytest.skip(
+            "{} — {}. Run `scripts/dev-setup --install` to provision a "
+            "floor-satisfying ./.venv (see test_prereq_toolchain.py).".format(
+                what, short
+            )
+        )
+
+
+def pytest_sessionstart(session):
+    """Announce a below-floor interpreter on stderr before a single test runs, on
+    the xdist CONTROLLER only (workers set `workerinput`, and one banner per
+    worker would be noise). Belt-and-braces for the prereq test: under `-q` a
+    failure summary can scroll far behind ~50 skips, and this lands first."""
+    if hasattr(session.config, "workerinput"):
+        return
+    short = floor_shortfall()
+    if short:
+        print(
+            "\n!! TOOLCHAIN PREREQ: {} — the toolchain-dependent tests will SKIP "
+            "and test_prereq_toolchain.py will FAIL. This is the environment, "
+            "not the branch. Remedy: scripts/dev-setup --install\n".format(short),
+            file=sys.stderr,
+        )
 
 
 def _active_cov_datafile():
@@ -248,6 +333,13 @@ def seed_venv(repo):
     it stays out of `git add` and the porcelain the dispatcher/integrator read."""
     import venv
 
+    # The contract above ("a genuine >=3.11 interpreter — this process's own
+    # base") is unmeetable below the floor: venv.create would hand the dispatcher
+    # a below-floor .venv and its WI-286 preflight would refuse it, surfacing an
+    # environment shortfall as ~48 opaque "preflight failed" reds.
+    skip_below_floor(
+        "this fixture must seed a floor-satisfying ./.venv from the running interpreter"
+    )
     venv.create(str(Path(repo) / ".venv"), with_pip=False)
 
 

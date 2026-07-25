@@ -16,7 +16,7 @@ import re
 import shutil
 import subprocess
 
-from conftest import KIT
+from conftest import KIT, skip_below_floor
 
 REPO_ROOT = KIT.parent  # the meta-repo root (this kit dogfoods dev-setup here)
 
@@ -404,6 +404,14 @@ def test_meta_devsetup_recreate_declines_stay_fail_closed(tmp_path):
     # WI-274 A(a), behavioral: --install on a sub-3.11 .venv OFFERS a recreate;
     # declining (interactive 'n' AND a closed stdin) keeps the fail-closed exit 1
     # and preserves the environment — the consent-first posture is unchanged.
+    # The recreate OFFER presupposes dev-setup can find a floor-satisfying
+    # interpreter to offer; with none installed it correctly bails earlier
+    # ("Python 3.11+ not found on PATH") and this assertion would report the
+    # environment as a defect. (Its --check sibling above needs no guard: it
+    # describes the stale venv without needing a replacement.)
+    skip_below_floor(
+        "dev-setup can only OFFER a recreate when a floor-satisfying interpreter exists"
+    )
     sh, root = _meta_devsetup_sh_scratch(tmp_path)
     # Interactive decline.
     proc = subprocess.run(
