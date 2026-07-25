@@ -1089,6 +1089,42 @@ def test_when_view_below_thresholds_returns_none_flat_dag(tmp_path):
     assert 'class="drill"' not in html_of(tmp_path)  # flat DAG, no tiered drill
 
 
+def test_wi296_interaction_copy_matches_the_emitter_that_actually_ran(tmp_path):
+    """WI-296: the When explainer must describe the emitter that RAN, not a promise
+    only one of them keeps.
+
+    Neighbourhood highlighting belongs to the FLAT emitter — the controller walks
+    `.wi`/`.edge` nodes only `dag_svg` produces. The sentence used to claim it
+    unconditionally, so above the `>3` rule (where the tiered drill view renders and
+    those node sets are empty) the dashboard promised an interaction it did not have.
+
+    Note what this does NOT do: the flat `.wi` path is live and is the default for a
+    small/newly-scaffolded repo, so its copy — and its emitter — stay exactly as they
+    were. 117-CRITIQUE read the empty `.wi` set in the meta-repo's own render as dead
+    code; deleting it would have broken the When tab for every downstream adopter.
+    """
+    # small registry -> flat DAG -> the neighbourhood promise is TRUE and kept
+    make_repo(tmp_path, SMALL_WIS)  # 2 workstreams, unphased -> 1 phase
+    assert gen(tmp_path).returncode == 0
+    flat = html_of(tmp_path)
+    assert 'class="drill"' not in flat
+    assert 'class="wi ' in flat  # the flat emitter really is the live one here
+    assert "highlight its neighbourhood" in flat
+    assert "Double-click</strong> a container" not in flat
+
+    # a registry above the >3 rule -> tiered drill -> the copy describes descending
+    tiered = tmp_path / "tiered"
+    tiered.mkdir()
+    tiered_repo(tiered, TIER_UNION_WIS)
+    assert gen(tiered).returncode == 0
+    drill = html_of(tiered)
+    assert 'class="drill"' in drill
+    assert "Double-click</strong> a container" in drill
+    assert "the breadcrumb returns to any ancestor" in drill
+    # the promise the tiered render cannot keep is gone
+    assert "highlight its neighbourhood" not in drill
+
+
 def test_when_view_is_deterministic_and_check_stable(tmp_path):
     # Sorted inputs, no clocks -> a re-render is byte-identical and --check passes.
     tiered_repo(tmp_path, TIER_UNION_WIS)

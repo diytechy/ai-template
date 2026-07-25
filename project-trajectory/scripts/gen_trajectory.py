@@ -2309,8 +2309,7 @@ HTML_TEMPLATE = string.Template("""<!doctype html>
       column past its deepest hard predecessor). <strong>Solid edges block</strong>
       (hard dependencies); <strong>dashed edges are advisory ordering</strong> (soft,
       <code>~</code>-prefixed — they never gate readiness). Cross-workstream edges are
-      the seams. <strong>Hover</strong> a work item to highlight its neighbourhood;
-      <strong>click</strong> for its detail. Plain SVG — no libraries, fully
+      the seams. $dag_interaction Plain SVG — no libraries, fully
       offline.</p>
       <div class="layout">
         $scroll_cue
@@ -3666,7 +3665,24 @@ def build_html(root, wis):
     # layers once a tier holds more than 3 members; at <= 3 phases and <= 3
     # workstreams `when_view` returns None, so the flat SVG DAG renders instead
     # (byte-identical to a small registry's roadmap).
-    dag_view = when_view(root, wis) or dag
+    tiered_dag = when_view(root, wis)
+    dag_view = tiered_dag or dag
+    # WI-296: the interaction sentence must describe the emitter that ACTUALLY ran.
+    # It used to promise "Hover a work item to highlight its neighbourhood"
+    # unconditionally, but neighbourhood highlighting is the FLAT emitter's — the
+    # controller walks `.wi`/`.edge` nodes only `dag_svg` produces. Above the >3 rule
+    # the tiered drill view renders instead, where those node sets are empty and the
+    # promise silently went unmet (117-CRITIQUE read the empty `.wi` set in THIS
+    # repo's render as dead code; it is not — it is the small-project default, and the
+    # flat path is what every freshly scaffolded downstream repo gets).
+    dag_interaction = (
+        "<strong>Double-click</strong> a container — or focus it and press Enter — "
+        "to descend a layer, and the breadcrumb returns to any ancestor; "
+        "<strong>click</strong> a work item for its detail."
+        if tiered_dag
+        else "<strong>Hover</strong> a work item to highlight its neighbourhood; "
+        "<strong>click</strong> for its detail."
+    )
     extra_tabs, extra_panels = [], []
     mods = sw_modules(root)
     if mods:
@@ -3728,6 +3744,7 @@ def build_html(root, wis):
         arch_details=j(arch_details),
         arch_desc=j(arch_desc),
         dag_svg=dag_view,
+        dag_interaction=dag_interaction,
         wi_details=j(wi_details),
         scroll_cue=SCROLL_CUE,
     )

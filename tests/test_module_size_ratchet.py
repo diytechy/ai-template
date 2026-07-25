@@ -48,7 +48,14 @@ BASELINE = {
     # --accent) plus the rationale comment that keeps a successor palette change
     # off it. Nearly all of the bump is that comment; the code delta is 3 lines.
     # Reviewed bump, reason in docs/log.md 2026-07-24. Re-stamp down with WI-280.
-    "gen_trajectory.py": 4598,
+    # +17 (4598 -> 4615), WI-296: the When explainer's interaction sentence is
+    # now chosen by which emitter ran ($dag_interaction). It promised
+    # "hover to highlight its neighbourhood" unconditionally, but that is the
+    # FLAT emitter's behaviour — above the >3 rule the tiered drill renders and
+    # the `.wi`/`.edge` sets the controller walks are empty. Most of the bump is
+    # the comment recording that the flat path is LIVE (the small-project
+    # default) and must not be deleted. Reviewed bump, log 2026-07-24.
+    "gen_trajectory.py": 4615,
     # +11 (3452 -> 3463), WI-284: _regenerate_disposition_artifacts also runs
     # `gen_trajectory.py --status` at integrate/blocked-disposition so a closed
     # id drops from the generated frontier automatically (and the disposition

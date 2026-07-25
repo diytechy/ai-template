@@ -12354,3 +12354,46 @@ justification above does not extend to it.
 Bar: commit tier **405 passed / 15.0 s**, `check_docs` 0 broken, dogfood-sync 23
 passed, full suite **1480 passed, 7 skipped** (500.3 s). Size ratchet re-stamped
 **3768 → 3889**; complexity ratchet untouched (both new functions under 10).
+
+## 2026-07-24 — WI-296 DONE: the When explainer describes the emitter that ran
+
+Closed as the **narrowed** defect. The row's original premise — "the flat-DAG
+emitter, CSS and JS are retired dead code, drop them" — was verified **wrong**
+before any code was touched, and the verification is recorded in the row so nobody
+re-derives the deletion.
+
+**What was actually broken.** `HTML_TEMPLATE` promised "**Hover** a work item to
+highlight its neighbourhood" **unconditionally**, but neighbourhood highlighting is
+the *flat* emitter's: the controller walks the `.wi`/`.edge` nodes only `dag_svg`
+produces. Above the SR-089 `>3` rule the tiered drill view renders instead, those
+node sets are empty, and the dashboard promised an interaction it could not perform.
+The sentence is now chosen by which emitter ran (`$dag_interaction`) — the flat path
+keeps the neighbourhood copy (true there), the tiered path describes descending:
+double-click or Enter to descend, breadcrumb to return, click for detail.
+
+**What was deliberately NOT done, and why it matters.** A minimal scaffold emits
+**8 `class="wi"` nodes and 0 `class="drill"`**, and two tests already assert that
+path. The kit *ships*: a freshly scaffolded adopter has few phases and workstreams,
+so the flat DAG is the **default** render for exactly the copy-ready starting state
+the kit exists to provide. Deleting it would have broken the When tab for every
+downstream project **while this repo's suite stayed green**, because this repo (12
+workstreams) never renders it. That is the failure mode `CLAUDE.md` names — "flag
+anything that would force downstream repos to migrate" — reached from a critic note
+that generalised one repo's artifact to the code's reachability.
+
+The new test asserts **both** branches, and also asserts the flat emitter is still
+live (`class="wi "` present in the small render) — so the guard now fails if a
+future session deletes the path this row originally proposed deleting. It was
+confirmed to fail against the unconditional copy.
+
+Bar: commit tier **405 passed / 14.2 s** (this test lives in a scaffold-heavy
+module, outside the smoke tier by design), `check_docs` 0 broken, full suite
+**1481 passed, 7 skipped** (499.2 s). Size ratchet **4598 → 4615**, mostly the
+comment recording why the flat path stays.
+
+**Expected consequence, stated up front:** this touches `gen_trajectory.py`, so the
+path-based `perceptual-stale` check re-fires on commit and the trajectory gate is
+red until a fresh critique post-dates it. (It read clean *before* the commit only
+because the staleness check is vacuous on an uncommitted render surface — the same
+trap recorded earlier today.) The three WIs in this sitting were chosen precisely
+because they do not need the OI-9 ruling; this one still owes a critique re-dispatch.
