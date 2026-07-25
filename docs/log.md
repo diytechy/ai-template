@@ -12565,3 +12565,60 @@ links / 0 broken; trace `orphans=0 integrity=0`; gate holds G3 (`drafts=0`). The
 suite is NOT a valid gate result on this machine — `.venv` is Python 3.9.6, below the
 3.11 floor, and no 3.11+ interpreter exists here. Module-size ratchet: 4615 → 4624 →
 4633, two reviewed bumps, reasons at the baseline.
+
+## 2026-07-25 (late) — WI-302/303 toolchain, and the FIRST real G3 harness run
+
+**WI-302 — a remedy that could not satisfy its own floor.** The owner ran dev-setup
+expecting it to seed the interpreter. It cannot: dev-setup DETECTS a runtime and
+pip-installs the dev tools INTO `./.venv`, which needs a Python to already exist. But
+the printed hint — the whole user experience when the floor is unmet — named
+`xcode-select --install`, whose Command Line Tools ship Python **3.9**, below the very
+floor that line reports. Following it returned the reader to an unchanged report with
+no exit. The same dead end shipped downstream in `dev-setup.template.sh`. Hint is now
+platform-aware and names provisioners that actually ship 3.11+, and says explicitly
+that CLT is not one. New `offer_python()` makes one consented offer **only through a
+provisioner already installed** (uv/pyenv/brew), re-running discovery after an accept.
+**Design ruling:** the kit never bootstraps a provisioner and never pipes a download
+into a shell — pinned executably across all 8 setup scripts.
+
+**WI-303 — the double-click now finishes.** `dev-setup.command` gained a runtime rung:
+on no 3.11+, one consented `[y/N]`, then the **pinned** python.org `.pkg`, verified
+**twice before anything executes** — pinned SHA-256, then PSF Developer-ID signature +
+Apple notarization. Any gate failing refuses with nothing run. This **refines** WI-302
+rather than reversing it: that ruling forbids executing *unverifiable* code, and
+`curl | sh` is unverifiable by construction (a server can serve different bytes to a
+pipe), whereas a pinned notarized artifact is proved before it runs. Scope held tight —
+the only place in the kit that fetches a runtime; the shipped template stays
+detect-only. Fail-closed verified with fakes: tampered bytes → CHECKSUM MISMATCH with
+booby-trapped `sudo`/`installer` stubs printing nothing; wrong team id → SIGNATURE
+CHECK FAILED; real artifact → both gates pass.
+
+**Result: `.venv` is Python 3.13.14** and every dev-setup rung reports `[ok]`.
+
+**The first G3 harness run this machine has ever been able to execute.** Full suite
+went `49 failed / 1436 passed` (below floor, no guards) → `2 failed / 1381 passed /
+107 skipped` (below floor, WI-301 guards) → **`1498 passed, 3 skipped`**. The 104
+formerly-skipped tests now execute, so the whole `agent_loop_*` dispatcher/worker/
+worktree layer is genuinely exercised for the first time in this sitting.
+
+`check.py --gate G3 --jobs 0`: **15 PASS / 2 FAIL**, tests+coverage `1499 passed,
+2 skipped`, coverage **91.90%** against the 85 floor. **The derived gate is untouched
+and still G3** — `docs/gate` is computed from artifact states; what fails is the
+*harness at* G3. Both failures were invisible rather than new:
+
+- **`dupes`** — five blocks. One was ours: the WI-297 edits left the svg wrapper
+  duplicated across dag/sw/know. Fixed, not sanctioned — `_svg_wrap` now folds
+  `_svg_role` in, so a call site cannot emit a container without the content-driven
+  role, making the WI-297 invariant structural rather than remembered. Byte-identical
+  output; the module **ratcheted DOWN** 4633 → 4632, repaying both WI-297 bumps. The
+  other four are pre-existing in `agent_dispatch.py` (verified present at `69b11fd`)
+  → **WI-304**, filed rather than sanctioned: a census-line sanction IS accepting the
+  duplication and must be deliberate, never a way to green a gate.
+- **`trajectory --strict`** — `perceptual-stale` promoted WARN→ERROR, because
+  `gen_trajectory.py` changed after `118-CRITIQUE`. **The checker is right**, and
+  fail-closed per the owner's 2026-07-20 ruling. It clears only with a fresh
+  family-heterogeneous CRITIQUE, currently unobtainable (no non-Anthropic model
+  available) — which is itself the argument for finishing WI-300's (f) mechanization,
+  since a mechanized anchor stops depending on a critic that cannot be reached.
+
+Nothing was reverted or sanctioned to make a step green.
