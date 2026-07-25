@@ -14,6 +14,10 @@ home elsewhere — don't restate it here:
   [`PROJECT_STATE.html`](../PROJECT_STATE.html).
 - **Spec-of-record + rubric conventions:** [specs/README.md](specs/README.md) ·
   [rubrics/README.md](rubrics/README.md) (dogfooded scaffold boilerplate).
+- **Resuming in a new session / closing the template out:**
+  [wrap-up-plan.md](wrap-up-plan.md) — sequencing, the deferred-backlog review with
+  queue/retire recommendations, and the standing hazards. A pointer doc: this file
+  and the registry stay authoritative.
 - **Design history:** [archive/](archive/README.md).
 - **Process (kit source):** [PROCESS.md](../project-trajectory/PROCESS.md) ·
   [PROCESS_OPTIONS.md](../project-trajectory/PROCESS_OPTIONS.md) (this repo has
