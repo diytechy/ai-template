@@ -124,7 +124,14 @@ BASELINE = {
     # sides are stale once merged, so taking a side is always wrong — this is
     # what forced the hand-integration of WI-274/276/282. New behaviour,
     # reviewed bump; reason in docs/log.md 2026-07-24. Re-stamp down w/ WI-280.
-    "agent_dispatch.py": 3889,
+    # -4 (3889 -> 3885), WI-304: the four pre-existing `dupes` blocks are gone,
+    # extracted rather than sanctioned — `_run_captured` states the subprocess
+    # capture contract once for seven call sites, `_regen_failure` the regen
+    # family's shared failure verdict for two. Ratcheted DOWN: the two helpers'
+    # docstrings cost less than the repetition they replaced, and the five raw
+    # `[-N:]` tail slices now route through `_failure_tail`. Re-stamp down with
+    # WI-280.
+    "agent_dispatch.py": 3885,
     "agent_loop.py": 3042,
     "trace.py": 2206,
     "check_trajectory.py": 1926,

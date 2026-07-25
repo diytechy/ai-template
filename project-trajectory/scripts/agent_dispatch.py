@@ -824,17 +824,37 @@ def ensure_integration_ref(root, journal):
     return dev, None
 
 
-def registry_rows_at(root, ref):
-    """The WI registry rows as read from `ref` (the integrated disposition),
-    falling back to the checkout when unreadable. The integration ref — not
-    the development checkout — is the scheduling authority once it exists."""
-    proc = subprocess.run(
-        ["git", "-C", str(root), "show", ref + ":docs/requirements/work-items.csv"],
+def _run_captured(argv, cwd=None, **extra):
+    """`subprocess.run` under the dispatcher's ONE capture contract (WI-304).
+
+    utf-8 + `errors="replace"` like the kit's own `git()` wrapper: a child
+    emitting a single locale-undecodable byte must mojibake, not crash the
+    integrator mid-composition (repo-review 2026-07-21 L-25). `stdin=DEVNULL` so
+    a child that would prompt on a TTY takes its default instead of hanging a
+    walk-away run. `extra` carries per-call additions such as `timeout=`.
+
+    Seven call sites repeated these five kwargs verbatim, which is what the G3
+    `dupes` step flagged. Stating the contract once means a future site cannot
+    half-adopt it — dropping `errors="replace"` alone would reintroduce the L-25
+    crash on exactly the rare input nobody tests with."""
+    return subprocess.run(
+        argv,
+        cwd=str(cwd) if cwd is not None else None,
         capture_output=True,
         text=True,
         encoding="utf-8",
         errors="replace",
         stdin=subprocess.DEVNULL,
+        **extra,
+    )
+
+
+def registry_rows_at(root, ref):
+    """The WI registry rows as read from `ref` (the integrated disposition),
+    falling back to the checkout when unreadable. The integration ref — not
+    the development checkout — is the scheduling authority once it exists."""
+    proc = _run_captured(
+        ["git", "-C", str(root), "show", ref + ":docs/requirements/work-items.csv"]
     )
     if proc.returncode != 0:
         return None
@@ -1387,24 +1407,13 @@ def _run_combined_bar(worktree, root):
     if not argv:  # declared but empty: fail closed, don't run subprocess([])
         return False, "declared test command is empty"
     try:
-        proc = subprocess.run(
-            argv,
-            cwd=str(worktree),
-            capture_output=True,
-            text=True,
-            # utf-8 + replace like the kit's own git() wrapper: a downstream test
-            # suite emitting one locale-undecodable byte must mojibake, not crash
-            # the integrator mid-composition (repo-review 2026-07-21 L-25).
-            encoding="utf-8",
-            errors="replace",
-            stdin=subprocess.DEVNULL,
-        )
+        proc = _run_captured(argv, worktree)
     except OSError as exc:
         # SR-008: a declared bar whose binary is absent/unrunnable is a RED bar
         # the integrator reworks — not a FileNotFoundError that crashes the whole
         # walk-away dispatcher (exit 1) after the worker is ready. Fail closed.
         return False, "test command not runnable: {}".format(exc)
-    tail = ((proc.stdout or "") + (proc.stderr or "")).strip()[-400:]
+    tail = _failure_tail((proc.stdout or "") + (proc.stderr or ""), 400)
     return proc.returncode == 0, ("pass" if proc.returncode == 0 else tail)
 
 
@@ -1425,6 +1434,26 @@ _DISPOSITION_REGEN = (
 )
 
 
+def _regen_failure(proc, label, what, budget=400):
+    """The regen family's shared "did that child fail?" verdict (WI-304).
+
+    Returns a `(False, reason)` pair when `proc` failed, else None so the caller
+    continues its loop. The disposition and conflict regen walks reported this
+    identically — the second block the G3 `dupes` step flagged.
+
+    `_failure_tail` (not a raw `[-budget:]` slice) is deliberate: it prefers the
+    LAST `  FAIL  <step>` block, because blind tail-truncation is exactly what hid
+    the real error behind a leading passing banner in the WI-229 blocked-
+    disposition loop. It degrades to the same tail bound when there is no FAIL
+    block, so routing every site through it is a strict improvement."""
+    if proc.returncode == 0:
+        return None
+    tail = _failure_tail((proc.stdout or "") + (proc.stderr or ""), budget)
+    return False, "{} regen failed ({}): {}".format(
+        what, label, tail or "exit {}".format(proc.returncode)
+    )
+
+
 def _regenerate_disposition_artifacts(worktree):
     """Regenerate the freshness-gated views a disposition stales, in the staging
     worktree before its commit, so it passes the same pre-commit floor (see
@@ -1434,20 +1463,13 @@ def _regenerate_disposition_artifacts(worktree):
     for _step, name, flags, markers in _DISPOSITION_REGEN:
         if not any((worktree / m).exists() for m in markers):
             continue
-        proc = subprocess.run(
+        proc = _run_captured(
             [sys.executable, str(scripts / name), "--root", str(worktree), *flags],
-            cwd=str(worktree),
-            capture_output=True,
-            text=True,
-            encoding="utf-8",
-            errors="replace",
-            stdin=subprocess.DEVNULL,
+            worktree,
         )
-        if proc.returncode != 0:
-            tail = ((proc.stdout or "") + (proc.stderr or "")).strip()[-400:]
-            return False, "disposition regen failed ({}): {}".format(
-                name, tail or "exit {}".format(proc.returncode)
-            )
+        failed = _regen_failure(proc, name, "disposition")
+        if failed:
+            return failed
     return True, ""
 
 
@@ -1614,7 +1636,7 @@ def _regen_dupes_census(wt, rels):
     the fingerprint body is re-emitted, from `check_dupes.py --emit-census` against
     the merged tree's own declared `[paths] src`."""
     scripts = Path(__file__).resolve().parent
-    proc = subprocess.run(
+    proc = _run_captured(
         [
             sys.executable,
             str(scripts / "check_dupes.py"),
@@ -1622,15 +1644,10 @@ def _regen_dupes_census(wt, rels):
             "--src",
             _declared_src(wt),
         ],
-        cwd=str(wt),
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-        stdin=subprocess.DEVNULL,
+        wt,
     )
     if proc.returncode != 0:
-        tail = ((proc.stdout or "") + (proc.stderr or "")).strip()[-300:]
+        tail = _failure_tail((proc.stdout or "") + (proc.stderr or ""), 300)
         return False, tail or "exit {}".format(proc.returncode)
     body = [ln for ln in proc.stdout.splitlines() if ln.strip()]
     for rel in rels:
@@ -1880,13 +1897,8 @@ def _stage_rows(wt, stage, rel):
     parsed straight through the csv module — so a quoted cell with an embedded
     newline survives instead of being collapsed and corrupting an untouched
     neighbor row on re-serialization (WI-231 rework)."""
-    proc = subprocess.run(
-        ["git", "-C", str(wt), "cat-file", "-p", ":{}:{}".format(stage, rel)],
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-        stdin=subprocess.DEVNULL,
+    proc = _run_captured(
+        ["git", "-C", str(wt), "cat-file", "-p", ":{}:{}".format(stage, rel)]
     )
     if proc.returncode != 0:
         return None, []
@@ -1978,20 +1990,10 @@ def _regenerate_generated(wt, paths, artifacts):
         argv = _generated_regen_argv(kind, wt)
         if argv is None:
             continue
-        proc = subprocess.run(
-            argv,
-            cwd=str(wt),
-            capture_output=True,
-            text=True,
-            encoding="utf-8",
-            errors="replace",
-            stdin=subprocess.DEVNULL,
-        )
-        if proc.returncode != 0:
-            tail = ((proc.stdout or "") + (proc.stderr or "")).strip()[-400:]
-            return False, "conflict regen failed ({}): {}".format(
-                kind, tail or "exit {}".format(proc.returncode)
-            )
+        proc = _run_captured(argv, wt)
+        failed = _regen_failure(proc, kind, "conflict")
+        if failed:
+            return failed
     return True, ""
 
 
@@ -3386,14 +3388,8 @@ def _regenerate_pending(root, journal):
         return
     gen = Path(__file__).resolve().parent / "gen_trajectory.py"
     try:
-        proc = subprocess.run(
-            [sys.executable, str(gen), "--root", str(root), "--status"],
-            capture_output=True,
-            text=True,
-            encoding="utf-8",
-            errors="replace",
-            stdin=subprocess.DEVNULL,
-            timeout=120,
+        proc = _run_captured(
+            [sys.executable, str(gen), "--root", str(root), "--status"], timeout=120
         )
     except subprocess.TimeoutExpired:
         journal.event("pending-regen-failed", reason="timeout after 120s")
@@ -3402,7 +3398,7 @@ def _regenerate_pending(root, journal):
         journal.event("pending-regen-failed", reason=_failure_tail(str(exc)))
         return
     if proc.returncode != 0:
-        tail = ((proc.stdout or "") + (proc.stderr or "")).strip()[-200:]
+        tail = _failure_tail((proc.stdout or "") + (proc.stderr or ""), 200)
         journal.event(
             "pending-regen-failed",
             reason=tail or "exit {}".format(proc.returncode),

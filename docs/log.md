@@ -12622,3 +12622,42 @@ and still G3** — `docs/gate` is computed from artifact states; what fails is t
   since a mechanized anchor stops depending on a critic that cannot be reached.
 
 Nothing was reverted or sanctioned to make a step green.
+
+## 2026-07-25 (late) — WI-304 DONE: the G3 `dupes` blocks extracted, not sanctioned
+
+**The row's own framing was wrong and is retracted.** WI-304 was filed with a soft
+edge to WI-280 calling decomposition "WI-280's subject." Reading the four blocks
+showed they are not architectural at all: two boilerplate patterns — the 5-kwarg
+`subprocess.run` capture block (7 sites) and the run-and-report failure verdict
+(2 sites) — i.e. extract-two-helpers work needing nothing from WI-280's typed-value-
+object program. Deferring behind WI-280 would have parked a red G3 step indefinitely
+for an unrelated reason.
+
+**Fixed by extraction.** `_run_captured(argv, cwd=None, **extra)` states the capture
+contract once; `_regen_failure(proc, label, what, budget)` states the regen family's
+failure verdict once. `check_dupes` now reports **OK — no duplicate blocks in 35
+file(s)**, and `docs/dupes-allow` gained **nothing**: the census stays a record of
+legitimate repetition instead of absorbing copy-paste. `agent_dispatch.py` **ratcheted
+DOWN** 3889 → 3885.
+
+**The latent defect found en route, which matters more than the duplication.** The
+five raw `tail = (...).strip()[-N:]` slices were doing the naive thing this codebase
+had already learned was wrong. `agent_common._failure_tail` exists — and is used ~20×
+in this same file — precisely because blind tail-truncation hid the real error behind
+a leading PASSING banner in the WI-229 blocked-disposition loop (three runs reporting
+`=== derived-gate : ...` while the actual `check_trajectory: ERROR - blocked-ref` sat
+off the end). It prefers the last `  FAIL  <step>` block and degrades to the same tail
+bound otherwise. All five sites now route through it, each keeping its own budget
+(400/400/300/400/200). Five places in the dispatcher could previously truncate away
+the reason a dispatch failed. **The duplication was the symptom; the error-hiding was
+the disease** — which is the case for keeping the `dupes` step honest rather than
+sanctioning past it.
+
+The 400/300/200 variance was flagged as possibly arbitrary during the options
+breakdown and was deliberately **kept**: each bound belongs to its own call site's
+output shape, and collapsing them is a change no evidence supports.
+
+Bars: full suite **1497 passed, 3 skipped** (the dispatcher paths genuinely execute on
+3.13.14 now); `check_dupes` OK; ruff clean. The `dupes` G3 step is green; the G3
+harness's remaining failure is `trajectory --strict` (`perceptual-stale`), which needs
+a fresh family-heterogeneous CRITIQUE and is unchanged by this work.
