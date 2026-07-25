@@ -112,3 +112,5 @@ resource: "generated"
 | [TC-099](TC-099.md) | Inspect the eleven legacy SR rows, their SupersededBy graph, replacement targets, and pos… |
 | [TC-100](TC-100.md) | Run check_trajectory over registries with a done+SpecRef row, an uncited live spec, a def… |
 | [TC-101](TC-101.md) | Run the check_coverage suite; a module below its floor exits 1 naming it, a declared modu… |
+| [TC-102](TC-102.md) | Generate the dashboard against two fixture registries and assert the SR-089 '>3' rule mec… |
+| [TC-103](TC-103.md) | Generate the dashboard from a tiered fixture registry and assert the drill emits <nav cla… |
