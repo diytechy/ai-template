@@ -14444,3 +14444,26 @@ orphan check applies to each before anyone clears them.
 `docs/pause` **stays**, with its reason rewritten for the current frontier: the
 three 121-CRITIQUE rows are render rows, so the deadlock that pause exists for
 is live again.
+
+### The committed re-attest brief was STALE — refreshed (same day)
+
+`docs/ratify/2026-07-26-reattest.md` was generated at the WI-316 close and never
+regenerated as today's amendments landed, so it was missing **LLR-105, TC-108,
+SR-054's later AcceptanceCriteria edit, and the LLR-116/117 + TC-121/122 rows
+added since**. An owner reading it would have blessed six `Modified` rows having
+seen four. Refreshed on the SAME `--since a5052a913` baseline (113 lines added).
+
+**The trap underneath it is worth stating, because it points the other way from
+the one already recorded.** Re-running with NO `--since` produces a brief in
+which **SR-052 and SR-053 are empty** — "no cell differs from the baseline
+beyond the Status flip". That is not a bug and not a nothing: their real
+amendment was `Verification: Critique → Test`, which landed at `911a7ab` /
+`0bba66c` while both rows still read `Verified`, and WI-316 flipped them to
+`Modified` afterwards at `4cc61fa`. The auto-baseline is "the newest revision
+where the row read `Verified`" — which is *after* the amendment, so it correctly
+reports no delta. **A pre-regime streak needs `--since`; the earlier lesson was
+that a bad `--since` FABRICATES a brief, and this is its mirror — no `--since`
+EMPTIES one.** Both fail silently, and both are read by a human about to attest.
+
+Rule of thumb going in: **a `Modified` section with no cells is a signal to
+check the baseline, never a row that is free to bless.**
