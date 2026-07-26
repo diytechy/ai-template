@@ -13194,3 +13194,68 @@ pins these files to LF, so the committed content was always clean. If `dupes`
 reds after a scripted edit, check line endings before believing it.
 
 **Verified at slice close:** full suite **1520 passed, 7 skipped** (474 s).
+
+
+## 2026-07-25 — Owner directive: mechanize the "perceptual residue" (WI-309…312 filed; WI-309 landed)
+
+**Owner ruling, in their words:** *"ideally we can get to the point where
+critiques are not required — if the test and render methods produce quality
+graphics with considerations for these aspects as mechanical tests, critiques can
+be retired."* So the residue examination was run with that as the question, and
+it changes the answer completely.
+
+### The examination (2026-07-25, against the shipped artifact)
+
+Six of the nine child LLRs delegate a leftover to their coarse parent. **Measured,
+none of the four distinct clauses is perceptual. They are UNMEASURED** — and each
+would fail today, which is the finding that matters: real defects were sitting
+behind the word "perceptual".
+
+| Residue | Verdict | Evidence |
+|---|---|---|
+| **LLR-102 / U5** "near-duplicate but non-identical hues" | arithmetic | The repo already computes pairwise ΔE — only *within* `PHASE_ACCENTS`. Across vocabularies **7 pairs fall under the same 15 floor** (worst 9.5: `SR` `#0e7490` vs `phase[3]` `#155e75`); `sw-node` `external`/`component` is **8.6**, the closest pair in the document |
+| **LLR-103 / U3** "spacing, exact visual weight" | set membership | 8 distinct `stroke-width`, 7 `opacity`, 5 `border-radius`, 4 `rx` |
+| **LLR-104 / U1** "sizes read as visually uniform" | set membership | **18 raw literals** against 5 tokens |
+| **LLR-101 / A2** "reads as well-named" | ~90% mechanical | 0 empty names, but **57 bare-id-only** and **14 duplicated across 74 nodes**, worst `contains → descend` **×39** |
+
+Filed as **WI-309…WI-312** against a shared spec
+([dashboard-residue-mechanization.md](specs/dashboard-residue-mechanization.md)).
+When all four land, SR-052 and SR-053 flip with an **empty** residue rather than
+accepted losses.
+
+**What this does NOT do, stated plainly:** it does not retire critiques.
+SR-054's four clauses (entry point *obvious*, reader stays *oriented*, truncation
+reads as *more-available*, crossings *tolerable*) describe a reader's experience,
+not the artifact's properties, and `perceptual-stale` fires while **any** SR is
+`Critique`. Two of those four (T4, T7) are mechanizable with a browser harness;
+two are not without redefining them as proxies. That boundary is a separate
+owner decision.
+
+### WI-309 — the type scale, declared
+
+Eleven steps in **three documented families**, because there genuinely are three
+and claiming "one scale" would be false: **node** (px — SVG geometry is fixed px,
+so a rem resizes labels out of their boxes), **page** (rem), and one **relative**
+step (em, for text sized against its parent — inline `code`, a table sub-line).
+
+Four groups were near-duplicate steps for one role and merged into the nearer
+one — `.7`/`.75rem`, `.9`/`.95`/`.98rem`, `1.05`/`1.1rem`, `8.5`/`9px`, all
+**3–7% apart**. Nobody distinguishes those; nothing justified them. Two literals
+(`.85rem`, `.8rem`) were byte-identical to a token that simply wasn't being used.
+
+**Two things the guard had to learn.** First, it scopes to `<style>` blocks and
+inline `style=` attributes: the rendered document *quotes* CSS inside prose (a
+registry `Detail` explaining a past palette fix names `font-size:13px`), and a
+whole-document scan judges documentation as if it were code. Second — and this is
+the **third** time — the emitter sweep was blind to a renderer: `sw_graph`'s flat
+form has its own `<style>` block, and `containerize` earns the *containment
+drill* instead, so the fixture list never rendered it. The reversion "a raw
+literal creeps back into an SVG emitter" **passed** until `how-sw-flat` was
+added. `_every_emitter_document` is now the single place that fixture list
+lives, with that history written into its docstring.
+
+All four reversions fail against the finished guard; restored, it passes.
+
+**Ratchet:** `gen_trajectory.py` 4872 → 4888 — the declarations plus the comment
+saying why three families rather than one, which is exactly what a successor
+would otherwise "simplify" away. Every call site got *shorter*. Reviewed bump.

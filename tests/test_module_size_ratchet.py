@@ -110,7 +110,15 @@ BASELINE = {
     # and WHY the clamp was a defect rather than a shared swatch (it ran before
     # the tooltip, accessible name, and detail JSON were built, so a parked row
     # SAID queued). Reviewed bump, log 2026-07-25. Re-stamp down with WI-280.
-    "gen_trajectory.py": 4872,
+    # +16 (4872 -> 4888), WI-309 (U1 core): the type scale becomes DECLARED —
+    # eleven steps in three documented families (node px / page rem / relative
+    # em) replacing 18 raw font-size literals, of which four groups were
+    # near-duplicate steps for one role 3-7% apart. The line delta is the
+    # declarations plus the comment stating why three families rather than one
+    # (a rem inside an SVG resizes labels out of fixed-px boxes) — the part a
+    # successor would otherwise 'simplify' back into a single unit. Every call
+    # site got SHORTER (a literal became a var()). Reviewed bump, log 2026-07-25.
+    "gen_trajectory.py": 4888,
     # +11 (3452 -> 3463), WI-284: _regenerate_disposition_artifacts also runs
     # `gen_trajectory.py --status` at integrate/blocked-disposition so a closed
     # id drops from the generated frontier automatically (and the disposition

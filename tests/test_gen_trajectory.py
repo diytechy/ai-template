@@ -1993,6 +1993,85 @@ def test_u3_phase_legend_renders_through_the_shared_legend_component(tmp_path):
     )
 
 
+# WI-309: the U1 residue ("whether the resulting sizes read as visually
+# uniform") was undecidable only because the scale was never DECLARED. Declare
+# it and the question becomes set membership — which is this test.
+
+# The three families, and why there are three rather than one. A `rem` inside an
+# SVG would resize labels out of boxes whose geometry is fixed px; an `em` sizes
+# against its parent, which is the point for inline `code`. Claiming "one scale"
+# across them would be false, so the invariant is "every size names a declared
+# step", not "every size shares one unit".
+TYPE_SCALE_FAMILIES = {
+    "node (px, fixed SVG geometry)": ["--nlabel", "--nsub", "--nhead"],
+    "page (rem, scales with root)": [
+        "--tiny",
+        "--xsmall",
+        "--small",
+        "--body",
+        "--lead",
+        "--display",
+        "--hero",
+    ],
+    "relative (em, sizes against parent)": ["--rel"],
+}
+
+
+def _style_surfaces(html):
+    """Only where a font-size actually PAINTS: `<style>` blocks and inline
+    `style=` attributes. The rendered document also *quotes* CSS inside prose
+    (a registry Detail cell explaining a past palette fix names
+    `font-size:13px`), and a naive whole-document scan reads that as a
+    declaration — judging documentation as if it were code."""
+    blocks = re.findall(r"<style[^>]*>(.*?)</style>", html, re.S)
+    blocks += re.findall(r'style="([^"]*)"', html)
+    return blocks
+
+
+def test_u1_every_font_size_resolves_to_a_declared_scale_step(tmp_path):
+    """dashboard-uniformity.md U1 core (WI-309): one declared type scale.
+
+    Before this, 18 raw literals sat against 5 tokens — `.7rem`/`.75rem`,
+    `.9`/`.95`/`.98rem`, `1.05`/`1.1rem`, `8.5px`/`9px` each being near-duplicate
+    steps for ONE role, 3-7% apart. No reader distinguishes those; no rule
+    justified them; and "do the sizes read as uniform?" cannot be answered about
+    a scale nobody wrote down.
+    """
+    declared = {t for fam in TYPE_SCALE_FAMILIES.values() for t in fam}
+
+    for label, html in _every_emitter_document(tmp_path):
+        # every declared step is defined exactly once, with a real value
+        for token in declared:
+            defs = re.findall(
+                re.escape(token) + r"\s*:\s*([0-9.]+(?:px|rem|em))\s*;", html
+            )
+            assert len(defs) == 1, (label, token, defs)
+
+        used = []
+        for surface in _style_surfaces(html):
+            used += re.findall(r"font-size\s*:\s*([^;}\"']+)", surface)
+        assert used, "vacuous — no font-size found in {}".format(label)
+
+        raw = sorted({v.strip() for v in used if not v.strip().startswith("var(")})
+        assert not raw, (
+            "in the {} render, font-size(s) bypass the declared scale: {} — add a "
+            "step with a stated role, or reuse the nearest one".format(label, raw)
+        )
+        unknown = sorted(
+            {
+                v.strip()
+                for v in used
+                if v.strip().startswith("var(")
+                and re.sub(r"var\(\s*|\s*\)", "", v.strip()) not in declared
+            }
+        )
+        assert not unknown, (label, unknown)
+
+    # ...and the declared set stays SMALL. A scale that grows a step per call
+    # site is not a scale; this is the pressure that forces the merge decision.
+    assert len(declared) <= 12, sorted(declared)
+
+
 def test_u1_process_tab_type_scale_matches_the_shared_tokens(tmp_path):
     """dashboard-uniformity.md U1 (WI-295, 119-CRITIQUE MINOR): the Process tab's
     "working loops" SVG (`.stgt`/`.stgn`/`.hooplab`/`.hubname`) used to hardcode
@@ -2349,6 +2428,25 @@ U2_NON_CONCEPT_HEXES = {
 }
 
 
+def _how_sw_flat(root):
+    """Declared seams but no containerization — the FLAT `sw_graph`.
+
+    `containerize` earns the containment drill instead, so a sweep carrying only
+    that fixture never renders `sw_graph`'s own `<style>` block. This is the
+    third emitter a whole-document sweep has silently missed (after `knode` and
+    the per-layer drill read), which is why `_every_emitter_document` is the one
+    place that list lives."""
+    make_repo(root)
+    (root / "docs" / "architecture.md").write_text(ARCH_MD, encoding="utf-8")
+    (root / "docs" / "requirements" / "interfaces.csv").write_text(
+        IF_HDR
+        + 'IF-001,Provides,src/m,downstream adopter,"cli",SR-001,v1,Stable,Active,,\n'
+        + 'IF-002,Consumes,src/m,docs/stack.ini,"reads",SR-001,v1,Stable,Active,,\n',
+        encoding="utf-8",
+    )
+    return root
+
+
 def _every_emitter_document(tmp_path):
     """`[(label, html), ...]` covering EVERY emitter that really renders.
 
@@ -2373,7 +2471,8 @@ def _every_emitter_document(tmp_path):
         ("knowledge-tiered", lambda p: with_bundle(p)),
         ("knowledge-flat", lambda p: _flat_bundle(p)),
         ("tiered-drill", lambda p: tiered_repo(p, TIER_UNION_WIS)),
-        ("how-sw", lambda p: containerize(p)),
+        ("how-sw-drill", lambda p: containerize(p)),
+        ("how-sw-flat", _how_sw_flat),
         ("process", lambda p: with_gate(p, "G2")),
     ):
         root = tmp_path / label

@@ -1033,7 +1033,7 @@ def sw_graph(root, mods):
     style = (
         "<style>#sw .swedge{fill:none;stroke:var(--muted);stroke-width:1.4;}"
         "#sw .swarrow-head{fill:var(--muted);}"
-        "#sw .swlab{fill:var(--muted);font-size:9px;}</style>"
+        "#sw .swlab{fill:var(--muted);font-size:var(--nsub);}</style>"
     )
     return _svg_wrap(
         width, height, defs + style + "".join(edge_svg) + "".join(node_svg)
@@ -1516,7 +1516,7 @@ DRILL_STYLE = (
     # `.legend`/`<i>` component the status/type/module legends use (see the
     # `.legend i` rule below), so no per-emitter style rule is needed here.
     ".drill nav.crumbs{display:flex;flex-wrap:wrap;align-items:center;gap:.1rem;"
-    "margin:.1rem 0 .6rem;font-size:.85rem;}"
+    "margin:.1rem 0 .6rem;font-size:var(--small);}"
     ".drill nav.crumbs .crumb{appearance:none;background:none;border:none;"
     "cursor:pointer;font:inherit;color:var(--accent);padding:.15rem .35rem;"
     "border-radius:6px;}"
@@ -2317,16 +2317,32 @@ HTML_TEMPLATE = string.Template("""<!doctype html>
        palette change (WI-292) off this token unless it re-checks white-on-fill. */
     --hub:#4f46e5;
     --done:#047857; --active:#b45309; --queued:#94a3b8; --retired:#78716c;
-    /* U1: one shared node-label / sub-label type scale across every SVG emitter
-       (icicle, drill, knowledge) — no per-emitter font-size overrides. */
-    --nlabel:10px; --nsub:8.5px; --small:.85rem; --xsmall:.8rem;
-    /* U1 (WI-295, 119-CRITIQUE): the Process "working loops" diagram's hub title
-       is a HEADLINE label (one per diagram, not a per-node label), so it is not
-       the same role as --nlabel — but it still needs to be ONE documented scale
-       step, not the ad-hoc 13px `.hooplab`/`.hubname` used to duplicate
-       independently (a 12px/9.5px `.stgt`/`.stgn` pair ALSO drifted from
-       --nlabel/--nsub for no reason and are fixed to reuse those directly). */
-    --nhead:13px;
+    /* ===== THE TYPE SCALE (U1 core, WI-309) =================================
+       Every font-size in this document resolves to a step declared here —
+       `test_u1_every_font_size_resolves_to_a_declared_scale_step` enforces it
+       over every emitter. Before WI-309 there were 18 raw literals against 5
+       tokens, including `.7rem`/`.75rem`, `.9`/`.95`/`.98rem`,
+       `1.05`/`1.1rem` and `8.5px`/`9px` — near-duplicate steps for ONE role,
+       3-7% apart, which no reader distinguishes and no rule justified. Those
+       merged into the nearer step; two literals (`.85rem`, `.8rem`) were
+       byte-identical to a token that simply was not being used.
+
+       THREE FAMILIES, because there genuinely are three. Claiming "one scale"
+       across them would be false:
+         - NODE (px): SVG labels. Fixed px because the SVG geometry is fixed px
+           — a rem here would resize labels out of their boxes.
+         - PAGE (rem): prose and chrome, scaling with the root size.
+         - RELATIVE (em): text that must size against its PARENT, not the root
+           (inline `code`, a table sub-line).
+       Add a step only with a role no existing step covers, and say the role. */
+    /* node: per-node label, its sub-label, and a once-per-diagram headline
+       (the Process hub title and the icicle lane heads are the same role). */
+    --nlabel:10px; --nsub:8.5px; --nhead:13px;
+    /* page: tiny < xsmall < small < body < lead < display < hero. */
+    --tiny:.75rem; --xsmall:.8rem; --small:.85rem; --body:.9rem;
+    --lead:1.05rem; --display:1.4rem; --hero:2rem;
+    /* relative: one step, for text sized against its parent. */
+    --rel:.9em;
     --shadow:0 1px 3px rgba(15,23,42,.06),0 1px 2px rgba(15,23,42,.04);
   }
   @media (prefers-color-scheme: dark) {
@@ -2343,28 +2359,28 @@ HTML_TEMPLATE = string.Template("""<!doctype html>
                position:sticky; top:0; z-index:5; }
   .top-inner { max-width:1120px; margin-inline:auto; padding:.85rem 1.25rem;
                display:flex; align-items:baseline; gap:.6rem; }
-  .mark { font-weight:700; letter-spacing:-.02em; font-size:1.05rem; }
+  .mark { font-weight:700; letter-spacing:-.02em; font-size:var(--lead); }
   .mark .dot { color:var(--accent); }
-  .top-sub { color:var(--muted); font-size:.85rem; }
+  .top-sub { color:var(--muted); font-size:var(--small); }
   .hero { padding:2.25rem 0 1.5rem; }
-  .hero h1 { font-size:1.05rem; text-transform:uppercase; letter-spacing:.08em;
+  .hero h1 { font-size:var(--lead); text-transform:uppercase; letter-spacing:.08em;
              color:var(--muted); margin:0 0 .6rem; font-weight:600; }
-  .asof { color:var(--muted); font-size:.85rem; margin:.4rem 0 0; }
-  table.swmap { border-collapse:collapse; width:100%; font-size:.9rem; }
+  .asof { color:var(--muted); font-size:var(--small); margin:.4rem 0 0; }
+  table.swmap { border-collapse:collapse; width:100%; font-size:var(--body); }
   table.swmap th, table.swmap td { text-align:left; padding:.45rem .6rem;
     border-bottom:1px solid var(--border); vertical-align:top; }
-  table.swmap .sub { color:var(--muted); font-size:.85em; }
-  .vision { font-size:1.4rem; line-height:1.4; font-weight:600;
+  table.swmap .sub { color:var(--muted); font-size:var(--rel); }
+  .vision { font-size:var(--display); line-height:1.4; font-weight:600;
             letter-spacing:-.02em; margin:0; max-width:60ch; }
   .cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr));
            gap:1rem; margin:1.75rem 0 .5rem; }
   .card { background:var(--surface); border:1px solid var(--border);
           border-radius:12px; padding:1.1rem 1.2rem; box-shadow:var(--shadow); }
-  .card .label { font-size:.8rem; text-transform:uppercase; letter-spacing:.05em;
+  .card .label { font-size:var(--xsmall); text-transform:uppercase; letter-spacing:.05em;
                  color:var(--muted); font-weight:600; }
-  .card .big { font-size:2rem; font-weight:700; letter-spacing:-.03em;
+  .card .big { font-size:var(--hero); font-weight:700; letter-spacing:-.03em;
                margin:.15rem 0 .1rem; }
-  .card .sub { font-size:.85rem; color:var(--muted); }
+  .card .sub { font-size:var(--small); color:var(--muted); }
   .card .sub.nowat { color:var(--active); font-weight:600; margin-top:.2rem; }
   .meter { background:var(--border); border-radius:999px; height:.55rem;
            overflow:hidden; margin-top:.7rem; }
@@ -2375,8 +2391,8 @@ HTML_TEMPLATE = string.Template("""<!doctype html>
   .tile { flex:1 1 90px; background:var(--surface); border:1px solid var(--border);
           border-radius:10px; padding:.7rem .8rem; text-align:center;
           box-shadow:var(--shadow); }
-  .tile b { display:block; font-size:1.4rem; letter-spacing:-.02em; }
-  .tile span { font-size:.75rem; color:var(--muted); text-transform:uppercase;
+  .tile b { display:block; font-size:var(--display); letter-spacing:-.02em; }
+  .tile span { font-size:var(--tiny); color:var(--muted); text-transform:uppercase;
                letter-spacing:.04em; }
   nav.tabs { display:flex; flex-wrap:wrap; gap:.25rem; margin:2rem 0 0; border-bottom:1px solid var(--border); }
   nav.tabs button { appearance:none; background:none; border:none; cursor:pointer;
@@ -2386,7 +2402,7 @@ HTML_TEMPLATE = string.Template("""<!doctype html>
   nav.tabs button.active { color:var(--accent); border-bottom-color:var(--accent); }
   .panel { display:none; padding-top:1.4rem; }
   .panel.active { display:block; }
-  .panel h2 { font-size:1.1rem; margin:0 0 .3rem; letter-spacing:-.01em; }
+  .panel h2 { font-size:var(--lead); margin:0 0 .3rem; letter-spacing:-.01em; }
   .panel p.cap { color:var(--muted); margin:0 0 1rem; max-width:70ch; }
   .layout { display:grid; grid-template-columns:1fr 320px; gap:1rem; }
   .view { overflow:auto; max-height:660px; background:var(--surface);
@@ -2425,7 +2441,7 @@ HTML_TEMPLATE = string.Template("""<!doctype html>
         transition:opacity .1s ease; }
   #ice .cell text { fill:#fff; font-size:var(--nlabel); pointer-events:none; }
   #ice .cell .sub { font-size:var(--nsub); }
-  #ice .lane-head { fill:var(--muted); font-size:11px; font-weight:700; letter-spacing:.06em; }
+  #ice .lane-head { fill:var(--muted); font-size:var(--nhead); font-weight:700; letter-spacing:.06em; }
   .cell.dim, .wi.dim, .edge.dim { opacity:.15; }
   #ice .cell.hl rect { stroke:var(--ring,#f59e0b); stroke-width:2.5; }
   .cell:focus, .wi:focus { outline:none; }
@@ -2447,7 +2463,7 @@ HTML_TEMPLATE = string.Template("""<!doctype html>
   .detail .badge { display:inline-block; font-size:var(--xsmall); font-weight:700;
         text-transform:uppercase; letter-spacing:.05em; padding:.15rem .5rem;
         border-radius:6px; color:#fff; }
-  .detail h3 { font-size:.98rem; margin:.55rem 0 .35rem; letter-spacing:-.01em; }
+  .detail h3 { font-size:var(--body); margin:.55rem 0 .35rem; letter-spacing:-.01em; }
   .detail .status { color:var(--muted); font-size:var(--xsmall); margin:0 0 .5rem; }
   .detail .body { color:var(--text); margin:.2rem 0; }
   .detail .meta { color:var(--muted); font-size:var(--small); margin-top:.6rem;
@@ -2459,8 +2475,8 @@ HTML_TEMPLATE = string.Template("""<!doctype html>
   .legend i { display:inline-block; width:.8rem; height:.8rem; border-radius:3px;
               vertical-align:-1px; margin-right:.35rem; }
   footer { margin-top:2.5rem; padding-top:1rem; border-top:1px solid var(--border);
-           color:var(--muted); font-size:.8rem; }
-  code { font-size:.9em; }
+           color:var(--muted); font-size:var(--xsmall); }
+  code { font-size:var(--rel); }
 </style></head><body>
   <header class="top"><div class="top-inner">
     <span class="mark">$project<span class="dot">.</span></span>
@@ -3777,7 +3793,7 @@ def process_panel(root, wis, stats):
 
     style = (
         "<style>"
-        "#process h3{font-size:.95rem;margin:1.5rem 0 .25rem;letter-spacing:-.01em;}"
+        "#process h3{font-size:var(--body);margin:1.5rem 0 .25rem;letter-spacing:-.01em;}"
         "#process .gnow{background:var(--surface);border:1px solid var(--border);"
         "border-radius:10px;padding:.6rem .9rem;box-shadow:var(--shadow);"
         "display:inline-block;margin:.2rem 0 .4rem;}"
@@ -3794,11 +3810,11 @@ def process_panel(root, wis, stats):
         "#process .pflow li.now{border:2px solid var(--accent);"
         "padding:calc(.5rem - 1px) calc(.7rem - 1px) calc(.55rem - 1px);}"
         "#process .pflow li.opt{border-style:dashed;}"
-        "#process .pflow b{display:block;font-size:.85rem;}"
-        "#process .pflow .g{display:block;font-size:.7rem;font-weight:700;"
+        "#process .pflow b{display:block;font-size:var(--small);}"
+        "#process .pflow .g{display:block;font-size:var(--tiny);font-weight:700;"
         "letter-spacing:.04em;color:var(--accent);}"
-        "#process .pflow .n{display:block;font-size:.75rem;color:var(--muted);}"
-        "#process ul.esc{font-size:.9rem;color:var(--muted);margin:.4rem 0 0;"
+        "#process .pflow .n{display:block;font-size:var(--tiny);color:var(--muted);}"
+        "#process ul.esc{font-size:var(--body);color:var(--muted);margin:.4rem 0 0;"
         "padding-left:1.2rem;}"
         "#process ul.esc b{color:var(--text);}"
         # Panel 4 — the two intersecting working-loop hoops sharing one LLM_Agent
@@ -3830,7 +3846,7 @@ def process_panel(root, wis, stats):
         # A4 (WI-293): no fill-opacity discount on hub sub-labels — the same rule
         # `.sub`/`.bsub` already follow. At .85 the effective ink dropped to
         # 2.57:1 in dark theme; at full opacity on --hub it is 6.29:1.
-        "#process .hubsub{fill:#fff;font-size:8.5px;}"
+        "#process .hubsub{fill:#fff;font-size:var(--nsub);}"
         "</style>"
     )
     panel = (
