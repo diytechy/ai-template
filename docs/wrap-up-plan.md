@@ -154,10 +154,11 @@ broken link hides. Tiering separates "illustrative placeholder path" from
 *Why:* it touches the **exact vocabulary WI-300's option (f) leans on** —
 binding work (`Verifies: SR-xxx;LLR-xxx`) is actively being built on this
 vocabulary right now (LLR-102..105/TC-105..108 landed just this session), so an
-unreconciled vocabulary risks rework the more binding lands. Has a real spec
-([specs/WI-065.md](specs/WI-065.md)). **Do this before finishing WI-300's
-remaining U2/U4/A1/A3/A4 binding** — every additional child LLR/TC is more
-surface a later reconciliation would have to touch.
+unreconciled vocabulary risks rework the more binding lands. Spec (archived at
+close): [WI-065](archive/specs/WI-065.2026-07-25.md). **Landed 2026-07-25**,
+ahead of the remaining U2/U4/A1/A3/A4 binding exactly as this recommended —
+`Verifies` is the one ruled citation cell and `trace.py` now joins `IF-###`
+tokens against `interfaces.csv`.
 
 ### Now retired
 

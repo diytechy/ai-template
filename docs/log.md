@@ -1251,7 +1251,7 @@ correctly did not fix inline: `check_trajectory`'s seam-TC-citation scan reads
 the TC `Verifies` column for `IF-###` tokens, but `trace.py`'s orphan check
 flags unknown `Verifies` tokens — so an `Active` seam cited the documented way
 fails `trace --strict`. Now a first-class `deferred` row with a live per-WI
-spec ([specs/WI-065.md](specs/WI-065.md), Done-when checklist included —
+spec ([specs/WI-065.md](archive/specs/WI-065.2026-07-25.md), Done-when checklist included —
 dogfooding the S0 #5 convention), parked until a seam actually needs `Active`
 status (all 47 current seams are `Stable`).
 
@@ -12917,3 +12917,56 @@ saying why the marker is legitimate); `gen_trajectory.py` 4729 → 4791 (the
 tablist). Both reviewed bumps, reasons stamped above their numbers.
 
 **Verified:** full suite **1462 passed, 54 skipped** (435 s).
+
+
+## 2026-07-25 — WI-065: one ruled home for a seam citation (the TC's `Verifies` cell)
+
+**The tension, filed 2026-07-11 and parked ever since:** `check_trajectory`'s
+seam-TC warn reads `IF-###` ids out of a TC's **`Verifies`** cell, while
+`trace.py`'s orphan rule rejected any `Verifies` token that was not an SR/LLR
+id. So citing an `Active` seam *the documented way* —
+`Verifies=SR-074;IF-009` — passed one check and **orphaned under the other**.
+The rule could not be satisfied honestly, which is why no seam was ever marked
+`Active`: the deferral was the symptom, not the cause.
+
+**Ruled: `Verifies` is the one citation cell** — option (a) of the spec's two.
+Rejected: moving the seam-TC scan to a cell `trace.py` does not
+vocabulary-check. That would add a second citation column to every TC row, so a
+reader would have to know two cells and a checker would have to keep them in
+sync — against the kit's single-source rule, and for no gain, because
+**`trace.py` already loads `interfaces.csv`** (WI-056) and the join is free.
+
+Two rules keep the widened vocabulary from becoming a hole:
+
+- **An unresolvable `IF-###` is still `references unknown`.** Accepting the IF
+  vocabulary is not accepting anything IF-shaped.
+- **A TC citing *only* seam ids is a new orphan finding.** A seam citation
+  **supplements** the spine citation; without this, `Verifies=IF-001` alone
+  would pass and a test would no longer have to say which requirement it
+  discharges.
+
+**The test is deliberately a joint one.** `test_seam_citation_satisfies_trace_
+and_check_trajectory_together` builds a two-module scaffold and runs **both**
+checkers against the same registry — the cited seam goes quiet while its
+uncited sibling still warns, so the assertion is not vacuous. A test that
+exercised one checker is precisely what let the two disagree for two weeks.
+All three guards were verified to **fail** against the pre-fix behaviour before
+being kept.
+
+**Why now, and not after WI-300:** every child LLR/TC that option (f) lands is
+more surface built on this vocabulary (LLR-102..105/TC-105..108 landed only
+yesterday). Reconciling first costs nothing; reconciling later is rework
+proportional to how much binding has accumulated.
+
+**Byte deltas:** `AGENTS.template.md` 9,975 → 9,975 (unchanged; 25 bytes of
+headroom under 10,000). `PROCESS.md` 60,420 → 60,420 (unchanged).
+`PROCESS_OPTIONS.md` 160,980 → **161,541 (+561)** — the ruled cell, why one cell
+beats a second column, and the supplements-never-replaces rule, in the
+"Intra-repo interfaces & the architecture graph" section. Baseline re-stamped in
+both `byte-budget-guard` skill copies. **Noted while re-stamping:** the recorded
+baseline read 161,007 against a measured 160,980, so a net −27 had landed
+un-re-stamped at some point — `wc -c` before editing rather than trusting the
+stamp as the before-size.
+
+**Verified:** the three new tests pass and each fails against the reverted
+behaviour; `check_docs --stale` OK (258 docs, 763 links, 0 broken).

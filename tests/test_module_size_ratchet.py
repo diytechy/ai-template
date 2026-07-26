@@ -158,7 +158,14 @@ BASELINE = {
     # the note is what stops the next author re-applying it. Reviewed bump.
     "agent_dispatch.py": 3906,
     "agent_loop.py": 3042,
-    "trace.py": 2206,
+    # +30 (2206 -> 2236), WI-065: `tc_citation_findings` — the TC-`Verifies`
+    # rules lifted out of `analyze` so the cell could accept `IF-###` seam ids.
+    # Most of the bump is that helper's docstring, which is where the RULING now
+    # lives (one citation cell, not a second column) — the part a successor
+    # would otherwise have to reconstruct from two disagreeing checkers. The
+    # extraction also ratcheted `analyze`'s complexity DOWN 53 -> 50. Reviewed
+    # bump, log 2026-07-25. Re-stamp downward with WI-280.
+    "trace.py": 2236,
     "check_trajectory.py": 1926,
     # +1 (1916 -> 1917), WI-279: one MAPPING row registering the new
     # scripts/check_coverage.py kit gate so it ships downstream — a required

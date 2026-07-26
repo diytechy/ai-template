@@ -598,6 +598,44 @@ def interface_findings(ifs, sr_ids, module_ids):
     return findings, advisories
 
 
+def tc_citation_findings(tcs, spine_ids, ifs):
+    """Every TC-`Verifies` orphan rule, as ``[(at_fault_id, finding), ...]``.
+
+    The vocabulary is SR/LLR spine ids **plus** `IF-###` seam ids (WI-065). The
+    seam-TC rule (process-options.md "Intra-repo interfaces & the architecture
+    graph") asks an `Active` seam to be cited by a TC, and `check_trajectory`
+    reads that citation out of **this same cell** — so rejecting `IF-###` here
+    made the documented citation unsatisfiable: it passed one check and orphaned
+    under the other. Ruled in favour of ONE citation cell rather than a second
+    column: a TC states everything it verifies in one place, and trace already
+    loads `interfaces.csv`, so the join is free.
+
+    Two rules keep the widened vocabulary from becoming a hole: an unresolvable
+    IF token is as wrong as an unknown SR, and a seam citation **supplements**
+    the spine citation — a TC naming only seam ids no longer says which
+    requirement it discharges."""
+    if_ids = {r["IF-ID"] for r in ifs}
+    out = []
+    for r in tcs:
+        tid = r["TC-ID"]
+        verified = refs(r.get("Verifies"))
+        if not verified:
+            out.append((tid, f"TC {tid} verifies nothing"))
+        elif not spine_ids & set(verified):
+            out.append(
+                (
+                    tid,
+                    f"TC {tid} cites only seam id(s) — a seam citation "
+                    "supplements the spine citation, so name the SR and/or LLR "
+                    "this test verifies",
+                )
+            )
+        for x in verified:
+            if x not in spine_ids and x not in if_ids:
+                out.append((tid, f"TC {tid} references unknown {x}"))
+    return out
+
+
 def placeholder_findings(label, raw_rows):
     """Leftover template example rows (ids ending '-000') in one registry."""
     key = id_key(label)
@@ -1343,17 +1381,9 @@ def analyze(reg, args):
             orphans.append(f"LLR {lid} has no test (TC)")
             orphan_ids.add(lid)
 
-    valid = sr_ids | llr_ids
-    for r in tcs:
-        tid = r["TC-ID"]
-        verified = refs(r.get("Verifies"))
-        if not verified:
-            orphans.append(f"TC {tid} verifies nothing")
-            orphan_ids.add(tid)
-        for x in verified:
-            if x not in valid:
-                orphans.append(f"TC {tid} references unknown {x}")
-                orphan_ids.add(tid)
+    for tid, finding in tc_citation_findings(tcs, sr_ids | llr_ids, ifs):
+        orphans.append(finding)
+        orphan_ids.add(tid)
 
     for u in sorted(sn_ids):
         # A Draft SN (section-as-state, §4a) is being drafted requirement-first and

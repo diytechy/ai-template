@@ -638,6 +638,85 @@ def test_legacy_interfaces_csv_without_notes_column_parses(scaffold):
     assert "interfaces=1 interface-findings=0" in proc.stdout
 
 
+# --- WI-065: one ruled home for a seam citation — the TC's `Verifies` cell ------
+# check_trajectory's seam-TC warn reads IF-### ids out of `Verifies`, but trace's
+# orphan rule used to reject any token that was not an SR/LLR id — so citing a
+# seam the documented way passed one check and ORPHANED under the other, and the
+# rule could not be satisfied honestly. Ruled: `Verifies` is the one citation
+# cell, and trace joins IF tokens against interfaces.csv. Both halves of that
+# ruling are exercised HERE, on one scaffold, because a test that ran only one
+# checker is exactly what let the two disagree for as long as they did.
+
+TWO_MODULE_IFS = (
+    'IF-001,Provides,src/demo,src/helper,"add() is called by the helper",'
+    "SR-001,v1,Stable,Active,,sink\n"
+    'IF-002,Consumes,src/helper,src/demo,"helper reads add()",'
+    "SR-001,v1,Stable,Active,,source\n"
+)
+
+HELPER_SRC = '''"""A second module, so the connectivity checks are not vacuous."""
+
+from demo import add
+
+
+def twice(n):
+    """Double a number via the seam. Implements: SR-001, LLR-001"""
+    return add(n, n)
+'''
+
+
+def _seam_scaffold(scaffold, verifies):
+    """A two-module project whose single TC cites `verifies`, arch-map refreshed."""
+    make_minimal_project(scaffold)
+    (scaffold / "src" / "helper.py").write_text(HELPER_SRC, encoding="utf-8")
+    proc = run_py(["scripts/gen_arch_map.py"], cwd=scaffold)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    _write_ifs(scaffold, TWO_MODULE_IFS)
+    (scaffold / "docs" / "test" / "test-cases.csv").write_text(
+        "TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Evidence,Status\n"
+        'TC-001,{},Unit,call add and assert the sum,Smoke,"a=1; b=2",'
+        '"Satisfies SR-001 AcceptanceCriteria",Yes,'
+        "tests/test_demo.py::test_add_sr001,Verified\n".format(verifies),
+        encoding="utf-8",
+    )
+    return scaffold
+
+
+def test_seam_citation_satisfies_trace_and_check_trajectory_together(scaffold):
+    _seam_scaffold(scaffold, "SR-001;LLR-001;IF-001")
+
+    # Half one: trace no longer orphans the seam token.
+    proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "orphans=0" in proc.stdout
+    assert "references unknown IF-001" not in _report(scaffold)
+
+    # Half two: the SAME cell satisfies the seam-TC warn — the cited seam is
+    # quiet while its uncited sibling still warns, so this is not vacuous.
+    proc = run_py(["scripts/check_trajectory.py"], cwd=scaffold)
+    assert "IF IF-001 is Active but cited by no TC" not in proc.stderr
+    assert "IF IF-002 is Active but cited by no TC" in proc.stderr
+
+
+def test_unknown_seam_id_in_verifies_is_still_an_orphan(scaffold):
+    # Accepting the IF vocabulary is not accepting anything IF-shaped: an id that
+    # resolves to no interfaces.csv row is as wrong as an unknown SR.
+    _seam_scaffold(scaffold, "SR-001;LLR-001;IF-999")
+    proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
+    assert proc.returncode == 1
+    assert "TC TC-001 references unknown IF-999" in _report(scaffold)
+
+
+def test_tc_citing_only_seam_ids_is_an_orphan(scaffold):
+    # A seam citation SUPPLEMENTS the spine citation. Without this rule the new
+    # vocabulary would let `Verifies=IF-001` alone pass, and a test would no
+    # longer have to say which requirement it discharges.
+    _seam_scaffold(scaffold, "IF-001")
+    proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
+    assert proc.returncode == 1
+    assert "TC TC-001 cites only seam id(s)" in _report(scaffold)
+
+
 # --- WI-089: the Draft artifact state + decomposition exemption ---------------
 # The derived-gate model (docs/specs/derived-gate-model.md §3) lets a requirement
 # be drafted in the LIVE spine before it is decomposed: a `Draft` SR/LLR is exempt

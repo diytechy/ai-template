@@ -1946,6 +1946,15 @@ declared IF endpoint; each `Active` seam is cited by ≥1 TC; a `Contracts: IF-#
 docstring line (harvested into the arch-map like `Implements:`) matches the
 registry.
 
+**Where a seam citation goes (ruled, WI-065): the TC's own `Verifies` cell**,
+alongside the SR/LLR ids — `Verifies=SR-074;IF-009`. One cell states everything
+a test verifies, so there is no second column to keep in sync. `trace.py` joins
+`IF-###` tokens against `interfaces.csv` exactly as it joins SR/LLR ids: an
+unresolvable seam id is an orphan finding like any other. A seam citation
+**supplements** the spine citation and never replaces it — a TC naming only
+`IF-###` ids is a finding, because a test still has to say which requirement it
+discharges.
+
 **The honesty valve.** A pure **source** (produces output, consumes nothing) or
 **sink** (consumes, produces nothing) would otherwise breed a boilerplate
 opposite-direction row. Mark it instead: make the `Notes` cell of one of that

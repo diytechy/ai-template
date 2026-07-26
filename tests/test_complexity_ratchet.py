@@ -106,7 +106,12 @@ BASELINE = {
     # --require-verified was widened to every ratified SR of any method, naming
     # the real method in the finding. Trace decomposition remains a follow-up;
     # the added branches are the honest audit surface.
-    ("trace.py", "analyze"): 53,
+    # 53 -> 50, WI-065: the TC-`Verifies` rules moved OUT to
+    # `tc_citation_findings`, so widening the vocabulary to `IF-###` cost this
+    # function nothing and paid three branches back. The escape the ratchet
+    # actually prefers — decomposition, not a bump — taken on the very function
+    # the WI-259 note above called a follow-up.
+    ("trace.py", "analyze"): 50,
     ("trace.py", "mermaid_graph"): 17,
     # 28 -> 27: the L-3 ratify bucketing removed a nested scan (re-stamped
     # downward per the ratchet's improvement rule).
