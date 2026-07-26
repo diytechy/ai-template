@@ -71,7 +71,7 @@ Unchanged this session — still open, still need the owner:
 |---|---|---|
 | **OI-4** | WI-097 — LICENSE + public/private intent | No recommendation possible; needs your intent first. **Blocks any public release** (review finding H-3). |
 | **OI-7** | WI-123 — review cadence | Recommendation: wait for evidence. Per-slice review just caught a real defect this session (see §5) — that's evidence *against* relaxing, if anything. |
-| **OI-8** | WI-278 — branch integration & CI-on-branch | Ruled: open a PR. **Still not implemented.** |
+| **OI-8** | WI-278 — branch integration & CI-on-branch | **Not yet ruled** — recommendation is open a PR. WI-278 is now `queued` (2026-07-25) so the build is ready to go, but the owner should still bless the approach before/while it lands. |
 
 Full briefs: [open-items.md](open-items.md).
 
@@ -123,56 +123,52 @@ an existing attribute string broke three unrelated tests that asserted attribute
 adjacent. If you add a new inline attribute to a shared emitter, append it
 **last**, after everything existing tests might assert about the tag's shape.)
 
-## 5. Deferred backlog — review and recommendations
+## 5. Deferred backlog — review, and actions taken 2026-07-25
 
-Unchanged from earlier this session (nothing in the deferred set was touched).
-Fourteen deferred rows, reviewed 2026-07-25. **Three should be queued; one should
-probably be retired; the rest are correctly parked.**
+Reviewed 2026-07-25 (see the reasoning that drove each call below); **owner
+acted on all four recommendations the same day** — WI-278/WI-062/WI-065 are now
+`queued` (they appear in status.md's Ready frontier above) and WI-060 is
+`retired`. The rest of the fourteen deferred rows are correctly parked as-is.
 
-### Queue these
+### Now queued
 
-**WI-278 — branch integration & CI-on-branch. Strongest recommendation here.**
-*Pro:* this session produced decisive evidence. The local gate had a **total blind
-spot** — the entire `agent_loop_*` layer (~104 tests) could not execute on this
-machine, and the G3 harness had never run, concealing two failing steps including
-four pre-existing duplicate blocks. Hosted CI on Linux + Windows would have caught
-both immediately. The branch is also ~845 commits ahead of `main` with **no CI on
-push** (`test.yml` fires only on `push: main` and `pull_request`). OI-8 is already
-ruled; the cheapest option (open a PR) is `quick` tier.
-*Con:* opening a PR invites review pressure on a large delta; merging in slices is
-real work.
-*Verdict:* **queue now.** It is the highest value-per-effort item in the repo, and it
-closes a class of blindness rather than one defect.
+**WI-278 — branch integration & CI-on-branch.** *Why:* this session produced
+decisive evidence. The local gate had a **total blind spot** — the entire
+`agent_loop_*` layer (~104 tests) could not execute on this machine, and the G3
+harness had never run, concealing two failing steps including four
+pre-existing duplicate blocks. Hosted CI on Linux + Windows would have caught
+both immediately. The branch is also ~845 commits ahead of `main` with **no CI
+on push** (`test.yml` fires only on `push: main` and `pull_request`). Highest
+value-per-effort item in the repo — closes a class of blindness, not one
+defect. **OI-8 (the underlying CI-strategy decision) is still NOT ruled** —
+queuing the WI makes it buildable, but the owner should still bless the
+approach (open a PR vs. add `on.push.branches` vs. merge in slices) before or
+while it lands; see §3.
 
-**WI-062 — `check_doc_refs` warn-first untraced-path tier.**
-*Pro:* **562 dangling references** repo-wide today. That volume is pure noise, and
-noise is how a real broken link hides — the check's signal is currently near zero.
-Tiering separates "illustrative placeholder path" from "actually broken".
-*Con:* needs a design decision on what the tiers are; `--strict` already gates, so
-nothing is currently *unsafe*.
-*Verdict:* **queue.** Largest active noise source in the doc checks.
+**WI-062 — `check_doc_refs` warn-first untraced-path tier.** *Why:* **562
+dangling references** repo-wide today — pure noise, and noise is how a real
+broken link hides. Tiering separates "illustrative placeholder path" from
+"actually broken." Largest active noise source in the doc checks.
 
-**WI-065 — active-seam TC citation, reconcile `trace` `Verifies` vocabulary.**
-*Pro:* it touches the **exact vocabulary option (f) leans on** — WI-300's binding
-work (`Verifies: SR-xxx;LLR-xxx`) is actively being built out on this vocabulary
-right now (LLR-102..105/TC-105..108 this session alone), so an unreconciled
-vocabulary risks rework the more binding lands. Has a real spec
-([specs/WI-065.md](specs/WI-065.md)).
-*Con:* spine-adjacent, so it wants care; not blocking today.
-*Verdict:* **queue, ideally before finishing WI-300's remaining U2/U4/A1/A3/A4
-binding** — every additional child LLR/TC this session added is more surface a
-later reconciliation would have to touch.
+**WI-065 — active-seam TC citation, reconcile `trace`'s `Verifies` vocabulary.**
+*Why:* it touches the **exact vocabulary WI-300's option (f) leans on** —
+binding work (`Verifies: SR-xxx;LLR-xxx`) is actively being built on this
+vocabulary right now (LLR-102..105/TC-105..108 landed just this session), so an
+unreconciled vocabulary risks rework the more binding lands. Has a real spec
+([specs/WI-065.md](specs/WI-065.md)). **Do this before finishing WI-300's
+remaining U2/U4/A1/A3/A4 binding** — every additional child LLR/TC is more
+surface a later reconciliation would have to touch.
 
-### Consider retiring
+### Now retired
 
-**WI-060 — coordinator working-tree stash/rollback between sessions.**
-*Pro:* residue between sessions is a genuine unattended hazard.
-*Con:* it appears to **contradict a settled design decision**. The `session-protocol`
-skill states the loop surfaces residue into the session prompt but "never
-auto-stashes — the judgment is yours." WI-060 proposes automating exactly that.
-*Verdict:* **don't queue.** Rule it: either retire with that reason recorded (the
-repo's retire-don't-delete habit keeps the reasoning traceable), or re-scope it to
-something that doesn't fight the existing contract.
+**WI-060 — coordinator working-tree stash/rollback between sessions.** *Why:*
+it contradicted a settled design decision — the `session-protocol` skill states
+the loop surfaces residue into the session prompt but "never auto-stashes —
+the judgment is yours." WI-060 proposed automating exactly that. Retired
+(not deleted) with the reason recorded in its `Deliverable` field, per the
+repo's retire-don't-delete habit — if cross-session residue becomes a real
+recurring pain, a successor WI should re-scope around surfacing +
+human-directed cleanup, not automated rollback.
 
 ### Keep deferred (correctly parked)
 
@@ -261,5 +257,5 @@ it). Not itself evidence for or against WI-280, but the ratchet's discipline
    119-CRITIQUE, each closing by binding like the WI-292/294/295/299 set did.
 6. **WI-272** — dashboard status fidelity.
 7. **WI-062** — de-noise the doc-ref check.
-8. Rule **OI-4** (LICENSE) whenever your public/private intent settles; rule
-   **WI-060** retire-or-rescope.
+8. Rule **OI-4** (LICENSE) whenever your public/private intent settles, and
+   **OI-8** (CI strategy) whenever you're ready to bless WI-278's approach.
