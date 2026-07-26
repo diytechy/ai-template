@@ -173,7 +173,16 @@ BASELINE = {
     # delta is the comment explaining why a viewBox alone cannot fix it and why
     # the floor exists - pure scale-to-fit trades T7 for T4. Reviewed bump, log
     # 2026-07-26. Re-stamp down with WI-280.
-    "gen_trajectory.py": 5186,
+    # +50 (5186 -> 5236), WI-317: the containment/descend arrow takes the same
+    # per-fill --ring ink as the focus ring (T5, measured 1.06:1 light / 1.99:1
+    # dark on the phase-1 fill). The code is small - _cedge_marker, a RING_INKS
+    # constant, a per-layer marker dict; most of the delta is the comment on WHY
+    # one marker per ink exists at all, i.e. that marker content renders from the
+    # defs tree and cannot see the referencing node's custom properties. Without
+    # that recorded, the next reader collapses the markers back into one and
+    # silently restores the defect. Reviewed bump, log 2026-07-26. Re-stamp down
+    # with WI-280.
+    "gen_trajectory.py": 5236,
     # +11 (3452 -> 3463), WI-284: _regenerate_disposition_artifacts also runs
     # `gen_trajectory.py --status` at integrate/blocked-disposition so a closed
     # id drops from the generated frontier automatically (and the disposition

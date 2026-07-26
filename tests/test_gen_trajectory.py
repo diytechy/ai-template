@@ -2456,8 +2456,107 @@ def test_a4_ring_ink_clears_the_3to1_floor_against_every_node_fill():
     )
     for fill in sorted(fills):
         ink = gt._ring_ink(fill)
-        assert ink in ("#ffffff", "#0f172a"), (fill, ink)
+        # WI-317: the ink set is CLOSED, not incidental — the containment-arrow
+        # markers are emitted one per ink, so a third value would ship an arrow
+        # head with no marker to paint it.
+        assert ink in gt.RING_INKS, (fill, ink, gt.RING_INKS)
         assert _wcag(ink, fill) >= 3, (fill, ink, _wcag(ink, fill))
+
+
+def _theme_tokens(css, name):
+    """The light and dark values of a CSS custom property, in that order (light
+    `:root` first, then the `prefers-color-scheme: dark` block) — the same
+    two-value shape `test_drill_focus_ring_is_distinct_from_the_active_accent`
+    relies on."""
+    vals = re.findall(r"--{}:(#[0-9a-f]{{3,8}})".format(name), css)
+    assert len(vals) == 2, (name, vals)
+    return vals
+
+
+def _cedge_paint(rule_value, block_ring, accent):
+    """Resolve what a browser paints for a `.cedge` shaft/head declaration, given
+    the host block's inline `--ring` (absent for a theme-token fill) and the
+    theme's `--accent`. Mirrors CSS `var()` fallback: `var(--ring,X)` takes the
+    block's ring when it declares one, else X."""
+    m = re.fullmatch(r"var\(--ring,(.+)\)", rule_value)
+    if m:
+        return block_ring or _cedge_paint(m.group(1), block_ring, accent)
+    if rule_value == "var(--accent)":
+        return accent
+    assert rule_value.startswith("#"), rule_value  # a fixed hue, resolved as-is
+    return rule_value
+
+
+def test_t5_containment_arrow_clears_the_3to1_floor_against_every_host_fill(tmp_path):
+    """dashboard-usability.md T5 / LLR-105 (WI-317, found by the WI-305 train's
+    critique 2026-07-26): the containment arrow — the `.cedge` shaft plus its
+    `cedgearrow` marker head — is painted INSIDE the host block, over that
+    block's own fill, and it is the affordance a reader must find to descend a
+    tier. So T5's 3:1 UI-boundary floor applies to it exactly as it applied to
+    the focus ring WI-299 fixed, and the failure mode is the identical one:
+    a single fixed hue (`var(--accent)`) vanishes on whichever fill happens to
+    match it — measured 1.06:1 in light (#4f46e5 on the phase-1 #0369a1) and
+    1.99:1 in dark (#818cf8 on the same fill). The paint must derive from the
+    host fill's contrast-safe control token (`--ring`, LLR-105's machinery), and
+    the arithmetic must close over EVERY declared fill, not a sampled one."""
+    gt = load_script("gen_trajectory")
+    shaft = re.search(r"\.drill \.cedge\{[^}]*stroke:([^;]+);", gt.DRILL_STYLE).group(1)
+    head = re.search(r"\.drill \.cedgehead\{fill:([^;]+);", gt.DRILL_STYLE).group(1)
+
+    tiered_repo(tmp_path, TIER_UNION_WIS)
+    assert gen(tmp_path).returncode == 0
+    css = html_of(tmp_path)
+    accents = _theme_tokens(css, "accent")
+
+    # 1. Arithmetic over the CLOSED vocabulary: every fill a descendable block can
+    #    carry, in both themes — the LLR-105 closure, not a hand-picked example.
+    fills = (
+        set(gt.STATUS_FILL.values())
+        | set(gt.TIER_FILL.values())
+        | set(gt.OKF_TYPE_FILL.values())
+        | set(gt.SW_NODE_FILL.values())
+        | set(gt.PHASE_ACCENTS)
+    )
+    for fill in sorted(fills):
+        ring = gt._ring_ink(fill)
+        for accent in accents:
+            for paint in (
+                _cedge_paint(shaft, ring, accent),
+                _cedge_paint(head, ring, accent),
+            ):
+                assert _wcag(paint, fill) >= 3, (fill, paint, _wcag(paint, fill))
+
+    # 2. The theme-token fills (`var(--surface)` containers) keep the fallback
+    #    paint, so it must clear the floor against the resolved surface too.
+    for surface, accent in zip(_theme_tokens(css, "surface"), accents):
+        for paint in (
+            _cedge_paint(shaft, None, accent),
+            _cedge_paint(head, None, accent),
+        ):
+            assert _wcag(paint, surface) >= 3, (surface, paint, _wcag(paint, surface))
+
+    # 3. RENDERED, not merely declared: every emitted arrow sits in a block whose
+    #    marker head resolves to that block's own ring (a shared head painted from
+    #    one hue is exactly the defect — the shaft alone passing is not enough).
+    blocks = [b for b in css.split('<g class="block ') if 'class="cedge"' in b]
+    assert blocks, "no containment arrows emitted"
+    for b in blocks:
+        block = b.split("</g>", 1)[0]
+        ring = re.search(r"--ring:(#[0-9a-f]{6})", block)
+        marker = re.search(r'class="cedge"[^>]*marker-end="url\(#([^)]+)\)"', block)
+        assert marker, block[:200]
+        mdef = re.search(
+            r'<marker id="{}"[^>]*?(?: style="--ring:(#[0-9a-f]{{6}})")?>'.format(
+                re.escape(marker.group(1))
+            ),
+            css,
+        )
+        assert mdef, marker.group(1)
+        assert mdef.group(1) == (ring.group(1) if ring else None), (
+            marker.group(1),
+            mdef.group(1),
+            ring.group(1) if ring else None,
+        )
 
 
 def test_u3_ring_token_is_the_one_highlight_idiom_across_every_emitter(tmp_path):
@@ -3496,6 +3595,22 @@ def test_a1_every_wired_control_pairs_click_with_focus_or_keydown(tmp_path):
     )
 
 
+# Every hex-bearing UPPERCASE constant in the emitter, with the role that says
+# WHICH floor applies to it. `fill-vocabulary` members are backgrounds (label ink
+# 4.5:1, focus ring 3:1); a `control-ink` member is the foreground painted on
+# those fills, so it is floor-checked in the other direction by the ring/arrow
+# tests and closed here against `_ring_ink`'s reachable outputs (WI-317). A new
+# constant fails the sweep until it is classified.
+A4_HEX_CONSTANT_ROLES = {
+    "STATUS_FILL": "fill-vocabulary",
+    "TIER_FILL": "fill-vocabulary",
+    "OKF_TYPE_FILL": "fill-vocabulary",
+    "SW_NODE_FILL": "fill-vocabulary",
+    "PHASE_ACCENTS": "fill-vocabulary",
+    "RING_INKS": "control-ink",
+}
+
+
 def test_a4_the_vocabulary_sweep_is_closed_and_every_member_clears_the_floors():
     """dashboard-accessibility.md A4 closure (WI-313). The sibling A4 tests own
     the arithmetic; what none of them owned is the SET — each sweeps a
@@ -3534,15 +3649,10 @@ def test_a4_the_vocabulary_sweep_is_closed_and_every_member_clears_the_floors():
         hexes = [s for s in strings if re.fullmatch(r"#[0-9a-fA-F]{3,8}", s)]
         if hexes:
             found[name] = hexes
-    assert set(found) == {
-        "STATUS_FILL",
-        "TIER_FILL",
-        "OKF_TYPE_FILL",
-        "SW_NODE_FILL",
-        "PHASE_ACCENTS",
-    }, (
-        "the hex-bearing constant set changed — a new colour vocabulary must "
-        "join _palette_vocabularies and the A4/U5 sweeps before it ships: "
+    assert set(found) == set(A4_HEX_CONSTANT_ROLES), (
+        "the hex-bearing constant set changed — a new constant must declare its "
+        "ROLE in A4_HEX_CONSTANT_ROLES (and a new colour vocabulary must also "
+        "join _palette_vocabularies and the A4/U5 sweeps) before it ships: "
         "{}".format(sorted(found))
     )
     # Every member must be CANONICAL 6-digit lowercase — the contrast
@@ -3555,12 +3665,27 @@ def test_a4_the_vocabulary_sweep_is_closed_and_every_member_clears_the_floors():
     # is the light-gray fill that carries dark slate ink (see
     # test_a4_node_fills_meet_the_wcag_floor, which states the same rule).
     dark_ink_fills = {gt.STATUS_FILL["queued"]}
+    fills = []
     for name, hexes in sorted(found.items()):
+        if A4_HEX_CONSTANT_ROLES[name] != "fill-vocabulary":
+            continue
+        fills.extend(hexes)
         for fill in hexes:
             ink = "#0f172a" if fill in dark_ink_fills else "#ffffff"
             assert _wcag(ink, fill) >= 4.5, (name, fill, ink, _wcag(ink, fill))
             ring = gt._ring_ink(fill)
             assert _wcag(ring, fill) >= 3, (name, fill, ring, _wcag(ring, fill))
+    # A `control-ink` constant is measured the other way round — it is painted ON
+    # the fills, so its floors are the ring/arrow ones the sibling tests own; what
+    # closes HERE is that the set is exactly what `_ring_ink` can choose (WI-317
+    # emits one containment-arrow marker per ink, so an unreachable member is dead
+    # markup and a reachable non-member would ship an arrow head with no marker).
+    for name in [n for n, r in A4_HEX_CONSTANT_ROLES.items() if r == "control-ink"]:
+        assert set(found[name]) == {gt._ring_ink(f) for f in fills}, (
+            name,
+            sorted(found[name]),
+            sorted({gt._ring_ink(f) for f in fills}),
+        )
 
 
 # A4, the theme-token half (adversarial-review finding F4): LLR-114 claims the
@@ -3575,6 +3700,10 @@ A4_FILL_TOKEN_ROLES = {
     "--muted": "ink",  # sub-label / edge text colour
     "--text": "ink",  # body text colour used as SVG fill
     "--surface": "container-fill",  # component boxes; dark --text sits on it
+    # WI-317: the containment-arrow head is FILLED with the per-node control ink.
+    # Not a background — its floor is 3:1 against the host node fill, owned by
+    # test_t5_containment_arrow_clears_the_3to1_floor_against_every_host_fill.
+    "--ring": "control-ink",
 }
 
 

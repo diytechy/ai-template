@@ -14182,3 +14182,68 @@ Ratchets re-stamped with reasons inline (gen_trajectory 5112 → 5186;
 the T5 arrow-contrast finding; then ONE fresh critique against the final render
 commit, the owner's re-attest sitting, and the train cleanup (worktree,
 `refs/llm/reservations/WI-305`+`WI-315`, `docs/pause`).
+
+## 2026-07-26 — WI-317: the descend arrow joins the ring, and a marker limitation that had to be designed around
+
+The one piece of value the deadlocked train dispatch bought. The critique's T5
+MAJOR was a defect no WI owned: the containment/descend arrow (`.cedge` + its
+`cedgearrow` head) is drawn INSIDE the block, over the node's own fill, in a
+fixed `var(--accent)` — **1.06:1 in light** (`#4f46e5` on the phase-1 `#0369a1`)
+and **1.99:1 in dark**. Identical failure mode to the focus ring WI-299 fixed
+(`var(--accent)` at 1.00:1 on the phase-3 block), one control over: a hue picked
+once cannot clear 3:1 against every fill it may land on.
+
+### The fix is the ring's, except where SVG would not let it be
+
+The shaft was a one-line change — `stroke:var(--ring,var(--accent))`, inheriting
+the per-node ink `_ring_style` already stamps. The head was not, and the reason
+is worth recording because it is invisible until it bites: **marker content is
+rendered from the `<defs>` tree, not from the element that references it**, so a
+custom property set on the host node does not reach inside the marker. A shared
+head would have kept being painted from one hue while the shaft passed — a
+half-fixed arrow that measures green on the rule and still vanishes on screen.
+
+So the emitter now emits **one marker per ring ink** (`_cedge_marker`) and each
+block references the one matching its fill; `RING_INKS` declares that ink set as
+closed, because one-marker-per-ink is only total over a closed set. A
+theme-token fill (`var(--surface)`) keeps the unsuffixed accent marker, exactly
+where `_ring_style` also declines to stamp — accent is tuned as ink on surface.
+Emitted: 55 unsuffixed + 14 `cedgearrow-ffffff`.
+
+`context-stroke` would have been two CSS lines instead, and was rejected: it
+makes the rendered colour depend on browser support, and the guard could then
+only assert what the CSS *says*, not what any reader sees.
+
+### The guard, proven against the defect first
+
+`TC-108` grew a half (b) that resolves the CSS `var()` fallback the way a
+browser does — block's inline `--ring` if present, else the theme's `--accent`,
+read from the emitted CSS per theme — and asserts ≥ 3:1 over the closed fill
+set in both themes, plus the surface fills the fallback still serves. Then it
+reads the RENDERED artifact and requires every arrow's marker to carry its host
+block's ink. Run against the pre-fix code it failed at **1.0596:1
+(`#4f46e5` on `#0369a1`)** — the critic's measured value to four decimals.
+`LLR-105` widened from "the focus ring" to "every control painted over a node's
+own fill"; both rows go `Modified` into the open re-attest window.
+
+### Two sensors bit; both were answered, not silenced
+
+- The **LLR-114 reflection sweep** (WI-313) caught `RING_INKS` as an
+  unclassified hex-bearing constant. It was asserting a flat set equality, which
+  is the right shape but the wrong question for an ink: `#ffffff` "on" `#ffffff`
+  is 1:1, and the sweep would have demanded 4.5:1. It now classifies by **role**
+  — `fill-vocabulary` members keep both floors; a `control-ink` is measured the
+  other way round (its floors belong to the ring/arrow tests) and is closed
+  against `_ring_ink`'s reachable outputs, so a dead ink or a reachable
+  non-member fails.
+- `A4_FILL_TOKEN_ROLES` gained `--ring` (the head is *filled* with it). Note the
+  token test runs on a small fixture that renders no drill, so it would not have
+  caught this on its own — the classification is deliberate, not forced.
+
+**Verified:** smoke 410 passed; `test_gen_trajectory.py` 143 passed; `trace
+--strict --strict-integrity` clean at SN=25 SR=110 LLR=114 TC=117 orphans=0
+integrity=0; `check_docs` OK (265 docs, 793 links, 0 broken); derived gate
+**G2** (`modified=6` — the open window, deliberate). Ratchet re-stamped
+5186 → 5236 with its reason inline; most of that delta is the comment recording
+the marker/defs constraint, without which the next reader collapses the markers
+back into one and silently restores the defect.

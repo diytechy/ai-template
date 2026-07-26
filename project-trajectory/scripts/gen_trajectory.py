@@ -734,15 +734,25 @@ def tab_panel_open(pid):
 
 
 def _arrow_markers(*specs):
-    """`<defs>` wrapping one `<marker>` per spec: `(marker_id, css_class)`, or
+    """`<defs>` wrapping one `<marker>` per spec: `(marker_id, css_class)`,
     `(marker_id, css_class, size)` to override the default `ARROW_SIZE` (the
-    `cedgearrow` containment marker renders a touch smaller)."""
+    `cedgearrow` containment marker renders a touch smaller), or
+    `(marker_id, css_class, size, ring)` to stamp the marker itself with a
+    `--ring` value.
+
+    That last form exists because marker content is rendered from the `<defs>`
+    tree, not from the element referencing it: a custom property set on the
+    referencing node does NOT reach inside the marker, so a head that must match
+    its host node's contrast-safe ink has to carry its own `--ring` (WI-317)."""
     markers = "".join(
         '<marker id="{}" viewBox="0 0 10 10" refX="8" refY="5" '
         'markerWidth="{sz}" markerHeight="{sz}" markerUnits="userSpaceOnUse" '
-        'orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" '
+        'orient="auto-start-reverse"{ring}><path d="M0,0 L10,5 L0,10 z" '
         'class="{}"></path></marker>'.format(
-            esc(spec[0]), esc(spec[1]), sz=spec[2] if len(spec) > 2 else ARROW_SIZE
+            esc(spec[0]),
+            esc(spec[1]),
+            sz=spec[2] if len(spec) > 2 else ARROW_SIZE,
+            ring=' style="--ring:{}"'.format(spec[3]) if len(spec) > 3 else "",
         )
         for spec in specs
     )
@@ -1537,7 +1547,30 @@ def _ring_ink(fill):
     fill_lum = lum(fill)
     white = 1.05 / (fill_lum + 0.05)
     black = (fill_lum + 0.05) / 0.05
-    return "#ffffff" if white >= black else "#0f172a"
+    return RING_INKS[0] if white >= black else RING_INKS[1]
+
+
+# The closed set `_ring_ink` chooses between — declared, not implied, because the
+# containment-arrow markers are emitted one per ink (`_cedge_marker`): a third
+# ink would need a third marker, and a test asserts the closure.
+RING_INKS = ("#ffffff", "#0f172a")
+
+
+def _cedge_marker(fill):
+    """`(marker id, ring ink)` for the containment/descend arrow drawn INSIDE a
+    block of `fill` (WI-317, T5 — the arrow measured 1.06:1 light / 1.99:1 dark
+    when it was painted in a fixed `var(--accent)` over the phase-1 `#0369a1`).
+
+    The arrow is an expand/descend affordance sitting on the node's own fill, so
+    it takes the same per-fill contrast-safe ink as the focus ring — but a marker
+    cannot inherit the host node's `--ring` (see `_arrow_markers`), so each ink
+    gets its own marker and the block references the one matching its fill. A
+    theme-token fill (`var(--surface)`) keeps the unsuffixed marker and the CSS
+    `var(--accent)` fallback, exactly as `_ring_style` leaves it unstamped."""
+    if fill and fill.startswith("#"):
+        ink = _ring_ink(fill)
+        return "cedgearrow-{}".format(ink.lstrip("#")), ink
+    return "cedgearrow", None
 
 
 def _ring_style(fill):
@@ -1640,10 +1673,17 @@ DRILL_STYLE = (
     ".drill .port.in{stroke:var(--accent);}"
     ".drill .wire{fill:none;stroke:var(--muted);stroke-width:var(--w-line);opacity:var(--o-muted);}"
     ".drill .warrow{fill:var(--muted);}"
-    # SR-056: one horizontal parent→child arrow per containment edge — the accent
+    # SR-056: one horizontal parent→child arrow per containment edge — a distinct
     # colour (vs. the muted dependency wire) marks it as a descend/containment edge.
-    ".drill .cedge{fill:none;stroke:var(--accent);stroke-width:var(--w-line);}"
-    ".drill .cedgehead{fill:var(--accent);}"
+    # WI-317 (T5): that colour was a fixed `var(--accent)`, and the arrow is drawn
+    # INSIDE the block, over the node's own fill — 1.06:1 light / 1.99:1 dark on
+    # the phase-1 `#0369a1`, the same way the focus ring vanished at 1.00:1 before
+    # WI-299. It now reads the same per-node `--ring` control token; the head is
+    # painted by a per-ink marker (`_cedge_marker`) because marker content cannot
+    # see the referencing node's custom properties. `var(--accent)` stays the
+    # fallback for a theme-token fill, where accent is tuned as ink already.
+    ".drill .cedge{fill:none;stroke:var(--ring,var(--accent));stroke-width:var(--w-line);}"
+    ".drill .cedgehead{fill:var(--ring,var(--accent));}"
     "</style>"
 )
 
@@ -2112,6 +2152,7 @@ def _drill_layer_svg(blocks, edges):
         )
 
     nodes = []
+    cedge_markers = {}  # WI-317: marker id -> ring ink, only the ones this layer uses
     for b in blocks:
         x, y = pos[b["key"]]
         cy = y + row_h / 2
@@ -2138,11 +2179,14 @@ def _drill_layer_svg(blocks, edges):
             )
             # SR-056: one horizontal parent→child arrow makes the containment edge
             # explicit (top-right, clear of the centred label), not merely implied.
+            # WI-317: its head is the marker matching THIS block's ring ink.
             ax = x + col_w - CEDGE_LEN - 6
+            mid, ink = _cedge_marker(b.get("fill"))
+            cedge_markers[mid] = ink
             cedge = (
                 '<path class="cedge" d="M{:.1f},{:.1f} h{}" '
-                'marker-end="url(#cedgearrow)"><title>contains → descend</title>'
-                "</path>".format(ax, y + 9, CEDGE_LEN)
+                'marker-end="url(#{})"><title>contains → descend</title>'
+                "</path>".format(ax, y + 9, CEDGE_LEN, mid)
             )
         else:
             # A1 (dashboard-accessibility): a leaf block is interactive too — the
@@ -2189,7 +2233,13 @@ def _drill_layer_svg(blocks, edges):
             )
         )
 
-    defs = _arrow_markers(("drillarrow", "warrow"), ("cedgearrow", "cedgehead", 8))
+    defs = _arrow_markers(
+        ("drillarrow", "warrow"),
+        *(
+            (mid, "cedgehead", 8) if ink is None else (mid, "cedgehead", 8, ink)
+            for mid, ink in sorted(cedge_markers.items())
+        ),
+    )
     body = defs + "".join(wires) + "".join(nodes)
     return (
         '<svg viewBox="0 0 {w:.0f} {h:.0f}" width="{w:.0f}" style="{s}" '
