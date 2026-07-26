@@ -138,7 +138,13 @@ BASELINE = {
     # no legend at all (only the containment drill had one), and gains the
     # shared `.legend` component. Half the delta is the two comments stating
     # the defect each block exists to prevent. Reviewed bump, log 2026-07-26.
-    "gen_trajectory.py": 4943,
+    # +9 (4943 -> 4952), WI-313 rework (adversarial review F1): the emitted JS
+    # tierColor/statusColor maps are SUBSTITUTED from TIER_FILL/STATUS_FILL —
+    # the hand-copied literals kept the same stale tc hex the legend fix
+    # missed, one screen further down. Most of the delta is the comment naming
+    # that finding; the maps themselves got shorter. Reviewed bump, log
+    # 2026-07-26.
+    "gen_trajectory.py": 4952,
     # +11 (3452 -> 3463), WI-284: _regenerate_disposition_artifacts also runs
     # `gen_trajectory.py --status` at integrate/blocked-disposition so a closed
     # id drops from the generated frontier automatically (and the disposition

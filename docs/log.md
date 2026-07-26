@@ -13657,3 +13657,93 @@ SN=25 SR=110 **LLR=112 TC=115** orphans=0, verified-mechanized 94→**95**;
 error, now naming **SR-054 only** — the done-when's exact target. Derived gate
 G3 all phases; okf pruned the two superseded pages. Registry: 313 rows,
 **295 done**, 3 retired; frontier now leads WI-305/306/307/308.
+
+## 2026-07-26 — Adversarial review of the flip (OPUS), and the same-day rework it forced
+
+**Gate record first:** after the flip, the gate bar ran in full — the
+unfiltered suite **1484 passed, 54 skipped**, and `check.py --gate G3 --jobs 0`
+**16 of 17 PASS** (tests+coverage re-ran inside it: 1485 passed), the sole red
+the owner-parked `perceptual-stale`, now naming **SR-054 only**. One honesty
+correction to the two commit messages: `check_trajectory --strict` also emits a
+pre-existing **WI-308 SpecRef-newer-than-row WARN** (row `3caf42f`, spec
+`e348543`, both before this session) that the "down to the single parked error"
+phrasing did not mention.
+
+**The review (Claude Opus, adversarial brief: refute everything) returned 12
+findings — 4 CONFIRMED, 4 REFUTED, 4 JUDGEMENT — and the confirmations were
+earned:**
+
+- **F1 (HIGH, fixed):** the stale `#047857` tc hex — the exact defect the flip
+  commit narrates as eliminated — **still shipped in the emitted JS**: the
+  detail-badge maps `const tierColor`/`statusColor` were hand-copied literals
+  one screen below the fixed legend, so clicking a TC cell rendered a
+  done-green badge. The maps (and their in-script fallbacks) are now
+  **substituted from `TIER_FILL`/`STATUS_FILL`**, and
+  `test_a3_js_detail_maps_mirror_the_declared_palettes` holds every emitted
+  copy equal to the constants — it **bit on the committed artifact before the
+  fix existed**, the cleanest proof a guard can give. (The three
+  `d.fill||'#64748b'` degrade-fallbacks in the self-contained panel scripts
+  remain literals by choice — they only render when data is missing.)
+- **F2 (HIGH, fixed):** the A1 "derived from the emitted JS" closure read only
+  single-quoted `querySelectorAll`, while the emitters already used
+  `querySelector('nav.crumbs')` and `closest('[role=tab]')` — five of the
+  review's six alternative wiring spellings escaped. The extractor now reads
+  **every DOM-selecting API in any quote style** and **fails on a non-literal
+  selector argument**; `nav.crumbs`/`nav.tabs` are classified containers.
+- **F3 (MED-HIGH, fixed):** the A3 core test passed with the original
+  mislabelled-legend defect reintroduced (a wrong-but-declared hex still
+  matches *some* worded swatch), and emitter + bijection test shared one
+  literal key tuple, so a fifth tier member would be silently dropped. The
+  legend and the test now both derive from the `TIER_FILL` **dict**, and two
+  new drift guards hold the **CSS status tokens** equal to `STATUS_FILL`
+  (theme-invariant) — the remaining hand-copied colour surfaces.
+- **F5 (MED-HIGH, fixed):** the first binding quietly dropped the ruling's
+  **key-handler half** of A1 claiming it needed a browser. It does not:
+  `test_a1_every_wired_control_pairs_click_with_focus_or_keydown` statically
+  asserts every control wiring loop that attaches `click`/`dblclick` attaches
+  `focus`/`keydown` beside it. LLR-112 restated; the honest residue is runtime
+  behaviour *equivalence*, not the wiring's existence.
+- **F4 (MED, fixed):** the A4 reflection closure was defeated by 7 of 9
+  realistic shapes (nested per-theme dicts, sets, shorthand/alpha hexes, bare
+  strings) and the theme-token check hand-maintained `{"--hub"}` — the exact
+  defect LLR-114 claimed closed. The reflection is now **recursive** over all
+  shapes, requires **canonical 6-digit** members, and the fill-token set is
+  **derived from the emitted CSS** with a declared role per token
+  (`A4_FILL_TOKEN_ROLES`), floor-checked in both themes.
+- **REFUTED (good news):** the per-tab colour-alone probe found **every painted
+  member cued in its own panel** (the same-document narrowing currently costs
+  a reader nothing); both generator fixes verified genuine; the flip itself
+  verified mechanically legitimate (all Evidence node ids exist and pass,
+  sequencing respected, rubric map id-correct, ratchet honest).
+- **F12 (JUDGEMENT, filed):** closing WI-300 is defensible under the spec, but
+  the close narrative under-stated SR-054's residue — **T6 theme-lock is
+  mechanizable with residue *none* and was owned by nothing**. Filed as
+  **WI-314** (bind T6 under SR-054 per the (f) pattern); T7 rides WI-307;
+  status.md's residue statement corrected.
+- **F6 (JUDGEMENT, surfaced for attestation):** A3's "beside the fill" →
+  "same document" narrowing was introduced at build time where the ruling
+  recorded no residue; it is stated in LLR-113 and — per the review's own
+  measurement — currently vacuous in effect, but the pending re-attestation
+  should bless it knowingly. F11 (matcher quoting fidelity) noted as
+  housekeeping; the non-literal-selector assert covers its sharpest edge.
+
+**Six more mutation proofs**, all bite + restore byte-identical: a
+double-quoted new selector (escaped the first draft, caught now) · a drifted
+`--done` token · a wiring loop stripped of its focus path · a **nested** rogue
+vocabulary · an unclassified `fill:var()` token · an emitter dropping a tier
+member. The Errno-22 mid-write hazard struck twice and left two mutation
+residues on disk (caught by residue grep + git diff before any commit; the
+harness now writes via atomic `os.replace`) — the hazard list's warning about
+scripted rewrites on Windows stands.
+
+**Ratchet:** `gen_trajectory.py` 4943 → **4952** (reviewed bump: the
+substituted-maps comment). **Verified:** `tests/test_gen_trajectory.py` full
+module **134 passed**; registry rows LLR-112/113/114 + TC-117/118/119 restated
+to claim exactly what is proven; trace/check_docs/smoke re-run green at commit.
+**Budget re-stamps with this pass:** the dashboard size sensor bit at the
+commit bar — `PROJECT_STATE.html` 1,403,240 bytes vs the 1,400,000 ceiling
+stamped 2026-07-22 at 1,155,350 measured. Confirmed legitimate registry growth,
+not an embedding bug: 25 new WI rows and the whole option-(f) LLR/TC
+decomposition (each row's Detail now states scope + narrowing, and every cell
+embeds in the dashboard detail JSON). `MAX_BYTES` → **1,600,000** (~14%
+headroom), reason here per the sensor's own instruction.

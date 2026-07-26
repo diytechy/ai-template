@@ -2617,14 +2617,19 @@ HTML_TEMPLATE = string.Template("""<!doctype html>
     function renderDetail(box, d, id, tierColor){
       if(!d){ box.innerHTML = '<p class="hint">No detail.</p>'; return; }
       box.innerHTML =
-        '<span class="badge" style="background:'+tierColor+';color:'+(tierColor==='#94a3b8'?'#0f172a':'#fff')+'">'+esc(d.tier||d.status)+'</span>'
+        '<span class="badge" style="background:'+tierColor+';color:'+(tierColor===statusColor.queued?'#0f172a':'#fff')+'">'+esc(d.tier||d.status)+'</span>'
         + '<h3>'+esc(id)+(d.title?' — '+esc(d.title):'')+'</h3>'
         + (d.status&&d.tier?'<p class="status">'+esc(d.status)+'</p>':'')
         + '<p class="body">'+esc(d.body)+'</p>'
         + (d.meta?'<p class="meta">'+esc(d.meta)+'</p>':'');
     }
-    const tierColor = { sn:'#4338ca', sr:'#0e7490', llr:'#64748b', tc:'#047857' };
-    const statusColor = { done:'#047857', active:'#b45309', queued:'#94a3b8', retired:'#78716c' };
+    /* A3 (WI-313 rework): these maps are SUBSTITUTED from TIER_FILL/STATUS_FILL,
+       never hand-copied — the adversarial review found the previous literals
+       kept a pre-WI-311 tc hex that had become the done-green, the same defect
+       the static legend fix missed here. test_a3_js_detail_maps_mirror_the_
+       declared_palettes holds them equal to the Python constants. */
+    const tierColor = $tier_color_js;
+    const statusColor = $status_color_js;
 
     // Icicle: hover highlights a block + its descendants; click shows detail.
     const ice = document.getElementById('ice');
@@ -2641,8 +2646,8 @@ HTML_TEMPLATE = string.Template("""<!doctype html>
     for(const c of iceCells){
       const id = c.getAttribute('data-id');
       c.addEventListener('mouseover', () => iceHover(id));
-      c.addEventListener('click', () => renderDetail(iceBox, archDetails[id], id, tierColor[archDetails[id]?.tier]||'#64748b'));
-      c.addEventListener('focus', () => { iceHover(id); renderDetail(iceBox, archDetails[id], id, tierColor[archDetails[id]?.tier]||'#64748b'); });
+      c.addEventListener('click', () => renderDetail(iceBox, archDetails[id], id, tierColor[archDetails[id]?.tier]||tierColor.llr));
+      c.addEventListener('focus', () => { iceHover(id); renderDetail(iceBox, archDetails[id], id, tierColor[archDetails[id]?.tier]||tierColor.llr); });
     }
     if(ice) ice.addEventListener('mouseleave', () => { for(const c of iceCells) c.classList.remove('dim','hl'); });
 
@@ -2669,8 +2674,8 @@ HTML_TEMPLATE = string.Template("""<!doctype html>
     for(const n of wiNodes){
       const id = n.getAttribute('data-id');
       n.addEventListener('mouseover', () => dagHover(id));
-      n.addEventListener('click', () => renderDetail(dagBox, wiDetails[id], id, statusColor[wiDetails[id]?.status]||'#94a3b8'));
-      n.addEventListener('focus', () => { dagHover(id); renderDetail(dagBox, wiDetails[id], id, statusColor[wiDetails[id]?.status]||'#94a3b8'); });
+      n.addEventListener('click', () => renderDetail(dagBox, wiDetails[id], id, statusColor[wiDetails[id]?.status]||statusColor.queued));
+      n.addEventListener('focus', () => { dagHover(id); renderDetail(dagBox, wiDetails[id], id, statusColor[wiDetails[id]?.status]||statusColor.queued); });
     }
     if(dag) dag.addEventListener('mouseleave', dagClear);
     // When roadmap (drill render): every block opens the SAME detail aside.
@@ -2680,7 +2685,7 @@ HTML_TEMPLATE = string.Template("""<!doctype html>
     // matches per render mode, so neither is a dead wiring for the artifact it renders.
     if(dag) for(const b of dag.querySelectorAll('.block[data-wi]')){
       const id = b.getAttribute('data-wi');
-      const show = () => renderDetail(dagBox, wiDetails[id], id, statusColor[wiDetails[id]?.status]||'#94a3b8');
+      const show = () => renderDetail(dagBox, wiDetails[id], id, statusColor[wiDetails[id]?.status]||statusColor.queued);
       b.addEventListener('click', show);
       b.addEventListener('focus', show);
     }
@@ -4041,16 +4046,20 @@ def build_html(root, wis):
         return json.dumps(o, ensure_ascii=False).replace("</", "<\\/")
 
     # A3 (WI-313): the icicle tier legend derives from TIER_FILL rather than
-    # restating it. The hardcoded spans this replaces kept a pre-WI-311 TC hex
+    # restating it. The hardcoded spans this replaced kept a pre-WI-311 TC hex
     # (#047857) that had since become STATUS_FILL["done"] — a legend labelling
     # the done-green "TC" while the actual TC cells painted TIER_FILL["tc"].
+    # Iterates the DICT (not a literal key tuple) so a new tier member cannot
+    # be silently dropped from the legend — the adversarial-review finding.
     tier_legend = "".join(
-        '<span><i style="background:{}"></i>{}</span>'.format(TIER_FILL[t], t.upper())
-        for t in ("sn", "sr", "llr", "tc")
+        '<span><i style="background:{}"></i>{}</span>'.format(fill, tier.upper())
+        for tier, fill in TIER_FILL.items()
     )
     return HTML_TEMPLATE.substitute(
         asof=html.escape(_asof(root)),
         tier_legend=tier_legend,
+        tier_color_js=json.dumps(TIER_FILL),
+        status_color_js=json.dumps(STATUS_FILL),
         extra_tabs="\n      ".join(extra_tabs),
         extra_panels="\n\n    ".join(extra_panels),
         project=html.escape(project_name(root)),

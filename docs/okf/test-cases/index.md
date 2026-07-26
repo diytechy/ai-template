@@ -125,4 +125,4 @@ resource: "generated"
 | [TC-116](TC-116.md) | Over the shipped dashboard plus seven fixture renders, assert each declared scale step is… |
 | [TC-117](TC-117.md) | Over the shipped dashboard plus seven fixture renders: derive every querySelectorAll sele… |
 | [TC-118](TC-118.md) | Over the shipped dashboard plus seven fixture renders: resolve the document's token defin… |
-| [TC-119](TC-119.md) | Reflect every UPPERCASE module-level dict/tuple/list holding #rrggbb members and assert t… |
+| [TC-119](TC-119.md) | Reflect every UPPERCASE module-level constant RECURSIVELY (nested dicts/tuples/sets and b… |

@@ -24,7 +24,12 @@ DASHBOARD = REPO_ROOT / "PROJECT_STATE.html"
 # ceiling carries ~21% headroom for ordinary registry growth; a jump past it is
 # a runaway signal, not routine drift. Re-stamp with a logged reason, never
 # silently.
-MAX_BYTES = 1_400_000
+# Re-stamped 2026-07-26 at 1,403,240 measured: legitimate registry growth, not
+# an embedding bug — 25 WI rows (289 -> 314) plus the option-(f) decomposition
+# (LLR-101..114 / TC-104..119, each Detail stating scope + narrowing, all
+# embedded in the dashboard's detail JSON) crossed the 2026-07-22 ceiling.
+# ~14% headroom kept. Reason in the log, 2026-07-26.
+MAX_BYTES = 1_600_000
 
 
 def test_dashboard_stays_within_its_size_budget():

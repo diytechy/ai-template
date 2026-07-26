@@ -2868,14 +2868,33 @@ A1_WIRED_SELECTORS = {
     ".layer": "drill-layer bookkeeping — shown/hidden, never a focus stop",
     ".view, .tablescroll": "scroll containers — scroll-cue listeners only",
     ".drill:not([data-ready])": "controller root marker, not a control",
+    "nav.crumbs": "breadcrumb landmark — its controls are runtime <button>s",
+    "nav.tabs": "tablist container — activation is delegated via closest()",
 }
+
+# Every DOM-selecting API the emitted JS may use, in any quote style. The
+# adversarial review defeated the first draft (querySelectorAll + single
+# quotes only) with five other spellings, two of which the emitters already
+# use (querySelector('nav.crumbs'), closest('[role=tab]')).
+_SELECTOR_CALL = re.compile(
+    r"(?:querySelectorAll|querySelector|closest|matches)\(\s*(['\"`])(.*?)\1\s*\)"
+)
 
 
 def _wired_selectors(html):
-    """Every selector the document's own scripts pass to querySelectorAll."""
+    """Every selector the document's own scripts pass to a DOM-selecting API —
+    and a loud failure on a NON-LITERAL selector argument, which the static
+    derivation cannot see and therefore must not silently allow."""
     out = set()
     for script in re.findall(r"<script\b[^>]*>(.*?)</script>", html, re.S):
-        out |= set(re.findall(r"querySelectorAll\(\s*'([^']+)'\s*\)", script))
+        out |= {m.group(2) for m in _SELECTOR_CALL.finditer(script)}
+        dynamic = re.findall(
+            r"(?:querySelectorAll|querySelector|closest|matches)\(\s*[^'\"`)]", script
+        )
+        assert not dynamic, (
+            "a DOM-selecting call takes a non-literal selector — the A1 closure "
+            "cannot classify what it cannot read; use a literal: " + repr(dynamic)
+        )
     return out
 
 
@@ -3076,7 +3095,9 @@ def test_a3_icicle_tier_legend_swatches_are_the_painted_tier_palette(tmp_path):
     only because the Knowledge tab's own legend covered the real hex. The
     legend now derives from TIER_FILL; this pins the bijection the same way
     `test_every_multifill_panel_emits_a_palette_bijection_legend` pins the
-    phase legend's."""
+    phase legend's. Expected is built from the DICT, not a key tuple, so a
+    fifth tier member missing from the legend also fails (adversarial-review
+    hardening — emitter and test previously shared the same literal tuple)."""
     gt = load_script("gen_trajectory")
     make_repo(tmp_path)
     assert gen(tmp_path).returncode == 0
@@ -3084,9 +3105,135 @@ def test_a3_icicle_tier_legend_swatches_are_the_painted_tier_palette(tmp_path):
     legend = page.split('id="arch-detail"', 1)[1]
     legend = legend.split('<div class="legend">', 1)[1].split("</div>", 1)[0]
     entries = re.findall(r'<i style="background:(#[0-9a-f]{6})"></i>([A-Z]+)', legend)
-    assert entries == [
-        (gt.TIER_FILL[t], t.upper()) for t in ("sn", "sr", "llr", "tc")
-    ], entries
+    assert entries == [(fill, tier.upper()) for tier, fill in gt.TIER_FILL.items()], (
+        entries
+    )
+
+
+def test_a3_js_detail_maps_mirror_the_declared_palettes(tmp_path):
+    """A3, the JS half (adversarial-review finding F1): the detail-panel badge
+    paints from `const tierColor` / `const statusColor` maps in the emitted
+    main script. Those used to be HAND-COPIED literals — and kept the same
+    stale pre-WI-311 tc hex the static legend fix eliminated, so clicking a TC
+    cell rendered a badge in the done-green while the cell and the legend both
+    said `TIER_FILL["tc"]`. The maps are now substituted from the constants;
+    this holds every emitted copy byte-equal to the Python palettes, so a
+    hand-copy cannot come back."""
+    gt = load_script("gen_trajectory")
+    for label, html in _every_emitter_document(tmp_path):
+        seen = 0
+        for name, expect in (
+            ("tierColor", gt.TIER_FILL),
+            ("statusColor", gt.STATUS_FILL),
+        ):
+            for m in re.finditer(r"const " + name + r" = (\{[^;]*?\});", html):
+                got = dict(
+                    re.findall(
+                        r"[\"']?(\w+)[\"']?\s*:\s*[\"'](#[0-9a-fA-F]{6})[\"']",
+                        m.group(1),
+                    )
+                )
+                seen += 1
+                assert got == dict(expect), (
+                    "in the {} render, the emitted {} map disagrees with the "
+                    "declared palette — a hand-copied colour vocabulary: {}".format(
+                        label, name, got
+                    )
+                )
+        assert seen >= 2, "vacuous — {} emitted no detail colour maps".format(label)
+
+
+def test_a3_css_status_tokens_mirror_status_fill(tmp_path):
+    """A3, the token half: the DAG status legend paints via `var(--done)` etc.,
+    while the nodes paint the STATUS_FILL constants directly — so a drift
+    between the CSS token block and the Python dict mislabels the legend the
+    same way the hardcoded tier legend did. Holds the four status tokens equal
+    to STATUS_FILL in `:root` and asserts the dark block does NOT override them
+    (they are theme-invariant by design)."""
+    gt = load_script("gen_trajectory")
+    make_repo(tmp_path)
+    assert gen(tmp_path).returncode == 0
+    css = html_of(tmp_path)
+    for status, fill in gt.STATUS_FILL.items():
+        assert _css_var(css, "--" + status) == fill, (status, fill)
+    dark = css.split("prefers-color-scheme: dark", 1)[1].split("}", 1)[0]
+    for status in gt.STATUS_FILL:
+        assert "--" + status + ":" not in dark, (
+            "--{} is overridden in dark — the status vocabulary is declared "
+            "theme-invariant".format(status)
+        )
+
+
+def _brace_body(text, open_index):
+    """The text between a `{` at open_index and its matching `}`."""
+    depth = 0
+    for i in range(open_index, len(text)):
+        if text[i] == "{":
+            depth += 1
+        elif text[i] == "}":
+            depth -= 1
+            if depth == 0:
+                return text[open_index + 1 : i]
+    return text[open_index + 1 :]
+
+
+def _wiring_bodies(script, sel):
+    """The for-loop bodies that iterate the elements `querySelectorAll(sel)`
+    yields — both emitted shapes: the immediate `for(const x of …qSA('sel')){}`
+    loop, and `const NAME = […qSA('sel')…]` followed by `for(const x of NAME)`
+    loops elsewhere in the same script."""
+    bodies = []
+    for m in re.finditer(r"querySelectorAll\('" + re.escape(sel) + r"'\)", script):
+        head = script[max(0, m.start() - 100) : m.start()]
+        if re.search(r"for\s*\(\s*const\s+\w+\s+of\s+[\w.\[\]? ]*$", head):
+            bodies.append(_brace_body(script, script.index("{", m.end())))
+            continue
+        assign = re.search(r"const\s+(\w+)\s*=[^;{]*$", head)
+        if assign:
+            for lm in re.finditer(
+                r"for\s*\(\s*const\s+\w+\s+of\s+" + assign.group(1) + r"\s*\)\s*\{",
+                script,
+            ):
+                bodies.append(_brace_body(script, lm.end() - 1))
+    return bodies
+
+
+def test_a1_every_wired_control_pairs_click_with_focus_or_keydown(tmp_path):
+    """A1's OPERABLE half, statically (adversarial-review finding F5): the
+    ruling's A1 core is "natively focusable or tabindex + a KEY HANDLER", and
+    the first binding quietly dropped the key-handler half claiming it needed a
+    browser. It does not: the same static read that derives the selectors can
+    assert that every control-selector wiring loop that attaches a mouse
+    activation (`click`/`dblclick`) also attaches a keyboard-reachable path
+    (`focus`, whose handler does the same work in these emitters, or
+    `keydown`). Runtime behaviour equivalence is still not driven — that
+    narrowing stands — but mouse-only wiring can no longer ship silently.
+    Runtime-created controls (the breadcrumb buttons) are native <button>s,
+    where a click listener IS keyboard-operable, and stay out of scope."""
+    paired = 0
+    for label, html in _every_emitter_document(tmp_path):
+        for script in re.findall(r"<script\b[^>]*>(.*?)</script>", html, re.S):
+            for sel, role in A1_WIRED_SELECTORS.items():
+                if role != "control":
+                    continue
+                bodies = "".join(_wiring_bodies(script, sel))
+                if not bodies:
+                    continue
+                if "addEventListener('click'" in bodies or (
+                    "addEventListener('dblclick'" in bodies
+                ):
+                    paired += 1
+                    assert (
+                        "addEventListener('focus'" in bodies
+                        or "addEventListener('keydown'" in bodies
+                    ), (
+                        "in the {} render, {} wires a mouse activation with no "
+                        "keyboard path beside it: {}".format(label, sel, bodies[:200])
+                    )
+    assert paired >= 4, (
+        "vacuous — only {} control wiring loops with a mouse activation were "
+        "found across the sweep".format(paired)
+    )
 
 
 def test_a4_the_vocabulary_sweep_is_closed_and_every_member_clears_the_floors():
@@ -3102,19 +3249,29 @@ def test_a4_the_vocabulary_sweep_is_closed_and_every_member_clears_the_floors():
     existing, not by being remembered.
     """
     gt = load_script("gen_trajectory")
+
+    def _flatten(value):
+        """Every string reachable inside a constant — nested dicts/tuples/
+        lists/sets and bare strings included, because the adversarial review
+        defeated the flat-dict-only draft with a per-theme dict-of-dicts (the
+        WI-293 shape), a tuple-of-tuples, a set, and a bare string constant."""
+        if isinstance(value, str):
+            yield value
+        elif isinstance(value, dict):
+            for v in value.values():
+                yield from _flatten(v)
+        elif isinstance(value, (tuple, list, set, frozenset)):
+            for v in value:
+                yield from _flatten(v)
+
     found = {}
     for name in dir(gt):
         if not name.isupper():
             continue
-        value = getattr(gt, name)
-        if not isinstance(value, (dict, tuple, list)):
-            continue
-        members = value.values() if isinstance(value, dict) else value
-        hexes = [
-            v
-            for v in members
-            if isinstance(v, str) and re.fullmatch(r"#[0-9a-fA-F]{6}", v)
-        ]
+        strings = list(_flatten(getattr(gt, name)))
+        # ANY hex form counts as hex-bearing (3/4/6/8 digits) — a shorthand or
+        # alpha member must not escape the closure by being oddly spelled.
+        hexes = [s for s in strings if re.fullmatch(r"#[0-9a-fA-F]{3,8}", s)]
         if hexes:
             found[name] = hexes
     assert set(found) == {
@@ -3128,6 +3285,12 @@ def test_a4_the_vocabulary_sweep_is_closed_and_every_member_clears_the_floors():
         "join _palette_vocabularies and the A4/U5 sweeps before it ships: "
         "{}".format(sorted(found))
     )
+    # Every member must be CANONICAL 6-digit lowercase — the contrast
+    # arithmetic below is only defined for that form, so a shorthand or
+    # alpha-carrying member fails here rather than shipping unmeasured.
+    for name, hexes in found.items():
+        bad = [h for h in hexes if not re.fullmatch(r"#[0-9a-f]{6}", h)]
+        assert not bad, (name, "non-canonical hex member(s)", bad)
     # Label ink is white everywhere except the one declared exception: `queued`
     # is the light-gray fill that carries dark slate ink (see
     # test_a4_node_fills_meet_the_wcag_floor, which states the same rule).
@@ -3138,6 +3301,50 @@ def test_a4_the_vocabulary_sweep_is_closed_and_every_member_clears_the_floors():
             assert _wcag(ink, fill) >= 4.5, (name, fill, ink, _wcag(ink, fill))
             ring = gt._ring_ink(fill)
             assert _wcag(ring, fill) >= 3, (name, fill, ring, _wcag(ring, fill))
+
+
+# A4, the theme-token half (adversarial-review finding F4): LLR-114 claims the
+# floors cover "emitted theme tokens", but the only token test hand-maintained
+# a set of one ({"--hub"}) — the exact hand-copied-list defect the LLR says it
+# closed. Same cure as A1's selectors: DERIVE the set from the emitted CSS and
+# force a classification, so a new `fill:var(--x)` fails until a human states
+# its role — and the roles that carry white text get the both-themes floor.
+A4_FILL_TOKEN_ROLES = {
+    "--hub": "white-text-fill",  # the Process hub rect, white label on it
+    "--accent": "ink",  # .hooplab headline TEXT colour, not a fill behind text
+    "--muted": "ink",  # sub-label / edge text colour
+    "--text": "ink",  # body text colour used as SVG fill
+    "--surface": "container-fill",  # component boxes; dark --text sits on it
+}
+
+
+def test_a4_every_css_fill_token_is_classified_and_floor_checked(tmp_path):
+    """Every theme token the emitted CSS uses as a `fill:` must be classified
+    in A4_FILL_TOKEN_ROLES; `white-text-fill` roles clear 4.5:1 under white in
+    BOTH themes (the WI-293 lesson — a per-theme token passed light and shipped
+    2.98:1 in dark), and `container-fill` roles keep the page's own `--text`
+    readable on them in both themes."""
+    with_gate(tmp_path, "G2")  # the Process tab renders --hub, the widest set
+    assert gen(tmp_path).returncode == 0
+    css = html_of(tmp_path)
+    used = set(re.findall(r"fill:\s*var\((--[\w-]+)", css))
+    assert used, "vacuous — no fill:var() token found"
+    unclassified = used - set(A4_FILL_TOKEN_ROLES)
+    assert not unclassified, (
+        "fill token(s) with no declared role — classify before shipping: {}".format(
+            sorted(unclassified)
+        )
+    )
+    for token, role in A4_FILL_TOKEN_ROLES.items():
+        if role == "white-text-fill":
+            for dark in (False, True):
+                value = _css_var(css, token, dark=dark)
+                assert _wcag("#ffffff", value) >= 4.5, (token, dark, value)
+        elif role == "container-fill":
+            for dark in (False, True):
+                surface = _css_var(css, token, dark=dark)
+                text = _css_var(css, "--text", dark=dark)
+                assert _wcag(text, surface) >= 4.5, (token, dark, surface, text)
 
 
 def test_u3_knowledge_edge_stroke_uses_the_shared_muted_token(tmp_path):
