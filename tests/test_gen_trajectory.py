@@ -2714,6 +2714,54 @@ def test_t2_small_spine_keeps_the_flat_icicle(tmp_path):
     assert "TC-001" in text  # deep cells render inline, unhidden
 
 
+# --- WI-307 / SR-054 T7 + T4: every diagram scales to fit, with a floor -------
+# 119-CRITIQUE T7 and the WI-305 train critique (T7 + T4): every emitted SVG
+# carried a FIXED pixel width, so at 390px all four views demanded "Scroll
+# sideways to see the full view" and cut off right-side lanes, and the How graph
+# clipped `CMP-002 - Generators` mid-label. A viewBox alone cannot fix that - the
+# fixed width pins the rendered size. These guards hold the responsive sizing on
+# EVERY emitter (the defect was per-wrapper, so a per-view test would miss a
+# fourth emitter added later) and pin the legibility floor that keeps the fix
+# from trading T7 for T4.
+
+_FIT_RE = re.compile(
+    r'style="width:100%;max-width:(\d+)px;min-width:(\d+)px;height:auto"'
+)
+
+
+def test_t7_every_emitted_svg_scales_to_fit(tmp_path):
+    # Derived from the emitted document, not a hand list: EVERY <svg> must carry
+    # the responsive style, and none may keep a bare fixed width. A new emitter
+    # that forgets it fails here.
+    make_repo(tmp_path)
+    _spine_with_sns(tmp_path, 8)
+    assert gen(tmp_path).returncode == 0
+    text = html_of(tmp_path)
+    svgs = re.findall(r"<svg\b[^>]*>", text)
+    assert svgs, "vacuous - no svg emitted"
+    missing = [t[:90] for t in svgs if "width:100%" not in t]
+    assert not missing, "svg(s) without responsive sizing: {}".format(missing)
+    # A fixed width with no fit style is the exact pre-fix shape.
+    assert not re.findall(r'<svg viewBox="[^"]*" width="\d+"(?! style=)', text)
+
+
+def test_t7_shrink_floor_keeps_labels_legible(tmp_path):
+    # The floor is the T4 half: pure scale-to-fit would squeeze a wide graph into
+    # 390px and shrink a 12px label past readable, so min-width pins how far the
+    # diagram may shrink. Assert the emitted ratio matches the declared constant
+    # rather than re-hardcoding it (one home for the number).
+    gt = load_script("gen_trajectory")
+    make_repo(tmp_path)
+    _spine_with_sns(tmp_path, 8)
+    assert gen(tmp_path).returncode == 0
+    pairs = _FIT_RE.findall(html_of(tmp_path))
+    assert pairs, "vacuous - no responsive svg found"
+    for natural, floor in pairs:
+        expected = int(float(natural) * gt.SHRINK_FLOOR)
+        assert abs(int(floor) - expected) <= 1, (natural, floor, expected)
+    assert 0 < gt.SHRINK_FLOOR < 1
+
+
 def test_t1_hero_names_the_active_work_item(tmp_path):
     # dashboard-usability T1 (048): the landing hero names the in-flight work item
     # (id + title) so finding "the next work" costs zero tab switches. WI-002 is

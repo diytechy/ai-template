@@ -166,7 +166,14 @@ BASELINE = {
     # TC) while the three wired tabs opened at a summary. Most of the delta is
     # the comment stating why capping depth does NOT fix a leaf-proportional
     # height. Reviewed bump, log 2026-07-26. Re-stamp down with WI-280.
-    "gen_trajectory.py": 5156,
+    # +30 (5156 -> 5186), WI-307: _svg_fit_style + SHRINK_FLOOR, applied in the
+    # three SVG wrappers so EVERY diagram scales to fit its container instead of
+    # pinning a fixed pixel width (T7: all four 390px views demanded sideways
+    # scroll; T4: the How graph clipped CMP-002 mid-label). Nearly all of the
+    # delta is the comment explaining why a viewBox alone cannot fix it and why
+    # the floor exists - pure scale-to-fit trades T7 for T4. Reviewed bump, log
+    # 2026-07-26. Re-stamp down with WI-280.
+    "gen_trajectory.py": 5186,
     # +11 (3452 -> 3463), WI-284: _regenerate_disposition_artifacts also runs
     # `gen_trajectory.py --status` at integrate/blocked-disposition so a closed
     # id drops from the generated frontier automatically (and the disposition

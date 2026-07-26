@@ -261,6 +261,34 @@ ICICLE_UNIT = 18  # px of height per TC leaf
 _FOCUSABLE = re.compile(r"tabindex\s*=|<a\s[^>]*href\s*=", re.I)
 
 
+# WI-307 (T7 + T4, 119-CRITIQUE + the WI-305 train critique): every emitted SVG
+# used to carry a FIXED pixel `width`, so a diagram wider than the viewport could
+# only be reached by horizontal scrolling — at 390px all four views demanded
+# "Scroll sideways to see the full view" and cut off right-side lanes, and the
+# How graph clipped `CMP-002 — Generators` mid-label (the T4 half of the same
+# defect). A `viewBox` alone does not fix it: the fixed width pins the rendered
+# size, so the box never scales.
+#
+# The fix is scale-to-fit WITH A LEGIBILITY FLOOR, not unbounded scaling. Pure
+# scale-to-fit trades T7 for T4 — squeezing a 900px graph into 390px shrinks a
+# 12px label to ~5px, which is the "readable at default zoom" floor T4 forbids.
+# So the SVG scales down only to SHRINK_FLOOR of its natural width; past that it
+# stops shrinking and the container's existing scroll + `.scrollcue` affordance
+# takes over. That is the row's own rule — "keep the sideways-scroll hint only as
+# a fallback for content that genuinely cannot fit" — made mechanical, and it is
+# stated as residue rather than hidden: a view whose natural width exceeds
+# 390 / SHRINK_FLOOR still scrolls, with the cue.
+SHRINK_FLOOR = 0.62  # smallest fraction of natural width before scrolling resumes
+
+
+def _svg_fit_style(width):
+    """The responsive sizing for an emitted diagram: fill the container, keep the
+    viewBox aspect, and never shrink past the label-legibility floor."""
+    return "width:100%;max-width:{:.0f}px;min-width:{:.0f}px;height:auto".format(
+        width, width * SHRINK_FLOOR
+    )
+
+
 def _svg_wrap(width, height, body):
     """The `<svg>` wrapper shared by the graph emitters (dag / sw / know), which
     differ only in their content. Folding `_svg_role` in makes the WI-297
@@ -269,9 +297,9 @@ def _svg_wrap(width, height, body):
     writes the tag. The per-site `role=` interpolation this replaced is the shape
     that let a children-presentational role sit over focusable nodes."""
     return (
-        '<svg viewBox="0 0 {:.0f} {:.0f}" width="{:.0f}" '
+        '<svg viewBox="0 0 {:.0f} {:.0f}" width="{:.0f}" style="{}" '
         'preserveAspectRatio="xMinYMin meet" role="{}">{}</svg>'.format(
-            width, height, width, _svg_role(body), body
+            width, height, width, _svg_fit_style(width), _svg_role(body), body
         )
     )
 
@@ -482,9 +510,9 @@ def arch_icicle(root):
         )
         body = heads + "".join(cells)
         return (
-            '<svg viewBox="0 -22 {} {:.0f}" width="{}" '
+            '<svg viewBox="0 -22 {} {:.0f}" width="{}" style="{}" '
             'preserveAspectRatio="xMinYMin meet" role="{}">{}</svg>'.format(
-                width, y + 22, width, _svg_role(body), body
+                width, y + 22, width, _svg_fit_style(width), _svg_role(body), body
             )
         )
 
@@ -2164,9 +2192,11 @@ def _drill_layer_svg(blocks, edges):
     defs = _arrow_markers(("drillarrow", "warrow"), ("cedgearrow", "cedgehead", 8))
     body = defs + "".join(wires) + "".join(nodes)
     return (
-        '<svg viewBox="0 0 {w:.0f} {h:.0f}" width="{w:.0f}" '
+        '<svg viewBox="0 0 {w:.0f} {h:.0f}" width="{w:.0f}" style="{s}" '
         'preserveAspectRatio="xMinYMin meet" role="{r}" class="drillsvg">'
-        "{b}</svg>".format(w=width, h=height, r=_svg_role(body), b=body)
+        "{b}</svg>".format(
+            w=width, h=height, s=_svg_fit_style(width), r=_svg_role(body), b=body
+        )
     )
 
 
