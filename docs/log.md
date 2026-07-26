@@ -14381,3 +14381,48 @@ the wired step green via `check.py --gate G3 --run-step doc-refs`; smoke **413
 passed**; `trace --strict --strict-integrity` clean at SN=25 SR=110 LLR=115
 TC=118 orphans=0 integrity=0 **interfaces=70**; `check_docs` OK (266 docs, 794
 links, 0 broken); derived gate **G2** (`modified=6`).
+
+## 2026-07-26 — 121-CRITIQUE: the batched-render route run end-to-end, on a genuinely non-Anthropic critic
+
+The route [wrap-up-plan.md](wrap-up-plan.md) §4/§7 prescribes, executed once:
+land the whole render batch attended, then dispatch **one** critique against the
+last render commit. Verdict: **CHANGES-REQUESTED findings=3** —
+[121-CRITIQUE](reviews/121-CRITIQUE.md). **T2 and T5 pass; T4 fails twice, T8
+once.** Filed as [WI-318](requirements/work-items.csv) (clipped node
+descriptions), **WI-319** (truncated next-work title), **WI-320** (roadmap edge
+routing). The loop builds the eyes; it never edits the dashboard inline.
+
+### Routing by provider, not by gateway
+
+The OpenCode-Go gateway again returned nothing to a `kimi-k3` PONG probe — the
+same outage shape as 2026-07-24. `codex` (OpenAI) answered a probe in seconds
+and carried the whole dispatch. That is not a degraded fallback: the builder was
+Claude, so an OpenAI critic is a **genuinely family-heterogeneous** dispatch, the
+*stronger* SR-084 path, and the one 120-CRITIQUE had to give up. **Probe before
+planning around a gateway**, and treat the route as a choice of PROVIDER.
+
+### The critic behaved better than the scope brief required
+
+Three things worth recording, because they are what a good critique dispatch
+looks like and each was a failure mode in an earlier round:
+
+- **It honored the retired anchors.** T1/T3/T6/T7 are bound to tests now; the
+  brief said so and the critic used its "out of scope" section for what it could
+  not judge rather than inflating `findings=N`.
+- **It applied the recipe's own caveat unprompted** — checked an apparent
+  sticky-header overlap in a `-full` shot against the matching `-fold` shot and
+  dismissed it as the documented `fullPage` capture artifact.
+- **It read pixels, not markup**, and cited the exact shot file behind every
+  finding. It even tried to crop a PNG for a closer look at the DAG corridors.
+
+### What the verdict means for the gate, and what it does not
+
+`perceptual-stale` is **clear** — the gate's requirement is a critique that
+*post-dates* the render change, not an APPROVE (the verdict drives the
+warn-first lax-TC ratchet on WI-close commits, a different mechanism). So the
+G3 harness is green while the three findings are worked.
+
+And the deadlock is unchanged: three render rows again, one whole-document
+critique. Batch them attended and dispatch once. **`docs/pause` stays.** The
+structural question — whether a render train should be able to close while an
+anchor it never touched fails — is still OI-9/WI-300's, and still the owner's.
