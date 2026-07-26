@@ -44,15 +44,21 @@ def _derive(scaffold):
 
 # --- the meta-repo dogfood ----------------------------------------------------
 def test_meta_repo_default_phase_holds_g3_and_cache_is_fresh():
-    # The kit's north star, phase-aware since phase 2 opened (WI-116): the
-    # meta's verified spine — foundation phase 1 — holds G3 regardless of what
-    # pre-dev drafts a later phase carries, and the committed docs/gate cache
-    # matches the recomputed state (--check green). Run against the real meta root.
-    # The back-filled spine is fully phased (1..4), so the derived current phase = 4.
+    # The kit's north star, phase-aware since phase 2 opened (WI-116), re-scoped
+    # by WI-316: the per-phase values are DERIVED from the live registry states
+    # rather than hardcoded — a `Modified` re-attest window legitimately pulls a
+    # phase to G2 (the whole point of the marker), so freezing "1=G3" here would
+    # red the dogfood for the exact state the mechanism exists to make visible.
+    # The test's real claims survive: --print agrees with compute() on the real
+    # meta root, the basis carries the modified=N count, and the committed
+    # docs/gate cache matches the recomputed state (--check green).
+    result = _derive(ROOT)
     proc = run_py([SCRIPTS / "derive_gate.py", "--print", "--root", ROOT], cwd=ROOT)
     assert proc.returncode == 0, proc.stdout + proc.stderr
-    assert "1=G3" in proc.stdout
+    for phase, gate in result["per_phase"].items():
+        assert "{}={}".format(phase, gate) in proc.stdout
     assert "phase=4" in proc.stdout
+    assert "modified={}".format(result["modified"]) in proc.stdout
     check = run_py([SCRIPTS / "derive_gate.py", "--check", "--root", ROOT], cwd=ROOT)
     assert check.returncode == 0, check.stdout + check.stderr
 
@@ -129,6 +135,43 @@ def test_decomposed_unverified_is_g2(scaffold):
 def test_no_real_srs_is_g1(scaffold):
     # A fresh scaffold (only -000 placeholders) is at G1, never a vacuous G3.
     assert _derive(scaffold)["gate"] == "G1"
+
+
+def test_modified_sr_reads_g2_and_is_counted(scaffold):
+    # WI-316: a Modified SR (post-attestation amendment, re-attest owed) pulls its
+    # gate to G2 through the EXISTING decomposed-unverified rung — no rule of its
+    # own — and the basis carries modified=N so the pending state never hides.
+    # Children stay Verified: their status never independently gates (maturity),
+    # so the pull is exactly one rung, not a G0 draft-drop.
+    make_minimal_project(scaffold)
+    # SR-001 keeps the minimal project's LLR/TC children (decomposed), so the
+    # Modified status pulls exactly one rung — not the undecomposed G1.
+    _write(scaffold, srs=_sr("SR-001", status="Modified"))
+    result = _derive(scaffold)
+    assert result["raw"] == GATE.G2
+    assert result["gate"] == "G2"
+    assert result["modified"] == 1
+    assert result["drafts"] == 0
+    # The emitted basis line surfaces the count between drafts and computed.
+    assert "drafts=0 modified=1 computed=G2" in GATE.basis_line(result)
+
+
+def test_modified_children_are_counted_but_never_gate(scaffold):
+    # A Modified LLR/TC joins the modified=N count (informational precision) but
+    # caps nothing: maturity_gate stays Draft-only, so the SR's own status drives
+    # the gate exactly as before — the anti-coupling rule the derived-gate model
+    # dropped LLR/TC status for is untouched by WI-316.
+    make_minimal_project(scaffold)
+    _write(
+        scaffold,
+        srs=_sr("SR-001"),
+        llrs='LLR-001,SR-001,Adder,src/demo,add,"d",(see TC),Modified\n',
+        tcs='TC-001,SR-001;LLR-001,Unit,m,Smoke,"a=1","e",Yes,tests/test_demo.py::t,Modified\n',
+    )
+    result = _derive(scaffold)
+    assert result["gate"] == "G3"  # SR Verified; children's status never caps
+    assert result["modified"] == 2
+    assert GATE.maturity_gate({"Status": "Modified"}) == GATE.G3
 
 
 # --- the cache + --check rot guard --------------------------------------------

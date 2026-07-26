@@ -248,6 +248,71 @@ def test_running_runstate_does_not_project(tmp_path):
     assert "None — no durable owner action is pending" in body
 
 
+# --- (e) Draft / Modified spine rows (WI-316) ----------------------------------
+
+SR_HEADER = (
+    "SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,"
+    "Permutations,Priority,Verification,Status,Phase,Area\n"
+)
+
+
+def _write_srs(repo, body):
+    (repo / "docs" / "requirements" / "system-requirements.csv").write_text(
+        SR_HEADER + body, encoding="utf-8"
+    )
+
+
+def test_modified_sr_projects_reattest_owed_with_brief_pointer(tmp_path):
+    # A Modified SR (post-attestation amendment) projects one pure-region line:
+    # re-attest owed, both flips named, pointing at the before/after brief. The
+    # -000 example row is inert, exactly like every other projection source.
+    _init(tmp_path)
+    _write_srs(
+        tmp_path,
+        'SR-000,EXAMPLE,,"r","x","a",,C,Test,Modified,1,\n'
+        'SR-004,Gate derivation,SN-001,"r","x","a",,C,Test,Modified,2,\n',
+    )
+    assert _gen(tmp_path).returncode == 0
+    body = _block(tmp_path)
+    assert "SR-004" in body and "re-attest owed" in body
+    assert "Gate derivation" in body and "phase 2" in body
+    assert "--ratify modified" in body
+    assert "`Modified`→`Verified`" in body and "`Planned`" in body
+    assert "SR-000" not in body  # the example row never projects
+    # The line sits in the PURE region (above the machine-local label), so the
+    # freshness gate byte-compares it.
+    assert body.index("SR-004") < body.index("Machine-local advisory")
+
+
+def test_draft_sr_projects_ratification_owed(tmp_path):
+    # A Draft SR projects a ratification-owed line pointing at the per-SR
+    # hierarchy brief — Draft rows never surfaced in open-items before WI-316.
+    _init(tmp_path)
+    _write_srs(tmp_path, 'SR-007,New need,SN-001,"r","x","a",,C,Test,Draft,3,\n')
+    assert _gen(tmp_path).returncode == 0
+    body = _block(tmp_path)
+    assert "SR-007" in body and "ratification owed" in body
+    assert "--ratify SR-007" in body
+
+
+def test_verified_sr_does_not_project_and_flip_drops_the_line(tmp_path):
+    # A Verified SR projects nothing; flipping Modified->Verified (the re-attest)
+    # drops the line on the next regeneration — the projection is stateless.
+    _init(tmp_path)
+    _write_srs(
+        tmp_path, 'SR-004,Gate derivation,SN-001,"r","x","a",,C,Test,Modified,2,\n'
+    )
+    assert _gen(tmp_path).returncode == 0
+    assert "SR-004" in _block(tmp_path)
+    _write_srs(
+        tmp_path, 'SR-004,Gate derivation,SN-001,"r","x","a",,C,Test,Verified,2,\n'
+    )
+    assert _gen(tmp_path).returncode == 0
+    body = _block(tmp_path)
+    assert "SR-004" not in body
+    assert "None — no durable owner action is pending" in body
+
+
 # --- freshness + byte-untouched hand-authored region ---------------------------
 
 

@@ -921,6 +921,128 @@ def test_staged_is_a_no_op_outside_git(tmp_path):
     assert "validation chain" not in proc.stderr
 
 
+# --- WI-316: the amend-without-flip warn (--staged, warn-first) -----------------
+
+_SPINE_SR_HEADER = (
+    "SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,"
+    "Permutations,Priority,Verification,Status,Phase,Area\n"
+)
+
+
+def _sr_row(req="the original attested text", status="Verified"):
+    return 'SR-001,Adder,SN-001,"{}","why","ac",,C,Test,{},1,\n'.format(req, status)
+
+
+def _init_spine_repo(root):
+    """A git repo whose HEAD holds SR-001 Verified. Returns the git runner."""
+    git = shutil.which("git")
+    if not git:
+        pytest.skip("needs git on PATH")
+
+    def run_git(*a):
+        return subprocess.run(
+            [git, "-C", str(root), *a], capture_output=True, text=True
+        )
+
+    req = root / "docs" / "requirements"
+    req.mkdir(parents=True, exist_ok=True)
+    (req / "system-requirements.csv").write_text(
+        _SPINE_SR_HEADER + _sr_row(), encoding="utf-8"
+    )
+    run_git("init")
+    run_git("config", "user.email", "t@example.com")
+    run_git("config", "user.name", "T")
+    run_git("add", "-A")
+    run_git("commit", "-m", "attested baseline")
+    return run_git
+
+
+def _amend_sr(root, req, status):
+    (root / "docs" / "requirements" / "system-requirements.csv").write_text(
+        _SPINE_SR_HEADER + _sr_row(req, status), encoding="utf-8"
+    )
+
+
+def test_staged_spine_amend_without_flip_warns(tmp_path):
+    # Amending a Verified SR's content cells while Status stays Verified warns,
+    # naming the row and the changed cells — the write-time discipline the
+    # RE-ATTESTATION-PENDING commit-message prose never had (process.md §7).
+    run_git = _init_spine_repo(tmp_path)
+    _amend_sr(tmp_path, "the AMENDED text", "Verified")
+    run_git("add", "-A")
+    proc = run_traj(tmp_path, "--staged")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "SR-001" in proc.stderr
+    assert "Requirement" in proc.stderr
+    assert "Modified re-attest marker" in proc.stderr
+
+
+def test_staged_spine_amend_with_flip_is_silent(tmp_path):
+    # The same amendment WITH the flip (amend + Modified in one commit — the
+    # regime the brief's baseline derivation depends on) is the sanctioned path:
+    # no warn. Mutation-proves the warn keys on the missing flip, not the diff.
+    run_git = _init_spine_repo(tmp_path)
+    _amend_sr(tmp_path, "the AMENDED text", "Modified")
+    run_git("add", "-A")
+    proc = run_traj(tmp_path, "--staged")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "re-attest marker" not in proc.stderr
+
+
+def test_staged_child_amend_with_sr_flip_is_silent_without_it_warns(tmp_path):
+    # Amending an LLR while flipping its OWNING SR in the same commit is the
+    # sanctioned path (the SR is the attestation unit) — no child warn. The
+    # identical LLR amendment with the SR left Verified warns on the child.
+    run_git = _init_spine_repo(tmp_path)
+    llr_h = "LLR-ID,SR-Refs,Title,Module,CodeSymbol,Detail,TestRefs,Status\n"
+    llr_csv = tmp_path / "docs" / "requirements" / "low-level-requirements.csv"
+
+    def write_llr(detail):
+        llr_csv.write_text(
+            llr_h
+            + 'LLR-001,SR-001,Core,src/d.py,f,"{}",(see TC),Verified\n'.format(detail),
+            encoding="utf-8",
+        )
+
+    write_llr("the original detail")
+    run_git("add", "-A")
+    run_git("commit", "-m", "attested chain")
+
+    # (1) amend the LLR + flip the owning SR together -> silent.
+    write_llr("the AMENDED detail")
+    _amend_sr(tmp_path, "the original attested text", "Modified")
+    run_git("add", "-A")
+    proc = run_traj(tmp_path, "--staged")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "re-attest marker" not in proc.stderr
+
+    # (2) the same LLR amendment with the SR left Verified -> the child warns.
+    _amend_sr(tmp_path, "the original attested text", "Verified")
+    run_git("add", "-A")
+    proc2 = run_traj(tmp_path, "--staged")
+    assert proc2.returncode == 0, proc2.stdout + proc2.stderr
+    assert "LLR-001" in proc2.stderr
+    assert "no owning SR is flagged" in proc2.stderr
+
+
+def test_staged_spine_new_row_and_status_only_flip_are_silent(tmp_path):
+    # A NEW row is not an amendment; a Status-only change (e.g. the re-attest
+    # flip Modified->Verified with no content delta) made a deliberate call the
+    # warn does not second-guess. Both stay silent.
+    run_git = _init_spine_repo(tmp_path)
+    csv_path = tmp_path / "docs" / "requirements" / "system-requirements.csv"
+    csv_path.write_text(
+        _SPINE_SR_HEADER
+        + _sr_row()
+        + 'SR-002,New req,SN-001,"fresh","why","ac",,C,Test,Verified,1,\n',
+        encoding="utf-8",
+    )
+    run_git("add", "-A")
+    proc = run_traj(tmp_path, "--staged")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "re-attest marker" not in proc.stderr
+
+
 # --- WI-068: the critique-loop ratchet (--staged, warn-first) ------------------
 
 CRITIQUE_SR_ROW = (

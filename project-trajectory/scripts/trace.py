@@ -9,7 +9,7 @@ PROCESS.md: it never needs hand-maintaining.
 Usage:
     python scripts/trace.py [--strict] [--strict-integrity] [--require-verified]
                             [--phase LIST] [--no-placeholders] [--strict-schema]
-                            [--html] [--ratify SCOPE [--out FILE]]
+                            [--html] [--ratify SCOPE [--out FILE] [--since REV]]
                             [--root DIR] [--docs DIR]
 
 Reads (under --docs, default "<root>/docs"; --root defaults to "."): the spine —
@@ -61,7 +61,10 @@ is Status=Verified" (Draft SRs exempt); --no-placeholders flags leftover "-000"
 example rows (wire in from G2 on); --strict-schema adds required-field,
 closed-vocabulary, and "Automated=Yes cites Evidence" checks over the real rows;
 --ratify SCOPE emits ONLY the batch-scoped ratification hierarchy (a phase tag or
-an SR-id list) to stdout or --out and runs no checks (WI-146). Warn-only
+an SR-id list) to stdout or --out and runs no checks (WI-146); the reserved scope
+`modified` (WI-316) emits the re-attestation brief instead — per-cell
+before/after for every `Modified` SR's chain against its attested baseline (the
+newest revision where the SR row read `Verified`; `--since REV` overrides). Warn-only
 advisories (loud on stdout + in the report, never gating): an unpinned
 comparative acceptance-criterion, an LLR reading below Verified while every
 citing TC is Verified (WI-129), a missing knowledge pack, and an interface
@@ -74,7 +77,9 @@ Contracts: IF-001, IF-021, IF-042 — the interface seams this module declares (
 
 import argparse
 import csv
+import io
 import re
+import subprocess
 import sys
 from pathlib import Path
 
@@ -123,6 +128,21 @@ def is_verified(row):
     is the value the G3 --require-verified criterion and the gate derivation act on.
     Duplicated in derive_gate.py per the F5 rule; pinned equal by test_rule_sync."""
     return (row.get("Status") or "").strip().lower() == "verified"
+
+
+def is_modified(row):
+    """The post-attestation `Modified` state (WI-316, process.md §7): the row
+    landed `Verified` but its content changed after the last attestation, so a
+    re-attest is owed — `Modified`→`Verified` blesses the amendment (existing
+    evidence still verifies the amended text), `Modified`→`Planned` when the
+    amendment invalidated the evidence. Recognized for SURFACING, not gate
+    arithmetic: a Modified SR is simply not Verified, so `derive_gate.sr_gate`
+    already reads it as decomposed-unverified G2 with no code of its own — this
+    predicate exists for the `modified=N` basis count, the pending-owner-actions
+    projection, the chain-consistency warns, and the `--ratify modified` brief.
+    Same case-insensitive one-casing rule as the other two recognized values;
+    duplicated in derive_gate.py per the F5 rule; pinned equal by test_rule_sync."""
+    return (row.get("Status") or "").strip().lower() == "modified"
 
 
 # SR Verification methods that decompose to a TC but no LLR — there is no code to
@@ -352,7 +372,11 @@ def llr_status_advisories(llrs, tcs):
     under --strict or --strict-integrity), because making LLR status gate would
     re-introduce the exact LLR-status coupling the derived-gate model dropped.
     An LLR with no citing TC is the orphan rules' job, not this lint's; matching
-    is case-insensitive via the shared is_verified() predicate."""
+    is case-insensitive via the shared is_verified() predicate. A `Modified` LLR
+    is exempt (WI-316): its below-Verified status is DELIBERATE — a
+    post-attestation amendment awaiting re-attest, not a readout drift — so the
+    "lift to Verified" nag would tell the owner to erase the very marker the
+    sitting needs."""
     citing = {}  # LLR id -> [is_verified(tc) for each citing TC]
     for r in tcs:
         tc_ok = is_verified(r)
@@ -362,7 +386,7 @@ def llr_status_advisories(llrs, tcs):
     out = []
     for r in llrs:
         lid = r.get("LLR-ID")
-        if not lid or is_verified(r):
+        if not lid or is_verified(r) or is_modified(r):
             continue
         verdicts = citing.get(lid)
         if verdicts and all(verdicts):
@@ -370,6 +394,64 @@ def llr_status_advisories(llrs, tcs):
                 "LLR {} reads '{}' but every citing TC is Verified — lift to "
                 "Verified (the evidence already exists)".format(
                     lid, (r.get("Status") or "").strip()
+                )
+            )
+    return out
+
+
+def modified_chain_advisories(srs, llrs, tcs):
+    """Warn-only findings (WI-316): a `Modified` LLR/TC whose owning SR is neither
+    `Modified` nor `Draft`. The SR is the ATTESTATION UNIT (process.md §7) — the
+    re-attest sitting, the pending-owner-actions projection, and the
+    `--ratify modified` brief all key off the SR row — so a chain amendment
+    marked only on a child is INVISIBLE to every surface the marker exists to
+    feed. Flip the owning SR (the amendment's real scope) or the child's flag is
+    dead weight. Warn only, same tier as llr_status_advisories: never joins the
+    exit code, even under --strict — a warn-tier checker feature mints no SR and
+    gates nothing (WI-129/132). A TC's owning SRs resolve through both its
+    direct `Verifies` SR cites and the SR-Refs of every LLR it cites."""
+    sr_by_id = {r.get("SR-ID"): r for r in srs if r.get("SR-ID")}
+    llr_srs = {}  # LLR id -> [owning SR ids]
+    for r in llrs:
+        lid = r.get("LLR-ID")
+        if lid:
+            llr_srs[lid] = [x for x in refs(r.get("SR-Refs")) if x in sr_by_id]
+
+    def _flagged(sr_ids):
+        return any(
+            is_modified(sr_by_id[s]) or is_draft(sr_by_id[s])
+            for s in sr_ids
+            if s in sr_by_id
+        )
+
+    out = []
+    for r in llrs:
+        lid = r.get("LLR-ID")
+        if not lid or not is_modified(r):
+            continue
+        owners = llr_srs.get(lid, [])
+        if owners and not _flagged(owners):
+            out.append(
+                "LLR {} is Modified but its owning SR ({}) is not Modified/Draft "
+                "— flip the attestation unit (the SR) or the amendment is "
+                "invisible to the re-attest sitting".format(lid, ";".join(owners))
+            )
+    for r in tcs:
+        tid = r.get("TC-ID")
+        if not tid or not is_modified(r):
+            continue
+        owners = []
+        for x in refs(r.get("Verifies")):
+            if x in sr_by_id:
+                owners.append(x)
+            elif x in llr_srs:
+                owners.extend(llr_srs[x])
+        if owners and not _flagged(owners):
+            out.append(
+                "TC {} is Modified but its owning SR ({}) is not Modified/Draft "
+                "— flip the attestation unit (the SR) or the amendment is "
+                "invisible to the re-attest sitting".format(
+                    tid, ";".join(sorted(set(owners)))
                 )
             )
     return out
@@ -964,6 +1046,241 @@ def _sn_prose(sn_text):
             "acceptance": cells[3] if len(cells) > 3 else "",
         }
     return meta
+
+
+# --- the re-attestation brief (--ratify modified, WI-316) ----------------------
+# A sitting cannot bless a delta it cannot see: for each `Modified` SR the brief
+# shows every chain row's changed cells as BEFORE (the row at the attested
+# baseline revision) vs AFTER (the working tree). The baseline is git-derived —
+# the newest commit at which the SR row read `Verified` — which is correct under
+# the amend+flip-same-commit regime the staged warn enforces; `--since REV`
+# overrides it for pre-regime streaks (amendments that landed while the row
+# stayed Verified, e.g. the WI-316 backfill batch). Git archaeology lives HERE,
+# on demand, never in the pending projection (pointer-only per its charter).
+
+SPINE_FILES = (
+    ("docs/requirements/system-requirements.csv", "SR-ID"),
+    ("docs/requirements/low-level-requirements.csv", "LLR-ID"),
+    ("docs/test/test-cases.csv", "TC-ID"),
+)
+
+
+def _git_out(root, args):
+    """stdout of a git command under `root`, or None on ANY failure (no git
+    binary, not a repo, unknown rev/path) — the best-effort-off-git pattern."""
+    try:
+        proc = subprocess.run(
+            ["git", "-C", str(root), *args],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+        )
+    except (OSError, ValueError):
+        return None
+    return proc.stdout if proc.returncode == 0 else None
+
+
+def _rows_at(root, rev, rel_path, id_col):
+    """{id: row} of a registry CSV at `rev` (`git show`, csv-parsed — spine cells
+    are long, never line-split; -000 example rows dropped). {} when the file does
+    not exist at that revision (nothing existed = an empty baseline)."""
+    text = _git_out(root, ["show", "{}:{}".format(rev, rel_path)])
+    if text is None:
+        return {}
+    return {
+        r[id_col]: r
+        for r in csv.DictReader(io.StringIO(text))
+        if r.get(id_col) and not r[id_col].endswith("-000")
+    }
+
+
+def _attested_baseline(root, sr_id):
+    """The newest commit at which `sr_id`'s SR row read `Verified` — the
+    attestation boundary. Correct by construction under the amend+flip regime
+    (an amendment flips the row in the same commit, so every commit where the
+    row still reads Verified predates the pending streak). Walks the SR
+    registry's commits newest-first; bounded in practice by the streak depth
+    (typically 1-2 revisions). None: off-git, or the row was never Verified in
+    committed history (first attestation still pending)."""
+    log = _git_out(root, ["log", "--format=%H", "--", SPINE_FILES[0][0]])
+    if log is None:
+        return None
+    for rev in log.split():
+        row = _rows_at(root, rev, SPINE_FILES[0][0], SPINE_FILES[0][1]).get(sr_id)
+        if row is not None and is_verified(row):
+            return rev
+    return None
+
+
+def _changed_cells(before, after):
+    """(cell, before, after) triples for every differing cell, in column order —
+    EXCEPT the `Verified`→`Modified` Status flip itself: the marker is not the
+    amendment, and listing it would bury the real delta under N identical lines.
+    Every other Status movement (a supersession, the →Planned evidence
+    downgrade) is a real change and shows."""
+    before = before or {}
+    after = after or {}
+    keys = list(dict.fromkeys(list(after) + list(before)))
+    out = []
+    for k in keys:
+        b = (before.get(k) or "").strip()
+        a = (after.get(k) or "").strip()
+        if b == a:
+            continue
+        if k == "Status" and b.lower() == "verified" and a.lower() == "modified":
+            continue
+        out.append((k, b, a))
+    return out
+
+
+def _cell_diff_lines(changed):
+    lines = []
+    for cell, b, a in changed:
+        lines.append("- **{}**".format(cell))
+        lines.append("  - before: {}".format(b or "(empty)"))
+        lines.append("  - after: {}".format(a or "(empty)"))
+    return lines
+
+
+def reattest_lines(root, srs, llrs, tcs, since=None):
+    """Markdown for the re-attestation brief (`--ratify modified`, WI-316): one
+    section per `Modified` SR — the attestation unit — with per-cell
+    before/after for every chain row (the SR + its LLRs + their/its TCs) that
+    changed since the attested baseline, plus rows ADDED to or REMOVED from the
+    chain. Baseline = `--since` when given, else the git-derived newest
+    still-Verified revision of the SR row. Off-git (or a never-Verified row) it
+    degrades honestly: current state only, with a stated no-before note.
+    Deterministic given HEAD + the working tree; a generator mode like
+    ratify_lines — runs no checks."""
+    modified_srs = sorted(
+        (r for r in srs if is_modified(r)), key=lambda r: r.get("SR-ID", "")
+    )
+    lines = [
+        "# Re-attestation brief — `Modified` spine rows",
+        "",
+        "_Generated by `trace.py --ratify modified` (WI-316). One section per"
+        " `Modified` SR (the attestation unit); each chain row shows only its"
+        " CHANGED cells, before (the attested baseline revision) vs after (the"
+        " working tree). The `Verified`→`Modified` Status flip itself is not"
+        " listed — the marker is not the amendment. Baseline: `--since` when"
+        " given, else the newest revision where the SR row still read"
+        " `Verified` (correct under the amend+flip-same-commit rule the staged"
+        " warn enforces — use `--since` for a pre-regime streak). Rule on each"
+        " section: bless → `Verified`; evidence no longer verifies the amended"
+        " text → `Planned` (process.md §7)._",
+        "",
+    ]
+    if not modified_srs:
+        lines.append("_No `Modified` SR — nothing owes a re-attest._")
+        return lines
+    git_ok = _git_out(root, ["rev-parse", "HEAD"]) is not None
+    base_cache = {}  # rev -> {rel_path: {id: row}}
+
+    def rows_at_cached(rev, rel_path, id_col):
+        per_rev = base_cache.setdefault(rev, {})
+        if rel_path not in per_rev:
+            per_rev[rel_path] = _rows_at(root, rev, rel_path, id_col)
+        return per_rev[rel_path]
+
+    llrs_by_sr = _bucket_by_ref(llrs, "SR-Refs")
+    tcs_by_ref = _bucket_by_ref(tcs, "Verifies")
+
+    def chain_of(sr_id, chain_srs, chain_llrs_by_sr, chain_tcs_by_ref):
+        """[(kind, id, row)] — the SR + its LLR children + TCs citing the SR or
+        a child LLR, computed from ONE side's rows (current or baseline)."""
+        out = []
+        sr_row = next((r for r in chain_srs if r.get("SR-ID") == sr_id), None)
+        if sr_row is not None:
+            out.append(("SR", sr_id, sr_row))
+        child_llrs = sorted(
+            chain_llrs_by_sr.get(sr_id, []), key=lambda r: r.get("LLR-ID", "")
+        )
+        seen_tcs = {}
+        for lr in child_llrs:
+            out.append(("LLR", lr["LLR-ID"], lr))
+        for key in [sr_id] + [lr["LLR-ID"] for lr in child_llrs]:
+            for t in chain_tcs_by_ref.get(key, []):
+                seen_tcs.setdefault(t.get("TC-ID"), t)
+        for tid in sorted(k for k in seen_tcs if k):
+            out.append(("TC", tid, seen_tcs[tid]))
+        return out
+
+    for sr in modified_srs:
+        sid = sr.get("SR-ID", "")
+        title = (sr.get("Title") or "").strip()
+        lines += ["", "## {} — {}".format(sid, title or "(untitled)"), ""]
+        baseline = (
+            since if since else (_attested_baseline(root, sid) if git_ok else None)
+        )
+        current_chain = chain_of(sid, srs, llrs_by_sr, tcs_by_ref)
+        if baseline is None:
+            reason = (
+                "no git history available"
+                if not git_ok
+                else "the row was never `Verified` in committed history"
+                " (first attestation pending)"
+            )
+            lines.append(
+                "_No attested baseline — {}; current state only._".format(reason)
+            )
+            for kind, rid, row in current_chain:
+                lines += ["", "### {} {} (current)".format(kind, rid)]
+                for k, v in row.items():
+                    if (v or "").strip():
+                        lines.append("- **{}**: {}".format(k, v.strip()))
+            continue
+        date = (_git_out(root, ["show", "-s", "--format=%cs", baseline]) or "").strip()
+        lines.append(
+            "_Baseline `{}`{}{}._".format(
+                baseline[:9],
+                " ({})".format(date) if date else "",
+                " — from `--since`"
+                if since
+                else " — newest revision where {} read `Verified`".format(sid),
+            )
+        )
+        base_srs = list(rows_at_cached(baseline, *SPINE_FILES[0]).values())
+        base_llrs = list(rows_at_cached(baseline, *SPINE_FILES[1]).values())
+        base_tcs = list(rows_at_cached(baseline, *SPINE_FILES[2]).values())
+        base_chain = chain_of(
+            sid,
+            base_srs,
+            _bucket_by_ref(base_llrs, "SR-Refs"),
+            _bucket_by_ref(base_tcs, "Verifies"),
+        )
+        base_by_id = {(k, i): r for k, i, r in base_chain}
+        cur_by_id = {(k, i): r for k, i, r in current_chain}
+        any_change = False
+        for kind, rid, row in current_chain:
+            before = base_by_id.get((kind, rid))
+            if before is None:
+                any_change = True
+                lines += ["", "### {} {} — ADDED since baseline".format(kind, rid)]
+                for k, v in row.items():
+                    if (v or "").strip():
+                        lines.append("- **{}**: {}".format(k, v.strip()))
+                continue
+            changed = _changed_cells(before, row)
+            if changed:
+                any_change = True
+                lines += ["", "### {} {}".format(kind, rid)]
+                lines += _cell_diff_lines(changed)
+        for kind, rid, row in base_chain:
+            if (kind, rid) not in cur_by_id:
+                any_change = True
+                lines += [
+                    "",
+                    "### {} {} — REMOVED since baseline".format(kind, rid),
+                    "_Present at the baseline, absent from the working tree._",
+                ]
+        if not any_change:
+            lines.append(
+                "_No cell differs from the baseline beyond the Status flip —"
+                " if that is unexpected, the streak may predate the regime;"
+                " re-run with `--since <rev>`._"
+            )
+    return lines
 
 
 def ratify_lines(scope, sn_ids, srs, llrs, tcs, sn_meta=None):
@@ -1643,6 +1960,11 @@ def analyze(reg, args):
     # citing TC is Verified — a readout drift, never a failure (LLR status is
     # non-gating under the derived-gate model). Never joins a failure set below.
     llr_status_advis = llr_status_advisories(llrs, tcs)
+    # Warn-only, always on (WI-316): a Modified LLR/TC whose owning SR is not
+    # flagged — the amendment is invisible to the re-attest surfaces, which all
+    # key off the SR row. Same never-gating tier as the status-coherence lint;
+    # rendered through the same channel (one advisory pipe, two lints).
+    llr_status_advis = llr_status_advis + modified_chain_advisories(srs, llrs, tcs)
 
     # Draft artifacts (derived-gate model §3): the rows exempted from the
     # child-completeness orphan rules + the --require-verified criterion. Listed
@@ -1839,12 +2161,14 @@ def render_report(reg, findings, args, forest):
         if not advisories
         else [f"- {f}" for f in advisories]
     )
-    # Warn-only advisory section (never a failure, WI-129): LLRs reading below
-    # Verified whose citing TCs are all Verified. Lift the Status cell by hand
-    # (registries are hand-owned SSOT — no generator writes them back).
-    lines += ["", "## LLR status-coherence advisories (warn-only)", ""]
+    # Warn-only advisory section (never a failure, WI-129 + WI-316): LLRs reading
+    # below Verified whose citing TCs are all Verified (lift the Status cell by
+    # hand — registries are hand-owned SSOT, no generator writes them back), and
+    # Modified LLR/TC rows whose owning SR is not flagged (flip the attestation
+    # unit or the amendment is invisible to the re-attest sitting).
+    lines += ["", "## Status-coherence advisories (warn-only)", ""]
     lines += (
-        ["None. No unlifted LLRs under fully-Verified tests."]
+        ["None. No unlifted LLRs, no orphaned Modified chain rows."]
         if not llr_status_advis
         else [f"- {f}" for f in llr_status_advis]
     )
@@ -2163,7 +2487,20 @@ def main():
         help="emit ONLY the batch-scoped ratification hierarchy (SN->SR->LLR->TC "
         "with prose) for SCOPE — a phase tag (e.g. v3) or an SR-id list "
         "(e.g. 'SR-052,SR-053'); a G1/G2 brief links this instead of hand-copying "
-        "rows (WI-146). Prints to stdout unless --out is given; runs no checks",
+        "rows (WI-146). The reserved scope 'modified' (WI-316) emits the "
+        "RE-ATTESTATION brief instead: per-cell before/after for every Modified "
+        "SR's chain vs its attested baseline (see --since). Prints to stdout "
+        "unless --out is given; runs no checks",
+    )
+    ap.add_argument(
+        "--since",
+        metavar="REV",
+        default=None,
+        help="with --ratify modified, override the attested-baseline revision "
+        "for every Modified SR (default: the newest revision where each SR row "
+        "still read Verified — correct under the amend+flip-same-commit rule; "
+        "use this for a pre-regime streak whose amendments landed while the row "
+        "stayed Verified)",
     )
     ap.add_argument(
         "--out",
@@ -2193,15 +2530,19 @@ def main():
     # --ratify is a generator mode, not a checker: emit the batch-scoped
     # ratification hierarchy and exit 0 without running any orphan/integrity pass
     # (WI-146a). It reuses the loaded, example-filtered working sets above.
+    # The reserved scope `modified` (WI-316) emits the re-attestation brief
+    # instead: per-cell before/after for every Modified SR's chain, baselined at
+    # the git-derived last-Verified revision (or --since).
     if args.ratify is not None:
-        text = (
-            "\n".join(
-                ratify_lines(
-                    args.ratify, reg.sn_ids, reg.srs, reg.llrs, reg.tcs, reg.sn_meta
-                )
+        if args.ratify.strip().lower() == "modified":
+            body = reattest_lines(
+                Path(args.root), reg.srs, reg.llrs, reg.tcs, since=args.since
             )
-            + "\n"
-        )
+        else:
+            body = ratify_lines(
+                args.ratify, reg.sn_ids, reg.srs, reg.llrs, reg.tcs, reg.sn_meta
+            )
+        text = "\n".join(body) + "\n"
         if args.out:
             out_path = Path(args.out)
             out_path.parent.mkdir(parents=True, exist_ok=True)

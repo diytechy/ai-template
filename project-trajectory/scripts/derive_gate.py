@@ -22,7 +22,10 @@ G0 < G1 < G2 < G3:
   - **SR** — Draft (Status) => G0; ratified but not decomposed => G1; decomposed
     (has its required LLR — unless the Verification is LLR-exempt
     Analysis/Inspection/Attest — AND a TC) => G2; decomposed AND Status=Verified
-    => G3.
+    => G3. A `Modified` SR (post-attestation amendment, WI-316) needs no rule of
+    its own: it is decomposed-but-not-Verified, so it reads G2 — the deliberate
+    gate pull that makes a pending re-attest visible. The `modified=N` basis
+    count surfaces it beside `drafts=N`.
   - **LLR / TC** — Draft => G0 (the new-phase signal). Once present, its Status
     does not independently gate: the SR's Verified status drives G2->G3 (matching
     trace.py's --require-verified, which checks SRs, not LLR/TC status), so a
@@ -182,6 +185,16 @@ def maturity_gate(row):
     return G0 if is_draft(row) else G3
 
 
+def is_modified(row):
+    """The post-attestation `Modified` state (WI-316, process.md §7): content
+    changed after the last attestation, re-attest owed. NO gate arithmetic of its
+    own — a Modified SR is simply not Verified, so sr_gate already derives G2
+    (decomposed-unverified); recognized here only for the `modified=N` basis
+    count, so the pending state never hides. Duplicated from trace.py per the F5
+    no-shared-module rule; pinned equal by test_rule_sync."""
+    return (row.get("Status") or "").strip().lower() == "modified"
+
+
 def sn_gate(sn_id, draft_ids):
     """A Draft SN (section-as-state) is G0; a ratified SN has no obligation past G1
     and so never caps the repo (contributes G3 to the min)."""
@@ -224,6 +237,16 @@ def compute(docs):
         + sum(1 for r in tcs if is_draft(r))
         + len(sn_draft)
     )
+    # `Modified` rows (WI-316): landed-but-unblessed amendments awaiting re-attest.
+    # Counted across the three registries exactly like drafts (SNs have no Status
+    # cell — a changed ratified SN rides its SR chain's Modified) and surfaced on
+    # the basis line so the pending state never hides. No gate arithmetic here:
+    # a Modified SR already computes G2 via sr_gate's decomposed-unverified rung.
+    n_modified = (
+        sum(1 for r in srs if is_modified(r))
+        + sum(1 for r in llrs if is_modified(r))
+        + sum(1 for r in tcs if is_modified(r))
+    )
 
     # Aggregation. A repo with no real SRs yet is at G1 (requirements-drafting),
     # never a vacuous G3 from ratified-SN-only. Otherwise the raw level is the min
@@ -251,6 +274,7 @@ def compute(docs):
     return {
         "counts": {"SN": len(sn_ids), "SR": len(srs), "LLR": len(llrs), "TC": len(tcs)},
         "drafts": n_draft,
+        "modified": n_modified,
         "raw": raw,
         "per_phase": per_phase,
         "phase": cur_phase,
@@ -316,13 +340,14 @@ def basis_line(result):
     c = result["counts"]
     per_phase = ";".join(f"{k}={v}" for k, v in result["per_phase"].items())
     return (
-        "# basis: SN={SN} SR={SR} LLR={LLR} TC={TC} drafts={d} computed={raw} "
-        "phase={ph} per-phase={pp}".format(
+        "# basis: SN={SN} SR={SR} LLR={LLR} TC={TC} drafts={d} modified={m} "
+        "computed={raw} phase={ph} per-phase={pp}".format(
             SN=c["SN"],
             SR=c["SR"],
             LLR=c["LLR"],
             TC=c["TC"],
             d=result["drafts"],
+            m=result["modified"],
             raw=GATE_NAMES[result["raw"]],
             ph=result["phase"] if result["phase"] is not None else "(none)",
             pp=per_phase or "(none)",
@@ -336,8 +361,9 @@ HEADER = [
     "# The active gate is COMPUTED from artifact states, not declared",
     "# (docs/specs/derived-gate-model.md): the repo is at gate G iff every in-scope",
     "# SN/SR/LLR/TC meets G's bar. You advance it by RATIFYING artifacts in a",
-    "# reviewed commit (Draft->Planned, or moving an SN out of a draft section),",
-    "# not by editing this line. Regenerate: python scripts/derive_gate.py",
+    "# reviewed commit (Draft->Planned, or moving an SN out of a draft section;",
+    "# a Modified row re-attests the same way, Modified->Verified — process.md",
+    "# section 7), not by editing this line. Regenerate: python scripts/derive_gate.py",
     "# Freshness is guarded by `--check` (a pre-commit + gate step). check.py / CI",
     "# read the first non-comment line below, exactly as before.",
     "#",

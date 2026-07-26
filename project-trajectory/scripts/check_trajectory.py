@@ -53,10 +53,13 @@ the `gen_arch_map`/`gen_trajectory` idiom), where it is an integrator snapshot
 that cannot accrete prose and the successor freshness check applies (specified in
 `status_forward_only_findings`, not yet implemented — no status.md generator
 exists). `--staged` adds the warn-first **no-validation-delta** checks: the
-follow-up-on-a-done-SR ratchet, and the **critique-loop ratchet** (WI-068) — a WI
+follow-up-on-a-done-SR ratchet, the **critique-loop ratchet** (WI-068) — a WI
 closing on a `Verification=Critique` SR while the latest `docs/reviews/*-CRITIQUE.md`
 verdict is CHANGES-REQUESTED, without the staged set touching the TC registry, the
-tests dir, or a `docs/rubrics/` file (harden the TC or add a rubric anchor).
+tests dir, or a `docs/rubrics/` file (harden the TC or add a rubric anchor) — and
+the **amend-without-flip** warn (WI-316): a staged diff changing content cells of
+a `Verified` spine row without setting the `Modified` re-attest marker
+(process.md §7), the write-time discipline commit-message prose never had.
 
 **Opt-out and vacuous by default** — the posture of the always-on
 `docs/secrets-scan` floor. The check is on unless `docs/trajectory-check` reads
@@ -120,6 +123,7 @@ Contracts: IF-009, IF-023 — the interface seams this module declares (process.
 import argparse
 import configparser
 import csv
+import io
 import re
 import subprocess
 import sys
@@ -1509,6 +1513,118 @@ def staged_findings(root):
     ]
 
 
+# The three spine registries the staged amend-without-flip warn (WI-316) watches,
+# each with its id column. The SN needs file has no Status cell (section-as-state)
+# — a changed ratified SN rides its SR chain's Modified — so it is not listed.
+SPINE_CSVS = (
+    ("docs/requirements/system-requirements.csv", "SR-ID"),
+    ("docs/requirements/low-level-requirements.csv", "LLR-ID"),
+    ("docs/test/test-cases.csv", "TC-ID"),
+)
+
+
+def staged_spine_findings(root):
+    """The amend-without-flip warn (WI-316; warn-first, `--staged` only).
+
+    A staged diff that changes the CONTENT cells of a spine row whose Status
+    reads `Verified` in both HEAD and the stage has amended attested prose
+    without setting the `Modified` re-attest marker (process.md §7) — the
+    write-time discipline the old RE-ATTESTATION-PENDING commit-message prose
+    never had. One warning per amended row, naming the changed cells. Returns
+    [] when not applicable; any missing git context is a silent no-op, like
+    staged_findings. Rows are parsed with the csv module over the full staged /
+    HEAD file text (spine cells are long; never line-split). A NEW row (id not
+    in HEAD) is not an amendment; a row whose Status moved (to Modified, Draft,
+    Planned, anything) made a deliberate call this warn does not second-guess."""
+    staged = _git(root, ["diff", "--cached", "--name-only"])
+    if staged is None:
+        return []
+    staged_names = set(staged.splitlines())
+    if not any(p in staged_names for p, _ in SPINE_CSVS):
+        return []
+
+    def _index_rows(csv_path, id_col):
+        """{id: row} of the INDEX version (`git show :path` — equals HEAD when
+        the file is not staged), or {} when unreadable."""
+        text = _git(root, ["show", ":" + csv_path])
+        if text is None:
+            return {}
+        return {
+            r[id_col]: r
+            for r in csv.DictReader(io.StringIO(text))
+            if r.get(id_col) and not r[id_col].endswith("-000")
+        }
+
+    # The attestation unit is the SR: an amended child whose OWNING SR flips in
+    # this same commit is the sanctioned amend+flip path, so only rows whose
+    # unit stays unflagged warn. Owner resolution uses the staged (index) state.
+    idx_srs = _index_rows(*SPINE_CSVS[0])
+    idx_llrs = _index_rows(*SPINE_CSVS[1])
+
+    def _flagged_sr(sid):
+        status = ((idx_srs.get(sid) or {}).get("Status") or "").strip().lower()
+        return status in ("modified", "draft")
+
+    def _owners(csv_path, row):
+        if csv_path == SPINE_CSVS[0][0]:
+            return [row.get("SR-ID")]
+        if csv_path == SPINE_CSVS[1][0]:
+            return [
+                x.strip() for x in (row.get("SR-Refs") or "").split(";") if x.strip()
+            ]
+        owners = []
+        for x in (row.get("Verifies") or "").split(";"):
+            x = x.strip()
+            if x.startswith("SR-"):
+                owners.append(x)
+            elif x.startswith("LLR-") and x in idx_llrs:
+                owners.extend(
+                    y.strip()
+                    for y in (idx_llrs[x].get("SR-Refs") or "").split(";")
+                    if y.strip()
+                )
+        return owners
+
+    out = []
+    for csv_path, id_col in SPINE_CSVS:
+        if csv_path not in staged_names:
+            continue
+        head_text = _git(root, ["show", "HEAD:" + csv_path])
+        staged_text = _git(root, ["show", ":" + csv_path])
+        if head_text is None or staged_text is None:
+            continue  # first commit / newly added registry — nothing attested yet
+        head_rows = {
+            r[id_col]: r
+            for r in csv.DictReader(io.StringIO(head_text))
+            if r.get(id_col) and not r[id_col].endswith("-000")
+        }
+        for row in csv.DictReader(io.StringIO(staged_text)):
+            rid = (row.get(id_col) or "").strip()
+            head = head_rows.get(rid)
+            if not rid or rid.endswith("-000") or head is None:
+                continue
+            head_status = (head.get("Status") or "").strip().lower()
+            cur_status = (row.get("Status") or "").strip().lower()
+            if head_status != "verified" or cur_status != "verified":
+                continue
+            if any(_flagged_sr(s) for s in _owners(csv_path, row) if s):
+                continue  # the attestation unit flips in this commit — sanctioned
+            changed = sorted(
+                k
+                for k in set(head) | set(row)
+                if k != "Status" and (head.get(k) or "") != (row.get(k) or "")
+            )
+            if changed:
+                out.append(
+                    "{}: content cell(s) {} amended while Status stays Verified "
+                    "and no owning SR is flagged — a post-attestation amendment "
+                    "owes the Modified re-attest marker (process.md §7); flip "
+                    "the owning SR in this commit, or the sitting never sees "
+                    "the change".format(rid, ", ".join(changed))
+                )
+    return out
+
+
 # The critique-loop ratchet (WI-068). A `Verification=Critique` SR and its latest
 # CRITIQUE verdict file (docs/reviews/NNN-CRITIQUE.md, the S8 verdict format).
 RUBRICS_DIR = "docs/rubrics/"
@@ -1792,11 +1908,17 @@ def main():
         return 0
 
     # --staged is the commit-time no-validation-delta warn only: never blocks,
-    # never re-runs the full validation (the trajectory step already did). Two
-    # warns: the follow-up-on-a-done-SR ratchet, and the critique-loop ratchet
-    # (a WI closing under a CHANGES-REQUESTED critique without hardening the chain).
+    # never re-runs the full validation (the trajectory step already did). Three
+    # warns: the follow-up-on-a-done-SR ratchet, the critique-loop ratchet
+    # (a WI closing under a CHANGES-REQUESTED critique without hardening the
+    # chain), and the WI-316 amend-without-flip warn (attested spine prose
+    # changed without the Modified re-attest marker).
     if args.staged:
-        for w in staged_findings(root) + critique_ratchet_findings(root):
+        for w in (
+            staged_findings(root)
+            + critique_ratchet_findings(root)
+            + staged_spine_findings(root)
+        ):
             print("check_trajectory: WARN - {}".format(w), file=sys.stderr)
         return 0
 

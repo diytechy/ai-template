@@ -46,6 +46,23 @@ gate derives from it:
   a core section). The ratification date is git-derived (the commit that moved it).
 - **G2 → G3** — the SR reaches `Status=Verified` once its tests pass; the derived
   gate follows.
+- **Re-attest (`Modified` → …)** — a `Verified` row whose content was amended
+  after attestation carries `Status=Modified` (WI-316; canonical semantics:
+  process.md §7): the derived gate reads G2 for its phase until the sitting
+  rules, and the pending-owner-actions projection carries one line per Modified
+  SR. Read the before/after first — `python scripts/trace.py --ratify modified
+  [--out docs/ratify/<date>-reattest.md]` (add `--since <rev>` for a streak
+  whose amendments landed while the row still read Verified). **The flip
+  asserts two things**, so there are two honest outcomes:
+  **`Modified` → `Verified`** — the amendment is blessed AND the existing
+  evidence still verifies the amended text (the right call for narrowings and
+  judge-reassignments whose tests are green against the new wording); or
+  **`Modified` → `Planned`** — the amendment invalidated the evidence, so the
+  row re-earns `Verified` through re-verification and the gate correctly stays
+  below G3 until it does. Record the ruling in the log's Decisions, like any
+  ratification. Amend-and-flip land in the **same commit** going forward (the
+  `--staged` warn enforces it); the SR is the attestation unit — a chain change
+  (child LLR/TC amended or added) flips the owning SR.
 
 **Carry the batch-scoped hierarchy view (G1/G2).** A ratification brief presents
 the batch's `SN → SR → LLR/TC` tree with its prose so the acceptor rules on the

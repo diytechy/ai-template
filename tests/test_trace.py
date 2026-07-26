@@ -1,6 +1,6 @@
 """trace.py: orphan detection and the --require-verified G3 criterion."""
 
-from conftest import KIT, load_script, make_minimal_project, run_py
+from conftest import KIT, SCRIPTS, load_script, make_minimal_project, run_py
 
 # SR-002 is a genuine (ratified, non-Draft) orphan: Status=Planned, so the
 # derived-gate Draft exemption (WI-089) does NOT apply and the decomposition
@@ -1058,6 +1058,71 @@ def test_llr_status_coherence_predicate():
     assert warns([impl], []) == []
 
 
+def test_modified_llr_is_exempt_from_the_status_advisory():
+    # WI-316: a Modified LLR under fully-Verified TCs is DELIBERATE (a
+    # post-attestation amendment awaiting re-attest), so the "lift to Verified"
+    # nag must stay silent — it would tell the owner to erase the marker the
+    # sitting needs. Mutation proof: the same row as Implemented DOES warn, so
+    # the exemption is the Modified value, not a broken lint.
+    from conftest import load_script
+
+    trace = load_script("trace")
+    ver_tc = {"TC-ID": "TC-010", "Verifies": "SR-010;LLR-010", "Status": "Verified"}
+    modified = {"LLR-ID": "LLR-010", "SR-Refs": "SR-010", "Status": "Modified"}
+    assert trace.llr_status_advisories([modified], [ver_tc]) == []
+    impl = {**modified, "Status": "Implemented"}
+    assert len(trace.llr_status_advisories([impl], [ver_tc])) == 1
+
+
+def test_modified_chain_advisory_flags_the_orphaned_child():
+    # WI-316: a Modified LLR/TC whose owning SR is not flagged is invisible to
+    # every re-attest surface (they key off the SR row), so it warns; flipping
+    # the owning SR to Modified (or Draft) silences it. The TC path resolves
+    # owners through both direct SR cites and cited-LLR SR-Refs.
+    from conftest import load_script
+
+    trace = load_script("trace")
+    sr_ok = {"SR-ID": "SR-010", "Status": "Verified"}
+    sr_mod = {"SR-ID": "SR-010", "Status": "Modified"}
+    llr = {"LLR-ID": "LLR-010", "SR-Refs": "SR-010", "Status": "Modified"}
+    tc = {"TC-ID": "TC-010", "Verifies": "LLR-010", "Status": "Modified"}
+
+    found = trace.modified_chain_advisories([sr_ok], [llr], [tc])
+    assert len(found) == 2, found
+    assert any("LLR LLR-010 is Modified" in f and "SR-010" in f for f in found)
+    assert any("TC TC-010 is Modified" in f and "SR-010" in f for f in found)
+
+    # Flipping the attestation unit silences both; Draft counts as flagged too.
+    assert trace.modified_chain_advisories([sr_mod], [llr], [tc]) == []
+    sr_draft = {"SR-ID": "SR-010", "Status": "Draft"}
+    assert trace.modified_chain_advisories([sr_draft], [llr], [tc]) == []
+
+    # A Verified child never warns — the lint watches Modified children only.
+    ok_llr = {**llr, "Status": "Verified"}
+    ok_tc = {**tc, "Status": "Verified"}
+    assert trace.modified_chain_advisories([sr_ok], [ok_llr], [ok_tc]) == []
+
+    # A TC citing its SR directly resolves the owner without an LLR hop.
+    tc_direct = {"TC-ID": "TC-011", "Verifies": "SR-010", "Status": "Modified"}
+    assert len(trace.modified_chain_advisories([sr_ok], [], [tc_direct])) == 1
+    assert trace.modified_chain_advisories([sr_mod], [], [tc_direct]) == []
+
+
+def test_modified_chain_advisory_is_warn_only(scaffold):
+    # The chain warn joins the shared advisory pipe: loud on stdout, in the
+    # report, never an exit-code change even under --strict.
+    make_minimal_project(scaffold)
+    llr_csv = scaffold / "docs" / "requirements" / "low-level-requirements.csv"
+    llr_csv.write_text(
+        llr_csv.read_text(encoding="utf-8").replace(",Implemented", ",Modified"),
+        encoding="utf-8",
+    )
+    proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "LLR LLR-001 is Modified" in proc.stdout
+    assert "flip the attestation unit" in proc.stdout
+
+
 def test_llr_status_advisory_is_warn_only_and_reported(scaffold):
     # Done-when 1+4: the minimal project ships LLR-001 Implemented under a
     # Verified TC-001, so trace emits the warn on stdout and in the report — but
@@ -1068,7 +1133,7 @@ def test_llr_status_advisory_is_warn_only_and_reported(scaffold):
     assert "WARNING (advisory): LLR LLR-001 reads 'Implemented'" in proc.stdout
     assert "llr-status-advisories=1" in proc.stdout
     report = (scaffold / "docs" / "test" / "report.md").read_text(encoding="utf-8")
-    assert "LLR status-coherence advisories" in report
+    assert "Status-coherence advisories" in report
     assert "LLR-001 reads 'Implemented'" in report
 
     # --strict-integrity likewise unaffected (the warn never joins the integrity set).
@@ -1086,7 +1151,7 @@ def test_llr_status_advisory_is_warn_only_and_reported(scaffold):
     assert "reads 'Implemented'" not in proc3.stdout
     assert "llr-status-advisories" not in proc3.stdout
     report3 = (scaffold / "docs" / "test" / "report.md").read_text(encoding="utf-8")
-    assert "None. No unlifted LLRs under fully-Verified tests." in report3
+    assert "None. No unlifted LLRs, no orphaned Modified chain rows." in report3
 
 
 # --- WI-146(a): the --ratify batch-scoped ratification hierarchy view ---------
@@ -1149,6 +1214,148 @@ def test_ratify_out_writes_linkable_file(scaffold):
     assert "# Ratification hierarchy" in written
     assert "The system shall add two numbers." in written
     assert "trace: wrote ratification view" in proc.stdout
+
+
+# --- WI-316: the re-attestation brief (--ratify modified) ----------------------
+# A sitting cannot bless a delta it cannot see: per-cell before/after for every
+# Modified SR's chain, baselined at the git-derived last-Verified revision
+# (--since overrides). A generator mode: runs no checks, always exits 0.
+
+_REATTEST_SR_H = (
+    "SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,"
+    "Permutations,Priority,Verification,Status,Phase\n"
+)
+_REATTEST_LLR_H = "LLR-ID,SR-Refs,Title,Module,CodeSymbol,Detail,TestRefs,Status\n"
+_REATTEST_TC_H = (
+    "TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Evidence,Status\n"
+)
+
+
+def _reattest_repo(root):
+    """A git repo with an ATTESTED baseline commit (SR-001 Verified, old prose)
+    then an amend+flip commit (Requirement changed, Status Modified, LLR-002
+    added) — the exact regime the brief's default baseline walk assumes.
+    Returns the git runner."""
+    import shutil as _sh
+    import subprocess as _sp
+
+    git = _sh.which("git")
+    if not git:
+        pytest.skip("needs git on PATH")
+
+    def run_git(*a):
+        return _sp.run([git, "-C", str(root), *a], capture_output=True, text=True)
+
+    req = root / "docs" / "requirements"
+    req.mkdir(parents=True, exist_ok=True)
+    (root / "docs" / "test").mkdir(parents=True, exist_ok=True)
+
+    def write_spine(sr_status, requirement, extra_llr=""):
+        (req / "system-requirements.csv").write_text(
+            _REATTEST_SR_H
+            + 'SR-001,Adder,SN-001,"{}","why","old ac",,C,Test,{},1\n'.format(
+                requirement, sr_status
+            ),
+            encoding="utf-8",
+        )
+        (req / "low-level-requirements.csv").write_text(
+            _REATTEST_LLR_H
+            + 'LLR-001,SR-001,Add core,src/demo.py,add,"pure add",(see TC-001),Verified\n'
+            + extra_llr,
+            encoding="utf-8",
+        )
+        (root / "docs" / "test" / "test-cases.csv").write_text(
+            _REATTEST_TC_H
+            + 'TC-001,SR-001;LLR-001,Unit,"drive add","Smoke","a=1","sum",Yes,'
+            "tests/test_demo.py::t,Verified\n",
+            encoding="utf-8",
+        )
+
+    write_spine("Verified", "the ORIGINAL attested text")
+    run_git("init")
+    run_git("config", "user.email", "t@example.com")
+    run_git("config", "user.name", "T")
+    run_git("add", "-A")
+    run_git("commit", "-m", "attested baseline")
+    # The amend+flip commit: prose changes AND the marker lands together.
+    write_spine(
+        "Modified",
+        "the AMENDED text",
+        'LLR-002,SR-001,New slice,src/demo.py,mul,"added later",(see TC-001),Verified\n',
+    )
+    run_git("add", "-A")
+    run_git("commit", "-m", "amend + flip")
+    return run_git
+
+
+def test_reattest_brief_shows_before_after_and_added_rows(tmp_path):
+    # The default walk skips the Modified HEAD revision, lands on the attested
+    # baseline, and the brief shows the Requirement's before/after, the ADDED
+    # LLR — and NOT the Verified->Modified Status flip (the marker is not the
+    # amendment).
+    _reattest_repo(tmp_path)
+    proc = run_py([SCRIPTS / "trace.py", "--ratify", "modified"], cwd=tmp_path)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    out = proc.stdout
+    assert "# Re-attestation brief" in out
+    assert "## SR-001 — Adder" in out
+    assert "before: the ORIGINAL attested text" in out
+    assert "after: the AMENDED text" in out
+    assert "LLR LLR-002 — ADDED since baseline" in out
+    assert "Baseline `" in out and "read `Verified`" in out
+    # The flip itself is excluded from the cell diff.
+    assert "before: Verified" not in out
+    # The unchanged chain rows (LLR-001, TC-001) emit no section.
+    assert "### LLR LLR-001" not in out
+    assert "### TC TC-001" not in out
+
+
+def test_reattest_brief_since_overrides_the_baseline(tmp_path):
+    # --since pins the baseline for a pre-regime streak. Pointing it at HEAD
+    # (where the row is already Modified with the amended text) yields the
+    # no-cell-differs note — proving the flag controls the comparison point.
+    run_git = _reattest_repo(tmp_path)
+    head = run_git("rev-parse", "HEAD").stdout.strip()
+    proc = run_py(
+        [SCRIPTS / "trace.py", "--ratify", "modified", "--since", head], cwd=tmp_path
+    )
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "from `--since`" in proc.stdout
+    assert "No cell differs from the baseline" in proc.stdout
+    assert "before: the ORIGINAL attested text" not in proc.stdout
+
+
+def test_reattest_brief_degrades_honestly_off_git(tmp_path):
+    # No git repo: current state only, with the stated no-baseline note — never
+    # a crash, never a fabricated diff.
+    req = tmp_path / "docs" / "requirements"
+    req.mkdir(parents=True)
+    (tmp_path / "docs" / "test").mkdir(parents=True)
+    (req / "system-requirements.csv").write_text(
+        _REATTEST_SR_H + 'SR-001,Adder,SN-001,"r","w","a",,C,Test,Modified,1\n',
+        encoding="utf-8",
+    )
+    (req / "low-level-requirements.csv").write_text(_REATTEST_LLR_H, encoding="utf-8")
+    (tmp_path / "docs" / "test" / "test-cases.csv").write_text(
+        _REATTEST_TC_H, encoding="utf-8"
+    )
+    proc = run_py([SCRIPTS / "trace.py", "--ratify", "modified"], cwd=tmp_path)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "No attested baseline" in proc.stdout
+    assert "current state only" in proc.stdout
+    assert "SR SR-001 (current)" in proc.stdout
+
+
+def test_reattest_brief_empty_when_nothing_is_modified(scaffold):
+    # No Modified SR -> the explicit nothing-owed line (and --out still writes).
+    make_minimal_project(scaffold)
+    proc = run_py(
+        ["scripts/trace.py", "--ratify", "modified", "--out", "docs/ratify/r.md"],
+        cwd=scaffold,
+    )
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    written = (scaffold / "docs" / "ratify" / "r.md").read_text(encoding="utf-8")
+    assert "No `Modified` SR — nothing owes a re-attest." in written
 
 
 # --- WI-081 Slice C: the render/exit extraction + M8 pre-indexing --------------

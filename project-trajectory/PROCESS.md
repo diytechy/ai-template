@@ -292,9 +292,19 @@ never a manual bump (§7 "The active gate"; the model + parallel/series workflow
 [process-options.md "Derived gate model"](process-options.md#derived-gate-model)).
 A `Draft` artifact lives in the live spine (exempt from the decomposition rules),
 retiring the old `-000`/off-spine drafting workaround.
-`Status` is open-vocabulary, but its two gate-bearing values — `Draft` and
-`Verified` — are matched **case-insensitively** (write them Title-Case); no other
-value carries gate meaning.
+`Status` is open-vocabulary with three recognized values, matched
+**case-insensitively** (write them Title-Case). Two bear gate arithmetic:
+`Draft` and `Verified`. The third, `Modified`, marks a **post-attestation
+amendment** — content changed after the row was attested, so a re-attest is
+owed. It adds no arithmetic (a Modified SR is simply not Verified, deriving G2)
+but is surfaced: the `modified=N` basis count, a pending-owner-actions line, and
+the `trace.py --ratify modified` before/after brief. Re-attest is a reviewed
+Status-change commit like ratification: `Modified`→`Verified` blesses the
+amendment (existing evidence still verifies the amended text);
+`Modified`→`Planned` when the amendment invalidated the evidence, so the row
+re-earns `Verified`. Amend and flip in the **same commit** (a `--staged` warn
+enforces it); the SR is the attestation unit — flip it whenever its chain
+changes. No other value carries meaning.
 Define machine-checkable criteria wherever possible; classify the rest honestly.
 
 - **G1 — Requirements, UX & constraints.** The `PROJECT-VISION:` tag exists in

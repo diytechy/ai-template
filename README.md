@@ -331,7 +331,10 @@ What each approval gate certifies — full criteria in
 [`PROCESS.md`](project-trajectory/PROCESS.md) §4. The **active** gate is
 *derived*, not declared: `derive_gate.py` computes it from the artifact states
 and caches it to `docs/gate` (generated, never hand-edited); it advances when a
-batch of artifacts is **ratified** in a reviewed `Status`-change commit
+batch of artifacts is **ratified** in a reviewed `Status`-change commit, and it
+*pulls back* when attested content is amended — a `Status=Modified` row owes a
+re-attest and derives G2 until the sitting blesses it (`trace.py --ratify
+modified` emits the before/after brief; semantics: PROCESS.md §7)
 (process-options.md "Derived gate model").
 
 - **G1 — Requirements/UX/Constraints.** Needs + requirements are complete,

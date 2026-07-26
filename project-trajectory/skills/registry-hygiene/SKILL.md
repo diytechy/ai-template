@@ -66,7 +66,15 @@ call `trace.py` directly to iterate on a specific finding.
   `Status` cell to `Verified` (registries are hand-owned — no generator writes
   them back). It never gates: LLR status is non-gating under the derived-gate
   model (the SR's `Verified` drives G2→G3), so a lagging LLR is a readout drift,
-  not a coverage hole.
+  not a coverage hole. A `Modified` LLR is exempt — that below-Verified status
+  is the deliberate re-attest marker (process.md §7), not a drift; do NOT lift
+  it to silence a warn.
+- **Modified chain advisory** (`WARNING (advisory)`, warn-only, WI-316) — a
+  `Modified` LLR/TC whose owning SR is neither `Modified` nor `Draft`. The SR
+  is the attestation unit (the projection, the gate pull, and the
+  `--ratify modified` brief all key off the SR row), so a child-only flag is
+  invisible to the sitting. Fix: flip the owning SR to `Modified` — never
+  un-flag the child to silence the warn.
 
 ## Verify the fix
 

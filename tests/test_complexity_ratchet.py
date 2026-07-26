@@ -88,6 +88,11 @@ BASELINE = {
     ("check_trajectory.py", "interface_findings"): 23,
     ("check_trajectory.py", "main"): 21,
     ("check_trajectory.py", "staged_findings"): 12,
+    # WI-316 (2026-07-26): the amend-without-flip warn — HEAD-vs-index row
+    # compare across three registries with owning-SR suppression (the
+    # attestation unit sanctions same-commit amend+flip). New guard, reason in
+    # the log; a WI-280 decomposition candidate.
+    ("check_trajectory.py", "staged_spine_findings"): 20,
     ("gen_arch_map.py", "build_dependency_diagram"): 14,
     ("gen_arch_map.py", "main"): 17,
     ("gen_cases.py", "all_pairs"): 13,
@@ -120,6 +125,13 @@ BASELINE = {
     # 28 -> 27: the L-3 ratify bucketing removed a nested scan (re-stamped
     # downward per the ratchet's improvement rule).
     ("trace.py", "ratify_lines"): 27,
+    # WI-316 (2026-07-26): the two new spine-status surfaces — the
+    # orphaned-Modified-child warn (SR/LLR/TC owner resolution) and the
+    # re-attestation brief emitter (per-SR baseline walk + chain diff +
+    # ADDED/REMOVED sections + off-git degrade). New capability, reasons in
+    # the log; the brief emitter is a named WI-280 extraction candidate.
+    ("trace.py", "modified_chain_advisories"): 13,
+    ("trace.py", "reattest_lines"): 23,
     ("trace.py", "render_report"): 17,
 }
 

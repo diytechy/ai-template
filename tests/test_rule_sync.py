@@ -59,6 +59,41 @@ def test_is_verified_agrees():
         assert TRACE.is_verified(row) == GATE.is_verified(row), row
 
 
+def test_is_modified_agrees():
+    # Both files recognize the post-attestation Modified state (WI-316): trace.py
+    # for the chain-consistency warns + the --ratify modified brief, derive_gate.py
+    # for the modified=N basis count. Divergence would let a pending re-attest hide
+    # from one surface while the other reports it — the same false-green class the
+    # is_draft/is_verified pins exist for. Same casing/whitespace/None battery,
+    # plus the two sibling magic values (each must read NOT-modified in both).
+    cases = [
+        {"Status": "Modified"},
+        {"Status": "modified"},
+        {"Status": "  MODIFIED  "},
+        {"Status": "Verified"},
+        {"Status": "Draft"},
+        {"Status": "Planned"},
+        {"Status": ""},
+        {"Status": None},
+        {},
+    ]
+    for row in cases:
+        assert TRACE.is_modified(row) == GATE.is_modified(row), row
+    # The three recognized values are mutually exclusive on any single row.
+    for val in ("Modified", "Draft", "Verified"):
+        row = {"Status": val}
+        assert (
+            sum(
+                (
+                    TRACE.is_draft(row),
+                    TRACE.is_verified(row),
+                    TRACE.is_modified(row),
+                )
+            )
+            == 1
+        ), row
+
+
 def test_llr_exempt_agrees():
     # Both files decide the LLR-exemption at their own decision point (trace's
     # orphan rule, derive_gate's sr_gate). Review 017 caught them disagreeing on

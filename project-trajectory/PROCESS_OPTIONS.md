@@ -1603,7 +1603,10 @@ until a real recurring pattern earns it.
 
 **Phase cadence.** Any batch of spine-touching work headed for the same
 re-attestation should land as **one phase** — batch the changes so a **single
-owner sitting** covers each re-attestation, rather than paying for several. A
+owner sitting** covers each re-attestation, rather than paying for several
+(what is owed is carried as `Status=Modified` on the amended rows — the
+re-attest marker, process.md §7 — so the pending batch is registry state the
+sitting reads via `trace.py --ratify modified`, never commit-message prose). A
 phase's spec is one shared `docs/specs/` doc with a `#anchor` per WI. **Its
 cadence:** mid-phase WI sessions end at the **commit bar** (the pre-commit
 hook floor + the project's test command + `check_docs --stale`), not the full

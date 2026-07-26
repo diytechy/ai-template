@@ -3,11 +3,12 @@
 # The active gate is COMPUTED from artifact states, not declared
 # (docs/specs/derived-gate-model.md): the repo is at gate G iff every in-scope
 # SN/SR/LLR/TC meets G's bar. You advance it by RATIFYING artifacts in a
-# reviewed commit (Draft->Planned, or moving an SN out of a draft section),
-# not by editing this line. Regenerate: python scripts/derive_gate.py
+# reviewed commit (Draft->Planned, or moving an SN out of a draft section;
+# a Modified row re-attests the same way, Modified->Verified — process.md
+# section 7), not by editing this line. Regenerate: python scripts/derive_gate.py
 # Freshness is guarded by `--check` (a pre-commit + gate step). check.py / CI
 # read the first non-comment line below, exactly as before.
 #
-# basis: SN=25 SR=110 LLR=112 TC=115 drafts=0 computed=G3 phase=4 per-phase=1=G3;2=G3;3=G3;4=G3
-# computed 2026-07-26 (as-of 9d21ce9)
-G3
+# basis: SN=25 SR=110 LLR=112 TC=115 drafts=0 modified=4 computed=G2 phase=4 per-phase=1=G2;2=G3;3=G2;4=G3
+# computed 2026-07-26 (as-of c3bb270)
+G2

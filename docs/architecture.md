@@ -529,6 +529,7 @@ Contracts (interfaces): IF-009, IF-023
 | `run_state_findings(wis, root)` | Warn when an end-state would park a runnable queued work item (WI-115). |  |
 | `backlog_staleness_findings(root, wis)` | WI-205 — the backlog-staleness warn (warn-only, the WI-129 checker stance). |  |
 | `staged_findings(root)` | The no-validation-delta warn (S0 ruling #2 corollary; warn-first). |  |
+| `staged_spine_findings(root)` | The amend-without-flip warn (WI-316; warn-first, `--staged` only). |  |
 | `ratify_brief_findings(root)` | Warn-first brief lint (WI-146b): an `## OI-N` decision brief whose decision |  |
 | `critique_ratchet_findings(root)` | The lax-TC ratchet for the critique loop (WI-068; warn-first, the same |  |
 | `critique_staleness_findings(root)` | The perceptual re-fire finding (WI-243; git-time staleness like |  |
@@ -560,6 +561,7 @@ Contracts (interfaces): IF-050, IF-051
 | `sn_draft_ids(text)` | Draft SN ids (section-as-state §4a): every SN-### under a heading whose text |  |
 | `sr_gate(sr, has_llr, has_tc)` | The gate an SR row has reached, from its Status + whether it is decomposed. |  |
 | `maturity_gate(row)` | An LLR/TC caps the gate only when it is Draft (G0 — the new-phase signal). |  |
+| `is_modified(row)` | The post-attestation `Modified` state (WI-316, process.md §7): content |  |
 | `sn_gate(sn_id, draft_ids)` | A Draft SN (section-as-state) is G0; a ratified SN has no obligation past G1 |  |
 | `compute(docs)` | Derive the gate from the spine registries under `docs`. Returns a result |  |
 | `basis_line(result)` | The single, deterministic `# basis:` comment line compared by --check |  |
@@ -828,11 +830,13 @@ Contracts (interfaces): IF-001, IF-021, IF-042
 | `is_example(rid)` |  |  |
 | `is_draft(row)` | A row in the pre-ratification `Draft` state (derived-gate model §3): exempt |  |
 | `is_verified(row)` | The terminal `Verified` state, matched case-insensitively so it follows the |  |
+| `is_modified(row)` | The post-attestation `Modified` state (WI-316, process.md §7): the row |  |
 | `llr_exempt(row)` | SR Verification method in LLR_EXEMPT, matched on the stripped cell so a |  |
 | `phase_num(row)` | The integer a row's free-form `Phase` cell digit-parses to (`v2`->2, `2`->2); |  |
 | `structure_findings(path, display)` | Column-count structural check over one registry CSV: every data row must |  |
 | `ac_advisories(srs)` | Warn-only findings: real SR rows whose AcceptanceCriteria uses a |  |
 | `llr_status_advisories(llrs, tcs)` | Warn-only findings (WI-129): an LLR whose Status reads below `Verified` |  |
+| `modified_chain_advisories(srs, llrs, tcs)` | Warn-only findings (WI-316): a `Modified` LLR/TC whose owning SR is neither |  |
 | `id_key(label)` |  |  |
 | `id_sort_key(rid)` | Numeric-then-lexical sort key for a registry id, so SR-9 orders before | SR-10, SR-9 |
 | `integrity_findings(label, raw_rows)` | Duplicated or malformed ids in one registry (example '-000' rows skipped — |  |
@@ -848,6 +852,7 @@ Contracts (interfaces): IF-001, IF-021, IF-042
 | `phase_ratified_findings(real)` | The ratified-phase completeness rule (process.md §4 "Phased delivery"): once |  |
 | `build_forest(sn_ids, srs, llrs, tcs, orphan_ids, sn_draft)` | The SN -> SR -> LLR -> TC chain as nested nodes, plus synthetic groups for |  |
 | `outline_lines(roots)` | Indented Markdown list of the forest — pure text, so it reviews line-by- |  |
+| `reattest_lines(root, srs, llrs, tcs, since)` | Markdown for the re-attestation brief (`--ratify modified`, WI-316): one |  |
 | `ratify_lines(scope, sn_ids, srs, llrs, tcs, sn_meta)` | Markdown for the batch-scoped ratification hierarchy (WI-146a). Groups the |  |
 | `mermaid_graph(sn_ids, srs, llrs, tcs, orphan_ids, sn_draft)` | A `graph LR` DAG of the chain (a TC verifies its SR *and* its LLR), colored |  |
 | `html_document(roots)` | A dependency-free, collapsible <details> tree of the full graph — inline |  |
