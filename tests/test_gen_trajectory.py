@@ -2559,6 +2559,227 @@ def test_t5_containment_arrow_clears_the_3to1_floor_against_every_host_fill(tmp_
         )
 
 
+# --- T6 theme-lock (WI-314): the anchor's mechanized core --------------------
+#
+# "Every surface's background/text token resolves from one theme set; no mid-page
+# inversion" (the WI-300 per-anchor table, residue NONE). The measurable content
+# is FAMILY PAIRING, not "no literals": a fixed status swatch carrying fixed
+# white ink is theme-locked *correctly* — it never flips, and neither does its
+# ink. What inverts a page is a MIXED pair (a theme-varying ink on a fixed fill,
+# or fixed ink on a theme-varying surface) or a SECOND theme mechanism scoped
+# below `:root`. Those are what these guards forbid.
+T6_HOST_DERIVED_TOKENS = {
+    # `--ring` is stamped per node (`_ring_style`) and per marker (`_cedge_marker`)
+    # FROM the host fill, so it is invariant-with-an-invariant-host and varying-
+    # with-a-varying-host by construction — dual by design, not unclassified.
+    # Its pairing obligation is the 3:1 floor LLR-105/TC-108 own.
+    "--ring",
+}
+
+
+def _theme_families(css):
+    """`(varying, invariant)` — the CSS custom properties that change with the
+    theme versus those deliberately declared once. Derived from the emitted
+    document (the dark block's override set IS the definition of varying), never
+    hand-listed, so a new token joins a family by existing."""
+    root = re.search(r":root\s*\{(.*?)\}", css, re.S).group(1)
+    light = dict(re.findall(r"(--[\w-]+)\s*:\s*([^;]+);", root))
+    dark_block = re.search(
+        r"@media\s*\(prefers-color-scheme:\s*dark\)\s*\{\s*:root\s*\{(.*?)\}", css, re.S
+    ).group(1)
+    dark = dict(re.findall(r"(--[\w-]+)\s*:\s*([^;]+);?", dark_block))
+    assert not set(dark) - set(light), (
+        "the dark block overrides token(s) `:root` never declares — a surface "
+        "that exists in only one theme: {}".format(sorted(set(dark) - set(light)))
+    )
+    return set(dark), set(light) - set(dark)
+
+
+def _paint_family(value, varying):
+    """`"varying"`, `"invariant"`, or None (not a colour) for one paint value —
+    resolving `var(--token)` through the family split above."""
+    value = value.strip()
+    m = re.match(r"var\(\s*(--[\w-]+)", value)
+    if m:
+        if m.group(1) in T6_HOST_DERIVED_TOKENS:
+            return None
+        return "varying" if m.group(1) in varying else "invariant"
+    return (
+        "invariant" if re.match(r"#[0-9a-fA-F]{3,8}$|rgba?\(|hsla?\(", value) else None
+    )
+
+
+def _css_rules(css):
+    return [
+        (m.group(1).strip(), m.group(2))
+        for m in re.finditer(r"([^{}]+)\{([^{}]*)\}", css)
+    ]
+
+
+def _decl(body, prop):
+    m = re.search(r"(?:^|[;\s])" + prop + r"\s*:\s*([^;}]+)", body)
+    return m.group(1).strip() if m else None
+
+
+def test_t6_theme_lock_has_one_mechanism_and_no_mixed_family_pair(tmp_path):
+    """dashboard-usability.md T6 / LLR-117 (WI-314): the dashboard renders in one
+    theme at a time, applied to the whole page — no tab, panel, or node flips to
+    the opposite theme mid-view. Mechanized as the two ways that can actually
+    break: a theme mechanism scoped below `:root` (a second
+    `prefers-color-scheme` block, or a per-component `color-scheme`), and a
+    surface/ink pair drawn from two different theme families.
+
+    Swept over EVERY emitter, not one fixture, for the A2 review's reason: a
+    document walk judges only what its fixture renders, and the emitter that
+    does not render is where the violation hides."""
+    gt = load_script("gen_trajectory")
+    vocabulary = (
+        set(gt.STATUS_FILL.values())
+        | set(gt.TIER_FILL.values())
+        | set(gt.OKF_TYPE_FILL.values())
+        | set(gt.SW_NODE_FILL.values())
+        | set(gt.PHASE_ACCENTS)
+    )
+    nodes, pairs, seen, text_fills = 0, 0, set(), {}
+    for label, html in _every_emitter_document(tmp_path):
+        css = "\n".join(re.findall(r"<style>(.*?)</style>", html, re.S))
+        varying, invariant = _theme_families(css)
+        assert varying and invariant, (label, sorted(varying), len(invariant))
+
+        # 1. ONE mechanism, at the root. A second block — or one scoped to a
+        #    component — is precisely a mid-page seam.
+        blocks = re.findall(
+            r"@media\s*\([^)]*prefers-color-scheme[^)]*\)\s*\{\s*([^\s{]+)", css
+        )
+        assert blocks == [":root"], (label, blocks)
+        schemes = [
+            s.strip() for s in re.findall(r"([^{}]*)\{[^{}]*color-scheme\s*:", css)
+        ]
+        assert schemes == [":root"], (label, schemes)
+
+        # 2. The page's own surface pair follows the theme — if `body` painted a
+        #    fixed background or ink, the whole document would be theme-locked to
+        #    one side while every card kept flipping.
+        body_rule = next(
+            b for s, b in _css_rules(css) if s.split(",")[0].strip() == "body"
+        )
+        for prop in ("background", "color"):
+            assert _paint_family(_decl(body_rule, prop), varying) == "varying", (
+                label,
+                prop,
+                _decl(body_rule, prop),
+            )
+        pairs += _assert_no_mixed_css_rule(label, css, varying)
+        nodes += _assert_no_mixed_svg_node(label, html, varying)
+        _collect_css_text_fills(html, css, varying, text_fills)
+        # 6. No ad-hoc theme-locked SURFACE. Every rect fill is either a theme
+        #    token (it flips) or a member of a declared colour vocabulary (a
+        #    node, deliberately invariant, and A4's arithmetic already owns its
+        #    ink). A literal outside both would be a fixed panel — the seam a
+        #    reader crosses that the pair checks above cannot see, because a
+        #    background rect carries no text of its own.
+        for fill in set(re.findall(r'<rect\b[^>]*fill="([^"]+)"', html)):
+            assert fill.startswith("var(") or fill in vocabulary, (label, fill)
+            seen.add(_paint_family(fill, varying))
+    for sel, (fams, hosts) in sorted(text_fills.items()):
+        assert len(fams) == 1, (sel, fams)  # one rule, one family, every emitter
+        # a text paint with a host anywhere in the sweep must match that host's
+        # family; one with no host anywhere lands on the page and must follow it
+        assert hosts == fams if hosts else fams == {"varying"}, (sel, fams, hosts)
+    assert pairs >= 1, "vacuous — no bg/ink rule pair classified at all"
+    assert nodes >= 50, "vacuous — only {} node pair(s) classified".format(nodes)
+    assert len(text_fills) >= 4, "vacuous — {} css text fill(s)".format(len(text_fills))
+    # both families must actually occur, or the sweep proves nothing about mixing
+    assert {"varying", "invariant"} <= seen, seen
+
+
+def _assert_no_mixed_css_rule(label, css, varying):
+    """3. No CSS rule pairs a background and an ink from two families. Stated
+    plainly rather than dressed up: the page CSS has exactly ONE rule that
+    declares a classifiable background AND ink today — `body` (the rest pair an
+    ink with `background:none`) — so this check's value is prospective, and the
+    sweep's weight is carried by 4 and 5. The one badge idiom that pairs both
+    inline is composed in JS from the invariant vocabulary, where A4's
+    arithmetic (LLR-114) already owns the pairing."""
+    pairs = 0
+    for sel, body in _css_rules(css):
+        bg = _decl(body, "background(?:-color)?")
+        ink = _decl(body, "color")
+        fams = {_paint_family(bg or "", varying), _paint_family(ink or "", varying)}
+        if bg and ink and None not in fams:
+            pairs += 1
+            assert len(fams) == 1, (label, sel[:70], bg, ink, fams)
+    return pairs
+
+
+def _assert_no_mixed_svg_node(label, html, varying):
+    """4. Same rule for every emitted SVG node: an inline rect fill and the
+    inline text fill drawn on it must come from one family."""
+    nodes = 0
+    for g in re.findall(r"<g\b[^>]*>.*?</g>", html, re.S):
+        rect = re.search(r'<rect\b[^>]*fill="([^"]+)"', g)
+        text = re.search(r'<text\b[^>]*fill="([^"]+)"', g)
+        if not (rect and text):
+            continue
+        fams = {
+            _paint_family(rect.group(1), varying),
+            _paint_family(text.group(1), varying),
+        }
+        if None in fams:
+            continue
+        nodes += 1
+        assert len(fams) == 1, (label, rect.group(1), text.group(1), fams)
+    return nodes
+
+
+def _collect_css_text_fills(html, css, varying, into):
+    """5. The CSS-driven half: an SVG text fill declared in a rule, paired
+    against the family its host nodes actually paint in the artifact — derived
+    per selector, not a hand-copied list.
+
+    Accumulated ACROSS the sweep before judging, because "this selector has no
+    host rect here" is ambiguous in a single document: it means either "the
+    paint lands on the page background" (`#ice .lane-head`) or "this emitter
+    does not render those nodes" (`#ice .cell` in the shipped artifact, where
+    WI-306's start-collapsed drill replaced the flat icicle). Only a selector
+    with no host anywhere is the former."""
+    for sel, body in _css_rules(css):
+        fill = _decl(body, "fill")
+        if not fill or not re.search(r"\btext\b|\btspan\b", sel):
+            continue
+        fam = _paint_family(fill, varying)
+        if fam is None:
+            continue
+        host = re.sub(r"\s+(?:text|tspan)\b.*$", "", sel.split(",")[0].strip())
+        seen_fam, seen_hosts = into.setdefault(sel, (set(), set()))
+        seen_fam.add(fam)
+        seen_hosts |= _host_rect_families(html, host, varying)
+
+
+def _host_rect_families(html, selector, varying):
+    """The paint families of the rects belonging to `#id .cls[.cls2]` in the
+    emitted document — the host surface a CSS-declared text fill lands on.
+    Empty when the selector names no rect-bearing node (a lane head, an arrow
+    marker), which is itself the signal that the paint sits on the page."""
+    m = re.match(r"#([\w-]+)\s+\.([\w.-]+)$", selector)
+    if not m:
+        return set()
+    region = html.split('id="{}"'.format(m.group(1)), 1)
+    if len(region) < 2:
+        return set()
+    wanted = set(m.group(2).split("."))
+    fams = set()
+    for g in re.findall(r"<g\b[^>]*>.*?</g>", region[1].split("</svg>", 1)[0], re.S):
+        cls = re.search(r'class="([^"]*)"', g)
+        rect = re.search(r'<rect\b[^>]*fill="([^"]+)"', g)
+        if not (cls and rect) or not wanted <= set(cls.group(1).split()):
+            continue
+        fam = _paint_family(rect.group(1), varying)
+        if fam:
+            fams.add(fam)
+    return fams
+
+
 def test_u3_ring_token_is_the_one_highlight_idiom_across_every_emitter(tmp_path):
     """dashboard-uniformity.md U3/U4 (WI-294a, 119-CRITIQUE): the hover/focus
     highlight ring used to be `var(--accent)` in the drill emitters (When/How-SW)

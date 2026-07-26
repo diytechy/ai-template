@@ -14247,3 +14247,72 @@ integrity=0; `check_docs` OK (265 docs, 793 links, 0 broken); derived gate
 5186 → 5236 with its reason inline; most of that delta is the comment recording
 the marker/defs constraint, without which the next reader collapses the markers
 back into one and silently restores the defect.
+
+## 2026-07-26 — WI-314: T6 theme-lock bound (LLR-117/TC-122) — and the first anchor that measured clean
+
+The last mechanizable-but-unbound SR-054 anchor from the F12 finding. Closed by
+binding, per the option-(f) pattern: `LLR-117` + `TC-122`, `Automated: Yes`, and
+**T6 leaves the critique** — live anchors are now **T2, T4, T5, T8**, moved on
+all three surfaces in step (rubric header + the T6 anchor, `TC-055.Expected`,
+`SR-054.AcceptanceCriteria`).
+
+### The design call that made it checkable
+
+T6's measurable content is **family pairing, not the absence of literals**. A
+fixed status swatch under fixed white ink is theme-locked *correctly* — neither
+side flips, so no reader ever sees it invert. The first draft of this check
+would have failed that swatch and been wrong.
+
+So the two families are **derived** from the emitted document — the dark block's
+override set *is* the definition of theme-varying — and the test forbids the two
+shapes that actually invert a page:
+
+1. **A theme mechanism below `:root`** — a second `prefers-color-scheme` block,
+   or a per-component `color-scheme`. That is literally the seam a reader
+   crosses while scrolling.
+2. **A mixed-family pair** — a theme-varying ink on a fixed surface, or the
+   reverse: correct in the theme it was authored in, inverted in the other.
+   Applied to CSS rules that declare both, to every emitted SVG node pairing an
+   inline rect fill with an inline text fill, and to CSS-declared text fills
+   paired against the family their host nodes *actually* paint in the artifact.
+
+A sixth check closes the hole the pair checks structurally cannot see: **a
+background rect carries no ink of its own**, so a fixed panel would sail past
+every pairing rule. Every rect fill must therefore be a theme token or a
+declared vocabulary member — never an ad-hoc locked surface.
+
+### Two lessons the mechanics taught
+
+- **Sweep every emitter, then judge.** In ONE document, "this selector has no
+  host rect" cannot distinguish *"the paint lands on the page background"*
+  (`#ice .lane-head`) from *"this emitter did not render those nodes"*
+  (`#ice .cell`, ever since WI-306's start-collapsed drill replaced the flat
+  icicle in the shipped artifact). The first version asserted on the single
+  document and reported a violation that was not one. The pairing verdict is now
+  accumulated across `_every_emitter_document` and decided once.
+- **A non-vacuity bar must be measured, not guessed.** The draft asserted
+  "≥ 3 classifiable background/ink CSS rule pairs" — the document has exactly
+  **one** (`body`; the rest pair an ink with `background:none`). Rather than
+  quietly drop the check, its narrow reach is stated in the test, the LLR, and
+  here: that half is prospective, and the sweep's weight sits on the node
+  (900+ pairs) and text-fill halves.
+
+### The exception to a standing lesson
+
+Every rubric clause measured on 2026-07-25/26 had **failed on first
+measurement**. T6 did not: one theme mechanism, zero orphan dark tokens, zero
+mixed pairs in 893 node pairs, every rect fill inside a declared vocabulary.
+Recording that deliberately — "measure before writing it off as perceptual" is
+the lesson, and it holds whichever way the measurement lands.
+
+The guard was proven against five independent mutations, each caught by its own
+assertion: `--text` dropped from the dark block; a phase block's ink switched to
+`var(--text)` over its fixed fill; `#ice .cell text` switched to `var(--text)`
+over its invariant host; a second `prefers-color-scheme` block scoped to
+`.detail`; a node rect repainted `#ffffff`. Source restored byte-identical after
+each.
+
+**Verified:** smoke 410 passed; `test_gen_trajectory.py` **144 passed**;
+`trace --strict --strict-integrity` clean at SN=25 SR=110 **LLR=115 TC=118**
+orphans=0 integrity=0; `check_docs` OK (265 docs, 793 links, 0 broken); derived
+gate **G2** (`modified=6`). No ratchet re-stamp — the change is test-side.

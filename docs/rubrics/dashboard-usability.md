@@ -11,9 +11,10 @@ The verdict is `VERDICT: APPROVE|CHANGES-REQUESTED findings=N` with each finding
 citing an anchor id (`T1`…`T8`). APPROVE requires every **live** anchor satisfied.
 Judge as a **first-time reviewer** opening the dashboard cold.
 
-> **T1, T3 and T7 are bound as tests, not critique anchors** (owner rulings
-> 2026-07-26) — T1 to `LLR-115`/`TC-120`, T3 to `LLR-100`/`TC-103`, T7 to
-> `LLR-116`/`TC-121`; none is **yours to judge**. The live anchor set is **T2, T4, T5, T6, T8**.
+> **T1, T3, T6 and T7 are bound as tests, not critique anchors** (owner rulings
+> 2026-07-26) — T1 to `LLR-115`/`TC-120`, T3 to `LLR-100`/`TC-103`, T6 to
+> `LLR-117`/`TC-122`, T7 to `LLR-116`/`TC-121`; none is **yours to judge**. The
+> live anchor set is **T2, T4, T5, T8**.
 
 ## The core reading tasks (the concrete "one tab switch" list)
 
@@ -86,7 +87,9 @@ contrast](dashboard-accessibility.md); T5 extends that floor to interactive
 controls and adds the both-themes obligation. *Bad:* the active-tab underline or
 a focus ring is crisp in light theme but washes into its background in dark.
 
-**T6 — Theme-lock (no mid-view inversion).** The dashboard renders in one theme
+**T6 — Theme-lock (no mid-view inversion).** *Bound to `LLR-117`/`TC-122`
+(WI-314) — not a critique anchor; kept here as the stated intent the test
+mechanizes.* The dashboard renders in one theme
 at a time — light, dark, or a system-following auto — applied to the whole page;
 no tab, panel, or detail view flips to the opposite theme mid-view. A reader
 scrolling or switching tabs under one theme selection never crosses a light/dark
@@ -121,8 +124,11 @@ still blocks APPROVE until the render passes.)
   judge the live legibility / layout anchors below.
 - A clipped or overlapping label is a T4 failure even if everything else is clean
   — legibility is a floor.
-- T5 and T6 are floors too: check T5 in **both** themes, not just the default.
-  T7 is no longer yours — `TC-121` holds every emitted diagram to scale-to-fit
+- T5 is a floor too: check it in **both** themes, not just the default. T6 is no
+  longer yours — `TC-122` holds the document to one theme mechanism at `:root`
+  and forbids a mixed-family surface/ink pair, swept over every emitter; a seam
+  you believe you see is a gap in that test and routes through change-intake.
+  T7 is no longer yours either — `TC-121` holds every emitted diagram to scale-to-fit
   with a legibility floor. A view that still scrolls sideways at 390px is the
   floor working as designed (its natural width exceeds 390 / SHRINK_FLOOR), not
   a T7 finding; if you believe it is a defect, that is a gap in `TC-121` and
