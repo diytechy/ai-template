@@ -124,3 +124,4 @@ resource: "generated"
 | [LLR-113](LLR-113.md) | No information by colour alone (A3 core) |
 | [LLR-114](LLR-114.md) | Text-contrast floors, closed over the vocabulary set (A4) |
 | [LLR-115](LLR-115.md) | Task findability - labelled entry within one tab switch (T1 core) |
+| [LLR-116](LLR-116.md) | Viewport-fit by scale-to-fit with a legibility floor (T7 core) |

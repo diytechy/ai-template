@@ -127,3 +127,4 @@ resource: "generated"
 | [TC-118](TC-118.md) | Over the shipped dashboard plus seven fixture renders: resolve the document's token defin… |
 | [TC-119](TC-119.md) | Reflect every UPPERCASE module-level constant RECURSIVELY (nested dicts/tuples/sets and b… |
 | [TC-120](TC-120.md) | Generate the dashboard from a zero-active/all-queued fixture (the exact 119-CRITIQUE fail… |
+| [TC-121](TC-121.md) | Generate the dashboard and derive EVERY emitted <svg> from the document (not a hand list,… |

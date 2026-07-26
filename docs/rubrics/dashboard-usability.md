@@ -11,9 +11,9 @@ The verdict is `VERDICT: APPROVE|CHANGES-REQUESTED findings=N` with each finding
 citing an anchor id (`T1`…`T8`). APPROVE requires every **live** anchor satisfied.
 Judge as a **first-time reviewer** opening the dashboard cold.
 
-> **T1 and T3 are retired as critique anchors** (owner rulings 2026-07-26) — T1
-> is bound to `LLR-115`/`TC-120` (WI-315), T3 to `LLR-100`/`TC-103`; neither is
-> **yours to judge**. The live anchor set is **T2, T4, T5, T6, T7, T8**.
+> **T1, T3 and T7 are bound as tests, not critique anchors** (owner rulings
+> 2026-07-26) — T1 to `LLR-115`/`TC-120`, T3 to `LLR-100`/`TC-103`, T7 to
+> `LLR-116`/`TC-121`; none is **yours to judge**. The live anchor set is **T2, T4, T5, T6, T8**.
 
 ## The core reading tasks (the concrete "one tab switch" list)
 
@@ -93,7 +93,7 @@ scrolling or switching tabs under one theme selection never crosses a light/dark
 seam. *Bad:* under the same theme setting the When tab renders dark while the
 Process tab renders on a light card, so switching tabs inverts the page.
 
-**T7 — Viewport fit at the declared widths.** The layout fits each width in the
+**T7 — Viewport fit at the declared widths. BOUND as a test 2026-07-26 (WI-307) — `LLR-116`/`TC-121`; do not judge it here.** The bar it stated: the layout fits each width in the
 declared render matrix — the 390px mobile landing and the declared desktop widths
 (the `render-dashboard-critique` shot set is the source of truth) — with no
 horizontal scroll and nothing clipped past the viewport edge at the initial,
@@ -121,9 +121,12 @@ still blocks APPROVE until the render passes.)
   judge the live legibility / layout anchors below.
 - A clipped or overlapping label is a T4 failure even if everything else is clean
   — legibility is a floor.
-- T5–T7 are floors too: check T5 in **both** themes, not just the default, and
-  confirm T7 against the 390px shot specifically — a layout that fits at desktop
-  can still overflow at mobile.
+- T5 and T6 are floors too: check T5 in **both** themes, not just the default.
+  T7 is no longer yours — `TC-121` holds every emitted diagram to scale-to-fit
+  with a legibility floor. A view that still scrolls sideways at 390px is the
+  floor working as designed (its natural width exceeds 390 / SHRINK_FLOOR), not
+  a T7 finding; if you believe it is a defect, that is a gap in `TC-121` and
+  routes through change-intake, never a verdict.
 
 ---
 
