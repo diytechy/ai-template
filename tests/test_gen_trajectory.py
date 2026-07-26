@@ -2072,6 +2072,86 @@ def test_u1_every_font_size_resolves_to_a_declared_scale_step(tmp_path):
     assert len(declared) <= 12, sorted(declared)
 
 
+# WI-310: the U3 residue ("spacing, exact visual weight") measured as drift —
+# 8 stroke-widths, 7 opacities, 5 corner radii, with FIVE stroke widths doing the
+# single job "draw a connector". Same declare-then-assert shape as the type scale.
+WEIGHT_TOKENS = {
+    "stroke-width": ["--w-hair", "--w-node", "--w-line", "--w-emph"],
+    "opacity": [
+        "--o-wash",
+        "--o-dim",
+        "--o-ghost",
+        "--o-soft",
+        "--o-muted",
+        "--o-full",
+    ],
+    "border-radius": ["--r-chip", "--r-ctl", "--r-card", "--r-pill"],
+}
+
+
+def test_u3_every_weight_value_resolves_to_a_declared_token(tmp_path):
+    """dashboard-uniformity.md U3 core (WI-310): one declared token per role for
+    the properties that carry visual weight.
+
+    `stroke-opacity` is checked under `opacity` deliberately — it is the same
+    scale applied to a stroke, and letting it keep its own literals would leave
+    the exact hole this closes.
+    """
+    for label, html in _every_emitter_document(tmp_path):
+        for prop, tokens in WEIGHT_TOKENS.items():
+            for token in tokens:
+                defs = re.findall(re.escape(token) + r"\s*:\s*([^;]+);", html)
+                assert len(defs) == 1, (label, token, defs)
+
+            used = []
+            for surface in _style_surfaces(html):
+                # (?<![-\w]) so `stroke-opacity` is not eaten by `opacity`
+                used += re.findall(
+                    r"(?<![-\w])" + re.escape(prop) + r"\s*:\s*([^;}\"']+)", surface
+                )
+                if prop == "opacity":
+                    used += re.findall(r"stroke-opacity\s*:\s*([^;}\"']+)", surface)
+            if not used:
+                continue  # this render does not exercise the property
+            raw = sorted({v.strip() for v in used if not v.strip().startswith("var(")})
+            assert not raw, (
+                "in the {} render, {} value(s) bypass the declared tokens: {} — "
+                "name the role or reuse the nearest step".format(label, prop, raw)
+            )
+            unknown = sorted(
+                {
+                    re.sub(r"var\(\s*|\s*\)", "", v.strip())
+                    for v in used
+                    if re.sub(r"var\(\s*|\s*\)", "", v.strip()) not in tokens
+                }
+            )
+            assert not unknown, (label, prop, unknown)
+
+
+def test_u3_svg_corner_radii_match_the_declared_scale(tmp_path):
+    """U3 core, the SVG half (WI-310): `rx` is a presentation attribute and
+    cannot read a CSS custom property portably, so `SVG_RX` is its declaration
+    and this closes the loop — asserting the DECLARATION against both the source
+    literals and every rendered document, so the tuple cannot quietly disagree
+    with what the emitters actually draw.
+    """
+    gt = load_script("gen_trajectory")
+    declared = set(gt.SVG_RX)
+    assert declared, "SVG_RX is empty"
+
+    src = (SCRIPTS / "gen_trajectory.py").read_text(encoding="utf-8")
+    in_source = set(re.findall(r'\brx="([0-9.]+)"', src))
+    assert in_source <= declared, (
+        "rect template(s) draw an undeclared corner radius {} — add the role to "
+        "SVG_RX or reuse a declared step".format(sorted(in_source - declared))
+    )
+    assert in_source, "vacuous — no rx literal found in the emitters"
+
+    for label, html in _every_emitter_document(tmp_path):
+        rendered = set(re.findall(r'\brx="([0-9.]+)"', html))
+        assert rendered <= declared, (label, sorted(rendered - declared))
+
+
 def test_u1_process_tab_type_scale_matches_the_shared_tokens(tmp_path):
     """dashboard-uniformity.md U1 (WI-295, 119-CRITIQUE MINOR): the Process tab's
     "working loops" SVG (`.stgt`/`.stgn`/`.hooplab`/`.hubname`) used to hardcode
@@ -2595,7 +2675,12 @@ def test_u3_knowledge_edge_stroke_uses_the_shared_muted_token(tmp_path):
     with_bundle(tmp_path)
     assert gen(tmp_path).returncode == 0
     css = html_of(tmp_path)
-    assert "#knowgraph .kedge{fill:none;stroke:var(--muted);stroke-width:1.5;}" in css
+    # WI-310: the width is now the shared `--w-line` connector token rather than
+    # a bare 1.5 — same claim (one idiom), one more literal retired.
+    assert (
+        "#knowgraph .kedge{fill:none;stroke:var(--muted);stroke-width:var(--w-line);}"
+        in css
+    )
     assert "#knowgraph .kedge{fill:none;stroke:#94a3b8" not in css
 
 

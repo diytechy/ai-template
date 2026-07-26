@@ -118,7 +118,15 @@ BASELINE = {
     # (a rem inside an SVG resizes labels out of fixed-px boxes) — the part a
     # successor would otherwise 'simplify' back into a single unit. Every call
     # site got SHORTER (a literal became a var()). Reviewed bump, log 2026-07-25.
-    "gen_trajectory.py": 4888,
+    # +34 (4888 -> 4922), WI-310 (U3 core): fourteen weight/alpha/corner tokens
+    # plus the SVG_RX declaration, retiring 8 stroke-widths / 7 opacities / 5
+    # radii / 6 rx values — of which FIVE stroke widths were doing the single
+    # job 'draw a connector'. Most of the delta is the two comments: the role
+    # each token names, and WHY SVG_RX is a declaration the test enforces rather
+    # than a value spliced into the rect templates (splicing with `+` rebinds
+    # .format to the last fragment — a real bug this WI hit and backed out).
+    # Reviewed bump, log 2026-07-25. Re-stamp downward with WI-280.
+    "gen_trajectory.py": 4922,
     # +11 (3452 -> 3463), WI-284: _regenerate_disposition_artifacts also runs
     # `gen_trajectory.py --status` at integrate/blocked-disposition so a closed
     # id drops from the generated frontier automatically (and the disposition

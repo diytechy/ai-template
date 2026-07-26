@@ -549,6 +549,22 @@ def project_name(root):
 
 # --- the layered work-item DAG, computed in Python (Thread 52 ruling A) ---------
 
+# SVG corner radii (U3 core, WI-310). The `rx` PRESENTATION ATTRIBUTE cannot read
+# a CSS custom property portably, so this scale is declared here in Python rather
+# than beside the `--r-*` tokens in the stylesheet — same rule, different
+# mechanism. Before WI-310 the emitters used 3/6/7/8/9/12, of which FOUR (6, 7,
+# 8, 9) were doing the single job "round a node box": exactly the drift U3 exists
+# to catch.
+#
+# These are the DECLARATION, not the substitution. The `rx="…"` values stay
+# literals in the rect templates, because those templates are implicitly
+# concatenated multi-line strings ending in `.format(...)`, and splicing a
+# constant in with `+` rebinds `.format` to the last fragment alone — a real bug
+# this WI hit and backed out. `test_u3_svg_corner_radii_match_the_declared_scale`
+# closes the loop instead, asserting BOTH the emitted set and the source literals
+# against this tuple, so a seventh radius cannot appear un-declared.
+SVG_RX = ("3", "8", "12")  # icicle cell · any node box · process chip
+
 DAG_COL_W = 172  # node width
 DAG_COL_GAP = 60  # horizontal gap between dependency ranks
 DAG_ROW_H = 46  # node height
@@ -853,7 +869,7 @@ def dag_svg(wis):
             # last, like the drill's, so existing adjacency assertions hold.
             '<g class="wi {}" data-id="{}" tabindex="0"{} data-status="{}">'
             "<title>{}</title>"
-            '<rect x="{:.1f}" y="{:.1f}" width="{}" height="{}" rx="7" '
+            '<rect x="{:.1f}" y="{:.1f}" width="{}" height="{}" rx="8" '
             'fill="{}"></rect>{}</g>'.format(
                 st,
                 esc(w["id"]),
@@ -1014,7 +1030,7 @@ def sw_graph(root, mods):
         tip = "{} ({})".format(disp, info["kind"])
         node_svg.append(
             "<g><title>{}</title>"
-            '<rect x="{:.1f}" y="{:.1f}" width="{}" height="{}" rx="6" '
+            '<rect x="{:.1f}" y="{:.1f}" width="{}" height="{}" rx="8" '
             'fill="{}"></rect><text x="{:.1f}" y="{:.1f}" text-anchor="middle" '
             'dominant-baseline="central" fill="#fff" font-size="10">{}</text>'
             "</g>".format(
@@ -1031,7 +1047,7 @@ def sw_graph(root, mods):
         )
     defs = _arrow_markers(("swarrow", "swarrow-head"))
     style = (
-        "<style>#sw .swedge{fill:none;stroke:var(--muted);stroke-width:1.4;}"
+        "<style>#sw .swedge{fill:none;stroke:var(--muted);stroke-width:var(--w-line);}"
         "#sw .swarrow-head{fill:var(--muted);}"
         "#sw .swlab{fill:var(--muted);font-size:var(--nsub);}</style>"
     )
@@ -1519,14 +1535,14 @@ DRILL_STYLE = (
     "margin:.1rem 0 .6rem;font-size:var(--small);}"
     ".drill nav.crumbs .crumb{appearance:none;background:none;border:none;"
     "cursor:pointer;font:inherit;color:var(--accent);padding:.15rem .35rem;"
-    "border-radius:6px;}"
+    "border-radius:var(--r-ctl);}"
     ".drill nav.crumbs .crumb[aria-current]{color:var(--text);font-weight:600;"
     "cursor:default;}"
     ".drill nav.crumbs .sep{color:var(--muted);}"
     ".drill .layer[hidden]{display:none;}"
     ".drill svg.drillsvg{display:block;font-family:inherit;}"
     ".drill .block[data-descend]{cursor:pointer;}"
-    ".drill .block[data-descend] rect{stroke-width:1.5;}"
+    ".drill .block[data-descend] rect{stroke-width:var(--w-line);}"
     ".drill .block:focus{outline:none;}"
     # WI-294a/WI-299 (119-CRITIQUE): a single hue (--accent, then amber elsewhere)
     # cannot clear 3:1 against every node fill — it vanished at 1.00:1 on the
@@ -1538,19 +1554,19 @@ DRILL_STYLE = (
     # below read the same property) — one highlight idiom, not two, and one that
     # cannot fail regardless of which fill it lands on. The static fallback keeps
     # today's behaviour for any node a future emitter doesn't tag with --ring.
-    ".drill .block:focus rect{stroke:var(--ring,var(--accent));stroke-width:2.5;}"
+    ".drill .block:focus rect{stroke:var(--ring,var(--accent));stroke-width:var(--w-emph);}"
     # SR-056: the hover/focus highlight persists on the last-hovered block until
     # another takes it (the shared .hl idiom — cf. the icicle/DAG/knowledge views).
-    ".drill .block.hl rect{stroke:var(--ring,var(--accent));stroke-width:2.5;}"
+    ".drill .block.hl rect{stroke:var(--ring,var(--accent));stroke-width:var(--w-emph);}"
     ".drill .block .blab{font-size:var(--nlabel);font-weight:700;}"
     ".drill .block .bsub{font-size:var(--nsub);}"
-    ".drill .port{fill:var(--surface);stroke:var(--muted);stroke-width:1.2;}"
+    ".drill .port{fill:var(--surface);stroke:var(--muted);stroke-width:var(--w-line);}"
     ".drill .port.in{stroke:var(--accent);}"
-    ".drill .wire{fill:none;stroke:var(--muted);stroke-width:1.5;opacity:.85;}"
+    ".drill .wire{fill:none;stroke:var(--muted);stroke-width:var(--w-line);opacity:var(--o-muted);}"
     ".drill .warrow{fill:var(--muted);}"
     # SR-056: one horizontal parent→child arrow per containment edge — the accent
     # colour (vs. the muted dependency wire) marks it as a descend/containment edge.
-    ".drill .cedge{fill:none;stroke:var(--accent);stroke-width:1.5;}"
+    ".drill .cedge{fill:none;stroke:var(--accent);stroke-width:var(--w-line);}"
     ".drill .cedgehead{fill:var(--accent);}"
     "</style>"
 )
@@ -2343,6 +2359,24 @@ HTML_TEMPLATE = string.Template("""<!doctype html>
     --lead:1.05rem; --display:1.4rem; --hero:2rem;
     /* relative: one step, for text sized against its parent. */
     --rel:.9em;
+    /* ===== WEIGHT, EMPHASIS AND CORNER (U3 core, WI-310) ====================
+       The same declare-then-assert discipline as the type scale above, for the
+       three properties that carry "visual weight" —
+       `test_u3_every_weight_value_resolves_to_a_declared_token` enforces it.
+       Measured before WI-310: 8 distinct stroke-widths, 7 opacities and 5
+       corner radii, which is drift rather than a system: FIVE stroke widths
+       (1, 1.2, 1.4, 1.5, 1.8) were doing the single job "draw a connector".
+       Each token below names a ROLE; near-duplicates merged into the role's
+       step. Add one only for a role no existing step covers. */
+    /* stroke — a hairline separator, a node's own outline, any connector
+       (edge/wire/port/containment arrow), and the focus/hover emphasis. */
+    --w-hair:.5; --w-node:1; --w-line:1.5; --w-emph:2.5;
+    /* alpha — a background wash, a de-emphasised node, a faint outline, an
+       advisory (soft) edge, an ordinary edge, and the reset to fully opaque. */
+    --o-wash:.05; --o-dim:.15; --o-ghost:.35; --o-soft:.65;
+    --o-muted:.85; --o-full:1;
+    /* corner — legend chip, small control, card/panel, and a full pill. */
+    --r-chip:3px; --r-ctl:6px; --r-card:12px; --r-pill:999px;
     --shadow:0 1px 3px rgba(15,23,42,.06),0 1px 2px rgba(15,23,42,.04);
   }
   @media (prefers-color-scheme: dark) {
@@ -2375,21 +2409,21 @@ HTML_TEMPLATE = string.Template("""<!doctype html>
   .cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr));
            gap:1rem; margin:1.75rem 0 .5rem; }
   .card { background:var(--surface); border:1px solid var(--border);
-          border-radius:12px; padding:1.1rem 1.2rem; box-shadow:var(--shadow); }
+          border-radius:var(--r-card); padding:1.1rem 1.2rem; box-shadow:var(--shadow); }
   .card .label { font-size:var(--xsmall); text-transform:uppercase; letter-spacing:.05em;
                  color:var(--muted); font-weight:600; }
   .card .big { font-size:var(--hero); font-weight:700; letter-spacing:-.03em;
                margin:.15rem 0 .1rem; }
   .card .sub { font-size:var(--small); color:var(--muted); }
   .card .sub.nowat { color:var(--active); font-weight:600; margin-top:.2rem; }
-  .meter { background:var(--border); border-radius:999px; height:.55rem;
+  .meter { background:var(--border); border-radius:var(--r-pill); height:.55rem;
            overflow:hidden; margin-top:.7rem; }
-  .meter > span { display:block; height:100%; border-radius:999px; }
+  .meter > span { display:block; height:100%; border-radius:var(--r-pill); }
   .meter.def > span { background:var(--accent); }
   .meter.exe > span { background:var(--done); }
   .tiles { display:flex; flex-wrap:wrap; gap:.5rem; }
   .tile { flex:1 1 90px; background:var(--surface); border:1px solid var(--border);
-          border-radius:10px; padding:.7rem .8rem; text-align:center;
+          border-radius:var(--r-card); padding:.7rem .8rem; text-align:center;
           box-shadow:var(--shadow); }
   .tile b { display:block; font-size:var(--display); letter-spacing:-.02em; }
   .tile span { font-size:var(--tiny); color:var(--muted); text-transform:uppercase;
@@ -2406,7 +2440,7 @@ HTML_TEMPLATE = string.Template("""<!doctype html>
   .panel p.cap { color:var(--muted); margin:0 0 1rem; max-width:70ch; }
   .layout { display:grid; grid-template-columns:1fr 320px; gap:1rem; }
   .view { overflow:auto; max-height:660px; background:var(--surface);
-          border:1px solid var(--border); border-radius:12px; box-shadow:var(--shadow);
+          border:1px solid var(--border); border-radius:var(--r-card); box-shadow:var(--shadow);
           padding:.6rem; }
   .view svg { display:block; font-family:inherit; }
   /* WI-219 (M-04): a view wider than the viewport must SIGNAL its off-screen
@@ -2437,32 +2471,32 @@ HTML_TEMPLATE = string.Template("""<!doctype html>
   .view.clipr, .tablescroll.clipr {
      -webkit-mask-image: linear-gradient(to left, transparent, #000 2.2rem);
              mask-image: linear-gradient(to left, transparent, #000 2.2rem); }
-  #ice .cell rect { stroke:rgba(255,255,255,.35); stroke-width:.5; cursor:pointer;
+  #ice .cell rect { stroke:rgba(255,255,255,.35); stroke-width:var(--w-hair); cursor:pointer;
         transition:opacity .1s ease; }
   #ice .cell text { fill:#fff; font-size:var(--nlabel); pointer-events:none; }
   #ice .cell .sub { font-size:var(--nsub); }
   #ice .lane-head { fill:var(--muted); font-size:var(--nhead); font-weight:700; letter-spacing:.06em; }
-  .cell.dim, .wi.dim, .edge.dim { opacity:.15; }
-  #ice .cell.hl rect { stroke:var(--ring,#f59e0b); stroke-width:2.5; }
+  .cell.dim, .wi.dim, .edge.dim { opacity:var(--o-dim); }
+  #ice .cell.hl rect { stroke:var(--ring,#f59e0b); stroke-width:var(--w-emph); }
   .cell:focus, .wi:focus { outline:none; }
-  #dag .wi rect { stroke:rgba(15,23,42,.15); stroke-width:1; cursor:pointer;
+  #dag .wi rect { stroke:rgba(15,23,42,.15); stroke-width:var(--w-node); cursor:pointer;
         transition:opacity .1s ease; }
   #dag .wi text { fill:#fff; pointer-events:none; }
   #dag .wi .wid { font-size:var(--nlabel); font-weight:700; }
   #dag .wi .sub { font-size:var(--nsub); }
   #dag .wi.queued text { fill:#0f172a; }
-  #dag .wi.hl rect { stroke:var(--ring,#f59e0b); stroke-width:2.5; }
-  #dag .edge { fill:none; stroke:var(--muted); stroke-width:1.4; opacity:.85; }
-  #dag .edge.soft { stroke-dasharray:5 4; opacity:.65; }
-  #dag .edge.hl { stroke:#f59e0b; stroke-width:2; opacity:1; }
+  #dag .wi.hl rect { stroke:var(--ring,#f59e0b); stroke-width:var(--w-emph); }
+  #dag .edge { fill:none; stroke:var(--muted); stroke-width:var(--w-line); opacity:var(--o-muted); }
+  #dag .edge.soft { stroke-dasharray:5 4; opacity:var(--o-soft); }
+  #dag .edge.hl { stroke:#f59e0b; stroke-width:var(--w-emph); opacity:var(--o-full); }
   #dag .arrowhead { fill:var(--muted); }
   .detail { background:var(--surface); border:1px solid var(--border);
-        border-radius:12px; padding:1rem 1.1rem; box-shadow:var(--shadow);
+        border-radius:var(--r-card); padding:1rem 1.1rem; box-shadow:var(--shadow);
         overflow-y:auto; max-height:640px; }
   .detail .hint { color:var(--muted); }
   .detail .badge { display:inline-block; font-size:var(--xsmall); font-weight:700;
         text-transform:uppercase; letter-spacing:.05em; padding:.15rem .5rem;
-        border-radius:6px; color:#fff; }
+        border-radius:var(--r-ctl); color:#fff; }
   .detail h3 { font-size:var(--body); margin:.55rem 0 .35rem; letter-spacing:-.01em; }
   .detail .status { color:var(--muted); font-size:var(--xsmall); margin:0 0 .5rem; }
   .detail .body { color:var(--text); margin:.2rem 0; }
@@ -2472,7 +2506,7 @@ HTML_TEMPLATE = string.Template("""<!doctype html>
         .detail{ max-height:none; } .scrollcue{ display:block; } }
   .legend { display:flex; flex-wrap:wrap; gap:1rem; margin-top:.9rem;
             font-size:var(--small); color:var(--muted); }
-  .legend i { display:inline-block; width:.8rem; height:.8rem; border-radius:3px;
+  .legend i { display:inline-block; width:.8rem; height:.8rem; border-radius:var(--r-chip);
               vertical-align:-1px; margin-right:.35rem; }
   footer { margin-top:2.5rem; padding-top:1rem; border-top:1px solid var(--border);
            color:var(--muted); font-size:var(--xsmall); }
@@ -3101,7 +3135,7 @@ def know_graph(root):
         node_svg.append(
             '<g class="knode" data-id="{}" tabindex="0"{}>'
             "<title>{}</title>"
-            '<rect x="{:.1f}" y="{:.1f}" width="{}" height="{}" rx="6" '
+            '<rect x="{:.1f}" y="{:.1f}" width="{}" height="{}" rx="8" '
             'fill="{}"></rect><text x="{:.1f}" y="{:.1f}" text-anchor="middle" '
             'dominant-baseline="central">{}</text></g>'.format(
                 esc(k),
@@ -3287,16 +3321,16 @@ def _know_panel(root, svg, details):
     # aside in either shape.
     style = (
         "<style>"
-        "#knowgraph .knode rect{stroke:rgba(15,23,42,.15);stroke-width:1;"
+        "#knowgraph .knode rect{stroke:rgba(15,23,42,.15);stroke-width:var(--w-node);"
         "cursor:pointer;transition:opacity .1s ease;}"
         "#knowgraph .knode text{fill:#fff;font-size:var(--nlabel);pointer-events:none;}"
-        "#knowgraph .knode.dim,#knowgraph .kedge.dim{opacity:.15;}"
-        "#knowgraph .knode.hl rect{stroke:var(--ring,#f59e0b);stroke-width:2.5;}"
+        "#knowgraph .knode.dim,#knowgraph .kedge.dim{opacity:var(--o-dim);}"
+        "#knowgraph .knode.hl rect{stroke:var(--ring,#f59e0b);stroke-width:var(--w-emph);}"
         # U3 (dashboard-uniformity): the directed-dependency edge shares the drill
         # `.wire` idiom — one `--muted` stroke token (was a hardcoded #94a3b8 that
         # diverged from `.wire` in light mode) at the same 1.5 width.
-        "#knowgraph .kedge{fill:none;stroke:var(--muted);stroke-width:1.5;}"
-        "#knowgraph .kedge.hl{stroke:#f59e0b;stroke-width:2;}"
+        "#knowgraph .kedge{fill:none;stroke:var(--muted);stroke-width:var(--w-line);}"
+        "#knowgraph .kedge.hl{stroke:#f59e0b;stroke-width:var(--w-emph);}"
         "#knowgraph .knowarrow-head{fill:var(--muted);}"
         "#know-detail .body{overflow-wrap:anywhere;}"
         "</style>"
@@ -3635,7 +3669,7 @@ def _loop_card(loop_id, idx, title, note, href, px, py):
     shown = note if len(note) <= g["notemax"] else note[: g["notemax"] - 1] + "…"
     body = (
         "<title>{}</title>"
-        '<rect x="{:.1f}" y="{:.1f}" width="{:.1f}" height="{:.1f}" rx="9"/>'
+        '<rect x="{:.1f}" y="{:.1f}" width="{:.1f}" height="{:.1f}" rx="8"/>'
         '<text x="{:.1f}" y="{:.1f}" text-anchor="middle">'
         '<tspan class="stgt" x="{:.1f}" dy="-2">{}</tspan>'
         '<tspan class="stgn" x="{:.1f}" dy="14">{}</tspan></text>'.format(
@@ -3795,13 +3829,13 @@ def process_panel(root, wis, stats):
         "<style>"
         "#process h3{font-size:var(--body);margin:1.5rem 0 .25rem;letter-spacing:-.01em;}"
         "#process .gnow{background:var(--surface);border:1px solid var(--border);"
-        "border-radius:10px;padding:.6rem .9rem;box-shadow:var(--shadow);"
+        "border-radius:var(--r-card);padding:.6rem .9rem;box-shadow:var(--shadow);"
         "display:inline-block;margin:.2rem 0 .4rem;}"
         "#process .gnow b{color:var(--accent);}"
         "#process ol.pflow{list-style:none;display:flex;flex-wrap:wrap;"
         "gap:.55rem;padding:0;margin:.5rem 0;align-items:stretch;}"
         "#process .pflow li{position:relative;background:var(--surface);"
-        "border:1px solid var(--border);border-radius:10px;"
+        "border:1px solid var(--border);border-radius:var(--r-card);"
         "padding:.5rem .7rem .55rem;box-shadow:var(--shadow);max-width:200px;}"
         "#process .pflow li+li{margin-left:1rem;}"
         '#process .pflow li+li::before{content:"→";'
@@ -3825,18 +3859,18 @@ def process_panel(root, wis, stats):
         "#process .loops{margin:.7rem 0;}"
         "#process .loopsvg{display:block;width:100%;height:auto;max-width:720px;"
         "margin:0 auto;font-family:inherit;}"
-        "#process .hoop{fill:var(--accent);opacity:.05;stroke:var(--accent);"
-        "stroke-opacity:.35;stroke-width:1.5;}"
+        "#process .hoop{fill:var(--accent);opacity:var(--o-wash);stroke:var(--accent);"
+        "stroke-opacity:var(--o-ghost);stroke-width:var(--w-line);}"
         "#process .hooplab{fill:var(--accent);font-size:var(--nhead);font-weight:700;"
         "letter-spacing:.01em;}"
-        "#process .floop{fill:none;stroke:var(--muted);stroke-width:1.8;"
-        "opacity:.9;}"
+        "#process .floop{fill:none;stroke:var(--muted);stroke-width:var(--w-line);"
+        "opacity:var(--o-muted);}"
         "#process .floparrow-head{fill:var(--muted);}"
         "#process a.stg{cursor:pointer;}"
         "#process .stg rect{fill:var(--surface);stroke:var(--border);"
-        "stroke-width:1.2;filter:drop-shadow(0 1px 2px rgba(15,23,42,.12));}"
+        "stroke-width:var(--w-line);filter:drop-shadow(0 1px 2px rgba(15,23,42,.12));}"
         "#process a.stg:hover rect,#process a.stg:focus rect{stroke:var(--accent);"
-        "stroke-width:2;}"
+        "stroke-width:var(--w-emph);}"
         "#process .stg:focus{outline:none;}"
         "#process .stgt{fill:var(--text);font-size:var(--nlabel);font-weight:700;}"
         "#process .stgn{fill:var(--muted);font-size:var(--nsub);}"

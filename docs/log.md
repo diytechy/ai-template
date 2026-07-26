@@ -13259,3 +13259,50 @@ All four reversions fail against the finished guard; restored, it passes.
 **Ratchet:** `gen_trajectory.py` 4872 → 4888 — the declarations plus the comment
 saying why three families rather than one, which is exactly what a successor
 would otherwise "simplify" away. Every call site got *shorter*. Reviewed bump.
+
+
+## 2026-07-25 — WI-310: the U3 residue mechanized (weight, alpha, corner)
+
+Fourteen declared tokens plus `SVG_RX`, retiring **8 stroke-widths, 7 opacities,
+5 border-radii and 6 `rx` values**. The measurement that justified it: **five**
+stroke widths (1, 1.2, 1.4, 1.5, 1.8) were doing the single job *"draw a
+connector"*, and **four** `rx` values (6, 7, 8, 9) the single job *"round a node
+box"*. That is what LLR-103's residue — "spacing, exact visual weight" — was
+gesturing at without ever measuring.
+
+Each token names a **role**, and near-duplicates merged into the role's step:
+`--w-hair` (a hairline separator) · `--w-node` (a node's own outline) ·
+`--w-line` (any connector) · `--w-emph` (focus/hover); `--o-wash` · `--o-dim` ·
+`--o-ghost` · `--o-soft` · `--o-muted` · `--o-full`; `--r-chip` · `--r-ctl` ·
+`--r-card` · `--r-pill`.
+
+**`stroke-opacity` is checked under the opacity scale deliberately.** It is the
+same scale applied to a stroke, and letting it keep its own literals would have
+left precisely the hole this closes — the reversion proving that is one of the
+six.
+
+### Two things worth recording
+
+**`SVG_RX` is a declaration the test enforces, not a value spliced in.** The
+first attempt concatenated the constant into the rect templates —
+`'… rx="' + RX_NODE + '" '` — which broke at runtime: those templates are
+implicitly-concatenated multi-line strings ending in `.format(...)`, and `+`
+binds tighter than the method call, so `.format` applied to the **last fragment
+alone**. Backed out; the literals stay literals and
+`test_u3_svg_corner_radii_match_the_declared_scale` asserts the declaration
+against *both* the source literals and every rendered document, so a seventh
+radius cannot appear un-declared. The comment records the trap.
+
+**A comment can break a regex-driven edit.** The token block's own prose
+originally read `/* opacity: a background wash, … */`, and the rewrite pass
+matched `opacity:` inside it, mangling the declaration block. Renamed to
+`/* alpha — … */`. Worth knowing before the next scripted CSS edit: prose that
+quotes a property name reads as that property.
+
+**Ratchet:** `gen_trajectory.py` 4888 → 4922, mostly those two comments.
+Reviewed bump.
+
+**Verified:** `tests/test_gen_trajectory.py` **122 passed**; six reversions all
+fail against the finished guards (a raw stroke-width, a raw opacity, a
+`stroke-opacity` literal, a raw border-radius, a font-size token used as a
+weight, and an undeclared seventh radius); restored, both pass.
