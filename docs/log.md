@@ -14426,3 +14426,21 @@ And the deadlock is unchanged: three render rows again, one whole-document
 critique. Batch them attended and dispatch once. **`docs/pause` stays.** The
 structural question — whether a render train should be able to close while an
 anchor it never touched fails — is still OI-9/WI-300's, and still the owner's.
+
+### Train cleanup (same day)
+
+`3-g2-WI-305-6f47`'s worktree, branch and both reservation refs are cleared;
+`refs/llm/` is now empty. Two things were checked first, and one of them
+mattered: the `002-CRITIQUE` that WI-317 cites as its spec-of-record is tracked
+on this branch (fine), but the train's **two `docs/iteration/` session logs
+existed nowhere else** — the killed BUILD session and the CRITIQUE session that
+returned `findings=4`. They were folded on before the branch went.
+**Check a branch for orphaned FILES, not just for merged work.**
+
+The older 2026-07-24 train/integrate worktrees are still on this machine. They
+were hand-integrated at the time and are not this session's to judge; the same
+orphan check applies to each before anyone clears them.
+
+`docs/pause` **stays**, with its reason rewritten for the current frontier: the
+three 121-CRITIQUE rows are render rows, so the deadlock that pause exists for
+is live again.
