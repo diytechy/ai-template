@@ -12,6 +12,27 @@ classes links can't see, with false-positive control as the design center
      real rots. URLs, globs, and `{placeholder}` shapes are skipped; a line
      carrying `path-ok` is exempt (the `privacy-ok` idiom) for deliberate
      examples naming files that don't exist here.
+
+     Split UNTRACED from DANGLING (WI-062). A path that isn't on disk is not
+     automatically rot, and treating it as such buried the signal: this repo
+     reported 561 findings, of which 534 were explainable and 27 were worth
+     looking at — and noise is how a real broken link hides. A missing path is
+     reported as *untraced*, not dangling, when it has a mechanical reason:
+
+       - KIT-RELATIVE — it resolves under `--kit-root` (default
+         `project-trajectory/`, skipped when absent). A kit's own prose names
+         its portable unit by the paths a DOWNSTREAM repo will have after
+         copy-in (`scripts/check.py`, `hooks/pre-commit`, `ci/check.yml`), so
+         those tokens are correct for their reader and merely not rooted here.
+       - HISTORICAL — the doc is a RECORD surface (`--record-prefix`, default
+         the log, archive, reviews, plans and review reports). A session log
+         naming a file that has since been retired is accurate history, not a
+         broken pointer; "fixing" it would falsify the record.
+
+     Untraced findings are counted, never gate, and print only with
+     `--show-untraced`. `--strict` gates on dangling alone. The distinction is
+     the whole point: a suppression list hides findings, a REASON classifies
+     them, so an untraced count that jumps is still a signal you can read.
   2. SYMBOL TIER (opt-in convention — no heuristic storm): only references
      written `sym:<module>.<name>` are checked, against the generated module
      map in architecture.md (the arch-map inventory is the oracle — reuse the
@@ -67,6 +88,21 @@ PATH_PREFIXES = (
     "ci/",
     "hooks/",
 )
+# Doc surfaces that RECORD what was true at a moment. A retired file named in a
+# session log is accurate history; rewriting it to satisfy a linter would
+# falsify the record, so a missing path there is untraced, never dangling.
+RECORD_PREFIXES = (
+    "docs/log.md",
+    "docs/archive/",
+    "docs/reviews/",
+    "docs/plans/",
+    "docs/repo-review-",
+    "docs/test/report.md",
+)
+# The portable unit a kit ships. Prose inside it addresses files by the paths an
+# ADOPTING repo will have after copy-in, so `scripts/check.py` is correct for its
+# reader even though this repo keeps it at `project-trajectory/scripts/check.py`.
+DEFAULT_KIT_ROOT = "project-trajectory"
 BACKTICK = re.compile(r"`([^`\n]+)`")
 SYM = re.compile(r"\bsym:([A-Za-z_][\w.]*)\.(\w+)\b")
 MOD_HEAD = re.compile(r"^### `([^`]+)`")
@@ -82,6 +118,12 @@ def is_path_shaped(token):
     # paths; none is a single filesystem path, so they are out of the path
     # tier's scope (false-positive control is the point).
     if "::" in token or ";" in token or "," in token:
+        return False
+    # Placeholder shapes, alongside `{}`/`*` above (WI-062): `…` stands in for
+    # "and the rest" and `###`/`NNN` for "your id here", so `docs/specs/WI-###.md`
+    # is a FORM, not a path. `#` also opens a markdown anchor, and an anchored
+    # doc reference is a LINK — check_docs.py's job, not this tool's.
+    if "…" in token or "#" in token or "NNN" in token:
         return False
     if "/" not in token:
         return False
@@ -142,8 +184,47 @@ def load_symbol_oracle(arch_path):
     return {k: v for k, v in oracle.items() if v}
 
 
-def findings_for(doc, root, oracle):
-    out = []
+def untraced_reason(token, rel, root, kit_root, record_prefixes):
+    """Why a missing path is explainable, or None when it is real rot (WI-062).
+
+    Order matters only for the message: a token can be both kit-relative and in
+    a record surface, and kit-relative is the more specific statement."""
+    if kit_root is not None and (kit_root / token).exists():
+        return (
+            "resolves under {}/ — a kit-relative path, correct for a repo "
+            "that adopted the kit".format(kit_root.name)
+        )
+    if any(rel.startswith(p) for p in record_prefixes):
+        return (
+            "a record surface — history naming a path that has since moved or retired"
+        )
+    return None
+
+
+def path_findings(line, rel, n, root, kit_root, record_prefixes):
+    """One line's path-tier verdicts as `(dangling, untraced)` (WI-062).
+
+    Lifted out of `findings_for` so the per-token classification lives in one
+    readable place rather than adding branches to the file walk — `findings_for`
+    is already the tool's densest function."""
+    bad, untraced = [], []
+    for token in BACKTICK.findall(line):
+        if not is_path_shaped(token):
+            continue
+        clean = token.strip().rstrip("/")
+        if (root / clean).exists():
+            continue
+        why = untraced_reason(clean, rel, root, kit_root, record_prefixes)
+        if why:
+            untraced.append("{}:{}: `{}` — {}".format(rel, n, token, why))
+        else:
+            bad.append("{}:{}: `{}` does not exist in the repo".format(rel, n, token))
+    return bad, untraced
+
+
+def findings_for(doc, root, oracle, kit_root=None, record_prefixes=RECORD_PREFIXES):
+    """`(dangling, untraced)` — see the module docstring for the split."""
+    out, untraced = [], []
     rel = doc.relative_to(root).as_posix()
     in_generated = False
     for n, line in enumerate(
@@ -162,14 +243,9 @@ def findings_for(doc, root, oracle):
             continue
         if "path-ok" in line:
             continue  # deliberate example naming a path that isn't here
-        for token in BACKTICK.findall(line):
-            if (
-                is_path_shaped(token)
-                and not (root / token.strip().rstrip("/")).exists()
-            ):
-                out.append(
-                    "{}:{}: `{}` does not exist in the repo".format(rel, n, token)
-                )
+        bad, explained = path_findings(line, rel, n, root, kit_root, record_prefixes)
+        out += bad
+        untraced += explained
         for mod, name in SYM.findall(line):
             if not oracle:
                 continue  # no inventory -> the symbol tier skips (docstring)
@@ -186,7 +262,7 @@ def findings_for(doc, root, oracle):
                     "{}:{}: sym:{}.{} — symbol {!r} is not in module {!r}'s "
                     "public inventory".format(rel, n, mod, name, name, tail)
                 )
-    return out
+    return out, untraced
 
 
 def _utf8_console():
@@ -215,29 +291,69 @@ def main():
     ap.add_argument(
         "--strict",
         action="store_true",
-        help="exit 1 on findings (default: warn-first, exit 0)",
+        help="exit 1 on DANGLING findings (default: warn-first, exit 0). "
+        "Untraced findings never gate — see --show-untraced.",
+    )
+    ap.add_argument(
+        "--kit-root",
+        default=DEFAULT_KIT_ROOT,
+        help="second root a path may resolve against — a kit's portable unit, "
+        "whose prose addresses files by the paths an adopting repo will have "
+        "(default {}; ignored when absent)".format(DEFAULT_KIT_ROOT),
+    )
+    ap.add_argument(
+        "--record-prefix",
+        action="append",
+        default=None,
+        help="doc prefix that RECORDS history, where a moved/retired path is "
+        "accurate rather than broken (repeatable; defaults to {})".format(
+            ", ".join(RECORD_PREFIXES)
+        ),
+    )
+    ap.add_argument(
+        "--show-untraced",
+        action="store_true",
+        help="print the explained findings too, with their reason",
     )
     args = ap.parse_args()
     root = Path(args.root).resolve()
+    kit_root = (root / args.kit_root) if args.kit_root else None
+    if kit_root is not None and not kit_root.is_dir():
+        kit_root = None
+    records = tuple(args.record_prefix) if args.record_prefix else RECORD_PREFIXES
     oracle = load_symbol_oracle(root / args.arch)
     if not oracle:
         print(
             "check_doc_refs: no symbol inventory in {} — the sym: tier is "
             "skipped (path tier still runs).".format(args.arch)
         )
-    findings = []
+    findings, untraced = [], []
     for doc in doc_files(root):
-        findings += findings_for(doc, root, oracle)
+        found, explained = findings_for(doc, root, oracle, kit_root, records)
+        findings += found
+        untraced += explained
     for f in findings:
         print("check_doc_refs: WARN - " + f, file=sys.stderr)
+    if args.show_untraced:
+        for u in untraced:
+            print("check_doc_refs: UNTRACED - " + u, file=sys.stderr)
+    # Always REPORT the untraced count even when the list is silent: a
+    # classification you can't see the size of is a suppression list.
+    tail = ""
+    if untraced:
+        tail = " · {} untraced (explained: kit-relative or a record surface){}".format(
+            len(untraced), "" if args.show_untraced else " — --show-untraced to list"
+        )
     if findings:
         print(
-            "check_doc_refs: {} dangling reference(s){}.".format(
-                len(findings), "" if args.strict else " (warn-first; --strict gates)"
+            "check_doc_refs: {} dangling reference(s){}{}.".format(
+                len(findings),
+                "" if args.strict else " (warn-first; --strict gates)",
+                tail,
             )
         )
         return 1 if args.strict else 0
-    print("check_doc_refs: OK - no dangling path or sym: references.")
+    print("check_doc_refs: OK - no dangling path or sym: references{}.".format(tail))
     return 0
 
 

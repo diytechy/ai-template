@@ -13118,3 +13118,58 @@ than a shared swatch. Reviewed bump.
 
 **Verified:** `tests/test_gen_trajectory.py` + the three ratchet/budget modules
 **121 passed** after the re-stamp; `check_docs --stale` OK.
+
+
+## 2026-07-25 — WI-062: check_doc_refs splits UNTRACED from DANGLING (561 findings → 22)
+
+**The problem was never the count, it was that the count meant nothing.** 561
+dangling references made the check unreadable, and an unreadable check is where a
+real broken link hides. Measuring first showed the noise was not diffuse — it fell
+into two classes with a *mechanical* explanation each:
+
+- **Kit-relative (117).** A kit's own prose addresses its portable unit by the
+  paths a **downstream** repo will have after copy-in — `scripts/check.py`,
+  `hooks/pre-commit`, `ci/check.yml`. Those tokens are *correct for their
+  reader*; they just aren't rooted here. Resolved against `--kit-root`
+  (default `project-trajectory/`, skipped when absent).
+- **Record surfaces (417).** `docs/log.md`, `docs/archive/`, `docs/reviews/`,
+  `docs/plans/`, the review reports. A session log naming a since-retired file
+  is **accurate history**; rewriting it to satisfy a linter would falsify the
+  record. Configurable via `--record-prefix`.
+
+Plus three shapes that were never paths at all: `…` ("and the rest"), `###`/`NNN`
+("your id here"), and `#` — an *anchored* doc reference is a **link**, which is
+`check_docs.py`'s job, not this tool's.
+
+**Reason, not suppression — the distinction the whole design rests on.** An
+allowlist hides findings and rots silently. A classification says *why*, so:
+untraced findings are **counted**, never gate, and print with `--show-untraced`;
+`--strict` gates on dangling alone; and **the untraced count prints even when the
+list is silent**, because a classification whose size you cannot see is a
+suppression list with better manners. If that number jumps, it is still a signal.
+
+**Each guard carries its own negative half.** A test that only proved "this is
+untraced" would pass just as happily against a blanket exemption, so each asserts
+the *conditionality*: the kit-relative token still gates once the kit file is
+deleted, and the very same `docs/next-wi` still gates when it appears in a **live**
+doc rather than the log. Verified by disabling each tier in turn (1 and 2 failures
+respectively); restored, 13 pass.
+
+**The residue is now small enough to fix, and is filed as WI-308** rather than
+tolerated. It sorts into three classes, which is itself the useful output:
+**(a) real rot** — `stakeholder-needs.md` still names the retired `docs/next-wi`,
+and three docs link specs that have since been *archived* (the link-aware-archival
+class **WI-288** already owns); **(b) scaffold-only** paths this meta-repo
+deliberately lacks, every one of them already declared in
+`test_dogfood_sync.py`'s `SCAFFOLD_OMISSIONS` — so either mark the lines
+`path-ok` or teach the checker that list; **(c) declared-policy files where
+absence means default** (`docs/review-cadence`, `docs/subagent-gate`,
+`docs/components-check`) — naming one is correct prose, so those want a rule, not
+a fix.
+
+**Deliberately NOT done here: wiring `[step:doc-refs]` into `docs/stack.ini`.**
+Doing it now would add 22 warns to every gate run, which is how a check earns the
+ignore it took this WI to undo. It belongs after WI-308's triage, and WI-308 says
+so.
+
+**Verified:** `tests/test_check_doc_refs.py` **13 passed**; `ruff` clean.

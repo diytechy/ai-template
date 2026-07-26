@@ -384,7 +384,9 @@ Contracts (interfaces): IF-008, IF-028
 | `is_path_shaped(token)` |  |  |
 | `doc_files(root)` |  |  |
 | `load_symbol_oracle(arch_path)` | {module-tail: {symbols}} parsed from the generated module map, or {}. |  |
-| `findings_for(doc, root, oracle)` |  |  |
+| `untraced_reason(token, rel, root, kit_root, record_prefixes)` | Why a missing path is explainable, or None when it is real rot (WI-062). |  |
+| `path_findings(line, rel, n, root, kit_root, record_prefixes)` | One line's path-tier verdicts as `(dangling, untraced)` (WI-062). |  |
+| `findings_for(doc, root, oracle, kit_root, record_prefixes)` | `(dangling, untraced)` — see the module docstring for the split. |  |
 | `main()` |  |  |
 
 ### `scripts/check_docs`

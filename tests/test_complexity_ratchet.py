@@ -72,7 +72,11 @@ BASELINE = {
     # scan into the shared _step_sections helper) — entry deleted per the
     # ratchet's improvement rule (re-stamp/delete downward in the same commit).
     ("check.py", "main"): 16,
-    ("check_doc_refs.py", "findings_for"): 12,
+    # `findings_for` dropped under the limit, WI-062: the untraced/dangling
+    # classification went OUT to `path_findings` rather than adding three
+    # branches to the file walk — decomposition, the escape the ratchet prefers,
+    # so the new tier cost this function nothing. Entry deleted per the
+    # improvement rule (re-stamp or delete downward in the same commit).
     ("check_docs.py", "check_links"): 13,
     ("check_docs.py", "git_commit_lookup"): 12,
     ("check_flows.py", "main"): 12,

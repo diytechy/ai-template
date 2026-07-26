@@ -114,6 +114,80 @@ def test_generated_linguist_tree_is_not_linted(tmp_path):
     assert proc.returncode == 0, proc.stdout + proc.stderr
 
 
+# --- WI-062: UNTRACED vs DANGLING ---------------------------------------------
+# A path that isn't on disk is not automatically rot. Before the split this repo
+# reported 561 findings, 534 of them explainable — and noise is how a real broken
+# link hides. Each tier below classifies by a REASON, never by a suppression
+# list, so the untraced count stays a number you can watch.
+
+
+def test_kit_relative_path_is_untraced_not_dangling(tmp_path):
+    # A kit's prose addresses its portable unit by the paths an ADOPTING repo
+    # will have after copy-in, so `scripts/check.py` is right for its reader even
+    # though this repo keeps it under project-trajectory/.
+    make_repo(tmp_path, "Wire `scripts/check.py` into CI.\n")
+    kit = tmp_path / "project-trajectory" / "scripts"
+    kit.mkdir(parents=True)
+    (kit / "check.py").write_text("x = 1\n", encoding="utf-8")
+
+    proc = refs(tmp_path, "--strict")
+    assert proc.returncode == 0, "a kit-relative path must not gate"
+    assert "scripts/check.py does not exist" not in proc.stderr
+    assert "1 untraced" in proc.stdout
+    listed = refs(tmp_path, "--show-untraced")
+    assert "UNTRACED" in listed.stderr and "kit-relative" in listed.stderr
+
+    # ...and the classification is a REASON, not a blanket pass: the same token
+    # with no such file anywhere is still dangling.
+    (kit / "check.py").unlink()
+    assert refs(tmp_path, "--strict").returncode == 1
+
+
+def test_record_surface_path_is_untraced_not_dangling(tmp_path):
+    # A session log naming a since-retired file is accurate history. "Fixing" it
+    # would falsify the record, so it can never be a gating finding.
+    make_repo(tmp_path, "Nothing here.\n")
+    (tmp_path / "docs" / "log.md").write_text(
+        "2026-01-01 — retired `docs/next-wi` in favour of the scheduler.\n",
+        encoding="utf-8",
+    )
+    proc = refs(tmp_path, "--strict")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "1 untraced" in proc.stdout
+    listed = refs(tmp_path, "--show-untraced")
+    assert "record surface" in listed.stderr
+
+    # The SAME token in a LIVE doc still gates — the tier keys on the surface,
+    # not on the token, so retired-file rot in live prose stays visible.
+    (tmp_path / "README.md").write_text("Set `docs/next-wi`.\n", encoding="utf-8")
+    assert refs(tmp_path, "--strict").returncode == 1
+
+
+def test_untraced_count_is_always_reported_even_when_silent(tmp_path):
+    # A classification whose size you cannot see is a suppression list. The count
+    # prints on stdout whether or not the list is shown.
+    make_repo(tmp_path, "Nothing here.\n")
+    (tmp_path / "docs" / "log.md").write_text(
+        "`docs/gone-a` and `docs/gone-b` were retired.\n", encoding="utf-8"
+    )
+    proc = refs(tmp_path)
+    assert "2 untraced" in proc.stdout
+    assert "UNTRACED" not in proc.stderr, "silent by default"
+
+
+def test_placeholder_and_anchored_shapes_are_not_paths(tmp_path):
+    # `WI-###`/`NNN` are FORMS ("your id here") and `…` is "and the rest"; an
+    # anchored doc reference is a LINK, which is check_docs.py's job.
+    make_repo(
+        tmp_path,
+        "Name it `docs/specs/WI-###.md`, file `docs/reviews/NNN-AUDIT.md`, "
+        "see `docs/…` and `docs/specs/my-effort.md#s1--first-slice`.\n",
+    )
+    proc = refs(tmp_path, "--strict")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "untraced" not in proc.stdout, "these are not paths at all, not excuses"
+
+
 def test_symbol_tier_skips_without_inventory(tmp_path):
     # A files-mode / non-Python stack has no symbol inventory: the sym: tier
     # skips with a note, and the path tier still runs.
