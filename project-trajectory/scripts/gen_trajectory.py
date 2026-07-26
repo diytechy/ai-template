@@ -2438,6 +2438,18 @@ HTML_TEMPLATE = string.Template("""<!doctype html>
   .tile b { display:block; font-size:var(--display); letter-spacing:-.02em; }
   .tile span { font-size:var(--tiny); color:var(--muted); text-transform:uppercase;
                letter-spacing:.04em; }
+  /* T1 (SR-054, WI-305): the landing "Next work" surface — a `.card` box (reusing
+     its surface/border/label styling) listing the scheduler's ready frontier so
+     "find the next work" costs zero tab switches. */
+  .nextwork { margin:.5rem 0 1rem; }
+  .nwlist { list-style:none; margin:.5rem 0 0; padding:0; display:grid; gap:.35rem; }
+  .nwlist li { font-size:var(--small); color:var(--text); }
+  .nwlist .nwid { font-weight:700; }
+  .nwlist .nwt { color:var(--muted); }
+  .nwlist li.waiting .nwid { color:var(--muted); }
+  .nwafter { color:var(--active); font-size:var(--xsmall); font-weight:600; }
+  .nwmore { color:var(--muted); font-size:var(--xsmall); }
+  .nwnone { color:var(--muted); font-size:var(--small); margin:.5rem 0 0; }
   nav.tabs { display:flex; flex-wrap:wrap; gap:.25rem; margin:2rem 0 0; border-bottom:1px solid var(--border); }
   nav.tabs button { appearance:none; background:none; border:none; cursor:pointer;
      font:inherit; font-weight:600; color:var(--muted); padding:.6rem .9rem;
@@ -2548,6 +2560,8 @@ HTML_TEMPLATE = string.Template("""<!doctype html>
           <div class="meter exe"><span style="width:$wi_pct%"></span></div>
         </div>
       </div>
+
+      $next_work
 
       <div class="tiles">
         <div class="tile"><b>$sn_total</b><span>SN</span></div>
@@ -3965,6 +3979,96 @@ def process_panel(root, wis, stats):
     return tab_button("process", "Process"), panel
 
 
+# --- the landing-hero "Next work" surface (T1 / SR-054, WI-305) ----------------
+# "Find the next work" is one of SR-054's three core reading tasks, and
+# 119-CRITIQUE (T1) found it had NO path: with zero `active` rows nothing marked
+# "you are here", the Process tab's resume loop is a static method diagram, and
+# the only route to a queued item was When -> descend a phase -> descend a
+# workstream -> scan for a queued node — the anchor's own bad case, expanding
+# nested blocks to locate something. This names the dependency-ready WIs the
+# scheduler derives (schedule.frontier — the SAME frontier IF-071 projects into
+# status.md's Ready-frontier block) right on the landing view, so the task costs
+# ZERO tab switches. Ready WIs come first (actionable now); when the cap has room
+# the next WAITING WIs follow, each annotated with the blocking predecessor that
+# holds it — so the surface renders "the ready/queued WIs ... with their blocking
+# predecessor" in one glance. OPTIONAL, exactly like `_frontier_lines`: a scaffold
+# that ships gen_trajectory without schedule.py renders NO block (empty string)
+# rather than crashing — the kit's "non-adopter pays nothing" posture.
+_NEXT_WORK_CAP = 6
+
+
+def _next_work_html(root):
+    """The hero "Next work" list as an HTML string, or "" when schedule.py is
+    unavailable or the registry carries no real work items. Ready WIs first (in
+    the scheduler's deterministic build order), then the next waiting WIs
+    annotated with their blocking predecessor — so the surface is byte-stable
+    under the --check freshness compare and always either names the next work or
+    says why none is ready."""
+    if schedule is None:
+        return ""
+    try:
+        wis = schedule.load_wis(
+            schedule.load_rows(root / "docs/requirements/work-items.csv")
+        )
+        records = schedule.evaluate(wis)
+    except (OSError, ValueError):
+        return ""
+    if not wis:
+        return ""
+    titles = {w["id"]: w.get("title", "") for w in wis}
+    by_id = {w["id"]: w for w in wis}
+    status = {w["id"]: w["status"] for w in wis}
+    ready = [r for r in records if r["disposition"] == "ready"]
+    waiting = [r for r in records if r["disposition"] == "waiting"]
+    shown = (ready + waiting)[:_NEXT_WORK_CAP]
+
+    if not shown:
+        open_left = any(r["disposition"] not in ("done", "retired") for r in records)
+        msg = (
+            "No ready work — see the When roadmap for open items."
+            if open_left
+            else "All work items are done."
+        )
+        return (
+            '<div class="card nextwork"><div class="label">Next work</div>'
+            '<p class="nwnone">{}</p></div>'.format(esc(msg))
+        )
+
+    items = []
+    for r in shown:
+        wid = r["id"]
+        title = esc(_clip_title(titles.get(wid, ""), limit=60))
+        if r["disposition"] == "waiting":
+            # The unmet hard predecessors that hold this WI (WI-267: a `retired`
+            # dead-end predecessor also shows — it will never be `done`).
+            blockers = [p for p in by_id[wid]["preds"] if status.get(p) != "done"]
+            after = (
+                ' <span class="nwafter">after {}</span>'.format(
+                    esc(", ".join(blockers))
+                )
+                if blockers
+                else ""
+            )
+            items.append(
+                '<li class="waiting"><span class="nwid">{}</span> '
+                '<span class="nwt">{}</span>{}</li>'.format(esc(wid), title, after)
+            )
+        else:
+            items.append(
+                '<li><span class="nwid">{}</span> '
+                '<span class="nwt">{}</span></li>'.format(esc(wid), title)
+            )
+    extra = len(ready) + len(waiting) - len(shown)
+    if extra > 0:
+        items.append(
+            '<li class="nwmore">+{} more — see the When roadmap</li>'.format(extra)
+        )
+    return (
+        '<div class="card nextwork"><div class="label">Next work</div>'
+        '<ul class="nwlist">{}</ul></div>'.format("".join(items))
+    )
+
+
 def build_html(root, wis):
     total = len(wis)
     done = sum(1 for w in wis if w["status"] == "done")
@@ -4081,6 +4185,7 @@ def build_html(root, wis):
         wi_active=active,
         wi_retired_clause=wi_retired_clause,
         wi_active_line=wi_active_line,
+        next_work=_next_work_html(root),
         arch_svg=arch,
         arch_details=j(arch_details),
         arch_desc=j(arch_desc),

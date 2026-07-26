@@ -123,3 +123,4 @@ resource: "generated"
 | [LLR-112](LLR-112.md) | Keyboard reachability of every wired control (A1 core) |
 | [LLR-113](LLR-113.md) | No information by colour alone (A3 core) |
 | [LLR-114](LLR-114.md) | Text-contrast floors, closed over the vocabulary set (A4) |
+| [LLR-115](LLR-115.md) | Task findability - labelled entry within one tab switch (T1 core) |

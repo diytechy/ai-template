@@ -150,7 +150,16 @@ BASELINE = {
     # review surface instead of commit-message prose. New behaviour (the
     # projection gains a durable source), not monolith drift. Reviewed bump,
     # log 2026-07-26. Re-stamp downward with WI-280.
-    "gen_trajectory.py": 5007,
+    # +105 (5007 -> 5112), WI-305 (SR-054 T1, 119-CRITIQUE): the landing "Next
+    # work" surface — `_next_work_html` names the scheduler's ready frontier (the
+    # SAME derivation IF-071 projects to status.md) on the hero, so "find the
+    # next work" costs zero tab switches instead of a drill through nested When
+    # blocks; waiting WIs carry their blocking predecessor. New behaviour (the
+    # T1 defect had NO path at all), not monolith drift. Most of the delta is the
+    # helper plus the comment recording WHY the surface exists and its
+    # graceful-degrade posture. Reviewed bump, log 2026-07-26. Re-stamp downward
+    # with WI-280.
+    "gen_trajectory.py": 5112,
     # +11 (3452 -> 3463), WI-284: _regenerate_disposition_artifacts also runs
     # `gen_trajectory.py --status` at integrate/blocked-disposition so a closed
     # id drops from the generated frontier automatically (and the disposition

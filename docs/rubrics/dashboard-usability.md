@@ -11,9 +11,9 @@ The verdict is `VERDICT: APPROVE|CHANGES-REQUESTED findings=N` with each finding
 citing an anchor id (`T1`…`T8`). APPROVE requires every **live** anchor satisfied.
 Judge as a **first-time reviewer** opening the dashboard cold.
 
-> **T3 is retired as a critique anchor** (owner ruling 2026-07-26) — it is bound
-> to `LLR-100`/`TC-103` and is **not** yours to judge. The live anchor set is
-> **T1, T2, T4, T5, T6, T7, T8**.
+> **T1 and T3 are retired as critique anchors** (owner rulings 2026-07-26) — T1
+> is bound to `LLR-115`/`TC-120` (WI-315), T3 to `LLR-100`/`TC-103`; neither is
+> **yours to judge**. The live anchor set is **T2, T4, T5, T6, T7, T8**.
 
 ## The core reading tasks (the concrete "one tab switch" list)
 
@@ -30,18 +30,23 @@ a nav button — no hunting, no scrolling a dense graph to find the entry point)
 
 ## Anchors
 
-**T1 — Task findability.** Each of the three tasks above is reachable within one
-tab switch from the landing view, and its entry point is a **labelled** nav
-control or a **named surface on the landing view** — never an unlabelled region
-the reader has to discover by clicking around. (Reworded by the 2026-07-26
-ruling: the anchor no longer turns on the word *obvious*. "Obvious" was always
-glossed here as labelled-not-unlabelled, and that gloss is the whole bar — judge
-the label, not your impression of it.) Judge both halves against the **rendered
-artifact carrying its real registry data**, never the nav skeleton: 119-CRITIQUE's
-MAJOR was a next-work surface that exists in the emitter but rendered *nothing*
-because no work item was `active`, which a structural nav check would have passed
-(`WI-305`). *Bad:* "how the parts connect" requires two tab switches or expanding
-three nested blocks to locate.
+**T1 — Task findability. BOUND as a test 2026-07-26 (owner ruling, WI-315) —
+the mechanizable bar is `LLR-115`/`TC-120`; do not judge it here.** The bar it
+stated: each of the three tasks above is reachable within one tab switch from the
+landing view, and its entry point is a **labelled** nav control or a **named
+surface on the landing view** — never an unlabelled region the reader has to
+discover by clicking around. (Reworded by the 2026-07-26 ruling: the anchor no
+longer turns on the word *obvious*. "Obvious" was always glossed here as
+labelled-not-unlabelled, and that gloss is the whole bar.) The reword left
+nothing perceptual, so — like T3 — T1 left the critique: `TC-120` resolves each
+task's entry point from the **rendered artifact carrying its real registry
+data**, never the nav skeleton. 119-CRITIQUE's MAJOR was a next-work surface that
+exists in the emitter but rendered *nothing* because no work item was `active`,
+which a structural nav-skeleton check would have passed — `WI-305` fixed the
+surface, `WI-315` froze it. A critic who believes findability is violated has
+found a gap in `TC-120` — route it through change-intake to harden the test,
+never through a verdict. *Bad (the test's job now):* "how the parts connect"
+requires two tab switches or expanding three nested blocks to locate.
 
 **T2 — Default-density legibility.** Views default to a legible density —
 start-collapsed per the SR-089 `>3` rule so a large project is not a wall of
@@ -110,8 +115,10 @@ still blocks APPROVE until the render passes.)
 
 ## Notes for the critic
 
-- Do the three tasks yourself against the generated `PROJECT_STATE.html` and
-  report, per task, the number of tab switches / clicks it actually took.
+- Findability (T1) is now bound to `LLR-115`/`TC-120` — a test owns "each of the
+  three tasks reachable in ≤ 1 labelled tab switch," so do **not** re-judge it.
+  Still open the generated `PROJECT_STATE.html` cold, as a first-time reviewer, to
+  judge the live legibility / layout anchors below.
 - A clipped or overlapping label is a T4 failure even if everything else is clean
   — legibility is a floor.
 - T5–T7 are floors too: check T5 in **both** themes, not just the default, and

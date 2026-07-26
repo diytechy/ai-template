@@ -2650,6 +2650,131 @@ def test_t1_hero_active_line_absent_when_nothing_is_active(tmp_path):
     assert 'class="sub nowat"' not in html_of(tmp_path)
 
 
+# --- WI-305 (SR-054 T1): the landing "Next work" surface -----------------------
+# 119-CRITIQUE's MAJOR: "find the next work" had no path — with 0 active rows
+# nothing marked "you are here" and the only route to a queued item was drilling
+# nested When blocks. The fix surfaces the scheduler's ready frontier (the SAME
+# derivation IF-071 projects to status.md) on the landing view. The scheduler
+# fails a bare row closed as `unclassified`, so these fixtures carry the minimal
+# SafetyClass=ordinary signal (mirroring test_trajectory._FRONTIER_HEADER).
+NW_HEADER = (
+    "WI-ID,Title,Workstream,SR-Refs,Predecessors,Status,Deliverable,SafetyClass\n"
+)
+
+
+def _hero_of(root):
+    text = html_of(root)
+    return text.split('class="hero"', 1)[1].split("</section>", 1)[0]
+
+
+def test_t1_next_work_names_the_ready_frontier_with_zero_active(tmp_path):
+    # The exact critique bad case: nothing is active, yet the next work must be
+    # named ON THE LANDING VIEW (zero tab switches), not buried in the When drill.
+    wis = (
+        "WI-001,Bootstrap,scripts,SR-001,,done,adder,ordinary\n"
+        "WI-002,Harness,scripts,SR-001,WI-001,queued,harness,ordinary\n"
+        "WI-003,Subtraction,scripts,SR-002,WI-001,queued,subber,ordinary\n"
+    )
+    make_repo(tmp_path, wis, header=NW_HEADER)
+    assert gen(tmp_path).returncode == 0
+    hero = _hero_of(tmp_path)
+    # no active row -> the old nowat line is absent, but the next-work path exists
+    assert 'class="sub nowat"' not in hero
+    assert 'class="card nextwork"' in hero
+    assert "Next work" in hero
+    # both dependency-ready WIs are named on the landing surface
+    assert "WI-002" in hero and "WI-003" in hero
+    # a `done` WI never appears as next work
+    assert "WI-001" not in hero.split('class="nwlist"', 1)[1].split("</ul>", 1)[0]
+
+
+def test_t1_next_work_annotates_the_blocking_predecessor(tmp_path):
+    # A queued WI whose hard predecessor is not yet done is surfaced WITH the
+    # predecessor that blocks it (the critique's "named, with their blocking
+    # predecessor").
+    wis = (
+        "WI-001,Groundwork,scripts,SR-001,,queued,ground,ordinary\n"
+        "WI-002,Release,docs,SR-002,WI-001,queued,shipped,ordinary\n"
+    )
+    make_repo(tmp_path, wis, header=NW_HEADER)
+    assert gen(tmp_path).returncode == 0
+    hero = _hero_of(tmp_path)
+    assert 'class="card nextwork"' in hero
+    assert "WI-001" in hero and "WI-002" in hero  # ready + waiting both listed
+    assert 'class="nwafter"' in hero and "after WI-001" in hero
+
+
+def test_t1_next_work_says_all_done_when_drained(tmp_path):
+    # A drained registry does not render an empty surface — it says so, so the
+    # landing view still answers "what's next" (nothing).
+    wis = (
+        "WI-001,Bootstrap,scripts,SR-001,,done,adder,ordinary\n"
+        "WI-002,Release,docs,SR-002,WI-001,done,shipped,ordinary\n"
+    )
+    make_repo(tmp_path, wis, header=NW_HEADER)
+    assert gen(tmp_path).returncode == 0
+    hero = _hero_of(tmp_path)
+    assert 'class="card nextwork"' in hero
+    assert "All work items are done." in hero
+    assert 'class="nwlist"' not in hero
+
+
+# --- WI-315 (SR-054 T1 binding): the three core reading tasks each reach a
+# LABELLED entry point within one tab switch of the landing view ----------------
+# WI-300's option-(f) pattern applied to T1, the last SR-054 anchor whose
+# mechanizable half had no owner. The 2026-07-26 owner ruling reworded T1 off the
+# word "obvious" onto an operational gloss: each of the three core reading tasks
+# (find the project state / the next work / how the parts connect) is reachable in
+# <= 1 tab switch from the landing view, its entry point a LABELLED nav control or
+# a NAMED landing surface. The design constraint (the whole lesson of 119-CRITIQUE's
+# MAJOR): assert against the RENDERED artifact carrying real registry data, never
+# the nav skeleton — a next-work surface that renders NOTHING on a zero-active
+# registry passes a skeleton check but fails the reader. So the fixture reproduces
+# the artifact the critic failed: zero active rows (all queued), plus a committed
+# module map (ARCH_MD) so the How-SW view (task 3) is present.
+T1_ALL_QUEUED = (
+    "WI-001,Bootstrap the adder,scripts,SR-001,,queued,adder,ordinary\n"
+    "WI-002,Wire the harness,scripts,SR-001,WI-001,queued,harness,ordinary\n"
+)
+
+
+def _landing_dashboard(root):
+    """Render the dashboard on the T1 failure condition — zero active rows plus a
+    module map, so all three reading tasks' entry points are present — and return
+    (hero, navbar), the two slices of the emitted document a reader lands on."""
+    make_repo(root, T1_ALL_QUEUED, header=NW_HEADER)
+    (root / "docs" / "architecture.md").write_text(ARCH_MD, encoding="utf-8")
+    assert gen(root).returncode == 0
+    html = html_of(root)
+    hero = html.split('class="hero"', 1)[1].split("</section>", 1)[0]
+    navbar = html.split('nav class="tabs"', 1)[1].split("</nav>", 1)[0]
+    return hero, navbar
+
+
+def test_t1_three_core_reading_tasks_reach_labelled_entry_points(tmp_path):
+    hero, navbar = _landing_dashboard(tmp_path)
+    # The exact 119-CRITIQUE state: nothing is active, so the "you are here" line
+    # is absent — yet every task below must still reach a labelled entry point.
+    assert 'class="sub nowat"' not in hero
+
+    # Task 1 — find the project state: NAMED landing surfaces, 0 tab switches.
+    assert '<div class="label">Definition completeness</div>' in hero
+    assert '<div class="label">Execution</div>' in hero
+
+    # Task 2 — find the next work: a NAMED landing surface (0 switches) that
+    # carries actual content, not an empty region (the 119-CRITIQUE defect — the
+    # surface exists in the emitter but rendered nothing on zero-active data).
+    assert 'class="card nextwork"' in hero
+    assert '<div class="label">Next work</div>' in hero
+    nwlist = hero.split('class="nwlist"', 1)[1].split("</ul>", 1)[0]
+    assert "WI-001" in nwlist  # the dependency-ready WI is named, not an empty box
+
+    # Task 3 — find how the parts connect: a LABELLED nav control (1 switch),
+    # sitting directly in the tab bar — never behind a descend/expand.
+    assert 'data-tab="sw"' in navbar
+    assert "How (SW architecture)" in navbar
+
+
 # --- WI-300 / SR-053: the last two uniformity anchors get a child LLR + TC -----
 # U5/U3/U1 were bound by WI-292/294/295. U2 and U4 pass structurally but were
 # never BOUND, so the coarse `TC-054` critique kept re-judging them by eye. These
