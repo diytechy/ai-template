@@ -13500,3 +13500,49 @@ passed**; `trace --strict` clean at SN=25 SR=110 **LLR=110 TC=113** orphans=0,
 verified-mechanized 93→**94**; `check_docs --stale` OK (260 docs, 763 links, 0
 broken); `check_trajectory --strict` down to the single parked `perceptual-stale`
 error.
+
+## 2026-07-26 — Handoff filed: WI-313 (bind A1/A3/A4 so SR-052 can follow)
+
+**Gate after the SR-053 flip: `check.py --gate G3 --jobs 0` = 16 of 17 PASS**,
+the sole failure the owner-parked `perceptual-stale` (now naming SR-052 and
+SR-054 only). `tests+coverage`, `dupes`, `traceability`, `derived-gate` and
+`status-map` all green over the flip.
+
+**WI-313 filed** (`P1`, strong, `SafetyClass=protected`) with
+[specs/WI-300-sr052-binding.md](specs/WI-300-sr052-binding.md) as its spec of
+record — a resumption guide written so a fresh session starts from measurements
+rather than re-deriving them. Filed as its own row rather than folded into
+WI-300 because `SpecRef` is single-valued (R-F resolves one spec per WI), so a
+second live spec needs a citing row; `~WI-300` records the soft edge.
+
+**What it carries, and why each number is in there rather than a "look into
+it":** the method that worked four times (measure the anchor before writing the
+test — every one of the four was assumed perceptual and *failed* on first
+measurement); the sweep and paint-surface helpers with the reason each exists;
+and the per-anchor state measured 2026-07-26 —
+
+- **A1** — structural half already passes: **0** elements carry an interaction
+  hook without `tabindex="0"`, across all 12 wired selectors. Two `<details>`
+  without a `<summary>` want a look. The proposed core is the *closure* the
+  existing tests don't assert: derive the selector list from the emitted JS so a
+  newly wired selector cannot skip a focusability guarantee.
+- **A3** — **4/4 status · 4/4 tier · 6/6 type · 8/8 phase** explained by a
+  labelled legend swatch **once CSS tokens are resolved**. That caveat is the
+  finding: a raw-hex scan reports status as 1/4 because its legend paints via
+  `var(--done)`. One genuine open question — `sw-node component #44403c` has no
+  legend entry and is *not painted as a node fill at all*, so it may fall outside
+  the anchor. Decide before fixing; WI-312's lesson was that measuring the wrong
+  set manufactures findings the standard does not make.
+- **A4** — cheapest of the three. **Six** owning tests already exist, so the work
+  is binding plus checking the pair set is *closed* (does a new fill enter the
+  sweep automatically, or is the list hand-maintained?).
+
+It also records what is **deliberately not** in scope: after SR-052 flips,
+`perceptual-stale` still fires because SR-054 keeps `Verification=Critique`, and
+retiring critiques outright rests on **T1** ("the entry point is obvious") and
+**T3** ("the reader stays oriented") — a reader's experience, not the artifact's
+properties. That is an owner decision, and the spec says not to quietly mechanize
+them into proxies to green the gate.
+
+Registry: 311 rows, 293 done, 3 retired, 9 deferred, **6 queued** (WI-300,
+WI-305, WI-306, WI-307, WI-308, WI-313).
