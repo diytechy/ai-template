@@ -1272,7 +1272,9 @@ def reattest_lines(root, srs, llrs, tcs, since=None):
                 lines += [
                     "",
                     "### {} {} — REMOVED since baseline".format(kind, rid),
-                    "_Present at the baseline, absent from the working tree._",
+                    "_In this SR's chain at the baseline, out of it in the working"
+                    " tree — the row was deleted, re-parented, or superseded"
+                    " (a superseded row keeps existing; it leaves the chain)._",
                 ]
         if not any_change:
             lines.append(

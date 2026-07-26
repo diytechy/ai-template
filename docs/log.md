@@ -442,7 +442,7 @@ why (one bullet each; cite ids)._
   *landed-but-unblessed*) · a stamp file beside `docs/gate` (a brand-new
   artifact, owner ruled against) · the prose status quo (the gap itself).
   Design + backfill plan (SR-052/053/054 as first live use) in
-  [specs/WI-316.md](specs/WI-316.md); `Priority=1` so it lands **before** the
+  [specs/WI-316.md](archive/specs/WI-316.2026-07-26.md); `Priority=1` so it lands **before** the
   owed sitting, which then flips registry state instead of blessing prose.
 
 ## Audit log
@@ -13937,7 +13937,7 @@ Dashboard/OKF/status/gate regenerated; derived gate
 ## 2026-07-26 — File WI-316: the `Modified` spine status (owner-ruled) — re-attestation becomes registry state
 
 Filing session, no build. The ruling and its alternatives are in the Decisions
-log above; [specs/WI-316.md](specs/WI-316.md) carries the design decided at
+log above; [specs/WI-316.md](archive/specs/WI-316.2026-07-26.md) carries the design decided at
 filing — the SR as the attestation unit, the three warn-tier consistency
 guards (including the staged amend-without-flip warn that closes the
 write-time gap the prose convention never had), the `modified=N` basis count,
@@ -13954,3 +13954,90 @@ before the owed re-attestation sitting so the sitting flips registry state.
 **Verified (commit bar):** smoke **409 passed, 13 skipped**; `check_docs
 --stale` OK, 0 broken. Registry: **314 rows, 295 done, 3 retired, 9 deferred,
 7 queued** (WI-305/306/307/308/314/315/316). Next free id **WI-317**.
+## 2026-07-26 — WI-316 DELIVERED: the `Modified` spine status — re-attestation is registry state, and the first re-attest window is OPEN
+
+Owner-directed build (Decisions log above carries the ruling; spec archived to
+[archive/specs/WI-316.2026-07-26.md](archive/specs/WI-316.2026-07-26.md)). The
+headline state change: **the derived gate reads G2 deliberately** — SR-049 (the
+build's own chain amendment, flipped in the same commit per the new regime) and
+the backfilled SR-052/053/054 all carry `Status=Modified`, per-phase
+`1=G2;3=G2`, basis `modified=4`. That is the mechanism working, not a
+regression: an unattested spine is not a G3 spine, and the owner sitting that
+flips the rows back restores G3 by derivation with no checker edits.
+
+### What shipped
+
+The build commit's message carries the full deliverable map (D1 predicate +
+basis count · D2 projection source (e) · D3 the three warn-tier guards · D6 the
+`--ratify modified` brief · the docs pass); this entry records what the commit
+message could not yet know:
+
+- **The committed sitting brief**
+  ([ratify/2026-07-26-reattest.md](ratify/2026-07-26-reattest.md), generated
+  `--since a5052a9` = the parent of the first pending commit) **reproduces the
+  real 8fcf530-forward amendments from git history, not fixtures** — the SR-054
+  section shows the T1/T3 ruling's exact four cell diffs
+  (`AcceptanceCriteria`, `LLR-055`/`LLR-100` `Detail`, `TC-055` `Expected`);
+  the SR-052 section shows the option-(f) decomposition as ADDED rows
+  (LLR-108/112/113/114, TC-113/117/118/119) with LLR-053/TC-053 leaving the
+  chain; SR-053 mirrors it for the U-anchors. The Done-when's proof, met.
+- **The brief under-count correction:** status.md's "from `8fcf530` forward"
+  framing survives, but the mechanically-derived chain shows the batch is
+  larger than the prose flags implied — LLR-102/103/104 cell amendments and
+  the full ADDED/REMOVED sets ride the same window. Exactly the class of
+  under-count a hand-maintained prose flag produces and a derived brief cannot.
+
+### Deviations from the spec, stated
+
+1. **Baseline derivation needed `--since` for the backfill** (recorded in the
+   spec's own deliverable 6 at filing, discovered concretely here): the default
+   walk's "newest revision where the row read Verified" is correct only under
+   the amend+flip-same-commit regime; the pre-regime batch amended rows while
+   they stayed `Verified`, so its walk-derived baseline would show only the
+   Status flip. The committed brief states its `--since` basis in every
+   section header.
+2. **The staged warn suppresses sanctioned child amendments** (not in the spec,
+   found while binding SR-049): an LLR/TC amended in the same staged set that
+   flips its owning SR is the sanctioned path — warning on it would train
+   people to ignore the warn. `staged_spine_findings` resolves owners through
+   the index state; proven both directions by
+   `test_staged_child_amend_with_sr_flip_is_silent_without_it_warns`.
+3. **A CSV-quoting trap struck once** during the SR-049 amendment: replacing
+   text inside an UNQUOTED AcceptanceCriteria cell introduced a comma and
+   silently shifted five columns (`Status` read `Test`). Caught by re-parsing
+   the row immediately after the edit — re-read a registry row after every
+   scripted cell edit; grep is not a parse.
+
+### Sensors that bit (each re-stamped with its reason inline)
+
+Module-size ratchet: `trace.py` 2236→2577 (the brief emitter — a named WI-280
+extraction candidate), `check_trajectory.py` 1926→2048 (the staged warn),
+`gen_trajectory.py` 4952→5003 (source (e)). C901 census: +`reattest_lines`(23),
++`staged_spine_findings`(20), +`modified_chain_advisories`(13). The meta
+dogfood gate test dropped its hardcoded `1=G3` for registry-derived per-phase
+expectations — a `Modified` window makes the hardcode legitimately false, and
+freezing it would red the dogfood for the exact state the marker exists to
+surface. The template-equals-empty-projection guard caught the lead-text drift
+on the first run. Byte budgets: PROCESS.md 60,420→61,174 (+754, the canonical
+§7 semantics — the one-home statement every other surface links to);
+PROCESS_OPTIONS.md 161,541→161,771 (+230, the phase-cadence pointer);
+AGENTS.template.md untouched (9,975).
+
+**Verified (close):** full unfiltered suite **1552 passed, 7 skipped** (7m29s,
+clean run after the golden regeneration + ratchet re-stamps);
+`check.py --gate G2 --jobs 0` (the DERIVED gate) — **5 of 6 steps PASS**, the
+sole red the `--strict` trajectory step's **owner-parked `perceptual-stale`**
+(SR-054, `Verification=Critique` — the render surface changed after
+120-CRITIQUE), the SAME standing red the G3 record carried before this session
+and the one only a fresh render critique clears; smoke **410 passed**;
+`check_docs` OK (264 docs, 787 links, 0 broken); `trace --strict
+--strict-integrity` clean at SN=25 SR=110 LLR=112 TC=115 orphans=0
+integrity=0. Golden report snapshots regenerated deliberately
+(`UPDATE_TRACE_GOLDEN=1`) for the renamed Status-coherence advisories section —
+the diff is the header + None-line only.
+
+**The `RE-ATTESTATION PENDING` commit-message convention is SUPERSEDED** for
+future spine changes: the marker is registry state, the projection carries the
+owed sitting, the staged warn polices the write side, and this entry is the
+recorded handover. Registry: **315 rows, 296 done, 3 retired, 9 deferred, 6
+queued**; frontier leads WI-305. Next free id **WI-317**.

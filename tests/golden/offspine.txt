@@ -88,7 +88,7 @@ None. Ids are unique and well-formed.
 
 - SR SR-002 AcceptanceCriteria uses 'identical' without a named predicate — say identical/equivalent *in what*, judged *how* (process.md §4 consistency review; heuristic, warn-only)
 
-## LLR status-coherence advisories (warn-only)
+## Status-coherence advisories (warn-only)
 
 - LLR LLR-001 reads 'Implemented' but every citing TC is Verified — lift to Verified (the evidence already exists)
 

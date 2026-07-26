@@ -65,7 +65,7 @@ None. Ids are unique and well-formed.
 
 None. No unpinned comparative terms.
 
-## LLR status-coherence advisories (warn-only)
+## Status-coherence advisories (warn-only)
 
 - LLR LLR-001 reads 'Implemented' but every citing TC is Verified — lift to Verified (the evidence already exists)
 

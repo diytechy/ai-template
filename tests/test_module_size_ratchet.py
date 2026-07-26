@@ -221,7 +221,7 @@ BASELINE = {
     # would otherwise have to reconstruct from two disagreeing checkers. The
     # extraction also ratcheted `analyze`'s complexity DOWN 53 -> 50. Reviewed
     # bump, log 2026-07-25. Re-stamp downward with WI-280.
-    # +341 (2236 -> 2577), WI-316: the re-attestation brief (--ratify modified)
+    # +343 (2236 -> 2579), WI-316: the re-attestation brief (--ratify modified)
     # — per-cell before/after for every Modified SR's chain against its
     # git-derived attested baseline (+ --since), the is_modified predicate, and
     # the two warn-tier lints (Modified-exempt status advisory; the
@@ -231,7 +231,7 @@ BASELINE = {
     # capability, not monolith drift; the largest WI-316 bump and a named
     # WI-280 decomposition candidate (the reattest emitter is an extractable
     # unit). Reviewed bump, log 2026-07-26. Re-stamp downward with WI-280.
-    "trace.py": 2577,
+    "trace.py": 2579,
     # +122 (1926 -> 2048), WI-316: staged_spine_findings — the amend-without-
     # flip warn (--staged): content cells of a Verified spine row changed
     # without the Modified marker, suppressed when the owning SR flips in the
