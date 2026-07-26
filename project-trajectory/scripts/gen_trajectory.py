@@ -921,7 +921,7 @@ SW_NODE_FILL = {
     "module": "#2563eb",
     "file": "#a21caf",
     "external": "#334155",
-    "component": "#475569",  # slate — the neutral container badge (7.58:1 on #fff)
+    "component": "#44403c",  # stone — the neutral container badge (10.27:1 on #fff)
 }
 SW_COL_W = 168
 SW_COL_GAP = 64
@@ -1427,7 +1427,7 @@ def _wi_st(w):
 # How-SW module) — `#1e40af`/`#155e75` replace them. Pairwise (not merely
 # adjacent) deltaE across the full set is now >= 15 (`test_u5_...` asserts this).
 PHASE_ACCENTS = (
-    "#0369a1", "#1e40af", "#991b1b", "#155e75",
+    "#0369a1", "#1e40af", "#991b1b", "#134e4a",
     "#be123c", "#4d7c0f", "#be185d", "#7e22ce",
 )  # fmt: skip
 
@@ -2957,7 +2957,7 @@ OKF_TYPE_FILL = {
     "System Requirement": "#0e7490",
     "Low-Level Requirement": "#64748b",
     "Test Case": "#0f766e",
-    "Interface": "#7c3aed",
+    "Interface": "#701a75",
     "Process Guide": "#9a3412",
 }
 

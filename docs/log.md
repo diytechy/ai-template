@@ -13306,3 +13306,65 @@ Reviewed bump.
 fail against the finished guards (a raw stroke-width, a raw opacity, a
 `stroke-opacity` literal, a raw border-radius, a font-size token used as a
 weight, and an undeclared seventh radius); restored, both pass.
+
+
+## 2026-07-25 — WI-311: the U5 residue mechanized (ΔE across vocabularies, not just within)
+
+LLR-102's residue read *"whether a reader perceives a collision the identity
+check misses"* — and looked perceptual for one reason only: the repo already
+computed pairwise ΔE, but **only inside `PHASE_ACCENTS`**. Widen the set and it
+is the same formula.
+
+### Two floors, both judgements, both recorded in the test
+
+- **15 WITHIN a vocabulary.** Every member can sit beside every other in one
+  legend, so the bar is the strict one the phase accents already met.
+- **12 ACROSS vocabularies.** A status fill and a phase accent share no legend,
+  so the bar is lower — but not absent, because `120-CRITIQUE` reported a reader
+  conflating exactly such a pair. 12 clears every confirmed conflation without
+  forcing a wholesale re-hue.
+
+They live in the test as named constants with that reasoning beside them, not in
+a commit message. The declared `tier`↔`okf` mirror is exempt **by design**, and
+the test asserts the mirrored pair is **byte-equal** rather than merely close —
+so "exempt" cannot quietly become "drifted".
+
+### Three conflations, found and fixed
+
+| ΔE | pair | fix |
+|---|---|---|
+| 8.6 | `sw[external]` vs `sw[component]` | `component` `#475569` → **`#44403c`** (stone) |
+| 9.5 | `SR`/`tier[sr]` vs `phase[3]` | `phase[3]` `#155e75` → **`#134e4a`** |
+| 10.5 | `okf[Interface]` vs `phase[7]` | `Interface` `#7c3aed` → **`#701a75`** |
+
+The third moved the **OKF entry rather than the phase**: a phase sequence reads
+as a progression, so displacing one of its steps costs more than moving a single
+type colour. Chosen by a joint search maximising the worst pairwise distance
+subject to white-text AA contrast — all three new values clear 9.4:1. Closest
+surviving pair is now **12.5** (`Process Guide` vs `phase[2]`), above the cross
+floor.
+
+### The U2 guard got tightened in the same pass, for a reason worth keeping
+
+Re-hueing made WI-300's U2 sweep red on `#155e75` and `#475569` — the **retired**
+hexes, which the rendered palette-rationale prose still *names* to explain why
+they were retired. The whole-document scan read prose as paint. The lazy fix was
+two more entries in `U2_NON_CONCEPT_HEXES`; that list's own comment warns this is
+"how a second colour vocabulary gets in", and it would have grown by one entry
+per retirement forever. Instead U2 now scopes to **paint surfaces** — `<style>`
+blocks, `style=` attributes, and `fill`/`stroke`/`stop-color`/`flood-color`
+attributes — exactly as U1 and U3 already do. Prose is structurally out of scope,
+and the allowlist is back to its **one** real entry (the `--ring` CSS fallback).
+
+### Operational note
+
+A proof harness left `gen_trajectory.py` mid-mutation: the Windows write in its
+`finally` raised `OSError` (a transient lock), so the *restore* failed after the
+mutation succeeded, leaving `Interface` reverted. Caught by checking `git status`
+straight after the traceback. **A scripted source mutation needs a retry loop on
+the restore path and a byte-identical assertion afterwards** — the rerun has
+both.
+
+**Verified:** dashboard suites **125 passed**; four reversions (all three
+original conflations plus a newly-introduced near-duplicate) fail the guard;
+restored, it passes and the source is byte-identical to its start.

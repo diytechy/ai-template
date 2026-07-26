@@ -2152,6 +2152,78 @@ def test_u3_svg_corner_radii_match_the_declared_scale(tmp_path):
         assert rendered <= declared, (label, sorted(rendered - declared))
 
 
+# WI-311: the U5 residue ("near-duplicate but non-identical hues") turned out to
+# be the SAME arithmetic the phase check already did, on a set nobody had
+# widened. Two floors, both judgements, both recorded here rather than in a
+# commit message:
+#
+#   WITHIN a vocabulary — 15. Every member can sit beside every other in one
+#   legend, so the bar is the strict one the phase accents already met.
+#   ACROSS vocabularies — 12. Two colours from different vocabularies meet less
+#   often (a status fill and a phase accent share no legend), so the bar is
+#   lower — but not absent, because 120-CRITIQUE reported a reader conflating
+#   exactly such a pair. 12 clears every confirmed conflation without forcing a
+#   wholesale re-hue; the closest surviving pair is 12.5.
+U5_FLOOR_WITHIN, U5_FLOOR_CROSS = 15.0, 12.0
+
+
+def _palette_vocabularies(gt):
+    """`{name: {key: hex}}` for every declared colour vocabulary."""
+    return {
+        "status": dict(gt.STATUS_FILL),
+        "tier": dict(gt.TIER_FILL),
+        "okf": dict(gt.OKF_TYPE_FILL),
+        "sw": dict(gt.SW_NODE_FILL),
+        "phase": {str(i): h for i, h in enumerate(gt.PHASE_ACCENTS)},
+    }
+
+
+# tier <-> okf is a DECLARED mirror: one concept wearing two label systems, so
+# the pair is exempt by design rather than by convenience.
+U5_MIRROR = {
+    ("tier", "sn"): ("okf", "Stakeholder Need"),
+    ("tier", "sr"): ("okf", "System Requirement"),
+    ("tier", "llr"): ("okf", "Low-Level Requirement"),
+    ("tier", "tc"): ("okf", "Test Case"),
+}
+
+
+def _u5_is_mirror(va, ka, vb, kb):
+    return U5_MIRROR.get((va, ka)) == (vb, kb) or U5_MIRROR.get((vb, kb)) == (va, ka)
+
+
+def test_u5_pairwise_deltae_holds_within_and_across_every_vocabulary():
+    """dashboard-uniformity.md U5 core, the residue half (WI-311).
+
+    `test_u5_phase_accents_clear_a_pairwise_deltae_floor` already applied ΔE —
+    but only inside `PHASE_ACCENTS`, which is why "a reader perceives a collision
+    the identity check misses" could be written off as perceptual. It is not: it
+    is the same formula on the set nobody widened. When this was first run it
+    found three real conflations, worst 8.6.
+    """
+    gt = load_script("gen_trajectory")
+    vocabs = _palette_vocabularies(gt)
+    flat = [(v, k, h) for v, d in vocabs.items() for k, h in d.items()]
+    assert len(flat) >= 20, "vacuous — too few declared colours: {}".format(len(flat))
+
+    worst = []
+    for i in range(len(flat)):
+        for j in range(i + 1, len(flat)):
+            va, ka, ha = flat[i]
+            vb, kb, hb = flat[j]
+            if _u5_is_mirror(va, ka, vb, kb):
+                assert ha == hb, ("a declared mirror must be byte-equal", ha, hb)
+                continue
+            floor = U5_FLOOR_WITHIN if va == vb else U5_FLOOR_CROSS
+            d = _delta_e76(ha, hb)
+            if d < floor:
+                worst.append((round(d, 1), floor, va, ka, ha, vb, kb, hb))
+    assert not worst, (
+        "colour pair(s) below the perceptual floor — a reader cannot reliably "
+        "tell these apart: {}".format(sorted(worst))
+    )
+
+
 def test_u1_process_tab_type_scale_matches_the_shared_tokens(tmp_path):
     """dashboard-uniformity.md U1 (WI-295, 119-CRITIQUE MINOR): the Process tab's
     "working loops" SVG (`.stgt`/`.stgn`/`.hooplab`/`.hubname`) used to hardcode
@@ -2500,11 +2572,9 @@ def test_t1_hero_active_line_absent_when_nothing_is_active(tmp_path):
 U2_NON_CONCEPT_HEXES = {
     # `--ring`'s CSS fallback: the literal a browser uses when an emitter this
     # repo has not written yet emits a node with no computed ring ink
-    # (_ring_ink's docstring states the degrade-gracefully intent).
+    # (_ring_ink's docstring states the degrade-gracefully intent). It lives in a
+    # `<style>` block, so it genuinely is a paint surface — the one real entry.
     "#f59e0b",
-    # Prose. The palette-rationale paragraph the dashboard renders NAMES retired
-    # hexes to explain why they were retired; it paints nothing.
-    "#6d28d9",
 }
 
 
@@ -2595,9 +2665,22 @@ def test_u2_every_concept_fill_comes_from_one_declared_vocabulary(tmp_path):
         tokens = {
             h.lower() for h in re.findall(r"--[\w-]+:\s*(#[0-9a-fA-F]{3,8})", html)
         }
+        # Only where a hex actually PAINTS. WI-311 re-hued three values, and the
+        # rendered palette-rationale prose still NAMES the retired ones to
+        # explain why they were retired — a whole-document scan read those as
+        # emitters and would have grown `U2_NON_CONCEPT_HEXES` by one entry per
+        # retirement, which is the "widen the list rather than fix it" trap that
+        # list's own comment warns about. Scoping to paint surfaces makes prose
+        # structurally out of scope instead.
+        painted = []
+        for surface in _style_surfaces(html):
+            painted += re.findall(r"#[0-9a-fA-F]{6}\b", surface)
+        for attr in ("fill", "stroke", "stop-color", "flood-color"):
+            painted += re.findall(attr + r'="(#[0-9a-fA-F]{6})"', html)
+        assert painted, "vacuous — no painted hex found in {}".format(label)
         stray = {
             h.lower()
-            for h in re.findall(r"#[0-9a-fA-F]{6}\b", html)
+            for h in painted
             if h.lower() not in declared
             and h.lower() not in tokens
             and h.lower() not in U2_NON_CONCEPT_HEXES
