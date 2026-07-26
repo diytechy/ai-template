@@ -14104,3 +14104,81 @@ but not literally green.
 
 Ratchets re-stamped with the fix-pass deltas (trace 2617, check_trajectory
 2058, gen_trajectory 5007; census modified_chain 15 / reattest 25).
+## 2026-07-26 — The render batch, attended: the dispatcher's deadlock proven live, then WI-305/315/306/307 landed
+
+The owner launched `agent-resume`. It reserved ONE train — `3-g2-WI-305-6f47`
+carrying WI-305 + WI-315 (correctly co-scheduled by their hard `Predecessors`
+edge) — and then demonstrated, on real money, the deadlock
+[wrap-up-plan.md](wrap-up-plan.md) §4 had predicted an hour earlier.
+
+### What the live run proved
+
+`_train_is_render_surface` requires a CRITIQUE APPROVE from any train whose WIs
+deliver a `Verification=Critique` SR. Both rows deliver SR-054. The critique
+therefore ran (session -002) and returned **CHANGES-REQUESTED findings=4** —
+**not one of them WI-305's**: T2 was WI-306's defect, T7 WI-307's, T4 the same
+390px clip under a different anchor, and **T5 was brand new** (the When descend
+arrow `.cedge` at 1.06:1 light / 1.99:1 dark against the 3:1 floor). A train
+scoped to two WIs cannot pass a whole-document critique whose other anchors
+belong to WIs it does not carry. That is structural, not bad luck.
+
+**The good news the same dispatch bought:** the critic re-ran T1's task exercise
+against WI-305's build and reported *"next work — 0 tab switches / 0 clicks"* —
+the first independent confirmation that the core reading task passes since
+119-CRITIQUE. And the T5 finding is a real defect nobody had filed.
+
+### A correction worth keeping: `docs/pause` cannot stop a running worker
+
+The driver created `docs/pause` at 14:13:56 and told the owner it would prevent
+the doomed critique. It did not: the build committed at 14:32 and the critique
+at 14:44 — a whole new session, half an hour after the file existed. Reading
+`may_dispatch` gating `_resume_reconciled` and concluding it reaches inside a
+worker was wrong. [agent_loop.py:1537](../project-trajectory/scripts/agent_loop.py)
+states the actual contract: in worker-assignment mode there are *"no lane
+status/run-state/**pause**/next-wi reads or writes"*. **`docs/pause` is a
+dispatcher-scope control** — it stops NEW reservations and the resume path, and
+the docstring's "the in-flight assignment finishes" means the whole TRAIN, every
+session in its ladder. The only lever that stops a running worker is killing it.
+
+### The fold-in
+
+Worker killed (its parent dispatcher exited with it; the stale lock, holding a
+dead pid, was removed). The kill caught the worker **mid-WI-315** — and that
+residue was coherent and green, so it was reconciled per the session-protocol
+rule rather than redone: `LLR-115`/`TC-120` bind T1, and `TC-120`'s method is
+the constraint WI-315's spec insisted on (generate from a ZERO-ACTIVE fixture —
+the exact 119-CRITIQUE failure condition — and resolve entry points from the
+RENDERED artifact, never the nav skeleton).
+
+Four WIs landed: **WI-305** (next-work surface), **WI-315** (T1 bound),
+**WI-306** (the What icicle start-collapses at the SN lane above the `>3` rule —
+capping DEPTH cannot work, because height is leaf-proportional), **WI-307**
+(every emitted SVG scales to fit with a legibility floor; 73 responsive, zero
+fixed-width holdouts). T1, T3 and T7 have now each left the critique for a test;
+**live anchors are T2, T4, T5, T6, T8**.
+
+### Three process lessons, each paid for
+
+1. **Commit the implementation BEFORE mutation-testing it.** The first WI-306
+   proof ran against an uncommitted change, and `git checkout --` reverted the
+   implementation along with the mutation. Redone against the committed code, it
+   bit correctly and restored byte-identical.
+2. **The forward-only rule broke three times in one session**, every time inside
+   a sentence explaining *why* something was scoped as it was. That is the shape
+   to watch: the rule is easiest to violate while justifying a decision.
+3. **A watcher that greps a whole journal fires on history.** The first
+   worker-done watch matched 21 events from 2026-07-24 and reported a terminal
+   state that had not happened. Anchor a log watch past the current line count,
+   and give it a liveness condition (pid, lock) that a crash would also trip.
+
+**Verified at each commit:** smoke 410 passed; the gen_trajectory module 142
+passed; `trace --strict --strict-integrity` clean at SN=25 SR=110 **LLR=114
+TC=117** orphans=0 integrity=0; `check_docs` OK (265 docs, 788 links, 0 broken);
+derived gate **G2** (`modified=4` — the open re-attest window, deliberate).
+Ratchets re-stamped with reasons inline (gen_trajectory 5112 → 5186;
+`arch_icicle` complexity 20 → 23).
+
+**Open after this entry:** WI-308 and WI-314 queued; **WI-317 to be filed** for
+the T5 arrow-contrast finding; then ONE fresh critique against the final render
+commit, the owner's re-attest sitting, and the train cleanup (worktree,
+`refs/llm/reservations/WI-305`+`WI-315`, `docs/pause`).
