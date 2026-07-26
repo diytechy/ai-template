@@ -421,6 +421,29 @@ why (one bullet each; cite ids)._
   **Not changed:** `SR-054` keeps `Verification=Critique` and `perceptual-stale`
   keeps firing on every render commit — this ruling does not green the gate and
   was not intended to. Live anchors: **T1, T2, T4, T5, T6, T7, T8**.
+- **2026-07-26 — RE-ATTESTATION TRACKING RULED: a third spine status,
+  `Modified`, owner-directed; filed as WI-316.** The gap: "re-attestation owed"
+  exists only as `RE-ATTESTATION PENDING` prose in commit messages — durable
+  nowhere, derived by nothing, surfaced only if a session reads the git log.
+  **The call:** the marker lives in the **requirements registries** — the
+  SR/LLR/TC registry is the current state of the *what*, and a post-attestation
+  content change *is* a change to the what, so the row's `Status` says so:
+  `Modified`, recognized alongside `Draft`/`Verified`, surfacing to the owner
+  and pulling the derived gate back for re-attest. The decisive mechanical
+  fact: **the gate-pull is already free** — `derive_gate` computes a
+  decomposed, non-`Verified` SR as **G2** today, so `Modified` is canonization
+  + surfacing, not new gate logic; `Draft` would have been the wrong tool (G0,
+  plus decomposition exemptions that are false for a landed row).
+  Re-attest = `Modified`→`Verified` in a reviewed commit — the exact mirror of
+  ratification's `Draft`→`Planned`. **Alternatives passed over:** a synthetic
+  `blocked` WI + `BlockRef` (the driver's first proposal — models
+  artifact-state as work-to-do when no work is blocked; the WI layer stays the
+  home of *cannot-proceed-without-a-human*, a different fact than
+  *landed-but-unblessed*) · a stamp file beside `docs/gate` (a brand-new
+  artifact, owner ruled against) · the prose status quo (the gap itself).
+  Design + backfill plan (SR-052/053/054 as first live use) in
+  [specs/WI-316.md](specs/WI-316.md); `Priority=1` so it lands **before** the
+  owed sitting, which then flips registry state instead of blessing prose.
 
 ## Audit log
 
@@ -13911,3 +13934,23 @@ warn persist, correctly.
 Dashboard/OKF/status/gate regenerated; derived gate
 **G3** all phases, basis unchanged. Registry: **313 rows, 295 done, 3 retired,
 9 deferred, 6 queued** (WI-305/306/307/308/314/315).
+## 2026-07-26 — File WI-316: the `Modified` spine status (owner-ruled) — re-attestation becomes registry state
+
+Filing session, no build. The ruling and its alternatives are in the Decisions
+log above; [specs/WI-316.md](specs/WI-316.md) carries the design decided at
+filing — the SR as the attestation unit, the three warn-tier consistency
+guards (including the staged amend-without-flip warn that closes the
+write-time gap the prose convention never had), the `modified=N` basis count,
+the pending-projection source (e) line, and the SR-052/053/054 backfill as
+first live use. The load-bearing mechanical fact, verified against
+`derive_gate.py` before filing: a decomposed non-`Verified` SR already derives
+**G2**, so the gate-pull costs zero gate logic — the WI is canonization,
+surfacing, and guards. The accepted trade is stated in the spec rather than
+discovered later: a `Modified` window runs the G2 bar, exactly like a `Draft`
+window. Rides IF-050/051/052/021; nearest-IF search done at filing, no new
+seam. `BuildTier=strong`, `SafetyClass=spine`, `Priority=1` — it should land
+before the owed re-attestation sitting so the sitting flips registry state.
+
+**Verified (commit bar):** smoke **409 passed, 13 skipped**; `check_docs
+--stale` OK, 0 broken. Registry: **314 rows, 295 done, 3 retired, 9 deferred,
+7 queued** (WI-305/306/307/308/314/315/316). Next free id **WI-317**.
