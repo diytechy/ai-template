@@ -14467,3 +14467,67 @@ EMPTIES one.** Both fail silently, and both are read by a human about to attest.
 
 Rule of thumb going in: **a `Modified` section with no cells is a signal to
 check the baseline, never a row that is free to bless.**
+
+## 2026-07-26 — Owner review of the `Modified` batch: a requirement must be stand-alone
+
+Reading the six amended rows, the owner stopped on SR-049's requirement text:
+
+> Three Status values are recognized case-insensitively **(process.md section 7)**:
+> Draft (G0 + decomposition exemptions), Verified (G3), and Modified **(WI-316)** …
+
+and asked the right question — *why does a system requirement cite a process
+document or a work item at all?* It should not. A requirement states what the
+system shall do, and must read stand-alone to someone who has none of this
+repo's history: a downstream adopter, a fresh agent, a reviewer six months on.
+Provenance already has better homes — the WI registry for who did it, the
+Decisions log for why, the LLR/TC chain for what verifies it.
+
+### Measured before deciding what to do about it
+
+Over all **110 SR rows**, `Requirement` + `AcceptanceCriteria`:
+
+| Pattern | SRs | Verdict |
+|---|---|---|
+| a `WI-###` id | **4** (SR-026, SR-049, SR-054, SR-060) | **rot** — all four are history |
+| a process-doc citation | **1** (SR-049) | **rot** |
+| a script filename | 65 | **legitimate** — this kit's product IS its scripts |
+| an artifact path | 6 | **legitimate** — the requirement governs that artifact |
+| a rubric / CRITIQUE reference | 5 | **legitimate** — the acceptance instrument |
+| a sibling SR/LLR/TC id | 14 | mixed |
+
+**Five rows carry the defect, not fifty** — which is what makes a narrow
+categorical rule affordable instead of a mass edit, and which is also why the
+rule must stay narrow: one that fired on 65 legitimate script names would earn
+the ignore, the exact failure `check_doc_refs` was rescued from twice.
+
+### Fixed now, and why only these two
+
+**SR-049** and **SR-054** were cleaned in place. Both already sat in the open
+`Modified` window, so amending them cost **no new attestation debt** — and the
+owner is about to bless that text, so it should be the text they want.
+SR-054's acceptance criteria also stopped enumerating the live critique anchors:
+that set was stated in **three** places (rubric header, `TC-055.Expected`, and
+there), and the rubric is the instrument a critic actually reads, so it is the
+single home. A third copy is the copy that goes stale.
+
+**SR-026 and SR-060 were left alone deliberately.** Both are `Verified`, so
+cleaning either flips it to `Modified` and enlarges a sitting the owner is
+currently trying to close. That is theirs to schedule, so it is filed, not done:
+**WI-321**, with the measurement above in its spec.
+
+### And the second question, which is a real design decision
+
+The owner also expected this depth to appear in `open-items.md` itself, and
+observed that a before/after with highlighting probably is not achievable in
+markdown — *"which makes me think perhaps the open-items document actually
+should be html."* That is exactly right and it is not a small call: it sets the
+precedent for every owner-facing depth view, and one of the options would put a
+second surface under the perceptual gate. Filed as **OI-10** with four options
+and a recommendation — (b), an HTML companion beside the markdown brief, so the
+depth lands in the artifact that already owns before/after without touching the
+render surface — and **WI-322** blocked behind the ruling.
+
+Two fixes are worth doing whichever way it goes, and both are in the brief: the
+projected SR line should **say** how many chain rows re-attest with it (four
+lines for six rows is correct — the SR is the attestation unit — but nothing
+says so), and any rendered view must **print the baseline** it diffed against.
