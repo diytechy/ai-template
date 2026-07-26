@@ -4526,7 +4526,11 @@ def _spine_pending(root):
                 "(`Modified`→`Verified`, or →`Planned` if the evidence no "
                 "longer verifies the amended text); before/after brief: "
                 "`python project-trajectory/scripts/trace.py --ratify "
-                "modified`.".format(sid, phase_note, title)
+                "modified` (a pre-regime streak — amendments that landed "
+                "while the row stayed Verified — needs `--since <rev>`; "
+                "committed briefs live in `docs/ratify/`).".format(
+                    sid, phase_note, title
+                )
             )
     return lines
 

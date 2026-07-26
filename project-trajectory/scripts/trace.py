@@ -430,7 +430,17 @@ def modified_chain_advisories(srs, llrs, tcs):
         if not lid or not is_modified(r):
             continue
         owners = llr_srs.get(lid, [])
-        if owners and not _flagged(owners):
+        if not owners:
+            # Adversarial-review F8: a Modified child with NO resolvable owning
+            # SR is the maximally-invisible case — no SR line to ride, no gate
+            # pull, no brief section. The dangling ref itself is the orphan
+            # rules' finding; THIS warn is about the marker having no surface.
+            out.append(
+                "LLR {} is Modified but resolves NO owning SR — the marker "
+                "rides no surface (no projection line, no gate pull, no brief "
+                "section); fix the SR-Refs and flip the owning SR".format(lid)
+            )
+        elif not _flagged(owners):
             out.append(
                 "LLR {} is Modified but its owning SR ({}) is not Modified/Draft "
                 "— flip the attestation unit (the SR) or the amendment is "
@@ -446,7 +456,14 @@ def modified_chain_advisories(srs, llrs, tcs):
                 owners.append(x)
             elif x in llr_srs:
                 owners.extend(llr_srs[x])
-        if owners and not _flagged(owners):
+        if not owners:
+            out.append(
+                "TC {} is Modified but resolves NO owning SR — the marker "
+                "rides no surface (no projection line, no gate pull, no brief "
+                "section); fix the Verifies chain and flip the owning "
+                "SR".format(tid)
+            )
+        elif not _flagged(owners):
             out.append(
                 "TC {} is Modified but its owning SR ({}) is not Modified/Draft "
                 "— flip the attestation unit (the SR) or the amendment is "
@@ -1088,6 +1105,10 @@ def _rows_at(root, rev, rel_path, id_col):
     text = _git_out(root, ["show", "{}:{}".format(rev, rel_path)])
     if text is None:
         return {}
+    # Adversarial-review F4: `git show` preserves a committed BOM, and a BOM'd
+    # header glues to the first column name so every row hides — the same
+    # hazard trace's own loaders read utf-8-sig for. Strip it before parsing.
+    text = text.lstrip("﻿")
     return {
         r[id_col]: r
         for r in csv.DictReader(io.StringIO(text))
@@ -1175,6 +1196,23 @@ def reattest_lines(root, srs, llrs, tcs, since=None):
         lines.append("_No `Modified` SR — nothing owes a re-attest._")
         return lines
     git_ok = _git_out(root, ["rev-parse", "HEAD"]) is not None
+    if since:
+        # Adversarial-review F1: an unresolvable --since must FAIL LOUDLY, never
+        # render. _rows_at returns {} on any `git show` failure (its honest
+        # meaning: the file did not exist at that revision), so a typo'd rev
+        # would silently render every chain row as "ADDED since baseline" — a
+        # FABRICATED brief handed to the sitting, the exact false-green class
+        # this WI exists to kill. Resolving up front also pins the display sha
+        # (F7): the brief's provenance line carries the resolved commit, not
+        # the raw user string, so the committed file is reproducible.
+        resolved = _git_out(root, ["rev-parse", "--verify", since + "^{commit}"])
+        if resolved is None:
+            raise SystemExit(
+                "trace: --since {!r} does not resolve to a commit in this "
+                "repository — refusing to render a brief against a fabricated "
+                "baseline".format(since)
+            )
+        since = resolved.strip()
     base_cache = {}  # rev -> {rel_path: {id: row}}
 
     def rows_at_cached(rev, rel_path, id_col):

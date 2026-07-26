@@ -130,8 +130,10 @@ BASELINE = {
     # re-attestation brief emitter (per-SR baseline walk + chain diff +
     # ADDED/REMOVED sections + off-git degrade). New capability, reasons in
     # the log; the brief emitter is a named WI-280 extraction candidate.
-    ("trace.py", "modified_chain_advisories"): 13,
-    ("trace.py", "reattest_lines"): 23,
+    # +2 each (fix pass, 2026-07-26): F8 ownerless-child branches and the F1
+    # --since fail-fast guard — both adversarial-review closures.
+    ("trace.py", "modified_chain_advisories"): 15,
+    ("trace.py", "reattest_lines"): 25,
     ("trace.py", "render_report"): 17,
 }
 

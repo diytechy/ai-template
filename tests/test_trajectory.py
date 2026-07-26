@@ -1025,6 +1025,28 @@ def test_staged_child_amend_with_sr_flip_is_silent_without_it_warns(tmp_path):
     assert "no owning SR is flagged" in proc2.stderr
 
 
+def test_staged_spine_warn_survives_a_bom(tmp_path):
+    # Adversarial-review F4: a committed BOM survives `git show` and glued to
+    # the id column, silently DISABLING the guard (fails open). The parse now
+    # strips it; the amend-without-flip warn must still fire on a BOM'd repo.
+    run_git = _init_spine_repo(tmp_path)
+    csv_path = tmp_path / "docs" / "requirements" / "system-requirements.csv"
+    csv_path.write_bytes(
+        bytes([0xEF, 0xBB, 0xBF]) + (_SPINE_SR_HEADER + _sr_row()).encode("utf-8")
+    )
+    run_git("add", "-A")
+    run_git("commit", "-m", "BOM'd attested baseline")
+    csv_path.write_bytes(
+        bytes([0xEF, 0xBB, 0xBF])
+        + (_SPINE_SR_HEADER + _sr_row("the AMENDED text", "Verified")).encode("utf-8")
+    )
+    run_git("add", "-A")
+    proc = run_traj(tmp_path, "--staged")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "SR-001" in proc.stderr
+    assert "Modified re-attest marker" in proc.stderr
+
+
 def test_staged_spine_new_row_and_status_only_flip_are_silent(tmp_path):
     # A NEW row is not an amendment; a Status-only change (e.g. the re-attest
     # flip Modified->Verified with no content delta) made a deliberate call the

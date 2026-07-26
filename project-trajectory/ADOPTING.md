@@ -644,6 +644,21 @@ table.
   successor too. Resync the kit-owned set together (`check_trajectory.py`,
   `schedule.py`, `agent_dispatch.py`, `gen_trajectory.py`) so the validator,
   scheduler, and dashboard agree.
+- **The `Modified` re-attest marker + the basis-line format (2026-07, WI-316).**
+  Spine `Status` gains a third recognized value, **`Modified`** — a
+  post-attestation amendment owing a re-attest (canonical semantics:
+  `process.md` §7): the derived gate reads G2 for its phase until the sitting
+  flips it back (`Modified`→`Verified`, or →`Planned` when the amendment
+  invalidated the evidence), the pending-owner-actions projection carries one
+  line per Draft/Modified SR, a warn-first `--staged` check flags an amendment
+  without the flip, and `trace.py --ratify modified` emits a per-cell
+  before/after brief against the git-derived attested baseline. Never breaking
+  for a registry that never writes the value — with one **flagged migration**:
+  the `docs/gate` `# basis:` line now carries `modified=N` beside `drafts=N`,
+  so the first `check.py`/pre-commit run after resync reds the `derived-gate`
+  freshness step once. Fix: `python scripts/derive_gate.py` and commit the
+  regenerated `docs/gate` (the first-non-comment-line gate value and its
+  consumers are unchanged).
 
 ### Repos whose `AGENTS.md` already means something else
 

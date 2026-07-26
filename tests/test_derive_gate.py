@@ -43,19 +43,64 @@ def _derive(scaffold):
 
 
 # --- the meta-repo dogfood ----------------------------------------------------
-def test_meta_repo_default_phase_holds_g3_and_cache_is_fresh():
+def _independent_meta_expectations():
+    """Per-phase gate expectations re-derived STRAIGHT from the registry CSVs
+    with none of derive_gate's machinery — a deliberate second implementation,
+    so the dogfood test can catch sr_gate breaking (the adversarial review's F3:
+    compare-a-subprocess-to-the-same-function is tautological). Simplified on
+    facts the meta's own harness enforces elsewhere (orphans=0 => every
+    non-exempt SR is decomposed): a phase expects G0 if any of its SRs is
+    Draft, else G2 if any is below Verified (Modified included), else G3."""
+    import csv as _csv
+
+    with (ROOT / "docs" / "requirements" / "system-requirements.csv").open(
+        encoding="utf-8-sig", newline=""
+    ) as fh:
+        srs = [
+            r
+            for r in _csv.DictReader(fh)
+            if (r.get("SR-ID") or "").startswith("SR-")
+            and not r["SR-ID"].endswith("-000")
+        ]
+    phases = {}
+    for r in srs:
+        status = (r.get("Status") or "").strip().lower()
+        phases.setdefault((r.get("Phase") or "").strip() or "(default)", []).append(
+            status
+        )
+    expect = {}
+    for phase, statuses in phases.items():
+        if any(s == "draft" for s in statuses):
+            expect[phase] = "G0"
+        elif any(s != "verified" for s in statuses):
+            expect[phase] = "G2"
+        else:
+            expect[phase] = "G3"
+    modified = sum(1 for sts in phases.values() for s in sts if s == "modified")
+    return expect, modified
+
+
+def test_meta_repo_phases_match_an_independent_derivation_and_cache_is_fresh():
     # The kit's north star, phase-aware since phase 2 opened (WI-116), re-scoped
-    # by WI-316: the per-phase values are DERIVED from the live registry states
-    # rather than hardcoded — a `Modified` re-attest window legitimately pulls a
-    # phase to G2 (the whole point of the marker), so freezing "1=G3" here would
-    # red the dogfood for the exact state the mechanism exists to make visible.
-    # The test's real claims survive: --print agrees with compute() on the real
-    # meta root, the basis carries the modified=N count, and the committed
-    # docs/gate cache matches the recomputed state (--check green).
+    # by WI-316 and re-anchored by the adversarial review's F3: the per-phase
+    # values are checked against an INDEPENDENT re-derivation from the raw CSVs
+    # (not against compute() — that comparison could never fail), so a Modified
+    # re-attest window legitimately reads G2 while a broken sr_gate rung (e.g.
+    # Modified deriving G1) still reds the dogfood. Plus: the SR-level modified
+    # count is a floor for the basis count, and the committed docs/gate cache
+    # matches the recomputed state (--check green).
+    expect, sr_modified = _independent_meta_expectations()
     result = _derive(ROOT)
+    for phase, gate in expect.items():
+        assert result["per_phase"].get(phase) == gate, (
+            phase,
+            gate,
+            result["per_phase"],
+        )
+    assert result["modified"] >= sr_modified  # LLR/TC flags may add to the count
     proc = run_py([SCRIPTS / "derive_gate.py", "--print", "--root", ROOT], cwd=ROOT)
     assert proc.returncode == 0, proc.stdout + proc.stderr
-    for phase, gate in result["per_phase"].items():
+    for phase, gate in expect.items():
         assert "{}={}".format(phase, gate) in proc.stdout
     assert "phase=4" in proc.stdout
     assert "modified={}".format(result["modified"]) in proc.stdout

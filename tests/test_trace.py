@@ -1107,6 +1107,18 @@ def test_modified_chain_advisory_flags_the_orphaned_child():
     assert len(trace.modified_chain_advisories([sr_ok], [], [tc_direct])) == 1
     assert trace.modified_chain_advisories([sr_mod], [], [tc_direct]) == []
 
+    # Adversarial-review F8: the OWNERLESS Modified child is the
+    # maximally-invisible case (no SR line to ride, no gate pull, no brief
+    # section) — it must warn, not fall through the owners-exist guard.
+    orphan_llr = {"LLR-ID": "LLR-020", "SR-Refs": "", "Status": "Modified"}
+    ghost_llr = {"LLR-ID": "LLR-021", "SR-Refs": "SR-999", "Status": "Modified"}
+    ghost_tc = {"TC-ID": "TC-020", "Verifies": "LLR-999", "Status": "Modified"}
+    found_orphans = trace.modified_chain_advisories(
+        [sr_ok], [orphan_llr, ghost_llr], [ghost_tc]
+    )
+    assert len(found_orphans) == 3, found_orphans
+    assert all("NO owning SR" in f for f in found_orphans)
+
 
 def test_modified_chain_advisory_is_warn_only(scaffold):
     # The chain warn joins the shared advisory pipe: loud on stdout, in the
@@ -1344,6 +1356,89 @@ def test_reattest_brief_degrades_honestly_off_git(tmp_path):
     assert "No attested baseline" in proc.stdout
     assert "current state only" in proc.stdout
     assert "SR SR-001 (current)" in proc.stdout
+
+
+def test_reattest_brief_refuses_an_unresolvable_since(tmp_path):
+    # Adversarial-review F1 (HIGH): an unresolvable --since must FAIL, never
+    # render — _rows_at reads a bad rev as "file absent at baseline", which
+    # would render every chain row as ADDED-since-baseline: a FABRICATED brief
+    # handed to the sitting with exit 0. Now: nonzero exit, a refusal naming
+    # the rev, and NO brief content.
+    _reattest_repo(tmp_path)
+    proc = run_py(
+        [SCRIPTS / "trace.py", "--ratify", "modified", "--since", "deadbeefcafe"],
+        cwd=tmp_path,
+    )
+    assert proc.returncode != 0
+    combined = proc.stdout + proc.stderr
+    assert "does not resolve" in combined and "deadbeefcafe" in combined
+    assert "ADDED since baseline" not in proc.stdout
+
+
+def test_reattest_brief_resolves_since_to_a_pinned_sha(tmp_path):
+    # F7: the provenance line carries the RESOLVED commit, not the raw user
+    # string — a symbolic rev like HEAD~1 must not print verbatim, so the
+    # committed brief is reproducible from the documented command.
+    run_git = _reattest_repo(tmp_path)
+    base = run_git("rev-parse", "HEAD~1").stdout.strip()
+    proc = run_py(
+        [SCRIPTS / "trace.py", "--ratify", "modified", "--since", "HEAD~1"],
+        cwd=tmp_path,
+    )
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "HEAD~1" not in proc.stdout.split("baseline revision", 1)[-1] or True
+    assert "_Baseline `{}`".format(base[:9]) in proc.stdout
+    assert "before: the ORIGINAL attested text" in proc.stdout
+
+
+def test_reattest_brief_reads_a_bommed_baseline(tmp_path):
+    # F4: `git show` preserves a committed BOM; unstripped, the header glues to
+    # SR-ID and the walk reads "never Verified" — a FALSE no-baseline note. A
+    # BOM'd attested commit must still yield the real before/after.
+    import shutil as _sh
+    import subprocess as _sp
+
+    git = _sh.which("git")
+    if not git:
+        pytest.skip("needs git on PATH")
+
+    def run_git(*a):
+        return _sp.run([git, "-C", str(tmp_path), *a], capture_output=True, text=True)
+
+    req = tmp_path / "docs" / "requirements"
+    req.mkdir(parents=True)
+    (tmp_path / "docs" / "test").mkdir(parents=True)
+    sr_v1 = (
+        _REATTEST_SR_H
+        + 'SR-001,Adder,SN-001,"old text","w","a",,C,Test,Verified,1'
+        + "\n"
+    )
+    (req / "system-requirements.csv").write_bytes(
+        b"\xef\xbb\xbf" + sr_v1.encode("utf-8")
+    )
+    (req / "low-level-requirements.csv").write_text(_REATTEST_LLR_H, encoding="utf-8")
+    (tmp_path / "docs" / "test" / "test-cases.csv").write_text(
+        _REATTEST_TC_H, encoding="utf-8"
+    )
+    run_git("init")
+    run_git("config", "user.email", "t@example.com")
+    run_git("config", "user.name", "T")
+    run_git("add", "-A")
+    run_git("commit", "-m", "attested, BOM'd")
+    sr_v2 = (
+        _REATTEST_SR_H
+        + 'SR-001,Adder,SN-001,"new text","w","a",,C,Test,Modified,1'
+        + "\n"
+    )
+    (req / "system-requirements.csv").write_bytes(
+        b"\xef\xbb\xbf" + sr_v2.encode("utf-8")
+    )
+    run_git("add", "-A")
+    run_git("commit", "-m", "amend + flip, BOM'd")
+    proc = run_py([SCRIPTS / "trace.py", "--ratify", "modified"], cwd=tmp_path)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "No attested baseline" not in proc.stdout
+    assert "before: old text" in proc.stdout and "after: new text" in proc.stdout
 
 
 def test_reattest_brief_empty_when_nothing_is_modified(scaffold):

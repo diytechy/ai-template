@@ -144,13 +144,13 @@ BASELINE = {
     # missed, one screen further down. Most of the delta is the comment naming
     # that finding; the maps themselves got shorter. Reviewed bump, log
     # 2026-07-26.
-    # +51 (4952 -> 5003), WI-316: pending-projection source (e) — one pointer
+    # +55 (4952 -> 5007; the last +4 is the F2 fix: the Modified projection line names --since for pre-regime streaks and the committed-brief home docs/ratify/), WI-316: pending-projection source (e) — one pointer
     # line per Draft SR (ratification owed) and per Modified SR (re-attest
     # owed), the surface that puts a pending re-attest on the owner's one
     # review surface instead of commit-message prose. New behaviour (the
     # projection gains a durable source), not monolith drift. Reviewed bump,
     # log 2026-07-26. Re-stamp downward with WI-280.
-    "gen_trajectory.py": 5003,
+    "gen_trajectory.py": 5007,
     # +11 (3452 -> 3463), WI-284: _regenerate_disposition_artifacts also runs
     # `gen_trajectory.py --status` at integrate/blocked-disposition so a closed
     # id drops from the generated frontier automatically (and the disposition
@@ -221,7 +221,7 @@ BASELINE = {
     # would otherwise have to reconstruct from two disagreeing checkers. The
     # extraction also ratcheted `analyze`'s complexity DOWN 53 -> 50. Reviewed
     # bump, log 2026-07-25. Re-stamp downward with WI-280.
-    # +343 (2236 -> 2579), WI-316: the re-attestation brief (--ratify modified)
+    # +381 (2236 -> 2617; the last +38 is the adversarial-review fix pass: F1 --since fail-fast, F4 BOM strip, F7 resolved-sha provenance, F8 ownerless-child warns), WI-316: the re-attestation brief (--ratify modified)
     # — per-cell before/after for every Modified SR's chain against its
     # git-derived attested baseline (+ --since), the is_modified predicate, and
     # the two warn-tier lints (Modified-exempt status advisory; the
@@ -231,14 +231,14 @@ BASELINE = {
     # capability, not monolith drift; the largest WI-316 bump and a named
     # WI-280 decomposition candidate (the reattest emitter is an extractable
     # unit). Reviewed bump, log 2026-07-26. Re-stamp downward with WI-280.
-    "trace.py": 2579,
-    # +122 (1926 -> 2048), WI-316: staged_spine_findings — the amend-without-
+    "trace.py": 2617,
+    # +132 (1926 -> 2058; the last +10 is the F4 BOM hardening: read_rows utf-8-sig + git-show strips), WI-316: staged_spine_findings — the amend-without-
     # flip warn (--staged): content cells of a Verified spine row changed
     # without the Modified marker, suppressed when the owning SR flips in the
     # same commit (the attestation unit). The write-time discipline the
     # RE-ATTESTATION-PENDING prose convention never had. Reviewed bump, log
     # 2026-07-26. Re-stamp downward with WI-280.
-    "check_trajectory.py": 2048,
+    "check_trajectory.py": 2058,
     # +1 (1916 -> 1917), WI-279: one MAPPING row registering the new
     # scripts/check_coverage.py kit gate so it ships downstream — a required
     # one-line registration, not monolith growth (the reviewed-bump escape the

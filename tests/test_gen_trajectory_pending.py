@@ -250,6 +250,7 @@ def test_running_runstate_does_not_project(tmp_path):
 
 # --- (e) Draft / Modified spine rows (WI-316) ----------------------------------
 
+BOM = bytes([0xEF, 0xBB, 0xBF])
 SR_HEADER = (
     "SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,"
     "Permutations,Priority,Verification,Status,Phase,Area\n"
@@ -293,6 +294,20 @@ def test_draft_sr_projects_ratification_owed(tmp_path):
     body = _block(tmp_path)
     assert "SR-007" in body and "ratification owed" in body
     assert "--ratify SR-007" in body
+
+
+def test_bommed_registry_still_projects(tmp_path):
+    # Adversarial-review F4: a BOM'd SR registry (the realistic Excel
+    # round-trip) glued the BOM to the SR-ID header and silently hid every
+    # Draft/Modified line — the projection read "None pending" while a
+    # re-attest was owed. read_rows now reads utf-8-sig.
+    _init(tmp_path)
+    body = SR_HEADER + 'SR-004,Gate derivation,SN-001,"r","x","a",,C,Test,Modified,2,'
+    (tmp_path / "docs" / "requirements" / "system-requirements.csv").write_bytes(
+        BOM + (body + chr(10)).encode("utf-8")
+    )
+    assert _gen(tmp_path).returncode == 0
+    assert "SR-004" in _block(tmp_path)
 
 
 def test_verified_sr_does_not_project_and_flip_drops_the_line(tmp_path):

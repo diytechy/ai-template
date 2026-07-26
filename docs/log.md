@@ -14041,3 +14041,66 @@ future spine changes: the marker is registry state, the projection carries the
 owed sitting, the staged warn polices the write side, and this entry is the
 recorded handover. Registry: **315 rows, 296 done, 3 retired, 9 deferred, 6
 queued**; frontier leads WI-305. Next free id **WI-317**.
+## 2026-07-26 — WI-316 adversarial review (OPUS, refute-everything): 8 CONFIRMED, 9 claims held, 3 judgement — all 8 fixed same-day
+
+The reviewer attacked every closure claim with mutations and fixtures and
+left the tree byte-clean. **What held under attack (the good news, earned):**
+the F5-pinned predicate equivalence + mutual exclusion; "zero new gate
+arithmetic" (per-artifact rules byte-identical to `4cc61fa^`, Modified
+undecomposed correctly reads G1 like Planned); both basis-line consumers
+(k=v/regex parsers, and the phase-drop detector does NOT false-positive on a
+Modified window); projection determinism + freshness + all sneak attempts
+(casing, truncated rows, unrelated-SR flip, ghost-LLR cites, whitespace-only
+diffs) caught; the brief's git archaeology (V→M→V→M walks stop at the RIGHT
+Verified; CRLF; multiline cells; re-parented chains); and the builder's own
+build commit replayed clean against the builder's own staged rule. **The
+confirmations, each fixed with a guard proven to bite:**
+
+- **F1 (HIGH):** `--ratify modified --since <typo>` FABRICATED the brief —
+  `_rows_at` reads any bad rev as "file absent at baseline", so every chain
+  row rendered "ADDED since baseline", exit 0, with a legitimizing header.
+  The exact false-green class the WI exists to kill, on the flag the backfill
+  requires. Now: `--since` is `rev-parse --verify`'d up front and an
+  unresolvable rev is a hard refusal naming itself
+  (`test_reattest_brief_refuses_an_unresolvable_since`).
+- **F4 (MED):** BOM blindness in all three NEW read paths (projection, staged
+  warn, brief baseline) — each failed SILENT and OPEN on a BOM'd registry (the
+  realistic Excel round-trip), while trace's own loaders had carried the
+  utf-8-sig defense for exactly this. `read_rows` now reads utf-8-sig and both
+  `git show` parse sites strip the BOM; three regression tests, one per path.
+- **F3 (MED):** the reworded meta dogfood test was TAUTOLOGICAL for gate
+  arithmetic — comparing `--print` to `compute()` compares a function to
+  itself; the reviewer's sr_gate mutation (Modified→G1) passed it once the
+  cache was regenerated. Now `_independent_meta_expectations` re-derives
+  per-phase gates STRAIGHT from the CSVs (a deliberate second implementation),
+  and the same mutation reds it — proven, restored byte-identical. Test
+  renamed off its stale `holds_g3` name.
+- **F2 (MED):** the projection line named a command that shows ZERO diffs for
+  the backfill batch (pre-regime streaks need `--since`). The Modified line
+  now says so and names the committed-brief home `docs/ratify/`.
+- **F5 (LOW):** the basis-format change forces a one-command downstream
+  migration (first `--check` after resync reds once) — was unflagged;
+  now a flagged ADOPTING.md §6 migration entry per CLAUDE.md's rule.
+- **F6 (LOW):** PROCESS.md §7 had dropped the word "gate", literally asserting
+  `Planned` carries no meaning two lines after prescribing it. Now: "no other
+  value carries MECHANICAL meaning (`Planned` stays the conventional name for
+  the ratified-but-unverified middle)". +90 bytes, re-stamped 61,264 ×3 copies.
+- **F7 (LOW):** the brief's provenance line truncated the RAW `--since` string
+  (`a5052a913` vs `a5052a9`), so the documented command didn't reproduce the
+  committed file. `--since` now resolves to the pinned sha before display;
+  the committed brief reproduces byte-identically from the short rev.
+- **F8 (LOW):** an OWNERLESS Modified child (empty/ghost SR-Refs) — the
+  maximally-invisible case — fell through the `if owners` guard silently. Both
+  ownerless branches now warn with their own message; unit-proven for the
+  empty, ghost-SR, and ghost-LLR shapes.
+
+**Judgement calls, recorded not fixed:** J1 a rename-plus-amend evades the
+staged warn (an id rename is itself a heavyweight reviewed act — documented
+behavior); J2 an OPEN Modified window suppresses later chain-amendment warns
+for its duration (arguably correct — the baseline still captures them — but it
+compounds the don't-let-windows-sprawl trade); J3 the close's "check.py at the
+gate" is 5/6 with the owner-parked perceptual-stale red, honestly disclosed
+but not literally green.
+
+Ratchets re-stamped with the fix-pass deltas (trace 2617, check_trajectory
+2058, gen_trajectory 5007; census modified_chain 15 / reattest 25).

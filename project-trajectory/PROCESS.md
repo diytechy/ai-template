@@ -304,7 +304,7 @@ amendment (existing evidence still verifies the amended text);
 `Modified`→`Planned` when the amendment invalidated the evidence, so the row
 re-earns `Verified`. Amend and flip in the **same commit** (a `--staged` warn
 enforces it); the SR is the attestation unit — flip it whenever its chain
-changes. No other value carries meaning.
+changes. No other value carries mechanical meaning (`Planned` stays the conventional name for the ratified-but-unverified middle).
 Define machine-checkable criteria wherever possible; classify the rest honestly.
 
 - **G1 — Requirements, UX & constraints.** The `PROJECT-VISION:` tag exists in

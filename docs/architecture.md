@@ -505,7 +505,7 @@ Contracts (interfaces): IF-009, IF-023
 | `read_trajectory_enabled(root)` | Whether the trajectory check is on. `docs/trajectory-check` with the one |  |
 | `read_interfaces_check_enabled(root)` | Whether the architecture-connectivity coverage warns are on (S5/WI-056). |  |
 | `read_components_check_enabled(root)` | Whether the How-SW top-view right-sizing rule is on (WI-073/FB5). |  |
-| `read_rows(path)` | The CSV rows of `path` as dicts, or [] when the file is absent. |  |
+| `read_rows(path)` | The CSV rows of `path` as dicts, or [] when the file is absent. Read |  |
 | `load_wis(rows)` | Parse work-item rows into `(wis, integrity_errors)`. |  |
 | `validate(wis, known_srs)` | Return the hard-error strings for the work-item graph ([] = clean). |  |
 | `load_known_srs(root)` | The set of real SR ids from system-requirements.csv (for the SR-ref warn). |  |

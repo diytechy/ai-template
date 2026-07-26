@@ -244,10 +244,15 @@ def _split_refs(cell):
 
 
 def read_rows(path):
-    """The CSV rows of `path` as dicts, or [] when the file is absent."""
+    """The CSV rows of `path` as dicts, or [] when the file is absent. Read
+    utf-8-sig (adversarial-review F4): a BOM'd registry — the realistic Excel
+    round-trip on a Windows-first kit — would otherwise glue the BOM to the
+    first column name and silently hide EVERY row from every consumer of this
+    loader (the WI graph, the pending projection's spine lines). utf-8-sig
+    reads plain utf-8 unchanged."""
     if not path.exists():
         return []
-    with path.open(encoding="utf-8", newline="") as fh:
+    with path.open(encoding="utf-8-sig", newline="") as fh:
         return list(csv.DictReader(fh))
 
 
@@ -1549,6 +1554,9 @@ def staged_spine_findings(root):
         text = _git(root, ["show", ":" + csv_path])
         if text is None:
             return {}
+        # F4: a committed BOM survives `git show`; strip it or the header glues
+        # to the id column and the guard silently disables (fails OPEN).
+        text = text.lstrip("﻿")
         return {
             r[id_col]: r
             for r in csv.DictReader(io.StringIO(text))
@@ -1593,6 +1601,8 @@ def staged_spine_findings(root):
         staged_text = _git(root, ["show", ":" + csv_path])
         if head_text is None or staged_text is None:
             continue  # first commit / newly added registry — nothing attested yet
+        head_text = head_text.lstrip("﻿")  # F4, as above
+        staged_text = staged_text.lstrip("﻿")
         head_rows = {
             r[id_col]: r
             for r in csv.DictReader(io.StringIO(head_text))
