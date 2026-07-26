@@ -131,6 +131,45 @@ def test_workflows_pin_actions_and_reduce_token_permissions(scaffold):
                 assert "{}@{}".format(action, sha) in text, workflow
 
 
+_FORK_ONLY_PR_GUARD = (
+    "if: github.event_name == 'push' || "
+    "github.event.pull_request.head.repo.full_name != github.repository"
+)
+
+
+def test_meta_ci_runs_on_every_branch_push_exactly_once():
+    """Hosted CI fires on ANY branch push, and no job runs twice (WI-278/OI-8).
+
+    The regression this locks is the one the 2026-07-22 review found as M-7:
+    `test.yml` triggered on `push: branches: [main]` + `pull_request`, so the
+    development branch accumulated ~845 commits with **no hosted run at all** —
+    a branch push only reached CI while somebody kept a PR open. Naming the
+    current branch would re-lapse at the next one, so the trigger is `["**"]`
+    and the `pull_request` event is narrowed to the case a push cannot see (a
+    fork's PR) rather than dropped.
+    """
+    text = (ROOT / ".github" / "workflows" / "test.yml").read_text(encoding="utf-8")
+    header, sep, jobs_block = text.partition("\njobs:\n")
+    assert sep, "test.yml lost its jobs: block"
+
+    assert re.search(r'^\s*branches: \["\*\*"\]$', header, flags=re.MULTILINE), (
+        "test.yml's push trigger must cover every branch; a named-branch list "
+        "(e.g. `branches: [main]`) leaves development branches uncovered"
+    )
+    assert re.search(r"^\s*pull_request:\s*$", header, flags=re.MULTILINE), (
+        "the pull_request trigger must stay — it is the only CI a fork's PR gets"
+    )
+
+    jobs = re.findall(r"^  ([A-Za-z][\w-]*):$", jobs_block, flags=re.MULTILINE)
+    assert len(jobs) >= 3, "expected at least test/smoke-budget/gate, got " + repr(jobs)
+    assert jobs_block.count(_FORK_ONLY_PR_GUARD) == len(jobs), (
+        "every job must carry the fork-only pull_request guard, or a same-repo "
+        "PR double-runs the whole matrix (the two events carry different "
+        "github.ref values, so the concurrency group cannot dedupe them); "
+        "jobs={}".format(jobs)
+    )
+
+
 def test_agents_guide_is_canonical_and_stubs_point_at_it(scaffold):
     # AGENTS.md carries the full guide; CLAUDE.md/GEMINI.md are thin stubs that
     # point back at it (single source of truth — Thread 0a).
@@ -285,6 +324,48 @@ def test_scaffold_stamps_kit_version(scaffold):
     # + date) or the explicit unknown marker for a non-git kit copy.
     ident = [ln for ln in text.splitlines() if ln and not ln.startswith("#")][-1]
     assert ident.strip(), "kit-version must carry a non-empty identity line"
+
+
+def test_kit_license_travels_inside_the_portable_unit():
+    """The license must live where the copy-in step can reach it (WI-097/OI-4).
+
+    Adopting the kit copies `project-trajectory/` — a LICENSE sitting only at
+    this repo's root would be left behind, which is exactly the H-3 gap
+    (a repo built to be copied, with no terms attached to what gets copied).
+    So the kit carries its own copy, and the two must stay byte-identical or
+    the copy is a silently different license.
+    """
+    root = (ROOT / "LICENSE").read_text(encoding="utf-8")
+    kit = (KIT / "LICENSE").read_text(encoding="utf-8")
+    assert "Apache License" in root and "Version 2.0" in root
+    assert kit == root, (
+        "project-trajectory/LICENSE has drifted from the root LICENSE — the "
+        "copied kit would carry different terms from the repo it came from"
+    )
+    notice = (ROOT / "NOTICE").read_text(encoding="utf-8")
+    assert "Apache License, Version 2.0" in notice
+
+
+def test_scaffold_records_the_kit_license_and_its_scope(scaffold):
+    """docs/kit-license carries the FULL text (Apache-2.0 §4(a)) plus its scope.
+
+    A pointer to a URL would not satisfy §4(a) for anyone redistributing the
+    adopting repo, and text with no scope note would read as if the kit were
+    licensing the adopter's own work — which it is not.
+    """
+    stamp = scaffold / "docs" / "kit-license"
+    assert stamp.exists(), "bootstrap must write docs/kit-license"
+    text = stamp.read_text(encoding="utf-8")
+    # The full instrument, not a reference to one.
+    assert "TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION" in text
+    assert "END OF TERMS AND CONDITIONS" in text
+    assert (KIT / "LICENSE").read_text(encoding="utf-8") in text
+    # ...and the scope note that keeps it from over-claiming.
+    lowered = text.lower()
+    assert "your own" in lowered or "are yours" in lowered, (
+        "kit-license must state that the adopter's own code is not covered"
+    )
+    assert "docs/kit-version" in text  # the §4(b) 'what did I change' pointer
 
 
 def test_scaffold_pins_hook_line_endings(scaffold):

@@ -41,6 +41,14 @@ reported as `skipped (exists)` — resolve each by hand:
   `profile:` regions per this record (an omitted section keeps its § heading
   plus a one-line stub; § labels never renumber). Commit it: a re-sync
   regenerates from it (see "Re-syncing" below).
+- **`docs/kit-license`** — always (re)written beside those two: the kit's own
+  **Apache-2.0** text, so your repo redistributes the copied kit files legally
+  without anyone fetching it (§4(a)). Commit it. It covers **the kit files
+  only** — your code, and every artifact this scaffold produces (your filled
+  registries, requirements, architecture, log), are yours under whatever license
+  you choose. Put that one in your repo's own `LICENSE`; the two don't compete.
+  If you modify a kit file, §4(b) asks you to say so in that file — the delta
+  from `docs/kit-version` is what makes that visible.
 - **`.github/workflows/check.yml`** — if you have CI already, add the
   `check.py` invocation to it instead of adopting the reference workflow
   wholesale. Keep one definition of "passing": CI runs the same command you run

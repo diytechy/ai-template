@@ -5,7 +5,17 @@
 name: kit-tests
 on:
   push:
-    branches: [main]
+    # EVERY branch, not just `main` (WI-278 / OI-8 ruled 2026-07-25). The
+    # development branch had run ~845 commits with NO hosted CI, because a
+    # branch push only triggered a run while someone kept a PR open — and the
+    # 2026-07-25 G3 sitting proved what that costs: an entire test layer
+    # (`agent_loop_*`) could not execute on the owner's machine at all, so the
+    # local gate was green over a blind spot only an independent environment
+    # sees. A push trigger is repo state that travels with the branch and
+    # cannot lapse; naming individual branches would just re-lapse at the next
+    # one. (The shipped reference, project-trajectory/ci/check.yml, already
+    # covers `llm/**` for the same reason.)
+    branches: ["**"]
   pull_request:
 
 permissions:
@@ -18,7 +28,15 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # ONE run per commit (WI-278). With `push: ["**"]` above, a same-repo branch
+  # is already covered by its push event, so the `pull_request` event would
+  # otherwise double every job — the two events carry different `github.ref`
+  # values (`refs/heads/x` vs `refs/pull/N/merge`), so the concurrency group
+  # cannot dedupe them. The guard keeps `pull_request` earning its keep for the
+  # one case push cannot see: a FORK's PR, whose branch never lands here.
+  # Repeated per job because GitHub Actions has no YAML anchors.
   test:
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
     strategy:
       fail-fast: false
       matrix:
@@ -71,6 +89,7 @@ jobs:
   # membership ratchet also catches), not runner noise. One lane: this is a timing
   # signal, not a portability check.
   smoke-budget:
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -90,6 +109,7 @@ jobs:
   # One platform: the matrix above already proves cross-OS/py portability; the gate
   # is a code-quality bar (coverage, lint, trace), not an OS-dependent one.
   gate:
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:

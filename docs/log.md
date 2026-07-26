@@ -350,6 +350,39 @@ why (one bullet each; cite ids)._
   `Evidence` BEFORE flipping an SR's `Verification`**, never the reverse. Needs no
   gate change (an SR leaves `_load_critique_srs` on its own) and no new checker
   (`trace.py` coverage already enforces "the anchor names its test").
+- **2026-07-25 — OI-4 RULED (WI-097): Apache-2.0, and the kit is headed
+  public.** The owner's public/private intent settled as *public*, which was the
+  missing input the brief said it needed; the license choice followed it.
+  Apache-2.0 over **MIT** because the kit's whole model is copy-in — every
+  downstream scaffold carries the terms — so the explicit patent grant and the
+  §4 attribution/NOTICE mechanics are worth their extra weight in a file that
+  travels. Alternatives passed over: **MIT** (shortest text, no patent grant) ·
+  **stay private / all-rights-reserved** (blocks outside use and leaves the
+  deep-review H-3 blocker standing). Clears H-3.
+- **2026-07-25 — OI-8 RULED (WI-278): add the development branch to
+  `on.push.branches` in `test.yml`; do not rewrite the 845-commit history.**
+  The brief's own recommendation (open/maintain a PR) is passed over in favour
+  of its named fallback because the trigger edit is one line, needs no
+  GitHub-side action, and — decisively — it cannot silently lapse: a PR only
+  runs CI while someone keeps it open, whereas a push trigger is repo state that
+  travels with the branch. What the ruling buys is what the 2026-07-25 G3 run
+  exposed: the local gate had a total blind spot (the whole `agent_loop_*` layer
+  could not execute on this machine), and hosted Linux + Windows CI is the
+  independent environment that closes it. Alternatives passed over: **PR-only**
+  (lapses when the PR closes) · **merge in reviewed slices** (still wanted, but
+  it is integration policy, not the CI-visibility fix) · **local-gates-only**
+  (the status quo that produced the blind spot). Merge-to-`main` stays a
+  separate, deliberate owner call under `docs/push-policy: human`.
+- **2026-07-25 — WI-273 RATIFIED (owner attest).** Owner **Peter Johnson**
+  attests the SR-084 dispatch behind the semantic-tabs train: REVIEW-A
+  (`OPENAI-TERRA`, non-Anthropic) drove the live tablist through click / arrow
+  wraparound / Home-End / Space-Enter with every worst-class hunt surviving, and
+  the CRITIQUE (`OPENAI-SOL`) returned CHANGES-REQUESTED on **A2** and
+  **A4-boundaries** only — both pre-existing whole-document findings this train
+  never touches, and both since **ruled and closed on their own merits**
+  (A2 → `LLR-101`/`TC-104`; A4-boundaries → retired as not-a-defect 2026-07-24).
+  The attestation is therefore of the *dispatch*, not a waiver of a finding.
+  Registry `Status` leaves `blocked`; the `BlockRef` clears.
 
 ## Audit log
 
@@ -12761,3 +12794,58 @@ by WI-297 earlier).
 **Verified:** full suite **1502 passed, 6 skipped**, coverage 92.15%;
 `check.py --gate G3 --jobs 0` **RESULT: PASS** (all 17 steps) after the ratchet
 re-stamp, gate re-stamp, and format/lint fixes above.
+
+
+## 2026-07-25 — OI-4 + OI-8 RULED; WI-097 (Apache-2.0) + WI-278 (CI on every branch push); WI-273 attested
+
+**Three owner rulings in one sitting**, all recorded in the Decisions log above:
+**OI-4** — the kit is headed **public** under **Apache-2.0**; **OI-8** — hosted
+CI runs on **every branch push**, not on a PR that can lapse; and **WI-273's**
+SR-084 dispatch is **attested**. Two of the three had been open since 2026-07-12
+for want of an input only the owner had.
+
+**WI-097 (Apache-2.0).** The deep-review H-3 finding was that a repo built to be
+copied carried no terms at all, so the documented quick-start — copy
+`project-trajectory/` into your repo — had no legal basis. Landed: root
+`LICENSE` + `NOTICE`, **an identical copy at `project-trajectory/LICENSE`**, a
+README license paragraph, and `bootstrap.py`'s new `write_kit_license()`.
+
+The non-obvious call is **where the license lives**. A LICENSE at this repo's
+root would be *left behind* by the very act the license exists to permit —
+adopters copy the kit directory, not the repo — so the portable unit carries its
+own copy, and `test_kit_license_travels_inside_the_portable_unit` asserts the two
+stay byte-identical (a drifted copy is a silently different license).
+`docs/kit-license` then gets the **full text**, not a URL, because §4(a) binds
+whoever redistributes the *adopting* repo, and its header states the scope the
+text alone would over-claim: the kit files are Apache-2.0; the adopter's own code
+and every artifact the scaffold produces are theirs.
+
+`main()` took **no new branch** — `write_kit_license` reports its own outcome, so
+the complexity ratchet held at 41 while `bootstrap.py` is still the WI-280
+decomposition target. The module-size ratchet took a reviewed bump
+(1917 → 1976), reason stamped above the number.
+
+**WI-278 (CI on every branch push).** `test.yml` fired on `push: [main]` +
+`pull_request`, so this branch ran ~845 commits with **no hosted CI** — a branch
+push only reached CI while somebody kept a PR open. The ruling took the brief's
+*fallback* over its recommendation: a trigger edit is repo state that travels
+with the branch and cannot silently lapse, and `branches: ["**"]` (not the
+current branch by name) cannot re-lapse at the next branch either. `pull_request`
+stays for the one case a push cannot see — a **fork's** PR — behind a per-job
+`if:` guard, because the two events carry different `github.ref` values and the
+concurrency group therefore *cannot* dedupe them; without the guard every
+same-repo PR would double the whole matrix.
+
+**Both guards were verified against the original defects**, per the WI-293
+lesson that a guard which cannot fail is not a guard:
+`test_meta_ci_runs_on_every_branch_push_exactly_once` fails when the trigger is
+reverted to `branches: [main]` **and** fails when the fork guard is stripped.
+
+**Status.md correction.** Its prose still described the G3 harness as **2 of 17
+steps failing** — true when written, superseded hours later by the green run
+recorded above. Rewritten to the current state, keeping the two standing rules
+that sitting produced (a census sanction *is* accepting the duplication; never
+revert a real fix to green a step).
+
+**Verified:** smoke `392 passed, 13 skipped`; `check_docs --stale` OK
+(255 docs, 760 links, 0 broken); `check_trajectory` clean.

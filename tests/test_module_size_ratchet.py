@@ -154,7 +154,14 @@ BASELINE = {
     # scripts/check_coverage.py kit gate so it ships downstream — a required
     # one-line registration, not monolith growth (the reviewed-bump escape the
     # ratchet documents; not a drive-by). Re-stamp downward with WI-280.
-    "bootstrap.py": 1917,
+    # +59 (1917 -> 1976), WI-097/OI-4: `write_kit_license` + `KIT_LICENSE_HEADER`,
+    # so every scaffold carries the Apache-2.0 text the copy-in step redistributes
+    # under (§4(a)) — new REQUIRED behaviour, and roughly two-thirds of the bump is
+    # the header prose stating what the license does NOT cover (the adopter's own
+    # code), which is the part that stops a scaffold reading as an over-claim.
+    # `main()` took no new branch: the writer reports its own outcome, so the
+    # complexity ratchet held at 41. Reviewed bump; re-stamp downward with WI-280.
+    "bootstrap.py": 1976,
 }
 
 

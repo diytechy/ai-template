@@ -92,6 +92,7 @@ audits.
 | `MULTI_REPO.md` | **Design doc** for the rare multi-repo rung: how the spine extends across separate repos under a coordinator (SR-tier delegation, interface catalog, assemblies-as-config, mechanical gate aggregation). A design — the heavy cross-repo tooling is deferred. Reference doc (like `EXAMPLE.md`); not scaffolded. |
 | `ADOPTING.md` | **Retrofit guide** for dropping the kit into an *existing* repo (code, history, CI, non-Python stacks): resolving bootstrap collisions, rewiring product steps, porting-or-explicitly-dropping the Python-reference generators (never a vacuous pass), and backfilling requirements from the boundary outward. Reference doc; not scaffolded. |
 | `EXTERNAL_SKILLS.md` | **Curated reference index** of third-party skill/plugin sources an adopter might mine for domain expertise or workflow accelerators the kit doesn't ship — each with its license, format, and trust caveats under a *mine-don't-install* posture. Complements `skills/README.md`'s plug-in contract. Reference doc (like `EXAMPLE.md`); not scaffolded. |
+| `LICENSE` | **Apache-2.0** — the terms the kit files travel under. It lives *inside* the portable unit because adoption **is** copying: a license at the source repo's root would be left behind. Copy it along with everything else; `bootstrap.py` also writes the full text into each scaffold at `docs/kit-license` (§4(a)), scoped by a header saying it covers the copied kit files and **not** the adopter's own code or artifacts. |
 
 ## How to use
 

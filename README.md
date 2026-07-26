@@ -10,6 +10,15 @@ trust what ships.
 It is **stack-agnostic** with **Python-first reference scripts** — drop it into
 any repo and wire the harness to that repo's tooling (SN-003).
 
+**License: [Apache-2.0](LICENSE)** ([NOTICE](NOTICE)). Copying
+`project-trajectory/` into your repo — the quick start below — is exactly what
+the grant is for. Your project's own code and the artifacts the scaffold
+produces (your registries, requirements, log) are **yours**, under whatever
+license you choose; only the kit files you copied stay Apache-2.0.
+`bootstrap.py` drops the full License text into every scaffold at
+`docs/kit-license` so a downstream repo can be redistributed without you
+chasing it.
+
 ## What's in here
 
 | Path | What it is |

@@ -16,20 +16,6 @@ decisions._
 
 ---
 
-## OI-4 — WI-097: LICENSE decision
-
-- **One-line:** rule WI-097 (LICENSE + public/private intent) — no rec; needs
-  the owner's public/private intent first.
-- **Decision:** which license, and whether the kit is headed public (the
-  deep-review-b H3 finding; WI row: [work-items.csv](requirements/work-items.csv)).
-- **Blast radius:** the legal terms of every downstream adoption — the kit's
-  whole model is copy-in, so the license travels with every scaffold.
-- **Options:** **MIT** (max adoption, simplest copy-in story) · **Apache-2.0**
-  (adds an explicit patent grant; slightly heavier notice obligations) · **stay
-  private / no license** (default all-rights-reserved; blocks outside use).
-- **Recommendation:** none recorded — this needs the owner's public/private
-  intent first.
-
 ## OI-7 — WI-123: review-cadence dial
 
 - **One-line:** rule WI-123 (review cadence) — rec: wait for ≥ 2 phases of
@@ -42,26 +28,6 @@ decisions._
   evidence.
 - **Recommendation (recorded):** rule only after ≥ 2 phases of medium-BUILD
   evidence.
-
-## OI-8 — WI-278: branch integration & CI-on-branch
-
-- **One-line:** rule WI-278 (integration strategy) — rec: open/maintain a PR so
-  branch pushes run CI and merge in reviewed slices; do not rewrite history.
-- **Decision:** how to integrate `dualplan-routing-fix` (≈845 commits ahead of
-  `main`) and whether hosted CI should run on protected development branches
-  (the repo-review-2026-07-22 M-7 finding; WI row:
-  [work-items.csv](requirements/work-items.csv)).
-- **Blast radius:** an enormous integration delta is hard to review, bisect, and
-  merge, and the remote branch can look healthy with no hosted CI result —
-  `.github/workflows/test.yml` fires only on `push: main` and `pull_request`, so
-  a branch push without an open PR runs no CI. Local gates are strong but are not
-  an independent environment.
-- **Options:** open/maintain a PR so branch updates run CI (cheapest; changes no
-  triggers) · add the dev branch to `on.push.branches` in `test.yml` · merge in
-  reviewed slices to shrink the delta · keep local-gates-only.
-- **Recommendation:** open a PR now (gets hosted CI on every push without a
-  trigger change) and merge in reviewed slices; the one-line `on.push.branches`
-  edit is the fallback if no PR. Do **not** rewrite the 845-commit history.
 
 ---
 

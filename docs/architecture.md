@@ -344,6 +344,7 @@ Contracts (interfaces): IF-014, IF-039
 | `initialize_generated_docs(dest, created)` | Run the generators once so the fresh scaffold starts green: the arch-map |  |
 | `kit_version()` | The kit's committed identity for the version stamp: (label, dirty). |  |
 | `write_kit_version(dest, dry_run)` | Stamp docs/kit-version with the kit commit the scaffold came from, so a |  |
+| `write_kit_license(dest, dry_run, verb)` | Write `docs/kit-license` — the kit's own LICENSE text, scoped by a header. |  |
 | `main()` |  |  |
 
 ### `scripts/check`

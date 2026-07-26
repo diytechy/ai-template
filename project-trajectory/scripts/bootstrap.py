@@ -226,6 +226,15 @@ working tree — bootstrap refuses to stamp a real SHA when the kit tree is dirt
 (it writes `<sha>-dirty` and warns) so an adoption can't be pinned to an
 unreproducible mid-edit state.
 
+It also writes `docs/kit-license` — the kit's own Apache-2.0 text, prefixed by a
+header stating what it does and does not cover. Adopting the kit *is* copying it,
+and Apache-2.0 §4(a) asks that recipients of a copy also receive the License, so
+the scaffold carries it rather than pointing at a URL. The scope is the copied
+kit files only: the adopting project's own code, and the artifacts this scaffold
+produces, are the adopter's under whatever license they choose. The text ships
+inside the portable unit (`project-trajectory/LICENSE`) so it survives the
+copy-in step.
+
 **Conditional scaffold generation (Thread 34).** The Markdown templates are
 masters holding *all* permutations; bootstrap *generates* each repo's copy by
 stripping `<!-- kit-only -->` regions (the "copy me" meta-prose no scaffold
@@ -1533,6 +1542,55 @@ def write_kit_version(dest, dry_run):
     return label, dirty, True
 
 
+KIT_LICENSE_HEADER = (
+    "# The license the COPIED KIT FILES carry — Apache-2.0, the full text below.\n"
+    "#\n"
+    "# Why this file exists: adopting the kit means COPYING it (project-trajectory/\n"
+    "# into your repo, its templates scaffolded into docs/). Apache-2.0 §4(a) asks\n"
+    "# that anyone who receives those files also receives the License, so bootstrap\n"
+    "# drops it here rather than leaving you to fetch it — your repo is\n"
+    "# redistributable as-is.\n"
+    "#\n"
+    "# SCOPE — this covers the kit files you copied, and nothing else. Your own\n"
+    "# code, and the artifacts this scaffold produces (your filled registries,\n"
+    "# requirements, architecture, log), are YOURS under whatever license your\n"
+    "# project chooses. Put that one in your repo's own LICENSE; this file does not\n"
+    "# compete with it. If you MODIFY a kit file, §4(b) asks you to say so in that\n"
+    "# file — docs/kit-version records which kit commit you started from, which is\n"
+    "# what makes the delta visible.\n"
+    "#\n"
+    "# Generated, like docs/kit-version: rewritten on every scaffold/re-sync.\n"
+    "# ---------------------------------------------------------------------------\n"
+)
+
+
+def write_kit_license(dest, dry_run, verb):
+    """Write `docs/kit-license` — the kit's own LICENSE text, scoped by a header.
+
+    The kit ships its license INSIDE the portable unit (`project-trajectory/
+    LICENSE`) precisely so it survives the copy-in step; a root LICENSE in the
+    kit's home repo would not travel. Reports its own outcome (like the other
+    stamp writers' callers do) so `main()` stays a straight-line sequence —
+    bootstrap's `main` is already the WI-280 decomposition target, and a new
+    branch there is debt this step doesn't need to add. Returns True if written."""
+    source = KIT / "LICENSE"
+    if not source.exists():
+        print(
+            "WARNING: the kit has no LICENSE file, so docs/kit-license was NOT "
+            "written — this scaffold carries no record of the terms the copied "
+            "kit files are under. Restore project-trajectory/LICENSE and re-run.",
+            file=sys.stderr,
+        )
+        return False
+    print("  {}: docs/kit-license (Apache-2.0, kit files only)".format(verb))
+    if dry_run:
+        return False
+    target = dest / "docs" / "kit-license"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    _write_text_lf(target, KIT_LICENSE_HEADER + source.read_text(encoding="utf-8"))
+    return True
+
+
 def main():
     _utf8_console()
     ap = argparse.ArgumentParser(
@@ -1889,6 +1947,7 @@ def main():
             verb, stack, ",".join(sorted(omit)) or "none"
         )
     )
+    write_kit_license(dest, args.dry_run, verb)
     if dirty:
         print(
             "WARNING: the kit working tree is DIRTY — this scaffold is stamped "

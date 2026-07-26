@@ -1,0 +1,25 @@
+The project-trajectory kit
+Copyright 2026 Peter Johnson
+
+This product includes software developed by Peter Johnson.
+
+Licensed under the Apache License, Version 2.0 (see LICENSE).
+
+---
+
+This repository is a KIT MEANT TO BE COPIED. Its documented quick-start copies
+`project-trajectory/` into another repository, and `bootstrap.py` scaffolds the
+templates into that repository's `docs/`. Both are exercises of the Apache-2.0
+grant, so:
+
+- The copied kit files (scripts, templates, skills, process docs) stay under
+  Apache-2.0. `bootstrap.py` writes the full License text into the scaffold at
+  `docs/kit-license`, which satisfies §4(a) for anyone who redistributes the
+  adopting repository.
+- **The adopting project's own code and documents are NOT derivative works of
+  the kit** and take whatever license that project chooses. The artifacts the
+  scaffold produces — your filled registries, your requirements, your log — are
+  yours.
+- If you modify a kit file in your adoption, §4(b) asks you to say so in that
+  file. `docs/kit-version` records which kit commit you scaffolded from, which
+  is also what makes that delta visible.
