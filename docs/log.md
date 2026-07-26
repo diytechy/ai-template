@@ -13887,7 +13887,7 @@ failed. That fixture is the one that must bite.
   *"a verdict must not cite T3"* stated where the critic's instructions resolve.
   Three surfaces, one statement, kept in step (the next binding must move all
   three together — `WI-315`'s Done-when says so).
-- **WI-315 filed** + [`specs/WI-315.md`](specs/WI-315.md).
+- **WI-315 filed** + [`specs/WI-315.md`](archive/specs/WI-315.2026-07-26.md).
 - `WI-305`/`WI-306`/`WI-307`/`WI-314` **re-affirmed against the amended `SR-054`**
   — the backlog-staleness warn fired on all four the moment the SR row changed,
   which is the checker working; each was re-read (all four cite anchors that stay
