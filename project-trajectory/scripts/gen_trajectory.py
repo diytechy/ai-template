@@ -584,6 +584,31 @@ STATUS_GLYPH = {"done": "✓", "active": "●", "queued": "○", "retired": "⊗
 ARROW_SIZE = 9  # px, userSpaceOnUse — independent of any wire's stroke-width
 
 
+def tab_button(tab, label):
+    """One dynamically-added dashboard tab as a WAI-ARIA `role="tab"` button
+    (WI-273, SR-052). Every generated extra starts *unselected*: the first tab
+    (`arch`) is the initial selection and is hardwired in the template, so an
+    extra carries `aria-selected="false"` and drops out of the roving tab
+    sequence (`tabindex="-1"`) until chosen. `aria-controls` names the panel it
+    reveals; that panel's `aria-labelledby` points back at this button's
+    `id="tab-<tab>"`. The tab controller flips these on selection."""
+    return (
+        '<button role="tab" id="tab-{t}" data-tab="{t}" aria-controls="{t}"'
+        ' aria-selected="false" tabindex="-1">{label}</button>'
+    ).format(t=tab, label=label)
+
+
+def tab_panel_open(pid):
+    """Opening `<section>` tag for a dynamically-added tab panel (WI-273,
+    SR-052): a `role="tabpanel"` labelled by its controlling tab and `hidden`
+    until selected. The tab controller clears `hidden` together with the
+    `.active` display class so assistive tech and the visual layer agree."""
+    return (
+        '<section id="{p}" class="panel" role="tabpanel"'
+        ' aria-labelledby="tab-{p}" hidden>'
+    ).format(p=pid)
+
+
 def _arrow_markers(*specs):
     """`<defs>` wrapping one `<marker>` per spec: `(marker_id, css_class)`, or
     `(marker_id, css_class, size)` to override the default `ARROW_SIZE` (the
@@ -1178,7 +1203,7 @@ def sw_containment(root, mods):
     root_blocks += [ext_block(k, d, kind) for k, (d, kind) in sorted(root_ext.items())]
     layers.append((root_id, _drill_layer_svg(root_blocks, root_edges)))
 
-    tab = '<button data-tab="sw">How (SW architecture)</button>'
+    tab = tab_button("sw", "How (SW architecture)")
     summary_line = (
         '<p class="cap"><strong>Top view: {} item(s)</strong> — {} top-level '
         "component(s) + {} uncontained module(s); bounded at {} "
@@ -1231,7 +1256,8 @@ def sw_containment(root, mods):
         "})();</script>"
     )
     panel = (
-        '<section id="sw" class="panel">\n<h2>Software architecture (How)</h2>\n'
+        tab_panel_open("sw")
+        + "\n<h2>Software architecture (How)</h2>\n"
         + DRILL_STYLE
         + SW_CMPTREE_STYLE
         + "\n"
@@ -2393,13 +2419,13 @@ HTML_TEMPLATE = string.Template("""<!doctype html>
       </div>
     </section>
 
-    <nav class="tabs">
-      <button class="active" data-tab="arch">What (SR breakdown)</button>
-      <button data-tab="dag">When (roadmap DAG)</button>
+    <nav class="tabs" role="tablist" aria-label="Dashboard views">
+      <button class="active" role="tab" id="tab-arch" data-tab="arch" aria-controls="arch" aria-selected="true" tabindex="0">What (SR breakdown)</button>
+      <button role="tab" id="tab-dag" data-tab="dag" aria-controls="dag" aria-selected="false" tabindex="-1">When (roadmap DAG)</button>
       $extra_tabs
     </nav>
 
-    <section id="arch" class="panel active">
+    <section id="arch" class="panel active" role="tabpanel" aria-labelledby="tab-arch">
       <h2>Architecture decomposition</h2>
       <p class="cap">The <code>SN→SR→LLR→TC</code> spine as an <strong>icicle</strong>:
       block height is leaf-proportional — a TC is one unit, an LLR spans the sum of
@@ -2421,7 +2447,7 @@ HTML_TEMPLATE = string.Template("""<!doctype html>
       </div>
     </section>
 
-    <section id="dag" class="panel">
+    <section id="dag" class="panel" role="tabpanel" aria-labelledby="tab-dag" hidden>
       <h2>Work-item trajectory</h2>
       <p class="cap">The dependency DAG from <code>docs/requirements/work-items.csv</code>,
       laid out left→right by <strong>dependency rank</strong> (a work item sits one
@@ -2558,12 +2584,47 @@ HTML_TEMPLATE = string.Template("""<!doctype html>
     for(const el of scrollBoxes) el.addEventListener('scroll', syncScrollCues);
     syncScrollCues();
 
-    for (const b of document.querySelectorAll('nav.tabs button'))
-      b.onclick = () => {
-        for (const x of document.querySelectorAll('nav.tabs button')) x.classList.toggle('active', x===b);
-        for (const p of document.querySelectorAll('.panel')) p.classList.toggle('active', p.id===b.dataset.tab);
+    // WI-273 (SR-052): the view switcher is a WAI-ARIA tablist, not a row of
+    // styled buttons. selectTab keeps the three bits of state assistive tech
+    // reads in sync — which tab is aria-selected, panel visibility (the .active
+    // display class AND the hidden attribute), and the roving tabindex (only the
+    // selected tab is in the tab sequence) — plus the visual .active class and
+    // the overflow scroll cues. Keyboard: Left/Right and Up/Down move focus and
+    // activate the tab; Home/End jump to the first/last; Enter/Space fall through
+    // to the native <button> click. Automatic activation (arrow selects at once)
+    // is safe because every panel is already in the DOM.
+    const tablist = document.querySelector('nav.tabs');
+    if(tablist){
+      const tabs = [...tablist.querySelectorAll('[role=tab]')];
+      const selectTab = (tab, moveFocus) => {
+        for(const t of tabs){
+          const on = t===tab;
+          t.classList.toggle('active', on);
+          t.setAttribute('aria-selected', on ? 'true' : 'false');
+          t.tabIndex = on ? 0 : -1;
+          const panel = document.getElementById(t.dataset.tab);
+          if(panel){ panel.classList.toggle('active', on); panel.hidden = !on; }
+        }
+        if(moveFocus) tab.focus();
         syncScrollCues();
       };
+      tablist.addEventListener('click', e => {
+        const tab = e.target.closest('[role=tab]');
+        if(tab) selectTab(tab, false);
+      });
+      tablist.addEventListener('keydown', e => {
+        const i = tabs.indexOf(e.target);
+        if(i < 0) return;
+        let j;
+        if(e.key==='ArrowRight' || e.key==='ArrowDown') j = (i+1) % tabs.length;
+        else if(e.key==='ArrowLeft' || e.key==='ArrowUp') j = (i-1+tabs.length) % tabs.length;
+        else if(e.key==='Home') j = 0;
+        else if(e.key==='End') j = tabs.length-1;
+        else return;
+        e.preventDefault();
+        selectTab(tabs[j], true);
+      });
+    }
   </script>
 </body></html>
 """)
@@ -2655,7 +2716,7 @@ def cmp_rows(root):
 
 
 def _sw_panel(mods, graph=None):
-    tab = '<button data-tab="sw">How (SW architecture)</button>'
+    tab = tab_button("sw", "How (SW architecture)")
     rows = []
     for m in mods:
         syms = ", ".join(m["symbols"][:8]) + ("…" if len(m["symbols"]) > 8 else "")
@@ -2685,7 +2746,8 @@ def _sw_panel(mods, graph=None):
             )
         )
     panel = (
-        '<section id="sw" class="panel">\n<h2>Software architecture (How)</h2>\n'
+        tab_panel_open("sw")
+        + "\n<h2>Software architecture (How)</h2>\n"
         + graph_block
         + '<p class="cap">The module map from <code>docs/architecture.md</code> — a '
         "view of the generated code map (its <code>--check</code> keeps it honest "
@@ -2702,7 +2764,7 @@ def _sw_panel(mods, graph=None):
 
 
 def _cmp_panel(rows):
-    tab = '<button data-tab="cmp">How (physical)</button>'
+    tab = tab_button("cmp", "How (physical)")
     body = []
     for r in rows:
         body.append(
@@ -2714,7 +2776,7 @@ def _cmp_panel(rows):
             )
         )
     panel = (
-        '<section id="cmp" class="panel">\n<h2>Components (How — physical)</h2>\n'
+        tab_panel_open("cmp") + "\n<h2>Components (How — physical)</h2>\n"
         '<p class="cap">The <code>CMP-###</code> component registry (membership derives '
         "from <code>Component</code> tags on the primitives; the graph view is "
         "deferred-on-need — this table is the honest current rendering).</p>\n"
@@ -3117,7 +3179,7 @@ def _know_panel(root, svg, details):
     Above the SR-089 `>3` type threshold the panel renders the START-COLLAPSED
     type-tiered drill (`know_view`, WI-159 — the T2 density fix); at or below it,
     the flat concept graph (`know_graph`) below."""
-    tab = '<button data-tab="know">Knowledge (OKF)</button>'
+    tab = tab_button("know", "Knowledge (OKF)")
     legend = "".join(
         '<span><i style="background:{}"></i>{}</span>'.format(c, html.escape(t))
         for t, c in OKF_TYPE_FILL.items()
@@ -3195,7 +3257,7 @@ def _know_panel(root, svg, details):
             "the source of truth.</p>\n"
         )
         panel = (
-            '<section id="know" class="panel">\n'
+            tab_panel_open("know") + "\n"
             "<h2>Knowledge graph (OKF concepts)</h2>\n"
             + cap
             + DRILL_STYLE
@@ -3267,7 +3329,7 @@ def _know_panel(root, svg, details):
         "})();</script>"
     )
     panel = (
-        '<section id="know" class="panel">\n'
+        tab_panel_open("know") + "\n"
         "<h2>Knowledge graph (OKF concepts)</h2>\n"
         '<p class="cap">The committed <code>docs/okf/</code> knowledge bundle as a '
         "typed concept graph — the dashboard is the bundle's first real "
@@ -3691,7 +3753,7 @@ def process_panel(root, wis, stats):
         "</style>"
     )
     panel = (
-        '<section id="process" class="panel">\n'
+        tab_panel_open("process") + "\n"
         "<h2>How this project is built</h2>\n"
         '<p class="cap">The method reference — the other tabs show project '
         "<em>state</em>; this one shows the <strong>process</strong> the state "
@@ -3748,7 +3810,7 @@ def process_panel(root, wis, stats):
         "the method's, not this repo's data.</p>\n" + loops_html + "\n"
         "</section>"
     )
-    return '<button data-tab="process">Process</button>', panel
+    return tab_button("process", "Process"), panel
 
 
 def build_html(root, wis):

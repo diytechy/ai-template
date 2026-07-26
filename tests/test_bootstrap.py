@@ -367,6 +367,19 @@ def test_scaffold_records_the_kit_license_and_its_scope(scaffold):
     )
     assert "docs/kit-version" in text  # the §4(b) 'what did I change' pointer
 
+    # §4(d) attribution travels, and survives a PRIVACY-CHECKED adopting repo.
+    # A real name in a scaffold is a legal requirement, not a leak, so the one
+    # line carrying it is marked — and the License text itself carries none, so
+    # that marker stays a single auditable exception rather than a habit.
+    # (test_check_privacy's fresh-scaffold sweep is the enforcing half.)
+    attribution = [ln for ln in text.splitlines() if "Copyright 2026" in ln]
+    assert len(attribution) == 1, attribution
+    assert "privacy-ok" in attribution[0].lower(), attribution[0]
+    assert "Peter Johnson" not in (KIT / "LICENSE").read_text(encoding="utf-8"), (
+        "the LICENSE instrument must keep the stock Apache appendix placeholder; "
+        "real attribution belongs in NOTICE and the kit-license header"
+    )
+
 
 def test_scaffold_pins_hook_line_endings(scaffold):
     # The sh-based git hook breaks under Windows autocrlf without an eol=lf pin;

@@ -35,8 +35,9 @@ from conftest import SCRIPTS
 THRESHOLD = 1500
 
 # Measured 2026-07-22 (len(text.splitlines()); files end with a newline, so this
-# equals `wc -l`). These six are the review's H-2 modules, unchanged since the
-# as-found `6a752b4`. Re-stamp DOWNWARD as WI-280 decomposes them.
+# equals `wc -l`). These six are the review's H-2 modules. Re-stamp DOWNWARD as
+# WI-280 decomposes them; an UPWARD re-stamp is the reviewed-baseline-edit escape
+# hatch (see the module docstring) and must name its WI right here.
 BASELINE = {
     # +76 (4511 -> 4587), WI-284: the generated Ready-frontier block — the
     # scheduler-derived forward-looking WI list that makes the forward-only
@@ -84,7 +85,16 @@ BASELINE = {
     # carries the WHY-not-WHAT rationale for each de-collision, and the new
     # `--nhead` token gets its one documented-scale-step comment. Reviewed
     # bump, reason in docs/log.md 2026-07-25.
-    "gen_trajectory.py": 4729,
+    # +62 (4729 -> 4791), WI-273 (SR-052, review M-3): the dashboard tabs became a
+    # real WAI-ARIA tablist (role/aria-selected/aria-controls + tabpanel wiring, a
+    # roving tabindex, and an arrow/Home/End keyboard controller). That fix lives
+    # unavoidably in this module's HTML_TEMPLATE and its tab-emit helpers. The
+    # train stamped 4573 off its OWN base (4511) and its compose re-stamped 4660
+    # off the WI-293 baseline (4598) — both stale by integrate time, which is the
+    # re-stamp-off-own-base conflict WI-289 tracks. Resolved to the ACTUAL
+    # integrated count and keeping BOTH rationale chains rather than picking a
+    # side. Reviewed bump, log 2026-07-25. Re-stamp downward with WI-280.
+    "gen_trajectory.py": 4791,
     # +11 (3452 -> 3463), WI-284: _regenerate_disposition_artifacts also runs
     # `gen_trajectory.py --status` at integrate/blocked-disposition so a closed
     # id drops from the generated frontier automatically (and the disposition
@@ -161,7 +171,13 @@ BASELINE = {
     # code), which is the part that stops a scaffold reading as an over-claim.
     # `main()` took no new branch: the writer reports its own outcome, so the
     # complexity ratchet held at 41. Reviewed bump; re-stamp downward with WI-280.
-    "bootstrap.py": 1976,
+    # +10 (1976 -> 1986), WI-097 follow-up: the full suite caught what smoke could
+    # not — a fresh PRIVACY-CHECKED scaffold reds on the copyright holder's real
+    # name in docs/kit-license. Fixed by moving attribution out of the License
+    # instrument (stock Apache appendix placeholder, real holder in the root
+    # NOTICE) into ONE header line carrying `privacy-ok`, plus the comment saying
+    # why that marker is legitimate here and must stay the only one. Reviewed bump.
+    "bootstrap.py": 1986,
 }
 
 

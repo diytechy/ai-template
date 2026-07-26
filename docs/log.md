@@ -12849,3 +12849,71 @@ revert a real fix to green a step).
 
 **Verified:** smoke `392 passed, 13 skipped`; `check_docs --stale` OK
 (255 docs, 760 links, 0 broken); `check_trajectory` clean.
+
+
+## 2026-07-25 — WI-273 INTEGRATED (semantic dashboard tabs), and a privacy defect the smoke tier could not see
+
+**WI-273** — the WAI-ARIA tablist for the dashboard tabs (`role="tab"` /
+`role="tabpanel"`, `aria-selected`/`aria-controls`, a roving `tabindex`, and an
+arrow/Home/End keyboard controller) — is **integrated**. Nothing was built this
+sitting: the train had been composed and green on `stage/WI-273` since
+2026-07-24 and was blocked on **one owner attestation**, given today.
+
+**The merge, not the code, was the remaining work.** `stage/WI-273`'s merge-base
+was `662bc87`, well behind HEAD, so this was a real 3-way merge with two
+conflicts — both the known mechanical classes, both resolved by the documented
+convention rather than by picking a side:
+
+- `PROJECT_STATE.html` — generated; **regenerated from the integrated tree**.
+- `tests/test_module_size_ratchet.py` — the **WI-289 re-stamp-off-own-base**
+  class, hit *twice* in one row: the train stamped `4573` against its own base
+  (4511), its compose re-stamped `4660` against the WI-293 baseline (4598), and
+  by integrate time HEAD sat at 4729 after WI-292/294/295/299. Resolved to the
+  **actual integrated count 4791**, keeping **both** rationale chains. Two stale
+  stamps on one row is the strongest evidence yet for WI-289.
+
+**The critique findings did not gate this.** REVIEW-A (`OPENAI-TERRA`,
+non-Anthropic) had driven a live keyboard probe — click / Left-Right wraparound /
+Up-Down / Home-End / Space / Enter — with exactly one selected tab, one visible
+panel, and one `tabindex=0` at every transition; its lone finding was the
+critique itself. The CRITIQUE's two CHANGES-REQUESTED findings (A2,
+A4-boundaries) were pre-existing whole-document items this train never touched,
+and **both were separately ruled and closed** on 2026-07-24/25 (A2 → LLR-101/
+TC-104; A4-boundaries retired as not-a-defect). So the attestation was of the
+*dispatch*, not a waiver.
+
+### The WI-097 defect the smoke tier could not catch
+
+The full suite — run because integrating a train is a slice close, not a
+mid-slice commit — failed on
+`test_check_privacy.py::test_repo_sweep_fresh_scaffold_green_then_seeded_leak_red`:
+
+    docs/kit-license:207: [global git name] Peter Johnson
+
+**Real, and shipped-to-every-adopter if missed.** The Apache appendix's
+`Copyright 2026 Peter Johnson` line rode the license text into
+`docs/kit-license`, so **every privacy-checked downstream scaffold would have
+red-flagged the kit's own license.** The commit-bar smoke tier drops the
+scaffold-heavy modules by design, so nothing before the full suite could see it.
+
+The fix keeps both properties rather than trading one away:
+
+- The **License instrument carries no personal name** — restored to the stock
+  Apache appendix placeholder (`Copyright [yyyy] [name of copyright owner]`),
+  which is also the conventional Apache-2.0 shape and keeps the file diffable
+  against upstream. Real attribution lives in the root `NOTICE`, which is not
+  copied into scaffolds.
+- **§4(d) attribution still travels**, on **one** line of the generated
+  `docs/kit-license` header, marked `privacy-ok`. A real name there is a *legal
+  requirement*, not a leak — which is exactly what that marker is for — and
+  because the License body now has none, the marker stays a single auditable
+  exception instead of becoming a habit.
+
+`test_scaffold_records_the_kit_license_and_its_scope` now asserts both halves:
+exactly one attribution line, marked; and no personal name in the instrument.
+
+**Ratchets:** `bootstrap.py` 1976 → 1986 (the attribution header + the comment
+saying why the marker is legitimate); `gen_trajectory.py` 4729 → 4791 (the
+tablist). Both reviewed bumps, reasons stamped above their numbers.
+
+**Verified:** full suite **1462 passed, 54 skipped** (435 s).

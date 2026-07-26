@@ -653,6 +653,8 @@ Contracts (interfaces): IF-011, IF-024, IF-052, IF-056, IF-071
 | `spine_stats(root)` | Definition-maturity numbers. 'Definition completeness' = SRs marked |  |
 | `project_vision(root)` | One-line vision: the README `PROJECT-VISION:` tag (the kit's canonical |  |
 | `project_name(root)` | The project's display name — the README's first H1, else the folder name. |  |
+| `tab_button(tab, label)` | One dynamically-added dashboard tab as a WAI-ARIA `role="tab"` button | SR-052 |
+| `tab_panel_open(pid)` | Opening `<section>` tag for a dynamically-added tab panel (WI-273, | SR-052 |
 | `dag_svg(wis)` | The work-item DAG as one plain SVG string + a details dict for the panel. |  |
 | `sw_graph(root, mods)` | The How-SW interface graph as one plain SVG string, or None when no IF |  |
 | `sw_containment(root, mods)` | The containerized How-SW top view as a Simulink-style drill (SR-090..SR-092, | SR-090, SR-092 |

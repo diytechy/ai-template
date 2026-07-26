@@ -1,0 +1,91 @@
+# agent-loop session log — written by scripts/agent_loop.py
+# session: 004
+# date: 2026-07-23 06:57
+# train: 3-g3-WI-273-b45e
+# base: 747f1529c206
+# phase: BUILD
+# wi: WI-273
+# model: opus
+# guardrails:
+# outcome: BLOCKED
+# commits:
+# tokens:
+# cost-usd:
+# wall-secs:
+# api-secs:
+# turns:
+# ttft-secs:
+# cache-read:
+# cache-create:
+# effort:
+# fast:
+# prompt-chars:
+# exit-code: 0
+# ---
+WI-273 rework session. REVIEW-A (session 003, gpt-5.6-terra / OPENAI) returned
+`CHANGES-REQUESTED findings=1`. The single finding is not a code defect — it is
+that SR-052's MANDATORY independent accessibility acceptance is UNCOVERED:
+
+  [MAJOR] gen_trajectory.py:2278 -> this SR-052 dashboard render change has no
+  fresh, family-heterogeneous rubric critique ... `check_trajectory --strict`
+  reports `perceptual-stale SR-052;SR-053;SR-054` -> add and pass a fresh
+  `docs/reviews/*-CRITIQUE.md` against `docs/rubrics/dashboard-accessibility.md`
+  for the generated current artifact before integration -> @owner
+
+## Confirmed live gate state (this tree, HEAD d9146e6)
+
+`python project-trajectory/scripts/check_trajectory.py --root . --strict` →
+
+  ERROR - perceptual-stale SR-052;SR-053;SR-054 (Verification=Critique) last
+  judged by docs/reviews/112-CRITIQUE.md but the dashboard render surface changed
+  after it (project-trajectory/scripts/gen_trajectory.py) — re-run the dashboard
+  critique against the current render (the shoot.mjs matrix) and record a fresh
+  docs/reviews/*-CRITIQUE.md
+
+(The other two --strict errors — WI-275 `done` id in status.md, and R-F on
+docs/specs/WI-275.md — are pre-existing base coordination truth from the WI-275
+integration; they read only status.md + the registry, neither authored by
+WI-273, and are the integrator's status.md regen to reconcile. Not this WI.)
+
+## Why this worker cannot clear it (the block)
+
+SR-052 acceptance is explicit: "A fresh **family-heterogeneous** CRITIQUE session
+judging the generated dashboard against docs/rubrics/dashboard-accessibility.md
+... returns APPROVE citing numbered anchors." SR-084 makes that dispatch a
+COORDINATOR obligation ("trigger a fresh family-heterogeneous Critique session"),
+and the archived parallel-dispatch contract §8 keeps "family heterogeneity ...
+rules in force," with §10 placing the CRITIQUE phase in the serial coordinator
+pass, NOT a parallel build-out lane.
+
+The builder (session 002, commit 912356b) was ANTHROPIC/Claude Opus and recorded
+in its own commit body: "As the Claude build worker I cannot self-certify that
+independent verdict." This rework worker is ALSO ANTHROPIC (claude-opus-4-8). A
+CRITIQUE I author would be the SAME family as the implementer, so it does NOT
+satisfy the family-heterogeneity requirement SR-052/SR-084 and the rubric all
+mandate. The `perceptual-stale` check is git-time only, so a self-authored
+CRITIQUE file WOULD mechanically clear the check — but that is precisely the
+"warns get IGNORED by autonomous agents" failure the owner's 2026-07-20
+fail-closed ruling exists to prevent: a false green that misrepresents the SR-052
+acceptance as met when the required independent, cross-family judgment never ran.
+The finding's `-> @owner` tail confirms the remedy is coordinator/owner-scoped,
+not worker-scoped.
+
+REVIEW-A found NO code defect in the ARIA tablist implementation (912356b), so
+there is no in-scope build work to advance here — the only outstanding item is
+the acceptance-critique dispatch, which a Claude worker cannot perform (no access
+to a non-Anthropic provider route from this lane).
+
+## Remedy (for the coordinator / owner)
+
+Dispatch a fresh CRITIQUE-phase session on a **non-ANTHROPIC family** — from the
+enabled set (docs/agents-enabled) that is OPENAI (Sol/Terra/Luna) or OPENCODE
+(Kimi/Grok), strong tier — judging the CURRENT generated PROJECT_STATE.html
+against docs/rubrics/dashboard-accessibility.md (anchors A1 keyboard
+reachability, A2 accessible names, A3 no-color-alone, A4 contrast), recorded as
+the next-numbered docs/reviews/NNN-CRITIQUE.md. On APPROVE committed after the
+render-surface change, `perceptual-stale` clears and WI-273 can integrate; on
+CHANGES-REQUESTED the named anchor failures return to a build worker as
+concrete, fixable findings.
+
+No product/registry/coordination-truth files were edited by this session; only
+this evidence log was added.
