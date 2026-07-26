@@ -13893,7 +13893,21 @@ at **SN=25 SR=110 LLR=112 TC=115** orphans=0 integrity=0, verified-mechanized
 95; `check_docs --stale` **OK — 262 docs, 774 links, 0 broken**;
 `check_trajectory --strict` back to the pre-session baseline — the single
 owner-parked `perceptual-stale` error (naming `SR-054` only) plus the
-pre-existing `WI-308` SpecRef WARN, with the four SR-054 amendment warns
-cleared by re-affirmation. Dashboard/OKF/status/gate regenerated; derived gate
+pre-existing `WI-308` SpecRef WARN, with the SR-054 amendment warns cleared.
+
+**Correction to the sentence above, and a second trap.** The warns did **not**
+clear *because* the rows were re-affirmed — they clear because the touched rows
+land in the **same commit** as the amended SR row, so neither blame time is
+strictly newer. Before committing, the signal is unstable: `_blame_row_times`
+reads the working tree, so an uncommitted row blames as "Not Committed Yet" at
+*wall-clock now*, and because the SR registry is blamed after the WI registry,
+sub-second jitter alone re-fired the warn for `WI-314`/`WI-315` after the edits
+had cleared it. **Judge this checker post-commit, not pre-commit.** The
+re-affirmation edits were still the right call — `WI-314` carried a residue
+statement the ruling made false — but they are not what silenced the warn, and a
+future session that amends an SR without touching its citing rows will see the
+warn persist, correctly.
+
+Dashboard/OKF/status/gate regenerated; derived gate
 **G3** all phases, basis unchanged. Registry: **313 rows, 295 done, 3 retired,
 9 deferred, 6 queued** (WI-305/306/307/308/314/315).
