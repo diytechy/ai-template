@@ -1,8 +1,11 @@
 # Wrap-up plan — closing out the template
 
 **Purpose.** A resumption guide for finishing this repo's open work in a later
-session. Written 2026-07-25; revised same day after a session that dispatched
-two fresh critiques and closed WI-292/294/295/299.
+session. Written 2026-07-25; revised 2026-07-26 after the WI-316 session — the
+`Modified` re-attest marker landed, the first re-attest window is OPEN, and the
+old §3/§4/§7 content (OI-4/OI-8 unruled; WI-300/272/273/278/065/062 open) is
+all superseded: those are done, ruled, or retired. This revision replaces them
+with the live wrap-up sequence.
 
 **This file is a POINTER, not a source of truth.** [status.md](status.md) is the
 forward-only working surface, [work-items.csv](requirements/work-items.csv) is the
@@ -14,19 +17,32 @@ this file only adds what they don't carry — a **sequencing recommendation** an
 
 ## 1. Where the repo actually stands
 
-Read the generated block at the top of [status.md](status.md) for live numbers. As
-of writing: derived gate **G3**, spine SN=25 SR=110 LLR=105 TC=108, `drafts=0`.
+Read the generated block at the top of [status.md](status.md) for live numbers.
+As of 2026-07-26 (branch `dualplan-routing-fix` @ `d09b8d0`, NOT pushed):
+spine SN=25 SR=110 LLR=112 TC=115, `drafts=0`, **`modified=4`**.
 
-**`check.py --gate G3 --jobs 0` is currently green — RESULT: PASS, all 17 steps** —
-full suite 1502 passed / 6 skipped, 92.15% coverage. This is a fresh green, not a
-standing one: it will **re-red the moment `gen_trajectory.py` changes again** (see
-§2) — which WI-300, WI-272, WI-305, WI-306, and WI-307 all do. Don't be surprised
-by it; budget a re-critique with the next render-touching commit.
+**The derived gate reads G2 DELIBERATELY — do not "fix" it.** This is the
+WI-316 `Modified` re-attest window (canonical semantics: process.md §7), not a
+regression: SR-049/052/053/054 carry `Status=Modified` (post-attestation
+amendments awaiting the owner sitting), per-phase `1=G2;3=G2`. The sitting
+flips each row `Modified`→`Verified` (bless) or →`Planned` (evidence
+invalidated) in a reviewed commit and **G3 re-derives on its own** — no checker
+edits. Sitting inputs, both committed: the generated pending block in
+[open-items.md](open-items.md) (one line per Modified SR) and the before/after
+brief [ratify/2026-07-26-reattest.md](ratify/2026-07-26-reattest.md)
+(regenerate: `trace.py --ratify modified`; a pre-regime streak needs
+`--since <rev>`). While the window is open the harness bar is the **G2 bar**
+(the G3-only steps drop out) — don't let it sprawl.
 
-**Environment note (still true):** until 2026-07-25 the G3 harness had never been
-runnable on the owner's machine (`.venv` was Python 3.9.6, below the kit's own 3.11
-floor). That is fixed. Treat any pre-2026-07-25 "all passing" claim with that
-caveat — it was a *partial* run.
+The last full-suite run: **1557 passed, 7 skipped**; `check.py` at the derived
+gate 5/6 PASS, the sole red the owner-parked `perceptual-stale` on SR-054
+(§2). The `RE-ATTESTATION PENDING` commit-message convention is **retired** —
+the marker is registry state now, the `--staged` hook warn polices the write
+side, and `derive_gate`'s basis line counts it (`modified=N`).
+
+**Environment note (still true):** until 2026-07-25 the G3 harness had never
+been runnable on the owner's machine. Treat any pre-2026-07-25 "all passing"
+claim as a partial run.
 
 ## 2. The perceptual gate: how it actually works (read this before touching gen_trajectory.py)
 
@@ -65,65 +81,56 @@ entirely once its perceptual residue is empty. See §4.
 
 ## 3. Open owner decisions (nobody else can make these)
 
-Unchanged this session — still open, still need the owner:
+Revised 2026-07-26. OI-4 (Apache-2.0) and OI-8 (hosted CI on every branch
+push) are **ruled** — rulings in [log.md](log.md)'s Decisions. WI-273 is
+**attested and integrated**. What remains:
 
-| | Subject | State |
+| | Subject | State / recommendation |
 |---|---|---|
-| **OI-4** | WI-097 — LICENSE + public/private intent | No recommendation possible; needs your intent first. **Blocks any public release** (review finding H-3). |
-| **OI-7** | WI-123 — review cadence | Recommendation: wait for evidence. Per-slice review just caught a real defect this session (see §5) — that's evidence *against* relaxing, if anything. |
-| **OI-8** | WI-278 — branch integration & CI-on-branch | **Not yet ruled** — recommendation is open a PR. WI-278 is now `queued` (2026-07-25) so the build is ready to go, but the owner should still bless the approach before/while it lands. |
-
-Full briefs: [open-items.md](open-items.md).
+| **Sitting** | Re-attest the `Modified` rows (§1) | **Recommended: hold ONE sitting at the END of the wrap-up sequence (§7)** — the render WIs in §4 will re-flip SR-054, and the phase-cadence rule batches spine work into a single sitting. SR-054's flip should FOLLOW the fresh critique (its `Verified` rests on critique evidence; blessing it while `perceptual-stale` is red is blessing stale evidence). SR-049/052/053 rest on green tests and could flip any time — but one sitting covers all. |
+| **Queue scope** | The six queued WIs (§4) | Build (launch `agent-resume`), or defer/retire to shrink the wrap-up. Note the incentive: WI-305/306/307 fix exactly the anchors (T1/T2/T7) that failed 119-CRITIQUE — landing them is what makes the final critique's APPROVE plausible. |
+| **OI-7** | WI-123 — review cadence | Parked by its own recommendation. For a true wrap-up, rule it: the evidence (per-slice adversarial review caught real defects on WI-297, WI-313, and WI-316 — three sessions running) argues **keep per-slice; retire WI-123**, which empties the hand-authored open-items surface. |
+| **WI-061/063** | Archive-anchored deferred rows | Re-specify against live homes or `retired`; low stakes, but a wrapped registry shouldn't carry specs pointing into the archive. |
+| **Publish** | Push → CI → merge-to-`main` | `push-policy: human`. Safe order per the OI-8 ruling: push the branch FIRST, let hosted CI (Linux+Windows+macOS) run the first genuinely independent-environment validation this branch has ever had, then merge and push `main`. Separately: the unpushed `guardrails-fable-method` branch (WI-213/214) still awaits integrate-or-drop. |
 
 ## 4. The active queue
 
-Generated order lives in status.md's **Ready frontier**. Current shape:
+Six rows, generated order in status.md's **Ready frontier**:
 
-- **WI-300** (`P1`, strong, spine) — the (f) decomposition, **partially done this
-  session**. What landed: U5 (WI-292), U3 (WI-294), U1 (WI-295), and T5 (WI-299)
-  are each fixed + tested + bound to a new child LLR/TC
-  (LLR-102..105/TC-105..108). **What's still open, and who owns it:**
-  - **SR-053 → `Verification=Test`** needs **U2** (one colour vocabulary) and
-    **U4** (one interaction idiom) bound too. Both anchors **already pass** —
-    they're structurally guaranteed by the shared `STATUS_FILL`/`TIER_FILL`/etc.
-    dicts and the shared `_drill_layer_svg` emitter — but neither has a
-    dedicated test or child LLR/TC. **No defect WI owns this**; it's net-new
-    test-authoring that only WI-300 itself can close. Once bound, retire the
-    coarse `LLR-054`/`TC-054` and flip `SR-053`.
-  - **SR-052 → `Verification=Test`** needs **A1** (blocked — WI-273 needs your
-    attest/ratify, see below), **A3** (no info by colour alone — likely already
-    true, needs a test), and **A4's broader arithmetic core** (every text/fill
-    pair, not just the ring WI-299 bound) — none of these three have a child
-    LLR/TC yet. A2 is done (`LLR-101`/`TC-104`, delivered by WI-297 earlier).
-  - Spec of record: [specs/WI-300.md](archive/specs/WI-300.2026-07-26.md) (its per-anchor pass
-    predates this session's builds — read status.md/log.md for what's actually
-    landed, not the spec's original estimate table).
-- **WI-305 / WI-306 / WI-307** — new, filed from `119-CRITIQUE.md` findings no
-  existing WI covered: no next-work surface reachable in one tab switch (T1), the
-  What/landing tab doesn't start-collapsed like the other three tabs (T2), and two
-  SVG emitters clip/force sideways-scroll at their declared widths (T7, both a
-  mobile How-SW case and a **desktop-width** What-icicle case). None are gated on
-  anything; all three touch `gen_trajectory.py` so budget a re-critique.
-- **WI-272** — dashboard work-item status fidelity (preserve `deferred`/`blocked`
-  instead of rewriting both as `queued` in the UI). Independent of the critique
-  chain; not gated on WI-300.
-- **WI-273** — `blocked`. Its code is proven sound (composed, green, both a
-  non-Anthropic REVIEW-A and CRITIQUE already ran against it) — it's blocked
-  purely on your **attest/ratify** of that dispatch (see
-  [open-items.md](open-items.md)'s generated Pending section). Once ratified it
-  unblocks on its own; nothing to build.
+- **WI-308** (quick, non-render) — triage the 22 dangling doc refs WI-062
+  exposed, then wire `[step:doc-refs]` into `docs/stack.ini`. Independent of
+  everything below; can land any time without re-redding the perceptual gate.
+- **WI-305 / WI-306 / WI-307** (render) — the 119-CRITIQUE defects: no
+  next-work surface in one tab switch (T1), the landing tab not
+  start-collapsed (T2), SVG emitters not reflowing at declared widths (T7 —
+  one mobile case, one desktop case). All touch `gen_trajectory.py`.
+- **WI-314** (render) — bind SR-054's T6 theme-lock (mechanizable, residue
+  none) per the option-(f) pattern.
+- **WI-315** (render, gated behind WI-305) — bind T1's reworded operational
+  bar; its spec demands the guard be proven against the rendered artifact with
+  real registry data (the zero-active-rows fixture that fooled a structural
+  check).
 
-**Hard constraint, harness-enforced:** a child LLR/TC **cannot** land ahead of its
-test behind `Status: Draft`. `Draft` escapes `--require-verified`, but
-`derive_gate.py` returns **G0** for a draft row — one draft drops the gate off G3.
-Tests first, flip second, never the reverse. (This bit a first attempt this
-session in a different way: inserting a new per-node attribute *in the middle* of
-an existing attribute string broke three unrelated tests that asserted attribute
-*adjacency* — e.g. `data-tier="phase" data-descend="..."` had to stay literally
-adjacent. If you add a new inline attribute to a shared emitter, append it
-**last**, after everything existing tests might assert about the tag's shape.)
+**Every render row will re-flip SR-054 `Modified` when it lands** (the
+amend+flip same-commit rule) — expected, and why the sitting comes last (§7).
+
+**The batching constraint (learned the hard way 2026-07-24 — do not replay
+it):** if these run through the PARALLEL dispatcher, each render train
+separately needs a CRITIQUE APPROVE at its reviewed head to integrate
+(WI-243/WI-260, fail-closed), and APPROVE requires EVERY anchor — but
+T1/T2/T7 only pass once ALL THREE defect fixes have landed. Three separate
+trains therefore deadlock exactly the way WI-272/273 did (each held by
+anchors it never touched). **Batch the render WIs into ONE train or one
+attended session, and dispatch ONE critique after the last render commit.**
 
 ## 5. Deferred backlog — review, and actions taken 2026-07-25
+
+> **Delta 2026-07-26:** everything below stands as the historical record; the
+> live deltas since: WI-278/WI-062/WI-065 are **done** (no longer queued),
+> OI-4/OI-8 are **ruled**, WI-097 is **done** (Apache-2.0 landed), and the
+> WI-123 evidence now includes a third adversarial round (WI-316: 8 confirmed
+> findings, 1 HIGH). The keep-deferred table is unchanged except WI-097 (done)
+> and WI-123 (rule it — §3).
 
 Reviewed 2026-07-25 (see the reasoning that drove each call below); **owner
 acted on all four recommendations the same day** — WI-278/WI-062/WI-065 are now
@@ -242,21 +249,48 @@ it). Not itself evidence for or against WI-280, but the ratchet's discipline
 - **A `DEGRADED` same-family critique is legal — dispatch it rather than stalling**
   on "no non-Anthropic access." See §2. Still reach for a genuinely different
   provider first when one is available; record which you used.
+- **Amend a spine row → flip it `Modified` in the SAME commit** (process.md §7;
+  the `--staged` hook warn polices it, suppressed when the owning SR flips in
+  the same staged set). The brief's default baseline walk DEPENDS on this rule
+  — a streak that amended while `Verified` needs `--ratify modified --since
+  <rev>`, and an unresolvable rev now hard-fails rather than fabricating.
+- **A scripted CSV cell edit that introduces a comma into an UNQUOTED cell
+  silently shifts every later column** — this bit SR-049 during WI-316
+  (`Status` read `Test`). Re-parse the row with the `csv` module immediately
+  after every scripted edit; grep is not a parse.
+- **Judge the backlog-staleness warns POST-commit** — pre-commit, blame times
+  come from the working tree at wall-clock now, and sub-second jitter re-fires
+  warns that same-commit landings actually clear.
+- **An open `Modified` window suppresses later chain-amendment warns for its
+  SR** (review judgement J2) — the brief's baseline still captures them, but
+  the write-time discipline is off for the duration. One more reason the
+  window should be short.
 
-## 7. Suggested order
+## 7. Suggested order (revised 2026-07-26 — the wrap-up sequence)
 
-1. **WI-278** — get CI running on the branch. Everything else is safer once an
-   independent environment is checking it.
-2. **WI-065** — reconcile the `Verifies` vocabulary before adding more child
-   LLR/TC bindings on top of it.
-3. **WI-300's remaining binding** — U2 + U4 (SR-053, no defect, pure test-authoring)
-   and A3 + A4-core (SR-052). This is the critical path to both SRs flipping to
-   `Test` and the seven render rows leaving the critique chain for good.
-4. **Ratify WI-273** (owner attest/ratify only — the code and both non-Anthropic
-   verdicts are already in) — unblocks on its own once SR-052 flips or on your say-so.
-5. **WI-305 / WI-306 / WI-307** — the three new render-usability fixes from
-   119-CRITIQUE, each closing by binding like the WI-292/294/295/299 set did.
-6. **WI-272** — dashboard status fidelity.
-7. **WI-062** — de-noise the doc-ref check.
-8. Rule **OI-4** (LICENSE) whenever your public/private intent settles, and
-   **OI-8** (CI strategy) whenever you're ready to bless WI-278's approach.
+The hard sequencing constraint: **the final critique must post-date the LAST
+render-touching commit** (`perceptual-stale` is git-time-based — any later
+`gen_trajectory.py`/`shoot.mjs` commit re-reds it, wasting the dispatch), and
+**the sitting comes after the critique** (SR-054's flip blesses critique
+evidence). WI-308 is the only queue row exempt — non-render, land it any time.
+
+1. **Launch `agent-resume`** → WI-308, then the render set
+   (WI-305 → WI-315, WI-306, WI-307, WI-314) **batched per §4's constraint**
+   — one train or one attended session, no per-train critiques.
+2. **Dispatch ONE render critique** against the last render commit (the
+   `render-dashboard-critique` skill; §2's provider rules). This clears
+   `perceptual-stale` — and with T1/T2/T7 fixed by step 1, APPROVE is the
+   expected verdict for the first time.
+3. **Hold the ONE owner sitting**: read the regenerated brief
+   (`trace.py --ratify modified`; `--since` for the pre-regime streak), flip
+   every `Modified` row →`Verified`/`Planned` in a reviewed commit. G3
+   re-derives all phases on its own.
+4. **Run `check.py --gate G3 --jobs 0`** — the target is all-17 green with no
+   parked red, for the first time with nothing waived.
+5. **Rule OI-7** (retire WI-123 per §3) and disposition **WI-061/063** — the
+   open-items surface and the archive-anchored deferred rows go to zero.
+6. **Push the branch** → hosted CI validates on three OSes → **merge to
+   `main`** and push. Decide `guardrails-fable-method` in the same sitting.
+
+After step 6: 0 queued, 0 blocked, 0 `Modified`, open-items empty, gate G3,
+CI green on an independent machine — wrapped, in this repo's own terms.
