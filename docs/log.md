@@ -13173,3 +13173,24 @@ ignore it took this WI to undo. It belongs after WI-308's triage, and WI-308 say
 so.
 
 **Verified:** `tests/test_check_doc_refs.py` **13 passed**; `ruff` clean.
+
+**Census churn caught at slice close (WI-062 tail).** `check_dupes` reported
+three "new" duplicate blocks. They are not new: the block is `_utf8_console`,
+the canonical F5 example the census header itself names, reached through the
+`return` line above it — and WI-062 changed that neighbouring line
+(`return out` -> `return out, untraced`), moving the block's token window and
+therefore its fingerprint. The same three pairs are already sanctioned under
+their old hashes. Recorded consciously per the census's own rule, with that
+reasoning written into the file. This is **not** the "reach for a sanction to
+green a step" move the standing rule forbids: no new duplication was written and
+none was accepted. Verified by running `check_dupes` at HEAD~1 (0 findings) and
+reading the block.
+
+**Also a local-tooling hazard worth naming:** a helper script that rewrites a
+`.py` with Python's `write_text` on Windows produces **CRLF**, and `check_dupes`
+fingerprints *tokens*, so a CRLF working-tree copy voids every census entry for
+that file — 22 phantom findings, none of them in any commit. `.gitattributes`
+pins these files to LF, so the committed content was always clean. If `dupes`
+reds after a scripted edit, check line endings before believing it.
+
+**Verified at slice close:** full suite **1520 passed, 7 skipped** (474 s).

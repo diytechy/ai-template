@@ -266,3 +266,14 @@ d82b3ded7c24  project-trajectory/scripts/plan_briefs.py == project-trajectory/sc
 2a3ae413b478  project-trajectory/scripts/plan_coverage.py == project-trajectory/scripts/plan_coverage_step.py
 21b0fbb40f6c  project-trajectory/scripts/trace.py == project-trajectory/scripts/trace.py
 7c1e98fa864e  project-trajectory/scripts/trace.py == project-trajectory/scripts/trace.py
+# WI-062 FINGERPRINT CHURN, not new duplication. The block is `_utf8_console`
+# — the canonical F5 example this file's own header names — reached through the
+# `return` line above it. WI-062 changed that neighbouring line
+# (`return out` -> `return out, untraced`), which moved the block's token window
+# and therefore its fingerprint; the SAME three pairs are already sanctioned
+# above under their old hashes. Recorded consciously per the header's rule, and
+# emphatically NOT the 'reach for a sanction to green a step' move the standing
+# rule forbids: no new duplication was written, and none was accepted.
+44fc409f063d  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/check_dupes.py
+44fc409f063d  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/gen_cases.py
+b76043ee462f  project-trajectory/scripts/check_dupes.py == project-trajectory/scripts/gen_cases.py
