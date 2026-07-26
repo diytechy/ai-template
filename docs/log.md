@@ -12970,3 +12970,94 @@ stamp as the before-size.
 
 **Verified:** the three new tests pass and each fails against the reverted
 behaviour; `check_docs --stale` OK (258 docs, 763 links, 0 broken).
+
+
+## 2026-07-25 — WI-300 slice: U2 + U4 bound (SR-053's last two anchors) — and the flip is BLOCKED by residue the bindings themselves declared
+
+**SPINE CHANGE — LLR-106/107 + TC-109/110 added; RE-ATTESTATION PENDING.**
+
+U5/U3/U1 were bound by WI-292/294/295. This slice binds the two anchors no
+defect WI owned, which is why they had sat unbound: **U2** (one status/phase/
+type colour vocabulary) and **U4** (one interaction idiom per structure). Both
+already passed structurally — the work was decomposition and honest test
+authoring, not a fix. Except that U2 turned out to have a real defect.
+
+**U2 (LLR-106/TC-109) — and the defect the binding surfaced.** The core is
+single-sourcing: every concept's fill is *looked up* from a declared palette, so
+one concept cannot render two hexes because there is only one place a hex can
+come from. Written as a sweep for `#rrggbb` values that belong to neither a
+declared palette collection nor a `--token:#hex` theme definition, it
+immediately found one: the How-SW **`component`** badge was a bare `#475569`
+literal inside `cmp_block`. That vocabulary had four kinds and declared three,
+and — the part that matters — **the undeclared member was invisible to every
+check that reasons over the palette**: U5's collision sweep and `_ring_ink`'s
+enumeration both walk the dicts. A vocabulary is one vocabulary only if every
+member is *in* it. Fixed by moving it into `SW_NODE_FILL`.
+
+**U4 (LLR-107/TC-110).** Two node roles, each spelled one way in every emitter:
+an *identified* node (icicle `.cell`, flat-DAG `.wi`, knowledge `.knode`)
+carries `data-id`; a *detail-bearing* drill node (`.block`) carries
+`data-node`; both are made focusable the same way. Neither role ever carries the
+other's attribute. Per the ruling this is **attribute** parity, not runtime
+parity — proving two emitters' handlers *behave* alike needs a browser harness —
+and the LLR says so rather than over-claiming.
+
+**Both sweeps run over every emitter, and that was earned the hard way.** The
+first U4 draft read only the shipped dashboard and **passed while `data-id` was
+renamed to `data-key` in the knowledge emitter** — because a meta-repo's own
+dashboard never renders the flat `.knode` graph (it needs a ≤3-type OKF bundle;
+`with_bundle`'s four types earn the tiered drill instead). That is the A2
+adversarial review's lesson recurring exactly: *a document walk judges only the
+emitters its fixture happens to render.* Both tests now sweep the shipped
+artifact **plus six fixtures**, and U4 additionally asserts every declared node
+kind actually rendered — so the sweep cannot degrade into "whatever ran today".
+
+Four defect variants were replayed against the finished guards; all four fail,
+and both pass restored: the original undeclared-literal, an emitter inventing a
+hue, cells losing their shared focus mechanism, and the `data-key` rename that
+slipped past the first draft.
+
+### The finding: no SR can flip yet, and the reason is in our own registry
+
+The plan said bind the last anchors, then flip SR-052 and SR-053 to
+`Verification=Test`. **Reading the delivered bindings before flipping shows that
+is not currently true**, and the evidence is the `Detail` text of the children
+themselves. Every child LLR landed so far ends by delegating a residue upward:
+
+- **LLR-102 (U5):** "Whether a reader perceives a collision the identity check
+  misses (near-duplicate but non-identical hues) remains perceptual under
+  LLR-054/TC-054." **120-CRITIQUE independently reported exactly that residue as
+  live.**
+- **LLR-103 (U3):** "Whether a reader perceives the RESULT as uniform (spacing,
+  exact visual weight) remains perceptual under LLR-054/TC-054."
+- **LLR-104 (U1):** "Whether the resulting sizes read as visually uniform remains
+  perceptual under LLR-054/TC-054."
+- **LLR-101 (A2):** "Whether each control READS as well-named remains perceptual
+  under LLR-053/TC-053."
+
+The ruling's own rule is *"an SR keeps `Verification=Critique` only while a
+perceptual child remains under it."* By that rule, **SR-053 and SR-052 both
+still have one.** Flipping either now would retire a residue that a critic has
+confirmed is live, with nothing enforcing it — which the ruling names as "the one
+way this ruling fails."
+
+This is not a contradiction of the ruling; the ruling **anticipated it** and
+reserved the call: *"If the owner judges the narrowing too lossy, those two stay
+perceptual and SR-053 keeps a rubric — the scheme degrades gracefully."* What is
+new is that the residue is **wider than the U3/U4 narrowing the ruling
+discussed** — the builders wrote residue into *every* binding, including U5 and
+U1, where the spec's per-anchor pass had recorded "none".
+
+So the flip is an **owner decision**, not a build step, and it is now the only
+thing standing between the seven render rows and their exit from the critique
+chain. Recorded rather than taken: the mechanization is done and the binding is
+complete either way.
+
+**Ratchet:** `gen_trajectory.py` 4791 → 4802 (the documented four-entry
+`SW_NODE_FILL`; ten of eleven lines are the comment). Reviewed bump.
+
+**Verified:** full suite **1465 passed, 54 skipped** (475 s), plus the gate and
+ratchet re-stamps that run brought out; `trace --strict` clean at
+SN=25 SR=110 LLR=107 TC=110 orphans=0. **`perceptual-stale` is red again** —
+`gen_trajectory.py` changed after 120-CRITIQUE, as it does on every render
+commit; it clears with a fresh critique (wrap-up-plan.md §2).

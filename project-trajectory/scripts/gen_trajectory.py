@@ -854,7 +854,18 @@ def dag_svg(wis):
 # OKF_TYPE_FILL["System Requirement"] (a source module misread as an SR), file
 # `#7c3aed` = OKF_TYPE_FILL["Interface"], external `#64748b` = TIER_FILL["llr"].
 # Reassigned to hexes not used by STATUS_FILL/TIER_FILL/OKF_TYPE_FILL/PHASE_ACCENTS.
-SW_NODE_FILL = {"module": "#2563eb", "file": "#a21caf", "external": "#334155"}
+# WI-300 (U2 core): `component` used to be a bare `#475569` literal inside
+# `cmp_block`, so the How-SW vocabulary had four kinds but declared three — the
+# one kind whose colour lived outside the dict was invisible to every check that
+# reasons over the vocabulary (U5's collision sweep, `_ring_ink`'s enumeration,
+# and U2's own single-source rule). A vocabulary is only "one vocabulary" if
+# every member is IN it.
+SW_NODE_FILL = {
+    "module": "#2563eb",
+    "file": "#a21caf",
+    "external": "#334155",
+    "component": "#475569",  # slate — the neutral container badge (7.58:1 on #fff)
+}
 SW_COL_W = 168
 SW_COL_GAP = 64
 SW_ROW_H = 40
@@ -1073,7 +1084,7 @@ def sw_containment(root, mods):
             "title": cmp_label(cid),
             "body": "A CMP-### component: {} module(s) in it and its PartOf parts. "
             "Double-click to descend into its members and internal seams.".format(n),
-            "fill": "#475569",  # slate — the neutral container badge (7.58:1 on #fff)
+            "fill": SW_NODE_FILL["component"],
         }
         return {
             "key": "cmp:" + cid,

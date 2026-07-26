@@ -119,3 +119,5 @@ resource: "generated"
 | [TC-106](TC-106.md) | Generate the dashboard from a tiered fixture registry and a flat OKF bundle and assert: (… |
 | [TC-107](TC-107.md) | Generate the dashboard with the Process tab enabled (G2 gate) and assert --nhead is decla… |
 | [TC-108](TC-108.md) | Compute _ring_ink for every fill declared in STATUS_FILL/TIER_FILL/OKF_TYPE_FILL/SW_NODE_… |
+| [TC-109](TC-109.md) | Collect every #rrggbb literal declared in gen_trajectory's module-level palette collectio… |
+| [TC-110](TC-110.md) | Render every emitter, walk each node group, and assert per node kind: it carries tabindex… |

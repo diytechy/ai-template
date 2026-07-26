@@ -7,6 +7,7 @@ refuses to render an invalid registry, and stays vacuous when there is nothing t
 show. Each is pinned by running the real script over a minimal temp project.
 """
 
+import collections
 import re
 import shutil
 
@@ -2245,6 +2246,166 @@ def test_t1_hero_active_line_absent_when_nothing_is_active(tmp_path):
     make_repo(tmp_path, wis)
     assert gen(tmp_path).returncode == 0
     assert 'class="sub nowat"' not in html_of(tmp_path)
+
+
+# --- WI-300 / SR-053: the last two uniformity anchors get a child LLR + TC -----
+# U5/U3/U1 were bound by WI-292/294/295. U2 and U4 pass structurally but were
+# never BOUND, so the coarse `TC-054` critique kept re-judging them by eye. These
+# two tests are their cores.
+
+# Hexes that legitimately appear in the shipped document without being a concept
+# fill. Each entry names WHY, because the temptation when this test reds is to
+# widen the list rather than fix the emitter — and a widened allowlist is exactly
+# how a second colour vocabulary gets in.
+U2_NON_CONCEPT_HEXES = {
+    # `--ring`'s CSS fallback: the literal a browser uses when an emitter this
+    # repo has not written yet emits a node with no computed ring ink
+    # (_ring_ink's docstring states the degrade-gracefully intent).
+    "#f59e0b",
+    # Prose. The palette-rationale paragraph the dashboard renders NAMES retired
+    # hexes to explain why they were retired; it paints nothing.
+    "#6d28d9",
+}
+
+
+def _every_emitter_document(tmp_path):
+    """`[(label, html), ...]` covering EVERY emitter that really renders.
+
+    The A2 adversarial review's lesson, generalized: a document walk can only
+    judge the emitters its fixture happens to render, and it measured the then-
+    current fixture at 2 of 6 — the one genuine violation lived in an emitter
+    that never rendered, so the test passed while the defect shipped. A
+    whole-document uniformity check has exactly that failure mode, so it sweeps
+    the union: the artifact this repo ships (the loops diagram, the How-SW
+    graph, the tiered drill) plus fixtures for the emitters a meta-repo's own
+    dashboard does not exercise. Note BOTH knowledge fixtures — `with_bundle`'s
+    four OKF types earn the tiered drill, so only `_flat_bundle` (<= 3 types)
+    renders the flat `.knode` concept graph, and a sweep with just the former is
+    blind to that emitter.
+    """
+    docs = []
+    shipped = ROOT / "PROJECT_STATE.html"
+    if shipped.is_file():
+        docs.append(("shipped", shipped.read_text(encoding="utf-8")))
+    for label, build in (
+        ("flat-dag", lambda p: make_repo(p)),
+        ("knowledge-tiered", lambda p: with_bundle(p)),
+        ("knowledge-flat", lambda p: _flat_bundle(p)),
+        ("tiered-drill", lambda p: tiered_repo(p, TIER_UNION_WIS)),
+        ("how-sw", lambda p: containerize(p)),
+        ("process", lambda p: with_gate(p, "G2")),
+    ):
+        root = tmp_path / label
+        root.mkdir(parents=True, exist_ok=True)
+        build(root)
+        assert gen(root).returncode == 0, label
+        docs.append((label, html_of(root)))
+    return docs
+
+
+def test_u2_every_concept_fill_comes_from_one_declared_vocabulary(tmp_path):
+    """dashboard-uniformity.md U2 (WI-300 core): one status/phase/type colour
+    vocabulary means every concept's fill is looked up from a declared palette —
+    so the same concept CANNOT render two hexes, because there is only one place
+    the hex can come from.
+
+    The defect this catches is an emitter painting a concept with a LITERAL, and
+    a literal is invisible to every check that reasons over the palette dicts
+    (U5's collision sweep and `_ring_ink`'s enumeration both walk the DICTS).
+    The How-SW `component` badge was exactly that — a four-kind vocabulary
+    declaring three, with the fourth a bare `#475569` inside `cmp_block`.
+    """
+    gt = load_script("gen_trajectory")
+
+    declared = set()
+    for name in dir(gt):
+        if not name.isupper():
+            continue
+        value = getattr(gt, name)
+        members = value.values() if isinstance(value, dict) else value
+        if isinstance(value, (dict, tuple, list)):
+            declared |= {
+                v.lower() for v in members if isinstance(v, str) and v.startswith("#")
+            }
+    assert len(declared) >= 15, "vocabulary lookup found nothing: {}".format(declared)
+
+    for label, html in _every_emitter_document(tmp_path):
+        # A `--token:#hex` definition is the theme layer (surfaces, text,
+        # borders), not a concept encoding — declared once in the CSS by design.
+        tokens = {
+            h.lower() for h in re.findall(r"--[\w-]+:\s*(#[0-9a-fA-F]{3,8})", html)
+        }
+        stray = {
+            h.lower()
+            for h in re.findall(r"#[0-9a-fA-F]{6}\b", html)
+            if h.lower() not in declared
+            and h.lower() not in tokens
+            and h.lower() not in U2_NON_CONCEPT_HEXES
+        }
+        assert not stray, (
+            "in the {} render, hex(es) belong to no declared vocabulary and no "
+            "theme token — an emitter is painting a concept with a literal, "
+            "which is a second colour vocabulary by another name: {}".format(
+                label, sorted(stray)
+            )
+        )
+
+
+def test_u4_one_interaction_idiom_per_node_role_across_every_emitter(tmp_path):
+    """dashboard-uniformity.md U4 (WI-300 core): one interaction idiom per
+    structure, narrowed (per the ruling) to ATTRIBUTE parity — runtime behaviour
+    parity would need a browser harness.
+
+    Two roles exist and each must be spelled ONE way everywhere:
+
+    * an **identified** node (icicle `.cell`, flat-DAG `.wi`, knowledge `.knode`)
+      advertises its registry id through `data-id`;
+    * a **detail-bearing** drill node (`.block`, in both the When and How-SW
+      drills) advertises its detail-map key through `data-node`.
+
+    And every node of either role is made focusable the same way — `tabindex="0"`
+    on the group. The failure this forbids is a new emitter inventing `data-key`
+    or a hand-rolled focus mechanism: two spellings of one interaction, which is
+    what U4 exists to catch.
+    """
+    roles = {
+        "cell": "data-id",
+        "wi": "data-id",
+        "knode": "data-id",
+        "block": "data-node",
+    }
+    seen = collections.Counter()
+    for label, html in _every_emitter_document(tmp_path):
+        for tag in re.findall(r"<g\b[^>]*>", html):
+            cls = re.search(r'class="([^"]*)"', tag)
+            if not cls:
+                continue
+            kind = cls.group(1).split()[0]
+            if kind not in roles:
+                continue
+            seen[kind] += 1
+            assert 'tabindex="0"' in tag, (
+                "in {}, a {} node is not focusable the shared way: {}".format(
+                    label, kind, tag[:120]
+                )
+            )
+            assert roles[kind] + '="' in tag, (
+                "in {}, a {} node does not carry its role's declared attribute "
+                "{}: {}".format(label, kind, roles[kind], tag[:120])
+            )
+            # ...and does not ALSO carry the other role's attribute, which would
+            # be one node addressed two ways.
+            for attr in set(roles.values()) - {roles[kind]}:
+                assert attr + '="' not in tag, (label, kind, attr, tag[:120])
+    # EVERY declared node kind must actually have rendered. Without this the
+    # sweep degrades silently into "the emitters this fixture happened to run"
+    # — the exact vacuity the A2 review caught, and the reason a `knode`
+    # regression slipped past this test's first draft.
+    missing = sorted(set(roles) - set(seen))
+    assert not missing, (
+        "no node rendered for kind(s) {} — the sweep is blind to them, so it "
+        "cannot claim they share the idiom (seen: {})".format(missing, dict(seen))
+    )
 
 
 def test_u3_knowledge_edge_stroke_uses_the_shared_muted_token(tmp_path):

@@ -94,7 +94,14 @@ BASELINE = {
     # re-stamp-off-own-base conflict WI-289 tracks. Resolved to the ACTUAL
     # integrated count and keeping BOTH rationale chains rather than picking a
     # side. Reviewed bump, log 2026-07-25. Re-stamp downward with WI-280.
-    "gen_trajectory.py": 4791,
+    # +11 (4791 -> 4802), WI-300 (U2 core): SW_NODE_FILL grows from a one-line
+    # dict to a documented four-entry one, absorbing the `component` badge fill
+    # that had been a bare literal inside `cmp_block`. Ten of the eleven lines
+    # are the comment recording WHY an undeclared vocabulary member is a defect
+    # (it is invisible to U5's collision sweep and to `_ring_ink`'s enumeration
+    # alike) — the part a successor would otherwise inline straight back.
+    # Reviewed bump, log 2026-07-25. Re-stamp downward with WI-280.
+    "gen_trajectory.py": 4802,
     # +11 (3452 -> 3463), WI-284: _regenerate_disposition_artifacts also runs
     # `gen_trajectory.py --status` at integrate/blocked-disposition so a closed
     # id drops from the generated frontier automatically (and the disposition
