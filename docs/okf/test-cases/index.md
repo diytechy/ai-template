@@ -121,3 +121,7 @@ resource: "generated"
 | [TC-108](TC-108.md) | Compute _ring_ink for every fill declared in STATUS_FILL/TIER_FILL/OKF_TYPE_FILL/SW_NODE_… |
 | [TC-109](TC-109.md) | Collect every #rrggbb literal declared in gen_trajectory's module-level palette collectio… |
 | [TC-110](TC-110.md) | Render every emitter, walk each node group, and assert per node kind: it carries tabindex… |
+| [TC-113](TC-113.md) | Over the shipped dashboard plus seven fixture renders, collect every focusable element (t… |
+| [TC-114](TC-114.md) | Enumerate every declared colour vocabulary and compute pairwise CIE76 deltaE over all cro… |
+| [TC-115](TC-115.md) | Over the shipped dashboard plus seven fixture renders, assert each declared --w-*/--o-*/-… |
+| [TC-116](TC-116.md) | Over the shipped dashboard plus seven fixture renders, assert each declared scale step is… |

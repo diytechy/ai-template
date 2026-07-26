@@ -2224,6 +2224,96 @@ def test_u5_pairwise_deltae_holds_within_and_across_every_vocabulary():
     )
 
 
+# WI-312: the A2 residue ("whether each control READS as well-named"). Presence
+# was already checked; QUALITY was not, and quality is largely mechanical.
+#
+# SCOPE, corrected during the build and worth stating: A2 governs INTERACTIVE
+# elements and meaningful graphics. The first measurement counted every `<title>`
+# in the document and reported 57 bare-id names — but those sit on EDGE PATHS
+# (`<path class="wire"><title>IF-001</title>`), which are neither focusable nor
+# named graphics. A tooltip on a decorative connector is a usability nicety, not
+# an accessible-name defect, and asserting over it would have manufactured 57
+# findings that WCAG does not make. Measured over the right set, the real defect
+# was one: three drills each labelling their breadcrumb landmark "Breadcrumb".
+_BARE_ID = re.compile(r"(?:WI|SR|SN|LLR|TC|IF|CMP)-\d+")
+
+
+def _named_controls(html):
+    """`[(kind, name), …]` for every focusable element and role=img graphic."""
+    out = []
+    for m in re.finditer(r"<(g|svg|button|nav)\b([^>]*)>", html):
+        tag, attrs = m.group(1), m.group(2)
+        if not (
+            'tabindex="0"' in attrs or 'role="img"' in attrs or tag in ("button", "nav")
+        ):
+            continue
+        aria = re.search(r'aria-label="([^"]*)"', attrs)
+        if aria:
+            out.append((tag, aria.group(1)))
+            continue
+        tail = html[m.end() : m.end() + 400]
+        title = re.match(r"\s*<title>([^<]*)</title>", tail)
+        if title:
+            out.append((tag, title.group(1)))
+            continue
+        text = re.sub(r"<[^>]+>", "", tail.split("</" + tag + ">")[0]).strip()
+        out.append((tag, text))
+    return out
+
+
+def test_a2_every_control_name_is_present_and_not_a_bare_id(tmp_path):
+    """dashboard-accessibility.md A2 core, the QUALITY half (WI-312).
+
+    A name that is merely present can still be useless. Two rules that hold
+    everywhere: a control must HAVE a name, and that name must not be a bare
+    registry id — `IF-001` tells a screen-reader user nothing about what the
+    control is or does.
+    """
+    for label, html in _every_emitter_document(tmp_path):
+        controls = _named_controls(html)
+        # 10, not a bigger round number: the smallest fixture legitimately
+        # renders 18 controls, and a floor tuned to the largest render would
+        # fail honest small projects rather than catch a vacuous sweep.
+        assert len(controls) >= 10, "vacuous — {} found {} controls".format(
+            label, len(controls)
+        )
+        unnamed = [c for c in controls if not c[1].strip()]
+        assert not unnamed, (label, "controls with no accessible name", unnamed[:5])
+        bare = [c for c in controls if _BARE_ID.fullmatch(c[1].strip())]
+        assert not bare, (
+            "in the {} render, control(s) are named by a bare registry id, which "
+            "says nothing about what they are: {}".format(label, bare[:5])
+        )
+
+
+def test_a2_landmark_names_are_distinct(tmp_path):
+    """A2 quality, the uniqueness half (WI-312).
+
+    Scoped to LANDMARKS (`<nav>`), deliberately. A screen-reader user listing a
+    page's navigation regions hears their names as a flat list, so two called
+    "Breadcrumb" are indistinguishable — which is exactly what three drills
+    each emitting `aria-label="Breadcrumb"` produced.
+
+    NOT asserted document-wide: a descend control for the same container
+    legitimately appears in several drill layers, and only one layer is visible
+    at a time, so those repeats are the same control reached by different paths
+    rather than an ambiguity a reader ever faces.
+
+    Note this rule is carried mainly by the SHIPPED artifact: each fixture below
+    renders a single drill, so only a document with two or more navs exercises
+    it (the `< 2` skip). That is a real coverage limit — verified by reverting
+    the fix, which fails here only once the dashboard is regenerated.
+    """
+    for label, html in _every_emitter_document(tmp_path):
+        names = re.findall(r"<nav\b[^>]*aria-label=\"([^\"]*)\"", html)
+        if len(names) < 2:
+            continue
+        assert len(set(names)) == len(names), (
+            "in the {} render, navigation landmarks share a name — a reader "
+            "listing them cannot tell which is which: {}".format(label, sorted(names))
+        )
+
+
 def test_u1_process_tab_type_scale_matches_the_shared_tokens(tmp_path):
     """dashboard-uniformity.md U1 (WI-295, 119-CRITIQUE MINOR): the Process tab's
     "working loops" SVG (`.stgt`/`.stgn`/`.hooplab`/`.hubname`) used to hardcode

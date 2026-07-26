@@ -126,7 +126,12 @@ BASELINE = {
     # than a value spliced into the rect templates (splicing with `+` rebinds
     # .format to the last fragment — a real bug this WI hit and backed out).
     # Reviewed bump, log 2026-07-25. Re-stamp downward with WI-280.
-    "gen_trajectory.py": 4922,
+    # +6 (4922 -> 4928), WI-312 (A2 name-quality core): the three drills stop
+    # labelling their breadcrumb landmark `Breadcrumb` and derive a distinct
+    # name from the root crumb. One line of code; the rest is the comment on
+    # WHY a present, correct name can still be useless (a screen-reader user
+    # listing landmarks hears three identical entries). Reviewed bump.
+    "gen_trajectory.py": 4928,
     # +11 (3452 -> 3463), WI-284: _regenerate_disposition_artifacts also runs
     # `gen_trajectory.py --status` at integrate/blocked-disposition so a closed
     # id drops from the generated frontier automatically (and the disposition

@@ -2136,7 +2136,13 @@ def _render_drill(drill_id, root_id, root_crumb, layers):
     return (
         '<div class="drill" data-drill="{did}" data-root="{root}" '
         'data-root-crumb="{crumb}">'
-        '<nav class="crumbs" aria-label="Breadcrumb"></nav>'
+        # A2 name QUALITY (WI-312): three drills each render a breadcrumb, and
+        # all three used to be `aria-label="Breadcrumb"`. A screen-reader user
+        # listing the page's navigation landmarks then hears "Breadcrumb" three
+        # times with nothing to tell them apart — a name can be present, correct
+        # and still useless. The root crumb already names the view, so it makes
+        # each landmark self-identifying at no cost.
+        '<nav class="crumbs" aria-label="{crumb} breadcrumb"></nav>'
         '<div class="layers">{divs}</div></div>{script}'.format(
             did=esc(drill_id),
             root=esc(root_id),

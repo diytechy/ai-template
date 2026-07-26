@@ -118,3 +118,7 @@ resource: "generated"
 | [LLR-105](LLR-105.md) | Interactive-control contrast in both themes (T5 core) |
 | [LLR-106](LLR-106.md) | Single-sourced concept colour vocabulary (U2 core) |
 | [LLR-107](LLR-107.md) | One interaction idiom per node role (U4 core) |
+| [LLR-108](LLR-108.md) | Accessible-name quality, not merely presence (A2 residue) |
+| [LLR-109](LLR-109.md) | Pairwise deltaE floor across every vocabulary (U5 residue) |
+| [LLR-110](LLR-110.md) | Declared weight/alpha/corner tokens (U3 residue) |
+| [LLR-111](LLR-111.md) | Declared type scale, no raw font-size literals (U1 residue) |

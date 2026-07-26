@@ -13368,3 +13368,72 @@ both.
 **Verified:** dashboard suites **125 passed**; four reversions (all three
 original conflations plus a newly-introduced near-duplicate) fail the guard;
 restored, it passes and the source is byte-identical to its start.
+
+
+## 2026-07-26 — WI-312: the A2 residue mechanized — and the scope correction that matters more
+
+### The measurement was wrong, and finding out is the useful part
+
+WI-312 was filed on a measurement of **57 bare-id names and 14 duplicated names
+across 74 nodes, worst `contains → descend` ×39**. Building it showed that
+measurement counted **every `<title>` in the document** — and those names sit on
+**edge paths** (`<path class="wire"><title>IF-001</title>`), which are neither
+focusable nor named graphics.
+
+A2 governs **interactive elements and meaningful graphics**. A tooltip on a
+decorative connector is a usability nicety, not an accessible-name defect.
+Asserting over them would have manufactured 57 findings WCAG does not make, then
+"fixed" them — churn dressed as rigour.
+
+Measured over the set A2 actually governs: **zero empty names, zero bare-id
+names**, and **one** real defect — three drills each labelling their breadcrumb
+landmark `Breadcrumb`, so a screen-reader user listing navigation regions hears
+three identical entries and cannot tell which view they belong to. Fixed by
+deriving each label from its drill's root crumb: *Roadmap* / *Architecture* /
+*Concepts* breadcrumb.
+
+**Uniqueness is asserted for landmarks only, deliberately.** A descend control
+for the same container legitimately recurs across drill layers, and only one
+layer is visible at a time — those repeats are one control reached by different
+paths, not an ambiguity any reader faces. A document-wide uniqueness rule would
+have been easy to write and wrong.
+
+Three reversions fail the finished guards (the original triple-`Breadcrumb`, a
+control losing its name, a control named by a bare id). The landmark rule leans
+on the **shipped** artifact — each fixture renders a single drill — which is a
+real coverage limit, recorded in the test rather than papered over. It also only
+bites once the dashboard is **regenerated**, which is how the first proof run
+passed spuriously.
+
+### WI-300's residue is now bound
+
+The four mechanized clauses became child rows, and the four parent LLRs stopped
+delegating upward:
+
+| Anchor | Was "perceptual under…" | Now |
+|---|---|---|
+| A2 name quality | LLR-101 → LLR-053/TC-053 | **LLR-108 / TC-113** |
+| U5 near-duplicate hues | LLR-102 → LLR-054/TC-054 | **LLR-109 / TC-114** |
+| U3 spacing / visual weight | LLR-103 → LLR-054/TC-054 | **LLR-110 / TC-115** |
+| U1 sizes read as uniform | LLR-104 → LLR-054/TC-054 | **LLR-111 / TC-116** |
+
+**Every remaining residue clause in the spine is now under SR-054** — LLR-099
+(T2 "reads legibly at default density"), LLR-100 (T3 "stays oriented"), LLR-105
+(T5 "reads as inviting") — exactly where the spec predicted it would end up.
+
+### Where that leaves the flip
+
+- **SR-053 — residue empty, all five anchors bound (U1…U5). Ready to flip.**
+- **SR-052 — not ready.** Its A2 residue is cleared, but **A1, A3 and A4 are
+  still undecomposed** and ride the coarse `LLR-053`. Clearing a residue clause
+  is not the same as binding an anchor; that binding is WI-300's own remaining
+  work.
+- **SR-054 keeps `Verification=Critique` by design**, so `perceptual-stale` goes
+  on firing on every render commit regardless of what SR-052/SR-053 do. Retiring
+  critiques outright still needs the T1/T3 decision the spec names.
+
+**Ratchet:** `gen_trajectory.py` 4922 → 4928 (one line of code; the rest is the
+comment on why a present, correct name can still be useless). Reviewed bump.
+
+**Verified:** dashboard + ratchet suites **127 passed**; `trace --strict` clean at
+SN=25 SR=110 **LLR=111 TC=114** orphans=0.
