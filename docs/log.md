@@ -13061,3 +13061,60 @@ ratchet re-stamps that run brought out; `trace --strict` clean at
 SN=25 SR=110 LLR=107 TC=110 orphans=0. **`perceptual-stale` is red again** —
 `gen_trajectory.py` changed after 120-CRITIQUE, as it does on every render
 commit; it clears with a fresh critique (wrap-up-plan.md §2).
+
+
+## 2026-07-25 — WI-272: the dashboard stops rewriting six registry statuses as four
+
+Review finding **M-2**, and the word that mattered in it was *silently*. The
+dashboard did not merely give `deferred` and `blocked` a shared swatch — the
+clamp `w["status"] if w["status"] in STATUS_FILL else "queued"` ran **before**
+the tooltip, the accessible name, the drill label, and the detail JSON were
+built, so a parked row's own detail read `"status": "queued"`. Parked-by-choice
+and impeded-by-something are not ordinary queue work, and this is the repo's
+advertised state surface, so the mislabelling mis-prioritizes real work.
+
+**The fix keeps the shared swatch and kills the rewrite** — deliberately, and
+this is the design call worth recording. Minting two more hues was the obvious
+move and is the wrong one: the palette already carries five vocabularies in one
+document, and **U5's live residue is near-duplicate hues** (LLR-102, reconfirmed
+by 120-CRITIQUE). Two more colours would have paid for status fidelity by making
+an open perceptual finding worse. So:
+
+- **`STATUS_BUCKET`** makes the six→four *swatch* mapping explicit, where it used
+  to be an inline `else "queued"`. A table you can read is not a clamp.
+- **`_wi_status`** (the row's own word) sits beside **`_wi_st`** (the fill key),
+  and each emitter now uses the right one — paint with the bucket, *label* with
+  the status. Both are docstringed to say which, because the failure mode is
+  quietly reaching for the wrong one.
+- Every text surface carries the truth: hover title, drill label, node class,
+  the new per-node **`data-status`** attribute, and the detail JSON, which now
+  carries **both** `status` (true) and `bucket` (swatch).
+- The legend **names the grouping** — "not started — ○ queued (ready), ◌ deferred
+  (parked by choice), ⊘ blocked (has an impediment)" — rather than leaving a
+  shared colour to imply "queued", which is review M-2's own suggested remedy
+  when a visual grouping is kept.
+
+**A3's invariant got stronger, not weaker.** It asserted one glyph per *fill*.
+That would have left the two statuses sharing `queued`'s swatch with **no
+non-colour cue at all** — exactly the case A3 exists for. It now asserts one
+glyph per *status*, that every bucket is a real fill, and that no two statuses
+share a glyph.
+
+**Two vacuity traps hit while writing the drill guard**, both worth remembering:
+`_layer_with` returns the *first* matching layer, so the first draft judged only
+one phase/workstream group (it saw `done` and `active`, and the glyph-set
+assertion would have passed vacuously); and `.blab` is the label class of *every*
+drill block, so a bare class scan also pulls in phase/workstream containers and
+the whole How-SW drill, none of which have a status to prefix. The guard now
+matches `data-tier="work-item"` blocks specifically, across every layer.
+
+Three reversions were replayed against the finished guards — the original clamp,
+the flat DAG labelling its bucket again, and the detail JSON reporting the bucket
+again. All three fail; restored, both pass.
+
+**Ratchet:** `gen_trajectory.py` 4802 → 4872, most of it the `STATUS_BUCKET`
+comment recording why the grouping stays and why the clamp was a defect rather
+than a shared swatch. Reviewed bump.
+
+**Verified:** `tests/test_gen_trajectory.py` + the three ratchet/budget modules
+**121 passed** after the re-stamp; `check_docs --stale` OK.

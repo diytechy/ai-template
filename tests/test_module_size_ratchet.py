@@ -101,7 +101,16 @@ BASELINE = {
     # (it is invisible to U5's collision sweep and to `_ring_ink`'s enumeration
     # alike) — the part a successor would otherwise inline straight back.
     # Reviewed bump, log 2026-07-25. Re-stamp downward with WI-280.
-    "gen_trajectory.py": 4802,
+    # +70 (4802 -> 4872), WI-272 (review M-2): the six-status registry
+    # vocabulary stops being rewritten into four. The code delta is small — a
+    # `_wi_status` (true status) beside `_wi_st` (fill bucket), two glyphs, a
+    # `data-status` attribute per node — and most of the bump is the
+    # STATUS_BUCKET table's comment, which records WHY the grouping is kept
+    # (minting two more hues would worsen the live U5 near-duplicate residue)
+    # and WHY the clamp was a defect rather than a shared swatch (it ran before
+    # the tooltip, accessible name, and detail JSON were built, so a parked row
+    # SAID queued). Reviewed bump, log 2026-07-25. Re-stamp down with WI-280.
+    "gen_trajectory.py": 4872,
     # +11 (3452 -> 3463), WI-284: _regenerate_disposition_artifacts also runs
     # `gen_trajectory.py --status` at integrate/blocked-disposition so a closed
     # id drops from the generated frontier automatically (and the disposition

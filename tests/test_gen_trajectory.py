@@ -1015,6 +1015,79 @@ def tiered_repo(root, wis_body, header=TIER_HDR, srs=TIER_SRS):
     return root
 
 
+# --- WI-272 (review M-2): six registry statuses, four swatches, no rewriting ----
+
+SIX_STATUS_WIS = (
+    "WI-001,Bootstrap,scripts,SR-001,,done,the adder\n"
+    "WI-002,Harness,scripts,SR-001,WI-001,active,\n"
+    "WI-003,Release,docs,SR-002,WI-002,queued,\n"
+    "WI-004,Someday,docs,SR-002,WI-002,deferred,parked on purpose\n"
+    "WI-005,Waiting,docs,SR-002,WI-002,blocked,needs an upstream decision\n"
+    "WI-006,Dropped,docs,SR-002,WI-002,retired,won't build\n"
+)
+
+
+def test_wi272_deferred_and_blocked_are_never_rewritten_as_queued(tmp_path):
+    """review M-2: the dashboard used to clamp every unknown status to `queued`
+    — and not just for the swatch. The clamp ran BEFORE the tooltip, the
+    accessible name, and the detail JSON were built, so a `deferred` row's own
+    detail said `"status": "queued"`. Parked-by-choice and impeded-by-something
+    are not ordinary queue work, and this is the repo's advertised state surface,
+    so that mislabelling mis-prioritizes real work.
+
+    Sharing a swatch is fine and stays (minting two more hues would worsen the
+    live U5 near-duplicate residue); rewriting the STATUS is the defect.
+    """
+    make_repo(tmp_path, SIX_STATUS_WIS)
+    assert gen(tmp_path).returncode == 0
+    page = html_of(tmp_path)
+
+    for status in ("done", "active", "queued", "deferred", "blocked", "retired"):
+        assert 'data-status="{}"'.format(status) in page, (
+            "no node carries data-status={} — the DOM lost the true status".format(
+                status
+            )
+        )
+        assert '"status": "{}"'.format(status) in page, (
+            "the detail JSON never reports {} — it is being rewritten".format(status)
+        )
+    # the hover title names the row's own status, not its bucket
+    assert "WI-004 — Someday (deferred)" in page
+    assert "WI-005 — Waiting (blocked)" in page
+    # ...and the two share `queued`'s swatch, deliberately and visibly: the
+    # legend names the grouping rather than leaving the shared colour to imply
+    # they are queued.
+    gt = load_script("gen_trajectory")
+    assert gt.STATUS_BUCKET["deferred"] == gt.STATUS_BUCKET["blocked"] == "queued"
+    assert "not started" in page
+    for glyph in (gt.STATUS_GLYPH["deferred"], gt.STATUS_GLYPH["blocked"]):
+        assert glyph in page, "the legend must show the glyph that tells them apart"
+
+
+def test_wi272_status_is_carried_through_the_tiered_drill_too(tmp_path):
+    # The flat DAG and the tiered drill are separate emitters; M-2 named both.
+    # The drill's leaf label is glyph-prefixed per STATUS, so `deferred` and
+    # `blocked` differ from `queued` there without any colour at all.
+    tiered_repo(tmp_path, TIER_UNION_WIS + SIX_STATUS_WIS.replace("WI-00", "WI-01"))
+    assert gen(tmp_path).returncode == 0
+    gt = load_script("gen_trajectory")
+    # Every WORK-ITEM block across every layer. Two narrowings, both learned by
+    # getting them wrong: `_layer_with` returns one layer, so it saw only the
+    # first phase/workstream group (done + active — the glyph assertion would
+    # have passed vacuously); and `.blab` is the label class of EVERY drill
+    # block, so a bare class scan also pulls in phase/workstream containers and
+    # the whole How-SW drill, none of which have a status to prefix.
+    labels = re.findall(
+        r'data-tier="work-item"[^>]*data-label="([^"]*)"', html_of(tmp_path)
+    )
+    assert labels, "no work-item blocks rendered"
+    glyphs = set(gt.STATUS_GLYPH.values())
+    assert all(lab[0] in glyphs for lab in labels), labels
+    # the parked/impeded glyphs actually reached the drill, so this is not vacuous
+    assert any(lab[0] == gt.STATUS_GLYPH["deferred"] for lab in labels), labels
+    assert any(lab[0] == gt.STATUS_GLYPH["blocked"] for lab in labels), labels
+
+
 def test_when_view_tiers_by_phase_above_threshold(tmp_path):
     # > 3 phases -> the When view starts at a layer of 4 phase blocks, each a
     # descend container carrying the per-phase color accent; the count is surfaced.
@@ -1856,7 +1929,15 @@ def test_a3_status_glyph_pairs_every_status_fill(tmp_path):
     # dashboard-accessibility.md A3 (no info by colour alone): a drill work-item
     # block pairs its status fill with a shape-distinct glyph in the visible label.
     gt = load_script("gen_trajectory")
-    assert set(gt.STATUS_GLYPH) == set(gt.STATUS_FILL)  # one glyph per status
+    # One glyph per STATUS, not per fill (WI-272). Six statuses share four
+    # swatches, so pairing glyphs with fills would have left `deferred`/`blocked`
+    # — the two that share `queued`'s swatch — with no non-colour cue at all,
+    # which is precisely the case A3 exists for.
+    assert set(gt.STATUS_GLYPH) == set(gt.STATUS_BUCKET)
+    assert set(gt.STATUS_BUCKET.values()) == set(gt.STATUS_FILL)
+    assert len(set(gt.STATUS_GLYPH.values())) == len(gt.STATUS_GLYPH), (
+        "two statuses share a glyph — the shape cue stops distinguishing them"
+    )
     tiered_repo(tmp_path, TIER_UNION_WIS)
     assert gen(tmp_path).returncode == 0
     leaf = _layer_with(html_of(tmp_path), 'data-tier="work-item"')

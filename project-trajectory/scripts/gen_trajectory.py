@@ -556,20 +556,52 @@ DAG_ROW_GAP = 22  # vertical gap between nodes in a rank
 DAG_PAD = 18
 # WI-267: `retired` is a TERMINAL WON'T-BUILD status with its OWN dashboard bucket
 # — a muted stone hue byte-distinct from every other fill (done/active/queued and
-# the drill tiers), never folded into done's green. deferred/blocked are not keyed
-# here (they clamp to the queued fill in `_wi_st`); retired is, so a dead-end row
-# reads as visibly terminal, not merely parked.
+# the drill tiers), never folded into done's green, so a dead-end row reads as
+# visibly terminal, not merely parked.
 STATUS_FILL = {
     "done": "#047857",
     "active": "#b45309",
     "queued": "#94a3b8",
     "retired": "#78716c",
 }
-# A3 (no-info-by-color-alone): a redundant, shape-distinct status glyph paired with
-# every status fill — the meaning survives without colour perception. Prefixed to a
-# drill work-item block's label (and named in its hover title / detail). `retired`
-# gets the circled-times ⊗ (a struck-out terminal), distinct from ✓/●/○.
-STATUS_GLYPH = {"done": "✓", "active": "●", "queued": "○", "retired": "⊗"}
+
+# WI-272 (review M-2): the registry's SIX statuses map onto FOUR fills, and this
+# table is that mapping made EXPLICIT. It used to be an inline `if not in
+# STATUS_FILL: "queued"` clamp, which did not merely share a swatch — it rewrote
+# the status itself, so a `deferred` row's tooltip, accessible name, and detail
+# JSON all *said* "queued". Parked-by-choice and impeded-by-something are not
+# ordinary queue work, and the dashboard is this repo's advertised state surface,
+# so mislabelling them mis-prioritizes real work.
+#
+# The fix keeps ONE colour per concept rather than minting two more hues: the
+# shared swatch means "not started", the three sub-states are told apart by their
+# own GLYPH and by the true status word carried in every text surface, and the
+# legend names the grouping instead of pretending it isn't there. Minting hues
+# would also have made the live U5 near-duplicate residue worse (LLR-102) — the
+# palette is already dense.
+STATUS_BUCKET = {
+    "done": "done",
+    "active": "active",
+    "queued": "queued",
+    "deferred": "queued",
+    "blocked": "queued",
+    "retired": "retired",
+}
+# The one label the shared swatch may carry: naming the bucket is what stops it
+# reading as "queued" (review M-2's "name it explicitly").
+STATUS_BUCKET_LABEL = {"queued": "not started", "done": "done", "active": "active"}
+# A3 (no-info-by-color-alone): a redundant, shape-distinct glyph per STATUS — one
+# per *status*, not per fill, so the three statuses sharing the "not started"
+# swatch stay distinguishable without colour perception at all. ○ open / ◌ parked
+# (a dotted, un-drawn ring) / ⊘ barred / ⊗ struck-out terminal.
+STATUS_GLYPH = {
+    "done": "✓",
+    "active": "●",
+    "queued": "○",
+    "deferred": "◌",
+    "blocked": "⊘",
+    "retired": "⊗",
+}
 
 # WI-249 render-legibility fix (render-dashboard-critique found every wire's
 # arrowhead invisible: some used a near-white fill (`var(--border)`, a light
@@ -795,7 +827,8 @@ def dag_svg(wis):
     nodes, details = [], {}
     for w in wis:
         x, y = pos[w["id"]]
-        st = w["status"] if w["status"] in STATUS_FILL else "queued"
+        status = _wi_status(w)  # what the row IS — every text surface below
+        st = STATUS_BUCKET[status]  # which swatch it paints in (WI-272)
         title = w["title"]
         short = title if len(title) <= 22 else title[:21] + "…"
         label = (
@@ -808,20 +841,24 @@ def dag_svg(wis):
                 # A3 (no info by colour alone): the flat fallback pairs its status
                 # fill with the same visible glyph the tiered drill uses, so a small
                 # (<=3-tier) registry still encodes status by shape, not hue alone.
-                "{} {}".format(STATUS_GLYPH[st], esc(w["id"])),
+                "{} {}".format(STATUS_GLYPH[status], esc(w["id"])),
                 x + DAG_COL_W / 2,
                 esc(short),
             )
         )
-        tip = "{} — {} ({})".format(w["id"], title, st)
+        tip = "{} — {} ({})".format(w["id"], title, status)
         nodes.append(
-            '<g class="wi {}" data-id="{}" tabindex="0"{}>'
+            # WI-272: `class` carries the swatch BUCKET (the `#dag .wi.queued`
+            # text rule keys on it), `data-status` the row's own word — appended
+            # last, like the drill's, so existing adjacency assertions hold.
+            '<g class="wi {}" data-id="{}" tabindex="0"{} data-status="{}">'
             "<title>{}</title>"
             '<rect x="{:.1f}" y="{:.1f}" width="{}" height="{}" rx="7" '
             'fill="{}"></rect>{}</g>'.format(
                 st,
                 esc(w["id"]),
                 _ring_style(STATUS_FILL[st]),
+                esc(status),
                 esc(tip),
                 x,
                 y,
@@ -833,7 +870,11 @@ def dag_svg(wis):
         )
         ws = WORKSTREAM_LABELS.get(w["workstream"], w["workstream"])
         details[w["id"]] = {
-            "status": st,
+            # `status` is the registry's own word; `bucket` is the swatch it
+            # shares (WI-272). Two fields, so the detail JSON can never again
+            # report a parked row as queued.
+            "status": status,
+            "bucket": st,
             "title": title,
             "body": "Workstream: {}".format(ws),
             "meta": "Delivers: {} · After: {}".format(
@@ -1314,9 +1355,23 @@ def _hscroll(label):
     return 'tabindex="0" role="group" aria-label="{}"'.format(esc(label))
 
 
+def _wi_status(w):
+    """A work item's TRUE registry status, for every text surface (WI-272).
+
+    Only a status the vocabulary does not know at all falls back, and it falls
+    back to `queued` because that is the safe read for an unrecognized row — the
+    six declared statuses are always reported as themselves."""
+    return w["status"] if w["status"] in STATUS_BUCKET else "queued"
+
+
 def _wi_st(w):
-    """A work item's status clamped to a known fill key."""
-    return w["status"] if w["status"] in STATUS_FILL else "queued"
+    """A work item's FILL BUCKET — the colour key, not the status (WI-272).
+
+    Six statuses, four fills: `deferred` and `blocked` share `queued`'s swatch
+    under the "not started" grouping. Callers that paint use this; callers that
+    LABEL must use `_wi_status`, or the render goes back to telling the reader a
+    parked row is queued."""
+    return STATUS_BUCKET[_wi_status(w)]
 
 
 # --- WI-087: phase-aware, count-thresholded tiering over the When view ----------
@@ -2014,6 +2069,12 @@ def _drill_layer_svg(blocks, edges):
         # wire single-click + focus to the detail aside (the sw drill sets no `wi`).
         if b.get("wi"):
             attrs += ' data-wi="{}"'.format(esc(b["wi"]))
+        # WI-272: the row's TRUE status, where the swatch alone cannot carry it
+        # (`deferred`/`blocked` share `queued`'s fill). Appended last for the same
+        # adjacency reason as data-node above. Absent for non-status blocks (the
+        # phase/workstream containers and the whole How-SW drill).
+        if b.get("status"):
+            attrs += ' data-status="{}"'.format(esc(b["status"]))
         # WI-294a/WI-299: appended last, same reason as data-node above — keeps
         # every existing adjacency assertion (`data-tier="…" data-descend="…"`)
         # intact for tests that don't know this attribute exists.
@@ -2141,25 +2202,33 @@ def when_view(root, wis):
         ]
 
     def wi_block(w, key=None):
-        st = _wi_st(w)
+        status = _wi_status(w)  # the row's own status — labels, titles, detail
+        st = STATUS_BUCKET[status]  # the swatch it shares (WI-272)
         t = w["title"]
         return {
             "key": key or w["id"],
             # A3: the status glyph rides in the visible label (so the column width
             # accounts for it), redundant with the fill hue; `wi` carries the bare id
             # for the detail-panel wiring (U4) independent of the decorated label.
-            "label": "{} {}".format(STATUS_GLYPH[st], w["id"]),
+            # The glyph is per STATUS, so `deferred`/`blocked` stay distinguishable
+            # from `queued` even though the three share one swatch.
+            "label": "{} {}".format(STATUS_GLYPH[status], w["id"]),
             "wi": w["id"],
             "sub": t if len(t) <= 20 else t[:19] + "…",
             "fill": STATUS_FILL[st],
             "textfill": "#0f172a" if st == "queued" else "#fff",
             "stroke": "rgba(15,23,42,.15)",
             "tier": "work-item",
+            # `cls` is the SWATCH bucket (the `#dag .wi.queued` text rule and its
+            # siblings key on it); `status` is the row's own word, emitted as
+            # `data-status` so the DOM never loses it. One idiom, matching the
+            # flat DAG's node groups (U4).
             "cls": st,
+            "status": status,
             # OI-10 fix: surface the delivery Phase in the leaf block's hover title
             # too, so it stays visible when the phase tier is flat (≤3 phases) but a
             # workstream tier drills in (SR-089 "expose delivery phase").
-            "title": "{} — {} ({}) · {}".format(w["id"], t, st, phase_of[w["id"]]),
+            "title": "{} — {} ({}) · {}".format(w["id"], t, status, phase_of[w["id"]]),
         }
 
     def wi_layer(members):
@@ -2475,10 +2544,11 @@ HTML_TEMPLATE = string.Template("""<!doctype html>
           detail — workstream, status, the SRs it delivers, its predecessors.</p></aside>
       </div>
       <div class="legend">
-        <span><i style="background:var(--done)"></i>done</span>
-        <span><i style="background:var(--active)"></i>active — you are here</span>
-        <span><i style="background:var(--queued)"></i>queued</span>
-        <span><i style="background:var(--retired)"></i>retired — won't build (terminal)</span>
+        <span><i style="background:var(--done)"></i>✓ done</span>
+        <span><i style="background:var(--active)"></i>● active — you are here</span>
+        <span><i style="background:var(--queued)"></i>not started — ○ queued (ready),
+          ◌ deferred (parked by choice), ⊘ blocked (has an impediment)</span>
+        <span><i style="background:var(--retired)"></i>⊗ retired — won't build (terminal)</span>
       </div>
     </section>
 
