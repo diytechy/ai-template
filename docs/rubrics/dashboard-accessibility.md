@@ -1,6 +1,28 @@
-# Rubric — Dashboard accessibility (SR-052)
+# Rubric — Dashboard accessibility (SR-052) — RETIRED 2026-07-26
 
-**Adjudicates:** SR-052 (dashboard accessibility, `Verification=Critique`).
+> **This rubric no longer adjudicates anything.** All four anchors are
+> mechanized and bound, so **SR-052 is `Verification=Test`** and no critique
+> dispatch owes it a verdict:
+>
+> | Anchor | Owning LLR / TC |
+> |---|---|
+> | **A1** keyboard reachability | `LLR-112`/`TC-117` |
+> | **A2** accessible names | `LLR-101`/`TC-104` + `LLR-108`/`TC-113` |
+> | **A3** no information by colour alone | `LLR-113`/`TC-118` |
+> | **A4** text contrast | `LLR-114`/`TC-119` (the focus ring also binds under SR-054 T5 as `LLR-105`/`TC-108`) |
+>
+> Kept rather than deleted (retire-don't-delete): it is the record of what the
+> anchors *meant* before they became assertions, and the successor LLRs cite it.
+> **Do not re-judge these by eye** — a critic finding an A-anchor "violated" is
+> either reading a stale artifact or has found a gap in the owning test, and the
+> latter routes through the change-intake flow to harden the TC, never through a
+> verdict. The narrowing each mechanization accepted is stated in its LLR (A1
+> drops "feels sensible" for document order; A3 asserts a worded cue in the same
+> document, not within eyeshot; A4 is constant/token arithmetic, not rendered
+> pixels).
+
+**Historically adjudicated:** SR-052 (dashboard accessibility), when it carried
+`Verification=Critique`.
 **Used by:** the SR-084 critique dispatch — a fresh, provider-heterogeneous CRITIQUE
 session judges the generated `PROJECT_STATE.html` against the numbered anchors
 below, receiving this rubric + the SN/SR intent + the artifact recipe and **never

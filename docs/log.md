@@ -329,7 +329,7 @@ why (one bullet each; cite ids)._
   near-verbatim restate their SR** — a paraphrase, not a decomposition — so all
   four A-anchors collapse into one all-or-nothing TC. *That* is why a train had to
   pass the whole rubric; the gate-shape debate was a symptom. Per-anchor pass:
-  [specs/WI-300.md](specs/WI-300.md) — **13 of 17 mechanize**, and the perceptual
+  [specs/WI-300.md](archive/specs/WI-300.2026-07-26.md) — **13 of 17 mechanize**, and the perceptual
   residue is **entirely inside SR-054** (four narrow clauses: is the entry point
   *obvious*, does the reader stay *oriented*, does a truncation read as
   *more-available*, are crossings *tolerable*). SR-052 and SR-053 have none, so
@@ -13509,7 +13509,7 @@ SR-054 only). `tests+coverage`, `dupes`, `traceability`, `derived-gate` and
 `status-map` all green over the flip.
 
 **WI-313 filed** (`P1`, strong, `SafetyClass=protected`) with
-[specs/WI-300-sr052-binding.md](specs/WI-300-sr052-binding.md) as its spec of
+[specs/WI-300-sr052-binding.md](archive/specs/WI-300-sr052-binding.2026-07-26.md) as its spec of
 record — a resumption guide written so a fresh session starts from measurements
 rather than re-deriving them. Filed as its own row rather than folded into
 WI-300 because `SpecRef` is single-valued (R-F resolves one spec per WI), so a
@@ -13617,3 +13617,43 @@ ratchet file: the two legend fixes and their defect-stating comments).
 SN=25 SR=110 **LLR=113 TC=116** orphans=0 integrity=0; `check_docs --stale` OK
 (261 docs, 768 links, 0 broken); okf/dashboard/status/gate regenerated
 (derived gate basis now LLR=113 TC=116, still G3 all phases).
+
+## 2026-07-26 — SR-052 flips to Verification=Test — the critique chain is down to SR-054, by design
+
+**SPINE CHANGE (SR-052 Critique → Test; LLR-053/TC-053 superseded) —
+RE-ATTESTATION PENDING.** Closes **WI-313** (the binding, previous entry) and
+**WI-300** (option (f), delivered end to end).
+
+All four accessibility anchors are mechanized and bound, so by the ruling's own
+rule — an SR keeps `Verification=Critique` only while a perceptual child remains
+under it — SR-052 no longer qualifies:
+
+  A1 → LLR-112/TC-117    A2 → LLR-101/TC-104 + LLR-108/TC-113
+  A3 → LLR-113/TC-118    A4 → LLR-114/TC-119
+
+The ruling's central claim held mechanically a second time: `perceptual-stale`
+now names **SR-054 only**. SR-052 dropped out of `_load_critique_srs` on its
+own — no gate change, no checker edit. LLR-053/TC-053 are superseded rather
+than left alive: the coarse paraphrase row is exactly the all-or-nothing TC the
+ruling identified as the defect, and provenance survives in every child's
+"split out of LLR-053" line. The accessibility rubric is retired to a record
+with the anchor→LLR/TC map and the do-not-re-judge-by-eye instruction, mirror
+of the uniformity rubric's retirement.
+
+**WI-300 closes with a deliberate non-delivery stated on the row:** SR-054
+keeps `Verification=Critique` by design. Its T1 "entry point is obvious" and
+T3 "stays oriented" clauses describe a reader's experience, not the artifact;
+whether to retire critiques outright — or mechanize T4/T7 with a browser
+harness — is an owner decision the spec leaves **unfiled** (binding spec §6),
+so no WI pretends to own it. Both specs are archived per R-F with close
+stamps (`docs/archive/specs/WI-300.2026-07-26.md` + `…-sr052-binding…`), their
+relative links re-rooted, and the three log/wrap-up links redirected to the
+archive paths — the WI-274 convention.
+
+**Verified:** smoke **396 passed, 13 skipped**; `check_docs --stale` OK (261
+docs, 768 links, 0 broken); `trace --strict --strict-integrity` clean at
+SN=25 SR=110 **LLR=112 TC=115** orphans=0, verified-mechanized 94→**95**;
+`check_trajectory --strict` down to the single parked `perceptual-stale`
+error, now naming **SR-054 only** — the done-when's exact target. Derived gate
+G3 all phases; okf pruned the two superseded pages. Registry: 313 rows,
+**295 done**, 3 retired; frontier now leads WI-305/306/307/308.

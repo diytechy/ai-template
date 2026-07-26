@@ -95,7 +95,7 @@ Generated order lives in status.md's **Ready frontier**. Current shape:
     true, needs a test), and **A4's broader arithmetic core** (every text/fill
     pair, not just the ring WI-299 bound) — none of these three have a child
     LLR/TC yet. A2 is done (`LLR-101`/`TC-104`, delivered by WI-297 earlier).
-  - Spec of record: [specs/WI-300.md](specs/WI-300.md) (its per-anchor pass
+  - Spec of record: [specs/WI-300.md](archive/specs/WI-300.2026-07-26.md) (its per-anchor pass
     predates this session's builds — read status.md/log.md for what's actually
     landed, not the spec's original estimate table).
 - **WI-305 / WI-306 / WI-307** — new, filed from `119-CRITIQUE.md` findings no

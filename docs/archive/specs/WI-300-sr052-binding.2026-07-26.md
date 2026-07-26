@@ -1,11 +1,20 @@
 # WI-300 remainder — bind A1 / A3 / A4 so SR-052 can flip
 
-**Status: queued.** The last step of WI-300's option (f) ruling. Written
+**Status: CLOSED 2026-07-26** — delivered by **WI-313**: A1 → LLR-112/TC-117,
+A3 → LLR-113/TC-118, A4 → LLR-114/TC-119; **SR-052 flipped to
+`Verification=Test`**, LLR-053/TC-053 superseded, the accessibility rubric
+retired with its anchor→LLR/TC map. Measure-first found two live A3 defects
+this guide's own measurements missed (the hardcoded stale icicle tier-legend
+swatch, and the legend-less flat How-SW seam graph) — both §3/§4 open
+questions resolved as measurement artifacts (zero `<details>` in the markup;
+`#44403c` paints only as the text-bearing detail badge). Archived per R-F.
+
+**Status at filing: queued.** The last step of WI-300's option (f) ruling. Written
 2026-07-26 as a resumption guide: a fresh session should be able to start from
 here without re-deriving anything.
 
 **Spec of record for:** WI-300 (this file is its remaining-work half; the ruling
-and the per-anchor pass are in [WI-300.md](WI-300.md)).
+and the per-anchor pass are in [WI-300.2026-07-26.md](WI-300.2026-07-26.md)).
 
 ---
 
@@ -177,9 +186,9 @@ green.
 - [ ] Every new guard is verified to **fail** against the defect it claims to
       catch, and the source is byte-identical afterwards.
 - [ ] Only then: `SR-052.Verification` → `Test`; supersede `LLR-053`/`TC-053`;
-      retire [rubrics/dashboard-accessibility.md](../rubrics/dashboard-accessibility.md)
+      retire [rubrics/dashboard-accessibility.md](../../rubrics/dashboard-accessibility.md)
       to a record with an anchor→LLR/TC map, as
-      [dashboard-uniformity.md](../rubrics/dashboard-uniformity.md) now is.
+      [dashboard-uniformity.md](../../rubrics/dashboard-uniformity.md) now is.
 - [ ] `check_trajectory --strict` shows `perceptual-stale` naming **SR-054 only**.
 - [ ] Full suite + `check.py` at the derived gate; spine change ⇒ log it as
       **RE-ATTESTATION PENDING**.
