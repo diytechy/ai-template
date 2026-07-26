@@ -121,3 +121,6 @@ resource: "generated"
 | [LLR-109](LLR-109.md) | Pairwise deltaE floor across every vocabulary (U5 residue) |
 | [LLR-110](LLR-110.md) | Declared weight/alpha/corner tokens (U3 residue) |
 | [LLR-111](LLR-111.md) | Declared type scale, no raw font-size literals (U1 residue) |
+| [LLR-112](LLR-112.md) | Keyboard reachability of every wired control (A1 core) |
+| [LLR-113](LLR-113.md) | No information by colour alone (A3 core) |
+| [LLR-114](LLR-114.md) | Text-contrast floors, closed over the vocabulary set (A4) |

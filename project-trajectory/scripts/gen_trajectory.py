@@ -2575,12 +2575,7 @@ HTML_TEMPLATE = string.Template("""<!doctype html>
         <aside id="arch-detail" class="detail"><p class="hint">Hover to highlight a subtree;
           click a block to read its full text — requirement, acceptance, status.</p></aside>
       </div>
-      <div class="legend">
-        <span><i style="background:#4338ca"></i>SN</span>
-        <span><i style="background:#0e7490"></i>SR</span>
-        <span><i style="background:#64748b"></i>LLR</span>
-        <span><i style="background:#047857"></i>TC</span>
-      </div>
+      <div class="legend">$tier_legend</div>
     </section>
 
     <section id="dag" class="panel" role="tabpanel" aria-labelledby="tab-dag" hidden>
@@ -2881,6 +2876,17 @@ def _sw_panel(mods, graph=None):
             + '<div class="view" {}>{}</div>\n'.format(
                 _hscroll("Interface-seam graph, horizontally scrollable"), graph
             )
+            # A3 (WI-313): the flat seam graph encodes node KIND by fill, and it
+            # rendered with no legend — the containment drill earned one in the
+            # 048/U3 round; this fallback never did. Same shared `.legend`
+            # component; component containers never render here, so three entries.
+            + (
+                '<div class="legend">'
+                '<span><i style="background:{module}"></i>module</span>'
+                '<span><i style="background:{file}"></i>file (shared-contract hub)</span>'
+                '<span><i style="background:{external}"></i>external actor</span>'
+                "</div>\n"
+            ).format(**SW_NODE_FILL)
         )
     panel = (
         tab_panel_open("sw")
@@ -4034,8 +4040,17 @@ def build_html(root, wis):
     def j(o):
         return json.dumps(o, ensure_ascii=False).replace("</", "<\\/")
 
+    # A3 (WI-313): the icicle tier legend derives from TIER_FILL rather than
+    # restating it. The hardcoded spans this replaces kept a pre-WI-311 TC hex
+    # (#047857) that had since become STATUS_FILL["done"] — a legend labelling
+    # the done-green "TC" while the actual TC cells painted TIER_FILL["tc"].
+    tier_legend = "".join(
+        '<span><i style="background:{}"></i>{}</span>'.format(TIER_FILL[t], t.upper())
+        for t in ("sn", "sr", "llr", "tc")
+    )
     return HTML_TEMPLATE.substitute(
         asof=html.escape(_asof(root)),
+        tier_legend=tier_legend,
         extra_tabs="\n      ".join(extra_tabs),
         extra_panels="\n\n    ".join(extra_panels),
         project=html.escape(project_name(root)),

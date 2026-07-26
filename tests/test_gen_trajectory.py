@@ -2841,6 +2841,305 @@ def test_u4_one_interaction_idiom_per_node_role_across_every_emitter(tmp_path):
     )
 
 
+# --- WI-313 / SR-052: bind A1/A3/A4 — the last undecomposed accessibility -----
+# anchors, same shape as the U-anchor bindings above: declare the set, assert
+# membership, sweep every emitter, and state the narrowing in the owning LLR.
+
+# A1, the closure half. The page's interactivity is exactly what its emitted JS
+# WIRES, so the selector list is DERIVED from the document's own
+# `querySelectorAll` calls rather than hand-copied — a selector newly wired in
+# an emitter fails the test until it is classified here, which is the closure
+# the per-element A1 tests above (drill blocks, tabs) do not give. A `control`
+# entry's matches receive per-element activation listeners (click / focus /
+# dblclick / keydown), so every element they match must be keyboard-focusable;
+# each non-control entry states why its matches are not focus stops.
+A1_WIRED_SELECTORS = {
+    ".block": "control",
+    ".block[data-node]": "control",
+    ".block[data-node]:not([data-wi])": "control",
+    ".block[data-wi]": "control",
+    ".cell": "control",
+    ".wi": "control",
+    ".knode": "control",
+    "[data-descend]": "control",
+    "[role=tab]": "control",
+    ".edge": "hover-dim target — classes toggled on it, no listener attaches",
+    ".kedge": "hover-dim target, the knowledge-graph spelling",
+    ".layer": "drill-layer bookkeeping — shown/hidden, never a focus stop",
+    ".view, .tablescroll": "scroll containers — scroll-cue listeners only",
+    ".drill:not([data-ready])": "controller root marker, not a control",
+}
+
+
+def _wired_selectors(html):
+    """Every selector the document's own scripts pass to querySelectorAll."""
+    out = set()
+    for script in re.findall(r"<script\b[^>]*>(.*?)</script>", html, re.S):
+        out |= set(re.findall(r"querySelectorAll\(\s*'([^']+)'\s*\)", script))
+    return out
+
+
+def _open_tags(html):
+    """(tag, attrs) for every open tag in the MARKUP — scripts stripped first
+    (the TC-104 decoy lesson: embedded JSON prose fakes markup), and the attr
+    scan is quote-aware so a `>` inside an attribute value cannot truncate it."""
+    markup = re.sub(r"<script\b.*?</script>", "", html, flags=re.S)
+    return re.findall(r"<(\w+)((?:[^>\"]|\"[^\"]*\")*)>", markup)
+
+
+def _a1_selector_matches(sel, attrs):
+    """Match the tiny selector grammar the emitters use — `.cls`, `[attr]`,
+    `[attr=v]`, and a trailing `:not([attr])`. A richer selector must extend
+    this matcher deliberately (the fullmatch assert makes that loud)."""
+    m = re.fullmatch(
+        r"(?:\.(?P<cls>[\w-]+))?(?P<conds>(?:\[[\w-]+(?:=[\w-]+)?\])*)"
+        r"(?::not\(\[(?P<neg>[\w-]+)\]\))?",
+        sel,
+    )
+    assert m, "selector grammar not handled by this matcher: " + sel
+    if m.group("cls"):
+        cls = re.search(r'class="([^"]*)"', attrs)
+        if not cls or m.group("cls") not in cls.group(1).split():
+            return False
+    for name, val in re.findall(r"\[([\w-]+)(?:=([\w-]+))?\]", m.group("conds")):
+        if val:
+            if not re.search(re.escape(name) + r'="' + re.escape(val) + r'"', attrs):
+                return False
+        elif name + '="' not in attrs:
+            return False
+    if m.group("neg") and m.group("neg") + '="' in attrs:
+        return False
+    return True
+
+
+def _a1_focusable(tag, attrs):
+    """Keyboard-focusable: explicit `tabindex="0"`, or natively tab-ordered — a
+    `<button>` (the roving-tabindex tabs stay buttons), or an `<a href>` (the
+    LLR-101 lesson: a native SVG link carries no tabindex and needs none)."""
+    return (
+        'tabindex="0"' in attrs or tag == "button" or (tag == "a" and "href=" in attrs)
+    )
+
+
+def test_a1_every_wired_interaction_selector_matches_only_focusable_elements(
+    tmp_path,
+):
+    """dashboard-accessibility.md A1 core (WI-313): every element the page wires
+    an interaction to is reachable by keyboard.
+
+    The per-element tests above check KNOWN controls (drill leaves, tabs); what
+    none of them assert is the CLOSURE — that the set of wired selectors and the
+    set of focusable elements cannot drift apart. Deriving the selectors from
+    the emitted JS closes it from one side (a new wired selector fails until
+    classified); asserting every declared selector is seen and every control
+    selector matches somewhere closes it from the other (a stale entry, or a
+    sweep gone blind, also fails).
+    """
+    seen_selectors = set()
+    matched = collections.Counter()
+    for label, html in _every_emitter_document(tmp_path):
+        wired = _wired_selectors(html)
+        unclassified = wired - set(A1_WIRED_SELECTORS)
+        assert not unclassified, (
+            "in the {} render, the page wires selector(s) this test has no "
+            "focusability classification for — decide control vs container and "
+            "add them to A1_WIRED_SELECTORS: {}".format(label, sorted(unclassified))
+        )
+        seen_selectors |= wired
+        tags = _open_tags(html)
+        for sel, role in A1_WIRED_SELECTORS.items():
+            if role != "control" or sel not in wired:
+                continue
+            for tag, attrs in tags:
+                if _a1_selector_matches(sel, attrs):
+                    matched[sel] += 1
+                    assert _a1_focusable(tag, attrs), (
+                        "in the {} render, a wired control is not keyboard-"
+                        "focusable: {} matched <{}{}>".format(
+                            label, sel, tag, attrs[:120]
+                        )
+                    )
+    stale = set(A1_WIRED_SELECTORS) - seen_selectors
+    assert not stale, (
+        "classified selector(s) never appeared in any render — the entry is "
+        "stale or the sweep is blind: {}".format(sorted(stale))
+    )
+    unexercised = {s for s, r in A1_WIRED_SELECTORS.items() if r == "control"} - set(
+        matched
+    )
+    assert not unexercised, (
+        "control selector(s) matched no element anywhere — vacuous: {}".format(
+            sorted(unexercised)
+        )
+    )
+
+
+def test_a1_focus_walk_follows_document_order(tmp_path):
+    """A1's "sensible order" residue, narrowed to what is assertable (the
+    WI-300 ruling's recorded recommendation): document order IS emission order,
+    and the focus walk follows document order as long as nothing carries a
+    positive tabindex. The only values the page may use are `0` (join the walk
+    in document order) and `-1` — and every `-1` must sit on a tablist button,
+    where the WI-273 roving-tabindex controller owns the order via arrow keys.
+    Whether that order FEELS sensible is the perceptual half the ruling dropped,
+    stated in LLR-112 as the scope narrowing.
+    """
+    for label, html in _every_emitter_document(tmp_path):
+        seen = 0
+        for tag, attrs in _open_tags(html):
+            ti = re.search(r"tabindex\s*=\s*\"?(-?\d+)\"?", attrs)
+            if not ti:
+                continue
+            seen += 1
+            assert ti.group(1) in ("0", "-1"), (
+                "in the {} render, a positive tabindex reorders the focus "
+                "walk: <{}{}>".format(label, tag, attrs[:120])
+            )
+            if ti.group(1) == "-1":
+                assert tag == "button" and 'role="tab"' in attrs, (
+                    "in the {} render, tabindex=-1 outside the roving tablist "
+                    "removes a control from the walk: <{}{}>".format(
+                        label, tag, attrs[:120]
+                    )
+                )
+        assert seen, "vacuous — no tabindex found in {}".format(label)
+
+
+# A3 (no information by colour alone), the closure half. The status glyphs and
+# the flat-DAG fallback are owned above; what was never asserted is that EVERY
+# vocabulary member that paints is explained somewhere in words.
+def _legend_swatches(html):
+    """[(resolved-hex-or-raw-value, label), …] for every legend swatch, with
+    `var()` resolved against the document's own token definitions — the status
+    legend paints via `var(--done)` etc., and a raw hex scan under-reports it."""
+    tokens = dict(re.findall(r"(--[\w-]+)\s*:\s*(#[0-9a-fA-F]{6})", html))
+    out = []
+    for m in re.finditer(r'<i style="background:([^"]+)"></i>\s*([^<]*)', html):
+        value = m.group(1).strip()
+        var = re.fullmatch(r"var\((--[\w-]+)\)", value)
+        if var:
+            value = tokens.get(var.group(1), value)
+        out.append((value.lower(), m.group(2).strip()))
+    return out
+
+
+def test_a3_every_painted_vocabulary_member_is_explained_in_words(tmp_path):
+    """dashboard-accessibility.md A3 core (WI-313): for every declared colour
+    vocabulary, every member that actually PAINTS in a document resolves to a
+    legend swatch labelled in words in that same document.
+
+    The vocabularies are enumerated from the module (`_palette_vocabularies`,
+    the U5 closure), so a new vocabulary cannot ship without entering this
+    sweep. SCOPE, and its narrowing (LLR-113): the cue must exist in the same
+    document — that it sits within eyeshot of the painted element is layout
+    this does not re-assert. The JS-rendered detail-panel badge is out of scope
+    because its background carries its concept as the badge's own visible text
+    (`esc(d.kind)`), so that colour never carries the information alone.
+    """
+    gt = load_script("gen_trajectory")
+    vocabs = _palette_vocabularies(gt)
+    explained = collections.Counter()
+    for label, html in _every_emitter_document(tmp_path):
+        markup = re.sub(r"<script\b.*?</script>", "", html, flags=re.S)
+        painted = " ".join(_style_surfaces(markup))
+        for attr in ("fill", "stroke"):
+            painted += " " + " ".join(
+                re.findall(attr + r'="(#[0-9a-fA-F]{6})"', markup)
+            )
+        painted = painted.lower()
+        worded = {h for h, lab in _legend_swatches(markup) if lab}
+        for vname, members in vocabs.items():
+            for key, hx in members.items():
+                if hx.lower() not in painted:
+                    continue
+                explained[vname] += 1
+                assert hx.lower() in worded, (
+                    "in the {} render, {}[{}] paints {} but no legend swatch "
+                    "explains that colour in words — the encoding is colour-"
+                    "alone for a reader who cannot perceive it".format(
+                        label, vname, key, hx
+                    )
+                )
+    missing = set(vocabs) - set(explained)
+    assert not missing, (
+        "no render painted any member of vocabulary(ies) {} — the sweep is "
+        "blind to them and cannot claim they are explained".format(sorted(missing))
+    )
+
+
+def test_a3_icicle_tier_legend_swatches_are_the_painted_tier_palette(tmp_path):
+    """The defect this WI found on first measurement (the method's rule 1,
+    again): the What-tab tier legend HARDCODED its four swatches, and its TC
+    swatch kept a pre-WI-311 hex that had since become `STATUS_FILL["done"]` —
+    so the legend labelled the done-green "TC" while the actual TC cells
+    painted `TIER_FILL["tc"]`, and the document-wide check above stayed green
+    only because the Knowledge tab's own legend covered the real hex. The
+    legend now derives from TIER_FILL; this pins the bijection the same way
+    `test_every_multifill_panel_emits_a_palette_bijection_legend` pins the
+    phase legend's."""
+    gt = load_script("gen_trajectory")
+    make_repo(tmp_path)
+    assert gen(tmp_path).returncode == 0
+    page = html_of(tmp_path)
+    legend = page.split('id="arch-detail"', 1)[1]
+    legend = legend.split('<div class="legend">', 1)[1].split("</div>", 1)[0]
+    entries = re.findall(r'<i style="background:(#[0-9a-f]{6})"></i>([A-Z]+)', legend)
+    assert entries == [
+        (gt.TIER_FILL[t], t.upper()) for t in ("sn", "sr", "llr", "tc")
+    ], entries
+
+
+def test_a4_the_vocabulary_sweep_is_closed_and_every_member_clears_the_floors():
+    """dashboard-accessibility.md A4 closure (WI-313). The sibling A4 tests own
+    the arithmetic; what none of them owned is the SET — each sweeps a
+    hand-copied list of the palette constants, so a sixth vocabulary could ship
+    outside every floor check. Reflection closes it: every UPPERCASE
+    module-level collection holding hex members must be one of the five
+    declared vocabularies (a new one fails here until it joins
+    `_palette_vocabularies` and the A4/U5 sweeps), and every member of the
+    REFLECTED set must clear both floors — 4.5:1 for its label ink and 3:1 for
+    its computed focus ring — so a new vocabulary enters the arithmetic by
+    existing, not by being remembered.
+    """
+    gt = load_script("gen_trajectory")
+    found = {}
+    for name in dir(gt):
+        if not name.isupper():
+            continue
+        value = getattr(gt, name)
+        if not isinstance(value, (dict, tuple, list)):
+            continue
+        members = value.values() if isinstance(value, dict) else value
+        hexes = [
+            v
+            for v in members
+            if isinstance(v, str) and re.fullmatch(r"#[0-9a-fA-F]{6}", v)
+        ]
+        if hexes:
+            found[name] = hexes
+    assert set(found) == {
+        "STATUS_FILL",
+        "TIER_FILL",
+        "OKF_TYPE_FILL",
+        "SW_NODE_FILL",
+        "PHASE_ACCENTS",
+    }, (
+        "the hex-bearing constant set changed — a new colour vocabulary must "
+        "join _palette_vocabularies and the A4/U5 sweeps before it ships: "
+        "{}".format(sorted(found))
+    )
+    # Label ink is white everywhere except the one declared exception: `queued`
+    # is the light-gray fill that carries dark slate ink (see
+    # test_a4_node_fills_meet_the_wcag_floor, which states the same rule).
+    dark_ink_fills = {gt.STATUS_FILL["queued"]}
+    for name, hexes in sorted(found.items()):
+        for fill in hexes:
+            ink = "#0f172a" if fill in dark_ink_fills else "#ffffff"
+            assert _wcag(ink, fill) >= 4.5, (name, fill, ink, _wcag(ink, fill))
+            ring = gt._ring_ink(fill)
+            assert _wcag(ring, fill) >= 3, (name, fill, ring, _wcag(ring, fill))
+
+
 def test_u3_knowledge_edge_stroke_uses_the_shared_muted_token(tmp_path):
     # dashboard-uniformity U3 (048 MINOR): the knowledge-graph directed edge shares
     # the drill `.wire` stroke idiom (the `--muted` token), not a hardcoded hex

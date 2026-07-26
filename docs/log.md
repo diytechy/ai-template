@@ -13546,3 +13546,74 @@ them into proxies to green the gate.
 
 Registry: 311 rows, 293 done, 3 retired, 9 deferred, **6 queued** (WI-300,
 WI-305, WI-306, WI-307, WI-308, WI-313).
+
+## 2026-07-26 — WI-313 build: A1/A3/A4 bound (LLR-112..114 / TC-117..119) — SPINE CHANGE, RE-ATTESTATION PENDING
+
+The three undecomposed accessibility anchors get their child LLR/TC rows, each
+landing `Verified` **with its owning tests in the same commit** (the WI-300
+sequencing rule, enforced by `derive_gate`'s draft-drops-the-gate behaviour).
+SR-052 does **not** flip in this commit — that is the next, separate step, after
+these bindings are reviewed against the artifact.
+
+### Measure-first paid again — twice, both under A3
+
+The handoff's rule 1 ("do not start by writing the test; start by finding out
+whether it passes") found **two live colour-alone defects** in an anchor whose
+handoff measurement read 4/4-everywhere green:
+
+- **The What-tab tier legend hardcoded its swatches** in `HTML_TEMPLATE`, and its
+  TC swatch kept a pre-WI-311 hex (`#047857`) that had since become
+  `STATUS_FILL["done"]` — the legend labelled the done-green "TC" while the
+  actual TC cells painted `TIER_FILL["tc"]` `#0f766e`. The handoff's
+  document-wide scan stayed green only because the Knowledge tab's own okf legend
+  covered the real hex. The legend now derives from `TIER_FILL`
+  (`$tier_legend`), and a bijection test pins it the way the phase legend's does.
+- **The flat How-SW seam graph had no legend at all** — it encodes node KIND
+  (module / file / external) purely by fill; the containment drill earned its
+  legend in the 048/U3 round and the fallback never did. It now emits the same
+  shared `.legend` component. Found by the new sweep's first run, not by eye.
+
+### What each anchor's binding asserts, and its stated narrowing
+
+- **A1 (`LLR-112`/`TC-117`)** — the *closure* the per-element tests never gave:
+  the wired-selector set is **derived from the emitted JS's own
+  `querySelectorAll` calls**, every selector must be classified
+  control-vs-container, every control match must be focusable (`tabindex="0"`,
+  a button, or a native link — the LLR-101 lesson), and a newly wired selector
+  fails until classified. "Sensible order" narrows to: no positive `tabindex`
+  (document order **is** emission order), `-1` only on the WI-273 roving
+  tablist. The handoff's "2 `<details>` without `<summary>`" resolved as a
+  measurement artifact — prose inside the embedded JSON; the markup has **zero**
+  `<details>` elements.
+- **A3 (`LLR-113`/`TC-118`)** — every vocabulary member that *paints* in a
+  document resolves to a **worded legend swatch in that same document**, tokens
+  resolved (`var(--done)`), vocabularies enumerated from the module so a new one
+  enters by existing. The `#44403c` open question resolved *out of scope*: it
+  paints only as the JS detail-badge background whose own visible text is the
+  word "component" — the text is the cue (the WI-312 wrong-set lesson applied,
+  not a manufactured finding).
+- **A4 (`LLR-114`/`TC-119`)** — mostly binding, as predicted, plus the one gap
+  no sibling owned: **the vocabulary SET was hand-copied in every A4/U5 sweep**.
+  Reflection closes it — any uppercase hex-bearing module constant must be one
+  of the five declared vocabularies, and every reflected member clears 4.5:1
+  label ink and 3:1 ring, so a sixth vocabulary cannot ship outside the floors.
+
+### Guards proven to bite
+
+Five mutation proofs, each restored byte-identical (`git diff` clean apart from
+the intended change): a `.cell` losing `tabindex` · a newly wired
+`.cell,.newthing` selector · a positive `tabindex="3"` · a rogue
+`ROGUE_FILL` sixth vocabulary · an under-floor member (2.54:1) — plus the two
+A3 defects above, which the new tests caught live before the fixes existed. The
+Windows `OSError`-mid-write hazard from the handoff struck once during the
+proofs (on the mutation write, transient) and the retry-and-verify harness
+absorbed it.
+
+**Ratchet:** `gen_trajectory.py` 4928 → **4943** (reviewed bump, reason in the
+ratchet file: the two legend fixes and their defect-stating comments).
+
+**Verified:** `tests/test_gen_trajectory.py` full module **130 passed**; smoke
+**396 passed, 13 skipped**; `trace --strict --strict-integrity` clean at
+SN=25 SR=110 **LLR=113 TC=116** orphans=0 integrity=0; `check_docs --stale` OK
+(261 docs, 768 links, 0 broken); okf/dashboard/status/gate regenerated
+(derived gate basis now LLR=113 TC=116, still G3 all phases).

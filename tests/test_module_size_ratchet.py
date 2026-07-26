@@ -131,7 +131,14 @@ BASELINE = {
     # name from the root crumb. One line of code; the rest is the comment on
     # WHY a present, correct name can still be useless (a screen-reader user
     # listing landmarks hears three identical entries). Reviewed bump.
-    "gen_trajectory.py": 4928,
+    # +15 (4928 -> 4943), WI-313 (A3 core): two colour-alone defect fixes found
+    # on first measurement — the What-tab tier legend hardcoded a stale TC
+    # swatch (#047857, by then STATUS_FILL["done"]) and now derives from
+    # TIER_FILL; and the flat How-SW seam graph encoded node KIND by fill with
+    # no legend at all (only the containment drill had one), and gains the
+    # shared `.legend` component. Half the delta is the two comments stating
+    # the defect each block exists to prevent. Reviewed bump, log 2026-07-26.
+    "gen_trajectory.py": 4943,
     # +11 (3452 -> 3463), WI-284: _regenerate_disposition_artifacts also runs
     # `gen_trajectory.py --status` at integrate/blocked-disposition so a closed
     # id drops from the generated frontier automatically (and the disposition
