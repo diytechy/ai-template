@@ -383,6 +383,44 @@ why (one bullet each; cite ids)._
   (A2 → `LLR-101`/`TC-104`; A4-boundaries → retired as not-a-defect 2026-07-24).
   The attestation is therefore of the *dispatch*, not a waiver of a finding.
   Registry `Status` leaves `blocked`; the `BlockRef` clears.
+- **2026-07-26 — T1/T3 RULED (the parked "retire critiques outright" decision):
+  T3 retired as a critique anchor, T1 reworded and filed for binding.** The
+  decision the [WI-300 binding spec](archive/specs/WI-300-sr052-binding.2026-07-26.md)
+  §6 deliberately left unfiled is answered, and it was **never one call** — the
+  two clauses pointed opposite ways.
+  **T3 "keeps the reader oriented" → retired**, bound wholly to
+  `LLR-100`/`TC-103`. Decisive evidence: the critique **cannot verify T3's own
+  claim** — the shot matrix captures initial views only, so `115-CRITIQUE`
+  passed it on markup and `119-CRITIQUE` passed it with the caveat "no
+  descended/breadcrumb state was captured in this shot set, so the return path
+  itself is unverified", while `TC-103` clicks the crumb and asserts the restore.
+  The test is strictly the stronger instrument; the residual clause never
+  independently passed or failed a round.
+  **T1 "the entry point is obvious" → reworded, not retired.** The rubric already
+  glossed "obvious" operationally — *a labelled tab, not an unlabelled region* —
+  so the anchor now states that gloss and drops the adjective, adding the
+  judge-against-real-data instruction. Its mechanizable half (≤ 1 tab switch)
+  was **unbound** — under `SR-054` only T2/T3/T5 had children, the identical
+  hole F12 found for T6 — and is filed as **WI-315**, gated behind `WI-305`
+  because binding an anchor whose defect is open is the lax classification the
+  WI-300 ruling forbids.
+  **Alternatives passed over:** *retire SR-054's critique outright* — rejected on
+  a count, not a preference: it would orphan **five** anchors (T1-reachability,
+  T4, T6, T7, T8), only T2/T3/T5 being bound, so "retire" is a three-more-bindings
+  programme, not a flip. *Mechanize T1/T3 as proxies to green the gate* — rejected;
+  it is the failure mode the spec named. *Keep both clauses and change only when
+  `perceptual-stale` fires* — held in reserve as the cheaper fallback if the
+  binding programme is not funded.
+  **Two corrections to the record this ruling rests on:** (1) the critique's real
+  catches — 119's next-work gap, the exploded landing tab, SVG reflow, four colour
+  collisions — were **all in mechanizable halves**, never in T1-obvious or
+  T3-oriented, so retiring the instrument on those two clauses' account would
+  retire it for a reason unrelated to its yield; (2) the "T4/T7 need a browser
+  harness" cost is overstated in the WI-300 table — Playwright is **already
+  vendored and driven** by `scripts/dashboard-shots/shoot.mjs`.
+  **Not changed:** `SR-054` keeps `Verification=Critique` and `perceptual-stale`
+  keeps firing on every render commit — this ruling does not green the gate and
+  was not intended to. Live anchors: **T1, T2, T4, T5, T6, T7, T8**.
 
 ## Audit log
 
@@ -13747,3 +13785,115 @@ not an embedding bug: 25 new WI rows and the whole option-(f) LLR/TC
 decomposition (each row's Detail now states scope + narrowing, and every cell
 embeds in the dashboard detail JSON). `MAX_BYTES` → **1,600,000** (~14%
 headroom), reason here per the sensor's own instruction.
+## 2026-07-26 — T1/T3 RULED and executed: T3 leaves the critique, T1 is reworded and filed — SPINE CHANGE, RE-ATTESTATION PENDING
+
+The owner ruled the decision the option-(f) binding spec §6 deliberately left
+unfiled, and directed it be implemented. The ruling itself is in the **Decisions
+log** above; this entry is the executed record. **No `Verification` value moved
+— `SR-054` stays `Critique` and `perceptual-stale` still fires.** That was never
+the goal, and it is worth saying plainly: this ruling shrinks what the critique
+is *asked* to judge, it does not green a checker.
+
+### The decision was not one call
+
+Presented as "retire critiques outright (T1/T3)", the two clauses pointed
+**opposite ways** once measured against the rounds they had actually been through:
+
+- **T3 "keeps the reader oriented" → RETIRED as a critique anchor**, bound wholly
+  to `LLR-100`/`TC-103`. The decisive fact is that **the critique cannot verify
+  T3's own claim while the test can**: the shot matrix captures initial views
+  only, so `115-CRITIQUE` passed T3 on markup and `119-CRITIQUE` passed it with
+  the caveat *"no descended/breadcrumb state was captured in this shot set, so
+  the return path itself is unverified"* — while `TC-103` clicks the crumb and
+  asserts the trail truncates. The residual clause never independently passed or
+  failed a round.
+- **T1 "the entry point is obvious" → REWORDED, not retired.** The rubric already
+  glossed "obvious" operationally — *a labelled tab, not an unlabelled region* —
+  so the anchor now **states that gloss and drops the adjective**. What was
+  actually missing was the other half: T1's `≤ 1 tab switch` core had **no
+  owner** (under `SR-054` only T2/T3/T5 had child rows), the identical
+  mechanizable-but-unbound hole the adversarial review's F12 found for T6. Filed
+  as **WI-315**.
+
+### Three findings that changed the shape of the answer
+
+1. **"Retire outright" would have orphaned five anchors, not two clauses.** Only
+   T2/T3/T5 are bound; T1-reachability, T4, T6, T7 and T8 have no owner. Retiring
+   `SR-054`'s critique today is a *three-more-bindings programme*, not a flip —
+   a count, not a preference, and it is why the answer split.
+2. **The critique's real yield was never in the two clauses under debate.** Its
+   catches — `119`'s next-work gap, the exploded landing tab, SVG reflow at two
+   widths, four cross-vocabulary colour collisions — sit **entirely in the
+   mechanizable halves**. Retiring the instrument on T1-obvious/T3-oriented
+   grounds would have retired it for a reason unrelated to what it was finding.
+3. **The "T4/T7 need a browser harness" cost is overstated in the residue table.**
+   Playwright is **already vendored and already driven** —
+   `scripts/dashboard-shots/shoot.mjs` renders the whole shot matrix with it — so
+   bounding-box and `scrollWidth` checks are incremental, not a new dependency.
+   Recorded because it re-prices the remaining programme.
+
+### Why WI-315 is gated behind WI-305, not filed as ready
+
+`WI-305` is the open T1 defect. Binding an anchor whose defect is open is exactly
+the **lax classification** the option-(f) ruling names as its one failure mode —
+the test would have to be written to pass against a dashboard the critique had
+already failed. The spec states the dependency and the alternative (prove the
+guard against the pre-fix artifact).
+
+The spec also carries the design constraint that makes the binding worth writing:
+**assert against the rendered artifact carrying real registry data, not the nav
+skeleton.** `119-CRITIQUE`'s MAJOR was a next-work surface that *exists* in the
+emitter (`gen_trajectory.py`'s hero `sub nowat` line, already covered by
+`test_t1_hero_names_the_active_work_item`) but rendered **nothing**, because it
+fires only on `status == "active"` and the registry had zero active rows — a
+state `test_t1_hero_active_line_absent_when_nothing_is_active` explicitly
+blesses. A structural nav check passes on precisely the artifact the critic
+failed. That fixture is the one that must bite.
+
+### What changed
+
+- [`rubrics/dashboard-usability.md`](rubrics/dashboard-usability.md) — T3 marked
+  **RETIRED as a critique anchor** with its LLR/TC map and the reason (the
+  retire-don't-delete idiom the uniformity/accessibility rubrics use); T1
+  reworded onto its own gloss plus the judge-against-real-data instruction; the
+  header states the **live anchor set** once: **T1, T2, T4, T5, T6, T7, T8**.
+- `LLR-100` — now owns the **whole** T3 anchor, no residue; the ruling's basis
+  recorded on the row. `LLR-055` — narrowing note updated: T3 leaves entirely,
+  T1's residue becomes the reworded operational bar pending `WI-315`.
+- `TC-055` and `SR-054.AcceptanceCriteria` — the live anchor set mirrored, with
+  *"a verdict must not cite T3"* stated where the critic's instructions resolve.
+  Three surfaces, one statement, kept in step (the next binding must move all
+  three together — `WI-315`'s Done-when says so).
+- **WI-315 filed** + [`specs/WI-315.md`](specs/WI-315.md).
+- `WI-305`/`WI-306`/`WI-307`/`WI-314` **re-affirmed against the amended `SR-054`**
+  — the backlog-staleness warn fired on all four the moment the SR row changed,
+  which is the checker working; each was re-read (all four cite anchors that stay
+  live) and `WI-314`'s carried residue statement, now stale, was corrected on the
+  row rather than left to rot.
+
+### Deviations from the recommendation as briefed
+
+None in substance. One addition: `status.md`'s **Next action** now names
+re-attestation as the owner's *second* standing item beside merge-to-`main` —
+it was already true across the four earlier flagged commits but was stated
+nowhere on the working surface.
+
+### Trap worth recording
+
+The first draft of the `status.md` edit tripped `check_trajectory`'s
+forward-only rule three times by naming closed WI ids while *explaining* the
+change (`ERROR - a done work-item id appears in docs/status.md`). Narrating
+history is exactly what that rule exists to stop, and the pull toward it is
+strongest when the edit is a ruling with a rationale. Rewritten to describe the
+work by content and leave the ids in the log.
+
+**Verified:** full unfiltered suite **1535 passed, 7 skipped** (`-n auto`,
+9m35s); smoke **409 passed** (16.3s); `trace --strict --strict-integrity` clean
+at **SN=25 SR=110 LLR=112 TC=115** orphans=0 integrity=0, verified-mechanized
+95; `check_docs --stale` **OK — 262 docs, 774 links, 0 broken**;
+`check_trajectory --strict` back to the pre-session baseline — the single
+owner-parked `perceptual-stale` error (naming `SR-054` only) plus the
+pre-existing `WI-308` SpecRef WARN, with the four SR-054 amendment warns
+cleared by re-affirmation. Dashboard/OKF/status/gate regenerated; derived gate
+**G3** all phases, basis unchanged. Registry: **313 rows, 295 done, 3 retired,
+9 deferred, 6 queued** (WI-305/306/307/308/314/315).

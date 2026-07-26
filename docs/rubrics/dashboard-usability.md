@@ -8,8 +8,12 @@ the implementer's self-assessment**. Authored at `[v3]-[g2]` (WI-135) from the
 SR-054 / SN-024 / SN-023 intent, not from the possibly-lax TC.
 
 The verdict is `VERDICT: APPROVE|CHANGES-REQUESTED findings=N` with each finding
-citing an anchor id (`T1`…`T8`). APPROVE requires every anchor satisfied. Judge as
-a **first-time reviewer** opening the dashboard cold.
+citing an anchor id (`T1`…`T8`). APPROVE requires every **live** anchor satisfied.
+Judge as a **first-time reviewer** opening the dashboard cold.
+
+> **T3 is retired as a critique anchor** (owner ruling 2026-07-26) — it is bound
+> to `LLR-100`/`TC-103` and is **not** yours to judge. The live anchor set is
+> **T1, T2, T4, T5, T6, T7, T8**.
 
 ## The core reading tasks (the concrete "one tab switch" list)
 
@@ -27,8 +31,16 @@ a nav button — no hunting, no scrolling a dense graph to find the entry point)
 ## Anchors
 
 **T1 — Task findability.** Each of the three tasks above is reachable within one
-tab switch and the entry point is obvious (a labelled tab, not an unlabelled
-region). *Bad:* "how the parts connect" requires two tab switches or expanding
+tab switch from the landing view, and its entry point is a **labelled** nav
+control or a **named surface on the landing view** — never an unlabelled region
+the reader has to discover by clicking around. (Reworded by the 2026-07-26
+ruling: the anchor no longer turns on the word *obvious*. "Obvious" was always
+glossed here as labelled-not-unlabelled, and that gloss is the whole bar — judge
+the label, not your impression of it.) Judge both halves against the **rendered
+artifact carrying its real registry data**, never the nav skeleton: 119-CRITIQUE's
+MAJOR was a next-work surface that exists in the emitter but rendered *nothing*
+because no work item was `active`, which a structural nav check would have passed
+(`WI-305`). *Bad:* "how the parts connect" requires two tab switches or expanding
 three nested blocks to locate.
 
 **T2 — Default-density legibility.** Views default to a legible density —
@@ -36,10 +48,24 @@ start-collapsed per the SR-089 `>3` rule so a large project is not a wall of
 nodes on open — while a small project still reads flat. *Bad:* the When view opens
 fully exploded with hundreds of overlapping nodes.
 
-**T3 — Detail in context.** Revealing detail (descending a container, opening a
-detail panel) does not lose the surrounding context — a breadcrumb or inline panel
-keeps the reader oriented. *Bad:* descending a layer replaces the whole view with
-no way back to where you were.
+**T3 — Detail in context. RETIRED as a critique anchor 2026-07-26 (owner ruling)
+— bound to `LLR-100`/`TC-103`; do not judge it here.** The bar it stated:
+revealing detail (descending a container, opening a detail panel) does not lose
+the surrounding context — the drill emits a breadcrumb whose crumb click
+**truncates the trail to that ancestor**, restoring the parent view, and detail
+opens in a persistent inline panel. *Bad:* descending a layer replaces the whole
+view with no way back to where you were.
+
+The reason it left: **the critique cannot verify T3's actual claim, and the test
+can.** The shot matrix captures initial views only, so a static-PNG reviewer sees
+that a breadcrumb *exists* and stops — 115-CRITIQUE passed it on markup, and
+119-CRITIQUE passed it with the caveat "no descended/breadcrumb state was
+captured in this shot set, so the return path itself is unverified". `TC-103`
+clicks the crumb and asserts the restore. The residual clause "keeps the reader
+oriented" never independently passed or failed a round; the breadcrumb *is* the
+orientation the anchor asked for. A critic who believes T3 is violated has found
+a gap in `TC-103` — route it through change-intake to harden the test, never
+through a verdict.
 
 **T4 — Label legibility.** Labels stay readable at default zoom, with no clipped,
 truncated-without-affordance, or overlapping text. *Bad:* node labels collide or
