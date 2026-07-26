@@ -159,7 +159,14 @@ BASELINE = {
     # helper plus the comment recording WHY the surface exists and its
     # graceful-degrade posture. Reviewed bump, log 2026-07-26. Re-stamp downward
     # with WI-280.
-    "gen_trajectory.py": 5112,
+    # +44 (5112 -> 5156), WI-306: the What icicle earns its tiering by scale -
+    # panel() extracted so a subtree renders as its own drill layer, plus the
+    # start-collapsed SN root layer above the SR-089 >3 rule. 119-CRITIQUE T2
+    # MAJOR: the landing view opened the whole spine at LEAF scale (one unit per
+    # TC) while the three wired tabs opened at a summary. Most of the delta is
+    # the comment stating why capping depth does NOT fix a leaf-proportional
+    # height. Reviewed bump, log 2026-07-26. Re-stamp down with WI-280.
+    "gen_trajectory.py": 5156,
     # +11 (3452 -> 3463), WI-284: _regenerate_disposition_artifacts also runs
     # `gen_trajectory.py --status` at integrate/blocked-disposition so a closed
     # id drops from the generated frontier automatically (and the disposition

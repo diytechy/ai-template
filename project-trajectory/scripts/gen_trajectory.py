@@ -245,6 +245,10 @@ def read_sns(root):
 # intentional — one concept, two label systems).
 TIER_FILL = {"sn": "#4338ca", "sr": "#0e7490", "llr": "#64748b", "tc": "#0f766e"}
 TIER_COL = {"sn": 0, "sr": 1, "llr": 2, "tc": 3}
+# WI-306: the What-tab icicle drill ids (start-collapsed above the SR-089
+# `>3` SN threshold - the T2 density fix, same idiom as the sibling views).
+ARCH_DRILL_ID = "archdrill"
+ARCH_ROOT_LAYER = "arch-root"
 ICICLE_UNIT = 18  # px of height per TC leaf
 
 
@@ -414,10 +418,9 @@ def arch_icicle(root):
     for s in roots:
         collect(s)
 
-    cells = []
     col_w, gap = 200, 16
 
-    def draw(nid, y):
+    def draw(nid, y, cells):
         h = weight[nid] * ICICLE_UNIT
         t = tier[nid]
         x = TIER_COL[t] * (col_w + gap)
@@ -458,29 +461,70 @@ def arch_icicle(root):
         )
         cur = y
         for c in kids.get(nid, []):
-            draw(c, cur)
+            draw(c, cur, cells)
             cur += weight[c] * ICICLE_UNIT
 
-    y = 0.0
-    for s in roots:
-        draw(s, y)
-        y += weight[s] * ICICLE_UNIT
+    def panel(root_ids):
+        """The leaf-proportional icicle for `root_ids`: the whole spine at the
+        flat scale, or ONE SN's subtree as a drill layer."""
+        cells = []
+        y = 0.0
+        for s in root_ids:
+            draw(s, y, cells)
+            y += weight[s] * ICICLE_UNIT
+        width = 4 * col_w + 3 * gap
+        heads = "".join(
+            '<text class="lane-head" x="{:.0f}" y="-8" '
+            'text-anchor="middle">{}</text>'.format(
+                TIER_COL[t] * (col_w + gap) + col_w / 2, t.upper()
+            )
+            for t in ("sn", "sr", "llr", "tc")
+        )
+        body = heads + "".join(cells)
+        return (
+            '<svg viewBox="0 -22 {} {:.0f}" width="{}" '
+            'preserveAspectRatio="xMinYMin meet" role="{}">{}</svg>'.format(
+                width, y + 22, width, _svg_role(body), body
+            )
+        )
 
-    width = 4 * col_w + 3 * gap
-    heads = "".join(
-        '<text class="lane-head" x="{:.0f}" y="-8" text-anchor="middle">{}</text>'.format(
-            TIER_COL[t] * (col_w + gap) + col_w / 2, t.upper()
+    # WI-306 (T2, 119-CRITIQUE MAJOR): the landing What view used to render the
+    # WHOLE spine at leaf scale - one unit per TC - so a mature registry opened as
+    # a multi-screen wall while the three WIRED tabs correctly opened at a summary
+    # layer. Capping DEPTH would not have fixed it: height is leaf-proportional,
+    # so stopping at the SR lane still stacks one unit per SR. The summary has to
+    # be a coarser TIER - one block per SN, descend on click - which is what the
+    # anchor's bad case ("a wall of nodes on open") and the row both ask for.
+    #
+    # Earned by scale exactly like its siblings (SR-089's `>3` rule): at or below
+    # 3 SNs the flat icicle renders BYTE-IDENTICALLY, so a small project never
+    # pays for tiering it cannot need.
+    if len(roots) <= 3:
+        return panel(roots), details, desc
+
+    layers = []
+    blocks = []
+    for s in roots:
+        lid = "archl-{}".format(s.lower())
+        blocks.append(
+            {
+                "key": s,
+                "label": s,
+                "sub": (details[s]["title"] or "").strip(),
+                "cls": "sn",
+                "tier": "sn",
+                "descend": lid,
+                "crumb": s,
+                "count": len(desc.get(s, [])),
+            }
         )
-        for t in ("sn", "sr", "llr", "tc")
+        layers.append((lid, panel([s])))
+    layers.insert(0, (ARCH_ROOT_LAYER, _drill_layer_svg(blocks, [])))
+    return (
+        _render_drill(ARCH_DRILL_ID, ARCH_ROOT_LAYER, "What (spine)", layers),
+        details,
+        desc,
     )
-    body = heads + "".join(cells)
-    svg = (
-        '<svg viewBox="0 -22 {} {:.0f}" width="{}" '
-        'preserveAspectRatio="xMinYMin meet" role="{}">{}</svg>'.format(
-            width, y + 22, width, _svg_role(body), body
-        )
-    )
-    return svg, details, desc
 
 
 def spine_stats(root):

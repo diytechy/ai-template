@@ -2627,6 +2627,93 @@ def test_a2_the_repos_own_shipped_dashboard_holds_the_invariant():
     assert sum(_focusable_count(b) for _, b in subtrees), "vacuous — no focusables"
 
 
+# --- WI-306 / SR-054 T2: the What icicle earns its tiering by scale -----------
+# 119-CRITIQUE MAJOR: the landing What view rendered the WHOLE spine at leaf
+# scale (one unit per TC), opening as a multi-screen wall while the three wired
+# tabs correctly opened at a summary layer. Capping DEPTH would not have fixed
+# it - height is leaf-proportional, so stopping at the SR lane still stacks one
+# unit per SR - so the summary has to be a coarser TIER: one block per SN,
+# descend on click, earned above the SR-089 `>3` rule like its sibling views.
+
+_T2_SN_HEADER = (
+    "# Stakeholder Needs (SN-###)\n\n"
+    "| SN-ID | Need | Why it matters | Priority | Acceptance intent |\n"
+    "|---|---|---|---|---|\n"
+)
+
+
+def _spine_with_sns(root, n):
+    """Rewrite the fixture spine to span `n` SNs, each with one SR/LLR/TC - the
+    scale knob the `>3` rule turns on."""
+    req = root / "docs" / "requirements"
+    (req / "stakeholder-needs.md").write_text(
+        _T2_SN_HEADER
+        + "".join(
+            "| SN-{i:03d} | Need {i}. | Matters {i}. | M | works {i}. |\n".format(i=i)
+            for i in range(1, n + 1)
+        ),
+        encoding="utf-8",
+    )
+    (req / "system-requirements.csv").write_text(
+        "SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,"
+        "Permutations,Priority,Verification,Status\n"
+        + "".join(
+            'SR-{i:03d},Req {i},SN-{i:03d},"Shall {i}.",R,"ac {i}",,M,Test,'
+            "Verified\n".format(i=i)
+            for i in range(1, n + 1)
+        ),
+        encoding="utf-8",
+    )
+    (req / "low-level-requirements.csv").write_text(
+        "LLR-ID,SR-Refs,Title,Module,CodeSymbol,Detail,TestRefs,Status\n"
+        + "".join(
+            'LLR-{i:03d},SR-{i:03d},Low {i},src/m.py,f{i},"d {i}",(see TC),'
+            "Verified\n".format(i=i)
+            for i in range(1, n + 1)
+        ),
+        encoding="utf-8",
+    )
+    (root / "docs" / "test" / "test-cases.csv").write_text(
+        "TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,"
+        "Evidence,Status\n"
+        + "".join(
+            'TC-{i:03d},SR-{i:03d};LLR-{i:03d},Unit,m {i},Smoke,"p","e {i}",Yes,'
+            "tests/t.py::t{i},Verified\n".format(i=i)
+            for i in range(1, n + 1)
+        ),
+        encoding="utf-8",
+    )
+
+
+def test_t2_what_icicle_starts_collapsed_above_the_sn_threshold(tmp_path):
+    # Above the `>3` rule the What view is a start-collapsed drill: one descend
+    # block per SN in the root layer, one child layer each, and the deep TC cells
+    # sit in HIDDEN child layers - not in the initially-shown root, which is the
+    # wall the anchor forbids.
+    make_repo(tmp_path)
+    _spine_with_sns(tmp_path, 8)
+    assert gen(tmp_path).returncode == 0
+    text = html_of(tmp_path)
+    assert 'data-drill="archdrill"' in text
+    assert text.count('data-descend="archl-sn-') == 8
+    assert text.count('data-layer="archl-sn-') == 8
+    root_layer = text.split('data-layer="arch-root"', 1)[1].split("</div>", 1)[0]
+    assert "SN-001" in root_layer
+    assert "TC-001" not in root_layer  # no leaf cells in the opening view
+
+
+def test_t2_small_spine_keeps_the_flat_icicle(tmp_path):
+    # At or below 3 SNs the tiering is NOT earned: the flat icicle renders, so a
+    # small project never pays for a drill it cannot need - the same symmetry the
+    # When and Knowledge views hold to.
+    make_repo(tmp_path)
+    _spine_with_sns(tmp_path, 3)
+    assert gen(tmp_path).returncode == 0
+    text = html_of(tmp_path)
+    assert 'data-drill="archdrill"' not in text
+    assert "TC-001" in text  # deep cells render inline, unhidden
+
+
 def test_t1_hero_names_the_active_work_item(tmp_path):
     # dashboard-usability T1 (048): the landing hero names the in-flight work item
     # (id + title) so finding "the next work" costs zero tab switches. WI-002 is

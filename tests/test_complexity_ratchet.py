@@ -102,7 +102,10 @@ BASELINE = {
     ("gen_okf.py", "main"): 13,
     ("gen_release_checklist.py", "main"): 20,
     ("gen_trajectory.py", "_okf_nodes"): 15,
-    ("gen_trajectory.py", "arch_icicle"): 20,
+    # +3 (20 -> 23), WI-306: the start-collapsed SN root layer above the >3 rule
+    # (the T2 density fix) - the panel() extraction plus the tiered branch. A
+    # WI-280 decomposition candidate: panel/draw are an extractable unit.
+    ("gen_trajectory.py", "arch_icicle"): 23,
     ("gen_trajectory.py", "sw_containment"): 28,
     ("gen_trajectory.py", "when_view"): 15,
     ("plan_coverage.py", "check_plan"): 17,
