@@ -175,6 +175,20 @@ docs/status.md = status | <!-- BEGIN GENERATED STATUS --> | <!-- END GENERATED S
 # [step:license-lint]
 # command = npx license-checker --production --failOn GPL
 #
+
+# Prose reference rot — a backticked repo path or a `sym:module.name` reference
+# naming something that is no longer there (check_docs.py only proves markdown
+# LINKS resolve). Warn-first by design, so TRIAGE BEFORE YOU WIRE IT: run it
+# once, fix or classify what it finds, and only then add --strict here. A path
+# that is missing for a mechanical reason is reported as UNTRACED, not dangling
+# — it resolves under the kit root, the doc is a record surface (log/archive/
+# reviews), or the path is declared with its reason in a declared-absences file
+# (see --declared-absences; a repo lists there what it deliberately does not
+# carry, e.g. an opt-in registry or a policy file whose absence IS the default).
+# The untraced count always prints, so the classification's size stays visible.
+# [step:doc-refs]
+# command = {py} scripts/check_doc_refs.py --root . --strict
+#
 # Per-module coverage floors (the kit-owned comparator, stdlib-only): the global
 # [coverage] threshold is one aggregate number, so a well-tested module can
 # subsidize a thin high-risk one. Add `--cov-report=json` to [coverage] args so

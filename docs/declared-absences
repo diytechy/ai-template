@@ -1,0 +1,44 @@
+# Paths this repo deliberately does NOT carry, each with the reason (WI-308).
+#
+# One line per entry: `<path> — <reason>`. Blank lines and `#` comments ignored.
+#
+# Two readers share it, which is the point — the fact is stated once:
+#   - `tests/test_dogfood_sync.py` — the scaffold-omission declaration: a
+#     `bootstrap.py` MAPPING destination that is absent here must be listed, and
+#     an entry whose path MATERIALIZES must be removed (a test enforces both).
+#   - `check_doc_refs.py` — prose naming one of these is UNTRACED, not dangling.
+#     Before WI-308 those references were 12 of this repo's 22 dangling findings,
+#     each of them a fact already stated here.
+#
+# This is a DECLARATION, not a suppression list: every line carries its reason,
+# a materialized path fails the honesty test, and nothing here is exempt from
+# the checker — it is reclassified, counted, and printable with
+# `--show-untraced`. A path that is simply ROT does not belong here; it belongs
+# fixed (`docs/next-wi`, retired by WI-180, is the worked example).
+
+# --- Scaffold destinations a meta-repo has no use for -------------------------
+GEMINI.md — no Gemini agent in use; OpenCode/KIMI/GROK read AGENTS.md natively
+docs/process.md — the master PROCESS.md lives in project-trajectory/ (status.md non-goal)
+docs/process-options.md — the master PROCESS_OPTIONS.md lives in project-trajectory/ (status.md non-goal)
+docs/plan.md — superseded by the trajectory layer + parallel dispatch (WI-252 mutual exclusion)
+docs/interfaces.md — cross-project contract index; skip for a standalone deliverable (its own header)
+docs/requirements/performance-budgets.csv — process.md §9 perf layer not enabled (opt-in, off-spine)
+docs/requirements/procurement.csv — a meta-repo purchases no parts (opt-in, off-spine)
+docs/requirements/assets.csv — a meta-repo ships no binary assets (opt-in, off-spine)
+run.cmd — no product to launch (status.md non-goal; the launchers here are agent-resume.*)
+run.sh — no product to launch (status.md non-goal)
+run.command — no product to launch (status.md non-goal)
+.githooks/pre-push — privacy-checked-repo backstop; docs/privacy-check declares off (owner-ruled out, WI-251)
+.github/workflows/check.yml — test.yml's gate job runs the same check.py at the derived gate
+src/ — the kit's product is project-trajectory/ + tests/, not an application tree
+docs/kit-license — a stamp bootstrap.py writes into a SCAFFOLD; the kit itself is the source
+docs/kit-profile — likewise a scaffold stamp, recording which kit rung a repo adopted
+docs/release-checklist.md — a scaffolded artifact for a repo that ships releases
+
+# --- Declared policy files where ABSENT is a legal, documented state ----------
+# Naming one of these in prose is CORRECT: the reader treats absence as the
+# stated default, so the file exists only when a repo overrides that default.
+docs/blackout — absent = disabled, byte-identical, by the template's own spec
+docs/review-cadence — absent = `slice` (per-slice review), the default cadence
+docs/subagent-gate — absent = deny; a research-enabled repo writes `allow`
+docs/components-check — absent = the component-findings gate stays warn-first

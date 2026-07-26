@@ -73,7 +73,7 @@ One layer, two faces: **knowledge packs** (the durable store) and the
 - **A durable module spec = the CMP row + its refs.** Per-component
   expectations live where the component's identity already lives: the
   `CMP-###` row (`State`, `Knowledge`, `DetailDoc`), not a new
-  `docs/specs/components/` tree — `docs/specs/` keeps its archive-at-close
+  `docs/specs/components/` tree — `docs/specs/` keeps its archive-at-close <!-- path-ok: names the REJECTED layout, which by construction does not exist -->
   semantics.
 - **Integrity, warn-first.** `trace.py` (which already validates CMP
   membership joins) learns to resolve `docs/knowledge/`-shaped `Knowledge`
@@ -158,7 +158,7 @@ One layer, two faces: **knowledge packs** (the durable store) and the
 
 ## 5. Rejected alternatives
 
-- **`docs/specs/components/` chunks** — forks `docs/specs/`' archive-at-close
+- **`docs/specs/components/` chunks** — forks `docs/specs/`' archive-at-close <!-- path-ok: a rejected alternative names a layout that was never built -->
   semantics; the CMP `DetailDoc`/`Knowledge` hooks already exist.
 - **An authored dir inside `docs/okf/`** — violates OKF's
   generated-never-authored constraint. (OKF may later *export* packs alongside

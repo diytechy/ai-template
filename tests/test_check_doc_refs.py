@@ -195,3 +195,54 @@ def test_symbol_tier_skips_without_inventory(tmp_path):
     proc = refs(tmp_path, "--strict")
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "skipped" in proc.stdout
+
+
+def test_declared_absence_is_untraced_with_its_own_reason(tmp_path):
+    # WI-308's third untraced reason: a repo may DECLARE, with a reason, the
+    # paths it deliberately does not carry — an opt-in registry it never
+    # enabled, a policy file whose absence IS the documented default. Prose
+    # naming one is correct for its reader, exactly like a kit-relative path.
+    make_repo(tmp_path, "Set `docs/review-cadence` to change it; see `docs/nope.md`.\n")
+    (tmp_path / "docs" / "declared-absences").write_text(
+        "# why each is missing\n"
+        "docs/review-cadence — absent = `slice`, the default cadence\n",
+        encoding="utf-8",
+    )
+    proc = refs(tmp_path, "--strict", "--show-untraced")
+    # the declared one is reclassified, WITH the declared reason quoted back...
+    assert "docs/review-cadence" in proc.stderr
+    assert "absent = `slice`, the default cadence" in proc.stderr
+    assert "UNTRACED" in proc.stderr
+    # ...and the undeclared one on the SAME line still gates: this is a
+    # classification, not a blanket exemption for the file or the line.
+    assert proc.returncode == 1
+    assert "docs/nope.md` does not exist" in proc.stderr
+
+
+def test_absences_file_absent_or_malformed_never_silences(tmp_path):
+    # Degrade in the safe direction. No file at all, and a file whose line
+    # carries no separator, must both leave the path DANGLING — a reader that
+    # guessed at a malformed entry would silence real rot.
+    make_repo(tmp_path, "See `docs/review-cadence`.\n")
+    assert refs(tmp_path, "--strict").returncode == 1, "no file: still rot"
+    (tmp_path / "docs" / "declared-absences").write_text(
+        "docs/review-cadence\n", encoding="utf-8"
+    )
+    proc = refs(tmp_path, "--strict")
+    assert proc.returncode == 1, "a line with no reason declares nothing"
+    assert "docs/review-cadence` does not exist" in proc.stderr
+
+
+def test_declared_absences_is_a_declaration_not_a_suppression_list(tmp_path):
+    # The count is still reported, so the size of the class stays visible — the
+    # same honesty rule WI-062 applied to the kit-relative and record reasons.
+    make_repo(tmp_path, "See `docs/a-thing.md` and `docs/other-thing.md`.\n")
+    (tmp_path / "docs" / "declared-absences").write_text(
+        "docs/a-thing.md — opt-in layer this repo never enabled\n"
+        "docs/other-thing.md — likewise\n",
+        encoding="utf-8",
+    )
+    proc = refs(tmp_path, "--strict")
+    assert proc.returncode == 0
+    assert "2 untraced" in proc.stdout
+    assert "declared absent" in proc.stdout

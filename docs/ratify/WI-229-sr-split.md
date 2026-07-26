@@ -3,7 +3,7 @@
 **State:** ATTESTED 2026-07-19 — stage 3 may proceed (record below).
 
 This is the stage-1 migration plan required by
-[`docs/specs/WI-229.md`](../archive/specs/WI-229.2026-07-20.md). It freezes the split IDs, the
+[`docs/archive/specs/WI-229.2026-07-20.md`](../archive/specs/WI-229.2026-07-20.md). It freezes the split IDs, the
 post-split evidence parents, and the coverage-preservation rules. It does not
 ratify itself. The worker that authored it must stop at the attestation boundary.
 

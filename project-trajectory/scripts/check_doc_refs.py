@@ -28,6 +28,14 @@ classes links can't see, with false-positive control as the design center
          the log, archive, reviews, plans and review reports). A session log
          naming a file that has since been retired is accurate history, not a
          broken pointer; "fixing" it would falsify the record.
+       - DECLARED (WI-308) — the path is listed, with its reason, in the
+         `--declared-absences` file (default `docs/declared-absences`; ignored
+         when absent). A repo states there what it deliberately does not carry:
+         an opt-in registry it never enabled, a scaffold destination a meta-repo
+         has no use for, a policy file whose ABSENCE is the documented default.
+         Prose naming one is correct for its reader, and the declared reason is
+         quoted back in the finding. Fail-soft in the safe direction: no file, or
+         a line with no `<path> — <reason>` separator, declares nothing.
 
      Untraced findings are counted, never gate, and print only with
      `--show-untraced`. `--strict` gates on dangling alone. The distinction is
@@ -48,7 +56,7 @@ unless --strict; NOT wired into check.py's required floor. Opt in per repo:
 
 Scan surface = root *.md + docs/**/*.md (the check_docs surface). Stdlib only.
 
-Contracts: IF-008, IF-028 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.csv).
+Contracts: IF-008, IF-028, IF-072 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.csv).
 """
 
 import argparse
@@ -103,6 +111,11 @@ RECORD_PREFIXES = (
 # ADOPTING repo will have after copy-in, so `scripts/check.py` is correct for its
 # reader even though this repo keeps it at `project-trajectory/scripts/check.py`.
 DEFAULT_KIT_ROOT = "project-trajectory"
+# A repo may DECLARE the paths it deliberately does not carry, each with its
+# reason, in one file (WI-308). Prose naming one is correct-for-its-reader in the
+# same way a kit-relative path is: the reference describes a real destination,
+# and its absence here is the documented state. Optional — no file, no reason.
+DEFAULT_ABSENCES = "docs/declared-absences"
 BACKTICK = re.compile(r"`([^`\n]+)`")
 SYM = re.compile(r"\bsym:([A-Za-z_][\w.]*)\.(\w+)\b")
 MOD_HEAD = re.compile(r"^### `([^`]+)`")
@@ -184,11 +197,36 @@ def load_symbol_oracle(arch_path):
     return {k: v for k, v in oracle.items() if v}
 
 
-def untraced_reason(token, rel, root, kit_root, record_prefixes):
+def load_declared_absences(path):
+    """`{path: reason}` from a declared-absences file, or `{}` when it is absent
+    (WI-308). Format is one `<path> — <reason>` per line, `#` comments and blanks
+    ignored; a line without the separator is skipped rather than fatal, so a
+    malformed entry degrades to "not declared" — the conservative direction, since
+    the failure mode of guessing is silencing a real rot."""
+    if path is None or not path.is_file():
+        return {}
+    out = {}
+    for line in path.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line or line.startswith("#"):
+            continue
+        for sep in (" — ", " - "):
+            if sep in line:
+                p, reason = line.split(sep, 1)
+                out[p.strip().rstrip("/")] = reason.strip()
+                break
+    return out
+
+
+def untraced_reason(token, rel, root, kit_root, record_prefixes, absences=None):
     """Why a missing path is explainable, or None when it is real rot (WI-062).
 
-    Order matters only for the message: a token can be both kit-relative and in
-    a record surface, and kit-relative is the more specific statement."""
+    Order is by specificity, and only affects the message: a token can be both
+    kit-relative and in a record surface. A DECLARED absence (WI-308) is the most
+    specific of all — the repo has stated, with a reason, that it does not carry
+    this path — so it is checked first and reports the declared reason verbatim."""
+    if absences and token in absences:
+        return "declared absent by design — {}".format(absences[token])
     if kit_root is not None and (kit_root / token).exists():
         return (
             "resolves under {}/ — a kit-relative path, correct for a repo "
@@ -201,7 +239,7 @@ def untraced_reason(token, rel, root, kit_root, record_prefixes):
     return None
 
 
-def path_findings(line, rel, n, root, kit_root, record_prefixes):
+def path_findings(line, rel, n, root, kit_root, record_prefixes, absences=None):
     """One line's path-tier verdicts as `(dangling, untraced)` (WI-062).
 
     Lifted out of `findings_for` so the per-token classification lives in one
@@ -214,7 +252,7 @@ def path_findings(line, rel, n, root, kit_root, record_prefixes):
         clean = token.strip().rstrip("/")
         if (root / clean).exists():
             continue
-        why = untraced_reason(clean, rel, root, kit_root, record_prefixes)
+        why = untraced_reason(clean, rel, root, kit_root, record_prefixes, absences)
         if why:
             untraced.append("{}:{}: `{}` — {}".format(rel, n, token, why))
         else:
@@ -222,7 +260,9 @@ def path_findings(line, rel, n, root, kit_root, record_prefixes):
     return bad, untraced
 
 
-def findings_for(doc, root, oracle, kit_root=None, record_prefixes=RECORD_PREFIXES):
+def findings_for(
+    doc, root, oracle, kit_root=None, record_prefixes=RECORD_PREFIXES, absences=None
+):
     """`(dangling, untraced)` — see the module docstring for the split."""
     out, untraced = [], []
     rel = doc.relative_to(root).as_posix()
@@ -243,7 +283,9 @@ def findings_for(doc, root, oracle, kit_root=None, record_prefixes=RECORD_PREFIX
             continue
         if "path-ok" in line:
             continue  # deliberate example naming a path that isn't here
-        bad, explained = path_findings(line, rel, n, root, kit_root, record_prefixes)
+        bad, explained = path_findings(
+            line, rel, n, root, kit_root, record_prefixes, absences
+        )
         out += bad
         untraced += explained
         for mod, name in SYM.findall(line):
@@ -311,6 +353,15 @@ def main():
         ),
     )
     ap.add_argument(
+        "--declared-absences",
+        default=DEFAULT_ABSENCES,
+        help="file declaring the paths this repo deliberately does not carry, "
+        "one `<path> — <reason>` per line; a reference to one is untraced with "
+        "its declared reason (default {}; ignored when absent)".format(
+            DEFAULT_ABSENCES
+        ),
+    )
+    ap.add_argument(
         "--show-untraced",
         action="store_true",
         help="print the explained findings too, with their reason",
@@ -321,6 +372,9 @@ def main():
     if kit_root is not None and not kit_root.is_dir():
         kit_root = None
     records = tuple(args.record_prefix) if args.record_prefix else RECORD_PREFIXES
+    absences = load_declared_absences(
+        (root / args.declared_absences) if args.declared_absences else None
+    )
     oracle = load_symbol_oracle(root / args.arch)
     if not oracle:
         print(
@@ -329,7 +383,7 @@ def main():
         )
     findings, untraced = [], []
     for doc in doc_files(root):
-        found, explained = findings_for(doc, root, oracle, kit_root, records)
+        found, explained = findings_for(doc, root, oracle, kit_root, records, absences)
         findings += found
         untraced += explained
     for f in findings:
@@ -341,7 +395,7 @@ def main():
     # classification you can't see the size of is a suppression list.
     tail = ""
     if untraced:
-        tail = " · {} untraced (explained: kit-relative or a record surface){}".format(
+        tail = " · {} untraced (explained: declared absent, kit-relative, or a record surface){}".format(
             len(untraced), "" if args.show_untraced else " — --show-untraced to list"
         )
     if findings:

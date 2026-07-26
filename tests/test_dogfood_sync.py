@@ -332,25 +332,17 @@ def test_live_work_items_header_matches_template_exactly():
 # backfilled, and 0/58 live specs carried the close-ritual boxes the absent
 # exemplar stated — a one-time audit is not an invariant, so this walk is.
 
-# dest -> one-line reason, owner-triaged 2026-07-20 (WI-251). An entry whose
-# destination MATERIALIZES must be removed (asserted below) — the list can only
+# dest -> one-line reason, owner-triaged 2026-07-20 (WI-251) and MOVED to a
+# declared file by WI-308: `docs/declared-absences` is now the one home, because
+# `check_doc_refs.py` needs the same facts (prose naming a path this repo
+# declares it does not carry is untraced, not rot) and the kit's anti-duplication
+# rule says state it once. The seam is the FILE, not an import — the checker is a
+# stdlib-only kit script and must not reach into a test module. An entry whose
+# destination MATERIALIZES must be removed (asserted below): the list can only
 # shrink, never silently mask a backfill.
-SCAFFOLD_OMISSIONS = {
-    "GEMINI.md": "no Gemini agent in use; OpenCode/KIMI/GROK read AGENTS.md natively",
-    "docs/process.md": "the master PROCESS.md lives in project-trajectory/ (status.md non-goal)",
-    "docs/process-options.md": "the master PROCESS_OPTIONS.md lives in project-trajectory/ (status.md non-goal)",
-    "docs/blackout": "absent = disabled, byte-identical, by the template's own spec",
-    "docs/plan.md": "superseded by the trajectory layer + parallel dispatch (WI-252 mutual exclusion)",
-    "docs/interfaces.md": "cross-project contract index; skip for a standalone deliverable (its own header)",
-    "docs/requirements/performance-budgets.csv": "process.md §9 perf layer not enabled (opt-in, off-spine)",
-    "docs/requirements/procurement.csv": "a meta-repo purchases no parts (opt-in, off-spine)",
-    "docs/requirements/assets.csv": "a meta-repo ships no binary assets (opt-in, off-spine)",
-    "run.cmd": "no product to launch (status.md non-goal; the launchers here are agent-resume.*)",
-    "run.sh": "no product to launch (status.md non-goal)",
-    "run.command": "no product to launch (status.md non-goal)",
-    ".githooks/pre-push": "privacy-checked-repo backstop; docs/privacy-check declares off (owner-ruled out, WI-251)",
-    ".github/workflows/check.yml": "test.yml's gate job runs the same check.py at the derived gate",
-}
+SCAFFOLD_OMISSIONS = load_script("check_doc_refs").load_declared_absences(
+    ROOT / "docs" / "declared-absences"
+)
 
 
 def _mapping_unaccounted():

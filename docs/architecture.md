@@ -377,16 +377,17 @@ Contracts (interfaces): IF-069, IF-070
 
 ### `scripts/check_doc_refs`
 _Doc reference validation — prose that names dead files or symbols (Thread 49)._
-Contracts (interfaces): IF-008, IF-028
+Contracts (interfaces): IF-008, IF-028, IF-072
 
 | Public item | Summary | Implements |
 |---|---|---|
 | `is_path_shaped(token)` |  |  |
 | `doc_files(root)` |  |  |
 | `load_symbol_oracle(arch_path)` | {module-tail: {symbols}} parsed from the generated module map, or {}. |  |
-| `untraced_reason(token, rel, root, kit_root, record_prefixes)` | Why a missing path is explainable, or None when it is real rot (WI-062). |  |
-| `path_findings(line, rel, n, root, kit_root, record_prefixes)` | One line's path-tier verdicts as `(dangling, untraced)` (WI-062). |  |
-| `findings_for(doc, root, oracle, kit_root, record_prefixes)` | `(dangling, untraced)` — see the module docstring for the split. |  |
+| `load_declared_absences(path)` | `{path: reason}` from a declared-absences file, or `{}` when it is absent |  |
+| `untraced_reason(token, rel, root, kit_root, record_prefixes, absences)` | Why a missing path is explainable, or None when it is real rot (WI-062). |  |
+| `path_findings(line, rel, n, root, kit_root, record_prefixes, absences)` | One line's path-tier verdicts as `(dangling, untraced)` (WI-062). |  |
+| `findings_for(doc, root, oracle, kit_root, record_prefixes, absences)` | `(dangling, untraced)` — see the module docstring for the split. |  |
 | `main()` |  |  |
 
 ### `scripts/check_docs`

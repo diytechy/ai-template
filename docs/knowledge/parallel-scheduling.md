@@ -1,7 +1,7 @@
 # Traincar scheduling — DAG scheduling and clustering research
 
 This pack preserves the prior art behind **traincar packing** (the
-parallel-dispatch plan, `docs/specs/parallel-wi-dispatch.md` §7). The normative
+parallel-dispatch plan, `docs/archive/specs/parallel-wi-dispatch.2026-07-20.md` §7). The normative
 rule stays in the plan; this note records the sources, the analogs, and — most
 importantly — why their guarantees do **not** transfer to this system.
 

@@ -17,7 +17,7 @@ per-repo (a re-sync overwrites it); this register amends it (process-options.md
 fixed points at the bottom, which nothing overrides.**
 
 **This repo (the ai-template META-repo):** the kit's own unattended layer,
-self-applied (adopted via **WI-107**, `docs/specs/WI-107.md`). Under
+self-applied (adopted via **WI-107**, `docs/archive/specs/WI-107.2026-07-20.md`). Under
 `autonomous`, every gate **except G-Final** closes on an **independent
 fresh-context LLM reviewer's recorded verdict** — no human batch sitting. This
 is config-layer only: **no spine change**, so the flip does **not** move the

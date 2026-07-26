@@ -14316,3 +14316,68 @@ each.
 `trace --strict --strict-integrity` clean at SN=25 SR=110 **LLR=115 TC=118**
 orphans=0 integrity=0; `check_docs` OK (265 docs, 793 links, 0 broken); derived
 gate **G2** (`modified=6`). No ratchet re-stamp — the change is test-side.
+
+## 2026-07-26 — WI-308: the doc-reference residue goes to zero, and the check earns its gate slot
+
+WI-062 dropped this repo from **561 dangling findings to 22** by splitting
+UNTRACED (explained by a mechanical reason) from DANGLING (real rot). That is
+what made triage worth doing, and the ORDER was the whole point: wiring
+`[step:doc-refs]` first would have added 22 warns to every gate run — exactly
+how a check earns the ignore WI-062 had just undone. Triaged to **0**, then
+wired at G3.
+
+### The triage split four ways, not the spec's three
+
+The fourth class was the useful surprise: **imprecise prose**.
+`docs/specs/README.md` and `docs/specs/WI-000.md` both wrote
+`requirements/interfaces.csv` — a path relative to nothing, which no reader can
+resolve and no checker can trace. Fixed in the two shipped templates as well, so
+the dogfood byte-compare stays green (STRUCTURE must not drift).
+
+**Class (a), real rot — five fixes.** Three archived specs are now cited at
+their `docs/archive/specs/` paths. And SN-025 stopped *asserting* the retired
+`docs/next-wi` as a live path: the backtick convention IS the assertion, so the
+honest fix was prose about a file that was retired, not a path claim the repo
+cannot honour. WI-288 (link-aware spec archival) owns *preventing* the archived-
+spec class; it cannot retroactively fix links already stale, so the two do not
+collide.
+
+**Classes (b) and (c) took the spec's option (2) over `path-ok`.** Twelve of the
+22 were facts the repo had ALREADY stated — in `tests/test_dogfood_sync.py`'s
+`SCAFFOLD_OMISSIONS`, or as a policy file whose absence is the documented
+default. Marking them `path-ok` would have repeated a fact as a suppression, so
+they **moved** to [`docs/declared-absences`](declared-absences), a
+`<path> — <reason>` file that both readers load (**IF-072**). The seam is the
+FILE, never an import: a stdlib-only kit script must not reach into a test
+module, and the test now loads its declaration from the same place.
+
+### Two alternatives rejected, with reasons
+
+- **Broadening `RECORD_PREFIXES` to `docs/ratify/`** would have absorbed the one
+  stale brief pointer for free. Declined: widening a suppression class on a
+  single instance is the WI-062 discipline run backwards. The pointer was fixed
+  instead.
+- **A shape rule for extensionless `docs/` stamps** ("absence is a legal state")
+  is tempting and wrong — it would have swallowed `docs/next-wi`, the one piece
+  of REAL rot in the whole list. A rule that cannot distinguish a live default
+  from a retired file is not a rule.
+
+### Why the declared file is a declaration and not a suppression list
+
+Every line carries its reason, and the reason is quoted back in the finding. A
+listed path that MATERIALIZES fails `test_scaffold_omissions_list_is_current`.
+References are still counted, and printable with `--show-untraced`. And the
+parser fails in the safe direction: no file, or a line with no separator,
+declares nothing — a malformed entry leaves the path dangling rather than
+silencing it. Each of the three new guards in `tests/test_check_doc_refs.py`
+carries that negative half (an undeclared path on the SAME line still gates).
+
+The shipped `stack.ini.template` gains the step **commented**, with the
+triage-before-you-wire order stated in its comment — the sequencing is the
+transferable lesson, not the flag.
+
+**Verified:** `check_doc_refs --strict` **exit 0, 0 dangling, 508 untraced**;
+the wired step green via `check.py --gate G3 --run-step doc-refs`; smoke **413
+passed**; `trace --strict --strict-integrity` clean at SN=25 SR=110 LLR=115
+TC=118 orphans=0 integrity=0 **interfaces=70**; `check_docs` OK (266 docs, 794
+links, 0 broken); derived gate **G2** (`modified=6`).
