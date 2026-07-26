@@ -1,6 +1,8 @@
 # Mechanizing the dashboard's "perceptual residue" (WI-309…WI-312)
 
-**Status: queued** (filed 2026-07-25, owner-directed: *"ideally we can get to the
+**Status: CLOSED 2026-07-26** — delivered by **WI-309** (U1 type scale), **WI-310** (U3 weight/alpha/corner), **WI-311** (U5 cross-vocabulary ΔE) and **WI-312** (A2 name quality), bound as LLR-108…111 / TC-113…116. **SR-053 flipped to `Verification=Test`** with an empty residue; **SR-052 did not** — its A2 residue is cleared but A1/A3/A4 remain undecomposed under the coarse `LLR-053`, which is WI-300's own remaining work. Archived per R-F.
+
+_Filed 2026-07-25, owner-directed: *"ideally we can get to the
 point where critiques are not required — if the test and render methods produce
 quality graphics with considerations for these aspects as mechanical tests,
 critiques can be retired."*)

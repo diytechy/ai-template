@@ -13219,7 +13219,7 @@ behind the word "perceptual".
 | **LLR-101 / A2** "reads as well-named" | ~90% mechanical | 0 empty names, but **57 bare-id-only** and **14 duplicated across 74 nodes**, worst `contains → descend` **×39** |
 
 Filed as **WI-309…WI-312** against a shared spec
-([dashboard-residue-mechanization.md](specs/dashboard-residue-mechanization.md)).
+([dashboard-residue-mechanization.md](archive/specs/dashboard-residue-mechanization.2026-07-26.md)).
 When all four land, SR-052 and SR-053 flip with an **empty** residue rather than
 accepted losses.
 
@@ -13437,3 +13437,66 @@ comment on why a present, correct name can still be useless). Reviewed bump.
 
 **Verified:** dashboard + ratchet suites **127 passed**; `trace --strict` clean at
 SN=25 SR=110 **LLR=111 TC=114** orphans=0.
+
+
+## 2026-07-26 — SR-053 flips to `Verification=Test`: the first SR to leave the critique chain
+
+**SPINE CHANGE — SR-053 `Critique → Test`; `LLR-054`/`TC-054` superseded;
+RE-ATTESTATION PENDING.**
+
+All five uniformity anchors are mechanized and bound, the residue clauses are
+gone, so by the WI-300 ruling's own rule — *an SR keeps `Verification=Critique`
+only while a perceptual child remains under it* — SR-053 no longer qualifies.
+
+| Anchor | Owning LLR / TC |
+|---|---|
+| U1 one type scale | `LLR-104`/`TC-107` + `LLR-111`/`TC-116` |
+| U2 one colour vocabulary | `LLR-106`/`TC-109` |
+| U3 uniform node/edge/legend styling | `LLR-103`/`TC-106` + `LLR-110`/`TC-115` |
+| U4 one interaction idiom | `LLR-107`/`TC-110` |
+| U5 one concept per colour | `LLR-102`/`TC-105` + `LLR-109`/`TC-114` |
+
+**The ruling's central claim held, mechanically.** `perceptual-stale` now reads
+`SR-052;SR-054` — SR-053 **dropped out of `_load_critique_srs` on its own**, with
+no gate change, no new checker and no code touched in `check_trajectory.py`. That
+was option (f)'s whole argument over (e), and it is now demonstrated rather than
+asserted.
+
+`LLR-054`/`TC-054` are **superseded, not merely unused**: leaving the coarse
+paraphrase alive would have re-created the exact all-or-nothing TC the ruling
+identified as the defect. Provenance survives where it belongs — every successor
+LLR's `Detail` still says "split out of LLR-054 under the WI-300 (f) ruling", and
+this log. [rubrics/dashboard-uniformity.md](rubrics/dashboard-uniformity.md) is
+**retired to a record** with an anchor→LLR/TC map and an explicit instruction not
+to re-judge those anchors by eye: a critic who thinks a U-anchor is violated has
+either read a stale artifact or found a gap in the owning test, and the latter
+routes through change-intake to harden the TC, never through a verdict.
+
+### What did NOT flip, and why the distinction matters
+
+**SR-052 stays `Critique`.** Its A2 residue is cleared and bound, but **A1, A3
+and A4 remain undecomposed** and ride the coarse `LLR-053`. *Clearing a residue
+clause is not the same as binding an anchor* — the first says "this part is no
+longer judged by eye", the second says "this anchor is owned by a test". Flipping
+SR-052 now would retire three anchors nothing enforces, which is precisely the
+failure mode the ruling names. That binding is WI-300's own remaining work.
+
+**SR-054 keeps `Critique` by design**, so `perceptual-stale` still fires on every
+render commit. Retiring critiques outright now rests on **T1 "the entry point is
+obvious"** and **T3 "the reader stays oriented"** — properties of a reader's
+experience, not of the artifact. T4 and T7 are mechanizable with a browser
+harness. That is an owner decision, not buildable work, and status.md says so.
+
+### Housekeeping the flip surfaced
+
+Two checks earned their keep in the same minute: **R-F** flagged the shared spec
+as live-but-uncited the moment its fourth WI closed (archived with the close date
+and the delivering WI ids stamped into it), and the **forward-only guard** caught
+a `done` WI id I had just written into status.md's prose while describing the
+lesson. Both were mechanical, immediate, and correct.
+
+**Verified:** smoke **409 passed**; trace/trajectory/derive-gate suites **189
+passed**; `trace --strict` clean at SN=25 SR=110 **LLR=110 TC=113** orphans=0,
+verified-mechanized 93→**94**; `check_docs --stale` OK (260 docs, 763 links, 0
+broken); `check_trajectory --strict` down to the single parked `perceptual-stale`
+error.

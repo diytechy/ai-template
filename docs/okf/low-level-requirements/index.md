@@ -64,7 +64,6 @@ resource: "generated"
 | [LLR-051](LLR-051.md) | Process reference tab |
 | [LLR-052](LLR-052.md) | Tiered When roadmap |
 | [LLR-053](LLR-053.md) | Dashboard accessibility rendering |
-| [LLR-054](LLR-054.md) | Dashboard UI-uniformity rendering |
 | [LLR-055](LLR-055.md) | Dashboard usability rendering |
 | [LLR-056](LLR-056.md) | Process tab intake + human-decision loop panels |
 | [LLR-057](LLR-057.md) | Decomposition render polish (columns, arrows, persistent hover) |

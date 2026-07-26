@@ -1,6 +1,26 @@
-# Rubric — Dashboard UI uniformity (SR-053)
+# Rubric — Dashboard UI uniformity (SR-053) — RETIRED 2026-07-26
 
-**Adjudicates:** SR-053 (dashboard UI uniformity, `Verification=Critique`).
+> **This rubric no longer adjudicates anything.** All five anchors are
+> mechanized and bound, so **SR-053 is `Verification=Test`** and no critique
+> dispatch owes it a verdict:
+>
+> | Anchor | Owning LLR / TC |
+> |---|---|
+> | **U1** one type scale | `LLR-104`/`TC-107` + `LLR-111`/`TC-116` |
+> | **U2** one colour vocabulary | `LLR-106`/`TC-109` |
+> | **U3** uniform node/edge/legend styling | `LLR-103`/`TC-106` + `LLR-110`/`TC-115` |
+> | **U4** one interaction idiom | `LLR-107`/`TC-110` |
+> | **U5** one concept per colour | `LLR-102`/`TC-105` + `LLR-109`/`TC-114` |
+>
+> Kept rather than deleted (retire-don't-delete): it is the record of what the
+> anchors *meant* before they became assertions, and the successor LLRs cite it.
+> **Do not re-judge these by eye** — a critic finding a U-anchor "violated" is
+> either reading a stale artifact or has found a gap in the owning test, and the
+> latter routes through the change-intake flow to harden the TC, never through a
+> verdict. The narrowing each mechanization accepted is stated in its LLR.
+
+**Historically adjudicated:** SR-053 (dashboard UI uniformity), when it carried
+`Verification=Critique`.
 **Used by:** the SR-084 critique dispatch — a fresh, provider-heterogeneous CRITIQUE
 session judges the generated `PROJECT_STATE.html` against the numbered anchors
 below, receiving this rubric + the SN/SR intent + the artifact recipe and **never
