@@ -15534,3 +15534,41 @@ pass then found two more the critic missed. This pass is larger.
 **The sitting grew, as intended:** SR 45 `Modified` / 80 `Verified`, LLR 51/79,
 TC 21/100. That is one sitting instead of two, which is what the sequencing
 ruling bought.
+
+### 2026-07-27 — WI-328 S6: 125-REVIEW-A, and the mirror image of the last one
+
+Dispatched to a fresh **OpenAI/`codex`** strong-tier session — family-heterogeneous,
+gateway probed live (`PONG`) before planning around it. Sandbox held only the 13
+BEFORE/AFTER pairs and the invariant claimed; no repo, no commit message, no
+self-assessment. `CHANGES-REQUESTED findings=6` over 4 pairs, 9 pairs `OK`.
+
+**All six confirmed and fixed.** Two were losses (`SR-057`'s *"never from prose"*
+prohibition; `SR-059`'s *"/check"* list member). The other four were the opposite
+and the more useful finding: **scope creep introduced while "improving" a row** —
+a reason-code obligation widened to a fifth class, an `LLR`-layer behavior
+promoted into an `SR` acceptance criterion, an implementation narrowed to a
+specific hooks directory, and an invented acceptance condition about swappable
+harness commands. Splitting invited tightening, and tightening a `Verified` row's
+acceptance criteria mid-attestation is a change the owner never agreed to.
+
+**Three more found by the second instrument, none of them by the critic:** a
+normalised vocabulary delta over all 13 splits surfaced `SR-115`'s dropped
+*"deterministically"*, `SR-122`'s dropped *"stamp-only"* scoping (which widened
+the exclusion from stamp-only diffs to every comparison), and `SR-114`'s dropped
+*"stdlib"* + the arm64 parenthetical that makes *"not a runner-availability
+workaround"* checkable rather than asserted.
+
+Two instruments, **disjoint finding sets, for the second consecutive review**.
+That is a pattern now, not an anecdote: the critic reads for meaning and misses
+vocabulary; the delta reads vocabulary and cannot judge meaning. Neither alone is
+the bar.
+
+Full record: [reviews/125-REVIEW-A.md](reviews/125-REVIEW-A.md).
+
+**Also found, and NOT by the review — a gap the WI created.** `form_findings`
+(gating) and `paraphrase_advisories` shipped with **no SR/LLR/TC**, and
+`provenance_findings` has had none since it landed. The convention is
+unambiguous — `ac_advisories` has `SR-004` → `LLR-004` → a TC, one row per lint —
+and the harness cannot catch this, because `trace.py` only reports orphans among
+rows that exist. Untraced checker behaviour in a repo whose product is
+traceability. Owner's call whether to close it inside WI-328 or file it.
