@@ -15659,3 +15659,51 @@ honesty valve marks **ThisProject**, so a row saying `scripts/trace` consumes
 matching the `IF-065`/`IF-066` precedent exactly: the **extracted** module is
 `ThisProject` and `Provides` to its parent, with `source` first in Notes because
 a pure predicate layer consuming something would mean the split failed.
+
+### 2026-07-27 — 126-REVIEW-A: the class a self-review cannot catch
+
+One dispatch over the three surfaces that had reached the attestation window
+unreviewed — the nine fixes applied after 125-REVIEW-A (a fix pass nothing
+checked), WI-330's six new rows, and the 47 S5 cells a premature completion tick
+had hidden. Fresh **OpenAI/`codex`** strong-tier session, family-heterogeneous,
+sandboxed to ~100 KB of BEFORE/AFTER material and the four claims alone. Told a
+previous batch had returned six findings and told **not** to assume this one
+clean or dirty.
+
+`CHANGES-REQUESTED findings=27` over 21 of 53 items — 16 BLOCKER, 11 MAJOR.
+**All 27 confirmed and fixed.**
+
+**Six were dropped normative content** — the class the brief asked it to hunt
+first, because a lost scope narrowing widens a claim without looking like a
+change: the lock's participating processes, the `path-ok` exemption, the
+stdlib/no-runtime-dependency boundary, a retirement clause, and two sets of
+concrete measurements I generalised away while tidying.
+
+**Eight were false or overreaching reasoning — claims I wrote that are not
+true.** A committed secret is not thereby published. The pid-reuse mechanism was
+stated **backwards** (reuse makes a liveness check *retain* a dead lock, not
+clear a live one). A derived bundle *can* disagree; it can only be stale. A build
+judging its own output does not pass "by construction". A citation is a pointer,
+not a copy.
+
+**Two were a requirement broader than its mechanism**, which is the finding with
+the longest reach. `SR-127` promised to fail a requirement stating "more than one
+obligation" while the checker counts obligation keywords — two obligations can
+share one keyword, and two keywords need not be two obligations. `SR-128`
+guaranteed an advisory for an unrestricted "child cell" while covering two
+relationships. Both narrowed to what is actually checked, and the rationale now
+says plainly that each rule is a LEXICAL PROXY scoped to what it can decide. **A
+requirement that overclaims is worse than a narrow one: it is the readout an
+attestation trusts.**
+
+Three reviews, three distinct failure modes — 124 found what was left behind when
+text was removed, 125 found what was added when text was rewritten, 126 found
+reasoning that reads fluently and is false. **The third is the class a
+self-review cannot catch, because the author believes it**, and it is the class
+that gets signed: two of these would have entered the record as fact.
+
+Root cause of the exposure, recorded plainly: S5 was ticked on a gating signal
+rather than against its own checklist, so 47 cells reached an attestation window
+with no review at all. The checklist is the contract; the green is not.
+
+Full record: [reviews/126-REVIEW-A.md](reviews/126-REVIEW-A.md).
