@@ -634,6 +634,9 @@ Contracts (interfaces): IF-073, IF-074, IF-075
 
 | Public item | Summary | Implements |
 |---|---|---|
+| `theme_tokens(css)` | `{"light": {token: value}, "dark": {...}}` parsed out of the EMITTED CSS — |  |
+| `read_view(path)` | The view as written, without universal-newline translation. |  |
+| `normalize(text)` | Line endings folded to LF for COMPARISON only. |  |
 | `esc(text)` |  |  |
 | `load_open_items(root)` | Rows of the open-items registry, `-000` example rows dropped (the |  |
 | `word_diff(before, after)` | A unified word-level diff as HTML: unchanged runs wrapped `.eq` (so the |  |

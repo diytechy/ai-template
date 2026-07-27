@@ -665,7 +665,6 @@ def find_stale(parsed, root, lookup):
 
 STATUS_BUDGET_DEFAULT = 120
 _OI_RE = re.compile(r"\bOI-\d+\b")
-_OI_HEADING_RE = re.compile(r"^#{2,3}\s+[^\n]*?\b(OI-\d+)\b", re.M)
 _NEEDS_HUMAN_RE = re.compile(r"needs\s*\\?<human>", re.I)
 _SCOPE_HEADING_RE = re.compile(r"^##\s+scope\b", re.I | re.M)
 _OPEN_ITEMS_MARKER_RE = re.compile(r"open items", re.I)

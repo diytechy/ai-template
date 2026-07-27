@@ -69,7 +69,44 @@ def gen(root, *args):
 
 
 def html_of(root):
-    return (root / "docs" / "open-items.html").read_text(encoding="utf-8")
+    with (root / "docs" / "open-items.html").open(encoding="utf-8", newline="") as fh:
+        return fh.read()
+
+
+def write_view(root, text):
+    """Write the view VERBATIM. The generator reads and writes without
+    newline translation (a registry cell can hold a CRLF), so a tamper fixture
+    that used `write_text` would manufacture drift of its own."""
+    with (root / "docs" / "open-items.html").open(
+        "w", encoding="utf-8", newline=""
+    ) as fh:
+        fh.write(text)
+
+
+def _git_init(root):
+    """A committed git repo — the attestation baseline is git-derived, so the
+    baseline paths need real history to walk."""
+    subprocess.run(["git", "init", "-q", str(root)], check=True)
+    _git_commit(root, "seed")
+
+
+def _git_commit(root, message):
+    subprocess.run(["git", "-C", str(root), "add", "-A"], check=True)
+    subprocess.run(
+        [
+            "git",
+            "-C",
+            str(root),
+            "-c",
+            "user.email=t@t",
+            "-c",
+            "user.name=t",
+            "commit",
+            "-qm",
+            message,
+        ],
+        check=True,
+    )
 
 
 PENDING_OI = (
@@ -175,10 +212,7 @@ def test_check_bites_on_drift_and_reproduces_the_stamped_baseline(tmp_path):
     root = repo(tmp_path, oi_rows=PENDING_OI)
     assert gen(root).returncode == 0
     assert gen(root, "--check").returncode == 0, "fresh output must pass its own gate"
-    out = root / "docs" / "open-items.html"
-    out.write_text(
-        html_of(root).replace("Pick a licence", "Pick a LICENCE"), encoding="utf-8"
-    )
+    write_view(root, html_of(root).replace("Pick a licence", "Pick a LICENCE"))
     stale = gen(root, "--check")
     assert stale.returncode == 1 and "STALE" in stale.stdout
     # The file DECLARES the baseline it was rendered against, so --check
@@ -201,12 +235,10 @@ def test_check_masks_the_machine_local_region(tmp_path):
     tampered = (
         page[:start] + "\n<p>a conflict only THIS machine can see</p>\n" + page[end:]
     )
-    (root / "docs" / "open-items.html").write_text(tampered, encoding="utf-8")
+    write_view(root, tampered)
     assert gen(root, "--check").returncode == 0, "machine-local drift must not gate"
     # The negative half: drift OUTSIDE that region still bites.
-    (root / "docs" / "open-items.html").write_text(
-        tampered.replace("Pick a licence", "Pick another licence"), encoding="utf-8"
-    )
+    write_view(root, tampered.replace("Pick a licence", "Pick another licence"))
     assert gen(root, "--check").returncode == 1
 
 
@@ -247,28 +279,54 @@ def test_html_escapes_registry_prose(tmp_path):
 def test_open_items_theme_tokens_match_the_dashboard():
     """A drift guard, not an extraction (the WI-291 precedent, and the F5 ruling
     against a shared `_kitcommon`): the two owner surfaces must read as one
-    system, so every theme token this module declares must carry the same value
-    the dashboard emits. Extracting them would edit gen_trajectory and re-red
-    `perceptual-stale` for a refactor — this catches the drift instead."""
+    system, so every shared theme token must carry the same value the dashboard
+    emits.
+
+    REWORKED after 122-REVIEW-A refuted the first version twice over: its
+    `assert value in CSS` sat OUTSIDE the token loop (so it checked one token per
+    theme), and it compared against a module-level `THEME` dict that nothing
+    rendered from — nine of the twelve EMITTED tokens were rewritten, including
+    dark `--text:#444444`, and it stayed green. Both halves are now closed: the
+    values are parsed out of the CSS the page actually ships
+    (`gen_open_items.theme_tokens`), and every token is asserted."""
     gi = load_script("gen_open_items")
     gt = load_script("gen_trajectory")
     template = gt.HTML_TEMPLATE.template
-    root_block = re.search(r":root \{(.*?)\n  \}", template, re.S).group(1)
-    dark_block = re.search(
-        r"@media \(prefers-color-scheme: dark\) \{\s*:root \{(.*?)\}", template, re.S
-    ).group(1)
-    for theme, block in (("light", root_block), ("dark", dark_block)):
-        declared = dict(re.findall(r"(--[\w-]+):\s*(#[0-9a-fA-F]{3,8})", block))
-        for token, value in gi.THEME[theme].items():
-            assert token in declared, (theme, token, "dashboard no longer declares it")
-            assert declared[token].lower() == value.lower(), (
+    blocks = {
+        "light": re.search(r":root \{([^}]*)\}", template, re.S).group(1),
+        "dark": re.search(
+            r"@media \(prefers-color-scheme: dark\) \{\s*:root \{(.*?)\}",
+            template,
+            re.S,
+        ).group(1),
+    }
+    ours = gi.theme_tokens()
+    assert set(ours) == {"light", "dark"}
+    checked = 0
+    for theme, block in blocks.items():
+        dashboard = dict(re.findall(r"(--[\w-]+):\s*(#[0-9a-fA-F]{3,8})", block))
+        assert ours[theme], theme  # never vacuous: the parse must find tokens
+        for token, value in ours[theme].items():
+            assert token in dashboard, (theme, token, "dashboard dropped it")
+            assert dashboard[token].lower() == value.lower(), (
                 theme,
                 token,
-                declared[token],
+                dashboard[token],
                 value,
             )
-        # the view's own CSS must use the value it claims to mirror
-        assert value.lower() in gi.CSS.lower(), (theme, token, value)
+            checked += 1
+    assert checked == 2 * len(gi.THEME_TOKENS), checked
+
+
+def test_theme_drift_guard_reads_the_shipped_css_not_a_mirror():
+    """The negative half of the guard above, and the reason it exists: a value
+    that appears only in a constant proves nothing about the page. `theme_tokens`
+    must read whatever CSS it is handed, so drifting the CSS drifts the guard's
+    input rather than leaving it agreeing with a stale mirror."""
+    gi = load_script("gen_open_items")
+    drifted = gi.CSS.replace("--text:#0f172a", "--text:#444444", 1)
+    assert gi.theme_tokens(drifted)["light"]["--text"] == "#444444"
+    assert gi.theme_tokens()["light"]["--text"] == "#0f172a"
 
 
 def test_the_view_names_its_authority(tmp_path):
@@ -279,3 +337,193 @@ def test_the_view_names_its_authority(tmp_path):
     assert gen(tmp_path).returncode == 0
     page = html_of(tmp_path)
     assert "reattest_model" in page and "authoritative" in page
+
+
+# --- 122-REVIEW-A regressions: one per finding, each proven against the defect --
+
+
+def test_baseline_is_reused_when_no_since_is_passed(tmp_path):
+    """122-REVIEW-A's BLOCKER, as a regression. The unattended loop regenerates
+    this file with no `--since`; if that meant "fall back to the auto baseline",
+    every regeneration would silently DESTROY the depth an owner is about to
+    attest from — driven, it collapsed 43 chain-row diffs to 18 and emptied two
+    sections, and `--check` then certified the loss. An existing view's stamp is
+    authoritative unless a run overrides it."""
+    verified = (
+        "SR-005,Reused baseline,SN-001,shall do the original thing,because,"
+        "criteria,,C,Test,Verified,1,W\n"
+    )
+    root = repo(tmp_path, sr_rows=verified)
+    _git_init(root)
+    base = subprocess.run(
+        ["git", "-C", str(root), "rev-parse", "HEAD"],
+        capture_output=True,
+        text=True,
+        check=True,
+    ).stdout.strip()
+    # The amendment lands while the row still reads Verified (the pre-regime
+    # streak), then the flip — so the AUTO baseline sees no delta and only the
+    # pinned one does.
+    amended = verified.replace("the original thing", "the AMENDED thing")
+    (root / "docs" / "requirements" / "system-requirements.csv").write_text(
+        SR_HEADER + amended, encoding="utf-8"
+    )
+    _git_commit(root, "amend while Verified")
+    (root / "docs" / "requirements" / "system-requirements.csv").write_text(
+        SR_HEADER + amended.replace(",Verified,", ",Modified,"), encoding="utf-8"
+    )
+
+    assert gen(root, "--since", base).returncode == 0
+    assert "AMENDED" in html_of(root), "the pinned baseline must show the amendment"
+
+    # The loop's exact invocation: no --since, no flags.
+    assert gen(root).returncode == 0
+    after = html_of(root)
+    assert "AMENDED" in after, (
+        "regenerating with no --since destroyed the attestation depth the file "
+        "itself declared a baseline for"
+    )
+    assert base[:9] in after
+    assert gen(root, "--check").returncode == 0
+
+    # The negative half: `--since ""` is the explicit opt-back-to-auto, so the
+    # reuse is a default, not a trap you cannot escape.
+    assert gen(root, "--since", "").returncode == 0
+    assert "check the baseline" in html_of(root).lower()
+
+
+def test_crlf_cell_is_stripped_at_the_source(tmp_path):
+    """122-REVIEW-A found half of this: `write_text` newline-TRANSLATES, so a
+    registry cell holding a CRLF went to disk as CR CR LF and read back as two
+    LFs — the view failed `--check` the moment it was generated, permanently.
+
+    The root cause is a CR reaching the emitted HTML at all, and `esc` is the one
+    choke point every registry value passes through, so that is where it is
+    stripped. Asserted on the FILE, independent of how the compare works — the
+    two fixes would otherwise mask each other and neither mutation would bite."""
+    root = repo(tmp_path, oi_rows="")
+    (root / "docs" / "requirements" / "open-items.csv").write_bytes(
+        OI_HEADER.encode("utf-8")
+        + b'OI-6,CRLF cell,pending,,one line,"line one,\r\nline two",,,,,,\r\n'
+    )
+    assert gen(root).returncode == 0
+    raw = (root / "docs" / "open-items.html").read_bytes()
+    assert b"\r" not in raw, "a CR from a registry cell reached the emitted view"
+    assert b"line two" in raw, "...and the cell's content must still be there"
+    # ...and the round trip its absence protects.
+    assert gen(root, "--check").returncode == 0
+    assert gen(root).returncode == 0
+    assert gen(root, "--check").returncode == 0
+
+
+def test_check_is_agnostic_to_the_checkouts_line_endings(tmp_path):
+    """The mirror hazard, caught by the WI-322 rework rather than the review: a
+    CHECKOUT can carry CRLF line endings by local git convention (a fresh
+    worktree on Windows), and a byte-exact compare then reds a file nothing
+    touched. Stripping CR at the source cannot help here — the CRs are the
+    file's own line endings — so the compare normalizes both sides."""
+    root = repo(tmp_path, oi_rows=PENDING_OI)
+    assert gen(root).returncode == 0
+    assert gen(root, "--check").returncode == 0
+    # Simulate the CRLF checkout, byte for byte.
+    view = root / "docs" / "open-items.html"
+    view.write_bytes(view.read_bytes().replace(b"\n", b"\r\n"))
+    assert b"\r\n" in view.read_bytes()
+    assert gen(root, "--check").returncode == 0, (
+        "a CRLF checkout must not read as stale — nothing about the content changed"
+    )
+    # The negative half: REAL content drift still bites, CRLF or not.
+    view.write_bytes(view.read_bytes().replace(b"Pick a licence", b"Pick a LICENCE"))
+    assert gen(root, "--check").returncode == 1
+
+
+def test_empty_attestation_state_names_only_what_it_checked(tmp_path):
+    """122-REVIEW-A: the whole-section empty state claimed no Draft/Modified
+    SPINE ROW while the model selects SRs only — a Draft LLR under a Verified SR
+    is invisible AND was actively denied. Say what was checked."""
+    repo(
+        tmp_path,
+        sr_rows="SR-007,Settled,SN-001,shall,because,criteria,,C,Test,Verified,1,W\n",
+        llr_rows=(
+            "LLR-007,SR-007,A drafted child,mod.py,sym,detail,(see TC-007),"
+            "Draft,CMP-001,1\n"
+        ),
+    )
+    assert gen(tmp_path).returncode == 0
+    page = html_of(tmp_path)
+    assert "<strong>SR</strong>" in page
+    assert "chain-consistency warn" in page  # where the reader is sent instead
+    assert "spine row — nothing owes" not in page  # the refuted claim is gone
+
+
+def test_unsafe_link_target_is_not_clickable():
+    """122-REVIEW-A: `md_inline` emitted a raw href with no scheme allow-list, so
+    an agent-authored cell could ship a `javascript:` URL onto the one document a
+    human reads. The text still shows — degraded, not dropped."""
+    gi = load_script("gen_open_items")
+    out = gi.md_inline("[click](javascript:alert(1)) and [ok](docs/x.md)")
+    assert 'href="javascript:' not in out
+    assert "click (javascript:alert(1))" in out
+    assert '<a href="docs/x.md">ok</a>' in out
+    # ...and the ordinary shapes still link.
+    for target in ("#frag", "../x.md", "https://example.test/x"):
+        assert 'href="{}"'.format(target) in gi.md_inline("[t]({})".format(target))
+
+
+def test_whitespace_only_edit_does_not_fuse_neighbours():
+    """122-REVIEW-A: `word_diff` dropped whitespace-only opcodes, so "a  b" ->
+    "a b" rendered as "ab" — the reconstructed after-text must be the cell the
+    owner is actually blessing."""
+    gi = load_script("gen_open_items")
+    out = gi.word_diff("a  b", "a b")
+    assert re.sub(r"<[^>]+>", "", out) == "a b", out
+
+
+def test_retired_markdown_surface_is_reported(tmp_path):
+    """122-REVIEW-A: a resynced adopter keeps docs/open-items.md, whose generated
+    block nothing writes any more — it can assert a stale owner action with every
+    gate green. Warn-only: the migration is the owner's, and failing would red a
+    repo midway through it."""
+    root = repo(tmp_path, oi_rows=PENDING_OI)
+    assert gen(root).returncode == 0
+    (root / "docs" / "open-items.md").write_text(
+        "# Open items\n\n- **WI-999** blocked, awaiting ratification\n",
+        encoding="utf-8",
+    )
+    proc = gen(root, "--check")
+    assert proc.returncode == 0, "warn-only — it must not red a repo mid-migration"
+    assert "still present beside the registry" in proc.stdout
+    assert "ADOPTING.md section 6" in proc.stdout
+    # The negative half: no stale file, no warning.
+    (root / "docs" / "open-items.md").unlink()
+    assert "still present" not in gen(root, "--check").stdout
+
+
+def test_collapse_toggle_is_wired_to_the_unchanged_runs(tmp_path):
+    """Done-when V4, which 122-REVIEW-A marked UNCOVERED. Structural, and the
+    narrowing is stated rather than hidden: this asserts the toggle EXISTS,
+    targets the `.eq` runs the diff emits, and preserves the full text for
+    restore. Whether a browser actually collapses them is runtime behaviour no
+    stdlib test can drive — that needs the Playwright harness, and asserting it
+    here would be the proxy this repo refuses."""
+    verified = (
+        "SR-008,Amended,SN-001,shall do a thing,because,criteria,,C,Test,Verified,1,W\n"
+    )
+    root = repo(tmp_path, sr_rows=verified)
+    _git_init(root)
+    # A real amendment, so a real diff renders: the `.eq` runs only exist where
+    # unchanged text sits BESIDE a change, which is exactly what the toggle
+    # collapses.
+    (root / "docs" / "requirements" / "system-requirements.csv").write_text(
+        SR_HEADER
+        + verified.replace("a thing", "a DIFFERENT thing").replace(
+            ",Verified,", ",Modified,"
+        ),
+        encoding="utf-8",
+    )
+    assert gen(root).returncode == 0
+    page = html_of(root)
+    assert 'id="focus"' in page and 'type="checkbox"' in page
+    assert ".diff .eq" in page  # the toggle targets the runs the diff emits
+    assert "data-full" in page  # ...and keeps the original for restore
+    assert 'class="eq"' in page  # ...which the rendered diff really emits

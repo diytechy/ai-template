@@ -49,6 +49,13 @@ REGISTRIES = {
     "docs/requirements/components.csv": "components.template.csv",
     "docs/requirements/interfaces.csv": "interfaces.template.csv",
     "docs/test/test-cases.csv": "test-cases.template.csv",
+    # WI-322 / 122-REVIEW-A: the new owner-decision registry was the ONE shipped
+    # registry whose header was not locked to its live counterpart. Drifting
+    # Status/Raised/OneLine in the template passed all 23 dogfood tests, and a
+    # scaffold on that template then rendered "the owner queue is empty" for a
+    # registry holding two pending decisions — exit 0, gate green, silent wrong
+    # content on the surface a human rules from.
+    "docs/requirements/open-items.csv": "open-items.template.csv",
 }
 TEMPLATE_DIR = ROOT / "project-trajectory" / "registries"
 

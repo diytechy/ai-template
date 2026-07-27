@@ -74,31 +74,16 @@ LOCAL_END = "<!-- END MACHINE-LOCAL -->"
 BASELINE_MARK = "<!-- attestation-baseline: {} -->"
 BASELINE_RE = re.compile(r"<!-- attestation-baseline: ([^\s>]*) -->")
 
-# Mirrors the dashboard's theme tokens so the two owner surfaces read as one
-# system. NOT imported: they live inside gen_trajectory's HTML_TEMPLATE string,
-# and extracting them would edit that module — which re-reds `perceptual-stale`
-# and costs a critique dispatch for a refactor. Kept honest by
-# test_open_items_theme_tokens_match_the_dashboard, the WI-291 drift-guard
-# pattern (a guard, not an extraction) rather than a shared-module dedup the
-# F5 ruling already rejected.
-THEME = {
-    "light": {
-        "--bg": "#f8fafc",
-        "--surface": "#ffffff",
-        "--border": "#e2e8f0",
-        "--text": "#0f172a",
-        "--muted": "#64748b",
-        "--accent": "#4f46e5",
-    },
-    "dark": {
-        "--bg": "#0b1120",
-        "--surface": "#0f172a",
-        "--border": "#1e293b",
-        "--text": "#e2e8f0",
-        "--muted": "#94a3b8",
-        "--accent": "#818cf8",
-    },
-}
+# The theme tokens the two owner surfaces must agree on. This is a NAME list,
+# not a value mirror: 122-REVIEW-A refuted the value-mirror version — nine of the
+# twelve emitted tokens were rewritten (dark `--text:#444444`) and the guard
+# stayed green, because the mirror was a test-only dict nothing rendered from.
+# The values now live in ONE place, the emitted CSS below, and the drift guard
+# parses them out of it (`theme_tokens`) so it cannot pass while the page ships
+# something else. Still a guard rather than an extraction: importing the
+# dashboard's tokens would edit gen_trajectory and re-red `perceptual-stale`
+# for a refactor (the WI-291 precedent, and the F5 ruling against _kitcommon).
+THEME_TOKENS = ("--bg", "--surface", "--border", "--text", "--muted", "--accent")
 
 CSS = """
 :root{
@@ -195,6 +180,50 @@ JS = """
 """
 
 
+def theme_tokens(css=None):
+    """`{"light": {token: value}, "dark": {...}}` parsed out of the EMITTED CSS —
+    the single source the page actually ships. The drift guard compares this
+    against the dashboard's own emitted values; a value that exists only in a
+    test fixture would prove nothing (122-REVIEW-A)."""
+    css = CSS if css is None else css
+    root = re.search(r":root\{([^}]*)\}", css, re.S)
+    dark = re.search(
+        r"@media \(prefers-color-scheme:dark\)\{\s*:root\{([^}]*)\}", css, re.S
+    )
+    out = {}
+    for name, block in (("light", root), ("dark", dark)):
+        found = dict(
+            re.findall(
+                r"(--[\w-]+):\s*(#[0-9a-fA-F]{3,8})",
+                block.group(1) if block else "",
+            )
+        )
+        out[name] = {t: found[t] for t in THEME_TOKENS if t in found}
+    return out
+
+
+def read_view(path):
+    """The view as written, without universal-newline translation."""
+    with path.open(encoding="utf-8", newline="") as fh:
+        return fh.read()
+
+
+def normalize(text):
+    """Line endings folded to LF for COMPARISON only.
+
+    Two failure modes pull in opposite directions and this is the seam that
+    satisfies both. A registry cell can hold a CRLF (what a Windows-authored
+    multi-line CSV cell carries): `write_text` turned that into CR CR LF and read
+    it back as two LFs, so the view failed `--check` the moment it was generated
+    (122-REVIEW-A). But a *checkout* can also carry CRLF line endings by local
+    git convention, and a byte-exact compare would then red every fresh worktree
+    — which the WI-322 rework caught when the integrate suite's detached view
+    worktree went STALE. So: emitted cell text is stripped of CR at the source
+    (`esc`), the file is written LF-only, and the compare normalizes both sides —
+    the artifact is line-ending-clean and the gate is line-ending-agnostic."""
+    return text.replace(chr(13) + chr(10), chr(10)).replace(chr(13), chr(10))
+
+
 def _utf8_console():
     """Emit UTF-8 whatever the OS console codepage is: this module prints em
     dashes and arrows in its own messages, and a legacy Windows cp1252 console
@@ -208,7 +237,11 @@ def _utf8_console():
 
 
 def esc(text):
-    return html.escape(text or "", quote=True)
+    # CR is stripped HERE, at the single choke point every registry value passes
+    # through: a CR inside a CSV cell is an authoring artifact of the editor that
+    # wrote it, and carrying it into the emitted HTML makes the artifact's line
+    # endings depend on who last touched the registry (WI-322 rework).
+    return html.escape(normalize(text or ""), quote=True)
 
 
 def load_open_items(root):
@@ -251,6 +284,12 @@ def word_diff(before, after):
             out.append("<del>{}</del>".format(esc(gone)))
         if came.strip():
             out.append("<ins>{}</ins>".format(esc(came)))
+        elif came:
+            # A whitespace-only insertion is not worth MARKING, but dropping it
+            # fused the neighbours — "a  b" → "a b" rendered as "ab". The
+            # reconstructed "after" must be the cell the owner is blessing, so
+            # the run is emitted unmarked (122-REVIEW-A).
+            out.append('<span class="eq">{}</span>'.format(esc(came)))
     return "".join(out)
 
 
@@ -274,8 +313,24 @@ def md_inline(text):
     out = esc(text)
     out = re.sub(r"`([^`]+)`", r"<code>\1</code>", out)
     out = re.sub(r"\*\*([^*]+)\*\*", r"<strong>\1</strong>", out)
-    out = re.sub(r"\[([^\]]+)\]\(([^)]+)\)", r'<a href="\2">\1</a>', out)
+    out = re.sub(r"\[([^\]]+)\]\(([^)]+)\)", _safe_link, out)
     return out
+
+
+# A link target is emitted as an anchor ONLY when it is a fragment, a relative
+# path, or http(s). These cells are agent-authored prose landing on the one
+# document a human reads, so an unrestricted target ships a clickable
+# `javascript:` URL onto the owner's decision surface (122-REVIEW-A). An unsafe
+# target is not silently dropped — it degrades to visible literal text, so the
+# reader still sees what the brief said.
+_SAFE_TARGET = re.compile(r"(?:#|\.{0,2}/|[\w.-]+/|https?:)")
+
+
+def _safe_link(match):
+    text, target = match.group(1), match.group(2)
+    if _SAFE_TARGET.match(target):
+        return '<a href="{}">{}</a>'.format(target, text)
+    return "{} ({})".format(text, target)
 
 
 def _brief_cards(items):
@@ -315,8 +370,15 @@ def _attestation_cards(model):
     """One card per SR owing a ratification or re-attest, its chain beneath."""
     if not model:
         return (
-            '<p class="empty">No <code>Draft</code> or <code>Modified</code> spine '
-            "row — nothing owes a ratification or a re-attest.</p>"
+            '<p class="empty">No <code>Draft</code> or <code>Modified</code> '
+            "<strong>SR</strong> — nothing owes a ratification or a re-attest at "
+            "the attestation unit. Say only what was checked: an amended LLR or "
+            "TC rides its owning SR's section, so it shows above only when that "
+            "SR is itself <code>Draft</code>/<code>Modified</code>; a chain row "
+            "amended under a <code>Verified</code> SR is reported by "
+            "<code>trace.py --strict</code>'s chain-consistency warn, not here. "
+            "The earlier wording said <em>spine row</em>, which denied a state "
+            "this view cannot see (122-REVIEW-A).</p>"
         )
     cards = []
     for entry in model:
@@ -526,7 +588,9 @@ def main(argv=None):
         help="attestation baseline revision for the whole view — use for a "
         "PRE-REGIME streak, where an amendment landed while the row still read "
         "Verified so the auto-derived baseline sits after it and the section "
-        "renders empty. Stamped into the output so --check reproduces it.",
+        "renders empty. Stamped into the output, and REUSED by later runs that "
+        "pass no --since (so the unattended loop cannot silently regenerate the "
+        "depth away). Pass an empty string to opt back to the auto baseline.",
     )
     ap.add_argument(
         "--check",
@@ -547,6 +611,22 @@ def main(argv=None):
             )
         )
         return 0
+    # The migration has a detector, on BOTH paths. A resynced adopter keeps the
+    # retired docs/open-items.md, whose GENERATED PENDING block nothing writes
+    # any more — it can sit there asserting a stale owner action, with their
+    # status.md still pointing at it, while every gate stays green (122-REVIEW-A
+    # planted a fabricated "WI-999 blocked" line and nothing noticed). Warn-only:
+    # the migration is the owner's, and failing here would red a repo midway
+    # through it.
+    if (root / "docs" / "open-items.md").is_file() and (
+        root / OPEN_ITEMS_CSV
+    ).is_file():
+        print(
+            "gen_open_items: WARN - docs/open-items.md is still present beside "
+            "the registry. It was RETIRED by WI-322 and nothing regenerates its "
+            "pending block, so anything it claims is now unmaintained. Migrate "
+            "any remaining briefs to rows and delete it (ADOPTING.md section 6)."
+        )
     if args.check:
         if not out.is_file():
             print(
@@ -554,13 +634,13 @@ def main(argv=None):
                 "`python scripts/gen_open_items.py`".format(OUT_REL)
             )
             return 1
-        current = out.read_text(encoding="utf-8")
+        current = read_view(out)
         # Re-render against the baseline the FILE declares (not this run's flag),
         # so the gate compares like with like on every machine and in CI.
         stamped = BASELINE_RE.search(current)
         since = (stamped.group(1) if stamped else "") or None
         fresh = render(root, since=since)
-        if mask_local(current) != mask_local(fresh):
+        if normalize(mask_local(current)) != normalize(mask_local(fresh)):
             print(
                 "gen_open_items: {} STALE — run "
                 "`python scripts/gen_open_items.py`".format(OUT_REL)
@@ -568,12 +648,31 @@ def main(argv=None):
             return 1
         print("gen_open_items: open-items view up to date.")
         return 0
-    fresh = render(root, since=args.since)
-    if out.is_file() and out.read_text(encoding="utf-8") == fresh:
+    # BASELINE REUSE IS THE GENERATOR'S RULE, not just --check's (122-REVIEW-A
+    # BLOCKER). The unattended loop regenerates this file with no --since; if
+    # that meant "fall back to the auto baseline", every regeneration would
+    # silently DESTROY the depth an owner is about to attest from — driven, it
+    # collapsed 43 chain-row diffs to 18 and emptied two sections, and --check
+    # then certified the loss because the file matched its own degraded render.
+    # So an existing view's stamp is authoritative unless a run overrides it;
+    # `--since ""` is the explicit opt-back-to-auto.
+    since = args.since
+    if since is None and out.is_file():
+        stamped = BASELINE_RE.search(read_view(out))
+        since = (stamped.group(1) if stamped else "") or None
+    fresh = render(root, since=since)
+    if out.is_file() and normalize(read_view(out)) == normalize(fresh):
         print("gen_open_items: already up to date -> {}".format(out))
         return 0
     out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(fresh, encoding="utf-8")
+    # Write with an explicit LF newline: write_text NEWLINE-TRANSLATES, so a
+    # registry cell holding a CRLF (what a Windows-authored multi-line CSV cell
+    # carries) went to disk as CR CR LF and read back as two LFs - the view
+    # failed --check IMMEDIATELY after being generated, permanently, with no
+    # clean remedy. The sibling generator carries the same fix for the same
+    # reason (122-REVIEW-A).
+    with out.open("w", encoding="utf-8", newline=chr(10)) as fh:
+        fh.write(fresh)
     print("gen_open_items: wrote {}".format(out))
     return 0
 

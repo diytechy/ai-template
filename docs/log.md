@@ -14727,3 +14727,95 @@ The transferable bit: **a new module is not integrated until the component web
 says where it lives.** The commit bar runs the warn tier, so a module can land
 untagged and only the gate-level `--strict` says so — run it before calling a
 module-adding WI done.
+
+## 2026-07-26 — 122-REVIEW-A on WI-322: CHANGES-REQUESTED findings=10, all reworked
+
+An independent adversarial review of `41b228a` against
+[rubrics/code-review-adversarial.md](rubrics/code-review-adversarial.md), driven
+in an isolated clone. Verdict: **CHANGES-REQUESTED findings=10** — 1 BLOCKER,
+5 MAJOR, 4 MINOR, plus **3 UNCOVERED Done-when items**. Record:
+[122-REVIEW-A](reviews/122-REVIEW-A.md).
+
+It honoured R2 throughout — every finding driven, not read off the diff — and it
+**verified four of my five claims independently** (byte-identical markdown across
+the `reattest_model` extraction, on both baselines *and* across the
+changed/added/removed/no-baseline states I had not tested; four guards
+mutation-proven; a fresh scaffold green; both retargeted lints correct in both
+directions). Then it refuted the fifth.
+
+### The BLOCKER: the loop was silently deleting the owner's attestation depth
+
+`agent_dispatch._regenerate_pending` regenerates the view with no `--since`. I
+had built the baseline stamp so `--check` could reproduce a `--since` render —
+and stopped there. The reviewer drove the **real** shipped function:
+
+> 43 chain-row diffs → **18**. Two attestation sections emptied. The stamp
+> blanked. And `--check` then returned **0**, because the file matched its own
+> degraded render.
+
+That is this WI's own spec Hazard #1, realised in the one place it matters: a
+human sits down to bless six rows and sees "check the baseline". The fix moves
+the rule from the checker to the **generator** — an existing view's stamp is
+authoritative unless a run overrides it, with `--since ""` the explicit
+opt-back-to-auto. One place, so the dispatcher, the hook and a human re-run all
+inherit it.
+
+### The refuted claim, and why it is the most useful finding
+
+I wrote a theme "drift guard" and called it honest. The reviewer set **nine of
+the twelve emitted tokens** to arbitrary colours — dark `--text:#444444` — and
+the guard stayed **green**, because (a) its `assert value in CSS` sat *outside*
+the token loop, and (b) it compared against a module-level `THEME` dict **nothing
+rendered from**. A mirror is not a guard; it is a second copy that agrees with
+itself. The values now live once, in the emitted CSS, and `theme_tokens()`
+parses them out of what the page actually ships — with its own negative half
+asserting that drifting the CSS drifts the guard's input.
+
+**This is the second time in two days** the same class bit: WI-293's A4 suite
+checked palette CONSTANTS while a per-theme `var()` fill went unmeasured. The
+rule earns restating: *a guard that reads a constant instead of the artifact is
+testing your intention, not your output.*
+
+### The rest, each fixed with a regression proven against the defect
+
+- **CRLF round-trip** — `write_text` newline-TRANSLATES: a registry cell holding
+  a CRLF went to disk as CR CR LF and read back as two LFs, so the view failed
+  `--check` *immediately after being generated*, permanently. The reviewer found
+  the write half; fixing it alone left the **read** half still translating, which
+  the new regression caught. Both are now explicit (`newline=chr(10)` out,
+  `newline=""` in).
+- **The empty state lied.** It claimed no `Draft`/`Modified` **spine row** while
+  the model selects **SRs**; a Draft LLR under a Verified SR was invisible *and*
+  denied. It now says what it checked and points at the chain-consistency warn.
+- **The shipped registry template was unlocked** — the one registry missing from
+  `test_dogfood_sync.REGISTRIES`. Renaming its header passed all 23 dogfood
+  tests, and a scaffold on it then rendered "the owner queue is empty" for two
+  pending decisions, exit 0.
+- **`javascript:` targets** could reach the owner's browser through an
+  agent-authored brief cell; links are now allow-listed to fragment / relative /
+  http(s), and an unsafe target degrades to visible text rather than vanishing.
+- **A whitespace-only edit fused its neighbours** ("a  b" → "a b" rendered
+  "ab") — the reconstructed after-text must be the cell being blessed.
+- **The migration had no detector**: a resynced adopter keeps a dead
+  `open-items.md` whose block nothing regenerates; the reviewer planted a
+  fabricated "WI-999 blocked" line and every gate stayed green. Now a warn on
+  both paths — warn-only, because failing would red a repo mid-migration.
+- **Dead `_OI_HEADING_RE`** deleted with the rule it served.
+
+### The three UNCOVERED Done-when items
+
+V4 (the collapse toggle was never executed) now has a **structural** test with
+its narrowing stated: it asserts the toggle exists, targets the `.eq` runs the
+diff emits, and keeps the full text for restore — and says plainly that whether a
+browser collapses them needs the Playwright harness, because claiming it here
+would be the proxy this repo refuses. V8 and V10 were the empty-state defect and
+are closed with it.
+
+**Seven guards mutation-proven** (baseline reuse, write translation, read
+translation, whitespace runs, the empty-state wording, the link allow-list, the
+migration detector) — each reintroduced defect turns its test red, source
+restored byte-identical (verified by hash).
+
+**One process lesson, which the reviewer named and I am keeping:** the commit bar
+runs the **warn** tier, so a module can land untagged and only the gate-level
+`--strict` says so. `check.py --gate <gate>` before closing any module-adding WI.
