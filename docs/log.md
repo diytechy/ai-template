@@ -15643,3 +15643,19 @@ on its first check. `MAPPING` now copies the pair together with a comment saying
 why, and `ADOPTING.md` §6 tells a hand-managed re-sync the same. Worth recording
 that this is exactly the blast radius the WI was deferred for — and that a test
 caught it in seconds.
+
+**WI-329 follow-through, and a correction.** The commit above claimed *"zero new
+attestation debt"*. That was wrong by one row, and the harness said so
+immediately: `LLR-004` flipped `Modified` while its owning `SR-004` did not, and
+**the SR is the attestation unit** — an amendment whose SR is not flagged is
+invisible to the sitting. `SR-004` flips too, so the honest cost of WI-329 is
+**two** newly-`Modified` rows, not zero. Still far cheaper than deferring, which
+would have cost those same two *plus* re-attesting three rows days apart *plus* a
+`G3→G2→G3` round trip.
+
+`IF-076` was also declared with its endpoints backwards. The `source`/`sink`
+honesty valve marks **ThisProject**, so a row saying `scripts/trace` consumes
+`scripts/trace_text` cannot mark the extracted module as consuming nothing. Now
+matching the `IF-065`/`IF-066` precedent exactly: the **extracted** module is
+`ThisProject` and `Provides` to its parent, with `source` first in Notes because
+a pure predicate layer consuming something would mean the split failed.
