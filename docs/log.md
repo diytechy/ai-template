@@ -444,6 +444,32 @@ why (one bullet each; cite ids)._
   Design + backfill plan (SR-052/053/054 as first live use) in
   [specs/WI-316.md](archive/specs/WI-316.2026-07-26.md); `Priority=1` so it lands **before** the
   owed sitting, which then flips registry state instead of blessing prose.
+- **2026-07-26 — OI-10 RULED (WI-322): option (b) — `open-items.csv` is the
+  source, a generated `open-items.html` is the owner's reading surface, and
+  the aggregate `docs/open-items.md` retires entirely.** Raised at the first
+  re-attestation sitting: the pending projection was a pointer where the owner
+  needed the before/after, the depth that makes a re-attest readable is a
+  word-level diff markdown cannot express, and the owner went further —
+  *"open-items.md is no longer even necessary; a single html reference view is
+  sufficient, the md can be retired in its entirety."* **The call, in the
+  owner's framing:** briefs live as rows in `open-items.csv` beside
+  `work-items.csv`, the generator pulls them into `open-items.html`, and the
+  human never reads the CSV — which defuses the driver's recorded objection to
+  (b) (prose-in-cells readability): the cell is a machine source, read raw
+  exactly as often as `work-items.csv` is, i.e. never. It is the same
+  registry→generated-view pattern the repo already runs on, and it makes OI
+  state queryable instead of a text block. **Recommendation (a) — per-item
+  markdown sources — passed over** by the owner: it retires the aggregate file
+  but keeps a *directory* of prose files as a second authoring surface; (b)
+  leaves exactly one registry + one view. **Accepted trade-offs, recorded, not
+  relitigated:** brief prose is authored into CSV cells and diffs as
+  one-line-per-row in review (the `work-items.csv` precedent says this is
+  livable); agents read briefs through the CSV row, same as they read WI
+  deliverables today. **Blast radius stands as measured** (kit version bump:
+  template + MAPPING, 11 kit-doc references, 7 test modules, one SR/LLR/TC
+  row, the `agent_dispatch` status-map marker + per-loop refresh — migration
+  note owed to `ADOPTING.md` §6). Spec rewritten around the ruling:
+  [specs/WI-322.md](specs/WI-322.md); the WI unblocks (`BlockRef` clears).
 
 ## Audit log
 
