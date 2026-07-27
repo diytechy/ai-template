@@ -15608,3 +15608,38 @@ avoid. The honest control is review, and the record now says review failed here
 twice.
 
 Spine: **SN=25 SR=128 LLR=133 TC=124**, orphans=0, `--strict` exit 0.
+
+### 2026-07-27 — WI-329: the debt is paid, and the owner corrected the sequencing
+
+The driver had said this could wait until after the sitting. **The owner caught
+that it could not**, and the reasoning is the rule this repo filed in
+`PROCESS.md` §4 that same morning: requirement-text work sequences INTO an open
+window. Re-measured on the challenge, the driver's own number was stale —
+WI-330 had just added three more `LLR` rows naming a moving symbol, so the
+footprint was **4 rows, not 1**. Deferring would have re-attested `LLR-133/134/135`
+days apart and taken `LLR-004` through a `G3→G2→G3` round trip for one pointer
+column. Landing first cost **zero** new attestation debt: all four were already
+`Modified` or became so inside the open window.
+
+**`trace.py` 3,026 → 2,703** — 109 lines *below* the pre-WI-328 baseline of
+2,812, so the census tightens rather than merely stops growing. Both WI-328
+bumps are repaid, and this is the escape the ratchet documents and prefers:
+decomposition, not a bump.
+
+`trace_text.py` (383 lines, under `THRESHOLD`, so it needs no baseline entry)
+holds the four pure predicates plus `refs`/`is_example`/`is_draft`. The
+primitives live in the **lower** layer and `trace.py` imports them back, so the
+dependency runs one way and there is no cycle. `IF-076` declares the seam on the
+`IF-065`/`IF-066` precedent.
+
+**The invariant is proven, not asserted:** the three golden report files are
+**byte-identical** across the split. That is a stronger guarantee than a green
+suite, because the finding *strings* are the contract — `IF-076` says so.
+
+**The scaffold break was found by the harness, not predicted.** The golden
+scaffold test failed with a `FileNotFoundError` the moment the extraction landed:
+a scaffolded project got `trace.py` without `trace_text.py` and `ImportError`ed
+on its first check. `MAPPING` now copies the pair together with a comment saying
+why, and `ADOPTING.md` §6 tells a hand-managed re-sync the same. Worth recording
+that this is exactly the blast radius the WI was deferred for — and that a test
+caught it in seconds.

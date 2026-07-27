@@ -72,6 +72,7 @@ graph LR
     m_scripts_score_reviews["scripts/score_reviews — The substance scorer — score a review verdict b…"]
     m_scripts_subagent_gate["scripts/subagent_gate — Subagent spawn gate — deny-by-default fan-out c…"]
     m_scripts_trace["scripts/trace — Traceability join + orphan report for the SN->S…"]
+    m_scripts_trace_text["scripts/trace_text — Spine-row TEXT rules and the row primitives the…"]
     m_scripts_agent_common --> m_scripts_agent_session
     m_scripts_agent_dispatch --> m_scripts_agent_common
     m_scripts_agent_dispatch --> m_scripts_agent_route
@@ -97,6 +98,7 @@ graph LR
     m_scripts_plan_runner --> m_scripts_plan_briefs
     m_scripts_plan_runner --> m_scripts_plan_coverage_step
     m_scripts_plan_runner --> m_scripts_plan_round
+    m_scripts_trace --> m_scripts_trace_text
     m_scripts_agent_common -. IF-065 .-> m_scripts_agent_loop
     m_scripts_agent_dispatch -. IF-067 .-> m_scripts_agent_loop
     m_scripts_agent_route -. IF-044 .-> m_scripts_agent_loop
@@ -125,6 +127,7 @@ graph LR
     m_scripts_score_reviews -. IF-046 .-> m_scripts_agent_loop
     m_scripts_trace -. IF-001 .-> m_scripts_check
     m_scripts_trace -. IF-075 .-> m_scripts_gen_open_items
+    m_scripts_trace_text -. IF-076 .-> m_scripts_trace
 ```
 <!-- END GENERATED DEPENDENCY DIAGRAM -->
 
@@ -846,23 +849,17 @@ Contracts (interfaces): IF-020, IF-038
 
 ### `scripts/trace`
 _Traceability join + orphan report for the SN->SR->LLR->TC registries._
+Imports (internal): `trace_text`
 Contracts (interfaces): IF-001, IF-021, IF-042
 
 | Public item | Summary | Implements |
 |---|---|---|
 | `load_csv(path)` |  |  |
-| `refs(value)` | Split a multi-ref cell (';', ',' or whitespace separated) into ids. |  |
-| `is_example(rid)` |  |  |
-| `is_draft(row)` | A row in the pre-ratification `Draft` state (derived-gate model §3): exempt |  |
 | `is_verified(row)` | The terminal `Verified` state, matched case-insensitively so it follows the |  |
 | `is_modified(row)` | The post-attestation `Modified` state (WI-316, process.md §7): the row |  |
 | `llr_exempt(row)` | SR Verification method in LLR_EXEMPT, matched on the stripped cell so a |  |
 | `phase_num(row)` | The integer a row's free-form `Phase` cell digit-parses to (`v2`->2, `2`->2); |  |
 | `structure_findings(path, display)` | Column-count structural check over one registry CSV: every data row must |  |
-| `ac_advisories(srs)` | Warn-only findings: real SR rows whose AcceptanceCriteria uses a |  |
-| `provenance_findings(srs, llrs, tcs)` | A spine row whose text carries its own PROVENANCE — a work-item id, or a | LLR-050 |
-| `form_findings(srs, llrs, tcs)` | A spine row whose text is not ONE testable obligation (process.md §3). |  |
-| `paraphrase_advisories(srs, llrs)` | Warn-only: a child cell that mostly RE-WORDS its parent (process.md §3 |  |
 | `llr_status_advisories(llrs, tcs)` | Warn-only findings (WI-129): an LLR whose Status reads below `Verified` |  |
 | `modified_chain_advisories(srs, llrs, tcs)` | Warn-only findings (WI-316): a `Modified` LLR/TC whose owning SR is neither |  |
 | `id_key(label)` |  |  |
@@ -893,6 +890,20 @@ Contracts (interfaces): IF-001, IF-021, IF-042
 | `render_console(reg, findings, args, out, html_out)` | Print the warn-only advisory lines and the one-line Traceability summary to stdout (loud but never gating). |  |
 | `exit_code(findings, args)` | The gate exit code: 1 under --strict if any orphan/status/integrity/placeholder/schema/off-spine finding exists; 1 under --strict-integrity if any integrity finding exists; else 0. |  |
 | `main()` |  |  |
+
+### `scripts/trace_text`
+_Spine-row TEXT rules and the row primitives they share (WI-329)._
+Contracts (interfaces): IF-076
+
+| Public item | Summary | Implements |
+|---|---|---|
+| `refs(value)` | Split a multi-ref cell (';', ',' or whitespace separated) into ids. |  |
+| `is_example(rid)` |  |  |
+| `is_draft(row)` | A row in the pre-ratification `Draft` state (derived-gate model §3): exempt |  |
+| `ac_advisories(srs)` | Warn-only findings: real SR rows whose AcceptanceCriteria uses a |  |
+| `provenance_findings(srs, llrs, tcs)` | A spine row whose text carries its own PROVENANCE — a work-item id, or a | LLR-050 |
+| `form_findings(srs, llrs, tcs)` | A spine row whose text is not ONE testable obligation (process.md §3). |  |
+| `paraphrase_advisories(srs, llrs)` | Warn-only: a child cell that mostly RE-WORDS its parent (process.md §3 |  |
 <!-- END GENERATED MODULE MAP -->
 
 ## Runtime flows

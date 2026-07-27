@@ -41,7 +41,7 @@ What it creates in the destination:
     docs/knowledge/README.md                  <- knowledge/README.template.md
     docs/rubrics/README.md, docs/rubrics/rubric-000.md <- rubrics/*.template.md  (critique rubrics)
     docs/test/test-cases.csv                   <- registries/test-cases.template.csv
-    scripts/trace.py, derive_gate.py, check.py, check_flows.py, check_docs.py, check_perf.py,
+    scripts/trace.py, trace_text.py, derive_gate.py, check.py, check_flows.py, check_docs.py, check_perf.py,
     scripts/check_stubs.py, check_dupes.py, check_coverage.py, check_doc_refs.py, check_privacy.py, check_vendored.py, check_trajectory.py,
     scripts/subagent_gate.py, gen_arch_map.py, gen_release_checklist.py, gen_cases.py, gen_trajectory.py, gen_open_items.py, gen_okf.py
     scripts/plan_coverage.py, plan_round.py, plan_briefs.py, plan_coverage_step.py, plan_artifacts.py
@@ -1208,6 +1208,10 @@ MAPPING = [
     ("rubrics/README.template.md", "docs/rubrics/README.md"),
     ("rubrics/rubric-000.template.md", "docs/rubrics/rubric-000.md"),
     ("scripts/trace.py", "scripts/trace.py"),
+    # WI-329: trace.py imports its spine-row TEXT layer from this sibling, so a
+    # scaffold missing it gets an ImportError on the first check. Copied
+    # together, always.
+    ("scripts/trace_text.py", "scripts/trace_text.py"),
     ("scripts/derive_gate.py", "scripts/derive_gate.py"),
     ("scripts/check.py", "scripts/check.py"),
     ("scripts/check_flows.py", "scripts/check_flows.py"),

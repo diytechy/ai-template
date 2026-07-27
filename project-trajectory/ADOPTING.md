@@ -332,6 +332,17 @@ table.
 
 ### Migration recipes for specific kit changes
 
+- **`trace.py` splits into two files (2026-07).** `scripts/trace_text.py` joins
+  `scripts/trace.py`, and **a re-sync must copy both** — `trace.py` imports its
+  spine-row text layer from the sibling, so a repo that picks up one and not the
+  other gets an `ImportError` on its first check rather than a quiet
+  degradation. `bootstrap.py` copies them together; a hand-managed re-sync must
+  too. No behaviour changes: the split is pure decomposition, and the kit's three
+  golden report files stay byte-identical across it. *Why:* the four text
+  predicates (`provenance_findings`, `form_findings`, `paraphrase_advisories`,
+  `ac_advisories`) and the row primitives they share are one concern — *is this
+  row readable and decidable on its own?* — and pure (rows in, findings out), so
+  they separate cleanly from the join that owns I/O and reporting.
 - **The LLR `Rationale` column (2026-07).** `low-level-requirements.csv` gains an
   optional **`Rationale`** column after `Detail`. Non-breaking and header-driven:
   a registry without it reads as blank and stays valid, so migration is adding

@@ -321,11 +321,14 @@ BASELINE = {
     # which is filed rather than done inline because it moves the scaffold
     # surface (bootstrap MAPPING, README kit-contents, test file lists) and
     # this WI lands inside an open attestation window. Log 2026-07-27.
-    # +18 (3008 -> 3026), same WI: the two Draft exemptions and the reasons the
-    # zero-`shall` and `must` cases are NOT findings — narrowings the golden
-    # fixtures and the derive_gate lifecycle test forced, and exactly the ones a
-    # successor would otherwise re-add. Same reviewed bump, same WI-329 debt.
-    "trace.py": 3026,
+    # -323 (3026 -> 2703), WI-329: the debt above is PAID. The four pure text
+    # predicates and the row primitives they share moved to trace_text.py, which
+    # stays under THRESHOLD and needs no entry of its own. This is the escape the
+    # ratchet documents and prefers — decomposition, not a bump — and it lands
+    # 109 lines BELOW the pre-WI-328 baseline of 2812, so the census tightens
+    # rather than merely stops growing. Proven behaviour-preserving by the three
+    # golden files staying byte-identical.
+    "trace.py": 2703,
     # +132 (1926 -> 2058; the last +10 is the F4 BOM hardening: read_rows utf-8-sig + git-show strips), WI-316: staged_spine_findings — the amend-without-
     # flip warn (--staged): content cells of a Verified spine row changed
     # without the Modified marker, suppressed when the owning SR flips in the
@@ -356,7 +359,10 @@ BASELINE = {
     # ROW written with csv.writer (a brief cell carries commas), and bootstrap
     # seeds the generated owner surface so a fresh scaffold passes its own
     # freshness gate. Reviewed bump, log 2026-07-26.
-    "bootstrap.py": 2003,
+    # +4 (2003 -> 2007), WI-329: trace_text.py joins MAPPING beside trace.py (which
+    # imports it, so a scaffold missing it ImportErrors on the first check) plus the
+    # comment saying why they copy together. Reviewed bump, log 2026-07-27.
+    "bootstrap.py": 2007,
 }
 
 
