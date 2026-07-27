@@ -15174,3 +15174,70 @@ against the baseline **the file already declares**, never re-derive one, because
 re-deriving is exactly the WI-322 review's BLOCKER. Escalating this in prose
 instead of filing it is the mistake the 2026-07-24 open-surface audit caught
 three times over.
+
+## 2026-07-26 — WI-326: a green that hid 47 tests, caught by not trusting a number
+
+Closing out the session, the full suite reported **1540 passed, 54 skipped**. The
+handoff for the previous session recorded **1579 passed, 7 skipped** at
+`faa3cba`. The totals reconciled once the seven tests added this session were
+accounted for — but **47 tests had moved from *passed* to *skipped*** and nothing
+anywhere said so.
+
+It would have been easy to report the green. Two things stopped that: `54` is not
+`7`, and this repo's first stakeholder need is *"gates are honest — a green never
+hides a skipped check."*
+
+### What it was
+
+`pytest -rs` grouped the reasons in one line: **47 of the 54 are a POSIX shell**.
+
+| Reason | Count |
+|---|---|
+| `needs a POSIX shell and git on PATH` | 36 |
+| `no POSIX shell on PATH` | 5 |
+| the other POSIX/exec-bit/coverage gates | 6 |
+
+Git for Windows ships `sh.exe` at both `Git\bin\sh.exe` and
+`Git\usr\bin\sh.exe`, but puts only `Git\cmd` on `PATH`. So `sh` is *installed
+and unreachable* — **the default Windows developer state, not an exotic one.**
+
+Re-running the identical tree with `C:\Program Files\Git\bin` prepended:
+
+```
+1587 passed, 7 skipped in 593.65s   (0 failed)
+```
+
+All 47 run, all 47 pass. Nothing was broken; 47 things were simply never asked.
+
+### Why this is a finding and not a footnote
+
+**36 of the 47 are `test_pre_commit_hook.py`** — the tests guarding the commit
+floor. On a default Windows box the floor's own guards do not execute, and the
+suite still prints a green. That is precisely the dishonest-green shape the kit
+exists to prevent, one level up from the code: not a skipped *check*, but a
+skipped *check-of-the-check*.
+
+It also silently broke comparability between sessions. The handoff said `1579/7`;
+I measured `1540/54`; both were "green"; neither was wrong; they were not the
+same run. A successor diffing those two numbers learns nothing without the
+`-rs` line nobody thinks to pass.
+
+**Filed as WI-326** (`P1`), with the fix scoped in the row: *announce* the
+environment-gated skip count in the session header always, and *gate* on it at
+`check.py`. Explicitly rejected in the row: auto-injecting the PATH entry — a
+harness that silently repairs its own environment hides the identical fact one
+layer down, and the repo has a standing rule against greening a step that way.
+
+### The transferable bit
+
+**A skip count is a measurement, and an unexplained change in it is a finding.**
+The suite never lied — `-rs` was one flag away the whole time. What nearly went
+wrong was accepting "0 failed" as the answer to "is it green?" when the question
+that mattered was "did it run?"
+
+**Verified:** `1587 passed, 7 skipped` with a POSIX shell on PATH, zero failures;
+`check.py --gate G2 --jobs 0` **RESULT: PASS**, every step;
+`check_trajectory --strict` clean (323 work items, graph acyclic) with
+`perceptual-stale` **cleared** and re-verified *after* the critique was
+committed. The remaining 7 skips are genuine platform gates (exec bit, advisory
+locks, `cmd.exe` expansion) and match the count the previous session recorded.
