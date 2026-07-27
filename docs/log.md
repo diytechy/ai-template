@@ -15335,3 +15335,79 @@ smoke **433 passed** (with a POSIX shell on PATH); `check_docs` OK (271 docs, 81
 links, 0 broken); goldens regenerated for the renamed gating section. Ratchet
 re-stamped **2778 → 2807** with its reason inline. **WI-324 narrowed** to the
 `TC-055` de-triplication alone — its `SR-026`/`SR-060` half was absorbed here.
+
+## 2026-07-27 — 124-REVIEW-A: the owner asked whether anyone had checked my prose. Nobody had.
+
+Mid-sitting, the owner asked whether an adversarial review had been run against
+the 48 rewritten requirement cells, adding that they would re-attest but were not
+going through 44 rows with a fine-tooth comb.
+
+**The honest answer was no** — I had diffed my own edit and read my own prose.
+That is not corroboration, and it is the weakest possible basis for a signature
+on text the signer has said they will not comb. So the sitting paused and a fresh
+**OpenAI/`codex`** critic got the 48 BEFORE/AFTER pairs and the invariant being
+claimed — no repo access, no commit message, no rationale, no knowledge of who
+made the edit.
+
+**`CHANGES-REQUESTED findings=30`.** Full record:
+[124-REVIEW-A](reviews/124-REVIEW-A.md).
+
+### It caught two things I would have shipped into an attestation
+
+- **`SR-046` (MAJOR):** removing the `process.md` citation orphaned a *later*
+  bare `§7` in the same cell. My sweep checked every removal site and never asked
+  what a removal orphaned **elsewhere in the same sentence**.
+- **`TC-120` (BLOCKER):** *"owned by the cited WI-305 tests"* → *"owned by the
+  cited next-work tests"*. The word **"cited"** survived with nothing to point
+  at. Ownership stopped being resolvable and the sentence still scanned — which
+  is exactly why a read-through missed it.
+
+Plus `TC-124` twice, where the removed id had been the fixture's only
+distinguishing identity (now named as its actual constant, `_NW_LONG`).
+
+### And it called a BLOCKER on a cost I had predicted and accepted
+
+`LLR-120` measured which node box a wire grazed; that box was `WI-043`, and my
+rule forced it out to *"a neighbouring node box"*. I flagged this as a known cost
+when writing the rule and judged it acceptable. An independent reader called it a
+**BLOCKER** — the measurement stopped being reproducible.
+
+**Predicting a cost does not discharge it.** The fix was to stop paraphrasing and
+re-scope: the row now claims what it owns (264 wires, 0 through a box, and that
+the least-bad fallback is a *reachable* state), and explicitly does not claim the
+one-off datum, whose identity lives in the work item that will act on it — where
+a specific id belongs and the rule does not reach.
+
+### The critic was necessary and NOT sufficient
+
+Two defects it did not report were caught by my own second pass, run as a
+deliberately **different instrument** — a word-level delta rather than a sentence
+read-through: `SR-050`'s tautology (*"downgrades verification to Critique (the
+Critique verification vocabulary)"*) and a dangling participle in `LLR-101`,
+`LLR-112`, `LLR-113` (*"and delivered: every element…"*).
+
+Two instruments, disjoint findings. The lesson is not "get a reviewer" — it is
+**vary the instrument**, because a reader checking meaning and a differ checking
+words fail in different places.
+
+### 30 findings, 7 defects — and saying so is the job
+
+23 of the 30 say a version of *"you removed the work-item id but left
+`Thread 53` / `119-CRITIQUE` / `the 2026-07-26 owner ruling` / `REWORKED same day
+after adversarial review`."* The critic is right that these are history rather
+than specification — and it is arguing the **rule is too narrow**, not that this
+edit broke something.
+
+Passing its count through unexamined would have been as dishonest as ignoring it.
+Acting on it would have meant rewriting 23 more cells **inside an open
+attestation window**, in rows a human is mid-way through blessing — the exact
+drive-by this whole thread exists to prevent. It is filed as **WI-328** with the
+evidence and the three counter-forces that make it a ruling rather than a
+cleanup: a critique reference is the *acceptance instrument* of a
+`Verification=Critique` row; some dated text is a measurement snapshot, not a
+stamp (the critic drew that line correctly itself); and discovery chronology
+sometimes carries the only surviving warning about a defect class that recurred.
+
+**Verified after the fixes:** `trace --strict --strict-integrity` clean,
+`provenance-findings=0`, exit 0. Brief regenerated on the same
+`--since a5052a913` baseline.
