@@ -527,3 +527,97 @@ def test_collapse_toggle_is_wired_to_the_unchanged_runs(tmp_path):
     assert ".diff .eq" in page  # the toggle targets the runs the diff emits
     assert "data-full" in page  # ...and keeps the original for restore
     assert 'class="eq"' in page  # ...which the rendered diff really emits
+
+
+def ctx_blocks(page):
+    """The rendered context blocks, each sliced from its opening tag to the next
+    structural boundary. A crude split rather than a parser, deliberately: the
+    assertions below need to know WHICH block a field landed in, and the kit
+    installs nothing to parse HTML with."""
+    out = []
+    for chunk in page.split('<div class="ctx">')[1:]:
+        end = min(
+            (
+                i
+                for i in (chunk.find('<div class="row"'), chunk.find("</article>"))
+                if i >= 0
+            ),
+            default=len(chunk),
+        )
+        out.append(chunk[:end])
+    return out
+
+
+def test_full_row_context_renders_beside_the_diff_and_complements_it(tmp_path):
+    """The owner's 2026-07-27 finding: the surface showed WHICH CELLS MOVED and
+    nothing else, so a rewritten `Rationale` arrived with no `Requirement` beside
+    it — and "does the existing evidence still verify this row" is a question
+    about what the row now SAYS, not only about what changed in it.
+
+    Structural, and the narrowing is stated: this asserts the context is
+    RENDERED, is wired to the same control, and complements rather than repeats
+    the diff. Whether a browser reveals it on click is runtime behaviour no
+    stdlib test can drive (the same boundary the collapse guard states)."""
+    verified = (
+        "SR-009,Amended reasoning,SN-001,shall hold the ORIGINAL requirement,"
+        "because of the old reason,the acceptance criteria,,C,Test,Verified,1,W\n"
+    )
+    root = repo(tmp_path, sr_rows=verified)
+    _git_init(root)
+    (root / "docs" / "requirements" / "system-requirements.csv").write_text(
+        SR_HEADER
+        + verified.replace(
+            "because of the old reason", "because of a NEW reason"
+        ).replace(",Verified,", ",Modified,"),
+        encoding="utf-8",
+    )
+    assert gen(root).returncode == 0
+    page = html_of(root)
+    blocks = ctx_blocks(page)
+    assert blocks, "an amended row rendered no context block"
+    block = blocks[0]
+    # The context the diff omitted — the requirement the amended rationale argues
+    # for, and the criteria that carry its evidence.
+    assert "shall hold the ORIGINAL requirement" in block
+    assert "the acceptance criteria" in block
+    # The negative halves. (a) The changed cell is NOT repeated as a plain field:
+    # an unmarked second copy of the text under review is exactly what an
+    # attestation must not carry.
+    assert ">Rationale<" not in block
+    assert "because of a NEW reason" not in block
+    # (b) An empty column is not context — `Notes` is blank in the fixture.
+    assert ">Notes<" not in block
+    # (c) The SR row rendered its own diff, so the card-level fallback block for
+    # a chain-only amendment must not also fire.
+    assert "itself — no cell changed beyond the Status flip" not in page
+    # Wired to the SAME control as the text collapse, and honest without JS.
+    assert "body.ctx-open .ctx" in page and "'ctx-open'" in page
+    assert "<noscript><style>.ctx{display:flex;}</style></noscript>" in page
+
+
+def test_sr_text_renders_when_only_a_child_row_was_amended(tmp_path):
+    """An SR can owe a re-attest while nothing but its Status flipped — the whole
+    amendment sitting in an LLR or TC beneath it. That section used to open with
+    a child-row diff and never state the requirement it hangs from."""
+    sr = (
+        "SR-010,A stable requirement,SN-001,shall state the THING BEING VERIFIED,"
+        "because,criteria,,C,Test,{},1,W\n"
+    )
+    llr = "LLR-010,SR-010,A child,mod.py,sym,{},TC-010,Verified,CMP-001,1\n"
+    root = repo(
+        tmp_path, sr_rows=sr.format("Verified"), llr_rows=llr.format("old detail")
+    )
+    _git_init(root)
+    (root / "docs" / "requirements" / "system-requirements.csv").write_text(
+        SR_HEADER + sr.format("Modified"), encoding="utf-8"
+    )
+    (root / "docs" / "requirements" / "low-level-requirements.csv").write_text(
+        LLR_HEADER + llr.format("NEW detail"), encoding="utf-8"
+    )
+    assert gen(root).returncode == 0
+    page = html_of(root)
+    assert "SR-010 itself — no cell changed beyond the Status flip" in page
+    assert "shall state the THING BEING VERIFIED" in page
+    # The negative half: the fallback states what it is, and does not claim the
+    # SR was amended — the LLR is what changed, and it still shows its diff.
+    assert "<del>old</del>" in page and "<ins>NEW</ins>" in page

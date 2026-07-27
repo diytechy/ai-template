@@ -500,6 +500,27 @@ why (one bullet each; cite ids)._
   warn-only, both untrue since WI-327 widened and gated it without touching the
   doc — a downstream adopter was inheriting a rule wrong about its own scope and
   its own severity.
+- **2026-07-27 — OI-7 RULED: keep per-slice review; WI-123 `retired`.** The
+  owner ruled the review-cadence dial that had been open since 2026-07-12 —
+  *"previous evidence shows a per slice review is advantageous and not to
+  deviate."* The proposal was to replace the review after every committed
+  session with **two adversarial rounds at phase close**, with the passing suite
+  as cover in between; it was filed evidence-gated (rule after ≥ 2 phases of
+  medium-`BUILD` evidence), and the evidence arrived pointing the other way.
+  What it showed, in the order it landed: per-slice review **refuted WI-297's
+  headline claim and found the severe defect the WI existed to fix**; it caught
+  real defects on WI-313 and WI-316; and across `124/125/126-REVIEW-A` it caught
+  three classes a green suite cannot reach — text **left behind** by a removal,
+  scope **added** by a rewrite, and **eight fluent, confident, false claims**,
+  two of which would have entered the record under a signature. The mechanism
+  behind that: the builder writes its own tests, so a suite polices regression in
+  what is tested and says nothing about whether "tested" is honest. **Alternative
+  passed over: leaving WI-123 `deferred`.** A row waiting for evidence that has
+  arrived is not deferred work, it is a settled question wearing an open status —
+  so the WI is `retired` (terminal, reason in its `Deliverable`), its spec is
+  archived to `docs/archive/specs/WI-123.2026-07-27.md`, and reopening the dial
+  needs **new** evidence rather than a re-read of this. The pending owner queue
+  is now empty of decision briefs; only the attestation sitting remains.
 
 ## Audit log
 
@@ -3788,7 +3809,7 @@ coherence; `AGENT_MODEL` stays `claude-fable-5` (an unknown phase routes UP,
 never down). The original pin's own comment named the safety this leans on —
 **tier-up-never-down re-raises a contested build to strong via the per-slice
 review escalation** — so the per-slice review leg stays ON (the coupling is
-recorded in [specs/WI-123.md](specs/WI-123.md)). Registry Notes
+recorded in [specs/WI-123.md](archive/specs/WI-123.2026-07-27.md)). Registry Notes
 (`agents.csv` fable/opus rows), status.md's unattended-layer bullet, and the
 README config table updated to match. Config + docs only; no engine change,
 no spine change.
@@ -3803,7 +3824,7 @@ rulings):**
   zero `@pytest.mark.smoke` marks and the commit bar names the full command
   (~70 s post-WI-075). Spec records the population/re-point plan and the
   honest counterweight (push-policy `human` means CI can lag many commits).
-- **WI-123** ([specs/WI-123.md](specs/WI-123.md)) — owner proposal: two
+- **WI-123** ([specs/WI-123.md](archive/specs/WI-123.2026-07-27.md)) — owner proposal: two
   adversarial reviews at campaign close instead of per-slice review.
   Recommendation recorded: **evidence-gate, don't turn this dial in the same
   breath as WI-121** — the builder writes its own tests (a green suite can't
@@ -15742,3 +15763,85 @@ ran on a non-Anthropic critic. Model-specific behaviour belongs in the
 `agents.csv` `Env` column, which is per-model and already holds the effort pins.
 
 Handoff for the sitting: [handoff-2026-07-27.md](handoff-2026-07-27.md).
+
+### 2026-07-27 — OI-7 ruled, and the attestation surface gains the context a diff cannot carry
+
+Two owner asks, resumed from [handoff-2026-07-27.md](handoff-2026-07-27.md).
+
+**OI-7 — ruled: keep per-slice review.** *"Previous evidence shows a per slice
+review is advantageous and not to deviate."* The ruling and the alternatives it
+passed over are in the Decisions log above; the executed record is here.
+`WI-123` → `retired` with the reason in its `Deliverable`, `SpecRef` cleared and
+the spec archived to
+[archive/specs/WI-123.2026-07-27.md](archive/specs/WI-123.2026-07-27.md) with an
+ARCHIVED header naming why it was never built (rule R-F). `OI-7` → `ruled` with
+its `RuledDate`/`RulingRef`, so **the generated owner surface now carries no
+pending decision brief at all** — the queue in
+[open-items.html](open-items.html) is the attestation sitting alone. Two log
+links that pointed at the live spec were redirected to the archive copy;
+`check_doc_refs` is 0 broken, and the one remaining mention (a `docs/run-state`
+quotation inside a 2026-07-13 entry) is correctly classed as a record surface,
+not a dangling path.
+
+**WI-332 — the view showed what MOVED and nothing else.** The owner hit this
+while preparing the sitting: a rewritten `Rationale` arrives with no
+`Requirement` beside it, and the *"Collapse unchanged text"* checkbox implies a
+fuller reading that did not exist. The diagnosis worth keeping: **a diff answers
+a different question than an attestation asks.** *What moved* is the diff's
+question; *does the existing evidence still verify what this row now says* is the
+owner's, and the second needs the cells the first has no reason to render.
+
+`gen_open_items` now renders the rest of every row under the same control:
+
+- for a **changed** row, its remaining cells — empty ones dropped, and the
+  changed ones **deliberately not repeated**: an unmarked second copy of the text
+  under review is precisely what an attestation must not carry;
+- for a section whose SR only **flipped Status** (the whole amendment sitting in
+  a child `LLR`/`TC` — `SR-004` here), the SR's own text, which that reader
+  previously had to go and look up mid-sitting;
+- one `body` class toggled by the existing handler, so the text collapse and the
+  cell collapse **cannot disagree**, plus a `<noscript>` block that reveals the
+  context when the control governs nothing.
+
+Label-beside-value grid rather than the stacked `.field` shape used elsewhere:
+stacked, a dozen mostly-one-word cells pushed the next diff a screen down —
+context that buries what it was added to support. No spine amendment: `LLR-118`
+scopes this module as the **renderer** and enumerates no affordance (the collapse
+toggle is not in it either), so the open window is not enlarged; if the owner
+wants the affordance enumerated, `LLR-118` is already `Modified` and free to
+carry it.
+
+**The complexity ratchet fired, and was paid rather than re-stamped.**
+`_attestation_cards` went to 11 against the limit of 10, which is the ratchet
+working as designed: the per-row rendering came out to `_chain_row` (with the
+state→tag map lifted to a module constant), and `gen_open_items --check` confirms
+the page is **byte-identical** across the split, so the decomposition changed no
+output. No baseline entry was added.
+
+**Guards, mutation-proven** (three separate mutations, each confirmed to fail the
+right test): drop the context block, drop the skip-set so the diffed cell is
+duplicated, drop the SR-level fallback. Both new tests state their own boundary —
+they assert the markup is rendered and wired, not that a browser reveals it. That
+half was verified out-of-band instead: Chromium at 1280 × light + dark, box
+checked → context hidden, cleared → `body.ctx-open` and context visible, in both
+themes and at the 390 px breakpoint.
+
+Bar: smoke **436 passed**, full suite **1592 passed, 7 skipped** (10:06, re-run
+on the final tree); `ruff format` clean on both changed files; `check_docs
+--stale` 0 broken;
+`check_trajectory --strict` clean (331 WIs, 312 done, 4 retired); `gen_trajectory` +
+`gen_open_items` regenerated. Registry: **331 rows** (WI-332 done, WI-333
+queued), 4 `retired`, **8 `deferred`** (WI-123 left that list).
+
+**Not fixed, surfaced instead — `WI-333` filed** ([specs/WI-333.md](specs/WI-333.md)).
+`ruff check` over `project-trajectory/scripts` + `tests` reports **20 pre-existing
+findings** (13 × `F402` `html` shadowed by a loop variable, 2 × `F821` undefined
+`pytest`, 5 × `F401` unused import — one of them in a file this session touched,
+predating it). `[step:lint]` runs exactly that command, so the **G3 step is red
+today** at a gate the repo has not reached; the derived gate is G2 and nothing
+here regressed it. One finding is not cosmetic: `tests/test_trace.py` calls
+`pytest.skip("needs git on PATH")` twice **without importing pytest**, so on a
+machine with no git the guard raises `NameError` instead of skipping — a safety
+net that has never been watched fail, which is the exact shape of trap this repo
+keeps paying for. Filed rather than swept into an unrelated commit; the spec says
+triage that one first.

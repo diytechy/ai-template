@@ -25,6 +25,11 @@ WHAT IT RENDERS, in the order an owner needs it:
      marked, and THE BASELINE REVISION PRINTED ON EVERY SECTION. An empty
      section reads as *check the baseline*, never as *nothing changed* — the
      failure mode that shipped a brief missing two of six rows (log 2026-07-26).
+     Clearing the toolbar box also reveals THE REST OF EACH ROW — the cells the
+     diff had no reason to show, plus the SR's own text where the amendment sits
+     entirely in a child. A diff says what moved; an attestation asks whether the
+     evidence still verifies what the row now SAYS, and the second question needs
+     the cells the first one omits (owner, 2026-07-27).
   3. PENDING OWNER ACTIONS — the pointer projection `gen_trajectory` already
      derives (blocked rows, the spine pointers, the NEEDS-HUMAN ask) plus its
      machine-local advisory, reused verbatim rather than recomputed.
@@ -144,6 +149,24 @@ section.band{display:flex;flex-direction:column;gap:1rem;}
   box-shadow:inset 0 -2px 0 var(--ins-rule);border-radius:2px;padding:0 .05em;}
 .diff del{background:var(--del-bg);color:var(--del-ink);
   text-decoration:line-through;border-radius:2px;padding:0 .05em;}
+/* The row's remaining cells. Hidden while the toolbar box is CHECKED (the
+   focus default), shown when it is cleared — one control, two collapses: the
+   long unchanged runs INSIDE a diff, and the fields that never changed at all.
+   A reader blessing a rewritten `Rationale` needs the `Requirement` it argues
+   for, and before this the surface rendered the changed cells alone. */
+.ctx{display:none;flex-direction:column;gap:.5rem;margin-top:.15rem;
+  border-top:1px dashed var(--border);padding-top:.6rem;}
+body.ctx-open .ctx{display:flex;}
+/* Label beside value, not above it: a row carries a dozen cells and most hold
+   one word, so the stacked `.field` shape used elsewhere pushed the NEXT diff a
+   screen down — context that buries what it was added to support. */
+.ctx .field{display:grid;grid-template-columns:minmax(5rem,10.5rem) 1fr;
+  gap:.15rem .9rem;align-items:baseline;}
+.ctx .field .k{overflow-wrap:anywhere;}
+@media (max-width:34rem){.ctx .field{grid-template-columns:1fr;}}
+.ctxhead{font-size:var(--tiny);text-transform:uppercase;letter-spacing:.08em;
+  color:var(--muted);font-weight:600;}
+.hint{color:var(--muted);font-size:var(--xsmall);}
 ul.pointers{margin:0;padding-left:1.1rem;font-size:var(--small);}
 ul.pointers li{margin:.3rem 0;}
 code{font-family:var(--mono);font-size:.92em;}
@@ -168,6 +191,9 @@ JS = """
   var spans=[].slice.call(document.querySelectorAll('.diff .eq'));
   spans.forEach(function(s){s.setAttribute('data-full',s.textContent);});
   function apply(){
+    // The SAME control governs both halves of "focus": the middles of long
+    // unchanged runs, and the cells that did not change at all.
+    document.body.classList.toggle('ctx-open',!box.checked);
     spans.forEach(function(s){
       var full=s.getAttribute('data-full');
       s.textContent=(box.checked&&full.length>LIMIT)
@@ -366,8 +392,100 @@ def _brief_cards(items):
     return "".join(cards)
 
 
-def _attestation_cards(model):
-    """One card per SR owing a ratification or re-attest, its chain beneath."""
+def _context_block(full, skip=(), heading="the rest of this row"):
+    """The row's remaining cells as labelled fields — the CONTEXT a diff omits.
+
+    A per-cell diff answers *what moved*; it cannot answer *what the row now
+    says*, and those are different questions to someone deciding whether the
+    existing evidence still verifies an amended requirement. The first sitting
+    under this surface hit exactly that: a `Rationale` rewritten in full, with
+    the `Requirement` it justifies nowhere on the page. Rendered always, revealed
+    by clearing the toolbar box (hence hidden markup rather than a second
+    generator mode — the owner is one click from full context, not one re-run).
+
+    `skip` drops the cells the diff already showed, so the block is a complement
+    and never a second, unmarked copy of the changed text. Empty cells are
+    dropped for the same reason the whole-row states drop them: a column with no
+    value is not context, it is noise between the ones that carry it."""
+    fields = []
+    for key, val in (full or {}).items():
+        if key in skip or not (val or "").strip():
+            continue
+        fields.append(
+            '<div class="field"><span class="k">{}</span>'
+            '<span class="v">{}</span></div>'.format(esc(key), esc(val.strip()))
+        )
+    if not fields:
+        return ""
+    return '<div class="ctx"><div class="ctxhead">{}</div>{}</div>'.format(
+        esc(heading), "".join(fields)
+    )
+
+
+ROW_STATE_TAGS = {
+    "changed": "changed",
+    "added": "ADDED since baseline",
+    "removed": "REMOVED since baseline",
+    "current": "current content",
+}
+
+
+def _chain_row(row):
+    """One chain row of a section: its per-cell diff where the baseline has a
+    before, its whole current content where it does not.
+
+    Split out of `_attestation_cards` when the context block pushed that
+    function over the complexity ratchet — decomposition rather than a baseline
+    bump, which is the escape the ratchet exists to force."""
+    inner = []
+    if row["state"] == "changed":
+        for name, before, after in row["cells"]:
+            inner.append(
+                '<div class="cellname">{n} <span class="pill">{p}% of the '
+                'words changed</span></div><div class="diff">{d}</div>'.format(
+                    n=esc(name),
+                    p=changed_percent(before, after),
+                    d=word_diff(before, after),
+                )
+            )
+        inner.append(
+            _context_block(
+                row["full"],
+                skip={name for name, _, _ in row["cells"]},
+                heading="the rest of this {} — unchanged since the baseline".format(
+                    row["kind"]
+                ),
+            )
+        )
+    else:
+        for key, val in (row["full"] or {}).items():
+            if (val or "").strip():
+                inner.append(
+                    '<div class="cellname">{k}</div><div class="diff">{v}</div>'.format(
+                        k=esc(key), v=esc(val.strip())
+                    )
+                )
+    return (
+        '<div class="row"><div class="row-head">'
+        '<span class="rid">{k} {i}</span>'
+        '<span class="pill">{s}</span></div>{b}</div>'.format(
+            k=esc(row["kind"]),
+            i=esc(row["id"]),
+            s=esc(ROW_STATE_TAGS[row["state"]]),
+            b="".join(inner),
+        )
+    )
+
+
+def _attestation_cards(model, srs_by_id=None):
+    """One card per SR owing a ratification or re-attest, its chain beneath.
+
+    `srs_by_id` supplies the SR row's own cells for the case where the SR does
+    NOT appear among its chain rows — which happens whenever nothing but the
+    `Verified`→`Modified` flip touched it and an LLR or TC carries the whole
+    amendment. Without it that owner reads a diff of a child row with no
+    statement of the requirement it hangs from."""
+    srs_by_id = srs_by_id or {}
     if not model:
         return (
             '<p class="empty">No <code>Draft</code> or <code>Modified</code> '
@@ -406,42 +524,19 @@ def _attestation_cards(model):
             base = '<p class="baseline">no baseline — {}</p>'.format(
                 esc(entry["no_baseline_reason"])
             )
-        body = []
-        for row in entry["rows"]:
-            state = row["state"]
-            tag = {
-                "changed": "changed",
-                "added": "ADDED since baseline",
-                "removed": "REMOVED since baseline",
-                "current": "current content",
-            }[state]
-            inner = []
-            if state == "changed":
-                for name, before, after in row["cells"]:
-                    inner.append(
-                        '<div class="cellname">{n} <span class="pill">{p}% of the '
-                        'words changed</span></div><div class="diff">{d}</div>'.format(
-                            n=esc(name),
-                            p=changed_percent(before, after),
-                            d=word_diff(before, after),
-                        )
-                    )
-            else:
-                for key, val in (row["full"] or {}).items():
-                    if (val or "").strip():
-                        inner.append(
-                            '<div class="cellname">{k}</div>'
-                            '<div class="diff">{v}</div>'.format(
-                                k=esc(key), v=esc(val.strip())
-                            )
-                        )
-            body.append(
-                '<div class="row"><div class="row-head">'
-                '<span class="rid">{k} {i}</span>'
-                '<span class="pill">{s}</span></div>{b}</div>'.format(
-                    k=esc(row["kind"]), i=esc(row["id"]), s=esc(tag), b="".join(inner)
-                )
+        # The SR's own text, for the section where the SR row itself does not
+        # render: nothing but the Status flip touched it, so the amendment sits
+        # entirely in a child LLR/TC. The chain hangs off a requirement the
+        # reader would otherwise have to go and look up mid-attestation.
+        sr_ctx = ""
+        if not any(r["kind"] == "SR" and r["id"] == entry["id"] for r in entry["rows"]):
+            sr_ctx = _context_block(
+                srs_by_id.get(entry["id"]),
+                heading="{} itself — no cell changed beyond the Status flip".format(
+                    entry["id"]
+                ),
             )
+        body = [_chain_row(row) for row in entry["rows"]]
         if not entry["rows"]:
             # Never a confident blank: an empty section under an auto-derived
             # baseline usually means the amendment PREDATES it (a pre-regime
@@ -454,8 +549,12 @@ def _attestation_cards(model):
                 "baseline. Re-run with <code>--since &lt;rev&gt;</code>.</p>"
             )
         cards.append(
-            '<article class="card" id="{i}">{h}{b}{rows}</article>'.format(
-                i=esc(entry["id"] + "-attest"), h=head, b=base, rows="".join(body)
+            '<article class="card" id="{i}">{h}{b}{c}{rows}</article>'.format(
+                i=esc(entry["id"] + "-attest"),
+                h=head,
+                b=base,
+                c=sr_ctx,
+                rows="".join(body),
             )
         )
     return "".join(cards)
@@ -505,7 +604,11 @@ def render(root, since=None):
         '<html lang="en"><head><meta charset="utf-8">\n'
         '<meta name="viewport" content="width=device-width, initial-scale=1">\n'
         "<title>Open items — owner decision surface</title>\n"
-        "<style>{css}</style></head><body>\n"
+        "<style>{css}</style>\n"
+        # Without scripting the checkbox governs nothing, so the honest default
+        # is the FULLER page: context visible rather than a control that lies.
+        "<noscript><style>.ctx{{display:flex;}}</style></noscript>\n"
+        "</head><body>\n"
         '<div class="wrap">\n'
         "<header>\n"
         '<p class="eyebrow">generated — do not hand-edit · '
@@ -520,7 +623,10 @@ def render(root, since=None):
         "</header>\n"
         '<section class="band"><p class="eyebrow">1 · Pending decisions</p>{briefs}</section>\n'
         '<div class="toolbar"><label><input type="checkbox" id="focus" checked> '
-        "Collapse unchanged text</label></div>\n"
+        "Collapse unchanged text and the cells that did not change</label>"
+        '<span class="hint">clear it to read every row in full — each amended '
+        "row's remaining cells, and the SR text a chain-only amendment hangs "
+        "from</span></div>\n"
         '<section class="band"><p class="eyebrow">2 · Ratification &amp; '
         "re-attestation</p>{attestations}</section>\n"
         '<section class="band"><p class="eyebrow">3 · Pending owner actions '
@@ -543,7 +649,9 @@ def render(root, since=None):
         js=JS,
         basemark=BASELINE_MARK.format(since or ""),
         briefs=_brief_cards(items),
-        attestations=_attestation_cards(model),
+        attestations=_attestation_cards(
+            model, {r.get("SR-ID"): r for r in reg.srs if r.get("SR-ID")}
+        ),
         pointers=_pointer_list(pure),
         local=_pointer_list(local),
         lb=LOCAL_BEGIN,

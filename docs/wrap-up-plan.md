@@ -89,7 +89,7 @@ push) are **ruled** — rulings in [log.md](log.md)'s Decisions. WI-273 is
 |---|---|---|
 | **Sitting** | Re-attest the `Modified` rows (§1) | **Recommended: hold ONE sitting at the END of the wrap-up sequence (§7)** — the render WIs in §4 will re-flip SR-054, and the phase-cadence rule batches spine work into a single sitting. SR-054's flip should FOLLOW the fresh critique (its `Verified` rests on critique evidence; blessing it while `perceptual-stale` is red is blessing stale evidence). SR-049/052/053 rest on green tests and could flip any time — but one sitting covers all. |
 | **Queue scope** | The six queued WIs (§4) | Build (launch `agent-resume`), or defer/retire to shrink the wrap-up. Note the incentive: WI-305/306/307 fix exactly the anchors (T1/T2/T7) that failed 119-CRITIQUE — landing them is what makes the final critique's APPROVE plausible. |
-| **OI-7** | WI-123 — review cadence | Parked by its own recommendation. For a true wrap-up, rule it: the evidence (per-slice adversarial review caught real defects on WI-297, WI-313, and WI-316 — three sessions running) argues **keep per-slice; retire WI-123**, which empties the hand-authored open-items surface. |
+| **OI-7** | WI-123 — review cadence | **RULED 2026-07-27** (Decisions log): keep per-slice review, **WI-123 `retired`**, spec archived. The owner ruled on the evidence this row recommended waiting for — per-slice adversarial review caught real defects on WI-297, WI-313, WI-316 and again across 124/125/126-REVIEW-A. No decision brief is pending now. |
 | **WI-061/063** | Archive-anchored deferred rows | Re-specify against live homes or `retired`; low stakes, but a wrapped registry shouldn't carry specs pointing into the archive. |
 | **Publish** | Push → CI → merge-to-`main` | `push-policy: human`. Safe order per the OI-8 ruling: push the branch FIRST, let hosted CI (Linux+Windows+macOS) run the first genuinely independent-environment validation this branch has ever had, then merge and push `main`. Separately: the unpushed `guardrails-fable-method` branch (WI-213/214) still awaits integrate-or-drop. |
 
@@ -131,6 +131,11 @@ attended session, and dispatch ONE critique after the last render commit.**
 > WI-123 evidence now includes a third adversarial round (WI-316: 8 confirmed
 > findings, 1 HIGH). The keep-deferred table is unchanged except WI-097 (done)
 > and WI-123 (rule it — §3).
+>
+> **Delta 2026-07-27:** **OI-7 is ruled and WI-123 is `retired`** — keep
+> per-slice review (Decisions log). The keep-deferred table's WI-123 row is
+> spent: it is no longer deferred work awaiting a ruling, it is a closed
+> question.
 
 Reviewed 2026-07-25 (see the reasoning that drove each call below); **owner
 acted on all four recommendations the same day** — WI-278/WI-062/WI-065 are now
@@ -287,8 +292,9 @@ evidence). WI-308 is the only queue row exempt — non-render, land it any time.
    re-derives all phases on its own.
 4. **Run `check.py --gate G3 --jobs 0`** — the target is all-17 green with no
    parked red, for the first time with nothing waived.
-5. **Rule OI-7** (retire WI-123 per §3) and disposition **WI-061/063** — the
-   open-items surface and the archive-anchored deferred rows go to zero.
+5. ~~**Rule OI-7**~~ **done 2026-07-27** (WI-123 `retired`; no pending brief
+   remains) — still owed: disposition **WI-061/063**, so the archive-anchored
+   deferred rows go to zero too.
 6. **Push the branch** → hosted CI validates on three OSes → **merge to
    `main`** and push. Decide `guardrails-fable-method` in the same sitting.
 
