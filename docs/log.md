@@ -14698,3 +14698,32 @@ complexity `reattest_lines` 25 → **14** with the extracted `reattest_model` at
 **One cost to name:** this touched `gen_trajectory.py`, so `perceptual-stale`
 re-reds until a critique post-dates it. That is already budgeted — WI-318/319/320
 are render rows, and the ONE critique after that batch covers this change too.
+
+### The `--strict` trajectory step found what the commit bar did not (same day)
+
+`check.py --gate G2` after the WI-322 commit surfaced a gap the warn-tier floor
+had let through: **the new module was in the arch-map but in no component**, and
+under it a sharper one — **`gen_open_items` (CMP-002 Generators) imports `trace`
+(CMP-001 Traceability core) across a component boundary with no declared seam.**
+
+That import is the anti-duplication decision this WI is most proud of, and it
+was undeclared. Now filed:
+
+- **LLR-118 / TC-123** bind the module under **SR-049** — the generated view is
+  the RENDERED half of the `Modified`/`Draft` attestation regime SR-049 derives
+  the gate from, so that is its parent, and SR-049 was already `Modified` so the
+  binding adds no new attestation debt. The LLR states the two contracts the
+  emitted file carries *because the alternative fails silently in front of a
+  human about to attest* (the baseline stamp; the check-the-baseline empty
+  state), and states what is NOT claimed: that the page reads well.
+- **IF-075** declares the cross-component seam itself, with the reason the
+  membership was NOT retagged to dodge it: the model belongs with the registries
+  it reads, the renderer with the generators.
+
+`check_trajectory --strict` is now clean apart from `perceptual-stale`, which is
+the expected, already-budgeted re-red. Spine: **LLR=116 TC=119, interfaces=73**.
+
+The transferable bit: **a new module is not integrated until the component web
+says where it lives.** The commit bar runs the warn tier, so a module can land
+untagged and only the gate-level `--strict` says so — run it before calling a
+module-adding WI done.

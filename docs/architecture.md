@@ -124,6 +124,7 @@ graph LR
     m_scripts_schedule -. IF-071 .-> m_scripts_gen_trajectory
     m_scripts_score_reviews -. IF-046 .-> m_scripts_agent_loop
     m_scripts_trace -. IF-001 .-> m_scripts_check
+    m_scripts_trace -. IF-075 .-> m_scripts_gen_open_items
 ```
 <!-- END GENERATED DEPENDENCY DIAGRAM -->
 
@@ -629,7 +630,7 @@ Contracts (interfaces): IF-012, IF-033
 ### `scripts/gen_open_items`
 _The owner decision surface, generated (WI-322, OI-10 ruled option (b))._
 Imports (internal): `gen_trajectory`, `trace`
-Contracts (interfaces): IF-073, IF-074
+Contracts (interfaces): IF-073, IF-074, IF-075
 
 | Public item | Summary | Implements |
 |---|---|---|

@@ -126,3 +126,4 @@ resource: "generated"
 | [LLR-115](LLR-115.md) | Task findability - labelled entry within one tab switch (T1 core) |
 | [LLR-116](LLR-116.md) | Viewport-fit by scale-to-fit with a legibility floor (T7 core) |
 | [LLR-117](LLR-117.md) | Theme-lock: one theme mechanism and no mixed-family surface/ink pair (T6 core) |
+| [LLR-118](LLR-118.md) | Generated owner decision surface (registry + attestation depth) |
