@@ -50,7 +50,6 @@ Stdlib only. Usage:  python scripts/gen_trajectory.py [--root .] [--check] [--st
   --status   splice the derived-facts snapshot (spine + derived gate + open-items
              one-liners) into docs/status.md's `<!-- BEGIN GENERATED STATUS -->`
              block (WI-202) AND the durable pending-owner-actions projection into
-             docs/open-items.md's `<!-- BEGIN GENERATED PENDING -->` block
              (WI-234); with --check, byte-compare BOTH for freshness — the
              successor invariant to the WI-200 forward-only token guard. Vacuous
              (exit 0) per file when it is absent or has no marker pair.
@@ -134,9 +133,9 @@ STATUS_END = "<!-- END GENERATED STATUS -->"
 # guarded derivation the status snapshot PROJECTS (never recomputes).
 _GATE_BASIS_RE = re.compile(r"^#\s*basis:\s*(.+)$", re.M)
 
-# --- the docs/open-items.md GENERATED PENDING projection (WI-234) ---------------
+# --- the pending-owner-actions projection (WI-234) ------------------------------
 # `--status` also splices a second GENERATED block — at the END of
-# docs/open-items.md, below the hand-authored OI briefs (which regeneration
+# the generated owner surface docs/open-items.html (WI-322), beside the briefs
 # leaves byte-untouched) — projecting every DURABLE pending-owner action so the
 # owner's one review surface never misses a parallel-branch hard stop again. A
 # pure projection of durable state ONLY; the out/dispatch journal is a
@@ -163,10 +162,7 @@ _GATE_BASIS_RE = re.compile(r"^#\s*basis:\s*(.+)$", re.M)
 # the same exclusion applies on every machine (one place: `_mask_machine_local`),
 # so the harness `status-map` step and the post-integration re-run skip identical
 # lines. Deterministic (sorted refs, no clocks), so the gated region is
-# byte-stable. Opt-in: an open-items.md without the marker pair is left untouched.
-OPEN_ITEMS_MD = "docs/open-items.md"
-PENDING_BEGIN = "<!-- BEGIN GENERATED PENDING -->"
-PENDING_END = "<!-- END GENERATED PENDING -->"
+# byte-stable. Opt-in: a repo carrying no open-items registry renders nothing.
 # The always-emitted lead of the machine-local ADVISORY sub-section of the
 # PENDING block, and the stable boundary `_mask_machine_local` splits on so the
 # `--status --check` freshness gate byte-compares ONLY the committed-tree-pure
@@ -3874,8 +3870,12 @@ def _loop_panel(root):
         ("Merge", "verdicts merged; the loop repeats", home("docs/log.md")),
     ]
     decide_loop = [
-        ("Open items", "incl. the gate-ratification table", home("docs/open-items.md")),
-        ("Human review", "the owner reviews and rules", home("docs/open-items.md")),
+        (
+            "Open items",
+            "incl. the gate-ratification table",
+            home("docs/open-items.html"),
+        ),
+        ("Human review", "the owner reviews and rules", home("docs/open-items.html")),
         ("Decisions record", "the ruling appends to the log", home("docs/log.md")),
         ("Merge", "the item leaves the surface; repeats", home("docs/log.md")),
     ]
@@ -4096,7 +4096,7 @@ def process_panel(root, wis, stats):
         "<strong>enters</strong> (A) and how the human <strong>decides</strong> "
         "(B) — both entered by the same agent. Each stage links to its canonical "
         "home (<code>status.md</code>, <code>work-items.csv</code>, "
-        "<code>open-items.md</code>, <code>log.md</code>); the loop structure is "
+        "<code>open-items.html</code>, <code>log.md</code>); the loop structure is "
         "the method's, not this repo's data.</p>\n" + loops_html + "\n"
         "</section>"
     )
@@ -4413,34 +4413,35 @@ def _first_sentence(s):
 
 
 def _open_item_oneliners(root):
-    """`[(OI-id, one-liner)]` projected from `docs/open-items.md`'s `## OI-N`
-    sections, id-order. The one-liner is the section's explicit `- **One-line:** …`
-    field, else the first sentence of its `- **Recommendation…:** …` line — the
-    contract pinned in docs/specs/open-items-surface.md, so the projection is
-    deterministic. Volatile per-item facts (an OI's live git state) stay in the
-    brief, never the stamped snapshot. Empty when open-items.md is absent."""
-    p = root / "docs" / "open-items.md"
+    """`[(OI-id, one-liner)]` for every PENDING decision, id-order — the status
+    snapshot's one-line-per-item projection.
+
+    Reads `docs/requirements/open-items.csv` (WI-322, OI-10 ruled option (b)):
+    the registry is the source and `docs/open-items.html` is the rendered owner
+    surface, so a markdown section parse has nothing left to parse. The
+    one-liner is the row's `OneLine` cell, else the first sentence of its
+    `Recommendation` — the same fallback the markdown contract had, kept so a
+    row that states only a recommendation still projects something useful.
+    Empty when the registry is absent (a repo carrying no decisions)."""
+    p = root / "docs" / "requirements" / "open-items.csv"
     if not p.is_file():
         return []
-    text = p.read_text(encoding="utf-8", errors="replace")
-    parts = ct.OI_SECTION_RE.split(text)  # [pre, head1, body1, head2, body2, ...]
     out = []
-    for i in range(1, len(parts), 2):
-        head = parts[i]
-        body = parts[i + 1] if i + 1 < len(parts) else ""
-        m = _OI_ID_RE.search(head)
-        if not m:
+    for row in ct.read_rows(p):  # the shared reader — BOM-safe, one CSV idiom
+        oid = (row.get("OI-ID") or "").strip()
+        if not _OI_ID_RE.fullmatch(oid) or oid.endswith("-000"):
             continue
-        oid = m.group(0)
-        one = _field_value(body, _ONELINE_LABEL_RE)
-        if one is None:
-            reco = _field_value(body, _RECO_LABEL_RE)
+        if (row.get("Status") or "").strip().lower() != "pending":
+            continue  # a ruled row is history; the Decisions log holds it
+        one = (row.get("OneLine") or "").strip()
+        if not one:
+            reco = (row.get("Recommendation") or "").strip()
             one = _first_sentence(reco) if reco else ""
         out.append((oid, _clean_oneliner(one)))
     return sorted(out, key=lambda t: int(t[0].split("-")[1]))
 
 
-# --- the docs/open-items.md pending-owner-actions projection (WI-234) -----------
+# --- the pending-owner-actions projection sources (WI-234) ----------------------
 
 
 def _git(root, *args):
@@ -4791,7 +4792,7 @@ def _runstate_pending(root):
 
 def pending_block(root):
     """The GENERATED PENDING block CONTENT (between the markers) for
-    docs/open-items.md, emitted in two regions separated by the always-present
+    the generated owner surface, emitted in two regions separated by the always-present
     ``PENDING_LOCAL_LABEL`` line:
 
       * a committed-tree-PURE region (blocked WI rows with a BlockRef +
@@ -4839,144 +4840,10 @@ def pending_block(root):
     )
 
 
-def _mask_machine_local(doc_text):
-    """Return `doc_text` with the machine-local advisory ITEMS of the PENDING
-    block dropped — everything strictly between the ``PENDING_LOCAL_LABEL`` line
-    (kept, so the label itself stays gated) and ``PENDING_END`` (kept). This is
-    the ONE place the `--status --check` byte-compare is scoped to the
-    committed-tree-pure region, so the pre-commit gate and the post-integration
-    re-run exclude exactly the same refs/llm-derived lines — no split-brain
-    (M-10/WI-266). The boundary is ANCHORED to WITHIN the PENDING_BEGIN..PENDING_END
-    generated block: a hand-authored line byte-identical to the label placed
-    outside that block can never become the split point (it would otherwise drop
-    the whole pure region and silently disable the gate). Text without the
-    marker/label triple is returned untouched (an older file missing the label
-    reads as drift and re-generation restores it)."""
-    lines = doc_text.splitlines(keepends=True)
-
-    def _find(target, start):
-        for k in range(start, len(lines)):
-            if lines[k].rstrip("\r\n") == target:
-                return k
-        return None
-
-    begin_i = _find(PENDING_BEGIN, 0)
-    if begin_i is None:
-        return doc_text
-    end_i = _find(PENDING_END, begin_i + 1)
-    if end_i is None:
-        return doc_text
-    label_i = _find(PENDING_LOCAL_LABEL, begin_i + 1)
-    if label_i is None or label_i >= end_i:
-        return doc_text
-    return "".join(lines[: label_i + 1] + lines[end_i:])
-
-
-def _splice_pending(doc_text, content):
-    """Replace the text between the PENDING markers with `content`; returns
-    `(new_text, present)`. Markers are matched only as EXACT FULL LINES, so a
-    hand-authored brief quoting the marker string on an indented or fenced line
-    is ignored — regeneration never chokes on it. `present` is False when the
-    pair is absent (the opt-in / graceful-degrade posture — a lone marker or
-    neither → left untouched, `--status --check` passes vacuously). Anomalies
-    fail CLOSED with a named error, never a silent rewrite: a duplicated marker
-    line, or an inverted pair (END before BEGIN). The file's dominant line-ending
-    style is preserved (a CRLF checkout stays CRLF), so the byte-untouched
-    guarantee holds on autocrlf."""
-    crlf = doc_text.count("\r\n")
-    nl = "\r\n" if crlf and crlf >= (doc_text.count("\n") - crlf) else "\n"
-    lines = doc_text.splitlines()
-    begins = [i for i, ln in enumerate(lines) if ln == PENDING_BEGIN]
-    ends = [i for i, ln in enumerate(lines) if ln == PENDING_END]
-    if not begins or not ends:
-        return doc_text, False
-    if len(begins) > 1 or len(ends) > 1:
-        raise SystemExit(
-            "{}: duplicated PENDING marker line ({} begin / {} end); keep exactly "
-            "one {} / {} pair".format(
-                OPEN_ITEMS_MD, len(begins), len(ends), PENDING_BEGIN, PENDING_END
-            )
-        )
-    begin, end = begins[0], ends[0]
-    if end < begin:
-        raise SystemExit(
-            "{}: PENDING markers are inverted ({} appears before {}); refusing to "
-            "splice".format(OPEN_ITEMS_MD, PENDING_END, PENDING_BEGIN)
-        )
-    new_lines = lines[: begin + 1] + content.splitlines() + lines[end:]
-    result = nl.join(new_lines)
-    if doc_text.endswith(("\n", "\r")):
-        result += nl
-    return result, True
-
-
-def run_pending(root, check):
-    """`--status` companion: splice the durable pending-owner projection into
-    docs/open-items.md's PENDING block (or, with `check`, byte-compare and fail on
-    drift). Vacuous — exit 0 — when open-items.md is absent or has no marker pair
-    (the opt-in posture, so a repo that never adopts the surface pays nothing)."""
-    path = root / OPEN_ITEMS_MD
-    if not path.exists():
-        if not check:
-            print(
-                "gen_trajectory: no {} — nothing to project (vacuous).".format(
-                    OPEN_ITEMS_MD
-                )
-            )
-        return 0
-    # newline="" preserves the file's own line endings on read, so a CRLF
-    # checkout round-trips byte-for-byte through the splice (the hand region stays
-    # untouched) rather than being normalized to LF.
-    with path.open("r", encoding="utf-8", newline="") as fh:
-        current = fh.read()
-    updated, present = _splice_pending(current, pending_block(root))
-    if not present:
-        if not check:
-            print(
-                "gen_trajectory: {} has no GENERATED PENDING markers — vacuous "
-                "(add the {} / {} pair to opt in).".format(
-                    OPEN_ITEMS_MD, PENDING_BEGIN, PENDING_END
-                )
-            )
-        return 0
-    if check:
-        # PURITY (M-10/WI-266): gate ONLY the committed-tree-pure region. The
-        # machine-local advisory lines derive from `refs/llm/*`, which don't
-        # transport with clone/push — byte-comparing them would read STALE in any
-        # second clone (CI, another machine). `_mask_machine_local` drops those
-        # lines from BOTH the regenerated and the committed text, so a difference
-        # confined to them passes; blocked rows, the run-state ask, the label and
-        # the lead prose still bite.
-        if _mask_machine_local(updated) != _mask_machine_local(current):
-            print(
-                "pending owner-actions projection STALE in {}: run `python "
-                "scripts/gen_trajectory.py --status`".format(OPEN_ITEMS_MD),
-                file=sys.stderr,
-            )
-            return 1
-        print("pending owner-actions projection up to date.")
-        return 0
-    if updated == current:
-        print(
-            "gen_trajectory: {} pending projection already up to date.".format(
-                OPEN_ITEMS_MD
-            )
-        )
-    else:
-        # newline="" writes the spliced text verbatim — _splice_pending already
-        # embedded the file's own line endings, so translation must stay off.
-        with path.open("w", encoding="utf-8", newline="") as fh:
-            fh.write(updated)
-        print(
-            "gen_trajectory: pending projection regenerated -> {}".format(OPEN_ITEMS_MD)
-        )
-    return 0
-
-
 def status_block(root):
     """The GENERATED STATUS block CONTENT (between the markers) for docs/status.md:
     the derived gate + spine snapshot (projected from `docs/gate`, the freshness-
-    guarded SSOT) plus the open-items one-liners (from open-items.md). Derived
+    guarded SSOT) plus the open-items one-liners (from the registry). Derived
     facts ONLY — the forward-only intent stays hand-authored outside the markers.
     Deterministic (no clocks), so the `--status --check` byte-compare is stable,
     exactly like the arch-map / dashboard freshness gates."""
@@ -5023,8 +4890,10 @@ def status_block(root):
     ois = _open_item_oneliners(root)
     if ois:
         lines.append(
-            "- **Open items** _(projected from [open-items.md](open-items.md) — "
-            "each item's blast radius, options, and recommendation live there):_"
+            "- **Open items** _(pending rows of "
+            "[requirements/open-items.csv](requirements/open-items.csv); each "
+            "item's blast radius, options and recommendation render in "
+            "[open-items.html](open-items.html), the generated owner surface):_"
         )
         lines.extend("  - **{}** — {}".format(oid, one) for oid, one in ois)
     lines.extend(_frontier_lines(root))
@@ -5168,22 +5037,23 @@ def main():
         "--status",
         action="store_true",
         help="splice the derived-facts snapshot (spine + derived gate + "
-        "open-items one-liners) into docs/status.md AND the durable "
-        "pending-owner-actions projection into docs/open-items.md instead of "
-        "rendering the dashboard; with --check, byte-compare both for freshness "
-        "(the WI-200 forward-only guard's successor). Vacuous without the "
-        "marker pair.",
+        "open-items one-liners) into docs/status.md instead of rendering the "
+        "dashboard; with --check, byte-compare it for freshness (the WI-200 "
+        "forward-only guard's successor). Vacuous without the marker pair. The "
+        "pending-owner-actions projection moved to gen_open_items.py with "
+        "WI-322 — this still DERIVES it (`pending_block`), that renders it.",
     )
     args = ap.parse_args()
     root = Path(args.root).resolve()
 
     if args.status:
-        # Both marker-block projections ride `--status` so the harness
-        # `status-map` step's `--status --check` freshness-gates BOTH the
-        # status snapshot and the pending-owner-actions projection (WI-234).
-        rc = run_status(root, args.check)
-        rc_pending = run_pending(root, args.check)
-        return rc or rc_pending
+        # `--status` gates the status snapshot alone since WI-322: the
+        # pending-owner-actions projection moved to the generated owner surface
+        # docs/open-items.html (its own `open-items` harness step), because the
+        # markdown file it used to splice into is retired. `pending_block` stays
+        # here — it is still the ONE derivation of what is pending; gen_open_items
+        # imports it rather than growing a second opinion.
+        return run_status(root, args.check)
 
     if not ct.read_trajectory_enabled(root):
         print("gen_trajectory: off (docs/trajectory-check) — nothing to render.")

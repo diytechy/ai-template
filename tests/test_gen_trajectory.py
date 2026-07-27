@@ -1766,7 +1766,9 @@ def test_process_loop_stage_links_resolve():
     for home in (
         "docs/status.md",
         "docs/requirements/work-items.csv",
-        "docs/open-items.md",
+        # WI-322: the human-decision loop lands on the GENERATED owner surface,
+        # not the retired markdown file.
+        "docs/open-items.html",
         "docs/log.md",
     ):
         assert 'href="{}"'.format(home) in loops, home
@@ -3985,15 +3987,21 @@ GATE_FILE = (
 )
 # One-line field vs Recommendation fallback; OI-3's field soft-wraps two lines,
 # and its Decision carries a volatile git-state that must NOT reach the snapshot.
-OPEN_ITEMS = (
-    "# Open items\n\n"
-    "## OI-2 — the second decision\n\n"
-    "- **Decision:** whether to flip the flag.\n"
-    "- **Recommendation:** keep it off until phase 3. A later sitting revisits.\n\n"
-    "## OI-1 — the first decision\n\n"
-    "- **One-line:** push — the branch is remote-tracked, so the unpushed\n"
-    "  commits are pure durability risk (the merge is a separate sitting).\n"
-    "- **Decision:** origin exists, ahead 9 commits at check — verify at read time.\n"
+# WI-322: briefs are ROWS of the open-items registry, not markdown sections.
+# Declared out of id order on purpose — the projection sorts numerically — and
+# OI-2 carries no OneLine, so the first-sentence-of-Recommendation fallback is
+# exercised too.
+OPEN_ITEMS_HEADER = (
+    "OI-ID,Title,Status,Raised,OneLine,Decision,BlastRadius,Options,"
+    "Recommendation,WI-Refs,RuledDate,RulingRef\n"
+)
+OPEN_ITEMS = OPEN_ITEMS_HEADER + (
+    'OI-2,the second decision,pending,,,"whether to flip the flag.",,,'
+    '"keep it off until phase 3. A later sitting revisits.",,,\n'
+    "OI-1,the first decision,pending,,"
+    '"push — the branch is remote-tracked, so the unpushed commits are pure '
+    'durability risk (the merge is a separate sitting).",'
+    '"origin exists, ahead 9 commits at check — verify at read time.",,,,,,\n'
 )
 STATUS_MARKED = (
     "# Status\n\n## Current State\n\n"
@@ -4008,7 +4016,10 @@ def make_status_repo(root, status=STATUS_MARKED, open_items=OPEN_ITEMS, gate=GAT
     make_repo(root)
     (root / "docs" / "gate").write_text(gate, encoding="utf-8")
     if open_items is not None:
-        (root / "docs" / "open-items.md").write_text(open_items, encoding="utf-8")
+        (root / "docs" / "requirements").mkdir(parents=True, exist_ok=True)
+        (root / "docs" / "requirements" / "open-items.csv").write_text(
+            open_items, encoding="utf-8"
+        )
     if status is not None:
         (root / "docs" / "status.md").write_text(status, encoding="utf-8")
     return root
@@ -4069,10 +4080,10 @@ def test_status_check_fresh_and_stale(tmp_path):
     fresh = gen(tmp_path, "--status", "--check")
     assert fresh.returncode == 0 and "up to date" in fresh.stdout
     # an open-items edit stales the block (caught at commit, not first in CI)
-    oi = tmp_path / "docs" / "open-items.md"
+    oi = tmp_path / "docs" / "requirements" / "open-items.csv"
     oi.write_text(
         oi.read_text(encoding="utf-8")
-        + "\n## OI-5 — a new ask\n\n- **One-line:** decide soon.\n",
+        + "OI-5,a new ask,pending,,decide soon.,,,,,,,\n",
         encoding="utf-8",
     )
     stale = gen(tmp_path, "--status", "--check")

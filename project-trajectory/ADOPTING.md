@@ -626,7 +626,33 @@ table.
   template gets one STALE nudge on the next `status-map` gate — run
   `gen_trajectory.py --status` to regenerate the labeled block (your hand-authored
   `## OI-N` briefs above the markers stay byte-untouched). Overwrite the kit-owned
-  `OPEN_ITEMS.template.md` on resync.
+  `OPEN_ITEMS.template.md` on resync. *(Superseded by WI-322 below, which retires
+  that file entirely — if you are adopting past that version, do its migration
+  instead of this one.)*
+- **The owner decision surface became a registry + a generated view (2026-07,
+  WI-322).** `docs/open-items.md` is **retired**. Decision briefs are now ROWS in
+  `docs/requirements/open-items.csv` (scaffolded from
+  `registries/open-items.template.csv`), and `scripts/gen_open_items.py` renders
+  them — together with every `Draft`/`Modified` spine row's per-cell
+  before/after — into `docs/open-items.html`, the surface the owner reads. The
+  driver was a real sitting: the old pending block was a POINTER ("run
+  `trace.py --ratify modified`"), and the depth that makes a re-attest readable
+  is a word-level diff, which markdown cannot mark.
+  **Downstream impact — a one-time migration, and it is manual by design because
+  only you can classify your briefs:**
+  1. copy `registries/open-items.template.csv` to
+     `docs/requirements/open-items.csv`;
+  2. move each **pending** `## OI-N` section of your `docs/open-items.md` into a
+     row (the section's fields map 1:1 onto the columns: one-line, decision,
+     blast radius, options, recommendation). **Do not backfill ruled items** —
+     their record is the log's Decisions, and OI ids have historically been
+     reused after a section was deleted, so a backfill can collide;
+  3. delete `docs/open-items.md`;
+  4. run `python scripts/gen_open_items.py` and commit `docs/open-items.html`.
+  The new `open-items` harness step gates its freshness (machine-local advisory
+  region masked, like the block it replaces). If you skip the migration
+  entirely, the step is **vacuous** — no registry and no view means nothing to
+  render — so an adopter who never used the surface pays nothing.
 - **The terminal `retired` work-item Status (2026-07, WI-267).** The work-item
   lifecycle gains a sixth `Status`, **`retired`** — a terminal WON'T-BUILD row
   that stays in the registry forever with its reason in the `Deliverable` column

@@ -57,6 +57,7 @@ graph LR
     m_scripts_gen_arch_map["scripts/gen_arch_map — Generate the module/function map for `architect…"]
     m_scripts_gen_cases["scripts/gen_cases — Generate test-case combinations from a requirem…"]
     m_scripts_gen_okf["scripts/gen_okf — OKF export — the traceability graph as a portab…"]
+    m_scripts_gen_open_items["scripts/gen_open_items — The owner decision surface, generated (WI-322, …"]
     m_scripts_gen_release_checklist["scripts/gen_release_checklist — Generate the human release checklist from the r…"]
     m_scripts_gen_skills_index["scripts/gen_skills_index — Generate the skills applicability index from th…"]
     m_scripts_gen_trajectory["scripts/gen_trajectory — Generate the offline project-state dashboard (r…"]
@@ -86,6 +87,8 @@ graph LR
     m_scripts_agent_loop --> m_scripts_plan_runner
     m_scripts_agent_loop --> m_scripts_schedule
     m_scripts_agent_loop --> m_scripts_score_reviews
+    m_scripts_gen_open_items --> m_scripts_gen_trajectory
+    m_scripts_gen_open_items --> m_scripts_trace
     m_scripts_gen_trajectory --> m_scripts_check_trajectory
     m_scripts_gen_trajectory --> m_scripts_schedule
     m_scripts_plan_runner --> m_scripts_agent_route
@@ -531,7 +534,7 @@ Contracts (interfaces): IF-009, IF-023
 | `backlog_staleness_findings(root, wis)` | WI-205 — the backlog-staleness warn (warn-only, the WI-129 checker stance). |  |
 | `staged_findings(root)` | The no-validation-delta warn (S0 ruling #2 corollary; warn-first). |  |
 | `staged_spine_findings(root)` | The amend-without-flip warn (WI-316; warn-first, `--staged` only). |  |
-| `ratify_brief_findings(root)` | Warn-first brief lint (WI-146b): an `## OI-N` decision brief whose decision |  |
+| `ratify_brief_findings(root)` | Warn-first brief lint (WI-146b): an open-items row whose decision is a |  |
 | `critique_ratchet_findings(root)` | The lax-TC ratchet for the critique loop (WI-068; warn-first, the same |  |
 | `critique_staleness_findings(root)` | The perceptual re-fire finding (WI-243; git-time staleness like |  |
 | `main()` |  |  |
@@ -623,6 +626,23 @@ Contracts (interfaces): IF-012, IF-033
 | `on_disk(out_root)` |  |  |
 | `main()` |  |  |
 
+### `scripts/gen_open_items`
+_The owner decision surface, generated (WI-322, OI-10 ruled option (b))._
+Imports (internal): `gen_trajectory`, `trace`
+Contracts (interfaces): IF-073, IF-074
+
+| Public item | Summary | Implements |
+|---|---|---|
+| `esc(text)` |  |  |
+| `load_open_items(root)` | Rows of the open-items registry, `-000` example rows dropped (the |  |
+| `word_diff(before, after)` | A unified word-level diff as HTML: unchanged runs wrapped `.eq` (so the |  |
+| `changed_percent(before, after)` | How much of the cell moved, counting WORDS — whitespace runs are dropped |  |
+| `md_inline(text)` | The few markdown inline forms the reused pointer lines actually use — |  |
+| `render(root, since)` | The whole page. Deterministic: every input is sorted upstream. |  |
+| `pending_regions(root)` | `(pure, machine_local)` markdown item text, reused from gen_trajectory's |  |
+| `mask_local(text)` | `text` with the machine-local region blanked, for the freshness compare. |  |
+| `main(argv)` |  |  |
+
 ### `scripts/gen_release_checklist`
 _Generate the human release checklist from the registries._
 Contracts (interfaces): IF-018, IF-034
@@ -672,7 +692,6 @@ Contracts (interfaces): IF-011, IF-024, IF-052, IF-056, IF-071
 | `process_panel(root, wis, stats)` | The Process tab + panel as (tab, panel), or None when there is no | SR-055 |
 | `build_html(root, wis)` |  |  |
 | `pending_block(root)` | The GENERATED PENDING block CONTENT (between the markers) for |  |
-| `run_pending(root, check)` | `--status` companion: splice the durable pending-owner projection into |  |
 | `status_block(root)` | The GENERATED STATUS block CONTENT (between the markers) for docs/status.md: |  |
 | `run_status(root, check)` | `--status` mode: splice the derived snapshot into docs/status.md (or, with |  |
 | `main()` |  |  |
@@ -853,6 +872,7 @@ Contracts (interfaces): IF-001, IF-021, IF-042
 | `phase_ratified_findings(real)` | The ratified-phase completeness rule (process.md §4 "Phased delivery"): once |  |
 | `build_forest(sn_ids, srs, llrs, tcs, orphan_ids, sn_draft)` | The SN -> SR -> LLR -> TC chain as nested nodes, plus synthetic groups for |  |
 | `outline_lines(roots)` | Indented Markdown list of the forest — pure text, so it reviews line-by- |  |
+| `reattest_model(root, srs, llrs, tcs, since, statuses)` | The STRUCTURED attestation model: one entry per SR owing an attestation, |  |
 | `reattest_lines(root, srs, llrs, tcs, since)` | Markdown for the re-attestation brief (`--ratify modified`, WI-316): one |  |
 | `ratify_lines(scope, sn_ids, srs, llrs, tcs, sn_meta)` | Markdown for the batch-scoped ratification hierarchy (WI-146a). Groups the |  |
 | `mermaid_graph(sn_ids, srs, llrs, tcs, orphan_ids, sn_draft)` | A `graph LR` DAG of the chain (a TC verifies its SR *and* its LLR), colored |  |

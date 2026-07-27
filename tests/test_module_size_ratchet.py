@@ -182,7 +182,13 @@ BASELINE = {
     # that recorded, the next reader collapses the markers back into one and
     # silently restores the defect. Reviewed bump, log 2026-07-26. Re-stamp down
     # with WI-280.
-    "gen_trajectory.py": 5236,
+    # -130 (5236 -> 5106), WI-322: the markdown-splice half of the pending
+    # projection retired with docs/open-items.md (run_pending, _splice_pending,
+    # _mask_machine_local and their marker constants). pending_block STAYS — it
+    # is still the one derivation of what is pending; gen_open_items imports it
+    # rather than growing a second opinion. Ratchet moving DOWN, which is the
+    # direction WI-280 wants.
+    "gen_trajectory.py": 5106,
     # +11 (3452 -> 3463), WI-284: _regenerate_disposition_artifacts also runs
     # `gen_trajectory.py --status` at integrate/blocked-disposition so a closed
     # id drops from the generated frontier automatically (and the disposition
@@ -244,7 +250,11 @@ BASELINE = {
     # `_failure_tail` is safe only in the regen family, and the `**extra` caveat.
     # That prose is load-bearing: this exact mistake was just made and shipped, so
     # the note is what stops the next author re-applying it. Reviewed bump.
-    "agent_dispatch.py": 3906,
+    # +17 (3906 -> 3923), WI-322: the owner surface joins _DISPOSITION_REGEN
+    # (a disposition edits its inputs, so it must regenerate before its own
+    # commit faces the floor) and _regenerate_pending retargets from the retired
+    # markdown splice to gen_open_items. Reviewed bump, log 2026-07-26.
+    "agent_dispatch.py": 3923,
     "agent_loop.py": 3042,
     # +30 (2206 -> 2236), WI-065: `tc_citation_findings` — the TC-`Verifies`
     # rules lifted out of `analyze` so the cell could accept `IF-###` seam ids.
@@ -263,14 +273,22 @@ BASELINE = {
     # capability, not monolith drift; the largest WI-316 bump and a named
     # WI-280 decomposition candidate (the reattest emitter is an extractable
     # unit). Reviewed bump, log 2026-07-26. Re-stamp downward with WI-280.
-    "trace.py": 2617,
+    # +91 (2617 -> 2708), WI-322: reattest_model is SPLIT OUT of reattest_lines
+    # so one computation feeds two renderers — the markdown brief here and the
+    # generated open-items.html. The alternative was a second copy of the git
+    # archaeology in the new module, which is the paraphrase-not-decompose
+    # failure the kit preaches against. Markdown output proven byte-identical
+    # across the refactor. Reviewed bump, log 2026-07-26.
+    "trace.py": 2708,
     # +132 (1926 -> 2058; the last +10 is the F4 BOM hardening: read_rows utf-8-sig + git-show strips), WI-316: staged_spine_findings — the amend-without-
     # flip warn (--staged): content cells of a Verified spine row changed
     # without the Modified marker, suppressed when the owning SR flips in the
     # same commit (the attestation unit). The write-time discipline the
     # RE-ATTESTATION-PENDING prose convention never had. Reviewed bump, log
     # 2026-07-26. Re-stamp downward with WI-280.
-    "check_trajectory.py": 2058,
+    # +5 (2058 -> 2063), WI-322: ratify_brief_findings reads open-items ROWS
+    # instead of parsing markdown sections. Reviewed bump, log 2026-07-26.
+    "check_trajectory.py": 2063,
     # +1 (1916 -> 1917), WI-279: one MAPPING row registering the new
     # scripts/check_coverage.py kit gate so it ships downstream — a required
     # one-line registration, not monolith growth (the reviewed-bump escape the
@@ -288,7 +306,11 @@ BASELINE = {
     # instrument (stock Apache appendix placeholder, real holder in the root
     # NOTICE) into ONE header line carrying `privacy-ok`, plus the comment saying
     # why that marker is legitimate here and must stay the only one. Reviewed bump.
-    "bootstrap.py": 1986,
+    # +17 (1986 -> 2003), WI-322: the scaffolded OI-3 brief becomes a registry
+    # ROW written with csv.writer (a brief cell carries commas), and bootstrap
+    # seeds the generated owner surface so a fresh scaffold passes its own
+    # freshness gate. Reviewed bump, log 2026-07-26.
+    "bootstrap.py": 2003,
 }
 
 

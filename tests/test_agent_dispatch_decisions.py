@@ -567,13 +567,18 @@ def test_disposition_regen_is_the_floor_freshness_subset():
         "okf",
         "trajectory-map",
         "status-map",
+        # WI-322: the owner decision surface is generated from the open-items
+        # registry + the spine's Draft/Modified rows, and a disposition edits
+        # exactly those inputs (a blocked row, the run-state ask) — so it is a
+        # regenerated artifact, not an excluded one.
+        "open-items",
         "trajectory",
         "registry-integrity",
         "derived-gate",
         "skills-sync",
     ]
     regen_steps = [step for step, *_ in dispatcher._DISPOSITION_REGEN]
-    assert regen_steps == ["okf", "trajectory-map", "status-map"]
+    assert regen_steps == ["okf", "trajectory-map", "status-map", "open-items"]
 
 
 def test_status_map_regen_opts_in_on_either_generated_file():
@@ -587,7 +592,10 @@ def test_status_map_regen_opts_in_on_either_generated_file():
     status_entry = next(
         e for e in dispatcher._DISPOSITION_REGEN if e[0] == "status-map"
     )
-    assert set(status_entry[3]) == {"docs/status.md", "docs/open-items.md"}
+    assert set(status_entry[3]) == {
+        "docs/status.md",
+        "docs/requirements/open-items.csv",
+    }
     assert status_entry[3] is dispatcher._STATUS_MAP_MARKERS  # the ONE home
 
 

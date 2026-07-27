@@ -63,16 +63,17 @@ finding classes:
     lean status snapshot, so (S-1) it warns past a line budget — default 120,
     `docs/status-lint` overrides with an integer or the one word `off` (which
     disables S-1..S-3); (S-2) its Open-items marker must precede the `## Scope`
-    heading (open items surface at the top); (S-3) with `docs/open-items.md`
-    present, every `OI-N` inside the Needs-<human> block has a `## OI-N`
-    section there (no undocumented owner ask) and every section id appears in
-    status.md (no orphan brief). S-3 **retires under a generated snapshot**
-    (WI-202): once status.md carries the `<!-- BEGIN GENERATED STATUS -->` block,
-    its open-items list is PROJECTED from open-items.md, so the two cannot
-    disagree — the `status-map` freshness gate is the invariant and S-3 stands
-    down (S-1/S-2 still guard the hand-authored region). S-3 extraction is
-    best-effort over the template's shape; a custom layout misses warnings, never
-    false-fails. Vacuous when status.md (or, for S-3, open-items.md) is absent.
+    heading (open items surface at the top); (S-3) with
+    `docs/requirements/open-items.csv` present, every `OI-N` inside the
+    Needs-<human> block has a PENDING row there (no undocumented owner ask) and
+    every pending id appears in status.md (no orphan brief). S-3 **retires under
+    a generated snapshot** (WI-202): once status.md carries the
+    `<!-- BEGIN GENERATED STATUS -->` block, its open-items list is PROJECTED
+    from that registry, so the two cannot disagree — the `status-map` freshness
+    gate is the invariant and S-3 stands down (S-1/S-2 still guard the
+    hand-authored region). S-3 extraction is best-effort over the template's
+    shape; a custom layout misses warnings, never false-fails. Vacuous when
+    status.md (or, for S-3, the registry) is absent.
 
 The root `OWNER_SCRATCHPAD.md` is exempt from all of the above: it holds the
 human owner's free-form private notes and is dropped from doc discovery entirely
@@ -89,6 +90,7 @@ Contracts: IF-002, IF-030 — the interface seams this module declares (process.
 """
 
 import argparse
+import csv
 import fnmatch
 import os
 import re
@@ -669,7 +671,7 @@ _SCOPE_HEADING_RE = re.compile(r"^##\s+scope\b", re.I | re.M)
 _OPEN_ITEMS_MARKER_RE = re.compile(r"open items", re.I)
 # The kit's generated-block sentinel (gen_arch_map / gen_trajectory --status):
 # its presence in status.md means the open-items list is a projection of
-# open-items.md, so the S-3 coherence check retires (WI-202). Duplicated here per
+# the open-items registry, so the S-3 coherence check retires (WI-202). Duplicated here per
 # the F5 rule rather than importing a sibling — a tiny, stable contract string.
 _STATUS_GENERATED_RE = re.compile(r"<!--\s*BEGIN GENERATED", re.IGNORECASE)
 
@@ -724,11 +726,11 @@ def _needs_human_block(text):
 
 def check_status_surface(root, docs_dir):
     """S-1 (line budget) / S-2 (Open items before ## Scope) / S-3 (OI coherence
-    with docs/open-items.md) over docs/status.md — warnings only, never the exit
+    with the open-items registry) over docs/status.md — warnings only, never the exit
     code (the WI-129 stance: warn, don't gate, don't mutate). Vacuous when
     status.md is absent or docs/status-lint says `off`. S-3 stands down under a
     generated snapshot (WI-202): a `<!-- BEGIN GENERATED STATUS -->` block makes
-    the open-items list a projection of open-items.md, so the two cannot disagree
+    the open-items list a projection of the registry, so the two cannot disagree
     and the `status-map` freshness gate owns coherence instead."""
     status = root / docs_dir / "status.md"
     if not status.exists():
@@ -744,7 +746,7 @@ def check_status_surface(root, docs_dir):
     if n_lines > budget:
         warns.append(
             "status.md is {} lines (budget {}): it is the lean status snapshot "
-            "— move depth to open-items.md / the WI registry / the log "
+            "— move depth to the open-items registry / the WI registry / the log "
             "(docs/status-lint overrides the budget, `off` disables)".format(
                 n_lines, budget
             )
@@ -765,26 +767,40 @@ def check_status_surface(root, docs_dir):
 
     # S-3 (OI coherence) retires under a generated snapshot (WI-202): when
     # status.md carries the `<!-- BEGIN GENERATED STATUS -->` block, its open-items
-    # list is PROJECTED from open-items.md by `gen_trajectory --status`, so the two
+    # list is PROJECTED from the open-items registry by `gen_trajectory --status`, so the two
     # surfaces cannot disagree — the `status-map` freshness gate is the invariant.
     # The check stays live only for a hand-authored (non-generated) status.md,
     # where the two lists can drift; S-1/S-2 above still guard the region a
     # generated block does not own.
-    open_items = root / docs_dir / "open-items.md"
+    # WI-322 moved briefs from markdown sections to ROWS of the open-items
+    # registry (the owner reads the generated view), so the brief set is the
+    # registry's PENDING ids. Same rule, one source down: a stdlib csv read, no
+    # heading parse. A ruled row is not a brief — its record is the log.
+    open_items = root / docs_dir / "requirements" / "open-items.csv"
     if open_items.exists() and not _STATUS_GENERATED_RE.search(text):
-        oi_text = open_items.read_text(encoding="utf-8", errors="replace")
-        briefed = set(_OI_HEADING_RE.findall(oi_text))
+        briefed = set()
+        try:
+            with open_items.open(encoding="utf-8-sig", newline="") as fh:
+                for row in csv.DictReader(fh):
+                    oid = (row.get("OI-ID") or "").strip()
+                    status = (row.get("Status") or "").strip().lower()
+                    if oid.startswith("OI-") and not oid.endswith("-000"):
+                        if status == "pending":
+                            briefed.add(oid)
+        except OSError:
+            return warns
         needs = set(_OI_RE.findall(_needs_human_block(text)))
         for oid in sorted(needs - briefed):
             warns.append(
-                "{}: a Needs-<human> item in status.md with no `## {}` section "
-                "in open-items.md (every owner ask carries its brief)".format(oid, oid)
+                "{}: a Needs-<human> item in status.md with no pending `{}` row "
+                "in requirements/open-items.csv (every owner ask carries its "
+                "brief)".format(oid, oid)
             )
         for oid in sorted(briefed - set(_OI_RE.findall(text))):
             warns.append(
-                "{}: briefed in open-items.md but never named in status.md "
-                "(an orphan brief — ruled items move to the log's Decisions "
-                "and the section is deleted)".format(oid)
+                "{}: briefed in requirements/open-items.csv but never named in "
+                "status.md (an orphan brief — a ruled item moves to the log's "
+                "Decisions and its row leaves `pending`)".format(oid)
             )
     return warns
 

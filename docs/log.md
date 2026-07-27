@@ -265,7 +265,7 @@ why (one bullet each; cite ids)._
   `derived-gate-model`; git-verified in sync with `origin/derived-gate-model`
   at the WI-207 close (`f41f866`) — the ~18-commit durability risk is closed.
   The brief's residue — whether/when to integrate into `main` — keeps the
-  stable **OI-3** id, narrowed in [open-items.md](open-items.md); rec:
+  stable **OI-3** id, narrowed in `open-items.md`; rec:
   integrate at the next stable cut (post-WI-209). Per the pending-only rule
   the executed half moves here and out of the brief.
 - **2026-07-18 — OI-3 RULED AND CLOSED (owner): integrate `derived-gate-model`
@@ -276,7 +276,7 @@ why (one bullet each; cite ids)._
   stable cut. No further git action taken (nothing to integrate; pushes stay
   `push-policy: human`). Alternatives passed over: re-pointing tooling to keep
   `derived-gate-model` as de-facto mainline — moot once merged. The OI-3
-  section is deleted from [open-items.md](open-items.md) per the pending-only
+  section is deleted from `open-items.md` per the pending-only
   rule. (Unmerged residue elsewhere is *not* OI-3's: `dualplan-routing-fix`
   and `guardrails-fable-method` remain open dev branches with their own
   merge-to-main sittings to be ruled separately.)
@@ -469,7 +469,7 @@ why (one bullet each; cite ids)._
   template + MAPPING, 11 kit-doc references, 7 test modules, one SR/LLR/TC
   row, the `agent_dispatch` status-map marker + per-loop refresh — migration
   note owed to `ADOPTING.md` §6). Spec rewritten around the ruling:
-  [specs/WI-322.md](specs/WI-322.md); the WI unblocks (`BlockRef` clears).
+  [specs/WI-322.md](archive/specs/WI-322.2026-07-26.md); the WI unblocks (`BlockRef` clears).
 
 ## Audit log
 
@@ -5184,7 +5184,7 @@ WI-141…144 are named).
 
 **Owner sitting due (OI-8).** Under `single-ratify` the one human ratification
 lands at the phase's g2 close — this close. The decomposition is committed and
-the floor is green; the sitting's brief is [open-items.md](open-items.md) OI-8.
+the floor is green; the sitting's brief is `open-items.md` OI-8.
 Not pushed (`push-policy: human`).
 
 **Handoff correction (same session).** The driver first wrote run-state
@@ -5523,7 +5523,7 @@ WI-142:
 
 - **Tracked the artifact.** Committed `034-REVIEW-A.md` so the review record
   lives in the repo like 003…031-REVIEW-A.
-- **Verified the findings against the code, then filed [OI-10](open-items.md).**
+- **Verified the findings against the code, then filed OI-10.**
   Finding 1 [MAJOR] is real but edge-case — `gen_trajectory.py` `wi_block()`
   surfaces the delivery Phase in no visible/hover text, so a descent into a
   mixed-phase workstream (phase tier ≤3, workstream tier >3) drops the per-WI
@@ -5567,7 +5567,7 @@ its SRs — SR-052/053/054 Critique + SR-056 remain Planned until WI-143/144);
 overall derived gate unchanged at **G2**. SN=24 SR=56 LLR=57 TC=57, orphans=0.
 
 **Review carryover.** The session-034 REVIEW-A findings against WI-141 were
-filed as [OI-10](open-items.md) this sitting (recommended fold into WI-143);
+filed as OI-10 this sitting (recommended fold into WI-143);
 they are amendment candidates, not blockers on this slice.
 
 **Deviation:** none. `gen_trajectory.py` is not budget-watched; no budgeted doc
@@ -5656,7 +5656,7 @@ the session-protocol before starting WI-144:
 
 - **Tracked the artifact.** Committed `038-REVIEW-A.md` so the review record lives
   in the repo like 003…036-REVIEW-A.
-- **Verified the finding against the code, then filed [OI-11](open-items.md).**
+- **Verified the finding against the code, then filed OI-11.**
   The finding — the `cedge` arrow is emitted once per descendable block as a short
   shaft "terminating at no child," which the reviewer reads as violating SR-056's
   "one arrow per containment edge" and asks to end each arrow "at the corresponding
@@ -5696,7 +5696,7 @@ residue and one **real** blocker to reconcile before any build:
   034/036/038): committed `docs/reviews/040-REVIEW-A.md`. Its finding #1 (the
   `cedge` arrow) is the already-open **OI-11**; finding #2 is the gate failure
   fixed above.
-- **Filed [OI-12](open-items.md) — the 042 CRITIQUE disposition.** The fresh,
+- **Filed OI-12 — the 042 CRITIQUE disposition.** The fresh,
   provider-heterogeneous critique (Claude Fable 5;
   [reviews/042-CRITIQUE.md](reviews/042-CRITIQUE.md)) is SR-047's loop firing for
   the first time and returned **CHANGES-REQUESTED, 7 findings + 3 TC-HARDEN**.
@@ -6328,7 +6328,7 @@ routes to `@owner`, so it is surfaced as an OI, not fixed here.
   session entry: persisting `NEEDS-HUMAN` "would force a two-act resume"), but the
   reviewer asked for "an explicit spec amendment before closing WI-147" and no
   owner ruling exists though the row is `done`. Routed to
-  **OI-13** ([open-items.md](open-items.md)) — ratify the deviation (amend the
+  **OI-13** (`open-items.md`) — ratify the deviation (amend the
   spec) vs. direct the code fix; rec: ratify (single-act resume; a graceful pause
   ≠ a `NEEDS-HUMAN` decision-block; honest downside recorded). No code/test change
   made — an `@owner` call is not the driver's to adjudicate.
@@ -14590,3 +14590,111 @@ of text rather than removing it, which is the defect that started this.
 
 WI-322 is rewritten to match, including the migration steps and a note for
 `ADOPTING.md` §6 so a repo that already scaffolded the old file knows what to do.
+
+## 2026-07-26 — WI-322: `open-items.md` retired; a registry + a generated view
+
+OI-10's ruling, executed. `docs/open-items.md` is **gone** — here and from the
+kit's scaffold surface. Decision briefs are rows in
+[`docs/requirements/open-items.csv`](requirements/open-items.csv);
+`gen_open_items.py` renders them, **plus every `Draft`/`Modified` spine row's
+per-cell before/after**, into [`docs/open-items.html`](open-items.html). A new
+`open-items` harness step and pre-commit floor entry gate its freshness, with
+the machine-local advisory region masked (the M-10 rule it inherits).
+
+### The design centre was anti-duplication
+
+The view needed two things that already existed, and the temptation was to
+re-implement each:
+
+- **The git archaeology and the cell comparison.** Instead,
+  `trace.reattest_model` is **split out of** `reattest_lines`, so one
+  computation feeds two renderers — the markdown brief and the HTML view. The
+  markdown output was captured before the refactor and proven **byte-identical**
+  after, both with `--since` and on the auto baseline.
+- **What is pending.** The view imports `gen_trajectory.pending_block` rather
+  than re-deriving blocked rows, the run-state ask and the advisory region. The
+  page says so where a reader ruling from it can see it: if the view and the
+  `--ratify` brief ever disagree, **the brief is authoritative and the view is
+  the bug**.
+
+The theme tokens are the one deliberate copy: extracting them would edit
+`gen_trajectory` and re-red `perceptual-stale` for a refactor, so they are
+mirrored with a **drift guard** asserting they equal the dashboard's emitted
+values — the WI-291 precedent, and the F5 ruling against a shared `_kitcommon`.
+
+### The view is self-describing about its baseline
+
+`--since` would otherwise be a write-only flag: a freshness gate could never
+reproduce output rendered against a hand-passed revision. The page therefore
+**stamps the baseline it used** and `--check` re-renders with that one. This
+matters because of the pre-regime streak: an auto-derived baseline can sit
+*after* the amendment and render an **empty** section — which the page states as
+**check the baseline**, never as *nothing changed*.
+
+### A finding that changed the design: OI ids have been REUSED
+
+The spec leaned toward keeping ruled rows as tombstones. Measuring the Decisions
+log first killed that: **`OI-8` and `OI-9` each name two different decisions**
+(2026-07-14 vs 2026-07-25) — the ids were recycled after sections were deleted.
+A registry keyed on a non-unique id would be broken from birth, so ruled history
+is **not backfilled**: the registry carries pending rows plus tombstones from
+here forward, and the Decisions log remains the record. Uniqueness is fixed
+going forward without inventing a past.
+
+### Three defects the tests caught mid-build, each fixed rather than accommodated
+
+1. **No UTF-8 console guard.** The generator prints em dashes; on a cp1252
+   console it handed a caller undecodable bytes. Every sibling kit script has
+   `_utf8_console()`; this one now does too.
+2. **`changed_percent` counted whitespace**, so four words replaced by four
+   different words read as **57%** on a label that says "of the words". It
+   counts words now.
+3. **Bootstrap left `__pycache__` in every fresh scaffold** — the moment a
+   scaffolded generator IMPORTS its siblings, running it writes bytecode beside
+   the source. Caught by the byte-for-byte scaffold comparison; fixed with `-B`
+   on bootstrap's generator pass, which also seeds the view so a fresh scaffold
+   passes its own gate.
+
+### Migration, and what it cost
+
+Template → `registries/open-items.template.csv`; `bootstrap.py` MAPPING plus the
+scaffolded OI-3 brief (now a `csv.writer` row — a brief cell carries commas);
+11 kit-doc references; an `ADOPTING.md` §6 migration note; the `agent_dispatch`
+status-map marker + disposition regen; `check_trajectory`'s brief lint;
+`check_docs`' S-3. **Seven test modules retargeted**, and **twelve splice-only
+tests retired with the code they guarded** — porting a marker-pair or
+CRLF-round-trip test to a file that no longer exists would guard nothing; their
+live successors (the mask, the staleness bite, the vacuous non-adopter) are in
+`tests/test_gen_open_items.py`. `SR-055`/`LLR-056` name the surface, so both
+were amended and flipped `Modified` in the same commit — the re-attest window
+now holds **8** rows, up from 6.
+
+### The pre-commit floor caught three things this entry would otherwise claim
+
+Worth recording, because all three were mine and the hook found them, not me:
+**WI-322's own registry row was malformed** (an unquoted Deliverable carrying
+commas parsed to 7 columns of 17 — the exact defect `--strict-integrity` exists
+for, rewritten through `csv.writer`); **`IF-073`/`IF-074` were declared in the
+module docstring but never filed**, so the seam registry and the code disagreed;
+and the dashboard was stale behind both. Seams now filed: IF-073 the registry
+read, IF-074 the emitted view and its two contracts (the baseline stamp, the
+masked machine-local region).
+
+**Verified:** full suite **1569 passed, 7 skipped**; `check_doc_refs --strict`
+exit 0; `check_docs` OK; `trace --strict --strict-integrity` clean at SN=25
+SR=110 LLR=115 TC=118 orphans=0 integrity=0 **interfaces=72**; a fresh scaffold
+bootstraps, renders its own view, and passes `gen_open_items --check`.
+**Byte deltas:** `AGENTS.template.md` 9,975 (unchanged, 25 under budget);
+`PROCESS.md` 61,264 (unchanged); `PROCESS_OPTIONS.md` 161,771 → 162,342
+(**+571**, LF-normalized — the owner-decision-surface section rewritten for the
+registry + view, including *why* it is a registry: the attestation depth is a
+word-level diff markdown cannot mark).
+**Ratchets re-stamped with reasons inline:** `gen_trajectory.py` 5236 → **5106**
+(down — the splice retired), `trace.py` 2617 → 2708, `agent_dispatch.py`
+3906 → 3923, `bootstrap.py` 1986 → 2003, `check_trajectory.py` 2058 → 2063;
+complexity `reattest_lines` 25 → **14** with the extracted `reattest_model` at
+21, and `check_docs:check_status_surface` newly baselined at 13.
+
+**One cost to name:** this touched `gen_trajectory.py`, so `perceptual-stale`
+re-reds until a critique post-dates it. That is already budgeted — WI-318/319/320
+are render rows, and the ONE critique after that batch covers this change too.

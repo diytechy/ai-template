@@ -165,8 +165,9 @@ fi
 #    When a step reports STALE, regenerate in dependency order — arch-map ->
 #    okf -> trajectory (the dashboard consumes the other two); the gate marker via
 #    derive_gate.py, then the status snapshot via `gen_trajectory.py --status`
-#    (it reads the fresh gate) — then re-commit.
-"$PY" "$SCRIPTS_DIR/check.py" --run-steps arch-map,okf,trajectory-map,status-map,trajectory,registry-integrity,derived-gate,skills-sync
+#    (it reads the fresh gate), then the owner surface via `gen_open_items.py`
+#    — then re-commit.
+"$PY" "$SCRIPTS_DIR/check.py" --run-steps arch-map,okf,trajectory-map,status-map,open-items,trajectory,registry-integrity,derived-gate,skills-sync
 
 # 2. No-validation-delta warn (warn-first, never blocks): when this commit
 #    closes a WI that is a follow-up on an SR a previously-done WI already

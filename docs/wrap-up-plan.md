@@ -28,7 +28,7 @@ amendments awaiting the owner sitting), per-phase `1=G2;3=G2`. The sitting
 flips each row `Modified`→`Verified` (bless) or →`Planned` (evidence
 invalidated) in a reviewed commit and **G3 re-derives on its own** — no checker
 edits. Sitting inputs, both committed: the generated pending block in
-[open-items.md](open-items.md) (one line per Modified SR) and the before/after
+[open-items.html](open-items.html) (one line per Modified SR) and the before/after
 brief [ratify/2026-07-26-reattest.md](ratify/2026-07-26-reattest.md)
 (regenerate: `trace.py --ratify modified`; a pre-regime streak needs
 `--since <rev>`). While the window is open the harness bar is the **G2 bar**

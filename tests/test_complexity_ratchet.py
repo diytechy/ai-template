@@ -77,6 +77,10 @@ BASELINE = {
     # branches to the file walk — decomposition, the escape the ratchet prefers,
     # so the new tier cost this function nothing. Entry deleted per the
     # improvement rule (re-stamp or delete downward in the same commit).
+    # WI-322: S-3's brief source moved from a markdown heading parse to the
+    # open-items registry, which adds one read + one guard branch and crosses the
+    # census threshold. Reviewed entry, log 2026-07-26.
+    ("check_docs.py", "check_status_surface"): 13,
     ("check_docs.py", "check_links"): 13,
     ("check_docs.py", "git_commit_lookup"): 12,
     ("check_flows.py", "main"): 12,
@@ -136,7 +140,12 @@ BASELINE = {
     # +2 each (fix pass, 2026-07-26): F8 ownerless-child branches and the F1
     # --since fail-fast guard — both adversarial-review closures.
     ("trace.py", "modified_chain_advisories"): 15,
-    ("trace.py", "reattest_lines"): 25,
+    # WI-322 split the git archaeology out of the renderer: reattest_lines is
+    # now prose-only (25 -> 14) and the extracted model carries the branching
+    # (21), which is a wash in total and a real separation of concerns — one
+    # computation, two renderers.
+    ("trace.py", "reattest_lines"): 14,
+    ("trace.py", "reattest_model"): 21,
     ("trace.py", "render_report"): 17,
 }
 

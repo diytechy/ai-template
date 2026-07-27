@@ -1644,50 +1644,55 @@ CRITIQUE_VERDICT_RE = re.compile(
     re.I | re.M,
 )
 
-OPEN_ITEMS_MD = "docs/open-items.md"
-OI_SECTION_RE = re.compile(r"(?m)^(##\s+OI-\d+\b.*)$")
-# A `[<phase>]-[g1|g2]` bracketed anchor appearing anywhere in a brief body (not
-# line-anchored like PHASE_ANCHOR_RE, which matches a WI *title*).
+OPEN_ITEMS_CSV = "docs/requirements/open-items.csv"
+# A `[<phase>]-[g1|g2]` bracketed anchor appearing anywhere in a brief cell.
 RATIFY_ANCHOR_RE = re.compile(r"\[[^\]\[]+\]-\[g[12]\]")
-# The brief satisfies the rule only by a Markdown *link* whose target names a
-# ratification/hierarchy view — a bare `trace.py --ratify` command mention no
-# longer counts (WI-146 REVIEW-A): a command can be unexecuted or wrong-scope, so
-# it is not proof the generated view exists and is carried in the brief.
-RATIFY_VIEW_RE = re.compile(r"\]\([^)]*(?:ratif|hierarch)[^)]*\)", re.IGNORECASE)
+# The brief satisfies the rule only by naming a ratification/hierarchy VIEW — a
+# bare `trace.py --ratify` command mention no longer counts (WI-146 REVIEW-A): a
+# command can be unexecuted or wrong-scope, so it is not proof the generated view
+# exists and is carried in the brief. WI-322 moved briefs from markdown sections
+# to registry ROWS, so the proof is a path/link token in the cell rather than a
+# markdown link — the rule is the same, its evidence shape follows the source.
+RATIFY_VIEW_RE = re.compile(
+    r"(?:ratif|hierarch)\w*[^\s]*\.(?:md|html|csv)|\]\([^)]*(?:ratif|hierarch)[^)]*\)",
+    re.IGNORECASE,
+)
 
 
 def ratify_brief_findings(root):
-    """Warn-first brief lint (WI-146b): an `## OI-N` decision brief whose decision
-    is a `[phase]-[g1|g2]` ratification should *link* the batch-scoped
-    ratification hierarchy view (`trace.py --ratify <phase>`) instead of
-    hand-copying registry rows. WARN only — never a gate fail (the house stance
-    for prose surfaces, WI-129/132). Vacuous when `docs/open-items.md` is absent
-    or carries no ratification brief, so a repo without the surface pays nothing."""
-    path = root / OPEN_ITEMS_MD
+    """Warn-first brief lint (WI-146b): an open-items row whose decision is a
+    `[phase]-[g1|g2]` ratification should point at the batch-scoped ratification
+    hierarchy view (`trace.py --ratify <phase>`) instead of hand-copying registry
+    rows. WARN only — never a gate fail (the house stance for prose surfaces,
+    WI-129/132).
+
+    Reads `docs/requirements/open-items.csv` since WI-322 retired the markdown
+    surface; the brief text is the row's prose cells. Vacuous when the registry
+    is absent or carries no ratification brief, so a repo without the surface
+    pays nothing."""
+    path = root / OPEN_ITEMS_CSV
     if not path.is_file():
         return []
-    try:
-        text = path.read_text(encoding="utf-8", errors="replace")
-    except OSError:
-        return []
-    # Split on `## OI-N` headings: parts = [pre, head1, body1, head2, body2, ...],
-    # so any intro prose before the first section (which may name a `[phase]-[g2]`
-    # in passing) is correctly excluded from every brief body.
-    parts = OI_SECTION_RE.split(text)
     out = []
-    for i in range(1, len(parts), 2):
-        head = parts[i].strip()
-        body = parts[i + 1] if i + 1 < len(parts) else ""
+    for row in read_rows(path):
+        oid = (row.get("OI-ID") or "").strip()
+        if not oid.startswith("OI-") or oid.endswith("-000"):
+            continue
+        if (row.get("Status") or "").strip().lower() != "pending":
+            continue
+        body = " ".join(
+            (row.get(k) or "")
+            for k in ("OneLine", "Decision", "BlastRadius", "Options", "Recommendation")
+        )
         is_ratification = RATIFY_ANCHOR_RE.search(body) and re.search(
             r"ratif", body, re.IGNORECASE
         )
         if not is_ratification or RATIFY_VIEW_RE.search(body):
             continue
-        oid = head.split()[1]  # the `OI-N` token
         out.append(
-            "{}: a [phase]-[g1|g2] ratification brief should link the batch-scoped "
+            "{}: a [phase]-[g1|g2] ratification brief should name the batch-scoped "
             "hierarchy view (generate it with `trace.py --ratify <phase>`) instead "
-            "of hand-copying registry rows ({})".format(oid, OPEN_ITEMS_MD)
+            "of hand-copying registry rows ({})".format(oid, OPEN_ITEMS_CSV)
         )
     return out
 

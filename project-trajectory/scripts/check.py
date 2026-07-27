@@ -193,6 +193,7 @@ BUILTIN_STEP_NAMES = frozenset(
         "arch-map",
         "trajectory-map",
         "status-map",
+        "open-items",
         "okf",
         "skills-sync",
     }
@@ -664,6 +665,22 @@ def steps(coverage, tier, gate, phase=None, profile=None):
                 "--status",
                 "--check",
             ],
+            {"G3"},
+            "process",
+        ),
+        # Owner decision-surface freshness (WI-322, OI-10 ruled option (b)):
+        # docs/open-items.html is generated from docs/requirements/open-items.csv
+        # plus the spine's Draft/Modified rows — the surface that replaced the
+        # hand-maintained docs/open-items.md. Same generated-artifact contract as
+        # its siblings, with one difference stated in gen_open_items: the
+        # machine-local advisory region is MASKED before comparing, because those
+        # refs/llm/* facts don't transport with clone/push and would red a second
+        # clone (M-10/WI-266). Vacuous — exit 0 — when a repo carries neither the
+        # registry nor the view, so a non-adopter pays nothing.
+        (
+            "open-items",
+            (),
+            [sys.executable, str(_SCRIPTS / "gen_open_items.py"), "--check"],
             {"G3"},
             "process",
         ),

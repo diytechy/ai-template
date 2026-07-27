@@ -791,28 +791,43 @@ def test_status_order_and_missing_marker_warn(scaffold):
     assert "no Open-items marker" in proc.stdout
 
 
+def _write_open_items(scaffold, rows):
+    """The open-items REGISTRY (WI-322) — S-3's brief source since the markdown
+    surface retired."""
+    path = scaffold / "docs" / "requirements" / "open-items.csv"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        "OI-ID,Title,Status,Raised,OneLine,Decision,BlastRadius,Options,"
+        "Recommendation,WI-Refs,RuledDate,RulingRef\n" + rows,
+        encoding="utf-8",
+    )
+
+
 def test_oi_coherence_both_directions(scaffold):
     # S-3: a Needs-<human> OI with no brief warns; a briefed OI never named in
     # status.md warns; an In-flight OI needs NO brief; all warn-only (exit 0).
     _write_status(scaffold, _STATUS_SHAPED)
-    (scaffold / "docs" / "open-items.md").write_text(
-        "# Open items\n\n## OI-1 - decide the flag\n\n- **Decision:** ...\n\n"
-        "## OI-8 - stale ruled item\n\n- **Decision:** ...\n",
-        encoding="utf-8",
+    _write_open_items(
+        scaffold,
+        "OI-1,decide the flag,pending,,,...,,,,,,\n"
+        "OI-8,stale ruled item,pending,,,...,,,,,,\n",
     )
     proc = run_py(["scripts/check_docs.py"], cwd=scaffold)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "OI-9: a Needs-<human> item" in proc.stdout  # missing brief
-    assert "OI-8: briefed in open-items.md" in proc.stdout  # orphan brief
+    assert "OI-8: briefed in requirements/open-items.csv" in proc.stdout  # orphan
     assert "OI-1" not in proc.stdout  # coherent id is quiet
     assert "OI-2" not in proc.stdout  # in-flight needs no brief
 
 
 def test_oi_coherence_vacuous_without_open_items(scaffold):
-    # S-3 is opt-in: deleting open-items.md silences it (the other status
-    # rules stay live).
+    # S-3 is opt-in: without the registry it is silent (the other status rules
+    # stay live). WI-322: a RULED row is likewise not a brief — it is history —
+    # so a queue of only ruled rows is the same vacuum.
     _write_status(scaffold, _STATUS_SHAPED)
-    (scaffold / "docs" / "open-items.md").unlink()
+    oi = scaffold / "docs" / "requirements" / "open-items.csv"
+    if oi.exists():
+        oi.unlink()
     proc = run_py(["scripts/check_docs.py"], cwd=scaffold)
     assert proc.returncode == 0
     assert "OI-9" not in proc.stdout
@@ -820,18 +835,18 @@ def test_oi_coherence_vacuous_without_open_items(scaffold):
 
 def test_oi_coherence_retires_under_generated_marker(scaffold):
     # WI-202: once status.md carries a `<!-- BEGIN GENERATED STATUS -->` block,
-    # its open-items list is PROJECTED from open-items.md by gen_trajectory
-    # --status, so the S-3 coherence check stands down (the status-map freshness
-    # gate is the invariant). The SAME incoherence that fires without the marker
-    # (a missing brief AND an orphan brief) is silent with it.
+    # its open-items list is PROJECTED from the open-items registry by
+    # gen_trajectory --status, so the S-3 coherence check stands down (the
+    # status-map freshness gate is the invariant). The SAME incoherence that
+    # fires without the marker (a missing brief AND an orphan brief) is silent.
     marked = "# Status\n\n<!-- BEGIN GENERATED STATUS -->\n" + _STATUS_SHAPED.split(
         "\n", 1
     )[1].replace("## Scope", "<!-- END GENERATED STATUS -->\n\n## Scope")
     _write_status(scaffold, marked)
-    (scaffold / "docs" / "open-items.md").write_text(
-        "# Open items\n\n## OI-1 - decide the flag\n\n- **Decision:** ...\n\n"
-        "## OI-8 - stale ruled item\n\n- **Decision:** ...\n",
-        encoding="utf-8",
+    _write_open_items(
+        scaffold,
+        "OI-1,decide the flag,pending,,,...,,,,,,\n"
+        "OI-8,stale ruled item,pending,,,...,,,,,,\n",
     )
     proc = run_py(["scripts/check_docs.py"], cwd=scaffold)
     assert proc.returncode == 0, proc.stdout + proc.stderr

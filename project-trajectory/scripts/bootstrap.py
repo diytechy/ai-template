@@ -43,7 +43,7 @@ What it creates in the destination:
     docs/test/test-cases.csv                   <- registries/test-cases.template.csv
     scripts/trace.py, derive_gate.py, check.py, check_flows.py, check_docs.py, check_perf.py,
     scripts/check_stubs.py, check_dupes.py, check_coverage.py, check_doc_refs.py, check_privacy.py, check_vendored.py, check_trajectory.py,
-    scripts/subagent_gate.py, gen_arch_map.py, gen_release_checklist.py, gen_cases.py, gen_trajectory.py, gen_okf.py
+    scripts/subagent_gate.py, gen_arch_map.py, gen_release_checklist.py, gen_cases.py, gen_trajectory.py, gen_open_items.py, gen_okf.py
     scripts/plan_coverage.py, plan_round.py, plan_briefs.py, plan_coverage_step.py, plan_artifacts.py
                                                (the dual-plan round set, process-options.md "Dual-plan decomposition")
     scripts/agent_route.py, scripts/score_reviews.py   (S8 coordinator routing + review scorer)
@@ -264,6 +264,8 @@ Contracts: IF-014, IF-039 — the interface seams this module declares (process.
 
 import argparse
 import configparser
+import csv
+import io
 import re
 import shutil
 import subprocess
@@ -994,25 +996,30 @@ STACK_IN_FLIGHT = (
     "runner in docs/stack.ini's [tiers] (pytest.ini deliberately not "
     "scaffolded) → [stack.ini](stack.ini)\n"
 )
-# The Needs-<human> OI-3 carries its decision brief in docs/open-items.md
+# The Needs-<human> OI-3 carries its decision brief in the open-items REGISTRY
 # (check_docs S-3: every owner ask has its brief); the In-flight OI-4..6 are
-# driver work and need none.
-# The scaffolded open-items.md ends with the generated pending-owner-actions
-# block (WI-234), separated from the hand-authored briefs by a `---` + lead-in
-# comment; a stack brief is inserted ABOVE that separator so it never lands
-# below the marker. Kept byte-exact with OPEN_ITEMS.template.md's tail.
-OI_PENDING_ANCHOR = "---\n\n<!-- Generated pending-owner-actions projection"
-
-STACK_OI3_BRIEF = (
-    "\n## OI-3 — Decide: the {stack} toolchain commands\n\n"
-    "- **Decision:** the format / lint / test commands for the {stack} stack "
-    "in docs/stack.ini's `[product]` section (blocks: G1).\n"
-    "- **Blast radius:** every gate run and CI job shells these commands — a "
-    "wrong entry green-washes the harness.\n"
-    "- **Options:** the stack's conventional tools · whatever the repo "
-    "already runs in CI.\n"
-    "- **Recommendation:** mirror the existing CI commands first, then "
-    "tighten.\n"
+# driver work and need none. WI-322 retired the markdown surface — briefs are
+# ROWS in docs/requirements/open-items.csv, rendered into the generated
+# docs/open-items.html the owner reads — so the brief is APPENDED as a row
+# instead of spliced above a marker. `csv.writer` does the quoting: a brief cell
+# carries commas, and a hand-built string would have been a quoting bug waiting
+# for its first one.
+STACK_OI3_ROW = (
+    "OI-3",
+    "Decide: the {stack} toolchain commands",
+    "pending",
+    "",
+    "rule the {stack} format / lint / test commands - rec: mirror the existing "
+    "CI commands first, then tighten",
+    "the format / lint / test commands for the {stack} stack in docs/stack.ini's "
+    "[product] section (blocks: G1).",
+    "every gate run and CI job shells these commands - a wrong entry "
+    "green-washes the harness.",
+    "the stack's conventional tools · whatever the repo already runs in CI.",
+    "mirror the existing CI commands first, then tighten.",
+    "",
+    "",
+    "",
 )
 
 
@@ -1056,22 +1063,20 @@ def append_stack_checklist(dest, stack, dry_run):
         1,
     )
     _write_text_lf(status, text)
-    # OI-3 is a Needs-<human> ask, so it owes a brief (check_docs S-3). Insert it
-    # ABOVE the generated pending-owner-actions block (WI-234) so hand-authored
-    # briefs stay above the marker, never below it.
-    open_items = dest / "docs" / "open-items.md"
+    # OI-3 is a Needs-<human> ask, so it owes a brief (check_docs S-3): append it
+    # as a row of the open-items registry, which the generated owner surface
+    # renders. Idempotent — re-running bootstrap must not file OI-3 twice.
+    open_items = dest / "docs" / "requirements" / "open-items.csv"
     if open_items.exists():
-        oi_text = open_items.read_text(encoding="utf-8")
-        brief = STACK_OI3_BRIEF.format(stack=stack)
-        if OI_PENDING_ANCHOR in oi_text:
-            oi_text = oi_text.replace(
-                OI_PENDING_ANCHOR,
-                brief.strip("\n") + "\n\n" + OI_PENDING_ANCHOR,
-                1,
+        existing = open_items.read_text(encoding="utf-8-sig")
+        if "\nOI-3," not in existing:
+            buf = io.StringIO()
+            csv.writer(buf, lineterminator="\n").writerow(
+                [cell.format(stack=stack) for cell in STACK_OI3_ROW]
             )
-        else:
-            oi_text = oi_text + brief
-        _write_text_lf(open_items, oi_text)
+            if existing and not existing.endswith("\n"):
+                existing += "\n"
+            _write_text_lf(open_items, existing + buf.getvalue())
     return True
 
 
@@ -1137,7 +1142,7 @@ MAPPING = [
     # The owner decision briefs status.md's Needs-<human> bullets link to
     # (process-options.md "Trajectory / work-items layer"): one OI-N section
     # per pending decision, deleted when the ruling lands in log.md Decisions.
-    ("OPEN_ITEMS.template.md", "docs/open-items.md"),
+    ("registries/open-items.template.csv", "docs/requirements/open-items.csv"),
     # The append-only history status.md points at (Thread 36, process.md §5):
     # sign-offs, verdicts, and ratified decisions append here, keeping the
     # per-session status.md reload cheap.
@@ -1220,6 +1225,7 @@ MAPPING = [
     ("scripts/gen_release_checklist.py", "scripts/gen_release_checklist.py"),
     ("scripts/gen_cases.py", "scripts/gen_cases.py"),
     ("scripts/gen_trajectory.py", "scripts/gen_trajectory.py"),
+    ("scripts/gen_open_items.py", "scripts/gen_open_items.py"),
     ("scripts/gen_okf.py", "scripts/gen_okf.py"),
     ("scripts/plan_coverage.py", "scripts/plan_coverage.py"),
     ("scripts/plan_round.py", "scripts/plan_round.py"),
@@ -1466,10 +1472,21 @@ def initialize_generated_docs(dest, created):
     for rel_cmd in (
         arch_cmd,
         ["scripts/trace.py"],
+        # WI-322: the owner decision surface is a fully-generated file, so a
+        # MISSING one reads as stale to its freshness gate (the C9 posture its
+        # siblings take). Seeding it here is what keeps a fresh scaffold green
+        # on its first `check.py` — the scaffolded registry already carries the
+        # example rows the status template's Needs-<human> bullets name.
+        ["scripts/gen_open_items.py"],
     ):
         if not (dest / rel_cmd[0]).exists() or not (dest / "docs").exists():
             continue
-        proc = subprocess.run([sys.executable] + rel_cmd, cwd=str(dest))
+        # `-B`: never write __pycache__ into a fresh scaffold. gen_open_items
+        # IMPORTS its sibling generators (one derivation, two renderers), and an
+        # import writes bytecode next to the source — which left a
+        # scripts/__pycache__/ tree in every new project, with .pyc bytes that
+        # differ run to run. Caught by the byte-for-byte scaffold comparison.
+        proc = subprocess.run([sys.executable, "-B"] + rel_cmd, cwd=str(dest))
         if proc.returncode != 0:
             print(
                 "WARNING: {} exited {}".format(rel_cmd[0], proc.returncode),

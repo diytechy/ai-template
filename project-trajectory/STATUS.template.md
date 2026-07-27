@@ -6,10 +6,12 @@ every section short and current; history — sign-offs, verdicts, ratified
 decisions, session notes — appends to the log this header points at, never here.
 
 - **History:** [log.md](log.md) _(append-only; see process.md §5)_
-- **Owner decision briefs:** [open-items.md](open-items.md) _(one `## OI-N`
-  section per pending Needs-\<human> decision — blast radius, options,
-  recommendation; the bullet here stays a one-liner. A ruling appends to the
-  log's Decisions and the section is removed.)_
+- **Owner decision surface:** [requirements/open-items.csv](requirements/open-items.csv)
+  _(rendered to `docs/open-items.html` by `scripts/gen_open_items.py` — one row per
+  pending Needs-\<human> decision, with blast radius, options and recommendation,
+  plus the before/after of every spine row owing a ratification or re-attest. The
+  bullet here stays a one-liner. A ruling appends to the log's Decisions and the
+  row's `Status` leaves `pending`.)_
 - **Work plan:** [plan.md](plan.md) _(the sequenced session blocks the
   plan/build cadence executes; the "Next action" below names the current
   block — see process-options.md "Plan/build cadence")_
@@ -40,8 +42,9 @@ decisions, session notes — appends to the log this header points at, never her
   sub-lists below. Any deferrals/decisions list follows the same bullet
   discipline.)_
   - **Needs <human>** _(state the decision wanted, per item — **gate/ratification
-    blockers first**; keep each a one-liner and put the depth in
-    [open-items.md](open-items.md))_:
+    blockers first**; keep each a one-liner and put the depth in the
+    [open-items registry](requirements/open-items.csv), which
+    `scripts/gen_open_items.py` renders to `docs/open-items.html`)_:
     - OI-1 — decide: keep or drop the legacy export flag (blocks: G1) →
       [system-requirements.csv](requirements/system-requirements.csv)
   - **In flight** _(driver; no approval needed)_:

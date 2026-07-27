@@ -1616,31 +1616,39 @@ def test_phase_findings_vacuous_without_anchors(tmp_path):
 
 
 # --- WI-146(b): the ratification-brief hierarchy-view lint --------------------
-# A `## OI-N` brief whose decision is a `[phase]-[g1|g2]` ratification should
-# *link* the generated batch-scoped hierarchy view rather than hand-copy rows.
-# Warn-first (never a gate fail); vacuous without such a brief.
+# An open-items ROW whose decision is a `[phase]-[g1|g2]` ratification should
+# name the generated batch-scoped hierarchy view rather than hand-copy rows.
+# Warn-first (never a gate fail); vacuous without such a brief. WI-322 moved the
+# briefs from markdown sections into `docs/requirements/open-items.csv`, so the
+# lint reads rows and the evidence it accepts is a view PATH in the cell.
+
+_OI_HEADER = (
+    "OI-ID,Title,Status,Raised,OneLine,Decision,BlastRadius,Options,"
+    "Recommendation,WI-Refs,RuledDate,RulingRef\n"
+)
 
 
-def _write_open_items(root, body):
-    (root / "docs").mkdir(parents=True, exist_ok=True)
-    (root / "docs" / "open-items.md").write_text(body, encoding="utf-8")
+def _write_open_items(root, rows):
+    (root / "docs" / "requirements").mkdir(parents=True, exist_ok=True)
+    (root / "docs" / "requirements" / "open-items.csv").write_text(
+        _OI_HEADER + rows, encoding="utf-8"
+    )
     return root
+
+
+def _oi_row(oid, decision, title="a decision", status="pending"):
+    return '{},{},{},,,"{}",,,,,,\n'.format(oid, title, status, decision)
 
 
 def test_ratify_brief_without_view_warns(tmp_path):
     ct = load_script("check_trajectory")
     _write_open_items(
         tmp_path,
-        "# Open items\n"
-        "Intro naming `[v3]-[g2]` in passing (before any section).\n\n"
-        "## OI-20 — v3 g2 close\n"
-        "- Decision: ratify the `[v3]-[g2]` dashboard batch.\n"
-        "- Options: accept.\n\n"
-        "## OI-21 — unrelated\n"
-        "- Decision: something else, no anchor here.\n",
+        _oi_row("OI-20", "ratify the [v3]-[g2] dashboard batch.")
+        + _oi_row("OI-21", "something else, no anchor here."),
     )
     warns = ct.ratify_brief_findings(tmp_path)
-    # Exactly the ratification brief warns; the intro prose and OI-21 do not.
+    # Exactly the ratification brief warns; the unrelated row does not.
     assert len(warns) == 1
     assert warns[0].startswith("OI-20:")
     assert "hierarchy view" in warns[0]
@@ -1648,13 +1656,13 @@ def test_ratify_brief_without_view_warns(tmp_path):
 
 def test_ratify_brief_with_generator_command_only_warns(tmp_path):
     # A bare `trace.py --ratify` command mention is NOT proof the view exists and
-    # is carried — the brief must *link* the generated view (WI-146 REVIEW-A).
+    # is carried — the brief must name the generated view (WI-146 REVIEW-A).
     ct = load_script("check_trajectory")
     _write_open_items(
         tmp_path,
-        "## OI-20 — v3 g2 close\n"
-        "- Decision: ratify the `[v3]-[g2]` batch. Hierarchy: run "
-        "`trace.py --ratify v3`.\n",
+        _oi_row(
+            "OI-20", "ratify the [v3]-[g2] batch. Hierarchy: run trace.py --ratify v3."
+        ),
     )
     warns = ct.ratify_brief_findings(tmp_path)
     assert len(warns) == 1 and warns[0].startswith("OI-20:")
@@ -1664,27 +1672,28 @@ def test_ratify_brief_with_view_link_is_silent(tmp_path):
     ct = load_script("check_trajectory")
     _write_open_items(
         tmp_path,
-        "## OI-20 — v3 g2 close\n"
-        "- Decision: ratify the `[v3]-[g2]` batch. "
-        "See the [tree](ratify/v3-g2.md).\n",
+        _oi_row(
+            "OI-20", "ratify the [v3]-[g2] batch. See the tree: docs/ratify/v3-g2.md."
+        ),
     )
     assert ct.ratify_brief_findings(tmp_path) == []
 
 
-def test_ratify_brief_lint_vacuous_without_brief(tmp_path):
+def test_ratify_brief_lint_is_vacuous_off_the_pending_queue(tmp_path):
     ct = load_script("check_trajectory")
-    # No open-items.md at all -> nothing to check.
+    # No registry at all -> nothing to check.
     assert ct.ratify_brief_findings(tmp_path) == []
-    # A section with a ratification word but no [phase]-[g*] anchor -> not a brief.
+    # A ratification word with no [phase]-[g*] anchor -> not a brief.
+    _write_open_items(tmp_path, _oi_row("OI-30", "whether to ratify a policy change."))
+    assert ct.ratify_brief_findings(tmp_path) == []
+    # ...an anchor with no ratification language -> also not a brief.
+    _write_open_items(tmp_path, _oi_row("OI-31", "sequence [v3]-[g2] after v2 work."))
+    assert ct.ratify_brief_findings(tmp_path) == []
+    # ...and a RULED row is history, not a pending decision, so it never warns
+    # even when it carries both (the negative half WI-322 added).
     _write_open_items(
         tmp_path,
-        "## OI-30 — general\n- Decision: whether to ratify a policy change.\n",
-    )
-    assert ct.ratify_brief_findings(tmp_path) == []
-    # ...and an anchor with no ratification language -> also not a brief.
-    _write_open_items(
-        tmp_path,
-        "## OI-31 — scheduling\n- Decision: sequence `[v3]-[g2]` after v2 work.\n",
+        _oi_row("OI-32", "ratify the [v3]-[g2] batch.", status="ruled"),
     )
     assert ct.ratify_brief_findings(tmp_path) == []
 

@@ -1521,8 +1521,8 @@ becomes an **integrator-generated reference snapshot** — regenerated only on t
 integration branch after a successful integration and gated by generated
 freshness (like `PROJECT_STATE.html`), never written on a worker branch. It
 carries only: the derived gate/bar pointers; queued/deferred/blocked counts + a
-link to the WI dashboard; pending `Needs <human>` items linked to
-`open-items.md`; the last integrated train + integration-queue summary; and
+link to the WI dashboard; pending `Needs <human>` items linked to the owner
+decision surface; the last integrated train + integration-queue summary; and
 project scope/constraints whose canonical homes are linked, not copied. The
 former **R-B/R-C** rules — every open WI repeated as a token in `status.md` —
 are **retired** (WI-180): a generated snapshot needs no registry copy to
@@ -1533,24 +1533,33 @@ forward-only (WI-200):** a `done` WI id lingering in `status.md` is a finding
 again — warn at commit, ERROR under `--strict` at G2+ — except inside a
 generated snapshot block, which cannot accrete prose.
 
-**The owner decision surface (`docs/open-items.md`) + the status-surface
-lint.** The Needs-\<human> bullets in `status.md` stay **one-liners** (id +
-one-line recommendation), or the blackboard re-bloats; the *depth* of each
-pending decision — blast radius, options with pros/cons, the driver's
-recommendation — lives in **`docs/open-items.md`** (scaffolded from
-`OPEN_ITEMS.template.md`), one `## OI-N` section per pending decision, so the
-owner reviews **one file with all context**. Lifecycle: a section lives there
-only while pending — the ruling appends to `log.md`'s Decisions and the
-section is deleted (`work-items.csv` = tracking, `open-items.md` = pre-ruling
-analysis, `log.md` = post-ruling record; no third source of truth).
-`check_docs.py` warns — **structure only, never the exit code** (content
-quality is reviewer-class, and gate promotion is this layer's un-defer trigger
-for a spine SR): **S-1** `status.md` over its line budget (default 120;
-`docs/status-lint` overrides with an integer, `off` disables S-1..S-3);
-**S-2** the Open-items marker must precede `## Scope`; **S-3** every
-Needs-\<human> `OI-N` has a section in `open-items.md` and every section id
-appears in `status.md`. S-3 is vacuous without `open-items.md` — the surface
-is optional; delete the file to opt out.
+**The owner decision surface (a registry + a generated view) + the
+status-surface lint.** The Needs-\<human> bullets in `status.md` stay
+**one-liners** (id + one-line recommendation), or the blackboard re-bloats; the
+*depth* of each pending decision — blast radius, options with pros/cons, the
+driver's recommendation — lives in **`docs/requirements/open-items.csv`**
+(scaffolded from `registries/open-items.template.csv`), one row per decision,
+and renders into **`docs/open-items.html`** — the generated surface the owner
+actually reads, so the review is **one page with all context**.
+
+Registry-plus-view rather than a markdown file, for a reason worth stating: the
+same surface must also carry the *attestation* depth — every `Draft` or
+`Modified` spine row's per-cell before/after — and the only readable form of
+that is a **word-level diff**, which markdown cannot mark. Generating the view
+also lets it show what a pointer cannot: which rows ride an SR's line, and the
+baseline revision each diff was computed against.
+
+Lifecycle: a row is `pending` only until it is ruled — the ruling appends to
+`log.md`'s Decisions and the row's `Status` leaves `pending` (`work-items.csv` =
+tracking, the open-items registry = pre-ruling analysis, `log.md` = post-ruling
+record; no third source of truth). `check_docs.py` warns — **structure only,
+never the exit code** (content quality is reviewer-class, and gate promotion is
+this layer's un-defer trigger for a spine SR): **S-1** `status.md` over its line
+budget (default 120; `docs/status-lint` overrides with an integer, `off`
+disables S-1..S-3); **S-2** the Open-items marker must precede `## Scope`;
+**S-3** every Needs-\<human> `OI-N` has a pending row in the registry and every
+pending id appears in `status.md`. S-3 is vacuous without the registry — the
+surface is optional; omit it to opt out.
 
 **Spec-of-record (`SpecRef` + `docs/specs/`).** A queued WI whose only description
 is its title is not implementable, and nothing used to check that an open WI named
