@@ -128,3 +128,4 @@ resource: "generated"
 | [LLR-117](LLR-117.md) | Theme-lock: one theme mechanism and no mixed-family surface/ink pair (T6 core) |
 | [LLR-118](LLR-118.md) | Generated owner decision surface (registry + attestation depth) |
 | [LLR-119](LLR-119.md) | T4 label legibility, mechanized: ink inside its box, truncation with a reveal |
+| [LLR-120](LLR-120.md) | No edge through an unrelated node box (T8 objective floor) |

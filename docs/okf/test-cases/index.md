@@ -131,3 +131,4 @@ resource: "generated"
 | [TC-122](TC-122.md) | Sweep EVERY emitter document (the shipped artifact plus a fixture per emitter, the A2-rev… |
 | [TC-123](TC-123.md) | Drive gen_open_items over temp repos: assert a pending registry row renders as a brief an… |
 | [TC-124](TC-124.md) | Generate the dashboard over a tiered fixture carrying one sentence-length stakeholder nee… |
+| [TC-125](TC-125.md) | Sweep the union of emitter documents (the shipped PROJECT_STATE.html plus a fixture per e… |

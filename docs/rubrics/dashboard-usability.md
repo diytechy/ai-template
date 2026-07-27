@@ -125,9 +125,18 @@ edge passes through an unrelated node box**, and edge crossings are minimized �
 where a crossing is unavoidable it happens in open space, not under a label or
 port cluster. *Bad:* a dependency wire cuts straight through an intermediate
 WI's box so it reads as connected to it; three edges cross inside a port fan
-and the sources become unattributable. (Known open finding: WI-253 tracks the
-current crossing/through-box gap — a critique may cite it as filed, but T8
-still blocks APPROVE until the render passes.)
+and the sources become unattributable.
+
+*The first clause of this anchor is now a test.* **No edge through an unrelated
+node box is bound to `LLR-120`/`TC-125`** (WI-320): every wire of every emitted
+diagram is sampled and measured against every node rect that is not its own
+endpoint, across the shipped artifact plus a fixture per emitter. A wire you see
+cutting a box it does not connect to is a **gap in `TC-125`** — route it through
+change-intake, never through a verdict.
+
+What stays yours is the second clause, which is the one a measurement cannot
+settle: **crossings minimized, and where unavoidable, in open space** rather than
+under a label or inside a port fan.
 
 ## Notes for the critic
 

@@ -4507,6 +4507,63 @@ def test_routed_label_rides_a_detoured_edge():
     assert gt._routed_label_xy(straight, 999.0, 888.0) == (999.0, 888.0)
 
 
+# --- WI-320 / SR-054 T8: the through-box rule, swept over what actually ships --
+# 121-CRITIQUE's MAJOR is the first finding ever to land on T8, and only half of it
+# is measurable. The row's split: bind the objective floor — NO edge passes through
+# an unrelated node box — before anyone re-routes the layout for the lane
+# separation the critic also asked for. The unit tests above prove the ROUTER on
+# synthetic geometry; this proves the ARTIFACT, which is a different claim: the
+# router returns a least-bad fallback when it cannot find a clear lane, so "the
+# algorithm detours" does not imply "nothing shipped through a box".
+_WIRE_RE = re.compile(r'<path class="wire[^"]*" d="([^"]*)"')
+_NODE_RE = re.compile(
+    r'<g class="(?:block|wi)\b[^>]*?(?:data-node|data-id)="([^"]*)".*?'
+    r'<rect x="([-\d.]+)" y="([-\d.]+)" width="([\d.]+)" height="([\d.]+)"',
+    re.S,
+)
+
+
+def _endpoint_of(point, rect, pad):
+    return (
+        rect[0] - pad <= point[0] <= rect[0] + rect[2] + pad
+        and rect[1] - pad <= point[1] <= rect[1] + rect[3] + pad
+    )
+
+
+def test_t8_no_wire_passes_through_an_unrelated_node_box(tmp_path):
+    gt = load_script("gen_trajectory")
+    pad = gt.PORT_R + 4.0  # a wire legitimately starts/ends ON its own port circle
+    swept = detoured = 0
+    through = []
+    for label, doc in _every_emitter_document(tmp_path):
+        for svg in re.findall(r"<svg\b.*?</svg>", doc, re.S):
+            nodes = [
+                (m.group(1), tuple(float(m.group(k)) for k in (2, 3, 4, 5)))
+                for m in _NODE_RE.finditer(svg)
+            ]
+            if not nodes:
+                continue
+            for d in _WIRE_RE.findall(svg):
+                pts = _sample_path_d(d)
+                if len(pts) < 2:
+                    continue
+                swept += 1
+                detoured += "L" in d
+                for nid, rect in nodes:
+                    if _endpoint_of(pts[0], rect, pad) or _endpoint_of(
+                        pts[-1], rect, pad
+                    ):
+                        continue  # its own source / target box
+                    if _polyline_crosses(pts, rect):
+                        through.append((label, nid, rect, d[:70]))
+                        break
+    assert swept, "vacuous - no wires emitted anywhere in the sweep"
+    # Non-vacuity with teeth: the rule must actually be under load. If nothing
+    # needed re-routing, a broken router would pass this sweep unnoticed.
+    assert detoured, "vacuous - no wire in the sweep had to route around anything"
+    assert not through, "wire(s) through an unrelated box: {}".format(through[:4])
+
+
 def test_route_edges_terminals_snap_to_port_circle():
     # 079-CRITIQUE (WI-256): a fanned wire (its passed port y offset from the block
     # mid-height for strand separation) used to TERMINATE at cy+offset, so a steep

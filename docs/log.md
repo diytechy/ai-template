@@ -14963,3 +14963,63 @@ a future narrowing of the fixture cannot quietly make the guard prove nothing.
 orphans=0 integrity=0. Ratchet re-stamped **5146 → 5192**; part of that delta is
 `_title_clause` lifted out of `_clip_title` so the card and the status.md
 frontier line share one clause extractor instead of forking a second opinion.
+
+## 2026-07-26 — WI-320: T8's objective half bound, its reader-experience half filed rather than proxied
+
+The first finding ever to land on T8, and the row it was filed as had already
+done the hard thinking: **bind the through-box rule first as the objective floor,
+then treat lane separation as its own design slice.** That split is the whole
+shape of this WI, and it is worth being explicit about why it is not a dodge.
+
+T8 is two clauses. *No edge passes through an unrelated node box* is geometry a
+reader cannot argue with. *Crossings minimized, and where unavoidable in open
+space* is a judgement about what a reader can follow. The standing rule from the
+WI-300 (f) ruling is that the second kind must not be quietly turned into a
+proxy — a crossing count would green the gate without answering the critic — so
+only the first is claimed here, as `LLR-120`/`TC-125`, and **T8 stays live**.
+
+### The artifact claim is not the router claim
+
+WI-253 shipped obstacle-aware routing and `tests/test_gen_trajectory.py` already
+proves it on synthetic geometry: a wire that would cut a box detours, a clear
+wire stays byte-identical, a backward seam lanes around. None of that is the
+claim the anchor makes. `_detour_d` returns a **least-bad fallback** when no
+candidate lane clears within `_MAX_LANES` — so "the algorithm detours" does not
+imply "nothing shipped through a box", and the artifact-level claim had only ever
+been hand-verified **once**, during WI-273.
+
+`TC-125` sweeps the shipped dashboard plus one fixture per emitter (the A2-review
+rule that a walk judges only what its fixture renders), samples every wire into
+the same polyline the router's own hit-test uses, drops the rects whose port
+circle holds an endpoint, and measures the rest.
+
+**Measured: 264 shipped wires, zero through a box.** The floor holds today, which
+is the honest reason to bind it now — a floor recorded while it holds is a
+regression guard; recorded after it breaks it is a to-do list.
+
+### Non-vacuity had to be designed in, twice
+
+A sweep that finds nothing can be right or blind. Two assertions separate those:
+the sweep must find wires **and** at least one of them must be a **detour** — if
+nothing in the corpus needed re-routing, a broken router would sail through. Then
+the guard was run against a mutation (the blocked-wire branch disabled, so every
+wire keeps its direct cubic) and failed naming a knowledge-graph wire cutting the
+`Low-Level Requirement` node at `(330,18,96,46)`. Source restored byte-identical.
+
+### One measurement I did not expect, kept rather than swallowed
+
+At the router's own 3px clearance rather than the bare box, **one** shipped wire
+is a hit: it rides within 3px of `WI-043`'s edge. That is `_detour_d` exhausting
+its lane candidates and returning the fallback — the giving-up state is real and
+reachable, not theoretical. It is not a through-box, so it does not belong in
+`TC-125`'s claim; it belongs to the design slice, so it is recorded in `LLR-120`
+and carried into **WI-323** as a starting point, together with the observation
+that `_port_fan` is a *local* anti-knot rule (spread co-port wires by the other
+endpoint's row) with **no notion of a shared corridor** — which is exactly what
+the critic reported.
+
+**Verified:** smoke **421 passed, 13 skipped**; the T8 sweep and the four T4
+guards green; `trace --strict --strict-integrity` clean at SN=25 SR=110
+**LLR=118 TC=121** orphans=0 integrity=0; `check_docs` OK (269 docs, 807 links,
+0 broken). No ratchet movement — this WI added a test and two registry rows, no
+production code.
