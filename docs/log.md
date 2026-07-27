@@ -14531,3 +14531,36 @@ Two fixes are worth doing whichever way it goes, and both are in the brief: the
 projected SR line should **say** how many chain rows re-attest with it (four
 lines for six rows is correct — the SR is the attestation unit — but nothing
 says so), and any rendered view must **print the baseline** it diffed against.
+
+### OI-10 reframed by owner direction: retire the file, not just fix its depth
+
+Follow-up the same sitting: *"I would go further and say open-items.md is no
+longer even necessary. A single html reference view is sufficient, the md can be
+retired in its entirety."* OI-10 is rewritten around that. Two findings from
+measuring it before agreeing:
+
+**It is a shipped artifact, so this is a kit version bump.**
+`OPEN_ITEMS.template.md` is a `bootstrap.py` MAPPING destination — every
+adopting repo has a `docs/open-items.md`. Add **11 references** across the kit's
+own docs, **7 test modules** (`test_gen_trajectory_pending.py` alone has 20
+references), one SR / one LLR / one TC row, and `agent_dispatch.py` using it as
+a **status-map marker** while refreshing its pending block every dispatch loop.
+None of that argues against retiring it — it is the price, and the owner should
+set it knowing the number.
+
+**The file is two things wearing one name,** and only one of them is the thing
+the owner is done with: a *generated* pending projection (HTML renders it
+better — no argument) and a set of *hand-authored briefs*. A generated view
+needs a source, so "retire the md" has to answer **where brief prose lives
+afterwards**, and every other part of the decision falls out of that answer.
+
+Recommendation recorded: **retire markdown as the owner's READING surface,
+keep it as the AUTHORING format** — one `docs/open-items/OI-N.md` per pending
+decision, one generated `docs/open-items.html`. The aggregate document, which is
+the thing that is genuinely unnecessary, disappears; the prose stays writable by
+a human, diffable in review, and readable by the agents that work from these
+docs. The alternative that is purer — brief prose in CSV cells — moves the wall
+of text rather than removing it, which is the defect that started this.
+
+WI-322 is rewritten to match, including the migration steps and a note for
+`ADOPTING.md` §6 so a repo that already scaffolded the old file knows what to do.

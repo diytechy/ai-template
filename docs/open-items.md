@@ -31,11 +31,16 @@ decisions._
 
 ---
 
-## OI-10 — Should the pending projection carry the before/after, and in what format?
+## OI-10 — Retire this file in favour of one generated HTML reference view?
 
-- **One-line:** rule the format for re-attest depth on the owner surface —
-  rec: **HTML companion generated beside the markdown brief**, markdown stays
-  the decision record.
+- **One-line:** rule whether `open-items.md` is retired outright for a single
+  generated HTML owner surface — rec: **yes to the surface, but a generated view
+  needs a source; keep per-item markdown as that source**. Kit-wide change with a
+  downstream migration.
+- **Owner direction (2026-07-26):** *"I would go further and say open-items.md is
+  no longer even necessary. A single html reference view is sufficient, the md
+  can be retired in its entirety."* The question below is scoped to what that
+  costs and what must not be lost with it — the direction itself is the owner's.
 - **Decision (owner-raised 2026-07-26, at the first re-attestation sitting):**
   the generated *Pending owner actions* block is a **pointer** — it names
   `trace.py --ratify modified` rather than carrying the amendment. The owner
@@ -45,41 +50,58 @@ decisions._
   readable is a **word-level diff** (of a 1,500-character cell, forty words
   moved) — and **markdown cannot express that**. So the question is a format
   question, and it is the owner's.
-- **Blast radius:** the owner review surface itself, plus one generator and one
-  freshness gate. Nothing in the spine or the loop depends on the answer. But
-  the choice sets a precedent for every future owner-facing depth view, and
-  option (c) in particular adds a *second* render surface under the perceptual
-  gate, which is the expensive kind of yes.
-- **Options:**
-  - **(a) Markdown, deeper.** Inline the per-cell before/after into the
-    generated block. *For:* one file, one format, no new machinery. *Against:*
-    it IS the wall of text — six amended rows, some cells 1,500 characters, no
-    way to mark what moved. This is what the sitting already rejected.
-  - **(b) An HTML companion beside the brief** — `trace.py --ratify --html`
-    writes `docs/ratify/<date>-reattest.html`, the markdown block and
-    `status.md` each link it once. *For:* the brief is already the artifact
-    whose one job is before/after, so it gains a format rather than the repo
-    gaining a surface; word-diff, collapsible unchanged runs, both themes; zero
-    new dependency (stdlib string work, same comparison already implemented);
-    it is **not** a render surface, so it never re-reds `perceptual-stale`.
-    *Against:* a second file per sitting, and a generated HTML file to keep
-    fresh. **← recommended**
-  - **(c) Fold it into `PROJECT_STATE.html`.** *For:* one HTML surface for the
-    whole repo, themes and freshness already solved. *Against:* it grows
-    `gen_trajectory.py`, which is 5,236 lines and under a size ratchet with its
-    decomposition (WI-280) still pending; and every edit to it re-reds the
-    perceptual gate, so a typo fix in an attestation panel would cost a
-    critique dispatch. The dashboard is a *project-state* surface; a sitting
-    brief is a *point-in-time* record with a different lifecycle.
-  - **(d) Rule it out of scope.** Keep the pointer; the owner reads the brief in
-    an editor. *For:* zero work. *Against:* the sitting just demonstrated the
-    cost, and the stale-brief defect found the same day
-    (see [log.md](log.md)) shows the pointer's other failure — nobody notices a
-    brief has gone stale when nothing renders it.
-- **Recommendation (recorded):** **(b)**. It puts the depth in the artifact that
-  already owns before/after, keeps markdown as the decision record, and buys the
-  legibility without touching the render surface or the dashboard's ratchet.
-  Whatever is ruled, two fixes are worth doing regardless: the projected SR line
+- **Blast radius — measured 2026-07-26, and it is kit-wide, not local.** This
+  file is not just a local surface; it is a **shipped artifact**:
+  - `OPEN_ITEMS.template.md` is a `bootstrap.py` MAPPING destination — every
+    repo that adopted this kit has a `docs/open-items.md`;
+  - **11 references** across the kit's own docs (`PROCESS_OPTIONS.md` ×6,
+    `ADOPTING.md` ×2, `README.md`, `STATUS.template.md` ×2);
+  - **7 test modules** assert it (`test_gen_trajectory_pending.py` alone has 20
+    references), plus one SR / one LLR / one TC row that name it;
+  - `agent_dispatch.py` uses it as a **status-map marker** and refreshes its
+    pending block each dispatch loop; `check_trajectory.py` keys a rule on it.
+
+  So retiring it is a **kit version bump with a documented migration**, not a
+  cleanup. That is not an argument against — it is the price, and it should be
+  paid deliberately.
+- **The one thing that must not be lost.** This file is **two things wearing one
+  name**: a *generated* pending projection (which HTML renders better, no
+  argument) and a set of *hand-authored briefs* — blast radius, options,
+  recommendation, written by a human or an agent. A generated view needs a
+  source. "Retire the md" therefore has to answer: **where does brief prose live
+  after this?** Everything else in the decision follows from that answer.
+- **Options** (all of them retire this aggregate file as a *reading surface*;
+  they differ on the source):
+  - **(a) HTML view over per-item markdown sources** — one
+    `docs/open-items/OI-N.md` per pending decision, one generated
+    `docs/open-items.html`. *For:* prose stays writable, diffable in review, and
+    readable by the agents that work from these docs; the generated view is the
+    single reference the owner reads; the aggregate file — the thing that is
+    genuinely unnecessary — is what disappears. *Against:* still markdown on
+    disk, which is not literally "retired in its entirety".
+    **← recommended**
+  - **(b) HTML view over a CSV registry** — `open-items.csv` beside
+    `work-items.csv`, one row per OI. *For:* the purest form of the owner's
+    direction; makes OI state queryable, so the pending projection becomes
+    derived data rather than a text block; matches the registry→dashboard
+    pattern the repo already runs on. *Against:* multi-paragraph options and
+    recommendations inside CSV cells is exactly what makes `work-items.csv`
+    unreadable raw — it moves the wall of text rather than removing it, and
+    every future brief is written into a spreadsheet cell.
+  - **(c) Fold OI state into `work-items.csv`** as a row kind. *For:* one
+    registry. *Against:* an OI is a *decision*, a WI is *work*; the repo
+    deliberately separates them, and merging would blur the DAG's semantics.
+  - **(d) Keep the file, add the HTML depth beside it** (the original
+    recommendation before the owner's direction). *For:* zero migration.
+    *Against:* leaves two surfaces where the owner wants one.
+- **Recommendation (recorded):** **(a)**. It delivers what the direction asks —
+  one HTML reference view, no aggregate markdown document — while keeping the
+  brief prose in a form a human can write, a reviewer can diff, and an agent can
+  read. Retiring markdown *as the owner's reading surface* is the win; retiring
+  it *as the authoring format* would buy nothing and cost the loop its context.
+  Sequence it after the current sitting closes, and ship it with the kit
+  migration note.
+  Two fixes are worth doing regardless of the ruling: the projected SR line
   should **say** how many chain rows re-attest with it (four lines for six rows
   is correct, but nothing says so), and any rendered view must **print the
   baseline revision** it diffed against — an empty section means *check the
