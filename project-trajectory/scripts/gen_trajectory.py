@@ -2609,6 +2609,17 @@ HTML_TEMPLATE = string.Template("""<!doctype html>
   .nwlist li.waiting .nwid { color:var(--muted); }
   .nwafter { color:var(--active); font-size:var(--xsmall); font-weight:600; }
   .nwmore { color:var(--muted); font-size:var(--xsmall); }
+  /* T4 (WI-319, 121-CRITIQUE MINOR): a title long enough to still need clipping
+     after the card stopped budgeting by character count reveals through a NATIVE
+     disclosure — operable by pointer and keyboard, with no script — so the
+     ellipsis a reader meets is one they can act on. Opening hides the cue and
+     the remainder joins the text it was cut from. */
+  .nwt details, .nwt summary { display:inline; }
+  .nwt summary { cursor:pointer; list-style:none; }
+  .nwt summary::-webkit-details-marker { display:none; }
+  .nwt .nwrev { color:var(--accent); font-size:var(--xsmall); font-weight:600;
+                margin-left:.15rem; }
+  .nwt details[open] .nwrev { display:none; }
   .nwnone { color:var(--muted); font-size:var(--small); margin:.5rem 0 0; }
   nav.tabs { display:flex; flex-wrap:wrap; gap:.25rem; margin:2rem 0 0; border-bottom:1px solid var(--border); }
   nav.tabs button { appearance:none; background:none; border:none; cursor:pointer;
@@ -4159,6 +4170,32 @@ def process_panel(root, wis, stats):
 # that ships gen_trajectory without schedule.py renders NO block (empty string)
 # rather than crashing — the kit's "non-adopter pays nothing" posture.
 _NEXT_WORK_CAP = 6
+# WI-319 (T4, 121-CRITIQUE MINOR): a bound on ONE item's height, not a text
+# budget. The card used to spend a fixed 60 characters whatever width it had —
+# cutting "…tiering expo…" mid-word at 1680px with the card half empty, the
+# anchor's truncated-WITHOUT-affordance case. HTML already fits text to the space
+# available, so the clause is emitted whole and the card's width does the
+# fitting; this only bounds the tail of a registry cell that carries its whole
+# rationale in the Title (measured over 320 rows: median 44, p90 126, max 609).
+_NEXT_WORK_TITLE = 140
+
+
+def _next_work_title(title):
+    """One next-work item's title cell, as escaped markup. Under the bound it is
+    simply the whole clause, wrapped by the card. Over it, the remainder discloses
+    through a NATIVE `<details>` — operable by pointer and by keyboard, needing no
+    script — cut at a word so the text reads continuously once opened, which is
+    what makes the ellipsis one a reader can act on rather than a dead end."""
+    head = _title_clause(title)
+    if len(head) <= _NEXT_WORK_TITLE:
+        return esc(head)
+    cut = head.rfind(" ", 0, _NEXT_WORK_TITLE + 1)
+    if cut <= 0:
+        cut = _NEXT_WORK_TITLE
+    return (
+        '<details><summary>{}<span class="nwrev">… show all</span></summary>'
+        "{}</details>"
+    ).format(esc(head[:cut].rstrip()), esc(head[cut:]))
 
 
 def _next_work_html(root):
@@ -4201,7 +4238,7 @@ def _next_work_html(root):
     items = []
     for r in shown:
         wid = r["id"]
-        title = esc(_clip_title(titles.get(wid, ""), limit=60))
+        title = _next_work_title(titles.get(wid, ""))  # already escaped markup
         if r["disposition"] == "waiting":
             # The unmet hard predecessors that hold this WI (WI-267: a `retired`
             # dead-end predecessor also shows — it will never be `done`).
@@ -4990,12 +5027,21 @@ def _frontier_lines(root):
     return out
 
 
+def _title_clause(title):
+    """The leading clause of a WI Title — the name of the work, before the
+    rationale the registry cell carries after it."""
+    return title.split(" - ")[0].split(" — ")[0].strip() or "(untitled)"
+
+
 def _clip_title(title, limit=90):
-    """First clause of a WI Title, clipped — the registry titles are long."""
-    head = title.split(" - ")[0].split(" — ")[0].strip()
+    """First clause of a WI Title, clipped — the registry titles are long. The
+    status.md frontier line still budgets by character (one markdown line, and
+    status.md carries its own line budget); the dashboard card does not — see
+    `_next_work_title`."""
+    head = _title_clause(title)
     if len(head) > limit:
         head = head[: limit - 1].rstrip() + "…"
-    return head or "(untitled)"
+    return head
 
 
 def _splice_status(doc_text, content):

@@ -194,7 +194,12 @@ BASELINE = {
     # helper, one call site each side — and the alternative was worse for size:
     # every emitter budgeting its own sub is four copies of the same arithmetic.
     # Reviewed bump, log 2026-07-26. Re-stamp down with WI-280.
-    "gen_trajectory.py": 5146,
+    # +46 (5146 -> 5192), WI-319: the next-work card stops budgeting its title by
+    # character count (`_next_work_title` + the `_title_clause` split lifted out of
+    # `_clip_title`, so the card and the status.md line share one clause extractor
+    # instead of forking), plus five CSS rules for the native disclosure. Reviewed
+    # bump, log 2026-07-26. Re-stamp down with WI-280.
+    "gen_trajectory.py": 5192,
     # +11 (3452 -> 3463), WI-284: _regenerate_disposition_artifacts also runs
     # `gen_trajectory.py --status` at integrate/blocked-disposition so a closed
     # id drops from the generated frontier automatically (and the disposition

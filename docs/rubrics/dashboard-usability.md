@@ -77,13 +77,18 @@ through a verdict.
 truncated-without-affordance, or overlapping text. *Bad:* node labels collide or
 run past their block at the default render.
 
-*Half of this anchor is now a test.* **Ink outside its own box is bound to
-`LLR-119`/`TC-124`** (WI-318): every label line of every drill block is measured
-against that block's rect, on both axes, in the emitted document. A label you see
-running past its block is therefore a **gap in `TC-124`** — route it through
-change-intake to harden the test, never through a verdict. What stays yours is
-the clause a measurement cannot settle: whether a truncation a reader meets is
-**actionable** — an ellipsis with no way to reveal the rest still fails T4.
+*Two measurable halves of this anchor are now tests*, both `LLR-119`/`TC-124`:
+**ink outside its own box** (WI-318 — every label line of every drill block is
+measured against that block's rect, on both axes, in the emitted document) and
+**the next-work card's own truncation** (WI-319 — it no longer budgets by
+character count, and any residue it does cut carries a visible, script-free
+reveal). A label you see running past its block, or that card cutting a title
+dead, is therefore a **gap in `TC-124`** — route it through change-intake to
+harden the test, never through a verdict.
+
+What stays yours is the clause a measurement cannot settle **anywhere else in
+the document**: whether a truncation a reader meets is **actionable**. An
+ellipsis with no way to reveal the rest still fails T4.
 
 **T5 — Interactive-control legibility, in every theme.** Every control a reader
 must find and operate — tab buttons, expand/collapse affordances, focus rings,

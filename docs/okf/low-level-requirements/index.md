@@ -127,4 +127,4 @@ resource: "generated"
 | [LLR-116](LLR-116.md) | Viewport-fit by scale-to-fit with a legibility floor (T7 core) |
 | [LLR-117](LLR-117.md) | Theme-lock: one theme mechanism and no mixed-family surface/ink pair (T6 core) |
 | [LLR-118](LLR-118.md) | Generated owner decision surface (registry + attestation depth) |
-| [LLR-119](LLR-119.md) | No node-label ink outside its own block (T4 geometric floor) |
+| [LLR-119](LLR-119.md) | T4 label legibility, mechanized: ink inside its box, truncation with a reveal |

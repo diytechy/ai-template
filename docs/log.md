@@ -14898,3 +14898,68 @@ broken). Ratchet re-stamped **5106 → 5146** with its reason inline: one helper
 and one branch, bounded by construction — the alternative (each emitter
 budgeting its own sub) is four copies of the same arithmetic. Re-stamp down with
 WI-280.
+
+## 2026-07-26 — WI-319: the next-work card stops budgeting text by the character, and T4 grows a second mechanized half
+
+121-CRITIQUE's MINOR, and the diagnosis in the row is the whole fix: the card was
+spending a **fixed 60-character budget whatever width it had**. At 1680px, with
+the card half empty, WI-308 still read `…tiering expo…` — cut mid-word, with
+nothing visible to act on. That is the anchor's *truncated-**without-affordance***
+case, not merely a short label.
+
+**HTML already fits text to the space available.** The 60 was the only thing
+preventing it. So the card now emits the Title's whole leading clause and lets
+its own width do the fitting, and `_NEXT_WORK_TITLE` (140) changes job: it bounds
+**one item's height**, not its text.
+
+### Why a bound survives at all, and what happens when it bites
+
+Measured over all 320 registry rows, the leading clause runs median 44, p90 126,
+**max 609** characters — the Title cell carries the rationale after the name, and
+a third of the rows end the name with a full stop rather than the ` - ` the
+splitter knows. So "just render it" has a real tail. Past the bound the remainder
+**discloses through a native `<details>`**, cut at a word so the head and the
+remainder rejoin continuously when opened, with a visible `… show all` cue that
+hides itself once open.
+
+Native is the point, twice over. A `<summary>` is operable by pointer **and**
+keyboard in a file opened from disk with no script — and *because* the operability
+is HTML semantics rather than a handler, it can be asserted from the emitted
+markup instead of needing the browser harness. A JS toggle would have moved this
+finding into the Playwright residue; this does not.
+
+I passed over a sentence-boundary split for the clause (it would shorten the
+title itself). Measured: it helps **6 rows of 320** and leaves the max at 609,
+because the worst rows have no sentence boundary — a heuristic that buys almost
+nothing, so the bound does the work instead.
+
+### Binding: one LLR per anchor, widened rather than multiplied
+
+`LLR-119`/`TC-124` — created this morning for WI-318 as T4's geometric floor — are
+**widened** to own both measurable halves rather than sprouting a second row per
+finding. That matches the shape the other anchors already have (`LLR-115`=T1,
+`LLR-116`=T7, `LLR-117`=T6). T4 stays a **live critique anchor**: the
+document-wide "is this truncation actionable" clause is not claimed, only this
+emitter's own truncation, and the rubric now says exactly that.
+
+**A status call worth stating rather than burying:** LLR-119/TC-124 stay
+`Verified`, not `Modified`. `Modified` marks a row amended *after* its
+attestation; these were created today, after the open window's `a5052a913`
+baseline, and have never been attested — the same way WI-314 landed
+`LLR-117`/`TC-122` mid-window as `Verified`. Flipping them would also have
+manufactured the exact trap the WI-322 review named: an attestation section with
+**no cells**, which reads as "nothing changed" to the person about to bless it.
+
+### Proven against the defect
+
+Reverted to the pre-fix emitter both guards fail, and the first one fails
+printing the critic's own string: `<span class="nwt">Triage the 22 dangling doc
+references WI-062's tiering expo…</span>`. The non-vacuity assertion is explicit
+(the fixture clause is asserted longer than the retired 60-character budget), so
+a future narrowing of the fixture cannot quietly make the guard prove nothing.
+
+**Verified:** smoke **421 passed, 13 skipped**; the four T4 guards green;
+`trace --strict --strict-integrity` clean at SN=25 SR=110 LLR=117 TC=120
+orphans=0 integrity=0. Ratchet re-stamped **5146 → 5192**; part of that delta is
+`_title_clause` lifted out of `_clip_title` so the card and the status.md
+frontier line share one clause extractor instead of forking a second opinion.

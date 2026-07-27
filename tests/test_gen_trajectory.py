@@ -3325,6 +3325,66 @@ def test_t1_next_work_says_all_done_when_drained(tmp_path):
     assert 'class="nwlist"' not in hero
 
 
+# --- WI-319 / SR-054 T4: the next-work card fits its title to the CARD ---------
+# 121-CRITIQUE MINOR: the card spent a fixed 60-character budget whatever width it
+# had, so WI-308 read "…tiering expo…" — cut mid-word at 1680px with the card half
+# empty, and nothing visible to act on. HTML already fits text to the space
+# available; the budget was the only thing preventing it. `_NEXT_WORK_TITLE` now
+# bounds ONE item's height rather than its text, and where it bites the remainder
+# discloses through a native `<details>` (operable by pointer and keyboard, no
+# script — its operability is HTML semantics, which is what makes it assertable
+# from the markup at all).
+_NW_LONG = (  # 109 chars — the real WI-308 clause the critic read
+    "Triage the 22 dangling doc references WI-062's tiering exposed, "
+    "then wire [step:doc-refs] into docs/stack.ini"
+)
+
+
+def _nw_items(root):
+    hero = _hero_of(root)
+    return hero.split('class="nwlist"', 1)[1].split("</ul>", 1)[0]
+
+
+def test_t4_next_work_title_is_not_budgeted_by_character_count(tmp_path):
+    # The reported shape: a clause the old fixed budget cut at 60 characters now
+    # renders WHOLE, with no ellipsis anywhere in the list.
+    wis = 'WI-001,"{}",docs,SR-001,,queued,d,ordinary\n'.format(_NW_LONG)
+    make_repo(tmp_path, wis, header=NW_HEADER)
+    assert gen(tmp_path).returncode == 0
+    items = _nw_items(tmp_path)
+    assert len(_NW_LONG) > 60, "vacuous - the fixture must exceed the old budget"
+    assert html.unescape(items).count(_NW_LONG) == 1
+    assert "…" not in items
+
+
+def test_t4_an_over_bound_next_work_title_discloses_operably(tmp_path):
+    # Past the bound the card still does not dead-end: a native disclosure, a
+    # VISIBLE cue on it, and the whole clause present — head and remainder
+    # rejoining exactly, so opening it reads continuously.
+    gt = load_script("gen_trajectory")
+    clause = "Bound the seam ".join(str(i) for i in range(40))
+    assert len(clause) > gt._NEXT_WORK_TITLE
+    make_repo(
+        tmp_path,
+        "WI-001,{},docs,SR-001,,queued,d,ordinary\n".format(clause),
+        header=NW_HEADER,
+    )
+    assert gen(tmp_path).returncode == 0
+    items = _nw_items(tmp_path)
+    assert "<details><summary>" in items and "</details>" in items
+    assert 'class="nwrev"' in items  # the cue a reader can see and click
+    head, rest = items.split('<span class="nwrev">', 1)
+    head = html.unescape(head.split("<details><summary>", 1)[1])
+    rest = html.unescape(rest.split("</summary>", 1)[1].split("</details>", 1)[0])
+    assert head + rest == clause  # nothing lost, and it rejoins cleanly
+    assert head.rstrip() == head and rest.startswith(" ")  # cut at a word
+    # The reveal must not depend on script (a static file opened from disk) nor be
+    # hidden by the emitter's own CSS.
+    css = html_of(tmp_path)
+    assert ".nwt summary { cursor:pointer" in css
+    assert re.search(r"\.nwt summary\s*\{[^}]*display:none", css) is None
+
+
 # --- WI-315 (SR-054 T1 binding): the three core reading tasks each reach a
 # LABELLED entry point within one tab switch of the landing view ----------------
 # WI-300's option-(f) pattern applied to T1, the last SR-054 anchor whose
