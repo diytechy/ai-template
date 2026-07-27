@@ -471,6 +471,36 @@ why (one bullet each; cite ids)._
   note owed to `ADOPTING.md` §6). Spec rewritten around the ruling:
   [specs/WI-322.md](archive/specs/WI-322.2026-07-26.md); the WI unblocks (`BlockRef` clears).
 
+- **2026-07-27 — WI-328 re-aimed; the LLR gets a `Rationale` column; and
+  requirement-text work sequences INTO an open attestation window.** Two owner
+  rulings at the first re-attestation sitting, on the question *"does WI-328
+  move SR/LLR/TC text, and will I have to re-attest twice?"*. **(1) The LLR
+  schema grows a `Rationale` column** — accepted as *"the right form"* with its
+  downstream migration cost explicit (an adopter re-syncing gets a new column;
+  `ADOPTING.md` §6 note owed; `IF-021`/`IF-033`/`IF-051` bump `v1`→`v2`, no new
+  seam). The measurement that forced it: `Detail` is the LLR's **only** prose
+  cell, so the what, the why, the ruled-out alternatives and the authoring
+  chronology are *structurally* forced into one field — 75 of 118 `Detail`s are
+  under 300 chars while the 24 walls are all the recent render/critique cluster,
+  the rows whose reasons were richest and had nowhere to go. Rationale is a
+  requirement attribute at **every** level in `29148`; the asymmetry with the SR
+  was the bug. **Passed over: a `History`/`Provenance` column** — provenance
+  already has two homes (`work-items.csv`, `log.md`) and a third is the
+  duplication the kit exists to prevent. **(2) Run WI-328 inside the open
+  window**, against the general preference for touching attested artifacts,
+  *because* it is requirement documentation: 50 rows are `Modified` and
+  unblessed and 28 of the 39 rows it rewrites are already among them, so
+  landing first folds ~11 new rows into one sitting where landing after builds
+  a second sitting of ~39. The owner stated it as a **standing rule**, not a
+  one-off — *"work items that affect requirement documentation should always be
+  performed with preference against attesting artifacts or else it means more
+  work"* — so it is filed where a rule belongs rather than left in this log:
+  `PROCESS.md` §4, beside the `Modified` re-attest definition. **Also corrected
+  in the same commit:** §3 described the stand-alone rule as `SR`-only and
+  warn-only, both untrue since WI-327 widened and gated it without touching the
+  doc — a downstream adopter was inheriting a rule wrong about its own scope and
+  its own severity.
+
 ## Audit log
 
 <!-- Append verdict blocks here per PROCESS.md §5. Newest at the bottom. -->

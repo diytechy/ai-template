@@ -91,12 +91,13 @@ Stable, zero-padded, never reused.
   repeat its parent, link instead.
 - **Registries are the machine source of truth; prose is thin** and links by ID.
 - **A requirement states the system, not its own history.** No work-item id and
-  no citation of *this* document inside an `SR`'s normative text: provenance
-  belongs to the work-item registry and the log, and a row **obeys** the process
-  rather than citing it, so it reads stand-alone to someone with none of your
-  history. Naming the thing under specification — a script, an artifact path, the
-  rubric a `Critique` row is judged against — is the *subject*, not provenance.
-  `trace.py` warns (never gates: cleaning a `Verified` row owes a re-attest).
+  no citation of *this* document inside the normative text of **any spine row**
+  (`SR`, `LLR`, `TC`): provenance belongs to the work-item registry and the log,
+  and a row **obeys** the process rather than citing it, so it reads stand-alone
+  to someone with none of your history. Naming the thing under specification — a
+  script, an artifact path, the rubric a `Critique` row is judged against — is the
+  *subject*, not provenance. `trace.py` gates under `--strict`; pointer columns
+  (`Module`, `CodeSymbol`, `TestRefs`, `Evidence`) are out of scope by design.
 - **The traceability matrix is generated** by a small join over the registries'
   ID/parent columns; it reports **orphans** (req with no child/test; test/LLR
   with no parent). Hand-maintaining the matrix is forbidden.
@@ -311,7 +312,11 @@ amendment (existing evidence still verifies the amended text);
 `Modified`→`Planned` when the amendment invalidated the evidence, so the row
 re-earns `Verified`. Amend and flip in the **same commit** (a `--staged` warn
 enforces it); the SR is the attestation unit — flip it whenever its chain
-changes. No other value carries mechanical meaning (`Planned` stays the conventional name for the ratified-but-unverified middle).
+changes. **Sequence requirement-text work *into* an open window, not after it:**
+a prose standard, a registry schema change or a cleanup lands while the sitting
+is still owed, so its rows join the batch a human is already reading. Landing it
+after a re-attest flips freshly-blessed rows straight back to `Modified` and buys
+a second sitting for the same reading. No other value carries mechanical meaning (`Planned` stays the conventional name for the ratified-but-unverified middle).
 Define machine-checkable criteria wherever possible; classify the rest honestly.
 
 - **G1 — Requirements, UX & constraints.** The `PROJECT-VISION:` tag exists in
