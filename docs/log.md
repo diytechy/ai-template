@@ -15023,3 +15023,71 @@ guards green; `trace --strict --strict-integrity` clean at SN=25 SR=110
 **LLR=118 TC=121** orphans=0 integrity=0; `check_docs` OK (269 docs, 807 links,
 0 broken). No ratchet movement — this WI added a test and two registry rows, no
 production code.
+
+## 2026-07-26 — WI-321: a requirement states the system, not its own history — the rule, and the half an agent must not land alone
+
+The owner's observation at the first re-attestation sitting, made mechanical.
+`SR-049` had grown `(process.md section 7)` and `(WI-316)` *inside its
+Requirement* — provenance a reader cannot resolve without this repo's history, in
+the one row that is supposed to be readable without it.
+
+`standalone_sr_advisories` flags a `WI-###` token or a `process.md` /
+`process-options.md` citation in an SR's `Requirement` or `AcceptanceCriteria`,
+and the rule is stated once in **`PROCESS.md` §3** so a downstream adopter
+inherits the *standard*, not just the checker.
+
+### The narrowness is the design, and it was measured before it was written
+
+110 SRs: **4** carried a WI id, **1** a process-doc citation. But **65 name a
+script**, 6 an artifact path and 5 a rubric — and every one of those is
+**legitimate**, because this kit's product *is* its scripts, so the name is the
+system under specification rather than a citation, and for a
+`Verification=Critique` row the rubric is the acceptance instrument. A rule that
+fired on 65 rows would be a rule everyone learns to scroll past — the
+`check_doc_refs` lesson from WI-062/WI-308. So the test carries the **negative
+half** in the same breath as the positive one, and it is the larger half.
+
+It fires on exactly the two rows the filing predicted: `SR-026` and `SR-060`,
+three cells, all the same retired-serial-loop parenthetical.
+
+### Its own pipe, because a shared counter would have been a small lie
+
+The obvious cheap move was to append it to `ac_advisories`. That counter prints
+as `ac-advisories=N` and its report section is titled *Acceptance-criteria
+advisories* — folding a provenance finding in would have made both statements
+false about part of their contents. It gets its own pipe, section and
+`sr-provenance-advisories` counter instead.
+
+That cost lines, so it was **paid for in place**: the five per-pipe console loops
+became one loop over their ordered concatenation. Same output, one branch instead
+of five — which is also what kept `render_console` off the complexity ratchet
+after it tripped at 11. The ratchet asked for a simplification and there was a
+real one available; that is the ratchet working, not an obstacle.
+
+### The half I did not do, and why that is the point
+
+Three of the four Done-when items were mine. The other two — cleaning `SR-026` /
+`SR-060`, and de-triplicating the live-anchor list out of `TC-055` — **amend
+`Verified` rows**, and each amendment flips one to `Modified` and joins a
+re-attestation sitting. The spec says that is *"the owner's to schedule, not a
+drive-by edit"*; `status.md` says land it *"where a sitting can absorb that, not
+mid-window"*. The window has been open with eight rows since this morning and the
+sitting has not happened. **An agent adding three more rows to it is exactly the
+drive-by the WI was raised to prevent**, so they are split off as **WI-324**
+rather than hidden as unticked boxes — and the new warn now names all three cells
+on every `trace.py` run, so the debt is *visible* rather than remembered.
+
+### One thing spotted, not fixed
+
+`PROCESS_OPTIONS.md` measures **164,738** bytes against a stamped baseline of
+**161,771** (WI-316) — a **+2,967** growth that landed with WI-322 without the
+re-stamp the `byte-budget-guard` convention asks for. Not this WI's to re-stamp
+(the reason belongs to whoever grew it), and recorded here rather than fixed
+inline. `PROCESS.md`'s own stamp is current: 61,264 → **61,824** (+560), re-stamped
+in all three tracked skill copies in this commit.
+
+**Verified:** smoke **421 passed, 13 skipped**; `test_trace.py` +
+`test_ac_advisory.py` **73 passed**; `check_docs` OK (269 docs, 807 links, 0
+broken); `trace --strict --strict-integrity` clean at SN=25 SR=110 LLR=118 TC=121
+orphans=0 integrity=0, `sr-provenance-advisories=3` (the visible debt). Ratchet
+re-stamped **2708 → 2778** with its reason inline.

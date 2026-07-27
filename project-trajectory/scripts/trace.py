@@ -361,6 +361,51 @@ def ac_advisories(srs):
     return out
 
 
+_WI_TOKEN_RE = re.compile(r"\bWI-\d+")
+_PROCESS_DOC_RE = re.compile(r"\bprocess(?:-options)?\.md\b", re.IGNORECASE)
+
+
+def standalone_sr_advisories(srs):
+    """Warn-only findings (WI-321, the rule in process.md §3): a real SR whose
+    NORMATIVE text carries its own PROVENANCE — a work-item id, or a citation of
+    the process doc the row obeys. Both facts have better homes (the work-item
+    registry, the log's Decisions), and a requirement must read stand-alone to
+    someone with none of the project's history.
+
+    Narrow BY MEASUREMENT, not by taste — 110 SRs at filing: 4 carried a WI id and
+    1 a process-doc citation, all rot. But 65 name a SCRIPT, 6 an ARTIFACT PATH
+    and 5 a RUBRIC, and every one is legitimate — this kit's product IS its
+    scripts, so the name is the system under specification, and for a
+    `Verification=Critique` row the rubric is the acceptance instrument. None is
+    flagged: a rule that cries wolf on 65 rows gets ignored (the `check_doc_refs`
+    lesson, WI-062/WI-308).
+
+    Warn only, the `ac_advisories` tier, never joining the exit code even under
+    --strict: cleaning a `Verified` row flips it `Modified` and owes a
+    re-attestation, so escalating this to a gate is the owner's scheduling call,
+    not one a checker forces mid-window."""
+    out = []
+    for r in srs:
+        rid = r.get("SR-ID")
+        if not rid:
+            continue
+        for col in ("Requirement", "AcceptanceCriteria"):
+            cell = (r.get(col) or "").strip()
+            cited = sorted(set(_WI_TOKEN_RE.findall(cell))) + sorted(
+                {m.group(0).lower() for m in _PROCESS_DOC_RE.finditer(cell)}
+            )
+            if cited:
+                out.append(
+                    "SR {} {} cites {} — a requirement states the system, not its "
+                    "own history: move provenance to work-items.csv / the log's "
+                    "Decisions, and obey the process rather than citing it "
+                    "(warn-only; cleaning a Verified row flips it Modified)".format(
+                        rid, col, ", ".join(repr(c) for c in cited)
+                    )
+                )
+    return out
+
+
 def llr_status_advisories(llrs, tcs):
     """Warn-only findings (WI-129): an LLR whose Status reads below `Verified`
     while *every* TC that cites it is already `Verified`. The evidence to lift it
@@ -2087,6 +2132,11 @@ def analyze(reg, args):
     # Warn-only, always on: comparative AcceptanceCriteria terms with no pinned
     # predicate (see the module docstring). Never joins a failure set below.
     advisories = ac_advisories(srs)
+    # Warn-only, always on (WI-321): an SR whose normative text carries provenance
+    # (a WI id, a process-doc citation). Its OWN pipe rather than folded into the
+    # AC advisories above — that counter names the acceptance-criteria lint, and a
+    # shared count would say "ac-advisories" about a finding that is not one.
+    sr_provenance_advis = standalone_sr_advisories(srs)
     # Warn-only, always on (WI-129): an LLR reading below Verified while every
     # citing TC is Verified — a readout drift, never a failure (LLR status is
     # non-gating under the derived-gate model). Never joins a failure set below.
@@ -2121,6 +2171,7 @@ def analyze(reg, args):
     findings.placeholders = placeholders
     findings.schema = schema
     findings.advisories = advisories
+    findings.sr_provenance_advis = sr_provenance_advis
     findings.llr_status_advis = llr_status_advis
     findings.budget_findings = budget_findings
     findings.module_findings = module_findings
@@ -2154,6 +2205,7 @@ def render_report(reg, findings, args, forest):
     placeholders = findings.placeholders
     schema = findings.schema
     advisories = findings.advisories
+    sr_provenance_advis = findings.sr_provenance_advis
     llr_status_advis = findings.llr_status_advis
     budget_findings = findings.budget_findings
     module_findings = findings.module_findings
@@ -2291,6 +2343,15 @@ def render_report(reg, findings, args, forest):
         ["None. No unpinned comparative terms."]
         if not advisories
         else [f"- {f}" for f in advisories]
+    )
+    # Warn-only advisory section (never a failure, WI-321): a requirement states
+    # the system, not its own history. Cleaning one flips a Verified row to
+    # Modified, so the owner schedules it into a sitting — hence warn, not gate.
+    lines += ["", "## Requirement stand-alone advisories (warn-only)", ""]
+    lines += (
+        ["None. No SR cites a work item or a process doc in its normative text."]
+        if not sr_provenance_advis
+        else [f"- {f}" for f in sr_provenance_advis]
     )
     # Warn-only advisory section (never a failure, WI-129 + WI-316): LLRs reading
     # below Verified whose citing TCs are all Verified (lift the Status cell by
@@ -2450,6 +2511,7 @@ def render_console(reg, findings, args, out, html_out):
     orphans = findings.orphans
     integrity = findings.integrity
     advisories = findings.advisories
+    sr_provenance_advis = findings.sr_provenance_advis
     interface_advisories = findings.interface_advisories
     knowledge_advisories = findings.knowledge_advisories
     llr_status_advis = findings.llr_status_advis
@@ -2468,13 +2530,16 @@ def render_console(reg, findings, args, out, html_out):
     interface_backlink_findings = findings.interface_backlink_findings
 
     # Advisories are loud (stdout, not just the report) but never fail the run.
-    for a in advisories:
-        print(f"WARNING (advisory): {a}")
-    for a in interface_advisories:
-        print(f"WARNING (advisory): {a}")
-    for a in knowledge_advisories:
-        print(f"WARNING (advisory): {a}")
-    for a in llr_status_advis:
+    # One loop over the ordered concatenation, not one loop per pipe: the pipes
+    # stay separate where it matters (their own report sections and counters) and
+    # a fifth lint no longer costs this routine a branch.
+    for a in (
+        advisories
+        + sr_provenance_advis
+        + interface_advisories
+        + knowledge_advisories
+        + llr_status_advis
+    ):
         print(f"WARNING (advisory): {a}")
     # Gating findings print here too, not only as counts: the report file is
     # gitignored, and the harness bar is "print the real output — never
@@ -2542,6 +2607,11 @@ def render_console(reg, findings, args, out, html_out):
             else ""
         )
         + (f" ac-advisories={len(advisories)}" if advisories else "")
+        + (
+            f" sr-provenance-advisories={len(sr_provenance_advis)}"
+            if sr_provenance_advis
+            else ""
+        )
         + (
             f" llr-status-advisories={len(llr_status_advis)}"
             if llr_status_advis

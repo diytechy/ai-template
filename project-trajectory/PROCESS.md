@@ -90,6 +90,13 @@ Stable, zero-padded, never reused.
 - **Decompose, don't paraphrase.** A child adds detail; if it would merely
   repeat its parent, link instead.
 - **Registries are the machine source of truth; prose is thin** and links by ID.
+- **A requirement states the system, not its own history.** No work-item id and
+  no citation of *this* document inside an `SR`'s normative text: provenance
+  belongs to the work-item registry and the log, and a row **obeys** the process
+  rather than citing it, so it reads stand-alone to someone with none of your
+  history. Naming the thing under specification — a script, an artifact path, the
+  rubric a `Critique` row is judged against — is the *subject*, not provenance.
+  `trace.py` warns (never gates: cleaning a `Verified` row owes a re-attest).
 - **The traceability matrix is generated** by a small join over the registries'
   ID/parent columns; it reports **orphans** (req with no child/test; test/LLR
   with no parent). Hand-maintaining the matrix is forbidden.

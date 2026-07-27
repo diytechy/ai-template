@@ -916,6 +916,42 @@ def test_predicate_markers_are_word_bounded():
     assert warns("indistinguishable from the reference")
 
 
+def test_a_requirement_states_the_system_not_its_own_history():
+    # WI-321 (owner-raised at the first re-attestation sitting): an SR must be
+    # stand-alone — a reader with none of this repo's history reads one row and
+    # knows what the system shall do. Provenance has better homes (work-items.csv,
+    # the log's Decisions), and the row OBEYS the process rather than citing it.
+    from conftest import load_script
+
+    trace = load_script("trace")
+
+    def warns(**cells):
+        cells.setdefault("SR-ID", "SR-101")
+        return [f for f in trace.standalone_sr_advisories([cells])]
+
+    # The two patterns the filing measured as rot, in either normative cell.
+    assert warns(Requirement="Shall resume (WI-210, one path).")
+    assert warns(AcceptanceCriteria="Modified (WI-316) rows re-attest.")
+    assert warns(Requirement="The gate derives per process.md section 7.")
+    assert warns(Requirement="See process-options.md 'Phased delivery'.")
+    # The NEGATIVE half, and the whole reason the rule can be narrow: 65 of 110
+    # rows name a script, 6 name an artifact path and 5 name a rubric, and every
+    # one of those is legitimate — this kit's product IS its scripts, so the name
+    # is the system under specification, not a citation. A rule that fired on
+    # them would be a rule that gets ignored.
+    assert not warns(Requirement="trace.py --strict shall exit nonzero.")
+    assert not warns(Requirement="The derived gate caches to docs/gate.")
+    assert not warns(AcceptanceCriteria="Judged against docs/rubrics/x.md.")
+    assert not warns(Requirement="Renders PROJECT_STATE.html offline.")
+    assert not warns(Requirement="Bounded by SR-055; decomposed to LLR-050.")
+    # Not a WI id merely because the letters occur, and not any .md file.
+    assert not warns(Requirement="A SWITCH-210 dial selects the tier.")
+    assert not warns(Requirement="Documented in ADOPTING.md section 6.")
+    # It reports WHICH cell and WHAT it cited, so the fix is unambiguous.
+    (msg,) = warns(Requirement="Shall resume (WI-210) per process.md.")
+    assert "Requirement" in msg and "'WI-210'" in msg and "'process.md'" in msg
+
+
 def test_duplicate_of_malformed_id_reports_duplicated():
     # WI-106 L4: a malformed id appearing twice must report "duplicated" for its
     # second occurrence, not "malformed" a second time.
