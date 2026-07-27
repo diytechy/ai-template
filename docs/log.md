@@ -15091,3 +15091,86 @@ in all three tracked skill copies in this commit.
 broken); `trace --strict --strict-integrity` clean at SN=25 SR=110 LLR=118 TC=121
 orphans=0 integrity=0, `sr-provenance-advisories=3` (the visible debt). Ratchet
 re-stamped **2708 → 2778** with its reason inline.
+
+## 2026-07-26 — 123-CRITIQUE: the batched route run a second time, and the first round where decomposition visibly paid
+
+One critique, dispatched once against the last render commit of the
+WI-318/319/320 batch, exactly as [wrap-up-plan.md](wrap-up-plan.md) §4/§7
+prescribes. Verdict: **CHANGES-REQUESTED findings=1** —
+[123-CRITIQUE](reviews/123-CRITIQUE.md). **T2, T4 and T5 pass; T8 alone fails.**
+
+Against 121-CRITIQUE that is three findings down to one, and **T4 flipped from
+two failures to a pass**. The critic's own reasoning names the argument the fix
+rests on rather than merely tolerating the ellipsis: truncation is acceptable
+*because* the reader is visibly told how to reach the rest. That is the T4
+affordance clause being satisfied on the merits, not waived.
+
+### The finding was already on the board — and that is the result
+
+The single finding is the roadmap DAG's coincident lanes and dense port fans:
+**`WI-323`**, filed earlier the same day when WI-320 deliberately split T8's
+objective floor (bound as `LLR-120`/`TC-125`) from its perceptual clause. An
+independent critic, working from pixels in a sandbox with no access to that
+reasoning, landed on exactly the clause the split had reserved.
+
+So it is recorded **against the existing row**, not duplicated into a new one.
+The critique loop's rule is "file findings as their own WIs"; the rule's purpose
+is that nothing a critic sees evaporates, and a finding that maps 1:1 onto an
+open row is already satisfying it. Filing WI-325 as a twin of WI-323 would have
+inflated the backlog to look responsive.
+
+**Read plainly: this round queued no new work.** The batched-attended route is
+now proven twice, and this time it did the thing it is actually for — it told us
+whether the queue we already held was the right queue. It said yes.
+
+### What it does and does not do to the gate
+
+`perceptual-stale` clears: the gate's requirement is a critique that **post-dates
+the render change**, not an APPROVE. Verified after committing the file, not
+before — an uncommitted critique passes the staleness check *silently and
+vacuously*, which is the trap the 2026-07-24 session paid for.
+
+The CHANGES-REQUESTED verdict does arm the warn-first critique-loop ratchet
+(WI-068) for any future WI-close on `SR-054` that touches neither the TC
+registry, the tests dir, nor a rubric. That is correct and worth keeping:
+**WI-323 must land with validation, not just with pixels.**
+
+### The deadlock is now one row wide
+
+The pause stands, because `SR-054` is still `Verification=Critique` and WI-323 is
+still a render row. But the shape has changed: the render frontier that was three
+rows this morning is one, and the residue under the SR is now **two clauses, not
+two anchors** — T4's document-wide "is this truncation actionable", and T8's
+"crossings minimized, in open space". Nine anchors or clauses have left the
+critique for a test since the option-(f) ruling.
+
+### Route note, holding across two dispatches
+
+The OpenCode-Go gateway again returned nothing to a `kimi-k3` probe; `codex`
+(OpenAI) answered in seconds, both this round and 121's. **Probe before planning
+around a gateway, and route by PROVIDER** — the builder was Claude, so an OpenAI
+critic is the *stronger* SR-084 path, not a fallback.
+
+### The committed re-attest brief was stale AGAIN — refreshed
+
+Same failure mode as the one recorded under 121-CRITIQUE, one round later:
+`docs/ratify/2026-07-26-reattest.md` listed `SR-054`'s chain only through
+`LLR-117`/`TC-122`, so it was missing `LLR-118`/`TC-123` (WI-322) and
+`LLR-119`/`LLR-120`/`TC-124`/`TC-125` (today). An owner reading it would have
+blessed a chain three rows shorter than the one in the registry. Refreshed on the
+**same `--since a5052a913` baseline**: 385 → 474 lines, **89 insertions and zero
+deletions**, so the depth grew and nothing collapsed — the check that matters,
+given the WI-322 review's BLOCKER was a regeneration that silently *lost* rows.
+
+**This has now happened twice, so it is FILED, not narrated.** The brief is a
+generated artifact with **no freshness gate**, while every other generated
+surface here has one (`gen_trajectory --check`, the status snapshot,
+`gen_okf --check`, `gen_open_items --check`). Both catches were a human
+noticing — the weakest tier in
+[enforcement-audit.md](enforcement-audit.md). **WI-325** (`P1`) asks for a
+`--check` mode on `--ratify modified`, wired into the floor, with the constraint
+that makes it harder than its siblings written into the row: it must compare
+against the baseline **the file already declares**, never re-derive one, because
+re-deriving is exactly the WI-322 review's BLOCKER. Escalating this in prose
+instead of filing it is the mistake the 2026-07-24 open-surface audit caught
+three times over.
