@@ -521,6 +521,36 @@ why (one bullet each; cite ids)._
   archived to `docs/archive/specs/WI-123.2026-07-27.md`, and reopening the dial
   needs **new** evidence rather than a re-read of this. The pending owner queue
   is now empty of decision briefs; only the attestation sitting remains.
+- **2026-07-27 — RE-ATTESTATION RATIFIED: 140 rows blessed, G3 returns by
+  derivation.** Owner **Peter Johnson** attests the whole `Modified` batch —
+  **SR 59 · LLR 57 · TC 24** — as `Modified`→`Verified`: the amendments are
+  blessed *and* the existing evidence still verifies the amended text. **No row
+  went to `Planned`**; the owner ruled the batch whole ("I will re-attest all the
+  changes") after reviewing it on the generated surface. What was attested is
+  recorded in [ratify/2026-07-27-reattest.md](ratify/2026-07-27-reattest.md),
+  regenerated *before* the flip against the same `--since a5052a913` baseline the
+  view carried — **59 sections against the committed 2026-07-26 brief's 15**,
+  which is [WI-325](specs/WI-325.md)'s premise confirmed a third time and the
+  reason the record was re-rendered rather than cited. The agent made the
+  ratifying commit on the acceptor's behalf, which `docs/gate-policy`
+  (`autonomous`) and the gate-advance contract both permit; the judgment was the
+  owner's. `derive_gate.py` then computed **G3 for all four phases**
+  (`drafts=0 modified=0`) — the gate followed the states, it was not set.
+  **Verification basis, stated rather than buried: 112 mechanized · 16
+  demonstrated · 0 attested** — no SR rests on a human attestation as its
+  verification method, so the trust footprint of this G3 is machine-checked
+  except for 16 demonstrated rows. **Alternative passed over:** flipping only the
+  rows whose evidence was re-run this session and leaving the rest `Modified`.
+  Rejected because a partial flip re-opens the window it closes — the sitting's
+  value is that it is single-pass, and three independent reviews
+  (124/125/126-REVIEW-A) had already interrogated the batch.
+  **Recorded with the ratification, not hidden by it:** closing the window
+  returned the bar to G3 and immediately exposed two **G3-only** steps that had
+  regressed while it was open — `lint` (20 findings) and `dupes` (90
+  unsanctioned blocks), both green at the 2026-07-25 all-17 `PASS`. They are
+  [WI-333](specs/WI-333.md) and [WI-334](specs/WI-334.md), both `P1`. The
+  attestation is about requirement TEXT and stands; the harness debt is separate
+  work, and saying so is the point of reporting the split.
 
 ## Audit log
 
@@ -15845,3 +15875,88 @@ machine with no git the guard raises `NameError` instead of skipping — a safet
 net that has never been watched fail, which is the exact shape of trap this repo
 keeps paying for. Filed rather than swept into an unrelated commit; the spec says
 triage that one first.
+
+### 2026-07-27 — the re-attestation sitting: 140 rows, G3 by derivation, and what the window had been hiding
+
+The owner reviewed the batch and ruled it whole. The ruling and the alternative
+passed over are in the Decisions log above; this is the executed record.
+
+**The flip.** 140 rows `Modified`→`Verified` — **SR 59/128 · LLR 57/133 · TC
+24/124** — across the three registries. Mechanically it is 140 cells, and the
+method mattered: a `csv.reader`→`csv.writer` round-trip was proven **byte-exact
+against the original files first** (`lineterminator='\r\n'`, no BOM), so the
+rewrite could only touch the `Status` cells. `git diff --word-diff` confirms it:
+every changed word is one `Modified` → `Verified`. A regex over the raw lines
+would have been faster and would have risked a cell containing the word.
+
+**The record was re-rendered, not cited.** `docs/ratify/2026-07-26-reattest.md`
+carried **15** SR sections; the live batch was **59**. That is not a defect in
+the brief — it is [WI-325](specs/WI-325.md)'s premise, a generated artifact with
+no freshness gate drifting behind the registry it summarizes, now confirmed a
+third time. Regenerated to
+[ratify/2026-07-27-reattest.md](ratify/2026-07-27-reattest.md) **before** the
+flip (afterwards there is nothing left to render) against the same
+`--since a5052a913` baseline the owner's view was rendered with, so the committed
+record and the reviewed surface agree by construction.
+
+**G3 returned by derivation**, not by a hand-set line:
+`drafts=0 modified=0 computed=G3 phase=4 per-phase=1=G3;2=G3;3=G3;4=G3`.
+`trace.py --strict --strict-schema --no-placeholders --require-verified` is
+clean at that gate: SN=25 SR=128 LLR=133 TC=124, orphans 0, integrity 0,
+schema-findings 0. **Verification basis: 112 mechanized · 16 demonstrated · 0
+attested.**
+
+### What closing the window exposed — the finding worth more than the sitting
+
+`check.py --gate G3 --jobs 0` came back **RESULT: FAIL (4 steps)**. Two were
+mine and are fixed here (a stale `okf` bundle, and the new ratify brief tripping
+`--strict-orphans` until this entry linked it). **The other two are a
+regression, and the dating is the whole point:**
+
+| Step | State now | State 2026-07-25 |
+|---|---|---|
+| `lint` | 20 ruff findings | **green** (all-17 `PASS`, after a lint fix pass) |
+| `dupes` | 90 unsanctioned blocks | **green** (same run) |
+
+Both are **G3-only** steps. From 2026-07-26 the open `Modified` window held the
+derived gate at **G2**, which drops `lint`, `dupes` and `--require-verified`
+from the bar *by design* — so twelve commits went green over checks that had
+stopped running, and the debt surfaced in one lump the moment the sitting
+restored G3.
+
+**The window did not cause the regression; it hid it.** `status.md` already
+carried the warning "don't let it sprawl" about a window's duration — this is
+that warning's price, measured. I had called the lint findings "pre-existing debt
+at a gate we have not reached" earlier in this same session; dating them
+(`44024b3`/WI-318 introduced the 13 `F402` `for label, html in ...` shadowings)
+proved that wrong, and the correction is the reason both WIs are `P1` rather
+than housekeeping:
+
+- **[WI-333](specs/WI-333.md)** — the 20 lint findings, with the introducing
+  commit per rule, and a Done-when that **refuses a fix which only clears them**:
+  the process half (should G3-only steps run advisory during an open window?)
+  must be ruled or explicitly declined.
+- **[WI-334](specs/WI-334.md)** — the 90 duplicate blocks, which are a *mixture*
+  of genuine new duplication (one confirmed by reading it: `gen_open_items.py`
+  748 == 769, the `BASELINE_RE` baseline-reuse pair) and **census drift** (the
+  census is fingerprinted, so editing one token in a sanctioned block invalidates
+  its line). The hard constraint is written into the spec: **a census line IS
+  acceptance of the duplication**, so a blanket re-stamp of 90 lines is
+  forbidden — the standing rule from the 2026-07-25 close.
+
+**A process mistake of my own, recorded because it nearly cost the sitting.**
+While dating the lint findings I ran `git stash` inside a probe loop to read
+historical file versions — with the 140-row flip uncommitted and a gate run in
+flight. It reverted the working tree; `git stash pop` restored it and the flip
+was re-verified row-by-row before continuing, but the gate run in flight had to
+be discarded and re-run. `git show <rev>:<path>` reads history without touching
+the working tree, which is what the probe should have used and now does. Never
+stash a working tree you have not committed.
+
+Bar: full suite **1592 passed, 6 skipped** inside the gate run (the orphan test
+failed there and passes now); `derive_gate --check` fresh; `trace.py --strict
+--require-verified` clean; `check_docs` 0 broken, 0 unexplained orphans;
+`check_doc_refs` 0 dangling; `check_trajectory --strict` clean (332 WIs, 312
+done, 4 retired). **`check.py --gate G3` is RED on `lint` + `dupes`** — stated
+plainly rather than deferred: the spine is attested, the harness at the new gate
+is not yet green, and the two are different claims.
