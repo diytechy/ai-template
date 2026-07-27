@@ -126,7 +126,7 @@ resource: "generated"
 | [TC-117](TC-117.md) | Over the shipped dashboard plus seven fixture renders: derive every querySelectorAll sele… |
 | [TC-118](TC-118.md) | Over the shipped dashboard plus seven fixture renders: resolve the document's token defin… |
 | [TC-119](TC-119.md) | Reflect every UPPERCASE module-level constant RECURSIVELY (nested dicts/tuples/sets and b… |
-| [TC-120](TC-120.md) | Generate the dashboard from a zero-active/all-queued fixture (the exact 119-CRITIQUE fail… |
+| [TC-120](TC-120.md) | Generate the dashboard from a zero-active/all-queued fixture — the condition under which … |
 | [TC-121](TC-121.md) | Generate the dashboard and derive EVERY emitted <svg> from the document (not a hand list,… |
 | [TC-122](TC-122.md) | Sweep EVERY emitter document (the shipped artifact plus a fixture per emitter, the A2-rev… |
 | [TC-123](TC-123.md) | Drive gen_open_items over temp repos: assert a pending registry row renders as a brief an… |
