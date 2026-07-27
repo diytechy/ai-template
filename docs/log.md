@@ -14819,3 +14819,17 @@ restored byte-identical (verified by hash).
 **One process lesson, which the reviewer named and I am keeping:** the commit bar
 runs the **warn** tier, so a module can land untagged and only the gate-level
 `--strict` says so. `check.py --gate <gate>` before closing any module-adding WI.
+
+### Session handoff filed
+
+[handoff-2026-07-26.md](handoff-2026-07-26.md) — the launch surface for the next
+session: the 60-second start (two commands, and the one red to expect), where
+things live now that `open-items.md` is gone, what is owed and by whom, the three
+standing constraints not to undo by accident, WI-322's invariants, and the traps
+this session paid for. `status.md` points at it and stays authoritative.
+
+`docs/open-items.md` is now listed in [declared-absences](declared-absences) as a
+RETIRED surface — one home for the fact instead of a scatter of `path-ok`
+comments, and it earns a guard for free: `test_scaffold_omissions_list_is_current`
+fails if the path ever materializes, so **recreating the retired surface trips a
+test**.

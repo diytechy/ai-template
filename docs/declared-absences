@@ -35,6 +35,13 @@ docs/kit-license — a stamp bootstrap.py writes into a SCAFFOLD; the kit itself
 docs/kit-profile — likewise a scaffold stamp, recording which kit rung a repo adopted
 docs/release-checklist.md — a scaffolded artifact for a repo that ships releases
 
+# --- Retired surfaces: gone on purpose, and prose still names them -----------
+# A retired path is a deliberate absence with a reason, so it belongs here rather
+# than as a scatter of `path-ok` comments. Listing it also earns a guard for
+# free: test_scaffold_omissions_list_is_current fails if the path ever
+# MATERIALIZES, so recreating a retired surface trips a test.
+docs/open-items.md — RETIRED by WI-322; the owner surface is docs/requirements/open-items.csv rendered to docs/open-items.html
+
 # --- Declared policy files where ABSENT is a legal, documented state ----------
 # Naming one of these in prose is CORRECT: the reader treats absence as the
 # stated default, so the file exists only when a repo overrides that default.
