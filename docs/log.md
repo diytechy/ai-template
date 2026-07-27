@@ -15707,3 +15707,38 @@ rather than against its own checklist, so 47 cells reached an attestation window
 with no review at all. The checklist is the contract; the green is not.
 
 Full record: [reviews/126-REVIEW-A.md](reviews/126-REVIEW-A.md).
+
+### 2026-07-27 — WI-331 filed: re-tune for the standard model without making the shipped docs model-specific
+
+Owner-raised after reading the published prompting guidance for the model this
+repo now routes to by default. The framing was two-sided and both halves bind:
+*"I don't want the tooling to constrain it — but I also want the tooling to stay
+appropriate for other agents."*
+
+**Already aligned on four of five axes**, one of them non-obviously: scope
+discipline (`CLAUDE.md` says it near-verbatim), terse prose (`PROCESS.md` §5),
+thinking never disabled, and — the one worth recording — **no severity filter in
+the reviewer prompt**. The guidance names conservative-reporting instructions as
+what silently depresses review recall; this repo independently arrived at
+severity-*ordered* plus *"an APPROVE must mean you tried to break it"*.
+
+**Three findings**, filed rather than fixed inline: `PROCESS.md` frames
+delegation as a **duty** (written when models under-delegated, now pushing the
+direction this one over-does); there is no deterministic **in-session** spawn cap
+(the dispatcher bounds `--jobs` and traincars, nothing bounds subagents inside a
+session); and the `agents.csv` effort pins predate the current model and want a
+re-sweep.
+
+**Deliberately not changed: the Medium self-review tier stays.** The guidance
+says to delete redundant verification instructions because the model verifies its
+own WORK — but what it cannot verify is its own CLAIMS, and 126-REVIEW-A found
+eight false statements in these very registries. The limit gets recorded beside
+the tier instead of the tier being strengthened or removed.
+
+**The constraint that makes this a careful edit:** no model-specific tuning in
+`AGENTS.template.md` or `PROCESS.md`. They ship to every adopter and every agent
+family, and this repo routes to three — the last three independent reviews all
+ran on a non-Anthropic critic. Model-specific behaviour belongs in the
+`agents.csv` `Env` column, which is per-model and already holds the effort pins.
+
+Handoff for the sitting: [handoff-2026-07-27.md](handoff-2026-07-27.md).
