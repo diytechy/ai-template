@@ -8,6 +8,7 @@ show. Each is pinned by running the real script over a minimal temp project.
 """
 
 import collections
+import html
 import re
 import shutil
 
@@ -3082,6 +3083,154 @@ def test_t7_shrink_floor_keeps_labels_legible(tmp_path):
         expected = int(float(natural) * gt.SHRINK_FLOOR)
         assert abs(int(floor) - expected) <= 1, (natural, floor, expected)
     assert 0 < gt.SHRINK_FLOOR < 1
+
+
+# --- WI-318 / SR-054 T4: no label ink outside the block it belongs to ---------
+# 121-CRITIQUE MAJOR: the What/Architecture root layer drew each SN's whole need
+# as the block's sub-label, unwrapped — one centred line that began outside the
+# left edge of its box and ran past the right one, at 390px AND at 1680px, so the
+# text was unreadable AS a label and broke the box too. `_tier_col_width` cannot
+# absorb it: it clamps at MAX_TIER_COL, so a 400-character need asks for a 2000px
+# column and gets 172.
+#
+# The binding is the T4 anchor's mechanizable floor, stated geometrically and
+# swept over the EMITTED document: every `<tspan>` a drill block renders must fit
+# inside that block's own rect, horizontally and vertically. Deliberately not a
+# per-view assertion — the defect lives in the one shared label emitter that feeds
+# four views, so a fifth view added later is covered without touching this test.
+_BLOCK_RE = re.compile(r'<g class="block\b.*?</g>', re.S)
+_BRECT_RE = re.compile(
+    r'<rect x="([-\d.]+)" y="([-\d.]+)" width="([\d.]+)" height="([\d.]+)"'
+)
+_BTEXT_RE = re.compile(r'<text x="[-\d.]+" y="([-\d.]+)"[^>]*>(.*?)</text>', re.S)
+_BSPAN_RE = re.compile(
+    r'<tspan x="([-\d.]+)" dy="([-\d.]+)" class="(blab|bsub)">([^<]*)</tspan>'
+)
+# Conservative vertical glyph extents as a fraction of the declared font size:
+# enough of an over-estimate that a real render cannot exceed them.
+_ASCENT, _DESCENT = 0.8, 0.25
+
+
+def _label_boxes(html_text):
+    """Every drill-block label line as (block, class, text, ink-rect, block-rect),
+    measured from the emitted markup with the emitter's own declared per-character
+    widths and the font sizes the emitted CSS declares."""
+    gt = load_script("gen_trajectory")
+    size = {
+        cls: float(re.search(r"--{}:([\d.]+)px".format(var), html_text).group(1))
+        for cls, var in (("blab", "nlabel"), ("bsub", "nsub"))
+    }
+    per_char = {"blab": gt._BLAB_CH, "bsub": gt._BSUB_CH}
+    out = []
+    for block in _BLOCK_RE.findall(html_text):
+        rect = _BRECT_RE.search(block)
+        text = _BTEXT_RE.search(block)
+        if not rect or not text:
+            continue
+        rx, ry, rw, rh = (float(v) for v in rect.groups())
+        baseline = float(text.group(1))
+        node = re.search(r'data-node="([^"]*)"', block)
+        for x, dy, cls, raw in _BSPAN_RE.findall(text.group(2)):
+            baseline += float(dy)
+            # Entities are ONE glyph: measuring `&#x27;` as six characters would
+            # invent overflow on every apostrophe.
+            width = len(html.unescape(raw)) * per_char[cls]
+            cx = float(x)
+            out.append(
+                (
+                    node.group(1) if node else "?",
+                    cls,
+                    raw,
+                    (
+                        cx - width / 2,
+                        baseline - size[cls] * _ASCENT,
+                        cx + width / 2,
+                        baseline + size[cls] * _DESCENT,
+                    ),
+                    (rx, ry, rx + rw, ry + rh),
+                )
+            )
+    return out
+
+
+_LONG_NEED = (  # the real SN-001, the row the critic read at 390px and 1680px
+    "A team can drop the kit into a new or existing repo and get a working "
+    "gated, requirement-traced process without hand-building the tooling."
+)
+
+
+def _spine_with_a_long_need(root, n=8):
+    """The tiered spine fixture with ONE realistic sentence-length need, so the
+    sweep below is exercised against the shape that actually overflowed."""
+    _spine_with_sns(root, n)
+    sn = root / "docs" / "requirements" / "stakeholder-needs.md"
+    sn.write_text(
+        sn.read_text(encoding="utf-8").replace("| Need 1. |", "| " + _LONG_NEED + " |"),
+        encoding="utf-8",
+    )
+
+
+def test_t4_no_block_label_renders_outside_its_own_box(tmp_path):
+    make_repo(tmp_path)
+    _spine_with_a_long_need(tmp_path)
+    assert gen(tmp_path).returncode == 0
+    boxes = _label_boxes(html_of(tmp_path))
+    assert boxes, "vacuous - no drill block labels emitted"
+    # Non-vacuity with teeth: the sentence-length need must actually be in there,
+    # or this sweep proves nothing about the defect it was written for.
+    assert any(_LONG_NEED.split()[0] in raw for _n, _c, raw, _i, _b in boxes)
+    outside = [
+        (node, cls, raw, ink, box)
+        for node, cls, raw, ink, box in boxes
+        if ink[0] < box[0] or ink[1] < box[1] or ink[2] > box[2] or ink[3] > box[3]
+    ]
+    assert not outside, "label ink outside its block: {}".format(outside[:4])
+
+
+def test_t4_a_sentence_length_sub_label_wraps_and_ellipsizes(tmp_path):
+    # The fix path itself: too long for one line -> a second line, then an
+    # ellipsis. (The full string keeps its homes on the block: <title>,
+    # aria-label, data-summary.)
+    make_repo(tmp_path)
+    _spine_with_a_long_need(tmp_path)
+    assert gen(tmp_path).returncode == 0
+    text = html_of(tmp_path)
+    block = next(
+        b for b in _BLOCK_RE.findall(text) if 'data-node="SN-001"' in b and "…" in b
+    )
+    subs = re.findall(r'class="bsub">([^<]*)</tspan>', block)
+    assert len(subs) == 2, subs
+    assert subs[0] and not subs[0].endswith("…")  # broke on a word, not mid-word
+    assert subs[1].endswith("…")
+    assert _LONG_NEED.startswith(html.unescape(subs[0]))
+    assert _LONG_NEED in text  # the whole need still reads, via <title>/summary
+
+
+def test_t4_a_short_sub_label_keeps_the_two_line_grid(tmp_path):
+    # The wrap is earned by length, not applied to everything: a sub that already
+    # fits renders on the untouched two-line grid.
+    make_repo(tmp_path)
+    _spine_with_sns(tmp_path, 8)
+    assert gen(tmp_path).returncode == 0
+    block = next(
+        b for b in _BLOCK_RE.findall(html_of(tmp_path)) if 'data-node="SN-002"' in b
+    )
+    assert 'dy="-2" class="blab"' in block and 'dy="13" class="bsub"' in block
+    assert len(re.findall(r'class="bsub"', block)) == 1
+
+
+def test_fit_lines_breaks_on_words_then_ellipsizes():
+    gt = load_script("gen_trajectory")
+    assert gt._fit_lines("", 10, 2) == []
+    assert gt._fit_lines("short", 10, 2) == ["short"]  # untouched when it fits
+    assert gt._fit_lines("one two three", 8, 2) == ["one two", "three"]
+    # More text than the budget holds: the last line ends in an ellipsis and no
+    # line exceeds the budget.
+    got = gt._fit_lines("aa bb cc dd ee ff gg", 8, 2)
+    assert got == ["aa bb cc", "dd ee f…"], got
+    assert all(len(line) <= 8 for line in got)
+    # A single word longer than the budget is cut, never allowed to run past.
+    assert gt._fit_lines("supercalifragilistic", 8, 2) == ["supercal", "ifragil…"]
 
 
 def test_t1_hero_names_the_active_work_item(tmp_path):

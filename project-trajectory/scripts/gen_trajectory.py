@@ -1734,6 +1734,31 @@ DRILL_SCRIPT = (
 )
 
 
+def _fit_lines(text, budget, max_lines):
+    """`text` broken onto at most `max_lines` lines of at most `budget` characters,
+    preferring a space break; the last line is ellipsized when text remains. A word
+    longer than the budget is hard-cut rather than allowed to run past the box.
+    `[]` for empty text, so a caller can keep its own empty-sub rendering."""
+    text = (text or "").strip()
+    if not text:
+        return []
+    lines, rest = [], text
+    while rest and len(lines) < max_lines:
+        if len(rest) <= budget:
+            lines.append(rest)
+            rest = ""
+            break
+        cut = rest.rfind(" ", 0, budget + 1)
+        if cut <= 0:  # one word longer than the budget
+            cut = budget
+        lines.append(rest[:cut].rstrip())
+        rest = rest[cut:].lstrip()
+    if rest:
+        last = lines[-1]
+        lines[-1] = (last[: budget - 1].rstrip() if len(last) >= budget else last) + "…"
+    return lines
+
+
 def _drill_block_label(b, col_w, cx, cy):
     """The centred `<text>` for one drill block. A plain label renders as the bold
     label line over its sub-label. A block flagged `wrap` with an `ID — Name` label
@@ -1743,34 +1768,49 @@ def _drill_block_label(b, col_w, cx, cy):
     "CMP-004 — Unattended…"; the sub-label (module count) drops to a third line. The
     name line uses the smaller sub font, so its budget (and the right-sized column)
     fit the longest declared name. The explicit `wrap` flag (not a `" — "` string
-    sniff) keeps an incidental em-dash in some other block's name from wrapping."""
+    sniff) keeps an incidental em-dash in some other block's name from wrapping.
+
+    WI-318 (T4, 121-CRITIQUE MAJOR): the SUB-label used to be emitted RAW, so a
+    block whose sub is a sentence rather than a count — the What root layer draws
+    each SN's whole need there — ran outside its own box at every width, and
+    `_tier_col_width` cannot absorb that (it clamps at MAX_TIER_COL). It is now
+    fitted to the column like the label. Three text lines is the ceiling — the grid
+    the `wrap` branch above already proved fits `row_h` — so the budget is two sub
+    lines; a sub that already fits one renders byte-identically to before. Rule,
+    scope and residue: LLR-119 / TC-124."""
     fill = b.get("textfill", "var(--text)")
     head = '<text x="{:.1f}" y="{:.1f}" text-anchor="middle" fill="{}">'.format(
         cx, cy, fill
     )
+    nbudget = max(1, (col_w - TIER_COL_PAD) // _BSUB_CH)
     if b.get("wrap") and " — " in b["label"]:
         idpart, namepart = b["label"].split(" — ", 1)
-        nbudget = max(1, (col_w - TIER_COL_PAD) // _BSUB_CH)
         if len(namepart) > nbudget:
             namepart = namepart[: nbudget - 1] + "…"
+        # The id and name lines already spend the 3-line budget, so the sub fits
+        # one line here.
+        sub = (_fit_lines(b["sub"], nbudget, 1) or [""])[0]
         return (
             head
             + '<tspan x="{:.1f}" dy="-11" class="blab">{}</tspan>'
             '<tspan x="{:.1f}" dy="11" class="bsub">{}</tspan>'
             '<tspan x="{:.1f}" dy="11" class="bsub">{}</tspan></text>'.format(
-                cx, esc(idpart), cx, esc(namepart), cx, esc(b["sub"])
+                cx, esc(idpart), cx, esc(namepart), cx, esc(sub)
             )
         )
     max_label = max(1, (col_w - TIER_COL_PAD) // _BLAB_CH)
     main_label = b["label"]
     if len(main_label) > max_label:
         main_label = main_label[: max_label - 1] + "…"
+    subs = _fit_lines(b["sub"], nbudget, 2) or [""]
+    # Two lines keep the original grid byte-for-byte; three take the `wrap` grid.
+    head_dy, sub_dy = (-2, 13) if len(subs) == 1 else (-11, 11)
+    span = '<tspan x="{:.1f}" dy="{}" class="{}">{}</tspan>'
     return (
         head
-        + '<tspan x="{:.1f}" dy="-2" class="blab">{}</tspan>'
-        '<tspan x="{:.1f}" dy="13" class="bsub">{}</tspan></text>'.format(
-            cx, esc(main_label), cx, esc(b["sub"])
-        )
+        + span.format(cx, head_dy, "blab", esc(main_label))
+        + "".join(span.format(cx, sub_dy, "bsub", esc(s)) for s in subs)
+        + "</text>"
     )
 
 

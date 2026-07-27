@@ -14833,3 +14833,68 @@ RETIRED surface — one home for the fact instead of a scatter of `path-ok`
 comments, and it earns a guard for free: `test_scaffold_omissions_list_is_current`
 fails if the path ever materializes, so **recreating the retired surface trips a
 test**.
+
+
+## 2026-07-26 — WI-318: a sub-label that never leaves its box, and half of T4 becomes a test
+
+121-CRITIQUE's MAJOR, and the simplest defect in the batch to state: in the
+What/Architecture root layer every SN block drew its **whole stakeholder need**
+as the sub-label, on one unwrapped line centred on a 172px block. SN-025's need
+is 405 characters — 2025px of ink in a 172px box, starting 241px to the *left*
+of the block and ending 259px past its right edge. Fifteen of twenty-five blocks
+overflowed; the critic read it at 390px and again at 1680px, which is what ruled
+out a narrow-viewport reflow explanation.
+
+### Why the existing right-sizing could not have caught it
+
+`_tier_col_width` (SR-056/LLR-057) already sizes a column to its widest member's
+content — and it *did*, then clamped at `MAX_TIER_COL`. That clamp is correct:
+the alternative is a 2000px column. What was missing is the other half of the
+bargain — **if the column will not grow to the text, the text must be fitted to
+the column.** The label line had that (`max_label`); the sub-label never did.
+So the fix is one helper, `_fit_lines`, applied where the raw string used to go:
+break on a word onto a second line, then ellipsize. Three text lines is the
+ceiling, which is not a new judgement — it is the grid the `ID — Name` wrap
+branch has already been rendering inside `row_h` since WI-246.
+
+A sub-label that already fits one line renders **byte-identically** to before
+(the regeneration after the refactor reported "already up to date"), so this is
+15 blocks changing, not 910.
+
+### The binding: T4's geometric floor, not T4
+
+`LLR-119`/`TC-124` bind the clause a reader cannot argue with — *no character a
+block renders may fall outside that block's own rect* — swept over every drill
+block of the emitted document on **both** axes, measured from the emitted
+geometry with the emitter's declared per-character widths and the document's own
+declared font sizes. Deliberately not a per-view assertion: the defect lives in
+the one shared label emitter that feeds four views.
+
+What stays perceptual is the rest of the anchor: **truncated-*without-affordance***
+still wants eyes, so `T4` remains a live critique anchor and the rubric now says
+which half is which. That is the WI-300 (f) pattern applied honestly — bind the
+measurable floor, do not quietly mechanize the reader-experience clause into a
+proxy. The full string keeps its homes on the block (`<title>`, `aria-label`,
+`data-summary`), which is what makes the ellipsis defensible rather than a
+second WI-319.
+
+### Proven against the defect, and one measurement trap
+
+Reverted to the pre-fix emitter, the sweep fails naming `SN-001`'s ink at
+`x=-241..449` in a block spanning `x=18..190`, and the fit-path and helper
+guards fail with it. The two-line-grid guard passes both before and after **by
+design** — it guards over-application, not the defect, and saying so keeps a
+future reader from "fixing" it.
+
+The trap worth recording: an entity is **one glyph**. Measuring the emitted
+string raw counts `&#x27;` as six characters and `&gt;` as four, which invented
+four overflows on already-budgeted labels — a guard that would have failed on
+every apostrophe in the registry. Unescape before measuring.
+
+**Verified:** the four new guards green; smoke **421 passed, 13 skipped**;
+`trace --strict --strict-integrity` clean at SN=25 SR=110 **LLR=117 TC=120**
+orphans=0 integrity=0 interfaces=73; `check_docs` OK (269 docs, 807 links, 0
+broken). Ratchet re-stamped **5106 → 5146** with its reason inline: one helper
+and one branch, bounded by construction — the alternative (each emitter
+budgeting its own sub) is four copies of the same arithmetic. Re-stamp down with
+WI-280.

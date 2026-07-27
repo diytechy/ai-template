@@ -188,7 +188,13 @@ BASELINE = {
     # is still the one derivation of what is pending; gen_open_items imports it
     # rather than growing a second opinion. Ratchet moving DOWN, which is the
     # direction WI-280 wants.
-    "gen_trajectory.py": 5106,
+    # +40 (5106 -> 5146), WI-318: the shared drill label emitter FITS a sub-label
+    # to the column it is drawn in instead of emitting it raw (`_fit_lines`, plus
+    # a branch on how many sub lines came back). Bounded by construction — one
+    # helper, one call site each side — and the alternative was worse for size:
+    # every emitter budgeting its own sub is four copies of the same arithmetic.
+    # Reviewed bump, log 2026-07-26. Re-stamp down with WI-280.
+    "gen_trajectory.py": 5146,
     # +11 (3452 -> 3463), WI-284: _regenerate_disposition_artifacts also runs
     # `gen_trajectory.py --status` at integrate/blocked-disposition so a closed
     # id drops from the generated frontier automatically (and the disposition
