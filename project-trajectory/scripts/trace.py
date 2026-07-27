@@ -365,44 +365,78 @@ _WI_TOKEN_RE = re.compile(r"\bWI-\d+")
 _PROCESS_DOC_RE = re.compile(r"\bprocess(?:-options)?\.md\b", re.IGNORECASE)
 
 
-def standalone_sr_advisories(srs):
-    """Warn-only findings (WI-321, the rule in process.md §3): a real SR whose
-    NORMATIVE text carries its own PROVENANCE — a work-item id, or a citation of
-    the process doc the row obeys. Both facts have better homes (the work-item
-    registry, the log's Decisions), and a requirement must read stand-alone to
-    someone with none of the project's history.
+# Every spine cell whose text a reader treats as the SPECIFICATION — the columns
+# a downstream adopter reads to learn what the system does and why. `Module`,
+# `CodeSymbol`, `TestRefs`, `Evidence` and the id/status columns are pointers by
+# design and are deliberately out of scope.
+PROVENANCE_COLS = (
+    ("SR", "SR-ID", ("Title", "Requirement", "Rationale", "AcceptanceCriteria")),
+    ("LLR", "LLR-ID", ("Title", "Detail")),
+    ("TC", "TC-ID", ("Method", "Expected", "Parameters")),
+)
 
-    Narrow BY MEASUREMENT, not by taste — 110 SRs at filing: 4 carried a WI id and
-    1 a process-doc citation, all rot. But 65 name a SCRIPT, 6 an ARTIFACT PATH
-    and 5 a RUBRIC, and every one is legitimate — this kit's product IS its
-    scripts, so the name is the system under specification, and for a
-    `Verification=Critique` row the rubric is the acceptance instrument. None is
-    flagged: a rule that cries wolf on 65 rows gets ignored (the `check_doc_refs`
-    lesson, WI-062/WI-308).
 
-    Warn only, the `ac_advisories` tier, never joining the exit code even under
-    --strict: cleaning a `Verified` row flips it `Modified` and owes a
-    re-attestation, so escalating this to a gate is the owner's scheduling call,
-    not one a checker forces mid-window."""
+def provenance_findings(srs, llrs, tcs):
+    """A spine row whose text carries its own PROVENANCE — a work-item id, or a
+    citation of the process doc the row obeys (the rule in process.md §3).
+
+    **A requirement states the system, not its own history.** A reader — human,
+    agent, or a downstream adopter with none of this project's history — must read
+    one row and know what the system does and why, without resolving a work item
+    they cannot see. Both facts have better homes: which WI delivered or amended a
+    row lives in `work-items.csv` and the log, why it was decided that way lives in
+    the log's Decisions, and the row OBEYS the process rather than citing it.
+
+    Applied to every SPINE registry, not just the SR. The rule shipped SR-only and
+    that was the wrong scope: measured across the whole spine afterwards, 2 SRs
+    carried a WI id in their normative text — and **26 LLRs, 8 TCs and 9 more SR
+    Title/Rationale cells did too**, none of them watched. The largest pocket was
+    the layer the SR-only rule could not see, and it kept growing while the rule
+    was green (an `LLR` written the same week the lint landed carried three).
+
+    Narrow BY MEASUREMENT, not by taste. It flags exactly two token shapes. A
+    SCRIPT name (65 SR rows), an ARTIFACT PATH (6) and a RUBRIC (5) are NOT
+    flagged and must never be: this kit's product IS its scripts, so the name is
+    the system under specification, and for a `Verification=Critique` row the
+    rubric is the acceptance instrument. A rule that cries wolf on 65 legitimate
+    rows is a rule that gets scrolled past — the `check_doc_refs` lesson.
+
+    GATING under `--strict` (owner ruling 2026-07-27, raised at the first
+    re-attestation sitting on finding `LLR-050`'s `WI-316:` changelog prefix). It
+    shipped warn-only on the argument that cleaning a `Verified` row flips it
+    `Modified` and owes a re-attestation, so the checker should not pick the
+    owner's schedule. The counter-argument won and is the stronger one: a warn
+    nobody must act on is how 43 rows accumulated, and the whole population was
+    cleaned in one pass at the same sitting, so the rule now guards zero-to-zero
+    rather than dictating a cleanup.
+
+    KNOWN COST, accepted deliberately: a WI id is forbidden even where it is the
+    DATA rather than a citation — a row describing the dashboard's own rendered
+    nodes cannot name one. That case is real (it occurred once, in a measurement
+    of which node box a wire grazed) and the row was reworded to describe the node
+    instead of naming it, with the specific id kept in the log. A carve-out would
+    cost more than it buys: any exemption a checker cannot distinguish from the
+    defect is one an author can reach for."""
     out = []
-    for r in srs:
-        rid = r.get("SR-ID")
-        if not rid:
-            continue
-        for col in ("Requirement", "AcceptanceCriteria"):
-            cell = (r.get(col) or "").strip()
-            cited = sorted(set(_WI_TOKEN_RE.findall(cell))) + sorted(
-                {m.group(0).lower() for m in _PROCESS_DOC_RE.finditer(cell)}
-            )
-            if cited:
-                out.append(
-                    "SR {} {} cites {} — a requirement states the system, not its "
-                    "own history: move provenance to work-items.csv / the log's "
-                    "Decisions, and obey the process rather than citing it "
-                    "(warn-only; cleaning a Verified row flips it Modified)".format(
-                        rid, col, ", ".join(repr(c) for c in cited)
-                    )
+    for rows, (label, key, cols) in zip((srs, llrs, tcs), PROVENANCE_COLS):
+        for r in rows:
+            rid = (r.get(key) or "").strip()
+            if not rid or is_example(rid):
+                continue
+            for col in cols:
+                cell = (r.get(col) or "").strip()
+                cited = sorted(set(_WI_TOKEN_RE.findall(cell))) + sorted(
+                    {m.group(0).lower() for m in _PROCESS_DOC_RE.finditer(cell)}
                 )
+                if cited:
+                    out.append(
+                        "{} {} {} cites {} — a spine row states the system, not "
+                        "its own history: move provenance to work-items.csv / "
+                        "the log's Decisions, and obey the process rather than "
+                        "citing it".format(
+                            label, rid, col, ", ".join(repr(c) for c in cited)
+                        )
+                    )
     return out
 
 
@@ -2132,11 +2166,11 @@ def analyze(reg, args):
     # Warn-only, always on: comparative AcceptanceCriteria terms with no pinned
     # predicate (see the module docstring). Never joins a failure set below.
     advisories = ac_advisories(srs)
-    # Warn-only, always on (WI-321): an SR whose normative text carries provenance
-    # (a WI id, a process-doc citation). Its OWN pipe rather than folded into the
-    # AC advisories above — that counter names the acceptance-criteria lint, and a
-    # shared count would say "ac-advisories" about a finding that is not one.
-    sr_provenance_advis = standalone_sr_advisories(srs)
+    # GATING (owner ruling 2026-07-27): a spine row whose text carries its own
+    # provenance. Its own pipe, not folded into the AC advisories above — that
+    # counter names the acceptance-criteria lint, and a shared count would say
+    # "ac-advisories" about a finding that is not one. Joins exit_code.
+    provenance = provenance_findings(srs, llrs, tcs)
     # Warn-only, always on (WI-129): an LLR reading below Verified while every
     # citing TC is Verified — a readout drift, never a failure (LLR status is
     # non-gating under the derived-gate model). Never joins a failure set below.
@@ -2171,7 +2205,7 @@ def analyze(reg, args):
     findings.placeholders = placeholders
     findings.schema = schema
     findings.advisories = advisories
-    findings.sr_provenance_advis = sr_provenance_advis
+    findings.provenance = provenance
     findings.llr_status_advis = llr_status_advis
     findings.budget_findings = budget_findings
     findings.module_findings = module_findings
@@ -2205,7 +2239,7 @@ def render_report(reg, findings, args, forest):
     placeholders = findings.placeholders
     schema = findings.schema
     advisories = findings.advisories
-    sr_provenance_advis = findings.sr_provenance_advis
+    provenance = findings.provenance
     llr_status_advis = findings.llr_status_advis
     budget_findings = findings.budget_findings
     module_findings = findings.module_findings
@@ -2344,14 +2378,14 @@ def render_report(reg, findings, args, forest):
         if not advisories
         else [f"- {f}" for f in advisories]
     )
-    # Warn-only advisory section (never a failure, WI-321): a requirement states
-    # the system, not its own history. Cleaning one flips a Verified row to
-    # Modified, so the owner schedules it into a sitting — hence warn, not gate.
-    lines += ["", "## Requirement stand-alone advisories (warn-only)", ""]
+    # GATING section: a spine row states the system, not its own history. Failing
+    # under --strict rather than warning, because a warn nobody must act on is how
+    # 43 rows accumulated before anyone looked below the SR layer.
+    lines += ["", "## Spine stand-alone findings (gating under --strict)", ""]
     lines += (
-        ["None. No SR cites a work item or a process doc in its normative text."]
-        if not sr_provenance_advis
-        else [f"- {f}" for f in sr_provenance_advis]
+        ["None. No spine row cites a work item or a process doc in its text."]
+        if not provenance
+        else [f"- {f}" for f in provenance]
     )
     # Warn-only advisory section (never a failure, WI-129 + WI-316): LLRs reading
     # below Verified whose citing TCs are all Verified (lift the Status cell by
@@ -2511,7 +2545,7 @@ def render_console(reg, findings, args, out, html_out):
     orphans = findings.orphans
     integrity = findings.integrity
     advisories = findings.advisories
-    sr_provenance_advis = findings.sr_provenance_advis
+    provenance = findings.provenance
     interface_advisories = findings.interface_advisories
     knowledge_advisories = findings.knowledge_advisories
     llr_status_advis = findings.llr_status_advis
@@ -2534,13 +2568,11 @@ def render_console(reg, findings, args, out, html_out):
     # stay separate where it matters (their own report sections and counters) and
     # a fifth lint no longer costs this routine a branch.
     for a in (
-        advisories
-        + sr_provenance_advis
-        + interface_advisories
-        + knowledge_advisories
-        + llr_status_advis
+        advisories + interface_advisories + knowledge_advisories + llr_status_advis
     ):
         print(f"WARNING (advisory): {a}")
+    for f in provenance:
+        print(f"FINDING (spine stand-alone): {f}")
     # Gating findings print here too, not only as counts: the report file is
     # gitignored, and the harness bar is "print the real output — never
     # summarize a failure away" (check.py). Mirrors exit_code()'s composition;
@@ -2607,11 +2639,7 @@ def render_console(reg, findings, args, out, html_out):
             else ""
         )
         + (f" ac-advisories={len(advisories)}" if advisories else "")
-        + (
-            f" sr-provenance-advisories={len(sr_provenance_advis)}"
-            if sr_provenance_advis
-            else ""
-        )
+        + (f" provenance-findings={len(provenance)}" if provenance else "")
         + (
             f" llr-status-advisories={len(llr_status_advis)}"
             if llr_status_advis
@@ -2634,6 +2662,7 @@ def exit_code(findings, args):
         or findings.module_findings
         or findings.component_findings
         or findings.interface_backlink_findings
+        or findings.provenance
     ):
         return 1
     if args.strict_integrity and findings.integrity:

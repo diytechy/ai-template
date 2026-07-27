@@ -15241,3 +15241,97 @@ that mattered was "did it run?"
 `perceptual-stale` **cleared** and re-verified *after* the critique was
 committed. The remaining 7 skips are genuine platform gates (exec bit, advisory
 locks, `cmd.exe` expansion) and match the count the previous session recorded.
+
+## 2026-07-27 — WI-327: the stand-alone rule was scoped to the wrong layer, and the owner found it by reading a row
+
+The owner, mid-sitting, asked why `LLR-050` references a work item. Its `Detail`
+carried **`WI-316:`** as a changelog prefix — everything after it is genuine
+mechanism (`is_modified` recognized, counted onto the compared basis line), the
+prefix is pure provenance. Then the sharper question: *isn't there a warning for
+this, and should it be an error?*
+
+There was a warning. It could not possibly have fired.
+
+### The rule I shipped watched 2 rows of 45
+
+`standalone_sr_advisories` checked **SR rows only**, and only their
+`Requirement`/`AcceptanceCriteria`. Measured across the whole spine afterwards:
+
+| Where | Rows carrying a WI id | Watched? |
+|---|---|---|
+| SR `Requirement`/`AcceptanceCriteria` | 2 | ✅ |
+| SR `Title`/`Rationale` | 9 | ❌ |
+| **LLR `Title`/`Detail`** | **26** | ❌ |
+| TC `Method`/`Expected`/`Parameters` | 8 | ❌ |
+
+**The largest pocket was the layer the rule could not see**, and the scoping
+mistake has a specific shape worth naming: I measured only the registry the
+owner's example came from, then cited that measurement as proof the rule could
+safely be narrow. The measurement was real; it just never asked whether the same
+rot sat one rung down. It did, thirteen times over.
+
+**And it kept growing while the rule was green.** `LLR-119`, `LLR-120` and
+`TC-124` — written the same day the lint landed, by the agent that wrote the lint
+— all carried WI ids. A guard that watches the wrong layer is not neutral; it
+supplies a feeling of coverage that suppresses the question.
+
+### Ruled: gate it, and clean the population in the same pass
+
+I recommended a staged-introduction ratchet (freeze the 43, forbid the 44th) on
+the argument that a hard gate would either red the build or force a mass flip.
+**The owner ruled for the full error and the full cleanup**, and that is the
+better call for a reason my recommendation under-weighted: a warn nobody must act
+on is *how the 43 accumulated*. Cleaning them all in one pass means the rule
+guards **zero-to-zero** — it never dictates a cleanup schedule, because there is
+nothing left to schedule.
+
+The cost was also smaller than I told them, and I had it wrong in the direction
+that mattered. I quoted "~5x the window" by counting **rows**. The SR is the
+**attestation unit**: 44 dirty rows land on 14 SRs, **5 of which were already
+`Modified`**, so the sitting grows by **9 SR units**, not 44. 24 of the 26 dirty
+LLRs hang under SRs already in the window — including `LLR-050` itself. Measure
+the unit the process actually uses, not the unit that is easy to count.
+
+### What shipped
+
+`provenance_findings` replaces the SR-only advisory: every normative cell of all
+three registries, flagging a WI id or a process-doc citation, **gating under
+`--strict`** through `exit_code`. Pointer columns (`Module`, `CodeSymbol`,
+`TestRefs`, `Evidence`) stay out of scope *by design* — they exist to point.
+
+The narrowness survives intact and the test still carries it as the larger half:
+a **script name (65 SR rows), an artifact path (6), a rubric (5)** are not
+provenance and must never be flagged, because this kit's product *is* its
+scripts, so the name is the system under specification.
+
+**48 cells across 44 rows cleaned**, mechanism preserved verbatim — every edit
+reviewed as before/after prose, not applied as blind regex. 42 rows flipped
+`Verified` → `Modified`, joining the sitting already open. `derive_gate` now
+reads `modified=50` and every phase G2, which is the window doing its job.
+
+### Proven against the owner's own example
+
+Reintroducing `LLR-050`'s `WI-316:` prefix fails `--strict` at **exit 1**, naming
+the registry, the row, the cell and the token. Source restored.
+
+**One known cost, accepted deliberately:** a WI id is forbidden even where it is
+the *data* rather than a citation — `LLR-120` measured which node box a wire
+grazed, and that box was `WI-043`. It was reworded to describe the node instead
+of naming it, with the id kept in the log. A carve-out would cost more than it
+buys: any exemption a checker cannot distinguish from the defect is one an author
+can reach for.
+
+### A mistake I made and had to undo
+
+Mutation-proving the guard, I reverted the planted defect with
+`git checkout -- <file>` — on a file holding **26 uncommitted cleanups**, which
+it discarded wholesale. Caught immediately (the finding count jumped back to 26)
+and re-applied, but the lesson stands and it is the same one from earlier in the
+session: **`git checkout` is only safe as an undo when the file has no
+uncommitted work.** Verify that first, or mutate a copy.
+
+**Verified:** `trace --strict --strict-integrity` clean, `provenance-findings=0`;
+smoke **433 passed** (with a POSIX shell on PATH); `check_docs` OK (271 docs, 815
+links, 0 broken); goldens regenerated for the renamed gating section. Ratchet
+re-stamped **2778 → 2807** with its reason inline. **WI-324 narrowed** to the
+`TC-055` de-triplication alone — its `SR-026`/`SR-060` half was absorbed here.

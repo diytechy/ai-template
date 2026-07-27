@@ -298,7 +298,13 @@ BASELINE = {
     # into one over their ordered concatenation, which also kept
     # `render_console` off the complexity ratchet. Reviewed bump, log
     # 2026-07-26. Re-stamp downward with WI-280.
-    "trace.py": 2778,
+    # +29 (2778 -> 2807), WI-327: the stand-alone rule widened from the SR to the
+    # whole spine and promoted from advisory to a gating finding — a shared
+    # PROVENANCE_COLS table, one loop over three registries, and the docstring
+    # recording WHY the SR-only scope was wrong (26 LLR + 8 TC + 9 SR cells the
+    # rule could not see, still growing while it was green). Reviewed bump, log
+    # 2026-07-27. Re-stamp downward with WI-280.
+    "trace.py": 2807,
     # +132 (1926 -> 2058; the last +10 is the F4 BOM hardening: read_rows utf-8-sig + git-show strips), WI-316: staged_spine_findings — the amend-without-
     # flip warn (--staged): content cells of a Verified spine row changed
     # without the Modified marker, suppressed when the owning SR flips in the

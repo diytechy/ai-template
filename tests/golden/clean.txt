@@ -62,9 +62,9 @@ None. Ids are unique and well-formed.
 
 None. No unpinned comparative terms.
 
-## Requirement stand-alone advisories (warn-only)
+## Spine stand-alone findings (gating under --strict)
 
-None. No SR cites a work item or a process doc in its normative text.
+None. No spine row cites a work item or a process doc in its text.
 
 ## Status-coherence advisories (warn-only)
 

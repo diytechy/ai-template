@@ -859,7 +859,7 @@ Contracts (interfaces): IF-001, IF-021, IF-042
 | `phase_num(row)` | The integer a row's free-form `Phase` cell digit-parses to (`v2`->2, `2`->2); |  |
 | `structure_findings(path, display)` | Column-count structural check over one registry CSV: every data row must |  |
 | `ac_advisories(srs)` | Warn-only findings: real SR rows whose AcceptanceCriteria uses a |  |
-| `standalone_sr_advisories(srs)` | Warn-only findings (WI-321, the rule in process.md §3): a real SR whose |  |
+| `provenance_findings(srs, llrs, tcs)` | A spine row whose text carries its own PROVENANCE — a work-item id, or a | LLR-050 |
 | `llr_status_advisories(llrs, tcs)` | Warn-only findings (WI-129): an LLR whose Status reads below `Verified` |  |
 | `modified_chain_advisories(srs, llrs, tcs)` | Warn-only findings (WI-316): a `Modified` LLR/TC whose owning SR is neither |  |
 | `id_key(label)` |  |  |

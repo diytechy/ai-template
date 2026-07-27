@@ -916,40 +916,63 @@ def test_predicate_markers_are_word_bounded():
     assert warns("indistinguishable from the reference")
 
 
-def test_a_requirement_states_the_system_not_its_own_history():
-    # WI-321 (owner-raised at the first re-attestation sitting): an SR must be
-    # stand-alone — a reader with none of this repo's history reads one row and
-    # knows what the system shall do. Provenance has better homes (work-items.csv,
-    # the log's Decisions), and the row OBEYS the process rather than citing it.
+def test_a_spine_row_states_the_system_not_its_own_history():
+    # Owner-raised at the first re-attestation sitting, on LLR-050's `WI-316:`
+    # changelog prefix: a spine row must be stand-alone — a reader with none of
+    # this repo's history reads one row and knows what the system does and why.
+    # Provenance has better homes (work-items.csv, the log's Decisions), and the
+    # row OBEYS the process rather than citing it.
     from conftest import load_script
 
     trace = load_script("trace")
 
-    def warns(**cells):
-        cells.setdefault("SR-ID", "SR-101")
-        return [f for f in trace.standalone_sr_advisories([cells])]
+    def flags(sr=None, llr=None, tc=None):
+        def rows(cells, key, rid):
+            if cells is None:
+                return []
+            cells.setdefault(key, rid)
+            return [cells]
 
-    # The two patterns the filing measured as rot, in either normative cell.
-    assert warns(Requirement="Shall resume (WI-210, one path).")
-    assert warns(AcceptanceCriteria="Modified (WI-316) rows re-attest.")
-    assert warns(Requirement="The gate derives per process.md section 7.")
-    assert warns(Requirement="See process-options.md 'Phased delivery'.")
-    # The NEGATIVE half, and the whole reason the rule can be narrow: 65 of 110
-    # rows name a script, 6 name an artifact path and 5 name a rubric, and every
-    # one of those is legitimate — this kit's product IS its scripts, so the name
-    # is the system under specification, not a citation. A rule that fired on
-    # them would be a rule that gets ignored.
-    assert not warns(Requirement="trace.py --strict shall exit nonzero.")
-    assert not warns(Requirement="The derived gate caches to docs/gate.")
-    assert not warns(AcceptanceCriteria="Judged against docs/rubrics/x.md.")
-    assert not warns(Requirement="Renders PROJECT_STATE.html offline.")
-    assert not warns(Requirement="Bounded by SR-055; decomposed to LLR-050.")
+        return trace.provenance_findings(
+            rows(sr, "SR-ID", "SR-101"),
+            rows(llr, "LLR-ID", "LLR-101"),
+            rows(tc, "TC-ID", "TC-101"),
+        )
+
+    # The two token shapes, in the normative cells of all THREE registries — the
+    # scope the SR-only version could not see, and where 43 of the 45 rows lived.
+    assert flags(sr={"Requirement": "Shall resume (WI-210, one path)."})
+    assert flags(sr={"AcceptanceCriteria": "Modified (WI-316) rows re-attest."})
+    assert flags(sr={"Rationale": "Re-scoped by WI-210 to one path."})
+    assert flags(sr={"Title": "Resume authority (WI-210)"})
+    assert flags(llr={"Detail": "WI-316: is_modified recognized."})
+    assert flags(llr={"Title": "Derived gate (WI-316)"})
+    assert flags(tc={"Method": "Ported from the tracks suite, WI-210."})
+    assert flags(tc={"Expected": "Live set as of the WI-314 binding."})
+    assert flags(tc={"Parameters": "the 109-character WI-308 clause"})
+    assert flags(sr={"Requirement": "The gate derives per process.md section 7."})
+    assert flags(llr={"Detail": "See process-options.md 'Phased delivery'."})
+    # The NEGATIVE half, and the whole reason the rule can be narrow: 65 SR rows
+    # name a script, 6 an artifact path and 5 a rubric, and every one is
+    # legitimate — this kit's product IS its scripts, so the name is the system
+    # under specification. A rule that fired on those gets scrolled past.
+    assert not flags(sr={"Requirement": "trace.py --strict shall exit nonzero."})
+    assert not flags(sr={"Requirement": "The derived gate caches to docs/gate."})
+    assert not flags(sr={"AcceptanceCriteria": "Judged against docs/rubrics/x.md."})
+    assert not flags(llr={"Detail": "gen_trajectory.py renders PROJECT_STATE.html."})
+    assert not flags(sr={"Requirement": "Bounded by SR-055; decomposed to LLR-050."})
+    assert not flags(tc={"Method": "Run tests/test_trace.py against a scaffold."})
     # Not a WI id merely because the letters occur, and not any .md file.
-    assert not warns(Requirement="A SWITCH-210 dial selects the tier.")
-    assert not warns(Requirement="Documented in ADOPTING.md section 6.")
-    # It reports WHICH cell and WHAT it cited, so the fix is unambiguous.
-    (msg,) = warns(Requirement="Shall resume (WI-210) per process.md.")
-    assert "Requirement" in msg and "'WI-210'" in msg and "'process.md'" in msg
+    assert not flags(sr={"Requirement": "A SWITCH-210 dial selects the tier."})
+    assert not flags(llr={"Detail": "Documented in ADOPTING.md section 6."})
+    # Pointer columns are out of scope BY DESIGN — they exist to point.
+    assert not flags(llr={"Detail": "x", "Module": "wi_210.py", "TestRefs": "WI-210"})
+    # A placeholder row never gates a scaffold.
+    assert not flags(sr={"SR-ID": "SR-000", "Requirement": "Example (WI-210)."})
+    # It reports the registry, the row, the cell and WHAT it cited.
+    (msg,) = flags(llr={"Detail": "Resumes (WI-210) per process.md."})
+    assert msg.startswith("LLR LLR-101 Detail")
+    assert "'WI-210'" in msg and "'process.md'" in msg
 
 
 def test_duplicate_of_malformed_id_reports_duplicated():
