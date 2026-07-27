@@ -233,14 +233,19 @@ ID_PATTERNS = {
     ),  # optional intra-repo/cross-project interface registry (process.md §8)
 }
 
-# Fields that must be non-empty under --strict-schema. Deliberately omits the
-# optional columns (Rationale, Permutations, Phase, TestRefs, Parameters).
+# Fields that must be non-empty under --strict-schema. Omits the optional columns
+# (Permutations, Phase, TestRefs, Parameters) and the LLR's `Rationale`: a short
+# decomposition row's why IS its parent SR's, so requiring one everywhere would
+# manufacture the restatement the column exists to prevent. The SR's `Rationale`
+# IS required — every row already carries one, so it guards zero-to-zero. A legacy
+# CSV without the column reads as empty (the ADOPTING.md §6 migration adds it).
 REQUIRED_FIELDS = {
     "SR": [
         "SR-ID",
         "Title",
         "SN-Refs",
         "Requirement",
+        "Rationale",
         "AcceptanceCriteria",
         "Priority",
         "Verification",
@@ -371,7 +376,7 @@ _PROCESS_DOC_RE = re.compile(r"\bprocess(?:-options)?\.md\b", re.IGNORECASE)
 # design and are deliberately out of scope.
 PROVENANCE_COLS = (
     ("SR", "SR-ID", ("Title", "Requirement", "Rationale", "AcceptanceCriteria")),
-    ("LLR", "LLR-ID", ("Title", "Detail")),
+    ("LLR", "LLR-ID", ("Title", "Detail", "Rationale")),
     ("TC", "TC-ID", ("Method", "Expected", "Parameters")),
 )
 

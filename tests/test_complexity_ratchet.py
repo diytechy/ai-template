@@ -102,7 +102,12 @@ BASELINE = {
     ("gen_cases.py", "all_pairs"): 13,
     ("gen_cases.py", "main"): 12,
     ("gen_okf.py", "_doc_title_and_summary"): 13,
-    ("gen_okf.py", "emit"): 29,
+    # -4 (29 -> 25), WI-328: the LLR's new Rationale column would have been the
+    # FIFTH `if cell: body.append("**Label.** ...")` inside emit, and the ratchet
+    # caught it at +1. Extracted as the `field()` helper — the `links()` sibling
+    # for plain cells — which removed all five branches instead of adding one.
+    # The emitted bundle is byte-identical, so this is a pure shape change.
+    ("gen_okf.py", "emit"): 25,
     ("gen_okf.py", "main"): 13,
     ("gen_release_checklist.py", "main"): 20,
     ("gen_trajectory.py", "_okf_nodes"): 15,

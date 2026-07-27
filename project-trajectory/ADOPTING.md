@@ -332,6 +332,20 @@ table.
 
 ### Migration recipes for specific kit changes
 
+- **The LLR `Rationale` column (2026-07).** `low-level-requirements.csv` gains an
+  optional **`Rationale`** column after `Detail`. Non-breaking and header-driven:
+  a registry without it reads as blank and stays valid, so migration is adding
+  one header cell whenever convenient. *Why it exists:* `Detail` was the LLR's
+  only prose cell, so the *what*, the *why*, the ruled-out alternatives and the
+  authoring history were structurally forced into one field — and a cell asked to
+  hold four things holds none of them legibly. `Rationale` is a requirement
+  attribute at **every** level (ISO/IEC/IEEE 29148); the SR had one and the LLR
+  did not, and that asymmetry was the bug. It stays **optional** on purpose: a
+  short mechanical decomposition row's why *is* its parent SR's, and requiring one
+  everywhere would manufacture exactly the restatement §3 forbids. Fill it where
+  the decomposition was itself a decision. It is normative text, so the
+  stand-alone rule applies — no work-item ids, no process-doc citations
+  (`trace.py` gates it under `--strict`).
 - **The component/workstream schema bundle (2026-07).** Four coupled, **never
   breaking** registry changes land together: **(a)** the work-items `Track`
   column is renamed **`Workstream`** (a mutable grouping category — "track" now

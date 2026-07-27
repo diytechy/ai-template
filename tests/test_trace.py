@@ -947,6 +947,12 @@ def test_a_spine_row_states_the_system_not_its_own_history():
     assert flags(sr={"Title": "Resume authority (WI-210)"})
     assert flags(llr={"Detail": "WI-316: is_modified recognized."})
     assert flags(llr={"Title": "Derived gate (WI-316)"})
+    # The LLR's `Rationale` is normative text like its `Detail`, so the rule
+    # reaches it. Without this the new column would be a provenance loophole —
+    # exactly the "largest pocket is the layer the rule cannot see" failure the
+    # SR-only scope already made once.
+    assert flags(llr={"Rationale": "Chosen in WI-300's option (f) ruling."})
+    assert flags(llr={"Rationale": "Required by process.md section 3."})
     assert flags(tc={"Method": "Ported from the tracks suite, WI-210."})
     assert flags(tc={"Expected": "Live set as of the WI-314 binding."})
     assert flags(tc={"Parameters": "the 109-character WI-308 clause"})
@@ -973,6 +979,69 @@ def test_a_spine_row_states_the_system_not_its_own_history():
     (msg,) = flags(llr={"Detail": "Resumes (WI-210) per process.md."})
     assert msg.startswith("LLR LLR-101 Detail")
     assert "'WI-210'" in msg and "'process.md'" in msg
+
+
+def test_the_llr_carries_a_rationale_column_and_it_is_optional():
+    # WI-328. `Detail` was the LLR's ONLY prose cell, so the what, the why, the
+    # ruled-out alternatives and the authoring history were structurally forced
+    # into one field — measured: 75 of 118 Details under 300 chars, but the 24
+    # walls (one over 3,000) all in the rows whose reasons were richest. Rationale
+    # is a requirement attribute at EVERY level in 29148; the SR had one and the
+    # LLR did not, and that asymmetry was the bug.
+    import csv
+
+    from conftest import ROOT, load_script
+
+    trace = load_script("trace")
+
+    # The column exists in BOTH the shipped template and the kit's own registry,
+    # and sits beside the cell it splits.
+    for path in (
+        ROOT / "project-trajectory/registries/low-level-requirements.template.csv",
+        ROOT / "docs/requirements/low-level-requirements.csv",
+    ):
+        with open(path, newline="", encoding="utf-8") as fh:
+            hdr = next(csv.reader(fh))
+        assert "Rationale" in hdr, path
+        assert hdr.index("Rationale") == hdr.index("Detail") + 1, path
+
+    # The deliberate asymmetry: required on the SR, optional on the LLR. A short
+    # decomposition row's why IS its parent SR's, so requiring one everywhere
+    # would manufacture the restatement the column exists to prevent.
+    assert "Rationale" in trace.REQUIRED_FIELDS["SR"]
+    assert "Rationale" not in trace.REQUIRED_FIELDS["LLR"]
+
+    # Which means an LLR with no Rationale is clean...
+    bare = {
+        "LLR-ID": "LLR-101",
+        "SR-Refs": "SR-1",
+        "Title": "t",
+        "Module": "m",
+        "CodeSymbol": "c",
+        "Detail": "d",
+        "Status": "Verified",
+    }
+    assert trace.schema_findings("LLR", [bare]) == []
+    # ...and an SR with an empty one is not (zero-to-zero: all 110 carry one).
+    sr = {
+        "SR-ID": "SR-101",
+        "Title": "t",
+        "SN-Refs": "SN-1",
+        "Requirement": "r",
+        "Rationale": "",
+        "AcceptanceCriteria": "a",
+        "Priority": "1",
+        "Verification": "Test",
+        "Status": "Verified",
+    }
+    (found,) = trace.schema_findings("SR", [sr])
+    assert "empty required field Rationale" in found
+
+    # A pre-migration registry that lacks the COLUMN entirely still validates —
+    # the same graceful path TC's Evidence column documents (ADOPTING.md §6).
+    del bare["Detail"]
+    legacy = trace.schema_findings("LLR", [bare])
+    assert legacy == ["LLR LLR-101 has empty required field Detail"], legacy
 
 
 def test_duplicate_of_malformed_id_reports_duplicated():

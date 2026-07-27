@@ -79,7 +79,7 @@ only for an independent high-risk review (§6).
 |---|---|---|
 | `SN-###` | Stakeholder Need | — |
 | `SR-###` | System Requirement | `SN-Refs` |
-| `LLR-###` | Low-Level Requirement | `SR-Refs` (+ Module/CodeSymbol) |
+| `LLR-###` | Low-Level Requirement | `SR-Refs` (+ Module/CodeSymbol, Detail/Rationale) |
 | `TC-###` | Test Case | `Verifies` (SR/LLR) |
 
 Stable, zero-padded, never reused.

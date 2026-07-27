@@ -304,7 +304,14 @@ BASELINE = {
     # recording WHY the SR-only scope was wrong (26 LLR + 8 TC + 9 SR cells the
     # rule could not see, still growing while it was green). Reviewed bump, log
     # 2026-07-27. Re-stamp downward with WI-280.
-    "trace.py": 2807,
+    # +5 (2807 -> 2812), WI-328: the LLR gains a `Rationale` column. One data line
+    # (the SR's `Rationale` joins REQUIRED_FIELDS — every row already carries one,
+    # so it guards zero-to-zero) and four comment lines recording why the LLR's
+    # stays OPTIONAL while the SR's does not: a short decomposition row's why IS
+    # its parent SR's, so requiring one everywhere manufactures the restatement the
+    # column exists to prevent. That asymmetry is exactly what a successor would
+    # re-litigate from the code alone. Reviewed bump, log 2026-07-27.
+    "trace.py": 2812,
     # +132 (1926 -> 2058; the last +10 is the F4 BOM hardening: read_rows utf-8-sig + git-show strips), WI-316: staged_spine_findings — the amend-without-
     # flip warn (--staged): content cells of a Verified spine row changed
     # without the Modified marker, suppressed when the owning SR flips in the

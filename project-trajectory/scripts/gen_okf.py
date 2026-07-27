@@ -198,6 +198,17 @@ def links(label, ids, target_dir):
     ]
 
 
+def field(label, value, fmt="{}"):
+    """One optional labelled body section, or nothing when the cell is empty.
+
+    The `links` sibling above for plain cells. Extracted when the LLR gained its
+    `Rationale` column and made this the fifth copy of `if cell: body.append(...)`
+    inside `emit` — the complexity ratchet caught the fifth and was right to: the
+    branch was never the point, the label was."""
+    value = (value or "").strip()
+    return ["\n**{}.** {}".format(label, fmt.format(value))] if value else []
+
+
 def _strip_md_links(text):
     """Reduce inline markdown links/images to their visible text. A derived
     summary is prose, not navigation — and a relative link valid in the source
@@ -304,12 +315,8 @@ def emit(root):
     for r in srs:
         cid = r["SR-ID"].strip()
         body = ["**Requirement.** {}".format((r.get("Requirement") or "").strip())]
-        ac = (r.get("AcceptanceCriteria") or "").strip()
-        if ac:
-            body.append("\n**Acceptance criteria.** {}".format(ac))
-        rat = (r.get("Rationale") or "").strip()
-        if rat:
-            body.append("\n**Rationale.** {}".format(rat))
+        body += field("Acceptance criteria", r.get("AcceptanceCriteria"))
+        body += field("Rationale", r.get("Rationale"))
         body += links("Realizes", split_refs(r.get("SN-Refs", "")), "stakeholder-needs")
         body += links("Decomposed by", llr_of_sr.get(cid, []), "low-level-requirements")
         body += links("Verified by", tc_of.get(cid, []), "test-cases")
@@ -337,6 +344,7 @@ def emit(root):
     for r in llrs:
         cid = r["LLR-ID"].strip()
         body = ["**Detail.** {}".format((r.get("Detail") or "").strip())]
+        body += field("Rationale", r.get("Rationale"))
         mod = (r.get("Module") or "").strip()
         sym = (r.get("CodeSymbol") or "").strip()
         if mod or sym:
@@ -366,12 +374,8 @@ def emit(root):
     for r in tcs:
         cid = r["TC-ID"].strip()
         body = ["**Method.** {}".format((r.get("Method") or "").strip())]
-        exp = (r.get("Expected") or "").strip()
-        if exp:
-            body.append("\n**Expected.** {}".format(exp))
-        ev = (r.get("Evidence") or "").strip()
-        if ev:
-            body.append("\n**Evidence.** `{}`".format(ev))
+        body += field("Expected", r.get("Expected"))
+        body += field("Evidence", r.get("Evidence"), "`{}`")
         ups = split_refs(r.get("Verifies", ""))
         body += links(
             "Verifies (SR)",

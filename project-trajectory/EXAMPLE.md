@@ -41,14 +41,22 @@ Note: each SR has **measurable** acceptance criteria a test can assert (not "exp
 ## 3. Low-Level Requirements — `requirements/low-level-requirements.csv`
 
 ```csv
-LLR-ID,SR-Refs,Title,Module,CodeSymbol,Detail,TestRefs,Status,Phase
-LLR-001,SR-001,Pure records->CSV serializer,src/export/csv,to_csv,"Pure function: records -> String. Header from the schema; values quoted per RFC-4180. No I/O — unit-testable in isolation.",(see TC),Implemented,
-LLR-002,SR-002,Atomic file write,src/export/io,write_atomic,"Write bytes to <path>.tmp, then rename to <path>; remove the tmp on any error. Rename is atomic on the same volume. The I/O shell around the pure core.",(see TC),Implemented,
+LLR-ID,SR-Refs,Title,Module,CodeSymbol,Detail,Rationale,TestRefs,Status,Phase
+LLR-001,SR-001,Pure records->CSV serializer,src/export/csv,to_csv,"Pure function: records -> String. Header from the schema; values quoted per RFC-4180. No I/O — unit-testable in isolation.",,(see TC),Implemented,
+LLR-002,SR-002,Atomic file write,src/export/io,write_atomic,"Write bytes to <path>.tmp, then rename to <path>; remove the tmp on any error. Rename is atomic on the same volume. The I/O shell around the pure core.","Streaming the write in place was ruled out: a crash mid-write leaves a half-file the next run reads as valid. Costs one temp file per export.",(see TC),Implemented,
 ```
 
 Note the split: **`to_csv` is a pure core** (cheap, exhaustive unit tests);
 **`write_atomic` is the I/O shell** (a smaller number of integration tests).
 Detail *decomposes* the SR — it doesn't restate it.
+
+Note also the **`Rationale`** split, and that `LLR-001` leaves it blank. `Detail`
+says *what this row is*; `Rationale` says *why it is that and not something else*
+— what breaks without it, which alternative lost. It is optional, and blank is
+the right answer for a row like `LLR-001` whose why is simply its parent SR's.
+Reach for it when the decomposition itself was a decision (`LLR-002` chose atomic
+rename over a streaming write). Keeping the two apart is what stops a `Detail`
+growing into a wall of mechanism, justification and edit history at once.
 
 ## 4. Test Cases — `test/test-cases.csv`
 

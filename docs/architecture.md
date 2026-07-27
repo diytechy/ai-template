@@ -623,6 +623,7 @@ Contracts (interfaces): IF-012, IF-033
 | `banner(source)` | The one-line GENERATED provenance blockquote every emitted file carries, |  |
 | `concept(rel_dir, cid, ctype, title, description, tags, resource, body_lines)` |  |  |
 | `links(label, ids, target_dir)` |  |  |
+| `field(label, value, fmt)` | One optional labelled body section, or nothing when the cell is empty. |  |
 | `emit(root)` | {relpath-under-docs/okf: content} for the whole bundle, or {} when the |  |
 | `on_disk(out_root)` |  |  |
 | `main()` |  |  |
