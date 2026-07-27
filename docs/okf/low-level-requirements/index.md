@@ -141,3 +141,6 @@ resource: "generated"
 | [LLR-130](LLR-130.md) | Dashboard staleness check |
 | [LLR-131](LLR-131.md) | Contradiction-safe dual-plan class |
 | [LLR-132](LLR-132.md) | PAGE gate-policy mapping |
+| [LLR-133](LLR-133.md) | Spine stand-alone rule |
+| [LLR-134](LLR-134.md) | Requirement form rules |
+| [LLR-135](LLR-135.md) | Paraphrase advisory |

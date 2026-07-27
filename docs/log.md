@@ -15572,3 +15572,39 @@ unambiguous — `ac_advisories` has `SR-004` → `LLR-004` → a TC, one row per
 and the harness cannot catch this, because `trace.py` only reports orphans among
 rows that exist. Untraced checker behaviour in a repo whose product is
 traceability. Owner's call whether to close it inside WI-328 or file it.
+
+### 2026-07-27 — WI-330: the traceability harness cannot detect untraced work
+
+Found by hand while scoping WI-329, not by any check and not by either review.
+`provenance_findings` and `form_findings` both **gate** under `--strict`, and
+`paraphrase_advisories` warns, and all three shipped with **no SR, no LLR, no
+TC**. Not a judgement call: `ac_advisories` — the same kind of thing — has
+`SR-004` → `LLR-004` → `TC-004`, one row per lint.
+
+**Why nothing caught it.** `trace.py` reports orphans among rows that *exist*. It
+has no notion of shipped behaviour with no row at all, because nothing points at
+the behaviour to begin with. Two adversarial reviews of this very change
+(124-REVIEW-A, 125-REVIEW-A) both missed it, because both were scoped to prose
+fidelity rather than coverage. A repo whose product is traceability shipped two
+gating checks untraced and its own process caught neither — worth recording
+plainly rather than filing quietly.
+
+Closed as registry rows only: three chains on the `SR-004` shape, **zero
+production code changed**, each `TC` citing the pytest node id of a test that
+already existed and already passed (re-run: 3 passed, before filing). New rows
+land `Modified` — the evidence exists but no human has attested them, and marking
+them `Verified` would be the driver signing for the owner.
+
+One self-inflicted finding on the way in, kept because it is a real class:
+`LLR-134`'s Detail **described** the no-obligation-keyword rule and therefore
+tripped it — the checker cannot distinguish a mention from a use. Reworded rather
+than exempted, on the WI-327 precedent that an exemption a checker cannot see is
+one an author can reach for.
+
+**Not done, deliberately:** widening `trace.py` to detect untraced behaviour. It
+would mean guessing which functions constitute "behaviour" — a heuristic with a
+large legitimate majority, the exact failure the provenance rule was measured to
+avoid. The honest control is review, and the record now says review failed here
+twice.
+
+Spine: **SN=25 SR=128 LLR=133 TC=124**, orphans=0, `--strict` exit 0.

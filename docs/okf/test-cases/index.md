@@ -132,3 +132,6 @@ resource: "generated"
 | [TC-123](TC-123.md) | Drive gen_open_items over temp repos: assert a pending registry row renders as a brief an… |
 | [TC-124](TC-124.md) | Generate the dashboard over a tiered fixture carrying one sentence-length stakeholder nee… |
 | [TC-125](TC-125.md) | Sweep the union of emitter documents (the shipped PROJECT_STATE.html plus a fixture per e… |
+| [TC-126](TC-126.md) | Run the spine stand-alone suite; a WI id or process-doc citation in a normative cell of a… |
+| [TC-127](TC-127.md) | Run the requirement-form suite; each of the six rules fires on its own defect shape, and … |
+| [TC-128](TC-128.md) | Run the paraphrase-advisory suite; an echoing child warns while a real decomposition nami… |
