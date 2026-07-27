@@ -369,6 +369,47 @@ def ac_advisories(srs):
 _WI_TOKEN_RE = re.compile(r"\bWI-\d+")
 _PROCESS_DOC_RE = re.compile(r"\bprocess(?:-options)?\.md\b", re.IGNORECASE)
 
+# Requirement FORM (process.md §3). The stand-alone rule below says a row must not
+# carry its own history; these say it must be ONE testable obligation. They are
+# 29148's individual-requirement characteristics restricted to the half a checker
+# can decide with no judgement — singular, unambiguous, verifiable. Every pattern
+# was measured across all three registries before it shipped, and five of the six
+# fire on 0-1 rows: these are guards, not a cleanup schedule.
+_SHALL_RE = re.compile(r"\bshall\b", re.IGNORECASE)
+# Non-`shall` modals in a REQUIREMENT only. An AcceptanceCriteria legitimately
+# says "may" (a permitted outcome) and a Rationale says "would" (the consequence
+# of the alternative), so widening this cries wolf on correct prose.
+# `must` is deliberately ABSENT. 29148 reserves `shall`, but a project that uses
+# `must` as its obligation keyword is following a different convention, not making
+# an error — and this rule ships downstream, where flagging it would red every SR
+# in such a repo on their first re-sync. The kit does not adjudicate that choice;
+# it flags the modals that are ambiguous ALONGSIDE an obligation keyword.
+_MODAL_RE = re.compile(
+    r"\b(?:should|may|might|could|would|can|will|ought to)\b", re.IGNORECASE
+)
+# Unfalsifiable adjectives: a criterion no test can settle. `ac_advisories` warns
+# on a comparative with no predicate; this gates on the terms that have no
+# predicate to name.
+# `etc\.` leads the alternation and carries NO trailing \b: a word boundary after
+# a period only exists mid-sentence, so `\betc\.\b` silently never fires. The
+# first version had it inside the \b-wrapped group and matched nothing; the test's
+# positive half is what caught it.
+_VAGUE_RE = re.compile(
+    r"\betc\.|"
+    r"\b(?:as appropriate|as needed|if possible|where practical|user-friendly|"
+    r"efficient(?:ly)?|robust|flexible|sufficient(?:ly)?|adequate(?:ly)?|"
+    r"reasonable|state of the art|seamless(?:ly)?|intuitive|easy to use|"
+    r"minimal|optimal|appropriate(?:ly)?|and so on|TBD|TBC)\b",
+    re.IGNORECASE,
+)
+# Open-ended clauses: the scope cannot be closed, so the row cannot be completed.
+_ESCAPE_RE = re.compile(
+    r"(?:including but not limited to|at a minimum|among others|such as)",
+    re.IGNORECASE,
+)
+# "shall be logged" names no logger. Passive with a `by <actor>` is fine.
+_ACTORLESS_RE = re.compile(r"\bshall be\s+\w+(?:ed|en)\b(?!\s+by\b)", re.IGNORECASE)
+
 
 # Every spine cell whose text a reader treats as the SPECIFICATION — the columns
 # a downstream adopter reads to learn what the system does and why. `Module`,
@@ -442,6 +483,140 @@ def provenance_findings(srs, llrs, tcs):
                             label, rid, col, ", ".join(repr(c) for c in cited)
                         )
                     )
+    return out
+
+
+def _real(rows, key):
+    """The non-placeholder rows of one registry, with their id."""
+    for r in rows:
+        rid = (r.get(key) or "").strip()
+        if rid and not is_example(rid):
+            yield rid, r
+
+
+def form_findings(srs, llrs, tcs):
+    """A spine row whose text is not ONE testable obligation (process.md §3).
+
+    The stand-alone rule says a row must not carry its own HISTORY. This says the
+    part that is left must be *decidable*: 29148's individual-requirement
+    characteristics — singular, unambiguous, verifiable — restricted to the half a
+    checker settles without judgement. What it deliberately cannot see is whether
+    the requirement is NECESSARY, CORRECT or FEASIBLE; those stay the consistency
+    review's, and no proxy metric is offered for them (the readability-score
+    refusal, kept).
+
+    Narrow BY MEASUREMENT over all three registries, the discipline the SR-only
+    scoping error taught: five of the six patterns fire on 0-1 rows and the sixth
+    (one `shall` per requirement) on 13 of 110, so every one of them lands as a
+    guard rather than a cleanup schedule. The negative half matters as much: a
+    multi-clause `AcceptanceCriteria` is legitimate and untouched — an AC
+    enumerates the ways ONE obligation is checked, which is the opposite of a row
+    holding two obligations."""
+    out = []
+    for rid, r in _real(srs, "SR-ID"):
+        if is_draft(r):
+            continue
+        req = (r.get("Requirement") or "").strip()
+        if not req:
+            continue
+        # MORE than one, never zero. A row with no `shall` is not necessarily
+        # wrong — a placeholder, or a project whose obligation keyword is not the
+        # English word "shall" — and flagging it would red a legitimate scaffold.
+        # The measured defect was two-obligations-in-one-row, and that is what
+        # this catches.
+        n = len(_SHALL_RE.findall(req))
+        if n > 1:
+            out.append(
+                "SR {} Requirement carries {} 'shall' — one row states one "
+                "obligation, or a partial pass has no id to report against: "
+                "split it".format(rid, n)
+            )
+        weak = sorted({w.lower() for w in _MODAL_RE.findall(req)})
+        if weak:
+            out.append(
+                "SR {} Requirement uses {} in normative text — 'shall' is the "
+                "obligation; 'should'/'may'/'will' are a goal, a permission and "
+                "a statement of fact, and a reader cannot tell which is "
+                "binding".format(rid, ", ".join(repr(w) for w in weak))
+            )
+        passive = _ACTORLESS_RE.search(req)
+        if passive:
+            out.append(
+                "SR {} Requirement says {!r} with no actor — name what performs "
+                "it, or the row cannot say who failed".format(rid, passive.group(0))
+            )
+    for rows, (label, key, cols) in zip((srs, llrs, tcs), PROVENANCE_COLS):
+        for rid, r in _real(rows, key):
+            # A `Draft` row is pre-ratification and process.md §4 already exempts
+            # it from the decomposition rules. "TBD" in a Draft acceptance
+            # criterion is what Draft MEANS; flagging it would make the state
+            # unusable for the drafting it exists to allow.
+            if is_draft(r):
+                continue
+            for col in cols:
+                cell = (r.get(col) or "").strip()
+                for rx, why in (
+                    (_VAGUE_RE, "no test can settle it — name the measurable"),
+                    (
+                        _ESCAPE_RE,
+                        "the scope cannot be closed, so the row cannot"
+                        " be completed — enumerate it",
+                    ),
+                ):
+                    hits = sorted({h.lower() for h in rx.findall(cell)})
+                    if hits:
+                        out.append(
+                            "{} {} {} uses {} — {}".format(
+                                label,
+                                rid,
+                                col,
+                                ", ".join(repr(h) for h in hits),
+                                why,
+                            )
+                        )
+                if label == "LLR" and col == "Detail" and _SHALL_RE.search(cell):
+                    out.append(
+                        "LLR {} Detail uses 'shall' — the SR states the "
+                        "obligation and the LLR decomposes it; a 'shall' here is "
+                        "either a restatement of the parent or a requirement "
+                        "hiding a tier below where it is traced".format(rid)
+                    )
+    return out
+
+
+def paraphrase_advisories(srs, llrs):
+    """Warn-only: a child cell that mostly RE-WORDS its parent (process.md §3
+    'decompose, don't paraphrase'). Lexical overlap is a heuristic and is labelled
+    as one — it never gates. Measured at 38 of 118 LLRs, which is exactly why: a
+    short `Detail` legitimately shares vocabulary with the SR it decomposes, so a
+    gating version would cry wolf on correct rows and get scrolled past."""
+    out = []
+
+    def words(s):
+        return {w for w in re.findall(r"[a-z_]{4,}", (s or "").lower())}
+
+    for rid, r in _real(srs, "SR-ID"):
+        req, rat = words(r.get("Requirement")), words(r.get("Rationale"))
+        if rat and len(req & rat) / len(rat) > 0.55:
+            out.append(
+                "SR {} Rationale mostly re-words its own Requirement — a "
+                "rationale says WHY the requirement exists (what breaks without "
+                "it, which alternative lost), not what it says again".format(rid)
+            )
+    by_id = {rid: r for rid, r in _real(srs, "SR-ID")}
+    for rid, r in _real(llrs, "LLR-ID"):
+        det = words(r.get("Detail"))
+        for p in refs(r.get("SR-Refs")):
+            parent = by_id.get(p)
+            if parent and det:
+                req = words(parent.get("Requirement"))
+                if len(req & det) / len(det) > 0.6:
+                    out.append(
+                        "LLR {} Detail mostly re-words {} — a child adds "
+                        "detail (module, mechanism, the decomposition choice); "
+                        "if it would repeat the parent, link instead".format(rid, p)
+                    )
+                    break
     return out
 
 
@@ -2176,6 +2351,16 @@ def analyze(reg, args):
     # counter names the acceptance-criteria lint, and a shared count would say
     # "ac-advisories" about a finding that is not one. Joins exit_code.
     provenance = provenance_findings(srs, llrs, tcs)
+    # GATING (WI-328): requirement FORM — one `shall` per requirement, no weak
+    # modal, no actorless passive, no unfalsifiable term, no open-ended clause, no
+    # `shall` in an LLR. Same pipe as provenance: both are "is this row readable
+    # and decidable on its own", and splitting them across two counters would make
+    # a reader check two places for one answer. Joins exit_code.
+    form = form_findings(srs, llrs, tcs)
+    # Warn-only, always on (WI-328): a child cell that re-words its parent. A
+    # heuristic (lexical overlap), so it warns FOREVER — 38 of 118 LLRs trip it
+    # and most are legitimate. Never joins a failure set below.
+    paraphrase = paraphrase_advisories(srs, llrs)
     # Warn-only, always on (WI-129): an LLR reading below Verified while every
     # citing TC is Verified — a readout drift, never a failure (LLR status is
     # non-gating under the derived-gate model). Never joins a failure set below.
@@ -2211,6 +2396,8 @@ def analyze(reg, args):
     findings.schema = schema
     findings.advisories = advisories
     findings.provenance = provenance
+    findings.form = form
+    findings.paraphrase = paraphrase
     findings.llr_status_advis = llr_status_advis
     findings.budget_findings = budget_findings
     findings.module_findings = module_findings
@@ -2245,6 +2432,8 @@ def render_report(reg, findings, args, forest):
     schema = findings.schema
     advisories = findings.advisories
     provenance = findings.provenance
+    form = findings.form
+    paraphrase = findings.paraphrase
     llr_status_advis = findings.llr_status_advis
     budget_findings = findings.budget_findings
     module_findings = findings.module_findings
@@ -2391,6 +2580,20 @@ def render_report(reg, findings, args, forest):
         ["None. No spine row cites a work item or a process doc in its text."]
         if not provenance
         else [f"- {f}" for f in provenance]
+    )
+    # GATING section (WI-328): requirement form — one testable obligation per row.
+    lines += ["", "## Requirement form findings (gating under --strict)", ""]
+    lines += (
+        ["None. Every requirement states one obligation in decidable terms."]
+        if not form
+        else [f"- {f}" for f in form]
+    )
+    # Warn-only section: a child cell re-wording its parent. Heuristic, never gates.
+    lines += ["", "## Paraphrase advisories (warn-only heuristic)", ""]
+    lines += (
+        ["None flagged by the overlap heuristic."]
+        if not paraphrase
+        else [f"- {f}" for f in paraphrase]
     )
     # Warn-only advisory section (never a failure, WI-129 + WI-316): LLRs reading
     # below Verified whose citing TCs are all Verified (lift the Status cell by
@@ -2551,6 +2754,8 @@ def render_console(reg, findings, args, out, html_out):
     integrity = findings.integrity
     advisories = findings.advisories
     provenance = findings.provenance
+    form = findings.form
+    paraphrase = findings.paraphrase
     interface_advisories = findings.interface_advisories
     knowledge_advisories = findings.knowledge_advisories
     llr_status_advis = findings.llr_status_advis
@@ -2573,11 +2778,17 @@ def render_console(reg, findings, args, out, html_out):
     # stay separate where it matters (their own report sections and counters) and
     # a fifth lint no longer costs this routine a branch.
     for a in (
-        advisories + interface_advisories + knowledge_advisories + llr_status_advis
+        advisories
+        + interface_advisories
+        + knowledge_advisories
+        + llr_status_advis
+        + paraphrase
     ):
         print(f"WARNING (advisory): {a}")
     for f in provenance:
         print(f"FINDING (spine stand-alone): {f}")
+    for f in form:
+        print(f"FINDING (requirement form): {f}")
     # Gating findings print here too, not only as counts: the report file is
     # gitignored, and the harness bar is "print the real output — never
     # summarize a failure away" (check.py). Mirrors exit_code()'s composition;
@@ -2645,6 +2856,8 @@ def render_console(reg, findings, args, out, html_out):
         )
         + (f" ac-advisories={len(advisories)}" if advisories else "")
         + (f" provenance-findings={len(provenance)}" if provenance else "")
+        + (f" form-findings={len(form)}" if form else "")
+        + (f" paraphrase-advisories={len(paraphrase)}" if paraphrase else "")
         + (
             f" llr-status-advisories={len(llr_status_advis)}"
             if llr_status_advis
@@ -2668,6 +2881,7 @@ def exit_code(findings, args):
         or findings.component_findings
         or findings.interface_backlink_findings
         or findings.provenance
+        or findings.form
     ):
         return 1
     if args.strict_integrity and findings.integrity:

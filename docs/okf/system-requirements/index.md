@@ -121,3 +121,18 @@ resource: "generated"
 | [SR-108](SR-108.md) | Serialized dual-plan disposition |
 | [SR-109](SR-109.md) | Spec-lifecycle close-side coherence |
 | [SR-110](SR-110.md) | Per-module coverage floors |
+| [SR-111](SR-111.md) | Kit-version stamp |
+| [SR-112](SR-112.md) | Checked per-agent skill fan-out |
+| [SR-113](SR-113.md) | Dev-setup wires the process floor |
+| [SR-114](SR-114.md) | Kit scripts run across the supported OSes |
+| [SR-115](SR-115.md) | Deterministic traincar ordering |
+| [SR-116](SR-116.md) | Generated status and run-state surfaces |
+| [SR-117](SR-117.md) | Atomic traincar reservation and lane leasing |
+| [SR-118](SR-118.md) | Traincar build and review shape |
+| [SR-119](SR-119.md) | Release on early train end |
+| [SR-120](SR-120.md) | Blocked-constituent disposition |
+| [SR-121](SR-121.md) | Gated downstream migration to the parallel default |
+| [SR-122](SR-122.md) | Dashboard freshness check |
+| [SR-123](SR-123.md) | Critique closure ratchet |
+| [SR-124](SR-124.md) | Contradiction-safe dual-plan dispatcher class |
+| [SR-125](SR-125.md) | PAGE maps through gate policy |

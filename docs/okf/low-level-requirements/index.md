@@ -129,3 +129,15 @@ resource: "generated"
 | [LLR-118](LLR-118.md) | Generated owner decision surface (registry + attestation depth) |
 | [LLR-119](LLR-119.md) | T4 label legibility, mechanized: ink inside its box, truncation with a reveal |
 | [LLR-120](LLR-120.md) | No edge through an unrelated node box (T8 objective floor) |
+| [LLR-121](LLR-121.md) | Kit-version stamp |
+| [LLR-122](LLR-122.md) | dev-setup wires core.hooksPath |
+| [LLR-123](LLR-123.md) | Deterministic traincar ordering |
+| [LLR-124](LLR-124.md) | Generated status + run-state |
+| [LLR-125](LLR-125.md) | Atomic reservations + worktree leasing |
+| [LLR-126](LLR-126.md) | Train build + review shape |
+| [LLR-127](LLR-127.md) | Release unstarted reservations on early end |
+| [LLR-128](LLR-128.md) | Blocked-constituent disposition |
+| [LLR-129](LLR-129.md) | Gated downstream migration |
+| [LLR-130](LLR-130.md) | Dashboard staleness check |
+| [LLR-131](LLR-131.md) | Contradiction-safe dual-plan class |
+| [LLR-132](LLR-132.md) | PAGE gate-policy mapping |

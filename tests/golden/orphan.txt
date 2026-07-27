@@ -69,6 +69,14 @@ None. No unpinned comparative terms.
 
 None. No spine row cites a work item or a process doc in its text.
 
+## Requirement form findings (gating under --strict)
+
+None. Every requirement states one obligation in decidable terms.
+
+## Paraphrase advisories (warn-only heuristic)
+
+None flagged by the overlap heuristic.
+
 ## Status-coherence advisories (warn-only)
 
 - LLR LLR-001 reads 'Implemented' but every citing TC is Verified — lift to Verified (the evidence already exists)

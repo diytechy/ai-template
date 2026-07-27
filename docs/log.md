@@ -15441,3 +15441,96 @@ sometimes carries the only surviving warning about a defect class that recurred.
 **Verified after the fixes:** `trace --strict --strict-integrity` clean,
 `provenance-findings=0`, exit 0. Brief regenerated on the same
 `--since a5052a913` baseline.
+
+---
+
+## 2026-07-27 — WI-328: a requirement carries its own reason (S1–S5 of six)
+
+The owner's question was a sequencing one — *"does WI-328 move SR/LLR/TC text? I
+don't want to re-attest twice"* — and answering it honestly re-aimed the WI.
+
+### The rule had not terminated because it was the wrong KIND of rule
+
+WI-321/327 banned provenance in normative text. Right, and 29148-aligned. But it
+removed the **pointer** without requiring the **substance**: 124-REVIEW-A found 23
+more survivors in different costumes, and the 48-cell rewrite left dangling
+participles behind — the tell that removing a citation left a hole where the
+reason used to be. There is always another costume, because provenance is not a
+token shape. **The terminating rule is a positive obligation, not a wider
+prohibition.**
+
+### Measured across all three registries before acting
+
+WI-327's own recorded scoping error was measuring only the registry the example
+came from, so every candidate was measured across SR + LLR + TC. Two results
+redirected the WI:
+
+- **The SR layer's *what* was already clean** — 0 of 110 `Requirement` cells
+  carried provenance; all 22 SR hits were in `Rationale`. A rationale-quality WI.
+- **The LLR had nowhere to put a why** — `Detail` was its only prose cell, so the
+  what, the why, the ruled-out alternatives and the authoring history were
+  *structurally* forced into one field. 75 of 118 `Detail`s were under 300 chars
+  while the 24 walls (one over 3,000) were all the recent render/critique cluster
+  — the rows whose reasons were richest and had nowhere to go. A **schema**
+  defect, not an authoring one.
+
+**A check the measurement refuted, recorded because it nearly shipped:** a
+`Rationale` length floor. SR-016's 45-character rationale is *complete* — it
+states the impact if the requirement is absent. Length was never the defect; the
+22 rows where a citation carries the reason were.
+
+### Owner rulings
+
+1. **The LLR gains a `Rationale` column** — "the right form", downstream
+   migration cost accepted. Optional on the LLR, required on the SR, and the
+   asymmetry is deliberate: a short decomposition row's why *is* its parent SR's.
+   A `History` column was passed over — provenance already has two homes.
+2. **Run inside the open attestation window**, against the general preference,
+   *because* the work is requirement documentation. Stated as a standing rule and
+   therefore filed in `PROCESS.md` §4, not left here.
+3. **C1 gates now and the 13 compound rows are split in this WI** — chosen over
+   an advisory tier or a grandfathered baseline, after the driver reported that
+   all 13 hold genuinely multiple obligations and that a recorded sanction is
+   accepting the defect.
+
+### What shipped
+
+- **S1** — `PROCESS.md` §3 corrected: the rule had been documented as `SR`-only
+  and warn-only, both untrue since WI-327 widened and gated it without touching
+  the doc. Adopters were inheriting a rule wrong about its own scope *and* its
+  own severity.
+- **S3** — the `Rationale` column across template, registry, `gen_okf`,
+  `EXAMPLE.md`, `ADOPTING.md` §6; `IF-021`/`033`/`051` → `v2`, no new seam.
+- **S2/S4** — six gating form rules (one `shall`, no weak modal, no actorless
+  passive, no unfalsifiable term, no open-ended clause, no `shall` in an LLR), a
+  warn-only paraphrase advisory, and the rationale contract stated once in §3.
+- **S5** — **13 compound SRs split into 28**: +15 SR (SR-111…SR-125), +12 LLR
+  (LLR-121…LLR-132), 13 TCs re-pointed, 3 one-off form fixes. `form-findings`
+  16 → **0**, orphans 0, `--strict` exit 0. Spine SN=25 **SR=125 LLR=130** TC=121.
+
+### Three things worth carrying forward
+
+- **A test's positive half caught a dead regex.** `\betc\.\b` can never match —
+  a word boundary after a period only exists mid-sentence — so the vague-term
+  rule silently ignored `etc.` The measurement that "proved" it fired on zero
+  rows was made with the same broken pattern. A negative half alone would have
+  passed forever.
+- **The complexity ratchet was right twice.** The LLR `Rationale` would have been
+  the *fifth* `if cell: body.append(...)` in `gen_okf.emit`; extracting `field()`
+  removed all five instead of adding one (29 → **25**, bundle byte-identical).
+- **`trace.py` took a +196 bump against "decompose, do not bump"** — so the debt
+  is **filed as WI-329**, not argued away. The extractable unit is cohesive and
+  already named (the four pure text predicates), and it is deferred only because
+  the extraction moves the scaffold surface and this WI landed inside an open
+  window.
+
+### Still owed on this WI
+
+**S6** — the independent adversarial review of the rewritten cells, plus a
+word-level delta run. Not optional: WI-327's 48-cell pass needed 124-REVIEW-A,
+which found 7 real defects including two BLOCKERs, and the editor's own second
+pass then found two more the critic missed. This pass is larger.
+
+**The sitting grew, as intended:** SR 45 `Modified` / 80 `Verified`, LLR 51/79,
+TC 21/100. That is one sitting instead of two, which is what the sequencing
+ruling bought.

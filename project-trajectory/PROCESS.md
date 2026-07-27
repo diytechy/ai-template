@@ -98,6 +98,19 @@ Stable, zero-padded, never reused.
   script, an artifact path, the rubric a `Critique` row is judged against — is the
   *subject*, not provenance. `trace.py` gates under `--strict`; pointer columns
   (`Module`, `CodeSymbol`, `TestRefs`, `Evidence`) are out of scope by design.
+- **One requirement, one `shall`** — in decidable terms: no second `shall`, no
+  `should`/`may`/`will` in normative text, no unfalsifiable adjective ("robust",
+  "minimal"), no open-ended "such as", no actorless passive, and no `shall` in an
+  `LLR` (the SR states the obligation; the child decomposes it). A multi-clause
+  `AcceptanceCriteria` is fine — it enumerates how *one* obligation is checked.
+  `trace.py` gates these under `--strict`; what needs judgement (necessary,
+  correct, feasible) stays the consistency review's.
+- **A rationale carries its own reason.** `Rationale` is complete when a reader
+  with none of your history knows **what breaks without the requirement** and
+  **which alternative lost**. A review, ruling or design-thread reference is
+  optional context *on top of* a sentence that already stands alone — never a
+  substitute for one. Dropping a citation and leaving the reason with it is the
+  failure this exists to prevent.
 - **The traceability matrix is generated** by a small join over the registries'
   ID/parent columns; it reports **orphans** (req with no child/test; test/LLR
   with no parent). Hand-maintaining the matrix is forbidden.

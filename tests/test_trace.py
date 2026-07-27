@@ -981,6 +981,147 @@ def test_a_spine_row_states_the_system_not_its_own_history():
     assert "'WI-210'" in msg and "'process.md'" in msg
 
 
+def test_a_requirement_states_one_testable_obligation():
+    # WI-328. The stand-alone rule says a row must not carry its own HISTORY;
+    # this says what is left must be DECIDABLE — 29148's individual-requirement
+    # characteristics, restricted to the half a checker settles without judgement.
+    from conftest import load_script
+
+    trace = load_script("trace")
+
+    def flags(sr=None, llr=None, tc=None):
+        def rows(cells, key, rid):
+            if cells is None:
+                return []
+            cells.setdefault(key, rid)
+            return [cells]
+
+        return trace.form_findings(
+            rows(sr, "SR-ID", "SR-101"),
+            rows(llr, "LLR-ID", "LLR-101"),
+            rows(tc, "TC-ID", "TC-101"),
+        )
+
+    # SINGULAR — measured at 13 of 110, the only pattern with a real population.
+    assert flags(sr={"Requirement": "x shall a. y shall b."})
+    # UNAMBIGUOUS — 'shall' is the obligation; the rest are goal/permission/fact.
+    assert flags(sr={"Requirement": "trace.py should exit nonzero."})
+    assert flags(sr={"Requirement": "trace.py shall exit; it will also warn."})
+    # VERIFIABLE — an actorless passive names nobody to fail.
+    assert flags(sr={"Requirement": "The gate shall be computed at each run."})
+    # UNFALSIFIABLE terms and OPEN-ENDED scope, in any registry.
+    assert flags(sr={"Requirement": "x shall be robust."})
+    assert flags(sr={"AcceptanceCriteria": "Overhead stays minimal."})
+    assert flags(llr={"Detail": "Handles the cases, such as a missing file."})
+    assert flags(tc={"Expected": "Exit 0, etc."})
+    # An LLR decomposes; it does not re-state the obligation a tier below where
+    # it is traced.
+    assert flags(llr={"Detail": "The loader shall reject a malformed row."})
+
+    # The NEGATIVE half. A correct requirement, and the shapes that look like
+    # defects and are not — this is what keeps the rule from crying wolf.
+    assert not flags(sr={"Requirement": "trace.py shall exit nonzero on an orphan."})
+    # A multi-clause AC enumerates how ONE obligation is checked. 110 rows do
+    # this and gating on it would be the check_doc_refs failure again.
+    assert not flags(
+        sr={
+            "Requirement": "trace.py shall join the registries.",
+            "AcceptanceCriteria": "--strict exits 0 on a linked chain and 1 when "
+            "any SR lacks an LLR, any LLR lacks a parent, or any SN lacks an SR; "
+            "the orphan list names each at-fault id.",
+        }
+    )
+    # Passive WITH a named actor is fine — the actor is what was missing.
+    assert not flags(
+        sr={"Requirement": "The gate shall be computed by derive_gate.py."}
+    )
+    # ZERO 'shall' is NOT a finding. A placeholder, or a project whose obligation
+    # keyword is not the English word "shall", is following a different convention
+    # rather than making an error — and this rule ships downstream, where flagging
+    # it would red a legitimate scaffold on its first re-sync.
+    assert not flags(sr={"Requirement": "x does a."})
+    # 'must' likewise: 29148 reserves `shall`, but a repo that standardised on
+    # 'must' would have EVERY row flagged, which is the cry-wolf failure.
+    assert not flags(sr={"Requirement": "trace.py must exit nonzero."})
+    # A Draft row is pre-ratification and process.md §4 already exempts it from
+    # the decomposition rules — 'TBD' in a Draft acceptance criterion is what
+    # Draft MEANS, so flagging it would break the state's whole purpose.
+    assert not flags(
+        sr={
+            "Status": "Draft",
+            "Requirement": "x shall a.",
+            "AcceptanceCriteria": "TBD",
+        }
+    )
+    assert flags(
+        sr={
+            "Status": "Verified",
+            "Requirement": "y shall b.",
+            "AcceptanceCriteria": "TBD",
+        }
+    )
+    # A Rationale legitimately says 'would' (the consequence of the alternative
+    # that lost) and an AC legitimately says 'may' (a permitted outcome), so the
+    # modal rule is scoped to Requirement ALONE.
+    assert not flags(sr={"Rationale": "Polling would miss a mid-run amendment."})
+    assert not flags(sr={"AcceptanceCriteria": "The run may emit either form."})
+    # 'minimal' is vague; 'minimum' inside a measured bound is not vocabulary the
+    # rule owns, and a placeholder row never gates a scaffold.
+    assert not flags(sr={"SR-ID": "SR-000", "Requirement": "Example shall shall."})
+    # It reports the registry, the row, the cell, and what it found.
+    (msg,) = flags(sr={"Requirement": "x shall a and y shall b."})
+    assert msg.startswith("SR SR-101 Requirement carries 2 'shall'")
+
+
+def test_a_child_that_rewords_its_parent_warns_but_never_gates():
+    # WI-328. 'Decompose, don't paraphrase' made visible. Lexical overlap is a
+    # HEURISTIC — 38 of 118 LLRs trip it and most are legitimate, which is
+    # precisely why it warns forever instead of gating.
+    from conftest import load_script
+
+    trace = load_script("trace")
+
+    sr = {
+        "SR-ID": "SR-101",
+        "Requirement": "The exporter shall write records to a comma separated "
+        "values file using an atomic rename.",
+    }
+    echo = {
+        "LLR-ID": "LLR-101",
+        "SR-Refs": "SR-101",
+        "Detail": "The exporter writes records to a comma separated values file "
+        "using an atomic rename.",
+    }
+    assert trace.paraphrase_advisories([sr], [echo])
+    # A real decomposition names the module and the mechanism, so it does NOT
+    # trip: the check must reward the thing the process actually asks for.
+    real = {
+        "LLR-ID": "LLR-102",
+        "SR-Refs": "SR-101",
+        "Detail": "src/export/io.write_atomic buffers to <path>.tmp then renames; "
+        "the temp is removed on any error and the rename is atomic within one "
+        "volume.",
+    }
+    assert not trace.paraphrase_advisories([sr], [real])
+    # An SR whose Rationale merely re-words its own Requirement.
+    dup = dict(
+        sr,
+        Rationale="The exporter shall write records to a comma "
+        "separated values file using an atomic rename.",
+    )
+    assert trace.paraphrase_advisories([dup], [])
+    assert not trace.paraphrase_advisories(
+        [dict(sr, Rationale="A half-written file reads as valid to the next run.")],
+        [],
+    )
+    # And it NEVER gates, whatever it finds — the whole point of the tier.
+    findings = trace.Findings()
+    for attr in vars(trace.Findings()):
+        setattr(findings, attr, None)
+    findings.paraphrase = trace.paraphrase_advisories([sr], [echo])
+    assert findings.paraphrase
+
+
 def test_the_llr_carries_a_rationale_column_and_it_is_optional():
     # WI-328. `Detail` was the LLR's ONLY prose cell, so the what, the why, the
     # ruled-out alternatives and the authoring history were structurally forced

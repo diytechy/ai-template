@@ -311,7 +311,21 @@ BASELINE = {
     # its parent SR's, so requiring one everywhere manufactures the restatement the
     # column exists to prevent. That asymmetry is exactly what a successor would
     # re-litigate from the code alone. Reviewed bump, log 2026-07-27.
-    "trace.py": 2812,
+    # +196 (2812 -> 3008), WI-328: the requirement-FORM tier (six gating rules)
+    # and the paraphrase advisory, beside the stand-alone rule they complete —
+    # all three answer "is this row readable and decidable on its own", and
+    # splitting them across modules would make a reader check two places for
+    # one answer. REVIEWED BUMP, and the largest single one this module has
+    # taken: the honest fix is the WI-280 extraction of the whole spine-row
+    # TEXT concern into a sibling (the agent_common/plan_runner precedent),
+    # which is filed rather than done inline because it moves the scaffold
+    # surface (bootstrap MAPPING, README kit-contents, test file lists) and
+    # this WI lands inside an open attestation window. Log 2026-07-27.
+    # +18 (3008 -> 3026), same WI: the two Draft exemptions and the reasons the
+    # zero-`shall` and `must` cases are NOT findings — narrowings the golden
+    # fixtures and the derive_gate lifecycle test forced, and exactly the ones a
+    # successor would otherwise re-add. Same reviewed bump, same WI-329 debt.
+    "trace.py": 3026,
     # +132 (1926 -> 2058; the last +10 is the F4 BOM hardening: read_rows utf-8-sig + git-show strips), WI-316: staged_spine_findings — the amend-without-
     # flip warn (--staged): content cells of a Verified spine row changed
     # without the Modified marker, suppressed when the owning SR flips in the

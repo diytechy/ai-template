@@ -133,6 +133,10 @@ BASELINE = {
     # actually prefers — decomposition, not a bump — taken on the very function
     # the WI-259 note above called a follow-up.
     ("trace.py", "analyze"): 50,
+    # WI-328: six measured form rules over three registries. Flat and
+    # table-driven — the branches are the RULES, so collapsing them would
+    # hide which rule fired from the message a reader acts on.
+    ("trace.py", "form_findings"): 14,
     ("trace.py", "mermaid_graph"): 17,
     # 28 -> 27: the L-3 ratify bucketing removed a nested scan (re-stamped
     # downward per the ratchet's improvement rule).

@@ -29,7 +29,11 @@ DASHBOARD = REPO_ROOT / "PROJECT_STATE.html"
 # (LLR-101..114 / TC-104..119, each Detail stating scope + narrowing, all
 # embedded in the dashboard's detail JSON) crossed the 2026-07-22 ceiling.
 # ~14% headroom kept. Reason in the log, 2026-07-26.
-MAX_BYTES = 1_600_000
+# 1,600,000 -> 1,650,000, WI-328: the compound-SR split added 15 SR and 12 LLR
+# rows, every one of which renders a node. Registry GROWTH, not a rendering
+# blow-up — the per-row cost is unchanged, and the check that would catch a real
+# blow-up is this one staying tight against the new row count.
+MAX_BYTES = 1_650_000
 
 
 def test_dashboard_stays_within_its_size_budget():
