@@ -17512,3 +17512,100 @@ system working: the census-audit guard flagged the `lf-write-preamble` sanctions
 as dead the moment the revert dissolved the duplication they described, and an
 `ast.parse` assertion stopped a regex-based revert from writing an unparseable
 file.
+
+---
+
+## Session 2026-07-28 (cont.) — WI-354: the same reference, enforced in one home and unread in the other
+
+R-E resolved a `doc#anchor` SpecRef by splitting on `#` and testing that the
+**path** existed. The fragment was discarded unread. WI-326's row cited
+`docs/log.md#2026-07-26--wi-326-a-green-that-hid-47-tests` from the day it was
+filed — a **truncated** slug matching no heading — and nothing surfaced it for two
+days. It surfaced only when the close wrote the same string into a markdown
+*link*, where `check_docs` rejected it instantly. One reference, enforced in one
+registry and invisible in the other: the WI-308 doc-refs class, one home over.
+
+**The anchor set comes from `check_docs.parse_doc`, not from a second slugifier.**
+Two slug implementations that drift produce false findings on *correct* rows,
+which is worse than the gap. That is a sibling import, allowed on the same ground
+`gen_trajectory` already uses for `check_trajectory`: both modules are in
+`bootstrap.py` MAPPING, so they ship and re-sync together. The contrast that
+settled it is in that same file — `schedule` is imported *optionally* precisely
+because it is **not** in MAPPING. So the rule is not "siblings are fine", it is
+**MAPPING membership decides**, and it was checked rather than assumed.
+
+The import is nonetheless **lazy and degrades to path-only**, because this module
+runs in the *shipped* pre-commit hook and 130-REVIEW-A's `ratify-fresh` finding is
+exactly what a hook that hard-requires a file an adopter may not have does: it
+blocks every commit. Degrading silently is its own risk, so the non-vacuity is
+pinned by tests that drive a known-bad anchor rather than by trusting the comment.
+
+**The guard was made to fail before it was believed.** Driven against the real
+WI-326 string it not only fires but recovers the full heading the ref was
+truncated from — `#2026-07-26--wi-326-a-green-that-hid-47-tests-caught-by-not-trusting-a-number`.
+That near-miss report is the difference between a finding that is true and one
+that is actionable, and it needed its own rule: `difflib` scores a short prefix of
+a long slug poorly, which is precisely the truncation shape, so `nearest_anchor`
+tries a prefix relation first and falls back to `difflib`.
+
+**A test was pinning the defect.** `test_specref_with_anchor_resolves` asserted
+"anchor ignored by R-E" and passed while citing a heading its own fixture did not
+have. That is the WI-336 shape — *a test asserting the ABSENCE of a behaviour can
+entrench a defect* — and it is now the positive case, alongside a bogus-anchor
+twin, a near-miss assertion, a non-markdown exemption, and a cross-home property
+test asserting `check_docs` and `check_trajectory` agree on the same anchor in
+both directions.
+
+Two things I got wrong on the way, both caught by measuring rather than reasoning.
+The cross-home test's expected slug was hand-computed and wrong twice; deriving it
+from the doc's own anchor set exposed the real cause — `parse_doc` strips inline
+code spans from the whole document *before* slugifying, so `slugify(raw heading)`
+is not always the anchor. And PowerShell's `Measure-Object -Line` reported 2343
+lines for a 2590-line file because it skips blank lines; the module ratchet's own
+number is the one to sign.
+
+**Run over the live registry before landing**, as the row required: 5 rows carry an
+anchored SpecRef, all 5 open, and all 5 resolve. The gap was real and the current
+registry is clean — the check ships as a tripwire, not a backlog.
+
+Extracted to `specref_findings` rather than folded in line: in line it took
+`ssot_findings` to C901 **11**, and buying a complexity baseline on the module
+already named as WI-280's next slice is the wrong direction. Module size
+2497 → **2590**, reviewed — the **sixth** consecutive upward bump with no
+decomposition between them, now costing roughly +90 lines per slice, which is the
+number to weigh against the scaffold-surface change a real extraction costs.
+
+The sibling import is a real architectural edge and the repo said so: the
+cross-component rule surfaced `CMP-001 -> CMP-003` with no declared seam, exactly
+as it surfaced `CMP-002 -> CMP-001` at WI-064. Declared as **IF-077**
+(`Consumes`, SR-068;SR-012) with the `Contracts:` docstring line to match.
+**SR-068 was NOT amended** — it already requires an open WI's SpecRef to "resolve
+in-repo", and this sharpens what *resolve* means, so no spine row goes `Modified`
+and no re-attest window reopens.
+
+### The bar I was measuring against was not the bar
+
+Both of those errors were live for several runs while the handoff's 18-step block
+reported **18/18 PASS**. The cause is not the steps but the flag:
+**`--run-steps` resolves its plan at gate `"all"` regardless of `--gate`**
+(`check.py:1293`), and `trajectory` is the ONLY step whose command differs,
+because it alone keys on `gate in ("G2","G3")` while every other gate-conditional
+step includes `"all"`. So it runs **without `--strict`**, and the entire
+R-A…R-E / forward-only / perceptual-stale tier degrades to WARN. `--list` prints
+`--strict`; the run does not use it — *two different commands from the same
+flags*. Filed as **WI-355**, not fixed inline: resolving at `"all"` is deliberate
+for the shipped pre-commit hook, the hook passes no `--gate`, and `--gate`
+defaults to the ACTIVE gate — so the obvious fix would arm `--strict` in the
+commit floor, which is precisely what that code forbids.
+
+I compounded it: my own output filter was `PASS|FAIL|ERROR`, which **drops the
+WARN tier** — the tier those findings were sitting in the whole time. A filter
+that hides the only severity a warn-first checker emits is a filter that
+guarantees a green.
+
+Two smaller traps, both cheap to re-pay and both caught by looking rather than
+reasoning. **Regenerate `PROJECT_STATE.html` LAST**: run in the order
+dashboard → `--status`, the dashboard lands stale and `trajectory-map` fails.
+And **PowerShell's `Measure-Object -Line` skips blank lines** — it reported 2343
+for a 2590-line file, which would have been a wrong signed number in the ratchet
+had I not cross-checked against the ratchet's own count.

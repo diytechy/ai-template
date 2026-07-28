@@ -392,7 +392,24 @@ BASELINE = {
     # FIFTH consecutive upward bump on this module with no decomposition between
     # them, and check_trajectory.py is hereby the concrete next slice of WI-280 —
     # named with its measured number rather than left as a general intention.
-    "check_trajectory.py": 2497,
+    # +93 (2497 -> 2590), WI-354: R-E resolved only the PATH half of a
+    # `doc#anchor` SpecRef, so a row could cite a heading that does not exist and
+    # read as traceable (WI-326 did, for two days). The anchor half plus the
+    # near-miss reporter is the new behaviour; the rule itself was EXTRACTED to
+    # `specref_findings` rather than folded in line, which put `ssot_findings`
+    # back under the C901 limit instead of buying another complexity baseline —
+    # so the growth is new behaviour, not accreted branching.
+    #
+    # This is the SIXTH consecutive upward bump with no decomposition between
+    # them, and the trend is now the argument, not the individual bumps: the five
+    # entries above each justify themselves and the module is still 2590 lines of
+    # SHIPPED surface (bootstrap MAPPING -> every adopting repo, run by the
+    # shipped pre-commit hook). WI-280 already names this module as its concrete
+    # next slice; what this entry adds is that the cost is compounding at roughly
+    # +90 lines per slice, which is the number to weigh against the
+    # scaffold-surface change a real extraction costs. Reviewed bump, log
+    # 2026-07-28.
+    "check_trajectory.py": 2590,
     # +1 (1916 -> 1917), WI-279: one MAPPING row registering the new
     # scripts/check_coverage.py kit gate so it ships downstream — a required
     # one-line registration, not monolith growth (the reviewed-bump escape the

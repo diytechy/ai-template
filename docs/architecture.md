@@ -88,6 +88,7 @@ graph LR
     m_scripts_agent_loop --> m_scripts_plan_runner
     m_scripts_agent_loop --> m_scripts_schedule
     m_scripts_agent_loop --> m_scripts_score_reviews
+    m_scripts_check_trajectory --> m_scripts_check_docs
     m_scripts_gen_open_items --> m_scripts_gen_trajectory
     m_scripts_gen_open_items --> m_scripts_trace
     m_scripts_gen_trajectory --> m_scripts_check_trajectory
@@ -106,6 +107,7 @@ graph LR
     m_scripts_check_coverage -. IF-069 .-> m_scripts_check
     m_scripts_check_doc_refs -. IF-008 .-> m_scripts_check
     m_scripts_check_docs -. IF-002 .-> m_scripts_check
+    m_scripts_check_docs -. IF-077 .-> m_scripts_check_trajectory
     m_scripts_check_dupes -. IF-007 .-> m_scripts_check
     m_scripts_check_flows -. IF-003 .-> m_scripts_check
     m_scripts_check_perf -. IF-004 .-> m_scripts_check
@@ -510,7 +512,8 @@ Contracts (interfaces): IF-006, IF-026
 
 ### `scripts/check_trajectory`
 _Validate the work-item registry (docs/requirements/work-items.csv) — stdlib only._
-Contracts (interfaces): IF-009, IF-023
+Imports (internal): `check_docs`
+Contracts (interfaces): IF-009, IF-023, IF-077
 
 | Public item | Summary | Implements |
 |---|---|---|
@@ -535,6 +538,9 @@ Contracts (interfaces): IF-009, IF-023
 | `read_derived_phases(root)` | `{phase-label: gate-level-int}` parsed from the `# basis:` line of the |  |
 | `phase_anchors(wis)` | `({(phase, gate): wi}, [shape-warnings])` — the `[phase]-[g*]` anchor WIs |  |
 | `phase_findings(root, wis)` | The phase-archetype + phase-drop warns (WI-093; warn-first). Returns the |  |
+| `doc_anchors(path)` | The lowercase anchor slugs `path` exposes, or None when they cannot be |  |
+| `nearest_anchor(frag, anchors)` | The closest existing slug to `frag`, or None. A wrong anchor is nearly |  |
+| `specref_findings(root, w)` | R-E's SpecRef rule for ONE open WI, as a list of messages (the caller tags |  |
 | `ssot_findings(wis, root)` | The work-items.csv coherence findings (R-A + R-E) + the unknown-status |  |
 | `spec_lifecycle_findings(root, wis)` | The spec-lifecycle close-side rule **R-F** (WI-251) — the mechanical half |  |
 | `completion_reconciliation_findings(root, wis)` | Disagreements between a WI's declared `Status` and its completion evidence, |  |

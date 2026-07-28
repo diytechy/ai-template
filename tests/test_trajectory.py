@@ -68,11 +68,16 @@ def write_status(root, text):
     (root / "docs" / "status.md").write_text(text, encoding="utf-8")
 
 
-def write_spec(root, rel):
-    """Create an in-repo spec file so a SpecRef resolves (R-E)."""
+def write_spec(root, rel, *headings):
+    """Create an in-repo spec file so a SpecRef resolves (R-E).
+
+    `headings` become `##` sections, so a `path#anchor` SpecRef citing one of
+    them resolves on BOTH halves (WI-354). A caller that passes none is testing
+    the path half only and must not cite an anchor."""
     p = root / rel
     p.parent.mkdir(parents=True, exist_ok=True)
-    p.write_text("# spec\n", encoding="utf-8")
+    body = "# spec\n" + "".join("\n## {}\n".format(h) for h in headings)
+    p.write_text(body, encoding="utf-8")
 
 
 # --- vacuous / opt-out: the layer costs a non-adopter nothing ------------------
@@ -392,13 +397,100 @@ def test_re_dangling_specref_warns_plain_fails_strict(tmp_path):
 
 
 def test_specref_with_anchor_resolves(tmp_path):
-    # A `path#anchor` SpecRef resolves on the path part alone (anchor ignored by
-    # R-E; deeper validation rides check_doc_refs).
-    write_spec(tmp_path, "docs/specs/effort.md")
+    # A `path#anchor` SpecRef whose anchor really is a heading is clean on BOTH
+    # halves. Until WI-354 this test cited a heading the file did not have and
+    # still passed, because R-E read only the path — the assertion pinned the
+    # very gap the rule now closes, so it is the positive case now.
+    write_spec(tmp_path, "docs/specs/effort.md", "S1 — first slice")
     write_wis_sr(
         tmp_path,
         "WI-001,A,scripts,,,queued,,docs/specs/effort.md#s1--first-slice\n",
     )
+    proc = run_traj(tmp_path, "--strict")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+
+
+def test_specref_anchor_that_names_no_heading_warns_plain_fails_strict(tmp_path):
+    # WI-354: the anchor half of R-E. The path exists, so the pre-WI-354 rule saw
+    # nothing; the heading does not, so the citation is not actually traceable.
+    # Same warn-plain / error-under---strict tier as the rest of R-E.
+    write_spec(tmp_path, "docs/specs/effort.md", "S1 — first slice")
+    write_wis_sr(
+        tmp_path, "WI-001,A,scripts,,,queued,,docs/specs/effort.md#s9--no-such\n"
+    )
+    plain = run_traj(tmp_path)
+    assert plain.returncode == 0, plain.stdout + plain.stderr
+    assert "R-E WI-001" in plain.stderr and "names no such heading" in plain.stderr
+    strict = run_traj(tmp_path, "--strict")
+    assert strict.returncode == 1
+    assert "R-E WI-001" in strict.stderr
+
+
+def test_specref_anchor_report_names_the_nearest_heading(tmp_path):
+    # The finding must be ACTIONABLE, not merely true: a wrong anchor is nearly
+    # always stale or TRUNCATED rather than invented (WI-326 cited a truncated
+    # docs/log.md slug for two days), so the report names the near miss. difflib
+    # alone scores a short prefix of a long slug poorly, which is exactly that
+    # shape, so `nearest_anchor` prefers a prefix relation first.
+    write_spec(tmp_path, "docs/specs/effort.md", "S1 first slice with a long tail")
+    write_wis_sr(
+        tmp_path, "WI-001,A,scripts,,,queued,,docs/specs/effort.md#s1-first-slice\n"
+    )
+    proc = run_traj(tmp_path, "--strict")
+    assert proc.returncode == 1
+    assert "did you mean #s1-first-slice-with-a-long-tail?" in proc.stderr, proc.stderr
+
+
+def test_specref_and_markdown_link_agree_on_the_same_anchor(tmp_path):
+    """The WI-354 design claim, as a property rather than a comment: the SAME
+    reference must not pass in one home and fail in the other.
+
+    Before WI-354 a truncated anchor was an error as a LINK (check_docs) and
+    invisible as a SpecRef (check_trajectory), which is how WI-326's ref survived
+    two days. The anchor set now comes from check_docs.parse_doc, so this asserts
+    the two homes agree on a heading whose slug is non-trivial — em dash, code
+    span and punctuation all normalize — in BOTH directions."""
+    heading = "S1 — the strict slice, part 2"
+    write_spec(tmp_path, "docs/specs/effort.md", heading)
+    # Ground truth is the anchor set the DOC exposes, read back with check_docs'
+    # own parser — never a hand-written literal, which would assert my arithmetic
+    # about em dashes rather than the agreement between the two homes. Reading it
+    # back also sidesteps a real subtlety: parse_doc strips inline code spans from
+    # the document before slugifying, so slugify(raw heading) is not always the
+    # anchor.
+    anchors = load_script("check_docs").parse_doc(
+        tmp_path / "docs" / "specs" / "effort.md"
+    )["anchors"]
+    (slug,) = [a for a in anchors if a != "spec"]
+
+    def homes(anchor):
+        (tmp_path / "docs" / "citer.md").write_text(
+            "# citer\n\n[ref](specs/effort.md#{})\n".format(anchor), encoding="utf-8"
+        )
+        write_wis_sr(
+            tmp_path,
+            "WI-001,A,scripts,,,queued,,docs/specs/effort.md#{}\n".format(anchor),
+        )
+        docs = run_py([SCRIPTS / "check_docs.py", "--root", tmp_path], cwd=tmp_path)
+        traj = run_traj(tmp_path, "--strict")
+        return (
+            "no such anchor" in (docs.stdout + docs.stderr),
+            "names no such heading" in (traj.stdout + traj.stderr),
+        )
+
+    # The real slug: neither home objects.
+    assert homes(slug) == (False, False)
+    # Truncated (the WI-326 shape) and plain wrong: BOTH homes object.
+    assert homes(slug[:12]) == (True, True)
+    assert homes("totally-invented") == (True, True)
+
+
+def test_specref_anchor_on_a_non_markdown_target_is_not_judged(tmp_path):
+    # Anchors are a markdown concept. A SpecRef into a non-markdown in-repo file
+    # keeps the pre-WI-354 path-only behaviour rather than inventing a finding.
+    (tmp_path / "docs").mkdir(parents=True, exist_ok=True)
+    (tmp_path / "docs" / "gate").write_text("G3\n", encoding="utf-8")
+    write_wis_sr(tmp_path, "WI-001,A,scripts,,,queued,,docs/gate#anything\n")
     proc = run_traj(tmp_path, "--strict")
     assert proc.returncode == 0, proc.stdout + proc.stderr
 
@@ -433,7 +525,7 @@ def test_rf_shared_doc_lives_while_any_open_citer_remains(tmp_path):
     # R-F negative: a shared effort doc archives only at its LAST open citer's
     # close — a deferred WI is open, so the doc (cited via #anchor) stays live
     # even though a done sibling once shipped from it (SpecRef duly cleared).
-    write_spec(tmp_path, "docs/specs/effort.md")
+    write_spec(tmp_path, "docs/specs/effort.md", "s2")
     write_wis_sr(
         tmp_path,
         "WI-001,Done half,scripts,,,done,shipped it,\n"

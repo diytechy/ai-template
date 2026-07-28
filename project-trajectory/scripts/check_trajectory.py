@@ -117,12 +117,13 @@ anchors (the meta case) or a legacy `docs/gate` with no basis line.
 Usage:  python scripts/check_trajectory.py [--root .] [--strict] [--staged]
 Exit codes: 0 clean / vacuous / opted-out, 1 a hard error, 2 usage/environment.
 
-Contracts: IF-009, IF-023 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.csv).
+Contracts: IF-009, IF-023, IF-077 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.csv). IF-077 (WI-354) is the ANCHOR-resolution seam: R-E resolves a SpecRef's `#anchor` through check_docs.parse_doc so one slugifier defines an anchor in both homes — a lazy import that degrades to path-only, since this module runs in the shipped pre-commit hook.
 """
 
 import argparse
 import configparser
 import csv
+import difflib
 import io
 import re
 import subprocess
@@ -1174,6 +1175,118 @@ def phase_findings(root, wis):
     return warns
 
 
+# --- SpecRef anchor resolution (WI-354) ---------------------------------------
+# R-E resolved only the PATH half of a `doc#anchor` SpecRef, so a row could cite a
+# heading that does not exist and read as traceable for days (WI-326 cited a
+# truncated `docs/log.md#...` slug from the day it was filed; it surfaced only when
+# the close wrote the same string into a markdown LINK, where check_docs rejected
+# it at once). The identical reference was enforced in one home and unread in the
+# other — the WI-308 doc-refs class, one registry over.
+#
+# The anchor set comes from check_docs.parse_doc, NOT from a second slugifier here:
+# two slug implementations that drift produce false findings on correct rows, which
+# is worse than the gap being closed. That is a SIBLING IMPORT, allowed on the same
+# ground as gen_trajectory's `check_trajectory` one — both modules are in
+# bootstrap.py MAPPING, so they always ship and re-sync together.
+#
+# The import is LAZY and degrades to None rather than raising: this module runs in
+# the SHIPPED pre-commit hook, and the `ratify-fresh` lesson (130-REVIEW-A) is that
+# a hook which hard-requires a file an adopter's tree may not have blocks every
+# commit. Missing check_docs therefore costs the anchor half only — the path half
+# is unchanged. Vacuity here is a real risk, so it is pinned by a test that drives
+# the check against a KNOWN-BAD anchor rather than by trusting this comment.
+_MD_SUFFIXES = (".md", ".markdown")
+_ANCHOR_CACHE = {}  # resolved path -> frozenset of anchors, or None when unreadable
+
+
+def doc_anchors(path):
+    """The lowercase anchor slugs `path` exposes, or None when they cannot be
+    determined (not a markdown file, unreadable, or check_docs unavailable).
+
+    None means "unknown, do not judge" and is never treated as an empty set — an
+    absent sibling must not turn every anchored SpecRef into a finding."""
+    key = str(path)
+    if key in _ANCHOR_CACHE:
+        return _ANCHOR_CACHE[key]
+    anchors = None
+    if path.suffix.lower() in _MD_SUFFIXES and path.is_file():
+        try:
+            import check_docs
+        except ImportError:  # pragma: no cover - exercised via the sys.path fallback
+            sys.path.insert(0, str(Path(__file__).resolve().parent))
+            try:
+                import check_docs
+            except ImportError:
+                check_docs = None
+        if check_docs is not None:
+            try:
+                anchors = frozenset(check_docs.parse_doc(path)["anchors"])
+            except OSError:
+                anchors = None
+    _ANCHOR_CACHE[key] = anchors
+    return anchors
+
+
+def nearest_anchor(frag, anchors):
+    """The closest existing slug to `frag`, or None. A wrong anchor is nearly
+    always a stale or TRUNCATED one rather than an invented one, so the report
+    names the near miss — that is what makes the finding actionable instead of
+    merely true. Truncation is scored explicitly because difflib's ratio punishes
+    a short prefix of a long slug, which is the exact WI-326 shape."""
+    if not anchors:
+        return None
+    prefix = [a for a in anchors if a.startswith(frag) or frag.startswith(a)]
+    if prefix:
+        return sorted(prefix, key=lambda a: (abs(len(a) - len(frag)), a))[0]
+    near = difflib.get_close_matches(frag, sorted(anchors), n=1, cutoff=0.6)
+    return near[0] if near else None
+
+
+def specref_findings(root, w):
+    """R-E's SpecRef rule for ONE open WI, as a list of messages (the caller tags
+    the rule and owns the warn/strict tier).
+
+    Both halves of a `path#anchor` are resolved. Split out of `ssot_findings`
+    when the anchor half landed (WI-354): folding it in line took that function
+    past the complexity ratchet, and this module is already named as WI-280's
+    next decomposition slice, so the rule gets its own unit rather than the
+    monolith getting another sanctioned baseline entry."""
+    spec = w["specref"]
+    if not spec:
+        return [
+            "{}: open WI has no SpecRef (name its spec-of-record: "
+            "docs/specs/WI-###.md or a doc#anchor)".format(w["id"])
+        ]
+    pathpart, _, frag = spec.partition("#")
+    pathpart, frag = pathpart.strip(), frag.strip()
+    if not pathpart:
+        return []
+    target = root / pathpart
+    if not target.exists():
+        return [
+            "{}: SpecRef {!r} does not resolve to an in-repo file".format(w["id"], spec)
+        ]
+    if not frag:
+        return []
+    # The anchor half (WI-354). Matching check_docs' link rule exactly — compare
+    # lowercased, markdown targets only — so the SAME reference cannot pass as a
+    # SpecRef and fail as a link, which is how WI-326's truncated anchor survived.
+    anchors = doc_anchors(target)
+    if anchors is None or frag.lower() in anchors:
+        return []
+    near = nearest_anchor(frag.lower(), anchors)
+    return [
+        "{}: SpecRef {!r} names no such heading in {} ({})".format(
+            w["id"],
+            spec,
+            pathpart,
+            "did you mean #" + near + "?"
+            if near
+            else "no similar heading — the target may have been rewritten",
+        )
+    ]
+
+
 def ssot_findings(wis, root):
     """The work-items.csv coherence findings (R-A + R-E) + the unknown-status
     lint, each as `(rule, hard, message)`.
@@ -1239,27 +1352,7 @@ def ssot_findings(wis, root):
             )
         # R-E: an open WI names a resolvable SpecRef (path or path#anchor).
         if st in OPEN_STATUSES:
-            spec = w["specref"]
-            if not spec:
-                out.append(
-                    (
-                        "R-E",
-                        False,
-                        "{}: open WI has no SpecRef (name its spec-of-record: "
-                        "docs/specs/WI-###.md or a doc#anchor)".format(w["id"]),
-                    )
-                )
-            else:
-                pathpart = spec.split("#", 1)[0].strip()
-                if pathpart and not (root / pathpart).exists():
-                    out.append(
-                        (
-                            "R-E",
-                            False,
-                            "{}: SpecRef {!r} does not resolve to an in-repo "
-                            "file".format(w["id"], spec),
-                        )
-                    )
+            out.extend(("R-E", False, msg) for msg in specref_findings(root, w))
 
     return out
 
