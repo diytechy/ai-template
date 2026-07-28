@@ -274,7 +274,13 @@ BASELINE = {
     # (`_resolvable_link`), because the same-file duplication the new half created
     # made `check_dupes` red and F5 never covers a same-file copy. Reviewed bump,
     # log 2026-07-28. Re-stamp downward with WI-280.
-    "agent_dispatch.py": 4028,
+    # +15 (4028 -> 4043), WI-348: every text write declares its newline policy,
+    # so a generated repo artifact is LF on every platform. Path.write_text
+    # cannot express that on the 3.11 floor (the newline= kwarg is 3.13+), so
+    # each site becomes the two-line open() form. Partly REPAID in the same
+    # change: the two atomic-JSON writers were extracted to _atomic_json, which
+    # retires a census sanction. Reviewed bump, log 2026-07-28.
+    "agent_dispatch.py": 4043,
     "agent_loop.py": 3042,
     # +30 (2206 -> 2236), WI-065: `tc_citation_findings` — the TC-`Verifies`
     # rules lifted out of `analyze` so the cell could accept `IF-###` seam ids.
@@ -337,7 +343,8 @@ BASELINE = {
     # 109 lines BELOW the pre-WI-328 baseline of 2812, so the census tightens
     # rather than merely stops growing. Proven behaviour-preserving by the three
     # golden files staying byte-identical.
-    "trace.py": 2703,
+    # +3 (2703 -> 2706), WI-348: three report writers take the two-line LF form.
+    "trace.py": 2706,
     # +132 (1926 -> 2058; the last +10 is the F4 BOM hardening: read_rows utf-8-sig + git-show strips), WI-316: staged_spine_findings — the amend-without-
     # flip warn (--staged): content cells of a Verified spine row changed
     # without the Modified marker, suppressed when the owning SR flips in the

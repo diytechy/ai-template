@@ -513,7 +513,8 @@ def main():
         _git(root, ["log", "-1", "--format=%cs"]) or datetime.date.today().isoformat()
     )
     gate_path.parent.mkdir(parents=True, exist_ok=True)
-    gate_path.write_text(render_cache(result, as_of, date), encoding="utf-8")
+    with gate_path.open("w", encoding="utf-8", newline="\n") as _fh:
+        _fh.write(render_cache(result, as_of, date))
     print("derive_gate: wrote {} -> {} ({}).".format(GATE_FILE, result["gate"], basis))
     return 0
 

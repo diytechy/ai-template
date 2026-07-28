@@ -996,10 +996,8 @@ def write_session_log(iter_dir, meta, transcript):
     if meta.get("train"):
         name = "{}-{}".format(meta["train"], name)
     path = iter_dir / name
-    path.write_text(
-        "\n".join(header) + "\n" + bounded_transcript(transcript) + "\n",
-        encoding="utf-8",
-    )
+    with path.open("w", encoding="utf-8", newline="\n") as _fh:
+        _fh.write("\n".join(header) + "\n" + bounded_transcript(transcript) + "\n")
     return path
 
 
@@ -1087,7 +1085,10 @@ def regenerate_index(docs_dir):
         + "\n".join(rows)
         + "\n"
     )
-    (docs_dir / "iteration_index.md").write_text(text, encoding="utf-8")
+    with docs_dir / "iteration_index.md".open(
+        "w", encoding="utf-8", newline="\n"
+    ) as _fh:
+        _fh.write(text)
 
 
 def commit_telemetry(root, session, label, paths):
@@ -1406,9 +1407,8 @@ def _write_runstate(docs, state, ask=""):
     half): RUNNING | NEEDS-HUMAN (+ ask) | BLOCKED | DONE. Generated only by
     the dispatcher/integrator — never by a worker."""
     try:
-        (docs / "run-state").write_text(
-            state + ("\nask: " + ask if ask else "") + "\n", encoding="utf-8"
-        )
+        with docs / "run-state".open("w", encoding="utf-8", newline="\n") as _fh:
+            _fh.write(state + ("\nask: " + ask if ask else "") + "\n")
     except OSError:
         pass
 

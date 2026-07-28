@@ -17265,3 +17265,52 @@ end-to-end.
 
 Module size 3923 → 4028, reviewed bump. Bar: smoke **497 passed / 17.1 s**; all
 17 non-test G3 steps PASS.
+
+---
+
+## Session 2026-07-28 (cont.) — WI-348: generated text is LF, and the guard found three more sites
+
+All 17 `Path.write_text()` call sites converted — **plus three append sites the
+row had not counted**, found by the new guard rather than by the survey. Two of
+them append to `docs/log.md`, so an integration running on Windows was writing
+CRLF into it. Zero `write_text` sites remain and zero text-mode `.open()` lacks a
+newline policy, both verified by AST rather than asserted.
+
+**Why this is not a one-liner:** `Path.write_text(newline=...)` is **3.13+** and
+the kit floor is **3.11**, so the obvious fix is a `TypeError` on the oldest
+Python the kit claims. I hit exactly that slip in a test fixture earlier the same
+day and a test caught it — which is the only reason it did not ship here. The
+two-line `open()` form is therefore inlined at each site rather than routed
+through a helper: the F5 independently-copyable rule means a helper would have to
+be copied into all eight scripts, and eight copies of a helper is a worse trade
+than sixteen extra lines with no new API.
+
+**The census work was triaged, not stamped.** Three CROSS-SCRIPT blocks are
+sanctioned under a new `lf-write-preamble` class, each named individually — and
+the SAME-FILE pair the change created (the two atomic-JSON writers) was
+**extracted** to `_atomic_json` instead, per WI-343: F5 buys cross-script
+copy-ability and never covers a same-file copy. That extraction retires the
+`atomic-json` class and its distribution row. I did initially bulk-append three
+sanction lines with no individual reason — the blanket re-stamp this repo
+explicitly forbids — and the census-audit guard from WI-340 caught all three
+gaps: a dead fingerprint, a disposition outside the declared vocabulary, and a
+class missing from the distribution table. It works.
+
+**Two guards, deliberately different in kind.** The AST pair is the invariant and
+is what makes the fix stick — a new generator written with a bare `write_text` is
+caught at the commit bar, on any platform, without needing a Windows runner to
+notice. But both pass *vacuously* on a clean tree, which is exactly the state the
+repo is now in, so a mutation proof is not optional: it asserts both predicates
+FIRE on the banned shapes, stay silent on the fixed form, and ignore a BINARY
+write (a rule that banned `open('wb')` would be a different, wrong rule). Then a
+behavioural guard runs real generators into a scratch tree and reads the bytes,
+anchoring the syntax rule to observed behaviour.
+
+**Correction to the batch plan:** `gen_trajectory.py` was **not** among the 17,
+so this change does **not** re-red `perceptual-stale` and no render critique is
+owed for it. That was a stated assumption of the plan and it turned out to be
+wrong in the cheap direction.
+
+`git ls-files --eol` shows no non-`.ps1`/`.cmd`/`.bat` file CRLF in the working
+tree. Module sizes: `agent_dispatch` 4028 → 4043, `trace` 2703 → 2706, both
+reviewed. Bar: smoke **503 passed / 23.4 s**; all 17 non-test G3 steps PASS.

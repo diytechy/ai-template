@@ -158,7 +158,7 @@
 #   ref-transaction        2    (1%)   extract WI-343
 #   signature-echo         2    (1%)   deliberate
 #   bootstrap-copy         2    (1%)   extract WI-347
-#   atomic-json            1            extract WI-343
+#   lf-write-preamble      3    (1%)   deliberate
 #   trailer-scan           1            extract WI-343
 #   trailer-fold           1            deliberate
 #   exe-presence           1            extract WI-345
@@ -438,12 +438,6 @@ f4b75f24b488  project-trajectory/scripts/agent_dispatch.py == project-trajectory
 5c87733175e3  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
 ffa194248f7b  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
 
-# --- atomic-json (1 block)  --------------------------------------
-# disposition: extract WI-343
-# the write-temp-then-os.replace atomic JSON write, once for the journal
-# manifest and once per train file. Extractable to _atomic_json(path, data).
-a21f84485bb7  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
-
 # --- trailer-scan (1 block)  -------------------------------------
 # disposition: extract WI-343
 # `git log --format=<trailers>` over base..train + the per-line split loop,
@@ -584,3 +578,25 @@ e5d5ce58f56b  project-trajectory/scripts/gen_trajectory.py == project-trajectory
 # the `for k, v in row['full'].items()` bullet renderer, in the no-baseline
 # arm and the added-row arm of the same re-attestation brief writer.
 0940f41e16b9  project-trajectory/scripts/trace.py == project-trajectory/scripts/trace.py
+
+# --- lf-write-preamble (3 blocks) --------------------------------------
+# disposition: deliberate
+# WI-348 gave every generator the same three-line write ritual: mkdir the
+# parent, open with newline="\n", write. It is CROSS-SCRIPT (trace.py vs
+# gen_release_checklist.py), which is exactly what the F5 independently-
+# copyable rule buys -- a downstream repo copies ONE generator and it must
+# carry its own LF discipline, not import a kit module. Deliberately NOT
+# routed through a helper: Path.write_text(newline=) is 3.13+ and the floor
+# is 3.11, so a helper would have to be copied into all eight scripts, and
+# eight copies of a helper is a worse trade than the inline form. The
+# invariant is enforced by tests/test_generated_newlines.py over the AST,
+# which is stronger than de-duplication would be.
+# All three pairs are CROSS-SCRIPT and were TRIAGED INDIVIDUALLY, not
+# blanket-stamped: check_perf/check_stubs are the two report writers,
+# gen_release_checklist/trace and gen_release_checklist/gen_trajectory the
+# generator writers. The SAME-FILE pair this change also created
+# (agent_dispatch.manifest vs .train) was EXTRACTED to _atomic_json instead,
+# per WI-343: F5 never covers a same-file copy.
+d22835c84624  project-trajectory/scripts/gen_release_checklist.py == project-trajectory/scripts/trace.py
+38d34ca0c629  project-trajectory/scripts/check_perf.py == project-trajectory/scripts/check_stubs.py
+cbfad86fcc11  project-trajectory/scripts/gen_release_checklist.py == project-trajectory/scripts/gen_trajectory.py

@@ -721,7 +721,9 @@ class _Journal:
         }
         rec.update(fields)
         try:
-            with (self.dir / "events.jsonl").open("a", encoding="utf-8") as fh:
+            with (self.dir / "events.jsonl").open(
+                "a", encoding="utf-8", newline="\n"
+            ) as fh:
                 fh.write(json.dumps(rec, sort_keys=True) + "\n")
         except OSError:
             pass
@@ -730,21 +732,29 @@ class _Journal:
         )
         print("dispatch: {}{}".format(event, " " + detail if detail else ""))
 
-    def manifest(self, data):
+    def _atomic_json(self, dest, data):
+        """Write `data` as pretty JSON to `dest` via a same-directory temp +
+        `os.replace`, so a reader never sees a half-written file, and best-effort
+        on OSError — telemetry must never take the dispatcher down.
+
+        LF on every platform (WI-348): this is a repo artifact, and a generator
+        that writes CRLF on Windows leaves an `eol=lf` file dirty in the working
+        tree. Extracted when WI-348 made the two callers byte-identical: the F5
+        sanction buys CROSS-SCRIPT copy-ability and never covers a same-file
+        copy (WI-343)."""
         try:
-            tmp = self.dir / "manifest.json.tmp"
-            tmp.write_text(json.dumps(data, indent=2, sort_keys=True), "utf-8")
-            os.replace(str(tmp), str(self.dir / "manifest.json"))
+            tmp = dest.with_name(dest.name + ".tmp")
+            with tmp.open("w", encoding="utf-8", newline="\n") as fh:
+                fh.write(json.dumps(data, indent=2, sort_keys=True))
+            os.replace(str(tmp), str(dest))
         except OSError:
             pass
 
+    def manifest(self, data):
+        self._atomic_json(self.dir / "manifest.json", data)
+
     def train(self, train_id, data):
-        try:
-            tmp = self.dir / "trains" / (train_id + ".json.tmp")
-            tmp.write_text(json.dumps(data, indent=2, sort_keys=True), "utf-8")
-            os.replace(str(tmp), str(self.dir / "trains" / (train_id + ".json")))
-        except OSError:
-            pass
+        self._atomic_json(self.dir / "trains" / (train_id + ".json"), data)
 
 
 # -----------------------------------------------------------------------------
@@ -1488,7 +1498,8 @@ def generate_status(docs, root, last_train=""):
         " successful integration — never written on a worker branch._",
     ]
     try:
-        path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+        with path.open("w", encoding="utf-8", newline="\n") as _fh:
+            _fh.write("\n".join(lines) + "\n")
     except OSError:
         return False
     return True
@@ -2018,7 +2029,8 @@ def _resolve_generated_path(wt, rel, entry):
         )
         if resolved is None:
             return False
-        path.write_text(resolved, encoding="utf-8")
+        with path.open("w", encoding="utf-8", newline="\n") as _fh:
+            _fh.write(resolved)
     except OSError:
         return False
     git(wt, "add", "--", rel)
@@ -2289,7 +2301,7 @@ def integrate_train(root, docs, journal, tid, wis, base, review_ctx):
     )
     log_path = Path(wt) / "docs" / "log.md"
     try:
-        with log_path.open("a", encoding="utf-8") as fh:
+        with log_path.open("a", encoding="utf-8", newline="\n") as fh:
             fh.write(
                 "\n## {} — integrated train {} ({})\n\n"
                 "Head {} composed onto {} by the serialized integrator; "
@@ -2373,7 +2385,9 @@ def _append_blocked_log(wt, hit, tid, base):
     """Append the blocked-disposition evidence stanza to docs/log.md (best-effort:
     a missing/locked log never fails the transaction)."""
     try:
-        with (Path(wt) / "docs" / "log.md").open("a", encoding="utf-8") as fh:
+        with (Path(wt) / "docs" / "log.md").open(
+            "a", encoding="utf-8", newline="\n"
+        ) as fh:
             fh.write(
                 "\n## {} — blocked disposition: {} (train {})\n\n"
                 "Worker-reported blocker with committed evidence at {}; "
@@ -3024,9 +3038,10 @@ def telemetry_summary(journal):
         ),
     }
     try:
-        (journal.dir / "telemetry.json").write_text(
-            json.dumps(summary, indent=2, sort_keys=True), encoding="utf-8"
-        )
+        with journal.dir / "telemetry.json".open(
+            "w", encoding="utf-8", newline="\n"
+        ) as _fh:
+            _fh.write(json.dumps(summary, indent=2, sort_keys=True))
     except OSError:
         pass
     print(

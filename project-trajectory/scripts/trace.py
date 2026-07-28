@@ -2672,7 +2672,8 @@ def main():
         if args.out:
             out_path = Path(args.out)
             out_path.parent.mkdir(parents=True, exist_ok=True)
-            out_path.write_text(text, encoding="utf-8")
+            with out_path.open("w", encoding="utf-8", newline="\n") as _fh:
+                _fh.write(text)
             print("trace: wrote ratification view -> {}".format(out_path))
         else:
             sys.stdout.write(text)
@@ -2685,12 +2686,14 @@ def main():
 
     out = docs / "test" / "report.md"
     out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(render_report(reg, findings, args, forest), encoding="utf-8")
+    with out.open("w", encoding="utf-8", newline="\n") as _fh:
+        _fh.write(render_report(reg, findings, args, forest))
 
     html_out = None
     if args.html:
         html_out = docs / "test" / "report.html"
-        html_out.write_text(html_document(forest), encoding="utf-8")
+        with html_out.open("w", encoding="utf-8", newline="\n") as _fh:
+            _fh.write(html_document(forest))
 
     render_console(reg, findings, args, out, html_out)
 
