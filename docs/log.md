@@ -552,6 +552,34 @@ why (one bullet each; cite ids)._
   attestation is about requirement TEXT and stands; the harness debt is separate
   work, and saying so is the point of reporting the split.
 
+- **2026-07-28 — WI completion stays DECLARED; the gap is a missing reconciler
+  (WI-352).** Asked, after WI-328 sat `queued` for a day with its work finished:
+  should a WI's `Status` be *derived* from evidence, the way `docs/gate` is
+  derived from artifact states rather than declared? **Ruled no.** The evidence a
+  deriver would read is the `WI:` commit trailer, and
+  `agent_common.latest_trailer_evidence` already folds those into built/blocked
+  sets for the dispatcher — but a trailer means *"a commit claims this WI,"* not
+  *"the work is right."* **WI-336 is the counterexample in this registry:** its
+  code landed while its row stayed `queued`, and that was correct, because a
+  review had refuted three of its claims; a deriver would have flipped it to
+  `done`. `deferred`/`blocked`/`retired` are not derivable at all — they are
+  decisions, not outcomes. And derivation bottoms out somewhere: `derive_gate`
+  computes the gate *from* declared Status cells, so deriving those in turn only
+  moves the turtle. **Alternative passed over:** deriving `Status` from trailers
+  with a manual override cell — rejected as two homes plus a third to reconcile
+  them. **What was adopted instead:** `Status` remains an attestation, and gets
+  the reconciler every other declared-vs-computed pair here already has
+  (`derive_gate --check` recomputes and fails on drift; every generator carries
+  `--check`). It reports disagreement and never auto-flips — an auto-flip would
+  re-create precisely the false completion that WI-336 and `40c92f6` were both
+  corrections of. Scoped in WI-352.
+  **Not changed, because it is already true:** resume does *not* read
+  `status.md`. The `DEFAULT_PROMPT` that once resumed from it retired with the
+  serial loop (`agent_loop.py:305`), workers are told not to resume from it
+  (`:343`), the dispatcher reads nothing from it (`:495`), and `docs/next-wi` is
+  retired (WI-180). Work is selected through `schedule.py`'s derived frontier;
+  the frontier list inside `status.md` is a generated, freshness-gated mirror.
+
 ## Audit log
 
 <!-- Append verdict blocks here per PROCESS.md §5. Newest at the bottom. -->
