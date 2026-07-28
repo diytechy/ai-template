@@ -24,7 +24,9 @@ records it one entry per line (# comments fine). Two entry forms are honored:
     It sanctions THAT block in THAT pair; NEW copy-paste between the same two
     files gets a different fingerprint and so is NOT exempt — it fails until a
     deliberate census line is added. Regenerate the fingerprints with
-    --emit-census (WI-276).
+    --emit-census (WI-276). A fingerprint is a property of the CODE, not of the
+    checkout: line endings are normalized before tokenizing, so one census holds
+    on Windows and Linux alike (WI-337 — see normalized_source).
   * BARE PAIR (legacy, coarse) — "a.py == b.py": the whole file pair is
     exempt, so any later duplication between the two files passes automatically.
     Kept for backward compatibility; prefer the fingerprinted form.
@@ -41,6 +43,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import io
 import re
 import sys
 import tokenize
@@ -80,7 +83,9 @@ def fingerprint(block):
 
 
 # Token types that carry no duplicated *logic*: layout, comments, and the
-# encoding/EOF bookkeeping tokens. NEWLINE (logical line end) is kept so a
+# encoding/EOF bookkeeping tokens (ENCODING never reaches us now that we
+# tokenize decoded text, but dropping it costs nothing and keeps the set a
+# statement of intent). NEWLINE (logical line end) is kept so a
 # window can't stitch unrelated statements into a phantom duplicate — dropped
 # NEWLINEs would let "end of one function + start of the next" look identical
 # across files that merely share adjacent short functions.
@@ -94,11 +99,39 @@ _INSIGNIFICANT = {
 }
 
 
+def normalized_source(path):
+    """The file decoded with its declared encoding and with UNIVERSAL NEWLINES
+    applied — CRLF and lone CR both collapsed to LF (WI-337).
+
+    Line endings are a property of the CHECKOUT, not of the code: a repo may
+    store LF (`.gitattributes eol=lf`) and still hold CRLF in a Windows working
+    tree — and, worse, hold BOTH, since editing on Windows leaves CRLF behind
+    file by file. The tokenizer sees those bytes: a NEWLINE token's text is
+    "\\r\\n" on a CRLF file and "\\n" on an LF one. Without this, a census
+    stamped on one OS reds the `dupes` step on the other, and a MIXED tree is
+    worse than either — two files with different endings cannot match each other
+    at all, so whole duplicate blocks go unreported. Measured on the kit itself:
+    the same corpus reported 164 blocks on a mixed tree against 208 under
+    uniform endings (208 under uniform LF and uniform CRLF alike — only the
+    fingerprints ever depended on which), and the mixed-tree census left a fresh
+    LF checkout with 128 unsanctioned blocks. Normalizing here makes a
+    fingerprint a property of the code. `detect_encoding` honours the coding
+    cookie and BOM exactly as `tokenize` itself would."""
+    with open(path, "rb") as handle:
+        encoding, _first_lines = tokenize.detect_encoding(handle.readline)
+        handle.seek(0)
+        text = handle.read().decode(encoding)
+    return text.replace("\r\n", "\n").replace("\r", "\n")
+
+
 def significant_tokens(path):
     """(kind, text, line) for each significant token in the file, or None when
     the file can't be tokenized (unterminated string/bracket, bad coding
     cookie, non-UTF-8). A lint surfaces bad input, never crashes on it — the
     kit's own convention (gen_arch_map catches SyntaxError).
+
+    Tokenized from normalized_source(), so the result — and every fingerprint
+    derived from it — is line-ending-independent (WI-337).
 
     `kind` is the token-type NAME (tokenize.tok_name[...]), not its integer id:
     the integers are not stable across Python releases (e.g. OP is 54 on 3.11
@@ -107,13 +140,13 @@ def significant_tokens(path):
     a developer). The names ("OP", "NAME", "STRING", …) are stable, so the
     fingerprint is portable across the version matrix (WI-276)."""
     try:
-        with open(path, "rb") as handle:
-            return [
-                (tokenize.tok_name[tok.type], tok.string, tok.start[0])
-                for tok in tokenize.tokenize(handle.readline)
-                if tok.type not in _INSIGNIFICANT
-            ]
-    except (tokenize.TokenError, SyntaxError, UnicodeDecodeError) as exc:
+        readline = io.StringIO(normalized_source(path)).readline
+        return [
+            (tokenize.tok_name[tok.type], tok.string, tok.start[0])
+            for tok in tokenize.generate_tokens(readline)
+            if tok.type not in _INSIGNIFICANT
+        ]
+    except (tokenize.TokenError, SyntaxError, UnicodeDecodeError, LookupError) as exc:
         print(
             "check_dupes: WARN - {}: could not tokenize ({}); skipped".format(
                 Path(path).as_posix(), exc

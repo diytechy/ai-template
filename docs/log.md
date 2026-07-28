@@ -15863,7 +15863,7 @@ on the final tree); `ruff format` clean on both changed files; `check_docs
 `gen_open_items` regenerated. Registry: **331 rows** (WI-332 done, WI-333
 queued), 4 `retired`, **8 `deferred`** (WI-123 left that list).
 
-**Not fixed, surfaced instead — `WI-333` filed** ([specs/WI-333.md](archive/specs/WI-333.2026-07-27.md)).
+**Not fixed, surfaced instead — `WI-333` filed** ([specs/WI-333.md, now archived](archive/specs/WI-333.2026-07-27.md)).
 `ruff check` over `project-trajectory/scripts` + `tests` reports **20 pre-existing
 findings** (13 × `F402` `html` shadowed by a loop variable, 2 × `F821` undefined
 `pytest`, 5 × `F401` unused import — one of them in a file this session touched,
@@ -16096,6 +16096,24 @@ always the same, an assertion that cannot observe the thing it names.
 census records the classification, in the file where the next reader of a
 sanction will actually look:
 
+> **CORRECTED 2026-07-27 (WI-337 + [127-REVIEW-A](reviews/127-REVIEW-A.md)) —
+> read the entry below knowing this.** Two of its numbers and one of its claims
+> are false, and history is not rewritten, so the correction lives here.
+> **(a) "86" was never the checker's count of anything.** It was a
+> census-transition reconstruction, measured on a working tree whose `scripts/`
+> was MIXED (28 files LF, 9 CRLF). The tokenizer saw those bytes, so the census
+> was a property of the checkout: the same corpus reports **208** blocks under
+> uniform line endings, and the re-stamped census red a fresh LF worktree with
+> **128** unsanctioned blocks — a CI break that had not fired only because the
+> branch was never pushed. The reviewer's "18" is the LF figure for the *earlier*
+> census; neither number is *the* count. **(b) "MOST are the CLI preamble" is
+> numerically false** — reconstructed 34 CLI-preamble against 50 other drifts,
+> plus a new cross-module `_git` duplicate the entry does not mention. The
+> premise under 164 signed sanctions was wrong even though the F5 ruling may
+> still cover them; the truthful per-block audit is **WI-338**'s. **(c)** The
+> claim below that this was triage "rather than a re-stamp" stands for the one
+> extraction, but the classification it rests on does not.
+
 - **Most of it is the kit's per-script CLI preamble** — `_utf8_console()` plus
   the `argparse` skeleton — across ~10 scripts. That duplication is
   **deliberate**: kit scripts must stay independently copy-able and stdlib-only,
@@ -16179,4 +16197,93 @@ else's accounting and wants its own correction.
 Bar: `tests/test_advisory_during_window.py` 5 passed; `ruff check`/`format`
 clean; targeted modules green.
 
-**CORRECTION, same day, before this was believed.** [127-REVIEW-A](reviews/127-REVIEW-A.md) refuted this entry on three points and **WI-336 is back to `queued`** — the code above is landed but incomplete, and the row carries the detail. (1) It never runs the promised stronger `--require-verified` traceability variant: the advisory list is built from a step table already specialized to the CURRENT gate, and the test asserting traceability is *not* advisory entrenched it. (2) `window_open()` fires on `drafts>0`, which is ordinary G0/G1 state — so the "a project genuinely at G1 is not nagged" claim above is FALSE as written. (3) `module-coverage` runs advisory while its producer is excluded, so it can grade a stale `coverage.json`. The byte figures above are also wrong: they compared a CRLF working tree against an LF baseline. True: **+771** for the edit, **+571** pre-existing overage — not +782 / 2,967.
+**CORRECTION, same day, before this was believed.** [127-REVIEW-A](reviews/127-REVIEW-A.md) refuted this entry on three points and **WI-336 is back to `queued`** — the code above is landed but incomplete, and the row carries the detail. (1) It never runs the promised stronger `--require-verified` traceability variant: the advisory list is built from a step table already specialized to the CURRENT gate, and the test asserting traceability is *not* advisory entrenched it. (2) `window_open()` fires on `drafts>0`, which is ordinary G0/G1 state — so the "a project genuinely at G1 is not nagged" claim above is FALSE as written. (3) `module-coverage` runs advisory while its producer is excluded, so it can grade a stale `coverage.json`. The byte figures above are also wrong: they compared a CRLF working tree against an LF baseline. True: **+771** for the edit, **+571** pre-existing overage — not +782 / 2,967. *(Both re-measured 2026-07-27 under WI-337, on a working tree normalized to the LF form the index holds: 162,342 → 163,113 for the edit, against a 161,771 baseline. The corrected figures are exact.)*
+
+### 2026-07-27 — WI-337: a fingerprint of the checkout is not a fingerprint of the code
+
+The `dupes` census could not be valid on Windows and Linux at the same time, and
+the branch was one push away from proving it on CI.
+
+**The mechanism.** `check_dupes` tokenized the file's raw bytes, so a `NEWLINE`
+token's text was `"\r\n"` on a CRLF checkout and `"\n"` on an LF one. Every
+fingerprint therefore keyed the **checkout**, not the code. Normalizing at the
+read — `normalized_source()` decodes with the declared encoding, then collapses
+CRLF and lone CR to LF — makes it a property of the code again. `detect_encoding`
+still honours the coding cookie and BOM, exactly as `tokenize` did.
+
+**The tree was worse than "CRLF": it was MIXED**, and that is what made the
+damage structural rather than cosmetic. 28 files under `scripts/` were LF and 9
+were CRLF, so those two groups **could not match each other at all** — and
+`find_duplicates` anchors each duplicate on the first file it sees, so the
+groups did not merely hide cross-group blocks, they re-rooted the ones that
+survived. The census WI-334 stamped was not a mis-fingerprinted census of the
+right blocks; it was **a different and wrong set**:
+
+| corpus, same code | blocks |
+|---|---|
+| this mixed working tree, pre-fix | **164** |
+| uniform LF, or uniform CRLF, pre-fix | **208** each — *the count never depended on which*, only the fingerprints did |
+| normalized, post-fix | **208**, identical in a CRLF tree and an LF worktree |
+
+**The re-stamp is a restoration, and the numbers say so rather than the prose.**
+Of the 208, **191 were already sanctioned** by the pre-WI-334 census at
+`1b65c4d` — the LF-based one, i.e. the basis hosted CI actually uses. Only
+**17** are drift since then (WI-333's ruff fixes, WI-334's `gen_open_items`
+extraction, this WI's own edit), and read rather than counted they are the
+established F5 families: the per-script CLI preamble, `load_csv`/`refs`, the
+`_git` subprocess wrapper, the stack-profile reader, plus known intra-module
+WI-280 debt. The committed mixed-tree census matched only **80** of the 208 —
+which is the same fact as the LF worktree's 128 failures, seen from the other
+side.
+
+**What is deliberately NOT claimed:** a classification of the census. WI-334's
+"MOST are the CLI preamble" was refuted (34 versus 50) and is **removed** from
+`docs/dupes-allow`'s header rather than restated; the truthful per-block audit
+is WI-338's, and it was genuinely blocked on this fix — a classification is
+meaningless while the fingerprints depend on the checkout.
+
+**Three guards, mutated against the real source before being believed.** Two
+assert the property (`significant_tokens` and the emitted census agree across
+line endings, on fixtures written with `write_bytes` — the existing fixtures use
+`write_text`, which emits the platform default and so could never observe this).
+The third is the mutation proof *in* the suite: it swaps `normalized_source` for
+a raw decode and asserts the census then diverges, so the guards fail loudly if
+they are ever made vacuous. Reverting the normalization in the shipped file reds
+all three; restoring it greens them.
+
+**The working tree itself was the other half of the defect.** 67 tracked files
+were CRLF on disk while the index and `.gitattributes` both declare LF — edit
+residue on Windows, invisible to `git status` because the clean filter
+normalizes on the way in. That is not only this census's problem: it is what
+produced the **false byte-budget delta** 127-REVIEW-A flagged (a CRLF working
+tree measured against an LF baseline), and it had put
+`project-trajectory/hooks/pre-commit` — which `.gitattributes` warns must be LF
+or `#!/bin/sh` breaks — into CRLF. All 67 were restored, each one refused unless
+its LF form was **byte-identical to its HEAD blob**, so the operation could only
+ever be a no-op restoration: `git diff` after it names exactly the three files
+this WI edits. With the tree uniform, the two corrected byte figures above
+re-measure exactly.
+
+**A second checker has the same flaw, and is filed rather than fixed here:**
+`check_vendored.py` compares `sha256` of a vendored file's raw bytes against the
+fetched upstream's, so a CRLF checkout of an LF-stored vendored doc reports
+false drift — **WI-339**. The others named in the spec are clean and were
+checked, not assumed: `check_stubs.py` and `gen_arch_map.py` go through
+`ast.parse` on `read_text()` (universal newlines, and an AST has no line endings
+in it), and the size/complexity ratchets count `splitlines()`, not bytes.
+
+**Also fixed, because a new function and a new spec touch generated surfaces:**
+`docs/architecture.md`'s code map (`normalized_source` is a new symbol) and a
+dangling `docs/guardrails/UPSTREAM` reference in the WI-339 spec — this
+meta-repo vendors no guardrails core of its own, which is part of why
+`check_vendored`'s defect went unnoticed here.
+
+**Bar.** `tests/test_check_dupes.py` **18 passed** (3 new). Full unfiltered
+suite **1605 passed, 7 skipped** (13:20). `check.py --gate G3 --jobs 0`: the
+`tests+coverage` step ran **1606 passed, 6 skipped**, coverage **92.28%**
+(floor 85), and **every one of the 19 steps passes** — including the three the
+window used to hide, and `dupes` among them, which is the whole point of this
+WI. The first gate run also caught `doc-refs` and `arch-map`, both fixed above
+and re-run green; the 17 non-test steps were then re-run individually after the
+fix. Byte-budget files untouched (`PROCESS.md`, `PROCESS_OPTIONS.md`,
+`AGENTS.template.md` all identical to HEAD).

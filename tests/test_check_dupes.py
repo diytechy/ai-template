@@ -318,3 +318,94 @@ def test_unallowed_is_count_aware_and_fingerprint_scoped():
     assert len(cd.unallowed([other], one)) == 1  # different fp: not covered
     # A legacy bare-pair entry covers any block in the pair and is not consumed.
     assert cd.unallowed([f1, f2, other], [(None, "src/a.py == src/b.py")]) == []
+
+
+# --- WI-337: a fingerprint is a property of the CODE, not of the checkout -----
+# The tokenizer used to see the source's line endings (a NEWLINE token's text is
+# "\r\n" on a CRLF checkout, "\n" on an LF one), so the same code fingerprinted
+# differently per platform and a census stamped on one OS red the `dupes` step on
+# the other. These guards write the SAME corpus with EXPLICIT endings — the
+# existing fixtures use write_text(), which silently emits the platform default
+# and so could never observe this.
+
+DUPLICATED_CORPUS = {"a.py": UNIQUE_A + HELPER, "b.py": UNIQUE_B + HELPER}
+
+
+def write_src_eol(root, files, ending):
+    """write_src() with the line ending pinned, defeating the platform default."""
+    src = root / "src"
+    src.mkdir(parents=True, exist_ok=True)
+    for name, body in files.items():
+        (src / name).write_bytes(body.replace("\n", ending).encode("utf-8"))
+    return root
+
+
+def test_significant_tokens_ignore_the_checkout_s_line_endings(tmp_path):
+    cd = load_script("check_dupes")
+    lf, crlf = tmp_path / "lf.py", tmp_path / "crlf.py"
+    lf.write_bytes(HELPER.encode("utf-8"))
+    crlf.write_bytes(HELPER.replace("\n", "\r\n").encode("utf-8"))
+    # The fixture really does differ on disk — otherwise the assert below is
+    # comparing a file with itself.
+    assert lf.read_bytes() != crlf.read_bytes()
+    assert b"\r" not in lf.read_bytes() and b"\r\n" in crlf.read_bytes()
+
+    lf_toks = cd.significant_tokens(str(lf))
+    crlf_toks = cd.significant_tokens(str(crlf))
+    assert lf_toks, "fixture produced no tokens — nothing was compared"
+    assert lf_toks == crlf_toks
+
+    def signature(toks):
+        return tuple((kind, text) for kind, text, _line in toks)
+
+    assert cd.fingerprint(signature(lf_toks)) == cd.fingerprint(signature(crlf_toks))
+
+
+def test_emitted_census_is_identical_under_lf_and_crlf(tmp_path):
+    # End-to-end through the real CLI: the census a Windows developer stamps is
+    # the census Linux CI verifies.
+    lf = write_src_eol(tmp_path / "lf", DUPLICATED_CORPUS, "\n")
+    crlf = write_src_eol(tmp_path / "crlf", DUPLICATED_CORPUS, "\r\n")
+    lf_lines, crlf_lines = emit(lf), emit(crlf)
+    assert lf_lines, "the corpus seeded no duplicate block — this guard is vacuous"
+    assert lf_lines == crlf_lines
+
+
+def _fingerprints_by_ending(cd, root):
+    """The census fingerprints `cd` reports for one corpus, per line ending."""
+    out = []
+    for flavour, ending in (("lf", "\n"), ("crlf", "\r\n")):
+        seeded = write_src_eol(root / flavour, DUPLICATED_CORPUS, ending)
+        files = sorted((seeded / "src").rglob("*.py"))
+        out.append(
+            [fp for _a, _b, _len, fp in cd.find_duplicates(files, cd.MIN_TOKENS)]
+        )
+    return out
+
+
+def test_normalization_is_what_makes_the_census_portable(tmp_path):
+    """The MUTATION PROOF for the two guards above: revert the normalization and
+    they go red. A guard that cannot fail is not a guard (2026-07-27 lesson)."""
+    cd = load_script("check_dupes")
+    with_lf, with_crlf = _fingerprints_by_ending(cd, tmp_path / "with")
+    assert with_lf and with_lf == with_crlf
+
+    def unnormalized_source(path):
+        """normalized_source() with ONLY the newline collapse removed."""
+        with open(path, "rb") as handle:
+            encoding, _first = cd.tokenize.detect_encoding(handle.readline)
+            handle.seek(0)
+            return handle.read().decode(encoding)
+
+    original = cd.normalized_source
+    cd.normalized_source = unnormalized_source
+    try:
+        without_lf, without_crlf = _fingerprints_by_ending(cd, tmp_path / "without")
+    finally:
+        cd.normalized_source = original
+
+    assert without_lf == with_lf  # LF was never the broken side
+    assert without_lf != without_crlf, (
+        "removing the normalization did not change the census — these guards "
+        "cannot observe the defect they name"
+    )
