@@ -2554,3 +2554,71 @@ def test_done_with_an_empty_deliverable_is_already_r_a_and_is_not_duplicated(tmp
     assert proc.returncode == 1, proc.stdout + proc.stderr
     assert "R-A" in proc.stderr
     assert "completion" not in proc.stderr
+
+
+def test_the_live_only_scope_is_load_bearing_not_vacuous():
+    """130-REVIEW-A MAJOR 5: the two figures justifying WI-352's live-only scope
+    were signed and wrong (38 vs the real 40; "258 of 282" vs 281 of 296). The
+    first was measured against an EARLIER implementation and never re-measured
+    after `_own_spec` changed — the measure-after-the-last-edit rule; the second
+    was inferred rather than measured.
+
+    The remedy is not a corrected number in prose, which rots the same way. It is
+    this: the DESIGN CLAIM re-derived from the live repo on every run. Scoping the
+    done-side check to live specs only matters if the archive would in fact
+    produce findings, so assert that it does — with headroom, as a property rather
+    than a freeze."""
+    import csv as _csv
+
+    ct = load_script("check_trajectory")
+    rows = list(
+        _csv.DictReader(
+            (ROOT / "docs" / "requirements" / "work-items.csv").open(
+                encoding="utf-8-sig"
+            )
+        )
+    )
+    status = {r["WI-ID"]: r["Status"].strip() for r in rows}
+    archive = ROOT / "docs" / "archive" / "specs"
+    findings = 0
+    for path in sorted(archive.glob("*.md")):
+        wid = path.name.split(".")[0]
+        if status.get(wid) != "done":
+            continue
+        _ticked, unticked = ct._done_when_boxes(
+            path.read_text(encoding="utf-8", errors="replace")
+        )
+        findings += bool(unticked)
+    assert findings >= 10, (
+        "only {} archived spec(s) would report unticked boxes — the live-only "
+        "scope was justified by there being MANY unactionable archive findings, "
+        "so if this has dropped near zero the scoping decision needs "
+        "re-arguing".format(findings)
+    )
+
+
+def test_done_when_holds_the_overwhelming_majority_of_checkboxes():
+    """The premise of the section rule, re-derived rather than quoted.
+
+    If checkboxes stopped clustering under `Done-when`, scoping the tally to that
+    section would start MISSING completion evidence instead of excluding
+    migration checklists — so the premise is asserted, not asserted once in a
+    docstring and left to rot."""
+    import re as _re
+
+    ct = load_script("check_trajectory")
+    box = _re.compile(r"^\s*[-*]\s+\[[ xX]\]")
+    inside = total = 0
+    for folder in ("specs", "archive/specs"):
+        for path in sorted((ROOT / "docs" / folder).glob("*.md")):
+            text = path.read_text(encoding="utf-8", errors="replace")
+            total += sum(1 for ln in text.splitlines() if box.match(ln))
+            ticked, unticked = ct._done_when_boxes(text)
+            inside += ticked + unticked
+    assert total > 0, "no checkboxes at all — this guard has gone vacuous"
+    assert inside * 10 >= total * 9, (
+        "only {} of {} checkboxes sit under a Done-when heading; below ~90% the "
+        "section rule stops being a filter and starts being a blind spot".format(
+            inside, total
+        )
+    )

@@ -174,3 +174,42 @@ def test_the_message_says_which_rule_it_applied():
     source = pathlib.Path(cv.__file__).read_text(encoding="utf-8")
     assert "line endings normalized" in source
     assert "binary, exact bytes" in source
+
+
+def test_a_no_nul_binary_is_not_normalized():
+    """130-REVIEW-A MAJOR 6, pinned with the reviewer's own fixture.
+
+    The first implementation identified binary NEGATIVELY, by the absence of a
+    NUL byte. A valid binary PPM whose single pixel is `(13, 10, 255)` contains
+    CRLF and no NUL, so it was normalized — and two byte-distinct images then
+    produced the SAME digest. In a drift detector a false MATCH is the worst
+    direction to be wrong in: real upstream drift reads as clean.
+    """
+    import hashlib
+
+    cv = _cv()
+    ppm = b"P6\n1 1\n255\n" + bytes([13, 10, 255])
+    other = b"P6\n1 1\n255\n" + bytes([10, 255])
+    assert b"\x00" not in ppm, (
+        "the fixture must not contain a NUL, or it proves nothing"
+    )
+    assert cv.looks_binary(ppm) is True
+    digest, normalized = cv.content_digest(ppm)
+    assert normalized is False
+    assert digest == hashlib.sha256(ppm).digest()
+    assert cv.content_digest(ppm)[0] != cv.content_digest(other)[0], (
+        "two byte-distinct binaries must not collide"
+    )
+
+
+def test_text_is_identified_positively_not_by_absence_of_nul():
+    """The rule is what text IS — decodable UTF-8, no non-whitespace control
+    bytes — because the negative form cannot see a binary that happens to lack a
+    NUL. Both directions asserted, so neither can drift into the other."""
+    cv = _cv()
+    assert cv.looks_text(b"") is True  # nothing to mangle
+    assert cv.looks_text("héllo — ok\n".encode()) is True  # non-ASCII UTF-8
+    assert cv.looks_text(b"tabs\tand\r\nbreaks\n") is True
+    assert cv.looks_text(bytes([0xFF, 0xFE])) is False  # invalid UTF-8
+    assert cv.looks_text(b"text\x07bell") is False  # a non-whitespace control
+    assert cv.looks_text(b"has\x00nul") is False  # the original case

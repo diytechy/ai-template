@@ -92,15 +92,45 @@ def fetch(url, timeout):
 # encoding the kit accepts produces one, and every common binary container does.
 _NUL = b"\x00"
 
+# Control bytes that legitimately occur in text. Everything else below 0x20 is
+# not something a vendored document contains.
+_TEXT_CONTROLS = frozenset(b"\t\r\n\f\v")
+
+
+def looks_text(data):
+    """Whether `data` is confidently TEXT, and may therefore be line-normalized.
+
+    POSITIVE identification, not "binary means contains a NUL". 130-REVIEW-A
+    refuted the negative form: a valid binary PPM whose single pixel is
+    `(13, 10, 255)` contains CRLF and **no NUL**, so it was normalized — and two
+    byte-distinct images then produced the SAME digest, which is a false MATCH in
+    a drift detector, the worst direction to be wrong in. Confirmed here before
+    fixing:
+
+        byte-distinct : True
+        NUL in either : False
+        DIGESTS COLLIDE: True
+
+    The test is therefore what text IS: decodable as UTF-8, and free of control
+    bytes other than the whitespace ones. That PPM fails on the first clause
+    (`0xFF` is an invalid start byte), which is exactly the discrimination the
+    NUL heuristic could not make.
+
+    Deliberately not inferred from the file EXTENSION: an unknown extension must
+    not silently opt a file out of the line-ending fix. Empty content is text —
+    there is nothing to mangle."""
+    try:
+        data.decode("utf-8")
+    except UnicodeDecodeError:
+        return False
+    return not any(b < 0x20 and b not in _TEXT_CONTROLS for b in data)
+
 
 def looks_binary(data):
-    """Whether `data` should be compared byte-for-byte rather than normalized.
-
-    Deliberately conservative and stated here rather than inferred from the file
-    extension: an unknown extension must not silently opt a file OUT of the
-    line-ending fix, and a genuine binary must not be normalized into a false
-    match. Empty content is text (nothing to mangle)."""
-    return _NUL in data
+    """The complement of `looks_text` — kept as a name because the call sites and
+    the guards read better in the negative, and because a reader coming from the
+    original NUL heuristic will look for it."""
+    return not looks_text(data)
 
 
 def content_digest(data):

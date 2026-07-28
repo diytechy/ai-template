@@ -286,8 +286,58 @@ def _skipif_conditions(tree):
     return out
 
 
+def _any_which_call(node):
+    """Every `...which(x)` call inside `node`, whatever the argument.
+
+    Deliberately not restricted to a constant gated tool: 130-REVIEW-A's bypass
+    passed the tool name through a VARIABLE, so a rule keyed on the literal
+    cannot see it."""
+    out = []
+    for child in ast.walk(node):
+        if not isinstance(child, ast.Call):
+            continue
+        func = child.func
+        name = func.attr if isinstance(func, ast.Attribute) else getattr(func, "id", "")
+        if name == "which":
+            out.append(child)
+    return out
+
+
+def _imports_the_declared_gate(tree):
+    """Whether the module imports the declared-gate helpers at all."""
+    wanted = {"skip_without_env_gates", "env_gate_skipif"}
+    for node in ast.walk(tree):
+        if isinstance(node, ast.ImportFrom):
+            if wanted & {a.name for a in node.names}:
+                return True
+    return False
+
+
 def _hand_rolled_gate_probes(path):
-    """Findings for one test module: a gated-tool probe deciding a skip."""
+    """Findings for one test module: a tool probe that could decide a skip.
+
+    THREE rules, widening outward, because 130-REVIEW-A drove the first two:
+
+    1. a `skipif` CONDITION that probes a gated tool directly;
+    2. one FUNCTION that both probes a gated tool and calls `skip()`;
+    3. a MODULE that probes with `which` at all AND skips at all, while importing
+       neither declared-gate helper.
+
+    Rule 3 is what the reviewer's bypass needed: it split the probe and the skip
+    across two module-level helpers and passed the tool through a variable, so
+    neither of the first two could see it. A module that genuinely probes a
+    NON-gated tool (`pwsh`) and skips is exempted by importing the helpers, which
+    every such module here already does — the exemption is cheap and explicit,
+    which is the point: the guard now asks a module to declare that it has
+    thought about this, rather than trying to infer it.
+
+    **What this still cannot see, recorded rather than papered over**
+    (`docs/enforcement-audit.md`, Reviewer tier): a probe in module A deciding a
+    skip in module B; a probe that shells out (`subprocess.run(["git", ...])`)
+    instead of using `which`; and a skip conditioned on a probe's result stored in
+    a module constant at import time. Those are semantic, not structural, and a
+    guard that claimed them would be advertising a property it does not hold —
+    which is the exact defect this rule replaced."""
     tree = ast.parse(path.read_text(encoding="utf-8"))
     findings = []
 
@@ -312,6 +362,16 @@ def _hand_rolled_gate_probes(path):
                     probes[0].args[0].value,
                 )
             )
+
+    probes = _any_which_call(tree)
+    if probes and _skip_calls(tree) and not _imports_the_declared_gate(tree):
+        findings.append(
+            "{}:{} the module probes with which() and skips, but imports neither "
+            "`skip_without_env_gates` nor `env_gate_skipif` — split across "
+            "helpers, that is an uncounted gated skip".format(
+                path.name, probes[0].lineno
+            )
+        )
     return findings
 
 
@@ -366,15 +426,87 @@ def test_the_guard_catches_a_freshly_invented_probe(tmp_path):
     assert not _hand_rolled_gate_probes(ok), "post-gate which() must be allowed"
 
 
-def test_the_guard_ignores_an_ungated_tool(tmp_path):
-    """`which('pwsh')` is not a declared gate, so it is nobody's business here —
-    otherwise the guard would grow into a ban on `shutil.which`."""
+def test_an_ungated_tool_is_not_a_NAMED_finding(tmp_path):
+    """`which('pwsh')` is not a declared gate, so neither of the two NAMED rules
+    fires on it — the guard must not grow into "any `which` is a defect".
+
+    Rule 3 does ask such a module to import the declared helpers, and that is
+    deliberate: after 130-REVIEW-A it is the only structural way to tell a
+    legitimate ungated probe from a gated one smuggled through a variable. The
+    cost is one import; the alternative was a guard that could be bypassed."""
     other = tmp_path / "test_other.py"
-    other.write_text(
+    body = (
         "import shutil, pytest\n"
+        "{}"
         "def test_x():\n"
         "    if not shutil.which('pwsh'):\n"
+        "        pytest.skip('no powershell')\n"
+    )
+    other.write_text(body.format(""), encoding="utf-8")
+    findings = _hand_rolled_gate_probes(other)
+    assert findings and "imports neither" in findings[0], findings
+    assert not any("probes 'pwsh'" in f for f in findings), (
+        "an ungated tool must never be named as a gated-probe finding"
+    )
+
+    other.write_text(
+        body.format("from conftest import skip_without_env_gates  # noqa: F401\n"),
+        encoding="utf-8",
+    )
+    assert _hand_rolled_gate_probes(other) == []
+
+
+def test_the_guard_catches_the_helper_indirection_bypass(tmp_path):
+    """130-REVIEW-A BLOCKER 2, reproduced exactly.
+
+    The reviewer split the probe and the skip across two module-level helpers and
+    passed the tool name through a VARIABLE, so neither the skipif rule nor the
+    same-function rule could see it, and the shipped guard reported nothing. The
+    module rule catches it; the exempt twin proves the exemption is what makes
+    the difference, not something incidental about the file."""
+    bypass = tmp_path / "test_bypass.py"
+    bypass.write_text(
+        "import shutil, pytest\n"
+        "def _probe(tool):\n"
+        "    return shutil.which(tool)\n"
+        "def _need(tool):\n"
+        "    if not _probe(tool):\n"
+        "        pytest.skip('requires ' + tool)\n"
+        "def test_x():\n"
+        "    _need('git')\n"
+        "    assert True\n",
+        encoding="utf-8",
+    )
+    findings = _hand_rolled_gate_probes(bypass)
+    assert findings, "the reviewer's bypass still walks past the guard"
+    assert "imports neither" in findings[0], findings
+
+    exempt = tmp_path / "test_exempt.py"
+    exempt.write_text(
+        "import shutil, pytest\n"
+        "from conftest import skip_without_env_gates\n"
+        "def _pwsh():\n"
+        "    return shutil.which('pwsh')\n"
+        "def test_x():\n"
+        "    skip_without_env_gates('posix-shell')\n"
+        "    if not _pwsh():\n"
         "        pytest.skip('no powershell')\n",
         encoding="utf-8",
     )
-    assert not _hand_rolled_gate_probes(other)
+    assert _hand_rolled_gate_probes(exempt) == [], (
+        "a module that DECLARES the gate must stay exempt, or every legitimate "
+        "probe of an ungated tool becomes a finding"
+    )
+
+
+def test_the_guards_residue_is_recorded_not_claimed():
+    """What the AST cannot see is written down where the enforcement tiers live,
+    rather than left implied by a guard that would otherwise advertise a property
+    it does not hold — the defect this rule replaced."""
+    from conftest import ROOT
+
+    audit = (ROOT / "docs" / "enforcement-audit.md").read_text(encoding="utf-8")
+    assert "WI-326" in audit and "cross-module" in audit, (
+        "the Reviewer-tier residue of the environment-gate rule is not recorded "
+        "in docs/enforcement-audit.md"
+    )

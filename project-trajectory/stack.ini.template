@@ -204,28 +204,6 @@ docs/status.md = status | <!-- BEGIN GENERATED STATUS --> | <!-- END GENERATED S
 # command = {py} scripts/check_coverage.py --tier {tier} --skip-tiers smoke
 # lane = tests+coverage
 #
-# --- Re-attestation brief freshness (WI-325) -- SHIPPED LIVE, not commented ----
-# Every other generated surface the kit ships is freshness-gated; docs/ratify/*.md
-# is generated the same way (`trace.py --ratify modified --out ...`) and was gated
-# by nothing, so it silently drifted behind the registry it summarizes. That
-# matters more than the usual staleness because the brief is read by a HUMAN ABOUT
-# TO ATTEST: a short brief means an owner blesses rows they were never shown. It
-# therefore fails closed.
-#
-# The compare uses the baseline the brief itself DECLARES, never a re-derived one.
-# Re-deriving is the failure this exists to prevent: a regeneration once collapsed
-# 43 chain-row diffs to 18 while a --check certified the loss.
-#
-# Live rather than commented because it is DOUBLY SELF-ARMING and costs a project
-# without a re-attestation practice exactly nothing: silent when there is no
-# docs/ratify/ brief at all, and silent when no SR is `Modified` (the window is
-# closed, so the brief is a historical record rather than a live surface). No
-# migration is forced on an existing adopter.
-[step:ratify-fresh]
-command = {py} scripts/trace.py --root . --ratify modified --check
-gates = G2,G3
-layer = process
-
 # TS/JS adopters: if you run SOURCES directly (Node native type-stripping, no
 # `tsc` emit) with an esbuild/swc-transpiled test runner (vitest, jest+swc), add
 # a typecheck gate — the test transpiler accepts non-erasable syntax (enums,

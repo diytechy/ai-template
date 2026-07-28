@@ -196,6 +196,7 @@ BUILTIN_STEP_NAMES = frozenset(
         "status-map",
         "open-items",
         "okf",
+        "ratify-fresh",
         "skills-sync",
     }
 )
@@ -696,6 +697,39 @@ def steps(coverage, tier, gate, phase=None, profile=None):
             (),
             [sys.executable, str(_SCRIPTS / "gen_okf.py"), "--check"],
             {"G3"},
+            "process",
+        ),
+        # Re-attestation brief freshness (WI-325). Every other generated surface
+        # here is freshness-gated; docs/ratify/*.md is generated the same way and
+        # was gated by nothing, so it silently drifted behind the registry it
+        # summarizes — twice in one day, both times caught only by a human
+        # noticing. It fails CLOSED because a stale brief is read by a HUMAN
+        # ABOUT TO ATTEST: a short brief means an owner blesses rows they were
+        # never shown. The comparison uses the baseline the brief itself
+        # DECLARES, never a re-derived one (re-deriving is the WI-322 BLOCKER,
+        # where a regeneration collapsed 43 chain-row diffs to 18 while a
+        # --check certified the loss).
+        #
+        # BUILT-IN rather than a docs/stack.ini `[step:]` — 130-REVIEW-A found
+        # that shipping the hook while the step lived in a project-owned
+        # stack.ini BLOCKS EVERY COMMIT for an adopter whose stack.ini predates
+        # WI-325 ("check: no step named 'ratify-fresh'", exit 1). Its siblings
+        # above are all built-in for exactly this reason: check.py and the hook
+        # ship together, so a step declared here can never be missing from under
+        # the hook that calls it. Doubly self-arming, so a non-adopter pays
+        # nothing: silent with no docs/ratify/ brief, and silent when no SR is
+        # Modified (the window is closed, so the brief is a record).
+        (
+            "ratify-fresh",
+            (),
+            [
+                sys.executable,
+                str(_SCRIPTS / "trace.py"),
+                "--ratify",
+                "modified",
+                "--check",
+            ],
+            {"G2", "G3"},
             "process",
         ),
         # Cross-agent skill-sync freshness (S7): every per-agent skill copy

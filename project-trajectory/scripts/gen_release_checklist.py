@@ -307,8 +307,7 @@ def main():
     else:
         out = docs / "release-checklist.md"
     out.parent.mkdir(parents=True, exist_ok=True)
-    with out.open("w", encoding="utf-8", newline="\n") as _fh:
-        _fh.write("\n".join(L) + "\n")
+    out.write_text("\n".join(L) + "\n", encoding="utf-8", newline="\n")
 
     print(
         "Release checklist -> {}  (SN={} human-SR={} manual-TC={} IF={} PB={})".format(

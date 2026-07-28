@@ -1332,8 +1332,10 @@ def spec_lifecycle_findings(root, wis):
 _DONE_BOX_RE = re.compile(r"^\s*[-*]\s+\[[xX]\]")
 _OPEN_BOX_RE = re.compile(r"^\s*[-*]\s+\[ \]")
 _HEADING_RE = re.compile(r"^(#{1,6})\s+(.*)$")
-# Checkboxes live under a "Done-when" heading by overwhelming convention (258 of
-# 282 across every live and archived spec). The rest are migration checklists,
+# Checkboxes live under a "Done-when" heading by overwhelming convention (281 of
+# 296 across every live and archived spec; re-derived by
+# test_done_when_holds_the_overwhelming_majority_of_checkboxes rather than
+# trusted here). The rest are migration checklists,
 # which are STEPS rather than completion evidence and must not count — counting
 # them would make a kit-version-bump doc read as an unfinished WI.
 _DONE_WHEN_RE = re.compile(r"^\s*(?:\d+[.)]\s*)?done[- ]when\b", re.IGNORECASE)
@@ -1443,8 +1445,8 @@ def completion_reconciliation_findings(root, wis):
         reachable from HEAD.
 
     **Why the done side is scoped to LIVE specs**, measured rather than assumed:
-    run over the archive it produced **38** findings, and neither class was
-    actionable. Some are a self-referential terminal box (`Commit bar green; row
+    run over the archive it produced **40** findings (36 with no box ticked at
+    all, 4 partly ticked) and neither class was actionable. Some are a self-referential terminal box (`Commit bar green; row
     done, spec archived` — untickable at the moment you would tick it); the rest
     are closes that never ticked. For a WI closed weeks ago, whose Deliverable and
     log entry carry the record, the only available action is cosmetic — and a

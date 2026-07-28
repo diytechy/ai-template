@@ -1498,8 +1498,7 @@ def generate_status(docs, root, last_train=""):
         " successful integration — never written on a worker branch._",
     ]
     try:
-        with path.open("w", encoding="utf-8", newline="\n") as _fh:
-            _fh.write("\n".join(lines) + "\n")
+        path.write_text("\n".join(lines) + "\n", encoding="utf-8", newline="\n")
     except OSError:
         return False
     return True
@@ -2029,8 +2028,7 @@ def _resolve_generated_path(wt, rel, entry):
         )
         if resolved is None:
             return False
-        with path.open("w", encoding="utf-8", newline="\n") as _fh:
-            _fh.write(resolved)
+        path.write_text(resolved, encoding="utf-8", newline="\n")
     except OSError:
         return False
     git(wt, "add", "--", rel)
@@ -3038,10 +3036,11 @@ def telemetry_summary(journal):
         ),
     }
     try:
-        with journal.dir / "telemetry.json".open(
-            "w", encoding="utf-8", newline="\n"
-        ) as _fh:
-            _fh.write(json.dumps(summary, indent=2, sort_keys=True))
+        (journal.dir / "telemetry.json").write_text(
+            json.dumps(summary, indent=2, sort_keys=True),
+            encoding="utf-8",
+            newline="\n",
+        )
     except OSError:
         pass
     print(

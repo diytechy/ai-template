@@ -17419,3 +17419,96 @@ finding and exits clean is worse than no checker.
 
 Module size 2706 → 2848, reviewed. Bar: smoke **509 passed / 24.2 s**; all 18
 non-test G3 steps PASS.
+
+---
+
+## Session 2026-07-28 (cont.) — 130-REVIEW-A: I shipped a crash, and a false claim caused it
+
+An independent `codex`/OpenAI adversarial review of the whole batch
+(`07c0db6..0bf010f`) returned **CHANGES-REQUESTED, 7 findings — 4 BLOCKER, 3
+MAJOR**. All seven held. The record is
+[130-REVIEW-A](reviews/130-REVIEW-A.md).
+
+### The headline, stated plainly
+
+**`Path.write_text(newline=…)` is 3.10+, not 3.13+.** It is `Path.read_text`
+whose `newline` kwarg is 3.13+, and I confused the two. Three other kit scripts
+had said "3.10+" in their own comments the whole time.
+
+That false premise was not cosmetic. It drove WI-348's mechanical rewrite of 17
+`write_text` sites into `open()` form — and at every site whose receiver is a
+path EXPRESSION, `docs / "run-state".open(...)` parses as
+`docs / ("run-state".open(...))`. So **`_write_runstate`, `regenerate_index` and
+`telemetry_summary` all raised `AttributeError` on live coordinator paths.**
+`ruff` reported "All checks passed". The 1,680-test suite passed. Nothing calls
+those three functions, so nothing noticed. An external reviewer found it by
+*calling them*.
+
+Fixed by **reverting**, not by parenthesizing: the conversion was never needed,
+so reverting removes the entire hazard class and shrinks the diff. The three
+append sites stay on `open()` (`write_text` cannot append) and `_atomic_json`
+stays extracted.
+
+### The other six
+
+- **BLOCKER 2** — the AST anti-drift guard was bypassed *again*: the reviewer
+  split the probe and the skip across two module-level helpers and passed the
+  tool name through a variable, so neither the `skipif` rule nor the
+  same-function rule could see it. A third, module-scope rule now catches that
+  shape, and the residue it still cannot see — a cross-module probe, a
+  `subprocess`-based probe, a probe frozen into an import-time constant — is
+  written into [enforcement-audit.md](enforcement-audit.md) as Reviewer tier.
+  **That is the second guard on this branch to be driven and bypassed**, which is
+  the argument for writing the gap down rather than implying it.
+- **BLOCKER 3** — the LF guard checked only that a `newline` kwarg EXISTED. The
+  reviewer flipped the real `trace.py` writer to `newline="\r\n"` and got
+  *5 passed*. It now judges the VALUE, and models all four text-writing APIs
+  (`write_text`, `Path.open`, builtin `open`, `io.open`). `newline=""` is
+  accepted as the WI-234 *preserve* discipline — the property is that the
+  PLATFORM never decides, not that the literal is always `"\n"`.
+- **BLOCKER 4** — shipping `[step:ratify-fresh]` in `stack.ini` while also
+  shipping the hook that calls it **blocks every commit** for an adopter whose
+  `stack.ini` predates WI-325 (`check: no step named 'ratify-fresh'`, exit 1). It
+  is now a **built-in** `check.py` step, which is what every sibling freshness
+  check already was — `check.py` and the hook ship together, so a step declared
+  there can never be missing under the hook that calls it. Verified against the
+  reviewer's exact scenario: a scaffold with no `ratify-fresh` in its stack.ini
+  runs the hook's batched command at **exit 0**.
+- **MAJOR 5** — *both* signed WI-352 census figures were false: **40** archive
+  findings, not 38; **281 of 296** checkboxes under a Done-when heading, not
+  "258 of 282". The first was measured against an EARLIER implementation and
+  never re-measured after `_own_spec` changed; the second was inferred, not
+  measured. Corrected — and replaced with two tests that **re-derive** the design
+  claims from the live repo, because a corrected number in prose rots the same
+  way the wrong one did.
+- **MAJOR 6** — WI-339 identified binary NEGATIVELY, by the absence of a NUL. A
+  valid binary PPM whose pixel is `(13, 10, 255)` contains CRLF and no NUL, so it
+  was normalized, and two byte-distinct images produced the same digest — a false
+  MATCH in a drift detector, the worst direction to be wrong in. Text is now
+  identified POSITIVELY: decodable UTF-8, no non-whitespace control bytes.
+- **MAJOR 7** — the version claim above, corrected in every home and pinned by a
+  test that asserts what both APIs actually do on the floor interpreter.
+
+### What this says about the method, honestly
+
+The per-WI reviews and this batch review between them found ~17 findings across
+this session. **Almost none were broken code that a test could have caught** —
+they were claims. The one exception is the crash, and the crash existed *because*
+of a claim.
+
+Two things worked and should be repeated. Giving the reviewer the branch's
+calibration up front — "the signature defect here is signed claims, not bugs" —
+is why it went looking for the right thing. And the instruction to **mutate the
+guards and check they can fail** is what produced BLOCKERs 2 and 3; both guards
+were green and both were hollow.
+
+One thing did not work and is now a standing rule with teeth: **a number measured
+before the last edit is not a measurement of what shipped.** MAJOR 5 is that rule
+failing on the same day I wrote it into the handoff — and the response is not to
+try harder but to make the number re-derivable by a test.
+
+Two of this repo's own guards also caught my fixes mid-flight, which is the
+system working: the census-audit guard flagged the `lf-write-preamble` sanctions
+as dead the moment the revert dissolved the duplication they described, and an
+`ast.parse` assertion stopped a regex-based revert from writing an unparseable
+file.

@@ -280,7 +280,7 @@ BASELINE = {
     # each site becomes the two-line open() form. Partly REPAID in the same
     # change: the two atomic-JSON writers were extracted to _atomic_json, which
     # retires a census sanction. Reviewed bump, log 2026-07-28.
-    "agent_dispatch.py": 4043,
+    "agent_dispatch.py": 4042,
     "agent_loop.py": 3042,
     # +30 (2206 -> 2236), WI-065: `tc_citation_findings` — the TC-`Verifies`
     # rules lifted out of `analyze` so the cell could accept `IF-###` seam ids.
@@ -353,7 +353,7 @@ BASELINE = {
     # chain-row diffs to 18 while --check certified the loss. A successor who
     # "simplifies" that comment away removes the reason the code is shaped this
     # way. Reviewed bump, log 2026-07-28. Re-stamp downward with WI-280.
-    "trace.py": 2848,
+    "trace.py": 2847,
     # +132 (1926 -> 2058; the last +10 is the F4 BOM hardening: read_rows utf-8-sig + git-show strips), WI-316: staged_spine_findings — the amend-without-
     # flip warn (--staged): content cells of a Verified spine row changed
     # without the Modified marker, suppressed when the owning SR flips in the
@@ -392,7 +392,7 @@ BASELINE = {
     # FIFTH consecutive upward bump on this module with no decomposition between
     # them, and check_trajectory.py is hereby the concrete next slice of WI-280 —
     # named with its measured number rather than left as a general intention.
-    "check_trajectory.py": 2495,
+    "check_trajectory.py": 2497,
     # +1 (1916 -> 1917), WI-279: one MAPPING row registering the new
     # scripts/check_coverage.py kit gate so it ships downstream — a required
     # one-line registration, not monolith growth (the reviewed-bump escape the

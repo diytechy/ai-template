@@ -341,8 +341,7 @@ def main():
     report = format_report(goal_path.name, clauses, plans)
     print(report)
     if args.out:
-        with Path(args.out).open("w", encoding="utf-8", newline="\n") as _fh:
-            _fh.write(report)
+        Path(args.out).write_text(report, encoding="utf-8", newline="\n")
     if sr_ids is None:
         print("plan_coverage: note - no system-requirements.csv; SR refs unvalidated")
     if if_ids is None:

@@ -291,8 +291,11 @@ def update_baseline(baseline_path, metrics):
             changes.append((pid, old, val))
         existing[pid] = val
     baseline_path.parent.mkdir(parents=True, exist_ok=True)
-    with baseline_path.open("w", encoding="utf-8", newline="\n") as _fh:
-        _fh.write(json.dumps(existing, indent=2, sort_keys=True) + "\n")
+    baseline_path.write_text(
+        json.dumps(existing, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+        newline="\n",
+    )
     return changes
 
 
@@ -360,8 +363,7 @@ def main():
 
     report = Path(report_path)
     report.parent.mkdir(parents=True, exist_ok=True)
-    with report.open("w", encoding="utf-8", newline="\n") as _fh:
-        _fh.write(render_report(results, args.tier))
+    report.write_text(render_report(results, args.tier), encoding="utf-8", newline="\n")
 
     for r in results:
         if r["status"] in ("FAIL", "WARN"):

@@ -264,8 +264,9 @@ def main():
     if not report.is_absolute():
         report = root / report
     report.parent.mkdir(parents=True, exist_ok=True)
-    with report.open("w", encoding="utf-8", newline="\n") as _fh:
-        _fh.write(render_report(findings, len(files)))
+    report.write_text(
+        render_report(findings, len(files)), encoding="utf-8", newline="\n"
+    )
 
     for f in findings:
         print(
