@@ -8,6 +8,7 @@ check entirely. Each is pinned red/green by running the real script over a
 minimal temp registry (no full scaffold needed — the validator reads plain CSVs).
 """
 
+import difflib
 import os
 import shutil
 import subprocess
@@ -441,6 +442,48 @@ def test_specref_anchor_report_names_the_nearest_heading(tmp_path):
     assert "did you mean #s1-first-slice-with-a-long-tail?" in proc.stderr, proc.stderr
 
 
+def test_nearest_anchor_prefix_pass_beats_difflib_on_a_severe_truncation():
+    """The prefix pass must EARN its place, measured — not asserted.
+
+    131-REVIEW-A MINOR 5 refuted the original rationale by deleting the branch and
+    watching every test stay green: WI-326's own 44-of-76-char truncation scores
+    0.733 and plain difflib finds it unaided. The branch survives because a
+    SEVERER truncation defeats difflib outright, and this pins that exact pair, so
+    deleting the branch now fails and the docstring cannot rot back into the
+    over-claim."""
+    ct = load_script("check_trajectory")
+    full = "2026-07-26--wi-326-a-green-that-hid-47-tests-caught-by-not-trusting"
+    anchors = frozenset({full, "decisions-log", "audit-log", "gate-sign-offs"})
+
+    mild = "2026-07-26--wi-326-a-green-that-hid-47-tests"
+    assert difflib.get_close_matches(mild, sorted(anchors), n=1, cutoff=0.6) == [full]
+
+    severe = "2026-07-26--wi-326"
+    assert difflib.get_close_matches(severe, sorted(anchors), n=1, cutoff=0.6) == []
+    assert ct.nearest_anchor(severe, anchors) == full
+
+
+def test_specref_with_no_path_is_a_finding(tmp_path):
+    # 131-REVIEW-A BLOCKER 1: a bare `#anchor` names no document, so nothing can
+    # resolve it. This returned CLEAN both before and after WI-354 — the one shape
+    # that made "both halves resolve" untrue as written.
+    write_wis_sr(tmp_path, "WI-001,A,scripts,,,queued,,#totally-invented\n")
+    plain = run_traj(tmp_path)
+    assert plain.returncode == 0, plain.stdout + plain.stderr
+    assert "R-E WI-001" in plain.stderr and "has no path" in plain.stderr
+    strict = run_traj(tmp_path, "--strict")
+    assert strict.returncode == 1
+
+
+def test_specref_naming_a_directory_is_a_finding(tmp_path):
+    # Same review: `exists()` is true for a directory, so one resolved clean.
+    (tmp_path / "docs" / "specs").mkdir(parents=True, exist_ok=True)
+    write_wis_sr(tmp_path, "WI-001,A,scripts,,,queued,,docs/specs\n")
+    strict = run_traj(tmp_path, "--strict")
+    assert strict.returncode == 1
+    assert "names a directory" in strict.stderr, strict.stderr
+
+
 def test_specref_and_markdown_link_agree_on_the_same_anchor(tmp_path):
     """The WI-354 design claim, as a property rather than a comment: the SAME
     reference must not pass in one home and fail in the other.
@@ -449,19 +492,21 @@ def test_specref_and_markdown_link_agree_on_the_same_anchor(tmp_path):
     invisible as a SpecRef (check_trajectory), which is how WI-326's ref survived
     two days. The anchor set now comes from check_docs.parse_doc, so this asserts
     the two homes agree on a heading whose slug is non-trivial — em dash, code
-    span and punctuation all normalize — in BOTH directions."""
-    heading = "S1 — the strict slice, part 2"
+    span and punctuation all normalize — in BOTH directions, and in mixed CASE."""
+    cd = load_script("check_docs")
+    heading = "S1 — the `--strict` slice, part 2"
     write_spec(tmp_path, "docs/specs/effort.md", heading)
     # Ground truth is the anchor set the DOC exposes, read back with check_docs'
     # own parser — never a hand-written literal, which would assert my arithmetic
-    # about em dashes rather than the agreement between the two homes. Reading it
-    # back also sidesteps a real subtlety: parse_doc strips inline code spans from
-    # the document before slugifying, so slugify(raw heading) is not always the
-    # anchor.
-    anchors = load_script("check_docs").parse_doc(
-        tmp_path / "docs" / "specs" / "effort.md"
-    )["anchors"]
+    # about em dashes rather than the agreement between the two homes.
+    anchors = cd.parse_doc(tmp_path / "docs" / "specs" / "effort.md")["anchors"]
     (slug,) = [a for a in anchors if a != "spec"]
+    # The subtlety that made a hand-written literal wrong twice, now ASSERTED
+    # rather than described (131-REVIEW-A MINOR 7: the docstring named a code
+    # span the fixture did not contain): parse_doc strips inline code spans over
+    # the whole document BEFORE slugifying headings, so slugify(raw heading) is
+    # NOT the anchor whenever the heading carries one.
+    assert cd.slugify(heading) != slug, (cd.slugify(heading), slug)
 
     def homes(anchor):
         (tmp_path / "docs" / "citer.md").write_text(
@@ -480,6 +525,14 @@ def test_specref_and_markdown_link_agree_on_the_same_anchor(tmp_path):
 
     # The real slug: neither home objects.
     assert homes(slug) == (False, False)
+    # MIXED CASE of the real slug: check_docs compares fragments lowercased, so
+    # neither home may object. This is the case that KILLS the mutation
+    # 131-REVIEW-A MAJOR 2 drove: dropping `frag.lower()` in specref_findings
+    # survived all five original tests while making check_trajectory reject an
+    # anchor check_docs accepts — reopening the exact cross-home disagreement
+    # this test exists to prevent.
+    assert homes(slug.upper()) == (False, False)
+    assert homes(slug.capitalize()) == (False, False)
     # Truncated (the WI-326 shape) and plain wrong: BOTH homes object.
     assert homes(slug[:12]) == (True, True)
     assert homes("totally-invented") == (True, True)

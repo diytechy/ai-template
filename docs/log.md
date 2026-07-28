@@ -17564,9 +17564,17 @@ is not always the anchor. And PowerShell's `Measure-Object -Line` reported 2343
 lines for a 2590-line file because it skips blank lines; the module ratchet's own
 number is the one to sign.
 
-**Run over the live registry before landing**, as the row required: 5 rows carry an
-anchored SpecRef, all 5 open, and all 5 resolve. The gap was real and the current
-registry is clean — the check ships as a tripwire, not a backlog.
+**Run over the live registry before landing**, as the row required: **6** rows
+carry an anchored SpecRef, all open, and all resolve. The gap was real and the
+current registry is clean — the check ships as a tripwire, not a backlog. The
+figure is re-derivable rather than remembered, which is the point:
+
+```
+python project-trajectory/scripts/check_trajectory.py --strict   # 0 R-E findings
+```
+
+(It read *five* in the first draft of this entry. I measured, then filed WI-355 —
+which adds an anchored row — and never re-measured. 131-REVIEW-A MAJOR 3.)
 
 Extracted to `specref_findings` rather than folded in line: in line it took
 `ssot_findings` to C901 **11**, and buying a complexity baseline on the module
@@ -17603,9 +17611,76 @@ WARN tier** — the tier those findings were sitting in the whole time. A filter
 that hides the only severity a warn-first checker emits is a filter that
 guarantees a green.
 
-Two smaller traps, both cheap to re-pay and both caught by looking rather than
-reasoning. **Regenerate `PROJECT_STATE.html` LAST**: run in the order
-dashboard → `--status`, the dashboard lands stale and `trajectory-map` fails.
-And **PowerShell's `Measure-Object -Line` skips blank lines** — it reported 2343
-for a 2590-line file, which would have been a wrong signed number in the ratchet
-had I not cross-checked against the ratchet's own count.
+One smaller trap worth re-paying nothing for: **PowerShell's `Measure-Object
+-Line` skips blank lines** — it reported 2343 for a 2590-line file, which would
+have been a wrong signed number in the ratchet had I not cross-checked against
+the ratchet's own count.
+
+I also wrote a second "trap" here — *regenerate `PROJECT_STATE.html` LAST,
+because running the dashboard before `--status` leaves it stale* — and
+**131-REVIEW-A refuted it**. I had flagged it to the reviewer as my weakest claim
+because I inferred the mechanism from one observation instead of establishing it,
+and that instinct was right. The reviewer isolated the generator's inputs, made
+the status block stale, rendered, ran `--status`, and rendered again: the two
+dashboards were sha256-identical. `build_html` does not consume status
+*contents* — it only links to the file. So `--status` cannot stale the dashboard
+and the ordering rule was fiction. The real cause of the staleness I saw was some
+other shared input reaching its final state after the dashboard was rendered; I
+did not determine which, and say so rather than name one. The honest invariant is
+the general one: **regenerate each derived artifact after its inputs are final**,
+which needs no ordering folklore. *A trap that is wrong is worse than no trap* —
+the same rule this branch already learned about `Path.write_text`.
+
+### 131-REVIEW-A: the guard I had just written was hollow in a way I had not imagined
+
+An independent `codex`/OpenAI review of `fc27814` returned **CHANGES-REQUESTED,
+7 findings** ([131-REVIEW-A](reviews/131-REVIEW-A.md)). It found them by DRIVING
+the rule, not reading it — the same method that has now worked five rounds
+running. Every code-behaviour finding was re-verified here on 3.11.9 first,
+because the reviewer could not run the repo `.venv` and fell back to Python 3.8,
+below the declared floor.
+
+**BLOCKER 1 — a bare `#anchor` SpecRef resolved CLEAN**, before and after WI-354,
+because `specref_findings` returned `[]` on an empty path. My commit message said
+"both halves of a `path#anchor` are resolved"; that sentence was false for the one
+shape I never considered. Same for a SpecRef naming a DIRECTORY, which `exists()`
+happily accepts. Both are now findings; measured first, no live row has either.
+
+**MAJOR 2 — the case normalization was unguarded.** Deleting `.lower()` from the
+fragment comparison survived all five of my tests while making `check_trajectory`
+reject an anchor `check_docs` accepts — reopening the exact cross-home
+disagreement the property test exists to prevent. *My mutation testing covered the
+shapes I imagined; this is the third guard on this branch bypassed by a reviewer
+who imagined a different one.* The fix is the mixed-case pair now asserted in both
+homes, and the harness that proves each new guard goes red is recorded below.
+
+**MAJOR 3 — "5 rows carry an anchored SpecRef" was already false when I signed
+it.** It is six. I measured five, then filed WI-355 — which adds an anchored row —
+and never re-measured. That is *the same rule failing on the same day I wrote it
+into the log for the second time*: measure AFTER the last edit. Prose cannot fix
+this; the count is now re-derived by the close script rather than typed.
+
+**MAJOR 4 — "sixth consecutive bump" and "~+90 lines per slice" could not both be
+true**, because "slice" was never defined and the per-slice mean ranges 95–133
+depending on grouping. Worse, the "FIFTH" I incremented was itself wrong: the
+2495 → 2497 step never got a transition comment, so the count had silently skipped
+one. The entry now lists every baseline (1926 → … → 2590) and states the one unit
+countable from that list — the SEVENTH increase, +664 total, mean +95.
+
+**MINOR 5 is the one where the review was half right and I checked its fix.** Its
+refutation was correct: WI-326's own truncation scores 0.733 and plain
+`get_close_matches` finds it unaided, so my rationale was an over-claim and my test
+did not discriminate — deleting the prefix branch kept all five tests green. But
+its recommendation to delete the branch was wrong, and measuring showed why:
+`2026-07-26--wi-326` returns NOTHING from difflib at the 0.6 cutoff while the
+prefix pass returns the exact heading. The branch is justified by *severe*
+truncation, not truncation as such. Rationale corrected, measured pair pinned.
+
+MINOR 6 (the false ordering rule) and MINOR 7 (a docstring naming a code span its
+fixture did not contain) are dispositioned above and in the test.
+
+**All four new guards were then mutation-proven**: dropping `.lower()`, deleting
+the prefix pass, restoring the empty-path early return, and disabling the
+directory check each turn their guard RED, with the source restored byte-identical
+afterwards. A guard is not done when it passes — only when it has been made to
+fail.

@@ -400,16 +400,32 @@ BASELINE = {
     # back under the C901 limit instead of buying another complexity baseline —
     # so the growth is new behaviour, not accreted branching.
     #
-    # This is the SIXTH consecutive upward bump with no decomposition between
-    # them, and the trend is now the argument, not the individual bumps: the five
-    # entries above each justify themselves and the module is still 2590 lines of
-    # SHIPPED surface (bootstrap MAPPING -> every adopting repo, run by the
-    # shipped pre-commit hook). WI-280 already names this module as its concrete
-    # next slice; what this entry adds is that the cost is compounding at roughly
-    # +90 lines per slice, which is the number to weigh against the
+    # +23 (2590 -> 2613), WI-354 follow-up: 131-REVIEW-A's BLOCKER 1 — a bare
+    # `#anchor` SpecRef, and one naming a DIRECTORY, both resolved CLEAN because
+    # the rule returned early on an empty path and trusted `exists()`. Two
+    # findings and their reasons; the corrected `nearest_anchor` rationale is the
+    # rest.
+    #
+    # THE TREND, stated so it is re-derivable rather than counted by hand. Every
+    # recorded baseline for this module, in order:
+    #   1926 -> 2048 -> 2058 -> 2063 -> 2135 -> 2495 -> 2497 -> 2590 -> 2613
+    # That is the EIGHTH increase, +687 total, mean +86 per increase. Two
+    # corrections 131-REVIEW-A forced, both worth keeping: the entry above said
+    # "FIFTH" because the 2495 -> 2497 step was never given a transition comment
+    # (it was a review fix), so the count silently skipped one — and "roughly +90
+    # per slice" was unsupportable because "slice" was never defined, with the
+    # per-slice mean landing anywhere from 95 to 133 depending on how the two
+    # WI-316 commits and the +2 are grouped. The unit here is now the one thing
+    # that is unambiguous and countable from this list: a BASELINE INCREASE.
+    #
+    # The trend is the argument, not the individual bumps: each entry above
+    # justifies itself and the module is still 2590 lines of SHIPPED surface
+    # (bootstrap MAPPING -> every adopting repo, run by the shipped pre-commit
+    # hook). WI-280 already names this module as its concrete next slice; what
+    # this entry adds is the compounding rate to weigh against the
     # scaffold-surface change a real extraction costs. Reviewed bump, log
     # 2026-07-28.
-    "check_trajectory.py": 2590,
+    "check_trajectory.py": 2613,
     # +1 (1916 -> 1917), WI-279: one MAPPING row registering the new
     # scripts/check_coverage.py kit gate so it ships downstream — a required
     # one-line registration, not monolith growth (the reviewed-bump escape the

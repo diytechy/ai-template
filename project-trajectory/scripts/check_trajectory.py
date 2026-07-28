@@ -1231,8 +1231,17 @@ def nearest_anchor(frag, anchors):
     """The closest existing slug to `frag`, or None. A wrong anchor is nearly
     always a stale or TRUNCATED one rather than an invented one, so the report
     names the near miss — that is what makes the finding actionable instead of
-    merely true. Truncation is scored explicitly because difflib's ratio punishes
-    a short prefix of a long slug, which is the exact WI-326 shape."""
+    merely true.
+
+    The prefix pass runs BEFORE difflib because difflib's ratio degrades with the
+    LENGTH of the truncation, not with truncation as such — and 131-REVIEW-A
+    refuted the stronger claim this docstring used to make. Measured against the
+    live docs/log.md anchor set: WI-326's own 44-of-76-char truncation scores
+    0.733 and plain `get_close_matches` finds it unaided, so that case does NOT
+    justify the branch. A severer truncation does — `2026-07-26--wi-326` returns
+    NOTHING from difflib at the 0.6 cutoff while the prefix pass returns the exact
+    heading. That measured pair is pinned by a test, so this rationale cannot rot
+    into the over-claim it replaced."""
     if not anchors:
         return None
     prefix = [a for a in anchors if a.startswith(frag) or frag.startswith(a)]
@@ -1260,11 +1269,25 @@ def specref_findings(root, w):
     pathpart, _, frag = spec.partition("#")
     pathpart, frag = pathpart.strip(), frag.strip()
     if not pathpart:
-        return []
+        # A bare `#anchor` names no document, so there is nothing to resolve it
+        # against. This returned CLEAN both before and after WI-354 — a hole
+        # 131-REVIEW-A found by driving the rule rather than reading it, and the
+        # one shape that made "both halves resolve" untrue as written.
+        return [
+            "{}: SpecRef {!r} has no path — a SpecRef names a document "
+            "(docs/specs/WI-###.md or a doc#anchor), not a bare "
+            "fragment".format(w["id"], spec)
+        ]
     target = root / pathpart
     if not target.exists():
         return [
             "{}: SpecRef {!r} does not resolve to an in-repo file".format(w["id"], spec)
+        ]
+    if not target.is_file():
+        # A directory exists but is not a spec-of-record; `exists()` alone let one
+        # through (same review). Measured before landing: no live row names one.
+        return [
+            "{}: SpecRef {!r} names a directory, not a document".format(w["id"], spec)
         ]
     if not frag:
         return []
