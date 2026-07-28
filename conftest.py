@@ -43,6 +43,8 @@ run — a resource nicety must not be able to red a suite.
 import os
 import sys
 
+import pytest
+
 DEFAULT_CAP_PERCENT = 50
 JOB_NAME = "ai-template-pytest"
 
@@ -51,6 +53,13 @@ JOB_NAME = "ai-template-pytest"
 _JOB_HANDLE = None
 
 
+# `optionalhook` because this hookspec exists only while pytest-xdist is loaded.
+# Without it, ANY run that lacks xdist — `-p no:xdist`, or an environment that
+# never installed it — dies with `PluginValidationError: unknown hook` before a
+# single test executes. Found by running a test with git off PATH to exercise an
+# unrelated skip guard (WI-333), which is its own lesson: the failure was in the
+# most-used file in the repo and every normal invocation hid it.
+@pytest.hookimpl(optionalhook=True)
 def pytest_xdist_auto_num_workers(config):
     """Half this machine's logical CPUs, leaving the rest for everything else.
 
@@ -84,7 +93,10 @@ def _requested_cap():
 
 
 def _warn(message):
-    print("conftest: {} — running without it.".format(message), file=sys.stderr)
+    """One line to stderr. The CALLER owns the whole sentence: the fallback path
+    is still capped, so a hard-coded "running without it" suffix would have made
+    the only visible signal say the opposite of what happened."""
+    print("conftest: {}".format(message), file=sys.stderr)
 
 
 def _bound_windows(percent):
@@ -120,24 +132,53 @@ def _bound_windows(percent):
     k32.GetCurrentProcess.restype = wintypes.HANDLE
     k32.SetPriorityClass.argtypes = [wintypes.HANDLE, wintypes.DWORD]
 
-    # Same name -> the SAME job: this call opens the existing one when another
-    # run (or an xdist worker, or another worktree's suite) already made it, which
-    # is what makes the ceiling machine-wide instead of per-process.
-    job = k32.CreateJobObjectW(None, JOB_NAME)
-    if not job:
+    k32.IsProcessInJob.argtypes = [
+        wintypes.HANDLE,
+        wintypes.HANDLE,
+        ctypes.POINTER(wintypes.BOOL),
+    ]
+    me = k32.GetCurrentProcess()
+
+    def capped(job):
+        """Apply the rate limit to `job` and put this process inside it."""
+        info = RATE(ENABLE | HARD_CAP, percent * 100)  # units of 1/100 percent
+        if not k32.SetInformationJobObject(
+            job, CPU_RATE_INFO_CLASS, ctypes.byref(info), ctypes.sizeof(info)
+        ):
+            raise ctypes.WinError(ctypes.get_last_error())
+        inside = wintypes.BOOL()
+        if k32.IsProcessInJob(me, job, ctypes.byref(inside)) and inside.value:
+            return True  # an xdist worker that inherited it; nothing to do
+        return bool(k32.AssignProcessToJobObject(job, me))
+
+    # Prefer the SHARED job: same name -> same job, so concurrent runs and other
+    # worktrees land under ONE ceiling instead of one each.
+    shared = k32.CreateJobObjectW(None, JOB_NAME)
+    if not shared:
         raise ctypes.WinError(ctypes.get_last_error())
-    info = RATE(ENABLE | HARD_CAP, percent * 100)  # units of 1/100 of a percent
-    if not k32.SetInformationJobObject(
-        job, CPU_RATE_INFO_CLASS, ctypes.byref(info), ctypes.sizeof(info)
-    ):
-        raise ctypes.WinError(ctypes.get_last_error())
-    if not k32.AssignProcessToJobObject(job, k32.GetCurrentProcess()):
-        err = ctypes.get_last_error()
-        # 5 = already in this job (a re-entered worker). Not a failure.
-        if err != 5:
-            raise ctypes.WinError(err)
-    k32.SetPriorityClass(k32.GetCurrentProcess(), BELOW_NORMAL)
-    _JOB_HANDLE = job
+    if capped(shared):
+        _JOB_HANDLE = shared
+    else:
+        # Windows refuses to assign a process into a job that is not in its own
+        # job hierarchy, so a run launched from a DIFFERENT process tree than the
+        # one that created the named job gets ERROR_ACCESS_DENIED here. An
+        # earlier version swallowed that as "already in this job" and returned
+        # happily, leaving the run completely UNCAPPED while reporting success —
+        # the worst outcome available, since the whole point is a guarantee.
+        # Fall back to a private job so THIS tree is still bounded, and say so:
+        # the ceiling is no longer shared, so N such runs can reach N x the cap.
+        private = k32.CreateJobObjectW(None, None)
+        if not private or not capped(private):
+            raise ctypes.WinError(ctypes.get_last_error())
+        _JOB_HANDLE = private
+        _warn(
+            "the shared {!r} job is owned by another process tree, so this run is "
+            "capped at {}% ON ITS OWN rather than sharing one ceiling "
+            "(concurrent runs can then total more than {}%)".format(
+                JOB_NAME, percent, percent
+            )
+        )
+    k32.SetPriorityClass(me, BELOW_NORMAL)
 
 
 def pytest_configure(config):
@@ -152,4 +193,8 @@ def pytest_configure(config):
             # No cgroup-free hard cap exists here; say what this actually is.
             os.nice(5)
     except Exception as exc:  # noqa: BLE001 - a nicety must never red a suite
-        _warn("could not bound CPU use ({}: {})".format(type(exc).__name__, exc))
+        _warn(
+            "could not bound CPU use ({}: {}) — this run is NOT capped.".format(
+                type(exc).__name__, exc
+            )
+        )

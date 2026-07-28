@@ -24,7 +24,7 @@ view: the mask, the staleness bite, and the vacuous-non-adopter posture.
 
 import subprocess
 
-from conftest import ROOT, SCRIPTS, load_script, run_py
+from conftest import load_script
 
 _dispatch = load_script("agent_loop").agent_dispatch
 

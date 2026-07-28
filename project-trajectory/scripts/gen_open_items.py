@@ -55,7 +55,6 @@ import argparse
 import csv
 import difflib
 import html
-import io
 import re
 import sys
 from pathlib import Path
@@ -232,6 +231,19 @@ def read_view(path):
     """The view as written, without universal-newline translation."""
     with path.open(encoding="utf-8", newline="") as fh:
         return fh.read()
+
+
+def stamped_baseline(view_text):
+    """The `--since` revision a rendered view records, or None when it records
+    none (an empty stamp means "auto baseline", not "the empty revision").
+
+    Both callers that need it — the `--check` compare and the write path's
+    baseline REUSE — must read the stamp identically, because the whole point of
+    the stamp is that a later run reproduces an earlier render. They were two
+    copies of the same three lines, which is a place where a one-line divergence
+    would silently split the gate from the generator (WI-334)."""
+    stamped = BASELINE_RE.search(view_text)
+    return (stamped.group(1) if stamped else "") or None
 
 
 def normalize(text):
@@ -745,8 +757,7 @@ def main(argv=None):
         current = read_view(out)
         # Re-render against the baseline the FILE declares (not this run's flag),
         # so the gate compares like with like on every machine and in CI.
-        stamped = BASELINE_RE.search(current)
-        since = (stamped.group(1) if stamped else "") or None
+        since = stamped_baseline(current)
         fresh = render(root, since=since)
         if normalize(mask_local(current)) != normalize(mask_local(fresh)):
             print(
@@ -766,8 +777,7 @@ def main(argv=None):
     # `--since ""` is the explicit opt-back-to-auto.
     since = args.since
     if since is None and out.is_file():
-        stamped = BASELINE_RE.search(read_view(out))
-        since = (stamped.group(1) if stamped else "") or None
+        since = stamped_baseline(read_view(out))
     fresh = render(root, since=since)
     if out.is_file() and normalize(read_view(out)) == normalize(fresh):
         print("gen_open_items: already up to date -> {}".format(out))

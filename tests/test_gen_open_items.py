@@ -21,7 +21,6 @@ Each guard carries its negative half, per the house rule.
 
 import re
 import subprocess
-import sys
 
 from conftest import SCRIPTS, load_script, run_py
 

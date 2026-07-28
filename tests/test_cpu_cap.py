@@ -20,6 +20,7 @@ Two halves, and the split matters:
 import ctypes
 import importlib.util
 import os
+import subprocess
 import sys
 
 import pytest
@@ -87,6 +88,45 @@ def test_cap_parsing_covers_the_dial(monkeypatch):
     assert root_conftest._requested_cap() == root_conftest.DEFAULT_CAP_PERCENT
 
 
+def test_pytest_still_runs_when_xdist_is_absent():
+    """The root conftest must not be able to kill a run that lacks xdist.
+
+    `pytest_xdist_auto_num_workers` is xdist's hookspec, so declaring it
+    unconditionally makes pluggy reject the conftest — `PluginValidationError:
+    unknown hook` — and pytest dies before collecting a single test. That is not
+    a hypothetical: it shipped, and it broke `-p no:xdist` and any environment
+    that never installed xdist. `@pytest.hookimpl(optionalhook=True)` is the fix
+    and this is its guard.
+
+    Found only because a test was run with git off PATH to exercise an unrelated
+    skip; every ordinary invocation in this repo loads xdist and hid it.
+
+    Collects a REPO test, not a temp one: pytest loads conftests from the
+    collected file's ancestors, so a probe written into `tmp_path` never loads
+    the root conftest and the guard passes no matter how broken that file is.
+    The first version of this test did exactly that and survived its own
+    mutation."""
+    proc = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "pytest",
+            "-q",
+            "-p",
+            "no:xdist",
+            "--collect-only",
+            "tests/test_smoke_budget.py",
+        ],
+        cwd=str(ROOT),
+        capture_output=True,
+        text=True,
+    )
+    out = proc.stdout + proc.stderr
+    assert "PluginValidationError" not in out, out
+    assert "INTERNALERROR" not in out, out
+    assert proc.returncode == 0, out
+
+
 def test_worker_count_is_half_the_box_and_defers_to_an_explicit_setting(monkeypatch):
     monkeypatch.delenv("PYTEST_XDIST_AUTO_NUM_WORKERS", raising=False)
     assert root_conftest.pytest_xdist_auto_num_workers(None) == max(
@@ -140,24 +180,30 @@ def test_this_live_process_runs_under_the_hard_cap_it_asked_for():
         wintypes.DWORD,
         ctypes.c_void_p,
     ]
-    job = k32.OpenJobObjectW(JOB_OBJECT_QUERY, False, root_conftest.JOB_NAME)
-    assert job, "the named job {!r} does not exist — the cap was never created".format(
-        root_conftest.JOB_NAME
-    )
+    # The claim is "this process runs under a hard cap at the configured rate",
+    # NOT "this process is in that specific job" — there are two legitimate ways
+    # to be capped and an assertion on only one of them fails a working run:
+    #   shared  — assigned to the named job (the normal case; workers inherit it)
+    #   private — a different process tree already owned the named job, so the
+    #             conftest fell back to a private job with the same rate
+    # Checking both is what makes this test true rather than merely strict.
+    me = k32.GetCurrentProcess()
+    named = k32.OpenJobObjectW(JOB_OBJECT_QUERY, False, root_conftest.JOB_NAME)
     inside = wintypes.BOOL()
-    assert k32.IsProcessInJob(k32.GetCurrentProcess(), job, ctypes.byref(inside))
-    # The claim under test: the cap covers whichever process is running this —
-    # controller or worker — and therefore every subprocess they spawn.
-    assert inside.value, "this pytest process is OUTSIDE the capped job"
+    in_named = bool(
+        named and k32.IsProcessInJob(me, named, ctypes.byref(inside)) and inside.value
+    )
     info = RATE()
     ok = k32.QueryInformationJobObject(
-        job,
+        named if in_named else None,  # NULL = "the job I am in" (the fallback)
         JobObjectCpuRateControlInformation,
         ctypes.byref(info),
         ctypes.sizeof(info),
         None,
     )
-    assert ok, ctypes.WinError(ctypes.get_last_error())
+    assert ok, "this process is under no job with CPU rate control: {}".format(
+        ctypes.WinError(ctypes.get_last_error())
+    )
     assert info.ControlFlags & JOB_OBJECT_CPU_RATE_CONTROL_ENABLE, hex(
         info.ControlFlags
     )

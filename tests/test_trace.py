@@ -1,5 +1,13 @@
 """trace.py: orphan detection and the --require-verified G3 criterion."""
 
+# Two git-backed tests below guard with `pytest.skip("needs git on PATH")`, and
+# this import was missing: on a machine without git those guards raised
+# NameError instead of skipping — the safety net failing exactly where it was
+# supposed to catch. Nothing noticed because every machine that has run this
+# suite had git (WI-333; the G3-only `lint` step that reports it had been
+# dropped from the bar by an open re-attestation window).
+import pytest
+
 from conftest import KIT, SCRIPTS, load_script, make_minimal_project, run_py
 
 # SR-002 is a genuine (ratified, non-Draft) orphan: Status=Planned, so the

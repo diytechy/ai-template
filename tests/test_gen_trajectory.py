@@ -2042,16 +2042,16 @@ def test_u1_every_font_size_resolves_to_a_declared_scale_step(tmp_path):
     """
     declared = {t for fam in TYPE_SCALE_FAMILIES.values() for t in fam}
 
-    for label, html in _every_emitter_document(tmp_path):
+    for label, page in _every_emitter_document(tmp_path):
         # every declared step is defined exactly once, with a real value
         for token in declared:
             defs = re.findall(
-                re.escape(token) + r"\s*:\s*([0-9.]+(?:px|rem|em))\s*;", html
+                re.escape(token) + r"\s*:\s*([0-9.]+(?:px|rem|em))\s*;", page
             )
             assert len(defs) == 1, (label, token, defs)
 
         used = []
-        for surface in _style_surfaces(html):
+        for surface in _style_surfaces(page):
             used += re.findall(r"font-size\s*:\s*([^;}\"']+)", surface)
         assert used, "vacuous — no font-size found in {}".format(label)
 
@@ -2100,14 +2100,14 @@ def test_u3_every_weight_value_resolves_to_a_declared_token(tmp_path):
     scale applied to a stroke, and letting it keep its own literals would leave
     the exact hole this closes.
     """
-    for label, html in _every_emitter_document(tmp_path):
+    for label, page in _every_emitter_document(tmp_path):
         for prop, tokens in WEIGHT_TOKENS.items():
             for token in tokens:
-                defs = re.findall(re.escape(token) + r"\s*:\s*([^;]+);", html)
+                defs = re.findall(re.escape(token) + r"\s*:\s*([^;]+);", page)
                 assert len(defs) == 1, (label, token, defs)
 
             used = []
-            for surface in _style_surfaces(html):
+            for surface in _style_surfaces(page):
                 # (?<![-\w]) so `stroke-opacity` is not eaten by `opacity`
                 used += re.findall(
                     r"(?<![-\w])" + re.escape(prop) + r"\s*:\s*([^;}\"']+)", surface
@@ -2150,8 +2150,8 @@ def test_u3_svg_corner_radii_match_the_declared_scale(tmp_path):
     )
     assert in_source, "vacuous — no rx literal found in the emitters"
 
-    for label, html in _every_emitter_document(tmp_path):
-        rendered = set(re.findall(r'\brx="([0-9.]+)"', html))
+    for label, page in _every_emitter_document(tmp_path):
+        rendered = set(re.findall(r'\brx="([0-9.]+)"', page))
         assert rendered <= declared, (label, sorted(rendered - declared))
 
 
@@ -2272,8 +2272,8 @@ def test_a2_every_control_name_is_present_and_not_a_bare_id(tmp_path):
     registry id — `IF-001` tells a screen-reader user nothing about what the
     control is or does.
     """
-    for label, html in _every_emitter_document(tmp_path):
-        controls = _named_controls(html)
+    for label, page in _every_emitter_document(tmp_path):
+        controls = _named_controls(page)
         # 10, not a bigger round number: the smallest fixture legitimately
         # renders 18 controls, and a floor tuned to the largest render would
         # fail honest small projects rather than catch a vacuous sweep.
@@ -2307,8 +2307,8 @@ def test_a2_landmark_names_are_distinct(tmp_path):
     it (the `< 2` skip). That is a real coverage limit — verified by reverting
     the fix, which fails here only once the dashboard is regenerated.
     """
-    for label, html in _every_emitter_document(tmp_path):
-        names = re.findall(r"<nav\b[^>]*aria-label=\"([^\"]*)\"", html)
+    for label, page in _every_emitter_document(tmp_path):
+        names = re.findall(r"<nav\b[^>]*aria-label=\"([^\"]*)\"", page)
         if len(names) < 2:
             continue
         assert len(set(names)) == len(names), (
@@ -2644,8 +2644,8 @@ def test_t6_theme_lock_has_one_mechanism_and_no_mixed_family_pair(tmp_path):
         | set(gt.PHASE_ACCENTS)
     )
     nodes, pairs, seen, text_fills = 0, 0, set(), {}
-    for label, html in _every_emitter_document(tmp_path):
-        css = "\n".join(re.findall(r"<style>(.*?)</style>", html, re.S))
+    for label, page in _every_emitter_document(tmp_path):
+        css = "\n".join(re.findall(r"<style>(.*?)</style>", page, re.S))
         varying, invariant = _theme_families(css)
         assert varying and invariant, (label, sorted(varying), len(invariant))
 
@@ -2673,15 +2673,15 @@ def test_t6_theme_lock_has_one_mechanism_and_no_mixed_family_pair(tmp_path):
                 _decl(body_rule, prop),
             )
         pairs += _assert_no_mixed_css_rule(label, css, varying)
-        nodes += _assert_no_mixed_svg_node(label, html, varying)
-        _collect_css_text_fills(html, css, varying, text_fills)
+        nodes += _assert_no_mixed_svg_node(label, page, varying)
+        _collect_css_text_fills(page, css, varying, text_fills)
         # 6. No ad-hoc theme-locked SURFACE. Every rect fill is either a theme
         #    token (it flips) or a member of a declared colour vocabulary (a
         #    node, deliberately invariant, and A4's arithmetic already owns its
         #    ink). A literal outside both would be a fixed panel — the seam a
         #    reader crosses that the pair checks above cannot see, because a
         #    background rect carries no text of its own.
-        for fill in set(re.findall(r'<rect\b[^>]*fill="([^"]+)"', html)):
+        for fill in set(re.findall(r'<rect\b[^>]*fill="([^"]+)"', page)):
             assert fill.startswith("var(") or fill in vocabulary, (label, fill)
             seen.add(_paint_family(fill, varying))
     for sel, (fams, hosts) in sorted(text_fills.items()):
@@ -3540,11 +3540,11 @@ def test_u2_every_concept_fill_comes_from_one_declared_vocabulary(tmp_path):
             }
     assert len(declared) >= 15, "vocabulary lookup found nothing: {}".format(declared)
 
-    for label, html in _every_emitter_document(tmp_path):
+    for label, page in _every_emitter_document(tmp_path):
         # A `--token:#hex` definition is the theme layer (surfaces, text,
         # borders), not a concept encoding — declared once in the CSS by design.
         tokens = {
-            h.lower() for h in re.findall(r"--[\w-]+:\s*(#[0-9a-fA-F]{3,8})", html)
+            h.lower() for h in re.findall(r"--[\w-]+:\s*(#[0-9a-fA-F]{3,8})", page)
         }
         # Only where a hex actually PAINTS. WI-311 re-hued three values, and the
         # rendered palette-rationale prose still NAMES the retired ones to
@@ -3554,10 +3554,10 @@ def test_u2_every_concept_fill_comes_from_one_declared_vocabulary(tmp_path):
         # list's own comment warns about. Scoping to paint surfaces makes prose
         # structurally out of scope instead.
         painted = []
-        for surface in _style_surfaces(html):
+        for surface in _style_surfaces(page):
             painted += re.findall(r"#[0-9a-fA-F]{6}\b", surface)
         for attr in ("fill", "stroke", "stop-color", "flood-color"):
-            painted += re.findall(attr + r'="(#[0-9a-fA-F]{6})"', html)
+            painted += re.findall(attr + r'="(#[0-9a-fA-F]{6})"', page)
         assert painted, "vacuous — no painted hex found in {}".format(label)
         stray = {
             h.lower()
@@ -3599,8 +3599,8 @@ def test_u4_one_interaction_idiom_per_node_role_across_every_emitter(tmp_path):
         "block": "data-node",
     }
     seen = collections.Counter()
-    for label, html in _every_emitter_document(tmp_path):
-        for tag in re.findall(r"<g\b[^>]*>", html):
+    for label, page in _every_emitter_document(tmp_path):
+        for tag in re.findall(r"<g\b[^>]*>", page):
             cls = re.search(r'class="([^"]*)"', tag)
             if not cls:
                 continue
@@ -3747,8 +3747,8 @@ def test_a1_every_wired_interaction_selector_matches_only_focusable_elements(
     """
     seen_selectors = set()
     matched = collections.Counter()
-    for label, html in _every_emitter_document(tmp_path):
-        wired = _wired_selectors(html)
+    for label, page in _every_emitter_document(tmp_path):
+        wired = _wired_selectors(page)
         unclassified = wired - set(A1_WIRED_SELECTORS)
         assert not unclassified, (
             "in the {} render, the page wires selector(s) this test has no "
@@ -3756,7 +3756,7 @@ def test_a1_every_wired_interaction_selector_matches_only_focusable_elements(
             "add them to A1_WIRED_SELECTORS: {}".format(label, sorted(unclassified))
         )
         seen_selectors |= wired
-        tags = _open_tags(html)
+        tags = _open_tags(page)
         for sel, role in A1_WIRED_SELECTORS.items():
             if role != "control" or sel not in wired:
                 continue
@@ -3794,9 +3794,9 @@ def test_a1_focus_walk_follows_document_order(tmp_path):
     Whether that order FEELS sensible is the perceptual half the ruling dropped,
     stated in LLR-112 as the scope narrowing.
     """
-    for label, html in _every_emitter_document(tmp_path):
+    for label, page in _every_emitter_document(tmp_path):
         seen = 0
-        for tag, attrs in _open_tags(html):
+        for tag, attrs in _open_tags(page):
             ti = re.search(r"tabindex\s*=\s*\"?(-?\d+)\"?", attrs)
             if not ti:
                 continue
@@ -3849,8 +3849,8 @@ def test_a3_every_painted_vocabulary_member_is_explained_in_words(tmp_path):
     gt = load_script("gen_trajectory")
     vocabs = _palette_vocabularies(gt)
     explained = collections.Counter()
-    for label, html in _every_emitter_document(tmp_path):
-        markup = re.sub(r"<script\b.*?</script>", "", html, flags=re.S)
+    for label, page in _every_emitter_document(tmp_path):
+        markup = re.sub(r"<script\b.*?</script>", "", page, flags=re.S)
         painted = " ".join(_style_surfaces(markup))
         for attr in ("fill", "stroke"):
             painted += " " + " ".join(
@@ -3911,13 +3911,13 @@ def test_a3_js_detail_maps_mirror_the_declared_palettes(tmp_path):
     this holds every emitted copy byte-equal to the Python palettes, so a
     hand-copy cannot come back."""
     gt = load_script("gen_trajectory")
-    for label, html in _every_emitter_document(tmp_path):
+    for label, page in _every_emitter_document(tmp_path):
         seen = 0
         for name, expect in (
             ("tierColor", gt.TIER_FILL),
             ("statusColor", gt.STATUS_FILL),
         ):
-            for m in re.finditer(r"const " + name + r" = (\{[^;]*?\});", html):
+            for m in re.finditer(r"const " + name + r" = (\{[^;]*?\});", page):
                 got = dict(
                     re.findall(
                         r"[\"']?(\w+)[\"']?\s*:\s*[\"'](#[0-9a-fA-F]{6})[\"']",
@@ -4002,8 +4002,8 @@ def test_a1_every_wired_control_pairs_click_with_focus_or_keydown(tmp_path):
     Runtime-created controls (the breadcrumb buttons) are native <button>s,
     where a click listener IS keyboard-operable, and stay out of scope."""
     paired = 0
-    for label, html in _every_emitter_document(tmp_path):
-        for script in re.findall(r"<script\b[^>]*>(.*?)</script>", html, re.S):
+    for label, page in _every_emitter_document(tmp_path):
+        for script in re.findall(r"<script\b[^>]*>(.*?)</script>", page, re.S):
             for sel, role in A1_WIRED_SELECTORS.items():
                 if role != "control":
                     continue

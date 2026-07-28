@@ -548,7 +548,7 @@ why (one bullet each; cite ids)._
   returned the bar to G3 and immediately exposed two **G3-only** steps that had
   regressed while it was open — `lint` (20 findings) and `dupes` (90
   unsanctioned blocks), both green at the 2026-07-25 all-17 `PASS`. They are
-  [WI-333](specs/WI-333.md) and [WI-334](specs/WI-334.md), both `P1`. The
+  [WI-333](archive/specs/WI-333.2026-07-27.md) and [WI-334](archive/specs/WI-334.2026-07-27.md), both `P1`. The
   attestation is about requirement TEXT and stands; the harness debt is separate
   work, and saying so is the point of reporting the split.
 
@@ -15863,7 +15863,7 @@ on the final tree); `ruff format` clean on both changed files; `check_docs
 `gen_open_items` regenerated. Registry: **331 rows** (WI-332 done, WI-333
 queued), 4 `retired`, **8 `deferred`** (WI-123 left that list).
 
-**Not fixed, surfaced instead — `WI-333` filed** ([specs/WI-333.md](specs/WI-333.md)).
+**Not fixed, surfaced instead — `WI-333` filed** ([specs/WI-333.md](archive/specs/WI-333.2026-07-27.md)).
 `ruff check` over `project-trajectory/scripts` + `tests` reports **20 pre-existing
 findings** (13 × `F402` `html` shadowed by a loop variable, 2 × `F821` undefined
 `pytest`, 5 × `F401` unused import — one of them in a file this session touched,
@@ -15932,11 +15932,11 @@ at a gate we have not reached" earlier in this same session; dating them
 proved that wrong, and the correction is the reason both WIs are `P1` rather
 than housekeeping:
 
-- **[WI-333](specs/WI-333.md)** — the 20 lint findings, with the introducing
+- **[WI-333](archive/specs/WI-333.2026-07-27.md)** — the 20 lint findings, with the introducing
   commit per rule, and a Done-when that **refuses a fix which only clears them**:
   the process half (should G3-only steps run advisory during an open window?)
   must be ruled or explicitly declined.
-- **[WI-334](specs/WI-334.md)** — the 90 duplicate blocks, which are a *mixture*
+- **[WI-334](archive/specs/WI-334.2026-07-27.md)** — the 90 duplicate blocks, which are a *mixture*
   of genuine new duplication (one confirmed by reading it: `gen_open_items.py`
   748 == 769, the `BASELINE_RE` baseline-reuse pair) and **census drift** (the
   census is fingerprinted, so editing one token in a sanctioned block invalidates
@@ -16045,3 +16045,79 @@ It is committed now, and the docstring says what is true. Until this commit,
 train worktrees never saw it — an untracked root file does not propagate into a
 `git worktree` — so the one place multiple suites run at once was the one place
 with no cap at all.
+
+### 2026-07-27 — WI-333 + WI-334: the two steps the attestation window had been hiding
+
+Both regressions the closed window exposed are fixed, and `check.py`'s `lint`
+and `dupes` steps are green. The findings along the way were worth more than the
+fixes.
+
+**WI-333 — `ruff check` 20 → 0.**
+
+- **`F821` (2), the one that mattered.** `tests/test_trace.py` called
+  `pytest.skip("needs git on PATH")` twice **without importing pytest** — so on
+  a machine with no git the guard raised `NameError` instead of skipping. The
+  branch is live, not dead, so the import was added and the skip path was
+  **exercised rather than assumed**: with `PATH` stripped of git the test now
+  reports `SKIPPED [1] needs git on PATH`, and removing the import again puts
+  the `NameError` back. A safety net nobody had ever watched fail.
+- **`F402` (13).** The `for label, html in …` loop variable shadowed the `html`
+  **module** in `tests/test_gen_trajectory.py`. Checked first whether it was a
+  live bug: **zero** module-style `html.*` calls sit inside any of the 13 loop
+  bodies, so it was a latent hazard, not a defect. Renamed to `page`; 151 tests
+  still pass.
+- **`F401` (5).** Each confirmed to appear exactly once — its own import line —
+  before removal.
+
+**Two defects in the root `conftest.py`, both shipped by the previous commit,
+both found sideways.** Running a test with git off `PATH` — to exercise an
+unrelated skip — is what surfaced them:
+
+1. **`pytest_xdist_auto_num_workers` was declared unconditionally**, so any run
+   without xdist (`-p no:xdist`, or an environment that never installed it) died
+   with `PluginValidationError: unknown hook` **before collecting a single
+   test**. `@pytest.hookimpl(optionalhook=True)` is the fix.
+2. **`AssignProcessToJobObject`'s `ERROR_ACCESS_DENIED` was swallowed as
+   "already in this job".** It is not: Windows refuses to assign a process into
+   a job outside its own job hierarchy, so a run launched from a *different
+   process tree* than the named job's owner ran **completely uncapped while
+   reporting success** — the worst available outcome for something whose entire
+   value is a guarantee. Now it falls back to a private capped job and says so,
+   and the `_warn` suffix stopped claiming "running without it" for a path that
+   is, in fact, running with it.
+
+The guard for (1) was itself **vacuous on first write** — the probe test lived in
+`tmp_path`, so pytest never loaded the root conftest in the subprocess and the
+test passed against a deliberately broken file. Pointed at a real repo test, it
+fails correctly. Third self-inflicted vacuous guard this session; the pattern is
+always the same, an assertion that cannot observe the thing it names.
+
+**WI-334 — 86 duplicate blocks → 0, by triage rather than a re-stamp.** The
+census records the classification, in the file where the next reader of a
+sanction will actually look:
+
+- **Most of it is the kit's per-script CLI preamble** — `_utf8_console()` plus
+  the `argparse` skeleton — across ~10 scripts. That duplication is
+  **deliberate**: kit scripts must stay independently copy-able and stdlib-only,
+  which is exactly why the F5 ruling rejected a shared `_kitcommon.py`.
+  `check_stubs.py` says so in its own code: *"verbatim across the kit"*.
+  Sanctioned **with the reason**, not extracted.
+- **The intra-file blocks** in `agent_dispatch` / `gen_trajectory` / `trace` /
+  `check_trajectory` are the `WI-280` decomposition debt, already sanctioned;
+  their fingerprints moved because the blocks were **edited**. Re-stamped as
+  drift, which is what a fingerprinted census does when code changes.
+- **One was genuine, new, and intra-module, so it was EXTRACTED**:
+  `gen_open_items` read its `attestation-baseline` stamp in two places — the
+  `--check` compare and the write path's baseline reuse — and a one-line
+  divergence there would have split the freshness gate from the generator
+  silently. Now `stamped_baseline()`; `--check` confirms the emitted page is
+  byte-identical.
+- 43 committed sanctions that matched nothing were pruned.
+
+No blanket re-stamp: a census line **is** acceptance of the duplication, and the
+standing rule is that a sanction is never reached for to green a step.
+
+**Still open, and it is the owner's:** should the G3-only steps run **advisory**
+during a `Draft`/`Modified` window? The two failures are fixed; the hole that let
+them accumulate is not, and it re-opens with the next spine amendment.
+`status.md` carries the question with its options.

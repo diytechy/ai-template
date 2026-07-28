@@ -640,6 +640,7 @@ Contracts (interfaces): IF-073, IF-074, IF-075
 |---|---|---|
 | `theme_tokens(css)` | `{"light": {token: value}, "dark": {...}}` parsed out of the EMITTED CSS — |  |
 | `read_view(path)` | The view as written, without universal-newline translation. |  |
+| `stamped_baseline(view_text)` | The `--since` revision a rendered view records, or None when it records |  |
 | `normalize(text)` | Line endings folded to LF for COMPARISON only. |  |
 | `esc(text)` |  |  |
 | `load_open_items(root)` | Rows of the open-items registry, `-000` example rows dropped (the |  |
