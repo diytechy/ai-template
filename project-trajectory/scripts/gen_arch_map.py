@@ -293,18 +293,32 @@ def _module_files(src_roots):
     internal module/package names (for coupling detection)."""
     files = []
     names = set()
+    for root, base, path in _walk_roots(src_roots, "*.py"):
+        files.append((path, base))
+        names.add(path.stem)
+        for part in path.relative_to(root).parts[:-1]:
+            names.add(part)
+    return files, names
+
+
+def _walk_roots(src_roots, pattern):
+    """Yield `(root, base, path)` for every non-hidden `pattern` match under each
+    existing root, sorted. `base` is the rel-path base (`root.parent`, or `root`
+    itself for a bare name).
+
+    The "which files count as source" rule — skip anything with a dot- or
+    `__pycache__` path part — lived in both collectors below and is stated here
+    once (WI-347). Both arms are in this one file, so the cross-script F5
+    sanction never covered them."""
     for root in src_roots:
         root = Path(root)
         if not root.exists():
             continue
-        for path in sorted(root.rglob("*.py")):
+        base = root.parent if root.name else root
+        for path in sorted(root.rglob(pattern)):
             if any(part.startswith((".", "__pycache__")) for part in path.parts):
                 continue
-            files.append((path, root.parent if root.name else root))
-            names.add(path.stem)
-            for part in path.relative_to(root).parts[:-1]:
-                names.add(part)
-    return files, names
+            yield root, base, path
 
 
 def _source_files(src_roots):
@@ -312,19 +326,11 @@ def _source_files(src_roots):
     language-agnostic (used by --mode files). Same hidden/__pycache__ skip and
     rel-path base as _module_files, but no extension filter: on a non-Python
     repo the map must still see the code."""
-    files = []
-    for root in src_roots:
-        root = Path(root)
-        if not root.exists():
-            continue
-        base = root.parent if root.name else root
-        for path in sorted(root.rglob("*")):
-            if not path.is_file():
-                continue
-            if any(part.startswith((".", "__pycache__")) for part in path.parts):
-                continue
-            files.append((path, base))
-    return files
+    return [
+        (path, base)
+        for _root, base, path in _walk_roots(src_roots, "*")
+        if path.is_file()
+    ]
 
 
 def first_comment_summary(text, prefixes):

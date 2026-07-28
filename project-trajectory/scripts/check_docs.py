@@ -394,20 +394,31 @@ def find_orphans(docs, graph, roots, root):
 ORPHAN_ALLOW = "orphans-allow"
 
 
+def declared_lines(path):
+    """The declared-file idiom in ONE home: every non-blank, non-`#` line of
+    `path`, stripped; `[]` when the file is absent.
+
+    Two declared files in this module read the same way and differ only in what
+    they take from the result — `orphans-allow` keeps every line, `status-lint`
+    keeps the last. Stating the parse twice let them drift (WI-347; the block was
+    charged to the CROSS-script declared-file F5 sanction, which never covered it,
+    because F5 buys cross-SCRIPT copy-ability and both copies are in this file)."""
+    if not path.exists():
+        return []
+    out = []
+    for line in path.read_text(encoding="utf-8", errors="replace").splitlines():
+        line = line.strip()
+        if line and not line.startswith("#"):
+            out.append(line)
+    return out
+
+
 def load_orphan_classes(root, docs_dir):
     """The docs/<docs>/orphans-allow glob patterns (declared-file idiom, like
     docs/status-lint): `#` comment lines and blanks dropped, one glob per
     remaining line. [] when the file is absent — default = today's behavior, no
     class suppression (the kit must not surprise an existing repo)."""
-    p = root / docs_dir / ORPHAN_ALLOW
-    if not p.exists():
-        return []
-    patterns = []
-    for line in p.read_text(encoding="utf-8", errors="replace").splitlines():
-        line = line.strip()
-        if line and not line.startswith("#"):
-            patterns.append(line)
-    return patterns
+    return declared_lines(root / docs_dir / ORPHAN_ALLOW)
 
 
 def partition_orphans(orphans, patterns):
@@ -679,16 +690,10 @@ def _status_lint_policy(root, docs_dir):
     """The `docs/status-lint` declared value (declared-file idiom: `#` comment
     lines, one value on the last non-blank line): an int line budget, the string
     "off", or None (absent/blank/unparseable => the default budget)."""
-    p = root / docs_dir / "status-lint"
-    if not p.exists():
+    lines = declared_lines(root / docs_dir / "status-lint")
+    if not lines:
         return None
-    value = None
-    for line in p.read_text(encoding="utf-8", errors="replace").splitlines():
-        line = line.strip()
-        if line and not line.startswith("#"):
-            value = line
-    if value is None:
-        return None
+    value = lines[-1]  # the declared value is the LAST non-comment line
     if value.lower() == "off":
         return "off"
     try:

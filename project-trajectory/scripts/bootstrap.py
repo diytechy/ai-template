@@ -430,6 +430,30 @@ def select_skills(stack, domain, binary_assets):
     return chosen
 
 
+def copy_if_new(src, dst, dry_run, force):
+    """The write-once scaffold copy, stated once (WI-347): True when `dst` was
+    created (or would be, under `dry_run`), False when it already exists and
+    `force` is off.
+
+    Deliberately does NOT test `src`: one caller copies a kit file that must be
+    there, where a missing source should raise rather than be skipped silently,
+    and the caller that tolerates an absent source says so itself."""
+    if dst.exists() and not force:
+        return False
+    if not dry_run:
+        dst.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(src, dst)
+    return True
+
+
+def _skill_rel(spec, name_dir, rel):
+    """The dest-relative POSIX path of one file inside a materialized skill — the
+    identity `refresh_agent_skills` reports for BOTH a refreshed copy and a
+    deleted-source removal. Stated once (WI-347): the two arms differ in what they
+    do to the file, not in what they call it."""
+    return (Path(spec["skills_dir"]) / name_dir.name / rel).as_posix()
+
+
 def materialize_agent_layer(dest, agents, skills, dry_run, force):
     """Copy the selected skills (and the inert hook example) into each chosen
     agent's native location. Returns a list of created dest-relative paths."""
@@ -438,25 +462,17 @@ def materialize_agent_layer(dest, agents, skills, dry_run, force):
         spec = AGENTS[agent]
         for name, src in skills:
             dst_rel = "{}/{}/SKILL.md".format(spec["skills_dir"], name)
-            dst = dest / dst_rel
-            if dst.exists() and not force:
-                continue
-            if not dry_run:
-                dst.parent.mkdir(parents=True, exist_ok=True)
-                shutil.copyfile(src, dst)
-            created.append(dst_rel)
+            if copy_if_new(src, dest / dst_rel, dry_run, force):
+                created.append(dst_rel)
         # The inert hook example is optional — an agent with no shipped hook
         # config (codex) declares no `hooks_src` and simply gets its skills.
         if not spec.get("hooks_src"):
             continue
         hooks_src = KIT / spec["hooks_src"]
-        if hooks_src.exists():
-            hooks_dst = dest / spec["hooks_dst"]
-            if not hooks_dst.exists() or force:
-                if not dry_run:
-                    hooks_dst.parent.mkdir(parents=True, exist_ok=True)
-                    shutil.copyfile(hooks_src, hooks_dst)
-                created.append(spec["hooks_dst"])
+        if hooks_src.exists() and copy_if_new(
+            hooks_src, dest / spec["hooks_dst"], dry_run, force
+        ):
+            created.append(spec["hooks_dst"])
     return created
 
 
@@ -474,12 +490,10 @@ def materialize_knowledge_packs(dest, domain, dry_run, force):
     for label, topic, pack_domain in selected:
         src = KIT / "knowledge" / (label + ".md")
         dst_rel = "docs/knowledge/" + label + ".md"
-        dst = dest / dst_rel
-        if not src.is_file() or (dst.exists() and not force):
+        # This caller TOLERATES an absent source (a domain with no pack file), so
+        # it makes that test itself rather than folding it into copy_if_new.
+        if not src.is_file() or not copy_if_new(src, dest / dst_rel, dry_run, force):
             continue
-        if not dry_run:
-            dst.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copyfile(src, dst)
         created.append(dst_rel)
         indexed.append((label, topic, pack_domain))
 
@@ -539,9 +553,7 @@ def sync_agent_skills(dest, dry_run):
                 data = src_file.read_bytes()
                 if dst_file.exists() and dst_file.read_bytes() == data:
                     continue
-                refreshed.append(
-                    (Path(spec["skills_dir"]) / name_dir.name / rel).as_posix()
-                )
+                refreshed.append(_skill_rel(spec, name_dir, rel))
                 if not dry_run:
                     dst_file.parent.mkdir(parents=True, exist_ok=True)
                     dst_file.write_bytes(data)
@@ -556,9 +568,7 @@ def sync_agent_skills(dest, dry_run):
                 rel = dst_file.relative_to(name_dir)
                 if rel in src_rels:
                     continue
-                refreshed.append(
-                    (Path(spec["skills_dir"]) / name_dir.name / rel).as_posix()
-                )
+                refreshed.append(_skill_rel(spec, name_dir, rel))
                 if not dry_run:
                     dst_file.unlink()
                     parent = dst_file.parent

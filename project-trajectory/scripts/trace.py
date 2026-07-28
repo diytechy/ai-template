@@ -1091,6 +1091,19 @@ def _changed_cells(before, after):
     return out
 
 
+def _full_row_bullets(row):
+    """The `- **Cell**: value` bullets for a WHOLE registry row, non-empty cells
+    only — how the re-attestation brief renders a row it has no baseline to diff
+    against. Both arms that need it (no attested baseline, and a row ADDED since
+    the baseline) rendered it identically in place (WI-347); same file, so the
+    cross-script F5 sanction never covered the copy."""
+    return [
+        "- **{}**: {}".format(k, v.strip())
+        for k, v in row["full"].items()
+        if (v or "").strip()
+    ]
+
+
 def _cell_diff_lines(changed):
     lines = []
     for cell, b, a in changed:
@@ -1415,9 +1428,7 @@ def reattest_lines(root, srs, llrs, tcs, since=None):
             )
             for row in entry["rows"]:
                 lines += ["", "### {} {} (current)".format(row["kind"], row["id"])]
-                for k, v in row["full"].items():
-                    if (v or "").strip():
-                        lines.append("- **{}**: {}".format(k, v.strip()))
+                lines += _full_row_bullets(row)
             continue
         lines.append(
             "_Baseline `{}`{}{}._".format(
@@ -1436,9 +1447,7 @@ def reattest_lines(root, srs, llrs, tcs, since=None):
                     "",
                     "### {} {} — ADDED since baseline".format(row["kind"], row["id"]),
                 ]
-                for k, v in row["full"].items():
-                    if (v or "").strip():
-                        lines.append("- **{}**: {}".format(k, v.strip()))
+                lines += _full_row_bullets(row)
             elif row["state"] == "changed":
                 lines += ["", "### {} {}".format(row["kind"], row["id"])]
                 lines += _cell_diff_lines(row["cells"])

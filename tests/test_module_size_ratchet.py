@@ -353,7 +353,11 @@ BASELINE = {
     # chain-row diffs to 18 while --check certified the loss. A successor who
     # "simplifies" that comment away removes the reason the code is shaped this
     # way. Reviewed bump, log 2026-07-28. Re-stamp downward with WI-280.
-    "trace.py": 2847,
+    # +9 (2847 -> 2856), WI-347: `_full_row_bullets` — the whole-row renderer the
+    # re-attestation brief used identically in its no-baseline and added-row arms.
+    # Same extraction-grows-the-file shape as bootstrap.py above. Reviewed bump,
+    # log 2026-07-28.
+    "trace.py": 2856,
     # +132 (1926 -> 2058; the last +10 is the F4 BOM hardening: read_rows utf-8-sig + git-show strips), WI-316: staged_spine_findings — the amend-without-
     # flip warn (--staged): content cells of a Verified spine row changed
     # without the Modified marker, suppressed when the owning SR flips in the
@@ -450,7 +454,13 @@ BASELINE = {
     # +4 (2003 -> 2007), WI-329: trace_text.py joins MAPPING beside trace.py (which
     # imports it, so a scaffold missing it ImportErrors on the first check) plus the
     # comment saying why they copy together. Reviewed bump, log 2026-07-27.
-    "bootstrap.py": 2007,
+    # +10 (2007 -> 2017), WI-347: `copy_if_new` (the write-once scaffold copy, 3
+    # call sites) and `_skill_rel` (the refreshed-path identity the write and
+    # delete arms both report). An EXTRACTION that grows the file, which is the
+    # normal shape here and not a contradiction: two named helpers with docstrings
+    # cost more lines than the three inline copies they replace, and buy the
+    # thing lines cannot — one home for the rule. Reviewed bump, log 2026-07-28.
+    "bootstrap.py": 2017,
 }
 
 

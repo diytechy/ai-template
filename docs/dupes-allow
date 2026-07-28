@@ -131,49 +131,61 @@
 # classes with three different dispositions; same-path is now METADATA, printed
 # in the totals, never a reason.
 #
-# Count note: the WI-337 section above says 208, and did at that commit. It is
-# 207 here because WI-341's `_raw_level` extraction in derive_gate.py made two
-# adjacent spine-loader blocks (`6cc84e6e5a77`, `9997eb98dd01`) into one
-# contiguous run, `108925d1de82`. Same class, same F5 reason, one fewer entry —
-# and it was the guard below that reported the drift, not a re-stamp.
+# Count note. The WI-337 section above says 208, and did at that commit. It is
+# 196 here, and the delta has two parts that must not be blurred together:
+#   * 201 -> 196 is WI-347, which EXTRACTED five same-file blocks (bootstrap-copy
+#     2, source-walk 1, brief-row-render 1, declared-file-local 1) and removed
+#     their sections. Each fingerprint was proven absent from `--emit-census`
+#     before its sanction was deleted.
+#   * 207 -> 201 was ALREADY TRUE at this commit's parent and nothing said so.
+#     The header declared 207 while the sections held 201 fingerprint lines. One
+#     block of that is explained (WI-341's `_raw_level` extraction merged two
+#     adjacent spine-loader runs, 208 -> 207); the remaining six are NOT
+#     explained here, because I did not determine what dissolved them and will
+#     not invent a cause for a number.
 #
-# The distribution (207 blocks):
+# THE GUARD DID NOT CATCH THAT, and the reason is worth keeping: it compares each
+# distribution ROW against its section header, and every header did match its own
+# lines — nothing compared the DECLARED TOTAL against the sections. The
+# "By disposition" line was stale in exactly the same way, reading "extract 35"
+# while the rows summed to 29. Filed as WI-356.
 #
-#   cli                   77   (37%)   deliberate
+# Every figure below is now GENERATED from the sections rather than counted by
+# hand — the rule this repo already applies to every other derived number.
+#
+# The distribution (196 blocks):
+#
+#   cli                   77   (39%)   deliberate
 #   spine-loader          20   (10%)   deliberate
-#   declared-file         11    (5%)   deliberate
-#   markdown-table        11    (5%)   deliberate
-#   graph-layout          11    (5%)   debt WI-280
-#   git-wrapper            9    (4%)   deliberate
-#   train-disposition      9    (4%)   debt WI-280
+#   declared-file         11    (6%)   deliberate
+#   graph-layout          11    (6%)   debt WI-280
+#   markdown-table        11    (6%)   deliberate
+#   git-wrapper            9    (5%)   deliberate
+#   train-disposition      9    (5%)   debt WI-280
 #   spine-load-repeat      8    (4%)   extract WI-346
-#   ref-namespace          5    (2%)   extract WI-343
-#   wi-registry            5    (2%)   deliberate
+#   ref-namespace          5    (3%)   extract WI-343
+#   wi-registry            5    (3%)   deliberate
 #   module-path            4    (2%)   deliberate
-#   import-fallback        3    (1%)   deliberate
-#   okf-row                3    (1%)   deliberate
-#   ctx-unpack             3    (1%)   deliberate
-#   reservation-release    3    (1%)   extract WI-343
-#   verdict-plumbing       3    (1%)   extract WI-345
+#   ctx-unpack             3    (2%)   deliberate
+#   import-fallback        3    (2%)   deliberate
+#   okf-row                3    (2%)   deliberate
+#   reservation-release    3    (2%)   extract WI-343
+#   verdict-plumbing       3    (2%)   extract WI-345
 #   ref-transaction        2    (1%)   extract WI-343
 #   signature-echo         2    (1%)   deliberate
-#   bootstrap-copy         2    (1%)   extract WI-347
-#   trailer-scan           1            extract WI-343
-#   trailer-fold           1            deliberate
 #   exe-presence           1            extract WI-345
-#   warn-tier-dispatch     1            deliberate
-#   source-walk            1            extract WI-347
-#   subprocess-capture     1            extract WI-346
-#   brief-row-render       1            extract WI-347
-#   declared-file-local    1            extract WI-347
 #   graph-walk             1            deliberate
 #   skills-materialize     1            deliberate
+#   subprocess-capture     1            extract WI-346
+#   trailer-fold           1            deliberate
+#   trailer-scan           1            extract WI-343
+#   warn-tier-dispatch     1            deliberate
 #
-# By disposition: deliberate 152, extract 35 (WI-343..WI-347), debt 20 (WI-280).
-# By path relation (metadata only): 143 cross-module, 64 same-file. The two cuts
-# do NOT coincide — 7 same-file blocks are deliberate, 2 join cross-module
-# classes of the same idiom, and 35 of the 55 remaining are ordinary extraction
-# work no decomposition programme has to precede.
+# By disposition: deliberate 152, extract 24 (WI-343/345/346), debt 20 (WI-280).
+# By path relation (metadata only): 143 cross-module, 53 same-file. The two cuts
+# do NOT coincide — 9 same-file blocks are deliberate, and the other 44 are the
+# extract + debt work, which is the honest shape of this file: a third of the
+# census is not F5 at all.
 #
 # The two facts worth carrying: cross-module duplication here is dominated by
 # SMALL STABLE HELPERS the F5 ruling deliberately duplicates (a shared
@@ -364,26 +376,29 @@ d2ff16e89265  project-trajectory/scripts/plan_artifacts.py == project-trajectory
 # here is CROSS-script, which is the only thing that reason buys (129-REVIEW-A
 # MAJOR 3: WI-340 briefly filed check_docs's same-file pair here, where the F5
 # rationale does not reach it — it is its own class below).
+#
+# RE-STAMPED at WI-347 (three fingerprints, same eleven blocks, NOT a shrink).
+# Extracting check_docs' own same-file copy into `declared_lines` left its
+# CROSS-script copy in place — F5 still applies and the class is unchanged in
+# size — but it changed how the matcher pairs the clique these three blocks came
+# from, so the extents, and therefore the fingerprints, moved:
+#   4a3b752e412f -> fdc493cdecdb  (check_docs == check_privacy)
+#   4a3b752e412f -> fdc493cdecdb  (check_docs == check_trajectory)
+#   3f945b5c8930 -> 4493f2c1d5f8  (check_privacy == check_trajectory, neither
+#                                  file touched — the third clique member left)
+# Proven a RE-STAMP and not a rewrite: 3 sanctions went dead and exactly 3 new
+# blocks appeared over the same file pairs, and the total is 196 either way.
 3864c24be1f4  project-trajectory/scripts/bootstrap.py == project-trajectory/scripts/gen_skills_index.py
 1726b03a8cdf  project-trajectory/scripts/bootstrap.py == project-trajectory/scripts/check_doc_refs.py
 c6270a4626d4  project-trajectory/scripts/bootstrap.py == project-trajectory/scripts/check_trajectory.py
 14c5e5641e80  project-trajectory/scripts/check_coverage.py == project-trajectory/scripts/check_perf.py
-4a3b752e412f  project-trajectory/scripts/check_docs.py == project-trajectory/scripts/check_privacy.py
-4a3b752e412f  project-trajectory/scripts/check_docs.py == project-trajectory/scripts/check_trajectory.py
-3f945b5c8930  project-trajectory/scripts/check_privacy.py == project-trajectory/scripts/check_trajectory.py
+fdc493cdecdb  project-trajectory/scripts/check_docs.py == project-trajectory/scripts/check_privacy.py
+fdc493cdecdb  project-trajectory/scripts/check_docs.py == project-trajectory/scripts/check_trajectory.py
+4493f2c1d5f8  project-trajectory/scripts/check_privacy.py == project-trajectory/scripts/check_trajectory.py
 eff0eac572a0  project-trajectory/scripts/check_privacy.py == project-trajectory/scripts/gen_trajectory.py
 c16d14a4efc4  project-trajectory/scripts/check_privacy.py == project-trajectory/scripts/check_trajectory.py
 75b2bcbfcc04  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/gen_trajectory.py
 8e99e263cf71  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/gen_trajectory.py
-
-# --- declared-file-local (1 block)  ------------------------------
-# disposition: extract WI-347
-# check_docs.py reads two DIFFERENT declared files with the same
-# read/strip/skip-comment loop — one collecting every non-comment line, one
-# taking the last. Both are in check_docs.py, so the cross-script F5 reason does
-# not apply (129-REVIEW-A MAJOR 3, correcting WI-340): inside one file the loop
-# is just a helper waiting to be named.
-70e7e2e30301  project-trajectory/scripts/check_docs.py == project-trajectory/scripts/check_docs.py
 
 # --- git-wrapper (9 blocks) --------------------------------------
 # disposition: deliberate
@@ -508,15 +523,6 @@ b8b532ba9de4  project-trajectory/scripts/agent_loop.py == project-trajectory/scr
 08e04d3ff9c1  project-trajectory/scripts/agent_loop.py == project-trajectory/scripts/agent_loop.py
 96d2f74fe714  project-trajectory/scripts/agent_loop.py == project-trajectory/scripts/agent_loop.py
 
-# --- bootstrap-copy (2 blocks) -----------------------------------
-# disposition: extract WI-347
-# the copy-if-absent-or-forced file loop and the skills-refresh walk, each
-# repeated between the mapping copier and the skills materialiser.
-82419571a936  project-trajectory/scripts/bootstrap.py == project-trajectory/scripts/bootstrap.py
-7046137adff6  project-trajectory/scripts/bootstrap.py == project-trajectory/scripts/bootstrap.py
-
-
-
 # --- warn-tier-dispatch (1 block)  -------------------------------
 # disposition: deliberate
 # main()'s per-check warn/strict line. Each check carries its own comment
@@ -524,12 +530,6 @@ b8b532ba9de4  project-trajectory/scripts/agent_loop.py == project-trajectory/scr
 # and those tiers differ per check; a table-driven loop would move that
 # reasoning away from the check it explains. Two sites, not growing.
 558577071d47  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/check_trajectory.py
-
-# --- source-walk (1 block)  --------------------------------------
-# disposition: extract WI-347
-# the rglob('*.py') walk with the dot/__pycache__ skip, in the single-root
-# and the multi-root arm of the same collector.
-3b8e5c6a5e38  project-trajectory/scripts/gen_arch_map.py == project-trajectory/scripts/gen_arch_map.py
 
 # --- spine-load-repeat (8 blocks) --------------------------------
 # disposition: extract WI-346
@@ -571,9 +571,3 @@ bfd6e67c304f  project-trajectory/scripts/gen_trajectory.py == project-trajectory
 # agent_dispatch as _run_captured rather than sanctioning it; the same
 # precedent applies to gen_trajectory's two sites.
 e5d5ce58f56b  project-trajectory/scripts/gen_trajectory.py == project-trajectory/scripts/gen_trajectory.py
-
-# --- brief-row-render (1 block)  ---------------------------------
-# disposition: extract WI-347
-# the `for k, v in row['full'].items()` bullet renderer, in the no-baseline
-# arm and the added-row arm of the same re-attestation brief writer.
-0940f41e16b9  project-trajectory/scripts/trace.py == project-trajectory/scripts/trace.py

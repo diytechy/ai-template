@@ -17684,3 +17684,50 @@ the prefix pass, restoring the empty-path early return, and disabling the
 directory check each turn their guard RED, with the source restored byte-identical
 afterwards. A guard is not done when it passes — only when it has been made to
 fail.
+
+---
+
+## Session 2026-07-28 (cont.) — WI-347: five extractions, and two things the census only admits when you move it
+
+The four one-off same-file duplications triaged under WI-340, extracted rather
+than sanctioned — the rule this batch is governed by, re-proven again: **F5 buys
+cross-SCRIPT copy-ability, so it never covers a same-file copy.** What landed:
+`check_docs.declared_lines` (the declared-file idiom — read, strip, skip `#` —
+stated once instead of once per declared file), `bootstrap.copy_if_new` (the
+write-once scaffold copy, 3 sites) and `bootstrap._skill_rel` (the refreshed-path
+identity the write and delete arms both report), `gen_arch_map._walk_roots` (the
+dot/`__pycache__` source walk shared by the `.py` and language-agnostic
+collectors), and `trace._full_row_bullets` (the whole-row renderer shared by the
+brief's no-baseline and added-row arms). Census **201 → 196**, every fingerprint
+proven absent from `--emit-census` before its sanction was deleted.
+
+**Two of the five helpers exist because the SEMANTICS differed and the text did
+not**, which is the argument for extracting rather than sanctioning: `copy_if_new`
+deliberately does not test its source, because one caller must fail loudly on a
+missing kit file while the other tolerates an absent pack — that distinction was
+invisible while both were inline.
+
+**The census does not just shrink when you extract; it MOVES.** Removing
+`check_docs`' own copy left its CROSS-script copy in place — F5 still applies,
+the class is still 11 blocks — but it changed how the matcher pairs the clique,
+so three fingerprints changed extent, including one over
+`check_privacy == check_trajectory`, *a pair whose files I never touched*. That
+had to be re-stamped, and proven a re-stamp and not a shrink: 3 sanctions died,
+exactly 3 new blocks appeared over the same file pairs, total 196 either way.
+*An extraction can re-fingerprint a block it does not contain.*
+
+**And the header was already lying.** The distribution said `207 blocks` while
+the sections held **201** fingerprint lines — true before this commit, with all
+13 audit tests green. The guard compares each distribution ROW to its own section
+header, every header matched its own lines, and **nothing compares the declared
+TOTAL to reality**; the `By disposition` line was stale the same way, reading
+`extract 35` where the rows summed to 29. One block of the six-block gap is
+explained by WI-341 merging two adjacent runs; I did not determine what dissolved
+the other five and **did not invent a cause**, having spent MINOR 6 of this very
+session on exactly that mistake. Filed as **WI-356**; every figure in that header
+is now generated from the sections instead of counted by hand.
+
+Module sizes: `bootstrap.py` 2007 → 2017, `trace.py` 2847 → 2856 — an extraction
+that GROWS the file, which is the normal shape and not a contradiction: named
+helpers with docstrings cost more lines than the inline copies they replace, and
+buy the one thing lines cannot.

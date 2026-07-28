@@ -332,6 +332,7 @@ Contracts (interfaces): IF-014, IF-039
 | `parse_skill_frontmatter(text)` | Minimal frontmatter parse (name/scope + list fields) for a SKILL.md. |  |
 | `matches_scope(fm, stack, domain, binary_assets)` | Trivial tag-intersection matcher: does a skill's applicability fit the |  |
 | `select_skills(stack, domain, binary_assets)` | The kit-scope skills whose applicability intersects the declared scope. |  |
+| `copy_if_new(src, dst, dry_run, force)` | The write-once scaffold copy, stated once (WI-347): True when `dst` was |  |
 | `materialize_agent_layer(dest, agents, skills, dry_run, force)` | Copy the selected skills (and the inert hook example) into each chosen |  |
 | `materialize_knowledge_packs(dest, domain, dry_run, force)` | Install the curated packs for one explicitly declared domain. |  |
 | `sync_agent_skills(dest, dry_run)` | Force-refresh each per-agent skill copy from the ONE neutral source, so a |  |
@@ -417,6 +418,7 @@ Contracts (interfaces): IF-002, IF-030
 | `entry_roots(root, docs, docs_dir, extra)` | Reachability roots: top-level *.md, an optional docs/index.md Map-of- |  |
 | `reachable(roots, graph)` | Docs reachable from any entry root by following doc->doc links. |  |
 | `find_orphans(docs, graph, roots, root)` | Scanned docs with no path from an entry root (entry roots excepted). |  |
+| `declared_lines(path)` | The declared-file idiom in ONE home: every non-blank, non-`#` line of |  |
 | `load_orphan_classes(root, docs_dir)` | The docs/<docs>/orphans-allow glob patterns (declared-file idiom, like |  |
 | `partition_orphans(orphans, patterns)` | Split orphan relpaths into (genuine, expected). |  |
 | `report_orphans(genuine, expected, strict, docs_dir)` | Print the orphan findings: each genuine orphan individually (WARN, or FAIL |  |
