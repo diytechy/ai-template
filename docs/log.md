@@ -16796,3 +16796,16 @@ so.
 **Bar for this remediation.** Smoke **470 passed / 24.6 s**;
 `check.py --gate G3 --jobs 0` **RESULT: PASS**, all 19 steps, full stage
 **1630 passed, 6 skipped** (20:09).
+
+**Correction, same day — the rows filed above were filed at the wrong priority.**
+`Priority` sorts DESCENDING (`schedule.py:18`, "Priority desc"), and the
+pre-session maximum anywhere in the 349-row registry was **2**. Filing
+WI-343..WI-349 at **3** therefore invented a new top band and put routine
+extraction cleanup ABOVE every real defect in the repo — including WI-350, the
+BLOCKER the review had just raised, and WI-325/WI-326. Re-set: WI-350/WI-351 to
+2 (the review's two open findings), WI-348/WI-349 to 1, and the five extraction
+rows to 0, which is where comparable cleanup already sits. Worth recording
+because the failure is invisible by inspection: every row looked reasonable on
+its own, and only asking the SCHEDULER what the frontier now looked like showed
+that a whole band had been inserted at the top. **File a row, then read the
+frontier back.**
