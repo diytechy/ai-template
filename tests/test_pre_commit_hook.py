@@ -11,7 +11,7 @@ import os
 import shutil
 import subprocess
 
-from conftest import KIT, LLRS, make_minimal_project, run_py
+from conftest import KIT, LLRS, make_minimal_project, run_py, skip_without_env_gates
 
 HOOK = ".githooks/pre-commit"
 ARCH = "docs/architecture.md"
@@ -190,11 +190,8 @@ def test_hook_runs_end_to_end_when_sh_available(scaffold):
     # actual hook so its interpreter discovery + command wiring are exercised.
     # A pre-commit hook only ever runs inside a git repo (its step 3 secrets
     # floor reads the staged diff), so init one — the realistic footing.
+    skip_without_env_gates("posix-shell", "git")
     sh = shutil.which("sh")
-    if not sh or not shutil.which("git"):
-        import pytest
-
-        pytest.skip("needs a POSIX shell and git on PATH")
     make_minimal_project(scaffold)
     subprocess.run(["git", "init"], cwd=str(scaffold), capture_output=True)
     ok = subprocess.run([sh, HOOK], cwd=str(scaffold), capture_output=True, text=True)
@@ -221,11 +218,8 @@ def test_hook_honors_kit_scripts_dir_override(scaffold):
     # to the real dir runs green (the override branch produces a working
     # SCRIPTS_DIR); negative: a bogus override skips CLEARLY (a wrong override must
     # never silently pass as if the tree were clean).
+    skip_without_env_gates("posix-shell", "git")
     sh = shutil.which("sh")
-    if not sh or not shutil.which("git"):
-        import pytest
-
-        pytest.skip("needs a POSIX shell and git on PATH")
     make_minimal_project(scaffold)
     subprocess.run(["git", "init"], cwd=str(scaffold), capture_output=True)
 
@@ -254,11 +248,8 @@ def test_hook_skips_clearly_when_no_working_python3(scaffold):
     # Store app-execution alias). The hook probes by *running* a candidate, so it
     # must skip-or-report clearly, never crash. Shadow python3/python with fakes
     # that exit nonzero and confirm the hook exits 0 with a clear message.
+    skip_without_env_gates("posix-shell", "git")
     sh = shutil.which("sh")
-    if not sh or not shutil.which("git"):
-        import pytest
-
-        pytest.skip("needs a POSIX shell and git on PATH")
     make_minimal_project(scaffold)
     subprocess.run(["git", "init"], cwd=str(scaffold), capture_output=True)
     fakebin = scaffold / "fakebin"
@@ -294,11 +285,8 @@ def test_hook_fails_closed_when_privacy_on_but_no_python(scaffold):
     # privacy policy — with docs/privacy-check `true` (parsed in pure sh, the
     # pre-push pattern) and no working python, the hook REFUSES the skip. The
     # privacy-off scaffold default keeps the free skip (previous test).
+    skip_without_env_gates("posix-shell", "git")
     sh = shutil.which("sh")
-    if not sh or not shutil.which("git"):
-        import pytest
-
-        pytest.skip("needs a POSIX shell and git on PATH")
     make_minimal_project(scaffold)
     subprocess.run(["git", "init"], cwd=str(scaffold), capture_output=True)
     (scaffold / "docs" / "privacy-check").write_text("true\n", encoding="utf-8")
@@ -313,11 +301,8 @@ def test_hook_fails_closed_when_privacy_on_but_no_python(scaffold):
 def test_commit_msg_hook_fails_closed_when_privacy_on_but_no_python(scaffold):
     # M-42, commit-msg twin: the message scan of a privacy-checked repo must
     # fail closed rather than skip when no working python is found.
+    skip_without_env_gates("posix-shell", "git")
     sh = shutil.which("sh")
-    if not sh or not shutil.which("git"):
-        import pytest
-
-        pytest.skip("needs a POSIX shell and git on PATH")
     make_minimal_project(scaffold)
     subprocess.run(["git", "init"], cwd=str(scaffold), capture_output=True)
     (scaffold / "MSG.txt").write_text("an innocent message\n", encoding="utf-8")
@@ -347,11 +332,9 @@ def test_hook_secrets_floor_blocks_staged_key_with_privacy_off(scaffold):
     # Thread 44: the pre-commit hook now runs the always-on secrets floor for
     # every repo, so a staged credential is blocked before the commit exists —
     # even with the scaffolded privacy gate off — and the opt-out lifts it.
-    import pytest
 
+    skip_without_env_gates("posix-shell", "git")
     sh = shutil.which("sh")
-    if not sh or not shutil.which("git"):
-        pytest.skip("needs a POSIX shell and git on PATH")
     make_minimal_project(scaffold)
 
     def git(*args):
@@ -382,11 +365,9 @@ def test_hook_privacy_author_guard(scaffold):
     # Identity->privacy reframe: with docs/privacy-check on, the hook's --author
     # step blocks a private (non-exempt) author before the commit exists and
     # passes an exempt no-reply one; the scaffolded default (privacy off) skips.
-    import pytest
 
+    skip_without_env_gates("posix-shell", "git")
     sh = shutil.which("sh")
-    if not sh or not shutil.which("git"):
-        pytest.skip("needs a POSIX shell and git on PATH")
     make_minimal_project(scaffold)
 
     def git(*args):
@@ -438,11 +419,9 @@ def test_commit_msg_hook_scans_message(scaffold):
     # the message file as $1 and a nonzero exit aborts the commit. The always-on
     # secrets floor scans every repo's message; the privacy layer adds its
     # classes only when docs/privacy-check is `true`.
-    import pytest
 
+    skip_without_env_gates("posix-shell", "git")
     sh = shutil.which("sh")
-    if not sh or not shutil.which("git"):
-        pytest.skip("needs a POSIX shell and git on PATH")
     make_minimal_project(scaffold)
     subprocess.run(["git", "init"], cwd=str(scaffold), capture_output=True)
     HOOK_CM = ".githooks/commit-msg"

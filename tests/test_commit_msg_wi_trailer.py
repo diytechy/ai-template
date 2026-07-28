@@ -23,7 +23,7 @@ import subprocess
 
 import pytest
 
-from conftest import KIT, load_script, make_minimal_project
+from conftest import KIT, load_script, make_minimal_project, skip_without_env_gates
 
 SHIPPED_HOOK = KIT / "hooks" / "commit-msg"
 TRAIN = "llm/train/p0-g3-WI-282-eb40"
@@ -40,10 +40,10 @@ MALFORMED = "WI-282: enforce the trailer\n\nWI: WI-282\n\nTrain: t\nBase: abc123
 
 
 def _sh_or_skip():
-    sh = shutil.which("sh")
-    if not sh or not shutil.which("git"):
-        pytest.skip("needs a POSIX shell and git on PATH")
-    return sh
+    # WI-326: skip through the declared gate, not an inline probe, so this
+    # module's skips are counted and explained by the session banner.
+    skip_without_env_gates("posix-shell", "git")
+    return shutil.which("sh")
 
 
 def _git(repo, *args):
@@ -213,6 +213,13 @@ def test_end_to_end_through_git_commit_in_a_linked_worktree(tmp_path):
     # primary checkout's. Drive it through real `git commit` (not a direct hook
     # call) so that contract has a regression guard: malformed aborts the commit,
     # a valid trailer commits, and a sanctioned coordinator subject commits.
+    #
+    # WI-326: this drives `git` directly rather than through `_sh_or_skip`, so
+    # before the gate was declared it RED with a bare FileNotFoundError on a box
+    # without git on PATH instead of skipping — an environment shortfall wearing
+    # a branch defect's clothes, which is the same confusion in the opposite
+    # direction from the 47 silent skips.
+    skip_without_env_gates("posix-shell", "git")
     main = tmp_path / "main"
     main.mkdir()
     _git(main, "init")

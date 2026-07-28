@@ -16,7 +16,7 @@ import re
 import shutil
 import subprocess
 
-from conftest import KIT, skip_below_floor
+from conftest import KIT, skip_below_floor, skip_without_env_gates
 
 REPO_ROOT = KIT.parent  # the meta-repo root (this kit dogfoods dev-setup here)
 
@@ -29,6 +29,10 @@ DEVSETUP_COMMAND = "scripts/dev-setup.command"
 
 
 def _sh():
+    """The POSIX shell, skipping through the declared gate when there is none
+    (WI-326) — so this module's skips carry the counted reason and an actionable
+    remedy rather than a bare restatement of the missing tool."""
+    skip_without_env_gates("posix-shell")
     return shutil.which("sh")
 
 
@@ -90,10 +94,6 @@ def test_devsetup_has_edit_block_tiers_and_profiles(scaffold):
 
 def _devsetup_check(scaffold, *extra):
     sh = _sh()
-    if not sh:
-        import pytest
-
-        pytest.skip("no POSIX shell on PATH")
     return subprocess.run(
         [sh, "scripts/dev-setup.sh", "--check", *extra],
         cwd=str(scaffold),
@@ -147,10 +147,6 @@ def test_devsetup_check_runs_and_reports(scaffold):
     # The default tier must run and report without installing anything (exit 0),
     # so it is safe on a bare machine and in CI. Needs a POSIX shell.
     sh = _sh()
-    if not sh:
-        import pytest
-
-        pytest.skip("no POSIX shell on PATH")
     proc = subprocess.run(
         [sh, "scripts/dev-setup.sh", "--check"],
         cwd=str(scaffold),
@@ -202,10 +198,6 @@ def test_onboarder_sh_is_syntactically_valid(scaffold):
     # `sh -n` parses without executing — catches a broken onboarder before a
     # contributor ever runs it. (The .command/.cmd variants are per-OS manual.)
     sh = _sh()
-    if not sh:
-        import pytest
-
-        pytest.skip("no POSIX shell on PATH")
     for rel in ("scripts/onboard.sh", "scripts/dev-setup.sh"):
         proc = subprocess.run(
             [sh, "-n", rel], cwd=str(scaffold), capture_output=True, text=True
@@ -231,10 +223,6 @@ def test_bootstrap_scaffolds_devsetup_command(scaffold):
 
 def test_devsetup_command_is_syntactically_valid(scaffold):
     sh = _sh()
-    if not sh:
-        import pytest
-
-        pytest.skip("no POSIX shell on PATH")
     proc = subprocess.run(
         [sh, "-n", DEVSETUP_COMMAND], cwd=str(scaffold), capture_output=True, text=True
     )
@@ -494,10 +482,6 @@ def test_meta_repo_dogfoods_dev_setup():
         assert "dev-setup.template" in path.read_text(encoding="utf-8")
 
     sh = _sh()
-    if not sh:
-        import pytest
-
-        pytest.skip("no POSIX shell on PATH")
     proc = subprocess.run(
         [sh, "scripts/dev-setup.sh", "--check"],
         cwd=str(REPO_ROOT),

@@ -6,8 +6,10 @@ tests exercise the scripts the way a downstream user would: bootstrap a real
 scaffold in a temp dir and run the actual commands.
 """
 
+import collections
 import importlib.util
 import os
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -228,11 +230,182 @@ def skip_below_floor(what):
         )
 
 
+# --- WI-326: the environment gates ------------------------------------------
+# Preconditions that are not the BRANCH's business but silently change what the
+# suite RUNS. Measured 2026-07-26 on Windows (the account is in docs/log.md):
+# the same tree, the same commit, run twice — 1540 passed / 54 skipped without
+# `Git\bin` on PATH, 1587 passed / 7 skipped with it. Forty-seven tests were
+# never asked, 36 of them the guards on the commit floor itself, and BOTH runs
+# printed a green. That is SN-008's dishonest-green shape one level up: not a
+# skipped check, but a skipped check-of-the-check.
+#
+# Declared ONCE here because the skip guards and the gate must read the same
+# fact. A gate names its probe, what its absence costs, and whether a run
+# missing it may still be called a gate result. Tests skip through the helpers
+# below rather than re-probing, so the number the terminal summary reports and
+# the reason an individual test skipped cannot drift into two figures — which is
+# exactly how 47 went uncounted: `shutil.which("sh")` was copied inline into
+# four modules and no one owned the total.
+#
+# Deliberately NOT done, per the row: auto-prepending the directory to PATH. A
+# harness that silently repairs its own environment hides the identical fact one
+# layer down — the same standing rule that forbids reaching for a
+# `docs/dupes-allow` sanction to green a step.
+#
+# The declaration lives here rather than in docs/stack.ini (where [smoke-budget]
+# sits) because only this suite reads it: stack.ini is what the KIT SCRIPTS
+# parse, and tests/ is not shipped downstream.
+
+EnvGate = collections.namedtuple("EnvGate", "name required probe cost remedy")
+
+ENV_GATE_SKIP_PREFIX = "environment gate"
+
+
+def unreachable_posix_shell():
+    """A directory holding an `sh` that EXISTS on this machine but is not on
+    PATH, or None (including whenever `sh` is already reachable).
+
+    Git for Windows installs `sh.exe` under both `Git\\bin` and `Git\\usr\\bin`
+    but puts only `Git\\cmd` on PATH, so the shell is *installed and
+    unreachable* — the default Windows developer state, not an exotic one.
+    Naming the directory turns an unactionable "no POSIX shell" into a one-line
+    remedy the reader can paste."""
+    if shutil.which("sh"):
+        return None
+    bases = [os.environ.get("ProgramFiles"), os.environ.get("ProgramFiles(x86)")]
+    for base in [b for b in bases if b]:
+        for sub in ("Git\\bin", "Git\\usr\\bin"):
+            candidate = Path(base) / sub
+            if (candidate / "sh.exe").is_file():
+                return candidate
+    return None
+
+
+def _posix_shell_remedy():
+    found = unreachable_posix_shell()
+    if found:
+        return (
+            "put {} on PATH — sh.exe is already installed there; Git for "
+            "Windows puts only Git\\cmd on PATH".format(found)
+        )
+    return "install a POSIX shell (Git for Windows ships one) and put it on PATH"
+
+
+ENV_GATES = (
+    EnvGate(
+        name="posix-shell",
+        required=True,
+        probe=lambda: shutil.which("sh") is not None,
+        cost=(
+            "every shell-driven test SKIPS — the pre-commit and pre-push hook "
+            "suites (36 of which guard the commit floor itself), the dev-setup "
+            "install path, and the commit-msg trailer hook"
+        ),
+        remedy=_posix_shell_remedy,
+    ),
+    EnvGate(
+        name="git",
+        required=True,
+        probe=lambda: shutil.which("git") is not None,
+        cost="every test that drives a real repository SKIPS",
+        remedy=lambda: "install git and put it on PATH",
+    ),
+)
+
+
+def env_gate_shortfalls(names=None):
+    """The declared gates this machine does NOT satisfy, in declaration order.
+
+    `names` restricts the answer to the gates a caller depends on; None means
+    all of them. Returns EnvGate records, so a caller can report the cost and
+    the remedy without re-deriving either."""
+    return [
+        g for g in ENV_GATES if (names is None or g.name in names) and not g.probe()
+    ]
+
+
+def env_gate_skip_reason(missing):
+    """The one skip-reason string, shared by both skip forms so the terminal
+    summary can count them with a single substring test."""
+    remedies = list(dict.fromkeys(g.remedy() for g in missing))
+    return "{} unsatisfied: {} — {}".format(
+        ENV_GATE_SKIP_PREFIX, ", ".join(g.name for g in missing), "; ".join(remedies)
+    )
+
+
+def skip_without_env_gates(*names):
+    """`pytest.skip` when any NAMED declared gate is unsatisfied; a no-op
+    otherwise. The runtime form, for a guard inside a test or fixture."""
+    missing = env_gate_shortfalls(names)
+    if missing:
+        pytest.skip(env_gate_skip_reason(missing))
+
+
+def env_gate_skipif(*names):
+    """The module-level `pytest.mark.skipif` form of `skip_without_env_gates`,
+    carrying the identical reason string so both forms are counted alike."""
+    missing = env_gate_shortfalls(names)
+    return pytest.mark.skipif(
+        bool(missing), reason=env_gate_skip_reason(missing) if missing else ""
+    )
+
+
+def env_gate_banner():
+    """The stderr announcement, or None when every declared gate is satisfied.
+
+    Predicted from the probes, so it lands BEFORE the first test rather than
+    behind a scrollback of skips — the same belt-and-braces role the toolchain
+    banner plays for the interpreter floor."""
+    missing = env_gate_shortfalls()
+    if not missing:
+        return None
+    lines = [
+        "",
+        "!! ENVIRONMENT GATE: {} of {} declared gates unsatisfied on this "
+        "machine.".format(len(missing), len(ENV_GATES)),
+    ]
+    for gate in missing:
+        lines.append(
+            "     {}{}: {}".format(
+                gate.name, " (REQUIRED)" if gate.required else "", gate.cost
+            )
+        )
+        lines.append("       remedy: {}".format(gate.remedy()))
+    lines.append(
+        "   Those tests will SKIP, so this run is PARTIAL — a green here is not"
+    )
+    lines.append(
+        "   a gate result. test_prereq_toolchain.py FAILS on a required gate at"
+    )
+    lines.append("   slice close and in CI, where a gate result is actually claimed.")
+    lines.append("")
+    return "\n".join(lines)
+
+
+def env_gated_skip_count(terminalreporter):
+    """How many tests skipped THIS run because a declared environment gate was
+    unsatisfied — the MEASURED number, as opposed to the banner's prediction.
+
+    It reads the reason string the shared helpers emit, so a hand-rolled inline
+    `shutil.which` skip elsewhere is invisible here BY DESIGN: every number this
+    reports has a named, declared cause."""
+    counted = 0
+    for report in terminalreporter.stats.get("skipped", []):
+        longrepr = getattr(report, "longrepr", None)
+        reason = (
+            longrepr[2] if isinstance(longrepr, tuple) and len(longrepr) == 3 else ""
+        )
+        if ENV_GATE_SKIP_PREFIX in str(reason):
+            counted += 1
+    return counted
+
+
 def pytest_sessionstart(session):
-    """Announce a below-floor interpreter on stderr before a single test runs, on
-    the xdist CONTROLLER only (workers set `workerinput`, and one banner per
-    worker would be noise). Belt-and-braces for the prereq test: under `-q` a
-    failure summary can scroll far behind ~50 skips, and this lands first."""
+    """Announce a below-floor interpreter and any unsatisfied environment gate on
+    stderr before a single test runs, on the xdist CONTROLLER only (workers set
+    `workerinput`, and one banner per worker would be noise). Belt-and-braces for
+    the prereq test: under `-q` a failure summary can scroll far behind ~50
+    skips, and this lands first."""
     if hasattr(session.config, "workerinput"):
         return
     short = floor_shortfall()
@@ -243,6 +416,45 @@ def pytest_sessionstart(session):
             "not the branch. Remedy: scripts/dev-setup --install\n".format(short),
             file=sys.stderr,
         )
+    banner = env_gate_banner()
+    if banner:
+        print(banner, file=sys.stderr)
+
+
+def pytest_terminal_summary(terminalreporter):
+    """Report the MEASURED environment-gated skip count once the run is over.
+
+    The session-start banner predicts from the probes; this states what actually
+    happened. It is the line whose absence let two sessions record `1579 passed,
+    7 skipped` and `1540 passed, 54 skipped` as comparable greens — the count was
+    always one `-rs` flag away, and nobody passes `-rs`."""
+    if hasattr(terminalreporter.config, "workerinput"):
+        return
+    counted = env_gated_skip_count(terminalreporter)
+    missing = env_gate_shortfalls()
+    if not counted and not missing:
+        return
+    terminalreporter.write_line("")
+    terminalreporter.write_line(
+        "ENVIRONMENT-GATED SKIPS: {} test(s) did not RUN because {} of {} "
+        "declared gates are unsatisfied ({}).".format(
+            counted,
+            len(missing),
+            len(ENV_GATES),
+            ", ".join(g.name for g in missing) or "none",
+        ),
+        yellow=True,
+        bold=True,
+    )
+    for gate in missing:
+        terminalreporter.write_line(
+            "  remedy ({}): {}".format(gate.name, gate.remedy())
+        )
+    terminalreporter.write_line(
+        "  A pass total measured here is NOT comparable with one measured on a "
+        "fully-gated machine.",
+        yellow=True,
+    )
 
 
 def _active_cov_datafile():

@@ -16884,3 +16884,79 @@ few relative links, so it only bites on a link-rich one, and then it reddens the
 composed tree at integration, the exact late-surfacing failure WI-288 existed to
 stop. The six links here were fixed by resolving each against the old directory
 and re-relativising against the new.
+
+---
+
+## Session 2026-07-28 (cont.) — WI-326: the 47 skipped tests get an owner
+
+The [2026-07-26 finding](#2026-07-26--wi-326-a-green-that-hid-47-tests-caught-by-not-trusting-a-number) measured
+the gap; this closes it. Option (a)+(b) from the row — *announce always, gate at
+the gate* — landed on the shape the interpreter floor already uses, so it needed
+no new tier and no new config surface.
+
+**The fix that mattered was not the banner.** The gate condition was four inline
+copies of `shutil.which("sh")` — eight sites in `test_pre_commit_hook.py`, five
+in `test_onboard_devsetup.py`, one in `test_commit_msg_wi_trailer.py`, and a
+module-level `skipif` in `test_pre_push_hook.py`. Every skip was real and
+correct; the *total* was nobody's. That is how 47 tests could stop running and
+no surface anywhere held the number. So the gates are now declared once
+(`conftest.ENV_GATES` — probe, cost, `required`, remedy) and every site skips
+through `skip_without_env_gates` / `env_gate_skipif`, which emit one shared
+reason string. `test_no_test_skips_on_a_hand_rolled_shell_probe` scans `tests/`
+so the copies cannot grow back — a new shell-gated test written with its own
+inline probe would be invisible to both the banner and the count, and the suite
+would quietly resume hiding tests.
+
+**Announce** is two hooks, not one: `pytest_sessionstart` prints the *predicted*
+banner on stderr before the first test (controller only, on every run including
+`-m smoke`), and `pytest_terminal_summary` prints the *measured* count after the
+last. Both are needed and they answer different questions — the prediction is
+actionable before you wait for the run, and the measurement is the number two
+sessions could not compare. The summary says so explicitly: *a pass total
+measured here is NOT comparable with one measured on a fully-gated machine.*
+
+**The remedy is computed, not recited.** `unreachable_posix_shell()` looks for an
+`sh.exe` that exists on this machine but is off PATH, and names the directory —
+so the message reads `put C:\Program Files\Git\bin on PATH`, which is the whole
+distance between an unactionable warning and a fix. It stops there, deliberately:
+the row rules out auto-injecting the entry, because a harness that repairs its
+own environment hides the identical fact one layer down.
+
+**Gate** is `test_prereq_toolchain.py`, which already owned "this machine cannot
+produce a gate result" for the interpreter floor. It is SLOW-tiered, so the hard
+stop lands in the full suite — `check.py`'s `tests+coverage` step and CI — while
+the commit bar keeps the warning and loses only the failure. A developer on an
+unprovisioned box can still commit the fix that provisions it.
+
+**What is deliberately NOT counted:** an `os.name != "posix"` skip. It has no
+remedy on Windows, so counting it would turn the number into noise, and a number
+that is noise gets ignored — the failure mode the row's own "warns get ignored"
+history warns about. `test_count_ignores_an_unrelated_skip` pins it.
+
+**Verifying it found one more.** Running with PATH scrubbed, one test did not
+skip — `test_end_to_end_through_git_commit_in_a_linked_worktree` RED with a bare
+`FileNotFoundError`, because it drives `git` directly rather than through the
+guard. That is the same confusion in the opposite direction: an environment
+shortfall wearing a branch defect's clothes. Now gated.
+
+**Guards, and the proof they are not vacuous.** Twenty in-process units in
+`tests/test_env_gates.py` — each driving a *constructed* gate table rather than
+the host's real PATH, because a guard that re-reads a provisioned machine passes
+no matter what the code does. Plus a subprocess test that runs real pytest with
+PATH reduced to one empty directory (which makes `shutil.which` return None on
+every platform) and asserts both hooks fire and that the printed count *equals*
+the reported skip count, with a provisioned-machine twin asserting neither line
+appears. Four mutants were run against the pair — banner suppressed, summary
+suppressed, count forced to zero, `skipif` reason drifted to a different string —
+and each failed the suite.
+
+**Smoke ratchet re-stamped 480 → 530**, reason in `docs/stack.ini`: the +20 are
+in-process unit tests, which is the growth this sensor is documented to allow,
+and 530 keeps ~8% headroom rather than the ~2% that made a previous stamp a
+freeze.
+
+Bar: smoke **490 passed / 31.3 s**; the 16 non-test G3 steps all PASS (7.8 s);
+`check_docs --stale` OK. The full suite and the G3 test step run at the end of
+this batch, not per WI — the expensive steps are `tests+coverage` and
+`module-coverage` alone, and the other sixteen cost seven seconds, so they run
+every time.

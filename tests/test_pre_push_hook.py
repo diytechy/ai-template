@@ -14,16 +14,16 @@ import shutil
 import subprocess
 
 import pytest
-from conftest import augment_env
+from conftest import augment_env, env_gate_skipif
 
 HOOK = ".githooks/pre-push"
 ZERO = "0" * 40
 FAKE_USER = "privacyprobeuser"
 
-pytestmark = pytest.mark.skipif(
-    not (shutil.which("sh") and shutil.which("git")),
-    reason="needs a POSIX shell and git on PATH",
-)
+# WI-326: the module-level form of the declared gate. Same reason string as the
+# runtime helper, so the session banner and the terminal-summary count see this
+# module's skips too.
+pytestmark = env_gate_skipif("posix-shell", "git")
 
 
 def _posix(path):
