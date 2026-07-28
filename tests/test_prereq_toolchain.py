@@ -21,6 +21,17 @@ The floor is read from `agent_common.MIN_PYTHON` — the same constant the
 dispatcher's WI-286 harness gate and `scripts/dev-setup.sh` enforce — and the
 gates from `conftest.ENV_GATES`, so each is declared once and flows here
 untouched.
+
+**One thing here is NOT verified, and is recorded as unverified rather than
+claimed.** The environment gate hard-fails wherever the full suite runs, which
+includes CI's `windows-latest` lane. Whether that runner puts `sh.exe` on PATH
+could not be determined from the runner-images documentation, and this branch has
+never been pushed, so there is no CI evidence either way. If it does not, the
+first push turns a *silent* skip of ~250 tests into a red cell — which is this
+check working, not a regression, and the remedy is one PATH line in the workflow.
+The branch has already been wrong twice about what an OS permits, in opposite
+directions (127- and 128-REVIEW-A), so the rule stands: one machine is one data
+point, and an unmeasured claim is stated as unmeasured.
 """
 
 import os
@@ -131,9 +142,11 @@ def _gate_diagnosis(missing):
         "\nprints a green — the dishonest-green shape SN-008 forbids, one level up"
         "\n(not a skipped check, but a skipped check-OF-the-check). Measured"
         "\n2026-07-26 on Windows: 1540 passed / 54 skipped without Git\\bin on PATH"
-        "\nversus 1587 passed / 7 skipped with it — 47 tests never asked, 36 of them"
-        "\nthe guards on the commit floor itself. A pass total from a machine in this"
-        "\nstate is NOT comparable with one from a fully-gated machine."
+        "\nversus 1587 passed / 7 skipped with it. Re-measured 2026-07-28 once the"
+        "\ngit gate had an owner too: with BOTH gates closed, 250 tests across the"
+        "\nsuite do not run — 26 of them the two hook suites that guard the commit"
+        "\nfloor itself. A pass total from a machine in this state is NOT comparable"
+        "\nwith one from a fully-gated machine."
         "\n"
         "\nThis failure is the ENVIRONMENT, not the branch. It is deliberately not"
         "\nrepaired automatically: a harness that silently prepends a PATH entry hides"
@@ -159,66 +172,70 @@ def test_a_gate_closed_run_announces_itself_at_both_ends(tmp_path):
     """Drive a REAL pytest run on a box with no gate satisfied, and read what it
     printed.
 
-    `tests/test_env_gates.py` unit-tests the helpers; nothing there proves the
-    two pytest HOOKS are wired, and a banner that is never printed is exactly the
+    `tests/test_env_gates.py` unit-tests the helpers; nothing there proves the two
+    pytest HOOKS are wired, and a banner that is never printed is exactly the
     defect WI-326 exists to fix. So this constructs the unprovisioned box — PATH
     reduced to one empty directory, which makes `shutil.which` return None for
-    every tool on every platform — rather than inheriting whatever the runner
-    happens to have, and asserts both ends fire: the predicted banner on stderr
-    before the first test, and the measured count on stdout after the last.
+    every tool on every platform (`shutil.which` reads `os.environ["PATH"]` when
+    set, with no `os.defpath` fallback) — and asserts both ends fire: the
+    predicted banner on stderr before the first test, and the measured count on
+    stdout after the last.
 
     `test_pre_push_hook.py` is the subject because it skips at MODULE level, so
-    the run costs no fixtures — and it is the skipif form, the one a substring
+    the run costs no fixtures — and it is the `skipif` form, the one a substring
     count under-reads first if the two skip helpers ever drift apart.
+
+    The SATISFIED twin is constructed too, via `KIT_ENV_GATES_SATISFIED` (read by
+    `conftest.env_gate_shortfalls`), rather than by running on this machine and
+    hoping it is provisioned. The first version of this test inherited the
+    runner's PATH for that half, so it PASSED here and would have RED on exactly
+    the unprovisioned Windows box WI-326 targets — an adversarial review measured
+    it. It also ran `--collect-only`, so zero tests ran and the count path was
+    never exercised at all; both halves now run the real thing.
     """
     empty = tmp_path / "nothing"
     empty.mkdir()
-    env = dict(os.environ, PATH=str(empty), PYTEST_CPU_CAP="off")
-    env.pop("PYTEST_ADDOPTS", None)
-    proc = subprocess.run(
-        [
-            sys.executable,
-            "-m",
-            "pytest",
-            "-q",
-            "-p",
-            "no:xdist",
-            "tests/test_pre_push_hook.py",
-        ],
+    base = dict(os.environ, PYTEST_CPU_CAP="off")
+    base.pop("PYTEST_ADDOPTS", None)
+    base.pop("KIT_ENV_GATES_SATISFIED", None)
+    command = [
+        sys.executable,
+        "-m",
+        "pytest",
+        "-q",
+        "-p",
+        "no:xdist",
+        "tests/test_pre_push_hook.py",
+    ]
+
+    closed = subprocess.run(
+        command,
         cwd=str(ROOT),
         capture_output=True,
         text=True,
-        env=env,
+        env=dict(base, PATH=str(empty)),
     )
-    combined = proc.stdout + proc.stderr
-    assert "ENVIRONMENT GATE:" in proc.stderr, combined
-    assert "posix-shell" in proc.stderr, combined
-    assert "ENVIRONMENT-GATED SKIPS:" in proc.stdout, combined
+    combined = closed.stdout + closed.stderr
+    assert "ENVIRONMENT GATE:" in closed.stderr, combined
+    assert "posix-shell" in closed.stderr, combined
+    assert "ENVIRONMENT-GATED SKIPS:" in closed.stdout, combined
 
     # The count is the point, so read it rather than trusting the label.
     counted = int(
-        re.search(r"ENVIRONMENT-GATED SKIPS: (\d+) test", proc.stdout).group(1)
+        re.search(r"ENVIRONMENT-GATED SKIPS: (\d+) test", closed.stdout).group(1)
     )
-    reported_skips = int(re.search(r"(\d+) skipped", proc.stdout).group(1))
-    assert counted == reported_skips > 0, combined
+    reported = int(re.search(r"(\d+) skipped", closed.stdout).group(1))
+    assert counted == reported > 0, combined
 
-    # And the mutation twin: the same command on THIS (provisioned) machine must
-    # print neither line, or the assertions above would pass on any run at all.
-    clean = subprocess.run(
-        [
-            sys.executable,
-            "-m",
-            "pytest",
-            "-q",
-            "-p",
-            "no:xdist",
-            "--collect-only",
-            "tests/test_pre_push_hook.py",
-        ],
+    # The twin: gates declared satisfied, same command, same machine. Neither
+    # line may appear — otherwise every assertion above would pass on any run.
+    satisfied = subprocess.run(
+        command,
         cwd=str(ROOT),
         capture_output=True,
         text=True,
-        env=dict(os.environ, PYTEST_CPU_CAP="off"),
+        env=dict(base, PATH=str(empty), KIT_ENV_GATES_SATISFIED="1"),
     )
-    assert "ENVIRONMENT-GATED SKIPS:" not in clean.stdout, clean.stdout + clean.stderr
-    assert "ENVIRONMENT GATE:" not in clean.stderr, clean.stdout + clean.stderr
+    both = satisfied.stdout + satisfied.stderr
+    assert "ENVIRONMENT-GATED SKIPS:" not in satisfied.stdout, both
+    assert "ENVIRONMENT GATE:" not in satisfied.stderr, both

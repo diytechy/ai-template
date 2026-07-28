@@ -13,6 +13,7 @@ gate that is unsatisfied by construction, and against its satisfied twin, so the
 guard can fail in both directions.
 """
 
+import ast
 import shutil
 import types
 
@@ -230,26 +231,150 @@ def test_unreachable_shell_is_none_when_nothing_is_installed(monkeypatch, tmp_pa
 
 # The original defect was not a missing feature, it was four inline copies of
 # `shutil.which("sh")` with no owner: the skips were real, the count was nobody's.
-# This is the guard that keeps that from growing back — a new shell-gated test
-# added with its own inline probe would be invisible to the banner and the count,
-# and the suite would quietly go back to hiding tests.
-LEGACY_REASONS = ("needs a POSIX shell and git on PATH", "no POSIX shell on PATH")
+# This is the guard that stops that growing back — and it is the SECOND version.
+#
+# The first scanned for two literal historical reason strings, and an adversarial
+# review drove it: a brand-new inline probe with a reason it had never seen walked
+# straight past, as did the fourteen `which("git")` probes that existed at the
+# time. That is the 129-REVIEW-A shape — a guard advertising a property it lacks —
+# so this one asserts the actual invariant instead, over the AST rather than the
+# text: **a `shutil.which` result for a gated tool must never decide a skip.**
+# Using `which` to LOCATE a tool after the gate has run is fine and common; what
+# is banned is re-deciding, because a skip decided anywhere else is a skip the
+# banner cannot predict and the summary cannot count.
+GATED_TOOLS = frozenset({"sh", "bash", "git"})
 
 
-def test_no_test_skips_on_a_hand_rolled_shell_probe():
+def _which_calls_for_gated_tools(node):
+    """Every `...which("sh"|"bash"|"git")` call inside `node`."""
+    found = []
+    for child in ast.walk(node):
+        if not isinstance(child, ast.Call):
+            continue
+        func = child.func
+        name = func.attr if isinstance(func, ast.Attribute) else getattr(func, "id", "")
+        if name != "which" or not child.args:
+            continue
+        arg = child.args[0]
+        if isinstance(arg, ast.Constant) and arg.value in GATED_TOOLS:
+            found.append(child)
+    return found
+
+
+def _skip_calls(node):
+    """Every `pytest.skip(...)` / bare `skip(...)` call inside `node`."""
+    out = []
+    for child in ast.walk(node):
+        if not isinstance(child, ast.Call):
+            continue
+        func = child.func
+        name = func.attr if isinstance(func, ast.Attribute) else getattr(func, "id", "")
+        if name == "skip":
+            out.append(child)
+    return out
+
+
+def _skipif_conditions(tree):
+    """The condition expression of every `pytest.mark.skipif(...)` in the tree."""
+    out = []
+    for child in ast.walk(tree):
+        if not isinstance(child, ast.Call):
+            continue
+        func = child.func
+        if isinstance(func, ast.Attribute) and func.attr == "skipif" and child.args:
+            out.append(child.args[0])
+    return out
+
+
+def _hand_rolled_gate_probes(path):
+    """Findings for one test module: a gated-tool probe deciding a skip."""
+    tree = ast.parse(path.read_text(encoding="utf-8"))
+    findings = []
+
+    for condition in _skipif_conditions(tree):
+        for call in _which_calls_for_gated_tools(condition):
+            findings.append(
+                "{}:{} a skipif CONDITION probes {!r} directly".format(
+                    path.name, call.lineno, call.args[0].value
+                )
+            )
+
+    for node in ast.walk(tree):
+        if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            continue
+        probes = _which_calls_for_gated_tools(node)
+        if probes and _skip_calls(node):
+            findings.append(
+                "{}:{} `{}` both probes {!r} and calls skip()".format(
+                    path.name,
+                    probes[0].lineno,
+                    node.name,
+                    probes[0].args[0].value,
+                )
+            )
+    return findings
+
+
+def test_no_test_decides_a_skip_from_its_own_tool_probe():
     from conftest import ROOT
 
     offenders = []
     for path in sorted((ROOT / "tests").glob("test_*.py")):
-        if path.name == "test_env_gates.py":  # this module quotes them on purpose
+        if path.name == "test_env_gates.py":  # this module IS the guard
             continue
-        text = path.read_text(encoding="utf-8")
-        for reason in LEGACY_REASONS:
-            if reason in text:
-                offenders.append("{}: {!r}".format(path.name, reason))
+        offenders.extend(_hand_rolled_gate_probes(path))
     assert not offenders, (
-        "these skip through an inline probe instead of the declared gate, so "
-        "their skips are uncounted and unexplained (WI-326) — use "
+        "these decide a skip from their own tool probe instead of the declared "
+        "gate, so their skips are uncounted and unexplained (WI-326) — use "
         "conftest.skip_without_env_gates / env_gate_skipif:\n  "
         + "\n  ".join(offenders)
     )
+
+
+def test_the_guard_catches_a_freshly_invented_probe(tmp_path):
+    """The mutation the first version of this guard FAILED. A reviewer wrote a
+    new inline skip with a reason string this repo had never used, and the
+    string-matching guard passed it. This one is driven against that exact shape
+    plus its skipif twin, and against a legitimate post-gate `which` that must
+    NOT be flagged — so it can fail in both directions."""
+    bad_runtime = tmp_path / "test_bad_runtime.py"
+    bad_runtime.write_text(
+        "import shutil, pytest\n"
+        "def test_x():\n"
+        "    if not shutil.which('sh'):\n"
+        "        pytest.skip('requires a POSIX shell')\n",
+        encoding="utf-8",
+    )
+    bad_mark = tmp_path / "test_bad_mark.py"
+    bad_mark.write_text(
+        "import shutil, pytest\n"
+        "pytestmark = pytest.mark.skipif(not shutil.which('git'), reason='anything')\n"
+        "def test_x():\n    pass\n",
+        encoding="utf-8",
+    )
+    ok = tmp_path / "test_ok.py"
+    ok.write_text(
+        "import shutil\n"
+        "from conftest import skip_without_env_gates\n"
+        "def test_x():\n"
+        "    skip_without_env_gates('posix-shell')\n"
+        "    assert shutil.which('sh')\n",
+        encoding="utf-8",
+    )
+    assert _hand_rolled_gate_probes(bad_runtime), "runtime probe not caught"
+    assert _hand_rolled_gate_probes(bad_mark), "skipif probe not caught"
+    assert not _hand_rolled_gate_probes(ok), "post-gate which() must be allowed"
+
+
+def test_the_guard_ignores_an_ungated_tool(tmp_path):
+    """`which('pwsh')` is not a declared gate, so it is nobody's business here —
+    otherwise the guard would grow into a ban on `shutil.which`."""
+    other = tmp_path / "test_other.py"
+    other.write_text(
+        "import shutil, pytest\n"
+        "def test_x():\n"
+        "    if not shutil.which('pwsh'):\n"
+        "        pytest.skip('no powershell')\n",
+        encoding="utf-8",
+    )
+    assert not _hand_rolled_gate_probes(other)

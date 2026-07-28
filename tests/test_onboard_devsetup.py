@@ -163,11 +163,14 @@ def test_devsetup_runtime_probe_enforces_python_311(scaffold, tmp_path):
     # The declared floor must be executable, not just a label. Put fake
     # python/python3 candidates first on PATH so the result is independent of
     # the interpreter installed on the test host.
-    sh = _sh()
-    if not sh or os.name != "posix":
+    if os.name != "posix":
         import pytest
 
+        # PLATFORM, not environment (WI-326): no remedy exists on Windows, so
+        # this must NOT route through the gate or the counted number becomes
+        # noise. Ordered before `_sh()`, which does skip through the gate.
         pytest.skip("needs a POSIX shell")
+    sh = _sh()
     fakebin = tmp_path / "fakebin"
     fakebin.mkdir()
     for name in ("python", "python3"):
@@ -361,11 +364,12 @@ def _fake_stale_venv(root):
 def _meta_devsetup_sh_scratch(tmp_path):
     """A scratch tree with the META dev-setup.sh + a fake stale ./.venv. Returns
     the scratch root, or skips when there is no POSIX shell / not on POSIX."""
-    sh = _sh()
-    if not sh or os.name != "posix":
+    if os.name != "posix":
         import pytest
 
+        # PLATFORM, not environment — see the note at the sibling site above.
         pytest.skip("needs a POSIX shell + exec bit")
+    sh = _sh()
     root = tmp_path / "repo"
     (root / "scripts").mkdir(parents=True)
     shutil.copy(REPO_ROOT / "scripts/dev-setup.sh", root / "scripts/dev-setup.sh")

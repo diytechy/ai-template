@@ -6,9 +6,15 @@
 # supposed to catch. Nothing noticed because every machine that has run this
 # suite had git (WI-333; the G3-only `lint` step that reports it had been
 # dropped from the bar by an open re-attestation window).
-import pytest
 
-from conftest import KIT, SCRIPTS, load_script, make_minimal_project, run_py
+from conftest import (
+    skip_without_env_gates,
+    KIT,
+    SCRIPTS,
+    load_script,
+    make_minimal_project,
+    run_py,
+)
 
 # SR-002 is a genuine (ratified, non-Draft) orphan: Status=Planned, so the
 # derived-gate Draft exemption (WI-089) does NOT apply and the decomposition
@@ -1528,9 +1534,8 @@ def _reattest_repo(root):
     import shutil as _sh
     import subprocess as _sp
 
+    skip_without_env_gates("git")
     git = _sh.which("git")
-    if not git:
-        pytest.skip("needs git on PATH")
 
     def run_git(*a):
         return _sp.run([git, "-C", str(root), *a], capture_output=True, text=True)
@@ -1675,9 +1680,8 @@ def test_reattest_brief_reads_a_bommed_baseline(tmp_path):
     import shutil as _sh
     import subprocess as _sp
 
+    skip_without_env_gates("git")
     git = _sh.which("git")
-    if not git:
-        pytest.skip("needs git on PATH")
 
     def run_git(*a):
         return _sp.run([git, "-C", str(tmp_path), *a], capture_output=True, text=True)

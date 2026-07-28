@@ -12,13 +12,11 @@ and the pre-commit hook.
 """
 
 import os
-import shutil
 import subprocess
 import sys
 from pathlib import Path
 
-import pytest
-from conftest import augment_env, run_py
+from conftest import env_gate_skipif, augment_env, run_py
 
 SCRIPT = "scripts/check_privacy.py"
 # This kit repo (a git checkout) and its real check_privacy.py, for the
@@ -30,7 +28,7 @@ KIT_SCRIPT = REPO_ROOT / "project-trajectory" / "scripts" / "check_privacy.py"
 # current-account class testable without depending on the machine's real user.
 FAKE_USER = "privacyprobeuser"
 
-needs_git = pytest.mark.skipif(not shutil.which("git"), reason="needs git on PATH")
+needs_git = env_gate_skipif("git")
 
 
 def lint_env():

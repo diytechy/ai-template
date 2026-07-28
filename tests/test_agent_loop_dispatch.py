@@ -25,14 +25,11 @@ import os
 import subprocess
 import sys
 
-import pytest
-from conftest import SCRIPTS, load_script, run_py, seed_venv
+from conftest import env_gate_skipif, SCRIPTS, load_script, run_py, seed_venv
 
 agent_loop = load_script("agent_loop")
 
-pytestmark = pytest.mark.skipif(
-    not __import__("shutil").which("git"), reason="needs git on PATH"
-)
+pytestmark = env_gate_skipif("git")
 
 HEADER = [
     "WI-ID",

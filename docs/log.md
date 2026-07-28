@@ -17132,3 +17132,95 @@ each fail the suite.
 
 Bar: smoke **490 passed / 24.8 s**; **all 17** non-test G3 steps PASS (6.1 s);
 `check_dupes` OK, no duplicate blocks in 37 files.
+
+---
+
+## Session 2026-07-28 (cont.) — WI-326 rework: the review found the same defect I had just fixed, one gate over
+
+An Opus adversarial review of `9e2008a`/`9828699` returned **CHANGES-REQUESTED,
+ten findings, two BLOCKERs**. All ten held. The two blockers are one defect seen
+twice, and it is the defect WI-326 exists to fix:
+
+**The `git` gate had no owner.** I declared it in `ENV_GATES` with a cost string
+— *"every test that drives a real repository SKIPS"* — and then routed nothing
+through it. The review measured **171 tests** behind hand-rolled `git` probes,
+six of them module-level `pytestmark`, while the new counter reported **0**. My
+own thesis, violated at larger scale than the 47 it fixed, in the same commit
+that argued it. Re-measured after the fix: with both gates closed, **250 tests
+across the suite do not run**, and every one of them is now counted and
+explained. 23 sites in 10 modules routed.
+
+**And the guard that was supposed to stop that regrowing could not fail.** It
+grepped for two *literal historical reason strings*. The reviewer wrote a fresh
+inline `shutil.which("sh")` skip with a reason this repo had never used, and the
+guard passed it — as it had been passing the fourteen `which("git")` probes that
+existed the whole time. That is the 129-REVIEW-A shape verbatim: a guard
+advertising a property it lacks, shipped by the session that wrote down the rule
+against it.
+
+The replacement asserts the invariant over the **AST**, not the text: *a
+`shutil.which` result for a gated tool must never decide a skip.* Using `which`
+to LOCATE a tool after the gate has run is fine; re-deciding is banned, because a
+skip decided anywhere else is one the banner cannot predict and the summary
+cannot count. It is driven against the reviewer's exact bypass and its `skipif`
+twin, against a legitimate post-gate `which` that must NOT be flagged, and
+against an *ungated* tool (`pwsh`) so it cannot grow into a blanket ban.
+
+**It found nine more sites the moment it ran** — including three I had written
+myself an hour earlier, in WI-352's own tests.
+
+### The rest, each a statement the code contradicted
+
+- **"36 of which guard the commit floor itself"** was arithmetically impossible:
+  that module holds 18 tests, 8 gate-skipped. The figure came from the original
+  finding and I re-signed it into a shipped `EnvGate.cost` string and into the
+  message a stranded developer reads. Now measured: **8** (pre-commit) and **18**
+  (pre-push).
+- **My own conversion violated "a platform skip is not counted."** `_sh()` skips
+  through the gate, and I left it called *before* the `os.name != "posix"` test at
+  two sites, so three POSIX-only tests were swallowed into the count —
+  over-reporting by 37% and promising a Windows reader that a PATH entry would
+  recover tests that can never run there. The platform check now comes first.
+- **The "provisioned-machine twin" inherited the runner's environment** — the
+  one thing the module docstring says it does not do. It passed here and would
+  have RED on exactly the unprovisioned Windows box WI-326 targets. It also used
+  `--collect-only`, so zero tests ran and the counting path was never exercised.
+  Both halves are now constructed: an empty PATH for the closed side, a new
+  `KIT_ENV_GATES_SATISFIED` for the open one.
+- **The CI claim is now recorded as unverified.** The gate hard-fails wherever the
+  full suite runs, including `windows-latest`; whether that runner has `sh` on
+  PATH could not be determined, and this branch has never been pushed. The
+  reviewer refused to guess in either direction, which is the right answer. If it
+  is absent, the first push turns a silent skip of ~250 tests into a red cell —
+  the check working, remedied by one PATH line in the workflow.
+- **`9e2008a` wrote a literal `0x08` into the WI registry.** A shell heredoc
+  collapsed the backslash of `Git\bin`, so `Git` + BACKSPACE reached the
+  Deliverable cell and it went on to claim the remedy reads *"put C:\Program
+  Files\Gitin on PATH"* — corrupting the exact string WI-326 exists to make
+  actionable. Every G3 step passed over it. Repaired, and **WI-349's brand-new
+  check was widened from CR/LF to every C0 control** so this class is caught by
+  the guard written in the same session, with a byte-level test over the shipped
+  registry.
+- **"The 16 non-test G3 steps" is 17** — and that was not a miscount but a real
+  gap: I had been omitting `perf-budgets` from the per-WI block all session. The
+  full 17 now run, in 6.1 s.
+- **Three different wall times for one signed bar** inside one commit (29.5 s /
+  31.3 s / 24.2 s). *Measure after the last edit, not during* — recorded on this
+  branch, broken on this branch, twice more today.
+- The xdist `longrepr` claim in a code comment was **reasoned about rather than
+  measured**, and the measurement contradicts it: under `-n 2` the 3-tuple
+  round-trips intact and the count read 51. Corrected to what was measured.
+
+### What this says about the method
+
+The per-WI adversarial review is earning its cost, but note *which* findings it
+produced: **nine of the ten were claims, not broken code.** Every test passed,
+every gate step was green, and the branch's signature defect showed up again
+unchanged — a sentence the code does not support. The one thing that caught the
+`git` gate was a reviewer asking "does the number this prints go up when tests
+stop running?" and then *running it with the gate closed*.
+
+Bar: smoke **492 passed / 18.7 s**; all **17** non-test G3 steps PASS; and the
+full unfiltered suite **1680 passed / 7 skipped** (11:06) — run because a change
+across 23 sites in 10 modules is exactly the broad-script-change case that asks
+for it, not because a WI closed.

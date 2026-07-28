@@ -12,9 +12,8 @@ import os
 import shutil
 import subprocess
 
-import pytest
 
-from conftest import ROOT, SCRIPTS, load_script, run_py
+from conftest import skip_without_env_gates, ROOT, SCRIPTS, load_script, run_py
 
 WI_HEADER = "WI-ID,Title,Workstream,SR-Refs,Predecessors,Status,Deliverable\n"
 # The header with the SpecRef column (S1) — used by the SSOT-rule tests.
@@ -863,9 +862,8 @@ def _init_followup_repo(root):
     """A git repo whose HEAD has WI-001 done (delivered SR-001) and WI-002 open,
     with WI-002 then closed as a follow-up on the same SR in the working tree.
     Returns the git runner; the caller stages the pieces under test."""
+    skip_without_env_gates("git")
     git = shutil.which("git")
-    if not git:
-        pytest.skip("needs git on PATH")
 
     def run_git(*a):
         return subprocess.run(
@@ -935,9 +933,8 @@ def _sr_row(req="the original attested text", status="Verified"):
 
 def _init_spine_repo(root):
     """A git repo whose HEAD holds SR-001 Verified. Returns the git runner."""
+    skip_without_env_gates("git")
     git = shutil.which("git")
-    if not git:
-        pytest.skip("needs git on PATH")
 
     def run_git(*a):
         return subprocess.run(
@@ -1076,9 +1073,8 @@ CRITIQUE_SR_ROW = (
 def _init_critique_close_repo(tmp_path, verdict="CHANGES-REQUESTED findings=2"):
     """A git repo with a Verification=Critique SR-050, a committed CRITIQUE verdict
     file, and WI-050 (on SR-050) closed queued->done in the working tree."""
+    skip_without_env_gates("git")
     git = shutil.which("git")
-    if not git:
-        pytest.skip("needs git on PATH")
 
     def run_git(*a):
         return subprocess.run(
@@ -1938,9 +1934,8 @@ def _write_sr_row(root, row):
 def _staleness_git(tmp_path):
     """A git runner whose commits can be stamped at a chosen epoch (`at=`), so the
     committer-time compare the staleness check reads is deterministic."""
+    skip_without_env_gates("git")
     git = shutil.which("git")
-    if not git:
-        pytest.skip("needs git on PATH")
     base = dict(os.environ)
 
     def run_git(*a, at=None):
@@ -2455,9 +2450,8 @@ def test_the_numbered_done_when_heading_form_is_recognised(tmp_path):
 
 
 def test_a_trailer_claiming_an_open_wi_warns(tmp_path):
+    skip_without_env_gates("git")
     git = shutil.which("git")
-    if not git:
-        pytest.skip("needs git on PATH")
     write_wis_sr(tmp_path, "WI-001,A,t,,,queued,,docs/log.md\n")
     (tmp_path / "docs" / "log.md").write_text("log\n", encoding="utf-8")
     for args in (
@@ -2480,9 +2474,8 @@ def test_the_trailer_signal_never_joins_the_exit_code(tmp_path):
     landed while its row CORRECTLY stayed queued, a review having refuted three
     of its claims. Erroring here would block the G3 gate for the length of that
     rework, with no honest way out but a false close."""
+    skip_without_env_gates("git")
     git = shutil.which("git")
-    if not git:
-        pytest.skip("needs git on PATH")
     write_wis_sr(tmp_path, "WI-001,A,t,,,queued,,docs/log.md\n")
     (tmp_path / "docs" / "log.md").write_text("log\n", encoding="utf-8")
     for args in (
@@ -2504,9 +2497,8 @@ def test_the_trailer_signal_never_joins_the_exit_code(tmp_path):
 
 def _staged_close_repo(tmp_path, spec_body):
     """A repo whose HEAD has WI-001 queued and whose INDEX closes it."""
+    skip_without_env_gates("git")
     git = shutil.which("git")
-    if not git:
-        pytest.skip("needs git on PATH")
 
     def run_git(*a):
         return subprocess.run([git, "-C", str(tmp_path), *a], capture_output=True)

@@ -12,7 +12,7 @@ import subprocess
 import sys
 
 import pytest
-from conftest import SCRIPTS, augment_env, load_script, run_py
+from conftest import env_gate_skipif, SCRIPTS, augment_env, load_script, run_py
 
 # The fake agent: records every invocation + the model it was handed, then
 # performs the next scripted action in the repo it was launched in (cwd),
@@ -1892,7 +1892,7 @@ def _build_commit(repo, wi, train, base):
     _git(repo, "commit", "-q", "-m", msg)
 
 
-@pytest.mark.skipif(not __import__("shutil").which("git"), reason="needs git on PATH")
+@env_gate_skipif("git")
 def test_worker_endstate_done_names_train_branch(tmp_path):
     al = load_script("agent_loop")
     repo, base, worker = _train_repo(tmp_path)
@@ -1905,7 +1905,7 @@ def test_worker_endstate_done_names_train_branch(tmp_path):
     assert al.TRAIN_BRANCH_PREFIX + "t1" in detail
 
 
-@pytest.mark.skipif(not __import__("shutil").which("git"), reason="needs git on PATH")
+@env_gate_skipif("git")
 def test_worker_endstate_review_open_defers(tmp_path):
     al = load_script("agent_loop")
     repo, base, worker = _train_repo(tmp_path)
@@ -1914,7 +1914,7 @@ def test_worker_endstate_review_open_defers(tmp_path):
     assert al.worker_endstate(str(repo), worker, True, False, 1) is None
 
 
-@pytest.mark.skipif(not __import__("shutil").which("git"), reason="needs git on PATH")
+@env_gate_skipif("git")
 def test_worker_endstate_rework_pending_defers(tmp_path):
     al = load_script("agent_loop")
     repo, base, worker = _train_repo(tmp_path)
@@ -1923,7 +1923,7 @@ def test_worker_endstate_rework_pending_defers(tmp_path):
     assert al.worker_endstate(str(repo), worker, False, False, 1) is None
 
 
-@pytest.mark.skipif(not __import__("shutil").which("git"), reason="needs git on PATH")
+@env_gate_skipif("git")
 def test_worker_endstate_blocked_trailer_exits_blocked(tmp_path):
     al = load_script("agent_loop")
     repo, base, worker = _train_repo(tmp_path)
@@ -1944,7 +1944,7 @@ def test_worker_endstate_blocked_trailer_exits_blocked(tmp_path):
     assert "OI-99" in detail
 
 
-@pytest.mark.skipif(not __import__("shutil").which("git"), reason="needs git on PATH")
+@env_gate_skipif("git")
 def test_worker_endstate_dirty_tree_defers(tmp_path):
     al = load_script("agent_loop")
     repo, base, worker = _train_repo(tmp_path)
@@ -1994,7 +1994,7 @@ def test_build_worker_assignment_is_none_without_wi_and_train():
     assert al.build_worker_assignment(args, "/does/not/matter") == (None, None)
 
 
-@pytest.mark.skipif(not __import__("shutil").which("git"), reason="needs git on PATH")
+@env_gate_skipif("git")
 def test_build_worker_assignment_bad_base_fails_closed(tmp_path, capsys):
     al = load_script("agent_loop")
     repo, _base, _worker = _train_repo(tmp_path)
@@ -2005,7 +2005,7 @@ def test_build_worker_assignment_bad_base_fails_closed(tmp_path, capsys):
     assert "does not resolve to a commit" in capsys.readouterr().err
 
 
-@pytest.mark.skipif(not __import__("shutil").which("git"), reason="needs git on PATH")
+@env_gate_skipif("git")
 def test_build_worker_assignment_good_base_parses_wi_list(tmp_path):
     al = load_script("agent_loop")
     repo, base, _worker = _train_repo(tmp_path)

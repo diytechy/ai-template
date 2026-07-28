@@ -235,7 +235,7 @@ def skip_below_floor(what):
 # suite RUNS. Measured 2026-07-26 on Windows (the account is in docs/log.md):
 # the same tree, the same commit, run twice — 1540 passed / 54 skipped without
 # `Git\bin` on PATH, 1587 passed / 7 skipped with it. Forty-seven tests were
-# never asked, 36 of them the guards on the commit floor itself, and BOTH runs
+# never asked, 26 of them the two hook suites guarding the commit floor, and BOTH
 # printed a green. That is SN-008's dishonest-green shape one level up: not a
 # skipped check, but a skipped check-of-the-check.
 #
@@ -297,8 +297,8 @@ ENV_GATES = (
         required=True,
         probe=lambda: shutil.which("sh") is not None,
         cost=(
-            "every shell-driven test SKIPS — the pre-commit and pre-push hook "
-            "suites (36 of which guard the commit floor itself), the dev-setup "
+            "every shell-driven test SKIPS — the pre-commit (8) and pre-push (18) "
+            "hook suites that guard the commit floor itself, the dev-setup "
             "install path, and the commit-msg trailer hook"
         ),
         remedy=_posix_shell_remedy,
@@ -313,12 +313,24 @@ ENV_GATES = (
 )
 
 
+# A test that needs to observe the SATISFIED half of this machinery cannot get
+# there by running on a provisioned machine — that inherits the runner's
+# environment, which is the thing under test. `KIT_ENV_GATES_SATISFIED` lets a
+# child process construct that half, the same way an empty PATH constructs the
+# unsatisfied one. Deliberately NOT an opt-out: it forces gates to read
+# satisfied, so setting it in anger would make the suite claim MORE ran, not
+# less, and `test_prereq_toolchain` still fails on the real probes.
+ENV_GATES_SATISFIED_VAR = "KIT_ENV_GATES_SATISFIED"
+
+
 def env_gate_shortfalls(names=None):
     """The declared gates this machine does NOT satisfy, in declaration order.
 
     `names` restricts the answer to the gates a caller depends on; None means
     all of them. Returns EnvGate records, so a caller can report the cost and
     the remedy without re-deriving either."""
+    if os.environ.get(ENV_GATES_SATISFIED_VAR):
+        return []
     return [
         g for g in ENV_GATES if (names is None or g.name in names) and not g.probe()
     ]
@@ -387,8 +399,17 @@ def env_gated_skip_count(terminalreporter):
     unsatisfied — the MEASURED number, as opposed to the banner's prediction.
 
     It reads the reason string the shared helpers emit, so a hand-rolled inline
-    `shutil.which` skip elsewhere is invisible here BY DESIGN: every number this
-    reports has a named, declared cause."""
+    `shutil.which` skip elsewhere would be invisible here — which is safe only
+    because `test_env_gates` bans one over the AST. The first version of that
+    guard matched two literal reason strings and let a fresh probe through, so
+    "invisible BY DESIGN" was, for one commit, just invisible.
+
+    The `(path, lineno, reason)` longrepr shape is what pytest actually hands
+    back for a skip, and it SURVIVES xdist: measured under `-n 2` with the gates
+    closed, both skip forms round-trip the 3-tuple intact and the count read 51.
+    The defensive non-tuple branch stays for plugins that wrap it, but the
+    earlier claim that "xdist hands back a bare string" was wrong — it was
+    reasoned about rather than measured."""
     counted = 0
     for report in terminalreporter.stats.get("skipped", []):
         longrepr = getattr(report, "longrepr", None)
