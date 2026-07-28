@@ -17314,3 +17314,40 @@ wrong in the cheap direction.
 `git ls-files --eol` shows no non-`.ps1`/`.cmd`/`.bat` file CRLF in the working
 tree. Module sizes: `agent_dispatch` 4028 → 4043, `trace` 2703 → 2706, both
 reviewed. Bar: smoke **503 passed / 23.4 s**; all 17 non-test G3 steps PASS.
+
+---
+
+## Session 2026-07-28 (cont.) — WI-339: the third instance of a checksum of the checkout
+
+`check_vendored` hashed `local.read_bytes()` — the **working tree's** bytes —
+against the fetched upstream's. `.gitattributes` declares the vendored docs
+`text eol=lf`, so a CRLF checkout made every vendored file report drift **at
+once**, with a message that blamed upstream: *"differs from pinned upstream —
+re-vendor or re-pin."* Re-vendoring would "fix" it until the next Windows edit;
+re-pinning would record a hash of somebody's checkout. This is the same class as
+the duplicate census before WI-337 and the generators before WI-348 — **a
+checksum of the checkout used as a checksum of the content** — and it is the
+third instance found in two days, which is itself the finding.
+
+**The care this needed that WI-337's did not.** A vendored file may legitimately
+be BINARY, and stripping CR bytes from a PNG or an archive would corrupt the
+comparison — the opposite failure. `looks_binary` sniffs a NUL byte (git's own
+heuristic) rather than trusting the extension: an unknown extension must not
+silently opt a file *out* of the fix, and a genuine binary must not be normalized
+into a false *match*. Both sides go through the same function, because the
+fetched remote may itself be served with either ending, and the WARN line names
+which rule it applied.
+
+**Six guards, one per Done-when clause** — including the one the spec insisted
+on: *genuinely different content still compares unequal, or it is only half a
+guard*. A normalization that collapsed everything would pass the cross-ending
+test and be worthless. The binary fixture is a PNG header carrying a CRLF **inside
+its binary content** on purpose.
+
+And the mutation proof lives **inside the suite**: it restates the pre-WI-339
+raw-bytes predicate, asserts the defect reproduces, and only then asserts the fix.
+A mutation run by hand once in a session is not evidence a successor can
+re-derive — that is the standing antidote from the 2026-07-27 close, applied
+rather than cited.
+
+Bar: smoke **509 passed**; all 17 non-test G3 steps PASS.

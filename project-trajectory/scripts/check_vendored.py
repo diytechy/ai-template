@@ -72,6 +72,50 @@ def fetch(url, timeout):
         return None, str(getattr(exc, "reason", exc) or exc)
 
 
+# --- WI-339: the comparison is of CONTENT, not of a checkout --------------------
+# `.gitattributes` declares the vendored docs `text eol=lf`, so they are STORED
+# LF — but a working tree can hold CRLF anyway (edit residue on Windows; WI-337
+# found 67 such files in this repo). Hashing raw bytes then reports EVERY vendored
+# file as drifted at once, and the message blames upstream: "differs from pinned
+# upstream — re-vendor or re-pin". Re-vendoring "fixes" it until the next Windows
+# edit; re-pinning records a hash of somebody's checkout. Same defect class as the
+# duplicate census before WI-337: a checksum of the checkout used as a checksum of
+# the content.
+#
+# THE CARE THIS NEEDED THAT WI-337's DID NOT: a vendored file may legitimately be
+# BINARY, and stripping CR bytes from a PNG or a zip would corrupt the comparison
+# — the opposite failure. So the rule is content-sniffed rather than applied
+# blindly, and both sides get the same treatment, because the fetched remote may
+# itself be served with either ending.
+
+# A NUL byte is the standard is-this-binary heuristic (git's own): no text
+# encoding the kit accepts produces one, and every common binary container does.
+_NUL = b"\x00"
+
+
+def looks_binary(data):
+    """Whether `data` should be compared byte-for-byte rather than normalized.
+
+    Deliberately conservative and stated here rather than inferred from the file
+    extension: an unknown extension must not silently opt a file OUT of the
+    line-ending fix, and a genuine binary must not be normalized into a false
+    match. Empty content is text (nothing to mangle)."""
+    return _NUL in data
+
+
+def content_digest(data):
+    """The sha256 of `data` as CONTENT: CRLF and lone CR collapse to LF for text,
+    while binary is hashed exactly as it is.
+
+    Returns `(digest, normalized)` so the caller can say WHICH rule it applied —
+    a comparison that silently changes its own basis is how the original defect
+    stayed invisible."""
+    if looks_binary(data):
+        return hashlib.sha256(data).digest(), False
+    canonical = data.replace(b"\r\n", b"\n").replace(b"\r", b"\n")
+    return hashlib.sha256(canonical).digest(), True
+
+
 def main():
     _utf8_console()
     ap = argparse.ArgumentParser(description=__doc__)
@@ -114,13 +158,17 @@ def main():
                 )
             )
             continue
-        if (
-            hashlib.sha256(local.read_bytes()).digest()
-            != hashlib.sha256(remote).digest()
-        ):
+        local_digest, normalized = content_digest(local.read_bytes())
+        remote_digest, _ = content_digest(remote)
+        if local_digest != remote_digest:
             print(
                 "check_vendored: WARN - {} differs from pinned upstream "
-                "({}/{}) — re-vendor or re-pin.".format(local_rel, base, up_rel)
+                "({}/{}) [{}] — re-vendor or re-pin.".format(
+                    local_rel,
+                    base,
+                    up_rel,
+                    "line endings normalized" if normalized else "binary, exact bytes",
+                )
             )
             drift += 1
 

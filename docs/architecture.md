@@ -559,6 +559,8 @@ Contracts (interfaces): IF-016, IF-036
 |---|---|---|
 | `parse_manifest(text)` | (base, [(local_path, upstream_path), ...]) from the UPSTREAM manifest. |  |
 | `fetch(url, timeout)` | (bytes, None) on success; (None, reason) on any network failure — so the |  |
+| `looks_binary(data)` | Whether `data` should be compared byte-for-byte rather than normalized. |  |
+| `content_digest(data)` | The sha256 of `data` as CONTENT: CRLF and lone CR collapse to LF for text, |  |
 | `main()` |  |  |
 
 ### `scripts/derive_gate`
