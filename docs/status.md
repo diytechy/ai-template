@@ -16,11 +16,16 @@ home elsewhere — don't restate it here:
   [`PROJECT_STATE.html`](../PROJECT_STATE.html).
 - **Spec-of-record + rubric conventions:** [specs/README.md](specs/README.md) ·
   [rubrics/README.md](rubrics/README.md) (dogfooded scaffold boilerplate).
-- **Resuming in a new session:** [handoff-2026-07-28.md](handoff-2026-07-28.md)
+- **Resuming in a new session:** [handoff-2026-07-28b.md](handoff-2026-07-28b.md)
   — **boot from this one.** It sequences the remaining non-deferred work (the two
-  hard rows the 2026-07-28 batch left, the four P0 census extractions, and the
-  rest), and carries the traps that session paid for. Its Tier B row is **closed**
-  — read that section for the account, not as an open task.
+  P0 census extractions still open, the two hard rows, and the harness rows this
+  session filed), and it opens with the correction that matters most: **the
+  18-step `--run-steps` block is NOT the G3 bar** — `--gate` is ignored there, so
+  the `trajectory` step runs without `--strict`. Run
+  `check_trajectory.py --strict` directly (~3 s) before claiming anything done.
+  Its predecessor [handoff-2026-07-28.md](handoff-2026-07-28.md) sequenced the
+  earlier batch; its Tier B row is **closed** and its §1 claim about the bar is
+  corrected in place — read it for the account, not as an open task.
   Its predecessor [handoff-2026-07-27b.md](handoff-2026-07-27b.md) opened with a
   single red — the CI-breaking duplicate census — which is now **cleared**; read
   it for that account, not as an open task.
