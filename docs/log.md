@@ -16643,8 +16643,11 @@ Applied to all four sites the review named. The 28-LF/9-CRLF mixture and the
 67-file restoration are marked HISTORICAL with the independently checkable
 residue named beside them (the committed 164-entry census; the review's own
 proof that no line-ending-only blob change ever landed). The classifier's "four
-passes" claim is simply gone — WI-340's re-triage states its *method* instead of
-its effort, which is the better claim anyway. The 24.3 s smoke figure now
+passes" claim is **superseded, not deleted** — this log is append-only, so the
+2026-07-27 entry stands as the dated record it was, and WI-340's re-triage
+replaces it by stating its *method* rather than its effort. (129-REVIEW-A MAJOR 4
+was right to catch the earlier wording here, which said "gone": the sentence is
+still at `docs/log.md:16354` and always will be.) The 24.3 s smoke figure now
 carries the command that re-derives it plus a reading taken today, which is
 half (1) applied rather than described.
 
@@ -16685,8 +16688,8 @@ that nothing enforces is precisely the enforcement-audit question, asked of the
 code's own dependency. Cell fixed; the missing integrity check is WI-349.
 
 **Dashboard ceiling re-stamped, 1,650,000 -> 1,900,000.** `PROJECT_STATE.html`
-measured 1,655,456 against 1,640,447 at the parent commit: **+15,009 for six new
-WI rows** and three long Deliverables, ~2.5 kB/row — the same per-row cost as
+is **1,658,490** against 1,640,447 at the parent commit: **+18,043 for seven new
+WI rows** (WI-343..WI-349) and three long Deliverables, ~2.6 kB/row — the same per-row cost as
 before, so registry growth rather than a rendering blow-up, which is the
 distinction that sensor exists to make. Worth naming *why* it fired at all: the
 old ceiling left **9,553 bytes** of headroom (0.6%), so it had already stopped
@@ -16719,3 +16722,77 @@ updated by hand, the third was not, and only the generated-artifact freshness
 gate knew). Recorded because the pattern is worth more than the fixes: every one
 was a *consistency* failure between an edit and something that mirrors it, and
 each was caught by a check that already existed.
+
+---
+
+## Session 2026-07-28 (cont.) — 129-REVIEW-A: the round-3 review of the round-3 fixes
+
+An independent OpenAI reviewer (codex/OPENAI-TERRA) reviewed `63fb07e..86d0276`
+and returned **CHANGES-REQUESTED, 5 findings: 1 BLOCKER, 3 MAJOR, 1 MINOR**
+([129-REVIEW-A](reviews/129-REVIEW-A.md)). Every factual claim in it was
+re-verified here before being acted on; **all five hold.** The pattern this
+branch keeps producing held again: nothing was broken code, and three of the
+five were numbers or rationales that passed every test.
+
+**Fixed in this commit:**
+
+- **MAJOR 3 — the audit contradicted its own rule.** WI-340 filed
+  `check_docs.py`'s same-file declared-file loop under the CROSS-script
+  `declared-file` class, whose sanction reads "each script reads its own
+  declaration rather than importing a sibling" — while the same commit argued,
+  repeatedly, that F5 never justifies a same-file copy. Both occurrences are in
+  `check_docs.py`. Split out as `declared-file-local`, disposition **extract
+  WI-347**, whose row now names the module. The corrected split is 152
+  deliberate / 35 extract / 20 debt.
+- **MAJOR 4 — three signed numbers were wrong, in the commit that landed the
+  rule about signed numbers.** The dashboard figures (`1,655,456`, `+15,009`,
+  "six new WI rows") were measured *before* WI-348 and WI-349 were filed later
+  in the same session and never re-taken: the real numbers are **1,658,490**,
+  **+18,043**, and **seven** rows. WI-348's "(4 already do)" was refuted by AST
+  scan — **17 omit `newline`, zero specify it**; the grep behind it had matched
+  `open(..., newline=)`, a different API. And the claim that the "four passes"
+  sentence was *gone* was wrong on its face: this log is append-only, so it is
+  **superseded, not deleted**, and still stands at `docs/log.md:16354`. The
+  lesson is sharper than the fixes: **measure after the last edit, not during** —
+  a number taken mid-session is destroyed by the rest of the session exactly as
+  a number taken pre-fix is destroyed by the fix.
+- **MINOR 5** — trailing blank line at EOF in `docs/dupes-allow`.
+
+**Filed, not fixed, because both are real design work:**
+
+- **WI-350 (BLOCKER 1)** — the anti-catch-all guard was **driven and bypassed**.
+  The reviewer rebuilt all 64 same-file blocks into two arbitrary 32-entry
+  classes plus one synthetic open WI whose Title merely listed the basenames,
+  and all six checks passed. The majority rule falls to an even split; the
+  ownership rule falls to keyword stuffing. The honest reading: the property
+  wanted — "a rationale a reader can check against the block" — may not be fully
+  mechanizable, in which case the residue belongs in the enforcement audit as a
+  Reviewer-tier rule rather than in a guard that advertises a property it does
+  not hold.
+- **WI-351 (MAJOR 2)** — `ex-draft` misses a mature spine reopened by flipping
+  an **existing** child to Draft: excluding the Draft LLR also removes the
+  structural evidence that its SR is decomposed, so a Verified SR reads
+  undecomposed (`computed=G0 ex-draft=G1`, no window). Confirmed on the shipped
+  code. **But the correction the review proposes was measured too, and it fires
+  the other way**: keeping the Draft child's structural role while dropping its
+  maturity gives an early Planned-SR spine `ex-draft=G2` against `computed=G0`,
+  i.e. a window — the exact nag 127-REVIEW-A MAJOR 5 ruled out. Filed with both
+  measurements so the next session starts from the trade-off rather than
+  rediscovering it. This branch has now shipped two corrections that were wrong
+  in the opposite direction; a third would be a pattern, not an accident.
+
+**On the two suite counts.** The reviewer's own full run reported
+`1630 passed, 6 skipped`; the run signed in the previous entry reported
+`1629 passed, 7 skipped`. Both are real, and they are not in conflict — the
+collected total is 1,636 either way, so exactly one test moved between *skipped*
+and *passed* between the two runs. That is the environment-dependent skip WI-326
+is about (tests that skip when no POSIX shell is on PATH). Recorded rather than
+reconciled: neither number is corrected, because both were observed — and this
+commit's own gate run then landed on `1630 passed, 6 skipped`, the reviewer's
+figure, which is the confirmation. A count that moves between runs on one
+machine is a *sensor reading*, not a constant, and WI-326 is the row that says
+so.
+
+**Bar for this remediation.** Smoke **470 passed / 24.6 s**;
+`check.py --gate G3 --jobs 0` **RESULT: PASS**, all 19 steps, full stage
+**1630 passed, 6 skipped** (20:09).

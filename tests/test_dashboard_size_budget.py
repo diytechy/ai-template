@@ -33,14 +33,20 @@ DASHBOARD = REPO_ROOT / "PROJECT_STATE.html"
 # rows, every one of which renders a node. Registry GROWTH, not a rendering
 # blow-up — the per-row cost is unchanged, and the check that would catch a real
 # blow-up is this one staying tight against the new row count.
-# 1,650,000 -> 1,900,000, WI-340/342 (2026-07-28). Measured 1,655,456 against
-# 1,640,447 at the parent commit: +15,009 for SIX new WI rows and three long
-# Deliverables, ~2.5 kB/row, which is the SAME per-row cost as before — registry
-# growth, not a rendering blow-up. Note what the old number really was: 1,650,000
+# 1,650,000 -> 1,900,000, WI-340/342 (2026-07-28). 1,658,490 against 1,640,447
+# at the parent commit: +18,043 for SEVEN new WI rows (WI-343..WI-349) and three
+# long Deliverables, ~2.6 kB/row, which is the SAME per-row cost as before —
+# registry growth, not a rendering blow-up. (129-REVIEW-A MAJOR 4 refuted the
+# first figures stamped here: they were measured before two more rows were filed
+# in the same session, so they were stale by +3,034 bytes and one WI. Measure
+# AFTER the last edit, not during.) Note what the old number really was: 1,650,000
 # left 9,553 bytes of headroom (0.6%), so it had stopped being the "generous
 # ceiling" this file documents and had become an exact freeze that bites on the
 # next four rows — the same defect as the smoke ratchet stamped at current+1
 # (WI-336). 1,900,000 restores ~15%, matching the 14-21% the earlier stamps kept.
+# Size at the commit that carries this stamp: 1,666,554 (129-REVIEW-A's remediation
+# added WI-350/WI-351). Both figures are point measurements labelled by commit,
+# per the signed-measurement rule — the ceiling is what is normative here.
 MAX_BYTES = 1_900_000
 
 

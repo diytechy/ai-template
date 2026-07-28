@@ -141,7 +141,7 @@
 #
 #   cli                   77   (37%)   deliberate
 #   spine-loader          20   (10%)   deliberate
-#   declared-file         12    (6%)   deliberate
+#   declared-file         11    (5%)   deliberate
 #   markdown-table        11    (5%)   deliberate
 #   graph-layout          11    (5%)   debt WI-280
 #   git-wrapper            9    (4%)   deliberate
@@ -168,13 +168,14 @@
 #   source-walk            1            extract WI-347
 #   subprocess-capture     1            extract WI-346
 #   brief-row-render       1            extract WI-347
+#   declared-file-local    1            extract WI-347
 #   graph-walk             1            deliberate
 #   skills-materialize     1            deliberate
 #
-# By disposition: deliberate 153, extract 34 (WI-343..WI-347), debt 20 (WI-280).
+# By disposition: deliberate 152, extract 35 (WI-343..WI-347), debt 20 (WI-280).
 # By path relation (metadata only): 143 cross-module, 64 same-file. The two cuts
-# do NOT coincide — 7 same-file blocks are deliberate, 3 join cross-module
-# classes of the same idiom, and 34 of the 54 remaining are ordinary extraction
+# do NOT coincide — 7 same-file blocks are deliberate, 2 join cross-module
+# classes of the same idiom, and 35 of the 55 remaining are ordinary extraction
 # work no decomposition programme has to precede.
 #
 # The two facts worth carrying: cross-module duplication here is dominated by
@@ -359,12 +360,13 @@ a55d35181e85  project-trajectory/scripts/gen_okf.py == project-trajectory/script
 d2ff16e89265  project-trajectory/scripts/plan_artifacts.py == project-trajectory/scripts/plan_coverage.py
 451248328e57  project-trajectory/scripts/plan_artifacts.py == project-trajectory/scripts/plan_coverage.py
 
-# --- declared-file (12 blocks) -----------------------------------
+# --- declared-file (11 blocks) -----------------------------------
 # disposition: deliberate
 # declared-file readers (policy files, stack.ini, coverage.json). F5: each
-# script reads its own declaration rather than importing a sibling.
-# (WI-340) plus one SAME-FILE block of the same idiom, regrouped here:
-# check_docs reads two different declared files with the same skip-comments loop.
+# script reads its own declaration rather than importing a sibling. Every entry
+# here is CROSS-script, which is the only thing that reason buys (129-REVIEW-A
+# MAJOR 3: WI-340 briefly filed check_docs's same-file pair here, where the F5
+# rationale does not reach it — it is its own class below).
 3864c24be1f4  project-trajectory/scripts/bootstrap.py == project-trajectory/scripts/gen_skills_index.py
 1726b03a8cdf  project-trajectory/scripts/bootstrap.py == project-trajectory/scripts/check_doc_refs.py
 c6270a4626d4  project-trajectory/scripts/bootstrap.py == project-trajectory/scripts/check_trajectory.py
@@ -376,6 +378,14 @@ eff0eac572a0  project-trajectory/scripts/check_privacy.py == project-trajectory/
 c16d14a4efc4  project-trajectory/scripts/check_privacy.py == project-trajectory/scripts/check_trajectory.py
 75b2bcbfcc04  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/gen_trajectory.py
 8e99e263cf71  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/gen_trajectory.py
+
+# --- declared-file-local (1 block)  ------------------------------
+# disposition: extract WI-347
+# check_docs.py reads two DIFFERENT declared files with the same
+# read/strip/skip-comment loop — one collecting every non-comment line, one
+# taking the last. Both are in check_docs.py, so the cross-script F5 reason does
+# not apply (129-REVIEW-A MAJOR 3, correcting WI-340): inside one file the loop
+# is just a helper waiting to be named.
 70e7e2e30301  project-trajectory/scripts/check_docs.py == project-trajectory/scripts/check_docs.py
 
 # --- git-wrapper (9 blocks) --------------------------------------
@@ -592,4 +602,3 @@ e5d5ce58f56b  project-trajectory/scripts/gen_trajectory.py == project-trajectory
 # the `for k, v in row['full'].items()` bullet renderer, in the no-baseline
 # arm and the added-row arm of the same re-attestation brief writer.
 0940f41e16b9  project-trajectory/scripts/trace.py == project-trajectory/scripts/trace.py
-
