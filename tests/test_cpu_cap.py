@@ -183,10 +183,15 @@ def test_this_live_process_runs_under_the_hard_cap_it_asked_for():
     # The claim is "this process runs under a hard cap at the configured rate",
     # NOT "this process is in that specific job" — there are two legitimate ways
     # to be capped and an assertion on only one of them fails a working run:
-    #   shared  — assigned to the named job (the normal case; workers inherit it)
+    #   shared  — assigned to the named job (this run's own tree; workers inherit)
     #   private — a different process tree already owned the named job, so the
     #             conftest fell back to a private job with the same rate
-    # Checking both is what makes this test true rather than merely strict.
+    # This is an OR over those two, deliberately: it asserts the RATE, and is
+    # silent about which job supplies it. Which branch you land in — and the fact
+    # that the second one is NOT a shared ceiling — is pinned separately, by
+    # test_a_second_independent_run_gets_its_own_ceiling. Read that one before
+    # believing anything here about concurrency (127-REVIEW-A MAJOR 2: the
+    # comment here used to say "checking both", which reads as "asserts both").
     me = k32.GetCurrentProcess()
     named = k32.OpenJobObjectW(JOB_OBJECT_QUERY, False, root_conftest.JOB_NAME)
     inside = wintypes.BOOL()
@@ -214,3 +219,96 @@ def test_this_live_process_runs_under_the_hard_cap_it_asked_for():
         info.ControlFlags
     )
     assert info.CpuRate == root_conftest._requested_cap() * 100, info.CpuRate
+
+
+# --- What the named job does and does NOT buy (127-REVIEW-A BLOCKER 1/MAJOR 2) -
+# The conftest used to promise that "every pytest process — other runs, other
+# worktrees — joins the SAME job and shares ONE ceiling". Nothing tested it, and
+# it is false: Windows only permits assignment when the target job is EMPTY or in
+# the process's own parent job chain, so the SECOND concurrent run cannot join a
+# job another tree has already populated. This guard measures both halves of the
+# real behaviour so the documentation can be checked against something.
+
+_PROBE = """
+import ctypes, importlib.util, os, sys, time
+from ctypes import wintypes
+spec = importlib.util.spec_from_file_location("_rc", sys.argv[1] + "/conftest.py")
+rc = importlib.util.module_from_spec(spec); spec.loader.exec_module(rc)
+rc.JOB_NAME = sys.argv[2]          # a name unique to this test, so the probe is
+warned = []                        # independent of the live pytest run's job
+rc._warn = lambda m: warned.append(m)
+rc._bound_windows(50)
+k32 = ctypes.WinDLL("kernel32", use_last_error=True)
+k32.GetCurrentProcess.restype = wintypes.HANDLE
+k32.OpenJobObjectW.restype = wintypes.HANDLE
+k32.OpenJobObjectW.argtypes = [wintypes.DWORD, wintypes.BOOL, wintypes.LPCWSTR]
+k32.IsProcessInJob.argtypes = [wintypes.HANDLE, wintypes.HANDLE,
+                               ctypes.POINTER(wintypes.BOOL)]
+named = k32.OpenJobObjectW(0x0004, False, rc.JOB_NAME)
+inside = wintypes.BOOL()
+shared = bool(named and k32.IsProcessInJob(k32.GetCurrentProcess(), named,
+                                           ctypes.byref(inside)) and inside.value)
+print(("SHARED" if shared else "PRIVATE") + " warned=" + str(len(warned)), flush=True)
+if len(sys.argv) > 3 and sys.argv[3] == "hold":
+    if len(sys.argv) > 4 and sys.argv[4] == "spawn-child":
+        # A CHILD inherits job membership, which is the property that IS real.
+        import subprocess
+        child = subprocess.run([sys.executable, __file__, sys.argv[1], sys.argv[2]],
+                               capture_output=True, text=True)
+        print("CHILD " + child.stdout.strip(), flush=True)
+    time.sleep(30)
+"""
+
+
+@pytest.mark.skipif(sys.platform != "win32", reason="job objects are Windows-only")
+def test_a_second_independent_run_gets_its_own_ceiling(tmp_path):
+    """Two concurrent runs do NOT total the cap — they total twice it.
+
+    This is the corrected claim, and it is pinned in both directions so neither
+    half can rot into a tautology:
+
+      * the FIRST tree reports `SHARED` — proving the named job is real and the
+        probe can observe membership. Without this half, a bug that made every
+        process fall back would satisfy the assertion below vacuously.
+      * a SECOND, INDEPENDENT tree, started while the first still holds the job,
+        reports `PRIVATE` and emits the shortfall warning.
+      * a CHILD of the first tree reports `SHARED` — the tree-wide ceiling that
+        the mechanism genuinely delivers, and the only sharing it delivers.
+
+    Uses a job name unique to this test: the live pytest run already owns
+    `JOB_NAME`, so probes reusing it would inherit membership from their parent
+    and report `SHARED` no matter what the code did.
+    """
+    probe = tmp_path / "probe.py"
+    probe.write_text(_PROBE, encoding="utf-8")
+    job_name = "ai-template-pytest-test-{}".format(os.getpid())
+    args = [sys.executable, str(probe), str(ROOT), job_name]
+
+    holder = subprocess.Popen(
+        args + ["hold", "spawn-child"], stdout=subprocess.PIPE, text=True
+    )
+    try:
+        first = holder.stdout.readline().strip()
+        assert first.startswith("SHARED"), (
+            "the first tree did not create/join the named job, so the rest of "
+            "this test proves nothing: {!r}".format(first)
+        )
+        child = holder.stdout.readline().strip()
+        assert child.startswith("CHILD SHARED"), (
+            "a child did not inherit the job — the tree-wide ceiling, which is "
+            "the one property actually promised: {!r}".format(child)
+        )
+
+        second = subprocess.run(args, capture_output=True, text=True, timeout=60)
+        assert second.stdout.strip().startswith("PRIVATE"), (
+            "a second independent tree unexpectedly SHARED the ceiling. If "
+            "Windows has started allowing this, the conftest docstring and "
+            "docs/status.md must be widened back — do not just relax this "
+            "assertion: {!r}".format(second.stdout)
+        )
+        # It must also SAY so: a silent downgrade of a resource guarantee is how
+        # the false claim survived a live run in the first place.
+        assert second.stdout.strip().endswith("warned=1"), second.stdout
+    finally:
+        holder.kill()
+        holder.wait()

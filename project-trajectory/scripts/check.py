@@ -724,6 +724,12 @@ GATE_FILE = Path("docs/gate")
 # The two counts below say whether the gate is SUPPRESSED by an open ratification
 # window rather than reflecting the project's real maturity.
 _BASIS_RE = re.compile(r"#\s*basis:.*\bdrafts=(\d+)\b.*\bmodified=(\d+)\b")
+# The other two fields the window test needs: the raw computed level (may be G0,
+# unlike the runnable value on the line below it) and the per-phase breakdown,
+# which is what distinguishes "drafts are holding a MATURE spine down" from
+# "this project is simply early".
+_COMPUTED_RE = re.compile(r"\bcomputed=(G\d)\b")
+_PER_PHASE_RE = re.compile(r"\bper-phase=(\S+)")
 
 # Steps kept OUT of the advisory pass, by name and with the reason — an
 # unexplained exclusion list is how a warn tier quietly stops covering things.
@@ -736,7 +742,16 @@ _BASIS_RE = re.compile(r"#\s*basis:.*\bdrafts=(\d+)\b.*\bmodified=(\d+)\b")
 # 24-thread box — which buys no signal and would train people to skip the gate.
 # The steps that ARE included (lint, dupes, the freshness gates, the G3
 # traceability criterion) are cheap, read-only, and genuinely stop running.
-ADVISORY_EXCLUDE = {"tests+coverage"}
+#
+# `module-coverage` follows its PRODUCER out (127-REVIEW-A MAJOR 6). It grades
+# `coverage.json`, which only `tests+coverage` writes — and `_clear_stale_coverage_report`
+# only deletes a stale report when the GATING plan contains that producer. Left
+# in, the advisory pass would either grade a coverage report from some earlier,
+# unrelated run as if it were this run's evidence, or report a missing-data
+# failure every time. Stale evidence reported as current is worse than no
+# evidence: it is the failure mode this whole ruling exists to prevent. If the
+# producer is ever cheap enough to include, this exclusion should go with it.
+ADVISORY_EXCLUDE = {"tests+coverage", "module-coverage"}
 
 
 def window_open(gate_file=None):
@@ -752,15 +767,46 @@ def window_open(gate_file=None):
 
     Deliberately NOT "any gate below G3": a project genuinely at G1 has not
     earned those steps and should not be told about them on every run. The
-    signal is specifically that the gate was *suppressed*, which is exactly what
-    these two counts record."""
+    signal is specifically that the gate was *suppressed*.
+
+    The two counts are not equally good evidence of that, which the first cut
+    got wrong (127-REVIEW-A MAJOR 5 — it fired on `drafts>0`, ordinary G0/G1
+    state, contradicting the very claim above):
+
+      * `modified>0` IS conclusive on its own. `Modified` is *defined* as a
+        post-attestation amendment (derive_gate's model, WI-316), so the row can
+        only exist in a spine that has already been ratified. Something that was
+        Verified is pending again — that is a window by construction.
+      * `drafts>0` is ambiguous. A Draft reads G0, so drafts drop the gate in a
+        mature repo starting a new phase AND in a project that has never
+        ratified anything. The counts cannot tell those apart, but the
+        `per-phase` breakdown can: in the mature repo the OTHER phases still
+        read G2/G3, while in the early project nothing has climbed yet. So a
+        draft window requires some phase to sit ABOVE the computed level.
+
+    When the basis carries no per-phase breakdown (an unphased repo), drafts
+    alone are treated as ordinary. That is the conservative direction on
+    purpose: the cost of a false positive is a warn tier people learn to ignore,
+    and the case that motivated the ruling — the 2026-07-26/27 re-attestation —
+    is a `modified` window, caught unconditionally."""
     path = Path(gate_file) if gate_file else GATE_FILE
     if not path.exists():
         return False
-    m = _BASIS_RE.search(path.read_text(encoding="utf-8", errors="replace"))
+    text = path.read_text(encoding="utf-8", errors="replace")
+    m = _BASIS_RE.search(text)
     if not m:
         return False  # a hand-written or pre-derived gate file: no opinion
-    return int(m.group(1)) > 0 or int(m.group(2)) > 0
+    drafts, modified = int(m.group(1)), int(m.group(2))
+    if modified > 0:
+        return True
+    if drafts == 0:
+        return False
+    computed = _COMPUTED_RE.search(text)
+    per_phase = _PER_PHASE_RE.search(text)
+    if not computed or not per_phase or per_phase.group(1) == "(none)":
+        return False
+    levels = re.findall(r"=(G\d)", per_phase.group(1))
+    return bool(levels) and max(levels) > computed.group(1)
 
 
 def run_advisory(advisory, jobs, lane_map):
@@ -780,7 +826,7 @@ def run_advisory(advisory, jobs, lane_map):
     return run_plan(advisory, True, jobs or len(advisory), lane_map)
 
 
-def advisory_plan(all_for_gate, gate):
+def advisory_plan(gate, plan, steps_at):
     """Steps a HIGHER gate requires, while an open ratification window holds this
     gate down. They run advisory: reported, never gating (owner ruling
     2026-07-27).
@@ -788,6 +834,21 @@ def advisory_plan(all_for_gate, gate):
     Without this a window is a blind spot rather than a lower bar — the step
     stops running, so the commit that breaks it says nothing and the debt lands
     in one lump whenever the window closes.
+
+    Built by ASKING `steps()` for each higher gate's own plan (`steps_at`), not
+    by filtering this gate's. That distinction is the whole of 127-REVIEW-A
+    BLOCKER 4: the step table is *specialized to the gate it was built for*, so
+    `traceability` built at G2 carries no `--require-verified`, and no filter
+    over it could ever produce the stronger variant — which the owner explicitly
+    ruled IN ("a `Planned` row also fails it, and that is real signal"). The
+    first cut filtered, so it silently ran neither the G3 command nor anything
+    in its place, while a test asserted traceability was *not* advisory and
+    entrenched it.
+
+    A step already in the gating plan is skipped only when its command is
+    IDENTICAL. When the higher gate's form differs, that stronger form runs
+    advisory alongside the weaker gating one — the same step name legitimately
+    appears in both tiers, which is why the summary marks the advisory rows.
 
     A named function rather than an inline comprehension for two reasons: it kept
     `main()` under the complexity ratchet, and it gives the guards something to
@@ -797,14 +858,25 @@ def advisory_plan(all_for_gate, gate):
     """
     if gate == "all" or not window_open():
         return []
-    higher = [g for g in GATES if g != "all" and g > gate]
-    return [
-        s
-        for s in all_for_gate
-        if gate not in s[3]
-        and any(g in s[3] for g in higher)
-        and s[0] not in ADVISORY_EXCLUDE
-    ]
+    gating = {}
+    for name, _requires, cmd, _gates, _layer in plan:
+        gating.setdefault(name, []).append(list(cmd))
+    out, seen = [], set()
+    # HIGHEST gate first, and one entry per step name: a step required at both
+    # G2 and G3 gets its G3 form, which is the stronger one. Ascending order ran
+    # `traceability` twice at G1 — once without `--require-verified` and once
+    # with — which is pure duplication, since the stronger form subsumes it.
+    for higher in sorted((g for g in GATES if g != "all" and g > gate), reverse=True):
+        for step in steps_at(higher):
+            name, _requires, cmd, gates, _layer = step
+            if higher not in gates or name in ADVISORY_EXCLUDE or name in seen:
+                continue
+            if list(cmd) in gating.get(name, []):
+                seen.add(name)  # already running in exactly this form
+                continue
+            seen.add(name)
+            out.append(step)
+    return out
 
 
 def resolve_gate(explicit):
@@ -1159,7 +1231,10 @@ def main():
 
     all_for_gate = steps(coverage, args.tier, gate, args.phase, profile)
     plan = [s for s in all_for_gate if gate == "all" or gate in s[3]]
-    advisory = advisory_plan(all_for_gate, gate)
+    # The higher gate's OWN table, not a filter of this one — see advisory_plan.
+    advisory = advisory_plan(
+        gate, plan, lambda g: steps(coverage, args.tier, g, args.phase, profile)
+    )
 
     if args.list:
         print("Plan for gate {} (tier {}):".format(gate, args.tier))

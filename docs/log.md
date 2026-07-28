@@ -15988,6 +15988,25 @@ however many processes that turns out to be. Because the job is **named**, every
 pytest process joins the *same* one and they share **one** ceiling: N concurrent
 runs total the cap instead of multiplying it.
 
+> **THE SENTENCE ABOVE IS FALSE AND WAS CORRECTED 2026-07-27 (WI-338;
+> [127-REVIEW-A](reviews/127-REVIEW-A.md) BLOCKER 1).** N concurrent runs
+> **multiply** the cap; they do not total it. Windows permits assignment only
+> into a job that is **empty or already in the process's own parent job chain**,
+> so a second run from a different process tree cannot join a job the first has
+> populated — it falls back to a private job at the same percent and warns on
+> stderr. Measured directly: with a first tree holding the named job, two
+> independent probes both reported `PRIVATE`, while a **child** of the first
+> reported `SHARED`. What the mechanism really delivers is a **tree-wide**
+> ceiling for one run, which is still the property that answers the original
+> problem (a worker count does not bound processes) — but "parallel train
+> worktrees share one ceiling", the case it was written for, is exactly the case
+> it does not cover. The reviewer's own run hit the fallback path. Two further
+> narrowings: an API failure leaves the run **uncapped**, and POSIX's
+> `os.nice(5)` is a **priority bump, not a cap at all**. All of it is now pinned
+> by `tests/test_cpu_cap.py::test_a_second_independent_run_gets_its_own_ceiling`,
+> which asserts the first tree SHARES, a child SHARES, and an independent second
+> tree is PRIVATE **and says so** — mutation-proven in both directions.
+
 The two levers answer different questions and both are wanted: the ceiling says
 how much the tests may take, the priority says they yield it the instant
 something in the foreground asks. The second is what a person actually
@@ -16287,3 +16306,149 @@ WI. The first gate run also caught `doc-refs` and `arch-map`, both fixed above
 and re-run green; the 17 non-test steps were then re-run individually after the
 fix. Byte-budget files untouched (`PROCESS.md`, `PROCESS_OPTIONS.md`,
 `AGENTS.template.md` all identical to HEAD).
+
+### 2026-07-27 — WI-338: correcting two claims that were signed and wrong
+
+Both halves of [127-REVIEW-A](reviews/127-REVIEW-A.md)'s BLOCKER 1 and BLOCKER 3.
+Neither was a code defect; both were **claims the code did not support**, which
+is the harder kind to notice because everything passes.
+
+**The CPU cap does not deliver one shared ceiling — measured, not argued.** With
+a first process tree holding the named job, two independent probes both landed
+in a **PRIVATE** job, while a **child** of the first landed in the **SHARED**
+one. Windows permits assignment only into a job that is *empty or already in the
+process's own parent job chain*, so the second concurrent run cannot join a job
+the first has populated. Concurrent runs therefore **multiply** the cap. The
+sting is that the promise was written for parallel train worktrees — the exact
+case it does not cover. What the mechanism *does* deliver is a **tree-wide**
+ceiling for one run, which still answers the original problem, since a worker
+count bounds workers and not the slow tier's subprocess-per-test fan-out.
+
+Narrowed everywhere it was signed: `conftest.py`'s docstring now opens with an
+explicit what-this-guarantees block naming all four outcomes (tree-wide cap,
+private fallback, uncapped on API failure, and POSIX's `os.nice(5)` being a
+priority bump rather than a cap), plus `docs/status.md`, this log's WI-335
+entry, the archived WI-335 spec, and the WI-335 `Deliverable`.
+
+**MAJOR 2, the missing guard, now exists.** The live-process test's OR over
+shared/private is *kept* — it asserts the RATE, which is the right claim — but
+its comment no longer reads as "asserts both". The new
+`test_a_second_independent_run_gets_its_own_ceiling` asserts the first tree is
+SHARED, a child is SHARED, and an independent second tree is PRIVATE **and says
+so on stderr**. The first assertion is there deliberately: without it, a bug
+that made *everything* fall back would satisfy the rest vacuously — the exact
+shape of the six vacuous guards this branch has already paid for. Mutation-proven
+twice, each on the assertion it should hit: forcing a private job reds the SHARED
+pair, silencing the fallback warning reds only the `warned=1` line.
+
+**The census classification — the half WI-337 unblocked.** All **208** blocks
+classified by reading them; the classifier **refuses to finish** while any block
+is `UNCLASSIFIED`, and it took four passes to get there (the leftovers were real
+families my first regexes simply did not name, not noise). The true
+distribution:
+
+| class | blocks | | class | blocks |
+|---|---|---|---|---|
+| cli preamble | **77 (37%)** | | git-wrapper | 9 |
+| intra-module | **64 (31%)** | | wi-registry | 5 |
+| spine-loader | 21 | | module-path | 4 |
+| markdown-table | 11 | | okf-row · import-fallback | 2 · 2 |
+| declared-file | 11 | | graph-walk · skills-materialize | 1 · 1 |
+
+So the CLI preamble **is** the largest single class — and it is **37%, not
+"most"**. The finding the false claim hid is the second row: **nearly a third of
+the census is not F5 duplication at all**, it is intra-module debt that
+`WI-280` owns. Those are the entries that should *shrink*; the cross-module
+groups are ones that deliberately should not.
+
+The audit lives **in `docs/dupes-allow`**, grouped — one section per class with
+its count and the reason that duplication is accepted — because that is where
+the next reader of a sanction actually looks, and an audit filed anywhere else
+is one nobody re-derives. The header says plainly that `--emit-census` prints
+**ungrouped** lines, so a future re-stamp must re-derive the grouping or admit it
+did not; a census whose classification has rotted is how the false claim
+survived in the first place.
+
+**A note on method.** My own classifier died on `UnicodeEncodeError` printing a
+BOM to a cp1252 console — defeated by exactly the hazard `_utf8_console()`
+exists to prevent, which is one of the duplicated helpers it was auditing.
+
+Bar: `tests/test_cpu_cap.py` 6 passed (1 new, 2 mutations); census green. Full
+suite **1609 passed, 7 skipped**; `check.py --gate G3 --jobs 0` **RESULT: PASS**,
+all 19 steps (shared with WI-336, landed together).
+
+### 2026-07-27 — WI-336, second attempt: the three things the first one got wrong
+
+The code landed a day ago; the **row** did not, because
+[127-REVIEW-A](reviews/127-REVIEW-A.md) refuted three of its claims. Shipping the
+code while withholding the claim was the right call — all three were real.
+
+**BLOCKER 4 — the promised stronger check ran nowhere.** The advisory list was
+built by *filtering the current gate's step table*, and that table is
+**specialized to the gate it was built for**: `traceability` built at G2 carries
+no `--require-verified`, so no filter over it could ever produce the G3 variant
+the owner explicitly ruled in (*"a `Planned` row also fails it, and that is real
+signal"*). Worse, the step is required at G2 too, so the filter dropped it
+outright — and the test asserted that absence, turning the defect into a fixture.
+
+`advisory_plan(gate, plan, steps_at)` now **asks `steps()` for each higher
+gate's own plan**. A step already gating is skipped only when its command is
+**identical**, so the G3 form runs advisory beside the G2 gating one — the same
+name legitimately appears in both tiers, which is what the summary's marker is
+for. Higher gates are walked **highest-first, one entry per name**, which also
+caught a bug the review did not: at G1 the ascending version queued
+`traceability` **twice**, once with `--require-verified` and once without.
+
+**MAJOR 5 — ordinary drafting was being called a window.** `window_open()` fired
+on any `drafts>0`, which is *normal* G0/G1 state, contradicting the docstring
+directly above it. The counts are not equally good evidence and the fix says so:
+
+- `modified>0` is conclusive **alone** — `Modified` is *defined* as a
+  post-attestation amendment, so the row cannot exist in a spine that was never
+  ratified.
+- `drafts>0` is ambiguous, because a Draft reads G0 whether it is a mature repo
+  opening a new phase or a project that has never ratified anything. The
+  `per-phase` breakdown separates them: in the mature repo the other phases
+  still read G2/G3. So a draft window now requires some phase to sit **above**
+  the computed level.
+
+An unphased repo with drafts is treated as ordinary. That is the conservative
+direction deliberately: a warn tier nobody wants is one everybody learns to
+ignore, and the case that motivated the ruling is a `modified` window, caught
+unconditionally.
+
+**MAJOR 6 — advisory coverage could grade a stale report.** `module-coverage`
+reads `coverage.json`, which only the *excluded* `tests+coverage` writes, and
+`_clear_stale_coverage_report` only clears a stale report when the **gating**
+plan contains the producer. So the advisory pass could present some earlier,
+unrelated run's coverage as this run's evidence. The consumer now follows its
+producer out of the pass, with the reason beside the exclusion. **Stale evidence
+reported as current is worse than no evidence** — it is the exact failure this
+ruling exists to prevent.
+
+**Guards, each mutation-proven, each reddening only the test that names it:**
+restoring the skip-if-the-name-is-gating filter reds the traceability-variant
+guard; firing on any draft reds the early-drafting guard; dropping
+`module-coverage` from `ADVISORY_EXCLUDE` reds the selection guard. The
+early-drafting guard asserts the mature-repo case in the *same* test, so the fix
+could not have been "just return False for drafts" and looked correct.
+
+The owner ruling behind this WI stands and was right the first time; only my
+implementation of it was wrong.
+
+**One budget re-stamped, deliberately.** The seven guards these three WIs added
+took the smoke tier from 449 to 453 tests, past its `max-tests = 450`. The
+wall-clock half of the budget is untouched — **24.3 s against 60 s**, ~2.5x
+headroom — so this is the membership ratchet alone, and the growth is exactly
+the cheap in-process kind `WI-122`'s opt-out intends to accrue. Re-stamped to
+**480**. Worth naming *why* it bit at all: 450 sat **one** test above the
+then-current 449, which made it an exact freeze rather than the growth sensor it
+is documented to be, so it fires on the first legitimate addition instead of on
+a heavy module slipping back into the bar. 480 restores ~6% headroom and is
+still far below the ~1280 that "accreting back toward the full suite" looks like.
+
+Bar: `tests/test_advisory_during_window.py` 8 passed (3 new/rewritten),
+`tests/test_cpu_cap.py` 6 passed, smoke 453 passed, ruff clean, complexity +
+module-size ratchets green. Full suite **1609 passed, 7 skipped** (10:22);
+`check.py --gate G3 --jobs 0` **RESULT: PASS**, all 19 steps — `tests+coverage`
+1138.5 s, module floors held.

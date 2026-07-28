@@ -1,11 +1,34 @@
 """Root conftest: bound what a test run costs THIS MACHINE.
 
+WHAT THIS DOES AND DOES NOT GUARANTEE — read this before quoting it (corrected
+2026-07-27 after 127-REVIEW-A refuted the original claim, which was that every
+concurrent run shares ONE ceiling; it does not, and nothing tested it):
+
+  * ON WINDOWS, ONE RUN AND EVERY PROCESS IT SPAWNS — controller, xdist workers,
+    and the subprocesses the slow tier launches per test — is held under a
+    single hard CPU-rate cap. This is the real guarantee, and it is the one that
+    matters, because the problem being solved is that a worker count does not
+    bound processes.
+  * A SECOND, CONCURRENT RUN FROM A DIFFERENT PROCESS TREE GETS ITS OWN CEILING
+    AT THE SAME PERCENT. Two such runs can therefore total 2x the cap, three 3x.
+    Windows only permits assignment into a job that is empty or already in the
+    process's own parent job chain, so the second tree cannot join a job the
+    first has populated. It falls back to a private job and SAYS so on stderr.
+    Pinned by `tests/test_cpu_cap.py::test_a_second_independent_run_gets_its_own_ceiling`,
+    which measures both branches.
+  * IF THE OS REFUSES ALTOGETHER the run is UNCAPPED, with a warning.
+  * ON POSIX there is no cap at all — `os.nice(5)` is a priority bump, which
+    changes who wins a contended CPU, not how much of the machine is used.
+
+So the honest one-liner is "a test run does not run away with the machine", not
+"N concurrent suites total 50%".
+
 Two levers, because they answer two different questions, and the first one alone
 does not keep a desktop usable:
 
   1. `pytest_xdist_auto_num_workers` — how many xdist workers ONE run asks for.
-  2. `pytest_configure` — a hard ceiling on what the whole process TREE may
-     consume, shared across every concurrent run.
+  2. `pytest_configure` — a hard ceiling on what one run's whole process TREE
+     may consume.
 
 Why (1) is not enough, measured 2026-07-27 on this 24-thread box:
 
@@ -14,27 +37,25 @@ Why (1) is not enough, measured 2026-07-27 on this 24-thread box:
     ~70 subprocess sites), so a 12-worker run measured **42 python + 4 git
     processes live at mean 59% / max 74% CPU**. Half the workers is not half the
     machine.
-  * It is per-process. Two concurrent runs are back to 24 workers — the exact
-    scenario that motivated the cap. Parallel WI dispatch makes that normal, not
-    exceptional: each train worktree runs its own suite.
+  * It is per-process, so it does nothing about concurrency — and neither, it
+    turns out, does (2). Parallel WI dispatch makes concurrent suites normal:
+    each train worktree runs its own. What (2) delivers there is that each run
+    is individually bounded and each one that could not share says so, which is
+    weaker than the original claim and is why the claim was corrected rather
+    than the code declared finished.
 
 So (2) applies a **named Windows job object with a hard CPU rate cap**. The job
-bounds the tree regardless of how many processes it spawns, and because the job
-is NAMED, every pytest process — controller, xdist workers, other runs, other
-worktrees — joins the SAME job and shares ONE ceiling. N concurrent suites total
-the cap instead of multiplying it. Proven with a deterministic burner: 24
+bounds the tree regardless of how many processes it spawns; the NAME is what
+lets a run's own descendants land in it. Proven with a deterministic burner: 24
 spinners measured 100% CPU uncapped and 37.5% mean / 47% max under a 25% cap.
 
 Plus a priority drop, which is what actually keeps the UI smooth: the ceiling
 says how much the tests may take, `BelowNormal` says they yield it the moment
-anything in the foreground wants it.
+anything in the foreground wants it. On POSIX the priority drop is the whole of
+it.
 
 Dial: `PYTEST_CPU_CAP` — a percent, or `off`/`0`/`100` to disable. CI sets it
 off (ephemeral runners, nobody's desktop, and a wall-clock smoke-budget job).
-
-POSIX degrades honestly to a `nice` bump: there is no job-object equivalent
-without cgroup privileges, and this file must not pretend to a guarantee it
-cannot make there.
 
 Never fatal. A machine that refuses any of this gets a warning and a normal test
 run — a resource nicety must not be able to red a suite.
@@ -151,8 +172,10 @@ def _bound_windows(percent):
             return True  # an xdist worker that inherited it; nothing to do
         return bool(k32.AssignProcessToJobObject(job, me))
 
-    # Prefer the SHARED job: same name -> same job, so concurrent runs and other
-    # worktrees land under ONE ceiling instead of one each.
+    # Prefer the NAMED job so this run's own descendants (xdist workers, the
+    # slow tier's per-test subprocesses) land in it. A concurrent run from
+    # another tree will NOT join it — see the module docstring; that limit is
+    # Windows', not a bug here, and the fallback below is what it costs.
     shared = k32.CreateJobObjectW(None, JOB_NAME)
     if not shared:
         raise ctypes.WinError(ctypes.get_last_error())
