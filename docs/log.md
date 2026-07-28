@@ -16960,3 +16960,14 @@ Bar: smoke **490 passed / 31.3 s**; the 16 non-test G3 steps all PASS (7.8 s);
 this batch, not per WI — the expensive steps are `tests+coverage` and
 `module-coverage` alone, and the other sixteen cost seven seconds, so they run
 every time.
+
+**Incidental, filed as WI-354: the SpecRef anchor nobody checks.** Closing the
+row above tripped `check_docs` on a link I had written from the anchor the WI-326
+row itself carried — `docs/log.md#2026-07-26--wi-326-a-green-that-hid-47-tests`,
+a truncated slug matching no heading in that file. It had been wrong since the
+row was filed and nothing said so: `check_trajectory`'s R-E resolves a SpecRef by
+splitting on `#` and testing only that the *path* exists, discarding the fragment
+unread. The same reference is enforced in one home (a markdown link) and
+unchecked in the other (a registry cell) — the WI-308 doc-refs class, one
+registry over. The row's own SpecRef is cleared here per R-F; validating the
+fragment is WI-354's.
