@@ -257,6 +257,9 @@ Contracts (interfaces): IF-015, IF-037, IF-041, IF-055, IF-064, IF-067, IF-068
 | `critique_control(docs, wi_ids, default_max)` | Resolve the optional per-WI critique control for one build scope. |  |
 | `critique_brief(root, docs, scope_srs)` | The redacted critique brief: for each in-scope Critique SR, its intent (the |  |
 | `critique_prompt(prompt_templates, verdict_path, brief)` | The redacted critique prompt: the CRITIQUE prompt-map template (a FILE the |  |
+| `launcher_exe(cmd_template)` | `(exe, installed)` for a command template: argv[0], and whether that |  |
+| `fresh_verdict_path(reviews_dir, name)` | The path a managed session must write its verdict to, guaranteed ABSENT. |  |
+| `read_verdict(verdict_path, route_family)` | The parsed verdict at `verdict_path`, or None when the session wrote no |  |
 | `RoutingState (class)` | The serial loop's managed-routing / escalation / critique / stall state |  |
 | `  methods` | pick_phase · route_intent · note_build_tier · cool · record_review_verdict · round_ready · complete_round · escalation · apply_decision · set_design_check · after_design_check · on_committed_build · set_train_range · schedule_review_round · schedule_critique · record_critique_verdict · note_session · stall_verdict |  |
 | `limit_reset_hint(output, data, exit_code)` | The 'resets <time>' text of a rate-limit message, or None. |  |

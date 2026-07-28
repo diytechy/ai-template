@@ -816,6 +816,56 @@ def critique_prompt(prompt_templates, verdict_path, brief):
     return base.replace("{verdict}", str(verdict_path)).replace("{brief}", brief)
 
 
+def launcher_exe(cmd_template):
+    """`(exe, installed)` for a command template: argv[0], and whether that
+    launcher is actually present — on PATH, or an explicit path that exists.
+
+    Stated once (WI-345): the per-phase cmd-map preflight and the agents.csv
+    registry preflight both ask "is this model's CLI really here", and a probe
+    that answers differently in two places is a preflight that passes for one
+    route and fails for another. Raises ValueError/IndexError from `build_argv`
+    on an unparseable template — both callers already catch that and report it
+    with their own registry's wording."""
+    argv, _ = build_argv(cmd_template, "model", "prompt")
+    exe = argv[0]
+    return exe, bool(shutil.which(exe) or Path(exe).exists())
+
+
+def fresh_verdict_path(reviews_dir, name):
+    """The path a managed session must write its verdict to, guaranteed ABSENT.
+
+    The name is fully predictable (next session number + the implementer's own
+    HEAD sha), so an UNCOMMITTED file planted here before the session runs would
+    be counted as the verdict whenever that session errors. Clearing it first is
+    what makes the reviewer/critic the only writer that counts (repo-review
+    2026-07-21 M-22; committed plants stay defeated by the sha-in-name design).
+
+    Stated once (WI-345). The two arms had this in duplicate with the REASON in
+    only one of them, so the critique arm's `unlink` read as a stray line — the
+    precise failure mode of a copied rule: the copy loses the why."""
+    path = reviews_dir / name
+    path.parent.mkdir(parents=True, exist_ok=True)
+    if path.exists():
+        path.unlink()
+    return path
+
+
+def read_verdict(verdict_path, route_family):
+    """The parsed verdict at `verdict_path`, or None when the session wrote no
+    file (errored, stalled, or simply did not write one).
+
+    Both managed arms read it identically; what they DO about an unparseable
+    `VERDICT:` line differs and deliberately stays in the arms — the review arm
+    cools and re-routes the phase, the critique arm cools and re-critiques. Only
+    the plumbing moves (WI-345)."""
+    if not verdict_path or not Path(verdict_path).exists():
+        return None
+    return score_reviews.parse_verdict(
+        Path(verdict_path).read_text(encoding="utf-8", errors="replace"),
+        model=route_family,
+    )
+
+
 # --- the serial loop's managed-routing / escalation / critique / stall state ---
 # (WI-080 Slice C) What were ~24 mutable locals threaded through main() now live
 # on one object behind PURE transition methods: each method mutates only this
@@ -1456,9 +1506,8 @@ def map_preflight(
     # review session mid-run (the preflight contract).
     for ph, tmpl in sorted(cmd_map.items()):
         try:
-            argv, _ = build_argv(tmpl, "model", "prompt")
-            exe = argv[0]
-            if not (shutil.which(exe) or Path(exe).exists()):
+            exe, installed = launcher_exe(tmpl)
+            if not installed:
                 failures.append(
                     "cmd-map [{}]: agent CLI not found: {!r} is not on PATH.".format(
                         ph, exe
@@ -1492,9 +1541,8 @@ def map_preflight(
         for mid in enabled:
             m = registry[mid]  # resolve_enabled guarantees the id is in the registry
             try:
-                argv, _ = build_argv(m.cmd_template, "model", "prompt")
-                exe = argv[0]
-                if not (shutil.which(exe) or Path(exe).exists()):
+                exe, installed = launcher_exe(m.cmd_template)
+                if not installed:
                     # The row's Notes is the declared install/sign-in hint —
                     # surface it at the earliest failure point (WI-109).
                     failures.append(
@@ -1872,26 +1920,14 @@ def route_session(ctx, i, current_wi, session, resume_reconcile, now):
                 else head_sha(root)
             ) or ""
         if is_review:
-            verdict_path = reviews_dir / "{}-{}-{}.md".format(
-                session, phase, reviewed_sha[:7]
+            verdict_path = fresh_verdict_path(
+                reviews_dir, "{}-{}-{}.md".format(session, phase, reviewed_sha[:7])
             )
-            verdict_path.parent.mkdir(parents=True, exist_ok=True)
-            # The path is fully predictable (next session number + the
-            # implementer's own HEAD sha), so an UNCOMMITTED file planted here
-            # before the reviewer runs would be counted as the verdict whenever
-            # the review session errors. The reviewer writes the only file that
-            # counts (repo-review 2026-07-21 M-22; committed plants stay
-            # defeated by the sha-in-name design).
-            if verdict_path.exists():
-                verdict_path.unlink()
             body = reviewer_prompt(prompt_templates, phase, verdict_path)
         elif is_critique:
-            verdict_path = reviews_dir / "{}-CRITIQUE-{}.md".format(
-                session, reviewed_sha[:7]
+            verdict_path = fresh_verdict_path(
+                reviews_dir, "{}-CRITIQUE-{}.md".format(session, reviewed_sha[:7])
             )
-            verdict_path.parent.mkdir(parents=True, exist_ok=True)
-            if verdict_path.exists():  # same pre-plant guard as the review path
-                verdict_path.unlink()
             brief = critique_brief(root, docs, st.critique_scope)
             body = critique_prompt(prompt_templates, verdict_path, brief)
         else:
@@ -1994,11 +2030,8 @@ def session_bookkeeping(
         )
         return "reroute"
     if managed and is_review:
-        if verdict_path and Path(verdict_path).exists():
-            v = score_reviews.parse_verdict(
-                Path(verdict_path).read_text(encoding="utf-8", errors="replace"),
-                model=route_family,
-            )
+        v = read_verdict(verdict_path, route_family)
+        if v is not None:
             if v.verdict is None:
                 # A verdict file with no parseable `VERDICT:` machine line
                 # (a routine LLM garble) is neither an approval nor a burnable
@@ -2141,11 +2174,8 @@ def session_bookkeeping(
     elif managed and is_critique:
         # The perceptual arbiter (WI-068): read the critic's verdict, iterate
         # BUILD<->CRITIQUE until APPROVE or the budget trips S8 escalation.
-        if verdict_path and Path(verdict_path).exists():
-            v = score_reviews.parse_verdict(
-                Path(verdict_path).read_text(encoding="utf-8", errors="replace"),
-                model=route_family,
-            )
+        v = read_verdict(verdict_path, route_family)
+        if v is not None:
             merged = (v.verdict or "").upper()
             print(
                 "critique [{}]: verdict={} findings={} scope={} ({})".format(

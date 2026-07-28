@@ -17731,3 +17731,38 @@ Module sizes: `bootstrap.py` 2007 → 2017, `trace.py` 2847 → 2856 — an extr
 that GROWS the file, which is the normal shape and not a contradiction: named
 helpers with docstrings cost more lines than the inline copies they replace, and
 buy the one thing lines cannot.
+
+---
+
+## Session 2026-07-28 (cont.) — WI-345: the copy that lost its reason
+
+`agent_loop`'s managed-session verdict plumbing, extracted into
+`fresh_verdict_path`, `read_verdict` and `launcher_exe`. The review and critique
+arms stay separate exactly as the row required — what each does about an
+unparseable `VERDICT:` line is untouched; only the plumbing moved.
+
+**The clearest argument for extracting rather than sanctioning is what the
+duplicate had already lost.** The pre-plant rule — clear the verdict file first,
+because its name is fully predictable, so an uncommitted plant would be counted
+as the verdict whenever the session errors (repo-review 2026-07-21 M-22) — was
+written out in the review arm and *absent* from the critique arm, where the bare
+`unlink` read as a stray line a later reader could reasonably delete. A copied
+rule keeps the code and drops the why. One helper, one docstring, both arms.
+
+`launcher_exe` is the same shape with a sharper edge: a preflight probe that
+answers differently in two places is a preflight that passes for one route and
+fails for another.
+
+**The extraction paid in complexity, not just in duplication**: `route_session`
+dropped **13 → 11** and `trace.reattest_lines` fell under the limit entirely, so
+its ratchet entry is *deleted* rather than re-stamped. Those are the first
+downward re-stamps this batch has produced, and they are the direction the
+ratchet exists to hold. `agent_loop.py` itself 3042 → 3072.
+
+**Census 196 → 190, and 2 of the 6 were not mine to plan.** Beyond the four
+charged blocks, two cross-script `module-path` entries dissolved: once
+`agent_loop`'s mkdir/exists/unlink shape became a named helper it stopped
+matching `agent_common`'s. Proven a removal and not a re-fingerprinting — the
+sanctions went dead and no new block appeared over that pair, the opposite of
+what WI-347 saw in `declared-file`. **Both directions are now on record, so the
+next extraction knows to check which one it got rather than assume.**

@@ -60,7 +60,11 @@ BASELINE = {
     ("agent_loop.py", "main"): 27,
     ("agent_loop.py", "map_preflight"): 19,
     ("agent_loop.py", "route_intent"): 13,
-    ("agent_loop.py", "route_session"): 13,
+    # WI-345: 13 -> 11. Both managed arms lost their inline
+    # exists/read/parse-verdict branch to `read_verdict`, so the tier decision is
+    # all that is left here. Re-stamped DOWNWARD, which is the direction this
+    # ratchet exists to hold.
+    ("agent_loop.py", "route_session"): 11,
     ("agent_loop.py", "run_iteration"): 23,
     ("agent_loop.py", "session_bookkeeping"): 31,
     ("agent_route.py", "load_registry"): 17,
@@ -160,11 +164,12 @@ BASELINE = {
     # +2 each (fix pass, 2026-07-26): F8 ownerless-child branches and the F1
     # --since fail-fast guard — both adversarial-review closures.
     ("trace.py", "modified_chain_advisories"): 15,
-    # WI-322 split the git archaeology out of the renderer: reattest_lines is
-    # now prose-only (25 -> 14) and the extracted model carries the branching
-    # (21), which is a wash in total and a real separation of concerns — one
-    # computation, two renderers.
-    ("trace.py", "reattest_lines"): 14,
+    # WI-322 split the git archaeology out of the renderer: reattest_lines went
+    # prose-only (25 -> 14) and the extracted model carries the branching (21) —
+    # one computation, two renderers. WI-347 then took it UNDER the limit
+    # entirely (`_full_row_bullets` absorbed the two whole-row render arms), so
+    # its entry is DELETED rather than re-stamped, which is what this ratchet
+    # asks for once a function drops below THRESHOLD.
     ("trace.py", "reattest_model"): 21,
     ("trace.py", "render_report"): 17,
 }

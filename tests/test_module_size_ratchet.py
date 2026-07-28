@@ -281,7 +281,15 @@ BASELINE = {
     # change: the two atomic-JSON writers were extracted to _atomic_json, which
     # retires a census sanction. Reviewed bump, log 2026-07-28.
     "agent_dispatch.py": 4042,
-    "agent_loop.py": 3042,
+    # +30 (3042 -> 3072), WI-345: `fresh_verdict_path`, `read_verdict` and
+    # `launcher_exe` — the managed-session verdict plumbing and the launcher
+    # probe, each stated once instead of once per arm. Extraction-grows-the-file
+    # again, and here it also BOUGHT complexity: route_session dropped 13 -> 11
+    # (re-stamped below). The docstrings carry the reasons the duplicates had
+    # lost — the pre-plant rule (repo-review 2026-07-21 M-22) existed in the
+    # review arm only, so the critique arm's `unlink` read as a stray line.
+    # Reviewed bump, log 2026-07-28.
+    "agent_loop.py": 3072,
     # +30 (2206 -> 2236), WI-065: `tc_citation_findings` — the TC-`Verifies`
     # rules lifted out of `analyze` so the cell could accept `IF-###` seam ids.
     # Most of the bump is that helper's docstring, which is where the RULING now

@@ -132,7 +132,13 @@
 # in the totals, never a reason.
 #
 # Count note. The WI-337 section above says 208, and did at that commit. It is
-# 196 here, and the delta has two parts that must not be blurred together:
+# 190 here, and the delta has three parts that must not be blurred together:
+#   * 196 -> 190 is WI-345, extracting agent_loop's verdict plumbing
+#     (verdict-plumbing 3, exe-presence 1) — plus TWO cross-script `module-path`
+#     blocks dissolved as a side effect, since agent_loop's copy of the
+#     mkdir/exists/unlink shape became a named helper and stopped matching
+#     agent_common's. Recorded in that section, and proven a removal rather than
+#     a re-stamp: the sanctions went dead and no new block appeared over the pair.
 #   * 201 -> 196 is WI-347, which EXTRACTED five same-file blocks (bootstrap-copy
 #     2, source-walk 1, brief-row-render 1, declared-file-local 1) and removed
 #     their sections. Each fingerprint was proven absent from `--emit-census`
@@ -153,10 +159,10 @@
 # Every figure below is now GENERATED from the sections rather than counted by
 # hand — the rule this repo already applies to every other derived number.
 #
-# The distribution (196 blocks):
+# The distribution (190 blocks):
 #
-#   cli                   77   (39%)   deliberate
-#   spine-loader          20   (10%)   deliberate
+#   cli                   77   (41%)   deliberate
+#   spine-loader          20   (11%)   deliberate
 #   declared-file         11    (6%)   deliberate
 #   graph-layout          11    (6%)   debt WI-280
 #   markdown-table        11    (6%)   deliberate
@@ -165,15 +171,13 @@
 #   spine-load-repeat      8    (4%)   extract WI-346
 #   ref-namespace          5    (3%)   extract WI-343
 #   wi-registry            5    (3%)   deliberate
-#   module-path            4    (2%)   deliberate
 #   ctx-unpack             3    (2%)   deliberate
 #   import-fallback        3    (2%)   deliberate
 #   okf-row                3    (2%)   deliberate
 #   reservation-release    3    (2%)   extract WI-343
-#   verdict-plumbing       3    (2%)   extract WI-345
+#   module-path            2    (1%)   deliberate
 #   ref-transaction        2    (1%)   extract WI-343
 #   signature-echo         2    (1%)   deliberate
-#   exe-presence           1            extract WI-345
 #   graph-walk             1            deliberate
 #   skills-materialize     1            deliberate
 #   subprocess-capture     1            extract WI-346
@@ -181,11 +185,11 @@
 #   trailer-scan           1            extract WI-343
 #   warn-tier-dispatch     1            deliberate
 #
-# By disposition: deliberate 152, extract 24 (WI-343/345/346), debt 20 (WI-280).
-# By path relation (metadata only): 143 cross-module, 53 same-file. The two cuts
-# do NOT coincide — 9 same-file blocks are deliberate, and the other 44 are the
-# extract + debt work, which is the honest shape of this file: a third of the
-# census is not F5 at all.
+# By disposition: deliberate 150, extract 20 (WI-343/346), debt 20 (WI-280).
+# By path relation (metadata only): 141 cross-module, 49 same-file. The two cuts
+# do NOT coincide — 9 same-file blocks are deliberate, and the other 40 are the
+# extract + debt work, which is the honest shape of this file: a fifth of the
+# census is still not F5 at all.
 #
 # The two facts worth carrying: cross-module duplication here is dominated by
 # SMALL STABLE HELPERS the F5 ruling deliberately duplicates (a shared
@@ -414,12 +418,17 @@ c669d0d84711  project-trajectory/scripts/check_trajectory.py == project-trajecto
 8dc145bef9c5  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/trace.py
 f02bcce4d53d  project-trajectory/scripts/gen_trajectory.py == project-trajectory/scripts/trace.py
 
-# --- module-path (4 blocks) --------------------------------------
+# --- module-path (2 blocks) --------------------------------------
 # disposition: deliberate
 # the module-path normaliser and the generated-block scanner, shared by the
 # arch map, the validator and trace.
-0e8a5f4a0f99  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/agent_loop.py
-0e8a5f4a0f99  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/agent_loop.py
+#
+# WAS 4. WI-345's `fresh_verdict_path` extraction in agent_loop.py dissolved the
+# two `agent_common == agent_loop` blocks (`0e8a5f4a0f99`) as a SIDE EFFECT —
+# agent_loop's copy of the mkdir/exists/unlink shape became a named helper, so it
+# no longer matches agent_common's. A real removal, not a re-stamp: the two
+# sanctions went dead and NO new block appeared over that pair. The remaining two
+# are the cross-script pair the F5 reason above actually describes.
 a96fdbede5b0  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/gen_arch_map.py
 a96fdbede5b0  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/trace.py
 
@@ -486,12 +495,6 @@ ab9c2785757c  project-trajectory/scripts/agent_dispatch.py == project-trajectory
 e47234cf5925  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
 c6b71579a078  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
 
-# --- exe-presence (1 block)  -------------------------------------
-# disposition: extract WI-345
-# build_argv -> argv[0] -> shutil.which-or-Path.exists, the 'is this
-# model's launcher actually installed' probe, at two sites.
-c8f5fddac0ef  project-trajectory/scripts/agent_loop.py == project-trajectory/scripts/agent_loop.py
-
 # --- signature-echo (2 blocks) -----------------------------------
 # disposition: deliberate
 # NOT copy-paste: the detector is matching a parameter list against its own
@@ -512,16 +515,6 @@ a5b7a7b890c2  project-trajectory/scripts/agent_loop.py == project-trajectory/scr
 b8b532ba9de4  project-trajectory/scripts/agent_loop.py == project-trajectory/scripts/agent_loop.py
 21b0fbb40f6c  project-trajectory/scripts/trace.py == project-trajectory/scripts/trace.py
 7c1e98fa864e  project-trajectory/scripts/trace.py == project-trajectory/scripts/trace.py
-
-# --- verdict-plumbing (3 blocks) ---------------------------------
-# disposition: extract WI-345
-# the managed-session verdict path: mkdir the parent, unlink a pre-planted
-# file, then read-and-parse it — duplicated between the review arm and the
-# critique arm, with the pre-plant rule explained in only one of them.
-# Extractable to a fresh-verdict-path/read pair; the arms stay separate.
-606bb9bf6b06  project-trajectory/scripts/agent_loop.py == project-trajectory/scripts/agent_loop.py
-08e04d3ff9c1  project-trajectory/scripts/agent_loop.py == project-trajectory/scripts/agent_loop.py
-96d2f74fe714  project-trajectory/scripts/agent_loop.py == project-trajectory/scripts/agent_loop.py
 
 # --- warn-tier-dispatch (1 block)  -------------------------------
 # disposition: deliberate
