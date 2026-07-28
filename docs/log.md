@@ -16809,3 +16809,50 @@ because the failure is invisible by inspection: every row looked reasonable on
 its own, and only asking the SCHEDULER what the frontier now looked like showed
 that a whole band had been inserted at the top. **File a row, then read the
 frontier back.**
+
+---
+
+## Session 2026-07-28 (cont.) — WI-328 was finished a day before its row said so
+
+The owner asked whether WI-328 was not already complete. It was. All six
+substantive Done-when items on its spec were ticked across six commits on
+2026-07-27, the LLR `Rationale` column and the `IF-021`/`IF-033`/`IF-051` v2
+bumps had shipped, and the spine pass had taken history-carrying cells from 39
+to zero — while the registry row still read `queued`. Closed here, with the
+final Done-when box ticked against today's runs (full suite `1630 passed,
+6 skipped`; `check.py --gate G3` PASS all 19) and the spec archived.
+
+**The finishing commit is the whole lesson.** `40c92f6` exists *because* S5 had
+been ticked before it was true — its message says "correcting a false
+completion… the owner would have attested a spine I had reported as finished."
+That commit updated the spec's checkboxes and never touched the registry row.
+The two are independent homes for one fact, "is this finished," and
+`check_trajectory` reconciles neither direction: R-F catches a `done` row still
+carrying a SpecRef, but nothing catches a spec whose boxes are all ticked while
+its row is open. Filed as **WI-352**, both directions, because this repo has now
+produced both — WI-336 landed as code while its row stayed queued, and `40c92f6`
+exists because a box was ticked early.
+
+**A false OPEN status is not the harmless direction of wrong.** WI-328 is
+`SafetyClass=spine`, so `schedule.py` had the entire project serializing behind
+an item that was already done, and it led the ready frontier for a day. It also
+produced wrong advice: asked which work needed owner input, this session named
+WI-328's LLR migration as a downstream-migration decision awaiting approval —
+a migration that had already shipped. **An audit of all 24 open rows against
+commit and spec evidence found this to be the only false status**; the inverse
+check (a `done` row with no Deliverable) is clean at zero.
+
+Bar: smoke and `check_docs --stale` below; no code changed in this correction.
+
+**And archiving the spec found a second gap, filed as WI-353.** Moving
+`docs/specs/WI-328.md` to `docs/archive/specs/` took `check_docs` from OK to
+**6 broken links** on the spot. WI-288 made archival link-aware in one
+direction — it redirects links that *point at* a spec it moved — but the moved
+spec's *own* relative links go one directory deeper and nothing re-relativises
+them. The existing loop structurally cannot catch them: it rewrites a link whose
+target resolves to a moved SOURCE, and these targets did not move, the file did.
+Latent rather than never-hit, which is why WI-288 missed it — most specs carry
+few relative links, so it only bites on a link-rich one, and then it reddens the
+composed tree at integration, the exact late-surfacing failure WI-288 existed to
+stop. The six links here were fixed by resolving each against the old directory
+and re-relativising against the new.
