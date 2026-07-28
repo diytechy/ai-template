@@ -2157,3 +2157,92 @@ def test_critique_staleness_fails_closed_under_strict(tmp_path):
     proc = run_traj(tmp_path, "--strict")
     assert proc.returncode == 1, proc.stdout + proc.stderr
     assert "ERROR - perceptual-stale SR-050" in proc.stderr
+
+
+# --- WI-349: the one-physical-line rule the staged-close scan depends on --------
+#
+# `staged_findings` compares `git show HEAD:<work-items.csv>` against the working
+# copy LINE-WISE and documents the assumption in its docstring; nothing enforced
+# it. The tests below write the offending row through `csv.writer` — the way a
+# tool would actually produce one — rather than hand-embedding a `\n`, so they
+# exercise the real quoting path that made the defect invisible.
+
+
+def _write_wis_via_csv(root, rows):
+    """Write work-items.csv through csv.writer, so a cell holding a newline is
+    QUOTED and spans two physical lines exactly as a real writer emits it."""
+    import csv as _csv
+
+    req = root / "docs" / "requirements"
+    req.mkdir(parents=True, exist_ok=True)
+    with (req / "work-items.csv").open("w", encoding="utf-8", newline="") as fh:
+        writer = _csv.writer(fh, lineterminator="\n")
+        writer.writerow(WI_HEADER.strip().split(","))
+        writer.writerows(rows)
+    # NB: Path.read_text(newline=) is 3.13+; the kit floor is 3.11, so open().
+    with (req / "work-items.csv").open("r", encoding="utf-8", newline="") as fh:
+        return fh.read()
+
+
+def test_embedded_newline_in_a_cell_is_a_hard_error(tmp_path):
+    raw = _write_wis_via_csv(
+        tmp_path, [["WI-001", "two\nlines", "t", "", "", "queued", ""]]
+    )
+    # The premise: this really is one CSV row spanning two physical lines.
+    assert raw.count("\n") == 3 and '"two\nlines"' in raw, repr(raw)
+    proc = run_traj(tmp_path)
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+    # It names the WI and the COLUMN, which is what makes it actionable.
+    assert "WI-001: Title cell contains a literal LF" in proc.stderr, proc.stderr
+
+
+def test_the_same_row_without_the_newline_is_clean(tmp_path):
+    """The mutation twin. Without it the test above could be passing on any of
+    the other dozen rules this registry shape could trip."""
+    _write_wis_via_csv(tmp_path, [["WI-001", "two lines", "t", "", "", "queued", ""]])
+    proc = run_traj(tmp_path)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+
+
+def test_a_carriage_return_in_a_cell_is_caught_too(tmp_path):
+    """CR alone, not just LF: a registry edited on a Windows tool and re-saved
+    can carry a lone CR, and it breaks the same line-wise read."""
+    _write_wis_via_csv(
+        tmp_path, [["WI-001", "carriage\rreturn", "t", "", "", "queued", ""]]
+    )
+    proc = run_traj(tmp_path)
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+    assert "WI-001: Title cell contains a literal CR" in proc.stderr, proc.stderr
+
+
+def test_a_broken_id_cell_is_reported_by_row_number(tmp_path):
+    """When the id cell itself is broken, reporting a TRUNCATED id would be worse
+    than none — it looks real and matches nothing — so it reports positionally."""
+    _write_wis_via_csv(tmp_path, [["WI-\n001", "A", "t", "", "", "queued", ""]])
+    proc = run_traj(tmp_path)
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+    assert "row 1: WI-ID cell contains a literal LF" in proc.stderr, proc.stderr
+
+
+def test_every_other_check_passed_on_such_a_row_before_this_one(tmp_path):
+    """The finding itself, pinned: the row is well-formed CSV and satisfies every
+    OTHER rule, so before this check the whole validator reported clean. If this
+    ever fails, the guard above has started riding on some unrelated rule rather
+    than on the newline — which is the vacuity that would make it worthless."""
+    ct = load_script("check_trajectory")
+    row = {
+        "WI-ID": "WI-001",
+        "Title": "two\nlines",
+        "Workstream": "t",
+        "SR-Refs": "",
+        "Predecessors": "",
+        "Status": "queued",
+        "Deliverable": "",
+        "SpecRef": "docs/log.md",
+    }
+    wis, integrity = ct.load_wis([row])
+    assert integrity == [], integrity
+    assert ct.validate(wis, set()) == []
+    assert [f for f in ct.ssot_findings(wis, tmp_path) if f[1]] == []
+    # ...and the new check is the one and only thing that catches it.
+    assert len(ct.cell_integrity_errors([row])) == 1

@@ -346,6 +346,74 @@ def _cycles(wis, pred_map):
     return found
 
 
+# --- WI-349: the one-physical-line rule the staged-close scan depends on ------
+# `staged_findings` compares `git show HEAD:<work-items.csv>` against the working
+# copy LINE-WISE and documents the assumption in its own docstring — "a WI row is
+# one physical line (no embedded newlines)". Nothing enforced it, which is the
+# enforcement-audit question asked of a rule the code already relies on.
+LINE_BREAK_CHARS = (("\r", "CR"), ("\n", "LF"))
+
+
+def cell_integrity_errors(rows):
+    """Hard-error strings for any registry cell containing a CR or an LF.
+
+    Demonstrated 2026-07-28: a WI row was written with a literal newline inside a
+    quoted `Title` cell. It round-tripped through `csv` perfectly, so the full
+    trajectory validator reported CLEAN — and the only thing that surfaced it was
+    git warning about mixed line endings in the working tree, i.e. luck. What
+    such a row actually costs is silent and downstream: `staged_findings` reads a
+    *different set of rows* than the loader does (its line-wise HEAD comparison
+    splits the row in two), the dashboard renders a broken cell in its detail
+    JSON, and the row is invisible to every line-based tool that touches the
+    registry.
+
+    ERROR at every run, alongside the malformed/duplicate-id errors rather than
+    in the warn-first coherence tier: those two are the same class — a row the
+    loader cannot be trusted to have read correctly — as opposed to a coherence
+    question about a row it read fine.
+
+    Deliberately scoped to the WI registry: the line-wise comparison is what
+    creates the requirement, and it reads only this file. The spine registries
+    are `trace.py`'s to police.
+
+    Names the WI id and the COLUMN, because a bare "row 47 is malformed" against
+    a 350-row single-line-per-row CSV is not actionable — the cell is what the
+    author has to find. Falls back to the 1-based row number when it is the id
+    cell itself that is broken.
+    """
+    errors = []
+    for index, row in enumerate(rows, start=1):
+        raw_id = str(row.get("WI-ID") or "")
+        broken_id = any(char in raw_id for char, _ in LINE_BREAK_CHARS)
+        # A truncated id would be worse than no id — it looks like a real one and
+        # matches nothing — so a broken id cell reports by row number instead.
+        where = (
+            "row {}".format(index)
+            if broken_id or not raw_id.strip()
+            else raw_id.strip()
+        )
+        for column, value in row.items():
+            # DictReader hands back a list under the restkey when a row has more
+            # fields than the header, and None as the key; neither is a str.
+            cells = value if isinstance(value, list) else [value]
+            name = column if isinstance(column, str) else "<extra fields>"
+            for cell in cells:
+                if not isinstance(cell, str):
+                    continue
+                for char, label in LINE_BREAK_CHARS:
+                    if char in cell:
+                        errors.append(
+                            "{}: {} cell contains a literal {} — a WI row must be "
+                            "ONE physical line (the staged-close scan compares "
+                            "HEAD line-wise, so an embedded break makes it read a "
+                            "different set of rows while every other check passes)".format(
+                                where, name, label
+                            )
+                        )
+                        break  # one finding per cell; the fix is the same
+    return errors
+
+
 def validate(wis, known_srs):
     """Return the hard-error strings for the work-item graph ([] = clean).
 
@@ -1961,7 +2029,11 @@ def main():
         else:
             print("check_trajectory: WARN - {}".format(msg), file=sys.stderr)
 
-    wis, integrity = load_wis(read_rows(root / WI_CSV))
+    wi_rows = read_rows(root / WI_CSV)
+    wis, integrity = load_wis(wi_rows)
+    # WI-349: the physical-line integrity of the rows themselves, checked on the
+    # RAW cells before anything reasons about the graph they describe.
+    integrity = integrity + cell_integrity_errors(wi_rows)
     if not wis and not integrity:
         if comp_errors:
             for e in comp_errors:

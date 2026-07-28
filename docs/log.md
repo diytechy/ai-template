@@ -16971,3 +16971,58 @@ unread. The same reference is enforced in one home (a markdown link) and
 unchecked in the other (a registry cell) — the WI-308 doc-refs class, one
 registry over. The row's own SpecRef is cleared here per R-F; validating the
 fragment is WI-354's.
+
+---
+
+## Session 2026-07-28 (cont.) — WI-349: a documented assumption becomes an enforced one
+
+`staged_findings` has carried this sentence in its own docstring since it was
+written: *"Line-splitting the HEAD CSV is safe here — a WI row is one physical
+line (no embedded newlines)."* Nothing enforced it. `cell_integrity_errors` now
+does, on the raw cells, before anything reasons about the graph they describe.
+
+**What the gap actually cost is silent, which is why it needed a check rather
+than a comment.** A row written with a literal newline inside a quoted cell is
+*valid CSV*: it round-trips through `csv` perfectly, so `load_wis`, `validate`
+and `ssot_findings` all pass it — the full validator reported CLEAN on
+2026-07-28 and the only thing that surfaced the row was git warning about mixed
+line endings in the working tree, i.e. luck. Meanwhile `staged_findings` reads a
+*different set of rows* than the loader does, because its line-wise HEAD
+comparison splits the row in two; the dashboard renders a broken cell in its
+detail JSON; and the row is invisible to every line-based tool downstream.
+
+**Error, not warn, and at every run.** It sits beside the malformed- and
+duplicate-id errors because it is the same class — a row the loader cannot be
+trusted to have read — as opposed to the warn-first coherence tier, which asks
+whether a row it read *fine* is coherent. Scoped to the WI registry deliberately:
+the line-wise comparison is what creates the requirement and it reads only this
+file. The spine registries are `trace.py`'s.
+
+**Two small decisions worth stating.** It is *not* in `load_wis`, so
+`tests/test_wi_loader_sync.py`'s schedule-vs-check_trajectory drift lock is
+untouched. And a broken *id* cell reports by row number rather than by the
+truncated id, because a truncated id is worse than none — it looks real and
+matches nothing.
+
+**The guard writes its fixture through `csv.writer`** rather than hand-embedding
+a `\n`, so it exercises the real quoting path that made the defect invisible, and
+it asserts the premise before the conclusion (that the file really is one CSV row
+across two physical lines). Five tests: LF caught, CR caught, broken id reported
+positionally, a mutation twin with the newline removed asserted clean, and — the
+finding itself pinned — `load_wis`, `validate` and `ssot_findings` all passing on
+that row, so this guard can never start silently riding on an unrelated rule.
+Four mutants (check unwired, CR dropped, column name dropped, row-number fallback
+reverted) each fail the suite.
+
+Writing the guard caught one more 3.11 floor slip in my own hand:
+`Path.read_text(newline=)` is 3.13+. The test found it, not a reviewer.
+
+**Module-size ratchet re-stamped 2063 → 2135**, a reviewed bump with the reason
+at the entry. Worth naming rather than burying: `check_trajectory.py` has now
+taken **four upward bumps in a row with no decomposition between them**. Each was
+defensible on its own; the pattern is a cost the WI-280 deferral is quietly
+accruing, and the next addition to this module should have to argue against
+extracting instead.
+
+Bar: smoke **490 passed / 27.9 s**; the 16 non-test G3 steps PASS;
+`gen_arch_map` regenerated for the new function.

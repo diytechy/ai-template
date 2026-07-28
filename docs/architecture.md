@@ -519,6 +519,7 @@ Contracts (interfaces): IF-009, IF-023
 | `read_components_check_enabled(root)` | Whether the How-SW top-view right-sizing rule is on (WI-073/FB5). |  |
 | `read_rows(path)` | The CSV rows of `path` as dicts, or [] when the file is absent. Read |  |
 | `load_wis(rows)` | Parse work-item rows into `(wis, integrity_errors)`. |  |
+| `cell_integrity_errors(rows)` | Hard-error strings for any registry cell containing a CR or an LF. |  |
 | `validate(wis, known_srs)` | Return the hard-error strings for the work-item graph ([] = clean). |  |
 | `load_known_srs(root)` | The set of real SR ids from system-requirements.csv (for the SR-ref warn). |  |
 | `load_ifs(rows)` | Real (non-`-000`) IF-### interface rows as dicts. Lenient — `trace.py` owns |  |

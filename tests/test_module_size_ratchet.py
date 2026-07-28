@@ -337,7 +337,19 @@ BASELINE = {
     # 2026-07-26. Re-stamp downward with WI-280.
     # +5 (2058 -> 2063), WI-322: ratify_brief_findings reads open-items ROWS
     # instead of parsing markdown sections. Reviewed bump, log 2026-07-26.
-    "check_trajectory.py": 2063,
+    # +72 (2063 -> 2135), WI-349: cell_integrity_errors — the physical-line rule
+    # `staged_findings` has documented in its own docstring since it was written
+    # and nothing enforced. It belongs HERE and not in a sibling: it is checked on
+    # the raw rows this module already reads, and it exists only because THIS
+    # module's staged-close scan compares HEAD line-wise, so moving it away would
+    # separate a rule from the single assumption it protects. About two thirds of
+    # the bump is the docstring recording the 2026-07-28 demonstration and why it
+    # is an error rather than a warn. Reviewed bump, log 2026-07-28. Re-stamp
+    # downward with WI-280 — and note this module has now taken four upward bumps
+    # in a row with no decomposition between them, which is a cost the WI-280
+    # deferral is quietly accruing rather than an argument that each bump was
+    # wrong.
+    "check_trajectory.py": 2135,
     # +1 (1916 -> 1917), WI-279: one MAPPING row registering the new
     # scripts/check_coverage.py kit gate so it ships downstream — a required
     # one-line registration, not monolith growth (the reviewed-bump escape the
