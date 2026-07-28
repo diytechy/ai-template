@@ -17351,3 +17351,23 @@ re-derive — that is the standing antidote from the 2026-07-27 close, applied
 rather than cited.
 
 Bar: smoke **509 passed**; all 17 non-test G3 steps PASS.
+
+**And the reconciler proved itself on the very next close.** WI-352's close-time
+check fired on WI-339's own commit:
+
+```
+check_trajectory: WARN - WI-339: this commit closes it, but its spec
+docs/specs/WI-339.md still has 4 unticked Done-when box(es) (0 ticked)
+```
+
+Four boxes, zero ticked, on a row I was flipping to `done` — the WI-328 shape
+exactly, caught at the one moment it is cheap to fix rather than weeks later on an
+archived record where only a cosmetic edit is left. The boxes were ticked and the
+spec archived **through the real `_archive_closed_specs`**, which also exercised
+WI-353's outbound rebase on a live link-rich spec: `check_docs` stayed at **0
+broken**. Two of this batch's WIs validated each other on real work within the
+hour, without either being aimed at the other.
+
+`status.md`'s forward-only rule caught the third corner of the same close: the
+hand-authored prose named `WI-339` as an open defect, which becomes a backward
+reference the moment the row closes. Rewritten to state what is now true.
