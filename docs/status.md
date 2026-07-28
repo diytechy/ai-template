@@ -16,9 +16,13 @@ home elsewhere — don't restate it here:
   [`PROJECT_STATE.html`](../PROJECT_STATE.html).
 - **Spec-of-record + rubric conventions:** [specs/README.md](specs/README.md) ·
   [rubrics/README.md](rubrics/README.md) (dogfooded scaffold boilerplate).
-- **Resuming in a new session:** [handoff-2026-07-27b.md](handoff-2026-07-27b.md)
-  — **boot from this one.** It opens with the single red that must clear before
-  the branch is pushed, and explains why the working tree is deliberately dirty.
+- **Resuming in a new session:** [handoff-2026-07-28.md](handoff-2026-07-28.md)
+  — **boot from this one.** It sequences the remaining non-deferred work (the two
+  hard rows the 2026-07-28 batch left, the filed WI-354, the four P0 census
+  extractions, and the rest), and carries the traps that session paid for.
+  Its predecessor [handoff-2026-07-27b.md](handoff-2026-07-27b.md) opened with a
+  single red — the CI-breaking duplicate census — which is now **cleared**; read
+  it for that account, not as an open task.
   Its predecessor [handoff-2026-07-27.md](handoff-2026-07-27.md) was written for
   the re-attestation sitting, which **ran**; read it for what the batch
   contained, not as an open task. Before that,
