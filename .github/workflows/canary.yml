@@ -15,6 +15,11 @@ on:
 permissions:
   contents: read
 
+# Off for the same reason as kit-tests: the root conftest's 50% cap protects a
+# developer's desktop, and an ephemeral runner has no desktop to protect.
+env:
+  PYTEST_CPU_CAP: "off"
+
 jobs:
   latest:
     runs-on: ubuntu-latest

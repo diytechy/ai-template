@@ -21,6 +21,15 @@ on:
 permissions:
   contents: read
 
+# The root conftest.py hard-caps a local test run at 50% of the machine (a named
+# Windows job object) so a developer's desktop stays usable while the suite runs.
+# CI is the opposite case: an ephemeral runner nobody is sitting at, with far
+# fewer cores, and a smoke-budget job below that ENFORCES a wall-clock number.
+# Halving throughput here would buy nothing and could breach that budget, so the
+# cap is off for every job in this workflow.
+env:
+  PYTEST_CPU_CAP: "off"
+
 # One live run per ref: stacked pushes cancel the superseded run instead of
 # queueing five redundant matrix cells behind it (M-27).
 concurrency:

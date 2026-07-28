@@ -15960,3 +15960,88 @@ failed there and passes now); `derive_gate --check` fresh; `trace.py --strict
 done, 4 retired). **`check.py --gate G3` is RED on `lint` + `dupes`** — stated
 plainly rather than deferred: the spine is attested, the harness at the new gate
 is not yet green, and the two are different claims.
+
+### 2026-07-27 — WI-335: bounding what a test run costs the machine it runs on
+
+Owner constraint, stated as an outcome rather than a mechanism: *"so long as
+this computer and other personal computers are not throttled whenever this repo
+is running its tests."* That rules out the lever every previous attempt used.
+
+**Why worker counts cannot satisfy it.** Machine load is
+`concurrent runs × workers per run × child processes per worker + non-pytest
+work`. `ptc`, `setx PYTEST_XDIST_AUTO_NUM_WORKERS`, and another session's
+`pytest_xdist_auto_num_workers` hook all set the **middle term only**. The hook
+works — `-n auto` gives **12/12** workers with it, **24/24** without — and it
+still is not enough, measured on this 24-thread box:
+
+- a **12-worker** run sat at **mean 59% / max 74% CPU** with **42 python + 4
+  git** processes live, because the slow tier is subprocess-per-test by design;
+- the cap is per-process, so two concurrent runs are back to 24 workers — which
+  parallel WI dispatch makes routine, since each train worktree runs its own
+  suite.
+
+**What shipped.** A **named Windows job object with a hard CPU rate cap**
+(default **50%**, `PYTEST_CPU_CAP` dials it) applied from the root conftest's
+`pytest_configure`, plus a `BelowNormal` priority drop. The job bounds the whole
+tree — controller, every xdist worker, every `git`/`python` a test spawns —
+however many processes that turns out to be. Because the job is **named**, every
+pytest process joins the *same* one and they share **one** ceiling: N concurrent
+runs total the cap instead of multiplying it.
+
+The two levers answer different questions and both are wanted: the ceiling says
+how much the tests may take, the priority says they yield it the instant
+something in the foreground asks. The second is what a person actually
+experiences as "my machine is fine".
+
+**Measured, not asserted:**
+
+| | |
+|---|---|
+| 24 spinners, no cap | **100%** CPU |
+| same, under a 25% hard cap | **37.5% mean / 47% max** |
+| live probe from an unrelated process mid-suite | `ControlFlags=0x5`, `CpuRate=5000` (ENABLE\|HARD_CAP, 50%) |
+| wall-clock cost | `test_trace.py` **20.4 s capped vs 20.7 s uncapped** — this suite is subprocess/IO-bound, not CPU-bound |
+
+CI opts out in `test.yml` + `canary.yml`: ephemeral runners have no desktop to
+protect, far fewer cores, and `test.yml` enforces a wall-clock smoke budget.
+POSIX degrades honestly to `os.nice(5)` — there is no cgroup-free hard cap there
+and the file must not claim a guarantee it cannot keep. Any failure warns and
+runs normally; a resource nicety must never be able to red a suite.
+
+**Three traps, each of which produced a green-looking wrong thing:**
+
+1. **`HARD_CAP` is `0x4`, not `0x2`.** `0x2` is `WEIGHT_BASED`, which takes a
+   `Weight` of 1–9 and rejects a rate — `ERROR_INVALID_PARAMETER` out of code
+   that reads perfectly.
+2. **`QueryInformationJobObject(NULL, …)` reports the *immediate* job.** An
+   xdist worker sits in a nested job, so the first guard read `ControlFlags=0`
+   and **failed while the cap was working**. `IsProcessInJob` against the named
+   handle asks the question that matters — is THIS process in THAT job — and
+   holds for controller and workers alike. Passing it in both modes is also the
+   proof that the cap really covers the workers.
+3. **A self-referential guard.** Every assertion compared against
+   `DEFAULT_CAP_PERCENT`, so changing the default 50 → 90 kept the module green
+   while withdrawing the guarantee. Caught by mutation-testing the *value*, not
+   the mechanism; the default is now pinned like a ratchet baseline, and moving
+   the dial means moving it in the test too, deliberately.
+
+Guards: `tests/test_cpu_cap.py`, mutation-proven three ways (flag `0x4`→`0x2`,
+never applying the cap, default `50`→`90` — each fails the right test).
+
+Bar: smoke **440 passed** (membership budget 450 — headroom is now 10, worth
+knowing before the next test module lands), full suite **1595 passed, 7
+skipped** in 12:10 under the cap, `ruff format`/`check` clean on both new files,
+`check_trajectory --strict` clean (333 WIs).
+
+**The suite caught one thing on the way in, and it is the right kind of catch:**
+the first version of the `status.md` note named `WI-335`, and
+`test_forward_only_unit_over_the_real_meta_repo` failed it — a `done` id in a
+forward-only surface. The rule held against the session that wrote it, which is
+the only test of a rule that counts.
+
+**Note for whoever reads this next:** the root `conftest.py` arrived untracked
+from another session and its docstring claimed it was committed and reached CI.
+It is committed now, and the docstring says what is true. Until this commit,
+train worktrees never saw it — an untracked root file does not propagate into a
+`git worktree` — so the one place multiple suites run at once was the one place
+with no cap at all.
