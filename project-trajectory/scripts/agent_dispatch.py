@@ -1222,6 +1222,24 @@ _MD_LINK_TARGET_RE = re.compile(r"(\]\()([^)\s]+)(\))")
 _URL_SCHEME_RE = re.compile(r"^(?:[a-z][a-z0-9+.-]*:|//)", re.I)
 
 
+def _resolvable_link(target, skip_absolute=False):
+    """`(base, sep, frag)` for a link target worth rewriting, or None to leave it.
+
+    The shared "is this even a repo-relative path?" test both halves of the
+    archival ritual run before they decide anything. A bare `#fragment` and any
+    scheme-ish or protocol-relative URL are never rewritten — an external link
+    that merely CONTAINS an archived path must survive intact. `skip_absolute`
+    additionally excuses a root-relative `/path`, which resolves independently of
+    the holding directory and therefore cannot be broken by moving the file (it
+    CAN be broken by moving the target, so only the rebase half sets it)."""
+    if target.startswith("#") or _URL_SCHEME_RE.match(target):
+        return None
+    if skip_absolute and target.startswith("/"):
+        return None
+    base, sep, frag = target.partition("#")
+    return (base, sep, frag) if base else None
+
+
 def _redirected_link_target(target, doc_dir, remap):
     """The rewritten target for ONE inline markdown link, or None to leave it
     alone (WI-288). Split out of `_relink_archived_specs` so each half stays under
@@ -1232,15 +1250,109 @@ def _redirected_link_target(target, doc_dir, remap):
     scheme-ish or protocol-relative URL (an external link that merely *contains*
     the archived path must not be rewritten), and anything whose resolved path is
     not in `remap`. A `#fragment` on a redirected link is carried over."""
-    if target.startswith("#") or _URL_SCHEME_RE.match(target):
+    parts = _resolvable_link(target)
+    if parts is None:
         return None
-    base, sep, frag = target.partition("#")
-    if not base:
-        return None
+    base, sep, frag = parts
     dest = remap.get(posixpath.normpath(posixpath.join(doc_dir, base)))
     if dest is None:
         return None
     return posixpath.relpath(dest, doc_dir or ".") + sep + frag
+
+
+def _rewrite_md_links(path, rewrite_target):
+    """Apply `rewrite_target(target) -> new|None` to every inline markdown link in
+    `path`; True when the file changed.
+
+    The primitive both halves of the archival ritual share (WI-353). Only the
+    per-link DECISION differs between them — did this link's target move, or did
+    the file holding it? — so the traversal, the "leave it alone" contract (a
+    `None` decision), and the I/O discipline live here once.
+
+    Line endings are preserved (read and write with `newline=""`) so a CRLF
+    checkout is not silently rewritten to LF — the WI-234 splice discipline. Any
+    unreadable/unwritable or non-UTF-8 file is skipped rather than raised on: this
+    runs mid-integration over a whole worktree, where one odd file must not abort
+    the ritual."""
+
+    def _sub(match):
+        new = rewrite_target(match.group(2))
+        return match.group(0) if new is None else match.group(1) + new + match.group(3)
+
+    try:
+        with path.open("r", encoding="utf-8", newline="") as fh:
+            text = fh.read()
+    except (OSError, UnicodeDecodeError):
+        return False
+    new_text = _MD_LINK_TARGET_RE.sub(_sub, text)
+    if new_text == text:
+        return False
+    try:
+        with path.open("w", encoding="utf-8", newline="") as fh:
+            fh.write(new_text)
+    except OSError:
+        return False
+    return True
+
+
+def _rebased_link_target(target, old_dir, new_dir):
+    """The rewritten target for ONE link inside a file that MOVED, or None to
+    leave it alone (WI-353).
+
+    The mirror of `_redirected_link_target`. That one asks "did this link's
+    TARGET move?"; this one asks "did the file HOLDING it move?" — and the two
+    cannot be one function, because their answers come from opposite ends. The
+    loop over inbound links structurally cannot catch these: it rewrites a link
+    whose target resolves to a moved SOURCE, and here the targets did not move at
+    all, the document did.
+
+    Same exclusions as its mirror, for the same reasons: a bare `#fragment`, a
+    scheme-ish or protocol-relative URL, and an ABSOLUTE (root-relative) path all
+    resolve independently of the holding directory, so moving the file cannot
+    break them. Everything else is resolved against the OLD directory and
+    re-relativised against the NEW one; the `#fragment` and the link TEXT survive
+    untouched."""
+    parts = _resolvable_link(target, skip_absolute=True)
+    if parts is None:
+        return None
+    base, sep, frag = parts
+    resolved = posixpath.normpath(posixpath.join(old_dir, base))
+    new = posixpath.relpath(resolved, new_dir or ".")
+    if new == base:
+        return None
+    return new + sep + frag
+
+
+def _rebase_moved_spec_links(wt, moves):
+    """Re-relativise each moved spec's OWN relative links (WI-353).
+
+    `_relink_archived_specs` made archival link-aware in one direction only, so a
+    link-rich spec was stranded by its own move: `docs/specs/` to
+    `docs/archive/specs/` is one directory deeper, and every `](../log.md)` inside
+    it then resolves one short. Demonstrated 2026-07-28 archiving WI-328's spec by
+    hand — `check_docs` went from OK to SIX broken links on the spot. Latent
+    rather than never-hit, which is why WI-288 missed it: most specs carry few
+    relative links, so it bites only on a link-rich one, and then it reddens the
+    COMPOSED tree at integration — exactly the late-surfacing failure WI-288
+    existed to stop.
+
+    Runs on the destination file, after the move. Returns the destination paths
+    rewritten."""
+    touched = []
+    for src, dest in moves:
+        old_dir = posixpath.dirname(src)
+        new_dir = posixpath.dirname(dest)
+        if old_dir == new_dir:
+            continue
+        changed = _rewrite_md_links(
+            Path(wt) / dest,
+            lambda target, _old=old_dir, _new=new_dir: _rebased_link_target(
+                target, _old, _new
+            ),
+        )
+        if changed:
+            touched.append(dest)
+    return touched
 
 
 def _relink_archived_specs(wt, moves):
@@ -1258,9 +1370,8 @@ def _relink_archived_specs(wt, moves):
     file's own directory, and the repo convention is honoured: the link TEXT is
     untouched and only the TARGET is redirected. Any `#fragment` survives.
 
-    Line endings are preserved (read and write with `newline=""`) so a CRLF
-    checkout is not silently rewritten to LF — the WI-234 splice discipline.
-    Returns the repo-relative paths whose links were rewritten."""
+    Returns the repo-relative paths whose links were rewritten; the traversal and
+    the line-ending discipline live in `_rewrite_md_links`."""
     if not moves:
         return []
     remap = {src: dest for src, dest in moves}
@@ -1272,25 +1383,12 @@ def _relink_archived_specs(wt, moves):
             continue
         rel = path.relative_to(root).as_posix()
         doc_dir = posixpath.dirname(rel)
-
-        def _redirect(m, _dir=doc_dir):
-            new = _redirected_link_target(m.group(2), _dir, remap)
-            return m.group(0) if new is None else m.group(1) + new + m.group(3)
-
-        try:
-            with path.open("r", encoding="utf-8", newline="") as fh:
-                text = fh.read()
-        except (OSError, UnicodeDecodeError):
-            continue
-        new_text = _MD_LINK_TARGET_RE.sub(_redirect, text)
-        if new_text == text:
-            continue
-        try:
-            with path.open("w", encoding="utf-8", newline="") as fh:
-                fh.write(new_text)
-        except OSError:
-            continue
-        touched.append(rel)
+        changed = _rewrite_md_links(
+            path,
+            lambda target, _dir=doc_dir: _redirected_link_target(target, _dir, remap),
+        )
+        if changed:
+            touched.append(rel)
     return touched
 
 
@@ -1308,10 +1406,16 @@ def _archive_closed_specs(wt, specrefs, stamp):
     Returns the moved [(src, dest)] for the integration log. Pure of clocks —
     `stamp` (YYYY-MM-DD) is supplied by the caller.
 
-    Moving the file is only half the ritual: `_relink_archived_specs` then redirects
-    every inbound markdown link to the new path (WI-288), because a train's own
-    log entry commonly links the spec it is closing and archival would otherwise
-    strand it. Both halves run here so no caller can do one without the other."""
+    Moving the file is only a THIRD of the ritual, and both other thirds run here
+    so no caller can do part of it. `_rebase_moved_spec_links` re-relativises the
+    moved spec's OWN outbound links (WI-353) — it lands one directory deeper, so
+    every `](../log.md)` inside it would otherwise resolve one short — and
+    `_relink_archived_specs` redirects every INBOUND link to the new path
+    (WI-288), because a train's own log entry commonly links the spec it is
+    closing. The two are mirrors and neither implies the other: one asks whether
+    a link's TARGET moved, the other whether the file HOLDING it did. Order
+    matters only in that the rebase reads the destination, so it runs after the
+    move."""
     moved = []
     archive_rel = Path("docs") / "archive" / "specs"
     for wid, ref in sorted(specrefs.items()):
@@ -1330,6 +1434,7 @@ def _archive_closed_specs(wt, specrefs, stamp):
             except OSError:
                 continue
         moved.append((path_part, str(dest_rel).replace("\\", "/")))
+    _rebase_moved_spec_links(wt, moved)
     _relink_archived_specs(wt, moved)
     return moved
 

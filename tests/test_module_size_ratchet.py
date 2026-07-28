@@ -265,7 +265,16 @@ BASELINE = {
     # (a disposition edits its inputs, so it must regenerate before its own
     # commit faces the floor) and _regenerate_pending retargets from the retired
     # markdown splice to gen_open_items. Reviewed bump, log 2026-07-26.
-    "agent_dispatch.py": 3923,
+    # +105 (3923 -> 4028), WI-353: the mirror half of the archival ritual —
+    # `_rebase_moved_spec_links` re-relativises the MOVED spec's own outbound
+    # links, which the inbound loop structurally cannot reach (it rewrites a link
+    # whose TARGET moved; here the targets did not move, the document did). The
+    # bump is smaller than it looks: the two rewriters were folded onto one
+    # primitive (`_rewrite_md_links`) and one shared link-shape test
+    # (`_resolvable_link`), because the same-file duplication the new half created
+    # made `check_dupes` red and F5 never covers a same-file copy. Reviewed bump,
+    # log 2026-07-28. Re-stamp downward with WI-280.
+    "agent_dispatch.py": 4028,
     "agent_loop.py": 3042,
     # +30 (2206 -> 2236), WI-065: `tc_citation_findings` — the TC-`Verifies`
     # rules lifted out of `analyze` so the cell could accept `IF-###` seam ids.

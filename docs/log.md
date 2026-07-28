@@ -17224,3 +17224,44 @@ Bar: smoke **492 passed / 18.7 s**; all **17** non-test G3 steps PASS; and the
 full unfiltered suite **1680 passed / 7 skipped** (11:06) — run because a change
 across 23 sites in 10 modules is exactly the broad-script-change case that asks
 for it, not because a WI closed.
+
+---
+
+## Session 2026-07-28 (cont.) — WI-353: the other half of a ritual that was already "indivisible"
+
+WI-288 made spec archival link-aware and said so in its docstring — *both halves
+run here so no caller can do one without the other*. There were three. A spec
+lands one directory deeper, so every `](../log.md)` inside it resolves one short,
+and the inbound loop **structurally cannot** catch that: it rewrites a link whose
+TARGET resolves to a moved source, and here the targets did not move, the
+document did. Demonstrated 2026-07-28 archiving WI-328's spec by hand —
+`check_docs` went from OK to **six broken links** on the spot.
+
+Latent rather than never-hit, which is why WI-288 missed it: most specs carry few
+relative links, so it bites only on a link-rich one — and then it reddens the
+**composed** tree at integration, which is the exact late-surfacing failure WI-288
+existed to stop.
+
+**The new half made `check_dupes` red, and that was the rule working.** F5 buys
+cross-*script* copy-ability and never covers a same-file copy, so two primitives
+were extracted rather than sanctioned: `_rewrite_md_links` (the traversal, the
+`None`-means-leave-it contract, and the `newline=""` discipline — only the
+per-link DECISION differs between the two rewriters) and `_resolvable_link` (the
+is-this-a-repo-relative-path test, with `skip_absolute` for the one genuine
+asymmetry: a `/path` cannot be broken by moving the HOLDER, but can be by moving
+the TARGET, so only the rebase half excuses it).
+
+**The guard reproduces the defect.** The fixture carries a link at each depth plus
+an anchor, an absolute path and an http URL; it is archived through the real
+`_archive_closed_specs` and checked with the real `check_docs` — and the mutation
+twin moves the same fixture *without* the rebase and asserts `check_docs` FAILS.
+Five more pin the fragment, the untouched link text, the same-directory no-op,
+CRLF preservation with no lone LF, and that the inbound redirect was not lost
+while adding the outbound one.
+
+Incidental, found by writing them: `check_docs` does not resolve root-relative
+links at all, so that shape is asserted on the decision function rather than
+end-to-end.
+
+Module size 3923 → 4028, reviewed bump. Bar: smoke **497 passed / 17.1 s**; all
+17 non-test G3 steps PASS.

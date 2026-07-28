@@ -11,7 +11,7 @@ import sys
 from pathlib import Path
 
 import pytest
-from conftest import ROOT, SCRIPTS, load_script
+from conftest import ROOT, SCRIPTS, load_script, run_py
 
 agent_loop = load_script("agent_loop")
 schedule = load_script("schedule")
@@ -723,3 +723,149 @@ def test_declared_test_command_substitutes_the_given_py(tmp_path):
     ]
     # Default (no py) stays this interpreter — the WI-285 contract is unchanged.
     assert agent_common._declared_test_command(ini)[0] == sys.executable
+
+
+# --- WI-353: archival re-relativises the MOVED spec's own outbound links --------
+#
+# WI-288 made archival link-aware in ONE direction. The mirror was missing, so a
+# link-rich spec was stranded by its own move: docs/specs -> docs/archive/specs is
+# one directory deeper and every `](../log.md)` inside then resolves one short.
+# Demonstrated 2026-07-28 archiving WI-328's spec by hand — check_docs went from
+# OK to SIX broken links on the spot. The fixture below carries a link at each
+# depth plus an anchor and an http URL, is archived through the REAL function, and
+# is then checked with the REAL check_docs.
+
+
+def _spec_with_links(repo):
+    """A live spec carrying one link at each depth, an anchor, an absolute path
+    and an http URL — the shapes that must be rewritten and the shapes that must
+    not."""
+    (repo / "docs" / "specs").mkdir(parents=True, exist_ok=True)
+    (repo / "docs" / "requirements").mkdir(parents=True, exist_ok=True)
+    (repo / "docs" / "log.md").write_text(
+        "# Log\n\n## Anchor\n\ntext\n", encoding="utf-8"
+    )
+    (repo / "docs" / "specs" / "SIBLING.md").write_text("# Sibling\n", encoding="utf-8")
+    (repo / "docs" / "requirements" / "work-items.csv").write_text(
+        "WI-ID\n", encoding="utf-8"
+    )
+    (repo / "PROCESS.md").write_text("# Process\n", encoding="utf-8")
+    body = (
+        "# WI-001\n\n"
+        "- same dir: [sib](SIBLING.md)\n"
+        "- explicit same dir: [sib2](./SIBLING.md)\n"
+        "- one up: [log](../log.md)\n"
+        "- one up with anchor: [anchor](../log.md#anchor)\n"
+        "- two up: [process](../../PROCESS.md)\n"
+        "- sideways: [wis](../requirements/work-items.csv)\n"
+        "- external: [ext](https://example.invalid/docs/specs/WI-001.md)\n"
+        "- fragment: [frag](#WI-001)\n"
+    )
+    path = repo / "docs" / "specs" / "WI-001.md"
+    path.write_text(body, encoding="utf-8")
+    return path
+
+
+def test_archival_rebases_the_moved_specs_own_links(tmp_path):
+    ad = load_script("agent_dispatch")
+    _spec_with_links(tmp_path)
+    moved = ad._archive_closed_specs(
+        tmp_path, {"WI-001": "docs/specs/WI-001.md"}, "2026-01-01"
+    )
+    assert moved == [
+        ("docs/specs/WI-001.md", "docs/archive/specs/WI-001.2026-01-01.md")
+    ]
+    text = (tmp_path / "docs" / "archive" / "specs" / "WI-001.2026-01-01.md").read_text(
+        encoding="utf-8"
+    )
+    # Each relative link now resolves from one directory deeper.
+    assert "](../../specs/SIBLING.md)" in text
+    assert "](../../log.md)" in text
+    assert "](../../log.md#anchor)" in text, "the #fragment must survive"
+    assert "](../../../PROCESS.md)" in text
+    assert "](../../requirements/work-items.csv)" in text
+    # ...and the shapes that do not depend on the holding directory are untouched.
+    assert "](https://example.invalid/docs/specs/WI-001.md)" in text
+    assert "](#WI-001)" in text
+    # The link TEXT is never touched.
+    for label in ("[sib]", "[log]", "[anchor]", "[process]", "[wis]", "[ext]"):
+        assert label in text
+    # A root-relative target resolves independently of the holding directory, so
+    # moving the file cannot break it — asserted on the decision function, since
+    # check_docs does not resolve absolute links at all.
+    assert (
+        ad._rebased_link_target("/docs/log.md", "docs/specs", "docs/archive/specs")
+        is None
+    )
+
+
+def test_the_archived_spec_passes_check_docs(tmp_path):
+    """The end-to-end assertion the WI is actually about: run the REAL link
+    checker over the result. Without the rebase this reported six broken links."""
+    ad = load_script("agent_dispatch")
+    _spec_with_links(tmp_path)
+    ad._archive_closed_specs(tmp_path, {"WI-001": "docs/specs/WI-001.md"}, "2026-01-01")
+    proc = run_py([SCRIPTS / "check_docs.py", "--root", tmp_path], cwd=tmp_path)
+    assert "0 broken" in proc.stdout + proc.stderr, proc.stdout + proc.stderr
+
+
+def test_without_the_rebase_the_same_fixture_is_broken(tmp_path):
+    """The mutation twin, run against the shipped code path rather than a
+    hand-edit: move the file the way archival does but skip the rebase, and the
+    same fixture must FAIL check_docs. A guard whose defect it cannot reproduce
+    is not a guard."""
+    src = _spec_with_links(tmp_path)
+    dest = tmp_path / "docs" / "archive" / "specs" / "WI-001.2026-01-01.md"
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    src.replace(dest)  # the move alone — no rebase
+    proc = run_py([SCRIPTS / "check_docs.py", "--root", tmp_path], cwd=tmp_path)
+    out = proc.stdout + proc.stderr
+    assert "0 broken" not in out, out
+    assert "broken link" in out, out
+
+
+def test_the_rebase_is_a_no_op_when_the_directory_does_not_change(tmp_path):
+    ad = load_script("agent_dispatch")
+    path = _spec_with_links(tmp_path)
+    before = path.read_text(encoding="utf-8")
+    assert (
+        ad._rebase_moved_spec_links(
+            tmp_path, [("docs/specs/WI-001.md", "docs/specs/WI-001.md")]
+        )
+        == []
+    )
+    assert path.read_text(encoding="utf-8") == before
+
+
+def test_the_rebase_preserves_crlf(tmp_path):
+    """The WI-234 splice discipline: a CRLF checkout must not be silently
+    rewritten to LF by a link fix."""
+    ad = load_script("agent_dispatch")
+    (tmp_path / "docs" / "specs").mkdir(parents=True)
+    (tmp_path / "docs" / "log.md").write_text("# Log\n", encoding="utf-8")
+    crlf = "# WI-001\r\n\r\n[log](../log.md)\r\n"
+    with (tmp_path / "docs" / "specs" / "WI-001.md").open(
+        "w", encoding="utf-8", newline=""
+    ) as fh:
+        fh.write(crlf)
+    ad._archive_closed_specs(tmp_path, {"WI-001": "docs/specs/WI-001.md"}, "2026-01-01")
+    with (tmp_path / "docs" / "archive" / "specs" / "WI-001.2026-01-01.md").open(
+        "r", encoding="utf-8", newline=""
+    ) as fh:
+        out = fh.read()
+    assert "](../../log.md)" in out
+    assert "\r\n" in out, "CRLF was rewritten to LF"
+    assert "\n" not in out.replace("\r\n", ""), "a lone LF was introduced"
+
+
+def test_both_halves_of_the_ritual_still_run(tmp_path):
+    """The indivisible-ritual rule (WI-288, extended by WI-353): the INBOUND
+    redirect must not have been lost while adding the outbound rebase."""
+    ad = load_script("agent_dispatch")
+    _spec_with_links(tmp_path)
+    (tmp_path / "docs" / "log.md").write_text(
+        "# Log\n\n## Anchor\n\nsee [spec](specs/WI-001.md)\n", encoding="utf-8"
+    )
+    ad._archive_closed_specs(tmp_path, {"WI-001": "docs/specs/WI-001.md"}, "2026-01-01")
+    log = (tmp_path / "docs" / "log.md").read_text(encoding="utf-8")
+    assert "](archive/specs/WI-001.2026-01-01.md)" in log, log
