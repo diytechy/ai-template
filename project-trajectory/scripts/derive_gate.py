@@ -201,10 +201,39 @@ def sn_gate(sn_id, draft_ids):
     return G0 if sn_id in draft_ids else G3
 
 
+def _raw_level(srs, llrs, tcs, sn_ids, sn_draft):
+    """`(raw_level, sr_gates)` over ONE set of spine rows.
+
+    The raw level is the min over every in-scope artifact's gate (SN drafts, SR
+    maturity, LLR/TC maturity); a set with no real SRs is G1
+    (requirements-drafting), never a vacuous G3 from ratified-SN-only. Taken as
+    a function of its rows rather than of `docs` so `compute` can ask it the
+    counterfactual question too — the same arithmetic, over the non-draft
+    subset (`ex-draft`), which is what tells a mature spine held down by drafts
+    apart from an early one (WI-341).
+    """
+    llr_sr_refs = {x for r in llrs for x in refs(r.get("SR-Refs"))}
+    tc_refs = {x for r in tcs for x in refs(r.get("Verifies"))}
+    sr_g = {
+        r["SR-ID"]: sr_gate(r, r["SR-ID"] in llr_sr_refs, r["SR-ID"] in tc_refs)
+        for r in srs
+    }
+    if not srs:
+        return G1, sr_g
+    raw = min(
+        [sr_g[k] for k in sr_g]
+        + [sn_gate(u, sn_draft) for u in sn_ids]
+        + [maturity_gate(r) for r in llrs]
+        + [maturity_gate(r) for r in tcs]
+    )
+    return raw, sr_g
+
+
 def compute(docs):
     """Derive the gate from the spine registries under `docs`. Returns a result
-    dict: counts, the raw computed level (may be G0), the per-phase breakdown, and
-    the runnable gate name (raw floored to G1)."""
+    dict: counts, the raw computed level (may be G0), the same level recomputed
+    with the drafts removed (`ex_draft`), the per-phase breakdown, and the
+    runnable gate name (raw floored to G1)."""
     raw_srs = load_csv(docs / "requirements" / "system-requirements.csv")
     raw_llrs = load_csv(docs / "requirements" / "low-level-requirements.csv")
     raw_tcs = load_csv(docs / "test" / "test-cases.csv")
@@ -219,17 +248,7 @@ def compute(docs):
         sn_ids = {u for u in re.findall(r"\bSN-\d+\b", text) if not is_example(u)}
         sn_draft = sn_draft_ids(text)
 
-    # The joins the SR gate needs: which SRs have an LLR, which SR/LLR ids have a TC.
-    llr_sr_refs = {x for r in llrs for x in refs(r.get("SR-Refs"))}
-    tc_refs = {x for r in tcs for x in refs(r.get("Verifies"))}
-
-    sr_g = {
-        r["SR-ID"]: sr_gate(r, r["SR-ID"] in llr_sr_refs, r["SR-ID"] in tc_refs)
-        for r in srs
-    }
-    llr_g = {r["LLR-ID"]: maturity_gate(r) for r in llrs}
-    tc_g = {r["TC-ID"]: maturity_gate(r) for r in tcs}
-    sn_g = {u: sn_gate(u, sn_draft) for u in sn_ids}
+    raw, sr_g = _raw_level(srs, llrs, tcs, sn_ids, sn_draft)
 
     n_draft = (
         sum(1 for r in srs if is_draft(r))
@@ -248,18 +267,22 @@ def compute(docs):
         + sum(1 for r in tcs if is_modified(r))
     )
 
-    # Aggregation. A repo with no real SRs yet is at G1 (requirements-drafting),
-    # never a vacuous G3 from ratified-SN-only. Otherwise the raw level is the min
-    # over every in-scope artifact's gate (SN drafts, SR maturity, LLR/TC maturity).
-    if not srs:
-        raw = G1
-    else:
-        raw = min(
-            [sr_g[k] for k in sr_g]
-            + [sn_g[k] for k in sn_g]
-            + [llr_g[k] for k in llr_g]
-            + [tc_g[k] for k in tc_g]
-        )
+    # The same arithmetic with the DRAFT rows taken out — "what would the gate be
+    # if nothing were pending?" (WI-341). A Draft reads G0, so it drops the repo's
+    # min AND its own phase's, which erases the only evidence a consumer had that
+    # this spine had ever climbed: in a single-phase repo the whole per-phase
+    # breakdown goes to G0 and a mature repo reopening becomes indistinguishable
+    # from a project that has never ratified anything (128-REVIEW-A MAJOR 3).
+    # Excluding the drafts recovers it WITHOUT history or a stored high-water:
+    # the rows the draft did not touch are still standing right here, and if they
+    # all read G2/G3 then the drafts are the only thing holding the gate down.
+    ex_draft, _ = _raw_level(
+        [r for r in srs if not is_draft(r)],
+        [r for r in llrs if not is_draft(r)],
+        [r for r in tcs if not is_draft(r)],
+        sn_ids - sn_draft,
+        set(),
+    )
 
     per_phase = _per_phase(srs, sr_g, llrs, tcs)
 
@@ -276,6 +299,7 @@ def compute(docs):
         "drafts": n_draft,
         "modified": n_modified,
         "raw": raw,
+        "ex_draft": ex_draft,
         "per_phase": per_phase,
         "phase": cur_phase,
         "gate": GATE_NAMES[max(G1, raw)],  # the runnable value (floored to G1)
@@ -335,13 +359,21 @@ def _git(root, args):
 
 def basis_line(result):
     """The single, deterministic `# basis:` comment line compared by --check
-    (the counts + raw computed level + per-phase breakdown — everything that must
-    stay in step with the states, excluding the volatile compute date)."""
+    (the counts + raw computed level + the drafts-removed level + per-phase
+    breakdown — everything that must stay in step with the states, excluding the
+    volatile compute date).
+
+    `ex-draft=` is additive (WI-341): a reader that does not know the field is
+    unaffected, and check.py falls back to the older per-phase heuristic when it
+    is absent, so a gate file written by an earlier derive_gate keeps working
+    until it is next regenerated. Regenerating IS required — `--check` compares
+    this line whole — which is the ordinary regenerate-a-generated-artifact step.
+    """
     c = result["counts"]
     per_phase = ";".join(f"{k}={v}" for k, v in result["per_phase"].items())
     return (
         "# basis: SN={SN} SR={SR} LLR={LLR} TC={TC} drafts={d} modified={m} "
-        "computed={raw} phase={ph} per-phase={pp}".format(
+        "computed={raw} ex-draft={ed} phase={ph} per-phase={pp}".format(
             SN=c["SN"],
             SR=c["SR"],
             LLR=c["LLR"],
@@ -349,6 +381,7 @@ def basis_line(result):
             d=result["drafts"],
             m=result["modified"],
             raw=GATE_NAMES[result["raw"]],
+            ed=GATE_NAMES[result["ex_draft"]],
             ph=result["phase"] if result["phase"] is not None else "(none)",
             pp=per_phase or "(none)",
         )

@@ -52,6 +52,7 @@ records where each one bites.
 | Ask one good question, not five hedges | Prose | judgment; not mechanizable |
 | Repo text is memory; promote durable facts to `docs/` | Prose + Harness | `check_docs` keeps the promoted links live; the promotion itself is judgment |
 | Back-link implementing symbols with `Implements: SR-/LLR-` | **Prose (gap)** | see Findings — surfaced by the map but **not required** by any check |
+| A signed measurement is reproducible, or marked historical (WI-342) | **Reviewer (honest gap)** | process-options.md "Signed measurements". Nothing can tell a live measurement from a recollection, so no harness or test can hold this; the reviewer asking "re-derive that number" is the whole enforcer, and it works — 127-REVIEW-A and 128-REVIEW-A between them refuted or marked UNVERIFIABLE eight signed figures. The mechanizable half is the *habit*: commit the command and manifest before the fix destroys the input |
 
 ## Findings from this audit
 

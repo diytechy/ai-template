@@ -33,7 +33,15 @@ DASHBOARD = REPO_ROOT / "PROJECT_STATE.html"
 # rows, every one of which renders a node. Registry GROWTH, not a rendering
 # blow-up — the per-row cost is unchanged, and the check that would catch a real
 # blow-up is this one staying tight against the new row count.
-MAX_BYTES = 1_650_000
+# 1,650,000 -> 1,900,000, WI-340/342 (2026-07-28). Measured 1,655,456 against
+# 1,640,447 at the parent commit: +15,009 for SIX new WI rows and three long
+# Deliverables, ~2.5 kB/row, which is the SAME per-row cost as before — registry
+# growth, not a rendering blow-up. Note what the old number really was: 1,650,000
+# left 9,553 bytes of headroom (0.6%), so it had stopped being the "generous
+# ceiling" this file documents and had become an exact freeze that bites on the
+# next four rows — the same defect as the smoke ratchet stamped at current+1
+# (WI-336). 1,900,000 restores ~15%, matching the 14-21% the earlier stamps kept.
+MAX_BYTES = 1_900_000
 
 
 def test_dashboard_stays_within_its_size_budget():

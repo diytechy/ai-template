@@ -16549,3 +16549,173 @@ created a genuine intra-module duplicate in `check.py`, and `dupes` caught it on
 the next run — **extracted into `_print_steps()`, not sanctioned**, which is the
 standing rule and, given WI-340 is open about exactly this class, the only
 defensible answer.
+
+---
+
+## Session 2026-07-28 — WI-340 + WI-341 + WI-342: the last three findings of 128-REVIEW-A
+
+Three findings, three different kinds of answer: one was a classification that
+had to be redone by reading, one was a question that stopped being owner-shaped
+once the right measurement was found, and one was a rule to state and then
+apply. All three landed with guards that fail when the defect is put back.
+
+**WI-340 — the census audit, re-triaged by reading (BLOCKER 2).** WI-338 reached
+"0 unclassified" partly by bucketing all 64 same-file blocks as `intra-module`
+and charging them wholesale to WI-280 — a class derivable from two path strings,
+which is the same reach-zero-by-broad-class failure that WI had just corrected,
+and which WI-304 had already corrected once. Each of the 64 was dumped with both
+of its extents reconstructed from the token stream and read. They are **20
+semantic classes with three dispositions**, and the split is the finding:
+
+- **34 blocks are ordinary extraction work** owned by nothing — filed as
+  WI-343 (agent_dispatch ref plumbing, 12), WI-344 (check_trajectory's
+  staged-close scan, 5), WI-345 (agent_loop verdict plumbing, 4),
+  WI-346 (gen_trajectory's local spine loader, 9), WI-347 (four one-offs).
+- **20 really are WI-280's programme** — the train disposition arms and the
+  graph/render layer, both of which its row names.
+- **7 were never debt at all.** Two are the detector matching a parameter list
+  against its own echo — `print_run_banner`'s definition against its single call
+  site, and `planner_pair`'s keyword tail against `planner_fallback`'s
+  deliberately uniform one. There is nothing to extract: the second occurrence
+  *is* the use of the first.
+- **3 belong to cross-module classes of the same idiom** that already existed
+  (`import-fallback`, `declared-file`, `okf-row`) — which a path predicate could
+  never have found, because it can only ask whether two paths are equal.
+
+The load-bearing error was about F5. F5 buys **cross-script** copy-ability, so
+it never justified a same-file copy; that is why `gen_trajectory`'s eight
+repeated spine loaders are extraction and not sanction.
+
+**The guard** (`tests/test_dupes_census_audit.py`, 13 tests, every check
+mutation-proven in-suite) enforces six properties, but one is the point: **a
+class charged to a WI must name a WI that exists, is still open, and whose row
+names every module in the class.** That is precisely what the old bucket failed —
+WI-280's row never mentioned `check_docs.py`, `gen_arch_map.py` or `gen_okf.py`.
+Its mutation test replays the original defect by moving a `check_docs.py` block
+under the WI-280 class. WI-280's row was amended to *name* the two modules it
+does own, so the ownership is now checkable rather than asserted. The regrouping
+was applied mechanically with the census multiset asserted unchanged first.
+
+The new guard then earned itself within the hour: WI-341's `_raw_level`
+extraction merged two adjacent spine-loader blocks into one (**208 → 207**), and
+the coverage check reported it on the next run. Re-stamped with the reason in
+the file, not silently.
+
+**WI-341 — measure the counterfactual instead of inferring it (MAJOR 3).** The
+row offered two routes, both changing what `derive_gate` publishes and both
+therefore owner-shaped: a stored high-water mark, or an explicit window marker.
+Both were passed over — a high-water read from the artifact's own previous
+content makes a generated file depend on its own history and never falls when a
+repo genuinely regresses; a declared marker re-introduces the hand-set gate the
+derived model exists to abolish. The evidence was already in the snapshot and
+nobody had asked for it: **a Draft erases its phase's level, but it does not
+touch the sibling rows.** So `derive_gate` now publishes `ex-draft=` — the same
+gate arithmetic over the non-draft subset — and a draft window requires it to
+clear G2 *and* to sit above what the drafts produced. Pure function of the
+artifacts; no history, no self-reference, and no owner decision needed after all.
+
+The false negative is closed (mature single-phase repo + one Draft:
+`computed=G0 per-phase=1=G0 ex-draft=G3` → window) and the MAJOR-3 false
+positive stays closed **at the source** rather than by a floor heuristic. The
+per-phase rule survives only as the fallback for a gate file written before the
+field existed. **Downstream note:** `docs/gate` must be regenerated once —
+`--check` says so, and it is the ordinary regenerate-a-generated-artifact step.
+
+Guards: three in `test_derive_gate.py` drive the real spine; five in
+`test_advisory_during_window.py` cover the consumer, including both precedence
+directions with `ex-draft` and `per-phase` deliberately disagreeing; one asserts
+the meta-repo's own `docs/gate` actually carries the field, without which every
+fixture assertion could pass while the producer published nothing. The mutation
+proof lives in the suite: strip only `ex-draft=G3` from the winning fixture and
+the answer reverts to the documented defect.
+
+**WI-342 — the standing rule for signed measurements (MAJOR 4).** Ruled: **both**
+halves, in order, stated once in process-options.md "Signed measurements". A
+measurement whose input its own fix will destroy commits its evidence *first* —
+command, manifest, before/after hashes, raw output, in the repo rather than in a
+session transcript. A number already taken on state that is gone is written as a
+*historical, non-reproducible observation* in the same sentence that states it.
+The reasoning worth carrying: such a number is not wrong, it is **unfalsifiable**,
+which to a reviewer is indistinguishable from one that was never true. That is
+how a false claim survives — not by being a lie, but by being uncheckable.
+
+Applied to all four sites the review named. The 28-LF/9-CRLF mixture and the
+67-file restoration are marked HISTORICAL with the independently checkable
+residue named beside them (the committed 164-entry census; the review's own
+proof that no line-ending-only blob change ever landed). The classifier's "four
+passes" claim is simply gone — WI-340's re-triage states its *method* instead of
+its effort, which is the better claim anyway. The 24.3 s smoke figure now
+carries the command that re-derives it plus a reading taken today, which is
+half (1) applied rather than described.
+
+Enforcement is honest: nothing can tell a live measurement from a recollection,
+so this is a **Reviewer**-tier rule and `docs/enforcement-audit.md` records it as
+one — with the evidence that the tier works, since two adversarial reviews
+refuted or marked UNVERIFIABLE eight signed figures between them.
+
+**Deviations from spec.** WI-341's row said the fix was owner-shaped because
+both routes it named change what `derive_gate` publishes. `ex-draft` also
+changes what it publishes, but additively and as a pure function of the same
+inputs, with the old consumer path preserved as a fallback — so it needs a
+regeneration, not a decision. Flagged here rather than assumed. WI-340's
+extractions were filed as five scoped WIs rather than performed: doing them
+would have changed the fingerprints of the very blocks being audited, in the
+same commit as the audit.
+
+**Incidental find, filed as WI-348.** `git ls-files --eol` — the per-session
+check WI-337 established — reported `docs/gate` as `i/lf w/crlf` immediately
+after `derive_gate.py` regenerated it, on a path `.gitattributes` declares
+`eol=lf`. The cause is general: **17** `write_text()` sites across the kit
+scripts pass no `newline` argument (4 already do), so on Windows every generated
+artifact leaves the tool CRLF. Harmless here — git's clean filter normalizes the
+committed blob and every reader strips — but it is the same defect *class* as
+WI-337 (a tool reading the checkout's bytes rather than the content) and WI-339
+is a third instance. Surfaced rather than fixed inline: it is a 17-site sweep
+and wants its own guard, not a word added to a commit about something else. The
+working-tree copy was normalized to LF here.
+
+**Second incidental find, filed as WI-349 — and found by tripping it.** While
+filing WI-348 above, a WI row was written with a literal newline inside its
+quoted `Title` cell. `check_trajectory` reported **clean**; the only thing that
+surfaced it was git warning about mixed line endings. That matters because
+`check_trajectory.py:1478` documents the assumption in its own docstring — "a WI
+row is one physical line (no embedded newlines)" — and then relies on it to
+compare staged names against HEAD's registry line-wise. A documented assumption
+that nothing enforces is precisely the enforcement-audit question, asked of the
+code's own dependency. Cell fixed; the missing integrity check is WI-349.
+
+**Dashboard ceiling re-stamped, 1,650,000 -> 1,900,000.** `PROJECT_STATE.html`
+measured 1,655,456 against 1,640,447 at the parent commit: **+15,009 for six new
+WI rows** and three long Deliverables, ~2.5 kB/row — the same per-row cost as
+before, so registry growth rather than a rendering blow-up, which is the
+distinction that sensor exists to make. Worth naming *why* it fired at all: the
+old ceiling left **9,553 bytes** of headroom (0.6%), so it had already stopped
+being the generous ceiling its own docstring describes and had become an exact
+freeze that would bite on the next four rows. Same defect as the smoke ratchet
+stamped at current+1 (WI-336). The new number restores ~15%, matching the 14-21%
+the earlier stamps kept.
+
+**Byte deltas on budgeted files.** `AGENTS.template.md` 9,975 (unchanged);
+`PROCESS.md` 63,249 (unchanged); `PROCESS_OPTIONS.md` 163,113 → 165,000
+(**+1,887**: the "Signed measurements" section and its applies-when row — a new
+standing rule, which is what this doc is for). Re-stamped in both
+`byte-budget-guard` copies, and worth naming: the recorded baseline said
+**161,771** while the tree was already **163,113** — WI-322 and the
+127-REVIEW-A commit grew the file without re-stamping. Measuring before editing
+is what caught it, which is the procedure's own instruction.
+
+**Bar.** Smoke **470 passed / 25.0 s** (budget 480 / 60 s); full unfiltered
+suite **1629 passed, 7 skipped** (13:09); `check.py --gate G3 --jobs 0`
+**RESULT: PASS**, all 19 steps.
+
+The gate's first run failed four steps, and all four were real rather than
+environmental: `format` (two new test files unformatted), `tests+coverage` and
+`trajectory` (the same finding twice — status.md's forward-only rule fired on
+the hand-authored prose, because closing a WI turns its id into a *backward*
+reference and this session's own narrative named three of them), and
+`skills-sync` (a **third** skill copy under `.agents/` that the
+"re-stamp every tracked skill copy" instruction did not enumerate — two were
+updated by hand, the third was not, and only the generated-artifact freshness
+gate knew). Recorded because the pattern is worth more than the fixes: every one
+was a *consistency* failure between an edit and something that mirrors it, and
+each was caught by a check that already existed.

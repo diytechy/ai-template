@@ -53,6 +53,32 @@ GATE_DRAFT_EARLY_MULTIPHASE = GATE_WINDOW.replace(
 GATE_CLEAN = GATE_WINDOW.replace("drafts=0 modified=7", "drafts=0 modified=0")
 GATE_HAND_WRITTEN = "# a hand-maintained gate file, no derivation basis\nG2\n"
 
+# --- WI-341: the `ex-draft` basis field ---------------------------------------
+# The fixtures above carry NO `ex-draft=`, so every assertion made on them also
+# pins the LEGACY path — a gate file written before WI-341 keeps its old
+# behaviour until it is regenerated. The ones below carry the field.
+#
+# A mature SINGLE-phase repo reopened by one Draft. This is the case the
+# per-phase heuristic structurally could not see (128-REVIEW-A MAJOR 3): the
+# Draft drops the only phase to G0, so `per-phase=1=G0` is indistinguishable
+# from a brand-new project — while `ex-draft=G3` says plainly that everything
+# the draft did not touch is still at G3.
+GATE_DRAFT_MATURE_SINGLE_PHASE = GATE_WINDOW.replace(
+    "drafts=0 modified=7 computed=G2 phase=1 per-phase=1=G2",
+    "drafts=1 modified=0 computed=G0 ex-draft=G3 phase=1 per-phase=1=G0",
+)
+# Byte-identical except for `ex-draft`: an early project's ratified rows are
+# undecomposed, so removing the drafts recovers nothing.
+GATE_DRAFT_EARLY_EX = GATE_DRAFT_MATURE_SINGLE_PHASE.replace(
+    "ex-draft=G3", "ex-draft=G1"
+)
+# Drafts present, but they are not what is holding the gate down (something else
+# is already at G2) — nothing is being suppressed, so it is not a window.
+GATE_DRAFT_NOT_SUPPRESSING = GATE_WINDOW.replace(
+    "drafts=0 modified=7 computed=G2 phase=1 per-phase=1=G2",
+    "drafts=1 modified=0 computed=G2 ex-draft=G2 phase=1 per-phase=1=G2",
+)
+
 
 def _gate(tmp_path, text, name="gate"):
     p = tmp_path / name
@@ -100,6 +126,73 @@ def test_ordinary_early_drafting_is_not_a_ratification_window(tmp_path):
     # per-phase field, is still detected. Without this pair the fix could be
     # "return False for drafts" and look correct.
     assert check.window_open(_gate(tmp_path, GATE_DRAFT_MATURE, "mature")) is True
+
+
+def test_a_single_phase_repo_reopened_by_a_draft_is_a_window(tmp_path):
+    """128-REVIEW-A MAJOR 3, the residual FALSE NEGATIVE — now closed (WI-341).
+
+    A Draft added to a previously-mature single-phase repo dropped that phase to
+    G0. The per-phase rule then found no phase above `computed` and reported no
+    window, so `lint`, `dupes` and `--require-verified` stopped running for the
+    duration — precisely the blind spot the advisory tier exists to close,
+    reopened by one row. `ex-draft` answers the question the breakdown could
+    not: what the spine computes with the drafts removed.
+
+    The three fixtures differ ONLY in `ex-draft=`/`computed=`, so a fix that
+    just returned True for drafts would fail the second and third.
+    """
+    assert (
+        check.window_open(_gate(tmp_path, GATE_DRAFT_MATURE_SINGLE_PHASE, "reopened"))
+        is True
+    )
+    # Same shape, nothing hidden behind the drafts: an early project.
+    assert check.window_open(_gate(tmp_path, GATE_DRAFT_EARLY_EX, "early-ex")) is False
+    # Drafts that are not suppressing anything: ex-draft == computed.
+    assert (
+        check.window_open(_gate(tmp_path, GATE_DRAFT_NOT_SUPPRESSING, "nosuppress"))
+        is False
+    )
+    # The mutation proof, in the suite rather than in a session transcript: strip
+    # ONLY `ex-draft=G3` from the winning fixture and the answer reverts to the
+    # documented defect. So this guard cannot pass for any reason other than the
+    # field being read — and the legacy fallback is pinned to its old behaviour
+    # at the same time.
+    without = GATE_DRAFT_MATURE_SINGLE_PHASE.replace("ex-draft=G3 ", "")
+    assert "ex-draft" not in without
+    assert check.window_open(_gate(tmp_path, without, "legacy")) is False
+
+
+def test_ex_draft_overrides_the_per_phase_fallback(tmp_path):
+    """`ex-draft` is the authority when present; per-phase is only the fallback.
+
+    Pinned with the two fields DISAGREEING in both directions, because the
+    fallback is now unreachable code for any current gate file and a wrong
+    precedence would be invisible otherwise.
+    """
+    # per-phase says "mature" (1=G3 above computed), ex-draft says nothing is
+    # hidden. ex-draft wins: not a window.
+    misleading_phase = GATE_WINDOW.replace(
+        "drafts=0 modified=7 computed=G2 phase=1 per-phase=1=G2",
+        "drafts=1 modified=0 computed=G0 ex-draft=G0 phase=4 per-phase=1=G3;4=G0",
+    )
+    assert check.window_open(_gate(tmp_path, misleading_phase, "mp")) is False
+    # And the reverse: per-phase sees nothing, ex-draft sees G3. Window.
+    misleading_flat = GATE_WINDOW.replace(
+        "drafts=0 modified=7 computed=G2 phase=1 per-phase=1=G2",
+        "drafts=1 modified=0 computed=G0 ex-draft=G3 phase=1 per-phase=(none)",
+    )
+    assert check.window_open(_gate(tmp_path, misleading_flat, "mf")) is True
+
+
+def test_the_meta_repos_own_gate_file_carries_the_field(tmp_path):
+    """Not a fixture test: the real docs/gate must actually publish `ex-draft`.
+
+    Without this, every assertion above could pass against hand-written strings
+    while `derive_gate.py` published nothing and the consumer silently ran on
+    the legacy fallback forever.
+    """
+    basis = (ROOT / "docs" / "gate").read_text(encoding="utf-8")
+    assert re.search(r"#\s*basis:.*\bex-draft=G\d\b", basis), basis
 
 
 def test_advisory_steps_are_the_ones_a_higher_gate_requires():

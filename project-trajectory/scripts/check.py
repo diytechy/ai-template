@@ -730,6 +730,12 @@ _BASIS_RE = re.compile(r"#\s*basis:.*\bdrafts=(\d+)\b.*\bmodified=(\d+)\b")
 # "this project is simply early".
 _COMPUTED_RE = re.compile(r"\bcomputed=(G\d)\b")
 _PER_PHASE_RE = re.compile(r"\bper-phase=(\S+)")
+# The level the spine would compute with the DRAFT rows removed (WI-341). This
+# is the direct answer to "are the drafts the only thing holding this gate
+# down?", and unlike the per-phase breakdown a draft cannot erase it: the rows
+# it did not touch are still there. Absent from gate files written before
+# WI-341 — the per-phase fallback below covers those until they regenerate.
+_EX_DRAFT_RE = re.compile(r"\bex-draft=(G\d)\b")
 
 # Steps kept OUT of the advisory pass, by name and with the reason — an
 # unexplained exclusion list is how a warn tier quietly stops covering things.
@@ -779,16 +785,26 @@ def window_open(gate_file=None):
         Verified is pending again — that is a window by construction.
       * `drafts>0` is ambiguous. A Draft reads G0, so drafts drop the gate in a
         mature repo starting a new phase AND in a project that has never
-        ratified anything. The counts cannot tell those apart, but the
-        `per-phase` breakdown can: in the mature repo the OTHER phases still
-        read G2/G3, while in the early project nothing has climbed yet. So a
-        draft window requires some phase to sit ABOVE the computed level.
+        ratified anything. The counts cannot tell those apart — `ex-draft` can,
+        by answering the question directly: it is the level the same arithmetic
+        computes with the draft rows REMOVED. If that clears G2 and sits above
+        the level the drafts produced, then the spine has demonstrably climbed
+        and the drafts are the only thing holding it down. A window.
 
-    When the basis carries no per-phase breakdown (an unphased repo), drafts
-    alone are treated as ordinary. That is the conservative direction on
-    purpose: the cost of a false positive is a warn tier people learn to ignore,
-    and the case that motivated the ruling — the 2026-07-26/27 re-attestation —
-    is a `modified` window, caught unconditionally."""
+    `ex-draft` replaced a per-phase heuristic that read the phase breakdown for
+    the same evidence (WI-341). The heuristic could not see a SINGLE-phase
+    repo's maturity at all: a Draft added there drops that phase to G0, so no
+    phase remains above `computed` and the mature repo reads exactly like a new
+    one — the very blind spot this tier exists to close, reopened by one row
+    (128-REVIEW-A MAJOR 3). It is kept below ONLY as the fallback for a gate
+    file written before `ex-draft` existed, and it keeps its own G2 floor,
+    which fixed the mirror-image false positive on an early multi-phase repo.
+
+    Both routes are conservative when the evidence is missing (no `ex-draft`
+    and no per-phase breakdown => ordinary): the cost of a false positive is a
+    warn tier people learn to ignore, and the case that motivated the ruling —
+    the 2026-07-26/27 re-attestation — is a `modified` window, caught
+    unconditionally."""
     path = Path(gate_file) if gate_file else GATE_FILE
     if not path.exists():
         return False
@@ -802,18 +818,22 @@ def window_open(gate_file=None):
     if drafts == 0:
         return False
     computed = _COMPUTED_RE.search(text)
+    if not computed:
+        return False
+    ex_draft = _EX_DRAFT_RE.search(text)
+    if ex_draft:
+        # Two conditions, not one: the drafts-removed level must clear the bar
+        # the advisory tier reports on (G2+), and it must actually be ABOVE what
+        # the drafts produced — otherwise the drafts are not what is holding the
+        # gate down and there is nothing being suppressed.
+        return ex_draft.group(1) >= "G2" and ex_draft.group(1) > computed.group(1)
+    # Fallback for a pre-WI-341 gate file (no `ex-draft`), with its own G2 floor.
     per_phase = _PER_PHASE_RE.search(text)
-    if not computed or not per_phase or per_phase.group(1) == "(none)":
+    if not per_phase or per_phase.group(1) == "(none)":
         return False
     levels = re.findall(r"=(G\d)", per_phase.group(1))
     if not levels:
         return False
-    # Two conditions, not one. "Above the computed level" alone still fired on a
-    # genuinely early project — `computed=G0 per-phase=1=G1;2=G0` is a repo whose
-    # first phase has only reached G1 while its second is being drafted, which
-    # has earned nothing (128-REVIEW-A MAJOR 3). The advisory tier reports what
-    # G2/G3 require, so the evidence has to be that some phase actually REACHED
-    # G2 or better.
     return max(levels) >= "G2" and max(levels) > computed.group(1)
 
 

@@ -31,6 +31,7 @@ required for the minimum profile). Rows are in document order; each maps to the
 | Dual-plan decomposition | a goal is design-shaping enough that one planner's WI decomposition should not go unchallenged | two rival plans + a coverage diff + one critique round + an arbiter verdict (`docs/plans/`) |
 | Tier-conditional guardrails | an unattended run maps different model tiers to different phases | `docs/guardrails-policy` |
 | Enforcement audit | your process outgrew one reader's head and you want to know which rules actually bind | `docs/enforcement-audit.md` |
+| Signed measurements | you are about to write a measured number into a doc, log or registry row | a commit-the-evidence-first rule + a historical-observation marker |
 | §7 boundary notes | onboarding contributors, wiring a workstation, or a contested tooling boundary | prose (setup-script + boundary calls) |
 | Skills layer | an AI agent works the repo and you want it to load reusable skills | `skills/` + a per-agent fan-out |
 | Trajectory / work-items layer | you want to track **how** work executes — cross-track order, %-complete | `work-items.csv` + `PROJECT_STATE.html` + `gen_trajectory.py` |
@@ -1237,6 +1238,37 @@ without a stated reason**. Recording the result as a short table in `docs/`
 Inspection that should be a Test, a guide rule no hook backs. (The meta-repo
 dogfoods this over its own working agreement; a live example finding it caught
 was the stdlib-only rule, promoted from an Inspection to a real test.)
+
+## Signed measurements
+
+**Applies when** a number you measured is about to be written into a doc, a log
+entry, a commit message or a registry row — *signed*, so a later reader treats
+it as fact. One command's cost; it stops the next session inheriting a figure it
+cannot check.
+
+A measurement is only as good as the state it was taken on, and the most
+valuable ones are taken on state the fix then destroys: the tree before the
+normalization, the counts before the re-stamp, the timing on the box that ran
+it. Once the fix lands the input is gone and the number is unfalsifiable — which
+is indistinguishable, to a reviewer, from a number that was never true. That is
+how a false claim survives: not by being a lie, but by being uncheckable.
+
+The rule has two halves, in order:
+
+1. **Commit the evidence first.** A measurement whose input its own fix will
+   destroy lands its evidence *before* the fix, in the repo rather than in a
+   session transcript: the exact command, the file manifest it ran over,
+   before/after hashes or counts, raw tool output. An evidence file beside the
+   WI's spec is enough. The bar is that a second person can rerun it, or check
+   the artifact it produced.
+2. **Otherwise mark it historical.** A number already taken on state that is
+   gone is written as a *historical, non-reproducible observation* — in the same
+   sentence that states it, not in a footnote. Marking it costs nothing and
+   keeps it useful; restating it as a standing fact is the failure.
+
+Neither half is mechanizable — no check distinguishes a live measurement from a
+recollection — so the enforcer is **Reviewer**, and it belongs in the
+enforcement audit above as one of the honestly-unbacked rules.
 
 ## §7 boundary notes
 

@@ -62,6 +62,14 @@
 # --- RE-STAMPED 2026-07-27 (WI-337) - on the LINE-ENDING-NORMALIZED basis ----
 # Supersedes the WI-334 re-stamp of the same day, which was INVALID.
 #
+# HISTORICAL, NON-REPRODUCIBLE (marked under WI-342): the 28/9 split below was
+# counted on the working tree as it stood before WI-337 normalized it. That tree
+# is gone and no manifest of the nine files was kept, so this specific figure
+# cannot be re-derived - `git ls-files --eol` on any later checkout answers a
+# different question. What IS checkable, and what the conclusion rests on: the
+# 164-entry census WI-334 committed, and that the same corpus under uniform LF
+# *and* uniform CRLF yields 208 (128-REVIEW-A reproduced both).
+#
 # WI-334 regenerated this census on a Windows working tree whose scripts/ was
 # MIXED - 28 files LF, 9 CRLF: the residue of editing on Windows after an
 # `eol=lf` checkout, not of the checkout itself. check_dupes tokenized those
@@ -101,40 +109,87 @@
 # landed the same day, once that was fixed - it is the section immediately
 # below, and it is grouped INTO the census rather than asserted above it.
 
-# --- THE AUDIT (WI-338, 2026-07-27): what these 208 blocks ACTUALLY are ---
+# --- THE AUDIT (WI-338, 2026-07-27; RE-TRIAGED WI-340, 2026-07-28) ---
 #
-# Every block below is classified, and the classification was produced by
-# READING the blocks, not by counting census lines. It replaces WI-334's
-# signed claim that "MOST are the kit's per-script CLI preamble", which
-# docs/reviews/127-REVIEW-A.md refuted and WI-337 removed rather than
-# restated. The true distribution:
+# Every block below is classified by READING it, and every class states a
+# DISPOSITION on the line under its header:
 #
-#   cli                   77   (37%)
-#   wi-registry            5   (2%)
-#   spine-loader          21   (10%)
-#   okf-row                2   (1%)
-#   graph-walk             1   (0%)
-#   import-fallback        2   (1%)
-#   skills-materialize     1   (0%)
-#   markdown-table        11   (5%)
-#   declared-file         11   (5%)
-#   git-wrapper            9   (4%)
-#   module-path            4   (2%)
-#   intra-module          64   (31%)
+#   disposition: deliberate      the duplication is the design; it stays.
+#   disposition: extract WI-nnn  it should be one helper; that WI owns the work.
+#   disposition: debt WI-nnn     it dissolves in a named decomposition programme.
 #
-# So the CLI preamble IS the largest single class - and it is 37%, not
-# "most". The two facts worth carrying: cross-module duplication here is
-# dominated by SMALL STABLE HELPERS the F5 ruling deliberately duplicates
-# (a shared _kitcommon.py was rejected 2026-07-12 so each script stays
-# independently copy-able), and nearly a THIRD of the census is not F5 at
-# all - it is intra-module debt that WI-280 owns.
+# A class that charges its blocks to a WI must name a WI whose registry row
+# names every module in the class — tests/test_dupes_census_audit.py enforces
+# that, together with the header counts and the fact that the grouping covers
+# the emitted census exactly. That rule exists because it was broken twice:
+# WI-334 signed "MOST are the CLI preamble" (refuted by 127-REVIEW-A), and
+# WI-338's replacement audit reached "0 unclassified" only by bucketing all 64
+# SAME-FILE blocks as one `intra-module` class charged wholesale to WI-280
+# (refuted by 128-REVIEW-A BLOCKER 2 — a class you can compute from two path
+# strings is not an acceptance rationale, and WI-304 had already made and
+# retracted that exact mistake). Those 64 are re-triaged below into 20 semantic
+# classes with three different dispositions; same-path is now METADATA, printed
+# in the totals, never a reason.
+#
+# Count note: the WI-337 section above says 208, and did at that commit. It is
+# 207 here because WI-341's `_raw_level` extraction in derive_gate.py made two
+# adjacent spine-loader blocks (`6cc84e6e5a77`, `9997eb98dd01`) into one
+# contiguous run, `108925d1de82`. Same class, same F5 reason, one fewer entry —
+# and it was the guard below that reported the drift, not a re-stamp.
+#
+# The distribution (207 blocks):
+#
+#   cli                   77   (37%)   deliberate
+#   spine-loader          20   (10%)   deliberate
+#   declared-file         12    (6%)   deliberate
+#   markdown-table        11    (5%)   deliberate
+#   graph-layout          11    (5%)   debt WI-280
+#   git-wrapper            9    (4%)   deliberate
+#   train-disposition      9    (4%)   debt WI-280
+#   spine-load-repeat      8    (4%)   extract WI-346
+#   ref-namespace          5    (2%)   extract WI-343
+#   wi-registry            5    (2%)   deliberate
+#   module-path            4    (2%)   deliberate
+#   staged-close-scan      4    (2%)   extract WI-344
+#   import-fallback        3    (1%)   deliberate
+#   okf-row                3    (1%)   deliberate
+#   ctx-unpack             3    (1%)   deliberate
+#   reservation-release    3    (1%)   extract WI-343
+#   verdict-plumbing       3    (1%)   extract WI-345
+#   ref-transaction        2    (1%)   extract WI-343
+#   signature-echo         2    (1%)   deliberate
+#   bootstrap-copy         2    (1%)   extract WI-347
+#   atomic-json            1            extract WI-343
+#   trailer-scan           1            extract WI-343
+#   trailer-fold           1            deliberate
+#   exe-presence           1            extract WI-345
+#   spec-scan              1            extract WI-344
+#   warn-tier-dispatch     1            deliberate
+#   source-walk            1            extract WI-347
+#   subprocess-capture     1            extract WI-346
+#   brief-row-render       1            extract WI-347
+#   graph-walk             1            deliberate
+#   skills-materialize     1            deliberate
+#
+# By disposition: deliberate 153, extract 34 (WI-343..WI-347), debt 20 (WI-280).
+# By path relation (metadata only): 143 cross-module, 64 same-file. The two cuts
+# do NOT coincide — 7 same-file blocks are deliberate, 3 join cross-module
+# classes of the same idiom, and 34 of the 54 remaining are ordinary extraction
+# work no decomposition programme has to precede.
+#
+# The two facts worth carrying: cross-module duplication here is dominated by
+# SMALL STABLE HELPERS the F5 ruling deliberately duplicates (a shared
+# _kitcommon.py was rejected 2026-07-12 so each script stays independently
+# copy-able); and F5 does NOT extend inside a file — cross-SCRIPT copy-ability
+# is what it buys, so a same-file copy needs its own reason or a helper.
 #
 # MAINTENANCE: `--emit-census` prints these lines UNGROUPED. A re-stamp that
 # cannot re-derive the grouping must say so rather than silently flatten it -
-# a census whose classification has rotted is how the false claim above
+# a census whose classification has rotted is how the false claims above
 # survived in the first place.
 
-# --- cli (77 blocks) -------------------------------------------
+# --- cli (77 blocks) ---------------------------------------------
+# disposition: deliberate
 # the per-script CLI skeleton + _utf8_console. F5: kit scripts must stay
 # independently copy-able and stdlib-only, which is why a shared
 # _kitcommon.py was REJECTED (owner ruling 2026-07-12). check_stubs.py says
@@ -217,7 +272,8 @@ a986f553a391  project-trajectory/scripts/plan_briefs.py == project-trajectory/sc
 0f99fcaa1f96  project-trajectory/scripts/plan_briefs.py == project-trajectory/scripts/schedule.py
 2a3ae413b478  project-trajectory/scripts/plan_coverage.py == project-trajectory/scripts/plan_coverage_step.py
 
-# --- wi-registry (5 blocks) -----------------------------------
+# --- wi-registry (5 blocks) --------------------------------------
+# disposition: deliberate
 # the WI-registry parser. Kept apart ON PURPOSE (WI-291 drift guard):
 # schedule.py stays stdlib-only and self-contained, and the one real risk -
 # DRIFT - is closed by tests/test_wi_loader_sync.py, not by extraction.
@@ -227,7 +283,8 @@ d298066d8071  project-trajectory/scripts/agent_common.py == project-trajectory/s
 d47d5975c21b  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/schedule.py
 f800f0c60265  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/schedule.py
 
-# --- spine-loader (21 blocks) ----------------------------------
+# --- spine-loader (20 blocks) ------------------------------------
+# disposition: deliberate
 # spine-registry loaders (load_csv/refs, the SR/LLR/TC/IF/OI row filters,
 # the draft-heading scan). Several carry an explicit in-code note -
 # 'Duplicated in trace.py per the F5 rule' - and derive_gate.py is
@@ -248,35 +305,45 @@ bea18e2ff5f7  project-trajectory/scripts/derive_gate.py == project-trajectory/sc
 b455a7e5955d  project-trajectory/scripts/derive_gate.py == project-trajectory/scripts/trace.py
 e756d21c8ca6  project-trajectory/scripts/derive_gate.py == project-trajectory/scripts/trace.py
 1f37852f250b  project-trajectory/scripts/derive_gate.py == project-trajectory/scripts/trace.py
-6cc84e6e5a77  project-trajectory/scripts/derive_gate.py == project-trajectory/scripts/trace.py
-9997eb98dd01  project-trajectory/scripts/derive_gate.py == project-trajectory/scripts/trace.py
+108925d1de82  project-trajectory/scripts/derive_gate.py == project-trajectory/scripts/trace.py
 c54131b73567  project-trajectory/scripts/gen_arch_map.py == project-trajectory/scripts/plan_briefs.py
 f3ea6bf955e3  project-trajectory/scripts/gen_arch_map.py == project-trajectory/scripts/plan_briefs.py
 b0b9cc04d152  project-trajectory/scripts/gen_release_checklist.py == project-trajectory/scripts/trace.py
 
-# --- okf-row (2 blocks) ---------------------------------------
+# --- okf-row (3 blocks) ------------------------------------------
+# disposition: deliberate
 # the OKF/dashboard row builders — the same (kind, title, body) tuple shape
 # emitted by gen_okf and gen_trajectory for each spine artifact.
+# (WI-340) plus one SAME-FILE block of the same idiom, regrouped here:
+# gen_okf builds the SR tier and the LLR tier rows with the same shape.
 9205a1d4996b  project-trajectory/scripts/gen_okf.py == project-trajectory/scripts/gen_trajectory.py
 fb06318154af  project-trajectory/scripts/gen_okf.py == project-trajectory/scripts/gen_trajectory.py
+9d770b2d948b  project-trajectory/scripts/gen_okf.py == project-trajectory/scripts/gen_okf.py
 
-# --- graph-walk (1 block) ------------------------------------
+# --- graph-walk (1 block)  ---------------------------------------
+# disposition: deliberate
 # the component-graph breadth-first walk, in the validator and the dashboard
 # generator.
 a2fa21743919  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/gen_trajectory.py
 
-# --- import-fallback (2 blocks) -------------------------------
+# --- import-fallback (3 blocks) ----------------------------------
+# disposition: deliberate
 # the sibling-import fallback and command-template substitution — the
 # preamble that lets a kit script run both as a script and in-process.
+# (WI-340) plus one SAME-FILE block of the same idiom, regrouped here:
+# agent_dispatch's try/except import arms repeat their 30-name import list.
 be3d9855f5b5  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/plan_runner.py
 982bbeb7eb27  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/check.py
+6cde28f6024f  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
 
-# --- skills-materialize (1 block) ----------------------------
+# --- skills-materialize (1 block)  -------------------------------
+# disposition: deliberate
 # the per-agent skills directory walk, shared by bootstrap and the skills
 # index generator.
 c1ad5fc6394f  project-trajectory/scripts/bootstrap.py == project-trajectory/scripts/gen_skills_index.py
 
-# --- markdown-table (11 blocks) --------------------------------
+# --- markdown-table (11 blocks) ----------------------------------
+# disposition: deliberate
 # the markdown-table row parser (SN rows, plan tables, the release
 # checklist). gen_okf/gen_trajectory carry the in-code note 'kept byte-for-
 # byte in sync ... they once drifted'.
@@ -292,9 +359,12 @@ a55d35181e85  project-trajectory/scripts/gen_okf.py == project-trajectory/script
 d2ff16e89265  project-trajectory/scripts/plan_artifacts.py == project-trajectory/scripts/plan_coverage.py
 451248328e57  project-trajectory/scripts/plan_artifacts.py == project-trajectory/scripts/plan_coverage.py
 
-# --- declared-file (11 blocks) ---------------------------------
+# --- declared-file (12 blocks) -----------------------------------
+# disposition: deliberate
 # declared-file readers (policy files, stack.ini, coverage.json). F5: each
 # script reads its own declaration rather than importing a sibling.
+# (WI-340) plus one SAME-FILE block of the same idiom, regrouped here:
+# check_docs reads two different declared files with the same skip-comments loop.
 3864c24be1f4  project-trajectory/scripts/bootstrap.py == project-trajectory/scripts/gen_skills_index.py
 1726b03a8cdf  project-trajectory/scripts/bootstrap.py == project-trajectory/scripts/check_doc_refs.py
 c6270a4626d4  project-trajectory/scripts/bootstrap.py == project-trajectory/scripts/check_trajectory.py
@@ -306,8 +376,10 @@ eff0eac572a0  project-trajectory/scripts/check_privacy.py == project-trajectory/
 c16d14a4efc4  project-trajectory/scripts/check_privacy.py == project-trajectory/scripts/check_trajectory.py
 75b2bcbfcc04  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/gen_trajectory.py
 8e99e263cf71  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/gen_trajectory.py
+70e7e2e30301  project-trajectory/scripts/check_docs.py == project-trajectory/scripts/check_docs.py
 
-# --- git-wrapper (9 blocks) -----------------------------------
+# --- git-wrapper (9 blocks) --------------------------------------
+# disposition: deliberate
 # the `git` subprocess wrapper and the dispatcher's preflight/lock pair -
 # small, stable, per-script.
 daf99714501b  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/check_privacy.py
@@ -320,7 +392,8 @@ c669d0d84711  project-trajectory/scripts/check_trajectory.py == project-trajecto
 8dc145bef9c5  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/trace.py
 f02bcce4d53d  project-trajectory/scripts/gen_trajectory.py == project-trajectory/scripts/trace.py
 
-# --- module-path (4 blocks) -----------------------------------
+# --- module-path (4 blocks) --------------------------------------
+# disposition: deliberate
 # the module-path normaliser and the generated-block scanner, shared by the
 # arch map, the validator and trace.
 0e8a5f4a0f99  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/agent_loop.py
@@ -328,53 +401,157 @@ f02bcce4d53d  project-trajectory/scripts/gen_trajectory.py == project-trajectory
 a96fdbede5b0  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/gen_arch_map.py
 a96fdbede5b0  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/trace.py
 
-# --- intra-module (64 blocks) ----------------------------------
-# duplication INSIDE one module — not F5 at all, but the WI-280
-# decomposition debt, which owns it as a design programme. These are the
-# census entries that should SHRINK over time; the cross-module groups above
-# are ones that should not, because the duplication is the deliberate
-# design.
+# --- trailer-fold (1 block)  -------------------------------------
+# disposition: deliberate
+# the two arms of latest_trailer_evidence's newest-first fold — the `WI:`
+# arm records a SET, the `Blocked-WI:` arm records a MAP keyed to a
+# parallel BlockRef list. Same loop shape, different accumulators; a
+# callback-parameterised merge would cost more than the four lines it saves.
 c5e35c61e3a6  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/agent_common.py
-6cde28f6024f  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
+
+# --- ref-namespace (5 blocks) ------------------------------------
+# disposition: extract WI-343
+# read/write of a JSON metadata commit under a dispatcher ref namespace
+# (rev-parse the ref -> `log -1 --format=%B` -> json.loads; commit-tree to
+# write). One contract, five sites across the conflict and blocked
+# namespaces. Extractable to a _ns_meta read/write pair.
 aa9e9ae651e2  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
 aa9e9ae651e2  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
-5c87733175e3  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
-ffa194248f7b  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
 6a1951447b34  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
 f4b75f24b488  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
 68aa5b42cee7  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
+
+# --- ref-transaction (2 blocks) ----------------------------------
+# disposition: extract WI-343
+# the `git update-ref --stdin` transaction — create-reservations and
+# release-reservations build the same prepare/commit batch and share the
+# bytes-not-text-mode rule (only one of the two carries the comment saying
+# why). Extractable to one _update_ref_txn(root, lines, what).
+5c87733175e3  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
+ffa194248f7b  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
+
+# --- atomic-json (1 block)  --------------------------------------
+# disposition: extract WI-343
+# the write-temp-then-os.replace atomic JSON write, once for the journal
+# manifest and once per train file. Extractable to _atomic_json(path, data).
 a21f84485bb7  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
+
+# --- trailer-scan (1 block)  -------------------------------------
+# disposition: extract WI-343
+# `git log --format=<trailers>` over base..train + the per-line split loop,
+# once for `WI:` and once for `Blocked-WI:`. The two differ only in the
+# format string and its field separator.
 cf219bc8c654  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
+
+# --- train-disposition (9 blocks) --------------------------------
+# disposition: debt WI-280
+# the train disposition sequence — staging worktree, reset to the
+# integration HEAD, rewrite the WI rows, regenerate the artifacts,
+# rev-parse, CAS the integration ref — run once per outcome arm
+# (integrated / blocked / parked). This is not boilerplate: each arm
+# threads different state through the same transition, which is exactly
+# the typed train value object WI-280 exists to introduce.
 5ba1c2915c22  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
 5ba1c2915c22  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
 4aafd502371e  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
 4aafd502371e  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
 d647f160d4ca  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
 c250d59a13b2  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
-05bd0eaa4e97  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
-e47234cf5925  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
 5db9c000fa5c  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
 9fbc857a332b  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
-c6b71579a078  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
 ab9c2785757c  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
+
+# --- reservation-release (3 blocks) ------------------------------
+# disposition: extract WI-343
+# release_reservations followed by the `release-failed` journal event, at
+# three call sites. A _release_and_journal(root, journal, tid, wis) states
+# the pairing once; today a site can release without journalling.
+05bd0eaa4e97  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
+e47234cf5925  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
+c6b71579a078  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
+
+# --- exe-presence (1 block)  -------------------------------------
+# disposition: extract WI-345
+# build_argv -> argv[0] -> shutil.which-or-Path.exists, the 'is this
+# model's launcher actually installed' probe, at two sites.
 c8f5fddac0ef  project-trajectory/scripts/agent_loop.py == project-trajectory/scripts/agent_loop.py
+
+# --- signature-echo (2 blocks) -----------------------------------
+# disposition: deliberate
+# NOT copy-paste: the detector is matching a parameter list against its own
+# echo. agent_loop pairs print_run_banner's 15-parameter definition with its
+# single call site; agent_route pairs planner_pair's keyword tail with
+# planner_fallback's, which is a deliberately uniform routing API. Nothing
+# to extract — the second occurrence IS the use of the first.
 a5b7a7b890c2  project-trajectory/scripts/agent_loop.py == project-trajectory/scripts/agent_loop.py
+021fec5dccbd  project-trajectory/scripts/agent_route.py == project-trajectory/scripts/agent_route.py
+
+# --- ctx-unpack (3 blocks) ---------------------------------------
+# disposition: deliberate
+# the bundle-unpack preamble: sibling functions open by binding the same
+# fields of one context/registry object to local names (agent_loop's ctx,
+# trace's reg). The alternative is threading the bundle through every
+# expression, which is less readable; the repetition is the cost of local
+# names and it does not grow with the code.
 b8b532ba9de4  project-trajectory/scripts/agent_loop.py == project-trajectory/scripts/agent_loop.py
+21b0fbb40f6c  project-trajectory/scripts/trace.py == project-trajectory/scripts/trace.py
+7c1e98fa864e  project-trajectory/scripts/trace.py == project-trajectory/scripts/trace.py
+
+# --- verdict-plumbing (3 blocks) ---------------------------------
+# disposition: extract WI-345
+# the managed-session verdict path: mkdir the parent, unlink a pre-planted
+# file, then read-and-parse it — duplicated between the review arm and the
+# critique arm, with the pre-plant rule explained in only one of them.
+# Extractable to a fresh-verdict-path/read pair; the arms stay separate.
 606bb9bf6b06  project-trajectory/scripts/agent_loop.py == project-trajectory/scripts/agent_loop.py
 08e04d3ff9c1  project-trajectory/scripts/agent_loop.py == project-trajectory/scripts/agent_loop.py
 96d2f74fe714  project-trajectory/scripts/agent_loop.py == project-trajectory/scripts/agent_loop.py
-021fec5dccbd  project-trajectory/scripts/agent_route.py == project-trajectory/scripts/agent_route.py
+
+# --- bootstrap-copy (2 blocks) -----------------------------------
+# disposition: extract WI-347
+# the copy-if-absent-or-forced file loop and the skills-refresh walk, each
+# repeated between the mapping copier and the skills materialiser.
 82419571a936  project-trajectory/scripts/bootstrap.py == project-trajectory/scripts/bootstrap.py
 7046137adff6  project-trajectory/scripts/bootstrap.py == project-trajectory/scripts/bootstrap.py
-70e7e2e30301  project-trajectory/scripts/check_docs.py == project-trajectory/scripts/check_docs.py
+
+# --- spec-scan (1 block)  ----------------------------------------
+# disposition: extract WI-344
+# the specs/*.md scan that skips README.md and the inert `-000` example,
+# in the spec-interface finder and the spec-archival check. The skip rule
+# is a policy stated twice.
 b759dba980a3  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/check_trajectory.py
+
+# --- staged-close-scan (4 blocks) --------------------------------
+# disposition: extract WI-344
+# the largest same-path block in the census (104 tokens): staged-name diff
+# -> `show HEAD:<wi csv>` -> status map -> the newly-closed-WI comparison,
+# run by both the shared-SR follow-up guard and the critique-close guard.
+# A _wis_closed_in_staged_commit(root) helper states it once.
 f71cd263873e  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/check_trajectory.py
 f3fed4010802  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/check_trajectory.py
 f67449fb3a0d  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/check_trajectory.py
 feb3b65493fe  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/check_trajectory.py
+
+# --- warn-tier-dispatch (1 block)  -------------------------------
+# disposition: deliberate
+# main()'s per-check warn/strict line. Each check carries its own comment
+# saying which tier it is in and why (WARN-only vs ERROR-under---strict),
+# and those tiers differ per check; a table-driven loop would move that
+# reasoning away from the check it explains. Two sites, not growing.
 558577071d47  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/check_trajectory.py
+
+# --- source-walk (1 block)  --------------------------------------
+# disposition: extract WI-347
+# the rglob('*.py') walk with the dot/__pycache__ skip, in the single-root
+# and the multi-root arm of the same collector.
 3b8e5c6a5e38  project-trajectory/scripts/gen_arch_map.py == project-trajectory/scripts/gen_arch_map.py
-9d770b2d948b  project-trajectory/scripts/gen_okf.py == project-trajectory/scripts/gen_okf.py
+
+# --- spine-load-repeat (8 blocks) --------------------------------
+# disposition: extract WI-346
+# the SR/LLR/TC row filters (`read_rows(...) if id.startswith(...)`) loaded
+# independently by three functions of gen_trajectory. NOT the F5 case: F5
+# buys cross-SCRIPT copy-ability, and every copy here is inside one file,
+# so a local _spine(root) loader costs nothing and removes eight blocks.
 30e7a736008d  project-trajectory/scripts/gen_trajectory.py == project-trajectory/scripts/gen_trajectory.py
 30e7a736008d  project-trajectory/scripts/gen_trajectory.py == project-trajectory/scripts/gen_trajectory.py
 fe21429656b1  project-trajectory/scripts/gen_trajectory.py == project-trajectory/scripts/gen_trajectory.py
@@ -383,6 +560,13 @@ eba66f159e6b  project-trajectory/scripts/gen_trajectory.py == project-trajectory
 e14f648a712d  project-trajectory/scripts/gen_trajectory.py == project-trajectory/scripts/gen_trajectory.py
 734e2d525d59  project-trajectory/scripts/gen_trajectory.py == project-trajectory/scripts/gen_trajectory.py
 173c64659891  project-trajectory/scripts/gen_trajectory.py == project-trajectory/scripts/gen_trajectory.py
+
+# --- graph-layout (11 blocks) ------------------------------------
+# disposition: debt WI-280
+# the edge-routing and layered-layout sequence, instantiated once per
+# rendered graph (WI DAG, spine wire, OKF knowledge map) with that graph's
+# own COL/ROW/PAD constants. The parameterisation that removes it is the
+# graph/view-model/render split WI-280's row names for this file.
 e7ebc7f29c86  project-trajectory/scripts/gen_trajectory.py == project-trajectory/scripts/gen_trajectory.py
 e7ebc7f29c86  project-trajectory/scripts/gen_trajectory.py == project-trajectory/scripts/gen_trajectory.py
 e7ebc7f29c86  project-trajectory/scripts/gen_trajectory.py == project-trajectory/scripts/gen_trajectory.py
@@ -394,7 +578,18 @@ b240d68b0686  project-trajectory/scripts/gen_trajectory.py == project-trajectory
 aaa30617a30f  project-trajectory/scripts/gen_trajectory.py == project-trajectory/scripts/gen_trajectory.py
 b860b104d408  project-trajectory/scripts/gen_trajectory.py == project-trajectory/scripts/gen_trajectory.py
 bfd6e67c304f  project-trajectory/scripts/gen_trajectory.py == project-trajectory/scripts/gen_trajectory.py
+
+# --- subprocess-capture (1 block)  -------------------------------
+# disposition: extract WI-346
+# the five-keyword subprocess.run capture block (capture_output/text/
+# encoding/errors/stdin=DEVNULL). WI-304 extracted exactly this pattern in
+# agent_dispatch as _run_captured rather than sanctioning it; the same
+# precedent applies to gen_trajectory's two sites.
 e5d5ce58f56b  project-trajectory/scripts/gen_trajectory.py == project-trajectory/scripts/gen_trajectory.py
+
+# --- brief-row-render (1 block)  ---------------------------------
+# disposition: extract WI-347
+# the `for k, v in row['full'].items()` bullet renderer, in the no-baseline
+# arm and the added-row arm of the same re-attestation brief writer.
 0940f41e16b9  project-trajectory/scripts/trace.py == project-trajectory/scripts/trace.py
-21b0fbb40f6c  project-trajectory/scripts/trace.py == project-trajectory/scripts/trace.py
-7c1e98fa864e  project-trajectory/scripts/trace.py == project-trajectory/scripts/trace.py
+

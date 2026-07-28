@@ -380,3 +380,62 @@ def test_per_phase_resolves_tc_citing_only_its_llr(scaffold):
     result = _derive(scaffold)
     assert result["raw"] == GATE.G0
     assert result["per_phase"]["(default)"] == "G0"  # was G1/G2 before the fix
+
+
+# --- ex-draft: the level the drafts are hiding (WI-341) -----------------------
+def _mature_single_phase_reopened(scaffold):
+    """A single-phase spine that reached G3, then had ONE Draft SR added.
+
+    This is the shape 128-REVIEW-A (MAJOR 3) showed the old per-phase heuristic
+    could not see: the Draft drops the only phase to G0, so the breakdown that
+    was the evidence of maturity is erased by the very row it is meant to
+    qualify.
+    """
+    make_minimal_project(scaffold)
+    _write(
+        scaffold,
+        srs=_sr("SR-001") + _sr("SR-002", status="Draft"),
+        llrs='LLR-001,SR-001,Adder,src/demo,add,"d",(see TC-001),Implemented\n',
+        tcs='TC-001,SR-001;LLR-001,Unit,m,Smoke,"a=1","e",Yes,tests,Implemented\n',
+    )
+    return _derive(scaffold)
+
+
+def test_ex_draft_reports_the_level_the_drafts_are_hiding(scaffold):
+    result = _mature_single_phase_reopened(scaffold)
+    # What the drafts produce...
+    assert result["raw"] == GATE.G0
+    assert result["per_phase"]["(default)"] == "G0"
+    # ...and what the rows they did not touch still say. THIS is the evidence a
+    # draft cannot erase, and it is why the field exists.
+    assert result["ex_draft"] == GATE.G3
+    assert "ex-draft=G3" in GATE.basis_line(result)
+
+
+def test_ex_draft_stays_low_when_the_spine_never_climbed(scaffold):
+    # The mirror case: drafts on a spine whose ratified rows are undecomposed.
+    # Removing the drafts changes nothing, so there is no hidden maturity — the
+    # early-project false positive stays fixed at the source, not by a heuristic.
+    make_minimal_project(scaffold)
+    _write(
+        scaffold,
+        srs=_sr("SR-001", status="Planned") + _sr("SR-002", status="Draft"),
+        llrs=LLRS_H[:0],
+        tcs=TCS_H[:0],
+    )
+    (scaffold / "docs" / "requirements" / "low-level-requirements.csv").write_text(
+        LLRS_H, encoding="utf-8"
+    )
+    (scaffold / "docs" / "test" / "test-cases.csv").write_text(TCS_H, encoding="utf-8")
+    result = _derive(scaffold)
+    assert result["raw"] == GATE.G0
+    assert result["ex_draft"] == GATE.G1
+
+
+def test_ex_draft_equals_computed_when_nothing_is_pending(scaffold):
+    # No drafts -> the counterfactual IS the actual. A window test reading these
+    # two can then never fire on a clean repo, whatever its level.
+    make_minimal_project(scaffold)
+    result = _derive(scaffold)
+    assert result["drafts"] == 0
+    assert result["ex_draft"] == result["raw"]
