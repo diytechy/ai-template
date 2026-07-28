@@ -16,8 +16,13 @@ home elsewhere — don't restate it here:
   [`PROJECT_STATE.html`](../PROJECT_STATE.html).
 - **Spec-of-record + rubric conventions:** [specs/README.md](specs/README.md) ·
   [rubrics/README.md](rubrics/README.md) (dogfooded scaffold boilerplate).
-- **Resuming in a new session:** [handoff-2026-07-28b.md](handoff-2026-07-28b.md)
-  — **boot from this one.** It sequences the remaining non-deferred work (the two
+- **Resuming in a new session:** read
+  [handoff-2026-07-28c.md](handoff-2026-07-28c.md) **first** — the 2026-07-28
+  complexity-audit decision brief. It proposes retiring most of the open
+  backlog and several enforcement layers, and its §7 checklist awaits owner
+  rulings; until those are ruled, do not grind the queue it questions. Then
+  [handoff-2026-07-28b.md](handoff-2026-07-28b.md)
+  — **boot from this one for mechanics.** It sequences the remaining non-deferred work (the two
   P0 census extractions still open, the two hard rows, and the harness rows this
   session filed), and it opens with the correction that matters most: **the
   18-step `--run-steps` block is NOT the G3 bar** — `--gate` is ignored there, so
