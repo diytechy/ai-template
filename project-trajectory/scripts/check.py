@@ -91,6 +91,7 @@ import argparse
 import configparser
 import importlib.util
 import os
+import re
 import shlex
 import shutil
 import subprocess
@@ -719,6 +720,92 @@ GATES = ["G1", "G2", "G3", "all"]
 # The machine-readable active gate (process.md §7). One line, e.g. "G1".
 GATE_FILE = Path("docs/gate")
 
+# `derive_gate.py` writes its inputs into a `# basis:` comment above the value.
+# The two counts below say whether the gate is SUPPRESSED by an open ratification
+# window rather than reflecting the project's real maturity.
+_BASIS_RE = re.compile(r"#\s*basis:.*\bdrafts=(\d+)\b.*\bmodified=(\d+)\b")
+
+# Steps kept OUT of the advisory pass, by name and with the reason — an
+# unexplained exclusion list is how a warn tier quietly stops covering things.
+#
+# `tests+coverage` is excluded because it is NOT a blind spot: a developer runs
+# the suite directly on every commit (the smoke bar) and unfiltered at slice
+# close, so its failures surface immediately with or without this pass. Adding it
+# would re-run the whole suite plus coverage on EVERY gate run for the life of a
+# window — measured 55.8 s at the smoke tier and ~11 min unfiltered on a
+# 24-thread box — which buys no signal and would train people to skip the gate.
+# The steps that ARE included (lint, dupes, the freshness gates, the G3
+# traceability criterion) are cheap, read-only, and genuinely stop running.
+ADVISORY_EXCLUDE = {"tests+coverage"}
+
+
+def window_open(gate_file=None):
+    """True when an open `Draft`/`Modified` window is holding the derived gate
+    below what the artifacts otherwise support.
+
+    Why this exists (owner ruling 2026-07-27): a window drops the gate, and the
+    plan below then drops every step tagged for the higher gate — so `lint`,
+    `dupes` and `--require-verified` simply STOP RUNNING for the duration. That
+    is not a relaxed bar, it is a blind spot: twelve commits went green over
+    those steps during the 2026-07-26/27 window and the debt surfaced in one
+    lump when the window closed (WI-333/WI-334).
+
+    Deliberately NOT "any gate below G3": a project genuinely at G1 has not
+    earned those steps and should not be told about them on every run. The
+    signal is specifically that the gate was *suppressed*, which is exactly what
+    these two counts record."""
+    path = Path(gate_file) if gate_file else GATE_FILE
+    if not path.exists():
+        return False
+    m = _BASIS_RE.search(path.read_text(encoding="utf-8", errors="replace"))
+    if not m:
+        return False  # a hand-written or pre-derived gate file: no opinion
+    return int(m.group(1)) > 0 or int(m.group(2)) > 0
+
+
+def run_advisory(advisory, jobs, lane_map):
+    """Run the warn-only tier and return its results ([] when there is none).
+
+    Split out of `main()` to hold the complexity ratchet: the advisory feature
+    added branches to a function already at its baseline, and the ratchet's rule
+    is to decompose rather than re-stamp."""
+    if not advisory:
+        return []
+    print(
+        "\n### ADVISORY — a ratification window is open, so the gate is "
+        "below what these steps belong to. They run WARN-ONLY: findings are\n"
+        "### reported, the exit code is not affected. Clearing the window "
+        "restores them to the bar (owner ruling 2026-07-27)."
+    )
+    return run_plan(advisory, True, jobs or len(advisory), lane_map)
+
+
+def advisory_plan(all_for_gate, gate):
+    """Steps a HIGHER gate requires, while an open ratification window holds this
+    gate down. They run advisory: reported, never gating (owner ruling
+    2026-07-27).
+
+    Without this a window is a blind spot rather than a lower bar — the step
+    stops running, so the commit that breaks it says nothing and the debt lands
+    in one lump whenever the window closes.
+
+    A named function rather than an inline comprehension for two reasons: it kept
+    `main()` under the complexity ratchet, and it gives the guards something to
+    CALL. The first version of the test re-implemented this filter and therefore
+    asserted against its own copy of the rule — a guard that cannot observe the
+    code it names.
+    """
+    if gate == "all" or not window_open():
+        return []
+    higher = [g for g in GATES if g != "all" and g > gate]
+    return [
+        s
+        for s in all_for_gate
+        if gate not in s[3]
+        and any(g in s[3] for g in higher)
+        and s[0] not in ADVISORY_EXCLUDE
+    ]
+
 
 def resolve_gate(explicit):
     """The gate to run: an explicit --gate wins; else the docs/gate file (the
@@ -1070,11 +1157,9 @@ def main():
         )
         sys.exit(1 if any(status == "FAIL" for _n, status, _d in results) else 0)
 
-    plan = [
-        s
-        for s in steps(coverage, args.tier, gate, args.phase, profile)
-        if gate == "all" or gate in s[3]
-    ]
+    all_for_gate = steps(coverage, args.tier, gate, args.phase, profile)
+    plan = [s for s in all_for_gate if gate == "all" or gate in s[3]]
+    advisory = advisory_plan(all_for_gate, gate)
 
     if args.list:
         print("Plan for gate {} (tier {}):".format(gate, args.tier))
@@ -1099,9 +1184,16 @@ def main():
         jobs = len(plan)
     results = run_plan(plan, args.lenient, jobs, lane_map)
 
+    advisory_results = run_advisory(advisory, jobs, lane_map)
+
     print("\n" + "=" * 56)
     print("Check summary (gate {}, tier {}):".format(gate, args.tier))
-    for name, status, detail in results:
+    # One loop over both tiers. Advisory rows carry their marker in the DETAIL
+    # column — never the bare status word, because an "ADVISORY FAIL" that reads
+    # like a FAIL in a scanned log is how a warn-only tier is mistaken for the bar.
+    for name, status, detail in list(results) + [
+        (n, st, "{} [advisory — not gating]".format(d)) for n, st, d in advisory_results
+    ]:
         print("  {:5} {:16} {}".format(status, name, detail))
     failed = [r for r in results if r[1] == "FAIL"]
     print("=" * 56)

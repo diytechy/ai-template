@@ -161,6 +161,17 @@ gated by one `Draft` bit:
 The **ratification date is git-derived** — the commit that moved the `Status` (or
 the SN section). No new field.
 
+**A window lowers the bar; it must not create a blind spot.** While `Draft`/
+`Modified` rows hold the gate down, the steps the *higher* gate requires would
+otherwise stop running entirely — so a regression introduced during the window
+goes unreported until it closes, then lands in one lump. `check.py` therefore
+runs those steps **advisory** (reported, warn-only, exit code unaffected) when
+`docs/gate`'s `# basis:` shows `drafts`/`modified` above zero. Narrow by design:
+a project genuinely at a lower gate is *not* nagged — only a gate **suppressed by
+a pending ratification** triggers it. The test/coverage step stays out (the
+commit bar already runs the suite, so it is not a blind spot, and re-running it
+every gate run for the life of a window buys nothing).
+
 **Draft artifacts live in the live spine.** A `Draft` SR/LLR/TC and a Draft SN are
 **exempt from the child-completeness orphan rules** (`trace.py`): a Draft SR needs
 no LLR/TC, a Draft LLR no TC, a Draft SN no SR — so a requirement is **drafted in

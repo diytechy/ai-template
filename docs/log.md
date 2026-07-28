@@ -16121,3 +16121,62 @@ standing rule is that a sanction is never reached for to green a step.
 during a `Draft`/`Modified` window? The two failures are fixed; the hole that let
 them accumulate is not, and it re-opens with the next spine amendment.
 `status.md` carries the question with its options.
+
+### 2026-07-27 — WI-336: a window lowers the bar, it must not blind it (owner ruling)
+
+The process half WI-333 left open, ruled by the owner the same day: *"agreed it
+should be permitted, I'm not sure if there would ever be a case where modified /
+draft scope would negate that."*
+
+**The owner overruled the driver, and was right.** I had argued for a carve-out:
+run `lint` and `dupes` advisory but leave `--require-verified` gate-bound,
+because during a `Modified` window its rows fail it by construction. That reasons
+about only half the population. A **`Planned`** row — one whose evidence was
+*invalidated* and has not re-earned `Verified` — also fails it, and that is real
+signal my carve-out would have suppressed for the life of every window. All three
+run advisory.
+
+**What shipped.** `check.py` grows `window_open()`, which reads the
+`drafts=`/`modified=` counts out of `derive_gate.py`'s `# basis:` comment, and a
+second warn-only `run_plan` pass over the steps a *higher* gate requires. The
+banner states the exit code is unaffected and every line carries
+`[advisory — not gating]`, because a bare `FAIL` in a scanned log is how a
+warn-only tier gets mistaken for the bar.
+
+**The trigger is deliberately narrow**, and the guards pin it: only a gate
+*suppressed by pending rows* qualifies. A project genuinely at G1 is not nagged
+about steps it has not earned — a warn tier nobody wants is one everybody learns
+to ignore — and a gate file with **no** basis line expresses no opinion, so a
+hand-maintained or legacy gate does not suddenly start reporting.
+
+**One exclusion, by name and with the reason in the code.** `tests+coverage`
+stays out: it is not a blind spot, because the commit bar runs the suite
+directly, and including it would re-run the whole suite plus coverage on every
+gate run for the window's life — measured **55.8 s at the smoke tier, ~11 min
+unfiltered**. That measurement came from driving the feature before trusting it:
+the first implementation swept the test step in, and the run showed exactly what
+that costs.
+
+**The end-to-end guard was weak on first write, again.** It compared exit codes
+across a run with and without a deliberately failing advisory step — but a bare
+scaffold is not green at G2 (it fails `derived-gate`/`traceability`/
+`design-flows` on placeholder registries), so `1 == 1` held whether or not the
+advisory step gated, and the mutation *passed*. It now compares the **gating
+failure count**, which moves 3 → 4 under that mutation. Fourth vacuous guard
+this session; the shape is identical every time — an assertion positioned where
+it cannot observe the thing it names.
+
+Five guards, all mutation-proven: drop the drafts half of the trigger, make a
+basis-less gate file report a window, drop the not-gating marker, empty the
+exclusion set, and let advisory results feed `failed`.
+
+Byte budget: `PROCESS_OPTIONS.md` **+782** (164,738 → 165,520) for the
+derived-gate section's new paragraph. Flagged, not hidden: that file's watched
+baseline was **already 2,967 bytes behind** before this edit (stamped 161,771 as
+of 2026-07-26), which I have not silently re-stamped over — the drift is someone
+else's accounting and wants its own correction.
+
+Bar: `tests/test_advisory_during_window.py` 5 passed; `ruff check`/`format`
+clean; targeted modules green.
+
+**CORRECTION, same day, before this was believed.** [127-REVIEW-A](reviews/127-REVIEW-A.md) refuted this entry on three points and **WI-336 is back to `queued`** — the code above is landed but incomplete, and the row carries the detail. (1) It never runs the promised stronger `--require-verified` traceability variant: the advisory list is built from a step table already specialized to the CURRENT gate, and the test asserting traceability is *not* advisory entrenched it. (2) `window_open()` fires on `drafts>0`, which is ordinary G0/G1 state — so the "a project genuinely at G1 is not nagged" claim above is FALSE as written. (3) `module-coverage` runs advisory while its producer is excluded, so it can grade a stale `coverage.json`. The byte figures above are also wrong: they compared a CRLF working tree against an LF baseline. True: **+771** for the edit, **+571** pre-existing overage — not +782 / 2,967.

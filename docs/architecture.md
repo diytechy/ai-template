@@ -364,6 +364,9 @@ Contracts (interfaces): IF-013, IF-022, IF-040
 | `extra_steps(profile, subs)` | Project-declared additional gate steps, from `docs/stack.ini` |  |
 | `extra_step_lanes(profile)` | `{step-name: lane}` for `[step:<name>]` sections declaring `lane = <other>` |  |
 | `steps(coverage, tier, gate, phase, profile)` |  |  |
+| `window_open(gate_file)` | True when an open `Draft`/`Modified` window is holding the derived gate |  |
+| `run_advisory(advisory, jobs, lane_map)` | Run the warn-only tier and return its results ([] when there is none). |  |
+| `advisory_plan(all_for_gate, gate)` | Steps a HIGHER gate requires, while an open ratification window holds this |  |
 | `resolve_gate(explicit)` | The gate to run: an explicit --gate wins; else the docs/gate file (the |  |
 | `run_step(name, requires, cmd, lenient)` | Run one step, streaming its output live (the sequential path). |  |
 | `run_step_captured(name, requires, cmd, lenient)` | run_step with the child's output captured instead of streamed — the |  |
