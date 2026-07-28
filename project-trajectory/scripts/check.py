@@ -806,7 +806,15 @@ def window_open(gate_file=None):
     if not computed or not per_phase or per_phase.group(1) == "(none)":
         return False
     levels = re.findall(r"=(G\d)", per_phase.group(1))
-    return bool(levels) and max(levels) > computed.group(1)
+    if not levels:
+        return False
+    # Two conditions, not one. "Above the computed level" alone still fired on a
+    # genuinely early project — `computed=G0 per-phase=1=G1;2=G0` is a repo whose
+    # first phase has only reached G1 while its second is being drafted, which
+    # has earned nothing (128-REVIEW-A MAJOR 3). The advisory tier reports what
+    # G2/G3 require, so the evidence has to be that some phase actually REACHED
+    # G2 or better.
+    return max(levels) >= "G2" and max(levels) > computed.group(1)
 
 
 def run_advisory(advisory, jobs, lane_map):
@@ -877,6 +885,19 @@ def advisory_plan(gate, plan, steps_at):
             seen.add(name)
             out.append(step)
     return out
+
+
+def _print_steps(plan):
+    """One `--list` line per step: name, layer, the gates that require it, and
+    the exact command. Extracted rather than repeated for the advisory tier —
+    `dupes` flagged the second copy immediately, and the standing rule is that a
+    census line IS acceptance of the duplication, never a way to green a step."""
+    for name, _requires, cmd, gates, layer in plan:
+        print(
+            "  - {:16} [{:7}] [{}]  {}".format(
+                name, layer, ",".join(sorted(gates)), " ".join(cmd)
+            )
+        )
 
 
 def resolve_gate(explicit):
@@ -1238,12 +1259,17 @@ def main():
 
     if args.list:
         print("Plan for gate {} (tier {}):".format(gate, args.tier))
-        for name, _requires, cmd, gates, layer in plan:
+        _print_steps(plan)
+        # The advisory tier is part of what this invocation WILL run, so --list
+        # must show it or the option lies (128-REVIEW-A MINOR 5: a real window
+        # listed only the weaker G2 traceability while the run executed the G3
+        # one). Marked, and separated, so it cannot be read as the bar.
+        if advisory:
             print(
-                "  - {:16} [{:7}] [{}]  {}".format(
-                    name, layer, ",".join(sorted(gates)), " ".join(cmd)
-                )
+                "\nAdvisory during the open ratification window "
+                "(reported, NOT gating — the exit code is not affected):"
             )
+            _print_steps(advisory)
         return
 
     if not plan:

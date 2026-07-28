@@ -43,6 +43,13 @@ GATE_DRAFT_UNPHASED = GATE_WINDOW.replace(
     "drafts=0 modified=7 computed=G2 phase=1 per-phase=1=G2",
     "drafts=2 modified=0 computed=G0 phase=(none) per-phase=(none)",
 )
+# STILL an early project: phase 1 has only reached G1 while phase 2 is drafted.
+# Some phase IS above `computed`, but nothing has reached the G2/G3 bar the
+# advisory tier reports on (128-REVIEW-A MAJOR 3).
+GATE_DRAFT_EARLY_MULTIPHASE = GATE_WINDOW.replace(
+    "drafts=0 modified=7 computed=G2 phase=1 per-phase=1=G2",
+    "drafts=1 modified=0 computed=G0 phase=2 per-phase=1=G1;2=G0",
+)
 GATE_CLEAN = GATE_WINDOW.replace("drafts=0 modified=7", "drafts=0 modified=0")
 GATE_HAND_WRITTEN = "# a hand-maintained gate file, no derivation basis\nG2\n"
 
@@ -83,6 +90,12 @@ def test_ordinary_early_drafting_is_not_a_ratification_window(tmp_path):
     """
     assert check.window_open(_gate(tmp_path, GATE_DRAFT_EARLY, "early")) is False
     assert check.window_open(_gate(tmp_path, GATE_DRAFT_UNPHASED, "unphased")) is False
+    # ...and the case the first fix still got wrong: a phase above `computed` is
+    # not enough, it must have reached the G2/G3 bar the advisory tier reports.
+    assert (
+        check.window_open(_gate(tmp_path, GATE_DRAFT_EARLY_MULTIPHASE, "early2"))
+        is False
+    )
     # ...while the mature-repo-new-phase case, which differs ONLY in the
     # per-phase field, is still detected. Without this pair the fix could be
     # "return False for drafts" and look correct.
@@ -283,3 +296,37 @@ def test_an_advisory_failure_does_not_change_the_exit_code(scaffold):
     (docs / "gate").write_text(WINDOW_GATE.format(0), encoding="utf-8")
     closed = run_py(args, cwd=scaffold)
     assert "ADVISORY-CANARY" not in (closed.stdout + closed.stderr)
+
+
+def test_list_shows_the_advisory_tier_it_will_run(scaffold):
+    """`--list` must print what the invocation WILL do, both tiers.
+
+    128-REVIEW-A MINOR 5: with a real window open, `--list` printed only the
+    weaker gating traceability command while the same invocation went on to
+    execute the stronger advisory one. An option that says "print the plan" and
+    hides half the plan is worse than no option.
+
+    Driven through the real CLI on a scaffold, because the defect was in
+    `main()`'s early return, which no unit-level call to `advisory_plan` can
+    observe.
+    """
+    docs = scaffold / "docs"
+    (docs / "gate").write_text(WINDOW_GATE.format(4), encoding="utf-8")
+    listed = run_py(
+        ["scripts/check.py", "--gate", "G2", "--tier", "smoke", "--list"],
+        cwd=scaffold,
+    )
+    out = listed.stdout + listed.stderr
+    assert "Advisory during the open ratification window" in out, out
+    assert "NOT gating" in out, out
+    # The load-bearing half: the stronger command is VISIBLE, not just the label.
+    assert "--require-verified" in out, out
+
+    # The negative half: close the window and the advisory section disappears,
+    # so this is a window-scoped disclosure and not permanent noise.
+    (docs / "gate").write_text(WINDOW_GATE.format(0), encoding="utf-8")
+    closed = run_py(
+        ["scripts/check.py", "--gate", "G2", "--tier", "smoke", "--list"],
+        cwd=scaffold,
+    )
+    assert "Advisory during the open" not in (closed.stdout + closed.stderr)

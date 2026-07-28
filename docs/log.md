@@ -15989,23 +15989,31 @@ pytest process joins the *same* one and they share **one** ceiling: N concurrent
 runs total the cap instead of multiplying it.
 
 > **THE SENTENCE ABOVE IS FALSE AND WAS CORRECTED 2026-07-27 (WI-338;
-> [127-REVIEW-A](reviews/127-REVIEW-A.md) BLOCKER 1).** N concurrent runs
-> **multiply** the cap; they do not total it. Windows permits assignment only
-> into a job that is **empty or already in the process's own parent job chain**,
-> so a second run from a different process tree cannot join a job the first has
-> populated — it falls back to a private job at the same percent and warns on
+> [127-REVIEW-A](reviews/127-REVIEW-A.md) BLOCKER 1) — and the first correction
+> was ALSO wrong, in the opposite direction ([128-REVIEW-A](reviews/128-REVIEW-A.md)
+> BLOCKER 1).** Whether N concurrent runs share the ceiling or multiply it is a
+> property of the HOST, not of process trees. `AssignProcessToJobObject` succeeds
+> when the process is in **no** job, or when the target is **empty or already in
+> that process's own parent job chain** — so an unjobbed second run joins the
+> named job and really does share, while one that something has already jobbed
+> (sandbox, container, CI agent) cannot join a populated job — it falls back to a private job at the same percent and warns on
 > stderr. Measured directly: with a first tree holding the named job, two
 > independent probes both reported `PRIVATE`, while a **child** of the first
-> reported `SHARED`. What the mechanism really delivers is a **tree-wide**
-> ceiling for one run, which is still the property that answers the original
-> problem (a worker count does not bound processes) — but "parallel train
-> worktrees share one ceiling", the case it was written for, is exactly the case
-> it does not cover. The reviewer's own run hit the fallback path. Two further
+> reported `SHARED` — on **this** host, where every process is already inside a
+> job. On a host where they are not, the same probe reports `SHARED`, which is
+> how 128-REVIEW-A refuted the correction: the guard written here passed locally
+> and **failed on the reviewer's machine**. What the mechanism really delivers
+> unconditionally is a **tree-wide** ceiling for one run — the property that
+> answers the original problem, since a worker count does not bound processes.
+> "Parallel train worktrees share one ceiling" is therefore *sometimes* true and
+> must be stated with its condition. Two further
 > narrowings: an API failure leaves the run **uncapped**, and POSIX's
 > `os.nice(5)` is a **priority bump, not a cap at all**. All of it is now pinned
-> by `tests/test_cpu_cap.py::test_a_second_independent_run_gets_its_own_ceiling`,
-> which asserts the first tree SHARES, a child SHARES, and an independent second
-> tree is PRIVATE **and says so** — mutation-proven in both directions.
+> by `tests/test_cpu_cap.py::test_a_run_that_is_already_jobbed_gets_its_own_ceiling`,
+> which **constructs** the topology instead of inheriting the runner's: the first
+> tree SHARES, a child SHARES, and a process put in its own job first falls back
+> to a private ceiling that **carries the same hard rate** (`flags=0x5
+> rate=5000`), and says so.
 
 The two levers answer different questions and both are wanted: the ceiling says
 how much the tests may take, the priority says they yield it the instant
@@ -16452,3 +16460,92 @@ Bar: `tests/test_advisory_during_window.py` 8 passed (3 new/rewritten),
 module-size ratchets green. Full suite **1609 passed, 7 skipped** (10:22);
 `check.py --gate G3 --jobs 0` **RESULT: PASS**, all 19 steps — `tests+coverage`
 1138.5 s, module floors held.
+
+### 2026-07-27 — 128-REVIEW-A: the correction was wrong too, in the other direction
+
+An independent adversarial review (OpenAI, non-Anthropic per SR-084) of
+`fd844f2..8df42c0`: **CHANGES-REQUESTED, 2 BLOCKER / 2 MAJOR / 2 MINOR**, filed
+as [128-REVIEW-A](reviews/128-REVIEW-A.md). It confirmed every census number,
+both mutation suites, and the end-to-end `--require-verified` behaviour — and
+then found the one thing a self-review structurally cannot.
+
+**BLOCKER 1 — the CPU-cap claim was wrong for the SECOND time, in the opposite
+direction, and its guard failed on the reviewer's machine.** I had replaced
+*"every concurrent run shares one ceiling"* with *"a second run from a different
+**process tree** gets its own"*. That is not the rule either.
+`AssignProcessToJobObject` succeeds when the process is in **no** job, or when
+the target is empty or in that process's own parent job chain — so the
+determinant is **the joining process's existing job membership, not tree
+identity**. An unjobbed second run *joins* and really does share; one that a
+sandbox, container or CI agent has already jobbed cannot.
+
+The proof is the review itself: the guard I wrote **passed here and failed
+there** (`second: SHARED warned=0`), because every process on this host is
+already inside a job and the reviewer's were not. A test that inherits the
+runner's topology measures the host, not the code.
+
+Fixed by making the test **construct** the topology it measures: a probe now
+joins its own anonymous job before calling the cap, which is the one condition
+under which the fallback is guaranteed. It asserts only what is universal — first
+tree `SHARED`, a child `SHARED`, an already-jobbed process `PRIVATE` **with the
+warning and a verified `flags=0x5 rate=5000`**, the private ceiling's rate the
+old guard never checked. What an *unjobbed* second process does is deliberately
+not asserted, because it legitimately varies. Claim narrowed in `conftest.py`,
+`status.md`, this log, the archived WI-335 spec and the WI-335/WI-338
+deliverables — this time **with its condition**.
+
+**The lesson is not "measure": I did measure.** I measured on one host and
+generalised. The first claim was over-confident, the second over-corrected from
+a single environment, and only a reviewer on *different hardware* could tell
+them apart. When a claim is about what the OS permits, one machine is one data
+point.
+
+**BLOCKER 2 — the census audit reached "0 unclassified" partly by catch-all**,
+and is **not** fixed here. 64 of the 208 blocks are bucketed as `intra-module`
+purely because `file_a == file_b` — derivable from two path strings without
+reading the block — and then given one blanket rationale, *"WI-280 owns it"*.
+That conflates small parsing repetition in `check_docs.py`, two source walkers in
+`gen_arch_map.py`, parallel OKF row construction, and genuine dispatcher debt;
+and `WI-304` already corrected exactly this mistake once. It is the same
+reach-zero-by-broad-class failure WI-338 existed to correct, one level up. The
+classification of the **67 cross-module** blocks stands. Filed as **WI-340**.
+
+**MAJOR 3 — the window discriminator, half fixed.** The false *positive* is
+closed: `computed=G0 per-phase=1=G1;2=G0` is an early multi-phase repo where
+some phase is above `computed` but nothing has reached the bar the advisory tier
+reports, so the rule now requires `max(per-phase) >= G2` **as well as** above
+`computed`. Counterexample pinned, mutation-proven. The false *negative* is
+structural and filed as **WI-341**: a Draft in a previously-mature **single**-phase
+repo drops that phase to G0 and erases the evidence the rule reads, so it needs
+persistent maturity in the basis line or an explicit window marker — a change to
+what `derive_gate` publishes, so it is the owner's.
+
+**MAJOR 4 — measurements whose inputs the fix destroyed**, filed as **WI-342**:
+the 28-LF/9-CRLF mixture, the 67-file restoration, the classifier's four passes,
+the 24.3 s smoke timing. Each was true when taken; none can be re-derived,
+because the evidence lived in a working tree the fix itself normalised away. The
+reviewer could corroborate the *results* and not the *inputs* — which is the
+shape of exactly the problem this branch has spent two days correcting.
+
+**MINOR 5 fixed** — `--list` printed only the gating plan while the same
+invocation went on to execute the advisory tier, including the stronger
+traceability command. It now lists the advisory steps separately and marked;
+guarded end-to-end on a scaffold, including that the section disappears when the
+window closes. **MINOR 6 fixed** — the archived `WI-333` spec still said the
+advisory process question was open; it now carries a dated closure note.
+
+**What the review confirmed** (worth recording, because a review that only
+finds fault teaches nothing about what held): all six census figures, including
+that 191-of-208 needs a *multiset* intersection — a naive set comparison gives
+192, and the reviewer checked; the classification arithmetic summing to 208; the
+smoke membership 449→453; every WI-337 guard failing under mutation, and every
+WI-336 guard failing under exactly its own mutation; and the G3
+`--require-verified` variant genuinely running end-to-end in a real window.
+
+Bar for this remediation: smoke **454 passed**; full suite **1610 passed,
+7 skipped** (12:38); `check.py --gate G3 --jobs 0` **RESULT: PASS**, all 19
+steps. One incidental find worth naming: adding the `--list` advisory block
+created a genuine intra-module duplicate in `check.py`, and `dupes` caught it on
+the next run — **extracted into `_print_steps()`, not sanctioned**, which is the
+standing rule and, given WI-340 is open about exactly this class, the only
+defensible answer.

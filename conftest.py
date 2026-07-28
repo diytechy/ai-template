@@ -1,21 +1,30 @@
 """Root conftest: bound what a test run costs THIS MACHINE.
 
-WHAT THIS DOES AND DOES NOT GUARANTEE — read this before quoting it (corrected
-2026-07-27 after 127-REVIEW-A refuted the original claim, which was that every
-concurrent run shares ONE ceiling; it does not, and nothing tested it):
+WHAT THIS DOES AND DOES NOT GUARANTEE — read this before quoting it. Two claims
+have already been wrong here, in OPPOSITE directions (127-REVIEW-A refuted "every
+concurrent run shares ONE ceiling"; 128-REVIEW-A then refuted the over-correction,
+"a second run from a different PROCESS TREE gets its own"). The rule is not about
+process trees:
 
   * ON WINDOWS, ONE RUN AND EVERY PROCESS IT SPAWNS — controller, xdist workers,
     and the subprocesses the slow tier launches per test — is held under a
-    single hard CPU-rate cap. This is the real guarantee, and it is the one that
-    matters, because the problem being solved is that a worker count does not
-    bound processes.
-  * A SECOND, CONCURRENT RUN FROM A DIFFERENT PROCESS TREE GETS ITS OWN CEILING
-    AT THE SAME PERCENT. Two such runs can therefore total 2x the cap, three 3x.
-    Windows only permits assignment into a job that is empty or already in the
-    process's own parent job chain, so the second tree cannot join a job the
-    first has populated. It falls back to a private job and SAYS so on stderr.
-    Pinned by `tests/test_cpu_cap.py::test_a_second_independent_run_gets_its_own_ceiling`,
-    which measures both branches.
+    single hard CPU-rate cap. Job membership is inherited, so this holds
+    unconditionally. It is also the guarantee that matters, because the problem
+    being solved is that a worker count does not bound processes.
+  * WHETHER A SECOND CONCURRENT RUN SHARES THAT CEILING DEPENDS ON THE HOST, and
+    specifically on whether something has already put it in a job object.
+    `AssignProcessToJobObject` succeeds when the process is in NO job, or when
+    the target job is empty or already in that process's parent job chain. So:
+      - nothing has jobbed the second run (a plain shell on a plain desktop) —
+        it JOINS the named job and the two runs really do share one ceiling;
+      - something has (a sandbox, a container, a CI agent, an IDE that jobs its
+        children) — it CANNOT join, falls back to a private job at the same
+        percent, and says so on stderr. Two such runs total 2x the cap.
+    Neither outcome is universal, which is exactly why the first two versions of
+    this paragraph were both false. `tests/test_cpu_cap.py` pins the parts that
+    ARE universal by CONSTRUCTING the topology: first tree shares, a child
+    inherits, and a process already in its own job falls back to a private
+    ceiling that carries the same hard rate.
   * IF THE OS REFUSES ALTOGETHER the run is UNCAPPED, with a warning.
   * ON POSIX there is no cap at all — `os.nice(5)` is a priority bump, which
     changes who wins a contended CPU, not how much of the machine is used.
@@ -37,12 +46,11 @@ Why (1) is not enough, measured 2026-07-27 on this 24-thread box:
     ~70 subprocess sites), so a 12-worker run measured **42 python + 4 git
     processes live at mean 59% / max 74% CPU**. Half the workers is not half the
     machine.
-  * It is per-process, so it does nothing about concurrency — and neither, it
-    turns out, does (2). Parallel WI dispatch makes concurrent suites normal:
-    each train worktree runs its own. What (2) delivers there is that each run
-    is individually bounded and each one that could not share says so, which is
-    weaker than the original claim and is why the claim was corrected rather
-    than the code declared finished.
+  * It is per-process, so it does nothing about concurrency — and (2) only
+    sometimes does. Parallel WI dispatch makes concurrent suites normal: each
+    train worktree runs its own. What (2) guarantees there is that each run is
+    individually bounded, and that a run which could not join the shared job
+    says so; whether they share is the host's answer, not this file's.
 
 So (2) applies a **named Windows job object with a hard CPU rate cap**. The job
 bounds the tree regardless of how many processes it spawns; the NAME is what
@@ -182,9 +190,12 @@ def _bound_windows(percent):
     if capped(shared):
         _JOB_HANDLE = shared
     else:
-        # Windows refuses to assign a process into a job that is not in its own
-        # job hierarchy, so a run launched from a DIFFERENT process tree than the
-        # one that created the named job gets ERROR_ACCESS_DENIED here. An
+        # Windows refuses to assign an ALREADY-JOBBED process into a job that is
+        # neither empty nor in its own parent job chain, so a run that something
+        # else has already put in a job (a sandbox, a container, a CI agent) gets
+        # ERROR_ACCESS_DENIED here once another run has populated the named job.
+        # A run that is in NO job joins it fine — which is why "different process
+        # tree" was the wrong way to describe this (128-REVIEW-A). An
         # earlier version swallowed that as "already in this job" and returned
         # happily, leaving the run completely UNCAPPED while reporting success —
         # the worst outcome available, since the whole point is a guarantee.
@@ -195,11 +206,10 @@ def _bound_windows(percent):
             raise ctypes.WinError(ctypes.get_last_error())
         _JOB_HANDLE = private
         _warn(
-            "the shared {!r} job is owned by another process tree, so this run is "
-            "capped at {}% ON ITS OWN rather than sharing one ceiling "
-            "(concurrent runs can then total more than {}%)".format(
-                JOB_NAME, percent, percent
-            )
+            "this run is already inside another job object, so it could not join "
+            "the shared {!r} job and is capped at {}% ON ITS OWN rather than "
+            "sharing one ceiling (concurrent runs can then total more than "
+            "{}%)".format(JOB_NAME, percent, percent)
         )
     k32.SetPriorityClass(me, BELOW_NORMAL)
 

@@ -221,13 +221,28 @@ def test_this_live_process_runs_under_the_hard_cap_it_asked_for():
     assert info.CpuRate == root_conftest._requested_cap() * 100, info.CpuRate
 
 
-# --- What the named job does and does NOT buy (127-REVIEW-A BLOCKER 1/MAJOR 2) -
-# The conftest used to promise that "every pytest process — other runs, other
-# worktrees — joins the SAME job and shares ONE ceiling". Nothing tested it, and
-# it is false: Windows only permits assignment when the target job is EMPTY or in
-# the process's own parent job chain, so the SECOND concurrent run cannot join a
-# job another tree has already populated. This guard measures both halves of the
-# real behaviour so the documentation can be checked against something.
+# --- What the named job does and does NOT buy -------------------------------
+# Two wrong claims have been made here, in opposite directions, and this guard
+# exists to stop a third.
+#
+#   1. The original: "every pytest process — other runs, other worktrees — joins
+#      the SAME job and shares ONE ceiling." Untested, and false whenever the
+#      joining process already sits in an unrelated job (127-REVIEW-A BLOCKER 1).
+#   2. The over-correction: "a second run from a different PROCESS TREE gets its
+#      own ceiling." Also false, and its guard was ambient-dependent — it passed
+#      on a machine whose processes were already jobbed and FAILED on one whose
+#      were not, reporting `SHARED` (128-REVIEW-A BLOCKER 1).
+#
+# The actual Windows rule is about the JOINING PROCESS'S OWN JOB MEMBERSHIP, not
+# about process trees: AssignProcessToJobObject succeeds if the process is in no
+# job, or if the target job is empty or already in that process's parent job
+# chain. So a second run shares the ceiling when nothing has jobbed it, and gets
+# its own when something has (a sandbox, a container, a CI agent, another job).
+#
+# Therefore this test CREATES the topology it measures instead of inheriting it.
+# `pre-job` makes the probe join its own anonymous job first, which is the one
+# condition under which the fallback is guaranteed — otherwise the outcome
+# legitimately depends on the host and no assertion can be universal.
 
 _PROBE = """
 import ctypes, importlib.util, os, sys, time
@@ -237,20 +252,45 @@ rc = importlib.util.module_from_spec(spec); spec.loader.exec_module(rc)
 rc.JOB_NAME = sys.argv[2]          # a name unique to this test, so the probe is
 warned = []                        # independent of the live pytest run's job
 rc._warn = lambda m: warned.append(m)
-rc._bound_windows(50)
 k32 = ctypes.WinDLL("kernel32", use_last_error=True)
 k32.GetCurrentProcess.restype = wintypes.HANDLE
+k32.CreateJobObjectW.restype = wintypes.HANDLE
+k32.CreateJobObjectW.argtypes = [ctypes.c_void_p, wintypes.LPCWSTR]
+k32.AssignProcessToJobObject.argtypes = [wintypes.HANDLE, wintypes.HANDLE]
 k32.OpenJobObjectW.restype = wintypes.HANDLE
 k32.OpenJobObjectW.argtypes = [wintypes.DWORD, wintypes.BOOL, wintypes.LPCWSTR]
 k32.IsProcessInJob.argtypes = [wintypes.HANDLE, wintypes.HANDLE,
                                ctypes.POINTER(wintypes.BOOL)]
+k32.QueryInformationJobObject.argtypes = [wintypes.HANDLE, ctypes.c_int,
+                                          ctypes.c_void_p, wintypes.DWORD,
+                                          ctypes.c_void_p]
+me = k32.GetCurrentProcess()
+if "pre-job" in sys.argv:
+    # Put THIS process in its own anonymous job first. Creating and joining an
+    # empty job always succeeds, so after this the process is definitely jobbed
+    # and the named job is definitely not in its parent chain.
+    own = k32.CreateJobObjectW(None, None)
+    if not (own and k32.AssignProcessToJobObject(own, me)):
+        print("PREJOB-FAILED", flush=True); sys.exit(0)
+rc._bound_windows(50)
 named = k32.OpenJobObjectW(0x0004, False, rc.JOB_NAME)
 inside = wintypes.BOOL()
-shared = bool(named and k32.IsProcessInJob(k32.GetCurrentProcess(), named,
-                                           ctypes.byref(inside)) and inside.value)
-print(("SHARED" if shared else "PRIVATE") + " warned=" + str(len(warned)), flush=True)
-if len(sys.argv) > 3 and sys.argv[3] == "hold":
-    if len(sys.argv) > 4 and sys.argv[4] == "spawn-child":
+shared = bool(named and k32.IsProcessInJob(me, named, ctypes.byref(inside))
+              and inside.value)
+
+class RATE(ctypes.Structure):
+    _fields_ = [("ControlFlags", wintypes.DWORD), ("CpuRate", wintypes.DWORD)]
+
+info = RATE()
+# NULL = "the job I am immediately in" — for the fallback that IS the private
+# job, which is the ceiling whose rate the old guard never checked.
+ok = k32.QueryInformationJobObject(named if shared else None, 15,
+                                   ctypes.byref(info), ctypes.sizeof(info), None)
+print("{} warned={} flags={} rate={}".format(
+    "SHARED" if shared else "PRIVATE", len(warned),
+    hex(info.ControlFlags) if ok else "?", info.CpuRate if ok else "?"), flush=True)
+if "hold" in sys.argv:
+    if "spawn-child" in sys.argv:
         # A CHILD inherits job membership, which is the property that IS real.
         import subprocess
         child = subprocess.run([sys.executable, __file__, sys.argv[1], sys.argv[2]],
@@ -261,23 +301,27 @@ if len(sys.argv) > 3 and sys.argv[3] == "hold":
 
 
 @pytest.mark.skipif(sys.platform != "win32", reason="job objects are Windows-only")
-def test_a_second_independent_run_gets_its_own_ceiling(tmp_path):
-    """Two concurrent runs do NOT total the cap — they total twice it.
+def test_a_run_that_is_already_jobbed_gets_its_own_ceiling(tmp_path):
+    """The cap's concurrency behaviour, with the topology CONSTRUCTED not assumed.
 
-    This is the corrected claim, and it is pinned in both directions so neither
-    half can rot into a tautology:
+    Three assertions, each true on any Windows host:
 
       * the FIRST tree reports `SHARED` — proving the named job is real and the
-        probe can observe membership. Without this half, a bug that made every
-        process fall back would satisfy the assertion below vacuously.
-      * a SECOND, INDEPENDENT tree, started while the first still holds the job,
-        reports `PRIVATE` and emits the shortfall warning.
-      * a CHILD of the first tree reports `SHARED` — the tree-wide ceiling that
-        the mechanism genuinely delivers, and the only sharing it delivers.
+        probe can observe membership. Without this, a bug that made everything
+        fall back would satisfy the rest vacuously.
+      * a CHILD of it reports `SHARED` — job membership is inherited, which is
+        the tree-wide ceiling the mechanism genuinely delivers.
+      * a process that is ALREADY IN ITS OWN JOB cannot join the populated named
+        job: it falls back to a private ceiling, says so, and that private
+        ceiling carries the same hard rate. This is the case where two runs
+        total twice the cap.
 
-    Uses a job name unique to this test: the live pytest run already owns
-    `JOB_NAME`, so probes reusing it would inherit membership from their parent
-    and report `SHARED` no matter what the code did.
+    What is deliberately NOT asserted: what an UNJOBBED second process does. It
+    joins the named job and shares the ceiling — which is why the "different
+    process tree" phrasing was wrong, and why the previous version of this test
+    failed on a host whose processes were not already jobbed while passing here.
+    Whether a given machine shares depends on whether something has jobbed the
+    run, so no universal assertion exists and the docs must state the condition.
     """
     probe = tmp_path / "probe.py"
     probe.write_text(_PROBE, encoding="utf-8")
@@ -299,16 +343,25 @@ def test_a_second_independent_run_gets_its_own_ceiling(tmp_path):
             "the one property actually promised: {!r}".format(child)
         )
 
-        second = subprocess.run(args, capture_output=True, text=True, timeout=60)
-        assert second.stdout.strip().startswith("PRIVATE"), (
-            "a second independent tree unexpectedly SHARED the ceiling. If "
-            "Windows has started allowing this, the conftest docstring and "
-            "docs/status.md must be widened back — do not just relax this "
-            "assertion: {!r}".format(second.stdout)
+        second = subprocess.run(
+            args + ["pre-job"], capture_output=True, text=True, timeout=60
         )
-        # It must also SAY so: a silent downgrade of a resource guarantee is how
-        # the false claim survived a live run in the first place.
-        assert second.stdout.strip().endswith("warned=1"), second.stdout
+        out = second.stdout.strip()
+        assert "PREJOB-FAILED" not in out, "could not construct the topology: " + out
+        assert out.startswith("PRIVATE"), (
+            "a process already inside its own job joined the populated named "
+            "job. Windows documents that as impossible; if it has changed, the "
+            "conftest docstring and docs/status.md must be widened — do not "
+            "just relax this assertion: {!r}".format(out)
+        )
+        # It must SAY so — a silent downgrade of a resource guarantee is how the
+        # original false claim survived a live run.
+        assert "warned=1" in out, out
+        # ...and the fallback must actually CAP. The previous guard checked only
+        # which job the process landed in, never that the private one carried a
+        # rate (128-REVIEW-A).
+        assert "flags=0x5" in out, "private fallback is not ENABLE|HARD_CAP: " + out
+        assert "rate={}".format(50 * 100) in out, out
     finally:
         holder.kill()
         holder.wait()
