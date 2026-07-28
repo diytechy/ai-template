@@ -530,7 +530,7 @@ why (one bullet each; cite ids)._
   recorded in [ratify/2026-07-27-reattest.md](ratify/2026-07-27-reattest.md),
   regenerated *before* the flip against the same `--since a5052a913` baseline the
   view carried — **59 sections against the committed 2026-07-26 brief's 15**,
-  which is [WI-325](specs/WI-325.md)'s premise confirmed a third time and the
+  which is [WI-325](archive/specs/WI-325.2026-07-28.md)'s premise confirmed a third time and the
   reason the record was re-rendered rather than cited. The agent made the
   ratifying commit on the acceptor's behalf, which `docs/gate-policy`
   (`autonomous`) and the gate-advance contract both permit; the judgment was the
@@ -15919,7 +15919,7 @@ would have been faster and would have risked a cell containing the word.
 
 **The record was re-rendered, not cited.** `docs/ratify/2026-07-26-reattest.md`
 carried **15** SR sections; the live batch was **59**. That is not a defect in
-the brief — it is [WI-325](specs/WI-325.md)'s premise, a generated artifact with
+the brief — it is [WI-325](archive/specs/WI-325.2026-07-28.md)'s premise, a generated artifact with
 no freshness gate drifting behind the registry it summarizes, now confirmed a
 third time. Regenerated to
 [ratify/2026-07-27-reattest.md](ratify/2026-07-27-reattest.md) **before** the
