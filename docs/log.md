@@ -17026,3 +17026,109 @@ extracting instead.
 
 Bar: smoke **490 passed / 27.9 s**; the 16 non-test G3 steps PASS;
 `gen_arch_map` regenerated for the new function.
+
+---
+
+## Session 2026-07-28 (cont.) — WI-352 + WI-344: completion gets a reconciler, and the census forces its own extraction
+
+The owner ruled that `Status` stays an **attestation** rather than becoming
+derived, so what was missing was never derivation — it was the **reconciler**
+every other declared-vs-computed pair here already has. Three signals, reported
+as `(kind, message)` pairs so the caller tiers them without pattern-matching
+prose, and **nothing auto-flips**: an auto-flip would re-create exactly the false
+completion that WI-336 and `40c92f6` were both corrections of.
+
+**Three scoping decisions, each measured rather than assumed. All three were
+wrong in my first draft, and measuring is what found that.**
+
+**The done side reads LIVE specs only.** Run over the archive it produced **38
+findings**, and neither class was actionable. Some are a self-referential
+terminal box — `Commit bar green; row done, spec archived`, untickable at the
+moment you would tick it. The rest are closes that never ticked. For a WI closed
+weeks ago, whose Deliverable and log entry carry the record, the only available
+action is cosmetic — and *a check whose recommended action is "nothing" is a wall
+of warns*, which is precisely how WI-308 recorded that a check earns its own
+ignore. So the moment that IS actionable gets its own check:
+`staged_completion_findings` warns at the **closing commit**, where the spec is
+still live, the author is still inside the change, and both homes for "is this
+finished" can be made to agree in one commit. WI-334 closed 2026-07-27 with five
+boxes never ticked and nothing said so; that is the case this now catches.
+
+**A WI's spec is name-identified, never "whatever SpecRef points at."** Measured
+before the rule existed: following SpecRef reported **WI-324's** work FINISHED —
+out of ticks **WI-321** had made — because WI-324 cites the shared WI-321 effort
+doc. A shared spec's boxes are not attributable to its citers.
+
+**The Done-when tally is a SECTION, bounded by heading level.** A subdivided
+Done-when keeps its boxes; a *sibling* heading ends it. `docs/specs/WI-321.md`
+carries WI-324's remaining boxes under a sibling `## Split off, deliberately`,
+and folding those in attributes one WI's unfinished work to another. Migration
+checklists are steps, not evidence, and do not count at all.
+
+**One deliberate deviation from the row, pinned by a test.** The row asks for the
+whole reconciler at warn-plain / error-under-`--strict`. The **trailer** signal
+warns and never joins the exit code — taken on the row's *own* argument, which is
+that a trailer means "a commit CLAIMS this WI", not "the work is right", citing
+WI-336: code landed, row correctly left `queued`, a review having refuted three
+of its claims. Erroring there blocks the G3 gate for the length of that rework
+with no honest way out but a false close. Spec evidence is different in kind — a
+ticked box IS an attestation, so its disagreement with the row is a contradiction
+between two homes for one fact, and that gates.
+
+**And the fourth signal the row asked for is deliberately not built.** A `done`
+row with an empty `Deliverable` is already **R-A**, a hard ERROR at every run —
+strictly stronger than this tier. A second, weaker copy of a live rule is the
+duplication this kit's own working agreement forbids. A test pins the omission so
+it reads as a decision rather than a gap.
+
+### WI-344, forced early and finished rather than left half-done
+
+Adding a fourth copy of the staged-close preamble turned `check_dupes` **red**,
+and the standing rule from WI-343 is that the F5 sanction buys **cross-script**
+copy-ability, so it never covers a **same-file** copy: extract, don't sanction.
+All five of WI-344's sanctioned blocks are now gone, and their census entries
+**removed** — after proving each fingerprint is absent from the live census,
+because a sanction whose block no longer exists is the stale-census drift WI-337
+was about. `_staged_wi_registry` folds three no-op cases into one answer;
+`_newly_closed` states the queued→done transition all three close-time ratchets
+key off; `_chain_untouched` states the shared tail with `*extra_dirs` for the one
+way the two sites differed, so the rule lives once and the difference stays
+visible at the call; `_armed_specs` states the which-files-are-real-specs policy
+both spec walks had spelled out.
+
+**The extraction paid for itself in the other ratchet:** `critique_ratchet_findings`
+(C901 11) and `staged_findings` (12) both dropped **below** the limit and were
+**deleted** from the complexity baseline rather than bumped — the direction that
+ratchet exists to hold.
+
+### The costs, stated rather than buried
+
+**Module size 2135 → 2495.** That is the **fifth consecutive upward bump** on
+`check_trajectory.py` with no decomposition between them. WI-349's entry said the
+next addition should have to argue against extracting, so here is the argument: a
+new sibling module is a **scaffold-surface** change (bootstrap MAPPING, README
+kit-contents, `test_bootstrap` file lists, the dogfood-sync structural lock) —
+which is why WI-328's spec deferred the same move — and the reconciler reads this
+module's own registry loader, `OPEN_STATUSES`, spec-lifecycle constants and
+`_git`, so the seam is not free. **That is a reason to schedule it, not a reason
+it is fine.** `check_trajectory.py` is hereby WI-280's concrete next slice, named
+with its measured number instead of left as a general intention.
+
+`main()` 21 → 22, a reviewed +1: the reconciler is deliberately split across two
+tiers, so `main()` needs one warn loop beside the gated extend. The tier
+*decision* moved out to `tier_completion_findings` rather than becoming two more
+branches — the simplification the ratchet prefers, applied as far as it goes.
+
+**And I stamped the size ratchet mid-edit again** (2472, then the real 2495 after
+one more extraction). That is the 129-REVIEW-A lesson — *measure after the last
+edit, not during* — failing on the very session that recorded it. The number here
+is read from the file after the final change.
+
+Guards: 18 tests, every signal driven against a **constructed** spec and every one
+paired with the twin that must stay silent. Six mutants — no-ticked-box reads as
+done, standing check reads the archive, any heading ends Done-when, open-citer
+suppression removed, trailer joins the exit code, migration checklists count —
+each fail the suite.
+
+Bar: smoke **490 passed / 24.8 s**; **all 17** non-test G3 steps PASS (6.1 s);
+`check_dupes` OK, no duplicate blocks in 37 files.

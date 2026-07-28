@@ -150,7 +150,6 @@
 #   ref-namespace          5    (2%)   extract WI-343
 #   wi-registry            5    (2%)   deliberate
 #   module-path            4    (2%)   deliberate
-#   staged-close-scan      4    (2%)   extract WI-344
 #   import-fallback        3    (1%)   deliberate
 #   okf-row                3    (1%)   deliberate
 #   ctx-unpack             3    (1%)   deliberate
@@ -163,7 +162,6 @@
 #   trailer-scan           1            extract WI-343
 #   trailer-fold           1            deliberate
 #   exe-presence           1            extract WI-345
-#   spec-scan              1            extract WI-344
 #   warn-tier-dispatch     1            deliberate
 #   source-walk            1            extract WI-347
 #   subprocess-capture     1            extract WI-346
@@ -524,23 +522,7 @@ b8b532ba9de4  project-trajectory/scripts/agent_loop.py == project-trajectory/scr
 82419571a936  project-trajectory/scripts/bootstrap.py == project-trajectory/scripts/bootstrap.py
 7046137adff6  project-trajectory/scripts/bootstrap.py == project-trajectory/scripts/bootstrap.py
 
-# --- spec-scan (1 block)  ----------------------------------------
-# disposition: extract WI-344
-# the specs/*.md scan that skips README.md and the inert `-000` example,
-# in the spec-interface finder and the spec-archival check. The skip rule
-# is a policy stated twice.
-b759dba980a3  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/check_trajectory.py
 
-# --- staged-close-scan (4 blocks) --------------------------------
-# disposition: extract WI-344
-# the largest same-path block in the census (104 tokens): staged-name diff
-# -> `show HEAD:<wi csv>` -> status map -> the newly-closed-WI comparison,
-# run by both the shared-SR follow-up guard and the critique-close guard.
-# A _wis_closed_in_staged_commit(root) helper states it once.
-f71cd263873e  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/check_trajectory.py
-f3fed4010802  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/check_trajectory.py
-f67449fb3a0d  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/check_trajectory.py
-feb3b65493fe  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/check_trajectory.py
 
 # --- warn-tier-dispatch (1 block)  -------------------------------
 # disposition: deliberate

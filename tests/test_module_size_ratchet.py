@@ -349,7 +349,25 @@ BASELINE = {
     # in a row with no decomposition between them, which is a cost the WI-280
     # deferral is quietly accruing rather than an argument that each bump was
     # wrong.
-    "check_trajectory.py": 2135,
+    # +360 (2135 -> 2495), WI-352 + WI-344 + the WI-349 rework, in one slice
+    # because they are one file and each forced the next. The reconciler itself
+    # is ~200 lines of which most is the docstring recording WHY the done side is
+    # scoped to live specs (measured: 38 unactionable findings over the archive)
+    # and why the trailer signal never gates. WI-344's extractions REMOVED code
+    # from three functions and dropped two below the C901 limit; the net is still
+    # +360 because the new check is new behaviour.
+    #
+    # THE ARGUMENT AGAINST EXTRACTING, since WI-349's entry said the next
+    # addition should have to make one: a new sibling module is a SCAFFOLD-SURFACE
+    # change (bootstrap MAPPING, README kit-contents, test_bootstrap file lists,
+    # the dogfood-sync structural lock), which is why WI-328's spec deferred the
+    # same move; the reconciler also reads this module's own registry loader,
+    # OPEN_STATUSES, spec-lifecycle constants and `_git`, so the seam is not free.
+    # That is a reason to schedule it, not a reason it is fine: this is now the
+    # FIFTH consecutive upward bump on this module with no decomposition between
+    # them, and check_trajectory.py is hereby the concrete next slice of WI-280 —
+    # named with its measured number rather than left as a general intention.
+    "check_trajectory.py": 2495,
     # +1 (1916 -> 1917), WI-279: one MAPPING row registering the new
     # scripts/check_coverage.py kit gate so it ships downstream — a required
     # one-line registration, not monolith growth (the reviewed-bump escape the

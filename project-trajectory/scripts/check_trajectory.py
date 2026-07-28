@@ -138,6 +138,9 @@ CMP_CSV = "docs/requirements/components.csv"
 RUN_STATE = "docs/run-state"
 ARCH_MD = "docs/architecture.md"
 SPECS_DIR = "docs/specs"
+# Where R-F sends a spec at close ("close date appended, WI ids noted"), so the
+# WI-352 reconciler can still find a terminal WI's spec after its SpecRef clears.
+ARCHIVE_SPECS_DIR = "docs/archive/specs"
 STATUS_MD = "docs/status.md"
 
 # The How-SW top view is bounded at this many items (top-level components +
@@ -346,16 +349,63 @@ def _cycles(wis, pred_map):
     return found
 
 
-# --- WI-349: the one-physical-line rule the staged-close scan depends on ------
+# --- WI-349: physical-line + control-character integrity of the registry rows --
 # `staged_findings` compares `git show HEAD:<work-items.csv>` against the working
 # copy LINE-WISE and documents the assumption in its own docstring — "a WI row is
 # one physical line (no embedded newlines)". Nothing enforced it, which is the
 # enforcement-audit question asked of a rule the code already relies on.
 LINE_BREAK_CHARS = (("\r", "CR"), ("\n", "LF"))
+# TAB is deliberately allowed: it is ordinary whitespace inside a quoted cell and
+# breaks nothing downstream. Every other C0 control is not text — see below.
+_ALLOWED_CONTROLS = "\t"
+
+
+def _control_findings(cell):
+    """`[(label, detail)]` for the integrity violations in one cell.
+
+    Two classes, reported distinctly because the reader's next action differs:
+
+      - **CR / LF** break the one-physical-line rule the staged-close scan reads;
+      - **any other C0 control** is not text at all. Widened here after
+        `9e2008a` wrote a literal `0x08` into this very registry: a shell heredoc
+        collapsed the `\\b` of a Windows path, so `Git\\bin` became `Git` +
+        BACKSPACE and the Deliverable cell went on to claim the remedy reads
+        `put C:\\Program Files\\Gitin on PATH` — corrupting the exact string
+        WI-326 existed to make actionable. Every gate step passed over it, and
+        the CR/LF-only form of this check passed over it too: an adversarial
+        review found it by scanning the bytes. A control character is invisible
+        in every editor and diff a reader will use, so nothing but a byte-level
+        check can see it, which is precisely the argument for the check.
+    """
+    out = []
+    for char, label in LINE_BREAK_CHARS:
+        if char in cell:
+            out.append(
+                (
+                    label,
+                    "a WI row must be ONE physical line (the staged-close scan "
+                    "compares HEAD line-wise, so an embedded break makes it read "
+                    "a different set of rows while every other check passes)",
+                )
+            )
+    if out:
+        return out  # a break is the more specific diagnosis; do not double-report
+    for char in cell:
+        if ord(char) < 0x20 and char not in _ALLOWED_CONTROLS or ord(char) == 0x7F:
+            out.append(
+                (
+                    "control character 0x{:02X}".format(ord(char)),
+                    "a registry cell is text; a control character is invisible in "
+                    "every editor and diff, so it can only ever be found by a "
+                    "byte-level check like this one",
+                )
+            )
+            break  # one finding per cell; the fix is the same
+    return out
 
 
 def cell_integrity_errors(rows):
-    """Hard-error strings for any registry cell containing a CR or an LF.
+    """Hard-error strings for any registry cell that is not one line of plain text.
 
     Demonstrated 2026-07-28: a WI row was written with a literal newline inside a
     quoted `Title` cell. It round-tripped through `csv` perfectly, so the full
@@ -400,17 +450,12 @@ def cell_integrity_errors(rows):
             for cell in cells:
                 if not isinstance(cell, str):
                     continue
-                for char, label in LINE_BREAK_CHARS:
-                    if char in cell:
-                        errors.append(
-                            "{}: {} cell contains a literal {} — a WI row must be "
-                            "ONE physical line (the staged-close scan compares "
-                            "HEAD line-wise, so an embedded break makes it read a "
-                            "different set of rows while every other check passes)".format(
-                                where, name, label
-                            )
+                for label, detail in _control_findings(cell):
+                    errors.append(
+                        "{}: {} cell contains a literal {} — {}".format(
+                            where, name, label, detail
                         )
-                        break  # one finding per cell; the fix is the same
+                    )
     return errors
 
 
@@ -962,6 +1007,24 @@ def _proposed_rationale_present(section, iid):
     return False
 
 
+def _armed_specs(root):
+    """The live `docs/specs/` files that are real specs-of-record, sorted.
+
+    The skip rule is a POLICY — the specs README documents the convention in
+    prose and `WI-000` is the inert example, so neither is an armed spec — and it
+    was stated at both walk sites. WI-344's `spec-scan` block; stating it once
+    means a change to what counts as armed cannot land in one checker and not the
+    other. Empty (never an error) when there is no specs dir."""
+    specs = root / SPECS_DIR
+    if not specs.is_dir():
+        return []
+    return [
+        path
+        for path in sorted(specs.glob("*.md"))
+        if path.name.lower() != "readme.md" and not path.stem.endswith("-000")
+    ]
+
+
 def spec_interface_findings(root):
     """WI-191 — a spec-of-record acts on DECLARED interface boundaries. A spec's
     `## Interfaces` section must cite only IF-### seams that resolve in
@@ -982,11 +1045,7 @@ def spec_interface_findings(root):
         return []
     if_rows = {r["id"]: r for r in load_ifs(read_rows(root / IF_CSV))}
     out = []
-    for path in sorted(specs.glob("*.md")):
-        # The specs/ README documents the rule (it names the heading in prose) and
-        # WI-000 is the inert example — neither is an armed spec-of-record.
-        if path.name.lower() == "readme.md" or path.stem.endswith("-000"):
-            continue
+    for path in _armed_specs(root):
         section = _spec_interfaces_section(
             path.read_text(encoding="utf-8", errors="replace")
         )
@@ -1246,18 +1305,264 @@ def spec_lifecycle_findings(root, wis):
                     w["id"], w["status"], spec, SPECS_DIR
                 )
             )
-    specs = root / SPECS_DIR
-    if specs.is_dir():
-        for path in sorted(specs.glob("*.md")):
-            if path.name.lower() == "readme.md" or path.stem.endswith("-000"):
-                continue
-            rel = "{}/{}".format(SPECS_DIR, path.name)
-            if rel not in open_cited:
-                out.append(
-                    "{}: live spec cited by no open WI (archive it to "
-                    "docs/archive/specs/ with the close date appended and the "
-                    "WI ids noted, or point an open WI's SpecRef at it)".format(rel)
+    for path in _armed_specs(root):
+        rel = "{}/{}".format(SPECS_DIR, path.name)
+        if rel not in open_cited:
+            out.append(
+                "{}: live spec cited by no open WI (archive it to "
+                "docs/archive/specs/ with the close date appended and the "
+                "WI ids noted, or point an open WI's SpecRef at it)".format(rel)
+            )
+    return out
+
+
+# --- WI-352: the completion reconciler ----------------------------------------
+# A WI's `Status` is an ATTESTATION, and the owner ruled 2026-07-28 that it stays
+# one rather than becoming derived: the evidence a deriver would read is the `WI:`
+# commit trailer, but a trailer means "a commit CLAIMS this WI", not "the work is
+# right" (WI-336's code landed while its row correctly stayed `queued`, because a
+# review had refuted three of its claims — a deriver would have flipped it), and
+# `deferred`/`blocked`/`retired` are decisions, not outcomes. What was missing is
+# not derivation but RECONCILIATION — the shape every other declared-vs-computed
+# pair here already has (`derive_gate --check` recomputes and fails on drift;
+# every generator carries `--check`). So this compares the declared cell against
+# the completion evidence and reports DISAGREEMENT, never auto-flipping: an
+# auto-flip would re-create exactly the false completion that WI-336 and
+# `40c92f6` were both corrections of.
+_DONE_BOX_RE = re.compile(r"^\s*[-*]\s+\[[xX]\]")
+_OPEN_BOX_RE = re.compile(r"^\s*[-*]\s+\[ \]")
+_HEADING_RE = re.compile(r"^(#{1,6})\s+(.*)$")
+# Checkboxes live under a "Done-when" heading by overwhelming convention (258 of
+# 282 across every live and archived spec). The rest are migration checklists,
+# which are STEPS rather than completion evidence and must not count — counting
+# them would make a kit-version-bump doc read as an unfinished WI.
+_DONE_WHEN_RE = re.compile(r"^\s*(?:\d+[.)]\s*)?done[- ]when\b", re.IGNORECASE)
+
+
+def _done_when_boxes(text):
+    """`(ticked, unticked)` counted only within the spec's Done-when SECTION.
+
+    Section, not "everything until the next heading": a Done-when that subdivides
+    keeps its boxes, while a SIBLING heading at the same level ends it. That
+    distinction is load-bearing — `docs/specs/WI-321.md` carries WI-324's
+    remaining boxes under a sibling `## Split off, deliberately` heading, and
+    folding those in would attribute one WI's unfinished work to another."""
+    ticked = unticked = 0
+    depth = None  # the Done-when heading's level, while we are inside its section
+    for line in text.splitlines():
+        heading = _HEADING_RE.match(line)
+        if heading:
+            level = len(heading.group(1))
+            if _DONE_WHEN_RE.match(heading.group(2)):
+                depth = level
+            elif depth is not None and level <= depth:
+                depth = None  # a sibling or shallower heading closes the section
+            continue
+        if depth is None:
+            continue
+        if _DONE_BOX_RE.match(line):
+            ticked += 1
+        elif _OPEN_BOX_RE.match(line):
+            unticked += 1
+    return ticked, unticked
+
+
+def _own_spec(root, wid, archived=True):
+    """A WI's OWN spec as `(path, rel)`, or `(None, None)`.
+
+    Name-identified only — `docs/specs/WI-###.md`, then the archived
+    `docs/archive/specs/WI-###.<date>.md` — and deliberately NOT whatever the
+    `SpecRef` points at. A SpecRef may name a SHARED effort doc (WI-324 cites
+    `docs/specs/WI-321.md`) or a non-spec record (`docs/log.md`,
+    `docs/reviews/*.md`), and boxes in either are not attributable to the citing
+    WI. Reading them anyway is how a reconciler invents a disagreement: measured
+    here before this rule existed, following SpecRef reported WI-324's work
+    "FINISHED" out of ticks WI-321 had made.
+
+    `archived=False` restricts to the LIVE spec — the standing check's scope, for
+    the reason recorded in `completion_reconciliation_findings`."""
+    live = root / SPECS_DIR / "{}.md".format(wid)
+    if live.is_file():
+        return live, "{}/{}".format(SPECS_DIR, live.name)
+    if not archived:
+        return None, None
+    archive = root / ARCHIVE_SPECS_DIR
+    if archive.is_dir():
+        matches = sorted(archive.glob("{}.*.md".format(wid)))
+        if matches:
+            return matches[-1], "{}/{}".format(ARCHIVE_SPECS_DIR, matches[-1].name)
+    return None, None
+
+
+def _wi_trailer_claims(root):
+    """WI ids named by a `WI:` trailer on a commit reachable from HEAD.
+
+    `None` off-git (no repo, or git unavailable), so the trailer signal is a
+    silent no-op there rather than a finding — the stance every other git-reading
+    check in this module takes."""
+    out = _git(
+        root, ["log", "--format=%(trailers:key=WI,valueonly,separator=,)", "HEAD"]
+    )
+    if out is None:
+        return None
+    return {
+        token.strip()
+        for token in out.replace("\n", ",").split(",")
+        if re.fullmatch(r"WI-\d+", token.strip())
+    }
+
+
+def _live_spec_boxes(root, wid):
+    """`(rel, ticked, unticked)` for a WI's own LIVE spec, or `None` when it has
+    none. The one place a Done-when tally is read, so the standing check and the
+    close-time check can never answer "is this finished" from different counts."""
+    path, rel = _own_spec(root, wid, archived=False)
+    if path is None:
+        return None
+    ticked, unticked = _done_when_boxes(
+        path.read_text(encoding="utf-8", errors="replace")
+    )
+    return rel, ticked, unticked
+
+
+def completion_reconciliation_findings(root, wis):
+    """Disagreements between a WI's declared `Status` and its completion evidence,
+    as `(kind, message)` pairs — the kind lets the caller tier them without
+    pattern-matching on human-readable prose.
+
+      - **spec-says-finished** — an OPEN row whose own spec has at least one
+        ticked Done-when box and none left unticked. The WI-328 shape: six boxes
+        ticked across six commits on 2026-07-27, the row still `queued` a day
+        later, and because it was `SafetyClass=spine` the scheduler serialized the
+        whole project behind finished work while the session told the owner a
+        shipped migration was awaiting approval.
+      - **spec-says-unfinished** — a `done` row whose own **live** spec still has
+        unticked boxes and which no open WI cites (the same "no open citer" test
+        R-F uses to decide when a spec may be archived).
+      - **trailer-claims-it** — an OPEN row named by a `WI:` trailer on a commit
+        reachable from HEAD.
+
+    **Why the done side is scoped to LIVE specs**, measured rather than assumed:
+    run over the archive it produced **38** findings, and neither class was
+    actionable. Some are a self-referential terminal box (`Commit bar green; row
+    done, spec archived` — untickable at the moment you would tick it); the rest
+    are closes that never ticked. For a WI closed weeks ago, whose Deliverable and
+    log entry carry the record, the only available action is cosmetic — and a
+    check whose recommended action is "nothing" is a wall of warns, which is
+    exactly how WI-308 recorded that a check earns its own ignore. The live window
+    is where the disagreement is still resolvable, and the CLOSING COMMIT is where
+    it is resolvable and visible at once: `staged_completion_findings` owns that
+    moment. The 38 are real record-keeping debt, filed rather than suppressed.
+
+    A fourth signal the row asked for — a `done` row with an empty `Deliverable` —
+    is deliberately NOT reimplemented: **R-A already makes it a hard ERROR at every
+    run**, strictly stronger than this tier, and a second weaker copy of a live
+    rule is the duplication this kit's working agreement forbids.
+
+    Never auto-flips. Vacuous until armed: no specs and no trailers, no findings.
+    """
+    out = []
+    open_cited = {
+        w["specref"].split("#", 1)[0].strip()
+        for w in wis
+        if w["status"] in OPEN_STATUSES and w["specref"]
+    }
+    for w in wis:
+        boxes = _live_spec_boxes(root, w["id"])
+        if boxes is None:
+            continue
+        rel, ticked, unticked = boxes
+        if w["status"] in OPEN_STATUSES and ticked and not unticked:
+            out.append(
+                (
+                    "spec-says-finished",
+                    "{}: status={} but its spec {} reports the work FINISHED ({} "
+                    "Done-when box(es) ticked, none left) — close the row or "
+                    "untick what has not shipped; nothing here flips it for "
+                    "you".format(w["id"], w["status"], rel, ticked),
                 )
+            )
+        elif w["status"] == "done" and unticked and rel not in open_cited:
+            out.append(
+                (
+                    "spec-says-unfinished",
+                    "{}: status=done but its live spec {} still has {} unticked "
+                    "Done-when box(es) and no open WI cites it — tick what "
+                    "shipped or reopen the row".format(w["id"], rel, unticked),
+                )
+            )
+
+    claims = _wi_trailer_claims(root)
+    if claims:
+        for w in wis:
+            if w["status"] in OPEN_STATUSES and w["id"] in claims:
+                out.append(
+                    (
+                        "trailer-claims-it",
+                        "{}: status={} but a commit reachable from HEAD carries a "
+                        "`WI: {}` trailer — a trailer CLAIMS the WI, it does not "
+                        "attest the work, so this is a prompt to reconcile, never "
+                        "a reason to close".format(w["id"], w["status"], w["id"]),
+                    )
+                )
+    return out
+
+
+def tier_completion_findings(findings):
+    """Split reconciler findings into `(warn_only, gated)`.
+
+    The tier is a property of the SIGNAL, so it is decided here beside the
+    signals rather than as another branch in `main()`. Spec evidence is an
+    attestation, so a row disagreeing with its own ticked boxes is a
+    contradiction between two homes for one fact and belongs at the gate. A `WI:`
+    trailer is not: it means "a commit CLAIMS this WI", which is the very
+    argument the owner's 2026-07-28 ruling uses to keep Status declared — so it
+    warns and never joins the exit code.
+
+    DEVIATION from the WI row, which asked for the whole reconciler at the
+    warn-plain / error-under-`--strict` tier. Taken on the row's own reasoning:
+    WI-336's code landed while its row CORRECTLY stayed `queued`, a review having
+    refuted three of its claims. An error-under-strict trailer rule blocks the G3
+    gate for the length of that rework, and the only ways out are a false close
+    or an untracked exception."""
+    warn_only = [msg for kind, msg in findings if kind == "trailer-claims-it"]
+    gated = [msg for kind, msg in findings if kind != "trailer-claims-it"]
+    return warn_only, gated
+
+
+def staged_completion_findings(root):
+    """The close-time half of the reconciler (WI-352): a staged commit flipping a
+    WI to `done` while its own spec still carries unticked Done-when boxes.
+
+    This is the moment the standing check cannot reach, and the one that matters
+    most. `40c92f6` exists because a box was ticked before it was true; WI-334 is
+    the mirror, closed 2026-07-27 with five boxes never ticked — and by the time
+    either is visible to a gate run the spec has been archived and only a cosmetic
+    fix is left. Here the spec is still live, the author is still inside the
+    change, and both homes for "is this finished" can be made to agree in one
+    commit.
+
+    Warning strings ([] when not applicable), a silent no-op off-git — the same
+    shape as `staged_findings` and `critique_ratchet_findings`."""
+    staged = _staged_wi_registry(root)
+    if staged is None:
+        return []
+    _, cur_map, head_map = staged
+    out = []
+    for wid, _cur in _newly_closed(cur_map, head_map):
+        boxes = _live_spec_boxes(root, wid)
+        if boxes is None:
+            continue
+        rel, ticked, unticked = boxes
+        if unticked:
+            out.append(
+                "{}: this commit closes it, but its spec {} still has {} unticked "
+                "Done-when box(es) ({} ticked) — tick what shipped in THIS commit, "
+                "or record in the log why the row closes without them; once the "
+                "spec is archived only a cosmetic fix is left".format(
+                    wid, rel, unticked, ticked
+                )
+            )
     return out
 
 
@@ -1532,6 +1837,58 @@ def _wi_status_map(rows):
     return out
 
 
+def _chain_untouched(root, staged_names, *extra_dirs):
+    """Whether the staged change set leaves the VALIDATION CHAIN alone.
+
+    The shared tail of both no-validation-delta ratchets: a close that touches
+    neither the TC registry nor the tests dir landed the fix in the code and not
+    in what judges it. `extra_dirs` widens what counts as the chain for a caller
+    that accepts another kind of evidence (the critique ratchet also accepts a
+    rubric anchor), which is the ONLY way the two sites differed — so the shared
+    rule lives here and the difference stays visible at the call."""
+    prefixes = (_tests_dir(root).rstrip("/") + "/",) + tuple(extra_dirs)
+    return not any(name == TC_CSV or name.startswith(prefixes) for name in staged_names)
+
+
+def _staged_wi_registry(root):
+    """`(staged_names, cur_map, head_map)` for a commit that stages the WI
+    registry, or `None` when there is nothing for a `--staged` check to say.
+
+    The preamble every close-time check re-derived: the staged name set, the
+    HEAD copy of the registry, and both status maps. `None` covers all three
+    no-op cases uniformly — no git context, no registry change staged (so
+    nothing was closed here), and no HEAD copy (first commit / file absent) — so
+    a caller degrades silently off-git without restating the reason.
+
+    Extracted for WI-344 (docs/dupes-allow `staged-close-scan`), forced early by
+    WI-352 adding a fourth copy: the census fails closed on a same-file
+    duplication, and the F5 sanction buys cross-SCRIPT copy-ability, so it never
+    covers one. Line-splitting the HEAD CSV is safe — a WI row is one physical
+    line, which `cell_integrity_errors` now enforces rather than assumes."""
+    staged = _git(root, ["diff", "--cached", "--name-only"])
+    if staged is None:
+        return None
+    staged_names = set(staged.splitlines())
+    if WI_CSV not in staged_names:
+        return None
+    head_text = _git(root, ["show", "HEAD:" + WI_CSV])
+    if head_text is None:
+        return None
+    cur_map = _wi_status_map(read_rows(root / WI_CSV))
+    head_map = _wi_status_map(list(csv.DictReader(head_text.splitlines())))
+    return staged_names, cur_map, head_map
+
+
+def _newly_closed(cur_map, head_map):
+    """The WI ids this staged change flips to `done`, with their current rows —
+    the transition all three close-time ratchets key off."""
+    return [
+        (wid, cur)
+        for wid, cur in cur_map.items()
+        if cur["status"] == "done" and head_map.get(wid, {}).get("status") != "done"
+    ]
+
+
 def staged_findings(root):
     """The no-validation-delta warn (S0 ruling #2 corollary; warn-first).
 
@@ -1544,17 +1901,10 @@ def staged_findings(root):
     any missing git context makes it a silent no-op (the hook has git; a gate
     run does not, and pays nothing). Line-splitting the HEAD CSV is safe here —
     a WI row is one physical line (no embedded newlines)."""
-    staged = _git(root, ["diff", "--cached", "--name-only"])
+    staged = _staged_wi_registry(root)
     if staged is None:
         return []
-    staged_names = set(staged.splitlines())
-    if WI_CSV not in staged_names:
-        return []  # no registry change staged -> nothing was closed here
-    head_text = _git(root, ["show", "HEAD:" + WI_CSV])
-    if head_text is None:
-        return []  # first commit / file not in HEAD
-    cur_map = _wi_status_map(read_rows(root / WI_CSV))
-    head_map = _wi_status_map(list(csv.DictReader(head_text.splitlines())))
+    staged_names, cur_map, head_map = staged
 
     prev_done_srs = {}  # SR id -> the done WI(s) that already delivered it
     for wid, h in head_map.items():
@@ -1573,8 +1923,7 @@ def staged_findings(root):
         return []
 
     tests_prefix = _tests_dir(root).rstrip("/") + "/"
-    chain_touched = any(f == TC_CSV or f.startswith(tests_prefix) for f in staged_names)
-    if chain_touched:
+    if not _chain_untouched(root, staged_names):
         return []
     return [
         "{}: closes as a follow-up on {} (already delivered by a done WI) but "
@@ -1814,34 +2163,21 @@ def critique_ratchet_findings(root):
     verdict, findings = _latest_critique_verdict(root)
     if verdict != "CHANGES-REQUESTED" or findings <= 0:
         return []
-    staged = _git(root, ["diff", "--cached", "--name-only"])
+    staged = _staged_wi_registry(root)
     if staged is None:
         return []
-    staged_names = set(staged.splitlines())
-    if WI_CSV not in staged_names:
-        return []  # no WI close staged here
-    head_text = _git(root, ["show", "HEAD:" + WI_CSV])
-    if head_text is None:
-        return []
-    cur_map = _wi_status_map(read_rows(root / WI_CSV))
-    head_map = _wi_status_map(list(csv.DictReader(head_text.splitlines())))
+    staged_names, cur_map, head_map = staged
 
     closing = []
-    for wid, c in cur_map.items():
-        was = head_map.get(wid, {}).get("status")
-        if c["status"] == "done" and was != "done":
-            shared = sorted(sr for sr in c["srs"] if sr in critique_srs)
-            if shared:
-                closing.append((wid, shared))
+    for wid, c in _newly_closed(cur_map, head_map):
+        shared = sorted(sr for sr in c["srs"] if sr in critique_srs)
+        if shared:
+            closing.append((wid, shared))
     if not closing:
         return []
 
     tests_prefix = _tests_dir(root).rstrip("/") + "/"
-    chain_touched = any(
-        f == TC_CSV or f.startswith(tests_prefix) or f.startswith(RUBRICS_DIR)
-        for f in staged_names
-    )
-    if chain_touched:
+    if not _chain_untouched(root, staged_names, RUBRICS_DIR):
         return []
     return [
         "{}: closes on Critique-verified {} while the latest CRITIQUE verdict is "
@@ -1994,13 +2330,17 @@ def main():
     # never re-runs the full validation (the trajectory step already did). Three
     # warns: the follow-up-on-a-done-SR ratchet, the critique-loop ratchet
     # (a WI closing under a CHANGES-REQUESTED critique without hardening the
-    # chain), and the WI-316 amend-without-flip warn (attested spine prose
-    # changed without the Modified re-attest marker).
+    # chain), the WI-316 amend-without-flip warn (attested spine prose
+    # changed without the Modified re-attest marker), and the WI-352 close-time
+    # completion warn (the row flips to `done` while its spec still has unticked
+    # Done-when boxes — the only moment that disagreement is cheaply fixable,
+    # since archival leaves nothing but a cosmetic edit).
     if args.staged:
         for w in (
             staged_findings(root)
             + critique_ratchet_findings(root)
             + staged_spine_findings(root)
+            + staged_completion_findings(root)
         ):
             print("check_trajectory: WARN - {}".format(w), file=sys.stderr)
         return 0
@@ -2103,6 +2443,26 @@ def main():
     # --strict tier (no new branch in main); the R-E open-half's closing
     # counterpart.
     findings.extend(("R-F", False, msg) for msg in spec_lifecycle_findings(root, wis))
+    # Completion reconciliation (WI-352) — the declared `Status` cell against the
+    # spec's Done-when boxes and the `WI:` trailers. WARN plain, ERROR under
+    # --strict, the same run-state tier as R-E/R-F, EXCEPT the trailer signal.
+    #
+    # DEVIATION from the WI row, which asked for the whole reconciler at that
+    # tier, taken on the row's OWN argument: it rules that Status stays an
+    # attestation precisely because a trailer means "a commit claims this WI",
+    # not "the work is right", and cites WI-336 — code landed, row correctly left
+    # `queued`, a review having refuted three of its claims. Under an
+    # error-under-strict trailer rule that legitimate state blocks the G3 gate
+    # for as long as the rework takes, and the only ways out are to close the row
+    # falsely or to carry an untracked exception. Spec evidence is different in
+    # kind: a ticked box IS an attestation, so its disagreement with the row is a
+    # contradiction between two homes for one fact and belongs at the gate.
+    warn_only, gated = tier_completion_findings(
+        completion_reconciliation_findings(root, wis)
+    )
+    for msg in warn_only:
+        print("check_trajectory: WARN - completion {}".format(msg), file=sys.stderr)
+    findings.extend(("completion", False, msg) for msg in gated)
     for rule, hard, msg in findings:
         line = "{} {}".format(rule, msg)
         if hard or args.strict:

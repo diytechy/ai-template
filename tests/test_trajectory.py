@@ -2246,3 +2246,319 @@ def test_every_other_check_passed_on_such_a_row_before_this_one(tmp_path):
     assert [f for f in ct.ssot_findings(wis, tmp_path) if f[1]] == []
     # ...and the new check is the one and only thing that catches it.
     assert len(ct.cell_integrity_errors([row])) == 1
+
+
+def test_a_control_character_in_a_cell_is_caught(tmp_path):
+    """WI-349 rework, after an adversarial review found a literal 0x08 that
+    `9e2008a` had written into the live registry: a shell heredoc collapsed the
+    backslash of a Windows path, so `Git` + BACKSPACE reached the Deliverable
+    cell and every gate step passed over it. A control character is invisible in
+    every editor and diff, so only a byte-level check can ever see one."""
+    ct = load_script("check_trajectory")
+    for code in (0x00, 0x08, 0x1B, 0x7F):
+        row = {"WI-ID": "WI-001", "Title": "Git" + chr(code) + "in"}
+        errs = ct.cell_integrity_errors([row])
+        assert len(errs) == 1, (code, errs)
+        assert "0x{:02X}".format(code) in errs[0], errs
+        assert "Title cell" in errs[0], errs
+
+
+def test_a_tab_is_not_a_control_finding(tmp_path):
+    """The mutation twin that keeps the rule from being 'any byte under 0x20':
+    a TAB is ordinary whitespace inside a quoted cell and breaks nothing."""
+    ct = load_script("check_trajectory")
+    assert ct.cell_integrity_errors([{"WI-ID": "WI-001", "Title": "a\tb"}]) == []
+
+
+def test_a_break_is_reported_as_a_break_not_as_a_control_byte(tmp_path):
+    """CR and LF are C0 controls too, so without the early return they would be
+    reported twice under two different diagnoses — and the reader's next action
+    differs between them."""
+    ct = load_script("check_trajectory")
+    errs = ct.cell_integrity_errors([{"WI-ID": "WI-001", "Title": "a\nb"}])
+    assert (
+        len(errs) == 1
+        and "literal LF" in errs[0]
+        and "control character" not in errs[0]
+    )
+
+
+def test_the_registry_this_repo_ships_is_control_character_clean(tmp_path):
+    """The live registry, read as BYTES rather than through the loader — which is
+    how the 0x08 was found and how it would have been missed again. Cheap, and it
+    is the only test here that would have caught the real defect."""
+    from conftest import ROOT
+
+    data = (ROOT / "docs" / "requirements" / "work-items.csv").read_bytes()
+    bad = sorted({b for b in data if b < 0x20 and b not in (0x09, 0x0A, 0x0D)})
+    assert not bad, "control byte(s) in the WI registry: {}".format(
+        [hex(b) for b in bad]
+    )
+
+
+# --- WI-352: the completion reconciler -----------------------------------------
+#
+# Status stays an ATTESTATION (owner ruling 2026-07-28); what was missing is the
+# RECONCILER every other declared-vs-computed pair here already has. Each signal
+# below is driven against a CONSTRUCTED spec, and each has a twin proving it stays
+# silent in the other direction — the three false-positive classes measured while
+# building it (a shared spec, a sibling section, an archived spec) are pinned as
+# hard as the findings themselves.
+
+
+def _write_spec(root, name, body):
+    specs = root / "docs" / "specs"
+    specs.mkdir(parents=True, exist_ok=True)
+    (specs / name).write_text(body, encoding="utf-8")
+    return specs / name
+
+
+DONE_WHEN_ALL_TICKED = "# WI-001\n\n## Done-when\n\n- [x] one\n- [x] two\n"
+DONE_WHEN_SOME_OPEN = "# WI-001\n\n## Done-when\n\n- [x] one\n- [ ] two\n"
+
+
+def test_open_row_whose_spec_reports_finished_warns(tmp_path):
+    """The WI-328 shape: every Done-when box ticked, the row still open."""
+    _write_spec(tmp_path, "WI-001.md", DONE_WHEN_ALL_TICKED)
+    write_wis_sr(tmp_path, "WI-001,A,t,,,queued,,docs/specs/WI-001.md\n")
+    proc = run_traj(tmp_path)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "completion WI-001: status=queued" in proc.stderr, proc.stderr
+    assert "reports the work FINISHED" in proc.stderr
+
+
+def test_open_row_whose_spec_reports_finished_errors_under_strict(tmp_path):
+    """Gate tier: a contradiction between two homes for one fact cannot reach a
+    green G2/G3, matching R-E/R-F."""
+    _write_spec(tmp_path, "WI-001.md", DONE_WHEN_ALL_TICKED)
+    write_wis_sr(tmp_path, "WI-001,A,t,,,queued,,docs/specs/WI-001.md\n")
+    proc = run_traj(tmp_path, "--strict")
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+    assert "ERROR - completion WI-001" in proc.stderr
+
+
+def test_one_unticked_box_is_enough_to_stay_silent(tmp_path):
+    """The mutation twin. Without it the finding above could be riding on the
+    mere presence of a spec rather than on the box states."""
+    _write_spec(tmp_path, "WI-001.md", DONE_WHEN_SOME_OPEN)
+    write_wis_sr(tmp_path, "WI-001,A,t,,,queued,,docs/specs/WI-001.md\n")
+    proc = run_traj(tmp_path, "--strict")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "completion" not in proc.stderr
+
+
+def test_a_spec_with_no_ticked_boxes_at_all_is_not_finished(tmp_path):
+    """`ticked and not unticked` — an untouched spec has zero of each, and zero
+    ticked must not read as done. This is the vacuity a bare `not unticked`
+    would introduce."""
+    _write_spec(tmp_path, "WI-001.md", "# WI-001\n\n## Done-when\n\n(nothing yet)\n")
+    write_wis_sr(tmp_path, "WI-001,A,t,,,queued,,docs/specs/WI-001.md\n")
+    proc = run_traj(tmp_path, "--strict")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "completion" not in proc.stderr
+
+
+def test_a_shared_spec_is_never_read_for_the_citing_wi(tmp_path):
+    """MEASURED false positive, from the live repo: WI-324 (queued) cites
+    docs/specs/WI-321.md, whose Done-when belongs to WI-321. Following SpecRef
+    reported WI-324's work "FINISHED" out of ticks WI-321 had made. The
+    reconciler reads a WI's OWN, name-identified spec only."""
+    _write_spec(tmp_path, "WI-001.md", DONE_WHEN_ALL_TICKED)
+    write_wis_sr(
+        tmp_path,
+        "WI-001,A,t,,,done,shipped,\nWI-002,B,t,,,queued,,docs/specs/WI-001.md\n",
+    )
+    proc = run_traj(tmp_path, "--strict")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "WI-002" not in proc.stderr.replace("WI-002,B", "")
+
+
+def test_done_row_with_unticked_boxes_in_its_live_spec_warns(tmp_path):
+    """The mirror direction — 40c92f6 exists because a box was ticked early."""
+    _write_spec(tmp_path, "WI-001.md", DONE_WHEN_SOME_OPEN)
+    write_wis_sr(tmp_path, "WI-001,A,t,,,done,shipped,\n")
+    proc = run_traj(tmp_path)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "completion WI-001: status=done" in proc.stderr, proc.stderr
+    assert "1 unticked" in proc.stderr
+
+
+def test_an_open_citer_suppresses_the_done_side(tmp_path):
+    """A shared effort doc legitimately carries the citer's remaining boxes after
+    its first owner closes — the same "no open citer" test R-F uses to decide
+    when a spec may be archived."""
+    _write_spec(tmp_path, "WI-001.md", DONE_WHEN_SOME_OPEN)
+    write_wis_sr(
+        tmp_path,
+        "WI-001,A,t,,,done,shipped,\nWI-002,B,t,,,queued,,docs/specs/WI-001.md\n",
+    )
+    proc = run_traj(tmp_path, "--strict")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "completion" not in proc.stderr
+
+
+def test_an_archived_spec_is_not_reported_by_the_standing_check(tmp_path):
+    """SCOPING DECISION, pinned: run over the archive this produced 38 findings
+    on the live repo, none actionable — a closed WI's record is its Deliverable
+    and log entry, so the only remaining action is cosmetic, and a check whose
+    recommended action is "nothing" is the wall of warns WI-308 recorded as how a
+    check earns its own ignore. The close-time check owns that moment instead."""
+    archive = tmp_path / "docs" / "archive" / "specs"
+    archive.mkdir(parents=True, exist_ok=True)
+    (archive / "WI-001.2026-01-01.md").write_text(DONE_WHEN_SOME_OPEN, encoding="utf-8")
+    write_wis_sr(tmp_path, "WI-001,A,t,,,done,shipped,\n")
+    proc = run_traj(tmp_path, "--strict")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "completion" not in proc.stderr
+
+
+# --- the Done-when SECTION boundary --------------------------------------------
+
+
+def test_boxes_under_a_sibling_heading_are_not_done_when(tmp_path):
+    """docs/specs/WI-321.md's real shape: its Done-when is followed by a sibling
+    `## Split off, deliberately` holding ANOTHER WI's boxes. Folding those in
+    would attribute one WI's unfinished work to another."""
+    ct = load_script("check_trajectory")
+    text = (
+        "# WI-001\n\n## Done-when\n\n- [x] mine\n\n"
+        "## Split off, deliberately\n\n- [ ] someone else's\n"
+    )
+    assert ct._done_when_boxes(text) == (1, 0)
+
+
+def test_boxes_under_a_subheading_of_done_when_do_count(tmp_path):
+    """The other half of the section rule: a Done-when that subdivides keeps its
+    boxes, so the boundary is heading LEVEL, not merely the next heading."""
+    ct = load_script("check_trajectory")
+    text = "# WI-001\n\n## Done-when\n\n- [x] a\n\n### Sub\n\n- [ ] b\n"
+    assert ct._done_when_boxes(text) == (1, 1)
+
+
+def test_a_migration_checklist_is_not_completion_evidence(tmp_path):
+    """Checkboxes outside a Done-when heading are STEPS, not evidence. Counting
+    them would make a kit-version-bump doc read as an unfinished WI."""
+    ct = load_script("check_trajectory")
+    text = "# WI-001\n\n## Migration checklist\n\n- [ ] step one\n- [ ] step two\n"
+    assert ct._done_when_boxes(text) == (0, 0)
+
+
+def test_the_numbered_done_when_heading_form_is_recognised(tmp_path):
+    """Older specs number their sections ("7. Done-when"), and "Done when"
+    without the hyphen is in live use too."""
+    ct = load_script("check_trajectory")
+    assert ct._done_when_boxes("## 7. Done-when\n\n- [x] a\n") == (1, 0)
+    assert ct._done_when_boxes("## Done when\n\n- [x] a\n") == (1, 0)
+
+
+# --- the trailer signal: warn-only, and pinned as such -------------------------
+
+
+def test_a_trailer_claiming_an_open_wi_warns(tmp_path):
+    git = shutil.which("git")
+    if not git:
+        pytest.skip("needs git on PATH")
+    write_wis_sr(tmp_path, "WI-001,A,t,,,queued,,docs/log.md\n")
+    (tmp_path / "docs" / "log.md").write_text("log\n", encoding="utf-8")
+    for args in (
+        ("init",),
+        ("config", "user.email", "t@example.com"),
+        ("config", "user.name", "T"),
+        ("add", "-A"),
+        ("commit", "-m", "build it\n\nWI: WI-001"),
+    ):
+        subprocess.run([git, "-C", str(tmp_path), *args], capture_output=True)
+    proc = run_traj(tmp_path)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "completion WI-001" in proc.stderr and "trailer" in proc.stderr
+
+
+def test_the_trailer_signal_never_joins_the_exit_code(tmp_path):
+    """DEVIATION from the WI row, pinned so it cannot be undone by accident. The
+    row asks for ERROR under --strict; its own argument forbids it. A trailer
+    means "a commit CLAIMS this WI", not "the work is right" — WI-336's code
+    landed while its row CORRECTLY stayed queued, a review having refuted three
+    of its claims. Erroring here would block the G3 gate for the length of that
+    rework, with no honest way out but a false close."""
+    git = shutil.which("git")
+    if not git:
+        pytest.skip("needs git on PATH")
+    write_wis_sr(tmp_path, "WI-001,A,t,,,queued,,docs/log.md\n")
+    (tmp_path / "docs" / "log.md").write_text("log\n", encoding="utf-8")
+    for args in (
+        ("init",),
+        ("config", "user.email", "t@example.com"),
+        ("config", "user.name", "T"),
+        ("add", "-A"),
+        ("commit", "-m", "build it\n\nWI: WI-001"),
+    ):
+        subprocess.run([git, "-C", str(tmp_path), *args], capture_output=True)
+    proc = run_traj(tmp_path, "--strict")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "WARN - completion WI-001" in proc.stderr
+    assert "ERROR" not in proc.stderr
+
+
+# --- the close-time half --------------------------------------------------------
+
+
+def _staged_close_repo(tmp_path, spec_body):
+    """A repo whose HEAD has WI-001 queued and whose INDEX closes it."""
+    git = shutil.which("git")
+    if not git:
+        pytest.skip("needs git on PATH")
+
+    def run_git(*a):
+        return subprocess.run([git, "-C", str(tmp_path), *a], capture_output=True)
+
+    _write_spec(tmp_path, "WI-001.md", spec_body)
+    write_wis_sr(tmp_path, "WI-001,A,t,,,queued,,docs/specs/WI-001.md\n")
+    run_git("init")
+    run_git("config", "user.email", "t@example.com")
+    run_git("config", "user.name", "T")
+    run_git("add", "-A")
+    run_git("commit", "-m", "open")
+    write_wis_sr(tmp_path, "WI-001,A,t,,,done,shipped,\n")
+    run_git("add", "-A")
+    return run_git
+
+
+def test_closing_a_wi_with_unticked_boxes_warns_at_commit_time(tmp_path):
+    """The moment that matters: the spec is still live, the author is still in
+    the change, and both homes can be made to agree in one commit. WI-334 closed
+    2026-07-27 with five boxes never ticked and nothing said so."""
+    _staged_close_repo(tmp_path, DONE_WHEN_SOME_OPEN)
+    proc = run_traj(tmp_path, "--staged")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "WI-001: this commit closes it" in proc.stderr, proc.stderr
+    assert "1 unticked" in proc.stderr
+
+
+def test_closing_a_wi_with_every_box_ticked_is_silent(tmp_path):
+    """The twin — otherwise the warn above could fire on any close at all."""
+    _staged_close_repo(tmp_path, DONE_WHEN_ALL_TICKED)
+    proc = run_traj(tmp_path, "--staged")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "this commit closes it" not in proc.stderr
+
+
+def test_the_close_time_check_is_a_no_op_off_git(tmp_path):
+    """Same degradation as every other staged check — a gate run has no index."""
+    ct = load_script("check_trajectory")
+    assert ct.staged_completion_findings(tmp_path) == []
+
+
+# --- the signal deliberately NOT reimplemented ---------------------------------
+
+
+def test_done_with_an_empty_deliverable_is_already_r_a_and_is_not_duplicated(tmp_path):
+    """The WI row asked for a fourth signal — a `done` row with an empty
+    Deliverable. R-A already makes that a HARD error at every run, strictly
+    stronger than this tier, so a second weaker copy would be the duplication the
+    kit's working agreement forbids. Pinned here so the omission reads as a
+    decision rather than a gap."""
+    write_wis_sr(tmp_path, "WI-001,A,t,,,done,,\n")
+    proc = run_traj(tmp_path)
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+    assert "R-A" in proc.stderr
+    assert "completion" not in proc.stderr

@@ -87,11 +87,22 @@ BASELINE = {
     ("check_privacy.py", "main"): 11,
     ("check_privacy.py", "scan_diff_text"): 14,
     ("check_privacy.py", "scan_line"): 13,
-    ("check_trajectory.py", "critique_ratchet_findings"): 11,
+    # WI-344 (2026-07-28): `critique_ratchet_findings` (11) and `staged_findings`
+    # (12) are DELETED, not bumped — extracting the staged-close preamble
+    # (`_staged_wi_registry` / `_newly_closed`) and the chain-touched tail
+    # (`_chain_untouched`) dropped both under the limit. This is the direction
+    # the ratchet exists to hold: it tightens by default.
     ("check_trajectory.py", "cross_component_findings"): 12,
     ("check_trajectory.py", "interface_findings"): 23,
-    ("check_trajectory.py", "main"): 21,
-    ("check_trajectory.py", "staged_findings"): 12,
+    # WI-352 reviewed bump 21 -> 22, +1: the completion reconciler is
+    # deliberately split across TWO tiers (spec evidence gates, trailer evidence
+    # only warns), so main() needs one warn loop beside the gated extend. Folding
+    # it into the existing dispatch loop would promote the trailer signal to an
+    # error under --strict, which is precisely the deviation the WI argues
+    # against. The tier DECISION itself was moved out to
+    # `tier_completion_findings` rather than being written as two more branches
+    # here — the simplification the ratchet prefers, applied as far as it goes.
+    ("check_trajectory.py", "main"): 22,
     # WI-316 (2026-07-26): the amend-without-flip warn — HEAD-vs-index row
     # compare across three registries with owning-SR suppression (the
     # attestation unit sanctions same-commit amend+flip). New guard, reason in

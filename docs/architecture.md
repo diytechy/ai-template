@@ -519,7 +519,7 @@ Contracts (interfaces): IF-009, IF-023
 | `read_components_check_enabled(root)` | Whether the How-SW top-view right-sizing rule is on (WI-073/FB5). |  |
 | `read_rows(path)` | The CSV rows of `path` as dicts, or [] when the file is absent. Read |  |
 | `load_wis(rows)` | Parse work-item rows into `(wis, integrity_errors)`. |  |
-| `cell_integrity_errors(rows)` | Hard-error strings for any registry cell containing a CR or an LF. |  |
+| `cell_integrity_errors(rows)` | Hard-error strings for any registry cell that is not one line of plain text. |  |
 | `validate(wis, known_srs)` | Return the hard-error strings for the work-item graph ([] = clean). |  |
 | `load_known_srs(root)` | The set of real SR ids from system-requirements.csv (for the SR-ref warn). |  |
 | `load_ifs(rows)` | Real (non-`-000`) IF-### interface rows as dicts. Lenient — `trace.py` owns |  |
@@ -537,6 +537,9 @@ Contracts (interfaces): IF-009, IF-023
 | `phase_findings(root, wis)` | The phase-archetype + phase-drop warns (WI-093; warn-first). Returns the |  |
 | `ssot_findings(wis, root)` | The work-items.csv coherence findings (R-A + R-E) + the unknown-status |  |
 | `spec_lifecycle_findings(root, wis)` | The spec-lifecycle close-side rule **R-F** (WI-251) — the mechanical half |  |
+| `completion_reconciliation_findings(root, wis)` | Disagreements between a WI's declared `Status` and its completion evidence, |  |
+| `tier_completion_findings(findings)` | Split reconciler findings into `(warn_only, gated)`. |  |
+| `staged_completion_findings(root)` | The close-time half of the reconciler (WI-352): a staged commit flipping a |  |
 | `status_forward_only_findings(root, wis)` | The status.md forward-only rule (WI-200) — restores the WI-180-retired R-D |  |
 | `dead_dependency_findings(wis)` | Surface a live WI that hard-depends on a `retired` predecessor (WI-267). |  |
 | `run_state_findings(wis, root)` | Warn when an end-state would park a runnable queued work item (WI-115). |  |
