@@ -17371,3 +17371,51 @@ hour, without either being aimed at the other.
 `status.md`'s forward-only rule caught the third corner of the same close: the
 hand-authored prose named `WI-339` as an open defect, which becomes a backward
 reference the moment the row closes. Rewritten to state what is now true.
+
+---
+
+## Session 2026-07-28 (cont.) — WI-325: the gate that must not re-derive its own expectation
+
+Every other generated surface here is freshness-gated; `docs/ratify/*.md` was
+generated the same way and gated by nothing, and went stale **twice in one day** —
+at 121-CRITIQUE missing two chain rows and an amendment, at 123-CRITIQUE three
+rows short. Both caught by a human noticing, the weakest tier
+`docs/enforcement-audit.md` names.
+
+**The constraint that makes this different from its siblings** is the one the row
+refused to let me skip: the brief **self-stamps** its baseline and reuses it, so
+`--check` compares against the baseline the FILE declares and never re-derives
+one. Re-deriving is the WI-322 review BLOCKER — a regeneration that silently
+collapsed 43 chain-row diffs to 18 while `--check` certified the loss. *A gate
+that re-derives its own expectation cannot detect the drift it exists to detect.*
+`declared_since` therefore reads only `— from \`--since\`` stamps: a section
+baselined by derivation pins nothing a re-derivation could move. Two different
+`--since` stamps cannot come from one run, so that is **reported as a hand-edit
+rather than resolved** — guessing which is current is precisely the silent
+substitution this check exists to prevent.
+
+**Doubly self-arming.** Silent with no brief; silent when no SR is `Modified`,
+because the window is then closed and the committed brief is a *record* of a
+finished sitting, not a live surface. Checking it against a registry whose rows
+have since been blessed would fail forever — which is how a check earns its own
+ignore (the WI-308 lesson, applied before shipping rather than after). The live
+brief is **derived** — newest `docs/ratify/*.md` by stamped *name*, not mtime,
+since a checkout rewrites mtimes and this check exists precisely not to trust the
+working tree.
+
+**Wired at both tiers**, as the row asks: `[step:ratify-fresh]` at G2+ and the
+pre-commit floor's batched freshness run — a sitting can happen between gate runs.
+Shipped **live** in `stack.ini.template`, not commented, because it costs a
+project without a re-attestation practice exactly nothing and forces no migration.
+
+Two of the repo's own tripwires fired and both were right. The disposition
+tripwire demanded the new floor step be **classified**: it is floor-checked but
+never regenerated, because regenerating an attestation surface from a dispatcher
+disposition would silently rewrite what the owner is about to attest to. And the
+tests found that **`main()` is called bare** at the bottom of `trace.py`, so a
+plain `return` sets no exit status — the check printed `STALE` and exited **0**
+until it used `sys.exit` like the analyze path does. A checker that reports a
+finding and exits clean is worse than no checker.
+
+Module size 2706 → 2848, reviewed. Bar: smoke **509 passed / 24.2 s**; all 18
+non-test G3 steps PASS.

@@ -576,6 +576,14 @@ def test_disposition_regen_is_the_floor_freshness_subset():
         "registry-integrity",
         "derived-gate",
         "skills-sync",
+        # WI-325: floor-checked, deliberately NOT regenerated. The brief is an
+        # attestation surface a HUMAN authors and reads before blessing rows —
+        # regenerating it from a dispatcher disposition would silently rewrite
+        # what the owner is about to attest to, which is the failure mode, not
+        # the fix. A disposition also edits none of its inputs: it moves WI rows,
+        # while the brief is keyed off `Modified` SR rows and their chains. So it
+        # joins arch-map/derived-gate/skills-sync in the excluded set.
+        "ratify-fresh",
     ]
     regen_steps = [step for step, *_ in dispatcher._DISPOSITION_REGEN]
     assert regen_steps == ["okf", "trajectory-map", "status-map", "open-items"]

@@ -889,6 +889,9 @@ Contracts (interfaces): IF-001, IF-021, IF-042
 | `build_forest(sn_ids, srs, llrs, tcs, orphan_ids, sn_draft)` | The SN -> SR -> LLR -> TC chain as nested nodes, plus synthetic groups for |  |
 | `outline_lines(roots)` | Indented Markdown list of the forest — pure text, so it reviews line-by- |  |
 | `reattest_model(root, srs, llrs, tcs, since, statuses)` | The STRUCTURED attestation model: one entry per SR owing an attestation, |  |
+| `newest_ratify_brief(root)` | The live re-attestation brief — the newest `docs/ratify/*.md` — or None. |  |
+| `declared_since(text)` | The `--since` revision a brief declares, or None when it derived its own. |  |
+| `ratify_check(root, srs, llrs, tcs, out_path, since)` | `(code, message)` for `--ratify modified --check`. |  |
 | `reattest_lines(root, srs, llrs, tcs, since)` | Markdown for the re-attestation brief (`--ratify modified`, WI-316): one |  |
 | `ratify_lines(scope, sn_ids, srs, llrs, tcs, sn_meta)` | Markdown for the batch-scoped ratification hierarchy (WI-146a). Groups the |  |
 | `mermaid_graph(sn_ids, srs, llrs, tcs, orphan_ids, sn_draft)` | A `graph LR` DAG of the chain (a TC verifies its SR *and* its LLR), colored |  |

@@ -1955,3 +1955,225 @@ def test_integrity_flags_content_row_with_blank_id():
     assert any("non-empty cells but no SR-ID" in f for f in found), found
     # Fully blank rows stay a non-finding (a trailing newline is not damage).
     assert trace.integrity_findings("SR", [{"SR-ID": "", "Title": " "}]) == []
+
+
+# --- WI-325: the re-attestation brief gets a freshness gate ---------------------
+#
+# Every other generated surface here is freshness-gated; the brief was not, and
+# it went stale TWICE in one day — at 121-CRITIQUE missing two chain rows and an
+# amendment (an owner would have blessed six rows having seen four), at
+# 123-CRITIQUE three rows short. Both caught by a human noticing.
+#
+# The hard part is not the comparison, it is the BASELINE: the brief self-stamps
+# one and reuses it, so `--check` must compare against the baseline the FILE
+# declares. Re-deriving is the WI-322 review BLOCKER — a regeneration that
+# silently collapsed 43 chain-row diffs to 18 while `--check` certified the loss.
+# The `does not re-derive` test below is therefore the load-bearing one.
+
+
+def _ratify_repo(tmp_path):
+    """A git repo with a Verified SR chain, amended and flipped to Modified, so
+    `--ratify modified` has something real to render. Returns (run_git, rev) with
+    `rev` the attested baseline commit."""
+    import shutil as _sh
+    import subprocess as _sp
+
+    skip_without_env_gates("git")
+    git = _sh.which("git")
+
+    def run_git(*a):
+        return _sp.run([git, "-C", str(tmp_path), *a], capture_output=True, text=True)
+
+    req = tmp_path / "docs" / "requirements"
+    req.mkdir(parents=True)
+
+    def write(
+        sr_status, sr_req="The system shall do the thing.", llr_detail="Detail A"
+    ):
+        (req / "system-requirements.csv").write_text(
+            "SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,"
+            "Permutations,Priority,Verification,Status\n"
+            'SR-001,Thing,SN-001,"{}",R,AC,,M,Test,{}\n'.format(sr_req, sr_status),
+            encoding="utf-8",
+        )
+        (req / "low-level-requirements.csv").write_text(
+            "LLR-ID,SR-Refs,Detail,Module,Rationale,Status\n"
+            "LLR-001,SR-001,{},m.py,why,Verified\n".format(llr_detail),
+            encoding="utf-8",
+        )
+        (req / "test-cases.csv").write_text(
+            "TC-ID,LLR-Refs,Steps,Expected,Automated,Tier,Status\n"
+            "TC-001,LLR-001,step,expected,Yes,smoke,Verified\n",
+            encoding="utf-8",
+        )
+
+    write("Verified")
+    run_git("init")
+    run_git("config", "user.email", "t@example.com")
+    run_git("config", "user.name", "T")
+    run_git("add", "-A")
+    run_git("commit", "-m", "attested baseline")
+    rev = run_git("rev-parse", "HEAD").stdout.strip()
+
+    # A later commit that amends the SR text and flips it Modified.
+    write("Modified", sr_req="The system shall do the AMENDED thing.")
+    run_git("add", "-A")
+    run_git("commit", "-m", "amend + flip")
+    return run_git, rev, write
+
+
+def _brief(tmp_path, *extra):
+    return run_py(
+        [
+            SCRIPTS / "trace.py",
+            "--root",
+            tmp_path,
+            "--ratify",
+            "modified",
+            "--out",
+            tmp_path / "docs" / "ratify" / "brief.md",
+            *extra,
+        ],
+        cwd=tmp_path,
+    )
+
+
+def _check(tmp_path, *extra):
+    return run_py(
+        [
+            SCRIPTS / "trace.py",
+            "--root",
+            tmp_path,
+            "--ratify",
+            "modified",
+            "--check",
+            *extra,
+        ],
+        cwd=tmp_path,
+    )
+
+
+def test_a_current_brief_passes_the_check(tmp_path):
+    _ratify_repo(tmp_path)
+    assert _brief(tmp_path).returncode == 0
+    proc = _check(tmp_path)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "is current" in proc.stderr, proc.stderr
+
+
+def test_a_row_added_after_the_brief_makes_it_stale(tmp_path):
+    """Drift direction 1 — the 121-CRITIQUE shape: chain rows added to the
+    registry after the brief was written, so an owner blesses fewer rows than
+    exist."""
+    _run_git, _rev, write = _ratify_repo(tmp_path)
+    assert _brief(tmp_path).returncode == 0
+    req = tmp_path / "docs" / "requirements"
+    (req / "low-level-requirements.csv").write_text(
+        "LLR-ID,SR-Refs,Detail,Module,Rationale,Status\n"
+        "LLR-001,SR-001,Detail A,m.py,why,Verified\n"
+        "LLR-002,SR-001,Detail B,m.py,why,Verified\n",
+        encoding="utf-8",
+    )
+    proc = _check(tmp_path)
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+    assert "STALE" in proc.stderr
+
+
+def test_a_changed_cell_makes_it_stale(tmp_path):
+    """Drift direction 2 — the same row, different content."""
+    _run_git, _rev, write = _ratify_repo(tmp_path)
+    assert _brief(tmp_path).returncode == 0
+    write("Modified", sr_req="The system shall do the RE-AMENDED thing.")
+    proc = _check(tmp_path)
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+    assert "STALE" in proc.stderr
+
+
+def test_the_check_does_not_re_derive_the_baseline(tmp_path):
+    """THE load-bearing test (WI-322's BLOCKER). A brief stamped `--since X` must
+    still be compared against X, even when the automatic derivation would now
+    pick something else — because a gate that re-derives its own expectation
+    cannot detect the drift it exists to detect.
+
+    Constructed so the two baselines genuinely disagree: the brief is written
+    against the FIRST commit while the auto-derived last-Verified revision is a
+    later one, and the check is then run with no --since at all."""
+    run_git, rev, write = _ratify_repo(tmp_path)
+    # An intermediate commit where the SR is Verified again with different text,
+    # so the git-derived "newest still-Verified" baseline is NOT `rev`.
+    write("Verified", sr_req="The system shall do the INTERIM thing.")
+    run_git("add", "-A")
+    run_git("commit", "-m", "interim verified")
+    write("Modified", sr_req="The system shall do the AMENDED thing.")
+    run_git("add", "-A")
+    run_git("commit", "-m", "re-amend + flip")
+
+    assert _brief(tmp_path, "--since", rev).returncode == 0
+    text = (tmp_path / "docs" / "ratify" / "brief.md").read_text(encoding="utf-8")
+    assert "from `--since`" in text, text[:400]
+
+    # No --since on the check: it must read the one the FILE declares.
+    proc = _check(tmp_path)
+    assert proc.returncode == 0, (
+        "the check re-derived a baseline instead of reusing the declared one:\n"
+        + proc.stdout
+        + proc.stderr
+    )
+    assert rev[:7] in proc.stderr or "baseline" in proc.stderr
+
+
+def test_the_declared_baseline_parser_reads_only_since_stamps():
+    """A section baselined by DERIVATION pins nothing a re-derivation could move,
+    so it must not be mistaken for a `--since` stamp."""
+    tr = load_script("trace")
+    assert (
+        tr.declared_since("_Baseline `abc1234` (2026-01-01) — from `--since`._\n")
+        == "abc1234"
+    )
+    assert tr.declared_since("_Baseline `abc1234` (2026-01-01)._\n") is None
+    assert tr.declared_since("no baseline here\n") is None
+
+
+def test_two_different_since_stamps_is_a_finding():
+    """One run cannot produce two, so it means the file was hand-edited or
+    spliced. Reported rather than resolved — guessing which is current is the
+    silent substitution this check exists to prevent."""
+    tr = load_script("trace")
+    text = (
+        "_Baseline `aaa1111` (2026-01-01) — from `--since`._\n"
+        "_Baseline `bbb2222` (2026-01-02) — from `--since`._\n"
+    )
+    assert tr.declared_since(text) == ["aaa1111", "bbb2222"]
+
+
+def test_a_missing_brief_is_a_no_op_not_a_failure(tmp_path):
+    """The arming idiom: a downstream repo with no docs/ratify/ pays nothing."""
+    _ratify_repo(tmp_path)
+    proc = _check(tmp_path)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "nothing to gate" in proc.stderr
+
+
+def test_a_closed_window_is_a_no_op(tmp_path):
+    """Once the sitting is done the brief is a HISTORICAL record, not a live
+    surface. Checking it against a registry whose rows have since been blessed
+    would fail forever, which is how a check earns its own ignore."""
+    _run_git, _rev, write = _ratify_repo(tmp_path)
+    assert _brief(tmp_path).returncode == 0
+    write("Verified", sr_req="The system shall do the AMENDED thing.")
+    proc = _check(tmp_path)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "window is closed" in proc.stderr
+
+
+def test_the_newest_brief_is_chosen_by_stamped_name(tmp_path):
+    """Briefs are date-stamped per sitting, so the live one is derived rather
+    than configured — and by NAME, not mtime, because a checkout rewrites mtimes
+    and this check exists precisely not to trust the working tree."""
+    tr = load_script("trace")
+    ratify = tmp_path / "docs" / "ratify"
+    ratify.mkdir(parents=True)
+    for name in ("2026-01-01-reattest.md", "2026-07-27-reattest.md", "README.md"):
+        (ratify / name).write_text("x\n", encoding="utf-8")
+    assert tr.newest_ratify_brief(tmp_path).name == "2026-07-27-reattest.md"
+    assert tr.newest_ratify_brief(tmp_path / "nowhere") is None

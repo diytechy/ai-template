@@ -344,7 +344,16 @@ BASELINE = {
     # rather than merely stops growing. Proven behaviour-preserving by the three
     # golden files staying byte-identical.
     # +3 (2703 -> 2706), WI-348: three report writers take the two-line LF form.
-    "trace.py": 2706,
+    # +142 (2706 -> 2848), WI-325: the re-attestation brief gets the freshness
+    # gate every other generated surface here already had. Most of the bump is
+    # the docstring on `ratify_check`, which records the constraint that makes
+    # this different from its siblings: the brief SELF-STAMPS its baseline, so
+    # the compare must reuse the one the FILE declares and must not re-derive —
+    # re-deriving is the WI-322 BLOCKER, where a regeneration collapsed 43
+    # chain-row diffs to 18 while --check certified the loss. A successor who
+    # "simplifies" that comment away removes the reason the code is shaped this
+    # way. Reviewed bump, log 2026-07-28. Re-stamp downward with WI-280.
+    "trace.py": 2848,
     # +132 (1926 -> 2058; the last +10 is the F4 BOM hardening: read_rows utf-8-sig + git-show strips), WI-316: staged_spine_findings — the amend-without-
     # flip warn (--staged): content cells of a Verified spine row changed
     # without the Modified marker, suppressed when the owning SR flips in the

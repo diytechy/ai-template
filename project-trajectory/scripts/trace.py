@@ -1264,6 +1264,115 @@ def reattest_model(root, srs, llrs, tcs, since=None, statuses=("modified",)):
     return model
 
 
+def newest_ratify_brief(root):
+    """The live re-attestation brief — the newest `docs/ratify/*.md` — or None.
+
+    DERIVED rather than configured: briefs are date-stamped per sitting, so a
+    fixed path in `docs/stack.ini` would have to be edited at every sitting and
+    would silently gate the wrong file when it was not. Newest by NAME, which is
+    the stamped date, not by mtime — a checkout re-writes mtimes and the whole
+    point of this check is not to trust the working tree's incidentals."""
+    ratify = root / "docs" / "ratify"
+    if not ratify.is_dir():
+        return None
+    briefs = sorted(p for p in ratify.glob("*.md") if p.name.lower() != "readme.md")
+    return briefs[-1] if briefs else None
+
+
+# --- WI-325: the re-attestation brief gets the freshness gate everything else has
+# Every other generated surface here is freshness-gated (`gen_trajectory --check`,
+# the status snapshot, `gen_okf --check`, `gen_open_items --check`); the brief was
+# generated the same way and gated by nothing, so it silently drifted behind the
+# registry it summarizes. Observed twice in one day: at 121-CRITIQUE it was
+# missing LLR-105/TC-108 and SR-054's later amendment (an owner would have blessed
+# six rows having seen four), and again at 123-CRITIQUE it was three chain rows
+# short. Both were caught by a human noticing — the weakest enforcement tier
+# `docs/enforcement-audit.md` names.
+#
+# THE CONSTRAINT THAT MAKES THIS HARDER THAN ITS SIBLINGS: the brief SELF-STAMPS
+# its baseline and reuses it, so `--check` must compare against the baseline the
+# FILE declares and must NOT re-derive one. Re-deriving is precisely the WI-322
+# review BLOCKER — a regeneration that silently collapsed 43 chain-row diffs to 18
+# while `--check` certified the loss. A gate that re-derives its own expectation
+# cannot detect the drift it exists to detect.
+_DECLARED_BASELINE_RE = re.compile(
+    r"^_Baseline `([0-9a-fA-F]+)`[^\n]*?— from `--since`\._$", re.M
+)
+
+
+def declared_since(text):
+    """The `--since` revision a brief declares, or None when it derived its own.
+
+    Only a brief written WITH `--since` pins a baseline that a re-derivation
+    could move; without it each section is baselined at the git-derived
+    last-Verified revision of its own SR, which is a function of history and is
+    stable as long as history is. So None means "let the renderer derive", not
+    "no baseline".
+
+    More than one distinct `--since` revision cannot come from one run, so it
+    means the file has been hand-edited or spliced: returned as a finding rather
+    than resolved, because guessing which one is current is exactly the silent
+    substitution this whole check exists to prevent."""
+    revs = {m.group(1) for m in _DECLARED_BASELINE_RE.finditer(text)}
+    if len(revs) > 1:
+        return sorted(revs)  # a list signals "ambiguous" to the caller
+    return revs.pop() if revs else None
+
+
+def ratify_check(root, srs, llrs, tcs, out_path, since=None):
+    """`(code, message)` for `--ratify modified --check`.
+
+    Fails CLOSED on a difference — a stale brief is read by a human about to
+    attest, and the cost of a false green here is an owner blessing rows they
+    were never shown.
+
+    Two silences, both the arming idiom the component checks use rather than
+    exceptions carved for this repo:
+
+      - **no file at `--out`** — a project with no `docs/ratify/` pays nothing;
+      - **no `Modified` SR** — the window is CLOSED, so nothing owes a re-attest
+        and the committed brief is a historical record of a finished sitting, not
+        a surface that can go stale. Checking it against a registry whose rows
+        have since been blessed would fail forever, which is how a check earns
+        its own ignore.
+    """
+    if not out_path.exists():
+        return 0, "no brief at {} — nothing to gate".format(out_path)
+    if not any(is_modified(r) for r in srs):
+        return 0, "no `Modified` SR — the re-attest window is closed"
+    try:
+        with out_path.open("r", encoding="utf-8", newline="") as fh:
+            existing = fh.read()
+    except OSError as exc:
+        return 1, "cannot read {}: {}".format(out_path, exc)
+
+    baseline = since or declared_since(existing)
+    if isinstance(baseline, list):
+        return 1, (
+            "{} declares {} different `--since` baselines ({}) — one run cannot "
+            "produce that, so the file has been hand-edited; regenerate it".format(
+                out_path, len(baseline), ", ".join(baseline)
+            )
+        )
+    rendered = "\n".join(reattest_lines(root, srs, llrs, tcs, since=baseline)) + "\n"
+    if rendered == existing:
+        return 0, "{} is current (baseline {})".format(
+            out_path, baseline or "git-derived"
+        )
+    return 1, (
+        "{} is STALE against the registry (compared at the baseline the file "
+        "itself declares{}, never a re-derived one). Regenerate it with "
+        "`trace.py --ratify modified{} --out {}` and re-read it BEFORE "
+        "attesting — an owner blessing a short brief blesses rows they were "
+        "never shown.".format(
+            out_path,
+            ": " + baseline if baseline else "",
+            " --since " + baseline if baseline else "",
+            out_path,
+        )
+    )
+
+
 def reattest_lines(root, srs, llrs, tcs, since=None):
     """Markdown for the re-attestation brief (`--ratify modified`, WI-316): one
     section per `Modified` SR — the attestation unit — with per-cell
@@ -2619,6 +2728,16 @@ def main():
         "unless --out is given; runs no checks",
     )
     ap.add_argument(
+        "--check",
+        action="store_true",
+        help="with --ratify modified: FRESHNESS mode. Re-render the brief and "
+        "compare it against the committed file (--out, else the newest "
+        "docs/ratify/*.md), exiting nonzero when they differ. The comparison "
+        "uses the baseline THAT FILE declares, never a re-derived one (WI-325). "
+        "Silent no-op when there is no brief, or when no SR is Modified (the "
+        "window is closed and the brief is a record, not a live surface)",
+    )
+    ap.add_argument(
         "--since",
         metavar="REV",
         default=None,
@@ -2660,6 +2779,29 @@ def main():
     # instead: per-cell before/after for every Modified SR's chain, baselined at
     # the git-derived last-Verified revision (or --since).
     if args.ratify is not None:
+        if args.ratify.strip().lower() == "modified" and args.check:
+            # WI-325: freshness, not generation — compare the committed brief
+            # against a render at the baseline THAT FILE declares.
+            code, message = ratify_check(
+                Path(args.root),
+                reg.srs,
+                reg.llrs,
+                reg.tcs,
+                Path(args.out)
+                if args.out
+                else (
+                    newest_ratify_brief(Path(args.root))
+                    or Path(args.root) / "docs" / "ratify" / "(none)"
+                ),
+                since=args.since,
+            )
+            print("trace: ratify-check — {}".format(message), file=sys.stderr)
+            # `main()` is called bare at the bottom of this module, so a plain
+            # `return` sets no exit status — this check must sys.exit like the
+            # analyze path does, or it reports STALE and exits 0. (It did.)
+            if code:
+                sys.exit(code)
+            return 0
         if args.ratify.strip().lower() == "modified":
             body = reattest_lines(
                 Path(args.root), reg.srs, reg.llrs, reg.tcs, since=args.since

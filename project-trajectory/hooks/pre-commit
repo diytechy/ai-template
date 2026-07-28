@@ -135,6 +135,13 @@ fi
 #                        the step is vacuous for a non-adopter; checks needing
 #                        the product toolchain or gate context (tests, perf,
 #                        flows) stay in check.py / CI.
+#      - ratify-fresh    the re-attestation brief fresh against the registry it
+#                        summarizes (WI-325). It self-stamps its baseline, so the
+#                        compare uses the one the FILE declares, never a re-derived
+#                        one. Doubly self-arming: silent with no brief, and silent
+#                        once the window is closed. Here rather than only at the
+#                        gate because a stale brief is read by a HUMAN about to
+#                        attest, and the sitting can happen between gate runs.
 #      - status-map      docs/status.md's GENERATED STATUS block fresh (WI-202):
 #                        the derived snapshot (spine + derived gate + open-items
 #                        one-liners) regenerates + byte-compares like trajectory-map,
@@ -167,7 +174,7 @@ fi
 #    derive_gate.py, then the status snapshot via `gen_trajectory.py --status`
 #    (it reads the fresh gate), then the owner surface via `gen_open_items.py`
 #    — then re-commit.
-"$PY" "$SCRIPTS_DIR/check.py" --run-steps arch-map,okf,trajectory-map,status-map,open-items,trajectory,registry-integrity,derived-gate,skills-sync
+"$PY" "$SCRIPTS_DIR/check.py" --run-steps arch-map,okf,trajectory-map,status-map,open-items,trajectory,registry-integrity,derived-gate,skills-sync,ratify-fresh
 
 # 2. No-validation-delta warn (warn-first, never blocks): when this commit
 #    closes a WI that is a follow-up on an SR a previously-done WI already
