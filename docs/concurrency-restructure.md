@@ -3,8 +3,10 @@
 **Branch:** `ConcurrencyTrainRewrite`. **Status:** draft for owner review; nothing
 here is implemented. **Goal (owner-stated):** the kit is parallel *out of the
 box*, and a full restructure is acceptable. This spec replaces the bespoke
-train/dispatcher machinery with git + a thin forge seam, shards the contended
-surfaces, and declares the concurrency rules that were previously implicit.
+train/dispatcher machinery with git + a thin integration seam — local serial
+integrator by default, forge as the optional online backend — shards the
+contended surfaces, and declares the concurrency rules that were previously
+implicit.
 
 Relationship to prior records: this executes several rulings proposed in
 [handoff-2026-07-28c.md](handoff-2026-07-28c.md) by *replacement* rather than
@@ -14,8 +16,10 @@ reservations → 8 integrations → 0 gate-verified → 11 rescues) is the evide
 base; the design principle throughout is **fail closed, contend nowhere, one
 home per fact**.
 
-> **RULING markers.** Decisions the owner must make are tagged `RULING-n`
-> inline and collected in §9. Everything else is proposed as written.
+> **RULING markers.** Decisions were tagged `RULING-n` inline and collected in
+> §9. **The owner answered all eight on 2026-07-28** — §9 records the rulings;
+> the inline markers stay for traceability. v1 (pre-ruling) is the prior
+> commit of this file.
 
 ---
 
@@ -29,35 +33,54 @@ without naming it. Declare it in `PROCESS.md` at the same tier as Python 3.11:
 **the process requires a git repository.** No fallback story is owed to
 non-git environments.
 
-### 1.2 The forge seam (RULING-2: GitHub as reference)
+### 1.2 The integration seam — local-first, forge optional (RULING-2: revised)
 
-Orchestration control moves to a *forge*: the layer providing pull requests,
-required status checks, and a merge queue. The kit declares a **thin seam** —
-five operations — and ships one reference implementation (GitHub via `gh`):
+One flow everywhere: **branch → change request → required checks on the
+composed tree → merge.** The seam is the five operations below; *who enforces
+them* is a backend choice, and the owner ruled the default is local:
 
-| Seam operation | GitHub reference |
-|---|---|
-| open a change request for a branch | `gh pr create` |
-| read its check status | `gh pr checks` |
-| record a review verdict | `gh pr review` |
-| merge when green (fail-closed) | `gh pr merge --auto` + branch protection |
-| composed-tree gating | merge queue (repo setting) |
+| Seam operation | Local integrator (default) | GitHub backend |
+|---|---|---|
+| open a change request | branch appears in `docs/work/active/` | `gh pr create` |
+| read check status | integrator runs the bar itself | `gh pr checks` |
+| record a review verdict | verdict artifact in the branch | `gh pr review` |
+| merge when green (fail-closed) | integrator refuses on red, ff on green | `gh pr merge --auto` + protection |
+| composed-tree gating | serial integrator ⇒ candidate **is** the composed tree | merge queue |
 
-Fail-closed is structural here: a **required** check that has not passed
-blocks the merge. The dispatcher's `skipped (no declared test command)` →
-merge-anyway failure class is not fixable in this model — it is unrepresentable.
+- **Local integrator** — a deliberately tiny serial trunk lane on this
+  machine: take the next finished branch, merge onto a candidate, run the
+  required checks, fast-forward the trunk on green, refuse **loudly** on red.
+  Because it is serial, composed-tree gating falls out by construction — it
+  is a one-page merge queue. No network, no push, no secrets.
+  `workers = 1` degenerates to the attended serial flow with **no separate
+  structure** (RULING-8).
+- **Forge (GitHub via `gh`)** — the same flow for repos that live online;
+  enforcement moves server-side (branch protection + required checks + merge
+  queue), out of any local agent's reach entirely.
 
-Adopters on another forge (GitLab, Gitea) implement the same five operations;
-adopters with no forge get the degraded serial mode in §5.4.
+**Why a PR is not just a local merge — the honest answer:** mechanically it
+*is* one. A PR is a server-held request to merge a branch, with policy
+attached; there is no such thing as an offline PR. The difference is **where
+enforcement lives**, not what happens to the commits. Locally, the integrator
+script is the enforcement point — trust equals its one page of audited,
+mutation-tested code plus the rule that workers never write the trunk. On a
+forge, the server refuses an un-green merge no matter what any agent does or
+skips. The threat model in this repo is bugs and fail-open (the dispatcher's
+`skipped → merged anyway` record), not malice — and a fail-loud one-page
+integrator answers that adequately; the forge answers it structurally.
+Adopters choose by where their repo lives; the artifacts and flow are
+byte-identical either way.
 
 ### 1.3 Dependency policy: stdlib by default, ledger for exceptions (RULING-3)
 
 Owner-stated: stdlib-only is nice but not mandatory; genuinely good tools may
 be used and installed by dev-setup — guarded against abuse. Proposed rule:
 
-- **Checks that ship downstream and run in adopter repos stay stdlib** — the
-  original portability argument holds for them (`trace.py`, `check.py`,
-  `check_docs.py`, …).
+- **Checks that ship downstream and run in adopter repos are
+  stdlib-preferred, not stdlib-absolute** (owner ruling): if a genuinely
+  cleaner tool exists it *may* be shipped downstream — expected rare, ideally
+  never. Such an entry sits in the ledger's **exceptional tier**, because it
+  makes every adopter install it; the bar is correspondingly highest.
 - **Coordinator-side tooling may take dependencies**, each recorded in a
   **dependency ledger** (`docs/dependencies.md`): what it is, what it
   replaces, why hand-rolling is worse, and the owner ruling that admitted it.
@@ -112,8 +135,11 @@ verification = "Test"
 **One home per fact is preserved**: mutable state (status) lives in location;
 immutable-ish metadata lives in frontmatter; narrative lives in the body. The
 scheduler, `check_trajectory`'s DAG validation, and the dashboard all switch
-to a spec-folder loader. If a tabular view is still wanted, `work-items.csv`
-may survive as a **generated** artifact (RULING-4) — derived, never edited.
+to a spec-folder loader. **RULING-4 (ruled): no CSV at all** — neither
+hand-edited nor generated. Everything the CSV provided (the DAG, the ready
+frontier, status counts, SR-Refs traceability) is derived by scanning
+frontmatter at run time; a tool wanting a table builds it in memory. One
+encoding on disk, zero parallel homes.
 
 ### 2.3 The claim protocol (serial, on the trunk)
 
@@ -166,36 +192,38 @@ regeneration pass (§5.2).
 
 ### 3.3 `render` — per the pending critique-gate ruling
 
-If SR-054 flips to `Verification=Test` (handoff-2026-07-28c §4 line 3), this
-class reduces to `ordinary` plus a periodic advisory critique, and the
-class exists only as a scheduling tag for batching. If the standing gate
-stays, render specs inherit the batch-attended rule. (RULING-5 — already on
-the audit checklist; restated here because it decides whether this class
-exists.)
+**RULING-5 (ruled): agreed.** SR-054 flips to `Verification=Test`
+(handoff-2026-07-28c §4 line 3), so this class reduces to `ordinary` plus a
+periodic advisory critique; the tag survives only as a batching hint so
+render-touching specs share one critique dispatch.
 
 ---
 
 ## 4. Integration and gating
 
-- **Branch protection on the trunk**: required checks = `check.py` at the
-  derived gate + the test tier the gate demands. Nothing merges un-gated —
-  including coordinator commits? No: trunk claim/compile commits are direct
-  pushes by design (they are serial bookkeeping, not product change) —
-  **RULING-6**: confirm this split, or route even bookkeeping through PRs at
-  the cost of latency.
-- **Merge queue on**: every PR is verified against the composed tree before
-  landing. This *is* gated parallel integration; no kit code implements it.
-- **Auto-merge**: a worker's publish step is `git push` + `gh pr create` +
-  `gh pr merge --auto`. The PR then lands itself when green.
-- **Human gates map to forge requirements**: autonomous lanes rely on
-  required checks only; lanes the gate-policy marks human additionally
-  require a review approval. Note the forge constraint: an identity cannot
-  approve its own PR, so autonomous-with-approval lanes need a second (bot)
-  identity — or stay checks-only (RULING-7).
-- **Degraded serial mode (no forge)**: a one-page script — merge branch into
-  an integration branch, run the bar, fast-forward trunk on green, refuse on
-  red. Serial only; documented as the floor, not the product. This preserves
-  an offline story at ~1% of the dispatcher's size (RULING-8: keep or drop).
+- **Required checks are declared once** (`stack.ini` at the derived gate) and
+  the integrator — either backend — merges only on green. A missing or empty
+  check declaration is a **refusal**, never a skip (the fail-open lesson,
+  stated as a contract).
+- **Composed-tree gating**: the serial local integrator provides it by
+  construction (§1.2); forge mode gets it from the merge queue.
+- **RULING-6 (ruled)**: coordinator **bookkeeping** (claims, fragment
+  compile, artifact regeneration) commits directly to the trunk — it is
+  serial, content-free bookkeeping by design. **Product changes reach the
+  trunk only through the integrator's merge**, made `--no-ff` so merges are
+  distinguishable in history. Mechanized: a check flags any non-merge trunk
+  commit that touches paths outside the bookkeeping surfaces
+  (`docs/work/`, `docs/log.d/` compilation, generated artifacts).
+- **RULING-7 (ruled): the config already exists** — `docs/gate-policy`,
+  `docs/push-policy`, and the review-policy dial are the human-gate
+  declarations. The integrator reads them and requires the corresponding
+  verdict artifact (review file, critique, attestation) before merging; no
+  new mechanism. The second-bot-identity question is **forge-mode only**
+  (a forge account cannot approve its own PR) and is deferred until forge
+  mode is used with approval-required lanes.
+- **RULING-8 (ruled): there is no separate serial fallback.** The local
+  integrator is not a degraded mode — it is the default backend of the one
+  flow. `workers = 1` *is* serial operation, with nothing extra maintained.
 
 ## 5. Shared-surface rules (the residual contention, each with its rule)
 
@@ -246,9 +274,9 @@ worker, because workers are branch-local and land only through the queue.
 |---|---|
 | `agent_dispatch.py` train/reservation/integration half (~4k lines) | **Retires** — forge + §2.3 replace it |
 | `refs/llm/*`, `out/dispatch/events.jsonl`, `docs/run-state`, `docs/pause` | **Retire** — git history, PR state, coordinator flag |
-| `work-items.csv` | **Retires** (or becomes generated — RULING-4) |
+| `work-items.csv` | **Retires outright** (RULING-4: no generated CSV either) |
 | WI-289 (compose auto-resolve), WI-343 (ref plumbing extraction) | **Moot** — the contended surfaces stop being written concurrently |
-| `agent_loop.py` | **Shrinks** to: claim → branch → launch worker session → publish via `gh`. No lane state machine |
+| `agent_loop.py` | **Shrinks** to: claim → branch → launch worker session → hand off to the integrator (local by default, `gh` in forge mode). No lane state machine |
 | `agent_route.py` + provider dispatch (`codex`/OpenCode) | **Remains** — heterogeneous review/critique routing is the irreplaceable piece |
 | `schedule.py` | **Remains**, loader swapped to spec folders; gains the §3 class rules |
 | `check_trajectory.py` | **Remains**, loader swapped; minus the never-fired rules per the audit ruling |
@@ -256,9 +284,10 @@ worker, because workers are branch-local and land only through the queue.
 
 ## 7. Migration plan (each phase is itself spine-class: solo, serial)
 
-- **Phase 0 — rulings + hygiene.** Owner answers §9. Clean the train residue.
+- **Phase 0 — rulings + hygiene.** ~~Owner answers §9~~ **done 2026-07-28.**
+  Remaining: clean the train residue.
 - **Phase 1 — declarations.** PROCESS.md names git; dependency ledger + its
-  enforcement test; forge seam documented.
+  enforcement test; the integration seam documented (both backends).
 - **Phase 2 — specs as registry.** Converter generates one spec file per
   existing CSV row (mechanical; frontmatter from columns); loaders in
   `schedule.py` / `check_trajectory.py` / `gen_trajectory.py` switch to the
@@ -266,11 +295,12 @@ worker, because workers are branch-local and land only through the queue.
   byte-exact round-trip before the CSV is demoted* (the 140-cell lesson).
 - **Phase 3 — shared-surface rules.** `log.d/` fragments + trunk compile;
   generated-artifacts-trunk-only; branch-scoped review names.
-- **Phase 4 — forge wiring.** Branch protection, required checks, merge
-  queue, `gh`-based publish; the shrunken coordinator; first parallel batch
-  of two `ordinary` WIs run end-to-end as the acceptance proof (the proof the
-  mothball proposal wanted, now against the new machinery: **the journal
-  must show the composed-tree check running, and zero hand-rescues**).
+- **Phase 4 — the integrator.** Build the local integrator lane (the one-page
+  serial merge queue) + the shrunken coordinator; wire the forge backend only
+  if/when this repo goes online. First parallel batch of two `ordinary` WIs
+  run end-to-end as the acceptance proof (the proof the mothball proposal
+  wanted, now against the new machinery: **the trunk history must show the
+  composed-tree check running on every merge, and zero hand-rescues**).
 - **Phase 5 — deletion.** The train machinery, its tests, and the dead
   surfaces leave; the audit's other approved retirements execute here too.
 
@@ -279,15 +309,23 @@ attended work as well.
 
 ## 8. Residual risks (honest list, post-design)
 
-1. **Forge dependence** — GitHub outage or rate limits halt integration (not
-   building). Mitigation: the §4 degraded serial mode, if kept.
+1. **Worker writes the trunk (local mode)** — nothing physically stops a
+   buggy worker from committing to trunk on this machine; enforcement is the
+   §4 mechanized check (non-merge trunk commit touching product paths = red)
+   plus worktree isolation. The threat model is bugs, not malice; if that
+   ever changes, forge mode is the structural answer.
 2. **Same-module collisions** remain possible (§3.1 hint, not guard) —
-   surfaced as PR conflicts; cost is a rebase, not a deadlock.
-3. **Trunk-lane bugs** — the compile step is new serial code; kept tiny,
-   fail-loud, and mutation-tested before trust (the vacuous-guard lesson).
-4. **Secrets/identity for autonomous lanes** — worker agents need push +
-   `gh` credentials; scope tokens per-lane; the approval-identity question is
-   RULING-7.
+   surfaced as ordinary merge conflicts at the integrator; cost is a rebase,
+   not a deadlock.
+3. **Trunk-lane bugs** — the integrator + compile step are new serial code;
+   kept tiny, fail-loud, and mutation-tested before trust (the vacuous-guard
+   lesson). A red trunk lane halts claiming.
+4. **Secrets/identity — forge mode only.** In local mode there are none:
+   everything on the machine already shares one environment (the owner's
+   observation is correct — a credential available to the trunk lane is
+   available to every branch worktree, so per-lane secrecy was never real
+   locally). The token-scoping and second-approver-identity concerns exist
+   only when the forge backend is enabled, and are deferred with it.
 5. **Semantic drift between spec body and frontmatter** — two parts of one
    file, but still two encodings; the existing completion-reconciler idea
    (Done-when vs status) re-lands here as "archive move requires all
@@ -295,20 +333,33 @@ attended work as well.
 6. **Migration-window inconsistency** — between Phases 2 and 5 both loaders
    exist; the dogfood-sync suite pins them equal until the old one deletes.
 
-## 9. Rulings needed
+## 9. Rulings (owner, 2026-07-28)
 
-- **RULING-1** — git declared as a required substrate in PROCESS.md.
-- **RULING-2** — GitHub/`gh` as the reference forge; seam kept thin enough to
-  swap.
-- **RULING-3** — the dependency ledger policy as stated (stdlib for shipped
-  checks; argued, owner-ruled entries for coordinator tooling).
-- **RULING-4** — `work-items.csv`: delete outright, or keep as a generated
-  view for the dashboard.
-- **RULING-5** — the SR-054 critique-gate flip (already on the audit
-  checklist; decides whether the `render` class exists).
-- **RULING-6** — trunk bookkeeping commits (claims, compile) as direct pushes
-  vs PRs-for-everything.
-- **RULING-7** — autonomous lanes: checks-only, or approval-required with a
-  second bot identity.
-- **RULING-8** — keep the one-page no-forge serial fallback, or declare the
-  forge required.
+- **RULING-1 — RULED, agree.** Git is declared a required substrate in
+  PROCESS.md.
+- **RULING-2 — RULED, revised: local-first.** No tunneling through GitHub.
+  The seam's default backend is the local serial integrator (§1.2); GitHub is
+  the optional online backend of the *same* flow for repos that live on a
+  forge. A PR was never mechanically more than a merge — its added value is
+  server-side enforcement, which this repo does not currently need.
+- **RULING-3 — RULED, strengthened.** Stdlib *preferred* for shipped checks,
+  not absolute: a genuinely cleaner tool may be forced downstream — rare,
+  ideally never — via the ledger's exceptional tier. Coordinator-side
+  dependencies via the ordinary ledger tier, installed by dev-setup.
+- **RULING-4 — RULED: no CSV at all.** Neither hand-edited nor generated;
+  all traceability derives from the TOML frontmatter scans. Two encodings of
+  the registry will not coexist.
+- **RULING-5 — RULED, agreed.** SR-054 flips to `Verification=Test`; the
+  `render` class survives only as a batching tag (§3.3).
+- **RULING-6 — RULED.** Bookkeeping (claims, compile, regeneration) commits
+  directly to the trunk; product changes reach the trunk only through the
+  integrator's `--no-ff` merge; mechanized by the non-merge-product-commit
+  check (§4). Note the push question dissolved with RULING-2: locally there
+  is no push at all, only trunk commits by the two serial lanes.
+- **RULING-7 — RULED: the config already exists.** `docs/gate-policy`,
+  `docs/push-policy`, and the review-policy dial are the human-gate
+  declarations; the integrator enforces them. No new mechanism; the
+  bot-identity question is forge-mode-only and deferred.
+- **RULING-8 — RULED: killed.** There is no separate serial fallback to
+  maintain — the local integrator is the default backend, and
+  `workers = 1` is the serial flow.

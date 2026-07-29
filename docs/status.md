@@ -17,10 +17,11 @@ home elsewhere — don't restate it here:
 - **Spec-of-record + rubric conventions:** [specs/README.md](specs/README.md) ·
   [rubrics/README.md](rubrics/README.md) (dogfooded scaffold boilerplate).
 - **The restructure design (this branch's purpose):**
-  [concurrency-restructure.md](concurrency-restructure.md) — DRAFT: parallel
-  out of the box via git + a thin forge seam (specs replace `work-items.csv`,
-  status-is-location, spine WIs as global barriers, log fragments, trunk-only
-  generated artifacts). Eight rulings pending in its §9.
+  [concurrency-restructure.md](concurrency-restructure.md) — parallel out of
+  the box via git + a thin integration seam, **local-first** (specs replace
+  `work-items.csv`, status-is-location, spine WIs as global barriers, log
+  fragments, trunk-only generated artifacts). **All eight §9 rulings answered
+  2026-07-28**; next is Phase 0–1 of its §7 migration plan.
 - **Resuming in a new session:** read
   [handoff-2026-07-28c.md](handoff-2026-07-28c.md) **first** — the 2026-07-28
   complexity-audit decision brief. It proposes retiring most of the open
