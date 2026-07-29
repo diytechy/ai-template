@@ -7,7 +7,10 @@ omitted section keeps its heading plus a one-line stub.
 <!-- /kit-only -->
 Canonical method for a gated, requirement-traced project. It is
 **stack-agnostic** — wire the harness commands to your project's
-language/tooling. Other docs reference this file by section rather than
+language/tooling — but it **requires a git repository**: diffable registries,
+the append-only log, reviewed Status-change commits, and gate ratification
+all presume git. That substrate was always assumed; it is named here so no
+one designs around its absence. Other docs reference this file by section rather than
 restating it. Links are authored for the scaffolded home (`docs/process.md`
 beside `docs/process-options.md`); at the kit's own location some relative
 links don't resolve.

@@ -81,9 +81,10 @@ be used and installed by dev-setup — guarded against abuse. Proposed rule:
   cleaner tool exists it *may* be shipped downstream — expected rare, ideally
   never. Such an entry sits in the ledger's **exceptional tier**, because it
   makes every adopter install it; the bar is correspondingly highest.
-- **Coordinator-side tooling may take dependencies**, each recorded in a
-  **dependency ledger** (`docs/dependencies.md`): what it is, what it
-  replaces, why hand-rolling is worse, and the owner ruling that admitted it.
+- **Coordinator-side tooling may take dependencies**, each recorded in the
+  **dependency ledger** ([dependencies.md](dependencies.md), live as of
+  Phase 1): what it is, what it replaces, why hand-rolling is worse, and the
+  owner ruling that admitted it.
   Installed by `setup.{sh,ps1}`; CI installs from the same list.
 - Enforcement: a test scans coordinator-module imports against the ledger and
   fails on an undeclared dependency. Adding a row is a reviewed, owner-ruled

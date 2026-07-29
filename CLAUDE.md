@@ -32,11 +32,18 @@ that easier to achieve in a real project — or get out of the way.
   decompose-don't-paraphrase, and generated-not-hand-maintained. Hold the kit to
   the same bar: don't restate a rule in five files — state it in
   [`PROCESS.md`](project-trajectory/PROCESS.md) and link to it.
-- **Keep scripts stdlib-only and cross-platform.** The kit's own scripts
-  (`trace.py`, `check.py`, `gen_arch_map.py`, `bootstrap.py`) must run on a clean
-  Python 3.11+ with no pip installs, on Windows and POSIX. Tools a *downstream*
-  project needs (ruff, pytest) are theirs to install; the kit must not require
-  them to run its own checks.
+- **Keep scripts stdlib-preferred and cross-platform; dependencies need a
+  ledger row.** The kit's own scripts (`trace.py`, `check.py`,
+  `gen_arch_map.py`, `bootstrap.py`) run on a clean Python 3.11+ on Windows
+  and POSIX, and today import stdlib only. The rule is "no *unargued*
+  dependencies," not "no dependencies" (owner ruling 2026-07-28,
+  `docs/concurrency-restructure.md` §1.3): a genuinely better tool may enter
+  via a reviewed row in [`docs/dependencies.md`](docs/dependencies.md) —
+  stating what it replaces and why — enforced by
+  `tests/test_dependency_ledger.py`. Shipped checks stay stdlib-*preferred*
+  (a dependency there forces every adopter to install it — rare, ideally
+  never). Tools a *downstream* project needs (ruff, pytest) are theirs to
+  install; the kit must not require them to run its own checks.
 - **Stack-agnostic core, Python-first reference.** The process and ID scheme are
   language-neutral; concrete harness commands are Python examples clearly marked
   as "swap for your stack."
