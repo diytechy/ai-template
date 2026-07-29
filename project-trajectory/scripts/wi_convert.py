@@ -388,9 +388,20 @@ def parse_spec(text, relpath, where=None):
 
     row = {column: "" for column in COLUMNS}
     row["WI-ID"] = _text(data.get("id"), "id", where)
-    row["Status"] = status_from_location(
-        Path(relpath).parent.name, data.get("disposition"), where
-    )
+    # Status is the FIRST path component (the loaders' rule — active/<branch>/
+    # sits one level deeper, so the parent dir is the branch, not the status).
+    # An in-flight claim is not convertible content: a conversion is a
+    # drained-stop operation (concurrency-restructure §3.2) — the branch either
+    # integrates or parks first. Refused BY NAME, never coerced.
+    parts = Path(relpath).parts
+    top = parts[0] if len(parts) > 1 else ""
+    if top == "active":
+        raise ConvertError(
+            "{}: an in-flight claim (active/{}) — conversion is a drained-stop "
+            "operation (concurrency-restructure §3.2): integrate or park the "
+            "branch, then convert".format(where, parts[1] if len(parts) > 2 else "?")
+        )
+    row["Status"] = status_from_location(top, data.get("disposition"), where)
     row["Deliverable"] = parse_deliverable(body, where)
     for column, key in SCALAR_FIELDS:
         if key in data:

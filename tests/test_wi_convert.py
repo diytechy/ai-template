@@ -55,7 +55,13 @@ def live_csv(tmp_path_factory):
         return REGISTRY
     assert WORK.is_dir(), "the registry has no home at all"
     out = tmp_path_factory.mktemp("live-registry") / "work-items.csv"
-    wi_convert.to_csv(WORK, out)
+    try:
+        wi_convert.to_csv(WORK, out)
+    except wi_convert.ConvertError as exc:
+        # An in-flight active/<branch>/ claim: conversion is a drained-stop
+        # operation (§3.2), so the realistic-data fixture is only definable at
+        # a drained registry. The refusal itself is pinned by its own test.
+        pytest.skip("live registry has in-flight claims: {}".format(exc))
     return out
 
 
@@ -179,7 +185,15 @@ def test_the_live_registry_round_trips_in_whichever_home_is_authoritative(
         "neither docs/requirements/work-items.csv nor docs/work/ exists — the "
         "registry has no home at all, which is not a state this repo may be in"
     )
-    count, findings, _rebuilt = _folder_home_round_trip(WORK, tmp_path)
+    try:
+        count, findings, _rebuilt = _folder_home_round_trip(WORK, tmp_path)
+    except wi_convert.ConvertError as exc:
+        # With a claim in flight the round-trip proof is not definable - and
+        # the converter must say so BY NAME rather than coerce or crash. That
+        # refusal is this test's claim in the undrained state.
+        assert "drained-stop" in str(exc), exc
+        assert "active/" in str(exc), exc
+        return
     assert count > 300, "the spec folder looks truncated: {} specs".format(count)
     assert findings == [], findings
 
@@ -232,6 +246,24 @@ def test_the_folder_home_round_trip_is_proven_against_a_materialized_registry(
         if row["WI-ID"] == "WI-009"
     )
     assert hand is None, hand
+
+
+def test_an_in_flight_claim_refuses_conversion_by_name(tmp_path):
+    """An active/<branch>/ spec (the Phase 4 claim) is not convertible content:
+    conversion is a drained-stop operation (§3.2), and the converter says so by
+    name instead of coercing the claim or crashing on the branch directory."""
+    work = tmp_path / "work"
+    row = {c: "" for c in wi_convert.COLUMNS}
+    row.update({"WI-ID": "WI-9", "Title": "claimed work", "Status": "queued"})
+    wi_convert.write_spec_file(work, row)
+    (work / "active" / "wi-9").mkdir(parents=True)
+    (work / "queued" / "WI-9-claimed-work.md").rename(
+        work / "active" / "wi-9" / "WI-9-claimed-work.md"
+    )
+    with pytest.raises(wi_convert.ConvertError) as err:
+        wi_convert.to_csv(work, tmp_path / "out.csv")
+    assert "drained-stop" in str(err.value)
+    assert "active/wi-9" in str(err.value)
 
 
 def test_mutation_a_corrupted_rebuilt_spec_reds_the_folder_home_round_trip(tmp_path):
@@ -516,18 +548,21 @@ def test_a_wrong_header_is_refused(tmp_path):
 
 
 def test_a_spec_in_an_unknown_directory_is_refused(tmp_path):
-    """The inverse classifier refuses too — `active/<branch>/` is a §2.3 state
-    this converter does not yet own, and it says so rather than guessing."""
+    """The inverse classifier refuses a directory it has never heard of, by
+    name — never a catch-all bucket. (`active/<branch>/` is no longer unknown:
+    it is the §2.3 in-flight claim, refused separately as a drained-stop
+    operation — see test_an_in_flight_claim_refuses_conversion_by_name.)"""
     source = tmp_path / "in.csv"
     _write_csv(source, [_row("WI-001", Status="queued")])
     wi_convert.to_specs(source, tmp_path / "work")
     spec = next((tmp_path / "work").rglob("*.md"))
-    moved = tmp_path / "work" / "active" / spec.name
+    moved = tmp_path / "work" / "parked" / spec.name
     moved.parent.mkdir(parents=True)
     spec.rename(moved)
     with pytest.raises(wi_convert.ConvertError) as exc:
         wi_convert.to_csv(tmp_path / "work", tmp_path / "out.csv")
     assert "not a status" in str(exc.value)
+    assert "parked" in str(exc.value)
 
 
 def test_columns_are_pinned_to_the_shipped_registry_header():
