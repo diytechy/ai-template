@@ -146,11 +146,33 @@ def claim(root, wi_id, branch):
     )
     if code != 0:
         return fail("git mv failed: {}".format(out))
+    # The claim changes the registry, which is a generated-artifact input, so
+    # the regeneration folds into the claim commit (RULING-6: claims and
+    # regeneration are the one bookkeeping lane) - otherwise the claim is
+    # blocked by its own freshness floor, which the acceptance run proved live.
+    code, out = _run(
+        [
+            str(ac.harness_python(root)),
+            str(SCRIPTS / "trunk_step.py"),
+            "--root",
+            ".",
+            "--regen",
+        ],
+        root,
+    )
+    if code != 0:
+        ac.git(root, "reset", "--hard", "HEAD")
+        return fail(
+            "claim regeneration failed (tree restored):\n{}".format(
+                ac._failure_tail(out)
+            )
+        )
+    ac.git(root, "add", "-A")
     code, out = ac.git(
         root,
         "commit",
         "-m",
-        "claim: {} -> active/{} (bookkeeping)\n\nThe §2.3 serial trunk claim; the work branch is cut from this commit.".format(
+        "claim: {} -> active/{} (bookkeeping)\n\nThe §2.3 serial trunk claim with its regeneration folded in; the work\nbranch is cut from this commit.".format(
             wi_id, branch
         ),
     )
