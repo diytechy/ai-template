@@ -18108,3 +18108,54 @@ pre-commit floor stays warn-first.
 - `check_dupes.py --src project-trajectory/scripts`:
   `OK - no duplicate blocks in 40 file(s)` — no census impact.
 - Freshness steps report `SKIP (work branch 'wi-355')` as §5.2 intends.
+
+## 2026-07-29 — Phase 4: the local integrator, and the acceptance proof PASSED (concurrency-restructure §7)
+
+**The restructure's machinery is live and demonstrated end-to-end.**
+`integrate.py` (claim + serial fail-closed merge queue + RULING-6 window
+audit; 29 tests) landed, the tracked pause was deleted in the same commit
+(§5.6 unpause = §3.2 claiming-resumes), and the §7 acceptance ran whole:
+WI-355 and WI-346 claimed through `integrate.py claim`, built by two
+parallel worker sessions in isolated worktrees under the full branch
+discipline, each independently reviewed by a fresh-context session
+(WI-scoped verdicts at branch tip, git-derived freshness), and merged by
+the queue — **`95ff7ef` (wi-346, bar PASS 34 steps, tier all) and
+`43d90ef` (wi-355, bar PASS 32 steps, tier all), audit clean: product
+changes arrived by merge only, zero hand-rescues in the queue run.** The
+§7 record in [concurrency-restructure.md](concurrency-restructure.md)
+carries the full account; only Phase 5 (deletion) remains.
+
+The run's real value was what it refused. Four live defects surfaced as
+loud refusals and were fixed on the trunk mid-run: the claim staled its
+own pre-commit floor (4a — regeneration folds into the claim commit,
+RULING-6 applied); `wi_convert` crashed on the claim's `active/<branch>/`
+shape (4b — now a drained-stop refusal by name; SR-129/LLR-136 →
+`Modified`, joining the open window); a merge-staged fragment's adding
+commit lives on MERGE_HEAD, not HEAD (4c — `added_at` retries there and
+only there); a refusal-parked candidate worktree could not be reused
+(4d). Four more were surfaced and FILED, not fixed — the findings
+register WI-357..WI-360: the closing commit un-claims its own branch on
+disk (the §2.3/§5.2 collision, hit three times; the emptied claim dir
+left on disk is the standing workaround), R-D reds at merge when trunk
+status.md prose names an in-queue id (pre-scrubbed by hand, `55777cc`),
+integrator unload leaves a branch held by its worker worktree
+(`branch -d` swallowed), and one unpinned lookup assertion from the
+REVIEW-A minors. Also worth its own sentence: the wi-346 reviewer's
+verdict commit was blocked by the un-claim collision and the reviewer
+**refused `--no-verify`** — the verdict landed by restoring the on-disk
+lane signal instead. No hook was bypassed anywhere in the phase.
+
+Sittings this date, distinct acts: the Phase 3 amendment was
+owner-attested in-session ("they look sufficient") and committed
+`d506ab9` — G3 re-derived, window open under two hours. The Phase 4
+window then opened by construction (SR-132/LLR-140/TC-132 `Draft`,
+SR-129/LLR-136 `Modified`) and is OPEN at this close — the brief is
+[ratify/2026-07-29c-phase4.md](ratify/2026-07-29c-phase4.md).
+
+Suite at close, drained trunk: full `pytest -q -n auto` **1893 passed,
+7 skipped** (~10.5 min, `PYTEST_DEBUG_TEMPROOT` unset); smoke **638
+passed** (~17 s — the converter's drained-registry fixtures run again
+now that no claim is in flight); `check_docs`
+0 broken; the RULING-6 audit and the full composed-tree bars are in the
+merge history itself. Byte budgets: PROCESS.md / PROCESS_OPTIONS.md /
+AGENTS.template.md untouched this phase (Phase 3's re-stamps stand).

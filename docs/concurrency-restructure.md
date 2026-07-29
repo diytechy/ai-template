@@ -1,8 +1,8 @@
-# Concurrency restructure — design spec (RULED; Phases 0–3 executed)
+# Concurrency restructure — design spec (RULED; Phases 0–4 executed)
 
 **Branch:** `ConcurrencyTrainRewrite`. **Status:** all §9 rulings answered
-2026-07-28; Phases 0, 1, 2 and 3 are **implemented** (per-phase records
-in §7), Phases 4–5 remain. **Goal (owner-stated):** the kit is parallel *out
+2026-07-28; Phases 0–4 are **implemented** (per-phase records in §7) and the
+Phase 4 acceptance proof PASSED — only Phase 5 (deletion) remains. **Goal (owner-stated):** the kit is parallel *out
 of the box*, and a full restructure is acceptable. This spec replaces the bespoke
 train/dispatcher machinery with git + a thin integration seam — local serial
 integrator by default, forge as the optional online backend — shards the
@@ -465,12 +465,52 @@ never a forgotten one (the stale-reason lesson).
   established F5 classes + one new `link-rebase` class + the WI-347
   clique-re-pairing effect on three git-wrapper lines), smoke tier at 636 of
   its 640 ceiling (headroom noted, not re-stamped).
-- **Phase 4 — the integrator.** Build the local integrator lane (the one-page
-  serial merge queue) + the shrunken coordinator; wire the forge backend only
-  if/when this repo goes online. First parallel batch of two `ordinary` WIs
-  run end-to-end as the acceptance proof (the proof the mothball proposal
-  wanted, now against the new machinery: **the trunk history must show the
-  composed-tree check running on every merge, and zero hand-rescues**).
+- **Phase 4 — the integrator — is DONE (2026-07-29), and the acceptance proof
+  PASSED.** `project-trajectory/scripts/integrate.py` (CMP-004; SR-132 chain)
+  is the §1.2 seam's default backend: `claim` (the §2.3 serial trunk claim —
+  refusal ladder: paused / dirty / branch-exists / unsafe-name / non-ordinary
+  / off-frontier — with **regeneration folded into the claim commit**, RULING-6
+  applied after the first live claim was blocked by its own freshness floor),
+  `integrate` (the serial queue: `--no-ff --no-commit` merge onto a reusable
+  candidate worktree, the §5.1/§5.2 trunk step folded into the merge commit,
+  the DECLARED bar on the composed tree read **fail-closed** — missing/empty
+  declaration refuses, any SKIP in the report refuses, exit 0 alone is not
+  evidence — the RULING-7 verdict gate with **git-derived freshness**
+  replacing the old sha7 filename binding, ff-only trunk advance, loud park
+  on red), and `audit` (RULING-6 over the queue's own `--since` window —
+  **scoped**, because the unconditional form flags attended serial work;
+  widening it is an owner ruling, left open deliberately). The coordinator
+  shrink is realized as this new small module rather than surgery on
+  `agent_loop.py`, whose train half dies wholesale at Phase 5.
+  **The acceptance proof:** WI-355 and WI-346 (both keep-ruled genuine,
+  disjoint modules) claimed through `integrate.py claim`, built by two
+  parallel worker sessions in isolated worktrees under the full branch
+  discipline (log fragments, no generated artifacts, freshness steps
+  auto-skipping on the claimed branches), each independently REVIEW-A'd by a
+  fresh-context session (verdicts `docs/reviews/WI-355-REVIEW-A.md` APPROVE
+  f=2-minor and `WI-346-REVIEW-A.md` APPROVE f=2-minor, both at branch tip),
+  then merged by the queue: **`95ff7ef` (wi-346, bar PASS 34 steps tier all)
+  and `43d90ef` (wi-355, bar PASS 32 steps tier all), audit clean — product
+  changes arrived by merge only, zero hand-rescues in the queue run.**
+  **What the acceptance surfaced and fixed en route** (each a live refusal,
+  fixed on the trunk, none papered over): the claim staled its own floor
+  (Phase 4a fix: regen folds into the claim commit); `wi_convert` crashed on
+  the claim's `active/<branch>/` shape — now a **drained-stop refusal by
+  name** (Phase 4b; SR-129/LLR-136 → `Modified`, in this window); a
+  merge-staged fragment's adding commit lives on MERGE_HEAD, not HEAD
+  (Phase 4c: `added_at` retries there and only there); a refusal-parked
+  candidate worktree could not be reused (Phase 4d).
+  **Surfaced and FILED, not fixed** (the findings register:
+  WI-357..WI-360): the closing commit un-claims its own branch on disk
+  (§2.3/§5.2 collision, hit three times — the emptied claim dir left on disk
+  is the standing workaround); R-D reds at merge when trunk status.md prose
+  names an in-queue WI (pre-scrubbed by hand this run, `55777cc`); integrator
+  unload is incomplete while a worker worktree holds the merged branch
+  (`branch -d` swallowed); one unpinned lookup assertion from the REVIEW-A
+  minors. Also observed working as designed: the wi-346 reviewer's verdict
+  commit was blocked by the un-claim collision and the reviewer REFUSED
+  `--no-verify` — the commit landed by restoring the on-disk lane signal, no
+  hook bypassed anywhere in the phase.
 - **Phase 5 — deletion.** The train machinery, its tests, and the dead
   surfaces leave; the audit's other approved retirements execute here too.
 
