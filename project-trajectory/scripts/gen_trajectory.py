@@ -152,9 +152,12 @@ _GATE_BASIS_RE = re.compile(r"^#\s*basis:\s*(.+)$", re.M)
 #       `Modified` SR owes a re-attest (post-attestation amendment, process.md
 #       §7) — one pointer line each, naming the on-demand brief
 #       (`trace.py --ratify <id>` / `--ratify modified`) that carries the depth.
+#   (f) a tracked `docs/work/pause` (concurrency-restructure §5.6): one
+#       `Paused since <date>` line, the declared reason rendered verbatim (no
+#       clock), so an open pause is a visible accruing cost.
 # One line per pending action with a pointer (never a brief — the depth stays in
 # the hand-authored briefs). The block is emitted in two regions split by the
-# PENDING_LOCAL_LABEL line: (a)+(d)+(e) are committed-tree-PURE and (b)+(c) plus the
+# PENDING_LOCAL_LABEL line: (a)+(d)+(e)+(f) are committed-tree-PURE and (b)+(c) plus the
 # stranded-train shape are MACHINE-LOCAL (refs/llm-derived). Its `--check` gates
 # only the pure region — the machine-local lines are generated for humans but
 # excluded from the byte-compare, because `refs/llm/*` don't transport with
@@ -4878,6 +4881,49 @@ def _runstate_pending(root):
     ]
 
 
+# Byte-identical with `agent_common.PAUSE_MALFORMED`: the coordinator's reader
+# and this projection must say the same thing about an unreadable pause file.
+# Copied rather than imported — this module's ONE sanctioned sibling import is
+# check_trajectory (see the header), and a renderer must not start depending on
+# the coordinator layer for a string. `tests/test_gen_trajectory_pending.py`
+# pins the two equal, so the copy cannot drift silently.
+PAUSE_MALFORMED = "<malformed docs/work/pause — fix or delete it>"
+
+
+def _pause_pending(root):
+    """Source (f): the tracked pause declaration `docs/work/pause`
+    (`docs/concurrency-restructure.md` §5.6) — TOML `reason` + `since`. Zero or
+    one bullet, so an open pause is a VISIBLE accruing cost rather than a
+    forgotten one (the stale-reason lesson); unpausing is a deletion commit, so
+    the bullet clears itself.
+
+    Committed-tree-PURE and deterministic: the declared `since` renders
+    VERBATIM — never an age computed from `now()`, which would make the gated
+    region change without a commit. Fail-CLOSED like the coordinator's reader: a
+    malformed file still projects, loudly, because a pause you cannot read is
+    still a pause. Where that reader NORMALIZES (its callers get a typed dict),
+    this one only has to answer "readable or not" before formatting, so it asks
+    once and catches — same outcomes, a renderer's shape."""
+    import tomllib  # the module's only TOML reader; kept local to this one use
+
+    p = root / "docs" / "work" / "pause"
+    if not p.is_file():
+        return []
+    try:
+        declared = tomllib.loads(p.read_text(encoding="utf-8"))
+        reason, since = declared["reason"], declared.get("since") or ""
+        if not isinstance(reason, str):
+            raise TypeError("pause `reason` must be text")
+    except (OSError, UnicodeDecodeError, tomllib.TOMLDecodeError, KeyError, TypeError):
+        reason, since = PAUSE_MALFORMED, ""
+    return [
+        "- **Paused{}** — {}.".format(
+            " since {}".format(since) if since else "",
+            reason or "no reason declared",
+        )
+    ]
+
+
 def pending_block(root):
     """The GENERATED PENDING block CONTENT (between the markers) for
     the generated owner surface, emitted in two regions separated by the always-present
@@ -4885,9 +4931,11 @@ def pending_block(root):
 
       * a committed-tree-PURE region (blocked WI rows with a BlockRef +
         Draft/Modified spine rows owing a ratification/re-attest + the
-        NEEDS-HUMAN run-state ask) that the `--status --check` freshness gate
-        byte-compares — a pure function of the committed tree, so it reads
-        identically in any clone; and
+        NEEDS-HUMAN run-state ask + the tracked `docs/work/pause` declaration)
+        that the harness `open-items` freshness gate byte-compares through
+        `gen_open_items.py --check` (the renderer since WI-322, NOT `--status`)
+        — a pure function of the committed tree, so it reads identically in any
+        clone; and
       * a MACHINE-LOCAL advisory region (refs/llm/conflict records, quarantined
         trains, stranded-train attestations) generated for humans but EXCLUDED
         from the byte-compare on every machine, because those `refs/llm/*` don't
@@ -4907,7 +4955,12 @@ def pending_block(root):
         "briefs above are hand-authored and untouched by regeneration._"
     )
     blocked_lines, blocked_ids = _blocked_pending(root)
-    pure_items = blocked_lines + _spine_pending(root) + _runstate_pending(root)
+    pure_items = (
+        blocked_lines
+        + _spine_pending(root)
+        + _runstate_pending(root)
+        + _pause_pending(root)
+    )
     pure_body = (
         "\n".join(pure_items)
         if pure_items

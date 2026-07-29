@@ -2615,7 +2615,10 @@ def staged_spine_findings(root):
 
 
 # The critique-loop ratchet (WI-068). A `Verification=Critique` SR and its latest
-# CRITIQUE verdict file (docs/reviews/NNN-CRITIQUE.md, the S8 verdict format).
+# CRITIQUE verdict file (`docs/reviews/*-CRITIQUE.md`, the S8 verdict format), in
+# BOTH naming generations — serial `NNN-CRITIQUE.md` and the branch-scoped
+# `WI-<n>-CRITIQUE.md` replacing it (concurrency-restructure §5.4, and
+# `_latest_critique_file`, which reads both).
 RUBRICS_DIR = "docs/rubrics/"
 REVIEWS_DIR = "docs/reviews"
 CRITIQUE_VERDICT_RE = re.compile(
@@ -2792,19 +2795,75 @@ def _render_surface_paths(root):
     return out
 
 
+def _critique_git_times(root, names):
+    """`{filename: committer-time-epoch}` for the `docs/reviews` critique files git
+    has history for, from ONE `git log --format=%ct --name-only` over the directory:
+    the log walks newest-first, so the FIRST sighting of a path is its last-touched
+    time — what `_path_commit_time` answers per path. {} on any git failure, the
+    silent degrade every git call here makes. Batched rather than one
+    `_path_commit_time` per file because this runs at the commit bar and the
+    reviews dir only grows: 20 critiques cost ~1.3s in per-path subprocesses
+    here, ~0.1s as one call, whatever the count."""
+    out = _git(root, ["log", "--format=%ct", "--name-only", "--", REVIEWS_DIR])
+    if out is None:
+        return {}
+    times = {}
+    when = None
+    for line in out.splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        if line.isdigit():  # a %ct header line; a path line never is
+            when = int(line)
+            continue
+        # `--name-only` prints REPO-root-relative paths, which need not equal
+        # `root`-relative ones — match on the directory suffix, which also drops
+        # the train-scoped `docs/reviews/<train>/` files (a deeper head).
+        head, _, name = line.rpartition("/")
+        if when is not None and head.endswith(REVIEWS_DIR) and name in names:
+            times.setdefault(name, when)
+    return times
+
+
 def _latest_critique_file(root):
-    """The highest-NUMBERED `docs/reviews/*-CRITIQUE.md` path, or None — the single
-    selection rule shared by `_latest_critique_verdict` and the WI-243 staleness
-    check. Selection is by filename number, the monotonic-numbering convention the
-    critique loop assumes (a fresh critique takes the next number, so the newest
-    file is the live one). If that convention is broken — a fresh critique filed
-    under a LOWER number — this returns the wrong file, the same recorded proxy the
-    verdict reader has always carried."""
+    """The LATEST `docs/reviews/*-CRITIQUE.md` path by last-change TIME, or None —
+    the single selection rule shared by `_latest_critique_verdict` and the WI-243
+    staleness check.
+
+    Selection is by time, not by name, and the glob accepts BOTH naming
+    generations: the historical serial `NNN-CRITIQUE.md` and the branch-scoped
+    `WI-<n>-CRITIQUE.md` that replaces it (docs/concurrency-restructure.md §5.4 —
+    a next-number counter is a race under concurrency). The two do not sort
+    against each other at all, so the old highest-number rule could not survive
+    the mix; it was also wrong on its own terms, a fresh critique filed under a
+    LOWER number losing to a stale higher-numbered one. The ladder, per file:
+    (1) the committer time of the last commit to touch it (`_critique_git_times`,
+    one batched `git log`); (2) its filesystem mtime, when git answers nothing —
+    uncommitted evidence, or a scaffold that is no git repo at all; (3) its
+    filename, greatest wins, as the final tie-break, so equal times still select
+    ONE file deterministically (two critiques in one commit, the batch case).
+    Both time rungs are wall-clock epochs, so a committed and an uncommitted file
+    still compare meaningfully. What time does NOT answer is SCOPE: the verdict
+    file is still not matched against the WI under judgement — the recorded proxy
+    `_latest_critique_verdict` documents."""
     d = root / REVIEWS_DIR
     if not d.is_dir():
         return None
     files = sorted(d.glob("*-CRITIQUE.md"))
-    return files[-1] if files else None
+    if not files:
+        return None
+    git_times = _critique_git_times(root, {p.name for p in files})
+
+    def _when(path):
+        t = git_times.get(path.name)
+        if t is None:
+            try:
+                t = path.stat().st_mtime
+            except OSError:
+                t = 0
+        return (t, path.name)
+
+    return max(files, key=_when)
 
 
 def critique_staleness_findings(root):

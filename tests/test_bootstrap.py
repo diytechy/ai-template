@@ -48,6 +48,10 @@ def test_scaffold_contains_expected_files(scaffold):
         "docs/work/active/.gitkeep",
         "docs/work/deferred/.gitkeep",
         "docs/work/archive/.gitkeep",
+        # The log's fragment drop-box (concurrency-restructure.md §5.1): empty,
+        # marker-only — an exemplar here would be compiled into docs/log.md by
+        # the first trunk step.
+        "docs/log.d/.gitkeep",
         "docs/specs/README.md",
         "docs/specs/WI-000.md",
         "docs/knowledge/README.md",
@@ -74,6 +78,7 @@ def test_scaffold_contains_expected_files(scaffold):
         "scripts/plan_coverage_step.py",
         "scripts/plan_artifacts.py",
         "scripts/wi_convert.py",
+        "scripts/trunk_step.py",
         "scripts/run_menu.py",
         "scripts/dev-setup.cmd",
         ".githooks/pre-commit",

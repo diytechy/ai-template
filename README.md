@@ -212,7 +212,12 @@ This scaffolds:
 - `AGENTS.md` (the agent guide; `CLAUDE.md`/`GEMINI.md` stubs point at it)
 - `docs/` — process, status + log + plan, architecture, interfaces, the
   registries, and the declared-policy files (`gate`, `gate-policy`,
-  `push-policy`, `privacy-check`)
+  `push-policy`, `privacy-check`) — plus `docs/log.d/`, the log's fragment
+  drop-box: a work branch writes `docs/log.d/<WI-id>-<slug>.md` instead of
+  hand-merging `docs/log.md`, and
+  [`trunk_step.py`](project-trajectory/scripts/trunk_step.py) compiles the
+  fragments in git-derived merge order (then re-derives the generated
+  artifacts) in one serial step on the trunk
 - `scripts/` — the harness
 - root `run.*` / `agent-resume.*` launchers (shipped inert until you wire them —
   a `[run]` section in `docs/stack.ini` for `run.*`, `AGENT_CMD` for

@@ -34,6 +34,12 @@ Design choices that keep it honest and CI-friendly:
       coverage threshold applies at `full`/`release` only — the smoke subset alone
       isn't expected to meet it. CI typically runs `smoke` on push, `full` on PR,
       and `release`/`all` on a release tag.
+    - **Lane-aware freshness.** The generated-artifact freshness gates are the
+      TRUNK lane's (concurrency-restructure.md §5.2). On a claimed work branch —
+      one with a `docs/work/active/<branch>/` spec directory — each is reported
+      SKIP with its reason instead of running. Fail-closed: off git, on a
+      detached HEAD, or unclaimed, the full bar applies. See
+      `_TRUNK_FRESHNESS_STEPS`.
     - **Non-interactive.** No prompts; deterministic exit codes for automation.
 
 Usage:
@@ -1011,6 +1017,109 @@ _COVERAGE_ENV_VARS = (
 )
 
 
+# --- The trunk lane: generated-artifact freshness is not a work branch's job ----
+# concurrency-restructure.md §5.2: work branches NEVER commit generated artifacts
+# — the trunk regenerates them in one serial step after each merge. Gating a
+# branch on their freshness would red every branch for drift it is forbidden to
+# fix, and would push workers to commit exactly the artifacts whose conflicts
+# this restructure exists to delete. Reads are unaffected: a branch-local check
+# reads a generated artifact as-of-base, and the composed tree re-derives at the
+# queue. Deliberately NOT here: `skills-sync` (both sides of that gate are
+# hand-authored SOURCE, so a branch editing a skill fixes its copies on the
+# branch), registry-integrity, trajectory, doc-navigability, and every product
+# step — those grade the branch's own edits, not the trunk's derived views.
+_TRUNK_FRESHNESS_STEPS = frozenset(
+    "derived-gate arch-map trajectory-map status-map open-items okf "
+    "ratify-fresh".split()
+)
+
+# `_work_branch` shells out to git; unmemoized it would run once per step. Keyed
+# by resolved root, so a test moving between fixtures gets its own answer.
+_WORK_BRANCH_CACHE = {}
+
+
+def _git_out(root, args):
+    """stdout of a git command under `root`, or None on ANY failure (no git
+    binary, not a repo, detached HEAD) — the house best-effort-off-git pattern
+    (trace.py `_git_out`, derive_gate.py `_git`)."""
+    try:
+        proc = subprocess.run(
+            ["git", "-C", str(root), *args],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+        )
+    except (OSError, ValueError):
+        return None
+    return proc.stdout if proc.returncode == 0 else None
+
+
+def _claimed_work_branch(root):
+    """The uncached answer behind `_work_branch` — see it for the contract."""
+    out = _git_out(root, ["symbolic-ref", "--short", "HEAD"])
+    branch = (out or "").strip()
+    if not branch:
+        return None  # no git, not a repo, or a detached HEAD => full checks
+    # A branch name is used here as a relative PATH. git's own ref rules already
+    # forbid `..` and `\`, but this decides whether a gate runs, so it refuses
+    # rather than trusts — loudly, because a name that reaches here is either a
+    # git that stopped enforcing its rules or something feeding us a fake ref.
+    if ".." in branch or "\\" in branch or branch.startswith("/"):
+        print(
+            "check: ignoring implausible branch name '{}' — running the full "
+            "checks (concurrency-restructure §5.2)".format(branch),
+            file=sys.stderr,
+        )
+        return None
+    active = Path(root) / "docs" / "work" / "active"
+    spec_dir = active / branch
+    try:
+        # Belt-and-braces containment: whatever the name, the claim directory
+        # must sit UNDER docs/work/active/ for this to be a claimed branch.
+        spec_dir.resolve().relative_to(active.resolve())
+    except (OSError, ValueError):
+        return None
+    return branch if spec_dir.is_dir() else None
+
+
+def _work_branch(root="."):
+    """The current branch name IF it is a CLAIMED work branch, else None.
+
+    The claim is the Phase 2c registry model (concurrency-restructure §2.1/§2.3):
+    a claimed branch's work-item specs live in `docs/work/active/<branch>/`, moved
+    there by the serial trunk commit that cut the branch. So the branch's own
+    working tree carries the evidence — no ref namespace, no reservation file.
+
+    Fail-CLOSED by construction: off git, on a detached HEAD, or with no matching
+    `active/` directory the answer is None and the STRICT bar applies. The trunk
+    is simply the branch nobody claimed a work item on."""
+    key = str(Path(root).resolve())
+    if key not in _WORK_BRANCH_CACHE:
+        _WORK_BRANCH_CACHE[key] = _claimed_work_branch(root)
+    return _WORK_BRANCH_CACHE[key]
+
+
+def _work_branch_skip(name, root="."):
+    """(status, detail, notice) when `name` is a trunk-lane freshness step and we
+    are on a claimed work branch, else None.
+
+    The skip happens HERE, at execution, not by dropping rows from the step table:
+    `--list` and the summary must still name the step, or the plan would lie about
+    what the gate covers. A skipped step never affects the exit code (SKIP is not
+    FAIL — the same status the missing-tool guard uses)."""
+    if name not in _TRUNK_FRESHNESS_STEPS:
+        return None
+    branch = _work_branch(root)
+    if not branch:
+        return None
+    detail = (
+        "work branch '{}' — generated freshness is the trunk lane's, "
+        "concurrency-restructure §5.2".format(branch)
+    )
+    return "SKIP", detail, "{}: skipped ({})".format(name, detail)
+
+
 def _step_env():
     """The environment for a spawned step, minus any ambient coverage-orchestration
     vars (see _COVERAGE_ENV_VARS) so the project's own coverage run is authoritative."""
@@ -1055,6 +1164,10 @@ def _step_guard(requires, cmd, lenient):
 def run_step(name, requires, cmd, lenient):
     """Run one step, streaming its output live (the sequential path).
     Returns (status, detail) where status in PASS/FAIL/SKIP."""
+    lane_skip = _work_branch_skip(name)
+    if lane_skip:
+        print(lane_skip[2], flush=True)
+        return lane_skip[0], lane_skip[1]
     guard, exe = _step_guard(requires, cmd, lenient)
     if guard:
         return guard
@@ -1071,6 +1184,11 @@ def run_step_captured(name, requires, cmd, lenient):
     """run_step with the child's output captured instead of streamed — the
     parallel path, where concurrent children writing one console would
     interleave. Returns (status, detail, output)."""
+    lane_skip = _work_branch_skip(name)
+    if lane_skip:
+        # The notice rides out as the step's OUTPUT so the parallel path prints
+        # it under the same lock as every other step's banner.
+        return lane_skip[0], lane_skip[1], lane_skip[2] + "\n"
     guard, exe = _step_guard(requires, cmd, lenient)
     if guard:
         return guard[0], guard[1], ""

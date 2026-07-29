@@ -172,6 +172,20 @@
 #     agent_common pairs): the `-000` example must not decide which registry
 #     home is authoritative, so `spec_registry_dir` grew that rule in all three
 #     verbatim copies. Same three blocks, re-fingerprinted, not new duplication.
+#   * 203 -> 213 is Phase 3 (2026-07-29): `trunk_step.py` ships (the serial
+#     trunk step, §5.1/§5.2) and `check.py` learns the work-branch lane. Ten
+#     additions, all established F5 families: five `cli` (trunk_step's
+#     _utf8_console + argparse/--root preamble), three `git-wrapper` (check.py's
+#     new `_git_out` pairing with trace/derive_gate/trunk_step), one
+#     `declared-file` (trunk_step reading stack.ini for the arch-map CLI the
+#     way check.py does), and one NEW `link-rebase` class (trunk_step's
+#     fragment link rewriter beside agent_dispatch's archival relink — a pair
+#     that dissolves when agent_dispatch retires at Phase 5). Three lines
+#     CHANGED rather than added, the WI-347 clique-re-pairing effect again:
+#     check.py joining the `_git_out` clique moved the matcher's extents, so
+#     `01b45f40febb` re-fingerprinted to `065823254083` (same
+#     check_trajectory == derive_gate pair; §5.4 also edited that region) and
+#     `c669d0d84711`/`f02bcce4d53d` re-paired onto check.py.
 #   * 207 -> 201 was ALREADY TRUE at this commit's parent and nothing said so.
 #     The header declared 207 while the sections held 201 fingerprint lines. One
 #     block of that is explained (WI-341's `_raw_level` extraction merged two
@@ -188,14 +202,14 @@
 # Every figure below is now GENERATED from the sections rather than counted by
 # hand — the rule this repo already applies to every other derived number.
 #
-# The distribution (203 blocks):
+# The distribution (213 blocks):
 #
-#   cli                   80   (39%)   deliberate
-#   spine-loader          20   (10%)   deliberate
-#   declared-file         11    (5%)   deliberate
-#   graph-layout          11    (5%)   debt WI-280
-#   markdown-table        11    (5%)   deliberate
-#   git-wrapper            9    (4%)   deliberate
+#   cli                   85   (40%)   deliberate
+#   spine-loader          20   (9%)   deliberate
+#   declared-file         12   (6%)   deliberate
+#   git-wrapper           12   (6%)   deliberate
+#   graph-layout          11   (5%)   debt WI-280
+#   markdown-table        11   (5%)   deliberate
 #   train-disposition      9    (4%)   debt WI-280
 #   spine-load-repeat      8    (4%)   extract WI-346
 #   wi-schema-columns      6    (3%)   deliberate
@@ -210,14 +224,15 @@
 #   ref-transaction        2    (1%)   extract WI-343
 #   signature-echo         2    (1%)   deliberate
 #   graph-walk             1           deliberate
+#   link-rebase            1           deliberate
 #   skills-materialize     1           deliberate
 #   subprocess-capture     1           extract WI-346
 #   trailer-fold           1           deliberate
 #   trailer-scan           1           extract WI-343
 #   warn-tier-dispatch     1           deliberate
 #
-# By disposition: deliberate 163, extract 20 (WI-343/346), debt 20 (WI-280).
-# By path relation (metadata only): 154 cross-module, 49 same-file. The two
+# By disposition: deliberate 173, extract 20 (WI-343/346), debt 20 (WI-280).
+# By path relation (metadata only): 164 cross-module, 49 same-file. The two
 # cuts do NOT coincide — 9 same-file blocks are deliberate, and the other 40
 # are the extract + debt work, which is the honest shape of this file: a fifth
 # of the census is still not F5 at all.
@@ -233,7 +248,7 @@
 # a census whose classification has rotted is how the false claims above
 # survived in the first place.
 
-# --- cli (80 blocks) ---------------------------------------------
+# --- cli (85 blocks) ---------------------------------------------
 # disposition: deliberate
 # the per-script CLI skeleton + _utf8_console. F5: kit scripts must stay
 # independently copy-able and stdlib-only, which is why a shared
@@ -319,6 +334,14 @@ a986f553a391  project-trajectory/scripts/plan_briefs.py == project-trajectory/sc
 ae679b73acd2  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/wi_convert.py
 d588a4299326  project-trajectory/scripts/check_privacy.py == project-trajectory/scripts/wi_convert.py
 f7d5136e6d5d  project-trajectory/scripts/derive_gate.py == project-trajectory/scripts/wi_convert.py
+# Phase 3 (2026-07-29): trunk_step.py ships — its _utf8_console and
+# argparse/--root preamble join the class (same F5 reason: the serial trunk
+# step must stay independently copy-able).
+b87ed5851f33  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/trunk_step.py
+4194ebd485fe  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/trunk_step.py
+f7d5136e6d5d  project-trajectory/scripts/derive_gate.py == project-trajectory/scripts/trunk_step.py
+5929de953fd4  project-trajectory/scripts/gen_open_items.py == project-trajectory/scripts/trunk_step.py
+3762ccd39230  project-trajectory/scripts/plan_briefs.py == project-trajectory/scripts/trunk_step.py
 
 # --- wi-registry (5 blocks) --------------------------------------
 # disposition: deliberate
@@ -407,7 +430,7 @@ a55d35181e85  project-trajectory/scripts/gen_okf.py == project-trajectory/script
 d2ff16e89265  project-trajectory/scripts/plan_artifacts.py == project-trajectory/scripts/plan_coverage.py
 451248328e57  project-trajectory/scripts/plan_artifacts.py == project-trajectory/scripts/plan_coverage.py
 
-# --- declared-file (11 blocks) -----------------------------------
+# --- declared-file (12 blocks) -----------------------------------
 # disposition: deliberate
 # declared-file readers (policy files, stack.ini, coverage.json). F5: each
 # script reads its own declaration rather than importing a sibling. Every entry
@@ -437,8 +460,11 @@ eff0eac572a0  project-trajectory/scripts/check_privacy.py == project-trajectory/
 c16d14a4efc4  project-trajectory/scripts/check_privacy.py == project-trajectory/scripts/check_trajectory.py
 75b2bcbfcc04  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/gen_trajectory.py
 8e99e263cf71  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/gen_trajectory.py
+# Phase 3 (2026-07-29): trunk_step.py builds the arch-map CLI from stack.ini
+# the way check.py does — the same cross-script declared-file reader.
+963d79f43ff8  project-trajectory/scripts/check.py == project-trajectory/scripts/trunk_step.py
 
-# --- git-wrapper (9 blocks) --------------------------------------
+# --- git-wrapper (12 blocks) --------------------------------------
 # disposition: deliberate
 # the `git` subprocess wrapper and the dispatcher's preflight/lock pair -
 # small, stable, per-script.
@@ -447,10 +473,26 @@ daf99714501b  project-trajectory/scripts/agent_common.py == project-trajectory/s
 332bdb287be6  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/gen_trajectory.py
 0bd14cd9c689  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_loop.py
 fe585fa411e9  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_loop.py
-01b45f40febb  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/derive_gate.py
-c669d0d84711  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/trace.py
+065823254083  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/derive_gate.py
+c669d0d84711  project-trajectory/scripts/check.py == project-trajectory/scripts/check_trajectory.py
 8dc145bef9c5  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/trace.py
-f02bcce4d53d  project-trajectory/scripts/gen_trajectory.py == project-trajectory/scripts/trace.py
+f02bcce4d53d  project-trajectory/scripts/check.py == project-trajectory/scripts/gen_trajectory.py
+# Phase 3 (2026-07-29): check.py's `_work_branch` lane detection brings its
+# own `_git_out` (the trace.py shape), and trunk_step.py carries the same
+# copy; check.py joining the clique re-paired/re-fingerprinted the three
+# lines above (the WI-347 effect — same blocks, moved extents), it did not
+# add code to the older scripts.
+b68a8ce88cdb  project-trajectory/scripts/check.py == project-trajectory/scripts/trace.py
+b68a8ce88cdb  project-trajectory/scripts/check.py == project-trajectory/scripts/trunk_step.py
+3d5196d5678c  project-trajectory/scripts/check.py == project-trajectory/scripts/derive_gate.py
+
+# --- link-rebase (1 block)  -------------------------------------
+# disposition: deliberate
+# the relative-link rewriter's read-modify shape: agent_dispatch's archival
+# relink and trunk_step's fragment-compile rebase (§5.1). Deliberately NOT
+# imported from agent_dispatch — that module retires at Phase 5, and this
+# pair dissolves with it.
+62ef56ce3884  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/trunk_step.py
 
 # --- module-path (2 blocks) --------------------------------------
 # disposition: deliberate

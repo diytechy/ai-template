@@ -294,6 +294,73 @@ def test_pause_reason_helper_edges(tmp_path):
     assert al.pause_reason(tmp_path) == "budget check"  # first non-comment line
 
 
+# --- §5.6: the TRACKED pause declaration (docs/work/pause) --------------------
+# `docs/concurrency-restructure.md` §5.6 moves the pause into the tree: TOML
+# `reason` + `since`, presence pauses, an unpause is a deletion COMMIT. Both
+# homes are live during the migration window, so `pause_reason` must keep its
+# exact return contract (None / "" / reason) against either one.
+
+
+def _tracked_pause(docs, body):
+    (docs / "work").mkdir(parents=True, exist_ok=True)
+    (docs / "work" / "pause").write_text(body, encoding="utf-8")
+
+
+def test_tracked_pause_reads_reason_and_since(tmp_path):
+    ac = load_script("agent_common")
+    assert ac.tracked_pause(tmp_path) is None  # absent -> not paused
+    _tracked_pause(
+        tmp_path, 'reason = "draining for the audit"\nsince = "2026-07-29"\n'
+    )
+    assert ac.tracked_pause(tmp_path) == {
+        "reason": "draining for the audit",
+        "since": "2026-07-29",
+    }
+    # `since` is optional; a missing one reads "" (never a clock-derived age).
+    _tracked_pause(tmp_path, 'reason = "draining"\n')
+    assert ac.tracked_pause(tmp_path) == {"reason": "draining", "since": ""}
+
+
+def test_tracked_pause_fails_closed_on_malformation(tmp_path):
+    # A pause file we cannot read is STILL a pause: unparseable TOML and a
+    # missing `reason` both return a paused dict carrying the loud message that
+    # routes the human to the fix — never None, which would resume the loop.
+    ac = load_script("agent_common")
+    for body in ("this is not toml at all\n", 'since = "2026-07-29"\n', "reason = 7\n"):
+        _tracked_pause(tmp_path, body)
+        assert ac.tracked_pause(tmp_path) == {"reason": ac.PAUSE_MALFORMED, "since": ""}
+        assert load_script("agent_loop").pause_reason(tmp_path) == ac.PAUSE_MALFORMED
+
+
+def test_pause_reason_reads_the_tracked_home(tmp_path):
+    al, ac = load_script("agent_loop"), load_script("agent_common")
+    assert al.pause_reason(tmp_path) is None  # neither home -> not paused
+    _tracked_pause(
+        tmp_path, 'reason = "draining for the audit"\nsince = "2026-07-29"\n'
+    )
+    assert al.pause_reason(tmp_path) == "draining for the audit"
+    # An empty declared reason is "paused, no reason" — the same `""` the legacy
+    # empty file yields, so callers branching on `is None` are unaffected.
+    _tracked_pause(tmp_path, 'reason = ""\nsince = "2026-07-29"\n')
+    assert al.pause_reason(tmp_path) == ""
+    assert ac.tracked_pause(tmp_path)["reason"] == ""
+
+
+def test_legacy_pause_wins_when_both_homes_are_present(tmp_path):
+    # Chosen precedence: LEGACY FIRST. A local untracked file a human dropped
+    # into a worktree keeps stopping that worktree even once the tracked
+    # declaration exists; either home paused still means paused, so the
+    # dispatcher can never resume just because the homes were swapped.
+    al = load_script("agent_loop")
+    _tracked_pause(tmp_path, 'reason = "tracked drain"\nsince = "2026-07-29"\n')
+    (tmp_path / "pause").write_text("local hold\n", encoding="utf-8")
+    assert al.pause_reason(tmp_path) == "local hold"
+    (tmp_path / "pause").unlink()
+    assert al.pause_reason(tmp_path) == "tracked drain"  # tracked still pauses
+    (tmp_path / "work" / "pause").unlink()
+    assert al.pause_reason(tmp_path) is None  # both gone -> resumed
+
+
 # --- WI-148: weekday blackout window ------------------------------------------
 
 

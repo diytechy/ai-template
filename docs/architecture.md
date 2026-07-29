@@ -73,6 +73,7 @@ graph LR
     m_scripts_subagent_gate["scripts/subagent_gate — Subagent spawn gate — deny-by-default fan-out c…"]
     m_scripts_trace["scripts/trace — Traceability join + orphan report for the SN->S…"]
     m_scripts_trace_text["scripts/trace_text — Spine-row TEXT rules and the row primitives the…"]
+    m_scripts_trunk_step["scripts/trunk_step — The serial trunk step — compile the log fragmen…"]
     m_scripts_wi_convert["scripts/wi_convert — Convert the work-item registry between its CSV …"]
     m_scripts_agent_common --> m_scripts_agent_session
     m_scripts_agent_dispatch --> m_scripts_agent_common
@@ -102,6 +103,7 @@ graph LR
     m_scripts_plan_runner --> m_scripts_plan_coverage_step
     m_scripts_plan_runner --> m_scripts_plan_round
     m_scripts_trace --> m_scripts_trace_text
+    m_scripts_trunk_step --> m_scripts_plan_artifacts
     m_scripts_agent_common -. IF-065 .-> m_scripts_agent_loop
     m_scripts_agent_dispatch -. IF-067 .-> m_scripts_agent_loop
     m_scripts_agent_route -. IF-044 .-> m_scripts_agent_loop
@@ -156,7 +158,8 @@ Contracts (interfaces): IF-037, IF-065
 | `read_declared(path, default)` | Read a one-word declared-policy file (docs/gate, docs/run-state, …): |  |
 | `read_agent_loop_config(docs)` | The declared coordinator dials — the ``[agent-loop]`` section of |  |
 | `resolve_coordinator_dials(args, docs)` | ``(model, model_map, jobs_opt)`` for the coordinator, each resolved by the |  |
-| `pause_reason(lane)` | A declared **graceful-pause** request (WI-147): the `docs/pause` file |  |
+| `tracked_pause(docs_dir)` | The **tracked** pause declaration — `docs/work/pause` |  |
+| `pause_reason(lane)` | A declared **graceful-pause** request: pause the loop at the next session |  |
 | `venv_python(root)` | Absolute path (a Path) to the repo's own .venv interpreter, or None when |  |
 | `harness_python(root)` | The interpreter the test harness (pytest + the pinned dev tools) should run |  |
 | `interpreter_version(exe)` | (major, minor) of the interpreter at `exe`, or None when it cannot be run. |  |
@@ -966,6 +969,23 @@ Contracts (interfaces): IF-076
 | `provenance_findings(srs, llrs, tcs)` | A spine row whose text carries its own PROVENANCE — a work-item id, or a | LLR-050 |
 | `form_findings(srs, llrs, tcs)` | A spine row whose text is not ONE testable obligation (process.md §3). |  |
 | `paraphrase_advisories(srs, llrs)` | Warn-only: a child cell that mostly RE-WORDS its parent (process.md §3 |  |
+
+### `scripts/trunk_step`
+_The serial trunk step — compile the log fragments, regenerate the trunk artifacts._
+Imports (internal): `plan_artifacts`
+
+| Public item | Summary | Implements |
+|---|---|---|
+| `fragment_paths(root)` | The fragment files awaiting compilation, filename-sorted. Dotfiles are |  |
+| `read_fragment(path)` | A fragment's text with line endings normalised to `\n`. |  |
+| `validate_fragment(path, text)` | The reasons `path` cannot be compiled, as a list of one-line strings (empty |  |
+| `added_at(root, path)` | The commit date (unix seconds) of the commit that ADDED `path`, `None` off |  |
+| `ordered_fragments(root, paths)` | `(ordered, errors)` — the fragments in merge order, or the loud reasons they |  |
+| `rebased_link_target(target)` | The rewritten target for ONE inline link inside a fragment, or None to leave |  |
+| `rebase_links(text)` | `text` with every rebasable inline link target moved from log.d-relative to |  |
+| `compile_log(root, dry_run)` | Fold `docs/log.d/*.md` into `docs/log.md` in merge order and delete them. |  |
+| `regen(root, dry_run)` | Re-derive the trunk's generated artifacts, in REGEN_STEPS order. Stops at |  |
+| `main(argv)` |  |  |
 
 ### `scripts/wi_convert`
 _Convert the work-item registry between its CSV row form and its spec-file form._

@@ -26,6 +26,12 @@
 docs/reviews/*
 docs/repo-review-*.md
 
+# log fragments awaiting the serial trunk step — a work branch's docs/log.md
+# entry, parked under its own unique name until trunk_step.py compiles it into
+# the log (concurrency-restructure.md §5.1). Transient by construction and never
+# a navigation node: the entry becomes reachable the moment it lands in log.md.
+docs/log.d/*
+
 # work-item specs — the per-WI SpecRef files (open and closed). Registry-
 # referenced (docs/requirements/work-items.csv), not doc-graph navigation nodes.
 docs/specs/WI-*.md

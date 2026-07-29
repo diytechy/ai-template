@@ -194,18 +194,72 @@ def resolve_coordinator_dials(args, docs):
     return model, model_map, jobs_opt
 
 
-def pause_reason(lane):
-    """A declared **graceful-pause** request (WI-147): the `docs/pause` file
-    present = pause the loop at the next session boundary. Returns the free-form
-    reason (the file's first non-comment line, `""` when it carries none) or
-    `None` when the file is absent. The file is the whole contract — presence
-    pauses, deleting it resumes — so `run-state` is deliberately left untouched
-    (a resume is one act: delete the file and re-launch). Per-lane like
-    run-state, so a track pauses only its own coordinator."""
-    path = lane / "pause"
+# What a `docs/work/pause` we cannot parse says. Fail-CLOSED: a broken pause
+# file must never read as "not paused", and the message routes the human to the
+# only two fixes. gen_trajectory.py carries a byte-identical copy (it does not
+# import this coordinator layer); a test pins the two equal.
+PAUSE_MALFORMED = "<malformed docs/work/pause — fix or delete it>"
+
+
+def tracked_pause(docs_dir):
+    """The **tracked** pause declaration — `docs/work/pause`
+    (`docs/concurrency-restructure.md` §5.6). One meaning, and no scope field
+    because one meaning needs none: **pause = stop claiming.** Everything in
+    flight finishes, integrates, and archives — a traincar always unloads, so a
+    pause never strands finished work on a branch; the only thing that stops an
+    unload is the integrator's own refusal (red bar, missing verdict), which is
+    the gate working, not the pause.
+
+    Presence pauses. An **unpause is a tracked deletion commit** — which is the
+    point of tracking the file: it survives clones, the reason is diffable
+    history instead of a stale local note, and resuming is auditable.
+
+    TOML, two keys: `reason` (free text) and `since` (a declared stamp, carried
+    verbatim — never an age computed from a clock). Returns
+    ``{"reason": ..., "since": ...}``, or ``None`` when the file is absent;
+    `since` missing renders ``""``. Unparseable TOML or a missing `reason`
+    returns a paused dict carrying `PAUSE_MALFORMED` — see above."""
+    path = Path(docs_dir) / "work" / "pause"
     if not path.is_file():
         return None
-    return read_declared(path, "")
+    try:
+        data = tomllib.loads(path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError, tomllib.TOMLDecodeError):
+        data = None
+    if not isinstance(data, dict) or not isinstance(data.get("reason"), str):
+        return {"reason": PAUSE_MALFORMED, "since": ""}
+    since = data.get("since")
+    if since is None:
+        since = ""
+    elif not isinstance(since, str):
+        since = str(since)  # a bare TOML date/int stamps as its ISO/decimal text
+    return {"reason": data["reason"], "since": since}
+
+
+def pause_reason(lane):
+    """A declared **graceful-pause** request: pause the loop at the next session
+    boundary. Return contract, unchanged and depended on by every caller:
+    `None` = not paused; a string = paused, `""` when the declaration carries no
+    reason. Presence is the whole contract — deleting the declaration resumes —
+    so `run-state` is deliberately left untouched.
+
+    Two homes during the migration window, consulted in this order:
+
+      1. the LEGACY untracked `lane/pause` (WI-147) — the reason is the file's
+         first non-comment line. Per-lane like run-state, so a track pauses only
+         its own coordinator. Retires with the dispatcher in Phase 5 of
+         `docs/concurrency-restructure.md`;
+      2. the TRACKED `lane/work/pause` (§5.6) — `tracked_pause`'s `reason`.
+
+    Legacy first, so a local file a human dropped into a worktree keeps stopping
+    exactly that worktree. Either home paused means paused: the retired-in-place
+    dispatcher can never resume merely because the untracked file was superseded
+    by the tracked one."""
+    path = lane / "pause"
+    if path.is_file():
+        return read_declared(path, "")
+    tracked = tracked_pause(lane)
+    return None if tracked is None else tracked["reason"]
 
 
 # --- WI-286: the harness interpreter (shared root .venv, floor-checked) --------

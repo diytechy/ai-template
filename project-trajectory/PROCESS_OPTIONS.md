@@ -570,23 +570,29 @@ control input — was retired):
   humans, never a session's input — the hand-authored remainder stays the
   human resume surface.
 
-**Optional `docs/pause`** (presence = pause requested; content = a free-form
-reason): a **graceful** walk-away stop honored at the *next session boundary* —
-the in-flight session finishes and commits normally, then the coordinator stops
-(exit 8) with a banner naming the file, **never a mid-session kill**. A launch
-with the file present starts no work; **deleting the file and re-launching
-resumes** — the file is the whole contract, so `run-state` is left untouched and
-resuming is a single act. Under the dispatcher, `docs/pause` stops **new
-reservations** at the next boundary while in-flight workers finish their safe
-boundary (workers themselves ignore it); absent = not paused, so an adopter
-who never creates it pays nothing.
+**Optional pause — tracked `docs/work/pause`** (TOML: `reason = "…"`,
+`since = "YYYY-MM-DD"`; no scope field — one meaning needs none): **pause =
+stop claiming. Everything in flight finishes, integrates, and archives** — a
+full stop is a *drained and unloaded* stop; finished work is never stranded on
+a branch. The only thing that stops an unload is the integrator's own refusal
+(red bar, missing required verdict) — that is the gate working, not the pause:
+a pause ends either fully merged and quiet, or fully merged except N branches
+parked red, each red a finding to work. The file is **tracked and committed**
+by the bookkeeping lane: it survives clones, its reason is diffable history,
+and unpausing is an auditable deletion commit. The coordinator reads it before
+every claim; status generation surfaces `paused since <date>: <reason>` so an
+open pause is a visible accruing cost, never a forgotten one. What no file can
+do — stop a running session — stays stated plainly: that remains "kill the
+worker". Absent = not paused, so an adopter who never creates it pays nothing.
+(The legacy *untracked* `docs/pause` marker is honored by the retiring
+dispatcher during the migration window only.)
 
 **Optional `docs/blackout`** (first line `HH:MM-HH:MM`, UTC, Mon–Fri): a
 recurring window inside which the coordinator starts **no new session** — the
-same next-boundary graceful semantic as `docs/pause`, but temporal and
+same stop-claiming graceful semantic as `docs/work/pause`, but temporal and
 self-clearing. The in-flight session wraps normally, then the loop **waits the
 window out and resumes automatically**, so one walk-away launch survives a daily
-blackout (unlike `pause`, no re-launch needed). The window is half-open
+blackout (unlike a pause, no unpause commit needed). The window is half-open
 `[start, end)` — 12:00–19:00 blocks 12:00 through 18:59 and releases at 19:00.
 `start == end` disables, and so does deleting the file (absent = disabled,
 byte-identical to before); the scaffold ships a **12:00–19:00** default so a
@@ -851,8 +857,11 @@ behavior**, so a fresh scaffold pays nothing.
   two independent *same-family* sessions review — fresh context is the
   invariant, family diversity best-effort (the scorer already weights
   cross-family corroboration above same-family). Verdicts are **repo files**
-  (`docs/reviews/NNN-<PHASE>.md`) in the `log.md` block format plus one machine
-  line: `VERDICT: APPROVE|CHANGES-REQUESTED findings=N`.
+  (`docs/reviews/WI-<n>-<PHASE>.md` — named by the work item they judge, never
+  by a serial counter: a next-number scan is a race under concurrency, and the
+  latest-verdict rule selects by git time, not filename order) in the `log.md`
+  block format plus one machine line:
+  `VERDICT: APPROVE|CHANGES-REQUESTED findings=N`.
 - **The substance scorer (`scripts/score_reviews.py`) is advisory.** It scores a
   verdict block by confirmed-finding rate, cross-reviewer corroboration
   (cross-family weighted up), anchored-finding precision (anchors must resolve;
@@ -890,12 +899,16 @@ behavior**, so a fresh scaffold pays nothing.
   (§3 commit cadence).
 - **No elevation, no interactive tools** — a step that truly needs admin
   rights or a TTY is a Blocked item, never a prompt nothing will answer.
-- **Keep `status.md` lean across iterations** — each session appends its
-  evidence (verdicts, decisions, session summary) to `log.md` (§5) and leaves
+- **Keep `status.md` lean across iterations** — each session records its
+  evidence (verdicts, decisions, session summary) for `log.md` (§5): directly
+  when on the serial trunk lane, as a `docs/log.d/<WI-id>-<slug>.md` fragment
+  on a work branch (`trunk_step.py` compiles fragments into `log.md` in merge
+  order and deletes them — no branch ever hand-merges the log), leaving
   `status.md` holding only the resume point + open/blocked items, so the next
   fresh session's context reload stays cheap.
 - **End-of-run evidence:** `status.md` Current State + Blocked register;
-  verdicts + Decisions in `docs/log.md`; a clean tree.
+  verdicts + Decisions in `docs/log.md` (via fragment on a work branch); a
+  clean tree.
 
 **Iteration logs are tracked, indexed repo artifacts.** The coordinator writes
 each session's log to `docs/iteration/NNN-<stamp>.log` — size-bounded (head +
@@ -1683,7 +1696,7 @@ guessed subset. A WI's phase is **derived** from the delivery `Phase` of the SRs
 it delivers (§4 "Phased delivery"), and the When-view dashboard tiers the WI DAG
 by **phase ⊃ workstream ⊃ work-item** — there is no separate grouping column.
 
-**Whole-registry contradiction audit (WI-206).** The per-commit reviewer sweep is change-scoped — it checks each new SN/SR/TC row against the whole registry as it lands (inductive pairwise coverage), but never re-audits **old-vs-old** drift between rows that both predate it. *Applies when* the registry is mature enough for that to bite (>= 2 closed phases or >= 30 SRs). *Occasion:* at **phase close** (with the gate bar) and **before G-Final**. *Execution:* one independent fresh-context session, redacted to the registries + `docs/rubrics/registry-contradiction-audit.md`, writing a recorded `docs/reviews/NNN-AUDIT.md` verdict. *Disposition:* findings route as WIs through change-intake; the audit never edits the spine. Per-commit coverage stays the change-scoped reviewer sweep — unchanged.
+**Whole-registry contradiction audit (WI-206).** The per-commit reviewer sweep is change-scoped — it checks each new SN/SR/TC row against the whole registry as it lands (inductive pairwise coverage), but never re-audits **old-vs-old** drift between rows that both predate it. *Applies when* the registry is mature enough for that to bite (>= 2 closed phases or >= 30 SRs). *Occasion:* at **phase close** (with the gate bar) and **before G-Final**. *Execution:* one independent fresh-context session, redacted to the registries + `docs/rubrics/registry-contradiction-audit.md`, writing a recorded `docs/reviews/<phase-or-scope>-AUDIT.md` verdict (scope-named, not serial-numbered). *Disposition:* findings route as WIs through change-intake; the audit never edits the spine. Per-commit coverage stays the change-scoped reviewer sweep — unchanged.
 
 **Parallel test execution.** Running the suite across cores is a **`docs/stack.ini`
 concern**, not a process rule: append `-n auto` to `[product] test` and the harness,
@@ -1712,8 +1725,13 @@ done/active/queued shaded), both computed in Python. Its `--check` is the
 `trajectory-map` freshness gate at G3 — regenerate-in-memory and byte-compare,
 exactly like the code map — so the committed dashboard can never silently drift
 from the registry; the shipped pre-commit hook runs the same step at every
-commit (vacuous for a non-adopter), so a registry edit that stales the
-dashboard is caught locally, not first in CI. In `status.md`, the **Next action** then names the next
+**trunk-lane** commit (vacuous for a non-adopter), so a registry edit that
+stales the dashboard is caught locally, not first in CI. On a **claimed work
+branch** (one with a `docs/work/active/<branch>/` claim) the freshness steps
+skip instead: generated artifacts are **trunk-only** — work branches never
+commit them, the serial trunk step regenerates them after each merge, and a
+branch-local check that *reads* one reads it as-of-base
+(concurrency-restructure §5.2). In `status.md`, the **Next action** then names the next
 `WI-###`(s), and the dashboard shows where they sit in the DAG.
 
 **Knowledge tab (consumes the OKF bundle).** When a committed `docs/okf/` bundle

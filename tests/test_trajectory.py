@@ -2301,6 +2301,68 @@ def test_critique_staleness_fails_closed_under_strict(tmp_path):
     assert "ERROR - perceptual-stale SR-050" in proc.stderr
 
 
+# --- concurrency-restructure §5.4: critique selection is by TIME, not by name ---
+#
+# Flat review artifacts leave the serial `NNN-CRITIQUE.md` counter (a next-number
+# race under concurrency) for branch-scoped `WI-<n>-CRITIQUE.md`. Both generations
+# live in `docs/reviews/` and do not sort against each other, so
+# `_latest_critique_file` picks the newest by git commit time, falling back to
+# mtime off git and to the filename (greatest wins) on a tie.
+
+
+def _write_critiques(root, *named_at):
+    """Write `docs/reviews/<name>` verdict files, stamping each at a chosen mtime
+    epoch — the off-git rung of the selection ladder, made deterministic."""
+    reviews = root / "docs" / "reviews"
+    reviews.mkdir(parents=True, exist_ok=True)
+    for name, when in named_at:
+        path = reviews / name
+        path.write_text("VERDICT: APPROVE findings=0\n", encoding="utf-8")
+        os.utime(path, (when, when))
+    return reviews
+
+
+def test_latest_critique_picks_newer_wi_scoped_name_off_git(tmp_path):
+    # Mixed generations, no git: the branch-scoped file is the newer one -> wins
+    # (the legacy name sorts ABOVE it lexicographically, so name order would lose).
+    ct = load_script("check_trajectory")
+    _write_critiques(tmp_path, ("123-CRITIQUE.md", 1000), ("WI-45-CRITIQUE.md", 2000))
+    assert ct._latest_critique_file(tmp_path).name == "WI-45-CRITIQUE.md"
+
+
+def test_latest_critique_picks_legacy_name_when_it_is_the_newer_one(tmp_path):
+    # The reverse ordering: the rule is time, not name SHAPE — a legacy numbered
+    # critique still wins while it is the freshest evidence.
+    ct = load_script("check_trajectory")
+    _write_critiques(tmp_path, ("123-CRITIQUE.md", 2000), ("WI-45-CRITIQUE.md", 1000))
+    assert ct._latest_critique_file(tmp_path).name == "123-CRITIQUE.md"
+
+
+def test_latest_critique_reads_git_time_not_filename_order(tmp_path):
+    # The case the old highest-number rule got WRONG: the LOWER-named critique is
+    # committed LATER, so it is the live verdict. Both files carry the SAME mtime,
+    # so only the git rung can tell them apart (mtime would tie, and the name
+    # tie-break would then pick the stale 900-).
+    ct = load_script("check_trajectory")
+    run_git = _staleness_git(tmp_path)
+    _write_critiques(tmp_path, ("900-CRITIQUE.md", 1000))
+    run_git("add", "-A")
+    run_git("commit", "-m", "the old high-numbered critique", at=1000)
+    _write_critiques(tmp_path, ("100-CRITIQUE.md", 1000))
+    run_git("add", "-A")
+    run_git("commit", "-m", "a fresh low-numbered critique", at=2000)
+    assert ct._latest_critique_file(tmp_path).name == "100-CRITIQUE.md"
+
+
+def test_latest_critique_tie_breaks_deterministically_on_name(tmp_path):
+    # Equal times (the ordinary batch: two critiques in one commit) still select
+    # ONE file — the greatest filename — and the same one on every call.
+    ct = load_script("check_trajectory")
+    _write_critiques(tmp_path, ("WI-45-CRITIQUE.md", 1500), ("WI-46-CRITIQUE.md", 1500))
+    picked = {ct._latest_critique_file(tmp_path).name for _ in range(3)}
+    assert picked == {"WI-46-CRITIQUE.md"}
+
+
 # --- WI-349: the one-physical-line rule the staged-close scan depends on --------
 #
 # `staged_findings` compares `git show HEAD:<work-items.csv>` against the working

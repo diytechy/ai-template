@@ -159,8 +159,10 @@ truth; every other view is *generated* from them. Generated output splits by siz
 
 - **Small, diff-meaningful blocks** live in tracked files behind `GENERATED`
   markers, kept honest by a freshness gate — the code map, dependency diagram,
-  and program flow (`gen_arch_map.py --check` fails a commit that left them
-  stale). These you *do* read in diffs.
+  and program flow (`gen_arch_map.py --check` fails a trunk-lane commit that
+  left them stale; on a claimed work branch freshness skips — generated
+  artifacts are trunk-only, regenerated after each merge). These you *do* read
+  in diffs.
 - **Large composite artifacts** — the full trace report (`test/report.md`: counts,
   matrix, the `SN→SR→LLR→TC` text outline, and the Mermaid graph), the HTML map
   (`trace.py --html`), and the perf report (`test/perf-report.md`, §9) — are
@@ -540,9 +542,14 @@ Two files split *now* from *history*: `status.md` is the **working surface** —
 the whole file holds only what must be performed next (open items, pending
 decisions, the next action) — and `log.md` is the **append-only history** it
 points at (sign-offs, verdicts, ratified decisions, session notes; evidence,
-never normative). Act from status.md; append evidence to log.md.
+never normative). Act from status.md; append evidence to log.md — directly on
+the serial trunk lane, or as a `docs/log.d/<WI-id>-<slug>.md` fragment on a
+work branch, compiled into `log.md` in merge order by `trunk_step.py` (the
+sign-off table and Decisions log are trunk-serial edits, never fragments).
 
-Reviews append to `log.md`:
+Reviews use this block — in `log.md`, or as a `docs/reviews/WI-<n>-<PHASE>.md`
+verdict file under the review layer (work-item-scoped names; serial counters
+race under concurrency):
 
 ```
 ### <HAT or REVIEWER> — <Gate> — Round <r> — <YYYY-MM-DD>
@@ -682,7 +689,8 @@ the first non-comment line of `docs/gate` — now **generated** by
 bar the project is actually at** — a fresh G1 scaffold is green, and the bar rises
 when a batch of artifacts is **ratified in a reviewed commit** and `docs/gate` is
 regenerated. The `derived-gate` step (`derive_gate.py --check`) guards the cache
-against rot on every commit and gate; a release tag runs the full bar regardless.
+against rot on every trunk-lane commit and gate (a claimed work branch reads the
+cache as-of-base); a release tag runs the full bar regardless.
 Without a project-active gate, CI would apply the end-state G3 bar from day one and
 stay red for months — training everyone to ignore it.
 

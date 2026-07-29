@@ -1,0 +1,5 @@
+# Tracked pause (concurrency-restructure §5.6): presence = stop claiming;
+# everything in flight finishes, integrates, and archives. Unpause is a
+# reviewed deletion commit.
+reason = "Legacy dispatcher retired-in-place; do not launch agent-resume against the train machinery - the restructure's Phase 4 integrator replaces it (docs/concurrency-restructure.md §7)."
+since = "2026-07-29"

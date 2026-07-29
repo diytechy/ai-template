@@ -209,7 +209,12 @@ BASELINE = {
     # hardcoding the CSV path, plus the comments saying why. The smallest
     # possible edit for a migration this size, which is the point of reading
     # through the sibling rather than parsing here. Re-stamp down with WI-280.
-    "gen_trajectory.py": 5203,
+    # +53 (5203 -> 5256), Phase 3 (§5.6): `_pause_pending` surfaces a tracked
+    # docs/work/pause in the pending block — declared `since` verbatim, no
+    # clock, fail-closed rendering on a malformed file — plus the module
+    # docstring's (f) purity-lettering entry for it. Reviewed bump,
+    # log 2026-07-29. Re-stamp down with WI-280.
+    "gen_trajectory.py": 5256,
     # +11 (3452 -> 3463), WI-284: _regenerate_disposition_artifacts also runs
     # `gen_trajectory.py --status` at integrate/blocked-disposition so a closed
     # id drops from the generated frontier automatically (and the disposition
@@ -306,7 +311,11 @@ BASELINE = {
     # folder-registry tree, which would silently disarm the re-check rather
     # than fail it. The code delta is one identifier. Reviewed bump; the whole
     # entry re-stamps with WI-280.
-    "agent_loop.py": 3076,
+    # +1 (3076 -> 3077), Phase 3 (§5.1): the worker-prompt rule redirects a
+    # branch's session record to a docs/log.d/ fragment and drops the stale
+    # work-items.csv mention carried since Phase 2c. Reviewed bump,
+    # log 2026-07-29. Re-stamp down with WI-280.
+    "agent_loop.py": 3077,
     # +30 (2206 -> 2236), WI-065: `tc_citation_findings` — the TC-`Verifies`
     # rules lifted out of `analyze` so the cell could accept `IF-###` seam ids.
     # Most of the bump is that helper's docstring, which is where the RULING now
@@ -484,7 +493,13 @@ BASELINE = {
     # two-registries-present error on its first check. Twelve of the fifteen
     # lines are the docstring recording that, and the whole verbatim block
     # re-stamps DOWN at Phase 5 with the CSV home. Reviewed bump.
-    "check_trajectory.py": 3063,
+    # +59 (3063 -> 3122), Phase 3 (§5.4): critique selection stops trusting the
+    # serial-number filename convention (a next-number race under concurrency)
+    # — `_critique_git_times` (one batched git log, measured 0.09 s vs 1.35 s
+    # per-path on this repo) plus the git-time -> mtime -> name ladder and the
+    # docstring stating both naming generations. Reviewed bump, log 2026-07-29.
+    # Re-stamp down with WI-280.
+    "check_trajectory.py": 3122,
     # +1 (1916 -> 1917), WI-279: one MAPPING row registering the new
     # scripts/check_coverage.py kit gate so it ships downstream — a required
     # one-line registration, not monolith growth (the reviewed-bump escape the
@@ -526,7 +541,11 @@ BASELINE = {
     # could not see. Required registration plus its reasons, not monolith growth
     # — the same shape as the WI-279 and WI-329 rows above. Reviewed bump;
     # re-stamp downward with WI-280.
-    "bootstrap.py": 2052,  # 2c flip: the work-items MAPPING row left (net -1)
+    # +19 (2052 -> 2071), Phase 3 (§5.1): the trunk_step.py MAPPING row, the
+    # docs/log.d/ GITKEEP_DIRS entry, and the docstring inventory lines — the
+    # same required-registration shape as the WI-279/WI-329/2c-i rows above.
+    # Reviewed bump, log 2026-07-29. Re-stamp down with WI-280.
+    "bootstrap.py": 2071,
     # NEW ENTRY, +228 (1423 -> 1651), Phase 2b of the concurrency restructure
     # (docs/concurrency-restructure.md §7): the spec-folder work-item reader,
     # which crosses this module over THRESHOLD for the first time. It is one
@@ -545,7 +564,12 @@ BASELINE = {
     # number is identical by construction and a divergence here would itself be
     # the drift `tests/test_wi_loader_sync.py` exists to catch. Retires with
     # this whole entry at Phase 5. Reviewed bump.
-    "agent_common.py": 1666,
+    # +54 (1666 -> 1720), Phase 3 (§5.6): `tracked_pause` — the TOML reader for
+    # the tracked docs/work/pause (fail-closed on malformation) — and
+    # `pause_reason` learning the second home so the retired-in-place
+    # dispatcher can never resume on a home swap. The legacy-home half retires
+    # with the dispatcher at Phase 5. Reviewed bump, log 2026-07-29.
+    "agent_common.py": 1720,
 }
 
 

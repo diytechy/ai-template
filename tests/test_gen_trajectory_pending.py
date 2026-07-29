@@ -441,3 +441,67 @@ def test_unreadable_reservation_metadata_projects_quarantine(tmp_path):
     body = _block(tmp_path)
     assert "Quarantined reservation" in body
     assert "WI-095" in body
+
+
+# --- (f) the tracked pause declaration, docs/work/pause -----------------------
+# `docs/concurrency-restructure.md` §5.6: status generation surfaces the open
+# pause so it is a visible accruing cost, never a forgotten one. Committed-tree
+# pure — the declared `since` renders verbatim, never an age from a clock.
+
+
+def _pause(repo, body):
+    (repo / "docs" / "work").mkdir(parents=True, exist_ok=True)
+    (repo / "docs" / "work" / "pause").write_text(body, encoding="utf-8")
+
+
+def test_no_pause_file_projects_no_bullet(tmp_path):
+    _init(tmp_path)
+    body = _block(tmp_path)
+    assert "Paused" not in body
+    assert "None — no durable owner action is pending" in body
+
+
+def test_tracked_pause_projects_reason_and_declared_since(tmp_path):
+    _init(tmp_path)
+    _pause(tmp_path, 'reason = "draining for the audit"\nsince = "2026-07-29"\n')
+    body = _block(tmp_path)
+    assert "- **Paused since 2026-07-29** — draining for the audit." in body
+    # The bullet sits in the PURE region, above the machine-local label, so the
+    # freshness compare bites the moment the pause is committed.
+    assert body.index("Paused since") < body.index("Machine-local advisory")
+    # Unpausing is a deletion; the projection is stateless, so the line clears.
+    (tmp_path / "docs" / "work" / "pause").unlink()
+    assert "Paused" not in _block(tmp_path)
+
+
+def test_tracked_pause_without_since_omits_the_stamp(tmp_path):
+    _init(tmp_path)
+    _pause(tmp_path, 'reason = "draining for the audit"\n')
+    assert "- **Paused** — draining for the audit." in _block(tmp_path)
+
+
+def test_malformed_pause_still_projects_fail_closed(tmp_path):
+    # A pause file we cannot read is still a pause: it projects the same loud
+    # message the coordinator's reader returns, routing the owner to the fix.
+    gt = load_script("gen_trajectory")
+    _init(tmp_path)
+    for bad in ("not toml at all\n", 'since = "2026-07-29"\n', "reason = 7\n"):
+        _pause(tmp_path, bad)
+        assert "- **Paused** — {}.".format(gt.PAUSE_MALFORMED) in _block(tmp_path)
+
+
+def test_pause_malformed_text_matches_the_coordinator_reader():
+    # One message, two readers: gen_trajectory copies the constant rather than
+    # importing the coordinator layer, so pin the copies equal.
+    assert (
+        load_script("gen_trajectory").PAUSE_MALFORMED
+        == load_script("agent_common").PAUSE_MALFORMED
+    )
+
+
+def test_pause_projection_is_deterministic(tmp_path):
+    # No clock anywhere in the derivation: two reads of the same tree are
+    # byte-identical, which is what the freshness gate depends on.
+    _init(tmp_path)
+    _pause(tmp_path, 'reason = "draining"\nsince = "2026-07-29"\n')
+    assert _block(tmp_path) == _block(tmp_path)

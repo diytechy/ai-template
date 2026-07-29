@@ -42,6 +42,9 @@ What it creates in the destination:
     docs/orphans-allow                         <- orphans-allow.template  (declares
                                                 docs/work/* an expected-live-orphan
                                                 class: registry entries, not pages)
+    docs/log.d/.gitkeep                        (the log's fragment drop-box: a work
+                                                branch writes docs/log.d/<WI-id>-<slug>.md,
+                                                the serial trunk step compiles them)
     docs/specs/README.md, docs/specs/WI-000.md <- specs/*.template.md  (spec-of-record dir)
     docs/knowledge/README.md                  <- knowledge/README.template.md
     docs/rubrics/README.md, docs/rubrics/rubric-000.md <- rubrics/*.template.md  (critique rubrics)
@@ -52,6 +55,8 @@ What it creates in the destination:
     scripts/plan_coverage.py, plan_round.py, plan_briefs.py, plan_coverage_step.py, plan_artifacts.py
                                                (the dual-plan round set, process-options.md "Dual-plan decomposition")
     scripts/wi_convert.py                      (work-item registry CSV <-> spec-folder converter)
+    scripts/trunk_step.py                      (the serial trunk step: compile log
+                                                fragments + regenerate the trunk artifacts)
     scripts/agent_route.py, scripts/score_reviews.py   (S8 coordinator routing + review scorer)
     docs/agents.csv                            <- agents.template.csv (model registry; inert until docs/agents-enabled)
     scripts/setup.{sh,ps1}, scripts/check.{sh,ps1}   (cross-platform launchers)
@@ -1269,6 +1274,12 @@ MAPPING = [
     # when the folder home is authoritative, so the two copy together — a
     # scaffold with the filer and not the converter files nothing.
     ("scripts/wi_convert.py", "scripts/wi_convert.py"),
+    # The serial trunk step (docs/concurrency-restructure.md §5.1/§5.5): compiles
+    # the log fragments in git-derived merge order and re-derives the generated
+    # artifacts. Ships with the kit because the rule it enforces — no work branch
+    # writes docs/log.md or commits a generated artifact — is the process, not
+    # this repo's local habit; its drop-box scaffolds as docs/log.d/ below.
+    ("scripts/trunk_step.py", "scripts/trunk_step.py"),
     # The S8 routing/scoring half of the unattended coordinator (WI-059): the
     # model-registry router + fixed escalation policy, and the substance scorer.
     # agent_loop imports them as siblings when the docs/agents-enabled enable-list
@@ -1367,6 +1378,14 @@ GITKEEP_DIRS = [
     "docs/work/active",
     "docs/work/deferred",
     "docs/work/archive",
+    # The log's fragment drop-box (docs/concurrency-restructure.md §5.1): a work
+    # branch writes `docs/log.d/<WI-id>-<slug>.md` — a unique name, so the log
+    # stops being a merge-conflict surface — and `scripts/trunk_step.py` compiles
+    # the fragments into `docs/log.md` serially, on the trunk. Scaffolded EMPTY,
+    # by the same .gitkeep convention as the status directories above: it holds no
+    # exemplar because a fragment's whole life is measured in one merge, and a
+    # committed example would be compiled into the log by the first trunk step.
+    "docs/log.d",
 ]
 
 # Per-destination text fixups applied right after a template is generated: the

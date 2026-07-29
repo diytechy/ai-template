@@ -24,3 +24,9 @@
 # Linking hundreds of them into the doc graph would bury the navigation the
 # graph exists to check. Their links are still validated like any other doc.
 docs/work/*
+
+# The log's fragment drop-box: a work branch's `docs/log.md` entry, parked under
+# its own unique name until `scripts/trunk_step.py` compiles it into the log on
+# the trunk. Transient by construction and never a navigation node — the entry
+# becomes reachable the moment it lands in `log.md`, and the fragment is deleted.
+docs/log.d/*

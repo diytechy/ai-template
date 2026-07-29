@@ -145,3 +145,6 @@ resource: "generated"
 | [LLR-134](LLR-134.md) | Requirement form rules |
 | [LLR-135](LLR-135.md) | Paraphrase advisory |
 | [LLR-136](LLR-136.md) | Registry converter (CSV <-> spec folder) |
+| [LLR-137](LLR-137.md) | Serial trunk step (log compile + regen) |
+| [LLR-138](LLR-138.md) | Tracked pause reader (dual-home) |
+| [LLR-139](LLR-139.md) | Pause surfaced in the pending block |

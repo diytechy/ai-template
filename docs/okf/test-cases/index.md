@@ -136,3 +136,5 @@ resource: "generated"
 | [TC-127](TC-127.md) | Run the requirement-form suite; each of the six rules fires on its own defect shape, and … |
 | [TC-128](TC-128.md) | Run the paraphrase-advisory suite; an echoing child warns while a real decomposition nami… |
 | [TC-129](TC-129.md) | Run the converter suite: the live registry round-trips in whichever home is authoritative… |
+| [TC-130](TC-130.md) | Run the trunk-step suite: committed fragments compile in git order with links rebased and… |
+| [TC-131](TC-131.md) | Run the pause suites: the tracked home pauses via pause_reason with legacy-first preceden… |

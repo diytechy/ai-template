@@ -80,9 +80,15 @@ cadence"). New behavior needs new tests
 ## 4. Record the work
 
 - Close the WI by MOVING its spec file to `docs/work/archive/` and filling
-  its `## Deliverable` body (status is the directory, never a field), and add a session entry to `docs/log.md`: one-line summary,
-  deliverables, **deviations from spec**, **byte deltas on budgeted files**, and
-  the `pytest -q` totals (match the style already there).
+  its `## Deliverable` body (status is the directory, never a field), and
+  record a session entry for `docs/log.md`: one-line summary, deliverables,
+  **deviations from spec**, **byte deltas on budgeted files**, and the
+  `pytest -q` totals (match the style already there). **Where it goes:** on
+  the serial trunk lane, append to `docs/log.md` directly; on a work branch,
+  write it as a fragment `docs/log.d/<WI-id>-<slug>.md` (starting with its
+  `## <YYYY-MM-DD> — <title>` heading; links authored relative to
+  `docs/log.d/`) — `trunk_step.py` compiles fragments into the log in merge
+  order and deletes them. Never hand-edit `docs/log.md` on a work branch.
 - Update `docs/status.md` to point at what's next; don't leave a stale "next".
 - With the parallel-dispatch scheduler, WI ordering is derived from the registry
   (the DAG + `Priority` + gate class), not a hand-curated `docs/next-wi` — that
