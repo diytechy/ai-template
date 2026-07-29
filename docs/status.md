@@ -28,32 +28,20 @@ home elsewhere — don't restate it here:
   re-derived G3 all phases; SR-054 is `Verification=Test` — the perceptual
   gate is retired, its residue a periodic advisory critique). Next: Phase 3
   (log fragments + trunk-only generated artifacts).
-- **Resuming in a new session:** read
-  [handoff-2026-07-28c.md](handoff-2026-07-28c.md) **first** — the 2026-07-28
-  complexity-audit decision brief. It proposes retiring most of the open
-  backlog and several enforcement layers, and its §7 checklist awaits owner
-  rulings; until those are ruled, do not grind the queue it questions. Then
-  [handoff-2026-07-28b.md](handoff-2026-07-28b.md)
-  — **boot from this one for mechanics.** It sequences the remaining non-deferred work (the two
-  P0 census extractions still open, the two hard rows, and the harness rows this
-  session filed), and it opens with the correction that matters most: **the
-  18-step `--run-steps` block is NOT the G3 bar** — `--gate` is ignored there, so
-  the `trajectory` step runs without `--strict`. Run
-  `check_trajectory.py --strict` directly (~3 s) before claiming anything done.
-  Its predecessor [handoff-2026-07-28.md](handoff-2026-07-28.md) sequenced the
-  earlier batch; its Tier B row is **closed** and its §1 claim about the bar is
-  corrected in place — read it for the account, not as an open task.
-  Its predecessor [handoff-2026-07-27b.md](handoff-2026-07-27b.md) opened with a
-  single red — the CI-breaking duplicate census — which is now **cleared**; read
-  it for that account, not as an open task.
-  Its predecessor [handoff-2026-07-27.md](handoff-2026-07-27.md) was written for
-  the re-attestation sitting, which **ran**; read it for what the batch
-  contained, not as an open task. Before that,
-  [handoff-2026-07-26.md](handoff-2026-07-26.md) is the prior session's: the 60-second start, what is owed and by whom,
-  the standing constraints, and the traps that session paid for. Then
-  [wrap-up-plan.md](wrap-up-plan.md) for the longer sequencing and the
-  deferred-backlog review. Both are pointer docs: this file and the registries
-  stay authoritative.
+- **Resuming in a new session — boot HERE, then the spec.** The working
+  program is [concurrency-restructure.md](concurrency-restructure.md): §7
+  holds the per-phase records (Phases 0–2 done and attested 2026-07-29) and
+  **Phase 3 is next** — `docs/log.d/` fragments + trunk compile, trunk-only
+  generated artifacts, branch-scoped review names. Standing trap that
+  survives the restructure: the `--run-steps` block is NOT the strict bar
+  (`--gate` is ignored there, WI-355) — run `check_trajectory.py --strict`
+  directly, unfiltered, before claiming anything done. The old WI queue
+  (frontier above) is largely awaiting the
+  [handoff-2026-07-28c.md](handoff-2026-07-28c.md) §3 retirement rulings and
+  the Phase 5 deletions — do not grind it ahead of those. The pre-restructure
+  handoffs ([2026-07-28b](handoff-2026-07-28b.md) and earlier, plus
+  [wrap-up-plan.md](wrap-up-plan.md)) are history: read them for the account,
+  never as open tasks; their sequencing is superseded by the spec.
 - **Design history:** [archive/](archive/README.md).
 - **Process (kit source):** [PROCESS.md](../project-trajectory/PROCESS.md) ·
   [PROCESS_OPTIONS.md](../project-trajectory/PROCESS_OPTIONS.md) (this repo has
