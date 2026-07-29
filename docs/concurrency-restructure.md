@@ -567,6 +567,78 @@ never a forgotten one (the stale-reason lesson).
   `--strict` clean, a §7 record here, and the spine amendment for whatever
   rows the deletions amend (SR-116/117/125 and friends go `retired`-shaped
   or `Modified`) — a window and a sitting, same as every phase.
+  **Phase 5 is DONE (2026-07-29, solo and attended; window OPEN for the
+  sitting).** All eight compiled points executed, nine commits on the trunk
+  lane; the mechanical test-fixture conversions ran as three parallel
+  read-limited subagents on disjoint files while the production edits stayed
+  serial in the one session. The record, point by point:
+  1. `agent_dispatch.py` (4,042 lines) deleted whole with seven test
+     modules (the six named + `test_agent_loop_migration.py`, audited
+     dispatcher-only — a deviation-with-reason). Surviving coverage
+     relocated first (`test_agent_common_harness.py`,
+     `test_dual_plan_round.py`); `docs/run-state` + every reader, the
+     `refs/llm` advisory machinery in gen_trajectory/gen_open_items, the
+     commit-msg train floor (WI-282), and `agent_route`'s dead `run_state`
+     keys left with it. **`docs/blackout` SURVIVES** — measured, not
+     assumed: agent_loop's own session-boundary check consumes it
+     independently, answering this entry's "if nothing else holds it" open
+     question. The WI-286 venv-floor preflight died with its only caller —
+     nothing surviving had the guarantee, so re-homing it is **WI-361**,
+     not a silent port.
+  2. `agent_loop.py` **shrunk in place** (the audit showed its train half
+     was thin — a re-export shell): docstring + WORKER_PROMPT re-grounded
+     on §2.3 (`WI:` trailer alone; `Train:`/`Base:` keyed dead machinery),
+     `--train` demoted to the optional session tag defaulting to the branch
+     name, the llm/train branch-equality preflight reduced to its
+     fail-closed core (a worker runs on a branch), the legacy untracked
+     pause half deleted (tracked `docs/work/pause` is the one home, a stray
+     local file now inert by test), launchers/templates de-dispatchered
+     (AGENT_JOBS gone).
+  3. The CSV home died: all three F5 reader copies folder-only
+     (`spec_registry_dir` deleted; a stray `work-items.csv` is the
+     validator's named integrity ERROR), `blocked` derived (queued +
+     blockref) in `schedule._disposition` AND — found by the fixture
+     conversion, fixed rather than accepted — in `gen_trajectory._wi_status`,
+     which would otherwise have silently erased the WI-272/M-2
+     parked-vs-queued distinction. `plan_artifacts` files specs only;
+     `build_scope_srs`/`critique_control` re-pointed off their direct CSV
+     reads (silently EMPTY since the 2c flip — the census classification at
+     item 4 exposed it). Ratchets re-stamped DOWN per their own scheduled
+     comments (agent_common 1720→1642, check_trajectory 3122→3039).
+  4. Census re-derived twice (208→181 at the deletion, reconciled again on
+     the final tree): six all-dispatcher classes dissolved, one pair
+     re-paired then DISSOLVED with the defect it shadowed; the unchecked
+     header aggregates deleted per the WI-356 ruling; the WI-350 same-file
+     majority rule retired to a Reviewer-tier enforcement-audit row after
+     false-positiving on the honest shrink.
+  5. `[generated]` is single-duty (§5.2 trunk-ownership declaration; the
+     auto-resolve half died with its reader) in both stack.ini copies + the
+     template; the REGEN_STEPS asymmetry is documented as
+     ownership-vs-regenerator, deliberately not derived.
+  6. PROCESS_OPTIONS' parallel-dispatch section rewrote onto the
+     §1.2/§2.3 seam (166,953→161,117 bytes, −5,836 — the deletion
+     dividend; baselines re-stamped ×3).
+  7. WI-343 retired (moot, as §6 predicted), WI-350/351/356 retired per the
+     audit rulings — each with its full record in `docs/work/archive/`.
+  8. WI-357..360 remain queued (buildable, per the plan); the phase FILED
+     three more: **WI-361** (venv-floor re-home), **WI-362** (the staleness
+     clock is blind to a Title rename — measured at conversion), **WI-363**
+     (gen_arch_map scans empty under any dot-prefixed absolute path —
+     pre-existing, isolated at conversion).
+  **Spine amendment (window open):** 15 dispatcher SRs superseded →
+  SR-132 (the TC-099 pattern: `Superseded:` titles, Inspection, no LLRs,
+  the new TC-133 + `test_phase5_supersession_rows_...` pin the map); 11
+  SRs re-grounded (SR-026/057/059/060/107/108/115/116/124/125/131); 15
+  LLRs + 10 TCs deleted with their machinery; IF-067 deleted, six IFs
+  re-versioned, **IF-080/IF-081 declared** (integrate.py + trunk_step.py —
+  clearing the two standing connectivity warns). Brief:
+  `docs/ratify/2026-07-29d-phase5.md`. Residue stated honestly: the §6
+  fate line "check_trajectory minus the never-fired rules" was NOT in the
+  compiled scope and was not done (the audit's §4-line-6 ruling remains
+  the owner's); the loop's managed review verdicts still write tag-scoped
+  `NNN-` names (both naming generations accepted since §5.4); and
+  `schedule.load_rows`/`cell_integrity_errors` survive with test-and-spine
+  consumers only.
 
 Phases 1–3 are valuable even if Phase 4 stalls — they de-contend the repo for
 attended work as well.

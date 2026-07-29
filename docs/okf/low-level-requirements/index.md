@@ -70,11 +70,6 @@ resource: "generated"
 | [LLR-059](LLR-059.md) | Pure safety classifier |
 | [LLR-060](LLR-060.md) | next-wi/run-phase retirement + generated status/run-state |
 | [LLR-061](LLR-061.md) | Explicit WI/train/worktree worker assignment |
-| [LLR-062](LLR-062.md) | Dispatcher + worktree pool + atomic reservations |
-| [LLR-063](LLR-063.md) | Traincar continuation + fork/join + release-on-end |
-| [LLR-064](LLR-064.md) | Serialized train composition |
-| [LLR-065](LLR-065.md) | Git evidence enumeration |
-| [LLR-066](LLR-066.md) | Parallel telemetry + downstream migration/audits |
 | [LLR-067](LLR-067.md) | Cross-component import coverage |
 | [LLR-068](LLR-068.md) | Spec interface-section validation |
 | [LLR-069](LLR-069.md) | Rival-plan coverage comparison |
@@ -98,11 +93,6 @@ resource: "generated"
 | [LLR-087](LLR-087.md) | Hierarchy seam ports |
 | [LLR-088](LLR-088.md) | One-layer hierarchy navigation |
 | [LLR-089](LLR-089.md) | Structural safety cross-check |
-| [LLR-090](LLR-090.md) | Safety-aware traincar packing |
-| [LLR-091](LLR-091.md) | Serialized blocked disposition |
-| [LLR-092](LLR-092.md) | Durable publication intent |
-| [LLR-093](LLR-093.md) | Ownership-state reconstruction |
-| [LLR-094](LLR-094.md) | Lifecycle-boundary recovery |
 | [LLR-095](LLR-095.md) | Dual-plan path isolation |
 | [LLR-096](LLR-096.md) | Serialized dual-plan disposition |
 | [LLR-097](LLR-097.md) | Spec-lifecycle close-side findings |
@@ -133,11 +123,6 @@ resource: "generated"
 | [LLR-122](LLR-122.md) | dev-setup wires core.hooksPath |
 | [LLR-123](LLR-123.md) | Deterministic traincar ordering |
 | [LLR-124](LLR-124.md) | Generated status + run-state |
-| [LLR-125](LLR-125.md) | Atomic reservations + worktree leasing |
-| [LLR-126](LLR-126.md) | Train build + review shape |
-| [LLR-127](LLR-127.md) | Release unstarted reservations on early end |
-| [LLR-128](LLR-128.md) | Blocked-constituent disposition |
-| [LLR-129](LLR-129.md) | Gated downstream migration |
 | [LLR-130](LLR-130.md) | Dashboard staleness check |
 | [LLR-131](LLR-131.md) | Contradiction-safe dual-plan class |
 | [LLR-132](LLR-132.md) | PAGE gate-policy mapping |

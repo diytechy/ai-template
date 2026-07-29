@@ -124,6 +124,7 @@ graph LR
     m_scripts_plan_runner -. IF-066 .-> m_scripts_agent_loop
     m_scripts_schedule -. IF-053 .-> m_scripts_check_trajectory
     m_scripts_schedule -. IF-071 .-> m_scripts_gen_trajectory
+    m_scripts_schedule -. IF-055 .-> m_scripts_integrate
     m_scripts_score_reviews -. IF-046 .-> m_scripts_agent_loop
     m_scripts_trace -. IF-001 .-> m_scripts_check
     m_scripts_trace -. IF-075 .-> m_scripts_gen_open_items
@@ -166,14 +167,13 @@ Contracts (interfaces): IF-037, IF-065
 | `parse_wi_list(spec)` | The ordered assigned-WI list from a `;`/`,`/whitespace-joined --wi value. |  |
 | `spec_work_dir(csv_path)` | The `docs/work` folder that replaces the registry CSV at `csv_path` — its |  |
 | `spec_files(work_dir)` | Every `<status>/WI-*.md` spec under `work_dir`, sorted by path; `[]` when |  |
-| `spec_registry_dir(csv_path)` | The spec folder that is AUTHORITATIVE for `csv_path`, or None when the CSV |  |
 | `parse_spec_frontmatter(text, relpath)` | `(data, body)` for one spec file: the TOML frontmatter between the `+++` |  |
 | `parse_spec_status(relpath, data)` | The Status a spec's LOCATION encodes, checked against its `disposition`. |  |
 | `parse_spec_id(relpath, data)` | The work-item id, which must be a non-empty string AND must be the one |  |
 | `parse_spec_deliverable(relpath, body)` | The Deliverable cell a spec body carries, verbatim ("" when absent). |  |
 | `parse_spec_row(text, relpath)` | `(row, order)` for one spec file — a 17-key row shaped exactly like the |  |
 | `read_spec_rows(work_dir, on_error)` | The spec folder's rows in REGISTRY order — by the explicit `order` key, |  |
-| `load_registry_rows(root)` | The work-item rows of `root`'s tracked registry, from whichever home is |  |
+| `load_registry_rows(root)` | The work-item rows from the one registry home, `docs/work/` (the spec |  |
 | `load_wi_registry(root)` | {WI-ID: raw row dict} from the worktree's tracked WI registry — the |  |
 | `latest_trailer_evidence(log_out)` | Fold a newest-first trailer log (TRAILER_EVIDENCE_FMT) into |  |
 | `train_evidence(root, base)` | (built, blocked) read from the train branch's committed trailers in |  |
@@ -494,16 +494,14 @@ Contracts (interfaces): IF-009, IF-023, IF-077
 | `read_rows(path)` | The CSV rows of `path` as dicts, or [] when the file is absent. Read |  |
 | `spec_work_dir(csv_path)` | The `docs/work` folder that replaces the registry CSV at `csv_path` — its |  |
 | `spec_files(work_dir)` | Every `<status>/WI-*.md` spec under `work_dir`, sorted by path; `[]` when |  |
-| `spec_registry_dir(csv_path)` | The spec folder that is AUTHORITATIVE for `csv_path`, or None when the CSV |  |
 | `parse_spec_frontmatter(text, relpath)` | `(data, body)` for one spec file: the TOML frontmatter between the `+++` |  |
 | `parse_spec_status(relpath, data)` | The Status a spec's LOCATION encodes, checked against its `disposition`. |  |
 | `parse_spec_id(relpath, data)` | The work-item id, which must be a non-empty string AND must be the one |  |
 | `parse_spec_deliverable(relpath, body)` | The Deliverable cell a spec body carries, verbatim ("" when absent). |  |
 | `parse_spec_row(text, relpath)` | `(row, order)` for one spec file — a 17-key row shaped exactly like the |  |
 | `read_spec_rows(work_dir, on_error)` | The spec folder's rows in REGISTRY order — by the explicit `order` key, |  |
-| `read_registry_rows(path, errors)` | The work-item rows from whichever home is authoritative — the spec folder |  |
-| `registry_home(root)` | The repo-relative path of the registry home this run actually read — the |  |
-| `registry_cell_errors(root, rows)` | `cell_integrity_errors` for the CSV home only. |  |
+| `read_registry_rows(path, errors)` | The work-item rows from the one registry home — the spec folder beside |  |
+| `registry_home(root)` | The repo-relative path of the registry home — `docs/work/`, the one |  |
 | `load_wis(rows)` | Parse work-item rows into `(wis, integrity_errors)`. |  |
 | `cell_integrity_errors(rows)` | Hard-error strings for any registry cell that is not one line of plain text. |  |
 | `validate(wis, known_srs)` | Return the hard-error strings for the work-item graph ([] = clean). |  |
@@ -813,14 +811,13 @@ Contracts (interfaces): IF-053, IF-054
 | `load_rows(path)` |  |  |
 | `spec_work_dir(csv_path)` | The `docs/work` folder that replaces the registry CSV at `csv_path` — its |  |
 | `spec_files(work_dir)` | Every `<status>/WI-*.md` spec under `work_dir`, sorted by path; `[]` when |  |
-| `spec_registry_dir(csv_path)` | The spec folder that is AUTHORITATIVE for `csv_path`, or None when the CSV |  |
 | `parse_spec_frontmatter(text, relpath)` | `(data, body)` for one spec file: the TOML frontmatter between the `+++` |  |
 | `parse_spec_status(relpath, data)` | The Status a spec's LOCATION encodes, checked against its `disposition`. |  |
 | `parse_spec_id(relpath, data)` | The work-item id, which must be a non-empty string AND must be the one |  |
 | `parse_spec_deliverable(relpath, body)` | The Deliverable cell a spec body carries, verbatim ("" when absent). |  |
 | `parse_spec_row(text, relpath)` | `(row, order)` for one spec file — a 17-key row shaped exactly like the |  |
 | `read_spec_rows(work_dir, on_error)` | The spec folder's rows in REGISTRY order — by the explicit `order` key, |  |
-| `load_registry_rows(path)` | The work-item rows from whichever home is authoritative — the spec folder |  |
+| `load_registry_rows(path)` | The work-item rows from the one registry home — the spec folder beside |  |
 | `load_wis(rows)` | Parse work-item rows into a list of scheduler WI dicts (skips the inert |  |
 | `classify(wi, *, structural)` | `(scheduling_class, [reason_codes])` for one WI — a pure function. | SR-093, SR-094, SR-107 |
 | `is_schedulable_class(sched_class)` | Only a positively-classified WI is eligible; unclassified fails closed. |  |

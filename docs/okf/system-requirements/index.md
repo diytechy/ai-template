@@ -69,13 +69,13 @@ resource: "generated"
 | [SR-056](SR-056.md) | Decomposition render polish |
 | [SR-057](SR-057.md) | WI-DAG frontier scheduling |
 | [SR-058](SR-058.md) | Superseded: Deterministic safety classification |
-| [SR-059](SR-059.md) | Retire next-wi; generated status and run-state |
+| [SR-059](SR-059.md) | Retire next-wi; generated status surface |
 | [SR-060](SR-060.md) | Explicit worker assignment mode |
-| [SR-061](SR-061.md) | Parallel-by-default dispatcher |
-| [SR-062](SR-062.md) | Change-train continuation |
+| [SR-061](SR-061.md) | Superseded: Parallel-by-default dispatcher |
+| [SR-062](SR-062.md) | Superseded: Change-train continuation |
 | [SR-063](SR-063.md) | Superseded: Atomic serialized integration |
 | [SR-064](SR-064.md) | Superseded: Crash safety and git-as-authority recovery |
-| [SR-065](SR-065.md) | Parallel-execution telemetry and downstream migration |
+| [SR-065](SR-065.md) | Superseded: Parallel-execution telemetry and downstream migration |
 | [SR-066](SR-066.md) | Superseded: Dual-plan decomposition round |
 | [SR-067](SR-067.md) | Work-item dependency validation |
 | [SR-068](SR-068.md) | Work-item row coherence |
@@ -105,33 +105,33 @@ resource: "generated"
 | [SR-092](SR-092.md) | One-layer hierarchy navigation |
 | [SR-093](SR-093.md) | Pure safety classification |
 | [SR-094](SR-094.md) | Structural safety cross-check |
-| [SR-095](SR-095.md) | Safety-aware traincar packing |
-| [SR-096](SR-096.md) | Serialized train composition |
-| [SR-097](SR-097.md) | Serialized blocked disposition |
-| [SR-098](SR-098.md) | Durable publication intent |
-| [SR-099](SR-099.md) | Git evidence enumeration |
-| [SR-100](SR-100.md) | Ownership-state reconstruction |
-| [SR-101](SR-101.md) | Lifecycle-boundary recovery |
+| [SR-095](SR-095.md) | Superseded: Safety-aware traincar packing |
+| [SR-096](SR-096.md) | Superseded: Atomic CAS integration |
+| [SR-097](SR-097.md) | Superseded: Serialized blocked disposition |
+| [SR-098](SR-098.md) | Superseded: Durable publication intent |
+| [SR-099](SR-099.md) | Superseded: Git evidence enumeration |
+| [SR-100](SR-100.md) | Superseded: Ownership-state reconstruction |
+| [SR-101](SR-101.md) | Superseded: Lifecycle-boundary recovery |
 | [SR-102](SR-102.md) | Typed dual-plan state machine |
 | [SR-103](SR-103.md) | Allowlist-only dual-plan briefs |
 | [SR-104](SR-104.md) | Dual-plan coverage-step adapter |
 | [SR-105](SR-105.md) | Stable dual-plan artifacts and WI filing |
 | [SR-106](SR-106.md) | Fresh-session dual-plan execution |
 | [SR-107](SR-107.md) | Dual-plan direct-path isolation |
-| [SR-108](SR-108.md) | Serialized dual-plan disposition |
+| [SR-108](SR-108.md) | Dual-plan round disposition |
 | [SR-109](SR-109.md) | Spec-lifecycle close-side coherence |
 | [SR-110](SR-110.md) | Per-module coverage floors |
 | [SR-111](SR-111.md) | Kit-version stamp |
 | [SR-112](SR-112.md) | Checked per-agent skill fan-out |
 | [SR-113](SR-113.md) | Dev-setup wires the process floor |
 | [SR-114](SR-114.md) | Kit scripts run across the supported OSes |
-| [SR-115](SR-115.md) | Deterministic traincar ordering |
-| [SR-116](SR-116.md) | Generated status and run-state surfaces |
-| [SR-117](SR-117.md) | Atomic traincar reservation and lane leasing |
-| [SR-118](SR-118.md) | Traincar build and review shape |
-| [SR-119](SR-119.md) | Release on early train end |
-| [SR-120](SR-120.md) | Blocked-constituent disposition |
-| [SR-121](SR-121.md) | Gated downstream migration to the parallel default |
+| [SR-115](SR-115.md) | Deterministic ready ordering |
+| [SR-116](SR-116.md) | Generated status surface |
+| [SR-117](SR-117.md) | Superseded: Atomic traincar reservation and lane leasing |
+| [SR-118](SR-118.md) | Superseded: Traincar build and review shape |
+| [SR-119](SR-119.md) | Superseded: Release on early train end |
+| [SR-120](SR-120.md) | Superseded: Blocked-constituent disposition |
+| [SR-121](SR-121.md) | Superseded: Gated downstream migration to the parallel default |
 | [SR-122](SR-122.md) | Dashboard freshness check |
 | [SR-123](SR-123.md) | Critique closure ratchet |
 | [SR-124](SR-124.md) | Contradiction-safe dual-plan dispatcher class |

@@ -18187,3 +18187,85 @@ agent_loop shrink; CSV-home death with its scheduled ratchet down-stamps;
 census re-derive; `[generated]` dual-duty dissolution; PROCESS_OPTIONS
 rewrite; audit retirements; then WI-357..360), and status.md's resume
 bullet points at it. `--strict` clean; `drafts=0 modified=0`.
+
+## 2026-07-29 — Phase 5: the deletion — the train machinery is gone, the seam is the only flow
+
+**Session type:** spine-class solo attended (the concurrency-restructure §7
+Phase 5 compiled scope, all eight points). One driving session; the mechanical
+test-fixture conversions ran as three parallel read-scoped subagents on
+disjoint files (test_trajectory / test_gen_trajectory+gen_arch_map / the
+agent_loop family), production edits serial throughout. Nine trunk commits.
+
+**What shipped, per compiled point** (the full record is the §7 Phase 5 entry
+in [concurrency-restructure.md](concurrency-restructure.md) — decompose,
+don't restate: this entry carries the session facts, the §7 record the
+design-level account):
+
+- **agent_dispatch.py deleted whole** (4,042 lines) with seven test modules —
+  the six named plus `test_agent_loop_migration.py`, audited 7/9
+  dispatcher-only with the rest exercising deleted CLI: **a
+  deviation-with-reason from the compiled list.** Surviving coverage was
+  relocated FIRST (`test_agent_common_harness.py`, `test_dual_plan_round.py`
+  — the latter's fixture re-seeded in folder form). `docs/run-state` and
+  every reader, the refs/llm advisory machinery, the WI-282 commit-msg train
+  floor, and agent_route's dead `run_state` keys left with it. Measured, not
+  assumed: **docs/blackout survives** (agent_loop's own session-boundary
+  check holds it — the spec's open question answered by the reference sweep).
+- **agent_loop.py shrunk in place** onto the §2.3 claim model; the legacy
+  untracked pause half retired (a stray `lane/pause` is inert, by test);
+  launchers/templates dropped AGENT_JOBS and the dispatcher prose.
+- **The CSV registry home died** (RULING-4 fully realized): three folder-only
+  readers, `blocked` derived (queued + blockref) in the scheduler AND the
+  dashboard, plan_artifacts files specs only. Two latent defects found and
+  fixed en route rather than shipped: `build_scope_srs`/`critique_control`
+  read the CSV path directly (silently EMPTY since the 2c flip — found while
+  classifying their census pair), and the dashboard would have erased the
+  WI-272/M-2 parked-vs-queued distinction under derived blocked
+  (`_wi_status` now derives it — found when a subagent re-grounded the M-2
+  tests to the regressed behavior; the fix reverted the re-grounding).
+- **Census re-derived** (208 → 181 → reconciled on the final tree): six
+  all-dispatcher classes dissolved; the WI-347 clique effect produced exactly
+  one re-pairing, classified by reading and then dissolved WITH the defect it
+  shadowed. The unchecked header aggregates deleted (the WI-356 ruling); the
+  WI-350 same-file majority rule retired to a Reviewer-tier
+  [enforcement-audit.md](enforcement-audit.md) row after false-positiving in
+  the OPPOSITE direction from the reviewer's bypass — the second measured
+  failure of that rule, one per direction.
+- **[generated] single-duty**; **PROCESS_OPTIONS rewrote** onto the seam
+  (166,953 → 161,117 bytes, −5,836 — re-stamped ×3 skill copies);
+  **WI-343/350/351/356 retired** per the audit rulings with full records in
+  `docs/work/archive/`; **WI-361/362/363 filed** (venv-floor re-home; the
+  staleness clock is blind to a Title rename; gen_arch_map scans empty under
+  a dot-prefixed absolute path — the last two measured during conversion).
+- **Spine amendment (window OPEN):** 15 SRs superseded → SR-132 (the TC-099
+  pattern; TC-133 + `test_phase5_supersession_rows_...` pin the map), 11 SRs
+  re-grounded, 15 LLRs + 10 TCs deleted with their machinery, IF-067
+  deleted, six IFs re-versioned, IF-080/IF-081 declared (clearing the two
+  standing integrate/trunk_step connectivity warns). Registry edits were
+  LINE-SURGICAL so untouched rows keep their blame dates (the
+  backlog-staleness clock reads them). Brief:
+  [ratify/2026-07-29d-phase5.md](ratify/2026-07-29d-phase5.md); derived gate
+  G1 (`modified=26 drafts=1`) until the sitting.
+
+**Deviations from spec:** the extra test-module deletion (above, with
+reason); §6's "check_trajectory minus the never-fired rules" line was NOT in
+the compiled scope and was deliberately not done (the audit §4-line-6 ruling
+stays the owner's); the WI-286 venv-floor guard was neither silently ported
+nor silently dropped — WI-361 records the re-homing question.
+
+**Byte deltas on budgeted files:** PROCESS_OPTIONS.md 166,953 → 161,117
+(−5,836, a shrink; baseline re-stamped in all three skill copies);
+PROCESS.md unchanged at 64,077; AGENTS.template.md unchanged at 9,975.
+
+**Bar:** per-commit smoke + check_docs green throughout (the floor's
+trajectory-map/arch-map staleness caught two unregenerated dashboards
+mid-phase and was obeyed, not bypassed). Interim full suite on the
+penultimate tree: 1632 passed / 7 skipped / 1 failed (the module-size
+ratchet, stamped in the same edit wave — a mid-run race, re-stamped and
+green). The exit-bar full suite + `check.py` at the derived gate run at the
+close commit; the census audit, trace `--strict-integrity`
+(orphans=0 integrity=0), and the supersession tests are green on the final
+tree. The CPU-cap/environment caveat of record: the ambient
+`PYTEST_DEBUG_TEMPROOT` points at a dot-prefixed directory, which the
+pre-existing WI-363 defect turns into 10 environmental arch-map reds — the
+full-suite runs here used a non-dot temp root and say so.

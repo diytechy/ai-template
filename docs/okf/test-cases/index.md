@@ -68,13 +68,8 @@ resource: "generated"
 | [TC-057](TC-057.md) | Run the dashboard suite; the tiered decomposition views render one horizontal parent->chi… |
 | [TC-058](TC-058.md) | Run schedule.py against a fixture registry; the ready frontier, the exclusions with reaso… |
 | [TC-059](TC-059.md) | Drive the pure classifier over every declared safety and policy input and compare consume… |
-| [TC-060](TC-060.md) | Exercise the migration on a fixture scaffold: next-wi/run-phase absent, no live surface r… |
+| [TC-060](TC-060.md) | Drive trunk_step --regen and the status-map freshness gate on fixture repos; assert the s… |
 | [TC-061](TC-061.md) | Run two concurrent workers from explicit --wi/--train/worktree assignments; assert no lan… |
-| [TC-062](TC-062.md) | Launch the dispatcher with independent ready WIs; assert up-to-ceiling concurrency in sep… |
-| [TC-063](TC-063.md) | Drive a unary chain, a fork, a join, a cap, and an early end; assert the continuation/sto… |
-| [TC-064](TC-064.md) | Compose trains through the serialized writer with clean/conflict review, red-bar, regener… |
-| [TC-065](TC-065.md) | Exercise recovery evidence enumeration and missing-integration authority cases. |
-| [TC-066](TC-066.md) | Run a parallel session + a downstream-migration fixture; assert reason-coded telemetry ag… |
 | [TC-067](TC-067.md) | Run the cross-component import coverage matrix. |
 | [TC-068](TC-068.md) | Run the armed-spec interface-section matrix. |
 | [TC-069](TC-069.md) | Run rival plan coverage, reference, graph, absent-registry, and malformed-input cases. |
@@ -100,11 +95,6 @@ resource: "generated"
 | [TC-089](TC-089.md) | Render seams at hierarchy ports and crossing container boundaries. |
 | [TC-090](TC-090.md) | Exercise pointer/keyboard descent and breadcrumb restoration. |
 | [TC-091](TC-091.md) | Classify missing, unknown, structurally contradictory, critique, checkpoint, and dual-pla… |
-| [TC-092](TC-092.md) | Pack ordinary, protected, forced-single, and spine-serial ready sets across caps and gate… |
-| [TC-093](TC-093.md) | Apply a blocker disposition to one WI in a multi-row registry. |
-| [TC-094](TC-094.md) | Inject publication crashes, stale or non-descendant targets, and clean/disjoint/overlappi… |
-| [TC-095](TC-095.md) | Reconstruct ownership from reservations/trains and inject ambiguity or duplicate claims. |
-| [TC-096](TC-096.md) | Inject termination at every reservation, integration, and publication boundary with out/d… |
 | [TC-097](TC-097.md) | Run direct worker/flag refusal and PlanMode-derived classification/contradiction cases. |
 | [TC-098](TC-098.md) | Run dispatcher SELECT, attended PAGE, autonomous PAGE continuation, regeneration failure,… |
 | [TC-099](TC-099.md) | Inspect the eleven legacy SR rows, their SupersededBy graph, replacement targets, and pos… |
@@ -139,3 +129,4 @@ resource: "generated"
 | [TC-130](TC-130.md) | Run the trunk-step suite: committed fragments compile in git order with links rebased and… |
 | [TC-131](TC-131.md) | Run the pause suites: the tracked home pauses via pause_reason with legacy-first preceden… |
 | [TC-132](TC-132.md) | Run the integrator suite: each claim refusal fires by name and the green claim moves the … |
+| [TC-133](TC-133.md) | Inspect the fifteen Phase-5 legacy SR rows, their SupersededBy links to SR-132, and the p… |
