@@ -143,6 +143,15 @@
 #     2, source-walk 1, brief-row-render 1, declared-file-local 1) and removed
 #     their sections. Each fingerprint was proven absent from `--emit-census`
 #     before its sanction was deleted.
+#   * 190 -> 194 is Phase 2b of the concurrency restructure: the spec-folder
+#     work-item reader, duplicated verbatim into schedule.py,
+#     check_trajectory.py and agent_common.py so the registry can move from
+#     work-items.csv to docs/work/ without a shared module (the F5/WI-291
+#     pattern, drift-guarded by tests/test_wi_loader_sync.py). Three blocks are
+#     that reader (`spec-folder-reader`), the fourth is the 17-column schema it
+#     restates, which plan_artifacts already declared (`wi-schema-columns`).
+#     Proven ADDITIVE, not a re-stamp: the emitted census diffs against the
+#     previous one as four insertions and zero changed or removed fingerprints.
 #   * 207 -> 201 was ALREADY TRUE at this commit's parent and nothing said so.
 #     The header declared 207 while the sections held 201 fingerprint lines. One
 #     block of that is explained (WI-341's `_raw_level` extraction merged two
@@ -159,10 +168,10 @@
 # Every figure below is now GENERATED from the sections rather than counted by
 # hand — the rule this repo already applies to every other derived number.
 #
-# The distribution (190 blocks):
+# The distribution (194 blocks):
 #
-#   cli                   77   (41%)   deliberate
-#   spine-loader          20   (11%)   deliberate
+#   cli                   77   (40%)   deliberate
+#   spine-loader          20   (10%)   deliberate
 #   declared-file         11    (6%)   deliberate
 #   graph-layout          11    (6%)   debt WI-280
 #   markdown-table        11    (6%)   deliberate
@@ -175,6 +184,7 @@
 #   import-fallback        3    (2%)   deliberate
 #   okf-row                3    (2%)   deliberate
 #   reservation-release    3    (2%)   extract WI-343
+#   spec-folder-reader     3    (2%)   deliberate
 #   module-path            2    (1%)   deliberate
 #   ref-transaction        2    (1%)   extract WI-343
 #   signature-echo         2    (1%)   deliberate
@@ -184,9 +194,10 @@
 #   trailer-fold           1            deliberate
 #   trailer-scan           1            extract WI-343
 #   warn-tier-dispatch     1            deliberate
+#   wi-schema-columns      1            deliberate
 #
-# By disposition: deliberate 150, extract 20 (WI-343/346), debt 20 (WI-280).
-# By path relation (metadata only): 141 cross-module, 49 same-file. The two cuts
+# By disposition: deliberate 154, extract 20 (WI-343/346), debt 20 (WI-280).
+# By path relation (metadata only): 145 cross-module, 49 same-file. The two cuts
 # do NOT coincide — 9 same-file blocks are deliberate, and the other 40 are the
 # extract + debt work, which is the honest shape of this file: a fifth of the
 # census is still not F5 at all.
@@ -564,3 +575,32 @@ bfd6e67c304f  project-trajectory/scripts/gen_trajectory.py == project-trajectory
 # agent_dispatch as _run_captured rather than sanctioning it; the same
 # precedent applies to gen_trajectory's two sites.
 e5d5ce58f56b  project-trajectory/scripts/gen_trajectory.py == project-trajectory/scripts/gen_trajectory.py
+
+# --- spec-folder-reader (3 blocks) -------------------------------
+# disposition: deliberate
+# the Phase 2b spec-folder registry reader (docs/concurrency-restructure.md
+# §2.1): docs/work/<status>/WI-###.md parsed into the SAME 17-key rows
+# csv.DictReader yields for work-items.csv, so the dual-read resolves at the
+# ROW level and nothing downstream learns which home is authoritative. One
+# verbatim copy per script, on the SAME F5 grounds as the wi-registry class
+# above - a shared module was rejected 2026-07-12 - and the same drift guard
+# closes the same risk: tests/test_wi_loader_sync.py locks all three readers
+# to identical rows over one folder, and both representations to one another.
+# The third entry is the 44-token SEAM where the CSV loader's tail meets the
+# reader's column list; only check_trajectory and schedule share it, because
+# agent_common's CSV loader differs. This class RETIRES with the CSV home at
+# Phase 5, when there is one registry again.
+c97707f916ba  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/check_trajectory.py
+955a662cef6e  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/schedule.py
+1dbf7e455ac3  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/schedule.py
+
+# --- wi-schema-columns (1 block) ---------------------------------
+# disposition: deliberate
+# the work-item registry's 17-column schema, which IS the registry's
+# definition and is therefore restated wherever a script must write or
+# reconstruct a row: plan_artifacts.WI_HEADER (it appends a queued row) and
+# the readers' WI_COLUMNS (they reconstruct one). A constant list of column
+# names is the small-stable-helper shape the F5 ruling covers; the schema
+# itself is pinned against the shipped template by test_dogfood_sync, so the
+# copies cannot drift apart silently.
+760d32e34d84  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/plan_artifacts.py

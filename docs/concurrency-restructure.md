@@ -360,6 +360,21 @@ never a forgotten one (the stale-reason lesson).
   retiring blocked-disposition path; readiness is the scheduler's to derive);
   and backlog-staleness/freshness must track a spec by **id, following
   renames**, or every status move silently resets its clock.
+  **2b is DONE (2026-07-28):** the three F5-duplicated spec-folder readers
+  (byte-identical block in `schedule`/`check_trajectory`/`agent_common`)
+  emit CSV-shaped rows, so every `load_wis` and downstream consumer is
+  untouched; dual-read resolves to the folder when `docs/work/` holds specs,
+  else the CSV; the validator alone errors on both-present. Representation
+  equivalence is proven (one fixture → CSV and folder via `wi_convert` →
+  four loader outputs agree), 12 source mutations each shown RED.
+  **Measured correction to the note above:** `git log --follow` ALONE does
+  not preserve the clock — a pure rename still answers the rename commit;
+  the working pair is `--follow --diff-filter=AM`, pinned by a four-way
+  mutation test. Carried to Phase 4/5: `agent_loop.py:1636` and three
+  `agent_dispatch` sites still call `schedule.load_rows` directly (empty
+  registry in a folder-only tree) — the agent_loop one-word re-point is owed
+  when Phase 4 shrinks it; and `schedule.classify`'s `blocked` branches are
+  reachable only from the CSV home, dying with it.
 - **Phase 3 — shared-surface rules.** `log.d/` fragments + trunk compile;
   generated-artifacts-trunk-only; branch-scoped review names.
 - **Phase 4 — the integrator.** Build the local integrator lane (the one-page

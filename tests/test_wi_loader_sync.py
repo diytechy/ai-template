@@ -1,4 +1,4 @@
-"""WI-291 drift guard: schedule.load_wis and check_trajectory.load_wis must agree.
+"""WI-291 drift guard: the kit's work-item registry parsers must agree.
 
 `schedule.py` (CMP-004, the pure decision engine) and `check_trajectory.py`
 (CMP-001, the validator) each carry their OWN work-item-registry parser — a
@@ -19,12 +19,47 @@ title, and blockref. Fields unique to one side (schedule's priority/safetyclass;
 check_trajectory's workstream/specref/integrity errors) are out of scope. A
 divergence here is a real bug; re-sync the two parsers (or, if the divergence is
 intended, this test is where the decision to fork them is recorded).
+
+**Phase 2b widened this guard twice** (docs/concurrency-restructure.md §7):
+
+  * a THIRD copy of the registry reader now lives in `agent_common.py` — the
+    spec-folder reader (`docs/work/<status>/WI-###-<slug>.md`) is duplicated
+    verbatim into all three scripts on the same F5 grounds, so all three must
+    read one folder into byte-identical rows;
+  * the registry now has TWO REPRESENTATIONS, and the guard that matters is that
+    they are the same registry. The fixture below is built ONCE and materialized
+    into a spec folder by `tools/wi_convert.py`, then both representations are
+    pushed through both `load_wis`. All four outputs must agree — which is the
+    representation-equivalence proof and the drift guard in one object, because
+    the failure they share is "one reader decided something the others did not".
+
+Both new guards are mutation-proven at the bottom of the file: a single corrupted
+spec cell must red the equivalence, and a reader that skips a file must red the
+three-way comparison. A guard nobody has seen fail is not a guard (WI-293).
 """
 
-from conftest import load_script
+import csv
+import importlib.util
+
+import pytest
+from conftest import ROOT, load_script
 
 sched = load_script("schedule")
 ctraj = load_script("check_trajectory")
+acommon = load_script("agent_common")
+
+
+def _load_tool(name):
+    # wi_convert lives in tools/ (meta-repo tooling until Phase 2c), so
+    # conftest.load_script — pinned to the kit's scripts/ — cannot see it. Same
+    # loader tests/test_wi_convert.py uses.
+    spec = importlib.util.spec_from_file_location(name, ROOT / "tools" / f"{name}.py")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+wi_convert = _load_tool("wi_convert")
 
 # The parsing decisions BOTH modules make — the surface that must never drift.
 SHARED_FIELDS = ("id", "title", "status", "preds", "soft", "srs", "blockref")
@@ -108,3 +143,258 @@ def test_hard_and_soft_predecessor_split_agrees():
         assert by["WI-003"]["soft"] == ["WI-001"]
         assert by["WI-006"]["preds"] == []
         assert by["WI-006"]["soft"] == ["WI-002"]
+
+
+# --- Phase 2b: one registry, two representations, three readers ---------------
+# The spec form cannot carry every row shape above — `wi_convert` REFUSES a
+# status outside done/retired/queued/deferred (a classifier that cannot finish is
+# louder than a catch-all), and a duplicate id or a blank WI-ID has no filename.
+# Those stay CSV-only concerns, exercised above. This fixture is the part of the
+# registry both homes can express, and it deliberately keeps the cells most
+# likely to be lost in translation: the `~` soft prefix, a multi-id SR cell, an
+# int-valued Priority, a retired row (archive/ + disposition), the inert -000
+# example row, and a Deliverable carrying the punctuation an escaper breaks on.
+CONVERTIBLE_ROWS = [
+    {
+        "WI-ID": "WI-001",
+        "Title": "root",
+        "Workstream": "scripts",
+        "SR-Refs": "SR-001;SR-002",
+        "Predecessors": "",
+        "Status": "done",
+        "Deliverable": 'shipped: "quoted", back\\slash, and a #hash',
+        "SpecRef": "",
+        "BuildTier": "medium",
+        "CritiqueBudget": "",
+        "CritiqueExhaustion": "",
+        "Priority": "2",
+        "Exclusive": "",
+        "BlockRef": "",
+        "EstTokens": "1200",
+        "SafetyClass": "ordinary",
+        "PlanMode": "",
+    },
+    {
+        "WI-ID": "WI-002",
+        "Title": "hard + soft predecessors",
+        "Workstream": "scripts",
+        "SR-Refs": "SR-002",
+        "Predecessors": "WI-001;~WI-005",
+        "Status": "queued",
+        "Deliverable": "",
+        "SpecRef": "docs/specs/WI-002.md",
+        "BuildTier": "",
+        "CritiqueBudget": "1",
+        "CritiqueExhaustion": "",
+        "Priority": "1",
+        "Exclusive": "docs/status.md",
+        "BlockRef": "SR-009",
+        "EstTokens": "",
+        "SafetyClass": "spine",
+        "PlanMode": "dual",
+    },
+    {
+        "WI-ID": "WI-003",
+        "Title": "parked with a reason",
+        "Workstream": "docs",
+        "SR-Refs": "",
+        "Predecessors": "",
+        "Status": "deferred",
+        "Deliverable": "",
+        "SpecRef": "docs/specs/WI-003.md",
+        "BuildTier": "",
+        "CritiqueBudget": "",
+        "CritiqueExhaustion": "",
+        "Priority": "0",
+        "Exclusive": "",
+        "BlockRef": "",
+        "EstTokens": "",
+        "SafetyClass": "",
+        "PlanMode": "",
+    },
+    {
+        "WI-ID": "WI-005",
+        "Title": "won't build",
+        "Workstream": "scripts",
+        "SR-Refs": "SR-003",
+        "Predecessors": "",
+        "Status": "retired",
+        "Deliverable": "retired: superseded by WI-001",
+        "SpecRef": "",
+        "BuildTier": "",
+        "CritiqueBudget": "",
+        "CritiqueExhaustion": "",
+        "Priority": "",
+        "Exclusive": "",
+        "BlockRef": "",
+        "EstTokens": "",
+        "SafetyClass": "ordinary",
+        "PlanMode": "",
+    },
+    {
+        "WI-ID": "WI-000",
+        "Title": "inert example row (must be skipped)",
+        "Workstream": "",
+        "SR-Refs": "",
+        "Predecessors": "",
+        "Status": "queued",
+        "Deliverable": "",
+        "SpecRef": "",
+        "BuildTier": "",
+        "CritiqueBudget": "",
+        "CritiqueExhaustion": "",
+        "Priority": "",
+        "Exclusive": "",
+        "BlockRef": "",
+        "EstTokens": "",
+        "SafetyClass": "",
+        "PlanMode": "",
+    },
+]
+
+# Every reader that must agree. The name each module gives the folder reader is
+# the same on purpose — three verbatim copies, so a rename in one is drift too.
+SPEC_READERS = (
+    ("schedule", sched),
+    ("check_trajectory", ctraj),
+    ("agent_common", acommon),
+)
+
+
+@pytest.fixture(scope="module")
+def both_homes(tmp_path_factory):
+    """`(csv_rows, work_dir)` — one fixture registry in BOTH representations, the
+    folder materialized from the CSV by the converter that defines the format."""
+    tmp = tmp_path_factory.mktemp("both-homes")
+    csv_path = tmp / "docs" / "requirements" / "work-items.csv"
+    csv_path.parent.mkdir(parents=True)
+    # newline="" is the csv module's contract and lineterminator pins LF, so the
+    # fixture cannot inherit the platform it is meant to be independent of.
+    with csv_path.open("w", encoding="utf-8", newline="") as handle:
+        writer = csv.writer(handle, lineterminator="\n")
+        writer.writerow(wi_convert.COLUMNS)
+        for row in CONVERTIBLE_ROWS:
+            writer.writerow([row[column] for column in wi_convert.COLUMNS])
+    wi_convert.to_specs(csv_path, tmp / "docs" / "work")
+    return csv_path, tmp / "docs" / "work"
+
+
+def _reader_disagreements(named_rows):
+    """Findings for a `[(name, rows)]` list whose entries must all be equal —
+    the three-way comparison, exposed so its own mutation proof can drive it."""
+    reference_name, reference = named_rows[0]
+    return [
+        "{} disagrees with {}".format(name, reference_name)
+        for name, rows in named_rows[1:]
+        if rows != reference
+    ]
+
+
+def test_the_three_folder_readers_read_one_folder_identically(both_homes):
+    """The F5 copies are copies. Any behavioural difference between them — a
+    field parsed, a file skipped, an order chosen — shows up here as unequal
+    rows, which is the whole reason the duplication is allowed to exist."""
+    _csv_path, work_dir = both_homes
+    named_rows = [(name, mod.read_spec_rows(work_dir)) for name, mod in SPEC_READERS]
+    assert named_rows[0][1], "the fixture folder produced no rows — guard vacuous"
+    assert _reader_disagreements(named_rows) == []
+
+
+def test_the_two_representations_are_the_same_registry(both_homes):
+    """Cell-exact equivalence at the ROW level — the level the dual-read happens
+    at, so everything above it is untouched by which home is authoritative."""
+    csv_path, work_dir = both_homes
+    csv_rows = sched.load_rows(csv_path)
+    folder_rows = sched.read_spec_rows(work_dir)
+    assert _cell_diff(csv_rows, folder_rows) == []
+
+
+def _cell_diff(csv_rows, folder_rows):
+    """Every differing cell between two row lists, as `id/column` strings."""
+    findings = []
+    if len(csv_rows) != len(folder_rows):
+        findings.append("row count {} != {}".format(len(csv_rows), len(folder_rows)))
+    for lhs, rhs in zip(csv_rows, folder_rows):
+        for column in wi_convert.COLUMNS:
+            if (lhs.get(column) or "") != (rhs.get(column) or ""):
+                findings.append("{}/{}".format(lhs.get("WI-ID"), column))
+    return findings
+
+
+def test_all_four_loader_outputs_agree_on_the_shared_decisions(both_homes):
+    """The four-way proof: {schedule, check_trajectory} x {CSV, folder}."""
+    csv_path, work_dir = both_homes
+    csv_rows = sched.load_rows(csv_path)
+    folder_rows = sched.read_spec_rows(work_dir)
+    outputs = {
+        "schedule/csv": sched.load_wis(csv_rows),
+        "schedule/folder": sched.load_wis(folder_rows),
+        "check_trajectory/csv": ctraj.load_wis(csv_rows)[0],
+        "check_trajectory/folder": ctraj.load_wis(folder_rows)[0],
+    }
+    reference = [_shared(w) for w in outputs["schedule/csv"]]
+    assert [w["id"] for w in outputs["schedule/csv"]] == [
+        "WI-001",
+        "WI-002",
+        "WI-003",
+        "WI-005",
+    ], "fixture premise gone (the -000 row must be skipped by every reader)"
+    for name, wis in outputs.items():
+        assert [_shared(w) for w in wis] == reference, name
+
+
+def test_the_soft_prefix_survives_the_round_trip_into_load_wis(both_homes):
+    """`~WI-005` is MEANING, not decoration: it is what makes an edge advisory.
+    The converter joins `needs` with ';' and keeps the `~` verbatim, and the
+    folder reader must hand `load_wis` a cell it splits the same way."""
+    _csv_path, work_dir = both_homes
+    for _name, mod in SPEC_READERS:
+        by_id = {r["WI-ID"]: r for r in mod.read_spec_rows(work_dir)}
+        assert by_id["WI-002"]["Predecessors"] == "WI-001;~WI-005"
+    folder = {w["id"]: w for w in sched.load_wis(sched.read_spec_rows(work_dir))}
+    assert folder["WI-002"]["preds"] == ["WI-001"]
+    assert folder["WI-002"]["soft"] == ["WI-005"]
+
+
+# --- mutation proofs: each new guard must fail on the defect it is for --------
+
+
+def test_mutation_one_corrupted_spec_cell_reds_the_equivalence(both_homes, tmp_path):
+    """Drive the failure shape rather than trusting the green: retype ONE
+    frontmatter value in the folder and the cell-exact compare must name it."""
+    csv_path, work_dir = both_homes
+    victim = next(p for p in work_dir.rglob("WI-002-*.md"))
+    broken = tmp_path / "work"
+    _copy_tree(work_dir, broken)
+    target = next(p for p in broken.rglob("WI-002-*.md"))
+    text = target.read_text(encoding="utf-8")
+    assert 'needs = ["WI-001", "~WI-005"]' in text, victim
+    target.write_text(
+        text.replace('needs = ["WI-001", "~WI-005"]', 'needs = ["WI-001", "WI-005"]'),
+        encoding="utf-8",
+        newline="\n",
+    )
+    findings = _cell_diff(sched.load_rows(csv_path), sched.read_spec_rows(broken))
+    assert "WI-002/Predecessors" in findings, findings
+
+
+def test_mutation_a_reader_that_drops_a_file_reds_the_three_way_check(both_homes):
+    """The three-way comparison's own failure mode, constructed: stand in a
+    reader that silently skipped one spec and the comparison must name it."""
+    _csv_path, work_dir = both_homes
+    full = sched.read_spec_rows(work_dir)
+    partial = [row for row in full if row["WI-ID"] != "WI-003"]
+    assert partial != full, "the fixture has no WI-003 — this proof is vacuous"
+    findings = _reader_disagreements(
+        [("schedule", full), ("check_trajectory", full), ("agent_common", partial)]
+    )
+    assert findings == ["agent_common disagrees with schedule"], findings
+
+
+def _copy_tree(src, dest):
+    for path in src.rglob("*.md"):
+        target = dest / path.relative_to(src)
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(
+            path.read_text(encoding="utf-8"), encoding="utf-8", newline="\n"
+        )

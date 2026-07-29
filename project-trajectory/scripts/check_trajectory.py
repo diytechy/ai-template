@@ -1,5 +1,13 @@
 #!/usr/bin/env python3
-"""Validate the work-item registry (docs/requirements/work-items.csv) — stdlib only.
+"""Validate the work-item registry — stdlib only.
+
+The registry has two possible homes and `read_registry_rows` resolves between
+them at the ROW level (Phase 2b of docs/concurrency-restructure.md): the spec
+folder `docs/work/` when it holds work specs, else
+`docs/requirements/work-items.csv` exactly as before. Every rule below reads the
+same 17-key rows either way. Both homes present at once is itself an integrity
+ERROR here — two encodings of one fact with no rule about which wins — which is
+the difference between this copy of the reader and the scheduler's silent one.
 
 The `SN->SR->LLR->TC` spine answers *what must be true*. A **work item**
 (`WI-###`) decomposes *how the work executes*: it delivers SR(s), belongs to a
@@ -128,9 +136,15 @@ import io
 import re
 import subprocess
 import sys
+import tomllib
 from pathlib import Path
 
 WI_CSV = "docs/requirements/work-items.csv"
+# The spec-folder home the CSV above gives way to (Phase 2b of
+# docs/concurrency-restructure.md). Declared as a repo-relative POSIX path
+# because the git plumbing below passes it as a PATHSPEC; the reader derives
+# the same folder from the CSV path via `spec_work_dir`.
+WI_WORK = "docs/work"
 SR_CSV = "docs/requirements/system-requirements.csv"
 TC_CSV = "docs/test/test-cases.csv"
 IF_CSV = "docs/requirements/interfaces.csv"
@@ -258,6 +272,269 @@ def read_rows(path):
         return []
     with path.open(encoding="utf-8-sig", newline="") as fh:
         return list(csv.DictReader(fh))
+
+
+# --- the spec-folder registry reader (duplicated per the F5 rule) -------------
+# `docs/work/<status>/WI-###-<slug>.md`: one Markdown spec per work item, its
+# STATUS encoded as the DIRECTORY (docs/concurrency-restructure.md §2.1, Phase
+# 2b). The reader emits rows carrying the SAME 17 keys `csv.DictReader` yields
+# for `work-items.csv`, so the dual-read happens at the ROW level, once, here —
+# `load_wis` and every consumer past it never learn which home is authoritative.
+# The format's definition is `tools/wi_convert.py` (`parse_spec` /
+# `status_from_location`), which materializes the folder; this is its read half.
+#
+# Copied VERBATIM across schedule.py, check_trajectory.py and agent_common.py
+# per the kit's F5 rule — a shared module was rejected (owner ruling
+# 2026-07-12) so each script stays independently copy-able, and the one real
+# risk of N parsers, DRIFT, is closed by tests/test_wi_loader_sync.py rather
+# than by extraction (WI-291).
+WI_COLUMNS = (
+    "WI-ID",
+    "Title",
+    "Workstream",
+    "SR-Refs",
+    "Predecessors",
+    "Status",
+    "Deliverable",
+    "SpecRef",
+    "BuildTier",
+    "CritiqueBudget",
+    "CritiqueExhaustion",
+    "Priority",
+    "Exclusive",
+    "BlockRef",
+    "EstTokens",
+    "SafetyClass",
+    "PlanMode",
+)
+SPEC_SCALARS = (
+    ("Title", "title"),
+    ("Workstream", "workstream"),
+    ("SpecRef", "specref"),
+    ("BuildTier", "buildtier"),
+    ("CritiqueBudget", "critique_budget"),
+    ("CritiqueExhaustion", "critique_exhaustion"),
+    ("Priority", "priority"),
+    ("Exclusive", "exclusive"),
+    ("BlockRef", "blockref"),
+    ("EstTokens", "est_tokens"),
+    ("SafetyClass", "safety_class"),
+    ("PlanMode", "planmode"),
+)
+SPEC_LISTS = (("SR-Refs", "sr_refs"), ("Predecessors", "needs"))
+# Directory -> Status. `archive/` holds BOTH terminal states and the frontmatter
+# `disposition` key tells them apart; `active/<branch>/` sits one level deeper,
+# so the status is the FIRST path component, never the file's parent directory.
+SPEC_STATUS_DIRS = {
+    "archive": "done",
+    "queued": "queued",
+    "deferred": "deferred",
+    "active": "active",
+}
+SPEC_FENCE = "+++"
+SPEC_DELIVERABLE = "\n## Deliverable\n\n"
+
+
+def spec_work_dir(csv_path):
+    """The `docs/work` folder that replaces the registry CSV at `csv_path` — its
+    `docs/` directory plus `work`, derived from the one path each caller already
+    declares rather than from a second constant that could disagree with it."""
+    return Path(csv_path).parent.parent / "work"
+
+
+def spec_files(work_dir):
+    """Every `<status>/WI-*.md` spec under `work_dir`, sorted by path; `[]` when
+    the folder is absent or holds none. An empty answer is what leaves the CSV
+    authoritative, so a stray file sitting DIRECTLY in `work_dir` — which has no
+    status directory above it — deliberately does not count as a registry."""
+    work_dir = Path(work_dir)
+    if not work_dir.is_dir():
+        return []
+    return sorted(p for p in work_dir.rglob("WI-*.md") if p.parent != work_dir)
+
+
+def spec_registry_dir(csv_path):
+    """The spec folder that is AUTHORITATIVE for `csv_path`, or None when the CSV
+    still is. The dual-read resolution, stated once: specs present => the folder
+    wins; no specs => the CSV is read exactly as before."""
+    work_dir = spec_work_dir(csv_path)
+    return work_dir if spec_files(work_dir) else None
+
+
+def parse_spec_frontmatter(text, relpath):
+    """`(data, body)` for one spec file: the TOML frontmatter between the `+++`
+    fences, parsed, and everything after the closing fence, verbatim."""
+    lines = text.split("\n")
+    if not lines or lines[0] != SPEC_FENCE or SPEC_FENCE not in lines[1:]:
+        raise ValueError(
+            "{}: no closed `{}` frontmatter fence".format(relpath, SPEC_FENCE)
+        )
+    close = lines.index(SPEC_FENCE, 1)
+    try:
+        data = tomllib.loads("\n".join(lines[1:close]))
+    except tomllib.TOMLDecodeError as exc:
+        raise ValueError(
+            "{}: frontmatter is not valid TOML — {}".format(relpath, exc)
+        ) from None
+    return data, "\n".join(lines[close + 1 :])
+
+
+def parse_spec_status(relpath, data):
+    """The Status a spec's LOCATION encodes, checked against its `disposition`.
+
+    `archive/` holds both terminal states, so the two ways location and
+    frontmatter can disagree — an unknown disposition, and a retirement filed
+    outside `archive/` — are refusals, never silent coercions. A directory
+    nobody declared is a refusal too: dropping it into `queued` would silently
+    reclassify work, which is the catch-all shape this kit refuses on sight."""
+    parts = relpath.split("/")
+    status = SPEC_STATUS_DIRS.get(parts[0]) if len(parts) > 1 else None
+    if status is None:
+        raise ValueError(
+            "{}: {!r} is not a status directory (the spec form knows only {})".format(
+                relpath, parts[0], ", ".join(sorted(SPEC_STATUS_DIRS))
+            )
+        )
+    disposition = data.get("disposition")
+    if disposition is None:
+        return status
+    if disposition != "retired":
+        raise ValueError("{}: unknown disposition {!r}".format(relpath, disposition))
+    if status != "done":
+        raise ValueError("{}: a retired spec belongs in archive/".format(relpath))
+    return "retired"
+
+
+def parse_spec_id(relpath, data):
+    """The work-item id, which must be a non-empty string AND must be the one
+    the filename carries — two homes for one fact, so they are compared here
+    rather than trusted apart."""
+    wid = data.get("id")
+    if not isinstance(wid, str) or not wid:
+        raise ValueError("{}: frontmatter carries no string `id`".format(relpath))
+    if not relpath.split("/")[-1].startswith(wid + "-"):
+        raise ValueError(
+            "{}: filename does not carry its own id {!r}".format(relpath, wid)
+        )
+    return wid
+
+
+def parse_spec_deliverable(relpath, body):
+    """The Deliverable cell a spec body carries, verbatim ("" when absent).
+
+    The long cell lives in the BODY precisely because body text needs no
+    escaping: it may hold newlines, quotes and markdown. This format owns the
+    whole body shape, so anything that is neither empty nor one
+    `## Deliverable` section is a malformation rather than free prose."""
+    if not body:
+        return ""
+    if not body.startswith(SPEC_DELIVERABLE) or not body.endswith("\n"):
+        raise ValueError(
+            "{}: body is neither empty nor one `## Deliverable` section".format(relpath)
+        )
+    return body[len(SPEC_DELIVERABLE) : -1]
+
+
+def parse_spec_row(text, relpath):
+    """`(row, order)` for one spec file — a 17-key row shaped exactly like the
+    CSV's. Raises ValueError NAMING the file on any malformation: invalid TOML, a
+    missing or non-string `id`, an id the filename disagrees with, a directory
+    that is not a status, or a body that is not the single `## Deliverable`
+    section this format owns."""
+    data, body = parse_spec_frontmatter(text, relpath)
+    row = dict.fromkeys(WI_COLUMNS, "")
+    row["WI-ID"] = parse_spec_id(relpath, data)
+    row["Status"] = parse_spec_status(relpath, data)
+    row["Deliverable"] = parse_spec_deliverable(relpath, body)
+    for column, key in SPEC_SCALARS:
+        if key in data:
+            row[column] = str(data[key])
+    for column, key in SPEC_LISTS:
+        if key in data:
+            row[column] = ";".join(str(v) for v in data[key])
+    order = data.get("order")
+    return row, order if isinstance(order, int) else None
+
+
+def read_spec_rows(work_dir, on_error=None):
+    """The spec folder's rows in REGISTRY order — by the explicit `order` key,
+    then by numeric id, which is the order the converter reproduces.
+
+    A malformed spec is reported to `on_error` (a callable taking one message)
+    and skipped; with no sink it is skipped SILENTLY. That mirrors the split this
+    kit already draws over the CSV — a broken registry is the validator's job to
+    report, not the scheduler's to crash on. Files are read with universal
+    newlines, so a spec checked out CRLF parses identically to one checked out
+    LF (the WI-337 lesson: line endings are a property of the checkout)."""
+    parsed = []
+    for path in spec_files(work_dir):
+        relpath = path.relative_to(work_dir).as_posix()
+        try:
+            row, order = parse_spec_row(path.read_text(encoding="utf-8"), relpath)
+        except (ValueError, OSError, UnicodeDecodeError) as exc:
+            if on_error is not None:
+                on_error(str(exc))
+            continue
+        parsed.append((order is None, order or 0, _spec_id_number(row["WI-ID"]), row))
+    parsed.sort(key=lambda item: item[:3])
+    return [item[-1] for item in parsed]
+
+
+def _spec_id_number(wid):
+    match = re.search(r"\d+", wid or "")
+    return int(match.group()) if match else 0
+
+
+# --- end of the F5-duplicated spec-folder reader ------------------------------
+
+
+def read_registry_rows(path, errors=None):
+    """The work-item rows from whichever home is authoritative — the spec folder
+    beside `path` when it holds specs, else the CSV at `path`, read exactly as
+    before (`read_rows`).
+
+    This module is the VALIDATOR, so it is the one copy of the reader that
+    SPEAKS. Two differences from the scheduler's and the coordinator's, both
+    deliberate:
+
+      * **both homes present is itself a finding.** A tree carrying `docs/work/`
+        specs AND a `work-items.csv` has two encodings of one fact and no rule
+        about which wins; the folder is authoritative (RULING-4) and the CSV must
+        go. Silence here is how a transition state diverges unnoticed.
+      * **a malformed spec is reported, not skipped silently** — the same split
+        `load_wis` already draws for a malformed CSV id.
+
+    Findings append to `errors` when a list is given; with none, this degrades to
+    the quiet read every other caller wants."""
+    work_dir = spec_registry_dir(path)
+    if work_dir is None:
+        return read_rows(path)
+    if errors is not None and Path(path).exists():
+        errors.append(
+            "two registries present — {} is authoritative; delete {}".format(
+                WI_WORK, WI_CSV
+            )
+        )
+    return read_spec_rows(work_dir, on_error=None if errors is None else errors.append)
+
+
+def registry_home(root):
+    """The repo-relative path of the registry home this run actually read — the
+    one thing a message about "N errors in the registry" must not guess at."""
+    return WI_CSV if spec_registry_dir(root / WI_CSV) is None else WI_WORK
+
+
+def registry_cell_errors(root, rows):
+    """`cell_integrity_errors` for the CSV home only.
+
+    That rule exists because `staged_findings` compares `work-items.csv`
+    LINE-WISE, so a WI row must be one physical line. Nothing reads the folder
+    registry line-wise — a Deliverable there is a body SECTION, where a newline
+    is the format working as designed — so applying the rule there would reject
+    a valid registry for a property it does not need to have."""
+    if spec_registry_dir(root / WI_CSV) is not None:
+        return []
+    return cell_integrity_errors(rows)
 
 
 def load_wis(rows):
@@ -1854,12 +2131,38 @@ def _blame_row_times(root, rel_path):
     return times
 
 
-def _path_commit_time(root, rel_path):
+def _path_commit_time(root, rel_path, row_history=False):
     """The committer time (epoch int) of the last commit to touch `rel_path`, via
     `git log -1 --format=%ct`, or None (no repo, an untracked path, no history) —
     the SpecRef-target half of the staleness compare, degrading silently like
-    `_blame_row_times`."""
-    out = _git(root, ["log", "-1", "--format=%ct", "--", rel_path])
+    `_blame_row_times`.
+
+    `row_history=True` asks the question `git blame` answers for a CSV row, for a
+    registry where one row is one FILE: *when was this work item's content last
+    edited*, across the renames its status changes are. It adds two flags, and
+    the pair was MEASURED rather than reasoned about, because the obvious single
+    flag does not work:
+
+      * `--follow` alone still answers 2000 for a spec created at t=1000 and
+        `git mv`d at t=2000 — the rename commit touches the new path, so `-1`
+        stops there whether renames are followed or not. `--follow` is what lets
+        the log reach PAST the move at all, but on its own it changes nothing
+        about the answer.
+      * `--diff-filter=AM` alone also answers 2000 — without rename detection the
+        move looks like an Add of the new path.
+      * Together they answer **1000**: the pure rename is filtered out as `R`,
+        and `--follow` carries the search back to the file's real last edit. A
+        commit that moves AND edits the spec (the ordinary close) still answers
+        2000, which is correct — that is the driven look the warn asks for.
+
+    Without both, every status move silently resets the row's staleness clock —
+    the trap docs/concurrency-restructure.md §7 names, though not by this cause.
+    `--follow` accepts exactly one pathspec, which is why the folder mode pays
+    one `git log` per OPEN row rather than one per registry."""
+    args = ["log", "-1", "--format=%ct"]
+    if row_history:
+        args += ["--follow", "--diff-filter=AM"]
+    out = _git(root, args + ["--", rel_path])
     if out is None:
         return None
     out = out.strip()
@@ -1869,6 +2172,50 @@ def _path_commit_time(root, rel_path):
         return int(out)
     except ValueError:
         return None
+
+
+def _spec_paths(work_dir):
+    """`{wid: repo-relative POSIX path}` for every spec under `work_dir`, keyed
+    off the FILENAME's id prefix. Reading the id from the name rather than the
+    frontmatter costs no file reads and cannot disagree with the parsed row —
+    `parse_spec_row` refuses a spec whose two ids differ."""
+    out = {}
+    for path in spec_files(work_dir):
+        wid = "-".join(path.name.split("-")[:2])
+        out[wid] = "{}/{}".format(WI_WORK, path.relative_to(work_dir).as_posix())
+    return out
+
+
+def _spec_row_times(root, work_dir, wids):
+    """`{wid: committer-time-epoch}` for the named specs — the folder-registry
+    counterpart of `_blame_row_times`, one `git log -1` per id, asking the
+    blame-equivalent question (`_path_commit_time(row_history=True)`) so a status
+    MOVE does not re-date a row that nobody re-validated.
+
+    Only the ids the caller actually examines are looked up: the whole point of
+    the blame form was one subprocess for the whole registry, and per-file logs
+    over a 350-item backlog would trade that for 350. Degrades to a missing key
+    (never a crash or a false warn) exactly like the blame form."""
+    paths = _spec_paths(work_dir)
+    times = {}
+    for wid in wids:
+        rel = paths.get(wid)
+        if rel is None:
+            continue
+        when = _path_commit_time(root, rel, row_history=True)
+        if when is not None:
+            times[wid] = when
+    return times
+
+
+def _wi_row_times(root, open_wis):
+    """`{wid: committer-time}` for the open WIs, from whichever registry home is
+    authoritative: ONE `git blame` over the CSV, whose rows are lines — or one
+    `git log` per open spec, because a folder registry has no rows to blame."""
+    work_dir = spec_registry_dir(root / WI_CSV)
+    if work_dir is None:
+        return _blame_row_times(root, WI_CSV)
+    return _spec_row_times(root, work_dir, [w["id"] for w in open_wis])
 
 
 def backlog_staleness_findings(root, wis):
@@ -1891,11 +2238,14 @@ def backlog_staleness_findings(root, wis):
     untracked registry, or an uncommitted (not-yet-in-HEAD) WI or SR row simply
     yields no comparison for the affected item — never a false warn. Bounded cost:
     at most two `git blame`s (the WI + SR registries) plus one `git log -1` per
-    distinct SpecRef path of an open WI."""
+    distinct SpecRef path of an open WI. In the spec-folder registry there are no
+    registry ROWS to blame — each work item is its own file — so the WI half
+    costs one `git log -1 --follow` per OPEN item (the only rows this check
+    examines), never one per work item."""
     open_wis = [w for w in wis if w["status"] in BACKLOG_STALE_STATUSES]
     if not open_wis:
         return []
-    wi_times = _blame_row_times(root, WI_CSV)
+    wi_times = _wi_row_times(root, open_wis)
     if not wi_times:
         return []  # off-git / the registry is untracked — no basis to compare
     sr_times = _blame_row_times(root, SR_CSV)
@@ -1955,6 +2305,40 @@ def _wi_status_map(rows):
     return out
 
 
+def _head_spec_status_map(root):
+    """`{wid: {"status", "srs": []}}` at HEAD in the folder registry, or None when
+    HEAD carries no `docs/work` (so the caller falls back to the CSV at HEAD).
+
+    Derived from `git ls-tree -r --name-only HEAD` PATHS ALONE — no blob is
+    read. In this registry the directory IS the status, so the tree listing
+    already answers the whole question the CSV needed a `git show` and a parse
+    for; one subprocess, no content, no size dependence on the backlog.
+
+    Two honest limits, both benign for the close ratchets that consume this:
+    `archive/` collapses `done` and `retired` (the disposition lives in the
+    frontmatter, which is a blob), so a HEAD-retired item reads `done` — both are
+    terminal, so `_newly_closed` cannot be fooled either way; and `srs` is empty,
+    because SR-Refs are content too. `_staged_wi_registry` fills that from the
+    WORKING TREE, where the same file is unchanged unless this very commit
+    touched it."""
+    out = _git(root, ["ls-tree", "-r", "--name-only", "HEAD", "--", WI_WORK])
+    if not out or not out.strip():
+        return None
+    prefix = WI_WORK + "/"
+    statuses = {}
+    for name in out.splitlines():
+        name = name.strip()
+        if not name.startswith(prefix) or not name.endswith(".md"):
+            continue
+        parts = name[len(prefix) :].split("/")
+        status = SPEC_STATUS_DIRS.get(parts[0]) if len(parts) > 1 else None
+        wid = "-".join(parts[-1].split("-")[:2])
+        if status is None or not WI_ID_RE.match(wid) or wid.endswith("-000"):
+            continue
+        statuses[wid] = {"status": status, "srs": []}
+    return statuses or None
+
+
 def _chain_untouched(root, staged_names, *extra_dirs):
     """Whether the staged change set leaves the VALIDATION CHAIN alone.
 
@@ -1982,11 +2366,19 @@ def _staged_wi_registry(root):
     WI-352 adding a fourth copy: the census fails closed on a same-file
     duplication, and the F5 sanction buys cross-SCRIPT copy-ability, so it never
     covers one. Line-splitting the HEAD CSV is safe — a WI row is one physical
-    line, which `cell_integrity_errors` now enforces rather than assumes."""
+    line, which `cell_integrity_errors` now enforces rather than assumes.
+
+    Dual-read (Phase 2b): in the spec-folder registry the same three facts come
+    from `_staged_spec_registry` below — the one place a `--staged` check has to
+    know which home it is reading, because "the registry changed" is a *diff*
+    question and the two homes have different diffs."""
     staged = _git(root, ["diff", "--cached", "--name-only"])
     if staged is None:
         return None
     staged_names = set(staged.splitlines())
+    work_dir = spec_registry_dir(root / WI_CSV)
+    if work_dir is not None:
+        return _staged_spec_registry(root, staged_names, work_dir)
     if WI_CSV not in staged_names:
         return None
     head_text = _git(root, ["show", "HEAD:" + WI_CSV])
@@ -1994,6 +2386,43 @@ def _staged_wi_registry(root):
         return None
     cur_map = _wi_status_map(read_rows(root / WI_CSV))
     head_map = _wi_status_map(list(csv.DictReader(head_text.splitlines())))
+    return staged_names, cur_map, head_map
+
+
+def _staged_spec_registry(root, staged_names, work_dir):
+    """`_staged_wi_registry`'s folder-registry half.
+
+    "The registry changed" becomes "a spec under `docs/work/` is staged", read
+    with `--name-status` so a RENAME is visible as one record: a status change in
+    this registry IS a rename, and `R<score>  queued/WI-360-x.md
+    archive/WI-360-x.md` is exactly what a CLOSURE looks like. The closure SET is
+    still derived by `_newly_closed` from the two status maps rather than from
+    the `R` records — one home for that fact, and it stays correct even when git
+    reports a move as an unpaired delete + add (rename detection is a heuristic;
+    the status maps are not).
+
+    HEAD status comes from the tree listing (`_head_spec_status_map`), with the
+    CSV `git show` kept as the fallback for the one commit whose HEAD predates
+    the folder — the migration commit itself, where every spec would otherwise
+    read as newly-closed. HEAD `srs` are filled from the WORKING TREE row of the
+    same id: in this registry one work item is one file, so a commit that closes
+    A leaves B's SR-Refs untouched, and reading them from disk costs nothing.
+    What that cannot see is a commit closing A while also editing B's SR-Refs;
+    it would judge A against B's *new* refs. That is a narrower blind spot than
+    a silent no-op, which is what "paths alone" would otherwise buy here."""
+    changed = _git(root, ["diff", "--cached", "--name-status", "--", WI_WORK])
+    if changed is None or not changed.strip():
+        return None
+    cur_map = _wi_status_map(read_spec_rows(work_dir))
+    head_map = _head_spec_status_map(root)
+    if head_map is None:
+        head_text = _git(root, ["show", "HEAD:" + WI_CSV])
+        if head_text is None:
+            return None
+        head_map = _wi_status_map(list(csv.DictReader(head_text.splitlines())))
+    else:
+        for wid, head in head_map.items():
+            head["srs"] = cur_map.get(wid, {}).get("srs", [])
     return staged_names, cur_map, head_map
 
 
@@ -2487,11 +2916,15 @@ def main():
         else:
             print("check_trajectory: WARN - {}".format(msg), file=sys.stderr)
 
-    wi_rows = read_rows(root / WI_CSV)
+    # Dual-read (Phase 2b): `docs/work/` specs when present, else the CSV. Any
+    # finding about the REGISTRY ITSELF — a malformed spec, or both homes present
+    # at once — is an integrity error, the same tier as a malformed id. WI-349's
+    # physical-line cell check joins it, for the CSV home only (see
+    # `registry_cell_errors`).
+    registry_errors = []
+    wi_rows = read_registry_rows(root / WI_CSV, registry_errors)
     wis, integrity = load_wis(wi_rows)
-    # WI-349: the physical-line integrity of the rows themselves, checked on the
-    # RAW cells before anything reasons about the graph they describe.
-    integrity = integrity + cell_integrity_errors(wi_rows)
+    integrity = registry_errors + integrity + registry_cell_errors(root, wi_rows)
     if not wis and not integrity:
         if comp_errors:
             for e in comp_errors:
@@ -2591,7 +3024,9 @@ def main():
         for e in errors:
             print("check_trajectory: ERROR - {}".format(e), file=sys.stderr)
         print(
-            "check_trajectory: {} error(s) in {}.".format(len(errors), WI_CSV),
+            "check_trajectory: {} error(s) in {}.".format(
+                len(errors), registry_home(root)
+            ),
             file=sys.stderr,
         )
         return 1

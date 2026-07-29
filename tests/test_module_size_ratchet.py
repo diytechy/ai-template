@@ -28,10 +28,13 @@ import pathlib
 
 from conftest import SCRIPTS
 
-# A module larger than this must be baselined. Set above agent_common.py (1223)
-# / agent_route.py (1181) so only the six coordinators the review named are
-# frozen; a routine edit to a mid-size script does not trip the ratchet, but a
-# mid-size script growing into a new monolith does.
+# A module larger than this must be baselined. Chosen 2026-07-22 to sit above
+# agent_common.py (then 1223) / agent_route.py (1181) so only the six
+# coordinators the review named were frozen; a routine edit to a mid-size script
+# does not trip the ratchet, but a mid-size script growing into a new monolith
+# does. That is exactly what agent_common.py then did — it crossed at Phase 2b
+# and has its own entry below — so the parenthetical above is the threshold's
+# HISTORY, not a live census; the live census is `_census()`.
 THRESHOLD = 1500
 
 # Measured 2026-07-22 (len(text.splitlines()); files end with a newline, so this
@@ -199,7 +202,14 @@ BASELINE = {
     # `_clip_title`, so the card and the status.md line share one clause extractor
     # instead of forking), plus five CSS rules for the native disclosure. Reviewed
     # bump, log 2026-07-26. Re-stamp down with WI-280.
-    "gen_trajectory.py": 5192,
+    # +11 (5192 -> 5203), Phase 2b: this module reads the registry THROUGH
+    # schedule/check_trajectory, so the second home costs it no loader at all —
+    # the eleven lines are `docs/work` joining the `_asof` git-log source list
+    # and the loop panel asking for whichever home exists (`wi_home`) instead of
+    # hardcoding the CSV path, plus the comments saying why. The smallest
+    # possible edit for a migration this size, which is the point of reading
+    # through the sibling rather than parsing here. Re-stamp down with WI-280.
+    "gen_trajectory.py": 5203,
     # +11 (3452 -> 3463), WI-284: _regenerate_disposition_artifacts also runs
     # `gen_trajectory.py --status` at integrate/blocked-disposition so a closed
     # id drops from the generated frontier automatically (and the disposition
@@ -437,7 +447,29 @@ BASELINE = {
     # this entry adds is the compounding rate to weigh against the
     # scaffold-surface change a real extraction costs. Reviewed bump, log
     # 2026-07-28.
-    "check_trajectory.py": 2613,
+    #
+    # +435 (2613 -> 3048), Phase 2b of the concurrency restructure: the registry
+    # gains a second HOME (docs/work/ spec files) and this module is the copy of
+    # the reader that SPEAKS — it reports a malformed spec and refuses a tree
+    # carrying both homes at once, where schedule.py and agent_common.py stay
+    # silent. Three parts, none of them accreted branching:
+    #   ~228  the F5-duplicated spec-folder reader, identical in all three
+    #         scripts (see agent_common.py's entry below for why it is copied);
+    #   ~110  the git plumbing the CSV's assumptions do not survive —
+    #         `_head_spec_status_map` (status at HEAD from `ls-tree` PATHS, no
+    #         blob read), `_spec_paths` / `_spec_row_times` (per-open-row
+    #         staleness), `_staged_spec_registry` (close detection from a staged
+    #         RENAME), and `_path_commit_time`'s row-history mode;
+    #   the rest  is the rationale for each, including the measurement that
+    #         `--follow` ALONE does not preserve a row's staleness clock across a
+    #         status move — the flag the design note named, which turned out to
+    #         need `--diff-filter=AM` beside it.
+    # This is the module the previous entry named as WI-280's concrete next
+    # slice, and this bump does not weaken that: it makes it larger and more
+    # urgent. What it is not is drift — every line is the second registry home,
+    # and the whole of it re-stamps DOWN at Phase 5 when the CSV home retires.
+    # Reviewed bump; reason here and in the Phase 2b session record.
+    "check_trajectory.py": 3048,
     # +1 (1916 -> 1917), WI-279: one MAPPING row registering the new
     # scripts/check_coverage.py kit gate so it ships downstream — a required
     # one-line registration, not monolith growth (the reviewed-bump escape the
@@ -469,6 +501,20 @@ BASELINE = {
     # cost more lines than the three inline copies they replace, and buy the
     # thing lines cannot — one home for the rule. Reviewed bump, log 2026-07-28.
     "bootstrap.py": 2017,
+    # NEW ENTRY, +228 (1423 -> 1651), Phase 2b of the concurrency restructure
+    # (docs/concurrency-restructure.md §7): the spec-folder work-item reader,
+    # which crosses this module over THRESHOLD for the first time. It is one
+    # verbatim copy of a reader that also lands in schedule.py and
+    # check_trajectory.py — the F5/WI-291 pattern, where a shared module was
+    # rejected (owner ruling 2026-07-12) so each script stays independently
+    # copy-able, and DRIFT is closed by tests/test_wi_loader_sync.py instead of
+    # by extraction. So the honest description is not "agent_common grew" but
+    # "the registry has two homes during the migration": roughly two thirds of
+    # the 228 is the docstring and the format's rules, and the whole entry
+    # RETIRES at Phase 5 when the CSV home goes and the reader is the only one
+    # left. Re-stamp DOWN then — this is the one baseline here with a scheduled
+    # end date. Reviewed bump; reason here and in the Phase 2b session record.
+    "agent_common.py": 1651,
 }
 
 

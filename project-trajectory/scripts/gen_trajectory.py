@@ -2968,6 +2968,10 @@ def _asof(root):
             root / "docs" / "requirements" / "system-requirements.csv",
             root / "docs" / "requirements" / "low-level-requirements.csv",
             root / "docs" / "requirements" / "work-items.csv",
+            # Both work-item homes (Phase 2b): whichever exists is a source of
+            # this page, and `git log` over a directory is the same question
+            # asked of the folder registry.
+            root / "docs" / "work",
             root / "docs" / "test" / "test-cases.csv",
             root / "docs" / "architecture.md",
             root / "README.md",
@@ -3912,11 +3916,15 @@ def _loop_panel(root):
     def home(rel):
         return rel if (root / rel).exists() else None
 
-    wi_csv = "docs/requirements/work-items.csv"
+    # The work-item registry's home, whichever it is (Phase 2b): the spec folder
+    # when this repo has migrated, else the CSV. `home` is an existence probe, so
+    # asking it for both and taking the first that answers keeps every emitted
+    # href resolvable without the panel knowing which home won.
+    wi_home = home("docs/work") or home("docs/requirements/work-items.csv")
     intake_loop = [
         ("Intake", "owner/agent hands work in", home("docs/status.md")),
-        ("Triage → WIs", "scoped work items with spec detail", home(wi_csv)),
-        ("Resume loop", "scheduler derives the ready frontier", home(wi_csv)),
+        ("Triage → WIs", "scoped work items with spec detail", wi_home),
+        ("Resume loop", "scheduler derives the ready frontier", wi_home),
         ("Build / review", "BUILD then REVIEW-A/B", home("docs/log.md")),
         ("Merge", "verdicts merged; the loop repeats", home("docs/log.md")),
     ]
@@ -4209,7 +4217,7 @@ def _next_work_html(root):
         return ""
     try:
         wis = schedule.load_wis(
-            schedule.load_rows(root / "docs/requirements/work-items.csv")
+            schedule.load_registry_rows(root / "docs/requirements/work-items.csv")
         )
         records = schedule.evaluate(wis)
     except (OSError, ValueError):
@@ -4588,7 +4596,7 @@ def _blocked_pending(root):
     never double-lists one). The pointer is the BlockRef path; when a path-shaped
     ref is absent from the dev tree but a train branch carries it, the
     `git show <train>:<path>` read path is used instead."""
-    wis, _ = ct.load_wis(ct.read_rows(root / ct.WI_CSV))
+    wis, _ = ct.load_wis(ct.read_registry_rows(root / ct.WI_CSV))
     lines, ids = [], set()
     for w in sorted(wis, key=lambda w: w["id"]):
         if w["status"] != "blocked" or not w["blockref"]:
@@ -4709,7 +4717,10 @@ def _stranded_pending(root, already):
     OPEN (queued/active/blocked); that projects an attestation line with the
     train read path to the blocking ratify doc. `already` = the WI ids source (a)
     covered, skipped so no WI double-lists."""
-    reg = {w["id"]: w["status"] for w in ct.load_wis(ct.read_rows(root / ct.WI_CSV))[0]}
+    reg = {
+        w["id"]: w["status"]
+        for w in ct.load_wis(ct.read_registry_rows(root / ct.WI_CSV))[0]
+    }
     open_states = {"queued", "active", "blocked"}
     trains, _ = _scan_reservations(root)
     lines, seen = [], set()
@@ -4997,7 +5008,7 @@ def _frontier_lines(root):
     if schedule is None:
         return []
     try:
-        rows = schedule.load_rows(root / "docs/requirements/work-items.csv")
+        rows = schedule.load_registry_rows(root / "docs/requirements/work-items.csv")
         wis = schedule.load_wis(rows)
         ready = schedule.frontier(wis)  # reserved=None -> pure registry frontier
     except (OSError, ValueError):
@@ -5145,7 +5156,7 @@ def main():
         print("gen_trajectory: off (docs/trajectory-check) — nothing to render.")
         return 0
 
-    wis, integrity = ct.load_wis(ct.read_rows(root / ct.WI_CSV))
+    wis, integrity = ct.load_wis(ct.read_registry_rows(root / ct.WI_CSV))
     if not wis and not integrity:
         print(
             "gen_trajectory: no work items (placeholder-only or absent registry) — "

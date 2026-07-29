@@ -35,6 +35,7 @@ import socket
 import subprocess
 import sys
 import time
+import tomllib
 from pathlib import Path
 
 # Sibling scripts (the WI-218 split): preflight validates the AGENT_CMD
@@ -519,12 +520,240 @@ def parse_wi_list(spec):
     return out
 
 
+# --- the spec-folder registry reader (duplicated per the F5 rule) -------------
+# `docs/work/<status>/WI-###-<slug>.md`: one Markdown spec per work item, its
+# STATUS encoded as the DIRECTORY (docs/concurrency-restructure.md §2.1, Phase
+# 2b). The reader emits rows carrying the SAME 17 keys `csv.DictReader` yields
+# for `work-items.csv`, so the dual-read happens at the ROW level, once, here —
+# `load_wis` and every consumer past it never learn which home is authoritative.
+# The format's definition is `tools/wi_convert.py` (`parse_spec` /
+# `status_from_location`), which materializes the folder; this is its read half.
+#
+# Copied VERBATIM across schedule.py, check_trajectory.py and agent_common.py
+# per the kit's F5 rule — a shared module was rejected (owner ruling
+# 2026-07-12) so each script stays independently copy-able, and the one real
+# risk of N parsers, DRIFT, is closed by tests/test_wi_loader_sync.py rather
+# than by extraction (WI-291).
+WI_COLUMNS = (
+    "WI-ID",
+    "Title",
+    "Workstream",
+    "SR-Refs",
+    "Predecessors",
+    "Status",
+    "Deliverable",
+    "SpecRef",
+    "BuildTier",
+    "CritiqueBudget",
+    "CritiqueExhaustion",
+    "Priority",
+    "Exclusive",
+    "BlockRef",
+    "EstTokens",
+    "SafetyClass",
+    "PlanMode",
+)
+SPEC_SCALARS = (
+    ("Title", "title"),
+    ("Workstream", "workstream"),
+    ("SpecRef", "specref"),
+    ("BuildTier", "buildtier"),
+    ("CritiqueBudget", "critique_budget"),
+    ("CritiqueExhaustion", "critique_exhaustion"),
+    ("Priority", "priority"),
+    ("Exclusive", "exclusive"),
+    ("BlockRef", "blockref"),
+    ("EstTokens", "est_tokens"),
+    ("SafetyClass", "safety_class"),
+    ("PlanMode", "planmode"),
+)
+SPEC_LISTS = (("SR-Refs", "sr_refs"), ("Predecessors", "needs"))
+# Directory -> Status. `archive/` holds BOTH terminal states and the frontmatter
+# `disposition` key tells them apart; `active/<branch>/` sits one level deeper,
+# so the status is the FIRST path component, never the file's parent directory.
+SPEC_STATUS_DIRS = {
+    "archive": "done",
+    "queued": "queued",
+    "deferred": "deferred",
+    "active": "active",
+}
+SPEC_FENCE = "+++"
+SPEC_DELIVERABLE = "\n## Deliverable\n\n"
+
+
+def spec_work_dir(csv_path):
+    """The `docs/work` folder that replaces the registry CSV at `csv_path` — its
+    `docs/` directory plus `work`, derived from the one path each caller already
+    declares rather than from a second constant that could disagree with it."""
+    return Path(csv_path).parent.parent / "work"
+
+
+def spec_files(work_dir):
+    """Every `<status>/WI-*.md` spec under `work_dir`, sorted by path; `[]` when
+    the folder is absent or holds none. An empty answer is what leaves the CSV
+    authoritative, so a stray file sitting DIRECTLY in `work_dir` — which has no
+    status directory above it — deliberately does not count as a registry."""
+    work_dir = Path(work_dir)
+    if not work_dir.is_dir():
+        return []
+    return sorted(p for p in work_dir.rglob("WI-*.md") if p.parent != work_dir)
+
+
+def spec_registry_dir(csv_path):
+    """The spec folder that is AUTHORITATIVE for `csv_path`, or None when the CSV
+    still is. The dual-read resolution, stated once: specs present => the folder
+    wins; no specs => the CSV is read exactly as before."""
+    work_dir = spec_work_dir(csv_path)
+    return work_dir if spec_files(work_dir) else None
+
+
+def parse_spec_frontmatter(text, relpath):
+    """`(data, body)` for one spec file: the TOML frontmatter between the `+++`
+    fences, parsed, and everything after the closing fence, verbatim."""
+    lines = text.split("\n")
+    if not lines or lines[0] != SPEC_FENCE or SPEC_FENCE not in lines[1:]:
+        raise ValueError(
+            "{}: no closed `{}` frontmatter fence".format(relpath, SPEC_FENCE)
+        )
+    close = lines.index(SPEC_FENCE, 1)
+    try:
+        data = tomllib.loads("\n".join(lines[1:close]))
+    except tomllib.TOMLDecodeError as exc:
+        raise ValueError(
+            "{}: frontmatter is not valid TOML — {}".format(relpath, exc)
+        ) from None
+    return data, "\n".join(lines[close + 1 :])
+
+
+def parse_spec_status(relpath, data):
+    """The Status a spec's LOCATION encodes, checked against its `disposition`.
+
+    `archive/` holds both terminal states, so the two ways location and
+    frontmatter can disagree — an unknown disposition, and a retirement filed
+    outside `archive/` — are refusals, never silent coercions. A directory
+    nobody declared is a refusal too: dropping it into `queued` would silently
+    reclassify work, which is the catch-all shape this kit refuses on sight."""
+    parts = relpath.split("/")
+    status = SPEC_STATUS_DIRS.get(parts[0]) if len(parts) > 1 else None
+    if status is None:
+        raise ValueError(
+            "{}: {!r} is not a status directory (the spec form knows only {})".format(
+                relpath, parts[0], ", ".join(sorted(SPEC_STATUS_DIRS))
+            )
+        )
+    disposition = data.get("disposition")
+    if disposition is None:
+        return status
+    if disposition != "retired":
+        raise ValueError("{}: unknown disposition {!r}".format(relpath, disposition))
+    if status != "done":
+        raise ValueError("{}: a retired spec belongs in archive/".format(relpath))
+    return "retired"
+
+
+def parse_spec_id(relpath, data):
+    """The work-item id, which must be a non-empty string AND must be the one
+    the filename carries — two homes for one fact, so they are compared here
+    rather than trusted apart."""
+    wid = data.get("id")
+    if not isinstance(wid, str) or not wid:
+        raise ValueError("{}: frontmatter carries no string `id`".format(relpath))
+    if not relpath.split("/")[-1].startswith(wid + "-"):
+        raise ValueError(
+            "{}: filename does not carry its own id {!r}".format(relpath, wid)
+        )
+    return wid
+
+
+def parse_spec_deliverable(relpath, body):
+    """The Deliverable cell a spec body carries, verbatim ("" when absent).
+
+    The long cell lives in the BODY precisely because body text needs no
+    escaping: it may hold newlines, quotes and markdown. This format owns the
+    whole body shape, so anything that is neither empty nor one
+    `## Deliverable` section is a malformation rather than free prose."""
+    if not body:
+        return ""
+    if not body.startswith(SPEC_DELIVERABLE) or not body.endswith("\n"):
+        raise ValueError(
+            "{}: body is neither empty nor one `## Deliverable` section".format(relpath)
+        )
+    return body[len(SPEC_DELIVERABLE) : -1]
+
+
+def parse_spec_row(text, relpath):
+    """`(row, order)` for one spec file — a 17-key row shaped exactly like the
+    CSV's. Raises ValueError NAMING the file on any malformation: invalid TOML, a
+    missing or non-string `id`, an id the filename disagrees with, a directory
+    that is not a status, or a body that is not the single `## Deliverable`
+    section this format owns."""
+    data, body = parse_spec_frontmatter(text, relpath)
+    row = dict.fromkeys(WI_COLUMNS, "")
+    row["WI-ID"] = parse_spec_id(relpath, data)
+    row["Status"] = parse_spec_status(relpath, data)
+    row["Deliverable"] = parse_spec_deliverable(relpath, body)
+    for column, key in SPEC_SCALARS:
+        if key in data:
+            row[column] = str(data[key])
+    for column, key in SPEC_LISTS:
+        if key in data:
+            row[column] = ";".join(str(v) for v in data[key])
+    order = data.get("order")
+    return row, order if isinstance(order, int) else None
+
+
+def read_spec_rows(work_dir, on_error=None):
+    """The spec folder's rows in REGISTRY order — by the explicit `order` key,
+    then by numeric id, which is the order the converter reproduces.
+
+    A malformed spec is reported to `on_error` (a callable taking one message)
+    and skipped; with no sink it is skipped SILENTLY. That mirrors the split this
+    kit already draws over the CSV — a broken registry is the validator's job to
+    report, not the scheduler's to crash on. Files are read with universal
+    newlines, so a spec checked out CRLF parses identically to one checked out
+    LF (the WI-337 lesson: line endings are a property of the checkout)."""
+    parsed = []
+    for path in spec_files(work_dir):
+        relpath = path.relative_to(work_dir).as_posix()
+        try:
+            row, order = parse_spec_row(path.read_text(encoding="utf-8"), relpath)
+        except (ValueError, OSError, UnicodeDecodeError) as exc:
+            if on_error is not None:
+                on_error(str(exc))
+            continue
+        parsed.append((order is None, order or 0, _spec_id_number(row["WI-ID"]), row))
+    parsed.sort(key=lambda item: item[:3])
+    return [item[-1] for item in parsed]
+
+
+def _spec_id_number(wid):
+    match = re.search(r"\d+", wid or "")
+    return int(match.group()) if match else 0
+
+
+# --- end of the F5-duplicated spec-folder reader ------------------------------
+
+
+def load_registry_rows(root):
+    """The work-item rows of `root`'s tracked registry, from whichever home is
+    authoritative — the spec folder `docs/work/` when it holds specs, else
+    `docs/requirements/work-items.csv` exactly as before.
+
+    Stays SILENT when both are present, like the scheduler and unlike the
+    validator: a worker reads the registry, it does not adjudicate it."""
+    csv_path = Path(root) / "docs" / "requirements" / "work-items.csv"
+    work_dir = spec_registry_dir(csv_path)
+    return read_spec_rows(work_dir) if work_dir else _read_csv_rows(csv_path)
+
+
 def load_wi_registry(root):
     """{WI-ID: raw row dict} from the worktree's tracked WI registry — the
     checked-out copy on the train branch, so a worker reads the same registry
     state its base commit fixed. Malformed/duplicate ids are skipped (the
-    validator's finding, not the worker's crash)."""
-    rows = _read_csv_rows(root / "docs" / "requirements" / "work-items.csv")
+    validator's finding, not the worker's crash). Reads whichever home is
+    authoritative via `load_registry_rows`; the rows are the same 17 keys either
+    way, so every caller of this map is unaffected by the migration."""
+    rows = load_registry_rows(root)
     out = {}
     for r in rows:
         wid = (r.get("WI-ID") or "").strip()

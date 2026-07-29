@@ -51,7 +51,7 @@ graph LR
     m_scripts_check_perf["scripts/check_perf — Performance budget & regression comparator: tra…"]
     m_scripts_check_privacy["scripts/check_privacy — Secrets + privacy-leak lint — the deterministic…"]
     m_scripts_check_stubs["scripts/check_stubs — No-stub / substance detector: flag implementati…"]
-    m_scripts_check_trajectory["scripts/check_trajectory — Validate the work-item registry (docs/requireme…"]
+    m_scripts_check_trajectory["scripts/check_trajectory — Validate the work-item registry — stdlib only."]
     m_scripts_check_vendored["scripts/check_vendored — Drift check for vendored third-party docs (stdl…"]
     m_scripts_derive_gate["scripts/derive_gate — Derive the active gate from artifact states — t…"]
     m_scripts_gen_arch_map["scripts/gen_arch_map — Generate the module/function map for `architect…"]
@@ -164,6 +164,16 @@ Contracts (interfaces): IF-037, IF-065
 | `blackout_wait(wake_seconds, window, resume_at, emit, sleep, interval)` | Emit the blackout banner, then wait `wake_seconds` in `interval`-second |  |
 | `sanitize_train(name)` | A train id becomes a branch segment, a log-file prefix, and a reviews/ |  |
 | `parse_wi_list(spec)` | The ordered assigned-WI list from a `;`/`,`/whitespace-joined --wi value. |  |
+| `spec_work_dir(csv_path)` | The `docs/work` folder that replaces the registry CSV at `csv_path` — its |  |
+| `spec_files(work_dir)` | Every `<status>/WI-*.md` spec under `work_dir`, sorted by path; `[]` when |  |
+| `spec_registry_dir(csv_path)` | The spec folder that is AUTHORITATIVE for `csv_path`, or None when the CSV |  |
+| `parse_spec_frontmatter(text, relpath)` | `(data, body)` for one spec file: the TOML frontmatter between the `+++` |  |
+| `parse_spec_status(relpath, data)` | The Status a spec's LOCATION encodes, checked against its `disposition`. |  |
+| `parse_spec_id(relpath, data)` | The work-item id, which must be a non-empty string AND must be the one |  |
+| `parse_spec_deliverable(relpath, body)` | The Deliverable cell a spec body carries, verbatim ("" when absent). |  |
+| `parse_spec_row(text, relpath)` | `(row, order)` for one spec file — a 17-key row shaped exactly like the |  |
+| `read_spec_rows(work_dir, on_error)` | The spec folder's rows in REGISTRY order — by the explicit `order` key, |  |
+| `load_registry_rows(root)` | The work-item rows of `root`'s tracked registry, from whichever home is |  |
 | `load_wi_registry(root)` | {WI-ID: raw row dict} from the worktree's tracked WI registry — the |  |
 | `latest_trailer_evidence(log_out)` | Fold a newest-first trailer log (TRAILER_EVIDENCE_FMT) into |  |
 | `train_evidence(root, base)` | (built, blocked) read from the train branch's committed trailers in |  |
@@ -516,7 +526,7 @@ Contracts (interfaces): IF-006, IF-026
 | `main()` |  |  |
 
 ### `scripts/check_trajectory`
-_Validate the work-item registry (docs/requirements/work-items.csv) — stdlib only._
+_Validate the work-item registry — stdlib only._
 Imports (internal): `check_docs`
 Contracts (interfaces): IF-009, IF-023, IF-077
 
@@ -526,6 +536,18 @@ Contracts (interfaces): IF-009, IF-023, IF-077
 | `read_interfaces_check_enabled(root)` | Whether the architecture-connectivity coverage warns are on (S5/WI-056). |  |
 | `read_components_check_enabled(root)` | Whether the How-SW top-view right-sizing rule is on (WI-073/FB5). |  |
 | `read_rows(path)` | The CSV rows of `path` as dicts, or [] when the file is absent. Read |  |
+| `spec_work_dir(csv_path)` | The `docs/work` folder that replaces the registry CSV at `csv_path` — its |  |
+| `spec_files(work_dir)` | Every `<status>/WI-*.md` spec under `work_dir`, sorted by path; `[]` when |  |
+| `spec_registry_dir(csv_path)` | The spec folder that is AUTHORITATIVE for `csv_path`, or None when the CSV |  |
+| `parse_spec_frontmatter(text, relpath)` | `(data, body)` for one spec file: the TOML frontmatter between the `+++` |  |
+| `parse_spec_status(relpath, data)` | The Status a spec's LOCATION encodes, checked against its `disposition`. |  |
+| `parse_spec_id(relpath, data)` | The work-item id, which must be a non-empty string AND must be the one |  |
+| `parse_spec_deliverable(relpath, body)` | The Deliverable cell a spec body carries, verbatim ("" when absent). |  |
+| `parse_spec_row(text, relpath)` | `(row, order)` for one spec file — a 17-key row shaped exactly like the |  |
+| `read_spec_rows(work_dir, on_error)` | The spec folder's rows in REGISTRY order — by the explicit `order` key, |  |
+| `read_registry_rows(path, errors)` | The work-item rows from whichever home is authoritative — the spec folder |  |
+| `registry_home(root)` | The repo-relative path of the registry home this run actually read — the |  |
+| `registry_cell_errors(root, rows)` | `cell_integrity_errors` for the CSV home only. |  |
 | `load_wis(rows)` | Parse work-item rows into `(wis, integrity_errors)`. |  |
 | `cell_integrity_errors(rows)` | Hard-error strings for any registry cell that is not one line of plain text. |  |
 | `validate(wis, known_srs)` | Return the hard-error strings for the work-item graph ([] = clean). |  |
@@ -820,6 +842,16 @@ Contracts (interfaces): IF-053, IF-054
 | Public item | Summary | Implements |
 |---|---|---|
 | `load_rows(path)` |  |  |
+| `spec_work_dir(csv_path)` | The `docs/work` folder that replaces the registry CSV at `csv_path` — its |  |
+| `spec_files(work_dir)` | Every `<status>/WI-*.md` spec under `work_dir`, sorted by path; `[]` when |  |
+| `spec_registry_dir(csv_path)` | The spec folder that is AUTHORITATIVE for `csv_path`, or None when the CSV |  |
+| `parse_spec_frontmatter(text, relpath)` | `(data, body)` for one spec file: the TOML frontmatter between the `+++` |  |
+| `parse_spec_status(relpath, data)` | The Status a spec's LOCATION encodes, checked against its `disposition`. |  |
+| `parse_spec_id(relpath, data)` | The work-item id, which must be a non-empty string AND must be the one |  |
+| `parse_spec_deliverable(relpath, body)` | The Deliverable cell a spec body carries, verbatim ("" when absent). |  |
+| `parse_spec_row(text, relpath)` | `(row, order)` for one spec file — a 17-key row shaped exactly like the |  |
+| `read_spec_rows(work_dir, on_error)` | The spec folder's rows in REGISTRY order — by the explicit `order` key, |  |
+| `load_registry_rows(path)` | The work-item rows from whichever home is authoritative — the spec folder |  |
 | `load_wis(rows)` | Parse work-item rows into a list of scheduler WI dicts (skips the inert |  |
 | `classify(wi, *, structural)` | `(scheduling_class, [reason_codes])` for one WI — a pure function. | SR-093, SR-094, SR-107 |
 | `is_schedulable_class(sched_class)` | Only a positively-classified WI is eligible; unclassified fails closed. |  |
