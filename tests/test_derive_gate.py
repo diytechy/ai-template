@@ -49,8 +49,11 @@ def _independent_meta_expectations():
     so the dogfood test can catch sr_gate breaking (the adversarial review's F3:
     compare-a-subprocess-to-the-same-function is tautological). Simplified on
     facts the meta's own harness enforces elsewhere (orphans=0 => every
-    non-exempt SR is decomposed): a phase expects G0 if any of its SRs is
-    Draft, else G2 if any is below Verified (Modified included), else G3."""
+    non-exempt SR is decomposed): a phase expects G0 if any of its SRs — OR
+    any of its LLR/TC rows, the documented new-phase signal (derive_gate's
+    "LLR/TC — Draft => G0"; first exercised by Phase 5's TC-133, a Draft TC
+    under no Draft SR) — is Draft, else G2 if any SR is below Verified
+    (Modified included), else G3."""
     import csv as _csv
 
     with (ROOT / "docs" / "requirements" / "system-requirements.csv").open(
@@ -68,9 +71,23 @@ def _independent_meta_expectations():
         phases.setdefault((r.get("Phase") or "").strip() or "(default)", []).append(
             status
         )
+    draft_child_phases = set()
+    for rel, idcol in (
+        ("docs/requirements/low-level-requirements.csv", "LLR-ID"),
+        ("docs/test/test-cases.csv", "TC-ID"),
+    ):
+        with (ROOT / rel).open(encoding="utf-8-sig", newline="") as fh:
+            for r in _csv.DictReader(fh):
+                rid = r.get(idcol) or ""
+                if not rid or rid.endswith("-000"):
+                    continue
+                if (r.get("Status") or "").strip().lower() == "draft":
+                    draft_child_phases.add(
+                        (r.get("Phase") or "").strip() or "(default)"
+                    )
     expect = {}
     for phase, statuses in phases.items():
-        if any(s == "draft" for s in statuses):
+        if any(s == "draft" for s in statuses) or phase in draft_child_phases:
             expect[phase] = "G0"
         elif any(s != "verified" for s in statuses):
             expect[phase] = "G2"
