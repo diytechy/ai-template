@@ -236,6 +236,47 @@ def read_sns(root):
     return [(r["id"], r["need"]) for r in _sn_rows(root)]
 
 
+def _spine(root, skip_example=False):
+    """`(srs, llrs, tcs)` — the SR/LLR/TC registry rows, id-prefix-filtered.
+
+    The three readers of the spine (the What icicle, the maturity numbers, the
+    Draft/Modified pointer lines) each re-derived the same
+    `read_rows(...) if id.startswith(...)` triple; the census charged the eight
+    resulting blocks to WI-346 as `spine-load-repeat`. Explicitly NOT the F5
+    case: F5 buys cross-SCRIPT copy-ability (a shared `_kitcommon.py` was
+    rejected 2026-07-12) and every copy was inside this one file, so a
+    module-local loader costs nothing and no independence is spent.
+
+    ROW ORDER IS THE CONTRACT: rows come back exactly as `ct.read_rows` yields
+    them — no sort, no set, no dict round-trip. The icicle picks a *primary*
+    parent as the first listed ref and lays blocks out in arrival order, and
+    `--check` byte-compares the rendered result, so a reordering here is a
+    silent artifact change.
+
+    `skip_example=True` additionally drops the `-000` placeholder rows a
+    freshly copied template carries. That is the pending projection's rule — an
+    example row owes no ratification — stated once in the loader rather than
+    re-derived at the call site. The default keeps them, because the icicle and
+    the maturity counts render whatever the registry holds."""
+
+    def rows(rel, col, prefix):
+        out = []
+        for r in ct.read_rows(root / rel):
+            rid = r.get(col) or ""
+            if not rid.startswith(prefix):
+                continue
+            if skip_example and rid.endswith("-000"):
+                continue
+            out.append(r)
+        return out
+
+    return (
+        rows(ct.SR_CSV, "SR-ID", "SR-"),
+        rows("docs/requirements/low-level-requirements.csv", "LLR-ID", "LLR-"),
+        rows("docs/test/test-cases.csv", "TC-ID", "TC-"),
+    )
+
+
 # WI-292 (U5 de-collision, 119-CRITIQUE): `tc` was `#047857`, byte-identical to
 # STATUS_FILL["done"] — two different concepts (a TC/Test-Case tier vs a done
 # status) reading as one colour wherever both appear (the icicle TC lane sits one
@@ -351,11 +392,7 @@ def arch_icicle(root):
         )
         add(r["id"], "sn", r["need"], r["need"], meta)
 
-    srs = [
-        r
-        for r in ct.read_rows(root / ct.SR_CSV)
-        if (r.get("SR-ID") or "").startswith("SR-")
-    ]
+    srs, llrs, tcs = _spine(root)
     sr_ids = {r["SR-ID"].strip() for r in srs}
     for r in srs:
         sid = r["SR-ID"].strip()
@@ -371,11 +408,6 @@ def arch_icicle(root):
         if parents:
             link(parents[0], sid)
 
-    llrs = [
-        r
-        for r in ct.read_rows(root / "docs/requirements/low-level-requirements.csv")
-        if (r.get("LLR-ID") or "").startswith("LLR-")
-    ]
     llr_ids = {r["LLR-ID"].strip() for r in llrs}
     for r in llrs:
         lid = r["LLR-ID"].strip()
@@ -391,11 +423,7 @@ def arch_icicle(root):
         if parents:
             link(parents[0], lid)
 
-    for r in [
-        r
-        for r in ct.read_rows(root / "docs/test/test-cases.csv")
-        if (r.get("TC-ID") or "").startswith("TC-")
-    ]:
+    for r in tcs:
         tid = r["TC-ID"].strip()
         add(
             tid,
@@ -558,21 +586,7 @@ def spine_stats(root):
     """Definition-maturity numbers. 'Definition completeness' = SRs marked
     Verified / total SRs — how much of the requirement definition is decomposed
     and confirmed, distinct from execution (work items done)."""
-    srs = [
-        r
-        for r in ct.read_rows(root / ct.SR_CSV)
-        if (r.get("SR-ID") or "").startswith("SR-")
-    ]
-    llrs = [
-        r
-        for r in ct.read_rows(root / "docs/requirements/low-level-requirements.csv")
-        if (r.get("LLR-ID") or "").startswith("LLR-")
-    ]
-    tcs = [
-        r
-        for r in ct.read_rows(root / "docs/test/test-cases.csv")
-        if (r.get("TC-ID") or "").startswith("TC-")
-    ]
+    srs, llrs, tcs = _spine(root)
     sr_total = len(srs)
     sr_verified = sum(
         1 for r in srs if (r.get("Status") or "").strip().lower() == "verified"
@@ -2959,6 +2973,31 @@ HTML_TEMPLATE = string.Template("""<!doctype html>
 """)
 
 
+def _run_captured(argv):
+    """`subprocess.run(argv)` under this module's ONE capture contract.
+
+    The five keywords: utf-8 with `errors="replace"` so a child emitting a
+    single locale-undecodable byte mojibakes rather than crashing a render, and
+    `stdin=DEVNULL` so a git that would prompt on a TTY takes its default
+    instead of hanging an unattended run. WI-304 extracted exactly this block in
+    `agent_dispatch` as `_run_captured` rather than sanctioning it; the census
+    charged the two sites left here (`_asof`, `_git`) to WI-346 as
+    `subprocess-capture`.
+
+    Deliberately does NOT catch: `OSError` (no git binary at all) propagates,
+    and both callers catch it to degrade to empty. That is the off-git
+    best-effort contract — a non-repo pays nothing, but the helper does not
+    silently swallow a failure a future caller might need to see."""
+    return subprocess.run(
+        argv,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        stdin=subprocess.DEVNULL,
+    )
+
+
 def _asof(root):
     """'state as of commit <sha> · <date>' from the last commit touching the
     sources, or '' (no git / no commits). Git-derived, never now() — a wall
@@ -2984,14 +3023,9 @@ def _asof(root):
     if not sources:
         return ""
     try:
-        proc = subprocess.run(
+        proc = _run_captured(
             ["git", "-C", str(root), "log", "-1", "--format=%h · %as", "--"]
-            + [str(p) for p in sources],
-            capture_output=True,
-            text=True,
-            encoding="utf-8",
-            errors="replace",
-            stdin=subprocess.DEVNULL,
+            + [str(p) for p in sources]
         )
     except OSError:
         return ""
@@ -4538,14 +4572,7 @@ def _git(root, *args):
     importing the dispatcher, which would drag the whole engine into a renderer).
     Every pending source degrades to empty off-git, so a non-repo pays nothing."""
     try:
-        proc = subprocess.run(
-            ["git", "-C", str(root), *args],
-            capture_output=True,
-            text=True,
-            encoding="utf-8",
-            errors="replace",
-            stdin=subprocess.DEVNULL,
-        )
+        proc = _run_captured(["git", "-C", str(root), *args])
     except OSError:
         return 1, ""
     return proc.returncode, proc.stdout
@@ -4816,12 +4843,10 @@ def _spine_pending(root):
     join the freshness-gated PURE region; pointer-only per this block's charter
     — the depth (per-cell before/after) lives in the on-demand brief the line
     names, `trace.py --ratify modified`, never here. Sorted by id, no clocks."""
-    srs = [
-        r
-        for r in ct.read_rows(root / ct.SR_CSV)
-        if (r.get("SR-ID") or "").startswith("SR-")
-        and not (r.get("SR-ID") or "").endswith("-000")
-    ]
+    # `skip_example=True`: a copied template's `-000` example row owes no
+    # ratification. Only the SR arm projects (the attestation unit), so the
+    # LLR/TC arms of the loader go unused here.
+    srs = _spine(root, skip_example=True)[0]
     lines = []
     for r in sorted(srs, key=lambda x: x["SR-ID"]):
         status = (r.get("Status") or "").strip().lower()

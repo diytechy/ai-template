@@ -194,6 +194,35 @@
 #     blocks were EXTRACTED into `_run` before this stamp, not sanctioned.
 #     (+1 more at the defect-fix pass, 216 -> 217: the case-preserving
 #     [generated] reader joined `declared-file` beside run_menu's.)
+#   * 217 -> 208 is WI-346, which EXTRACTED rather than re-sanctioned: one
+#     module-local `_spine(root, skip_example=False)` loader now returns the
+#     SR/LLR/TC rows for all three readers of gen_trajectory's spine, and one
+#     `_run_captured(argv)` states the five capture keywords that `_asof` and
+#     `_git` each spelled out. Nine sanctions went dead and the emitted census
+#     grew NOTHING: the full `--emit-census` diff against the parent is nine
+#     deletions and zero insertions, so no gen_trajectory == gen_trajectory
+#     block moved in to replace them.
+#     Eight of the nine are the charged classes: seven of `spine-load-repeat`
+#     (`30e7a736008d` twice, `fe21429656b1`, `eba66f159e6b`, `e14f648a712d`,
+#     `734e2d525d59`, `173c64659891`) and the whole of `subprocess-capture`
+#     (`e5d5ce58f56b`). Both sections are therefore deleted.
+#     The ninth is a CLIQUE dissolution one class over, the WI-347 effect in its
+#     removing form: `f02bcce4d53d` (check.py == gen_trajectory.py, git-wrapper)
+#     matched check.py's `_git_out` against gen_trajectory's `_git` BODY, and
+#     that body is now a one-line call, so the pair no longer has 30 shared
+#     tokens. check.py was not touched; the sanction is simply dead, and
+#     git-wrapper drops 12 -> 11. gen_trajectory's other git-wrapper pairing
+#     (`332bdb287be6`, against agent_dispatch) is unaffected.
+#     ONE charged fingerprint did NOT dissolve and is re-classed rather than
+#     dropped: `29c06640159e` re-emits BYTE-IDENTICALLY (same fp, same pair)
+#     because it was never the loader at all. It is the icicle's per-tier node
+#     build — `<tier>_ids = {...}` then the `add(...)` / primary-parent /
+#     `link(...)` loop — matched between the SR arm and the LLR arm, which
+#     `spine-load-repeat` charged to WI-346 by proximity. WI-346 owns the
+#     loaders; this is the render layer, so it moves to its own
+#     `tier-node-build` class charged to WI-280, whose row already names
+#     gen_trajectory.py's graph/render split. Mis-scoped charge corrected, not
+#     a new sanction.
 #   * 207 -> 201 was ALREADY TRUE at this commit's parent and nothing said so.
 #     The header declared 207 while the sections held 201 fingerprint lines. One
 #     block of that is explained (WI-341's `_raw_level` extraction merged two
@@ -210,16 +239,15 @@
 # Every figure below is now GENERATED from the sections rather than counted by
 # hand — the rule this repo already applies to every other derived number.
 #
-# The distribution (217 blocks):
+# The distribution (208 blocks):
 #
-#   cli                   87   (40%)   deliberate
-#   spine-loader          20   (9%)   deliberate
+#   cli                   87   (42%)   deliberate
+#   spine-loader          20   (10%)   deliberate
 #   declared-file         13   (6%)   deliberate
-#   git-wrapper           12   (6%)   deliberate
+#   git-wrapper           11   (5%)   deliberate
 #   graph-layout          11   (5%)   debt WI-280
 #   markdown-table        11   (5%)   deliberate
 #   train-disposition      9    (4%)   debt WI-280
-#   spine-load-repeat      8    (4%)   extract WI-346
 #   wi-schema-columns      6    (3%)   deliberate
 #   ref-namespace          5    (2%)   extract WI-343
 #   wi-registry            5    (2%)   deliberate
@@ -235,15 +263,15 @@
 #   graph-walk             1           deliberate
 #   link-rebase            1           deliberate
 #   skills-materialize     1           deliberate
-#   subprocess-capture     1           extract WI-346
+#   tier-node-build        1           debt WI-280
 #   trailer-fold           1           deliberate
 #   trailer-scan           1           extract WI-343
 #   warn-tier-dispatch     1           deliberate
 #
-# By disposition: deliberate 177, extract 20 (WI-343/346), debt 20 (WI-280).
-# By path relation (metadata only): 168 cross-module, 49 same-file. The two
-# cuts do NOT coincide — 9 same-file blocks are deliberate, and the other 40
-# are the extract + debt work, which is the honest shape of this file: a fifth
+# By disposition: deliberate 176, extract 11 (WI-343), debt 21 (WI-280).
+# By path relation (metadata only): 167 cross-module, 41 same-file. The two
+# cuts do NOT coincide — 9 same-file blocks are deliberate, and the other 32
+# are the extract + debt work, which is the honest shape of this file: a sixth
 # of the census is still not F5 at all.
 #
 # The two facts worth carrying: cross-module duplication here is dominated by
@@ -479,7 +507,7 @@ c16d14a4efc4  project-trajectory/scripts/check_privacy.py == project-trajectory/
 # paths) beside run_menu's config read - the same cross-script F5 reason.
 1b0265df6d81  project-trajectory/scripts/integrate.py == project-trajectory/scripts/run_menu.py
 
-# --- git-wrapper (12 blocks) --------------------------------------
+# --- git-wrapper (11 blocks) --------------------------------------
 # disposition: deliberate
 # the `git` subprocess wrapper and the dispatcher's preflight/lock pair -
 # small, stable, per-script.
@@ -491,7 +519,11 @@ fe585fa411e9  project-trajectory/scripts/agent_dispatch.py == project-trajectory
 065823254083  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/derive_gate.py
 c669d0d84711  project-trajectory/scripts/check.py == project-trajectory/scripts/check_trajectory.py
 8dc145bef9c5  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/trace.py
-f02bcce4d53d  project-trajectory/scripts/check.py == project-trajectory/scripts/gen_trajectory.py
+# WAS 12. WI-346 dissolved `f02bcce4d53d` (check.py == gen_trajectory.py) as a
+# SIDE EFFECT: it matched check.py's `_git_out` against gen_trajectory's `_git`
+# BODY, and that body is now one call to a local `_run_captured`, too short to
+# match. check.py was not touched and no block replaced it — a real removal, not
+# a re-stamp. gen_trajectory still pairs with agent_dispatch (`332bdb287be6`).
 # Phase 3 (2026-07-29): check.py's `_work_branch` lane detection brings its
 # own `_git_out` (the trace.py shape), and trunk_step.py carries the same
 # copy; check.py joining the clique re-paired/re-fingerprinted the three
@@ -623,20 +655,20 @@ b8b532ba9de4  project-trajectory/scripts/agent_loop.py == project-trajectory/scr
 # reasoning away from the check it explains. Two sites, not growing.
 558577071d47  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/check_trajectory.py
 
-# --- spine-load-repeat (8 blocks) --------------------------------
-# disposition: extract WI-346
-# the SR/LLR/TC row filters (`read_rows(...) if id.startswith(...)`) loaded
-# independently by three functions of gen_trajectory. NOT the F5 case: F5
-# buys cross-SCRIPT copy-ability, and every copy here is inside one file,
-# so a local _spine(root) loader costs nothing and removes eight blocks.
-30e7a736008d  project-trajectory/scripts/gen_trajectory.py == project-trajectory/scripts/gen_trajectory.py
-30e7a736008d  project-trajectory/scripts/gen_trajectory.py == project-trajectory/scripts/gen_trajectory.py
-fe21429656b1  project-trajectory/scripts/gen_trajectory.py == project-trajectory/scripts/gen_trajectory.py
-eba66f159e6b  project-trajectory/scripts/gen_trajectory.py == project-trajectory/scripts/gen_trajectory.py
+# --- tier-node-build (1 block)  ----------------------------------
+# disposition: debt WI-280
+# the What-icicle's per-tier node build: `<tier>_ids = {...}`, then the loop
+# that `add()`s one detail record and `link()`s it to its FIRST listed parent,
+# matched between the SR arm and the LLR arm of `arch_icicle`. The two arms
+# read different columns (Requirement/AcceptanceCriteria/SN-Refs vs
+# Detail/Module/SR-Refs), so what removes this is a per-tier column spec —
+# i.e. the view-model half of the graph/render split WI-280's row names for
+# this file, not a loader.
+# WAS carried by the deleted `spine-load-repeat` class, which charged it to
+# WI-346 by proximity. WI-346 extracted the loaders and this block re-emitted
+# byte-identically (same fingerprint), which is the proof it was never a
+# loader. Re-classed, not newly sanctioned.
 29c06640159e  project-trajectory/scripts/gen_trajectory.py == project-trajectory/scripts/gen_trajectory.py
-e14f648a712d  project-trajectory/scripts/gen_trajectory.py == project-trajectory/scripts/gen_trajectory.py
-734e2d525d59  project-trajectory/scripts/gen_trajectory.py == project-trajectory/scripts/gen_trajectory.py
-173c64659891  project-trajectory/scripts/gen_trajectory.py == project-trajectory/scripts/gen_trajectory.py
 
 # --- graph-layout (11 blocks) ------------------------------------
 # disposition: debt WI-280
@@ -655,14 +687,6 @@ b240d68b0686  project-trajectory/scripts/gen_trajectory.py == project-trajectory
 aaa30617a30f  project-trajectory/scripts/gen_trajectory.py == project-trajectory/scripts/gen_trajectory.py
 b860b104d408  project-trajectory/scripts/gen_trajectory.py == project-trajectory/scripts/gen_trajectory.py
 bfd6e67c304f  project-trajectory/scripts/gen_trajectory.py == project-trajectory/scripts/gen_trajectory.py
-
-# --- subprocess-capture (1 block)  -------------------------------
-# disposition: extract WI-346
-# the five-keyword subprocess.run capture block (capture_output/text/
-# encoding/errors/stdin=DEVNULL). WI-304 extracted exactly this pattern in
-# agent_dispatch as _run_captured rather than sanctioning it; the same
-# precedent applies to gen_trajectory's two sites.
-e5d5ce58f56b  project-trajectory/scripts/gen_trajectory.py == project-trajectory/scripts/gen_trajectory.py
 
 # --- spec-folder-reader (4 blocks) -------------------------------
 # disposition: deliberate
