@@ -17798,3 +17798,24 @@ commit and my strict tail-filtering hid it — the handoff's own do-not-filter
 trap, re-paid. And a `git checkout --` restore wiped uncommitted 2c-i work in
 plan_artifacts.py (reconstructed from its tests, which pinned the full
 contract): never restore-from-HEAD a file carrying uncommitted work.
+
+
+## 2026-07-29 — re-attestation sitting: the Phase 2c spine amendment is BLESSED
+
+**Decision (owner, 2026-07-29):** the ten rows in
+[ratify/2026-07-29-reattest.md](ratify/2026-07-29-reattest.md) are attested —
+7 `Modified`→`Verified` (SR-050, SR-054, SR-055, SR-067, LLR-034, LLR-051,
+LLR-056) and 3 `Draft`→`Verified` (SR-129, LLR-136, TC-129; TC evidence
+automated and green in the same suite run). The agent made the ratifying
+commit on the owner's behalf (gate-policy `autonomous`, the 2026-07-27
+precedent). SR-054's flip to `Verification=Test` is RULING-5 executed: the
+perceptual gate is retired; the T4/T8 clauses become the periodic advisory
+critique.
+
+The window closed same-day (open ~2 hours — the audit's close-windows-fast
+rule observed). Gate re-derived **G3, all four phases**. One correction on
+the way: TC-129's `Verifies` cited only its LLR, off the house
+`SR-xxx;LLR-yyy` convention, capping SR-129 at G1 — fixed (an error in a row
+this session created; the attested content is unchanged). Residual: WI-323's
+backlog-staleness WARN (it cites the amended SR-054) — its re-validation
+belongs to the audit-backlog rulings, not this sitting.
