@@ -57,6 +57,8 @@ What it creates in the destination:
     scripts/wi_convert.py                      (work-item registry CSV <-> spec-folder converter)
     scripts/trunk_step.py                      (the serial trunk step: compile log
                                                 fragments + regenerate the trunk artifacts)
+    scripts/integrate.py                       (the local integrator: claim + serial
+                                                fail-closed merge queue + RULING-6 audit)
     scripts/agent_route.py, scripts/score_reviews.py   (S8 coordinator routing + review scorer)
     docs/agents.csv                            <- agents.template.csv (model registry; inert until docs/agents-enabled)
     scripts/setup.{sh,ps1}, scripts/check.{sh,ps1}   (cross-platform launchers)
@@ -1280,6 +1282,11 @@ MAPPING = [
     # writes docs/log.md or commits a generated artifact — is the process, not
     # this repo's local habit; its drop-box scaffolds as docs/log.d/ below.
     ("scripts/trunk_step.py", "scripts/trunk_step.py"),
+    # The local integrator (concurrency-restructure §1.2, Phase 4): the §2.3
+    # claim, the serial fail-closed merge queue over finished claimed branches,
+    # and the RULING-6 window audit. The default backend of the one integration
+    # flow; the forge backend is the same flow with server-side enforcement.
+    ("scripts/integrate.py", "scripts/integrate.py"),
     # The S8 routing/scoring half of the unattended coordinator (WI-059): the
     # model-registry router + fixed escalation policy, and the substance scorer.
     # agent_loop imports them as siblings when the docs/agents-enabled enable-list

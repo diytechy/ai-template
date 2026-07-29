@@ -186,6 +186,14 @@
 #     `01b45f40febb` re-fingerprinted to `065823254083` (same
 #     check_trajectory == derive_gate pair; §5.4 also edited that region) and
 #     `c669d0d84711`/`f02bcce4d53d` re-paired onto check.py.
+#   * 213 -> 216 is Phase 4 (2026-07-29): `integrate.py` ships (the local
+#     integrator). Two `cli` rows (its argparse/--root preamble) and one new
+#     `child-capture` row - agent_common.git's capture keywords beside
+#     integrate._run's, cross-script, the F5 reason (integrate deliberately
+#     imports no runner from the loop family). Its own two same-file capture
+#     blocks were EXTRACTED into `_run` before this stamp, not sanctioned.
+#     (+1 more at the defect-fix pass, 216 -> 217: the case-preserving
+#     [generated] reader joined `declared-file` beside run_menu's.)
 #   * 207 -> 201 was ALREADY TRUE at this commit's parent and nothing said so.
 #     The header declared 207 while the sections held 201 fingerprint lines. One
 #     block of that is explained (WI-341's `_raw_level` extraction merged two
@@ -202,11 +210,11 @@
 # Every figure below is now GENERATED from the sections rather than counted by
 # hand — the rule this repo already applies to every other derived number.
 #
-# The distribution (213 blocks):
+# The distribution (217 blocks):
 #
-#   cli                   85   (40%)   deliberate
+#   cli                   87   (40%)   deliberate
 #   spine-loader          20   (9%)   deliberate
-#   declared-file         12   (6%)   deliberate
+#   declared-file         13   (6%)   deliberate
 #   git-wrapper           12   (6%)   deliberate
 #   graph-layout          11   (5%)   debt WI-280
 #   markdown-table        11   (5%)   deliberate
@@ -216,6 +224,7 @@
 #   ref-namespace          5    (2%)   extract WI-343
 #   wi-registry            5    (2%)   deliberate
 #   spec-folder-reader     4    (2%)   deliberate
+#   child-capture          1           deliberate
 #   ctx-unpack             3    (1%)   deliberate
 #   import-fallback        3    (1%)   deliberate
 #   okf-row                3    (1%)   deliberate
@@ -231,8 +240,8 @@
 #   trailer-scan           1           extract WI-343
 #   warn-tier-dispatch     1           deliberate
 #
-# By disposition: deliberate 173, extract 20 (WI-343/346), debt 20 (WI-280).
-# By path relation (metadata only): 164 cross-module, 49 same-file. The two
+# By disposition: deliberate 177, extract 20 (WI-343/346), debt 20 (WI-280).
+# By path relation (metadata only): 168 cross-module, 49 same-file. The two
 # cuts do NOT coincide — 9 same-file blocks are deliberate, and the other 40
 # are the extract + debt work, which is the honest shape of this file: a fifth
 # of the census is still not F5 at all.
@@ -248,7 +257,7 @@
 # a census whose classification has rotted is how the false claims above
 # survived in the first place.
 
-# --- cli (85 blocks) ---------------------------------------------
+# --- cli (87 blocks) ---------------------------------------------
 # disposition: deliberate
 # the per-script CLI skeleton + _utf8_console. F5: kit scripts must stay
 # independently copy-able and stdlib-only, which is why a shared
@@ -342,6 +351,9 @@ b87ed5851f33  project-trajectory/scripts/agent_common.py == project-trajectory/s
 f7d5136e6d5d  project-trajectory/scripts/derive_gate.py == project-trajectory/scripts/trunk_step.py
 5929de953fd4  project-trajectory/scripts/gen_open_items.py == project-trajectory/scripts/trunk_step.py
 3762ccd39230  project-trajectory/scripts/plan_briefs.py == project-trajectory/scripts/trunk_step.py
+# Phase 4 (2026-07-29): integrate.py's preamble joins for the same reason.
+4e246982c55c  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/integrate.py
+b25e7f8619e5  project-trajectory/scripts/gen_trajectory.py == project-trajectory/scripts/integrate.py
 
 # --- wi-registry (5 blocks) --------------------------------------
 # disposition: deliberate
@@ -430,7 +442,7 @@ a55d35181e85  project-trajectory/scripts/gen_okf.py == project-trajectory/script
 d2ff16e89265  project-trajectory/scripts/plan_artifacts.py == project-trajectory/scripts/plan_coverage.py
 451248328e57  project-trajectory/scripts/plan_artifacts.py == project-trajectory/scripts/plan_coverage.py
 
-# --- declared-file (12 blocks) -----------------------------------
+# --- declared-file (13 blocks) -----------------------------------
 # disposition: deliberate
 # declared-file readers (policy files, stack.ini, coverage.json). F5: each
 # script reads its own declaration rather than importing a sibling. Every entry
@@ -463,6 +475,9 @@ c16d14a4efc4  project-trajectory/scripts/check_privacy.py == project-trajectory/
 # Phase 3 (2026-07-29): trunk_step.py builds the arch-map CLI from stack.ini
 # the way check.py does — the same cross-script declared-file reader.
 963d79f43ff8  project-trajectory/scripts/check.py == project-trajectory/scripts/trunk_step.py
+# Phase 4: integrate.py's [generated] reader (optionxform=str, keys are
+# paths) beside run_menu's config read - the same cross-script F5 reason.
+1b0265df6d81  project-trajectory/scripts/integrate.py == project-trajectory/scripts/run_menu.py
 
 # --- git-wrapper (12 blocks) --------------------------------------
 # disposition: deliberate
@@ -580,6 +595,14 @@ c6b71579a078  project-trajectory/scripts/agent_dispatch.py == project-trajectory
 # to extract — the second occurrence IS the use of the first.
 a5b7a7b890c2  project-trajectory/scripts/agent_loop.py == project-trajectory/scripts/agent_loop.py
 021fec5dccbd  project-trajectory/scripts/agent_route.py == project-trajectory/scripts/agent_route.py
+
+# --- child-capture (1 block)  -----------------------------------
+# disposition: deliberate
+# the captured-child subprocess seam: agent_common.git's capture-keyword
+# block beside integrate._run's. Cross-script - the F5 reason - and kept
+# apart on purpose: the integrator imports no runner from the loop family
+# it gates. integrate's own two capture sites share ONE local _run.
+ba1237827bb6  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/integrate.py
 
 # --- ctx-unpack (3 blocks) ---------------------------------------
 # disposition: deliberate

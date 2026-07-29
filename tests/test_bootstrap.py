@@ -79,6 +79,7 @@ def test_scaffold_contains_expected_files(scaffold):
         "scripts/plan_artifacts.py",
         "scripts/wi_convert.py",
         "scripts/trunk_step.py",
+        "scripts/integrate.py",
         "scripts/run_menu.py",
         "scripts/dev-setup.cmd",
         ".githooks/pre-commit",

@@ -545,7 +545,10 @@ BASELINE = {
     # docs/log.d/ GITKEEP_DIRS entry, and the docstring inventory lines — the
     # same required-registration shape as the WI-279/WI-329/2c-i rows above.
     # Reviewed bump, log 2026-07-29. Re-stamp down with WI-280.
-    "bootstrap.py": 2071,
+    # +7 (2071 -> 2078), Phase 4: the integrate.py MAPPING row + docstring
+    # inventory lines - the same required-registration shape. Reviewed bump,
+    # log 2026-07-29. Re-stamp down with WI-280.
+    "bootstrap.py": 2078,
     # NEW ENTRY, +228 (1423 -> 1651), Phase 2b of the concurrency restructure
     # (docs/concurrency-restructure.md §7): the spec-folder work-item reader,
     # which crosses this module over THRESHOLD for the first time. It is one

@@ -148,3 +148,4 @@ resource: "generated"
 | [LLR-137](LLR-137.md) | Serial trunk step (log compile + regen) |
 | [LLR-138](LLR-138.md) | Tracked pause reader (dual-home) |
 | [LLR-139](LLR-139.md) | Pause surfaced in the pending block |
+| [LLR-140](LLR-140.md) | Local integrator (claim + queue + audit) |

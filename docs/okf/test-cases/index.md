@@ -138,3 +138,4 @@ resource: "generated"
 | [TC-129](TC-129.md) | Run the converter suite: the live registry round-trips in whichever home is authoritative… |
 | [TC-130](TC-130.md) | Run the trunk-step suite: committed fragments compile in git order with links rebased and… |
 | [TC-131](TC-131.md) | Run the pause suites: the tracked home pauses via pause_reason with legacy-first preceden… |
+| [TC-132](TC-132.md) | Run the integrator suite: each claim refusal fires by name and the green claim moves the … |

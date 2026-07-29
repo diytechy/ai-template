@@ -61,6 +61,7 @@ graph LR
     m_scripts_gen_release_checklist["scripts/gen_release_checklist — Generate the human release checklist from the r…"]
     m_scripts_gen_skills_index["scripts/gen_skills_index — Generate the skills applicability index from th…"]
     m_scripts_gen_trajectory["scripts/gen_trajectory — Generate the offline project-state dashboard (r…"]
+    m_scripts_integrate["scripts/integrate — integrate.py — the local integrator: a serial, …"]
     m_scripts_plan_artifacts["scripts/plan_artifacts — The dual-plan round artifact filer: the coordin…"]
     m_scripts_plan_briefs["scripts/plan_briefs — Redacted dual-plan brief assembler + the three …"]
     m_scripts_plan_coverage["scripts/plan_coverage — Dual-plan coverage pre-pass: make rival WI deco…"]
@@ -95,6 +96,9 @@ graph LR
     m_scripts_gen_open_items --> m_scripts_trace
     m_scripts_gen_trajectory --> m_scripts_check_trajectory
     m_scripts_gen_trajectory --> m_scripts_schedule
+    m_scripts_integrate --> m_scripts_agent_common
+    m_scripts_integrate --> m_scripts_schedule
+    m_scripts_integrate --> m_scripts_score_reviews
     m_scripts_plan_artifacts --> m_scripts_wi_convert
     m_scripts_plan_runner --> m_scripts_agent_route
     m_scripts_plan_runner --> m_scripts_agent_session
@@ -754,6 +758,20 @@ Contracts (interfaces): IF-011, IF-024, IF-052, IF-056, IF-071
 | `status_block(root)` | The GENERATED STATUS block CONTENT (between the markers) for docs/status.md: |  |
 | `run_status(root, check)` | `--status` mode: splice the derived snapshot into docs/status.md (or, with |  |
 | `main()` |  |  |
+
+### `scripts/integrate`
+_integrate.py — the local integrator: a serial, fail-closed merge queue._
+Imports (internal): `agent_common`, `schedule`, `score_reviews`
+
+| Public item | Summary | Implements |
+|---|---|---|
+| `fail(msg)` |  |  |
+| `claim(root, wi_id, branch)` | §2.3 steps 1+2: the serial trunk claim, then the branch cut. |  |
+| `finished_branches(root)` | Claimed branches whose tip moved every spec out of active/<branch>/. |  |
+| `integrate_one(root, branch, tier)` | One branch through the queue. Returns None on green, else the refusal. |  |
+| `integrate(root, tier)` |  |  |
+| `audit(root, since)` | RULING-6 over a window: non-merge trunk commits must stay on bookkeeping |  |
+| `main(argv)` |  |  |
 
 ### `scripts/plan_artifacts`
 _The dual-plan round artifact filer: the coordinator's write-side of a round_

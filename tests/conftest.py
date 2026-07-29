@@ -81,6 +81,7 @@ SLOW_MODULES = frozenset(
         "test_agent_loop_integrate",  # atomic integrator end-to-end
         "test_agent_loop_recovery",  # fault-injected crash matrix
         "test_agent_loop_migration",  # telemetry + downstream migration
+        "test_integrate",  # local integrator: real git repos + a real check.py bar
         # WI-281: subprocess/scaffold-heavy modules moved to slow to hold the
         # <= 60 s commit-bar budget. Each is dominated by run_py subprocesses
         # (running gen_trajectory / trace / check* / agent_loop) or the scaffold

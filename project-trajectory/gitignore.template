@@ -37,3 +37,4 @@ out/run-logs/
 # guarding against two coordinators in one checkout; never committed
 # (process-options.md "Parallel tracks").
 out/agent-loop.lock
+out/integrate.lock

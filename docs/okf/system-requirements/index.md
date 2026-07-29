@@ -142,3 +142,4 @@ resource: "generated"
 | [SR-129](SR-129.md) | Registry representation migration |
 | [SR-130](SR-130.md) | Serial trunk step compiles log fragments and regenerates authority |
 | [SR-131](SR-131.md) | Tracked pause drains claiming to a merged stop |
+| [SR-132](SR-132.md) | Local integrator: serial fail-closed merge queue |
