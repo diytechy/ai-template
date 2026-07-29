@@ -513,6 +513,60 @@ never a forgotten one (the stale-reason lesson).
   hook bypassed anywhere in the phase.
 - **Phase 5 — deletion.** The train machinery, its tests, and the dead
   surfaces leave; the audit's other approved retirements execute here too.
+  **The concrete scope, compiled at the Phase 4 close so a fresh session can
+  run this from the spec alone** (each item's fuller note lives where cited;
+  Phase 5 is itself spine-class — solo, attended, one session where
+  possible):
+  1. **`agent_dispatch.py` retires whole** (§6) with its tests
+     (`test_agent_loop_integrate/dispatch/train/recovery/dualplan`,
+     `test_agent_dispatch_decisions` — audit each file for the non-dispatch
+     helpers it also covers before deleting). With it die: `refs/llm/*`
+     conventions, `out/dispatch/events.jsonl`, `docs/run-state` (+ its
+     `_runstate_pending` surface in `gen_trajectory` and the run-state prose
+     in PROCESS_OPTIONS), the `docs/blackout` reader if nothing else holds
+     it, and `score_reviews.latest_phase_verdicts`' train-form consumers.
+     `agent_route.py` + heterogeneous critique dispatch REMAIN (§6).
+  2. **`agent_loop.py` shrinks or retires**: the Phase 4 coordinator lives
+     in `integrate.py`, so what remains of agent_loop is the worker-session
+     launch seam (`agent_session.py` is standalone) and the reviewer/critique
+     prompts — decide shrink-in-place vs extract-and-delete; the train
+     vocabulary in WORKER_PROMPT (`Train:`, `llm/train/`) re-grounds on the
+     §2.3 claim model either way. `agent_common.pause_reason`'s legacy
+     untracked-`docs/pause` half retires (agent_common:250); the root
+     `agent-resume.*` launchers re-point at the new flow or leave.
+  3. **The CSV registry home dies**: the dual-read in
+     `schedule`/`check_trajectory`/`agent_common` collapses to folder-only
+     (the F5 triplicated reader becomes the only reader;
+     `tests/test_module_size_ratchet.py` entries for `agent_common` (+228 and
+     +15 stamps) and `check_trajectory` re-stamp DOWN per their own comments;
+     `schedule.classify`'s `blocked` branches die with the CSV);
+     `wi_convert` keeps the legacy-format reference role; the
+     `wi-schema-columns` census class shrinks to one home (dupes-allow:709).
+  4. **Census + ratchet re-stamps that Phase 5 owns**: the `link-rebase`
+     class (agent_dispatch == trunk_step) dissolves (dupes-allow:183,540);
+     every `git-wrapper`/`cli` row naming agent_dispatch leaves; re-derive
+     the whole census on the post-deletion tree (the WI-347 clique effect
+     will re-pair survivors — classify, don't silently accept).
+  5. **`[generated]`'s dual duty dissolves** (auto-resolve allowlist vs
+     §5.2 trunk-regenerated set — the design smell filed at Phase 3) once
+     agent_dispatch's reader is gone; reconcile `trunk_step.REGEN_STEPS`
+     (6 families) against `[generated]` (10) while there.
+  6. **PROCESS_OPTIONS' parallel-dispatch section rewrites** onto the
+     §1.2/§2.3 model (the train-scoped verdict naming at ~:2330, the lane
+     files, `docs/pause` mentions) — byte-budget-guard before/after, baseline
+     re-stamp ×3 copies.
+  7. **The audit's approved retirements** (handoff-2026-07-28c §3, as
+     superseded by this spec's replacement approach): WI-343 is moot if
+     agent_dispatch deletes (§6 table) — retire its row with that reason;
+     re-examine WI-350/351/356 against the owner's audit rulings before
+     grinding them.
+  8. **Then the acceptance follow-ups become buildable**: WI-357 (the
+     close-un-claims-lane fix — design it against the post-deletion
+     loaders), WI-358, WI-359 (integrator unload/worktree GC), WI-360.
+  Exit bar: full suite green on the shrunken tree, census re-derived,
+  `--strict` clean, a §7 record here, and the spine amendment for whatever
+  rows the deletions amend (SR-116/117/125 and friends go `retired`-shaped
+  or `Modified`) — a window and a sitting, same as every phase.
 
 Phases 1–3 are valuable even if Phase 4 stalls — they de-contend the repo for
 attended work as well.

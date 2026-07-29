@@ -18159,3 +18159,31 @@ now that no claim is in flight); `check_docs`
 0 broken; the RULING-6 audit and the full composed-tree bars are in the
 merge history itself. Byte budgets: PROCESS.md / PROCESS_OPTIONS.md /
 AGENTS.template.md untouched this phase (Phase 3's re-stamps stand).
+
+## 2026-07-29 — re-attestation sitting: the Phase 4 spine amendment is BLESSED
+
+**Decision (owner, 2026-07-29):** the Phase 4 window's rows in
+[ratify/2026-07-29c-phase4.md](ratify/2026-07-29c-phase4.md) are attested —
+SR-129 `Modified`→`Verified` (the converter's drained-stop refusal of
+in-flight claims; its amended chain cell rode the SR per the
+SR-is-the-attestation-unit rule) and SR-132 + LLR-140 + TC-132
+`Draft`→`Verified` (the local integrator; TC evidence automated and green —
+`tests/test_integrate.py` 29 tests plus the live acceptance merges
+`95ff7ef`/`43d90ef`). The owner ruled in-session ("All of the req doc
+changes look good"); the agent made the ratifying commit on the owner's
+behalf (gate-policy `autonomous`, the standing precedent). Gate re-derived
+**G3, all four phases** — the third same-day window close of 2026-07-29.
+
+Two small integrity finds settled at the sitting: LLR-136's Phase 4b
+status flip had silently no-op'd on a quoting mismatch (the parent SR
+carried the `Modified` marker, so the attestation surface was correct —
+recorded here so the near-miss is visible), and WI-355's archived spec had
+kept its `specref` past close (R-F; caught by the direct `--strict` run the
+resume note prescribes, cleared with provenance already in the Deliverable).
+
+**Phase 5 is now resumable from the spec alone:** §7's Phase 5 entry
+carries the compiled 8-point deletion scope (agent_dispatch + tests;
+agent_loop shrink; CSV-home death with its scheduled ratchet down-stamps;
+census re-derive; `[generated]` dual-duty dissolution; PROCESS_OPTIONS
+rewrite; audit retirements; then WI-357..360), and status.md's resume
+bullet points at it. `--strict` clean; `drafts=0 modified=0`.
