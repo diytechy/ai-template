@@ -41,21 +41,16 @@ REM   set "AGENT_CMD_MAP=REVIEW-B=gemini -p {prompt} --model {model}"
 set "AGENT_CMD_MAP="
 REM Optional hands-on template for --interactive (defaults to AGENT_CMD):
 set "AGENT_CMD_INTERACTIVE="
-REM Parallel dispatch (process-options.md "Worker assignment"): a FRESH scaffold
-REM ships parallel-by-default at two workers. The dispatcher still HOLDS at one
-REM worker until this repo's soft-edge + SafetyClass audits pass (a fresh
-REM scaffold passes by construction); a repo migrating in from the legacy loop
-REM sets AGENT_JOBS=1 here until it signs off (the downstream-resync skill).
-REM An inherited AGENT_JOBS wins over this default; an absent/empty value
-REM still boots the dispatcher at its own default (the legacy serial resume
-REM driver is retired).
-REM Single-home option (IF-068): to avoid editing jobs/model/model-map in each
-REM of the three launchers, declare them once in docs\stack.ini [agent-loop].
-REM Keep AGENT_MODEL / AGENT_MODEL_MAP blank; for jobs, replace the next line
-REM with `set "AGENT_JOBS="` (CMD deletes the variable). This exact Windows edit
-REM leaves no launcher env override, so agent_loop resolves CLI flag ^> AGENT_*
-REM env ^> that file ^> default. Opt-in: a fresh scaffold keeps its dials here.
-if not defined AGENT_JOBS set "AGENT_JOBS=2"
+REM Parallel work runs through the integration seam (process-options.md
+REM "Parallel work - the integration seam"): claim with `integrate.py claim`,
+REM build worker sessions on the claimed branches (this launcher: --wi in the
+REM branch's worktree), merge through `integrate.py integrate`. (The
+REM AGENT_JOBS dispatcher ceiling retired with the parallel dispatcher at
+REM concurrency-restructure Phase 5.)
+REM Single-home option (IF-068): to avoid editing model/model-map in each of
+REM the three launchers, declare them once in docs\stack.ini [agent-loop] and
+REM keep AGENT_MODEL / AGENT_MODEL_MAP blank - agent_loop resolves CLI flag ^>
+REM AGENT_* env ^> that file ^> default.
 REM Per-session wall-clock bound (seconds) so one hung CLI cannot wedge a
 REM lane forever - the walk-away guarantee. Blank the slot to disable
 REM (engine default 0 = no timeout). Keep agent-resume.sh in sync.

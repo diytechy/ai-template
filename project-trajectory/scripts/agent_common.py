@@ -12,8 +12,8 @@ unchanged). The session engine (agent_loop) and the serial integrator
   - the per-worktree coordinator lock (kernel advisory lock; the held
     descriptor lives HERE, in this module's `_LOCK_FD`, so every caller
     shares one lock namespace);
-  - worker-assignment primitives (`WI_TOKEN_RE`, `TRAIN_BRANCH_PREFIX`,
-    `sanitize_train`, `parse_wi_list`, `load_wi_registry`, `train_evidence`)
+  - worker-assignment primitives (`WI_TOKEN_RE`, `sanitize_train`,
+    `parse_wi_list`, `load_wi_registry`, `train_evidence`)
     and the small CSV/ref readers;
   - `parse_map`, `preflight` (launchability refusal, SR-027), and the
     session-log family (size-bounded logs, the regenerated iteration index,
@@ -165,14 +165,16 @@ def read_agent_loop_config(docs):
 
 
 def resolve_coordinator_dials(args, docs):
-    """``(model, model_map, jobs_opt)`` for the coordinator, each resolved by the
+    """``(model, model_map)`` for the session engine, each resolved by the
     IF-068 precedence ``CLI flag > AGENT_* env > declared file > built-in
-    default`` (WI-274 part B). ``args.model``/``args.model_map``/``args.jobs`` are
-    ``None`` when their flag was not passed; an empty env or declared value falls
+    default`` (WI-274 part B). ``args.model``/``args.model_map`` are ``None``
+    when their flag was not passed; an empty env or declared value falls
     through (the launchers' "empty slot = default" convention, so the env path
-    keeps working unchanged). ``jobs_opt`` is ``None`` when nothing set it — the
-    caller then applies the §6 two-worker default. Kept OUT of ``agent_loop.main``
-    so that hot function's complexity does not grow (the ratchet's escape hatch)."""
+    keeps working unchanged). Kept OUT of ``agent_loop.main`` so that hot
+    function's complexity does not grow (the ratchet's escape hatch). (The
+    ``jobs`` dial retired with the parallel dispatcher at
+    concurrency-restructure Phase 5; a declared ``[agent-loop] jobs`` value is
+    ignored.)"""
     dials = read_agent_loop_config(docs)
     model = (
         args.model
@@ -184,12 +186,7 @@ def resolve_coordinator_dials(args, docs):
         if args.model_map is not None
         else (os.environ.get("AGENT_MODEL_MAP") or dials.get("model-map", ""))
     )
-    jobs_opt = (
-        args.jobs
-        if args.jobs is not None
-        else (os.environ.get("AGENT_JOBS", "").strip() or dials.get("jobs", "") or None)
-    )
-    return model, model_map, jobs_opt
+    return model, model_map
 
 
 # What a `docs/work/pause` we cannot parse says. Fail-CLOSED: a broken pause
@@ -238,24 +235,10 @@ def pause_reason(lane):
     """A declared **graceful-pause** request: pause the loop at the next session
     boundary. Return contract, unchanged and depended on by every caller:
     `None` = not paused; a string = paused, `""` when the declaration carries no
-    reason. Presence is the whole contract — deleting the declaration resumes —
-    so `run-state` is deliberately left untouched.
-
-    Two homes during the migration window, consulted in this order:
-
-      1. the LEGACY untracked `lane/pause` (WI-147) — the reason is the file's
-         first non-comment line. Per-lane like run-state, so a track pauses only
-         its own coordinator. Retires with the dispatcher in Phase 5 of
-         `docs/concurrency-restructure.md`;
-      2. the TRACKED `lane/work/pause` (§5.6) — `tracked_pause`'s `reason`.
-
-    Legacy first, so a local file a human dropped into a worktree keeps stopping
-    exactly that worktree. Either home paused means paused: the retired-in-place
-    dispatcher can never resume merely because the untracked file was superseded
-    by the tracked one."""
-    path = lane / "pause"
-    if path.is_file():
-        return read_declared(path, "")
+    reason. Presence is the whole contract — an unpause is a reviewed deletion
+    commit of the one home, the TRACKED `lane/work/pause` (concurrency-
+    restructure §5.6), read via `tracked_pause`. (The legacy untracked
+    `lane/pause` half, WI-147, retired with the dispatcher at Phase 5.)"""
     tracked = tracked_pause(lane)
     return None if tracked is None else tracked["reason"]
 
@@ -506,14 +489,10 @@ def blackout_wait(
 
 
 # --- WI-181: explicit worker assignment (SR-060) --------------------------------
-# A worker is one agent_loop process driving one dispatcher-assigned traincar on
-# one llm/train/<id> branch in one worktree. Its inputs are explicit CLI
-# arguments (never a lane file) and its result is committed evidence read back
-# through git trailers — the durable channel recovery reconstructs from (spec
-# §6/§11).
-
-# The branch namespace a train builds on. The dispatcher (Slice D) creates these.
-TRAIN_BRANCH_PREFIX = "llm/train/"
+# A worker is one agent_loop process driving one claimed assignment on one
+# branch in one worktree (the §2.3 claim model since concurrency-restructure
+# Phase 5). Its inputs are explicit CLI arguments (never a lane file) and its
+# result is committed evidence read back through git trailers.
 
 
 WI_TOKEN_RE = re.compile(r"^WI-\d+$")
@@ -529,13 +508,13 @@ TERMINAL_STATUSES = ("done", "retired")
 
 
 def sanitize_train(name):
-    """A train id becomes a branch segment, a log-file prefix, and a reviews/
-    subdirectory, so restrict it to a safe slug (alnum + `.`/`-`/`_`, starts
-    alphanumeric) — `--train` can then never traverse the tree. Returns the
-    name or raises ValueError (preflight surfaces the message)."""
+    """A session tag becomes a log-file prefix and a reviews/ subdirectory,
+    so restrict it to a safe slug (alnum + `.`/`-`/`_`, starts alphanumeric)
+    — `--train` can then never traverse the tree. Returns the name or raises
+    ValueError (preflight surfaces the message)."""
     if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]*", name or ""):
         raise ValueError(
-            "train id {!r} must be a slug matching [A-Za-z0-9][A-Za-z0-9._-]* "
+            "session tag {!r} must be a slug matching [A-Za-z0-9][A-Za-z0-9._-]* "
             "(starts alphanumeric; no path separators)".format(name)
         )
     return name
@@ -1597,46 +1576,38 @@ def preflight(root, template, args):
                     + (proc.stderr or proc.stdout or "").strip()
                 )
     # --- worker assignment preflight (WI-181, SR-060) -----------------------
+    # Re-grounded on the §2.3 claim model at concurrency-restructure Phase 5:
+    # --wi alone is a full assignment (the session tag defaults to the current
+    # branch name); --train survives as the optional explicit tag. A worker
+    # still fails CLOSED off a branch — a claim is a branch, so a detached
+    # HEAD is an unverifiable checkout.
     wi_spec = getattr(args, "wi", None)
     train = getattr(args, "train", None)
-    if bool(wi_spec) != bool(train):
+    if train and not wi_spec:
         failures.append(
-            "--wi and --train come as a pair (the dispatcher's explicit "
-            "assignment); got {}".format(
-                "--wi without --train" if wi_spec else "--train without --wi"
-            )
+            "--train is the worker session tag and needs the assignment; "
+            "got --train without --wi"
         )
     if (wi_spec or train) and getattr(args, "interactive", False):
         failures.append(
             "--wi/--train is an unattended worker assignment; it cannot be "
             "combined with --interactive."
         )
-    if wi_spec and train and not failures:
+    if wi_spec and not failures:
         try:
             assigned = parse_wi_list(wi_spec)
-            sanitize_train(train)
+            if train:
+                sanitize_train(train)
         except ValueError as exc:
             failures.append(str(exc))
         else:
-            expected = TRAIN_BRANCH_PREFIX + train
             code, branch = git(root, "branch", "--show-current")
             if code != 0 or not branch:
-                # Detached HEAD / unreadable branch: the lane cannot be
-                # confirmed, so a worker must fail CLOSED (the track guard's
-                # rule) — never build a train from an unverifiable checkout.
                 failures.append(
-                    "worker assignment for train {!r} requires branch {!r}, "
-                    "but this worktree's branch could not be determined "
-                    "(detached HEAD, or git older than 2.22).".format(train, expected)
-                )
-            elif branch != expected:
-                failures.append(
-                    "worker assignment for train {!r} must run on its train "
-                    "branch {!r}, but this worktree is on {!r} — the "
-                    "dispatcher creates the branch and leases the worktree "
-                    "(docs/specs/parallel-wi-dispatch.md §6).".format(
-                        train, expected, branch
-                    )
+                    "a worker assignment runs on its claimed branch "
+                    "(`integrate.py claim`), but this worktree's branch could "
+                    "not be determined (detached HEAD, or git older than "
+                    "2.22) — check the branch out first."
                 )
             wi_rows = load_wi_registry(root)
             for wid in assigned:

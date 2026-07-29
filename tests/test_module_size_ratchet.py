@@ -260,7 +260,13 @@ BASELINE = {
     # -3 (3008 -> 3005), Phase 5 C2 (2026-07-29): the dual-plan flag path's two
     # _write_runstate calls left with docs/run-state (stop banner + exit code
     # carry the outcome). Ratcheted DOWN.
-    "agent_loop.py": 3005,
+    # -6 (3005 -> 2999), Phase 5 item 2/C3 (2026-07-29): the shrink-in-place
+    # re-grounding — module docstring rewritten onto the §2.3 claim model,
+    # WORKER_PROMPT loses its Train:/Base: trailers and llm/train naming,
+    # --train becomes the optional session tag defaulting to the current
+    # branch name (flattened), TRAIN_BRANCH_PREFIX re-export gone. Ratcheted
+    # DOWN.
+    "agent_loop.py": 2999,
     # +30 (2206 -> 2236), WI-065: `tc_citation_findings` — the TC-`Verifies`
     # rules lifted out of `analyze` so the cell could accept `IF-###` seam ids.
     # Most of the bump is that helper's docstring, which is where the RULING now
@@ -529,7 +535,12 @@ BASELINE = {
     # -25 (1718 -> 1693), Phase 5 item 1/C2 (2026-07-29): _write_runstate and
     # SANCTIONED_TRAIN_SUBJECT_PREFIXES retired with docs/run-state and the
     # commit-msg train floor; END_STATES/docstring re-words. Ratcheted DOWN.
-    "agent_common.py": 1693,
+    # -17 (1693 -> 1676), Phase 5 item 2/C3 (2026-07-29): pause_reason's legacy
+    # untracked-home half retired (tracked docs/work/pause is the one home),
+    # resolve_coordinator_dials dropped the dispatcher jobs dial, the
+    # llm/train branch-equality preflight re-grounded on the claim model, and
+    # TRAIN_BRANCH_PREFIX left. Ratcheted DOWN.
+    "agent_common.py": 1664,
 }
 
 

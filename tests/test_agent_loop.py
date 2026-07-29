@@ -60,7 +60,7 @@ elif action in ("done", "blocked"):
     # that read run-state back is retired.
     m = re.search(r"- WI: (WI-\\d+)", args.prompt)
     wi = m.group(1) if m else "WI-201"
-    m = re.search(r"- Train: (\\S+) \\(branch", args.prompt)
+    m = re.search(r"- Branch: (\\S+) \\(its claim", args.prompt)
     train = m.group(1) if m else "t1"
     m = re.search(r"integration base ([0-9a-f]+)\\)", args.prompt)
     base = m.group(1) if m else ""
@@ -85,7 +85,7 @@ elif action == "stream-done":
     # trailing event must not shadow it - the parse preference under test).
     m = re.search(r"- WI: (WI-\\d+)", args.prompt)
     wi = m.group(1) if m else "WI-201"
-    m = re.search(r"- Train: (\\S+) \\(branch", args.prompt)
+    m = re.search(r"- Branch: (\\S+) \\(its claim", args.prompt)
     train = m.group(1) if m else "t1"
     m = re.search(r"integration base ([0-9a-f]+)\\)", args.prompt)
     base = m.group(1) if m else ""
@@ -282,23 +282,12 @@ def test_budget_ceiling(loop_repo):
     assert _invocations(ctl) == 3
 
 
-# --- WI-147: graceful pause (docs/pause) --------------------------------------
-
-
-def test_pause_reason_helper_edges(tmp_path):
-    al = load_script("agent_loop")
-    assert al.pause_reason(tmp_path) is None  # absent -> not paused
-    (tmp_path / "pause").write_text("", encoding="utf-8")
-    assert al.pause_reason(tmp_path) == ""  # present but empty -> paused, no reason
-    (tmp_path / "pause").write_text("# note\nbudget check\n", encoding="utf-8")
-    assert al.pause_reason(tmp_path) == "budget check"  # first non-comment line
-
-
 # --- §5.6: the TRACKED pause declaration (docs/work/pause) --------------------
-# `docs/concurrency-restructure.md` §5.6 moves the pause into the tree: TOML
-# `reason` + `since`, presence pauses, an unpause is a deletion COMMIT. Both
-# homes are live during the migration window, so `pause_reason` must keep its
-# exact return contract (None / "" / reason) against either one.
+# `docs/concurrency-restructure.md` §5.6: the pause lives in the tree — TOML
+# `reason` + `since`, presence pauses, an unpause is a deletion COMMIT. The
+# legacy untracked `lane/pause` half (WI-147) retired with the dispatcher at
+# Phase 5; `pause_reason` keeps its exact return contract (None / "" / reason)
+# against the one tracked home.
 
 
 def _tracked_pause(docs, body):
@@ -346,19 +335,17 @@ def test_pause_reason_reads_the_tracked_home(tmp_path):
     assert ac.tracked_pause(tmp_path)["reason"] == ""
 
 
-def test_legacy_pause_wins_when_both_homes_are_present(tmp_path):
-    # Chosen precedence: LEGACY FIRST. A local untracked file a human dropped
-    # into a worktree keeps stopping that worktree even once the tracked
-    # declaration exists; either home paused still means paused, so the
-    # dispatcher can never resume just because the homes were swapped.
+def test_legacy_pause_file_no_longer_pauses(tmp_path):
+    # The legacy untracked `lane/pause` retired at Phase 5: a stray local file
+    # must NOT pause (the one meaning lives in the tracked home), and the
+    # tracked declaration still does.
     al = load_script("agent_loop")
-    _tracked_pause(tmp_path, 'reason = "tracked drain"\nsince = "2026-07-29"\n')
     (tmp_path / "pause").write_text("local hold\n", encoding="utf-8")
-    assert al.pause_reason(tmp_path) == "local hold"
-    (tmp_path / "pause").unlink()
-    assert al.pause_reason(tmp_path) == "tracked drain"  # tracked still pauses
+    assert al.pause_reason(tmp_path) is None  # stray legacy file is inert
+    _tracked_pause(tmp_path, 'reason = "tracked drain"\nsince = "2026-07-29"\n')
+    assert al.pause_reason(tmp_path) == "tracked drain"
     (tmp_path / "work" / "pause").unlink()
-    assert al.pause_reason(tmp_path) is None  # both gone -> resumed
+    assert al.pause_reason(tmp_path) is None  # deletion commit resumes
 
 
 # --- WI-148: weekday blackout window ------------------------------------------
@@ -1509,11 +1496,13 @@ def test_read_agent_loop_config_reads_declared_dials(tmp_path):
 
 
 def test_resolve_coordinator_dials_precedence(tmp_path):
+    # (The jobs dial retired with the parallel dispatcher at Phase 5; a
+    # declared [agent-loop] jobs value is read but ignored.)
     al = load_script("agent_loop")
 
     class Args:  # a stand-in for the argparse namespace (only the dial fields)
-        def __init__(self, model=None, model_map=None, jobs=None):
-            self.model, self.model_map, self.jobs = model, model_map, jobs
+        def __init__(self, model=None, model_map=None):
+            self.model, self.model_map = model, model_map
 
     docs = tmp_path / "docs"
     docs.mkdir()
@@ -1523,26 +1512,22 @@ def test_resolve_coordinator_dials_precedence(tmp_path):
     )
     import os as _os
 
-    for var in ("AGENT_MODEL", "AGENT_MODEL_MAP", "AGENT_JOBS"):
+    for var in ("AGENT_MODEL", "AGENT_MODEL_MAP"):
         _os.environ.pop(var, None)
     # Nothing on CLI/env -> the declared file supplies every dial.
     assert al.resolve_coordinator_dials(Args(), docs) == (
         "declared",
         "PLAN=declared",
-        "1",
     )
     # An env slot beats the declared file; an explicit CLI value beats the env.
     _os.environ["AGENT_MODEL"] = "envm"
-    _os.environ["AGENT_JOBS"] = "3"
     try:
         assert al.resolve_coordinator_dials(Args(), docs)[0] == "envm"
-        assert al.resolve_coordinator_dials(Args(), docs)[2] == "3"
         assert al.resolve_coordinator_dials(Args(model="clim"), docs)[0] == "clim"
     finally:
-        for var in ("AGENT_MODEL", "AGENT_JOBS"):
-            _os.environ.pop(var, None)
-    # No declared file + nothing else -> jobs_opt None (caller applies the default).
-    assert al.resolve_coordinator_dials(Args(), tmp_path / "nodocs") == ("", "", None)
+        _os.environ.pop("AGENT_MODEL", None)
+    # No declared file + nothing else -> the built-in defaults.
+    assert al.resolve_coordinator_dials(Args(), tmp_path / "nodocs") == ("", "")
 
 
 @pytest.mark.parametrize(
@@ -1960,7 +1945,7 @@ def _build_commit(repo, wi, train, base):
 
 
 @env_gate_skipif("git")
-def test_worker_endstate_done_names_train_branch(tmp_path):
+def test_worker_endstate_done_names_branch(tmp_path):
     al = load_script("agent_loop")
     repo, base, worker = _train_repo(tmp_path)
     _build_commit(repo, "WI-201", "t1", base)
@@ -1969,7 +1954,7 @@ def test_worker_endstate_done_names_train_branch(tmp_path):
     code, label, detail = end
     assert code == al.EXIT_DONE
     assert label == "DONE"
-    assert al.TRAIN_BRANCH_PREFIX + "t1" in detail
+    assert "branch t1" in detail
 
 
 @env_gate_skipif("git")

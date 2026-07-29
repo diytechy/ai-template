@@ -61,18 +61,14 @@ REM single-provider since WI-160.)
 set "AGENT_CMD_MAP="
 REM Optional hands-on template for --interactive (defaults to AGENT_CMD):
 set "AGENT_CMD_INTERACTIVE=claude --model {model} {prompt}"
-REM Worker ceiling (dispatcher). WI-274: the VALUE now lives in docs/stack.ini
-REM [agent-loop] jobs (currently 1 = serial, the owner dial 2026-07-22). This
-REM slot stays the env-override tier - an inherited AGENT_JOBS still wins over
-REM the declared file (precedence: CLI --jobs ^> this env slot ^> docs/stack.ini
-REM ^> built-in default); left empty so the declared home is the one place a dial
-REM change lands. An absent value still boots the dispatcher (WI-210 - the legacy
-REM serial driver is retired).
-if not defined AGENT_JOBS set "AGENT_JOBS="
+REM (The AGENT_JOBS worker-ceiling slot retired with the parallel dispatcher
+REM at concurrency-restructure Phase 5: claiming and merging run through
+REM integrate.py, and this launcher boots explicit session roles only --
+REM agent_loop.py --wi / --interactive / --dual-plan.)
 REM (The meta-repo resume prompt slot is retired with the serial driver,
-REM WI-210: a plain launch is the dispatcher, and worker sessions build
-REM their explicit assignments - the repo rules live in CLAUDE.md and the
-REM session-protocol skill, which every session already reads.)
+REM WI-210: worker sessions build their explicit assignments - the repo
+REM rules live in CLAUDE.md and the session-protocol skill, which every
+REM session already reads.)
 REM Per-session wall-clock bound (seconds) so one hung CLI cannot wedge a
 REM lane forever - the walk-away guarantee (repo-review 2026-07-21 M-18).
 REM Blank the slot to disable (engine default 0 = no timeout). Keep

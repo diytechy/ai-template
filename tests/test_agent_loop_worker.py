@@ -160,7 +160,7 @@ if v:
     subprocess.run(["git", "commit", "-q", "-m", "review verdict"], check=True)
     sys.exit(0)
 wi = re.search(r"- WI: (WI-\d+)", args.prompt).group(1)
-train = re.search(r"- Train: (\S+) \(branch", args.prompt).group(1)
+train = re.search(r"- Branch: (\S+) \(its claim", args.prompt).group(1)
 base = re.search(r"integration base ([0-9a-f]+)\)", args.prompt).group(1)
 mode = (ctl / "mode").read_text().strip() if (ctl / "mode").exists() else "build"
 work = pathlib.Path("work-" + wi + ".txt")
@@ -247,7 +247,7 @@ def test_worker_multi_wi_assignment_builds_in_order(tmp_path):
     # Ordered: WI-201's session first, then WI-204's — and WI-204's prompt
     # carries the train diff of the accepted-but-unintegrated WI-201 commit.
     assert prompt.index("- WI: WI-201") < prompt.index("- WI: WI-204")
-    assert "Current train diff" in prompt
+    assert "Current branch diff" in prompt
     trailers = _git(repo, "log", "--format=%(trailers:key=WI,valueonly)", "HEAD")
     assert {"WI-201", "WI-204"} <= set(trailers.split())
     # Two sessions, two train-scoped logs.
@@ -415,11 +415,21 @@ def test_worker_review_evidence_names_exact_reviewed_commit(tmp_path):
 # --- preflight fails closed ------------------------------------------------------
 
 
-def test_wi_without_train_is_preflight_failure(tmp_path):
+def test_wi_without_train_defaults_tag_to_the_branch(tmp_path):
+    # Phase 5 re-grounding: --wi alone is a full assignment; the session tag
+    # defaults to the current branch name (flattened), so the evidence lands
+    # tag-scoped without any dispatcher-era --train.
     repo, base, ctl, fake = _setup(tmp_path)
     proc = _worker(repo, fake, ctl, "--wi", "WI-201")
+    assert proc.returncode == agent_loop.EXIT_DONE, proc.stdout + proc.stderr
+    assert "branch=llm-train-t1" in proc.stdout  # derived from llm/train/t1
+
+
+def test_train_without_wi_is_preflight_failure(tmp_path):
+    repo, base, ctl, fake = _setup(tmp_path)
+    proc = _worker(repo, fake, ctl, "--train", "t1")
     assert proc.returncode == agent_loop.EXIT_PREFLIGHT
-    assert "come as a pair" in (proc.stdout + proc.stderr)
+    assert "--train without --wi" in (proc.stdout + proc.stderr)
 
 
 def test_track_flag_is_gone(tmp_path):
@@ -433,12 +443,16 @@ def test_track_flag_is_gone(tmp_path):
     assert "--track" in (proc.stdout + proc.stderr)
 
 
-def test_worker_off_its_train_branch_fails_closed(tmp_path):
+def test_worker_on_detached_head_fails_closed(tmp_path):
+    # A claim is a branch (§2.3), so a detached HEAD is an unverifiable
+    # checkout — the assignment refuses up front. (The dispatcher-era
+    # llm/train/<train> branch-equality guard retired with the naming at
+    # Phase 5; the fail-closed core — a worker runs on a branch — survives.)
     repo, base, ctl, fake = _setup(tmp_path, train="t1")
-    _git(repo, "checkout", "-q", "-b", "llm/train/other", base)
+    _git(repo, "checkout", "-q", "--detach", "HEAD")
     proc = _worker(repo, fake, ctl, "--wi", "WI-201", "--train", "t1")
     assert proc.returncode == agent_loop.EXIT_PREFLIGHT
-    assert "must run on its train branch" in (proc.stdout + proc.stderr)
+    assert "could not be determined" in (proc.stdout + proc.stderr)
 
 
 def test_worker_unknown_or_done_wi_fails_closed(tmp_path):

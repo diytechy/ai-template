@@ -60,18 +60,14 @@ AGENT_PREFER_MAP=""
 AGENT_CMD_MAP=""
 # Optional hands-on template for --interactive (defaults to AGENT_CMD):
 AGENT_CMD_INTERACTIVE="claude --model {model} {prompt}"
-# Worker ceiling (dispatcher). WI-274: the VALUE now lives in docs/stack.ini
-# [agent-loop] jobs (currently 1 = serial, the owner dial 2026-07-22). This slot
-# stays the env-override tier — an inherited AGENT_JOBS still wins over the
-# declared file (precedence: CLI --jobs > this env slot > docs/stack.ini >
-# built-in default); left empty here so the declared home is the one place a
-# dial change lands. An absent value still boots the dispatcher (WI-210 — the
-# legacy serial driver is retired).
-AGENT_JOBS="${AGENT_JOBS:-}"
+# (The AGENT_JOBS worker-ceiling slot retired with the parallel dispatcher
+# at concurrency-restructure Phase 5: claiming and merging run through
+# integrate.py, and this launcher boots explicit session roles only —
+# agent_loop.py --wi / --interactive / --dual-plan.)
 # (The meta-repo resume prompt slot is retired with the serial driver,
-# WI-210: a plain launch is the dispatcher, and worker sessions build
-# their explicit assignments — the repo rules live in CLAUDE.md and the
-# session-protocol skill, which every session already reads.)
+# WI-210: worker sessions build their explicit assignments — the repo rules
+# live in CLAUDE.md and the session-protocol skill, which every session
+# already reads.)
 # Per-session wall-clock bound (seconds) so one hung CLI cannot wedge a lane
 # forever — the walk-away guarantee (repo-review 2026-07-21 M-18). Blank to
 # disable (engine default 0 = no timeout). Keep agent-resume.cmd in sync.
@@ -86,7 +82,7 @@ if [ -z "$AGENT_CMD" ]; then
   echo "sessions; see project-trajectory/PROCESS_OPTIONS.md 'Unattended operation'." >&2
   exit 1
 fi
-export AGENT_CMD AGENT_MODEL AGENT_MODEL_MAP AGENT_TIER_MAP AGENT_PREFER_MAP AGENT_CMD_MAP AGENT_CMD_INTERACTIVE AGENT_JOBS
+export AGENT_CMD AGENT_MODEL AGENT_MODEL_MAP AGENT_TIER_MAP AGENT_PREFER_MAP AGENT_CMD_MAP AGENT_CMD_INTERACTIVE
 PY="$(command -v python3 || command -v python)" || {
   echo "agent-resume.sh: python3 not found." >&2; exit 1;
 }

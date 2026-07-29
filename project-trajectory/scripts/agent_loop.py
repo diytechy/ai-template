@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
-"""Unattended agent entry point: dispatcher, assigned worker, or interactive session.
+"""Headless session engine: one claimed worker assignment, a reviewer/critique
+round, a dual-plan round, or an interactive sitting.
 
-Implements the walk-away protocol (process-options.md "Unattended operation
-(walk-away runs)"). A plain invocation runs the parallel dispatcher: it derives
-the ready WI frontier, reserves traincars in Git, launches explicit worker
-assignments, and integrates their committed evidence. ``--wi``/``--train`` runs
-one dispatcher-assigned worker; ``--interactive`` runs one attached hands-on
-session. The retired serial resume loop and its status/run-state input ladder are
-not CLI modes. Ported from a field-proven PowerShell coordinator (NotHomeWrecker
-trigger.ps1), which this one cross-platform implementation supersedes. Stdlib
-only, Python 3.11+.
+Implements the session half of the walk-away protocol (process-options.md
+"Unattended operation (walk-away runs)"). Claiming and merging live in the
+sibling integrate.py (the serial integration seam, concurrency-restructure
+§1.2/§2.3); the parallel dispatcher this module once fronted retired at Phase 5
+of that restructure, so a plain invocation now refuses with the map instead of
+launching anything. Ported from a field-proven PowerShell coordinator
+(NotHomeWrecker trigger.ps1), which this cross-platform implementation
+supersedes. Stdlib only, Python 3.11+.
 
 The agent invocation is a command template — the AGENT_CMD slot in the root
 agent-resume.{cmd,sh} launchers (or --agent-cmd / the AGENT_CMD env var).
@@ -24,7 +24,7 @@ consents by filling the slot, declaring the gate policy (docs/gate-policy),
 and running this; git + CI remain the enforcement floor. The banner restates
 this every run.
 
-During worker/review sessions and dispatcher coordination this module:
+During worker/review sessions this module:
   - picks the model per the in-process phase: --model-map
     "PHASE=model,PHASE=model" (or AGENT_MODEL_MAP), falling back to --model /
     AGENT_MODEL — and the COMMAND template the same way: --cmd-map /
@@ -40,9 +40,10 @@ During worker/review sessions and dispatcher coordination this module:
     head+tail copy to the tracked docs/iteration/NNN-<stamp>.log, then
     regenerates docs/iteration_index.md from the log metadata (generated,
     never hand-edited);
-  - honors docs/pause: a graceful-pause request (the file present) stops the
-    dispatcher at the next session boundary — the in-flight assignment finishes
-    and commits normally, never a mid-session kill; deleting the file resumes;
+  - honors the tracked docs/work/pause (concurrency-restructure §5.6): pause =
+    stop claiming/starting, at the next session boundary — the in-flight
+    session finishes and commits normally, never a mid-session kill; unpausing
+    is a reviewed deletion commit;
   - honors docs/blackout: a declared `HH:MM-HH:MM` UTC WEEKDAY-ONLY window
     (Mon–Fri; weekends are never blacked out, by blackout_wake's contract)
     inside which no new session starts — the in-flight one wraps normally, then
@@ -72,69 +73,39 @@ no capture) at the mapped tier — the "grind from a single point" entry for a
 human sitting down. The template comes from --interactive-cmd / the
 AGENT_CMD_INTERACTIVE env var, falling back to AGENT_CMD.
 
---jobs N|auto (or the AGENT_JOBS env) launches the PARALLEL DISPATCHER
-(WI-182, SR-061; docs/specs/parallel-wi-dispatch.md §4): reconcile owned
-trains -> gate -> build-out. It derives the ready frontier from the WI
-registry via schedule.py (declared SafetyClass required — unclassified fails
-closed), packs it into traincars (ordinary unary chains cluster up to the
-cap; ready spine/gate/attestation WIs cluster into ONE spine-only traincar —
-spine packs with spine, never with anything else (WI-204) — which serializes
-whole-project with every other lane drained, as does protected;
-one spine train at a time), atomically reserves each selected traincar's constituent WIs
-(refs/llm/reservations/WI-### — one commit-tree metadata commit + one
-update-ref --stdin zero-old-value transaction, all-or-none), leases a linked
-worktree per train (../<repo>-trains/<id>), and runs Slice-C workers in
-parallel up to the ceiling, rescanning on every worker exit (dynamic refill —
-never a static wave). A built train parks ready-to-integrate with its
-reservations held for the integrator (Slice F); docs/pause stops new
-reservations at the next boundary while in-flight workers finish;
-out/dispatch/ is a rebuildable journal/cache, never authority (§11); root
-docs/run-state becomes a generated dispatcher outcome. --jobs 1 is the
-explicit serial mode. A plain launch IS the dispatcher (WI-210, one engine /
-one selection path): absent --jobs/AGENT_JOBS resolves to the §6 default of
-two workers — the legacy serial resume driver and its --track lanes are
-retired. The two-worker promotion is GATED (WI-186, SR-065): a repo holds at
---jobs 1 until its SafetyClass audit (every open WI classified) AND soft-edge
-audit (signed via docs/parallel-ready) pass — a fresh scaffold passes by
-construction — and every launch emits reason-coded telemetry (run/train/WI/
-session aggregation) + a lanes/frontier/queue/ceiling banner.
-
---wi/--train run one WORKER ASSIGNMENT (WI-181, SR-060; the parallel-dispatch
-contract docs/specs/parallel-wi-dispatch.md §6): an explicit, dispatcher-supplied
-traincar — the ordered `--wi "WI-###[;WI-###…]"` list built on train branch
-llm/train/<train> in the worktree named by --worktree (default --root), from the
-integration base --base. A worker has NO lane files: it never reads or writes
-run-state/status.md/pause/next-wi and never regenerates generated root artifacts
-(the integrator owns them) — its prompt is assembled from AGENTS.md, the WI row,
-its SpecRef, predecessor context, the current train diff, and any --rework
+--wi runs one WORKER ASSIGNMENT (WI-181, SR-060) on a CLAIMED branch (the
+§2.3 model: `integrate.py claim` moves the spec queued/ -> active/<branch>/ on
+the trunk and cuts the branch; the ordered `--wi "WI-###[;WI-###…]"` list is
+built in the worktree named by --worktree, default --root, from the
+integration base --base, default HEAD at start). --train survives as the
+optional session TAG scoping logs and review evidence — default: the current
+branch name. A worker has NO lane files: it never reads or writes
+status.md/next-wi and never regenerates generated root artifacts (the trunk
+lane owns them, §5.2) — its prompt is assembled from AGENTS.md, the WI row,
+its SpecRef, predecessor context, the current branch diff, and any --rework
 finding, and its RESULT is committed evidence: each WI's final commit carries
-`WI:`/`Train:`/`Base:` trailers (a blocker commits `Blocked-WI:` + `BlockRef:`
-instead and the worker exits 3). Session logs are collision-safe
-(docs/iteration/<train>-NNN-*.log) and review verdicts land at
-docs/reviews/<train>/NNN-<PHASE>-<sha7>.md naming the exact reviewed commit, so
-parallel workers never collide. A traincar is ONE review scope (WI-183,
-SR-062): under managed routing + review-policy >= 1 the round is scheduled
-once, after the LAST assigned WI commits, over the combined base..HEAD train
-diff — intermediate constituents are accepted-on-train, not reviewed. Before
-each successor the §7 continuation conditions are re-checked: a constituent
-the classifier no longer permits in a multi-WI grouping ends the train EARLY
-(exit 10) — built evidence stands and the dispatcher transactionally releases
-the unstarted constituents' reservations. Exit 0 = every assigned WI built
-(and its one review cycle approved).
+a `WI:` trailer (a blocker commits `Blocked-WI:` + `BlockRef:` instead and
+the worker exits 3). Session logs are collision-safe
+(docs/iteration/<tag>-NNN-*.log) and managed review verdicts land under
+docs/reviews/<tag>/ naming the exact reviewed commit, so parallel branches
+never collide. An assignment is ONE review scope (WI-183, SR-062): under
+managed routing + review-policy >= 1 the round is scheduled once, after the
+LAST assigned WI commits, over the combined base..HEAD diff. Before each
+successor the §7 continuation conditions are re-checked: a constituent the
+classifier no longer permits in a multi-WI grouping ends the assignment EARLY
+(exit 10) — built evidence stands and the unstarted constituents return to
+the queue. Exit 0 = every assigned WI built (and its one review cycle
+approved).
 
 A per-worktree lockfile (out/agent-loop.lock) stops two coordinators grinding
-one checkout — the dispatcher, a worker, and an --interactive sitting all take
-it (one coordinator per checkout; the OS releases it on process death). The
-retired --track lanes' judgment duties are re-homed once in process-options.md
-"Unattended operation" (WI-210): intake/triage of new scope belongs to the
-human + the gate-stage sessions; drained-queue and NEEDS-HUMAN surfacing are
-dispatcher-generated (the end-state banner + root docs/run-state).
+one checkout — a worker and an --interactive sitting both take it (one
+coordinator per checkout; the OS releases it on process death).
 
 Exit codes: 0 DONE · 2 preflight/config failure (incl. the inert unfilled
 slot) · 3 BLOCKED · 4 stall abort (work stall or an all-ERROR agent-unavailable
 run — the banner distinguishes them) · 5 WAITING on a rate limit · 6 iteration
 budget exhausted while still RUNNING · 7 NEEDS-HUMAN (act, then re-run) · 8
-paused (docs/pause present — delete it and re-run to resume).
+paused (the tracked docs/work/pause present — unpause and re-run to resume).
 
 Preflight refuses to start iteration 1 when: the AGENT_CMD executable is
 missing (report, never a hang); the working directory is not a git repo; or
@@ -142,7 +113,14 @@ docs/privacy-check is enabled and the effective git author email is not in the
 exempt allowlist — an unattended run under a private identity is the
 history-leak disaster case (process-options.md "Commit identity & privacy").
 
-Contracts: IF-015, IF-068 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.csv). IF-068 (WI-274 part B) is the coordinator-dial read: main() resolves jobs/model/model-map from docs/stack.ini [agent-loop] (via agent_common.read_agent_loop_config) with precedence CLI flag > AGENT_* env > declared file > built-in default. The WI-218 split re-homed IF-041 (agent-CLI invocation) to agent_session.py, IF-037 (declared-surface reads) to agent_common.py, and IF-055 (the schedule seam) to agent_dispatch.py with their code; the split-out layers provide back over IF-064..IF-067.
+Contracts: IF-015, IF-068 — the interface seams this module declares
+(process.md §8; rows of record in docs/requirements/interfaces.csv). IF-068
+(WI-274 part B) is the coordinator-dial read: main() resolves model/model-map
+from docs/stack.ini [agent-loop] (via agent_common.read_agent_loop_config)
+with precedence CLI flag > AGENT_* env > declared file > built-in default.
+The WI-218 split re-homed IF-041 (agent-CLI invocation) to agent_session.py
+and IF-037 (declared-surface reads) to agent_common.py; the split-out layers
+provide back over IF-064..IF-067.
 """
 
 import argparse
@@ -178,7 +156,7 @@ except ImportError:  # pragma: no cover - in-process fallback
     import score_reviews
 
 # The WI-218 split: the session-launch layer (slice B), the shared coordinator
-# primitives + the dual-plan runner (slice C), and the parallel dispatcher/
+# primitives + the dual-plan runner (slice C), and (until Phase 5) the parallel dispatcher/
 # integrator (slice D) live in their own modules. These bindings keep
 # agent_loop's public surface (tests, downstream imports, monkeypatch targets)
 # and its internal callers unchanged. Mutable internals (the lock's held
@@ -215,7 +193,6 @@ parse_blackout = agent_common.parse_blackout
 blackout_wake = agent_common.blackout_wake
 blackout_wait = agent_common.blackout_wait
 WI_TOKEN_RE = agent_common.WI_TOKEN_RE
-TRAIN_BRANCH_PREFIX = agent_common.TRAIN_BRANCH_PREFIX
 sanitize_train = agent_common.sanitize_train
 parse_wi_list = agent_common.parse_wi_list
 load_wi_registry = agent_common.load_wi_registry
@@ -271,39 +248,40 @@ RESUME_RECONCILE_NOTE = (
 
 
 # The worker-assignment prompt (WI-181, SR-060). Assembled per session from the
-# WI row + SpecRef + predecessor context + train diff + rework finding — NEVER
+# WI row + SpecRef + predecessor context + branch diff + rework finding — NEVER
 # from docs/status.md (not a resume surface) or docs/next-wi (retired). The
 # format slots are filled by worker_prompt(); the trailer protocol is the
-# worker's ONLY result channel (committed evidence, spec §6 — workers have no
-# lane-local run-state).
+# worker's ONLY result channel (committed evidence — workers have no lane
+# files). Re-grounded on the §2.3 claim model at concurrency-restructure
+# Phase 5: the branch is the claim branch `integrate.py claim` cut, and the
+# claimed spec sits in docs/work/active/<branch>/.
 WORKER_PROMPT = (
-    "You are a worker session launched by the parallel dispatcher "
-    "(scripts/agent_loop.py --wi/--train) — assume no human is watching. You "
-    "are assigned ONE work item on ONE train branch; this assignment is your "
-    "whole scope. Read AGENTS.md first, then the SpecRef and SR rows below — "
-    "they are the spec of record.\n"
+    "You are a worker session for a CLAIMED work item "
+    "(scripts/agent_loop.py --wi, on a branch cut by `integrate.py claim`) — "
+    "assume no human is watching. You are assigned ONE work item on ONE claimed "
+    "branch; this assignment is your whole scope. Read AGENTS.md first, then "
+    "the SpecRef and SR rows below — they are the spec of record.\n"
     "\n"
     "Assignment:\n"
     "- WI: {wi} — {title}\n"
     "- SR-Refs: {srs} | SpecRef: {specref}\n"
-    "- Train: {train} (branch llm/train/{train}; integration base {base})\n"
+    "- Branch: {train} (its claim is docs/work/active/{train}/; integration "
+    "base {base})\n"
     "{pred_block}{diff_block}{rework_block}"
     "\n"
-    "Rules (the parallel-dispatch worker contract, "
-    "docs/specs/parallel-wi-dispatch.md §6):\n"
+    "Rules (the branch discipline, docs/concurrency-restructure.md §2.3/§5):\n"
     "- Work ONLY the assigned WI. Do not resume from docs/status.md and do not "
     "look for docs/next-wi (retired) — the assignment above is authoritative.\n"
     "- Run the declared harness (docs/stack.ini) and keep it green; commit "
-    "coherent progress. End your FINAL commit for this WI with the trailers:\n"
+    "coherent progress. End your FINAL commit for this WI with the trailer:\n"
     "    WI: {wi}\n"
-    "    Train: {train}\n"
-    "    Base: {base}\n"
     "- NEVER edit root coordination truth on this branch: docs/status.md, "
-    "docs/run-state, docs/log.md (write your session record as a fragment "
+    "docs/log.md (write your session record as a fragment "
     "docs/log.d/<WI-id>-<slug>.md instead; the trunk step compiles it), "
     "another branch's docs/work/active/ claims, or generated artifacts "
     "(docs/iteration_index.md, dashboards, generated maps). The trunk lane "
-    "regenerates generated artifacts after each merge.\n"
+    "regenerates generated artifacts after each merge (§5.2); the integrator "
+    "merges this branch only through its fail-closed queue.\n"
     "- If the WI cannot proceed for a non-predecessor reason, commit the "
     "evidence you have with the trailers `Blocked-WI: {wi}` and `BlockRef: "
     "<OI-N | spec anchor | named external condition>` INSTEAD of the WI "
@@ -431,21 +409,22 @@ NON_BUILD_PHASES = frozenset(REVIEW_PHASES) | {
 }
 
 
-# (read_ask retired with the serial driver, WI-210: the dispatcher composes
+# (read_ask retired with the serial driver, WI-210: the engine composes
 # its NEEDS-HUMAN banners from the ask it just generated — the `ask:` line in
 # docs/run-state remains the WI-127 contract for humans and launchers.)
 
 
 # (--track and its docs/tracks/<name>/ lane plumbing retired outright, WI-210:
-# the dispatcher's explicit --wi/--train worker assignment is the only lane
+# the explicit --wi worker assignment is the only lane
 # concept; docs/ is the one coordination surface and the integrator owns it.)
 
 
 def worker_prompt(root, wi_rows, wi, train, base, rework_text=""):
     """The per-session worker prompt (SR-060): the WI row + SpecRef +
-    predecessor context + the current train diff + any rework finding, slotted
-    into WORKER_PROMPT. Reads NOTHING from docs/status.md or docs/next-wi —
-    the explicit assignment is the whole scope."""
+    predecessor context + the current branch diff + any rework finding, slotted
+    into WORKER_PROMPT (`train` is the session tag = the claim branch name).
+    Reads NOTHING from docs/status.md or docs/next-wi — the explicit
+    assignment is the whole scope."""
     row = wi_rows.get(wi, {})
 
     preds = []
@@ -467,7 +446,7 @@ def worker_prompt(root, wi_rows, wi, train, base, rework_text=""):
                 )
     pred_block = (
         "- Hard predecessors (context, already integrated or accepted on this "
-        "train):\n" + "\n".join(preds) + "\n"
+        "branch):\n" + "\n".join(preds) + "\n"
         if preds
         else ""
     )
@@ -477,7 +456,7 @@ def worker_prompt(root, wi_rows, wi, train, base, rework_text=""):
     )
     _c2, stat_out = git(root, "diff", "--name-status", "{}..HEAD".format(base))
     diff_block = (
-        "- Current train diff ({}..HEAD — earlier WIs on this train, accepted "
+        "- Current branch diff ({}..HEAD — earlier work on this branch, accepted "
         "but not yet reviewed/integrated):\n{}\n{}\n".format(
             base[:7], _clip(log_out, 30), _clip(stat_out, 60)
         )
@@ -1204,9 +1183,9 @@ def worker_endstate(root, worker, review_open, managed, rp_int, allow_block_exit
     return (
         EXIT_DONE,
         "DONE",
-        "every assigned WI ({}) carries its trailer commit on {}{}".format(
+        "every assigned WI ({}) carries its trailer commit on branch {}{}".format(
             ";".join(worker["assigned"]),
-            TRAIN_BRANCH_PREFIX + worker["train"],
+            worker["train"],
             "; review round approved" if managed and rp_int >= 1 else "",
         ),
     )
@@ -1214,7 +1193,7 @@ def worker_endstate(root, worker, review_open, managed, rp_int, allow_block_exit
 
 def worker_exit_banner(worker, end):
     """Print the worker's end banner (never a status.md excerpt — a worker
-    has no resume surface) and hand the exit code to the dispatcher."""
+    has no resume surface) and hand back the exit code."""
     code_, label, detail = end
     print(
         "\n=== worker {} [{}]: {} ===".format(
@@ -1278,20 +1257,21 @@ def parse_args():
     ap.add_argument(
         "--train",
         default=None,
-        help="worker assignment (with --wi): the train id; the worktree must "
-        "be on branch llm/train/<train> (the dispatcher creates it).",
+        help="worker assignment: the session tag scoping logs and review "
+        "evidence. Default: the current branch name (the §2.3 claim branch "
+        "`integrate.py claim` cut).",
     )
     ap.add_argument(
         "--worktree",
         default=None,
-        help="worker assignment: the leased linked worktree to run in "
-        "(becomes the effective --root; default: --root itself).",
+        help="worker assignment: the worktree to run in (becomes the "
+        "effective --root; default: --root itself).",
     )
     ap.add_argument(
         "--base",
         default=None,
-        help="worker assignment: the train's integration base commit (from "
-        "the reservation metadata). Default: HEAD at worker start.",
+        help="worker assignment: the integration base commit the branch was "
+        "cut from. Default: HEAD at worker start.",
     )
     ap.add_argument(
         "--rework",
@@ -1506,23 +1486,39 @@ def map_preflight(
 
 
 def build_worker_assignment(args, root):
-    """The dispatcher's explicit worker assignment (--wi + --train): parse
-    the traincar's WI list, fail closed on an unresolvable --base, and load
-    the registry + scheduler views + any --rework findings. Returns
-    (None, None) when this is not a worker process, (worker, None) on
-    success, or (None, EXIT_PREFLIGHT) after printing its own error."""
+    """The explicit worker assignment (--wi, on a claimed branch): parse the
+    WI list, fail closed on an unresolvable --base, and load the registry +
+    scheduler views + any --rework findings. The session tag (`worker["train"]`,
+    scoping logs and review evidence) is --train when given, else the current
+    branch name — the §2.3 claim branch. Returns (None, None) when this is not
+    a worker process, (worker, None) on success, or (None, EXIT_PREFLIGHT)
+    after printing its own error."""
     # --- worker assignment mode (WI-181, SR-060) -----------------------------
     # worker != None switches the loop from "resume from the lane" to "build
-    # the explicit assignment": no lane status/run-state/pause/next-wi reads or
-    # writes, no generated-artifact regeneration, train-scoped collision-safe
-    # logs + review evidence, result = committed trailers + the exit code.
+    # the explicit assignment": no lane status/next-wi reads or writes, no
+    # generated-artifact regeneration, tag-scoped collision-safe logs + review
+    # evidence, result = committed trailers + the exit code.
     worker = None
-    if args.wi and args.train:
+    if args.wi:
+        tag = (args.train or "").strip()
+        if not tag:
+            code, out = git(root, "symbolic-ref", "--quiet", "--short", "HEAD")
+            # A branch name may carry "/" (not a safe path segment for the
+            # tag's reviews/<tag>/ and log-prefix roles) — flatten it.
+            tag = out.strip().replace("/", "-") if code == 0 else ""
+        if not tag:
+            print(
+                "agent_loop: no --train tag and no current branch (detached "
+                "HEAD) — a worker session runs on the claimed branch "
+                "(`integrate.py claim`); check one out or pass --train.",
+                file=sys.stderr,
+            )
+            return None, EXIT_PREFLIGHT
         base = (args.base or "").strip() or head_sha(root)
         if not base:
             # An unborn HEAD (zero-commit repo) has no integration base to
-            # build evidence against — fail closed, never crash (the
-            # dispatcher always assigns from an existing HEAD).
+            # build evidence against — fail closed, never crash (a claim is
+            # always cut from an existing HEAD).
             print(
                 "agent_loop: no --base and no HEAD commit to default to — a "
                 "worker builds from an integration base; commit first.",
@@ -1555,7 +1551,7 @@ def build_worker_assignment(args, root):
             )
             return None, EXIT_PREFLIGHT
         worker = {
-            "train": sanitize_train(args.train),
+            "train": sanitize_train(tag),
             "assigned": assigned,
             "base": base,
             "rows": rows,
@@ -1659,11 +1655,11 @@ def print_run_banner(
 ):
     """The unattended-coordinator launch banner: the run's identity, its
     policies, the routing/guardrails posture, and the privacy warning."""
-    print("=== unattended coordinator (scripts/agent_loop.py) ===")
+    print("=== session engine (scripts/agent_loop.py) ===")
     print("repo: {} | branch: {}".format(root, branch or "(none)"))
     if worker:
         print(
-            "worker assignment: train={} wi={} base={} (result = committed "
+            "worker assignment: branch={} wi={} base={} (result = committed "
             "trailers + exit code; no lane files)".format(
                 worker["train"], ";".join(worker["assigned"]), worker["base"][:12]
             )
@@ -1726,7 +1722,7 @@ class LoopContext:
 def route_session(ctx, i, current_wi, session, resume_reconcile, now):
     """Pick the phase + model + prompt for this worker session (managed
     routing or the single-model path; WI-210 — every loop session is a
-    dispatcher-assigned worker session). Returns an int exit code to end the
+    claimed worker session). Returns an int exit code to end the
     run (no routable model -> EXIT_NEEDS_HUMAN; a {model} template with no
     model -> EXIT_PREFLIGHT) or a `plan` dict the caller launches."""
     args = ctx.args
@@ -1820,7 +1816,7 @@ def route_session(ctx, i, current_wi, session, resume_reconcile, now):
             # Every enabled model at the preferred tier-or-stronger is cooling
             # down or none is enabled: page rather than drop to a weaker tier.
             # (A worker never writes run-state — its exit code is the page;
-            # the dispatcher generates the root run-state, spec §10.)
+            # the stop banner + exit code carry the outcome.)
             stop_banner(
                 status_path,
                 "NEEDS-HUMAN — no routable model",
@@ -2096,8 +2092,8 @@ def session_bookkeeping(
                 fa = agent_route.failure_action(gate_policy)
                 print("route/failure ({}): {}".format(fa["mode"], fa["note"]))
                 if fa["mode"] == "attended":
-                    # A worker never writes run-state — its exit code pages
-                    # the dispatcher, which generates the root file (§10).
+                    # A worker has no lane files — its exit code and the
+                    # stop banner carry the page.
                     stop_banner(
                         status_path,
                         "PAGE-HUMAN — review escalation",
@@ -2247,9 +2243,9 @@ def session_bookkeeping(
 def run_iteration(ctx, i):
     """One worker session end-to-end: guards, routing (route_session),
     launch, telemetry, bookkeeping (session_bookkeeping), and the outcome
-    ladder (WI-210 — the loop is the dispatcher-assigned worker engine; the
+    ladder (WI-210 — the loop is the claimed-assignment worker engine; the
     serial resume driver and its docs/pause boundary are retired: pause stops
-    NEW RESERVATIONS at the dispatcher, spec §12, while an in-flight worker
+    NEW CLAIMS at the coordinator (§5.6) while an in-flight worker
     finishes its safe boundary). Returns an int exit code to END the run, or
     None to proceed to the next iteration (a `continue` path returns None
     early, so the trailing pause sleep — the last statement — is naturally
@@ -2283,7 +2279,7 @@ def run_iteration(ctx, i):
         # hung. Same wait semantics — total sleep is exactly `wake` seconds.
         blackout_wait(wake, blackout_line, resume_at, emit=print, sleep=time.sleep)
     # (The WI-209 serial dual-plan quiet-park guard retired with the serial
-    # driver, WI-210: the dispatcher auto-runs a dual row's round, so the
+    # driver, WI-210: a dual row runs through --dual-plan, so the
     # page-instead-of-idle duty has no second path left to cover.)
     # Inject the reconcile note into the first session's prompt only (see the
     # once-at-start rationale above); every later session's prompt is
@@ -2295,7 +2291,7 @@ def run_iteration(ctx, i):
     # whose evidence is already complete (or blocked) exits immediately —
     # recovery reconstructs the same verdict from git alone (spec §11).
     # WI-239: a resumed worker's FIRST session (i == 1) is NOT short-circuited
-    # by a pre-existing Blocked-WI trailer — the dispatcher only re-dispatches a
+    # by a pre-existing Blocked-WI trailer — a coordinator only re-dispatches a
     # blocked train when the base may have been cured, so the worker gets its one
     # chance to supersede the block with a completion; a block still standing
     # after the session exits BLOCKED (the post-session check honors it).
@@ -2324,11 +2320,10 @@ def run_iteration(ctx, i):
         # attestation/protected/high-risk/critique/checkpoint) ends the
         # train EARLY instead of building inside a shared review scope.
         # Missing classification is NOT a newly-visible conflict: the
-        # dispatcher already fails closed at packing, and an explicit
-        # assignment is dispatcher-authorized. Built evidence stands; the
-        # dispatcher releases the unstarted reservations (SR-062).
+        # explicit assignment was authorized at claim time. Built evidence
+        # stands; the unstarted constituents return to the queue (SR-062).
         # WI-204 (SR-095): a spine-serial constituent inside a
-        # HOMOGENEOUS spine-only train is the dispatcher-authorized batch —
+        # HOMOGENEOUS spine-only batch is the authorized grouping —
         # spine packs with spine, never with anything else — so it is not a
         # newly-visible conflict; only a heterogeneous grouping refuses.
         if remaining and len(worker["assigned"]) > 1:
@@ -2352,14 +2347,14 @@ def run_iteration(ctx, i):
                 schedule.SCHED_SINGLE_WI,
             ):
                 print(
-                    "\n=== worker {} [{}]: TRAIN-END (early) ===".format(
+                    "\n=== worker {} [{}]: ASSIGNMENT-END (early) ===".format(
                         worker["train"], ";".join(worker["assigned"])
                     )
                 )
                 print(
                     "continuation refused at {}: {} — built {} stay(s) "
-                    "accepted-on-train; the dispatcher releases the "
-                    "unstarted constituent(s).".format(
+                    "accepted on the branch; the unstarted constituent(s) "
+                    "return to the queue.".format(
                         current_wi,
                         ";".join(reasons),
                         ";".join(sorted(built)) or "(none)",
@@ -2559,7 +2554,7 @@ def run_iteration(ctx, i):
         return EXIT_WAITING
     # (The run-state DONE/BLOCKED/NEEDS-HUMAN ladder retired with the serial
     # driver, WI-210: a worker's state is always RUNNING here — its end
-    # states are judged from committed evidence, below, and the dispatcher
+    # states are judged from committed evidence, below, and the coordinator
     # generates the root run-state.)
 
     # Worker end-state after the session too — a completed assignment must
@@ -2622,13 +2617,12 @@ def main():
         root = Path(args.root).resolve()
     docs = root / "docs"
 
-    # The coordinator dials, resolved ONCE from the single declared home
+    # The session dials, resolved ONCE from the single declared home
     # (docs/stack.ini [agent-loop], IF-068 / WI-274 part B) so they need not be
     # duplicated across the three agent-resume launchers — precedence CLI flag >
-    # AGENT_* env > declared file > built-in default. (The jobs dial belonged to
-    # the parallel dispatcher, retired at concurrency-restructure Phase 5; the
-    # resolver still returns its slot for compatibility, unread here.)
-    args.model, args.model_map, _ = resolve_coordinator_dials(args, docs)
+    # AGENT_* env > declared file > built-in default. (The jobs dial retired
+    # with the parallel dispatcher at concurrency-restructure Phase 5.)
+    args.model, args.model_map = resolve_coordinator_dials(args, docs)
 
     # A plain launch has no role since the parallel dispatcher retired
     # (concurrency-restructure §6): claiming and merging run through
