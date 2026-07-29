@@ -7,4 +7,21 @@ buildtier = "medium"
 priority = 2
 safety_class = "ordinary"
 order = 347
+disposition = "retired"
 +++
+
+## Deliverable
+
+RETIRED 2026-07-29, concurrency-restructure Phase 5 item 7, per the 2026-07-28
+audit ruling (handoff-2026-07-28c §3: "guard-on-a-guard; record as a
+Reviewer-tier gap"). The row's own text already conceded the property "may not
+be fully mechanizable; if it is not, say so and move the residue to the
+enforcement audit" — that is what happened, forced by measurement: at the Phase
+5 item-1 commit the same-file majority rule FALSE-POSITIVED in the opposite
+direction from 129-REVIEW-A's bypass (deleting the dispatcher's same-file
+classes honestly concentrated the survivors in graph-layout, which the
+arithmetic cannot tell from a rebuilt catch-all). The rule was retired from
+tests/test_dupes_census_audit.py and recorded as a Reviewer-tier row in
+docs/enforcement-audit.md in that commit. The checkable halves — per-section
+counts, distribution-table consistency, charged-class-names-open-WI-and-modules
+— remain tests.

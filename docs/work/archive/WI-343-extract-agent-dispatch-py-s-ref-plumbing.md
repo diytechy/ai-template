@@ -8,4 +8,16 @@ buildtier = "medium"
 priority = 0
 safety_class = "ordinary"
 order = 340
+disposition = "retired"
 +++
+
+## Deliverable
+
+RETIRED 2026-07-29, concurrency-restructure Phase 5 item 7 — MOOT, exactly as
+the §6 fate table predicted: `agent_dispatch.py` was deleted whole at the Phase
+5 item-1 commit, taking every block this row proposed to extract with it. The
+census classes it names (`ref-namespace` 5, `ref-transaction` 2,
+`reservation-release` 3, `trailer-scan` 1) dissolved in the same commit's
+census re-derive; `atomic-json` had already been retired by WI-348. Nothing to
+extract remains. Retired rather than closed: the work was never done — its
+subject ceased to exist.

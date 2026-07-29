@@ -7,4 +7,21 @@ buildtier = "medium"
 priority = 2
 safety_class = "ordinary"
 order = 348
+disposition = "retired"
 +++
+
+## Deliverable
+
+RETIRED 2026-07-29, concurrency-restructure Phase 5 item 7, per the 2026-07-28
+audit ruling (handoff-2026-07-28c §3: won't-fix the oracle). The row's own
+record shows why: the reviewer's fix and its mirror were BOTH measured wrong in
+opposite directions, on a branch that had already shipped two such corrections
+— `ex-draft` is an oracle whose false negative (a mature spine reopened by
+flipping an existing child to Draft) costs a delayed advisory, not a wrong
+gate, and every candidate correction re-opened the early-project nag that
+127-REVIEW-A MAJOR 5 ruled out. The honest core the audit asked to absorb into
+WI-355 is standing practice: WI-355 made an explicit `--gate` genuinely gate,
+and the recorded habit is to run `check_trajectory.py --strict` directly,
+unfiltered, before claiming anything done — the strict bar is never inferred
+from the warn-first floor. This row stays in the archive as the measured
+record of both wrong directions.

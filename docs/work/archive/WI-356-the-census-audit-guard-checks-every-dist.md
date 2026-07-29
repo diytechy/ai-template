@@ -8,3 +8,15 @@ priority = 2
 safety_class = "ordinary"
 order = 353
 +++
+
+## Deliverable
+
+RETIRED 2026-07-29, concurrency-restructure Phase 5 item 7, per the 2026-07-28
+audit ruling (handoff-2026-07-28c §3): the header total and "By disposition"
+aggregate were third copies of guarded data with no check of their own, so the
+fix was to DELETE the numbers, not to build the assert this row proposed. Done
+at the Phase 5 item-1 commit's census re-derive: docs/dupes-allow now carries
+the per-class distribution table (guarded row-by-row against the sections by
+tests/test_dupes_census_audit.py) and no unchecked document-level aggregates.
+A number nobody checks is a number that lies; the census now states only the
+figures its tests compare.

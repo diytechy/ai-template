@@ -44,7 +44,7 @@ required for the minimum profile). Rows are in document order; each maps to the
 | §9 NFR checklist | deciding which non-functional concerns a project must consider at G1 | an NFR checklist |
 | §9 perf comparator | you have captured `PB-###` budgets you want tracked over time | a perf comparator over `PB` rows |
 | §10 several modules, one repo | a repo grows distinct sub-systems that still build and release as one (scale rung 2) | a module map |
-| Parallel tracks (multi-lane operation) | one repo runs many WIs concurrently — the dispatcher/worker model (the track-lane machinery is retired, WI-210) | worker assignments + the integration ref |
+| Parallel work — the integration seam (multi-lane operation) | one repo runs many WIs concurrently — git + the serial integrator (the track-lane and dispatcher machinery are retired) | claims + the fail-closed merge queue |
 
 **Byte budget.** This file is **byte-watched** the way [`process.md`](process.md)
 is: its baseline lives in the `byte-budget-guard` skill, and any growth must be
@@ -533,21 +533,22 @@ proven coordinator (a spatial-capture pilot's `trigger.ps1`), which
 `scripts/agent_loop.py` supersedes — the protocol here is agent-neutral repo
 text, so a downstream can build its own coordinator against it.
 
-**The model.** The coordinator **is the parallel dispatcher** (WI-210 — one
-engine, one selection path; "Parallel tracks" below has the mechanics):
-reconcile owned trains → gate → build-out. It derives the ready WI frontier
-from the registry, reserves traincars, and runs **fresh headless worker
-sessions** — repo text is the only memory (§7 boundary notes, "Repo text is
-the durable agent memory layer"); each session builds its **explicit
-assignment** (the WI row + SpecRef + predecessor context + train diff), never
-a "resume from `status.md`" prompt — until the queue drains, a stall guard
-trips (N consecutive sessions without a commit), or an iteration budget
-ceiling hits. Work happens on `llm/train/<id>` branches (never the development
-branch), integration is serialized and honors `docs/push-policy` — under the
-default `human` the coordinator never pushes, even if asked. At worker start a
-dirty worktree (residue from an interrupted run) is surfaced into the first
-session's prompt as a reconcile instruction; stash/rollback is deliberately
-*not* automated — that judgment belongs to the session.
+**The model.** Work is claimed through the **integration seam** ("Parallel
+work — the integration seam" below has the mechanics): `integrate.py claim`
+moves the spec onto a claimed branch, and the session engine
+(`agent_loop.py --wi`) runs **fresh headless worker sessions** there — repo
+text is the only memory (§7 boundary notes, "Repo text is the durable agent
+memory layer"); each session builds its **explicit assignment** (the WI row +
+SpecRef + predecessor context + branch diff), never a "resume from
+`status.md`" prompt — until the assignment's evidence reads DONE/BLOCKED, a
+stall guard trips (N consecutive sessions without a commit), or an iteration
+budget ceiling hits. Work happens on claimed branches (never the development
+branch), merging is the serial fail-closed queue and honors
+`docs/push-policy` — under the default `human` the coordinator never pushes,
+even if asked. At worker start a dirty worktree (residue from an interrupted
+run) is surfaced into the first session's prompt as a reconcile instruction;
+stash/rollback is deliberately *not* automated — that judgment belongs to the
+session.
 
 **The judgment duties, stated once** (WI-210 re-homed them here when the
 serial resume driver — the loop that read `status.md`/`run-state` back as its
@@ -557,14 +558,14 @@ control input — was retired):
   sessions**: new WIs enter the registry at planning/ratification (or through
   a dual-plan round's filed children), never by a session inventing scope
   mid-run.
-- **Drained-queue handling** is the dispatcher's **end-state banner** — the
-  run reports what integrated, what needs attention, and what remains queued.
-- **NEEDS-HUMAN surfacing** is the **generated** root `docs/run-state`
-  (dispatcher/integrator-written, spec §10): `RUNNING`/`DONE`/`BLOCKED`/
-  `NEEDS-HUMAN`, with `NEEDS-HUMAN` carrying one `ask: <one-line ask>` line
-  the stop banner headlines. **A wrong DONE is a false green** (§4); a worker
-  never writes the file — its exit code and committed trailers are its whole
-  result channel.
+- **Drained-queue handling** is the run's **end-state banner** — the run
+  reports what integrated, what needs attention, and what remains queued.
+- **NEEDS-HUMAN surfacing** is the **stop banner + exit code 7**, with one
+  `ask: <one-line ask>` headline (the dispatcher-era generated
+  `docs/run-state` file retired with the dispatcher at
+  concurrency-restructure Phase 5 — git history and the integrator's own
+  refusals are the durable record). **A wrong DONE is a false green** (§4);
+  a worker's exit code and committed trailers are its whole result channel.
 - **The resume-from-`status.md` prompt is retired** with the path: the
   generated `status.md` block (`gen_trajectory.py --status`) is a snapshot for
   humans, never a session's input — the hand-authored remainder stays the
@@ -584,8 +585,8 @@ every claim; status generation surfaces `paused since <date>: <reason>` so an
 open pause is a visible accruing cost, never a forgotten one. What no file can
 do — stop a running session — stays stated plainly: that remains "kill the
 worker". Absent = not paused, so an adopter who never creates it pays nothing.
-(The legacy *untracked* `docs/pause` marker is honored by the retiring
-dispatcher during the migration window only.)
+(The legacy *untracked* `docs/pause` marker retired with the dispatcher at
+concurrency-restructure Phase 5 — the tracked file is the one home.)
 
 **Optional `docs/blackout`** (first line `HH:MM-HH:MM`, UTC, Mon–Fri): a
 recurring window inside which the coordinator starts **no new session** — the
@@ -625,8 +626,7 @@ never a silent rework), re-chunks `docs/plan.md` before continuing (re-planning
 belongs on the strong tier). The coordinator's model map ties the tier to the
 phase: `AGENT_MODEL_MAP="PLAN=<strong-model>,BUILD=<cheap-model>"`. The mechanized
 bounce — a stop that forces re-planning onto the strong tier — rode the retired
-`run-phase` file; under parallel dispatch it becomes the dispatcher's
-activity-routing (Slices D–H, in development). On a small scope the cadence
+`run-phase` file; the in-process phase routing carries it now. On a small scope the cadence
 collapses to plan-and-build in one session. The plan
 file is the **compressed hand-off**: fresh sessions have no chat memory, and a
 block spec is far cheaper to reload than the exploration that produced it — the
@@ -685,7 +685,7 @@ because two samples of one model share blind spots; for the same reason
 `--model-map` syntax (`AGENT_CMD_MAP="REVIEW-B=gemini -p {prompt}"`), matched
 against the in-process phase — whose keys are free-form, so `REVIEW-A`/`REVIEW-B`
 phases just work — falling back to the single `AGENT_CMD`. (A template that
-itself needs `,`/`;` routes through a thin dispatcher wrapper instead.) In
+itself needs `,`/`;` routes through a thin command wrapper instead.) In
 managed mode the loop **schedules the review round** automatically after a
 committing build (the reviewer dial sets how many); the loop surfaces the dial
 in its banner and never blocks on it — the harness pass is the entry ticket,
@@ -817,32 +817,27 @@ behavior**, so a fresh scaffold pays nothing.
   Tier is otherwise per-*phase*, so a docs-only WI and a spine-critical engine WI
   both ride the BUILD default. An **optional `BuildTier` column** on
   `work-items.csv` (`strong|medium|quick`, legacy `weak` reads as `quick`;
-  empty/absent = the phase default) names a WI's *starting* build tier. The
-  dispatcher reads it **directly from the reserved WI's row** (the
-  parallel-dispatch design note in the kit's meta-repo — not shipped
-  downstream); the
-  hand-curated `docs/next-wi` pointer that once carried it is **retired** (WI-180,
+  empty/absent = the phase default) names a WI's *starting* build tier, read
+  directly from the claimed WI's row; the hand-curated `docs/next-wi` pointer
+  that once carried it is **retired** (WI-180,
   with its `;`-batch and gate-first advisories). It **composes with
   tier-up-never-down**: the column sets where a build *starts*; a contested review
   still escalates above it, so it never caps escalation. **Set the tier while
   filing or triaging the WI:** `quick` for mechanical, off-spine work, `medium` by
   default, `strong` only for design-shaping or spine-touching changes — a
   deliberate planner decision, never a mid-loop downgrade.
-  **Traincar batching (WI-133 → the scheduler).** Independent, off-spine dev
-  slices that once rode a `;`-joined `docs/next-wi` batch now cluster into a
-  **traincar** — one branch, one Build pass per WI, one review round over the
-  combined diff — packed by `schedule.py` (the scheduler contract) and dispatched
-  by the parallel dispatcher (Slices A/D). The single-review amortization and the
-  off-spine-only rule are unchanged; the mechanism moves from a driver-curated
-  file to the registry-derived frontier.
+  **Multi-WI assignments (WI-133 → the scheduler).** Independent, off-spine
+  dev slices may still batch onto one branch — one Build pass per WI, one
+  review round over the combined diff (`--wi "WI-a;WI-b"`); `schedule.py`
+  remains the registry-derived frontier the claim reads. The single-review
+  amortization and the off-spine-only rule are unchanged.
   **Review rework carry-forward (WI-170).** When a managed review merges to
   `CHANGES-REQUESTED`, the coordinator records the reviewed BUILD scope in
   `docs/rework-wi` and reworks it before taking new work (its prompt, telemetry
   label, and BuildTier lookup all follow it), so a build that already advanced
   cannot orphan its findings. It stays durable through further review rounds and
-  coordinator restarts; only an `APPROVE` of that scope clears it. Under parallel
-  dispatch this becomes assignment-scoped dispatcher state (§8 of the dispatch
-  plan).
+  coordinator restarts; only an `APPROVE` of that scope clears it. In worker
+  mode the same carry-forward is assignment-scoped (`--rework`).
 - **Reviewer independence (the evidence-backed core).** Reviewers are fresh
   sessions, **two families, at least one differing from the implementer's —
   *preferred, not required*** (family = who trained the model, so a router-fronted
@@ -1114,13 +1109,12 @@ direct BUILD, fail-closed). The manual protocol above remains the fallback —
 and the stronger-isolation option (empty-cwd sessions).
 
 **SELECT disposition fails closed on registry validation.** The filed child
-rows and their generated OKF/dashboard views are one atomic transaction. If a
-present generator rejects the new registry, the integration ref does not move:
-the dispatcher returns the generator/validator tail, quarantines the WI through
-the normal error path, and salvages `docs/plans/DP-*` evidence to
-`out/dispatch/salvage/<train>/`. Committing evidence with stale views is not a
-portable fallback — the shipped freshness hook would reject it — and bypassing
-the hook would make a known-invalid registry authoritative.
+specs and their generated OKF/dashboard views must validate together: if a
+present generator rejects the new registry, the round pages with the
+generator/validator tail and the `docs/plans/DP-*` evidence stays on disk for
+the human. Committing evidence with stale views is not a portable fallback —
+the shipped freshness hook would reject it — and bypassing the hook would
+make a known-invalid registry authoritative.
 
 ## Tier-conditional guardrails
 
@@ -1217,7 +1211,8 @@ visual-regression tooling. Its manifest and gates complement this process; keep
 
 **The boundary.** Guardrails govern *in-session agent mechanics*; the process
 (gates, traceability, the honest-gate rule) governs *artifacts*. A guardrail
-never relaxes a gate, and the honest-gate rule still owns every `run-state`.
+never relaxes a gate, and the honest-gate rule still owns every end-state
+claim.
 The meta-repo dogfoods the mechanism (tests) but runs the policy **off** — its
 own sessions are frontier-tier, so there is nothing to guard.
 
@@ -1588,13 +1583,11 @@ integration branch after a successful integration and gated by generated
 freshness (like `PROJECT_STATE.html`), never written on a worker branch. It
 carries only: the derived gate/bar pointers; queued/deferred/blocked counts + a
 link to the WI dashboard; pending `Needs <human>` items linked to the owner
-decision surface; the last integrated train + integration-queue summary; and
+decision surface; the ready frontier; and
 project scope/constraints whose canonical homes are linked, not copied. The
 former **R-B/R-C** rules — every open WI repeated as a token in `status.md` —
 are **retired** (WI-180): a generated snapshot needs no registry copy to
-cross-check, and the generator + its freshness `--check` land with the
-dispatcher/integrator (the parallel-dispatch design note in the kit's
-meta-repo — not shipped downstream). **R-D's done-id half is restored,
+cross-check (`gen_trajectory.py --status` + its freshness `--check`). **R-D's done-id half is restored,
 forward-only (WI-200):** a `done` WI id lingering in `status.md` is a finding
 again — warn at commit, ERROR under `--strict` at G2+ — except inside a
 generated snapshot block, which cannot accrete prose.
@@ -2281,187 +2274,119 @@ releases as a whole.
   machinery.
 <!-- /profile -->
 
-## Parallel tracks (multi-lane operation)
+## Parallel work — the integration seam (multi-lane operation)
 
 *Builds on PROCESS.md §10 (several modules, one repo) and the "Unattended
-operation" / "Agent iteration branch & sync" layers above.* **Applies when** one
-repo needs **more than one driver working at once**. The answer is the
-**parallel dispatcher + explicit worker assignments** below — the earlier
-*track-lane* machinery (`--track`, per-lane `docs/tracks/<name>/` copies of the
-coordination files, per-track ID blocks) is **retired outright (WI-210)**: it
-split the judgment duties across two control philosophies and forced every
-safety guard to be wired per-path. A repo with one active line of work still
-pays nothing — a plain launch with the queue holding one ready WI simply runs
-one worker.
+operation" layer above; the design of record is
+`docs/concurrency-restructure.md` (RULED 2026-07-28).* **Applies when** one
+repo needs **more than one driver working at once**. The answer is **git plus
+a thin integration seam**: one flow everywhere — *branch → change request →
+required checks on the composed tree → merge* — with the **local serial
+integrator** (`scripts/integrate.py`) as the default backend and a forge
+(GitHub via `gh`: branch protection + required checks + merge queue) as the
+optional online backend of the *same* flow. A repo with one active line of
+work pays nothing: `workers = 1` **is** the serial flow, with no separate
+structure (RULING-8). Two earlier generations of machinery are retired
+outright — the track-lane files (`--track`, WI-210) and the bespoke parallel
+dispatcher/reservation train (`agent_dispatch.py`, Phase 5 of the
+restructure): its measured lifetime record (19 reservations → 8 integrations
+→ 0 gate-verified, 11 hand-rescues) is the evidence base for replacing a
+hand-rolled forge with git itself.
 
-**What stays repo-singular (integrator-owned, never forked per lane):** the one
-`SN→SR→LLR→TC` requirement spine and every registry, `docs/gate` + `gate-policy` +
-`push-policy` + `privacy-check` + `guardrails-policy`, the root `status.md`/`log.md`,
-`AGENTS.md`, and the generated code map. The spine is **deliberately singular**
-(§10): `trace.py --strict` still demands **0 orphans across the whole repo, seams
-included** — a per-lane gate would hide exactly the cross-lane seams this method
-wants first-class. Workers **propose**; the **integrator lands**. Three of the
-old track disciplines survive as dispatcher rules: **registry rows land at
-ratification through the integrator** (a worker never edits the registries
-mid-flight — its filed drafts land at integration), **generated artifacts are
-never text-merged** (a conflict is resolved by regenerating on the composed
-tree), and **cross-module contracts are `IF-###` rows** in the one
+**What stays repo-singular (trunk-owned, never forked per branch):** the one
+`SN→SR→LLR→TC` requirement spine and every registry, `docs/gate` +
+`gate-policy` + `push-policy` + `privacy-check` + `guardrails-policy`, the
+root `status.md`/`log.md`, `AGENTS.md`, and every generated artifact. The
+spine is **deliberately singular** (§10): `trace.py --strict` still demands
+**0 orphans across the whole repo, seams included**. Workers **propose**; the
+**integrator lands**. Cross-module contracts are `IF-###` rows in the one
 `interfaces.csv` with an integration TC backing the seam.
 
-**Gating stays single-gate; per-train maturity rides `Phase` tags.** Keep **one**
-`docs/gate` for the repo ("Phased delivery" above): Verified is required only
-where a phase has actually built, and everything else is listed
-**phase-deferred** — the explicit, recorded exemption, never a silent skip.
+**Claims (the §2.3 protocol).** Work is claimed on the serial trunk:
+`integrate.py claim` moves the spec `docs/work/queued/ →
+docs/work/active/<branch>/` in one bookkeeping commit and cuts the worker
+branch from it. Claims are atomic and race-free because the claim commit is
+serial trunk history — no reservation refs, no journal; `git log` is the
+record. The claim refuses loudly while paused, on a dirty tree, when the
+branch exists, on an unsafe name, for a non-ordinary class, or off the
+frontier. The closing merge itself carries the move `active/<branch>/ →
+archive/`.
+
+**Concurrency classes (§3).** Declared per-spec: `ordinary` runs in
+parallel (the declared `modules` touch-set is a co-scheduling *hint* —
+overlaps that slip through surface as ordinary merge conflicts, the worker's
+to rebase); `spine` is a **barrier, not a lane** — claiming stops, active
+branches merge or park, the spine work runs solo in a single session, then
+claiming resumes, so "built against amended requirements" is unrepresentable
+rather than mitigated; `render` is ordinary plus a batching tag for the
+periodic advisory critique.
+
+**Worker sessions.** A worker builds its claimed assignment
+(`agent_loop.py --wi`, in the branch's worktree; `--train` survives only as
+the optional session tag, defaulting to the branch name). It has **no lane
+files** — it never edits `status.md`/`log.md`, another branch's claims, or
+generated artifacts; its session record is a log fragment
+(`docs/log.d/<WI-id>-<slug>.md`, §5.1) and its **result is committed
+evidence**: the final commit for a WI carries a `WI:` trailer (a blocker
+commits `Blocked-WI:` + `BlockRef:` instead; exit 3). Session logs and
+managed review evidence are tag-scoped so parallel branches never collide.
+
+**The serial merge queue.** `integrate.py integrate` takes each finished
+claimed branch in turn: a `--no-ff` merge onto a candidate worktree (the
+composed tree **is** the candidate, by construction — a one-page merge
+queue), the trunk step folded into the merge commit, and the **declared bar**
+run on the composed tree read fail-closed — a missing or empty check
+declaration is a **refusal**, never a skip, and any SKIP in the report
+refuses (the fail-open lesson, stated as a contract). The gate-policy dial
+(RULING-7) is enforced by requiring the corresponding **verdict artifact**
+(review file `docs/reviews/WI-<n>-<PHASE>.md`, critique, attestation) with
+git-derived freshness before the trunk fast-forwards; a red queue parks
+loudly. `integrate.py audit` is the RULING-6 window check: coordinator
+bookkeeping (claims, fragment compile, regeneration — the `[generated]` set
+in `stack.ini`) commits directly to the trunk, while **product changes reach
+the trunk only through the queue's `--no-ff` merges**; a non-merge trunk
+commit touching product paths is the finding.
+
+**Shared-surface rules (§5).** The log compiles from per-branch fragments in
+merge order (`trunk_step.py --compile-log`; no work branch ever hand-merges
+`log.md`). Generated artifacts are **trunk-only** (§5.2): work branches never
+commit them, branch-local checks read them as-of-base, and the trunk
+regenerates after each merge (`trunk_step.py --regen`) — this deletes the
+largest cause of parallel merge conflicts outright. Stamps and ratchets are
+re-derived or re-stamped on the trunk, never hand-carried on work branches
+(§5.3). Review/critique artifacts use branch-scoped names
+(`docs/reviews/WI-<n>-<PHASE>.md`), not a serial counter (§5.4).
+
+**Pause (§5.6) — drain to a clean, merged stop.** One meaning: **pause =
+stop claiming; everything in flight finishes, integrates, and archives.** The
+form is a **tracked** `docs/work/pause` (TOML `reason` + `since`), committed
+by the bookkeeping lane, so the reason is diffable history and unpausing is
+an auditable deletion commit. The only thing that stops an unload is the
+integrator's own refusal — that is the gate working, not the pause; a pause
+ends fully merged and quiet, or fully merged except N branches parked red,
+each red a finding. Status generation surfaces `Paused since <date>:
+<reason>` so an open pause is a visible accruing cost. What no file can do —
+stop a running session — stays stated plainly: that remains "kill the
+worker." A blackout window (`docs/blackout`) still starts no new session.
 
 **One coordinator per checkout.** A **per-worktree lock**
-(`out/agent-loop.lock`) refuses a second coordinator in one checkout (the
-double-launch / cron-overlap collision): a **kernel advisory lock**
-(`flock` / `LockFileEx`) the OS grants atomically and releases when the process
-exits *or crashes*, so a dead run never wedges the next one — there is no stale
-pid file to reason about. Cross-host on a shared filesystem is best-effort only
-(`flock` over NFS is unreliable): the lock guards one checkout on one host, the
-case that matters. The dispatcher, each worker (in its own worktree), and an
-`--interactive` sitting all take it.
+(`out/agent-loop.lock`) refuses a second coordinator in one checkout: a
+kernel advisory lock (`flock`/`LockFileEx`) the OS grants atomically and
+releases on process death, so a dead run never wedges the next one.
+Cross-host on a shared filesystem is best-effort only; the lock guards one
+checkout on one host, the case that matters.
 
-**Worker assignment (parallel dispatch) — the tracks successor.** The
-dispatcher-era coordinator replaces long-lived tracks with **explicit worker
-assignments** (`--wi "WI-###[;…]" --train <id> [--worktree <path> --base <sha>
---rework <file>]`): one dispatcher-assigned traincar built on branch
-`llm/train/<id>` in its leased worktree. A worker has **no lane files** — it
-never reads or writes `run-state`/`status.md`/`pause` and never regenerates
-generated root artifacts (integrator-owned); its prompt is assembled from
-`AGENTS.md` + the WI row + its SpecRef + predecessor context + the current
-train diff + any rework finding (never a `status.md` resume), and its **result
-is committed evidence**: each WI's final commit carries `WI:`/`Train:`/`Base:`
-trailers (a blocker commits `Blocked-WI:` + `BlockRef:` instead; exit 3). Its
-session logs (`docs/iteration/<train>-NNN-*.log`) and review verdicts
-(`docs/reviews/<train>/NNN-<PHASE>-<sha7>.md`, naming the **exact reviewed
-commit**) are train-scoped so parallel workers never collide at integration.
-A traincar is **one review scope**: the policy-required review round fires
-once, after the *last* constituent commits, over the combined train diff —
-intermediate constituents are accepted-on-train, not reviewed, and **no
-constituent becomes `done` until the whole train integrates**. Before each
-successor the continuation conditions are re-checked; a positive classifier
-conflict ends the train early (exit 10) and the dispatcher **transactionally
-releases the unstarted constituents' reservations** (built and blocked ones
-keep theirs as integrator evidence).
-`--track` is **gone** (WI-210): the flag, its lane files, and the per-track
-branch guard were retired with the serial driver; the worker assignment above
-is the only lane concept.
+**Forge mode.** On a repo that lives on a forge, the same artifacts and flow
+move server-side: open = `gh pr create`, checks = required status checks on
+the composed tree (merge queue), verdict = `gh pr review`, merge = protected
+`gh pr merge --auto`. Enforcement leaves every local agent's reach entirely —
+the structural answer where the local integrator is the adequate one (the
+threat model is bugs and fail-open, not malice). The second-approver-identity
+question is forge-mode-only and deferred until approval-required lanes are
+used there.
 
-**The parallel dispatcher (`--jobs`).** `agent_loop.py --jobs N|auto` (or the
-`AGENT_JOBS` env) replaces the resume loop with the **dispatcher**: it derives
-the ready frontier from the WI registry via `schedule.py` (a **declared
-`SafetyClass` is required** — an unclassified WI fails closed without stopping
-classified disjoint work), packs it into traincars (ordinary unary hard-chains
-cluster up to the cap, default 4; ready spine/gate/attestation WIs cluster into
-**one spine-only traincar** — spine packs with spine, never with anything else
-(WI-204) — which, like protected work, serializes **whole-project** with every
-other lane drained first), **atomically
-reserves** each selected traincar's constituent WIs — one off-history
-`commit-tree` metadata commit + one `update-ref --stdin` zero-old-value
-transaction creating the train branch and every `refs/llm/reservations/WI-###`
-ref, all-or-none — leases a linked worktree per train
-(`../<repo>-trains/<id>`), and runs workers in parallel up to the ceiling,
-rescanning on every worker exit (dynamic refill, never a static wave). A built
-train parks **ready-to-integrate with its reservations held** until the
-integrator advances the durable disposition, so nothing double-runs across
-restarts. `docs/pause` stops new reservations at the next boundary while
-in-flight workers finish; a blackout window starts no new worker;
-`out/dispatch/` is a rebuildable journal/cache — Git refs are the authority;
-root `run-state` becomes a **generated dispatcher outcome**. `--jobs 1` is the
-explicit serial mode. **A plain launch is the dispatcher** (WI-210 — one
-engine, one selection path): absent `--jobs`/`AGENT_JOBS` resolves to the
-two-worker default, held at 1 until the migration audits pass ("Downstream
-migration" below); the
-legacy serial resume driver is retired.
-
-**The atomic integrator.** Integration has **one logical writer** against a
-dispatcher-owned `refs/heads/llm/integration` ref — advanced **only by
-compare-and-swap** and never checked out in the primary worktree. Each ready
-train composes on a staging branch `llm/integrate/<train-id>` in its own
-worktree from the *current* integration HEAD: reservation scope and the
-**exact-head review verdicts** are verified first (a verdict naming an older
-commit does not count); a clean 3-way apply takes the fast path with **no
-re-review**, while *any* textual conflict parks the train for a **focused
-re-review** — never a silent one-side pick. A **source** conflict is human work
-(WI-232): the integrator records its merge inputs (train tip + integration head)
-and conflicted path(s) under a durable `refs/llm/conflict/<train>` ref, pages
-`NEEDS-HUMAN` with a WI-127 `ask:` naming them, and skips the identical merge on
-any relaunch whose inputs are unchanged — retrying once only when an input moves.
-On the fast path the WI rows go `done` with derived
-Deliverables, the log gains the integration evidence, the status snapshot and
-iteration index regenerate on the composed tree, and the **combined bar always
-runs** (a red bar blocks integration with the ref untouched). One integration
-commit carries `Integrated-WI`/`Train-Head` trailers; a stale CAS fails
-harmlessly and recomposes. A worker-reported blocker takes the **smaller
-disposition transaction** (only its WI → `blocked` + `BlockRef` + trailers +
-CAS, reservation released only after). Publication to the development branch
-is guarded by the durable `refs/llm/publish-intent` ref (target + expected-old
-+ dev ref, written before the second CAS, deleted only after the **verified**
-fast-forward/reset sync): a dirty checkout defers publication untouched; a
-crash between the CAS and the sync recovers idempotently — the intent, not a
-guess, identifies the pre-publication hash. Once the integration ref exists it
-is the **authoritative integrated disposition**; the development branch is its
-published projection, and `status.md` regeneration only ever touches a file
-that is absent or already generator-marked (a hand-authored status waits for
-the migration).
-
-**Crash safety (git as the recovery substrate).** `out/dispatch/` is a
-rebuildable journal/cache, **never authority**: every startup reconstructs one
-ownership/state record per WI and train from Git alone — the reservation refs
-and their metadata commits, the train/staging branches and their trailers, the
-integration ref's registry, and the publish intent. The reconcile stage
-restores an **already-integrated** train (all WIs `done` on the integration
-ref) and finishes its pending reservation release rather than re-integrating;
-a train branch whose **novel** commits (those in `base..tip` not reachable from
-the integration ref) claim a WI **outside its reservation set** is unprovable
-ownership and quarantines (nothing deleted), while disjoint proven work
-proceeds. The claim is read only from that novel range, so an owner **merging
-the development branch into a reserved train** — the sanctioned content-only
-sync that preempts stage-3 conflicts — imports integrated history, not claims:
-the merged-in WI trailers are already reachable from the integration ref and
-are ignored (a genuine foreign claim in a novel commit still quarantines).
-A crash at any lifecycle boundary — either side of the reservation
-transaction, either side of the integration CAS, after the intent write, or
-between the development CAS and the worktree sync — recovers without
-double-assignment, false completion, lost commits, or an unclassifiable
-publication state (the wired `AGENT_FAULT_POINT` hook is how the kit's own
-crash matrix proves it). Kernel locks release on process death; stored PIDs
-are hints, never liveness.
-
-**Telemetry & the parallel banner.** The dispatcher records reason-coded events
-(frontier, reservation, worker/reviewer start/finish, continuation, fork/join,
-overlap, conflict, re-review, integration, recovery, quarantine, cleanup)
-stamped with a per-launch **run id**, so telemetry aggregates by `(run, train,
-WI, session)` and a parallel session number never collides across runs. A
-one-line **banner** reports active lanes, ready-frontier width, integration-queue
-depth, and the cost/concurrency ceiling so parallel spend is visible; an
-end-of-run rollup (`out/dispatch/telemetry.json`) reports the required
-measurements — overlap/conflict/re-review/rework rates, recovery reconciles,
-combined-bar failures after individually-green trains — the evidence a
-downstream adopter tunes capacity from.
-
-**Downstream migration (the two-worker flip is earned, not assumed).** Enabling
-parallel dispatch changes default execution, so it is gated. A repo runs
-`--jobs 1` until **both** audits pass: the **SafetyClass audit** (every open WI
-carries a resolvable, non-`unclassified` class — one unaudited row holds the
-whole repo) and the **soft-edge audit** (every `~` soft predecessor reviewed for
-a hidden correctness dependency, signed off by creating `docs/parallel-ready`).
-A **fresh scaffold passes by construction** — no soft edges, all drafted WIs
-classified — so it ships parallel-by-default (`AGENT_JOBS=2` in the launcher);
-a repo migrating from the legacy loop holds at one worker until it signs off,
-and the flip is a **recorded** promotion. Legacy `active` WI rows reconcile to
-`queued` with a logged finding (runtime activity is dispatcher state, not a
-tracked column), and `docs/tracks/*` stays readable for one compatibility window
-while the dispatcher never schedules from it. A repo that never sets
-`--jobs`/`AGENT_JOBS` still runs the dispatcher — a plain launch resolves to
-the audited two-worker default (held at 1 until the audits above pass); the
-legacy single-session resume loop is retired (WI-210).
-
-**Throughput caution.** Under `attended` gate authority, every track's human asks
-converge on **one** ratifier; parallel tracks multiply the `NEEDS-HUMAN` queue. The
-dispatcher's job is to aggregate those asks into one review surface, and 2–3
-concurrently *active* lanes is the realistic ceiling while one human ratifies —
-dormant lanes (a lane directory + a "blocked on `IF-…`" note, no worktree) cost
-nothing until their gating decision lands.
+**Throughput caution.** Under `attended` gate authority, every branch's human
+asks converge on **one** ratifier; parallel branches multiply the
+`NEEDS-HUMAN` queue. Two to three concurrently *active* branches is the
+realistic ceiling while one human ratifies — a queued spec costs nothing
+until claimed.
