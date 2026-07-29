@@ -42,6 +42,7 @@ records where each one bites.
 | Rule | Primary | Backup / note |
 |---|---|---|
 | One fact, one home — no copy-paste logic | Harness | `check_dupes.py` (opt-in `[step:dupes]`); Reviewer for semantic dups |
+| A census class states a rationale a reader can CHECK against its blocks (no catch-all bucket under any label) | Reviewer | Was a mechanized majority rule in `tests/test_dupes_census_audit.py`; 129-REVIEW-A **drove and bypassed** it (even split + keyword-stuffed row, WI-350), and the Phase 5 dispatcher deletion false-positived it in the opposite direction (an honest shrink concentrated the survivors). Per the 2026-07-28 audit ruling the property is not fully mechanizable — the checkable halves (per-section counts, distribution-table consistency, charged-class-names-open-WI-and-modules) stay tests; whether a class's rationale actually fits its blocks is the reviewer's read |
 | Fail loudly, never silently | Test + Reviewer | scripts' own error-path tests; a bare except is a review finding |
 | Automation-safe by default (never blocks headless) | Test | `agent_loop`/hook headless tests; `preflight` guards footing |
 | Right-size; every line is a liability | Reviewer | Prose — over-engineering flagged either way (no hard check) |

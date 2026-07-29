@@ -71,16 +71,12 @@ SLOW_MODULES = frozenset(
         "test_check_perf",  # perf gate step on a scaffold
         "test_check_flows",  # design-flow gate step on a scaffold
         "test_meta_repo_hook",  # meta pre-commit hook integration
-        # The v4 parallel-dispatch end-to-end modules (WI-186): each spawns real
-        # dispatcher + worker subprocesses driving live git worktrees/reservations
-        # — the same heavy-integration class as the hook/scaffold runs above, so
-        # the commit bar drops them and the full suite + CI exercise them.
-        "test_agent_loop_dispatch",  # dispatcher fan-out end-to-end
-        "test_agent_loop_dualplan",  # the dual-plan round end-to-end (WI-199)
-        "test_agent_loop_train",  # traincar continuation / fork / join
-        "test_agent_loop_integrate",  # atomic integrator end-to-end
-        "test_agent_loop_recovery",  # fault-injected crash matrix
-        "test_agent_loop_migration",  # telemetry + downstream migration
+        # Heavy end-to-end session/integrator modules — real subprocesses
+        # driving live git repos, the same heavy-integration class as the
+        # hook/scaffold runs above. (The v4 parallel-dispatch e2e modules that
+        # anchored this group retired with the dispatcher at
+        # concurrency-restructure Phase 5.)
+        "test_dual_plan_round",  # the dual-plan round end-to-end (WI-199)
         "test_integrate",  # local integrator: real git repos + a real check.py bar
         # WI-281: subprocess/scaffold-heavy modules moved to slow to hold the
         # <= 60 s commit-bar budget. Each is dominated by run_py subprocesses
@@ -176,10 +172,9 @@ def load_script(name):
 # --- The interpreter-floor preflight -----------------------------------------
 # The kit declares ONE Python floor (`agent_common.MIN_PYTHON`) and dev-setup
 # provisions ./.venv to satisfy it. Run this suite under a BELOW-floor
-# interpreter and ~50 tests fail deep inside machinery that is working exactly as
-# designed: `seed_venv` builds its fixture venv from *this* process's base, so
-# the dispatcher's own WI-286 harness-floor gate refuses it ("agent_loop:
-# preflight failed"), and dev-setup's PATH probe finds no 3.11+ to offer. Those
+# interpreter and dozens of tests fail deep inside machinery that is working
+# exactly as designed (dev-setup's PATH probe finds no 3.11+ to offer, and the
+# toolchain-dependent fixtures build from *this* process's base). Those
 # reds read like branch defects but are purely environmental — measured
 # 2026-07-25 on a CLT-Python 3.9.6 .venv: 49 failures, a byte-identical set on a
 # clean tree. The guards below turn that into one loud, correct diagnosis plus
@@ -548,34 +543,9 @@ def run_py(args, cwd):
     )
 
 
-def seed_venv(repo):
-    """Give an end-to-end dispatch fixture a real, floor-satisfying `./.venv` so
-    the parallel dispatcher's WI-286 harness-floor preflight
-    (`agent_dispatch._harness_floor_failures`) passes.
-
-    That gate FAILS CLOSED when the root `.venv` is absent (REVIEW-A): a venv-less
-    repo must never fall back to the ambient interpreter, whose pinned dev tools
-    may be missing even at a satisfying version (a false green). So every fixture
-    that drives the dispatcher (`agent_loop.py --jobs`) end-to-end needs one.
-    Built with `venv.create(with_pip=False)` — a genuine ≥3.11 interpreter (this
-    process's own base), created in ~0.3 s with no network/pip cost. It is
-    deliberately tool-less: the fixtures stand in the real pytest bar with a fake
-    worker, so only the interpreter VERSION the preflight probes must be real (a
-    tool-less child's coverage `sitecustomize` import failure is a non-fatal stderr
-    warning, so the version probe and the trivial `{py} -c` bar still return 0).
-    Callers gitignore `.venv` (a local, per-checkout toolchain, never committed —
-    a leased worktree shares the primary's by absolute path, the WI-286 design), so
-    it stays out of `git add` and the porcelain the dispatcher/integrator read."""
-    import venv
-
-    # The contract above ("a genuine >=3.11 interpreter — this process's own
-    # base") is unmeetable below the floor: venv.create would hand the dispatcher
-    # a below-floor .venv and its WI-286 preflight would refuse it, surfacing an
-    # environment shortfall as ~48 opaque "preflight failed" reds.
-    skip_below_floor(
-        "this fixture must seed a floor-satisfying ./.venv from the running interpreter"
-    )
-    venv.create(str(Path(repo) / ".venv"), with_pip=False)
+# (seed_venv — the end-to-end dispatch fixtures' floor-satisfying ./.venv
+# builder — retired with the dispatcher's WI-286 harness-floor preflight at
+# concurrency-restructure Phase 5; no surviving fixture drives that gate.)
 
 
 # --- The agent_loop work-item registry fixture builder -----------------------

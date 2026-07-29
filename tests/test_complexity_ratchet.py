@@ -37,25 +37,16 @@ MAX_COMPLEXITY = 10
 
 BASELINE = {
     ("agent_common.py", "preflight"): 17,
-    ("agent_dispatch.py", "_salvage_round_evidence"): 16,
-    ("agent_dispatch.py", "dispatch_run"): 40,
+    # (The agent_dispatch.py rows retired with the module at
+    # concurrency-restructure Phase 5.)
     # Repo-review 2026-07-21 reviewed bumps (each +1..+3, all fail-closed
     # guards from that review's fix pass — reasons at the marked call sites):
-    # dual_plan_disposition/integrate_train gained the M-28 ValueError
-    # disposition guards; agent_loop main the M-20 malformed-policy warnings;
+    # agent_loop main gained the M-20 malformed-policy warnings;
     # route_session the M-22 verdict-pre-plant unlinks; session_bookkeeping
     # the H-1 unparseable-verdict fail-closed branches; load_registry the H-4
     # Model-slug refusal; run_session the H-2 interrupt kill-tree handler;
     # sync_agent_skills the M-14 orphan-deletion sweep; run_dual_plan_round
     # the L-29 unfileable-plan PAGE guard.
-    ("agent_dispatch.py", "dual_plan_disposition"): 11,
-    ("agent_dispatch.py", "integrate_train"): 17,
-    ("agent_dispatch.py", "pack_traincars"): 18,
-    # WI-230 reviewed bump 17 -> 20: the publish-under-disjoint-dirt rule adds
-    # the dirty-vs-diff intersection gate plus the two recovery-branch sync
-    # outcomes (the heavy lifting lives in the sub-10 helpers _publish_dirt /
-    # _sync_worktree). This remains follow-up dispatcher-decomposition debt.
-    ("agent_dispatch.py", "publish_integration"): 20,
     ("agent_loop.py", "critique_brief"): 11,
     ("agent_loop.py", "main"): 27,
     ("agent_loop.py", "map_preflight"): 19,

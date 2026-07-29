@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Shared coordinator primitives, extracted VERBATIM from agent_loop.py
 (WI-218 slice C — a file split, not a rewrite; behaviors and WI history
-unchanged). The worker loop (agent_loop) and the parallel dispatcher/
-integrator (agent_dispatch) both stand on this layer:
+unchanged). The session engine (agent_loop) and the serial integrator
+(integrate.py) both stand on this layer:
 
   - the typed exit codes + `END_STATES`;
   - `git`/`head_sha`/`head_sha_full` and the dirty-tree family (owner-only
@@ -294,17 +294,16 @@ def venv_python(root):
 def harness_python(root):
     """The interpreter the test harness (pytest + the pinned dev tools) should run
     under for a worktree session: the repo's own .venv when present (shared by
-    absolute path — one pinned ≥3.11 toolchain, no per-train install). Returns a
-    str path — the integrator's combined bar substitutes it for {py} so the bar
-    runs under the floor-satisfying interpreter even when the dispatcher was itself
+    absolute path — one pinned ≥3.11 toolchain, no per-worktree install).
+    Returns a str path — a bar runner substitutes it for {py} so the bar runs
+    under the floor-satisfying interpreter even when the caller was itself
     launched on ambient Python (WI-286).
 
-    The ambient `sys.executable` fallback is a DEFENSIVE default only: the
-    dispatcher gates on `_harness_floor_failures` at preflight, which now FAILS
-    CLOSED when the root .venv is absent (REVIEW-A) — so on the dispatcher's real
-    path a .venv always exists here and the fallback is never the one that runs the
-    bar. It stays for a stray caller (a stdlib-only resolver must return SOMETHING)
-    but is not a licence to run the harness on an unpinned ambient interpreter."""
+    The ambient `sys.executable` fallback is a DEFENSIVE default only (a
+    stdlib-only resolver must return SOMETHING), not a licence to run the
+    harness on an unpinned ambient interpreter. (The dispatcher-era fail-closed
+    floor gate that refused a venv-less root up front retired with the
+    dispatcher at concurrency-restructure Phase 5.)"""
     py = venv_python(root)
     return str(py) if py else sys.executable
 
@@ -340,8 +339,7 @@ def interpreter_version(exe):
 
 def _declared_test_command(ini, py=None):
     """The repo's declared test command as a tokenized argv, read from a
-    docs/stack.ini path — the stack-schema home the parallel-dispatch
-    integrator's combined bar reads (agent_dispatch._run_combined_bar) so it runs
+    docs/stack.ini path — the stack-schema home a bar runner reads so it runs
     the bar the repo actually declares. Mirrors check.py's stack schema rather
     than importing it — the OWNER_ONLY_PATHS precedent above: a CMP-004→CMP-001
     import for one small read would owe an IF seam; the tests pin it against

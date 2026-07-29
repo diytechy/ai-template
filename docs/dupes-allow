@@ -239,40 +239,45 @@
 # Every figure below is now GENERATED from the sections rather than counted by
 # hand — the rule this repo already applies to every other derived number.
 #
-# The distribution (208 blocks):
+# Phase 5, item-1 deletion (2026-07-29): agent_dispatch.py retired whole, and
+# this census was re-derived on the post-deletion tree (208 -> 181 lines; the
+# full account belongs to the Phase 5 record in docs/concurrency-restructure.md
+# §7). 28 rows left with the module — every pairing that named it, plus six
+# whole classes that lived entirely inside it: train-disposition (9, debt),
+# ref-namespace (5), ref-transaction (2), trailer-scan (1),
+# reservation-release (3) — the WI-343 extract classes, retired with that row —
+# and link-rebase (1, the trunk_step pairing this file predicted would
+# dissolve). ONE block re-paired instead of dissolving (the WI-347 clique
+# effect): 67d6e1244939, now agent_loop == agent_loop in wi-registry — read and
+# classified there, not silently accepted. The per-section counts below are the
+# guarded figures; the old document-level "By disposition"/"By path relation"
+# aggregates and the header total were DELETED rather than re-derived — they
+# were third copies of guarded data with no check of their own, which is
+# WI-356's finding, resolved per the 2026-07-28 audit ruling (delete the
+# numbers, do not build an assert).
 #
-#   cli                   87   (42%)   deliberate
-#   spine-loader          20   (10%)   deliberate
-#   declared-file         13   (6%)   deliberate
-#   git-wrapper           11   (5%)   deliberate
-#   graph-layout          11   (5%)   debt WI-280
-#   markdown-table        11   (5%)   deliberate
-#   train-disposition      9    (4%)   debt WI-280
-#   wi-schema-columns      6    (3%)   deliberate
-#   ref-namespace          5    (2%)   extract WI-343
-#   wi-registry            5    (2%)   deliberate
-#   spec-folder-reader     4    (2%)   deliberate
-#   child-capture          1           deliberate
-#   ctx-unpack             3    (1%)   deliberate
-#   import-fallback        3    (1%)   deliberate
-#   okf-row                3    (1%)   deliberate
-#   reservation-release    3    (1%)   extract WI-343
-#   module-path            2    (1%)   deliberate
-#   ref-transaction        2    (1%)   extract WI-343
-#   signature-echo         2    (1%)   deliberate
-#   graph-walk             1           deliberate
-#   link-rebase            1           deliberate
-#   skills-materialize     1           deliberate
-#   tier-node-build        1           debt WI-280
-#   trailer-fold           1           deliberate
-#   trailer-scan           1           extract WI-343
-#   warn-tier-dispatch     1           deliberate
+# The distribution:
 #
-# By disposition: deliberate 176, extract 11 (WI-343), debt 21 (WI-280).
-# By path relation (metadata only): 167 cross-module, 41 same-file. The two
-# cuts do NOT coincide — 9 same-file blocks are deliberate, and the other 32
-# are the extract + debt work, which is the honest shape of this file: a sixth
-# of the census is still not F5 at all.
+#   cli                   87   deliberate
+#   spine-loader          20   deliberate
+#   declared-file         13   deliberate
+#   graph-layout          11   debt WI-280
+#   markdown-table        11   deliberate
+#   git-wrapper            7   deliberate
+#   wi-schema-columns      6   deliberate
+#   wi-registry            4   deliberate
+#   spec-folder-reader     4   deliberate
+#   ctx-unpack             3   deliberate
+#   okf-row                3   deliberate
+#   import-fallback        2   deliberate
+#   module-path            2   deliberate
+#   signature-echo         2   deliberate
+#   child-capture          1   deliberate
+#   graph-walk             1   deliberate
+#   skills-materialize     1   deliberate
+#   tier-node-build        1   debt WI-280
+#   trailer-fold           1   deliberate
+#   warn-tier-dispatch     1   deliberate
 #
 # The two facts worth carrying: cross-module duplication here is dominated by
 # SMALL STABLE HELPERS the F5 ruling deliberately duplicates (a shared
@@ -383,14 +388,19 @@ f7d5136e6d5d  project-trajectory/scripts/derive_gate.py == project-trajectory/sc
 4e246982c55c  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/integrate.py
 b25e7f8619e5  project-trajectory/scripts/gen_trajectory.py == project-trajectory/scripts/integrate.py
 
-# --- wi-registry (5 blocks) --------------------------------------
+# --- wi-registry (4 blocks) --------------------------------------
 # disposition: deliberate
 # the WI-registry parser. Kept apart ON PURPOSE (WI-291 drift guard):
 # schedule.py stays stdlib-only and self-contained, and the one real risk -
 # DRIFT - is closed by tests/test_wi_loader_sync.py, not by extraction.
+# Phase 5 (2026-07-29): the two agent_dispatch pairings left with the module;
+# 67d6e1244939 RE-PAIRED (the WI-347 clique effect) onto agent_loop's own two
+# copies — build_scope_srs and critique_control each iterate _read_csv_rows
+# over the registry. Reading them for this classification surfaced that both
+# still read the CSV path DIRECTLY (empty in the folder-only tree since the
+# 2c flip) — owed a re-point at Phase 5 item 3, not a sanction edit.
 d298066d8071  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/check_trajectory.py
-241bbbbf4bec  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_loop.py
-67d6e1244939  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_loop.py
+67d6e1244939  project-trajectory/scripts/agent_loop.py == project-trajectory/scripts/agent_loop.py
 d47d5975c21b  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/schedule.py
 f800f0c60265  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/schedule.py
 
@@ -437,15 +447,14 @@ fb06318154af  project-trajectory/scripts/gen_okf.py == project-trajectory/script
 # generator.
 a2fa21743919  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/gen_trajectory.py
 
-# --- import-fallback (3 blocks) ----------------------------------
+# --- import-fallback (2 blocks) ----------------------------------
 # disposition: deliberate
 # the sibling-import fallback and command-template substitution — the
 # preamble that lets a kit script run both as a script and in-process.
-# (WI-340) plus one SAME-FILE block of the same idiom, regrouped here:
-# agent_dispatch's try/except import arms repeat their 30-name import list.
+# (WI-340; agent_dispatch's same-file import-arm block left with the module,
+# Phase 5.)
 be3d9855f5b5  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/plan_runner.py
 982bbeb7eb27  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/check.py
-6cde28f6024f  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
 
 # --- skills-materialize (1 block)  -------------------------------
 # disposition: deliberate
@@ -507,15 +516,11 @@ c16d14a4efc4  project-trajectory/scripts/check_privacy.py == project-trajectory/
 # paths) beside run_menu's config read - the same cross-script F5 reason.
 1b0265df6d81  project-trajectory/scripts/integrate.py == project-trajectory/scripts/run_menu.py
 
-# --- git-wrapper (11 blocks) --------------------------------------
+# --- git-wrapper (7 blocks) --------------------------------------
 # disposition: deliberate
-# the `git` subprocess wrapper and the dispatcher's preflight/lock pair -
-# small, stable, per-script.
+# the `git` subprocess wrapper and the preflight/lock pair - small, stable,
+# per-script. (The four agent_dispatch pairings left with the module, Phase 5.)
 daf99714501b  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/check_privacy.py
-533066636324  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/agent_dispatch.py
-332bdb287be6  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/gen_trajectory.py
-0bd14cd9c689  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_loop.py
-fe585fa411e9  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_loop.py
 065823254083  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/derive_gate.py
 c669d0d84711  project-trajectory/scripts/check.py == project-trajectory/scripts/check_trajectory.py
 8dc145bef9c5  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/trace.py
@@ -523,7 +528,7 @@ c669d0d84711  project-trajectory/scripts/check.py == project-trajectory/scripts/
 # SIDE EFFECT: it matched check.py's `_git_out` against gen_trajectory's `_git`
 # BODY, and that body is now one call to a local `_run_captured`, too short to
 # match. check.py was not touched and no block replaced it — a real removal, not
-# a re-stamp. gen_trajectory still pairs with agent_dispatch (`332bdb287be6`).
+# a re-stamp.
 # Phase 3 (2026-07-29): check.py's `_work_branch` lane detection brings its
 # own `_git_out` (the trace.py shape), and trunk_step.py carries the same
 # copy; check.py joining the clique re-paired/re-fingerprinted the three
@@ -532,14 +537,6 @@ c669d0d84711  project-trajectory/scripts/check.py == project-trajectory/scripts/
 b68a8ce88cdb  project-trajectory/scripts/check.py == project-trajectory/scripts/trace.py
 b68a8ce88cdb  project-trajectory/scripts/check.py == project-trajectory/scripts/trunk_step.py
 3d5196d5678c  project-trajectory/scripts/check.py == project-trajectory/scripts/derive_gate.py
-
-# --- link-rebase (1 block)  -------------------------------------
-# disposition: deliberate
-# the relative-link rewriter's read-modify shape: agent_dispatch's archival
-# relink and trunk_step's fragment-compile rebase (§5.1). Deliberately NOT
-# imported from agent_dispatch — that module retires at Phase 5, and this
-# pair dissolves with it.
-62ef56ce3884  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/trunk_step.py
 
 # --- module-path (2 blocks) --------------------------------------
 # disposition: deliberate
@@ -562,61 +559,6 @@ a96fdbede5b0  project-trajectory/scripts/check_trajectory.py == project-trajecto
 # parallel BlockRef list. Same loop shape, different accumulators; a
 # callback-parameterised merge would cost more than the four lines it saves.
 c5e35c61e3a6  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/agent_common.py
-
-# --- ref-namespace (5 blocks) ------------------------------------
-# disposition: extract WI-343
-# read/write of a JSON metadata commit under a dispatcher ref namespace
-# (rev-parse the ref -> `log -1 --format=%B` -> json.loads; commit-tree to
-# write). One contract, five sites across the conflict and blocked
-# namespaces. Extractable to a _ns_meta read/write pair.
-aa9e9ae651e2  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
-aa9e9ae651e2  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
-6a1951447b34  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
-f4b75f24b488  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
-68aa5b42cee7  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
-
-# --- ref-transaction (2 blocks) ----------------------------------
-# disposition: extract WI-343
-# the `git update-ref --stdin` transaction — create-reservations and
-# release-reservations build the same prepare/commit batch and share the
-# bytes-not-text-mode rule (only one of the two carries the comment saying
-# why). Extractable to one _update_ref_txn(root, lines, what).
-5c87733175e3  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
-ffa194248f7b  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
-
-# --- trailer-scan (1 block)  -------------------------------------
-# disposition: extract WI-343
-# `git log --format=<trailers>` over base..train + the per-line split loop,
-# once for `WI:` and once for `Blocked-WI:`. The two differ only in the
-# format string and its field separator.
-cf219bc8c654  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
-
-# --- train-disposition (9 blocks) --------------------------------
-# disposition: debt WI-280
-# the train disposition sequence — staging worktree, reset to the
-# integration HEAD, rewrite the WI rows, regenerate the artifacts,
-# rev-parse, CAS the integration ref — run once per outcome arm
-# (integrated / blocked / parked). This is not boilerplate: each arm
-# threads different state through the same transition, which is exactly
-# the typed train value object WI-280 exists to introduce.
-5ba1c2915c22  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
-5ba1c2915c22  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
-4aafd502371e  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
-4aafd502371e  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
-d647f160d4ca  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
-c250d59a13b2  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
-5db9c000fa5c  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
-9fbc857a332b  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
-ab9c2785757c  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
-
-# --- reservation-release (3 blocks) ------------------------------
-# disposition: extract WI-343
-# release_reservations followed by the `release-failed` journal event, at
-# three call sites. A _release_and_journal(root, journal, tid, wis) states
-# the pairing once; today a site can release without journalling.
-05bd0eaa4e97  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
-e47234cf5925  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
-c6b71579a078  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
 
 # --- signature-echo (2 blocks) -----------------------------------
 # disposition: deliberate

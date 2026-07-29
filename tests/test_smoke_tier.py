@@ -13,7 +13,7 @@ def test_tiering_is_total_smoke_or_slow():
     # hook marks every collected test smoke-or-slow and never neither — the
     # "a new test is in the commit bar by default" invariant. The "in" examples
     # are in-process unit modules WI-281 keeps in the bar.
-    assert smoke_tier_for("test_agent_dispatch_decisions") == "smoke"  # in
+    assert smoke_tier_for("test_agent_common_harness") == "smoke"  # in
     assert smoke_tier_for("test_schedule") == "smoke"
     assert smoke_tier_for("test_brand_new_module_nobody_marked") == "smoke"
     assert smoke_tier_for("test_pre_push_hook") == "slow"  # heavy e2e: out

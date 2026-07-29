@@ -224,87 +224,9 @@ BASELINE = {
     # degrade). Nine census sanctions went dead for +25 lines of prose.
     # Re-stamp down with WI-280.
     "gen_trajectory.py": 5281,
-    # +11 (3452 -> 3463), WI-284: _regenerate_disposition_artifacts also runs
-    # `gen_trajectory.py --status` at integrate/blocked-disposition so a closed
-    # id drops from the generated frontier automatically (and the disposition
-    # passes its own status-map floor — WI-283's core). Reviewed bump, log 2026-07-23.
-    # +70 (3463 -> 3533), WI-287: the integrator's spec close-ritual at done-flip
-    # (_wi_specrefs + _archive_closed_specs + the SpecRef='' clear) so a terminal
-    # WI clears its SpecRef and archives its spec — no more stranded R-F debt.
-    # New behaviour, reviewed bump (log 2026-07-23). Re-stamp downward with WI-280.
-    # -1 (3533 -> 3532), WI-285: _run_combined_bar delegates stack.ini
-    # test-command resolution to agent_common._declared_test_command (logic moved
-    # OUT to that CMP-004 shared-primitives module — no CMP-004→CMP-001 check
-    # import) and drops the now-unused `import shlex` — a tightening re-stamp.
-    # +6 (3532 -> 3538), WI-285 rework (REVIEW-A MAJOR): _run_combined_bar wraps
-    # the bar launch in `except OSError` so a declared-but-missing binary is a RED
-    # bar the integrator reworks (SR-008), not a FileNotFoundError that crashes the
-    # walk-away dispatcher after the worker is ready. Reviewed bump. Re-stamp
-    # downward with WI-280.
-    # +76 (3538 -> 3614), WI-286: the worktree harness-interpreter fix —
-    # _harness_floor_failures (preflight the ≥3.11 floor before any worker/bar
-    # runs) + _activate_root_venv (point the dispatcher and every child at the
-    # repo's shared .venv by absolute path) + _run_combined_bar's {py}=venv, so a
-    # venv-less train worktree stops resolving ambient 3.8. New behaviour, reviewed
-    # bump (reason here + in docs/log.md at integrate). Re-stamp downward with WI-280.
-    # +13 (3614 -> 3627), WI-286 rework (REVIEW-A MAJOR): _harness_floor_failures
-    # now FAILS CLOSED on a missing/incomplete root .venv instead of falling back to
-    # the ambient interpreter — an ambient Python can clear the version floor yet
-    # lack the pinned requirements-dev tools (a false green). The extra branch +
-    # explicit message replace the old ambient-fallthrough. Reviewed bump. Re-stamp
-    # downward with WI-280.
-    # +86 (3682 -> 3768), WI-288: `_relink_archived_specs` +
-    # `_redirected_link_target` — archival now redirects inbound markdown links to
-    # the moved spec, resolving each link by PATH relative to its own file so one
-    # rule covers every link depth. Without it archival strands a dangling link
-    # (live 2026-07-24 on WI-281, WI-274 identical) that only surfaces on the
-    # composed tree. Split into two functions because the single version measured
-    # C901 11 and this ratchet's sibling says SIMPLIFY, don't bump — so the size
-    # cost here bought a complexity baseline that stayed empty. New behaviour,
-    # reviewed bump; reason in docs/log.md 2026-07-24. Re-stamp down with WI-280.
-    # +121 (3768 -> 3889), WI-289: the two per-train RE-STAMPED data-file
-    # resolvers — `_regen_dupes_census` (regenerate the fingerprinted census
-    # from the merged tree via --emit-census, keeping the hand-authored header)
-    # and `_restamp_linecount_baselines` (rewrite ONLY the numbers to the
-    # merged actuals, preserving every rationale comment), plus the in-process
-    # regen dispatch. These files conflict on EVERY parallel compose and both
-    # sides are stale once merged, so taking a side is always wrong — this is
-    # what forced the hand-integration of WI-274/276/282. New behaviour,
-    # reviewed bump; reason in docs/log.md 2026-07-24. Re-stamp down w/ WI-280.
-    # -4 (3889 -> 3885), WI-304: the four pre-existing `dupes` blocks are gone,
-    # extracted rather than sanctioned — `_run_captured` states the subprocess
-    # capture contract once for seven call sites, `_regen_failure` the regen
-    # family's shared failure verdict for two. Ratcheted DOWN: the two helpers'
-    # docstrings cost less than the repetition they replaced, and the five raw
-    # `[-N:]` tail slices now route through `_failure_tail`. Re-stamp down with
-    # WI-280.
-    # +21 (3885 -> 3906), WI-304 rework after adversarial review. The bump is
-    # entirely COMMENT: why `_run_combined_bar` keeps a raw bounded tail (it runs
-    # the DOWNSTREAM repo's declared command, whose grammar we do not own, and
-    # `_failure_tail` truncates jest/go failures to their FAIL header), why
-    # `_failure_tail` is safe only in the regen family, and the `**extra` caveat.
-    # That prose is load-bearing: this exact mistake was just made and shipped, so
-    # the note is what stops the next author re-applying it. Reviewed bump.
-    # +17 (3906 -> 3923), WI-322: the owner surface joins _DISPOSITION_REGEN
-    # (a disposition edits its inputs, so it must regenerate before its own
-    # commit faces the floor) and _regenerate_pending retargets from the retired
-    # markdown splice to gen_open_items. Reviewed bump, log 2026-07-26.
-    # +105 (3923 -> 4028), WI-353: the mirror half of the archival ritual —
-    # `_rebase_moved_spec_links` re-relativises the MOVED spec's own outbound
-    # links, which the inbound loop structurally cannot reach (it rewrites a link
-    # whose TARGET moved; here the targets did not move, the document did). The
-    # bump is smaller than it looks: the two rewriters were folded onto one
-    # primitive (`_rewrite_md_links`) and one shared link-shape test
-    # (`_resolvable_link`), because the same-file duplication the new half created
-    # made `check_dupes` red and F5 never covers a same-file copy. Reviewed bump,
-    # log 2026-07-28. Re-stamp downward with WI-280.
-    # +15 (4028 -> 4043), WI-348: every text write declares its newline policy,
-    # so a generated repo artifact is LF on every platform. Path.write_text
-    # cannot express that on the 3.11 floor (the newline= kwarg is 3.13+), so
-    # each site becomes the two-line open() form. Partly REPAID in the same
-    # change: the two atomic-JSON writers were extracted to _atomic_json, which
-    # retires a census sanction. Reviewed bump, log 2026-07-28.
-    "agent_dispatch.py": 4042,
+    # (agent_dispatch.py and its whole bump history retired with the module
+    # at concurrency-restructure Phase 5 - the dispatcher deleted wholesale;
+    # the surviving integrator is integrate.py, below this threshold.)
     # +30 (3042 -> 3072), WI-345: `fresh_verdict_path`, `read_verdict` and
     # `launcher_exe` — the managed-session verdict plumbing and the launcher
     # probe, each stated once instead of once per arm. Extraction-grows-the-file
@@ -324,7 +246,13 @@ BASELINE = {
     # branch's session record to a docs/log.d/ fragment and drops the stale
     # work-items.csv mention carried since Phase 2c. Reviewed bump,
     # log 2026-07-29. Re-stamp down with WI-280.
-    "agent_loop.py": 3077,
+    # -69 (3077 -> 3008), Phase 5 item 1 (2026-07-29): the dispatcher's
+    # presence in THIS file leaves with agent_dispatch.py — the ~45-line
+    # re-export block, the --jobs/--worker-iterations/--poll-seconds args, and
+    # the plain-launch dispatch_run branch (now a refusal naming
+    # `integrate.py claim`). Ratcheted DOWN; the deeper item-2 shrink
+    # (WORKER_PROMPT re-grounding, --train) re-stamps again when it lands.
+    "agent_loop.py": 3008,
     # +30 (2206 -> 2236), WI-065: `tc_citation_findings` — the TC-`Verifies`
     # rules lifted out of `analyze` so the cell could accept `IF-###` seam ids.
     # Most of the bump is that helper's docstring, which is where the RULING now
@@ -581,7 +509,12 @@ BASELINE = {
     # `pause_reason` learning the second home so the retired-in-place
     # dispatcher can never resume on a home swap. The legacy-home half retires
     # with the dispatcher at Phase 5. Reviewed bump, log 2026-07-29.
-    "agent_common.py": 1720,
+    # -2 (1720 -> 1718), Phase 5 item 1 (2026-07-29): docstring edits only —
+    # the dispatcher references in the module docstring, harness_python and
+    # _declared_test_command re-worded for the deleted module. The scheduled
+    # BIG down-stamp here (the +228/+15 CSV-reader entries above) lands with
+    # Phase 5 item 3, not this commit.
+    "agent_common.py": 1718,
 }
 
 

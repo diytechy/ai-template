@@ -2092,7 +2092,6 @@ def test_parse_args_defaults(monkeypatch):
     assert args.max_iterations == 40
     assert args.stall_limit == 3
     assert args.pause == 10
-    assert args.jobs is None
 
 
 # --- the per-checkout coordinator lock (SR-029/SR-030) -------------------------

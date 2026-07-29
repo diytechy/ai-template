@@ -163,7 +163,6 @@ from pathlib import Path
 # gen_trajectory uses.
 try:
     import agent_common
-    import agent_dispatch
     import agent_route
     import agent_session
     import plan_runner
@@ -172,7 +171,6 @@ try:
 except ImportError:  # pragma: no cover - in-process fallback
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     import agent_common
-    import agent_dispatch
     import agent_route
     import agent_session
     import plan_runner
@@ -250,52 +248,6 @@ wi_plan_mode = plan_runner.wi_plan_mode
 run_dual_plan_round = plan_runner.run_dual_plan_round
 _dp_routes = plan_runner._dp_routes
 _dp_session = plan_runner._dp_session
-
-RESERVATION_NS = agent_dispatch.RESERVATION_NS
-DISPATCH_DIR = agent_dispatch.DISPATCH_DIR
-TRAIN_RETRY_SECONDS = agent_dispatch.TRAIN_RETRY_SECONDS
-FAULT_EXIT = agent_dispatch.FAULT_EXIT
-TRAIN_BRANCH_HEADS = agent_dispatch.TRAIN_BRANCH_HEADS
-INTEGRATION_REF = agent_dispatch.INTEGRATION_REF
-INTEGRATE_BRANCH_PREFIX = agent_dispatch.INTEGRATE_BRANCH_PREFIX
-PUBLISH_INTENT_REF = agent_dispatch.PUBLISH_INTENT_REF
-STATUS_GENERATED_MARKER = agent_dispatch.STATUS_GENERATED_MARKER
-PARALLEL_READY_FILE = agent_dispatch.PARALLEL_READY_FILE
-_fault = agent_dispatch._fault
-list_reservations = agent_dispatch.list_reservations
-reservation_meta = agent_dispatch.reservation_meta
-reserve_traincar = agent_dispatch.reserve_traincar
-release_reservations = agent_dispatch.release_reservations
-train_branch_evidence = agent_dispatch.train_branch_evidence
-worktree_root = agent_dispatch.worktree_root
-existing_worktrees = agent_dispatch.existing_worktrees
-lease_worktree = agent_dispatch.lease_worktree
-train_phase_gate = agent_dispatch.train_phase_gate
-pack_traincars = agent_dispatch.pack_traincars
-_Journal = agent_dispatch._Journal
-integration_head = agent_dispatch.integration_head
-cas_ref = agent_dispatch.cas_ref
-ensure_integration_ref = agent_dispatch.ensure_integration_ref
-registry_rows_at = agent_dispatch.registry_rows_at
-reviewed_train_head = agent_dispatch.reviewed_train_head
-train_verdicts = agent_dispatch.train_verdicts
-_staging_worktree = agent_dispatch._staging_worktree
-_rewrite_wi_rows = agent_dispatch._rewrite_wi_rows
-synth_deliverable = agent_dispatch.synth_deliverable
-generate_status = agent_dispatch.generate_status
-_run_combined_bar = agent_dispatch._run_combined_bar
-integrate_train = agent_dispatch.integrate_train
-blocked_disposition = agent_dispatch.blocked_disposition
-dual_plan_disposition = agent_dispatch.dual_plan_disposition
-_intent_meta = agent_dispatch._intent_meta
-publish_integration = agent_dispatch.publish_integration
-parse_jobs = agent_dispatch.parse_jobs
-assess_migration = agent_dispatch.assess_migration
-reconcile_legacy = agent_dispatch.reconcile_legacy
-resolve_ceiling = agent_dispatch.resolve_ceiling
-dispatch_banner = agent_dispatch.dispatch_banner
-telemetry_summary = agent_dispatch.telemetry_summary
-dispatch_run = agent_dispatch.dispatch_run
 
 
 # The limit-hit message a throttled headless run returns, e.g. "You've hit
@@ -1348,27 +1300,6 @@ def parse_args():
         help="worker assignment: a findings file (review verdict) to embed in "
         "the worker prompt as the rework scope — assignment-scoped state, "
         "replacing the lane rework-wi pointer.",
-    )
-    ap.add_argument(
-        "--jobs",
-        default=None,
-        help="the dispatcher's worker ceiling: an integer (1 = explicit "
-        "serial mode) or 'auto' (adaptive up to the AGENT_JOBS_CEILING env, "
-        "default 2). A plain launch IS the dispatcher (WI-210): absent "
-        "--jobs/AGENT_JOBS resolves to 2, held at 1 until the §14 migration "
-        "audits pass (docs/specs/parallel-wi-dispatch.md §4/§14).",
-    )
-    ap.add_argument(
-        "--worker-iterations",
-        type=int,
-        default=12,
-        help="dispatcher mode: per-worker session budget (default 12)",
-    )
-    ap.add_argument(
-        "--poll-seconds",
-        type=float,
-        default=2.0,
-        help="dispatcher mode: worker poll cadence in seconds (default 2)",
     )
     ap.add_argument(
         "--max-iterations",
@@ -2695,21 +2626,25 @@ def main():
     # The coordinator dials, resolved ONCE from the single declared home
     # (docs/stack.ini [agent-loop], IF-068 / WI-274 part B) so they need not be
     # duplicated across the three agent-resume launchers — precedence CLI flag >
-    # AGENT_* env > declared file > built-in default. model/model_map are
-    # consumed by BOTH the dispatcher (it routes and hands each worker --model)
-    # and the worker/interactive paths, so resolve them here, before the
-    # dispatcher branch below. jobs_opt is None when nothing set it.
-    args.model, args.model_map, jobs_opt = resolve_coordinator_dials(args, docs)
+    # AGENT_* env > declared file > built-in default. (The jobs dial belonged to
+    # the parallel dispatcher, retired at concurrency-restructure Phase 5; the
+    # resolver still returns its slot for compatibility, unread here.)
+    args.model, args.model_map, _ = resolve_coordinator_dials(args, docs)
 
-    # One engine, one selection path (WI-210, spec §1.2): a plain launch IS
-    # the dispatcher — absent --jobs/AGENT_JOBS/[agent-loop] jobs resolves to the
-    # §6 default of two workers (held at 1 until the §14 migration audits pass,
-    # SR-065), and --jobs 1 is the explicit serial-dispatcher escape. A worker
-    # assignment, interactive sitting, or --dual-plan round always wins — those
-    # are explicit per-process roles the dispatcher itself launches or replaces.
+    # A plain launch has no role since the parallel dispatcher retired
+    # (concurrency-restructure §6): claiming and merging run through
+    # `integrate.py claim` / `integrate.py integrate`, and this engine runs the
+    # explicit per-process roles only. Refuse with the map rather than guessing.
     if not (args.wi or args.train or args.interactive or args.dual_plan):
-        args.jobs = jobs_opt if jobs_opt is not None else "2"
-        return dispatch_run(args, root)
+        print(
+            "agent_loop: no role given. The parallel dispatcher retired "
+            "(concurrency-restructure Phase 5): claim work with "
+            "`integrate.py claim`, then launch a worker session with "
+            "--wi WI-<n> (in the claimed branch's worktree), or use "
+            "--interactive / --dual-plan WI-<n>.",
+            file=sys.stderr,
+        )
+        return EXIT_PREFLIGHT
     template = (
         args.agent_cmd
         if args.agent_cmd is not None
@@ -2912,14 +2847,10 @@ def main():
             stop_banner(docs / "status.md", "NEEDS-HUMAN", detail)
             return EXIT_NEEDS_HUMAN
         # autonomous / single-ratify: honor the pause-free invariant (WI-204,
-        # WI-209). A single-shot round has no sibling work to route onto the way
-        # the dispatcher does, so it lands on the same end state the dispatcher's
-        # dual-paged route-on reaches for an attention-only frontier: run-state
-        # RUNNING + EXIT_STALL (agent_dispatch._terminal_decision), never a
-        # NEEDS-HUMAN gate. The PAGE evidence is on disk under docs/plans/DP-*;
-        # relaunching re-runs the round. (page_action's non-stop-needs-human
-        # strings are intent labels; the realized behavior matches the
-        # dispatcher's page-action else arm.)
+        # WI-209): an attention-only outcome lands on run-state RUNNING +
+        # EXIT_STALL, never a NEEDS-HUMAN gate. The PAGE evidence is on disk
+        # under docs/plans/DP-*; relaunching re-runs the round.
+        # (page_action's non-stop-needs-human strings are intent labels.)
         _write_runstate(docs, "RUNNING")
         stop_banner(
             docs / "status.md",

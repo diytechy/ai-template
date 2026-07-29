@@ -100,7 +100,6 @@ def test_scaffold_contains_expected_files(scaffold):
         "scripts/agent_session.py",
         "scripts/agent_common.py",
         "scripts/plan_runner.py",
-        "scripts/agent_dispatch.py",
     ]:
         assert (scaffold / rel).exists(), "missing from scaffold: " + rel
 

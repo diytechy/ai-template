@@ -5,14 +5,20 @@ round unattended through the real agent_loop entry — two planner sessions, the
 real plan_coverage subprocess, one cross-critique each, the position-swapped
 arbiter pair — with a fake agent CLI standing in for the model sessions, and
 never enters the direct BUILD path. Heavy-integration class (subprocess
-sessions), so the module rides SLOW_MODULES like the other dispatch tests.
+sessions), so the module rides SLOW_MODULES like the other end-to-end tests.
+
+Relocated at concurrency-restructure Phase 5 from test_agent_loop_dualplan.py:
+the `--dual-plan` flag path is native agent_loop/plan_runner code and survives
+the dispatcher deletion; the dispatcher's frontier auto-dispatch tests died
+with it. The fixture registry is the spec-folder home (docs/work/), the only
+registry format after Phase 5.
 """
 
 import os
 import subprocess
 import sys
 
-from conftest import SCRIPTS, augment_env, run_py, seed_venv
+from conftest import SCRIPTS, augment_env, run_py
 
 AGENT_LOOP = SCRIPTS / "agent_loop.py"
 
@@ -61,6 +67,29 @@ else:
     sys.exit(1)
 """
 
+WI_001_SPEC = """+++
+id = "WI-001"
+title = "Done thing"
+workstream = "core"
+buildtier = "quick"
+specref = "docs/specs/WI-002.md"
++++
+
+## Deliverable
+
+shipped
+"""
+
+WI_002_SPEC = """+++
+id = "WI-002"
+title = "Widget effort (dual-plan)"
+workstream = "core"
+buildtier = "strong"
+specref = "docs/specs/WI-002.md"
+planmode = "{plan_mode}"
++++
+"""
+
 
 def make_fixture(tmp_path, plan_mode="dual"):
     root = tmp_path
@@ -81,22 +110,21 @@ def make_fixture(tmp_path, plan_mode="dual"):
         "Stability,Status,Component,Notes\n",
         encoding="utf-8",
     )
-    (root / "docs" / "requirements" / "work-items.csv").write_text(
-        "WI-ID,Title,Workstream,SR-Refs,Predecessors,Status,Deliverable,SpecRef,"
-        "BuildTier,PlanMode\n"
-        "WI-001,Done thing,core,,,done,shipped,docs/specs/WI-002.md,quick,\n"
-        "WI-002,Widget effort (dual-plan),core,,,queued,,docs/specs/WI-002.md,"
-        "strong,{}\n".format(plan_mode),
-        encoding="utf-8",
+    # The spec-folder registry home (the only home after Phase 5): one done
+    # item in archive/, the dual-plan target queued.
+    for sub in ("queued", "active", "deferred", "archive"):
+        (root / "docs" / "work" / sub).mkdir(parents=True)
+    (root / "docs" / "work" / "archive" / "WI-001-done-thing.md").write_text(
+        WI_001_SPEC, encoding="utf-8"
+    )
+    (root / "docs" / "work" / "queued" / "WI-002-widget-effort.md").write_text(
+        WI_002_SPEC.format(plan_mode=plan_mode), encoding="utf-8"
     )
     (root / "docs" / "log.md").write_text("# Log\n", encoding="utf-8")
     (root / "docs" / "status.md").write_text(
         "# Status\n\n- next: WI-002\n", encoding="utf-8"
     )
-    # The dispatcher journal writes out/ at the repo root; keeping it ignored
-    # keeps the primary worktree clean so publication is never deferred.
     (root / ".gitignore").write_text("out/\n.venv/\n", encoding="utf-8")
-    seed_venv(root)  # WI-286: the dispatcher preflight requires a ≥3.11 root .venv
     fake = root / "fake_agent.py"
     fake.write_text(FAKE_CLI, encoding="utf-8")
     # git init: agent_loop's preflight/lock path expects a repo-ish tree; the
@@ -138,6 +166,10 @@ def run_dualplan(root, fake, wi="WI-002", extra=()):
     )
 
 
+def _queued_specs(root):
+    return sorted(p.name for p in (root / "docs" / "work" / "queued").iterdir())
+
+
 def test_full_round_unattended_selects_and_files(tmp_path):
     root, fake = make_fixture(tmp_path)
     proc = run_dualplan(root, fake)
@@ -163,12 +195,16 @@ def test_full_round_unattended_selects_and_files(tmp_path):
     verdict = (rounds[0] / "verdict.md").read_text(encoding="utf-8")
     assert "both position-swapped runs agree" in verdict
 
-    # The selected plan's rows are filed as queued WIs hanging off WI-002.
-    wi_csv = (root / "docs" / "requirements" / "work-items.csv").read_text(
+    # The selected plan's rows are filed as queued spec files hanging off
+    # WI-002 (the folder home is the registry).
+    queued = _queued_specs(root)
+    child_3 = [n for n in queued if n.startswith("WI-003-")]
+    child_4 = [n for n in queued if n.startswith("WI-004-")]
+    assert child_3 and child_4, queued
+    spec_3 = (root / "docs" / "work" / "queued" / child_3[0]).read_text(
         encoding="utf-8"
     )
-    assert "WI-003" in wi_csv and "WI-004" in wi_csv
-    assert "WI-002" in wi_csv.split("WI-003", 1)[1]  # parent edge on the row
+    assert '"WI-002"' in spec_3  # parent edge in the child's needs
     log = (root / "docs" / "log.md").read_text(encoding="utf-8")
     assert "dual-plan round DP-001" in log
 
@@ -234,20 +270,12 @@ def test_arbiter_disagreement_pages(tmp_path):
     proc = run_dualplan(root, fake)
     assert proc.returncode == 7, proc.stdout + proc.stderr
     assert "position-unstable" in proc.stderr
-    # attended (default gate-policy) writes the NEEDS-HUMAN stop.
-    assert (
-        (root / "docs" / "run-state")
-        .read_text(encoding="utf-8")
-        .startswith("NEEDS-HUMAN")
-    )
 
 
 def test_arbiter_disagreement_autonomous_stalls_not_pages(tmp_path):
     # The same position-unstable PAGE under gate-policy autonomous must NOT
-    # hard-gate a human: the single-shot flag reaches the dispatcher's
-    # pause-free end state — EXIT_STALL, run-state RUNNING (attention), never
-    # NEEDS-HUMAN. (The dispatcher half is test_dispatcher_dual_page_autonomous_
-    # continues_pause_free; this covers the --dual-plan flag early path.)
+    # hard-gate a human: the single-shot flag reaches the pause-free end
+    # state — EXIT_STALL (attention), never NEEDS-HUMAN.
     root, fake = make_fixture(tmp_path)
     (root / "docs" / "gate-policy").write_text("autonomous\n", encoding="utf-8")
     fake.write_text(
@@ -258,15 +286,12 @@ def test_arbiter_disagreement_autonomous_stalls_not_pages(tmp_path):
     assert proc.returncode == 4, proc.stdout + proc.stderr  # EXIT_STALL: attention
     assert "position-unstable" in proc.stderr
     assert "design-check-session" in proc.stderr  # the autonomous page action
-    state = (root / "docs" / "run-state").read_text(encoding="utf-8")
-    assert state.startswith("RUNNING"), state
-    assert "NEEDS-HUMAN" not in state
 
 
 def test_arbiter_disagreement_single_ratify_stalls_not_pages(tmp_path):
     # single-ratify rides the SAME pause-free else-arm as autonomous (both are
-    # non-stop-needs-human page actions), so the flag path must reach EXIT_STALL
-    # + run-state RUNNING, never NEEDS-HUMAN. Braces SR-108's "autonomous/
+    # non-stop-needs-human page actions), so the flag path must reach
+    # EXIT_STALL, never NEEDS-HUMAN. Braces SR-108's "autonomous/
     # single-ratify" clause at the --dual-plan entry (113-REVIEW-A follow-up).
     root, fake = make_fixture(tmp_path)
     (root / "docs" / "gate-policy").write_text("single-ratify\n", encoding="utf-8")
@@ -278,9 +303,6 @@ def test_arbiter_disagreement_single_ratify_stalls_not_pages(tmp_path):
     assert proc.returncode == 4, proc.stdout + proc.stderr  # EXIT_STALL: attention
     assert "position-unstable" in proc.stderr
     assert "surface-block-continue-others" in proc.stderr  # the single-ratify action
-    state = (root / "docs" / "run-state").read_text(encoding="utf-8")
-    assert state.startswith("RUNNING"), state
-    assert "NEEDS-HUMAN" not in state
 
 
 def test_missing_rubric_pages_honestly(tmp_path):
@@ -289,157 +311,3 @@ def test_missing_rubric_pages_honestly(tmp_path):
     proc = run_dualplan(root, fake)
     assert proc.returncode == 7
     assert "no plan rubric on file" in proc.stderr
-
-
-# --- WI-209: frontier auto-dispatch under --jobs + the serial quiet-park page --
-
-
-def _dispatch_fixture(tmp_path, fake_body=FAKE_CLI):
-    """The dual fixture with the repo in a subdir and the fake agent OUTSIDE
-    it, so the planner hat-counter marker the fake writes next to itself never
-    dirties the primary worktree (a dirty checkout defers publication)."""
-    root, _fake_inside = make_fixture(tmp_path / "repo")
-    fake = tmp_path / "fake_dispatch.py"
-    fake.write_text(fake_body, encoding="utf-8")
-    return root, fake
-
-
-def _run_jobs(root, fake, gate_policy=None):
-    if gate_policy:
-        (root / "docs" / "gate-policy").write_text(gate_policy + "\n", encoding="utf-8")
-    env = augment_env(dict(os.environ))
-    env.pop("AGENT_CMD", None)
-    return subprocess.run(
-        [
-            sys.executable,
-            str(AGENT_LOOP),
-            "--root",
-            str(root),
-            "--jobs",
-            "1",
-            "--agent-cmd",
-            '{} "{}" {{prompt}}'.format(sys.executable, fake),
-            "--poll-seconds",
-            "0.2",
-            "--model",
-            "test",
-        ],
-        cwd=str(root),
-        capture_output=True,
-        encoding="utf-8",
-        stdin=subprocess.DEVNULL,
-        env=env,
-    )
-
-
-def _events(root):
-    p = root / "out" / "dispatch" / "events.jsonl"
-    if not p.exists():
-        return []
-    import json
-
-    return [
-        json.loads(ln)
-        for ln in p.read_text(encoding="utf-8").splitlines()
-        if ln.strip()
-    ]
-
-
-def _reservations(root):
-    out = subprocess.run(
-        [
-            "git",
-            "-C",
-            str(root),
-            "for-each-ref",
-            "--format=%(refname)",
-            "refs/llm/reservations",
-        ],
-        capture_output=True,
-        encoding="utf-8",
-    ).stdout
-    return {ln.rsplit("/", 1)[1] for ln in out.splitlines() if ln.strip()}
-
-
-def test_dispatcher_auto_runs_a_dual_row_from_the_frontier(tmp_path):
-    # The SR-066 auto-dispatch AC: a PlanMode=dual frontier row under --jobs
-    # runs the round in the dispatcher (never a BUILD worker), files the
-    # children on the integrated registry, closes the parent done, and
-    # releases the reservation.
-    root, fake = _dispatch_fixture(tmp_path)
-    proc = _run_jobs(root, fake)
-    assert proc.returncode == 0, proc.stdout + proc.stderr
-
-    reg = (root / "docs" / "requirements" / "work-items.csv").read_text(
-        encoding="utf-8"
-    )
-    assert "WI-003" in reg and "WI-004" in reg  # children filed + published
-    wi2 = [ln for ln in reg.splitlines() if ln.startswith("WI-002,")][0]
-    assert ",done," in wi2 and "dual-plan round (train " in wi2
-    rounds = list((root / "docs" / "plans").iterdir())
-    assert len(rounds) == 1 and (rounds[0] / "verdict.md").exists()
-
-    events = _events(root)
-    assert not [e for e in events if e["event"] == "worker-start"]
-    assert [e for e in events if e["event"] == "dual-plan-selected"]
-    assert _reservations(root) == set()
-    # The filed children remain queued (their own audit classifies them), so
-    # the wave ends with queued work left: RUNNING, never a false DONE.
-    assert (
-        (root / "docs" / "run-state").read_text(encoding="utf-8").startswith("RUNNING")
-    )
-
-
-def test_dispatcher_dual_page_attended_parks_needs_human(tmp_path):
-    # A position-biased arbiter PAGEs; attended gate-policy stops for the
-    # human with the run-state ask naming the WI (reservation kept).
-    root, fake = _dispatch_fixture(
-        tmp_path,
-        FAKE_CLI.replace('label = "A" if "ALPHA" in a else "B"', 'label = "A"'),
-    )
-    proc = _run_jobs(root, fake)  # absent gate-policy = attended
-    assert proc.returncode == 7, proc.stdout + proc.stderr
-    state = (root / "docs" / "run-state").read_text(encoding="utf-8")
-    assert state.startswith("NEEDS-HUMAN")
-    assert "WI-002" in state and "dual-plan" in state
-    assert _reservations(root) == {"WI-002"}
-
-
-def test_dispatcher_dual_page_autonomous_continues_pause_free(tmp_path):
-    # The same PAGE under gate-policy autonomous never parks the run on a
-    # human: the round is journaled + quarantined for the run and the
-    # dispatcher reaches its end state (the pause-free invariant).
-    root, fake = _dispatch_fixture(
-        tmp_path,
-        FAKE_CLI.replace('label = "A" if "ALPHA" in a else "B"', 'label = "A"'),
-    )
-    proc = _run_jobs(root, fake, gate_policy="autonomous")
-    assert proc.returncode == 4, proc.stdout + proc.stderr  # EXIT_STALL: attention
-    state = (root / "docs" / "run-state").read_text(encoding="utf-8")
-    assert state.startswith("RUNNING"), state
-    assert _reservations(root) == set()
-    actions = [e for e in _events(root) if e["event"] == "dual-plan-page-action"]
-    assert actions and actions[0]["action"] == "design-check-session"
-
-
-def test_dispatcher_dual_page_single_ratify_continues_pause_free(tmp_path):
-    # single-ratify PAGEs pause-free exactly like autonomous (the shared
-    # non-stop-needs-human else-arm): journaled + quarantined, EXIT_STALL,
-    # run-state RUNNING. Braces SR-108's single-ratify clause at the dispatcher.
-    root, fake = _dispatch_fixture(
-        tmp_path,
-        FAKE_CLI.replace('label = "A" if "ALPHA" in a else "B"', 'label = "A"'),
-    )
-    proc = _run_jobs(root, fake, gate_policy="single-ratify")
-    assert proc.returncode == 4, proc.stdout + proc.stderr  # EXIT_STALL: attention
-    state = (root / "docs" / "run-state").read_text(encoding="utf-8")
-    assert state.startswith("RUNNING"), state
-    assert _reservations(root) == set()
-    actions = [e for e in _events(root) if e["event"] == "dual-plan-page-action"]
-    assert actions and actions[0]["action"] == "surface-block-continue-others"
-
-
-# (The serial-driver quiet-park auto-page and its dual_only_frontier_ask
-# guard were the WI-209 legacy-path half; WI-210 retired the serial resume
-# driver outright, so the dispatcher's auto-dispatch above is the ONE path
-# and the no-silent-park duty needs no second cover.)

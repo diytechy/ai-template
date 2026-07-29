@@ -314,25 +314,16 @@ def test_no_class_is_named_after_the_path_relation(census):
     assert check_no_path_relation_class(sections) == []
 
 
-def test_the_triage_is_not_one_broad_class(census):
-    """The 64 same-file blocks 128-REVIEW-A objected to must stay SPREAD.
-
-    Not a proxy for the rules above — a direct read of the fact that motivated
-    them: no single class may hold a majority of the same-file blocks.
-    """
-    sections, _distribution, _stray = census
-    per_class = {}
-    for s in sections:
-        same = [e for e in s.entries if len(set(e.split()[1:]) - {"=="}) == 1]
-        if same:
-            per_class[s.name] = len(same)
-    total = sum(per_class.values())
-    assert total > 0, "no same-file blocks at all — this guard has gone vacuous"
-    biggest, count = max(per_class.items(), key=lambda kv: kv[1])
-    assert count * 2 <= total, (
-        "class `{}` holds {} of the {} same-file blocks — that is the "
-        "`intra-module` bucket rebuilt under another name".format(biggest, count, total)
-    )
+# (test_the_triage_is_not_one_broad_class — the same-file majority rule —
+# RETIRED at concurrency-restructure Phase 5 per the 2026-07-28 audit ruling on
+# WI-350: 129-REVIEW-A drove and bypassed it with an even split plus a
+# keyword-stuffed row, and the Phase 5 deletion then FALSE-POSITIVED it the
+# other way — retiring the dispatcher's same-file classes honestly concentrated
+# the remainder in graph-layout (a single-module debt class charged to WI-280),
+# which the majority arithmetic cannot tell from a rebuilt catch-all. The
+# property is a Reviewer-tier judgment now, recorded as such in
+# docs/enforcement-audit.md; the checkable halves — per-section counts, the
+# distribution table, and charged-class ownership — remain the tests above.)
 
 
 # --------------------------------------------------------------------------

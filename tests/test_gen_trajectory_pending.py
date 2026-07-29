@@ -26,19 +26,6 @@ import subprocess
 
 from conftest import load_script
 
-_dispatch = load_script("agent_loop").agent_dispatch
-
-
-class _Journal:
-    """A minimal stand-in for the dispatch journal: records .event() calls."""
-
-    def __init__(self):
-        self.events = []
-
-    def event(self, name, **kw):
-        self.events.append((name, kw))
-
-
 WI_HEADER = (
     "WI-ID,Title,Workstream,SR-Refs,Predecessors,Status,Deliverable,"
     "SpecRef,BuildTier,SafetyClass,BlockRef\n"
@@ -314,29 +301,6 @@ def test_verified_sr_does_not_project_and_flip_drops_the_line(tmp_path):
     body = _block(tmp_path)
     assert "SR-004" not in body
     assert "None — no durable owner action is pending" in body
-
-
-def test_dispatcher_regenerates_pending_at_terminal(tmp_path):
-    # _regenerate_pending (called after run-state is written at the terminal
-    # decision) refreshes the projection, capturing the NEEDS-HUMAN ask.
-    _init(tmp_path)
-    (tmp_path / "docs" / "run-state").write_text(
-        "NEEDS-HUMAN\nask: attest the plan\n", encoding="utf-8"
-    )
-    journal = _Journal()
-    _dispatch._regenerate_pending(tmp_path, journal)
-    body = _block(tmp_path)
-    assert "attest the plan" in body
-    assert not any(name == "pending-regen-failed" for name, _ in journal.events)
-
-
-def test_dispatcher_regenerate_pending_is_vacuous_without_surface(tmp_path):
-    # A non-adopter (no docs/open-items.md) is a silent no-op — the terminal
-    # path never crashes and journals nothing.
-    (tmp_path / "docs").mkdir(parents=True)
-    journal = _Journal()
-    _dispatch._regenerate_pending(tmp_path, journal)
-    assert journal.events == []
 
 
 # --- (a′) the stranded-train attestation shape (WI-229; the review CRITICAL) ---
