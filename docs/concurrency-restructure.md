@@ -267,31 +267,38 @@ a red trunk lane halts claiming (the fail-open lesson applied to the new
 machinery on day one). Pause is formalized in §5.6 — a capability kept, at
 the checkpoints where it can be honest.
 
-### 5.6 Pause — a station-boundary control (owner-raised, kept)
+### 5.6 Pause — drain to a clean, merged stop (owner-ruled semantics)
 
 The old `docs/pause` had the right idea at the wrong moment: its one live
 failure (2026-07-26) was being *expected* to stop a mid-flight worker, which
-it structurally never could. The capability survives, redefined at the two
-boundaries the serial lanes actually control — a traincar is affected only
-**at the station**, never on the track:
+it structurally never could. The capability survives with **one meaning**:
 
-- **`scope = "claims"`** — no new departures. In-flight traincars finish,
-  integrate, and archive normally. This is the default pause, and the spine
-  barrier (§3.2) is this same scope applied automatically during a drain —
-  one mechanism, two users.
-- **`scope = "integrate"`** — departures already out complete their build
-  but **hold at the platform**: nothing merges to trunk until resumed.
-  The inspect-before-anything-lands mode.
+**Pause = stop claiming. Everything in flight finishes, integrates, and
+archives.** A full stop is a *drained and unloaded* stop — a traincar always
+tries to unload (merge to trunk); the pause never strands finished work on a
+branch. The only thing that stops an unload is the **integrator's own
+refusal** (red bar, missing required verdict) — and that is the gate
+working, not the pause: broken work is never force-merged to satisfy a
+drain. A pause therefore ends in exactly one of two visible states: fully
+merged and quiet, or fully merged except N branches parked red — each red a
+finding to work, not a limbo.
 
-Form: a **tracked** file, `docs/work/pause` (TOML: `scope`, `reason`,
-`since`), committed by the bookkeeping lane. Tracked fixes three defects of
-the old file at once: it survives clones, the reason is diffable history
-instead of a stale local note, and unpausing is an auditable commit. Both
-serial lanes read it before acting, so enforcement sits exactly where the
-control is real. What no file can ever do — stop a running session — stays
-stated plainly: that remains "kill the worker." Status generation surfaces
-`paused (scope) since <date>: <reason>` so an open pause is a visible
-accruing cost, never a forgotten one (the stale-reason lesson).
+(A second scope considered in an earlier draft — holding finished branches
+unmerged for inspection — is **rejected**: completed-but-unmerged work is
+precisely the stranded-train pathology of the old machinery, and no use for
+it survives the always-unload rule. Inspection happens on the trunk, where
+every merge is a `--no-ff` commit that can be reverted.)
+
+Form: a **tracked** file, `docs/work/pause` (TOML: `reason`, `since` — no
+scope field; one meaning needs none), committed by the bookkeeping lane.
+Tracked fixes three defects of the old file at once: it survives clones, the
+reason is diffable history instead of a stale local note, and unpausing is
+an auditable commit. The coordinator reads it before every claim; the spine
+barrier (§3.2) is this same drain performed automatically — one mechanism,
+two users. What no file can ever do — stop a running session — stays stated
+plainly: that remains "kill the worker." Status generation surfaces
+`paused since <date>: <reason>` so an open pause is a visible accruing cost,
+never a forgotten one (the stale-reason lesson).
 
 ## 6. What retires, what shrinks, what remains
 
@@ -299,7 +306,7 @@ accruing cost, never a forgotten one (the stale-reason lesson).
 |---|---|
 | `agent_dispatch.py` train/reservation/integration half (~4k lines) | **Retires** — forge + §2.3 replace it |
 | `refs/llm/*`, `out/dispatch/events.jsonl`, `docs/run-state` | **Retire** — git history and spec location replace them |
-| `docs/pause` (untracked, dispatcher-scope) | **Replaced** by tracked `docs/work/pause` with declared scope — §5.6 |
+| `docs/pause` (untracked, dispatcher-scope) | **Replaced** by tracked `docs/work/pause` — drain to a clean, merged stop, §5.6 |
 | `work-items.csv` | **Retires outright** (RULING-4: no generated CSV either) |
 | WI-289 (compose auto-resolve), WI-343 (ref plumbing extraction) | **Moot** — the contended surfaces stop being written concurrently |
 | `agent_loop.py` | **Shrinks** to: claim → branch → launch worker session → hand off to the integrator (local by default, `gh` in forge mode). No lane state machine |
