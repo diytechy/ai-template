@@ -36,7 +36,6 @@ each check is run against a census deliberately broken in that one way, and must
 fail. A guard that cannot fail is not a guard (WI-293).
 """
 
-import csv
 import re
 import subprocess
 import sys
@@ -44,6 +43,7 @@ from collections import Counter
 from pathlib import Path
 
 import pytest
+from conftest import load_script
 
 ROOT = Path(__file__).resolve().parents[1]
 CENSUS = ROOT / "docs/dupes-allow"
@@ -134,8 +134,11 @@ def parse_census(text):
 
 
 def load_wi_rows():
-    with WI_CSV.open(encoding="utf-8", newline="") as handle:
-        return {row["WI-ID"]: row for row in csv.DictReader(handle)}
+    """WI rows from whichever registry home is live — through the validator's
+    own dual-read loader, so this audit needs no opinion about the home
+    (Phase 2c: the CSV path is derived, the folder beside it is the registry)."""
+    ct = load_script("check_trajectory")
+    return {row["WI-ID"]: row for row in ct.read_registry_rows(WI_CSV)}
 
 
 def emitted_census():
@@ -364,8 +367,8 @@ def test_mutation_a_wrong_header_count_reds_the_count_check():
     broken = parse_census(
         _mutate(
             CENSUS.read_text(encoding="utf-8"),
-            "# --- cli (77 blocks)",
-            "# --- cli (76 blocks)",
+            "# --- cli (80 blocks)",
+            "# --- cli (79 blocks)",
         )
     )
     assert check_counts(broken[0]) != []
@@ -375,7 +378,7 @@ def test_mutation_a_stale_distribution_row_reds_the_table_check():
     broken = parse_census(
         _mutate(
             CENSUS.read_text(encoding="utf-8"),
-            "#   cli                   77",
+            "#   cli                   80",
             "#   cli                   78",
         )
     )

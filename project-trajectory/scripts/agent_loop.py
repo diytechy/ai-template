@@ -1632,8 +1632,12 @@ def build_worker_assignment(args, root):
             # continuation re-check (classifier eligibility per constituent).
             "sched": {
                 w["id"]: w
+                # load_registry_rows, not load_rows: the dual-read resolution
+                # (docs/concurrency-restructure.md §2, Phase 2b). Reading the CSV
+                # directly answers EMPTY in a folder-registry tree, which here
+                # would silently disarm the §7 continuation re-check.
                 for w in schedule.load_wis(
-                    schedule.load_rows(
+                    schedule.load_registry_rows(
                         root / "docs" / "requirements" / "work-items.csv"
                     )
                 )

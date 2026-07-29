@@ -16,6 +16,8 @@
 # `--show-untraced`. A path that is simply ROT does not belong here; it belongs
 # fixed (`docs/next-wi`, retired by WI-180, is the worked example).
 
+docs/requirements/work-items.csv — retired at the Phase 2c authority flip (concurrency-restructure §2/§7): the work-item registry is the docs/work/ spec folder; prose naming the CSV before 2026-07-29 is history, and a migrating adopter converts theirs with scripts/wi_convert.py.
+
 # --- Scaffold destinations a meta-repo has no use for -------------------------
 GEMINI.md — no Gemini agent in use; OpenCode/KIMI/GROK read AGENTS.md natively
 docs/process.md — the master PROCESS.md lives in project-trajectory/ (status.md non-goal)

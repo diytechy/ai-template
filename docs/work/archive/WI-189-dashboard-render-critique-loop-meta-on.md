@@ -1,0 +1,11 @@
++++
+id = "WI-189"
+title = "Dashboard render-critique loop - meta-only pinned-Playwright screenshot matrix so agent critiques judge rendered pixels not source; doubles as the artifact recipe for a future dashboard Critique TC"
+workstream = "dashboard"
+buildtier = "medium"
+order = 188
++++
+
+## Deliverable
+
+WI-189 (2026-07-16): the dashboard render-critique loop, meta-only dev tooling. scripts/dashboard-shots/ holds a pinned Playwright install (package.json: playwright 1.61.1 -> chromium build 1228 / Chrome 149.0.7827.55) + shoot.mjs, one Node command that regenerates PROJECT_STATE.html then screenshots it across a DECLARED matrix (widths narrow/laptop/wide = 390/1280/1680 x themes light/dark via colorScheme x all 5 tabs arch/dag/sw/know/process; full-page per cell + an above-the-fold landing shot = 36 deterministic-named PNGs) into a gitignored shots/ dir, printing paths for an agent to Read. New this-repo skill render-dashboard-critique (source + byte-identical .claude/.agents copies, INDEX.csv regenerated to 27 skills) documents the loop AND is the artifact recipe a future dashboard Critique TC will name (PROCESS_OPTIONS Critique verification). dev-setup.sh --check gains a warn-only optional probe (dev-only; NOT --install, NOT the downstream dev-setup.template.*). .gitignore excludes node_modules/shots/package-lock. NO kit-shipped script, NO downstream template change, NO stdlib-only violation (owner meta-only ruling honored). Exercised end-to-end: installed chromium, produced 36 shots, Read 5 rendered views (landing light+dark folds, sw-full, dag-full, mobile arch-full) - the loop is confirmed working. Critique findings recorded for future WIs (this loop builds the eyes, not a redesign - a stated non-goal): (a) How-SW component labels truncate + edges overlap node boxes + heavy right whitespace at laptop; (b) 390px full-page shows a sticky-header/EXECUTION-card overlap, most likely a fullPage+position:sticky capture artifact (README caveat added); (c) the What-icicle overflows to SN+SR only at 390px (LLR/TC need horizontal scroll); (d) the When phase-accent palette has low hue separation (phases 1/2/4 near-identical maroon). Full suite 944p/2s; check_docs 0 broken.

@@ -144,3 +144,4 @@ resource: "generated"
 | [LLR-133](LLR-133.md) | Spine stand-alone rule |
 | [LLR-134](LLR-134.md) | Requirement form rules |
 | [LLR-135](LLR-135.md) | Paraphrase advisory |
+| [LLR-136](LLR-136.md) | Registry converter (CSV <-> spec folder) |

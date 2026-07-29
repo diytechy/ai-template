@@ -43,7 +43,11 @@ from conftest import ROOT, load_script
 
 # --- census: live registry -> its shipped template ---------------------------
 REGISTRIES = {
-    "docs/requirements/work-items.csv": "work-items.template.csv",
+    # work-items left this census at the Phase 2c authority flip: the live
+    # registry is the docs/work/ spec folder (whose exemplar is byte-pinned in
+    # BOILERPLATE_COPIES below), and the CSV template survives only as the
+    # legacy-format reference wi_convert.py migrates from — its schema is
+    # pinned by test_wi_convert and test_plan_artifacts, not by a live copy.
     "docs/requirements/system-requirements.csv": "system-requirements.template.csv",
     "docs/requirements/low-level-requirements.csv": "low-level-requirements.template.csv",
     "docs/requirements/components.csv": "components.template.csv",
@@ -212,8 +216,8 @@ def test_dev_setup_carries_no_engine_line_to_pin():
 
 # --- bite-proofs: each check FAILS on a mutated scratch copy -------------------
 def test_bite_removed_live_registry_column():
-    live = _header(ROOT / "docs/requirements/work-items.csv")
-    tmpl = _header(TEMPLATE_DIR / "work-items.template.csv")
+    live = _header(ROOT / "docs/requirements/system-requirements.csv")
+    tmpl = _header(TEMPLATE_DIR / "system-requirements.template.csv")
     assert registry_header_drift(tmpl, live) is None  # clean today
     mutated = [c for c in live if c != "Priority"]  # owner drops a live column
     drift = registry_header_drift(tmpl, mutated)
@@ -310,11 +314,17 @@ def test_schema_widening_is_behavior_neutral(tmp_path):
     column's first use, and a deliberate priority is *supposed* to change the
     schedule. A consumer reading a new column positionally still corrupts the
     core ten and fails here regardless of cell content."""
-    live_text = (ROOT / "docs/requirements/work-items.csv").read_text(encoding="utf-8")
-    reader = csv.DictReader(io.StringIO(live_text))
-    wide_header = list(reader.fieldnames)
+    # The live rows come from whichever home the registry occupies — since the
+    # Phase 2c flip that is the docs/work/ folder, read through the validator's
+    # own dual-read loader so this harness needs no opinion about the home.
+    ct_live = load_script("check_trajectory")
+    live_rows = ct_live.read_registry_rows(ROOT / "docs/requirements/work-items.csv")
+    wide_header = _header(TEMPLATE_DIR / "work-items.template.csv")
     optional = [c for c in wide_header if c not in _OLD_HEADER]
-    rows = [{**r, **{c: "" for c in optional}} for r in reader]
+    rows = [
+        {**{c: (r.get(c) or "") for c in wide_header}, **{c: "" for c in optional}}
+        for r in live_rows
+    ]
 
     legacy_root = tmp_path / "legacy"
     wide_root = tmp_path / "wide"
@@ -324,13 +334,11 @@ def test_schema_widening_is_behavior_neutral(tmp_path):
     assert _consumer_signature(legacy_root) == _consumer_signature(wide_root)
 
 
-def test_live_work_items_header_matches_template_exactly():
-    # Post-migration the live work-items header is not merely a superset but an
-    # exact match of the shipped template header (the widening adopted the full
-    # 17-column schema in template order).
-    live = _header(ROOT / "docs/requirements/work-items.csv")
-    tmpl = _header(TEMPLATE_DIR / "work-items.template.csv")
-    assert live == tmpl
+# test_live_work_items_header_matches_template_exactly retired at the Phase 2c
+# flip: there is no live work-items CSV to compare. The 17-column schema stays
+# pinned from both sides — wi_convert.COLUMNS against the shipped template
+# (test_wi_convert) and plan_artifacts.WI_HEADER against the same template
+# (test_plan_artifacts) — so the contract survives without a live copy.
 
 
 # --- scaffold coverage: every bootstrap MAPPING destination exists here or is a
@@ -413,6 +421,7 @@ def test_bite_scaffold_walk_catches_an_undeclared_absence():
 # per-agent-copy idiom). A deliberate divergence would demote the entry to the
 # header-superset treatment above, with the reason recorded here.
 BOILERPLATE_COPIES = {
+    "docs/work/queued/WI-000-example.md": "project-trajectory/work/WI-000.template.md",
     "docs/specs/README.md": "project-trajectory/specs/README.template.md",
     "docs/specs/WI-000.md": "project-trajectory/specs/WI-000.template.md",
     "docs/rubrics/README.md": "project-trajectory/rubrics/README.template.md",

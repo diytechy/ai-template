@@ -47,7 +47,7 @@ below is therefore "unfixed"; the ones with a decided disposition are:
 
 **Update (2026-07-12, same day):** on the owner's direction, every High/Medium
 finding now has a registry home — `Campaign=deep-review-2026-07-12b` in
-[work-items.csv](requirements/work-items.csv), named in
+[work-items.csv](work/), named in
 [status.md](status.md):
 
 - **H3 → WI-097** (LICENSE; owner ruling). **H4 → WI-098** (thin provenance in

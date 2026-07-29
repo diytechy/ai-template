@@ -132,7 +132,8 @@
 # in the totals, never a reason.
 #
 # Count note. The WI-337 section above says 208, and did at that commit. It is
-# 190 here, and the delta has three parts that must not be blurred together:
+# 203 here, and the delta has the parts below, which must not be blurred
+# together:
 #   * 196 -> 190 is WI-345, extracting agent_loop's verdict plumbing
 #     (verdict-plumbing 3, exe-presence 1) — plus TWO cross-script `module-path`
 #     blocks dissolved as a side effect, since agent_loop's copy of the
@@ -152,6 +153,25 @@
 #     restates, which plan_artifacts already declared (`wi-schema-columns`).
 #     Proven ADDITIVE, not a re-stamp: the emitted census diffs against the
 #     previous one as four insertions and zero changed or removed fingerprints.
+#   * 194 -> 203 is Phase 2c-i, which moved `wi_convert.py` from the meta-repo's
+#     `tools/` into `project-trajectory/scripts/`. Not one line of that file's
+#     duplication is new: it was authored at Phase 2a OUTSIDE `--src`, so these
+#     blocks existed and were simply never scanned. All NINE added lines are
+#     that relocation — three `cli` (its `_utf8_console` and its argparse
+#     preamble), five `wi-schema-columns` (the 17-column list and the
+#     column->frontmatter-key map, restated by any script that writes a row),
+#     and one `spec-folder-reader` (its `spec_paths` beside the readers'
+#     `spec_files`).
+#     One genuinely NEW block did appear and is NOT in this file: the spec-write
+#     loop, when `plan_artifacts` gained folder-mode filing. It was EXTRACTED
+#     rather than sanctioned — both writers now go through
+#     `wi_convert.write_spec_file` — and F5 could not have justified it anyway,
+#     since `plan_artifacts` already imports `wi_convert`, so there was no
+#     independent copy-ability left to buy.
+#     Two fingerprints CHANGED rather than being added (`spec-folder-reader`'s
+#     agent_common pairs): the `-000` example must not decide which registry
+#     home is authoritative, so `spec_registry_dir` grew that rule in all three
+#     verbatim copies. Same three blocks, re-fingerprinted, not new duplication.
 #   * 207 -> 201 was ALREADY TRUE at this commit's parent and nothing said so.
 #     The header declared 207 while the sections held 201 fingerprint lines. One
 #     block of that is explained (WI-341's `_raw_level` extraction merged two
@@ -168,39 +188,39 @@
 # Every figure below is now GENERATED from the sections rather than counted by
 # hand — the rule this repo already applies to every other derived number.
 #
-# The distribution (194 blocks):
+# The distribution (203 blocks):
 #
-#   cli                   77   (40%)   deliberate
+#   cli                   80   (39%)   deliberate
 #   spine-loader          20   (10%)   deliberate
-#   declared-file         11    (6%)   deliberate
-#   graph-layout          11    (6%)   debt WI-280
-#   markdown-table        11    (6%)   deliberate
-#   git-wrapper            9    (5%)   deliberate
-#   train-disposition      9    (5%)   debt WI-280
+#   declared-file         11    (5%)   deliberate
+#   graph-layout          11    (5%)   debt WI-280
+#   markdown-table        11    (5%)   deliberate
+#   git-wrapper            9    (4%)   deliberate
+#   train-disposition      9    (4%)   debt WI-280
 #   spine-load-repeat      8    (4%)   extract WI-346
-#   ref-namespace          5    (3%)   extract WI-343
-#   wi-registry            5    (3%)   deliberate
-#   ctx-unpack             3    (2%)   deliberate
-#   import-fallback        3    (2%)   deliberate
-#   okf-row                3    (2%)   deliberate
-#   reservation-release    3    (2%)   extract WI-343
-#   spec-folder-reader     3    (2%)   deliberate
+#   wi-schema-columns      6    (3%)   deliberate
+#   ref-namespace          5    (2%)   extract WI-343
+#   wi-registry            5    (2%)   deliberate
+#   spec-folder-reader     4    (2%)   deliberate
+#   ctx-unpack             3    (1%)   deliberate
+#   import-fallback        3    (1%)   deliberate
+#   okf-row                3    (1%)   deliberate
+#   reservation-release    3    (1%)   extract WI-343
 #   module-path            2    (1%)   deliberate
 #   ref-transaction        2    (1%)   extract WI-343
 #   signature-echo         2    (1%)   deliberate
-#   graph-walk             1            deliberate
-#   skills-materialize     1            deliberate
-#   subprocess-capture     1            extract WI-346
-#   trailer-fold           1            deliberate
-#   trailer-scan           1            extract WI-343
-#   warn-tier-dispatch     1            deliberate
-#   wi-schema-columns      1            deliberate
+#   graph-walk             1           deliberate
+#   skills-materialize     1           deliberate
+#   subprocess-capture     1           extract WI-346
+#   trailer-fold           1           deliberate
+#   trailer-scan           1           extract WI-343
+#   warn-tier-dispatch     1           deliberate
 #
-# By disposition: deliberate 154, extract 20 (WI-343/346), debt 20 (WI-280).
-# By path relation (metadata only): 145 cross-module, 49 same-file. The two cuts
-# do NOT coincide — 9 same-file blocks are deliberate, and the other 40 are the
-# extract + debt work, which is the honest shape of this file: a fifth of the
-# census is still not F5 at all.
+# By disposition: deliberate 163, extract 20 (WI-343/346), debt 20 (WI-280).
+# By path relation (metadata only): 154 cross-module, 49 same-file. The two
+# cuts do NOT coincide — 9 same-file blocks are deliberate, and the other 40
+# are the extract + debt work, which is the honest shape of this file: a fifth
+# of the census is still not F5 at all.
 #
 # The two facts worth carrying: cross-module duplication here is dominated by
 # SMALL STABLE HELPERS the F5 ruling deliberately duplicates (a shared
@@ -213,7 +233,7 @@
 # a census whose classification has rotted is how the false claims above
 # survived in the first place.
 
-# --- cli (77 blocks) ---------------------------------------------
+# --- cli (80 blocks) ---------------------------------------------
 # disposition: deliberate
 # the per-script CLI skeleton + _utf8_console. F5: kit scripts must stay
 # independently copy-able and stdlib-only, which is why a shared
@@ -296,6 +316,9 @@ a986f553a391  project-trajectory/scripts/plan_briefs.py == project-trajectory/sc
 3762ccd39230  project-trajectory/scripts/plan_briefs.py == project-trajectory/scripts/schedule.py
 0f99fcaa1f96  project-trajectory/scripts/plan_briefs.py == project-trajectory/scripts/schedule.py
 2a3ae413b478  project-trajectory/scripts/plan_coverage.py == project-trajectory/scripts/plan_coverage_step.py
+ae679b73acd2  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/wi_convert.py
+d588a4299326  project-trajectory/scripts/check_privacy.py == project-trajectory/scripts/wi_convert.py
+f7d5136e6d5d  project-trajectory/scripts/derive_gate.py == project-trajectory/scripts/wi_convert.py
 
 # --- wi-registry (5 blocks) --------------------------------------
 # disposition: deliberate
@@ -576,7 +599,7 @@ bfd6e67c304f  project-trajectory/scripts/gen_trajectory.py == project-trajectory
 # precedent applies to gen_trajectory's two sites.
 e5d5ce58f56b  project-trajectory/scripts/gen_trajectory.py == project-trajectory/scripts/gen_trajectory.py
 
-# --- spec-folder-reader (3 blocks) -------------------------------
+# --- spec-folder-reader (4 blocks) -------------------------------
 # disposition: deliberate
 # the Phase 2b spec-folder registry reader (docs/concurrency-restructure.md
 # §2.1): docs/work/<status>/WI-###.md parsed into the SAME 17-key rows
@@ -588,19 +611,35 @@ e5d5ce58f56b  project-trajectory/scripts/gen_trajectory.py == project-trajectory
 # to identical rows over one folder, and both representations to one another.
 # The third entry is the 44-token SEAM where the CSV loader's tail meets the
 # reader's column list; only check_trajectory and schedule share it, because
-# agent_common's CSV loader differs. This class RETIRES with the CSV home at
-# Phase 5, when there is one registry again.
-c97707f916ba  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/check_trajectory.py
-955a662cef6e  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/schedule.py
+# agent_common's CSV loader differs. The fourth (Phase 2c-i) is wi_convert's
+# `spec_paths` beside the readers' `spec_files`: the same "which files are
+# specs" rule, stated once for the WRITE side. It is NOT the same F5 case as
+# the three above - wi_convert may be imported - but it is the same rule, and
+# the readers must not import it (that is the whole of their independence), so
+# the copy stays with the drift guard on it. This class RETIRES with the CSV
+# home at Phase 5, when there is one registry again.
+9af3e0af42e9  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/check_trajectory.py
+dbe27a804733  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/schedule.py
 1dbf7e455ac3  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/schedule.py
+4d36b43d0895  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/wi_convert.py
 
-# --- wi-schema-columns (1 block) ---------------------------------
+# --- wi-schema-columns (6 blocks) --------------------------------
 # disposition: deliberate
 # the work-item registry's 17-column schema, which IS the registry's
 # definition and is therefore restated wherever a script must write or
-# reconstruct a row: plan_artifacts.WI_HEADER (it appends a queued row) and
-# the readers' WI_COLUMNS (they reconstruct one). A constant list of column
+# reconstruct a row: plan_artifacts.WI_HEADER (it appends a queued row),
+# the readers' WI_COLUMNS (they reconstruct one), and wi_convert.COLUMNS
+# (it converts between the two homes, so it needs both). Five of the six
+# arrived at Phase 2c-i with wi_convert's move into the kit - the file did
+# not change, it entered --src. Two of those five are the column ->
+# frontmatter-key MAP rather than the bare list, which is the same schema in
+# the other direction and belongs to the same class. A constant list of column
 # names is the small-stable-helper shape the F5 ruling covers; the schema
-# itself is pinned against the shipped template by test_dogfood_sync, so the
-# copies cannot drift apart silently.
+# itself is pinned against the shipped template by test_dogfood_sync and
+# test_wi_convert, so the copies cannot drift apart silently.
 760d32e34d84  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/plan_artifacts.py
+63ecb0abf993  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/wi_convert.py
+760d32e34d84  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/wi_convert.py
+b83181696230  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/wi_convert.py
+462810722e11  project-trajectory/scripts/plan_artifacts.py == project-trajectory/scripts/wi_convert.py
+8df9b7757333  project-trajectory/scripts/plan_artifacts.py == project-trajectory/scripts/wi_convert.py

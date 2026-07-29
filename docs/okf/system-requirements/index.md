@@ -139,3 +139,4 @@ resource: "generated"
 | [SR-126](SR-126.md) | Spine stand-alone rule |
 | [SR-127](SR-127.md) | Requirement form: one testable obligation |
 | [SR-128](SR-128.md) | Paraphrase advisory |
+| [SR-129](SR-129.md) | Registry representation migration |

@@ -299,7 +299,14 @@ BASELINE = {
     # lost — the pre-plant rule (repo-review 2026-07-21 M-22) existed in the
     # review arm only, so the critique arm's `unlink` read as a stray line.
     # Reviewed bump, log 2026-07-28.
-    "agent_loop.py": 3072,
+    # +4 (3072 -> 3076), concurrency-restructure Phase 2c-i: the one-word
+    # re-point of the §7 continuation re-check from `schedule.load_rows` to
+    # `schedule.load_registry_rows` (the dual-read resolution), plus the three
+    # comment lines saying WHY — reading the CSV directly answers EMPTY in a
+    # folder-registry tree, which would silently disarm the re-check rather
+    # than fail it. The code delta is one identifier. Reviewed bump; the whole
+    # entry re-stamps with WI-280.
+    "agent_loop.py": 3076,
     # +30 (2206 -> 2236), WI-065: `tc_citation_findings` — the TC-`Verifies`
     # rules lifted out of `analyze` so the cell could accept `IF-###` seam ids.
     # Most of the bump is that helper's docstring, which is where the RULING now
@@ -469,7 +476,15 @@ BASELINE = {
     # urgent. What it is not is drift — every line is the second registry home,
     # and the whole of it re-stamps DOWN at Phase 5 when the CSV home retires.
     # Reviewed bump; reason here and in the Phase 2b session record.
-    "check_trajectory.py": 3048,
+    # +15 (3048 -> 3063), Phase 2c-i: `spec_registry_dir` learns that a `-000`
+    # EXAMPLE spec does not decide which registry home is authoritative — the
+    # kit's own `-000` rule, applied to the folder home so `bootstrap` can
+    # scaffold the exemplar ADDITIVE beside the CSV. Measured before writing it:
+    # without the rule a fresh scaffold gets an empty registry AND a
+    # two-registries-present error on its first check. Twelve of the fifteen
+    # lines are the docstring recording that, and the whole verbatim block
+    # re-stamps DOWN at Phase 5 with the CSV home. Reviewed bump.
+    "check_trajectory.py": 3063,
     # +1 (1916 -> 1917), WI-279: one MAPPING row registering the new
     # scripts/check_coverage.py kit gate so it ships downstream — a required
     # one-line registration, not monolith growth (the reviewed-bump escape the
@@ -500,7 +515,18 @@ BASELINE = {
     # normal shape here and not a contradiction: two named helpers with docstrings
     # cost more lines than the three inline copies they replace, and buy the
     # thing lines cannot — one home for the rule. Reviewed bump, log 2026-07-28.
-    "bootstrap.py": 2017,
+    # +36 (2017 -> 2053), Phase 2c-i: the registry's SECOND home ships. Three
+    # MAPPING rows (the `wi_convert.py` kit script, the `WI-000` work-spec
+    # template, and the `orphans-allow` declaration that keeps a fresh scaffold
+    # warning-free — a work spec is a registry entry, not a page anyone
+    # navigates to), the three `docs/work/` status directories in GITKEEP_DIRS,
+    # and the docstring inventory lines for all of it. The orphans-allow row is
+    # the FULL SUITE's correction to a smoke-green tree: `test_profile`'s ten
+    # scaffold-green permutations caught the orphan warning the targeted tests
+    # could not see. Required registration plus its reasons, not monolith growth
+    # — the same shape as the WI-279 and WI-329 rows above. Reviewed bump;
+    # re-stamp downward with WI-280.
+    "bootstrap.py": 2052,  # 2c flip: the work-items MAPPING row left (net -1)
     # NEW ENTRY, +228 (1423 -> 1651), Phase 2b of the concurrency restructure
     # (docs/concurrency-restructure.md §7): the spec-folder work-item reader,
     # which crosses this module over THRESHOLD for the first time. It is one
@@ -514,7 +540,12 @@ BASELINE = {
     # RETIRES at Phase 5 when the CSV home goes and the reader is the only one
     # left. Re-stamp DOWN then — this is the one baseline here with a scheduled
     # end date. Reviewed bump; reason here and in the Phase 2b session record.
-    "agent_common.py": 1651,
+    # +15 (1651 -> 1666), Phase 2c-i: the SAME `-000` authority rule as
+    # check_trajectory's entry above — one of the three verbatim copies, so the
+    # number is identical by construction and a divergence here would itself be
+    # the drift `tests/test_wi_loader_sync.py` exists to catch. Retires with
+    # this whole entry at Phase 5. Reviewed bump.
+    "agent_common.py": 1666,
 }
 
 

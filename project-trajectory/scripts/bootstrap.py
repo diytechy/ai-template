@@ -36,7 +36,12 @@ What it creates in the destination:
     docs/requirements/procurement.csv          <- registries/procurement.template.csv
     docs/requirements/assets.csv               <- registries/assets.template.csv
     docs/requirements/components.csv           <- registries/components.template.csv
-    docs/requirements/work-items.csv           <- registries/work-items.template.csv
+    docs/work/queued/WI-000-example.md         <- work/WI-000.template.md  (the
+                                                registry's spec-folder home; the
+                                                other status dirs get .gitkeep)
+    docs/orphans-allow                         <- orphans-allow.template  (declares
+                                                docs/work/* an expected-live-orphan
+                                                class: registry entries, not pages)
     docs/specs/README.md, docs/specs/WI-000.md <- specs/*.template.md  (spec-of-record dir)
     docs/knowledge/README.md                  <- knowledge/README.template.md
     docs/rubrics/README.md, docs/rubrics/rubric-000.md <- rubrics/*.template.md  (critique rubrics)
@@ -46,6 +51,7 @@ What it creates in the destination:
     scripts/subagent_gate.py, gen_arch_map.py, gen_release_checklist.py, gen_cases.py, gen_trajectory.py, gen_open_items.py, gen_okf.py
     scripts/plan_coverage.py, plan_round.py, plan_briefs.py, plan_coverage_step.py, plan_artifacts.py
                                                (the dual-plan round set, process-options.md "Dual-plan decomposition")
+    scripts/wi_convert.py                      (work-item registry CSV <-> spec-folder converter)
     scripts/agent_route.py, scripts/score_reviews.py   (S8 coordinator routing + review scorer)
     docs/agents.csv                            <- agents.template.csv (model registry; inert until docs/agents-enabled)
     scripts/setup.{sh,ps1}, scripts/check.{sh,ps1}   (cross-platform launchers)
@@ -69,7 +75,7 @@ What it creates in the destination:
     .gitignore                                 <- gitignore.template
     .gitattributes                             <- gitattributes.template (eol=lf hook pin)
     .github/workflows/check.yml                <- ci/check.yml
-    src/, tests/                               (empty, with .gitkeep)
+    src/, tests/, docs/work/{active,deferred,archive}/   (empty, with .gitkeep)
 
 The agent guide lives once, in `AGENTS.md` (the cross-tool standard). `CLAUDE.md`
 and `GEMINI.md` ship as thin stubs that point back at it, because Claude Code and
@@ -1193,10 +1199,22 @@ MAPPING = [
         "registries/components.template.csv",
         "docs/requirements/components.csv",
     ),
-    (
-        "registries/work-items.template.csv",
-        "docs/requirements/work-items.csv",
-    ),
+    # registries/work-items.template.csv is deliberately NOT mapped: since the
+    # Phase 2c authority flip the work-item registry scaffolds as the docs/work/
+    # spec folder below, and the CSV template survives only as the legacy-format
+    # reference wi_convert.py migrates from (ADOPTING.md §6).
+    # The work-item registry's home (docs/concurrency-restructure.md §2):
+    # one Markdown spec per work item, its STATUS encoded as the directory. Ships
+    # ADDITIVE beside the CSV — the readers resolve to the folder only once it
+    # holds a REAL spec, so a fresh scaffold's CSV stays authoritative and the
+    # `-000` example is documentation, exactly like the `-000` row it mirrors.
+    # The status directories themselves are created below (GITKEEP_DIRS).
+    ("work/WI-000.template.md", "docs/work/queued/WI-000-example.md"),
+    # ...and the declaration that makes it green: a work spec is a REGISTRY
+    # ENTRY that happens to be Markdown, not a page anyone navigates to, so
+    # `docs/work/*` is a declared expected-live-orphan class rather than a wall
+    # of check_docs warnings (WI-228's census idiom, one glob with its reason).
+    ("orphans-allow.template", "docs/orphans-allow"),
     ("registries/test-cases.template.csv", "docs/test/test-cases.csv"),
     # Specs-of-record (process-options.md "Trajectory / work-items layer"): the
     # per-WI spec directory the work-items.csv `SpecRef` column points at (rule
@@ -1246,6 +1264,11 @@ MAPPING = [
     ("scripts/plan_briefs.py", "scripts/plan_briefs.py"),
     ("scripts/plan_coverage_step.py", "scripts/plan_coverage_step.py"),
     ("scripts/plan_artifacts.py", "scripts/plan_artifacts.py"),
+    # The work-item registry's CSV <-> spec-folder converter (§2 of
+    # docs/concurrency-restructure.md). plan_artifacts imports it as a sibling
+    # when the folder home is authoritative, so the two copy together — a
+    # scaffold with the filer and not the converter files nothing.
+    ("scripts/wi_convert.py", "scripts/wi_convert.py"),
     # The S8 routing/scoring half of the unattended coordinator (WI-059): the
     # model-registry router + fixed escalation policy, and the substance scorer.
     # agent_loop imports them as siblings when the docs/agents-enabled enable-list
@@ -1332,7 +1355,19 @@ MAPPING = [
     ("ci/check.yml", ".github/workflows/check.yml"),
 ]
 
-GITKEEP_DIRS = ["src", "tests"]
+GITKEEP_DIRS = [
+    "src",
+    "tests",
+    # The work-item registry's spec-folder home (docs/concurrency-restructure.md
+    # §2.1): STATUS IS THE DIRECTORY, so the directories must exist for the
+    # vocabulary to be visible — an empty `deferred/` is what tells a reader
+    # parking is a first-class state rather than a convention someone invented.
+    # `queued/` is not listed: the WI-000 example spec lands there, so git
+    # already tracks it. `active/` holds one subdirectory per claiming branch.
+    "docs/work/active",
+    "docs/work/deferred",
+    "docs/work/archive",
+]
 
 # Per-destination text fixups applied right after a template is generated: the
 # in-line rewrites a marker strip can't express (a phrase inside a line that

@@ -1,4 +1,4 @@
-"""WI registry <-> spec-file converter (concurrency-restructure §2, Phase 2a).
+"""WI registry <-> spec-file converter (concurrency-restructure §2).
 
 `wi_convert.py` is the mechanical half of "specs are the registry": one Markdown
 spec file per `work-items.csv` row, status encoded as the file's DIRECTORY, the
@@ -7,6 +7,13 @@ The design's own precondition is that *the converter is proven by a round-trip
 before the CSV is demoted* (the 140-cell lesson), so this module runs that proof
 against the REAL registry rather than a fixture — the file the next phase would
 actually convert.
+
+That proof is **representation-conditional** (Phase 2c-i): it follows whichever
+home the repo actually carries — the CSV while the CSV is authoritative, the
+spec folder once it is — because a proof pinned to the home it was written
+against is a proof the flip commit has to rewrite. The branch this repo does not
+take yet is not left as dead code: it is driven against a materialized fixture,
+and mutation-proven, in the same file.
 
 Every guard here is mutation-proven, per the repo's standing rule that a guard
 you have not seen fail is not a guard (WI-293):
@@ -26,29 +33,34 @@ the converter rather than at a subprocess's exit code.
 
 import csv
 
-import importlib.util
-
 import pytest
-from conftest import ROOT
+from conftest import ROOT, load_script
 
-
-def _load_tool(name):
-    # wi_convert lives in tools/ (meta-repo tooling), not the kit's scripts/:
-    # it ships at Phase 2c with the spine amendment, so conftest.load_script
-    # (pinned to scripts/) deliberately cannot see it.
-    spec = importlib.util.spec_from_file_location(name, ROOT / "tools" / f"{name}.py")
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
-    return mod
-
-
-wi_convert = _load_tool("wi_convert")
+# Phase 2c-i moved the converter from tools/ into the kit, so it loads like every
+# other kit script — the bespoke tools/ importer this module used to carry is
+# gone rather than kept working "just in case".
+wi_convert = load_script("wi_convert")
 
 REGISTRY = ROOT / "docs" / "requirements" / "work-items.csv"
+WORK = ROOT / "docs" / "work"
 
 
-def _registry_rows():
-    with REGISTRY.open(newline="", encoding="utf-8-sig") as handle:
+@pytest.fixture(scope="module")
+def live_csv(tmp_path_factory):
+    """The live registry AS a CSV file, whichever home the repo carries: the
+    real CSV while it exists, else a CSV rebuilt from docs/work/ (the home
+    since the Phase 2c flip). The format tests below want realistic data, not
+    an opinion about the home — this keeps their realism across the flip."""
+    if REGISTRY.exists():
+        return REGISTRY
+    assert WORK.is_dir(), "the registry has no home at all"
+    out = tmp_path_factory.mktemp("live-registry") / "work-items.csv"
+    wi_convert.to_csv(WORK, out)
+    return out
+
+
+def _registry_rows(path):
+    with path.open(newline="", encoding="utf-8-sig") as handle:
         return list(csv.DictReader(handle))
 
 
@@ -94,33 +106,193 @@ def _round_trip(tmp_path, rows):
 
 
 # --- the proof that matters: the real registry --------------------------------
+# The registry has TWO possible homes during the migration, and the round-trip
+# proof follows whichever one is authoritative rather than pinning the CSV — a
+# test that hard-codes the home it was written against is a test that has to be
+# rewritten by the very commit whose safety it exists to establish. Both branches
+# are LIVE: the folder direction is driven below against a materialized fixture,
+# so the branch this repo does not take yet still ships exercised.
 
 
-def test_the_real_registry_round_trips_cell_exact(capsys):
-    """`--verify` over `docs/requirements/work-items.csv` itself."""
-    assert wi_convert.verify(REGISTRY) is True
-    summary = capsys.readouterr().out
-    assert "cell-exact: yes" in summary, summary
+def _specs_by_id(work_dir):
+    """`{WI-ID: row}` for every spec under `work_dir`."""
+    return {row["WI-ID"]: row for row, _order, _rel in wi_convert.read_specs(work_dir)}
 
 
-def test_the_real_registry_produces_one_spec_per_row(tmp_path):
+def _spec_row_diff(before, after):
+    """Every differing cell between two `{id: row}` maps — the folder branch's
+    comparison, exposed like `_cell_mismatches` so its mutation proof can drive
+    it directly instead of trusting a green."""
+    findings = []
+    if set(before) != set(after):
+        findings.append(
+            "id set: lost {} / gained {}".format(
+                sorted(set(before) - set(after)), sorted(set(after) - set(before))
+            )
+        )
+    for wi_id, row in sorted(before.items()):
+        other = after.get(wi_id) or {}
+        findings.extend(
+            "{} {}".format(wi_id, column)
+            for column in wi_convert.COLUMNS
+            if (row.get(column) or "") != (other.get(column) or "")
+        )
+    return findings
+
+
+def _folder_home_round_trip(work_dir, scratch):
+    """`(row_count, findings, rebuilt_dir)` for folder -> CSV -> folder.
+
+    Compared by PARSE, not by bytes, and that is the honest instrument in this
+    direction: a HAND-FILED spec carries no `order` key (the converter mints one
+    on the way back) and its filename slug is cosmetic, so byte-equality would
+    be a stricter claim than "the same registry" and would red on a difference
+    that is not a loss. Parse-equality over all 17 columns of every spec is
+    exactly the claim being made.
+    """
+    rebuilt_csv = scratch / "rebuilt.csv"
+    before = _specs_by_id(work_dir)
+    count = wi_convert.to_csv(work_dir, rebuilt_csv)
+    rebuilt_dir = scratch / "work"
+    wi_convert.to_specs(rebuilt_csv, rebuilt_dir)
+    return count, _spec_row_diff(before, _specs_by_id(rebuilt_dir)), rebuilt_dir
+
+
+def test_the_live_registry_round_trips_in_whichever_home_is_authoritative(
+    tmp_path, capsys
+):
+    """The round-trip proof over the registry this repo actually carries.
+
+    CSV home: `--verify` cell-exact AND byte-identical (the source file is the
+    converter's own output shape, so the bytes are assertable here even though
+    `verify` only ever REPORTS them in general). Folder home: the same claim in
+    the direction that home can make it — folder -> CSV -> folder, parse-equal.
+    """
+    if REGISTRY.exists():
+        assert wi_convert.verify(REGISTRY) is True
+        summary = capsys.readouterr().out
+        assert "cell-exact: yes" in summary, summary
+        assert "byte-identical: yes" in summary, summary
+        return
+
+    assert WORK.is_dir(), (
+        "neither docs/requirements/work-items.csv nor docs/work/ exists — the "
+        "registry has no home at all, which is not a state this repo may be in"
+    )
+    count, findings, _rebuilt = _folder_home_round_trip(WORK, tmp_path)
+    assert count > 300, "the spec folder looks truncated: {} specs".format(count)
+    assert findings == [], findings
+
+
+def test_the_folder_home_round_trip_is_proven_against_a_materialized_registry(
+    tmp_path,
+):
+    """The branch above that this repo does not take yet, driven for real.
+
+    Home-independent by construction (it materializes its own folder), so the
+    folder direction is not dead code waiting for the flip to discover it. The
+    fixture deliberately carries the shapes that make folder -> CSV harder than
+    CSV -> folder: a spec in every status directory, a retirement (archive/ +
+    `disposition`), a multi-line Deliverable, the `~` soft prefix — and a
+    HAND-FILED spec with no `order` key, which only ever exists in this
+    direction.
+    """
+    rows = [
+        _row("WI-001", Title="root", Status="done", Deliverable="shipped\n\nit\n"),
+        _row(
+            "WI-002",
+            Title='a "quoted" one',
+            Status="queued",
+            **{"Predecessors": "WI-001;~WI-004", "SR-Refs": "SR-001;SR-002"},
+        ),
+        _row("WI-003", Title="parked", Status="deferred", Priority="2"),
+        _row("WI-004", Title="won't build", Status="retired", Deliverable="superseded"),
+    ]
+    source = tmp_path / "in.csv"
+    _write_csv(source, rows)
+    work = tmp_path / "work"
+    wi_convert.to_specs(source, work)
+
+    # The hand-filed spec: no `order`, and a slug the converter would not choose.
+    (work / "queued" / "WI-009-filed-by-hand.md").write_text(
+        '+++\nid = "WI-009"\ntitle = "filed by hand after the flip"\n'
+        'needs = ["WI-002"]\n+++\n',
+        encoding="utf-8",
+        newline="\n",
+    )
+
+    count, findings, _rebuilt = _folder_home_round_trip(work, tmp_path / "scratch")
+    assert count == 5, count
+    assert findings == [], findings
+    # The premise the hand-filed spec exists for: it really does lack `order`,
+    # so the comparison above tolerated a difference that is not a loss.
+    hand = next(
+        order
+        for row, order, _rel in wi_convert.read_specs(work)
+        if row["WI-ID"] == "WI-009"
+    )
+    assert hand is None, hand
+
+
+def test_mutation_a_corrupted_rebuilt_spec_reds_the_folder_home_round_trip(tmp_path):
+    """The folder branch's own failure shape, driven — otherwise its green is an
+    unfalsified claim (WI-293). Two defects, one dropped and one retyped, both
+    edited into the REBUILT tree after a clean round-trip proved the comparison
+    is capable of reporting no findings at all."""
+    rows = [
+        _row("WI-001", Status="queued", Workstream="scripts"),
+        _row("WI-002", Status="done", Deliverable="shipped"),
+    ]
+    source = tmp_path / "in.csv"
+    _write_csv(source, rows)
+    work = tmp_path / "work"
+    wi_convert.to_specs(source, work)
+
+    count, findings, rebuilt = _folder_home_round_trip(work, tmp_path / "scratch")
+    assert (count, findings) == (2, []), (count, findings)
+
+    before = _specs_by_id(work)
+    victim = next(rebuilt.rglob("WI-001-*.md"))
+    text = victim.read_text(encoding="utf-8")
+    assert 'workstream = "scripts"' in text, text
+    victim.write_text(
+        text.replace('workstream = "scripts"', 'workstream = "docs"'),
+        encoding="utf-8",
+        newline="\n",
+    )
+    next(rebuilt.rglob("WI-002-*.md")).unlink()
+
+    # Spelled out rather than summarized: a dropped spec reds BOTH the id-set
+    # line and every cell it carried, which is the report you want when the
+    # failure is real, and is only visible if the guard asserts it.
+    assert _spec_row_diff(before, _specs_by_id(rebuilt)) == [
+        "id set: lost ['WI-002'] / gained []",
+        "WI-001 Workstream",
+        "WI-002 WI-ID",
+        "WI-002 Title",
+        "WI-002 Status",
+        "WI-002 Deliverable",
+    ]
+
+
+def test_the_real_registry_produces_one_spec_per_row(tmp_path, live_csv):
     """Row count is READ from the CSV, not asserted from memory — and the file
     is expected to be substantial, so a truncated registry cannot pass by
     round-tripping three rows perfectly."""
-    expected = len(_registry_rows())
+    expected = len(_registry_rows(live_csv))
     assert expected > 300, "the registry looks truncated: {} rows".format(expected)
-    written = wi_convert.to_specs(REGISTRY, tmp_path / "work")
+    written = wi_convert.to_specs(live_csv, tmp_path / "work")
     assert len(written) == expected
     assert len(set(written)) == expected, "two rows produced the same spec path"
     rebuilt = wi_convert.to_csv(tmp_path / "work", tmp_path / "out.csv")
     assert rebuilt == expected
 
 
-def test_status_becomes_the_directory_and_retirement_stays_visible(tmp_path):
+def test_status_becomes_the_directory_and_retirement_stays_visible(tmp_path, live_csv):
     """Location IS the state (§2.1); `retired` shares `archive/` with `done` and
     is told apart by `disposition`, so retirement is never a deletion."""
-    rows = _registry_rows()
-    written = wi_convert.to_specs(REGISTRY, tmp_path / "work")
+    rows = _registry_rows(live_csv)
+    written = wi_convert.to_specs(live_csv, tmp_path / "work")
     by_id = {row["WI-ID"]: row for row in rows}
     for relpath in written:
         wi_id = relpath.rsplit("/", 1)[1].split("-", 2)
@@ -138,9 +310,9 @@ def test_status_becomes_the_directory_and_retirement_stays_visible(tmp_path):
         assert 'disposition = "retired"' in path.read_text(encoding="utf-8")
 
 
-def test_emitted_specs_are_lf_on_every_platform(tmp_path):
+def test_emitted_specs_are_lf_on_every_platform(tmp_path, live_csv):
     """The generated-artifact rule (WI-348): no CR bytes, whatever the OS."""
-    wi_convert.to_specs(REGISTRY, tmp_path / "work")
+    wi_convert.to_specs(live_csv, tmp_path / "work")
     offenders = [
         p.name for p in (tmp_path / "work").rglob("*.md") if b"\r" in p.read_bytes()
     ]
@@ -252,7 +424,7 @@ def test_an_empty_deliverable_and_an_empty_optional_cell_round_trip(tmp_path):
     assert "workstream" not in spec
 
 
-def test_row_order_survives_a_registry_that_is_not_id_sorted(tmp_path):
+def test_row_order_survives_a_registry_that_is_not_id_sorted(tmp_path, live_csv):
     """The live registry is NOT id-sorted, which is why `order` is carried
     explicitly. Reconstructing by id would silently reorder an authoritative
     file, so the guard uses a deliberately out-of-order fixture."""
@@ -260,7 +432,9 @@ def test_row_order_survives_a_registry_that_is_not_id_sorted(tmp_path):
     back = _round_trip(tmp_path, rows)
     assert [r["WI-ID"] for r in back] == ["WI-070", "WI-066", "WI-201", "WI-191"]
     # And the premise: the REAL registry is out of id order, so this matters.
-    ids = [wi_convert._id_number(r["WI-ID"]) for r in _registry_rows()]
+    # (Post-flip the `order` frontmatter keys carry that original order into
+    # the rebuilt CSV, so the premise stays checkable in either home.)
+    ids = [wi_convert._id_number(r["WI-ID"]) for r in _registry_rows(live_csv)]
     assert ids != sorted(ids), "the registry is id-sorted now — re-derive `order`"
 
 
@@ -366,8 +540,8 @@ def test_columns_are_pinned_to_the_shipped_registry_header():
     template = ROOT / "project-trajectory" / "registries" / "work-items.template.csv"
     with template.open(encoding="utf-8-sig", newline="") as handle:
         assert next(csv.reader(handle)) == wi_convert.COLUMNS
-    with REGISTRY.open(encoding="utf-8-sig", newline="") as handle:
-        assert next(csv.reader(handle)) == wi_convert.COLUMNS
+    # (The live-CSV half of this pin retired with the CSV at the Phase 2c flip;
+    # the template is the schema of record for the legacy format.)
 
 
 def test_the_toml_emitter_escapes_what_tomllib_must_read_back():

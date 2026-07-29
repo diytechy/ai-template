@@ -178,6 +178,25 @@ def test_ignore_drops_doc_from_scan(scaffold):
     assert passes.returncode == 0, passes.stdout + passes.stderr
 
 
+def test_ignore_glob_spans_directories(scaffold):
+    # The house glob convention (orphans-allow, declared-absences) is fnmatch
+    # with `*` SPANNING separators, and --ignore must match it: one
+    # `docs/work/*` covers every nested status directory of the spec-folder
+    # registry, whose bodies are historical records rather than navigable
+    # prose. The mutation half is the nested path: Path.match (the previous
+    # implementation) passes the flat case and silently missed this one.
+    nested = scaffold / "docs" / "work" / "archive"
+    nested.mkdir(parents=True, exist_ok=True)  # the scaffold ships the dirs
+    (nested / "WI-001-old.md").write_text(
+        '+++\nid = "WI-001"\n+++\n\n## Deliverable\n\n[stale](gone.md)\n',
+        encoding="utf-8",
+    )
+    fails = run_py(["scripts/check_docs.py"], cwd=scaffold)
+    assert fails.returncode == 1  # scanned -> the broken link is caught
+    passes = run_py(["scripts/check_docs.py", "--ignore", "docs/work/*"], cwd=scaffold)
+    assert passes.returncode == 0, passes.stdout + passes.stderr
+
+
 # --- the PROJECT-VISION tag (process.md §4 G1's mechanizable half) ------------
 
 
@@ -397,7 +416,9 @@ def test_harness_wires_stale_into_doc_navigability():
     # lying-map heuristic runs inside the harness.
     src = (SCRIPTS / "check.py").read_text(encoding="utf-8")
     i = src.index("check_docs.py")
-    assert "--stale" in src[i : i + 200]
+    # 600, not 200: the step's arg list now carries the docs/work scoping
+    # comment between the ignores and --stale (Phase 2c).
+    assert "--stale" in src[i : i + 600]
 
 
 def test_harness_runs_doc_navigability_at_g1(scaffold):
@@ -948,6 +969,13 @@ def test_absent_orphans_allow_is_todays_behavior(scaffold):
     # Downstream unchanged: with no docs/orphans-allow there is no class
     # suppression — a lonely doc warns individually and the `note` never appears
     # (the kit must not surprise an existing repo).
+    #
+    # The absence is CONSTRUCTED, not inherited: since Phase 2c-i a fresh
+    # scaffold SHIPS a docs/orphans-allow (declaring docs/work/* — a work spec
+    # is a registry entry, not a page anyone navigates to). A test that read the
+    # fixture's absence would have silently stopped testing absence at all the
+    # moment the scaffold gained the file, which is exactly what it did.
+    (scaffold / "docs" / "orphans-allow").unlink()
     (scaffold / "docs" / "lonely.md").write_text("# Lonely\n", encoding="utf-8")
     proc = run_py(
         ["scripts/check_docs.py", "--ignore", "docs/test/report.md"], cwd=scaffold
@@ -1030,6 +1058,10 @@ def test_meta_repo_has_zero_unexplained_orphans():
             ROOT,
             "--ignore",
             "docs/test/report.md",
+            # The registry is data, not prose — same scope the harness declares
+            # in check.py's doc-navigability step (Phase 2c flip).
+            "--ignore",
+            "docs/work/*",
             "--strict-orphans",
         ],
         cwd=ROOT,

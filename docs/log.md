@@ -282,7 +282,7 @@ why (one bullet each; cite ids)._
   merge-to-main sittings to be ruled separately.)
 - **2026-07-19 — OI-14 RULED: WI-229 stage-2 ATTEST (owner Peter Johnson).**
   The owner reviewed the complete frozen stage-1 migration plan
-  (`docs/ratify/WI-229-sr-split.md` on train `p0-g3-WI-229-3999`, page commit
+  (`docs/archive/ratify-WI-229-sr-split.md` on train `p0-g3-WI-229-3999`, page commit
   `9fed833f35139b69a519b75e978e6232209e2e8d`) and ruled **ATTEST** — the
   exact census (11 oversized SRs, the live base-sensitive set superseding the
   filed examples), supersession model (`SupersededBy` column, Inspection link
@@ -10239,7 +10239,7 @@ line-drift hints only); full suite green. C901 baseline unchanged; stdlib-only.
   `blocked`) on every branch, and the quarantine heuristic (unreadable metadata /
   missing branch) excluded the **present-but-stranded** shape. Durable signal
   without a new store: the frozen-plan commit `9fed833` on the reserved train
-  carries `Blocked-WI: WI-229` + `BlockRef: docs/ratify/WI-229-sr-split.md#…`, and
+  carries `Blocked-WI: WI-229` + `BlockRef: docs/archive/ratify-WI-229-sr-split.md#…`, and
   the ratify doc opens `State: AWAITING OWNER ATTESTATION`. **Note:** git's own
   trailer parser drops that trailer — the commit separates its trailer lines with
   blank lines, so git keeps only the last paragraph (`Base:`); `train_branch_evidence`'s
@@ -10251,7 +10251,7 @@ line-drift hints only); full suite green. C901 baseline unchanged; stdlib-only.
   a `docs/ratify/*` path the trailer commit touched → the commit itself). Deduped
   against source (a) on the WI id. **Live acceptance:** `gen_trajectory --status`
   on this repo now projects
-  `- **WI-229** — awaiting owner attestation/ratification on train `p0-g3-WI-229-3999`: `git show llm/train/p0-g3-WI-229-3999:docs/ratify/WI-229-sr-split.md`; attest, amend, or park the row.`
+  `- **WI-229** — awaiting owner attestation/ratification on train `p0-g3-WI-229-3999`: `git show llm/train/p0-g3-WI-229-3999:docs/archive/ratify-WI-229-sr-split.md`; attest, amend, or park the row.`
   Regression: stranded-shape end-to-end + resolve-drop (trailer WI flipped `done` ⇒
   line drops) + the not-double-listed-when-also-blocked pin.
 - **MINOR 2** — an unreadable/malformed `refs/llm/conflict/*` record now projects
@@ -10385,7 +10385,7 @@ category, derived gate **G3** throughout (the worker carried all
 replacement rows to Verified inside one session, so the pre-accepted
 G3→G2 dip never surfaced on the integrated tree), replacement SR max
 576 chars vs the 2,000 rule (before-sizes: the census table in
-[docs/ratify/WI-229-sr-split.md](ratify/WI-229-sr-split.md)). Review's ruled-no-change notes: the
+[docs/archive/ratify-WI-229-sr-split.md](archive/ratify-WI-229-sr-split.md)). Review's ruled-no-change notes: the
 WI-237 SR-064→SR-100 re-affirmation (authorized by scope item 3) and
 residual old-SR prose in non-split rows (protected by the no-prose-
 rewrite non-goal). **Why manual:** the dispatcher's blocked-exit path
@@ -10613,7 +10613,7 @@ enabled sets); STRUCTURE must not (schema headers, launcher command contracts,
 declared-section shapes).**
 
 **Part 1 — the one-time registry migration.** Widened the live
-[work-items.csv](requirements/work-items.csv) from its 10-column header to the
+[work-items.csv](work/) from its 10-column header to the
 template's full **17 columns, in TEMPLATE ORDER** — the template interleaves the
 5+1 new scheduler columns (CritiqueBudget, CritiqueExhaustion, Priority,
 Exclusive, BlockRef, EstTokens) BETWEEN BuildTier and SafetyClass and appends
@@ -11017,7 +11017,7 @@ skills (render-dashboard-critique), and tests; WI-193/200/201/202/203/204/205/
 IF-058…067), `dupes-allow`, rubric docs, `open-items-surface` contract, code
 constants + regression tests; WI-223…238 → PROCESS_OPTIONS dispatcher/dual-plan/
 crash-safety sections, SR-046/059/061/063/066/097/100, `test_complexity_ratchet`
-/`test_agent_dispatch_decisions`/`test_run_menu`, `docs/ratify/WI-229-sr-split.md`;
+/`test_agent_dispatch_decisions`/`test_run_menu`, `docs/archive/ratify-WI-229-sr-split.md`;
 WI-239…245 → SR-096/100 family, `REVIEWER_PROMPT` + `code-review-adversarial`
 rubric, `test_dogfood_sync`, `critique_staleness_findings` + TC-053/054/055,
 `dashboard-usability` rubric T5-T7, `EXTERNAL_SKILLS.md`; the six effort docs
@@ -14523,7 +14523,7 @@ The route [wrap-up-plan.md](wrap-up-plan.md) §4/§7 prescribes, executed once:
 land the whole render batch attended, then dispatch **one** critique against the
 last render commit. Verdict: **CHANGES-REQUESTED findings=3** —
 [121-CRITIQUE](reviews/121-CRITIQUE.md). **T2 and T5 pass; T4 fails twice, T8
-once.** Filed as [WI-318](requirements/work-items.csv) (clipped node
+once.** Filed as [WI-318](work/) (clipped node
 descriptions), **WI-319** (truncated next-work title), **WI-320** (roadmap edge
 routing). The loop builds the eyes; it never edits the dashboard inline.
 
@@ -17766,3 +17766,35 @@ matching `agent_common`'s. Proven a removal and not a re-fingerprinting — the
 sanctions went dead and no new block appeared over that pair, the opposite of
 what WI-347 saw in `declared-file`. **Both directions are now on record, so the
 next extraction knows to check which one it got rather than assume.**
+
+
+## 2026-07-29 — Phase 2c: the authority flip (concurrency-restructure §7)
+
+The work-item registry's home is now **`docs/work/`** — 354 spec files
+materialized by the proven converter (`--verify`: cell-exact AND
+byte-identical), the CSV deleted, the CSV template de-scaffolded (kept as the
+legacy-format reference), and the WI-000 example dogfooded. Spine amendment
+(cell-edited after a byte-identity round-trip proof): SR-050/SR-055/LLR-034/
+LLR-051/LLR-056 re-grounded on the folder home (`Modified`); SR-129/LLR-136/
+TC-129 added for the converter (CMP-005 containment); IF-023/024/053/054/061
+amended to v2; IF-078/IF-079 declared; **SR-054 flipped Critique->Test
+(RULING-5 executed)**, clearing `perceptual-stale`. plan_artifacts dual-writes
+(fresh folder-first scaffolds can never resurrect a CSV — mutation-proven);
+check_docs scopes `docs/work/*` out as data and its `--ignore` now uses the
+house spanning-glob semantics (regression-tested); historical CSV links
+redirected to the folder home; the legacy-named ratify brief archived so the
+newest-by-name gate reads the real one. Session-protocol skill (x3),
+PROCESS_OPTIONS registry definition, README, ADOPTING migration note and
+CLAUDE.md re-grounded. The `Modified`/Draft window is OPEN (gate derived G1,
+ex-draft=G2) — sitting brief: docs/ratify/2026-07-29-reattest.md.
+
+Byte deltas: AGENTS.template.md untouched (9,975/10,000); PROCESS.md
+untouched (63,493); PROCESS_OPTIONS.md 165,000 -> 165,611 (+611, the Registry
+definition re-grounded on the folder home; baseline re-stamped in all three
+skill copies).
+
+Process note, owned: the perceptual-stale ERROR had been live since the 2b
+commit and my strict tail-filtering hid it — the handoff's own do-not-filter
+trap, re-paid. And a `git checkout --` restore wiped uncommitted 2c-i work in
+plan_artifacts.py (reconstructed from its tests, which pinned the full
+contract): never restore-from-HEAD a file carrying uncommitted work.

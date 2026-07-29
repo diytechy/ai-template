@@ -145,7 +145,7 @@ a track is a *worktree + `llm/<track>` branch + `docs/tracks/<track>/` lane* —
 invocation, never committed.
 
 **(b) A grouping label on a work item.** In
-[`docs/requirements/work-items.csv`](../../docs/requirements/work-items.csv) the `Track`
+[`docs/requirements/work-items.csv`](../../docs/work/) the `Track`
 column holds `docs` / `scripts` / `unattended` / `self-adoption`, and
 [`gen_trajectory.py`](../../project-trajectory/scripts/gen_trajectory.py) uses it *only*
 as a DAG cluster-order seed + display label + a count tile. It carries no
@@ -931,7 +931,7 @@ the same graph through the HAL-style seams they program to.
 - [`THREAD_52_REVIEW.md`](THREAD_52_REVIEW.md) — the review that surfaced this; **F3**
   (schema/edge-semantics) and **F1** (trace the layer's own code) are the two
   findings this note is coupled to.
-- [`docs/requirements/work-items.csv`](../../docs/requirements/work-items.csv) — the `Track`
+- [`docs/requirements/work-items.csv`](../../docs/work/) — the `Track`
   column to retire; [`gen_trajectory.py`](../../project-trajectory/scripts/gen_trajectory.py)
   / [`check_trajectory.py`](../../project-trajectory/scripts/check_trajectory.py) — the view
   + validator that follow.

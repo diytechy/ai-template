@@ -40,7 +40,14 @@ def test_scaffold_contains_expected_files(scaffold):
         "docs/requirements/procurement.csv",
         "docs/requirements/assets.csv",
         "docs/requirements/components.csv",
-        "docs/requirements/work-items.csv",
+        # docs/requirements/work-items.csv left this list at the Phase 2c flip:
+        # the WI registry scaffolds as docs/work/ below (the CSV template ships
+        # unscaffolded, as the legacy-format reference wi_convert migrates).
+        "docs/work/queued/WI-000-example.md",
+        "docs/orphans-allow",
+        "docs/work/active/.gitkeep",
+        "docs/work/deferred/.gitkeep",
+        "docs/work/archive/.gitkeep",
         "docs/specs/README.md",
         "docs/specs/WI-000.md",
         "docs/knowledge/README.md",
@@ -66,6 +73,7 @@ def test_scaffold_contains_expected_files(scaffold):
         "scripts/plan_briefs.py",
         "scripts/plan_coverage_step.py",
         "scripts/plan_artifacts.py",
+        "scripts/wi_convert.py",
         "scripts/run_menu.py",
         "scripts/dev-setup.cmd",
         ".githooks/pre-commit",

@@ -280,7 +280,11 @@ def collect_docs(root, docs_dir, ignore=()):
         # Owner-only free-form notes never gate: drop the scratchpad entirely.
         if relpath == SCRATCHPAD:
             continue
-        if any(Path(relpath).match(g) for g in ignore):
+        # fnmatch, not Path.match: the house glob convention (see orphans-allow
+        # below) is repo-relative POSIX with `*` SPANNING separators, so one
+        # `docs/work/*` covers every status directory. Path.match is
+        # right-anchored and non-spanning — it silently missed nested paths.
+        if any(fnmatch.fnmatch(relpath, g) for g in ignore):
             continue
         docs.append(p)
     return docs

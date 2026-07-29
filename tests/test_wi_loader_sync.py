@@ -28,7 +28,7 @@ intended, this test is where the decision to fork them is recorded).
     read one folder into byte-identical rows;
   * the registry now has TWO REPRESENTATIONS, and the guard that matters is that
     they are the same registry. The fixture below is built ONCE and materialized
-    into a spec folder by `tools/wi_convert.py`, then both representations are
+    into a spec folder by `scripts/wi_convert.py`, then both representations are
     pushed through both `load_wis`. All four outputs must agree — which is the
     representation-equivalence proof and the drift guard in one object, because
     the failure they share is "one reader decided something the others did not".
@@ -39,27 +39,16 @@ three-way comparison. A guard nobody has seen fail is not a guard (WI-293).
 """
 
 import csv
-import importlib.util
 
 import pytest
-from conftest import ROOT, load_script
+from conftest import load_script
 
 sched = load_script("schedule")
 ctraj = load_script("check_trajectory")
 acommon = load_script("agent_common")
-
-
-def _load_tool(name):
-    # wi_convert lives in tools/ (meta-repo tooling until Phase 2c), so
-    # conftest.load_script — pinned to the kit's scripts/ — cannot see it. Same
-    # loader tests/test_wi_convert.py uses.
-    spec = importlib.util.spec_from_file_location(name, ROOT / "tools" / f"{name}.py")
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
-    return mod
-
-
-wi_convert = _load_tool("wi_convert")
+# Phase 2c-i moved the converter into the kit, so the bespoke tools/ importer
+# this module carried is gone — it loads like the three readers it feeds.
+wi_convert = load_script("wi_convert")
 
 # The parsing decisions BOTH modules make — the surface that must never drift.
 SHARED_FIELDS = ("id", "title", "status", "preds", "soft", "srs", "blockref")

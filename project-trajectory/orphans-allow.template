@@ -1,0 +1,26 @@
+# docs/orphans-allow — the declared EXPECTED live-orphan census (WI-228).
+#
+# Read by scripts/check_docs.py. A "live orphan" is a doc no navigation path
+# reaches from an entry root. Most orphans are RETAINED EVIDENCE — reviews,
+# closed-WI specs, round artifacts, registry entries that happen to be Markdown
+# — which must stay on disk yet is not a navigation node: "unlinked-from-
+# navigation" is the wrong frame for it.
+#
+# Each non-comment line is a shell glob (fnmatch, repo-relative POSIX; `*` spans
+# separators, so `docs/reviews/*` classifies the whole subtree). A matched
+# orphan is EXPECTED: dropped from the per-doc warnings, replaced by one
+# aggregate `note`, and never a finding even under `--strict-orphans`. An
+# orphan matching NOTHING here is GENUINE — it warns, which is the
+# newly-introduced-orphan ratchet: link it, index it, or, if it is a new
+# evidence class, add its glob here WITH ITS REASON.
+#
+# This is a DECLARATION, not a suppression list. Every line carries why, so a
+# genuinely undiscoverable new doc cannot hide inside a steady wall of expected
+# ones — the same silent-growth mode `docs/dupes-allow` bounds for duplication.
+# Deleting the file restores the pre-census behavior (every orphan warns).
+
+# The work-item registry's spec-folder home: each file IS a registry entry, not
+# a page anyone navigates to (its `id` and its DIRECTORY are what tools read).
+# Linking hundreds of them into the doc graph would bury the navigation the
+# graph exists to check. Their links are still validated like any other doc.
+docs/work/*

@@ -578,6 +578,13 @@ def steps(coverage, tier, gate, phase=None, profile=None):
                 str(_SCRIPTS / "check_docs.py"),
                 "--ignore",
                 "docs/test/report.md",
+                # The docs/work/ registry is DATA, not navigable prose: each
+                # spec's body is a verbatim historical record (its Deliverable
+                # cell), so link-checking it would force edits to history.
+                # Registry integrity (id/filename agreement, frontmatter parse,
+                # R-A/R-E) is check_trajectory's job, not this checker's.
+                "--ignore",
+                "docs/work/*",
                 "--stale",
             ],
             {"G1", "G2", "G3"},

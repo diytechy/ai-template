@@ -7,4 +7,4 @@ revisions, the cross-critiques, the computed `coverage*.md` reports, and
 safeguards, and the hard caps are defined once in the process-options master
 ("Dual-plan decomposition"); the verdict is summarized in [log.md](../log.md)
 and the selected plan's rows are filed as real WIs in
-[work-items.csv](../requirements/work-items.csv).
+[work-items.csv](../work/).

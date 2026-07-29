@@ -2,7 +2,7 @@
 
 A **spec-of-record** is the durable, cross-session memory of an *open* work item:
 what it must achieve and how you will know it is done. It is the bridge the
-`SpecRef` column of [`work-items.csv`](../requirements/work-items.csv) points at
+`specref` key of a [`docs/work/`](../work/) registry spec points at
 (process-options.md "Trajectory / work-items layer", rule **R-E**), and it exists
 only while the WI is open.
 

@@ -1374,7 +1374,7 @@ def test_meta_tiered_when_view_smoke():
     # wired drill diagram.
     ct = load_script("check_trajectory")
     gt = load_script("gen_trajectory")
-    wis, integrity = ct.load_wis(ct.read_rows(ROOT / ct.WI_CSV))
+    wis, integrity = ct.load_wis(ct.read_registry_rows(ROOT / ct.WI_CSV))
     assert not integrity
     view = gt.when_view(ROOT, wis)
     assert view is not None
@@ -1651,7 +1651,7 @@ def test_meta_process_tab_smoke():
     # meta-repo scaffolds no docs/process.md).
     ct = load_script("check_trajectory")
     gt = load_script("gen_trajectory")
-    wis, integrity = ct.load_wis(ct.read_rows(ROOT / ct.WI_CSV))
+    wis, integrity = ct.load_wis(ct.read_registry_rows(ROOT / ct.WI_CSV))
     assert not integrity
     out = gt.process_panel(ROOT, wis, gt.spine_stats(ROOT))
     assert out is not None
@@ -1766,7 +1766,10 @@ def test_process_loop_stage_links_resolve():
     # the Resume-loop stage now links the WI registry it derives the frontier from)
     for home in (
         "docs/status.md",
-        "docs/requirements/work-items.csv",
+        # Phase 2c: the WI registry's home is the docs/work/ spec folder (the
+        # panel's dual-home probe prefers it; the CSV href would no longer
+        # resolve here).
+        "docs/work",
         # WI-322: the human-decision loop lands on the GENERATED owner surface,
         # not the retired markdown file.
         "docs/open-items.html",
@@ -4744,7 +4747,7 @@ def test_meta_knowledge_and_when_wires_avoid_unrelated_boxes():
     assert kg is not None
     svg, _details = kg
     assert _wire_through_box_violations(svg) == []
-    wis, integrity = ct.load_wis(ct.read_rows(ROOT / ct.WI_CSV))
+    wis, integrity = ct.load_wis(ct.read_registry_rows(ROOT / ct.WI_CSV))
     assert not integrity
     when = gt.when_view(ROOT, wis)
     assert when is not None
@@ -4761,7 +4764,7 @@ def test_fallback_dag_and_sw_graph_wires_avoid_unrelated_boxes():
     # `<svg>` wrapper would otherwise pass vacuously).
     ct = load_script("check_trajectory")
     gt = load_script("gen_trajectory")
-    wis, integrity = ct.load_wis(ct.read_rows(ROOT / ct.WI_CSV))
+    wis, integrity = ct.load_wis(ct.read_registry_rows(ROOT / ct.WI_CSV))
     assert not integrity
     dag, _details = gt.dag_svg(wis)
     assert dag.lstrip().startswith("<svg") and dag.count('<path class="edge') > 100

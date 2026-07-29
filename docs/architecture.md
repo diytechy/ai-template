@@ -73,6 +73,7 @@ graph LR
     m_scripts_subagent_gate["scripts/subagent_gate — Subagent spawn gate — deny-by-default fan-out c…"]
     m_scripts_trace["scripts/trace — Traceability join + orphan report for the SN->S…"]
     m_scripts_trace_text["scripts/trace_text — Spine-row TEXT rules and the row primitives the…"]
+    m_scripts_wi_convert["scripts/wi_convert — Convert the work-item registry between its CSV …"]
     m_scripts_agent_common --> m_scripts_agent_session
     m_scripts_agent_dispatch --> m_scripts_agent_common
     m_scripts_agent_dispatch --> m_scripts_agent_route
@@ -93,6 +94,7 @@ graph LR
     m_scripts_gen_open_items --> m_scripts_trace
     m_scripts_gen_trajectory --> m_scripts_check_trajectory
     m_scripts_gen_trajectory --> m_scripts_schedule
+    m_scripts_plan_artifacts --> m_scripts_wi_convert
     m_scripts_plan_runner --> m_scripts_agent_route
     m_scripts_plan_runner --> m_scripts_agent_session
     m_scripts_plan_runner --> m_scripts_plan_artifacts
@@ -130,6 +132,7 @@ graph LR
     m_scripts_trace -. IF-001 .-> m_scripts_check
     m_scripts_trace -. IF-075 .-> m_scripts_gen_open_items
     m_scripts_trace_text -. IF-076 .-> m_scripts_trace
+    m_scripts_wi_convert -. IF-078 .-> m_scripts_plan_artifacts
 ```
 <!-- END GENERATED DEPENDENCY DIAGRAM -->
 
@@ -751,7 +754,8 @@ Contracts (interfaces): IF-011, IF-024, IF-052, IF-056, IF-071
 
 ### `scripts/plan_artifacts`
 _The dual-plan round artifact filer: the coordinator's write-side of a round_
-Contracts (interfaces): IF-061
+Imports (internal): `wi_convert`
+Contracts (interfaces): IF-061, IF-078
 
 | Public item | Summary | Implements |
 |---|---|---|
@@ -962,6 +966,37 @@ Contracts (interfaces): IF-076
 | `provenance_findings(srs, llrs, tcs)` | A spine row whose text carries its own PROVENANCE — a work-item id, or a | LLR-050 |
 | `form_findings(srs, llrs, tcs)` | A spine row whose text is not ONE testable obligation (process.md §3). |  |
 | `paraphrase_advisories(srs, llrs)` | Warn-only: a child cell that mostly RE-WORDS its parent (process.md §3 |  |
+
+### `scripts/wi_convert`
+_Convert the work-item registry between its CSV row form and its spec-file form._
+Contracts (interfaces): IF-079
+
+| Public item | Summary | Implements |
+|---|---|---|
+| `ConvertError (class)` | A refusal: the input cannot be converted without inventing something. |  |
+| `toml_string(value)` | `value` as a TOML basic string, escaped so tomllib reads it back exactly. |  |
+| `toml_value(value)` | `value` as TOML: int, array of basic strings, or basic string. |  |
+| `render_frontmatter(pairs)` | `key = value` lines for an ordered `(key, value)` sequence. |  |
+| `slugify(title)` | The filename slug: lowercase kebab of the title's first ~40 characters, |  |
+| `spec_filename(row)` |  |  |
+| `status_dir(row)` | The directory a row's Status maps to — or a refusal naming the row. |  |
+| `frontmatter_pairs(row, order)` | The ordered frontmatter of one registry row. Empty cells are OMITTED — |  |
+| `render_spec(row, order)` | `(relative_path, text)` for one registry row. |  |
+| `split_spec(text, where)` | `(frontmatter_text, body_text)` from a spec file's raw text. |  |
+| `parse_deliverable(body, where)` | The verbatim Deliverable cell from a spec body (empty when absent). |  |
+| `status_from_location(directory, disposition, where)` | The Status a spec's location encodes — the inverse of `status_dir`. |  |
+| `parse_spec(text, relpath, where)` | `(row, order)` reconstructed from one spec file. |  |
+| `work_dir_for(csv_path)` | The `docs/work` folder that pairs with the registry CSV at `csv_path` — |  |
+| `spec_paths(work_dir)` | Every `<status>/WI-*.md` spec under `work_dir`, sorted by path; `[]` when |  |
+| `folder_is_authoritative(csv_path)` | True when the spec folder beside `csv_path` holds at least one REAL spec. |  |
+| `load_csv(path)` | The registry's rows, header-preserving. Refuses a header that is not the |  |
+| `write_csv(path, rows)` | Write `rows` back as the 17-column registry: QUOTE_MINIMAL, LF. |  |
+| `to_specs(csv_path, work_dir, force)` | Write one spec file per CSV row under `work_dir`. Returns the relative |  |
+| `write_spec_file(work_dir, row, order)` | Write one registry row as a spec file under `work_dir`; return its |  |
+| `read_specs(work_dir)` | `[(row, order, relpath)]` for every `*.md` under `work_dir`, sorted into |  |
+| `to_csv(work_dir, out_path)` | Rebuild the registry CSV from a spec folder. Returns the row count. |  |
+| `verify(csv_path, emit)` | Full round-trip: CSV -> specs -> CSV in a temp dir, compared CELL-EXACT. |  |
+| `main()` |  |  |
 <!-- END GENERATED MODULE MAP -->
 
 ## Runtime flows

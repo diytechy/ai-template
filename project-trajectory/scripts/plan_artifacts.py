@@ -10,9 +10,12 @@ allocates the round's `docs/plans/DP-NNN-<slug>/` directory, writes each stage
 artifact (briefs, plans, revisions, critiques, coverage reports, verdict) as a
 tracked UTF-8 file with a stable name, appends the verdict summary to
 `docs/log.md`, and files the selected plan's `Plan-WI` rows as **queued** work
-items in `docs/requirements/work-items.csv` — such that `check_trajectory.py`
-passes on the result (R-A: a queued WI carries an empty Deliverable; the graph
-stays acyclic; plan-local predecessors resolve to the freshly minted ids).
+items in the registry's home — `docs/work/queued/` spec files when the folder
+is the registry (via the `wi_convert` sibling, IF-078), legacy
+`docs/requirements/work-items.csv` rows otherwise — such that
+`check_trajectory.py` passes on the result (R-A: a queued WI carries an empty
+Deliverable; the graph stays acyclic; plan-local predecessors resolve to the
+freshly minted ids).
 
 Four effects, each a plain function the coordinator calls:
 
@@ -28,12 +31,24 @@ parser is duplicated here (never a sibling import — the kit's independently
 copy-able-script convention, F5); this one only needs id/title/predecessors, so
 it stays deliberately smaller than `plan_coverage.parse_plan`.
 
-Contracts: IF-061 — the interface seam this module declares (process.md §8; rows of record in docs/requirements/interfaces.csv).
+Contracts: IF-061; IF-078 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.csv).
 """
 
 import csv
 import re
+import sys
 from pathlib import Path
+
+# Sibling import (the gen_trajectory -> check_trajectory pattern): scripts/ is
+# not a package, so a by-path load (tests, embedding) needs scripts/ on
+# sys.path before the sibling resolves. wi_convert is the registry's single
+# spec-file writer — filing and bulk migration MUST share it so a spec cannot
+# be produced by a path that skips its self-verification (IF-078).
+try:
+    import wi_convert
+except ImportError:  # pragma: no cover - direct-path loads only
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    import wi_convert
 
 WI_CSV = "docs/requirements/work-items.csv"
 # The modern header of record for a new work-item registry. Existing registries
@@ -64,6 +79,11 @@ DP_DIR_RE = re.compile(r"^DP-(\d+)-")
 # A well-formed work-item id (`WI-001`); the `-000` example row matches too but
 # is inert — it never constrains the next-id allocation (max real id + 1).
 WI_ID_RE = re.compile(r"^WI-(\d+)$")
+# A spec FILENAME's id prefix (`WI-011-some-slug.md`) — the folder home's ids
+# are read off filenames, never file contents (the loaders verify the
+# frontmatter id against the filename on every read, so the filename is safe
+# to trust here).
+WI_FILE_RE = re.compile(r"^WI-(\d+)-.*\.md$")
 
 DEFAULT_TIER = "medium"
 
@@ -124,20 +144,26 @@ def parse_plan_wis(text):
 
 
 def _existing_wi_nums(csv_path):
-    """The integer suffixes of every well-formed `WI-###` id already in the
-    registry (the inert `-000` example included — it is still a real max floor
-    of 0, never a collision), or an empty set when the file is absent."""
+    """The integer suffixes of every well-formed `WI-###` id in EITHER registry
+    home (the inert `-000` example included — it is still a real max floor of
+    0, never a collision). Deliberately the UNION rather than the
+    authoritative home's ids: mid-migration a repo can carry a CSV it stopped
+    reading and a folder it started writing, and either single-home allocator
+    mints an id the other already used."""
     nums = set()
-    if not csv_path.exists():
-        return nums
-    # utf-8-sig: a BOM'd registry (Excel) renamed the first header key, so ZERO
-    # existing ids were found and fresh children minted from WI-001 straight
-    # into collisions (repo-review 2026-07-21 M-33).
-    with csv_path.open(encoding="utf-8-sig", newline="") as fh:
-        for r in csv.DictReader(fh):
-            m = WI_ID_RE.match((r.get("WI-ID") or "").strip())
-            if m:
-                nums.add(int(m.group(1)))
+    if csv_path.exists():
+        # utf-8-sig: a BOM'd registry (Excel) renamed the first header key, so
+        # ZERO existing ids were found and fresh children minted from WI-001
+        # straight into collisions (repo-review 2026-07-21 M-33).
+        with csv_path.open(encoding="utf-8-sig", newline="") as fh:
+            for r in csv.DictReader(fh):
+                m = WI_ID_RE.match((r.get("WI-ID") or "").strip())
+                if m:
+                    nums.add(int(m.group(1)))
+    for path in wi_convert.spec_paths(wi_convert.work_dir_for(csv_path)):
+        m = WI_FILE_RE.match(path.name)
+        if m:
+            nums.add(int(m.group(1)))
     return nums
 
 
@@ -175,6 +201,32 @@ def _append_csv_rows(csv_path, rows):
             writer.writeheader()
         for row in rows:
             writer.writerow(row)
+
+
+def _write_spec_rows(csv_path, rows):
+    """The folder home's append: file each mapping row as a spec file in
+    `docs/work/queued/` via `wi_convert.write_spec_file` (the format's single
+    writer). Refuses BY NAME if a spec in ANY status directory already carries
+    an id being filed — two files for one work item is the one state the
+    registry cannot represent, and a silent overwrite would destroy the older
+    record. Returns the written relative paths."""
+    work_dir = wi_convert.work_dir_for(csv_path)
+    existing = {}
+    for path in wi_convert.spec_paths(work_dir):
+        m = WI_FILE_RE.match(path.name)
+        if m:
+            existing["WI-" + m.group(1)] = path.relative_to(work_dir).as_posix()
+    written = []
+    for row in rows:
+        wid = row["WI-ID"]
+        if wid in existing:
+            raise ValueError(
+                "cannot file {}: a spec already carries this id at {} — "
+                "the allocator and the tree disagree; resolve before "
+                "filing".format(wid, existing[wid])
+            )
+        written.append(wi_convert.write_spec_file(work_dir, row))
+    return written
 
 
 def allocate_round_dir(root, slug):
@@ -275,7 +327,18 @@ def file_selected_wis(
                 "BuildTier": tier_map.get(r["id"], DEFAULT_TIER),
             }
         )
-    _append_csv_rows(csv_path, out_rows)
+    # Filing home: the folder when it is authoritative — the READERS' own rule
+    # (`wi_convert.folder_is_authoritative`) — and ALSO when the CSV does not
+    # exist but a docs/work/ scaffold does: a fresh folder-first repo holds
+    # only the inert -000 example, which never flips read authority, and
+    # filing its first real WI must not resurrect a CSV the scaffold omitted.
+    work_dir = wi_convert.work_dir_for(csv_path)
+    if wi_convert.folder_is_authoritative(csv_path) or (
+        not csv_path.exists() and work_dir.is_dir()
+    ):
+        _write_spec_rows(csv_path, out_rows)
+    else:
+        _append_csv_rows(csv_path, out_rows)
     return mapping
 
 

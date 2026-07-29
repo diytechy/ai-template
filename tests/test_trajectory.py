@@ -897,7 +897,9 @@ def test_forward_only_unit_over_the_real_meta_repo():
     # Prove the pruned meta-repo status.md passes: its named WI ids (WI-194..200
     # open, the deferred backlog) carry no `done` id, so the rule finds nothing.
     ct = load_script("check_trajectory")
-    wis = ct.load_wis(ct.read_rows(ROOT / "docs/requirements/work-items.csv"))[0]
+    wis = ct.load_wis(ct.read_registry_rows(ROOT / "docs/requirements/work-items.csv"))[
+        0
+    ]
     assert ct.status_forward_only_findings(ROOT, wis) == []
 
 
@@ -2429,11 +2431,18 @@ def test_the_registry_this_repo_ships_is_control_character_clean(tmp_path):
     is the only test here that would have caught the real defect."""
     from conftest import ROOT
 
-    data = (ROOT / "docs" / "requirements" / "work-items.csv").read_bytes()
-    bad = sorted({b for b in data if b < 0x20 and b not in (0x09, 0x0A, 0x0D)})
-    assert not bad, "control byte(s) in the WI registry: {}".format(
-        [hex(b) for b in bad]
-    )
+    # Phase 2c: the live registry is the docs/work/ spec folder — scan every
+    # spec's raw bytes, same instrument, same rule (0x09/0x0A/0x0D allowed).
+    home = ROOT / "docs" / "work"
+    legacy = ROOT / "docs" / "requirements" / "work-items.csv"
+    sources = sorted(home.rglob("WI-*.md")) if home.is_dir() else [legacy]
+    assert sources, "the registry has no home at all"
+    for path in sources:
+        data = path.read_bytes()
+        bad = sorted({b for b in data if b < 0x20 and b not in (0x09, 0x0A, 0x0D)})
+        assert not bad, "control byte(s) in {}: {}".format(
+            path.name, [hex(b) for b in bad]
+        )
 
 
 # --- WI-352: the completion reconciler -----------------------------------------
@@ -2713,16 +2722,10 @@ def test_the_live_only_scope_is_load_bearing_not_vacuous():
     done-side check to live specs only matters if the archive would in fact
     produce findings, so assert that it does — with headroom, as a property rather
     than a freeze."""
-    import csv as _csv
-
     ct = load_script("check_trajectory")
-    rows = list(
-        _csv.DictReader(
-            (ROOT / "docs" / "requirements" / "work-items.csv").open(
-                encoding="utf-8-sig"
-            )
-        )
-    )
+    # Phase 2c: read through the validator's own dual-read loader, so the claim
+    # stays re-derivable from whichever home the registry occupies.
+    rows = ct.read_registry_rows(ROOT / "docs" / "requirements" / "work-items.csv")
     status = {r["WI-ID"]: r["Status"].strip() for r in rows}
     archive = ROOT / "docs" / "archive" / "specs"
     findings = 0

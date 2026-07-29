@@ -24,7 +24,7 @@ session (`LLR-119`/`TC-124`, `LLR-120`/`TC-125`). The critic honored all of it,
 listing each test-bound clause under "out of scope" rather than counting it.
 
 **Disposition — read this before filing anything.** The single finding is **not a
-new work item**: it is [WI-323](../requirements/work-items.csv), filed earlier
+new work item**: it is [WI-323](../work/), filed earlier
 the same day when WI-320 deliberately split T8's perceptual clause off from its
 objective floor. An independent critic reaching the same finding, from pixels,
 with no access to that reasoning, is **corroboration of the split** — so it is

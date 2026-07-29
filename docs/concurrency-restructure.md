@@ -1,8 +1,9 @@
-# Concurrency restructure — design spec (DRAFT, owner rulings pending)
+# Concurrency restructure — design spec (RULED; Phases 0–2 executed)
 
-**Branch:** `ConcurrencyTrainRewrite`. **Status:** draft for owner review; nothing
-here is implemented. **Goal (owner-stated):** the kit is parallel *out of the
-box*, and a full restructure is acceptable. This spec replaces the bespoke
+**Branch:** `ConcurrencyTrainRewrite`. **Status:** all §9 rulings answered
+2026-07-28; Phases 0, 1, 2a, 2b and 2c are **implemented** (per-phase records
+in §7), Phases 3–5 remain. **Goal (owner-stated):** the kit is parallel *out
+of the box*, and a full restructure is acceptable. This spec replaces the bespoke
 train/dispatcher machinery with git + a thin integration seam — local serial
 integrator by default, forge as the optional online backend — shards the
 contended surfaces, and declares the concurrency rules that were previously
@@ -335,15 +336,15 @@ never a forgotten one (the stale-reason lesson).
 - **Phase 1 — declarations.** PROCESS.md names git; dependency ledger + its
   enforcement test; the integration seam documented (both backends).
 - **Phase 2 — specs as registry.**
-  **2a is DONE (2026-07-28):** `tools/wi_convert.py` + `tests/test_wi_convert.py`
+  **2a is DONE (2026-07-28):** the converter + `tests/test_wi_convert.py`
   — the round-trip over the live registry is **cell-exact and byte-identical**
   (354 rows, all 17 columns, quoting included; the 140-cell lesson satisfied
-  outright). The converter is **meta-repo tooling until 2c**: shipping it in
-  `project-trajectory/scripts/` today would demand spine containment (a new
-  SR/LLR — a barrier edit and an open window) for a tool whose target format
-  the kit does not yet ship; it moves into the kit **at 2c**, inside the
-  wholesale spine amendment that flips authority. `docs/work/` stays
-  unmaterialized until that same flip — the CSV remains the single home.
+  outright). The converter was **meta-repo tooling (`tools/wi_convert.py`)
+  until 2c**: shipping it in `project-trajectory/scripts/` earlier would have
+  demanded spine containment (a new SR/LLR — a barrier edit and an open window)
+  for a tool whose target format the kit did not yet ship. It moved to
+  `project-trajectory/scripts/wi_convert.py` at **2c-i**, the pre-flip half of
+  the authority flip — see that entry below.
   **2b (loader swap), re-scoped by the consumer inventory (2026-07-28):**
   migrate only the SURVIVING consumers — `schedule.load_wis` +
   `check_trajectory.load_wis` (each keeps its OWN folder loader, drift-guard
@@ -375,6 +376,48 @@ never a forgotten one (the stale-reason lesson).
   registry in a folder-only tree) — the agent_loop one-word re-point is owed
   when Phase 4 shrinks it; and `schedule.classify`'s `blocked` branches are
   reachable only from the CSV home, dying with it.
+  **2c-i is DONE (2026-07-29)** — the PRE-FLIP half, everything that can be
+  green while the CSV is still authoritative. The converter moved to
+  `project-trajectory/scripts/wi_convert.py` (history followed) and the kit now
+  SHIPS the second home: `bootstrap.py` scaffolds
+  `docs/work/{queued,active,deferred,archive}/` plus the inert
+  `WI-000-example.md`, whose body carries the folder model's schema
+  documentation translated from the CSV template's `-000` cell.
+  `plan_artifacts.file_selected_wis` dual-WRITES — spec files into
+  `docs/work/queued/` when the folder is the home, CSV rows otherwise, with ids
+  allocated over the UNION of both homes so no transition state can mint a
+  duplicate. The live round-trip proof is now representation-CONDITIONAL, and
+  the agent_loop re-point carried from 2b landed.
+  **One design change the scaffold forced, measured not assumed:** an example
+  spec cannot decide authority. Scaffolding `WI-000-example.md` beside the CSV
+  template made the folder authoritative in every fresh repo — empty registry,
+  plus `two registries present` on the first check — so `spec_registry_dir`
+  excludes `WI-000-*` in all three verbatim copies. It is the `-000` rule the
+  kit already applies to every registry template, and it is the AUTHORITY rule
+  only: `read_spec_rows` still parses the example, `load_wis` still skips it.
+  **Known-red, and the FLIP commit's to fix, not this one's:**
+  `check_trajectory --strict` reports `scripts/wi_convert` as an arch-map module
+  in no CMP-### component. Containing it is a spine edit (an LLR `Component`
+  cell), which is exactly the barrier the flip commit is.
+  **2c-ii — THE FLIP — is DONE (2026-07-29), solo and attended (the §3.2
+  barrier, self-applied).** `docs/work/` materialized from the CSV by the
+  proven converter (354 specs + the example); the CSV deleted; the CSV
+  template de-scaffolded (kept as the legacy-format reference). Spine
+  amendment, cell-edited with a byte-identity round-trip proven first:
+  SR-050/SR-055/LLR-034/LLR-051/LLR-056 re-grounded on the folder home
+  (→`Modified`), **SR-129/LLR-136/TC-129** added for the converter (→CMP-005,
+  clearing the known-red), IF-023/024/053/054/061 amended to v2,
+  **IF-078/IF-079** declared. **SR-054 flipped `Critique`→`Test` (RULING-5,
+  executed)** — `perceptual-stale` cleared with it; the T4/T8 perceptual
+  clauses become the periodic advisory critique of §4-line-3's ruling.
+  Fresh-scaffold filing fixed: an absent CSV plus a scaffolded `docs/work/`
+  files specs (never resurrects the CSV), mutation-proven. Historical links
+  to the CSV redirected to the folder home (the WI-288/353 relink precedent);
+  `check_docs` scopes `docs/work/*` out as DATA (registry records are not
+  navigable prose — and its `--ignore` now uses the house spanning-glob
+  semantics, regression-tested, because `Path.match` silently missed nested
+  paths). The session-protocol skill (×3), PROCESS_OPTIONS' registry
+  definition, README, ADOPTING's migration note and CLAUDE.md re-grounded.
 - **Phase 3 — shared-surface rules.** `log.d/` fragments + trunk compile;
   generated-artifacts-trunk-only; branch-scoped review names.
 - **Phase 4 — the integrator.** Build the local integrator lane (the one-page

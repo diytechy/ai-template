@@ -8,7 +8,7 @@ ruling ([log.md](../../log.md) "Rulings", H1/M1/M5) and folds in the
 2026-07-12b review findings that were parked on these WIs (L3 → WI-080,
 M8 → WI-081; [repo-review-2026-07-12b.md](../../repo-review-2026-07-12b.md)).
 Starting a slice means flipping the WI's `Status` from `deferred` to `queued`
-in [work-items.csv](../../requirements/work-items.csv).
+in [work-items.csv](../../work/).
 
 **Branch:** `derived-gate-model` (the current working branch).
 

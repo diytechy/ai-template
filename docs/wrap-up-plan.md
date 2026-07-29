@@ -8,7 +8,7 @@ all superseded: those are done, ruled, or retired. This revision replaces them
 with the live wrap-up sequence.
 
 **This file is a POINTER, not a source of truth.** [status.md](status.md) is the
-forward-only working surface, [work-items.csv](requirements/work-items.csv) is the
+forward-only working surface, [work-items.csv](work/) is the
 authoritative registry, and [log.md](log.md) holds what shipped. Read those first;
 this file only adds what they don't carry — a **sequencing recommendation** and a
 **deferred-backlog review**. Where it disagrees with them, they win.

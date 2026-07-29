@@ -36,7 +36,7 @@ Nothing here has been fixed; every item is verified against the tree.
   [`project-trajectory/scripts/gen_trajectory.py`](../../project-trajectory/scripts/gen_trajectory.py),
   [`project-trajectory/scripts/check.py`](../../project-trajectory/scripts/check.py) (the two new steps),
   [`project-trajectory/registries/work-items.template.csv`](../../project-trajectory/registries/work-items.template.csv),
-  [`docs/requirements/work-items.csv`](../../docs/requirements/work-items.csv) (the dogfood data),
+  [`docs/requirements/work-items.csv`](../../docs/work/) (the dogfood data),
   `docs/trajectory.html` (generated; since WI-1.52 the root
   [`PROJECT_STATE.html`](../../PROJECT_STATE.html)),
   [`project-trajectory/PROCESS_OPTIONS.md`](../../project-trajectory/PROCESS_OPTIONS.md) ("Trajectory / work-items layer"),
@@ -177,7 +177,7 @@ hook, guarded like arch-map (missing-tool → skip). One line + a comment.
 
 ## F3 — MEDIUM · The dogfood DAG encodes narrative, not true dependencies
 
-**What.** Several predecessor edges in [`docs/requirements/work-items.csv`](../../docs/requirements/work-items.csv)
+**What.** Several predecessor edges in [`docs/requirements/work-items.csv`](../../docs/work/)
 are "reads well left-to-right," not "blocks build." SR-refs on meta-work are
 representative-not-exhaustive.
 

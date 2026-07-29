@@ -1,0 +1,12 @@
++++
+id = "WI-190"
+title = "Dual-plan decomposition protocol - two independent different-family planners + mechanical coverage diff + one rubric-anchored cross-critique round + a fresh-family arbiter that selects one plan and ports coverage-closing deltas (PROCESS_OPTIONS opt-in layer on the S8 chassis; evidence docs/knowledge/co-planning.md)"
+workstream = "unattended"
+needs = ["WI-068", "WI-191"]
+buildtier = "strong"
+order = 189
++++
+
+## Deliverable
+
+WI-190 (2026-07-16): the dual-plan decomposition protocol shipped and dogfooded end-to-end. LAYER (slice A): PROCESS_OPTIONS 'Dual-plan decomposition' - declared applies-when (unmeasurable optimization target / >=2 modules or IF seam / strong-tier design-shaping, selected at filing like BuildTier), the seven steps on the S8 chassis (no new engine), select-and-port-NEVER-merge, the n=1 cross-critique hard cap, the position-swap x2 agreement rule (disagreement = page), artifacts as tracked docs/plans/DP-NNN-<slug>/ files, acceptance per gate philosophy; cites the co-planning knowledge pack + states the transfer caveat in-place. RUBRIC: docs/rubrics/plan-decomposition.md (G1 solvable/G2 complete/G3 non-redundant/G4 coherent DAG; B1 imports spec-interface-hygiene seam-duplication, B2 coverage laundering, B3 padding - more WIs is NOT better, B4 phantom edges). PROMPTS (slice B): prompts/dual-plan-{planner,critic,arbiter}.template.md with redaction/anonymization/position-swap/anti-verbosity embedded in the prompt text; kit-shipped, not scaffolded. CHECKER (slice C): scripts/plan_coverage.py (stdlib, scaffolded; 12 tests) - C#/SR/IF cite resolution, Proposed-rationale presence, cycle detection, pairwise coverage diff; gaps are payload never findings; spine LLR-069/TC-069 under SR-044 (WI-191 pattern), seam filed Proposed IF-057 (nearest IF-023), CMP-001. DOGFOOD (DP-001, docs/plans/DP-001-dual-plan-loop-wiring/): the agent_loop-wiring follow-up goal (7 clauses) through the full manual protocol - planners sol(codex)+fable(claude) fresh isolated sessions, coverage r1 7/7 both, cross-critiques opus-xhigh->1 G1 finding + terra->1 B2 finding, one revision each, coverage r2 clean, arbiter opus-xhigh x2 position-swapped AGREED (SELECT plan-B-rev, ports=0 - no coverage gap existed to port); recorded degradations: no third family on host (arbiter shares ANTHROPIC family with planner B - anonymized/coin-flipped/swap-agreement mitigations recorded, self-preference caveat stated in verdict.md). Selected plan filed as WI-194..WI-199. agent_loop wiring stays the follow-up (not this WI).

@@ -1,0 +1,13 @@
++++
+id = "WI-308"
+title = "Triage the 22 dangling doc references WI-062's tiering exposed, then wire [step:doc-refs] into docs/stack.ini - the noise floor dropped 561 -> 22, so the residue is small enough to FIX rather than tolerate, and only then is the check worth running on every gate (wiring first would add 22 warns to every run, which is how a check earns the ignore WI-062 just undid). Three classes, each needing a different call: real rot, scaffold-only paths already declared in SCAFFOLD_OMISSIONS, and declared-policy files where ABSENT means default."
+workstream = "scripts"
+needs = ["WI-062"]
+buildtier = "quick"
+safety_class = "ordinary"
+order = 305
++++
+
+## Deliverable
+
+Delivered 2026-07-26. 22 -> 0 dangling, then the step wired at G3 (product layer). The triage split FOUR ways, not the spec's three, and the fourth was the useful surprise: two references were simply IMPRECISE PROSE (docs/specs/README.md + WI-000.md said `requirements/interfaces.csv`, a path relative to nothing), fixed in the templates too so the dogfood-sync byte compare stays green. Class (a) real rot - five fixes: three archived specs now cited at their docs/archive/specs/ paths, and SN-025 stopped ASSERTING the retired docs/next-wi as a live path (the backtick convention IS the assertion, so the honest fix was prose about a retired file, not a path claim). Class (b)+(c) took the spec's option (2) over path-ok: the facts were already declared in tests/test_dogfood_sync.py SCAFFOLD_OMISSIONS, so rather than repeat them as suppressions they MOVED to docs/declared-absences, a `<path> — <reason>` file that both readers load (IF-072). The seam is the FILE, never an import - a stdlib-only kit script must not reach into a test module - and the same file absorbed class (c), the policy files whose ABSENCE is the documented default, since that is the same statement with a different reason. Two rejected alternatives (rejected reasons in the log): broadening RECORD_PREFIXES to docs/ratify/ to absorb one stale brief pointer, and a shape rule for extensionless docs/ stamps, which would have swallowed docs/next-wi - the one real rot. The declared file is a DECLARATION, not a suppression list: every line carries a reason, a materialized path fails the honesty test test_scaffold_omissions_list_is_current, references are counted and printable with --show-untraced, and a malformed line declares nothing. Guards: three new tests in tests/test_check_doc_refs.py, each with its negative half (an undeclared path on the SAME line still gates; no-file and no-separator both still gate). The shipped stack.ini.template gains the step COMMENTED, with the triage-before-you-wire order stated - the whole point of the sequencing.

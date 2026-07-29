@@ -34,7 +34,7 @@ required for the minimum profile). Rows are in document order; each maps to the
 | Signed measurements | you are about to write a measured number into a doc, log or registry row | a commit-the-evidence-first rule + a historical-observation marker |
 | §7 boundary notes | onboarding contributors, wiring a workstation, or a contested tooling boundary | prose (setup-script + boundary calls) |
 | Skills layer | an AI agent works the repo and you want it to load reusable skills | `skills/` + a per-agent fan-out |
-| Trajectory / work-items layer | you want to track **how** work executes — cross-track order, %-complete | `work-items.csv` + `PROJECT_STATE.html` + `gen_trajectory.py` |
+| Trajectory / work-items layer | you want to track **how** work executes — cross-track order, %-complete | `docs/work/` specs + `PROJECT_STATE.html` + `gen_trajectory.py` |
 | Commit identity & privacy | you must keep a real, contactable identity out of published commits | `docs/privacy-check` + commit-identity config |
 | §8 purchased parts | the product incorporates purchased/external parts it buys rather than builds | a parts registry (`PB`/`PART`) |
 | Binary assets | the project ships unavoidably-binary deliverables (art, audio, video) | an assets registry (provenance / license / hash) |
@@ -1515,15 +1515,25 @@ Enabling this layer **supersedes the plan/build cadence's `docs/plan.md`**
 ("Unattended operation" → *Plan/build cadence*; WI-252): the WI DAG + specs
 *are* the plan — one "what's next and how" surface, never two.
 
-**Registry.** `docs/requirements/work-items.csv`, columns
-`WI-ID,Title,Workstream,SR-Refs,Predecessors,Status,Deliverable,SpecRef`.
-Off-spine and optional like `procurement.csv` / `assets.csv`: `trace.py` does not
-read `WI-` ids — the trajectory tooling owns them. `Status ∈
-{queued,active,done,deferred,blocked,retired}`; `deferred` is queued-but-not-next,
-`blocked` requires the optional `BlockRef` column to name what must clear, and
-`retired` (WI-267) is terminal — a deliberate won't-build, counted separately from
-`done`, never scheduled, its reason in `Deliverable`. An unknown status lints. `SR-Refs` / `Predecessors` are `;`-joined id lists; the
-`-000` example row is inert. A legacy CSV without `SpecRef` reads it as empty.
+**Registry.** The **`docs/work/` spec folder**: one Markdown file per work
+item, **status encoded as its directory** (`queued/`, `active/<branch>/`,
+`deferred/`, `archive/` for `done` — plus `disposition = "retired"` in
+frontmatter for `retired`), TOML `+++` frontmatter carrying the metadata
+(`id`, `title`, `workstream`, `sr_refs`, `needs` — `~` prefix = soft edge —
+`specref`, `buildtier`, scheduler keys), and the backward-only `Deliverable`
+record as the body. The scaffolded `WI-000-example.md` documents the format
+and is inert. A **legacy CSV home** (`docs/requirements/work-items.csv`,
+17 columns) is read via dual-read wherever it still exists — the folder wins
+once it holds a real spec, both-present is an integrity error, and
+`scripts/wi_convert.py` migrates a CSV with a round-trip proof. Off-spine and
+optional like `procurement.csv` / `assets.csv`: `trace.py` does not read
+`WI-` ids — the trajectory tooling owns them. `Status ∈
+{queued,active,done,deferred,blocked,retired}`; `deferred` is
+queued-but-not-next, `blocked` is `queued/` plus a `blockref` naming what
+must clear (no directory — readiness is derived, one home per fact), and
+`retired` (WI-267) is terminal — a deliberate won't-build, counted separately
+from `done`, never scheduled, its reason in the body. An unknown status
+refuses rather than buckets.
 
 **Validation** — `check_trajectory.py`, wired as the `trajectory` gate step from
 G2. Every `Predecessors` id (hard or soft) resolves to a real work item and the
@@ -1533,7 +1543,7 @@ edges is a **warning** (conflicting ordering hints, not a blocker); every `SR-Re
 draft SR referenced ahead of its row is legitimate; `WI-###` id shape and
 uniqueness — integrity, like `trace.py`.
 
-**The SSOT model (registry-authoritative).** `status.md` and `work-items.csv`
+**The SSOT model (registry-authoritative).** `status.md` and the WI registry
 used to compete — both carried work descriptions, and they drifted. The model
 makes the registry authoritative: **the WI `Deliverable` is backward-only** (what
 shipped) and the forward bridge is a per-WI **`SpecRef`** that lives while the WI

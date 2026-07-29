@@ -318,8 +318,12 @@ table.
   declared toolchain — the kit seeds the Python reference once and never
   re-touches it; its `[generated]` section — the integrator's auto-resolution
   allowlist, WI-235 — is likewise project-owned: keep your own artifact rows on
-  re-sync), every registry CSV and
+  re-sync), every registry CSV, the `docs/work/` WI spec folder, and
   `stakeholder-needs.md`, `docs/status.md`, `docs/log.md`, `docs/plan.md`
+  (**migrating a pre-flip repo:** a `docs/requirements/work-items.csv` keeps
+  working via dual-read; when ready, run `scripts/wi_convert.py --verify` then
+  `--to-specs` and delete the CSV — the folder wins the moment it holds a real
+  spec, and both-present is an integrity error by design),
   (your work plan — the kit seeds the block-list skeleton once),
   `docs/iteration/` + `docs/iteration_index.md` (session history),
   `docs/architecture.md`'s hand-written overview (regenerate only the marker

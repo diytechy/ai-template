@@ -246,6 +246,192 @@ def test_no_plan_table_files_nothing(tmp_path):
     assert _wi_csv(tmp_path).read_bytes() == before  # untouched
 
 
+# --- the SECOND home: filing into docs/work/ (concurrency-restructure §2) -----
+# The filer writes wherever the registry lives. CSV mode above is unchanged; the
+# tests below drive the folder mode, the resolution BETWEEN them, and the one
+# failure the union-allocation exists to make unreachable.
+
+
+def _work(root):
+    return root / "docs" / "work"
+
+
+def _write_spec(root, where, wi_id, slug="thing", deliverable="", **frontmatter):
+    """A spec file under `docs/work/<where>/`, LF whatever the platform."""
+    path = _work(root) / where / "{}-{}.md".format(wi_id, slug)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    lines = ['id = "{}"'.format(wi_id), 'title = "{}"'.format(slug)]
+    lines += ['{} = "{}"'.format(k, v) for k, v in frontmatter.items()]
+    text = "+++\n" + "".join(line + "\n" for line in lines) + "+++\n"
+    if deliverable:
+        text += "\n## Deliverable\n\n" + deliverable + "\n"
+    path.write_text(text, encoding="utf-8", newline="\n")
+    return path
+
+
+def _file_three(root, spec_ref="docs/plans/DP-001-x/plan.md"):
+    return pa.file_selected_wis(
+        root,
+        PLAN_TEXT,
+        spec_ref=spec_ref,
+        workstream="unattended",
+        predecessor_wi="WI-010",
+    )
+
+
+def test_a_folder_registry_gets_spec_files_not_csv_rows(tmp_path):
+    """The whole of folder mode: one file per work item, in `queued/`, and the
+    CSV left byte-for-byte alone even though it is still on disk."""
+    _seed_registry(tmp_path)
+    _write_spec(
+        tmp_path, "archive", "WI-010", slug="round-parent", deliverable="shipped"
+    )
+    before = _wi_csv(tmp_path).read_bytes()
+
+    mapping = _file_three(tmp_path)
+    assert mapping == {"P1": "WI-011", "P2": "WI-012", "P3": "WI-013"}
+    assert _wi_csv(tmp_path).read_bytes() == before, "CSV written in folder mode"
+
+    filed = sorted(p.name for p in (_work(tmp_path) / "queued").glob("*.md"))
+    assert filed == [
+        "WI-011-first-slice.md",
+        "WI-012-second-slice.md",
+        "WI-013-fan-in-slice.md",
+    ], filed
+    for path in (_work(tmp_path) / "queued").glob("*.md"):
+        assert b"\r" not in path.read_bytes(), path.name
+
+
+def test_a_filed_spec_reads_back_as_the_row_csv_mode_would_have_written(tmp_path):
+    """Same rows, two encodings — asserted by reading the folder back through
+    the same loader the scheduler uses, cell by cell, against the CSV mode's own
+    output. A filer that agreed on ids but not on cells would pass every test
+    above."""
+    csv_root, folder_root = tmp_path / "csv", tmp_path / "folder"
+    for root in (csv_root, folder_root):
+        _seed_registry(root)
+    _write_spec(folder_root, "archive", "WI-010", slug="round-parent")
+    _file_three(csv_root)
+    _file_three(folder_root)
+
+    sched = load_script("schedule")
+    csv_rows = {
+        r["WI-ID"]: r
+        for r in sched.load_rows(_wi_csv(csv_root))
+        if r["WI-ID"] > "WI-010"
+    }
+    folder_rows = {
+        r["WI-ID"]: r
+        for r in sched.read_spec_rows(_work(folder_root))
+        if r["WI-ID"] > "WI-010"
+    }
+    assert set(csv_rows) == {"WI-011", "WI-012", "WI-013"} == set(folder_rows)
+    for wi_id, row in csv_rows.items():
+        for column in pa.WI_HEADER:
+            assert (row.get(column) or "") == (folder_rows[wi_id].get(column) or ""), (
+                "{} {}".format(wi_id, column)
+            )
+
+
+def test_the_example_spec_alone_does_not_switch_the_filer_to_folder_mode(tmp_path):
+    """The resolution rule, which must be the READERS' rule: a scaffold's inert
+    `-000` example leaves the CSV authoritative, so a fresh repo's first filed
+    round still appends CSV rows rather than silently starting a second home."""
+    _seed_registry(tmp_path)
+    _write_spec(tmp_path, "queued", "WI-000", slug="example")
+    _file_three(tmp_path)
+    assert [r["WI-ID"] for r in _rows(tmp_path)][-3:] == ["WI-011", "WI-012", "WI-013"]
+    assert sorted(p.name for p in (_work(tmp_path) / "queued").glob("*.md")) == [
+        "WI-000-example.md"
+    ]
+
+
+def test_a_fresh_folder_first_scaffold_files_specs_without_resurrecting_a_csv(
+    tmp_path,
+):
+    """A folder-first scaffold carries NO CSV and only the inert example under
+    docs/work/. Filing its first real round must write spec files: the example
+    never flips READ authority, but an absent CSV must not be created either —
+    resurrecting the home the scaffold omitted would be the filer minting a
+    second registry. Mutation-proven by construction: the pre-2c-ii filer
+    (folder_is_authoritative alone) is the mutant, and it reds this test by
+    creating the CSV."""
+    _write_spec(tmp_path, "queued", "WI-000", slug="example")
+    mapping = _file_three(tmp_path)
+    assert mapping == {"P1": "WI-001", "P2": "WI-002", "P3": "WI-003"}
+    assert not _wi_csv(tmp_path).exists(), "filing resurrected the CSV home"
+    filed = sorted(p.name for p in (_work(tmp_path) / "queued").glob("*.md"))
+    assert filed == [
+        "WI-000-example.md",
+        "WI-001-first-slice.md",
+        "WI-002-second-slice.md",
+        "WI-003-fan-in-slice.md",
+    ], filed
+
+
+def test_ids_are_allocated_over_BOTH_homes_so_a_transition_cannot_collide(tmp_path):
+    """The union rule, driven from the direction that breaks a single-home
+    allocator: the folder is authoritative, and the HIGHEST id lives only in the
+    CSV the repo has stopped reading."""
+    _seed_registry(tmp_path)  # highest CSV id: WI-010
+    _write_spec(tmp_path, "archive", "WI-004", slug="older")
+    assert pa._existing_wi_nums(_wi_csv(tmp_path)) == {0, 1, 4, 10}
+    assert _file_three(tmp_path) == {"P1": "WI-011", "P2": "WI-012", "P3": "WI-013"}
+
+    # And symmetrically: an id that exists ONLY in the folder still raises the
+    # floor for a CSV-mode repo, which is the other half of "union".
+    other = tmp_path / "other"
+    _seed_registry(other)
+    _write_spec(other, "queued", "WI-042", slug="filed-later")
+    assert max(pa._existing_wi_nums(_wi_csv(other))) == 42
+
+
+def test_mutation_folder_mode_refuses_a_duplicate_id(tmp_path):
+    """The failure allocation makes unreachable, reached anyway: a spec already
+    carrying the id the filer is about to mint. It must REFUSE by name — two
+    files for one work item is the one state this registry cannot represent, and
+    a silent overwrite would destroy the older one."""
+    _seed_registry(tmp_path)
+    _write_spec(tmp_path, "archive", "WI-010", slug="round-parent")
+    # Stand in a broken allocator: WI-011 is already filed, in another status.
+    _write_spec(tmp_path, "deferred", "WI-011", slug="already-here")
+
+    rows = [{"WI-ID": "WI-011", "Title": "First slice", "Status": "queued"}]
+    try:
+        pa._write_spec_rows(_wi_csv(tmp_path), rows)
+    except ValueError as exc:
+        assert "WI-011" in str(exc) and "deferred/WI-011-already-here.md" in str(exc)
+    else:
+        raise AssertionError("a duplicate id was filed silently")
+
+    # The honest other half: the same call with a free id succeeds, so the
+    # refusal is about the collision and not about the code path.
+    rows[0]["WI-ID"] = "WI-014"
+    assert pa._write_spec_rows(_wi_csv(tmp_path), rows) == [
+        "queued/WI-014-first-slice.md"
+    ]
+    # And the pre-existing spec was not touched on the way past.
+    assert (_work(tmp_path) / "deferred" / "WI-011-already-here.md").exists()
+
+
+def test_check_trajectory_passes_after_filing_into_the_folder(tmp_path):
+    """The CSV mode's done-condition, restated for the second home: the real
+    validator exits 0 over the folder the filer just wrote."""
+    _write_spec(
+        tmp_path, "archive", "WI-010", slug="round-parent", deliverable="parent shipped"
+    )
+    plan_dir = pa.allocate_round_dir(tmp_path, "fixture")
+    plan_path = pa.write_stage(plan_dir, "plan-B-rev.md", PLAN_TEXT)
+    spec_ref = str(plan_path.relative_to(tmp_path)).replace("\\", "/")
+    assert set(_file_three(tmp_path, spec_ref).values()) == {
+        "WI-011",
+        "WI-012",
+        "WI-013",
+    }
+    proc = run_py([SCRIPTS / "check_trajectory.py", "--root", tmp_path], cwd=tmp_path)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+
+
 # --- the P5 done-condition: check_trajectory passes on the result -------------
 
 

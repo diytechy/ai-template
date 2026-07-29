@@ -36,6 +36,7 @@ import subprocess
 
 import pytest
 from conftest import (
+    KIT,
     SCRIPTS,
     load_script,
     run_py,
@@ -60,7 +61,7 @@ SR_HEADER = (
 
 
 def spec_text(wid, title="Thing", order=0, deliverable="", **frontmatter):
-    """One spec file's text in the format `tools/wi_convert.py` emits."""
+    """One spec file's text in the format `scripts/wi_convert.py` emits."""
     lines = ['id = "{}"'.format(wid), 'title = "{}"'.format(title)]
     for key, value in frontmatter.items():
         if isinstance(value, list):
@@ -152,6 +153,88 @@ def test_the_work_dir_is_derived_from_the_csv_path_not_a_second_constant(tmp_pat
     """`docs/requirements/work-items.csv` -> `docs/work`, in every copy."""
     for name, mod in MODULES:
         assert mod.spec_work_dir(csv_path(tmp_path)) == tmp_path / "docs" / "work", name
+
+
+# --- the inert `-000` example (Phase 2c-i) ------------------------------------
+# `bootstrap.py` scaffolds `docs/work/queued/WI-000-example.md` beside the CSV
+# template, so the folder home ships ADDITIVE. That only works if the example is
+# inert in BOTH senses the CSV's `-000` row is: skipped by `load_wis`, and unable
+# to decide which home is authoritative. Without the second, a fresh scaffold
+# would get an empty registry plus a two-registries-present finding on its first
+# check — measured, not assumed, which is why these guards exist.
+
+
+def _example_spec(root):
+    """The shipped `WI-000` template, written where bootstrap scaffolds it."""
+    path = root / "docs" / "work" / "queued" / "WI-000-example.md"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        (KIT / "work" / "WI-000.template.md").read_text(encoding="utf-8"),
+        encoding="utf-8",
+        newline="\n",
+    )
+    return path
+
+
+def test_the_example_spec_alone_leaves_the_csv_authoritative(tmp_path):
+    write_csv(
+        tmp_path, [{"WI-ID": "WI-001", "Title": "from the csv", "Status": "done"}]
+    )
+    _example_spec(tmp_path)
+    for name, mod in MODULES:
+        assert mod.spec_registry_dir(csv_path(tmp_path)) is None, name
+    assert sched.load_registry_rows(csv_path(tmp_path))[0]["Title"] == "from the csv"
+    # And the finding a fresh scaffold must NOT get.
+    errors = []
+    ctraj.read_registry_rows(csv_path(tmp_path), errors)
+    assert errors == [], errors
+
+
+def test_mutation_one_real_spec_beside_the_example_does_flip_authority(tmp_path):
+    """The rule is `-000` is not real, NOT `queued/ never counts` — so a genuine
+    spec in the same directory must still take the folder authoritative, or the
+    exemption would have silently disabled the whole home."""
+    write_csv(
+        tmp_path, [{"WI-ID": "WI-001", "Title": "from the csv", "Status": "done"}]
+    )
+    _example_spec(tmp_path)
+    write_spec(tmp_path, "queued", "WI-001", title="from the folder")
+    for name, mod in MODULES:
+        assert mod.spec_registry_dir(csv_path(tmp_path)) is not None, name
+    assert sched.load_registry_rows(csv_path(tmp_path))[0]["Title"] == "from the folder"
+
+
+def test_the_example_spec_parses_and_then_goes_inert_in_load_wis(tmp_path):
+    """It is READ like any other spec — the exemption is the authority rule, not
+    a second skip — and goes inert exactly where the CSV's `-000` row does, in
+    `load_wis`. Both halves asserted: a silent parse failure would look
+    identical to inertness from the outside."""
+    _example_spec(tmp_path)
+    write_spec(tmp_path, "queued", "WI-001")
+    work = tmp_path / "docs" / "work"
+    for name, mod in MODULES:
+        rows = mod.read_spec_rows(work)
+        # The shipped example is HAND-FILED — no `order` key — so it sorts after
+        # every numbered spec, which is the documented fallback and not an
+        # accident of this fixture.
+        assert [r["WI-ID"] for r in rows] == ["WI-001", "WI-000"], name
+        example = rows[-1]
+        assert example["Status"] == "queued", name
+        assert example["Deliverable"].startswith("**What this file is.**"), name
+    assert [w["id"] for w in sched.load_wis(sched.read_spec_rows(work))] == ["WI-001"]
+    assert [w["id"] for w in ctraj.load_wis(sched.read_spec_rows(work))[0]] == [
+        "WI-001"
+    ]
+
+
+def test_mutation_a_malformed_example_would_be_reported_not_hidden(tmp_path):
+    """The exemption must not have turned the example into an unchecked file:
+    break it and the validator's reader still names it."""
+    path = _example_spec(tmp_path)
+    path.write_text("not a spec at all\n", encoding="utf-8", newline="\n")
+    errors = []
+    ctraj.read_spec_rows(tmp_path / "docs" / "work", on_error=errors.append)
+    assert len(errors) == 1 and "WI-000-example.md" in errors[0], errors
 
 
 # --- both homes present: the validator speaks, the others do not --------------

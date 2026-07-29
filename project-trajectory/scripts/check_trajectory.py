@@ -280,7 +280,7 @@ def read_rows(path):
 # 2b). The reader emits rows carrying the SAME 17 keys `csv.DictReader` yields
 # for `work-items.csv`, so the dual-read happens at the ROW level, once, here —
 # `load_wis` and every consumer past it never learn which home is authoritative.
-# The format's definition is `tools/wi_convert.py` (`parse_spec` /
+# The format's definition is `scripts/wi_convert.py` (`parse_spec` /
 # `status_from_location`), which materializes the folder; this is its read half.
 #
 # Copied VERBATIM across schedule.py, check_trajectory.py and agent_common.py
@@ -331,6 +331,10 @@ SPEC_STATUS_DIRS = {
     "deferred": "deferred",
     "active": "active",
 }
+# The inert EXAMPLE spec's filename prefix (the `-000` rule, applied to the
+# folder home): scaffolded documentation, never a registry entry that decides
+# which home is authoritative.
+SPEC_EXAMPLE = "WI-000-"
 SPEC_FENCE = "+++"
 SPEC_DELIVERABLE = "\n## Deliverable\n\n"
 
@@ -355,10 +359,21 @@ def spec_files(work_dir):
 
 def spec_registry_dir(csv_path):
     """The spec folder that is AUTHORITATIVE for `csv_path`, or None when the CSV
-    still is. The dual-read resolution, stated once: specs present => the folder
-    wins; no specs => the CSV is read exactly as before."""
+    still is. The dual-read resolution, stated once: REAL specs present => the
+    folder wins; none => the CSV is read exactly as before.
+
+    A `WI-000-*.md` EXAMPLE spec does not count as a real one, for the same
+    reason the `-000` row in every shipped registry template does not: it is the
+    format's documentation, scaffolded into a fresh repo so the shape is
+    copy-ready beside the CSV it will one day replace. A placeholder that
+    decided authority would hand every new scaffold an empty registry and a
+    two-registries-present finding on its first check. This is the AUTHORITY
+    rule only — `read_spec_rows` still parses and returns the example, exactly
+    as `csv.DictReader` still yields the `-000` CSV row, and `load_wis` is the
+    one place either representation goes inert."""
     work_dir = spec_work_dir(csv_path)
-    return work_dir if spec_files(work_dir) else None
+    real = [p for p in spec_files(work_dir) if not p.name.startswith(SPEC_EXAMPLE)]
+    return work_dir if real else None
 
 
 def parse_spec_frontmatter(text, relpath):

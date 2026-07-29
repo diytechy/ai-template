@@ -11,7 +11,8 @@ scope: this-repo
 # Session protocol (this template repo)
 
 How a WI/thread session runs here. The live homes: **`docs/status.md`** (what's
-next), **`docs/requirements/work-items.csv`** (the WI registry), and
+next), **`docs/work/`** (the WI registry — one spec file per item, status = its
+directory), and
 **`docs/log.md`** (the session/gate record). This skill is the fast path; the
 process masters (`PROCESS.md` / `PROCESS_OPTIONS.md`) win when they disagree. The
 kit's design history — the old thread specs and the WI-1.x log — is archived at
@@ -21,8 +22,8 @@ kit's design history — the old thread specs and the WI-1.x log — is archived
 
 - Read `CLAUDE.md` (governs editing the kit) and `AGENTS.md` (the pointer stub).
 - Read `docs/status.md` (the working surface — what's next) and the scoped WI's
-  row in `docs/requirements/work-items.csv`. The spec-of-record for a WI is what
-  its row points at (an SR and/or a plan doc); older landed work is in the
+  spec file under `docs/work/` (its directory is its status). The
+  spec-of-record for a WI is what its `specref` points at (an SR and/or a plan doc); older landed work is in the
   archived plan. **Do only the scoped work** — no unrelated edits.
 - If a stub is being revived, find and link its earlier backlogged form (search
   `docs/archive/scratch.md` + the stub threads) so the resolution is traceable.
@@ -78,8 +79,8 @@ cadence"). New behavior needs new tests
 
 ## 4. Record the work
 
-- Set the WI's row in `docs/requirements/work-items.csv` to `done` with its
-  deliverable, and add a session entry to `docs/log.md`: one-line summary,
+- Close the WI by MOVING its spec file to `docs/work/archive/` and filling
+  its `## Deliverable` body (status is the directory, never a field), and add a session entry to `docs/log.md`: one-line summary,
   deliverables, **deviations from spec**, **byte deltas on budgeted files**, and
   the `pytest -q` totals (match the style already there).
 - Update `docs/status.md` to point at what's next; don't leave a stale "next".

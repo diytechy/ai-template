@@ -135,3 +135,4 @@ resource: "generated"
 | [TC-126](TC-126.md) | Run the spine stand-alone suite; a WI id or process-doc citation in a normative cell of a… |
 | [TC-127](TC-127.md) | Run the requirement-form suite; each of the six rules fires on its own defect shape, and … |
 | [TC-128](TC-128.md) | Run the paraphrase-advisory suite; an echoing child warns while a real decomposition nami… |
+| [TC-129](TC-129.md) | Run the converter suite: the live registry round-trips in whichever home is authoritative… |

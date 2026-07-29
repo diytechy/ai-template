@@ -26,7 +26,7 @@ Ranked; each cites its shot and its tracking WI.
    *Bad* example. Unlike the When/DAG and How/SW tabs (which start-collapsed per
    the `>3` rule, SR-089), the Knowledge graph has **no** collapse/tiering.
    *Shots:* `1280px-{light,dark}-know-full.png`. → **the fix is the already-filed
-   but DEFERRED [WI-159](../requirements/work-items.csv)** (Knowledge-tab density,
+   but DEFERRED [WI-159](../work/)** (Knowledge-tab density,
    start-collapsed re-spec); this critique **re-affirms it with fresh evidence**
    and it is the load-bearing finding.
 2. **[T4 label legibility — clipping] Knowledge graph TC-column labels are

@@ -1,0 +1,11 @@
++++
+id = "WI-112"
+title = "dev-setup agent-CLI consented installs + missing-CLI emphasis; model-access verification"
+workstream = "scripts"
+needs = ["WI-111", "WI-109"]
+order = 111
++++
+
+## Deliverable
+
+Owner-directed 2026-07-12 (verify agent-resume can access each defined model; see the opencode errors; make dev-setup offer the CLIs per-user-choice). VERIFICATION: (a) ANTHROPIC models smoked LIVE via the VSCode-bundled binary (~/.vscode/extensions/anthropic.claude-code-2.1.200.../native-binary/claude - the only claude on this machine; NOT on any shell PATH): claude-fable-5 / opus / sonnet / haiku all exit 0 and returned the asked-for reply on the owner's real auth (opus response confirmed claude-opus-4-8; probes cost ~$0.64 total). (b) OPENAI rows demonstrated FAILING through the REAL path - `sh agent-resume.sh` preflight exits 2 listing every missing-CLI row WITH its WI-109 Notes hint (all 6 rows in the sandbox; only the 3 opencode rows once claude is installed), zero writes; the mid-run surface (CLI vanishing post-preflight) shown via run_session -> 'coordinator: session error: [Errno 2] ... opencode'. Live OPENAI smoke blocked until opencode install + auth (exact per-row commands in the log). DEV-SETUP: --install now OFFERS each agent CLI individually (offer_cli/Offer-Cli in both twins: [y/N] per CLI -> npm install -g @anthropic-ai/claude-code / opencode-ai -> post-install sign-in hint; npm-absent = honest [skip]; reads guarded so non-interactive declines instead of dying); the WI-111 venv fast path reshaped exit->skip-section so offers always run; --check and post-offer both EMPHASIZE the consequence (owner-directed): with an enabled row's CLI missing agent-resume.* cannot boot the walk-away loop (preflight refuses naming gap+hint) - skipping is fine with your own tools / an IDE extension (trim docs/agents-enabled accordingly). Demoed live: --check note + --install decline path (venv fast-path, both offers declined, NOTE block, exit 0, zero mutations). Tests: textual per-CLI-offer + npm-package + emphasis assertions on both twins (test_onboard_devsetup, 15 passed). Meta tooling only - no kit-shipped file, no spine change. OPEN with the owner: the ANTHROPIC-FABLE row (token verified live, not yet registered), strong-tier lead order, and opencode-vs-codex routing for the OPENAI rows.

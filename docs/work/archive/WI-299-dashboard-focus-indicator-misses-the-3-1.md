@@ -1,0 +1,13 @@
++++
+id = "WI-299"
+title = "Dashboard focus indicator misses the 3:1 boundary floor, and VANISHES on the phase-3 block (118-CRITIQUE A4, OPENAI-SOL) - `.drill .block:focus rect` strokes in var(--accent), but --accent #4f46e5 IS the phase-3 block fill, so a keyboard user focusing that block gets a ring at 1.00:1 - literally invisible, no focus indication at all. Dark theme is 2.11:1 (#818cf8 on #4f46e5), and the icicle's amber #f59e0b ring misses 3:1 on the SR #0e7490 (2.49:1), LLR #64748b (2.22:1) and TC #047857 (2.55:1) fills. All five ratios re-verified independently. FOUND THREE TIMES INDEPENDENTLY at three severities - OPENCODE-KIMI filed it MINOR under uniformity U5 (117-CRITIQUE), OPENCODE-GROK saw it and declined to file it (116-CRITIQUE, 'focus still updates the detail pane'), OPENAI-SOL files it MAJOR under accessibility A4 - which makes it the best-corroborated finding of the 2026-07-24 critique rounds. Fix: a dedicated focus treatment independent of the palette (e.g. a two-layer ring: a light inner + dark outer stroke, which clears 3:1 against ANY fill), verified against every node fill in both themes. RELATED BUT DISTINCT: WI-292 owns the --accent/phase-3 hue COLLISION (a uniformity defect); WI-294 owns unifying the amber-vs-accent ring TOKEN across emitters; this row owns the ring's CONTRAST against what it is drawn on. Doing WI-292/294 without this one can still leave a sub-3:1 ring. MECHANIZE (OI-9): ship a focus-indicator contrast check - the focus ring must clear 3:1 against EVERY node fill it can be drawn on, in BOTH themes (the 1.00:1 case is ring-colour == fill-colour, which a simple equality check also catches). That check owns the focus half of A4, beside the theme-token test A4-hub already has. | WI-300 (f) OBLIGATION (2026-07-25 ruling): this row now CLOSES BY BINDING its anchor - land the fix, the test that owns the anchor, AND the child LLR+TC rows naming that test in Evidence, in the SAME commit. A child row cannot land ahead of its test: Draft exempts it from --require-verified but derive_gate returns G0 for a draft, dropping the gate off G3. When the last mechanizable anchor under an SR is bound, retire the coarse LLR/TC and flip that SR to Verification=Test - tests first, flip second, never the reverse."
+workstream = "dashboard"
+sr_refs = ["SR-052"]
+buildtier = "medium"
+safety_class = "ordinary"
+order = 296
++++
+
+## Deliverable
+
+gen_trajectory.py: the descend/hover/focus ring's colour is now computed per node fill (_ring_ink: white or near-black, whichever contrasts more) instead of a single fixed hue, so it clears 3:1 against every declared fill in both themes -- including the phase-3/--accent collision that measured 1.00:1. LLR-105/TC-108 bind the T5 core.
