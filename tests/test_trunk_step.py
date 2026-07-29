@@ -163,6 +163,24 @@ def test_uncommitted_fragment_is_a_loud_error(tmp_path, capsys):
     assert (root / "docs" / "log.d" / "WI-5-untracked.md").exists()
 
 
+def test_a_merge_staged_fragment_compiles_from_merge_head_history(tmp_path, capsys):
+    # The integrator folds the trunk step into the merge commit (--no-ff
+    # --no-commit), so a branch's fragment is staged but its adding commit is
+    # not yet reachable from HEAD - it lives on MERGE_HEAD. The committed-state
+    # rule widens to exactly that case and no further.
+    root = repo(tmp_path)
+    _git(root, "branch", "-m", "main")
+    _git(root, "checkout", "-q", "-b", "work")
+    fragment(root, "WI-7-branch-work.md", "## WI-7 - branch work\n", when=1_000_100)
+    _git(root, "checkout", "-q", "main")
+    (root / "trunk-file.txt").write_text("trunk moved\n", encoding="utf-8")
+    _commit(root, "trunk moves on", when=1_000_200)
+    _git(root, "merge", "--no-ff", "--no-commit", "work")
+    assert ts.compile_log(root) == 0, capsys.readouterr().err
+    assert "WI-7 - branch work" in log_text(root)
+    assert not (root / "docs" / "log.d" / "WI-7-branch-work.md").exists()
+
+
 def test_missing_heading_is_rejected(tmp_path, capsys):
     # The fragment carries the narrative AND its own `## ` heading — the log
     # append is verbatim, so a heading-less fragment would fuse into whatever

@@ -176,12 +176,32 @@ def added_at(root, path):
     Merge order is derived from git history rather than asserted (§5.1), so this
     single query answers both "where does it sort?" and "is it committed?" —
     a file that is merely staged has no adding commit and is rejected by the same
-    fact that would have ordered it."""
+    fact that would have ordered it. One deliberate widening: DURING a merge
+    composition (MERGE_HEAD set — the integrator folds this step into the merge
+    commit, so the branch's history is not yet reachable from HEAD) the query
+    retries against MERGE_HEAD, where the fragment's adding commit genuinely
+    lives. A fragment with no adding commit on either side is still refused."""
     rel = Path(path).relative_to(root).as_posix()
     out = _git_out(root, ["log", "--diff-filter=A", "--format=%ct", "-1", "--", rel])
     if out is None:
         return None
     out = out.strip()
+    if not out:
+        merging = _git_out(root, ["rev-parse", "--verify", "--quiet", "MERGE_HEAD"])
+        if merging and merging.strip():
+            out = _git_out(
+                root,
+                [
+                    "log",
+                    "--diff-filter=A",
+                    "--format=%ct",
+                    "-1",
+                    "MERGE_HEAD",
+                    "--",
+                    rel,
+                ],
+            )
+            out = (out or "").strip()
     return int(out.splitlines()[0]) if out else ""
 
 
