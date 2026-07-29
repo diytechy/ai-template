@@ -72,3 +72,20 @@ raising.
 
 No perceptual advisory owed: zero `Verification=Critique` rows since the
 Phase 2c flip, so no critique ceremony attaches to this WI.
+
+**Two Phase 4 findings the close surfaced, both structural, neither fixable
+from a work branch.** §2.3 step 3 (the closing commit moves
+`active/<branch>/ → archive/`) and §5.2 (a branch is a work branch *iff*
+`docs/work/active/<branch>/` exists) contradict each other at exactly one
+commit: the move un-claims the branch, so the seven trunk-lane freshness steps
+un-skip inside the very commit that legitimately changes the registry. The
+pre-commit floor then demands generated artifacts the same rule forbids the
+branch to commit. Worked around here by leaving the emptied claim directory in
+the working tree — untracked, so the committed tree is the correct closed
+state — which is a workaround, not a fix. Second: closing the WI reds
+`check_trajectory.status_forward_only_findings` (R-D), because `status.md:248`
+names **WI-346** in hand-authored prose as still-open. Scrubbing it is the
+trunk's job — a work branch must not edit `status.md` — so
+`tests/test_trajectory.py::test_forward_only_unit_over_the_real_meta_repo`
+stays red on this branch by construction and clears when the trunk regenerates
+and scrubs. Both want their own WIs; neither is this row's to close.
