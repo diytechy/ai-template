@@ -51,3 +51,10 @@ docs/blackout — absent = disabled, byte-identical, by the template's own spec
 docs/review-cadence — absent = `slice` (per-slice review), the default cadence
 docs/subagent-gate — absent = deny; a research-enabled repo writes `allow`
 docs/components-check — absent = the component-findings gate stays warn-first
+# Phase 5 retirements (concurrency-restructure §6/§7): design prose and the
+# §5.6/§2.3 contracts legitimately name these; their ABSENCE is the design.
+docs/run-state — retired at Phase 5 with the dispatcher, its only writer; the stop banner + exit codes carry the outcome
+docs/pause — the legacy untracked pause marker; retired at Phase 5 (the tracked docs/work/pause is the one home)
+docs/work/pause — present only while a pause is DECLARED; absence = not paused, the documented default
+docs/work/active/ — holds per-branch claim directories only while work is claimed; empty/absent at a drained stop
+tools/wi_convert.py — the converter's pre-2c meta-repo home, named as history in the spec; it moved to project-trajectory/scripts/wi_convert.py

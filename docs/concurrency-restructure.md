@@ -396,7 +396,7 @@ never a forgotten one (the stale-reason lesson).
   kit already applies to every registry template, and it is the AUTHORITY rule
   only: `read_spec_rows` still parses the example, `load_wis` still skips it.
   **Known-red, and the FLIP commit's to fix, not this one's:**
-  `check_trajectory --strict` reports `scripts/wi_convert` as an arch-map module
+  `check_trajectory --strict` reports `scripts/wi_convert` as an arch-map module <!-- path-ok: the arch-map MODULE label the error quoted, not a file path -->
   in no CMP-### component. Containing it is a spine edit (an LLR `Component`
   cell), which is exactly the barrier the flip commit is.
   **2c-ii — THE FLIP — is DONE (2026-07-29), solo and attended (the §3.2
