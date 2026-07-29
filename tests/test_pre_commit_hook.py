@@ -160,6 +160,40 @@ def test_hook_trajectory_step_is_the_ra_floor(scaffold):
     assert "check_trajectory.py" in hook_text and "--staged" in hook_text
 
 
+def test_run_steps_gate_promotes_the_warn_first_floor(scaffold):
+    # WI-355, the behavioral half of test_step_gate_honours_an_explicit_gate: the
+    # two halves must be pinned together, because the fix is only correct if BOTH
+    # hold. Same R-E fixture as test_hook_trajectory_step_is_the_ra_floor (a
+    # dangling SpecRef — warn-first at the commit floor, an ERROR under --strict).
+    make_minimal_project(scaffold)
+    wi = scaffold / "docs" / "requirements" / "work-items.csv"
+    header = "WI-ID,Title,Workstream,SR-Refs,Predecessors,Status,Deliverable,SpecRef\n"
+    wi.write_text(header + "WI-001,Real,core,,,queued,,docs/specs/WI-404.md\n", "utf-8")
+    # No --gate (what the pre-commit hook passes): the floor stays warn-first even
+    # though the scaffold's own docs/gate says G3 — a defaulted --gate must not be
+    # resolved through docs/gate, or every commit would be held to the gate bar.
+    gate_lines = (scaffold / "docs" / "gate").read_text(encoding="utf-8").splitlines()
+    declared = [ln.strip() for ln in gate_lines if ln.strip()[:1] not in ("", "#")]
+    assert declared == ["G3"], declared
+    warn = run_py(["scripts/check.py", "--run-steps", "trajectory"], cwd=scaffold)
+    assert warn.returncode == 0, "R-E must warn, not block, at the commit floor"
+    # Explicitly asking for the G3 bar really gates it (the WI-354 session read
+    # 18/18 PASS from this command while two real G3 errors were live).
+    gated = run_py(
+        ["scripts/check.py", "--gate", "G3", "--run-steps", "trajectory"], cwd=scaffold
+    )
+    assert gated.returncode != 0, "--gate G3 --run-steps must run the --strict command"
+    assert "R-E" in (gated.stdout + gated.stderr)
+    # Not a blanket "--gate G3 always fails": repair the SpecRef and it goes green.
+    (scaffold / "docs" / "specs").mkdir(parents=True, exist_ok=True)
+    (scaffold / "docs" / "specs" / "WI-001.md").write_text("# spec\n", "utf-8")
+    wi.write_text(header + "WI-001,Real,core,,,queued,,docs/specs/WI-001.md\n", "utf-8")
+    ok = run_py(
+        ["scripts/check.py", "--gate", "G3", "--run-steps", "trajectory"], cwd=scaffold
+    )
+    assert ok.returncode == 0, ok.stdout + ok.stderr
+
+
 def test_hook_blocks_duplicate_id_but_not_orphan(scaffold):
     # The hook's traceability command is --strict-integrity: a duplicated id is
     # wrong at any stage and must block, but an orphan is a G2+ *gate* criterion

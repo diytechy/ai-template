@@ -71,6 +71,7 @@ Usage:
                 status; a missing tool is SKIP (exit 0), a real failure exit 1.
                 The pre-commit hook uses it to source its format check from the
                 declared profile rather than restating the command.
+                An explicit --gate builds the step AT that gate (else "all").
     --run-steps Run several named steps concurrently with --run-step's lenient
                 semantics, reporting EVERY step's result (exit 1 if any FAILs) —
                 the pre-commit hook's batched freshness/integrity floor, one
@@ -467,7 +468,7 @@ def steps(coverage, tier, gate, phase=None, profile=None):
     # The trajectory validator gains --strict at G2/G3 — the gates promote the
     # status↔registry coherence rules R-B…R-E from WARN to ERROR (R-A always
     # fails). "all" is deliberately EXCLUDED so the pre-commit floor, which runs
-    # this step via `--run-step trajectory` (resolved at gate="all"), stays
+    # this step with NO --gate (so _step_gate resolves it to "all"), stays
     # warn-first: a plain commit must not block on status.md/SpecRef drift, only
     # on the R-A handoff-incoherence rule (process-options.md "Trajectory /
     # work-items layer").
@@ -998,6 +999,15 @@ def resolve_gate(explicit):
     return "all"
 
 
+def _step_gate(explicit):
+    """The gate that BUILDS a --run-step/--run-steps command: an explicit --gate
+    is honoured (so `--gate G3 --run-steps trajectory` really gates), but a
+    DEFAULTED one resolves to "all", never docs/gate — the pre-commit hook passes
+    no --gate and its floor must stay warn-first (see the trajectory step's
+    comment). Name lookup stays unfiltered, so `format` is findable at any gate."""
+    return explicit or "all"
+
+
 # coverage.py orchestration vars that must NOT leak into the steps this harness
 # spawns: the `tests+coverage` step runs the project's own `pytest --cov`, and if
 # a *parent* process is itself running under coverage (a CI that wraps the whole
@@ -1395,8 +1405,9 @@ def main():
     # unfiltered plan so a gate-scoped step (format is G3-only) is still found,
     # and be lenient about a missing tool so a not-yet-set-up repo can commit —
     # a real failure still exits nonzero.
+    step_gate = _step_gate(args.gate)  # explicit --gate gates; defaulted = "all"
     if args.run_step:
-        all_steps = steps(coverage, args.tier, "all", args.phase, profile)
+        all_steps = steps(coverage, args.tier, step_gate, args.phase, profile)
         match = [s for s in all_steps if s[0] == args.run_step]
         if not match:
             sys.exit("check: no step named {!r}".format(args.run_step))
@@ -1415,7 +1426,7 @@ def main():
         names = [t.strip() for t in args.run_steps.split(",") if t.strip()]
         if not names:
             sys.exit("check: --run-steps got no step names")
-        all_steps = steps(coverage, args.tier, "all", args.phase, profile)
+        all_steps = steps(coverage, args.tier, step_gate, args.phase, profile)
         by_name = {s[0]: s for s in all_steps}
         unknown = [n for n in names if n not in by_name]
         if unknown:
