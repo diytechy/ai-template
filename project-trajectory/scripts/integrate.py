@@ -270,19 +270,33 @@ def _verdict_gate(root, branch, wi_ids):
 
 
 def _candidate_worktree(root):
+    """The candidate worktree, created or REUSED. A refusal deliberately parks
+    the worktree for inspection, so the next run must reuse the registration
+    (git refuses to re-add a live worktree path) — a parked half-merge is
+    aborted and the tree hard-reset to the current trunk either way."""
     wt = root.parent / (root.name + "-integrate") / "candidate"
-    code, _ = ac.git(
-        root, "rev-parse", "--verify", "--quiet", "refs/heads/" + CANDIDATE_BRANCH
+    code, out = (
+        ac.git(wt, "rev-parse", "--abbrev-ref", "HEAD") if wt.is_dir() else (1, "")
     )
-    if wt.is_dir():
-        ac.git(root, "worktree", "prune")
-    if code == 0:
-        cmd = ["worktree", "add", "--force", str(wt), CANDIDATE_BRANCH]
+    if code == 0 and out.strip() == CANDIDATE_BRANCH:
+        ac.git(wt, "merge", "--abort")  # best-effort: clear a parked half-merge
     else:
-        cmd = ["worktree", "add", "-b", CANDIDATE_BRANCH, str(wt), "HEAD"]
-    code, out = ac.git(root, *cmd)
-    if code != 0:
-        raise RuntimeError("candidate worktree add failed: {}".format(out))
+        if wt.is_dir():
+            raise RuntimeError(
+                "{} exists but is not the candidate worktree - refusing to "
+                "clobber it".format(wt)
+            )
+        ac.git(root, "worktree", "prune")
+        code, _ = ac.git(
+            root, "rev-parse", "--verify", "--quiet", "refs/heads/" + CANDIDATE_BRANCH
+        )
+        if code == 0:
+            cmd = ["worktree", "add", "--force", str(wt), CANDIDATE_BRANCH]
+        else:
+            cmd = ["worktree", "add", "-b", CANDIDATE_BRANCH, str(wt), "HEAD"]
+        code, out = ac.git(root, *cmd)
+        if code != 0:
+            raise RuntimeError("candidate worktree add failed: {}".format(out))
     trunk_sha = _head(root)
     code, out = ac.git(wt, "reset", "--hard", trunk_sha)
     if code != 0:
