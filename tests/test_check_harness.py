@@ -271,6 +271,35 @@ def test_run_steps_reports_every_failure(scaffold):
     assert any("FAIL" in ln and "registry-integrity" in ln for ln in lines), proc.stdout
 
 
+def test_step_gate_honours_an_explicit_gate(scaffold):
+    # WI-355: --run-step/--run-steps used to resolve their plan at gate "all"
+    # unconditionally, so `--gate G3 --run-steps trajectory` ran the WARN-first
+    # command while `--gate G3 --list` advertised the --strict one. _step_gate is
+    # the explicit-vs-defaulted sentinel: an explicitly passed --gate builds the
+    # command AT that gate; a defaulted one (argparse default=None — what the
+    # pre-commit hook passes) stays "all" and must NEVER consult docs/gate, or
+    # the commit floor would arm --strict (see the trajectory step's comment).
+    check = load_script("check")
+    assert check._step_gate("G3") == "G3"
+    assert check._step_gate("G1") == "G1"
+    assert check._step_gate(None) == "all"
+    assert check._step_gate("") == "all"
+
+    # And the sentinel really changes the command built for the step that carries
+    # the R-B..R-E promotions — the only step keying on gate in ("G2","G3").
+    def traj_cmd(gate):
+        match = [s for s in check.steps(80, "full", gate) if s[0] == "trajectory"]
+        assert match, "no trajectory step at gate {}".format(gate)
+        return match[0][2]
+
+    assert "--strict" in traj_cmd("G3")
+    assert "--strict" in traj_cmd("G2")
+    assert "--strict" not in traj_cmd("all")
+    # Name lookup stays unfiltered at any gate: `format` is a G3-only step but the
+    # hook resolves it with no --gate, so it must still be findable at "all".
+    assert [s for s in check.steps(80, "full", "all") if s[0] == "format"]
+
+
 def test_run_steps_unknown_name_fails_loudly(scaffold):
     proc = run_py(["scripts/check.py", "--run-steps", "arch-map,nope"], cwd=scaffold)
     assert proc.returncode != 0
