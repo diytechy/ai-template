@@ -150,7 +150,6 @@ TC_CSV = "docs/test/test-cases.csv"
 IF_CSV = "docs/requirements/interfaces.csv"
 LLR_CSV = "docs/requirements/low-level-requirements.csv"
 CMP_CSV = "docs/requirements/components.csv"
-RUN_STATE = "docs/run-state"
 ARCH_MD = "docs/architecture.md"
 SPECS_DIR = "docs/specs"
 # Where R-F sends a spec at close ("close date appended, WI ids noted"), so the
@@ -1679,7 +1678,7 @@ def spec_lifecycle_findings(root, wis):
     one-sided enforcement is how this repo accreted 137 done rows with live
     SpecRefs before the rule existed. Two findings, both message-only (the
     caller tags `R-F` and owns the warn-plain / error-under-`--strict`
-    promotion, the `run-state` tier — so a rotting spec surface cannot reach a
+    promotion, the R-E warn tier — so a rotting spec surface cannot reach a
     green G2/G3 gate while a plain commit stays warn-first):
 
       - a **terminal** WI (`done` or `retired`, WI-267) whose `SpecRef` is still
@@ -2074,30 +2073,10 @@ def dead_dependency_findings(wis):
     return out
 
 
-def run_state_findings(wis, root):
-    """Warn when an end-state would park a runnable queued work item (WI-115).
-
-    An absent ``docs/run-state`` means the repo has not adopted unattended
-    operation, so this remains vacuous. Only hard predecessors constrain
-    readiness; soft edges are advisory by definition.
-    """
-    state = _first_declared_line(root / RUN_STATE)
-    if state not in ("NEEDS-HUMAN", "BLOCKED"):
-        return []
-    by_id = {w["id"]: w for w in wis}
-    actionable = [
-        w["id"]
-        for w in wis
-        if w["status"] == "queued"
-        and all(by_id.get(pred, {}).get("status") == "done" for pred in w["preds"])
-    ]
-    if not actionable:
-        return []
-    return [
-        "run-state {} but actionable queued WI(s) {} have all hard predecessors "
-        "done — is the pause still real? A stale end-state parks agent-resume at "
-        "boot".format(state, ";".join(sorted(actionable)))
-    ]
+# (run_state_findings — the WI-115 stale-end-state warn over docs/run-state —
+# retired at concurrency-restructure Phase 5 with the dispatcher that wrote
+# that file; a stale parked state is unrepresentable when no file declares
+# one.)
 
 
 def _git(root, args):
@@ -2880,7 +2859,7 @@ def critique_staleness_findings(root):
     TIERED severity (set by the caller): WARN at the commit bar, ERROR under
     `--strict` (the G3 gate) — fail-closed per the owner's 2026-07-20 ruling, a
     stale render surface cannot reach a green gate; main() routes it through the
-    strict-promotable findings loop (the same tier as `run-state`). Silent off-git
+    strict-promotable findings loop (the R-E warn tier). Silent off-git
     and vacuous when the repo declares no perceptual SR (so a downstream repo
     without a `Verification=Critique` SR — none ship — pays nothing at either
     tier), carries no CRITIQUE evidence, or exposes no locatable render surface.
@@ -3044,19 +3023,18 @@ def main():
     for msg in backlog_staleness_findings(root, wis):
         print("check_trajectory: WARN - {}".format(msg), file=sys.stderr)
     # The SSOT coherence layer: R-A is always an error; R-E, the
-    # run-state currency check, and the unknown-status lint are WARN unless
+    # unknown-status lint are WARN unless
     # --strict promotes them.
     findings = ssot_findings(wis, root)
-    findings.extend(("run-state", False, msg) for msg in run_state_findings(wis, root))
     # Dead dependency (WI-267): an open WI hard-depends on a retired (terminal
     # WON'T-BUILD) predecessor it can never see satisfied. WARN plain, ERROR under
-    # --strict — same warn-tier as R-E/run-state (no new branch in main).
+    # --strict — same warn-tier as R-E (no new branch in main).
     findings.extend(("dead-dep", False, msg) for msg in dead_dependency_findings(wis))
     # Perceptual re-fire (WI-243) — a Verification=Critique SR whose latest CRITIQUE
     # evidence predates a dashboard render-surface change is judging an older render.
     # WARN at the commit bar; **fail-closed under --strict** (the G3 gate) per the
     # owner's 2026-07-20 ruling — a stale render surface cannot reach a green gate.
-    # hard=False rides the same warn-plain / error-under-strict tier as run-state,
+    # hard=False rides the same warn-plain / error-under-strict tier as R-E,
     # so main() gains no branch. Vacuous when no perceptual SR / evidence / render
     # surface (a downstream repo without a Verification=Critique SR — none ship —
     # pays nothing), silent off-git, and opt-out via docs/trajectory-check.
@@ -3070,7 +3048,7 @@ def main():
     findings.extend(("R-F", False, msg) for msg in spec_lifecycle_findings(root, wis))
     # Completion reconciliation (WI-352) — the declared `Status` cell against the
     # spec's Done-when boxes and the `WI:` trailers. WARN plain, ERROR under
-    # --strict, the same run-state tier as R-E/R-F, EXCEPT the trailer signal.
+    # --strict, the same warn tier as R-E/R-F, EXCEPT the trailer signal.
     #
     # DEVIATION from the WI row, which asked for the whole reconciler at that
     # tier, taken on the row's OWN argument: it rules that Status stays an

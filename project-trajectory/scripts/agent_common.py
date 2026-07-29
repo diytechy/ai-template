@@ -17,7 +17,7 @@ unchanged). The session engine (agent_loop) and the serial integrator
     and the small CSV/ref readers;
   - `parse_map`, `preflight` (launchability refusal, SR-027), and the
     session-log family (size-bounded logs, the regenerated iteration index,
-    the telemetry commit) + the generated run-state write.
+    the telemetry commit).
 
 agent_loop re-exports the names it historically exposed, so its public
 surface is unchanged. Stdlib only, Python 3.11+, Windows/POSIX.
@@ -60,13 +60,11 @@ LOG_TAIL_LINES = 400
 LOG_MAX_BYTES = 65536
 
 
-# The end states docs/run-state may carry (one word, tracked like docs/gate;
-# anything else — including the file being absent — reads RUNNING). The file
-# is dispatcher-GENERATED (spec §10; the serial driver that used to read it
-# back is retired, WI-210). NEEDS-HUMAN may carry one `ask: <one-line ask>`
-# line after the state word — the concrete human act the stop banner
-# headlines (WI-127). Every state reader takes only the first declared line,
-# so the extra line is invisible to them.
+# The terminal end states a session/loop outcome may carry. (Their old durable
+# home, the dispatcher-generated `docs/run-state` file, retired with the
+# dispatcher at concurrency-restructure Phase 5 — the stop banner and exit
+# codes carry the outcome now.) NEEDS-HUMAN's one-line ask is the stop
+# banner's headline (WI-127).
 END_STATES = ("DONE", "BLOCKED", "NEEDS-HUMAN")
 
 
@@ -112,7 +110,7 @@ OWNER_ONLY_PATHS = ("OWNER_SCRATCHPAD.md",)
 
 
 def read_declared(path, default):
-    """Read a one-word declared-policy file (docs/gate, docs/run-state, …):
+    """Read a one-word declared-policy file (docs/gate, docs/gate-policy, …):
     the first non-empty, non-comment line — the same rule the git hooks and
     check_privacy.py apply — or `default` when absent/empty."""
     try:
@@ -520,17 +518,8 @@ TRAIN_BRANCH_PREFIX = "llm/train/"
 
 WI_TOKEN_RE = re.compile(r"^WI-\d+$")
 
-# The coordinator/bookkeeping commit subjects that legitimately carry NO `WI:`
-# trailer on a train branch — the integrator writes these itself around the
-# worker's build commits. The commit-msg WI-trailer floor (hooks/commit-msg,
-# WI-282) exempts these subject prefixes in pure sh, and reviewed_train_head's
-# mismatch diagnostic (warn_reviewed_head_slip) treats them as non-substantive
-# when locating the build tip — so the floor and the diagnostic can never
-# disagree on what a sanctioned shape is (the hook mirrors this tuple, kept in
-# step by tests/test_commit_msg_wi_trailer.py). A blocked disposition is exempt
-# too, but by its `Blocked-WI:` trailer rather than a subject prefix (a worker's
-# block evidence has a free-form subject).
-SANCTIONED_TRAIN_SUBJECT_PREFIXES = ("integrate:", "telemetry:", "review:", "blocked:")
+# (SANCTIONED_TRAIN_SUBJECT_PREFIXES and the WI-282 commit-msg trailer floor
+# retired with the dispatcher at concurrency-restructure Phase 5.)
 
 # The terminal work-item Statuses — no further build is owed (WI-267). Mirrors
 # check_trajectory.TERMINAL_STATUSES, kept inline here rather than imported: the
@@ -1696,20 +1685,6 @@ def _utf8_console():
             s.reconfigure(encoding="utf-8")
         except (AttributeError, ValueError):
             pass
-
-
-def _write_runstate(docs, state, ask=""):
-    """The dispatcher-generated root run-state (spec §10; SR-059's generation
-    half): RUNNING | NEEDS-HUMAN (+ ask) | BLOCKED | DONE. Generated only by
-    the dispatcher/integrator — never by a worker."""
-    try:
-        (docs / "run-state").write_text(
-            state + ("\nask: " + ask if ask else "") + "\n",
-            encoding="utf-8",
-            newline="\n",
-        )
-    except OSError:
-        pass
 
 
 def head_sha_full(root):

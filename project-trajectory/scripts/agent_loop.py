@@ -241,7 +241,6 @@ next_session_number = agent_common.next_session_number
 phase_draw_ordinal = agent_common.phase_draw_ordinal
 draw_iter_dirs = agent_common.draw_iter_dirs
 commit_telemetry = agent_common.commit_telemetry
-_write_runstate = agent_common._write_runstate
 
 PLAN_MODE_DUAL = plan_runner.PLAN_MODE_DUAL
 wi_plan_mode = plan_runner.wi_plan_mode
@@ -2843,15 +2842,13 @@ def main():
             file=sys.stderr,
         )
         if action == "stop-needs-human":
-            _write_runstate(docs, "NEEDS-HUMAN", "dual-plan round: " + detail)
             stop_banner(docs / "status.md", "NEEDS-HUMAN", detail)
             return EXIT_NEEDS_HUMAN
         # autonomous / single-ratify: honor the pause-free invariant (WI-204,
-        # WI-209): an attention-only outcome lands on run-state RUNNING +
-        # EXIT_STALL, never a NEEDS-HUMAN gate. The PAGE evidence is on disk
-        # under docs/plans/DP-*; relaunching re-runs the round.
-        # (page_action's non-stop-needs-human strings are intent labels.)
-        _write_runstate(docs, "RUNNING")
+        # WI-209): an attention-only outcome lands on EXIT_STALL, never a
+        # NEEDS-HUMAN gate. The PAGE evidence is on disk under docs/plans/DP-*;
+        # relaunching re-runs the round. (page_action's non-stop-needs-human
+        # strings are intent labels.)
         stop_banner(
             docs / "status.md",
             "dual-plan round paged — attention (autonomous: no human gate)",

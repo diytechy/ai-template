@@ -88,7 +88,7 @@ Apply only the ones your diff actually contains.
   two-worker promotion. Since WI-210 a **plain launch is the dispatcher** (the
   legacy serial resume driver and `--track` lanes are retired): after the flip,
   drop any local reliance on the retired surfaces — the resume-from-`status.md`
-  prompt, a hand-set `docs/run-state`, `docs/rework-wi`, and `docs/tracks/*`
+  prompt, a hand-set `docs/rework-wi`, and `docs/tracks/*`
   (now just your own notes; the dispatcher never reads them). Legacy `active`
   rows auto-reconcile to `queued` (a logged finding); delete
   `docs/next-wi`/`docs/run-phase` if a pre-v4 scaffold still carries them

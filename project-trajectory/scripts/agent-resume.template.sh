@@ -3,7 +3,7 @@
 # tier, or the unattended coordinator loop, from the repo root
 # (process-options.md "Unattended operation (walk-away runs)"). The booted
 # session inherits the whole committed context — AGENTS.md, docs/status.md,
-# docs/gate + gate-policy + run-state — so resuming work never requires
+# docs/gate + gate-policy — so resuming work never requires
 # recalling an incantation. Read it first; it only exports the slots below
 # and runs scripts/agent_loop.py.
 # macOS: agent-resume.command is the double-clickable Finder wrapper.

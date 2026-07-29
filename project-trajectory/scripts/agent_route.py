@@ -883,7 +883,6 @@ def failure_action(gate_policy):
     if gp == "single-ratify":
         return {
             "mode": "single-ratify",
-            "run_state": "RUNNING",
             "pause_wi": True,
             "keep_nondependent": True,
             "design_check": False,
@@ -892,7 +891,6 @@ def failure_action(gate_policy):
     if gp == "autonomous":
         return {
             "mode": "autonomous",
-            "run_state": "RUNNING",
             "pause_wi": True,
             "keep_nondependent": True,
             "design_check": True,
@@ -900,7 +898,6 @@ def failure_action(gate_policy):
         }
     return {
         "mode": "attended",
-        "run_state": "NEEDS-HUMAN",
         "pause_wi": True,
         "keep_nondependent": False,
         "design_check": False,

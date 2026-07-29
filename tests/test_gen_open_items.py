@@ -222,23 +222,10 @@ def test_check_bites_on_drift_and_reproduces_the_stamped_baseline(tmp_path):
     assert gi.BASELINE_RE.search(html_of(root)) is not None
 
 
-def test_check_masks_the_machine_local_region(tmp_path):
-    """M-10/WI-266's rule, inherited: refs/llm/* facts do not transport with
-    clone or push, so byte-comparing them would read STALE in any second clone."""
-    root = repo(tmp_path, oi_rows=PENDING_OI)
-    assert gen(root).returncode == 0
-    gi = load_script("gen_open_items")
-    page = html_of(root)
-    start = page.index(gi.LOCAL_BEGIN) + len(gi.LOCAL_BEGIN)
-    end = page.index(gi.LOCAL_END)
-    tampered = (
-        page[:start] + "\n<p>a conflict only THIS machine can see</p>\n" + page[end:]
-    )
-    write_view(root, tampered)
-    assert gen(root, "--check").returncode == 0, "machine-local drift must not gate"
-    # The negative half: drift OUTSIDE that region still bites.
-    write_view(root, tampered.replace("Pick a licence", "Pick another licence"))
-    assert gen(root, "--check").returncode == 1
+# (test_check_masks_the_machine_local_region retired at concurrency-restructure
+# Phase 5: the machine-local advisory region — M-10/WI-266's refs/llm/* mask —
+# left with the dispatcher, so the whole view is now a pure function of the
+# committed tree and the plain drift test above covers the compare.)
 
 
 def test_vacuous_without_the_registry_or_the_view(tmp_path):

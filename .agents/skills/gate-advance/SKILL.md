@@ -106,7 +106,7 @@ Run the gate bar with `scripts/check.py` (it selects the gate's checks from
 
 **Policy-flip sweep.** A change to `docs/gate-policy`, `docs/push-policy`,
 `docs/review-policy`, or `docs/guardrails-policy` is a status-staleness event:
-in the same sitting, grep `docs/status.md` and `docs/run-state` for old
+in the same sitting, grep `docs/status.md` for old
 pause/stop/approval wording and point it to the declared policy file rather than
 paraphrasing the value.
 

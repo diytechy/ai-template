@@ -59,7 +59,7 @@ chasing it.
     ([`agent_loop.py`](project-trajectory/scripts/agent_loop.py)).
   - Fresh headless **worker sessions** build explicit dispatcher assignments —
     each scoped by its WI row, spec, and train context, never a `status.md`
-    resume — and the dispatcher *generates* `docs/run-state` as the run's
+    resume — and the stop banner + exit codes carry the run's
     outcome.
   - **Parallel-by-default execution** *(delivered — phase `v4` at G3;
     [`parallel-wi-dispatch.md`](docs/archive/specs/parallel-wi-dispatch.2026-07-20.md))*: a plain

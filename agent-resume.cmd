@@ -6,7 +6,7 @@ REM repo root (project-trajectory/PROCESS_OPTIONS.md "Unattended operation
 REM (walk-away runs)"). This is the kit's own launcher applied to the kit
 REM repo itself: the booted session inherits the committed context -
 REM CLAUDE.md, AGENTS.md, docs/status.md, docs/requirements/work-items.csv,
-REM docs/log.md, docs/gate-policy + run-state (the live working surfaces;
+REM docs/log.md, docs/gate-policy (the live working surfaces;
 REM IMPROVEMENT_PLAN.md is archived history, not a working surface). Read it
 REM first; it only exports the slots below and runs the coordinator engine.
 REM

@@ -137,56 +137,27 @@ _GATE_BASIS_RE = re.compile(r"^#\s*basis:\s*(.+)$", re.M)
 # `--status` also splices a second GENERATED block — at the END of
 # the generated owner surface docs/open-items.html (WI-322), beside the briefs
 # leaves byte-untouched) — projecting every DURABLE pending-owner action so the
-# owner's one review surface never misses a parallel-branch hard stop again. A
-# pure projection of durable state ONLY; the out/dispatch journal is a
-# rebuildable cache (§11) and is never read here:
-#   (a) `blocked` WI rows carrying a BlockRef (the attestation/ratification page)
-#       — with the `git show <train>:<path>` read path when the doc lives only
-#       on a train branch and not the dev tree (the WI-229 shape);
-#   (b) source-conflict records under refs/llm/conflict/* (WI-232): train + paths;
-#   (c) quarantined trains — a reservation ref whose metadata is unreadable or
-#       whose train branch is missing (the agent_dispatch reconcile quarantine
-#       conditions, re-derived from the DURABLE refs, never the journal);
-#   (d) the run-state `ask:` line when docs/run-state reads NEEDS-HUMAN;
-#   (e) Draft/Modified SR rows (WI-316): a `Draft` SR owes a ratification, a
+# owner's one review surface never misses a hard stop. A pure projection of
+# committed-tree state ONLY:
+#   (a) `blocked` WI rows carrying a BlockRef (the attestation/ratification
+#       page);
+#   (b) Draft/Modified SR rows (WI-316): a `Draft` SR owes a ratification, a
 #       `Modified` SR owes a re-attest (post-attestation amendment, process.md
 #       §7) — one pointer line each, naming the on-demand brief
 #       (`trace.py --ratify <id>` / `--ratify modified`) that carries the depth.
-#   (f) a tracked `docs/work/pause` (concurrency-restructure §5.6): one
+#   (c) a tracked `docs/work/pause` (concurrency-restructure §5.6): one
 #       `Paused since <date>` line, the declared reason rendered verbatim (no
 #       clock), so an open pause is a visible accruing cost.
 # One line per pending action with a pointer (never a brief — the depth stays in
-# the hand-authored briefs). The block is emitted in two regions split by the
-# PENDING_LOCAL_LABEL line: (a)+(d)+(e)+(f) are committed-tree-PURE and (b)+(c) plus the
-# stranded-train shape are MACHINE-LOCAL (refs/llm-derived). Its `--check` gates
-# only the pure region — the machine-local lines are generated for humans but
-# excluded from the byte-compare, because `refs/llm/*` don't transport with
-# clone/push, so gating them would read STALE in any second clone (M-10/WI-266);
-# the same exclusion applies on every machine (one place: `_mask_machine_local`),
-# so the harness `status-map` step and the post-integration re-run skip identical
-# lines. Deterministic (sorted refs, no clocks), so the gated region is
-# byte-stable. Opt-in: a repo carrying no open-items registry renders nothing.
-# The always-emitted lead of the machine-local ADVISORY sub-section of the
-# PENDING block, and the stable boundary `_mask_machine_local` splits on so the
-# `--status --check` freshness gate byte-compares ONLY the committed-tree-pure
-# region (M-10/WI-266). Everything AFTER this exact-full-line — the refs/llm/*-
-# derived conflict/reservation/quarantine/stranded lines — is generated for
-# humans but excluded from the gate on every machine, because those refs do not
-# transport with clone/push (a second clone reproduces empty). Kept as one line
-# so the exact-full-line match holds; the label is itself gated (it sits at the
-# boundary, inclusive) so the exclusion can't be silently edited away.
-PENDING_LOCAL_LABEL = (
-    "_Machine-local advisory — source conflicts, reservations, quarantines, and "
-    "stranded-train attestations re-derived from `refs/llm/*` as of the dispatch "
-    "machine at generation time. These refs do not transport with clone/push, so "
-    "this section is regenerated every dispatch loop and is NOT part of the "
-    "`--status --check` freshness gate (M-10/WI-266); a second clone (CI, another "
-    "machine) may show it empty._"
-)
-_RESERVATION_NS = "refs/llm/reservations/"
-_CONFLICT_NS = "refs/llm/conflict/"
-_TRAIN_BRANCH_PREFIX = "llm/train/"
-_WI_REF_RE = re.compile(r"^WI-\d+$")
+# the hand-authored briefs). Deterministic (sorted rows, no clocks), so the
+# gated region is byte-stable; a pure function of the committed tree, so the
+# `--check` freshness gate byte-compares the WHOLE block in any clone. Opt-in:
+# a repo carrying no open-items registry renders nothing.
+# (The dispatcher-era MACHINE-LOCAL advisory region — refs/llm/* conflict/
+# reservation/quarantine/stranded-train lines, excluded from the compare under
+# M-10/WI-266 because those refs never transported — retired with the
+# dispatcher at concurrency-restructure Phase 5, and the run-state ask source
+# with it: git history and the integrator's own refusals are the record now.)
 
 # Workstream render order + display labels (the mutable grouping category on a
 # work item; legacy `Track` header still read); unknown ones fall through in
@@ -4578,260 +4549,21 @@ def _git(root, *args):
     return proc.returncode, proc.stdout
 
 
-def _ref_meta(root, ref):
-    """The JSON metadata a reservation/conflict ref's commit message carries
-    (a dict), or None when the ref is absent/unreadable/malformed. Mirrors
-    agent_dispatch.reservation_meta / read_conflict, read-only."""
-    code, sha = _git(root, "rev-parse", "--verify", "--quiet", ref)
-    if code != 0 or not sha.strip():
-        return None
-    code, body = _git(root, "log", "-1", "--format=%B", sha.strip())
-    if code != 0:
-        return None
-    try:
-        meta = json.loads(body)
-    except ValueError:
-        return None
-    return meta if isinstance(meta, dict) else None
-
-
-def _train_carrying_path(root, relpath):
-    """The first train branch (`llm/train/*`, id-sorted) whose tree contains
-    `relpath`, or '' — the read path for an attestation doc frozen on a train and
-    absent from the dev tree (the WI-229 shape: `git show <train>:<path>`)."""
-    code, out = _git(
-        root,
-        "for-each-ref",
-        "--format=%(refname)",
-        "refs/heads/" + _TRAIN_BRANCH_PREFIX,
-    )
-    if code != 0:
-        return ""
-    heads = "refs/heads/"
-    branches = sorted(
-        ln.strip()[len(heads) :]
-        for ln in out.splitlines()
-        if ln.strip().startswith(heads + _TRAIN_BRANCH_PREFIX)
-    )
-    for br in branches:
-        code, _ = _git(root, "cat-file", "-e", "{}:{}".format(br, relpath))
-        if code == 0:
-            return br
-    return ""
-
-
 def _blocked_pending(root):
     """Source (a): `(lines, ids)` — one line per `blocked` WI row carrying a
-    BlockRef, and the set of WI ids covered (so the stranded-train source below
-    never double-lists one). The pointer is the BlockRef path; when a path-shaped
-    ref is absent from the dev tree but a train branch carries it, the
-    `git show <train>:<path>` read path is used instead."""
+    BlockRef, and the set of WI ids covered. The pointer is the BlockRef
+    path."""
     wis, _ = ct.load_wis(ct.read_registry_rows(root / ct.WI_CSV))
     lines, ids = [], set()
     for w in sorted(wis, key=lambda w: w["id"]):
         if w["status"] != "blocked" or not w["blockref"]:
             continue
-        ref = w["blockref"]
-        pointer = "`{}`".format(ref)
-        path = ref.split("#", 1)[0]
-        pathish = "/" in path or "." in path
-        if pathish and not (root / path).exists():
-            train = _train_carrying_path(root, path)
-            if train:
-                pointer = "`git show {}:{}`".format(train, path)
         lines.append(
-            "- **{}** blocked — attest/ratify {}, then unblock the registry "
-            "row.".format(w["id"], pointer)
+            "- **{}** blocked — attest/ratify `{}`, then unblock the registry "
+            "row.".format(w["id"], w["blockref"])
         )
         ids.add(w["id"])
     return lines, ids
-
-
-def _scan_reservations(root):
-    """`(trains, unreadable)` re-derived from the DURABLE refs/llm/reservations/*
-    (never the out/dispatch journal): `trains` maps `train_id ->
-    {"wis": [...], "base": <sha>}` from readable metadata; `unreadable` is the
-    list of WI ids whose reservation metadata is missing/malformed. Mirrors
-    agent_dispatch._reservation_trains read-only."""
-    code, out = _git(
-        root, "for-each-ref", "--format=%(refname)", _RESERVATION_NS.rstrip("/")
-    )
-    trains, unreadable = {}, []
-    if code != 0:
-        return trains, unreadable
-    for ln in out.splitlines():
-        refname = ln.strip()
-        if not refname.startswith(_RESERVATION_NS):
-            continue
-        wid = refname[len(_RESERVATION_NS) :]
-        if not _WI_REF_RE.match(wid):
-            continue
-        meta = _ref_meta(root, refname)
-        if not meta or not meta.get("train") or not meta.get("wis"):
-            unreadable.append(wid)
-            continue
-        entry = trains.setdefault(
-            meta["train"], {"wis": [], "base": (meta.get("base") or "").strip()}
-        )
-        entry["wis"].append(wid)
-    return trains, unreadable
-
-
-def _train_tip(root, tid):
-    """The train branch tip sha, or '' when the branch is absent."""
-    code, tip = _git(
-        root,
-        "rev-parse",
-        "--verify",
-        "--quiet",
-        "refs/heads/" + _TRAIN_BRANCH_PREFIX + tid,
-    )
-    return tip.strip() if code == 0 else ""
-
-
-def _train_blocked_trailers(root, base, tip):
-    """`[(wi, blockref, commit_sha)]` for every `Blocked-WI:` trailer in the
-    commit bodies of `base..tip` (id-order per commit, newest first). Git's own
-    trailer parser is deliberately NOT used: the frozen-plan commit separates its
-    trailer lines with blank lines, which git treats as separate paragraphs and
-    drops all but the last — so a line-regex over the raw `%B` body is the
-    durable read (WI-229's `9fed833` shape)."""
-    rng = (base + ".." + tip) if base else tip
-    code, out = _git(root, "log", rng, "--format=%x1e%H%n%B")
-    if code != 0:
-        return []
-    found = []
-    for rec in out.split("\x1e"):
-        if not rec.strip("\n"):
-            continue
-        sha, _, body = rec.strip("\n").partition("\n")
-        wi, blockref = "", ""
-        for bl in body.splitlines():
-            m = re.match(r"(?i)^\s*Blocked-WI:\s*(WI-\d+)\s*$", bl)
-            if m:
-                wi = m.group(1)
-            m = re.match(r"(?i)^\s*BlockRef:\s*(\S+)\s*$", bl)
-            if m:
-                blockref = m.group(1)
-        if wi:
-            found.append((wi, blockref, sha.strip()))
-    return found
-
-
-def _attestation_pointer(root, tid, blockref, sha):
-    """The train read path to the blocking ratify doc for a stranded WI: the
-    BlockRef path (its `#anchor` stripped) when the train carries it, else the
-    first `docs/ratify/*` path the trailer commit touched, else the trailer
-    commit itself — all reachable with `git show <train>[:<path>]`."""
-    branch = _TRAIN_BRANCH_PREFIX + tid
-    if blockref:
-        path = blockref.split("#", 1)[0]
-        if path and _git(root, "cat-file", "-e", "{}:{}".format(branch, path))[0] == 0:
-            return "`git show {}:{}`".format(branch, path)
-    code, out = _git(root, "show", "--name-only", "--format=", sha)
-    if code == 0:
-        ratify = sorted(
-            p.strip() for p in out.splitlines() if p.strip().startswith("docs/ratify/")
-        )
-        if ratify:
-            return "`git show {}:{}`".format(branch, ratify[0])
-    return "the frozen plan at commit `{}` (`git show {}`)".format(sha[:12], sha[:12])
-
-
-def _stranded_pending(root, already):
-    """Source (a′): reserved WIs stranded on a PRESENT train awaiting owner
-    attestation — the WI-229 shape the registry doesn't mark `blocked` (its row
-    stays queued while the plan freezes on the train). For each persistent
-    reservation whose train branch exists, the train's commit bodies are scanned
-    for a `Blocked-WI:` trailer naming a reserved WI whose registry row is still
-    OPEN (queued/active/blocked); that projects an attestation line with the
-    train read path to the blocking ratify doc. `already` = the WI ids source (a)
-    covered, skipped so no WI double-lists."""
-    reg = {
-        w["id"]: w["status"]
-        for w in ct.load_wis(ct.read_registry_rows(root / ct.WI_CSV))[0]
-    }
-    open_states = {"queued", "active", "blocked"}
-    trains, _ = _scan_reservations(root)
-    lines, seen = [], set()
-    for tid in sorted(trains):
-        reserved = set(trains[tid]["wis"])
-        tip = _train_tip(root, tid)
-        if not tip:
-            continue
-        for wi, blockref, sha in _train_blocked_trailers(
-            root, trains[tid]["base"], tip
-        ):
-            if wi not in reserved or wi in already or wi in seen:
-                continue
-            if reg.get(wi) not in open_states:
-                continue
-            seen.add(wi)
-            lines.append(
-                "- **{}** — awaiting owner attestation/ratification on train `{}`: "
-                "{}; attest, amend, or park the row.".format(
-                    wi, tid, _attestation_pointer(root, tid, blockref, sha)
-                )
-            )
-    return lines
-
-
-def _conflict_pending(root):
-    """Source (b): one line per durable source-conflict record under
-    refs/llm/conflict/* (WI-232), naming the train and its conflicted paths — a
-    genuine human merge the dispatcher must not retry. An unreadable/malformed
-    record is surfaced too (not silently skipped), matching the reservations'
-    fail-loud posture."""
-    code, out = _git(
-        root, "for-each-ref", "--format=%(refname)", _CONFLICT_NS.rstrip("/")
-    )
-    if code != 0:
-        return []
-    tids = sorted(
-        ln.strip()[len(_CONFLICT_NS) :]
-        for ln in out.splitlines()
-        if ln.strip().startswith(_CONFLICT_NS)
-    )
-    lines = []
-    for tid in tids:
-        meta = _ref_meta(root, _CONFLICT_NS + tid)
-        if not meta:
-            lines.append(
-                "- **Unreadable conflict record** — inspect `{}{}`.".format(
-                    _CONFLICT_NS, tid
-                )
-            )
-            continue
-        paths = meta.get("paths") or "textual conflict against the integrated tree"
-        train = meta.get("train") or tid
-        lines.append(
-            "- **Source conflict** — train `{}` conflicts on {}; resolve by hand "
-            "(merge/rebase the train), then relaunch.".format(train, paths)
-        )
-    return lines
-
-
-def _quarantine_pending(root):
-    """Source (c): one line per quarantined train, re-derived from the DURABLE
-    reservation refs (never the out/dispatch journal): a reservation whose
-    metadata is unreadable, or whose train branch is missing — the reconcile
-    quarantine conditions (agent_dispatch._reservation_trains /
-    _reconcile_reserved_train). id-sorted for determinism."""
-    trains, unreadable = _scan_reservations(root)
-    lines = [
-        "- **Quarantined reservation** `{0}` — unreadable reservation metadata; "
-        "inspect `{1}{0}`.".format(wid, _RESERVATION_NS)
-        for wid in sorted(unreadable)
-    ]
-    for tid in sorted(trains):
-        if not _train_tip(root, tid):
-            lines.append(
-                "- **Quarantined train** `{}` — reservation without a train branch "
-                "({}); inspect the reservation refs.".format(
-                    tid, ", ".join(sorted(trains[tid]["wis"]))
-                )
-            )
-    return lines
 
 
 def _spine_pending(root):
@@ -4881,31 +4613,6 @@ def _spine_pending(root):
     return lines
 
 
-def _runstate_pending(root):
-    """Source (d): the run-state `ask:` line when docs/run-state reads
-    NEEDS-HUMAN (the first non-comment line, `read_declared`'s rule). Empty for
-    RUNNING/BLOCKED/DONE or an absent file."""
-    p = root / "docs" / "run-state"
-    if not p.is_file():
-        return []
-    state, ask = "", ""
-    for ln in p.read_text(encoding="utf-8", errors="replace").splitlines():
-        s = ln.strip()
-        if not s or s.startswith("#"):
-            continue
-        if not state:
-            state = s
-        elif s.lower().startswith("ask:") and not ask:
-            ask = s[len("ask:") :].strip()
-    if state != "NEEDS-HUMAN":
-        return []
-    tail = " — {}".format(ask) if ask else ""
-    return [
-        "- **Run-state NEEDS-HUMAN**{} — see the stop banner / "
-        "[status.md](status.md).".format(tail)
-    ]
-
-
 # Byte-identical with `agent_common.PAUSE_MALFORMED`: the coordinator's reader
 # and this projection must say the same thing about an unreadable pause file.
 # Copied rather than imported — this module's ONE sanctioned sibling import is
@@ -4950,60 +4657,32 @@ def _pause_pending(root):
 
 
 def pending_block(root):
-    """The GENERATED PENDING block CONTENT (between the markers) for
-    the generated owner surface, emitted in two regions separated by the always-present
-    ``PENDING_LOCAL_LABEL`` line:
-
-      * a committed-tree-PURE region (blocked WI rows with a BlockRef +
-        Draft/Modified spine rows owing a ratification/re-attest + the
-        NEEDS-HUMAN run-state ask + the tracked `docs/work/pause` declaration)
-        that the harness `open-items` freshness gate byte-compares through
-        `gen_open_items.py --check` (the renderer since WI-322, NOT `--status`)
-        — a pure function of the committed tree, so it reads identically in any
-        clone; and
-      * a MACHINE-LOCAL advisory region (refs/llm/conflict records, quarantined
-        trains, stranded-train attestations) generated for humans but EXCLUDED
-        from the byte-compare on every machine, because those `refs/llm/*` don't
-        transport with clone/push (M-10/WI-266). `_mask_machine_local` drops it
-        for the compare using ``PENDING_LOCAL_LABEL`` as the boundary.
-
-    Derived from durable state ONLY (never the journal cache), deterministic
-    (sorted, no clocks) so the gated region is byte-stable, exactly like the
-    status snapshot."""
+    """The GENERATED PENDING block CONTENT (between the markers) for the
+    generated owner surface: blocked WI rows with a BlockRef + Draft/Modified
+    spine rows owing a ratification/re-attest + the tracked `docs/work/pause`
+    declaration. A pure function of the committed tree — deterministic (sorted,
+    no clocks) — so the harness `open-items` freshness gate byte-compares the
+    WHOLE block through `gen_open_items.py --check` (the renderer since
+    WI-322, NOT `--status`) and it reads identically in any clone. (The
+    dispatcher-era machine-local advisory region retired with the dispatcher
+    at concurrency-restructure Phase 5.)"""
     pure_lead = (
         "_Pending owner actions — a generated projection of durable, "
         "committed-tree state (blocked rows with a ratify/attest pointer, "
         "Draft/Modified spine rows owing a ratification or re-attest, and the "
-        "NEEDS-HUMAN run-state ask); regenerated by `python "
+        "tracked pause declaration); regenerated by `python "
         "project-trajectory/scripts/gen_trajectory.py --status`, do not hand-edit. "
         "This section is freshness-gated by the harness `status-map` step. The "
         "briefs above are hand-authored and untouched by regeneration._"
     )
-    blocked_lines, blocked_ids = _blocked_pending(root)
-    pure_items = (
-        blocked_lines
-        + _spine_pending(root)
-        + _runstate_pending(root)
-        + _pause_pending(root)
-    )
+    blocked_lines, _blocked_ids = _blocked_pending(root)
+    pure_items = blocked_lines + _spine_pending(root) + _pause_pending(root)
     pure_body = (
         "\n".join(pure_items)
         if pure_items
         else "_None — no durable owner action is pending._"
     )
-    local_items = (
-        _stranded_pending(root, blocked_ids)
-        + _conflict_pending(root)
-        + _quarantine_pending(root)
-    )
-    local_body = (
-        "\n".join(local_items)
-        if local_items
-        else "_None currently observed on this machine._"
-    )
-    return "{}\n\n{}\n\n{}\n\n{}".format(
-        pure_lead, pure_body, PENDING_LOCAL_LABEL, local_body
-    )
+    return "{}\n\n{}".format(pure_lead, pure_body)
 
 
 def status_block(root):

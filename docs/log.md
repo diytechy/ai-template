@@ -5534,7 +5534,7 @@ Every addition is warn-first / opt-in — **no spine rows change, nothing
 downstream must migrate**.
 
 **State changes (prepare agent-resume).** **WI-145 → done** (Deliverable records
-both rulings + the state flip); [run-state](run-state) **NEEDS-HUMAN → RUNNING**
+both rulings + the state flip); `run-state` **NEEDS-HUMAN → RUNNING**
 (the `ask:` line dropped); `next-wi` stays **WI-141** (the OI-8-gated
 NOTE refreshed — the pin is now live). `open-items.md`: the OI-8 + OI-9 sections
 deleted (a ruling clears its brief); OI-3/OI-4/OI-7 remain open (block nothing).
@@ -6499,7 +6499,7 @@ unblocks WI-144; the build itself is WI-144's autonomous resume.
   PROCESS_OPTIONS "Unattended operation" already stated "run-state is left
   untouched." No code/test change.
 
-**State changes (unblock the loop).** [run-state](run-state) **NEEDS-HUMAN →
+**State changes (unblock the loop).** `run-state` **NEEDS-HUMAN →
 RUNNING** (ask line dropped, pause caveat added); `next-wi` stays
 **WI-144**, its NOTE rewritten for the final round (the critique budget is a
 per-run in-memory counter, so a fresh launch restores it — no reset file). Filed

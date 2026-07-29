@@ -31,8 +31,8 @@ WHAT IT RENDERS, in the order an owner needs it:
      evidence still verifies what the row now SAYS, and the second question needs
      the cells the first one omits (owner, 2026-07-27).
   3. PENDING OWNER ACTIONS — the pointer projection `gen_trajectory` already
-     derives (blocked rows, the spine pointers, the NEEDS-HUMAN ask) plus its
-     machine-local advisory, reused verbatim rather than recomputed.
+     derives (blocked rows, the spine pointers, the tracked pause), reused
+     verbatim rather than recomputed.
 
 ANTI-DUPLICATION, deliberately: the git archaeology and the cell comparison live
 in `trace.reattest_model`, and the pending projection lives in
@@ -40,10 +40,10 @@ in `trace.reattest_model`, and the pending projection lives in
 second opinion about what is pending or what changed — if this view and the
 `--ratify` brief ever disagree, the brief is authoritative and this is the bug.
 
-Freshness: `--check` byte-compares the regenerated view against the file, with
-the machine-local advisory region MASKED — those `refs/llm/*` facts do not
-transport with clone/push, so gating on them would red a second clone (the
-M-10/WI-266 rule the markdown block already followed).
+Freshness: `--check` byte-compares the regenerated view against the file — a
+pure function of the committed tree since the dispatcher-era machine-local
+advisory region retired (concurrency-restructure Phase 5), so it holds in any
+clone.
 
 Stdlib only, cross-platform, deterministic (sorted inputs, no clocks) so the
 gated compare is byte-stable.
@@ -67,10 +67,6 @@ import trace as tr  # noqa: E402
 OPEN_ITEMS_CSV = "docs/requirements/open-items.csv"
 OUT_REL = "docs/open-items.html"
 
-# The advisory region is regenerated per machine and excluded from --check, the
-# same split (and the same reason) as the markdown block's PENDING_LOCAL_LABEL.
-LOCAL_BEGIN = "<!-- BEGIN MACHINE-LOCAL -->"
-LOCAL_END = "<!-- END MACHINE-LOCAL -->"
 # The view RECORDS the baseline it was rendered against, so `--check` re-renders
 # with the same one instead of silently comparing against a different history.
 # Without this, `--since` would be a write-only flag whose output the freshness
@@ -602,7 +598,7 @@ def render(root, since=None):
         root, reg.srs, reg.llrs, reg.tcs, since=since, statuses=("modified", "draft")
     )
     items = load_open_items(root)
-    pure, local = pending_regions(root)
+    pure = pending_block_text(root)
     counts = {
         "pending": sum(
             1 for r in items if (r.get("Status") or "").strip().lower() == "pending"
@@ -643,12 +639,6 @@ def render(root, since=None):
         "re-attestation</p>{attestations}</section>\n"
         '<section class="band"><p class="eyebrow">3 · Pending owner actions '
         "(derived)</p>{pointers}</section>\n"
-        "{lb}\n"
-        '<section class="band"><p class="eyebrow">Machine-local advisory</p>'
-        '<p class="sub">Re-derived from this machine\'s <code>refs/llm/*</code>; these '
-        "do not transport with clone or push, so this region is excluded from the "
-        "freshness compare and may read empty in another clone.</p>{local}</section>\n"
-        "{le}\n"
         "<footer>Source: <code>docs/requirements/open-items.csv</code> + the spine "
         "registries. Rule a decision by appending to <code>docs/log.md</code>'s "
         "Decisions log and setting the row's <code>Status</code>; bless an amendment "
@@ -665,32 +655,14 @@ def render(root, since=None):
             model, {r.get("SR-ID"): r for r in reg.srs if r.get("SR-ID")}
         ),
         pointers=_pointer_list(pure),
-        local=_pointer_list(local),
-        lb=LOCAL_BEGIN,
-        le=LOCAL_END,
         **counts,
     )
 
 
-def pending_regions(root):
-    """`(pure, machine_local)` markdown item text, reused from gen_trajectory's
-    pending projection rather than recomputed — one home for "what is pending"."""
-    block = gt.pending_block(root)
-    label = gt.PENDING_LOCAL_LABEL
-    if label in block:
-        pure, local = block.split(label, 1)
-    else:  # pragma: no cover - the label is emitted unconditionally today
-        pure, local = block, ""
-    return pure, local
-
-
-def mask_local(text):
-    """`text` with the machine-local region blanked, for the freshness compare."""
-    start = text.find(LOCAL_BEGIN)
-    end = text.find(LOCAL_END)
-    if start == -1 or end == -1 or end < start:
-        return text
-    return text[: start + len(LOCAL_BEGIN)] + text[end:]
+def pending_block_text(root):
+    """The pending-projection markdown item text, reused from gen_trajectory
+    rather than recomputed — one home for "what is pending"."""
+    return gt.pending_block(root)
 
 
 def main(argv=None):
@@ -716,7 +688,7 @@ def main(argv=None):
         "--check",
         action="store_true",
         help="exit 1 when the file is stale, writing nothing (the freshness gate; "
-        "the machine-local region is masked before comparing)",
+        "a pure function of the committed tree)",
     )
     args = ap.parse_args(argv)
     root = Path(args.root).resolve()
@@ -759,7 +731,7 @@ def main(argv=None):
         # so the gate compares like with like on every machine and in CI.
         since = stamped_baseline(current)
         fresh = render(root, since=since)
-        if normalize(mask_local(current)) != normalize(mask_local(fresh)):
+        if normalize(current) != normalize(fresh):
             print(
                 "gen_open_items: {} STALE — run "
                 "`python scripts/gen_open_items.py`".format(OUT_REL)

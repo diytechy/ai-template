@@ -290,11 +290,11 @@ def test_constants_overridable_from_env():
 
 
 def test_failure_action_keyed_to_gate_policy():
-    assert route.failure_action("attended")["run_state"] == "NEEDS-HUMAN"
+    assert route.failure_action("attended")["mode"] == "attended"
     sr = route.failure_action("single-ratify")
-    assert sr["run_state"] == "RUNNING" and sr["keep_nondependent"] and sr["pause_wi"]
+    assert sr["keep_nondependent"] and sr["pause_wi"] and not sr["design_check"]
     au = route.failure_action("autonomous")
-    assert au["design_check"] and au["run_state"] == "RUNNING" and au["pause_wi"]
+    assert au["design_check"] and au["pause_wi"]
     # Absent/unknown defaults to attended (the safe stop).
     assert route.failure_action("")["mode"] == "attended"
 

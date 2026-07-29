@@ -83,9 +83,8 @@ FRAGMENT_NAME_RE = re.compile(
 )
 
 # Inline markdown link targets, and the "not a repo-relative path" exclusions.
-# Kept LOCAL rather than imported from agent_dispatch (whose mirror pair proved
-# these edge cases): that module retires with the old train machinery, and this
-# step must outlive it.
+# Kept LOCAL on purpose: the dispatcher's mirror pair proved these edge cases,
+# and this step outlived that module (retired at Phase 5).
 MD_LINK_TARGET_RE = re.compile(r"(\]\()([^)\s]+)(\))")
 URL_SCHEME_RE = re.compile(r"^(?:[a-z][a-z0-9+.-]*:|//)", re.I)
 

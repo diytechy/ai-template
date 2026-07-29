@@ -149,7 +149,7 @@ Contracts (interfaces): IF-037, IF-065
 
 | Public item | Summary | Implements |
 |---|---|---|
-| `read_declared(path, default)` | Read a one-word declared-policy file (docs/gate, docs/run-state, …): |  |
+| `read_declared(path, default)` | Read a one-word declared-policy file (docs/gate, docs/gate-policy, …): |  |
 | `read_agent_loop_config(docs)` | The declared coordinator dials — the ``[agent-loop]`` section of |  |
 | `resolve_coordinator_dials(args, docs)` | ``(model, model_map, jobs_opt)`` for the coordinator, each resolved by the |  |
 | `tracked_pause(docs_dir)` | The **tracked** pause declaration — `docs/work/pause` |  |
@@ -531,7 +531,6 @@ Contracts (interfaces): IF-009, IF-023, IF-077
 | `staged_completion_findings(root)` | The close-time half of the reconciler (WI-352): a staged commit flipping a |  |
 | `status_forward_only_findings(root, wis)` | The status.md forward-only rule (WI-200) — restores the WI-180-retired R-D |  |
 | `dead_dependency_findings(wis)` | Surface a live WI that hard-depends on a `retired` predecessor (WI-267). |  |
-| `run_state_findings(wis, root)` | Warn when an end-state would park a runnable queued work item (WI-115). |  |
 | `backlog_staleness_findings(root, wis)` | WI-205 — the backlog-staleness warn (warn-only, the WI-129 checker stance). |  |
 | `staged_findings(root)` | The no-validation-delta warn (S0 ruling #2 corollary; warn-first). |  |
 | `staged_spine_findings(root)` | The amend-without-flip warn (WI-316; warn-first, `--staged` only). |  |
@@ -648,8 +647,7 @@ Contracts (interfaces): IF-073, IF-074, IF-075
 | `changed_percent(before, after)` | How much of the cell moved, counting WORDS — whitespace runs are dropped |  |
 | `md_inline(text)` | The few markdown inline forms the reused pointer lines actually use — |  |
 | `render(root, since)` | The whole page. Deterministic: every input is sorted upstream. |  |
-| `pending_regions(root)` | `(pure, machine_local)` markdown item text, reused from gen_trajectory's |  |
-| `mask_local(text)` | `text` with the machine-local region blanked, for the freshness compare. |  |
+| `pending_block_text(root)` | The pending-projection markdown item text, reused from gen_trajectory |  |
 | `main(argv)` |  |  |
 
 ### `scripts/gen_release_checklist`
@@ -700,7 +698,7 @@ Contracts (interfaces): IF-011, IF-024, IF-052, IF-056, IF-071
 | `know_view(root)` | The OKF concept graph as a START-COLLAPSED, type-tiered Simulink-style drill | SR-089 |
 | `process_panel(root, wis, stats)` | The Process tab + panel as (tab, panel), or None when there is no | SR-055 |
 | `build_html(root, wis)` |  |  |
-| `pending_block(root)` | The GENERATED PENDING block CONTENT (between the markers) for |  |
+| `pending_block(root)` | The GENERATED PENDING block CONTENT (between the markers) for the |  |
 | `status_block(root)` | The GENERATED STATUS block CONTENT (between the markers) for docs/status.md: |  |
 | `run_status(root, check)` | `--status` mode: splice the derived snapshot into docs/status.md (or, with |  |
 | `main()` |  |  |

@@ -223,7 +223,12 @@ BASELINE = {
     # pending projection's rule; OSError propagates so callers own the off-git
     # degrade). Nine census sanctions went dead for +25 lines of prose.
     # Re-stamp down with WI-280.
-    "gen_trajectory.py": 5281,
+    # -321 (5281 -> 4960), Phase 5 C2 (2026-07-29): the machine-local advisory
+    # machinery left with the dispatcher — the refs/llm reservation/conflict/
+    # quarantine/stranded-train pending sources, the run-state ask, the
+    # PENDING_LOCAL_LABEL split and its mask. pending_block is now a pure
+    # function of the committed tree. Ratcheted DOWN.
+    "gen_trajectory.py": 4960,
     # (agent_dispatch.py and its whole bump history retired with the module
     # at concurrency-restructure Phase 5 - the dispatcher deleted wholesale;
     # the surviving integrator is integrate.py, below this threshold.)
@@ -252,7 +257,10 @@ BASELINE = {
     # the plain-launch dispatch_run branch (now a refusal naming
     # `integrate.py claim`). Ratcheted DOWN; the deeper item-2 shrink
     # (WORKER_PROMPT re-grounding, --train) re-stamps again when it lands.
-    "agent_loop.py": 3008,
+    # -3 (3008 -> 3005), Phase 5 C2 (2026-07-29): the dual-plan flag path's two
+    # _write_runstate calls left with docs/run-state (stop banner + exit code
+    # carry the outcome). Ratcheted DOWN.
+    "agent_loop.py": 3005,
     # +30 (2206 -> 2236), WI-065: `tc_citation_findings` — the TC-`Verifies`
     # rules lifted out of `analyze` so the cell could accept `IF-###` seam ids.
     # Most of the bump is that helper's docstring, which is where the RULING now
@@ -436,7 +444,11 @@ BASELINE = {
     # per-path on this repo) plus the git-time -> mtime -> name ladder and the
     # docstring stating both naming generations. Reviewed bump, log 2026-07-29.
     # Re-stamp down with WI-280.
-    "check_trajectory.py": 3122,
+    # -22 (3122 -> 3100), Phase 5 C2 (2026-07-29): run_state_findings (the
+    # WI-115 stale-end-state warn) retired with docs/run-state — no writer, no
+    # file, no staleness to warn about. Ratcheted DOWN; the CSV-plumbing
+    # down-stamp still lands with Phase 5 item 3.
+    "check_trajectory.py": 3100,
     # +1 (1916 -> 1917), WI-279: one MAPPING row registering the new
     # scripts/check_coverage.py kit gate so it ships downstream — a required
     # one-line registration, not monolith growth (the reviewed-bump escape the
@@ -514,7 +526,10 @@ BASELINE = {
     # _declared_test_command re-worded for the deleted module. The scheduled
     # BIG down-stamp here (the +228/+15 CSV-reader entries above) lands with
     # Phase 5 item 3, not this commit.
-    "agent_common.py": 1718,
+    # -25 (1718 -> 1693), Phase 5 item 1/C2 (2026-07-29): _write_runstate and
+    # SANCTIONED_TRAIN_SUBJECT_PREFIXES retired with docs/run-state and the
+    # commit-msg train floor; END_STATES/docstring re-words. Ratcheted DOWN.
+    "agent_common.py": 1693,
 }
 
 

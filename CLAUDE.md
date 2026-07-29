@@ -100,7 +100,7 @@ that easier to achieve in a real project — or get out of the way.
   rule applies to the kit scripts, not to testing them). CI:
   `.github/workflows/test.yml` runs it on Linux + Windows (Python 3.11 + latest)
   and macOS (latest).
-- [`docs/status.md`](docs/status.md) + `docs/{gate-policy,push-policy,privacy-check,run-state}`
+- [`docs/status.md`](docs/status.md) + `docs/{gate-policy,push-policy,privacy-check}`
   + root `agent-resume.{cmd,sh,command}` — the kit's **unattended layer
   self-applied**: the launchers (wired for Claude, strong tier) run
   `project-trajectory/scripts/agent_loop.py --root .`, resuming from

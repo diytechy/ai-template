@@ -220,9 +220,9 @@ def test_the_one_non_literal_site_in_the_kit_is_lf():
         for node, _label, _declared, value in text_write_calls(_parsed(path))
         if value == "<non-literal>"
     ]
-    assert sites == [("gen_open_items.py", 792)], sites
+    assert sites == [("gen_open_items.py", 764)], sites
     source = (SCRIPTS / "gen_open_items.py").read_text(encoding="utf-8").splitlines()
-    assert "chr(10)" in source[791], source[791]
+    assert "chr(10)" in source[763], source[763]
 
 
 def test_a_non_literal_newline_is_reported_not_accepted(tmp_path):
@@ -239,9 +239,9 @@ def test_a_non_literal_newline_is_reported_not_accepted(tmp_path):
 def test_the_three_crash_paths_actually_run():
     """The regression 130-REVIEW-A found by CALLING the functions.
 
-    `docs / "run-state".open(...)` parses as `docs / ("run-state".open(...))`, so
-    these three raised AttributeError on live paths while ruff passed and the full
-    suite passed — nothing called them. Behaviour, not syntax."""
+    `docs / "some-file".open(...)` parses as `docs / ("some-file".open(...))`, so
+    three writers raised AttributeError on live paths while ruff passed and the
+    full suite passed — nothing called them. Behaviour, not syntax."""
     import json
     import tempfile
     from pathlib import Path
@@ -253,9 +253,9 @@ def test_the_three_crash_paths_actually_run():
     docs = root / "docs"
     docs.mkdir()
 
-    ac._write_runstate(docs, "NEEDS-HUMAN", "the ask")
-    assert (docs / "run-state").read_bytes() == b"NEEDS-HUMAN\nask: the ask\n"
-
+    # (_write_runstate — one of the three original crash paths — retired with
+    # the dispatcher and its docs/run-state file at concurrency-restructure
+    # Phase 5; the two surviving paths keep the behaviour pinned.)
     ac.regenerate_index(docs)
     index = (docs / "iteration_index.md").read_bytes()
     assert index and b"\r" not in index

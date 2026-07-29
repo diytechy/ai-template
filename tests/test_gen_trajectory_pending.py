@@ -1,15 +1,14 @@
 """The pending-owner-actions projection (WI-234), as DERIVED (WI-322).
 
-`gen_trajectory.pending_block` is a pure projection of DURABLE state — never the
-out/dispatch journal cache (§11):
+`gen_trajectory.pending_block` is a pure projection of committed-tree state:
 
-  (a) `blocked` WI rows carrying a BlockRef (the attestation/ratification page),
-      with the `git show <train>:<path>` read path when the doc lives only on a
-      train branch (the WI-229 shape);
-  (b) source-conflict records under refs/llm/conflict/* (WI-232): train + paths;
-  (c) quarantined trains (a reservation whose train branch is missing / whose
-      metadata is unreadable), re-derived from the durable refs;
-  (d) the run-state `ask:` line when docs/run-state reads NEEDS-HUMAN.
+  (a) `blocked` WI rows carrying a BlockRef (the attestation/ratification page);
+  (e) Draft/Modified SR rows (WI-316) owing a ratification / re-attest;
+  (f) the tracked `docs/work/pause` declaration (concurrency-restructure §5.6).
+
+(The dispatcher-era sources — refs/llm conflict records, quarantined trains,
+stranded-train attestations, the run-state ask, and the machine-local advisory
+split — retired with the dispatcher at Phase 5; their tests went with them.)
 
 Each regression builds a temp git repo and asserts on the DERIVATION: the line
 appears, its pointer is right, and resolving the state drops it.
@@ -19,7 +18,7 @@ whose subject WAS the splice (marker pairs, CRLF round-trip, the hand-authored
 region staying byte-untouched, the freshness compare and its machine-local mask)
 went with the code they guarded — porting them would have guarded nothing. Their
 live successors are in `tests/test_gen_open_items.py`, against the generated
-view: the mask, the staleness bite, and the vacuous-non-adopter posture.
+view: the staleness bite and the vacuous-non-adopter posture.
 """
 
 import subprocess
@@ -85,53 +84,7 @@ def _block(repo):
     return load_script("gen_trajectory").pending_block(repo)
 
 
-def _commit_tree_ref(repo, ref, message):
-    """Create `ref` pointing at an off-history commit whose message is `message`
-    (the reservation/conflict record shape record_conflict/reserve_traincar use)."""
-    tree = _git(repo, "rev-parse", "HEAD^{tree}").stdout.strip()
-    sha = _git(repo, "commit-tree", tree, "-p", "HEAD", "-m", message).stdout.strip()
-    _git(repo, "update-ref", ref, sha)
-    return sha
-
-
-# --- (a) blocked row with a BlockRef on a train branch -------------------------
-
-
-def test_blocked_row_projects_with_train_read_path(tmp_path):
-    # A blocked WI whose BlockRef doc lives ONLY on a train branch projects one
-    # line carrying the `git show <train>:<path>` read path.
-    _init(
-        tmp_path,
-        "WI-001,Seed,scripts,,,done,seeded,,,,\n"
-        "WI-050,Split,requirements,,,blocked,,,,high-risk,docs/ratify/WI-050.md\n",
-    )
-    # Freeze the ratify doc on a train branch; it is ABSENT from the dev tree.
-    train = "llm/train/p0-g3-WI-050-abcd"
-    _git(tmp_path, "checkout", "-q", "-b", train)
-    (tmp_path / "docs" / "ratify").mkdir()
-    (tmp_path / "docs" / "ratify" / "WI-050.md").write_text(
-        "frozen plan\n", encoding="utf-8"
-    )
-    _git(tmp_path, "add", "-A")
-    _git(tmp_path, "commit", "-q", "-m", "freeze plan")
-    _git(tmp_path, "checkout", "-q", "master")
-    # (git's default branch may be master or main; normalize.)
-    if _git(tmp_path, "rev-parse", "--verify", "master").returncode != 0:
-        _git(tmp_path, "checkout", "-q", "main")
-
-    body = _block(tmp_path)
-    assert "WI-050" in body
-    assert "git show {}:docs/ratify/WI-050.md".format(train) in body
-
-    # Resolving (unblock the row) drops the line on the next regeneration.
-    wi = tmp_path / "docs" / "requirements" / "work-items.csv"
-    wi.write_text(
-        wi.read_text(encoding="utf-8").replace(
-            ",blocked,,,,high-risk,docs/ratify/WI-050.md", ",done,delivered,,,,"
-        ),
-        encoding="utf-8",
-    )
-    assert "WI-050" not in _block(tmp_path)
+# --- (a) blocked row with a BlockRef --------------------------------------
 
 
 def test_blocked_row_with_dev_tree_doc_cites_the_plain_path(tmp_path):
@@ -149,83 +102,6 @@ def test_blocked_row_with_dev_tree_doc_cites_the_plain_path(tmp_path):
     body = _block(tmp_path)
     assert "`docs/ratify/WI-051.md`" in body
     assert "git show" not in body
-
-
-# --- (b) source-conflict records under refs/llm/conflict/* ---------------------
-
-
-def test_conflict_record_projects_train_and_paths(tmp_path):
-    _init(tmp_path)
-    _commit_tree_ref(
-        tmp_path,
-        "refs/llm/conflict/p0-g3-WI-060-c0de",
-        '{"train": "p0-g3-WI-060-c0de", "tip": "x", "ihead": "y", '
-        '"paths": "src/a.py, docs/b.md"}',
-    )
-    body = _block(tmp_path)
-    assert "p0-g3-WI-060-c0de" in body
-    assert "src/a.py, docs/b.md" in body
-    assert "Source conflict" in body
-
-    # Clearing the conflict record drops the line.
-    _git(tmp_path, "update-ref", "-d", "refs/llm/conflict/p0-g3-WI-060-c0de")
-    assert "p0-g3-WI-060-c0de" not in _block(tmp_path)
-
-
-# --- (c) quarantined trains ----------------------------------------------------
-
-
-def test_quarantined_train_projects_reason(tmp_path):
-    # A reservation whose train branch is MISSING is quarantined
-    # (reservation-without-branch), re-derived from the durable refs.
-    _init(tmp_path)
-    _commit_tree_ref(
-        tmp_path,
-        "refs/llm/reservations/WI-070",
-        '{"train": "p0-g3-WI-070-9999", "wis": ["WI-070"], "base": "deadbeef"}',
-    )
-    body = _block(tmp_path)
-    assert "p0-g3-WI-070-9999" in body
-    assert "WI-070" in body
-    assert "Quarantined" in body
-
-    # Retiring the train (delete the reservation) drops the line.
-    _git(tmp_path, "update-ref", "-d", "refs/llm/reservations/WI-070")
-    assert "p0-g3-WI-070-9999" not in _block(tmp_path)
-
-
-def test_readable_reservation_with_branch_is_not_quarantined(tmp_path):
-    # A well-formed reservation whose train branch EXISTS is in-flight, not a
-    # pending owner action — it must NOT project.
-    _init(tmp_path)
-    train = "p0-g3-WI-071-1111"
-    _git(tmp_path, "branch", "llm/train/" + train)
-    _commit_tree_ref(
-        tmp_path,
-        "refs/llm/reservations/WI-071",
-        '{{"train": "{}", "wis": ["WI-071"], "base": "x"}}'.format(train),
-    )
-    assert "WI-071" not in _block(tmp_path)
-
-
-# --- (d) the run-state NEEDS-HUMAN ask -----------------------------------------
-
-
-def test_needs_human_runstate_ask_projects(tmp_path):
-    _init(tmp_path)
-    (tmp_path / "docs" / "run-state").write_text(
-        "NEEDS-HUMAN\nask: attest the frozen plan on the train\n", encoding="utf-8"
-    )
-    body = _block(tmp_path)
-    assert "NEEDS-HUMAN" in body
-    assert "attest the frozen plan on the train" in body
-
-
-def test_running_runstate_does_not_project(tmp_path):
-    _init(tmp_path)
-    (tmp_path / "docs" / "run-state").write_text("RUNNING\n", encoding="utf-8")
-    body = _block(tmp_path)
-    assert "None — no durable owner action is pending" in body
 
 
 # --- (e) Draft / Modified spine rows (WI-316) ----------------------------------
@@ -259,9 +135,6 @@ def test_modified_sr_projects_reattest_owed_with_brief_pointer(tmp_path):
     assert "--ratify modified" in body
     assert "`Modified`→`Verified`" in body and "`Planned`" in body
     assert "SR-000" not in body  # the example row never projects
-    # The line sits in the PURE region (above the machine-local label), so the
-    # freshness gate byte-compares it.
-    assert body.index("SR-004") < body.index("Machine-local advisory")
 
 
 def test_draft_sr_projects_ratification_owed(tmp_path):
@@ -303,110 +176,6 @@ def test_verified_sr_does_not_project_and_flip_drops_the_line(tmp_path):
     assert "None — no durable owner action is pending" in body
 
 
-# --- (a′) the stranded-train attestation shape (WI-229; the review CRITICAL) ---
-
-
-def _freeze_on_train(repo, wi, train, base_sha):
-    """Freeze a ratify doc on a fresh train branch with a blank-line-separated
-    `Blocked-WI:` trailer block — the exact WI-229 `9fed833` shape git's own
-    trailer parser drops (so the line-regex read is what surfaces it). Leaves the
-    checkout back on the default branch."""
-    default = _git(repo, "rev-parse", "--abbrev-ref", "HEAD").stdout.strip()
-    _git(repo, "checkout", "-q", "-b", "llm/train/" + train)
-    (repo / "docs" / "ratify").mkdir(exist_ok=True)
-    (repo / "docs" / "ratify" / (wi + ".md")).write_text(
-        "**State:** AWAITING OWNER ATTESTATION\n", encoding="utf-8"
-    )
-    _git(repo, "add", "-A")
-    body = (
-        "{0}: freeze the migration plan\n\n"
-        "Blocked-WI: {0}\n\n"
-        "BlockRef: docs/ratify/{0}.md#owner-attestation-hard-stop\n\n"
-        "Train: {1}\n\nBase: {2}\n"
-    ).format(wi, train, base_sha)
-    _git(repo, "commit", "-q", "-m", body)
-    _git(repo, "checkout", "-q", default)
-
-
-def test_stranded_train_attestation_projects_with_read_path(tmp_path):
-    # A reserved WI whose row is still QUEUED (never marked blocked) but whose
-    # train carries a Blocked-WI trailer + a frozen ratify doc must project one
-    # attestation line with the `git show <train>:<path>` read path. This is the
-    # WI-229 shape the review's CRITICAL flagged.
-    _init(
-        tmp_path,
-        "WI-001,Seed,scripts,,,done,seeded,,,,\n"
-        "WI-080,Migrate,requirements,,,queued,,,,high-risk,\n",
-    )
-    base = _git(tmp_path, "rev-parse", "HEAD").stdout.strip()
-    train = "p0-g3-WI-080-abcd"
-    _freeze_on_train(tmp_path, "WI-080", train, base)
-    _commit_tree_ref(
-        tmp_path,
-        "refs/llm/reservations/WI-080",
-        '{{"train": "{}", "wis": ["WI-080"], "base": "{}"}}'.format(train, base),
-    )
-    body = _block(tmp_path)
-    assert "WI-080" in body
-    assert "awaiting owner attestation" in body.lower()
-    assert "git show llm/train/{}:docs/ratify/WI-080.md".format(train) in body
-
-    # Resolve: the trailer WI's registry row flips to done -> the line drops.
-    wi = tmp_path / "docs" / "requirements" / "work-items.csv"
-    wi.write_text(
-        wi.read_text(encoding="utf-8").replace(
-            "WI-080,Migrate,requirements,,,queued,,,,high-risk,",
-            "WI-080,Migrate,requirements,,,done,migrated,,,,",
-        ),
-        encoding="utf-8",
-    )
-    assert "WI-080" not in _block(tmp_path)
-
-
-def test_stranded_not_double_listed_when_row_is_also_blocked(tmp_path):
-    # A WI whose row IS blocked-with-BlockRef and whose train also carries the
-    # trailer projects exactly once (source (a) wins; (a′) dedupes on the id).
-    _init(
-        tmp_path,
-        "WI-001,Seed,scripts,,,done,seeded,,,,\n"
-        "WI-081,Migrate,requirements,,,blocked,,,,high-risk,docs/ratify/WI-081.md\n",
-    )
-    base = _git(tmp_path, "rev-parse", "HEAD").stdout.strip()
-    train = "p0-g3-WI-081-abcd"
-    _freeze_on_train(tmp_path, "WI-081", train, base)
-    _commit_tree_ref(
-        tmp_path,
-        "refs/llm/reservations/WI-081",
-        '{{"train": "{}", "wis": ["WI-081"], "base": "{}"}}'.format(train, base),
-    )
-    # Exactly one listing line for the id (the `- **WI-081**` bullet prefix); the
-    # id also recurs inside that line's train/path pointer, so count the prefix.
-    assert _block(tmp_path).count("**WI-081**") == 1
-
-
-# --- (b) unreadable conflict record -------------------------------------------
-
-
-def test_unreadable_conflict_record_is_surfaced(tmp_path):
-    _init(tmp_path)
-    # A conflict ref pointing at a commit whose message is NOT JSON.
-    _commit_tree_ref(tmp_path, "refs/llm/conflict/p0-g3-WI-090-bad", "not json at all")
-    body = _block(tmp_path)
-    assert "Unreadable conflict record" in body
-    assert "p0-g3-WI-090-bad" in body
-
-
-# --- (c) unreadable-reservation-metadata quarantine ---------------------------
-
-
-def test_unreadable_reservation_metadata_projects_quarantine(tmp_path):
-    _init(tmp_path)
-    _commit_tree_ref(tmp_path, "refs/llm/reservations/WI-095", "totally not json")
-    body = _block(tmp_path)
-    assert "Quarantined reservation" in body
-    assert "WI-095" in body
-
-
 # --- (f) the tracked pause declaration, docs/work/pause -----------------------
 # `docs/concurrency-restructure.md` §5.6: status generation surfaces the open
 # pause so it is a visible accruing cost, never a forgotten one. Committed-tree
@@ -430,9 +199,6 @@ def test_tracked_pause_projects_reason_and_declared_since(tmp_path):
     _pause(tmp_path, 'reason = "draining for the audit"\nsince = "2026-07-29"\n')
     body = _block(tmp_path)
     assert "- **Paused since 2026-07-29** — draining for the audit." in body
-    # The bullet sits in the PURE region, above the machine-local label, so the
-    # freshness compare bites the moment the pause is committed.
-    assert body.index("Paused since") < body.index("Machine-local advisory")
     # Unpausing is a deletion; the projection is stateless, so the line clears.
     (tmp_path / "docs" / "work" / "pause").unlink()
     assert "Paused" not in _block(tmp_path)
