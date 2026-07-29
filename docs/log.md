@@ -17921,3 +17921,23 @@ Suite: full `pytest -q -n auto` **1857 passed, 7 skipped** (~12.1 min,
 staleness WARNs are the open window and the audit-backlog carry-overs,
 named in status.md); the pre-commit floor green with `ratify-fresh`
 against the new brief.
+
+## 2026-07-29 — re-attestation sitting: the Phase 3 spine amendment is BLESSED
+
+**Decision (owner, 2026-07-29):** the nine rows in
+[ratify/2026-07-29b-phase3.md](ratify/2026-07-29b-phase3.md) are attested —
+2 `Modified`→`Verified` (SR-006, LLR-006: the work-branch freshness-skip
+clause, whose evidence is the existing harness suite plus
+`tests/test_check_lane.py`, green against the amended text) and 7
+`Draft`→`Verified` (SR-130, SR-131, LLR-137, LLR-138, LLR-139, TC-130,
+TC-131; TC evidence automated and green in the same full-suite run — 1857
+passed / 7 skipped). The owner ruled in-session ("they look sufficient");
+the agent made the ratifying commit on the owner's behalf (gate-policy
+`autonomous`, the 2026-07-27 and 2026-07-29 precedent).
+
+The window closed same-day (open under two hours — close-windows-fast
+observed a third time). Gate re-derived **G3, all four phases**,
+`drafts=0 modified=0`. Regeneration ran through `trunk_step.py --regen` —
+the Phase 3 machinery regenerating its own ratification, second dogfood.
+Residual carried unchanged: WI-323's backlog-staleness WARN (audit-backlog
+rulings' to resolve, not this sitting's).
