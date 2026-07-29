@@ -4,7 +4,7 @@
 # (project-trajectory/PROCESS_OPTIONS.md "Unattended operation (walk-away
 # runs)"). This is the kit's own launcher applied to the kit repo itself: the
 # booted session inherits the committed context — CLAUDE.md, AGENTS.md,
-# docs/status.md, docs/requirements/work-items.csv, docs/log.md, and
+# docs/status.md, the docs/work/ registry, docs/log.md, and
 # docs/gate-policy (the live working surfaces; IMPROVEMENT_PLAN.md is archived
 # history, not a working surface). Read it first; it only exports the slots
 # below and runs the coordinator engine.

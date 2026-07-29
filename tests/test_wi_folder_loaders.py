@@ -1,20 +1,20 @@
-"""Phase 2b: the spec-folder work-item registry, read by the surviving loaders.
+"""The spec-folder work-item registry, read by the three surviving loaders.
 
-`docs/work/<status>/WI-###-<slug>.md` replaces `work-items.csv` as the work-item
-registry (docs/concurrency-restructure.md §2). The migration is a **dual read**
-resolved at the ROW level: three scripts — `schedule.py`, `check_trajectory.py`
-and `agent_common.py` — each carry their own verbatim copy of a reader that emits
-rows with the SAME 17 keys `csv.DictReader` yields for the CSV, so everything
-downstream of one function per script is untouched.
+`docs/work/<status>/WI-###-<slug>.md` is the ONE registry home
+(docs/concurrency-restructure.md §2; the CSV home retired at Phase 5,
+RULING-4). Three scripts — `schedule.py`, `check_trajectory.py` and
+`agent_common.py` — each carry their own verbatim copy of a reader that emits
+rows with the SAME 17 keys `csv.DictReader` once yielded, so everything
+downstream of one function per script was untouched by the migration.
 
-`tests/test_wi_loader_sync.py` proves the three copies agree with each other and
-with the CSV representation. THIS module tests what only the folder can do, and
-the places where the two homes are genuinely different questions:
+`tests/test_wi_loader_sync.py` proves the three copies agree with each other
+(and, as converter fidelity, with wi_convert's CSV form). THIS module tests
+what only the folder can do:
 
-  * the resolution itself (specs present -> folder wins; absent -> CSV, exactly
-    as today) and the deliberate asymmetry — both homes present is an INTEGRITY
-    ERROR from the validator and SILENCE from the scheduler and the coordinator,
-    because a worker reads the registry and does not adjudicate it;
+  * the one-home read (Phase 5: the CSV home retired) and the deliberate
+    asymmetry — a stray resurrected CSV is an INTEGRITY ERROR from the
+    validator and SILENCE from the scheduler and the coordinator, because a
+    worker reads the registry and does not adjudicate it;
   * the malformed-spec split, the same shape: the validator names the file, the
     other two skip it (a broken registry is the validator's job to report, not
     the scheduler's to crash on);
@@ -110,15 +110,16 @@ def csv_path(root):
 # --- the dual-read resolution -------------------------------------------------
 
 
-def test_the_csv_still_wins_when_there_is_no_spec_folder(tmp_path):
-    """Zero behaviour change is the whole bar for this phase: with no
-    `docs/work/`, every reader must go on reading the CSV exactly as before."""
+def test_no_spec_folder_reads_an_empty_registry(tmp_path):
+    """With no `docs/work/` the registry is simply EMPTY — the non-adopter
+    posture. A work-items.csv on disk changes nothing for the readers (the CSV
+    home retired at Phase 5); the validator alone names the stray file."""
     write_csv(
         tmp_path, [{"WI-ID": "WI-001", "Title": "from the csv", "Status": "done"}]
     )
-    assert sched.load_registry_rows(csv_path(tmp_path))[0]["Title"] == "from the csv"
-    assert ctraj.read_registry_rows(csv_path(tmp_path))[0]["Title"] == "from the csv"
-    assert acommon.load_wi_registry(tmp_path)["WI-001"]["Title"] == "from the csv"
+    assert sched.load_registry_rows(csv_path(tmp_path)) == []
+    assert ctraj.read_registry_rows(csv_path(tmp_path)) == []
+    assert acommon.load_wi_registry(tmp_path) == {}
 
 
 def test_the_folder_wins_when_it_holds_specs(tmp_path):
@@ -131,22 +132,21 @@ def test_the_folder_wins_when_it_holds_specs(tmp_path):
     assert acommon.load_wi_registry(tmp_path)["WI-001"]["Title"] == "from the folder"
 
 
-def test_an_empty_or_specless_work_dir_leaves_the_csv_authoritative(tmp_path):
+def test_an_empty_or_specless_work_dir_reads_empty(tmp_path):
     """An empty `docs/work/`, and one holding a file with no status directory
-    above it, are both "not a registry" — otherwise creating the folder would
-    silently blank the backlog."""
+    above it, both read as an empty registry — never a crash, and never a
+    resurrected CSV read."""
     write_csv(
         tmp_path, [{"WI-ID": "WI-001", "Title": "from the csv", "Status": "done"}]
     )
     work = tmp_path / "docs" / "work"
     work.mkdir(parents=True)
-    assert sched.spec_registry_dir(csv_path(tmp_path)) is None
+    assert sched.load_registry_rows(csv_path(tmp_path)) == []
     (work / "pause").write_text("reason = 'draining'\n", encoding="utf-8", newline="\n")
     (work / "WI-999-loose.md").write_text(
         spec_text("WI-999"), encoding="utf-8", newline="\n"
     )
-    assert sched.spec_registry_dir(csv_path(tmp_path)) is None
-    assert sched.load_registry_rows(csv_path(tmp_path))[0]["Title"] == "from the csv"
+    assert sched.load_registry_rows(csv_path(tmp_path)) == []
 
 
 def test_the_work_dir_is_derived_from_the_csv_path_not_a_second_constant(tmp_path):
@@ -176,32 +176,28 @@ def _example_spec(root):
     return path
 
 
-def test_the_example_spec_alone_leaves_the_csv_authoritative(tmp_path):
-    write_csv(
-        tmp_path, [{"WI-ID": "WI-001", "Title": "from the csv", "Status": "done"}]
-    )
+def test_the_example_spec_alone_is_an_empty_registry_without_findings(tmp_path):
+    """A fresh scaffold holds only the inert `-000` example: the registry
+    reads empty at `load_wis` (the example goes inert there) and, with no
+    stray CSV, the validator has nothing to say."""
     _example_spec(tmp_path)
-    for name, mod in MODULES:
-        assert mod.spec_registry_dir(csv_path(tmp_path)) is None, name
-    assert sched.load_registry_rows(csv_path(tmp_path))[0]["Title"] == "from the csv"
-    # And the finding a fresh scaffold must NOT get.
+    rows = ctraj.read_registry_rows(csv_path(tmp_path))
+    assert [r["WI-ID"] for r in rows] == ["WI-000"]
+    assert sched.load_wis(rows) == []
     errors = []
     ctraj.read_registry_rows(csv_path(tmp_path), errors)
     assert errors == [], errors
 
 
-def test_mutation_one_real_spec_beside_the_example_does_flip_authority(tmp_path):
-    """The rule is `-000` is not real, NOT `queued/ never counts` — so a genuine
-    spec in the same directory must still take the folder authoritative, or the
-    exemption would have silently disabled the whole home."""
-    write_csv(
-        tmp_path, [{"WI-ID": "WI-001", "Title": "from the csv", "Status": "done"}]
-    )
+def test_a_real_spec_beside_the_example_reads_normally(tmp_path):
+    """The `-000` exemption is `load_wis`'s inertness rule, never a directory
+    rule — a genuine spec in the same directory reads like any other."""
     _example_spec(tmp_path)
     write_spec(tmp_path, "queued", "WI-001", title="from the folder")
-    for name, mod in MODULES:
-        assert mod.spec_registry_dir(csv_path(tmp_path)) is not None, name
     assert sched.load_registry_rows(csv_path(tmp_path))[0]["Title"] == "from the folder"
+    assert [
+        w["id"] for w in sched.load_wis(sched.load_registry_rows(csv_path(tmp_path)))
+    ] == ["WI-001"]
 
 
 def test_the_example_spec_parses_and_then_goes_inert_in_load_wis(tmp_path):
@@ -237,17 +233,17 @@ def test_mutation_a_malformed_example_would_be_reported_not_hidden(tmp_path):
     assert len(errors) == 1 and "WI-000-example.md" in errors[0], errors
 
 
-# --- both homes present: the validator speaks, the others do not --------------
+# --- a stray CSV: the validator speaks, the others do not ---------------------
 
 
-def test_both_registries_present_is_an_integrity_error_from_the_validator(tmp_path):
+def test_a_stray_csv_is_an_integrity_error_from_the_validator(tmp_path):
     write_csv(tmp_path, [{"WI-ID": "WI-001", "Title": "csv", "Status": "done"}])
     write_spec(tmp_path, "queued", "WI-001")
     errors = []
     rows = ctraj.read_registry_rows(csv_path(tmp_path), errors)
     assert rows and rows[0]["Status"] == "queued"
     assert len(errors) == 1, errors
-    assert "two registries present" in errors[0]
+    assert "CSV registry home retired" in errors[0]
     assert "docs/work" in errors[0] and "work-items.csv" in errors[0]
 
 
@@ -263,7 +259,7 @@ def test_the_scheduler_and_the_coordinator_stay_silent_on_both_present(
     assert capsys.readouterr() == ("", "")
 
 
-def test_mutation_removing_the_csv_clears_the_two_registry_finding(tmp_path):
+def test_mutation_removing_the_csv_clears_the_stray_finding(tmp_path):
     """The finding's own remedy, exercised: delete the CSV and it goes away —
     otherwise the error would be unactionable noise rather than a migration step."""
     write_csv(tmp_path, [{"WI-ID": "WI-001", "Title": "csv", "Status": "done"}])
@@ -470,14 +466,14 @@ def test_the_validator_runs_clean_over_a_folder_registry(tmp_path):
     assert "2 work item(s)" in proc.stdout, proc.stdout
 
 
-def test_the_validator_fails_the_run_when_both_registries_exist(tmp_path):
-    """The two-registry state is an ERROR at the exit code, not a warn: it is
-    the one state where nothing can say which home is true."""
+def test_the_validator_fails_the_run_on_a_stray_csv(tmp_path):
+    """A resurrected CSV is an ERROR at the exit code, not a warn: it is a
+    second encoding of the registry that nothing reads."""
     _validator_repo(tmp_path)
     write_csv(tmp_path, [{"WI-ID": "WI-001", "Title": "csv", "Status": "done"}])
     proc = run_py([SCRIPTS / "check_trajectory.py"], cwd=tmp_path)
     assert proc.returncode == 1, proc.stdout + proc.stderr
-    assert "two registries present" in proc.stderr, proc.stderr
+    assert "CSV registry home retired" in proc.stderr, proc.stderr
     assert "error(s) in docs/work" in proc.stderr, proc.stderr
 
 

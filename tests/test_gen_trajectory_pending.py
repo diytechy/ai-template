@@ -25,11 +25,6 @@ import subprocess
 
 from conftest import load_script
 
-WI_HEADER = (
-    "WI-ID,Title,Workstream,SR-Refs,Predecessors,Status,Deliverable,"
-    "SpecRef,BuildTier,SafetyClass,BlockRef\n"
-)
-
 # Hand-authored briefs + the generated marker block, mirroring the shipped
 # OPEN_ITEMS.template.md tail. The intro + OI-1 above the marker must never be
 # rewritten by regeneration.
@@ -62,11 +57,23 @@ def _git(repo, *args):
     )
 
 
-def _init(repo, wis_body="WI-001,Seed,scripts,,,done,seeded,,,,\n"):
-    (repo / "docs" / "requirements").mkdir(parents=True)
-    (repo / "docs" / "requirements" / "work-items.csv").write_text(
-        WI_HEADER + wis_body, encoding="utf-8"
+def _spec(repo, sub, wid, slug, status_extra="", body=""):
+    d = repo / "docs" / "work" / sub
+    d.mkdir(parents=True, exist_ok=True)
+    text = '+++\nid = "{}"\ntitle = "{}"\n{}+++\n{}'.format(
+        wid, slug, status_extra, body
     )
+    (d / "{}-{}.md".format(wid, slug)).write_text(text, encoding="utf-8")
+
+
+def _init(repo, extra_specs=()):
+    """A seeded repo whose registry is the spec folder (the one home since
+    Phase 5): one done item plus any `(sub, wid, slug, frontmatter, body)`
+    tuples in `extra_specs`."""
+    (repo / "docs" / "requirements").mkdir(parents=True)
+    _spec(repo, "archive", "WI-001", "seed", body="\n## Deliverable\n\nseeded\n")
+    for sub, wid, slug, front, body in extra_specs:
+        _spec(repo, sub, wid, slug, front, body)
     (repo / "docs" / "requirements" / "open-items.csv").write_text(
         OPEN_ITEMS, encoding="utf-8"
     )
@@ -88,12 +95,11 @@ def _block(repo):
 
 
 def test_blocked_row_with_dev_tree_doc_cites_the_plain_path(tmp_path):
-    # When the BlockRef doc IS present in the dev tree, cite the plain path (no
-    # git-show read path needed).
+    # Blocked is DERIVED (queued + blockref, Phase 5): the projection cites
+    # the plain BlockRef path.
     _init(
         tmp_path,
-        "WI-001,Seed,scripts,,,done,seeded,,,,\n"
-        "WI-051,Split,requirements,,,blocked,,,,high-risk,docs/ratify/WI-051.md\n",
+        [("queued", "WI-051", "split", 'blockref = "docs/ratify/WI-051.md"\n', "")],
     )
     (tmp_path / "docs" / "ratify").mkdir()
     (tmp_path / "docs" / "ratify" / "WI-051.md").write_text("plan\n", encoding="utf-8")

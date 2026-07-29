@@ -11,7 +11,14 @@ import os
 import shutil
 import subprocess
 
-from conftest import KIT, LLRS, make_minimal_project, run_py, skip_without_env_gates
+from conftest import (
+    KIT,
+    LLRS,
+    make_minimal_project,
+    run_py,
+    skip_without_env_gates,
+    write_wi_registry,
+)
 
 HOOK = ".githooks/pre-commit"
 ARCH = "docs/architecture.md"
@@ -86,13 +93,11 @@ def test_hook_trajectory_map_step(scaffold):
     # Non-adopter: the scaffolded placeholder-only registry passes vacuously.
     ok = run_py(["scripts/check.py", "--run-step", "trajectory-map"], cwd=scaffold)
     assert ok.returncode == 0, ok.stdout + ok.stderr
-    # Adopter with a real work item and no generated dashboard: blocked.
-    wi = scaffold / "docs" / "requirements" / "work-items.csv"
-    wi.write_text(
-        "WI-ID,Title,Workstream,SR-Refs,Predecessors,Status,Deliverable\n"
-        'WI-001,Real work,core,,,queued,"a real row"\n',
-        encoding="utf-8",
-    )
+    # Adopter with a real work item and no generated dashboard: blocked. The
+    # registry's one home is `docs/work/` spec files (status = directory), so a
+    # real item is a spec beside the inert scaffolded `-000` example.
+    real = ["WI-001", "Real work", "core", "", "", "queued", "a real row"]
+    write_wi_registry(scaffold, [real])
     stale = run_py(["scripts/check.py", "--run-step", "trajectory-map"], cwd=scaffold)
     assert stale.returncode != 0, "a missing dashboard over real WIs must block"
     assert "STALE" in (stale.stdout + stale.stderr)
@@ -102,10 +107,9 @@ def test_hook_trajectory_map_step(scaffold):
     ok = run_py(["scripts/check.py", "--run-step", "trajectory-map"], cwd=scaffold)
     assert ok.returncode == 0, ok.stdout + ok.stderr
     # The opt-out stays free: `off` silences the step even with a stale dashboard.
-    wi.write_text(
-        wi.read_text(encoding="utf-8")
-        + 'WI-002,More work,core,,WI-001,queued,"stales the dashboard"\n',
-        encoding="utf-8",
+    write_wi_registry(
+        scaffold,
+        [real, ["WI-002", "More work", "core", "", "WI-001", "queued", "stales it"]],
     )
     (scaffold / "docs" / "trajectory-check").write_text("off\n", encoding="utf-8")
     ok = run_py(["scripts/check.py", "--run-step", "trajectory-map"], cwd=scaffold)
@@ -133,24 +137,32 @@ def test_hook_trajectory_step_is_the_ra_floor(scaffold):
     # error at commit — an incoherent WI handoff must block; the softer status.md
     # / SpecRef rules (R-B..R-E) warn here and gate only at G2+ (--strict).
     make_minimal_project(scaffold)
-    wi = scaffold / "docs" / "requirements" / "work-items.csv"
-    header = "WI-ID,Title,Workstream,SR-Refs,Predecessors,Status,Deliverable,SpecRef\n"
+
+    def _wi_001(deliverable, specref):
+        # One spec under docs/work/queued/ (the registry's one home; status is the
+        # directory). Re-writing the id replaces its spec, so each state below is
+        # the whole registry again, exactly as the CSV rewrites were.
+        write_wi_registry(
+            scaffold,
+            [["WI-001", "Real", "core", "", "", "queued", deliverable, specref]],
+        )
+
     # Non-adopter: the scaffolded placeholder-only registry passes vacuously.
     ok = run_py(["scripts/check.py", "--run-step", "trajectory"], cwd=scaffold)
     assert ok.returncode == 0, ok.stdout + ok.stderr
     # R-A violation: an open WI carrying a filled Deliverable -> the step blocks.
-    wi.write_text(header + "WI-001,Real,core,,,queued,already filled,\n", "utf-8")
+    _wi_001("already filled", "")
     blocked = run_py(["scripts/check.py", "--run-step", "trajectory"], cwd=scaffold)
     assert blocked.returncode != 0, "an open WI with a Deliverable must block (R-A)"
     assert "R-A" in (blocked.stdout + blocked.stderr)
     # A dangling SpecRef alone (R-E) is warn-first at the hook -> does NOT block.
-    wi.write_text(header + "WI-001,Real,core,,,queued,,docs/specs/WI-404.md\n", "utf-8")
+    _wi_001("", "docs/specs/WI-404.md")
     warn = run_py(["scripts/check.py", "--run-step", "trajectory"], cwd=scaffold)
     assert warn.returncode == 0, "R-E must warn, not block, at the commit floor"
     # Coherent open row (empty Deliverable + resolvable SpecRef) -> green.
     (scaffold / "docs" / "specs").mkdir(parents=True, exist_ok=True)
     (scaffold / "docs" / "specs" / "WI-001.md").write_text("# spec\n", "utf-8")
-    wi.write_text(header + "WI-001,Real,core,,,queued,,docs/specs/WI-001.md\n", "utf-8")
+    _wi_001("", "docs/specs/WI-001.md")
     ok = run_py(["scripts/check.py", "--run-step", "trajectory"], cwd=scaffold)
     assert ok.returncode == 0, ok.stdout + ok.stderr
     # The shipped hook script carries both the floor step (batched) and the
@@ -166,9 +178,13 @@ def test_run_steps_gate_promotes_the_warn_first_floor(scaffold):
     # hold. Same R-E fixture as test_hook_trajectory_step_is_the_ra_floor (a
     # dangling SpecRef — warn-first at the commit floor, an ERROR under --strict).
     make_minimal_project(scaffold)
-    wi = scaffold / "docs" / "requirements" / "work-items.csv"
-    header = "WI-ID,Title,Workstream,SR-Refs,Predecessors,Status,Deliverable,SpecRef\n"
-    wi.write_text(header + "WI-001,Real,core,,,queued,,docs/specs/WI-404.md\n", "utf-8")
+
+    def _wi_001(specref):
+        write_wi_registry(
+            scaffold, [["WI-001", "Real", "core", "", "", "queued", "", specref]]
+        )
+
+    _wi_001("docs/specs/WI-404.md")
     # No --gate (what the pre-commit hook passes): the floor stays warn-first even
     # though the scaffold's own docs/gate says G3 — a defaulted --gate must not be
     # resolved through docs/gate, or every commit would be held to the gate bar.
@@ -187,7 +203,7 @@ def test_run_steps_gate_promotes_the_warn_first_floor(scaffold):
     # Not a blanket "--gate G3 always fails": repair the SpecRef and it goes green.
     (scaffold / "docs" / "specs").mkdir(parents=True, exist_ok=True)
     (scaffold / "docs" / "specs" / "WI-001.md").write_text("# spec\n", "utf-8")
-    wi.write_text(header + "WI-001,Real,core,,,queued,,docs/specs/WI-001.md\n", "utf-8")
+    _wi_001("docs/specs/WI-001.md")
     ok = run_py(
         ["scripts/check.py", "--gate", "G3", "--run-steps", "trajectory"], cwd=scaffold
     )

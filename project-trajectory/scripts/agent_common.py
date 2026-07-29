@@ -623,25 +623,6 @@ def spec_files(work_dir):
     return sorted(p for p in work_dir.rglob("WI-*.md") if p.parent != work_dir)
 
 
-def spec_registry_dir(csv_path):
-    """The spec folder that is AUTHORITATIVE for `csv_path`, or None when the CSV
-    still is. The dual-read resolution, stated once: REAL specs present => the
-    folder wins; none => the CSV is read exactly as before.
-
-    A `WI-000-*.md` EXAMPLE spec does not count as a real one, for the same
-    reason the `-000` row in every shipped registry template does not: it is the
-    format's documentation, scaffolded into a fresh repo so the shape is
-    copy-ready beside the CSV it will one day replace. A placeholder that
-    decided authority would hand every new scaffold an empty registry and a
-    two-registries-present finding on its first check. This is the AUTHORITY
-    rule only — `read_spec_rows` still parses and returns the example, exactly
-    as `csv.DictReader` still yields the `-000` CSV row, and `load_wis` is the
-    one place either representation goes inert."""
-    work_dir = spec_work_dir(csv_path)
-    real = [p for p in spec_files(work_dir) if not p.name.startswith(SPEC_EXAMPLE)]
-    return work_dir if real else None
-
-
 def parse_spec_frontmatter(text, relpath):
     """`(data, body)` for one spec file: the TOML frontmatter between the `+++`
     fences, parsed, and everything after the closing fence, verbatim."""
@@ -770,15 +751,12 @@ def _spec_id_number(wid):
 
 
 def load_registry_rows(root):
-    """The work-item rows of `root`'s tracked registry, from whichever home is
-    authoritative — the spec folder `docs/work/` when it holds specs, else
-    `docs/requirements/work-items.csv` exactly as before.
-
-    Stays SILENT when both are present, like the scheduler and unlike the
-    validator: a worker reads the registry, it does not adjudicate it."""
-    csv_path = Path(root) / "docs" / "requirements" / "work-items.csv"
-    work_dir = spec_registry_dir(csv_path)
-    return read_spec_rows(work_dir) if work_dir else _read_csv_rows(csv_path)
+    """The work-item rows from the one registry home, `docs/work/` (the spec
+    folder; status = directory). The CSV home retired at concurrency-
+    restructure Phase 5 (RULING-4: no CSV in any form); an absent folder reads
+    as an empty registry, the non-adopter posture."""
+    work_dir = spec_work_dir(Path(root) / "docs" / "requirements" / "work-items.csv")
+    return read_spec_rows(work_dir) if work_dir.is_dir() else []
 
 
 def load_wi_registry(root):
@@ -1614,9 +1592,9 @@ def preflight(root, template, args):
                 row = wi_rows.get(wid)
                 if row is None:
                     failures.append(
-                        "assigned {} is not in docs/requirements/"
-                        "work-items.csv on this branch — a worker never "
-                        "builds an untracked WI.".format(wid)
+                        "assigned {} is not in the docs/work/ registry on "
+                        "this branch — a worker never builds an untracked "
+                        "WI.".format(wid)
                     )
                 elif (row.get("Status") or "").strip().lower() in TERMINAL_STATUSES:
                     # WI-267: a WI RETIRED mid-assignment is terminal too — a

@@ -61,5 +61,5 @@ rationale, and the read caveats — live in `scripts/dashboard-shots/README.md`.
    (viewport) shot before believing it.
 4. **File findings as their own WIs.** This loop **builds the eyes; it is not a
    redesign.** A rendered defect becomes a new WI (register it in
-   `docs/requirements/work-items.csv`, cite the shot), never an inline dashboard
+   `docs/work/`, cite the shot), never an inline dashboard
    edit inside the critique session.

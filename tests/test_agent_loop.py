@@ -12,7 +12,14 @@ import subprocess
 import sys
 
 import pytest
-from conftest import env_gate_skipif, SCRIPTS, augment_env, load_script, run_py
+from conftest import (
+    env_gate_skipif,
+    SCRIPTS,
+    augment_env,
+    load_script,
+    run_py,
+    write_wi_registry,
+)
 
 # The fake agent: records every invocation + the model it was handed, then
 # performs the next scripted action in the repo it was launched in (cwd),
@@ -165,13 +172,34 @@ def loop_repo(tmp_path):
     # out/ (the lock + raw run logs) must never dirty the tree: a worker's
     # DONE is judged from committed evidence + a clean tree (worker_endstate).
     (repo / ".gitignore").write_text("out/\n", encoding="utf-8")
-    (repo / "docs" / "requirements" / "work-items.csv").write_text(
-        "WI-ID,Title,Workstream,SR-Refs,Predecessors,Status,Deliverable,"
-        "SpecRef,BuildTier,SafetyClass\n"
-        "WI-200,Earlier thing,ws,,,done,shipped,,quick,\n"
-        "WI-201,Scoped work for WI-201,ws,,WI-200,queued,,docs/specs/thing.md,"
-        "medium,ordinary\n",
-        encoding="utf-8",
+    write_wi_registry(
+        repo,
+        [
+            [
+                "WI-200",
+                "Earlier thing",
+                "ws",
+                "",
+                "",
+                "done",
+                "shipped",
+                "",
+                "quick",
+                "",
+            ],
+            [
+                "WI-201",
+                "Scoped work for WI-201",
+                "ws",
+                "",
+                "WI-200",
+                "queued",
+                "",
+                "docs/specs/thing.md",
+                "medium",
+                "ordinary",
+            ],
+        ],
     )
     _git(repo, "init")
     _git(repo, "config", "user.email", "loop@example.com")
@@ -902,11 +930,22 @@ def test_zero_commit_repo_is_guarded(tmp_path):
     repo = tmp_path / "repo"
     (repo / "docs" / "requirements").mkdir(parents=True)
     (repo / "docs" / "status.md").write_text(STATUS_MD, encoding="utf-8")
-    (repo / "docs" / "requirements" / "work-items.csv").write_text(
-        "WI-ID,Title,Workstream,SR-Refs,Predecessors,Status,Deliverable,"
-        "SpecRef,BuildTier,SafetyClass\n"
-        "WI-201,Scoped work for WI-201,ws,,,queued,,,medium,ordinary\n",
-        encoding="utf-8",
+    write_wi_registry(
+        repo,
+        [
+            [
+                "WI-201",
+                "Scoped work for WI-201",
+                "ws",
+                "",
+                "",
+                "queued",
+                "",
+                "",
+                "medium",
+                "ordinary",
+            ]
+        ],
     )
     (repo / ".gitignore").write_text("out/\n", encoding="utf-8")
     _git_ok = subprocess.run(
@@ -2186,7 +2225,9 @@ def test_read_csv_rows_tolerates_a_bom(tmp_path):
     # parsed fine — the dispatcher and the worker held two different views of
     # one registry, and a BOM'd system-requirements.csv silently vacated the
     # critique gate. The reader must strip the BOM and keep quoted multi-line
-    # cells parseable.
+    # cells parseable. (The WI registry left CSV at Phase 5, so this reader now
+    # serves the SR/TC registries — the regression it pins is the reader's, and
+    # the original WI-shaped fixture is kept as the defect's own shape.)
     ac = load_script("agent_common")
     p = tmp_path / "work-items.csv"
     p.write_bytes(b'\xef\xbb\xbfWI-ID,Title,Status\nWI-001,"two\nline title",active\n')

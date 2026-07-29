@@ -47,7 +47,7 @@ from conftest import load_script
 
 ROOT = Path(__file__).resolve().parents[1]
 CENSUS = ROOT / "docs/dupes-allow"
-WI_CSV = ROOT / "docs/requirements/work-items.csv"
+WI_WORK = ROOT / "docs/work"
 SCRIPTS = ROOT / "project-trajectory/scripts"
 
 HEADER_RE = re.compile(r"^# --- (?P<name>[A-Za-z0-9-]+) \((?P<n>\d+) blocks?\)")
@@ -134,11 +134,11 @@ def parse_census(text):
 
 
 def load_wi_rows():
-    """WI rows from whichever registry home is live — through the validator's
-    own dual-read loader, so this audit needs no opinion about the home
-    (Phase 2c: the CSV path is derived, the folder beside it is the registry)."""
+    """WI rows from the registry's one home, the `docs/work/` spec folder — read
+    through the validator's own reader (Phase 5: the CSV home retired, so there
+    is no second home for this audit to have an opinion about)."""
     ct = load_script("check_trajectory")
-    return {row["WI-ID"]: row for row in ct.read_registry_rows(WI_CSV)}
+    return {row["WI-ID"]: row for row in ct.read_spec_rows(WI_WORK)}
 
 
 def emitted_census():

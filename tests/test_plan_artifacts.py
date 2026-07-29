@@ -140,6 +140,13 @@ def test_file_selected_wis_allocates_sequential_ids(tmp_path):
     assert mapping == {"P1": "WI-011", "P2": "WI-012", "P3": "WI-013"}
 
 
+def _filed_rows(root):
+    """The filed registry read back through the scheduler's own folder reader
+    (the one home since Phase 5)."""
+    sched = load_script("schedule")
+    return sched.read_spec_rows(root / "docs" / "work")
+
+
 def test_file_selected_wis_maps_predecessors_incl_fan_in(tmp_path):
     _seed_registry(tmp_path)
     pa.file_selected_wis(
@@ -149,7 +156,7 @@ def test_file_selected_wis_maps_predecessors_incl_fan_in(tmp_path):
         workstream="unattended",
         predecessor_wi="WI-010",
     )
-    by_id = {r["WI-ID"]: r for r in _rows(tmp_path)}
+    by_id = {r["WI-ID"]: r for r in _filed_rows(tmp_path)}
     # P1 has no plan-local edge -> only the round parent.
     assert by_id["WI-011"]["Predecessors"] == "WI-010"
     # P2 depends on P1 (mapped) + the parent.
@@ -168,7 +175,7 @@ def test_file_selected_wis_honors_tier_map_and_defaults_medium(tmp_path):
         predecessor_wi="WI-010",
         tier_map={"P1": "strong", "P3": "quick"},
     )
-    by_id = {r["WI-ID"]: r for r in _rows(tmp_path)}
+    by_id = {r["WI-ID"]: r for r in _filed_rows(tmp_path)}
     assert by_id["WI-011"]["BuildTier"] == "strong"
     assert by_id["WI-012"]["BuildTier"] == "medium"  # unmapped -> default
     assert by_id["WI-013"]["BuildTier"] == "quick"
@@ -183,7 +190,9 @@ def test_filed_rows_are_ra_compliant_queued(tmp_path):
         workstream="unattended",
         predecessor_wi="WI-010",
     )
-    filed = [r for r in _rows(tmp_path) if r["WI-ID"] in ("WI-011", "WI-012", "WI-013")]
+    filed = [
+        r for r in _filed_rows(tmp_path) if r["WI-ID"] in ("WI-011", "WI-012", "WI-013")
+    ]
     assert len(filed) == 3
     for r in filed:
         assert r["Status"] == "queued"
@@ -196,40 +205,11 @@ def test_filed_rows_are_ra_compliant_queued(tmp_path):
         assert None not in r.values()  # row width matches the declared header
 
 
-def test_file_selected_wis_preserves_legacy_header_order(tmp_path):
-    path = _wi_csv(tmp_path)
-    path.parent.mkdir(parents=True)
-    path.write_text(
-        "WI-ID,Title,Workstream,SR-Refs,Predecessors,Status,Deliverable,SpecRef,BuildTier\n"
-        "WI-001,Parent,docs,,,done,shipped,,\n",
-        encoding="utf-8",
-    )
-    pa.file_selected_wis(
-        tmp_path,
-        PLAN_TEXT,
-        spec_ref="docs/plans/DP-001-x/plan.md",
-        workstream="unattended",
-        predecessor_wi="WI-001",
-    )
-    with path.open(encoding="utf-8", newline="") as fh:
-        rows = list(csv.reader(fh))
-    assert all(len(row) == 9 for row in rows)
-
-
-def test_file_selected_wis_preserves_lf_and_appends_cleanly(tmp_path):
-    _seed_registry(tmp_path)
-    pa.file_selected_wis(
-        tmp_path,
-        PLAN_TEXT,
-        spec_ref="docs/plans/DP-001-x/plan.md",
-        workstream="unattended",
-        predecessor_wi="WI-010",
-    )
-    raw = _wi_csv(tmp_path).read_bytes()
-    assert b"\r\n" not in raw  # the seed was LF; the append preserved it
-    assert raw.endswith(b"\n")
-    # No row got glued onto the previous one (a proper terminator was written).
-    assert b",WI-011,Foundation" not in raw
+# (test_file_selected_wis_preserves_legacy_header_order and
+# test_file_selected_wis_preserves_lf_and_appends_cleanly retired at
+# concurrency-restructure Phase 5 with the CSV append path itself —
+# filing writes spec files through wi_convert.write_spec_file, whose
+# self-verification is the format guard.)
 
 
 def test_no_plan_table_files_nothing(tmp_path):
@@ -302,48 +282,14 @@ def test_a_folder_registry_gets_spec_files_not_csv_rows(tmp_path):
         assert b"\r" not in path.read_bytes(), path.name
 
 
-def test_a_filed_spec_reads_back_as_the_row_csv_mode_would_have_written(tmp_path):
-    """Same rows, two encodings — asserted by reading the folder back through
-    the same loader the scheduler uses, cell by cell, against the CSV mode's own
-    output. A filer that agreed on ids but not on cells would pass every test
-    above."""
-    csv_root, folder_root = tmp_path / "csv", tmp_path / "folder"
-    for root in (csv_root, folder_root):
-        _seed_registry(root)
-    _write_spec(folder_root, "archive", "WI-010", slug="round-parent")
-    _file_three(csv_root)
-    _file_three(folder_root)
-
-    sched = load_script("schedule")
-    csv_rows = {
-        r["WI-ID"]: r
-        for r in sched.load_rows(_wi_csv(csv_root))
-        if r["WI-ID"] > "WI-010"
-    }
-    folder_rows = {
-        r["WI-ID"]: r
-        for r in sched.read_spec_rows(_work(folder_root))
-        if r["WI-ID"] > "WI-010"
-    }
-    assert set(csv_rows) == {"WI-011", "WI-012", "WI-013"} == set(folder_rows)
-    for wi_id, row in csv_rows.items():
-        for column in pa.WI_HEADER:
-            assert (row.get(column) or "") == (folder_rows[wi_id].get(column) or ""), (
-                "{} {}".format(wi_id, column)
-            )
+# (test_a_filed_spec_reads_back_as_the_row_csv_mode_would_have_written
+# retired with CSV-mode filing at Phase 5; the RA-compliance test above
+# reads the filed specs cell-by-cell through the scheduler's own reader.)
 
 
-def test_the_example_spec_alone_does_not_switch_the_filer_to_folder_mode(tmp_path):
-    """The resolution rule, which must be the READERS' rule: a scaffold's inert
-    `-000` example leaves the CSV authoritative, so a fresh repo's first filed
-    round still appends CSV rows rather than silently starting a second home."""
-    _seed_registry(tmp_path)
-    _write_spec(tmp_path, "queued", "WI-000", slug="example")
-    _file_three(tmp_path)
-    assert [r["WI-ID"] for r in _rows(tmp_path)][-3:] == ["WI-011", "WI-012", "WI-013"]
-    assert sorted(p.name for p in (_work(tmp_path) / "queued").glob("*.md")) == [
-        "WI-000-example.md"
-    ]
+# (test_the_example_spec_alone_does_not_switch_the_filer_to_folder_mode
+# retired at Phase 5: filing is folder-only, so there is no mode for the
+# example to switch; its inertness is the readers' load_wis rule.)
 
 
 def test_a_fresh_folder_first_scaffold_files_specs_without_resurrecting_a_csv(
@@ -432,34 +378,10 @@ def test_check_trajectory_passes_after_filing_into_the_folder(tmp_path):
     assert proc.returncode == 0, proc.stdout + proc.stderr
 
 
-# --- the P5 done-condition: check_trajectory passes on the result -------------
-
-
-def test_check_trajectory_passes_after_filing(tmp_path):
-    """The P5 done-condition: after filing on a fixture repo, the real
-    check_trajectory.py exits 0 and the new rows are well-formed + acyclic."""
-    _seed_registry(tmp_path)
-    # A resolvable SpecRef so the row is coherent even under --strict (R-E).
-    plan_dir = pa.allocate_round_dir(tmp_path, "fixture")
-    plan_path = pa.write_stage(plan_dir, "plan-B-rev.md", PLAN_TEXT)
-    spec_ref = str(plan_path.relative_to(tmp_path)).replace("\\", "/")
-
-    mapping = pa.file_selected_wis(
-        tmp_path,
-        PLAN_TEXT,
-        spec_ref=spec_ref,
-        workstream="unattended",
-        predecessor_wi="WI-010",
-    )
-    assert set(mapping.values()) == {"WI-011", "WI-012", "WI-013"}
-
-    proc = run_py([SCRIPTS / "check_trajectory.py", "--root", tmp_path], cwd=tmp_path)
-    assert proc.returncode == 0, proc.stdout + proc.stderr
-    # And clean under --strict too (predecessors resolve, SpecRef resolves).
-    strict = run_py(
-        [SCRIPTS / "check_trajectory.py", "--root", tmp_path, "--strict"], cwd=tmp_path
-    )
-    assert strict.returncode == 0, strict.stdout + strict.stderr
+# (The CSV-mode P5 done-condition test retired at Phase 5;
+# test_check_trajectory_passes_after_filing_into_the_folder above is the
+# one done-condition — a seeded CSV now trips the stray-CSV finding by
+# design.)
 
 
 # --- log append ---------------------------------------------------------------

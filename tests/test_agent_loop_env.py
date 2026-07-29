@@ -9,7 +9,7 @@ import csv
 import subprocess
 import sys
 
-from conftest import SCRIPTS, run_py
+from conftest import SCRIPTS, run_py, write_wi_registry
 
 # The fake agent: record the value of AGENT_TEST_ENV_MARKER it was launched with
 # (or a sentinel when absent), commit one build, then write DONE to terminate.
@@ -53,11 +53,22 @@ def _make_repo(tmp_path, env_cell):
     (repo / "docs" / "run-phase").write_text("BUILD\n", encoding="utf-8")
     (repo / "docs" / "review-policy").write_text("0\n", encoding="utf-8")
     (repo / "docs" / "requirements").mkdir(parents=True, exist_ok=True)
-    (repo / "docs" / "requirements" / "work-items.csv").write_text(
-        "WI-ID,Title,Workstream,SR-Refs,Predecessors,Status,Deliverable,"
-        "SpecRef,BuildTier,SafetyClass\n"
-        "WI-201,Scoped work for WI-201,ws,,,queued,,,medium,ordinary\n",
-        encoding="utf-8",
+    write_wi_registry(
+        repo,
+        [
+            [
+                "WI-201",
+                "Scoped work for WI-201",
+                "ws",
+                "",
+                "",
+                "queued",
+                "",
+                "",
+                "medium",
+                "ordinary",
+            ]
+        ],
     )
     (repo / ".gitignore").write_text("out/\n", encoding="utf-8")
     _git(repo, "init")

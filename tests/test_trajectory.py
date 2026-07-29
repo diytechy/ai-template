@@ -5,9 +5,11 @@ malformed/duplicate ids) *and* what it deliberately lets through: a
 placeholder-only or absent registry is vacuously clean, a dangling SR ref only
 warns (draft SRs are legitimate), and `docs/trajectory-check: off` silences the
 check entirely. Each is pinned red/green by running the real script over a
-minimal temp registry (no full scaffold needed — the validator reads plain CSVs).
+minimal temp registry (no full scaffold needed — the validator reads the
+`docs/work/` spec folder, which a fixture writes file by file).
 """
 
+import csv
 import difflib
 import os
 import shutil
@@ -16,12 +18,17 @@ import subprocess
 
 from conftest import skip_without_env_gates, ROOT, SCRIPTS, load_script, run_py
 
-WI_HEADER = "WI-ID,Title,Workstream,SR-Refs,Predecessors,Status,Deliverable\n"
-# The header with the SpecRef column (S1) — used by the SSOT-rule tests.
-SR_WI_HEADER = (
-    "WI-ID,Title,Workstream,SR-Refs,Predecessors,Status,Deliverable,SpecRef,BlockRef\n"
-)
-LEGACY_HEADER = "WI-ID,Title,Track,SR-Refs,Predecessors,Status,Deliverable\n"
+wi_convert = load_script("wi_convert")
+
+# The fixture bodies below stay CSV-SHAPED — one line per work item, cells in one
+# of these two column orders — because a table is how a registry fixture reads.
+# The registry's one HOME is the `docs/work/` spec folder (concurrency-restructure
+# Phase 5, RULING-4: the CSV home retired, and a work-items.csv left on disk is
+# now itself an integrity error), so the writers below map each line through the
+# format's own writer instead of writing a CSV.
+WI_COLUMNS = "WI-ID,Title,Workstream,SR-Refs,Predecessors,Status,Deliverable"
+# ...plus the SpecRef + BlockRef columns (S1) — used by the SSOT-rule tests.
+SR_WI_COLUMNS = WI_COLUMNS + ",SpecRef,BlockRef"
 SR_HEADER = (
     "SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,"
     "Permutations,Priority,Verification,Status\n"
@@ -31,12 +38,60 @@ PLACEHOLDER_ROW = (
     "WI-000,EXAMPLE - delete on first real entry,track-name,SR-000,,queued,demo\n"
 )
 
+# `active/<branch>/` is the only status two levels deep and the branch is the
+# integrator's, so a fixture writing an active row has to name one.
+ACTIVE_BRANCH = "wi-fixture"
 
-def write_wis(root, body):
-    """Write docs/requirements/work-items.csv with `body` under the header."""
-    req = root / "docs" / "requirements"
-    req.mkdir(parents=True, exist_ok=True)
-    (req / "work-items.csv").write_text(WI_HEADER + body, encoding="utf-8")
+
+def _wi_rows(body, columns):
+    """`body`'s lines as full 17-column registry rows, read with `csv` so a
+    quoted cell parses exactly as it did when the body WAS the file."""
+    names = columns.split(",")
+    rows = []
+    for cells in csv.reader(body.splitlines()):
+        if not cells or not cells[0].strip():
+            continue
+        row = dict.fromkeys(wi_convert.COLUMNS, "")
+        row.update(dict(zip(names, cells)))
+        rows.append(row)
+    return rows
+
+
+def _write_spec_row(work, row, order):
+    """Write one row as its spec file under `work`.
+
+    Everything goes through `wi_convert`, the format's single writer — except the
+    directory for an `active` row, which that writer deliberately does not know:
+    the integrator's BRANCH names `active/<branch>/`, so a fixture supplies one
+    and reuses the same renderer for the file itself."""
+    if (row.get("Status") or "").strip() != "active":
+        return wi_convert.write_spec_file(work, row, order=order)
+    text = wi_convert.FENCE + "\n"
+    text += wi_convert.render_frontmatter(wi_convert.frontmatter_pairs(row, order))
+    text += wi_convert.FENCE + "\n"
+    if row.get("Deliverable"):
+        text += wi_convert.DELIVERABLE_PREFIX + row["Deliverable"] + "\n"
+    path = work / "active" / ACTIVE_BRANCH / wi_convert.spec_filename(row)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(text, encoding="utf-8", newline="\n")
+    return path
+
+
+def write_wis(root, body, columns=WI_COLUMNS):
+    """Write the work-item registry — the `docs/work/` spec folder — from the
+    CSV-shaped `body`, one spec file per line.
+
+    The folder is REPLACED on every call: one call writes the whole registry, so
+    a test that re-writes it (a status flip) MOVES the item's file rather than
+    leaving a second copy in the old status directory. Two rows sharing an id
+    stay two files (their titles differ, so their slugs do), which is what keeps
+    the duplicate-id integrity error reachable."""
+    work = root / "docs" / "work"
+    if work.exists():
+        shutil.rmtree(work)
+    work.mkdir(parents=True)
+    for order, row in enumerate(_wi_rows(body, columns), 1):
+        _write_spec_row(work, row, order)
     return root
 
 
@@ -56,11 +111,8 @@ def run_traj(root, *extra):
 
 
 def write_wis_sr(root, body):
-    """Write work-items.csv with the SpecRef-column header + `body`."""
-    req = root / "docs" / "requirements"
-    req.mkdir(parents=True, exist_ok=True)
-    (req / "work-items.csv").write_text(SR_WI_HEADER + body, encoding="utf-8")
-    return root
+    """`write_wis` for a `body` that also fills the SpecRef + BlockRef cells."""
+    return write_wis(root, body, SR_WI_COLUMNS)
 
 
 def write_status(root, text):
@@ -85,7 +137,7 @@ def write_spec(root, rel, *headings):
 
 
 def test_absent_registry_is_vacuously_clean(tmp_path):
-    # No work-items.csv at all (a repo that never touched the layer) -> pass.
+    # No docs/work/ at all (a repo that never touched the layer) -> pass.
     (tmp_path / "docs" / "requirements").mkdir(parents=True)
     proc = run_traj(tmp_path)
     assert proc.returncode == 0, proc.stdout + proc.stderr
@@ -215,17 +267,11 @@ def test_mixed_hard_soft_graph_passes(tmp_path):
     assert "acyclic" in proc.stdout
 
 
-def test_legacy_track_header_still_read(tmp_path):
-    # A pre-rename registry (Track column) validates unchanged — the rename is
-    # downstream-migrating but never breaking.
-    req = tmp_path / "docs" / "requirements"
-    req.mkdir(parents=True, exist_ok=True)
-    (req / "work-items.csv").write_text(
-        LEGACY_HEADER + "WI-001,A,old-lane,,,done,d\n", encoding="utf-8"
-    )
-    proc = run_traj(tmp_path)
-    assert proc.returncode == 0, proc.stdout + proc.stderr
-    assert "1 work item(s)" in proc.stdout
+# (test_legacy_track_header_still_read retired at concurrency-restructure
+# Phase 5: a CSV *header* — legacy `Track` column and all — is not a thing the
+# one registry home has. `load_wis` still reads `Track` as a Workstream
+# fallback for a row dict, and test_wi_loader_sync pins the row contract the
+# three readers share.)
 
 
 # --- SR refs: warn (not fail) when the SR registry is present -------------------
@@ -253,12 +299,12 @@ def test_known_sr_ref_does_not_warn(tmp_path):
 # --- tolerant of messy input ----------------------------------------------------
 
 
-def test_blank_or_non_wi_rows_are_ignored(tmp_path):
-    # A stray row whose id isn't a WI (blank first cell) is skipped, not an error.
-    write_wis(tmp_path, "WI-001,A,scripts,,,done,d\n,stray note,,,,,\n")
-    proc = run_traj(tmp_path)
-    assert proc.returncode == 0, proc.stdout + proc.stderr
-    assert "1 work item(s)" in proc.stdout
+# (test_blank_or_non_wi_rows_are_ignored retired at concurrency-restructure
+# Phase 5: a blank-id ROW is a CSV shape. Its folder-home counterpart is not a
+# tolerance but a REFUSAL — a spec whose frontmatter carries no `id` is a
+# malformed spec the validator names (test_wi_folder_loaders) — while the
+# tolerance that does survive, a non-`WI-*.md` file in the registry folder, is
+# `spec_files`' own contract, pinned there too.)
 
 
 def test_comment_only_toggle_reads_on(tmp_path):
@@ -345,34 +391,33 @@ def test_deferred_status_is_first_class(tmp_path):
     assert "unknown status" not in proc.stderr
 
 
-def test_blocked_status_is_first_class_with_blockref(tmp_path):
+def test_blocked_is_a_queued_spec_carrying_a_blockref(tmp_path):
+    # Phase 5 / §7: `blocked` is no longer a status. A parked WI is a QUEUED spec
+    # whose `blockref` names what must clear, and the blocked disposition is
+    # DERIVED (the scheduler's readiness, gen_trajectory's rendering) — so the
+    # evidence rides along and the validator judges an ordinary open row: empty
+    # Deliverable + resolvable SpecRef passes --strict with no lint.
     write_spec(tmp_path, "docs/specs/WI-001.md")
     write_wis_sr(
         tmp_path,
-        "WI-001,A,scripts,,,blocked,,docs/specs/WI-001.md,OI-7\n",
+        "WI-001,A,scripts,,,queued,,docs/specs/WI-001.md,OI-7\n",
     )
     proc = run_traj(tmp_path, "--strict")
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "unknown status" not in proc.stderr
+    assert "blocked" not in proc.stderr
 
 
-def test_blocked_status_requires_blockref(tmp_path):
-    write_spec(tmp_path, "docs/specs/WI-001.md")
-    write_wis_sr(tmp_path, "WI-001,A,scripts,,,blocked,,docs/specs/WI-001.md,\n")
-    proc = run_traj(tmp_path)
-    assert proc.returncode == 1
-    assert "blocked-ref WI-001" in proc.stderr and "BlockRef is empty" in proc.stderr
-
-
-def test_unknown_status_warns_plain_fails_strict(tmp_path):
-    # An out-of-vocabulary status lints (warn-first; ERROR under --strict).
-    write_wis_sr(tmp_path, "WI-001,A,scripts,,,paused,,,\n")
-    plain = run_traj(tmp_path)
-    assert plain.returncode == 0, plain.stdout + plain.stderr
-    assert "unknown status" in plain.stderr
-    strict = run_traj(tmp_path, "--strict")
-    assert strict.returncode == 1
-    assert "unknown status" in strict.stderr
+# (test_blocked_status_requires_blockref and
+# test_unknown_status_warns_plain_fails_strict retired at concurrency-restructure
+# Phase 5: both drove a Status CELL the one registry home cannot hold. Status is
+# now the spec's DIRECTORY, so `blocked` and `paused` alike are unwritable — an
+# undeclared directory is refused by the loader and named as a malformed spec
+# (test_wi_folder_loaders::test_an_unknown_status_directory_is_refused_not_bucketed),
+# which is a hard error at every run rather than this warn-first lint. The
+# `status-vocab` and `blocked-ref` rules in `ssot_findings` are consequently
+# unreachable from the registry — reported as a production finding, not patched
+# around here.)
 
 
 def test_re_empty_specref_warns_plain_fails_strict(tmp_path):
@@ -730,43 +775,13 @@ def test_coherent_registry_passes_strict_without_status_md(tmp_path):
         assert rule not in proc.stderr
 
 
-def test_run_state_end_state_warns_for_actionable_queue_and_fails_strict(tmp_path):
-    # WI-115: an end-state must not strand a queued WI whose hard predecessors
-    # are all done; soft predecessors remain advisory.
-    write_spec(tmp_path, "docs/specs/WI-002.md")
-    write_wis_sr(
-        tmp_path,
-        "WI-001,Done,scripts,,,done,shipped,\n"
-        "WI-002,Next,scripts,,WI-001;~WI-003,queued,,docs/specs/WI-002.md\n"
-        "WI-003,Advisory,scripts,,,active,,docs/specs/WI-002.md\n",
-    )
-    write_status(tmp_path, "Next: WI-002; WI-003 is its predecessor.\n")
-    (tmp_path / "docs" / "run-state").write_text("NEEDS-HUMAN\n", encoding="utf-8")
-    plain = run_traj(tmp_path)
-    assert plain.returncode == 0, plain.stdout + plain.stderr
-    assert "run-state NEEDS-HUMAN" in plain.stderr
-    strict = run_traj(tmp_path, "--strict")
-    assert strict.returncode == 1
-    assert "run-state NEEDS-HUMAN" in strict.stderr
-
-
-def test_run_state_check_is_vacuous_without_file_and_for_done_empty_queue(tmp_path):
-    # Non-adopters have no run-state file; DONE is legal when no queued WI is ready.
-    write_spec(tmp_path, "docs/specs/WI-002.md")
-    write_wis_sr(
-        tmp_path,
-        "WI-001,Done,scripts,,,done,shipped,\n"
-        "WI-002,Waiting,scripts,,WI-003,queued,,docs/specs/WI-002.md\n"
-        "WI-003,Blocked predecessor,scripts,,,active,,docs/specs/WI-002.md\n",
-    )
-    write_status(tmp_path, "Next: WI-002; WI-003 is its predecessor.\n")
-    absent = run_traj(tmp_path, "--strict")
-    assert absent.returncode == 0, absent.stdout + absent.stderr
-    assert "run-state" not in absent.stderr
-    (tmp_path / "docs" / "run-state").write_text("DONE\n", encoding="utf-8")
-    done = run_traj(tmp_path, "--strict")
-    assert done.returncode == 0, done.stdout + done.stderr
-    assert "run-state" not in done.stderr
+# (test_run_state_end_state_warns_for_actionable_queue_and_fails_strict and
+# test_run_state_check_is_vacuous_without_file_and_for_done_empty_queue retired
+# at concurrency-restructure Phase 5 with `run_state_findings` itself: the
+# WI-115 stale-end-state warn read `docs/run-state`, which left with the
+# dispatcher that wrote it, so a stale parked state is now unrepresentable. The
+# vacuity half went with it rather than being left to pass on a check that no
+# longer exists.)
 
 
 def test_placeholder_only_stays_vacuous_under_strict(tmp_path):
@@ -912,18 +927,14 @@ def test_forward_only_unit_over_the_real_meta_repo():
 # hand-authored region is still policed.
 
 
-# A header + rows the scheduler can CLASSIFY (a bare row fails closed as
-# `unclassified` and never reaches the ready frontier): SafetyClass=ordinary is
-# the minimal signal for an ordinary, packable WI.
-_FRONTIER_HEADER = (
-    "WI-ID,Title,Workstream,SR-Refs,Predecessors,Status,Deliverable,SafetyClass\n"
-)
+# Rows the scheduler can CLASSIFY (a bare row fails closed as `unclassified` and
+# never reaches the ready frontier): SafetyClass=ordinary is the minimal signal
+# for an ordinary, packable WI.
+_FRONTIER_COLUMNS = WI_COLUMNS + ",SafetyClass"
 
 
 def _write_frontier_wis(root, body):
-    req = root / "docs" / "requirements"
-    req.mkdir(parents=True, exist_ok=True)
-    (req / "work-items.csv").write_text(_FRONTIER_HEADER + body, encoding="utf-8")
+    write_wis(root, body, _FRONTIER_COLUMNS)
 
 
 def test_wi284_generated_frontier_drops_a_closed_wi(tmp_path):
@@ -950,7 +961,9 @@ def test_wi284_generated_frontier_drops_a_closed_wi(tmp_path):
 def test_wi284_done_id_in_generated_block_is_exempt_but_still_policed_outside(tmp_path):
     ct = load_script("check_trajectory")
     write_wis(tmp_path, "WI-001,First,scripts,,,done,\n")
-    wis = ct.load_wis(ct.read_rows(tmp_path / "docs/requirements/work-items.csv"))[0]
+    wis = ct.load_wis(
+        ct.read_registry_rows(tmp_path / "docs/requirements/work-items.csv")
+    )[0]
     # Named ONLY inside the generated block (where the frontier lives) -> exempt.
     write_status(
         tmp_path,
@@ -969,10 +982,12 @@ def test_wi284_done_id_in_generated_block_is_exempt_but_still_policed_outside(tm
     assert any("WI-001" in f for f in ct.status_forward_only_findings(tmp_path, wis))
 
 
-def test_legacy_csv_without_specref_column_still_parses(tmp_path):
-    # A pre-S1 registry (no SpecRef column) reads the missing cell as empty and
-    # never crashes: a done-only legacy registry validates clean; an open legacy
-    # row simply draws the warn-first R-E notice (DictReader -> None -> "").
+def test_a_spec_that_names_no_specref_still_parses(tmp_path):
+    # An absent cell is absent, not a crash: the folder form OMITS an empty
+    # frontmatter key entirely (absent and empty mean the same thing there), so a
+    # done spec with no `specref` validates clean and an open one simply draws the
+    # warn-first R-E notice. This was the pre-S1 legacy-CSV shape; it is now every
+    # spec that has nothing to say in a cell.
     write_wis(tmp_path, "WI-001,A,scripts,,,done,d\n")
     proc = run_traj(tmp_path)
     assert proc.returncode == 0, proc.stdout + proc.stderr
@@ -980,26 +995,14 @@ def test_legacy_csv_without_specref_column_still_parses(tmp_path):
     write_wis(tmp_path, "WI-001,A,scripts,,,active,\n")
     proc = run_traj(tmp_path)
     assert proc.returncode == 0, proc.stdout + proc.stderr
-    assert "R-E WI-001" in proc.stderr  # missing column -> warn, never a crash
+    assert "R-E WI-001" in proc.stderr  # absent key -> warn, never a crash
 
 
-def test_extra_legacy_column_is_tolerated(tmp_path):
-    # A registry carrying an extra optional column (a legacy grouping tag, read by
-    # name like Workstream — no vocabulary rule) validates exactly as one without
-    # it: DictReader tolerates unknown columns, so a re-synced downstream that kept
-    # a retired grouping tag never breaks.
-    req = tmp_path / "docs" / "requirements"
-    req.mkdir(parents=True, exist_ok=True)
-    hdr = "WI-ID,Title,Workstream,SR-Refs,Predecessors,Status,Deliverable,LegacyTag\n"
-    (req / "work-items.csv").write_text(
-        hdr
-        + "WI-001,A,scripts,,,done,d,some-slug-2026\n"
-        + "WI-002,B,scripts,,WI-001,done,d,anything-goes-here\n",
-        encoding="utf-8",
-    )
-    proc = run_traj(tmp_path, "--strict")
-    assert proc.returncode == 0, proc.stdout + proc.stderr
-    assert "2 work item(s)" in proc.stdout
+# (test_extra_legacy_column_is_tolerated retired at concurrency-restructure
+# Phase 5: it drove `csv.DictReader`'s tolerance of an unknown COLUMN in the CSV
+# home. The folder form has no header to carry a stale column, and an unknown
+# frontmatter KEY is simply not read into the 17-key row — `parse_spec_row`'s own
+# contract, pinned in test_wi_folder_loaders.)
 
 
 # --- S1: the no-validation-delta warn (--staged) -------------------------------
@@ -1040,7 +1043,7 @@ def test_staged_no_validation_delta_warns(tmp_path):
     # Closing a follow-up WI on an already-delivered SR while touching neither the
     # TC registry nor a test file warns: the fix did not land in the chain.
     run_git = _init_followup_repo(tmp_path)
-    run_git("add", "docs/requirements/work-items.csv")
+    run_git("add", "docs/work")
     proc = run_traj(tmp_path, "--staged")
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "validation chain did not change" in proc.stderr
@@ -1052,7 +1055,7 @@ def test_staged_no_warn_when_a_test_changes(tmp_path):
     run_git = _init_followup_repo(tmp_path)
     (tmp_path / "tests").mkdir(exist_ok=True)
     (tmp_path / "tests" / "test_fix.py").write_text("# covers the fix\n", "utf-8")
-    run_git("add", "docs/requirements/work-items.csv", "tests/test_fix.py")
+    run_git("add", "docs/work", "tests/test_fix.py")
     proc = run_traj(tmp_path, "--staged")
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "validation chain did not change" not in proc.stderr
@@ -1256,7 +1259,7 @@ def test_critique_ratchet_warns_and_holds(tmp_path):
     # touching neither the TC registry, the tests dir, nor a docs/rubrics/ file ->
     # warn (the fix landed in the artifact, not the chain).
     run_git = _init_critique_close_repo(tmp_path)
-    run_git("add", "docs/requirements/work-items.csv")
+    run_git("add", "docs/work")
     proc = run_traj(tmp_path, "--staged")
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "latest CRITIQUE verdict is CHANGES-REQUESTED" in proc.stderr
@@ -1266,7 +1269,7 @@ def test_critique_ratchet_warns_and_holds(tmp_path):
     (tmp_path / "docs" / "rubrics" / "render.md").write_text(
         "# render\n- B2 a newly-found failure mode\n", encoding="utf-8"
     )
-    run_git("add", "docs/requirements/work-items.csv", "docs/rubrics/render.md")
+    run_git("add", "docs/work", "docs/rubrics/render.md")
     proc = run_traj(tmp_path, "--staged")
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "latest CRITIQUE verdict" not in proc.stderr
@@ -1275,7 +1278,7 @@ def test_critique_ratchet_warns_and_holds(tmp_path):
 def test_critique_ratchet_silent_when_verdict_approves(tmp_path):
     # The latest CRITIQUE verdict is APPROVE -> no warn even with no chain delta.
     run_git = _init_critique_close_repo(tmp_path, verdict="APPROVE findings=0")
-    run_git("add", "docs/requirements/work-items.csv")
+    run_git("add", "docs/work")
     proc = run_traj(tmp_path, "--staged")
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "latest CRITIQUE verdict" not in proc.stderr
@@ -2131,15 +2134,31 @@ def test_backlog_staleness_amended_sr_warns(tmp_path):
     )
 
 
+def _reaffirm_spec(root, wid, note):
+    """Re-affirm one work item the folder-registry way: a reviewed edit to its
+    OWN spec text, FILENAME unchanged.
+
+    The filename is the subtlety this fixture has to respect. The Title drives
+    it, so editing the Title RENAMES the file — and a rename is exactly what
+    `_path_commit_time(row_history=True)` filters out on purpose, so that a
+    status MOVE cannot re-date a row nobody re-validated. The re-affirmation
+    therefore rides in the frontmatter as a dated comment: a real content edit,
+    at the same path, changing no cell."""
+    (spec,) = (root / "docs" / "work").rglob(wid + "-*.md")
+    spec.write_text(
+        spec.read_text(encoding="utf-8").replace(
+            "+++\n", "+++\n# {}\n".format(note), 1
+        ),
+        encoding="utf-8",
+        newline="\n",
+    )
+
+
 def test_backlog_staleness_wi_touched_after_amend_is_quiet(tmp_path):
     # Re-affirming (any reviewed edit to the WI row, here at t=3000, after the SR
-    # amendment) re-dates its blame and clears the warn.
+    # amendment) re-dates it and clears the warn.
     run_git = _init_amended_sr_repo(tmp_path)
-    write_wis_sr(
-        tmp_path,
-        "WI-001,Feature (re-affirmed 2026-07-17),scripts,SR-001,,active,,"
-        "docs/specs/WI-001.md\n",
-    )
+    _reaffirm_spec(tmp_path, "WI-001", "re-affirmed 2026-07-17")
     run_git("add", "-A")
     run_git("commit", "-m", "re-affirm WI-001", at=3000)
     proc = run_traj(tmp_path)
@@ -2363,76 +2382,31 @@ def test_latest_critique_tie_breaks_deterministically_on_name(tmp_path):
     assert picked == {"WI-46-CRITIQUE.md"}
 
 
-# --- WI-349: the one-physical-line rule the staged-close scan depends on --------
+# --- WI-349: the cell-integrity rule, at the level where it still applies -------
 #
-# `staged_findings` compares `git show HEAD:<work-items.csv>` against the working
-# copy LINE-WISE and documents the assumption in its docstring; nothing enforced
-# it. The tests below write the offending row through `csv.writer` — the way a
-# tool would actually produce one — rather than hand-embedding a `\n`, so they
-# exercise the real quoting path that made the defect invisible.
-
-
-def _write_wis_via_csv(root, rows):
-    """Write work-items.csv through csv.writer, so a cell holding a newline is
-    QUOTED and spans two physical lines exactly as a real writer emits it."""
-    import csv as _csv
-
-    req = root / "docs" / "requirements"
-    req.mkdir(parents=True, exist_ok=True)
-    with (req / "work-items.csv").open("w", encoding="utf-8", newline="") as fh:
-        writer = _csv.writer(fh, lineterminator="\n")
-        writer.writerow(WI_HEADER.strip().split(","))
-        writer.writerows(rows)
-    # NB: Path.read_text(newline=) is 3.13+; the kit floor is 3.11, so open().
-    with (req / "work-items.csv").open("r", encoding="utf-8", newline="") as fh:
-        return fh.read()
-
-
-def test_embedded_newline_in_a_cell_is_a_hard_error(tmp_path):
-    raw = _write_wis_via_csv(
-        tmp_path, [["WI-001", "two\nlines", "t", "", "", "queued", ""]]
-    )
-    # The premise: this really is one CSV row spanning two physical lines.
-    assert raw.count("\n") == 3 and '"two\nlines"' in raw, repr(raw)
-    proc = run_traj(tmp_path)
-    assert proc.returncode == 1, proc.stdout + proc.stderr
-    # It names the WI and the COLUMN, which is what makes it actionable.
-    assert "WI-001: Title cell contains a literal LF" in proc.stderr, proc.stderr
-
-
-def test_the_same_row_without_the_newline_is_clean(tmp_path):
-    """The mutation twin. Without it the test above could be passing on any of
-    the other dozen rules this registry shape could trip."""
-    _write_wis_via_csv(tmp_path, [["WI-001", "two lines", "t", "", "", "queued", ""]])
-    proc = run_traj(tmp_path)
-    assert proc.returncode == 0, proc.stdout + proc.stderr
-
-
-def test_a_carriage_return_in_a_cell_is_caught_too(tmp_path):
-    """CR alone, not just LF: a registry edited on a Windows tool and re-saved
-    can carry a lone CR, and it breaks the same line-wise read."""
-    _write_wis_via_csv(
-        tmp_path, [["WI-001", "carriage\rreturn", "t", "", "", "queued", ""]]
-    )
-    proc = run_traj(tmp_path)
-    assert proc.returncode == 1, proc.stdout + proc.stderr
-    assert "WI-001: Title cell contains a literal CR" in proc.stderr, proc.stderr
-
-
-def test_a_broken_id_cell_is_reported_by_row_number(tmp_path):
-    """When the id cell itself is broken, reporting a TRUNCATED id would be worse
-    than none — it looks real and matches nothing — so it reports positionally."""
-    _write_wis_via_csv(tmp_path, [["WI-\n001", "A", "t", "", "", "queued", ""]])
-    proc = run_traj(tmp_path)
-    assert proc.returncode == 1, proc.stdout + proc.stderr
-    assert "row 1: WI-ID cell contains a literal LF" in proc.stderr, proc.stderr
+# `cell_integrity_errors` was written for the assumption `staged_findings` made
+# about the CSV home: one work-item row is one PHYSICAL line, so a cell holding a
+# break silently mis-parses the line-wise diff. The four end-to-end guards that
+# drove it through a written work-items.csv retired at concurrency-restructure
+# Phase 5 with that home and that diff:
+#
+#   test_embedded_newline_in_a_cell_is_a_hard_error
+#   test_the_same_row_without_the_newline_is_clean (its mutation twin)
+#   test_a_carriage_return_in_a_cell_is_caught_too
+#   test_a_broken_id_cell_is_reported_by_row_number (row NUMBER is a CSV position)
+#
+# Nothing reads the folder registry line-wise — a Deliverable body's newline is
+# the format working as designed (test_wi_folder_loaders) — and `main()` no
+# longer calls the check at all. The function survives for the spine CSVs, whose
+# rows ARE lines, so the unit-level guards below stay: they call it directly on
+# row dicts, which is exactly the reachable surface.
 
 
 def test_every_other_check_passed_on_such_a_row_before_this_one(tmp_path):
     """The finding itself, pinned: the row is well-formed CSV and satisfies every
-    OTHER rule, so before this check the whole validator reported clean. If this
-    ever fails, the guard above has started riding on some unrelated rule rather
-    than on the newline — which is the vacuity that would make it worthless."""
+    OTHER rule, so before this check existed the validator reported clean. If this
+    ever fails, `cell_integrity_errors` has started riding on some unrelated rule
+    rather than on the newline — the vacuity that would make it worthless."""
     ct = load_script("check_trajectory")
     row = {
         "WI-ID": "WI-001",
@@ -2493,11 +2467,10 @@ def test_the_registry_this_repo_ships_is_control_character_clean(tmp_path):
     is the only test here that would have caught the real defect."""
     from conftest import ROOT
 
-    # Phase 2c: the live registry is the docs/work/ spec folder — scan every
-    # spec's raw bytes, same instrument, same rule (0x09/0x0A/0x0D allowed).
-    home = ROOT / "docs" / "work"
-    legacy = ROOT / "docs" / "requirements" / "work-items.csv"
-    sources = sorted(home.rglob("WI-*.md")) if home.is_dir() else [legacy]
+    # Phase 5: the live registry is the docs/work/ spec folder, its ONE home —
+    # scan every spec's raw bytes, same instrument, same rule (0x09/0x0A/0x0D
+    # allowed).
+    sources = sorted((ROOT / "docs" / "work").rglob("WI-*.md"))
     assert sources, "the registry has no home at all"
     for path in sources:
         data = path.read_bytes()
@@ -2581,7 +2554,7 @@ def test_a_shared_spec_is_never_read_for_the_citing_wi(tmp_path):
     )
     proc = run_traj(tmp_path, "--strict")
     assert proc.returncode == 0, proc.stdout + proc.stderr
-    assert "WI-002" not in proc.stderr.replace("WI-002,B", "")
+    assert "WI-002" not in proc.stderr
 
 
 def test_done_row_with_unticked_boxes_in_its_live_spec_warns(tmp_path):
@@ -2785,8 +2758,9 @@ def test_the_live_only_scope_is_load_bearing_not_vacuous():
     produce findings, so assert that it does — with headroom, as a property rather
     than a freeze."""
     ct = load_script("check_trajectory")
-    # Phase 2c: read through the validator's own dual-read loader, so the claim
-    # stays re-derivable from whichever home the registry occupies.
+    # Read through the validator's own registry loader (Phase 5: `docs/work/`,
+    # derived from the path below), so the claim stays re-derivable from the
+    # registry itself rather than from a second walk of the folder.
     rows = ct.read_registry_rows(ROOT / "docs" / "requirements" / "work-items.csv")
     status = {r["WI-ID"]: r["Status"].strip() for r in rows}
     archive = ROOT / "docs" / "archive" / "specs"

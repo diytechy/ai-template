@@ -13,13 +13,14 @@ priority = 0
 **What this file is.** One work item is one Markdown spec file under
 `docs/work/`, and this `-000` example is the format's documentation. Copy it to
 `docs/work/queued/WI-<n>-<slug>.md` to file real work; keep this one — nothing
-gates on it, so a fresh scaffold stays vacuously clean. It is inert in the two
-ways that matter: every loader skips a `-000` id (the same rule that makes the
-`-000` row in each registry template inert), and it does not decide which
-registry home is authoritative, so scaffolding it never demotes a project's
-`docs/requirements/work-items.csv`. That inertness is also why this example may
-carry a filled `Deliverable` while sitting in `queued/`, which the rule below
-forbids for real work.
+gates on it, so a fresh scaffold stays vacuously clean. It is inert where it
+matters: every loader skips a `-000` id (the same rule that makes the `-000`
+row in each registry template inert), so a fresh scaffold's registry reads
+empty and nothing gates on this exemplar. That inertness is also why this
+example may carry a filled `Deliverable` while sitting in `queued/`, which the
+rule below forbids for real work. (Since concurrency-restructure Phase 5 this
+folder is the ONE registry home — the CSV form survives only as
+`wi_convert.py`'s migration/interchange format.)
 
 **Status is the DIRECTORY, never a field.** One home per fact: the mutable
 state is the file's location, the immutable-ish metadata is the frontmatter, and

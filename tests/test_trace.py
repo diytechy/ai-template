@@ -1301,6 +1301,59 @@ def test_meta_supersession_rows_preserve_the_ratified_evidence_map():
     assert set(trace.refs(tc99["Verifies"])) == old
 
 
+def test_phase5_supersession_rows_preserve_the_ratified_evidence_map():
+    """TC-133: the fifteen dispatcher-era SRs superseded at concurrency-
+    restructure Phase 5 all link to SR-132 (the local integrator), retain no
+    LLR (their machinery was deleted, not re-homed), and are cited by TC-133
+    exactly — the TC-099 pattern, re-applied to the deletion phase."""
+    import csv
+
+    trace = load_script("trace")
+    root = KIT.parent
+    with (root / "docs/requirements/system-requirements.csv").open(
+        newline="", encoding="utf-8-sig"
+    ) as stream:
+        srs = list(csv.DictReader(stream))
+    with (root / "docs/requirements/low-level-requirements.csv").open(
+        newline="", encoding="utf-8-sig"
+    ) as stream:
+        llrs = list(csv.DictReader(stream))
+    with (root / "docs/test/test-cases.csv").open(
+        newline="", encoding="utf-8-sig"
+    ) as stream:
+        tcs = list(csv.DictReader(stream))
+
+    phase5 = {
+        "SR-061",
+        "SR-062",
+        "SR-065",
+        "SR-095",
+        "SR-096",
+        "SR-097",
+        "SR-098",
+        "SR-099",
+        "SR-100",
+        "SR-101",
+        "SR-117",
+        "SR-118",
+        "SR-119",
+        "SR-120",
+        "SR-121",
+    }
+    by_id = {row["SR-ID"]: row for row in srs}
+    for sid in sorted(phase5):
+        row = by_id[sid]
+        assert row.get("SupersededBy", "") == "SR-132", sid
+        assert row.get("Title", "").startswith("Superseded: "), sid
+        # Inspection is what exempts a machinery-less legacy row from the
+        # SR-needs-an-LLR orphan rule (trace.LLR_EXEMPT).
+        assert row.get("Verification") == "Inspection", sid
+    assert not trace.sr_supersession_findings(srs)
+    assert not any(phase5.intersection(trace.refs(row.get("SR-Refs"))) for row in llrs)
+    tc133 = next(row for row in tcs if row["TC-ID"] == "TC-133")
+    assert set(trace.refs(tc133["Verifies"])) == phase5
+
+
 # --- WI-129: LLR/TC status-coherence warn (registry lint) ---------------------
 # An LLR reading below Verified while every TC that cites it is Verified is a
 # readout drift, not a coverage hole (LLR status is non-gating under the

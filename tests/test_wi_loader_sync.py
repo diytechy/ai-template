@@ -26,12 +26,18 @@ intended, this test is where the decision to fork them is recorded).
     spec-folder reader (`docs/work/<status>/WI-###-<slug>.md`) is duplicated
     verbatim into all three scripts on the same F5 grounds, so all three must
     read one folder into byte-identical rows;
-  * the registry now has TWO REPRESENTATIONS, and the guard that matters is that
+  * the registry has TWO REPRESENTATIONS, and the guard that matters is that
     they are the same registry. The fixture below is built ONCE and materialized
     into a spec folder by `scripts/wi_convert.py`, then both representations are
     pushed through both `load_wis`. All four outputs must agree — which is the
     representation-equivalence proof and the drift guard in one object, because
     the failure they share is "one reader decided something the others did not".
+
+**Phase 5 retired the CSV HOME** (RULING-4): `docs/work/` is the registry, and
+the CSV survives only as `wi_convert.py`'s legacy interchange format. The CSV
+halves below therefore no longer pin a dual-read — they pin CONVERTER FIDELITY,
+which is the same assertion aimed at the same defect (a cell that means one thing
+in one form and another in the other), so they are kept rather than retired.
 
 Both new guards are mutation-proven at the bottom of the file: a single corrupted
 spec cell must red the equivalence, and a reader that skips a file must red the
@@ -290,8 +296,8 @@ def test_the_three_folder_readers_read_one_folder_identically(both_homes):
 
 
 def test_the_two_representations_are_the_same_registry(both_homes):
-    """Cell-exact equivalence at the ROW level — the level the dual-read happens
-    at, so everything above it is untouched by which home is authoritative."""
+    """Cell-exact equivalence at the ROW level — the level the CONVERSION happens
+    at, so everything above it is untouched by which form a registry arrived in."""
     csv_path, work_dir = both_homes
     csv_rows = sched.load_rows(csv_path)
     folder_rows = sched.read_spec_rows(work_dir)

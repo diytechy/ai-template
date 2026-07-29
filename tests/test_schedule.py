@@ -195,7 +195,7 @@ def test_reserved_wi_keeps_its_exclusive_key_even_unclassified():
 def test_blocked_deferred_reserved_excluded_with_reason_codes():
     wis = sched.load_wis(
         [
-            row("WI-001", status="blocked", blockref="OI-9"),
+            row("WI-001", blockref="OI-9"),  # blocked = queued + blockref (Phase 5)
             row("WI-002", status="deferred"),
             row("WI-003"),
             row("WI-004"),
@@ -209,9 +209,11 @@ def test_blocked_deferred_reserved_excluded_with_reason_codes():
     assert d4["reasons"] == ["reserved:claimed-by-live-train"]
 
 
-def test_blocked_without_blockref_still_reason_coded():
+def test_legacy_blocked_status_is_excluded_fail_closed():
+    # `blocked` stopped being a status at Phase 5 (it is queued + blockref);
+    # a stray literal must never fall through to ready.
     wis = sched.load_wis([row("WI-001", status="blocked")])
-    assert disposition(wis, "WI-001")["reasons"] == ["excluded:blocked:no-blockref"]
+    assert disposition(wis, "WI-001")["reasons"] == ["excluded:unknown-status:blocked"]
 
 
 # --- SR-058: deterministic safety classification -----------------------------
@@ -280,19 +282,18 @@ def test_spine_serial_sched_class_is_not_multi_wi_packable():
 
 # --- CLI surface (same decision, inspectable) --------------------------------
 def _write_registry(root, rows):
-    reg = root / "docs" / "requirements"
-    reg.mkdir(parents=True, exist_ok=True)
-    header = (
-        "WI-ID,Title,Workstream,SR-Refs,Predecessors,Status,Deliverable,SpecRef,"
-        "BuildTier,Priority,Exclusive,BlockRef,EstTokens,SafetyClass\n"
-    )
-    lines = [header]
-    for r in rows:
-        lines.append(
-            "{WI-ID},{Title},,{SR-Refs},{Predecessors},{Status},,,,"
-            "{Priority},{Exclusive},{BlockRef},{EstTokens},{SafetyClass}\n".format(**r)
-        )
-    (reg / "work-items.csv").write_text("".join(lines), encoding="utf-8")
+    """The fixture registry in its one home, `docs/work/` spec files (Phase 5;
+    written through the format's single writer, wi_convert)."""
+    wc = load_script("wi_convert")
+    work = root / "docs" / "work"
+    work.mkdir(parents=True, exist_ok=True)
+    for n, r in enumerate(rows, 1):
+        full = {c: "" for c in wc.COLUMNS}
+        full.update(r)
+        full["Status"] = full.get("Status") or "queued"
+        if full["Status"] == "done" and not full.get("Deliverable"):
+            full["Deliverable"] = "shipped"
+        wc.write_spec_file(work, full, order=n)
 
 
 def test_cli_ready_json_matches_library(tmp_path):

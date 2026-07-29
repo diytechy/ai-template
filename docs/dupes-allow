@@ -265,7 +265,7 @@
 #   markdown-table        11   deliberate
 #   git-wrapper            7   deliberate
 #   wi-schema-columns      6   deliberate
-#   wi-registry            4   deliberate
+#   wi-registry            3   deliberate
 #   spec-folder-reader     4   deliberate
 #   ctx-unpack             3   deliberate
 #   okf-row                3   deliberate
@@ -388,19 +388,18 @@ f7d5136e6d5d  project-trajectory/scripts/derive_gate.py == project-trajectory/sc
 4e246982c55c  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/integrate.py
 b25e7f8619e5  project-trajectory/scripts/gen_trajectory.py == project-trajectory/scripts/integrate.py
 
-# --- wi-registry (4 blocks) --------------------------------------
+# --- wi-registry (3 blocks) --------------------------------------
 # disposition: deliberate
 # the WI-registry parser. Kept apart ON PURPOSE (WI-291 drift guard):
 # schedule.py stays stdlib-only and self-contained, and the one real risk -
 # DRIFT - is closed by tests/test_wi_loader_sync.py, not by extraction.
 # Phase 5 (2026-07-29): the two agent_dispatch pairings left with the module;
-# 67d6e1244939 RE-PAIRED (the WI-347 clique effect) onto agent_loop's own two
-# copies — build_scope_srs and critique_control each iterate _read_csv_rows
-# over the registry. Reading them for this classification surfaced that both
-# still read the CSV path DIRECTLY (empty in the folder-only tree since the
-# 2c flip) — owed a re-point at Phase 5 item 3, not a sanction edit.
+# 67d6e1244939 re-paired onto agent_loop's build_scope_srs/critique_control
+# and then DISSOLVED at item 3 — the pair was two direct-CSV reads of the
+# registry (empty in the folder-only tree), re-pointed through
+# load_wi_registry, so the duplication was the defect's shadow and left with
+# the defect.
 d298066d8071  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/check_trajectory.py
-67d6e1244939  project-trajectory/scripts/agent_loop.py == project-trajectory/scripts/agent_loop.py
 d47d5975c21b  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/schedule.py
 f800f0c60265  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/schedule.py
 
@@ -647,10 +646,13 @@ bfd6e67c304f  project-trajectory/scripts/gen_trajectory.py == project-trajectory
 # specs" rule, stated once for the WRITE side. It is NOT the same F5 case as
 # the three above - wi_convert may be imported - but it is the same rule, and
 # the readers must not import it (that is the whole of their independence), so
-# the copy stays with the drift guard on it. This class RETIRES with the CSV
-# home at Phase 5, when there is one registry again.
-9af3e0af42e9  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/check_trajectory.py
-dbe27a804733  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/schedule.py
+# the copy stays with the drift guard on it. Phase 5 note: this class was
+# predicted to retire with the CSV home; measured, it SHRANK instead — the
+# three verbatim reader copies are now THE registry reader (the F5 case is
+# unchanged), and two fingerprints below re-fingerprinted when the dual-read
+# resolvers collapsed to folder-only in all three copies at once.
+506ee17be858  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/schedule.py
+a73be88000c3  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/check_trajectory.py
 1dbf7e455ac3  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/schedule.py
 4d36b43d0895  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/wi_convert.py
 

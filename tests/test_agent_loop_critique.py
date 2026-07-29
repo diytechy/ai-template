@@ -10,7 +10,7 @@ import subprocess
 import sys
 
 import pytest
-from conftest import SCRIPTS, load_script, run_py
+from conftest import SCRIPTS, load_script, run_py, write_wi_registry
 
 agent_loop = load_script("agent_loop")
 
@@ -90,11 +90,39 @@ TC_ROW = (
     '"rubric=docs/rubrics/render.md; artifact=art.txt","Critic APPROVE",No,,Verified\n'
 )
 
-WI_ROW = (
-    "WI-ID,Title,Workstream,SR-Refs,Predecessors,Status,Deliverable,SpecRef,"
-    "CritiqueBudget,CritiqueExhaustion\n"
-    "WI-050,Render,scripts,SR-050,,active,,docs/specs/WI-050.md,,\n"
-)
+# The registry's one home is `docs/work/` spec files, so the fixture hands
+# conftest cell-lists under this (non-default) column order. Status is the spec's
+# DIRECTORY now: `queued/`, which is what a worker builds — the preflight refuses
+# only the terminal statuses, so the CSV era's `active` cell carried no weight here.
+WI_HEADER = [
+    "WI-ID",
+    "Title",
+    "Workstream",
+    "SR-Refs",
+    "Predecessors",
+    "Status",
+    "Deliverable",
+    "SpecRef",
+    "CritiqueBudget",
+    "CritiqueExhaustion",
+]
+
+
+def _wi_row(budget="", exhaustion=""):
+    """WI-050 — the assigned work item, whose SR-050 reaches the Critique SR."""
+    return [
+        "WI-050",
+        "Render",
+        "scripts",
+        "SR-050",
+        "",
+        "queued",
+        "",
+        "docs/specs/WI-050.md",
+        budget,
+        exhaustion,
+    ]
+
 
 RUBRIC = "# render rubric\n\n- G1 contact shadows are consistent\n- B1 RUBRIC-MARKER seam artifacts\n"
 
@@ -132,9 +160,7 @@ def critique_repo(tmp_path):
     (repo / "docs" / "requirements" / "system-requirements.csv").write_text(
         SR_HEADER + SR_CRITIQUE, encoding="utf-8"
     )
-    (repo / "docs" / "requirements" / "work-items.csv").write_text(
-        WI_ROW, encoding="utf-8"
-    )
+    write_wi_registry(repo, [_wi_row()], header=WI_HEADER)
     (repo / "docs" / "test" / "test-cases.csv").write_text(TC_ROW, encoding="utf-8")
     (repo / "docs" / "rubrics" / "render.md").write_text(RUBRIC, encoding="utf-8")
 
@@ -211,22 +237,10 @@ def _models(ctl):
 
 
 def _set_critique_control(repo, budget, exhaustion):
-    rows = list(
-        csv.DictReader(
-            (repo / "docs/requirements/work-items.csv")
-            .read_text(encoding="utf-8")
-            .splitlines()
-        )
-    )
-    rows[0]["CritiqueBudget"] = budget
-    rows[0]["CritiqueExhaustion"] = exhaustion
-    with open(
-        repo / "docs/requirements/work-items.csv", "w", encoding="utf-8", newline=""
-    ) as fh:
-        writer = csv.DictWriter(fh, fieldnames=list(rows[0]))
-        writer.writeheader()
-        writer.writerows(rows)
-    _git(repo, "add", "docs/requirements/work-items.csv")
+    # Re-writing the id replaces its spec file in docs/work/ (the registry's one
+    # home), so the two control cells are re-declared rather than patched in place.
+    write_wi_registry(repo, [_wi_row(budget, exhaustion)], header=WI_HEADER)
+    _git(repo, "add", "docs/work")
     _git(repo, "commit", "-qm", "set critique control")
 
 

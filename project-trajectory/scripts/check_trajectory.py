@@ -1,13 +1,12 @@
 #!/usr/bin/env python3
 """Validate the work-item registry — stdlib only.
 
-The registry has two possible homes and `read_registry_rows` resolves between
-them at the ROW level (Phase 2b of docs/concurrency-restructure.md): the spec
-folder `docs/work/` when it holds work specs, else
-`docs/requirements/work-items.csv` exactly as before. Every rule below reads the
-same 17-key rows either way. Both homes present at once is itself an integrity
-ERROR here — two encodings of one fact with no rule about which wins — which is
-the difference between this copy of the reader and the scheduler's silent one.
+The registry home is the spec folder `docs/work/` (one file per work item,
+status = directory; the CSV home retired at concurrency-restructure Phase 5,
+RULING-4). Every rule below reads the same 17-key rows `read_registry_rows`
+emits. A stray resurrected `work-items.csv` is itself an integrity ERROR here
+— a second, unread encoding of the registry — which is the difference between
+this copy of the reader and the scheduler's silent one.
 
 The `SN->SR->LLR->TC` spine answers *what must be true*. A **work item**
 (`WI-###`) decomposes *how the work executes*: it delivers SR(s), belongs to a
@@ -180,7 +179,10 @@ WI_ID_RE = re.compile(r"^WI-\d+$")
 # named external dependency. `retired` (WI-267) is a TERMINAL won't-build row that
 # stays in the registry forever with its reason in the `Deliverable` column — a
 # deliberate dead-end, NOT an overload of `done` (a `done` WI shipped something; a
-# `retired` WI deliberately never will). An unknown status is a lint (warn-first).
+# `retired` WI deliberately never will). Since Phase 5 status is the spec's
+# DIRECTORY (an unknown one is a loader refusal) and `blocked` is DERIVED
+# (queued + blockref) rather than a status; the literal stays in these sets so
+# in-memory callers keep their meaning, but no loader can produce it.
 # "Open" = anything still in flight (not one of the two TERMINAL states).
 OPEN_STATUSES = ("queued", "active", "deferred", "blocked")
 # The terminal states: no further build/trace work is owed. Both require a filled
@@ -356,25 +358,6 @@ def spec_files(work_dir):
     return sorted(p for p in work_dir.rglob("WI-*.md") if p.parent != work_dir)
 
 
-def spec_registry_dir(csv_path):
-    """The spec folder that is AUTHORITATIVE for `csv_path`, or None when the CSV
-    still is. The dual-read resolution, stated once: REAL specs present => the
-    folder wins; none => the CSV is read exactly as before.
-
-    A `WI-000-*.md` EXAMPLE spec does not count as a real one, for the same
-    reason the `-000` row in every shipped registry template does not: it is the
-    format's documentation, scaffolded into a fresh repo so the shape is
-    copy-ready beside the CSV it will one day replace. A placeholder that
-    decided authority would hand every new scaffold an empty registry and a
-    two-registries-present finding on its first check. This is the AUTHORITY
-    rule only — `read_spec_rows` still parses and returns the example, exactly
-    as `csv.DictReader` still yields the `-000` CSV row, and `load_wis` is the
-    one place either representation goes inert."""
-    work_dir = spec_work_dir(csv_path)
-    real = [p for p in spec_files(work_dir) if not p.name.startswith(SPEC_EXAMPLE)]
-    return work_dir if real else None
-
-
 def parse_spec_frontmatter(text, relpath):
     """`(data, body)` for one spec file: the TOML frontmatter between the `+++`
     fences, parsed, and everything after the closing fence, verbatim."""
@@ -503,52 +486,37 @@ def _spec_id_number(wid):
 
 
 def read_registry_rows(path, errors=None):
-    """The work-item rows from whichever home is authoritative — the spec folder
-    beside `path` when it holds specs, else the CSV at `path`, read exactly as
-    before (`read_rows`).
+    """The work-item rows from the one registry home — the spec folder beside
+    `path` (`docs/work/`; the CSV home retired at concurrency-restructure
+    Phase 5, RULING-4). An absent folder reads as an empty registry.
 
     This module is the VALIDATOR, so it is the one copy of the reader that
-    SPEAKS. Two differences from the scheduler's and the coordinator's, both
-    deliberate:
+    SPEAKS. Two findings only it raises, both deliberate:
 
-      * **both homes present is itself a finding.** A tree carrying `docs/work/`
-        specs AND a `work-items.csv` has two encodings of one fact and no rule
-        about which wins; the folder is authoritative (RULING-4) and the CSV must
-        go. Silence here is how a transition state diverges unnoticed.
-      * **a malformed spec is reported, not skipped silently** — the same split
-        `load_wis` already draws for a malformed CSV id.
+      * **a stray `work-items.csv` is itself a finding.** No reader consumes
+        the CSV form any more, so a resurrected file is a second, silently
+        ignored encoding of the registry — name it and route to the fix.
+      * **a malformed spec is reported, not skipped silently** — the same
+        split `load_wis` already draws for a malformed id.
 
-    Findings append to `errors` when a list is given; with none, this degrades to
-    the quiet read every other caller wants."""
-    work_dir = spec_registry_dir(path)
-    if work_dir is None:
-        return read_rows(path)
+    Findings append to `errors` when a list is given; with none, this degrades
+    to the quiet read every other caller wants."""
     if errors is not None and Path(path).exists():
         errors.append(
-            "two registries present — {} is authoritative; delete {}".format(
-                WI_WORK, WI_CSV
-            )
+            "{} present but the CSV registry home retired (concurrency-"
+            "restructure Phase 5) — {} is the registry; convert stray rows "
+            "with wi_convert.py and delete the file".format(WI_CSV, WI_WORK)
         )
+    work_dir = spec_work_dir(path)
+    if not work_dir.is_dir():
+        return []
     return read_spec_rows(work_dir, on_error=None if errors is None else errors.append)
 
 
 def registry_home(root):
-    """The repo-relative path of the registry home this run actually read — the
-    one thing a message about "N errors in the registry" must not guess at."""
-    return WI_CSV if spec_registry_dir(root / WI_CSV) is None else WI_WORK
-
-
-def registry_cell_errors(root, rows):
-    """`cell_integrity_errors` for the CSV home only.
-
-    That rule exists because `staged_findings` compares `work-items.csv`
-    LINE-WISE, so a WI row must be one physical line. Nothing reads the folder
-    registry line-wise — a Deliverable there is a body SECTION, where a newline
-    is the format working as designed — so applying the rule there would reject
-    a valid registry for a property it does not need to have."""
-    if spec_registry_dir(root / WI_CSV) is not None:
-        return []
-    return cell_integrity_errors(rows)
+    """The repo-relative path of the registry home — `docs/work/`, the one
+    home since the CSV retired."""
+    return WI_WORK
 
 
 def load_wis(rows):
@@ -1615,24 +1583,11 @@ def ssot_findings(wis, root):
     out = []
     for w in wis:
         st = w["status"]
-        if st not in KNOWN_STATUSES:
-            out.append(
-                (
-                    "status-vocab",
-                    False,
-                    "{}: unknown status {!r} (expected queued|active|done|"
-                    "deferred|blocked|retired)".format(w["id"], st),
-                )
-            )
-        if st == "blocked" and not w["blockref"]:
-            out.append(
-                (
-                    "blocked-ref",
-                    True,
-                    "{}: status=blocked but BlockRef is empty (record the "
-                    "external dependency or decision that must clear)".format(w["id"]),
-                )
-            )
+        # (The `status-vocab` and `blocked-ref` rules retired with the CSV home
+        # at Phase 5: status is the spec's DIRECTORY, so an unknown status is a
+        # loader refusal before any row exists, and `blocked` is DERIVED as
+        # queued+blockref — a queued row without one is simply queued. No row
+        # can reach either rule.)
         # R-A: Deliverable non-empty IFF the WI is TERMINAL. A `done` WI's
         # Deliverable records what shipped; a `retired` WI's records the reason it
         # will never be built (WI-267) — either way the terminal row carries its
@@ -2203,13 +2158,12 @@ def _spec_row_times(root, work_dir, wids):
 
 
 def _wi_row_times(root, open_wis):
-    """`{wid: committer-time}` for the open WIs, from whichever registry home is
-    authoritative: ONE `git blame` over the CSV, whose rows are lines — or one
-    `git log` per open spec, because a folder registry has no rows to blame."""
-    work_dir = spec_registry_dir(root / WI_CSV)
-    if work_dir is None:
-        return _blame_row_times(root, WI_CSV)
-    return _spec_row_times(root, work_dir, [w["id"] for w in open_wis])
+    """`{wid: committer-time}` for the open WIs: one `git log` per open spec —
+    a folder registry has no rows to blame. (The CSV-home `git blame` half
+    retired with the CSV at Phase 5.)"""
+    return _spec_row_times(
+        root, spec_work_dir(root / WI_CSV), [w["id"] for w in open_wis]
+    )
 
 
 def backlog_staleness_findings(root, wis):
@@ -2359,28 +2313,13 @@ def _staged_wi_registry(root):
     Extracted for WI-344 (docs/dupes-allow `staged-close-scan`), forced early by
     WI-352 adding a fourth copy: the census fails closed on a same-file
     duplication, and the F5 sanction buys cross-SCRIPT copy-ability, so it never
-    covers one. Line-splitting the HEAD CSV is safe — a WI row is one physical
-    line, which `cell_integrity_errors` now enforces rather than assumes.
-
-    Dual-read (Phase 2b): in the spec-folder registry the same three facts come
-    from `_staged_spec_registry` below — the one place a `--staged` check has to
-    know which home it is reading, because "the registry changed" is a *diff*
-    question and the two homes have different diffs."""
+    covers one. (The CSV-home line-diff half retired with the CSV at Phase 5;
+    `_staged_spec_registry` is the one implementation.)"""
     staged = _git(root, ["diff", "--cached", "--name-only"])
     if staged is None:
         return None
     staged_names = set(staged.splitlines())
-    work_dir = spec_registry_dir(root / WI_CSV)
-    if work_dir is not None:
-        return _staged_spec_registry(root, staged_names, work_dir)
-    if WI_CSV not in staged_names:
-        return None
-    head_text = _git(root, ["show", "HEAD:" + WI_CSV])
-    if head_text is None:
-        return None
-    cur_map = _wi_status_map(read_rows(root / WI_CSV))
-    head_map = _wi_status_map(list(csv.DictReader(head_text.splitlines())))
-    return staged_names, cur_map, head_map
+    return _staged_spec_registry(root, staged_names, spec_work_dir(root / WI_CSV))
 
 
 def _staged_spec_registry(root, staged_names, work_dir):
@@ -2395,28 +2334,26 @@ def _staged_spec_registry(root, staged_names, work_dir):
     reports a move as an unpaired delete + add (rename detection is a heuristic;
     the status maps are not).
 
-    HEAD status comes from the tree listing (`_head_spec_status_map`), with the
-    CSV `git show` kept as the fallback for the one commit whose HEAD predates
-    the folder — the migration commit itself, where every spec would otherwise
-    read as newly-closed. HEAD `srs` are filled from the WORKING TREE row of the
-    same id: in this registry one work item is one file, so a commit that closes
-    A leaves B's SR-Refs untouched, and reading them from disk costs nothing.
-    What that cannot see is a commit closing A while also editing B's SR-Refs;
-    it would judge A against B's *new* refs. That is a narrower blind spot than
-    a silent no-op, which is what "paths alone" would otherwise buy here."""
+    HEAD status comes from the tree listing (`_head_spec_status_map`); a HEAD
+    with no `docs/work/` at all (a repo's first registry commit) has nothing a
+    close-time check can compare, so it degrades to None. (The CSV `git show`
+    fallback for the 2c migration commit retired with the CSV home at Phase 5
+    — that commit is history now.) HEAD `srs` are filled from the WORKING TREE
+    row of the same id: in this registry one work item is one file, so a
+    commit that closes A leaves B's SR-Refs untouched, and reading them from
+    disk costs nothing. What that cannot see is a commit closing A while also
+    editing B's SR-Refs; it would judge A against B's *new* refs. That is a
+    narrower blind spot than a silent no-op, which is what "paths alone" would
+    otherwise buy here."""
     changed = _git(root, ["diff", "--cached", "--name-status", "--", WI_WORK])
     if changed is None or not changed.strip():
         return None
     cur_map = _wi_status_map(read_spec_rows(work_dir))
     head_map = _head_spec_status_map(root)
     if head_map is None:
-        head_text = _git(root, ["show", "HEAD:" + WI_CSV])
-        if head_text is None:
-            return None
-        head_map = _wi_status_map(list(csv.DictReader(head_text.splitlines())))
-    else:
-        for wid, head in head_map.items():
-            head["srs"] = cur_map.get(wid, {}).get("srs", [])
+        return None
+    for wid, head in head_map.items():
+        head["srs"] = cur_map.get(wid, {}).get("srs", [])
     return staged_names, cur_map, head_map
 
 
@@ -2969,15 +2906,17 @@ def main():
         else:
             print("check_trajectory: WARN - {}".format(msg), file=sys.stderr)
 
-    # Dual-read (Phase 2b): `docs/work/` specs when present, else the CSV. Any
-    # finding about the REGISTRY ITSELF — a malformed spec, or both homes present
-    # at once — is an integrity error, the same tier as a malformed id. WI-349's
-    # physical-line cell check joins it, for the CSV home only (see
-    # `registry_cell_errors`).
+    # The one registry home (Phase 5): `docs/work/` specs. Any finding about
+    # the REGISTRY ITSELF — a malformed spec, or a stray resurrected CSV — is
+    # an integrity error, the same tier as a malformed id. (WI-349's
+    # physical-line cell check retired with the CSV home: nothing reads the
+    # folder registry line-wise, so a Deliverable body's newline is the format
+    # working as designed; `cell_integrity_errors` survives for the spine
+    # CSVs' own callers/tests.)
     registry_errors = []
     wi_rows = read_registry_rows(root / WI_CSV, registry_errors)
     wis, integrity = load_wis(wi_rows)
-    integrity = registry_errors + integrity + registry_cell_errors(root, wi_rows)
+    integrity = registry_errors + integrity
     if not wis and not integrity:
         if comp_errors:
             for e in comp_errors:

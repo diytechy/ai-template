@@ -6,12 +6,11 @@ scheduler contract of the parallel-WI-dispatch work (Slice A;
 docs/specs/parallel-wi-dispatch.md SR-057/SR-093..SR-095). It is a **pure, side-effect-free
 library + CLI** shared by validation, the dashboard, the dispatcher, and tests —
 it never mutates the registry, spawns a worker, or touches git. Readiness is
-DERIVED from the tracked WI registry plus any dispatcher reservations the caller
-passes in; it is never copied into prose. The registry has TWO possible homes and
-`load_registry_rows` resolves between them at the ROW level (Phase 2b of
-docs/concurrency-restructure.md): the spec folder `docs/work/` when it holds work
-specs, else `docs/requirements/work-items.csv` exactly as before. Everything past
-that one function — `load_wis` included — sees identical rows either way.
+DERIVED from the tracked WI registry plus any reservations the caller passes
+in; it is never copied into prose. The registry home is the spec folder
+`docs/work/` (`load_registry_rows`; the CSV home retired at
+concurrency-restructure Phase 5, RULING-4). Everything past that one function
+— `load_wis` included — sees the same 17-key rows.
 
 Two contracts live here:
 
@@ -197,25 +196,6 @@ def spec_files(work_dir):
     return sorted(p for p in work_dir.rglob("WI-*.md") if p.parent != work_dir)
 
 
-def spec_registry_dir(csv_path):
-    """The spec folder that is AUTHORITATIVE for `csv_path`, or None when the CSV
-    still is. The dual-read resolution, stated once: REAL specs present => the
-    folder wins; none => the CSV is read exactly as before.
-
-    A `WI-000-*.md` EXAMPLE spec does not count as a real one, for the same
-    reason the `-000` row in every shipped registry template does not: it is the
-    format's documentation, scaffolded into a fresh repo so the shape is
-    copy-ready beside the CSV it will one day replace. A placeholder that
-    decided authority would hand every new scaffold an empty registry and a
-    two-registries-present finding on its first check. This is the AUTHORITY
-    rule only — `read_spec_rows` still parses and returns the example, exactly
-    as `csv.DictReader` still yields the `-000` CSV row, and `load_wis` is the
-    one place either representation goes inert."""
-    work_dir = spec_work_dir(csv_path)
-    real = [p for p in spec_files(work_dir) if not p.name.startswith(SPEC_EXAMPLE)]
-    return work_dir if real else None
-
-
 def parse_spec_frontmatter(text, relpath):
     """`(data, body)` for one spec file: the TOML frontmatter between the `+++`
     fences, parsed, and everything after the closing fence, verbatim."""
@@ -344,12 +324,12 @@ def _spec_id_number(wid):
 
 
 def load_registry_rows(path):
-    """The work-item rows from whichever home is authoritative — the spec folder
-    beside `path` when it holds specs, else the CSV at `path`, read exactly as
-    before. The scheduler stays SILENT when both are present: reporting a
-    two-registry transition state is the validator's job (check_trajectory)."""
-    work_dir = spec_registry_dir(path)
-    return read_spec_rows(work_dir) if work_dir else load_rows(path)
+    """The work-item rows from the one registry home — the spec folder beside
+    `path` (`docs/work/`, status = directory). The CSV home retired at
+    concurrency-restructure Phase 5 (RULING-4); an absent folder reads as an
+    empty registry, the non-adopter posture."""
+    work_dir = spec_work_dir(path)
+    return read_spec_rows(work_dir) if work_dir.is_dir() else []
 
 
 def _split_refs(value):
@@ -679,10 +659,19 @@ def _disposition(wi, status, reserved, sched_class, class_reasons, exclusive_rea
     if st in _TERMINAL_DISPOSITION:
         disposition, code = _TERMINAL_DISPOSITION[st]
         return disposition, [code]
-    if st == "blocked":
-        return "blocked", ["excluded:blocked:%s" % (wi["blockref"] or "no-blockref")]
+    # `blocked` has no directory in the spec-folder registry (concurrency-
+    # restructure §2.1): a blocked item is `queued/` plus a `blockref` key, so
+    # the disposition is DERIVED here rather than read as a status. (The
+    # literal Status=blocked arm retired with the CSV home at Phase 5.)
+    if st == "queued" and wi["blockref"]:
+        return "blocked", ["excluded:blocked:%s" % wi["blockref"]]
     if st == "deferred":
         return "deferred", ["excluded:deferred"]
+    if st not in ("queued", "active"):
+        # A status this scheduler does not know (the legacy literal `blocked`
+        # included) is never silently ready — the same fail-closed posture as
+        # an unclassified SafetyClass.
+        return "excluded", ["excluded:unknown-status:%s" % (st or "(empty)")]
     if wi["id"] in reserved:
         return "reserved", ["reserved:claimed-by-live-train"]
     if not hard_preds_satisfied(wi, status):

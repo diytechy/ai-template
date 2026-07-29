@@ -12,10 +12,10 @@ Written at Phase 2a as meta-repo tooling, it became a **kit script** at Phase
 2c-i — the phase that ships the folder registry downstream (`bootstrap.py`
 scaffolds `docs/work/{queued,active,deferred,archive}/` and the `WI-000` example
 spec, and `plan_artifacts.py` imports this module as a sibling to file a new
-work item as a spec file). Running it is still the adopter's choice: it converts
-BETWEEN the two homes and never decides which one is authoritative — that
-resolution lives in each reader (`schedule.spec_registry_dir` and its two F5
-copies), and is "the folder when it holds specs, else the CSV".
+work item as a spec file). Running it is still the adopter's choice: it
+converts BETWEEN the two forms and never decides what the registry is — the
+folder is the one live home (Phase 5, RULING-4); the CSV form survives here
+as the legacy interchange format (migrate in, export for inspection).
 
 The spec-file form, per §2.1/§2.2:
 

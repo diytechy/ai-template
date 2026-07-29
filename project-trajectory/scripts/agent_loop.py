@@ -648,11 +648,16 @@ def build_scope_wis(root, docs, commit_range):
 
 
 def build_scope_srs(root, docs, commit_range):
-    """The SR ids delivered by the WI-tagged commits in `commit_range`."""
+    """The SR ids delivered by the WI-tagged commits in `commit_range`.
+
+    Reads the registry through `load_wi_registry` (the spec-folder home) —
+    the direct-CSV read this carried silently answered EMPTY in a
+    folder-registry tree, disarming the critique scope (found while
+    classifying its census pair at Phase 5, fixed with item 3)."""
     wi_ids = build_scope_wis(root, docs, commit_range)
     srs = set()
-    for r in _read_csv_rows(Path(docs) / "requirements" / "work-items.csv"):
-        if (r.get("WI-ID") or "").strip() in wi_ids:
+    for wid, r in load_wi_registry(Path(docs).parent).items():
+        if wid in wi_ids:
             srs.update(_refs(r.get("SR-Refs")))
     return srs
 
@@ -665,8 +670,10 @@ def critique_control(docs, wi_ids, default_max):
     Missing/invalid cells preserve the global default and move-on behavior.
     """
     budgets, disposition = [], "move-on"
-    for r in _read_csv_rows(Path(docs) / "requirements" / "work-items.csv"):
-        if (r.get("WI-ID") or "").strip() not in wi_ids:
+    # Through the registry loader, not a raw CSV read — the same Phase 5 item 3
+    # re-point as build_scope_srs above.
+    for wid, r in load_wi_registry(Path(docs).parent).items():
+        if wid not in wi_ids:
             continue
         raw = (r.get("CritiqueBudget") or "").strip().lower()
         if raw == "inf":

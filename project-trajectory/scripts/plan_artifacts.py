@@ -12,7 +12,7 @@ tracked UTF-8 file with a stable name, appends the verdict summary to
 `docs/log.md`, and files the selected plan's `Plan-WI` rows as **queued** work
 items in the registry's home — `docs/work/queued/` spec files when the folder
 is the registry (via the `wi_convert` sibling, IF-078), legacy
-`docs/requirements/work-items.csv` rows otherwise — such that
+spec files (the one registry home since Phase 5) — such that
 `check_trajectory.py` passes on the result (R-A: a queued WI carries an empty
 Deliverable; the graph stays acyclic; plan-local predecessors resolve to the
 freshly minted ids).
@@ -144,12 +144,11 @@ def parse_plan_wis(text):
 
 
 def _existing_wi_nums(csv_path):
-    """The integer suffixes of every well-formed `WI-###` id in EITHER registry
-    home (the inert `-000` example included — it is still a real max floor of
-    0, never a collision). Deliberately the UNION rather than the
-    authoritative home's ids: mid-migration a repo can carry a CSV it stopped
-    reading and a folder it started writing, and either single-home allocator
-    mints an id the other already used."""
+    """The integer suffixes of every well-formed `WI-###` id in the folder home
+    plus any stray legacy CSV (the inert `-000` example included — a real max
+    floor of 0, never a collision). The CSV home retired at Phase 5, but a
+    stray file's ids still count: an allocator that ignored them could mint a
+    collision while the validator routes the human to delete the file."""
     nums = set()
     if csv_path.exists():
         # utf-8-sig: a BOM'd registry (Excel) renamed the first header key, so
@@ -167,40 +166,9 @@ def _existing_wi_nums(csv_path):
     return nums
 
 
-def _registry_header(csv_path):
-    """Return an existing registry's declared column order or the modern
-    template header for an absent/empty registry."""
-    if csv_path.exists() and csv_path.stat().st_size:
-        # utf-8-sig: with a BOM the first header name became "﻿WI-ID" and
-        # DictWriter(extrasaction="ignore") silently DROPPED every row's real
-        # "WI-ID" value — appended rows carried empty id cells (M-33).
-        with csv_path.open(encoding="utf-8-sig", newline="") as fh:
-            header = next(csv.reader(fh), [])
-        if header:
-            return header
-    return WI_HEADER
-
-
-def _append_csv_rows(csv_path, rows):
-    """Append mapping `rows` by the registry's actual header (quoting-safe),
-    preserving line endings and terminating the prior last row first."""
-    newline = _detect_newline(csv_path)
-    write_header = not csv_path.exists() or csv_path.stat().st_size == 0
-    needs_nl = csv_path.exists() and csv_path.read_bytes()[-1:] not in (b"", b"\n")
-    csv_path.parent.mkdir(parents=True, exist_ok=True)
-    with csv_path.open("a", encoding="utf-8", newline="") as fh:
-        if needs_nl:
-            fh.write(newline)
-        writer = csv.DictWriter(
-            fh,
-            fieldnames=_registry_header(csv_path),
-            extrasaction="ignore",
-            lineterminator=newline,
-        )
-        if write_header:
-            writer.writeheader()
-        for row in rows:
-            writer.writerow(row)
+# (_registry_header/_append_csv_rows — the CSV home's append — retired with
+# the CSV registry at concurrency-restructure Phase 5; the folder writer
+# below is the one filing path.)
 
 
 def _write_spec_rows(csv_path, rows):
@@ -327,18 +295,9 @@ def file_selected_wis(
                 "BuildTier": tier_map.get(r["id"], DEFAULT_TIER),
             }
         )
-    # Filing home: the folder when it is authoritative — the READERS' own rule
-    # (`wi_convert.folder_is_authoritative`) — and ALSO when the CSV does not
-    # exist but a docs/work/ scaffold does: a fresh folder-first repo holds
-    # only the inert -000 example, which never flips read authority, and
-    # filing its first real WI must not resurrect a CSV the scaffold omitted.
-    work_dir = wi_convert.work_dir_for(csv_path)
-    if wi_convert.folder_is_authoritative(csv_path) or (
-        not csv_path.exists() and work_dir.is_dir()
-    ):
-        _write_spec_rows(csv_path, out_rows)
-    else:
-        _append_csv_rows(csv_path, out_rows)
+    # Filing home: the spec folder, the one registry home since the CSV
+    # retired (concurrency-restructure Phase 5, RULING-4).
+    _write_spec_rows(csv_path, out_rows)
     return mapping
 
 

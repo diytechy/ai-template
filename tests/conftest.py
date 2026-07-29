@@ -7,7 +7,6 @@ scaffold in a temp dir and run the actual commands.
 """
 
 import collections
-import csv
 import importlib.util
 import os
 import shutil
@@ -601,17 +600,29 @@ def wi_row(wid, preds="", safety="ordinary", status="queued", sr="SR-061", colum
 
 
 def write_wi_registry(repo, rows, header=None):
-    """Write docs/requirements/work-items.csv under `repo`.
-
-    `newline=""` is the csv module's contract (it owns the line terminator —
-    \\r\\n here), never the platform's; every copy this replaced passed it.
-    """
-    reg = Path(repo) / "docs" / "requirements"
-    reg.mkdir(parents=True, exist_ok=True)
-    with open(str(reg / "work-items.csv"), "w", encoding="utf-8", newline="") as fh:
-        w = csv.writer(fh)
-        w.writerow(wi_registry_header() if header is None else header)
-        w.writerows(rows)
+    """Write the fixture WI registry in its one home, `docs/work/` spec files
+    (Phase 5 — the CSV home retired). The signature is unchanged: `rows` are
+    header-ordered cell lists exactly as the CSV era wrote them, mapped here
+    through the format's single writer (wi_convert), so the ~250 call sites
+    across the session-engine suites read as before. Re-writing an id
+    replaces its spec (fixtures re-seed freely); the file for a previous
+    status is removed first so status = directory stays single-homed."""
+    wc = load_script("wi_convert")
+    cols = wi_registry_header() if header is None else header
+    work = Path(repo) / "docs" / "work"
+    work.mkdir(parents=True, exist_ok=True)
+    for n, cells in enumerate(rows, 1):
+        row = {c: "" for c in wc.COLUMNS}
+        row.update({col: (cell or "") for col, cell in zip(cols, cells)})
+        row["Status"] = row.get("Status") or "queued"
+        if row["Status"] == "done" and not row.get("Deliverable"):
+            row["Deliverable"] = "shipped"
+        wid = row["WI-ID"]
+        for old in work.glob("*/{}-*.md".format(wid)):
+            old.unlink()
+        for old in work.glob("active/*/{}-*.md".format(wid)):
+            old.unlink()
+        wc.write_spec_file(work, row, order=n)
 
 
 @pytest.fixture

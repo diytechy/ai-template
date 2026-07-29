@@ -228,7 +228,14 @@ BASELINE = {
     # quarantine/stranded-train pending sources, the run-state ask, the
     # PENDING_LOCAL_LABEL split and its mask. pending_block is now a pure
     # function of the committed tree. Ratcheted DOWN.
-    "gen_trajectory.py": 4960,
+    # +1 (4960 -> 4961), Phase 5 item 3/C4 (2026-07-29): _blocked_pending's
+    # docstring records the derived-blocked rule (queued + blockref — blocked
+    # has no directory). Reviewed bump.
+    # +6 (4961 -> 4967), Phase 5 C4 (2026-07-29): _wi_status DERIVES blocked
+    # (queued + blockref) so the dashboard keeps the WI-272/M-2 distinction
+    # the folder model would otherwise have erased — found by the fixture
+    # conversion, fixed rather than re-grounded away. Reviewed bump.
+    "gen_trajectory.py": 4967,
     # (agent_dispatch.py and its whole bump history retired with the module
     # at concurrency-restructure Phase 5 - the dispatcher deleted wholesale;
     # the surviving integrator is integrate.py, below this threshold.)
@@ -266,7 +273,12 @@ BASELINE = {
     # --train becomes the optional session tag defaulting to the current
     # branch name (flattened), TRAIN_BRANCH_PREFIX re-export gone. Ratcheted
     # DOWN.
-    "agent_loop.py": 2999,
+    # +7 (2999 -> 3006), Phase 5 item 3/C4 (2026-07-29): build_scope_srs and
+    # critique_control re-point from direct-CSV reads (empty in the folder
+    # tree — the silent-disarm defect found at C1's census classification)
+    # through load_wi_registry; the bump is the docstring recording the
+    # defect. Reviewed bump.
+    "agent_loop.py": 3006,
     # +30 (2206 -> 2236), WI-065: `tc_citation_findings` — the TC-`Verifies`
     # rules lifted out of `analyze` so the cell could accept `IF-###` seam ids.
     # Most of the bump is that helper's docstring, which is where the RULING now
@@ -454,7 +466,16 @@ BASELINE = {
     # WI-115 stale-end-state warn) retired with docs/run-state — no writer, no
     # file, no staleness to warn about. Ratcheted DOWN; the CSV-plumbing
     # down-stamp still lands with Phase 5 item 3.
-    "check_trajectory.py": 3100,
+    # -51 (3100 -> 3049), Phase 5 item 3/C4 (2026-07-29): the CSV home's
+    # plumbing — spec_registry_dir, the dual-read fallback, registry_cell_
+    # errors' WI-home wiring, _wi_row_times' blame half, _staged_wi_registry's
+    # line-diff half and the migration-commit CSV fallback. The Phase 2b/2c-i
+    # bumps above are repaid. Ratcheted DOWN.
+    # -10 (3049 -> 3039), Phase 5 item 3/C4 follow-through (2026-07-29): the
+    # unreachable `status-vocab` and `blocked-ref` ssot rules retired —
+    # status is the spec's directory (loader-refused if unknown) and blocked
+    # is derived, so no row can reach either. Ratcheted DOWN.
+    "check_trajectory.py": 3039,
     # +1 (1916 -> 1917), WI-279: one MAPPING row registering the new
     # scripts/check_coverage.py kit gate so it ships downstream — a required
     # one-line registration, not monolith growth (the reviewed-bump escape the
@@ -540,7 +561,11 @@ BASELINE = {
     # resolve_coordinator_dials dropped the dispatcher jobs dial, the
     # llm/train branch-equality preflight re-grounded on the claim model, and
     # TRAIN_BRANCH_PREFIX left. Ratcheted DOWN.
-    "agent_common.py": 1664,
+    # -22 (1664 -> 1642), Phase 5 item 3/C4 (2026-07-29): THE scheduled
+    # down-stamp — the dual-read resolution (spec_registry_dir + the CSV
+    # fallback) collapsed to the folder-only read; the +228/+15 entries above
+    # are repaid. Ratcheted DOWN.
+    "agent_common.py": 1642,
 }
 
 

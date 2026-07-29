@@ -10,7 +10,7 @@ import subprocess
 import sys
 
 import pytest
-from conftest import SCRIPTS, load_script, run_py
+from conftest import SCRIPTS, load_script, run_py, write_wi_registry
 
 agent_loop = load_script("agent_loop")
 
@@ -202,6 +202,23 @@ def _git(repo, *args):
     return p.stdout.strip()
 
 
+def _wi_201_row(tier):
+    """The assigned work item, as a 10-wide conftest WI row at `tier` — the
+    BuildTier the worker pins its build session to (WI-181)."""
+    return [
+        "WI-201",
+        "Scoped work for WI-201",
+        "ws",
+        "",
+        "",
+        "queued",
+        "",
+        "",
+        tier,
+        "ordinary",
+    ]
+
+
 @pytest.fixture
 def managed_repo(tmp_path):
     """A git repo wired for managed routing: docs/agents.csv (all rows point at
@@ -212,12 +229,7 @@ def managed_repo(tmp_path):
     (repo / "docs" / "status.md").write_text(STATUS_MD, encoding="utf-8")
     (repo / "docs" / "run-phase").write_text("BUILD\n", encoding="utf-8")
     (repo / "docs" / "requirements").mkdir(parents=True, exist_ok=True)
-    (repo / "docs" / "requirements" / "work-items.csv").write_text(
-        "WI-ID,Title,Workstream,SR-Refs,Predecessors,Status,Deliverable,"
-        "SpecRef,BuildTier,SafetyClass\n"
-        "WI-201,Scoped work for WI-201,ws,,,queued,,,medium,ordinary\n",
-        encoding="utf-8",
-    )
+    write_wi_registry(repo, [_wi_201_row("medium")])
     (repo / ".gitignore").write_text("out/\n", encoding="utf-8")
     _git(repo, "init")
     _git(repo, "config", "user.email", "loop@example.com")
@@ -482,14 +494,9 @@ def test_two_top_tier_failures_page_the_human(managed_repo):
     (repo / "docs" / "review-policy").write_text("1\n", encoding="utf-8")
     (ctl / "done_after").write_text("1", encoding="utf-8")
     # The worker pins the BUILD tier from the WI row (WI-181), so the row —
-    # not just the tier-map — must declare strong for a top-tier build.
-    wi_csv = repo / "docs" / "requirements" / "work-items.csv"
-    wi_csv.write_text(
-        wi_csv.read_text(encoding="utf-8").replace(
-            ",medium,ordinary", ",strong,ordinary"
-        ),
-        encoding="utf-8",
-    )
+    # not just the tier-map — must declare strong for a top-tier build. Re-writing
+    # the id replaces its spec file in docs/work/ (the registry's one home).
+    write_wi_registry(repo, [_wi_201_row("strong")])
     (ctl / "verdict_body.txt").write_text(
         "- [MAJOR] work.txt:1 -> broken -> fix -> @owner\n"
         "VERDICT: CHANGES-REQUESTED findings=1\n",
@@ -772,12 +779,7 @@ def _winstay_repo(tmp_path):
     (repo / "docs" / "status.md").write_text(STATUS_MD, encoding="utf-8")
     (repo / "docs" / "run-phase").write_text("BUILD\n", encoding="utf-8")
     (repo / "docs" / "review-policy").write_text("2\n", encoding="utf-8")
-    (repo / "docs" / "requirements" / "work-items.csv").write_text(
-        "WI-ID,Title,Workstream,SR-Refs,Predecessors,Status,Deliverable,"
-        "SpecRef,BuildTier,SafetyClass\n"
-        "WI-201,Scoped work for WI-201,ws,,,queued,,,medium,ordinary\n",
-        encoding="utf-8",
-    )
+    write_wi_registry(repo, [_wi_201_row("medium")])
     (repo / ".gitignore").write_text("out/\n", encoding="utf-8")
     _git(repo, "init")
     _git(repo, "config", "user.email", "loop@example.com")

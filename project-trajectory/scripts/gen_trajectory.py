@@ -1442,11 +1442,17 @@ def _hscroll(label):
 
 
 def _wi_status(w):
-    """A work item's TRUE registry status, for every text surface (WI-272).
+    """A work item's TRUE status, for every text surface (WI-272).
 
+    `blocked` is DERIVED here — a `queued/` spec carrying a `blockref`
+    (concurrency-restructure §2.1: blocked has no directory) — so the render
+    keeps telling the reader a parked row is parked, the exact distinction
+    WI-272/review-M-2 protects; the loaders themselves never mint the status.
     Only a status the vocabulary does not know at all falls back, and it falls
-    back to `queued` because that is the safe read for an unrecognized row — the
-    six declared statuses are always reported as themselves."""
+    back to `queued` because that is the safe read for an unrecognized row —
+    the declared statuses are always reported as themselves."""
+    if w["status"] == "queued" and w.get("blockref"):
+        return "blocked"
     return w["status"] if w["status"] in STATUS_BUCKET else "queued"
 
 
@@ -4550,13 +4556,14 @@ def _git(root, *args):
 
 
 def _blocked_pending(root):
-    """Source (a): `(lines, ids)` — one line per `blocked` WI row carrying a
-    BlockRef, and the set of WI ids covered. The pointer is the BlockRef
-    path."""
+    """Source (a): `(lines, ids)` — one line per blocked work item, and the set
+    of WI ids covered. In the spec-folder registry blocked is DERIVED: a
+    `queued/` item carrying a `blockref` key (concurrency-restructure §2.1 —
+    `blocked` has no directory). The pointer is the BlockRef path."""
     wis, _ = ct.load_wis(ct.read_registry_rows(root / ct.WI_CSV))
     lines, ids = [], set()
     for w in sorted(wis, key=lambda w: w["id"]):
-        if w["status"] != "blocked" or not w["blockref"]:
+        if w["status"] != "queued" or not w["blockref"]:
             continue
         lines.append(
             "- **{}** blocked — attest/ratify `{}`, then unblock the registry "

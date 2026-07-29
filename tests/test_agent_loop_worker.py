@@ -263,10 +263,10 @@ def test_worker_blocked_trailer_exits_blocked(tmp_path):
     assert "BlockRef: OI-99" in proc.stdout
     # The worker never writes the durable disposition — the registry row on
     # the train branch is untouched (the integrator owns Status, Slice F).
-    reg = (repo / "docs" / "requirements" / "work-items.csv").read_text(
+    spec = next((repo / "docs" / "work" / "queued").glob("WI-201-*.md")).read_text(
         encoding="utf-8"
     )
-    assert "blocked" not in reg.splitlines()[2].lower()
+    assert "blockref" not in spec.lower()  # still queued, no durable block
 
 
 def test_worker_resume_with_complete_evidence_spends_no_session(tmp_path):
@@ -459,7 +459,7 @@ def test_worker_unknown_or_done_wi_fails_closed(tmp_path):
     repo, base, ctl, fake = _setup(tmp_path)
     proc = _worker(repo, fake, ctl, "--wi", "WI-999", "--train", "t1")
     assert proc.returncode == agent_loop.EXIT_PREFLIGHT
-    assert "not in docs/requirements" in (proc.stdout + proc.stderr)
+    assert "not in the docs/work/ registry" in (proc.stdout + proc.stderr)
     proc = _worker(repo, fake, ctl, "--wi", "WI-200", "--train", "t1")
     assert proc.returncode == agent_loop.EXIT_PREFLIGHT
     out = proc.stdout + proc.stderr

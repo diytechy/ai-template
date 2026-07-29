@@ -280,7 +280,13 @@ def _render(rows, header):
 def _consumer_signature(root):
     """Every registry consumer's output over the work-items.csv at ``root``,
     as one comparable tuple: schedule classification/disposition, the
-    check_trajectory SSOT findings, the critique dials, and the plan modes."""
+    check_trajectory SSOT findings, the critique dials, and the plan modes.
+
+    Phase 5 note: ``critique_control`` takes a repo root and now reads only the
+    ``docs/work/`` home, so over these CSV-only scratch roots it returns the
+    default and contributes a CONSTANT. The width-neutrality claim rests on the
+    three row-dict consumers; the dial stays in the tuple so a consumer that
+    starts disagreeing across widths is still caught wherever it reads from."""
     schedule = load_script("schedule")
     ct = load_script("check_trajectory")
     al = load_script("agent_loop")
@@ -314,9 +320,9 @@ def test_schema_widening_is_behavior_neutral(tmp_path):
     column's first use, and a deliberate priority is *supposed* to change the
     schedule. A consumer reading a new column positionally still corrupts the
     core ten and fails here regardless of cell content."""
-    # The live rows come from whichever home the registry occupies — since the
-    # Phase 2c flip that is the docs/work/ folder, read through the validator's
-    # own dual-read loader so this harness needs no opinion about the home.
+    # The live rows come from the registry's one home, the docs/work/ folder
+    # (Phase 5: the CSV home retired), read through the validator's own loader —
+    # which derives that folder from the CSV path it is still handed.
     ct_live = load_script("check_trajectory")
     live_rows = ct_live.read_registry_rows(ROOT / "docs/requirements/work-items.csv")
     wide_header = _header(TEMPLATE_DIR / "work-items.template.csv")

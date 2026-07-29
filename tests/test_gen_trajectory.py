@@ -1,6 +1,7 @@
 """gen_trajectory.py — the offline trajectory dashboard (Thread 52 phase 2).
 
-The generator renders the root PROJECT_STATE.html from work-items.csv + the spine as a
+The generator renders the root PROJECT_STATE.html from the work-item registry (the
+`docs/work/` spec folder) + the spine as a
 *view* (a design principle: text is truth). What matters is that it is fully
 offline (no CDN), deterministic (so the --check freshness gate is byte-stable),
 refuses to render an invalid registry, and stays vacuous when there is nothing to
@@ -8,11 +9,13 @@ show. Each is pinned by running the real script over a minimal temp project.
 """
 
 import collections
+import csv
 import html
 import re
 import shutil
 import subprocess
 import sys
+from pathlib import Path
 
 import pytest
 from conftest import ROOT, SCRIPTS, load_script, run_py
@@ -53,6 +56,59 @@ GOOD_WIS = (
 )
 
 
+# The BlockRef a `blocked` fixture row gets when its header declares no column
+# for one: since Phase 5 the impediment pointer is what MAKES a row blocked, so
+# it cannot be left empty the way the CSV era could.
+BLOCKREF = "docs/gate/attest-SR-001.md"
+
+
+def write_wis(root, wis_body=GOOD_WIS, header=WI_HEADER):
+    """Write the fixture work items into the registry's one home — `docs/work/`
+    spec files, status = directory (the CSV home retired at
+    concurrency-restructure Phase 5, RULING-4).
+
+    The CSV-shaped `wis_body`/`header` inputs stay: they are the compact,
+    readable way to state a registry in a test, and the ROW ORDER they declare is
+    reproduced through the `order` frontmatter key the folder reader sorts on.
+    Two statuses need translating, because the folder form encodes them
+    differently rather than as a word in a cell:
+
+      * `blocked` has no directory — a blocked item is a `queued/` spec carrying
+        a `blockref`, which is what schedule.py derives the "blocked" disposition
+        and gen_trajectory's pending block from;
+      * `active` is `active/<branch>/`, one level deeper, so the spec is written
+        and then MOVED exactly as `integrate.py claim` files a claim.
+
+    Re-writing an id replaces its spec (fixtures re-seed freely); the file for a
+    previous status is removed first so status = directory stays single-homed.
+    """
+    wc = load_script("wi_convert")
+    cols = next(csv.reader([header.strip("\n")]))
+    work = root / "docs" / "work"
+    work.mkdir(parents=True, exist_ok=True)
+    for order, cells in enumerate(csv.reader(wis_body.splitlines()), 1):
+        if not cells:
+            continue
+        row = dict.fromkeys(wc.COLUMNS, "")
+        row.update({c: (v or "") for c, v in zip(cols, cells) if c in row})
+        status = row["Status"] or "queued"
+        if status == "blocked":
+            row["Status"] = "queued"
+            row["BlockRef"] = row["BlockRef"] or BLOCKREF
+        elif status == "active":
+            row["Status"] = "queued"  # relocated to active/<branch>/ below
+        wid = row["WI-ID"]
+        for old in list(work.glob("*/{}-*.md".format(wid))) + list(
+            work.glob("active/*/{}-*.md".format(wid))
+        ):
+            old.unlink()
+        relpath = wc.write_spec_file(work, row, order=order)
+        if status == "active":
+            claim = work / "active" / wid.lower() / Path(relpath).name
+            claim.parent.mkdir(parents=True, exist_ok=True)
+            (work / relpath).replace(claim)
+
+
 def make_repo(root, wis_body=GOOD_WIS, readme=True, header=WI_HEADER):
     req = root / "docs" / "requirements"
     req.mkdir(parents=True)
@@ -61,7 +117,7 @@ def make_repo(root, wis_body=GOOD_WIS, readme=True, header=WI_HEADER):
     (req / "system-requirements.csv").write_text(SRS, encoding="utf-8")
     (req / "low-level-requirements.csv").write_text(LLRS, encoding="utf-8")
     (root / "docs" / "test" / "test-cases.csv").write_text(TCS, encoding="utf-8")
-    (req / "work-items.csv").write_text(header + wis_body, encoding="utf-8")
+    write_wis(root, wis_body, header)
     if readme:
         (root / "README.md").write_text(
             '# demoproj\n\n<a id="vision"></a>\n'
@@ -300,11 +356,7 @@ def test_check_passes_fresh_and_trips_stale(tmp_path):
     fresh = gen(tmp_path, "--check")
     assert fresh.returncode == 0 and "up to date" in fresh.stdout
     # edit the registry without regenerating -> the committed HTML is stale.
-    wi = tmp_path / "docs" / "requirements" / "work-items.csv"
-    wi.write_text(
-        wi.read_text(encoding="utf-8") + "WI-005,More,scripts,SR-001,WI-004,queued,d\n",
-        encoding="utf-8",
-    )
+    write_wis(tmp_path, GOOD_WIS + "WI-005,More,scripts,SR-001,WI-004,queued,d\n")
     stale = gen(tmp_path, "--check")
     assert stale.returncode == 1 and "STALE" in stale.stderr
     # regenerating restores freshness.
@@ -1019,7 +1071,12 @@ def tiered_repo(root, wis_body, header=TIER_HDR, srs=TIER_SRS):
     return root
 
 
-# --- WI-272 (review M-2): six registry statuses, four swatches, no rewriting ----
+# --- WI-272 (review M-2): the registry statuses, four swatches, no rewriting ----
+# The `blocked` row below is stated in the CSV-shaped fixture vocabulary and
+# `write_wis` files it the way the folder registry encodes it since Phase 5: a
+# `queued/` spec carrying a `blockref`. So five statuses reach the render, and
+# `blocked` is a DISPOSITION derived from the pointer rather than a word in a
+# cell — see the two tests below for what that costs the dashboard.
 
 SIX_STATUS_WIS = (
     "WI-001,Bootstrap,scripts,SR-001,,done,the adder\n"
@@ -1046,6 +1103,10 @@ def test_wi272_deferred_and_blocked_are_never_rewritten_as_queued(tmp_path):
     assert gen(tmp_path).returncode == 0
     page = html_of(tmp_path)
 
+    # All six statuses — `blocked` included: since Phase 5 it is DERIVED
+    # (`queued/` + a `blockref` key, no directory of its own), and the
+    # dashboard's `_wi_status` derives it so the render keeps the distinction
+    # this test exists to protect.
     for status in ("done", "active", "queued", "deferred", "blocked", "retired"):
         assert 'data-status="{}"'.format(status) in page, (
             "no node carries data-status={} — the DOM lost the true status".format(
@@ -1058,9 +1119,9 @@ def test_wi272_deferred_and_blocked_are_never_rewritten_as_queued(tmp_path):
     # the hover title names the row's own status, not its bucket
     assert "WI-004 — Someday (deferred)" in page
     assert "WI-005 — Waiting (blocked)" in page
-    # ...and the two share `queued`'s swatch, deliberately and visibly: the
+    # ...and `deferred` shares `queued`'s swatch, deliberately and visibly: the
     # legend names the grouping rather than leaving the shared colour to imply
-    # they are queued.
+    # it is queued, and it still spells out the impeded state in words + glyph.
     gt = load_script("gen_trajectory")
     assert gt.STATUS_BUCKET["deferred"] == gt.STATUS_BUCKET["blocked"] == "queued"
     assert "not started" in page
@@ -1070,8 +1131,9 @@ def test_wi272_deferred_and_blocked_are_never_rewritten_as_queued(tmp_path):
 
 def test_wi272_status_is_carried_through_the_tiered_drill_too(tmp_path):
     # The flat DAG and the tiered drill are separate emitters; M-2 named both.
-    # The drill's leaf label is glyph-prefixed per STATUS, so `deferred` and
-    # `blocked` differ from `queued` there without any colour at all.
+    # The drill's leaf label is glyph-prefixed per STATUS, so `deferred`,
+    # `blocked` (derived from queued+blockref since Phase 5) and `retired`
+    # differ from `queued` there without any colour at all.
     tiered_repo(tmp_path, TIER_UNION_WIS + SIX_STATUS_WIS.replace("WI-00", "WI-01"))
     assert gen(tmp_path).returncode == 0
     gt = load_script("gen_trajectory")
@@ -1087,9 +1149,11 @@ def test_wi272_status_is_carried_through_the_tiered_drill_too(tmp_path):
     assert labels, "no work-item blocks rendered"
     glyphs = set(gt.STATUS_GLYPH.values())
     assert all(lab[0] in glyphs for lab in labels), labels
-    # the parked/impeded glyphs actually reached the drill, so this is not vacuous
+    # the parked/terminal minority glyphs actually reached the drill, so this is
+    # not vacuous (both would be ○ if the emitter clamped to the bucket)
     assert any(lab[0] == gt.STATUS_GLYPH["deferred"] for lab in labels), labels
     assert any(lab[0] == gt.STATUS_GLYPH["blocked"] for lab in labels), labels
+    assert any(lab[0] == gt.STATUS_GLYPH["retired"] for lab in labels), labels
 
 
 def test_when_view_tiers_by_phase_above_threshold(tmp_path):
@@ -1405,7 +1469,7 @@ def with_gate(root, gate="G2", wis_body=GOOD_WIS, header=WI_HEADER):
 def test_process_tab_renders_three_panels_from_live_data(tmp_path):
     # SR-050: with a docs/gate the dashboard gains the Process tab — the three
     # linked panels, each joining a canonical data source (docs/gate, the spine
-    # registries, work-items.csv) rather than restating hand-set numbers.
+    # registries, the docs/work/ registry) rather than restating hand-set numbers.
     with_gate(tmp_path, "G2")
     assert gen(tmp_path).returncode == 0
     text = html_of(tmp_path)
@@ -1424,7 +1488,7 @@ def test_process_tab_renders_three_panels_from_live_data(tmp_path):
     for phase in ("PLAN", "BUILD", "REVIEW-A/B", "CRITIQUE", "INTEGRATE"):
         assert phase in text
     assert "DESIGN-CHECK" in text and "Page the human" in text
-    # panel 3 states the two bars and joins work-items.csv (4 WIs, 1 done)
+    # panel 3 states the two bars and joins the WI registry (4 WIs, 1 done)
     assert "commit bar" in text and "gate bar" in text
     assert "4 work items · 1 done." in text
     # still fully offline with the new tab present
@@ -1606,7 +1670,7 @@ def test_process_link_outs_prefer_the_scaffolded_docs(tmp_path):
 
 
 def test_process_wi_counts_join_work_items(tmp_path):
-    # Panel 3's numbers are a live join over work-items.csv (total + done counts).
+    # Panel 3's numbers are a live join over the WI registry (total + done counts).
     with_gate(tmp_path, "G2", SMALL_WIS)
     assert gen(tmp_path).returncode == 0
     text = html_of(tmp_path)
@@ -4931,10 +4995,7 @@ def test_run_captured_states_the_five_keywords_and_degrades_off_git(
     with pytest.raises(OSError):
         gt._run_captured(["git", "--version"])
     # ...and both callers degrade to their empty forms rather than propagate.
-    (tmp_path / "docs" / "requirements").mkdir(parents=True)
-    (tmp_path / "docs" / "requirements" / "work-items.csv").write_text(
-        WI_HEADER, encoding="utf-8"
-    )
+    # (No registry is seeded: `_git`/`_asof` read git, not the work items.)
     assert gt._git(tmp_path, "rev-parse", "HEAD") == (1, "")
     assert gt._asof(tmp_path) == ""
 
