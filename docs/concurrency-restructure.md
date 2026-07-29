@@ -109,8 +109,20 @@ what forced `agent_dispatch.py` to hand-roll a forge in 4,042 lines.
 docs/work/
   queued/WI-360-forge-seam.md          # filed, unclaimed
   active/<branch>/WI-360-forge-seam.md # claimed by that branch
-  archive/WI-360-forge-seam.md         # done (moved by the closing PR)
+  deferred/WI-280-core-decomposition.md# parked with its reason (first-class,
+                                       #   as today's `deferred` status is)
+  archive/WI-360-forge-seam.md         # done (moved by the closing merge)
 ```
+
+Phase 2a grammar (fixed with the converter, so design and code cannot
+drift): frontmatter is TOML between `+++` delimiter lines; the long
+`Deliverable` record lives in the **body** under `## Deliverable` (verbatim
+prose — no escaping problems by construction); filenames are
+`<id>-<slug>.md` with a ≤40-char kebab slug from the title; `needs` tokens
+keep the `~` soft-dependency prefix verbatim; the converter **refuses** any
+status outside `done/retired/queued/deferred` (a classifier that cannot
+finish is louder than a catch-all) and refuses to materialize into a
+non-empty target without `--force` (no accidental second home).
 
 Moves in distinct paths never conflict; two branches claiming the same spec
 produce a visible move/move conflict — the reservation collision surfaced by
@@ -322,11 +334,32 @@ never a forgotten one (the stale-reason lesson).
   Remaining: clean the train residue.
 - **Phase 1 — declarations.** PROCESS.md names git; dependency ledger + its
   enforcement test; the integration seam documented (both backends).
-- **Phase 2 — specs as registry.** Converter generates one spec file per
-  existing CSV row (mechanical; frontmatter from columns); loaders in
-  `schedule.py` / `check_trajectory.py` / `gen_trajectory.py` switch to the
-  folder; CSV becomes generated or is deleted. *The converter is proven by a
-  byte-exact round-trip before the CSV is demoted* (the 140-cell lesson).
+- **Phase 2 — specs as registry.**
+  **2a is DONE (2026-07-28):** `tools/wi_convert.py` + `tests/test_wi_convert.py`
+  — the round-trip over the live registry is **cell-exact and byte-identical**
+  (354 rows, all 17 columns, quoting included; the 140-cell lesson satisfied
+  outright). The converter is **meta-repo tooling until 2c**: shipping it in
+  `project-trajectory/scripts/` today would demand spine containment (a new
+  SR/LLR — a barrier edit and an open window) for a tool whose target format
+  the kit does not yet ship; it moves into the kit **at 2c**, inside the
+  wholesale spine amendment that flips authority. `docs/work/` stays
+  unmaterialized until that same flip — the CSV remains the single home.
+  **2b (loader swap), re-scoped by the consumer inventory (2026-07-28):**
+  migrate only the SURVIVING consumers — `schedule.load_wis` +
+  `check_trajectory.load_wis` (each keeps its OWN folder loader, drift-guard
+  extended, per the F5/WI-291 pattern), `gen_trajectory` (reads via
+  `schedule`; a re-point), `agent_common.load_wi_registry`, and
+  `plan_artifacts` (id allocation becomes the §2.3 trunk-serial claim; its
+  append-a-row becomes write-a-file-in-`queued/`). The dispatcher's write
+  paths (`_rewrite_wi_rows` + 4 sites, `_union_registry`,
+  `registry_rows_at`) are **not ported — they die with Phase 5**; porting
+  code scheduled for deletion is waste. Step 0 of 2b: collapse the six
+  copy-paste test fixture builders into one conftest helper. Design notes
+  fixed now: `blocked` gets **no directory** — it is `queued/` plus a
+  `blockref` frontmatter key (the only writer of `Status=blocked` is the
+  retiring blocked-disposition path; readiness is the scheduler's to derive);
+  and backlog-staleness/freshness must track a spec by **id, following
+  renames**, or every status move silently resets its clock.
 - **Phase 3 — shared-surface rules.** `log.d/` fragments + trunk compile;
   generated-artifacts-trunk-only; branch-scoped review names.
 - **Phase 4 — the integrator.** Build the local integrator lane (the one-page
