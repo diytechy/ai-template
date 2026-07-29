@@ -1,0 +1,17 @@
++++
+id = "WI-346"
+title = "Give gen_trajectory.py one local spine loader and one capture helper (docs/dupes-allow: spine-load-repeat 8, subprocess-capture 1 = 9 sanctioned blocks). Three functions each re-derive the SR/LLR/TC row filters from ct.read_rows. This is explicitly NOT the F5 case - F5 buys cross-SCRIPT copy-ability and a shared _kitcommon.py was rejected 2026-07-12, but every copy here is inside one file, so a module-local _spine(root) costs nothing and removes eight census blocks. The five-keyword subprocess.run capture block is the same pattern WI-304 extracted in agent_dispatch as _run_captured rather than sanctioning it. Distinct from WI-280, which owns this file's graph/render split, not its loaders. Triaged under WI-340."
+workstream = "scripts"
+needs = ["WI-340"]
+specref = ""
+buildtier = "medium"
+priority = 0
+safety_class = "ordinary"
+order = 343
++++
+
+## Deliverable
+
+Spawned by [128-REVIEW-A](../../reviews/128-REVIEW-A.md) (the SpecRef this row carried, cleared at close per R-F).
+
+Extracted two module-local helpers in gen_trajectory.py, neither sanctioned. `_spine(root, skip_example=False)` returns `(srs, llrs, tcs)` for the three functions that each re-derived the `read_rows(...) if id.startswith(...)` triple — arch_icicle (whose TC filter was inlined in a for-header, so that loop was restructured rather than substituted), spine_stats, and _spine_pending, whose extra `-000` exclusion moved INTO the loader as the parameter. Row order is preserved verbatim and stated as the contract in the docstring: the icicle links each row to its first listed parent and lays blocks out in arrival order, and `--check` byte-compares the render, so a sort would be a silent artifact change. `_run_captured(argv)` states the five capture keywords that `_asof` and `_git` each spelled out (the WI-304 precedent), and deliberately does not catch OSError — both callers already own the off-git degrade. Census 217 -> 208, the WHOLE emitted census diffed: nine deletions, zero insertions, so nothing replaced what left. Eight are the charged classes (spine-load-repeat x7, subprocess-capture x1, both sections deleted); the ninth is a clique dissolution one class over — f02bcce4d53d (check.py == gen_trajectory.py, git-wrapper 12 -> 11) matched check.py's `_git_out` against gen_trajectory's `_git` BODY, now a one-line call, with check.py untouched. One charged fingerprint did NOT dissolve and is re-classed rather than dropped: 29c06640159e re-emits byte-identically because it was never a loader — it is the icicle's per-tier node build (SR arm vs LLR arm), which spine-load-repeat had charged here by proximity; new `tier-node-build` class, debt WI-280, whose row already names this file's graph/render split. Module-size ratchet 5256 -> 5281 (+25, the WI-345 shape: the code shrank, the helpers carry the docstrings the copies did without). Complexity ratchet NOT re-stamped: arch_icicle measures 23 before and after — ruff's mccabe does not count comprehension for/if clauses, so collapsing three filters moved nothing, and the ratchet is exact-match in both directions. Three unmarked tests over a deliberately scrambled fixture registry pin all of it. Byte-determinism verified by hand from the worktree (`--check` and `--status --check` both up to date), since the work-branch lane skips those freshness steps. No perceptual advisory owed: zero Verification=Critique rows since the Phase 2c flip.

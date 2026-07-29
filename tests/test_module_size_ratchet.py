@@ -214,7 +214,16 @@ BASELINE = {
     # clock, fail-closed rendering on a malformed file — plus the module
     # docstring's (f) purity-lettering entry for it. Reviewed bump,
     # log 2026-07-29. Re-stamp down with WI-280.
-    "gen_trajectory.py": 5256,
+    # +25 (5256 -> 5281), WI-346: the DEDUPLICATION grew the file, which is the
+    # WI-345 shape again. The code shrank — three re-derived SR/LLR/TC row
+    # filters collapsed into one `_spine(root, skip_example=False)` and two
+    # five-keyword `subprocess.run` capture blocks into one `_run_captured` —
+    # but each helper now carries the docstring stating the contract its copies
+    # left implicit (row order is the `--check` byte contract; `-000` is the
+    # pending projection's rule; OSError propagates so callers own the off-git
+    # degrade). Nine census sanctions went dead for +25 lines of prose.
+    # Re-stamp down with WI-280.
+    "gen_trajectory.py": 5281,
     # +11 (3452 -> 3463), WI-284: _regenerate_disposition_artifacts also runs
     # `gen_trajectory.py --status` at integrate/blocked-disposition so a closed
     # id drops from the generated frontier automatically (and the disposition
