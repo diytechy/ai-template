@@ -19,29 +19,28 @@ The load-bearing guarantees:
   - a non-adopting repo (no --jobs / AGENT_JOBS) is completely unaffected.
 """
 
-import csv
+import functools
 import json
 import subprocess
 import sys
 
-from conftest import env_gate_skipif, SCRIPTS, load_script, run_py, seed_venv
+from conftest import (
+    env_gate_skipif,
+    SCRIPTS,
+    load_script,
+    run_py,
+    seed_venv,
+    wi_registry_header,
+    wi_row,
+    write_wi_registry,
+)
 
 agent_loop = load_script("agent_loop")
 
 pytestmark = env_gate_skipif("git")
 
-HEADER = [
-    "WI-ID",
-    "Title",
-    "Workstream",
-    "SR-Refs",
-    "Predecessors",
-    "Status",
-    "Deliverable",
-    "SpecRef",
-    "BuildTier",
-    "SafetyClass",
-]
+HEADER = wi_registry_header()
+_wi_row = functools.partial(wi_row, sr="SR-065")
 
 
 def _git(repo, *args):
@@ -55,33 +54,9 @@ def _git(repo, *args):
     return p.stdout.strip()
 
 
-def _wi_row(wid, preds="", safety="ordinary", status="queued"):
-    return [
-        wid,
-        "Work " + wid,
-        "ws",
-        "SR-065",
-        preds,
-        status,
-        "shipped" if status == "done" else "",
-        "docs/specs/thing.md",
-        "medium",
-        safety,
-    ]
-
-
 def _make_repo(tmp_path, rows):
     repo = tmp_path / "repo"
-    (repo / "docs" / "requirements").mkdir(parents=True)
-    with open(
-        str(repo / "docs" / "requirements" / "work-items.csv"),
-        "w",
-        encoding="utf-8",
-        newline="",
-    ) as fh:
-        w = csv.writer(fh)
-        w.writerow(HEADER)
-        w.writerows(rows)
+    write_wi_registry(repo, rows, HEADER)
     (repo / "AGENTS.md").write_text("# agents\n", encoding="utf-8")
     (repo / ".gitignore").write_text("out/\n.venv/\n", encoding="utf-8")
     seed_venv(repo)  # WI-286: the dispatcher preflight requires a ≥3.11 root .venv

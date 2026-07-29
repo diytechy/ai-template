@@ -7,6 +7,7 @@ scaffold in a temp dir and run the actual commands.
 """
 
 import collections
+import csv
 import importlib.util
 import os
 import shutil
@@ -574,6 +575,72 @@ def seed_venv(repo):
         "this fixture must seed a floor-satisfying ./.venv from the running interpreter"
     )
     venv.create(str(Path(repo) / ".venv"), with_pip=False)
+
+
+# --- The agent_loop work-item registry fixture builder -----------------------
+# ONE implementation for the six agent_loop suites (worker/dispatch/train/
+# integrate/recovery/migration), each of which used to carry a near-verbatim
+# copy of the header constant, the row maker, and the CSV writer. The three
+# real variants are parameters, not copies:
+#   - `sr`: each suite tags its rows with the SR it verifies (SR-060..SR-065);
+#   - `columns`: the registry SHAPES the suites exercise are prefixes of one
+#     canonical column list — worker's 9 (a registry predating SafetyClass),
+#     the four dispatcher-era suites' 10, and integrate's 11 (+BlockRef, the
+#     column the integrator adopts). Slicing one list is what makes them
+#     provably prefixes rather than three hand-kept constants.
+# Each suite keeps its own module-level `HEADER`/`_wi_row`/`_write_registry`
+# name bound to a partial of these, so its ~250 call sites read unchanged.
+
+WI_REGISTRY_COLUMNS = [
+    "WI-ID",
+    "Title",
+    "Workstream",
+    "SR-Refs",
+    "Predecessors",
+    "Status",
+    "Deliverable",
+    "SpecRef",
+    "BuildTier",
+    "SafetyClass",
+    "BlockRef",
+]
+
+
+def wi_registry_header(columns=10):
+    """The first `columns` work-item registry columns, as a fresh list."""
+    return list(WI_REGISTRY_COLUMNS[:columns])
+
+
+def wi_row(wid, preds="", safety="ordinary", status="queued", sr="SR-061", columns=10):
+    """One work-item row, `columns` wide, as a fresh mutable list (callers
+    patch cells in place — e.g. integrate's `_wi_row_srrefs`)."""
+    return [
+        wid,
+        "Work " + wid,
+        "ws",
+        sr,
+        preds,
+        status,
+        "shipped" if status == "done" else "",
+        "docs/specs/thing.md",
+        "medium",
+        safety,
+        "",
+    ][:columns]
+
+
+def write_wi_registry(repo, rows, header=None):
+    """Write docs/requirements/work-items.csv under `repo`.
+
+    `newline=""` is the csv module's contract (it owns the line terminator —
+    \\r\\n here), never the platform's; every copy this replaced passed it.
+    """
+    reg = Path(repo) / "docs" / "requirements"
+    reg.mkdir(parents=True, exist_ok=True)
+    with open(str(reg / "work-items.csv"), "w", encoding="utf-8", newline="") as fh:
+        w = csv.writer(fh)
+        w.writerow(wi_registry_header() if header is None else header)
+        w.writerows(rows)
 
 
 @pytest.fixture

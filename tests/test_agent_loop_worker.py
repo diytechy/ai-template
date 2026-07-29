@@ -25,11 +25,19 @@ corrupt a parallel dispatch run:
 """
 
 import csv
+import functools
 import subprocess
 import sys
 
 import pytest
-from conftest import env_gate_skipif, SCRIPTS, load_script, run_py
+from conftest import (
+    env_gate_skipif,
+    SCRIPTS,
+    load_script,
+    run_py,
+    wi_registry_header,
+    write_wi_registry,
+)
 
 agent_loop = load_script("agent_loop")
 
@@ -60,17 +68,11 @@ def test_parse_wi_list_orders_and_validates():
 
 # --- repo scaffolding -----------------------------------------------------------
 
-REGISTRY_HEADER = [
-    "WI-ID",
-    "Title",
-    "Workstream",
-    "SR-Refs",
-    "Predecessors",
-    "Status",
-    "Deliverable",
-    "SpecRef",
-    "BuildTier",
-]
+# Worker mode is exercised against a registry that PREDATES the SafetyClass
+# column (9 wide) — that shape is load-bearing here, not staleness: the worker
+# never classifies, so it must run on a registry that carries no class.
+REGISTRY_HEADER = wi_registry_header(9)
+_write_registry = functools.partial(write_wi_registry, header=REGISTRY_HEADER)
 
 
 def _git(repo, *args):
@@ -82,15 +84,6 @@ def _git(repo, *args):
     )
     assert p.returncode == 0, p.stdout + p.stderr
     return p.stdout.strip()
-
-
-def _write_registry(repo, rows):
-    reg = repo / "docs" / "requirements"
-    reg.mkdir(parents=True, exist_ok=True)
-    with open(str(reg / "work-items.csv"), "w", encoding="utf-8", newline="") as fh:
-        w = csv.writer(fh)
-        w.writerow(REGISTRY_HEADER)
-        w.writerows(rows)
 
 
 def _make_train_repo(tmp_path, train="t1", wis=("WI-201",)):

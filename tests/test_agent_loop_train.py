@@ -21,27 +21,28 @@ use. The load-bearing guarantees:
 """
 
 import csv
+import functools
 import subprocess
 import sys
 
-from conftest import env_gate_skipif, SCRIPTS, load_script, run_py, seed_venv
+from conftest import (
+    env_gate_skipif,
+    SCRIPTS,
+    load_script,
+    run_py,
+    seed_venv,
+    wi_registry_header,
+    wi_row,
+    write_wi_registry,
+)
 
 agent_loop = load_script("agent_loop")
 
 pytestmark = env_gate_skipif("git")
 
-HEADER = [
-    "WI-ID",
-    "Title",
-    "Workstream",
-    "SR-Refs",
-    "Predecessors",
-    "Status",
-    "Deliverable",
-    "SpecRef",
-    "BuildTier",
-    "SafetyClass",
-]
+HEADER = wi_registry_header()
+_wi_row = functools.partial(wi_row, sr="SR-062")
+_write_registry = functools.partial(write_wi_registry, header=HEADER)
 
 
 def _git(repo, *args):
@@ -53,30 +54,6 @@ def _git(repo, *args):
     )
     assert p.returncode == 0, p.stdout + p.stderr
     return p.stdout.strip()
-
-
-def _wi_row(wid, preds="", safety="ordinary", status="queued"):
-    return [
-        wid,
-        "Work " + wid,
-        "ws",
-        "SR-062",
-        preds,
-        status,
-        "shipped" if status == "done" else "",
-        "docs/specs/thing.md",
-        "medium",
-        safety,
-    ]
-
-
-def _write_registry(repo, rows):
-    reg = repo / "docs" / "requirements"
-    reg.mkdir(parents=True, exist_ok=True)
-    with open(str(reg / "work-items.csv"), "w", encoding="utf-8", newline="") as fh:
-        w = csv.writer(fh)
-        w.writerow(HEADER)
-        w.writerows(rows)
 
 
 def _make_repo(tmp_path, rows):

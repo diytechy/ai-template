@@ -26,32 +26,32 @@ The load-bearing guarantees:
 """
 
 import csv
+import functools
 import json
 import subprocess
 import sys
 from pathlib import Path
 
 import pytest
-from conftest import env_gate_skipif, SCRIPTS, load_script, run_py, seed_venv
+from conftest import (
+    env_gate_skipif,
+    SCRIPTS,
+    load_script,
+    run_py,
+    seed_venv,
+    wi_registry_header,
+    wi_row,
+    write_wi_registry,
+)
 
 agent_loop = load_script("agent_loop")
 agent_dispatch = load_script("agent_dispatch")
 
 pytestmark = env_gate_skipif("git")
 
-HEADER = [
-    "WI-ID",
-    "Title",
-    "Workstream",
-    "SR-Refs",
-    "Predecessors",
-    "Status",
-    "Deliverable",
-    "SpecRef",
-    "BuildTier",
-    "SafetyClass",
-    "BlockRef",
-]
+# This suite alone exercises the BlockRef column (the integrator adopts it).
+HEADER = wi_registry_header(11)
+_wi_row = functools.partial(wi_row, sr="SR-063", columns=11)
 
 
 def _git(repo, *args):
@@ -65,34 +65,9 @@ def _git(repo, *args):
     return p.stdout.strip()
 
 
-def _wi_row(wid, preds="", safety="ordinary", status="queued"):
-    return [
-        wid,
-        "Work " + wid,
-        "ws",
-        "SR-063",
-        preds,
-        status,
-        "shipped" if status == "done" else "",
-        "docs/specs/thing.md",
-        "medium",
-        safety,
-        "",
-    ]
-
-
 def _make_repo(tmp_path, rows, stack_test=None, header=None, product_test=None):
     repo = tmp_path / "repo"
-    (repo / "docs" / "requirements").mkdir(parents=True)
-    with open(
-        str(repo / "docs" / "requirements" / "work-items.csv"),
-        "w",
-        encoding="utf-8",
-        newline="",
-    ) as fh:
-        w = csv.writer(fh)
-        w.writerow(header or HEADER)
-        w.writerows(rows)
+    write_wi_registry(repo, rows, header or HEADER)
     (repo / "AGENTS.md").write_text("# agents\n", encoding="utf-8")
     (repo / ".gitignore").write_text("out/\n.venv/\n", encoding="utf-8")
     seed_venv(repo)  # WI-286: the dispatcher preflight requires a ≥3.11 root .venv
