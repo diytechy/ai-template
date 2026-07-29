@@ -1,0 +1,34 @@
+# agent-loop session log — written by scripts/agent_loop.py
+# session: 014
+# date: 2026-07-23 23:38
+# train: 1-g3-WI-272-230f
+# base: 747f1529c206
+# phase: BUILD
+# wi: WI-272
+# model: gpt-5.6-terra
+# guardrails: 
+# outcome: COMMITTED
+# commits: bd67dab..e5bb2a7
+# tokens: 
+# cost-usd: 
+# wall-secs: 487
+# api-secs: 
+# turns: 
+# ttft-secs: 
+# cache-read: 
+# cache-create: 
+# effort: 
+# fast: 
+# prompt-chars: 6925
+# exit-code: 0
+# ---
+Blocked evidence committed: `e5bb2a7`.
+
+The corrected disposition requires:
+
+1. Integrator files a numbered U5 successor with reachable SpecRef.
+2. Its palette fix is integrated.
+3. Fresh TC-054 critique approves.
+4. Only then WI-272 closes.
+
+Validation: `check_docs --stale` passed. Smoke suite remains red solely on out-of-scope WI-275 `docs/status.md` state (1086 passed, 1 failed). Pre-existing untracked iteration logs were preserved.

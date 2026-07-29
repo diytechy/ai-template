@@ -1,0 +1,40 @@
+# agent-loop session log — written by scripts/agent_loop.py
+# session: 001
+# date: 2026-07-19 12:18
+# train: p0-g3-WI-229-a28a
+# base: 1797913eb634
+# phase: BUILD
+# wi: WI-229
+# model: gpt-5.6-sol
+# guardrails: 
+# outcome: COMMITTED
+# commits: 1797913..f57d28f
+# tokens: 
+# cost-usd: 
+# wall-secs: 3328
+# api-secs: 
+# turns: 
+# ttft-secs: 
+# cache-read: 
+# cache-create: 
+# effort: 
+# fast: 
+# prompt-chars: 1657
+# exit-code: 0
+# ---
+WI-229 scoped work is committed as `f57d28f924c9102b75422566b42a656cc7064286`.
+
+Delivered:
+
+- Ratified SR split: `SR=108`, `LLR=96`, `TC=99`.
+- Strict G3 trace: zero orphan, integrity, status, placeholder, and schema findings.
+- Replacement SR maximum size: 576 characters.
+- Isolated regenerated-tree smoke: `947 passed, 3 skipped`.
+- G3 coverage suite: `1162 passed, 35 skipped`, 91.08% coverage.
+- Worktree clean; prohibited coordination/generated artifacts untouched.
+
+Completion is blocked because base `1797913` independently fails the G3 duplicate-code gate:
+
+`agent_dispatch.py:294 == gen_trajectory.py:2930`
+
+The commit therefore carries `Blocked-WI: WI-229`, the named `BlockRef`, Train, and Base trailers instead of a completion trailer.

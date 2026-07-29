@@ -1,0 +1,34 @@
+# agent-loop session log — written by scripts/agent_loop.py
+# session: 008
+# date: 2026-07-23 14:02
+# train: p0-g3-WI-276-dec8
+# base: 747f1529c206
+# phase: BUILD
+# wi: WI-276
+# model: gpt-5.6-terra
+# guardrails: 
+# outcome: COMMITTED
+# commits: 81334bf..2fd5ba4
+# tokens: 
+# cost-usd: 
+# wall-secs: 1284
+# api-secs: 
+# turns: 
+# ttft-secs: 
+# cache-read: 
+# cache-create: 
+# effort: 
+# fast: 
+# prompt-chars: 4910
+# exit-code: 0
+# ---
+Completed WI-276 in commit `2fd5ba4`.
+
+- Merge detection now uses token-window offsets and only merges step-1-overlapping windows.
+- Added the same-line stale-census interior-edit regression.
+- Refreshed the fingerprint census (203 entries).
+- Updated LLR/TC source records; generated OKF files intentionally left for integration.
+
+Validation passed: detector suite (15/15), duplicate gate, docs check, strict trace, Ruff, diff check.
+
+Smoke suite: 1092 passed, 3 skipped, 1 unrelated failure from protected `docs/status.md` referencing done WI-275.
