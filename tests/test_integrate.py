@@ -710,6 +710,84 @@ def test_a_scaffold_that_declares_no_toolchain_still_runs_the_bar(tmp_path):
     assert integ._declared_bar_or_refusal(tmp_path) is None
 
 
+# --- 4b. the composed tree's own harness (WI-368) -----------------------------
+
+
+def test_the_composed_trees_copy_wins_under_the_invokers_layout(tmp_path, monkeypatch):
+    # The meta-repo shape: the invoker sits INSIDE --root, and the candidate
+    # carries the same relative layout — the candidate's copy must win, or a
+    # branch that changed a generator is regenerated with the trunk's vintage
+    # and refused by the merge commit's own freshness floor (the WI-368 hit).
+    root = tmp_path / "root"
+    inv = root / "kit" / "scripts"
+    inv.mkdir(parents=True)
+    (inv / "trunk_step.py").write_text("# invoker\n", encoding="utf-8", newline="\n")
+    monkeypatch.setattr(integ, "SCRIPTS", inv)
+    wt = tmp_path / "candidate"
+    cand = wt / "kit" / "scripts"
+    cand.mkdir(parents=True)
+    (cand / "trunk_step.py").write_text("# composed\n", encoding="utf-8", newline="\n")
+    got = integ._composed_tree_script(wt, root, "trunk_step.py")
+    assert got == cand / "trunk_step.py"
+
+
+def test_an_out_of_root_invoker_probes_the_known_layouts(tmp_path, monkeypatch):
+    # The kit-source-against-a-scaffold shape (this suite's own e2e fixtures):
+    # SCRIPTS is not under --root, so the relative-layout join cannot apply and
+    # the scaffold's scripts/ copy is found by the known-layout probe.
+    inv = tmp_path / "elsewhere" / "scripts"
+    inv.mkdir(parents=True)
+    (inv / "check.py").write_text("# invoker\n", encoding="utf-8", newline="\n")
+    monkeypatch.setattr(integ, "SCRIPTS", inv)
+    wt = tmp_path / "candidate"
+    (wt / "scripts").mkdir(parents=True)
+    (wt / "scripts" / "check.py").write_text(
+        "# composed\n", encoding="utf-8", newline="\n"
+    )
+    got = integ._composed_tree_script(wt, tmp_path / "repo", "check.py")
+    assert got == wt / "scripts" / "check.py"
+
+
+def test_a_candidate_without_the_script_falls_back_to_the_invoker(
+    tmp_path, monkeypatch
+):
+    # A candidate that predates the script (or carries no harness at all) must
+    # still integrate: the invoker's copy is the declared fallback, not a crash
+    # and not a silent skip.
+    inv = tmp_path / "elsewhere" / "scripts"
+    inv.mkdir(parents=True)
+    (inv / "trunk_step.py").write_text("# invoker\n", encoding="utf-8", newline="\n")
+    monkeypatch.setattr(integ, "SCRIPTS", inv)
+    wt = tmp_path / "candidate"
+    wt.mkdir()
+    got = integ._composed_tree_script(wt, tmp_path / "repo", "trunk_step.py")
+    assert got == inv / "trunk_step.py"
+
+
+def test_run_trunk_step_executes_the_composed_trees_copy(tmp_path, monkeypatch):
+    # The seam itself, non-vacuous against the pre-fix wiring: the invoker's
+    # copy exits 3, the composed tree's writes a sentinel — so a pass proves
+    # WHICH copy ran, not merely that something exited 0.
+    inv = tmp_path / "elsewhere" / "scripts"
+    inv.mkdir(parents=True)
+    (inv / "trunk_step.py").write_text(
+        "import sys\n\nsys.exit(3)\n", encoding="utf-8", newline="\n"
+    )
+    monkeypatch.setattr(integ, "SCRIPTS", inv)
+    root = tmp_path / "repo"
+    root.mkdir()
+    wt = tmp_path / "candidate"
+    (wt / "scripts").mkdir(parents=True)
+    (wt / "scripts" / "trunk_step.py").write_text(
+        'from pathlib import Path\n\nPath("sentinel.txt").write_text("composed\\n")\n',
+        encoding="utf-8",
+        newline="\n",
+    )
+    code, out = integ._run_trunk_step(wt, root)
+    assert code == 0, out
+    assert (wt / "sentinel.txt").read_text(encoding="utf-8") == "composed\n"
+
+
 # --- 5. the RULING-6 window audit --------------------------------------------
 
 
