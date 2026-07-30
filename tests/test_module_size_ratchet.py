@@ -235,7 +235,16 @@ BASELINE = {
     # (queued + blockref) so the dashboard keeps the WI-272/M-2 distinction
     # the folder model would otherwise have erased — found by the fixture
     # conversion, fixed rather than re-grounded away. Reviewed bump.
-    "gen_trajectory.py": 4967,
+    # +70 (4967 -> 5037), WI-323: corridor-aware lane routing — `_route_edges`
+    # keeps a per-diagram ledger of the lane hops it has already placed and
+    # `_detour_d` prefers a lane that is clear of every box AND of every occupied
+    # corridor, with `_lane_candidates` offering a short outboard stack behind each
+    # band edge so the pushed-off wire steps 10px rather than jumping a band. Half
+    # the bump is the two new helpers (`_lane_seg`, `_corridor_clash`) and half is
+    # the prose recording WHY the ledger cannot regress the T8 through-box floor and
+    # how `_LANE_SEP` was dialled against the shipped render. Reviewed bump,
+    # log 2026-07-29. Re-stamp down with WI-280.
+    "gen_trajectory.py": 5037,
     # (agent_dispatch.py and its whole bump history retired with the module
     # at concurrency-restructure Phase 5 - the dispatcher deleted wholesale;
     # the surviving integrator is integrate.py, below this threshold.)
@@ -354,7 +363,14 @@ BASELINE = {
     # re-attestation brief used identically in its no-baseline and added-row arms.
     # Same extraction-grows-the-file shape as bootstrap.py above. Reviewed bump,
     # log 2026-07-28.
-    "trace.py": 2856,
+    # +39 (2856 -> 2895), WI-364 (owner-ruled error tier 2026-07-29): the
+    # LLR-cites-superseded-SR integrity rule (`_llr_supersession_findings`) and
+    # the contract docstring stating the TC carve-out, plus the adversarial
+    # review's three refinements (dedupe a repeated cite, never name a
+    # nonexistent successor, the Draft-not-exempt statement). The shipped
+    # guard the ruling asked for, not monolith drift. Reviewed bump,
+    # log 2026-07-29. Re-stamp down with WI-280.
+    "trace.py": 2895,
     # +132 (1926 -> 2058; the last +10 is the F4 BOM hardening: read_rows utf-8-sig + git-show strips), WI-316: staged_spine_findings — the amend-without-
     # flip warn (--staged): content cells of a Verified spine row changed
     # without the Modified marker, suppressed when the owning SR flips in the
@@ -479,7 +495,22 @@ BASELINE = {
     # handoff-2026-07-28c §3 disposition): the un-defer trigger moved into
     # `staged_findings`'s docstring — docstring lines only, no code. Reviewed
     # bump, log 2026-07-29. Re-stamp down with WI-280.
-    "check_trajectory.py": 3047,
+    # +30 (3047 -> 3077), WI-362 narrowed (owner ruling 2026-07-29): warn-text +
+    # docstring statement of the rename blind spot, no detection engineering;
+    # +4 of it the review correction that points the hint at the WI's own
+    # docs/work/ spec file — the SpecRef target can never clear the warn.
+    # Re-stamp down with WI-280.
+    "check_trajectory.py": 3077,
+    # NEW ENTRY, +25 (1498 -> 1523), WI-357: the two-stage work-branch claim
+    # signal — the on-disk fast path plus the branch-history probe that
+    # survives the §2.3 close commit (git log -1 over the claim path), with
+    # the fail-toward-trunk comment a successor would otherwise "simplify"
+    # back into the defect, and the review-measured breadth/cost notes on the
+    # residual. check.py sat 2 lines under THRESHOLD before the fix; even the
+    # zero-comment form crossed it, so this is the crossing recorded, not
+    # growth approved. Reviewed bump, log 2026-07-29. Re-stamp down with
+    # WI-280.
+    "check.py": 1523,
     # +1 (1916 -> 1917), WI-279: one MAPPING row registering the new
     # scripts/check_coverage.py kit gate so it ships downstream — a required
     # one-line registration, not monolith growth (the reviewed-bump escape the
@@ -569,7 +600,20 @@ BASELINE = {
     # down-stamp — the dual-read resolution (spec_registry_dir + the CSV
     # fallback) collapsed to the folder-only read; the +228/+15 entries above
     # are repaid. Ratcheted DOWN.
-    "agent_common.py": 1642,
+    # +58 (1642 -> 1700), WI-361 (2026-07-29): harness_floor_failures — the
+    # WI-286 fail-closed floor re-homed from the deleted dispatcher onto the
+    # surviving integrate.py bar seam, plus the arming-boundary docstring
+    # (arms only where requirements-dev.txt declares the pinned toolchain).
+    # A restored guarantee with its contract stated, not monolith drift;
+    # ~2/3 is docstring. Reviewed bump, log 2026-07-29. Re-stamp down with
+    # WI-280.
+    # +20 (1700 -> 1720), the grind-close census extraction: worktree_records
+    # — the ONE shared porcelain walk — after check_dupes caught
+    # integrate._worktree_holding re-implementing primary_worktree_root's
+    # parse (extraction, not sanction: the WI-304 precedent). integrate.py
+    # shrank 9 in the same move. Reviewed bump, log 2026-07-29. Re-stamp
+    # down with WI-280.
+    "agent_common.py": 1720,
 }
 
 

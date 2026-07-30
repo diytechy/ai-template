@@ -6,6 +6,10 @@ tests cover agent_common.py functions that survive the train-machinery
 deletion — `_failure_tail`, `venv_python`, `harness_python`,
 `interpreter_version`, `_declared_test_command` — and lived in dispatcher
 modules only because the dispatcher was their first consumer.
+
+WI-361 added `harness_floor_failures` to that list: the WI-286 fail-closed floor,
+re-homed here as a public agent_common helper with an arming boundary, refused at
+integrate.py's bar seam (see tests/test_integrate.py for the wired half).
 """
 
 import os
@@ -89,11 +93,10 @@ def test_venv_python_finds_native_layout_else_none(tmp_path):
 
 
 def test_harness_python_prefers_venv_else_sys_executable(tmp_path):
-    # No .venv -> this process's own interpreter is the DEFENSIVE fallback.
-    # (The dispatcher-era fail-closed floor gate that refused a venv-less root
-    # up front retired with the dispatcher at concurrency-restructure Phase 5;
-    # the resolver's own contract — prefer the pinned .venv, degrade to the
-    # running interpreter — stands on its own.)
+    # No .venv -> this process's own interpreter is the DEFENSIVE fallback. The
+    # resolver's contract — prefer the pinned .venv, degrade to the running
+    # interpreter — stands on its own; tmp_path declares no pinned toolchain, so
+    # the WI-361 floor below is unarmed here and the fallback is the real answer.
     assert agent_common.harness_python(tmp_path) == sys.executable
     exe = _stub_venv(tmp_path)
     assert agent_common.harness_python(tmp_path) == str(exe)
@@ -106,6 +109,96 @@ def test_interpreter_version_reads_self_and_fails_soft_on_a_broken_exe(tmp_path)
     assert agent_common.interpreter_version(sys.executable) == sys.version_info[:2]
     garbage = _stub_venv(tmp_path)  # a text file named python(.exe) cannot run
     assert agent_common.interpreter_version(garbage) is None
+
+
+# --- the harness floor (WI-286, re-homed by WI-361) -----------------------------
+
+# Ported from the deleted dispatcher module (test_agent_dispatch_decisions.py @
+# 31ad569^) onto the public `agent_common.harness_floor_failures`, plus the two
+# tests for the arming boundary WI-361 added: the floor guards only a repo that
+# DECLARES the pinned toolchain (requirements-dev.txt at its root), so the
+# venv-less fixtures the rest of this fleet builds keep today's ambient fallback.
+
+
+def _declare_toolchain(tmp_path):
+    """Arm the floor: the pinned-toolchain declaration this repo shape opts in
+    with."""
+    (tmp_path / "requirements-dev.txt").write_text("pytest\n", encoding="utf-8")
+
+
+def test_harness_floor_clears_with_a_floor_satisfying_venv(tmp_path, monkeypatch):
+    # A root whose OWN .venv interpreter reports >= the floor clears the guard.
+    _declare_toolchain(tmp_path)
+    monkeypatch.setattr(agent_common, "venv_python", lambda root: tmp_path / "py")
+    monkeypatch.setattr(
+        agent_common, "interpreter_version", lambda exe: agent_common.MIN_PYTHON
+    )
+    assert agent_common.harness_floor_failures(tmp_path) == []
+
+
+def test_harness_floor_refuses_a_below_floor_venv(tmp_path, monkeypatch):
+    _declare_toolchain(tmp_path)
+    monkeypatch.setattr(agent_common, "venv_python", lambda root: tmp_path / "py")
+    monkeypatch.setattr(agent_common, "interpreter_version", lambda exe: (3, 8))
+    fails = agent_common.harness_floor_failures(tmp_path)
+    assert len(fails) == 1
+    assert ".venv is Python 3.8" in fails[0] and "below the 3.11 floor" in fails[0]
+
+
+def test_harness_floor_refuses_a_missing_venv(tmp_path, monkeypatch):
+    # REVIEW-A MAJOR: a missing (or incomplete-layout) root .venv fails CLOSED —
+    # the harness must not fall back to the ambient interpreter, whose pinned dev
+    # tools may be absent even at a satisfying version (a false green).
+    _declare_toolchain(tmp_path)
+    monkeypatch.setattr(agent_common, "venv_python", lambda root: None)
+    fails = agent_common.harness_floor_failures(tmp_path)
+    assert len(fails) == 1
+    assert "no runnable ./.venv" in fails[0] and "false green" in fails[0]
+    # The message points at the surviving remedy, not the retired dispatcher.
+    assert "dev-setup --install" in fails[0]
+
+
+def test_harness_floor_refuses_no_venv_even_when_ambient_is_at_floor(tmp_path):
+    # The exact hole REVIEW-A named: NO ./.venv but the ambient interpreter (this
+    # very test process) is >= the floor. It must FAIL closed and never consult the
+    # ambient version. No monkeypatch — the REAL resolver sees no .venv under
+    # tmp_path and refuses before ambient is read.
+    _declare_toolchain(tmp_path)
+    fails = agent_common.harness_floor_failures(tmp_path)
+    assert len(fails) == 1 and "no runnable ./.venv" in fails[0]
+
+
+def test_harness_floor_fails_closed_on_an_unrunnable_venv(tmp_path, monkeypatch):
+    # A .venv present but its interpreter cannot report a version -> fail closed
+    # (never treat an unverifiable interpreter as floor-satisfying). Built from the
+    # real layout: `_stub_venv` writes a text file named python(.exe), which
+    # resolves but cannot run.
+    _declare_toolchain(tmp_path)
+    _stub_venv(tmp_path)
+    fails = agent_common.harness_floor_failures(tmp_path)
+    assert len(fails) == 1 and "could not be run" in fails[0]
+
+
+def test_the_floor_is_unarmed_without_the_pinned_toolchain_declaration(
+    tmp_path, monkeypatch
+):
+    # The boundary, negative side: no requirements-dev.txt -> no refusal, whatever
+    # the .venv looks like. The declaration is checked FIRST, so an absent venv and
+    # even a below-floor one are both silent here — such a repo keeps
+    # `harness_python`'s ambient fallback, which is its whole contract.
+    assert agent_common.harness_floor_failures(tmp_path) == []
+    monkeypatch.setattr(agent_common, "venv_python", lambda root: tmp_path / "py")
+    monkeypatch.setattr(agent_common, "interpreter_version", lambda exe: (3, 8))
+    assert agent_common.harness_floor_failures(tmp_path) == []
+
+
+def test_the_declaration_alone_arms_the_floor_on_the_same_root(tmp_path):
+    # The boundary, positive side: the SAME venv-less root flips from silent to
+    # refusing the moment the declaration lands. Nothing else about the root
+    # changes, so the declaration is provably the arming input.
+    assert agent_common.harness_floor_failures(tmp_path) == []
+    _declare_toolchain(tmp_path)
+    assert len(agent_common.harness_floor_failures(tmp_path)) == 1
 
 
 # --- the declared-bar resolver (WI-285) -----------------------------------------

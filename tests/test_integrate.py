@@ -6,12 +6,14 @@ This module pins the four gates that make it *fail-closed*, plus the whole flow
 end-to-end:
 
   * **claim** (§2.3 steps 1+2) — the serial trunk move `queued/ ->
-    active/<branch>/` and the branch cut from that commit, and the six refusals
+    active/<branch>/` and the branch cut from that commit, and the seven refusals
     that stand in front of it: the tracked pause (§5.6), a dirty trunk, a branch
     that already exists, a branch name that would not map to a flat claim
     directory, a spec whose `safety_class` is not `ordinary` (spine runs
-    attended as the §3.2 barrier), and a WI that is not on the scheduler's ready
-    frontier.
+    attended as the §3.2 barrier), a WI that is not on the scheduler's ready
+    frontier, and (WI-358) a claimed id named in hand-authored `docs/status.md`
+    prose — the forward-only debt that would red R-D on the composed tree at
+    close, hoisted to where a single trunk commit can still pay it.
   * **finished-branch detection** — the closing commit's move to `archive/` IS
     the finished signal: no state file, no ref, just the tree.
   * **the verdict gate** (RULING-7) — the dialed review artifact must be
@@ -23,6 +25,14 @@ end-to-end:
     `[product] test`, or a declared-but-EMPTY one is a REFUSAL, never a skip.
   * **the RULING-6 window audit** — a non-merge trunk commit touching product
     paths is flagged by sha; bookkeeping surfaces and `--no-ff` merges are not.
+  * **the §5.6 unload** (WI-359) — after the merge the branch is deleted and a
+    CLEAN linked worktree holding it is GC'd, while a DIRTY one and the MAIN
+    checkout are reported by branch and path on stderr and left untouched.
+    "Dirty" counts IGNORED files and treats a failed dirt read as dirt: the
+    content that exists nowhere else is usually the ignored kind, and the
+    consequence of a wrong answer is deletion. No outcome is swallowed — a run
+    that merged everything but left a branch held exits NONZERO, because §5.6's
+    stop is drained AND unloaded and nothing ever retries the unload.
 
 Every git fixture here is a REAL repository (the queue derives everything from
 history — finished-ness from `ls-tree`, verdict freshness from commit times — so
@@ -304,6 +314,168 @@ def test_claim_moves_the_spec_commits_the_trunk_and_cuts_the_branch(tmp_path, ca
     assert _rev(root, "wi-401") == _rev(root, "HEAD")
 
 
+# --- 1b. claim: the status.md forward-only debt (WI-358) ----------------------
+
+
+def write_status(root, text, when=T_VERDICT):
+    path = root / "docs" / "status.md"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(text, encoding="utf-8", newline="\n")
+    _commit(root, "status: the working surface", when=when)
+
+
+def test_claim_refuses_when_status_md_hand_prose_names_the_claimed_id(tmp_path, capsys):
+    # WI-358. status.md is trunk-owned and forward-only, so the id named here
+    # reds R-D on the COMPOSED tree the moment the WI closes — and the work
+    # branch cannot scrub a file it does not own, so the red is undischargeable
+    # from where it is discovered. The claim is the structural home: refuse now,
+    # while the debt is one trunk commit, rather than at merge after the branch
+    # is built. A warn would simply be ignored and the red would still land.
+    root = claim_repo(tmp_path)
+    write_status(
+        root,
+        "# Status\n\n## Next\n\n- Carry the WI-401 rewrite through review.\n",
+    )
+
+    assert integ.claim(root, "WI-401", "wi-401") == 1
+    err = capsys.readouterr().err
+    assert "WI-401 is named in hand-authored docs/status.md prose" in err
+    assert "forward-only" in err
+    # Nothing moved and no branch was cut: the debt is paid before the branch
+    # exists, which is the whole point of hoisting the check to claim time.
+    assert (root / "docs" / "work" / "queued" / "WI-401-widget.md").is_file()
+    assert "wi-401" not in _branches(root)
+
+
+def test_the_claim_refusal_names_the_offending_status_md_line(tmp_path, capsys):
+    # Actionable like the rest of the ladder: the operator gets the line NUMBER
+    # and the line TEXT, so the scrub needs no search. Line 5 is the bullet.
+    root = claim_repo(tmp_path)
+    write_status(
+        root,
+        "# Status\n"
+        "\n"
+        "## Next\n"
+        "\n"
+        "- Carry the WI-401 rewrite through review.\n"
+        "- Unrelated WI-999 note.\n",
+    )
+
+    assert integ.claim(root, "WI-401", "wi-401") == 1
+    err = capsys.readouterr().err
+    assert "line 5" in err
+    assert "Carry the WI-401 rewrite through review." in err
+    # Only the matching id is quoted — a neighbouring bullet is not the debt.
+    assert "WI-999" not in err
+
+
+def test_claim_allows_an_id_that_appears_only_inside_the_generated_block(tmp_path):
+    # The mode-aware half, matching check_trajectory's own R-D stand-down: a
+    # generated status snapshot legitimately names QUEUED ids (it renders the
+    # frontier), and its content is regenerated at close rather than scrubbed by
+    # hand. Refusing on it would make every claim of a frontier WI impossible.
+    root = claim_repo(tmp_path)
+    write_status(
+        root,
+        "# Status\n"
+        "\n"
+        "<!-- BEGIN GENERATED STATUS -->\n"
+        "- WI-401 — Widget (queued, ready)\n"
+        "<!-- END GENERATED STATUS -->\n"
+        "\n"
+        "Hand prose that names no ids.\n",
+    )
+
+    assert integ.claim(root, "WI-401", "wi-401") == 0
+    assert (root / "docs" / "work" / "active" / "wi-401" / "WI-401-widget.md").is_file()
+    assert "wi-401" in _branches(root)
+
+
+def test_hand_prose_after_a_generated_block_is_still_policed(tmp_path):
+    # The END sentinel really re-arms the scan — otherwise a status.md that
+    # carries a generated block anywhere would exempt its whole tail, which is
+    # exactly the hybrid-file hole check_trajectory's own R-D closed.
+    root = claim_repo(tmp_path)
+    write_status(
+        root,
+        "# Status\n"
+        "\n"
+        "<!-- BEGIN GENERATED STATUS -->\n"
+        "- nothing here\n"
+        "<!-- END GENERATED STATUS -->\n"
+        "\n"
+        "- Still to do: the WI-401 rewrite.\n",
+    )
+
+    assert integ.claim(root, "WI-401", "wi-401") == 1
+
+
+def test_a_substring_id_in_status_prose_is_not_a_hit(tmp_path):
+    # The token shape is check_trajectory's `\\bWI-\\d+\\b`, so WI-4010 is a
+    # DIFFERENT work item, not a match on WI-401. Claim-time and merge-time must
+    # agree on what counts as a token or the hoisted check drifts from the rule
+    # it exists to pre-pay.
+    root = claim_repo(tmp_path)
+    write_status(root, "# Status\n\n- The WI-4010 rewrite is next.\n")
+
+    assert integ.claim(root, "WI-401", "wi-401") == 0
+
+
+def test_an_absent_status_md_is_not_a_claim_refusal(tmp_path):
+    # status.md is optional (a fresh scaffold may not carry one); a missing file
+    # is vacuously clean, never a fail-closed refusal — the rule being pre-paid
+    # is itself vacuous there.
+    root = claim_repo(tmp_path)
+    assert not (root / "docs" / "status.md").exists()
+    assert integ.claim(root, "WI-401", "wi-401") == 0
+
+
+def test_a_status_md_that_cannot_be_read_is_a_refusal_not_a_traceback(tmp_path, capsys):
+    # ABSENT is vacuously clean; PRESENT-BUT-UNREADABLE is not the same thing. A
+    # directory (or a permission denial) at docs/status.md would otherwise escape
+    # the claim as an OSError traceback, and — worse if it were caught loosely —
+    # an unscanned status.md is exactly where the debt hides. Fail closed, with
+    # the reason quoted.
+    root = claim_repo(tmp_path)
+    (root / "docs" / "status.md").mkdir(parents=True)
+
+    assert integ.claim(root, "WI-401", "wi-401") == 1
+    err = capsys.readouterr().err
+    assert "docs/status.md exists but cannot be read" in err
+    assert (root / "docs" / "work" / "queued" / "WI-401-widget.md").is_file()
+    assert "wi-401" not in _branches(root)
+
+
+def test_a_lowercase_wi_id_is_normalized_before_any_rung_runs(tmp_path):
+    # `Path.glob` casefolds on Windows, so `--wi wi-401` resolves the queued spec
+    # and then diverges from every rung that matches the canonical token: the
+    # WI-358 status scan silently skipped, and the scheduler frontier refused
+    # with a MISLEADING reason ("not on the ready frontier") for a WI that is on
+    # it. One normalization at the CLI boundary keeps the rungs agreeing.
+    root = claim_repo(tmp_path)
+    write_status(root, "# Status\n\n- Carry the WI-401 rewrite through review.\n")
+
+    proc = run_py(
+        [
+            SCRIPTS / "integrate.py",
+            "--root",
+            ".",
+            "claim",
+            "--wi",
+            "wi-401",
+            "--branch",
+            "wi-401",
+        ],
+        cwd=root,
+    )
+    out = proc.stdout + proc.stderr
+    assert proc.returncode == 1, out
+    assert "named in hand-authored docs/status.md prose" in out, out
+    assert "not on the ready frontier" not in out, out
+    assert integ.normalize_wi_id("wi-401") == "WI-401"
+    assert integ.normalize_wi_id("WI-401") == "WI-401"
+
+
 # --- 2. finished-branch detection: the tree IS the signal ---------------------
 
 
@@ -517,6 +689,27 @@ def test_a_declared_test_command_passes_the_bar_declaration_check(tmp_path):
     assert integ._declared_bar_or_refusal(tmp_path) is None
 
 
+def test_a_declared_toolchain_without_its_venv_refuses_the_bar(tmp_path):
+    # WI-361: the re-homed WI-286 floor. A repo that DECLARES the pinned toolchain
+    # (requirements-dev.txt) but has no ./.venv would otherwise run the composed-
+    # tree bar on the ambient interpreter, whose green may be false. The queue
+    # refuses instead, loudly and by name, before it composes anything.
+    _stack_ini(tmp_path, "[product]\ntest = {py} -m pytest -q\n")
+    (tmp_path / "requirements-dev.txt").write_text("pytest\n", encoding="utf-8")
+    refusal = integ._declared_bar_or_refusal(tmp_path)
+    assert refusal is not None
+    assert "harness floor REFUSES" in refusal
+    assert "no runnable ./.venv" in refusal and "dev-setup --install" in refusal
+
+
+def test_a_scaffold_that_declares_no_toolchain_still_runs_the_bar(tmp_path):
+    # The arming boundary from the wired side: the SAME venv-less root without the
+    # declaration is not refused. This is the property the whole venv-less fixture
+    # fleet (including the e2e scaffolds in this file) depends on.
+    _stack_ini(tmp_path, "[product]\ntest = {py} -m pytest -q\n")
+    assert integ._declared_bar_or_refusal(tmp_path) is None
+
+
 # --- 5. the RULING-6 window audit --------------------------------------------
 
 
@@ -598,23 +791,24 @@ def sub(a, b):
 '''
 
 
-def test_claim_build_and_integrate_end_to_end(tmp_path):
-    """The whole flow as a user runs it: scaffold -> claim -> build on the
-    branch -> close -> `integrate --tier smoke`.
+def scaffolded_closed_branch(tmp_path):
+    """A bootstrapped scaffold whose WI-401 is claimed, built and CLOSED on
+    `wi-401`: exactly the state the queue runs against. Returns (repo, claim_sha).
 
-    The bar is REAL. `make_minimal_project` gives the scaffold a fully traced
-    SN->SR->LLR->TC chain, so `check.py` at the derived gate (G3) and the smoke
-    tier genuinely passes on the composed tree — measured 17 PASS steps, zero
-    SKIP. `_run_bar` is deliberately NOT stubbed: a monkeypatched bar would make
-    every assertion below true of a queue that merges anything.
+    The bar this sets up for is REAL. `make_minimal_project` gives the scaffold a
+    fully traced SN->SR->LLR->TC chain, so `check.py` at the derived gate (G3) and
+    the smoke tier genuinely passes on the composed tree — measured 17 PASS steps,
+    zero SKIP. `_run_bar` is deliberately NOT stubbed by any caller: a
+    monkeypatched bar would make every downstream assertion true of a queue that
+    merges anything.
 
     Two fixture notes, each a real property of the script under test:
 
       * NO `.venv` is seeded. `agent_common.harness_python` prefers the repo's
         own `.venv` and falls back to `sys.executable`; a `seed_venv`-style
         `venv.create(with_pip=False)` interpreter carries neither pytest nor
-        ruff, so it would red the format/lint/test steps of the very bar this
-        test needs to pass honestly. The fallback lands on THIS suite's
+        ruff, so it would red the format/lint/test steps of the very bar these
+        tests need to pass honestly. The fallback lands on THIS suite's
         interpreter, which is floor-satisfying and carries the pinned tools.
       * `out/` is gitignored by the fixture. `integrate()` opens its coordinator
         lock at `out/integrate.lock` BEFORE checking the trunk is clean, and the
@@ -672,6 +866,14 @@ def test_claim_build_and_integrate_end_to_end(tmp_path):
     )
     _commit(repo, "close: WI-401 -> archive", when=T_VERDICT)
     _git(repo, "checkout", "-q", "master")
+    return repo, claim_sha
+
+
+def test_claim_build_and_integrate_end_to_end(tmp_path):
+    """The whole flow as a user runs it: scaffold -> claim -> build on the
+    branch -> close -> `integrate --tier smoke`, against the REAL bar
+    (`scaffolded_closed_branch` documents the fixture)."""
+    repo, claim_sha = scaffolded_closed_branch(tmp_path)
 
     # 3. the queue.
     proc = run_py([SCRIPTS / "integrate.py", "integrate", "--tier", "smoke"], cwd=repo)
@@ -749,6 +951,244 @@ def test_integrate_refuses_and_holds_the_trunk_when_the_bar_is_undeclared(tmp_pa
     assert "docs/stack.ini is absent" in out, out
     assert _rev(root, "HEAD") == trunk_before
     assert "wi-401" in _branches(root)
+
+
+# --- 7. the §5.6 unload: the branch AND its worker worktree (WI-359) ----------
+
+
+def _worktree_count(root):
+    """Registered worktrees, the trunk included (so a lone trunk counts 1)."""
+    return len([ln for ln in _git(root, "worktree", "list").splitlines() if ln.strip()])
+
+
+def merged_branch_repo(tmp_path, ignore=None):
+    """A trunk that has just merged `wi-401` --no-ff — the exact state
+    `integrate_one` reaches immediately before it unloads the branch.
+
+    `ignore` (a .gitignore body) is committed BEFORE the branch cut, so the rules
+    are live on `wi-401` too: a worktree checked out from a branch that predates
+    the .gitignore sees those paths as untracked, which would test the wrong
+    read entirely."""
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    git_repo(repo)
+    if ignore:
+        (repo / ".gitignore").write_text(ignore, encoding="utf-8", newline="\n")
+        _commit(repo, "chore: declare the ignore rules", when=T_BASE)
+    _git(repo, "checkout", "-q", "-b", "wi-401")
+    (repo / "widget.txt").write_text("1\n", encoding="utf-8", newline="\n")
+    _commit(repo, "feat: the widget", when=T_CODE)
+    _git(repo, "checkout", "-q", "main")
+    _git(repo, "merge", "--no-ff", "-m", "integrate: merge wi-401 (WI-401)", "wi-401")
+    return repo
+
+
+def test_unload_deletes_the_merged_branch_when_nothing_holds_it(tmp_path):
+    # The ordinary case, asserted so the two failure paths below are known to be
+    # exceptions rather than the only behaviour the function has.
+    repo = merged_branch_repo(tmp_path)
+    unloaded, note = integ._unload_branch(repo, "wi-401")
+    assert unloaded, note
+    assert "unloaded wi-401" in note
+    assert "wi-401" not in _branches(repo)
+
+
+def test_the_holding_worktree_is_found_by_branch(tmp_path):
+    # The lookup the report depends on: a branch checked out in a linked
+    # worktree resolves to that worktree's PATH, so the operator is told where
+    # the branch actually lives instead of only that the delete failed.
+    repo = merged_branch_repo(tmp_path)
+    worker = tmp_path / "worker"
+    _git(repo, "worktree", "add", str(worker), "wi-401")
+
+    holder, is_primary = integ._worktree_holding(repo, "wi-401")
+    assert holder is not None and holder.samefile(worker)
+    # A LINKED worktree, not the primary — git lists the main checkout first, so
+    # the record index is what tells removable from un-removable.
+    assert is_primary is False
+    # A branch nothing has checked out resolves to nothing — the parse keys on
+    # the record's `branch` line, not on the first `worktree` line it sees.
+    assert integ._worktree_holding(repo, "no-such-branch") == (None, False)
+
+
+def test_the_main_checkout_is_recognised_as_the_primary_worktree(tmp_path):
+    # `git worktree list` includes the MAIN checkout, so a branch the trunk
+    # itself has checked out resolves to a path that can NEVER be removed.
+    repo = merged_branch_repo(tmp_path)
+    _git(repo, "checkout", "-q", "wi-401")
+
+    holder, is_primary = integ._worktree_holding(repo, "wi-401")
+    assert holder is not None and holder.samefile(repo)
+    assert is_primary is True
+
+
+def test_unload_gcs_a_clean_worker_worktree_then_deletes_the_branch(tmp_path):
+    # `git branch -d` refuses a branch checked out in a linked worktree. Where
+    # the GC is SAFE the integrator owns it: a clean worktree holds nothing that
+    # is not in the merged history, so it is removed and the delete retried —
+    # this is the gap that let the old dispatcher accumulate 36 stale worktrees.
+    repo = merged_branch_repo(tmp_path)
+    worker = tmp_path / "worker"
+    _git(repo, "worktree", "add", str(worker), "wi-401")
+
+    unloaded, note = integ._unload_branch(repo, "wi-401")
+    assert unloaded, note
+    assert "worker" in note, note
+    assert not worker.exists()
+    assert "wi-401" not in _branches(repo)
+    # The registration is gone too, not merely the directory — a pruned-but-
+    # registered worktree is the residue the next `worktree add` trips over.
+    # Counted rather than name-matched: pytest's tmp dir is itself named after
+    # the test, so a substring check would find "worker" in the trunk's own row.
+    assert _worktree_count(repo) == 1
+
+
+def test_unload_reports_a_dirty_worker_worktree_and_touches_nothing(tmp_path):
+    # The 2026-07-26 lesson: a worktree can hold orphaned files that exist
+    # NOWHERE else, so dirt is evidence, not garbage. Nothing is forced — the
+    # report names the branch, the path and the two commands, and the untracked
+    # file is still on disk afterwards.
+    repo = merged_branch_repo(tmp_path)
+    worker = tmp_path / "worker"
+    _git(repo, "worktree", "add", str(worker), "wi-401")
+    (worker / "orphan.txt").write_text(
+        "the only copy\n", encoding="utf-8", newline="\n"
+    )
+
+    unloaded, note = integ._unload_branch(repo, "wi-401")
+    assert not unloaded
+    assert "UNLOAD INCOMPLETE" in note
+    assert "wi-401" in note and "worker" in note and "DIRTY" in note
+    assert "git worktree remove" in note and "git branch -d" in note
+    assert (worker / "orphan.txt").read_text(encoding="utf-8") == "the only copy\n"
+    assert "wi-401" in _branches(repo)
+
+
+def test_a_worktree_holding_only_gitignored_files_is_dirty(tmp_path):
+    # The sharpest edge of the same lesson, and why the GC cannot read dirt with
+    # `git status --porcelain` alone: the file that exists NOWHERE else is
+    # typically an IGNORED one — the unredacted `out/run-logs/` session stream, a
+    # local `.env`. To a tracked-only read the worktree looks pristine and
+    # `git worktree remove` deletes the lot without a word.
+    repo = merged_branch_repo(tmp_path, ignore="out/\n.env\n")
+    worker = tmp_path / "worker"
+    _git(repo, "worktree", "add", str(worker), "wi-401")
+    logs = worker / "out" / "run-logs"
+    logs.mkdir(parents=True)
+    (logs / "session.md").write_text(
+        "the only copy of this session\n", encoding="utf-8", newline="\n"
+    )
+
+    # The tracked-only read really does see nothing — this is the trap, pinned.
+    assert integ.ac.working_tree_dirty(worker) == []
+    assert integ._worktree_dirt(worker), "an ignored-only worktree must read dirty"
+
+    unloaded, note = integ._unload_branch(repo, "wi-401")
+    assert not unloaded
+    assert "UNLOAD INCOMPLETE" in note and "DIRTY" in note
+    assert (logs / "session.md").read_text(encoding="utf-8") == (
+        "the only copy of this session\n"
+    )
+    assert "wi-401" in _branches(repo)
+
+
+def test_a_dirt_read_git_cannot_perform_counts_as_dirty(tmp_path):
+    # Fail direction, stated as a test: an unreachable, corrupt or
+    # permission-denied worktree must read DIRTY, never clean. A fail-open read
+    # here would be the one fail-open path in a fail-closed script — and the one
+    # whose consequence is deletion.
+    dirt = integ._worktree_dirt(tmp_path / "not-a-worktree-at-all")
+    assert dirt, "a dirt read git could not perform must never read as clean"
+    assert "could not read this worktree" in dirt[0]
+
+
+def test_unload_never_prescribes_removing_the_main_checkout(tmp_path):
+    # `git worktree remove` refuses the primary FOREVER, so naming it as the
+    # remedy would send the operator after a command that can never succeed. The
+    # main checkout gets its own message — switch it off the branch — and is
+    # never a removal candidate, dirty or clean.
+    repo = merged_branch_repo(tmp_path)
+    _git(repo, "checkout", "-q", "wi-401")
+
+    unloaded, note = integ._unload_branch(repo, "wi-401")
+    assert not unloaded
+    assert "UNLOAD INCOMPLETE" in note
+    assert "MAIN checkout" in note
+    assert "git worktree remove" not in note, note
+    assert "git branch -d wi-401" in note
+    assert repo.is_dir() and "wi-401" in _branches(repo)
+
+
+def test_a_branch_that_survives_with_no_holder_is_still_reported(tmp_path):
+    # The swallow this replaces: `branch -d` on an UNMERGED branch fails and the
+    # old code discarded the code and the message both. There is no worktree to
+    # name here, so the git refusal itself has to reach the operator.
+    repo = merged_branch_repo(tmp_path)
+    _git(repo, "checkout", "-q", "-b", "wi-402")
+    (repo / "unmerged.txt").write_text("x\n", encoding="utf-8", newline="\n")
+    _commit(repo, "feat: never merged", when=T_LATER)
+    _git(repo, "checkout", "-q", "main")
+
+    unloaded, note = integ._unload_branch(repo, "wi-402")
+    assert not unloaded
+    assert "UNLOAD INCOMPLETE" in note
+    assert "wi-402" in note
+    assert "no registered worktree holds it" in note
+    assert "wi-402" in _branches(repo)
+
+
+def test_the_queue_gcs_a_clean_worker_worktree_end_to_end(tmp_path):
+    # WI-359 through the real CLI: the §5.6 "drained and unloaded" stop is not
+    # reached while a branch or its worktree lingers, so the queue must finish
+    # the job itself on the safe path rather than leaving hand cleanup behind.
+    repo, _claim_sha = scaffolded_closed_branch(tmp_path)
+    worker = tmp_path / "worker"
+    _git(repo, "worktree", "add", str(worker), "wi-401")
+
+    proc = run_py([SCRIPTS / "integrate.py", "integrate", "--tier", "smoke"], cwd=repo)
+    out = proc.stdout + proc.stderr
+    assert proc.returncode == 0, out
+
+    assert "integrate: wi-401 merged (WI-401)" in out, out
+    assert "GC'd clean worker worktree" in out, out
+    assert not worker.exists(), out
+    assert "wi-401" not in _branches(repo)
+    # The integrator's own candidate worktree is torn down too, so the trunk is
+    # the only registration left — the drained-and-unloaded stop, in full.
+    assert _worktree_count(repo) == 1
+
+
+def test_the_queue_exits_nonzero_when_a_merged_branch_stays_held(tmp_path):
+    # The other half, and the assertion that the silent swallow is gone. §5.6's
+    # stop is drained AND unloaded, and nothing ever retries an unload — a merged
+    # branch is no longer a finished claimed branch, so the next queue run will
+    # not see it. A green exit here would report a stop the run did not reach, so
+    # the remainder is named on STDERR by branch and path and carried to the
+    # exit code. The MERGE still stands: the trunk fast-forwarded before the
+    # unload, and the nonzero code reports debt, it does not undo work.
+    repo, _claim_sha = scaffolded_closed_branch(tmp_path)
+    trunk_before = _rev(repo, "HEAD")
+    worker = tmp_path / "worker"
+    _git(repo, "worktree", "add", str(worker), "wi-401")
+    (worker / "orphan.txt").write_text(
+        "the only copy\n", encoding="utf-8", newline="\n"
+    )
+
+    proc = run_py([SCRIPTS / "integrate.py", "integrate", "--tier", "smoke"], cwd=repo)
+    out = proc.stdout + proc.stderr
+    assert proc.returncode != 0, out
+    assert "integrate: wi-401 merged (WI-401)" in out, out
+
+    assert "UNLOAD INCOMPLETE" in proc.stderr, out
+    assert "STILL HELD - wi-401 at" in proc.stderr, out
+    assert "INCOMPLETE - 1 merged branch(es) NOT unloaded" in proc.stderr, out
+    assert "wi-401" in proc.stderr and "worker" in proc.stderr
+
+    # The merge landed and stays landed — the exit code is about the remainder.
+    assert _rev(repo, "HEAD") != trunk_before
+    assert _git(repo, "log", "-1", "--format=%s").strip().startswith("integrate: merge")
+    assert (worker / "orphan.txt").is_file()
+    assert "wi-401" in _branches(repo)
 
 
 def test_the_git_dependency_is_declared_for_this_module():

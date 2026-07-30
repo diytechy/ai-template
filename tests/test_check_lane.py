@@ -79,6 +79,18 @@ def claim(root, branch):
     return d
 
 
+def close(root, branch):
+    """§2.3 step 3: the close MOVES the specs to docs/work/archive/ and leaves no
+    active/<branch>/ behind — including the rmdir the WI-357 workaround relied on
+    nobody doing. After this the working tree carries no claim at all."""
+    src = root / "docs" / "work" / "active" / branch
+    dst = root / "docs" / "work" / "archive"
+    dst.mkdir(parents=True, exist_ok=True)
+    for spec in src.iterdir():
+        spec.rename(dst / spec.name)
+    src.rmdir()
+
+
 # --- 1. the detector ---------------------------------------------------------
 
 
@@ -115,6 +127,57 @@ def test_slashed_branch_name_maps_to_its_nested_claim_dir(check, tmp_path):
 def test_slashed_branch_needs_the_nested_dir_not_a_flattened_one(check, tmp_path):
     git_repo(tmp_path, branch="feat/x")
     claim(tmp_path, "feat-x")  # a flattened name is NOT the claim
+    assert check._work_branch(tmp_path) is None
+
+
+def test_the_closing_commit_does_not_un_claim_its_own_branch(check, tmp_path):
+    # WI-357, hit three times in the Phase 4 acceptance. The close commit stages
+    # active/<branch>/ -> archive/, so at the moment its own pre-commit bar runs
+    # the working tree holds no claim and the trunk-freshness gates re-arm inside
+    # the very commit that closes the WI — demanding artifacts §5.2 forbids the
+    # branch to commit. The signal has to outlive the move, and history does.
+    run_git = git_repo(tmp_path, branch="wi-360")
+    claim(tmp_path, "wi-360")
+    run_git("add", "-A")
+    run_git("commit", "-qm", "claim: WI-999 -> active/wi-360")
+    close(tmp_path, "wi-360")
+    run_git("add", "-A")  # staged, uncommitted: exactly what the hook sees
+    assert check._work_branch(tmp_path) == "wi-360"
+
+
+def test_a_commit_after_the_close_still_reads_as_a_work_branch(check, tmp_path):
+    # And it stays claimed afterwards: a review fixup or a log tweak pushed on the
+    # same branch is still the branch's lane, not the trunk's. Once the close is
+    # COMMITTED the claim exists nowhere but history, so this is the case a
+    # HEAD-tree-only signal would still get wrong.
+    run_git = git_repo(tmp_path, branch="wi-360")
+    claim(tmp_path, "wi-360")
+    run_git("add", "-A")
+    run_git("commit", "-qm", "claim: WI-999 -> active/wi-360")
+    close(tmp_path, "wi-360")
+    run_git("add", "-A")
+    run_git("commit", "-qm", "WI-999: close")
+    (tmp_path / "after.txt").write_text("fixup", encoding="utf-8")
+    run_git("add", "-A")
+    run_git("commit", "-qm", "WI-999: review fixup")
+    assert check._work_branch(tmp_path) == "wi-360"
+
+
+def test_trunk_history_full_of_other_branches_claims_is_still_the_trunk(
+    check, tmp_path
+):
+    # The realistic trunk: every merged WI left both its claim add and its archive
+    # move in trunk history. None of that names the TRUNK's own branch, so the
+    # history signal must stay silent. This is the fail-direction that matters —
+    # a false positive here switches the freshness gates off on the one branch
+    # that owns regenerating them, and nothing else would catch the drift.
+    run_git = git_repo(tmp_path, branch="main")
+    claim(tmp_path, "wi-360-forge-seam")
+    run_git("add", "-A")
+    run_git("commit", "-qm", "claim: WI-360 -> active/wi-360-forge-seam")
+    close(tmp_path, "wi-360-forge-seam")
+    run_git("add", "-A")
+    run_git("commit", "-qm", "WI-360: close")
     assert check._work_branch(tmp_path) is None
 
 

@@ -1090,7 +1090,30 @@ def _claimed_work_branch(root):
         spec_dir.resolve().relative_to(active.resolve())
     except (OSError, ValueError):
         return None
-    return branch if spec_dir.is_dir() else None
+    if spec_dir.is_dir():
+        return branch
+    # WI-357: the working tree alone cannot answer this. §2.3 step 3 closes a WI by
+    # MOVING the claim out of active/, so from the close commit on the tree holds no
+    # claim and the freshness gates re-arm inside the very commit that closes it,
+    # demanding artifacts §5.2 forbids the branch to commit. History outlives the
+    # move: the base commit that cut the branch added the directory, and that add
+    # stays reachable. One path-limited git call, stopped at the first hit.
+    # FAIL-DIRECTION: no git, a failing git or an empty answer all read as the TRUNK
+    # lane and its STRICT bar, because a false positive would switch the freshness
+    # gates off on the trunk — the one branch that owns regenerating them, where
+    # nothing else would catch the drift. Residual (review-confirmed breadth): ANY
+    # branch whose name ever appeared under docs/work/active/ in reachable history
+    # reads as claimed forever — a retired WI branch re-cut, or a throwaway reusing
+    # its name; that relaxes a BRANCH, never the trunk, and bounding the walk would
+    # need a configured trunk name this rule deliberately has not. Cost note: on
+    # the trunk the pathspec never matches, so the -1 walk pays full history —
+    # measured ~0.05 ms/commit (61 ms at 1.2k commits), once per process via the
+    # cache below; a very large adopter repo that feels it should bound with
+    # --since rather than name its trunk.
+    log = _git_out(
+        root, ["log", "-1", "--format=%H", "--", "docs/work/active/" + branch]
+    )
+    return branch if (log or "").strip() else None
 
 
 def _work_branch(root="."):
@@ -1098,12 +1121,14 @@ def _work_branch(root="."):
 
     The claim is the Phase 2c registry model (concurrency-restructure §2.1/§2.3):
     a claimed branch's work-item specs live in `docs/work/active/<branch>/`, moved
-    there by the serial trunk commit that cut the branch. So the branch's own
-    working tree carries the evidence — no ref namespace, no reservation file.
+    there by the serial trunk commit that cut the branch. So the branch itself
+    carries the evidence — no ref namespace, no reservation file — in its working
+    tree, or once the close archives the specs, in its own history.
 
-    Fail-CLOSED by construction: off git, on a detached HEAD, or with no matching
-    `active/` directory the answer is None and the STRICT bar applies. The trunk
-    is simply the branch nobody claimed a work item on."""
+    Fail-CLOSED by construction: off git, on a detached HEAD, or with neither a
+    matching `active/` directory nor a claim in history the answer is None and the
+    STRICT bar applies. The trunk is simply the branch nobody claimed a work item
+    on."""
     key = str(Path(root).resolve())
     if key not in _WORK_BRANCH_CACHE:
         _WORK_BRANCH_CACHE[key] = _claimed_work_branch(root)

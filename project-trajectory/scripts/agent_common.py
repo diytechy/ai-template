@@ -281,10 +281,11 @@ def harness_python(root):
     launched on ambient Python (WI-286).
 
     The ambient `sys.executable` fallback is a DEFENSIVE default only (a
-    stdlib-only resolver must return SOMETHING), not a licence to run the
-    harness on an unpinned ambient interpreter. (The dispatcher-era fail-closed
-    floor gate that refused a venv-less root up front retired with the
-    dispatcher at concurrency-restructure Phase 5.)"""
+    stdlib-only resolver must return SOMETHING), and it is the honest answer
+    ONLY for a repo that has not declared the pinned toolchain. A repo that has
+    is refused UPSTREAM by `harness_floor_failures` below - integrate.py calls
+    it before the bar - so a declared repo never reaches this fallback
+    (WI-361; the dispatcher-era gate this replaces died at Phase 5)."""
     py = venv_python(root)
     return str(py) if py else sys.executable
 
@@ -316,6 +317,63 @@ def interpreter_version(exe):
         return (int(parts[0]), int(parts[1]))
     except (ValueError, IndexError):
         return None
+
+
+def harness_floor_failures(root):
+    """WI-286/WI-361: a singleton list with a floor message when the interpreter
+    the harness would run under is not a floor-satisfying, PINNED root .venv,
+    else []. A tree without the repo's own .venv resolves ambient PATH (run
+    20260723T0202 inherited 3.8), so a below-floor idiom passes locally and only
+    fails in CI - and an ambient-MODERN interpreter is the worse half, clearing
+    the version floor while lacking the pinned dev tools the bar assumes, which
+    makes its green FALSE. integrate.py is the refusing seam: it calls this
+    before the composed-tree bar rather than running the bar on ambient Python.
+
+    ARMING BOUNDARY: the floor guards only a repo that DECLARES the pinned
+    toolchain - concretely, one carrying `requirements-dev.txt` at its root. A
+    repo without that declaration (a fresh scaffold, a test fixture, an adopter
+    on another stack) never sees this refusal and keeps `harness_python`'s
+    ambient fallback: there is no pin to hold it to, so refusing would enforce a
+    contract it never opted into.
+
+    Once armed it FAILS CLOSED on three shapes:
+
+    - **no runnable root .venv at all** - absent, or a present-but-incomplete/
+      corrupt layout (`venv_python` finds no interpreter). This must NOT fall
+      back to the ambient interpreter (REVIEW-A MAJOR on WI-286);
+    - a .venv whose interpreter cannot be run to report a version;
+    - a below-floor .venv (< MIN_PYTHON).
+
+    Returned as a LIST so a caller folds it into existing refusals with `+`."""
+    if not (Path(root) / "requirements-dev.txt").is_file():
+        return []
+    floor = "{}.{}".format(*MIN_PYTHON)
+    py = venv_python(root)
+    if py is None:
+        return [
+            "no runnable ./.venv interpreter found under {} (absent, or an "
+            "incomplete/corrupt .venv layout). This repo declares a pinned "
+            "toolchain (requirements-dev.txt), so the harness - tests plus those "
+            "pinned dev tools - must run under the repo's OWN Python {}+ .venv, "
+            "NOT the ambient interpreter, which may clear the version floor yet "
+            "lack the pinned tools and produce a false green. Run scripts/"
+            "dev-setup --install to create ./.venv (WI-286/WI-361).".format(root, floor)
+        ]
+    ver = interpreter_version(py)
+    if ver is None:
+        return [
+            "the ./.venv interpreter ({}) could not be run to check its version "
+            "- recreate it (scripts/dev-setup --install; WI-286/WI-361).".format(py)
+        ]
+    if ver < MIN_PYTHON:
+        return [
+            "the repo ./.venv is Python {}.{} - below the {} floor. The harness "
+            "(tests plus pinned dev tools) must run under a floor-satisfying "
+            "interpreter, or a below-floor idiom passes locally and only fails in "
+            "CI. Run scripts/dev-setup --install to (re)create ./.venv at Python "
+            "{}+ (WI-286/WI-361).".format(ver[0], ver[1], floor, floor)
+        ]
+    return []
 
 
 def _declared_test_command(ini, py=None):
@@ -1433,6 +1491,30 @@ def phase_draw_ordinal(iter_dirs, phase):
     return count
 
 
+def worktree_records(root):
+    """Parsed `git worktree list --porcelain` records as (path, branch) pairs,
+    in git's own order — the MAIN checkout always first (WI-263); branch is
+    None when that worktree is detached. [] when git cannot answer (not a
+    repo, git missing) — each caller chooses its own fail direction. The one
+    porcelain walk, shared so the primary-checkout reader and the
+    integrator's holder lookup cannot drift apart."""
+    code, out = git(root, "worktree", "list", "--porcelain")
+    if code != 0:
+        return []
+    records, path, branch = [], None, None
+    for line in out.splitlines():
+        if line.startswith("worktree "):
+            if path is not None:
+                records.append((path, branch))
+            path = line[len("worktree ") :].strip()
+            branch = None
+        elif line.startswith("branch refs/heads/"):
+            branch = line[len("branch refs/heads/") :].strip()
+    if path is not None:
+        records.append((path, branch))
+    return records
+
+
 def primary_worktree_root(root):
     """The MAIN (primary) worktree of `root`'s repo — the FIRST entry of
     `git worktree list --porcelain`, which git always lists ahead of the linked
@@ -1441,14 +1523,10 @@ def primary_worktree_root(root):
     that lives on the primary checkout. Returns a Path, or None when git can't
     answer (not a repo, git missing) — the caller then falls back to its local
     dir, so a draw never crashes."""
-    code, out = git(root, "worktree", "list", "--porcelain")
-    if code != 0:
+    records = worktree_records(root)
+    if not records or not records[0][0]:
         return None
-    for line in out.splitlines():
-        if line.startswith("worktree "):
-            path = line[len("worktree ") :].strip()
-            return Path(path) if path else None
-    return None
+    return Path(records[0][0])
 
 
 def draw_iter_dirs(root, local_iter_dir):

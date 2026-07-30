@@ -296,8 +296,12 @@ def test_step_gate_honours_an_explicit_gate(scaffold):
     assert "--strict" in traj_cmd("G2")
     assert "--strict" not in traj_cmd("all")
     # Name lookup stays unfiltered at any gate: `format` is a G3-only step but the
-    # hook resolves it with no --gate, so it must still be findable at "all".
+    # hook resolves it with no --gate, so it must still be findable at "all"...
     assert [s for s in check.steps(80, "full", "all") if s[0] == "format"]
+    # ...and at an explicit LOW gate too (WI-360, WI-355-REVIEW-A MINOR 2). The
+    # "all" assertion alone would stay green if steps() started filtering its
+    # returned table by gate — G1 is the case that would break, so pin it.
+    assert [s for s in check.steps(80, "full", "G1") if s[0] == "format"]
 
 
 def test_run_steps_unknown_name_fails_loudly(scaffold):

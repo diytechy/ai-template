@@ -7,7 +7,10 @@ merge. Three operations:
   claim      the §2.3 claim protocol, step 1+2: move a queued spec to
              docs/work/active/<branch>/ in a trunk bookkeeping commit, then
              cut the work branch from that commit. Refuses while the tracked
-             docs/work/pause is present (§5.6: pause = stop claiming).
+             docs/work/pause is present (§5.6: pause = stop claiming), and
+             while hand-authored docs/status.md prose names the claimed id
+             (WI-358: that R-D debt is paid before the branch exists, since a
+             branch cannot scrub trunk-owned status.md at merge time).
   integrate  the serial queue: for each FINISHED claimed branch (its tip
              moved every claimed spec out of active/<branch>/), merge
              --no-ff onto a candidate worktree, fold the §5.1/§5.2 trunk
@@ -16,7 +19,13 @@ merge. Three operations:
              DECLARED bar on the composed tree, require the policy verdicts
              (RULING-7), fast-forward the trunk on green, and refuse LOUDLY
              on red (§4) — broken work is never force-merged to satisfy a
-             drain, and a red queue stops rather than skips (§5.5).
+             drain, and a red queue stops rather than skips (§5.5). The
+             merged branch is then UNLOADED: a clean worker worktree holding
+             it is GC'd, while a dirty one (ignored files included) and the
+             MAIN checkout are reported by path and left alone. §5.6's stop
+             is drained AND unloaded, so a run that merged everything but
+             left a branch held names it on stderr and exits NONZERO - the
+             merges stand, the code reports the unpaid remainder.
   audit      the RULING-6 window check over the integrator's own operation:
              every trunk commit in --since..HEAD that touches product paths
              must be a merge commit. Scoped to a window because the
@@ -89,6 +98,89 @@ def _queued_spec(root, wi_id):
     return hits[0]
 
 
+# The R-D id-token shape and the generated-block split, matched HERE rather than
+# imported from check_trajectory: that module's `status_forward_only_findings`
+# flags only ids whose registry status is already `done`, and a claimed id is
+# still queued - the debt only becomes a red at close. The regex and the
+# BEGIN/END sentinels are kept identical to it so claim-time and merge-time agree
+# on what is a token and what is hand prose.
+_WI_TOKEN_RE = re.compile(r"\bWI-\d+\b")
+
+
+def normalize_wi_id(wi_id):
+    """`wi-401`/`Wi-401` -> `WI-401`; anything else is returned unchanged.
+
+    One normalization at the CLI boundary, because the rungs below disagree
+    about case: `Path.glob` casefolds on Windows (so a lowercase --wi still
+    resolves its spec) while the scheduler frontier and the WI-358 status scan
+    match the canonical uppercase token - which silently skipped the scan and
+    then refused with the wrong reason ("not on the ready frontier").
+    """
+    return re.sub(r"^wi-", "WI-", wi_id.strip(), flags=re.IGNORECASE)
+
+
+def _status_prose_hits(root, wi_id):
+    """Hand-authored docs/status.md lines naming `wi_id` as a token: (lineno, text).
+
+    Lines inside a generated block (`<!-- BEGIN GENERATED ... -->` through
+    `<!-- END GENERATED ... -->`) are excluded - the generated frontier
+    legitimately names queued ids, and R-D stands down there too.
+
+    Raises OSError when status.md exists but cannot be read - the caller turns
+    that into a refusal rather than a silently skipped scan (fail closed).
+    """
+    path = root / "docs" / "status.md"
+    if not path.exists():
+        return []
+    hits = []
+    generated = False
+    text = path.read_text(encoding="utf-8", errors="replace")
+    for lineno, line in enumerate(text.splitlines(), 1):
+        if "<!-- BEGIN GENERATED" in line:
+            generated = True
+        if not generated and wi_id in _WI_TOKEN_RE.findall(line):
+            hits.append((lineno, line.strip()))
+        if "<!-- END GENERATED" in line:
+            generated = False
+    return hits
+
+
+def _status_prose_refusal(root, wi_id):
+    """The WI-358 claim rung: a refusal string, or None.
+
+    status.md is trunk-owned and forward-only, so an id named in its HAND prose
+    reds R-D on the composed tree the moment the WI closes - and the work branch
+    cannot scrub a file it does not own. Refuse (not warn): the debt is payable
+    now, in one trunk commit, and a warn would only resurface as a red merge
+    after the whole branch was built.
+    """
+    try:
+        hits = _status_prose_hits(root, wi_id)
+    except OSError as exc:
+        # A status.md that exists but will not read (a directory, a permission
+        # denial) must not skip the scan - an unscanned file is exactly where
+        # the debt hides.
+        return (
+            "docs/status.md exists but cannot be read ({}) - the forward-only "
+            "scan cannot run, and an unscanned status.md is not a clean one; "
+            "fix the file, then claim".format(exc)
+        )
+    if not hits:
+        return None
+    return (
+        "{} is named in hand-authored docs/status.md prose (line{} {}) - "
+        "status.md is forward-only, so this id reds R-D on the composed tree "
+        "the moment the WI closes, and the work branch cannot scrub "
+        "trunk-owned status.md. Move that prose to its home (docs/log.md, or "
+        "the generated block) in a trunk commit, then claim:\n{}".format(
+            wi_id,
+            "" if len(hits) == 1 else "s",
+            ", ".join(str(n) for n, _ in hits),
+            "\n".join("  {}: {}".format(n, t) for n, t in hits),
+        )
+    )
+
+
 def _claim_refusal(root, wi_id, branch):
     """The claim's refusal ladder: the first reason this claim may not happen,
     or None. Every reason is named; order is cheapest-first."""
@@ -120,6 +212,9 @@ def _claim_refusal(root, wi_id, branch):
             "{} is safety_class={!r} - the integrator claims ordinary work only; "
             "spine/gate classes run attended as the §3.2 barrier".format(wi_id, safety)
         )
+    refusal = _status_prose_refusal(root, wi_id)  # WI-358
+    if refusal:
+        return refusal
     import schedule  # sibling; deferred so the cheap refusals above stay cheap
 
     ready = {r["id"] for r in schedule.frontier(schedule._load(root))}
@@ -312,7 +407,16 @@ def _head(root):
 
 
 def _declared_bar_or_refusal(root):
-    """§4: a missing or EMPTY check declaration is a refusal, never a skip."""
+    """§4: a missing or EMPTY check declaration is a refusal, never a skip - and
+    so is a declared bar with no floor-satisfying interpreter to run it on.
+
+    WI-361: this is the surviving home of the WI-286 harness floor, which had
+    exactly one enforcement point (the deleted dispatcher's preflight). It runs
+    HERE, ahead of the compose/merge/bar sequence in `integrate_one`, so a
+    declared-toolchain repo without its pinned .venv is a named refusal rather
+    than a silent ambient-Python bar run whose green may be false. The guard
+    arms only on a repo that declares the pinned toolchain - see
+    `agent_common.harness_floor_failures`."""
     ini = root / "docs" / "stack.ini"
     if not ini.exists():
         return "docs/stack.ini is absent - the required bar is undeclared"
@@ -321,6 +425,9 @@ def _declared_bar_or_refusal(root):
         return "no [product] test declaration - the required bar is undeclared"
     if argv == []:
         return "[product] test is declared but EMPTY - a misconfiguration, not a skip"
+    floor = ac.harness_floor_failures(root)
+    if floor:
+        return "the harness floor REFUSES this bar run: " + floor[0]
     return None
 
 
@@ -370,8 +477,128 @@ def _run_trunk_step(wt, root):
     return _run([str(py), str(SCRIPTS / "trunk_step.py"), "--root", "."], wt)
 
 
-def integrate_one(root, branch, tier):
-    """One branch through the queue. Returns None on green, else the refusal."""
+def _worktree_holding(root, branch):
+    """The registered worktree with `branch` checked out: `(path, is_primary)`,
+    or `(None, False)`.
+
+    Reads `ac.worktree_records` (the one shared porcelain walk). Git always
+    lists the MAIN checkout first, so record index 0 identifies the primary -
+    which can never be `git worktree remove`d and must not be described to
+    the operator as a worker worktree."""
+    for i, (path, held) in enumerate(ac.worktree_records(root)):
+        if held == branch:
+            return (Path(path) if path else None), i == 0
+    return None, False
+
+
+def _worktree_dirt(wt):
+    """The GC-safety read for one worktree: the `git status --porcelain
+    --ignored=matching` lines, or a synthetic line when git itself could not
+    answer. Non-empty means DO NOT REMOVE.
+
+    IGNORED files are counted here, unlike `ac.working_tree_dirty` (whose
+    tracked-dirt contract other callers depend on and which stays as it is): a
+    worker worktree's only unique content is routinely ignored - the unredacted
+    `out/run-logs/` session stream, a local `.env` - and `git worktree remove`
+    deletes it without a word.
+
+    Fail direction: a NONZERO git exit reads as DIRTY, never clean. An
+    unreachable, corrupt or permission-denied worktree is the last thing to
+    delete on a guess, and a fail-open read here would be the one fail-open in
+    a fail-closed script.
+    """
+    code, out = ac.git(wt, "status", "--porcelain", "--ignored=matching")
+    if code != 0:
+        return [
+            "!! git status could not read this worktree (treated as dirty): {}".format(
+                out.strip() or "(no output)"
+            )
+        ]
+    return [ln for ln in out.splitlines() if ln.strip()]
+
+
+def _unload_branch(root, branch):
+    """§5.6 unload of a merged work branch: (fully_unloaded, message).
+
+    `git branch -d` refuses a branch checked out in a linked worktree, and
+    swallowing that refusal is how the old dispatcher accumulated 36 stale
+    worktrees - so every outcome is reported by branch AND by holding path.
+
+    The GC is owned only where it is safe: a CLEAN linked worktree is removed
+    and the delete retried; a DIRTY one is reported and LEFT, never forced, and
+    the MAIN checkout is never removed at all. A worktree can hold orphaned
+    files that exist nowhere else (2026-07-26), so dirt is evidence, not
+    garbage.
+    """
+    code, out = ac.git(root, "branch", "-d", branch)
+    if code == 0:
+        ac.git(root, "worktree", "prune")
+        return True, "unloaded {} (branch deleted)".format(branch)
+    holder, is_primary = _worktree_holding(root, branch)
+    if holder is None:
+        return False, (
+            "UNLOAD INCOMPLETE - branch {} survives the merge (git branch -d "
+            "refused) and no registered worktree holds it; delete it by hand "
+            "after reading:\n{}".format(branch, ac._failure_tail(out))
+        )
+    if is_primary:
+        # `git worktree remove` refuses the primary FOREVER, so prescribing it
+        # would send the operator after a command that can never work.
+        return False, (
+            "UNLOAD INCOMPLETE - branch {} is held by the MAIN checkout at {}, "
+            "which is not a removable worktree. Switch that checkout off the "
+            "branch (git -C {} checkout <trunk>), then run: git branch -d "
+            "{}".format(branch, holder, holder, branch)
+        )
+    dirty = _worktree_dirt(holder)
+    if dirty:
+        return False, (
+            "UNLOAD INCOMPLETE - branch {} is held by the worker worktree {}, "
+            "which is DIRTY ({} uncommitted or ignored path(s)) - NOT removed "
+            "and NOT forced, because a worktree can hold files that exist "
+            "nowhere else (an ignored out/run-logs/ session stream counts). "
+            "Salvage or commit them, then run: git worktree remove {} && "
+            "git branch -d {}\n{}".format(
+                branch,
+                holder,
+                len(dirty),
+                holder,
+                branch,
+                "\n".join("  " + ln for ln in dirty[:10]),
+            )
+        )
+    code, rm_out = ac.git(root, "worktree", "remove", str(holder))
+    if code != 0:
+        return False, (
+            "UNLOAD INCOMPLETE - branch {} is held by the worker worktree {}, "
+            "which reads clean but would not remove; run: git worktree remove {} "
+            "&& git branch -d {}\n{}".format(
+                branch, holder, holder, branch, ac._failure_tail(rm_out)
+            )
+        )
+    ac.git(root, "worktree", "prune")
+    code, out = ac.git(root, "branch", "-d", branch)
+    if code != 0:
+        return False, (
+            "UNLOAD INCOMPLETE - the clean worker worktree {} was removed but "
+            "branch {} still will not delete; run: git branch -d {}\n{}".format(
+                holder, branch, branch, ac._failure_tail(out)
+            )
+        )
+    return True, "unloaded {} (branch deleted; GC'd clean worker worktree {})".format(
+        branch, holder
+    )
+
+
+def integrate_one(root, branch, tier, held=None):
+    """One branch through the queue. Returns None on green, else the refusal.
+
+    `held` is an out-parameter list collecting the branch names whose §5.6
+    unload did NOT complete. The merge itself stands (the trunk has already
+    fast-forwarded), so an incomplete unload is not a refusal - but nothing ever
+    retries it (a merged branch no longer appears in `finished_branches`), which
+    is why the caller has to carry the remainder to the run's exit code.
+    """
     wi_ids = _claimed_wi_ids(root, branch)
     if not wi_ids:
         return "trunk holds no claimed specs for {}".format(branch)
@@ -426,8 +653,13 @@ def integrate_one(root, branch, tier):
         return "trunk fast-forward refused (trunk moved under the queue?):\n{}".format(
             out
         )
-    ac.git(root, "branch", "-d", branch)
+    unloaded, note = _unload_branch(root, branch)
     print("integrate: {} merged ({}); {}".format(branch, ", ".join(wi_ids), summary))
+    # An incomplete unload goes to stderr rather than being swallowed - the §5.6
+    # drained-and-unloaded stop is not reached while a branch or worktree lingers.
+    print("integrate: {}".format(note), file=sys.stdout if unloaded else sys.stderr)
+    if not unloaded and held is not None:
+        held.append(branch)
     return None
 
 
@@ -447,8 +679,9 @@ def integrate(root, tier):
         if not branches:
             print("integrate: no finished claimed branches - nothing to merge.")
             return 0
+        held = []
         for branch in branches:
-            refusal = integrate_one(root, branch, tier)
+            refusal = integrate_one(root, branch, tier, held)
             if refusal:
                 # A red queue STOPS (§5.5) - it never skips to the next branch,
                 # because later merges would compose against a tree the red one
@@ -458,9 +691,40 @@ def integrate(root, tier):
         if code != 0:
             return fail("the RULING-6 window audit flagged this run's own history")
         _teardown(root)
+        if held:
+            return _held_summary(root, held)
         return 0
     finally:
         ac.release_lock()
+
+
+def _held_summary(root, held):
+    """The run's unpaid remainder: every still-held branch by name and path, and
+    a NONZERO exit. Always returns 1.
+
+    §5.6's stop is drained AND unloaded, so a run that merged everything but
+    left a branch behind must not report 0 - nothing retries the unload (a
+    merged branch is no longer a finished claimed branch), so this exit code is
+    the only surviving signal. The merges STAND; the code reports the
+    remainder, it does not undo work.
+    """
+    for branch in held:
+        holder, is_primary = _worktree_holding(root, branch)
+        where = (
+            "no worktree - the branch alone"
+            if holder is None
+            else "{}{}".format(holder, " (MAIN checkout)" if is_primary else "")
+        )
+        print("integrate: STILL HELD - {} at {}".format(branch, where), file=sys.stderr)
+    print(
+        "integrate: INCOMPLETE - {} merged branch(es) NOT unloaded ({}); the "
+        "queue drained but the §5.6 stop is not reached. The merges STAND - "
+        "this exit code reports the remainder, it does not undo work.".format(
+            len(held), ", ".join(held)
+        ),
+        file=sys.stderr,
+    )
+    return 1
 
 
 def _teardown(root):
@@ -559,7 +823,7 @@ def main(argv=None):
     args = ap.parse_args(argv)
     root = Path(args.root).resolve()
     if args.op == "claim":
-        return claim(root, args.wi, args.branch)
+        return claim(root, normalize_wi_id(args.wi), args.branch)
     if args.op == "integrate":
         return integrate(root, args.tier)
     return audit(root, args.since)
