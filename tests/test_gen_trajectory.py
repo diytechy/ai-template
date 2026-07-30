@@ -4843,6 +4843,128 @@ def test_route_edges_lane_routes_a_backward_edge_with_only_endpoint_obstacles():
     assert dn[1] == 120.0 and dn[-1] == 220.0  # terminals still snap to port centers
 
 
+# --- WI-367: the viewBox holds the wrap-around lanes (WI-323-CRITIQUE follow-up 2) -
+# A backward edge is routed AROUND the outside of its own endpoint boxes (WI-257,
+# just above), so at rank 0 / the last rank its U-turn lands outside the layout box
+# `[0, width]` the viewBox used to declare — and the SVG viewport clipped it: the
+# lane stopped flat at the box edge and its continuation re-entered a few px away.
+# `_svg_frame` grows the box to the ink instead of shrinking the ink to the box.
+
+
+def _viewbox_of(svg_tag):
+    return [float(v) for v in re.search(r'viewBox="([^"]+)"', svg_tag).group(1).split()]
+
+
+# A registry with a deliberate WRAP-AROUND: WI-001 (rank 0) carries a SOFT
+# (advisory, `~`-prefixed) edge after WI-004 (the last rank), so its wire runs
+# right-to-left across the whole diagram and the router sends it around the OUTSIDE
+# of both endpoint boxes — the exact shape the viewBox used to cut. A soft edge
+# never constrains the ranking, so the registry stays a legal acyclic DAG.
+WRAPAROUND_WIS = (
+    "WI-001,Bootstrap,scripts,SR-001,~WI-004,done,the adder\n"
+    "WI-002,Harness,scripts,SR-001,WI-001,active,harness green\n"
+    "WI-003,Subtraction,scripts,SR-002,WI-001;~WI-002,queued,the subber\n"
+    "WI-004,Release,docs,SR-002,WI-002;WI-003,queued,shipped\n"
+)
+
+
+def test_svg_viewbox_contains_every_routed_wire(tmp_path):
+    """No emitted wire is cut by its own viewBox — the WI-367 objective floor.
+
+    Swept over every emitter that really renders, on the SAMPLED polyline a viewer's
+    eye follows (not the source `d`), and with the same `_INK_PAD` clearance the
+    generator claims, so a stroke's half-width is inside the box too. Non-vacuous by
+    construction: the sweep must contain at least one wire that genuinely runs
+    outboard of the layout box, which is the shape that was being clipped.
+
+    The repo's own committed `PROJECT_STATE.html` is deliberately NOT in this sweep:
+    it is a generated artifact whose freshness belongs to the trunk lane, not to a
+    work branch (concurrency-restructure §5.2), so reading it would assert a property
+    of *this* emitter against markup an older one wrote — a standing red on every
+    work branch. `WRAPAROUND_WIS` supplies the outboard shape it used to contribute,
+    from a fixture generated inside this test run.
+    """
+    gt = load_script("gen_trajectory")
+    wrap = tmp_path / "wraparound"
+    wrap.mkdir(parents=True, exist_ok=True)
+    make_repo(wrap, WRAPAROUND_WIS)
+    assert gen(wrap).returncode == 0
+    docs = [(lb, d) for lb, d in _every_emitter_document(tmp_path) if lb != "shipped"]
+    docs.append(("wrap-around", html_of(wrap)))
+    # The fixture must really produce the shape, or the sweep is a tautology: an
+    # emitter that never routes outboard trivially never clips. A padded box (a
+    # negative viewBox min-x) is the visible proof that it did.
+    assert re.search(r'<svg viewBox="-\d', docs[-1][1]), "fixture lost its wrap-around"
+    clipped, outboard, swept = [], 0, 0
+    for label, doc in docs:
+        for svg in re.findall(r"<svg\b.*?</svg>", doc, re.S):
+            tag = svg[: svg.index(">") + 1]
+            if "viewBox" not in tag:
+                continue
+            vx, _vy, vw, _vh = _viewbox_of(tag)
+            body = re.sub(r"<defs>.*?</defs>", "", svg, flags=re.S)
+            for d in re.findall(r'\sd="([^"]+)"', body):
+                pts = _sample_path_d(d)
+                if len(pts) < 2:
+                    continue  # not an M/L/C wire (the containment arrow, the loops arc)
+                swept += 1
+                lo = min(p[0] for p in pts)
+                hi = max(p[0] for p in pts)
+                outboard += lo < 0.0 or hi > vw + vx
+                if lo - vx < gt._INK_PAD or (vx + vw) - hi < gt._INK_PAD:
+                    clipped.append((label, round(lo, 1), round(hi, 1), tag[:60]))
+    assert swept > 30, "vacuous — the sweep found no routed wires"
+    assert outboard, "vacuous — no wire in the sweep runs outboard of its layout box"
+    assert not clipped, "wire(s) clipped by their viewBox: {}".format(clipped[:4])
+
+
+def test_svg_frame_pads_only_the_side_that_carries_outboard_ink():
+    # The shipped roadmap root layer's numbers (measured 2026-07-30): a 692-wide
+    # layout box whose wrap-around lanes reach x=-17.5 on the left and x=711.0 on the
+    # right. Each side is padded to the ink plus `_INK_PAD`, rounded out to a whole
+    # unit, and the DECLARED width grows with the box — so a diagram that already fit
+    # its card keeps its former scale and merely stops being cut.
+    gt = load_script("gen_trajectory")
+    lanes = (
+        '<path class="wire" d="M703.0,10.0 L-17.5,10.0"/>'
+        '<path class="wire" d="M20.0,30.0 L711.0,30.0"/>'
+    )
+    both = gt._svg_frame(692, 354, lanes)
+    assert both.startswith('viewBox="-20 0 733 354" width="733"')
+    assert "max-width:733px" in both and "min-width:454px" in both
+    # ...and a lane that only overruns the right edge does not shift the left one.
+    right = gt._svg_frame(904, 150, '<path class="wire" d="M20.0,10.0 L923.0,10.0"/>')
+    assert right.startswith('viewBox="0 0 925 150" width="925"')
+
+
+def test_svg_frame_leaves_a_diagram_with_no_outboard_ink_untouched():
+    # The pad is measured from the body, so the overwhelming majority of emitted
+    # diagrams — every one whose wires stay inside the layout box — must keep the
+    # pre-WI-367 tag byte-for-byte. `-0` is the trap: a float negation of a zero pad
+    # would render `viewBox="-0 0 ..."` and churn every diagram in the dashboard.
+    gt = load_script("gen_trajectory")
+    inside = gt._svg_frame(600, 200, '<path class="wire" d="M20.0,10.0 L580.0,10.0"/>')
+    assert inside == 'viewBox="0 0 600 200" width="600" style="{}"'.format(
+        gt._svg_fit_style(600)
+    )
+    # A marker's path lives in the MARKER's viewBox, not user space: `<defs>` must be
+    # cut before the scan or every arrowhead would read as ink at x=0..10.
+    marked = gt._svg_frame(600, 200, gt._arrow_markers(("a", "b")))
+    assert marked == inside, "defs leaked into the ink scan"
+
+
+def test_path_xs_reads_the_emitted_vocabulary_and_bails_on_anything_else():
+    # `_path_xs` bounds the ink from the control hull. It must read the relative `h`
+    # of the containment arrow as a DELTA (not an absolute x), and it must stop at a
+    # command it does not know rather than consuming that command's arguments as
+    # coordinates — under-padding a never-seen shape is recoverable, mis-placing the
+    # whole box is not.
+    gt = load_script("gen_trajectory")
+    assert gt._path_xs("M100.0,9.0 h20") == [100.0, 120.0]
+    assert gt._path_xs("M1.0,2.0 C3.0,4.0 5.0,6.0 7.0,8.0") == [1.0, 3.0, 5.0, 7.0]
+    assert gt._path_xs("M1.0,2.0 A5 5 0 0 1 900,900") == [1.0]
+
+
 def test_detour_hit_tests_the_outboard_stub_zone():
     # 111-REVIEW-A MINOR 1 (WI-257): _detour_d re-verified obstacles only over
     # [min(x1,xe), max(x1,xe)], but the detour's stubs reach xa=x1+stub / xb=xe-stub
