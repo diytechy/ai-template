@@ -6,3 +6,23 @@ buildtier = "medium"
 priority = 1
 safety_class = "ordinary"
 +++
+
+## Deliverable
+
+DONE 2026-07-30. `integrate.py` resolves the trunk step AND the bar through
+the new `_composed_tree_script(wt, root, name)`: the invoker's root-relative
+layout joined onto the candidate first, then the known layouts (`scripts/`,
+`project-trajectory/scripts/`), falling back to the invoker's copy — so the
+§5.1/§5.2 fold and the §4 bar run the COMPOSED tree's own harness, and a
+branch that changes a generator regenerates the candidate with the merged
+vintage. Discovery deliberately mirrors the shipped pre-commit hook's
+scripts-dir probe (one convention, two enforcement points). Fail direction
+preserved: a candidate carrying no harness copy still integrates on the
+invoker's (never a crash, never a silent skip). Tests:
+tests/test_integrate.py §4b — the three resolution shapes plus a seam test
+non-vacuous against the pre-fix wiring (invoker's copy exits 3, composed
+copy writes a sentinel; a pass proves WHICH copy ran). The manual
+reproduction of both directions (trunk-vintage step -> STALE refusal;
+candidate's own step -> floor and bar green) is recorded in the spec title;
+the WI-366 merge that surfaced the defect is the queue's next act and its
+outcome lands in the log's session entry.
