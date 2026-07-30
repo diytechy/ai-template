@@ -567,8 +567,8 @@ never a forgotten one (the stale-reason lesson).
   `--strict` clean, a §7 record here, and the spine amendment for whatever
   rows the deletions amend (SR-116/117/125 and friends go `retired`-shaped
   or `Modified`) — a window and a sitting, same as every phase.
-  **Phase 5 is DONE (2026-07-29, solo and attended; window OPEN for the
-  sitting).** All eight compiled points executed, nine commits on the trunk
+  **Phase 5 is DONE (2026-07-29, solo and attended; window CLOSED — the
+  sitting attested same-day, ruling in log.md's Decisions).** All eight compiled points executed, nine commits on the trunk
   lane; the mechanical test-fixture conversions ran as three parallel
   read-limited subagents on disjoint files while the production edits stayed
   serial in the one session. The record, point by point:
@@ -625,7 +625,8 @@ never a forgotten one (the stale-reason lesson).
      clock is blind to a Title rename — measured at conversion), **WI-363**
      (gen_arch_map scans empty under any dot-prefixed absolute path —
      pre-existing, isolated at conversion).
-  **Spine amendment (window open):** 15 dispatcher SRs superseded →
+  **Spine amendment (window closed at the 2026-07-29 sitting — all 26 rows
+  + TC-133 blessed, G3 re-derived):** 15 dispatcher SRs superseded →
   SR-132 (the TC-099 pattern: `Superseded:` titles, Inspection, no LLRs,
   the new TC-133 + `test_phase5_supersession_rows_...` pin the map); 11
   SRs re-grounded (SR-026/057/059/060/107/108/115/116/124/125/131); 15

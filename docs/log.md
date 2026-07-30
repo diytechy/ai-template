@@ -18269,3 +18269,41 @@ tree. The CPU-cap/environment caveat of record: the ambient
 `PYTEST_DEBUG_TEMPROOT` points at a dot-prefixed directory, which the
 pre-existing WI-363 defect turns into 10 environmental arch-map reds — the
 full-suite runs here used a non-dot temp root and say so.
+
+## 2026-07-29 — re-attestation sitting: the Phase 5 spine amendment is BLESSED; the restructure's windows are all closed
+
+**Decision (owner, 2026-07-29):** the Phase 5 window's rows in
+[ratify/2026-07-29d-phase5.md](ratify/2026-07-29d-phase5.md) are attested —
+26 `Modified`→`Verified`: the 15 dispatcher-era supersession records
+(→ SR-132; blessing attests the supersession *record*, evidence the Phase 5
+deletion commits + the green suite) and the 11 seam-re-grounded rows
+(SR-026/057/059/060/107/108/115/116/124/125/131); TC-133 `Draft`→`Verified`
+(its pinning test green before the flip). The owner ruled in-session ("I
+will attest the phase 5 items"), in the same thread that RULED the
+superseded-row question: the rows STAY — the TC-099/TC-133 citation is an
+audit proving nothing live hangs on dead scope, not a test of dead behavior
+(the ruling's durable home: `docs/specs/WI-364.md` Notes; WI-364 itself
+files the kit-level error for an LLR citing a superseded SR). Agent commit
+on the owner's behalf (gate-policy `autonomous`, the standing precedent).
+Gate re-derived **G3, all four phases** (`drafts=0 modified=0 ex-draft=G3`)
+— the fourth same-day window close; the restructure has no open act.
+
+**The armed G3 bar surfaced the window's own cost, on schedule:**
+`check.py --gate G3 --jobs 0` runs 19/20 steps PASS with `traceability` red
+on exactly three PRE-EXISTING form findings — SR-006/SR-130/SR-131 each
+carry 2 `shall` (WI-328's gated rule). A per-commit transition scan dates
+all three to ONE Phase 3 commit (`7f66720`: SR-130/131 born compound,
+SR-006 amended 1→2) while the open window held the G3 tier advisory —
+flagged on every run since, gating only now. Not sanctioned, not reworded:
+**WI-365** (P1, `spine`, queued) files the split — the WI-328 pattern
+re-applied; it amends `Verified` rows, so it lands AT a sitting.
+
+**Bar:** full unfiltered suite **1634 passed / 7 skipped / 0 failed**
+(712s; fully gated — `Git\bin` on PATH satisfies the posix-shell gate;
+default non-dot temp root). Honesty notes: the first fully-gated run red
+1633/7/1 on `test_jobs_parallel_plan_matches_sequential` — passes in
+isolation (4s), a contention flake under the 34 newly-running hook-suite
+tests; rerun green; a recurrence earns its own WI. `check_trajectory
+--strict` clean (graph acyclic); `trace --strict-integrity` orphans=0
+integrity=0; smoke + check_docs green at the commit. Byte deltas on
+budgeted files: none.
