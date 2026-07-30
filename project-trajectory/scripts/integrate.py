@@ -448,6 +448,33 @@ def _run(argv, cwd):
     return proc.returncode, out
 
 
+def _composed_tree_script(wt, root, name):
+    """The COMPOSED tree's copy of harness script `name`, else the invoker's.
+
+    The trunk step and the bar must be the candidate's own (§4: the required
+    checks run ON the composed tree): a work branch may change a generator or
+    the harness itself, and regenerating the candidate with the invoker's
+    trunk-vintage copy writes artifacts the merge commit's own floor - which
+    runs the composed tree's version - then refuses them as stale (WI-368,
+    first hit by WI-366's renderer change). Discovery mirrors the shipped
+    hook's scripts-dir probe: the invoker's root-relative layout first, then
+    the known layouts; the invoker's copy is the fallback so a candidate that
+    predates the script (or a root the invoker sits outside of) still
+    integrates.
+    """
+    rels = []
+    try:
+        rels.append(SCRIPTS.relative_to(root))
+    except ValueError:
+        pass
+    rels.extend((Path("scripts"), Path("project-trajectory") / "scripts"))
+    for rel in rels:
+        cand = wt / rel / name
+        if cand.is_file():
+            return cand
+    return SCRIPTS / name
+
+
 def _run_bar(wt, root, tier):
     """check.py at the derived gate on the composed tree; fail-closed reading.
 
@@ -456,9 +483,8 @@ def _run_bar(wt, root, tier):
     the point: the composed tree is checked at the full trunk bar.
     """
     py = ac.harness_python(root)
-    code, out = _run(
-        [str(py), str(SCRIPTS / "check.py"), "--jobs", "0", "--tier", tier], wt
-    )
+    check = _composed_tree_script(wt, root, "check.py")
+    code, out = _run([str(py), str(check), "--jobs", "0", "--tier", tier], wt)
     skips = [ln for ln in out.splitlines() if re.match(r"\s*SKIP\s", ln)]
     if code != 0:
         return False, out, "bar exit {}".format(code)
@@ -474,7 +500,8 @@ def _run_bar(wt, root, tier):
 
 def _run_trunk_step(wt, root):
     py = ac.harness_python(root)
-    return _run([str(py), str(SCRIPTS / "trunk_step.py"), "--root", "."], wt)
+    step = _composed_tree_script(wt, root, "trunk_step.py")
+    return _run([str(py), str(step), "--root", "."], wt)
 
 
 def _worktree_holding(root, branch):
