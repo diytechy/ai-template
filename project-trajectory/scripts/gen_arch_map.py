@@ -301,6 +301,19 @@ def _module_files(src_roots):
     return files, names
 
 
+def _is_hidden_rel(rel):
+    """Whether a path RELATIVE TO ITS SCAN ROOT is hidden (a dot- or
+    `__pycache__` part) and so not source.
+
+    Root-relative is load-bearing, not incidental: the same test against the
+    path's *absolute* parts made every repo whose checkout sits under a
+    dot-prefixed directory (`~/.local/src`, a CI cache, a dot-prefixed pytest
+    temp root) scan to an empty map with exit 0 (WI-363). Where the caller keeps
+    the repo is not the caller's hidden-file intent; only what is inside the
+    root they pointed at is."""
+    return any(part.startswith((".", "__pycache__")) for part in rel.parts)
+
+
 def _walk_roots(src_roots, pattern):
     """Yield `(root, base, path)` for every non-hidden `pattern` match under each
     existing root, sorted. `base` is the rel-path base (`root.parent`, or `root`
@@ -316,9 +329,53 @@ def _walk_roots(src_roots, pattern):
             continue
         base = root.parent if root.name else root
         for path in sorted(root.rglob(pattern)):
-            if any(part.startswith((".", "__pycache__")) for part in path.parts):
+            if _is_hidden_rel(path.relative_to(root)):
                 continue
             yield root, base, path
+
+
+def _warn_hidden_swallow(src_roots, pattern, what):
+    """Emit the sharper zero-scan warning when hidden dirs ate the whole map.
+
+    Split out of main() so the conditional lives here, not in main's C901
+    budget; `what` names the counted unit honestly per mode ("modules" for
+    symbols, "source files" for files)."""
+    hidden = _hidden_dirs_swallowing_source(src_roots, pattern)
+    if hidden:
+        print(
+            "gen_arch_map: WARNING - the scan found zero {}, yet {} "
+            "hold(s) matching files that were skipped as hidden. The "
+            "dot-prefixed skip applies only to paths INSIDE a --src root "
+            "(a dot-prefixed parent of the checkout is not filtered), so "
+            "if that is real source, rename the directory or pass it as "
+            "its own --src root.".format(what, ", ".join(hidden)),
+            file=sys.stderr,
+        )
+
+
+def _hidden_dirs_swallowing_source(src_roots, pattern):
+    """Dot-prefixed directories INSIDE a scan root, as `<root>/<reldir>` strings,
+    that hold `pattern` files the hidden-skip dropped.
+
+    Only meaningful when the scan already yielded nothing — then these are the
+    directories that ate the whole map. A dot-prefixed *file* (`src/.gitkeep`,
+    the placeholder every fresh scaffold ships) and a `__pycache__` directory
+    are deliberately not reported: those are intentionally-hidden non-source, so
+    naming them would fire this warning on every empty repo."""
+    hits = set()
+    for root in src_roots:
+        root = Path(root)
+        if not root.exists():
+            continue
+        for path in root.rglob(pattern):
+            if not path.is_file():
+                continue
+            dirs = path.relative_to(root).parts[:-1]
+            for i, part in enumerate(dirs):
+                if part.startswith("."):
+                    hits.add(root.joinpath(*dirs[: i + 1]).as_posix())
+                    break
+    return sorted(hits)
 
 
 def _source_files(src_roots):
@@ -713,8 +770,10 @@ def main():
 
     if args.mode == "files":
         prefixes = tuple(args.comment_prefix or DEFAULT_COMMENT_PREFIXES)
+        pattern = "*"
         has_source = bool(_source_files(src_roots))
     else:
+        pattern = "*.py"
         has_source = bool(_module_files(src_roots)[0])
     # An empty scan is legitimate pre-code, but on a repo whose code lives in
     # another language the symbol map — and its --check freshness gate — would
@@ -736,6 +795,17 @@ def main():
                 ", ".join(str(s) for s in src_roots), fallback
             ),
             file=sys.stderr,
+        )
+        # Second, sharper warning for the one shape where the emptiness is the
+        # generator's own doing rather than the repo's: the root DOES hold
+        # matching files, but every one of them sits behind a dot-prefixed
+        # directory. Exit stays 0 (an empty map is still legitimate pre-code),
+        # but the generic "port the generator" advice above is the wrong remedy
+        # here, so say what actually happened and where.
+        _warn_hidden_swallow(
+            src_roots,
+            pattern,
+            "source files" if args.mode == "files" else "modules",
         )
 
     if args.mode == "files":

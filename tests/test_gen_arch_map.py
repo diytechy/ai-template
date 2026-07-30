@@ -257,6 +257,87 @@ def test_zero_source_scan_warns_loudly(scaffold):
     assert "ADOPTING.md" in proc.stderr
 
 
+# --- WI-363: the hidden-file skip is RELATIVE to the scan root -----------------
+
+
+@pytest.fixture
+def dot_ancestor_src(tmp_path):
+    """A two-module scan root sitting under a deliberately dot-prefixed
+    ancestor — the shape a checkout in `~/.local/src`, a CI cache directory, or
+    a `PYTEST_DEBUG_TEMPROOT` pointed at a dot-directory produces. Nothing about
+    the tree *inside* the root is hidden."""
+    src = tmp_path / ".cache" / "checkout" / "src"
+    src.mkdir(parents=True)
+    (src / "a.py").write_text(MOD_A, encoding="utf-8")
+    (src / "b.py").write_text(MOD_B, encoding="utf-8")
+    return str(src)
+
+
+def test_dot_prefixed_ancestor_does_not_suppress_the_scan(dot_ancestor_src):
+    # Regression: the skip tested the ABSOLUTE path parts, so one dot-prefixed
+    # directory anywhere above the checkout emptied every collector at exit 0.
+    out = gen_arch_map.build_map([dot_ancestor_src])
+    assert "(no source scanned)" not in out
+    assert "Module A — demo." in out and "`helper_b()`" in out
+    diagram = gen_arch_map.build_dependency_diagram([dot_ancestor_src])
+    assert "(no source scanned)" not in diagram
+    # the parser-backed collectors travel the same walk
+    assert "Run B." in gen_arch_map.build_flow([dot_ancestor_src], "b:run")
+    assert gen_arch_map.collect_parse_errors([dot_ancestor_src]) == []
+
+
+def test_files_mode_scans_under_a_dot_prefixed_ancestor(tmp_path):
+    src = tmp_path / ".pytest-tmp" / "src"
+    src.mkdir(parents=True)
+    (src / "a.js").write_text("// Alpha.\n", encoding="utf-8")
+    out = gen_arch_map.build_files_map(
+        [str(src)], gen_arch_map.DEFAULT_COMMENT_PREFIXES
+    )
+    assert "`src/a.js`" in out and "Alpha." in out
+
+
+def test_hidden_dir_inside_the_scan_root_is_still_skipped(two_module_src):
+    # The preserved direction: root-relative dot/__pycache__ parts stay filtered.
+    src = Path(two_module_src)
+    (src / ".hidden").mkdir()
+    (src / ".hidden" / "secret.py").write_text(
+        '"""Secret module."""\n', encoding="utf-8"
+    )
+    (src / "__pycache__").mkdir()
+    (src / "__pycache__" / "stale.py").write_text(
+        '"""Stale artifact."""\n', encoding="utf-8"
+    )
+    out = gen_arch_map.build_map([two_module_src])
+    assert "Secret module." not in out and "Stale artifact." not in out
+    assert "Module A — demo." in out  # the visible modules still land
+    files = gen_arch_map.build_files_map(
+        [two_module_src], gen_arch_map.DEFAULT_COMMENT_PREFIXES
+    )
+    assert ".hidden" not in files and "__pycache__" not in files
+
+
+def test_zero_modules_from_a_hidden_only_src_warns(scaffold):
+    # The sharper of the two empty-scan warnings: the root DOES hold modules,
+    # but a dot-prefixed directory inside it ate them all. Exit stays 0.
+    from conftest import run_py
+
+    # A fresh scaffold's src holds only .gitkeep — empty by design, so the
+    # sharper warning must not cry wolf (a dot-prefixed FILE is not the shape).
+    proc = run_py(["scripts/gen_arch_map.py"], cwd=scaffold)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "no source scanned" in proc.stderr
+    assert "skipped as hidden" not in proc.stderr
+
+    (scaffold / "src" / ".vendor").mkdir()
+    (scaffold / "src" / ".vendor" / "app.py").write_text(
+        '"""App."""\n', encoding="utf-8"
+    )
+    proc = run_py(["scripts/gen_arch_map.py"], cwd=scaffold)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "skipped as hidden" in proc.stderr
+    assert "src/.vendor" in proc.stderr  # names the directory, not just the root
+
+
 # --- WI-056: Contracts: docstring harvest + declared IF edges in the diagram ----
 
 
