@@ -127,6 +127,9 @@ resource: "generated"
 | [TC-128](TC-128.md) | Run the paraphrase-advisory suite; an echoing child warns while a real decomposition nami… |
 | [TC-129](TC-129.md) | Run the converter suite: the live registry round-trips in whichever home is authoritative… |
 | [TC-130](TC-130.md) | Run the trunk-step suite: committed fragments compile in git order with links rebased and… |
-| [TC-131](TC-131.md) | Run the pause suites: the tracked home pauses via pause_reason with legacy-first preceden… |
+| [TC-131](TC-131.md) | Run the pause suites: the tracked home pauses via pause_reason with the unchanged return … |
 | [TC-132](TC-132.md) | Run the integrator suite: each claim refusal fires by name and the green claim moves the … |
 | [TC-133](TC-133.md) | Inspect the fifteen Phase-5 legacy SR rows, their SupersededBy links to SR-132, and the p… |
+| [TC-134](TC-134.md) | Run the check-harness lane suite: a claimed work branch skips the declared freshness step… |
+| [TC-135](TC-135.md) | Run the trunk-step regen suite: --regen skips absent artifact families with a notice and … |
+| [TC-136](TC-136.md) | Run the pending-surface pause suite: the block renders since/reason verbatim (no clock), … |

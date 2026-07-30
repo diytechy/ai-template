@@ -158,6 +158,7 @@ Contracts (interfaces): IF-037, IF-065
 | `venv_python(root)` | Absolute path (a Path) to the repo's own .venv interpreter, or None when |  |
 | `harness_python(root)` | The interpreter the test harness (pytest + the pinned dev tools) should run |  |
 | `interpreter_version(exe)` | (major, minor) of the interpreter at `exe`, or None when it cannot be run. |  |
+| `harness_floor_failures(root)` | WI-286/WI-361: a singleton list with a floor message when the interpreter |  |
 | `parse_blackout(line)` | Parse a `HH:MM-HH:MM` blackout line into `(start_min, end_min)` — minutes |  |
 | `blackout_wake(line, now)` | Seconds until the current UTC weekday blackout window ends, or `None` when |  |
 | `blackout_banner(window, resume_at, wake_seconds, policy_file)` | The multi-line terminal banner shown when the coordinator holds a NEW |  |
@@ -195,6 +196,7 @@ Contracts (interfaces): IF-037, IF-065
 | `commit_telemetry(root, session, label, paths)` | Commit the coordinator's own bookkeeping in its own `telemetry:` commit, |  |
 | `next_session_number(iter_dir, train)` | Next NNN, continuing across coordinator restarts. A worker's numbering |  |
 | `phase_draw_ordinal(iter_dirs, phase)` | The 0-based CROSS-TRAIN draw ordinal for `phase` (WI-263, repo-review |  |
+| `worktree_records(root)` | Parsed `git worktree list --porcelain` records as (path, branch) pairs, |  |
 | `primary_worktree_root(root)` | The MAIN (primary) worktree of `root`'s repo — the FIRST entry of |  |
 | `draw_iter_dirs(root, local_iter_dir)` | The iteration directories `phase_draw_ordinal` must union for a cross-train |  |
 | `preflight(root, template, args)` | Refuse to start iteration 1 on a broken footing. Returns the list of |  |
@@ -708,9 +710,10 @@ Imports (internal): `agent_common`, `schedule`, `score_reviews`
 | Public item | Summary | Implements |
 |---|---|---|
 | `fail(msg)` |  |  |
+| `normalize_wi_id(wi_id)` | `wi-401`/`Wi-401` -> `WI-401`; anything else is returned unchanged. |  |
 | `claim(root, wi_id, branch)` | §2.3 steps 1+2: the serial trunk claim, then the branch cut. |  |
 | `finished_branches(root)` | Claimed branches whose tip moved every spec out of active/<branch>/. |  |
-| `integrate_one(root, branch, tier)` | One branch through the queue. Returns None on green, else the refusal. |  |
+| `integrate_one(root, branch, tier, held)` | One branch through the queue. Returns None on green, else the refusal. |  |
 | `integrate(root, tier)` |  |  |
 | `audit(root, since)` | RULING-6 over a window: non-merge trunk commits must stay on bookkeeping |  |
 | `main(argv)` |  |  |
@@ -886,7 +889,7 @@ Contracts (interfaces): IF-001, IF-021, IF-042
 | `id_key(label)` |  |  |
 | `id_sort_key(rid)` | Numeric-then-lexical sort key for a registry id, so SR-9 orders before | SR-10, SR-9 |
 | `integrity_findings(label, raw_rows)` | Duplicated or malformed ids in one registry (example '-000' rows skipped — |  |
-| `sr_supersession_findings(srs)` | Validate the optional SR ``SupersededBy`` extension. |  |
+| `sr_supersession_findings(srs, llrs)` | Validate the optional SR ``SupersededBy`` extension. |  |
 | `triangle_findings(tcs, llrs)` | SR/LLR citation coherence. A TC may cite an | LLR-1, SR-1, SR-2 |
 | `interface_findings(ifs, sr_ids, module_ids)` | The IF-### seam tier's back-link checks (process.md §8), closing the gap |  |
 | `tc_citation_findings(tcs, spine_ids, ifs)` | Every TC-`Verifies` orphan rule, as ``[(at_fault_id, finding), ...]``. |  |

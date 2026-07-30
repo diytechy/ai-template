@@ -18337,3 +18337,79 @@ lines of the WI-271 trigger — reason in the baseline ledger, re-stamp
 down with WI-280), and six historical log links plus four in-spec
 relative links retargeted to the `archive/specs/*.2026-07-29.md` homes
 (check_docs was the catcher, 13 broken → 0).
+
+## 2026-07-29/30 — the grind session: the entire queued backlog built, adversarially reviewed, and closed
+
+**Owner directive (in-session):** "grind through those sessions here and
+now, dispatching opus agents where appropriate, and spinning up adversarial
+reviews when necessary — clear out all open work items." Twelve WIs closed:
+WI-323/324/331/357/358/359/360/361/362/363/364/365. Per-WI deliverables are
+in their archived rows (decompose, don't restate); this entry carries the
+session facts, the bars, and the honest residue.
+
+**Session shape.** Five parallel Opus implementation agents on disjoint file
+sets (WI-363; WI-364; WI-357+360; WI-358+359; WI-362-narrowed), then WI-361
+and WI-323 as second-wave agents, WI-331 and the WI-365+324 spine surgery
+driven serially in the main session; TWO fresh-context adversarial reviewers
+over the wave-1 diffs; one same-family advisory render critique at WI-323's
+close. Trunk-lane serial commits (deviation from the `integrate.py claim`
+flow, with reason: three of the twelve WIs were defects IN that flow —
+WI-357's lane signal, WI-358's claim scan, WI-359's unload — so the queue's
+own machinery was the patient; all product edits still landed through the
+session's serial integration).
+
+**The adversarial reviews earned their keep** (the audit's keep-the-two-
+instruments ruling vindicated again): 15 findings on the integrator cluster
+— one MAJOR CONFIRMED (the worktree-GC dirt read was blind to git-IGNORED
+files, so a worker worktree whose only unique content was `out/run-logs/` —
+the unredacted session stream that exists nowhere else — read clean and was
+DESTROYED by the GC; fixed to `git status --porcelain --ignored=matching`,
+failing closed on a failing read) and one MODERATE (an incomplete unload
+exited 0 and was never retried — the 36-stale-worktree pathology in embryo;
+the queue now exits nonzero with a STILL HELD summary). Eight findings on
+the checks cluster, including the WI-362 hint pointing readers at the
+SpecRef target — a file whose editing can NEVER clear the warn (reworded to
+the `docs/work/` spec the clock actually reads). The `dupes` census then
+caught the session's own new duplication (integrate re-implementing the
+porcelain walk) — extracted to `agent_common.worktree_records`, not
+sanctioned. The advisory critique measured WI-323's verdict IMPROVED from
+rendered pixels (overlap ink 45.8% → 5.3%) AND proved two port-fan sites
+got worse — filed per change-intake as **WI-366/WI-367**, the only two rows
+now queued.
+
+**Spine.** SN=25 **SR=135 LLR=125 TC=122**, orphans=0, integrity=0,
+form-findings=0, drafts=0, modified=0 — the WI-365 split (SR-133/134/135 +
+LLR-141/142 + TC-134/135/136, chains re-pointed) and the WI-324
+de-triplication landed as one sitting batch under the standing in-session
+authorization; the stand-alone rule caught eight WI-id citations in the new
+cells en route and was obeyed, not sanctioned. Gate derives **G3 all four
+phases** and the G3 harness is green END TO END for the first time since
+the WI-328 era.
+
+**Bars (real output).** Full unfiltered suite, fully gated (posix-shell
+satisfied, non-dot temp root): **1672 passed / 7 skipped / 0 failed**
+(646s). `check.py --gate G3 --jobs 0`: **every step PASS** — the recorded
+run shows 19/20 with `arch-map` stale (the census extraction had just
+added `worktree_records`), regenerated and the step re-run PASS
+immediately after; `tests+coverage` PASS at 92%+ coverage inside the same
+run. `check_trajectory --strict` clean; smoke + check_docs green at each
+commit. One earlier full-suite flake of record:
+`test_jobs_parallel_plan_matches_sequential` red once under hook-suite
+contention, green in isolation and on rerun (same shape as the sitting
+run; second sighting today — a recurrence pattern now, worth a WI if seen
+a third time).
+
+**Deviations from spec:** WI-362 built in its owner-narrowed form (no
+rename detection); WI-361's arming boundary (requirements-dev.txt declares
+the pinned toolchain) chosen and documented rather than asked; WI-323 left
+`_port_fan` untouched by measurement (the critique then proved that half
+worse — filed, not hidden); WI-331's spawn-cap finding recorded as
+RULED OUT per the audit ruling.
+
+**Byte deltas on budgeted files:** PROCESS.md 64,077 → 64,301 (+224,
+WI-331's two model-neutral clauses; baseline re-stamped in all three skill
+copies); AGENTS.template.md unchanged at 9,975; PROCESS_OPTIONS.md
+unchanged at 161,117. Module-size ledger: check.py NEW at 1523 (WI-357
+crossed the threshold from 1498), trace.py 2856→2895, check_trajectory.py
+3039→3077, agent_common.py 1642→1720, gen_trajectory.py 4967→5037 — every
+bump carries its reason in the ledger; all re-stamp down with WI-280.

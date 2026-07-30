@@ -143,3 +143,6 @@ resource: "generated"
 | [SR-130](SR-130.md) | Serial trunk step compiles log fragments and regenerates authority |
 | [SR-131](SR-131.md) | Tracked pause drains claiming to a merged stop |
 | [SR-132](SR-132.md) | Local integrator: serial fail-closed merge queue |
+| [SR-133](SR-133.md) | Work-branch lane skip for freshness steps |
+| [SR-134](SR-134.md) | Trunk step regenerates the declared artifacts in dependency order |
+| [SR-135](SR-135.md) | Pending surface renders the declared pause verbatim |
