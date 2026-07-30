@@ -302,7 +302,29 @@ def test_claim_refuses_a_specref_that_does_not_resolve(tmp_path, capsys):
     root = claim_repo(tmp_path, specref="docs/ghost-spec.md")
     assert integ.claim(root, "WI-401", "wi-401") == 1
     err = capsys.readouterr().err
-    assert "does not resolve in-repo" in err and "docs/ghost-spec.md" in err
+    assert "does not resolve to an in-repo FILE" in err
+    assert "docs/ghost-spec.md" in err
+    assert "wi-401" not in _branches(root)
+
+
+def test_claim_refuses_a_bare_fragment_specref(tmp_path, capsys):
+    # 131-REVIEW-A's R-E shape: "#anchor" has no path part. `root / ""` is the
+    # repo root, which exists — the round-1 rung passed it and R-E then redded
+    # the composed tree (WI-370-REVIEW-A finding 1).
+    root = claim_repo(tmp_path, specref="#improvement-plan")
+    assert integ.claim(root, "WI-401", "wi-401") == 1
+    err = capsys.readouterr().err
+    assert "has no path part" in err
+    assert "wi-401" not in _branches(root)
+
+
+def test_claim_refuses_a_directory_specref(tmp_path, capsys):
+    # R-E's other path-half shape: a directory is not a document. `.exists()`
+    # accepted it; the rung must hold `.is_file()`, the same bar R-E holds.
+    root = claim_repo(tmp_path, specref="docs")
+    assert integ.claim(root, "WI-401", "wi-401") == 1
+    err = capsys.readouterr().err
+    assert "does not resolve to an in-repo FILE" in err
     assert "wi-401" not in _branches(root)
 
 

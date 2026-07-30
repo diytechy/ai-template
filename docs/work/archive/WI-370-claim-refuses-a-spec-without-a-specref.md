@@ -14,12 +14,15 @@ DONE 2026-07-30. `integrate.py` gains `_specref_refusal(root, meta, wi_id)`
 — the WI-370 claim rung, in the WI-358 helper shape — wired into
 `_claim_refusal` after the safety-class check: a queued spec whose
 `specref` is empty refuses with the R-E consequence and the payment path
-(one trunk commit, then claim); a non-empty ref whose PATH part does not
-exist in-repo refuses by name. Anchor (`path#anchor`) resolution stays
-check_trajectory's job — the rung checks the path part only, pinned by a
-passing-path test. Tests: three rung tests in tests/test_integrate.py's
-claim-refusal section (empty ref, unresolving ref, anchor form claiming
-clean through the whole ladder); fixtures now state which shape a spec is
+(one trunk commit, then claim); a bare-fragment ref (`#anchor`, no path
+part) and a ref whose path part is not an in-repo FILE (directory or
+missing) refuse by name — the same path-half shapes R-E itself reds,
+hardened at review round 1 (WI-370-REVIEW-A found the first cut's
+`.exists()` under-refusing on both). Anchor resolution stays
+check_trajectory's job — path part only, pinned by a passing-path test.
+Tests: five rung tests in tests/test_integrate.py's claim-refusal section
+(empty ref, missing path, bare fragment, directory ref, anchor form
+claiming clean through the whole ladder); fixtures now state which shape a spec is
 in — `spec_text` writes `specref` only when given, `claim_repo` queued
 specs resolve to the fixture seed by default, and the e2e closing move
 CLEARS the ref the way a real close does (R-F wants a terminal SpecRef

@@ -9,11 +9,13 @@ the ref into the archived copy and trips R-F instead. The claim is the
 last moment the debt is a one-line trunk commit.
 
 - **Deliverable:** `_specref_refusal` in
-  [integrate.py](../../project-trajectory/scripts/integrate.py) (empty ref
-  and unresolving-path refusals, path-part-only per R-E; anchors stay
-  check_trajectory's) + three rung tests and shape-explicit fixtures in
-  tests/test_integrate.py (queued specs carry a resolving ref, the e2e
-  close clears it). Spec archived:
+  [integrate.py](../../project-trajectory/scripts/integrate.py) (empty
+  ref, bare-fragment, directory, and missing-path refusals — the same
+  path-half shapes R-E reds; anchors stay check_trajectory's) + five rung
+  tests and shape-explicit fixtures in tests/test_integrate.py (queued
+  specs carry a resolving ref, the e2e close clears it). Review round 1
+  caught the first cut's `.exists()` under-refusing on bare-fragment and
+  directory refs — fixed and re-reviewed in round 2. Spec archived:
   [WI-370](../work/archive/WI-370-claim-refuses-a-spec-without-a-specref.md).
 - **Deviations from spec:** none in scope; the rung was extracted to its
   own helper after the C901 census flagged the inline form (complexity 11)

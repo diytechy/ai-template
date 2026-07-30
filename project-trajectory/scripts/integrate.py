@@ -201,10 +201,18 @@ def _specref_refusal(root, meta, wi_id):
             "cannot amend (WI-370). Name the spec-of-record in the queued "
             "spec in one trunk commit, then claim".format(wi_id)
         )
-    if not (root / ref.split("#", 1)[0]).exists():
+    path_part = ref.split("#", 1)[0]
+    if not path_part:
         return (
-            "{} SpecRef {!r} does not resolve in-repo (R-E: the path part "
-            "must exist) - fix the queued spec, then claim (WI-370)".format(wi_id, ref)
+            "{} SpecRef {!r} has no path part (a bare #anchor) - R-E wants "
+            "an in-repo document; fix the queued spec, then claim "
+            "(WI-370)".format(wi_id, ref)
+        )
+    if not (root / path_part).is_file():
+        return (
+            "{} SpecRef {!r} does not resolve to an in-repo FILE (R-E: a "
+            "directory or missing path reds the bar) - fix the queued spec, "
+            "then claim (WI-370)".format(wi_id, ref)
         )
     return None
 
