@@ -360,10 +360,26 @@ def test_schema_widening_is_behavior_neutral(tmp_path):
 # rule says state it once. The seam is the FILE, not an import — the checker is a
 # stdlib-only kit script and must not reach into a test module. An entry whose
 # destination MATERIALIZES must be removed (asserted below): the list can only
-# shrink, never silently mask a backfill.
+# shrink, never silently mask a backfill — except a `LIFECYCLE:`-marked reason,
+# which declares a path whose presence is a legal state (WI-369; the marker is
+# documented in the file's own header).
 SCAFFOLD_OMISSIONS = load_script("check_doc_refs").load_declared_absences(
     ROOT / "docs" / "declared-absences"
 )
+
+
+def _stale_declared_absences(entries, exists):
+    """Declared entries that have materialized, `LIFECYCLE:` rows exempt.
+
+    The exemption is the MARKER's, not a general soft-pass: an unmarked entry
+    that exists is stale wherever it appears (WI-369 — asserting absence of
+    the lifecycle paths deadlocked the parallel-claims queue, since every
+    composed tree holds the other branches' claim dirs)."""
+    return [
+        d
+        for d, reason in entries.items()
+        if not reason.startswith("LIFECYCLE:") and exists(d)
+    ]
 
 
 def _mapping_unaccounted():
@@ -397,10 +413,32 @@ def test_scaffold_mapping_covered_or_declared():
 def test_scaffold_omissions_list_is_current():
     # The honesty half: a declared omission whose destination now EXISTS is a
     # stale entry — remove it, so the list documents only real absences.
-    stale = [d for d in SCAFFOLD_OMISSIONS if (ROOT / d).exists()]
+    # LIFECYCLE rows are exempt while present (their presence is the declared
+    # legal state); everything else keeps the exact guard.
+    stale = _stale_declared_absences(SCAFFOLD_OMISSIONS, lambda d: (ROOT / d).exists())
     assert not stale, "SCAFFOLD_OMISSIONS entries now materialized: {}".format(
         ", ".join(stale)
     )
+
+
+def test_bite_lifecycle_exemption_is_marker_scoped():
+    # Bite-proof both directions on a synthetic pair: the marked row is exempt
+    # even when present, and the SAME situation unmarked is still flagged — so
+    # the exemption cannot silently widen into a general soft-pass.
+    entries = {
+        "docs/ghost": "retired surface; recreating it must trip the guard",
+        "docs/claim-dir": "LIFECYCLE: present only while work is claimed",
+    }
+    assert _stale_declared_absences(entries, lambda d: True) == ["docs/ghost"]
+    assert _stale_declared_absences(entries, lambda d: False) == []
+
+
+def test_the_lifecycle_rows_carry_the_marker():
+    # The two lifecycle paths must stay marked in docs/declared-absences: an
+    # edit dropping the marker re-arms the materialize-guard on a path that
+    # legally exists mid-claim/mid-pause, which is the WI-369 deadlock.
+    assert SCAFFOLD_OMISSIONS["docs/work/active"].startswith("LIFECYCLE:")
+    assert SCAFFOLD_OMISSIONS["docs/work/pause"].startswith("LIFECYCLE:")
 
 
 def test_bite_scaffold_walk_catches_an_undeclared_absence():
