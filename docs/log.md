@@ -18649,3 +18649,46 @@ into reachable history, and `_work_branch` reads history) and green again on the
 after merge. Smoke `-m smoke` after close: **555 passed / 1 failed** (that same
 conditional). `check_docs.py --root . --stale` green (0 broken links);
 `check_trajectory.py --strict` exit 0.
+
+## 2026-07-30 — Session: the queue's first real drain (WI-366..369)
+
+The 2026-07-29 frontier (WI-366 port fans, WI-367 viewBox padding) is built,
+adversarially reviewed (APPROVE x4, verdicts in [reviews/](reviews/)), and
+merged — WI-366 and WI-367 through `integrate.py`'s real queue (bar PASS, 40
+steps, tier `all`, each). Per-WI records are the four compiled entries above;
+what belongs to the SESSION is that this was the integrator's first drain of
+concurrent claims, and it surfaced three interlocking latent defects the
+attended-serial era never exercised:
+
+- **WI-368** — the fold ran the INVOKER's harness on the composed tree, so a
+  branch changing a generator was refused by its own merge commit's freshness
+  floor. Fixed; the WI-366 merge (a renderer change) is the live proof.
+- **WI-369** — the declared-absence honesty test redded every composed-tree
+  bar while ANY claim was outstanding (docs/work/active/ "materialized"),
+  deadlocking two-claim drains. Fixed via the `LIFECYCLE:` marker.
+- **The wedge and the escape.** With both fixes still on branches, the queue
+  could not merge anything (fixed alphabetical order runs wi-366 first; its
+  bar needed WI-369's fix on trunk and WI-368's fix in the running code). The
+  two fix branches were merged **attended-serial (RULING-8)** — --no-ff, the
+  trunk step folded, the full strict bar green at the drain head — recorded on
+  the merge commits themselves; the remaining branches then went through the
+  queue. RULING-6 audit: clean, product changes arrived by merge only.
+- **R-E intake debt.** Both fix intakes were filed without a SpecRef against
+  the warn-first floor and claimed cleanly — then redded `--strict` R-E from a
+  file the closing branches could not amend (open-wants-ref + terminal-wants-
+  cleared makes trunk-side repair merge the ref into the archived copy). Paid
+  by sequencing; the claim rung owes the check — **WI-370** filed, with
+  **WI-371** (shoot.mjs deletes session baselines under shots/) and **WI-372**
+  (the `_every_emitter_document` shipped-vs-fresh contract) from the builders'
+  and reviewers' findings.
+- **One rebase.** wi-366-port-fans predated the "never commit a generated
+  artifact" reminder and carried PROJECT_STATE.html; the queue refused the
+  conflict and the branch was rebased onto the drained trunk, resolving the
+  dashboard to the trunk copy (commit order preserved, so the APPROVE verdict
+  stayed fresh; the code diff was untouched).
+
+Trunk after the drain: smoke 552/0 green on trunk, `check_trajectory --strict`
+exit 0, both queue merges bar-PASS at tier `all`, `git worktree list` shows
+the primary checkout plus the integrator's candidate only, and no `wi-*`
+branches remain. The render half of both WIs (T8 attribution) goes to the
+periodic advisory render critique, filed separately in [reviews/](reviews/).
