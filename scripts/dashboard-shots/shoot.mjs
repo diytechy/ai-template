@@ -77,9 +77,14 @@ async function main() {
     console.error("no dashboard at " + DASHBOARD);
     process.exit(1);
   }
-  // Fresh output dir so a run's shots are exactly the declared matrix.
-  rmSync(OUT, { recursive: true, force: true });
+  // Fresh output for the files the harness OWNS — its own top-level *.png —
+  // so a run's shots are exactly the declared matrix. Subdirectories are
+  // someone else's work product (session baselines like shots/before/): the
+  // old whole-dir rmSync silently destroyed two sessions' baselines (WI-371).
   mkdirSync(OUT, { recursive: true });
+  for (const f of readdirSync(OUT)) {
+    if (f.endsWith(".png")) rmSync(join(OUT, f));
+  }
 
   const url = pathToFileURL(DASHBOARD).href;
   const browser = await chromium.launch();
@@ -120,7 +125,10 @@ async function main() {
   }
 
   console.log(`\nwrote ${written.length} screenshot(s) to ${OUT}`);
-  for (const p of readdirSync(OUT).sort()) console.log("  " + join(OUT, p));
+  // List only the harness's own PNGs — a preserved baseline subdir is not a
+  // screenshot this run wrote.
+  for (const p of readdirSync(OUT).sort())
+    if (p.endsWith(".png")) console.log("  " + join(OUT, p));
 }
 
 main().catch((e) => {
