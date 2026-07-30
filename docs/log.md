@@ -580,6 +580,21 @@ why (one bullet each; cite ids)._
   retired (WI-180). Work is selected through `schedule.py`'s derived frontier;
   the frontier list inside `status.md` is a generated, freshness-gated mirror.
 
+- **2026-07-30 — WI-372 narrowed to documentation; WI-370/371 approved to
+  build (owner, in-session).** The 2026-07-30 session's three follow-up
+  intakes were triaged against the 2026-07-28 audit's own lesson
+  (enforcement-layer growth is the repo's dominant failure mode). Ruled:
+  **WI-370** (claim-time SpecRef rung) and **WI-371** (shoot.mjs baseline
+  deletion) are built as filed — both prevent measured, recurring session
+  cost with quick-tier fixes. **WI-372** is narrowed from its medium-tier
+  form (shared fresh-emitting fixture) to quick-tier documentation: a
+  docstring contract on `_every_emitter_document` naming the two
+  truth-times and the shipped-copy compatibility pins, keeping the
+  existing per-caller exclusion pattern. **Alternative passed over:** the
+  shared fixture — rejected as test-infrastructure machinery whose failure
+  mode ("a future test author gets confused") does not justify a medium
+  build; the evidence stays in WI-367-REVIEW-A if it ever re-opens.
+
 ## Audit log
 
 <!-- Append verdict blocks here per PROCESS.md §5. Newest at the bottom. -->
