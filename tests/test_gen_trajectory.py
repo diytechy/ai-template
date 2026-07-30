@@ -11,6 +11,7 @@ show. Each is pinned by running the real script over a minimal temp project.
 import collections
 import csv
 import html
+import math
 import re
 import shutil
 import subprocess
@@ -4658,6 +4659,163 @@ def test_route_edges_terminals_snap_to_port_circle():
     )["A->C"]
     tn = [float(t) for t in re.findall(r"-?[\d.]+", detour)]
     assert "L" in detour and tn[1] == 120.0 and tn[-1] == 120.0
+
+
+# --- WI-366: the port harness (WI-323-CRITIQUE follow-up 1) ---------------------
+# The fan offset used to live only in a control point, so strands of one port left
+# the same pixel and whatever lane the router then picked decided how close they
+# ran — the critique pixel-measured 2.5-3 CSS px pitch over a ~55 px descent and
+# 0.07 px at the tightest site. The pure geometry below is what makes the fan step
+# the RENDERED pitch; the perceptual half of the claim stays with the before/after
+# shots and the periodic advisory critique (no crossing-count proxy, standing rule).
+
+
+def _first_clear(pa, pb, target, limit=60.0):
+    """The arclength along `pa` at which it first gets `target` px clear of polyline
+    `pb`, or None within `limit` — the departure-zone measure the critique's
+    "reach >= 8 px within ~15 px of the port" clause states."""
+    acc = 0.0
+    for p, q in zip(pa, pa[1:]):
+        acc += math.dist(p, q)
+        if acc > limit:
+            return None
+        near = min(_seg_pt_dist(q, b0, b1) for b0, b1 in zip(pb, pb[1:]))
+        if near >= target:
+            return acc
+    return None
+
+
+def _seg_pt_dist(p, a, b):
+    dx, dy = b[0] - a[0], b[1] - a[1]
+    span = dx * dx + dy * dy
+    t = (
+        0.0
+        if span == 0
+        else max(0.0, min(1.0, ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / span))
+    )
+    return math.dist(p, (a[0] + t * dx, a[1] + t * dy))
+
+
+def test_port_fan_steps_by_the_declared_pitch():
+    # The fan STEP is the rendered pitch now (the harness materializes it), so it must
+    # be `_FAN_PITCH` whenever the row slot can hold the whole band, and a single-edge
+    # port must still get exactly 0.0 (that is what keeps unfanned wires byte-stable).
+    gt = load_script("gen_trajectory")
+    pos = {n: (0.0, float(i) * 10) for i, n in enumerate("abcdefghij")}
+    for n in range(2, 6):
+        names = "abcdefghij"[:n]
+        group = {"src": [("src", t) for t in names]}
+        off = gt._port_fan(group, lambda e: e[1], pos, 46.0, 22.0)
+        band = sorted(off.values())
+        steps = [round(b - a, 6) for a, b in zip(band, band[1:])]
+        assert steps == [gt._FAN_PITCH] * (n - 1), (n, steps)
+        assert round(sum(band), 6) == 0.0  # centred on the port
+    lone = gt._port_fan({"src": [("src", "a")]}, lambda e: e[1], pos, 46.0, 22.0)
+    assert lone[("src", "a")] == 0.0
+
+
+def test_port_fan_band_stays_inside_its_row_slot():
+    # The cap is the row SLOT minus one pitch: a wider band would put the outermost
+    # strand of one port within a pitch of its vertical neighbour's, trading a fused
+    # fan for a fused pair BETWEEN fans. A port too crowded for the slot steps tighter
+    # instead of overflowing.
+    gt = load_script("gen_trajectory")
+    pos = {n: (0.0, float(i) * 10) for i, n in enumerate(range(40))}
+    row_h, row_gap = 46.0, 22.0
+    for n in (2, 5, 9, 20):
+        group = {"src": [("src", t) for t in range(n)]}
+        band = sorted(gt._port_fan(group, lambda e: e[1], pos, row_h, row_gap).values())
+        assert band[-1] - band[0] <= row_h + row_gap - gt._FAN_PITCH
+        gap = band[-1] - band[0]
+        # ...and two adjacent ports' outermost strands still clear one pitch
+        assert (row_h + row_gap) - gap >= gt._FAN_PITCH
+
+
+def test_lead_rung_turns_the_furthest_traveller_off_first():
+    # Order matters as much as the stagger: the strand diving furthest must leave the
+    # harness while the others are still coasting, or it crosses every strand it is
+    # inboard of. Up to `_LEAD_RUNGS` wires every neighbouring pair lands on a
+    # DIFFERENT rung (that is what gives a steep pair a horizontal gap); past it the
+    # cap collapses the LEAST-travelled end, and the rungs stay bounded.
+    gt = load_script("gen_trajectory")
+    n = gt._LEAD_RUNGS
+    down = [gt._lead_rung(k, n, True) for k in range(n)]
+    up = [gt._lead_rung(k, n, False) for k in range(n)]
+    assert down[-1] == 0 and up[0] == 0  # the furthest traveller turns off first
+    assert down == sorted(down, reverse=True) and up == sorted(up)
+    for row in (down, up):
+        assert all(a != b for a, b in zip(row, row[1:]))
+        assert max(row) <= gt._LEAD_RUNGS - 1
+    wide = [gt._lead_rung(k, 12, True) for k in range(12)]
+    assert max(wide) == gt._LEAD_RUNGS - 1  # capped, so the harness stays bounded
+    # the collapsed strands are the LEAST-travelled ones (rung 0 = furthest, kept
+    # distinct); the shallow end shares the innermost turn-off.
+    assert wide[-gt._LEAD_RUNGS :] == list(range(gt._LEAD_RUNGS - 1, -1, -1))
+    assert set(wide[: -gt._LEAD_RUNGS]) == {gt._LEAD_RUNGS - 1}
+
+
+def test_route_edges_harness_reaches_the_fan_pitch_near_the_port():
+    # The measured defect, reproduced: two wires out of ONE port whose targets sit far
+    # apart vertically, so the router lanes them both and the port-side bends used to
+    # dominate the fan offset. Both strokes must get `_FAN_PITCH` clear of each other
+    # within ~15px of the port, and each must still START on the port center.
+    gt = load_script("gen_trajectory")
+    rects = {
+        "A": (0.0, 300.0, 100.0, 46.0),
+        "B": (200.0, 300.0, 100.0, 46.0),
+        "T1": (400.0, 60.0, 100.0, 46.0),
+        "T2": (400.0, 540.0, 100.0, 46.0),
+    }
+    off = gt._port_fan(
+        {"A": [("A->T1", "T1"), ("A->T2", "T2")]},
+        lambda e: e[1],
+        {"T1": (400.0, 60.0), "T2": (400.0, 540.0)},
+        46.0,
+        22.0,
+    )
+    edges = [
+        (k, 100.0, 323.0 + off[(k, t)], 400.0, rects[t][1] + 23.0, "A", t)
+        for k, t in (("A->T1", "T1"), ("A->T2", "T2"))
+    ]
+    routes = gt._route_edges(edges, rects, 14, 6.5)
+    pts = {k: _sample_path_d(d, 96) for k, d in routes.items()}
+    for d in routes.values():
+        assert d.startswith("M100.0,323.0 ")  # still leaves the port CENTER
+    a, b = pts["A->T1"], pts["A->T2"]
+    for pa, pb in ((a, b), (b, a)):
+        s = _first_clear(pa, pb, gt._FAN_PITCH - 0.1)
+        assert s is not None and s <= 16.0, s
+    # and the strands do NOT cross each other inside the harness (the failure mode a
+    # stagger in the wrong order introduces)
+    assert all((p[1] < 323.0) == (a[8][1] < 323.0) for p in a[8:24])
+
+
+def test_route_edges_single_wire_port_keeps_the_legacy_path():
+    # Only a SHARED port owes a harness. A one-wire port keeps the exact legacy `d`,
+    # which is what holds the many unfanned wires — and every downstream render —
+    # byte-identical across this change.
+    gt = load_script("gen_trajectory")
+    rects = {"A": (0.0, 100.0, 100.0, 40.0), "B": (200.0, 100.0, 100.0, 40.0)}
+    lone = gt._route_edges(
+        [("A->B", 100.0, 120.0, 200.0, 120.0, "A", "B")], rects, 12, 2
+    )
+    dx = max((200.0 - 100.0) * 0.4, 12)
+    assert lone[
+        "A->B"
+    ] == "M{:.1f},{:.1f} C{:.1f},{:.1f} {:.1f},{:.1f} {:.1f},{:.1f}".format(
+        100.0, 120.0, 100.0 + dx, 120.0, 198.0 - dx, 120.0, 198.0, 120.0
+    )
+    shared = gt._route_edges(
+        [
+            ("A->B1", 100.0, 116.0, 200.0, 116.0, "A", "B"),
+            ("A->B2", 100.0, 124.0, 200.0, 124.0, "A", "B"),
+        ],
+        rects,
+        12,
+        2,
+    )
+    for d in shared.values():  # two cubics: the harness plus the routed remainder
+        assert d.count("C") >= 2 and d.startswith("M100.0,120.0 ")
 
 
 def test_route_edges_lane_routes_a_backward_edge_with_only_endpoint_obstacles():

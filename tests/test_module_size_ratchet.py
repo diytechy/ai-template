@@ -244,7 +244,19 @@ BASELINE = {
     # the prose recording WHY the ledger cannot regress the T8 through-box floor and
     # how `_LANE_SEP` was dialled against the shipped render. Reviewed bump,
     # log 2026-07-29. Re-stamp down with WI-280.
-    "gen_trajectory.py": 5037,
+    # +158 (5037 -> 5195), WI-366: the PORT HARNESS the WI-323 advisory critique's
+    # first follow-up asked for — a shared port's strands rise to their
+    # `_FAN_PITCH`-spaced heights over `_PORT_LEAD` px and coast to a staggered
+    # turn-off before any routing bend, so the fan step is the RENDERED pitch and a
+    # steep pair gets a horizontal gap too. ~55 lines are five small helpers
+    # (`_harness_seg`, `_lead_rung`, `_port_strands`, `_harness_ends`, `_routed_dx`,
+    # `_spliced_harness`) — the last four extracted so `_route_edges` stays under the
+    # C901 bar rather than earning a complexity baseline entry, which cost lines to
+    # save branches. The rest is prose recording WHY a control-point-only fan damped
+    # to ~2.6px, why the turn-off ORDER (furthest traveller first) is load-bearing,
+    # where the rung cap's residue lands, and the measured before/after at the two
+    # named sites. Reviewed bump, log 2026-07-30. Re-stamp down with WI-280.
+    "gen_trajectory.py": 5195,
     # (agent_dispatch.py and its whole bump history retired with the module
     # at concurrency-restructure Phase 5 - the dispatcher deleted wholesale;
     # the surviving integrator is integrate.py, below this threshold.)
