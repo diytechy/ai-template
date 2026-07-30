@@ -15,6 +15,14 @@
 # the checker — it is reclassified, counted, and printable with
 # `--show-untraced`. A path that is simply ROT does not belong here; it belongs
 # fixed (`docs/next-wi`, retired by WI-180, is the worked example).
+#
+# A reason beginning `LIFECYCLE:` declares a path whose PRESENCE is a legal,
+# documented state (a claim dir while work is claimed, a pause marker while
+# paused): the honesty test exempts it from the materialize-guard — asserting
+# absence deadlocked the §2.3 parallel-claims queue, since every composed tree
+# holds the OTHER branches' claim dirs (WI-369) — while `check_doc_refs.py`
+# still classifies prose naming it when absent. Everything unmarked keeps the
+# exact guard, including every retired surface.
 
 docs/requirements/work-items.csv — retired at the Phase 2c authority flip (concurrency-restructure §2/§7): the work-item registry is the docs/work/ spec folder; prose naming the CSV before 2026-07-29 is history, and a migrating adopter converts theirs with scripts/wi_convert.py.
 
@@ -55,6 +63,6 @@ docs/components-check — absent = the component-findings gate stays warn-first
 # §5.6/§2.3 contracts legitimately name these; their ABSENCE is the design.
 docs/run-state — retired at Phase 5 with the dispatcher, its only writer; the stop banner + exit codes carry the outcome
 docs/pause — the legacy untracked pause marker; retired at Phase 5 (the tracked docs/work/pause is the one home)
-docs/work/pause — present only while a pause is DECLARED; absence = not paused, the documented default
-docs/work/active/ — holds per-branch claim directories only while work is claimed; empty/absent at a drained stop
+docs/work/pause — LIFECYCLE: present only while a pause is DECLARED; absence = not paused, the documented default
+docs/work/active/ — LIFECYCLE: holds per-branch claim directories only while work is claimed; empty/absent at a drained stop
 tools/wi_convert.py — the converter's pre-2c meta-repo home, named as history in the spec; it moved to project-trajectory/scripts/wi_convert.py
