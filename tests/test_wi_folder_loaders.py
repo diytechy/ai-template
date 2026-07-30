@@ -622,7 +622,10 @@ def test_mutation_dropping_either_git_flag_resets_the_clock(tmp_path):
 def test_a_real_content_edit_does_redate_the_clock(tmp_path):
     """The other direction, or the guard above would be satisfied by a function
     that always answered "the first commit": editing the spec IS the driven look
-    the warn asks for, and it must clear the warn."""
+    the warn asks for, and it must clear the warn.
+
+    Note the FILENAME is unchanged here — that is the whole of the promise. The
+    sibling below pins what happens when it is not."""
     run_git = _staleness_repo(tmp_path)
     (tmp_path / "docs" / "work" / "deferred" / "WI-001-thing.md").write_text(
         spec_text("WI-001", title="re-affirmed", specref="docs/specs/WI-001.md"),
@@ -632,6 +635,46 @@ def test_a_real_content_edit_does_redate_the_clock(tmp_path):
     run_git("commit", "-am", "re-affirm WI-001", at=3000)
     times = ctraj._spec_row_times(tmp_path, tmp_path / "docs" / "work", ["WI-001"])
     assert times == {"WI-001": 3000}, times
+
+
+def test_a_retitle_plus_content_edit_does_not_redate_the_clock(tmp_path):
+    """WI-362, the ACCEPTED blind spot, asserted so that changing it is a
+    deliberate act rather than a side effect.
+
+    The Title drives the spec FILENAME, so re-titling a work item RENAMES its
+    file — and `--diff-filter=AM` drops a rename whatever else the same commit
+    did (git scores it `R<similarity>`, never `M`). A downstream author who
+    re-affirms by re-titling therefore keeps the pre-edit clock and the warn does
+    not clear. The owner ruled (2026-07-29) to state that in the warn text rather
+    than build rename detection; if a later WI builds the detection, this
+    assertion is the one it must consciously flip."""
+    run_git = git_repo(tmp_path)
+    write_spec(tmp_path, "queued", "WI-001", specref="docs/specs/WI-001.md")
+    run_git("add", "-A")
+    run_git("commit", "-m", "file WI-001", at=1000)
+    git_move(
+        tmp_path,
+        run_git,
+        "docs/work/queued/WI-001-thing.md",
+        "docs/work/queued/WI-001-reaffirmed.md",
+    )
+    (tmp_path / "docs" / "work" / "queued" / "WI-001-reaffirmed.md").write_text(
+        spec_text("WI-001", title="Reaffirmed", specref="docs/specs/WI-001.md"),
+        encoding="utf-8",
+        newline="\n",
+    )
+    run_git("add", "-A")
+    run_git("commit", "-m", "re-title WI-001", at=3000)
+    times = ctraj._spec_row_times(tmp_path, tmp_path / "docs" / "work", ["WI-001"])
+    assert times == {"WI-001": 1000}, times
+    # ... and the warn text a reader gets says so, so the blind spot is not
+    # silent: it names the WI's own spec file (the file the clock actually
+    # reads — review 2026-07-29 confirmed pointing at "the spec" sent readers
+    # to the SpecRef target, which can never clear the warn) and the rename
+    # rule, not "any reviewed edit".
+    assert "the WI's own spec file under docs/work/" in ctraj.BACKLOG_REAFFIRM_HINT
+    assert "keeping its filename" in ctraj.BACKLOG_REAFFIRM_HINT
+    assert "rename does not re-date the clock" in ctraj.BACKLOG_REAFFIRM_HINT
 
 
 def test_staleness_only_logs_the_rows_it_examines(tmp_path):
@@ -667,9 +710,14 @@ def test_backlog_staleness_reads_the_folder_registry_end_to_end(tmp_path):
     wis, _ = ctraj.load_wis(rows)
     findings = ctraj.backlog_staleness_findings(tmp_path, wis)
     assert findings and "WI-001: cites SR-001 amended after" in findings[0]
-    # Mutation: re-affirm by editing the spec, and the warn must clear.
-    (tmp_path / "docs" / "work" / "queued" / "WI-001-thing.md").write_text(
-        spec_text("WI-001", title="re-affirmed", sr_refs=["SR-001"]),
+    # Mutation: re-affirm the way the warn text asks for — a content edit at the
+    # SAME path (a dated frontmatter comment), leaving the Title and so the
+    # filename alone — and the warn must clear.
+    spec = tmp_path / "docs" / "work" / "queued" / "WI-001-thing.md"
+    spec.write_text(
+        spec.read_text(encoding="utf-8").replace(
+            "+++\n", "+++\n# re-affirmed 2026-07-29\n", 1
+        ),
         encoding="utf-8",
         newline="\n",
     )

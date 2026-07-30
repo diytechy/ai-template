@@ -199,6 +199,21 @@ KNOWN_STATUSES = ("queued", "active", "done", "deferred", "blocked", "retired")
 # `done`/`retired` are terminal and need no re-validation.
 BACKLOG_STALE_STATUSES = ("queued", "active", "blocked")
 
+# The clause both backlog-staleness warns end with. The clock it must clear
+# reads the WI's OWN registry spec under docs/work/ (`_spec_row_times`), never
+# the SpecRef target — editing the cited doc pushes ITS clock further ahead and
+# can never clear the warn. It names the SAME FILENAME because "any reviewed
+# edit re-affirms" is false for a Title edit: the Title drives the spec
+# filename, and the row clock filters renames out on purpose
+# (`_path_commit_time`, row-history mode), so a re-title does not re-date the
+# row even when the same commit changed content. WI-362.
+BACKLOG_REAFFIRM_HINT = (
+    "re-validate the WI against the amended requirement (or re-affirm with a "
+    "content edit to the WI's own spec file under docs/work/, keeping its "
+    "filename: editing the Title renames the file, and a rename does not "
+    "re-date the clock)"
+)
+
 
 def _utf8_console():
     """Emit UTF-8 to stdout/stderr whatever the OS console codepage is, so a
@@ -2100,9 +2115,15 @@ def _path_commit_time(root, rel_path, row_history=False):
       * `--diff-filter=AM` alone also answers 2000 — without rename detection the
         move looks like an Add of the new path.
       * Together they answer **1000**: the pure rename is filtered out as `R`,
-        and `--follow` carries the search back to the file's real last edit. A
-        commit that moves AND edits the spec (the ordinary close) still answers
-        2000, which is correct — that is the driven look the warn asks for.
+        and `--follow` carries the search back to the file's real last edit.
+
+    A commit that moves AND edits the spec answers 1000 as well — git scores it
+    `R<similarity>`, and `--diff-filter=AM` drops it like any other rename. That
+    is the accepted blind spot (WI-362, owner ruling 2026-07-29: name it, do not
+    build rename detection): re-affirmation must be a content edit at the SAME
+    path, because a Title edit renames the spec file. Only a rewrite large enough
+    to defeat rename detection reads as `A` and re-dates, so the re-dating of a
+    renamed path is a similarity heuristic and never something to rely on.
 
     Without both, every status move silently resets the row's staleness clock —
     the trap docs/concurrency-restructure.md §7 names, though not by this cause.
@@ -2175,10 +2196,21 @@ def backlog_staleness_findings(root, wis):
     blocked — `deferred` and `done` are exempt) this compares when its registry
     row last changed against when each cited source last changed, and warns when a
     source is STRICTLY NEWER: the WI needs a driven re-validation against the
-    amended requirement. Re-affirming is deliberately cheap — any reviewed edit to
-    the WI row re-dates its blame and clears the warn (a *driven look*, not
-    ceremony). Cited sources: each `SR-Refs` id (a row of system-requirements.csv)
-    and the `SpecRef` target file.
+    amended requirement. Re-affirming is deliberately cheap — a content edit to
+    the spec at the SAME path (frontmatter or body) re-dates the row and clears
+    the warn (a *driven look*, not ceremony). Cited sources: each `SR-Refs` id (a
+    row of system-requirements.csv) and the `SpecRef` target file.
+
+    SAME PATH is a real limitation, not a turn of phrase, and the warn text says
+    so. The row clock reads `--follow --diff-filter=AM` (`_path_commit_time`,
+    row-history mode) so that a pure status MOVE cannot re-date a row nobody
+    re-validated — the flag pair MEASURED at Phase 2b — and that filter drops a
+    rename whatever else the commit did. Since the Title drives the spec
+    FILENAME, re-titling a WI renames its file and does NOT clear the warn: a
+    genuine re-affirmation carried by a Title edit reads as no re-affirmation at
+    all. That is the accepted blind spot of the trade (WI-362, owner ruling
+    2026-07-29: state it in the warn, do not build rename detection) — pinned by
+    tests/test_wi_folder_loaders.py so changing it has to be deliberate.
 
     NEVER joins the exit code — not even under `--strict` (a warn-tier checker
     feature mints no SR and gates nothing, WI-129/132; the caller prints these and
@@ -2208,8 +2240,7 @@ def backlog_staleness_findings(root, wis):
             if t is not None and t > wi_time:
                 out.append(
                     "{}: cites {} amended after the WI row was last touched — "
-                    "re-validate the WI against the amended requirement (or touch "
-                    "the row to re-affirm)".format(w["id"], sr)
+                    "{}".format(w["id"], sr, BACKLOG_REAFFIRM_HINT)
                 )
         pathpart = w["specref"].split("#", 1)[0].strip()
         if pathpart:
@@ -2219,8 +2250,7 @@ def backlog_staleness_findings(root, wis):
             if t is not None and t > wi_time:
                 out.append(
                     "{}: its SpecRef {} changed after the WI row was last touched "
-                    "— re-validate the WI against the amended requirement (or touch "
-                    "the row to re-affirm)".format(w["id"], pathpart)
+                    "— {}".format(w["id"], pathpart, BACKLOG_REAFFIRM_HINT)
                 )
     return out
 
