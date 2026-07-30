@@ -20,7 +20,10 @@ last moment the debt is a one-line trunk commit.
 - **Deviations from spec:** none in scope; the rung was extracted to its
   own helper after the C901 census flagged the inline form (complexity 11)
   — extraction over baseline stamp.
-- **Suite:** full `pytest -q -n auto` (posix-shell gate satisfied):
-  1689 passed / 7 skipped / 1 failed — the sole failure the standing
-  WI-357 work-branch conditional, re-green on trunk.
+- **Suite:** full `pytest -q -n auto` (posix-shell gate satisfied),
+  measured at the close commit: 1689 passed / 7 skipped / 1 failed — the
+  sole failure the standing WI-357 work-branch conditional, re-green on
+  trunk. The round-2 fix added two rung tests, re-verified at HEAD via the
+  module bars + smoke (555/1, same conditional) rather than a second full
+  run; the composed-tree bar at merge is the unfiltered rerun.
   `check_trajectory.py --strict` exit 0.
