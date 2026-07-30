@@ -305,6 +305,13 @@ table.
   row, phase every *ratified* SR/LLR/TC — a ratified blank/unparseable `Phase` is
   then a `--strict-schema` finding — and the foundation (minimum) phase stays in
   scope under `--phase`.
+  **Superseded-SR grounding is now an integrity error (2026-07-29):** if your
+  SR registry uses the optional `SupersededBy` column, an LLR whose `SR-Refs`
+  cites a superseded SR reds `trace.py` at every gate after this re-sync
+  (`--strict` and `--strict-integrity`) — re-ground each such LLR on the
+  successor SR or delete it before re-syncing `trace.py`. TC citations of
+  superseded SRs stay legal (they are the retained evidence record). A
+  registry without the column is unaffected.
 - **Regenerate, never raw-copy (kit-owned but generated):** `docs/process.md` +
   `docs/process-options.md` are *generated* from the kit masters per the
   recorded `docs/kit-profile` (§1). Raw-copying `PROCESS.md`/

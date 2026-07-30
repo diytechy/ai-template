@@ -1248,6 +1248,76 @@ def test_sr_supersession_integrity_predicate():
     assert cycle == ["SR SupersededBy cycle: SR-001 -> SR-002 -> SR-001"]
 
 
+# --- WI-364: an LLR grounded on a superseded SR is an integrity error ---------
+
+
+def test_llr_citing_a_superseded_sr_is_an_integrity_finding():
+    trace = load_script("trace")
+
+    srs = [
+        {"SR-ID": "SR-061", "SupersededBy": "SR-132"},
+        {"SR-ID": "SR-062", "SupersededBy": "SR-131;SR-132"},
+        {"SR-ID": "SR-131", "SupersededBy": ""},
+        {"SR-ID": "SR-132", "SupersededBy": ""},
+    ]
+    found = trace.sr_supersession_findings(
+        srs,
+        [
+            {"LLR-ID": "LLR-014", "SR-Refs": "SR-061"},
+            {"LLR-ID": "LLR-015", "SR-Refs": "SR-062; SR-132"},
+            {"LLR-ID": "LLR-016", "SR-Refs": "SR-132"},
+        ],
+    )
+    # The message must name the LLR, the dead SR, and its successor(s) — the
+    # remediation is unreadable without all three.
+    assert found == [
+        "LLR LLR-014 SR-Refs cites superseded SR-061 (SupersededBy SR-132) — "
+        "re-ground on the successor or delete the LLR",
+        "LLR LLR-015 SR-Refs cites superseded SR-062 (SupersededBy SR-131;SR-132) — "
+        "re-ground on the successor or delete the LLR",
+    ], found
+    # Clean both ways: LLRs grounded only on live SRs, and a registry with no
+    # supersession column at all (the optional-extension compatibility contract).
+    assert (
+        trace.sr_supersession_findings(
+            srs, [{"LLR-ID": "LLR-016", "SR-Refs": "SR-131;SR-132"}]
+        )
+        == []
+    )
+    assert (
+        trace.sr_supersession_findings(
+            [{"SR-ID": "SR-061"}, {"SR-ID": "SR-132"}],
+            [{"LLR-ID": "LLR-014", "SR-Refs": "SR-061"}],
+        )
+        == []
+    )
+    # TC citations of a superseded SR stay legal (the TC-099/TC-133 evidence
+    # pattern requires them), so the sweep must not reach the TC registry: the
+    # LLR arg defaults empty and no TC rows are ever passed.
+    assert trace.sr_supersession_findings(srs) == []
+
+
+def test_llr_citing_a_superseded_sr_is_strict_integrity(scaffold):
+    make_minimal_project(scaffold)
+    srs = scaffold / "docs" / "requirements" / "system-requirements.csv"
+    rows = srs.read_text(encoding="utf-8").splitlines()
+    rows[0] += ",SupersededBy"
+    rows[1] += ",SR-002"
+    # A real successor row, so the only integrity finding under test is the new
+    # one (an unknown target would red the run on its own).
+    rows.append(
+        'SR-002,Subtraction,SN-001,"The system shall subtract two numbers.",'
+        '"Realizes SN-001.","sub(3,1) == 2",,M,Test,Verified,'
+    )
+    srs.write_text("\n".join(rows) + "\n", encoding="utf-8")
+    proc = run_py(["scripts/trace.py", "--strict-integrity"], cwd=scaffold)
+    assert proc.returncode == 1
+    report = (scaffold / "docs" / "test" / "report.md").read_text(encoding="utf-8")
+    assert (
+        "LLR LLR-001 SR-Refs cites superseded SR-001 (SupersededBy SR-002)" in report
+    ), report
+
+
 def test_sr_supersession_failures_are_strict_integrity_findings(scaffold):
     make_minimal_project(scaffold)
     srs = scaffold / "docs" / "requirements" / "system-requirements.csv"
@@ -1294,7 +1364,9 @@ def test_meta_supersession_rows_preserve_the_ratified_evidence_map():
     }
     linked = {row["SR-ID"]: row.get("SupersededBy", "") for row in srs}
     assert {sid: linked[sid] for sid in expected} == expected
-    assert not trace.sr_supersession_findings(srs)
+    # WI-364: the same call now also reds an LLR grounded on any superseded SR,
+    # so passing the live LLRs proves this repo stays green under the new rule.
+    assert not trace.sr_supersession_findings(srs, llrs)
     old = set(expected)
     assert not any(old.intersection(trace.refs(row.get("SR-Refs"))) for row in llrs)
     tc99 = next(row for row in tcs if row["TC-ID"] == "TC-099")
@@ -1348,7 +1420,7 @@ def test_phase5_supersession_rows_preserve_the_ratified_evidence_map():
         # Inspection is what exempts a machinery-less legacy row from the
         # SR-needs-an-LLR orphan rule (trace.LLR_EXEMPT).
         assert row.get("Verification") == "Inspection", sid
-    assert not trace.sr_supersession_findings(srs)
+    assert not trace.sr_supersession_findings(srs, llrs)
     assert not any(phase5.intersection(trace.refs(row.get("SR-Refs"))) for row in llrs)
     tc133 = next(row for row in tcs if row["TC-ID"] == "TC-133")
     assert set(trace.refs(tc133["Verifies"])) == phase5
