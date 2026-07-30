@@ -1850,7 +1850,17 @@ def _port_fan(groups, other_of, pos, row_h):
 _WIRE_HIT_MARGIN = 3.0  # a box is "hit" only when the cubic comes within this
 _WIRE_CLEAR = 7.0  # a detour lane sits this far outside the blocking band
 _WIRE_STUB = 18.0  # the horizontal run a detour keeps at each port before lifting
-_MAX_LANES = 24  # WI-257: candidate lanes tried per pass (bounds dense-overlap cost)
+_MAX_LANES = 48  # WI-257: candidate lanes tried per pass (bounds dense-overlap cost);
+# WI-323 raised it from 24 because each band-edge lane now carries `_LANE_STACK`
+# rungs behind it, so the cap has to cover the same reach in BASE lanes as before.
+_LANE_SEP = 10.0  # two lanes closer than this in one corridor read as a single line
+_CORRIDOR_MIN_OVERLAP = 40.0  # shorter shared runs read as a crossing, not a corridor
+_LANE_STACK = 3  # outboard rungs offered behind each band-edge lane
+# WI-323 dialled `_LANE_SEP` against the shipped dashboard, not from theory: at the
+# 1.5px `--w-line` stroke, 6.0 cleared every clash at its OWN threshold yet still left
+# 16 pairs inside 10px (visibly a doubled line); 10.0 with a 3-rung stack clears every
+# pair at both, and the tightest surviving corridor is a 10-14px pair. Wider forces a
+# lane out of the 22px inter-row channel and the wire jumps a whole band instead.
 
 
 def _cubic_points(p0, p1, p2, p3, n=24):
@@ -1912,7 +1922,13 @@ def _lane_candidates(y_pref, blocked, lo, hi):
     the margin. The head is exactly the former `_clear_lane_y` pick (a stable sort
     keeps the first candidate on distance ties), so a wire that already had a clear
     lane keeps it byte-for-byte; the tail lets `_detour_d` fall through to the next
-    lane when the nearest one still grazes a stub-corridor box."""
+    lane when the nearest one still grazes a stub-corridor box.
+
+    WI-323: each band-edge lane also carries a short STACK of rungs `_LANE_SEP` apart,
+    stepping AWAY from y_pref (so away from the band that pushed the wire out) and
+    inserted directly behind their parent. A wire whose corridor is free still takes
+    the head, so its `d` is byte-identical; a wire the corridor ledger pushes off
+    takes the neighbouring rung rather than jumping to a distant band edge."""
     merged = []
     for t, b in sorted(blocked):
         if merged and t <= merged[-1][1]:
@@ -1923,10 +1939,43 @@ def _lane_candidates(y_pref, blocked, lo, hi):
     for t, b in merged:
         cands.append(t - 0.1)
         cands.append(b + 0.1)
-    valid = [
-        c for c in cands if lo <= c <= hi and not any(t <= c <= b for t, b in merged)
-    ]
-    return sorted(valid, key=lambda c: abs(c - y_pref))
+
+    def free(c):
+        return lo <= c <= hi and not any(t <= c <= b for t, b in merged)
+
+    out, seen = [], set()
+    for c in sorted((c for c in cands if free(c)), key=lambda c: abs(c - y_pref)):
+        step = _LANE_SEP if c >= y_pref else -_LANE_SEP
+        for r in [c + k * step for k in range(_LANE_STACK + 1)]:
+            if round(r, 3) not in seen and free(r):
+                seen.add(round(r, 3))
+                out.append(r)
+    return out
+
+
+def _lane_seg(d):
+    """The (x_lo, x_hi, y) of a routed path's straight lane hop, or None for a direct
+    cubic. The lane is the only straight run `_detour_str` emits ("... xa,lane L
+    xb,lane ..."), so `" L"` identifies it without re-parsing the curves."""
+    if " L" not in d:
+        return None
+    before, after = d.split(" L", 1)
+    ax, ay = before.rsplit(" ", 1)[1].split(",")
+    bx = after.split(" ", 1)[0].split(",")[0]
+    return min(float(ax), float(bx)), max(float(ax), float(bx)), float(ay)
+
+
+def _corridor_clash(xlo, xhi, lane, taken):
+    """True when this lane would ride within `_LANE_SEP` of an already-placed lane
+    over a shared run longer than `_CORRIDOR_MIN_OVERLAP` — the pair then reads as ONE
+    line for that stretch and a reader cannot attribute it to one source and one
+    target (121-CRITIQUE MAJOR, second clause). A shorter shared run is a crossing in
+    open space, which T8 permits, so it is not a clash."""
+    for txlo, txhi, ty in taken:
+        if abs(ty - lane) < _LANE_SEP:
+            if min(xhi, txhi) - max(xlo, txlo) > _CORRIDOR_MIN_OVERLAP:
+                return True
+    return False
 
 
 def _detour_points(x1, sy, y1, xa, xb, xe, ty, y2, lane):
@@ -1971,7 +2020,7 @@ def _detour_str(x1, sy, y1, xa, xb, xe, ty, y2, lane):
 
 
 def _detour_d(
-    x1, sy, y1, xe, ty, y2, obstacles, clearance=_WIRE_CLEAR, stub=_WIRE_STUB
+    x1, sy, y1, xe, ty, y2, obstacles, clearance=_WIRE_CLEAR, stub=_WIRE_STUB, taken=()
 ):
     """A path 'd' that leaves the source port (x1, port-center sy) rightward, runs a
     clear horizontal lane over/under the blocking `obstacles`, and enters the target
@@ -1998,7 +2047,14 @@ def _detour_d(
     is capped and the clear-check short-circuits at the first hit, so DENSE-overlap
     geometry stays bounded — a clear lane is returned the moment one is found, and
     the O(obstacles) per-box hit count runs only to rank the pathological
-    no-clear-lane fallback."""
+    no-clear-lane fallback.
+
+    WI-323: `taken` is the caller's corridor ledger — the (x_lo, x_hi, y) lane hops
+    already placed in this diagram. Preference order is clear-of-every-box AND
+    corridor-free, then clear-but-coincident, then the least-bad fallback. The middle
+    tier is exactly what this function returned before the ledger existed, so the
+    ledger can only move a wire from one FULLY CLEAR lane to another: the T8
+    through-box floor (LLR-120/TC-125) cannot regress through this parameter."""
     xa, xb = x1 + stub, xe - stub
     fox, fxh = min(x1, xe, xa, xb), max(x1, xe, xa, xb)
     full = [r for r in obstacles if r[0] < fxh and r[0] + r[2] > fox]
@@ -2008,6 +2064,7 @@ def _detour_d(
     lane_span = [r for r in full if r[0] < hix and r[0] + r[2] > lox]
     y_pref = (y1 + y2) / 2.0
     best = None  # (hit_count, d): the least-bad deterministic fallback
+    shared = None  # first box-clear lane that still rides an occupied corridor
     # First pass over just the lane-span boxes reproduces the legacy lane (byte
     # stable); the second folds in the stub-corridor boxes to find a clear route
     # (skipped when the two sets are identical — a redundant re-scan).
@@ -2019,14 +2076,18 @@ def _detour_d(
         hi = max(r[1] + r[3] for r in src) + 40.0
         for lane in _lane_candidates(y_pref, blocked, lo, hi)[:_MAX_LANES]:
             pts = _detour_points(x1, sy, y1, xa, xb, xe, ty, y2, lane)
-            if not _polyline_hits(pts, full):  # early-exit: first clear lane wins
-                return _detour_str(x1, sy, y1, xa, xb, xe, ty, y2, lane)
+            if not _polyline_hits(pts, full):
+                d = _detour_str(x1, sy, y1, xa, xb, xe, ty, y2, lane)
+                if not _corridor_clash(min(xa, xb), max(xa, xb), lane, taken):
+                    return d  # early-exit: first box-clear, corridor-free lane wins
+                shared = shared or d
+                continue  # a clear lane cannot improve on `best`; keep looking
             hits = sum(1 for r in full if _polyline_hits(pts, (r,)))
             if best is None or hits < best[0]:
                 best = (hits, _detour_str(x1, sy, y1, xa, xb, xe, ty, y2, lane))
         if lane_span == full:
             break  # the second pass would re-scan the identical obstacle set
-    return best[1] if best else None
+    return shared or (best[1] if best else None)
 
 
 def _routed_label_xy(d, fx, fy):
@@ -2035,12 +2096,10 @@ def _routed_label_xy(d, fx, fy):
     midpoint (WI-255 — the label formerly stuck to the straight-chord midpoint and
     floated off a re-routed wire). A clear (direct-cubic) path has no 'L' and keeps
     the caller's straight-chord fallback (fx, fy), so its label is byte-identical."""
-    if " L" not in d:
+    seg = _lane_seg(d)
+    if seg is None:
         return fx, fy
-    before, after = d.split(" L", 1)
-    ax, ay = before.rsplit(" ", 1)[1].split(",")
-    bx = after.split(" ", 1)[0].split(",")[0]
-    return (float(ax) + float(bx)) / 2.0, float(ay)
+    return (seg[0] + seg[1]) / 2.0, seg[2]
 
 
 def _route_edges(edges, rects_by_id, min_dx, end_trim):
@@ -2068,6 +2127,14 @@ def _route_edges(edges, rects_by_id, min_dx, end_trim):
     escapes."""
     ordered = sorted(rects_by_id.items())
     out = {}
+    # WI-323 (121-CRITIQUE MAJOR, second clause): the SHARED-CORRIDOR LEDGER. Each
+    # wire was routed in isolation, so every long-haul wire pushed out of the same
+    # node band picked the same nearest clear lane and several ran coincident for
+    # hundreds of px. Lanes are now claimed as they are placed, and a later wire in
+    # the same horizontal corridor takes the next stacked lane instead. The ledger is
+    # per-call (one diagram, one coordinate system) and filled in the sorted edge
+    # order above, so which wire wins the innermost lane is deterministic.
+    taken = []
     for key, x1, y1, x2, y2, src, tgt in sorted(edges, key=lambda e: e[0]):
         xe = x2 - end_trim
         dx = max((x2 - x1) * 0.4, min_dx)
@@ -2090,11 +2157,14 @@ def _route_edges(edges, rects_by_id, min_dx, end_trim):
                     span.append((rs[0], rs[1], rs[2] - 0.1, rs[3]))  # trim port edge
                 if rt:
                     span.append(rt)
-            d = _detour_d(x1, sy, y1, xe, ty, y2, span)
+            d = _detour_d(x1, sy, y1, xe, ty, y2, span, taken=taken)
         if d is None:
             d = "M{:.1f},{:.1f} C{:.1f},{:.1f} {:.1f},{:.1f} {:.1f},{:.1f}".format(
                 x1, sy, x1 + dx, y1, xe - dx, y2, xe, ty
             )
+        seg = _lane_seg(d)
+        if seg is not None:
+            taken.append(seg)
         out[key] = d
     return out
 
