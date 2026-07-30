@@ -6,3 +6,22 @@ buildtier = "medium"
 priority = 1
 safety_class = "ordinary"
 +++
+
+## Deliverable
+
+DONE 2026-07-30. `docs/declared-absences` gains the `LIFECYCLE:` reason
+marker (documented in its header): a marked row declares a path whose
+PRESENCE is a legal, documented state, and
+`tests/test_dogfood_sync.py::test_scaffold_omissions_list_is_current`
+exempts exactly those rows from the materialize-guard via the extracted
+`_stale_declared_absences` helper — every unmarked row, including every
+retired surface, keeps the exact guard. The two live lifecycle rows
+(`docs/work/active/`, `docs/work/pause`) are tagged, and their marker is
+itself pinned (`test_the_lifecycle_rows_carry_the_marker`), so dropping it
+re-arms the deadlock visibly. A synthetic bite test proves the exemption is
+marker-scoped in both directions. `check_doc_refs.py` untouched: reasons
+are opaque text it consults only when the path is absent, so classification
+of prose naming an absent lifecycle path is unchanged. Verified on this
+branch with three claims outstanding: smoke reds only the standing WI-357
+work-branch conditional; the omissions test is green with
+`docs/work/active/` present.
