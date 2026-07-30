@@ -6,14 +6,17 @@ This module pins the four gates that make it *fail-closed*, plus the whole flow
 end-to-end:
 
   * **claim** (§2.3 steps 1+2) — the serial trunk move `queued/ ->
-    active/<branch>/` and the branch cut from that commit, and the seven refusals
+    active/<branch>/` and the branch cut from that commit, and the eight refusals
     that stand in front of it: the tracked pause (§5.6), a dirty trunk, a branch
     that already exists, a branch name that would not map to a flat claim
     directory, a spec whose `safety_class` is not `ordinary` (spine runs
-    attended as the §3.2 barrier), a WI that is not on the scheduler's ready
-    frontier, and (WI-358) a claimed id named in hand-authored `docs/status.md`
-    prose — the forward-only debt that would red R-D on the composed tree at
-    close, hoisted to where a single trunk commit can still pay it.
+    attended as the §3.2 barrier), (WI-370) a spec whose `SpecRef` is empty or
+    does not resolve in-repo — the R-E debt that becomes unpayable once the
+    closing branch exists, hoisted the same way R-D was — a WI that is not on
+    the scheduler's ready frontier, and (WI-358) a claimed id named in
+    hand-authored `docs/status.md` prose — the forward-only debt that would
+    red R-D on the composed tree at close, hoisted to where a single trunk
+    commit can still pay it.
   * **finished-branch detection** — the closing commit's move to `archive/` IS
     the finished signal: no state file, no ref, just the tree.
   * **the verdict gate** (RULING-7) — the dialed review artifact must be
@@ -135,6 +138,7 @@ def spec_text(
     needs=(),
     order=0,
     deliverable="A widget, shipped.",
+    specref=None,
 ):
     """One work-item spec in the format `scripts/wi_convert.py` emits (the
     tests/test_wi_folder_loaders.py `spec_text` shape).
@@ -142,7 +146,9 @@ def spec_text(
     The `## Deliverable` body is written by DEFAULT because the archived form is
     the one that has to survive `check_trajectory` on the composed tree: R-A
     errors on a `status=done` WI with an empty Deliverable, and `archive/` is
-    where every claimed spec ends up."""
+    where every claimed spec ends up. `specref` is written only when given: the
+    WI-370 claim rung wants it on a QUEUED spec, R-F wants it gone from an
+    archived one, so each fixture states which shape it is."""
     lines = [
         'id = "{}"'.format(wid),
         'title = "{}"'.format(title),
@@ -152,6 +158,8 @@ def spec_text(
         'safety_class = "{}"'.format(safety),
         "order = {}".format(order),
     ]
+    if specref:
+        lines.append('specref = "{}"'.format(specref))
     text = "+++\n" + "".join(ln + "\n" for ln in lines) + "+++\n"
     if deliverable:
         text += "\n## Deliverable\n\n" + deliverable + "\n"
@@ -188,8 +196,11 @@ def _branches(root):
 def claim_repo(tmp_path, branch="main", wi="WI-401", **spec_kw):
     """A trunk repo whose `docs/work/` spec folder IS the work-item registry
     (Phase 2b dual-read: real specs present => the folder is authoritative, so
-    no docs/requirements/work-items.csv is needed at all)."""
+    no docs/requirements/work-items.csv is needed at all). The queued spec
+    resolves its SpecRef to the fixture's own seed file so the WI-370 rung
+    passes by default — a rung-specific test overrides it."""
     git_repo(tmp_path, branch=branch)
+    spec_kw.setdefault("specref", "seed.txt")
     write_spec(tmp_path, "queued", wi, **spec_kw)
     _commit(tmp_path, "file " + wi, when=T_CODE)
     return tmp_path
@@ -274,12 +285,66 @@ def test_claim_refuses_a_spec_that_is_not_safety_class_ordinary(tmp_path, capsys
     assert "wi-401" not in _branches(root)
 
 
+def test_claim_refuses_a_spec_without_a_specref(tmp_path, capsys):
+    # WI-370: an open WI without a SpecRef reds R-E under --strict on every
+    # composed tree that sees it, and the debt is unpayable once the closing
+    # branch exists — so the claim is where it must be caught.
+    root = claim_repo(tmp_path, specref=None)
+    assert integ.claim(root, "WI-401", "wi-401") == 1
+    err = capsys.readouterr().err
+    assert "carries no SpecRef" in err and "WI-370" in err
+    assert (root / "docs" / "work" / "queued" / "WI-401-widget.md").is_file()
+    assert "wi-401" not in _branches(root)
+
+
+def test_claim_refuses_a_specref_that_does_not_resolve(tmp_path, capsys):
+    # R-E's own resolution rule at claim time: the path part must exist.
+    root = claim_repo(tmp_path, specref="docs/ghost-spec.md")
+    assert integ.claim(root, "WI-401", "wi-401") == 1
+    err = capsys.readouterr().err
+    assert "does not resolve to an in-repo FILE" in err
+    assert "docs/ghost-spec.md" in err
+    assert "wi-401" not in _branches(root)
+
+
+def test_claim_refuses_a_bare_fragment_specref(tmp_path, capsys):
+    # 131-REVIEW-A's R-E shape: "#anchor" has no path part. `root / ""` is the
+    # repo root, which exists — the round-1 rung passed it and R-E then redded
+    # the composed tree (WI-370-REVIEW-A finding 1).
+    root = claim_repo(tmp_path, specref="#improvement-plan")
+    assert integ.claim(root, "WI-401", "wi-401") == 1
+    err = capsys.readouterr().err
+    assert "has no path part" in err
+    assert "wi-401" not in _branches(root)
+
+
+def test_claim_refuses_a_directory_specref(tmp_path, capsys):
+    # R-E's other path-half shape: a directory is not a document. `.exists()`
+    # accepted it; the rung must hold `.is_file()`, the same bar R-E holds.
+    root = claim_repo(tmp_path, specref="docs")
+    assert integ.claim(root, "WI-401", "wi-401") == 1
+    err = capsys.readouterr().err
+    assert "does not resolve to an in-repo FILE" in err
+    assert "wi-401" not in _branches(root)
+
+
+def test_a_specref_anchor_resolves_by_its_path_part(tmp_path, capsys):
+    # `path#anchor` is legal R-E form; the rung checks the PATH part only
+    # (anchor resolution stays check_trajectory's job). The claim proceeds all
+    # the way through, proving the rung sits quietly in the passing path.
+    root = claim_repo(tmp_path, specref="seed.txt#section")
+    (root / ".gitignore").write_text("out/\n", encoding="utf-8", newline="\n")
+    _commit(root, "chore: ignore the coordinator lock", when=T_CODE)
+    assert integ.claim(root, "WI-401", "wi-401") == 0
+    assert "wi-401" in _branches(root)
+
+
 def test_claim_refuses_a_wi_that_is_not_on_the_ready_frontier(tmp_path, capsys):
     # Readiness is DERIVED by schedule.py from the registry, never asserted by
     # the claimer: WI-401 hard-needs WI-999, which is still queued, so WI-401 is
     # `waiting` and claiming it would start work against an unbuilt dependency.
     root = git_repo(tmp_path)
-    write_spec(tmp_path, "queued", "WI-401", needs=["WI-999"])
+    write_spec(tmp_path, "queued", "WI-401", needs=["WI-999"], specref="seed.txt")
     write_spec(tmp_path, "queued", "WI-999", slug="dependency", order=1)
     _commit(root, "file the dependent pair", when=T_CODE)
 
@@ -905,7 +970,11 @@ def scaffolded_closed_branch(tmp_path):
     (repo / "docs" / "review-policy").write_text("0\n", encoding="utf-8", newline="\n")
     with (repo / ".gitignore").open("a", encoding="utf-8", newline="\n") as fh:
         fh.write("out/\n")
-    write_spec(repo, "queued", "WI-401")
+    # A queued spec owes a resolving SpecRef (the WI-370 claim rung); the
+    # scaffold's own docs/log.md serves. The closing move below CLEARS it,
+    # because the archived form is what check_trajectory --strict sees on the
+    # composed tree and R-F wants a terminal SpecRef empty.
+    write_spec(repo, "queued", "WI-401", specref="docs/log.md")
 
     # The scaffold is committed as one seed on the default branch (bootstrap does
     # not init a repo), so the claim below is the FIRST thing the queue sees.
@@ -936,12 +1005,16 @@ def scaffolded_closed_branch(tmp_path):
     _git(repo, "checkout", "-q", "wi-401")
     (repo / "src" / "demo.py").write_text(E2E_DEMO_SRC, encoding="utf-8", newline="\n")
     _commit(repo, "feat: subtract, verifying SR-001", when=T_CODE)
-    _git(
-        repo,
-        "mv",
-        "docs/work/active/wi-401/WI-401-widget.md",
-        "docs/work/archive/WI-401-widget.md",
+    # The closing move edits the spec the way a real close does: the file
+    # lands in archive/ with its SpecRef cleared (R-F), not byte-moved.
+    src = repo / "docs" / "work" / "active" / "wi-401" / "WI-401-widget.md"
+    dst = repo / "docs" / "work" / "archive" / "WI-401-widget.md"
+    dst.write_text(
+        src.read_text(encoding="utf-8").replace('specref = "docs/log.md"\n', ""),
+        encoding="utf-8",
+        newline="\n",
     )
+    _git(repo, "rm", "-q", "docs/work/active/wi-401/WI-401-widget.md")
     _commit(repo, "close: WI-401 -> archive", when=T_VERDICT)
     _git(repo, "checkout", "-q", "master")
     return repo, claim_sha

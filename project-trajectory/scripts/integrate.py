@@ -7,10 +7,12 @@ merge. Three operations:
   claim      the §2.3 claim protocol, step 1+2: move a queued spec to
              docs/work/active/<branch>/ in a trunk bookkeeping commit, then
              cut the work branch from that commit. Refuses while the tracked
-             docs/work/pause is present (§5.6: pause = stop claiming), and
-             while hand-authored docs/status.md prose names the claimed id
+             docs/work/pause is present (§5.6: pause = stop claiming), while
+             hand-authored docs/status.md prose names the claimed id
              (WI-358: that R-D debt is paid before the branch exists, since a
-             branch cannot scrub trunk-owned status.md at merge time).
+             branch cannot scrub trunk-owned status.md at merge time), and
+             when the spec carries no in-repo-resolving SpecRef (WI-370:
+             the R-E debt is unpayable once the closing branch exists).
   integrate  the serial queue: for each FINISHED claimed branch (its tip
              moved every claimed spec out of active/<branch>/), merge
              --no-ff onto a candidate worktree, fold the §5.1/§5.2 trunk
@@ -181,6 +183,40 @@ def _status_prose_refusal(root, wi_id):
     )
 
 
+def _specref_refusal(root, meta, wi_id):
+    """The WI-370 claim rung: a refusal string, or None.
+
+    R-E, hoisted to claim time - the WI-358 shape again. An open WI without a
+    resolving SpecRef reds --strict on every composed tree that sees it, and
+    the debt is unpayable once the closing branch exists: open wants the ref
+    and terminal wants it cleared, so a trunk-side repair rename-merges the
+    ref INTO the archived copy and trips R-F instead. The rung checks the
+    PATH part only; anchor resolution stays check_trajectory's job.
+    """
+    ref = str(meta.get("specref", "") or "").strip()
+    if not ref:
+        return (
+            "{} carries no SpecRef - an open WI without one reds R-E under "
+            "--strict on every composed tree, from a file the closing branch "
+            "cannot amend (WI-370). Name the spec-of-record in the queued "
+            "spec in one trunk commit, then claim".format(wi_id)
+        )
+    path_part = ref.split("#", 1)[0]
+    if not path_part:
+        return (
+            "{} SpecRef {!r} has no path part (a bare #anchor) - R-E wants "
+            "an in-repo document; fix the queued spec, then claim "
+            "(WI-370)".format(wi_id, ref)
+        )
+    if not (root / path_part).is_file():
+        return (
+            "{} SpecRef {!r} does not resolve to an in-repo FILE (R-E: a "
+            "directory or missing path reds the bar) - fix the queued spec, "
+            "then claim (WI-370)".format(wi_id, ref)
+        )
+    return None
+
+
 def _claim_refusal(root, wi_id, branch):
     """The claim's refusal ladder: the first reason this claim may not happen,
     or None. Every reason is named; order is cheapest-first."""
@@ -212,6 +248,9 @@ def _claim_refusal(root, wi_id, branch):
             "{} is safety_class={!r} - the integrator claims ordinary work only; "
             "spine/gate classes run attended as the §3.2 barrier".format(wi_id, safety)
         )
+    refusal = _specref_refusal(root, meta, wi_id)  # WI-370
+    if refusal:
+        return refusal
     refusal = _status_prose_refusal(root, wi_id)  # WI-358
     if refusal:
         return refusal
