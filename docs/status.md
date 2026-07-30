@@ -35,10 +35,10 @@ home elsewhere — don't restate it here:
   and last 2026-07-29 sitting blessed the Phase 5 amendment; gate **G3, all
   four phases**). **The 2026-07-29 grind session built, reviewed and closed
   the entire queued backlog** (records in the registry and the log's session
-  entry); the frontier now holds exactly the TWO render follow-ups the
-  closing advisory critique filed per change-intake (WI-366 port fans,
-  WI-367 viewBox clip — each row's SpecRef names the critique record in
-  [reviews/](reviews/)), claimable through `integrate.py claim`.
+  entry); the frontier now holds exactly the render follow-ups the
+  closing advisory critique filed per change-intake — see the generated
+  Ready frontier below (each row's SpecRef names the critique record in
+  [reviews/](reviews/)); claimable through `integrate.py claim`.
   Standing habit that survives the restructure: run
   `check_trajectory.py --strict` directly, unfiltered, before claiming
   anything done — the DEFAULTED pre-commit floor stays warn-first by
