@@ -66,7 +66,10 @@ never improvise per session**. The current matrix:
   matters most).
 
 Output names are deterministic: `shots/{width}px-{theme}-{tab}-{full|fold}.png`
-(3 × 2 × 5 full = 30, + 6 landing folds = **36** shots). Pixel content is *not*
+(3 × 2 × 5 full = 30, + 6 landing folds = **36** shots). Each run deletes only
+its **own top-level `*.png`** before shooting — subdirectories under `shots/`
+(e.g. a session's `shots/before/` baseline) are preserved (WI-371; the old
+whole-dir clean silently destroyed baselines). Pixel content is *not*
 byte-deterministic (the git as-of stamp changes per commit) — that's fine; this
 is a perceptual loop, not a pixel-diff (a pixel-diff baseline is a possible
 follow-up, WI-189 non-goals).
