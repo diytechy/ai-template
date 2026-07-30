@@ -26,7 +26,9 @@ home elsewhere — don't restate it here:
   is dead (RULING-4 fully realized), PROCESS_OPTIONS rewrote onto the seam
   model, and the audit's approved WI retirements executed. **Its spine
   amendment window is OPEN** — the sitting is the one thing left (below).
-- **Resuming in a new session — boot HERE, then the spec.** The working
+- **Resuming in a new session — boot HERE, then
+  [handoff-2026-07-29.md](handoff-2026-07-29.md)** (the post-Phase-5 wrap-up:
+  the sitting, the sequenced queue, the unruled owner calls). The working
   program [concurrency-restructure.md](concurrency-restructure.md) is
   EXECUTED through Phase 5 (§7 records). **The one open act is the Phase 5
   sitting**: 26 `Modified` SRs + the Draft TC-133 hold the derived gate at
