@@ -616,6 +616,8 @@ flowchart TD
   closure): spawn an **independent** reviewer with a fresh-context, defect-
   hunting prompt. Verify its file edits; never trust an unverified "green."
 - **Medium**: self-review against the gate checklist + run the harness.
+  (Self-review catches wrong *work*, not wrong *claims* — an author believes
+  their own claims; that class needs the independent reviewer.)
 - **Low/mechanical** (rename, doc tweak, config): just run the harness.
 
 Keep `status.md` short so a reviewer can orient cheaply — the *whole file* is
@@ -635,15 +637,16 @@ hint** — metadata an agent reads and may act on, guidance like any other
 `AGENTS.md` directive, not a guarantee. Host-specific levers (e.g. a
 strong-model-plans/cheaper-model-executes mode, per-subagent model overrides,
 a model-selection command) are optional, documented per-host examples — name
-the pattern, never a vendor-specific model-selection engine. Tiering is also an
-**in-flight duty**, not just plan-time metadata: mid-session the driver should
-**step down** — hand a mechanical, well-specced subtask to a cheaper-tier
-subagent rather than spend strong-model context on it — and **step sideways** to
+the pattern, never a vendor-specific model-selection engine. Tiering also applies
+**in flight**, not just as plan-time metadata: mid-session the driver **steps
+down** — hands a mechanical, well-specced subtask to a cheaper-tier subagent —
+**when the hand-off pays for itself** (spawning has its own cost, and an agent
+that already delegates readily needs no push), and **steps sideways** to
 a peer-tier subagent with a fresh, dedicated context when the work would
 otherwise crowd the driver's context (bulk asset/prose generation, a wide file
 sweep; the independent reviewer above is already this pattern). Hosts
-increasingly make these hand-offs automatically; the duty stands wherever the
-lever is manual.
+increasingly make these hand-offs automatically; the judgment stands wherever
+the lever is manual.
 
 **Decision-surfacing rate — same axis, set at setup.** The risk triage above
 also calibrates **how often the driver pauses for a human decision**. It is a
