@@ -875,8 +875,8 @@ def dag_svg(wis):
     for e in wi_edges:
         out_groups.setdefault(e[0], []).append(e)
         in_groups.setdefault(e[1], []).append(e)
-    out_off = _port_fan(out_groups, lambda e: e[1], pos, DAG_ROW_H)
-    in_off = _port_fan(in_groups, lambda e: e[0], pos, DAG_ROW_H)
+    out_off = _port_fan(out_groups, lambda e: e[1], pos, DAG_ROW_H, DAG_ROW_GAP)
+    in_off = _port_fan(in_groups, lambda e: e[0], pos, DAG_ROW_H, DAG_ROW_GAP)
 
     # A cross-rank edge that would cut an unrelated WI box detours around it
     # (`_route_edges`, WI-253); a clear edge keeps its bowed cubic byte-for-byte.
@@ -1058,8 +1058,8 @@ def sw_graph(root, mods):
     for e in edges:
         out_groups.setdefault(e[0], []).append(e)
         in_groups.setdefault(e[1], []).append(e)
-    out_off = _port_fan(out_groups, lambda e: e[1], pos, SW_ROW_H)
-    in_off = _port_fan(in_groups, lambda e: e[0], pos, SW_ROW_H)
+    out_off = _port_fan(out_groups, lambda e: e[1], pos, SW_ROW_H, SW_ROW_GAP)
+    in_off = _port_fan(in_groups, lambda e: e[0], pos, SW_ROW_H, SW_ROW_GAP)
 
     rects = {k: (pos[k][0], pos[k][1], SW_COL_W, SW_ROW_H) for k in node_ids}
     routes = _route_edges(
@@ -1808,14 +1808,35 @@ def _drill_block_label(b, col_w, cx, cy):
     )
 
 
-def _port_fan(groups, other_of, pos, row_h):
+_FAN_PITCH = 8.0  # WI-366: the separation two strands of ONE port must reach
+_PORT_LEAD = 11.0  # ...the run over which they reach it, before any routing bend
+_LEAD_RUNGS = 3  # ...and how many staggered turn-off points that run offers
+
+
+def _port_fan(groups, other_of, pos, row_h, row_gap):
     """Per-port vertical fan-out offsets (keyed by edge tuple) so several wires
     sharing one port spread across a small band instead of converging on the
     exact same pixel — the "knot" a plain center-to-center wire draws when 3+
     edges share a port. Offsets are ordered by the OTHER endpoint's row (so a
     wire to a higher block leaves/lands higher), which also keeps neighbouring
     wires from needlessly crossing each other right at the port. A single-edge
-    port gets offset 0 (byte-identical to the former center-only routing)."""
+    port gets offset 0 (byte-identical to the former center-only routing).
+
+    WI-366 (WI-323-CRITIQUE follow-up 1) sets the STEP to `_FAN_PITCH` — the
+    separation the critic measured as the floor a reader needs to attribute one
+    stroke to one edge — where it was a bare 6.0 that the render then damped to
+    ~2.6 (the offset only moved a CONTROL point, and a cubic tracks a displaced
+    control at ~4/9 of its offset). `_route_edges` now spends `_PORT_LEAD` px
+    materializing the offset before any routing bend starts, so the step IS the
+    rendered pitch.
+
+    The cap is the ROW SLOT, not a fraction of the block: two vertically adjacent
+    ports sit `row_h + row_gap` apart, so a band wider than that minus one pitch
+    would fuse the outermost strand of one port with its neighbour's — trading a
+    fused fan for a fused pair between fans. A port with more wires than the slot
+    can hold at `_FAN_PITCH` (9 at the widest today, in a drilled-in layer) steps
+    proportionally tighter rather than overflowing; that residue is real and
+    stated, not hidden behind the average case."""
     offsets = {}
     for items in groups.values():
         n = len(items)
@@ -1824,7 +1845,7 @@ def _port_fan(groups, other_of, pos, row_h):
                 offsets[e] = 0.0
             continue
         items_sorted = sorted(items, key=lambda e: (pos[other_of(e)][1], e))
-        span = min(row_h * 0.6, (n - 1) * 6.0)
+        span = min(row_h + row_gap - _FAN_PITCH, (n - 1) * _FAN_PITCH)
         step = span / (n - 1)
         start = -span / 2
         for i, e in enumerate(items_sorted):
@@ -1991,6 +2012,108 @@ def _detour_points(x1, sy, y1, xa, xb, xe, ty, y2, lane):
     return pts
 
 
+def _harness_seg(xa, ya, xb, yb, mx):
+    """One HARNESS segment (WI-366): a cubic from (xa,ya) to (xb,yb) with BOTH controls
+    at x = mx, so the whole y change happens around mx and the rest of the run is flat
+    — the port-side bend idiom `_detour_str` already draws, with the bend x named
+    separately from the segment's end so a strand can turn off EARLY and then coast.
+    Leaves and arrives horizontally, so it joins the port ring and hands off to the
+    routed remainder without a kink."""
+    return "C{:.1f},{:.1f} {:.1f},{:.1f} {:.1f},{:.1f}".format(mx, ya, mx, yb, xb, yb)
+
+
+def _lead_rung(k, n, down):
+    """How many `_FAN_PITCH` rungs strand `k` of an `n`-wire port coasts before it
+    turns off its harness (WI-366). Neighbouring strands sit on DIFFERENT rungs, so a
+    pair that both plunge steeply out of the port begins its plunge `_FAN_PITCH` px
+    apart in X — which is what a steep pair needs, because a VERTICAL offset collapses
+    to `off * cos(angle)` on a near-vertical stroke (the 8 px the harness opens at the
+    port reads as ~4.7 px down the descent, and read as the ~2.5 px the critic
+    measured before it).
+
+    `k` indexes the strands by fan height (0 = topmost) and `down` says whether this
+    one's target lies below its port. The strand travelling FURTHEST in its direction
+    turns off FIRST, so it dives past the others while they are still coasting flat —
+    turn off in the other order and the early diver crosses every strand it is still
+    inboard of, trading a fused pair for a knot of crossings at the port.
+
+    Rungs are capped at `_LEAD_RUNGS` so the harness stays well inside the column
+    channel however many wires share the port. On a port with more than `_LEAD_RUNGS`
+    wires the cap collapses the LEAST-travelled end of the fan onto one turn-off, and
+    that is the right end to give up: a strand whose target is nearly level leaves at a
+    shallow angle, where the fan offset already reads as the full pitch and no x
+    stagger is owed. The residue is the pair whose targets are both near-level and
+    both far enough to plunge — measured on the shipped views, raising the cap past 3
+    moved one pair of 271, so the bound stays."""
+    return min((n - 1 - k) if down else k, _LEAD_RUNGS - 1)
+
+
+def _port_strands(edges):
+    """Where each wire sits in the fan at each of its two ports (WI-366), read off the
+    `_route_edges` edge list rather than threaded through by every caller: `_port_fan`
+    groups by node id, and every edge out of one node leaves that node's single output
+    port (every edge into it enters its single input port), so the same grouping is
+    recoverable here. Returns `(source, target)` dicts mapping an edge key to its
+    (index by fan height, wires on that port). Sorted, so it is deterministic."""
+    at_port = ({}, {})
+    for e in edges:
+        at_port[0].setdefault(e[5], []).append(e)
+        at_port[1].setdefault(e[6], []).append(e)
+    strand = ({}, {})
+    for end, ykey in ((0, 2), (1, 4)):  # e[2] is the source fan y, e[4] the target's
+        for es in at_port[end].values():
+            for i, e in enumerate(sorted(es, key=lambda e: (e[ykey], e[0]))):
+                strand[end][e[0]] = (i, len(es))
+    return strand
+
+
+def _harness_ends(strand, key, sy, y1, ty, y2):
+    """`(lead, tail)` — how many px each end of this wire spends holding its own fan
+    height before/after the routed remainder (WI-366). 0 at a port this wire has to
+    itself, which is what keeps every unfanned wire byte-identical. Both ends stagger
+    their turn-off by fan rung, mirrored: on departure the strand travelling furthest
+    turns off SOONEST, on arrival it joins the flat run LATEST, so in both cases it
+    clears the strands it would otherwise cross."""
+    lead = tail = 0.0
+    ko, no = strand[0][key]
+    ki, ni = strand[1][key]
+    if no > 1:
+        lead = _PORT_LEAD + _lead_rung(ko, no, y2 >= sy) * _FAN_PITCH
+    if ni > 1:
+        tail = _PORT_LEAD + _lead_rung(ki, ni, y1 >= ty) * _FAN_PITCH
+    return lead, tail
+
+
+def _routed_dx(span, min_dx, harnessed, routed):
+    """The horizontal control offset of a wire's direct cubic. `span` is the legacy
+    measure (target box left edge minus the wire's start), so an UNHARNESSED wire gets
+    the legacy value byte-for-byte. A harnessed wire's bow is additionally kept inside
+    the `routed` width the harness left it — a two-ended harness on a
+    single-column hop can leave less room than `min_dx`, and a control past the far
+    endpoint draws a visible backward loop (WI-366)."""
+    dx = max(span * 0.4, min_dx)
+    if harnessed and routed > 0:
+        return min(dx, routed / 2.0)
+    return dx
+
+
+def _spliced_harness(d, lead, tail, src_ends, tgt_ends):
+    """`d` — a path routed between the STRAND ends of the harness — with the harness
+    bends spliced back on, so the wire still terminates on both port centers (WI-366).
+    `src_ends` is (port x, port cy, strand x, strand y) at the source, `tgt_ends` the
+    mirror at the target. An unharnessed end is left exactly as routed."""
+    if lead:  # replaces the routed sub-path's own `M`, keeping one continuous path
+        x1, sy, xs, y1 = src_ends
+        d = "M{:.1f},{:.1f} {} {}".format(
+            x1, sy, _harness_seg(x1, sy, xs, y1, x1 + _PORT_LEAD / 2.0),
+            d.split(" ", 1)[1],
+        )  # fmt: skip
+    if tail:
+        xt, y2, xe, ty = tgt_ends
+        d = "{} {}".format(d, _harness_seg(xt, y2, xe, ty, xe - _PORT_LEAD / 2.0))
+    return d
+
+
 def _detour_str(x1, sy, y1, xa, xb, xe, ty, y2, lane):
     """The detour `d` (two cubics + a straight lane hop). Terminals `sy`/`ty` sit on
     the port centers; the first/last control uses the fanned `y1`/`y2`. Byte-
@@ -2124,9 +2247,38 @@ def _route_edges(edges, rects_by_id, min_dx, end_trim):
     start-on-port isn't miscounted as a through-box (its body still constrains the
     lane). Forward edges are untouched (xe > x1), so every clean wire stays
     byte-identical. Deterministic — inputs are sorted, no dict-iteration order
-    escapes."""
+    escapes.
+
+    WI-366 (WI-323-CRITIQUE follow-up 1): a port with 2+ wires gets a HARNESS. The
+    fan offset used to live only in the first/last CONTROL point, so every strand of
+    a port left the same pixel on a slightly different heading and the routing bend
+    — whose own control sits ~9 px out — then dominated: where a strand's fan rank
+    and its assigned lane disagreed (which WI-323's corridor ledger made common,
+    because a lane is now claimed by edge order, not by the other endpoint's row) the
+    two strands crossed back over each other AT the port and ran fused for tens of px
+    — 2.5–3 CSS px pitch over a ~55 px descent, and 0.07 px at the tightest site.
+
+    Each strand now RISES from the port center to its own `_FAN_PITCH`-spaced height
+    over `_PORT_LEAD` px, coasts flat to its own staggered turn-off (`_lead_rung`),
+    and only the REMAINDER of the span is routed. The rise reaches the pitch before
+    any lane can pull, whatever lane that is, and the stagger gives a pair that both
+    plunge steeply a HORIZONTAL gap as well — the narrow "stagger the departures" form
+    the critic asked for, not a two-phase route-then-refan pass. Measured on the
+    shipped roadmap (SVG user units = CSS px there): the tightest pair right of block
+    1's port went 0.07 → 8.0 px at 15 px from the port, and the three pairs right of
+    `unphased`'s port that never reached 8 px at all now do, by 17–20 px.
+
+    A SINGLE-wire port is untouched (no harness, terminal on the port center), so
+    every unfanned wire — the majority — stays byte-identical. The harness bend is
+    not itself hit-tested: it lives in the `col_gap` channel immediately outside its
+    own block, where by construction no box sits (the widest harness, `_PORT_LEAD` +
+    (`_LEAD_RUNGS` - 1) * `_FAN_PITCH` = 27 px, is under half the narrowest channel),
+    and the T8 sweep (`test_t8_no_wire_passes_through_an_unrelated_node_box`) samples
+    the FULL emitted `d` against every box, so a harness that ever cut one fails
+    there."""
     ordered = sorted(rects_by_id.items())
     out = {}
+    strand = _port_strands(edges)
     # WI-323 (121-CRITIQUE MAJOR, second clause): the SHARED-CORRIDOR LEDGER. Each
     # wire was routed in isolation, so every long-haul wire pushed out of the same
     # node band picked the same nearest clear lane and several ran coincident for
@@ -2137,18 +2289,23 @@ def _route_edges(edges, rects_by_id, min_dx, end_trim):
     taken = []
     for key, x1, y1, x2, y2, src, tgt in sorted(edges, key=lambda e: e[0]):
         xe = x2 - end_trim
-        dx = max((x2 - x1) * 0.4, min_dx)
         rs, rt = rects_by_id.get(src), rects_by_id.get(tgt)
         sy = rs[1] + rs[3] / 2 if rs else y1  # source port center (terminal)
         ty = rt[1] + rt[3] / 2 if rt else y2  # target port center (terminal)
+        # The harness (WI-366) consumes the first/last stretch; what is left is routed,
+        # and the strand — not the port center — is its terminal there.
+        lead, tail = _harness_ends(strand, key, sy, y1, ty, y2)
+        xs, xt = x1 + lead, xe - tail
+        sy_r, ty_r = (y1 if lead else sy), (y2 if tail else ty)
+        dx = _routed_dx(x2 - tail - xs, min_dx, lead or tail, xt - xs)
         obstacles = [v for k, v in ordered if k != src and k != tgt]
         infl = [
             (r[0] - _WIRE_HIT_MARGIN, r[1] - _WIRE_HIT_MARGIN,
              r[2] + 2 * _WIRE_HIT_MARGIN, r[3] + 2 * _WIRE_HIT_MARGIN)
             for r in obstacles
         ]  # fmt: skip
-        direct = _cubic_points((x1, sy), (x1 + dx, y1), (xe - dx, y2), (xe, ty))
-        backward = xe <= x1
+        direct = _cubic_points((xs, sy_r), (xs + dx, y1), (xt - dx, y2), (xt, ty_r))
+        backward = xt <= xs
         d = None
         if _polyline_hits(direct, infl) or backward:
             span = list(obstacles)
@@ -2157,11 +2314,12 @@ def _route_edges(edges, rects_by_id, min_dx, end_trim):
                     span.append((rs[0], rs[1], rs[2] - 0.1, rs[3]))  # trim port edge
                 if rt:
                     span.append(rt)
-            d = _detour_d(x1, sy, y1, xe, ty, y2, span, taken=taken)
+            d = _detour_d(xs, sy_r, y1, xt, ty_r, y2, span, taken=taken)
         if d is None:
             d = "M{:.1f},{:.1f} C{:.1f},{:.1f} {:.1f},{:.1f} {:.1f},{:.1f}".format(
-                x1, sy, x1 + dx, y1, xe - dx, y2, xe, ty
+                xs, sy_r, xs + dx, y1, xt - dx, y2, xt, ty_r
             )
+        d = _spliced_harness(d, lead, tail, (x1, sy, xs, y1), (xt, y2, xe, ty))
         seg = _lane_seg(d)
         if seg is not None:
             taken.append(seg)
@@ -2207,14 +2365,14 @@ def _drill_layer_svg(blocks, edges):
         lambda k: (order[k], k),
         geom,
     )
-    _cw, _cg, row_h, _rg, _pad = geom
+    _cw, _cg, row_h, row_gap, _pad = geom
 
     out_groups, in_groups = {}, {}
     for e in wire_edges:
         out_groups.setdefault(e[0], []).append(e)
         in_groups.setdefault(e[1], []).append(e)
-    out_off = _port_fan(out_groups, lambda e: e[1], pos, row_h)
-    in_off = _port_fan(in_groups, lambda e: e[0], pos, row_h)
+    out_off = _port_fan(out_groups, lambda e: e[1], pos, row_h, row_gap)
+    in_off = _port_fan(in_groups, lambda e: e[0], pos, row_h, row_gap)
 
     # The start stays on the output port (no arrowhead there, so it reads as
     # attached); the END is pulled PORT_R + 2 px short of the input-port center
@@ -3388,8 +3546,8 @@ def know_graph(root):
     for e in edges:
         out_groups.setdefault(e[0], []).append(e)
         in_groups.setdefault(e[1], []).append(e)
-    out_off = _port_fan(out_groups, lambda e: e[1], pos, KN_ROW_H)
-    in_off = _port_fan(in_groups, lambda e: e[0], pos, KN_ROW_H)
+    out_off = _port_fan(out_groups, lambda e: e[1], pos, KN_ROW_H, KN_ROW_GAP)
+    in_off = _port_fan(in_groups, lambda e: e[0], pos, KN_ROW_H, KN_ROW_GAP)
 
     rects = {k: (pos[k][0], pos[k][1], KN_COL_W, KN_ROW_H) for k in node_ids}
     routes = _route_edges(
