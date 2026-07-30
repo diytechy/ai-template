@@ -300,18 +300,100 @@ def _svg_fit_style(width):
     )
 
 
+# WI-367 (WI-323-CRITIQUE follow-up 2): every emitted diagram declared
+# `viewBox="0 0 width height"` — the LAYOUT box, `pad` px of margin around the node
+# grid — while the wire router deliberately sends a WRAP-AROUND (backward) edge
+# around the OUTSIDE of its own endpoint boxes: `_detour_d` turns its lane at
+# `x1 + _WIRE_STUB` / `xe - _WIRE_STUB`, a harness lead further out again (WI-257
+# MINOR 1 already recorded that outboard reach; WI-366 widened it). At rank 0, and
+# at the last rank, that turn lands OUTSIDE the layout box and the SVG viewport
+# clips it: the lane stops flat at the box edge and its continuation re-enters a
+# few px away — "a long horizontal line that stops at nothing, and a curve that
+# starts from nothing" (the critique, which could not tell a clip from a routing
+# margin from pixels alone). It is the CLIP. Measured on the shipped dashboard,
+# in SVG user units: the roadmap root layer's wires reach x=-17.5 and x=711.0
+# against a 0..692 box; the How-SW root layer reaches x=923.0 against 0..904.
+#
+# So the box is grown to the ink, not the ink shrunk to the box: pulling the U-turn
+# back inside would push it through its own endpoint box, the exact defect WI-257
+# removed. The pad is measured from the BODY — like `_svg_role` above — so no
+# emitter has to remember it, a successor emitter cannot forget it, and a diagram
+# with no outboard ink (every layer but four of the shipped dashboard) keeps a
+# byte-identical tag.
+_INK_PAD = 2.0  # ink, not centerline: clears `--w-emph` 2.5's 1.25 half-width
+
+# One token of a path `d`: a command letter or a number. What the emitters actually
+# write into a framed diagram is absolute `M`/`L`/`C` (the wires) and one relative
+# `h` (the containment arrow); `Q` is read too because the loops diagram writes it,
+# and it would otherwise be the first thing a successor moved under this wrapper.
+_PATH_TOKEN = re.compile(r"[A-Za-z]|-?\d+(?:\.\d+)?")
+
+
+def _path_xs(d):
+    """Every x coordinate a path `d` visits, endpoints AND cubic control points. A
+    Bézier lies inside its control hull, so min/max over these bound the ink without
+    sampling the curve — and on the shipped dashboard the bound is exact, because
+    every outboard extreme is a lane's own `L` endpoint. An unrecognised command
+    stops the scan rather than consuming its arguments as coordinates: a shape this
+    helper has never seen can then only be under-padded, never mis-placed."""
+    toks = _PATH_TOKEN.findall(d)
+    xs, cx, cmd, i = [], 0.0, "", 0
+    while i < len(toks):
+        if toks[i].isalpha():
+            cmd, i = toks[i], i + 1
+            continue
+        if cmd in ("M", "L", "C", "Q"):  # absolute, x,y pairs
+            cx, i = float(toks[i]), i + 2
+        elif cmd == "h":  # relative horizontal
+            cx, i = cx + float(toks[i]), i + 1
+        else:
+            break
+        xs.append(cx)
+    return xs
+
+
+def _ink_overflow(width, body):
+    """`(left, right)` — whole user units of wire ink lying outside the layout box
+    `[0, width]`, each already carrying `_INK_PAD` and 0 when nothing overflows (so
+    the common diagram pads by nothing). `<defs>` is cut first: a `<marker>`'s path
+    is drawn in the marker's own viewBox, not in user space."""
+    ds = re.findall(r'\sd="([^"]+)"', re.sub(r"<defs>.*?</defs>", "", body, flags=re.S))
+    xs = [x for d in ds for x in _path_xs(d)]
+    if not xs:
+        return 0, 0
+    # Whole units, and INTS: a float pad would negate to `-0.0` and render every
+    # unpadded diagram's viewBox as `-0 0 …`, churning the whole dashboard.
+    return (
+        max(0, math.ceil(_INK_PAD - min(xs))),
+        max(0, math.ceil(max(xs) + _INK_PAD - width)),
+    )
+
+
+def _svg_frame(width, height, body):
+    """The `viewBox` / `width` / `style` attribute triple every emitted diagram
+    opens with, its box widened left and right to whatever wire ink the router put
+    outside the layout box (WI-367). The declared natural width grows with it, so a
+    diagram that already fits its card renders at exactly its former scale and only
+    the clipped stubs appear; one that was already scaled to fit shrinks by the pad
+    fraction (measured: the How-SW root layer 0.800 -> 0.782 CSS px per unit at
+    1680px, its 12px labels 9.60 -> 9.38px, far above the `SHRINK_FLOOR` floor)."""
+    left, right = _ink_overflow(width, body)
+    box = width + left + right
+    return 'viewBox="{:d} 0 {:.0f} {:.0f}" width="{:.0f}" style="{}"'.format(
+        -left, box, height, box, _svg_fit_style(box)
+    )
+
+
 def _svg_wrap(width, height, body):
     """The `<svg>` wrapper shared by the graph emitters (dag / sw / know), which
     differ only in their content. Folding `_svg_role` in makes the WI-297
     invariant STRUCTURAL, not a rule each emitter must remember: a call site
     cannot emit a container without the content-driven role, because it never
     writes the tag. The per-site `role=` interpolation this replaced is the shape
-    that let a children-presentational role sit over focusable nodes."""
-    return (
-        '<svg viewBox="0 0 {:.0f} {:.0f}" width="{:.0f}" style="{}" '
-        'preserveAspectRatio="xMinYMin meet" role="{}">{}</svg>'.format(
-            width, height, width, _svg_fit_style(width), _svg_role(body), body
-        )
+    that let a children-presentational role sit over focusable nodes. `_svg_frame`
+    (WI-367) is folded in for the same reason."""
+    return '<svg {} preserveAspectRatio="xMinYMin meet" role="{}">{}</svg>'.format(
+        _svg_frame(width, height, body), _svg_role(body), body
     )
 
 
@@ -2500,11 +2582,8 @@ def _drill_layer_svg(blocks, edges):
     )
     body = defs + "".join(wires) + "".join(nodes)
     return (
-        '<svg viewBox="0 0 {w:.0f} {h:.0f}" width="{w:.0f}" style="{s}" '
-        'preserveAspectRatio="xMinYMin meet" role="{r}" class="drillsvg">'
-        "{b}</svg>".format(
-            w=width, h=height, s=_svg_fit_style(width), r=_svg_role(body), b=body
-        )
+        '<svg {a} preserveAspectRatio="xMinYMin meet" role="{r}" class="drillsvg">'
+        "{b}</svg>".format(a=_svg_frame(width, height, body), r=_svg_role(body), b=body)
     )
 
 

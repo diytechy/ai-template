@@ -256,7 +256,18 @@ BASELINE = {
     # to ~2.6px, why the turn-off ORDER (furthest traveller first) is load-bearing,
     # where the rung cap's residue lands, and the measured before/after at the two
     # named sites. Reviewed bump, log 2026-07-30. Re-stamp down with WI-280.
-    "gen_trajectory.py": 5195,
+    # +79 (5195 -> 5274), WI-367: the same critique's SECOND follow-up — every
+    # emitted diagram declared its viewBox as the LAYOUT box while the router sends
+    # a wrap-around lane around the outside of its own endpoint boxes, so at rank 0
+    # / the last rank the viewport clipped the U-turn. `_svg_frame` measures the
+    # outboard ink off the BODY (like `_svg_role` before it) and grows the box to
+    # it. ~35 lines are the three helpers (`_path_xs`, `_ink_overflow`,
+    # `_svg_frame`) and the two call sites shrank; the rest is the comment that
+    # ANSWERS the critique's open question (clip, not routing margin) with the
+    # measured user-unit extents, and records why the ink is not shrunk to the box
+    # instead — that would push the U-turn back through its own endpoint box, the
+    # defect WI-257 removed. Reviewed bump, log 2026-07-30. Re-stamp down with WI-280.
+    "gen_trajectory.py": 5274,
     # (agent_dispatch.py and its whole bump history retired with the module
     # at concurrency-restructure Phase 5 - the dispatcher deleted wholesale;
     # the surviving integrator is integrate.py, below this threshold.)
