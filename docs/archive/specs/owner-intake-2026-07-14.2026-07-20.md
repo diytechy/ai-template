@@ -5,7 +5,7 @@
 Owner-handed batch (eight items), triaged against the open registry per the
 change-intake flow (PROCESS.md §5). Item 1 is **feedback on the pending
 OI-8/OI-9 briefs** — folded into those surfaces and the draft
-[research-knowledge spec](../../specs/research-knowledge.md) (pre-ratification revision),
+[research-knowledge spec](research-knowledge.2026-07-29.md) (pre-ratification revision),
 not new decisions. **Dedupe findings first** — what already exists, so no
 queued work is duplicated:
 

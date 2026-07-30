@@ -2378,7 +2378,15 @@ def staged_findings(root):
     applicable). Compares the staged WI CSV against its HEAD version via git;
     any missing git context makes it a silent no-op (the hook has git; a gate
     run does not, and pays nothing). Line-splitting the HEAD CSV is safe here —
-    a WI row is one physical line (no embedded newlines)."""
+    a WI row is one physical line (no embedded newlines).
+
+    Known false-positive, accepted at the WI-271 retirement (owner ruling
+    2026-07-29): a follow-up WI whose chain change landed in its BUILD commit
+    warns on its bookkeeping-only close commit — a moment's investigation, the
+    lesser evil against a missed paper-close. Un-defer trigger: reopen (fresh
+    WI) only if that noise erodes the signal — operators reflexively
+    dismissing the warn. The footprint-aware widening is designed and ready in
+    docs/archive/specs/WI-271.2026-07-29.md."""
     staged = _staged_wi_registry(root)
     if staged is None:
         return []

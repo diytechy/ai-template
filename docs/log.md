@@ -115,7 +115,7 @@ why (one bullet each; cite ids)._
   (G2→G3, series).
 - **2026-07-14 — OI-9 RATIFIED (WI-145): the research-track + durable
   knowledge-layer design spec accepted as revised**
-  ([specs/research-knowledge.md](specs/research-knowledge.md)). The §6 open
+  ([specs/research-knowledge.md](archive/specs/research-knowledge.2026-07-29.md)). The §6 open
   decisions ruled per the spec recommendations: (1) home =
   `docs/knowledge/<label>.md` + the CMP `Knowledge`/`DetailDoc` hooks; (2) tier
   = a `BuildTier=strong` research coordinator delegating to quick/medium
@@ -3185,7 +3185,7 @@ load (hook batch 6→7 parallel steps; one extra `derive_gate` spawn), a plausib
 nudge but unproven and unreproducible. Because I can't reproduce it, I can't
 verify any fix — so a blind fix would be an unverifiable change to the declared
 `stack.ini` command / shipped hook. Filed instead as **WI-108 (deferred)**, spec
-[specs/WI-108.md](specs/WI-108.md), with the candidate hardening (xdist
+[specs/WI-108.md](archive/specs/WI-108.2026-07-29.md), with the candidate hardening (xdist
 `loadgroup` grouping of the hook tests) recorded for when it recurs enough to
 reproduce. **Correction to the campaign-close note:** the missing traceback was
 my own `| tail -25` on the gate command discarding it, not a capture defect in
@@ -5382,7 +5382,7 @@ staged paths; the veto test asserts the paths end unstaged (commits
 `b0a6f49`, `ec94508`).
 
 **WI-138 — the deliverable:** the ratifiable design spec
-[docs/specs/research-knowledge.md](specs/research-knowledge.md) (WI-088
+[docs/specs/research-knowledge.md](archive/specs/research-knowledge.2026-07-29.md) (WI-088
 pattern), answering owner-intake items 5+6 as one layer:
 
 - **Knowledge packs** — make the Thread-52-resolved `docs/knowledge/<label>.md`
@@ -5454,7 +5454,7 @@ work — the sitting stays pending and now covers the revised material.
   SR-052/053/054 (+LLR-053..055/TC-053..055, rubrics A/U/T anchors) and
   SN-010/021 → SR-055/056 + the SR-051 rev (+LLR/TC), prose quoted as-of
   today, section ephemeral. Mechanization filed as WI-146.
-- **OI-9 brief + [specs/research-knowledge.md](specs/research-knowledge.md)**
+- **OI-9 brief + [specs/research-knowledge.md](archive/specs/research-knowledge.2026-07-29.md)**
   — revised pre-ratification per the feedback (see the Decisions entry):
   strong-coordinator research tiering, knowledge⇒component coupling, the
   kit-provisioned pack library + skills domains filter (§6.5/§6.6 are new
@@ -5518,7 +5518,7 @@ green floor re-verified this sitting (below). Unblocks the v3 dev slices
 WI-141→144 (G2→G3, series).
 
 **OI-9 — the research-track + durable knowledge-layer design spec, ratified as
-revised** ([specs/research-knowledge.md](specs/research-knowledge.md), Status →
+revised** ([specs/research-knowledge.md](archive/specs/research-knowledge.2026-07-29.md), Status →
 RATIFIED). The §6 open decisions ruled per their recommendations: (1) home =
 `docs/knowledge/<label>.md` + the CMP `Knowledge`/`DetailDoc` hooks; (2) tier =
 `BuildTier=strong` research coordinator delegating to quick/medium gatherer
@@ -8168,7 +8168,7 @@ indefinitely as planned. Not pushed (`docs/push-policy: human`).
 
 **Session (owner-directed: "dig into WI-064… ready to take on this session",
 then "grind through them").** WI-064 was the AXES archive's open-questions
-container; [docs/specs/WI-064.md](specs/WI-064.md) (filed at prep, 2e4a6db)
+container; [docs/specs/WI-064.md](archive/specs/WI-064.2026-07-29.md) (filed at prep, 2e4a6db)
 scoped it to the residuals with verified real need and recorded the rest as
 gated. Ground truth verified at prep: membership complete (25 modules → 5
 CMPs), 4 import edges, exactly one cross-CMP and undeclared.
@@ -11680,7 +11680,7 @@ the *impl* commit while the WI is `active`, but the *close* commit — which tri
 follow-up detection on `active → done` — is bookkeeping-only, so its staged diff
 shows no chain file. WI-270 hit this (TC-035 changed in `a9e2b45`; the warn fired on
 the docs-only close `74de359`); WI-268 did not (SR-108 had no prior *done* deliverer,
-so it wasn't a follow-up). [WI-271](specs/WI-271.md) (deferred, `scripts`, medium,
+so it wasn't a follow-up). [WI-271](archive/specs/WI-271.2026-07-29.md) (deferred, `scripts`, medium,
 `~WI-270`) specs the **footprint-aware** fix — test the chain across the WI's build
 range, not just the staged commit — with the fail-safes preserved (stdlib-only,
 git-absent no-op, genuine one-commit paper-closes still warn). **Deferred** (owner
@@ -18307,3 +18307,33 @@ tests; rerun green; a recurrence earns its own WI. `check_trajectory
 --strict` clean (graph acyclic); `trace --strict-integrity` orphans=0
 integrity=0; smoke + check_docs green at the commit. Byte deltas on
 budgeted files: none.
+
+## 2026-07-29 — deferred-row ruling: six retired, WI-280 re-specified onto the post-deletion tree
+
+**Decision (owner, 2026-07-29, in-session):** the handoff-2026-07-28c §3
+dispositions are adopted for **WI-271, WI-108, WI-061, WI-063, WI-158,
+WI-187** — all six retired (moved to `docs/work/archive/` with
+`disposition = "retired"`, each Deliverable carrying its §3 reason;
+specrefs cleared per R-F). The now-uncited specs archived with date +
+attribution: `WI-271` / `WI-108` / `WI-064` (WI-187's shared spec) /
+`research-knowledge` (WI-158's shared spec) → `docs/archive/specs/*.2026-07-29.md`.
+Per WI-271's disposition, its un-defer trigger (false-positive noise
+eroding the warn's signal) moved into `staged_findings`'s docstring in
+`check_trajectory.py` — the footprint-aware design stays ready in the
+archived spec. **WI-280 stays deferred by its standing keep-ruling** and
+its row is re-specified: the train half of its scope (agent_dispatch
+disposition arms, typed train objects) was deleted at Phase 5, so the
+owned modules are now `gen_trajectory.py`'s graph/view-model/render layer
+(the 12 dupes-allow blocks charged to it are all there) and
+`bootstrap.py`'s `main()` first slice; measured sizes recorded in the row
+(4574/1919/2836). WI-277 stays hard-gated behind WI-280; WI-281 was
+confirmed already `done` (archived 2026-07-23, Deliverable filled) — no
+edit. The adversarial queue review that fed this sitting (per-WI verdicts,
+fold/narrow recommendations) is conversational context; its durable
+outcomes are these registry moves and the WI-365/364 rows filed earlier
+today. Mechanical costs paid here: the module-size ratchet re-stamped
+UP deliberately (`check_trajectory.py` 3039 → 3047, the eight docstring
+lines of the WI-271 trigger — reason in the baseline ledger, re-stamp
+down with WI-280), and six historical log links plus four in-spec
+relative links retargeted to the `archive/specs/*.2026-07-29.md` homes
+(check_docs was the catcher, 13 broken → 0).

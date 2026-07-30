@@ -475,7 +475,11 @@ BASELINE = {
     # unreachable `status-vocab` and `blocked-ref` ssot rules retired —
     # status is the spec's directory (loader-refused if unknown) and blocked
     # is derived, so no row can reach either. Ratcheted DOWN.
-    "check_trajectory.py": 3039,
+    # +8 (3039 -> 3047), WI-271 retirement (owner ruling 2026-07-29, the
+    # handoff-2026-07-28c §3 disposition): the un-defer trigger moved into
+    # `staged_findings`'s docstring — docstring lines only, no code. Reviewed
+    # bump, log 2026-07-29. Re-stamp down with WI-280.
+    "check_trajectory.py": 3047,
     # +1 (1916 -> 1917), WI-279: one MAPPING row registering the new
     # scripts/check_coverage.py kit gate so it ships downstream — a required
     # one-line registration, not monolith growth (the reviewed-bump escape the
