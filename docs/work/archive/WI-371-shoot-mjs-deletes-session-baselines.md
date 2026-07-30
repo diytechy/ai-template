@@ -17,6 +17,7 @@ baseline — alone; the final listing likewise prints only PNGs, and the
 README states the contract. The no-stale-shots property is preserved for
 the files the harness owns. Verified live rather than by pytest (meta-only
 Node dev tooling with no test harness; adding one for a one-line
-clean-scope change would be a new toolchain step): a planted
-`shots/before/marker.txt` survived a full 36-shot run that regenerated
-every declared PNG.
+clean-scope change would be a new toolchain step): a marker file planted
+in a session subdirectory of the gitignored shots output survived a full
+36-shot run that regenerated every declared PNG (the reviewer repeated
+the probe with a stale top-level PNG added, which was deleted as owed).
