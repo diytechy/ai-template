@@ -6,6 +6,15 @@ The generator renders the root PROJECT_STATE.html from the work-item registry (t
 offline (no CDN), deterministic (so the --check freshness gate is byte-stable),
 refuses to render an invalid registry, and stays vacuous when there is nothing to
 show. Each is pinned by running the real script over a minimal temp project.
+
+WI-277 split this module along the WI-280 production seams. What stays here is
+the FACADE + CLI surface: the whole-document contracts (self-contained/offline,
+mobile shell, scroll + clip affordance, drill focus ring, determinism, the
+no-README fallback), the `--check` freshness gate, the vacuous/opt-out arms, and
+the pair that pins the facade's own guarded sibling import. Everything below the
+facade moved to the module named for its production sibling —
+`test_traj_{parse,graph,views,panels,render,render_sweeps,status}.py` — and the
+fixture builders more than one of them needs live in `tests/traj_fixtures.py`.
 """
 
 import re

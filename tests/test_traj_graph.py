@@ -10,9 +10,10 @@ the stub corridor, the label riding a detoured edge, the WI-366 port harness
 every wrap-around lane, frame padding, `path_xs`, the detour candidate bound,
 and the swept "no wire passes through an unrelated node box" rule.
 
-The three `test_meta_*_wires_avoid_unrelated_boxes` cases and the detour bound
-patch `gt.traj_graph._detour_points` / `_lane_candidates` — WI-280 moved those
-symbols out of the facade, so the patch targets name the sibling module.
+`test_detour_bounds_the_candidate_set_and_second_pass` patches
+`gt.traj_graph._detour_points` and `._lane_candidates`, not the facade: WI-280
+moved the router into the sibling, and `_detour_d` resolves those names in the
+sibling's own namespace, so patching through the facade would silently miss.
 """
 
 import math
