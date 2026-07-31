@@ -1348,3 +1348,34 @@ def test_the_git_dependency_is_declared_for_this_module():
     # declared gate (conftest.ENV_GATES) is what makes that skip COUNTED in the
     # terminal summary rather than invisible (WI-326).
     assert shutil.which("git"), "the module-level env gate should have skipped"
+
+
+# --- the bar step count is honest (WI-377) ------------------------------------
+
+
+def test_bar_step_count_is_by_distinct_name_not_by_echoed_line():
+    # Under --jobs each step's status line prints TWICE (the lane runner as it
+    # finishes, then the final summary block), so a line count reported a
+    # 20-step bar as ""bar PASS (40 steps)"" - a false measurement in the
+    # merge record (WI-377). The count is by DISTINCT step name, so the
+    # --jobs N output (doubled lines) and the --jobs 1 output (single lines)
+    # of the same plan report the SAME step count.
+    lane_echo = (
+        "  PASS  format           0.1s\n"
+        "  PASS  lint             0.2s\n"
+        "  PASS  tests+coverage   61.0s\n"
+    )
+    summary = (
+        "=" * 56 + "\n"
+        "  PASS  format           0.1s\n"
+        "  PASS  lint             0.2s\n"
+        "  PASS  tests+coverage   61.0s\n"
+    )
+    jobs_n = lane_echo + summary  # every line twice, the --jobs shape
+    jobs_1 = summary  # the serial shape
+    assert integ._passed_steps(jobs_n) == integ._passed_steps(jobs_1)
+    assert len(integ._passed_steps(jobs_n)) == 3
+    # A FAIL/SKIP line never counts as a pass, and a malformed PASS line
+    # (no name field) cannot crash the read.
+    mixed = jobs_n + "  FAIL  dupes  exit 1 (0.1s)\n  SKIP  okf  absent\nPASS\n"
+    assert len(integ._passed_steps(mixed)) == 3

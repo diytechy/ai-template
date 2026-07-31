@@ -1,5 +1,12 @@
 # Effort — the unattended entry point
 
+> **ARCHIVED 2026-07-31 — effort complete.** This was the spec-of-record for
+> work items **WI-374** (S1, the drive loop — `scripts/drive.py`, IF-015 v3)
+> and **WI-375** (S2, the process-text truth pass) — both `done`;
+> deliverables in `docs/work/archive/`, session record in `docs/log.md`.
+> Archived per the spec lifecycle: close date appended to the filename,
+> attributed WIs named.
+
 Two slices restoring the thing Phase 5 removed by accident. **S1 builds the
 mechanism; S2 makes the shipped process text true again** — in that order,
 because the text can only describe a flow that exists.

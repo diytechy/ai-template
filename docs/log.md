@@ -19097,3 +19097,133 @@ commit except the standing WI-357 work-branch conditional
 checkout), plus the commit bar's configured `check_docs` step green; full
 unfiltered suite at close: totals in the review record. Byte budgets
 untouched (no budgeted file edited).
+
+## 2026-07-31 — WI-375: the unattended-operation text matches what ships (S2)
+
+**One line:** every kit doc that promised the retired dispatcher's mechanisms
+now describes the shipped flow — the plain-launch drive mode (WI-374),
+`integrate.py`'s claim/queue, and nothing that no longer exists.
+
+**Deliverables (all shipped kit text, no code):**
+- `PROCESS_OPTIONS.md` "Unattended operation": the model paragraph now opens
+  by naming the real single entry point — a plain `agent-resume` launch runs
+  the drive mode (`drive.py`): frontier re-derived every cycle, claim →
+  worker → serial merge queue, mid-run-filed WIs picked up in the same run,
+  parked claims resuming on relaunch. The capability table row cites
+  `drive.py`/`integrate.py` instead of the deleted `docs/run-*` (defect 2 of
+  the spec — `ls docs/run-*` has been *No such file* since Phase 5).
+- `PROCESS.md` §4: the coordinator sentence re-pointed from `docs/run-state`
+  (deleted at Phase 5) to the stop banner + typed exit codes.
+- `ADOPTING.md`: the "Unattended coordinator" bullet says what a plain launch
+  now does; the v4 "Parallel dispatch" bullet is rewritten as the
+  **retirement + upgrade recipe** (registry CSV → spec folder via
+  `wi_convert.py`, drain old train worktrees, seed `[generated]`, delete
+  retired-surface reliance — `AGENT_JOBS`, `docs/run-state`,
+  `docs/rework-wi`, tracks/next-wi/run-phase, `refs/llm/*`,
+  `docs/parallel-ready`); the WI-260 changelog bullet is marked *historical*
+  with the serial verdict gate named as the same rule's live home.
+- `skills/downstream-resync/SKILL.md` §3: the "Parallel-dispatch migration"
+  recipe (AGENT_JOBS=2, --jobs 1 holds, parallel-ready sign-off — all
+  retired) replaced by the **integration-seam migration**: registry flip,
+  drain-the-old-scheme, retired-surface deletion, `[generated]` seeding, and
+  the claim rung's SafetyClass note. Per-agent copies re-synced
+  (`bootstrap.py --sync`; `skills-sync` OK, 12 copies match source).
+
+**The sweep (part of the slice, per spec):** `docs/run-|run-state|AGENT_JOBS|
+dispatcher|--jobs|parallel-ready|reservation` over
+`project-trajectory/**/*.md`. **Round 1 refuted the first signed sweep**
+(the review record): two live promises had survived it — the kit README's
+agent_common row still offered "the generated run-state write" (the
+function retired with the dispatcher), and the session-protocol skill still
+attributed BuildTier reading to "the parallel-dispatch scheduler ... the
+dispatcher". Both fixed (README row carries the retirement note;
+the skill names `schedule.py` for ordering and the worker session as the
+BuildTier reader), per-agent copies re-synced, and the sweep re-run. What
+remains after the fix: historical retirement records (PROCESS_OPTIONS' own
+"retired at Phase 5" notes, ADOPTING's dated changelog bullets), the live
+and real `check.py --jobs 0` flag, generic English ("gate or dispatcher"
+in EXTERNAL_SKILLS.md), and the dual-plan prompt templates' "DISPATCHER
+NOTES" header (notes to whoever dispatches the prompt — role, not
+machinery).
+
+**Byte deltas (byte-budget-guard):**
+AGENTS.template.md untouched (10,000 budget n/a this WI);
+PROCESS.md 64,301 → 64,319 (+18: the run-state → stop-banner truth fix);
+PROCESS_OPTIONS.md 162,601 → 163,157 (+556: the entry-point model paragraph
++ the table-row citation fix). Both baselines re-stamped in
+`byte-budget-guard/SKILL.md` (source + agent copies) in this commit.
+ADOPTING.md 55,342 → 55,509 (+167, unbudgeted expansion home — the upgrade
+recipe grew by what the deleted false promises had hidden).
+
+**Deviations from spec:** none. Defect 1 needed WI-374 first (hard edge —
+honored); defect 2 fixed here with it.
+
+## 2026-07-31 — WI-376: the cross-repo IF-ID rule stops contradicting MULTI_REPO
+
+**One line:** `INTERFACES.template.md`'s rules list told every adopter to
+reuse identical `IF-` ids across repos — the exact collision MULTI_REPO.md
+§3.3 exists to prevent, and the template's own worked snippet already did
+the opposite; the bullet now states the repo-local rule, the qualified
+reference form, and the honesty caveat.
+
+**The defect (field-motivated):** an old multi-repo adoption (the homelab
+group) hit IF- designation confusion across independent repos. The research
+sweep found why: the scaffolded template's "Both sides reference the same
+`IF-ID`" bullet mandates deliberate id collision, while MULTI_REPO.md §3.3
+and EXAMPLE.md's multi-repo note state ids are owner-local with `CIF-###`
+as the coordinator handle — two shipped rules that cannot both be followed,
+and the wrong one ships in the file every repo scaffolds as
+`docs/interfaces.md`. The no-coordinator peer case (two repos, no CIF
+catalog) had no stated form at all, and `trace.py`'s `^IF-\d+$` integrity
+pattern silently forbids any qualified id in the `IF-ID` column.
+
+**The fix (one bullet, replacing the wrong one):** ids are repo-local; the
+two ends of one contract carry different local ids (as the snippet shows);
+a foreign seam is cited as the qualified pair (counterpart repo / `REPO-###`
++ its local `IF-###` + pinned version) in `Counterpart` + `Contract`/`Notes`,
+never in the `IF-ID` column; under a coordinator the stable handle is
+`CIF-###` (linked to MULTI_REPO.md §3.3); and the honesty note that no tool
+validates the far side — it is a text convention.
+
+**Not changed:** MULTI_REPO.md (already right), EXAMPLE.md (already right),
+the registry template (no schema change — the qualified pair lives in
+existing free-text cells), `trace.py` (the anchored pattern is correct;
+qualification belongs in prose cells).
+
+**Bars:** commit bar green (smoke standing-red only + check_docs OK); no
+budgeted file touched.
+
+## 2026-07-31 — WI-377: the bar step count is honest
+
+**One line:** `integrate.py` counted every `PASS` line in check.py's output,
+but under `--jobs` each step's status prints twice (lane runner + final
+summary), so a 20-step G3 bar was recorded as "bar PASS (40 steps)" in merge
+records — the count is now by **distinct step name**, identical at
+`--jobs 1` and `--jobs N`.
+
+**Deliverables:** `_passed_steps(out)` — a pure helper returning the
+distinct step names matching the `PASS` line shape (a malformed name-less
+PASS line is skipped, FAIL/SKIP never count) — with `_run_bar` reporting
+`len()` of it; one regression test in `tests/test_integrate.py` pinning
+that the doubled `--jobs` output shape and the serial shape of the same
+plan report the same count (and the malformed-line guard).
+
+**Why it mattered:** the figure had already leaked into records as if it
+were 40 units of work — the merge records for two earlier closes say "40
+steps", and one spec title repeated it. This kit treats recorded evidence
+as load-bearing; a doubled count is a false measurement in exactly the
+surface that is supposed to be trustworthy. (Existing log entries stay as
+written — history records what the tool printed at the time; this fixes
+the tool.)
+
+**Deviation from the filed remedy options:** the row offered "count only
+the summary block (split on the `=` banner) or a machine-readable total
+from check.py". Distinct-name counting was chosen instead: it needs no
+check.py change (the smaller blast radius), and it is robust to BOTH output
+shapes without depending on the banner's exact width — the banner-split
+form would silently fall back to double-counting on any banner change. The
+regression test pins the actual property the row asked for (same count,
+both jobs modes).
+
+**Bars:** targeted integrator tests green; smoke green except the standing
+work-branch red; `check_docs` OK. No budgeted file touched.
