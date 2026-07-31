@@ -285,7 +285,13 @@ BASELINE = {
     # helpers, and the shared drill renderer (_drill_layer_svg/_render_drill) —
     # moved verbatim to the new sibling traj_render.py (906 lines, under
     # THRESHOLD). Ratcheted DOWN.
-    "gen_trajectory.py": 3468,
+    # -1087 (3468 -> 2381), WI-280 S5: the What/When/How-SW views — arch_icicle,
+    # the flat DAG (dag_svg/_dag_layout + its constants), the How-SW seam graph
+    # (sw_graph/_sw_node) and containment drill (sw_containment), _wi_status/
+    # _wi_st, the tiered when_view (+_wi_phases/DEFAULT_PHASE), and the
+    # _sw_panel/_cmp_panel tab panels — moved verbatim to the new sibling
+    # traj_views.py (1141 lines, under THRESHOLD). Ratcheted DOWN.
+    "gen_trajectory.py": 2381,
     # (agent_dispatch.py and its whole bump history retired with the module
     # at concurrency-restructure Phase 5 - the dispatcher deleted wholesale;
     # the surviving integrator is integrate.py, below this threshold.)
@@ -618,7 +624,9 @@ BASELINE = {
     # comment covers the family). Reviewed bump.
     # +1 (2091 -> 2092), WI-280 S4: the traj_render.py MAPPING row. Reviewed
     # bump.
-    "bootstrap.py": 2092,
+    # +1 (2092 -> 2093), WI-280 S5: the traj_views.py MAPPING row. Reviewed
+    # bump.
+    "bootstrap.py": 2093,
     # NEW ENTRY, +228 (1423 -> 1651), Phase 2b of the concurrency restructure
     # (docs/concurrency-restructure.md §7): the spec-folder work-item reader,
     # which crosses this module over THRESHOLD for the first time. It is one

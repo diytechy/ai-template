@@ -261,7 +261,7 @@
 #   cli                   87   deliberate
 #   spine-loader          20   deliberate
 #   declared-file         13   deliberate
-#   graph-layout          11   debt WI-280
+#   graph-layout          10   debt WI-280
 #   markdown-table        11   deliberate
 #   git-wrapper            7   deliberate
 #   wi-schema-columns      6   deliberate
@@ -436,15 +436,17 @@ b0b9cc04d152  project-trajectory/scripts/gen_release_checklist.py == project-tra
 # emitted by gen_okf and gen_trajectory for each spine artifact.
 # (WI-340) plus one SAME-FILE block of the same idiom, regrouped here:
 # gen_okf builds the SR tier and the LLR tier rows with the same shape.
-9205a1d4996b  project-trajectory/scripts/gen_okf.py == project-trajectory/scripts/gen_trajectory.py
-fb06318154af  project-trajectory/scripts/gen_okf.py == project-trajectory/scripts/gen_trajectory.py
+# WI-280 S5: the dashboard side of both pairings moved to traj_views.py
+# (arch_icicle / the When leaf blocks) — same fingerprints, re-homed.
+9205a1d4996b  project-trajectory/scripts/gen_okf.py == project-trajectory/scripts/traj_views.py
+fb06318154af  project-trajectory/scripts/gen_okf.py == project-trajectory/scripts/traj_views.py
 9d770b2d948b  project-trajectory/scripts/gen_okf.py == project-trajectory/scripts/gen_okf.py
 
 # --- graph-walk (1 block)  ---------------------------------------
 # disposition: deliberate
 # the component-graph breadth-first walk, in the validator and the dashboard
-# generator.
-a2fa21743919  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/gen_trajectory.py
+# generator (sw_containment's subtree walk — traj_views.py since WI-280 S5).
+a2fa21743919  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/traj_views.py
 
 # --- import-fallback (2 blocks) ----------------------------------
 # disposition: deliberate
@@ -613,10 +615,11 @@ b8b532ba9de4  project-trajectory/scripts/agent_loop.py == project-trajectory/scr
 # WAS carried by the deleted `spine-load-repeat` class, which charged it to
 # WI-346 by proximity. WI-346 extracted the loaders and this block re-emitted
 # byte-identically (same fingerprint), which is the proof it was never a
-# loader. Re-classed, not newly sanctioned.
-29c06640159e  project-trajectory/scripts/gen_trajectory.py == project-trajectory/scripts/gen_trajectory.py
+# loader. Re-classed, not newly sanctioned. WI-280 S5: arch_icicle moved
+# verbatim to traj_views.py — same fingerprint, re-homed there.
+29c06640159e  project-trajectory/scripts/traj_views.py == project-trajectory/scripts/traj_views.py
 
-# --- graph-layout (11 blocks) ------------------------------------
+# --- graph-layout (10 blocks) ------------------------------------
 # disposition: debt WI-280
 # the edge-routing and layered-layout sequence, instantiated once per
 # rendered graph (WI DAG, spine wire, OKF knowledge map) with that graph's
@@ -625,17 +628,22 @@ b8b532ba9de4  project-trajectory/scripts/agent_loop.py == project-trajectory/scr
 # WI-280 S4: _drill_layer_svg's copy of the sequence moved verbatim to
 # traj_render.py, re-pairing one 99c2a2ac7eff and one e7ebc7f29c86 line onto
 # that sibling (same fingerprints, same class — WI-280's row names it).
+# WI-280 S5 (11 -> 10): dag_svg/sw_graph/sw_containment's copies moved to
+# traj_views.py, re-homing seven lines; the know_graph pairing left in the
+# facade re-fingerprinted (the WI-347 clique effect: b860b104d408 and one
+# e7ebc7f29c86 went dead, f0492e98954e appeared over the same know_graph ==
+# dag_svg sequence — read, it is the same fan/rects/route family). One block
+# net dissolved by the move.
 e7ebc7f29c86  project-trajectory/scripts/gen_trajectory.py == project-trajectory/scripts/traj_render.py
-e7ebc7f29c86  project-trajectory/scripts/gen_trajectory.py == project-trajectory/scripts/gen_trajectory.py
-e7ebc7f29c86  project-trajectory/scripts/gen_trajectory.py == project-trajectory/scripts/gen_trajectory.py
+e7ebc7f29c86  project-trajectory/scripts/gen_trajectory.py == project-trajectory/scripts/traj_views.py
 99c2a2ac7eff  project-trajectory/scripts/gen_trajectory.py == project-trajectory/scripts/traj_render.py
-99c2a2ac7eff  project-trajectory/scripts/gen_trajectory.py == project-trajectory/scripts/gen_trajectory.py
-99c2a2ac7eff  project-trajectory/scripts/gen_trajectory.py == project-trajectory/scripts/gen_trajectory.py
-b240d68b0686  project-trajectory/scripts/gen_trajectory.py == project-trajectory/scripts/gen_trajectory.py
-76cdecd0d810  project-trajectory/scripts/gen_trajectory.py == project-trajectory/scripts/gen_trajectory.py
-aaa30617a30f  project-trajectory/scripts/gen_trajectory.py == project-trajectory/scripts/gen_trajectory.py
-b860b104d408  project-trajectory/scripts/gen_trajectory.py == project-trajectory/scripts/gen_trajectory.py
-bfd6e67c304f  project-trajectory/scripts/gen_trajectory.py == project-trajectory/scripts/gen_trajectory.py
+99c2a2ac7eff  project-trajectory/scripts/gen_trajectory.py == project-trajectory/scripts/traj_views.py
+99c2a2ac7eff  project-trajectory/scripts/gen_trajectory.py == project-trajectory/scripts/traj_views.py
+b240d68b0686  project-trajectory/scripts/gen_trajectory.py == project-trajectory/scripts/traj_views.py
+76cdecd0d810  project-trajectory/scripts/gen_trajectory.py == project-trajectory/scripts/traj_views.py
+aaa30617a30f  project-trajectory/scripts/gen_trajectory.py == project-trajectory/scripts/traj_views.py
+bfd6e67c304f  project-trajectory/scripts/gen_trajectory.py == project-trajectory/scripts/traj_views.py
+f0492e98954e  project-trajectory/scripts/gen_trajectory.py == project-trajectory/scripts/traj_views.py
 
 # --- spec-folder-reader (4 blocks) -------------------------------
 # disposition: deliberate

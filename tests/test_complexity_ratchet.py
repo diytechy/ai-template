@@ -122,9 +122,11 @@ BASELINE = {
     # +3 (20 -> 23), WI-306: the start-collapsed SN root layer above the >3 rule
     # (the T2 density fix) - the panel() extraction plus the tiered branch. A
     # WI-280 decomposition candidate: panel/draw are an extractable unit.
-    ("gen_trajectory.py", "arch_icicle"): 23,
-    ("gen_trajectory.py", "sw_containment"): 28,
-    ("gen_trajectory.py", "when_view"): 15,
+    # WI-280 S5: all three moved verbatim to traj_views.py — re-keyed, same
+    # measured complexity (the move is the decomposition, not a bump).
+    ("traj_views.py", "arch_icicle"): 23,
+    ("traj_views.py", "sw_containment"): 28,
+    ("traj_views.py", "when_view"): 15,
     ("plan_coverage.py", "check_plan"): 17,
     ("plan_coverage.py", "main"): 12,
     ("plan_round.py", "record"): 29,
