@@ -94,8 +94,11 @@ AST with all docstrings stripped across base → tip.
 
 **Byte deltas on budgeted files.** None — `AGENTS.template.md`, `PROCESS.md` and
 `PROCESS_OPTIONS.md` are untouched. The one file changed is
-`tests/test_gen_trajectory.py` (+36 lines, all docstring); the module-size
-ratchet reads kit scripts only, not `tests/`, and does not move.
+`tests/test_gen_trajectory.py` (**+59 lines** across the whole branch, 5,287 →
+5,346, all docstring — the round-1 and round-2 fixes grew it past the +36 the
+build commit alone contributed, which is the figure this line carried until
+round 2 caught it stale); the module-size ratchet reads kit scripts only, not
+`tests/`, and does not move.
 
 **Bar** (measured after the round-1 fixes, on the tree this fragment ships with).
 Full unfiltered suite `python -m pytest -q -n auto`:
@@ -113,11 +116,18 @@ done, graph acyclic; only the three pre-existing IF-seam WARNs).
 **A measurement lesson worth the line: don't run the suite on a tree you are
 still editing.** The first post-fix full run reported **2 failed** — the standing
 conditional plus `test_check_docs.py::test_meta_repo_has_zero_unexplained_orphans`
-— and the second failure was an artifact of the run itself: the review file
-existed as an unlinked orphan during the window in which this fragment had not
-yet grown its link to it. Re-run on a quiescent tree, the same test passes in
-1.17 s and the suite totals as above. This repo already has the sibling rule for
-line endings ("measure on a tree whose line endings match the index, or the
-measurement lies", status.md); the general form is that **a live working tree is
-part of the measurement**, and an 11-minute run edited mid-flight has no single
-tree to be true of.
+— and the second red was a property of the moving tree, not of the code: the
+round-1 verdict file existed then with a **broken relative link** (it quoted this
+WI's Deliverable citation verbatim, and `../../reviews/…` resolves from
+`docs/work/archive/` but not from `docs/reviews/`), and that test asserts
+`check_docs` exits 0. The reviewer repaired its own file; re-run on a quiescent
+tree the test passes in ~1.1 s and the suite totals as above.
+**Round 2 corrected this entry's first draft, which is why it is worth reading
+twice:** the draft blamed the review file being an *unlinked orphan*, and that
+diagnosis was false — `docs/orphans-allow` allow-lists `docs/reviews/*` exactly
+so a verdict file never needs an inbound link, so the fragment's own link to it
+was never load-bearing. The lesson survives the correction, the cause did not.
+This repo already has the sibling rule for line endings ("measure on a tree whose
+line endings match the index, or the measurement lies", status.md); the general
+form is that **a live working tree is part of the measurement**, and an
+11-minute run edited mid-flight has no single tree to be true of.

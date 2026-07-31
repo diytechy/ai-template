@@ -3604,8 +3604,9 @@ def _every_emitter_document(tmp_path):
     fixtures (measured 2026-07-30 by running the test itself against a
     dashboard-less `ROOT`), so filtering `shipped` out there reds the test on a
     floor that has nothing to do with the emitter anyone changed. Its
-    replacement fixture comes FIRST and the filter second — the opposite order
-    from the worked example above, which had one to hand.
+    replacement fixture comes FIRST and the filter second — the same order the
+    worked example above uses; the difference is that it already HAD a fixture
+    to hand and T6 does not, so here the fixture is the work.
 
     **When a keeper reds, read the failing LABEL first:** `shipped` means
     regenerate the dashboard on trunk (or exclude it, above); any other label
