@@ -264,9 +264,9 @@ hand-merging the two shapes.
 
 | module | subject (WI-280 sibling) | tests | lines |
 | --- | --- | --- | --- |
-| `test_gen_trajectory.py` *(stays)* | the facade + CLI | 14 | 286 |
+| `test_gen_trajectory.py` *(stays)* | the facade + CLI | 14 | 295 |
 | `test_traj_parse.py` | `traj_parse.py` — sources + the git/subprocess seam | 5 | 233 |
-| `test_traj_graph.py` | `traj_graph.py` — layout + wire routing | 25 | 769 |
+| `test_traj_graph.py` | `traj_graph.py` — layout + wire routing | 25 | 770 |
 | `test_traj_views.py` | `traj_views.py` — What / When / How-SW | 37 | 897 |
 | `test_traj_panels.py` | `traj_panels.py` — Knowledge / Process / next-work | 31 | 691 |
 | `test_traj_render.py` | `traj_render.py` — primitives + design system | 32 | 1,290 |
