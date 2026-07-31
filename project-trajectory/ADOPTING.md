@@ -557,36 +557,36 @@ table.
   agent legs too.
 - **Unattended coordinator (`scripts/agent_loop.py` + root `agent-resume.*`).**
   Newer kits ship a walk-away entry (process-options.md "Unattended
-  operation"): the launchers boot the dispatcher (or one hands-on session at
-  the right tier) and ship **inert** until their `AGENT_CMD` slot is wired. To adopt: copy the engine
+  operation"): a plain launch drives the serial claim→build→integrate loop
+  (`drive.py`; one hands-on session via `--interactive`) and the launchers
+  ship **inert** until their `AGENT_CMD` slot is wired. To adopt: copy the engine
   (kit-owned, overwrite freely on later re-syncs) + the three launchers
   (yours after seeding — like `run.*`), and merge the `out/run-logs/` line
   into `.gitignore`. The tracked `docs/iteration/` logs + `iteration_index.md`
   appear on first run; preserve them like `docs/log.md` — they are history. A
   repo without agent-driven work skips all of it.
-- **Parallel dispatch (`agent-resume --jobs`, v4).** Newer kits let one
-  `agent-resume` launch drive **every dependency-ready WI in parallel** — a
-  dispatcher/integrator over the WI DAG with durable Git reservations and
-  serialized atomic integration (process-options.md "Worker assignment" /
-  "The parallel dispatcher" / "The atomic integrator"). Since WI-210 a **plain
-  launch is the dispatcher** (the legacy serial resume driver and `--track`
-  lanes are retired — one engine, one selection path): absent
-  `--jobs`/`AGENT_JOBS` resolves to the two-worker default, and the dispatcher
-  **holds at `--jobs 1` until two audits pass** — a SafetyClass audit (every
-  open WI classified) and a soft-edge audit (signed via `docs/parallel-ready`).
-  A fresh scaffold passes both by construction. **The upgrade recipe** (the
-  **downstream-resync skill** walks it): re-sync the kit, run your own
-  migration audits (the SafetyClass + soft-edge audits above), flip
-  (`AGENT_JOBS=2` in the launchers), then drop any local reliance
-  on the retired legacy surfaces — the resume-from-`status.md` prompt, a
-  hand-set `docs/run-state`, `docs/rework-wi`, `--track`/`docs/tracks/*`
-  lanes, and `docs/next-wi`/`docs/run-phase` (the WI DAG + `Priority` are the
-  whole ordering contract — no former content translates to scheduling state).
-  `docs/status.md`/`docs/run-state` are **generated** dispatcher surfaces (a
-  hand-authored `status.md` is left untouched until you adopt the generated
-  one). Legacy `active` rows reconcile to `queued` as a logged finding, and a
-  leftover `docs/tracks/*` is your own note directory now — the dispatcher
-  never reads it.
+- **Parallel dispatch (v4) → the integration seam + the serial drive loop
+  (2026-07, concurrency restructure).** The v4 dispatcher/integrator — durable
+  Git reservations, `--jobs`/`AGENT_JOBS`, worktree pools, `docs/run-state`,
+  train branches — is **deleted** at Phase 5 of the restructure: its lifetime
+  record (19 reservations → 8 integrations → 0 gate-verified, 11 hand-rescues)
+  did not justify its 4,042 lines. What replaces it is composition
+  (process-options.md "Unattended operation" / "Parallel work — the
+  integration seam"): claims are `integrate.py claim` (queued spec →
+  `docs/work/active/<branch>/`, branch cut from the claim commit), merging is
+  `integrate.py integrate` (the serial fail-closed queue — full bar on the
+  composed tree, RULING-7 verdict gate), and a **plain `agent-resume` launch
+  drives** the loop serially (`drive.py`): frontier → claim → worker session →
+  merge, the frontier re-derived every cycle so mid-run-filed WIs are picked
+  up in the same run. **The upgrade recipe** (the **downstream-resync skill**
+  walks it step by step): re-sync the kit, convert the WI registry CSV to the
+  spec folder (`wi_convert.py --verify` → `--to-specs` → delete the CSV),
+  drain or hand-finish any live train worktrees/branches from the old scheme,
+  seed `docs/stack.ini [generated]`, then delete local reliance on the
+  retired surfaces — `AGENT_JOBS`, `docs/run-state`, `docs/rework-wi`,
+  `--track`/`docs/tracks/*`, `docs/next-wi`/`docs/run-phase`, `refs/llm/*`,
+  `docs/parallel-ready` (the WI DAG + `Priority` are the whole ordering
+  contract — no former content translates to scheduling state).
 - **Run launchers become a capability menu (`scripts/run_menu.py` + `[run]`).**
   Newer kits retire the hard-wired, duplicated `RUN_CMD` in `run.cmd`/`run.sh`:
   the launchers are now thin delegates to `scripts/run_menu.py`, which reads a
@@ -648,10 +648,12 @@ table.
   scheduled (0/1/2); CRITIQUE is orthogonal — required on every render-surface
   train regardless of dial. A same-head CHANGES-REQUESTED→APPROVE flip escalates
   NEEDS-HUMAN rather than silently winning; a never-filed required phase pages
-  instead of stalling. **Downstream impact:** if your repo runs the unattended
-  parallel dispatcher, a train that previously integrated on an extra approval
-  covering a missing phase will now block — ensure each scheduled phase actually
-  files its verdict. No registry schema change.
+  instead of stalling. **Downstream impact** *(historical — the v4 dispatcher
+  retired at the Phase 5 restructure; `integrate.py`'s serial verdict gate
+  keeps the same every-scheduled-phase-APPROVE rule)*: a train that previously
+  integrated on an extra approval covering a missing phase will now block —
+  ensure each scheduled phase actually files its verdict. No registry schema
+  change.
 - **Status-map freshness gate made machine-pure (2026-07, WI-266).** The
   `docs/open-items.md` PENDING block is split into a committed-tree-pure gated
   region (blocked WI rows + the run-state ask) and a **machine-local advisory**
