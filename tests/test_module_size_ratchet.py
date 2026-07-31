@@ -647,7 +647,16 @@ BASELINE = {
     # bump.
     # +2 (2094 -> 2096), WI-280 S6: the traj_panels.py MAPPING row + the
     # docstring inventory line wrapping onto two. Reviewed bump.
-    "bootstrap.py": 2096,
+    # +128 (2096 -> 2224), WI-280 slice 10: main()'s decomposition — the
+    # extraction-grows-the-file shape this module has taken before (WI-347's
+    # entry states it): nine named phase functions plus the two typed records
+    # (ScaffoldPlan / CopyOutcome) cost their own `def` lines and docstrings,
+    # and buy what lines cannot — main() drops from 380 straight-line lines at
+    # complexity 41 to a ~40-line sequencer, and its complexity entry is
+    # DELETED rather than re-stamped. Output proven byte-identical (scaffold
+    # byte-compare suites + a pre/post --dry-run stdout diff). Reviewed bump,
+    # reason here and in docs/log.d/WI-280-bounded-core-decomposition.md.
+    "bootstrap.py": 2224,
     # NEW ENTRY, +228 (1423 -> 1651), Phase 2b of the concurrency restructure
     # (docs/concurrency-restructure.md §7): the spec-folder work-item reader,
     # which crosses this module over THRESHOLD for the first time. It is one

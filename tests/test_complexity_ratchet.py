@@ -60,7 +60,17 @@ BASELINE = {
     ("agent_loop.py", "session_bookkeeping"): 31,
     ("agent_route.py", "load_registry"): 17,
     ("agent_session.py", "run_session"): 14,
-    ("bootstrap.py", "main"): 41,
+    # WI-280 slice 10 (subsuming the retired WI-082): `main` (41 — the largest
+    # single function in the kit, and the one an adopter's FIRST command runs)
+    # is DECOMPOSED into named phases — build_parser / resolve_profile /
+    # resolve_choices -> ScaffoldPlan / copy_kit_files -> CopyOutcome (its
+    # per-file write extracted again as `_write_scaffold_file`, which kept the
+    # ledger under the limit rather than buying a new baseline row) /
+    # apply_stack_extras / materialize_agent_layer_phase /
+    # apply_declared_policies / report_outcome / write_stamps — and every one of
+    # them, `main` included, is now under the limit. Entry DELETED per the
+    # improvement rule; proven behaviour-preserving by the scaffold byte-compare
+    # suites plus a pre/post --dry-run stdout diff.
     ("bootstrap.py", "sync_agent_skills"): 13,
     ("bootstrap.py", "strip_markers"): 14,
     # extra_steps dropped under the limit (WI-279 lifted its [step:] section
