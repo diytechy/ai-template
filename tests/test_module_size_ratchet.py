@@ -274,7 +274,12 @@ BASELINE = {
     # bare move is the facade's re-export/docstring plumbing (the import block
     # comment + the split sentence). Ratcheted DOWN: the decomposition this
     # ratchet was holding the door open for.
-    "gen_trajectory.py": 4695,
+    # -391 (4695 -> 4304), WI-280 S3: the parse/sources layer — the spine/OKF/
+    # arch-map/gate readers, WORKSTREAM_LABELS, project vision/name, the
+    # _run_captured/_asof/_git capture seam, and the guarded `schedule` import's
+    # one home — moved verbatim to the new sibling traj_parse.py (434 lines,
+    # under THRESHOLD). Ratcheted DOWN.
+    "gen_trajectory.py": 4304,
     # (agent_dispatch.py and its whole bump history retired with the module
     # at concurrency-restructure Phase 5 - the dispatcher deleted wholesale;
     # the surviving integrator is integrate.py, below this threshold.)
@@ -603,7 +608,9 @@ BASELINE = {
     # copied-together comment + the docstring inventory line — the same
     # required-registration shape as the WI-329/WI-374 rows above. Reviewed
     # bump; the WI-280 log fragment carries the reason.
-    "bootstrap.py": 2090,
+    # +1 (2090 -> 2091), WI-280 S3: the traj_parse.py MAPPING row (the S2
+    # comment covers the family). Reviewed bump.
+    "bootstrap.py": 2091,
     # NEW ENTRY, +228 (1423 -> 1651), Phase 2b of the concurrency restructure
     # (docs/concurrency-restructure.md §7): the spec-folder work-item reader,
     # which crosses this module over THRESHOLD for the first time. It is one

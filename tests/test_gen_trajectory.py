@@ -5319,7 +5319,9 @@ def test_run_captured_states_the_five_keywords_and_degrades_off_git(
         seen.update(kwargs)
         return subprocess.run(argv, **kwargs)
 
-    monkeypatch.setattr(gt, "subprocess", _SubprocessShim(spy))
+    # WI-280: `_run_captured` resolves `subprocess` in traj_parse's namespace now,
+    # so patch the module the call looks in (gt.traj_parse is the cached instance).
+    monkeypatch.setattr(gt.traj_parse, "subprocess", _SubprocessShim(spy))
     proc = gt._run_captured([sys.executable, "-c", "print('hi')"])
     assert seen == {
         "capture_output": True,
@@ -5336,7 +5338,7 @@ def test_run_captured_states_the_five_keywords_and_degrades_off_git(
     def boom(argv, **kwargs):
         raise OSError("no git here")
 
-    monkeypatch.setattr(gt, "subprocess", _SubprocessShim(boom))
+    monkeypatch.setattr(gt.traj_parse, "subprocess", _SubprocessShim(boom))
     with pytest.raises(OSError):
         gt._run_captured(["git", "--version"])
     # ...and both callers degrade to their empty forms rather than propagate.

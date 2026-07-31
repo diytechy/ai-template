@@ -116,7 +116,9 @@ BASELINE = {
     ("gen_okf.py", "emit"): 25,
     ("gen_okf.py", "main"): 13,
     ("gen_release_checklist.py", "main"): 20,
-    ("gen_trajectory.py", "_okf_nodes"): 15,
+    # WI-280 S3: _okf_nodes moved verbatim to traj_parse.py — re-keyed, same
+    # measured complexity (the move is the decomposition, not a bump).
+    ("traj_parse.py", "_okf_nodes"): 15,
     # +3 (20 -> 23), WI-306: the start-collapsed SN root layer above the >3 rule
     # (the T2 density fix) - the panel() extraction plus the tiered branch. A
     # WI-280 decomposition candidate: panel/draw are an extractable unit.

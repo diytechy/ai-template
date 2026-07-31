@@ -466,11 +466,13 @@ c1ad5fc6394f  project-trajectory/scripts/bootstrap.py == project-trajectory/scri
 # the markdown-table row parser (SN rows, plan tables, the release
 # checklist). gen_okf/gen_trajectory carry the in-code note 'kept byte-for-
 # byte in sync ... they once drifted'.
+# WI-280 S3: gen_trajectory's copy (_sn_rows) moved verbatim to traj_parse.py,
+# so its two gen_okf pairings re-homed there — same fingerprints, same class.
 5203288b8c2d  project-trajectory/scripts/check_docs.py == project-trajectory/scripts/gen_release_checklist.py
 469f0dd6e7c9  project-trajectory/scripts/check_docs.py == project-trajectory/scripts/plan_artifacts.py
 469f0dd6e7c9  project-trajectory/scripts/check_docs.py == project-trajectory/scripts/plan_coverage.py
-8c11d9f9d54a  project-trajectory/scripts/gen_okf.py == project-trajectory/scripts/gen_trajectory.py
-6050c334ce2f  project-trajectory/scripts/gen_okf.py == project-trajectory/scripts/gen_trajectory.py
+8c11d9f9d54a  project-trajectory/scripts/gen_okf.py == project-trajectory/scripts/traj_parse.py
+6050c334ce2f  project-trajectory/scripts/gen_okf.py == project-trajectory/scripts/traj_parse.py
 d576d8a2a2d6  project-trajectory/scripts/gen_okf.py == project-trajectory/scripts/trace.py
 a55d35181e85  project-trajectory/scripts/gen_okf.py == project-trajectory/scripts/trace.py
 9483675e297d  project-trajectory/scripts/gen_release_checklist.py == project-trajectory/scripts/plan_artifacts.py
@@ -497,6 +499,9 @@ d2ff16e89265  project-trajectory/scripts/plan_artifacts.py == project-trajectory
 #                                  file touched — the third clique member left)
 # Proven a RE-STAMP and not a rewrite: 3 sanctions went dead and exactly 3 new
 # blocks appeared over the same file pairs, and the total is 196 either way.
+# WI-280 S3: gen_trajectory's declared-file readers (_gate_value and the OKF
+# frontmatter walk) moved verbatim to traj_parse.py, so its three pairings
+# re-homed there — same fingerprints, same class.
 3864c24be1f4  project-trajectory/scripts/bootstrap.py == project-trajectory/scripts/gen_skills_index.py
 1726b03a8cdf  project-trajectory/scripts/bootstrap.py == project-trajectory/scripts/check_doc_refs.py
 c6270a4626d4  project-trajectory/scripts/bootstrap.py == project-trajectory/scripts/check_trajectory.py
@@ -504,10 +509,10 @@ c6270a4626d4  project-trajectory/scripts/bootstrap.py == project-trajectory/scri
 fdc493cdecdb  project-trajectory/scripts/check_docs.py == project-trajectory/scripts/check_privacy.py
 fdc493cdecdb  project-trajectory/scripts/check_docs.py == project-trajectory/scripts/check_trajectory.py
 4493f2c1d5f8  project-trajectory/scripts/check_privacy.py == project-trajectory/scripts/check_trajectory.py
-eff0eac572a0  project-trajectory/scripts/check_privacy.py == project-trajectory/scripts/gen_trajectory.py
+eff0eac572a0  project-trajectory/scripts/check_privacy.py == project-trajectory/scripts/traj_parse.py
 c16d14a4efc4  project-trajectory/scripts/check_privacy.py == project-trajectory/scripts/check_trajectory.py
-75b2bcbfcc04  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/gen_trajectory.py
-8e99e263cf71  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/gen_trajectory.py
+75b2bcbfcc04  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/traj_parse.py
+8e99e263cf71  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/traj_parse.py
 # Phase 3 (2026-07-29): trunk_step.py builds the arch-map CLI from stack.ini
 # the way check.py does — the same cross-script declared-file reader.
 963d79f43ff8  project-trajectory/scripts/check.py == project-trajectory/scripts/trunk_step.py
