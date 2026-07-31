@@ -28,9 +28,12 @@ After the fix, the identical probe answers
 
 **Scope, established by audit rather than assumed.** An AST sweep of every
 MAPPED script's sibling imports against the MAPPING found `schedule` to be
-the **only** omission — 43 mapped modules, 46 on disk, and the two
-unshipped remainders are `bootstrap` itself and `gen_skills_index` (kit-only
-by design, it generates the kit's own `INDEX.csv`).
+the **only** omission. Counted by parsing the MAPPING literal itself:
+**43 mapped before this fix, 44 after**, against **46** kit scripts on disk —
+and the two that remain unmapped are `bootstrap` itself and
+`gen_skills_index`, kit-only by design (it generates the kit's own
+`INDEX.csv` from a neutral `skills/` source a scaffold never receives, and
+`check.py` already branches to a vacuous no-op downstream). 44 + 2 = 46.
 
 **Deliverables.** The MAPPING row (with the reason stated at the row, so the
 next reader knows it is load-bearing rather than a nicety), the
@@ -38,7 +41,7 @@ next reader knows it is load-bearing rather than a nicety), the
 `project-trajectory/README.md` kit-contents row.
 
 **The class fix, which is the durable part.**
-`test_every_sibling_imported_module_is_shipped_by_mapping` walks the AST of
+`test_every_sibling_imported_module_is_shipped_by_mapping` parses the MAPPING literal via ast (not a whole-file regex, which would also match script names in prose and mark an unmapped module as mapped) and walks the AST of
 every shipped script and asserts each kit-module it imports is itself
 mapped. **Mutation-proven**: run against the pre-fix `bootstrap.py` (taken
 from git history, not a hand-edit) it reports exactly

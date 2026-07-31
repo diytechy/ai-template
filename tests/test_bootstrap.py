@@ -890,8 +890,28 @@ def test_every_sibling_imported_module_is_shipped_by_mapping():
     alone added six) that forgets its MAPPING row fails here instead of in an
     adopter's repo.
     """
-    mapping_src = (SCRIPTS / "bootstrap.py").read_text(encoding="utf-8")
-    mapped = set(re.findall(r'"(?:scripts/)?([A-Za-z_]\w*)\.py"', mapping_src))
+    # Read the MAPPING LITERAL, not the file text: a whole-file regex also
+    # matches script names in docstrings and comments, which would silently
+    # mark an unmapped module as mapped - a false negative on exactly the
+    # module someone next mentions in prose (WI-379 review round 1).
+    bootstrap_tree = ast.parse((SCRIPTS / "bootstrap.py").read_text(encoding="utf-8"))
+    mapping_node = next(
+        (
+            node.value
+            for node in bootstrap_tree.body
+            if isinstance(node, ast.Assign)
+            and any(isinstance(t, ast.Name) and t.id == "MAPPING" for t in node.targets)
+        ),
+        None,
+    )
+    assert mapping_node is not None, "bootstrap.py no longer defines MAPPING"
+    mapped = {
+        literal.value.rsplit("/", 1)[-1][:-3]
+        for literal in ast.walk(mapping_node)
+        if isinstance(literal, ast.Constant)
+        and isinstance(literal.value, str)
+        and literal.value.endswith(".py")
+    }
     kit_modules = {p.stem for p in SCRIPTS.glob("*.py")}
 
     missing = {}
