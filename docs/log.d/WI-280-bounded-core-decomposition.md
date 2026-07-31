@@ -2,7 +2,7 @@
 
 **BUILD (slices S2–S9 of the owner-approved decomposition; slices 10–11 — bootstrap
 main + closeout — remain open).** `project-trajectory/scripts/gen_trajectory.py`
-(5,274 splitlines at claim) is now a **941-line facade** — docstring (Contracts:
+(5,274 splitlines at claim) is now a **942-line facade** — docstring (Contracts:
 line kept), the guarded `check_trajectory` import (the family's ONE sys.path
 repair), the sibling imports + consumer-read re-exports, `OUT_HTML`/`ASOF_RE`,
 `HTML_TEMPLATE`, `build_html`, `main` — over six new siblings, every move a
@@ -237,8 +237,9 @@ committed here as a DELIBERATE exception, recorded: it derives from the spine
 CSVs this very commit changes and from no trunk-only input (unlike the
 dashboard, which needs the regenerated arch map), and
 `tests/test_derive_gate.py`'s cache-freshness assertion is NOT branch-aware —
-leaving it stale would strand a red in the full suite and in CI. The trunk
-step re-derives the identical bytes. Under
+leaving it stale would strand a red in the full suite and in CI. The trunk step re-derives the identical GATING
+content — the first non-comment line and the `# basis:` line — though the
+as-of comment moves to the regenerating commit. Under
 `docs/gate-policy: autonomous` the review round's recorded verdict ratifies —
 the WI-374 / LLR-143 precedent — flipping the 11 back to `Verified` and
 restoring G3. No row that was not edited was flipped.
@@ -273,8 +274,12 @@ count-mutation fixtures in tests/test_dupes_census_audit.py re-pinned.
 committed PROJECT_STATE.html is legitimately stale on this branch (the trunk
 lane regenerates it). Render-neutrality is therefore proven DIRECTLY instead of
 through `--check`: the pre-split (S2-parent) renderer and the current split
-renderer, run over the SAME repo inputs, both emit **1,776,473 bytes** and the
-outputs are **byte-identical** (ASOF excluded, exactly as `--check` does).
+renderer, run over the SAME repo inputs, both emit **1,787,126 bytes**
+(1,776,534 characters) and the outputs are **byte-identical** — identical even
+BEFORE the ASOF strip, so the `--check` exclusion is not doing the work.
+(Round-1 review correction: the figure first signed here, 1,776,473, was a
+CHARACTER count mislabelled as bytes and taken at an earlier commit; both
+numbers above are measured at the tip.)
 
 **Full close set.** `pytest -q -n auto`: **1700 passed, 12 skipped, 1 failed**
 — the failure is the standing
@@ -284,8 +289,10 @@ repo is not on a work branch and is expected on a claimed branch.
 acyclic). `check_docs --stale`: OK, 330 docs, 933 links, **0 broken, 0 orphans**
 (trunk's archival cleared the one this branch had inherited). `trace.py
 --strict`: **exit 0** — SN=25 SR=135 LLR=126 TC=123, orphans=0, integrity=0,
-component-findings=0, interface-findings=0. `ruff format --check`: 128 files
-already formatted.
+component-findings=0, interface-findings=0. `ruff format --check`: **129 files**
+already formatted over the bar's declared scope (`project-trajectory/scripts
+tests`); 131 repo-wide. **`ruff check`: see the round-1 fixes below — it was
+MISSING from this close set, which is how a 7-error lint red reached review.**
 
 **`trace.py --strict --require-verified` exits 1 BY CONSTRUCTION, and that is
 the correct state, not a defect to hide.** Its only findings are the eleven
@@ -305,3 +312,94 @@ docs/reviews/ file was written (the orchestrator owns the close ceremony); no
 generated artifact (arch map, dashboard, gate, open-items, ratify brief) is
 committed from this work branch (§5.2); the ten pre-existing stale CodeSymbol
 cells above are recorded, not fixed; nothing was pushed.
+
+---
+
+## 2026-07-31 — WI-280 round-1 review fixes (REVIEW-A, findings=4)
+
+**MAJOR 1 — the split red `ruff check`, and this WI's own gate move hid it.**
+Reproduced exactly as filed: `ruff check project-trajectory/scripts tests` = **7
+errors, all F401, all in the facade**, against real trunk's **"All checks
+passed!"**. `math` and `subprocess` were genuinely dead in `gen_trajectory.py`
+(0 hits for `math.`/`subprocess.` — the code that used them moved to the
+siblings) and are DELETED; the six bare `import traj_*` lines are the facade's
+deliberate module-object bindings and now carry a per-line F401 suppression, the
+same marker the neighbouring `from traj_* import (...)` blocks already used —
+plus a comment saying WHY they are unused HERE on purpose (the suite patches
+`gt.traj_graph._detour_points` and `gt.traj_parse.subprocess`, which only works
+on the instance the moved code actually resolves in). `ruff check` is now
+**"All checks passed!"**.
+
+*The process defect underneath it, named:* this WI's signed close set ran `ruff
+format --check` (formatting) and never `ruff check` (lint) — the one step it
+omitted is the one its change reded. It stayed invisible because `lint` is a
+`[product] [G3]` step and this WI's own SR flip dropped the derived gate to
+**G2**, where the step prints `FAIL lint ... [advisory — not gating]` and
+`check.py` still exits 0. **`ruff check` is now part of the close set below**,
+and that is the durable fix — the finding was not "a stray import" but "the bar
+we signed was narrower than the bar that gates us".
+
+**MAJOR 2 — `ratify-fresh` reds the COMPOSED tree, and it is NOT split damage.**
+The S11 record's harness analysis stopped at the work branch (where
+`arch-map`/`trajectory-map`/`status-map`/`open-items`/`ratify-fresh` all SKIP
+under §5.2) and never stated what happens on the merge candidate, where nothing
+skips. `trace.py --ratify modified --check` gates the NEWEST file in
+`docs/ratify/` (`newest_ratify_brief` — newest by NAME, the stamped date), and
+that was still `2026-07-29d-phase5.md`, a finished sitting's record.
+
+*Root cause diagnosed, so a successor does not mistake it for this WI's
+breakage:* the check short-circuits with "no `Modified` SR — the re-attest
+window is closed" while nothing is Modified, which is the only reason trunk is
+green. I reproduced the reviewer's probe independently — at trunk state
+**7cb7011**, flipping a single UNRELATED `SR-001` to `Modified` yields the
+**identical** `2026-07-29d-phase5.md is STALE` message. The brief has been rotten
+since before this branch; WI-280 is simply the first WI to open a window.
+
+*Fix — the designed workflow, not a workaround:* a new window owes its OWN
+brief, so this window's is generated and committed on the branch:
+`trace.py --ratify modified --out docs/ratify/2026-07-31-wi280.md` —
+[the brief](../ratify/2026-07-31-wi280.md), **11 sections, 143 lines**, each showing only the `Module` cell before/after. **No
+`--since`**: the git-derived baseline (`2eddc78c8`, the newest revision where
+each SR still read `Verified`) is correct here precisely because the amend and
+the flip landed in ONE commit, which is the regime that rule assumes. Being
+newest by name, this file becomes the gated one, and `ratify-fresh` now reports
+`docs/ratify/2026-07-31-wi280.md is current (baseline git-derived)`. Note
+`trunk_step --regen` does NOT cover `docs/ratify/`, so the brief has to be
+committed on the branch or the composed tree stays red.
+
+**This brief is the artifact the owner reads before blessing the eleven rows** —
+`--ratify modified` is not a lint, it is the sitting's instrument: a sitting
+cannot bless a delta it cannot see, and an owner blessing a short brief blesses
+rows they were never shown. Recorded for the enumeration the S11 record missed:
+opening a `Modified` window makes `ratify-fresh` a GATING `[G2,G3]` step on the
+composed tree, unlike the §5.2 generated-freshness steps that stay trunk-lane.
+
+**MINOR 3 — three signed figures did not reproduce; re-stamped to the metric
+named beside each.** (1) the facade is **942** lines at S6 (d600969) by the
+ratchet's own `len(text.splitlines())`, not 941, so the S6 delta is **-969** —
+corrected here and in the retired ratchet entry. (2) the byte-golden pair emits
+**1,787,126 bytes** (1,776,534 characters) at the tip; the 1,776,473 first
+signed was a CHARACTER count mislabelled as bytes, taken at an earlier commit —
+the identity claim itself was and is true, and is in fact stronger than
+recorded: the two renders are identical even BEFORE the ASOF strip. (3) `ruff
+format --check` covers **129** files over the bar's declared scope
+(`project-trajectory/scripts tests`), 131 repo-wide, not 128. The `docs/gate`
+sentence is narrowed: the trunk step re-derives the identical GATING content
+(the first non-comment line and the `# basis:` line), while the as-of comment
+moves to the regenerating commit.
+
+**MINOR 4 — the one shipped-checker behaviour change now has a guard.**
+`_render_surface_paths` gained the `traj_*` family with no test; two are added
+in `tests/test_trajectory.py`: one pins that the surface holds the facade plus
+EVERY existing sibling (deterministically ordered), one drives the
+`except ValueError` fallback arm over a synthetic root for both scaffold homes
+(`project-trajectory/scripts` and a bootstrapped repo's bare `scripts`).
+**Mutation-proven**, per this repo's rule that a guard which cannot fail is not
+a guard: narrowing the surface back to facade-only reds the first test, and
+restoring it greens again. The fragment's own justification for the change was
+that a facade-only surface would leave the warn "running and always passing" —
+that is precisely the failure mode now pinned.
+
+**Round-2 close set — every number, `ruff check` included this time.**
+See the closing report; the two figures that move with these fixes are the
+facade (949 lines at the round-2 tip) and the ratify brief (a new tracked file).

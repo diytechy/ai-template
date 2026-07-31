@@ -299,15 +299,17 @@ BASELINE = {
     # _splice_status/run_status — moved verbatim to traj_status.py (508 lines,
     # under THRESHOLD; the facade docstring gains the sibling clause, +3); main's --status arm calls traj_status.run_status.
     # Ratcheted DOWN.
-    # -970 (1911 -> 941), WI-280 S6: the Knowledge / Process / Next-work panels
+    # -969 (1911 -> 942), WI-280 S6: the Knowledge / Process / Next-work panels
     # — know_graph + the type-tiered know_view/_know_panel, the Process tab
     # (lifecycle x gates, the resume loop, the SR-055 working-loop hoops), and
     # the landing-hero Next-work card — moved verbatim to traj_panels.py (1016
     # lines, under THRESHOLD). What remains here IS the facade: the docstring,
     # the guarded ct import + sibling re-exports, OUT_HTML/ASOF_RE,
-    # HTML_TEMPLATE, build_html and main. ENTRY RETIRES: 941 is under
+    # HTML_TEMPLATE, build_html and main. ENTRY RETIRES: 942 is under
     # THRESHOLD, so per the module rule the baseline is deleted rather than
     # re-stamped — the H-2 monolith this ratchet froze is decomposed.
+    # (Round-1 review correction: this entry first read 941/-970; the ratchet's
+    # own metric, len(text.splitlines()), measures 942 at that commit.)
     #
     # (agent_dispatch.py and its whole bump history retired with the module
     # at concurrency-restructure Phase 5 - the dispatcher deleted wholesale;

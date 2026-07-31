@@ -73,10 +73,8 @@ Contracts: IF-011, IF-024, IF-052, IF-056, IF-071 — the interface seams this m
 import argparse
 import html
 import json
-import math
 import re
 import string
-import subprocess
 import sys
 from pathlib import Path
 
@@ -108,11 +106,17 @@ except ImportError:
 # imports sit AFTER the guarded check_trajectory import above on purpose: that
 # guard is this module's ONE sys.path repair, and the siblings rely on it when
 # this file is loaded from outside scripts/ (the F5 self-heal contract).
-import traj_views
-import traj_status
-import traj_render
-import traj_panels
-import traj_parse
+# Every sibling is ALSO bound as a bare module attribute (`gen_trajectory.traj_parse`
+# and friends): the facade's re-exported names are values, so a consumer that must
+# reach the module OBJECT — the suite patches `gt.traj_graph._detour_points` and
+# `gt.traj_parse.subprocess`, which only works on the instance the moved code
+# actually resolves in — has one place to reach it. Deliberate, hence the
+# per-line F401 suppression each carries: unused HERE is the point.
+import traj_views  # noqa: F401
+import traj_status  # noqa: F401
+import traj_render  # noqa: F401
+import traj_panels  # noqa: F401
+import traj_parse  # noqa: F401
 from traj_parse import (  # noqa: F401
     OKF_DIR,
     OKF_TIER_ORDER,
@@ -135,7 +139,7 @@ from traj_parse import (  # noqa: F401
     spine_stats,
     sw_modules,
 )
-import traj_graph
+import traj_graph  # noqa: F401
 from traj_render import (  # noqa: F401
     ARROW_SIZE,
     CEDGE_LEN,
