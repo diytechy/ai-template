@@ -1,0 +1,9 @@
++++
+id = "WI-373"
+title = "Skepticism in the review protocol runs one direction: the reviewer charter treats the implementation report as claims to re-run, but nothing charters a finding's OWNER to confirm-or-refute before acting - the measured failure mode of the review-round era (127-131: ~70% of findings were claims/hollow-guards/bookkeeping; re-review rounds aimed 100% at prior fixes and converged to zero real findings while manufacturing work), and the same one-way trust let parked work be scrubbed by sessions that never read the record justifying it, with no sanctioned shape for costly-but-right rework (owner directive 2026-07-30). Documentation-only, three homes stated once each: PROCESS_OPTIONS.md verdict protocol gains the finding lifecycle (a finding names a falsifiable failure scenario; its owner CONFIRMS by reproducing or REFUTES it before changing code, refutation a legitimate recorded outcome feeding the reviewer's confirmed-finding rate; a re-review round verifies fixes landed, never hunts fresh findings in them - fresh hunts aim at product surfaces); AGENTS.template.md working agreement gains the reversal-evidence bar (deleting/reverting takes the same evidence as creating - read the record that justified the thing first) and the symmetric sunk-cost failure (sunk-cost KEEPING/moth-balling: a wrong design escalates as a written case to a design-change item, never parks unrecorded, never silently reverts), paid inside the 10,000-byte budget; docs/enforcement-audit.md records the honest tiers. NO new checks or scripts (the 2026-07-28 audit's enforcement-layer-growth warning applies); score_reviews feed-or-delete stays an owner call, out of scope."
+workstream = "process"
+specref = "docs/specs/WI-373.md"
+buildtier = "quick"
+priority = 2
+safety_class = "ordinary"
++++
