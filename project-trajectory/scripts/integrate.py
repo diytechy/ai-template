@@ -514,6 +514,24 @@ def _composed_tree_script(wt, root, name):
     return SCRIPTS / name
 
 
+def _passed_steps(out):
+    """The DISTINCT step names check.py's output reports as PASS.
+
+    Counted by name, not by line (WI-377): under --jobs each step's status
+    line prints twice - once by the lane runner as it finishes, once in the
+    final summary block - so a line count reported a 20-step bar as "40
+    steps", a false measurement in the merge record. Distinct names give the
+    same answer at --jobs 1 and --jobs N.
+    """
+    names = set()
+    for ln in out.splitlines():
+        if re.match(r"\s*PASS\s", ln):
+            parts = ln.split()
+            if len(parts) >= 2:
+                names.add(parts[1])
+    return names
+
+
 def _run_bar(wt, root, tier):
     """check.py at the derived gate on the composed tree; fail-closed reading.
 
@@ -533,8 +551,11 @@ def _run_bar(wt, root, tier):
             out,
             "bar reported SKIP - a skip is a refusal here:\n" + "\n".join(skips),
         )
-    passes = len([ln for ln in out.splitlines() if re.match(r"\s*PASS\s", ln)])
-    return True, out, "bar PASS ({} steps, tier {})".format(passes, tier)
+    return (
+        True,
+        out,
+        "bar PASS ({} steps, tier {})".format(len(_passed_steps(out)), tier),
+    )
 
 
 def _run_trunk_step(wt, root):
