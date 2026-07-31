@@ -204,7 +204,12 @@ contract), **IF-085** traj_parse → schedule (IF-071's). The three modules are
 marked `sink` (they provide nothing across a component boundary — their only
 consumer is the facade in the same CMP) and declare their ids in a `Contracts:`
 docstring line, which also clears the "connectivity undeclared" and "no Provides
-seam" warns for them. **Deviation from the split plan**, recorded: the S2–S9
+seam" warns for them. *Precision a successor will want:* that rule reads the
+`Contracts (interfaces):` line **gen_arch_map harvests into docs/architecture.md**,
+not the source docstring directly — so on THIS work branch, where the arch map is
+trunk-owned and unregenerated, IF-082..085 still warn "no script declares it".
+Driven on the regenerated clone, they clear; only the three genuinely
+seamless modules below remain. **Deviation from the split plan**, recorded: the S2–S9
 design said the siblings carry no `Contracts:` line because the seam stays
 gen_trajectory's — true until these module-level seams existed; the registry
 would otherwise warn on rows nothing declares.
