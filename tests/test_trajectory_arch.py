@@ -1,0 +1,870 @@
+"""check_trajectory.py — decision over architecture inputs (WI-277: split
+verbatim from tests/test_trajectory.py by behavior boundary).
+
+Interface-connectivity coverage (WI-056), the How-SW top-view right-sizing
+bound (WI-073/FB5), knowledge⇒component coupling (WI-153), the [phase]-[g*]
+anchors + phase-drop detector (WI-093), the ratification-brief hierarchy-view
+lint (WI-146b), cross-CMP edges without a declared IF (WI-064), and specs
+acting on declared interface boundaries (WI-191).
+"""
+
+import csv
+import shutil
+
+
+from conftest import SCRIPTS, load_script, run_py
+
+wi_convert = load_script("wi_convert")
+
+
+# The registry-fixture writers below are copied from tests/test_trajectory.py
+# rather than imported — no test module in this suite imports another, and
+# conftest is not this module's to extend (the suite idiom test_integrate.py's
+# `git_repo` states; WI-277 kept it when splitting the monolith).
+# The fixture bodies below stay CSV-SHAPED — one line per work item, cells in one
+# of these two column orders — because a table is how a registry fixture reads.
+# The registry's one HOME is the `docs/work/` spec folder (concurrency-restructure
+# Phase 5, RULING-4: the CSV home retired, and a work-items.csv left on disk is
+# now itself an integrity error), so the writers below map each line through the
+# format's own writer instead of writing a CSV.
+WI_COLUMNS = "WI-ID,Title,Workstream,SR-Refs,Predecessors,Status,Deliverable"
+# ...plus the SpecRef + BlockRef columns (S1) — used by the SSOT-rule tests.
+SR_WI_COLUMNS = WI_COLUMNS + ",SpecRef,BlockRef"
+
+# `active/<branch>/` is the only status two levels deep and the branch is the
+# integrator's, so a fixture writing an active row has to name one.
+ACTIVE_BRANCH = "wi-fixture"
+
+
+def _wi_rows(body, columns):
+    """`body`'s lines as full 17-column registry rows, read with `csv` so a
+    quoted cell parses exactly as it did when the body WAS the file."""
+    names = columns.split(",")
+    rows = []
+    for cells in csv.reader(body.splitlines()):
+        if not cells or not cells[0].strip():
+            continue
+        row = dict.fromkeys(wi_convert.COLUMNS, "")
+        row.update(dict(zip(names, cells)))
+        rows.append(row)
+    return rows
+
+
+def _write_spec_row(work, row, order):
+    """Write one row as its spec file under `work`.
+
+    Everything goes through `wi_convert`, the format's single writer — except the
+    directory for an `active` row, which that writer deliberately does not know:
+    the integrator's BRANCH names `active/<branch>/`, so a fixture supplies one
+    and reuses the same renderer for the file itself."""
+    if (row.get("Status") or "").strip() != "active":
+        return wi_convert.write_spec_file(work, row, order=order)
+    text = wi_convert.FENCE + "\n"
+    text += wi_convert.render_frontmatter(wi_convert.frontmatter_pairs(row, order))
+    text += wi_convert.FENCE + "\n"
+    if row.get("Deliverable"):
+        text += wi_convert.DELIVERABLE_PREFIX + row["Deliverable"] + "\n"
+    path = work / "active" / ACTIVE_BRANCH / wi_convert.spec_filename(row)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(text, encoding="utf-8", newline="\n")
+    return path
+
+
+def write_wis(root, body, columns=WI_COLUMNS):
+    """Write the work-item registry — the `docs/work/` spec folder — from the
+    CSV-shaped `body`, one spec file per line.
+
+    The folder is REPLACED on every call: one call writes the whole registry, so
+    a test that re-writes it (a status flip) MOVES the item's file rather than
+    leaving a second copy in the old status directory. Two rows sharing an id
+    stay two files (their titles differ, so their slugs do), which is what keeps
+    the duplicate-id integrity error reachable."""
+    work = root / "docs" / "work"
+    if work.exists():
+        shutil.rmtree(work)
+    work.mkdir(parents=True)
+    for order, row in enumerate(_wi_rows(body, columns), 1):
+        _write_spec_row(work, row, order)
+    return root
+
+
+def run_traj(root, *extra):
+    return run_py([SCRIPTS / "check_trajectory.py", "--root", root, *extra], cwd=root)
+
+
+# --- WI-056: architecture-connectivity coverage (warn-first, opt-out default-on)
+# The views-checker runs at the same `trajectory` step; every finding is a WARN
+# (never an exit-code change, even under --strict) and the meta driver is the
+# "connectivity undeclared" warn a multi-module arch-map with no seams emits.
+
+ARCH_2MOD = """# Arch
+<!-- BEGIN GENERATED MODULE MAP -->
+### `scripts/mod_a`
+_A._
+
+| Public item | Summary | Implements |
+|---|---|---|
+| `run()` | go |  |
+
+### `scripts/mod_b`
+_B._
+
+| Public item | Summary | Implements |
+|---|---|---|
+| `go()` | g |  |
+<!-- END GENERATED MODULE MAP -->
+"""
+
+ARCH_1MOD = """# Arch
+<!-- BEGIN GENERATED MODULE MAP -->
+### `scripts/mod_a`
+_A._
+
+| Public item | Summary | Implements |
+|---|---|---|
+| `run()` | go |  |
+<!-- END GENERATED MODULE MAP -->
+"""
+
+IF_HDR = (
+    "IF-ID,Direction,ThisProject,Counterpart,Contract,SR-Refs,Version,"
+    "Stability,Status,Component,Notes\n"
+)
+
+
+def write_arch(root, text):
+    (root / "docs").mkdir(parents=True, exist_ok=True)
+    (root / "docs" / "architecture.md").write_text(text, encoding="utf-8")
+
+
+def write_ifs(root, body):
+    req = root / "docs" / "requirements"
+    req.mkdir(parents=True, exist_ok=True)
+    (req / "interfaces.csv").write_text(IF_HDR + body, encoding="utf-8")
+
+
+def test_interface_coverage_warns(tmp_path):
+    # Multi-module arch-map with NO interfaces.csv -> "connectivity undeclared"
+    # (the ruled opt-out, default-on posture), and the exit code is still 0.
+    write_arch(tmp_path, ARCH_2MOD)
+    proc = run_traj(tmp_path)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "connectivity undeclared" in proc.stderr
+
+
+def test_interface_check_off_silences(tmp_path):
+    write_arch(tmp_path, ARCH_2MOD)
+    (tmp_path / "docs" / "interfaces-check").write_text("off\n", encoding="utf-8")
+    proc = run_traj(tmp_path)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "connectivity undeclared" not in proc.stderr
+
+
+def test_single_module_inventory_is_vacuous(tmp_path):
+    # <=1 module: nothing to connect, so the coverage layer stays silent.
+    write_arch(tmp_path, ARCH_1MOD)
+    proc = run_traj(tmp_path)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "connectivity undeclared" not in proc.stderr
+
+
+def test_uncovered_direction_warns(tmp_path):
+    # One Provides seam a->b: a has no Consumes, b has no Provides -> both
+    # missing-direction warns fire (exit 0).
+    write_arch(tmp_path, ARCH_2MOD)
+    write_ifs(
+        tmp_path,
+        'IF-001,Provides,scripts/mod_a,scripts/mod_b,"call",SR-001,v1,Stable,Active,,\n',
+    )
+    proc = run_traj(tmp_path)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "declares no Consumes seam" in proc.stderr  # mod_a
+    assert "declares no Provides seam" in proc.stderr  # mod_b
+
+
+def test_source_sink_marker_suppresses_direction_warn(tmp_path):
+    # mod_a marked source (consumes nothing), mod_b marked sink (provides nothing)
+    # -> both missing-direction warns suppressed by the honesty valve.
+    write_arch(tmp_path, ARCH_2MOD)
+    write_ifs(
+        tmp_path,
+        'IF-001,Provides,scripts/mod_a,scripts/mod_b,"call",SR-001,v1,Stable,Active,,source\n'
+        'IF-002,Consumes,scripts/mod_b,docs/stack.ini,"reads",SR-001,v1,Stable,Active,,sink\n',
+    )
+    proc = run_traj(tmp_path)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "declares no Consumes seam" not in proc.stderr
+    assert "declares no Provides seam" not in proc.stderr
+
+
+def test_seam_tc_citation_warn(tmp_path):
+    # A symmetric pair covers both directions, so only the Active-seam-TC warn
+    # fires; a TC that cites IF-001 suppresses its warn, IF-002 still warns.
+    write_arch(tmp_path, ARCH_2MOD)
+    write_ifs(
+        tmp_path,
+        'IF-001,Provides,scripts/mod_a,scripts/mod_b,"a to b",SR-001,v1,Stable,Active,,\n'
+        'IF-002,Provides,scripts/mod_b,scripts/mod_a,"b to a",SR-001,v1,Stable,Active,,\n',
+    )
+    (tmp_path / "docs" / "test").mkdir(parents=True, exist_ok=True)
+    (tmp_path / "docs" / "test" / "test-cases.csv").write_text(
+        "TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Evidence,Status\n"
+        "TC-001,SR-001;IF-001,Integration,seam,Full,,ok,Yes,tests/x.py,Verified\n",
+        encoding="utf-8",
+    )
+    proc = run_traj(tmp_path)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "declares no Consumes seam" not in proc.stderr  # symmetric -> covered
+    assert "IF IF-001 is Active but cited by no TC" not in proc.stderr
+    assert "IF IF-002 is Active but cited by no TC" in proc.stderr
+
+
+def test_contracts_docstring_citation_warns(tmp_path):
+    # A module's `Contracts (interfaces):` arch-map line names IF-003 (absent from
+    # the registry) -> forward warn; and once the convention is in use, a registry
+    # IF declared by no module warns in reverse.
+    arch = ARCH_2MOD.replace("_A._\n", "_A._\nContracts (interfaces): IF-003\n")
+    write_arch(tmp_path, arch)
+    write_ifs(
+        tmp_path,
+        'IF-001,Provides,scripts/mod_a,scripts/mod_b,"a to b",SR-001,v1,Stable,Active,,\n'
+        'IF-002,Provides,scripts/mod_b,scripts/mod_a,"b to a",SR-001,v1,Stable,Active,,\n',
+    )
+    proc = run_traj(tmp_path)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "declares Contracts: IF-003 but no such IF-### row" in proc.stderr
+    assert "no script declares it via a Contracts" in proc.stderr
+
+
+def test_interface_warns_never_fail_strict(tmp_path):
+    # Even under --strict, the connectivity warns never change the exit code
+    # (they are warns, not the R-B..R-E coherence rules --strict promotes). With
+    # no work-items registry the run is vacuously clean once the warns are printed.
+    write_arch(tmp_path, ARCH_2MOD)
+    proc = run_traj(tmp_path, "--strict")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "connectivity undeclared" in proc.stderr
+
+
+# --- WI-073/FB5: the How-SW top-view right-sizing rule -------------------------
+# The software-architecture top view is bounded at 10 items (top-level CMP
+# components that contain a module + uncontained modules); over the bound is a
+# finding — WARN plain, ERROR under --strict (G2+). Opt-out docs/components-check;
+# vacuous below the bound or with no arch-map inventory (the bound is the rule).
+
+CMP_HDR = "CMP-ID,Name,Category,Knowledge,State,SupersededBy,PartOf,DetailDoc,Notes\n"
+TAGGED_LLR_HDR = (
+    "LLR-ID,SR-Refs,Title,Module,CodeSymbol,Detail,TestRefs,Status,Component\n"
+)
+
+
+def _arch_n(n):
+    """A generated MODULE MAP block of n modules scripts/mod_0..mod_{n-1}."""
+    body = "".join(
+        "### `scripts/mod_{i}`\n_M{i}._\n\n| Public item | Summary | Implements |\n"
+        "|---|---|---|\n| `f{i}()` | go |  |\n\n".format(i=i)
+        for i in range(n)
+    )
+    return (
+        "# Arch\n<!-- BEGIN GENERATED MODULE MAP -->\n"
+        + body
+        + "<!-- END GENERATED MODULE MAP -->\n"
+    )
+
+
+def write_cmps(root, body):
+    req = root / "docs" / "requirements"
+    req.mkdir(parents=True, exist_ok=True)
+    (req / "components.csv").write_text(CMP_HDR + body, encoding="utf-8")
+
+
+def write_tagged_llrs(root, pairs):
+    """`pairs` = [(module, CMP-id)]; writes an LLR csv (Component column) so a
+    module joins its CMP through its LLR's Component tag (the AXES membership)."""
+    req = root / "docs" / "requirements"
+    req.mkdir(parents=True, exist_ok=True)
+    body = "".join(
+        "LLR-{:03d},SR-001,T,{},f,d,(see TC),Verified,{}\n".format(i + 1, mod, cmp)
+        for i, (mod, cmp) in enumerate(pairs)
+    )
+    (req / "low-level-requirements.csv").write_text(
+        TAGGED_LLR_HDR + body, encoding="utf-8"
+    )
+
+
+def test_top_view_over_bound_warns_plain_fails_strict(tmp_path):
+    # 12 modules, no CMP rows -> 12 uncontained top items > 10.
+    write_arch(tmp_path, _arch_n(12))
+    plain = run_traj(tmp_path)
+    assert plain.returncode == 0, plain.stdout + plain.stderr
+    assert "How-SW top view has 12 items" in plain.stderr
+    strict = run_traj(tmp_path, "--strict")
+    assert strict.returncode == 1
+    assert "How-SW top view has 12 items" in strict.stderr
+
+
+def test_declaring_components_below_bound_clears_it(tmp_path):
+    # 3 components containing all 12 modules -> top view = 3 <= 10.
+    write_arch(tmp_path, _arch_n(12))
+    write_cmps(
+        tmp_path,
+        "CMP-001,A,software,,built,,,,\n"
+        "CMP-002,B,software,,built,,,,\n"
+        "CMP-003,C,software,,built,,,,\n",
+    )
+    write_tagged_llrs(
+        tmp_path,
+        [("scripts/mod_{}".format(i), "CMP-00{}".format(i % 3 + 1)) for i in range(12)],
+    )
+    proc = run_traj(tmp_path, "--strict")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "How-SW top view" not in proc.stderr
+
+
+def test_nested_cmp_counts_only_at_top_level_root(tmp_path):
+    # CMP-003 nests under CMP-001 (PartOf); its members count under CMP-001, so
+    # the roots are {CMP-001, CMP-002} = 2 top items, well under the bound.
+    write_arch(tmp_path, _arch_n(12))
+    write_cmps(
+        tmp_path,
+        "CMP-001,Core,software,,built,,,,\n"
+        "CMP-002,Other,software,,built,,,,\n"
+        "CMP-003,Nested,software,,built,,CMP-001,,\n",
+    )
+    pairs = []
+    for i in range(12):
+        cmp = "CMP-001" if i < 4 else ("CMP-003" if i < 8 else "CMP-002")
+        pairs.append(("scripts/mod_{}".format(i), cmp))
+    write_tagged_llrs(tmp_path, pairs)
+    proc = run_traj(tmp_path, "--strict")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "How-SW top view" not in proc.stderr
+
+
+def test_uncontained_modules_count_toward_the_bound(tmp_path):
+    # One component holding a single module leaves 11 uncontained -> 1 + 11 = 12.
+    write_arch(tmp_path, _arch_n(12))
+    write_cmps(tmp_path, "CMP-001,Only,software,,built,,,,\n")
+    write_tagged_llrs(tmp_path, [("scripts/mod_0", "CMP-001")])
+    strict = run_traj(tmp_path, "--strict")
+    assert strict.returncode == 1
+    assert "1 top-level component(s) + 11 uncontained module(s)" in strict.stderr
+
+
+def test_top_view_off_switch_silences(tmp_path):
+    write_arch(tmp_path, _arch_n(12))
+    (tmp_path / "docs" / "components-check").write_text("off\n", encoding="utf-8")
+    proc = run_traj(tmp_path, "--strict")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "How-SW top view" not in proc.stderr
+
+
+def test_ten_module_inventory_is_vacuous(tmp_path):
+    # Exactly at the bound with no CMP rows -> passes trivially (the bound, not
+    # the registry, is the rule).
+    write_arch(tmp_path, _arch_n(10))
+    proc = run_traj(tmp_path, "--strict")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "How-SW top view" not in proc.stderr
+
+
+def test_absent_inventory_top_view_is_vacuous(tmp_path):
+    # No architecture.md at all -> nothing to bound (pre-arch-map / files-mode).
+    (tmp_path / "docs").mkdir(parents=True, exist_ok=True)
+    proc = run_traj(tmp_path, "--strict")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "How-SW top view" not in proc.stderr
+
+
+# --- WI-153: knowledge⇒component coupling (research-knowledge.md §3a) -----------
+# When docs/knowledge/ holds a real pack, an uncontained arch-map module is a
+# finding *regardless of* the 10-item bound — WARN plain, ERROR under --strict —
+# so the knowledge⇒component web must be complete wherever packs are enabled. It
+# reuses the Component-tag join (no new join), the docs/components-check opt-out,
+# and stays dormant until a real pack (not the README index) exists.
+
+KN_MSG = "arch-map module(s) are in no CMP-### component"
+
+
+def write_pack(root, label, body="# Pack\n"):
+    d = root / "docs" / "knowledge"
+    d.mkdir(parents=True, exist_ok=True)
+    (d / (label + ".md")).write_text(body, encoding="utf-8")
+
+
+def test_pack_presence_arms_coupling_below_bound(tmp_path):
+    # 3 modules (well under the 10-item bound), none contained, + one pack: the
+    # top-view rule is vacuous here, but the pack arms the coupling finding.
+    write_arch(tmp_path, _arch_n(3))
+    write_pack(tmp_path, "prompt-image")
+    plain = run_traj(tmp_path)
+    assert plain.returncode == 0, plain.stdout + plain.stderr
+    assert "docs/knowledge/ holds 1 pack(s) but 3 " + KN_MSG in plain.stderr
+    strict = run_traj(tmp_path, "--strict")
+    assert strict.returncode == 1
+    assert KN_MSG in strict.stderr
+
+
+def test_coupling_dormant_without_packs(tmp_path):
+    # Same uncontained 3-module arch-map but no pack -> below the bound, silent.
+    write_arch(tmp_path, _arch_n(3))
+    proc = run_traj(tmp_path, "--strict")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert KN_MSG not in proc.stderr
+
+
+def test_readme_index_alone_does_not_arm_coupling(tmp_path):
+    # The scaffolded README.md is the index, not a pack -> still dormant.
+    write_arch(tmp_path, _arch_n(3))
+    (tmp_path / "docs" / "knowledge").mkdir(parents=True, exist_ok=True)
+    (tmp_path / "docs" / "knowledge" / "README.md").write_text("# idx\n", "utf-8")
+    proc = run_traj(tmp_path, "--strict")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert KN_MSG not in proc.stderr
+
+
+def test_coupling_clears_when_every_module_contained(tmp_path):
+    # A pack exists, but every module is tagged into a CMP -> web complete, silent.
+    write_arch(tmp_path, _arch_n(3))
+    write_pack(tmp_path, "prompt-image")
+    write_cmps(tmp_path, "CMP-001,Core,software,,built,,,,\n")
+    write_tagged_llrs(
+        tmp_path, [("scripts/mod_{}".format(i), "CMP-001") for i in range(3)]
+    )
+    proc = run_traj(tmp_path, "--strict")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert KN_MSG not in proc.stderr
+
+
+def test_coupling_reports_only_the_uncontained_modules(tmp_path):
+    # A pack + a CMP holding one of three modules -> two remain uncontained.
+    write_arch(tmp_path, _arch_n(3))
+    write_pack(tmp_path, "prompt-image")
+    write_cmps(tmp_path, "CMP-001,Core,software,,built,,,,\n")
+    write_tagged_llrs(tmp_path, [("scripts/mod_0", "CMP-001")])
+    strict = run_traj(tmp_path, "--strict")
+    assert strict.returncode == 1
+    assert "holds 1 pack(s) but 2 " + KN_MSG in strict.stderr
+
+
+def test_coupling_respects_the_components_check_off_switch(tmp_path):
+    # docs/components-check: off silences the coupling as it does the top view.
+    write_arch(tmp_path, _arch_n(3))
+    write_pack(tmp_path, "prompt-image")
+    (tmp_path / "docs" / "components-check").write_text("off\n", encoding="utf-8")
+    proc = run_traj(tmp_path, "--strict")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert KN_MSG not in proc.stderr
+
+
+def test_coupling_needs_an_arch_map_inventory(tmp_path):
+    # A pack but no arch-map -> no modules to leave uncontained -> dormant.
+    write_pack(tmp_path, "prompt-image")
+    proc = run_traj(tmp_path, "--strict")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert KN_MSG not in proc.stderr
+
+
+# --- WI-093: the [phase]-[g*] archetype + phase-drop detector ------------------
+# The derived-gate model (docs/specs/derived-gate-model.md §7/§9.3): a phase's
+# pre-dev batch is a WI whose Title carries a `[<phase>]-[g<N>]` tag; the derived
+# gate dropping below a phase's closed anchor level warns to open a new phase-gate
+# WI. All warn-first; the logic is unit-tested via load_script.
+
+
+def _wis(ct, rows):
+    return ct.load_wis(rows)[0]
+
+
+def test_phase_anchors_parse_and_duplicate_warn():
+    ct = load_script("check_trajectory")
+    wis = _wis(
+        ct,
+        [
+            {
+                "WI-ID": "WI-201",
+                "Title": "[v2]-[g1] structure v2 reqs",
+                "Status": "done",
+            },
+            {
+                "WI-ID": "WI-202",
+                "Title": "[v2]-[g2] decompose v2",
+                "Predecessors": "WI-201",
+                "Status": "queued",
+            },
+            {
+                "WI-ID": "WI-203",
+                "Title": "[v2]-[g2] a duplicate g2",
+                "Status": "queued",
+            },
+            {"WI-ID": "WI-204", "Title": "an ordinary WI", "Status": "queued"},
+        ],
+    )
+    anchors, warns = ct.phase_anchors(wis)
+    assert ("v2", 1) in anchors and ("v2", 2) in anchors
+    assert anchors[("v2", 2)]["id"] == "WI-202"  # first wins
+    assert any("duplicate phase-gate anchor [v2]-[g2]" in w for w in warns)
+
+
+def test_phase_anchor_g2_without_g1_predecessor_warns():
+    ct = load_script("check_trajectory")
+    wis = _wis(
+        ct,
+        [
+            {"WI-ID": "WI-201", "Title": "[v3]-[g1] x", "Status": "done"},
+            {"WI-ID": "WI-202", "Title": "[v3]-[g2] y", "Status": "queued"},  # no pred
+        ],
+    )
+    _, warns = ct.phase_anchors(wis)
+    assert any("does not list its [v3]-[g1]" in w for w in warns)
+
+
+def _write_gate(root, per_phase, value="G1"):
+    (root / "docs").mkdir(parents=True, exist_ok=True)
+    (root / "docs" / "gate").write_text(
+        "# header\n# basis: SN=1 SR=3 LLR=3 TC=3 drafts=0 computed={} "
+        "per-phase={}\n# computed 2026-07-12 (as-of x)\n{}\n".format(
+            value, per_phase, value
+        ),
+        encoding="utf-8",
+    )
+
+
+def test_read_derived_phases_parses_basis(tmp_path):
+    ct = load_script("check_trajectory")
+    _write_gate(tmp_path, "v1=G3;v2=G0")
+    assert ct.read_derived_phases(tmp_path) == {"v1": 3, "v2": 0}
+    # A legacy hand-set gate with no basis line yields no phase data (vacuous).
+    (tmp_path / "docs" / "gate").write_text("# legacy\nG3\n", encoding="utf-8")
+    assert ct.read_derived_phases(tmp_path) == {}
+
+
+def test_phase_drop_detector_warns(tmp_path):
+    ct = load_script("check_trajectory")
+    # v2 closed at [g2] (done) but the derived level for v2 is now G0 (a reopen).
+    _write_gate(tmp_path, "v1=G3;v2=G0")
+    wis = _wis(
+        ct,
+        [
+            {"WI-ID": "WI-210", "Title": "[v2]-[g1] x", "Status": "done"},
+            {
+                "WI-ID": "WI-211",
+                "Title": "[v2]-[g2] y",
+                "Predecessors": "WI-210",
+                "Status": "done",
+            },
+        ],
+    )
+    warns = ct.phase_findings(tmp_path, wis)
+    assert any("phase 'v2' dropped to G0" in w and "[v2]-[g2]" in w for w in warns)
+    # Back at G2: no drop warn (the phase re-cleared its anchor level).
+    _write_gate(tmp_path, "v1=G3;v2=G2", value="G2")
+    assert ct.phase_findings(tmp_path, wis) == []
+
+
+def test_phase_findings_vacuous_without_anchors(tmp_path):
+    ct = load_script("check_trajectory")
+    _write_gate(tmp_path, "v1=G0")  # a phase at G0 but NO anchor records a close
+    wis = _wis(ct, [{"WI-ID": "WI-220", "Title": "ordinary", "Status": "queued"}])
+    assert ct.phase_findings(tmp_path, wis) == []
+
+
+# --- WI-146(b): the ratification-brief hierarchy-view lint --------------------
+# An open-items ROW whose decision is a `[phase]-[g1|g2]` ratification should
+# name the generated batch-scoped hierarchy view rather than hand-copy rows.
+# Warn-first (never a gate fail); vacuous without such a brief. WI-322 moved the
+# briefs from markdown sections into `docs/requirements/open-items.csv`, so the
+# lint reads rows and the evidence it accepts is a view PATH in the cell.
+
+_OI_HEADER = (
+    "OI-ID,Title,Status,Raised,OneLine,Decision,BlastRadius,Options,"
+    "Recommendation,WI-Refs,RuledDate,RulingRef\n"
+)
+
+
+def _write_open_items(root, rows):
+    (root / "docs" / "requirements").mkdir(parents=True, exist_ok=True)
+    (root / "docs" / "requirements" / "open-items.csv").write_text(
+        _OI_HEADER + rows, encoding="utf-8"
+    )
+    return root
+
+
+def _oi_row(oid, decision, title="a decision", status="pending"):
+    return '{},{},{},,,"{}",,,,,,\n'.format(oid, title, status, decision)
+
+
+def test_ratify_brief_without_view_warns(tmp_path):
+    ct = load_script("check_trajectory")
+    _write_open_items(
+        tmp_path,
+        _oi_row("OI-20", "ratify the [v3]-[g2] dashboard batch.")
+        + _oi_row("OI-21", "something else, no anchor here."),
+    )
+    warns = ct.ratify_brief_findings(tmp_path)
+    # Exactly the ratification brief warns; the unrelated row does not.
+    assert len(warns) == 1
+    assert warns[0].startswith("OI-20:")
+    assert "hierarchy view" in warns[0]
+
+
+def test_ratify_brief_with_generator_command_only_warns(tmp_path):
+    # A bare `trace.py --ratify` command mention is NOT proof the view exists and
+    # is carried — the brief must name the generated view (WI-146 REVIEW-A).
+    ct = load_script("check_trajectory")
+    _write_open_items(
+        tmp_path,
+        _oi_row(
+            "OI-20", "ratify the [v3]-[g2] batch. Hierarchy: run trace.py --ratify v3."
+        ),
+    )
+    warns = ct.ratify_brief_findings(tmp_path)
+    assert len(warns) == 1 and warns[0].startswith("OI-20:")
+
+
+def test_ratify_brief_with_view_link_is_silent(tmp_path):
+    ct = load_script("check_trajectory")
+    _write_open_items(
+        tmp_path,
+        _oi_row(
+            "OI-20", "ratify the [v3]-[g2] batch. See the tree: docs/ratify/v3-g2.md."
+        ),
+    )
+    assert ct.ratify_brief_findings(tmp_path) == []
+
+
+def test_ratify_brief_lint_is_vacuous_off_the_pending_queue(tmp_path):
+    ct = load_script("check_trajectory")
+    # No registry at all -> nothing to check.
+    assert ct.ratify_brief_findings(tmp_path) == []
+    # A ratification word with no [phase]-[g*] anchor -> not a brief.
+    _write_open_items(tmp_path, _oi_row("OI-30", "whether to ratify a policy change."))
+    assert ct.ratify_brief_findings(tmp_path) == []
+    # ...an anchor with no ratification language -> also not a brief.
+    _write_open_items(tmp_path, _oi_row("OI-31", "sequence [v3]-[g2] after v2 work."))
+    assert ct.ratify_brief_findings(tmp_path) == []
+    # ...and a RULED row is history, not a pending decision, so it never warns
+    # even when it carries both (the negative half WI-322 added).
+    _write_open_items(
+        tmp_path,
+        _oi_row("OI-32", "ratify the [v3]-[g2] batch.", status="ruled"),
+    )
+    assert ct.ratify_brief_findings(tmp_path) == []
+
+
+# --- WI-064: the cross-CMP-edge-without-IF rule ---------------------------------
+# An internal import edge between two DIFFERENT components with no covering
+# IF-### row is a finding (the AXES ratified model's enforceability ruling) —
+# WARN plain, ERROR under --strict, sharing the docs/components-check opt-out.
+# Edges come from the MODULE MAP block's `Imports (internal):` lines; the seam
+# side joins interfaces.csv endpoints in either direction. Vacuous whenever any
+# input is absent (never-breaking).
+
+ARCH_2MOD_IMPORT = """# Arch
+<!-- BEGIN GENERATED MODULE MAP -->
+### `scripts/mod_a`
+_A._
+Imports (internal): `mod_b`
+
+| Public item | Summary | Implements |
+|---|---|---|
+| `run()` | go |  |
+
+### `scripts/mod_b`
+_B._
+
+| Public item | Summary | Implements |
+|---|---|---|
+| `go()` | g |  |
+<!-- END GENERATED MODULE MAP -->
+"""
+
+TWO_CMPS = "CMP-001,A,software,,built,,,,\nCMP-002,B,software,,built,,,,\n"
+
+
+def _cross_cmp_repo(tmp_path, cmp_b="CMP-002"):
+    """mod_a (CMP-001) imports mod_b (cmp_b); no IF row unless a test adds one."""
+    write_arch(tmp_path, ARCH_2MOD_IMPORT)
+    write_cmps(tmp_path, TWO_CMPS)
+    write_tagged_llrs(
+        tmp_path, [("scripts/mod_a", "CMP-001"), ("scripts/mod_b", cmp_b)]
+    )
+
+
+def test_cross_cmp_import_without_seam_warns_plain_fails_strict(tmp_path):
+    _cross_cmp_repo(tmp_path)
+    plain = run_traj(tmp_path)
+    assert plain.returncode == 0, plain.stdout + plain.stderr
+    assert (
+        "cross-component import scripts/mod_a (CMP-001) -> scripts/mod_b (CMP-002)"
+        in plain.stderr
+    )
+    strict = run_traj(tmp_path, "--strict")
+    assert strict.returncode == 1
+    assert "has no declared IF-### seam" in strict.stderr
+
+
+def test_cross_cmp_import_with_declared_seam_is_silent(tmp_path):
+    _cross_cmp_repo(tmp_path)
+    write_ifs(
+        tmp_path,
+        'IF-001,Consumes,scripts/mod_a,scripts/mod_b,"call",SR-001,v1,Stable,Active,,\n',
+    )
+    proc = run_traj(tmp_path, "--strict")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "cross-component import" not in proc.stderr
+
+
+def test_cross_cmp_seam_covers_either_direction(tmp_path):
+    # The seam row authored from mod_b's side (b -> a) still covers the a -> b
+    # import edge — a seam is one declared relationship, not a directed pair.
+    _cross_cmp_repo(tmp_path)
+    write_ifs(
+        tmp_path,
+        'IF-001,Provides,scripts/mod_b,scripts/mod_a,"call",SR-001,v1,Stable,Active,,\n',
+    )
+    proc = run_traj(tmp_path, "--strict")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "cross-component import" not in proc.stderr
+
+
+def test_intra_cmp_import_is_silent(tmp_path):
+    # Both endpoints in CMP-001: internal wiring, never a finding.
+    _cross_cmp_repo(tmp_path, cmp_b="CMP-001")
+    proc = run_traj(tmp_path, "--strict")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "cross-component import" not in proc.stderr
+
+
+def test_cross_cmp_unmapped_endpoint_is_vacuous(tmp_path):
+    # mod_b has no Component membership: coverage is the containment rule's job,
+    # so the cross-CMP rule stays silent rather than double-reporting.
+    write_arch(tmp_path, ARCH_2MOD_IMPORT)
+    write_cmps(tmp_path, TWO_CMPS)
+    write_tagged_llrs(tmp_path, [("scripts/mod_a", "CMP-001")])
+    proc = run_traj(tmp_path, "--strict")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "cross-component import" not in proc.stderr
+
+
+def test_cross_cmp_no_imports_lines_is_vacuous(tmp_path):
+    # An arch-map without `Imports (internal):` lines (older gen, or no internal
+    # imports) contributes no edges — the rule costs nothing.
+    write_arch(tmp_path, ARCH_2MOD)
+    write_cmps(tmp_path, TWO_CMPS)
+    write_tagged_llrs(
+        tmp_path, [("scripts/mod_a", "CMP-001"), ("scripts/mod_b", "CMP-002")]
+    )
+    proc = run_traj(tmp_path, "--strict")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "cross-component import" not in proc.stderr
+
+
+def test_components_check_off_silences_cross_cmp(tmp_path):
+    _cross_cmp_repo(tmp_path)
+    (tmp_path / "docs" / "components-check").write_text("off\n", encoding="utf-8")
+    proc = run_traj(tmp_path, "--strict")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "cross-component import" not in proc.stderr
+
+
+# --- specs act on declared interface boundaries (WI-191) ----------------------
+
+# One Stable seam + one Proposed seam for the spec-citation checks.
+SPEC_IFS_ONE = (
+    'IF-001,Consumes,scripts/mod_a,docs/stack.ini,"reads",SR-001,v1,Stable,Stable,,\n'
+)
+SPEC_IFS_PROPOSED = SPEC_IFS_ONE + (
+    'IF-050,Provides,scripts/mod_a,scripts/mod_b,"new seam",SR-001,v1,'
+    "Experimental,Proposed,,\n"
+)
+
+
+def write_spec_file(root, name, body):
+    d = root / "docs" / "specs"
+    d.mkdir(parents=True, exist_ok=True)
+    (d / name).write_text(body, encoding="utf-8")
+
+
+def _spec_repo(root, spec_name, spec_body, ifs=SPEC_IFS_ONE):
+    # A non-vacuous WI registry (the spec check runs past the WI-load) + the IF
+    # registry + one spec file. The done WI keeps R-A clean; no open WI leaves
+    # R-E vacuous, so the only findings are the spec-interface ones.
+    write_wis(root, "WI-001,A,scripts,,,done,Shipped it.\n")
+    write_ifs(root, ifs)
+    write_spec_file(root, spec_name, spec_body)
+
+
+def test_spec_interfaces_unarmed_is_vacuous(tmp_path):
+    _spec_repo(tmp_path, "WI-001.md", "# WI-001\n\n## Approach\n\nNo section.\n")
+    proc = run_traj(tmp_path)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "Interfaces" not in proc.stderr  # no `## Interfaces` -> not armed
+
+
+def test_spec_interfaces_resolvable_passes(tmp_path):
+    _spec_repo(
+        tmp_path,
+        "WI-001.md",
+        "# WI-001\n\n## Interfaces\n\n- IF-001: acts on the stack reader.\n\n"
+        "## Done-when\n",
+    )
+    proc = run_traj(tmp_path)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "resolves to no row" not in proc.stderr
+
+
+def test_spec_interfaces_unresolvable_warns_then_errors_under_strict(tmp_path):
+    body = "# WI-001\n\n## Interfaces\n\n- IF-999: no such seam.\n\n## Done-when\n"
+    _spec_repo(tmp_path, "WI-001.md", body)
+    proc = run_traj(tmp_path)  # WARN plain, exit 0
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "IF-999 which resolves to no row" in proc.stderr
+    strict = run_traj(tmp_path, "--strict")  # ERROR, exit 1
+    assert strict.returncode == 1
+    assert "IF-999 which resolves to no row" in strict.stderr
+
+
+def test_spec_interfaces_proposed_needs_rationale(tmp_path):
+    bare = "# WI-001\n\n## Interfaces\n\n- IF-050 (Proposed)\n\n## Done-when\n"
+    _spec_repo(tmp_path, "WI-001.md", bare, ifs=SPEC_IFS_PROPOSED)
+    proc = run_traj(tmp_path)
+    assert "Proposed seam IF-050 with no rationale" in proc.stderr
+    # A rationale naming the nearest existing seam + why it falls short -> clean.
+    ok = (
+        "# WI-001\n\n## Interfaces\n\n- IF-050 (Proposed): a new provide; nearest "
+        "IF-001 is a consume, insufficient because this is the opposite "
+        "direction.\n"
+    )
+    write_spec_file(tmp_path, "WI-001.md", ok)
+    assert "Proposed seam IF-050" not in run_traj(tmp_path).stderr
+
+
+def test_spec_interfaces_empty_section_warns(tmp_path):
+    _spec_repo(tmp_path, "WI-001.md", "# WI-001\n\n## Interfaces\n\nTBD.\n\n## X\n")
+    assert (
+        "cites no IF-### and states no intra-module escape" in run_traj(tmp_path).stderr
+    )
+
+
+def test_spec_interfaces_intra_module_escape_passes(tmp_path):
+    body = (
+        "# WI-001\n\n## Interfaces\n\nIntra-module: acts only within scripts/mod_a; "
+        "no cross-module seam (PROCESS.md §8).\n"
+    )
+    _spec_repo(tmp_path, "WI-001.md", body)
+    proc = run_traj(tmp_path)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "cites no IF-###" not in proc.stderr
+
+
+def test_spec_interfaces_readme_and_example_not_armed(tmp_path):
+    # The specs/ README documents the rule and the inert WI-000 example both carry
+    # the heading, but neither is an armed spec-of-record.
+    _spec_repo(
+        tmp_path, "README.md", "# Specs\n\n## Interfaces\n\nThe rule: cite IF-###.\n"
+    )
+    write_spec_file(tmp_path, "WI-000.md", "# WI-000\n\n## Interfaces\n\n- IF-999 x\n")
+    proc = run_traj(tmp_path)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "IF-999" not in proc.stderr

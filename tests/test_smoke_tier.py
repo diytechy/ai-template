@@ -22,6 +22,23 @@ def test_tiering_is_total_smoke_or_slow():
         assert smoke_tier_for(stem) == "slow"
 
 
+def test_wi277_split_modules_stay_slow():
+    # The WI-277 guard. Splitting a slow monolith mints NEW module stems, and
+    # `smoke_tier_for` defaults an unlisted stem to smoke — so a split that
+    # forgets its SLOW_MODULES entry silently pulls a subprocess-heavy module
+    # back into the per-commit bar (the WI-281 budget breaks quietly, since the
+    # ratchet is blind to a single omission). Each stem below inherits its
+    # parent's tier because it inherits its parent's cost class; a deliberate
+    # re-tier of a genuinely in-process half is a separate measured decision
+    # that must also update this list.
+    for stem in (
+        "test_trajectory_staged",
+        "test_trajectory_arch",
+        "test_trajectory_specs",
+    ):
+        assert smoke_tier_for(stem) == "slow", stem
+
+
 def test_slow_modules_are_real_test_files():
     # A renamed/removed file must not leave a dead SLOW_MODULES entry silently
     # shrinking the slow set (slowing the commit bar back down unnoticed), and

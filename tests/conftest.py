@@ -95,6 +95,15 @@ SLOW_MODULES = frozenset(
         "test_agent_loop_critique",  # critique-round subprocesses
         "test_check_harness",  # check.py harness on scaffolds
         "test_trajectory",  # trajectory registry on scaffolds
+        # WI-277 split test_trajectory.py by behavior boundary. The three new
+        # modules carry the SAME cost class as their parent (check_trajectory.py
+        # run_py subprocesses over temp registries), so they inherit its tier —
+        # the split is behavior-preserving, not a re-tiering. (Whether the
+        # decision-only halves belong back in the bar is a separate MEASURED
+        # decision, deliberately not taken here.)
+        "test_trajectory_staged",  # --staged git-effect + git-time recovery
+        "test_trajectory_arch",  # decision over architecture inputs
+        "test_trajectory_specs",  # decision over spec bodies
         "test_components_registry",  # components gate on scaffolds
         "test_derive_gate",  # derive_gate on scaffolds
         "test_gen_okf",  # gen_okf on scaffolds
