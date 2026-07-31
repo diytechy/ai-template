@@ -35,6 +35,8 @@ def test_wi277_split_modules_stay_slow():
         "test_trajectory_staged",
         "test_trajectory_arch",
         "test_trajectory_specs",
+        "test_trace_rules",
+        "test_trace_briefs",
     ):
         assert smoke_tier_for(stem) == "slow", stem
 

@@ -89,6 +89,12 @@ SLOW_MODULES = frozenset(
         "test_agent_loop_review",  # review-tail subprocess rounds
         "test_agent_loop",  # agent_loop.py subprocess loops
         "test_trace",  # trace.py subprocess runs
+        # WI-277 split test_trace.py by behavior boundary; same cost class as the
+        # parent (trace.py run_py subprocesses / real git repos), so same tier —
+        # behavior-preserving, not a re-tiering. test_trace_rules is genuinely
+        # in-process; putting it back in the bar is a separate MEASURED call.
+        "test_trace_rules",  # pure registry-rule decisions
+        "test_trace_briefs",  # re-attestation brief: git effect + freshness gate
         "test_check_docs",  # check_docs on bootstrapped scaffolds
         "test_registry_checks",  # registry gates on scaffolds
         "test_check_privacy",  # privacy lint on scaffolds

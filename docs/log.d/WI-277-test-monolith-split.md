@@ -69,3 +69,42 @@ Collect-only: **1713 → 1714 total**, **556 → 557 smoke**. The single `+1` on
 both sides is the new permanent guard test in `test_smoke_tier.py` (a smoke
 module); the **slow** count is unchanged at 1157, which is the number that would
 have moved had a stem been forgotten or a test dropped.
+
+### S7 — `tests/test_trace.py` (2,304 lines, 81 tests)
+
+Kept in the parent (**44 tests**): the scaffold-driven half — orphan detection,
+strict/schema gates, the verification-category buckets (Test / Attest /
+Demonstrated / Critique), phase scoping, the generated outline / Mermaid / HTML
+render, the schema-safe optional columns, the WI-056 IF seam tier, WI-065 seam
+citations, the WI-089/WI-090 Draft exemptions, the WI-188 ratified-phase rule
+and the repo-review regressions.
+
+| new module | behavior boundary | tests | moved from |
+| --- | --- | --- | --- |
+| `test_trace_rules.py` | pure decision, in-process | 21 | the spine-prose predicates (a row states the system not its own history; one testable obligation; the paraphrase advisory that warns but never gates; the optional LLR Rationale column), WI-229/WI-364 supersession integrity, the WI-129 LLR/TC status-coherence lint, the WI-146(a) `--ratify` view, and the WI-081 Slice C helpers (`_bucket_by_ref`, `exit_code`) |
+| `test_trace_briefs.py` | git effect + recovery | 16 | WI-316 `--ratify modified` (baseline walk, `--since`, off-git degradation, a BOMmed baseline) and the WI-325 freshness gate on it, whose load-bearing case is that `--check` reads the baseline the FILE declares |
+
+44 + 21 + 16 = **81** — the parent's exact test count. `tests/golden/` and
+`test_trace_golden.py` were not touched.
+
+Two deviations from the plan's line ranges, both resolved by CONTENT (the plan
+said to relocate by name where the ranges had shifted):
+
+- The WI-081 Slice C block (`_bucket_by_ref` + the `_findings_stub` exit-code
+  policy) sits *after* the reattest-brief section on disk, so the plan's single
+  range for briefs would have swept it in. The plan names it under **rules**,
+  which is also where it belongs by behavior (two pure helpers, no git), so
+  `test_trace_rules.py` is two ranges rather than one.
+- The plan's gloss listed "draft exemptions" under rules, but the WI-089/WI-090
+  draft tests are scaffold-driven and sit inside the parent's own stated range;
+  moving them would have split the WI-090 section mid-way. They stay with the
+  scaffold half. Net: rules 21 (plan estimated ~27), briefs 16 (~14),
+  parent 44 (~40) — the redistribution, not the total, moved.
+
+Every git-backed test left the parent, so `skip_without_env_gates` and `SCRIPTS`
+left its imports with them — and the WI-333 note explaining *why*
+`skip_without_env_gates` is imported rather than assumed moved verbatim to
+`test_trace_briefs.py`, which now hosts the tests it guards. A comment that
+outlives the code it documents is how the next reader gets misled.
+
+Collect-only: **1714 total / 557 smoke, both unchanged** (1157 slow).
