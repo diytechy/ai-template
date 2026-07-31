@@ -291,7 +291,15 @@ BASELINE = {
     # _wi_st, the tiered when_view (+_wi_phases/DEFAULT_PHASE), and the
     # _sw_panel/_cmp_panel tab panels — moved verbatim to the new sibling
     # traj_views.py (1141 lines, under THRESHOLD). Ratcheted DOWN.
-    "gen_trajectory.py": 2381,
+    # -470 (2381 -> 1911), WI-280 S7 (built before S6 — _next_work_title calls
+    # _title_clause, so the status module must exist first): the --status
+    # snapshot + pending projection — the STATUS_MD markers, _gate_facts/
+    # _spine_counts, the open-item one-liners, the blocked/spine/pause pending
+    # sources, pending_block/status_block, the Ready-frontier lines and
+    # _splice_status/run_status — moved verbatim to traj_status.py (508 lines,
+    # under THRESHOLD; the facade docstring gains the sibling clause, +3); main's --status arm calls traj_status.run_status.
+    # Ratcheted DOWN.
+    "gen_trajectory.py": 1911,
     # (agent_dispatch.py and its whole bump history retired with the module
     # at concurrency-restructure Phase 5 - the dispatcher deleted wholesale;
     # the surviving integrator is integrate.py, below this threshold.)
@@ -626,7 +634,9 @@ BASELINE = {
     # bump.
     # +1 (2092 -> 2093), WI-280 S5: the traj_views.py MAPPING row. Reviewed
     # bump.
-    "bootstrap.py": 2093,
+    # +1 (2093 -> 2094), WI-280 S7: the traj_status.py MAPPING row. Reviewed
+    # bump.
+    "bootstrap.py": 2094,
     # NEW ENTRY, +228 (1423 -> 1651), Phase 2b of the concurrency restructure
     # (docs/concurrency-restructure.md §7): the spec-folder work-item reader,
     # which crosses this module over THRESHOLD for the first time. It is one

@@ -409,12 +409,14 @@ f800f0c60265  project-trajectory/scripts/check_trajectory.py == project-trajecto
 # the draft-heading scan). Several carry an explicit in-code note -
 # 'Duplicated in trace.py per the F5 rule' - and derive_gate.py is
 # deliberately self-contained so the gate can be derived without trace.py.
+# WI-280 S7: the dashboard side of 4b5af82ebaa3 (the status snapshot's row
+# filter) moved verbatim to traj_status.py — same fingerprint, re-homed.
 fd8bed87fb54  project-trajectory/scripts/agent_loop.py == project-trajectory/scripts/check_trajectory.py
 aa845026a358  project-trajectory/scripts/check_flows.py == project-trajectory/scripts/plan_coverage.py
 84e2717e93b1  project-trajectory/scripts/check_perf.py == project-trajectory/scripts/gen_release_checklist.py
 276a458797c4  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/gen_arch_map.py
 b17d9576c85b  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/trace.py
-4b5af82ebaa3  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/gen_trajectory.py
+4b5af82ebaa3  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/traj_status.py
 c7533358d6c4  project-trajectory/scripts/derive_gate.py == project-trajectory/scripts/gen_release_checklist.py
 bea18e2ff5f7  project-trajectory/scripts/derive_gate.py == project-trajectory/scripts/gen_release_checklist.py
 019630ddf2c7  project-trajectory/scripts/derive_gate.py == project-trajectory/scripts/trace.py
