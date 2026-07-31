@@ -51,9 +51,20 @@ namespace, parallel to SN/SR/LLR/TC).
   a contract test that asserts the published shape; a `Consumes` interface needs
   a test (or recorded fixture/mock pinned to `Version`) proving we read it
   correctly. No interface ships untested.
-- **Both sides reference the same `IF-ID`.** Use identical ids across repos so a
-  human or agent can grep one string and find both ends. Record the counterpart
-  repo + the matching id so the trail is two-way.
+- **`IF-` ids are repo-local — never reuse an id across repos.** Each repo owns
+  its own `IF-###` space, so `IF-007` in two repos are *different* interfaces
+  that merely share a string (MULTI_REPO.md §3.3 — they would collide the
+  moment anything referenced both). The two ends of one cross-repo contract
+  therefore carry **different local ids** (exactly as the snippet below shows),
+  and a foreign seam is cited as the **qualified pair** — the counterpart repo
+  (its name or `REPO-###` row) **plus** its local `IF-###` and pinned version —
+  written in `Counterpart` and `Contract`/`Notes`, **never in the `IF-ID`
+  column** (`trace.py`'s `^IF-\d+$` integrity pattern rejects any qualified
+  form there). Under a coordinator repo, the one stable global handle is the
+  coordinator-level `CIF-###` (MULTI_REPO.md §3.3). Honesty note: no tool
+  validates the far side of a cross-repo reference — it is a text convention;
+  keep the trail two-way by recording the counterpart repo + matching id on
+  both rows.
 - **Stability gates change.** Changing a `Stable` contract requires a notice to
   the counterpart and a version bump; `Experimental` may change freely. Note
   breaking changes in the audit log and bump `Version`.
