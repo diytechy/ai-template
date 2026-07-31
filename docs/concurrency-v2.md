@@ -1,47 +1,60 @@
-# Concurrency v2 — the dispatcher, the spine barrier, and what is ratified
+# Constraints over checks — concurrency, spine authority, and work-item state
 
-> **STATUS: DESIGN DRAFT — nothing here is ruled.** This is the working
-> surface for the concurrency discussion opened 2026-07-31, after a session
-> ran two work items in parallel by hand and surfaced three separate
-> problems. The draft WI rows in [`docs/work/deferred/`](work/deferred/)
-> point here; **none should be claimed** until this doc is settled and the
-> breakdown is solidified. Precedent for this shape:
-> [`concurrency-restructure.md`](concurrency-restructure.md), which ran the
-> same way before becoming a phased program.
+> **STATUS: DESIGN DRAFT — nothing here is ruled.** Working surface opened
+> 2026-07-31 after a session ran two work items in parallel by hand and
+> surfaced problems that were not really about concurrency. The draft rows in
+> [`docs/work/deferred/`](work/deferred/) point here; **none should be
+> claimed** until this settles. Precedent for the shape:
+> [`concurrency-restructure.md`](concurrency-restructure.md).
 
-## Why this exists
+## 0. The governing principle (owner framing, 2026-07-31)
 
-The 2026-07-31 session claimed WI-280 and WI-277 at once (03:07 and 04:50)
-and merged them serially (09:49, 11:25). Nothing broke, but three things
-surfaced that the current design does not handle:
+> *"A lot of the previous moth-balling was due to constraining the overall
+> system and building checks instead of building constraints that would have
+> prevented the bad behavior in the first place."*
 
-1. **A spine-touching WI ran concurrently with other work** — under a
-   declared `safety_class = "ordinary"` that was honest at filing and wrong
-   by the time the work revealed itself.
-2. **The re-attest window it opened cost four review rounds**, two of them
-   bought by the freshness gate re-arming (recorded as WI-378).
-3. **That window should probably never have opened at all** — see §3.
+Prefer **structure that makes a bad state unrepresentable** over **a check
+that detects it after the fact**. Every section below is an application; each
+proposal is judged first by whether it *removes* machinery.
 
-## 1. The vocabulary (proposed, needs agreement)
+**Worked example, found while drafting this.** The `archive/` folder holds
+both terminal states, so a `disposition = "retired"` frontmatter key
+disambiguates it — and `parse_spec_status()` exists to verify the attribute
+and the folder agree, raising on "unknown disposition" and on "a retired spec
+outside archive/". One folder too few produced: an attribute, a validator, two
+error paths, and its tests. **Splitting the folder deletes all of it.** That is
+the shape to look for everywhere else.
 
-The session's confusion came from collapsing two roles. Keeping them
-separate is the first thing to agree:
+**Why this keeps happening — a structural answer, not a character one.** The
+2026-07-28 audit already found enforcement-layer growth to be the repo's
+dominant failure mode, and Phase 5 then deleted 4,042 lines, so this is not
+aversion to architectural change. The likelier cause is an **incentive
+gradient**: a check fits inside the scope of the WI that discovered the
+problem, while a constraint usually needs a schema or flow change that crosses
+WI boundaries and may owe an attestation. Every local decision to add a check
+is individually correct; the aggregate is enforcement-layer growth. If that
+diagnosis is right, the fix is procedural — ask *"what constraint would make
+this unrepresentable?"* at **filing** time, where the cost is still comparable,
+rather than at review time when only the check is in scope.
+
+---
+
+# Workstream A — concurrency and spine authority
+
+## A1. Vocabulary
 
 | Term | Owns | Exists today |
 |---|---|---|
-| **Driver** | Sequencing **within one lane**: next WI → claim → build → merge → repeat. No concurrency decisions. | Yes — [`drive.py`](../project-trajectory/scripts/drive.py) |
-| **Dispatcher** | Allocation **across lanes**: how many run at once, what each gets, and when the spine batch is admitted. | **No** — deleted with the v4 dispatcher at Phase 5 |
+| **Driver** | Sequencing **within one lane**: next WI → claim → build → merge → repeat | Yes — [`drive.py`](../project-trajectory/scripts/drive.py) |
+| **Dispatcher** | Allocation **across lanes**: how many run at once, what each gets, when the spine batch is admitted | **No** — deleted at Phase 5 |
 
-**Open question A:** do these stay separate modules, or is the dispatcher a
-mode of the driver? The owner has questioned whether the split is worth it.
-Argument for one module: at `lanes = 1` the dispatcher is a no-op, and two
-modules means two things to reason about. Argument for two: the driver is
-proven and small; concurrency logic is where the last dispatcher died.
+**Open question A:** separate modules, or dispatcher as a driver mode? At
+`lanes = 1` the dispatcher is a no-op.
 
-## 2. How the dispatcher should operate
+## A2. How the dispatcher operates
 
-The owner's model, stated as a flow. **Spine work is not refused — it
-waits for the station to clear, then runs alone.**
+Spine work is **not refused** — it waits for the station to clear, then runs
+alone.
 
 ```mermaid
 flowchart TD
@@ -51,46 +64,39 @@ flowchart TD
     D --> E[Integrator: serial merge queue]
     E --> A
 
-    B -- yes --> F[STOP admitting new work<br/>spine batch has priority]
-    F --> G{All lanes back<br/>in the station?<br/>no open claims}
+    B -- yes --> F[Stop admitting new work<br/>spine batch has priority]
+    F --> G{All lanes back<br/>in the station?}
     G -- no --> H[Wait for in-flight lanes<br/>to finish and merge]
     H --> G
-    G -- yes --> I[Admit the spine batch:<br/>ALL spine WIs together,<br/>as the only thing touching trunk]
-    I --> J[Build + review + ratify<br/>one re-attest window for the batch]
+    G -- yes --> I[Admit ALL spine WIs together<br/>as one batch, sole toucher of trunk]
+    I --> J[Build, review, ratify<br/>ONE re-attest window]
     J --> K[Merge; window closes]
-    K --> A
+    K --> L[Re-evaluate the backlog:<br/>which queued WIs cite amended SRs?]
+    L --> A
 ```
 
-Three properties this gives, none of which hold today:
+Properties this gives, none of which hold today: spine work is **exclusive**,
+**batched** (N spine changes = one window, one owner sitting), and
+**prioritised** (drains rather than starving).
 
-- **Spine work is exclusive**, so no other WI's scope can shift underneath it.
-- **Spine work batches**, so N spine changes cost **one** re-attest window
-  and one owner sitting, not N.
-- **Spine work has priority**, so it drains rather than starving behind a
-  queue of ordinary work.
+**Constraint, not check:** `schedule.py` already classifies
+`spine|gate|attestation → serial-whole-project`, but `_disposition()` still
+returns `ready` for those rows and the only enforcement is `integrate.py`'s
+blunt refusal. Making the frontier itself withhold a spine WI until lanes are
+empty is a constraint; the current refusal is a check.
 
-**What already exists:** `schedule.py` classifies
-`spine|gate|attestation → serial-whole-project` and
-`protected → protected-serial`. **What is missing:** anything that acts on
-it. `_disposition()` still returns `ready` for those rows, and the only
-enforcement is `integrate.py`'s blunt *"claims ordinary work only"* refusal —
-which is a hard stop, not a wait. So this is largely making an existing
-declaration true, not new machinery.
+**Open question B:** what admits the batch — the dispatcher (can wait) or a
+claim rung (can only refuse)?
 
-**Open question B:** what admits the spine batch — the dispatcher (which
-knows lane state) or a claim rung (which is where every other refusal
-lives)? A claim rung cannot *wait*, only refuse; waiting needs the
-dispatcher.
+## A3. What counts as a spine touch — OWNER RULING 2026-07-31
 
-## 3. What counts as a spine touch (OWNER RULING 2026-07-31)
+> Only what is **ratified** matters. Ratification is on change of **scope**,
+> defined by the **prose and the relevant field attributes**. Traceability —
+> the `Module` pointer and its kin — is *traced*, not ratified, and must **not**
+> count as a spine touch.
 
-> Only what is **ratified** matters. The owner ratifies the spine on change
-> of **scope**, which is defined by the **prose and the relevant field
-> attributes**. Traceability — the `Module` pointer and its kin — is *traced*,
-> not ratified, and must **not** count as a spine touch.
-
-**The current detector violates this.** `check_trajectory.staged_spine_findings`
-compares every column except `Status`:
+The detector violates this. `check_trajectory.staged_spine_findings` compares
+every column except `Status`:
 
 ```python
 changed = sorted(k for k in set(head) | set(row)
@@ -98,91 +104,140 @@ changed = sorted(k for k in set(head) | set(row)
 ```
 
 So `Module`, `CodeSymbol`, `TestRefs`, `Component` and `Phase` arm the
-post-attestation amendment warn exactly as if the requirement text had
-changed. That is what happened on WI-280: 19 LLR `Module` cells followed
-code that moved, which forced 11 owning SRs to `Modified`, which dropped the
-gate G3→G2, which cost a ratify brief and four review rounds.
+re-attest warn as if requirement prose had changed. **That is what happened on
+WI-280**: 19 LLR `Module` cells followed code that moved → 11 owning SRs to
+`Modified` → gate G3→G2 → a ratify brief and four review rounds, for a change
+that altered no requirement. Under this ruling **that window should never have
+opened.**
 
-**Under this ruling, that window should never have opened.** Fixing the
-detector therefore does three jobs at once: it stops spurious re-attests, it
-removes most of WI-378's pain, and it makes the §2 barrier cheap — because a
-decomposition stops counting as spine work.
-
-**Open question C:** the exact cell split per registry. First cut:
+**Open question C — the cell split.** First cut; the `?` rows need the owner's
+line:
 
 | Registry | Ratified (arms the warn) | Traced (must not) |
 |---|---|---|
 | SR | `Title`, `Requirement`, `Rationale`, `AcceptanceCriteria`, `Permutations`, `Priority`, `Verification` | `SN-Refs`?, `Phase`, `Area`, `Lifecycle` |
 | LLR | `Title`, `Detail`, `Rationale` | `Module`, `CodeSymbol`, `TestRefs`, `Component`, `Phase` |
-| TC | `Method`, `Expected`, `Parameters`, `Level`, `Tier` | `Verifies`, `Evidence`, `Automated`, `Phase` |
+| TC | `Method`, `Expected`, `Parameters`, `Level`, `Tier` | `Verifies`?, `Evidence`, `Automated`, `Phase` |
 
-The `?` cells are genuinely arguable: `SN-Refs` changes *what the requirement
-answers to*, which smells like scope. `Verifies` changes what a test claims
-to cover. These need the owner's line, not mine.
+`SN-Refs` changes what a requirement answers to; `Verifies` changes what a test
+claims to cover. Both smell like scope.
 
-## 4. Grouping, and the bar-amortisation problem
+## A4. Grouping and the bar
 
-The owner's objection to one-WI-at-a-time is quantitative and correct: the
-gate bar is ~11 minutes (measured 2026-07-31: 634 s of it is
-`tests+coverage`; all nineteen other steps total ~25 s). Three WIs handled
-singly cost **three** bars; grouped, they cost **one**.
+The bar is ~11 minutes (measured 2026-07-31: 634 s is `tests+coverage`; the
+other nineteen steps total ~25 s). Three WIs singly = three bars.
 
-**The synthesis worth considering: you do not need multi-WI *sessions* to get
-that.** The bar is paid at *integration*, not at build. Two independent
-knobs:
+**What actually fails**, from this session's seven WIs:
 
-| Knob | What it groups | Cost | Failure coupling |
+| Class | What | Seen | Attributable without bisecting? |
 |---|---|---|---|
-| **Session grouping** (the retired traincar) | N WIs into one worker session | Complex — this is what the deleted dispatcher did, with a recorded 19 reservations → 8 integrations → **0** gate-verified | High: one bad WI reds the whole car, and the session must unwind it |
-| **Drain grouping** (integrator composes) | N *finished branches* onto one candidate, barred **once** | Small — a loop change in `integrate.py`, already listed as a Q2 speed lever | Medium: a red bar needs bisecting; mitigate by falling back to per-branch barring on red |
+| A. Product code wrong | the WI's own code is broken | **0 at merge** | yes |
+| B. Registration incomplete | code fine, a spine/census/ratchet row missing | WI-374, WI-280 | **yes** — the bar names check and row |
+| C. Composition | two greens, red together | **0 observed** | **no** — needs bisecting |
+| D. Pre-existing rot | exposed, not caused | WI-280 | yes — reproduces at trunk |
+| E. Merge conflict | textual | WI-280 ×2, WI-277 ×1 | yes — before the bar |
+| F. Gate refusal | verdict freshness | WI-280 ×2 | yes — not a work failure |
 
-**Drain grouping gets the 3-bars-to-1 win without session grouping's
-failure coupling**, because each WI is still built and reviewed
-independently — only the *bar* is shared. That looks like the better trade,
-and it is strictly smaller.
+The composed bar **never caught broken product code** — each builder's own
+close bar caught it first. So the merge bar's realistic job is composition and
+registration, and most reds name their own cause.
 
-**Open question D:** is session grouping wanted at all once drain grouping
-exists? If not, the vestigial plumbing should be removed or formally marked
-dormant — today `schedule.py` still classifies for "optimistic multi-WI
-packing", `agent_loop --wi` still accepts `'WI-201;WI-204'`, and the §7
-continuation guard still exists, but **nothing packs**. Capability that looks
-present and isn't is the worst of the three states.
+| Knob | Groups | Failure coupling |
+|---|---|---|
+| **Session grouping** (retired traincar) | N WIs into one session | High — one bad WI reds the car; recorded history 19 reservations → 8 integrations → **0** gate-verified |
+| **Drain grouping** | N *finished branches*, barred once | Medium — red needs bisecting; fall back to per-branch on red |
 
-## 5. A `draft` status for work items (gap)
+**Drain grouping wins twice:** it gets 3-bars-into-1 without session
+grouping's coupling, *and* it is the only configuration that can catch Class C
+at all — a per-branch bar is structurally blind to interaction failures.
 
-There is no way to file a work item that is *not yet ready to be claimed*.
-The status directories are `queued`, `active`, `deferred`, `archive`;
-`deferred` means "parked with a reason", which is the closest fit but reads
-as a decision rather than as work-in-progress thinking. The rows for this
-design are in `deferred/` for that reason, and say so.
+**Open question D:** is session grouping wanted once drain grouping exists? If
+not, remove the vestigial plumbing — `schedule.py` still classifies for
+"optimistic multi-WI packing", `agent_loop --wi` still accepts
+`'WI-201;WI-204'`, the §7 continuation guard still runs, but **nothing packs**.
 
-Adding `draft/` is a real schema change: `SPEC_STATUS_DIRS` is duplicated
-across three F5 readers (`schedule.py`, `check_trajectory.py`,
-`agent_common.py`), plus `wi_convert.py` and their tests. Worth doing if the
-"write it down before it is claimable" need is recurring — which this session
-suggests it is.
+## A5. Backlog re-evaluation after re-attest
+
+A verdict goes stale when the tree moves; a **WI's premise** goes stale when a
+cited SR is amended. The first is mechanized (`_verdict_gate`); the second is
+**not checked at all** — `SR-Refs` is only ever tested for *existence*.
+
+If re-attest means scope changed, every open WI citing an amended SR may be
+mis-scoped or obsolete, and today it will be claimed and built as if nothing
+happened. Cheap to detect with machinery that already exists (`ratify_check`
+and `_verdict_gate` both do git-derived staleness). **Warn, not gate** — a
+scope change means *re-read*, and gating would strand the backlog on every
+ratification. Fires at the §A2 flow's final step.
+
+**Depends on A3:** without the cell split this warns constantly on WIs whose
+premise never changed — noise that gets it switched off.
+
+---
+
+# Workstream B — work-item state
+
+## B1. The duplication
+
+Status **is** the folder — except `archive/`, which holds two terminal states
+and therefore needs a `disposition` attribute plus a validator to keep them
+honest. That is the only reason the attribute exists.
+
+## B2. The proposed model (owner, 2026-07-31)
+
+| Before | After |
+|---|---|
+| `queued`, `active`, `deferred`, `archive` (+ `disposition`) | `draft`, `queued`, `active`, `deferred`, `cancelled`, `complete` |
+
+- **`draft/`** — written down, **not claimable**. Today there is nowhere honest
+  to put thinking-in-progress; `deferred` reads as *a decision*. (These very
+  rows sit in `deferred/` for want of it.)
+- **`cancelled/`** replaces `retired`, which is ambiguous — it can read as
+  *finished and put out to pasture*. "Cancelled" cannot.
+- **`complete/`** replaces the done half of `archive/`.
+
+**What this removes:** the `disposition` key, `parse_spec_status()`'s
+attribute/folder cross-check, its two raise paths, and their tests. State
+becomes *unrepresentably* inconsistent rather than checked-for-consistency.
+This is §0's principle applied.
+
+**Specs mirror it.** A closed WI's spec-of-record moves to the folder matching
+its terminal state rather than a single `docs/archive/specs/`, so a spec's
+location answers "did this ship or was it cancelled?" without opening it.
+
+**Cost, stated honestly:** `SPEC_STATUS_DIRS` is triplicated across the three
+F5 readers (`agent_common.py`, `check_trajectory.py`, `schedule.py` — 3/4/3
+references), plus `wi_convert.py`, the scheduler's terminal-state logic, and
+tests. The driver must treat `draft` as never-ready. Existing `archive/` rows
+migrate by disposition. Downstream repos owe a migration step.
+
+**Open question F:** is `draft/` worth its share of that cost? This session
+says yes, but one session is one data point.
+
+---
 
 ## Open questions, collected
 
-- **A.** Driver and dispatcher: one module or two?
-- **B.** What admits the spine batch — dispatcher (can wait) or claim rung (can only refuse)?
-- **C.** The exact ratified-vs-traced cell split, including `SN-Refs` and `Verifies`.
-- **D.** Is session grouping wanted once drain grouping exists? If not, remove or dormant-mark the plumbing.
-- **E.** How many lanes by default? (The bar is CPU-capped at 50%, so two concurrent bars contend — lane count and bar cost are coupled.)
-- **F.** Does `draft/` earn its schema change?
+- **A.** Driver and dispatcher — one module or two?
+- **B.** What admits the spine batch — dispatcher (waits) or claim rung (refuses)?
+- **C.** The ratified-vs-traced cell split, incl. `SN-Refs` and `Verifies`.
+- **D.** Session grouping once drain grouping exists — keep, or remove the plumbing?
+- **E.** Default lane count. (The bar is CPU-capped at 50%, so two concurrent bars contend — lanes and bar cost are coupled.)
+- **F.** Does `draft/` earn the schema change?
 
-## Provisional WI breakdown — NOT solidified
+## Provisional breakdown — NOT solidified
 
-Draft rows in [`docs/work/deferred/`](work/deferred/), all pointing here:
+All in [`docs/work/deferred/`](work/deferred/), all pointing here.
 
-| Draft | Scope | Depends on |
-|---|---|---|
-| WI-380 | Ratified-vs-traced cell split in the amendment detector (§3) | Question C |
-| WI-381 | Spine barrier: batch, priority, wait-for-station (§2) | Questions A, B |
-| WI-382 | Drain grouping: one composed bar per drain (§4) | Question D |
-| WI-383 | Driver/dispatcher vocabulary + grouping disposition (§1, §4) | Questions A, D |
-| WI-384 | `draft/` work-item status (§5) | Question F |
+| Draft | Scope | Removes machinery? | Blocked on |
+|---|---|---|---|
+| **WI-380** | Ratified-vs-traced cell split (A3) | narrows a check | C |
+| **WI-381** | Spine barrier: batch, priority, wait (A2) | replaces a refusal with a constraint | A, B |
+| **WI-382** | Drain grouping: one composed bar (A4) | — (adds capability) | D |
+| **WI-383** | Driver/dispatcher vocabulary + grouping disposition (A1, A4) | **yes** — deletes vestigial packing plumbing | A, D |
+| **WI-384** | Six-state model, `disposition` deleted (B) | **yes** — attribute + validator + tests | F |
+| **WI-385** | Backlog re-evaluation after re-attest (A5) | — (adds a warn) | A3 |
 
-**Sequencing note:** WI-380 (§3) is the one that should land first regardless
-of how the rest resolves — it is small, it is already ruled, and it removes
-most of the pain the others are designed around.
+**Sequencing:** **WI-380 first**, regardless of how the rest resolves — small,
+already ruled, and it removes most of the pain WI-381/385 are designed around.
+**WI-384 is the cleanest test of §0's principle** and is independent of the
+concurrency work, so it can proceed in parallel with the design discussion.

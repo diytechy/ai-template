@@ -73,20 +73,26 @@ home elsewhere — don't restate it here:
   handoffs ([2026-07-28b](handoff-2026-07-28b.md) and earlier, plus
   [wrap-up-plan.md](wrap-up-plan.md)) are history: read them for the
   account, never as open tasks.
-- **Open design discussion — [concurrency-v2.md](concurrency-v2.md)** (DRAFT,
-  opened 2026-07-31; **nothing in it is ruled**). Three problems the parallel
-  session surfaced: a spine-touching WI ran concurrently under an
-  honest-at-filing `ordinary` class; the re-attest window it opened cost four
-  review rounds; and — per the owner's ruling — **that window should never
-  have opened**, because traceability cells are *traced*, not ratified, while
-  the amendment detector compares every column but `Status`. Carries the
-  dispatcher flow, the ratified-vs-traced cell split, the bar-amortisation
-  trade (drain grouping vs the retired session grouping), and six open
-  questions. Its draft rows **WI-380..WI-384** sit in
-  [work/deferred/](work/deferred/) and must **not** be claimed until the
-  design settles; **WI-380 is the one to land first** regardless of how the
-  rest resolves. [WI-378](work/queued/WI-378-ratify-verdict-freshness-loop.md)
-  is reframed onto it and now waits on WI-380.
+- **Open design discussion —
+  [concurrency-v2.md](concurrency-v2.md)** (DRAFT, opened 2026-07-31;
+  **nothing in it is ruled**). Its governing principle is the owner's:
+  **prefer a constraint that makes a bad state unrepresentable over a check
+  that detects it** — the answer to why enforcement-layer growth keeps
+  recurring despite the 2026-07-28 audit naming it. Two workstreams. **A —
+  concurrency:** the dispatcher flow (spine work *waits* for the station to
+  clear, then runs alone and batched), the owner ruling that **traceability is
+  traced, not ratified** (the amendment detector compares every column but
+  `Status`, which is why a pure decomposition bought a ratify brief and four review rounds
+  for a change that altered no requirement), drain-grouping vs the retired
+  session grouping, and backlog re-evaluation after a re-attest. **B — work-item
+  state:** `draft|queued|active|deferred|cancelled|complete`, which deletes the
+  `disposition` attribute and its validator outright. Draft rows
+  **WI-380..WI-385** are in [work/deferred/](work/deferred/) and must **not**
+  be claimed until the design settles. **WI-380 lands first** regardless of how
+  the rest resolves; **WI-384 is independent** of the concurrency work and is
+  the cleanest test of the principle.
+  [WI-378](work/queued/WI-378-ratify-verdict-freshness-loop.md) is reframed
+  onto this and now waits on WI-380.
 - **Design history:** [archive/](archive/README.md).
 - **Process (kit source):** [PROCESS.md](../project-trajectory/PROCESS.md) ·
   [PROCESS_OPTIONS.md](../project-trajectory/PROCESS_OPTIONS.md) (this repo has
