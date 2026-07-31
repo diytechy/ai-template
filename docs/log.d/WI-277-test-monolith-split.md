@@ -226,7 +226,10 @@ Collect-only **1714 total / 557 smoke / 1157 slow — all three unmoved** (the
 three tests changed module, not existence). Per module: `test_agent_loop` 58,
 `_policy` 26, `_routing` 29, `_worker` 31 = **144**, still `121 + 23`. Smoke
 `1 failed, 552 passed, 4 skipped` (the standing work-branch red). The affected
-modules together: `297 passed, 1 skipped`. The reviewer's own method, rerun —
+modules together — the four `test_agent_loop*` legs, the four `test_trajectory*`
+legs and `test_smoke_tier` (the `test_trace*` legs are NOT in this set; measured
+2026-07-31) — run `297 passed, 1 skipped`, the lone skip being the pre-existing
+POSIX-only advisory-lock case, not a split artifact. The reviewer's own method, rerun —
 with git off `PATH`, `pytest tests/test_agent_loop_policy.py -k "<the three>"`
 now gives **3 passed, 23 deselected** (was 3 skipped). The strict AST check
 rerun after the moves: **405/405 survive, exactly one body differs** (the
