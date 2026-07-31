@@ -1,5 +1,6 @@
 """Bootstrap must produce a scaffold that is green out of the box."""
 
+import ast
 import re
 
 from conftest import KIT, ROOT, SCRIPTS, load_script, run_py
@@ -65,6 +66,7 @@ def test_scaffold_contains_expected_files(scaffold):
         "scripts/check_privacy.py",
         "scripts/check_vendored.py",
         "scripts/check_trajectory.py",
+        "scripts/schedule.py",
         "scripts/subagent_gate.py",
         "scripts/agent_route.py",
         "scripts/score_reviews.py",
@@ -870,3 +872,47 @@ def test_scaffolded_scripts_carry_no_archive_review_anchors(scaffold):
         assert not anchor.search(text), "archive anchor survived in " + src.name
         compile(text, str(copied), "exec")
     assert kit_hits > 0, "kit source should still carry the provenance citations"
+
+
+def test_every_sibling_imported_module_is_shipped_by_mapping():
+    """A shipped script's sibling imports must themselves be in MAPPING.
+
+    WI-379: `bootstrap.py`'s MAPPING decides what a fresh scaffold receives,
+    and the kit's own `scripts/` dir holds every file — so a shipped module
+    importing a sibling the MAPPING omits is invisible HERE and an
+    ImportError THERE. It is also invisible to a downstream re-sync, because
+    an already-adopted repo carries the file from an older kit; only a fresh
+    scaffold reaches it. That is exactly how `schedule.py` went missing while
+    `integrate.py claim` (the integration seam) and `drive.py` (the walk-away
+    loop) both import it unguarded — a scaffold could not claim work at all.
+
+    Guards the CLASS, not the instance: any future sibling extraction (WI-280
+    alone added six) that forgets its MAPPING row fails here instead of in an
+    adopter's repo.
+    """
+    mapping_src = (SCRIPTS / "bootstrap.py").read_text(encoding="utf-8")
+    mapped = set(re.findall(r'"(?:scripts/)?([A-Za-z_]\w*)\.py"', mapping_src))
+    kit_modules = {p.stem for p in SCRIPTS.glob("*.py")}
+
+    missing = {}
+    for path in sorted(SCRIPTS.glob("*.py")):
+        if path.stem == "bootstrap" or path.stem not in mapped:
+            continue  # the scaffolder itself is not shipped; nor are kit-only tools
+        tree = ast.parse(path.read_text(encoding="utf-8"))
+        for node in ast.walk(tree):
+            names = []
+            if isinstance(node, ast.Import):
+                names = [a.name.split(".")[0] for a in node.names]
+            elif isinstance(node, ast.ImportFrom) and node.level == 0 and node.module:
+                names = [node.module.split(".")[0]]
+            for name in names:
+                if name in kit_modules and name not in mapped:
+                    missing.setdefault(name, set()).add(path.name)
+
+    assert not missing, (
+        "shipped script(s) import a sibling MAPPING omits: "
+        + "; ".join(
+            "{}.py <- {}".format(mod, ", ".join(sorted(who)))
+            for mod, who in sorted(missing.items())
+        )
+    )

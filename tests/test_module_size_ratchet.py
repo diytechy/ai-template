@@ -666,7 +666,12 @@ BASELINE = {
     # DELETED rather than re-stamped. Output proven byte-identical (scaffold
     # byte-compare suites + a pre/post --dry-run stdout diff). Reviewed bump,
     # reason here and in docs/log.d/WI-280-bounded-core-decomposition.md.
-    "bootstrap.py": 2224,
+    # +8 (2224 -> 2232), WI-379: the schedule.py MAPPING row plus the comment
+    # stating WHY it is load-bearing (integrate.py's claim ladder and drive.py's
+    # cycle import it UNGUARDED, so a scaffold without it could not claim work
+    # at all). Required registration, not monolith growth - the same shape as
+    # the trunk_step/integrate/drive rows above. Reviewed bump, log 2026-07-31.
+    "bootstrap.py": 2232,
     # NEW ENTRY, +228 (1423 -> 1651), Phase 2b of the concurrency restructure
     # (docs/concurrency-restructure.md §7): the spec-folder work-item reader,
     # which crosses this module over THRESHOLD for the first time. It is one

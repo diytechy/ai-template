@@ -1264,6 +1264,14 @@ MAPPING = [
     ("scripts/check_privacy.py", "scripts/check_privacy.py"),
     ("scripts/check_vendored.py", "scripts/check_vendored.py"),
     ("scripts/check_trajectory.py", "scripts/check_trajectory.py"),
+    # The ready-frontier/safety-classification library (IF-053). Shipped
+    # because it is a SIBLING IMPORT of the integration seam, not a nicety:
+    # integrate.py's claim refusal ladder and drive.py's cycle both
+    # `import schedule` UNGUARDED, so a scaffold without it cannot claim work
+    # or run the walk-away loop at all (WI-379 — a fresh scaffold raised
+    # ModuleNotFoundError from the frontier check). check_trajectory and the
+    # dashboard read it too.
+    ("scripts/schedule.py", "scripts/schedule.py"),
     ("scripts/subagent_gate.py", "scripts/subagent_gate.py"),
     ("scripts/gen_arch_map.py", "scripts/gen_arch_map.py"),
     ("scripts/gen_release_checklist.py", "scripts/gen_release_checklist.py"),
