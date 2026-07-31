@@ -279,7 +279,13 @@ BASELINE = {
     # _run_captured/_asof/_git capture seam, and the guarded `schedule` import's
     # one home — moved verbatim to the new sibling traj_parse.py (434 lines,
     # under THRESHOLD). Ratcheted DOWN.
-    "gen_trajectory.py": 4304,
+    # -836 (4304 -> 3468), WI-280 S4: the SVG/HTML rendering primitives — esc/
+    # SCROLL_CUE/_hscroll, the declared colour+weight vocabularies (TIER/STATUS/
+    # SW/OKF/PHASE, SVG_RX, ring inks), the responsive svg wrappers, the tab
+    # helpers, and the shared drill renderer (_drill_layer_svg/_render_drill) —
+    # moved verbatim to the new sibling traj_render.py (906 lines, under
+    # THRESHOLD). Ratcheted DOWN.
+    "gen_trajectory.py": 3468,
     # (agent_dispatch.py and its whole bump history retired with the module
     # at concurrency-restructure Phase 5 - the dispatcher deleted wholesale;
     # the surviving integrator is integrate.py, below this threshold.)
@@ -610,7 +616,9 @@ BASELINE = {
     # bump; the WI-280 log fragment carries the reason.
     # +1 (2090 -> 2091), WI-280 S3: the traj_parse.py MAPPING row (the S2
     # comment covers the family). Reviewed bump.
-    "bootstrap.py": 2091,
+    # +1 (2091 -> 2092), WI-280 S4: the traj_render.py MAPPING row. Reviewed
+    # bump.
+    "bootstrap.py": 2092,
     # NEW ENTRY, +228 (1423 -> 1651), Phase 2b of the concurrency restructure
     # (docs/concurrency-restructure.md §7): the spec-folder work-item reader,
     # which crosses this module over THRESHOLD for the first time. It is one

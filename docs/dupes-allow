@@ -622,10 +622,13 @@ b8b532ba9de4  project-trajectory/scripts/agent_loop.py == project-trajectory/scr
 # rendered graph (WI DAG, spine wire, OKF knowledge map) with that graph's
 # own COL/ROW/PAD constants. The parameterisation that removes it is the
 # graph/view-model/render split WI-280's row names for this file.
+# WI-280 S4: _drill_layer_svg's copy of the sequence moved verbatim to
+# traj_render.py, re-pairing one 99c2a2ac7eff and one e7ebc7f29c86 line onto
+# that sibling (same fingerprints, same class — WI-280's row names it).
+e7ebc7f29c86  project-trajectory/scripts/gen_trajectory.py == project-trajectory/scripts/traj_render.py
 e7ebc7f29c86  project-trajectory/scripts/gen_trajectory.py == project-trajectory/scripts/gen_trajectory.py
 e7ebc7f29c86  project-trajectory/scripts/gen_trajectory.py == project-trajectory/scripts/gen_trajectory.py
-e7ebc7f29c86  project-trajectory/scripts/gen_trajectory.py == project-trajectory/scripts/gen_trajectory.py
-99c2a2ac7eff  project-trajectory/scripts/gen_trajectory.py == project-trajectory/scripts/gen_trajectory.py
+99c2a2ac7eff  project-trajectory/scripts/gen_trajectory.py == project-trajectory/scripts/traj_render.py
 99c2a2ac7eff  project-trajectory/scripts/gen_trajectory.py == project-trajectory/scripts/gen_trajectory.py
 99c2a2ac7eff  project-trajectory/scripts/gen_trajectory.py == project-trajectory/scripts/gen_trajectory.py
 b240d68b0686  project-trajectory/scripts/gen_trajectory.py == project-trajectory/scripts/gen_trajectory.py

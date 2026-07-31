@@ -2213,7 +2213,12 @@ def test_u3_svg_corner_radii_match_the_declared_scale(tmp_path):
     declared = set(gt.SVG_RX)
     assert declared, "SVG_RX is empty"
 
-    src = (SCRIPTS / "gen_trajectory.py").read_text(encoding="utf-8")
+    # WI-280: the emitters live across gen_trajectory.py and its traj_* split
+    # siblings now, so the literal scan follows them (one corpus, same rule).
+    src = "".join(
+        p.read_text(encoding="utf-8")
+        for p in sorted(SCRIPTS.glob("traj_*.py")) + [SCRIPTS / "gen_trajectory.py"]
+    )
     in_source = set(re.findall(r'\brx="([0-9.]+)"', src))
     assert in_source <= declared, (
         "rect template(s) draw an undeclared corner radius {} — add the role to "

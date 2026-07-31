@@ -72,6 +72,7 @@ def test_scaffold_contains_expected_files(scaffold):
         "scripts/gen_trajectory.py",
         "scripts/traj_graph.py",
         "scripts/traj_parse.py",
+        "scripts/traj_render.py",
         "scripts/gen_open_items.py",
         "scripts/gen_okf.py",
         "scripts/plan_coverage.py",
