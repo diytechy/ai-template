@@ -1,6 +1,6 @@
 """The shared test API for the gen_trajectory family (WI-277).
 
-`tests/test_gen_trajectory.py` was a 5,3xx-line monolith. WI-277 split it along
+`tests/test_gen_trajectory.py` was a 5,359-line monolith. WI-277 split it along
 the WI-280 production seams into `test_traj_{parse,graph,views,panels,render,
 render_sweeps,status}.py` plus the facade module — and the split surfaced one
 thing that genuinely belongs to no single module: the fixture builders.
