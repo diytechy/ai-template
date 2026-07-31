@@ -3563,6 +3563,42 @@ def _every_emitter_document(tmp_path):
     four OKF types earn the tiered drill, so only `_flat_bundle` (<= 3 types)
     renders the flat `.knode` concept graph, and a sweep with just the former is
     blind to that emitter.
+
+    TWO TRUTH-TIMES (WI-372). The list is not homogeneous, and a caller has to
+    know which one it is asserting over:
+
+    - **`shipped`** is the COMMITTED `PROJECT_STATE.html` — markup an OLDER
+      renderer wrote. Generated artifacts belong to the trunk lane
+      (concurrency-restructure §5.2; `check.py` skips the freshness gates on a
+      work branch), so off trunk this document legitimately lags the code under
+      test. Asserting over it is a COMPATIBILITY PIN — "the invariant holds for
+      the markup already in a reader's hands" — never "this emitter satisfies
+      it". It is simply ABSENT in a checkout with no committed dashboard, so a
+      caller that reads it must still be meaningful fresh-only.
+    - **Every other label** is FRESH: built into `tmp_path` and rendered by
+      THIS run's `gen_trajectory.py`, so it is a property of the code under
+      test.
+
+    The trap that mixture sets is the CALLER's to disarm, and deliberately so
+    (the shared fresh-emitting fixture was considered and rejected — owner
+    ruling 2026-07-30, log.md Decisions). A change that TIGHTENS an invariant
+    reds through the stale shipped copy rather than through the emitter it
+    changed: the failure names an older renderer's markup while the code under
+    test is clean. So when the assertion is about the CURRENT emitter, filter
+    at the call site and supply a fixture for whatever shape the shipped copy
+    used to contribute — `test_svg_viewbox_contains_every_routed_wire` is the
+    worked example (`if lb != "shipped"`, plus `WRAPAROUND_WIS` for the
+    outboard lane it lost).
+
+    Every OTHER call site keeps `shipped` on purpose, as the pin above: the
+    U1-U4 / A1-A3 / T6 uniformity-and-accessibility sweeps and T8's
+    through-box sweep. Their invariants hold in the older markup TODAY — that
+    is an observation about the committed artifact, not a guarantee it carries
+    forward. **When one of them reds, read the failing LABEL first:** `shipped`
+    means regenerate the dashboard on trunk (or exclude it, above); any other
+    label means the emitter really regressed. The same pin is made without
+    this helper by `test_a2_the_repos_own_shipped_dashboard_holds_the_invariant`,
+    which reads the committed file directly and skips when it is absent.
     """
     docs = []
     shipped = ROOT / "PROJECT_STATE.html"
