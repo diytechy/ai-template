@@ -267,7 +267,50 @@ BASELINE = {
     # measured user-unit extents, and records why the ink is not shrunk to the box
     # instead — that would push the U-turn back through its own endpoint box, the
     # defect WI-257 removed. Reviewed bump, log 2026-07-30. Re-stamp down with WI-280.
-    "gen_trajectory.py": 5274,
+    # -579 (5274 -> 4695), WI-280 S2: the pure layout/routing core
+    # (_dag_ranks/_reorder/_layered_layout, _port_fan, the whole WI-253/WI-323/
+    # WI-366 wire-router block) moved verbatim to the new sibling traj_graph.py
+    # (614 lines, under THRESHOLD — no entry of its own). The +5 against the
+    # bare move is the facade's re-export/docstring plumbing (the import block
+    # comment + the split sentence). Ratcheted DOWN: the decomposition this
+    # ratchet was holding the door open for.
+    # -391 (4695 -> 4304), WI-280 S3: the parse/sources layer — the spine/OKF/
+    # arch-map/gate readers, WORKSTREAM_LABELS, project vision/name, the
+    # _run_captured/_asof/_git capture seam, and the guarded `schedule` import's
+    # one home — moved verbatim to the new sibling traj_parse.py (434 lines,
+    # under THRESHOLD). Ratcheted DOWN.
+    # -836 (4304 -> 3468), WI-280 S4: the SVG/HTML rendering primitives — esc/
+    # SCROLL_CUE/_hscroll, the declared colour+weight vocabularies (TIER/STATUS/
+    # SW/OKF/PHASE, SVG_RX, ring inks), the responsive svg wrappers, the tab
+    # helpers, and the shared drill renderer (_drill_layer_svg/_render_drill) —
+    # moved verbatim to the new sibling traj_render.py (906 lines, under
+    # THRESHOLD). Ratcheted DOWN.
+    # -1087 (3468 -> 2381), WI-280 S5: the What/When/How-SW views — arch_icicle,
+    # the flat DAG (dag_svg/_dag_layout + its constants), the How-SW seam graph
+    # (sw_graph/_sw_node) and containment drill (sw_containment), _wi_status/
+    # _wi_st, the tiered when_view (+_wi_phases/DEFAULT_PHASE), and the
+    # _sw_panel/_cmp_panel tab panels — moved verbatim to the new sibling
+    # traj_views.py (1141 lines, under THRESHOLD). Ratcheted DOWN.
+    # -470 (2381 -> 1911), WI-280 S7 (built before S6 — _next_work_title calls
+    # _title_clause, so the status module must exist first): the --status
+    # snapshot + pending projection — the STATUS_MD markers, _gate_facts/
+    # _spine_counts, the open-item one-liners, the blocked/spine/pause pending
+    # sources, pending_block/status_block, the Ready-frontier lines and
+    # _splice_status/run_status — moved verbatim to traj_status.py (508 lines,
+    # under THRESHOLD; the facade docstring gains the sibling clause, +3); main's --status arm calls traj_status.run_status.
+    # Ratcheted DOWN.
+    # -969 (1911 -> 942), WI-280 S6: the Knowledge / Process / Next-work panels
+    # — know_graph + the type-tiered know_view/_know_panel, the Process tab
+    # (lifecycle x gates, the resume loop, the SR-055 working-loop hoops), and
+    # the landing-hero Next-work card — moved verbatim to traj_panels.py (1016
+    # lines, under THRESHOLD). What remains here IS the facade: the docstring,
+    # the guarded ct import + sibling re-exports, OUT_HTML/ASOF_RE,
+    # HTML_TEMPLATE, build_html and main. ENTRY RETIRES: 942 is under
+    # THRESHOLD, so per the module rule the baseline is deleted rather than
+    # re-stamped — the H-2 monolith this ratchet froze is decomposed.
+    # (Round-1 review correction: this entry first read 941/-970; the ratchet's
+    # own metric, len(text.splitlines()), measures 942 at that commit.)
+    #
     # (agent_dispatch.py and its whole bump history retired with the module
     # at concurrency-restructure Phase 5 - the dispatcher deleted wholesale;
     # the surviving integrator is integrate.py, below this threshold.)
@@ -530,7 +573,15 @@ BASELINE = {
     # +4 of it the review correction that points the hint at the WI's own
     # docs/work/ spec file — the SpecRef target can never clear the warn.
     # Re-stamp down with WI-280.
-    "check_trajectory.py": 3077,
+    # +21 (3077 -> 3098), WI-280 slice 11: `_render_surface_paths` watches the
+    # WHOLE dashboard generator FAMILY (gen_trajectory.py + its `traj_*.py`
+    # split siblings), not the facade alone. Required, not drift: after the
+    # split every emitter lives in a sibling, so a facade-only surface would
+    # have silently retired the render-critique-staleness warn — the check
+    # would still run and always pass. Most of the delta is the two fallback
+    # arms and the comment recording that. Reviewed bump, reason here and in
+    # docs/log.d/WI-280-bounded-core-decomposition.md.
+    "check_trajectory.py": 3098,
     # NEW ENTRY, +25 (1498 -> 1523), WI-357: the two-stage work-branch claim
     # signal — the on-disk fast path plus the branch-history probe that
     # survives the §2.3 close commit (git log -1 over the claim path), with
@@ -592,7 +643,30 @@ BASELINE = {
     # +7 (2078 -> 2085), WI-374: the drive.py MAPPING row + docstring
     # inventory lines - the same required-registration shape. Reviewed bump,
     # log 2026-07-31. Re-stamp down with WI-280.
-    "bootstrap.py": 2085,
+    # +5 (2085 -> 2090), WI-280 S2: the traj_graph.py MAPPING row + its
+    # copied-together comment + the docstring inventory line — the same
+    # required-registration shape as the WI-329/WI-374 rows above. Reviewed
+    # bump; the WI-280 log fragment carries the reason.
+    # +1 (2090 -> 2091), WI-280 S3: the traj_parse.py MAPPING row (the S2
+    # comment covers the family). Reviewed bump.
+    # +1 (2091 -> 2092), WI-280 S4: the traj_render.py MAPPING row. Reviewed
+    # bump.
+    # +1 (2092 -> 2093), WI-280 S5: the traj_views.py MAPPING row. Reviewed
+    # bump.
+    # +1 (2093 -> 2094), WI-280 S7: the traj_status.py MAPPING row. Reviewed
+    # bump.
+    # +2 (2094 -> 2096), WI-280 S6: the traj_panels.py MAPPING row + the
+    # docstring inventory line wrapping onto two. Reviewed bump.
+    # +128 (2096 -> 2224), WI-280 slice 10: main()'s decomposition — the
+    # extraction-grows-the-file shape this module has taken before (WI-347's
+    # entry states it): nine named phase functions plus the two typed records
+    # (ScaffoldPlan / CopyOutcome) cost their own `def` lines and docstrings,
+    # and buy what lines cannot — main() drops from 380 straight-line lines at
+    # complexity 41 to a ~40-line sequencer, and its complexity entry is
+    # DELETED rather than re-stamped. Output proven byte-identical (scaffold
+    # byte-compare suites + a pre/post --dry-run stdout diff). Reviewed bump,
+    # reason here and in docs/log.d/WI-280-bounded-core-decomposition.md.
+    "bootstrap.py": 2224,
     # NEW ENTRY, +228 (1423 -> 1651), Phase 2b of the concurrency restructure
     # (docs/concurrency-restructure.md §7): the spec-folder work-item reader,
     # which crosses this module over THRESHOLD for the first time. It is one

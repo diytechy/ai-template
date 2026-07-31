@@ -2213,7 +2213,12 @@ def test_u3_svg_corner_radii_match_the_declared_scale(tmp_path):
     declared = set(gt.SVG_RX)
     assert declared, "SVG_RX is empty"
 
-    src = (SCRIPTS / "gen_trajectory.py").read_text(encoding="utf-8")
+    # WI-280: the emitters live across gen_trajectory.py and its traj_* split
+    # siblings now, so the literal scan follows them (one corpus, same rule).
+    src = "".join(
+        p.read_text(encoding="utf-8")
+        for p in sorted(SCRIPTS.glob("traj_*.py")) + [SCRIPTS / "gen_trajectory.py"]
+    )
     in_source = set(re.findall(r'\brx="([0-9.]+)"', src))
     assert in_source <= declared, (
         "rect template(s) draw an undeclared corner radius {} — add the role to "
@@ -5060,7 +5065,11 @@ def test_detour_bounds_the_candidate_set_and_second_pass(monkeypatch):
         calls[0] += 1
         return real_points(*a, **k)
 
-    monkeypatch.setattr(gt, "_detour_points", counting)
+    # WI-280: `_detour_d` resolves `_detour_points` in traj_graph's own namespace
+    # now, so patch the module the caller looks in. `gt.traj_graph` IS the cached
+    # sys.modules instance the facade's re-exports bound from (a fresh
+    # `load_script("traj_graph")` would build a second, unconsulted module object).
+    monkeypatch.setattr(gt.traj_graph, "_detour_points", counting)
     # short-circuit: one blocking box, the nearest lane clears at once -> the router
     # returns after a single trial rather than sweeping every candidate.
     rects = {
@@ -5075,7 +5084,9 @@ def test_detour_bounds_the_candidate_set_and_second_pass(monkeypatch):
     # pass — _MAX_LANES trials — not the 1000 the two uncapped passes would have.
     calls[0] = 0
     monkeypatch.setattr(
-        gt, "_lane_candidates", lambda *a, **k: [float(i) for i in range(500)]
+        gt.traj_graph,
+        "_lane_candidates",
+        lambda *a, **k: [float(i) for i in range(500)],
     )
     dense = {
         "S": (0.0, 300.0, 100.0, 40.0),
@@ -5313,7 +5324,9 @@ def test_run_captured_states_the_five_keywords_and_degrades_off_git(
         seen.update(kwargs)
         return subprocess.run(argv, **kwargs)
 
-    monkeypatch.setattr(gt, "subprocess", _SubprocessShim(spy))
+    # WI-280: `_run_captured` resolves `subprocess` in traj_parse's namespace now,
+    # so patch the module the call looks in (gt.traj_parse is the cached instance).
+    monkeypatch.setattr(gt.traj_parse, "subprocess", _SubprocessShim(spy))
     proc = gt._run_captured([sys.executable, "-c", "print('hi')"])
     assert seen == {
         "capture_output": True,
@@ -5330,7 +5343,7 @@ def test_run_captured_states_the_five_keywords_and_degrades_off_git(
     def boom(argv, **kwargs):
         raise OSError("no git here")
 
-    monkeypatch.setattr(gt, "subprocess", _SubprocessShim(boom))
+    monkeypatch.setattr(gt.traj_parse, "subprocess", _SubprocessShim(boom))
     with pytest.raises(OSError):
         gt._run_captured(["git", "--version"])
     # ...and both callers degrade to their empty forms rather than propagate.

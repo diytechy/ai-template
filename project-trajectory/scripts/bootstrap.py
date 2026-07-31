@@ -52,6 +52,8 @@ What it creates in the destination:
     scripts/trace.py, trace_text.py, derive_gate.py, check.py, check_flows.py, check_docs.py, check_perf.py,
     scripts/check_stubs.py, check_dupes.py, check_coverage.py, check_doc_refs.py, check_privacy.py, check_vendored.py, check_trajectory.py,
     scripts/subagent_gate.py, gen_arch_map.py, gen_release_checklist.py, gen_cases.py, gen_trajectory.py, gen_open_items.py, gen_okf.py
+    scripts/traj_graph.py, traj_parse.py, traj_render.py, traj_views.py, traj_panels.py, traj_status.py
+                                               (the WI-280 gen_trajectory.py split — copied with it, always)
     scripts/plan_coverage.py, plan_round.py, plan_briefs.py, plan_coverage_step.py, plan_artifacts.py
                                                (the dual-plan round set, process-options.md "Dual-plan decomposition")
     scripts/wi_convert.py                      (work-item registry CSV <-> spec-folder converter)
@@ -285,6 +287,7 @@ import re
 import shutil
 import subprocess
 import sys
+from dataclasses import dataclass
 from pathlib import Path
 
 KIT = Path(__file__).resolve().parent.parent  # the project-trajectory/ folder
@@ -1266,6 +1269,15 @@ MAPPING = [
     ("scripts/gen_release_checklist.py", "scripts/gen_release_checklist.py"),
     ("scripts/gen_cases.py", "scripts/gen_cases.py"),
     ("scripts/gen_trajectory.py", "scripts/gen_trajectory.py"),
+    # WI-280 split of gen_trajectory.py: the sibling module(s) it imports and
+    # re-exports — copied together, always (the trace_text.py idiom; a scaffold
+    # missing one ImportErrors on the first render).
+    ("scripts/traj_graph.py", "scripts/traj_graph.py"),
+    ("scripts/traj_parse.py", "scripts/traj_parse.py"),
+    ("scripts/traj_render.py", "scripts/traj_render.py"),
+    ("scripts/traj_views.py", "scripts/traj_views.py"),
+    ("scripts/traj_status.py", "scripts/traj_status.py"),
+    ("scripts/traj_panels.py", "scripts/traj_panels.py"),
     ("scripts/gen_open_items.py", "scripts/gen_open_items.py"),
     ("scripts/gen_okf.py", "scripts/gen_okf.py"),
     ("scripts/plan_coverage.py", "scripts/plan_coverage.py"),
@@ -1700,8 +1712,55 @@ def write_kit_license(dest, dry_run, verb):
     return True
 
 
-def main():
-    _utf8_console()
+# --- main() decomposed into phases (WI-280 slice 10, subsuming the retired
+# WI-082) ------------------------------------------------------------------
+#
+# `main()` was a 380-line straight-line script at complexity 41 — the largest
+# single function in the kit and the one every adopter's FIRST command runs.
+# The phases below are the script's own paragraphs given names and a typed
+# hand-off; nothing about the scaffold changes, which is the point: every print
+# is byte-identical and in the same order, proven by the scaffold byte-compare
+# suites (test_bootstrap / test_profile / test_stack_profile) and by a
+# pre/post `--dry-run` diff. The two records carry what the paragraphs used to
+# pass through a dozen locals.
+
+
+@dataclass(frozen=True)
+class ScaffoldPlan:
+    """Everything the resolution ladders decided, before a byte is written:
+    the declared profile (stack/omit), the agent layer, the three declared
+    policies, and the two write modes. Frozen — a phase reads the plan, it
+    never re-decides."""
+
+    stack: str
+    omit: frozenset
+    agent_choice: str
+    agents: list
+    domain: str
+    skills: list
+    gate_policy: str
+    push_policy: str
+    privacy_check: str
+    force: bool
+    dry_run: bool
+
+
+@dataclass
+class CopyOutcome:
+    """What the copy phases did, accumulated across them: `created` is the
+    ordered report list (later phases append to it — the report prints it in
+    that order), `skipped` the write-once hits, `missing` the absent templates
+    that make the run exit 1."""
+
+    created: list
+    skipped: list
+    missing: list
+
+
+def build_parser():
+    """The CLI surface. Its own function so `main()` reads as a sequence of
+    phases and the flag set can be inspected without running a scaffold."""
+
     ap = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )
@@ -1791,30 +1850,14 @@ def main():
         "Omitted + interactive TTY -> ASK; non-interactive -> 'false' "
         '(process-options.md "Commit identity & privacy").',
     )
-    args = ap.parse_args()
+    return ap
 
-    dest = Path(args.dest).resolve()
 
-    # --sync (S7): a FOCUSED refresh of the per-agent skill copies, nothing else.
-    # Kept separate from the full scaffold pass so re-materializing the skills in
-    # an existing repo (e.g. this kit's own .claude/.agents) doesn't re-stamp
-    # kit-version, re-run the generators, or touch any other file.
-    if args.sync:
-        refreshed = sync_agent_skills(dest, args.dry_run)
-        verb = "would refresh" if args.dry_run else "refreshed"
-        for rel in refreshed:
-            print("  {}: {}".format(verb, rel))
-        print(
-            "\n{} per-agent skill file(s) {} from the neutral source.".format(
-                len(refreshed), "to refresh" if args.dry_run else "refreshed"
-            )
-        )
-        return
-
-    # Resolve the scaffold profile (Thread 34): explicit flags win; else the
-    # destination's recorded docs/kit-profile (so a re-sync regenerates the
-    # same structural choices instead of silently reverting them); else ASK
-    # for the stack on an interactive TTY / take the do-nothing defaults.
+def resolve_profile(ap, args, dest):
+    """`(stack, omit)` — the scaffold profile (Thread 34): explicit flags win;
+    else the destination's recorded docs/kit-profile (so a re-sync regenerates
+    the same structural choices instead of silently reverting them); else ASK
+    for the stack on an interactive TTY / take the do-nothing defaults."""
     recorded = read_kit_profile(dest) or {}
     stack = args.stack
     if stack is None:
@@ -1832,7 +1875,14 @@ def main():
                 ", ".join(sorted(unknown)), "|".join(PROFILE_AXES)
             )
         )
+    return stack, omit
 
+
+def resolve_choices(args, stack, omit):
+    """The consent-first ladders — agent layer, domain/skills, and the three
+    declared policies — resolved into one `ScaffoldPlan`. Each follows the same
+    rule: an explicit flag wins; else ASK on an interactive TTY; else the
+    do-nothing default (CI-safe, and the scaffolded file already says it)."""
     # Resolve the agent choice: explicit flag wins; else ASK on an interactive
     # TTY; else default to "none" — which materializes no skills/hooks and so
     # preserves the historical (agent-neutral) scaffold exactly (CI-safe).
@@ -1902,13 +1952,63 @@ def main():
             "false",
         )
     )
+    return ScaffoldPlan(
+        stack=stack,
+        omit=omit,
+        agent_choice=agent_choice,
+        agents=agents,
+        domain=domain,
+        skills=skills,
+        gate_policy=gate_policy,
+        push_policy=push_policy,
+        privacy_check=privacy_check,
+        force=args.force,
+        dry_run=args.dry_run,
+    )
 
-    if not dest.exists():
-        if args.dry_run:
-            print("would create destination directory:", dest)
-        else:
-            dest.mkdir(parents=True)
 
+def _write_scaffold_file(src, dst, src_rel, dst_rel, dest, plan):
+    """Write ONE mapped file into the scaffold: the per-suffix generation rule,
+    the template meta-prose rewrites, the README's one placeholder, and the
+    POSIX executable bit. Its own function (WI-280 slice 10) so `copy_kit_files`
+    is the write-once LEDGER — which file, and whether — and this is the writing."""
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    if dst.suffix == ".md":
+        # Markdown templates are GENERATED, not copied: drop kit-only
+        # regions, keep or stub profile regions per the resolved profile.
+        _write_text_lf(
+            dst, strip_markers(src.read_text(encoding="utf-8"), plan.omit, src_rel)
+        )
+    elif dst.suffix == ".py":
+        # Kit scripts copy verbatim EXCEPT for the archive-anchor provenance
+        # citations, which would dangle downstream (see strip_provenance).
+        # write_bytes keeps the source's LF endings byte-for-byte (unlike
+        # write_text, which would translate to os.linesep on Windows).
+        dst.write_bytes(
+            strip_provenance(src.read_text(encoding="utf-8")).encode("utf-8")
+        )
+    else:
+        shutil.copyfile(src, dst)
+    # Strip the in-line template meta-prose a marker can't express (the
+    # process doc's "(template)" title) now that the file *is* the doc.
+    apply_template_rewrites(dst_rel, dst)
+    # The README skeleton carries the one dynamic placeholder: the project's
+    # name, taken from the destination folder (the kickoff agent fills in
+    # the rest from the project brief).
+    if dst_rel == "README.md":
+        text = dst.read_text(encoding="utf-8")
+        _write_text_lf(dst, text.replace("{{PROJECT_NAME}}", dest.name))
+    # Keep the .sh/.command launchers and the git hook executable on POSIX
+    # (the hook has no extension; git and Finder only run these if the
+    # executable bit is set — .command is macOS's double-clickable shell).
+    if dst.suffix in (".sh", ".command") or dst.parent.name == ".githooks":
+        dst.chmod(dst.stat().st_mode | 0o111)
+
+
+def copy_kit_files(dest, plan):
+    """The MAPPING copy pass + the GITKEEP_DIRS placeholders, as a
+    `CopyOutcome`. Write-once by default (an existing file is skipped, not
+    overwritten); `--force` overwrites; `--dry-run` reports without writing."""
     created, skipped, missing = [], [], []
     for src_rel, dst_rel in MAPPING:
         src = KIT / src_rel
@@ -1916,147 +2016,144 @@ def main():
         # Stack-gated artifacts (Thread 34, R7/C3): an explicitly non-Python
         # stack gets no dead Python artifacts — the rewiring checklist lands
         # in docs/status.md instead (append_stack_checklist below).
-        if dst_rel == "pytest.ini" and stack in NON_PYTHON_STACKS:
+        if dst_rel == "pytest.ini" and plan.stack in NON_PYTHON_STACKS:
             continue
         if not src.exists():
             missing.append(src_rel)
             continue
-        if dst.exists() and not args.force:
+        if dst.exists() and not plan.force:
             skipped.append(dst_rel)
             continue
-        if args.dry_run:
+        if plan.dry_run:
             created.append(dst_rel)
             continue
-        dst.parent.mkdir(parents=True, exist_ok=True)
-        if dst.suffix == ".md":
-            # Markdown templates are GENERATED, not copied: drop kit-only
-            # regions, keep or stub profile regions per the resolved profile.
-            _write_text_lf(
-                dst, strip_markers(src.read_text(encoding="utf-8"), omit, src_rel)
-            )
-        elif dst.suffix == ".py":
-            # Kit scripts copy verbatim EXCEPT for the archive-anchor provenance
-            # citations, which would dangle downstream (see strip_provenance).
-            # write_bytes keeps the source's LF endings byte-for-byte (unlike
-            # write_text, which would translate to os.linesep on Windows).
-            dst.write_bytes(
-                strip_provenance(src.read_text(encoding="utf-8")).encode("utf-8")
-            )
-        else:
-            shutil.copyfile(src, dst)
-        # Strip the in-line template meta-prose a marker can't express (the
-        # process doc's "(template)" title) now that the file *is* the doc.
-        apply_template_rewrites(dst_rel, dst)
-        # The README skeleton carries the one dynamic placeholder: the project's
-        # name, taken from the destination folder (the kickoff agent fills in
-        # the rest from the project brief).
-        if dst_rel == "README.md":
-            text = dst.read_text(encoding="utf-8")
-            _write_text_lf(dst, text.replace("{{PROJECT_NAME}}", dest.name))
-        # Keep the .sh/.command launchers and the git hook executable on POSIX
-        # (the hook has no extension; git and Finder only run these if the
-        # executable bit is set — .command is macOS's double-clickable shell).
-        if dst.suffix in (".sh", ".command") or dst.parent.name == ".githooks":
-            dst.chmod(dst.stat().st_mode | 0o111)
+        _write_scaffold_file(src, dst, src_rel, dst_rel, dest, plan)
         created.append(dst_rel)
 
     for d in GITKEEP_DIRS:
         keep = dest / d / ".gitkeep"
         if keep.exists():
             skipped.append("{}/.gitkeep".format(d))
-        elif args.dry_run:
+        elif plan.dry_run:
             created.append("{}/.gitkeep".format(d))
         else:
             keep.parent.mkdir(parents=True, exist_ok=True)
             _write_text_lf(keep, "")
             created.append("{}/.gitkeep".format(d))
+    return CopyOutcome(created, skipped, missing)
 
+
+def apply_stack_extras(dest, plan, outcome):
+    """The declared stack's two follow-ups: the harness-rewiring checklist a
+    non-Python scaffold owes, and the stack-neutral arch-map mode."""
     # A non-Python stack's remaining hand-edits become visible Open-items
     # bullets in the fresh status.md (only on the run that created it — a
     # re-sync must never re-append into a repo's own working surface).
     if (
-        stack in NON_PYTHON_STACKS
-        and "docs/status.md" in created
-        and append_stack_checklist(dest, stack, args.dry_run)
+        plan.stack in NON_PYTHON_STACKS
+        and "docs/status.md" in outcome.created
+        and append_stack_checklist(dest, plan.stack, plan.dry_run)
     ):
         print(
             "  appended the {} harness-rewiring checklist to docs/status.md "
-            "(Open items OI-3..OI-6)".format(stack)
+            "(Open items OI-3..OI-6)".format(plan.stack)
         )
-    if seed_arch_map_mode(dest, stack, created, args.dry_run):
+    if seed_arch_map_mode(dest, plan.stack, outcome.created, plan.dry_run):
         print(
             "  set docs/stack.ini [arch-map] mode = files (stack-neutral code "
             "map until a {} symbol-level generator is ported — "
-            "ADOPTING.md §3)".format(stack)
+            "ADOPTING.md §3)".format(plan.stack)
         )
 
-    # Materialize the chosen agent's layer: its matched skills into the native
-    # skills dir + the inert hook example. "none" (the non-interactive default)
-    # adds nothing, so the historical scaffold is byte-for-byte unchanged.
-    created.extend(
-        materialize_agent_layer(dest, agents, skills, args.dry_run, args.force)
+
+def materialize_agent_layer_phase(dest, plan, outcome):
+    """The chosen agent's layer: its matched skills into the native skills dir
+    + the inert hook example, the curated knowledge packs, and the launcher
+    seed. "none" (the non-interactive default) adds nothing, so the historical
+    scaffold is byte-for-byte unchanged."""
+    outcome.created.extend(
+        materialize_agent_layer(
+            dest, plan.agents, plan.skills, plan.dry_run, plan.force
+        )
     )
-    created.extend(materialize_knowledge_packs(dest, domain, args.dry_run, args.force))
+    outcome.created.extend(
+        materialize_knowledge_packs(dest, plan.domain, plan.dry_run, plan.force)
+    )
 
     # Seed the fresh agent-resume launchers' AGENT_CMD slot with the chosen
     # agent's example command (never on a re-sync that skipped them).
-    if seed_agent_resume(dest, agents, created, args.dry_run):
+    if seed_agent_resume(dest, plan.agents, outcome.created, plan.dry_run):
         print(
             "  seeded agent-resume launchers for {} (AGENT_CMD carries the "
             "permission-bypass flag — filling/keeping it is your consent to "
-            "unattended sessions; see docs/process-options.md).".format(agents[0])
+            "unattended sessions; see docs/process-options.md).".format(plan.agents[0])
         )
 
+
+def apply_declared_policies(dest, plan, outcome):
+    """The three declared-authority files: a non-default level overwrites the
+    scaffolded default (which the copy pass just laid down) and says so."""
     # A declared non-default gate authority overwrites the scaffolded default
     # and lays down the deviation-register skeleton for the level.
-    for rel in apply_gate_policy(dest, gate_policy, args.dry_run):
-        if rel not in created:
-            created.append(rel)
-    if gate_policy != "attended":
-        print("  gate-authority level: {}".format(gate_policy))
+    for rel in apply_gate_policy(dest, plan.gate_policy, plan.dry_run):
+        if rel not in outcome.created:
+            outcome.created.append(rel)
+    if plan.gate_policy != "attended":
+        print("  gate-authority level: {}".format(plan.gate_policy))
 
     # A declared non-default push authority overwrites the scaffolded default
     # (the file itself was just copied with `human` on its value line).
-    if push_policy != "human":
-        apply_push_policy(dest, push_policy, args.dry_run)
-        if "docs/push-policy" not in created:
-            created.append("docs/push-policy")
-        print("  push policy: {}".format(push_policy))
+    if plan.push_policy != "human":
+        apply_push_policy(dest, plan.push_policy, plan.dry_run)
+        if "docs/push-policy" not in outcome.created:
+            outcome.created.append("docs/push-policy")
+        print("  push policy: {}".format(plan.push_policy))
 
     # A `true` privacy-check overwrites the scaffolded default (`false`) — set
     # at repo creation, the cheap moment.
-    if privacy_check and privacy_check != "false":
-        apply_privacy_check(dest, privacy_check, args.dry_run)
-        if "docs/privacy-check" not in created:
-            created.append("docs/privacy-check")
-        print("  privacy-check: {}".format(privacy_check))
+    if plan.privacy_check and plan.privacy_check != "false":
+        apply_privacy_check(dest, plan.privacy_check, plan.dry_run)
+        if "docs/privacy-check" not in outcome.created:
+            outcome.created.append("docs/privacy-check")
+        print("  privacy-check: {}".format(plan.privacy_check))
 
-    verb = "would create" if args.dry_run else "created"
-    for c in created:
+
+def report_outcome(plan, outcome):
+    """The per-file report + the one-line summary, in the order the phases
+    appended to it."""
+    verb = "would create" if plan.dry_run else "created"
+    for c in outcome.created:
         print("  {}: {}".format(verb, c))
-    for s in skipped:
+    for s in outcome.skipped:
         print("  skipped (exists): {}".format(s))
-    for m in missing:
+    for m in outcome.missing:
         print("  WARNING missing template: {}".format(m), file=sys.stderr)
 
     print(
         "\n{} file(s) {}, {} skipped.".format(
-            len(created), "to create" if args.dry_run else "created", len(skipped)
+            len(outcome.created),
+            "to create" if plan.dry_run else "created",
+            len(outcome.skipped),
         )
     )
 
+
+def write_stamps(dest, plan):
+    """The generated stamps — kit-version / kit-profile / kit-license — plus
+    the agent-choice note in docs/status.md."""
+    verb = "would create" if plan.dry_run else "created"
     # docs/kit-version + docs/kit-profile are generated stamps, not user
     # content, so they are always (re)written — refreshed on every
     # scaffold/re-sync to record the kit state + profile this run came from.
-    label, dirty, wrote = write_kit_version(dest, args.dry_run)
+    label, dirty, wrote = write_kit_version(dest, plan.dry_run)
     print("  {}: docs/kit-version ({})".format(verb, label))
-    write_kit_profile(dest, stack, omit, args.dry_run)
+    write_kit_profile(dest, plan.stack, plan.omit, plan.dry_run)
     print(
         "  {}: docs/kit-profile (stack={}; omit={})".format(
-            verb, stack, ",".join(sorted(omit)) or "none"
+            verb, plan.stack, ",".join(sorted(plan.omit)) or "none"
         )
     )
-    write_kit_license(dest, args.dry_run, verb)
+    write_kit_license(dest, plan.dry_run, verb)
     if dirty:
         print(
             "WARNING: the kit working tree is DIRTY — this scaffold is stamped "
@@ -2067,17 +2164,59 @@ def main():
 
     # Record the agent choice + date + materialized skills in docs/status.md so
     # the scaffolded repo carries the setup decision (AGENTS.md stays canonical).
-    if record_agent_choice(dest, agent_choice, skills, args.dry_run):
-        print("  {}: docs/status.md agent-setup note ({})".format(verb, agent_choice))
+    if record_agent_choice(dest, plan.agent_choice, plan.skills, plan.dry_run):
+        print(
+            "  {}: docs/status.md agent-setup note ({})".format(verb, plan.agent_choice)
+        )
 
-    if not args.dry_run:
-        initialize_generated_docs(dest, created)
-    if not args.dry_run and created:
+
+def main():
+    _utf8_console()
+    ap = build_parser()
+    args = ap.parse_args()
+
+    dest = Path(args.dest).resolve()
+
+    # --sync (S7): a FOCUSED refresh of the per-agent skill copies, nothing else.
+    # Kept separate from the full scaffold pass so re-materializing the skills in
+    # an existing repo (e.g. this kit's own .claude/.agents) doesn't re-stamp
+    # kit-version, re-run the generators, or touch any other file.
+    if args.sync:
+        refreshed = sync_agent_skills(dest, args.dry_run)
+        verb = "would refresh" if args.dry_run else "refreshed"
+        for rel in refreshed:
+            print("  {}: {}".format(verb, rel))
+        print(
+            "\n{} per-agent skill file(s) {} from the neutral source.".format(
+                len(refreshed), "to refresh" if args.dry_run else "refreshed"
+            )
+        )
+        return
+
+    stack, omit = resolve_profile(ap, args, dest)
+    plan = resolve_choices(args, stack, omit)
+
+    if not dest.exists():
+        if plan.dry_run:
+            print("would create destination directory:", dest)
+        else:
+            dest.mkdir(parents=True)
+
+    outcome = copy_kit_files(dest, plan)
+    apply_stack_extras(dest, plan, outcome)
+    materialize_agent_layer_phase(dest, plan, outcome)
+    apply_declared_policies(dest, plan, outcome)
+    report_outcome(plan, outcome)
+    write_stamps(dest, plan)
+
+    if not plan.dry_run:
+        initialize_generated_docs(dest, outcome.created)
+    if not plan.dry_run and outcome.created:
         print(
             "Next: fill the PROJECT BRIEF in AGENTS.md + docs/status.md, then "
             "run gate G1 (docs/process.md)."
         )
-    if missing:
+    if outcome.missing:
         sys.exit(1)
 
 

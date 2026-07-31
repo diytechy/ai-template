@@ -2718,31 +2718,52 @@ def critique_ratchet_findings(root):
 _RENDER_RECIPE_REL = "scripts/dashboard-shots/shoot.mjs"
 
 
+# WI-280 split the dashboard generator into `gen_trajectory.py` (the facade:
+# HTML_TEMPLATE + build_html) plus the `traj_*.py` siblings that hold every
+# emitter. The render surface is the WHOLE family — after the split, a change
+# that alters the rendered pixels lands in a sibling far more often than in the
+# facade, so watching the facade alone would have silently retired this warn.
+_RENDER_SURFACE_GLOB = "traj_*.py"
+
+
 def _render_surface_paths(root):
     """Repo-relative render-surface paths that EXIST under `root`: the co-located
-    dashboard generator `gen_trajectory.py` and the render recipe if the repo
-    carries one. A downstream without the meta-only recipe pays nothing for it;
-    an unlocatable generator yields no path (the check then stays silent).
+    dashboard generator `gen_trajectory.py`, its WI-280 `traj_*.py` split siblings
+    (which hold the emitters), and the render recipe if the repo carries one. A
+    downstream without the meta-only recipe pays nothing for it; an unlocatable
+    generator yields no path (the check then stays silent).
 
-    Accepted warn-first boundary: layout-affecting values the generator IMPORTS
-    from sibling modules (e.g. a display constant defined in this checker) are NOT
+    Accepted warn-first boundary: layout-affecting values the family IMPORTS from
+    modules OUTSIDE it (e.g. a display constant defined in this checker) are NOT
     watched — folding them in would fire the warn on every unrelated edit to those
-    modules. The surface is the generator + recipe themselves; a render change that
-    lands only in an imported constant is a known, tolerated miss."""
+    modules. The surface is the generator family + recipe themselves; a render
+    change that lands only in an externally-imported constant is a known,
+    tolerated miss."""
     out = []
-    gen = Path(__file__).resolve().with_name("gen_trajectory.py")
+    here = Path(__file__).resolve().parent
+    gen = here / "gen_trajectory.py"
     try:
         rel = gen.relative_to(root)
         if gen.is_file():
             out.append(rel.as_posix())
+        # The split siblings live beside the facade; sorted so the warn's path
+        # list is deterministic.
+        for sib in sorted(here.glob(_RENDER_SURFACE_GLOB)):
+            out.append(sib.relative_to(root).as_posix())
     except ValueError:
         # the checker is not under root (unusual) — try the kit's two homes.
         for cand in (
-            "project-trajectory/scripts/gen_trajectory.py",
-            "scripts/gen_trajectory.py",
+            "project-trajectory/scripts",
+            "scripts",
         ):
-            if (root / cand).is_file():
-                out.append(cand)
+            if (root / cand / "gen_trajectory.py").is_file():
+                out.append(cand + "/gen_trajectory.py")
+                out.extend(
+                    sorted(
+                        (root / cand / s.name).relative_to(root).as_posix()
+                        for s in (root / cand).glob(_RENDER_SURFACE_GLOB)
+                    )
+                )
                 break
     if (root / _RENDER_RECIPE_REL).is_file():
         out.append(_RENDER_RECIPE_REL)

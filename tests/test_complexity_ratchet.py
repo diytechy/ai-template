@@ -60,7 +60,17 @@ BASELINE = {
     ("agent_loop.py", "session_bookkeeping"): 31,
     ("agent_route.py", "load_registry"): 17,
     ("agent_session.py", "run_session"): 14,
-    ("bootstrap.py", "main"): 41,
+    # WI-280 slice 10 (subsuming the retired WI-082): `main` (41 — the largest
+    # single function in the kit, and the one an adopter's FIRST command runs)
+    # is DECOMPOSED into named phases — build_parser / resolve_profile /
+    # resolve_choices -> ScaffoldPlan / copy_kit_files -> CopyOutcome (its
+    # per-file write extracted again as `_write_scaffold_file`, which kept the
+    # ledger under the limit rather than buying a new baseline row) /
+    # apply_stack_extras / materialize_agent_layer_phase /
+    # apply_declared_policies / report_outcome / write_stamps — and every one of
+    # them, `main` included, is now under the limit. Entry DELETED per the
+    # improvement rule; proven behaviour-preserving by the scaffold byte-compare
+    # suites plus a pre/post --dry-run stdout diff.
     ("bootstrap.py", "sync_agent_skills"): 13,
     ("bootstrap.py", "strip_markers"): 14,
     # extra_steps dropped under the limit (WI-279 lifted its [step:] section
@@ -116,13 +126,23 @@ BASELINE = {
     ("gen_okf.py", "emit"): 25,
     ("gen_okf.py", "main"): 13,
     ("gen_release_checklist.py", "main"): 20,
-    ("gen_trajectory.py", "_okf_nodes"): 15,
+    # WI-280 S3: _okf_nodes moved verbatim to traj_parse.py — re-keyed, same
+    # measured complexity (the move is the decomposition, not a bump).
+    ("traj_parse.py", "_okf_nodes"): 15,
     # +3 (20 -> 23), WI-306: the start-collapsed SN root layer above the >3 rule
     # (the T2 density fix) - the panel() extraction plus the tiered branch. A
     # WI-280 decomposition candidate: panel/draw are an extractable unit.
-    ("gen_trajectory.py", "arch_icicle"): 23,
-    ("gen_trajectory.py", "sw_containment"): 28,
-    ("gen_trajectory.py", "when_view"): 15,
+    # WI-280 S5: all three moved verbatim to traj_views.py — re-keyed, same
+    # measured complexity (the move is the decomposition, not a bump).
+    # WI-280 S9, re-stamped DOWN — the pay-down this ratchet was holding for:
+    # arch_icicle 23 -> 19 (the SR/LLR node-build arms became one module-level
+    # `_add_tier_rows` loop over the TierSpec column declaration);
+    # sw_containment 28 -> 17 (`_subtree_modules` + `_layer_edges` lifted to
+    # module level with their joins passed in); when_view 15 -> under the
+    # limit (its `agg_edges`/`wi_block` lifted out as `_agg_edges`/`_wi_block`)
+    # — entry DELETED per the improvement rule.
+    ("traj_views.py", "arch_icicle"): 19,
+    ("traj_views.py", "sw_containment"): 17,
     ("plan_coverage.py", "check_plan"): 17,
     ("plan_coverage.py", "main"): 12,
     ("plan_round.py", "record"): 29,

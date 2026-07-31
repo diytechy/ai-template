@@ -1,0 +1,441 @@
+"""Parse/sources for the project-state dashboard — registries, docs, git.
+
+The spine/OKF/arch-map/gate readers, the one subprocess capture seam
+(_run_captured/_asof/_git), and the guarded `schedule` import's ONE home.
+WI-280 split of gen_trajectory.py; the facade re-exports, so consumers are
+unchanged.
+
+Contracts: IF-082, IF-085 — the seams this module declares (process.md §8; rows of
+record in docs/requirements/interfaces.csv). Both are the sibling-held halves of
+gen_trajectory's own seams: IF-082 is IF-056's derivation-loader read of
+check_trajectory, IF-085 is IF-071's frontier read of schedule (whose guarded import
+has its ONE home here).
+"""
+
+import json
+import re
+import subprocess
+import sys
+from pathlib import Path
+
+# The sanctioned sibling import (one home for registry loading/validation) —
+# plain here: the facade's guarded import is the module family's ONE sys.path
+# repair, and it runs before this module is ever imported.
+import check_trajectory as ct
+
+# schedule.py — the ready-frontier derivation the generated STATUS block projects
+# (WI-284): the forward-looking WI list is GENERATED, not hand-authored, so a
+# `done` WI can never linger there and redden a later train's DONE gate. OPTIONAL:
+# a scaffold that ships gen_trajectory without schedule.py (or a downstream not
+# using the scheduler) simply omits the Ready-frontier block — `_frontier_lines`
+# degrades to empty rather than crashing the whole generator (the kit's
+# "non-adopter pays nothing" posture; a hard import here broke the hook-scaffold
+# tests that copy check_trajectory but not schedule).
+try:
+    import schedule
+except ImportError:
+    try:
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        import schedule
+    except ImportError:
+        schedule = None
+
+# Workstream render order + display labels (the mutable grouping category on a
+# work item; legacy `Track` header still read); unknown ones fall through in
+# file order.
+WORKSTREAM_LABELS = {
+    "self-adoption": "Self-adoption",
+    "scripts": "Scripts / harness",
+    "docs": "Docs / process",
+    "unattended": "Unattended layer",
+    "deliverable": "Deliverables",
+}
+
+
+# --- spine parsing (ported from the proven gilbert generator, kit columns) -----
+
+
+def _sn_rows(root):
+    """Full stakeholder-need rows (id, need, why, acceptance) from the md table,
+    the `-000` placeholder skipped and the rows id-sorted for determinism.
+
+    Kept byte-for-byte in sync with gen_okf.sn_rows (a small stable helper
+    duplicated per the F5 rule, not shared) — the two once drifted (one kept
+    `-000`, one didn't), which rendered a phantom SN-000 root in the icicle.
+    Change both together."""
+    md = root / "docs/requirements/stakeholder-needs.md"
+    rows = []
+    if not md.exists():
+        return rows
+    for line in md.read_text(encoding="utf-8").splitlines():
+        m = re.match(r"\|\s*(SN-\d+)\s*\|(.*)", line)
+        if not m or m.group(1).endswith("-000"):
+            continue
+        cells = [re.sub(r"\*\*|`", "", c).strip() for c in m.group(2).split("|")]
+        rows.append(
+            {
+                "id": m.group(1),
+                "need": cells[0] if cells else "",
+                "why": cells[1] if len(cells) > 1 else "",
+                "acceptance": cells[3] if len(cells) > 3 else "",
+            }
+        )
+    return sorted(rows, key=lambda r: r["id"])
+
+
+def read_sns(root):
+    """(id, short-label) per stakeholder need — the SN count + icicle roots."""
+    return [(r["id"], r["need"]) for r in _sn_rows(root)]
+
+
+def _spine(root, skip_example=False):
+    """`(srs, llrs, tcs)` — the SR/LLR/TC registry rows, id-prefix-filtered.
+
+    The three readers of the spine (the What icicle, the maturity numbers, the
+    Draft/Modified pointer lines) each re-derived the same
+    `read_rows(...) if id.startswith(...)` triple; the census charged the eight
+    resulting blocks to WI-346 as `spine-load-repeat`. Explicitly NOT the F5
+    case: F5 buys cross-SCRIPT copy-ability (a shared `_kitcommon.py` was
+    rejected 2026-07-12) and every copy was inside this one file, so a
+    module-local loader costs nothing and no independence is spent.
+
+    ROW ORDER IS THE CONTRACT: rows come back exactly as `ct.read_rows` yields
+    them — no sort, no set, no dict round-trip. The icicle picks a *primary*
+    parent as the first listed ref and lays blocks out in arrival order, and
+    `--check` byte-compares the rendered result, so a reordering here is a
+    silent artifact change.
+
+    `skip_example=True` additionally drops the `-000` placeholder rows a
+    freshly copied template carries. That is the pending projection's rule — an
+    example row owes no ratification — stated once in the loader rather than
+    re-derived at the call site. The default keeps them, because the icicle and
+    the maturity counts render whatever the registry holds."""
+
+    def rows(rel, col, prefix):
+        out = []
+        for r in ct.read_rows(root / rel):
+            rid = r.get(col) or ""
+            if not rid.startswith(prefix):
+                continue
+            if skip_example and rid.endswith("-000"):
+                continue
+            out.append(r)
+        return out
+
+    return (
+        rows(ct.SR_CSV, "SR-ID", "SR-"),
+        rows("docs/requirements/low-level-requirements.csv", "LLR-ID", "LLR-"),
+        rows("docs/test/test-cases.csv", "TC-ID", "TC-"),
+    )
+
+
+def spine_stats(root):
+    """Definition-maturity numbers. 'Definition completeness' = SRs marked
+    Verified / total SRs — how much of the requirement definition is decomposed
+    and confirmed, distinct from execution (work items done)."""
+    srs, llrs, tcs = _spine(root)
+    sr_total = len(srs)
+    sr_verified = sum(
+        1 for r in srs if (r.get("Status") or "").strip().lower() == "verified"
+    )
+    return {
+        "sn_total": len(read_sns(root)),
+        "sr_total": sr_total,
+        "sr_verified": sr_verified,
+        "llr_total": len(llrs),
+        "tc_total": len(tcs),
+        "def_pct": round(100 * sr_verified / sr_total) if sr_total else 0,
+    }
+
+
+def project_vision(root):
+    """One-line vision: the README `PROJECT-VISION:` tag (the kit's canonical
+    one-home vision), else AGENTS.md's one-line purpose, else a constant."""
+    readme = root / "README.md"
+    if readme.exists():
+        m = re.search(
+            r"\*\*PROJECT-VISION:\*\*\s*(.+?)\n\s*\n",
+            readme.read_text(encoding="utf-8"),
+            re.S,
+        )
+        if m:
+            return re.sub(r"\s+", " ", re.sub(r"\*\*|`", "", m.group(1))).strip()
+    agents = root / "AGENTS.md"
+    if agents.exists():
+        m = re.search(
+            r"one-line purpose:\*\*\s*(.+?)(?:\n\s*-|\n\n)",
+            agents.read_text(encoding="utf-8"),
+            re.S,
+        )
+        if m:
+            return re.sub(r"\s+", " ", m.group(1)).strip().rstrip(".")
+    return "A requirement-traced project built with agents and humans."
+
+
+def project_name(root):
+    """The project's display name — the README's first H1, else the folder name."""
+    readme = root / "README.md"
+    if readme.exists():
+        for line in readme.read_text(encoding="utf-8").splitlines():
+            m = re.match(r"#\s+(.+)", line.strip())
+            if m:
+                return m.group(1).strip()
+    return root.resolve().name or "Project"
+
+
+def _run_captured(argv):
+    """`subprocess.run(argv)` under this module's ONE capture contract.
+
+    The five keywords: utf-8 with `errors="replace"` so a child emitting a
+    single locale-undecodable byte mojibakes rather than crashing a render, and
+    `stdin=DEVNULL` so a git that would prompt on a TTY takes its default
+    instead of hanging an unattended run. WI-304 extracted exactly this block in
+    `agent_dispatch` as `_run_captured` rather than sanctioning it; the census
+    charged the two sites left here (`_asof`, `_git`) to WI-346 as
+    `subprocess-capture`.
+
+    Deliberately does NOT catch: `OSError` (no git binary at all) propagates,
+    and both callers catch it to degrade to empty. That is the off-git
+    best-effort contract — a non-repo pays nothing, but the helper does not
+    silently swallow a failure a future caller might need to see."""
+    return subprocess.run(
+        argv,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        stdin=subprocess.DEVNULL,
+    )
+
+
+def _asof(root):
+    """'state as of commit <sha> · <date>' from the last commit touching the
+    sources, or '' (no git / no commits). Git-derived, never now() — a wall
+    clock would make every regeneration a byte change; this changes only when
+    a source-touching commit lands, and --check ignores the line (ASOF_RE)."""
+    sources = [
+        p
+        for p in (
+            root / "docs" / "requirements" / "stakeholder-needs.md",
+            root / "docs" / "requirements" / "system-requirements.csv",
+            root / "docs" / "requirements" / "low-level-requirements.csv",
+            root / "docs" / "requirements" / "work-items.csv",
+            # Both work-item homes (Phase 2b): whichever exists is a source of
+            # this page, and `git log` over a directory is the same question
+            # asked of the folder registry.
+            root / "docs" / "work",
+            root / "docs" / "test" / "test-cases.csv",
+            root / "docs" / "architecture.md",
+            root / "README.md",
+        )
+        if p.exists()
+    ]
+    if not sources:
+        return ""
+    try:
+        proc = _run_captured(
+            ["git", "-C", str(root), "log", "-1", "--format=%h · %as", "--"]
+            + [str(p) for p in sources]
+        )
+    except OSError:
+        return ""
+    stamp = (proc.stdout or "").strip()
+    return (
+        "state as of commit {}".format(stamp) if proc.returncode == 0 and stamp else ""
+    )
+
+
+def _git(root, *args):
+    """`(returncode, stdout)` for a READ-ONLY git command, `(1, "")` on any
+    failure — the `_asof` idiom (gen_trajectory shells git via stdlib rather than
+    importing the dispatcher, which would drag the whole engine into a renderer).
+    Every pending source degrades to empty off-git, so a non-repo pays nothing."""
+    try:
+        proc = _run_captured(["git", "-C", str(root), *args])
+    except OSError:
+        return 1, ""
+    return proc.returncode, proc.stdout
+
+
+def sw_modules(root):
+    """[(module, summary, [public symbols])] parsed from architecture.md's
+    GENERATED MODULE MAP block — the committed arch-map artifact is the
+    How-SW source (a view of a view; no AST re-parse). Empty on a files-mode
+    map or a missing doc, and the panel is then omitted."""
+    md = root / "docs" / "architecture.md"
+    mods, current, inside = [], None, False
+    if not md.exists():
+        return mods
+    for line in md.read_text(encoding="utf-8").splitlines():
+        if "BEGIN GENERATED MODULE MAP" in line:
+            inside = True
+            continue
+        if "END GENERATED" in line:
+            inside = False
+            current = None
+            continue
+        if not inside:
+            continue
+        m = re.match(r"^### `([^`]+)`", line)
+        if m:
+            current = {"name": m.group(1), "summary": "", "symbols": []}
+            mods.append(current)
+            continue
+        if current is None:
+            continue
+        s = re.match(r"^\| `(\w+)[(`]", line)
+        if s:
+            current["symbols"].append(s.group(1))
+            continue
+        t = re.match(r"^_(.+)_$", line.strip())
+        if t and not current["summary"]:
+            current["summary"] = t.group(1)
+    return [m for m in mods if m["symbols"]]
+
+
+def cmp_rows(root):
+    """Real CMP-### component rows (the optional physical/component layer)."""
+    rows = ct.read_rows(root / "docs" / "requirements" / "components.csv")
+    return [
+        r
+        for r in rows
+        if (r.get("CMP-ID") or "").strip().startswith("CMP-")
+        and not (r.get("CMP-ID") or "").strip().endswith("-000")
+    ]
+
+
+# --- the Knowledge tab: the committed OKF bundle as a concept graph (WI-070) ----
+#
+# The dashboard becomes docs/okf's *first real consumer* (the 2026-07-11 OKF
+# audit found the bundle had none). A view of a view: gen_okf.py emits the
+# bundle from the spine, this reads it back and renders it. The small
+# frontmatter/link loader below is DUPLICATED here rather than imported from
+# gen_okf per the F5 small-loader rule — the sanctioned sibling import is
+# reserved for the large evolving check_trajectory graph core, not for a stable
+# parser a downstream cherry-pick would drag a second module in for.
+OKF_DIR = "docs/okf"
+
+# Tier precedence orients every link upstream -> downstream, so the concept
+# graph is a DAG the WI-DAG layouter can rank (SN -> SR -> LLR -> TC). Interfaces
+# and process guides carry no spine links in the bundle, so their rank is
+# immaterial — they render as isolated rank-0 nodes (an honest picture of what
+# the bundle actually links).
+OKF_TIER_ORDER = {
+    "stakeholder-needs": 0,
+    "system-requirements": 1,
+    "low-level-requirements": 2,
+    "test-cases": 3,
+    "interfaces": 4,
+    "process-guides": 5,
+}
+
+
+def _okf_frontmatter(text):
+    """Parse an OKF concept file's frontmatter — the subset gen_okf emits, whose
+    scalars are JSON strings (valid YAML). Returns {type,title,description,
+    resource} present, or None when the block is missing/unterminated so the
+    caller skips the file with a warn rather than crashing the dashboard."""
+    lines = text.split("\n")
+    if not lines or lines[0].strip() != "---":
+        return None
+    fm = {}
+    for ln in lines[1:]:
+        if ln.strip() == "---":
+            return fm
+        m = re.match(r"(\w+):\s*(.*)$", ln)
+        if not m:
+            continue
+        key, val = m.group(1), m.group(2).strip()
+        if key in ("type", "title", "description", "resource"):
+            try:
+                fm[key] = json.loads(val)  # JSONDecodeError is a ValueError
+            except ValueError:
+                fm[key] = val.strip('"')
+    return None  # no closing fence -> malformed
+
+
+def _okf_nodes(root):
+    """Walk docs/okf/<tier>/*.md -> (nodes, sorted-edges), or ({}, []) with no
+    bundle. Nodes are frontmatter-typed; edges are the SN->SR->LLR->TC spine
+    links parsed from the '- Label: [id](href)' lists, oriented upstream->
+    downstream by tier. index.md / UPSTREAM.md are not concepts; the GENERATED
+    banner (a '>' blockquote, never a '- ' list line) is never read as content;
+    a malformed file is skipped with a stderr warn (a hand-broken bundle can
+    never crash generation)."""
+    base = root / OKF_DIR
+    if not base.is_dir():
+        return {}, []
+    nodes, raw_links = {}, {}
+    for tier_dir in sorted(p for p in base.iterdir() if p.is_dir()):
+        tier = tier_dir.name
+        for f in sorted(tier_dir.glob("*.md")):
+            if f.name in ("index.md", "UPSTREAM.md"):
+                continue
+            cid = f.stem
+            try:
+                text = f.read_text(encoding="utf-8")
+                fm = _okf_frontmatter(text)
+            except OSError:
+                fm, text = None, ""
+            if not fm or not fm.get("type"):
+                print(
+                    "gen_trajectory: skipping malformed OKF concept {} (no "
+                    "frontmatter/type).".format(f.relative_to(root).as_posix()),
+                    file=sys.stderr,
+                )
+                continue
+            nodes[cid] = {
+                "type": fm.get("type", ""),
+                "title": fm.get("title", ""),
+                "description": fm.get("description", ""),
+                "resource": fm.get("resource", ""),
+                "tier": tier,
+                "href": "{}/{}/{}.md".format(OKF_DIR, tier, cid),
+            }
+            targets = set()
+            for ln in text.split("\n"):
+                if ln.lstrip().startswith("- "):  # a link-list line only
+                    for m in re.finditer(r"\[([^\]]+)\]\(", ln):
+                        targets.add(m.group(1).strip())
+            raw_links[cid] = targets
+    edges = set()
+    for cid, targets in raw_links.items():
+        a = OKF_TIER_ORDER.get(nodes[cid]["tier"], 99)
+        for tid in targets:
+            if tid == cid or tid not in nodes:  # self / non-concept text -> drop
+                continue
+            b = OKF_TIER_ORDER.get(nodes[tid]["tier"], 99)
+            if a < b:
+                edges.add((cid, tid))
+            elif b < a:
+                edges.add((tid, cid))
+    return nodes, sorted(edges)
+
+
+PROCESS_GATE_FILE = "docs/gate"
+
+
+def _gate_value(root):
+    """The runnable gate from docs/gate — the first non-comment line (the
+    derive_gate.parse_cache contract, a small stable parse duplicated per the F5
+    rule), or None when the file is absent/comment-only. None is the Process
+    tab's omit condition: no gate layer, no method view."""
+    path = root / PROCESS_GATE_FILE
+    if not path.exists():
+        return None
+    for line in path.read_text(encoding="utf-8", errors="replace").splitlines():
+        s = line.strip()
+        if s and not s.startswith("#"):
+            return s
+    return None
+
+
+def _process_doc(root, scaffolded, master):
+    """The process-doc link target that resolves in THIS repo: the scaffolded
+    docs/ copy when present (the downstream case), else the kit master (the
+    meta-repo case, which never scaffolds docs/process.md), else the scaffolded
+    default (what bootstrap writes). File presence only — deterministic."""
+    for rel in (scaffolded, master):
+        if (root / rel).exists():
+            return rel
+    return scaffolded
