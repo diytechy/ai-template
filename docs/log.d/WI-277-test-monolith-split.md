@@ -176,6 +176,14 @@ python -m pytest -q -m smoke --collect-only   556 -> 557 (S6) -> 557 -> 557
 python -m pytest -q -n auto -m smoke      1 failed, 552 passed, 4 skipped
 ```
 
+The full unfiltered suite, run over the final S8 tree (the slice/close bar):
+
+```
+1 failed, 1701 passed, 12 skipped in 674.43s (0:11:14)
+```
+
+1701 + 1 + 12 = **1714** — the collected total, all of it actually executed.
+
 The single red is the standing `test_check_lane.py::test_this_repo_is_not_a_work_branch`
 — expected on a claimed branch, never chased.
 
