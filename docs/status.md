@@ -40,14 +40,15 @@ home elsewhere — don't restate it here:
   integrator defects it surfaced** (the session entry in [log.md](log.md)
   records the drain, the RULING-8 attended-serial escape, and the R-E
   intake debt). **That follow-up queue is now drained too** (2026-07-30/31).
-  The frontier now holds two efforts, both named in the generated Ready
-  frontier below: the **unattended entry point** (`P2`, leading — Phase 5's
-  dispatcher deletion took the scheduling front end with it, so the
-  walk-away loop is automatic at the end and manual at the front; spec
-  [specs/unattended-entry-point.md](specs/unattended-entry-point.md)), and
-  the **H-2 decomposition program**, promoted out of `deferred` on
-  2026-07-31 (what a claimer needs before taking it is in the
-  Deferred-backlog bullet further down; scope is in the rows).
+  **The walk-away loop is whole again end to end** (2026-07-31): a plain
+  `agent-resume` launch drives frontier → claim → worker → serial merge
+  queue, re-deriving the frontier every cycle (the unattended-entry-point
+  effort closed through the integrator's own queue; spec archived at
+  [archive/specs/](archive/specs/), record in [log.md](log.md)). The
+  frontier now holds the **H-2 decomposition program** plus this session's
+  filed follow-ons, all named in the generated Ready frontier below (what a
+  claimer needs before taking the H-2 rows is in the Deferred-backlog
+  bullet further down; scope is in the rows).
   Standing habit that survives the restructure: run
   `check_trajectory.py --strict` directly, unfiltered, before claiming
   anything done — the DEFAULTED pre-commit floor stays warn-first by
