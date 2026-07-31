@@ -5,6 +5,24 @@ obstacle-aware wire router every layered emitter calls. WI-280 split of
 gen_trajectory.py; the facade re-exports, so consumers are unchanged.
 """
 
+from dataclasses import dataclass
+
+
+@dataclass(frozen=True)
+class GraphGeom:
+    """One layered graph's geometry — the (col_w, col_gap, row_h, row_gap, pad)
+    quintet every emitter used to thread as a bare tuple (WI-280 S8). Iterable
+    in that same order, so `_layered_layout`'s unpack takes it unchanged."""
+
+    col_w: float
+    col_gap: float
+    row_h: float
+    row_gap: float
+    pad: float
+
+    def __iter__(self):
+        return iter((self.col_w, self.col_gap, self.row_h, self.row_gap, self.pad))
+
 
 def _dag_ranks(wis, pred_map):
     """Longest-path layering: a node's rank is one past its deepest predecessor
@@ -612,3 +630,58 @@ def _route_edges(edges, rects_by_id, min_dx, end_trim):
             taken.append(seg)
         out[key] = d
     return out
+
+
+def route_graph(nodes, edges, pos, geom, min_dx, end_trim):
+    """The shared fan/rects/route sequence every layered emitter ran inline
+    (WI-280 S8 — the census's `graph-layout` class, one copy per graph): group
+    the edges by port, fan them (`_port_fan`), build the node boxes from `pos` +
+    `geom`, and route every wire (`_route_edges`). `edges` are (src, tgt, ...)
+    tuples of any arity (only e[0]/e[1] are read); `nodes` is the full node-id
+    set, so a node with no edge still obstructs routing. Returns
+    `(routes, out_off, in_off)` — the sw seam graph anchors its labels to the
+    fan offsets, the other emitters read only the routed paths."""
+    out_groups, in_groups = {}, {}
+    for e in edges:
+        out_groups.setdefault(e[0], []).append(e)
+        in_groups.setdefault(e[1], []).append(e)
+    out_off = _port_fan(out_groups, lambda e: e[1], pos, geom.row_h, geom.row_gap)
+    in_off = _port_fan(in_groups, lambda e: e[0], pos, geom.row_h, geom.row_gap)
+
+    rects = {n: (pos[n][0], pos[n][1], geom.col_w, geom.row_h) for n in nodes}
+    routes = _route_edges(
+        [
+            (
+                e,
+                pos[e[0]][0] + geom.col_w,
+                pos[e[0]][1] + geom.row_h / 2 + out_off[e],
+                pos[e[1]][0],
+                pos[e[1]][1] + geom.row_h / 2 + in_off[e],
+                e[0],
+                e[1],
+            )
+            for e in edges
+        ],  # fmt: skip
+        rects,
+        min_dx,
+        end_trim,
+    )
+    return routes, out_off, in_off
+
+
+def flat_graph(node_ids, edges, geom, min_dx, end_trim):
+    """Adjacency + layout + routing for a FLAT, id-seeded graph in one call —
+    the shared shape of the How-SW seam graph and the OKF concept graph
+    (WI-280 S8; the census's residual `graph-layout` preamble): pred/succ maps
+    from the (src, tgt, ...) edge tuples, `_layered_layout` seeded by bare id,
+    then `route_graph`. Returns (pos, width, height, routes, out_off, in_off)."""
+    pred_map = {k: [] for k in node_ids}
+    succ_map = {k: [] for k in node_ids}
+    for e in edges:
+        pred_map[e[1]].append(e[0])
+        succ_map[e[0]].append(e[1])
+    pos, width, height = _layered_layout(
+        [{"id": k} for k in node_ids], pred_map, succ_map, lambda k: k, geom
+    )
+    routes, out_off, in_off = route_graph(node_ids, edges, pos, geom, min_dx, end_trim)
+    return pos, width, height, routes, out_off, in_off

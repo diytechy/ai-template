@@ -256,12 +256,19 @@
 # WI-356's finding, resolved per the 2026-07-28 audit ruling (delete the
 # numbers, do not build an assert).
 #
+# WI-280 S8 (2026-07-31): the graph-layout class (10 blocks at its widest,
+# debt WI-280) is DISSOLVED, not re-stamped — `GraphGeom` + `route_graph` /
+# `flat_graph` in traj_graph.py now own the per-emitter fan/rects/route
+# sequence and the flat-graph adjacency preamble. Measured: the emitted census
+# lost all ten fingerprints and gained ZERO new blocks; the class and its
+# distribution row are deleted per the maintenance rule, and the render stayed
+# byte-identical (`gen_trajectory.py --check` green across the change).
+#
 # The distribution:
 #
 #   cli                   87   deliberate
 #   spine-loader          20   deliberate
 #   declared-file         13   deliberate
-#   graph-layout          10   debt WI-280
 #   markdown-table        11   deliberate
 #   git-wrapper            7   deliberate
 #   wi-schema-columns      6   deliberate
@@ -620,34 +627,6 @@ b8b532ba9de4  project-trajectory/scripts/agent_loop.py == project-trajectory/scr
 # loader. Re-classed, not newly sanctioned. WI-280 S5: arch_icicle moved
 # verbatim to traj_views.py — same fingerprint, re-homed there.
 29c06640159e  project-trajectory/scripts/traj_views.py == project-trajectory/scripts/traj_views.py
-
-# --- graph-layout (10 blocks) ------------------------------------
-# disposition: debt WI-280
-# the edge-routing and layered-layout sequence, instantiated once per
-# rendered graph (WI DAG, spine wire, OKF knowledge map) with that graph's
-# own COL/ROW/PAD constants. The parameterisation that removes it is the
-# graph/view-model/render split WI-280's row names for this file.
-# WI-280 S4: _drill_layer_svg's copy of the sequence moved verbatim to
-# traj_render.py, re-pairing one 99c2a2ac7eff and one e7ebc7f29c86 line onto
-# that sibling (same fingerprints, same class — WI-280's row names it).
-# WI-280 S5 (11 -> 10): dag_svg/sw_graph/sw_containment's copies moved to
-# traj_views.py, re-homing seven lines; the know_graph pairing left in the
-# facade re-fingerprinted (the WI-347 clique effect: b860b104d408 and one
-# e7ebc7f29c86 went dead, f0492e98954e appeared over the same know_graph ==
-# dag_svg sequence — read, it is the same fan/rects/route family). One block
-# net dissolved by the move.
-# WI-280 S6: know_graph's copy moved verbatim to traj_panels.py, so every
-# gen_trajectory-side line re-homed there — same ten fingerprints, same class.
-e7ebc7f29c86  project-trajectory/scripts/traj_panels.py == project-trajectory/scripts/traj_render.py
-e7ebc7f29c86  project-trajectory/scripts/traj_panels.py == project-trajectory/scripts/traj_views.py
-99c2a2ac7eff  project-trajectory/scripts/traj_panels.py == project-trajectory/scripts/traj_render.py
-99c2a2ac7eff  project-trajectory/scripts/traj_panels.py == project-trajectory/scripts/traj_views.py
-99c2a2ac7eff  project-trajectory/scripts/traj_panels.py == project-trajectory/scripts/traj_views.py
-b240d68b0686  project-trajectory/scripts/traj_panels.py == project-trajectory/scripts/traj_views.py
-76cdecd0d810  project-trajectory/scripts/traj_panels.py == project-trajectory/scripts/traj_views.py
-aaa30617a30f  project-trajectory/scripts/traj_panels.py == project-trajectory/scripts/traj_views.py
-bfd6e67c304f  project-trajectory/scripts/traj_panels.py == project-trajectory/scripts/traj_views.py
-f0492e98954e  project-trajectory/scripts/traj_panels.py == project-trajectory/scripts/traj_views.py
 
 # --- spec-folder-reader (4 blocks) -------------------------------
 # disposition: deliberate

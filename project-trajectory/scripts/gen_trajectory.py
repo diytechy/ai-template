@@ -229,6 +229,7 @@ from traj_panels import (  # noqa: F401
     process_panel,
 )
 from traj_graph import (  # noqa: F401
+    GraphGeom,
     _FAN_PITCH,
     _LEAD_RUNGS,
     _MAX_LANES,
@@ -242,6 +243,8 @@ from traj_graph import (  # noqa: F401
     _route_edges,
     _routed_label_xy,
     _seg_hits_rect,
+    flat_graph,
+    route_graph,
 )
 
 # The unified project-state artifact at the repo ROOT (WI-039, the ratified

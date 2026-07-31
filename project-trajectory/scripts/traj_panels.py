@@ -10,7 +10,7 @@ import json
 import math
 
 import traj_parse
-from traj_graph import _layered_layout, _port_fan, _route_edges
+from traj_graph import GraphGeom, flat_graph
 from traj_parse import OKF_TIER_ORDER, _gate_value, _okf_nodes, _process_doc
 from traj_render import (
     DRILL_STYLE,
@@ -51,42 +51,10 @@ def know_graph(root):
     if not nodes:
         return None
     node_ids = sorted(nodes)
-    node_list = [{"id": k} for k in node_ids]
-    pred_map = {k: [] for k in node_ids}
-    succ_map = {k: [] for k in node_ids}
-    for s, d in edges:
-        pred_map[d].append(s)
-        succ_map[s].append(d)
-    pos, width, height = _layered_layout(
-        node_list,
-        pred_map,
-        succ_map,
-        lambda k: k,
-        (KN_COL_W, KN_COL_GAP, KN_ROW_H, KN_ROW_GAP, KN_PAD),
-    )
-
-    out_groups, in_groups = {}, {}
-    for e in edges:
-        out_groups.setdefault(e[0], []).append(e)
-        in_groups.setdefault(e[1], []).append(e)
-    out_off = _port_fan(out_groups, lambda e: e[1], pos, KN_ROW_H, KN_ROW_GAP)
-    in_off = _port_fan(in_groups, lambda e: e[0], pos, KN_ROW_H, KN_ROW_GAP)
-
-    rects = {k: (pos[k][0], pos[k][1], KN_COL_W, KN_ROW_H) for k in node_ids}
-    routes = _route_edges(
-        [
-            (
-                e,
-                pos[e[0]][0] + KN_COL_W,
-                pos[e[0]][1] + KN_ROW_H / 2 + out_off[e],
-                pos[e[1]][0],
-                pos[e[1]][1] + KN_ROW_H / 2 + in_off[e],
-                e[0],
-                e[1],
-            )
-            for e in edges
-        ],  # fmt: skip
-        rects,
+    pos, width, height, routes, _out_off, _in_off = flat_graph(
+        node_ids,
+        edges,
+        GraphGeom(KN_COL_W, KN_COL_GAP, KN_ROW_H, KN_ROW_GAP, KN_PAD),
         12,
         2,
     )

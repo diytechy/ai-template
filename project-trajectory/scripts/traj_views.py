@@ -9,7 +9,13 @@ import json
 import re
 
 import check_trajectory as ct
-from traj_graph import _layered_layout, _port_fan, _route_edges, _routed_label_xy
+from traj_graph import (
+    GraphGeom,
+    _layered_layout,
+    _routed_label_xy,
+    flat_graph,
+    route_graph,
+)
 from traj_parse import WORKSTREAM_LABELS, _sn_rows, _spine
 from traj_render import (
     DRILL_STYLE,
@@ -317,32 +323,14 @@ def dag_svg(wis):
         + [(p, "edge soft") for p in w["soft"]]
         if p in ids
     ]
-    out_groups, in_groups = {}, {}
-    for e in wi_edges:
-        out_groups.setdefault(e[0], []).append(e)
-        in_groups.setdefault(e[1], []).append(e)
-    out_off = _port_fan(out_groups, lambda e: e[1], pos, DAG_ROW_H, DAG_ROW_GAP)
-    in_off = _port_fan(in_groups, lambda e: e[0], pos, DAG_ROW_H, DAG_ROW_GAP)
-
     # A cross-rank edge that would cut an unrelated WI box detours around it
-    # (`_route_edges`, WI-253); a clear edge keeps its bowed cubic byte-for-byte.
-    rects = {
-        w["id"]: (pos[w["id"]][0], pos[w["id"]][1], DAG_COL_W, DAG_ROW_H) for w in wis
-    }
-    routes = _route_edges(
-        [
-            (
-                e,
-                pos[e[0]][0] + DAG_COL_W,
-                pos[e[0]][1] + DAG_ROW_H / 2 + out_off[e],
-                pos[e[1]][0],
-                pos[e[1]][1] + DAG_ROW_H / 2 + in_off[e],
-                e[0],
-                e[1],
-            )
-            for e in wi_edges
-        ],  # fmt: skip
-        rects,
+    # (`route_graph` -> `_route_edges`, WI-253); a clear edge keeps its bowed
+    # cubic byte-for-byte.
+    routes, _out_off, _in_off = route_graph(
+        [w["id"] for w in wis],
+        wi_edges,
+        pos,
+        GraphGeom(DAG_COL_W, DAG_COL_GAP, DAG_ROW_H, DAG_ROW_GAP, DAG_PAD),
         12,
         2,
     )
@@ -469,42 +457,12 @@ def sw_graph(root, mods):
         return None
 
     node_ids = sorted(nodes)
-    node_list = [{"id": k} for k in node_ids]
-    pred_map = {k: [] for k in node_ids}
-    succ_map = {k: [] for k in node_ids}
-    for s, d, _iid in edges:
-        pred_map[d].append(s)
-        succ_map[s].append(d)
-    pos, width, height = _layered_layout(
-        node_list,
-        pred_map,
-        succ_map,
-        lambda k: k,
-        (SW_COL_W, SW_COL_GAP, SW_ROW_H, SW_ROW_GAP, SW_PAD),
-    )
-
-    out_groups, in_groups = {}, {}
-    for e in edges:
-        out_groups.setdefault(e[0], []).append(e)
-        in_groups.setdefault(e[1], []).append(e)
-    out_off = _port_fan(out_groups, lambda e: e[1], pos, SW_ROW_H, SW_ROW_GAP)
-    in_off = _port_fan(in_groups, lambda e: e[0], pos, SW_ROW_H, SW_ROW_GAP)
-
-    rects = {k: (pos[k][0], pos[k][1], SW_COL_W, SW_ROW_H) for k in node_ids}
-    routes = _route_edges(
-        [
-            (
-                e,
-                pos[e[0]][0] + SW_COL_W,
-                pos[e[0]][1] + SW_ROW_H / 2 + out_off[e],
-                pos[e[1]][0],
-                pos[e[1]][1] + SW_ROW_H / 2 + in_off[e],
-                e[0],
-                e[1],
-            )
-            for e in edges
-        ],  # fmt: skip
-        rects,
+    # The label anchor below still bows to the fan strand, so this is the one
+    # emitter that reads the offsets `flat_graph` returns beside the routes.
+    pos, width, height, routes, out_off, in_off = flat_graph(
+        node_ids,
+        edges,
+        GraphGeom(SW_COL_W, SW_COL_GAP, SW_ROW_H, SW_ROW_GAP, SW_PAD),
         12,
         2,
     )

@@ -9,7 +9,7 @@ import html
 import math
 import re
 
-from traj_graph import _layered_layout, _port_fan, _route_edges
+from traj_graph import GraphGeom, _layered_layout, route_graph
 
 
 # --- shared When-view rendering helpers ---------------------------------------
@@ -698,7 +698,7 @@ def _drill_layer_svg(blocks, edges):
             succ_map[a].append(b)
             wire_edges.append((a, b, t))
     col_w = _tier_col_width(blocks)  # SR-056: right-sized, ≤ MAX_TIER_COL
-    geom = (col_w,) + DRILL_GEOM[1:]
+    geom = GraphGeom(col_w, *DRILL_GEOM[1:])
     pos, width, height = _layered_layout(
         [{"id": k} for k in keys],
         pred_map,
@@ -708,38 +708,13 @@ def _drill_layer_svg(blocks, edges):
     )
     _cw, _cg, row_h, row_gap, _pad = geom
 
-    out_groups, in_groups = {}, {}
-    for e in wire_edges:
-        out_groups.setdefault(e[0], []).append(e)
-        in_groups.setdefault(e[1], []).append(e)
-    out_off = _port_fan(out_groups, lambda e: e[1], pos, row_h, row_gap)
-    in_off = _port_fan(in_groups, lambda e: e[0], pos, row_h, row_gap)
-
     # The start stays on the output port (no arrowhead there, so it reads as
     # attached); the END is pulled PORT_R + 2 px short of the input-port center
     # so its `marker-end` arrowhead draws in the clear gap just outside the ring
-    # (WI-249). A wire that would cut an unrelated block detours (`_route_edges`,
-    # WI-253) through a clear lane instead of straight through the box.
-    rects = {
-        b["key"]: (pos[b["key"]][0], pos[b["key"]][1], col_w, row_h) for b in blocks
-    }
-    routes = _route_edges(
-        [
-            (
-                e,
-                pos[e[0]][0] + col_w,
-                pos[e[0]][1] + row_h / 2 + out_off[e],
-                pos[e[1]][0],
-                pos[e[1]][1] + row_h / 2 + in_off[e],
-                e[0],
-                e[1],
-            )
-            for e in wire_edges
-        ],  # fmt: skip
-        rects,
-        14,
-        PORT_R + 2,
-    )
+    # (WI-249). A wire that would cut an unrelated block detours (`route_graph`
+    # -> `_route_edges`, WI-253) through a clear lane instead of straight
+    # through the box.
+    routes, _out_off, _in_off = route_graph(keys, wire_edges, pos, geom, 14, PORT_R + 2)
     wires = []
     for e in sorted(wire_edges):
         title = e[2]
