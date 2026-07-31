@@ -78,7 +78,15 @@ worth more than the fix they cost:
 
 **Deviations from spec.** None.
 
-**Review round record ([WI-372-REVIEW-A](../reviews/WI-372-REVIEW-A.md)).**
+**Review round record ([WI-372-REVIEW-A](../reviews/WI-372-REVIEW-A.md)) — three
+rounds: CHANGES-REQUESTED findings=4 → APPROVE findings=2 → APPROVE findings=0.**
+Every finding in all three rounds was confirmed by reproduction before any fix,
+and none was refuted. Rounds 2 and 3 were scoped to verifying that the previous
+round's fixes landed, per the lifecycle — not to hunting fresh findings in them;
+round 3 exists because round 2's APPROVE predated the fixes it prompted, and a
+WI that has shipped a false record twice has earned the check rather than the
+benefit of the doubt.
+
 Round 1: CHANGES-REQUESTED, findings=4 (1 MAJOR, 3 MINOR). **All four confirmed
 by independent reproduction before any fix, none refuted** — the finding
 lifecycle applied to a documentation change, where "it reads plausibly" is
