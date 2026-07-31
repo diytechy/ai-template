@@ -72,28 +72,34 @@ Apply only the ones your diff actually contains.
   `Status=Draft`), or post-attestation additions launder into the ratified
   gate. ADOPTING.md §6 has the exact recipe (`git log -- docs/gate` → diff).
 
-- **Parallel-dispatch migration (adopting `agent-resume --jobs`):** the
-  dispatcher **holds your repo at `--jobs 1`** until two audits pass, so the
-  optimistic parallelism is safe before it ever runs. Do them deliberately:
-  1. **SafetyClass audit** — give every open WI (`queued`/`blocked`/legacy
-     `active`) a reviewed `SafetyClass`; the validator flags the structurally
-     visible ones, but you must classify the indirect scope it cannot see. One
-     `unclassified` open row keeps the whole repo serial.
-  2. **Soft-edge audit** — review every `~` soft predecessor for a hidden
-     *correctness* dependency (promote those to hard edges); the optimistic
-     scheduler runs soft-linked WIs concurrently, so a missed hard edge is the
-     main silent-conflict risk. Record the sign-off by creating
-     `docs/parallel-ready`.
-  Then set `AGENT_JOBS=2` in the launcher — the dispatcher logs the deliberate
-  two-worker promotion. Since WI-210 a **plain launch is the dispatcher** (the
-  legacy serial resume driver and `--track` lanes are retired): after the flip,
-  drop any local reliance on the retired surfaces — the resume-from-`status.md`
-  prompt, a hand-set `docs/rework-wi`, and `docs/tracks/*`
-  (now just your own notes; the dispatcher never reads them). Legacy `active`
-  rows auto-reconcile to `queued` (a logged finding); delete
-  `docs/next-wi`/`docs/run-phase` if a pre-v4 scaffold still carries them
-  (their content translates to **no** scheduling state — the WI DAG +
-  `Priority` are the whole ordering contract).
+- **Integration-seam migration (crossing the concurrency restructure,
+  2026-07):** the v4 parallel dispatcher — reservations, `--jobs`/`AGENT_JOBS`,
+  worktree pools, `docs/run-state`, train branches — is **deleted** at Phase 5
+  of `concurrency-restructure`; claiming and merging now run through
+  `integrate.py` (`claim` = queued spec → `docs/work/active/<branch>/` +
+  branch cut; `integrate` = the serial fail-closed merge queue), and a
+  **plain `agent-resume` launch drives the serial loop** (frontier → claim →
+  worker → merge, re-derived every cycle; `drive.py`). To cross it:
+  1. **Registry flip** — convert `docs/requirements/work-items.csv` to the
+     spec folder (`scripts/wi_convert.py --verify`, then `--to-specs`, then
+     delete the CSV); status is the directory now. Map any status the
+     converter refuses deliberately (e.g. a legacy `superseded` row becomes
+     `archive/` + `disposition = "retired"` with the superseding id named in
+     its Deliverable) — never bucket silently.
+  2. **Drain the old scheme** — finish or hand-merge any live train
+     worktrees/branches (`llm/train/*`, `llm/integrate/*`) BEFORE the flip;
+     the new claim model does not read them. Check worktrees for orphaned
+     files before deleting (dirt is evidence, not garbage).
+  3. **Delete retired-surface reliance** — `AGENT_JOBS` in the launchers,
+     `docs/run-state`, `docs/rework-wi`, `--track`/`docs/tracks/*`,
+     `docs/next-wi`/`docs/run-phase`, `refs/llm/*` reservation refs, and any
+     `docs/parallel-ready` sign-off (nothing reads it now). No former content
+     translates to scheduling state — the WI DAG + `Priority` are the whole
+     ordering contract.
+  4. **Seed `[generated]`** — the integrator's auto-resolution allowlist in
+     `docs/stack.ini` (the shipped template carries the default set).
+  A `SafetyClass` on every open WI still matters — the claim rung refuses
+  non-`ordinary` work (spine/gate classes run attended as the §3.2 barrier).
 
 ## 4. Re-stamp and verify
 

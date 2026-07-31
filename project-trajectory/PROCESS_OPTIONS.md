@@ -26,7 +26,7 @@ required for the minimum profile). Rows are in document order; each maps to the
 | Lifecycle phase | install/startup/steady-state requirements are easy to miss (most non-trivial products) | lifecycle tags on SRs |
 | Gate authority levels | a repo declares a non-default `docs/gate-policy` | `docs/gate-policy` + an attestation / deviation register |
 | Agent iteration branch & sync | you want agent-driven work to land as curated, reviewable history | a branch + sync cadence, wired into hooks |
-| Unattended operation | a coordinator grinds work from one entry point while nobody watches | `agent_loop.py`, `docs/run-*`, `agents.csv`, the launchers |
+| Unattended operation | a coordinator grinds work from one entry point while nobody watches | `agent_loop.py` + `drive.py`, `integrate.py`, `agents.csv`, the launchers |
 | Critique verification & the critique loop | a requirement's acceptance is **subjective** | a critique round + `Attest`/critique TCs |
 | Dual-plan decomposition | a goal is design-shaping enough that one planner's WI decomposition should not go unchallenged | two rival plans + a coverage diff + one critique round + an arbiter verdict (`docs/plans/`) |
 | Tier-conditional guardrails | an unattended run maps different model tiers to different phases | `docs/guardrails-policy` |
@@ -552,8 +552,16 @@ proven coordinator (a spatial-capture pilot's `trigger.ps1`), which
 `scripts/agent_loop.py` supersedes — the protocol here is agent-neutral repo
 text, so a downstream can build its own coordinator against it.
 
-**The model.** Work is claimed through the **integration seam** ("Parallel
-work — the integration seam" below has the mechanics): `integrate.py claim`
+**The model.** The single entry point is a **plain `agent-resume` launch** —
+`agent_loop.py`'s drive mode (the sibling `drive.py`): each cycle re-derives
+the ready frontier (`schedule.py`), claims the next queued WI in build order,
+runs one worker session on the claimed branch's worktree, and drains the
+serial merge queue — so a WI filed mid-run is picked up in the same run, a
+parked claim resumes on relaunch, and any composed refusal stops the run
+loudly (the driver adds ordering only, never authority). Each part remains
+independently drivable: work is claimed through the **integration seam**
+("Parallel work — the integration seam" below has the mechanics):
+`integrate.py claim`
 moves the spec onto a claimed branch, and the session engine
 (`agent_loop.py --wi`) runs **fresh headless worker sessions** there — repo
 text is the only memory (§7 boundary notes, "Repo text is the durable agent
