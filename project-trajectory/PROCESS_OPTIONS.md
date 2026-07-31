@@ -412,7 +412,10 @@ fresh findings in them**; fresh finding-hunts aim at product surfaces
 findings while manufacturing work, and the rounds aimed at shipped code
 produce the real ones). Every review leg — gate verdicts here, and the
 per-WI reviewer rounds under "Unattended operation" — routes its findings
-through this lifecycle.
+through this lifecycle. The same case discipline covers a design found wrong
+mid-build: its escalation names **what was found, why the current shape
+cannot reach the requirement, and the cost of both paths** — the written
+case is what turns costly rework from a unilateral act into a decidable one.
 
 ### The Blocked register (replaces mid-run escalation)
 

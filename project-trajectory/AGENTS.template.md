@@ -165,10 +165,10 @@ Direct and concrete; explain the *why* before the *how*.
   silent extra is what destroys trust; surface a design smell as a separate
   finding to its owner, not an inline fix.
 - **Flag uncertainty honestly — and distrust certainty**, yours or a
-  reviewer's: a review finding is a claim — confirm (reproduce) or refute it
-  before acting on it. A small experiment with hypothesis + result beats
-  confident guessing. Peak confidence is when the 30-second recheck is
-  cheapest (process.md §6).
+  reviewer's: a finding is a claim — confirm or refute it first
+  (process-options.md "finding lifecycle"). A small experiment with
+  hypothesis + result beats confident guessing. Peak confidence is when the
+  30-second recheck is cheapest (process.md §6).
 - **No sunk-cost shipping, keeping, or blind retries.** An approach found
   wrong late is still wrong — drop it; never retry past a failure whose cause
   you haven't found (process.md §6). A wrong design is escalated as a written
