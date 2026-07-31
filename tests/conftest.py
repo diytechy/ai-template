@@ -88,6 +88,11 @@ SLOW_MODULES = frozenset(
         "test_gen_trajectory",  # gen_trajectory.py subprocesses (the #1 cost)
         "test_agent_loop_review",  # review-tail subprocess rounds
         "test_agent_loop",  # agent_loop.py subprocess loops
+        # WI-277 split test_agent_loop.py by behavior boundary. Both inherit the
+        # parent's tier with the split (behavior-preserving); test_agent_loop_routing
+        # is genuinely in-process, and re-tiering it is a separate MEASURED call.
+        "test_agent_loop_routing",  # RoutingState transitions + outcome ladder
+        "test_agent_loop_policy",  # declared-policy parsers + coordinator dials
         "test_trace",  # trace.py subprocess runs
         # WI-277 split test_trace.py by behavior boundary; same cost class as the
         # parent (trace.py run_py subprocesses / real git repos), so same tier —

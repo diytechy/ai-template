@@ -108,3 +108,80 @@ left its imports with them — and the WI-333 note explaining *why*
 outlives the code it documents is how the next reader gets misled.
 
 Collect-only: **1714 total / 557 smoke, both unchanged** (1157 slow).
+
+### S8 — `tests/test_agent_loop.py` (2,256 lines, 111 test functions)
+
+Kept in the parent (**56 functions**): everything that needs the
+`FAKE_AGENT`/`loop_repo` subprocess harness — the exit/stall/budget ladders,
+the guardrails injection matrix, throttle and error handling, the dirty-tree
+and telemetry effects, the live status line, the `_git` helper and zero-commit
+guards, the per-checkout coordinator lock, and the repo-review regressions.
+
+| destination | behavior boundary | fns | moved from |
+| --- | --- | --- | --- |
+| `test_agent_loop_routing.py` *(new)* | pure decision | 21 | the WI-080 Slice C `RoutingState` transitions (phase pick, `route_intent` family exclusions and tier pins, `apply_decision`, critique/review verdict bookkeeping, `note_session`/`stall_verdict`), the WI-264 win-stay policy executed end to end in process, and the Slice D `classify_outcome` ladder |
+| `test_agent_loop_policy.py` *(new)* | parse / decision | 23 | the §5.6 tracked pause, the WI-148 blackout edge/wake/wrap parsers, the WI-261 banner + countdown, both `seconds_until_reset` clock readings, the declared-policy parser agreement, `parse_map`, the WI-080 Slice B session-construction seams, and the WI-274/IF-068 dial precedence |
+| `test_agent_loop_worker.py` *(existing)* | git effect (worker leg) | 11 | the Slice D `worker_endstate`/`worker_exit_banner` end-state block and the Slice E `build_worker_assignment`/`parse_args` seams, with the `_train_repo`/`_build_commit` helpers |
+
+56 + 21 + 23 + 11 = **111** — the parent's exact function count. As collected
+(parametrized cases expanded): `test_agent_loop` 121 → 58, `test_agent_loop_worker`
+23 → 34, plus routing 29 and policy 23. **121 + 23 = 58 + 34 + 29 + 23 = 144.**
+
+No new stem for the worker block, as planned: it appends to the module that
+already owns the worker leg, which already carries `pytestmark =
+env_gate_skipif("git")` and its own equivalent `_git`, so the moved tests need
+neither a copy nor an import. Only `argparse` was added to its imports.
+
+Deviations, all in the direction of *not splitting a coherent section in half*:
+
+- The WI-080 **Slice B** seams moved whole (6 functions: `session_model`,
+  `session_template`, and the four `compose_session_prompt` cases) rather than
+  the four the plan named. The section's own comment says "the three
+  session-construction functions"; leaving two behind would have left that
+  header lying in the parent about tests that were no longer there.
+- `test_seconds_until_reset_weekly_same_weekday` moved alongside
+  `..._parses_both_clock_formats`. The plan named only the latter, but they pin
+  the same pure function and splitting them serves nothing.
+- Three section dividers are now **in both modules** (`WI-148 weekday blackout`,
+  `WI-080 Slice A`, `WI-274 part B / IF-068`) because each heads tests on both
+  sides of the boundary — the loop_repo end-to-end guard stays with the parent,
+  the parser moves. Duplicating a divider is cheaper than orphaning one.
+- `_vendor_core` is **copied** into the policy module (the parent still uses its
+  own), with the standard "copied rather than imported" note.
+
+Three comments were repointed rather than moved verbatim, each flagged inline
+with `WI-277` so the edit is visible in review: two `above` references
+(`parse_map`'s "the preflight above", the Slice C banner's "the golden-net
+suites above") that would have dangled once their referent was in another file,
+and a note on the Slice D header recording that its worker half went to the
+worker module. The S7 rule again: a comment that outlives the code it documents
+misleads the next reader.
+
+Collect-only: **1714 total / 557 smoke, both unchanged** (1157 slow).
+
+### Verification
+
+Run at the close of each slice with
+`c:\Projects\ai-template\.venv\Scripts\python.exe`:
+
+```
+python -m pytest -q --collect-only        1713 -> 1714 (S6, the new guard) -> 1714 -> 1714
+python -m pytest -q -m smoke --collect-only   556 -> 557 (S6) -> 557 -> 557
+python -m pytest -q -n auto -m smoke      1 failed, 552 passed, 4 skipped
+```
+
+The single red is the standing `test_check_lane.py::test_this_repo_is_not_a_work_branch`
+— expected on a claimed branch, never chased.
+
+`check_docs --root . --ignore docs/test/report.md --ignore "docs/work/*" --stale`
+→ `OK - 330 doc(s), 933 intra-repo link(s), 0 broken`.
+`check_trajectory --root . --strict` → `clean (375 work item(s), 359 done (96%),
+14 retired, graph acyclic)`.
+
+### What this WI still owes
+
+The anchor split (`tests/test_gen_trajectory.py`, plan slices S1–S5) is
+deliberately not started: its production module is being decomposed on another
+branch, and the plan's shared-fixture module for it should express the seams
+that decomposition settles on, not the ones it is about to move. That work
+resumes once the production split merges.
