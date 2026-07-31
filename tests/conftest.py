@@ -97,6 +97,8 @@ SLOW_MODULES = frozenset(
         "test_traj_views",  # What / When / How-SW view emitters
         "test_traj_render",  # render primitives + the design system
         "test_traj_render_sweeps",  # closure sweeps over every emitter
+        "test_traj_graph",  # layout + obstacle-aware wire routing
+        "test_traj_parse",  # source loaders + the git/subprocess seam
         "test_agent_loop_review",  # review-tail subprocess rounds
         "test_agent_loop",  # agent_loop.py subprocess loops
         # WI-277 split test_agent_loop.py by behavior boundary. Both inherit the
