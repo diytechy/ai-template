@@ -6,9 +6,15 @@ production module is being decomposed on another branch, and splitting the test
 monolith before its seams settle would just move the churn.
 
 Every move is a **verbatim cut-paste** (docstrings and comments included —
-several encode owner rulings). No test body was edited, renamed, re-tiered or
-re-ordered; the only edits are the new module docstrings, the per-module import
-lines, and the helper copies. The suite idiom is preserved: **no test module
+several encode owner rulings). No test was renamed, re-tiered, re-ordered or
+had its assertions touched; the edits are the new module docstrings, the
+per-module import lines, the helper copies, and **three comment repairs in S8**
+(each flagged inline with `WI-277`) where a moved comment's "above" would
+otherwise have pointed at a file it no longer lives in. A mechanical check
+confirms it: parsing trunk's three parents and the seven resulting modules with
+`ast`, **every one of the 405 top-level functions survives**, and the only three
+whose text differs are those documented repairs plus the `_vendor_core` copy
+note. The suite idiom is preserved: **no test module
 imports another**, `conftest.py` stays the only shared home, and the small
 fixture writers are **copied per module** with the standard "copied rather than
 imported" note (the shape `tests/test_integrate.py::git_repo` states). No new
