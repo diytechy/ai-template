@@ -97,6 +97,7 @@ def test_scaffold_contains_expected_files(scaffold):
         "agent-resume.sh",
         "agent-resume.command",
         "scripts/agent_loop.py",
+        "scripts/drive.py",
         "scripts/agent_session.py",
         "scripts/agent_common.py",
         "scripts/plan_runner.py",
