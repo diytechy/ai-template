@@ -3574,7 +3574,8 @@ def _every_emitter_document(tmp_path):
       test. Asserting over it is a COMPATIBILITY PIN — "the invariant holds for
       the markup already in a reader's hands" — never "this emitter satisfies
       it". It is simply ABSENT in a checkout with no committed dashboard, so a
-      caller that reads it must still be meaningful fresh-only.
+      caller that reads it should still be meaningful fresh-only — with one
+      MEASURED exception, T6, called out below.
     - **Every other label** is FRESH: built into `tmp_path` and rendered by
       THIS run's `gen_trajectory.py`, so it is a property of the code under
       test.
@@ -3590,15 +3591,36 @@ def _every_emitter_document(tmp_path):
     worked example (`if lb != "shipped"`, plus `WRAPAROUND_WIS` for the
     outboard lane it lost).
 
-    Every OTHER call site keeps `shipped` on purpose, as the pin above: the
-    U1-U4 / A1-A3 / T6 uniformity-and-accessibility sweeps and T8's
-    through-box sweep. Their invariants hold in the older markup TODAY — that
-    is an observation about the committed artifact, not a guarantee it carries
-    forward. **When one of them reds, read the failing LABEL first:** `shipped`
-    means regenerate the dashboard on trunk (or exclude it, above); any other
-    label means the emitter really regressed. The same pin is made without
-    this helper by `test_a2_the_repos_own_shipped_dashboard_holds_the_invariant`,
-    which reads the committed file directly and skips when it is absent.
+    Every OTHER call site keeps `shipped` on purpose: the U1-U4 / A1-A3 / T6
+    uniformity-and-accessibility sweeps and T8's through-box sweep. Most keep
+    it as the pin above — their invariants hold in the older markup TODAY,
+    which is an observation about the committed artifact, not a guarantee it
+    carries forward.
+
+    **T6 is the exception, and it is the one that will bite.**
+    `test_t6_theme_lock_has_one_mechanism_and_no_mixed_family_pair` does not
+    merely PIN the shipped document, it is LOAD-BEARING on it: its non-vacuity
+    floor `nodes >= 50` reaches only 33 node pairs over the seven fresh
+    fixtures (measured 2026-07-30 by running the test itself against a
+    dashboard-less `ROOT`), so filtering `shipped` out there reds the test on a
+    floor that has nothing to do with the emitter anyone changed. Its
+    replacement fixture comes FIRST and the filter second — the opposite order
+    from the worked example above, which had one to hand.
+
+    **When a keeper reds, read the failing LABEL first:** `shipped` means
+    regenerate the dashboard on trunk (or exclude it, above); any other label
+    means the emitter really regressed. That triage reads the PER-DOCUMENT
+    assertions, which all format `label` into their message. T6 is the
+    exception here too: its closing assertions run AFTER the sweep loop, over a
+    `text_fills` dict accumulated ACROSS documents and keyed by CSS SELECTOR,
+    so a shipped-vs-fresh disagreement surfaces there as
+    `('#dag .wi text', {'invariant', 'varying'})` — the selector, never the
+    label (measured the same day, by lagging that one rule in a copy of the
+    committed dashboard).
+
+    The same pin is made without this helper by
+    `test_a2_the_repos_own_shipped_dashboard_holds_the_invariant`, which reads
+    the committed file directly and skips when it is absent.
     """
     docs = []
     shipped = ROOT / "PROJECT_STATE.html"

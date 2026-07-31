@@ -39,10 +39,33 @@ regenerate the dashboard on trunk, any other label means the emitter really
 regressed. `test_a2_the_repos_own_shipped_dashboard_holds_the_invariant` is
 cross-referenced as the same pin made without the helper.
 
+**The two exceptions review round 1 forced in.** T6
+(`test_t6_theme_lock_has_one_mechanism_and_no_mixed_family_pair`) is not a pin
+at all — it is LOAD-BEARING on the shipped document: driven against a
+dashboard-less `ROOT`, its non-vacuity floor `nodes >= 50` reaches only 33 node
+pairs over the seven fresh fixtures, so a successor following the contract's own
+"filter at the call site" remedy would red T6 on a floor unrelated to the emitter
+they changed. Its replacement fixture comes first, the filter second. And the
+read-the-LABEL triage rule holds only for the per-document assertions: T6's
+closing assertions run after the sweep over a `text_fills` dict accumulated
+ACROSS documents and keyed by CSS selector, so a shipped-vs-fresh disagreement
+surfaces there as `('#dag .wi text', {'invariant', 'varying'})` — selector, never
+label (driven by lagging that one rule in a copy of the committed dashboard).
+Both now stand in the docstring, with their measurement dates.
+
 **What deliberately did not ship.** No enforcement layer: the shared
 fresh-emitting fixture of the original medium-tier filing stays out of scope
-(rejected as enforcement-layer growth; its evidence remains in
-[WI-367-REVIEW-A](../../reviews/WI-367-REVIEW-A.md) if it ever re-opens), the
-per-caller exclusion pattern is unchanged, and there is no new test — a docstring
-contract is the whole deliverable. Zero behaviour change: one docstring, no code
-touched, no fixture added.
+(rejected as enforcement-layer growth), the per-caller exclusion pattern is
+unchanged, and there is no new test — a docstring contract is the whole
+deliverable. Zero behaviour change: one docstring, no code touched, no fixture
+added (proven by AST comparison with docstrings stripped, base → tip).
+
+**Where the re-open evidence actually is.** The filing above says the evidence
+"stays in WI-367-REVIEW-A if it re-opens". It does not.
+[WI-367-REVIEW-A](../../reviews/WI-367-REVIEW-A.md) carries three findings — the
+port-fan 7.90 px figure, the sw-0 / layer-count record figures, and the
+`_path_xs` Q gap — and no version of that file mentions
+`_every_emitter_document` (one commit, `c8750e7`; caught in review round 1).
+The builder's finding survives VERBATIM in this row's own intake title above,
+and its measured consequences are now in the docstring. **Re-open from here,
+not from the review file.**
