@@ -96,6 +96,17 @@ and the parked claim resumes on relaunch; duplicating that ladder in the
 driver is exactly the drift the census exists to catch (recorded here as
 the disposition).
 
+**The composed-tree bar caught the missing spine paperwork** — the first
+integrate attempt redded on the `trajectory` step: the regenerated arch-map
+now carries `scripts/drive` and the knowledge⇒component web check requires
+every arch-map module in a CMP. Fixed the Phase-4-precedent way (the
+integrate.py shape): **LLR-143** (Module=drive.py, Component=CMP-004,
+SR-026's chain) + **TC-137** (Evidence=tests/test_drive.py), both Verified
+with the review record as the autonomous-ratification verdict. A first
+draft of LLR-143 cited its own WI id in the Detail cell; `trace.py --strict`
+red it (spine stand-alone rule) and the token was removed — the harness
+working as designed, twice in one merge.
+
 **Bars:** `tests/test_drive.py` 13 passed; the smoke tier green at each
 commit except the standing WI-357 work-branch conditional
 (`test_this_repo_is_not_a_work_branch`, red by design on any claimed-branch
