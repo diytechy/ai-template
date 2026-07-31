@@ -5,12 +5,15 @@ The pure parse/decision half of the coordinator's configuration surface: the
 tracked pause declaration, the WI-148 weekday blackout window (edges, wake
 boundary, the wrap past midnight) and its WI-261 banner/countdown feedback, the
 rate-limit `seconds_until_reset` clock readings, the one-rule declared-policy
-file parser, `parse_map`, the WI-080 Slice B session-construction seams, and the
-WI-274/IF-068 single-home dial precedence. No fake agent, no loop_repo — every
-test here calls the function directly.
+file parser, `parse_map`, the WI-080 Slice B session-construction seams, the
+WI-274/IF-068 single-home dial precedence, and the ungated Slice D/E main()
+seams. No fake agent, no loop_repo, no git — every test here calls the function
+directly, which is also why this module carries NO module-wide gate.
 """
 
+import argparse
 import datetime
+import sys
 
 import pytest
 from conftest import load_script
@@ -437,3 +440,43 @@ def test_resolve_coordinator_dials_precedence(tmp_path):
         _os.environ.pop("AGENT_MODEL", None)
     # No declared file + nothing else -> the built-in defaults.
     assert al.resolve_coordinator_dials(Args(), tmp_path / "nodocs") == ("", "")
+
+
+# --- WI-080 Slice D/E: the PURE main()-seam units -----------------------------
+# The ungated half of Slices D/E. worker_exit_banner and the two argument-shaped
+# seams (build_worker_assignment's not-a-worker case, parse_args defaults) touch
+# no git and no repo — they read/return values, so they belong with the parse
+# and decision units here rather than in the worker leg's module, which carries
+# a module-wide `pytestmark = env_gate_skipif("git")` that would ADD a gate they
+# never had (REVIEW-A round 1: they went 3 passed -> 3 skipped with git off
+# PATH when the split first parked them there). Their git-dependent siblings —
+# worker_endstate and the build_worker_assignment cases that resolve a real
+# base — are in tests/test_agent_loop_worker.py, where the gate is earned.
+
+
+def test_worker_exit_banner_returns_code_and_prints(capsys):
+    al = load_script("agent_loop")
+    worker = {"train": "t1", "assigned": ["WI-201", "WI-204"]}
+    code = al.worker_exit_banner(
+        worker, (al.EXIT_DONE, "DONE", "every assigned WI built")
+    )
+    assert code == al.EXIT_DONE
+    out = capsys.readouterr().out
+    assert "worker t1 [WI-201;WI-204]: DONE" in out
+    assert "every assigned WI built" in out
+
+
+def test_build_worker_assignment_is_none_without_wi_and_train():
+    al = load_script("agent_loop")
+    args = argparse.Namespace(wi=None, train=None, base=None, rework=None)
+    # Not a worker process — no root touched, no error.
+    assert al.build_worker_assignment(args, "/does/not/matter") == (None, None)
+
+
+def test_parse_args_defaults(monkeypatch):
+    al = load_script("agent_loop")
+    monkeypatch.setattr(sys, "argv", ["agent_loop.py"])
+    args = al.parse_args()
+    assert args.max_iterations == 40
+    assert args.stall_limit == 3
+    assert args.pause == 10

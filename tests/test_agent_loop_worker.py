@@ -510,11 +510,16 @@ def test_worker_retired_wi_fails_closed(tmp_path):
 
 # --- WI-080 Slice D/E: worker end-state + the assignment seam ------------------
 # WI-277 moved this block here VERBATIM from tests/test_agent_loop.py, where it
-# had grown up beside the coordinator's own tests: worker_endstate /
-# worker_exit_banner and build_worker_assignment are the WORKER leg, which is
-# this module's subject. `_git` is already defined above (same shape), and the
-# module-level `pytestmark = env_gate_skipif("git")` already covers the
-# per-test gates the moved tests carry.
+# had grown up beside the coordinator's own tests: worker_endstate and the
+# git-backed build_worker_assignment cases are the WORKER leg, which is this
+# module's subject. `_git` is already defined above (same shape).
+#
+# ONLY git-dependent tests were moved here. This module carries a module-wide
+# `pytestmark = env_gate_skipif("git")` (:45), which would ADD a gate to any
+# pure test placed under it — REVIEW-A round 1 caught exactly that: three pure
+# seams landed here on the first cut and went 3 passed -> 3 SKIPPED with git off
+# PATH, silently losing coverage on an ungated machine. They now live in
+# tests/test_agent_loop_policy.py. Do not park an ungated test in this module.
 
 
 def _train_repo(tmp_path, train="t1", assigned=("WI-201",)):
@@ -617,18 +622,6 @@ def test_worker_endstate_owner_scratchpad_stays_done(tmp_path):
     assert end is not None and end[0] == al.EXIT_DONE
 
 
-def test_worker_exit_banner_returns_code_and_prints(capsys):
-    al = load_script("agent_loop")
-    worker = {"train": "t1", "assigned": ["WI-201", "WI-204"]}
-    code = al.worker_exit_banner(
-        worker, (al.EXIT_DONE, "DONE", "every assigned WI built")
-    )
-    assert code == al.EXIT_DONE
-    out = capsys.readouterr().out
-    assert "worker t1 [WI-201;WI-204]: DONE" in out
-    assert "every assigned WI built" in out
-
-
 # --- WI-080 Slice E: main() composed from module-level seams ------------------
 # main() is now orchestration-only (parse -> setup -> mode select -> loop); the
 # setup phases (parse_args / map_preflight / build_worker_assignment /
@@ -636,13 +629,11 @@ def test_worker_exit_banner_returns_code_and_prints(capsys):
 # (route_session / session_bookkeeping / run_iteration over a LoopContext) are
 # module functions. The e2e net pins behavior; these lean units pin the three
 # newly unit-addressable seams.
-
-
-def test_build_worker_assignment_is_none_without_wi_and_train():
-    al = load_script("agent_loop")
-    args = argparse.Namespace(wi=None, train=None, base=None, rework=None)
-    # Not a worker process — no root touched, no error.
-    assert al.build_worker_assignment(args, "/does/not/matter") == (None, None)
+#
+# Only the git-dependent half of the Slice lives here — the pure units
+# (worker_exit_banner, the no-assignment build_worker_assignment case,
+# parse_args defaults) are in tests/test_agent_loop_policy.py, which carries no
+# module-wide gate. See the WI-277 note on the block header above.
 
 
 @env_gate_skipif("git")
@@ -667,12 +658,3 @@ def test_build_worker_assignment_good_base_parses_wi_list(tmp_path):
     assert worker["assigned"] == ["WI-201", "WI-204"]
     assert worker["base"] == base
     assert worker["rework"] == ""
-
-
-def test_parse_args_defaults(monkeypatch):
-    al = load_script("agent_loop")
-    monkeypatch.setattr(sys, "argv", ["agent_loop.py"])
-    args = al.parse_args()
-    assert args.max_iterations == 40
-    assert args.stall_limit == 3
-    assert args.pause == 10

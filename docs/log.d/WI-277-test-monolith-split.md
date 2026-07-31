@@ -7,14 +7,29 @@ monolith before its seams settle would just move the churn.
 
 Every move is a **verbatim cut-paste** (docstrings and comments included —
 several encode owner rulings). No test was renamed, re-tiered, re-ordered or
-had its assertions touched; the edits are the new module docstrings, the
-per-module import lines, the helper copies, and **three comment repairs in S8**
-(each flagged inline with `WI-277`) where a moved comment's "above" would
-otherwise have pointed at a file it no longer lives in. A mechanical check
-confirms it: parsing trunk's three parents and the seven resulting modules with
-`ast`, **every one of the 405 top-level functions survives**, and the only three
-whose text differs are those documented repairs plus the `_vendor_core` copy
-note. The suite idiom is preserved: **no test module
+had its assertions touched; the edits are the three **parent** docstrings
+(each gaining a forwarding pointer to its new siblings), the new module
+docstrings, the per-module import lines, the helper copies, and **three comment
+repairs in S8** (each flagged inline with `WI-277`) where a moved comment would
+otherwise have pointed at a file it no longer lives in.
+
+The mechanical check, stated as what it actually shows (the round-1 reviewer
+re-cut it stricter — decorators included, duplicate-aware — and their numbers
+are the ones below): across trunk's three parents and the resulting modules,
+**all 405 top-level functions survive, and exactly ONE body differs** —
+`test_parse_map_rejects_entry_without_equals`, the only repair that sits inside
+a function. The other two repairs are **module-level section dividers**, which a
+function-body comparison cannot see at all. `_vendor_core` is not a changed body
+but an added **copy** carrying a copy note; trunk's original survives
+byte-identical at `tests/test_agent_loop.py:568`. And `_git` is a **comparison
+artifact, not a difference**: trunk already carried two distinct `_git` helpers
+(`test_agent_loop.py:154`, `test_agent_loop_worker.py:78`) that differ only in a
+local name (`proc` vs `p`); both survive unchanged, and a name-keyed script
+collapses them into a phantom diff. All 12 decorated functions' `@parametrize`
+blocks are byte-identical — the check that matters most, since a mutated
+parametrize is how a split drops cases while keeping every function name.
+
+The suite idiom is preserved: **no test module
 imports another**, `conftest.py` stays the only shared home, and the small
 fixture writers are **copied per module** with the standard "copied rather than
 imported" note (the shape `tests/test_integrate.py::git_repo` states). No new
@@ -126,17 +141,29 @@ guards, the per-checkout coordinator lock, and the repo-review regressions.
 | destination | behavior boundary | fns | moved from |
 | --- | --- | --- | --- |
 | `test_agent_loop_routing.py` *(new)* | pure decision | 21 | the WI-080 Slice C `RoutingState` transitions (phase pick, `route_intent` family exclusions and tier pins, `apply_decision`, critique/review verdict bookkeeping, `note_session`/`stall_verdict`), the WI-264 win-stay policy executed end to end in process, and the Slice D `classify_outcome` ladder |
-| `test_agent_loop_policy.py` *(new)* | parse / decision | 23 | the §5.6 tracked pause, the WI-148 blackout edge/wake/wrap parsers, the WI-261 banner + countdown, both `seconds_until_reset` clock readings, the declared-policy parser agreement, `parse_map`, the WI-080 Slice B session-construction seams, and the WI-274/IF-068 dial precedence |
-| `test_agent_loop_worker.py` *(existing)* | git effect (worker leg) | 11 | the Slice D `worker_endstate`/`worker_exit_banner` end-state block and the Slice E `build_worker_assignment`/`parse_args` seams, with the `_train_repo`/`_build_commit` helpers |
+| `test_agent_loop_policy.py` *(new)* | parse / decision | 26 | the §5.6 tracked pause, the WI-148 blackout edge/wake/wrap parsers, the WI-261 banner + countdown, both `seconds_until_reset` clock readings, the declared-policy parser agreement, `parse_map`, the WI-080 Slice B session-construction seams, the WI-274/IF-068 dial precedence, and the **ungated** Slice D/E main() seams (`worker_exit_banner`, `build_worker_assignment`'s not-a-worker case, `parse_args` defaults) |
+| `test_agent_loop_worker.py` *(existing)* | git effect (worker leg) | 8 | the Slice D `worker_endstate` block and the git-backed Slice E `build_worker_assignment` cases, with the `_train_repo`/`_build_commit` helpers |
 
-56 + 21 + 23 + 11 = **111** — the parent's exact function count. As collected
+56 + 21 + 26 + 8 = **111** — the parent's exact function count. As collected
 (parametrized cases expanded): `test_agent_loop` 121 → 58, `test_agent_loop_worker`
-23 → 34, plus routing 29 and policy 23. **121 + 23 = 58 + 34 + 29 + 23 = 144.**
+23 → 31, plus routing 29 and policy 26. **121 + 23 = 58 + 31 + 29 + 26 = 144.**
 
 No new stem for the worker block, as planned: it appends to the module that
-already owns the worker leg, which already carries `pytestmark =
-env_gate_skipif("git")` and its own equivalent `_git`, so the moved tests need
-neither a copy nor an import. Only `argparse` was added to its imports.
+already owns the worker leg and its own equivalent `_git`, so the moved tests
+need neither a copy nor an import.
+
+**Round-1 review fix (MINOR).** The first cut of this slice put the whole Slice
+D/E block in the worker module — including three tests that touch no git. That
+module carries a module-wide `pytestmark = env_gate_skipif("git")`, so those
+three inherited a gate they never had: the reviewer drove both sides with git
+off `PATH` and got **3 passed on trunk, 3 SKIPPED on the branch**. Three pure
+seams would have stopped running on an ungated machine, silently — the very
+failure mode the `WI-333` note S7 was careful to move verbatim is about. The
+fix is the boundary the WI is named for: the pure units live in the ungated
+policy module, the git-dependent ones stay in the worker leg. The worker
+module's block header now says plainly that its mark *adds* a gate, so nobody
+parks an ungated test there again. The behavior-preservation claim holds only
+after this fix; before it, this slice had exactly one exception.
 
 Deviations, all in the direction of *not splitting a coherent section in half*:
 
@@ -188,9 +215,22 @@ The single red is the standing `test_check_lane.py::test_this_repo_is_not_a_work
 — expected on a claimed branch, never chased.
 
 `check_docs --root . --ignore docs/test/report.md --ignore "docs/work/*" --stale`
-→ `OK - 330 doc(s), 933 intra-repo link(s), 0 broken`.
+→ `OK - 331 doc(s), 933 intra-repo link(s), 0 broken` (330 before the round-1
+review doc landed).
 `check_trajectory --root . --strict` → `clean (375 work item(s), 359 done (96%),
 14 retired, graph acyclic)`.
+
+#### After the round-1 review fixes
+
+Collect-only **1714 total / 557 smoke / 1157 slow — all three unmoved** (the
+three tests changed module, not existence). Per module: `test_agent_loop` 58,
+`_policy` 26, `_routing` 29, `_worker` 31 = **144**, still `121 + 23`. Smoke
+`1 failed, 552 passed, 4 skipped` (the standing work-branch red). The affected
+modules together: `297 passed, 1 skipped`. The reviewer's own method, rerun —
+with git off `PATH`, `pytest tests/test_agent_loop_policy.py -k "<the three>"`
+now gives **3 passed, 23 deselected** (was 3 skipped). The strict AST check
+rerun after the moves: **405/405 survive, exactly one body differs** (the
+`parse_map` repoint), matching the reviewer's number.
 
 ### What this WI still owes
 

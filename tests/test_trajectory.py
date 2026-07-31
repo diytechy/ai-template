@@ -7,6 +7,13 @@ warns (draft SRs are legitimate), and `docs/trajectory-check: off` silences the
 check entirely. Each is pinned red/green by running the real script over a
 minimal temp registry (no full scaffold needed — the validator reads the
 `docs/work/` spec folder, which a fixture writes file by file).
+
+WI-277 split this module by behavior boundary. What stays here is the parse +
+decision core: graph validation, the R-A/R-E/R-F SSOT rules, SpecRef anchors,
+the terminal `retired` status and status.md forward-only. The `--staged` git
+effect and git-time recovery checks moved to tests/test_trajectory_staged.py,
+the decisions over architecture inputs to tests/test_trajectory_arch.py, and the
+decisions over spec bodies to tests/test_trajectory_specs.py.
 """
 
 import csv
