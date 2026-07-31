@@ -44,11 +44,23 @@ home elsewhere — don't restate it here:
   `agent-resume` launch drives frontier → claim → worker → serial merge
   queue, re-deriving the frontier every cycle (the unattended-entry-point
   effort closed through the integrator's own queue; spec archived at
-  [archive/specs/](archive/specs/), record in [log.md](log.md)). The
-  frontier now holds the **H-2 decomposition program** plus this session's
-  filed follow-ons, all named in the generated Ready frontier below (what a
-  claimer needs before taking the H-2 rows is in the Deferred-backlog
-  bullet further down; scope is in the rows).
+  [archive/specs/](archive/specs/), record in [log.md](log.md)).
+  **The H-2 decomposition program is EXECUTED and merged** (2026-07-31):
+  the production split left `gen_trajectory.py` a 949-line facade over six
+  sub-threshold siblings and `bootstrap.py`'s `main()` a 48-line sequencer
+  (both size/complexity entries retired or deleted, not re-stamped up), and
+  the test split followed it — all four monoliths cut along the same
+  seams, proven by AST rather than asserted. **The one thing a successor
+  most needs to know from that program:** a downstream migration found what
+  no in-repo check could — `bootstrap.py`'s MAPPING had omitted
+  `schedule.py`, so every *fresh scaffold* raised `ModuleNotFoundError` on
+  its first claim while this repo stayed green, because the kit's own
+  `scripts/` dir holds every file and an adopted repo carries the module
+  from an older kit. The instance is fixed and the CLASS is now guarded
+  (`test_every_sibling_imported_module_is_shipped_by_mapping`) — but the
+  lesson is the general one: **a scaffold-surface change is only verified
+  by bootstrapping a scaffold.** The frontier now holds the follow-ons
+  filed this session; scope is in the rows.
   Standing habit that survives the restructure: run
   `check_trajectory.py --strict` directly, unfiltered, before claiming
   anything done — the DEFAULTED pre-commit floor stays warn-first by
