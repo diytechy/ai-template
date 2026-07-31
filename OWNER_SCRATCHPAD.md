@@ -450,3 +450,25 @@ Related to WI-254, you indicated "the shipped kit hook is untouched, so downstre
 Is WI-253 the only open work item?  Grind through WI-253
 
 Finally, should we remove completed work items from the work-items table?  
+
+~~~~~~~~~~~~~~~~~~~~~~
+
+Remaining pieces, please spin up other agents where appropriate (opus level where appropriate as well).  Use the openai agent as well for critical cross-review as well where appropriate.
+
+Note I want this session to be fully autonomous, attestation can be performed by a new agent or a different family agent.  I will not be present, I can review the requirement document changes later, but this is restructuring a deliverable that already exists, it is a rearchitecture, so I do not expect any SNs to change.
+
+1. What can be done to ensure while agent-resume is running, that any new work that was created since it's start, is appropriately acted on (without requiring the train to come to a stop and "agent-resume" to be retriggered).  Or is that already working today?  So if I start agent-resume, a work item or review determines another work-item is created, will that newly created work-item be properly injested during the same agent-resume cycle?
+
+2. What is causing the test cases here to take so long to run?  Ex: "The full gate bar on the composed tree takes a while."  I think the last metric I saw was 40 min?
+
+3. A very old version of this ai-template was used in a multi-repo setup (multiple repos referenced throughout C:\Projects\Personal\homelab) and at one point there I saw a comment about interfering / conflicting IF- designations between repos (since they are all indepenent)  Perhaps it is already laid out, but if multi-repo connections are in use, the IF- layer can't just connect to a bare external IF-, it would have to prepeend it or otherwise specify a repo specific IF first.  I'm not sure if that neesd to be better clarified in the docs somewhere to prevent conflict.
+
+4. Now that this ai-template is up-to-date, do you see any issues / blockers with getting it down-stream into the large gilbert project (C:\Projects\gilbert), this is probably the most complex project right now.  Obviously many registries will need to be updated to some of the new conventions / columns, that's fine, I just want to make sure there are not any other sticking points that will come back to this template and force iteration for compatability.
+
+5. Finally, queue and churn through WI-374, WI-280, WI-277 and WI-375 at the end.
+
+Consider done when:
+- All questions above are answered
+- Work items noted above are complete (in whatever order is best, I assume WI-280 is the right starting candidate)
+- Any new work items that are constructed as a reaction to reviews both in work items and in downstream repo compatability that are critically / confidently needed are also completed.
+- After all work is complete, perform migration on the gilbert project, such that it is moved over to the new template, and it's open items are waiting for the user to re-attest it's spine changes that are necessary to adopt the new ai-template.  Again, any new learnings from migrating the new template updates to gilbert should also be applied here if confident.
