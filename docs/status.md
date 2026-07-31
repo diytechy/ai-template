@@ -73,6 +73,20 @@ home elsewhere — don't restate it here:
   handoffs ([2026-07-28b](handoff-2026-07-28b.md) and earlier, plus
   [wrap-up-plan.md](wrap-up-plan.md)) are history: read them for the
   account, never as open tasks.
+- **Open design discussion — [concurrency-v2.md](concurrency-v2.md)** (DRAFT,
+  opened 2026-07-31; **nothing in it is ruled**). Three problems the parallel
+  session surfaced: a spine-touching WI ran concurrently under an
+  honest-at-filing `ordinary` class; the re-attest window it opened cost four
+  review rounds; and — per the owner's ruling — **that window should never
+  have opened**, because traceability cells are *traced*, not ratified, while
+  the amendment detector compares every column but `Status`. Carries the
+  dispatcher flow, the ratified-vs-traced cell split, the bar-amortisation
+  trade (drain grouping vs the retired session grouping), and six open
+  questions. Its draft rows **WI-380..WI-384** sit in
+  [work/deferred/](work/deferred/) and must **not** be claimed until the
+  design settles; **WI-380 is the one to land first** regardless of how the
+  rest resolves. [WI-378](work/queued/WI-378-ratify-verdict-freshness-loop.md)
+  is reframed onto it and now waits on WI-380.
 - **Design history:** [archive/](archive/README.md).
 - **Process (kit source):** [PROCESS.md](../project-trajectory/PROCESS.md) ·
   [PROCESS_OPTIONS.md](../project-trajectory/PROCESS_OPTIONS.md) (this repo has
