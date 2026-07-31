@@ -86,15 +86,48 @@ SLOW_MODULES = frozenset(
         # ranking is the close deliverable in docs/specs/WI-281.md). All still
         # run at slice/phase close + CI.
         "test_gen_trajectory",  # gen_trajectory.py subprocesses (the #1 cost)
+        # WI-277 split test_gen_trajectory.py along the WI-280 production seams.
+        # Every module below is the SAME cost class as the parent — each test
+        # still runs the real gen_trajectory.py over a temp project through
+        # run_py — so they inherit its tier; the split is behavior-preserving,
+        # not a re-tiering. (test_traj_render_sweeps is if anything heavier: it
+        # renders every emitter document per test.)
+        "test_traj_status",  # the --status docs/status.md snapshot
+        "test_traj_panels",  # Knowledge / Process / landing panels
+        "test_traj_views",  # What / When / How-SW view emitters
+        "test_traj_render",  # render primitives + the design system
+        "test_traj_render_sweeps",  # closure sweeps over every emitter
+        "test_traj_graph",  # layout + obstacle-aware wire routing
+        "test_traj_parse",  # source loaders + the git/subprocess seam
         "test_agent_loop_review",  # review-tail subprocess rounds
         "test_agent_loop",  # agent_loop.py subprocess loops
+        # WI-277 split test_agent_loop.py by behavior boundary. Both inherit the
+        # parent's tier with the split (behavior-preserving); test_agent_loop_routing
+        # is genuinely in-process, and re-tiering it is a separate MEASURED call.
+        "test_agent_loop_routing",  # RoutingState transitions + outcome ladder
+        "test_agent_loop_policy",  # declared-policy parsers + coordinator dials
         "test_trace",  # trace.py subprocess runs
+        # WI-277 split test_trace.py by behavior boundary; same cost class as the
+        # parent (trace.py run_py subprocesses / real git repos), so same tier —
+        # behavior-preserving, not a re-tiering. test_trace_rules is genuinely
+        # in-process; putting it back in the bar is a separate MEASURED call.
+        "test_trace_rules",  # pure registry-rule decisions
+        "test_trace_briefs",  # re-attestation brief: git effect + freshness gate
         "test_check_docs",  # check_docs on bootstrapped scaffolds
         "test_registry_checks",  # registry gates on scaffolds
         "test_check_privacy",  # privacy lint on scaffolds
         "test_agent_loop_critique",  # critique-round subprocesses
         "test_check_harness",  # check.py harness on scaffolds
         "test_trajectory",  # trajectory registry on scaffolds
+        # WI-277 split test_trajectory.py by behavior boundary. The three new
+        # modules carry the SAME cost class as their parent (check_trajectory.py
+        # run_py subprocesses over temp registries), so they inherit its tier —
+        # the split is behavior-preserving, not a re-tiering. (Whether the
+        # decision-only halves belong back in the bar is a separate MEASURED
+        # decision, deliberately not taken here.)
+        "test_trajectory_staged",  # --staged git-effect + git-time recovery
+        "test_trajectory_arch",  # decision over architecture inputs
+        "test_trajectory_specs",  # decision over spec bodies
         "test_components_registry",  # components gate on scaffolds
         "test_derive_gate",  # derive_gate on scaffolds
         "test_gen_okf",  # gen_okf on scaffolds

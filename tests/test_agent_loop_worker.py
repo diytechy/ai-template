@@ -24,6 +24,7 @@ corrupt a parallel dispatch run:
     lands at reviews/<train>/NNN-<PHASE>-<sha7>.md naming the reviewed HEAD.
 """
 
+import argparse
 import csv
 import functools
 import subprocess
@@ -505,3 +506,155 @@ def test_worker_retired_wi_fails_closed(tmp_path):
     assert proc.returncode == agent_loop.EXIT_PREFLIGHT
     out = proc.stdout + proc.stderr
     assert "already retired" in out and "terminal status" in out
+
+
+# --- WI-080 Slice D/E: worker end-state + the assignment seam ------------------
+# WI-277 moved this block here VERBATIM from tests/test_agent_loop.py, where it
+# had grown up beside the coordinator's own tests: worker_endstate and the
+# git-backed build_worker_assignment cases are the WORKER leg, which is this
+# module's subject. `_git` is already defined above (same shape).
+#
+# ONLY git-dependent tests were moved here. This module carries a module-wide
+# `pytestmark = env_gate_skipif("git")` (:45), which would ADD a gate to any
+# pure test placed under it — REVIEW-A round 1 caught exactly that: three pure
+# seams landed here on the first cut and went 3 passed -> 3 SKIPPED with git off
+# PATH, silently losing coverage on an ungated machine. They now live in
+# tests/test_agent_loop_policy.py. Do not park an ungated test in this module.
+
+
+def _train_repo(tmp_path, train="t1", assigned=("WI-201",)):
+    """A throwaway repo: a seed commit (the integration base), then branch
+    llm/train/<train>. Returns (repo, base, worker-dict) — the worker carries
+    exactly the keys worker_endstate reads."""
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    _git(repo, "init")
+    _git(repo, "config", "user.email", "loop@example.com")
+    _git(repo, "config", "user.name", "Loop Test")
+    (repo / ".gitignore").write_text("out/\n", encoding="utf-8")
+    (repo / "seed.txt").write_text("seed\n", encoding="utf-8")
+    _git(repo, "add", "-A")
+    _git(repo, "commit", "-q", "-m", "seed")
+    base = _git(repo, "rev-parse", "HEAD")
+    _git(repo, "checkout", "-q", "-b", "llm/train/" + train)
+    worker = {"train": train, "assigned": list(assigned), "base": base, "rework": ""}
+    return repo, base, worker
+
+
+def _build_commit(repo, wi, train, base):
+    (repo / ("work-" + wi + ".txt")).write_text("work " + wi, encoding="utf-8")
+    _git(repo, "add", "-A")
+    msg = "build {}\n\nWI: {}\nTrain: {}\nBase: {}\n".format(wi, wi, train, base)
+    _git(repo, "commit", "-q", "-m", msg)
+
+
+@env_gate_skipif("git")
+def test_worker_endstate_done_names_branch(tmp_path):
+    al = load_script("agent_loop")
+    repo, base, worker = _train_repo(tmp_path)
+    _build_commit(repo, "WI-201", "t1", base)
+    end = al.worker_endstate(str(repo), worker, False, False, 1)
+    assert end is not None
+    code, label, detail = end
+    assert code == al.EXIT_DONE
+    assert label == "DONE"
+    assert "branch t1" in detail
+
+
+@env_gate_skipif("git")
+def test_worker_endstate_review_open_defers(tmp_path):
+    al = load_script("agent_loop")
+    repo, base, worker = _train_repo(tmp_path)
+    _build_commit(repo, "WI-201", "t1", base)
+    # Built + clean, but the caller reports the train's review cycle still open.
+    assert al.worker_endstate(str(repo), worker, True, False, 1) is None
+
+
+@env_gate_skipif("git")
+def test_worker_endstate_rework_pending_defers(tmp_path):
+    al = load_script("agent_loop")
+    repo, base, worker = _train_repo(tmp_path)
+    _build_commit(repo, "WI-201", "t1", base)
+    worker["rework"] = "a CHANGES-REQUESTED verdict is pending"
+    assert al.worker_endstate(str(repo), worker, False, False, 1) is None
+
+
+@env_gate_skipif("git")
+def test_worker_endstate_blocked_trailer_exits_blocked(tmp_path):
+    al = load_script("agent_loop")
+    repo, base, worker = _train_repo(tmp_path)
+    (repo / "work-WI-201.txt").write_text("stuck", encoding="utf-8")
+    _git(repo, "add", "-A")
+    _git(
+        repo,
+        "commit",
+        "-q",
+        "-m",
+        "blocked WI-201\n\nBlocked-WI: WI-201\nBlockRef: OI-99\n",
+    )
+    end = al.worker_endstate(str(repo), worker, False, False, 1)
+    assert end is not None
+    code, label, detail = end
+    assert code == al.EXIT_BLOCKED
+    assert label == "BLOCKED"
+    assert "OI-99" in detail
+
+
+@env_gate_skipif("git")
+def test_worker_endstate_dirty_tree_defers(tmp_path):
+    al = load_script("agent_loop")
+    repo, base, worker = _train_repo(tmp_path)
+    _build_commit(repo, "WI-201", "t1", base)
+    # Committed evidence is complete, but an uncommitted path means not-done.
+    (repo / "scratch.txt").write_text("uncommitted", encoding="utf-8")
+    assert al.worker_endstate(str(repo), worker, False, False, 1) is None
+
+
+def test_worker_endstate_owner_scratchpad_stays_done(tmp_path):
+    # WI-203: an owner-only-dirty tree (OWNER_SCRATCHPAD.md) is not interrupted
+    # work — done detection must not read it as not-done (contrast the scratch.txt
+    # case above, which still defers).
+    al = load_script("agent_loop")
+    repo, base, worker = _train_repo(tmp_path)
+    _build_commit(repo, "WI-201", "t1", base)
+    (repo / "OWNER_SCRATCHPAD.md").write_text("owner notes", encoding="utf-8")
+    end = al.worker_endstate(str(repo), worker, False, False, 1)
+    assert end is not None and end[0] == al.EXIT_DONE
+
+
+# --- WI-080 Slice E: main() composed from module-level seams ------------------
+# main() is now orchestration-only (parse -> setup -> mode select -> loop); the
+# setup phases (parse_args / map_preflight / build_worker_assignment /
+# track_preamble_text / print_run_banner / run_interactive) and the loop body
+# (route_session / session_bookkeeping / run_iteration over a LoopContext) are
+# module functions. The e2e net pins behavior; these lean units pin the three
+# newly unit-addressable seams.
+#
+# Only the git-dependent half of the Slice lives here — the pure units
+# (worker_exit_banner, the no-assignment build_worker_assignment case,
+# parse_args defaults) are in tests/test_agent_loop_policy.py, which carries no
+# module-wide gate. See the WI-277 note on the block header above.
+
+
+@env_gate_skipif("git")
+def test_build_worker_assignment_bad_base_fails_closed(tmp_path, capsys):
+    al = load_script("agent_loop")
+    repo, _base, _worker = _train_repo(tmp_path)
+    args = argparse.Namespace(wi="WI-201", train="t1", base="deadbeef", rework=None)
+    worker, err = al.build_worker_assignment(args, repo)
+    assert worker is None
+    assert err == al.EXIT_PREFLIGHT
+    assert "does not resolve to a commit" in capsys.readouterr().err
+
+
+@env_gate_skipif("git")
+def test_build_worker_assignment_good_base_parses_wi_list(tmp_path):
+    al = load_script("agent_loop")
+    repo, base, _worker = _train_repo(tmp_path)
+    args = argparse.Namespace(wi="WI-201;WI-204", train="t1", base=base, rework=None)
+    worker, err = al.build_worker_assignment(args, repo)
+    assert err is None
+    assert worker["train"] == "t1"
+    assert worker["assigned"] == ["WI-201", "WI-204"]
+    assert worker["base"] == base
+    assert worker["rework"] == ""
