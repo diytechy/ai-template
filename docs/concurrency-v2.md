@@ -41,6 +41,102 @@ rather than at review time when only the check is in scope.
 
 # Workstream A — concurrency and spine authority
 
+## A0. How a launch works TODAY (the shipped call chain)
+
+Read this before proposing changes — it is what exists, not what is wanted.
+Verified against the code 2026-07-31.
+
+```mermaid
+flowchart TD
+    subgraph L["agent-resume.cmd / .sh  (the only entry point)"]
+        L1["sets AGENT_CMD, AGENT_MODEL*, AGENT_*_MAP<br/>then runs agent_loop.py --root . --session-timeout N"]
+    end
+
+    L1 --> M["agent_loop.main()"]
+    M --> M1["resolve dials once:<br/>CLI flag &gt; AGENT_* env &gt; docs/stack.ini [agent-loop]"]
+    M1 --> R{"which role flag?"}
+    R -- "--wi" --> W["WORKER role"]
+    R -- "--interactive" --> IX["one attached session"]
+    R -- "--dual-plan" --> DP["one decomposition round"]
+    R -- "none" --> DE["_drive_entry()"]
+
+    DE --> DL["_coordinator_lock()<br/>out/agent-loop.lock — one per checkout"]
+    DL --> DR["drive.run(root, args, tier='all')"]
+
+    subgraph C["drive.run — ONE serial lane, repeats per cycle"]
+        C0["_session_config_refusal()<br/>lazy: only if work needs a worker"] --> C1
+        C1{"ac.tracked_pause()?"} -- yes --> X8["exit 8 PAUSED"]
+        C1 -- no --> C2{"ac.working_tree_dirty()?"}
+        C2 -- yes --> X2["exit 2"]
+        C2 -- no --> C3["_resume_or_claim()"]
+    end
+
+    C3 --> P{"_parked_branches()<br/>an interrupted claim?"}
+    P -- yes --> ASSIGN["resume it"]
+    P -- no --> SC{"_stranded_claims()<br/>active spec, no branch ref?"}
+    SC -- yes --> X2b["exit 2 — refuses to call this drained"]
+    SC -- no --> F["schedule.frontier(schedule._load())<br/>RE-DERIVED EVERY CYCLE"]
+    F -- "empty" --> DRAIN["integrate.integrate() then<br/>exit 0 'queue drained'"]
+    F -- "has work" --> CL["_branch_for(ready[0]) + git check-ref-format<br/>then integrate.claim()"]
+    CL --> ASSIGN
+
+    ASSIGN --> WK["_default_worker()"]
+    WK --> WK1["_ensure_worktree() → git worktree add"]
+    WK1 --> WK2["subprocess: agent_loop.py<br/>--worktree WT --wi IDS --train BRANCH<br/>+ forwarded dials"]
+    WK2 --> W
+
+    subgraph WB["the worker sub-process (agent_loop --wi)"]
+        W --> WB1["build each assigned WI in order,<br/>commit with a WI: trailer"]
+        WB1 --> WB2{"next constituent<br/>still groupable?"}
+        WB2 -- "spine / protected / single-wi" --> WB3["exit 10 ASSIGNMENT-END<br/>built work stays, rest returns to queue"]
+        WB2 -- yes --> WB1
+        WB1 --> WB4["ONE review scope after the LAST WI,<br/>over the combined base..HEAD diff"]
+    end
+
+    WB4 --> WR{"worker exit"}
+    WR -- "7" --> X7["exit 7 NEEDS-HUMAN<br/>claim stays parked"]
+    WR -- "non-zero" --> XN["stop; claim stays parked"]
+    WR -- "0 DONE" --> Q["integrate.integrate()"]
+
+    subgraph IQ["integrate.integrate — serial fail-closed merge queue"]
+        Q --> Q1["clean-trunk check + out/integrate.lock"]
+        Q1 --> Q2["finished_branches()"]
+        Q2 --> Q3["per branch: _verdict_gate (RULING-7)"]
+        Q3 --> Q4["merge --no-ff onto candidate worktree<br/>+ trunk_step folded into the merge commit"]
+        Q4 --> Q5["_run_bar → check.py --jobs 0 --tier all<br/>ON THE COMPOSED TREE"]
+        Q5 -- red --> QR["park candidate, STOP the queue"]
+        Q5 -- green --> Q6["ff-only trunk advance + _unload_branch"]
+        Q6 --> Q7["audit() — RULING-6 window check"]
+    end
+
+    Q7 --> PR["_cycle_stall(): trunk moved?"]
+    PR -- "unmoved N times" --> X4["exit 4 STALL"]
+    PR -- "moved" --> C1
+```
+
+**What this makes visible for the batching question:**
+
+- **`drive.py` has no CLI and no lane input.** It is a library `agent_loop`
+  calls; it reads 14 fields off the shared namespace and always claims
+  `ready[0]`, passing `wi_ids = [wid]` — **exactly one**. A dispatcher needs a
+  genuinely new input; nothing here can be repurposed.
+- **The batch capability lives one level down**, at `agent_loop --wi
+  'WI-201;WI-204'` — reachable by hand, unreachable from `drive`, because
+  nothing packs.
+- **The worker already refuses to batch spine work** (the `exit 10` arm):
+  built work stays, unstarted constituents return to the queue. The
+  *worker-side* half of §A2 exists; the dispatcher-side half (wait for the
+  station, batch the spine WIs together) does not.
+- **A batch is ONE review scope** — a single round after the last constituent,
+  over the combined diff. That is the real amortisation, and the real loss of
+  attribution.
+- **The bar sits at `integrate`, not at the worker**, which is why drain
+  grouping (§A4) can share it without touching sessions at all.
+- **Two flag collisions.** `--max-iterations` is drive's *cycle* ceiling and is
+  **not** forwarded, so the worker independently uses its own default of 40
+  *sessions*. `--stall-limit` is forwarded but means *cycles with an unmoved
+  trunk* to drive and *consecutive no-commit sessions* to the worker.
+
 ## A1. Vocabulary
 
 | Term | Owns | Exists today |
