@@ -39,7 +39,20 @@ def test_wi277_split_modules_stay_slow():
         "test_trace_briefs",
         "test_agent_loop_routing",
         "test_agent_loop_policy",
+        "test_traj_status",
+        "test_traj_panels",
     ):
+        assert smoke_tier_for(stem) == "slow", stem
+
+    # The literal above is hand-maintained, so it goes stale the next time the
+    # gen_trajectory family gains a module. This half is DERIVED and needs no
+    # editing: every `test_traj_*.py` on disk must be slow, because every one of
+    # them drives the real gen_trajectory.py through run_py — the #1 cost in the
+    # suite. (Kept inside this test rather than beside it so the WI-277 slice
+    # guard "collected-test count is unchanged" stays a clean signal.)
+    stems = sorted(p.stem for p in (ROOT / "tests").glob("test_traj_*.py"))
+    assert stems, "vacuous — the traj split modules are gone"
+    for stem in stems:
         assert smoke_tier_for(stem) == "slow", stem
 
 

@@ -86,6 +86,14 @@ SLOW_MODULES = frozenset(
         # ranking is the close deliverable in docs/specs/WI-281.md). All still
         # run at slice/phase close + CI.
         "test_gen_trajectory",  # gen_trajectory.py subprocesses (the #1 cost)
+        # WI-277 split test_gen_trajectory.py along the WI-280 production seams.
+        # Every module below is the SAME cost class as the parent — each test
+        # still runs the real gen_trajectory.py over a temp project through
+        # run_py — so they inherit its tier; the split is behavior-preserving,
+        # not a re-tiering. (test_traj_render_sweeps is if anything heavier: it
+        # renders every emitter document per test.)
+        "test_traj_status",  # the --status docs/status.md snapshot
+        "test_traj_panels",  # Knowledge / Process / landing panels
         "test_agent_loop_review",  # review-tail subprocess rounds
         "test_agent_loop",  # agent_loop.py subprocess loops
         # WI-277 split test_agent_loop.py by behavior boundary. Both inherit the
