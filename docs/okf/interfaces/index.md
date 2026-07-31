@@ -89,3 +89,7 @@ resource: "generated"
 | [IF-079](IF-079.md) |  |
 | [IF-080](IF-080.md) |  |
 | [IF-081](IF-081.md) |  |
+| [IF-082](IF-082.md) |  |
+| [IF-083](IF-083.md) |  |
+| [IF-084](IF-084.md) |  |
+| [IF-085](IF-085.md) |  |

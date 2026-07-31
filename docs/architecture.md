@@ -74,6 +74,12 @@ graph LR
     m_scripts_subagent_gate["scripts/subagent_gate — Subagent spawn gate — deny-by-default fan-out c…"]
     m_scripts_trace["scripts/trace — Traceability join + orphan report for the SN->S…"]
     m_scripts_trace_text["scripts/trace_text — Spine-row TEXT rules and the row primitives the…"]
+    m_scripts_traj_graph["scripts/traj_graph — Pure graph layout and wire routing for the proj…"]
+    m_scripts_traj_panels["scripts/traj_panels — The Knowledge / Process / Next-work dashboard p…"]
+    m_scripts_traj_parse["scripts/traj_parse — Parse/sources for the project-state dashboard —…"]
+    m_scripts_traj_render["scripts/traj_render — SVG/HTML rendering primitives for the project-s…"]
+    m_scripts_traj_status["scripts/traj_status — The --status snapshot + pending projection (WI-…"]
+    m_scripts_traj_views["scripts/traj_views — The What / When / How-SW dashboard views (WI-28…"]
     m_scripts_trunk_step["scripts/trunk_step — The serial trunk step — compile the log fragmen…"]
     m_scripts_wi_convert["scripts/wi_convert — Convert the work-item registry between its CSV …"]
     m_scripts_agent_common --> m_scripts_agent_session
@@ -92,7 +98,12 @@ graph LR
     m_scripts_gen_open_items --> m_scripts_gen_trajectory
     m_scripts_gen_open_items --> m_scripts_trace
     m_scripts_gen_trajectory --> m_scripts_check_trajectory
-    m_scripts_gen_trajectory --> m_scripts_schedule
+    m_scripts_gen_trajectory --> m_scripts_traj_graph
+    m_scripts_gen_trajectory --> m_scripts_traj_panels
+    m_scripts_gen_trajectory --> m_scripts_traj_parse
+    m_scripts_gen_trajectory --> m_scripts_traj_render
+    m_scripts_gen_trajectory --> m_scripts_traj_status
+    m_scripts_gen_trajectory --> m_scripts_traj_views
     m_scripts_integrate --> m_scripts_agent_common
     m_scripts_integrate --> m_scripts_schedule
     m_scripts_integrate --> m_scripts_score_reviews
@@ -104,6 +115,19 @@ graph LR
     m_scripts_plan_runner --> m_scripts_plan_coverage_step
     m_scripts_plan_runner --> m_scripts_plan_round
     m_scripts_trace --> m_scripts_trace_text
+    m_scripts_traj_panels --> m_scripts_traj_graph
+    m_scripts_traj_panels --> m_scripts_traj_parse
+    m_scripts_traj_panels --> m_scripts_traj_render
+    m_scripts_traj_panels --> m_scripts_traj_status
+    m_scripts_traj_parse --> m_scripts_check_trajectory
+    m_scripts_traj_parse --> m_scripts_schedule
+    m_scripts_traj_render --> m_scripts_traj_graph
+    m_scripts_traj_status --> m_scripts_check_trajectory
+    m_scripts_traj_status --> m_scripts_traj_parse
+    m_scripts_traj_views --> m_scripts_check_trajectory
+    m_scripts_traj_views --> m_scripts_traj_graph
+    m_scripts_traj_views --> m_scripts_traj_parse
+    m_scripts_traj_views --> m_scripts_traj_render
     m_scripts_trunk_step --> m_scripts_plan_artifacts
     m_scripts_agent_common -. IF-065 .-> m_scripts_agent_loop
     m_scripts_agent_route -. IF-044 .-> m_scripts_agent_loop
@@ -119,6 +143,9 @@ graph LR
     m_scripts_check_stubs -. IF-006 .-> m_scripts_check
     m_scripts_check_trajectory -. IF-009 .-> m_scripts_check
     m_scripts_check_trajectory -. IF-056 .-> m_scripts_gen_trajectory
+    m_scripts_check_trajectory -. IF-082 .-> m_scripts_traj_parse
+    m_scripts_check_trajectory -. IF-084 .-> m_scripts_traj_status
+    m_scripts_check_trajectory -. IF-083 .-> m_scripts_traj_views
     m_scripts_derive_gate -. IF-050 .-> m_scripts_check
     m_scripts_gen_arch_map -. IF-010 .-> m_scripts_check
     m_scripts_gen_okf -. IF-012 .-> m_scripts_check
@@ -130,6 +157,7 @@ graph LR
     m_scripts_schedule -. IF-053 .-> m_scripts_check_trajectory
     m_scripts_schedule -. IF-071 .-> m_scripts_gen_trajectory
     m_scripts_schedule -. IF-055 .-> m_scripts_integrate
+    m_scripts_schedule -. IF-085 .-> m_scripts_traj_parse
     m_scripts_score_reviews -. IF-046 .-> m_scripts_agent_loop
     m_scripts_trace -. IF-001 .-> m_scripts_check
     m_scripts_trace -. IF-075 .-> m_scripts_gen_open_items
@@ -331,6 +359,17 @@ Contracts (interfaces): IF-014, IF-039
 | `kit_version()` | The kit's committed identity for the version stamp: (label, dirty). |  |
 | `write_kit_version(dest, dry_run)` | Stamp docs/kit-version with the kit commit the scaffold came from, so a |  |
 | `write_kit_license(dest, dry_run, verb)` | Write `docs/kit-license` — the kit's own LICENSE text, scoped by a header. |  |
+| `ScaffoldPlan (class)` | Everything the resolution ladders decided, before a byte is written: |  |
+| `CopyOutcome (class)` | What the copy phases did, accumulated across them: `created` is the |  |
+| `build_parser()` | The CLI surface. Its own function so `main()` reads as a sequence of |  |
+| `resolve_profile(ap, args, dest)` | `(stack, omit)` — the scaffold profile (Thread 34): explicit flags win; |  |
+| `resolve_choices(args, stack, omit)` | The consent-first ladders — agent layer, domain/skills, and the three |  |
+| `copy_kit_files(dest, plan)` | The MAPPING copy pass + the GITKEEP_DIRS placeholders, as a |  |
+| `apply_stack_extras(dest, plan, outcome)` | The declared stack's two follow-ups: the harness-rewiring checklist a |  |
+| `materialize_agent_layer_phase(dest, plan, outcome)` | The chosen agent's layer: its matched skills into the native skills dir |  |
+| `apply_declared_policies(dest, plan, outcome)` | The three declared-authority files: a non-default level overwrites the |  |
+| `report_outcome(plan, outcome)` | The per-file report + the one-line summary, in the order the phases |  |
+| `write_stamps(dest, plan)` | The generated stamps — kit-version / kit-profile / kit-license — plus |  |
 | `main()` |  |  |
 
 ### `scripts/check`
@@ -689,32 +728,12 @@ Contracts (interfaces): IF-019, IF-035
 
 ### `scripts/gen_trajectory`
 _Generate the offline project-state dashboard (root `PROJECT_STATE.html`)._
-Imports (internal): `check_trajectory`, `schedule`
+Imports (internal): `check_trajectory`, `traj_graph`, `traj_panels`, `traj_parse`, `traj_parse.schedule`, `traj_render`, `traj_status`, `traj_views`
 Contracts (interfaces): IF-011, IF-024, IF-052, IF-056, IF-071
 
 | Public item | Summary | Implements |
 |---|---|---|
-| `read_sns(root)` | (id, short-label) per stakeholder need — the SN count + icicle roots. |  |
-| `arch_icicle(root)` | SVG icicle (partition) of the SN->SR->LLR->TC spine + (details, descendants). |  |
-| `spine_stats(root)` | Definition-maturity numbers. 'Definition completeness' = SRs marked |  |
-| `project_vision(root)` | One-line vision: the README `PROJECT-VISION:` tag (the kit's canonical |  |
-| `project_name(root)` | The project's display name — the README's first H1, else the folder name. |  |
-| `tab_button(tab, label)` | One dynamically-added dashboard tab as a WAI-ARIA `role="tab"` button | SR-052 |
-| `tab_panel_open(pid)` | Opening `<section>` tag for a dynamically-added tab panel (WI-273, | SR-052 |
-| `dag_svg(wis)` | The work-item DAG as one plain SVG string + a details dict for the panel. |  |
-| `sw_graph(root, mods)` | The How-SW interface graph as one plain SVG string, or None when no IF |  |
-| `sw_containment(root, mods)` | The containerized How-SW top view as a Simulink-style drill (SR-090..SR-092, | SR-090, SR-092 |
-| `esc(s)` |  |  |
-| `when_view(root, wis)` | The When roadmap as a Simulink-style drill-down (SR-089/SR-091/SR-092, | SR-089, SR-091, SR-092 |
-| `sw_modules(root)` | [(module, summary, [public symbols])] parsed from architecture.md's |  |
-| `cmp_rows(root)` | Real CMP-### component rows (the optional physical/component layer). |  |
-| `know_graph(root)` | The OKF concept graph as (svg, details), or None when there is no bundle |  |
-| `know_view(root)` | The OKF concept graph as a START-COLLAPSED, type-tiered Simulink-style drill | SR-089 |
-| `process_panel(root, wis, stats)` | The Process tab + panel as (tab, panel), or None when there is no | SR-055 |
 | `build_html(root, wis)` |  |  |
-| `pending_block(root)` | The GENERATED PENDING block CONTENT (between the markers) for the |  |
-| `status_block(root)` | The GENERATED STATUS block CONTENT (between the markers) for docs/status.md: |  |
-| `run_status(root, check)` | `--status` mode: splice the derived snapshot into docs/status.md (or, with |  |
 | `main()` |  |  |
 
 ### `scripts/integrate`
@@ -945,6 +964,74 @@ Contracts (interfaces): IF-076
 | `provenance_findings(srs, llrs, tcs)` | A spine row whose text carries its own PROVENANCE — a work-item id, or a | LLR-050 |
 | `form_findings(srs, llrs, tcs)` | A spine row whose text is not ONE testable obligation (process.md §3). |  |
 | `paraphrase_advisories(srs, llrs)` | Warn-only: a child cell that mostly RE-WORDS its parent (process.md §3 |  |
+
+### `scripts/traj_graph`
+_Pure graph layout and wire routing for the project-state dashboard._
+
+| Public item | Summary | Implements |
+|---|---|---|
+| `GraphGeom (class)` | One layered graph's geometry — the (col_w, col_gap, row_h, row_gap, pad) |  |
+| `route_graph(nodes, edges, pos, geom, min_dx, end_trim)` | The shared fan/rects/route sequence every layered emitter ran inline |  |
+| `flat_graph(node_ids, edges, geom, min_dx, end_trim)` | Adjacency + layout + routing for a FLAT, id-seeded graph in one call — |  |
+
+### `scripts/traj_panels`
+_The Knowledge / Process / Next-work dashboard panels (WI-280 split of_
+Imports (internal): `traj_graph`, `traj_parse`, `traj_render`, `traj_status`
+
+| Public item | Summary | Implements |
+|---|---|---|
+| `know_graph(root)` | The OKF concept graph as (svg, details), or None when there is no bundle |  |
+| `know_view(root)` | The OKF concept graph as a START-COLLAPSED, type-tiered Simulink-style drill | SR-089 |
+| `process_panel(root, wis, stats)` | The Process tab + panel as (tab, panel), or None when there is no | SR-055 |
+
+### `scripts/traj_parse`
+_Parse/sources for the project-state dashboard — registries, docs, git._
+Imports (internal): `check_trajectory`, `schedule`
+Contracts (interfaces): IF-082, IF-085
+
+| Public item | Summary | Implements |
+|---|---|---|
+| `read_sns(root)` | (id, short-label) per stakeholder need — the SN count + icicle roots. |  |
+| `spine_stats(root)` | Definition-maturity numbers. 'Definition completeness' = SRs marked |  |
+| `project_vision(root)` | One-line vision: the README `PROJECT-VISION:` tag (the kit's canonical |  |
+| `project_name(root)` | The project's display name — the README's first H1, else the folder name. |  |
+| `sw_modules(root)` | [(module, summary, [public symbols])] parsed from architecture.md's |  |
+| `cmp_rows(root)` | Real CMP-### component rows (the optional physical/component layer). |  |
+
+### `scripts/traj_render`
+_SVG/HTML rendering primitives for the project-state dashboard._
+Imports (internal): `traj_graph`
+
+| Public item | Summary | Implements |
+|---|---|---|
+| `esc(s)` |  |  |
+| `tab_button(tab, label)` | One dynamically-added dashboard tab as a WAI-ARIA `role="tab"` button | SR-052 |
+| `tab_panel_open(pid)` | Opening `<section>` tag for a dynamically-added tab panel (WI-273, | SR-052 |
+
+### `scripts/traj_status`
+_The --status snapshot + pending projection (WI-280 split of gen_trajectory.py)._
+Imports (internal): `check_trajectory`, `traj_parse`
+Contracts (interfaces): IF-084
+
+| Public item | Summary | Implements |
+|---|---|---|
+| `pending_block(root)` | The GENERATED PENDING block CONTENT (between the markers) for the |  |
+| `status_block(root)` | The GENERATED STATUS block CONTENT (between the markers) for docs/status.md: |  |
+| `run_status(root, check)` | `--status` mode: splice the derived snapshot into docs/status.md (or, with |  |
+
+### `scripts/traj_views`
+_The What / When / How-SW dashboard views (WI-280 split of gen_trajectory.py)._
+Imports (internal): `check_trajectory`, `traj_graph`, `traj_parse`, `traj_render`
+Contracts (interfaces): IF-083
+
+| Public item | Summary | Implements |
+|---|---|---|
+| `TierSpec (class)` | One spine tier's registry columns for the icicle's node build (WI-280 |  |
+| `arch_icicle(root)` | SVG icicle (partition) of the SN->SR->LLR->TC spine + (details, descendants). |  |
+| `dag_svg(wis)` | The work-item DAG as one plain SVG string + a details dict for the panel. |  |
+| `sw_graph(root, mods)` | The How-SW interface graph as one plain SVG string, or None when no IF |  |
+| `sw_containment(root, mods)` | The containerized How-SW top view as a Simulink-style drill (SR-090..SR-092, | SR-090, SR-092 |
+| `when_view(root, wis)` | The When roadmap as a Simulink-style drill-down (SR-089/SR-091/SR-092, | SR-089, SR-091, SR-092 |
 
 ### `scripts/trunk_step`
 _The serial trunk step — compile the log fragments, regenerate the trunk artifacts._

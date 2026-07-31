@@ -256,26 +256,37 @@
 # WI-356's finding, resolved per the 2026-07-28 audit ruling (delete the
 # numbers, do not build an assert).
 #
+# WI-280 S8 (2026-07-31): the graph-layout class (10 blocks at its widest,
+# debt WI-280) is DISSOLVED, not re-stamped — `GraphGeom` + `route_graph` /
+# `flat_graph` in traj_graph.py now own the per-emitter fan/rects/route
+# sequence and the flat-graph adjacency preamble. Measured: the emitted census
+# lost all ten fingerprints and gained ZERO new blocks; the class and its
+# distribution row are deleted per the maintenance rule, and the render stayed
+# byte-identical (`gen_trajectory.py --check` green across the change).
+# WI-280 S9 (2026-07-31): the tier-node-build class (1 block, debt WI-280)
+# DISSOLVED — arch_icicle's SR and LLR arms became one loop over the
+# `TierSpec` column declaration (traj_views.py), which also dissolved the
+# two okf-row gen_okf pairings (that class re-counts 3 -> 1). Zero new
+# blocks; render byte-identical again.
+#
 # The distribution:
 #
-#   cli                   87   deliberate
+#   cli                   85   deliberate
 #   spine-loader          20   deliberate
 #   declared-file         13   deliberate
-#   graph-layout          11   debt WI-280
 #   markdown-table        11   deliberate
 #   git-wrapper            7   deliberate
 #   wi-schema-columns      6   deliberate
 #   wi-registry            3   deliberate
 #   spec-folder-reader     4   deliberate
 #   ctx-unpack             3   deliberate
-#   okf-row                3   deliberate
+#   okf-row                1   deliberate
 #   import-fallback        2   deliberate
 #   module-path            2   deliberate
 #   signature-echo         2   deliberate
 #   child-capture          1   deliberate
 #   graph-walk             1   deliberate
 #   skills-materialize     1   deliberate
-#   tier-node-build        1   debt WI-280
 #   trailer-fold           1   deliberate
 #   warn-tier-dispatch     1   deliberate
 #
@@ -290,7 +301,7 @@
 # a census whose classification has rotted is how the false claims above
 # survived in the first place.
 
-# --- cli (87 blocks) ---------------------------------------------
+# --- cli (85 blocks) ---------------------------------------------
 # disposition: deliberate
 # the per-script CLI skeleton + _utf8_console. F5: kit scripts must stay
 # independently copy-able and stdlib-only, which is why a shared
@@ -323,18 +334,23 @@ b87ed5851f33  project-trajectory/scripts/agent_common.py == project-trajectory/s
 b87ed5851f33  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/schedule.py
 ae679b73acd2  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/score_reviews.py
 b87ed5851f33  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/trace.py
-74572e51bafc  project-trajectory/scripts/bootstrap.py == project-trajectory/scripts/check.py
-74572e51bafc  project-trajectory/scripts/bootstrap.py == project-trajectory/scripts/check_coverage.py
-74572e51bafc  project-trajectory/scripts/bootstrap.py == project-trajectory/scripts/check_doc_refs.py
-74572e51bafc  project-trajectory/scripts/bootstrap.py == project-trajectory/scripts/check_perf.py
-74572e51bafc  project-trajectory/scripts/bootstrap.py == project-trajectory/scripts/check_stubs.py
-74572e51bafc  project-trajectory/scripts/bootstrap.py == project-trajectory/scripts/check_trajectory.py
-74572e51bafc  project-trajectory/scripts/bootstrap.py == project-trajectory/scripts/derive_gate.py
-74572e51bafc  project-trajectory/scripts/bootstrap.py == project-trajectory/scripts/gen_arch_map.py
-74572e51bafc  project-trajectory/scripts/bootstrap.py == project-trajectory/scripts/gen_cases.py
-74572e51bafc  project-trajectory/scripts/bootstrap.py == project-trajectory/scripts/gen_okf.py
-74572e51bafc  project-trajectory/scripts/bootstrap.py == project-trajectory/scripts/gen_release_checklist.py
-ac856932503d  project-trajectory/scripts/check.py == project-trajectory/scripts/gen_arch_map.py
+# WI-280 slice 10: bootstrap's argparse preamble moved into `build_parser`,
+# so its extents shifted and it left this clique — the shared preamble the
+# eleven `74572e51bafc` rows recorded now pairs from check.py (nine rows;
+# check.py == bootstrap.py and == gen_arch_map.py are gone with it, and the
+# clique's re-pairing re-fingerprinted `ac856932503d` -> `495cd311f6ca` over
+# the untouched check.py == gen_arch_map.py pair — the WI-347 effect). Same
+# F5 duplication, two rows fewer: 87 -> 85.
+74572e51bafc  project-trajectory/scripts/check.py == project-trajectory/scripts/check_coverage.py
+74572e51bafc  project-trajectory/scripts/check.py == project-trajectory/scripts/check_doc_refs.py
+74572e51bafc  project-trajectory/scripts/check.py == project-trajectory/scripts/check_perf.py
+74572e51bafc  project-trajectory/scripts/check.py == project-trajectory/scripts/check_stubs.py
+74572e51bafc  project-trajectory/scripts/check.py == project-trajectory/scripts/check_trajectory.py
+74572e51bafc  project-trajectory/scripts/check.py == project-trajectory/scripts/derive_gate.py
+74572e51bafc  project-trajectory/scripts/check.py == project-trajectory/scripts/gen_cases.py
+74572e51bafc  project-trajectory/scripts/check.py == project-trajectory/scripts/gen_okf.py
+74572e51bafc  project-trajectory/scripts/check.py == project-trajectory/scripts/gen_release_checklist.py
+495cd311f6ca  project-trajectory/scripts/check.py == project-trajectory/scripts/gen_arch_map.py
 44fc409f063d  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/check_dupes.py
 44fc409f063d  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/check_stubs.py
 44fc409f063d  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/gen_cases.py
@@ -409,12 +425,14 @@ f800f0c60265  project-trajectory/scripts/check_trajectory.py == project-trajecto
 # the draft-heading scan). Several carry an explicit in-code note -
 # 'Duplicated in trace.py per the F5 rule' - and derive_gate.py is
 # deliberately self-contained so the gate can be derived without trace.py.
+# WI-280 S7: the dashboard side of 4b5af82ebaa3 (the status snapshot's row
+# filter) moved verbatim to traj_status.py — same fingerprint, re-homed.
 fd8bed87fb54  project-trajectory/scripts/agent_loop.py == project-trajectory/scripts/check_trajectory.py
 aa845026a358  project-trajectory/scripts/check_flows.py == project-trajectory/scripts/plan_coverage.py
 84e2717e93b1  project-trajectory/scripts/check_perf.py == project-trajectory/scripts/gen_release_checklist.py
 276a458797c4  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/gen_arch_map.py
 b17d9576c85b  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/trace.py
-4b5af82ebaa3  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/gen_trajectory.py
+4b5af82ebaa3  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/traj_status.py
 c7533358d6c4  project-trajectory/scripts/derive_gate.py == project-trajectory/scripts/gen_release_checklist.py
 bea18e2ff5f7  project-trajectory/scripts/derive_gate.py == project-trajectory/scripts/gen_release_checklist.py
 019630ddf2c7  project-trajectory/scripts/derive_gate.py == project-trajectory/scripts/trace.py
@@ -430,21 +448,25 @@ c54131b73567  project-trajectory/scripts/gen_arch_map.py == project-trajectory/s
 f3ea6bf955e3  project-trajectory/scripts/gen_arch_map.py == project-trajectory/scripts/plan_briefs.py
 b0b9cc04d152  project-trajectory/scripts/gen_release_checklist.py == project-trajectory/scripts/trace.py
 
-# --- okf-row (3 blocks) ------------------------------------------
+# --- okf-row (1 block) -------------------------------------------
 # disposition: deliberate
 # the OKF/dashboard row builders — the same (kind, title, body) tuple shape
 # emitted by gen_okf and gen_trajectory for each spine artifact.
 # (WI-340) plus one SAME-FILE block of the same idiom, regrouped here:
 # gen_okf builds the SR tier and the LLR tier rows with the same shape.
-9205a1d4996b  project-trajectory/scripts/gen_okf.py == project-trajectory/scripts/gen_trajectory.py
-fb06318154af  project-trajectory/scripts/gen_okf.py == project-trajectory/scripts/gen_trajectory.py
+# WI-280 S5: the dashboard side of both pairings moved to traj_views.py
+# (arch_icicle / the When leaf blocks) — same fingerprints, re-homed.
+# WI-280 S9 (3 -> 1): the two gen_okf pairings DISSOLVED — arch_icicle's SR/LLR
+# arms became one `TierSpec`-driven loop, so the dashboard side no longer
+# matches gen_okf's per-tier builders. Zero new blocks; gen_okf's own
+# same-file pair below is untouched.
 9d770b2d948b  project-trajectory/scripts/gen_okf.py == project-trajectory/scripts/gen_okf.py
 
 # --- graph-walk (1 block)  ---------------------------------------
 # disposition: deliberate
 # the component-graph breadth-first walk, in the validator and the dashboard
-# generator.
-a2fa21743919  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/gen_trajectory.py
+# generator (sw_containment's subtree walk — traj_views.py since WI-280 S5).
+a2fa21743919  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/traj_views.py
 
 # --- import-fallback (2 blocks) ----------------------------------
 # disposition: deliberate
@@ -466,11 +488,13 @@ c1ad5fc6394f  project-trajectory/scripts/bootstrap.py == project-trajectory/scri
 # the markdown-table row parser (SN rows, plan tables, the release
 # checklist). gen_okf/gen_trajectory carry the in-code note 'kept byte-for-
 # byte in sync ... they once drifted'.
+# WI-280 S3: gen_trajectory's copy (_sn_rows) moved verbatim to traj_parse.py,
+# so its two gen_okf pairings re-homed there — same fingerprints, same class.
 5203288b8c2d  project-trajectory/scripts/check_docs.py == project-trajectory/scripts/gen_release_checklist.py
 469f0dd6e7c9  project-trajectory/scripts/check_docs.py == project-trajectory/scripts/plan_artifacts.py
 469f0dd6e7c9  project-trajectory/scripts/check_docs.py == project-trajectory/scripts/plan_coverage.py
-8c11d9f9d54a  project-trajectory/scripts/gen_okf.py == project-trajectory/scripts/gen_trajectory.py
-6050c334ce2f  project-trajectory/scripts/gen_okf.py == project-trajectory/scripts/gen_trajectory.py
+8c11d9f9d54a  project-trajectory/scripts/gen_okf.py == project-trajectory/scripts/traj_parse.py
+6050c334ce2f  project-trajectory/scripts/gen_okf.py == project-trajectory/scripts/traj_parse.py
 d576d8a2a2d6  project-trajectory/scripts/gen_okf.py == project-trajectory/scripts/trace.py
 a55d35181e85  project-trajectory/scripts/gen_okf.py == project-trajectory/scripts/trace.py
 9483675e297d  project-trajectory/scripts/gen_release_checklist.py == project-trajectory/scripts/plan_artifacts.py
@@ -497,6 +521,9 @@ d2ff16e89265  project-trajectory/scripts/plan_artifacts.py == project-trajectory
 #                                  file touched — the third clique member left)
 # Proven a RE-STAMP and not a rewrite: 3 sanctions went dead and exactly 3 new
 # blocks appeared over the same file pairs, and the total is 196 either way.
+# WI-280 S3: gen_trajectory's declared-file readers (_gate_value and the OKF
+# frontmatter walk) moved verbatim to traj_parse.py, so its three pairings
+# re-homed there — same fingerprints, same class.
 3864c24be1f4  project-trajectory/scripts/bootstrap.py == project-trajectory/scripts/gen_skills_index.py
 1726b03a8cdf  project-trajectory/scripts/bootstrap.py == project-trajectory/scripts/check_doc_refs.py
 c6270a4626d4  project-trajectory/scripts/bootstrap.py == project-trajectory/scripts/check_trajectory.py
@@ -504,10 +531,10 @@ c6270a4626d4  project-trajectory/scripts/bootstrap.py == project-trajectory/scri
 fdc493cdecdb  project-trajectory/scripts/check_docs.py == project-trajectory/scripts/check_privacy.py
 fdc493cdecdb  project-trajectory/scripts/check_docs.py == project-trajectory/scripts/check_trajectory.py
 4493f2c1d5f8  project-trajectory/scripts/check_privacy.py == project-trajectory/scripts/check_trajectory.py
-eff0eac572a0  project-trajectory/scripts/check_privacy.py == project-trajectory/scripts/gen_trajectory.py
+eff0eac572a0  project-trajectory/scripts/check_privacy.py == project-trajectory/scripts/traj_parse.py
 c16d14a4efc4  project-trajectory/scripts/check_privacy.py == project-trajectory/scripts/check_trajectory.py
-75b2bcbfcc04  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/gen_trajectory.py
-8e99e263cf71  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/gen_trajectory.py
+75b2bcbfcc04  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/traj_parse.py
+8e99e263cf71  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/traj_parse.py
 # Phase 3 (2026-07-29): trunk_step.py builds the arch-map CLI from stack.ini
 # the way check.py does — the same cross-script declared-file reader.
 963d79f43ff8  project-trajectory/scripts/check.py == project-trajectory/scripts/trunk_step.py
@@ -595,39 +622,6 @@ b8b532ba9de4  project-trajectory/scripts/agent_loop.py == project-trajectory/scr
 # and those tiers differ per check; a table-driven loop would move that
 # reasoning away from the check it explains. Two sites, not growing.
 558577071d47  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/check_trajectory.py
-
-# --- tier-node-build (1 block)  ----------------------------------
-# disposition: debt WI-280
-# the What-icicle's per-tier node build: `<tier>_ids = {...}`, then the loop
-# that `add()`s one detail record and `link()`s it to its FIRST listed parent,
-# matched between the SR arm and the LLR arm of `arch_icicle`. The two arms
-# read different columns (Requirement/AcceptanceCriteria/SN-Refs vs
-# Detail/Module/SR-Refs), so what removes this is a per-tier column spec —
-# i.e. the view-model half of the graph/render split WI-280's row names for
-# this file, not a loader.
-# WAS carried by the deleted `spine-load-repeat` class, which charged it to
-# WI-346 by proximity. WI-346 extracted the loaders and this block re-emitted
-# byte-identically (same fingerprint), which is the proof it was never a
-# loader. Re-classed, not newly sanctioned.
-29c06640159e  project-trajectory/scripts/gen_trajectory.py == project-trajectory/scripts/gen_trajectory.py
-
-# --- graph-layout (11 blocks) ------------------------------------
-# disposition: debt WI-280
-# the edge-routing and layered-layout sequence, instantiated once per
-# rendered graph (WI DAG, spine wire, OKF knowledge map) with that graph's
-# own COL/ROW/PAD constants. The parameterisation that removes it is the
-# graph/view-model/render split WI-280's row names for this file.
-e7ebc7f29c86  project-trajectory/scripts/gen_trajectory.py == project-trajectory/scripts/gen_trajectory.py
-e7ebc7f29c86  project-trajectory/scripts/gen_trajectory.py == project-trajectory/scripts/gen_trajectory.py
-e7ebc7f29c86  project-trajectory/scripts/gen_trajectory.py == project-trajectory/scripts/gen_trajectory.py
-99c2a2ac7eff  project-trajectory/scripts/gen_trajectory.py == project-trajectory/scripts/gen_trajectory.py
-99c2a2ac7eff  project-trajectory/scripts/gen_trajectory.py == project-trajectory/scripts/gen_trajectory.py
-99c2a2ac7eff  project-trajectory/scripts/gen_trajectory.py == project-trajectory/scripts/gen_trajectory.py
-b240d68b0686  project-trajectory/scripts/gen_trajectory.py == project-trajectory/scripts/gen_trajectory.py
-76cdecd0d810  project-trajectory/scripts/gen_trajectory.py == project-trajectory/scripts/gen_trajectory.py
-aaa30617a30f  project-trajectory/scripts/gen_trajectory.py == project-trajectory/scripts/gen_trajectory.py
-b860b104d408  project-trajectory/scripts/gen_trajectory.py == project-trajectory/scripts/gen_trajectory.py
-bfd6e67c304f  project-trajectory/scripts/gen_trajectory.py == project-trajectory/scripts/gen_trajectory.py
 
 # --- spec-folder-reader (4 blocks) -------------------------------
 # disposition: deliberate

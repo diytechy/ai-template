@@ -26,6 +26,15 @@
 docs/reviews/*
 docs/repo-review-*.md
 
+# re-attestation briefs — the per-SITTING instrument `trace.py --ratify modified`
+# generates and `ratify-fresh` gates: the owner reads the live one before blessing
+# a `Modified` row, and finished ones stay as the record of what was shown. The
+# same retained-evidence class as the round reviews above (WI-280 added the glob
+# when it opened the first Modified window since the briefs began; earlier ones
+# were reachable only incidentally, from whichever handoff doc happened to cite
+# them, which is reachability by accident rather than by class).
+docs/ratify/*
+
 # log fragments awaiting the serial trunk step — a work branch's docs/log.md
 # entry, parked under its own unique name until trunk_step.py compiles it into
 # the log (concurrency-restructure.md §5.1). Transient by construction and never

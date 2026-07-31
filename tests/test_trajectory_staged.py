@@ -5,7 +5,9 @@ The --staged warn family (S1 no-validation-delta, WI-316 spine-amend-without-
 flip incl. the BOM case, the WI-068 critique-loop ratchet), the WI-205
 backlog-staleness and WI-243 critique-staleness git-time warns, and the
 concurrency-restructure §5.4 latest-critique selection-by-git-time tests —
-everything here builds a real git repo and asserts on effect or recovery.
+everything here builds a real git repo and asserts on effect or recovery. The
+WI-280 `_render_surface_paths` pair rides along: it pins the file set the
+critique-staleness warn watches, so it belongs beside that warn's own tests.
 """
 
 import csv
@@ -14,7 +16,7 @@ import shutil
 import subprocess
 
 
-from conftest import skip_without_env_gates, SCRIPTS, load_script, run_py
+from conftest import skip_without_env_gates, ROOT, SCRIPTS, load_script, run_py
 
 wi_convert = load_script("wi_convert")
 
@@ -712,3 +714,53 @@ def test_latest_critique_tie_breaks_deterministically_on_name(tmp_path):
     _write_critiques(tmp_path, ("WI-45-CRITIQUE.md", 1500), ("WI-46-CRITIQUE.md", 1500))
     picked = {ct._latest_critique_file(tmp_path).name for _ in range(3)}
     assert picked == {"WI-46-CRITIQUE.md"}
+
+
+# --- WI-280: the dashboard render SURFACE is the whole generator family ---------
+
+
+def test_render_surface_covers_the_whole_generator_family():
+    """`_render_surface_paths` feeds the render-critique-staleness warn: a
+    `Verification=Critique` SR whose judged render surface changed after the
+    verdict must re-fire. WI-280 split every EMITTER out of gen_trajectory.py
+    into `traj_*.py` siblings, so a facade-only surface would leave that warn
+    running and always passing — the exact silent-green shape the warn exists
+    to prevent. This pins the family, both because the change was unguarded
+    (round-1 review, MINOR) and because the failure mode is invisible: nothing
+    else goes red when the surface silently narrows."""
+    ct = load_script("check_trajectory")
+    paths = ct._render_surface_paths(ROOT)
+    assert paths, "vacuous — the surface resolved to nothing"
+
+    scripts_rel = "project-trajectory/scripts/"
+    assert scripts_rel + "gen_trajectory.py" in paths, paths
+    # Every sibling that actually exists beside the facade must be watched.
+    siblings = sorted(
+        p.name for p in (ROOT / "project-trajectory" / "scripts").glob("traj_*.py")
+    )
+    assert siblings, "premise gone: no traj_* siblings to watch"
+    for name in siblings:
+        assert scripts_rel + name in paths, (name, paths)
+    # Deterministic order, so the emitted warn text is stable.
+    assert paths == sorted(dict.fromkeys(paths)) or paths[0].endswith(
+        "gen_trajectory.py"
+    ), paths
+
+
+def test_render_surface_fallback_arm_finds_both_scaffold_homes(tmp_path):
+    """The `except ValueError` arm — the checker is not under `root` (a
+    downstream tool pointing at another repo). Both scaffold layouts resolve:
+    the kit's own `project-trajectory/scripts/` and a bootstrapped repo's bare
+    `scripts/`. Driven with a synthetic root so the real tree cannot mask a
+    regression."""
+    ct = load_script("check_trajectory")
+    for home in ("project-trajectory/scripts", "scripts"):
+        root = tmp_path / home.replace("/", "_")
+        d = root / home
+        d.mkdir(parents=True)
+        for name in ("gen_trajectory.py", "traj_graph.py", "traj_render.py"):
+            (d / name).write_text("", encoding="utf-8")
+        paths = ct._render_surface_paths(root)
+        assert home + "/gen_trajectory.py" in paths, (home, paths)
+        assert home + "/traj_graph.py" in paths, (home, paths)
+        assert home + "/traj_render.py" in paths, (home, paths)
