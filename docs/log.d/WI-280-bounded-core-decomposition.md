@@ -401,5 +401,26 @@ that a facade-only surface would leave the warn "running and always passing" —
 that is precisely the failure mode now pinned.
 
 **Round-2 close set — every number, `ruff check` included this time.**
-See the closing report; the two figures that move with these fixes are the
-facade (949 lines at the round-2 tip) and the ratify brief (a new tracked file).
+On the branch: `ruff check project-trajectory/scripts tests` **All checks
+passed!**; `ruff format --check` **129 files**; full suite **1702 passed, 12
+skipped, 1 failed** (the standing `test_this_repo_is_not_a_work_branch`, expected
+on a claimed branch); `check_trajectory --strict` clean (375 WIs, 359 done, 14
+retired, acyclic); `trace.py --strict` **exit 0** (orphans 0, integrity 0,
+component 0, interface 0); `ratify-fresh` **current**; `check_docs --stale`
+**332 docs, 934 links, 0 broken, 0 orphans**.
+
+**The two states the record previously never drove — both now green, on a real
+clone WITH history (a fresh `git init` cannot re-derive the brief's git baseline,
+which is a simulation artifact, not a finding).** (i) MERGE CANDIDATE, window
+still open, non-work branch after `trunk_step --regen`: gate **G2**, `ratify-fresh`
+**PASS**, `lint` **PASS**, **RESULT: PASS** — this is the state the merge lands
+in, and it was `FAIL ratify-fresh` before this round. (ii) POST-RATIFICATION,
+the eleven blessed back to `Verified` + regen: gate re-derives to **G3** and the
+full bar is **20/20 PASS, RESULT: PASS** — the state the reviewer withheld
+ratification over, previously `FAIL lint`, now green. The one advisory `FAIL
+traceability` at (i) is `--require-verified` on the eleven pending rows, which is
+the window doing its job and clears at ratification.
+
+The facade is **949** lines at the round-2 tip (942 at S6 + the F401 markers and
+their rationale comment), and `docs/ratify/2026-07-31-wi280.md` is a new tracked
+artifact.
