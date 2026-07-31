@@ -42,6 +42,8 @@ def test_wi277_split_modules_stay_slow():
         "test_traj_status",
         "test_traj_panels",
         "test_traj_views",
+        "test_traj_render",
+        "test_traj_render_sweeps",
     ):
         assert smoke_tier_for(stem) == "slow", stem
 
