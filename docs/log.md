@@ -18949,21 +18949,35 @@ pre-existing; `status.md` is untouched here). `check_trajectory.py --strict` cle
 done, graph acyclic; only the three pre-existing IF-seam WARNs).
 `ruff format --check` + `ruff check` clean on the changed file.
 
-**A measurement lesson worth the line: don't run the suite on a tree you are
-still editing.** The first post-fix full run reported **2 failed** — the standing
-conditional plus `test_check_docs.py::test_meta_repo_has_zero_unexplained_orphans`
-— and the second red was a property of the moving tree, not of the code: the
-round-1 verdict file existed then with a **broken relative link** (it quoted this
-WI's Deliverable citation verbatim, and `../../reviews/…` resolves from
-`docs/work/archive/` but not from `docs/reviews/`), and that test asserts
-`check_docs` exits 0. The reviewer repaired its own file; re-run on a quiescent
-tree the test passes in ~1.1 s and the suite totals as above.
-**Round 2 corrected this entry's first draft, which is why it is worth reading
-twice:** the draft blamed the review file being an *unlinked orphan*, and that
-diagnosis was false — `docs/orphans-allow` allow-lists `docs/reviews/*` exactly
-so a verdict file never needs an inbound link, so the fragment's own link to it
-was never load-bearing. The lesson survives the correction, the cause did not.
-This repo already has the sibling rule for line endings ("measure on a tree whose
-line endings match the index, or the measurement lies", status.md); the general
-form is that **a live working tree is part of the measurement**, and an
-11-minute run edited mid-flight has no single tree to be true of.
+**A misread measurement — corrected TWICE, and kept here for that reason**
+(amended on trunk 2026-07-30, after the merge, when the owner asked the obvious
+question this entry should have answered). The first post-fix full run reported
+**2 failed**: the standing conditional plus
+`test_check_docs.py::test_meta_repo_has_zero_unexplained_orphans`. That second
+red was **real, and the run was right**. The round-1 verdict file carried a
+**broken relative link** — it quoted this WI's Deliverable citation verbatim, and
+`../../reviews/…` resolves from `docs/work/archive/` but not from
+`docs/reviews/` — and that test asserts `check_docs` exits 0. The reviewer
+repaired its own file; the test then passed in ~1.1 s.
+
+**Both of this entry's earlier readings were wrong**, and they are recorded
+rather than overwritten because the class they belong to is this repo's dominant
+defect: a fluent narrative written where a check belonged. Draft 1 blamed an
+*unlinked orphan* — false; `docs/orphans-allow` allow-lists `docs/reviews/*`
+precisely so a verdict file never needs an inbound link (round 2 caught it).
+Draft 2 then blamed a **moving tree** ("don't run the suite on a tree you are
+still editing") — also false: the broken link sat on disk for the WHOLE run,
+written before it started and repaired after it finished, so the concurrent doc
+edits had nothing to do with the failure. **The re-run passed because the link
+was fixed, not because the tree had settled.** Neither review round challenged
+that headline: round 3 was deliberately scoped to the three edits round 2 had
+prompted, which is the honest limit of a bounded re-review — it verifies the
+fixes it was pointed at and vouches for nothing else.
+
+**What survives as the actual rule:** a red you cannot explain is a red you have
+not finished reading, and *"it passed when I re-ran it"* is a hypothesis, not a
+diagnosis. The difference between the two runs here was a repaired file, and one
+`git diff` between them would have said so. (The sibling rule about measuring on
+a tree whose line endings match the index — status.md — is a real and separate
+rule; this episode is not evidence for it, and was briefly written up as though
+it were.)
