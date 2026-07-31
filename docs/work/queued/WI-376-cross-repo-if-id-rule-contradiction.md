@@ -1,0 +1,8 @@
++++
+id = "WI-376"
+title = "Fix the cross-repo IF-ID contradiction in INTERFACES.template.md: its rule bullet says \"Both sides reference the same IF-ID. Use identical ids across repos\" while MULTI_REPO.md §3.3 (and EXAMPLE.md's multi-repo note) mandate the OPPOSITE - IF- id spaces are repo-local, identical strings in two repos are different interfaces, and a coordinator references them through CIF-### handles precisely because reusing ids across repos collides. The template is the file every adopter scaffolds as docs/interfaces.md, so the WRONG rule is the one that ships; the template even contradicts itself - its own worked snippet uses different local ids (IF-001 provider / IF-002 consumer) with the far id cited in the Contract cell. Also unspecified: the no-coordinator PEER case (two independent repos, no CIF catalog) - a bare external IF-007 reference is ambiguous, and trace.py's ^IF-\\d+$ integrity pattern means a qualified form can never go in the IF-ID column, only in Counterpart/Contract/Notes. Rewrite the bullet: ids are repo-local; a foreign seam is cited as the qualified pair (counterpart repo or REPO- id, its local IF-###, version) in Counterpart + Contract/Notes, never in the IF-ID column; under a coordinator the stable global handle is CIF-### (link MULTI_REPO.md §3.3); plus the honesty caveat that no tool validates the far side of a cross-repo reference - it is a text convention. Field-motivated: an old multi-repo adoption (homelab) hit exactly this IF- collision confusion."
+workstream = "docs"
+specref = "project-trajectory/MULTI_REPO.md"
+buildtier = "quick"
+safety_class = "ordinary"
++++
