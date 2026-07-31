@@ -30,11 +30,21 @@ now describes the shipped flow — the plain-launch drive mode (WI-374),
   (`bootstrap.py --sync`; `skills-sync` OK, 12 copies match source).
 
 **The sweep (part of the slice, per spec):** `docs/run-|run-state|AGENT_JOBS|
-dispatcher` over `project-trajectory/**/*.md`. Remaining mentions are all
-historical retirement records (PROCESS_OPTIONS' own "retired with the
-dispatcher at Phase 5" notes, the seam section's design history) or generic
-English ("gate or dispatcher" in EXTERNAL_SKILLS.md's mine-don't-install
-rule) — none promises a retired mechanism as live.
+dispatcher|--jobs|parallel-ready|reservation` over
+`project-trajectory/**/*.md`. **Round 1 refuted the first signed sweep**
+(the review record): two live promises had survived it — the kit README's
+agent_common row still offered "the generated run-state write" (the
+function retired with the dispatcher), and the session-protocol skill still
+attributed BuildTier reading to "the parallel-dispatch scheduler ... the
+dispatcher". Both fixed (README row carries the retirement note;
+the skill names `schedule.py` for ordering and the worker session as the
+BuildTier reader), per-agent copies re-synced, and the sweep re-run. What
+remains after the fix: historical retirement records (PROCESS_OPTIONS' own
+"retired at Phase 5" notes, ADOPTING's dated changelog bullets), the live
+and real `check.py --jobs 0` flag, generic English ("gate or dispatcher"
+in EXTERNAL_SKILLS.md), and the dual-plan prompt templates' "DISPATCHER
+NOTES" header (notes to whoever dispatches the prompt — role, not
+machinery).
 
 **Byte deltas (byte-budget-guard):**
 AGENTS.template.md untouched (10,000 budget n/a this WI);

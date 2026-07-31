@@ -90,13 +90,13 @@ cadence"). New behavior needs new tests
   `docs/log.d/`) — `trunk_step.py` compiles fragments into the log in merge
   order and deletes them. Never hand-edit `docs/log.md` on a work branch.
 - Update `docs/status.md` to point at what's next; don't leave a stale "next".
-- With the parallel-dispatch scheduler, WI ordering is derived from the registry
-  (the DAG + `Priority` + gate class), not a hand-curated `docs/next-wi` — that
-  pointer is retired (WI-180; process-options.md "Unattended operation"). When
+- WI ordering is derived from the registry by `schedule.py` (the DAG +
+  `Priority` + gate class), not a hand-curated `docs/next-wi` — that pointer
+  is retired (WI-180; process-options.md "Unattended operation"). When
   filing or triaging a WI, set `BuildTier` deliberately: `quick` for mechanical,
   off-spine work; `medium` by default; `strong` only for design-shaping or
-  spine-touching changes — the dispatcher reads it from the WI row. Do not
-  silently downgrade a declared route mid-loop.
+  spine-touching changes — the worker session reads it from the WI row. Do
+  not silently downgrade a declared route mid-loop.
 
 ## 5. Commit in this repo's style
 
