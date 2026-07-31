@@ -242,3 +242,197 @@ deliberately not started: its production module is being decomposed on another
 branch, and the plan's shared-fixture module for it should express the seams
 that decomposition settles on, not the ones it is about to move. That work
 resumes once the production split merges.
+
+> *Settled the same day* — WI-280 merged and the anchor split ran; see the
+> next section.
+
+## 2026-07-31 (later) — WI-277 the ANCHOR split (S1–S5)
+
+WI-280 merged, so the deferred half ran. `tests/test_gen_trajectory.py`
+(5,359 lines, 163 tests after the trunk merge) is now **eight modules**, cut
+along the seams WI-280 drew in production — the same reason the anchor waited:
+the split had to express the seams the decomposition settled on, not the ones it
+was about to move.
+
+The merge itself had one conflict, in `tests/test_trajectory.py`: trunk appended
+the WI-280 `_render_surface_paths` pair to a file S6 had already split.
+Resolved by carrying both tests **verbatim** into `test_trajectory_staged.py`,
+beside the critique-staleness warn whose watched file set they pin — never by
+hand-merging the two shapes.
+
+### The anchor inventory
+
+| module | subject (WI-280 sibling) | tests | lines |
+| --- | --- | --- | --- |
+| `test_gen_trajectory.py` *(stays)* | the facade + CLI | 14 | 286 |
+| `test_traj_parse.py` | `traj_parse.py` — sources + the git/subprocess seam | 5 | 233 |
+| `test_traj_graph.py` | `traj_graph.py` — layout + wire routing | 25 | 769 |
+| `test_traj_views.py` | `traj_views.py` — What / When / How-SW | 37 | 897 |
+| `test_traj_panels.py` | `traj_panels.py` — Knowledge / Process / next-work | 31 | 691 |
+| `test_traj_render.py` | `traj_render.py` — primitives + design system | 32 | 1,290 |
+| `test_traj_render_sweeps.py` | `traj_render.py`, swept not sampled | 12 | 718 |
+| `test_traj_status.py` | `traj_status.py` — the `--status` snapshot | 7 | 209 |
+
+14 + 5 + 25 + 37 + 31 + 32 + 12 + 7 = **163**, the anchor's exact test count.
+
+`test_traj_render` and `test_traj_render_sweeps` share a production subject and
+split on **assertion shape** instead: the first pins one emitter at a time, the
+second walks `_every_emitter_document` and asserts a CLOSED property over every
+member. That is the boundary a reader needs; one 1,800-line module is not.
+
+### The one sanctioned shared module: `tests/traj_fixtures.py`
+
+S6–S8 created no shared module and copied fixtures per module. The anchor cannot:
+`_every_emitter_document` composes `make_repo`, `with_bundle`, `_flat_bundle`,
+`tiered_repo` + `TIER_UNION_WIS`, `containerize`, `_how_sw_flat`, `with_gate`,
+`gen` and `html_of` — builders whose homes land in **four different** split
+modules — and it is called from both `test_traj_render_sweeps` and
+`test_traj_graph`. Copying that per module would fork the one place the emitter
+list lives, which is precisely what its docstring says it exists to prevent.
+
+So `tests/traj_fixtures.py` holds it: no `test_` prefix, therefore never
+collected, imported the way `conftest` is. **No test module imports another test
+module** — the S6–S8 idiom is intact. `_every_emitter_document` moved
+byte-identical; its docstring encodes the 2026-07-30 owner ruling on
+shipped-vs-fresh truth-times.
+
+Membership is **measured, not chosen**: a name lives here iff more than one of
+the eight modules uses it (computed from the anchor's own reference graph, then
+re-proved by `ruff check` on the result — an over-inclusive fixture module shows
+up as an unused import somewhere, a missing one as an `F821`). Anything used by
+exactly one module moved with that module: `make_status_repo`, `status_text`,
+`block_of`, `_know_section`, `_loops_div`, `_hero_of`, `_landing_dashboard`,
+`_label_boxes`, `_spine_with_sns`, `sw_section`, `_sample_path_d`,
+`_viewbox_of`, `_scrambled_spine`, `_SubprocessShim`, … .
+
+That measurement put **six names in the fixture module that the WI's plan had
+listed elsewhere**, each recorded rather than quietly absorbed:
+
+| name | measured users |
+| --- | --- |
+| `_wcag` | render (4 tests), panels (1), sweeps (2) |
+| `_css_var` | panels (1), sweeps (2) |
+| `_style_surfaces` | render (2), sweeps (2) |
+| `_palette_vocabularies` | render (1), sweeps (1) |
+| `SMALL_WIS` | views (2), panels (2) |
+| `_layer_with` | views (3), render (3) |
+
+The plan's parenthetical ("`_wcag` … used by exactly ONE module") was a guess
+the measurement refutes: `_wcag` is the WCAG contrast primitive, and three
+different modules assert floors with it. The alternative — copies in three
+modules — is the duplication this WI exists to remove.
+
+The module's own docstring carries the standing instruction not to let it
+accrete: a helper one module calls belongs in that module, and a second caller
+has to be justified the same way these six were.
+
+### Smoke-membership proof
+
+Tiering is by module **stem**, and an unlisted stem defaults to `smoke`. Seven
+new stems each joined `conftest.SLOW_MODULES` **in the same commit as the module
+it names**, with the same reasoning S6–S8 used: identical cost class (every test
+drives the real `gen_trajectory.py` through `run_py`), so they inherit the
+parent's tier — behavior-preserving, not a re-tier.
+
+`tests/test_smoke_tier.py::test_wi277_split_modules_stay_slow` gained the seven
+stems **and a derived half that needs no future editing**: every
+`tests/test_traj_*.py` on disk must map to `"slow"`. A ninth sibling that
+forgets its `SLOW_MODULES` row now reds without anyone remembering to extend a
+literal. It was folded into the existing test rather than added beside it, so
+the slice guard below stays a clean signal.
+
+The guard, run at every slice close (`.venv` interpreter, as above):
+
+```
+python -m pytest -q --collect-only            1716   (S1..S5: 1716 1716 1716 1716 1716)
+python -m pytest -q -m smoke --collect-only    557   (S1..S5:  557  557  557  557  557)
+python -m pytest -q -m slow  --collect-only   1159   (S1..S5: 1159 1159 1159 1159 1159)
+```
+
+All three flat across all five slices. Smoke unmoved is the proof no stem was
+forgotten (a forgotten stem moves 163-odd tests from slow into smoke); total
+unmoved is the proof no test was dropped.
+
+### Loss proof (AST, run over the final tree)
+
+Trunk's pre-split anchor vs. the eight modules + `traj_fixtures.py`, comparing
+every top-level name's source segment byte for byte:
+
+```
+before: 282 top-level names
+after : 282 top-level names across 9 files
+MISSING (dropped): none
+EXTRA (new): none
+DUPLICATED across modules: none
+BODY CHANGED (0):
+test functions: before=163 after=163 equal=True
+```
+
+Nothing dropped, nothing invented, nothing copied into two homes, and **zero
+bodies differ** — including the four monkeypatch sites WI-280 repointed to
+`gt.traj_parse.subprocess` / `gt.traj_graph._detour_points` /
+`_lane_candidates`, which arrived already repointed on trunk and so needed no
+edit here.
+
+### Deviations
+
+Three, all in the direction of keeping a coherent section whole and the shared
+module small:
+
+- **The T7 scale-to-fit pair goes to `test_traj_views`**, which the WI's
+  per-module lists did not name at all. Both tests drive `_spine_with_sns`, the
+  What-icicle fixture, and the section they sit in is literally headed
+  "T7 + T4" — one banner, one behavior. Sending them to the render module would
+  have made `_spine_with_sns` a third shared fixture for no gain.
+- **`test_u3_sw_drill_has_a_legend_and_a_wired_detail_aside` goes to
+  `test_traj_views`** rather than travelling with the rest of the design-system
+  block. It asserts on the containerized How-SW section through
+  `sw_section`/`containerize`; keeping it with its view keeps `sw_section`
+  single-homed.
+- **Six extra names in `traj_fixtures.py`** (the table above), because the
+  measurement disagreed with the plan's guess.
+
+One incidental fix, reported rather than buried: with the other `sys` users
+gone, the facade's module-level `import sys` became redundant against the local
+one inside `test_gen_trajectory_self_heals_sibling_import` (ruff `F811`). The
+**module-level** import was dropped, not the local one — the local import is
+part of what that test deliberately exercises, and this way the test body stays
+byte-identical to trunk, which is what the loss proof above reports.
+
+### Verification
+
+Per slice: `ruff format` **and** `ruff check` (both, every time — a recent WI
+shipped seven `F401`s by running only `format`), the three collect-only counts
+above, the split family green, and
+
+```
+python -m pytest -q -n auto -m smoke      1 failed, 552 passed, 4 skipped
+check_docs  --root . --ignore docs/test/report.md --ignore "docs/work/*" --stale
+            -> OK - 333 doc(s), 934 intra-repo link(s), 0 broken
+check_trajectory --root . --strict
+            -> clean (376 work item(s), 360 done (96%), 14 retired, graph acyclic)
+```
+
+The single red is the standing
+`test_check_lane.py::test_this_repo_is_not_a_work_branch` — expected on a
+claimed branch, never chased.
+
+The split family itself, run whole after S5:
+
+```
+python -m pytest -q -n auto tests/test_gen_trajectory*.py tests/test_traj_*.py
+174 passed
+```
+
+174 = the anchor's 163 + the 11 in `test_gen_trajectory_pending.py`, which this
+WI did not touch.
+
+The full unfiltered suite (the WI/slice close bar), run over the final tree:
+
+```
+python -m pytest -q -n auto
+1 failed, 1703 passed, 12 skipped in 355.37s (0:05:55)
+```
+
+1703 + 1 + 12 = **1716** — the collected total, all of it actually executed, and
+the same 1716 the pre-split anchor produced.
