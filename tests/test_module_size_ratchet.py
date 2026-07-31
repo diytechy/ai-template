@@ -267,7 +267,14 @@ BASELINE = {
     # measured user-unit extents, and records why the ink is not shrunk to the box
     # instead — that would push the U-turn back through its own endpoint box, the
     # defect WI-257 removed. Reviewed bump, log 2026-07-30. Re-stamp down with WI-280.
-    "gen_trajectory.py": 5274,
+    # -579 (5274 -> 4695), WI-280 S2: the pure layout/routing core
+    # (_dag_ranks/_reorder/_layered_layout, _port_fan, the whole WI-253/WI-323/
+    # WI-366 wire-router block) moved verbatim to the new sibling traj_graph.py
+    # (614 lines, under THRESHOLD — no entry of its own). The +5 against the
+    # bare move is the facade's re-export/docstring plumbing (the import block
+    # comment + the split sentence). Ratcheted DOWN: the decomposition this
+    # ratchet was holding the door open for.
+    "gen_trajectory.py": 4695,
     # (agent_dispatch.py and its whole bump history retired with the module
     # at concurrency-restructure Phase 5 - the dispatcher deleted wholesale;
     # the surviving integrator is integrate.py, below this threshold.)
@@ -592,7 +599,11 @@ BASELINE = {
     # +7 (2078 -> 2085), WI-374: the drive.py MAPPING row + docstring
     # inventory lines - the same required-registration shape. Reviewed bump,
     # log 2026-07-31. Re-stamp down with WI-280.
-    "bootstrap.py": 2085,
+    # +5 (2085 -> 2090), WI-280 S2: the traj_graph.py MAPPING row + its
+    # copied-together comment + the docstring inventory line — the same
+    # required-registration shape as the WI-329/WI-374 rows above. Reviewed
+    # bump; the WI-280 log fragment carries the reason.
+    "bootstrap.py": 2090,
     # NEW ENTRY, +228 (1423 -> 1651), Phase 2b of the concurrency restructure
     # (docs/concurrency-restructure.md §7): the spec-folder work-item reader,
     # which crosses this module over THRESHOLD for the first time. It is one

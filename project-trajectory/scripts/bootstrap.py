@@ -52,6 +52,7 @@ What it creates in the destination:
     scripts/trace.py, trace_text.py, derive_gate.py, check.py, check_flows.py, check_docs.py, check_perf.py,
     scripts/check_stubs.py, check_dupes.py, check_coverage.py, check_doc_refs.py, check_privacy.py, check_vendored.py, check_trajectory.py,
     scripts/subagent_gate.py, gen_arch_map.py, gen_release_checklist.py, gen_cases.py, gen_trajectory.py, gen_open_items.py, gen_okf.py
+    scripts/traj_graph.py                      (the WI-280 gen_trajectory.py split — copied with it, always)
     scripts/plan_coverage.py, plan_round.py, plan_briefs.py, plan_coverage_step.py, plan_artifacts.py
                                                (the dual-plan round set, process-options.md "Dual-plan decomposition")
     scripts/wi_convert.py                      (work-item registry CSV <-> spec-folder converter)
@@ -1266,6 +1267,10 @@ MAPPING = [
     ("scripts/gen_release_checklist.py", "scripts/gen_release_checklist.py"),
     ("scripts/gen_cases.py", "scripts/gen_cases.py"),
     ("scripts/gen_trajectory.py", "scripts/gen_trajectory.py"),
+    # WI-280 split of gen_trajectory.py: the sibling module(s) it imports and
+    # re-exports — copied together, always (the trace_text.py idiom; a scaffold
+    # missing one ImportErrors on the first render).
+    ("scripts/traj_graph.py", "scripts/traj_graph.py"),
     ("scripts/gen_open_items.py", "scripts/gen_open_items.py"),
     ("scripts/gen_okf.py", "scripts/gen_okf.py"),
     ("scripts/plan_coverage.py", "scripts/plan_coverage.py"),

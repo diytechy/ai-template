@@ -5060,7 +5060,11 @@ def test_detour_bounds_the_candidate_set_and_second_pass(monkeypatch):
         calls[0] += 1
         return real_points(*a, **k)
 
-    monkeypatch.setattr(gt, "_detour_points", counting)
+    # WI-280: `_detour_d` resolves `_detour_points` in traj_graph's own namespace
+    # now, so patch the module the caller looks in. `gt.traj_graph` IS the cached
+    # sys.modules instance the facade's re-exports bound from (a fresh
+    # `load_script("traj_graph")` would build a second, unconsulted module object).
+    monkeypatch.setattr(gt.traj_graph, "_detour_points", counting)
     # short-circuit: one blocking box, the nearest lane clears at once -> the router
     # returns after a single trial rather than sweeping every candidate.
     rects = {
@@ -5075,7 +5079,9 @@ def test_detour_bounds_the_candidate_set_and_second_pass(monkeypatch):
     # pass — _MAX_LANES trials — not the 1000 the two uncapped passes would have.
     calls[0] = 0
     monkeypatch.setattr(
-        gt, "_lane_candidates", lambda *a, **k: [float(i) for i in range(500)]
+        gt.traj_graph,
+        "_lane_candidates",
+        lambda *a, **k: [float(i) for i in range(500)],
     )
     dense = {
         "S": (0.0, 300.0, 100.0, 40.0),

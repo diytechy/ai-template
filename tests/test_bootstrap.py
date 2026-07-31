@@ -70,6 +70,7 @@ def test_scaffold_contains_expected_files(scaffold):
         "scripts/score_reviews.py",
         "scripts/gen_cases.py",
         "scripts/gen_trajectory.py",
+        "scripts/traj_graph.py",
         "scripts/gen_open_items.py",
         "scripts/gen_okf.py",
         "scripts/plan_coverage.py",
