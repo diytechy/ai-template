@@ -301,16 +301,12 @@ def _worker_stop_code(branch, code):
     return None
 
 
-def _cycle_progress(root, branch, head_before, merged, stall):
-    """`(merged, stall)` after one green cycle. Merged means the branch is
-    GONE (integrate's §5.6 unload) - a worker that reported DONE without
-    finishing its branch merges nothing and leaves the trunk unmoved, which
-    is exactly what the stall counter measures."""
-    code, _ = ac.git(root, "rev-parse", "--verify", "--quiet", "refs/heads/" + branch)
-    if code != 0:
-        merged += 1
+def _cycle_stall(root, head_before, stall):
+    """The stall counter after one green cycle: a cycle that leaves the trunk
+    unmoved — a worker that reported DONE without finishing its branch merges
+    nothing — increments it; any trunk advance resets it."""
     head_after = ac.git(root, "rev-parse", "HEAD")[1].strip()
-    return merged, (stall + 1 if head_after == head_before else 0)
+    return stall + 1 if head_after == head_before else 0
 
 
 def run(root, args, worker=None, tier="all"):
@@ -375,13 +371,20 @@ def run(root, args, worker=None, tier="all"):
         if code is not None:
             return code
 
+        # Count what the drain will actually merge — every finished branch,
+        # residue included, not just this cycle's own (REVIEW-A round 2: the
+        # branch-gone read undercounted a mixed residue+claim drain). On a
+        # green drain every finished branch merged (a held branch exits
+        # nonzero above), so the pre-drain count is exact.
+        finished = len(integrate.finished_branches(root))
         code = integrate.integrate(root, tier)
         if code != 0:
             # Red bar / verdict refusal / held branch: integrate printed the
             # reason; a red queue stops rather than skips (§5.5).
             return code
+        merged += finished
 
-        merged, stall = _cycle_progress(root, branch, head_before, merged, stall)
+        stall = _cycle_stall(root, head_before, stall)
         if stall >= max(1, args.stall_limit):
             _say(
                 "STALL - {} consecutive cycle(s) left the trunk unmoved; "

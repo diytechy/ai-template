@@ -2,10 +2,11 @@
 
 **One line:** a plain `agent-resume` launch now drives the serial
 claim→build→integrate loop instead of exiting 2 with a map — the scheduling
-front end Phase 5's dispatcher deletion took with it is back, as ~280 lines of
-composition instead of 4,042 lines of machinery.
+front end Phase 5's dispatcher deletion took with it is back, as ~427 lines of
+composition (ratchet splitlines method, all files) instead of 4,042 lines of
+machinery.
 
-**Deliverables.** New `scripts/drive.py` (397 lines by the size-ratchet's
+**Deliverables.** New `scripts/drive.py` (400 lines by the size-ratchet's
 splitlines method, stdlib only): the drive
 loop — re-derive the ready frontier (`schedule.py`, IF-053) at the top of
 EVERY cycle, claim the next queued WI in build order (`integrate.py claim`,
@@ -36,9 +37,11 @@ parked).
   `active/<branch>/` + the branch; the next plain launch relaunches the
   worker on it before claiming anything new — the double-click that started
   the run is the one that restarts it.
-- *Merged means the branch is GONE.* The integrated counter checks the ref,
-  not the worker's word; a worker that reports DONE without finishing its
-  branch leaves the trunk unmoved and trips the driver's own stall guard.
+- *Merged is counted from the tree, not the worker's word.* The integrated
+  counter reads `finished_branches` ahead of each green drain (exact,
+  residue included — a held branch exits nonzero first); a worker that
+  reports DONE without finishing its branch merges nothing, leaves the
+  trunk unmoved, and trips the driver's own stall guard.
 - *Refusals stop, never skip.* A refusing claim rung, a red bar, a held
   branch — the run ends with that exit code. The one new refusal is
   BEFORE any claim: an unwired AGENT_CMD (no template, no enable-list)
@@ -66,9 +69,14 @@ The complexity census moved for neither module (`agent_loop.py:main` stays
 27; `drive.py`'s functions all sit under the C901 threshold — the loop body
 was decomposed rather than stamped).
 
-**Round 1 → round 2 (the review pass).** REVIEW-A round 1: APPROVE
+**Round 1 → round 3 (the review pass).** REVIEW-A round 1: APPROVE
 findings=3, all MINOR record-accuracy (the line-count figure, the bars
-wording, the drained-banner undercounting residue merges) — all three fixed.
+wording, the drained-banner undercounting residue merges). Round 2 (APPROVE
+findings=2) caught the residue counter still under by one step on a mixed
+residue+claim drain and a self-contradicting Deliverable cell; the counter
+now reads what the drain will actually merge — `finished_branches` before
+each green drain, which is exact because a held branch exits nonzero — and
+the records were re-stamped.
 A codex cross-review (owner-directed cross-provider leg, advisory) returned
 6 findings; 4 taken as code: (1) a **stranded claim** — active specs whose
 branch ref is gone, reachable when the claim's trunk commit lands but the
