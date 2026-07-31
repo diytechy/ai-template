@@ -7,6 +7,7 @@ re-exports, so consumers are unchanged."""
 import html
 import json
 import re
+from dataclasses import dataclass
 
 import check_trajectory as ct
 from traj_graph import (
@@ -48,6 +49,54 @@ ARCH_ROOT_LAYER = "arch-root"
 ICICLE_UNIT = 18  # px of height per TC leaf
 
 
+@dataclass(frozen=True)
+class TierSpec:
+    """One spine tier's registry columns for the icicle's node build (WI-280
+    S9 — the census's `tier-node-build` class: the SR and LLR arms of
+    `arch_icicle` ran the same add/primary-parent/link loop over different
+    columns, so the columns become the DECLARATION and the loop runs once)."""
+
+    id_col: str
+    tier: str
+    body_col: str
+    meta_label: str
+    meta_col: str
+    ref_col: str
+
+
+# The two tiers the shared loop builds; the SN roots and the TC leaves keep
+# their own arms (each reads a genuinely different row shape).
+SR_TIER = TierSpec(
+    "SR-ID", "sr", "Requirement", "Acceptance", "AcceptanceCriteria", "SN-Refs"
+)
+LLR_TIER = TierSpec("LLR-ID", "llr", "Detail", "Module", "Module", "SR-Refs")
+
+
+def _add_tier_rows(rows, spec, parent_ids, add, link):
+    """The shared per-tier node build (WI-280 S9, `TierSpec`): `add()` one
+    detail record per row and `link()` it to its FIRST listed parent — the
+    loop the SR and LLR arms each spelled out. `add`/`link` are the icicle's
+    own accumulators, passed in so this stays a pure loop over the spec.
+    Returns the tier's id set — the next tier's parent universe."""
+    ids = {r[spec.id_col].strip() for r in rows}
+    for r in rows:
+        rid = r[spec.id_col].strip()
+        add(
+            rid,
+            spec.tier,
+            (r.get("Title") or "").strip(),
+            (r.get(spec.body_col) or "").strip(),
+            "{}: {}".format(spec.meta_label, (r.get(spec.meta_col) or "").strip()),
+            (r.get("Status") or "").strip(),
+        )
+        parents = [
+            s for s in ct._split_refs(r.get(spec.ref_col, "")) if s in parent_ids
+        ]
+        if parents:
+            link(parents[0], rid)
+    return ids
+
+
 def arch_icicle(root):
     """SVG icicle (partition) of the SN->SR->LLR->TC spine + (details, descendants).
 
@@ -86,35 +135,8 @@ def arch_icicle(root):
         add(r["id"], "sn", r["need"], r["need"], meta)
 
     srs, llrs, tcs = _spine(root)
-    sr_ids = {r["SR-ID"].strip() for r in srs}
-    for r in srs:
-        sid = r["SR-ID"].strip()
-        add(
-            sid,
-            "sr",
-            (r.get("Title") or "").strip(),
-            (r.get("Requirement") or "").strip(),
-            "Acceptance: {}".format((r.get("AcceptanceCriteria") or "").strip()),
-            (r.get("Status") or "").strip(),
-        )
-        parents = [s for s in ct._split_refs(r.get("SN-Refs", "")) if s in sn_ids]
-        if parents:
-            link(parents[0], sid)
-
-    llr_ids = {r["LLR-ID"].strip() for r in llrs}
-    for r in llrs:
-        lid = r["LLR-ID"].strip()
-        add(
-            lid,
-            "llr",
-            (r.get("Title") or "").strip(),
-            (r.get("Detail") or "").strip(),
-            "Module: {}".format((r.get("Module") or "").strip()),
-            (r.get("Status") or "").strip(),
-        )
-        parents = [s for s in ct._split_refs(r.get("SR-Refs", "")) if s in sr_ids]
-        if parents:
-            link(parents[0], lid)
+    sr_ids = _add_tier_rows(srs, SR_TIER, sn_ids, add, link)
+    llr_ids = _add_tier_rows(llrs, LLR_TIER, sr_ids, add, link)
 
     for r in tcs:
         tid = r["TC-ID"].strip()
@@ -530,6 +552,63 @@ def sw_graph(root, mods):
 SW_CMPTREE_STYLE = "<style>#sw .cmptree{margin-top:.4rem;}</style>"
 
 
+def _subtree_modules(cid, direct, children_of):
+    """Every module in `cid` and its PartOf-descendants (cycle-guarded) —
+    lifted out of `sw_containment` (WI-280 S9) with its joins passed in."""
+    seen, frontier, out = set(), [cid], set()
+    while frontier:
+        n = frontier.pop()
+        if n in seen:
+            continue
+        seen.add(n)
+        out.update(direct.get(n, []))
+        frontier.extend(children_of.get(n, []))
+    return out
+
+
+def _layer_edges(ifs, inv, block_of, in_scope, allow_boundary):
+    """Aggregated seam wires among one drill layer's blocks + the file/external
+    blocks they reach — lifted out of `sw_containment` (WI-280 S9), which passes
+    its declared seams + inventory in. `block_of(norm)` -> the sibling block
+    key(s) a module maps to at this layer (empty when out of this layer's
+    scope); a seam whose two module endpoints land in different sibling blocks
+    (or a boundary seam to a file/external, when `allow_boundary(norm)`)
+    becomes one deduped wire."""
+    agg, externals = {}, {}
+    for r in ifs:
+        tk, tkey, tdisp = _sw_node(r["this"], inv)
+        ck, ckey, cdisp = _sw_node(r["counterpart"], inv)
+        if r["direction"] == "consumes":  # flip so producer -> consumer
+            (pk, pkey, pd), (nk, nkey, nd) = (ck, ckey, cdisp), (tk, tkey, tdisp)
+        else:
+            (pk, pkey, pd), (nk, nkey, nd) = (tk, tkey, tdisp), (ck, ckey, cdisp)
+        pn = pkey.split(":", 1)[1] if pk == "module" else None
+        nn = nkey.split(":", 1)[1] if nk == "module" else None
+        if pk == "module" and nk == "module":  # internal / cross seam
+            if pn not in in_scope or nn not in in_scope:
+                continue
+            pkeys, nkeys = block_of(pn), block_of(nn)
+        else:  # boundary seam to a file / external hub
+            # exactly one endpoint is the module; the other is the hub. Keep
+            # the producer -> consumer orientation (module producer wires OUT to
+            # the hub; module consumer takes the hub's OUT into its IN).
+            if pk == "module":
+                mnorm, (ekey, edisp, ekind) = pn, (nkey, nd, nk)
+            else:
+                mnorm, (ekey, edisp, ekind) = nn, (pkey, pd, pk)
+            if mnorm not in in_scope or not allow_boundary(mnorm):
+                continue
+            externals[ekey] = (edisp, ekind)
+            mkeys = block_of(mnorm)
+            pkeys, nkeys = (mkeys, {ekey}) if pk == "module" else ({ekey}, mkeys)
+        for a in sorted(pkeys):
+            for b in sorted(nkeys):
+                if a != b:
+                    agg.setdefault((a, b), set()).add(r["id"])
+    edges = [(a, b, ", ".join(sorted(ids))) for (a, b), ids in sorted(agg.items())]
+    return edges, externals
+
+
 def sw_containment(root, mods):
     """The containerized How-SW top view as a Simulink-style drill (SR-090..SR-092,
     rev, WI-141), or None when no `CMP-###` component contains an arch-map module
@@ -563,16 +642,7 @@ def sw_containment(root, mods):
         direct[cid] = sorted(direct[cid])
 
     def subtree_modules(cid):
-        """Every module in `cid` and its PartOf-descendants (cycle-guarded)."""
-        seen, frontier, out = set(), [cid], set()
-        while frontier:
-            n = frontier.pop()
-            if n in seen:
-                continue
-            seen.add(n)
-            out.update(direct.get(n, []))
-            frontier.extend(children_of.get(n, []))
-        return out
+        return _subtree_modules(cid, direct, children_of)
 
     ifs = ct.load_ifs(ct.read_rows(root / ct.IF_CSV))
     counter = [0]
@@ -653,44 +723,7 @@ def sw_containment(root, mods):
         }
 
     def layer_edges(block_of, in_scope, allow_boundary):
-        """Aggregated seam wires among this layer's blocks + the file/external
-        blocks they reach. `block_of(norm)` -> the sibling block key(s) a module
-        maps to at this layer (empty when out of this layer's scope); a seam whose
-        two module endpoints land in different sibling blocks (or a boundary seam to
-        a file/external, when `allow_boundary(norm)`) becomes one deduped wire."""
-        agg, externals = {}, {}
-        for r in ifs:
-            tk, tkey, tdisp = _sw_node(r["this"], inv)
-            ck, ckey, cdisp = _sw_node(r["counterpart"], inv)
-            if r["direction"] == "consumes":  # flip so producer -> consumer
-                (pk, pkey, pd), (nk, nkey, nd) = (ck, ckey, cdisp), (tk, tkey, tdisp)
-            else:
-                (pk, pkey, pd), (nk, nkey, nd) = (tk, tkey, tdisp), (ck, ckey, cdisp)
-            pn = pkey.split(":", 1)[1] if pk == "module" else None
-            nn = nkey.split(":", 1)[1] if nk == "module" else None
-            if pk == "module" and nk == "module":  # internal / cross seam
-                if pn not in in_scope or nn not in in_scope:
-                    continue
-                pkeys, nkeys = block_of(pn), block_of(nn)
-            else:  # boundary seam to a file / external hub
-                # exactly one endpoint is the module; the other is the hub. Keep
-                # the producer -> consumer orientation (module producer wires OUT to
-                # the hub; module consumer takes the hub's OUT into its IN).
-                if pk == "module":
-                    mnorm, (ekey, edisp, ekind) = pn, (nkey, nd, nk)
-                else:
-                    mnorm, (ekey, edisp, ekind) = nn, (pkey, pd, pk)
-                if mnorm not in in_scope or not allow_boundary(mnorm):
-                    continue
-                externals[ekey] = (edisp, ekind)
-                mkeys = block_of(mnorm)
-                pkeys, nkeys = (mkeys, {ekey}) if pk == "module" else ({ekey}, mkeys)
-            for a in sorted(pkeys):
-                for b in sorted(nkeys):
-                    if a != b:
-                        agg.setdefault((a, b), set()).add(r["id"])
-        edges = [(a, b, ", ".join(sorted(ids))) for (a, b), ids in sorted(agg.items())]
-        return edges, externals
+        return _layer_edges(ifs, inv, block_of, in_scope, allow_boundary)
 
     def emit_cmp_layer(cid):
         lid = new_id()
@@ -871,6 +904,57 @@ def _wi_phases(root, wis):
     return out
 
 
+def _agg_edges(subset, key_of):
+    """One aggregated edge per crossing (key_of[p] != key_of[w]) pair, valued by
+    the deduped union of contributing WI edges — so a parent edge is exactly that
+    union (the WI-074 boundary idiom; lifted out of `when_view`, WI-280 S9).
+    Returns sorted (a, b, title) triples."""
+    member = {w["id"] for w in subset}
+    agg = {}
+    for w in subset:
+        kw = key_of[w["id"]]
+        for p in w["preds"] + w["soft"]:
+            if p in member and key_of[p] != kw:
+                agg.setdefault((key_of[p], kw), set()).add((p, w["id"]))
+    return [
+        (a, b, ", ".join("{}→{}".format(p, w) for p, w in sorted(e)))
+        for (a, b), e in sorted(agg.items())
+    ]
+
+
+def _wi_block(w, phase_of, key=None):
+    """One leaf work-item block for the tiered roadmap (lifted out of
+    `when_view`, WI-280 S9; the delivery-phase map is passed in)."""
+    status = _wi_status(w)  # the row's own status — labels, titles, detail
+    st = STATUS_BUCKET[status]  # the swatch it shares (WI-272)
+    t = w["title"]
+    return {
+        "key": key or w["id"],
+        # A3: the status glyph rides in the visible label (so the column width
+        # accounts for it), redundant with the fill hue; `wi` carries the bare id
+        # for the detail-panel wiring (U4) independent of the decorated label.
+        # The glyph is per STATUS, so `deferred`/`blocked` stay distinguishable
+        # from `queued` even though the three share one swatch.
+        "label": "{} {}".format(STATUS_GLYPH[status], w["id"]),
+        "wi": w["id"],
+        "sub": t if len(t) <= 20 else t[:19] + "…",
+        "fill": STATUS_FILL[st],
+        "textfill": "#0f172a" if st == "queued" else "#fff",
+        "stroke": "rgba(15,23,42,.15)",
+        "tier": "work-item",
+        # `cls` is the SWATCH bucket (the `#dag .wi.queued` text rule and its
+        # siblings key on it); `status` is the row's own word, emitted as
+        # `data-status` so the DOM never loses it. One idiom, matching the
+        # flat DAG's node groups (U4).
+        "cls": st,
+        "status": status,
+        # OI-10 fix: surface the delivery Phase in the leaf block's hover title
+        # too, so it stays visible when the phase tier is flat (≤3 phases) but a
+        # workstream tier drills in (SR-089 "expose delivery phase").
+        "title": "{} — {} ({}) · {}".format(w["id"], t, status, phase_of[w["id"]]),
+    }
+
+
 def when_view(root, wis):
     """The When roadmap as a Simulink-style drill-down (SR-089/SR-091/SR-092,
     rev, WI-141): phase ⊃ workstream ⊃ work-item block LAYERS, each tier
@@ -899,57 +983,13 @@ def when_view(root, wis):
         counter[0] += 1
         return "when-{}".format(counter[0] - 1)
 
-    def agg_edges(subset, key_of):
-        """One aggregated edge per crossing (key_of[p] != key_of[w]) pair, valued by
-        the deduped union of contributing WI edges — so a parent edge is exactly that
-        union (the WI-074 boundary idiom). Returns sorted (a, b, title) triples."""
-        member = {w["id"] for w in subset}
-        agg = {}
-        for w in subset:
-            kw = key_of[w["id"]]
-            for p in w["preds"] + w["soft"]:
-                if p in member and key_of[p] != kw:
-                    agg.setdefault((key_of[p], kw), set()).add((p, w["id"]))
-        return [
-            (a, b, ", ".join("{}→{}".format(p, w) for p, w in sorted(e)))
-            for (a, b), e in sorted(agg.items())
-        ]
-
-    def wi_block(w, key=None):
-        status = _wi_status(w)  # the row's own status — labels, titles, detail
-        st = STATUS_BUCKET[status]  # the swatch it shares (WI-272)
-        t = w["title"]
-        return {
-            "key": key or w["id"],
-            # A3: the status glyph rides in the visible label (so the column width
-            # accounts for it), redundant with the fill hue; `wi` carries the bare id
-            # for the detail-panel wiring (U4) independent of the decorated label.
-            # The glyph is per STATUS, so `deferred`/`blocked` stay distinguishable
-            # from `queued` even though the three share one swatch.
-            "label": "{} {}".format(STATUS_GLYPH[status], w["id"]),
-            "wi": w["id"],
-            "sub": t if len(t) <= 20 else t[:19] + "…",
-            "fill": STATUS_FILL[st],
-            "textfill": "#0f172a" if st == "queued" else "#fff",
-            "stroke": "rgba(15,23,42,.15)",
-            "tier": "work-item",
-            # `cls` is the SWATCH bucket (the `#dag .wi.queued` text rule and its
-            # siblings key on it); `status` is the row's own word, emitted as
-            # `data-status` so the DOM never loses it. One idiom, matching the
-            # flat DAG's node groups (U4).
-            "cls": st,
-            "status": status,
-            # OI-10 fix: surface the delivery Phase in the leaf block's hover title
-            # too, so it stays visible when the phase tier is flat (≤3 phases) but a
-            # workstream tier drills in (SR-089 "expose delivery phase").
-            "title": "{} — {} ({}) · {}".format(w["id"], t, status, phase_of[w["id"]]),
-        }
-
     def wi_layer(members):
         """A leaf layer of work-item blocks wired by their intra-set edges."""
         lid = new_id()
-        blocks = [wi_block(w) for w in sorted(members, key=lambda w: w["id"])]
-        edges = agg_edges(members, {w["id"]: w["id"] for w in members})
+        blocks = [
+            _wi_block(w, phase_of) for w in sorted(members, key=lambda w: w["id"])
+        ]
+        edges = _agg_edges(members, {w["id"]: w["id"] for w in members})
         layers.append((lid, _drill_layer_svg(blocks, edges)))
         return lid
 
@@ -981,7 +1021,7 @@ def when_view(root, wis):
                 else:
                     blk.update(fill="var(--surface)", stroke="var(--muted)")
                 blocks.append(blk)
-            edges = agg_edges(subset, {w["id"]: keyfn(w) for w in subset})
+            edges = _agg_edges(subset, {w["id"]: keyfn(w) for w in subset})
             layers.append((lid, _drill_layer_svg(blocks, edges)))
             return lid
         # No tier crosses its threshold here -> the bottom-tier work-item layer.

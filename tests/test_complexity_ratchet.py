@@ -124,9 +124,15 @@ BASELINE = {
     # WI-280 decomposition candidate: panel/draw are an extractable unit.
     # WI-280 S5: all three moved verbatim to traj_views.py — re-keyed, same
     # measured complexity (the move is the decomposition, not a bump).
-    ("traj_views.py", "arch_icicle"): 23,
-    ("traj_views.py", "sw_containment"): 28,
-    ("traj_views.py", "when_view"): 15,
+    # WI-280 S9, re-stamped DOWN — the pay-down this ratchet was holding for:
+    # arch_icicle 23 -> 19 (the SR/LLR node-build arms became one module-level
+    # `_add_tier_rows` loop over the TierSpec column declaration);
+    # sw_containment 28 -> 17 (`_subtree_modules` + `_layer_edges` lifted to
+    # module level with their joins passed in); when_view 15 -> under the
+    # limit (its `agg_edges`/`wi_block` lifted out as `_agg_edges`/`_wi_block`)
+    # — entry DELETED per the improvement rule.
+    ("traj_views.py", "arch_icicle"): 19,
+    ("traj_views.py", "sw_containment"): 17,
     ("plan_coverage.py", "check_plan"): 17,
     ("plan_coverage.py", "main"): 12,
     ("plan_round.py", "record"): 29,

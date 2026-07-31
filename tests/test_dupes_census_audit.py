@@ -379,17 +379,22 @@ def test_mutation_a_stale_distribution_row_reds_the_table_check():
 def test_mutation_charging_a_foreign_module_to_wi_280_reds_the_ownership_check(census):
     """The exact defect 128-REVIEW-A found, replayed.
 
-    Move a check_docs.py block under the WI-280-charged class — the same move
+    Put a check_docs.py block under a WI-280-charged class — the same move
     WI-338's `intra-module` bucket made 64 times — and the ownership rule must
-    catch it, because WI-280's row never names check_docs.
+    catch it, because WI-280's row never names check_docs. WI-280 S9 dissolved
+    the last debt-charged class in the live census, so the mutation FABRICATES
+    the charged class it replays: the rule outlives the classes it once
+    policed, and this proves it still bites.
     """
     sections, _d, _s = census
-    charged = next(s for s in sections if s.disposition == "debt WI-280")
     foreign = next(
         e for s in sections for e in s.entries if "check_docs.py == project" in e
     )
-    text = CENSUS.read_text(encoding="utf-8")
-    text = text.replace(charged.entries[0], charged.entries[0] + "\n" + foreign, 1)
+    text = CENSUS.read_text(encoding="utf-8") + (
+        "\n# --- fabricated-debt (1 block) -----------------------------------\n"
+        "# disposition: debt WI-280\n"
+        "# mutation fixture: a check_docs block charged to WI-280.\n" + foreign + "\n"
+    )
     broken = parse_census(text)
     findings = check_charged_classes_name_their_modules(broken[0], load_wi_rows())
     assert any("check_docs.py" in f for f in findings), findings

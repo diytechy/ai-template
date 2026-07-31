@@ -263,6 +263,11 @@
 # lost all ten fingerprints and gained ZERO new blocks; the class and its
 # distribution row are deleted per the maintenance rule, and the render stayed
 # byte-identical (`gen_trajectory.py --check` green across the change).
+# WI-280 S9 (2026-07-31): the tier-node-build class (1 block, debt WI-280)
+# DISSOLVED — arch_icicle's SR and LLR arms became one loop over the
+# `TierSpec` column declaration (traj_views.py), which also dissolved the
+# two okf-row gen_okf pairings (that class re-counts 3 -> 1). Zero new
+# blocks; render byte-identical again.
 #
 # The distribution:
 #
@@ -275,14 +280,13 @@
 #   wi-registry            3   deliberate
 #   spec-folder-reader     4   deliberate
 #   ctx-unpack             3   deliberate
-#   okf-row                3   deliberate
+#   okf-row                1   deliberate
 #   import-fallback        2   deliberate
 #   module-path            2   deliberate
 #   signature-echo         2   deliberate
 #   child-capture          1   deliberate
 #   graph-walk             1   deliberate
 #   skills-materialize     1   deliberate
-#   tier-node-build        1   debt WI-280
 #   trailer-fold           1   deliberate
 #   warn-tier-dispatch     1   deliberate
 #
@@ -439,7 +443,7 @@ c54131b73567  project-trajectory/scripts/gen_arch_map.py == project-trajectory/s
 f3ea6bf955e3  project-trajectory/scripts/gen_arch_map.py == project-trajectory/scripts/plan_briefs.py
 b0b9cc04d152  project-trajectory/scripts/gen_release_checklist.py == project-trajectory/scripts/trace.py
 
-# --- okf-row (3 blocks) ------------------------------------------
+# --- okf-row (1 block) -------------------------------------------
 # disposition: deliberate
 # the OKF/dashboard row builders — the same (kind, title, body) tuple shape
 # emitted by gen_okf and gen_trajectory for each spine artifact.
@@ -447,8 +451,10 @@ b0b9cc04d152  project-trajectory/scripts/gen_release_checklist.py == project-tra
 # gen_okf builds the SR tier and the LLR tier rows with the same shape.
 # WI-280 S5: the dashboard side of both pairings moved to traj_views.py
 # (arch_icicle / the When leaf blocks) — same fingerprints, re-homed.
-9205a1d4996b  project-trajectory/scripts/gen_okf.py == project-trajectory/scripts/traj_views.py
-fb06318154af  project-trajectory/scripts/gen_okf.py == project-trajectory/scripts/traj_views.py
+# WI-280 S9 (3 -> 1): the two gen_okf pairings DISSOLVED — arch_icicle's SR/LLR
+# arms became one `TierSpec`-driven loop, so the dashboard side no longer
+# matches gen_okf's per-tier builders. Zero new blocks; gen_okf's own
+# same-file pair below is untouched.
 9d770b2d948b  project-trajectory/scripts/gen_okf.py == project-trajectory/scripts/gen_okf.py
 
 # --- graph-walk (1 block)  ---------------------------------------
@@ -611,22 +617,6 @@ b8b532ba9de4  project-trajectory/scripts/agent_loop.py == project-trajectory/scr
 # and those tiers differ per check; a table-driven loop would move that
 # reasoning away from the check it explains. Two sites, not growing.
 558577071d47  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/check_trajectory.py
-
-# --- tier-node-build (1 block)  ----------------------------------
-# disposition: debt WI-280
-# the What-icicle's per-tier node build: `<tier>_ids = {...}`, then the loop
-# that `add()`s one detail record and `link()`s it to its FIRST listed parent,
-# matched between the SR arm and the LLR arm of `arch_icicle`. The two arms
-# read different columns (Requirement/AcceptanceCriteria/SN-Refs vs
-# Detail/Module/SR-Refs), so what removes this is a per-tier column spec —
-# i.e. the view-model half of the graph/render split WI-280's row names for
-# this file, not a loader.
-# WAS carried by the deleted `spine-load-repeat` class, which charged it to
-# WI-346 by proximity. WI-346 extracted the loaders and this block re-emitted
-# byte-identically (same fingerprint), which is the proof it was never a
-# loader. Re-classed, not newly sanctioned. WI-280 S5: arch_icicle moved
-# verbatim to traj_views.py — same fingerprint, re-homed there.
-29c06640159e  project-trajectory/scripts/traj_views.py == project-trajectory/scripts/traj_views.py
 
 # --- spec-folder-reader (4 blocks) -------------------------------
 # disposition: deliberate
