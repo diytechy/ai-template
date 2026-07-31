@@ -299,7 +299,16 @@ BASELINE = {
     # _splice_status/run_status — moved verbatim to traj_status.py (508 lines,
     # under THRESHOLD; the facade docstring gains the sibling clause, +3); main's --status arm calls traj_status.run_status.
     # Ratcheted DOWN.
-    "gen_trajectory.py": 1911,
+    # -970 (1911 -> 941), WI-280 S6: the Knowledge / Process / Next-work panels
+    # — know_graph + the type-tiered know_view/_know_panel, the Process tab
+    # (lifecycle x gates, the resume loop, the SR-055 working-loop hoops), and
+    # the landing-hero Next-work card — moved verbatim to traj_panels.py (1016
+    # lines, under THRESHOLD). What remains here IS the facade: the docstring,
+    # the guarded ct import + sibling re-exports, OUT_HTML/ASOF_RE,
+    # HTML_TEMPLATE, build_html and main. ENTRY RETIRES: 941 is under
+    # THRESHOLD, so per the module rule the baseline is deleted rather than
+    # re-stamped — the H-2 monolith this ratchet froze is decomposed.
+    #
     # (agent_dispatch.py and its whole bump history retired with the module
     # at concurrency-restructure Phase 5 - the dispatcher deleted wholesale;
     # the surviving integrator is integrate.py, below this threshold.)
@@ -636,7 +645,9 @@ BASELINE = {
     # bump.
     # +1 (2093 -> 2094), WI-280 S7: the traj_status.py MAPPING row. Reviewed
     # bump.
-    "bootstrap.py": 2094,
+    # +2 (2094 -> 2096), WI-280 S6: the traj_panels.py MAPPING row + the
+    # docstring inventory line wrapping onto two. Reviewed bump.
+    "bootstrap.py": 2096,
     # NEW ENTRY, +228 (1423 -> 1651), Phase 2b of the concurrency restructure
     # (docs/concurrency-restructure.md §7): the spec-folder work-item reader,
     # which crosses this module over THRESHOLD for the first time. It is one

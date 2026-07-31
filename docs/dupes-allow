@@ -636,16 +636,18 @@ b8b532ba9de4  project-trajectory/scripts/agent_loop.py == project-trajectory/scr
 # e7ebc7f29c86 went dead, f0492e98954e appeared over the same know_graph ==
 # dag_svg sequence — read, it is the same fan/rects/route family). One block
 # net dissolved by the move.
-e7ebc7f29c86  project-trajectory/scripts/gen_trajectory.py == project-trajectory/scripts/traj_render.py
-e7ebc7f29c86  project-trajectory/scripts/gen_trajectory.py == project-trajectory/scripts/traj_views.py
-99c2a2ac7eff  project-trajectory/scripts/gen_trajectory.py == project-trajectory/scripts/traj_render.py
-99c2a2ac7eff  project-trajectory/scripts/gen_trajectory.py == project-trajectory/scripts/traj_views.py
-99c2a2ac7eff  project-trajectory/scripts/gen_trajectory.py == project-trajectory/scripts/traj_views.py
-b240d68b0686  project-trajectory/scripts/gen_trajectory.py == project-trajectory/scripts/traj_views.py
-76cdecd0d810  project-trajectory/scripts/gen_trajectory.py == project-trajectory/scripts/traj_views.py
-aaa30617a30f  project-trajectory/scripts/gen_trajectory.py == project-trajectory/scripts/traj_views.py
-bfd6e67c304f  project-trajectory/scripts/gen_trajectory.py == project-trajectory/scripts/traj_views.py
-f0492e98954e  project-trajectory/scripts/gen_trajectory.py == project-trajectory/scripts/traj_views.py
+# WI-280 S6: know_graph's copy moved verbatim to traj_panels.py, so every
+# gen_trajectory-side line re-homed there — same ten fingerprints, same class.
+e7ebc7f29c86  project-trajectory/scripts/traj_panels.py == project-trajectory/scripts/traj_render.py
+e7ebc7f29c86  project-trajectory/scripts/traj_panels.py == project-trajectory/scripts/traj_views.py
+99c2a2ac7eff  project-trajectory/scripts/traj_panels.py == project-trajectory/scripts/traj_render.py
+99c2a2ac7eff  project-trajectory/scripts/traj_panels.py == project-trajectory/scripts/traj_views.py
+99c2a2ac7eff  project-trajectory/scripts/traj_panels.py == project-trajectory/scripts/traj_views.py
+b240d68b0686  project-trajectory/scripts/traj_panels.py == project-trajectory/scripts/traj_views.py
+76cdecd0d810  project-trajectory/scripts/traj_panels.py == project-trajectory/scripts/traj_views.py
+aaa30617a30f  project-trajectory/scripts/traj_panels.py == project-trajectory/scripts/traj_views.py
+bfd6e67c304f  project-trajectory/scripts/traj_panels.py == project-trajectory/scripts/traj_views.py
+f0492e98954e  project-trajectory/scripts/traj_panels.py == project-trajectory/scripts/traj_views.py
 
 # --- spec-folder-reader (4 blocks) -------------------------------
 # disposition: deliberate
