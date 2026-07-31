@@ -94,6 +94,7 @@ SLOW_MODULES = frozenset(
         # renders every emitter document per test.)
         "test_traj_status",  # the --status docs/status.md snapshot
         "test_traj_panels",  # Knowledge / Process / landing panels
+        "test_traj_views",  # What / When / How-SW view emitters
         "test_agent_loop_review",  # review-tail subprocess rounds
         "test_agent_loop",  # agent_loop.py subprocess loops
         # WI-277 split test_agent_loop.py by behavior boundary. Both inherit the

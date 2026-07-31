@@ -41,6 +41,7 @@ def test_wi277_split_modules_stay_slow():
         "test_agent_loop_policy",
         "test_traj_status",
         "test_traj_panels",
+        "test_traj_views",
     ):
         assert smoke_tier_for(stem) == "slow", stem
 
