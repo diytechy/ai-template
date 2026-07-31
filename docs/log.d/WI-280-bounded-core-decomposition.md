@@ -131,11 +131,177 @@ claimed-branch signal) + `check_docs.py --stale` OK + `ruff format` clean.
    `_frontier_lines`/`_next_work_html` — the spec's own directive (traj_parse
    is the guarded import's one home).
 
-**Known follow-ups for the orchestrator (slices 10–11 / closeout):** the six
-new modules join the arch map only when the trunk regenerates
-docs/architecture.md (work-branch lane rule §5.2 — generated artifacts are
-trunk-owned, so this branch left it untouched); at that point the How-SW top
-view gains six uncontained modules (5 → 11 items > TOP_VIEW_MAX 10) and the
-knowledge⇒component coupling rule will flag them until LLR `Component` rows
-contain the siblings (registry work deliberately left out of these slices —
-Verified-row Module re-pointing owes re-attestation and is an owner act).
+(The follow-ups this section previously left open — the arch-map/top-view
+resolution and the LLR containment — are CLOSED by slices 10–11 below.)
+
+---
+
+## 2026-07-31 — WI-280 slices 10–11: bootstrap main(), the spine/seam closeout
+
+Trunk merged in first (`git merge ConcurrencyTrainRewrite`, 7cb7011): one
+conflict, PROJECT_STATE.html, resolved by REGENERATION rather than by picking a
+side; `project-trajectory/README.md` auto-merged with both edits intact (trunk's
+WI-375 agent_common row + this branch's split clause). Trunk's archival of
+docs/specs/unattended-entry-point.md also cleared the pre-existing orphan red
+this branch had been carrying. Post-merge green set re-run: both `--check`
+forms, the two gen_trajectory suites (174 passed), smoke (551 passed).
+
+**Slice 10 — `bootstrap.main()` decomposed (83d6741).** 380 straight-line lines
+at complexity **41** — the kit's largest single function, and the one an
+adopter's FIRST command runs (the retired WI-082's subject, subsumed here). It
+becomes a ~40-line sequencer over nine phases and two typed records:
+`build_parser`, `resolve_profile` (the stack/omit ladder incl. `ap.error`),
+`resolve_choices` → `ScaffoldPlan`, `copy_kit_files` → `CopyOutcome`,
+`apply_stack_extras`, `materialize_agent_layer_phase`, `apply_declared_policies`,
+`report_outcome`, `write_stamps`; the `--sync` early return and the final
+initialize/exit block stay in `main`. `dataclasses` is stdlib, so the
+stdlib-only rule holds.
+
+*Proof that nothing about the scaffold changed*, three ways: the byte-compare
+suites (`test_bootstrap` + `test_profile` + `test_stack_profile`, **94 passed**),
+a pre/post `--dry-run` **stdout diff** (identical once the dest path and the
+dirty-tree stamp are normalized), and a full pre/post **scaffold tree diff**
+(identical excluding `kit-version`'s stamp and README's project-name
+placeholder). Every print is byte-for-byte, in order.
+
+*One extraction beyond the plan:* `copy_kit_files` measured 13, so its per-file
+write went out again as `_write_scaffold_file`. The ratchet prefers
+decomposition to a new baseline row, and both now sit under the limit.
+
+**Slice 11 — spine/seam closeout (this commit).**
+
+*(a) LLR pointer re-homes.* Every LLR symbol was resolved against the post-split
+AST. **19 rows** whose cited symbols now live wholly in one sibling were
+re-homed: `traj_views.py` ← LLR-052/057/085/086; `traj_panels.py` ←
+LLR-051/056; `traj_parse.py` ← LLR-078; `traj_render.py` ←
+LLR-100/101/102/105/106/109/110/113/114/116; `traj_graph.py` ← LLR-120;
+`traj_status.py` ← LLR-139. Rows whose symbols span the facade and a sibling
+(LLR-035/055/079/080/099/103/107/108/115/117/119/130) KEEP `gen_trajectory.py`
+— the facade is the composition point and re-exports every name, so the pointer
+is still true. **No CodeSymbol cell was edited:** nothing S8/S9 touched was
+renamed (`route_graph`/`flat_graph`/`GraphGeom`/`TierSpec` are new names, not
+renames). Recorded finding, NOT fixed here: ten cells carry symbol names that
+already did not exist before this WI (`_nav`, `_tier_column`, `_svg_node`,
+`_descend`, `_breadcrumb`, `_drill_svg`, `_drill_edges`, `sw_view`,
+`know_graph_svg`, `build_module_map`) — pre-existing staleness, out of scope,
+and fixing it would owe a re-attest for reasons unrelated to WI-280.
+
+*Verified in a THROWAWAY copy* (no regenerated artifact committed — §5.2 keeps
+them trunk-owned, and the harness confirms `arch-map`/`trajectory-map`/
+`status-map`/`open-items`/`ratify-fresh` all SKIP on a work branch): with the
+arch map regenerated over the post-split tree the inventory grows 40 → **46**,
+all six siblings join **CMP-002**, and the How-SW top view stays **5 items ≤
+TOP_VIEW_MAX 10** with **zero uncontained** modules. `component_findings` →
+NONE. This closes the follow-up the S2–S9 record left open.
+
+*(a′) Four new cross-component seams.* The regenerated map exposed four real
+CMP-002 → CMP-001/CMP-004 import edges that the split MOVED off the facade, each
+an undeclared-seam finding. Declared as the rule itself directs, one row per
+importing module, each pointing at the parent contract rather than restating it:
+**IF-082** traj_parse → check_trajectory, **IF-083** traj_views →
+check_trajectory, **IF-084** traj_status → check_trajectory (all three IF-056's
+contract), **IF-085** traj_parse → schedule (IF-071's). The three modules are
+marked `sink` (they provide nothing across a component boundary — their only
+consumer is the facade in the same CMP) and declare their ids in a `Contracts:`
+docstring line, which also clears the "connectivity undeclared" and "no Provides
+seam" warns for them. **Deviation from the split plan**, recorded: the S2–S9
+design said the siblings carry no `Contracts:` line because the seam stays
+gen_trajectory's — true until these module-level seams existed; the registry
+would otherwise warn on rows nothing declares.
+
+*Residue, stated:* `traj_graph.py`, `traj_panels.py` and `traj_render.py` remain
+"connectivity undeclared" WARNs — they genuinely have no cross-component
+coupling, and inventing seam rows to silence a warn would be worse than the
+warn. Same class as the pre-existing IF-055/080/081 warns on trunk.
+
+*(b) The Verified-row amend discipline — the flip DID happen.* The 19 Module
+edits tripped `check_trajectory --staged`'s amend-without-flip warn on all 19
+rows. Both sanctioned responses were MEASURED before choosing:
+
+  * flipping the 19 **LLR** rows silences the warn (the checker skips any row
+    whose own Status moved) and leaves the derived gate at **G3**
+    (`modified=19`) — but `trace.py --ratify modified` then reports "No
+    `Modified` SR": the brief is per-SR, so the sitting would never see the
+    change. That is precisely what the warn's own wording protects against, so
+    this option was REVERTED rather than shipped.
+  * flipping the **11 owning SRs** — SR-050, SR-052, SR-053, SR-054, SR-055,
+    SR-056, SR-071, SR-088, SR-089, SR-090, SR-135 — clears the warn at its
+    root and ARMS the brief: `trace.py --ratify modified` now renders 11
+    sections, each showing only the `Module` cell before/after. This is what
+    shipped.
+
+Consequence, stated plainly: the derived gate computes **G3 → G2**
+(`modified=11`; a Modified SR is simply not Verified, so `sr_gate` derives the
+decomposed-unverified rung) until the sitting blesses them. `docs/gate` is generated and trunk-owned, but it is
+committed here as a DELIBERATE exception, recorded: it derives from the spine
+CSVs this very commit changes and from no trunk-only input (unlike the
+dashboard, which needs the regenerated arch map), and
+`tests/test_derive_gate.py`'s cache-freshness assertion is NOT branch-aware —
+leaving it stale would strand a red in the full suite and in CI. The trunk
+step re-derives the identical bytes. Under
+`docs/gate-policy: autonomous` the review round's recorded verdict ratifies —
+the WI-374 / LLR-143 precedent — flipping the 11 back to `Verified` and
+restoring G3. No row that was not edited was flipped.
+
+*(c) `_render_surface_paths` extended* to the whole generator FAMILY
+(`gen_trajectory.py` + the `traj_*.py` glob, in both the co-located and the
+two-home fallback arms). Required, not cosmetic: after the split every emitter
+lives in a sibling, so a facade-only surface would have left the
+render-critique-staleness warn running and always passing.
+
+*(d) IF prose,* minimal and only where now false: **IF-071**'s "gen_trajectory
+reads the scheduler" was false at module level (the guarded import moved) and is
+now the family + a pointer to IF-085; **IF-024**/**IF-052** gained one clause
+naming the sibling that holds the read; **IF-056** gained a clause naming its
+three sibling-held rows. **IF-074 was left alone** — `gen_open_items` imports
+`gt.pending_block`, which still resolves through the facade re-export, so the
+cell is still true.
+
+**Ratchet re-stamps, slices 10–11:** bootstrap.py size **2096 → 2224** (reviewed
+bump: the extraction-grows-the-file shape WI-347's entry already records);
+`("bootstrap.py","main"): 41` **DELETED** (improvement rule — `main` and every
+extracted phase are under the C901 limit, and `copy_kit_files` was extracted
+again rather than baselined); check_trajectory.py size **3077 → 3098** (the
+render-surface family). Census: bootstrap's argparse preamble moving into
+`build_parser` left the `cli` clique — eleven `74572e51bafc` bootstrap rows
+become nine from check.py, and `ac856932503d` re-fingerprinted to
+`495cd311f6ca` over the untouched check == gen_arch_map pair (the WI-347 effect
+again); **cli 87 → 85**, header + distribution row re-derived, and the two
+count-mutation fixtures in tests/test_dupes_census_audit.py re-pinned.
+
+**Byte-golden, slice 11.** The four new IF rows are a dashboard INPUT, so the
+committed PROJECT_STATE.html is legitimately stale on this branch (the trunk
+lane regenerates it). Render-neutrality is therefore proven DIRECTLY instead of
+through `--check`: the pre-split (S2-parent) renderer and the current split
+renderer, run over the SAME repo inputs, both emit **1,776,473 bytes** and the
+outputs are **byte-identical** (ASOF excluded, exactly as `--check` does).
+
+**Full close set.** `pytest -q -n auto`: **1700 passed, 12 skipped, 1 failed**
+— the failure is the standing
+`test_check_lane.py::test_this_repo_is_not_a_work_branch`, which asserts this
+repo is not on a work branch and is expected on a claimed branch.
+`check_trajectory --strict`: clean (375 WIs, 359 done, 14 retired, graph
+acyclic). `check_docs --stale`: OK, 330 docs, 933 links, **0 broken, 0 orphans**
+(trunk's archival cleared the one this branch had inherited). `trace.py
+--strict`: **exit 0** — SN=25 SR=135 LLR=126 TC=123, orphans=0, integrity=0,
+component-findings=0, interface-findings=0. `ruff format --check`: 128 files
+already formatted.
+
+**`trace.py --strict --require-verified` exits 1 BY CONSTRUCTION, and that is
+the correct state, not a defect to hide.** Its only findings are the eleven
+`SR-0xx is Verification=Test but Status=Modified` lines — exactly the rows slice
+11(b) flipped, saying the thing the flip exists to say: a ratified SR was
+amended and owes a re-attest before the repo may claim G3. It goes green when
+the review round blesses the eleven back to `Verified`. Any commit that follows
+the amend+flip rule is in this state until its sitting; treating it as a red to
+suppress would re-introduce exactly the silent-amendment defect WI-316 closed.
+(One real defect WAS found this way and fixed: the first IF-056 edit put commas
+into an UNQUOTED Contract cell, so the row parsed to 14 columns against an
+11-column header — `trace --strict`'s integrity rule caught it; the clause was
+rewritten comma-free and integrity is back to 0.)
+
+**Left undone, deliberately:** the WI spec is NOT archived and no
+docs/reviews/ file was written (the orchestrator owns the close ceremony); no
+generated artifact (arch map, dashboard, gate, open-items, ratify brief) is
+committed from this work branch (§5.2); the ten pre-existing stale CodeSymbol
+cells above are recorded, not fixed; nothing was pushed.

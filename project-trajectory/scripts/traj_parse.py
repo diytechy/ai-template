@@ -3,7 +3,14 @@
 The spine/OKF/arch-map/gate readers, the one subprocess capture seam
 (_run_captured/_asof/_git), and the guarded `schedule` import's ONE home.
 WI-280 split of gen_trajectory.py; the facade re-exports, so consumers are
-unchanged."""
+unchanged.
+
+Contracts: IF-082, IF-085 — the seams this module declares (process.md §8; rows of
+record in docs/requirements/interfaces.csv). Both are the sibling-held halves of
+gen_trajectory's own seams: IF-082 is IF-056's derivation-loader read of
+check_trajectory, IF-085 is IF-071's frontier read of schedule (whose guarded import
+has its ONE home here).
+"""
 
 import json
 import re

@@ -571,7 +571,15 @@ BASELINE = {
     # +4 of it the review correction that points the hint at the WI's own
     # docs/work/ spec file — the SpecRef target can never clear the warn.
     # Re-stamp down with WI-280.
-    "check_trajectory.py": 3077,
+    # +21 (3077 -> 3098), WI-280 slice 11: `_render_surface_paths` watches the
+    # WHOLE dashboard generator FAMILY (gen_trajectory.py + its `traj_*.py`
+    # split siblings), not the facade alone. Required, not drift: after the
+    # split every emitter lives in a sibling, so a facade-only surface would
+    # have silently retired the render-critique-staleness warn — the check
+    # would still run and always pass. Most of the delta is the two fallback
+    # arms and the comment recording that. Reviewed bump, reason here and in
+    # docs/log.d/WI-280-bounded-core-decomposition.md.
+    "check_trajectory.py": 3098,
     # NEW ENTRY, +25 (1498 -> 1523), WI-357: the two-stage work-branch claim
     # signal — the on-disk fast path plus the branch-history probe that
     # survives the §2.3 close commit (git log -1 over the claim path), with

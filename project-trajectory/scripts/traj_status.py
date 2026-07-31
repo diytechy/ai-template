@@ -3,6 +3,10 @@
 The docs/status.md GENERATED STATUS splice (WI-202), the pending-owner-
 actions derivation gen_open_items renders (WI-234), and the generated
 Ready-frontier lines. The facade re-exports, so consumers are unchanged.
+
+Contracts: IF-084 — the seam this module declares (process.md §8; row of record in
+docs/requirements/interfaces.csv): IF-056's derivation-loader read of
+check_trajectory, as held by the sibling that now carries the import.
 """
 
 import re
