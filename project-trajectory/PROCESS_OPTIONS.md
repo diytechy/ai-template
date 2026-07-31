@@ -398,6 +398,25 @@ A gate closes only on the verdict of an **independent LLM reviewer**:
   "Derived gate model" describes). CHANGES-REQUESTED → findings route to their
   owner hats; re-review up to `MAX_ROUNDS`, then the Blocked register.
 
+**The finding lifecycle: a finding is a claim, not a verdict.** A recorded
+finding names a concrete, falsifiable failure scenario (these inputs → this
+wrong behavior); its owner **confirms** it by reproducing that scenario — or
+**refutes** it — *before* changing code. A refutation is a legitimate
+outcome, recorded in the round record with its evidence: it counts against
+the reviewer's confirmed-finding rate, never against the owner's standing.
+This is the reviewer's own skepticism pointed the other way — the reviewer
+re-runs the implementer's claims; the implementer re-derives the reviewer's.
+And a **re-review round verifies that the fixes landed — it does not hunt
+fresh findings in them**; fresh finding-hunts aim at product surfaces
+(measured here: rounds aimed at a prior round's fixes converge to zero real
+findings while manufacturing work, and the rounds aimed at shipped code
+produce the real ones). Every review leg — gate verdicts here, and the
+per-WI reviewer rounds under "Unattended operation" — routes its findings
+through this lifecycle. The same case discipline covers a design found wrong
+mid-build: its escalation names **what was found, why the current shape
+cannot reach the requirement, and the cost of both paths** — the written
+case is what turns costly rework from a unilateral act into a decidable one.
+
 ### The Blocked register (replaces mid-run escalation)
 
 When a finding survives `MAX_ROUNDS`, a call is MEDIUM/HIGH revert-cost after
@@ -847,7 +866,9 @@ behavior**, so a fresh scaffold pays nothing.
   reviewer prompt**, overridable per phase with a prompt-template **file** via
   `--prompt-map`/`AGENT_PROMPT_MAP` (each entry preflighted like
   `AGENT_CMD_MAP`). **No debate rounds** — independent parallel reviews,
-  mechanically merged (CHANGES-REQUESTED if any reviewer requests changes).
+  mechanically merged (CHANGES-REQUESTED if any reviewer requests changes);
+  each finding then routes under the finding lifecycle ("The LLM-gate verdict
+  protocol"): confirm-or-refute before code changes.
   **Degraded availability is ruled legal:** when only one family responds,
   two independent *same-family* sessions review — fresh context is the
   invariant, family diversity best-effort (the scorer already weights
