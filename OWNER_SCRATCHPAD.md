@@ -469,6 +469,6 @@ Note I want this session to be fully autonomous, attestation can be performed by
 
 Consider done when:
 - All questions above are answered
-- Work items noted above are complete (in whatever order is best, I assume WI-280 is the right starting candidate)
+- Work items noted above are complete
 - Any new work items that are constructed as a reaction to reviews both in work items and in downstream repo compatability that are critically / confidently needed are also completed.
 - After all work is complete, perform migration on the gilbert project, such that it is moved over to the new template, and it's open items are waiting for the user to re-attest it's spine changes that are necessary to adopt the new ai-template.  Again, any new learnings from migrating the new template updates to gilbert should also be applied here if confident.
