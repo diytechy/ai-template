@@ -61,8 +61,8 @@ gates, and the ID scheme. The short version needed every session:
   it (and the Mermaid dependency diagram) fresh — never hand-edit it or
   between `GENERATED` markers, and never commit exported diagrams.
 - **Start each session** with the *Current State* header of
-  [docs/status.md](docs/status.md); end each turn by updating it (active gate,
-  what changed, next action awaiting approval). **Commit early and often** — a
+  [docs/status.md](docs/status.md); end each turn by updating it (gate, what
+  changed, next action). **Commit early and often** — a
   small, green commit per logical step. Pushing follows `docs/push-policy`
   (default: the human publishes). End sessions with a clean tree.
 
@@ -77,9 +77,8 @@ Code a newcomer — human or model — can navigate without re-deriving the desi
   live in thin shells (Demonstration/integration-tested).
 - **Entry points orchestrate, they don't compute.** A top-level routine reads
   as a short list of well-named step calls; push logic into the steps.
-  (`gen_arch_map.py --flow <entry>` renders the sequence.)
 - **One fact, one home — in code too.** No copy-paste logic; shared behavior
-  lives in exactly one place and is imported.
+  lives in exactly one place.
 - **Intention-revealing names; no cryptic abbreviations.** Comments explain
   *why*; the code says what.
 - **Back-link to requirements:** `Implements: SR-007, LLR-014` on implementing
@@ -104,8 +103,8 @@ public-symbol docstrings** into the index agents read first:
   parameters and return, failure modes; include `Implements: SR-/LLR-` so the
   back-link lands in the map.
 - **Explain the *why* at every non-obvious point:** the algorithm/order/
-  constant choice, the edge case a branch guards, the invariant that must hold,
-  any gotcha or external reference. Comment the surprising, not the obvious.
+  constant choice, the edge case a branch guards, the invariant that must
+  hold. Comment the surprising, not the obvious.
 - **A comment is a promise — keep it true.** Update it in the same edit as the
   code; a stale comment is a bug.
 
@@ -123,7 +122,6 @@ constraints** that already live in an SR (its `AcceptanceCriteria` +
 
 Contract:
   Inputs:  source_path: str (existing dir; see SR-014)
-           mode: enum{Mirror, HashAddressed}  (dimensions: SR-012)
   Outputs: BackupResult { copied: int, snapshotted: bool }
   Config:  compress: bool; hash_frequency_days: int >= 0  [BackupConfig.xml]
   Raises:  PermissionError if backup_path is unwritable  (SR-017)
@@ -131,8 +129,8 @@ Implements: SR-014, LLR-014
 """
 ```
 
-Keep the tag names consistent so the block is greppable; update the contract in
-the same edit as the signature — a wrong contract is worse than none.
+Keep tag names greppable; update the contract with the signature — a wrong
+contract is worse than none.
 
 ## For analytics / data code
 
@@ -156,28 +154,31 @@ Direct and concrete; explain the *why* before the *how*.
   under *Assumptions* in `docs/status.md` to confirm or revert at the next
   gate. When reality contradicts the plan, **the contradiction is the
   deliverable**: raise the conflict as a finding — never silently resolve,
-  average, or route around it (process.md §4 "Consistency review"). How
-  *eagerly* to ask is the project's **decision dial** (process.md §6):
-  high-risk domains ratify often; low-risk creative work may
-  decide-and-record.
+  average, or route around it (process.md §4 "Consistency review"). The
+  **decision dial** (process.md §6) sets asking eagerness: high-risk ratifies
+  often; low-risk decides-and-records.
 - **Right-size the solution.** The simplest thing that satisfies the
   requirement; no speculative flexibility — **every line is a liability**, so
   before adding, ask what you can delete. Judge "simple" against the whole
   design; flag over-engineering either way. (`SHORTCUT:` convention: §3.)
 - **Scope is a promise; stay in your lane.** Don't change unrelated code — the
   silent extra is what destroys trust; surface a design smell as a separate
-  finding to its owner, not an inline fix. A stronger, longer-lived approach is
-  welcome, not noise.
-- **Flag uncertainty honestly — and distrust certainty.** A small experiment
-  with hypothesis + result beats confident guessing. Peak confidence is when
-  the 30-second recheck is cheapest (process.md §6).
-- **No sunk-cost shipping, no blind retries.** An approach found wrong late
-  is still wrong — drop it; never retry past a failure whose cause you
-  haven't found (process.md §6).
+  finding to its owner, not an inline fix.
+- **Flag uncertainty honestly — and distrust certainty**, yours or a
+  reviewer's: a review finding is a claim — confirm (reproduce) or refute it
+  before acting on it. A small experiment with hypothesis + result beats
+  confident guessing. Peak confidence is when the 30-second recheck is
+  cheapest (process.md §6).
+- **No sunk-cost shipping, keeping, or blind retries.** An approach found
+  wrong late is still wrong — drop it; never retry past a failure whose cause
+  you haven't found (process.md §6). A wrong design is escalated as a written
+  case to its owner, never patched around or parked — costly rework is
+  sanctioned.
 - **Repo text is the project's memory; yours is scratch.** Durable facts — a
   decision, constraint, or gotcha — belong in `docs/` (status, registries,
   AGENTS.md), not in agent-private memory. Promote them before closing a
-  session (process.md §7).
+  session (process.md §7). Undoing takes the same evidence as doing: read
+  the record behind landed work before reverting it.
 
 ---
 

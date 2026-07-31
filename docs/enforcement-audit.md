@@ -55,6 +55,9 @@ records where each one bites.
 | Back-link implementing symbols with `Implements: SR-/LLR-` | **Prose (gap)** | see Findings — surfaced by the map but **not required** by any check |
 | Every environment-gated skip routes through the declared gate (WI-326) | **Harness + Reviewer (bounded gap)** | `tests/test_env_gates.py` bans, over the AST, a `skipif` condition that probes a gated tool, a function that both probes and skips, and a module that probes with `which` and skips while importing neither declared helper. What it CANNOT see, and does not claim to: a **cross-module** probe (module A decides, module B skips); a probe that shells out (`subprocess.run(["git", ...])`) rather than using `which`; and a probe whose result is frozen into a module constant at import time. Those are semantic. The first two AST rules were **driven and bypassed** by 130-REVIEW-A (helper indirection plus the tool name passed through a variable), which is why the module rule exists and why the residue is written down here instead of implied by a guard that would be advertising a property it lacks |
 | A signed measurement is reproducible, or marked historical (WI-342) | **Reviewer (honest gap)** | process-options.md "Signed measurements". Nothing can tell a live measurement from a recollection, so no harness or test can hold this; the reviewer asking "re-derive that number" is the whole enforcer, and it works — 127-REVIEW-A and 128-REVIEW-A between them refuted or marked UNVERIFIABLE eight signed figures. The mechanizable half is the *habit*: commit the command and manifest before the fix destroys the input |
+| A review finding is confirmed (reproduced) or refuted before code changes; a re-review round verifies fixes, never hunts fresh findings in them (WI-373) | Reviewer + Prose | process-options.md "The LLM-gate verdict protocol" (the finding lifecycle). Symmetric to the signed-measurements row: nothing mechanical can tell a reproduction from a recollection, so the round record holding the confirm/refute evidence is the enforcer; `score_reviews.py`'s confirmed-finding rate is the advisory backstop. The evidence: rounds 127→131 ran ~70% non-product findings, and the self-aimed rounds converged to zero while manufacturing work |
+| Undoing takes the same evidence as doing — read the record behind landed work before reverting it (WI-373) | Prose | working agreement; Reviewer backs it (a revert citing no record is a finding). Origin: parked work scrubbed by sessions that never read the record justifying it (owner directive 2026-07-30) |
+| A wrong design escalates as a written case to its owner, never patched around or parked — no sunk-cost keeping (WI-373) | Prose | working agreement; judgment, not mechanizable. The ConcurrencyTrainRewrite restructure is the worked precedent that deliberate costly rework is the sanctioned move |
 
 ## Findings from this audit
 
@@ -69,11 +72,13 @@ records where each one bites.
    class today: **Prose** (a documented convention with no enforcer). Closing
    it (a warn-first check that an LLR's named `CodeSymbol` carries the tag)
    pairs naturally with the architecture-connectivity work; **filed, not built.**
-3. **The judgment rules are honestly Prose.** The five "how to think" rules
+3. **The judgment rules are honestly Prose.** The "how to think" rules
    (ask-one-question, distrust-certainty, no-sunk-cost, name-the-contradiction,
-   right-size) have no mechanical enforcer and are not expected to — they are
-   reserved for the always-loaded guide by design, and the reviewer charter is
-   their only backup. Recorded as a **stated reason**, per the audit's bar.
+   right-size — and, since WI-373, confirm-or-refute, reversal-evidence, and
+   no-sunk-cost-keeping) have no mechanical enforcer and are not expected to —
+   they are reserved for the always-loaded guide by design, and the reviewer
+   charter is their only backup. Recorded as a **stated reason**, per the
+   audit's bar.
 4. **Spec-interface near-duplication is reviewer-tier (WI-191).** The mechanical
    check (`check_trajectory.spec_interface_findings`) verifies a spec's
    `## Interfaces` citations **resolve** and that a `Proposed` citation carries a
