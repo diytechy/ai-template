@@ -25,6 +25,65 @@ applying that design to the kit itself.
 _Ratified or executed decisions only — the call, the alternatives passed over,
 why (one bullet each; cite ids)._
 
+- **2026-07-31 — Traceability is TRACED, not ratified (the spine-touch
+  definition).** Ruled: only what is *ratified* counts as a spine touch, and
+  ratification is on change of **scope**, defined by the **prose and the
+  relevant field attributes**. A `Module`/`CodeSymbol`/`TestRefs` pointer
+  following code that moved is traceability — it changes nothing the owner
+  blessed — and must not arm the re-attest marker.
+  `check_trajectory.staged_spine_findings` currently violates this: it compares
+  every column except `Status`, so a decomposition that moved 19 LLR `Module`
+  cells forced 11 owning SRs to `Modified`, dropped the derived gate G3→G2, and
+  bought a ratify brief plus four review rounds for a change that altered no
+  requirement. Rejected: keeping the blunt all-columns comparison and absorbing
+  the spurious windows as a cost of safety — it makes every decomposition a
+  spine event and trains readers to wave the marker through. Executes as
+  **WI-380** (the ratified-vs-traced cell split); the arguable cells (`SN-Refs`,
+  `Verifies`) are left open for a per-registry ruling.
+
+- **2026-07-31 — Spine work waits, batches, and runs alone.** Ruled: a
+  spine-touching WI is not refused but **held** until every lane is back in the
+  station (no open claims), then admitted as the **only** thing touching trunk,
+  with **all** spine WIs admitted together so N spine changes cost one
+  re-attest window and one owner sitting rather than N; spine work takes
+  priority so it drains rather than starving. A WI that discovers mid-flight
+  that it needs spine work must finish what it can and queue a spine WI for the
+  rest, or report that it cannot complete — never do the spine work inline.
+  Rejected: the current blunt "the integrator claims ordinary work only"
+  refusal, which is a hard stop rather than a wait, and which a WI honestly
+  filed as `ordinary` bypasses the moment its true scope appears. Executes as
+  **WI-381**; `schedule.py` already classifies `spine|gate|attestation →
+  serial-whole-project`, so this is mostly making an existing declaration true.
+
+- **2026-07-31 — Work-item state is the FOLDER; `disposition` is deleted.**
+  Ruled: the state vocabulary becomes
+  `draft | queued | active | deferred | cancelled | complete`. `retired` is
+  ambiguous — it can read as *finished and put out to pasture* — and becomes
+  **`cancelled`**, which cannot. `draft/` gives thinking-in-progress an honest
+  home it has never had. The point is structural, not cosmetic: `disposition`
+  exists **only** because `archive/` holds two terminal states the folder
+  cannot express, so it needs an attribute *and* `parse_spec_status()`'s
+  cross-check *and* two raise paths *and* their tests — splitting the folder
+  deletes all of it, and the inconsistent state stops being checked-for and
+  becomes unrepresentable. Specs-of-record mirror the terminal folders.
+  Rejected: adding a `draft` value as a frontmatter attribute, which would have
+  deepened exactly the duplication this removes. Executes as **WI-384**.
+
+- **2026-07-31 — Governing principle: constraints over checks.** Ruled as the
+  frame for the above and for
+  [`concurrency-v2.md`](concurrency-v2.md): prefer **structure that makes a bad
+  state unrepresentable** over **a check that detects it after the fact**; a
+  proposal that only adds enforcement must justify itself against the
+  alternative that removes the possibility. This names the mechanism behind the
+  2026-07-28 audit's finding that enforcement-layer growth is the repo's
+  dominant failure mode — the likely cause being an **incentive gradient**, in
+  that a check fits inside the scope of the WI that found the problem while a
+  constraint usually crosses WI boundaries and may owe an attestation, so every
+  local decision is correct and the aggregate is not. Consequence recorded for
+  filing discipline: ask *"what constraint would make this unrepresentable?"*
+  at **filing** time, where both options are still comparably cheap, not at
+  review time when only the check is in scope.
+
 - **2026-07-07 — SR-011 split; SR-036 added (post-G2 spec review).** The G2
   review found SR-011 described the *ADOPTING.md §6 re-sync process* ("overwrite
   kit-owned, preserve project-owned") rather than what `bootstrap.py` mechanically

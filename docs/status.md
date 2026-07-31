@@ -28,8 +28,13 @@ home elsewhere — don't restate it here:
   amendment window is CLOSED** — attested at the 2026-07-29 sitting, ruling
   in [log.md](log.md)'s Decisions; the restructure has no open act.
 - **Resuming in a new session — boot HERE, then
-  [handoff-2026-07-29.md](handoff-2026-07-29.md)** (the post-Phase-5 wrap-up:
-  the sitting, the sequenced queue, the unruled owner calls). The working
+  [concurrency-v2.md](concurrency-v2.md) if you are picking up the open design
+  (that is where the live work is), and the
+  [log's Decisions](log.md#decisions-log) for the four 2026-07-31 rulings that
+  frame it.** The older
+  [handoff-2026-07-29.md](handoff-2026-07-29.md) is now **history, not a
+  queue** — its sequenced work is all closed; read it for the post-Phase-5
+  account only. The working
   program [concurrency-restructure.md](concurrency-restructure.md) is
   EXECUTED through Phase 5 (§7 records), its windows all closed (the fourth
   and last 2026-07-29 sitting blessed the Phase 5 amendment; gate **G3, all
