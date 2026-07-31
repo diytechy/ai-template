@@ -51,7 +51,7 @@ now fails here instead of in an adopter's repo.
 needs no action; a repo scaffolded from a kit between the drive-loop
 landing and this fix should copy `scripts/schedule.py` across.
 
-**Ratchet re-stamp:** ootstrap.py 2224 -> 2232 (+8) — the MAPPING row plus the comment stating why it is load-bearing. Required registration, the same shape as the trunk_step/integrate/drive rows, not monolith growth.
+**Ratchet re-stamp:** `bootstrap.py` 2224 -> 2232 (+8) — the MAPPING row plus the comment stating why it is load-bearing. Required registration, the same shape as the trunk_step/integrate/drive rows, not monolith growth.
 
 **Bars:** the new test and the scaffold file-list test pass; `ruff check`
 and `ruff format` clean; commit bar green except the standing work-branch
