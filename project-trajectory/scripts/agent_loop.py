@@ -6,8 +6,11 @@ Implements the session half of the walk-away protocol (process-options.md
 "Unattended operation (walk-away runs)"). Claiming and merging live in the
 sibling integrate.py (the serial integration seam, concurrency-restructure
 §1.2/§2.3); the parallel dispatcher this module once fronted retired at Phase 5
-of that restructure, so a plain invocation now refuses with the map instead of
-launching anything. Ported from a field-proven PowerShell coordinator
+of that restructure. A plain invocation (no role flag) runs the serial DRIVE
+mode (WI-374, the sibling drive.py): claim the next ready WI in build order,
+run a worker session on the claimed branch, drain the merge queue, repeat —
+the walk-away front end the dispatcher's deletion had removed. The explicit
+roles below are unchanged. Ported from a field-proven PowerShell coordinator
 (NotHomeWrecker trigger.ps1), which this cross-platform implementation
 supersedes. Stdlib only, Python 3.11+.
 
@@ -2606,6 +2609,31 @@ def run_iteration(ctx, i):
     return None
 
 
+def _coordinator_lock(root):
+    """Take the per-checkout coordinator lock, registering its release for
+    exit. Returns None when held, else the EXIT_PREFLIGHT the caller returns
+    — the ONE home of the acquire/report/register sequence, shared by the
+    drive mode and the explicit-role path."""
+    lock_path = root / "out" / "agent-loop.lock"
+    lock_err = acquire_lock(lock_path)
+    if lock_err:
+        print("agent_loop: {}".format(lock_err), file=sys.stderr)
+        return EXIT_PREFLIGHT
+    atexit.register(release_lock, lock_path)
+    return None
+
+
+def _drive_entry(root, args):
+    """The WI-374 plain-launch drive mode: coordinator lock, then the serial
+    claim->build->integrate loop in the sibling drive.py."""
+    import drive
+
+    code = _coordinator_lock(root)
+    if code is not None:
+        return code
+    return drive.run(root, args)
+
+
 def main():
     _utf8_console()
     args = parse_args()
@@ -2631,20 +2659,15 @@ def main():
     # with the parallel dispatcher at concurrency-restructure Phase 5.)
     args.model, args.model_map = resolve_coordinator_dials(args, docs)
 
-    # A plain launch has no role since the parallel dispatcher retired
-    # (concurrency-restructure §6): claiming and merging run through
-    # `integrate.py claim` / `integrate.py integrate`, and this engine runs the
-    # explicit per-process roles only. Refuse with the map rather than guessing.
+    # A plain launch (no role) is the DRIVE mode (WI-374): the serial
+    # claim->build->integrate front end, restored after the parallel
+    # dispatcher's Phase 5 deletion took the scheduling front half with it.
+    # The loop itself lives in the sibling drive.py — ordering only, no new
+    # authority; every refusal stays where it already lives. It takes the
+    # same per-checkout coordinator lock the explicit roles take below (the
+    # worker subprocesses it spawns lock their own worktrees).
     if not (args.wi or args.train or args.interactive or args.dual_plan):
-        print(
-            "agent_loop: no role given. The parallel dispatcher retired "
-            "(concurrency-restructure Phase 5): claim work with "
-            "`integrate.py claim`, then launch a worker session with "
-            "--wi WI-<n> (in the claimed branch's worktree), or use "
-            "--interactive / --dual-plan WI-<n>.",
-            file=sys.stderr,
-        )
-        return EXIT_PREFLIGHT
+        return _drive_entry(root, args)
     template = (
         args.agent_cmd
         if args.agent_cmd is not None
@@ -2781,12 +2804,9 @@ def main():
     # One coordinator per worktree (a double-launch or cron overlap is the
     # collision the branch guard can't catch — same branch, same checkout).
     # Both the loop and a single interactive session take it; atexit drops it.
-    lock_path = root / "out" / "agent-loop.lock"
-    lock_err = acquire_lock(lock_path)
-    if lock_err:
-        print("agent_loop: {}".format(lock_err), file=sys.stderr)
-        return EXIT_PREFLIGHT
-    atexit.register(release_lock, lock_path)
+    code = _coordinator_lock(root)
+    if code is not None:
+        return code
 
     if args.interactive:
         return run_interactive(

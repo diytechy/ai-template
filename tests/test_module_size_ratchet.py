@@ -310,7 +310,14 @@ BASELINE = {
     # tree — the silent-disarm defect found at C1's census classification)
     # through load_wi_registry; the bump is the docstring recording the
     # defect. Reviewed bump.
-    "agent_loop.py": 3006,
+    # +20 (3006 -> 3026), WI-374: the plain-launch DRIVE mode — the loop body
+    # lives in the new sibling drive.py (deliberately NOT here: this module is
+    # a named H-2 decomposition target); the bump is the delegation
+    # (_drive_entry), the docstring re-grounding (plain launch drives instead
+    # of refusing), and _coordinator_lock — the acquire/report/register
+    # sequence extracted to ONE home so the two lock sites cannot drift.
+    # Reviewed bump, log 2026-07-31.
+    "agent_loop.py": 3026,
     # +30 (2206 -> 2236), WI-065: `tc_citation_findings` — the TC-`Verifies`
     # rules lifted out of `analyze` so the cell could accept `IF-###` seam ids.
     # Most of the bump is that helper's docstring, which is where the RULING now
@@ -582,7 +589,10 @@ BASELINE = {
     # +7 (2071 -> 2078), Phase 4: the integrate.py MAPPING row + docstring
     # inventory lines - the same required-registration shape. Reviewed bump,
     # log 2026-07-29. Re-stamp down with WI-280.
-    "bootstrap.py": 2078,
+    # +7 (2078 -> 2085), WI-374: the drive.py MAPPING row + docstring
+    # inventory lines - the same required-registration shape. Reviewed bump,
+    # log 2026-07-31. Re-stamp down with WI-280.
+    "bootstrap.py": 2085,
     # NEW ENTRY, +228 (1423 -> 1651), Phase 2b of the concurrency restructure
     # (docs/concurrency-restructure.md §7): the spec-folder work-item reader,
     # which crosses this module over THRESHOLD for the first time. It is one

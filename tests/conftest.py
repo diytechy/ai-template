@@ -77,6 +77,7 @@ SLOW_MODULES = frozenset(
         # concurrency-restructure Phase 5.)
         "test_dual_plan_round",  # the dual-plan round end-to-end (WI-199)
         "test_integrate",  # local integrator: real git repos + a real check.py bar
+        "test_drive",  # the drive loop: real git repos + the real bar (WI-374)
         # WI-281: subprocess/scaffold-heavy modules moved to slow to hold the
         # <= 60 s commit-bar budget. Each is dominated by run_py subprocesses
         # (running gen_trajectory / trace / check* / agent_loop) or the scaffold

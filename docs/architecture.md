@@ -53,6 +53,7 @@ graph LR
     m_scripts_check_trajectory["scripts/check_trajectory — Validate the work-item registry — stdlib only."]
     m_scripts_check_vendored["scripts/check_vendored — Drift check for vendored third-party docs (stdl…"]
     m_scripts_derive_gate["scripts/derive_gate — Derive the active gate from artifact states — t…"]
+    m_scripts_drive["scripts/drive — drive.py — the serial claim->build->integrate d…"]
     m_scripts_gen_arch_map["scripts/gen_arch_map — Generate the module/function map for `architect…"]
     m_scripts_gen_cases["scripts/gen_cases — Generate test-case combinations from a requirem…"]
     m_scripts_gen_okf["scripts/gen_okf — OKF export — the traceability graph as a portab…"]
@@ -79,11 +80,15 @@ graph LR
     m_scripts_agent_loop --> m_scripts_agent_common
     m_scripts_agent_loop --> m_scripts_agent_route
     m_scripts_agent_loop --> m_scripts_agent_session
+    m_scripts_agent_loop --> m_scripts_drive
     m_scripts_agent_loop --> m_scripts_plan_round
     m_scripts_agent_loop --> m_scripts_plan_runner
     m_scripts_agent_loop --> m_scripts_schedule
     m_scripts_agent_loop --> m_scripts_score_reviews
     m_scripts_check_trajectory --> m_scripts_check_docs
+    m_scripts_drive --> m_scripts_agent_common
+    m_scripts_drive --> m_scripts_integrate
+    m_scripts_drive --> m_scripts_schedule
     m_scripts_gen_open_items --> m_scripts_gen_trajectory
     m_scripts_gen_open_items --> m_scripts_trace
     m_scripts_gen_trajectory --> m_scripts_check_trajectory
@@ -205,7 +210,7 @@ Contracts (interfaces): IF-037, IF-065
 
 ### `scripts/agent_loop`
 _Headless session engine: one claimed worker assignment, a reviewer/critique_
-Imports (internal): `agent_common`, `agent_route`, `agent_session`, `plan_round`, `plan_runner`, `schedule`, `score_reviews`
+Imports (internal): `agent_common`, `agent_route`, `agent_session`, `drive`, `plan_round`, `plan_runner`, `schedule`, `score_reviews`
 Contracts (interfaces): IF-015, IF-068
 
 | Public item | Summary | Implements |
@@ -575,6 +580,15 @@ Contracts (interfaces): IF-050, IF-051
 | `render_cache(result, as_of, date)` | The full docs/gate file text: static header, the compared `# basis:` line, |  |
 | `parse_cache(text)` | `(gate_value, basis_line)` from a cached docs/gate: the first non-comment |  |
 | `main()` |  |  |
+
+### `scripts/drive`
+_drive.py — the serial claim->build->integrate driver (the scheduling front end)._
+Imports (internal): `agent_common`, `integrate`, `schedule`
+Contracts (interfaces): IF-015
+
+| Public item | Summary | Implements |
+|---|---|---|
+| `run(root, args, worker, tier)` | The drive loop. `worker` is the one injection seam (tests): a callable |  |
 
 ### `scripts/gen_arch_map`
 _Generate the module/function map for `architecture.md` from the source tree._

@@ -136,3 +136,4 @@ resource: "generated"
 | [LLR-140](LLR-140.md) | Local integrator (claim + queue + audit) |
 | [LLR-141](LLR-141.md) | Work-branch lane signal + freshness skip |
 | [LLR-142](LLR-142.md) | Trunk-step artifact regen (dependency order) |
+| [LLR-143](LLR-143.md) | Plain-launch drive loop (claim->build->integrate) |

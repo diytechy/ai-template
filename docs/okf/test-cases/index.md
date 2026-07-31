@@ -133,3 +133,4 @@ resource: "generated"
 | [TC-134](TC-134.md) | Run the check-harness lane suite: a claimed work branch skips the declared freshness step… |
 | [TC-135](TC-135.md) | Run the trunk-step regen suite: --regen skips absent artifact families with a notice and … |
 | [TC-136](TC-136.md) | Run the pending-surface pause suite: the block renders since/reason verbatim (no clock), … |
+| [TC-137](TC-137.md) | Run the drive suite: an unwired agent command refuses before any claim while an empty que… |

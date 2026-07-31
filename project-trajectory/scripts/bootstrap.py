@@ -70,6 +70,8 @@ What it creates in the destination:
     run.{cmd,sh,command}                       <- run.template.*  (root product launchers)
     agent-resume.{cmd,sh,command}              <- agent-resume.template.*  (root agent launchers)
     scripts/agent_loop.py                      (worker/reviewer/critique session engine; entry point)
+    scripts/drive.py                           (the serial claim->build->integrate driver a plain
+                                                agent-resume launch runs; WI-374)
     scripts/agent_session.py, agent_common.py, plan_runner.py
                                                (the WI-218 split: session launch / shared primitives / dual-plan runner)
     .githooks/pre-commit                       <- hooks/pre-commit  (opt-in process floor)
@@ -1339,6 +1341,11 @@ MAPPING = [
     # when --agents chose an agent); deletable like run.* — see the module
     # docstring and process-options.md "Unattended operation".
     ("scripts/agent_loop.py", "scripts/agent_loop.py"),
+    # The scheduling front end (WI-374): the serial claim->build->integrate
+    # driver a plain agent-resume launch runs — agent_loop.py imports it as a
+    # sibling when no role flag is given. Composes schedule.py / integrate.py /
+    # the worker role; adds ordering only, never authority.
+    ("scripts/drive.py", "scripts/drive.py"),
     # The WI-218 split of the coordinator engine: the headless session layer,
     # the shared primitives, and the dual-plan runner agent_loop.py imports as
     # siblings. (The parallel dispatcher retired at concurrency-restructure
