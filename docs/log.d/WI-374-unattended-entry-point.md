@@ -5,7 +5,8 @@ claim→build→integrate loop instead of exiting 2 with a map — the schedulin
 front end Phase 5's dispatcher deletion took with it is back, as ~280 lines of
 composition instead of 4,042 lines of machinery.
 
-**Deliverables.** New `scripts/drive.py` (269 lines, stdlib only): the drive
+**Deliverables.** New `scripts/drive.py` (397 lines by the size-ratchet's
+splitlines method, stdlib only): the drive
 loop — re-derive the ready frontier (`schedule.py`, IF-053) at the top of
 EVERY cycle, claim the next queued WI in build order (`integrate.py claim`,
 IF-080), run one worker session on the claimed branch's own worktree
@@ -16,7 +17,7 @@ coordinator lock;
 [IF-015 is amended to v3](../requirements/interfaces.csv) — the contract
 sentence "a plain launch refuses with the map" is exactly what changed.
 Packaging: bootstrap MAPPING row + docstring, kit README row,
-test_bootstrap file list. Ten tests in `tests/test_drive.py` (slow tier;
+test_bootstrap file list. Thirteen tests in `tests/test_drive.py` (slow tier;
 smoke membership unchanged), two of them end-to-end against the REAL
 composed-tree bar on a bootstrapped scaffold — green (claim→merge→drained
 banner, worker worktree GC'd) and red (bar RED stops the run with the claim
@@ -65,6 +66,31 @@ The complexity census moved for neither module (`agent_loop.py:main` stays
 27; `drive.py`'s functions all sit under the C901 threshold — the loop body
 was decomposed rather than stamped).
 
-**Bars:** `tests/test_drive.py` 10 passed; smoke + `check_docs --stale` green
-at each commit; full unfiltered suite green at close (totals in the review
-record). Byte budgets untouched (no budgeted file edited).
+**Round 1 → round 2 (the review pass).** REVIEW-A round 1: APPROVE
+findings=3, all MINOR record-accuracy (the line-count figure, the bars
+wording, the drained-banner undercounting residue merges) — all three fixed.
+A codex cross-review (owner-directed cross-provider leg, advisory) returned
+6 findings; 4 taken as code: (1) a **stranded claim** — active specs whose
+branch ref is gone, reachable when the claim's trunk commit lands but the
+branch cut fails — is now a named fail-closed refusal instead of an
+invisible state a run could report as "queue drained" (plus
+`check-ref-format` validation before any claim); (2) the config preflight
+is applied **lazily** — only when work actually needs a worker — so an
+inert scaffold with an empty queue drains to exit 0 per the spec's
+empty-frontier contract; (3) the clean-trunk refusal is hoisted to the top
+of every cycle so the parked-resume path meets it before a worker session
+is spent; (4) the plain launch's session dials (`--model`, the five maps,
+`--stall-limit`, `--wait-on-limit`/fallback, `--live-status`) now ride to
+the worker explicitly instead of being silently dropped. Not taken:
+duplicating agent_loop's full launchability/identity preflight ahead of the
+claim — the worker's own preflight is the authority, its refusal is loud,
+and the parked claim resumes on relaunch; duplicating that ladder in the
+driver is exactly the drift the census exists to catch (recorded here as
+the disposition).
+
+**Bars:** `tests/test_drive.py` 13 passed; the smoke tier green at each
+commit except the standing WI-357 work-branch conditional
+(`test_this_repo_is_not_a_work_branch`, red by design on any claimed-branch
+checkout), plus the commit bar's configured `check_docs` step green; full
+unfiltered suite at close: totals in the review record. Byte budgets
+untouched (no budgeted file edited).

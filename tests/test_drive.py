@@ -117,8 +117,17 @@ def drive_args(**kw):
         agent_cmd="stub-agent",
         session_timeout=0,
         no_session_echo=False,
+        live_status=False,
         max_iterations=10,
         stall_limit=3,
+        model="",
+        model_map="",
+        cmd_map="",
+        prompt_map="",
+        tier_map="",
+        prefer_map="",
+        wait_on_limit=0,
+        limit_retry_fallback=3600,
     )
     for k, v in kw.items():
         setattr(ns, k, v)
@@ -169,6 +178,51 @@ def test_drive_refuses_an_unwired_agent_command_before_claiming(
     assert "no agent command wired" in capsys.readouterr().err
     assert (root / "docs" / "work" / "queued" / "WI-401-widget.md").is_file()
     assert "wi-401-widget" not in _git(root, "branch", "--format=%(refname:short)")
+
+
+def test_drive_unwired_config_still_drains_an_empty_queue_to_zero(
+    tmp_path, capsys, monkeypatch
+):
+    # The config preflight is applied only when work needs a worker: an inert
+    # scaffold (empty AGENT_CMD, no enable-list) with an EMPTY queue is a
+    # successful drain, not a config error — the spec's empty-frontier
+    # contract wins (codex cross-review, round 1).
+    monkeypatch.delenv("AGENT_CMD", raising=False)
+    root = git_repo(tmp_path)
+
+    rc = drv.run(root, drive_args(agent_cmd=None), worker=None)
+    assert rc == 0
+    assert "queue drained" in capsys.readouterr().out
+
+
+def test_drive_refuses_a_stranded_claim_rather_than_draining(tmp_path, capsys):
+    # A half-completed claim — active/<branch>/ holds specs but the branch
+    # ref is gone — is invisible to both the frontier (status=active) and the
+    # parked-resume read (no ref). The run must fail closed naming it, never
+    # report the queue drained over work nobody can reach.
+    root = git_repo(tmp_path)
+    write_spec(root, "active/wi-401", "WI-401", specref="seed.txt")
+    _commit(root, "claim: WI-401 -> active/wi-401 (branch cut lost)", when=T_CODE)
+    worker = Recorder()
+
+    rc = drv.run(root, drive_args(), worker=worker)
+    assert rc == 2
+    err = capsys.readouterr().err
+    assert "NO branch ref" in err and "wi-401" in err
+    assert worker.calls == []
+
+
+def test_drive_refuses_a_dirty_trunk_before_resuming(tmp_path, capsys):
+    # The claim rung's clean-trunk refusal, hoisted to the cycle top: the
+    # parked-resume path must meet it too, BEFORE a worker session runs.
+    root = parked_repo(tmp_path)
+    (root / "scratch.txt").write_text("uncommitted\n", encoding="utf-8")
+    worker = Recorder()
+
+    rc = drv.run(root, drive_args(), worker=worker)
+    assert rc == 2
+    assert "working tree is dirty" in capsys.readouterr().err
+    assert worker.calls == []
 
 
 def test_drive_empty_frontier_drains_and_exits_zero(tmp_path, capsys):

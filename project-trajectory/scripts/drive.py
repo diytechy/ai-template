@@ -135,6 +135,32 @@ def _default_worker(root, branch, wi_ids, args):
         argv += ["--session-timeout", str(args.session_timeout)]
     if args.no_session_echo:
         argv += ["--no-session-echo"]
+    if args.live_status:
+        argv += ["--live-status"]
+    # The plain launch's session dials ride to the worker EXPLICITLY - env
+    # inheritance covers the launcher-set slots, but a flag given on the
+    # command line would otherwise be silently dropped (codex cross-review
+    # finding, WI-374 round 1). model/model-map arrive here already resolved
+    # (CLI > env > stack.ini), so forwarding them as flags preserves exactly
+    # the plain launch's resolution.
+    for flag, value in (
+        ("--model", args.model),
+        ("--model-map", args.model_map),
+        ("--cmd-map", args.cmd_map),
+        ("--prompt-map", args.prompt_map),
+        ("--tier-map", args.tier_map),
+        ("--prefer-map", args.prefer_map),
+        ("--stall-limit", str(args.stall_limit)),
+    ):
+        if value:
+            argv += [flag, value]
+    if args.wait_on_limit:
+        argv += [
+            "--wait-on-limit",
+            str(args.wait_on_limit),
+            "--limit-retry-fallback",
+            str(args.limit_retry_fallback),
+        ]
     proc = subprocess.run(argv, cwd=str(root), stdin=subprocess.DEVNULL)
     return proc.returncode
 
@@ -165,12 +191,38 @@ def _session_config_refusal(root, args):
     )
 
 
-def _resume_or_claim(root, cycle, tier, merged):
+def _stranded_claims(root):
+    """active/<branch>/ directories that still hold specs but whose branch ref
+    is GONE — a half-completed claim (the trunk commit landed, the branch cut
+    or a later deletion did not). Invisible to both the frontier (the WI is
+    `active`) and the parked-resume read (no ref), so without this check a
+    run would report the queue DRAINED over work nobody can reach (codex
+    cross-review finding, WI-374 round 1)."""
+    active = root / "docs" / "work" / "active"
+    if not active.is_dir():
+        return []
+    return [
+        p.name
+        for p in sorted(active.iterdir())
+        if p.is_dir()
+        and any(p.glob("WI-*.md"))
+        and ac.git(root, "rev-parse", "--verify", "--quiet", "refs/heads/" + p.name)[0]
+        != 0
+    ]
+
+
+def _resume_or_claim(root, cycle, tier, merged, config_refusal):
     """One cycle's assignment: `(branch, wi_ids, None)` to build, or
     `(None, None, exit_code)` when the run ends here — the drained queue
-    (EXIT_DONE), a claim refusal's code, or a registry/frontier mismatch."""
+    (EXIT_DONE), a claim refusal's code, a stranded claim, or a
+    registry/frontier mismatch. `config_refusal` (string or None) is applied
+    only when there is work that needs a worker — BEFORE a claim would park a
+    branch, but never blocking an empty queue from draining to success."""
     parked = _parked_branches(root)
     if parked:
+        if config_refusal:
+            _say(config_refusal, err=True)
+            return None, None, ac.EXIT_PREFLIGHT
         branch = parked[0]
         wi_ids = integrate._claimed_wi_ids(root, branch)
         _say(
@@ -179,27 +231,44 @@ def _resume_or_claim(root, cycle, tier, merged):
             )
         )
         return branch, wi_ids, None
+    stranded = _stranded_claims(root)
+    if stranded:
+        _say(
+            "claimed spec(s) with NO branch ref - refusing to treat this "
+            "queue as drainable: {}. Restore the branch, or move the specs "
+            "back to queued/ in a reviewed trunk commit, then relaunch.".format(
+                ", ".join(stranded)
+            ),
+            err=True,
+        )
+        return None, None, ac.EXIT_PREFLIGHT
     ready = [
         r for r in schedule.frontier(schedule._load(root)) if r["status"] == "queued"
     ]
     if not ready:
         # A finished branch may still be waiting (e.g. built by hand between
-        # runs) - drain before declaring the queue empty.
+        # runs) - drain before declaring the queue empty, and COUNT what that
+        # drain merges (REVIEW-A round 1: the banner undercounted residue).
+        residue = len(integrate.finished_branches(root))
         code = integrate.integrate(root, tier)
         if code != 0:
             return None, None, code
         _say(
             "queue drained - no ready work items; {} WI(s) integrated this run.".format(
-                merged
+                merged + residue
             )
         )
         return None, None, ac.EXIT_DONE
+    if config_refusal:
+        _say(config_refusal, err=True)
+        return None, None, ac.EXIT_PREFLIGHT
     wid = ready[0]["id"]
     branch = _branch_for(root, wid)
-    if branch is None:
+    if branch is None or ac.git(root, "check-ref-format", "--branch", branch)[0] != 0:
         _say(
-            "no single queued spec matches {} - the registry and the frontier "
-            "disagree; fix the spec folder, then relaunch".format(wid),
+            "no single queued spec matches {}, or its filename does not map "
+            "to a valid git branch name - fix the spec folder, then "
+            "relaunch".format(wid),
             err=True,
         )
         return None, None, ac.EXIT_PREFLIGHT
@@ -257,9 +326,13 @@ def run(root, args, worker=None, tier="all"):
     left to the OS's exit-time release — exactly the guard's intended span.
     """
     worker = worker or _default_worker
-    if worker is _default_worker and (refusal := _session_config_refusal(root, args)):
-        _say(refusal, err=True)
-        return ac.EXIT_PREFLIGHT
+    # Computed once, APPLIED lazily: _resume_or_claim refuses on it only when
+    # work actually needs a worker, so an empty queue still drains to exit 0
+    # on an unwired scaffold (the spec's empty-frontier contract; codex
+    # cross-review finding, round 1).
+    config_refusal = (
+        _session_config_refusal(root, args) if worker is _default_worker else None
+    )
     merged = 0
     stall = 0
     for cycle in range(1, max(1, args.max_iterations) + 1):
@@ -278,9 +351,23 @@ def run(root, args, worker=None, tier="all"):
                 err=True,
             )
             return ac.EXIT_PAUSED
+        # The claim rung's clean-trunk refusal, hoisted to the cycle top so
+        # the PARKED-resume path meets it too - otherwise a worker session
+        # runs (in its own worktree) only for the merge to refuse on dirt
+        # that was visible before it started (codex cross-review, round 1).
+        if ac.working_tree_dirty(root):
+            _say(
+                "the trunk working tree is dirty - claims, resumes and merges "
+                "all need a clean trunk; commit or stash it, then relaunch "
+                "({} WI(s) integrated before the stop).".format(merged),
+                err=True,
+            )
+            return ac.EXIT_PREFLIGHT
 
         head_before = ac.git(root, "rev-parse", "HEAD")[1].strip()
-        branch, wi_ids, code = _resume_or_claim(root, cycle, tier, merged)
+        branch, wi_ids, code = _resume_or_claim(
+            root, cycle, tier, merged, config_refusal
+        )
         if branch is None:
             return code
 
