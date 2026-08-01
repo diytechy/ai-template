@@ -164,15 +164,19 @@ at the wi-380 merge, 164,003 at wi-384, 164,003 at wi-386, so WI-380 and WI-386
 moved this file by **0 bytes and the whole +846 is WI-384's**. That is the
 silent growth the skill exists to catch.
 
-**Tests.** The full suite was driven **three times** across the row — twice
-before REVIEW-A round 1 and once after its corrections landed — reading
-`1 failed, 1744 passed, 12 skipped` every time (331.63 s / 344.97 s / 409.43 s;
-wall varies with sibling worktrees, the counts do not). The reviewer
+**Tests.** The full suite was driven **four times** across the row — twice before
+REVIEW-A round 1, once after its corrections, once after round 2's — reading
+`1 failed, 1744 passed, 12 skipped` every time (331.63 s / 344.97 s / 409.43 s /
+446.85 s; wall varies with sibling worktrees, the counts do not). The reviewer
 independently reproduced the same counts. `pytest -q -n auto -m smoke` →
-`1 failed, 560 passed, 4 skipped`, run five times with stable counts (wall
-12.5–24.2 s). The one red is the standing
-`test_check_lane.py::test_this_repo_is_not_a_work_branch` (this checkout *is* a
-work branch). `ruff check .` → `All checks passed!`; `ruff format --check .` →
+`1 failed, 560 passed, 4 skipped`, run six times with stable counts (wall
+12.5–33.0 s). The one red is
+`test_check_lane.py::test_this_repo_is_not_a_work_branch`, which asserts the
+checkout it runs in holds no `docs/work/active/<branch>/` claim — false by
+construction in a lane worktree, so it reds on every claimed branch and is not
+this row's. It is **not** a permanent standing red: it is fixed on trunk ahead
+of this branch (`5f292892`) and clears when the lane refreshes.
+`ruff check .` → `All checks passed!`; `ruff format --check .` →
 `146 files already formatted`; `check_trajectory.py --root . --strict` → `clean
 (390 work item(s), 366 done (94%), 16 cancelled, graph acyclic)`;
 `check_doc_refs.py --root . --strict` → `OK - no dangling path or sym:
