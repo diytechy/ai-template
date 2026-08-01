@@ -112,7 +112,14 @@ BASELINE = {
     # compare across three registries with owning-SR suppression (the
     # attestation unit sanctions same-commit amend+flip). New guard, reason in
     # the log; a WI-280 decomposition candidate.
-    ("check_trajectory.py", "staged_spine_findings"): 20,
+    # WI-380 (2026-08-01): RE-KEYED, not bumped. The scan moved to
+    # `staged_spine_amendments` (which returns the structured §A5.1 split) and
+    # `staged_spine_findings` became a thin formatter over it — under the limit,
+    # so its entry is DELETED. The §A5.1 classification loop that would have
+    # taken this to 23 was extracted as `_split_changed_cells` instead, holding
+    # the scan at its old 20: decomposition, which is the escape this ratchet
+    # prefers over a bump.
+    ("check_trajectory.py", "staged_spine_amendments"): 20,
     ("gen_arch_map.py", "build_dependency_diagram"): 14,
     ("gen_arch_map.py", "main"): 17,
     ("gen_cases.py", "all_pairs"): 13,
