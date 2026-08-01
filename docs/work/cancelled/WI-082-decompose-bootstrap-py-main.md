@@ -4,7 +4,6 @@ title = "Decompose bootstrap.py main()"
 workstream = "scripts"
 needs = ["WI-010"]
 safety_class = "ordinary"
-disposition = "retired"
 order = 81
 +++
 

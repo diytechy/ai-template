@@ -32,6 +32,7 @@ the converter rather than at a subprocess's exit code.
 """
 
 import csv
+import re
 
 import pytest
 from conftest import ROOT, load_script
@@ -206,10 +207,10 @@ def test_the_folder_home_round_trip_is_proven_against_a_materialized_registry(
     Home-independent by construction (it materializes its own folder), so the
     folder direction is not dead code waiting for the flip to discover it. The
     fixture deliberately carries the shapes that make folder -> CSV harder than
-    CSV -> folder: a spec in every status directory, a retirement (archive/ +
-    `disposition`), a multi-line Deliverable, the `~` soft prefix — and a
-    HAND-FILED spec with no `order` key, which only ever exists in this
-    direction.
+    CSV -> folder: a spec in every status directory — both TERMINALS included,
+    which since WI-384 is the whole of how they are told apart — a multi-line
+    Deliverable, the `~` soft prefix, and a HAND-FILED spec with no `order` key,
+    which only ever exists in this direction.
     """
     rows = [
         _row("WI-001", Title="root", Status="done", Deliverable="shipped\n\nit\n"),
@@ -220,7 +221,13 @@ def test_the_folder_home_round_trip_is_proven_against_a_materialized_registry(
             **{"Predecessors": "WI-001;~WI-004", "SR-Refs": "SR-001;SR-002"},
         ),
         _row("WI-003", Title="parked", Status="deferred", Priority="2"),
-        _row("WI-004", Title="won't build", Status="retired", Deliverable="superseded"),
+        _row(
+            "WI-004",
+            Title="won't build",
+            Status="cancelled",
+            Deliverable="superseded",
+        ),
+        _row("WI-005", Title="still thinking", Status="draft"),
     ]
     source = tmp_path / "in.csv"
     _write_csv(source, rows)
@@ -236,7 +243,7 @@ def test_the_folder_home_round_trip_is_proven_against_a_materialized_registry(
     )
 
     count, findings, _rebuilt = _folder_home_round_trip(work, tmp_path / "scratch")
-    assert count == 5, count
+    assert count == 6, count
     assert findings == [], findings
     # The premise the hand-filed spec exists for: it really does lack `order`,
     # so the comparison above tolerated a difference that is not a loss.
@@ -320,9 +327,12 @@ def test_the_real_registry_produces_one_spec_per_row(tmp_path, live_csv):
     assert rebuilt == expected
 
 
-def test_status_becomes_the_directory_and_retirement_stays_visible(tmp_path, live_csv):
-    """Location IS the state (§2.1); `retired` shares `archive/` with `done` and
-    is told apart by `disposition`, so retirement is never a deletion."""
+def test_status_becomes_the_directory_and_cancellation_stays_visible(
+    tmp_path, live_csv
+):
+    """Location IS the state (§2.1), and since WI-384 location is the WHOLE of
+    it: `cancelled/` is its own directory, so a cancellation is visible from the
+    path and no frontmatter key carries — or could contradict — the state."""
     rows = _registry_rows(live_csv)
     written = wi_convert.to_specs(live_csv, tmp_path / "work")
     by_id = {row["WI-ID"]: row for row in rows}
@@ -331,15 +341,26 @@ def test_status_becomes_the_directory_and_retirement_stays_visible(tmp_path, liv
         wi_id = "-".join(wi_id[:2])
         directory = relpath.split("/", 1)[0]
         assert directory == wi_convert.STATUS_DIRS[by_id[wi_id]["Status"]]
-    retired = [r["WI-ID"] for r in rows if r["Status"] == "retired"]
-    assert retired, "the registry has no retired rows — this guard has gone vacuous"
-    for wi_id in retired:
+    cancelled = [r["WI-ID"] for r in rows if r["Status"] == "cancelled"]
+    assert cancelled, "the registry has no cancelled rows — this guard is vacuous"
+    for wi_id in cancelled:
         path = next(
             p
-            for p in (tmp_path / "work" / "archive").iterdir()
+            for p in (tmp_path / "work" / "cancelled").iterdir()
             if p.name.startswith(wi_id)
         )
-        assert 'disposition = "retired"' in path.read_text(encoding="utf-8")
+        # The deleted attribute stays deleted: the folder is the statement.
+        # Matched as a KEY ASSIGNMENT, not as a substring: a retired concept is
+        # allowed to be discussed, and two live rows discuss this one — WI-061's
+        # title quotes the handoff ruling that retired `disposition`, and
+        # another quotes a stale "By disposition" census line. Both sit inside
+        # the frontmatter, in the `title` value, so neither a whole-file nor a
+        # whole-frontmatter substring read can tell prose from schema. (Found on
+        # WI-386's composed tree — the first DRAINED registry this test could
+        # run against at all, since `live_csv` skips while a claim is in flight.
+        # It is a false positive either way, never a real `disposition` key.)
+        head = path.read_text(encoding="utf-8").split("+++", 2)[1]
+        assert not re.search(r"(?m)^\s*disposition\s*=", head)
 
 
 def test_emitted_specs_are_lf_on_every_platform(tmp_path, live_csv):
@@ -368,7 +389,7 @@ def test_an_unknown_status_is_refused_by_name(tmp_path):
     message = str(exc.value)
     assert "WI-002" in message and "in-flight" in message, message
     # And the honest other half: the statuses it DOES know are not refused.
-    for status in ("done", "retired", "queued", "deferred"):
+    for status in ("draft", "queued", "deferred", "done", "cancelled"):
         wi_convert.status_dir(_row("WI-009", Status=status))
 
 

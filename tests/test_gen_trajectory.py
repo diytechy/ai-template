@@ -58,30 +58,54 @@ def test_generates_self_contained_dashboard(tmp_path):
     assert "stroke-dasharray" in text
 
 
-# WI-267: a `retired` (terminal WON'T-BUILD) WI gets its OWN dashboard bucket —
-# a stone fill byte-distinct from done's green, the ⊗ glyph, a legend entry, and
-# a separate count that is never folded into `done`.
-RETIRED_WIS = GOOD_WIS + "WI-005,Abandoned idea,scripts,,,retired,superseded\n"
+# WI-267: a `cancelled` (terminal WON'T-BUILD) WI gets its OWN dashboard bucket
+# — a stone fill byte-distinct from done's green, the ⊗ glyph, a legend entry,
+# and a separate count that is never folded into `done`. (Spelled `retired`
+# until WI-384.)
+CANCELLED_WIS = GOOD_WIS + "WI-005,Abandoned idea,scripts,,,cancelled,superseded\n"
 
 
-def test_retired_wi_renders_its_own_bucket(tmp_path):
+def test_cancelled_wi_renders_its_own_bucket(tmp_path):
     gt = load_script("gen_trajectory")
-    # the retired fill is byte-distinct from every other status fill (not a
+    # the cancelled fill is byte-distinct from every other status fill (not a
     # rename of done's green) — the render-legibility invariant.
-    assert gt.STATUS_FILL["retired"] == "#78716c"
+    assert gt.STATUS_FILL["cancelled"] == "#78716c"
     assert len(set(gt.STATUS_FILL.values())) == len(gt.STATUS_FILL)
-    make_repo(tmp_path, wis_body=RETIRED_WIS)
+    make_repo(tmp_path, wis_body=CANCELLED_WIS)
     assert gen(tmp_path).returncode == 0, "gen failed"
     text = html_of(tmp_path)
     # its own fill colour + the ⊗ glyph
     assert "#78716c" in text
     assert "⊗" in text
     # a legend entry naming the terminal state
-    assert "retired — won't build" in text
+    assert "cancelled — won't build" in text
     # counted SEPARATELY on the execution hero (never folded into done): 1 of 5
-    # done -> 20%, plus a distinct "1 retired" clause.
+    # done -> 20%, plus a distinct "1 cancelled" clause.
     assert "20%" in text
-    assert "1 retired" in text
+    assert "1 cancelled" in text
+
+
+def test_draft_renders_as_its_own_status_inside_the_not_started_bucket(tmp_path):
+    # WI-384: `draft` shares the "not started" swatch with queued/deferred/
+    # blocked — one colour per CONCEPT — but keeps its own glyph and its own
+    # status word, which is the WI-272 rule (a shared fill must never rewrite
+    # the status itself) applied to the new state.
+    gt = load_script("gen_trajectory")
+    assert gt.STATUS_BUCKET["draft"] == "queued"
+    assert gt.STATUS_GLYPH["draft"] not in (
+        gt.STATUS_GLYPH["queued"],
+        gt.STATUS_GLYPH["deferred"],
+        gt.STATUS_GLYPH["blocked"],
+    )
+    make_repo(
+        tmp_path,
+        wis_body=GOOD_WIS + "WI-005,Still thinking,scripts,,,draft,\n",
+    )
+    assert gen(tmp_path).returncode == 0, "gen failed"
+    text = html_of(tmp_path)
+    assert 'data-status="draft"' in text
+    assert '"status": "draft"' in text
+    assert gt.STATUS_GLYPH["draft"] in text
 
 
 def test_mobile_responsive_shell(tmp_path):

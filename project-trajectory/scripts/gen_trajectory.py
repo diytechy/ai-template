@@ -279,7 +279,7 @@ HTML_TEMPLATE = string.Template("""<!doctype html>
        block: #fff on #4f46e5 is 6.29:1 in both themes. Keep any successor
        palette change (WI-292) off this token unless it re-checks white-on-fill. */
     --hub:#4f46e5;
-    --done:#047857; --active:#b45309; --queued:#94a3b8; --retired:#78716c;
+    --done:#047857; --active:#b45309; --queued:#94a3b8; --cancelled:#78716c;
     /* ===== THE TYPE SCALE (U1 core, WI-309) =================================
        Every font-size in this document resolves to a step declared here —
        `test_u1_every_font_size_resolves_to_a_declared_scale_step` enforces it
@@ -503,7 +503,7 @@ HTML_TEMPLATE = string.Template("""<!doctype html>
         <div class="card">
           <div class="label">Execution</div>
           <div class="big">$wi_pct%</div>
-          <div class="sub">$wi_done of $wi_total work items done · $wi_active active$wi_retired_clause</div>
+          <div class="sub">$wi_done of $wi_total work items done · $wi_active active$wi_cancelled_clause</div>
           $wi_active_line
           <div class="meter exe"><span style="width:$wi_pct%"></span></div>
         </div>
@@ -564,8 +564,9 @@ HTML_TEMPLATE = string.Template("""<!doctype html>
         <span><i style="background:var(--done)"></i>✓ done</span>
         <span><i style="background:var(--active)"></i>● active — you are here</span>
         <span><i style="background:var(--queued)"></i>not started — ○ queued (ready),
-          ◌ deferred (parked by choice), ⊘ blocked (has an impediment)</span>
-        <span><i style="background:var(--retired)"></i>⊗ retired — won't build (terminal)</span>
+          ✎ draft (still being figured out), ◌ deferred (parked by choice),
+          ⊘ blocked (has an impediment)</span>
+        <span><i style="background:var(--cancelled)"></i>⊗ cancelled — won't build (terminal)</span>
       </div>
     </section>
 
@@ -737,12 +738,12 @@ def build_html(root, wis):
     total = len(wis)
     done = sum(1 for w in wis if w["status"] == "done")
     active = sum(1 for w in wis if w["status"] == "active")
-    # WI-267: `retired` (terminal WON'T-BUILD) rows get their OWN count, never
+    # WI-267: `cancelled` (terminal WON'T-BUILD) rows get their OWN count, never
     # folded into done. Surfaced on the execution hero only when present, so the
-    # common no-retired dashboard sub-line is unchanged. The execution % stays
-    # done/total — retired work was deliberately abandoned, not completed.
-    retired = sum(1 for w in wis if w["status"] == "retired")
-    wi_retired_clause = " · {} retired".format(retired) if retired else ""
+    # common no-cancellation dashboard sub-line is unchanged. The execution %
+    # stays done/total — cancelled work was deliberately abandoned, not completed.
+    cancelled = sum(1 for w in wis if w["status"] == "cancelled")
+    wi_cancelled_clause = " · {} cancelled".format(cancelled) if cancelled else ""
     # T1 (dashboard-usability): name the in-flight work on the landing hero so
     # "find the next work" costs zero tab switches — the When drill buries the
     # active leaf several descents deep. Empty (no markup) when nothing is active.
@@ -847,7 +848,7 @@ def build_html(root, wis):
         wi_done=done,
         wi_total=total,
         wi_active=active,
-        wi_retired_clause=wi_retired_clause,
+        wi_cancelled_clause=wi_cancelled_clause,
         wi_active_line=wi_active_line,
         next_work=_next_work_html(root),
         arch_svg=arch,

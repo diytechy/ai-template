@@ -25,6 +25,9 @@
 # exact guard, including every retired surface.
 
 docs/requirements/work-items.csv — retired at the Phase 2c authority flip (concurrency-restructure §2/§7): the work-item registry is the docs/work/ spec folder; prose naming the CSV before 2026-07-29 is history, and a migrating adopter converts theirs with scripts/wi_convert.py.
+docs/work/archive/ — retired at WI-384's state-model flip (concurrency-v2 §B2): the folder held BOTH terminal states and so needed a `disposition` attribute to tell them apart, and splitting it into docs/work/complete/ and docs/work/cancelled/ is what deleted that attribute, its validator and both raise paths. Prose naming archive/ before 2026-08-01 is history. Deliberately NOT marked LIFECYCLE: this path must never materialize again, so the honesty guard here is the same reconciliation signal the loaders enforce — a spec closed into archive/ by a branch cut before the flip is a named, loud error, not a silent skip.
+docs/archive/specs/complete/ — a destination WI-391 will CREATE, not a path missing today: WI-384 built the registry half of concurrency-v2 §B2 and split off the spec-of-record half, which mirrors the terminal folders here. Remove this line when WI-391 lands — the materialize-guard is the mechanism that forces it.
+docs/archive/specs/cancelled/ — the second half of the same WI-391 destination pair; see the line above, and remove both together when it lands.
 
 # --- Scaffold destinations a meta-repo has no use for -------------------------
 GEMINI.md — no Gemini agent in use; OpenCode/KIMI/GROK read AGENTS.md natively

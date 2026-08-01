@@ -36,16 +36,16 @@ the per-WI `SpecRef` is the forward bridge that lives while the WI is open and
 clears at close. Cross-reading `work-items.csv` and its SpecRefs mechanizes two
 rules:
   - **R-A** — a WI's `Deliverable` is non-empty **iff** its `Status` is
-    **terminal** (`done` or `retired`; WI-267). An open (queued/active/deferred)
+    **terminal** (`done` or `cancelled`; WI-267). An open (draft/queued/active/deferred)
     WI with a filled Deliverable, or a terminal WI with an empty one, is a hard
     **ERROR at every run** (no flag needed): a commit is the agent handoff point,
     so an incoherent WI state launches the next session wrong. (`done` records
-    what shipped; `retired` records why it never will.)
+    what shipped; `cancelled` records why it never will.)
   - **R-E** — every open WI carries a non-empty `SpecRef` resolving to an in-repo
     target (`path` or `path#anchor`; the path part must exist). A terminal WI is
     exempt (its SpecRef is cleared — R-F).
   - **R-F** (WI-251; WI-267) — the close side R-E leaves unstated: a **terminal**
-    (`done`/`retired`) WI's `SpecRef` is **empty**, and every live `docs/specs/`
+    (`done`/`cancelled`) WI's `SpecRef` is **empty**, and every live `docs/specs/`
     file (scaffold README/`-000` boilerplate excluded) is cited by at least one
     *open* WI — otherwise it belongs in `docs/archive/specs/` (the specs README
     lifecycle).
@@ -64,9 +64,14 @@ follow-up-on-a-done-SR ratchet, the **critique-loop ratchet** (WI-068) — a WI
 closing on a `Verification=Critique` SR while the latest `docs/reviews/*-CRITIQUE.md`
 verdict is CHANGES-REQUESTED, without the staged set touching the TC registry, the
 tests dir, or a `docs/rubrics/` file (harden the TC or add a rubric anchor) — and
-the **amend-without-flip** warn (WI-316): a staged diff changing content cells of
-a `Verified` spine row without setting the `Modified` re-attest marker
+the **amend-without-flip** warn (WI-316): a staged diff changing the **ratified**
+cells of a `Verified` spine row without setting the `Modified` re-attest marker
 (process.md §7), the write-time discipline commit-message prose never had.
+*Ratified*, not every cell — the §A5.1 cell split (owner ruling 2026-07-31;
+WI-380) rules traceability **traced, not ratified**, so a `Module`/`CodeSymbol`/
+`TestRefs`/`SN-Refs`/`Verifies` pointer following code that moved does **not**
+arm the marker. The traced half is not discarded: it is carried structurally by
+`staged_spine_amendments`, which returns both halves per amended row.
 
 **Opt-out and vacuous by default** — the posture of the always-on
 `docs/secrets-scan` floor. The check is on unless `docs/trajectory-check` reads
@@ -174,29 +179,40 @@ CMP_ID_RE = re.compile(r"^CMP-\d+$")
 # row matches this shape but is inert (skipped from the graph — see load_wis).
 WI_ID_RE = re.compile(r"^WI-\d+$")
 
-# The work-item lifecycle vocabulary (S1). `deferred` is a first-class,
-# queued-but-not-next state carrying a recorded reason; `blocked` is parked on a
-# named external dependency. `retired` (WI-267) is a TERMINAL won't-build row that
+# The work-item lifecycle vocabulary (S1). `draft` is thinking-in-progress — the
+# ABSENCE of a decision (WI-384); `deferred` is a first-class, queued-but-not-next
+# state carrying the decision's recorded reason; `blocked` is parked on a
+# named external dependency. `cancelled` (WI-267, spelled `retired` until WI-384)
+# is a TERMINAL won't-build row that
 # stays in the registry forever with its reason in the `Deliverable` column — a
 # deliberate dead-end, NOT an overload of `done` (a `done` WI shipped something; a
-# `retired` WI deliberately never will). Since Phase 5 status is the spec's
+# `cancelled` WI deliberately never will). Since Phase 5 status is the spec's
 # DIRECTORY (an unknown one is a loader refusal) and `blocked` is DERIVED
 # (queued + blockref) rather than a status; the literal stays in these sets so
 # in-memory callers keep their meaning, but no loader can produce it.
 # "Open" = anything still in flight (not one of the two TERMINAL states).
-OPEN_STATUSES = ("queued", "active", "deferred", "blocked")
+OPEN_STATUSES = ("draft", "queued", "active", "deferred", "blocked")
 # The terminal states: no further build/trace work is owed. Both require a filled
-# `Deliverable` (the shipped record for `done`; the retirement reason for
-# `retired`) and both must clear their `SpecRef` (R-A + R-F below). `retired` is
-# deliberately NOT in OPEN_STATUSES / BACKLOG_STALE_STATUSES / the ready frontier.
-TERMINAL_STATUSES = ("done", "retired")
-KNOWN_STATUSES = ("queued", "active", "done", "deferred", "blocked", "retired")
+# `Deliverable` (the shipped record for `done`; the cancellation reason for
+# `cancelled`) and both must clear their `SpecRef` (R-A + R-F below). `cancelled`
+# is deliberately NOT in OPEN_STATUSES / BACKLOG_STALE_STATUSES / the frontier.
+TERMINAL_STATUSES = ("done", "cancelled")
+KNOWN_STATUSES = (
+    "draft",
+    "queued",
+    "active",
+    "done",
+    "deferred",
+    "blocked",
+    "cancelled",
+)
 
 # Backlog-staleness (WI-205) applies to genuinely-in-flight WIs: the open set
-# minus `deferred` (a deferred WI re-enters via an owner un-defer, itself the
-# driven look, so it is EXEMPT), plus `blocked` (a WI parked on an external
+# minus `deferred` and `draft` (both re-enter via an owner look — an un-defer, or
+# the thinking finishing — which is itself the driven review, so both are
+# EXEMPT), plus `blocked` (a WI parked on an external
 # dependency is still live work whose cited requirements can drift under it).
-# `done`/`retired` are terminal and need no re-validation.
+# `done`/`cancelled` are terminal and need no re-validation.
 BACKLOG_STALE_STATUSES = ("queued", "active", "blocked")
 
 # The clause both backlog-staleness warns end with. The clock it must clear
@@ -338,14 +354,29 @@ SPEC_SCALARS = (
     ("PlanMode", "planmode"),
 )
 SPEC_LISTS = (("SR-Refs", "sr_refs"), ("Predecessors", "needs"))
-# Directory -> Status. `archive/` holds BOTH terminal states and the frontmatter
-# `disposition` key tells them apart; `active/<branch>/` sits one level deeper,
-# so the status is the FIRST path component, never the file's parent directory.
+# Directory -> Status. The directory is the WHOLE statement (WI-384): every
+# state owns a folder — including BOTH terminals, `complete/` for work that
+# shipped and `cancelled/` for work that never will — so nothing in the
+# frontmatter disambiguates a folder and nothing can disagree with one.
+# `draft/` is thinking-in-progress, and it is DECLARED rather than left as an
+# unscanned folder because an undeclared directory's specs are skipped below:
+# they never enter the registry, so the duplicate-id guard and the dashboard go
+# blind to an id a draft holds. (The id MINT is safe either way — it reads
+# FILENAMES, never this table — so declaring the folder makes the reservation
+# CHECKED rather than incidental; driven at WI-384's review.) The two terminal
+# WORDS differ for a reason:
+# `complete/` renamed a folder whose rows still read `done` (the status word
+# every consumer already speaks), while `cancelled` had no folder to rename —
+# only the `disposition = "retired"` spelling this row deleted — so the word
+# itself moved. `active/<branch>/` sits one level deeper, so the status is the
+# FIRST path component, never the file's parent directory.
 SPEC_STATUS_DIRS = {
-    "archive": "done",
+    "draft": "draft",
     "queued": "queued",
-    "deferred": "deferred",
     "active": "active",
+    "deferred": "deferred",
+    "cancelled": "cancelled",
+    "complete": "done",
 }
 # The inert EXAMPLE spec's filename prefix (the `-000` rule, applied to the
 # folder home): scaffolded documentation, never a registry entry that decides
@@ -391,14 +422,16 @@ def parse_spec_frontmatter(text, relpath):
     return data, "\n".join(lines[close + 1 :])
 
 
-def parse_spec_status(relpath, data):
-    """The Status a spec's LOCATION encodes, checked against its `disposition`.
+def parse_spec_status(relpath):
+    """The Status a spec's LOCATION encodes — the whole of it.
 
-    `archive/` holds both terminal states, so the two ways location and
-    frontmatter can disagree — an unknown disposition, and a retirement filed
-    outside `archive/` — are refusals, never silent coercions. A directory
-    nobody declared is a refusal too: dropping it into `queued` would silently
-    reclassify work, which is the catch-all shape this kit refuses on sight."""
+    Each state owns one directory, so there is no attribute to cross-check and
+    no way for location and frontmatter to disagree: WI-384 split `archive/`
+    into `complete/` + `cancelled/` and with it deleted the `disposition` key,
+    the cross-check, and both of its raise paths. One refusal survives, because
+    it is the one a folder-as-state model still needs: a directory nobody
+    declared. Dropping it into `queued` would silently reclassify work, which
+    is the catch-all shape this kit refuses on sight."""
     parts = relpath.split("/")
     status = SPEC_STATUS_DIRS.get(parts[0]) if len(parts) > 1 else None
     if status is None:
@@ -407,14 +440,7 @@ def parse_spec_status(relpath, data):
                 relpath, parts[0], ", ".join(sorted(SPEC_STATUS_DIRS))
             )
         )
-    disposition = data.get("disposition")
-    if disposition is None:
-        return status
-    if disposition != "retired":
-        raise ValueError("{}: unknown disposition {!r}".format(relpath, disposition))
-    if status != "done":
-        raise ValueError("{}: a retired spec belongs in archive/".format(relpath))
-    return "retired"
+    return status
 
 
 def parse_spec_id(relpath, data):
@@ -456,7 +482,7 @@ def parse_spec_row(text, relpath):
     data, body = parse_spec_frontmatter(text, relpath)
     row = dict.fromkeys(WI_COLUMNS, "")
     row["WI-ID"] = parse_spec_id(relpath, data)
-    row["Status"] = parse_spec_status(relpath, data)
+    row["Status"] = parse_spec_status(relpath)
     row["Deliverable"] = parse_spec_deliverable(relpath, body)
     for column, key in SPEC_SCALARS:
         if key in data:
@@ -1604,7 +1630,7 @@ def ssot_findings(wis, root):
         # queued+blockref — a queued row without one is simply queued. No row
         # can reach either rule.)
         # R-A: Deliverable non-empty IFF the WI is TERMINAL. A `done` WI's
-        # Deliverable records what shipped; a `retired` WI's records the reason it
+        # Deliverable records what shipped; a `cancelled` WI's records the reason it
         # will never be built (WI-267) — either way the terminal row carries its
         # permanent backward record, and an open row's Deliverable is filled only
         # at close.
@@ -1651,14 +1677,14 @@ def spec_lifecycle_findings(root, wis):
     promotion, the R-E warn tier — so a rotting spec surface cannot reach a
     green G2/G3 gate while a plain commit stays warn-first):
 
-      - a **terminal** WI (`done` or `retired`, WI-267) whose `SpecRef` is still
+      - a **terminal** WI (`done` or `cancelled`, WI-267) whose `SpecRef` is still
         set — the terminal transition clears it (the Deliverable + log carry the
-        backward record; a `retired` row's reason lives in its Deliverable);
+        backward record; a `cancelled` row's reason lives in its Deliverable);
       - a **live** `docs/specs/` file cited by no *open* WI — archive it to
         `docs/archive/specs/` (close date appended, WI ids noted) or point an
         open WI at it. A shared effort doc therefore archives only when its
         last open citer closes; `deferred`/`blocked` are open, so their specs
-        stay, but `retired` is terminal, so a retired WI keeps no live spec. The
+        stay, but `cancelled` is terminal, so a cancelled WI keeps no live spec. The
         scaffold boilerplate (README, any `-000` exemplar) is excluded by the
         `spec_interface_findings` idiom.
 
@@ -1699,7 +1725,7 @@ def spec_lifecycle_findings(root, wis):
 # commit trailer, but a trailer means "a commit CLAIMS this WI", not "the work is
 # right" (WI-336's code landed while its row correctly stayed `queued`, because a
 # review had refuted three of its claims — a deriver would have flipped it), and
-# `deferred`/`blocked`/`retired` are decisions, not outcomes. What was missing is
+# `draft`/`deferred`/`blocked`/`cancelled` are decisions, not outcomes. What was missing is
 # not derivation but RECONCILIATION — the shape every other declared-vs-computed
 # pair here already has (`derive_gate --check` recomputes and fails on drift;
 # every generator carries `--check`). So this compares the declared cell against
@@ -2013,18 +2039,18 @@ def status_forward_only_findings(root, wis):
 
 
 def dead_dependency_findings(wis):
-    """Surface a live WI that hard-depends on a `retired` predecessor (WI-267).
+    """Surface a live WI that hard-depends on a `cancelled` predecessor (WI-267).
 
-    A `retired` WI is a terminal WON'T-BUILD row — it will never integrate
+    A `cancelled` WI is a terminal WON'T-BUILD row — it will never integrate
     `done`, so an open successor whose hard edge points at it can NEVER become
     ready. The conservative decision (WI-267 design-decision 3) is to SURFACE
-    the dead edge rather than let a retired predecessor silently "satisfy" the
+    the dead edge rather than let a cancelled predecessor silently "satisfy" the
     dependency the way `done` does: the owner must re-home the successor's edge
-    or retire it too. The scheduler already refuses to schedule such a WI
+    or cancel it too. The scheduler already refuses to schedule such a WI
     (schedule.hard_preds_satisfied requires `done`, not merely terminal); this
     makes the same dead edge visible in the validator. WARN plain, ERROR under
     `--strict`. Soft (`~`) edges are advisory and never gate readiness, so they
-    are exempt. Vacuous until a registry actually retires a still-depended-on WI.
+    are exempt. Vacuous until a registry actually cancels a still-depended-on WI.
     """
     by_id = {w["id"]: w for w in wis}
     out = []
@@ -2032,13 +2058,13 @@ def dead_dependency_findings(wis):
         if w["status"] not in OPEN_STATUSES:
             continue
         dead = sorted(
-            p for p in w["preds"] if by_id.get(p, {}).get("status") == "retired"
+            p for p in w["preds"] if by_id.get(p, {}).get("status") == "cancelled"
         )
         if dead:
             out.append(
-                "{}: open WI hard-depends on retired WI(s) {} — a retired "
+                "{}: open WI hard-depends on cancelled WI(s) {} — a cancelled "
                 "predecessor is terminal and never satisfies a hard dependency; "
-                "re-home the edge or retire this WI too".format(w["id"], ";".join(dead))
+                "re-home the edge or cancel this WI too".format(w["id"], ";".join(dead))
             )
     return out
 
@@ -2292,13 +2318,13 @@ def _head_spec_status_map(root):
     already answers the whole question the CSV needed a `git show` and a parse
     for; one subprocess, no content, no size dependence on the backlog.
 
-    Two honest limits, both benign for the close ratchets that consume this:
-    `archive/` collapses `done` and `retired` (the disposition lives in the
-    frontmatter, which is a blob), so a HEAD-retired item reads `done` — both are
-    terminal, so `_newly_closed` cannot be fooled either way; and `srs` is empty,
-    because SR-Refs are content too. `_staged_wi_registry` fills that from the
-    WORKING TREE, where the same file is unchanged unless this very commit
-    touched it."""
+    One honest limit remains, benign for the close ratchets that consume this:
+    `srs` is empty, because SR-Refs are content too. `_staged_wi_registry` fills
+    that from the WORKING TREE, where the same file is unchanged unless this very
+    commit touched it. (The second limit is GONE with WI-384: `archive/` used to
+    collapse `done` and `cancelled` behind a frontmatter key no tree listing can
+    read, so a HEAD-cancelled item read `done`. Each terminal now has its own
+    directory, so paths alone answer shipped-or-cancelled exactly.)"""
     out = _git(root, ["ls-tree", "-r", "--name-only", "HEAD", "--", WI_WORK])
     if not out or not out.strip():
         return None
@@ -2358,7 +2384,7 @@ def _staged_spec_registry(root, staged_names, work_dir):
     "The registry changed" becomes "a spec under `docs/work/` is staged", read
     with `--name-status` so a RENAME is visible as one record: a status change in
     this registry IS a rename, and `R<score>  queued/WI-360-x.md
-    archive/WI-360-x.md` is exactly what a CLOSURE looks like. The closure SET is
+    complete/WI-360-x.md` is exactly what a CLOSURE looks like. The closure SET is
     still derived by `_newly_closed` from the two status maps rather than from
     the `R` records — one home for that fact, and it stays correct even when git
     reports a move as an unpaired delete + add (rename detection is a heuristic;
@@ -2460,31 +2486,143 @@ SPINE_CSVS = (
     ("docs/test/test-cases.csv", "TC-ID"),
 )
 
+# The §A5.1 cell split (OWNER RULING 2026-07-31, docs/concurrency-v2.md; WI-380).
+# Only what is RATIFIED arms the re-attest warn. Traceability is TRACED, not
+# ratified: re-pointing an LLR at the module the code moved to amends no
+# attested prose. WI-280 paid for the conflation — 19 `Module` cells followed
+# moved code -> 11 owning SRs to `Modified` -> the gate dropped G3->G2 -> a
+# ratify brief and four review rounds, for a change that altered no requirement.
+#
+# BOTH halves are declared per registry, and the RESIDUAL RULE FAILS SAFE: a
+# column in neither set is treated as RATIFIED. A column added to a registry
+# after this table was written can therefore only ever be too loud — a spurious
+# window someone sees and dismisses — never silently un-ratified, which would
+# be a MISSED window nobody sees. `tests/test_trajectory_staged.py` pins both
+# halves of that: the unknown-column behaviour, and that every column of the
+# live and shipped-template headers is classified here (so a new column cannot
+# ride in on the residual unnoticed).
+SPINE_TRACED_CELLS = {
+    "docs/requirements/system-requirements.csv": frozenset(
+        {"SN-Refs", "Phase", "Area", "Lifecycle"}
+    ),
+    "docs/requirements/low-level-requirements.csv": frozenset(
+        {"Module", "CodeSymbol", "TestRefs", "Component", "Phase"}
+    ),
+    "docs/test/test-cases.csv": frozenset(
+        {"Verifies", "Evidence", "Automated", "Phase"}
+    ),
+}
+# The ratified half. `SR-Refs` (LLR) and `SupersededBy` (SR) are NOT named by
+# §A5.1: they are listed here because the residual keeps them ratified — i.e.
+# today's behaviour, deliberately NOT narrowed past what the owner ruled. That
+# `SR-Refs` is the same shape of pointer as the ruled-traced `SN-Refs` /
+# `Verifies` is a real question, and it is WI-388's to put, not this row's.
+SPINE_RATIFIED_CELLS = {
+    "docs/requirements/system-requirements.csv": frozenset(
+        {
+            "Title",
+            "Requirement",
+            "Rationale",
+            "AcceptanceCriteria",
+            "Permutations",
+            "Priority",
+            "Verification",
+            "SupersededBy",
+        }
+    ),
+    "docs/requirements/low-level-requirements.csv": frozenset(
+        {"Title", "Detail", "Rationale", "SR-Refs"}
+    ),
+    "docs/test/test-cases.csv": frozenset(
+        {"Method", "Expected", "Parameters", "Level", "Tier"}
+    ),
+}
 
-def staged_spine_findings(root):
-    """The amend-without-flip warn (WI-316; warn-first, `--staged` only).
 
-    A staged diff that changes the CONTENT cells of a spine row whose Status
-    reads `Verified` in both HEAD and the stage has amended attested prose
-    without setting the `Modified` re-attest marker (process.md §7) — the
-    write-time discipline the old RE-ATTESTATION-PENDING commit-message prose
-    never had. One warning per amended row, naming the changed cells. Returns
-    [] when not applicable; any missing git context is a silent no-op, like
-    staged_findings. Rows are parsed with the csv module over the full staged /
-    HEAD file text (spine cells are long; never line-split). A NEW row (id not
-    in HEAD) is not an amendment; a row whose Status moved (to Modified, Draft,
-    Planned, anything) made a deliberate call this warn does not second-guess."""
-    staged = _git(root, ["diff", "--cached", "--name-only"])
-    if staged is None:
+def spine_cell_class(csv_path, column):
+    """`"traced"` for a column §A5.1 rules traceability, else `"ratified"`.
+
+    The residual is deliberate and fails SAFE: an unclassified column — one
+    added to a registry after the ruling — reads as ratified and keeps arming
+    the warn. See SPINE_TRACED_CELLS."""
+    return "traced" if column in SPINE_TRACED_CELLS.get(csv_path, ()) else "ratified"
+
+
+def _split_changed_cells(csv_path, id_col, head, row):
+    """One row's changed cells, split into the §A5.1 halves with their
+    before/after: `{"ratified": {cell: (before, after)}, "traced": {...}}`.
+    The id column and `Status` are not content (the id is the join key; Status
+    is the flip the caller is asking about), so neither is compared."""
+    changed = {"ratified": {}, "traced": {}}
+    for key in set(head) | set(row):
+        if key in (id_col, "Status"):
+            continue
+        before, after = (head.get(key) or ""), (row.get(key) or "")
+        if before != after:
+            changed[spine_cell_class(csv_path, key)][key] = (before, after)
+    return changed
+
+
+def _spine_revs(root, base, head):
+    """`(changed-paths, old-prefix, new-prefix)` for the two trees the spine scan
+    compares, or None when git cannot answer (the silent-no-op degrade).
+
+    The prefixes are `git show` arguments: `"HEAD:"`, `"abc123:"`, or `":"` for
+    the INDEX. `head=None` means the index — the `--staged` hook case, and the
+    default. Any other value is a commit-ish, which is what §A5.2's trigger
+    needs: adjudication is minted from *a trunk commit that changed a ratified
+    cell*, and a commit is not the index."""
+    if head is None:
+        names = _git(root, ["diff", "--cached", "--name-only", base])
+        new_prefix = ":"
+    else:
+        names = _git(root, ["diff", "--name-only", base, head])
+        new_prefix = head + ":"
+    if names is None:
+        return None
+    return set(names.splitlines()), base + ":", new_prefix
+
+
+def staged_spine_amendments(root, base="HEAD", head=None):
+    """The structured amendment set behind the amend-without-flip warn (WI-316,
+    narrowed by WI-380) — the seam adjudication (WI-388) consumes.
+
+    One record per Verified spine row amended between the two trees, each cell
+    sorted into the §A5.1 halves with its before/after:
+
+        {"registry": <csv path>, "id": <row id>,
+         "ratified": {cell: (before, after)}, "traced": {cell: (before, after)}}
+
+    WHICH TWO TREES is a parameter, and WI-388 needs it to be: `head=None` (the
+    default) compares the INDEX against `base`, which is the hook's `--staged`
+    question, but §A5.2 mints adjudication from a **trunk commit**, and a commit
+    is not the index — `staged_spine_amendments(root, "HEAD~1", "HEAD")` asks
+    the post-commit question the dispatcher actually has to ask. Both arms are
+    tested.
+
+    A record may carry a traced change with NO ratified change. Only the
+    `SN-Refs`/`Verifies` subset of those is the WI-388 case (§A5.1 routes a
+    re-point of what a requirement answers to, or what a test claims to cover,
+    to adjudication); a `Module`/`CodeSymbol`/`TestRefs`/`Component`/`Phase`
+    change is simply silent — traced, not pending, nothing owed. Rows are parsed
+    with the csv module over the full file text on each side (spine cells are
+    long; never line-split). Returns [] when not applicable; any missing git
+    context is a silent no-op, like staged_findings. A NEW row (id absent on the
+    base side) is not an amendment; a row whose Status moved (to Modified,
+    Draft, Planned, anything) made a deliberate call this does not
+    second-guess."""
+    revs = _spine_revs(root, base, head)
+    if revs is None:
         return []
-    staged_names = set(staged.splitlines())
+    staged_names, old_rev, new_rev = revs
     if not any(p in staged_names for p, _ in SPINE_CSVS):
         return []
 
     def _index_rows(csv_path, id_col):
-        """{id: row} of the INDEX version (`git show :path` — equals HEAD when
-        the file is not staged), or {} when unreadable."""
-        text = _git(root, ["show", ":" + csv_path])
+        """{id: row} of the NEW-side version (`git show <new_rev>path` — the
+        index by default, equal to HEAD when the file is not staged; the head
+        commit under a rev range), or {} when unreadable."""
+        text = _git(root, ["show", new_rev + csv_path])
         if text is None:
             return {}
         # F4: a committed BOM survives `git show`; strip it or the header glues
@@ -2498,7 +2636,8 @@ def staged_spine_findings(root):
 
     # The attestation unit is the SR: an amended child whose OWNING SR flips in
     # this same commit is the sanctioned amend+flip path, so only rows whose
-    # unit stays unflagged warn. Owner resolution uses the staged (index) state.
+    # unit stays unflagged warn. Owner resolution uses the NEW-side state — the
+    # index for the hook, the head commit for a rev range.
     idx_srs = _index_rows(*SPINE_CSVS[0])
     idx_llrs = _index_rows(*SPINE_CSVS[1])
 
@@ -2530,8 +2669,8 @@ def staged_spine_findings(root):
     for csv_path, id_col in SPINE_CSVS:
         if csv_path not in staged_names:
             continue
-        head_text = _git(root, ["show", "HEAD:" + csv_path])
-        staged_text = _git(root, ["show", ":" + csv_path])
+        head_text = _git(root, ["show", old_rev + csv_path])
+        staged_text = _git(root, ["show", new_rev + csv_path])
         if head_text is None or staged_text is None:
             continue  # first commit / newly added registry — nothing attested yet
         head_text = head_text.lstrip("﻿")  # F4, as above
@@ -2552,20 +2691,34 @@ def staged_spine_findings(root):
                 continue
             if any(_flagged_sr(s) for s in _owners(csv_path, row) if s):
                 continue  # the attestation unit flips in this commit — sanctioned
-            changed = sorted(
-                k
-                for k in set(head) | set(row)
-                if k != "Status" and (head.get(k) or "") != (row.get(k) or "")
-            )
-            if changed:
-                out.append(
-                    "{}: content cell(s) {} amended while Status stays Verified "
-                    "and no owning SR is flagged — a post-attestation amendment "
-                    "owes the Modified re-attest marker (process.md §7); flip "
-                    "the owning SR in this commit, or the sitting never sees "
-                    "the change".format(rid, ", ".join(changed))
-                )
+            changed = _split_changed_cells(csv_path, id_col, head, row)
+            if changed["ratified"] or changed["traced"]:
+                out.append(dict(changed, registry=csv_path, id=rid))
     return out
+
+
+def staged_spine_findings(root):
+    """The amend-without-flip warn (WI-316; warn-first, `--staged` only), scoped
+    by WI-380 to RATIFIED cells only.
+
+    A staged diff that changes the ratified cells of a spine row whose Status
+    reads `Verified` in both HEAD and the stage has amended attested prose
+    without setting the `Modified` re-attest marker (process.md §7) — the
+    write-time discipline the old RE-ATTESTATION-PENDING commit-message prose
+    never had. One warning per amended row, naming the changed cells. A row
+    whose only changes are TRACED (§A5.1) is silent here by ruling; it still
+    appears in `staged_spine_amendments`, which is where WI-388 picks it up.
+    Index-vs-HEAD by construction — this is the hook's question, so it takes no
+    rev arguments; the post-commit view is `staged_spine_amendments`'s."""
+    return [
+        "{}: ratified cell(s) {} amended while Status stays Verified "
+        "and no owning SR is flagged — a post-attestation amendment "
+        "owes the Modified re-attest marker (process.md §7); flip "
+        "the owning SR in this commit, or the sitting never sees "
+        "the change".format(a["id"], ", ".join(sorted(a["ratified"])))
+        for a in staged_spine_amendments(root)
+        if a["ratified"]
+    ]
 
 
 # The critique-loop ratchet (WI-068). A `Verification=Critique` SR and its latest
@@ -3024,7 +3177,7 @@ def main():
     # unknown-status lint are WARN unless
     # --strict promotes them.
     findings = ssot_findings(wis, root)
-    # Dead dependency (WI-267): an open WI hard-depends on a retired (terminal
+    # Dead dependency (WI-267): an open WI hard-depends on a cancelled (terminal
     # WON'T-BUILD) predecessor it can never see satisfied. WARN plain, ERROR under
     # --strict — same warn-tier as R-E (no new branch in main).
     findings.extend(("dead-dep", False, msg) for msg in dead_dependency_findings(wis))
@@ -3082,14 +3235,14 @@ def main():
         return 1
 
     done = sum(1 for w in wis if w["status"] == "done")
-    # WI-267: `retired` (terminal WON'T-BUILD) rows are counted SEPARATELY, never
-    # folded into `done`; surfaced only when present so the line stays unchanged
-    # for the common no-retired registry.
-    retired = sum(1 for w in wis if w["status"] == "retired")
-    retired_note = ", {} retired".format(retired) if retired else ""
+    # WI-267: `cancelled` (terminal WON'T-BUILD) rows are counted SEPARATELY,
+    # never folded into `done`; surfaced only when present so the line stays
+    # unchanged for the common no-cancellation registry.
+    cancelled = sum(1 for w in wis if w["status"] == "cancelled")
+    cancelled_note = ", {} cancelled".format(cancelled) if cancelled else ""
     print(
         "check_trajectory: clean ({} work item(s), {} done ({}%){}, graph "
-        "acyclic).".format(len(wis), done, round(100 * done / len(wis)), retired_note)
+        "acyclic).".format(len(wis), done, round(100 * done / len(wis)), cancelled_note)
     )
     return 0
 

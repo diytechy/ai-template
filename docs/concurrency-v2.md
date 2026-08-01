@@ -1,15 +1,15 @@
 # Constraints over checks — concurrency, spine authority, and work-item state
 
-> **STATUS: DESIGN DRAFT — nothing here is in [`log.md`](log.md)'s Decisions
-> yet.** Working surface opened 2026-07-31 after a session ran two work items
-> in parallel by hand and surfaced problems that were not really about
+> **STATUS: CLOSED AND RULED — the rulings are in [`log.md`](log.md)'s
+> Decisions.** Working surface opened 2026-07-31 after a session ran two work
+> items in parallel by hand and surfaced problems that were not really about
 > concurrency. §0/§A0 are background; **Part I** carries the owner's 2026-07-31
 > answers to questions A–F and the derivations taken from them — each labelled
 > **(OWNER)** or **(DERIVED)**. **All six questions are answered** and §A2's
-> one empirical precondition is **measured** (§A2.1). The rows in
-> [`docs/work/deferred/`](work/deferred/) are written to this plan but stay
-> **unclaimable** until the design is ruled into [`log.md`](log.md)'s
-> Decisions. Precedent for the shape:
+> one empirical precondition is **measured** (§A2.1). The rows this plan
+> produced are claimable in [`docs/work/queued/`](work/queued/) — they were
+> written here while the design was open and moved out of `deferred/` the
+> moment it was ruled. Precedent for the shape:
 > [`concurrency-restructure.md`](concurrency-restructure.md).
 
 ## 0. The governing principle (owner framing, 2026-07-31)
@@ -823,7 +823,7 @@ one only makes sense once *all* the rows have landed:
 2. **Connectivity and the interface registry** — the `drive.py` →
    `dispatch.py` + `lane.py` move. Note the registry is **already drifting
    before this program starts**: `check_trajectory` warns today that
-   `scripts/drive`, `traj_graph`, `traj_panels` and `traj_render` sit in the
+   `drive`, `traj_graph`, `traj_panels` and `traj_render` sit in the
    arch-map with no `IF-###` row, and that `IF-055`/`IF-080`/`IF-081` are
    registered with no script declaring them. Close the drift this program
    *causes*; **record, without silently absorbing,** the drift it inherits.
@@ -976,9 +976,10 @@ has no open question left, only its entry in [`log.md`](log.md)'s Decisions.
 
 ## Revised breakdown
 
-Rows live in [`docs/work/deferred/`](work/deferred/) and stay unclaimable until
-this doc's ⚠ is closed and the whole design is ruled into
-[`log.md`](log.md)'s Decisions.
+Rows live in [`docs/work/queued/`](work/queued/) and are claimable — the design
+is closed and the whole of it is ruled into [`log.md`](log.md)'s Decisions.
+They were drafted into `deferred/` while it was open, for want of the `draft/`
+folder WI-384 adds.
 
 **Ids are stable and never renumbered** (the `OI-N` convention, applied to WIs).
 Two drafted rows are subsumed rather than reshaped, so they retire with their

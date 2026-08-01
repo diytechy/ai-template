@@ -5,7 +5,6 @@ workstream = "dashboard"
 sr_refs = ["SR-052"]
 buildtier = "medium"
 safety_class = "ordinary"
-disposition = "retired"
 order = 295
 +++
 

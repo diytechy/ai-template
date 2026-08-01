@@ -84,8 +84,8 @@ Apply only the ones your diff actually contains.
      spec folder (`scripts/wi_convert.py --verify`, then `--to-specs`, then
      delete the CSV); status is the directory now. Map any status the
      converter refuses deliberately (e.g. a legacy `superseded` row becomes
-     `archive/` + `disposition = "retired"` with the superseding id named in
-     its Deliverable) — never bucket silently.
+     `cancelled/` with the superseding id named in its Deliverable) — never
+     bucket silently.
   2. **Drain the old scheme** — finish or hand-merge any live train
      worktrees/branches (`llm/train/*`, `llm/integrate/*`) BEFORE the flip;
      the new claim model does not read them. Check worktrees for orphaned

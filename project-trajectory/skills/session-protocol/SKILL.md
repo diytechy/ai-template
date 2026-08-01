@@ -79,7 +79,9 @@ cadence"). New behavior needs new tests
 
 ## 4. Record the work
 
-- Close the WI by MOVING its spec file to `docs/work/archive/` and filling
+- Close the WI by MOVING its spec file to the terminal directory its outcome
+  names — `docs/work/complete/` when it shipped, `docs/work/cancelled/` when it
+  never will — and filling
   its `## Deliverable` body (status is the directory, never a field), and
   record a session entry for `docs/log.md`: one-line summary, deliverables,
   **deviations from spec**, **byte deltas on budgeted files**, and the

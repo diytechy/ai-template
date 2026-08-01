@@ -91,3 +91,16 @@ which is WI-359's rule working as designed. And `refresh`
 refuses outright when the MAIN checkout holds the branch, because trunk is
 whatever that checkout has out - refreshing there merges the branch into itself
 and attests a composition that never happened.
+
+Merging trunk `979d8e09` (WI-380 + WI-384) took four conflicts, each resolved so
+both intents survive: this spec's home moved to `docs/work/complete/` under
+WI-384's six-state model (and the `close_branch` test helper with it); the two
+test conflicts kept WI-384's terminal-state vocabulary alongside this WI's
+station-protocol assertions; and the size ratchet was RE-MEASURED on the merged
+tree rather than picking a side - 1548 measured, which is exactly 1523 + WI-384's
++1 + this WI's +24, so the arithmetic checks the resolution. The merge also
+turned up a real Class C composition failure, in the place §A2 predicts one:
+WI-384's cancellation guard reds only on a DRAINED registry, which closing this
+WI is what produces, and its substring read convicted two specs that merely
+discuss the retired `disposition` concept in their titles. Fixed at the
+assertion (a key assignment, not a substring) and mutation-proven.

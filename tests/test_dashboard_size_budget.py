@@ -47,7 +47,17 @@ DASHBOARD = REPO_ROOT / "PROJECT_STATE.html"
 # Size at the commit that carries this stamp: 1,666,554 (129-REVIEW-A's remediation
 # added WI-350/WI-351). Both figures are point measurements labelled by commit,
 # per the signed-measurement rule — the ceiling is what is normative here.
-MAX_BYTES = 1_900_000
+# 1,900,000 -> 2,185,000, concurrency-v2 drain (2026-08-01). Trunk measured
+# 1,899,614 at 4ae2e838 — 386 bytes of headroom, 0.02%. The ceiling had again
+# become an exact freeze rather than the generous one this file documents, and
+# the stamp above diagnoses that exact failure at 0.6%: any merge at all trips
+# it. It was tripped by the first WI of the drain (WI-380 renders +1,270 bytes
+# — one archived spec with a Deliverable plus one intake edit), which is
+# ordinary per-row cost, not a rendering blow-up. Restamped to ~15% headroom,
+# matching the 14-21% every earlier stamp kept.
+# Measured AFTER the last edit in this commit, per this file's own 129-REVIEW-A
+# lesson: 1,899,614 at the commit carrying the stamp. Reason in the log.
+MAX_BYTES = 2_185_000
 
 
 def test_dashboard_stays_within_its_size_budget():

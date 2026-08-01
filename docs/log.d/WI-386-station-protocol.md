@@ -146,11 +146,58 @@ is the second one.
      `refresh` operation entirely. §A9.1 item 2 scopes the interface registry
      only to the connectivity drift, so this is scope WI-390 does not yet know
      it has.
-   - `LLR-141`'s Notes are incomplete rather than false (`--trunk-lane` is a
-     documented exception the Notes do not mention).
+   - **`TC-137`'s Description** — *"a red composed-tree bar … stop[s] the run by
+     name"* and *"the red path (candidate parked, claim intact)"*. Both clauses
+     are false: the bar is the refresh bar on the branch, and nothing is parked.
+     Found by the merge-time sweep for prose naming retired surfaces.
+   - **`TC-132`'s Description** — one false clause: *"fast-forwards the trunk to
+     a --no-ff merge commit"*. There is no ff-only step left; the merge IS the
+     advance.
+   - `LLR-141`'s and `TC-134`'s Descriptions are incomplete rather than false
+     (`--trunk-lane` is a documented exception neither mentions).
    Per the owner ruling (spine work waits, batches, runs alone) that is still
    the program-close row's to fix — but it inherits *false records*, not stale
    ones.
+
+**The trunk merge (`979d8e09`), and what composing found.** Four conflicts, each
+resolved so both intents survive rather than by picking a side.
+
+- **The spec's home** — `docs/work/archive/` → **`docs/work/complete/`**. Not a
+  rename to absorb: WI-384 made the folder the whole of the state, so a
+  completed row belongs in `complete/` and there is no field to set. My test
+  helper `close_branch` moved with it (it was writing the §2.3 step-3 close into
+  a directory that no longer exists), and its docstring now says *terminal
+  directory* rather than *archive/*.
+- **`tests/test_drive.py`** — WI-384's `complete/` path plus my
+  no-attestation assertion; both kept.
+- **`tests/test_integrate.py`** — WI-384's `complete/` path kept. Trunk's side
+  also re-asserted that `CANDIDATE_BRANCH` and the candidate worktree were torn
+  down; that constant and that worktree are what this WI deletes, so the
+  assertion has no subject left. It is recorded at the resolution rather than
+  quietly dropped.
+- **`tests/test_module_size_ratchet.py`** — the same disjoint-entry collision
+  WI-384 hit one merge earlier, and resolved the same way: **re-measured**, not
+  picked. WI-384 stamped `check.py` 1523 → 1524 (a docstring line) and this WI
+  1523 → 1547 (`--trunk-lane`), from the same base. The merged file measures
+  **1548** by the census's own metric, which is exactly `1523 + 1 + 24` — so the
+  arithmetic checks the resolution instead of agreeing with it. Both reason
+  chains are preserved verbatim, and the entry's own line attribution was
+  corrected there too (13 of 26 added, not "eleven of 24").
+
+**And the merge earned its keep — a real Class C composition failure, caught
+exactly where §A2 says it would be.** `tests/test_wi_convert.py`'s
+cancellation guard (WI-384's) reds on the composed tree: it asserted the string
+`"disposition"` appears nowhere in a cancelled spec, and two live rows discuss
+that retired concept **inside their `title` values** — WI-061 quotes the ruling
+that retired it, another quotes a stale *"By disposition"* census line. Neither
+branch could see it alone: `live_csv` skips while any claim is in flight, and
+this branch is the first to present a DRAINED registry, because closing WI-386
+is what drains it. Two greens, red together, attributable to the composition
+that caused it — which is the case the deleted composed-tree bar existed for and
+that §A2 said it would catch for free. Fixed at the assertion (match a KEY
+assignment, `^\s*disposition\s*=`, not a substring) and mutation-proven: adding
+a real `disposition = "retired"` key back to a cancelled spec still reds it. A
+false positive either way — no live spec carries the key.
 
 **Known terminal state, for WI-387.** A genuine trunk-merge conflict at refresh
 is a loud, self-describing handback: the branch is left at its work commit with
@@ -182,17 +229,20 @@ function invented this session. No behaviour moved: the preflight runs
 the dirty check → `_work_tip` → `reset --hard`, which is the round-1 sequence
 with exactly the one new guard inserted.
 
-**Bars.** Full unfiltered suite `pytest -q -n auto`: **1729 passed, 12 skipped,
-2 failed in 394s**; `ruff check .` and `ruff format --check .` clean (146
-files); `check_trajectory.py --root . --strict` clean (388 work items, graph
-acyclic, only the pre-existing IF-registry connectivity warns §A9.1 already
-records). Both failures are pre-existing on this branch and neither is this
-change: `test_check_lane.py::test_this_repo_is_not_a_work_branch` (the standing
-work-branch failure — the kit's own checkout IS a claimed branch in a claim
-worktree), and `test_check_docs.py::test_meta_repo_has_zero_unexplained_orphans`
-via a stale `work/deferred/` link in `concurrency-v2.md`.
+**Bars, on the composed tree (trunk `979d8e09` merged in).** Full unfiltered
+suite `pytest -q -n auto`: **1748 passed, 8 skipped, 1 failed in 319s**;
+`ruff check .` and `ruff format --check .` clean (146 files);
+`check_doc_refs.py --root . --strict` OK, no dangling path references — the
+question that check exists to answer was asked deliberately here, since this WI
+retires `_composed_tree_script`, the candidate worktree and the `candidate-red`
+branch; `check_docs.py` OK across 339 docs, 968 links, **0 broken**;
+`check_trajectory.py --root . --strict` clean (389 work items, 365 done, 16
+cancelled, graph acyclic — only the pre-existing IF-registry connectivity warns
+§A9.1 already records).
 
-**Finding, not fixed here.** `docs/concurrency-v2.md` links `work/deferred/`
-twice, and git tracks no such path — the trunk checkout only resolves it because
-an EMPTY untracked directory survives there on disk. Every fresh clone and every
-new worktree reds `check_docs` on it. Worth its own row.
+**The one remaining red is the standing work-branch failure**,
+`test_check_lane.py::test_this_repo_is_not_a_work_branch` (`assert 'wi-386' is
+None`): the kit's own checkout IS a claimed branch inside a claim worktree, and
+it clears when this branch stops being one. The `work/deferred/` orphans red
+this branch carried before the merge is **gone** — it was the behind-trunk
+condition, exactly as predicted, and trunk's own commits cleared it.

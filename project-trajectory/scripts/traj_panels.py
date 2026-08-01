@@ -938,7 +938,7 @@ def _next_work_html(root):
     shown = (ready + waiting)[:_NEXT_WORK_CAP]
 
     if not shown:
-        open_left = any(r["disposition"] not in ("done", "retired") for r in records)
+        open_left = any(r["disposition"] not in ("done", "cancelled") for r in records)
         msg = (
             "No ready work — see the When roadmap for open items."
             if open_left
@@ -954,8 +954,8 @@ def _next_work_html(root):
         wid = r["id"]
         title = _next_work_title(titles.get(wid, ""))  # already escaped markup
         if r["disposition"] == "waiting":
-            # The unmet hard predecessors that hold this WI (WI-267: a `retired`
-            # dead-end predecessor also shows — it will never be `done`).
+            # The unmet hard predecessors that hold this WI (WI-267: a
+            # `cancelled` dead-end predecessor also shows — never `done`).
             blockers = [p for p in by_id[wid]["preds"] if status.get(p) != "done"]
             after = (
                 ' <span class="nwafter">after {}</span>'.format(

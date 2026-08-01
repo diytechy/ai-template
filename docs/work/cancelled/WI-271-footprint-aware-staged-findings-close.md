@@ -6,7 +6,6 @@ needs = ["~WI-270"]
 buildtier = "medium"
 safety_class = "ordinary"
 order = 268
-disposition = "retired"
 +++
 
 ## Deliverable

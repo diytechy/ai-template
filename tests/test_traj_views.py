@@ -232,7 +232,8 @@ SIX_STATUS_WIS = (
     "WI-003,Release,docs,SR-002,WI-002,queued,\n"
     "WI-004,Someday,docs,SR-002,WI-002,deferred,parked on purpose\n"
     "WI-005,Waiting,docs,SR-002,WI-002,blocked,needs an upstream decision\n"
-    "WI-006,Dropped,docs,SR-002,WI-002,retired,won't build\n"
+    "WI-006,Dropped,docs,SR-002,WI-002,cancelled,won't build\n"
+    "WI-007,Sketch,docs,SR-002,WI-002,draft,\n"
 )
 
 
@@ -255,7 +256,15 @@ def test_wi272_deferred_and_blocked_are_never_rewritten_as_queued(tmp_path):
     # (`queued/` + a `blockref` key, no directory of its own), and the
     # dashboard's `_wi_status` derives it so the render keeps the distinction
     # this test exists to protect.
-    for status in ("done", "active", "queued", "deferred", "blocked", "retired"):
+    for status in (
+        "done",
+        "active",
+        "queued",
+        "draft",
+        "deferred",
+        "blocked",
+        "cancelled",
+    ):
         assert 'data-status="{}"'.format(status) in page, (
             "no node carries data-status={} — the DOM lost the true status".format(
                 status
@@ -280,7 +289,8 @@ def test_wi272_deferred_and_blocked_are_never_rewritten_as_queued(tmp_path):
 def test_wi272_status_is_carried_through_the_tiered_drill_too(tmp_path):
     # The flat DAG and the tiered drill are separate emitters; M-2 named both.
     # The drill's leaf label is glyph-prefixed per STATUS, so `deferred`,
-    # `blocked` (derived from queued+blockref since Phase 5) and `retired`
+    # `blocked` (derived from queued+blockref since Phase 5), `draft` and
+    # `cancelled`
     # differ from `queued` there without any colour at all.
     tiered_repo(tmp_path, TIER_UNION_WIS + SIX_STATUS_WIS.replace("WI-00", "WI-01"))
     assert gen(tmp_path).returncode == 0
@@ -301,7 +311,8 @@ def test_wi272_status_is_carried_through_the_tiered_drill_too(tmp_path):
     # not vacuous (both would be ○ if the emitter clamped to the bucket)
     assert any(lab[0] == gt.STATUS_GLYPH["deferred"] for lab in labels), labels
     assert any(lab[0] == gt.STATUS_GLYPH["blocked"] for lab in labels), labels
-    assert any(lab[0] == gt.STATUS_GLYPH["retired"] for lab in labels), labels
+    assert any(lab[0] == gt.STATUS_GLYPH["cancelled"] for lab in labels), labels
+    assert any(lab[0] == gt.STATUS_GLYPH["draft"] for lab in labels), labels
 
 
 def test_when_view_tiers_by_phase_above_threshold(tmp_path):

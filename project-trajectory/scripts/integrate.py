@@ -252,7 +252,7 @@ def _specref_refusal(root, meta, wi_id):
     resolving SpecRef reds --strict on every composed tree that sees it, and
     the debt is unpayable once the closing branch exists: open wants the ref
     and terminal wants it cleared, so a trunk-side repair rename-merges the
-    ref INTO the archived copy and trips R-F instead. The rung checks the
+    ref INTO the closed copy and trips R-F instead. The rung checks the
     PATH part only; anchor resolution stays check_trajectory's job.
     """
     ref = str(meta.get("specref", "") or "").strip()
@@ -395,8 +395,9 @@ def _branch_tree_paths(root, ref, prefix):
 def finished_branches(root):
     """Claimed branches whose tip moved every spec out of active/<branch>/.
 
-    The closing commit's move to archive/ IS the finished signal (§2.3 step 3)
-    - no state file, no ref, just the tree.
+    The closing commit's move to a TERMINAL directory (complete/ or
+    cancelled/) IS the finished signal (§2.3 step 3) - no state file, no ref,
+    just the tree.
     """
     active = root / ACTIVE
     if not active.is_dir():

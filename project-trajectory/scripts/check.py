@@ -1138,7 +1138,8 @@ def _work_branch(root="."):
     a claimed branch's work-item specs live in `docs/work/active/<branch>/`, moved
     there by the serial trunk commit that cut the branch. So the branch itself
     carries the evidence — no ref namespace, no reservation file — in its working
-    tree, or once the close archives the specs, in its own history.
+    tree, or once the close moves the specs to their terminal directory, in
+    its own history.
 
     Fail-CLOSED by construction: off git, on a detached HEAD, or with neither a
     matching `active/` directory nor a claim in history the answer is None and the

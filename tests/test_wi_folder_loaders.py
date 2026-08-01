@@ -279,9 +279,11 @@ def test_mutation_removing_the_csv_clears_the_stray_finding(tmp_path):
 @pytest.mark.parametrize(
     "where,expected",
     [
+        ("draft", "draft"),
         ("queued", "queued"),
         ("deferred", "deferred"),
-        ("archive", "done"),
+        ("complete", "done"),
+        ("cancelled", "cancelled"),
         ("active/llm-wi-001", "active"),
         ("active/feature/nested-branch", "active"),
     ],
@@ -295,14 +297,92 @@ def test_the_directory_is_the_status(tmp_path, where, expected):
         assert [r["Status"] for r in rows] == [expected], name
 
 
-def test_retirement_is_archive_plus_a_disposition(tmp_path):
-    write_spec(tmp_path, "archive", "WI-001", disposition="retired", deliverable="why")
-    write_spec(tmp_path, "archive", "WI-002", order=1, deliverable="shipped")
+def test_each_terminal_state_is_its_own_directory(tmp_path):
+    """WI-384: the two terminals are told apart by LOCATION and nothing else.
+
+    Before, both lived in `archive/` and a `disposition` key told them apart —
+    an attribute, a validator and two raise paths for one missing folder. The
+    split deleted all of it: the reader below asks the path and has nothing else
+    to consult, so folder and attribute can no longer disagree because there is
+    no attribute."""
+    write_spec(tmp_path, "cancelled", "WI-001", deliverable="why it never will")
+    write_spec(tmp_path, "complete", "WI-002", order=1, deliverable="shipped")
+    for name, mod in MODULES:
+        rows = mod.read_spec_rows(tmp_path / "docs" / "work")
+        assert [(r["WI-ID"], r["Status"]) for r in rows] == [
+            ("WI-001", "cancelled"),
+            ("WI-002", "done"),
+        ], name
+
+
+def test_a_leftover_disposition_key_is_inert_not_authoritative(tmp_path):
+    """The deleted attribute stays deleted. A spec still carrying the old
+    `disposition` key — a downstream repo mid-migration — reads by its FOLDER,
+    with the stale key ignored like any other unknown frontmatter. There is
+    deliberately no validator left to consult it, so it cannot contradict the
+    location."""
+    write_spec(
+        tmp_path, "complete", "WI-001", disposition="retired", deliverable="shipped"
+    )
+    for name, mod in MODULES:
+        rows = mod.read_spec_rows(tmp_path / "docs" / "work")
+        assert [r["Status"] for r in rows] == ["done"], name
+
+
+# --- `draft/`: a DECLARED directory, and why the declaration is the point -----
+
+
+def test_draft_is_never_ready_exactly_like_deferred(tmp_path):
+    """WI-384: `draft` and `deferred` are both never-ready and differ only in
+    what they SAY — `deferred` is a decision (not now), `draft` is the absence of
+    one (still being figured out). So each keeps its own disposition and reason
+    code rather than one being folded into the other."""
+    write_spec(tmp_path, "draft", "WI-001", safety_class="ordinary")
+    write_spec(tmp_path, "deferred", "WI-002", order=1, safety_class="ordinary")
+    write_spec(tmp_path, "queued", "WI-003", order=2, safety_class="ordinary")
     rows = sched.read_spec_rows(tmp_path / "docs" / "work")
-    assert [(r["WI-ID"], r["Status"]) for r in rows] == [
-        ("WI-001", "retired"),
-        ("WI-002", "done"),
-    ]
+    records = sched.evaluate(sched.load_wis(rows))
+    by_id = {r["id"]: r for r in records}
+    assert by_id["WI-001"]["disposition"] == "draft"
+    assert by_id["WI-001"]["reasons"] == ["excluded:draft"]
+    assert by_id["WI-002"]["disposition"] == "deferred"
+    assert by_id["WI-002"]["reasons"] == ["excluded:deferred"]
+    # ... and the frontier holds only the queued row, so neither slipped in.
+    assert [r["id"] for r in sched.frontier(sched.load_wis(rows))] == ["WI-003"]
+
+
+def test_a_drafted_id_is_visible_to_the_registry_and_so_reserved(tmp_path):
+    """The reason `draft/` is a declared status directory: id reservation —
+    corrected at WI-384's REVIEW-A round 1, because the ruled clause was half
+    false and this test is what proves which half.
+
+    `read_spec_rows` walks `<status>/WI-*.md` and skips anything under a
+    directory it does not know, so a draft parked in an improvised folder never
+    enters the registry: the duplicate-id GUARD and the dashboard go blind to
+    the id it holds. What the ruling ALSO claimed — that `max(id) + 1` would
+    reissue the id — is not true of the shipped mint, which reads filenames
+    through `wi_convert.spec_paths`, an unfiltered walk that never consults
+    `SPEC_STATUS_DIRS` (driven on two temp trees: declared and undeclared both
+    mint the same next id). So the mint is safe either way and the declaration
+    makes the reservation CHECKED rather than incidental. This asserts what is
+    actually true — the declared folder is seen by the readers and by the
+    duplicate-id guard, and the undeclared one is not."""
+    write_spec(tmp_path, "draft", "WI-042", title="held id")
+    work = tmp_path / "docs" / "work"
+    for name, mod in MODULES:
+        rows = mod.read_spec_rows(work)
+        assert [(r["WI-ID"], r["Status"]) for r in rows] == [("WI-042", "draft")], name
+    # The id is in the graph, so the duplicate-id guard can see a collision...
+    write_spec(tmp_path, "queued", "WI-042", slug="collides", order=1)
+    _wis, integrity = ctraj.load_wis(ctraj.read_registry_rows(csv_path(tmp_path)))
+    assert any("WI-042" in msg and "duplicate" in msg.lower() for msg in integrity), (
+        integrity
+    )
+    # ... whereas the SAME spec in an undeclared folder is invisible, which is
+    # the hazard the declaration closes (the counterfactual, not a hypothesis).
+    other = tmp_path / "elsewhere"
+    write_spec(other, "thinking", "WI-042", title="held id")
+    assert sched.read_spec_rows(other / "docs" / "work") == []
 
 
 def test_blocked_is_queued_plus_a_blockref_not_a_directory(tmp_path):
@@ -330,7 +410,7 @@ def test_rows_come_back_in_registry_order(tmp_path):
     """The explicit `order` key first, then numeric id — a hand-filed spec with
     no order sorts after every numbered one instead of landing arbitrarily."""
     write_spec(tmp_path, "queued", "WI-010", order=1)
-    write_spec(tmp_path, "archive", "WI-004", order=0, deliverable="shipped")
+    write_spec(tmp_path, "complete", "WI-004", order=0, deliverable="shipped")
     write_spec(tmp_path, "queued", "WI-002", order=None)
     write_spec(tmp_path, "queued", "WI-001", order=None)
     rows = sched.read_spec_rows(tmp_path / "docs" / "work")
@@ -346,7 +426,6 @@ MALFORMED = {
     "no-id": '+++\ntitle = "nameless"\n+++\n',
     "non-string-id": "+++\nid = 7\n+++\n",
     "id-filename-mismatch": '+++\nid = "WI-002"\n+++\n',
-    "unknown-disposition": '+++\nid = "WI-001"\ndisposition = "cancelled"\n+++\n',
     "body-is-not-deliverable": '+++\nid = "WI-001"\n+++\n\n## Notes\n\nfree text\n',
 }
 
@@ -388,11 +467,24 @@ def test_an_unknown_status_directory_is_refused_not_bucketed(tmp_path):
     assert sched.read_spec_rows(tmp_path / "docs" / "work") == []
 
 
-def test_a_retired_spec_outside_archive_is_refused(tmp_path):
-    write_spec(tmp_path, "queued", "WI-001", disposition="retired")
+def test_the_retired_archive_directory_is_now_refused_by_name(tmp_path):
+    """WI-384 deleted `archive/` from the vocabulary, and deleting a directory
+    from a DECLARED set is what makes its reappearance loud.
+
+    Not hypothetical: a branch cut before the split closes its WI into
+    `archive/`, and the composed tree then holds a directory nobody declares. It
+    must be a named refusal that stops the validator, never a silent skip that
+    drops the row out of the registry — the reconciliation is to move the file
+    into `complete/` or `cancelled/`."""
+    write_spec(tmp_path, "archive", "WI-001", deliverable="shipped")
     errors = []
     assert ctraj.read_registry_rows(csv_path(tmp_path), errors) == []
-    assert "belongs in archive/" in errors[0], errors
+    assert "'archive' is not a status directory" in errors[0], errors
+    assert "complete" in errors[0] and "cancelled" in errors[0], errors
+    # ... and the quiet readers drop it, which is exactly why the LOUD half
+    # above has to exist: on its own a skip is indistinguishable from an
+    # empty backlog.
+    assert sched.read_spec_rows(tmp_path / "docs" / "work") == []
 
 
 def test_mutation_a_valid_spec_produces_no_finding(tmp_path):
@@ -415,7 +507,7 @@ def test_a_multi_line_deliverable_is_the_format_working_not_a_broken_cell(tmp_pa
     the folder registry nothing does — the Deliverable is a BODY section, where a
     newline is the format working as designed."""
     body = "line one\n\nline two"
-    write_spec(tmp_path, "archive", "WI-001", deliverable=body)
+    write_spec(tmp_path, "complete", "WI-001", deliverable=body)
     rows = ctraj.read_registry_rows(csv_path(tmp_path))
     assert rows[0]["Deliverable"] == body
     # The same cell in the CSV home IS a hard error — so the scoping decision is
@@ -436,7 +528,7 @@ def _validator_repo(tmp_path):
     # here proves the cell-integrity rule really is scoped to the CSV home.
     write_spec(
         tmp_path,
-        "archive",
+        "complete",
         "WI-001",
         sr_refs=["SR-001"],
         deliverable="shipped it\n\nand recorded why",
@@ -521,17 +613,25 @@ def test_status_at_head_comes_from_ls_tree_paths(tmp_path):
     answers the whole question."""
     run_git = git_repo(tmp_path)
     write_spec(tmp_path, "queued", "WI-001")
-    write_spec(tmp_path, "archive", "WI-002", order=1, deliverable="shipped")
+    write_spec(tmp_path, "complete", "WI-002", order=1, deliverable="shipped")
     write_spec(tmp_path, "deferred", "WI-003", order=2)
     write_spec(tmp_path, "active/llm-x", "WI-004", order=3)
+    write_spec(tmp_path, "cancelled", "WI-005", order=4, deliverable="never")
+    write_spec(tmp_path, "draft", "WI-006", order=5)
     run_git("add", "-A")
     run_git("commit", "-m", "init")
     head = ctraj._head_spec_status_map(tmp_path)
+    # WI-005 is the case the tree listing could NOT answer before WI-384: the
+    # two terminals shared `archive/` and were told apart by a frontmatter key,
+    # which is a blob, so a HEAD-cancelled item read `done`. One directory per
+    # state makes paths alone exact.
     assert {wid: v["status"] for wid, v in head.items()} == {
         "WI-001": "queued",
         "WI-002": "done",
         "WI-003": "deferred",
         "WI-004": "active",
+        "WI-005": "cancelled",
+        "WI-006": "draft",
     }
     # Paths alone cannot carry SR-Refs; the map says so rather than guessing.
     assert all(v["srs"] == [] for v in head.values())
@@ -567,7 +667,7 @@ def test_mutation_a_content_only_head_map_would_be_a_different_answer(tmp_path):
         tmp_path,
         run_git,
         "docs/work/queued/WI-001-thing.md",
-        "docs/work/archive/WI-001-thing.md",
+        "docs/work/complete/WI-001-thing.md",
     )
     run_git("commit", "-am", "close")
     assert ctraj._head_spec_status_map(tmp_path)["WI-001"]["status"] == "done"
@@ -727,9 +827,11 @@ def test_backlog_staleness_reads_the_folder_registry_end_to_end(tmp_path):
 
 def _closing_repo(tmp_path):
     """A repo whose HEAD has WI-001 done and WI-002 queued, with WI-002's spec
-    STAGED as a move into archive/ — a closure, expressed as a rename."""
+    STAGED as a move into complete/ — a closure, expressed as a rename."""
     run_git = git_repo(tmp_path)
-    write_spec(tmp_path, "archive", "WI-001", sr_refs=["SR-001"], deliverable="shipped")
+    write_spec(
+        tmp_path, "complete", "WI-001", sr_refs=["SR-001"], deliverable="shipped"
+    )
     write_spec(tmp_path, "queued", "WI-002", order=1, sr_refs=["SR-001"])
     run_git("add", "-A")
     run_git("commit", "-m", "init")
@@ -737,12 +839,12 @@ def _closing_repo(tmp_path):
         tmp_path,
         run_git,
         "docs/work/queued/WI-002-thing.md",
-        "docs/work/archive/WI-002-thing.md",
+        "docs/work/complete/WI-002-thing.md",
     )
     return run_git
 
 
-def test_a_staged_rename_into_archive_reads_as_a_closure(tmp_path):
+def test_a_staged_rename_into_complete_reads_as_a_closure(tmp_path):
     _closing_repo(tmp_path)
     staged = ctraj._staged_wi_registry(tmp_path)
     assert staged is not None, "the staged move was not detected at all"
@@ -754,9 +856,9 @@ def test_a_staged_rename_into_archive_reads_as_a_closure(tmp_path):
 
 def test_the_staged_scan_is_a_no_op_when_no_spec_is_staged(tmp_path):
     """Same repo, nothing staged under `docs/work` — the scan must say nothing
-    rather than reporting every archived spec as newly closed."""
+    rather than reporting every closed spec as newly closed."""
     run_git = git_repo(tmp_path)
-    write_spec(tmp_path, "archive", "WI-001", deliverable="shipped")
+    write_spec(tmp_path, "complete", "WI-001", deliverable="shipped")
     run_git("add", "-A")
     run_git("commit", "-m", "init")
     (tmp_path / "unrelated.txt").write_text("x\n", encoding="utf-8", newline="\n")

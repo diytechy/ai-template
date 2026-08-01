@@ -40,7 +40,7 @@ flow end-to-end:
     hand-authored `docs/status.md` prose — the forward-only debt that would
     red R-D on the composed tree at close, hoisted to where a single trunk
     commit can still pay it.
-  * **finished-branch detection** — the closing commit's move to `archive/` IS
+  * **finished-branch detection** — the closing commit's move to `complete/` IS
     the finished signal: no state file, no ref, just the tree.
   * **the verdict gate** (RULING-7) — the dialed review artifact must be
     present, must parse as APPROVE, and must be FRESH: a verdict whose last
@@ -173,12 +173,12 @@ def spec_text(
     """One work-item spec in the format `scripts/wi_convert.py` emits (the
     tests/test_wi_folder_loaders.py `spec_text` shape).
 
-    The `## Deliverable` body is written by DEFAULT because the archived form is
+    The `## Deliverable` body is written by DEFAULT because the CLOSED form is
     the one that has to survive `check_trajectory` on the composed tree: R-A
-    errors on a `status=done` WI with an empty Deliverable, and `archive/` is
+    errors on a `status=done` WI with an empty Deliverable, and `complete/` is
     where every claimed spec ends up. `specref` is written only when given: the
     WI-370 claim rung wants it on a QUEUED spec, R-F wants it gone from an
-    archived one, so each fixture states which shape it is."""
+    closed one, so each fixture states which shape it is."""
     lines = [
         'id = "{}"'.format(wid),
         'title = "{}"'.format(title),
@@ -574,9 +574,9 @@ def test_a_lowercase_wi_id_is_normalized_before_any_rung_runs(tmp_path):
 # --- 2. finished-branch detection: the tree IS the signal ---------------------
 
 
-def test_finished_is_the_move_to_archive_not_a_state_file(tmp_path):
+def test_finished_is_the_move_to_complete_not_a_state_file(tmp_path):
     # §2.3 step 3. A claimed branch is finished exactly when its TIP holds no
-    # spec under active/<branch>/ — the closing commit's move to archive/ is the
+    # spec under active/<branch>/ — the closing commit's move to complete/ is the
     # whole signal, so there is no state file to go stale and no ref to leak.
     root = claim_repo(tmp_path)
     assert integ.claim(root, "WI-401", "wi-401") == 0
@@ -585,14 +585,14 @@ def test_finished_is_the_move_to_archive_not_a_state_file(tmp_path):
     assert integ.finished_branches(root) == []
 
     _git(root, "checkout", "-q", "wi-401")
-    (root / "docs" / "work" / "archive").mkdir(parents=True, exist_ok=True)
+    (root / "docs" / "work" / "complete").mkdir(parents=True, exist_ok=True)
     _git(
         root,
         "mv",
         "docs/work/active/wi-401/WI-401-widget.md",
-        "docs/work/archive/WI-401-widget.md",
+        "docs/work/complete/WI-401-widget.md",
     )
-    _commit(root, "close: WI-401 -> archive", when=T_VERDICT)
+    _commit(root, "close: WI-401 -> complete", when=T_VERDICT)
     _git(root, "checkout", "-q", "main")
 
     assert integ.finished_branches(root) == ["wi-401"]
@@ -606,14 +606,14 @@ def test_a_claim_dir_with_no_matching_branch_is_ignored(tmp_path):
     root = claim_repo(tmp_path)
     assert integ.claim(root, "WI-401", "wi-401") == 0
     _git(root, "checkout", "-q", "wi-401")
-    (root / "docs" / "work" / "archive").mkdir(parents=True, exist_ok=True)
+    (root / "docs" / "work" / "complete").mkdir(parents=True, exist_ok=True)
     _git(
         root,
         "mv",
         "docs/work/active/wi-401/WI-401-widget.md",
-        "docs/work/archive/WI-401-widget.md",
+        "docs/work/complete/WI-401-widget.md",
     )
-    _commit(root, "close: WI-401 -> archive", when=T_VERDICT)
+    _commit(root, "close: WI-401 -> complete", when=T_VERDICT)
     _git(root, "checkout", "-q", "main")
 
     claim_dir(root, "ghost")
@@ -1029,12 +1029,16 @@ def station_repo(tmp_path, check_src=STUB_CHECK_GREEN):
 
 def close_branch(root, branch, wi="WI-401", slug="widget", extra=None):
     """Build and CLOSE `branch` in its own lane worktree: one product commit and
-    the §2.3 step-3 move to archive/. Leaves the worktree registered, which is
-    where the refresh will run — the lane's own tree, by design."""
+    the §2.3 step-3 move to its TERMINAL directory. Leaves the worktree
+    registered, which is where the refresh will run — the lane's own tree, by
+    design. (WI-384 split `archive/` into `complete/` + `cancelled/`; the
+    finished signal is unchanged — the tree no longer holds a spec under
+    `active/<branch>/` — but the destination has to be a real state folder or
+    the loaders refuse it.)"""
     wt = root.parent / (root.name + integ.LANE_WORKTREE_SUFFIX) / branch
     _git(root, "worktree", "add", "-q", str(wt), branch)
     (wt / "{}.txt".format(branch)).write_text("1\n", encoding="utf-8", newline="\n")
-    dst = wt / "docs" / "work" / "archive" / "{}-{}.md".format(wi, slug)
+    dst = wt / "docs" / "work" / "complete" / "{}-{}.md".format(wi, slug)
     dst.parent.mkdir(parents=True, exist_ok=True)
     src = wt / "docs" / "work" / "active" / branch / "{}-{}.md".format(wi, slug)
     dst.write_text(
@@ -1675,7 +1679,7 @@ def scaffolded_closed_branch(tmp_path):
         fh.write("out/\n")
     # A queued spec owes a resolving SpecRef (the WI-370 claim rung); the
     # scaffold's own docs/log.md serves. The closing move below CLEARS it,
-    # because the archived form is what check_trajectory --strict sees on the
+    # because the closed form is what check_trajectory --strict sees on the
     # composed tree and R-F wants a terminal SpecRef empty.
     write_spec(repo, "queued", "WI-401", specref="docs/log.md")
 
@@ -1709,16 +1713,16 @@ def scaffolded_closed_branch(tmp_path):
     (repo / "src" / "demo.py").write_text(E2E_DEMO_SRC, encoding="utf-8", newline="\n")
     _commit(repo, "feat: subtract, verifying SR-001", when=T_CODE)
     # The closing move edits the spec the way a real close does: the file
-    # lands in archive/ with its SpecRef cleared (R-F), not byte-moved.
+    # lands in complete/ with its SpecRef cleared (R-F), not byte-moved.
     src = repo / "docs" / "work" / "active" / "wi-401" / "WI-401-widget.md"
-    dst = repo / "docs" / "work" / "archive" / "WI-401-widget.md"
+    dst = repo / "docs" / "work" / "complete" / "WI-401-widget.md"
     dst.write_text(
         src.read_text(encoding="utf-8").replace('specref = "docs/log.md"\n', ""),
         encoding="utf-8",
         newline="\n",
     )
     _git(repo, "rm", "-q", "docs/work/active/wi-401/WI-401-widget.md")
-    _commit(repo, "close: WI-401 -> archive", when=T_VERDICT)
+    _commit(repo, "close: WI-401 -> complete", when=T_VERDICT)
     _git(repo, "checkout", "-q", "master")
     return repo, claim_sha
 
@@ -1765,14 +1769,17 @@ def test_claim_build_and_integrate_end_to_end(tmp_path):
     )
 
     # The claim is released: the branch is gone and active/<branch>/ is empty in
-    # the trunk's tree, with the spec archived by the branch's own closing move.
+    # the trunk's tree, with the spec closed by the branch's own closing move.
     assert "wi-401" not in _branches(repo)
     tracked = _git(repo, "ls-tree", "-r", "--name-only", "HEAD").split()
     assert not [p for p in tracked if p.startswith("docs/work/active/wi-401/")], tracked
-    assert "docs/work/archive/WI-401-widget.md" in tracked
+    assert "docs/work/complete/WI-401-widget.md" in tracked
     # No integrator-owned worktree exists to tear down any more: the trunk is
     # the only registration left, and the lane the refresh used was GC'd by the
-    # §5.6 unload rather than by a teardown of its own.
+    # §5.6 unload rather than by a teardown of its own. (Trunk's side of this
+    # merge asserted `CANDIDATE_BRANCH` was cleaned up; that constant and the
+    # worktree it named are what this WI deleted, so the assertion is not
+    # dropped to settle a conflict - it has no subject left.)
     assert not (tmp_path / "repo-integrate").exists()
     assert _worktree_count(repo) == 1
     assert _git(repo, "status", "--porcelain").strip() == ""
@@ -1804,14 +1811,14 @@ def test_integrate_refuses_and_holds_the_trunk_when_the_bar_is_undeclared(tmp_pa
     trunk_before = _rev(root, "HEAD")
 
     _git(root, "checkout", "-q", "wi-401")
-    (root / "docs" / "work" / "archive").mkdir(parents=True, exist_ok=True)
+    (root / "docs" / "work" / "complete").mkdir(parents=True, exist_ok=True)
     _git(
         root,
         "mv",
         "docs/work/active/wi-401/WI-401-widget.md",
-        "docs/work/archive/WI-401-widget.md",
+        "docs/work/complete/WI-401-widget.md",
     )
-    _commit(root, "close: WI-401 -> archive", when=T_LATER)
+    _commit(root, "close: WI-401 -> complete", when=T_LATER)
     _git(root, "checkout", "-q", "main")
 
     proc = run_py([SCRIPTS / "integrate.py", "integrate"], cwd=root)
