@@ -373,10 +373,27 @@ def test_cache_key_is_the_root_not_the_process(check, tmp_path):
     assert check._work_branch(trunk) is None
 
 
-def test_this_repo_is_not_a_work_branch(check):
-    # The kit's own checkout: whatever branch it sits on, it has no
+def test_the_primary_checkout_is_not_a_work_branch(check):
+    # The kit's PRIMARY checkout — the trunk lane — has no
     # docs/work/active/<branch>/ claim, so its own harness runs the full bar.
     # This is the guard that would catch a detector so loose it matched the
     # trunk — the failure mode that turns every freshness gate off everywhere.
-    root = os.fspath(SCRIPTS.parent.parent)
-    assert check._work_branch(root) is None
+    #
+    # The subject is the primary checkout, not "wherever this suite happens to
+    # run". Before the station protocol (WI-386) those were the same thing; a
+    # lane worktree now runs this suite as a GATE during `integrate.py refresh`,
+    # and a lane by construction HAS a claim — so asserting about the current
+    # root made the guard false exactly where the protocol needs it green, and
+    # the intent (the detector must not match trunk) is unchanged by naming the
+    # trunk explicitly. The constructed both-ways proof is the test above; this
+    # one is the live-repo canary over the real registry.
+    root = SCRIPTS.parent.parent
+    proc = subprocess.run(
+        ["git", "rev-parse", "--git-common-dir"],
+        cwd=os.fspath(root),
+        capture_output=True,
+        text=True,
+    )
+    assert proc.returncode == 0, proc.stderr
+    common = (root / proc.stdout.strip()).resolve()
+    assert check._work_branch(os.fspath(common.parent)) is None
