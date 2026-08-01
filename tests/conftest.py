@@ -78,6 +78,11 @@ SLOW_MODULES = frozenset(
         "test_dual_plan_round",  # the dual-plan round end-to-end (WI-199)
         "test_integrate",  # local integrator: real git repos + a real check.py bar
         "test_drive",  # the drive loop: real git repos + the real bar (WI-374)
+        # The two lane closes: real claims (so the real trunk_step --regen
+        # subprocess), real lane worktrees, real reverts — the same heavy class
+        # as its two siblings above, filed with them rather than left to the
+        # opt-out default where it would spend a fifth of the smoke budget.
+        "test_handback",  # handback + quarantine on real git repos (WI-387)
         # WI-281: subprocess/scaffold-heavy modules moved to slow to hold the
         # <= 60 s commit-bar budget. Each is dominated by run_py subprocesses
         # (running gen_trajectory / trace / check* / agent_loop) or the scaffold

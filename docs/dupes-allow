@@ -658,8 +658,16 @@ b8b532ba9de4  project-trajectory/scripts/agent_loop.py == project-trajectory/scr
 # `_NEVER_READY = ("deferred", "draft")` alone reproduces a986f553a391 exactly.
 # The edit is INSIDE the matched block; an earlier note here blamed the module
 # docstring, which the isolation refutes.
-221f967454e5  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/schedule.py
-e781cf6ec0e8  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/check_trajectory.py
+# WI-387 re-fingerprinted the two agent_common pairs again (221f967454e5 ->
+# a17abce26cb8, e781cf6ec0e8 -> 7a1470c3f0c1) for the same structural reason:
+# the `## Handback` section joined the spec BODY GRAMMAR, so `SPEC_HANDBACK`
+# and the four-line partition in `parse_spec_deliverable` land INSIDE the
+# matched block in all three copies at once. The class did not grow — the same
+# three files, the same one block, ten lines longer — and
+# check_trajectory == schedule again kept its fp (1dbf7e455ac3), which is the
+# tell that the change is inside the shared region rather than a new copy.
+a17abce26cb8  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/schedule.py
+7a1470c3f0c1  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/check_trajectory.py
 1dbf7e455ac3  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/schedule.py
 4d36b43d0895  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/wi_convert.py
 

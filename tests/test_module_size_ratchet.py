@@ -628,7 +628,10 @@ BASELINE = {
     # the arithmetic is a check on the resolution rather than a coincidence.
     # Both reason chains above are preserved verbatim; neither WI's record
     # was dropped to make the number fit. Re-stamp down with WI-280.
-    "check_trajectory.py": 3251,
+    # +10 (3251 -> 3261), WI-387: the `## Handback` section joins the spec body
+    # grammar in this F5 copy — identical text to the other two by construction
+    # (tests/test_wi_loader_sync.py). Reviewed bump, log 2026-08-01.
+    "check_trajectory.py": 3261,
     # NEW ENTRY, +25 (1498 -> 1523), WI-357: the two-stage work-branch claim
     # signal — the on-disk fast path plus the branch-history probe that
     # survives the §2.3 close commit (git log -1 over the claim path), with
@@ -757,7 +760,14 @@ BASELINE = {
     # +2 (2241 -> 2243), WI-384 REVIEW-A round 1: the same corrected rationale
     # in the GITKEEP_DIRS comment. Two comment lines, zero code tokens.
     # Reviewed bump, log 2026-08-01.
-    "bootstrap.py": 2243,
+    # +7 (2243 -> 2250), WI-387: the scaffold registration of the new sibling
+    # handback.py — one MAPPING row, its four-line reason, and two docstring
+    # lines in the kit-contents listing. Required registration, not monolith
+    # growth: the same shape as the trunk_step/integrate/drive rows above (and
+    # the omission this repo learned to fear — a scaffold-surface change that
+    # ships without its MAPPING row breaks every fresh scaffold while the kit's
+    # own tree stays green). Reviewed bump, log 2026-08-01.
+    "bootstrap.py": 2250,
     # NEW ENTRY, +228 (1423 -> 1651), Phase 2b of the concurrency restructure
     # (docs/concurrency-restructure.md §7): the spec-folder work-item reader,
     # which crosses this module over THRESHOLD for the first time. It is one
@@ -821,7 +831,29 @@ BASELINE = {
     # rationale in this copy of the F5 block — identical text to the other two
     # by construction (tests/test_wi_loader_sync.py). Three comment lines, zero
     # code tokens. Reviewed bump, log 2026-08-01.
-    "agent_common.py": 1731,
+    # +10 (1731 -> 1741), WI-387: the `## Handback` section joins the spec body
+    # grammar (`SPEC_HANDBACK` + the four-line partition in
+    # `parse_spec_deliverable`) so a returned WI can say in trunk what remains.
+    # Identical text to the other two F5 copies by construction
+    # (tests/test_wi_loader_sync.py). Reviewed bump, log 2026-08-01. Re-stamp
+    # down with WI-280.
+    "agent_common.py": 1741,
+    # NEW ENTRY, WI-387 — integrate.py crossed THRESHOLD (1418 -> 1588) adding
+    # the third terminal outcome. The extraction the ratchet asks for was TAKEN
+    # FIRST, not argued away: `hand_back` and `quarantine`, the largest unit and
+    # the only genuinely separable one, ship as the new sibling handback.py (261
+    # lines, under THRESHOLD, its own MAPPING/README/test-list rows) — exactly
+    # the WI-374 precedent that put the drive loop in drive.py rather than into
+    # agent_loop.py. What remains is irreducibly this module's own: the CLAIM
+    # (inverted to commit-tree -> branch -> trunk, plus `_abandoned_claim`, the
+    # shape recogniser that lets a crashed claim be re-cut instead of hand-
+    # repaired — this is what DELETED `drive._stranded_claims`), the outcome
+    # READ the merge slot gates on (`OUTCOME_DIRS` + `branch_outcomes`), and
+    # `_verdict_gate` re-keyed off the outcome. Splitting any of those out would
+    # put half of one decision in another file. Reviewed bump, reason in
+    # docs/log.md 2026-08-01; re-stamp DOWN with WI-390's deletions (the §A9.1
+    # discipline) or with WI-280.
+    "integrate.py": 1588,
 }
 
 

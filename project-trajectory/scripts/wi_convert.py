@@ -158,6 +158,12 @@ FENCE = "+++"
 # decide which home is authoritative (see `folder_is_authoritative`).
 EXAMPLE_PREFIX = "WI-000-"
 DELIVERABLE_PREFIX = "\n## Deliverable\n\n"
+# The body's OTHER section (WI-387): a returned WI carries a `## Handback` note
+# after the Deliverable's place. It maps to no CSV column, so this converter
+# READS past it and does not reproduce it — `--to-csv` on a folder holding a
+# returned spec must not refuse, and `--to-specs` starts from a CSV that never
+# had one. (`--verify` round-trips CSV -> specs -> CSV, so it never sees one.)
+HANDBACK_PREFIX = "\n## Handback\n"
 # Slug source width: enough of a title to be recognizable in a directory
 # listing, short enough to keep paths sane.
 SLUG_CHARS = 40
@@ -344,6 +350,9 @@ def split_spec(text, where):
 
 def parse_deliverable(body, where):
     """The verbatim Deliverable cell from a spec body (empty when absent)."""
+    if body == "":
+        return ""
+    body = body.partition(HANDBACK_PREFIX)[0]
     if body == "":
         return ""
     if not body.startswith(DELIVERABLE_PREFIX) or not body.endswith("\n"):

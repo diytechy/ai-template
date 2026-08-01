@@ -197,6 +197,12 @@ SPEC_STATUS_DIRS = {
 SPEC_EXAMPLE = "WI-000-"
 SPEC_FENCE = "+++"
 SPEC_DELIVERABLE = "\n## Deliverable\n\n"
+# The body's OTHER section (WI-387): a lane that HANDS a WI back writes a
+# `## Handback` note after the Deliverable's place, so the returned spec says
+# in trunk what remains and where the partial work is. It carries no registry
+# cell — nothing here parses it — and is recognised only so an honest
+# returned spec does not read as a malformed one.
+SPEC_HANDBACK = "\n## Handback\n"
 
 
 def spec_work_dir(csv_path):
@@ -276,7 +282,11 @@ def parse_spec_deliverable(relpath, body):
     The long cell lives in the BODY precisely because body text needs no
     escaping: it may hold newlines, quotes and markdown. This format owns the
     whole body shape, so anything that is neither empty nor one
-    `## Deliverable` section is a malformation rather than free prose."""
+    `## Deliverable` section (optionally followed by the `## Handback` note a
+    returned spec carries) is a malformation rather than free prose."""
+    if not body:
+        return ""
+    body = body.partition(SPEC_HANDBACK)[0]
     if not body:
         return ""
     if not body.startswith(SPEC_DELIVERABLE) or not body.endswith("\n"):

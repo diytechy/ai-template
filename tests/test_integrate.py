@@ -409,6 +409,69 @@ def test_claim_moves_the_spec_commits_the_trunk_and_cuts_the_branch(tmp_path, ca
     assert _rev(root, "wi-401") == _rev(root, "HEAD")
 
 
+def crashed_claim(root, wi="WI-401", branch="wi-401"):
+    """The state a crash inside the INVERTED claim leaves (WI-387, §A3): the
+    branch exists on a claim commit, and trunk never moved onto it.
+
+    Reproduced by claiming for real and then rewinding trunk alone, which is
+    exactly what a process killed between `git branch` and the trunk advance
+    would have left — the branch ref is durable, the trunk advance is not."""
+    assert integ.claim(root, wi, branch) == 0
+    _git(root, "reset", "--hard", "HEAD~1")
+    return root
+
+
+def test_a_crashed_claim_leaves_an_orphan_branch_the_next_claim_re_cuts(tmp_path):
+    # THE WHOLE POINT OF THE INVERSION. Trunk-first left a claim no lane could
+    # reach and cost an exit-2 refusal plus hand repair; branch-first leaves a
+    # branch whose claim commit trunk never took, with the WI still queued — a
+    # shape the claim resolves by itself.
+    root = claim_repo(tmp_path)
+    crashed_claim(root)
+
+    # The benign shape, stated as the three facts that define it.
+    assert "wi-401" in _branches(root)
+    assert (root / "docs" / "work" / "queued" / "WI-401-widget.md").is_file()
+    assert integ._abandoned_claim(root, "wi-401")
+
+    assert integ.claim(root, "WI-401", "wi-401") == 0
+    assert (root / "docs" / "work" / "active" / "wi-401" / "WI-401-widget.md").is_file()
+    assert _rev(root, "wi-401") == _rev(root, "HEAD")
+
+
+def test_a_branch_carrying_work_is_a_collision_the_claim_still_refuses(
+    tmp_path, capsys
+):
+    # The re-claim deletes a branch, so it has to recognise the abandoned shape
+    # EXACTLY. A branch of the same name carrying anything of its own — here a
+    # commit on top of the claim, which is what a resumed lane looks like — is
+    # a real collision and must still refuse rather than be deleted.
+    root = claim_repo(tmp_path)
+    crashed_claim(root)
+    _git(root, "checkout", "-q", "wi-401")
+    (root / "half-done.txt").write_text("1\n", encoding="utf-8", newline="\n")
+    _commit(root, "WI-401: half a widget", when=T_VERDICT)
+    _git(root, "checkout", "-q", "main")
+
+    assert not integ._abandoned_claim(root, "wi-401")
+    assert integ.claim(root, "WI-401", "wi-401") == 1
+    assert "branch wi-401 already exists" in capsys.readouterr().err
+    assert "half-done.txt" in _git(root, "ls-tree", "-r", "--name-only", "wi-401")
+
+
+def test_an_unrelated_branch_of_the_same_name_is_never_deleted(tmp_path, capsys):
+    # The other half of the same guard: a hand-made branch that merely collides
+    # on the name carries no claim subject at all, so it fails the shape test on
+    # its first condition and survives untouched.
+    root = claim_repo(tmp_path)
+    _git(root, "branch", "wi-401")
+
+    assert not integ._abandoned_claim(root, "wi-401")
+    assert integ.claim(root, "WI-401", "wi-401") == 1
+    assert "already exists" in capsys.readouterr().err
+    assert "wi-401" in _branches(root)
+
+
 # --- 1b. claim: the status.md forward-only debt (WI-358) ----------------------
 
 
@@ -620,6 +683,61 @@ def test_a_claim_dir_with_no_matching_branch_is_ignored(tmp_path):
     assert integ.finished_branches(root) == ["wi-401"]
 
 
+# --- 2b. the OUTCOME is the folder (WI-387, §A3) ------------------------------
+
+
+def _close_to(root, branch, directory, wi="WI-401", slug="widget"):
+    """Move `branch`'s claimed spec into `directory` on the branch — the move
+    that both finishes the lane and states its outcome."""
+    _git(root, "checkout", "-q", branch)
+    dest = root / "docs" / "work" / directory
+    dest.mkdir(parents=True, exist_ok=True)
+    _git(
+        root,
+        "mv",
+        "docs/work/active/{}/{}-{}.md".format(branch, wi, slug),
+        "docs/work/{}/{}-{}.md".format(directory, wi, slug),
+    )
+    _commit(root, "close: {} -> {}".format(wi, directory), when=T_VERDICT)
+    _git(root, "checkout", "-q", "main")
+
+
+def test_the_outcome_is_read_off_the_folder_the_specs_landed_in(tmp_path):
+    # Three outcomes, one read, no state file — and the read must DISCRIMINATE,
+    # so all three are driven on identical branches that differ only in which
+    # folder the closing commit moved the spec into.
+    for directory, outcome in (
+        ("complete", "merged"),
+        ("cancelled", "cancelled"),
+        ("queued", "handback"),
+        ("draft", "handback"),
+    ):
+        home = tmp_path / directory
+        home.mkdir()
+        root = claim_repo(home)
+        assert integ.claim(root, "WI-401", "wi-401") == 0
+        _close_to(root, "wi-401", directory)
+        assert integ.finished_branches(root) == ["wi-401"]
+        assert integ.branch_outcomes(root, "wi-401") == ({"WI-401": outcome}, [])
+
+
+def test_a_claimed_spec_that_landed_nowhere_names_no_outcome(tmp_path):
+    # Fail closed. A branch that DELETED its claimed spec is finished by the
+    # active/-is-empty read but has stated nothing, and guessing an outcome for
+    # it would let unreviewed work merge as if it had been approved.
+    root = claim_repo(tmp_path)
+    assert integ.claim(root, "WI-401", "wi-401") == 0
+    _git(root, "checkout", "-q", "wi-401")
+    _git(root, "rm", "-q", "docs/work/active/wi-401/WI-401-widget.md")
+    _commit(root, "close: delete the spec instead of moving it", when=T_VERDICT)
+    _git(root, "checkout", "-q", "main")
+
+    assert integ.branch_outcomes(root, "wi-401") == ({}, ["WI-401-widget.md"])
+    refusal = integ.integrate_one(root, "wi-401", "smoke")
+    assert "no declared state directory" in refusal
+    assert _rev(root, "HEAD") != _rev(root, "wi-401")  # nothing merged
+
+
 # --- 3. the verdict gate (RULING-7) ------------------------------------------
 
 
@@ -669,14 +787,14 @@ def test_verdict_is_not_required_at_review_policy_zero(tmp_path):
     # The dial off is a real configuration, not a loophole: at 0 the harness
     # gates ARE the bar and the queue asks for no verdict artifact.
     root = verdict_repo(tmp_path, policy="0")
-    assert integ._verdict_gate(root, "wi-401", ["WI-401"]) is None
+    assert integ._verdict_gate(root, "wi-401", {"WI-401": "merged"}) is None
 
 
 def test_a_required_verdict_absent_from_the_branch_refuses_by_name(tmp_path):
     # Fail-closed and ACTIONABLE: the refusal names the exact path the branch
     # must carry, so the remedy needs no lookup.
     root = verdict_repo(tmp_path, policy="1")
-    refusal = integ._verdict_gate(root, "wi-401", ["WI-401"])
+    refusal = integ._verdict_gate(root, "wi-401", {"WI-401": "merged"})
     assert refusal is not None
     assert "docs/reviews/WI-401-REVIEW-A.md" in refusal
     assert "absent from wi-401" in refusal
@@ -688,7 +806,7 @@ def test_a_changes_requested_verdict_refuses(tmp_path):
     root = verdict_repo(tmp_path, policy="1")
     write_verdict(root, VERDICT_CHANGES, when=T_VERDICT)
 
-    refusal = integ._verdict_gate(root, "wi-401", ["WI-401"])
+    refusal = integ._verdict_gate(root, "wi-401", {"WI-401": "merged"})
     assert refusal is not None
     assert "is not an APPROVE" in refusal
     assert "CHANGES-REQUESTED" in refusal
@@ -706,7 +824,7 @@ def test_an_approve_that_predates_a_later_code_commit_is_stale(tmp_path):
     )
     _commit(root, "feat: change the widget after the review", when=T_LATER)
 
-    refusal = integ._verdict_gate(root, "wi-401", ["WI-401"])
+    refusal = integ._verdict_gate(root, "wi-401", {"WI-401": "merged"})
     assert refusal is not None
     assert "predates the branch's last code commit" in refusal
 
@@ -716,7 +834,7 @@ def test_an_approve_committed_after_the_last_code_commit_passes(tmp_path):
     # so the freshness comparison is proven to have two answers, not one.
     root = verdict_repo(tmp_path, policy="1")
     write_verdict(root, VERDICT_APPROVE, when=T_VERDICT)
-    assert integ._verdict_gate(root, "wi-401", ["WI-401"]) is None
+    assert integ._verdict_gate(root, "wi-401", {"WI-401": "merged"}) is None
 
 
 def test_a_later_log_fragment_commit_does_not_stale_a_good_verdict(tmp_path):
@@ -733,14 +851,31 @@ def test_a_later_log_fragment_commit_does_not_stale_a_good_verdict(tmp_path):
     fragment.write_text("## WI-401 — the widget\n", encoding="utf-8", newline="\n")
     _commit(root, "log: WI-401 fragment", when=T_LATER)
 
-    assert integ._verdict_gate(root, "wi-401", ["WI-401"]) is None
+    assert integ._verdict_gate(root, "wi-401", {"WI-401": "merged"}) is None
+
+
+def test_only_the_merged_outcome_owes_a_verdict(tmp_path):
+    # KEYED OFF THE OUTCOME, NOT THE CLAIM (WI-387, §A3). One repo, one missing
+    # verdict, three answers: `merged` asserts the work is done and owes an
+    # APPROVE; `cancelled` and `handback` assert the opposite and owe none.
+    # Reading the requirement off the claim would deadlock the commonest
+    # handback cause on itself — a review escalation is exactly the case where
+    # no APPROVE exists, so the lane could not return the work it failed to get
+    # approved.
+    root = verdict_repo(tmp_path, policy="1")
+    assert integ._verdict_gate(root, "wi-401", {"WI-401": "merged"}) is not None
+    assert integ._verdict_gate(root, "wi-401", {"WI-401": "cancelled"}) is None
+    assert integ._verdict_gate(root, "wi-401", {"WI-401": "handback"}) is None
+    # ...and a MIXED branch is gated on its merged constituent alone.
+    mixed = {"WI-401": "handback", "WI-402": "merged"}
+    assert "WI-402-REVIEW-A.md" in integ._verdict_gate(root, "wi-401", mixed)
 
 
 def test_a_malformed_review_policy_fails_closed(tmp_path):
     # A dial nobody can parse must never read as "0 = no review required". The
     # refusal quotes what it read, because the typo is the whole diagnosis.
     root = verdict_repo(tmp_path, policy="sometimes")
-    refusal = integ._verdict_gate(root, "wi-401", ["WI-401"])
+    refusal = integ._verdict_gate(root, "wi-401", {"WI-401": "merged"})
     assert refusal is not None
     assert "docs/review-policy is not an integer" in refusal
     assert "sometimes" in refusal and "fail closed" in refusal
@@ -1000,7 +1135,7 @@ sys.exit(1)
 """
 
 
-def station_repo(tmp_path, check_src=STUB_CHECK_GREEN):
+def station_repo(tmp_path, check_src=STUB_CHECK_GREEN, policy="0", dest="complete"):
     """A trunk with WI-401 claimed onto `wi-401` and CLOSED, plus a stub harness.
 
     Everything the slot reads is real: a real claim commit, a real branch, a
@@ -1014,7 +1149,9 @@ def station_repo(tmp_path, check_src=STUB_CHECK_GREEN):
     (root / "docs" / "stack.ini").write_text(
         "[product]\ntest = {py} -m pytest -q\n", encoding="utf-8", newline="\n"
     )
-    (root / "docs" / "review-policy").write_text("0\n", encoding="utf-8", newline="\n")
+    (root / "docs" / "review-policy").write_text(
+        policy + "\n", encoding="utf-8", newline="\n"
+    )
     scripts = root / "scripts"
     scripts.mkdir(exist_ok=True)
     (scripts / "trunk_step.py").write_text(
@@ -1023,11 +1160,11 @@ def station_repo(tmp_path, check_src=STUB_CHECK_GREEN):
     (scripts / "check.py").write_text(check_src, encoding="utf-8", newline="\n")
     _commit(root, "chore: the stub harness and the declared bar", when=T_CODE)
     assert integ.claim(root, "WI-401", "wi-401") == 0
-    close_branch(root, "wi-401")
+    close_branch(root, "wi-401", dest=dest)
     return root
 
 
-def close_branch(root, branch, wi="WI-401", slug="widget", extra=None):
+def close_branch(root, branch, wi="WI-401", slug="widget", extra=None, dest="complete"):
     """Build and CLOSE `branch` in its own lane worktree: one product commit and
     the §2.3 step-3 move to its TERMINAL directory. Leaves the worktree
     registered, which is where the refresh will run — the lane's own tree, by
@@ -1038,7 +1175,7 @@ def close_branch(root, branch, wi="WI-401", slug="widget", extra=None):
     wt = root.parent / (root.name + integ.LANE_WORKTREE_SUFFIX) / branch
     _git(root, "worktree", "add", "-q", str(wt), branch)
     (wt / "{}.txt".format(branch)).write_text("1\n", encoding="utf-8", newline="\n")
-    dst = wt / "docs" / "work" / "complete" / "{}-{}.md".format(wi, slug)
+    dst = wt / "docs" / "work" / dest / "{}-{}.md".format(wi, slug)
     dst.parent.mkdir(parents=True, exist_ok=True)
     src = wt / "docs" / "work" / "active" / branch / "{}-{}.md".format(wi, slug)
     dst.write_text(
@@ -1321,8 +1458,8 @@ def test_the_pessimistic_sequence_runs_when_a_lane_loses_the_race(tmp_path):
     assert out.count("is not merge-ready") == 1, out
     assert "the pessimistic sequence" in out, out
     assert "wi-402 is not merge-ready" in out, out
-    assert "integrate: wi-401 merged (WI-401)" in out, out
-    assert "integrate: wi-402 merged (WI-402)" in out, out
+    assert "integrate: wi-401 merged (WI-401=merged)" in out, out
+    assert "integrate: wi-402 merged (WI-402=merged)" in out, out
     # Both landed, and the second composed ON TOP of the first — the Class C
     # coverage the deleted composed-tree bar used to buy, now free.
     tracked = _git(root, "ls-tree", "-r", "--name-only", "HEAD").split()
@@ -1342,7 +1479,7 @@ def test_a_branch_that_never_refreshed_is_refreshed_by_the_slot(tmp_path):
     out = proc.stdout + proc.stderr
     assert proc.returncode == 0, out
     assert "not a verified refresh commit" in out, out
-    assert "integrate: wi-401 merged (WI-401)" in out, out
+    assert "integrate: wi-401 merged (WI-401=merged)" in out, out
 
 
 def test_the_refresh_cli_is_the_lane_side_entry_point(tmp_path):
@@ -1580,6 +1717,21 @@ def test_a_deliberately_forged_attestation_is_a_STATED_limit_not_a_defence(tmp_p
     assert _order(wt) == [], "and no bar ever ran"
 
 
+def test_a_cancelled_branch_merges_through_the_slot_owing_no_verdict(tmp_path):
+    # The outcome keying, driven through the WHOLE slot rather than at the gate
+    # helper: review-policy 1, no verdict artifact anywhere, and a lane whose
+    # specs went to `cancelled/`. It merges — because the cancellation is a
+    # trunk fact and the id stays retired, which is only true if the branch
+    # lands. (`test_only_the_merged_outcome_owes_a_verdict` shows the same repo
+    # shape refusing when the outcome is `merged`, so this is not vacuous.)
+    root = station_repo(tmp_path, policy="1", dest="cancelled")
+
+    assert integ.branch_outcomes(root, "wi-401") == ({"WI-401": "cancelled"}, [])
+    assert integ.integrate(root, "smoke") == 0
+    assert (root / "docs" / "work" / "cancelled" / "WI-401-widget.md").is_file()
+    assert "wi-401" not in _branches(root)
+
+
 def test_the_refresh_refuses_when_the_main_checkout_holds_the_branch(tmp_path):
     # Round 1: with the main checkout on the branch, `_head(root)` IS the branch,
     # so the refresh "merged trunk in" from itself, printed a trunk sha that was
@@ -1617,11 +1769,11 @@ def test_the_mechanical_refresh_does_not_stale_a_good_verdict(tmp_path):
     verdict.parent.mkdir(parents=True, exist_ok=True)
     verdict.write_text(VERDICT_APPROVE, encoding="utf-8", newline="\n")
     _commit(wt, "review: WI-401 REVIEW-A", when=T_LATER)
-    assert integ._verdict_gate(root, "wi-401", ["WI-401"]) is None
+    assert integ._verdict_gate(root, "wi-401", {"WI-401": "merged"}) is None
 
     _sha, refusal = integ.refresh(root, "wi-401", "smoke")
     assert refusal is None, refusal
-    assert integ._verdict_gate(root, "wi-401", ["WI-401"]) is None
+    assert integ._verdict_gate(root, "wi-401", {"WI-401": "merged"}) is None
 
 
 # --- 6. end to end, against a REAL green bar ---------------------------------
@@ -1742,7 +1894,7 @@ def test_claim_build_and_integrate_end_to_end(tmp_path):
     bar = re.search(r"bar PASS \((\d+) steps, tier smoke\)", out)
     assert bar, out
     assert int(bar.group(1)) >= 10, out
-    assert "integrate: wi-401 merged (WI-401)" in out, out
+    assert "integrate: wi-401 merged (WI-401=merged)" in out, out
     assert "integrate: audit clean" in out, out
 
     # This branch never refreshed (nothing called it), so the slot said so and
@@ -2025,7 +2177,7 @@ def test_the_queue_gcs_a_clean_worker_worktree_end_to_end(tmp_path):
     out = proc.stdout + proc.stderr
     assert proc.returncode == 0, out
 
-    assert "integrate: wi-401 merged (WI-401)" in out, out
+    assert "integrate: wi-401 merged (WI-401=merged)" in out, out
     assert "GC'd clean worker worktree" in out, out
     assert not worker.exists(), out
     assert "wi-401" not in _branches(repo)
@@ -2065,7 +2217,7 @@ def test_the_queue_exits_nonzero_when_a_merged_branch_stays_held(tmp_path):
     proc = run_py([SCRIPTS / "integrate.py", "integrate", "--tier", "smoke"], cwd=repo)
     out = proc.stdout + proc.stderr
     assert proc.returncode != 0, out
-    assert "integrate: wi-401 merged (WI-401)" in out, out
+    assert "integrate: wi-401 merged (WI-401=merged)" in out, out
 
     assert "UNLOAD INCOMPLETE" in proc.stderr, out
     assert "STILL HELD - wi-401 at" in proc.stderr, out
