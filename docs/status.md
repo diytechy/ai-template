@@ -27,6 +27,14 @@ home elsewhere — don't restate it here:
   model, and the audit's approved WI retirements executed. **Its spine
   amendment window is CLOSED** — attested at the 2026-07-29 sitting, ruling
   in [log.md](log.md)'s Decisions; the restructure has no open act.
+- **START HERE if you are picking up after 2026-08-01:**
+  [handoff-2026-08-01.md](handoff-2026-08-01.md). Most of the concurrency-v2
+  program is built and merged; **two lanes are still open and both are blocked
+  on one unexplained red**, which that file describes in full along with the
+  hypothesis already tested and refuted. It also records which of the session's
+  pitfalls came from the work and which came from driving four lanes by hand
+  when the shipped loop is serial — read that before deciding how to run the
+  rest.
 - **Resuming in a new session — boot HERE, then
   [concurrency-v2.md](concurrency-v2.md), which is the spec-of-record for the
   whole queued backlog; the design is CLOSED and its ten 2026-07-31 rulings are
