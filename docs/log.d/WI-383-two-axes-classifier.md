@@ -265,19 +265,22 @@ apply the concurrency axis. The internal `w["exclusive"]` is left alone: it
 mirrors the `Exclusive` column name across the three F5-duplicated readers, and
 renaming it there would be drift, not clarity.
 
-**Bars — re-measured on the tree this block is committed with** (the round-2
-lesson: a figure that is not reproducible at its own commit is not a
-measurement. The previous block advertised itself as post-round-1 while its
-`check_trajectory` line still read `389 work item(s)`, which the same commit's
-filing of WI-394 had already made `390`).
+**Bars — every figure below re-measured after the round-4 edits, on a tree
+whose only remaining difference from this commit is this block's own text.**
+(The round-2 lesson: a figure not reproducible at its own commit is not a
+measurement — the block once read `389 work item(s)` while the same commit's
+WI-394 filing had made it `390`. Round 4 caught the header repeating the
+promise one commit early: it was measured at `94e4a4d8` with three doc changes
+landing after. Stating the *delta* rather than a sha is the honest form, since
+the last edit a bars block can ever contain is its own numbers.)
 
 ```
 $ python -m pytest -q -n auto
-1 failed, 1756 passed, 8 skipped in 567.93s (0:09:27)
+1 failed, 1756 passed, 8 skipped in 572.07s (0:09:32)
       # the one standing red is tests/test_check_lane.py::test_this_repo_is_not_a_work_branch
       # (this checkout IS a claimed work branch — the guard is asserting about the trunk)
 $ python -m pytest -q -n auto -m smoke
-1 failed, 572 passed in 13.75s                 # same standing red
+1 failed, 572 passed in 21.15s                 # same standing red
 $ python -m ruff check .            -> All checks passed!
 $ python -m ruff format --check .   -> 146 files already formatted
 $ python project-trajectory/scripts/check_docs.py --root . --ignore docs/test/report.md --ignore "docs/work/*" --stale
@@ -289,9 +292,47 @@ check_doc_refs: OK - no dangling path or sym: references · 871 untraced   [exit
 ```
 
 Suite counts across the rounds, on this branch: `1755` at close → `1756` after
-the round-1 fixes (the new call-site pin) → `1756` here, since round 2 changed
-no code. The wall time moved (400 s → 568 s) because the box was busier, not
-the suite; `390` is the WI count including the `WI-394` this branch files.
+the round-1 fixes (the new call-site pin) → `1756` since, rounds 2–4 having
+added tests to nothing. Wall time is not a signal here — it ranged 329–588 s
+across five runs of the same suite as the box got busier. `390` is the WI count
+including the `WI-394` this branch files. `check_doc_refs` held at
+`871 untraced / 0 dangling` **because round 4's two new backticked path tokens
+carry a `path-ok` marker**, not because nothing moved — remove the marker and
+it reports exactly those two.
+
+**CORRECTION — the "no `.py` changed, so the recorded result stands" inference
+was unsound, and the inference is the defect, not the number.** In round 3 I
+skipped the full suite on the grounds that
+`git diff --stat b19dcc8a..HEAD -- '*.py'` was empty. The counts happened to
+hold (round 4 re-ran it: `1 failed, 1756 passed, 8 skipped in 329.41s`), but
+the reasoning does not, and a successor applying it to a different row would be
+wrong.
+
+**This suite reads `docs/` as INPUT, not only `*.py`.** Measured: **twelve**
+test modules resolve a path under the live `ROOT / "docs"`, and three read the
+live work registry directly —
+
+```
+tests/test_dupes_census_audit.py:50   WI_WORK = ROOT / "docs/work"
+tests/test_trajectory_specs.py:188    sorted((ROOT / "docs" / "work").rglob("WI-*.md"))
+tests/test_wi_convert.py:46           WORK = ROOT / "docs" / "work"
+```
+
+Rounds 2–4 added exactly that kind of input. Driven: the glob at
+`test_trajectory_specs.py:188` currently returns **391** spec files and
+`WI-394` is among them — this branch's own filing is a live test input. The
+independent proof is already in this record: `check_trajectory` moved
+`389 → 390` for precisely that row.
+
+**The rule, stated so it transfers:** a docs-only diff is not evidence that a
+recorded suite result stands — it is evidence about `*.py` only, and this
+harness's inputs are wider than that. Re-run, or name the specific consumers
+the diff cannot have touched. Round 4's own citation for this
+(`test_dogfood_sync.py::_consumer_signature`) is the one part not to carry
+forward: that helper is only ever called on `tmp_path` scratch roots
+(`test_dogfood_sync.py:348`, and its docstring says so), so it does not read
+the live registry. The finding is right; the three modules above are its
+evidence.
 
 No byte-budgeted file was touched. Generated artifacts (`docs/architecture.md`'s
 module map loses the `agent_loop → schedule` edge) are deliberately NOT
