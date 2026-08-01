@@ -18,21 +18,30 @@ Two contracts live here:
     hard predecessor is integrated `done` (soft `~` edges never block). The ready
     set excludes `blocked`/`deferred`/`draft`/`cancelled`/reserved WIs and any WI
     the safety classifier deems ineligible, then orders the survivors by
-    `(gate class, Priority desc, transitive downstream-dependent count desc,
+    `(rank, Priority desc, transitive downstream-dependent count desc,
     remaining hard-path length desc, WI id)`.
 
-  * **Deterministic safety classification (SR-093/SR-094).** One pure classifier maps a
-    WI's declared `SafetyClass` (`ordinary|spine|gate|attestation|protected|
-    high-risk`) plus review/critique policy and structural evidence to a
-    scheduling class + reason codes. `spine|gate|attestation` serialize
-    whole-project; `protected` serializes whole-project; `high-risk`, a critique
-    requirement, an integration checkpoint, or a registry `PlanMode=dual` signal
-    (SR-107 — derived from the signal itself, never a second hand-set cell; a
-    contradicting declared SafetyClass quarantines) force a single-WI traincar; only
-    classified `ordinary` work packs optimistically; anything missing, unknown, or
-    contradicting its structural evidence returns `unclassified`, which **fails
-    closed** (never scheduled) for that WI without stopping disjoint classified
-    work.
+  * **Deterministic safety classification on TWO axes (SR-093/SR-094;
+    docs/concurrency-v2.md §A1).** One pure classifier maps a WI's declared
+    `SafetyClass` (`ordinary|spine|gate|attestation|protected|high-risk`), its
+    critique flag and the registry `PlanMode=dual` signal (SR-107 — derived from
+    the signal itself, never a second hand-set cell) to **two independent
+    answers**, because the two questions are independent:
+
+      - **concurrency** — *what may share the station?* `exclusive` (runs alone)
+        or `parallel`. This is NOT the `Exclusive` mutex-key column below —
+        different idea, same English word; the axis header says how they differ,
+        and the emitted record spells the column `exclusive_keys` for that
+        reason.
+      - **rank** — *who goes first?* An integer, low first; it is the leading
+        term of the order key and `Priority`/graph criticality/id break ties
+        beneath it.
+
+    They are read from two tables keyed by the same declared kind, never from
+    each other, so changing one cannot move the other. Anything missing,
+    unknown, or contradicting its structural evidence returns `unclassified`,
+    which **fails closed** (never scheduled) for that WI without stopping
+    disjoint classified work.
 
 The optional schema columns (`Priority`, `Exclusive`, `BlockRef`, `EstTokens`,
 `SafetyClass`) are read via `DictReader`, so a legacy registry without them reads
@@ -66,23 +75,60 @@ REGISTRY = "docs/requirements/work-items.csv"
 # classification"). The DECLARED values a WI may carry in its SafetyClass cell. ---
 SAFETY_CLASSES = ("ordinary", "spine", "gate", "attestation", "protected", "high-risk")
 
-# Scheduling classes the classifier RETURNS (distinct from the declared vocabulary).
-SCHED_SPINE_SERIAL = "spine-serial"  # spine/gate/attestation — serial, whole-project
-SCHED_PROTECTED = "protected-serial"  # protected — serial, whole-project
-SCHED_SINGLE_WI = "single-wi"  # high-risk / critique / checkpoint — own traincar
-SCHED_ORDINARY = "ordinary"  # optimistic multi-WI packing eligible
-SCHED_UNCLASSIFIED = "unclassified"  # fail closed — never scheduled
+# --- the two axes the classifier RETURNS (docs/concurrency-v2.md §A1) ---------
+# One declared kind answered two different questions through ONE five-value
+# ladder (`spine-serial | protected-serial | single-wi | ordinary |
+# unclassified`): `_GATE_RANK` made the class decide who goes first while
+# `classify()` made the same class decide what may share the station. That is
+# why `protected-serial` and `single-wi` looked like different things when both
+# only ever meant *run alone*. The ladder is gone; the two questions are asked
+# separately, of two tables keyed by the same declared kind.
+#
+# WORD OF WARNING, in the one module that has no excuse for one: this
+# `exclusive` is NOT the `Exclusive` registry COLUMN. The column is a set of
+# named mutex keys (`db`, `registry-lock`) that serializes the WIs sharing a
+# key against EACH OTHER — see `_exclusive_conflicts`. This value is a WI's
+# concurrency answer and names no key at all: `exclusive` here means alone in
+# the station, full stop. The two travel together in one record, which is why
+# the emitted key is `exclusive_keys` rather than `exclusive` (REVIEW-A round 1).
+CONCURRENCY_EXCLUSIVE = "exclusive"  # runs alone — nothing else in the station
+CONCURRENCY_PARALLEL = "parallel"  # may share the station with anything
+CONCURRENCY_UNCLASSIFIED = "unclassified"  # fail closed — never scheduled
 
-# Lowest-gate-first ordering rank (spec §4 step 4): the most gate-constraining
-# work sorts first. unclassified is excluded from the frontier, so its rank only
-# matters for a stable total order in --explain output.
-_GATE_RANK = {
-    SCHED_SPINE_SERIAL: 0,
-    SCHED_PROTECTED: 1,
-    SCHED_SINGLE_WI: 2,
-    SCHED_ORDINARY: 3,
-    SCHED_UNCLASSIFIED: 4,
+# Axis 1 — CONCURRENCY by declared kind. Note what is NOT here: the answer is
+# read off the kind, never off the rank, and no kind is exclusive merely for
+# being ranked early. `critique` is `parallel` because nothing about a critique
+# touches product code; it was only ever serialized to keep it out of a packed
+# multi-WI session, and with packing deleted (§A6.1) that had nothing left to
+# prevent.
+_KIND_CONCURRENCY = {
+    "spine": CONCURRENCY_EXCLUSIVE,
+    "attestation": CONCURRENCY_EXCLUSIVE,
+    "gate": CONCURRENCY_EXCLUSIVE,
+    "protected": CONCURRENCY_EXCLUSIVE,
+    "high-risk": CONCURRENCY_EXCLUSIVE,
+    "critique": CONCURRENCY_PARALLEL,
+    "ordinary": CONCURRENCY_PARALLEL,
 }
+
+# Axis 2 — RANK by declared kind: low first, the leading term of the order key.
+# The numbers are §A1's ruled table verbatim, INCLUDING its gap: rank 1 belongs
+# to the `adjudication` kind, which WI-388 adds. Writing the ladder whole means
+# that row adds one mapping instead of renumbering a ruled table (and a reader
+# who wonders where 1 went finds the answer here rather than in the diff).
+_KIND_RANK = {
+    "spine": 0,
+    # 1 — `adjudication` (WI-388, §A5.2): exclusive, runs no bar.
+    "attestation": 2,
+    "gate": 2,
+    "protected": 3,
+    "high-risk": 4,
+    "critique": 5,
+    "ordinary": 6,
+}
+# unclassified is excluded from the frontier, so its rank only matters for a
+# stable total order in --explain output — last, behind every real kind.
+RANK_UNCLASSIFIED = 7
 
 # Tracked Status vocabulary (spec §3.1). Anything other than `done` is not-ready;
 # `blocked`/`deferred`/`draft`/`cancelled`/reserved carry their own disposition
@@ -397,72 +443,72 @@ def load_wis(rows):
 
 # --- deterministic safety classification (SR-093/SR-094) ----------------------
 def classify(wi, *, structural=None):
-    """`(scheduling_class, [reason_codes])` for one WI — a pure function.
+    """`(concurrency, rank, [reason_codes])` for one WI — a pure function.
 
-    Inputs (spec §4): the declared `SafetyClass`, a critique/integration-checkpoint
-    requirement (read off the WI's flags), the registry `PlanMode` signal, and
-    optional `structural` evidence (the class the repository graph implies,
-    supplied by the validator). Ordered rules:
+    Inputs (§A1): the declared `SafetyClass`, a critique requirement (read off
+    the WI's flags), the registry `PlanMode` signal, and optional `structural`
+    evidence (the kind the repository graph implies, supplied by the validator).
+    Resolution is two steps, and keeping them apart is the whole point of this
+    function: first decide WHICH KIND this WI is, then read each axis off its
+    own table.
 
-      0. PlanMode=dual -> single-WI traincar, DERIVED from the signal itself
+      1. PlanMode=dual is the `high-risk` kind, DERIVED from the signal itself
          (SR-107/WI-201: never a second hand-set cell; a declared SafetyClass
-         other than empty or high-risk contradicts and quarantines unclassified)
-      1. spine/gate/attestation  -> serial whole-project (never a multi-WI traincar)
-      2. protected               -> serial whole-project
-      3. high-risk / critique / integration-checkpoint -> single-WI traincar
-      4. ordinary                -> optimistic multi-WI packing
-      5. missing / unknown / contradicting structural evidence -> unclassified
-         (fails closed for this WI; disjoint classified work is unaffected)
+         other than empty or `high-risk` contradicts and quarantines).
+      2. A declared SafetyClass that is missing or not in the vocabulary
+         quarantines as `unclassified`.
+      3. `ordinary` + contradicting structural evidence quarantines: a
+         mis-declaration is never silently upgraded.
+      4. The critique flag promotes only `ordinary` to the `critique` kind — a
+         declared exclusive kind is the more constraining statement and wins.
+      5. `_KIND_CONCURRENCY[kind]` and `_KIND_RANK[kind]`, read independently.
 
-    The cross-check (rule 5) fails closed when a WI DECLARES `ordinary` but the
-    structural evidence says spine/gate/attestation/protected/high-risk — a
-    mis-declaration is never silently upgraded, it is quarantined as unclassified.
+    A quarantined WI answers `(CONCURRENCY_UNCLASSIFIED, RANK_UNCLASSIFIED)`: it
+    fails closed for itself and never blocks disjoint classified work.
     """
     declared = (wi.get("safetyclass") or "").strip().lower()
     critique = bool(wi.get("critique"))
-    checkpoint = bool(wi.get("checkpoint"))
 
-    # PlanMode=dual derives the single-WI-traincar class FROM THE SIGNAL ITSELF
-    # (SR-107, the WI-201 ruling): a dual-plan round is never packed with other
-    # WIs and never needs a second hand-set SafetyClass cell (single-source). A
-    # declared SafetyClass that contradicts the derivation (anything whose own
-    # scheduling class is not single-wi) quarantines as unclassified — the same
-    # cross-check posture as rule 5, never a silent override in either direction.
+    # A dual-plan round is the high-risk kind and never needs a second hand-set
+    # SafetyClass cell (single-source). A declared SafetyClass that contradicts
+    # the derivation quarantines — the same cross-check posture as step 3, never
+    # a silent override in either direction.
     dual = (wi.get("planmode") or "").strip().lower() == "dual"
     if dual and declared and declared != "high-risk":
-        return SCHED_UNCLASSIFIED, [
-            "unclassified:planmode-dual-vs-declared-%s" % declared
-        ]
+        return _unclassified("planmode-dual-vs-declared-%s" % declared)
 
     if not dual and declared not in SAFETY_CLASSES:
         code = "missing" if not declared else "unknown-value:%s" % declared
-        return SCHED_UNCLASSIFIED, ["unclassified:%s" % code]
+        return _unclassified(code)
 
     struct = (structural or "").strip().lower() or None
     if declared == "ordinary" and struct in SAFETY_CLASSES and struct != "ordinary":
-        return SCHED_UNCLASSIFIED, [
-            "unclassified:declared-ordinary-vs-structural-%s" % struct
-        ]
+        return _unclassified("declared-ordinary-vs-structural-%s" % struct)
 
-    if declared in ("spine", "gate", "attestation"):
-        return SCHED_SPINE_SERIAL, ["serial-whole-project:%s" % declared]
-    if declared == "protected":
-        return SCHED_PROTECTED, ["serial-whole-project:protected"]
-    if dual or declared == "high-risk" or critique or checkpoint:
-        reasons = ["single-wi:dual-plan"] if dual else []
-        if declared == "high-risk":
-            reasons.append("single-wi:high-risk")
-        if critique:
-            reasons.append("single-wi:critique")
-        if checkpoint:
-            reasons.append("single-wi:integration-checkpoint")
-        return SCHED_SINGLE_WI, reasons
-    return SCHED_ORDINARY, ["ordinary:optimistic-packing-eligible"]
+    kind = "high-risk" if dual else declared
+    if kind == "ordinary" and critique:
+        kind = "critique"
+
+    concurrency, rank = _KIND_CONCURRENCY[kind], _KIND_RANK[kind]
+    # The reason list names the concurrency answer and each signal that produced
+    # it, so `--explain` stays readable: a dual row that ALSO declares high-risk
+    # carries both codes, while a dual row with no SafetyClass cell (the
+    # single-source shape) carries only the derived one.
+    reasons = ["%s:dual-plan" % concurrency] if dual else []
+    if declared:
+        reasons.append("%s:%s" % (concurrency, kind))
+    return concurrency, rank, reasons
 
 
-def is_schedulable_class(sched_class):
+def _unclassified(code):
+    """The fail-closed answer, stated once so every quarantine path returns the
+    same shape (both axes refused, never one)."""
+    return CONCURRENCY_UNCLASSIFIED, RANK_UNCLASSIFIED, ["unclassified:%s" % code]
+
+
+def is_schedulable(concurrency):
     """Only a positively-classified WI is eligible; unclassified fails closed."""
-    return sched_class != SCHED_UNCLASSIFIED
+    return concurrency != CONCURRENCY_UNCLASSIFIED
 
 
 # --- graph derivations (SR-057) ----------------------------------------------
@@ -557,16 +603,20 @@ def hard_path_lengths(wis):
     return {wid: depth(wid) for wid in children}
 
 
-def order_key(wi, sched_class, downstream, hardpath):
-    """The deterministic sort key (spec §4 step 6): lowest gate class first, then
-    the human Priority override, then structural criticality, then WI id."""
-    return (
-        _GATE_RANK.get(sched_class, _GATE_RANK[SCHED_UNCLASSIFIED]),
-        -wi["priority"],
-        -downstream,
-        -hardpath,
-        wi["id"],
-    )
+def order_key(wi, rank, downstream, hardpath):
+    """The deterministic sort key: lowest rank first, then the human Priority
+    override, then structural criticality, then WI id.
+
+    It takes the RANK, not the classification, so the concurrency axis is not in
+    the ordering decision (§A1). That is a convention, NOT a guarantee: the
+    parameter is an untyped positional and nothing here inspects it, so the only
+    thing keeping it true is the single call site in `evaluate`. REVIEW-A round 1
+    drove `order_key(w, concurrency, …)` past the whole suite with byte-identical
+    counts while genuinely reordering the frontier. What convicts that edit now
+    is `test_the_frontier_orders_one_concurrency_group_by_rank`, which orders
+    four kinds that share one concurrency value — do not weaken it into a test
+    that hands this function a literal."""
+    return (rank, -wi["priority"], -downstream, -hardpath, wi["id"])
 
 
 def evaluate(wis, reserved=None):
@@ -582,24 +632,26 @@ def evaluate(wis, reserved=None):
 
     records = []
     for w in wis:
-        sched_class, class_reasons = classify(w)
+        concurrency, rank, class_reasons = classify(w)
         disposition, reasons = _disposition(
-            w, status, reserved, sched_class, class_reasons, exclusive_ready
+            w, status, reserved, concurrency, class_reasons, exclusive_ready
         )
         records.append(
             {
                 "id": w["id"],
                 "status": w["status"],
-                "sched_class": sched_class,
+                "concurrency": concurrency,
+                "rank": rank,
                 "disposition": disposition,
                 "priority": w["priority"],
                 "downstream": downstream[w["id"]],
                 "hard_path": hardpath[w["id"]],
-                "exclusive": w["exclusive"],
+                # `exclusive_keys`, not `exclusive`: this is the mutex-key SET
+                # from the `Exclusive` column, a different idea from the
+                # `concurrency` value beside it (see the axis header above).
+                "exclusive_keys": w["exclusive"],
                 "reasons": reasons,
-                "_key": order_key(
-                    w, sched_class, downstream[w["id"]], hardpath[w["id"]]
-                ),
+                "_key": order_key(w, rank, downstream[w["id"]], hardpath[w["id"]]),
             }
         )
     records.sort(key=lambda r: r["_key"])
@@ -613,7 +665,14 @@ def _exclusive_conflicts(wis, status, reserved):
     ready and share a non-empty `Exclusive` key, the deterministically-first one
     (by id) wins the key; the rest are exclusive-conflicting. A key held by a
     reserved/active WI is owned by it (a live train keeps its keys whatever its
-    row now classifies as)."""
+    row now classifies as).
+
+    This is the `Exclusive` COLUMN and has nothing to do with the `exclusive`
+    CONCURRENCY value: a key serializes only the WIs that NAME THE SAME KEY
+    against each other, while the concurrency value is about the station as a
+    whole and names nothing. A `parallel` WI can hold a mutex key, and two
+    `exclusive` WIs with no key still conflict — through the dispatcher's
+    barrier, not through here."""
     holders = {}
     # A reserved WI owns each of its keys outright.
     for w in wis:
@@ -632,7 +691,7 @@ def _exclusive_conflicts(wis, status, reserved):
             if w["status"] == "queued"
             and w["id"] not in reserved
             and hard_preds_satisfied(w, status)
-            and is_schedulable_class(classify(w)[0])
+            and is_schedulable(classify(w)[0])
         ),
         key=lambda w: w["id"],
     )
@@ -665,7 +724,7 @@ def _waiting_reasons(wi, status):
     return reasons
 
 
-def _disposition(wi, status, reserved, sched_class, class_reasons, exclusive_ready):
+def _disposition(wi, status, reserved, concurrency, class_reasons, exclusive_ready):
     """`(disposition, [reason_codes])` for one WI: ready | waiting | reserved |
     blocked | deferred | draft | done | cancelled | excluded. The reason list is
     its own codes; the classifier's reason is carried only where classification
@@ -693,7 +752,7 @@ def _disposition(wi, status, reserved, sched_class, class_reasons, exclusive_rea
         return "reserved", ["reserved:claimed-by-live-train"]
     if not hard_preds_satisfied(wi, status):
         return "waiting", _waiting_reasons(wi, status)
-    if not is_schedulable_class(sched_class):
+    if not is_schedulable(concurrency):
         return "excluded", list(class_reasons) + ["excluded:unclassified-fail-closed"]
     # Exclusive-key conflict: another WI owns a key this one needs.
     for k in wi["exclusive"]:
@@ -715,8 +774,11 @@ def simulate(wis, jobs, reserved=None):
     of rounds, each a list of assigned WI ids. `--jobs 1` yields the serial order.
 
     This is a planning aid: it treats an assigned WI as immediately `done` and
-    does not model build time, reservations beyond the initial set, or traincar
-    continuation (those are the dispatcher's runtime concerns, Slices D/E)."""
+    models neither build time nor reservations beyond the initial set. It does
+    apply the `Exclusive` mutex keys (through `frontier`), but it does NOT apply
+    the CONCURRENCY axis: a round here is "what could start", not "what the
+    dispatcher admits" — the exclusive-runs-alone barrier is the dispatcher's
+    (§A4). The two are different things; see the axis header."""
     if jobs < 1:
         raise ValueError("jobs must be >= 1")
     # Work on shallow copies so the caller's WIs are never mutated.
@@ -764,15 +826,15 @@ def _cmd_ready(args):
             display = dict(r)
             display["reasons"] = ";".join(r["reasons"])
             print(
-                "{id:<10} {disposition:<9} {sched_class:<14} "
+                "{id:<10} {disposition:<9} {concurrency:<12} rank={rank} "
                 "P{priority:<3} down={downstream:<3} path={hard_path:<3} {reasons}".format(
                     **display
                 )
             )
         else:
             print(
-                "{id:<10} {sched_class:<14} P{priority} down={downstream} "
-                "path={hard_path}".format(**r)
+                "{id:<10} {concurrency:<12} rank={rank} P{priority} "
+                "down={downstream} path={hard_path}".format(**r)
             )
     return 0
 

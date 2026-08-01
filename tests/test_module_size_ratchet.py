@@ -360,7 +360,13 @@ BASELINE = {
     # of refusing), and _coordinator_lock — the acquire/report/register
     # sequence extracted to ONE home so the two lock sites cannot drift.
     # Reviewed bump, log 2026-07-31.
-    "agent_loop.py": 3026,
+    # -53 (3026 -> 2973), WI-383: session grouping REMOVED rather than wired
+    # (docs/concurrency-v2.md §A6.1) — the §7 continuation re-check, the
+    # `exit 10 ASSIGNMENT-END` arm, the worker's `sched` scheduler view and the
+    # `schedule` import all go with it. The only multi-WI assignment left is the
+    # spine batch the dispatcher admits, whose constituents are homogeneous by
+    # construction: the one case the guard never refused. Ratcheted DOWN.
+    "agent_loop.py": 2973,
     # +30 (2206 -> 2236), WI-065: `tc_citation_findings` — the TC-`Verifies`
     # rules lifted out of `analyze` so the cell could accept `IF-###` seam ids.
     # Most of the bump is that helper's docstring, which is where the RULING now

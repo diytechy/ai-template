@@ -296,7 +296,15 @@ def _consumer_signature(root):
     with reg.open(encoding="utf-8-sig", newline="") as fh:
         srows = list(csv.DictReader(fh))
     sched = tuple(
-        (rec["id"], rec["disposition"], rec["sched_class"], rec["priority"])
+        # Both classifier axes (WI-383): a width change must move neither the
+        # concurrency answer nor the rank, and reading only one would miss half.
+        (
+            rec["id"],
+            rec["disposition"],
+            rec["concurrency"],
+            rec["rank"],
+            rec["priority"],
+        )
         for rec in schedule.evaluate(schedule.load_wis(srows))
     )
     rows = ct.read_rows(reg)
