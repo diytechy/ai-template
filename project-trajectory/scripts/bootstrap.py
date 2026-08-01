@@ -61,6 +61,8 @@ What it creates in the destination:
                                                 fragments + regenerate the trunk artifacts)
     scripts/integrate.py                       (the local integrator: claim + serial
                                                 fail-closed merge queue + RULING-6 audit)
+    scripts/handback.py                        (the two lane closes that are not a merge:
+                                                handback + its bar-inert quarantine; WI-387)
     scripts/agent_route.py, scripts/score_reviews.py   (S8 coordinator routing + review scorer)
     docs/agents.csv                            <- agents.template.csv (model registry; inert until docs/agents-enabled)
     scripts/setup.{sh,ps1}, scripts/check.{sh,ps1}   (cross-platform launchers)
@@ -1367,6 +1369,11 @@ MAPPING = [
     # sibling when no role flag is given. Composes schedule.py / integrate.py /
     # the worker role; adds ordering only, never authority.
     ("scripts/drive.py", "scripts/drive.py"),
+    # The two lane closes that are NOT a merge (WI-387, concurrency-v2 §A3):
+    # handback (the work so far committed as-is, the specs back in queued/) and
+    # its ruled red arm, quarantine. drive.py imports it unguarded, so a
+    # scaffold without it cannot run the walk-away loop at all.
+    ("scripts/handback.py", "scripts/handback.py"),
     # The WI-218 split of the coordinator engine: the headless session layer,
     # the shared primitives, and the dual-plan runner agent_loop.py imports as
     # siblings. (The parallel dispatcher retired at concurrency-restructure

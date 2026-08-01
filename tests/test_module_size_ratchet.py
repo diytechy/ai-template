@@ -634,7 +634,10 @@ BASELINE = {
     # the arithmetic is a check on the resolution rather than a coincidence.
     # Both reason chains above are preserved verbatim; neither WI's record
     # was dropped to make the number fit. Re-stamp down with WI-280.
-    "check_trajectory.py": 3251,
+    # +10 (3251 -> 3261), WI-387: the `## Handback` section joins the spec body
+    # grammar in this F5 copy — identical text to the other two by construction
+    # (tests/test_wi_loader_sync.py). Reviewed bump, log 2026-08-01.
+    "check_trajectory.py": 3261,
     # NEW ENTRY, +25 (1498 -> 1523), WI-357: the two-stage work-branch claim
     # signal — the on-disk fast path plus the branch-history probe that
     # survives the §2.3 close commit (git log -1 over the claim path), with
@@ -763,7 +766,14 @@ BASELINE = {
     # +2 (2241 -> 2243), WI-384 REVIEW-A round 1: the same corrected rationale
     # in the GITKEEP_DIRS comment. Two comment lines, zero code tokens.
     # Reviewed bump, log 2026-08-01.
-    "bootstrap.py": 2243,
+    # +7 (2243 -> 2250), WI-387: the scaffold registration of the new sibling
+    # handback.py — one MAPPING row, its four-line reason, and two docstring
+    # lines in the kit-contents listing. Required registration, not monolith
+    # growth: the same shape as the trunk_step/integrate/drive rows above (and
+    # the omission this repo learned to fear — a scaffold-surface change that
+    # ships without its MAPPING row breaks every fresh scaffold while the kit's
+    # own tree stays green). Reviewed bump, log 2026-08-01.
+    "bootstrap.py": 2250,
     # NEW ENTRY, +228 (1423 -> 1651), Phase 2b of the concurrency restructure
     # (docs/concurrency-restructure.md §7): the spec-folder work-item reader,
     # which crosses this module over THRESHOLD for the first time. It is one
@@ -827,7 +837,74 @@ BASELINE = {
     # rationale in this copy of the F5 block — identical text to the other two
     # by construction (tests/test_wi_loader_sync.py). Three comment lines, zero
     # code tokens. Reviewed bump, log 2026-08-01.
-    "agent_common.py": 1731,
+    # +10 (1731 -> 1741), WI-387: the `## Handback` section joins the spec body
+    # grammar (`SPEC_HANDBACK` + the four-line partition in
+    # `parse_spec_deliverable`) so a returned WI can say in trunk what remains.
+    # Identical text to the other two F5 copies by construction
+    # (tests/test_wi_loader_sync.py). Reviewed bump, log 2026-08-01. Re-stamp
+    # down with WI-280.
+    "agent_common.py": 1741,
+    # NEW ENTRY, WI-387 — integrate.py crossed THRESHOLD (1418 -> 1588) adding
+    # the third terminal outcome. The extraction the ratchet asks for was TAKEN
+    # FIRST, not argued away: `hand_back` and `quarantine`, the largest unit and
+    # the only genuinely separable one, ship as the new sibling handback.py (261
+    # lines, under THRESHOLD, its own MAPPING/README/test-list rows) — exactly
+    # the WI-374 precedent that put the drive loop in drive.py rather than into
+    # agent_loop.py. What remains is irreducibly this module's own: the CLAIM
+    # (inverted to commit-tree -> branch -> trunk, plus `_abandoned_claim`, the
+    # shape recogniser that lets a crashed claim be re-cut instead of hand-
+    # repaired — this is what DELETED `drive._stranded_claims`), the outcome
+    # READ the merge slot gates on (`OUTCOME_DIRS` + `branch_outcomes`), and
+    # `_verdict_gate` re-keyed off the outcome. Splitting any of those out would
+    # put half of one decision in another file. Reviewed bump, reason in
+    # docs/log.md 2026-08-01; re-stamp DOWN with WI-390's deletions (the §A9.1
+    # discipline) or with WI-280.
+    # +50 (1588 -> 1638), WI-387 REVIEW-A round 1, both MAJORs landing here or
+    # beside here. `_abandoned_claim` gained the fourth fact that actually
+    # establishes "no work was built on this branch" — the tip's diff against
+    # its own parent must touch only the RULING-6 bookkeeping surfaces — plus
+    # the exact `_claim_subject` comparison and the `wi_id` it needs for it;
+    # the re-claim now prints the deleted sha and its restore command; and
+    # `branch_outcomes` collects per-basename outcome SETS so a spec in two
+    # folders refuses instead of silently resolving toward the outcome that
+    # skips the verdict gate. The rest is the claim docstring, whose two false
+    # sentences were replaced by the measured three-window account and the
+    # measured list of what the plumbing commit bypasses — record correction,
+    # which this program pays for in prose or pays for later. Reviewed bump,
+    # log 2026-08-01.
+    # +5 (1638 -> 1643), same round: the fourth fact reuses the RULING-6 allowed
+    # set, so a repo that declares no `[generated]` artifacts fails CLOSED there
+    # (its own claim commits carry the regeneration and stop looking like claim
+    # commits). Five comment lines saying so, because the failure DIRECTION is
+    # the part a successor would otherwise have to rediscover. Reviewed bump,
+    # log 2026-08-01.
+    # +34 (1643 -> 1677), REVIEW-A round 2: two more reports-success-on-failure
+    # shapes closed. `git branch -D`'s return code is read and the HOLDER named
+    # (it refuses a branch a worktree has checked out, and announcing a deletion
+    # that did not happen is what hid the rename mis-parse next door); and the
+    # content fact narrows from "only bookkeeping surfaces" — under which a
+    # commit adding just a log fragment was convicted and the fragment lost — to
+    # what the claim actually WRITES: this WI's spec move into active/<branch>/,
+    # required, plus declared generated paths, nothing else. Reviewed bump,
+    # log 2026-08-01.
+    # +15 (1677 -> 1692), same round: the orphan-deletion block extracted to
+    # `_drop_abandoned` because reading the return code pushed `claim` to C901
+    # 11. Extraction over a complexity baseline - the ratchet's stated
+    # preference - and the helper carries the WHY of both the printed sha and
+    # the checked code. Reviewed bump, log 2026-08-01.
+    # +41 net (1692 -> 1733), WI-387 merging trunk `4fb02de4`: NOT a new bump
+    # and not a side picked. The auto-merge kept 1692 - trunk carried no
+    # integrate.py entry at all, because ITS copy was 1449, under THRESHOLD - so
+    # the stamp had to be re-measured rather than trusted. Resolved by measuring
+    # the merged file with the census's own metric (`len(text.splitlines())` =
+    # 1733) and checking the arithmetic: base `6b22f169` 1418, + this branch's
+    # +274, + WI-378's +31 (the `_verdict_gate` docstring census), + the 10-line
+    # bridge paragraph the conflict resolution added = 1733 exactly. The sum
+    # CHECKS the resolution rather than agreeing with it: dropping either side's
+    # paragraph to clear the conflict would show up here as a shortfall. Both
+    # reason chains survive - WI-378 had none to preserve at this entry, and
+    # every WI-387 line above is intact. Re-stamp DOWN with WI-390.
+    "integrate.py": 1733,
 }
 
 

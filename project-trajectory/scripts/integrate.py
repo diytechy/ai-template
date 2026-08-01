@@ -18,11 +18,23 @@ merges second must refresh onto a trunk containing the first and bar THERE,
 so every pair composes exactly once, on the real tree, with the red
 attributable to the refresh that caused it.
 
-Four operations:
+THREE TERMINAL OUTCOMES, NO FOURTH (§A3). Every lane ends in a merge: `merged`
+(specs -> complete/), `cancelled` (specs -> cancelled/, so the cancellation is a
+trunk fact and the id stays retired) and `handback` (the work so far committed
+as-is, the specs back in queued/ carrying a `## Handback` section and a
+blockref). The outcome is not a flag anyone sets: it IS the folder the branch
+moved its specs into, read back by `branch_outcomes` off the same move that made
+the branch finished - so a merge queue that reads the outcome cannot disagree
+with the tree it is merging.
+
+Four operations here; the two lane closes that are NOT a merge (`hand_back`,
+`quarantine`) live in the sibling handback.py:
 
   claim      the §2.3 claim protocol, step 1+2: move a queued spec to
-             docs/work/active/<branch>/ in a trunk bookkeeping commit, then
-             cut the work branch from that commit. Refuses while the tracked
+             docs/work/active/<branch>/, write that bookkeeping commit as an
+             OBJECT, point the work branch at it, and only then advance trunk
+             (§A3 - the order is what makes a crash between the two writes
+             benign, see `claim`). Refuses while the tracked
              docs/work/pause is present (§5.6: pause = stop claiming), while
              hand-authored docs/status.md prose names the claimed id
              (WI-358: that R-D debt is paid before the branch exists, since a
@@ -42,7 +54,9 @@ Four operations:
   integrate  THE MERGE SLOT: the exclusive turn to advance trunk, and the
              whole merge queue. It takes the coordinator lock ONCE (the one
              acquisition site in this file, see `_slot`) and, per FINISHED
-             claimed branch, requires the policy verdicts (RULING-7), checks
+             claimed branch, reads the lane's OUTCOME off the tree
+             (`branch_outcomes`), requires the policy verdicts the outcome
+             owes (RULING-7 keyed off §A3, not off the claim), checks
              the ancestor relation and VERIFIES the `Bar-Green:` attestation
              at the branch tip, then merges --no-ff. A branch that is not
              merge-ready is refreshed RIGHT THERE, inside the slot — which is
@@ -101,6 +115,21 @@ import score_reviews
 SCRIPTS = Path(__file__).resolve().parent
 WORK = "docs/work"
 ACTIVE = WORK + "/active"
+
+# THE THREE TERMINAL OUTCOMES (§A3), and the whole of how a lane declares one:
+# the directory it moved its claimed specs INTO. `complete/` asserts the work is
+# done, `cancelled/` asserts it never will be, and any OPEN folder asserts it is
+# being handed back unfinished for a future lane to pick up out of trunk. There
+# is no fourth answer and no state file that could hold one, which is what makes
+# "every lane ends in a merge, branches never hang" a property of the tree
+# rather than a rule someone has to remember.
+OUTCOME_DIRS = {
+    "complete": "merged",
+    "cancelled": "cancelled",
+    "queued": "handback",
+    "draft": "handback",
+    "deferred": "handback",
+}
 
 # One LANE worktree home per repo, sibling to the checkout; one subdirectory per
 # claimed branch. The worker builds there and the station refresh runs there —
@@ -279,6 +308,124 @@ def _specref_refusal(root, meta, wi_id):
     return None
 
 
+def _claim_subject(wi_id, branch):
+    """The claim commit's subject - one home, because the writer and the
+    abandoned-claim reader below must agree on it exactly."""
+    return "claim: {} -> active/{} (bookkeeping)".format(wi_id, branch)
+
+
+def _abandoned_claim(root, wi_id, branch):
+    """Is `branch` the orphan a CRASHED claim leaves behind - and nothing else?
+
+    This function authorises a `git branch -D`, so it has to convict, not
+    resemble. Four facts, and every one of them has to hold:
+
+      * the tip's subject is EXACTLY `_claim_subject(wi_id, branch)`. The one
+        home is one home - an earlier version tested only that the subject
+        ENDED with `-> active/<branch> (bookkeeping)`, which a hand-written
+        `wip: nearly done -> active/wi-401 (bookkeeping)` satisfies, and
+        REVIEW-A round 1 drove that branch being deleted with its work on it;
+      * the tip is NOT an ancestor of trunk - nothing of it reached trunk;
+      * the tip's parent IS, so the branch is exactly ONE commit past a point
+        trunk has; and
+      * that one commit IS THE MOVE THIS CLAIM WOULD MAKE, and nothing else:
+        it ADDS this WI's spec under `active/<branch>/`, and every path it
+        touches is that spec's move or a DECLARED generated artifact. Being one
+        commit ahead proves nothing about what the commit carries - round 1
+        drove a one-commit branch adding `real-work.txt` - and "only
+        bookkeeping surfaces" was still too wide: round 2 drove a commit adding
+        only `docs/log.d/WI-401-hours.md` being convicted and the fragment
+        lost. The claim writes a spec move plus its regeneration, so that is
+        the whole of what a claim commit may contain.
+
+    Any branch failing any of the four is a real collision and still refuses.
+
+    THE FAILURE DIRECTION, stated as narrowly as the code behaves: a repo that
+    has declared no `[generated]` artifacts refuses its OWN crashed claims,
+    because the regeneration this claim folds in lands on undeclared paths. It
+    never deletes something it should not; it declines to re-cut something it
+    could have. Same declaration `audit` reads.
+    """
+    tip = _rev(root, "refs/heads/" + branch)
+    if tip is None:
+        return False
+    subject = _commit_message(root, tip).splitlines()[:1]
+    if not subject or subject[0].strip() != _claim_subject(wi_id, branch):
+        return False
+    head = _head(root)
+    if ac.git(root, "merge-base", "--is-ancestor", tip, head)[0] == 0:
+        return False
+    if ac.git(root, "merge-base", "--is-ancestor", tip + "^1", head)[0] != 0:
+        return False
+    # --no-renames because the claim's `git mv` would otherwise arrive as ONE
+    # rename record and hide the queued side of the move; split, both paths are
+    # named and each is judged on its own.
+    code, out = ac.git(root, "diff", "--name-status", "--no-renames", tip + "^1", tip)
+    if code != 0:
+        return False  # a diff nobody could read is not evidence of anything
+    generated = _generated_paths(root)
+    claimed = "{}/{}/{}-".format(ACTIVE, branch, wi_id)
+    queued = "{}/queued/{}-".format(WORK, wi_id)
+    moved_in = False
+    for line in out.splitlines():
+        parts = line.strip().split("\t")
+        if len(parts) < 2:
+            continue
+        status, path = parts[0], parts[-1].replace("\\", "/")
+        if path.startswith(claimed):
+            moved_in = moved_in or status.startswith("A")
+        elif not path.startswith(queued) and not any(
+            path == g.rstrip("/") or path.startswith(g) for g in generated
+        ):
+            return False
+    # A commit that regenerated artifacts but moved no spec is not a claim.
+    return moved_in
+
+
+def _drop_abandoned(root, branch):
+    """Delete the abandoned claim branch the ladder let through, if there is
+    one. A refusal string, or None.
+
+    Only an abandoned claim survives `_claim_refusal`'s branch rung, so this is
+    the re-claim §A3 asks for rather than a clobber. Two things it does that a
+    one-liner did not: it prints the SHA and the restore command, because a
+    deletion the operator cannot reach by reflog is a deletion they cannot
+    audit; and it READS THE RETURN CODE, because `git branch -D` refuses a
+    branch a worktree has checked out. Round 2 announced
+    `deleted the abandoned claim branch ...` over a branch that still existed
+    and then refused with an unrelated message - the same
+    reports-success-on-failure shape as the rename mis-parse it sat eight lines
+    from, so the holder is named here and the caller stops.
+    """
+    orphan = _rev(root, "refs/heads/" + branch)
+    if not orphan:
+        return None
+    code, out = ac.git(root, "branch", "-D", branch)
+    if code != 0:
+        holder, is_primary = _worktree_holding(root, branch)
+        where = (
+            "no registered worktree holds it"
+            if holder is None
+            else "it is checked out in {}{}".format(
+                holder, " (the MAIN checkout)" if is_primary else ""
+            )
+        )
+        return (
+            "{} is an abandoned claim but will not delete - {}. Free the branch "
+            "(git worktree remove <path> / git -C <path> checkout <trunk>) then "
+            "re-run; nothing was claimed:\n{}".format(
+                branch, where, ac._failure_tail(out)
+            )
+        )
+    print(
+        "integrate: deleted the abandoned claim branch {} (was {}; recoverable "
+        "via git reflog / git branch {} {})".format(
+            branch, orphan[:10], branch, orphan[:10]
+        )
+    )
+    return None
+
+
 def _claim_refusal(root, wi_id, branch):
     """The claim's refusal ladder: the first reason this claim may not happen,
     or None. Every reason is named; order is cheapest-first."""
@@ -293,7 +440,7 @@ def _claim_refusal(root, wi_id, branch):
     if ac.working_tree_dirty(root):
         return "the trunk working tree is dirty - a claim is a clean serial commit"
     code, _ = ac.git(root, "rev-parse", "--verify", "--quiet", "refs/heads/" + branch)
-    if code == 0:
+    if code == 0 and not _abandoned_claim(root, wi_id, branch):
         return "branch {} already exists".format(branch)
     if ".." in branch or "/" in branch or "\\" in branch:
         return (
@@ -327,8 +474,48 @@ def _claim_refusal(root, wi_id, branch):
 
 
 def claim(root, wi_id, branch):
-    """§2.3 steps 1+2: the serial trunk claim, then the branch cut."""
+    """§2.3 steps 1+2 in the order that makes a half-claim BENIGN (§A3).
+
+    THREE interesting points, not two - the first version of this docstring
+    said two and was wrong (REVIEW-A round 1, driven).
+
+    1. Before `commit-tree`. The spec is already `git mv`d and the regen output
+       already staged, so a crash here leaves a DIRTY TRUNK with the spec
+       moved and no branch. That window is unchanged by the inversion (the old
+       order had it too) and it is not this function's to close: the next
+       claim's `working_tree_dirty` rung refuses it by name, and drive.py's
+       cycle-top check turns it into EXIT_PREFLIGHT. Hand repair, but LOUD and
+       already fronted.
+    2. Between `git branch` and the trunk advance - THE WINDOW THE INVERSION
+       MOVES, and the entire reason `drive._stranded_claims` existed. TRUNK
+       FIRST left a claim no lane could reach: the spec sat in
+       `active/<branch>/` on trunk with no branch to build it, invisible to
+       the frontier (the WI is no longer queued) and to the parked-resume read
+       (no ref). BRANCH FIRST leaves trunk holding the WI in `queued/` while a
+       branch sits on a claim commit trunk never took - definitionally an
+       abandoned claim, which `_abandoned_claim` convicts and the next claim
+       deletes and re-cuts. That is the failure moving to the benign side, and
+       the check deleted with it.
+    3. After the trunk advance: the claim is complete.
+
+    THE HONEST COST OF THE PLUMBING. `write-tree` + `commit-tree` skip the
+    pre-commit hook entirely, and that is more than the freshness floor. The
+    regen below covers six of the hook's ten `--run-steps` (arch-map, okf,
+    derived-gate, trajectory-map, status-map, open-items); it does NOT cover
+    `registry-integrity`, the `trajectory` SSOT check, `skills-sync` or
+    `ratify-fresh`, and outside `--run-steps` the commit also skips
+    `check_privacy --author`, the ALWAYS-ON secrets floor, the `format` step
+    and the `commit-msg` hook. Most are vacuous for a pure bookkeeping commit
+    whose parent just passed them, but two are not: `ratify-fresh` reads the
+    registry this commit MUTATES, and the secrets floor would otherwise scan
+    the regenerated artifacts. So trunk advances to a commit no hook inspected,
+    and the next thing to bar it is a lane's §A2 refresh. Accepted for the
+    window it buys, not because nothing is given up.
+    """
     refusal = _claim_refusal(root, wi_id, branch)
+    if refusal:
+        return fail(refusal)
+    refusal = _drop_abandoned(root, branch)
     if refusal:
         return fail(refusal)
     spec = _queued_spec(root, wi_id)
@@ -364,23 +551,42 @@ def claim(root, wi_id, branch):
             )
         )
     ac.git(root, "add", "-A")
-    code, out = ac.git(
+
+    def restore(reason, detail):
+        ac.git(root, "reset", "--hard", "HEAD")
+        return fail("{} (trunk restored):\n{}".format(reason, ac._failure_tail(detail)))
+
+    code, tree = ac.git(root, "write-tree")
+    if code != 0 or not tree.strip():
+        return restore("the claim tree could not be named", tree)
+    code, commit = ac.git(
         root,
-        "commit",
+        "commit-tree",
+        tree.strip(),
+        "-p",
+        _head(root),
         "-m",
-        "claim: {} -> active/{} (bookkeeping)\n\nThe §2.3 serial trunk claim with its regeneration folded in; the work\nbranch is cut from this commit.".format(
-            wi_id, branch
+        "{}\n\nThe §2.3 claim with its regeneration folded in, written BEFORE the\nbranch and before trunk moves onto it (§A3): a crash between the two\nwrites leaves at worst an orphan branch this claim re-cuts, never a\nclaim no lane can reach.".format(
+            _claim_subject(wi_id, branch)
         ),
     )
+    if code != 0 or not commit.strip():
+        return restore("the claim commit object could not be written", commit)
+    commit = commit.strip()
+    code, out = ac.git(root, "branch", branch, commit)
     if code != 0:
+        return restore("branch cut failed", out)
+    code, out = ac.git(root, "reset", "--hard", commit)
+    if code != 0:
+        # The branch is already correct, so this leaves the benign shape the
+        # inversion exists to produce - not a state anyone has to repair.
         return fail(
-            "claim commit failed (the floor is the gate working):\n{}".format(out)
+            "the trunk advance onto claim commit {} failed; {} holds the claim "
+            "and trunk did not move, which is the abandoned-claim shape a "
+            "re-claim resolves:\n{}".format(commit[:10], branch, out)
         )
-    code, out = ac.git(root, "branch", branch, "HEAD")
-    if code != 0:
-        return fail("branch cut failed: {}".format(out))
     print(
-        "integrate: claimed {} on {} (trunk commit + branch cut)".format(wi_id, branch)
+        "integrate: claimed {} on {} (branch cut + trunk advance)".format(wi_id, branch)
     )
     return 0
 
@@ -416,12 +622,50 @@ def finished_branches(root):
     return done
 
 
+def _claimed_specs(root, branch):
+    """`[(WI id, spec filename)]` the TRUNK holds claimed for this branch."""
+    out = []
+    for spec in sorted((root / ACTIVE / branch).glob("WI-*.md")):
+        parts = spec.name.split("-", 2)
+        out.append((parts[0] + "-" + parts[1], spec.name))
+    return out
+
+
 def _claimed_wi_ids(root, branch):
     """The WI ids the TRUNK holds claimed for this branch."""
-    ids = []
-    for spec in sorted((root / ACTIVE / branch).glob("WI-*.md")):
-        ids.append(spec.name.split("-", 2)[0] + "-" + spec.name.split("-", 2)[1])
-    return ids
+    return [wi_id for wi_id, _name in _claimed_specs(root, branch)]
+
+
+def branch_outcomes(root, branch):
+    """`({WI id: outcome}, [claimed filenames naming other than ONE outcome])`.
+
+    Read off the BRANCH's own tree against `OUTCOME_DIRS`, so the outcome is
+    derived from the same move that made the branch FINISHED - one fact, read
+    twice, never two facts to keep in agreement.
+
+    EXACTLY ONE folder, or nothing. A spec that landed in no declared folder
+    names none of the three; a spec left in TWO declared folders names two, and
+    resolving that silently is worse than either - a dict keyed on the basename
+    used to let the last `ls-tree` line win, which is plain alphabetical
+    precedence and put `queued` (handback, no verdict owed) ahead of `complete`
+    (merged, an APPROVE owed). REVIEW-A round 1 drove it. Both shapes go to
+    `unresolved` and the caller refuses, here, where the outcome is read -
+    rather than leaning on the duplicate-id ERROR a different script happens to
+    raise later.
+    """
+    landed = {}
+    for path in _branch_tree_paths(root, branch, WORK) or []:
+        parts = path.split("/")
+        if len(parts) > 3 and parts[2] in OUTCOME_DIRS:
+            landed.setdefault(parts[-1], set()).add(OUTCOME_DIRS[parts[2]])
+    outcomes, unresolved = {}, []
+    for wi_id, name in _claimed_specs(root, branch):
+        seen = landed.get(name) or set()
+        if len(seen) == 1:
+            outcomes[wi_id] = next(iter(seen))
+        else:
+            unresolved.append(name)
+    return outcomes, unresolved
 
 
 def _last_commit_time(root, ref, *pathspec):
@@ -536,7 +780,7 @@ def _work_tip(root, branch):
     return _rev(root, rev)
 
 
-def _verdict_gate(root, branch, wi_ids):
+def _verdict_gate(root, branch, outcomes):
     """RULING-7: the dialed verdict artifacts, fresh at the branch's work tip.
 
     review-policy >= 1 demands docs/reviews/WI-<n>-REVIEW-A.md per closed WI,
@@ -574,6 +818,25 @@ def _verdict_gate(root, branch, wi_ids):
     `docs/log.d/` differs on purpose: a log fragment is the narrative of work
     the verdict already read, carries no key any reader gates on, and is
     append-compiled on the trunk rather than merged.
+
+    KEYED OFF THE OUTCOME, NOT OFF THE CLAIM (§A3). Only `merged` asserts the
+    work is done, and only an assertion of done owes a verdict; `cancelled` and
+    `handback` assert the opposite - this will never be built, or this is coming
+    back unfinished - so an APPROVE would be an approval of nothing. Reading the
+    requirement off the claim instead would deadlock the commonest handback
+    cause on itself: a review escalation is precisely the case where no APPROVE
+    exists, and the lane would be unable to return the work it could not get
+    approved.
+
+    THE TWO RULES MEET AT ONE POINT, stated so nobody has to re-derive it from
+    the loop: the freshness comparison above only ever runs for an id whose
+    outcome is `merged`, because the others are skipped before reaching it. So
+    WI-378's `docs/work/` reasoning governs exactly the branches that assert
+    done - which is also the only place its ordering rule ("close before the
+    final verdict round") can bite, since the closing MOVE is itself a
+    `docs/work/` change. Neither rule weakens the other: a returned or
+    cancelled spec moves under `docs/work/` too, and owes no verdict for that
+    move to stale.
     """
     dial = ac.read_declared(root / "docs" / "review-policy", "0")
     try:
@@ -589,7 +852,9 @@ def _verdict_gate(root, branch, wi_ids):
         ":(exclude)docs/reviews",
         ":(exclude)docs/log.d",
     )
-    for wi in wi_ids:
+    for wi in sorted(outcomes):
+        if outcomes[wi] != "merged":
+            continue
         rel = "docs/reviews/{}-REVIEW-A.md".format(wi)
         code, text = ac.git(root, "show", "{}:{}".format(branch, rel))
         if code != 0:
@@ -1200,10 +1465,20 @@ def integrate_one(root, branch, tier, held=None):
     wi_ids = _claimed_wi_ids(root, branch)
     if not wi_ids:
         return "trunk holds no claimed specs for {}".format(branch)
+    outcomes, unresolved = branch_outcomes(root, branch)
+    if unresolved:
+        return (
+            "{} left claimed spec(s) without exactly ONE declared state "
+            "directory ({}) - the folder a spec lands in IS the lane's outcome "
+            "(§A3), so one that landed nowhere names none of the three and one "
+            "that landed twice names two; nothing was merged".format(
+                branch, ", ".join(unresolved)
+            )
+        )
     refusal = _declared_bar_or_refusal(root)
     if refusal:
         return refusal
-    refusal = _verdict_gate(root, branch, wi_ids)
+    refusal = _verdict_gate(root, branch, outcomes)
     if refusal:
         return refusal
 
@@ -1234,8 +1509,11 @@ def integrate_one(root, branch, tier, held=None):
         "merge",
         "--no-ff",
         "-m",
-        "integrate: merge {} ({})\n\nThe §A2 merge: trunk was already an ancestor of this branch, so the\nmerge is trivially clean and its tree IS the branch tip's - the tree the\nbranch's own refresh bar passed ({}).".format(
-            branch, ", ".join(wi_ids), why
+        "integrate: merge {} ({})\n\nThe §A2 merge: trunk was already an ancestor of this branch, so the\nmerge is trivially clean and its tree IS the branch tip's - the tree the\nbranch's own refresh bar passed ({}).\n\nOutcomes (§A3): {}".format(
+            branch,
+            ", ".join(wi_ids),
+            why,
+            ", ".join("{}={}".format(w, outcomes[w]) for w in wi_ids),
         ),
         branch,
     )
@@ -1250,7 +1528,13 @@ def integrate_one(root, branch, tier, held=None):
             "stops for a human to read:\n{}".format(branch, ac._failure_tail(out))
         )
     unloaded, note = _unload_branch(root, branch)
-    print("integrate: {} merged ({}); {}".format(branch, ", ".join(wi_ids), why))
+    print(
+        "integrate: {} merged ({}); {}".format(
+            branch,
+            ", ".join("{}={}".format(w, outcomes[w]) for w in wi_ids),
+            why,
+        )
+    )
     # An incomplete unload goes to stderr rather than being swallowed - the §5.6
     # drained-and-unloaded stop is not reached while a branch or worktree lingers.
     print("integrate: {}".format(note), file=sys.stdout if unloaded else sys.stderr)

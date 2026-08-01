@@ -27,6 +27,15 @@ construction). A parked claimed branch from an interrupted run is resumed
 (worker relaunched on it) rather than refused, so the walk-away loop restarts
 with the same double-click that started it.
 
+EVERY LANE ENDS IN A MERGE (docs/concurrency-v2.md §A3, WI-387). A worker that
+cannot finish no longer stops the run: the driver reads its exit code, and a
+DECIDED one (`_WORKER_OUTCOMES`) closes the lane as a HANDBACK — the work so
+far committed as-is, the specs back in `queued/` blocked on a blockref, the
+branch merged like any other. A CRASH is not a hang and keeps the parked-resume
+path unchanged. The WRITES themselves stay in the handback.py sibling, which
+owns closing a lane; what lives here is only the DECISION of which outcome a
+cycle reached.
+
 Explicitly NOT here, by spec: worktree pools, reservations, train grouping,
 run-state files, disposition arms. If a change starts to grow this module
 toward the deleted dispatcher's shape, stop and escalate as a written case
@@ -44,6 +53,7 @@ import sys
 from pathlib import Path
 
 import agent_common as ac
+import handback
 import integrate
 import schedule
 
@@ -189,44 +199,60 @@ def _drain(root, tier):
     at a time, with the bar inside the lock. That is the owner's recorded
     caveat priced at one line.
 
-    A red refresh STOPS the run - it is the same failure a red merge bar used
-    to be, moved to where the lane that caused it can fix it.
+    A red refresh STOPS the run for a branch that asserts it is DONE - it is
+    the same failure a red merge bar used to be, moved to where the lane that
+    caused it can fix it. A branch that asserts the opposite is the §A3
+    exception the ruling covers: see `_refresh_or_quarantine`.
     """
     for branch in integrate.finished_branches(root):
-        _sha, refusal = integrate.refresh(root, branch, tier)
+        refusal = _refresh_or_quarantine(root, branch, tier)
         if refusal:
             _say(refusal, err=True)
             return 1
     return integrate.integrate(root, tier)
 
 
-def _stranded_claims(root):
-    """active/<branch>/ directories that still hold specs but whose branch ref
-    is GONE — a half-completed claim (the trunk commit landed, the branch cut
-    or a later deletion did not). Invisible to both the frontier (the WI is
-    `active`) and the parked-resume read (no ref), so without this check a
-    run would report the queue DRAINED over work nobody can reach (codex
-    cross-review finding, WI-374 round 1)."""
-    active = root / "docs" / "work" / "active"
-    if not active.is_dir():
-        return []
-    return [
-        p.name
-        for p in sorted(active.iterdir())
-        if p.is_dir()
-        and any(p.glob("WI-*.md"))
-        and ac.git(root, "rev-parse", "--verify", "--quiet", "refs/heads/" + p.name)[0]
-        != 0
-    ]
+def _refresh_or_quarantine(root, branch, tier):
+    """The §A2 refresh, with the §A3 red-handback ruling behind it. A refusal
+    string, or None.
+
+    A merged lane that reds the bar has broken something and is told so: its
+    outcome ASSERTS the work is done, and the run stops for the lane to fix it.
+    A lane that merged nothing asserts the opposite - it is handing the work
+    back, or throwing it away - and stopping the run over red code nobody
+    claimed was finished is exactly the hanging branch this design abolishes.
+    So it is quarantined once (ruled option 1: revert the code, keep the failing
+    diff as a bar-inert `.patch`) and refreshed again. Once, deliberately: a
+    second red on a tree whose product changes have all been reverted is a real
+    anomaly, not a case to loop on.
+    """
+    _sha, refusal = integrate.refresh(root, branch, tier)
+    if not refusal:
+        return None
+    outcomes, unresolved = integrate.branch_outcomes(root, branch)
+    if unresolved or "merged" in outcomes.values():
+        return refusal
+    _say("{} - quarantining it (§A3: it merges nothing).".format(refusal), err=True)
+    refusal = handback.quarantine(root, branch, refusal)
+    if refusal:
+        return refusal
+    _sha, refusal = integrate.refresh(root, branch, tier)
+    return refusal
 
 
 def _resume_or_claim(root, cycle, tier, merged, config_refusal):
     """One cycle's assignment: `(branch, wi_ids, None)` to build, or
     `(None, None, exit_code)` when the run ends here — the drained queue
-    (EXIT_DONE), a claim refusal's code, a stranded claim, or a
-    registry/frontier mismatch. `config_refusal` (string or None) is applied
-    only when there is work that needs a worker — BEFORE a claim would park a
-    branch, but never blocking an empty queue from draining to success."""
+    (EXIT_DONE), a claim refusal's code, or a registry/frontier mismatch.
+    `config_refusal` (string or None) is applied only when there is work that
+    needs a worker — BEFORE a claim would park a branch, but never blocking an
+    empty queue from draining to success.
+
+    (`_stranded_claims` retired with WI-387. It existed only because the claim
+    advanced trunk BEFORE cutting the branch, so a crash between the two writes
+    left a claim no lane could reach; `integrate.claim` now writes the branch
+    first, and the crash window leaves an orphan branch the next claim deletes
+    and re-cuts — a benign shape, so there is nothing left to refuse over.)"""
     parked = _parked_branches(root)
     if parked:
         if config_refusal:
@@ -240,17 +266,6 @@ def _resume_or_claim(root, cycle, tier, merged, config_refusal):
             )
         )
         return branch, wi_ids, None
-    stranded = _stranded_claims(root)
-    if stranded:
-        _say(
-            "claimed spec(s) with NO branch ref - refusing to treat this "
-            "queue as drainable: {}. Restore the branch, or move the specs "
-            "back to queued/ in a reviewed trunk commit, then relaunch.".format(
-                ", ".join(stranded)
-            ),
-            err=True,
-        )
-        return None, None, ac.EXIT_PREFLIGHT
     ready = [
         r for r in schedule.frontier(schedule._load(root)) if r["status"] == "queued"
     ]
@@ -290,23 +305,96 @@ def _resume_or_claim(root, cycle, tier, merged, config_refusal):
     return branch, [wid], None
 
 
-def _worker_stop_code(branch, code):
-    """None to continue the loop, else the exit code the worker's outcome ends
-    the run with — the claim stays parked either way, so a relaunch resumes."""
-    if code == ac.EXIT_NEEDS_HUMAN:
+# The exit codes a worker DECIDES on: it ran, reached a conclusion, and said so.
+# Every one of them is a lane that cannot finish, which under §A3 is a HANDBACK
+# — the lane closes into trunk and the run keeps going. Anything else (a
+# traceback's 1, a signal, a killed process) is a CRASH, which is deliberately
+# NOT a hang and keeps the machinery that already handles it: the branch exists,
+# the specs are still in active/<branch>/, so the next cycle's _parked_branches
+# re-assigns a lane to it and the stall guard bounds a worker that keeps dying.
+#
+# `EXIT_TRAIN_END` (10) is deliberately NOT here, and as of WI-383 the constant
+# it named no longer exists: session grouping is gone (§A6.1) and
+# `agent_common` keeps only a note reserving the number. This set was written
+# without it while that deletion was still in flight on a sibling lane —
+# naming it would have made this module an AttributeError at import the moment
+# the two merged. A code no worker emits needs no arm; were one ever to arrive
+# it falls to the crash path, which parks and resumes rather than deciding an
+# outcome on behalf of a worker that decided none.
+#
+# A TRADE THIS SET MAKES, stated here rather than left in the literal (REVIEW-A
+# round 1). `EXIT_BUDGET` and `EXIT_STALL` are RESUMABLE conditions: before
+# WI-387 a worker that hit its session ceiling stopped the run with the claim
+# parked, and a relaunch resumed the same lane, so a WI needing more than one
+# worker budget finished across relaunches with no human in the loop. They are
+# decided exits, so they now hand back — and `hand_back` sets a `blockref`,
+# which `schedule._disposition` reads as `blocked`, so an unattended run can
+# never pick that WI up again until a human clears it. §A3's ruling is "any
+# non-zero worker exit that is not a crash", and its justification (the dominant
+# shape is green-but-not-approved or cannot-proceed-for-config-reasons) is about
+# EXIT_NEEDS_HUMAN, not about a ceiling. The alternative — hand back WITHOUT a
+# blockref so a ceiling stays resumable — re-opens the claim/return/re-claim
+# loop this row closed, bounded then only by --max-iterations, so it is an owner
+# call rather than a builder's: filed as a finding, not decided here.
+_WORKER_OUTCOMES = frozenset(
+    {
+        ac.EXIT_PREFLIGHT,
+        ac.EXIT_BLOCKED,
+        ac.EXIT_STALL,
+        ac.EXIT_WAITING,
+        ac.EXIT_BUDGET,
+        ac.EXIT_NEEDS_HUMAN,
+        ac.EXIT_PAUSED,
+    }
+)
+
+
+def _lane_close(root, branch, code):
+    """What a non-DONE worker outcome does to the lane: None to keep driving,
+    else the exit code the run ends with (§A3).
+
+    THE RUN-STOPS THIS REPLACES. `EXIT_NEEDS_HUMAN` used to end the whole drive
+    loop and any other non-zero exit stopped it with the branch parked — so one
+    WI wanting a human froze a walk-away run, and its partial work sat where
+    nobody would find it. Neither is an exceptional outcome that deserves an
+    exceptional path: the lane hands back, the WI returns to trunk blocked and
+    visible on the owner surface, and the dispatcher moves to the next one.
+
+    A lane that ALREADY CLOSED its specs is left alone whatever it exited with.
+    Its tree has already named an outcome — `complete/`, `cancelled/`, wherever
+    it moved them — and the drain will merge it on that. Handing it back would
+    be the driver overruling the tree with an exit code, and it cannot anyway:
+    `hand_back` reads the claimed spec out of `active/<branch>/` in the LANE,
+    where a closed lane no longer has one, so it failed with an OSError and
+    stopped the run over a branch that would have merged cleanly (REVIEW-A
+    round 1, driven — a review escalation lands at the END of a lane, which is
+    exactly when the close may already be written).
+
+    A failed handback DOES stop the run, and must: it is the one state the
+    invariant cannot express, so it is reported rather than driven past.
+    """
+    if branch in integrate.finished_branches(root):
         _say(
-            "NEEDS-HUMAN from the worker on {} - act on its ask, then "
-            "relaunch; the claim stays parked and resumes.".format(branch),
+            "worker on {} exited {} but its specs are already out of active/ - "
+            "the tree has named an outcome, so the drain merges it on that "
+            "rather than handing back over the top of it.".format(branch, code)
+        )
+        return None
+    if code not in _WORKER_OUTCOMES:
+        _say(
+            "worker on {} CRASHED (exit {}) - the claim stays in active/{}/ "
+            "and the next cycle resumes it; a worker that keeps dying trips "
+            "the stall guard.".format(branch, code, branch),
             err=True,
         )
-        return code
-    if code != ac.EXIT_DONE:
-        _say(
-            "worker on {} exited {} - stopping (the claim stays parked; "
-            "relaunching resumes it).".format(branch, code),
-            err=True,
-        )
-        return code
+        return None
+    reason = "worker exit {}{}".format(
+        code, " (NEEDS-HUMAN)" if code == ac.EXIT_NEEDS_HUMAN else ""
+    )
+    _ids, refusal = handback.hand_back(root, branch, reason)
+    if refusal:
+        _say("cannot hand back {}: {}".format(branch, refusal), err=True)
+        return ac.EXIT_PREFLIGHT
     return None
 
 
@@ -376,9 +464,11 @@ def run(root, args, worker=None, tier="all"):
         if branch is None:
             return code
 
-        code = _worker_stop_code(branch, worker(root, branch, wi_ids, args))
-        if code is not None:
-            return code
+        code = worker(root, branch, wi_ids, args)
+        if code != ac.EXIT_DONE:
+            code = _lane_close(root, branch, code)
+            if code is not None:
+                return code
 
         # Count what the drain will actually merge — every finished branch,
         # residue included, not just this cycle's own (REVIEW-A round 2: the
