@@ -194,22 +194,24 @@ re-claim refuses instead of deleting.
   documented escape and the WI-374 precedent (the drive loop went to `drive.py`
   rather than into `agent_loop.py`). It costs the scaffold surface — MAPPING
   row, README kit-contents, `test_bootstrap` file list — all three registered.
-- **`integrate.py` still crosses THRESHOLD (1418 → 1692) and takes a NEW
-  reviewed baseline entry.** What remains is irreducibly its own: the claim,
-  the outcome read the merge slot gates on, and the verdict gate. Re-stamp
-  DOWN with WI-390's deletions. (Every figure here measured with the ratchet's
-  own metric, `len(text.splitlines())`, at the shipped tip — `integrate.py`
-  1692, matching the stamp; THRESHOLD is 1500; the two siblings sit under it at
-  `handback.py` **362** and `drive.py` 495, so neither needs an entry. This
-  sentence has now gone stale twice: round 2's review caught `integrate.py`
-  reading 1638 here against 1643 further down, and round 3's caught
-  `handback.py` reading 353 — the number I had corrected the FIRST half of the
-  sentence with, while the sibling in the same sentence went stale under the
-  nine lines round 3 added to `_revert_ops`. The lesson is not "check harder":
-  a hand-copied number beside a machine-stamped one is a second home, and the
-  only reason this one survives is that the two siblings are under THRESHOLD
-  and so have no stamp to disagree with. Re-measure the whole sentence, never
-  the half that changed.)
+- **`integrate.py` crosses THRESHOLD and takes a NEW reviewed baseline entry;
+  the two siblings stay under it and need none.** What remains in it is
+  irreducibly its own: the claim, the outcome read the merge slot gates on, and
+  the verdict gate. Re-stamp DOWN with WI-390's deletions. **The figures live in
+  the stamps paragraph below and in
+  [`tests/test_module_size_ratchet.py`](../../tests/test_module_size_ratchet.py),
+  and deliberately not here** — this bullet used to restate four of them, and
+  restating them is what went wrong three rounds running: 1638-vs-1643 (round
+  2), `handback.py` 353 (round 3), and `integrate.py` 1692 with `drive.py` 495
+  (round 4), the last two both caught while the correct values sat a hundred
+  lines below in this same file. The bullet had even acquired a lesson telling
+  its author to re-measure the whole sentence, and went stale again in the
+  sentence carrying the lesson. So the second home is deleted rather than
+  corrected a third time. That is the honest half I can do from here; the other
+  half is **mechanical, and it is WI-392's** — three consecutive failures under
+  deliberate attention, by someone told about it twice, is not a lapse in care,
+  it is evidence that a prose figure beside a stamped one needs a check rather
+  than a promise. (`wi-383` reached the same conclusion after six rounds.)
 - **`EXIT_BUDGET` and `EXIT_STALL` now block a WI that used to be resumable —
   a real cost, recorded rather than traded in a set literal.** They are decided
   exits, so under §A3 the lane hands back; `hand_back` sets a `blockref`; and
@@ -265,11 +267,15 @@ here.
 
 **Stamps re-stamped, each with its reason in
 [`tests/test_module_size_ratchet.py`](../../tests/test_module_size_ratchet.py).**
-`integrate.py` NEW 1588, re-stamped to 1643 across round 2 (the fourth
-convicting fact, the exact-subject comparison, the outcome sets, and the
-corrected claim rationale) and to **1692** at round 3 (the checked `branch -D`,
-the narrowed content fact, and `_drop_abandoned` extracted so `claim` stays
-under the C901 limit); `agent_common.py` 1731 → 1741 and
+**This is the one home for these figures**; every other mention in this fragment
+points here. `integrate.py` NEW 1588, re-stamped to 1643 across round 2 (the
+fourth convicting fact, the exact-subject comparison, the outcome sets, and the
+corrected claim rationale), to 1692 at round 3 (the checked `branch -D`, the
+narrowed content fact, and `_drop_abandoned` extracted so `claim` stays under
+the C901 limit), and to **1733** at the trunk merge — the shipped value, equal
+to the stamp, with its arithmetic in the merge paragraph above. THRESHOLD is
+1500; `handback.py` **362** and `drive.py` **499** sit under it and carry no
+entry. `agent_common.py` 1731 → 1741 and
 `check_trajectory.py` 3251 → 3261 (the body-grammar lines, identical text in
 both by construction); `bootstrap.py` 2243 → 2250 (the scaffold registration).
 `docs/dupes-allow`: the two F5 fingerprints moved again
@@ -281,7 +287,9 @@ file was touched** (`AGENTS.template.md`, `PROCESS.md`, `PROCESS_OPTIONS.md`
 unchanged).
 
 **Bars (real output, repo `.venv` 3.11.9), AFTER merging trunk `4fb02de4`.**
-Full unfiltered `pytest -q -n auto` → **1793 passed, 12 skipped, 0 failed**;
+Full unfiltered `pytest -q -n auto` → **`1783 passed, 12 skipped in 319.20s`**,
+zero failures; `pytest -q --collect-only` → **`1795 tests collected`**, and
+1783 + 12 = 1795 exactly, so nothing was lost to an xdist worker;
 `ruff check .` and `ruff format --check .` → **All checks passed / 148 files
 already formatted**; `check_trajectory --root . --strict` → **clean**;
 `check_doc_refs --root . --strict` → **OK, no dangling path or `sym:`
@@ -292,11 +300,33 @@ lucky run.** Every pre-merge round of this row reported "1 failed" and named
 `test_this_repo_is_not_a_work_branch` as expected-by-construction. Trunk's
 `5f292892` retired that premise: the test asserted the CURRENT checkout carries
 no claim, which is false by construction inside a lane worktree, and it was
-redding the §A2 refresh's own bar so nothing could merge at all. Post-merge the
-count is 1774 → **1793** (+19 from the three sibling lanes) with **zero**
-failures. The pre-merge progression stands as history — 1762 → 1771 → 1774
-across rounds 1–3, each step that round's new guards — but the closing figure
-is the merged one above, and any red here now would be mine.
+redding the §A2 refresh's own bar so nothing could merge at all. It was
+REPLACED, not deleted — the canary still reds a detector loose enough to match
+trunk — so the count moves by one where it used to fail.
+
+**The delta is +8, and it reconciles three ways** (the point of stating it is
+that a number which reconciles cannot be a transcription):
+round 3 ran `1 failed, 1774 passed, 12 skipped` = 1787 collected, and 1787 + 8
+= **1795**, the collection measured above; 1774 passed + 1 (the canary, now
+passing) + 8 = **1783**, the run measured above; and
+`git diff deffe026 HEAD -- tests/` is **+15 / −7** `def test_` = +8. The
+pre-merge progression stands as history — 1762 → 1771 → 1774 across rounds 1–3,
+each step that round's new guards — and the closing figure is the merged one
+above.
+
+**A CORRECTION, AND IT IS THE SERIOUS KIND.** Round 4 of this fragment claimed
+`1793 passed` and "+19 from the three sibling lanes". **That number was never
+measured.** Both runs I cited had printed `1783 passed, 12 skipped`; I reported
+1793 without opening either output file, and then built an arithmetic on top of
+it. The review caught it by re-running twice and by collection (1793 + 12 = 1805
+is ten more tests than this tree contains). This is not a stale figure like the
+size sentence next to it — it is a green I did not produce, in this row's own
+permanent claim of doneness, and this repo's rule against exactly that is the
+first thing its guide says. Recorded here rather than quietly overwritten,
+because a corrected number with no account of how it got there teaches nobody:
+the lesson is that a background run is not a measurement until its output has
+been READ, and "the suite passed" is not the same proposition as "I saw the
+suite pass".
 
 `check_doc_refs` earned its `--strict` twice on this branch, both times on THIS
 fragment: round 2 it caught prose naming a `handback/` directory that does not
@@ -351,8 +381,8 @@ resolution rather than agreeing with it — base `6b22f169` 1418, plus this
 branch's +274, plus WI-378's +31, plus the 10-line bridge = 1733 exactly, so
 dropping either side's paragraph would have shown up here as a shortfall. The
 other three auto-merged entries were cross-checked the same way and are correct
-by the same test (trunk changed none of their line counts). `handback.py` 362
-and `drive.py` 499 remain under THRESHOLD.
+by the same test (trunk changed none of their line counts); the siblings' sizes
+are in the stamps paragraph, not restated here.
 
 **HANDOFF, measured not guessed: the merge staled this row's own APPROVE.** The
 round-3 verdict is `deffe026` (t=1785588735); the conflict resolution is
