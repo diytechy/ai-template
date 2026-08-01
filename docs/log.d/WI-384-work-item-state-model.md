@@ -323,14 +323,31 @@ changes with compile timing is a seam worth someone's attention.
 **Verified on the surface that actually refused, not just on the branch.**
 `doc-refs --strict` reads exit 0 here, and the composed tree
 (`git merge-tree --write-tree` against trunk, extracted and checked) carries
-zero findings attributable to this row. It does report two — both
-`docs/test/report.md`, from `README.md` — and those are an artifact of the
-verification method, not a red: that file is GENERATED and gitignored
-(`.gitignore:12`), so a bare tree extraction lacks it while any real working
-tree has it, the bar's own `registry-integrity` step regenerating it via
-`trace.py` before `doc-refs` runs. The control settles it: extracting TRUNK
-ALONE the same way reports the identical two. Anyone re-driving this should
-expect them and not mistake them for rot.
+zero findings attributable to this row.
+
+A bare extraction does report some, and they are an artifact of the METHOD: the
+only path involved is docs/test/report.md, which is GENERATED and gitignored
+(`.gitignore:12`), so extracting a git tree lacks it while any real working tree
+has it — the bar's own `registry-integrity` step regenerates it via trace.py
+before `doc-refs` runs. **The control that isolates the cause:** copy that one
+file into the extraction and nothing else, and the run goes from dangling to
+`no dangling · 866 untraced`, exit 0. That names the cause rather than showing
+that trunk merely shares it; extracting TRUNK ALONE the same way, which reports
+the same residual, is the corroboration rather than the argument.
+
+**Measured 2026-08-01 at this row's tip, by the command above** — two dangling,
+both `README.md`'s own citations of that generated file. The figure carries its
+revision for a reason this paragraph learned the hard way: an earlier draft of
+it BACKTICKED the filename, which made the sentence part of what it was
+measuring — the token added a third finding to the very count it reported, so
+the paragraph said "two" while the run said three, and the commit that shipped
+it was titled "its two false positives". The fix is to stop contributing to the
+measurement rather than to chase the number: the filename is plain text above,
+so this paragraph now measures only `README.md`, and a later edit to this prose
+cannot move the figure again. That is this repo's signed-measurement rule
+(`stack.ini`'s smoke-budget note) meeting the case that most deserved it — a
+measurement is only re-derivable if you say what you measured, when, and with
+what, and it is only STABLE if the instrument is not inside the sample.
 
 **Bars (final, on the merged tree).** Full suite `1718 passed, 12 skipped,
 1 failed` (6:18 wall, `-n auto`; 1712 before the merge — the +6 are WI-380's

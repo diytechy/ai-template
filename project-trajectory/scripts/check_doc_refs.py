@@ -99,6 +99,18 @@ PATH_PREFIXES = (
 # Doc surfaces that RECORD what was true at a moment. A retired file named in a
 # session log is accurate history; rewriting it to satisfy a linter would
 # falsify the record, so a missing path there is untraced, never dangling.
+#
+# The line is WHO CAN ACT, not genre (WI-384, where adding the closed work-item
+# directories was proposed, built, measured INERT and reverted): this list
+# matches the CONTAINING FILE, so an entry here silences every missing path in
+# every file under it, forever — a catch-all that can only ever cover tokens no
+# earlier branch of `untraced_reason` already explains. It is right for
+# `docs/log.md`, append-only compiled history nobody can maintain per-token, and
+# wrong for a surface whose author is still standing there and can declare the
+# path with its reason. That is also why `docs/log.d/` is deliberately absent
+# while `docs/log.md` is present: a fragment is judged strictly while its author
+# can still edit it, and becomes record the moment the trunk step compiles it —
+# the same rule applied consistently, not an oversight.
 RECORD_PREFIXES = (
     "docs/log.md",
     "docs/archive/",
