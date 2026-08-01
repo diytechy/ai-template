@@ -309,8 +309,8 @@ def unreachable_posix_shell():
         return None
     bases = [os.environ.get("ProgramFiles"), os.environ.get("ProgramFiles(x86)")]
     for base in [b for b in bases if b]:
-        for sub in ("Git\\bin", "Git\\usr\\bin"):
-            candidate = Path(base) / sub
+        for sub in (("Git", "bin"), ("Git", "usr", "bin")):
+            candidate = Path(base).joinpath(*sub)
             if (candidate / "sh.exe").is_file():
                 return candidate
     return None

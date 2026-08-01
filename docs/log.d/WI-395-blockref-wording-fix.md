@@ -22,3 +22,16 @@ merge lands — loop machinery, never another work item; R3, log Decisions
 terminal row; cleared in the rework commit. REVIEW-A finding 3 (the retired
 sentence still readable at `docs/concurrency-restructure.md:361`) is recorded
 here, not edited: that doc is design history by the §A9.1 standing rule.
+
+**Deviation — Class D rot fixed to green the bar (recorded, not silent):** the
+refresh bar redded on five pre-existing, platform-exposed test defects (green
+on the Windows desktop where rows 1-2 were driven, red on this macOS
+checkout; reproduced at trunk, so exposed-not-caused): (1)
+`tests/conftest.py::unreachable_posix_shell` joined `Path(base) / "Git\bin"`
+— a literal backslash component on POSIX; now tuple-joined. (2)
+`tests/test_generated_newlines.py` pinned `read_text(newline=)` as a
+TypeError, which its own docstring dates to the 3.13 floor — this venv is
+3.13.14; the pin now asserts each side of the floor. (3)
+`tests/test_integrate.py::scaffolded_closed_branch` assumed `git init` creates
+`master`; pinned with the file's own symbolic-ref idiom (local
+`init.defaultBranch` varies). Re-run: the three modules 138 passed.
