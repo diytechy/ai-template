@@ -28,22 +28,32 @@ the narrative is the body.
 
 | Location | Status |
 |---|---|
+| `docs/work/draft/WI-###-<slug>.md` | `draft` — written down, not claimable |
 | `docs/work/queued/WI-###-<slug>.md` | `queued` — filed, unclaimed |
 | `docs/work/active/<branch>/WI-###-<slug>.md` | `active` — claimed by that branch |
 | `docs/work/deferred/WI-###-<slug>.md` | `deferred` — parked with its reason |
-| `docs/work/archive/WI-###-<slug>.md` | `done` |
-| `docs/work/archive/…` + `disposition = "retired"` | `retired` |
+| `docs/work/complete/WI-###-<slug>.md` | `done` — it shipped |
+| `docs/work/cancelled/WI-###-<slug>.md` | `cancelled` — it never will |
 
-Two consequences worth stating, because they are the reason for the shape:
+Three consequences worth stating, because they are the reason for the shape:
 
 - **`blocked` has no directory.** A blocked item is `queued/` plus a `blockref`
   frontmatter key naming the reason; readiness is the scheduler's to derive, so
   a second encoding of "not now" would be a second home for one fact.
-- **`retired` is a move, never a deletion.** It shares `archive/` with `done`
-  and is told apart by `disposition = "retired"`, with the reason in this body:
-  a terminal won't-build record that stays in the registry forever. A retired
+- **`cancelled` is a move, never a deletion.** A terminal won't-build record
+  that stays in the registry forever with its reason in this body. It gets its
+  OWN directory rather than sharing one with `done`, because a folder holding
+  two states needs an attribute to tell them apart and a validator to keep the
+  two honest — the shape this format deliberately does not have. A cancelled
   predecessor does **not** satisfy a successor's hard dependency (it never
   integrates), so a work item hard-blocked on one stays visibly waiting.
+- **`draft` is the absence of a decision**, where `deferred` is a decision:
+  `deferred` says *not now*, `draft` says *still being figured out*. Both are
+  never-ready to the scheduler and differ only in what they say. `draft/` is a
+  DECLARED status directory rather than a scratch folder for one hard reason:
+  specs outside the declared set are skipped by every reader, so they would be
+  invisible to `max(id) + 1` and the next id minted would collide with one a
+  draft already holds.
 
 **The filename** is `<id>-<slug>.md`, the slug a short kebab-case of the title.
 The id in the frontmatter and the id in the filename are compared on every read
