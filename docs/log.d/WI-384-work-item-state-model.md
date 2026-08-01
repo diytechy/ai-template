@@ -320,6 +320,18 @@ are covered by the declaration above), and it is not this row's scope — but a
 fragment is `log.md`'s text before compilation, and a classification that
 changes with compile timing is a seam worth someone's attention.
 
+**Verified on the surface that actually refused, not just on the branch.**
+`doc-refs --strict` reads exit 0 here, and the composed tree
+(`git merge-tree --write-tree` against trunk, extracted and checked) carries
+zero findings attributable to this row. It does report two — both
+`docs/test/report.md`, from `README.md` — and those are an artifact of the
+verification method, not a red: that file is GENERATED and gitignored
+(`.gitignore:12`), so a bare tree extraction lacks it while any real working
+tree has it, the bar's own `registry-integrity` step regenerating it via
+`trace.py` before `doc-refs` runs. The control settles it: extracting TRUNK
+ALONE the same way reports the identical two. Anyone re-driving this should
+expect them and not mistake them for rot.
+
 **Bars (final, on the merged tree).** Full suite `1718 passed, 12 skipped,
 1 failed` (6:18 wall, `-n auto`; 1712 before the merge — the +6 are WI-380's
 tests arriving with it);
