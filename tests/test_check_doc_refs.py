@@ -233,6 +233,90 @@ def test_absences_file_absent_or_malformed_never_silences(tmp_path):
     assert "docs/review-cadence` does not exist" in proc.stderr
 
 
+# --- WI-396: a LINE-SUFFIXED citation is the path it names --------------------
+# `docs/x.md:40-41` defeated the extension test, so every suffixed token fell to
+# PATH_PREFIXES — the DOWNSTREAM layout — and a suffixed reference into the kit's
+# own `project-trajectory/` tree reached NO bucket: not dangling, not untraced,
+# never classified. The suffix is now stripped before the shape test AND before
+# the stat, so the two byte-identical halves of a dogfooded pair reach the same
+# NAMED verdict: BOTH CLEAN.
+
+KIT_HALF = "project-trajectory/work/WI-000.template.md"
+DOCS_HALF = "docs/work/queued/WI-000-example.md"
+SUFFIX = ":40-41"
+
+
+def pair_repo(root, suffix=SUFFIX):
+    """The dogfooded pair: byte-identical files under the kit tree and under
+    docs/, cited in one sentence of live prose with the same line suffix."""
+    make_repo(
+        root,
+        "Two halves: `{}{}` and `{}{}`.\n".format(KIT_HALF, suffix, DOCS_HALF, suffix),
+    )
+    for half in (KIT_HALF, DOCS_HALF):
+        p = root / half
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_text("same bytes\n", encoding="utf-8")
+    return root
+
+
+def verdict(proc, token):
+    """The token's NAMED outcome — the row's DONE-WHEN is about which bucket it
+    lands in, not merely about whether the two agree."""
+    if "`{}` does not exist".format(token) in proc.stderr:
+        return "DANGLING"
+    if "UNTRACED - " in proc.stderr and "`{}` —".format(token) in proc.stderr:
+        return "UNTRACED"
+    return "CLEAN"
+
+
+def test_a_suffixed_pair_reaches_the_same_named_verdict_both_clean(tmp_path):
+    proc = refs(pair_repo(tmp_path), "--strict", "--show-untraced")
+    assert verdict(proc, KIT_HALF + SUFFIX) == "CLEAN"
+    assert verdict(proc, DOCS_HALF + SUFFIX) == "CLEAN"
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    # CLEAN because both RESOLVE, not because either was excused: an untraced
+    # count here would mean the kit half passed as "kit-relative" instead.
+    assert "untraced" not in proc.stdout, proc.stdout
+
+
+def test_the_suffixed_pair_diverges_when_either_half_is_broken(tmp_path):
+    # The mutation twin (WI-353 discipline). Equality alone cannot FAIL if the
+    # tool stops examining a half — which is precisely the defect — so break each
+    # half in turn and assert the pair DIVERGES. Both directions, because a rule
+    # that looked at only one side would still pass a single-sided mutation.
+    for i, (broken, intact) in enumerate(
+        ((KIT_HALF, DOCS_HALF), (DOCS_HALF, KIT_HALF))
+    ):
+        root = pair_repo(tmp_path / "case{}".format(i))
+        (root / broken).unlink()
+        proc = refs(root, "--strict", "--show-untraced")
+        assert verdict(proc, broken + SUFFIX) == "DANGLING", proc.stderr
+        assert verdict(proc, intact + SUFFIX) == "CLEAN", proc.stderr
+        assert proc.returncode == 1
+
+
+def test_a_suffixed_citation_to_a_missing_file_still_gates(tmp_path):
+    # Stripping the suffix is not a free pass for suffixed tokens (the shape the
+    # "suffixed is never a path" alternative would have taken), and the finding
+    # quotes the token AS WRITTEN so it can be found in the doc.
+    make_repo(tmp_path, "The old `scripts/deleted.py:40` did this.\n")
+    proc = refs(tmp_path, "--strict")
+    assert proc.returncode == 1
+    assert "`scripts/deleted.py:40` does not exist" in proc.stderr
+
+
+def test_only_an_all_digit_trailing_suffix_is_stripped(tmp_path):
+    # `:40`/`:40-41` are line citations; anything else is part of the path, and
+    # a real file whose name contains a colon must still resolve.
+    make_repo(tmp_path, "See `scripts/real.py:40` and `scripts/real.py:40-41`.\n")
+    assert refs(tmp_path, "--strict").returncode == 0
+    make_repo(tmp_path, "See `scripts/real.py:head`.\n")
+    proc = refs(tmp_path, "--strict")
+    assert proc.returncode == 1, "`:head` is not a line suffix — the token stands"
+    assert "`scripts/real.py:head` does not exist" in proc.stderr
+
+
 def test_declared_absences_is_a_declaration_not_a_suppression_list(tmp_path):
     # The count is still reported, so the size of the class stays visible — the
     # same honesty rule WI-062 applied to the kit-relative and record reasons.

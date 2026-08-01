@@ -9,9 +9,12 @@ classes links can't see, with false-positive control as the design center
      shaped like a repo path (contains "/" and ends in a known source/doc
      extension, or starts with a conventional top-level dir) must exist on
      disk. A renamed or deleted file named in prose is one of the commonest
-     real rots. URLs, globs, and `{placeholder}` shapes are skipped; a line
-     carrying `path-ok` is exempt (the `privacy-ok` idiom) for deliberate
-     examples naming files that don't exist here.
+     real rots. A trailing LINE SUFFIX (`docs/x.md:40`, `docs/x.md:40-41`) is
+     stripped first — a citation to a line still names the file, and it names
+     it for both the shape test and the resolution (WI-396). URLs, globs, and
+     `{placeholder}` shapes are skipped; a line carrying `path-ok` is exempt
+     (the `privacy-ok` idiom) for deliberate examples naming files that don't
+     exist here.
 
      Split UNTRACED from DANGLING (WI-062). A path that isn't on disk is not
      automatically rot, and treating it as such buried the signal: this repo
@@ -128,10 +131,31 @@ DEFAULT_KIT_ROOT = "project-trajectory"
 # same way a kit-relative path is: the reference describes a real destination,
 # and its absence here is the documented state. Optional — no file, no reason.
 DEFAULT_ABSENCES = "docs/declared-absences"
+# A citation may point at a LINE inside the file it names: `docs/x.md:40`,
+# `docs/x.md:40-41`. The path is the token WITHOUT that suffix, so it is stripped
+# before the shape test and before the stat (WI-396). Both sites, deliberately:
+# `is_path_shaped` is a predicate that cannot hand a rewritten token back, so
+# stripping in it alone would leave `path_findings` stat-ing the whole
+# `path:line` string and calling a live file missing.
+#
+# Suffixing is what made the old rule ASYMMETRIC rather than merely strict. It
+# defeats the extension test (nothing ends in `.md` once `:40-41` is appended),
+# which threw every suffixed token onto PATH_PREFIXES — a list of the DOWNSTREAM
+# layout — so a suffixed reference into `project-trajectory/` (the tree this
+# kit's own product lives in, and one no adopting repo carries) landed in NO
+# bucket at all: not dangling, not untraced, never classified. Stripping fixes
+# every prefix at once, which is why it is preferred over growing that list.
+LINE_SUFFIX = re.compile(r":\d+(?:-\d+)?$")
 BACKTICK = re.compile(r"`([^`\n]+)`")
 SYM = re.compile(r"\bsym:([A-Za-z_][\w.]*)\.(\w+)\b")
 MOD_HEAD = re.compile(r"^### `([^`]+)`")
 SYM_ROW = re.compile(r"^\| `(\w+)[(`]")
+
+
+def _strip_line_suffix(token):
+    """`docs/x.md:40-41` -> `docs/x.md` (WI-396). Only a trailing all-digit
+    `:<line>` / `:<line>-<line>` goes; anything else is part of the path."""
+    return LINE_SUFFIX.sub("", token)
 
 
 def is_path_shaped(token):
@@ -152,6 +176,7 @@ def is_path_shaped(token):
         return False
     if "/" not in token:
         return False
+    token = _strip_line_suffix(token)
     return token.rstrip("/").endswith(PATH_EXTS) or token.startswith(PATH_PREFIXES)
 
 
@@ -261,7 +286,11 @@ def path_findings(line, rel, n, root, kit_root, record_prefixes, absences=None):
     for token in BACKTICK.findall(line):
         if not is_path_shaped(token):
             continue
-        clean = token.strip().rstrip("/")
+        # The stat, the untraced classification and the declared-absences
+        # lookup all take the STRIPPED path — the second of the two sites
+        # WI-396 names. The finding still quotes the token as WRITTEN, so a
+        # reader can find it in the doc.
+        clean = _strip_line_suffix(token.strip()).rstrip("/")
         if (root / clean).exists():
             continue
         why = untraced_reason(clean, rel, root, kit_root, record_prefixes, absences)
