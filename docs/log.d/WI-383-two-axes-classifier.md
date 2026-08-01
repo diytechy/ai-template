@@ -104,9 +104,14 @@ cannot pin a property of a CALL SITE.
 `isinstance(rank, int)` guard in `order_key`. A defensive type check in a pure
 library function is the check-instead-of-constraint shape §0 warns against, and
 it would not catch a caller passing the wrong *integer* — it converts one
-un-pinned property into a narrower un-pinned property. The coordinator endorsed
-the divergence; it is recorded here so a successor does not re-propose it as an
-oversight.
+un-pinned property into a narrower un-pinned property. **The sharpest form of
+the argument is round 2's**, and it is the one to keep: the guard converts *"the
+caller passes the rank"* into *"the caller passes an int"*, so
+`order_key(w, downstream, …)` or `order_key(w, w["priority"], …)` sails
+straight through while destroying the order. It is not merely the wrong shape —
+it is a **bad check**, and it would not even have caught the mutation actually
+driven against this WI. Reviewer and coordinator both endorsed the decline;
+recorded here so a successor does not re-propose it as an oversight.
 
 **Deviation from the spec: the `checkpoint` classifier input was deleted too.**
 Not named in the ruled table, and it did not survive the reasoning that keeps
@@ -192,10 +197,33 @@ code.
 
 One datum found by writing the spec itself: `check_doc_refs --strict` flagged
 the invented `.py` path quoted in its evidence table, but passed the
-`…::test_entirely_invented` citation silently — its PATH tier needs the token
-to END in a known extension, and a `::node` suffix defeats that. The kit
-already owns a path-existence checker; it is blind to the registry citation
-shape for one tokenising reason (and never reads the CSVs anyway).
+`…::test_entirely_invented` citation silently.
+
+**Round 2 corrected my reason for that, and the correction changes the
+pricing** — so it is recorded rather than quietly swapped. I wrote that the
+PATH tier "needs the token to END in a known extension, and a `::node` suffix
+defeats that", and called it "one tokenising reason". The *behaviour* is real
+and reproduces; the *mechanism* was wrong, twice over. `is_path_shaped`
+short-circuits on `::` **before** any extension or prefix rule is reached, and
+its comment says why in as many words — *"the kit's sanctioned Evidence form …
+false-positive control is the point"*. And the rule I cited could not have
+produced the pass anyway: it is a **disjunction**, and `tests/` is already in
+`PATH_PREFIXES`. Re-driven myself:
+
+```
+is_path_shaped('tests/nope.py')                                -> True
+is_path_shaped('tests/no_extension_at_all')                    -> True    # the control
+is_path_shaped('tests/this_file_has_never_existed.py::test_…') -> False
+```
+
+So the exclusion is a **deliberate, commented decision**, not an accident, and
+that cuts both ways in `WI-394`: option (a) is HARDER than I priced it (a full
+resolver must overturn that decision, not fill an unconsidered gap), while the
+file-half-only shape — now written up as option (c) — is CHEAPER (splitting on
+`::` at that guard, taking the part before it, is the whole change inside the
+tool; the guard's own comment already grants "a real file plus a selector").
+Both surfaces are corrected. The second half of the datum stands untouched: the
+tool scans root `*.md` + `docs/**/*.md` and never reads the CSVs at all.
 
 The row is `ordinary`, not spine, and the spec says why: `Evidence`, `Module`,
 `CodeSymbol` and `TestRefs` are all TRACED under §A5.1, so it arms no re-attest
@@ -218,26 +246,33 @@ apply the concurrency axis. The internal `w["exclusive"]` is left alone: it
 mirrors the `Exclusive` column name across the three F5-duplicated readers, and
 renaming it there would be drift, not clarity.
 
-**Bars (real output, this branch, after the round-1 fixes).**
+**Bars — re-measured on the tree this block is committed with** (the round-2
+lesson: a figure that is not reproducible at its own commit is not a
+measurement. The previous block advertised itself as post-round-1 while its
+`check_trajectory` line still read `389 work item(s)`, which the same commit's
+filing of WI-394 had already made `390`).
 
 ```
 $ python -m pytest -q -n auto
-1 failed, 1756 passed, 8 skipped in 400.41s (0:06:40)
+1 failed, 1756 passed, 8 skipped in 567.93s (0:09:27)
       # the one standing red is tests/test_check_lane.py::test_this_repo_is_not_a_work_branch
       # (this checkout IS a claimed work branch — the guard is asserting about the trunk)
 $ python -m pytest -q -n auto -m smoke
-1 failed, 572 passed in 13.21s                 # same standing red
+1 failed, 572 passed in 13.75s                 # same standing red
 $ python -m ruff check .            -> All checks passed!
 $ python -m ruff format --check .   -> 146 files already formatted
+$ python project-trajectory/scripts/check_docs.py --root . --ignore docs/test/report.md --ignore "docs/work/*" --stale
+check_docs: OK - 341 doc(s), 970 intra-repo link(s), 0 broken.                              [exit 0]
 $ python project-trajectory/scripts/check_trajectory.py --root . --strict
-check_trajectory: clean (389 work item(s), 366 done (94%), 16 cancelled, graph acyclic).   [exit 0]
+check_trajectory: clean (390 work item(s), 366 done (94%), 16 cancelled, graph acyclic).    [exit 0]
 $ python project-trajectory/scripts/check_doc_refs.py --root . --strict
 check_doc_refs: OK - no dangling path or sym: references · 871 untraced   [exit 0]
 ```
 
-(Round 1 measured `1 failed, 1755 passed, 8 skipped` / `1 failed, 567 passed,
-4 skipped` on the same tree before these fixes; the +1 in each is the new
-call-site pin.)
+Suite counts across the rounds, on this branch: `1755` at close → `1756` after
+the round-1 fixes (the new call-site pin) → `1756` here, since round 2 changed
+no code. The wall time moved (400 s → 568 s) because the box was busier, not
+the suite; `390` is the WI count including the `WI-394` this branch files.
 
 No byte-budgeted file was touched. Generated artifacts (`docs/architecture.md`'s
 module map loses the `agent_loop → schedule` edge) are deliberately NOT
