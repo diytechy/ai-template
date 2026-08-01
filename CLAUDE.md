@@ -123,6 +123,11 @@ that easier to achieve in a real project — or get out of the way.
   **enforcement audit** (dogfooding the `PROCESS_OPTIONS.md` discipline): each
   process/working-agreement rule mapped to its strongest enforcer
   (Harness/Test/Reviewer/Prose), with the honest gaps recorded.
+- [`docs/registry-machinery-reference.md`](docs/registry-machinery-reference.md) —
+  a **reference doc** (like `EXAMPLE.md`/`ADOPTING.md`, not a working surface):
+  what the scripts actually enforce on the `SN→SR→LLR→TC` spine — every field,
+  every join rule, how `derive_gate.py` computes the gate from those rows, and
+  how that gate then selects the harness steps, test tier and coverage floors.
 - [`docs/archive/`](docs/archive/README.md) — the kit's **design history**:
   `IMPROVEMENT_PLAN.md` (the thread specs + WI-1.x log, archived once the live
   homes — `status.md` + `work-items.csv` + `log.md` — superseded it) and its own
