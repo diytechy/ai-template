@@ -1,43 +1,66 @@
-## 2026-08-01 — WI-391 handed back: the specs-of-record mirror is refuted, not built
+## 2026-08-01 — WI-391 cancelled: the specs-of-record mirror is refuted, not built
 
-**Outcome: HANDBACK.** WI-391 asked for concurrency-v2 §B2's second sentence —
+**Outcome: CANCELLED.** WI-391 asked for concurrency-v2 §B2's second sentence —
 specs-of-record mirror the terminal folders, so a spec's location answers
 shipped-or-cancelled without opening it. It was measured, prototyped and
-**refuted** rather than built. An independent review confirmed the refutation
-(`APPROVE findings=6`, `2a4c9642`) and strengthened it. The row returns to
-`queued/` with `blockref = "OI-11"` — it refutes an owner-ruled sentence, so the
-owner rules it, not the driver.
+**refuted** rather than built. Two independent review rounds confirmed it: round
+1 `APPROVE findings=6` (`2a4c9642`), round 2 `CHANGES-REQUESTED findings=4`
+against the write-up, with the decision itself not reopened.
 
-**What was measured.** Stated as a convention, because conventions differ enough
-between readers that the intake's totals are best treated as superseded: the
-literal string `archive/specs/<name>.md` in `*.md`/`*.py`/`*.csv`/`*.html`
-occurs **156 times across 31 files** at `2a4c9642` (154/30 at `0b4774f0` — the
-delta is [this row's own review file](../reviews/WI-391-REVIEW-A.md), a live
-demonstration that the reference surface accretes faster than a migration could
-be scheduled). `docs/log.md` holds **119 occurrences on 101 lines, 92 of them
-markdown link targets over 61 unique targets** (71 unique repo-wide). The
-intake's 154/30/101 could not be reproduced under any convention tried, here or
-at the commit that wrote them; every count taken here runs **at or above** the
-intake's, so the error direction strengthens the conclusion. One sub-figure the
-review read as misattributed — log.md's `61 unique` — *does* reproduce here and
-is reported as measured rather than as the review had it.
+The row is `cancelled/`, not parked in `queued/` with a `blockref`, because
+**under both options open at OI-11 — strike the sentence or restate it — this
+row's work does not happen.** Its own fate is settled even though the design
+text's is not, and `cancelled/` is exactly the won't-build-with-the-reason state
+WI-384 built. The reason lives in the spec's `## Deliverable`, which is the home
+a cancelled row's reason is *supposed* to have — so the record needed no new
+grammar.
 
-The relocation cost is larger than any literal-string count, because a
-relocation rewrites **resolved** links: **124 inbound targets across 25 files**
-resolved by path (the WI-288 rule), plus **91 outbound links across 43 of the
-111 files** that a one-level-deeper move rebases (the WI-353 defect) — about
-**215 targets**, 92 of them in the append-compiled `docs/log.md`.
+**Observed en route, and it drove the disposition: a `queued` + `blockref` park
+never self-releases.** `blocked` is derived as `queued` plus a `blockref`, and
+the blocker's own state is never consulted — so flipping OI-11 to `ruled` would
+**not** have returned WI-391 to the frontier. The row would have sat parked with
+nobody assigned to close it. Worth recording as a property of the registry
+rather than as a one-off: a `blockref` is a label, not a subscription, so any
+park taken to "wait for a decision" needs a human to come back and unpark it.
 
-**Why it was refuted.** Not cost — the one-time migration was prototyped as a
-dry run at ~70 lines, and one-time beats rebuilding a relinker for a move that
-happens once. Cost was measured precisely to remove the "too expensive" defence.
-The argument is structural, and it is a measurement, not an analogy:
+**What was measured.** Stated as this row's own convention, because conventions
+differ enough between readers that the intake's totals are best treated as
+superseded: the literal string `archive/specs/<name>.md` in
+`*.md`/`*.py`/`*.csv`/`*.html` occurs **156 times across 31 files** at
+`2a4c9642`, and **154 across 30** at `0b4774f0` — the delta is exactly this row's
+own review file, one new file carrying two occurrences, a fair demonstration
+that the reference surface accretes faster than a migration could be scheduled.
+`docs/log.md` (untouched by this branch) holds **119 occurrences on 101 lines**,
+of which **92 are markdown link targets** covering **57 unique targets by
+full-string key** — 55 by basename, 55 fragment-stripped, 57
+basename-plus-fragment, so **57 is the maximum by any key**.
+
+**A correction recorded rather than quietly fixed.** An earlier draft reported
+"61 unique targets" against those 92, and when a reviewer challenged it I
+*defended* it before re-measuring. It is wrong: 61 is the number of unique names
+among `docs/log.md`'s **119 all-occurrences**, a different and larger population
+than its 92 link targets. The figure was briefly asserted as verified against a
+correction, which is worse than inheriting a wrong number from the intake, so it
+is written down here.
+
+The relocation cost is larger than any literal-string count, because a relocation
+rewrites **resolved** links: **124 inbound targets across 25 files** resolved by
+path (the WI-288 rule), plus **91 outbound links across 43 of the 111 files**
+that a one-level-deeper move rebases (the WI-353 defect) — about **215 targets**
+against the intake's 101.
+
+**Why it was refuted.** Not cost — the one-time migration was prototyped as a dry
+run at ~70 lines, precisely to remove the "too expensive" defence, and that
+prototype also settles the rebuild-a-relinker question: one-time beats rebuilding
+machinery for a move that happens once. The argument is structural, and it is a
+measurement rather than an analogy:
 
 - **Not total.** A folder is derived data and needs a total function from state
-  to location. This one is undefined for **16 of 111** archived specs — 15
-  shared effort docs (a first-class shape per `docs/specs/README.md`) plus
+  to location. This one is undefined for **16 of 111** archived specs — 15 shared
+  effort docs (a first-class shape per the `docs/specs/` README lifecycle) plus
   `WI-300-sr052-binding.2026-07-26.md`, whose name does not match `_own_spec`'s
-  own `WI-###.<date>.md` glob.
+  own `WI-###.<date>.md` glob. A mapping whose own reader cannot name a file is
+  not a mapping.
 - **Contradictory.** `research-knowledge.2026-07-29.md` is cited by WI-138 and
   WI-145 (`complete`) and by WI-158 (`cancelled`); R-F archives a shared doc when
   its *last* open citer closes, so both folders are correct for it.
@@ -56,30 +79,31 @@ The argument is structural, and it is a measurement, not an analogy:
   `docs/orphans-allow` (line 50) survives untouched only because fnmatch `*`
   spans separators.
 
-**What the review corrected.** Six findings, all taken: the intake figures are
-unreproducible and must not be reported as "reproduced exactly"; the split is
-92/3/16, not 93/3/15; the structural argument led with its weakest evidence (an
-analogy to `disposition`) and was restructured to lead with the
-totality/regenerator measurement; the
-enforcement-layer-maintaining-enforcement-layer objection would have sunk this
-session's own follow-up, so the one-time-vs-recurring distinction is now stated
-explicitly; and the proposed remedy for the two `declared-absences` entries was
-**wrong** — deleting them adds **+2 dangling** references under
-`check_doc_refs --strict`, because the WI-391 spec's own title text names both
-paths and survives any disposition. They are **restated**, not deleted.
+**What review corrected.** Round 1, six findings, all taken: the intake figures
+are unreproducible and must not be reported as "reproduced exactly"; the split is
+92/3/16, not 93/3/15; the structural argument led with its weakest evidence and
+was restructured to lead with the totality/regenerator measurement; the
+one-time-vs-recurring distinction had to be stated, since the
+enforcement-layer-maintaining-enforcement-layer objection would otherwise have
+sunk this session's own follow-up; and the proposed remedy for the two
+`declared-absences` entries was **wrong** — deleting them adds **+2 dangling**
+references under `check_doc_refs --strict`, because the WI-391 spec's own title
+names both paths and survives cancellation. They are **restated**, not deleted.
+Round 2, four findings, all taken: the unique-target figure above, the
+disposition (cancel, do not park), an OI-11 that argued its own recommendation
+too hard, and an unenforceable cross-row promise, dropped.
 
-**Filed.**
+**Filed, and both outlive this row.**
 
-- **OI-11** ([`docs/requirements/open-items.csv`](../requirements/open-items.csv)) —
-  whether §B2's sentence is **struck** or **restated**, `Status=pending`, both
-  options with honest FOR/AGAINST, blast radius stated truthfully (a design
-  sentence, a queued row, two `declared-absences` entries; nothing in
-  `docs/archive/specs/` moves either way). Recommendation: **restate, don't
-  strike** — the goal is sound and already met by the registry half, unmeetable
-  for the 16 by any folder layout, and striking would delete an owner ruling and
-  leave no record of why, so the tidy-up gets re-proposed.
+- **OI-11** ([`docs/requirements/open-items.csv`](../requirements/open-items.csv))
+  — whether §B2's sentence is **struck** or **restated**, `Status=pending`. It is
+  a decision about the **design text only**, and says so: WI-391 is already
+  cancelled under either answer, so nobody rules on this expecting to unblock a
+  build. Both options are argued at comparable weight, including the honest case
+  *for* striking — the kit's own state-it-once-and-link principle — and the
+  recommendation (restate) sits once, in the recommendation cell.
 - **WI-393** — rehome the link-aware archival ritual (WI-288's inbound relink,
-  WI-353's outbound rebase, and their two shared primitives), all deleted with
+  WI-353's outbound rebase and their two shared primitives), deleted with
   `agent_dispatch.py` at Phase 5 (`31ad569d`) and never rehomed. Spec archival is
   an unassisted `git mv` again. Driven evidence: from a 4-broken-link baseline, a
   probe spec plus an inbound link left it at 4; a bare `git mv` into the archive
@@ -88,31 +112,22 @@ paths and survives any disposition. They are **restated**, not deleted.
   check). Constraint-shaped — one indivisible ritual no caller can do two thirds
   of — so §0 reaches it, and unlike WI-391 it has driving necessity.
 
-**Observed: two parallel lanes minted the same WI id, and nothing on either
-branch could have caught it.** This row and the `wi-378` lane were each told to
-file a new WI in the same wave; both mints read `docs/work/` on their own branch,
-neither branch could see the other's new row, and both correctly returned
-**WI-392**. The row filed here was renumbered to **WI-393**. This is the first
+**Two parallel lanes minted the same WI id.** This row and the `wi-378` lane were
+each told to file a new WI in the same wave; both mints read `docs/work/` on
+their own branch, neither could see the other's new row, and both correctly
+returned **WI-392**. The row filed here was renumbered to **WI-393**. First
 *observed* instance of the id-reservation hazard §B3 discusses — that section was
-ruled on the strength of a hypothetical, and this is the evidence. Worth stating
-in both directions: the composed tree **would** have caught it, because the
-duplicate-id guard reads the whole registry, so the collision surfaces at merge
-rather than silently. The system works; it works later and more expensively than
-a reservation would.
-
-**Deviation from spec.** The handback record was directed into a `## Handback`
-**body** section. That shape is **not representable yet**:
-`parse_spec_deliverable` accepts only an empty body or exactly one
-`## Deliverable` section (a bare `## Handback` raises), and a filled
-`Deliverable` on an open row is an **R-A hard error**. WI-387 is building that
-shape in a live worktree, so it was not pre-empted here; the record went into the
-spec's `title` — this repo's shipped idiom for long spec prose — with a note
-saying where it belongs. **WI-387 should relocate it when the section lands.**
+ruled on a hypothetical, and this is the evidence. In both directions: the
+composed tree **would** have caught it, because the duplicate-id guard reads the
+whole registry. The system works; it works later than a reservation would.
 
 **Bars.** Full suite, `ruff check .`, `ruff format --check .`,
-`check_trajectory.py --root . --strict`, `check_doc_refs.py --root . --strict`,
-`gen_open_items.py --check` — all recorded in the session report. The one
-standing red is `test_this_repo_is_not_a_work_branch`, expected in a worktree.
+`check_trajectory.py --strict`, `check_doc_refs.py --strict` — all green in the
+session report. The one standing red is `test_this_repo_is_not_a_work_branch`,
+expected in a worktree. `docs/open-items.html` is deliberately **not** on this
+branch: `gen_open_items.py` is one of `trunk_step.py`'s regen steps, so the trunk
+lane regenerates it, and a generated view committed here went stale within the
+same session the moment the registry changed again.
 
 **Byte deltas on budgeted files:** none — `AGENTS.template.md`, `PROCESS.md` and
 `PROCESS_OPTIONS.md` untouched.
