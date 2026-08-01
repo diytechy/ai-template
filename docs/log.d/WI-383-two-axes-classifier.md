@@ -100,6 +100,14 @@ after the property that cannot observe the place it breaks. The lesson is not
 "write more tests" — it is that a test which constructs its inputs by hand
 cannot pin a property of a CALL SITE.
 
+**Considered and declined:** the reviewer's other offered remedy, an
+`isinstance(rank, int)` guard in `order_key`. A defensive type check in a pure
+library function is the check-instead-of-constraint shape §0 warns against, and
+it would not catch a caller passing the wrong *integer* — it converts one
+un-pinned property into a narrower un-pinned property. The coordinator endorsed
+the divergence; it is recorded here so a successor does not re-propose it as an
+oversight.
+
 **Deviation from the spec: the `checkpoint` classifier input was deleted too.**
 Not named in the ruled table, and it did not survive the reasoning that keeps
 `critique`. Checked before removing: `load_wis` never emitted a `checkpoint`
@@ -156,6 +164,43 @@ entry with an entirely invented `tests/this_file_has_never_existed.py::test_enti
 `check_doc_refs --strict` (rc=0) and the trace/registry test modules (70
 passed). Nothing anywhere convicts it. The file half is checkable with
 `Path.exists()` today; only the `::node` suffix needs pytest to adjudicate.
+
+**Filed as `WI-394`** (`docs/work/queued/`, spec-of-record
+[`docs/specs/WI-394.md`](../specs/WI-394.md)) — with the option NOT picked for
+the owner, because the one thing definitely wrong today is that the current
+state implies a check nobody performs. Before filing I measured whether the
+class is wider than `Evidence`, rather than guessing:
+
+| Cell mutated to something invented | `trace.py --strict …` | `check_trajectory --strict` |
+|---|---|---|
+| LLR `Module` + `CodeSymbol` (LLR-059) | rc=0 | rc=0 |
+| LLR `TestRefs` → `(see TC-999)` | rc=0 | rc=0 |
+| TC `Evidence` (the reviewer's run) | rc=0 | rc=0 |
+| **CONTROL:** TC `Verifies` → `SR-999;LLR-999` | **rc=1** — `FINDING (orphan): TC TC-091 references unknown SR-999` | — |
+
+113 tests across `test_trace.py`, `test_registry_checks.py`,
+`test_check_flows.py`, `test_check_stubs.py`, `test_modules_registry.py` and
+`test_components_registry.py` also pass under the `Module`/`CodeSymbol`
+mutation. Every tree restored and re-verified with `git diff --exit-code`.
+
+So the boundary is crisp and it is **not** "traced cells are unchecked": a
+pointer into ANOTHER REGISTRY is joined and validated (`Verifies`, `SR-Refs`,
+`Component`); a pointer OUT of the registries into the code or test tree —
+`Evidence`, `Module`, `CodeSymbol`, `TestRefs` — is not checked at all. Those
+four are exactly the cells carrying the spine's claim to be grounded in the
+code.
+
+One datum found by writing the spec itself: `check_doc_refs --strict` flagged
+the invented `.py` path quoted in its evidence table, but passed the
+`…::test_entirely_invented` citation silently — its PATH tier needs the token
+to END in a known extension, and a `::node` suffix defeats that. The kit
+already owns a path-existence checker; it is blind to the registry citation
+shape for one tokenising reason (and never reads the CSVs anyway).
+
+The row is `ordinary`, not spine, and the spec says why: `Evidence`, `Module`,
+`CodeSymbol` and `TestRefs` are all TRACED under §A5.1, so it arms no re-attest
+window. Ids 392/393 were skipped — both are minted on sibling branches in this
+wave and invisible from here, which is the id-reservation hazard §B3 describes.
 
 **Naming fix (REVIEW-A round 1, MINOR).** `CONCURRENCY_EXCLUSIVE = "exclusive"`
 landed beside the pre-existing `Exclusive` mutex-key column — two unrelated
