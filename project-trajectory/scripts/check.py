@@ -1054,10 +1054,12 @@ _WORK_BRANCH_CACHE = {}
 # commits a generated artifact", which the station refresh (concurrency-v2.md
 # §A2) makes false for exactly one commit: it merges trunk in, runs trunk_step
 # ON the branch and bars the result — a tree byte-identical to the one the merge
-# produces, so it owes the trunk lane's gates. Skipping them there would let the
-# only mechanical bar in the loop pass over the artifacts it had just written.
-# Opt-IN, so a caller that forgets the flag gets today's (stricter-for-trunk)
-# answer rather than a silently relaxed one.
+# produces, so it owes the trunk lane's gates. Without the flag those seven
+# steps SKIP, and the integrator reads any SKIP as a refusal, so the refresh
+# could never go green: the flag is what MAKES the mechanical bar possible, not
+# a rescue from a false pass (REVIEW-A round 1 — the first version of this
+# comment had the failure direction backwards). Opt-IN all the same, so a
+# caller that forgets it gets the stricter-for-trunk answer.
 _FORCE_TRUNK_LANE = False
 
 

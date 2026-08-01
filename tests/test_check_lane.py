@@ -296,11 +296,13 @@ def test_branch_edit_gates_still_run_in_the_g3_plan(check, tmp_path, monkeypatch
 
 
 def test_trunk_lane_forces_every_freshness_step_back_on(check, tmp_path, monkeypatch):
-    # WI-386. The refresh bar runs on the branch, so without this the ONE
-    # mechanical bar in the whole loop would skip the very artifacts the trunk
-    # step had just written on that same tree — a green over unchecked output.
-    # The branch is genuinely claimed here (the detector still says so), which
-    # is what makes this a forced OVERRIDE rather than a detection change.
+    # WI-386. The refresh bar runs on the branch, and the integrator reads any
+    # SKIP as a refusal — so without this flag the seven freshness steps stand
+    # down, the bar reports SKIP, and the refresh can never go green at all.
+    # The flag MAKES the mechanical bar possible; it is not a rescue from a
+    # false pass (REVIEW-A round 1 drove the direction). The branch is
+    # genuinely claimed here (the detector still says so), which is what makes
+    # this a forced OVERRIDE rather than a detection change.
     git_repo(tmp_path, branch="wi-360")
     claim(tmp_path, "wi-360")
     monkeypatch.chdir(tmp_path)

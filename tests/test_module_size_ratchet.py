@@ -591,18 +591,20 @@ BASELINE = {
     # zero-comment form crossed it, so this is the crossing recorded, not
     # growth approved. Reviewed bump, log 2026-07-29. Re-stamp down with
     # WI-280.
-    # +22 (1523 -> 1545), WI-386: `--trunk-lane`, the ONE deliberate exception
+    # +24 (1523 -> 1547), WI-386: `--trunk-lane`, the ONE deliberate exception
     # to the rule the entry above added. The station protocol moves the only
     # mechanical bar in the loop onto the branch, so the branch's tree becomes
-    # the trunk's tree and owes the freshness gates the lane rule stands down —
-    # without the flag that bar would pass over the artifacts the same step had
-    # just written. Nine of the 22 lines are the argparse help and the comment
-    # recording WHY an opt-in override to a fail-closed rule is safe, which is
-    # exactly the text a successor would otherwise delete as redundant. The
-    # behaviour itself is one flag, one module flag, one `or`. Reviewed bump,
-    # reason here and in docs/log.d/WI-386-station-protocol.md. Re-stamp down
-    # with WI-280.
-    "check.py": 1545,
+    # the trunk's tree and owes the freshness gates the lane rule stands down.
+    # Without the flag those seven steps SKIP and the integrator reads any SKIP
+    # as a refusal, so the refresh could never go green — the flag MAKES the
+    # mechanical bar possible (REVIEW-A round 1 corrected the direction stated
+    # here: it does not rescue the bar from a false pass). Eleven of the 24
+    # lines are the argparse help and the comment recording why an opt-in
+    # override to a fail-closed rule is safe, which is exactly the text a
+    # successor would otherwise delete as redundant; the behaviour is one flag,
+    # one module global, one `or`. Reviewed bump, reason here and in
+    # docs/log.d/WI-386-station-protocol.md. Re-stamp down with WI-280.
+    "check.py": 1547,
     # +1 (1916 -> 1917), WI-279: one MAPPING row registering the new
     # scripts/check_coverage.py kit gate so it ships downstream — a required
     # one-line registration, not monolith growth (the reviewed-bump escape the
