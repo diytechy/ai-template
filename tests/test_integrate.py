@@ -2227,7 +2227,9 @@ def scaffolded_closed_branch(tmp_path):
     # The scaffold is committed as one seed on the default branch (bootstrap does
     # not init a repo), so the claim below is the FIRST thing the queue sees.
     _git(repo, "init", "-q")
-    _git(repo, "symbolic-ref", "HEAD", "refs/heads/master")  # local init.defaultBranch varies
+    _git(
+        repo, "symbolic-ref", "HEAD", "refs/heads/master"
+    )  # local init.defaultBranch varies
     _git(repo, "config", "user.email", "t@example.com")
     _git(repo, "config", "user.name", "T")
     _git(repo, "config", "commit.gpgsign", "false")
