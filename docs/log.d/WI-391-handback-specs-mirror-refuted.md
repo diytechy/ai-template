@@ -95,7 +95,7 @@ Round 2, four findings, all taken: the unique-target figure above, the
 disposition (cancel, do not park), an OI-11 that argued its own recommendation
 too hard, and an unenforceable cross-row promise, dropped.
 
-**Filed, and all three outlive this row.**
+**Filed, and all four outlive this row.**
 
 - **OI-11** ([`docs/requirements/open-items.csv`](../requirements/open-items.csv))
   — whether §B2's sentence is **struck** or **restated**, `Status=pending`. It is
@@ -113,6 +113,9 @@ too hard, and an unenforceable cross-row promise, dropped.
   (`docs/archive/` is exempt from the orphan check only, not the broken-link
   check). Constraint-shaped — one indivisible ritual no caller can do two thirds
   of — so §0 reaches it, and unlike WI-391 it has driving necessity.
+- **WI-396** — `check_doc_refs` is structurally blind to a suffixed reference
+  into `project-trajectory/`, the half of this repo that is the product. Filed
+  small, with the limiter that the gap cannot reach an adopting repo.
 - **WI-395** — the `blockref` gap above, filed with its two honest readings and
   neither of them ruled: either the derivation consults the blocker's state, so a
   park releases itself (costing a cross-registry read in a deliberately
@@ -129,6 +132,46 @@ returned **WI-392**. The row filed here was renumbered to **WI-393**. First
 ruled on a hypothetical, and this is the evidence. In both directions: the
 composed tree **would** have caught it, because the duplicate-id guard reads the
 whole registry. The system works; it works later than a reservation would.
+
+**A citation trap that fired twice on this branch, recorded here rather than in
+a commit body.** `check_doc_refs` reads a `path:line` token as a path, so the
+line suffix makes it name a file that does not exist. It convicted three
+citations in this fragment, then — after that lesson — one more in WI-395, and
+then a third time inside **WI-396, the row filed to document the defect**, where
+the asymmetry reproduced verbatim in the sentence describing it. This repo's
+convention is to keep line numbers **out of the path token** and put them in
+prose. Three occurrences on one branch, the last while writing about the first
+two, makes it a pattern rather than carelessness — and a commit message is not
+one of the working surfaces, so it belongs on one.
+
+The same episode exposed a real defect, and my first account of it was **wrong in
+a way that flipped the conclusion**. I recorded that the shipped
+`project-trajectory/…` half of the citation "classifies as kit-relative and lands
+in the untraced bucket". It does not: it **never reaches classification**. Driven
+— `is_path_shaped("project-trajectory/work/WI-000.template.md:40-41")` is
+`False` while the `docs/` twin is `True`, and the counter settles it, since
+writing both as `path:line` reports `1 dangling · 887 untraced`, the same 887 as
+a clean run, where a bucketed token would have made it 888. The cause is
+`is_path_shaped`: with a `:40-41` suffix nothing ends in a path extension, so
+everything falls to `PATH_PREFIXES`, which enumerates the **downstream** layout
+and lists `registries/`, `skills/` and `ci/` *without* the `project-trajectory/`
+prefix they actually live under here. An accidental blind spot, not a deliberate
+exemption — the kit-relative rule fires only on tokens that are already
+path-shaped, so it neither defends nor can close this. Filed as **WI-396**, with
+the honest limiter that `project-trajectory/` does not exist downstream, so no
+adopter inherits the gap.
+
+**Where §0 would have caught this, and where it would not.** The reviewer's
+reading, which is the sharper version of the lesson: this is the process working,
+one step later than §0 prescribes. The intake said *at filing*, in its own words,
+that the row "deletes no machinery, closes no raise path and makes no bad state
+unrepresentable" and "must justify itself on the navigation benefit alone" — and
+§0 prescribes asking *"what constraint would make this unrepresentable?"* at
+**filing**, "where the cost is still comparable". Applied then, the answer was
+already "none, by the row's own admission". So the filing was correct given the
+ruling it inherited, and refutation is exactly what a claimed row is for; the
+available improvement is only about **where the question gets asked**, not about
+whether this row should have been written.
 
 **Bars.** Full suite, `ruff check .`, `ruff format --check .`,
 `check_trajectory.py --strict`, `check_doc_refs.py --strict` — all green in the
