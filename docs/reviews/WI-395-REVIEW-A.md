@@ -120,4 +120,59 @@ tree at `e1d8bffd` (`rework: WI-395 clears SpecRef at close (REVIEW-A finding
 
 No new findings.
 
+---
+
+## Round 3 (2026-08-01) — bar-greening rework `e7d45ec1` (Class D)
+Verdict: APPROVE
+
+Judging only `e7d45ec1` (`rework: green the bar - three platform-exposed test
+defects (Class D)`): four files touched — three test files plus the log
+fragment recording the deviation; no product code. The commit's premise is
+verified, not inherited: at trunk (the main checkout on
+`ConcurrencyTrainRewrite`) the same three modules give **`5 failed, 133
+passed in 35.52s`** — exactly the five named tests
+(`test_unreachable_shell_names_the_git_directory_holding_it`,
+`test_write_text_accepts_newline_on_the_declared_floor`, and the three
+`test_integrate` e2e tests riding the `scaffolded_closed_branch` fixture) —
+so the rot is pre-existing and platform-exposed, not this branch's doing. On
+the branch: `pytest -q tests/test_env_gates.py tests/test_generated_newlines.py
+tests/test_integrate.py` → **`138 passed in 37.17s`**.
+
+Each fix narrows a wrong premise rather than papering over behavior:
+
+1. **conftest Git-bin probe.** Windows semantics are unchanged — driven:
+   `PureWindowsPath('C:/Program Files') / 'Git\\bin'` equals
+   `.joinpath('Git', 'bin')` (`'C:\\Program Files\\Git\\bin'`, `equal: True`;
+   likewise the `usr` triple). The failing test's own docstring promises
+   "Constructed here rather than probed, so this runs identically on POSIX" —
+   the old POSIX-literal `"Git\\bin"` component (one component named
+   `Git\bin` on POSIX) broke that stated contract; the tuple-join restores it
+   without moving the Windows path a byte.
+2. **The `read_text(newline=)` pin.** The differential is real on both sides
+   of the floor, driven on two interpreters on this machine: system 3.9.6 →
+   `TypeError: read_text() got an unexpected keyword argument 'newline'`;
+   venv 3.13.14 → returns `'a\nb\n'`. The version-conditional pin still fails
+   meaningfully in both directions — below 3.13 it demands the raise, at
+   3.13+ it demands acceptance with exact untranslated content — so the
+   write_text-vs-read_text floor asymmetry the docstring exists to pin is now
+   pinned accurately instead of ossifying the pre-3.13 half as timeless.
+3. **The e2e scaffold's `master` premise.** "`git init` creates `master`" is
+   `init.defaultBranch`-dependent; the one-line
+   `symbolic-ref HEAD refs/heads/master` right after init is the file's own
+   documented idiom (its other init site, `tests/test_integrate.py:158-167`:
+   "`git init -b` is 2.28+, so the branch is set with a symbolic-ref
+   instead"), making the later `checkout -q master` (`:2268`)
+   config-independent. Nothing behavioral is hidden: `grep -n
+   "master\|symbolic-ref\|defaultBranch" project-trajectory/scripts/integrate.py`
+   is empty — the assumption was scaffold-local, never the product's.
+
+Scope, judged rather than waved through: fixing pre-existing test rot on a
+docs-only WI branch is an expansion beyond the amendment, but it is the
+recorded-deviation shape this repo's process provides for (Class D, stated in
+the log fragment with the platform split and the reproduction), each fix is
+the smallest that closes its defect, and the alternative — handing the next
+lane a red bar — is the worse outcome. Not a finding.
+
+No new findings; the round-1 total stands.
+
 VERDICT: APPROVE findings=3
