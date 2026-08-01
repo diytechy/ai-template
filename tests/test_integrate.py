@@ -42,6 +42,14 @@ flow end-to-end:
     commit can still pay it.
   * **finished-branch detection** — the closing commit's move to `complete/` IS
     the finished signal: no state file, no ref, just the tree.
+  * **the R1 mint refusal** (WI-397) — a finished branch whose `docs/work/`
+    delta ADDS a spec carrying an id it never claimed cannot merge, because
+    minting is a serial trunk-side act and two lanes cannot see each other's
+    trees. Driven on one topology built both ways (with and without the minted
+    file), plus the three shapes that must stay ADMITTED — a terminal-outcome
+    move into `complete/` and `cancelled/`, and a handback's return to `queued/`
+    with its bar-inert `.patch` — and the rename trap that makes `--no-renames`
+    load-bearing rather than tidy.
   * **the verdict gate** (RULING-7) — the dialed review artifact must be
     present, must parse as APPROVE, and must be FRESH: a verdict whose last
     commit predates a later code commit on the branch is a stale APPROVE and
@@ -939,6 +947,166 @@ def test_a_claimed_spec_that_landed_nowhere_names_no_outcome(tmp_path):
     refusal = integ.integrate_one(root, "wi-401", "smoke")
     assert "exactly ONE declared state directory" in refusal
     assert _rev(root, "HEAD") != _rev(root, "wi-401")  # nothing merged
+
+
+# --- 2c. the R1 mint refusal (WI-397) ----------------------------------------
+
+
+def _mint_repo(home, minted=None, directory="complete"):
+    """A claimed branch that CLOSED its own spec into `directory` — and, when
+    `minted` is given, filed a spec for that id in the same commit.
+
+    One builder for both sides of the rung, so "the same branch with the foreign
+    spec removed" is literally the same topology minus one file rather than a
+    second fixture that happens to look similar."""
+    home.mkdir(parents=True, exist_ok=True)
+    root = claim_repo(home)
+    assert integ.claim(root, "WI-401", "wi-401") == 0
+    _git(root, "checkout", "-q", "wi-401")
+    if minted is not None:
+        write_spec(root, "queued", minted, slug="found-mid-flight", specref="seed.txt")
+    dest = root / "docs" / "work" / directory
+    dest.mkdir(parents=True, exist_ok=True)
+    _git(
+        root,
+        "mv",
+        "docs/work/active/wi-401/WI-401-widget.md",
+        "docs/work/{}/WI-401-widget.md".format(directory),
+    )
+    _commit(root, "close: WI-401 -> {}".format(directory), when=T_VERDICT)
+    _git(root, "checkout", "-q", "main")
+    return root
+
+
+def test_a_branch_that_mints_a_foreign_id_is_refused_at_the_merge_slot(tmp_path):
+    # RULING R1 (owner, 2026-08-01). Two lanes cannot see each other's trees, so
+    # a branch-side `max(id) + 1` collides by construction — it happened twice in
+    # one session. The rung makes it unrepresentable at the one point every lane
+    # passes through, and the refusal has to be ACTIONABLE: the foreign id, the
+    # path that carries it, the claimed set it was judged against, and the rule.
+    root = _mint_repo(tmp_path / "minted", minted="WI-777")
+
+    refusal = integ.integrate_one(root, "wi-401", "smoke")
+    assert refusal is not None
+    assert "WI-777" in refusal
+    assert "docs/work/queued/WI-777-found-mid-flight.md" in refusal
+    assert "NEVER MINTS A WORK-ITEM ID" in refusal
+    assert "(WI-401)" in refusal  # the claimed set, so the judgement is checkable
+    assert _rev(root, "HEAD") != _rev(root, "wi-401")  # nothing merged
+
+
+def test_the_same_branch_without_the_minted_spec_is_admitted(tmp_path):
+    # The other half of the same topology: a rung that refused everything would
+    # pass the test above. Driven twice — the rung itself says None, and the SLOT
+    # gets past it to the NEXT refusal (this fixture declares no `[product] test`),
+    # which is what proves the admission is in situ and not just in the helper.
+    root = _mint_repo(tmp_path / "clean", minted=None)
+
+    claimed = integ._claimed_wi_ids(root, "wi-401")
+    assert claimed == ["WI-401"]
+    assert integ._minted_id_refusal(root, "wi-401", claimed) is None
+    refusal = integ.integrate_one(root, "wi-401", "smoke")
+    assert "no [product] test declaration" in refusal
+    assert "NEVER MINTS" not in refusal
+
+
+def test_a_branchs_own_terminal_outcome_move_is_admitted(tmp_path):
+    # The move that CLOSES a lane re-ADDS the spec under its terminal folder, so
+    # a rung reading adds naively would refuse every branch that ever finished.
+    # Both terminal folders, because both are that move.
+    for directory in ("complete", "cancelled"):
+        root = _mint_repo(tmp_path / directory, directory=directory)
+        claimed = integ._claimed_wi_ids(root, "wi-401")
+        added = [
+            ln
+            for ln in _git(
+                root,
+                "diff",
+                "--name-status",
+                "--no-renames",
+                _rev(root, "main"),
+                "wi-401",
+                "--",
+                "docs/work",
+            ).splitlines()
+            if ln.startswith("A")
+        ]
+        # The move really is an ADD on this side — the admission is the rung
+        # reading the id, not the diff happening to be empty.
+        assert added == ["A\tdocs/work/{}/WI-401-widget.md".format(directory)], added
+        assert integ._minted_id_refusal(root, "wi-401", claimed) is None, directory
+
+
+def test_a_handbacks_return_to_queued_and_its_artefact_are_admitted(tmp_path):
+    # The third outcome (§A3). A handback ADDS its own spec back under `queued/`
+    # and drops a bar-inert `.patch` beside it — the shape `handback.py` writes.
+    # Neither is a mint: the returned spec's id is claimed, and the artefact
+    # carries no spec filename at all.
+    root = claim_repo(tmp_path)
+    assert integ.claim(root, "WI-401", "wi-401") == 0
+    _git(root, "checkout", "-q", "wi-401")
+    _git(
+        root,
+        "mv",
+        "docs/work/active/wi-401/WI-401-widget.md",
+        "docs/work/queued/WI-401-widget.md",
+    )
+    patch = root / "docs" / "work" / "handback" / "wi-401.patch"
+    patch.parent.mkdir(parents=True, exist_ok=True)
+    patch.write_text("--- a/x\n+++ b/x\n", encoding="utf-8", newline="\n")
+    _commit(root, "handback: WI-401 -> queued/", when=T_VERDICT)
+    _git(root, "checkout", "-q", "main")
+
+    assert integ.branch_outcomes(root, "wi-401") == ({"WI-401": "handback"}, [])
+    assert integ._minted_id_refusal(root, "wi-401", ["WI-401"]) is None
+
+
+def test_the_mint_is_seen_even_when_git_would_report_it_as_a_rename(tmp_path):
+    # Why the diff is read `--no-renames`, driven rather than asserted. Rename
+    # detection is free to pair the branch's own close (a DELETE under
+    # `active/`) with the minted file — spec files are short and near-identical
+    # — and then the mint arrives as one `R` record with no add left to see.
+    # Here the minted spec is a BYTE COPY of the claimed one while the closed
+    # copy was edited, so the pairing is unambiguous and reproducible.
+    root = claim_repo(tmp_path)
+    assert integ.claim(root, "WI-401", "wi-401") == 0
+    _git(root, "checkout", "-q", "wi-401")
+    src = root / "docs" / "work" / "active" / "wi-401" / "WI-401-widget.md"
+    original = src.read_text(encoding="utf-8")
+    (root / "docs" / "work" / "queued" / "WI-777-copy.md").write_text(
+        original, encoding="utf-8", newline="\n"
+    )
+    dest = root / "docs" / "work" / "complete" / "WI-401-widget.md"
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    dest.write_text(
+        original.replace("A widget, shipped.", "A widget, shipped, at last."),
+        encoding="utf-8",
+        newline="\n",
+    )
+    _git(root, "rm", "-q", "docs/work/active/wi-401/WI-401-widget.md")
+    _commit(root, "close: WI-401 -> complete, and mint WI-777", when=T_VERDICT)
+    _git(root, "checkout", "-q", "main")
+
+    # The trap, MEASURED: with rename detection on, the mint appears in exactly
+    # one record and that record is an `R` (git pairs it with the delete side of
+    # the close). The only ADD left is the branch's own legitimate close — so an
+    # add-reader would see nothing wrong and merge the collision.
+    detected = _git(
+        root,
+        "diff",
+        "--name-status",
+        "-M",
+        _rev(root, "main"),
+        "wi-401",
+        "--",
+        "docs/work",
+    )
+    minted = [ln for ln in detected.splitlines() if "WI-777" in ln]
+    assert len(minted) == 1 and minted[0].startswith("R"), detected
+    assert "A\tdocs/work/complete/WI-401-widget.md" in detected, detected
+
+    refusal = integ._minted_id_refusal(root, "wi-401", ["WI-401"])
+    assert refusal is not None and "WI-777" in refusal
 
 
 # --- 3. the verdict gate (RULING-7) ------------------------------------------

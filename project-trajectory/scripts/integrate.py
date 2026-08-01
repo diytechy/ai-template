@@ -55,7 +55,11 @@ Four operations here; the two lane closes that are NOT a merge (`hand_back`,
              whole merge queue. It takes the coordinator lock ONCE (the one
              acquisition site in this file, see `_slot`) and, per FINISHED
              claimed branch, reads the lane's OUTCOME off the tree
-             (`branch_outcomes`), requires the policy verdicts the outcome
+             (`branch_outcomes`), REFUSES a branch whose docs/work/ delta mints
+             a work-item id outside its claimed set (RULING R1, see
+             `_minted_id_refusal` - minting is trunk-side and serial, so a
+             collision two lanes could produce is unrepresentable), requires the
+             policy verdicts the outcome
              owes (RULING-7 keyed off §A3, not off the claim), checks
              the ancestor relation and VERIFIES the `Bar-Green:` attestation
              at the branch tip, then merges --no-ff. A branch that is not
@@ -199,6 +203,10 @@ def _queued_spec(root, wi_id):
 # on what is a token and what is hand prose.
 _WI_TOKEN_RE = re.compile(r"\bWI-\d+\b")
 
+# A work-item SPEC filename, `WI-<n>-<slug>.md` - the shape `claim` writes and
+# the shape every state folder holds. See `_spec_id`.
+_SPEC_NAME_RE = re.compile(r"^(WI-\d+)-.+\.md$")
+
 
 def normalize_wi_id(wi_id):
     """`wi-401`/`Wi-401` -> `WI-401`; anything else is returned unchanged.
@@ -314,6 +322,24 @@ def _claim_subject(wi_id, branch):
     return "claim: {} -> active/{} (bookkeeping)".format(wi_id, branch)
 
 
+def _name_status(out):
+    """`(status, path)` per record of a `git diff --name-status` run, paths
+    posix-normalised; unreadable records are skipped.
+
+    ONE parse of that porcelain, because the two readers of it here both
+    AUTHORISE something off what a commit touched - `_abandoned_claim` a branch
+    deletion, `_minted_id_refusal` a merge refusal - and two parsers that
+    disagreed about the tab split or about backslashes would disagree about the
+    facts those authorisations rest on. Both callers pass `--no-renames`, so a
+    record is `<status>\\t<path>` and `parts[-1]` is that path.
+    """
+    for line in out.splitlines():
+        parts = line.strip().split("\t")
+        if len(parts) < 2:
+            continue
+        yield parts[0], parts[-1].replace("\\", "/")
+
+
 def _abandoned_claim(root, wi_id, branch):
     """Is `branch` the orphan a CRASHED claim leaves behind - and nothing else?
 
@@ -367,11 +393,7 @@ def _abandoned_claim(root, wi_id, branch):
     claimed = "{}/{}/{}-".format(ACTIVE, branch, wi_id)
     queued = "{}/queued/{}-".format(WORK, wi_id)
     moved_in = False
-    for line in out.splitlines():
-        parts = line.strip().split("\t")
-        if len(parts) < 2:
-            continue
-        status, path = parts[0], parts[-1].replace("\\", "/")
+    for status, path in _name_status(out):
         if path.startswith(claimed):
             moved_in = moved_in or status.startswith("A")
         elif not path.startswith(queued) and not any(
@@ -622,12 +644,32 @@ def finished_branches(root):
     return done
 
 
+def _spec_id(name):
+    """The WI id a spec FILENAME carries (`WI-397-slug.md` -> `WI-397`), or None.
+
+    ONE home for the filename->id read, because the claimed set below and the
+    R1 mint rung (`_minted_id_refusal`) have to agree exactly on what id a name
+    carries: the rung's whole question is "is this id in that set", and two
+    parsers that disagree would answer it wrongly in one direction or the other.
+    Strict on purpose - the `.md` suffix is required, so a handback's bar-inert
+    `docs/work/handback/<branch>.patch` is not a spec by the same extension rule
+    that makes it inert to every other checker (handback.ARTEFACTS).
+    """
+    matched = _SPEC_NAME_RE.match(name)
+    return matched.group(1) if matched else None
+
+
 def _claimed_specs(root, branch):
     """`[(WI id, spec filename)]` the TRUNK holds claimed for this branch."""
     out = []
     for spec in sorted((root / ACTIVE / branch).glob("WI-*.md")):
-        parts = spec.name.split("-", 2)
-        out.append((parts[0] + "-" + parts[1], spec.name))
+        # A glob hit carrying no id is not a claimed spec: `claim` only ever
+        # writes `WI-<n>-<slug>.md` (it resolves the queued spec by that shape),
+        # so anything else here is hand-made residue, and calling it an id would
+        # put a non-id in the refusals and the merge message.
+        wi_id = _spec_id(spec.name)
+        if wi_id:
+            out.append((wi_id, spec.name))
     return out
 
 
@@ -666,6 +708,102 @@ def branch_outcomes(root, branch):
         else:
             unresolved.append(name)
     return outcomes, unresolved
+
+
+def _minted_id_refusal(root, branch, claimed):
+    """RULING R1 (owner, 2026-08-01): the merge slot's MINT refusal - a refusal
+    string, or None.
+
+    A WORK BRANCH NEVER MINTS A WORK-ITEM ID; minting is a serial TRUNK-side act
+    only. A new work item takes `max(existing id) + 1`, and a lane can only see
+    its own tree - so on 2026-08-01 two lanes independently minted the same
+    `WI-392`, while three rows existed only on one unmerged branch and held
+    trunk's max BELOW them, which would have re-collided on the next trunk mint.
+    The alternatives coordinate that state (a reservation table in the
+    dispatcher, lane-namespaced ids renumbered at merge); this deletes it. An id
+    a branch cannot create cannot collide, and the id-reservation question
+    leaves the dispatcher's scope before that row is built.
+
+    THE SAME SHAPE AS `_claim_refusal`, AT THE OTHER END OF THE LANE'S LIFE: one
+    named refusal, read off git, in front of the one act that would make the bad
+    state real.
+
+    WHAT IS READ. The branch's OWN `docs/work/` delta - `merge-base(trunk,
+    branch)` to the tip - so trunk-side minting stays exactly as free as it is
+    today (the claim's bookkeeping commit, WI-388's mechanical adjudication
+    mint, a human commit): whatever trunk did sits in the BASE, not in the diff.
+    Only ADDS count, and only of a spec FILENAME (`_spec_id`), which is what
+    leaves every allowed move alone without a second policy engine to say so:
+
+      * a terminal-outcome move (`active/<branch>/` -> `complete/`, `cancelled/`)
+        and a handback's return to `queued/` both re-ADD a file whose id the
+        branch already holds claimed, so the id is in the set;
+      * an EDIT to a claimed row's body arrives as `M`, never `A`;
+      * a handback's bar-inert `docs/work/handback/<branch>.patch` carries no
+        spec filename at all.
+
+    `--no-renames` is load-bearing, not tidiness: with rename detection on, git
+    is free to pair a newly minted spec against the DELETE side of the branch's
+    own close - spec files are short and near-identical in shape - and the mint
+    would arrive as one `R` record with no add left to see. `_abandoned_claim`
+    splits its diff for the same reason.
+
+    THE HONEST BOUND, the same one `refresh_attestation` states: this defeats
+    the accident (a lane filing a follow-up where it is working) and not a lane
+    that means to. A branch can still commit an id-bearing row as prose in some
+    other file, and nothing here reads a file that is not a spec. That is the
+    threat model the rest of this script holds - drift and a lane that goes
+    wrong, not a lane that lies - and the remedy for the accident is what the
+    ruling asked for: lane-discovered findings are recorded as PROSE and take an
+    id at or after merge.
+    """
+    head = _head(root)
+    code, base = ac.git(root, "merge-base", head, branch)
+    if code != 0 or not base.strip():
+        # Fail closed: an unread delta is not an empty one.
+        return (
+            "cannot read the merge base of trunk {} and {}, so the {} delta the "
+            "R1 mint rung reads is unknowable; nothing was merged:\n{}".format(
+                head[:10], branch, WORK, ac._failure_tail(base)
+            )
+        )
+    code, out = ac.git(
+        root,
+        "diff",
+        "--name-status",
+        "--no-renames",
+        base.strip(),
+        branch,
+        "--",
+        WORK,
+    )
+    if code != 0:
+        return "cannot read {}'s {} delta against {}; nothing was merged:\n{}".format(
+            branch, WORK, base.strip()[:10], ac._failure_tail(out)
+        )
+    foreign = []
+    for status, path in _name_status(out):
+        if not status.startswith("A"):
+            continue
+        wi_id = _spec_id(path.rsplit("/", 1)[-1])
+        if wi_id and wi_id not in claimed:
+            foreign.append((wi_id, path))
+    if not foreign:
+        return None
+    return (
+        "{} ADDS work-item spec(s) carrying {} outside its claimed set ({}) - a "
+        "WORK BRANCH NEVER MINTS A WORK-ITEM ID (owner ruling R1, 2026-08-01: "
+        "minting is a serial TRUNK-side act only, so an id two lanes could pick "
+        "at once is unrepresentable rather than coordinated around). Record the "
+        "finding as PROSE - the spec body, the log fragment, the review record - "
+        "and let it take its id at or after merge, on trunk; nothing was "
+        "merged:\n{}".format(
+            branch,
+            "an id" if len(foreign) == 1 else "ids",
+            ", ".join(sorted(claimed)) or "empty",
+            "\n".join("  {} minted at {}".format(w, p) for w, p in foreign),
+        )
+    )
 
 
 def _last_commit_time(root, ref, *pathspec):
@@ -1450,6 +1588,40 @@ def _merge_ready(root, branch):
     return True, attested[1]
 
 
+def _merge_refusal(root, branch, wi_ids):
+    """The merge slot's refusal ladder: `(outcomes, refusal)` - the first reason
+    this branch may not merge, or the outcomes the merge needs and None.
+
+    `_claim_refusal`'s shape at the other end of the lane's life, and extracted
+    for the same reason that one was: the ladder grew a rung (RULING R1) and
+    `integrate_one` went over the C901 baseline, which this repo's ratchet
+    answers by extraction rather than by a bigger number. Order is
+    cheapest-first, and every rung is read off the tree or off git - nothing
+    here consults a state file.
+    """
+    if not wi_ids:
+        return {}, "trunk holds no claimed specs for {}".format(branch)
+    outcomes, unresolved = branch_outcomes(root, branch)
+    if unresolved:
+        return outcomes, (
+            "{} left claimed spec(s) without exactly ONE declared state "
+            "directory ({}) - the folder a spec lands in IS the lane's outcome "
+            "(§A3), so one that landed nowhere names none of the three and one "
+            "that landed twice names two; nothing was merged".format(
+                branch, ", ".join(unresolved)
+            )
+        )
+    # Sequential, not a tuple of calls: a tuple would EVALUATE every rung before
+    # testing the first, which is exactly the cheapest-first ordering thrown away.
+    refusal = _minted_id_refusal(root, branch, wi_ids)  # RULING R1
+    if refusal:
+        return outcomes, refusal
+    refusal = _declared_bar_or_refusal(root)
+    if refusal:
+        return outcomes, refusal
+    return outcomes, _verdict_gate(root, branch, outcomes)
+
+
 def integrate_one(root, branch, tier, held=None):
     """One branch through the merge slot. Returns None on green, else the refusal.
 
@@ -1463,22 +1635,7 @@ def integrate_one(root, branch, tier, held=None):
     the caller has to carry the remainder to the run's exit code.
     """
     wi_ids = _claimed_wi_ids(root, branch)
-    if not wi_ids:
-        return "trunk holds no claimed specs for {}".format(branch)
-    outcomes, unresolved = branch_outcomes(root, branch)
-    if unresolved:
-        return (
-            "{} left claimed spec(s) without exactly ONE declared state "
-            "directory ({}) - the folder a spec lands in IS the lane's outcome "
-            "(§A3), so one that landed nowhere names none of the three and one "
-            "that landed twice names two; nothing was merged".format(
-                branch, ", ".join(unresolved)
-            )
-        )
-    refusal = _declared_bar_or_refusal(root)
-    if refusal:
-        return refusal
-    refusal = _verdict_gate(root, branch, outcomes)
+    outcomes, refusal = _merge_refusal(root, branch, wi_ids)
     if refusal:
         return refusal
 
