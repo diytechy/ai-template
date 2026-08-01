@@ -53,8 +53,8 @@ option and no state file that could hold one. Two run-stops die with it (the
   hand-written `wip: nearly done -> active/wi-401 (bookkeeping)` was deleted
   with its work on it. Round 2 replaced that with "only the RULING-6
   bookkeeping surfaces" — still too wide, and round 2's review drove a commit
-  adding **only** `docs/log.d/WI-401-hours.md` being convicted and the fragment
-  lost, plus the same for a `docs/log.md` rewrite and a hand-written
+  adding **only** a `WI-401-hours.md` log fragment being convicted and that
+  fragment lost, plus the same for a `docs/log.md` rewrite and a hand-written
   `PROJECT_STATE.html`. The rule is now what the claim actually writes, and the
   spec move is REQUIRED rather than merely permitted, so a regeneration that
   moved no spec is not a claim either. Six negatives now fail if any one fact
@@ -274,18 +274,27 @@ all three copies at once, and `check_trajectory == schedule` keeping its fp
 file was touched** (`AGENTS.template.md`, `PROCESS.md`, `PROCESS_OPTIONS.md`
 unchanged).
 
-**Bars (real output, this branch, repo `.venv` 3.11.9; round-2 figures).**
-Commit bar before each commit: `pytest -q -n auto -m smoke` → **1 failed, 560
-passed, 4 skipped in 13.55s**; configured `check_docs --stale` → **OK, 340 docs,
-971 links, 0 broken**. Closing bar: full unfiltered `pytest -q -n auto` →
-**1 failed, 1771 passed, 12 skipped in 648.41s** (round 1 was 1762 passed;
-the +9 are this round's new guards); `ruff check .` and `ruff format --check .`
-→ **All checks passed / 148 files already formatted**; `check_trajectory --root
+**Bars (real output, this branch, repo `.venv` 3.11.9; round-3 figures, the
+shipped tip).** Commit bar before each commit: `pytest -q -n auto -m smoke` →
+**1 failed, 560 passed, 4 skipped in 13.23s**; configured `check_docs --stale` →
+**OK, 340 docs, 971 links, 0 broken**. Closing bar: full unfiltered
+`pytest -q -n auto` → **1 failed, 1774 passed, 12 skipped in 426.21s**
+(1762 → 1771 → 1774 across the three rounds; each step is that round's new
+guards, and each reconciles); `ruff check .` and `ruff format --check .` →
+**All checks passed / 148 files already formatted**; `check_trajectory --root
 . --strict` → **clean (389 work items, 366 done, 16 cancelled, graph acyclic)**,
 pre-existing WARNs only; `check_doc_refs --root . --strict` → **OK, no dangling
 path or `sym:` references**. The sole failure at both tiers is the standing
 `test_this_repo_is_not_a_work_branch`, which asserts this checkout is not a work
 branch and therefore fails by construction on one.
+
+`check_doc_refs` earned its `--strict` twice on this branch, both times on THIS
+fragment: round 2 it caught prose naming a `handback/` directory that does not
+exist until a quarantine writes one, and round 3 it caught the log-fragment path
+in the sentence above, invented to describe an exploit. Both rephrased to name
+the shape without minting a path. It is a good check and asking its question
+deliberately — *which prose now names a path this branch does not have?* — is
+what catches it before a composed bar does.
 
 **One round-2 red was mine and is recorded rather than quietly fixed.** Adding
 the `[generated]` declaration to `claim_repo` gave every fixture built on it a
