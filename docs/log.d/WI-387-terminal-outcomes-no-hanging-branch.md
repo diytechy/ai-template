@@ -354,6 +354,22 @@ other three auto-merged entries were cross-checked the same way and are correct
 by the same test (trunk changed none of their line counts). `handback.py` 362
 and `drive.py` 499 remain under THRESHOLD.
 
+**HANDOFF, measured not guessed: the merge staled this row's own APPROVE.** The
+round-3 verdict is `deffe026` (t=1785588735); the conflict resolution is
+`de9c4deb` (t=1785592495) and it necessarily touches `integrate.py`,
+`drive.py` and `tests/` — outside the two excluded prefixes — so it becomes
+`code_time` and `_verdict_gate` now answers *"`docs/reviews/WI-387-REVIEW-A.md`
+predates the branch's last code commit"*. Driven, not inferred. This is not a
+surprise or a defect: it is precisely the class WI-378's census names — *one*
+of their thirteen staled APPROVEs was "one by a hand trunk merge" — and their
+own docstring says the ordering rules are "necessary, not sufficient". A
+conflict resolution is a content edit by definition, so no ordering could have
+placed it before the verdict. **The integrator needs a round-4 verdict on the
+merged tree before this branch can pass its own gate**; the verdict file is not
+this lane's to touch, so it is reported here rather than worked around. Nothing
+about the resolution is hidden by it — the gate is doing exactly what this row
+re-keyed it to do, to the branch that re-keyed it.
+
 **The `EXIT_TRAIN_END` deviation is now live, and it was load-bearing rather
 than merely cautious.** It was excluded from `_WORKER_OUTCOMES` while WI-383's
 deletion was still in flight on a sibling lane; that deletion has landed, and
