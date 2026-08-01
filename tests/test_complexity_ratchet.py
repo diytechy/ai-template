@@ -56,7 +56,11 @@ BASELINE = {
     # all that is left here. Re-stamped DOWNWARD, which is the direction this
     # ratchet exists to hold.
     ("agent_loop.py", "route_session"): 11,
-    ("agent_loop.py", "run_iteration"): 23,
+    # WI-383: 23 -> 20. The §7 continuation re-check — a `remaining and
+    # len(assigned) > 1` guard wrapping a spine-only-batch `all(...)` and a
+    # three-class membership test — left with session grouping (§A6.1).
+    # Re-stamped DOWNWARD.
+    ("agent_loop.py", "run_iteration"): 20,
     ("agent_loop.py", "session_bookkeeping"): 31,
     ("agent_route.py", "load_registry"): 17,
     ("agent_session.py", "run_session"): 14,

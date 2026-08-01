@@ -92,10 +92,10 @@ EXIT_NEEDS_HUMAN = 7
 EXIT_PAUSED = 8
 
 
-# A worker whose §7 continuation re-check refuses the next constituent ends
-# its train EARLY (WI-183, SR-062): built/blocked evidence stands, and the
-# dispatcher transactionally releases the unstarted constituents' reservations.
-EXIT_TRAIN_END = 10
+# (EXIT_TRAIN_END = 10 retired with session grouping — WI-383, §A6.1: it ended a
+# PACKED assignment early when the §7 continuation re-check refused the next
+# constituent, and nothing packs. The number stays retired rather than reused —
+# an exit code is a contract with every launcher and log that ever read it.)
 
 
 # The FB3 owner-only path(s): OWNER_SCRATCHPAD.md is free-form owner notes the
