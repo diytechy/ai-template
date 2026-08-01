@@ -115,7 +115,17 @@ too hard, and an unenforceable cross-row promise, dropped.
   of — so §0 reaches it, and unlike WI-391 it has driving necessity.
 - **WI-396** — `check_doc_refs` is structurally blind to a suffixed reference
   into `project-trajectory/`, the half of this repo that is the product. Filed
-  small, with the limiter that the gap cannot reach an adopting repo.
+  small, with the limiter that the gap cannot reach an adopting repo. The
+  evidence that makes the trap a defect rather than a slip: `docs/log.md` is a
+  record surface and `docs/log.d/` is not, so the identical citation is legal in
+  the log and illegal in the fragment that *becomes* the log.
+
+Noted, not filed: WI-395's (A)-vs-(B) ruling has no OI row, so its cost surface
+is a queued WI's title rather than `docs/open-items.html`. That is correct for
+now — a row nobody has claimed is not yet a decision anyone is being asked to
+make — but it is worth raising when WI-395 is claimed, since (A) carries a
+five-module-and-a-hook blast radius that an owner would normally meet on the
+open-items surface.
 - **WI-395** — the `blockref` gap above, filed with its two honest readings and
   neither of them ruled: either the derivation consults the blocker's state, so a
   park releases itself (costing a cross-registry read in a deliberately
@@ -133,8 +143,8 @@ ruled on a hypothetical, and this is the evidence. In both directions: the
 composed tree **would** have caught it, because the duplicate-id guard reads the
 whole registry. The system works; it works later than a reservation would.
 
-**A citation trap that fired twice on this branch, recorded here rather than in
-a commit body.** `check_doc_refs` reads a `path:line` token as a path, so the
+**A citation trap that fired three times on this branch, recorded here rather
+than in a commit body.** `check_doc_refs` reads a `path:line` token as a path, so the
 line suffix makes it name a file that does not exist. It convicted three
 citations in this fragment, then — after that lesson — one more in WI-395, and
 then a third time inside **WI-396, the row filed to document the defect**, where
@@ -142,7 +152,16 @@ the asymmetry reproduced verbatim in the sentence describing it. This repo's
 convention is to keep line numbers **out of the path token** and put them in
 prose. Three occurrences on one branch, the last while writing about the first
 two, makes it a pattern rather than carelessness — and a commit message is not
-one of the working surfaces, so it belongs on one.
+one of the working surfaces, so it belongs on one. A **fourth** followed
+immediately, from the same family but a different shape: quoting one of
+`RECORD_PREFIXES`' own bare prefixes — a `docs/repo-review-…` stem, which names
+no file at all — is read as a path and convicted. Then a **fifth**, writing
+*that* sentence. Both were fixed with the tool's own escape: an `…` in the
+token, which `is_path_shaped` treats as not-a-path by design. The count is not
+the point; the shape is. Every one of the five was a citation that reads
+correctly to a human, and the checker's rule — path-shaped means *ends in an
+extension or starts with a known prefix* — admits no way to say "this is a
+prefix, not a file" except a character you have to already know about.
 
 The same episode exposed a real defect, and my first account of it was **wrong in
 a way that flipped the conclusion**. I recorded that the shipped
