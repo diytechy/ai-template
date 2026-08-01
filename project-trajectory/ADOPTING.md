@@ -756,12 +756,23 @@ table.
   the rename commit (today), while the pair answers the row's true pre-migration
   date. A rewritten history re-dates every row.
   *Why `draft/` had to be a DECLARED directory rather than a scratch folder:*
+  because there is nowhere else safe to put a draft, and the two wrong places
+  fail differently. Both were driven on a fresh scaffold with the same spec.
+  **An undeclared directory UNDER `docs/work/`** (say `docs/work/thinking/`):
   the readers walk `<status>/WI-*.md` and skip anything under a directory they
-  do not know, so a draft parked in an improvised folder never enters the
-  registry — the duplicate-id guard and the dashboard both go blind to the id it
-  is holding. The id MINT is safe either way (it reads filenames through an
-  unfiltered walk), so the declaration is what makes the reservation CHECKED
-  rather than incidental. Resync the kit-owned set together
+  do not know, so the spec never enters the registry at all — the duplicate-id
+  guard and the dashboard go blind, `schedule ready` prints nothing and
+  `gen_trajectory` renders no document. The id mint alone survives, because it
+  reads FILENAMES through an unfiltered walk, so the id is held by accident
+  rather than by design; and `check_trajectory --strict` exits 1 naming the
+  directory, so at least the state is LOUD. **A folder outside `docs/work/`**
+  (say `docs/drafts/`) is worse in the way that matters: the mint does not see
+  it either — `_existing_wi_nums` returns the example row alone, so the next
+  mint really would reissue the held id — and **nothing reds**;
+  `check_trajectory --strict` reads `clean (no work items …)` and exits 0. So
+  declaring `draft/` is what turns an id reservation from an accident (or a
+  silent collision) into something the registry holds and the harness checks.
+  Resync the kit-owned set together
   (`check_trajectory.py`, `schedule.py`, `agent_common.py`, `wi_convert.py`,
   `gen_trajectory.py` + the `traj_*` renderers, `bootstrap.py`) so the loaders,
   scheduler, converter and dashboard share one vocabulary.
