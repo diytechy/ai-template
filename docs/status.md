@@ -29,12 +29,17 @@ home elsewhere — don't restate it here:
   in [log.md](log.md)'s Decisions; the restructure has no open act.
 - **START HERE if you are picking up after 2026-08-01:**
   [handoff-2026-08-01.md](handoff-2026-08-01.md). Most of the concurrency-v2
-  program is built and merged; **two lanes are still open and both are blocked
-  on one unexplained red**, which that file describes in full along with the
-  hypothesis already tested and refuted. It also records which of the session's
-  pitfalls came from the work and which came from driving four lanes by hand
-  when the shipped loop is serial — read that before deciding how to run the
-  rest.
+  program is built and merged. **The refresh red that blocked both open lanes is
+  RESOLVED** (§2's resolution box; the account is in [log.md](log.md)): it was
+  two causes, not one, and the hypothesis §2 records as "tested and refuted" was
+  the correct one — so read §2 top to bottom, not just its opening claim. **One
+  lane is still open**, named in §1 and in the generated frontier below; the
+  other merged, and its worktree is deliberately still loaded because the unload
+  refuses a lane holding ignored caches. The handoff also records which of the
+  session's pitfalls came from the work and which came from driving four lanes
+  by hand when the shipped loop is serial — read that before deciding how to run
+  the rest, and read its **§6** for the two findings the resolution produced that
+  have no id yet.
 - **The drain plan for the remaining backlog:**
   [backlog-plan-2026-08-01.md](backlog-plan-2026-08-01.md) — the serial build
   order for the queued rows, the standing rules every builder inherits, and the

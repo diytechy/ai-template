@@ -22412,3 +22412,115 @@ a same-id duplicate the registry already rejects, the loss is bounded to that
 directory, and the sha and its restore command print — and because no honest
 flow produces it. Written down so the gap between the sentence and the code is
 a known one rather than a discovered one.
+
+## 2026-08-01 — Integrator session: the wi-387 refresh red, diagnosed and merged
+
+**Summary.** [handoff-2026-08-01.md](handoff-2026-08-01.md) §2's "one blocking
+thing" is answered, at root cause, and `wi-387` is merged (`a6321c99`). The
+answer is not the one §2 expected: the bar reds **three steps on two causes**,
+one of them **trunk's own**, and **the hypothesis §2 records as "tested and
+refuted" was the correct one** — what was wrong was the refutation.
+
+**Deliverables.**
+
+1. **`5222c487` (trunk) — `docs/backlog-plan-2026-08-01.md:109` marked
+   `path-ok`.** R2's background quotes `tests/this_file_has_never_existed.py` as
+   the *measured evidence* that an invented Evidence cell clears every strict
+   gate; `check_doc_refs --strict` reads it as a dangling repo path. This
+   reproduces at trunk `a6d68186` with no lane in the picture — **trunk had been
+   RED at the G3 `doc-refs` step since that file landed**, and no branch could
+   have refreshed past it. `path-ok` is the shipped idiom for exactly this
+   ("deliberate examples naming files that don't exist here", `check_doc_refs`
+   docstring) and [`docs/specs/WI-394.md`](specs/WI-394.md) already carries it on
+   the same quotation.
+2. **`4b4f29d6` (branch) — `LLR-144` + `TC-138` tag `handback.py` into
+   `CMP-004`.** The regenerated arch-map carries `scripts/handback`, and the
+   knowledge⇒component web (WI-153) makes an arch-map module in no `CMP-###` an
+   ERROR under `--strict`. Same remedy as `ad2acd23` gave `drive.py` and Phase 4
+   gave `integrate.py` (LLR-140/TC-132): one LLR row (SR-132, Module
+   `handback.py`, Component CMP-004) and one TC row (Evidence
+   `tests/test_handback.py`), both `Verified` on the branch review record as the
+   autonomous-ratification verdict (`docs/gate-policy: autonomous`).
+3. **`07ba9195` (branch) — REVIEW-A round 6, APPROVE findings=0.** A
+   `docs/requirements` + `docs/test` change is a non-review, non-fragment work
+   commit, so it staled the round-5 APPROVE by `_verdict_gate`'s own rule. Same
+   shape and same remedy as `b7f1a939` took for WI-374's spine rows.
+4. **`af6193bc` — the station refresh**, `bar PASS (20 steps, tier all)` in
+   10m25s; **`a6321c99` — the merge**, through `integrate.py`'s slot with the
+   ancestor constraint and the `Bar-Green:` trailer both verified, audit clean.
+
+**The diagnosis, and why it took three attempts.** The refusal message the
+refresh prints carries **no per-step error text**, and the reason is mechanical
+rather than incidental: `agent_common._failure_tail` anchors on the **LAST**
+`  FAIL  <step>` line and walks back to the nearest `=== <step> :` banner, but
+`check.py` re-prints every step's status in its **final summary block**, at any
+`--jobs` — so the last `FAIL` is always the summary copy and the extracted
+600-char window is always summary lines. Two earlier sessions lost the text to
+this; the third did too. What recovered it was reproducing the refreshed tree by
+hand — `git merge --no-ff --no-commit <trunk>`, `trunk_step.py`, `git add -A`,
+then each failing step directly — which is necessary because the refresh's
+`undo` resets the lane, so the failing tree no longer exists by the time the
+message is read. The recovered text, in full:
+
+```
+check_trajectory: ERROR - docs/knowledge/ holds 6 pack(s) but 1 arch-map
+module(s) are in no CMP-### component (docs/requirements/components.csv); tag
+them via LLR `Component` cells so the knowledge⇒component web is complete, or
+set docs/components-check: off
+
+tests/test_traj_views.py::test_meta_component_top_view_smoke
+E   AssertionError: assert ['scripts/handback'] == []
+
+check_doc_refs: WARN - docs/backlog-plan-2026-08-01.md:109:
+`tests/this_file_has_never_existed.py` does not exist in the repo
+```
+
+**Why the earlier refutation was wrong, stated so it is not repeated.** §2
+records "regenerating the arch map in the lane leaves `check_trajectory` clean".
+It does not. Driven at each end: `component_top_view(root)` reports
+`inventory 46, uncontained []` at trunk and `inventory 47, uncontained
+['scripts/handback']` on the refreshed tree, with 6 knowledge packs arming the
+rule in both. The three "clean" hand-probes must have measured a tree whose
+`docs/architecture.md` was still trunk-vintage — which is the easy mistake to
+make here, because that is exactly what a work branch's copy *is*.
+
+**The structural finding, which is the part worth keeping.**
+`docs/architecture.md` is a trunk-owned generated artifact, so check.py's
+`arch-map` freshness step SKIPs on a claimed work branch (SR-133,
+`concurrency-restructure §5.2`). A new module therefore does not enter the
+arch-map inventory until the **refresh** regenerates it — after the last review
+round. Round 5's `check_trajectory --root . --strict` rc=0 was honest and could
+not have predicted the red. So the containment remedy always lands after an
+APPROVE and always costs a round: **`WI-374`/`drive.py` was the first instance,
+`WI-387`/`handback.py` is the second, with the identical two rows.** The
+constraint-shaped answer — make the containment owed where the module is
+*added*, not where the inventory is regenerated — is written up in
+[handoff-2026-08-01.md](handoff-2026-08-01.md) §6 along with the
+`_failure_tail` defect. Neither is filed as a row: a lane may not mint an id,
+and trunk's max is 394 while the unmerged `wi-391` branch carries 395/396, so a
+trunk mint would recreate the collision this session's predecessor caused.
+
+**Deviations from the brief.** The merge slot was entered for **`wi-387` only**
+— `integrate.integrate()`'s own body (dirty check → `_slot` → `integrate_one` →
+`audit` → `_held_summary`) with the branch list restricted to one — because
+`finished_branches` also returns `wi-391`, which is another agent's lane and
+would have been refreshed and merged inside the slot by the pessimistic path.
+Neither the ancestor constraint nor the `Bar-Green:` verification was bypassed;
+only the queue's breadth was.
+
+**Bars (real output, repo `.venv` 3.11.9).** Refresh bar on the composed tree:
+`bar PASS (20 steps, tier all)`. Post-merge on trunk `a6321c99`:
+`python -m pytest -q -n auto` → **1784 passed, 11 skipped in 355.25s**, exit 0;
+`python project-trajectory/scripts/check.py --jobs 0 --tier all` (derived gate
+G3) → **20/20 PASS, RESULT: PASS**, exit 0. `trace.py --strict
+--require-verified` on the branch → rc=0, **SN=25 SR=135 LLR=127 TC=124
+orphans=0 integrity=0 component-findings=0**.
+
+**Byte deltas on budgeted files:** none — no budgeted doc
+(`AGENTS.template.md`, `PROCESS.md`, `PROCESS_OPTIONS.md`) was touched.
+
+**Unpaid remainder, deliberately.** `integrate` exits 1 with `UNLOAD INCOMPLETE
+- branch wi-387 is held by the worker worktree ... which is DIRTY (6 ...
+ignored path(s))`. The merge stands; the unload is owed and is left for the
+agent that drains `wi-391`, per this session's instruction not to unload any
+worktree.
