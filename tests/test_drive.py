@@ -412,6 +412,43 @@ def test_a_needs_human_worker_hands_back_and_the_run_keeps_going(tmp_path, capsy
     assert (root / "half-done.py").read_text(encoding="utf-8") == "VALUE = 1\n"
 
 
+def test_a_decided_exit_after_the_lane_closed_merges_on_its_declared_outcome(
+    tmp_path, capsys
+):
+    # THE OTHER DIAGONAL of the invariant's boundary. A review escalation lands
+    # at the END of a lane, so the close may already be written when the worker
+    # reports a decided failure — and `hand_back` reads the claimed spec out of
+    # `active/<branch>/` in the LANE, where a closed lane no longer has one. It
+    # failed with an OSError and stopped the run over a branch that would have
+    # merged cleanly (REVIEW-A round 1, driven). The tree has already named an
+    # outcome; the drain merges it on that.
+    root = stub_harness_repo(tmp_path)
+
+    def worker(root_, branch, wi_ids, args):
+        wt, err = drv.integrate.lane_worktree(root_, branch)
+        assert err is None, err
+        (wt / "shipped.py").write_text("VALUE = 1\n", encoding="utf-8", newline="\n")
+        src = wt / "docs" / "work" / "active" / branch / "WI-401-widget.md"
+        dst = wt / "docs" / "work" / "complete" / "WI-401-widget.md"
+        dst.parent.mkdir(parents=True, exist_ok=True)
+        dst.write_text(
+            src.read_text(encoding="utf-8").replace('specref = "seed.txt"\n', ""),
+            encoding="utf-8",
+            newline="\n",
+        )
+        _git(wt, "rm", "-q", "docs/work/active/{}/WI-401-widget.md".format(branch))
+        _commit(wt, "WI-401: build + close", when=T_LATER)
+        return 6  # EXIT_BUDGET, after the close was already written
+
+    rc = drv.run(root, drive_args(), worker=worker, tier="smoke")
+    assert rc == 0
+    out = capsys.readouterr().out
+    assert "already out of active/" in out, out
+    assert "merged (WI-401=merged)" in out, out
+    assert (root / "docs" / "work" / "complete" / "WI-401-widget.md").is_file()
+    assert (root / "shipped.py").is_file()
+
+
 def test_a_red_handback_is_reverted_to_a_bar_inert_artefact_and_merges(
     tmp_path, capsys
 ):

@@ -853,7 +853,26 @@ BASELINE = {
     # put half of one decision in another file. Reviewed bump, reason in
     # docs/log.md 2026-08-01; re-stamp DOWN with WI-390's deletions (the §A9.1
     # discipline) or with WI-280.
-    "integrate.py": 1588,
+    # +50 (1588 -> 1638), WI-387 REVIEW-A round 1, both MAJORs landing here or
+    # beside here. `_abandoned_claim` gained the fourth fact that actually
+    # establishes "no work was built on this branch" — the tip's diff against
+    # its own parent must touch only the RULING-6 bookkeeping surfaces — plus
+    # the exact `_claim_subject` comparison and the `wi_id` it needs for it;
+    # the re-claim now prints the deleted sha and its restore command; and
+    # `branch_outcomes` collects per-basename outcome SETS so a spec in two
+    # folders refuses instead of silently resolving toward the outcome that
+    # skips the verdict gate. The rest is the claim docstring, whose two false
+    # sentences were replaced by the measured three-window account and the
+    # measured list of what the plumbing commit bypasses — record correction,
+    # which this program pays for in prose or pays for later. Reviewed bump,
+    # log 2026-08-01.
+    # +5 (1638 -> 1643), same round: the fourth fact reuses the RULING-6 allowed
+    # set, so a repo that declares no `[generated]` artifacts fails CLOSED there
+    # (its own claim commits carry the regeneration and stop looking like claim
+    # commits). Five comment lines saying so, because the failure DIRECTION is
+    # the part a successor would otherwise have to rediscover. Reviewed bump,
+    # log 2026-08-01.
+    "integrate.py": 1643,
 }
 
 

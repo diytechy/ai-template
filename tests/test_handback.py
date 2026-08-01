@@ -81,8 +81,11 @@ def spec_text(wid, specref="seed.txt", deliverable=""):
     return text
 
 
-def claimed_repo(tmp_path, wid="WI-401", branch="wi-401"):
-    """A trunk with `wid` CLAIMED onto `branch` — the state a lane closes from."""
+def claimed_repo(tmp_path, wid="WI-401", branch="wi-401", extra=()):
+    """A trunk with `wid` CLAIMED onto `branch` — the state a lane closes from.
+
+    `extra` is `[(path, text)]` seeded BEFORE the claim, so a test that needs a
+    file to rename has one at the base the quarantine reverts to."""
     skip_without_env_gates("git")
     root = tmp_path / "repo"
     root.mkdir()
@@ -96,6 +99,10 @@ def claimed_repo(tmp_path, wid="WI-401", branch="wi-401"):
     spec = root / "docs" / "work" / "queued" / "{}-widget.md".format(wid)
     spec.parent.mkdir(parents=True, exist_ok=True)
     spec.write_text(spec_text(wid), encoding="utf-8", newline="\n")
+    for name, text in extra:
+        target = root / name
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(text, encoding="utf-8", newline="\n")
     _commit(root, "seed + file " + wid, when=T_BASE)
     assert integ.claim(root, wid, branch) == 0
     return root
@@ -271,6 +278,97 @@ def test_quarantine_reverts_the_product_and_keeps_the_failing_diff(tmp_path):
     assert (wt / "added.py").read_text(encoding="utf-8") == "BROKEN = (\n"
     assert (wt / "seed.txt").read_text(encoding="utf-8") == "edited\n"
     assert not (wt / ".gitignore").exists()
+
+
+def test_the_name_status_stream_is_read_as_records_not_pairs():
+    # THE PARSE ITSELF, on the exact field list REVIEW-A round 1 drove. Read two
+    # at a time this pairs as ('R100','Aold.py'), ('Anew.py','D'), … — paths in
+    # the status slot, the bookkeeping filter blind, and `z_broken.py` (the
+    # failing file) past the loop bound. A rename is THREE fields, and
+    # `diff.renames` has defaulted true since Git 2.9, so this is ordinary
+    # output rather than an exotic case.
+    fields = [
+        "R100",
+        "Aold.py",
+        "Anew.py",
+        "D",
+        "docs/work/active/wi-401/WI-401-widget.md",
+        "A",
+        "docs/work/queued/WI-401-widget.md",
+        "M",
+        "z_broken.py",
+    ]
+    assert hb.diff_records(fields) == [
+        ("R100", ["Aold.py", "Anew.py"]),
+        ("D", ["docs/work/active/wi-401/WI-401-widget.md"]),
+        ("A", ["docs/work/queued/WI-401-widget.md"]),
+        ("M", ["z_broken.py"]),
+    ]
+    # A copy is the other three-field form.
+    assert hb.diff_records(["C75", "src/a.py", "src/b.py"]) == [
+        ("C75", ["src/a.py", "src/b.py"])
+    ]
+    # A stream that ends mid-record is a TRUNCATED READ, not an empty diff:
+    # None, so the caller refuses rather than quarantining a partial list.
+    assert hb.diff_records(["R100", "Aold.py"]) is None
+    assert hb.diff_records(["M"]) is None
+
+
+def test_quarantine_reverts_a_rename_and_keeps_the_failing_file(tmp_path):
+    # The end-to-end half of the same defect, in the DAMAGING alignment: the
+    # rename sorts first (capital A before `docs/`) and the broken file sorts
+    # last, so under the pair-parse `z_broken.py` was dropped entirely and the
+    # run reported "4 path(s) reverted" over a branch still holding it.
+    root = claimed_repo(tmp_path, extra=[("Aold.py", "OLD = 1\n")])
+    wt = lane(root)
+    _git(wt, "mv", "Aold.py", "Anew.py")
+    (wt / "z_broken.py").write_text("VALUE = (\n", encoding="utf-8", newline="\n")
+    _commit(wt, "WI-401: rename a module and break a file")
+    assert hb.hand_back(root, "wi-401", "worker exit 7")[1] is None
+
+    assert hb.quarantine(root, "wi-401", "bar exit 1") is None
+
+    tree = _git(root, "ls-tree", "-r", "--name-only", "wi-401").split()
+    # The rename is undone in BOTH directions...
+    assert "Aold.py" in tree and "Anew.py" not in tree
+    assert (wt / "Aold.py").read_text(encoding="utf-8") == "OLD = 1\n"
+    assert not (wt / "Anew.py").exists()
+    # ...and the failing file is really gone, not merely uncounted.
+    assert "z_broken.py" not in tree and not (wt / "z_broken.py").exists()
+    # The record keeps both, which is the other half of what the mis-parse lost.
+    patch = (wt / "docs" / "work" / "handback" / "wi-401.patch").read_text(
+        encoding="utf-8"
+    )
+    assert "z_broken.py" in patch and "Anew.py" in patch
+
+
+def test_a_failed_revert_step_refuses_and_restores_rather_than_reporting(
+    tmp_path, monkeypatch
+):
+    # The discarded return codes. Under the mis-parse four git calls were
+    # no-match failures and every one was thrown away, which is why a wrong
+    # revert printed a confident count. Fault-injected on the LAST revert step
+    # so earlier ones have already run: the refusal names the path, and the
+    # lane goes back to its tip instead of being left half-reverted.
+    root, wt = quarantined_repo(tmp_path)
+    real_git = hb.ac.git
+
+    def flaky(cwd, *args):
+        if args[:1] == ("checkout",) and args[-1] == "seed.txt":
+            return 1, "fatal: simulated pathspec failure"
+        return real_git(cwd, *args)
+
+    monkeypatch.setattr(hb.ac, "git", flaky)
+    refusal = hb.quarantine(root, "wi-401", "bar exit 1")
+    monkeypatch.undo()
+
+    assert refusal is not None
+    assert "FAILED on seed.txt" in refusal and "nothing was quarantined" in refusal
+    # Restored: the earlier `git rm` of added.py is undone, no artefact was
+    # written into the tree, and the branch tip did not move.
+    assert (wt / "added.py").is_file()
+    assert not (wt / "docs" / "work" / "handback").exists()
+    assert "quarantine" not in _git(root, "log", "-1", "--format=%s", "wi-401")
 
 
 def test_quarantine_leaves_the_handback_bookkeeping_alone(tmp_path):

@@ -75,6 +75,78 @@ def _git_stdout(cwd, *args):
     return proc.returncode, proc.stdout or ""
 
 
+# The surfaces a revert must never touch: the spec move and the log fragments
+# ARE the record being kept, so reverting them would revert the handback itself.
+BOOKKEEPING = (integrate.WORK + "/", "docs/log.d/")
+
+
+def diff_records(fields):
+    """`--name-status -z` fields as `[(status, [paths])]`, or None if truncated.
+
+    RECORDS, NOT PAIRS. `diff.renames` has defaulted true since Git 2.9, so
+    `R<score>` and `C<score>` are ordinary output and each emits THREE fields —
+    the status, the old path, the new path. Reading the stream two fields at a
+    time desynchronises at the first one and every field after it lands in the
+    wrong slot: paths get read as statuses, the bookkeeping filter stops
+    matching, and the last record falls off the end of the loop bound. REVIEW-A
+    round 1 drove exactly that and the quarantine printed a confident
+    "4 path(s) reverted" over a branch whose failing file was untouched.
+
+    A stream that ends mid-record is a TRUNCATED READ, not an empty diff, and
+    returns None so the caller refuses instead of quarantining a partial list.
+    """
+    records, i = [], 0
+    while i < len(fields):
+        status = fields[i]
+        wanted = 2 if status[:1] in ("R", "C") else 1
+        if i + wanted >= len(fields):
+            return None
+        records.append((status, fields[i + 1 : i + 1 + wanted]))
+        i += 1 + wanted
+    return records
+
+
+def _revert_ops(status, paths):
+    """The git operations that undo one diff record: `[(op, path)]`.
+
+    A rename or copy is TWO undo steps, which is the other half of why the
+    pair-parse was wrong: the NEW path is an addition this branch made and has
+    to go, and the OLD path is what the base had and has to come back. (For a
+    copy the old path is unchanged at the base, so restoring it is a harmless
+    no-op — uniform beats a special case nobody will remember.)
+    """
+    if status[:1] in ("R", "C"):
+        return [("rm", paths[1]), ("checkout", paths[0])]
+    if status[:1] == "A":
+        return [("rm", paths[0])]
+    return [("checkout", paths[0])]
+
+
+def _revert(wt, base, branch, changed):
+    """Undo every changed record in `wt`, back to `base`. A refusal, or None.
+
+    EVERY return code is read. A revert that half-happened is the one outcome
+    worse than not quarantining at all, so a failing step resets the lane to its
+    tip and refuses by name — and a DISCARDED code here is exactly how the
+    pair-parse defect stayed silent while four no-match git calls ran and the
+    run printed a confident "4 path(s) reverted" (REVIEW-A round 1).
+    """
+    for status, paths in changed:
+        for op, path in _revert_ops(status, paths):
+            if op == "rm":
+                code, out = ac.git(wt, "rm", "-q", "-f", "--", path)
+            else:
+                code, out = ac.git(wt, "checkout", base, "--", path)
+            if code != 0:
+                ac.git(wt, "reset", "--hard", "HEAD")
+                return (
+                    "the quarantine revert of {} FAILED on {} ({} {}) - the "
+                    "lane is reset to its tip and nothing was quarantined:"
+                    "\n{}".format(branch, path, op, status, ac._failure_tail(out))
+                )
+    return None
+
+
 def _note(branch, reason, span):
     """The `## Handback` section a returned spec carries: what happened, and
     where the work so far is. The commit RANGE is the load-bearing sentence —
@@ -220,11 +292,19 @@ def quarantine(root, branch, why):
     code, raw = _git_stdout(wt, "diff", "--name-status", "-z", base, "HEAD")
     if code != 0:
         return "cannot read {}'s diff against {}".format(branch, base[:10])
-    fields = [f for f in raw.split("\0") if f]
+    records = diff_records([f for f in raw.split("\0") if f])
+    if records is None:
+        return (
+            "{}'s --name-status stream against {} ends mid-record - the diff "
+            "was read short, and quarantining a partial file list would revert "
+            "some of the lane and leave the rest live".format(branch, base[:10])
+        )
+    # A record touching a bookkeeping surface is exempt WHOLE - a rename with
+    # one foot in docs/work/ is not something to half-undo.
     changed = [
-        (fields[i], fields[i + 1])
-        for i in range(0, len(fields) - 1, 2)
-        if not fields[i + 1].startswith((integrate.WORK + "/", "docs/log.d/"))
+        (status, paths)
+        for status, paths in records
+        if not any(p.startswith(BOOKKEEPING) for p in paths)
     ]
     if not changed:
         return (
@@ -232,19 +312,26 @@ def quarantine(root, branch, why):
             "bar is not its own code to revert - there is nothing to "
             "quarantine and the refusal stands".format(branch)
         )
-    code, patch = _git_stdout(wt, "diff", base, "HEAD", "--", *[p for _s, p in changed])
+    # Every path of every record, renames included, so the patch carries the
+    # rename rather than half of it.
+    paths = [p for _s, record_paths in changed for p in record_paths]
+    code, patch = _git_stdout(wt, "diff", base, "HEAD", "--", *paths)
     if code != 0:
         return "cannot render {}'s failing diff as a patch".format(branch)
+    refusal = _revert(wt, base, branch, changed)
+    if refusal:
+        return refusal
     rel = "{}/{}.patch".format(ARTEFACTS, branch)
     dest = wt / rel
     dest.parent.mkdir(parents=True, exist_ok=True)
     dest.write_text(patch, encoding="utf-8", newline="")
-    for status, path in changed:
-        if status.startswith("A"):
-            ac.git(wt, "rm", "-q", "-f", "--", path)
-        else:
-            ac.git(wt, "checkout", base, "--", path)
-    ac.git(wt, "add", "-A")
+    # Named, not swept: `git rm` and `git checkout <tree-ish> -- <path>` both
+    # stage what they did, so the artefact is the only thing left to add.
+    code, out = ac.git(wt, "add", "--", rel)
+    if code != 0:
+        return "cannot stage the quarantine artefact {}:\n{}".format(
+            rel, ac._failure_tail(out)
+        )
     code, out = ac.git(
         wt,
         "commit",
@@ -260,7 +347,7 @@ def quarantine(root, branch, why):
         )
     print(
         "handback: quarantined {} -> {} ({} path(s) reverted)".format(
-            branch, rel, len(changed)
+            branch, rel, len(paths)
         )
     )
     return None

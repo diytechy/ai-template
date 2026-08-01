@@ -317,6 +317,21 @@ def _resume_or_claim(root, cycle, tier, merged, config_refusal):
 # which the same design program removes — a code no worker emits needs no arm,
 # and if one ever arrives it falls to the crash path, which parks and resumes
 # rather than deciding an outcome on behalf of a worker that decided none.
+#
+# A TRADE THIS SET MAKES, stated here rather than left in the literal (REVIEW-A
+# round 1). `EXIT_BUDGET` and `EXIT_STALL` are RESUMABLE conditions: before
+# WI-387 a worker that hit its session ceiling stopped the run with the claim
+# parked, and a relaunch resumed the same lane, so a WI needing more than one
+# worker budget finished across relaunches with no human in the loop. They are
+# decided exits, so they now hand back — and `hand_back` sets a `blockref`,
+# which `schedule._disposition` reads as `blocked`, so an unattended run can
+# never pick that WI up again until a human clears it. §A3's ruling is "any
+# non-zero worker exit that is not a crash", and its justification (the dominant
+# shape is green-but-not-approved or cannot-proceed-for-config-reasons) is about
+# EXIT_NEEDS_HUMAN, not about a ceiling. The alternative — hand back WITHOUT a
+# blockref so a ceiling stays resumable — re-opens the claim/return/re-claim
+# loop this row closed, bounded then only by --max-iterations, so it is an owner
+# call rather than a builder's: filed as a finding, not decided here.
 _WORKER_OUTCOMES = frozenset(
     {
         ac.EXIT_PREFLIGHT,
@@ -341,9 +356,26 @@ def _lane_close(root, branch, code):
     exceptional path: the lane hands back, the WI returns to trunk blocked and
     visible on the owner surface, and the dispatcher moves to the next one.
 
+    A lane that ALREADY CLOSED its specs is left alone whatever it exited with.
+    Its tree has already named an outcome — `complete/`, `cancelled/`, wherever
+    it moved them — and the drain will merge it on that. Handing it back would
+    be the driver overruling the tree with an exit code, and it cannot anyway:
+    `hand_back` reads the claimed spec out of `active/<branch>/` in the LANE,
+    where a closed lane no longer has one, so it failed with an OSError and
+    stopped the run over a branch that would have merged cleanly (REVIEW-A
+    round 1, driven — a review escalation lands at the END of a lane, which is
+    exactly when the close may already be written).
+
     A failed handback DOES stop the run, and must: it is the one state the
     invariant cannot express, so it is reported rather than driven past.
     """
+    if branch in integrate.finished_branches(root):
+        _say(
+            "worker on {} exited {} but its specs are already out of active/ - "
+            "the tree has named an outcome, so the drain merges it on that "
+            "rather than handing back over the top of it.".format(branch, code)
+        )
+        return None
     if code not in _WORKER_OUTCOMES:
         _say(
             "worker on {} CRASHED (exit {}) - the claim stays in active/{}/ "
