@@ -29,7 +29,10 @@ Two contracts live here:
     answers**, because the two questions are independent:
 
       - **concurrency** — *what may share the station?* `exclusive` (runs alone)
-        or `parallel`.
+        or `parallel`. This is NOT the `Exclusive` mutex-key column below —
+        different idea, same English word; the axis header says how they differ,
+        and the emitted record spells the column `exclusive_keys` for that
+        reason.
       - **rank** — *who goes first?* An integer, low first; it is the leading
         term of the order key and `Priority`/graph criticality/id break ties
         beneath it.
@@ -80,6 +83,14 @@ SAFETY_CLASSES = ("ordinary", "spine", "gate", "attestation", "protected", "high
 # why `protected-serial` and `single-wi` looked like different things when both
 # only ever meant *run alone*. The ladder is gone; the two questions are asked
 # separately, of two tables keyed by the same declared kind.
+#
+# WORD OF WARNING, in the one module that has no excuse for one: this
+# `exclusive` is NOT the `Exclusive` registry COLUMN. The column is a set of
+# named mutex keys (`db`, `registry-lock`) that serializes the WIs sharing a
+# key against EACH OTHER — see `_exclusive_conflicts`. This value is a WI's
+# concurrency answer and names no key at all: `exclusive` here means alone in
+# the station, full stop. The two travel together in one record, which is why
+# the emitted key is `exclusive_keys` rather than `exclusive` (REVIEW-A round 1).
 CONCURRENCY_EXCLUSIVE = "exclusive"  # runs alone — nothing else in the station
 CONCURRENCY_PARALLEL = "parallel"  # may share the station with anything
 CONCURRENCY_UNCLASSIFIED = "unclassified"  # fail closed — never scheduled
@@ -596,9 +607,15 @@ def order_key(wi, rank, downstream, hardpath):
     """The deterministic sort key: lowest rank first, then the human Priority
     override, then structural criticality, then WI id.
 
-    It takes the RANK, not the classification — the ordering axis is all this
-    function is entitled to see, so a concurrency change can never reorder the
-    frontier (§A1)."""
+    It takes the RANK, not the classification, so the concurrency axis is not in
+    the ordering decision (§A1). That is a convention, NOT a guarantee: the
+    parameter is an untyped positional and nothing here inspects it, so the only
+    thing keeping it true is the single call site in `evaluate`. REVIEW-A round 1
+    drove `order_key(w, concurrency, …)` past the whole suite with byte-identical
+    counts while genuinely reordering the frontier. What convicts that edit now
+    is `test_the_frontier_orders_one_concurrency_group_by_rank`, which orders
+    four kinds that share one concurrency value — do not weaken it into a test
+    that hands this function a literal."""
     return (rank, -wi["priority"], -downstream, -hardpath, wi["id"])
 
 
@@ -629,7 +646,10 @@ def evaluate(wis, reserved=None):
                 "priority": w["priority"],
                 "downstream": downstream[w["id"]],
                 "hard_path": hardpath[w["id"]],
-                "exclusive": w["exclusive"],
+                # `exclusive_keys`, not `exclusive`: this is the mutex-key SET
+                # from the `Exclusive` column, a different idea from the
+                # `concurrency` value beside it (see the axis header above).
+                "exclusive_keys": w["exclusive"],
                 "reasons": reasons,
                 "_key": order_key(w, rank, downstream[w["id"]], hardpath[w["id"]]),
             }
@@ -645,7 +665,14 @@ def _exclusive_conflicts(wis, status, reserved):
     ready and share a non-empty `Exclusive` key, the deterministically-first one
     (by id) wins the key; the rest are exclusive-conflicting. A key held by a
     reserved/active WI is owned by it (a live train keeps its keys whatever its
-    row now classifies as)."""
+    row now classifies as).
+
+    This is the `Exclusive` COLUMN and has nothing to do with the `exclusive`
+    CONCURRENCY value: a key serializes only the WIs that NAME THE SAME KEY
+    against each other, while the concurrency value is about the station as a
+    whole and names nothing. A `parallel` WI can hold a mutex key, and two
+    `exclusive` WIs with no key still conflict — through the dispatcher's
+    barrier, not through here."""
     holders = {}
     # A reserved WI owns each of its keys outright.
     for w in wis:
@@ -747,9 +774,11 @@ def simulate(wis, jobs, reserved=None):
     of rounds, each a list of assigned WI ids. `--jobs 1` yields the serial order.
 
     This is a planning aid: it treats an assigned WI as immediately `done` and
-    models neither build time, reservations beyond the initial set, nor the
-    `exclusive` concurrency axis — a round here is "what could start", not "what
-    the dispatcher admits" (that barrier is the dispatcher's, §A4)."""
+    models neither build time nor reservations beyond the initial set. It does
+    apply the `Exclusive` mutex keys (through `frontier`), but it does NOT apply
+    the CONCURRENCY axis: a round here is "what could start", not "what the
+    dispatcher admits" — the exclusive-runs-alone barrier is the dispatcher's
+    (§A4). The two are different things; see the axis header."""
     if jobs < 1:
         raise ValueError("jobs must be >= 1")
     # Work on shallow copies so the caller's WIs are never mutated.

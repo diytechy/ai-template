@@ -20,11 +20,13 @@ adds, so that row adds a mapping instead of renumbering a ruled table.
 
 `SCHED_SPINE_SERIAL`, `SCHED_PROTECTED` and `SCHED_SINGLE_WI` are gone,
 collapsed into the one `exclusive` value they always meant. `_GATE_RANK` is
-gone; `order_key` now takes the RANK, not the classification, so no concurrency
-value can reach the sort at all — the independence is structural on that side
-rather than merely tested. `is_schedulable_class` → `is_schedulable`, and
-a quarantine refuses BOTH axes (`CONCURRENCY_UNCLASSIFIED`,
-`RANK_UNCLASSIFIED`), never one.
+gone; `order_key` takes the RANK, not the classification, so the concurrency
+axis is not in the ordering decision. **That is a convention, not a structural
+guarantee** — round 1 of REVIEW-A drove `order_key(w, concurrency, …)` past the
+whole suite with byte-identical counts while genuinely reordering the frontier,
+so the claim is retracted and replaced by a test that convicts that edit (see
+below). `is_schedulable_class` → `is_schedulable`, and a quarantine refuses BOTH
+axes (`CONCURRENCY_UNCLASSIFIED`, `RANK_UNCLASSIFIED`), never one.
 
 Session grouping is **removed, not wired** (§A6.1): the §7 continuation
 re-check, the `exit 10 ASSIGNMENT-END` arm, `EXIT_TRAIN_END` itself, the
@@ -39,10 +41,27 @@ ruled table does not name it, `load_wis` never emitted the key (so it was
 reachable only from hand-built dicts), and its entire meaning was "do not pack
 me" — with packing gone it prevents nothing.
 
-**Two axes, pinned independently.** Rank 4 and rank 5 are adjacent and land on
-opposite concurrency values, so rank does not determine concurrency; the five
-exclusive kinds hold four distinct ranks, so concurrency does not determine
-rank; a `Priority`-driven reorder leaves every concurrency answer untouched;
-and `order_key`'s signature makes that last claim structural. The reserved
-rank-1 gap has its own test. `tests/test_schedule.py` constructs every registry
-it reads.
+**Two axes, pinned independently** — each pin mutation-proved, because round 1
+found two that could not fail:
+
+- Rank 4 (`high-risk`) and rank 5 (`critique`) are adjacent and land on opposite
+  concurrency values → rank does not determine concurrency.
+- The five exclusive kinds hold four distinct ranks → concurrency does not
+  determine rank. Read off `sched._KIND_CONCURRENCY`/`_KIND_RANK`, not off the
+  test file's own copy of §A1, so the mutation that makes concurrency fully
+  determine rank reds this pin (it did not before).
+- A `Priority`-driven reorder leaves every concurrency answer untouched.
+- **The ordering axis is pinned at its call site**: a frontier whose leading run
+  is four kinds sharing one concurrency value and holding ranks 0/2/3/4. Feed
+  the concurrency string to the sort instead and all four tie, dropping the
+  spine WI from first to fourth. Nothing hands `order_key` a literal.
+
+The reserved rank-1 gap has its own test. `tests/test_schedule.py` constructs
+every registry it reads (40 tests, all in-process).
+
+**Naming.** The emitted record key is `exclusive_keys`, not `exclusive`: the
+`Exclusive` COLUMN is a set of named mutex keys and has nothing to do with the
+`exclusive` CONCURRENCY value, and leaving two ideas one word apart in the
+module whose whole diagnosis is an overloaded word would have been the same
+mistake twice. Stated at the axis header, at `_exclusive_conflicts`, in the
+module docstring, and asserted on the wire.

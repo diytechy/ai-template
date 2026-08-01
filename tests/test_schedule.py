@@ -12,6 +12,9 @@ from conftest import SCRIPTS, load_script, run_py
 
 sched = load_script("schedule")
 
+# The two concurrency values, named once — several fixtures below read them.
+EXCL, PAR = sched.CONCURRENCY_EXCLUSIVE, sched.CONCURRENCY_PARALLEL
+
 
 def row(wid, status="queued", preds="", safety="ordinary", **kw):
     """A raw registry row as csv.DictReader would yield it."""
@@ -185,6 +188,11 @@ def test_shared_exclusive_key_serializes():
     d = disposition(wis, "WI-002")
     assert d["disposition"] == "excluded"
     assert any("exclusive-conflict:db@WI-001" in c for c in d["reasons"])
+    # The emitted key is `exclusive_keys` — the mutex-key SET from the
+    # `Exclusive` column, which is a different idea from the `concurrency`
+    # value beside it and must not be spelled the same on the wire.
+    assert d["exclusive_keys"] == ["db"]
+    assert "exclusive" not in d and d["concurrency"] == PAR
 
 
 def test_disjoint_exclusive_keys_do_not_serialize():
@@ -252,8 +260,6 @@ def test_legacy_blocked_status_is_excluded_fail_closed():
 # The tests below pin each axis SEPARATELY and then pin the independence itself,
 # because a re-conflation would pass any test that only ever reads one of them.
 
-EXCL, PAR = sched.CONCURRENCY_EXCLUSIVE, sched.CONCURRENCY_PARALLEL
-
 # §A1's ruled table, restated as data the tests read: kind -> (concurrency, rank).
 RULED_TABLE = {
     "spine": (EXCL, 0),
@@ -308,12 +314,15 @@ def test_concurrency_does_not_determine_rank():
     # And the reverse: the five exclusive kinds hold four distinct ranks, so
     # "exclusive" says nothing about order. (This is the pair `protected-serial`
     # and `single-wi` used to encode as two classes — both mean run alone.)
-    exclusive_ranks = {
-        rank for kind, (conc, rank) in RULED_TABLE.items() if conc == EXCL
-    }
-    assert exclusive_ranks == {0, 2, 3, 4}
-    parallel_ranks = {rank for kind, (conc, rank) in RULED_TABLE.items() if conc == PAR}
-    assert parallel_ranks == {5, 6}
+    #
+    # Read off the SHIPPED tables, not off RULED_TABLE: an assertion over this
+    # module's own literal would only prove the test file is self-consistent,
+    # and would pass unchanged with `_KIND_RANK` mutated so concurrency fully
+    # determines rank (REVIEW-A round 1).
+    ranks = {}
+    for kind, concurrency in sched._KIND_CONCURRENCY.items():
+        ranks.setdefault(concurrency, set()).add(sched._KIND_RANK[kind])
+    assert ranks == {EXCL: {0, 2, 3, 4}, PAR: {5, 6}}
 
 
 def test_reordering_the_frontier_never_moves_the_concurrency_axis():
@@ -327,12 +336,43 @@ def test_reordering_the_frontier_never_moves_the_concurrency_axis():
         assert {r["concurrency"] for r in sched.evaluate(wis)} == {PAR}
 
 
-def test_order_key_can_only_see_the_rank_axis():
-    """The structural half of the same claim: `order_key` is handed a rank, not a
-    classification, so no concurrency value can reach the sort at all."""
-    wi = {"priority": 0, "id": "WI-001"}
-    assert sched.order_key(wi, 3, 0, 0) == sched.order_key(wi, 3, 0, 0)
-    assert sched.order_key(wi, 0, 0, 0) < sched.order_key(wi, 6, 0, 0)
+def test_the_frontier_orders_one_concurrency_group_by_rank():
+    """The ordering axis pinned AT ITS CALL SITE — the only place it can break.
+
+    `order_key` takes a rank rather than a classification, but Python does not
+    enforce that: passing the concurrency value instead is a one-token edit, and
+    REVIEW-A round 1 drove exactly that mutation past the whole suite with
+    byte-identical counts. What convicts it is a frontier whose leading run is
+    FOUR KINDS THAT SHARE ONE CONCURRENCY VALUE and hold four distinct ranks —
+    order the concurrency string instead and all four tie, collapsing to id
+    order and dropping the spine WI from first to fourth. Nothing here hands
+    `order_key` a literal; the assertion runs through `evaluate`."""
+    wis = sched.load_wis(
+        [
+            row("WI-001", safety="gate"),  # rank 2
+            row("WI-002", safety="protected"),  # rank 3
+            row("WI-003", safety="high-risk"),  # rank 4
+            row("WI-004", safety="spine"),  # rank 0
+            row("WI-009", safety="ordinary"),  # rank 6, and the only `parallel`
+        ]
+    )
+    assert ready_ids(wis) == ["WI-004", "WI-001", "WI-002", "WI-003", "WI-009"]
+    records = {r["id"]: r for r in sched.evaluate(wis)}
+    # The four leaders are indistinguishable on the concurrency axis, so the
+    # order asserted above cannot have come from it.
+    leaders = ("WI-004", "WI-001", "WI-002", "WI-003")
+    assert {records[w]["concurrency"] for w in leaders} == {EXCL}
+    assert [records[w]["rank"] for w in leaders] == [0, 2, 3, 4]
+
+
+def test_rank_outranks_every_tiebreaker_in_the_order_key():
+    # Rank is the LEADING term: a better rank wins against a maxed Priority,
+    # more downstream dependents and a longer hard path all at once. The rest
+    # only ever break a tie within one rank.
+    early = {"priority": 0, "id": "WI-002"}
+    late = {"priority": 9, "id": "WI-001"}
+    assert sched.order_key(early, 0, 0, 0) < sched.order_key(late, 6, 99, 99)
+    assert sched.order_key(early, 3, 0, 0) == sched.order_key(early, 3, 0, 0)
 
 
 def test_critique_is_parallel_and_ranks_ahead_of_ordinary():
