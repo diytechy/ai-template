@@ -216,14 +216,33 @@ is_path_shaped('tests/no_extension_at_all')                    -> True    # the 
 is_path_shaped('tests/this_file_has_never_existed.py::test_…') -> False
 ```
 
-So the exclusion is a **deliberate, commented decision**, not an accident, and
-that cuts both ways in `WI-394`: option (a) is HARDER than I priced it (a full
-resolver must overturn that decision, not fill an unconsidered gap), while the
-file-half-only shape — now written up as option (c) — is CHEAPER (splitting on
-`::` at that guard, taking the part before it, is the whole change inside the
-tool; the guard's own comment already grants "a real file plus a selector").
-Both surfaces are corrected. The second half of the datum stands untouched: the
-tool scans root `*.md` + `docs/**/*.md` and never reads the CSVs at all.
+So the exclusion is a **deliberate, commented decision**, not an accident —
+and round 3 found it is also **guarded by a named regression test**,
+`tests/test_check_doc_refs.py::test_node_ids_and_joined_lists_are_not_path_flagged`.
+That cuts both ways in `WI-394`: option (a) is HARDER than I priced it (a full
+resolver must overturn a deliberate, *tested* decision, not fill an
+unconsidered gap), while the file-half-only shape — now written up as option
+(c) — is CHEAPER. Both surfaces are corrected.
+
+**Round 3 then corrected my correction, and the fix is in the same family as
+the original error: a mechanism asserted without driving it.** I wrote that
+splitting on `::` at that guard "is the whole change inside the tool". It is
+not, and applied literally it regresses. `is_path_shaped` is a **predicate** —
+it returns a bool and cannot hand a rewritten token back — while
+`path_findings` re-derives `clean` from the ORIGINAL token and stats it, so
+relaxing the guard alone makes the tool `stat` the whole `path::node` string.
+The reviewer applied my wording verbatim and got **10 dangling, four of them
+false** on files that exist. **Two sites**, and with both changed the run is
+**6 dangling, all true, zero false positives**, core change **+4/−2**.
+
+I also over-drew the (a)-vs-(c) asymmetry by saying (c) "concedes the exact
+case the guard was protecting". It does not concede it — it **re-scopes** the
+guard and reds the same guard test (a) would. Both options must amend a named,
+guarded decision; **only the size differs.** The ranking is unchanged and (c)
+still wins on cost, but it now wins for the true reason.
+
+The second half of the original datum stands untouched throughout: the tool
+scans root `*.md` + `docs/**/*.md` and never reads the CSVs at all.
 
 The row is `ordinary`, not spine, and the spec says why: `Evidence`, `Module`,
 `CodeSymbol` and `TestRefs` are all TRACED under §A5.1, so it arms no re-attest
