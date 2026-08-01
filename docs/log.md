@@ -654,6 +654,154 @@ why (one bullet each; cite ids)._
   mode ("a future test author gets confused") does not justify a medium
   build; the evidence stays in WI-367-REVIEW-A if it ever re-opens.
 
+- **2026-07-31 — The station protocol: a branch may not enter the merge queue
+  unless trunk is already its ancestor.** Ruled, and it is the load-bearing
+  decision of [`concurrency-v2.md`](concurrency-v2.md). The owner's sketch had
+  the branch pull trunk in and merge itself; the shipped direction (the
+  integrator merges the branch into a candidate at trunk, bars *that*, then
+  advances trunk `--ff-only`) is **kept**, because it is why trunk can only ever
+  move to a tree a bar passed — by construction, not by discipline. What the
+  sketch correctly identified was the gap it leaves: a merge conflict is an
+  integrator *refusal* that stops the queue and hands the conflict to nobody. So
+  the sketch's other half — the branch owns being current with trunk — is
+  admitted as a **precondition** (`git merge-base --is-ancestor`) rather than as
+  a merge step. Consequences: a conflict becomes **unrepresentable**; the
+  composed tree becomes byte-identical to the branch tree, so the integrator's
+  bar, the candidate worktree, `_teardown`, the `candidate-red` parking branch
+  and `_composed_tree_script` all **delete**, and the bar runs once per WI
+  instead of twice; and Class C composition failures are still caught, on the
+  real composed tree, by whichever branch merges second. **Rejected:** keeping a
+  cheap non-test tier at merge as defence-in-depth — "provably redundant" is the
+  entire argument for the constraint, and a kept-just-in-case bar is the shape
+  the governing principle warns about. **Also ruled: the refresh is
+  speculative** — the 11-minute bar runs *outside* the serial merge slot, which
+  is then sub-second, with a **one-lost-race-then-take-the-slot** bound so a slow
+  lane cannot be starved. The pessimistic alternative (bar inside the slot) was
+  rejected because it caps trunk advance near one WI per bar regardless of lane
+  count. Owner caveat recorded and **checked**: the historical pain (the deleted
+  dispatcher's 19 reservations → 8 integrations → 0 gate-verified → 11 rescues)
+  was speculation held in state git could not adjudicate — `refs/llm/` CAS
+  reservation refs, `out/dispatch/events.jsonl` — not speculation as such; this
+  speculates on **ancestry only**, where git is the arbiter and a lost race has
+  nothing to reconcile. Two requirements keep a later restriction to pessimistic
+  cheap: **one slot-acquisition call site**, and a pessimistic path that is
+  **never dead code** (the lost-race fallback exercises it in production).
+  **Measured precondition:** lane-side `trunk_step` determinism holds — exactly
+  two files drift (`PROJECT_STATE.html`, `docs/gate`), both by a HEAD-derived
+  stamp line the freshness gates already exclude by design. That measurement
+  forced one rule: **the refresh is a disposable commit** (a retry resets and
+  redoes it), because `docs/log.md` is append-compiled and a stacked second
+  refresh would conflict. Executes as **WI-386**; **WI-382** (drain grouping)
+  retires unbuilt, subsumed.
+
+- **2026-07-31 — Every lane ends in a merge: `merged | cancelled | handback`,
+  and there is no fourth option.** Ruled, making *"WIs always land back into
+  trunk; branches never hang"* true by construction rather than by sweep-up.
+  `cancelled` is throw-the-work-away and still merges, so the cancellation is a
+  trunk fact; `handback` is the owner's **quarantine** — partial work committed,
+  specs returned to `queued/`(or `draft/`) with what remains and a `blockref` if
+  a human is wanted — so the work lands where a future WI can find it instead of
+  on a branch nobody will. This deletes the `EXIT_NEEDS_HUMAN` run-stop and the
+  parked-branch stop: one WI wanting a human no longer freezes a walk-away run.
+  A crashed worker is deliberately **not** a hang and keeps `_parked_branches`.
+  **The red-handback case:** revert the code and merge the notes plus the
+  failing diff as a **bar-inert `.patch`**. Rejected: merging behind an expiring
+  declared absence (puts red code in trunk and adds an exclusion mechanism — a
+  check where the principle wants a constraint), and conceding one legitimately
+  parked case (spends the invariant). **The frequency argument originally given
+  for this was challenged by the owner and refuted** — Class A (*the WI's own
+  code is broken*) is **0 at merge** across the session's seven WIs, and none of
+  the four `EXIT_NEEDS_HUMAN` causes is a red bar; the dominant handback shape is
+  *green-but-not-approved* or *cannot-proceed-for-config-reasons*. The refutation
+  **strengthens** the ruling: a rare path earns neither an exclusion mechanism
+  nor the invariant. **A defect surfaced by that same check and now in scope:**
+  the verdict gate must key off the **outcome**, not the claim — `_verdict_gate`
+  demands an `APPROVE` for every id in `_claimed_wi_ids`, which a handback leaves
+  claimed, so as written the common path (a review escalation) deadlocks
+  demanding approval for work being *returned*. Also ruled here: invert the claim
+  order (`commit-tree` → `git branch` → advance trunk) so a crash leaves at worst
+  a benign orphan branch, deleting `_stranded_claims` and its refusal path.
+  Executes as **WI-387**.
+
+- **2026-07-31 — The scheduler has two axes, not one class ladder; session
+  grouping is removed.** Ruled: `schedule.py` runs five scheduling classes on one
+  ladder and uses it for two different jobs at once — `_GATE_RANK` decides *who
+  goes first* while `classify()` decides *what may share the station*. Split into
+  **concurrency** (`exclusive | parallel`) and **rank** (an integer). This
+  collapses `SCHED_PROTECTED`, `SCHED_SINGLE_WI` and `SCHED_SPINE_SERIAL` into
+  one value, and lets `critique` go **parallel** — it was `single-wi` only to keep
+  it out of a packed traincar, and with packing gone that distinction prevents
+  nothing. **Session grouping is removed, not wired:** with lanes, packing two
+  WIs into one session is strictly worse than two lanes (same throughput, worse
+  attribution, and the recorded 19 → 8 → **0** coupling), so the packing class,
+  the §7 continuation guard and the `exit 10` arm all delete. `agent_loop --wi
+  'A;B'` survives with exactly one caller — the dispatcher admitting the spine
+  batch. **Rejected:** leaving the plumbing dormant-but-present, which is the
+  worst of the three states. Executes as **WI-383**.
+
+- **2026-07-31 — Gate policy is the dispatcher's authority dial.** Ruled, on the
+  owner's premise that a full attended G1/G2/G3 requires back-and-forth: the loop
+  detects a gate change, cannot take the work, and the ratification items surface
+  in `open-items.html`. **Confirmed against the code** — the gate drop, the
+  advisory-tier window and `gen_open_items.py`'s per-`Draft`/`Modified` chain
+  cards are all real — **with one correction: today that exit is a refusal, not
+  a drain.** A queued spine row sorts first, `drive` claims it, `_claim_refusal`
+  rejects it, and the run stops **nonzero**, reading as failure when the machine
+  in fact finished everything it was allowed to do. The barrier must drain the
+  lanes and exit **0** naming the waiting ratifications.
+  `agent_route.failure_action("attended")` already words the behaviour
+  (*"start nothing new, let in-flight sessions close out, then alert the user"*),
+  so the dispatcher is the first thing able to implement a contract already
+  written down. Per level: `ordinary`/`critique`/`high-risk`/`protected` and
+  **`spine`** dispatch everywhere (building a scope change is *work*, not a
+  ratification); `attestation`/`gate` does **not** dispatch under `attended`
+  (drain, surface, exit 0), dispatches only the queued batch at the `[g2]` close
+  under `single-ratify`, and dispatches under `autonomous`. **Adjudication is
+  recommend-only under `attended`, and flips `Modified`→`Verified` under
+  `single-ratify`/`autonomous`** — the flip recovers the gate, which at the
+  default level is the human's act; recommend-only still replaces a bare
+  `Modified` count with a prepared brief, which is most of the win. **Rejected:**
+  flip-always, which would ship a path never exercised at the kit's default level
+  (this repo runs `autonomous`). The fixed points hold at every level: G-Final is
+  the human's, no un-run greens, the harness is still the bar, ratified owner
+  decisions are never re-decided. Executes as **WI-381** (barrier) and **WI-388**
+  (adjudication).
+
+- **2026-07-31 — Adjudication: scope-change detection mints a WI mechanically;
+  the backlog re-evaluation folds into it.** Ruled: a trunk commit changing a
+  **ratified** cell of a `Verified` row causes the dispatcher to write an
+  `adjudication`-class WI in a bookkeeping commit, with a Deliverable derived
+  from the diff `staged_spine_findings` already computes — **no model is
+  involved in creating it**. It runs **no bar** (its outputs are Status flips and
+  filed WIs, nothing a product bar can speak to), and it is what makes WI-380's
+  narrowed detector *safe*: narrowing without it moves the mis-fires from
+  *spurious window* to *missed window*. `SN-Refs` and `Verifies` are **traced**
+  and route here rather than arming a window — whether a re-point moved scope is
+  exactly this judgement — closing the one cell left open in the 2026-07-31
+  spine-touch ruling. **WI-385** (a git-derived warn on queued WIs citing an
+  amended SR) **retires unbuilt, folded in**: it is the same judgement on the
+  same diff at the same point in the flow, and a warn can only say *re-read
+  this* where the adjudicator can cancel, re-scope, or file the replacement.
+  Executes as **WI-388**.
+
+- **2026-07-31 — Design-close bookkeeping (`concurrency-v2.md`).** Ruled with
+  the above: **`lanes`** is a `docs/stack.ini [agent-loop]` dial whose template
+  seeds **2** while an **absent key means 1** — `stack.ini` is adopter-preserved
+  (ADOPTING.md §6), so a seeded key never reaches an existing adopter and a code
+  default of 2 would upgrade a long-adopted repo into concurrency silently.
+  **`drive.py` → `dispatch.py`** is accepted with its downstream resync cost
+  (`bootstrap.py` MAPPING, `test_bootstrap.py`, README kit contents), to be
+  **verified by bootstrapping a scaffold** per the WI-280 lesson. **`draft/`
+  earns the schema change**, and the deciding reason is **id reservation**, not
+  a place to think: `parse_spec_status` raises on an undeclared directory and the
+  reader skips the file, so drafts parked outside the enum are invisible to
+  `max(id) + 1` — and adjudication mints ids with nobody watching. **Ids are
+  never renumbered:** WI-381 and WI-383 are rescoped in place, WI-382 and WI-385
+  retire with their original scope plus the reason, and WI-386/387/388/389 carry
+  the new scope. **`retired` and `cancelled` are one state one rename apart** —
+  the two rows retired here are inputs to WI-384's migration, not a competing
+  vocabulary.
+
 ## Audit log
 
 <!-- Append verdict blocks here per PROCESS.md §5. Newest at the bottom. -->
@@ -20219,3 +20367,75 @@ landing and this fix should copy `scripts/schedule.py` across.
 **Bars:** the new test and the scaffold file-list test pass; `ruff check`
 and `ruff format` clean; commit bar green except the standing work-branch
 red.
+
+## 2026-07-31 — concurrency-v2 design CLOSED: questions A–F + decisions 1–7 ruled; registry re-cut (no spine change)
+
+A design session, not a build: no product code changed, no spine row moved
+(`SN=25 SR=135 LLR=126 TC=123`, `modified=0 drafts=0`, gate stays derived
+**G3**). The rulings themselves are in the Decisions log above; this entry is
+the mechanical record.
+
+**What the session produced.** [`concurrency-v2.md`](concurrency-v2.md) gains a
+**Part I** in which every statement is labelled `(OWNER)` — an answer the owner
+gave — or `(DERIVED)` — a consequence worked out from those answers and the
+shipped code. That split is the point: it keeps *what was ruled* separable from
+*what was inferred* while the design was still moving, and three inferences were
+corrected by the owner on their way to being ruled.
+
+**Two claims were checked rather than asserted, and both changed the design.**
+
+1. **Lane-side `trunk_step` determinism** (the precondition under the station
+   protocol). Measured on a detached worktree at a clean committed `HEAD`:
+   exactly two files drift — `PROJECT_STATE.html` and `docs/gate` — and both
+   drift only by a HEAD-derived stamp line already excluded from the freshness
+   compare by design (`gen_trajectory.ASOF_RE`; `derive_gate --check` compares
+   only the `# basis:` line). Worth noting one of the two is not even a
+   different commit: it is the same sha abbreviated to a different **length**,
+   because git widens abbreviations as the object count grows. *Sha length is
+   not a stable input.* The check also found the hazard that produced the
+   disposable-refresh rule: `docs/log.md` is append-compiled, so a stacked
+   second refresh would conflict on the file end.
+2. **"A large share of handbacks are red-and-unfixable"** — asserted in a draft
+   of §A3, challenged by the owner, and **refuted**. §A6's failure table puts
+   Class A at **0 at merge** across the session's seven WIs, and none of the four
+   `EXIT_NEEDS_HUMAN` causes in `agent_loop.py` is a red bar. Checking it
+   surfaced a real defect in the proposed design — the verdict gate would demand
+   an `APPROVE` for work being handed *back* — which is now in WI-387's scope.
+   The refutation strengthened the ruling rather than reversing it.
+
+A third claim, the owner's own caveat that optimistic concurrency *"caused pain
+historically,"* was checked the same way: the recorded pain (19 reservations → 8
+integrations → 0 gate-verified → 11 rescues) was speculation held in state git
+could not adjudicate, not speculation as such — confirming the caveat's stated
+suspicion that it was the implementation.
+
+**Registry re-cut.** WI-380/384 updated; **WI-381** rescoped from the barrier
+alone to the dispatcher split plus the barrier; **WI-383** from a vocabulary fix
+to the two-axis classifier collapse; **WI-382** and **WI-385** retired unbuilt
+(subsumed by WI-386 and folded into WI-388), each keeping its original scope plus
+the reason; **WI-386/387/388** filed for the new scope; **WI-389** filed at the
+owner's direction so this flow reaches `PROJECT_STATE.html`'s Process tab as its
+own render row rather than hidden inside a scripts WI. **No id was renumbered.**
+The scheduler independently confirms the shape: WI-384/386 sort at the root
+(`down=3`), then WI-383/387, then WI-380/381, with WI-388 last.
+
+**Two conventions the harness taught, recorded so the next session does not
+relearn them.** `R-A` is **directional** — an *open* WI's `Deliverable` must be
+**empty** (it records what was delivered, at close), while a *terminal* one's
+must be non-empty and its `SpecRef` cleared (`R-F`). So a long title is not a
+drafting style on the open rows; it is the only prose home they have. And
+`docs/stack.ini` is **adopter-preserved** (ADOPTING.md §6 "yours, kit only seeds
+them"), which is what forced the split lane-count default — a seeded key never
+reaches an existing adopter.
+
+**Bars.** Full suite `pytest -q -n auto` **1710 passed, 7 skipped** (7m45s);
+`check_trajectory.py --strict` **clean** (386 work items, 362 done, 16 retired,
+graph acyclic); `check_docs.py --stale` **OK — 335 docs, 950 intra-repo links, 0
+broken**. No worktree or branch residue (`git worktree list` shows only the
+primary checkout).
+
+**What is NOT done, deliberately.** Nothing is built. The rows stay in
+`docs/work/deferred/` and unclaimable; **WI-380, WI-384 and WI-386 depend on
+nothing** and are the entry points, with WI-386 the one to take first if only one
+is taken — it works at `lanes = 1`, needs no dispatcher, and carries the largest
+deletion in the design.

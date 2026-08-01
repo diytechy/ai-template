@@ -28,10 +28,11 @@ home elsewhere — don't restate it here:
   amendment window is CLOSED** — attested at the 2026-07-29 sitting, ruling
   in [log.md](log.md)'s Decisions; the restructure has no open act.
 - **Resuming in a new session — boot HERE, then
-  [concurrency-v2.md](concurrency-v2.md) if you are picking up the open design
-  (that is where the live work is), and the
-  [log's Decisions](log.md#decisions-log) for the four 2026-07-31 rulings that
-  frame it.** The older
+  [concurrency-v2.md](concurrency-v2.md), which is the spec-of-record for the
+  whole queued backlog; the design is CLOSED and its ten 2026-07-31 rulings are
+  in the [log's Decisions](log.md#decisions-log).** The backlog is claimable as
+  it stands — a plain `agent-resume` launch will take the frontier in order.
+  The older
   [handoff-2026-07-29.md](handoff-2026-07-29.md) is now **history, not a
   queue** — its sequenced work is all closed; read it for the post-Phase-5
   account only. The working
@@ -78,26 +79,55 @@ home elsewhere — don't restate it here:
   handoffs ([2026-07-28b](handoff-2026-07-28b.md) and earlier, plus
   [wrap-up-plan.md](wrap-up-plan.md)) are history: read them for the
   account, never as open tasks.
-- **Open design discussion —
-  [concurrency-v2.md](concurrency-v2.md)** (DRAFT, opened 2026-07-31;
-  **nothing in it is ruled**). Its governing principle is the owner's:
-  **prefer a constraint that makes a bad state unrepresentable over a check
-  that detects it** — the answer to why enforcement-layer growth keeps
-  recurring despite the 2026-07-28 audit naming it. Two workstreams. **A —
-  concurrency:** the dispatcher flow (spine work *waits* for the station to
-  clear, then runs alone and batched), the owner ruling that **traceability is
-  traced, not ratified** (the amendment detector compares every column but
-  `Status`, which is why a pure decomposition bought a ratify brief and four review rounds
-  for a change that altered no requirement), drain-grouping vs the retired
-  session grouping, and backlog re-evaluation after a re-attest. **B — work-item
-  state:** `draft|queued|active|deferred|cancelled|complete`, which deletes the
-  `disposition` attribute and its validator outright. Draft rows
-  **WI-380..WI-385** are in [work/deferred/](work/deferred/) and must **not**
-  be claimed until the design settles. **WI-380 lands first** regardless of how
-  the rest resolves; **WI-384 is independent** of the concurrency work and is
-  the cleanest test of the principle.
-  [WI-378](work/queued/WI-378-ratify-verdict-freshness-loop.md) is reframed
-  onto this and now waits on WI-380.
+- **The concurrency-v2 design — [concurrency-v2.md](concurrency-v2.md) —
+  is CLOSED and RULED** (2026-07-31; six entries in [log.md](log.md)'s
+  Decisions). **The rows it produced are `queued` and claimable now** — read
+  them in [work/queued/](work/queued/), which is where their ids and scope
+  live. *(No id is named in this file on purpose: an id in hand-authored
+  status prose is refused by the claim rung — see the standing note below.)*
+  Its governing principle is the owner's: **prefer a constraint that makes a
+  bad state unrepresentable over a check that detects it** — the answer to why
+  enforcement-layer growth keeps recurring despite the 2026-07-28 audit naming
+  it. Read the doc's **Part I**, where every statement is labelled `(OWNER)`
+  or `(DERIVED)`; questions A–F and follow-on decisions 1–7 are all ruled.
+  **What a successor most needs from it — the station protocol (§A2):** a
+  branch may not enter the merge queue unless trunk is already its ancestor.
+  That one line makes a merge conflict *unrepresentable*, collapses two bars
+  into one run on the branch, and catches composition failures on the real
+  composed tree for free — which is why the drain-grouping row retired unbuilt.
+  It **works at `lanes = 1` and needs no dispatcher**, so it is the row to take
+  first if only one is taken; three rows depend on nothing at all. §A2's single
+  empirical precondition (lane-side `trunk_step` determinism) was **measured and
+  holds**, and forced one rule that must be built with it — the refresh is a
+  **disposable commit**, because `log.md` is append-compiled and a stacked
+  second refresh would conflict. Also ruled: every lane ends in a merge
+  (`merged | cancelled | handback`, no fourth option, so no branch hangs); the
+  scheduler splits into two axes (`exclusive|parallel` + rank) and session
+  grouping is removed, not wired; gate policy is the dispatcher's authority dial
+  (`attestation` work drains-and-surfaces under `attended`, dispatches under
+  `autonomous`), and adjudication mints its WI **mechanically, with no model**.
+  Two findings came out of ruling the follow-ons, both now in a row's scope: the
+  **verdict gate must key off the outcome, not the claim** (else a handback
+  deadlocks demanding an APPROVE for work being *returned*), and
+  `retired`/`cancelled` are **one state one rename apart** — the two rows
+  retired here are inputs to the state-model migration, not a competing
+  vocabulary. A separate row carries the flow into
+  [`PROJECT_STATE.html`](../PROJECT_STATE.html)'s **Process tab** (owner
+  direction), verified with the `render-dashboard-critique` skill rather than by
+  reading the generator — the tab still draws the two-intersecting-hoops picture
+  that predates the station model, and a concurrency diagram is exactly the
+  thing that reads correct in source and wrong on screen.
+- **An id named in hand-authored `status.md` prose CANNOT BE CLAIMED.**
+  `integrate._status_prose_refusal` (the claim-time rung) refuses it outright
+  — not only for `done` ids, which is all the R-D guard catches. This bit for
+  real: at the 2026-07-31 close the sole `ready` row on the frontier was
+  **already unclaimable** at HEAD because an earlier session had named it in the
+  prose here. Generated blocks are exempt (the frontier list legitimately names
+  queued ids). **So: never write a live WI id into this file's hand prose** —
+  point at [work/queued/](work/queued/) and let the generated block name it.
+  The ratify/verdict-freshness row is reframed onto this design and now carries
+  a hard predecessor edge on the cell-split row, so the ordering is mechanical
+  rather than prose — read both in [work/queued/](work/queued/).
 - **Design history:** [archive/](archive/README.md).
 - **Process (kit source):** [PROCESS.md](../project-trajectory/PROCESS.md) ·
   [PROCESS_OPTIONS.md](../project-trajectory/PROCESS_OPTIONS.md) (this repo has
@@ -114,7 +144,10 @@ _Derived facts — regenerated by `python project-trajectory/scripts/gen_traject
 - **Active gate:** derived **G3** (per-phase `1=G3;2=G3;3=G3;4=G3`, derived current **phase=4**) — the harness at the derived gate is the bar; [`derive_gate.py`](../project-trajectory/scripts/derive_gate.py) computes it, cached to [`docs/gate`](gate).
 - **Spine:** **SN=25 SR=135 LLR=126 TC=123** (0 drafts) · 82 seams · 5 components.
 - **Ready frontier** _(dependency-ready WIs in build order — generated from the scheduler; a closed WI drops out automatically, so this list is never stale and never names a `done` id):_
-  - **WI-378** — Resolve the ratification/verdict-freshness loop: under gate-policy `autonomous` a reviewe…
+  - **WI-384** — RULED 2026-07-31 (docs/concurrency-v2.md workstream B)
+  - **WI-386** — RULED 2026-07-31 (docs/concurrency-v2.md §A2)
+  - **WI-383** — RULED 2026-07-31 (docs/concurrency-v2.md §A1 and §A6.1)
+  - **WI-380** — RULED 2026-07-31 (docs/concurrency-v2.md §A5.1)
 <!-- END GENERATED STATUS -->
 
 - **Bar (per commit):** `python -m pytest -q -n auto -m smoke` (~3.3 min) +
