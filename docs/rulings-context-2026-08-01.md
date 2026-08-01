@@ -103,6 +103,53 @@ Reading against what exists:
 before it is claimed; WI-395 is executed as the wording fix. If any numbered
 point above misstates the intent, correcting the point corrects the plan.
 
+### The arbitration-row variant (owner, 2026-08-01 — under consideration)
+
+The owner is considering that a work item might need to mint a **placeholder
+work item as a handback**, to mechanize an arbitration cycle. Analysis
+against the machinery as it now stands:
+
+- **Where the mint happens decides everything.** An *in-lane* mint (the
+  placeholder created in the branch's own tree as part of handing back) would
+  be refused by the just-shipped minting rung, and would reintroduce the
+  collision it exists to end — two lanes handing back concurrently would each
+  take the same next id. Minted **at intake** — by the dispatcher, on trunk,
+  serially, when the handback merge lands — it is the already-ruled
+  adjudication pattern (mechanical mint, derived description, no model)
+  extended from spine amendments to handback disposition. And the lane loses
+  nothing by not minting: the returned spec's own Handback section already
+  carries the row id, the reason, and what remains — everything the derived
+  placeholder needs.
+- **Reconciled with "recovery is loop machinery, never a work item":** the
+  *machinery* mints and routes; the minted row is the arbitration **instance**
+  made visible, claimable, and dispatchable under the gate-policy dial — the
+  same "force in a WI that must be attended to" shape already ruled for the
+  adjudication kind. The row's job is the judgement, never the recovery.
+- **One new invariant is required: no recursion.** An arbitration row's only
+  outcomes are a disposition (then it completes) or an escalation to the
+  owner surface. It can never itself hand back — otherwise handbacks could
+  chain arbitration rows forever.
+- **Effect on work in process: nothing running is invalidated.**
+  - The shipped minting rung: unchanged — it governs branch deltas only, and
+    the intake mint is trunk-side, the path it deliberately leaves free.
+  - The adjudication row is the natural home for the arbitration cycle — it
+    absorbs the handback mint the same way it absorbed the
+    backlog-re-evaluation row: same judgement, same agent, one home.
+  - The dispatcher row gains only the intake *trigger* (detect a merged
+    handback, mint, route); the judgement rides the minted row.
+  - WI-395 is unchanged as the wording fix — and this variant **closes the
+    original R3 question**: release becomes event-driven (a mint at intake)
+    instead of state-polled, so the cross-registry blocker-subscription is
+    never needed by anyone.
+  - Drain order unchanged. The spec amendments to the dispatcher and
+    adjudication rows are ordinary serial trunk-side edits at or before
+    claim, which also clear their standing SpecRef-freshness warnings.
+- **The no-row alternative, for completeness:** the dispatcher could apply
+  dispositions in place on the handed-back row, with no placeholder. Less
+  code, but the arbitration act becomes invisible to the frontier and the
+  dashboard, and cannot be dispatched or dialed by gate policy. Stated so the
+  choice is honest; not recommended.
+
 ---
 
 ## R4 — OI-11, and what "16 of 111 files map to no terminal state" means
