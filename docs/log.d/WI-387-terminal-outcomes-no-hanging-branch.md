@@ -197,13 +197,19 @@ re-claim refuses instead of deleting.
 - **`integrate.py` still crosses THRESHOLD (1418 → 1692) and takes a NEW
   reviewed baseline entry.** What remains is irreducibly its own: the claim,
   the outcome read the merge slot gates on, and the verdict gate. Re-stamp
-  DOWN with WI-390's deletions. (Measured with the ratchet's own metric,
-  `len(text.splitlines())`, at the shipped tip — the same figure the baseline
-  carries. An earlier draft of this line said 1638, a stale mid-round number
-  that never matched a stamp; round 2's review caught the disagreement between
-  it and the 1643 stated further down, and this is the corrected, re-measured
-  value after round 2's own fixes. THRESHOLD is 1500; the two siblings sit
-  under it at `handback.py` 353 and `drive.py` 495, so neither needs an entry.)
+  DOWN with WI-390's deletions. (Every figure here measured with the ratchet's
+  own metric, `len(text.splitlines())`, at the shipped tip — `integrate.py`
+  1692, matching the stamp; THRESHOLD is 1500; the two siblings sit under it at
+  `handback.py` **362** and `drive.py` 495, so neither needs an entry. This
+  sentence has now gone stale twice: round 2's review caught `integrate.py`
+  reading 1638 here against 1643 further down, and round 3's caught
+  `handback.py` reading 353 — the number I had corrected the FIRST half of the
+  sentence with, while the sibling in the same sentence went stale under the
+  nine lines round 3 added to `_revert_ops`. The lesson is not "check harder":
+  a hand-copied number beside a machine-stamped one is a second home, and the
+  only reason this one survives is that the two siblings are under THRESHOLD
+  and so have no stamp to disagree with. Re-measure the whole sentence, never
+  the half that changed.)
 - **`EXIT_BUDGET` and `EXIT_STALL` now block a WI that used to be resumable —
   a real cost, recorded rather than traded in a set literal.** They are decided
   exits, so under §A3 the lane hands back; `hand_back` sets a `blockref`; and
@@ -296,6 +302,26 @@ the shape without minting a path. It is a good check and asking its question
 deliberately — *which prose now names a path this branch does not have?* — is
 what catches it before a composed bar does.
 
+**And the answer to "does this want a new idiom?" is NO** — reviewed and ruled
+at round 3, recorded here so nobody re-opens it from the symptom. The repo
+already carries three forms that partition the space: `docs/declared-absences`
+(a path permanently not carried, with its reason), `path-ok` (prose whose
+SUBJECT is a path that does not exist), and the record prefixes (compiled
+history, judged loosely because it cannot be edited). A path that does not exist
+*yet, because the code has not run* is none of these: it is a **description**,
+not a reference — a reader cannot follow it — and `path-ok` would be wrong
+twice over, since it exempts the whole line and would be spent on incidental
+illustration. Rephrasing is the permanent answer, not a workaround. Being caught
+in a fragment is the design working as written: `check_doc_refs.py` records that
+`docs/log.d/` sits deliberately OUTSIDE the record prefixes so a fragment is
+"judged strictly while its author can still edit it", and WI-384 built, measured
+inert, and reverted that widening. The one thing worth adding is **guidance, not
+machinery** — a line in the `session-protocol` skill saying a fragment may not
+mint a path — and that belongs to **WI-396**, which owns this check's blind
+spot. Filed there, not built here: a sibling lane hit this three times today and
+five by the time round 3 reviewed it, so the frequency is real; the placement is
+that row's call.
+
 **One round-2 red was mine and is recorded rather than quietly fixed.** Adding
 the `[generated]` declaration to `claim_repo` gave every fixture built on it a
 `docs/stack.ini`, which changed the §4 refusal
@@ -330,3 +356,20 @@ it names, instead of the assertion being softened to whichever refusal fires.
    empty, `BlockRef` intact) and reads as a history of returns, which is
    arguably right — but nobody decided that it should accrete rather than
    replace, and a WI returned five times would carry five sections.
+5. **For WI-396, which owns the `check_doc_refs` blind spot: a fragment may
+   not mint a path.** Not a new idiom — that was weighed and refused at round 3
+   (see above); guidance, one line in the `session-protocol` skill. Filed
+   because the frequency is measured rather than felt: this branch hit it twice
+   and a sibling lane five times in one day, always in a `docs/log.d/` fragment
+   describing a path the code has not created yet. Placement is that row's
+   call, not this one's.
+
+**One residual, recorded below the filing bar** (round 3's review reached the
+same judgement independently): `_abandoned_claim` says "this WI's spec"
+singular while the code allows plural, so a commit making the real move **plus**
+a second `WI-401-*.md` file under the same claim directory is still convicted
+and that extra file lost. It stays unfiled because the only reachable content is
+a same-id duplicate the registry already rejects, the loss is bounded to that
+directory, and the sha and its restore command print — and because no honest
+flow produces it. Written down so the gap between the sentence and the code is
+a known one rather than a discovered one.
