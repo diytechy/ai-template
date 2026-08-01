@@ -880,9 +880,22 @@ attribute/folder cross-check, its two raise paths, and their tests. State
 becomes *unrepresentably* inconsistent rather than checked-for-consistency.
 This is §0's principle applied.
 
-**Specs mirror it.** A closed WI's spec-of-record moves to the folder matching
-its terminal state rather than a single `docs/archive/specs/`, so a spec's
-location answers "did this ship or was it cancelled?" without opening it.
+**Specs mirror it — RESTATED 2026-08-01 (OI-11 ruled (a); WI-391's
+measurement).** The goal this sentence originally set — a spec's location
+answers "did this ship or was it cancelled?" without opening it — **is met by
+the registry half of this very section**: the closed WI's own file sits in
+`docs/work/complete/` or `docs/work/cancelled/`. The archive half was measured
+and refuted: of 111 archived specs, 92 resolve to a completed WI and 3 to a
+cancelled one — already answered by registry location — while **16 resolve to
+no single terminal state at all** (15 shared effort docs serving several WIs,
+one of them cited from both terminal states; plus one glob-mismatched
+filename), so any `complete/`/`cancelled/` placement under
+`docs/archive/specs/` would assert something false for them, and the split
+would duplicate a registry fact with no regenerator gating its freshness. The
+spec-of-record archive therefore **stays one flat folder by decision** —
+`docs/declared-absences` carries the two never-built destinations (restated
+there, never deleted). Ruling record: OI-11 → [log.md](log.md) Decisions,
+2026-08-01.
 
 ### B2.1 `retired` and `cancelled` are the same state, one rename apart
 

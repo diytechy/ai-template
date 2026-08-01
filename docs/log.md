@@ -25,6 +25,43 @@ applying that design to the kit itself.
 _Ratified or executed decisions only — the call, the alternatives passed over,
 why (one bullet each; cite ids)._
 
+- **2026-08-01 — R3: handback disposition is loop machinery; the arbitration
+  row is minted at intake.** Ruled (owner,
+  [rulings-context-2026-08-01.md](rulings-context-2026-08-01.md) §R3, confirmed
+  in session): a handed-back row's disposition is completed by the
+  **dispatcher**, never by another work item — at intake (when the handback
+  merge lands) the mint helper writes a **disposition row of the `adjudication`
+  kind** trunk-side (mechanical, derived description, rank 1), whose only
+  outcomes are cancel / defer / re-queue with drafted follow-up / surface an
+  open item. **No recursion:** a disposition row may never itself hand back.
+  The shape generalizes to one invariant: **a WI id is created only by a human
+  trunk commit or the intake mint helper — lanes never mint** (R1 absolute, no
+  carve-outs; §A5.2's "files real WIs" executes as *drafts* in the row body
+  that intake mints at merge). Release becomes event-driven, so the
+  cross-registry blockref subscription (WI-395 option A) is never needed by
+  anyone; **WI-395 narrows to the wording fix**. Rejected: in-lane placeholder
+  minting (recreates the WI-392 collision R1 ended); dispositions applied in
+  place with no row (invisible to the frontier, the dashboard, and the
+  gate-policy dial). Executes across **WI-395** (wording) and **WI-388** (the
+  intake arm; spec amended trunk-side this date).
+
+- **2026-08-01 — R4: the §B2 "specs mirror the terminal folders" sentence is
+  RESTATED.** Ruled (owner, OI-11 option (a), the brief's own recommendation):
+  [concurrency-v2.md](concurrency-v2.md) §B2 is amended in place to record what
+  WI-391 measured — shipped-or-cancelled is already answered by location at
+  `docs/work/complete|cancelled/` for every attributable spec, and **no**
+  folder layout under `docs/archive/specs/` can serve the 16 files with no
+  single terminal ending (15 shared effort docs, one cited from both terminal
+  states; one glob-mismatched name), so the archive stays flat **by decision**.
+  The two `docs/declared-absences` lines naming the never-built destinations
+  are **restated, never deleted** (measured: deleting them adds +2 dangling
+  under `check_doc_refs --strict`, because the cancelled WI-391 spec's title
+  names both paths). Rejected: **strike** — the refutation would live only
+  where the next reader of a flat archive is not looking, which is exactly how
+  WI-391 came to be filed; **build with hand-placed leftovers** — asserts
+  endings false for 14% of the corpus and duplicates a registry fact with no
+  regenerator. OI-11 ruled; WI-391 stays cancelled.
+
 - **2026-08-01 — R1: a work branch never mints a work-item id.** Ruled (owner,
   [backlog-plan-2026-08-01.md](backlog-plan-2026-08-01.md) §R1): **minting a
   work-item id is a serial TRUNK-side act only** — the claim's bookkeeping
