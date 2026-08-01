@@ -398,6 +398,38 @@ A gate closes only on the verdict of an **independent LLM reviewer**:
   "Derived gate model" describes). CHANGES-REQUESTED → findings route to their
   owner hats; re-review up to `MAX_ROUNDS`, then the Blocked register.
 
+**Verdict freshness, and the ordering it buys back (WI-378).** The queue accepts
+a verdict only while it still describes the tree: `integrate._verdict_gate`
+requires the APPROVE's last commit to be **no older than the branch's last
+non-record commit** (`docs/reviews/` and `docs/log.d/` excluded; the station's
+`refresh` commit peeled off at the work tip it attests, since a mechanical
+re-merge is not a change the reviewer could conclude differently about). So
+**every commit after an APPROVE buys another round** — correctly when it changed
+what ships, *and equally* when it corrected a claim the verdict rested on, so
+"no code changed" is never by itself an argument for skipping the round. Two
+ordering rules make the avoidable part avoidable, and the lane owes both:
+**close before the final verdict round** (Deliverable filled, spec moved to its
+terminal folder, any ratifying Status-change commit made — so the reviewer sees
+the record it is blessing rather than invalidating it afterwards), and **never
+hand-merge trunk on a work branch** (only the station's `refresh` commit is
+peeled). They are **necessary, not sufficient**: a verdict's own finding can
+demand a record edit no ordering could have placed earlier.
+
+Measured 2026-08-01 over the **whole** population the predicate has governed —
+every `integrate: merge` commit having the freshness comparison's introducing
+commit as an ancestor (`git log --grep="^integrate: merge"`, filtered with
+`git merge-base --is-ancestor <that commit> <merge>`; 20 of them, with
+`review-policy` at `1` throughout): **13 APPROVEs staled — nine by a real change
+to shipping code or a declared doc, one by a hand trunk merge, and three by a
+record edit that followed its own verdict** (a close ceremony, a corrected
+evidence figure, and a `Deliverable` prose fix the verdict itself demanded).
+`docs/work/` is **deliberately not excluded**, and a successor should not
+re-open that: a spec's `safety_class`, `needs` and `Deliverable` are claims the
+verdict is *about*, so the 3-in-13 an exclusion would buy back is exactly the
+class a reviewer most needs to re-read. And 3-in-13 is the figure *before* the
+two ordering rules; follow them and they retire two of the thirteen, leaving
+**2 in 11 (18.2 %)** — both of which caught a false claim in the record.
+
 **The finding lifecycle: a finding is a claim, not a verdict.** A recorded
 finding names a concrete, falsifiable failure scenario (these inputs → this
 wrong behavior); its owner **confirms** it by reproducing that scenario — or
