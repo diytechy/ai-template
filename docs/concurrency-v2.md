@@ -823,7 +823,7 @@ one only makes sense once *all* the rows have landed:
 2. **Connectivity and the interface registry** — the `drive.py` →
    `dispatch.py` + `lane.py` move. Note the registry is **already drifting
    before this program starts**: `check_trajectory` warns today that
-   `scripts/drive`, `traj_graph`, `traj_panels` and `traj_render` sit in the
+   `drive`, `traj_graph`, `traj_panels` and `traj_render` sit in the
    arch-map with no `IF-###` row, and that `IF-055`/`IF-080`/`IF-081` are
    registered with no script declaring them. Close the drift this program
    *causes*; **record, without silently absorbing,** the drift it inherits.
