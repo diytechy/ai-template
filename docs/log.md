@@ -22729,3 +22729,82 @@ same session the moment the registry changed again.
 
 **Byte deltas on budgeted files:** none — `AGENTS.template.md`, `PROCESS.md` and
 `PROCESS_OPTIONS.md` untouched.
+
+## 2026-08-01 — Integrator session: wi-391 merged as a cancellation, and the drain's residue unloaded
+
+**Summary.** The second of the two open concurrency-v2 lanes is merged
+(`16c48934`) — as a **cancellation**, so the refutation is a trunk fact rather
+than a deleted branch — and the drain's whole machine-local residue is gone: the
+four lane worktrees left loaded across the 2026-07-31/08-01 sessions, their four
+branches, and the leftover `integrate/candidate-red`. `git worktree list` is back
+to the primary checkout alone and no `wi-*`/`integrate/*`/`llm/*` branch exists.
+
+**Deliverables.**
+
+1. **The lane reset to its approved tip.** `wi-391` was sitting on `230f6434`,
+   a refresh onto trunk `5f292892` that four subsequent trunk moves had made
+   stale. The §A2.1 disposable-commit rule says exactly what to do with it, so
+   the lane was `reset --hard` to `f9ffa08b` (REVIEW-A round 6, **APPROVE
+   findings=1**) and the stale refresh discarded, never cherry-picked.
+2. **`4b1e9ada` — the station refresh** onto trunk `2c80f1aa`:
+   `bar PASS (20 steps, tier all)`, `Bar-Green: tree=9de86eb4… work=f9ffa08b…`,
+   one attempt, **no conflict**.
+3. **`16c48934` — the merge**, through `integrate.py`'s slot with the ancestor
+   constraint and the trailer both verified: `integrate: wi-391 merged
+   (WI-391=cancelled)`, `audit clean (2c80f1aac6..HEAD — product changes arrived
+   by merge only)`. The verdict gate keyed off the **outcome**, not the claim, so
+   the cancellation owed no APPROVE-for-done — RULING-7 working as specified.
+   Landing with it: `WI-393`, `WI-395` and `WI-396` into `docs/work/queued/`, the
+   `WI-391` spec into `docs/work/cancelled/`, and `OI-11` onto the owner surface.
+4. **The unload.** Each of `wi-378`, `wi-383`, `wi-387`, `wi-391` was orphan-
+   checked first (`git status --short` empty; `--ignored` showing only
+   `.pytest_cache/`, `.ruff_cache/`, `__pycache__/` and the generated
+   `docs/test/report.md`), then removed and deleted. All four took a plain
+   `git branch -d` — including `wi-391`, because dropping the stale refresh left
+   the branch fully merged. `integrate/candidate-red` held exactly one commit off
+   trunk (`0e21eb03`, an alternative `merge wi-384` whose two parents are both
+   reachable from trunk, which merged `wi-384` separately at `979d8e09`); it is
+   residue of the candidate machinery WI-386 deleted, so it went with `-D`.
+5. **`docs/status.md` prose corrected.** The START HERE bullet still said one
+   lane was open and a merged lane's worktree still loaded; both are now false.
+   The residue bullet is re-dated to this verification rather than the Phase 4
+   close. No WI id was added to hand prose — the generated block names the
+   frontier itself.
+
+**The anticipated `docs/log.md` conflict cannot happen on this branch shape, and
+the reason generalises.** The brief expected one, because trunk's log grew with
+the `wi-387` merge and the log is append-compiled. It did not occur, and it could
+not have: a work branch never edits `docs/log.md` at all — it writes
+`docs/log.d/<WI>-<slug>.md`, and the compile is `trunk_step.py`'s, run fresh
+inside each refresh against whatever trunk it just merged. The append conflict
+§A2.1 warns about is between **two stacked refreshes on one branch**, not between
+a refresh and a moved trunk. That is why the disposable-commit rule is a reset
+rather than a merge strategy, and why the right response to a stale refresh is to
+throw it away rather than resolve it.
+
+**One finding worth a row when ids are next assigned (no id minted — trunk's max
+is now 396 and minting is a serial trunk-side act).** *A lane that ran its own
+bar can never be unloaded automatically, and the refusal is stricter than git's.*
+`_unload_branch` reads dirt with `git status --porcelain --ignored=matching`, so
+a `__pycache__/` counts as "files that may exist nowhere else" and the branch is
+reported held. But `_shed_residue` sheds only what **the refresh's own** bar
+added, by design (its docstring says so) — so any lane the worker built or tested
+in arrives at the slot permanently dirty, and every merge ends in `UNLOAD
+INCOMPLETE`. Measured this session: all four worktrees were removed by a plain
+`git worktree remove`, **no `--force` and no manual cache deletion**, because
+git's own cleanliness test ignores ignored files. So the integrator refuses an
+unload git itself would have performed safely, on every lane, forever. The
+constraint-shaped answer is not to loosen the read — the `out/run-logs/` case it
+protects is real — but to make the *distinction* representable: shed the declared
+tool residue (the bar's own cache/report set, which the repo already enumerates
+in `.gitignore`) and treat only the remainder as evidence.
+
+**Bars (real output, repo `.venv` 3.11.9, trunk `16c48934`).**
+`python -m pytest -q -n auto` → **1788 passed, 7 skipped in 355.89s**, exit 0.
+`python project-trajectory/scripts/check.py --jobs 0 --tier all` (derived gate
+G3) → **20/20 PASS, RESULT: PASS**, exit 0 — including the `status-map`,
+`open-items` and `trajectory-map` freshness gates, which is what proves the
+generated status/frontier and owner views regenerated with the merge.
+
+**Byte deltas on budgeted files:** none — `AGENTS.template.md`, `PROCESS.md` and
+`PROCESS_OPTIONS.md` untouched.
