@@ -1,0 +1,81 @@
++++
+id = "WI-384"
+title = "RULED 2026-07-31 (docs/concurrency-v2.md workstream B) - the design is ruled into log.md's Decisions, so this row is CLAIMABLE. Replace the work-item state vocabulary so STATE IS THE FOLDER, with no attribute duplicating it. Before: queued|active|deferred|archive plus a `disposition` frontmatter key. After: draft|queued|active|deferred|cancelled|complete. The `disposition` key exists for exactly one reason - archive/ holds two terminal states and the folder cannot express which - so it needs an attribute AND parse_spec_status()'s cross-check to keep the two honest, with two raise paths (unknown disposition, retirement filed outside archive/) and their tests. Splitting archive/ into complete/ and cancelled/ DELETES the attribute, the validator, both raise paths and the tests: the inconsistent state stops being checked-for and becomes unrepresentable. This is the cleanest test of the design's governing principle. Two vocabulary fixes ride along: `retired` is ambiguous (it can read as finished-and-put-out-to-pasture) and becomes `cancelled`, which cannot; and `draft/` gives thinking-in-progress an honest home - today there is none, so a design still under discussion sits in deferred/, which reads as A DECISION (we decided not to do this now) rather than as THE ABSENCE OF ONE (still being figured out). THESE VERY ROWS ARE THE WORKED EXAMPLE: while the concurrency-v2 design was open they sat in deferred/ for want of a draft/, and they moved to queued/ the moment it was ruled - so the mis-filing ended, but only because the thinking finished, and the next design to open has the same nowhere to sit until this row lands. draft is never-ready in the scheduler, exactly like deferred, and differs only in what it SAYS. Specs-of-record mirror the terminal folders instead of one docs/archive/specs/, so a spec's location answers shipped-or-cancelled without opening it. THE draft/ QUESTION IS RULED (2026-07-31) AND THE DECIDING REASON IS ID RESERVATION, not somewhere to think. Note first that there is NOTHING TO KEEP IN SYNC: the spec frontmatter carries no status key at all - Status is synthesised from the directory at read time - so folder/frontmatter divergence is ALREADY unrepresentable, and disposition is the single one-key exception this row deletes. But read_spec_rows walks <status>/WI-*.md, parse_spec_status RAISES on a directory not in SPEC_STATUS_DIRS, and read_spec_rows then SKIPS that file - so parking drafts in an UNDECLARED folder makes them invisible to max(id)+1, to the duplicate-id guard and to the dashboard, and the next mint would hand out an id a draft already holds. WI-388's mechanical adjudication minting is exactly such a mint, running with nobody watching, so declaring draft/ is what makes an id reservation real. RETIRED AND CANCELLED ARE ONE STATE, ONE RENAME APART - state this plainly because it is live the moment anything retires before this row lands. Today's shipped vocabulary has exactly ONE won't-build terminal, spelled disposition = retired and living in archive/; cancelled/ is that same state after this row renames it and gives it a folder. So anything retired BEFORE this lands correctly writes retired (the only spelling the readers, the scheduler's _TERMINAL_DISPOSITION and check_trajectory's R-A/R-F rungs accept), anything retired AFTER writes nothing at all because the folder is the whole statement, and the migration is mechanical and already in scope here. WI-382 and WI-385 (retired 2026-07-31, subsumed by WI-386 and folded into WI-388) are simply two of its INPUTS - and a useful pair, since both carry a real reason and so prove the migration preserves the RECORD rather than just the state. The rename is not cosmetic: retired can be read as finished-and-put-out-to-pasture, cancelled cannot, and those two rows are exactly the case that would be misread - subsumed work that never shipped. COST, stated honestly: SPEC_STATUS_DIRS is triplicated across the three F5 readers (agent_common 3, check_trajectory 4, schedule 3 references) plus wi_convert.py, the scheduler's terminal-state logic and tests; the driver must treat draft as never-ready; existing archive/ rows migrate by disposition; downstream repos owe a migration step. Independent of the concurrency workstream, so it can proceed in parallel. RE-AFFIRMED 2026-07-31 against the concurrency-v2 §A9.1 addition (the program-close row WI-390): that section adds a NEW row's scope - the spine amendment, connectivity, prose and stamps that no single builder can own - and changes nothing in this row's own scope, so this row stands as written."
+workstream = "process"
+buildtier = "medium"
+safety_class = "ordinary"
++++
+
+## Deliverable
+
+Work-item state IS the folder, with no attribute duplicating it. The vocabulary
+is `draft | queued | active | deferred | cancelled | complete`, and the
+directory is now the WHOLE statement rather than most of it.
+
+**What was DELETED** (the point of the row, not a side effect): the
+`disposition` frontmatter key; `parse_spec_status()`'s attribute/folder
+cross-check in all three F5 reader copies; both of its raise paths (unknown
+disposition, retirement filed outside `archive/`); `wi_convert`'s
+`status_from_location` disposition arm and its `RETIRED`/`ARCHIVE` constants;
+and the four tests that only proved that validator
+(`test_retirement_is_archive_plus_a_disposition`,
+`test_a_retired_spec_outside_archive_is_refused`, and the `unknown-disposition`
+entry in the malformed-spec table, which drove two parametrized cases). Nothing
+was kept "just in case": `parse_spec_status(relpath)` no longer takes the
+frontmatter at all, so a stale `disposition` key on a spec merged from an older
+branch is inert data that CANNOT contradict the location — proven by
+`test_a_leftover_disposition_key_is_inert_not_authoritative`. `status_dir` and
+`status_from_location` are now inverses of one table (`STATUS_DIRS` /
+`DIR_STATUSES`), so the mapping is a bijection and there is no second fact to
+keep honest.
+
+**Readers repointed** — the row's stated cost, measured: `SPEC_STATUS_DIRS` is
+triplicated verbatim across `agent_common.py`, `check_trajectory.py` and
+`schedule.py` (the F5 rule; `tests/test_wi_loader_sync.py` pins the three
+byte-equal), plus `wi_convert.py`'s write-side table. Beyond the four:
+`agent_common.TERMINAL_STATUSES` + the worker's terminal-assignment refusal;
+`schedule.py`'s `_TERMINAL_DISPOSITION`, `_waiting_reasons` dead-edge code and
+the new `_NEVER_READY` arm; `check_trajectory.py`'s `OPEN_STATUSES` /
+`TERMINAL_STATUSES` / `KNOWN_STATUSES`, R-A, R-F, the R-D forward-only rule,
+`dead_dependency_findings` and the clean-summary count; `traj_render.py`'s
+`STATUS_FILL` / `STATUS_BUCKET` / `STATUS_GLYPH`; `gen_trajectory.py`'s
+`--cancelled` CSS token, legend and hero clause; `traj_panels.py`'s next-work
+open-set test; `bootstrap.py`'s `GITKEEP_DIRS`; and the close-ritual prose in
+`integrate.py` / `check.py`.
+
+**`retired` -> `cancelled`** everywhere the WI *status* is meant (prose uses of
+"retired" meaning *removed* were left alone — the word is load-bearing in this
+repo's history). **`draft/`** is a declared status directory, never-ready in the
+scheduler exactly like `deferred` and carrying its own disposition + reason code
+so the two stay distinguishable in `--explain`; the ruled reason it must be
+DECLARED is id reservation, and the counterfactual is asserted rather than
+assumed (`test_a_drafted_id_is_visible_to_the_registry_and_so_reserved` shows
+the same spec in an undeclared folder reading as an empty registry).
+
+**Migration, mechanical and verified:** 378 specs left `docs/work/archive/` by
+`git mv` — 16 to `cancelled/` (every row carrying `disposition = "retired"`,
+including WI-382 and WI-385, the two this design retired) and 362 to
+`complete/`, with the `disposition` line stripped from the 16. The
+backlog-staleness clock (`git log --follow --diff-filter=AM`) was re-derived
+over all 362 migrated `complete/` specs afterwards: 0 unresolvable, and every
+sampled row still answers its PRE-migration date, so the rename re-dated
+nothing. Four link TARGETS in `docs/log.md` naming moved specs were retargeted
+(text and prose mentions untouched); `docs/dupes-allow` and the module linecount
+baseline were re-stamped with reasons in place.
+
+**Scaffold surface, verified by bootstrapping a scaffold** (the WI-280 lesson):
+`bootstrap.py --dest <tmp>` created all six status directories, a queued spec
+plus a draft spec read as `ready` and `excluded:draft`, `integrate.py claim`
+cut the branch and moved the spec into `active/<branch>/`, the close moved it to
+`complete/` and `check_trajectory --strict` read `1 done (50%)` clean. A stray
+`archive/` spec — the composed-tree hazard while sibling branches close into the
+directory this row deletes — exits 1 naming the file and listing the six
+declared directories, which is the reconciliation instruction.
+
+**Not done, and it needs its own row:** the "specs-of-record mirror the terminal
+folders" half of §B2. Relocating `docs/archive/specs/` into `complete/` +
+`cancelled/` subfolders means rewriting 154 inbound links, 109 of them inside
+`docs/log.md` — a surface a work branch may not edit — and the WI-288 relinker
+that once did this mechanically died with `agent_dispatch.py` at Phase 5. A
+partial move would leave three homes and answer "shipped or cancelled?" for
+neither, which is worse than either end state.
