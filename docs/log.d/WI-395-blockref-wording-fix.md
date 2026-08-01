@@ -17,3 +17,8 @@ merge lands — loop machinery, never another work item; R3, log Decisions
   amendment.
 - **Verification:** `python -m pytest -q tests/test_dogfood_sync.py` — 25
   passed in 0.14s (the pair-sync test that reds when the copies diverge).
+
+**Review round 1 remedy:** R-F — the close had left `specref` set on the
+terminal row; cleared in the rework commit. REVIEW-A finding 3 (the retired
+sentence still readable at `docs/concurrency-restructure.md:361`) is recorded
+here, not edited: that doc is design history by the §A9.1 standing rule.
