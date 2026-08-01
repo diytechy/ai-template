@@ -122,13 +122,30 @@ not in the smoke bar — the existing tiering, not a new choice):
   *ratified* half survives the same trip (a rev range is the same rules read
   against two commits, not a second weaker scan).
 
-**Mutation-proved, three directions, every red observed:** reverting
-`spine_cell_class` to the pre-WI-380 "everything but `Status` is ratified" reds
-the traced-cell test and the seam test (`2 failed, 7 passed`); flipping the
-residual to allowlist-only (`ratified` iff explicitly listed) reds the
-unknown-column test with an empty stderr — the missed window, made visible; and
-re-inlining an index-only `_spine_revs` reds the commit-range test on `[] ==
-[('docs/requirements/system-requirements.csv', 'SR-001')]`.
+**Mutation-proved, three directions, every red observed** (all figures under
+`pytest -q tests/test_trajectory_staged.py -k "spine or cell_split"`, re-driven
+at `dcddef0a`):
+
+- **M1** — `spine_cell_class` reverted to the pre-WI-380 "everything but
+  `Status` is ratified": **`3 failed, 7 passed, 23 deselected`**, reding
+  `…traced_cells_do_not_arm_the_reattest_warn`,
+  `…expose_the_traced_half_for_adjudication` and
+  `…read_a_commit_range_not_only_the_index`.
+- **M2** — the residual flipped to allowlist-only (`ratified` iff explicitly
+  listed): reds `…unknown_column_falls_to_ratified` on an empty stderr — the
+  missed window, made visible.
+- **M3** — `_spine_revs` re-inlined index-only: reds
+  `…read_a_commit_range_not_only_the_index` on `[] ==
+  [('docs/requirements/system-requirements.csv', 'SR-001')]`.
+
+> **Record correction (REVIEW-A round 2, the one MINOR).** M1 was first recorded
+> as `2 failed, 7 passed`, which was true when it was measured and went stale in
+> the very commit that added M3's test: the commit-range test also asserts the
+> traced half, so it reds under M1 too. The pass count coincidentally stayed at
+> 7 while selection went 9 → 10, which is exactly why the stale line still read
+> plausible — a reminder that a ledger figure is only evidence at the revision
+> it was driven on. Re-driven here rather than copied from the verdict. The
+> substance is unharmed: the revert reds **more**, never fewer.
 
 **Deviation from the spec, deliberate and narrow.** LLR `SR-Refs` and SR
 `SupersededBy` are columns of the live registries that §A5.1's table does not
