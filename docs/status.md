@@ -46,9 +46,12 @@ home elsewhere — don't restate it here:
 - **The drain plan for the remaining backlog:**
   [backlog-plan-2026-08-01.md](backlog-plan-2026-08-01.md) — the serial build
   order for the queued rows, the standing rules every builder inherits, and the
-  four pending owner rulings, each with options and a recommendation. One rule
-  from it binds immediately: **a work branch never mints a new work-item id** —
-  minting is a serial trunk-side act only.
+  owner rulings with their context. Two of its rules now bind mechanically:
+  **a work branch never mints a new work-item id** (the merge-slot rung
+  shipped 2026-08-01), and **implementation is PARKED** — `docs/work/pause`
+  is present (owner direction 2026-08-01), so the claim rung refuses new
+  claims until the owner rules the two pending decisions and deletes the
+  pause file in a tracked commit.
 - **Resuming in a new session — boot HERE, then
   [concurrency-v2.md](concurrency-v2.md), which is the spec-of-record for the
   whole queued backlog; the design is CLOSED and its ten 2026-07-31 rulings are

@@ -1,0 +1,2 @@
+reason = "Owner direction 2026-08-01: park the implementation process after row 2 of the backlog drain shipped (the citation-suffix fix, merged with a green G3 bar). The drain order, the standing rules, and the two rulings still pending (R3 handback disposition / arbitration variant, R4 the archive-split sentence) are in docs/backlog-plan-2026-08-01.md and docs/rulings-context-2026-08-01.md. Resume by ruling those and deleting this file in a tracked commit."
+since = "2026-08-01"

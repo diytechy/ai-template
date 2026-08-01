@@ -58,7 +58,7 @@ with every state change (claiming one broke trunk's doc-navigability on
 | # | Row | What it does | Direction (simplicity lens) | Ruling |
 |---|-----|--------------|------------------------------|--------|
 | 1 | WI-397 *(**shipped** 2026-08-01; R1 ruled and recorded)* | Refusal rung: a finished branch whose `docs/work/` delta adds a spec id outside its claimed set cannot merge | Constraint at the merge slot; deletes the id-reservation problem from the dispatcher's scope | **R1** |
-| 2 | WI-396 | Citation checker cannot see a line-suffixed reference into the kit's own tree | Prefer stripping the trailing line suffix before the shape test over growing the prefix list — one rule, fixes every prefix at once | — |
+| 2 | WI-396 *(**shipped** 2026-08-01)* | Citation checker cannot see a line-suffixed reference into the kit's own tree | Shipped as the strip-the-suffix rule at both call sites, verdict BOTH-CLEAN pinned with its mutation twin | — |
 | 3 | WI-395 | `blocked` rows promise a self-release that never happens | Fix the false promise in prose; do not build a cross-registry subscription | **R3** |
 | 4 | WI-394 | A Verified spine row can cite evidence that never existed | File-existence half only; the node-id half is ruled prose | **R2** |
 | 5 | WI-393 | Restore the link-aware spec-archival ritual Phase 5 deleted | Genuinely constraint-shaped: one indivisible move+relink operation nobody can perform two-thirds of. A claim-time instance was driven 2026-08-01 (the claim move broke this very table's links), so the ritual is owed at claim as well as at archival | — |
@@ -90,6 +90,13 @@ completes it; recovery is loop machinery, never a work item), held there for
 confirmation. Part 1's three mechanical findings (handoff §6: the
 failure-message extractor, containment-at-add, the unload residue
 distinction) are **minted** as rows 7–9 in the table above.
+
+**PARKED 2026-08-01 (owner direction), after row 2 shipped.**
+`docs/work/pause` is present, so the claim rung refuses new claims
+mechanically — rows 3–13 wait, and nothing needs to remember not to build.
+Resume: rule R3 and R4 (context in
+[rulings-context-2026-08-01.md](rulings-context-2026-08-01.md)), then delete
+the pause file in a tracked commit — an unpause is auditable by design.
 
 ### R1 — Where may a new work-item id be created?
 
