@@ -1546,7 +1546,7 @@ def test_a_directory_the_bar_itself_created_is_pruned(tmp_path):
 def test_a_deliberately_forged_attestation_is_a_STATED_limit_not_a_defence(tmp_path):
     # The honest bound, pinned so nobody re-reads the guarantee as stronger than
     # it is (REVIEW-A round 2 drove it). Naming the tree and the parent by hand
-    # is three git commands and no bar, and it VERIFIES — this test asserts the
+    # is four git invocations and no bar, and it VERIFIES — this test asserts the
     # limit rather than a defence, because the only structural closure is a
     # slot-side re-bar and DECISION 3 (owner ruling) deleted that outright.
     # If this test ever starts failing, the design changed: re-read §A2.0 and

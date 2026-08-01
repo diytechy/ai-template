@@ -25,8 +25,10 @@ is the second one.
   trailer all fail the tree or parent check.
 - **THE BOUND, STATED PLAINLY: this defeats accident, not intent.** A lane that
   *deliberately* constructs a valid attestation merges unbarred, and the cost is
-  **three git commands** — `add -A`, `git write-tree`, `git rev-parse <branch>`,
-  then a commit carrying those two values. Not "re-implementing the refresh":
+  **four git invocations** — `add -A`, `git write-tree`, `git rev-parse
+  <branch>`, and the `commit` that carries those two values (round 2's phrasing
+  said three and omitted the commit itself; round 3 corrected the count, and it
+  changes no judgement). Not "re-implementing the refresh":
   round 1's fix note said that and round 2 drove the real price, landing
   `never-barred.txt` on trunk with the bar never invoked. The format is printed
   in every refresh commit on trunk, and the operator of this system is an agent

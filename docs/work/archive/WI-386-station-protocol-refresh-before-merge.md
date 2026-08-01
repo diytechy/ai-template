@@ -28,8 +28,8 @@ landed unbarred content on trunk. All three are now regression tests.
 
 The bound is stated rather than overstated: this defeats ACCIDENT, not INTENT.
 A lane that deliberately constructs a valid attestation merges unbarred, and the
-cost is three git commands (`add -A`, `git write-tree`, `git rev-parse
-<branch>`) with no bar at all - review round 2 drove it and landed
+cost is four git invocations (`add -A`, `git write-tree`, `git rev-parse
+<branch>`, and the `commit` carrying them) with no bar at all - review round 2 drove it and landed
 `never-barred.txt` on trunk. That is accepted deliberately: the only structural
 closure is a bar the slot itself runs and cannot skip, and DECISION 3 (owner
 ruling 2026-07-31) deleted the merge bar outright as the kept-just-in-case shape

@@ -73,7 +73,7 @@ that tree: the refresh commit carries `Bar-Green: tree=<sha> work=<sha>
 message alone would prove nothing — amend, rebase, cherry-pick and copy all
 carry words onto content nobody barred — so the trailer is checked, never
 read. That closes ACCIDENT, not INTENT: a lane that deliberately names the
-tree and the parent (three git commands) merges unbarred, and the design
+tree and the parent (four git invocations) merges unbarred, and the design
 accepts it because DECISION 3 ruled out a slot-side bar and a lane is trusted
 code (`refresh_attestation` states the bound in full). Verdict freshness is
 git-derived the same way: the
@@ -471,10 +471,10 @@ def refresh_attestation(root, branch, rev=None):
 
     THE HONEST BOUND: this defeats ACCIDENT, not INTENT. Every accidental
     carrier refuses - a copied message, an amend, a rebase, a cherry-pick, a
-    trailer quoted in an ordinary commit. But forging one deliberately is three
-    git commands in the lane worktree and no bar at all: `add -A`, `T=$(git
-    write-tree)`, `P=$(git rev-parse <branch>)`, then commit with those two
-    values in the trailer. REVIEW-A round 2 drove exactly that and landed an
+    trailer quoted in an ordinary commit. But forging one deliberately is FOUR
+    git invocations in the lane worktree and no bar at all: `add -A`, `T=$(git
+    write-tree)`, `P=$(git rev-parse <branch>)`, and the `commit` that carries
+    those two values in the trailer. REVIEW-A round 2 drove exactly that and landed an
     unbarred file on trunk. The format is printed in every refresh commit, so
     the cost is reading, not reverse-engineering.
 
