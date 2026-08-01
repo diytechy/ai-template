@@ -38,15 +38,17 @@ foreign id(s), the path(s), the claimed set, and the rule. It is
   trap before asserting the rung sees through it, so the flag has a reason on
   file rather than a habit.
 
-**How it is tested.** Five tests in
+**How it is tested.** Six tests in
 [`tests/test_integrate.py`](../../tests/test_integrate.py), all constructing
 their own git topologies. One builder (`_mint_repo`) makes the refused and the
 admitted case the *same* branch minus one file, so a rung that refused
 everything could not pass both. The admission is driven twice — the helper
 returns `None`, and the whole slot gets past it to the next refusal — because a
 rung tested only through its own function proves nothing about where it was
-wired. The three admitted shapes are the two terminal folders and a handback's
-`queued/` return with its `.patch`.
+wired. The admitted shapes are the two terminal folders, a handback's `queued/`
+return with its `.patch`, and a **trunk-side** mint taken after the claim, which
+is the half a rung reading the whole tree instead of the branch's delta would
+have got wrong.
 
 **Deviations from spec, and what they cost.**
 

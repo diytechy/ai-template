@@ -46,10 +46,11 @@ flow end-to-end:
     delta ADDS a spec carrying an id it never claimed cannot merge, because
     minting is a serial trunk-side act and two lanes cannot see each other's
     trees. Driven on one topology built both ways (with and without the minted
-    file), plus the three shapes that must stay ADMITTED — a terminal-outcome
-    move into `complete/` and `cancelled/`, and a handback's return to `queued/`
-    with its bar-inert `.patch` — and the rename trap that makes `--no-renames`
-    load-bearing rather than tidy.
+    file), plus the shapes that must stay ADMITTED — a terminal-outcome move
+    into `complete/` and `cancelled/`, a handback's return to `queued/` with its
+    bar-inert `.patch`, and a TRUNK-side mint taken after the claim (free by
+    construction: it is in the merge base, not in the branch's delta) — and the
+    rename trap that makes `--no-renames` load-bearing rather than tidy.
   * **the verdict gate** (RULING-7) — the dialed review artifact must be
     present, must parse as APPROVE, and must be FRESH: a verdict whose last
     commit predates a later code commit on the branch is a stale APPROVE and
@@ -1058,6 +1059,22 @@ def test_a_handbacks_return_to_queued_and_its_artefact_are_admitted(tmp_path):
     _git(root, "checkout", "-q", "main")
 
     assert integ.branch_outcomes(root, "wi-401") == ({"WI-401": "handback"}, [])
+    assert integ._minted_id_refusal(root, "wi-401", ["WI-401"]) is None
+
+
+def test_a_trunk_side_mint_after_the_claim_is_not_the_branchs(tmp_path):
+    # The other half of the ruling, and the half a rung reading the WHOLE tree
+    # would get wrong: trunk-side minting stays exactly as free as it was. It is
+    # free by CONSTRUCTION rather than by exemption — whatever trunk did sits in
+    # the merge BASE, so it is not in the branch's delta at all.
+    root = claim_repo(tmp_path)
+    assert integ.claim(root, "WI-401", "wi-401") == 0
+    write_spec(root, "queued", "WI-500", slug="filed-on-trunk", specref="seed.txt")
+    _commit(root, "file WI-500 on the trunk", when=T_LATER)
+    _close_to(root, "wi-401", "complete")
+
+    # The id really is present on trunk and really is not the branch's.
+    assert (root / "docs" / "work" / "queued" / "WI-500-filed-on-trunk.md").is_file()
     assert integ._minted_id_refusal(root, "wi-401", ["WI-401"]) is None
 
 
