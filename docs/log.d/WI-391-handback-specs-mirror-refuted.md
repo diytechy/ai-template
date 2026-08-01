@@ -19,9 +19,11 @@ grammar.
 never self-releases.** `blocked` is derived as `queued` plus a `blockref`, and
 the blocker's own state is never consulted — so flipping OI-11 to `ruled` would
 **not** have returned WI-391 to the frontier. The row would have sat parked with
-nobody assigned to close it. Worth recording as a property of the registry
-rather than as a one-off: a `blockref` is a label, not a subscription, so any
-park taken to "wait for a decision" needs a human to come back and unpark it.
+nobody assigned to close it. This is a property of the registry, not a one-off:
+a `blockref` is a **label, not a subscription**, so any park taken to "wait for a
+decision" needs a human to come back and unpark it. Filed as **WI-395** rather
+than left as an observation in a log entry — this row is its worked example, and
+the cost of the silence is already one mis-taken disposition.
 
 **What was measured.** Stated as this row's own convention, because conventions
 differ enough between readers that the intake's totals are best treated as
@@ -93,7 +95,7 @@ Round 2, four findings, all taken: the unique-target figure above, the
 disposition (cancel, do not park), an OI-11 that argued its own recommendation
 too hard, and an unenforceable cross-row promise, dropped.
 
-**Filed, and both outlive this row.**
+**Filed, and all three outlive this row.**
 
 - **OI-11** ([`docs/requirements/open-items.csv`](../requirements/open-items.csv))
   — whether §B2's sentence is **struck** or **restated**, `Status=pending`. It is
@@ -111,6 +113,13 @@ too hard, and an unenforceable cross-row promise, dropped.
   (`docs/archive/` is exempt from the orphan check only, not the broken-link
   check). Constraint-shaped — one indivisible ritual no caller can do two thirds
   of — so §0 reaches it, and unlike WI-391 it has driving necessity.
+- **WI-395** — the `blockref` gap above, filed with its two honest readings and
+  neither of them ruled: either the derivation consults the blocker's state, so a
+  park releases itself (costing a cross-registry read in a deliberately
+  self-contained `schedule.py`, plus a new dangling-blockref failure mode needing
+  its own rule), or parks are human-swept and the `WI-000` exemplar and process
+  text must **say so**. What is wrong today is not the choice but the silence:
+  the mechanism implies a subscription it does not provide.
 
 **Two parallel lanes minted the same WI id.** This row and the `wi-378` lane were
 each told to file a new WI in the same wave; both mints read `docs/work/` on
