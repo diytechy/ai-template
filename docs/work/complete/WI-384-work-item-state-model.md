@@ -8,9 +8,15 @@ safety_class = "ordinary"
 
 ## Deliverable
 
-Work-item state IS the folder, with no attribute duplicating it. The vocabulary
-is `draft | queued | active | deferred | cancelled | complete`, and the
-directory is now the WHOLE statement rather than most of it.
+Work-item state IS the folder, with no attribute duplicating it: the directory
+is now the WHOLE statement rather than most of it. Two vocabularies, and they
+are not the same list. Six **directories** —
+`draft/ queued/ active/ deferred/ cancelled/ complete/`. Seven **statuses** —
+`draft, queued, active, done, deferred, blocked, cancelled`, where `complete/`
+maps to the status `done` (the word every consumer already speaks; renaming it
+was out of scope and deliberately not done) and `blocked` has no directory at
+all, being derived from `queued/` plus a `blockref`. `complete` is never a
+Status value.
 
 **What was DELETED** (the point of the row, not a side effect): the
 `disposition` frontmatter key; `parse_spec_status()`'s attribute/folder
@@ -47,10 +53,32 @@ open-set test; `bootstrap.py`'s `GITKEEP_DIRS`; and the close-ritual prose in
 "retired" meaning *removed* were left alone — the word is load-bearing in this
 repo's history). **`draft/`** is a declared status directory, never-ready in the
 scheduler exactly like `deferred` and carrying its own disposition + reason code
-so the two stay distinguishable in `--explain`; the ruled reason it must be
-DECLARED is id reservation, and the counterfactual is asserted rather than
-assumed (`test_a_drafted_id_is_visible_to_the_registry_and_so_reserved` shows
-the same spec in an undeclared folder reading as an empty registry).
+so the two stay distinguishable in `--explain`.
+
+**The ruled rationale for the declaration was CHECKED at REVIEW-A round 1 and is
+partly false; the conclusion stands and the reason is restated at all ten
+transcription sites.** §B3 called id reservation "the strongest argument" on the
+premise that a draft in an undeclared folder is invisible to `max(id) + 1`.
+Driven on two temp trees: it is not. The shipped mint
+(`plan_artifacts._existing_wi_nums` -> `wi_convert.spec_paths`) is an unfiltered
+`rglob("WI-*.md")` that never consults `SPEC_STATUS_DIRS` and matches on the
+FILENAME, so `draft/WI-042-held.md` and an undeclared `thinking/WI-042-held.md`
+both mint `WI-043` — identical. What DOES go blind is everything downstream of
+`read_spec_rows`, which filters: the same drive returns `['WI-042']` for the
+declared folder and `[]` for the undeclared one, so the validator's duplicate-id
+integrity finding and the dashboard never see the held id. The accurate reason:
+**declaring the folder makes the reservation CHECKED rather than incidental** —
+an undeclared folder holds its id today only by the accident that one writer
+scans unfiltered. That is what the counterfactual asserts rather than assumes
+(`test_a_drafted_id_is_visible_to_the_registry_and_so_reserved`), and it is now
+the wording in the three F5 copies, `bootstrap.py`, `ADOPTING.md`,
+`PROCESS_OPTIONS.md`, `README.md`, the `WI-000` template + its dogfooded copy
+and both test docstrings. `concurrency-v2.md` is a ruled design doc and is left
+to the owner; the correction's home is this row's log fragment, so WI-390's
+prose sweep inherits it rather than the error. Deliberately NOT done: filtering
+`spec_paths` by `SPEC_STATUS_DIRS` to make the original sentence true — that
+would make drafts in an undeclared folder invisible to the mint too, i.e. build
+the hazard the clause imagined.
 
 **Migration, mechanical and verified:** 378 specs left `docs/work/archive/` by
 `git mv` — 16 to `cancelled/` (every row carrying `disposition = "retired"`,
@@ -72,10 +100,18 @@ cut the branch and moved the spec into `active/<branch>/`, the close moved it to
 directory this row deletes — exits 1 naming the file and listing the six
 declared directories, which is the reconciliation instruction.
 
-**Not done, and it needs its own row:** the "specs-of-record mirror the terminal
-folders" half of §B2. Relocating `docs/archive/specs/` into `complete/` +
-`cancelled/` subfolders means rewriting 154 inbound links, 109 of them inside
-`docs/log.md` — a surface a work branch may not edit — and the WI-288 relinker
-that once did this mechanically died with `agent_dispatch.py` at Phase 5. A
-partial move would leave three homes and answer "shipped or cancelled?" for
-neither, which is worse than either end state.
+**Not done, and now filed as WI-391:** the "specs-of-record mirror the terminal
+folders" half of §B2. Re-measured at REVIEW-A round 1 (the first figure, "109 in
+log.md", was unreproducible and is superseded): a reference of the form
+`archive/specs/<name>.md` occurs **154 times repo-wide** across 30 files, of
+which **101 are markdown link TARGETS** — the quantity a relocation rewrites;
+`docs/log.md` alone holds **119 occurrences on 101 lines, 92 of them link
+targets** over 61 unique targets, across 111 archived spec files. That bulk
+lands in the one surface a work branch may not edit, and the WI-288 relinker
+that once did this mechanically died with `agent_dispatch.py` at Phase 5 —
+rebuilding it is WI-391's probable predecessor. A partial move would leave three
+homes and answer "shipped or cancelled?" for none of them, so the row is
+all-or-nothing. The split is a legitimate remainder rather than a dropped half:
+unlike the registry, `docs/archive/specs/` carries no state attribute, so
+mirroring it deletes no machinery and makes nothing unrepresentable — §B2 frames
+it as answering the question *without opening the file*, which is navigation.

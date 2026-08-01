@@ -1,8 +1,14 @@
 ## 2026-08-01 — WI-384: state is the folder — `archive/` splits, `disposition` is deleted
 
-The work-item status vocabulary becomes
-`draft | queued | active | deferred | cancelled | complete`, and the directory
-stops being *most* of the statement and becomes the whole of it. Spec of record:
+The work item's state is now its DIRECTORY and only its directory. Two
+vocabularies, and they are not the same list — REVIEW-A round 1 caught this
+record surface conflating them. Six **directories**:
+`draft/ queued/ active/ deferred/ cancelled/ complete/`. Seven **statuses**:
+`draft, queued, active, done, deferred, blocked, cancelled` — `complete/` maps
+to the status `done` (the word every consumer already speaks, deliberately not
+renamed by this row), and `blocked` has no directory at all, being derived from
+`queued/` plus a `blockref`. `complete` is never a Status value. Spec of
+record:
 [`concurrency-v2.md`](../concurrency-v2.md) Workstream B (§B1–§B3), ruled
 2026-07-31. Off-spine: `SN=25 SR=135 LLR=126 TC=123` unchanged, no spine row
 moved, no `Contracts:` seam changed.
@@ -29,12 +35,36 @@ to keep honest.
 cosmetic, since `retired` can be read as *finished and put out to pasture* and
 the two rows this design retires (WI-382, WI-385) are exactly the case that
 would be misread — subsumed work that never shipped. And `draft/` is new, a
-DECLARED status directory rather than a scratch folder, for the ruled reason
-(§B3): `read_spec_rows` walks `<status>/WI-*.md` and skips anything under an
-undeclared directory, so drafts parked outside the declared set are invisible to
-`max(id) + 1`, to the duplicate-id guard and to the dashboard, and the next mint
-reissues a held id. `draft` is never-ready in the scheduler exactly like
-`deferred` and differs only in what it says.
+DECLARED status directory rather than a scratch folder. `draft` is never-ready
+in the scheduler exactly like `deferred` and differs only in what it says.
+
+**The ruled rationale for declaring `draft/` was checked at REVIEW-A round 1 and
+is PARTLY FALSE — the conclusion stands, the reason has to be restated, and
+[WI-390](../concurrency-v2.md)'s prose sweep should inherit the correction
+rather than the error.** [`concurrency-v2.md`](../concurrency-v2.md) §B3 calls
+id reservation "the strongest argument", on the premise that a draft in an
+undeclared folder is *"invisible to `max(id) + 1`"* so the next mint would
+reissue its id. Driven on two temp trees, and it is not so: the shipped mint is
+`plan_artifacts._existing_wi_nums` -> `wi_convert.spec_paths`, an **unfiltered**
+`rglob("WI-*.md")` that never consults `SPEC_STATUS_DIRS` and only regex-matches
+the FILENAME. `docs/work/draft/WI-042-held.md` and the same spec at an
+undeclared `docs/work/thinking/WI-042-held.md` both yield `[42]` and both mint
+`WI-043`. Identical. The mint is safe either way.
+
+What IS true — and what the branch's own guard actually asserts — is the other
+half: everything downstream of `read_spec_rows` goes blind, because that reader
+DOES filter. In the same drive, the declared folder returns `['WI-042']` and the
+undeclared one returns `[]`, so the validator's duplicate-id integrity finding
+and the dashboard never see the held id at all. So the accurate statement is:
+**the declaration is what makes the reservation CHECKED rather than incidental**
+— today an undeclared folder holds its id only by the accident that one writer
+happens to scan unfiltered, and nothing would report a collision if that
+accident stopped being true. That strengthens the ruling rather than weakening
+it, and it is now the wording at all ten transcription sites (the three F5
+copies, `bootstrap.py`, `ADOPTING.md`, `PROCESS_OPTIONS.md`, `README.md`, the
+`WI-000` template + its dogfooded copy, and both this row's test docstrings).
+`concurrency-v2.md` itself is a RULED design doc and is left for the owner —
+this fragment is the correction's home.
 
 **Readers repointed (the row's stated cost, measured).** `SPEC_STATUS_DIRS` is
 triplicated verbatim across `agent_common.py`, `check_trajectory.py` and
@@ -73,23 +103,51 @@ were renamed *and* edited in one commit — git scores those `R<similarity>`, wh
    died with `agent_dispatch.py` at Phase 5; with the machinery gone the choice
    was a manual four-line retarget or a knowingly red bar.
 2. **The "specs-of-record mirror the terminal folders" half of §B2 was NOT
-   built,** and needs its own row. Relocating `docs/archive/specs/` into
-   `complete/` + `cancelled/` subfolders means rewriting 154 inbound links, 109
-   of them inside `docs/log.md` — the surface a work branch may not edit — and
-   the relinker that would have done it mechanically is the same one that died at
-   Phase 5. A partial move would leave three homes and answer
-   "shipped or cancelled?" for none of them, which is worse than either end
-   state. Everything else in the row is complete.
+   built.** It is now filed as **WI-391** in `docs/work/queued/`. Re-measured at
+   REVIEW-A round 1, because the first figure here ("109 in log.md") was
+   unreproducible by any counting method and is superseded: a reference of the
+   form `archive/specs/<name>.md` occurs **154 times repo-wide** across 30 files
+   (`*.md`/`*.py`/`*.csv`/`*.html`), of which **101 are markdown link TARGETS** —
+   the quantity a relocation actually has to rewrite. `docs/log.md` alone holds
+   **119 occurrences on 101 lines, 92 of them link targets** over 61 unique
+   targets, and 111 files sit in `docs/archive/specs/`. That bulk lands in the
+   one surface a work branch may not edit, and WI-288's relinker — which did
+   this mechanically — died with `agent_dispatch.py` at Phase 5, so rebuilding
+   it is WI-391's probable predecessor. A partial move would leave three homes
+   and answer "shipped or cancelled?" for none of them, so the row is
+   all-or-nothing by construction. Everything else in WI-384 is complete, and
+   the reviewer judged the split legitimate rather than a dropped half: unlike
+   the registry, `docs/archive/specs/` carries no state attribute, so mirroring
+   it deletes no machinery and makes nothing unrepresentable — it is navigation.
 
 **Two measured baselines re-stamped, reasons in place.** `docs/dupes-allow`:
 three fingerprints moved when the F5 reader block changed in all three copies at
 once (`506ee17be858`→`221f967454e5`, `a73be88000c3`→`e781cf6ec0e8`, and
-`6b98b4c1e7c5`→`a986f553a391` for the `plan_briefs == schedule` pair, whose edit
-was to `schedule.py`'s module docstring, not the shared block). The class did not
-grow — the block SHRANK by the deleted validator. Module linecounts:
-`check_trajectory` 3098→3116, `bootstrap` 2232→2241, `agent_common` 1720→1728,
+`6b98b4c1e7c5`→`a986f553a391` for the `plan_briefs == schedule` pair). The third
+entry's recorded reason was WRONG and is corrected: I had blamed
+`schedule.py`'s module docstring; isolating the change on an otherwise-base tree
+shows the ~38-token block OPENS at the module constant, and renaming
+`_RETIRED = "retired"` to `_NEVER_READY = ("deferred", "draft")` *alone*
+reproduces `a986f553a391` exactly. The edit is inside the matched block. The
+class did not grow — the two `agent_common` blocks SHRANK (968→918 and 970→920
+tokens) by the deleted validator, and the census is 164 blocks at base and 164
+at HEAD, same three pairs. Module linecounts:
+`check_trajectory` 3098→3119, `bootstrap` 2232→2243, `agent_common` 1720→1731,
 `check` 1523→1524 — all vocabulary plus the comments recording why `draft/` must
-be declared.
+be declared, the last +3/+2/+3 of it being round 1's corrected rationale (pure
+comment lines, zero code tokens). Two of the four modules got SMALLER in code
+mass while their baselines rose (`check_trajectory` −38 significant tokens,
+`agent_common` −43), so these are registration, not greening.
+
+**ADOPTING.md's migration recipe cited the wrong flag** and is corrected
+(REVIEW-A round 1): it named `git log --follow` as the staleness clock, but the
+shipped reader is `--follow --diff-filter=AM` and needs BOTH. Driven on this
+very migration — for `docs/work/complete/WI-374-…` the pair answers
+`2026-07-31 02:17` (its true pre-migration date) while `--follow` alone answers
+`2026-08-01 00:56`, the rename commit, and `--diff-filter=AM` alone answers the
+same wrong thing. This one ships to adopters, so the wrong flag would have
+taught every migrating repo to check the trap with an instrument that cannot
+see it.
 
 **Tests: the deletions took their tests with them; four guards added.** New:
 `test_each_terminal_state_is_its_own_directory` and

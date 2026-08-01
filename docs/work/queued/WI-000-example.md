@@ -51,9 +51,11 @@ Three consequences worth stating, because they are the reason for the shape:
   `deferred` says *not now*, `draft` says *still being figured out*. Both are
   never-ready to the scheduler and differ only in what they say. `draft/` is a
   DECLARED status directory rather than a scratch folder for one hard reason:
-  specs outside the declared set are skipped by every reader, so they would be
-  invisible to `max(id) + 1` and the next id minted would collide with one a
-  draft already holds.
+  specs outside the declared set are skipped by every reader, so they never
+  enter the registry — the duplicate-id guard and the dashboard both go blind to
+  an id a draft is holding. (The id mint itself reads FILENAMES and is safe
+  either way; the declaration is what makes the reservation checked rather than
+  incidental.)
 
 **The filename** is `<id>-<slug>.md`, the slug a short kebab-case of the title.
 The id in the frontmatter and the id in the filename are compared on every read

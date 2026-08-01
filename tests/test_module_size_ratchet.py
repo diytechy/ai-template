@@ -589,7 +589,14 @@ BASELINE = {
     # DECLARED directory (id reservation) rather than a scratch folder. Net of
     # comments the module shrank. Reviewed bump, log 2026-08-01. Re-stamp down
     # with WI-280.
-    "check_trajectory.py": 3116,
+    # +3 (3116 -> 3119), WI-384 REVIEW-A round 1: the MAJOR finding. The ruled
+    # reason for declaring `draft/` — that an undeclared folder is invisible to
+    # `max(id) + 1` — was driven and REFUTED (the mint reads filenames through
+    # an unfiltered walk and sees it either way), so the F5 block comment now
+    # states what is actually blind: the duplicate-id guard and the dashboard.
+    # Three COMMENT lines, zero code tokens; correcting a false rationale in
+    # place is cheaper than letting it ship. Reviewed bump, log 2026-08-01.
+    "check_trajectory.py": 3119,
     # NEW ENTRY, +25 (1498 -> 1523), WI-357: the two-stage work-branch claim
     # signal — the on-disk fast path plus the branch-history probe that
     # survives the §2.3 close commit (git log -1 over the claim path), with
@@ -685,10 +692,14 @@ BASELINE = {
     # +9 (2232 -> 2241), WI-384: three more scaffolded status directories
     # (draft/, cancelled/, complete/) in GITKEEP_DIRS plus the comment stating
     # why `draft/` is scaffolded for a reason beyond visibility — a spec under
-    # an undeclared directory is invisible to `max(id) + 1`, so the next mint
-    # reissues a held id. Required registration, not monolith growth: the same
+    # an undeclared directory never enters the registry, so the duplicate-id
+    # guard and the dashboard go blind to the id it holds. Required
+    # registration, not monolith growth: the same
     # shape as the MAPPING rows above. Reviewed bump, log 2026-08-01.
-    "bootstrap.py": 2241,
+    # +2 (2241 -> 2243), WI-384 REVIEW-A round 1: the same corrected rationale
+    # in the GITKEEP_DIRS comment. Two comment lines, zero code tokens.
+    # Reviewed bump, log 2026-08-01.
+    "bootstrap.py": 2243,
     # NEW ENTRY, +228 (1423 -> 1651), Phase 2b of the concurrency restructure
     # (docs/concurrency-restructure.md §7): the spec-folder work-item reader,
     # which crosses this module over THRESHOLD for the first time. It is one
@@ -748,7 +759,11 @@ BASELINE = {
     # this row deleted. Identical text to the other two copies by construction
     # (tests/test_wi_loader_sync.py). Reviewed bump, log 2026-08-01. Re-stamp
     # down with WI-280.
-    "agent_common.py": 1728,
+    # +3 (1728 -> 1731), WI-384 REVIEW-A round 1: the corrected `draft/`
+    # rationale in this copy of the F5 block — identical text to the other two
+    # by construction (tests/test_wi_loader_sync.py). Three comment lines, zero
+    # code tokens. Reviewed bump, log 2026-08-01.
+    "agent_common.py": 1731,
 }
 
 

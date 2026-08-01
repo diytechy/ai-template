@@ -173,8 +173,11 @@ SPEC_LISTS = (("SR-Refs", "sr_refs"), ("Predecessors", "needs"))
 # frontmatter disambiguates a folder and nothing can disagree with one.
 # `draft/` is thinking-in-progress, and it is DECLARED rather than left as an
 # unscanned folder because an undeclared directory's specs are skipped below:
-# they would be invisible to `max(id) + 1` and the next mint would reissue an
-# id a draft already holds. The two terminal WORDS differ for a reason:
+# they never enter the registry, so the duplicate-id guard and the dashboard go
+# blind to an id a draft holds. (The id MINT is safe either way — it reads
+# FILENAMES, never this table — so declaring the folder makes the reservation
+# CHECKED rather than incidental; driven at WI-384's review.) The two terminal
+# WORDS differ for a reason:
 # `complete/` renamed a folder whose rows still read `done` (the status word
 # every consumer already speaks), while `cancelled` had no folder to rename —
 # only the `disposition = "retired"` spelling this row deleted — so the word

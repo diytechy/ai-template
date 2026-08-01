@@ -352,15 +352,21 @@ def test_draft_is_never_ready_exactly_like_deferred(tmp_path):
 
 
 def test_a_drafted_id_is_visible_to_the_registry_and_so_reserved(tmp_path):
-    """The RULED reason `draft/` is a declared status directory (concurrency-v2
-    §B3): id reservation.
+    """The reason `draft/` is a declared status directory: id reservation —
+    corrected at WI-384's REVIEW-A round 1, because the ruled clause was half
+    false and this test is what proves which half.
 
     `read_spec_rows` walks `<status>/WI-*.md` and skips anything under a
-    directory it does not know, so a draft parked in an improvised folder is
-    invisible to `max(id) + 1` and to the duplicate-id guard — and the next
-    mint hands out an id the draft already holds. Declaring `draft/` is what
-    makes the reservation real, and this asserts both halves: the declared
-    folder is SEEN, and the undeclared one is not."""
+    directory it does not know, so a draft parked in an improvised folder never
+    enters the registry: the duplicate-id GUARD and the dashboard go blind to
+    the id it holds. What the ruling ALSO claimed — that `max(id) + 1` would
+    reissue the id — is not true of the shipped mint, which reads filenames
+    through `wi_convert.spec_paths`, an unfiltered walk that never consults
+    `SPEC_STATUS_DIRS` (driven on two temp trees: declared and undeclared both
+    mint the same next id). So the mint is safe either way and the declaration
+    makes the reservation CHECKED rather than incidental. This asserts what is
+    actually true — the declared folder is seen by the readers and by the
+    duplicate-id guard, and the undeclared one is not."""
     write_spec(tmp_path, "draft", "WI-042", title="held id")
     work = tmp_path / "docs" / "work"
     for name, mod in MODULES:

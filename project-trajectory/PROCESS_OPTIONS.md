@@ -1573,7 +1573,10 @@ optional like `procurement.csv` / `assets.csv`: `trace.py` does not read
 of a decision (still being figured out) where `deferred` is one (not now) —
 both never-ready, differing only in what they say, and `draft/` is a DECLARED
 directory because specs in an undeclared one are skipped by every reader and so
-invisible to `max(id) + 1`, which is how a mint reissues a held id; `blocked` is
+never enter the registry — the duplicate-id guard and the dashboard go blind to
+the id a draft is holding (the mint itself reads filenames and is safe either
+way, so the declaration makes the reservation checked, not merely possible);
+`blocked` is
 `queued/` plus a `blockref` naming what must clear (no directory — readiness is
 derived, one home per fact); and `cancelled` (WI-267, spelled `retired` until
 WI-384) is terminal — a deliberate won't-build, counted separately

@@ -750,13 +750,18 @@ table.
   4. rerun `check_trajectory.py --strict`: the loaders REFUSE an undeclared
      status directory, so a spec left behind in `archive/` is a loud, named
      error, never a silent skip.
-  Use `git mv` rather than delete+add: the backlog-staleness clock follows a
-  spec with `git log --follow`, and a rewritten history re-dates every row.
+  Use `git mv` rather than delete+add: the backlog-staleness clock reads
+  `git log --follow --diff-filter=AM`, and it needs BOTH flags — driven on this
+  kit's own migration, `--follow` alone and `--diff-filter=AM` alone each answer
+  the rename commit (today), while the pair answers the row's true pre-migration
+  date. A rewritten history re-dates every row.
   *Why `draft/` had to be a DECLARED directory rather than a scratch folder:*
   the readers walk `<status>/WI-*.md` and skip anything under a directory they
-  do not know, so drafts parked in an improvised folder are invisible to
-  `max(id) + 1` and to the duplicate-id guard — the next id minted would collide
-  with one a draft already holds. Resync the kit-owned set together
+  do not know, so a draft parked in an improvised folder never enters the
+  registry — the duplicate-id guard and the dashboard both go blind to the id it
+  is holding. The id MINT is safe either way (it reads filenames through an
+  unfiltered walk), so the declaration is what makes the reservation CHECKED
+  rather than incidental. Resync the kit-owned set together
   (`check_trajectory.py`, `schedule.py`, `agent_common.py`, `wi_convert.py`,
   `gen_trajectory.py` + the `traj_*` renderers, `bootstrap.py`) so the loaders,
   scheduler, converter and dashboard share one vocabulary.

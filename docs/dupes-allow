@@ -652,8 +652,12 @@ b8b532ba9de4  project-trajectory/scripts/agent_loop.py == project-trajectory/scr
 # while check_trajectory == schedule kept its fp. The class did not grow: the
 # block SHRANK by the validator this row deleted. One fingerprint outside this
 # class moved with it — the plan_briefs == schedule pair below (6b98b4c1e7c5 ->
-# a986f553a391), which now hashes equal to its plan_coverage_step sibling: the
-# edit was to schedule.py's module docstring, not to the shared block.
+# a986f553a391), which now hashes equal to its plan_coverage_step sibling. The
+# cause, isolated on an otherwise-base tree at REVIEW-A round 1: the ~38-token
+# block OPENS at the module constant, and renaming `_RETIRED = "retired"` to
+# `_NEVER_READY = ("deferred", "draft")` alone reproduces a986f553a391 exactly.
+# The edit is INSIDE the matched block; an earlier note here blamed the module
+# docstring, which the isolation refutes.
 221f967454e5  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/schedule.py
 e781cf6ec0e8  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/check_trajectory.py
 1dbf7e455ac3  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/schedule.py

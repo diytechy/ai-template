@@ -1412,8 +1412,10 @@ GITKEEP_DIRS = [
     # `complete/` is what says a terminal state has two outcomes and the folder
     # names which. `draft/` must be scaffolded for a second reason beyond
     # visibility: it is a DECLARED status directory, and specs parked in an
-    # undeclared one are invisible to `max(id) + 1`, so the next mint would
-    # reissue an id a draft already holds. `queued/` is not listed: the WI-000
+    # undeclared one never enter the registry, so the duplicate-id guard and
+    # the dashboard go blind to the id a draft holds. (The mint itself reads
+    # FILENAMES through an unfiltered walk and is safe either way — measured at
+    # WI-384's review.) `queued/` is not listed: the WI-000
     # example spec lands there, so git already tracks it. `active/` holds one
     # subdirectory per claiming branch.
     "docs/work/draft",
