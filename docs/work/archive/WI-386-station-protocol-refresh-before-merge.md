@@ -10,20 +10,33 @@ safety_class = "ordinary"
 
 The one constraint is built and enforced: `integrate.py` will not merge a branch
 unless `git merge-base --is-ancestor <trunk> <branch>` holds AND the branch tip
-carries a `Bar-Green:` trailer for that exact tree. Both reads are in
-`_merge_ready`, and both are proven to have two answers on a topology the tests
-construct rather than inherit.
+is a VERIFIED refresh commit. Both reads are in `_merge_ready`, and both are
+proven to have two answers on a topology the tests construct rather than
+inherit.
 
-`integrate.py refresh` is the lane-side operation that makes them true: in the
-branch's own lane worktree, merge trunk in, run `trunk_step.py` (compile then
-regen), run the declared bar, commit. The order is pinned by recording stub
-harness scripts, so a reordering fails a test rather than quietly changing what
-was barred. The refresh commit is disposable: a retry resets to the last WORK
-commit (`_work_tip`) and redoes the whole sequence, so a second refresh replaces
-the first instead of stacking a merge that would conflict on `docs/log.md`'s
-appended end. Every failure path - a conflicting trunk merge, a failed trunk
-step, a red bar, a floor-refused commit - leaves the branch back at that work
-commit with a clean tree and nothing parked.
+The attestation is a binding, not a message. The refresh commit carries
+`Bar-Green: tree=<sha> work=<sha> <summary>` and `refresh_attestation` checks all
+three names against git: `tree=` must equal the commit's own tree, `work=` its
+first parent, and the subject must be that branch's own `refresh: <branch> onto
+trunk`. The refresh names the tree before committing it (stage, then
+`git write-tree`, which writes the same index `commit` will use) and refuses to
+leave behind a commit whose attestation it cannot itself verify. Review round 1
+drove the earlier string form three ways - a forged trailer on an ordinary work
+commit, a whole refresh message copied onto another commit, and
+`git commit --amend` moving the tree under a genuine one - and each of those
+landed unbarred content on trunk. All three are now regression tests.
+
+`integrate.py refresh` is the lane-side operation that makes the constraint
+true: in the branch's own lane worktree, merge trunk in, run `trunk_step.py`
+(compile then regen), stage, run the declared bar, commit. The order is pinned
+by recording stub harness scripts, so a reordering fails a test rather than
+quietly changing what was barred. The refresh commit is disposable: a retry
+resets to the work sha the refresh itself recorded and redoes the whole
+sequence, so a second refresh replaces the first instead of stacking a merge
+that would conflict on `docs/log.md`'s appended end. Because that reset is a
+`reset --hard`, the peel is structural too - round 1 drove a work commit whose
+message merely quoted the trailer being peeled away and its file deleted from
+the branch.
 
 Deleted, because the constraint makes them unrepresentable or redundant: the
 merge-conflict arm, all four `merge --abort` paths, `_candidate_worktree` and
@@ -34,20 +47,29 @@ builder and again mechanically by the integrator - and the mechanical one is the
 one that survived.
 
 The owner's caveat is built, not hoped for. `_slot()` is the only
-`acquire_lock` call site in the file and a test asserts that against the source,
-because "restricting to pessimistic is a one-line move" is only true while it
-stays true. The pessimistic sequence is not a dormant branch: `integrate_one`
-refreshes IN the slot for any branch that arrives un-refreshed or stale, which
-every drain that merges a second branch reaches by construction (the first merge
-moves trunk out from under the second). `drive.py`'s `_drain` is the speculative
-half - one call, whose deletion restricts the design to pessimistic without any
-other edit and without a config dial.
+`acquire_lock` call site in the file, and `_slot(` occurs exactly twice in the
+source (its definition and its one call) - both asserted against the source,
+both mutation-driven, because counting the lock call alone let a second
+acquisition through the existing helper slip past. The pessimistic sequence is
+not a dormant branch: `integrate_one` refreshes IN the slot for any branch that
+arrives un-refreshed or stale, which every drain that merges a second branch
+reaches by construction. `drive.py`'s `_drain` is the speculative half - one
+call, whose deletion restricts the design to pessimistic without any other edit
+and without a config dial. The reviewer re-drove exactly that deletion: the
+queue still works end to end against the real bar.
 
-Two things the plan did not anticipate, both required by measurement rather than
-argument. `check.py --trunk-lane`: the freshness gates stand down on a claimed
-work branch (SR-133), so barring the refreshed branch without it would have let
-the only mechanical bar in the loop pass over the artifacts the same step had
-just written. And `_shed_residue`: the bar now runs in the lane worktree, so its
-own ignored tool residue would otherwise make §5.6's unload refuse to GC the
-lane over caches the integrator had just created - the refresh deletes what its
-own bar added, and nothing that predates it.
+Three things the plan did not anticipate, all required by measurement rather
+than argument. `check.py --trunk-lane`: the freshness gates stand down on a
+claimed work branch (SR-133), those seven steps then report SKIP, and the
+integrator reads any SKIP as a refusal - so without the flag the refresh could
+never go green at all. It makes the mechanical bar possible; it does not rescue
+it from a false pass. `_shed_residue`: the bar now runs in the lane worktree, so
+its own ignored tool residue would otherwise make the §5.6 unload refuse to GC
+the lane over caches the integrator had just created - it enumerates ignored
+FILES rather than diffing `git status` lines, which collapse an ignored
+directory to one line and so cannot see into a directory the worker already
+made. It does NOT make a lane clean: a lane the worker built in still reports
+dirty at unload, which is WI-359's rule working as designed. And `refresh`
+refuses outright when the MAIN checkout holds the branch, because trunk is
+whatever that checkout has out - refreshing there merges the branch into itself
+and attests a composition that never happened.

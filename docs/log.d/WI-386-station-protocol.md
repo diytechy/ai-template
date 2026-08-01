@@ -5,26 +5,36 @@
 merge queue unless trunk is already an ancestor of it* — and deleted the
 machinery that constraint makes unrepresentable. The bar now runs ONCE per WI,
 mechanically, on the branch, instead of once self-reported by the builder and
-again on a composed candidate tree.
+again on a composed candidate tree. Round 1 of review found the constraint's
+second half (*and its bar passed on this tree*) satisfiable by a string; round 2
+makes it a binding git verifies. Both are recorded below, because what shipped
+is the second one.
 
 **Deliverables.**
 
 - **The constraint, enforced.** `integrate.trunk_is_ancestor` (one
-  `git merge-base --is-ancestor`) plus `bar_green_attestation` (a `Bar-Green:`
-  trailer in the refresh commit) are the two reads `_merge_ready` makes before
-  the slot merges `--no-ff`. The attestation is a property of the SHA, so a
-  later commit on the branch revokes it — no ref namespace, no state file,
-  nothing that can outlive the tree it describes.
+  `git merge-base --is-ancestor`) plus `refresh_attestation` are the two reads
+  `_merge_ready` makes before the slot merges `--no-ff`.
+- **The attestation is a binding, not a message.** The refresh commit carries
+  `Bar-Green: tree=<sha> work=<sha> <summary>`, and all three names are checked
+  against git: `tree=` must equal the commit's own tree, `work=` its first
+  parent, and the subject must be this branch's `refresh: <branch> onto trunk`.
+  The refresh learns the tree before it commits by staging and running
+  `git write-tree`, then refuses to leave a commit whose attestation it cannot
+  itself verify. Amend, rebase, cherry-pick, a copied message and a hand-written
+  trailer all fail the tree or parent check.
 - **`integrate.py refresh`** — the lane-side station refresh, in the branch's
   own lane worktree: merge trunk in → `trunk_step.py` (compile, then regen) →
-  the declared bar → commit. Order pinned by recording stub harness scripts, so
-  a reordering fails a test instead of quietly changing what was barred.
-- **The refresh is a disposable commit** (§A2.1). `_work_tip` peels it off; a
-  retry resets there and redoes the sequence, so a second refresh REPLACES the
-  first rather than stacking a merge that would conflict on `docs/log.md`'s
-  append-compiled end. Every failure path — conflicting trunk merge, failed
-  trunk step, red bar, floor-refused commit — leaves the branch at that work
-  commit with a clean tree and nothing parked for a human to unpick.
+  stage → the declared bar → commit. Order pinned by recording stub harness
+  scripts, so a reordering fails a test instead of quietly changing what was
+  barred.
+- **The refresh is a disposable commit** (§A2.1). `_work_tip` peels it off at
+  the work sha the refresh itself recorded; a retry resets there and redoes the
+  sequence, so a second refresh REPLACES the first rather than stacking a merge
+  that would conflict on `docs/log.md`'s append-compiled end. Every failure path
+  — conflicting trunk merge, failed trunk step, red bar, floor-refused commit,
+  an attestation that does not verify — leaves the branch at that work commit
+  with a clean tree and nothing parked for a human to unpick.
 - **Deleted** from `integrate.py`: the merge-conflict arm, all four
   `merge --abort` paths, `_candidate_worktree` (with its parked-half-merge
   cleanup), the composed-tree bar call, `_teardown`, `CANDIDATE_BRANCH` and the
@@ -32,12 +42,15 @@ again on a composed candidate tree.
   worktree has one home now (`integrate.lane_worktree`), shared by the worker
   and the refresh so a red is fixable where the lane already lives.
 - **The owner's two requirements, built.** `_slot()` is the only `acquire_lock`
-  call site in the file, asserted against the source; `drive._drain`'s single
-  speculative `refresh` call is the whole speculation, and deleting it restricts
-  the design to pessimistic with no other edit and no config dial. The
-  pessimistic sequence is not dead code: `integrate_one` refreshes IN the slot
-  for any branch that arrives un-refreshed or stale, which every drain that
-  merges a second branch reaches by construction.
+  call site in the file AND `_slot(` occurs exactly twice in the source (its
+  definition and its one call), both asserted against the source and both
+  mutation-driven. `drive._drain`'s single speculative `refresh` call is the
+  whole speculation, and deleting it restricts the design to pessimistic with no
+  other edit and no config dial — the reviewer re-drove exactly that deletion
+  and the queue still worked end to end. The pessimistic sequence is not dead
+  code: `integrate_one` refreshes IN the slot for any branch that arrives
+  un-refreshed or stale, which every drain that merges a second branch reaches
+  by construction.
 
 **Deviations from spec, and why.**
 
@@ -48,42 +61,91 @@ again on a composed candidate tree.
    drives the loop in-process. Deleting it would regenerate and bar the
    refreshed branch with the trunk's copy of `check.py` — reintroducing the very
    defect it was written for. The *composed tree* died; the behaviour did not.
-   Its three tests were relocated, not deleted (the Phase 5 precedent).
+   Its three tests were relocated, not deleted (the Phase 5 precedent). Round 1
+   judged this real and the hazard MORE live under the station protocol, and
+   noted the ledger row had conflated tree identity with script vintage.
 2. **`check.py --trunk-lane` — a new flag, unanticipated by the plan.** The
    freshness gates stand down on a claimed work branch (SR-133/LLR-141), which
    rests on "a work branch never commits a generated artifact". The refresh
-   makes that false for exactly one commit, so without the flag the only
-   mechanical bar in the loop would pass over the artifacts the same step had
-   just written. Opt-in, so a caller that forgets it gets the stricter answer.
-   **This puts LLR-141's Notes out of date (incomplete, not false) — recorded
-   for the §A9.1 program close, not amended here.**
-3. **`_shed_residue` — added machinery the design did not predict.** The bar
-   now runs in the lane worktree, so its own IGNORED tool residue
-   (`.pytest_cache/`, `__pycache__/`, a coverage report) made §5.6's unload
-   refuse to GC the lane over caches the integrator had itself just created —
-   measured, not theorised: the first green e2e run exited nonzero on it. The
-   refresh deletes what its own bar added and nothing that predates it, so the
-   `out/run-logs/` stream WI-359 names still blocks the unload.
+   makes that false for exactly one commit. Without the flag those seven steps
+   SKIP and `_run_bar` reads any SKIP as a refusal, so **the refresh could never
+   go green at all** — the flag is what MAKES the mechanical bar possible, not a
+   rescue from a false pass. (Round 1 drove that: the first version of this
+   deviation, in four places, had the failure direction backwards. Corrected in
+   all of them.) The bar is equivalent, not weaker: `--trunk-lane` restores
+   exactly the seven `_TRUNK_FRESHNESS_STEPS` the deleted candidate-tree bar
+   ran. Opt-in, so a caller that forgets it gets the stricter answer.
+3. **`_shed_residue` — added machinery the design did not predict.** The bar now
+   runs in the lane worktree, so its own IGNORED tool residue (`.pytest_cache/`,
+   `__pycache__/`, a coverage report) made §5.6's unload refuse to GC the lane
+   over caches the integrator had itself just created — measured, not theorised.
+   It enumerates ignored FILES (`git ls-files -o -i`) rather than diffing
+   `git status --ignored=matching` lines, because that listing collapses an
+   ignored directory to one line at any `-u` setting and so could not see into a
+   directory that already existed — which round 1 drove, and which is the NORMAL
+   case since the worker builds in the same lane worktree. **Scope stated
+   honestly: this does not make a lane clean.** A lane the worker already built
+   in still reports dirty at unload and the branch is still held; that is
+   WI-359's rule working as designed and it predates this WI. All the refresh
+   promises is that it adds nothing to the pile.
 4. **`_verdict_gate` now measures code-time at `_work_tip`.** Structural
    consequence of moving the bar onto the branch: the refresh is the last commit
    before the merge and lands after the review by construction, so counting it
-   as "code" would have made RULING-7 unpassable for every WI.
+   as "code" would have made RULING-7 unpassable for every WI. Round 1 confirmed
+   the gate still catches an ordinary post-review commit.
 5. **The refresh stages BEFORE it bars, and commits the staged index.** A
    declared bar is the adopter's command; staging first means whatever it writes
    can never be swept into the attested commit by an `add -A` that ran after it.
-6. **No spine amendment.** SR-132's description of the composed-tree bar and
-   candidate worktree is now false, and LLR-140/LLR-141's Notes are out of date.
-   Per the owner ruling (spine work waits, batches, runs alone) and §A9.1, that
-   is the program-close row's scope.
+   It is also what makes `git write-tree` able to name the barred tree.
+6. **`refresh` refuses when the MAIN checkout holds the branch.** Trunk is
+   "whatever the main checkout has out", so a main checkout sitting on the
+   branch makes trunk BE the branch: round 1 drove it printing *refreshed onto
+   trunk `<its own sha>`* and attesting a composition that never happened. There
+   is no trunk to resolve while nothing has it checked out, so it refuses with
+   the switch-back command. `lane_worktree` still returns the primary as a
+   holder — the worker has no such problem.
+7. **No spine amendment — and the debt is larger than round 1 of this fragment
+   said.** Not "Notes are out of date": these records are **actively FALSE**
+   and nothing mechanical catches them (`check_trajectory --strict` exits 0 over
+   all of it).
+   - `SR-132` (*Local integrator: serial fail-closed merge queue*) describes the
+     composed-tree bar and candidate worktree, both deleted.
+   - **`LLR-140`'s Detail** — *"integrate_one: --no-ff --no-commit merge,
+     trunk_step.py folded into the merge commit, check.py --jobs 0 at the
+     declared tier on the composed tree read fail-closed, ff-only trunk advance,
+     branch deleted on green, candidate parked on red"* — every clause of that
+     sentence was deleted by this WI.
+   - **`IF-080`'s Contract** — same clauses (*"--no-ff onto a candidate
+     worktree, trunk step folded in, the DECLARED bar on the composed tree …
+     before the ff-only trunk advance"*), and it additionally omits the new
+     `refresh` operation entirely. §A9.1 item 2 scopes the interface registry
+     only to the connectivity drift, so this is scope WI-390 does not yet know
+     it has.
+   - `LLR-141`'s Notes are incomplete rather than false (`--trunk-lane` is a
+     documented exception the Notes do not mention).
+   Per the owner ruling (spine work waits, batches, runs alone) that is still
+   the program-close row's to fix — but it inherits *false records*, not stale
+   ones.
 
-**Reviewed baseline bump.** `check.py` 1523 → 1545 in
-[`test_module_size_ratchet.py`](../../tests/test_module_size_ratchet.py); nine
-of the 22 lines are the argparse help and the comment recording why an opt-in
+**Known terminal state, for WI-387.** A genuine trunk-merge conflict at refresh
+is a loud, self-describing handback: the branch is left at its work commit with
+a clean tree and no `MERGE_HEAD`, the run exits nonzero, and the refusal names
+the worktree and the `git merge <sha>` to run. What it does NOT do is record
+that it happened — no handback artifact, no `docs/work/pause`, nothing in
+status — so every relaunch re-hits the identical conflict with no automated
+progress. Driven both in-slot and in a two-branch drain (where the first merge
+stands and the second branch stays finished-and-claimed). That is §A3/WI-387's
+handback outcome arriving one row early; recorded here so the next reader does
+not have to derive it from a refusal string.
+
+**Reviewed baseline bump.** `check.py` 1523 → 1547 in
+[`test_module_size_ratchet.py`](../../tests/test_module_size_ratchet.py); eleven
+of the 24 lines are the argparse help and the comment recording why an opt-in
 override to a fail-closed rule is safe. Reason at the entry. Complexity ratchet
 untouched (`main` stayed at 16 — the flag is an assignment, not a branch).
 
-**Bars.** Full unfiltered suite `pytest -q -n auto`: **1720 passed, 12 skipped,
-2 failed in 505s**; `ruff check .` and `ruff format --check .` clean (146
+**Bars.** Full unfiltered suite `pytest -q -n auto`: **1726 passed, 12 skipped,
+2 failed in 538s**; `ruff check .` and `ruff format --check .` clean (146
 files); `check_trajectory.py --root . --strict` clean (388 work items, graph
 acyclic, only the pre-existing IF-registry connectivity warns §A9.1 already
 records). Both failures are pre-existing on this branch and neither is this
