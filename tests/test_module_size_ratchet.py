@@ -360,7 +360,13 @@ BASELINE = {
     # of refusing), and _coordinator_lock — the acquire/report/register
     # sequence extracted to ONE home so the two lock sites cannot drift.
     # Reviewed bump, log 2026-07-31.
-    "agent_loop.py": 3026,
+    # -53 (3026 -> 2973), WI-383: session grouping REMOVED rather than wired
+    # (docs/concurrency-v2.md §A6.1) — the §7 continuation re-check, the
+    # `exit 10 ASSIGNMENT-END` arm, the worker's `sched` scheduler view and the
+    # `schedule` import all go with it. The only multi-WI assignment left is the
+    # spine batch the dispatcher admits, whose constituents are homogeneous by
+    # construction: the one case the guard never refused. Ratcheted DOWN.
+    "agent_loop.py": 2973,
     # +30 (2206 -> 2236), WI-065: `tc_citation_findings` — the TC-`Verifies`
     # rules lifted out of `analyze` so the cell could accept `IF-###` seam ids.
     # Most of the bump is that helper's docstring, which is where the RULING now
@@ -886,7 +892,19 @@ BASELINE = {
     # 11. Extraction over a complexity baseline - the ratchet's stated
     # preference - and the helper carries the WHY of both the printed sha and
     # the checked code. Reviewed bump, log 2026-08-01.
-    "integrate.py": 1692,
+    # +41 net (1692 -> 1733), WI-387 merging trunk `4fb02de4`: NOT a new bump
+    # and not a side picked. The auto-merge kept 1692 - trunk carried no
+    # integrate.py entry at all, because ITS copy was 1449, under THRESHOLD - so
+    # the stamp had to be re-measured rather than trusted. Resolved by measuring
+    # the merged file with the census's own metric (`len(text.splitlines())` =
+    # 1733) and checking the arithmetic: base `6b22f169` 1418, + this branch's
+    # +274, + WI-378's +31 (the `_verdict_gate` docstring census), + the 10-line
+    # bridge paragraph the conflict resolution added = 1733 exactly. The sum
+    # CHECKS the resolution rather than agreeing with it: dropping either side's
+    # paragraph to clear the conflict would show up here as a shortfall. Both
+    # reason chains survive - WI-378 had none to preserve at this entry, and
+    # every WI-387 line above is intact. Re-stamp DOWN with WI-390.
+    "integrate.py": 1733,
 }
 
 

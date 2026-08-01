@@ -788,6 +788,37 @@ def _verdict_gate(root, branch, outcomes):
     older than the last non-review, non-fragment commit - the git-derived
     replacement for the old sha7-in-filename binding (§5.4 left it open).
 
+    `docs/work/` is NOT excluded, deliberately, and WI-378 measured the price
+    before leaving it that way. The population is derivable, not chosen - all
+    three steps, so this is re-runnable from what ships:
+
+        # 1. the commit that introduced this comparison
+        git log --reverse -S"_verdict_gate" -- <path to this file>
+        # 2. every integrator merge
+        git log --format="%H %s" --grep="^integrate: merge"
+        # 3. keep the ones the predicate governed
+        git merge-base --is-ancestor <commit from 1> <merge from 2>
+
+    That gave 20 merges as of 2026-08-01, `review-policy` at 1 throughout.
+    Replaying the predicate over all 20 found 13 staled APPROVEs: nine staled by
+    a real change to shipping code or a declared doc, one by a hand trunk merge,
+    and three by a record-only edit that followed its own verdict. Adding
+    `docs/work/` here would buy back those three (23.1%) and nothing else, at
+    the cost of letting a spec's `safety_class`, `needs` and `Deliverable` - the
+    claims the verdict is ABOUT - change after the APPROVE, unseen. One of the
+    three is exactly that: a `Deliverable` prose fix the verdict demanded. The
+    ordering rules that shrink the class - close before the final verdict round,
+    never hand-merge trunk - are in process-options.md, "The LLM-gate verdict
+    protocol"; they are necessary, not sufficient, since a verdict's own finding
+    can demand a record edit no ordering could have placed earlier. Follow them
+    and the case is weaker still: they retire 2 of the 13, leaving 11 of which
+    the exclusion would buy back 2 (18.2%) - and both of those rounds caught a
+    false claim in the record.
+
+    `docs/log.d/` differs on purpose: a log fragment is the narrative of work
+    the verdict already read, carries no key any reader gates on, and is
+    append-compiled on the trunk rather than merged.
+
     KEYED OFF THE OUTCOME, NOT OFF THE CLAIM (§A3). Only `merged` asserts the
     work is done, and only an assertion of done owes a verdict; `cancelled` and
     `handback` assert the opposite - this will never be built, or this is coming
@@ -796,6 +827,16 @@ def _verdict_gate(root, branch, outcomes):
     cause on itself: a review escalation is precisely the case where no APPROVE
     exists, and the lane would be unable to return the work it could not get
     approved.
+
+    THE TWO RULES MEET AT ONE POINT, stated so nobody has to re-derive it from
+    the loop: the freshness comparison above only ever runs for an id whose
+    outcome is `merged`, because the others are skipped before reaching it. So
+    WI-378's `docs/work/` reasoning governs exactly the branches that assert
+    done - which is also the only place its ordering rule ("close before the
+    final verdict round") can bite, since the closing MOVE is itself a
+    `docs/work/` change. Neither rule weakens the other: a returned or
+    cancelled spec moves under `docs/work/` too, and owes no verdict for that
+    move to stale.
     """
     dial = ac.read_declared(root / "docs" / "review-policy", "0")
     try:

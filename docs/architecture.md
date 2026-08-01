@@ -89,7 +89,6 @@ graph LR
     m_scripts_agent_loop --> m_scripts_drive
     m_scripts_agent_loop --> m_scripts_plan_round
     m_scripts_agent_loop --> m_scripts_plan_runner
-    m_scripts_agent_loop --> m_scripts_schedule
     m_scripts_agent_loop --> m_scripts_score_reviews
     m_scripts_check_trajectory --> m_scripts_check_docs
     m_scripts_drive --> m_scripts_agent_common
@@ -238,7 +237,7 @@ Contracts (interfaces): IF-037, IF-065
 
 ### `scripts/agent_loop`
 _Headless session engine: one claimed worker assignment, a reviewer/critique_
-Imports (internal): `agent_common`, `agent_route`, `agent_session`, `drive`, `plan_round`, `plan_runner`, `schedule`, `score_reviews`
+Imports (internal): `agent_common`, `agent_route`, `agent_session`, `drive`, `plan_round`, `plan_runner`, `score_reviews`
 Contracts (interfaces): IF-015, IF-068
 
 | Public item | Summary | Implements |
@@ -863,12 +862,12 @@ Contracts (interfaces): IF-053, IF-054
 | `read_spec_rows(work_dir, on_error)` | The spec folder's rows in REGISTRY order — by the explicit `order` key, |  |
 | `load_registry_rows(path)` | The work-item rows from the one registry home — the spec folder beside |  |
 | `load_wis(rows)` | Parse work-item rows into a list of scheduler WI dicts (skips the inert |  |
-| `classify(wi, *, structural)` | `(scheduling_class, [reason_codes])` for one WI — a pure function. | SR-093, SR-094, SR-107 |
-| `is_schedulable_class(sched_class)` | Only a positively-classified WI is eligible; unclassified fails closed. |  |
+| `classify(wi, *, structural)` | `(concurrency, rank, [reason_codes])` for one WI — a pure function. | SR-093, SR-094, SR-107 |
+| `is_schedulable(concurrency)` | Only a positively-classified WI is eligible; unclassified fails closed. |  |
 | `hard_preds_satisfied(wi, status)` | Every hard predecessor is integrated `done`. An unknown predecessor id |  |
 | `downstream_counts(wis)` | `{id: transitive hard-descendant count}` — how many distinct WIs depend on |  |
 | `hard_path_lengths(wis)` | `{id: remaining hard-path length}` — the longest chain of hard descendants |  |
-| `order_key(wi, sched_class, downstream, hardpath)` | The deterministic sort key (spec §4 step 6): lowest gate class first, then |  |
+| `order_key(wi, rank, downstream, hardpath)` | The deterministic sort key: lowest rank first, then the human Priority |  |
 | `evaluate(wis, reserved)` | Classify every WI and compute its readiness disposition — the one pass the |  |
 | `frontier(wis, reserved)` | The ordered ready frontier: records whose disposition is `ready`. |  |
 | `simulate(wis, jobs, reserved)` | Greedy list-scheduling simulation over the hard DAG: each round assigns up |  |

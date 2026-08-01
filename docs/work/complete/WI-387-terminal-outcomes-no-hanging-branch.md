@@ -57,6 +57,16 @@ subject SUFFIX and would delete a one-commit branch carrying real work;
 outcome that skips the verdict gate; two sentences of the claim rationale were
 false and are retracted in place; a decided exit *after* a lane closed its specs
 stopped the run; and the `EXIT_BUDGET`/`EXIT_STALL` walk-away cost was unrecorded.
+Rounds 2 and 3 closed three more each — the unchecked `git branch -D`, a content
+rule still wide enough to destroy a log fragment, and two stale size figures.
+
+Merging trunk `4fb02de4` (this row is the last of four lanes) conflicted once, in
+`_verdict_gate`'s docstring, where WI-378's freshness census met this row's
+outcome keying. Both stand: they govern different halves of the same gate — which
+paths stale an APPROVE, and which ids owe one — and the resolution adds only a
+bridge naming where they meet. The `EXIT_TRAIN_END` exclusion turned out to be
+load-bearing rather than cautious: WI-383's deletion landed, so naming that
+constant would have made `drive.py` an `AttributeError` at import.
 
 Tests: `tests/test_handback.py` (new, 13 tests, all constructing their own git
 topologies; the rename parse mutation-proven), plus the outcome/claim-inversion

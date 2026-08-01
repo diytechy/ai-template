@@ -280,19 +280,23 @@ all three copies at once, and `check_trajectory == schedule` keeping its fp
 file was touched** (`AGENTS.template.md`, `PROCESS.md`, `PROCESS_OPTIONS.md`
 unchanged).
 
-**Bars (real output, this branch, repo `.venv` 3.11.9; round-3 figures, the
-shipped tip).** Commit bar before each commit: `pytest -q -n auto -m smoke` →
-**1 failed, 560 passed, 4 skipped in 13.23s**; configured `check_docs --stale` →
-**OK, 340 docs, 971 links, 0 broken**. Closing bar: full unfiltered
-`pytest -q -n auto` → **1 failed, 1774 passed, 12 skipped in 426.21s**
-(1762 → 1771 → 1774 across the three rounds; each step is that round's new
-guards, and each reconciles); `ruff check .` and `ruff format --check .` →
-**All checks passed / 148 files already formatted**; `check_trajectory --root
-. --strict` → **clean (389 work items, 366 done, 16 cancelled, graph acyclic)**,
-pre-existing WARNs only; `check_doc_refs --root . --strict` → **OK, no dangling
-path or `sym:` references**. The sole failure at both tiers is the standing
-`test_this_repo_is_not_a_work_branch`, which asserts this checkout is not a work
-branch and therefore fails by construction on one.
+**Bars (real output, repo `.venv` 3.11.9), AFTER merging trunk `4fb02de4`.**
+Full unfiltered `pytest -q -n auto` → **1793 passed, 12 skipped, 0 failed**;
+`ruff check .` and `ruff format --check .` → **All checks passed / 148 files
+already formatted**; `check_trajectory --root . --strict` → **clean**;
+`check_doc_refs --root . --strict` → **OK, no dangling path or `sym:`
+references**; configured `check_docs --stale` → **OK, 0 broken**.
+
+**There is no standing red any more, and that is a real change rather than a
+lucky run.** Every pre-merge round of this row reported "1 failed" and named
+`test_this_repo_is_not_a_work_branch` as expected-by-construction. Trunk's
+`5f292892` retired that premise: the test asserted the CURRENT checkout carries
+no claim, which is false by construction inside a lane worktree, and it was
+redding the §A2 refresh's own bar so nothing could merge at all. Post-merge the
+count is 1774 → **1793** (+19 from the three sibling lanes) with **zero**
+failures. The pre-merge progression stands as history — 1762 → 1771 → 1774
+across rounds 1–3, each step that round's new guards — but the closing figure
+is the merged one above, and any red here now would be mine.
 
 `check_doc_refs` earned its `--strict` twice on this branch, both times on THIS
 fragment: round 2 it caught prose naming a `handback/` directory that does not
@@ -321,6 +325,42 @@ mint a path — and that belongs to **WI-396**, which owns this check's blind
 spot. Filed there, not built here: a sibling lane hit this three times today and
 five by the time round 3 reviewed it, so the frequency is real; the placement is
 that row's call.
+
+**Merging trunk `4fb02de4` — one conflict, and both intents kept.** This row is
+the last of four lanes, so WI-378, WI-383 and WI-391's siblings landed first.
+The single conflict is `_verdict_gate`'s docstring: WI-378 rewrote it with a
+measured census of why `docs/work/` is NOT excluded from the freshness pathspec,
+while this row rewrote the function's SIGNATURE and body to key off the outcome
+map. **Neither is falsified by the other** — theirs governs which paths make an
+APPROVE stale, mine governs which ids reach the comparison at all — so both
+paragraphs stand verbatim, and the resolution adds one bridging paragraph
+naming the single point where they meet: the freshness comparison only ever runs
+for an id whose outcome is `merged`, so WI-378's `docs/work/` reasoning governs
+exactly the branches that assert done, which is also the only place their
+ordering rule ("close before the final verdict round") can bite — the closing
+move being itself a `docs/work/` change. A returned or cancelled spec moves
+under `docs/work/` too and owes no verdict for that move to stale. Nothing of
+theirs was edited to fit.
+
+**The ratchet was re-measured, not trusted.** `tests/test_module_size_ratchet.py`
+auto-merged and kept this branch's `integrate.py: 1692`, which was stale — trunk
+carried no `integrate.py` entry at all (its copy was 1449, under THRESHOLD), so
+there was nothing to conflict with and nothing to warn. Measured on the merged
+tree with the census's own metric: **1733**. The arithmetic checks the
+resolution rather than agreeing with it — base `6b22f169` 1418, plus this
+branch's +274, plus WI-378's +31, plus the 10-line bridge = 1733 exactly, so
+dropping either side's paragraph would have shown up here as a shortfall. The
+other three auto-merged entries were cross-checked the same way and are correct
+by the same test (trunk changed none of their line counts). `handback.py` 362
+and `drive.py` 499 remain under THRESHOLD.
+
+**The `EXIT_TRAIN_END` deviation is now live, and it was load-bearing rather
+than merely cautious.** It was excluded from `_WORKER_OUTCOMES` while WI-383's
+deletion was still in flight on a sibling lane; that deletion has landed, and
+`agent_common` now keeps only a note reserving the number. Had the set named the
+constant, this merge would have made `drive.py` an `AttributeError` at import.
+The comment is re-tensed to say the deletion happened rather than that it is
+coming.
 
 **One round-2 red was mine and is recorded rather than quietly fixed.** Adding
 the `[generated]` declaration to `claim_repo` gave every fixture built on it a

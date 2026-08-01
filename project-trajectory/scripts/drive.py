@@ -313,10 +313,14 @@ def _resume_or_claim(root, cycle, tier, merged, config_refusal):
 # the specs are still in active/<branch>/, so the next cycle's _parked_branches
 # re-assigns a lane to it and the stall guard bounds a worker that keeps dying.
 #
-# `EXIT_TRAIN_END` (10) is deliberately NOT here. It belongs to session grouping,
-# which the same design program removes — a code no worker emits needs no arm,
-# and if one ever arrives it falls to the crash path, which parks and resumes
-# rather than deciding an outcome on behalf of a worker that decided none.
+# `EXIT_TRAIN_END` (10) is deliberately NOT here, and as of WI-383 the constant
+# it named no longer exists: session grouping is gone (§A6.1) and
+# `agent_common` keeps only a note reserving the number. This set was written
+# without it while that deletion was still in flight on a sibling lane —
+# naming it would have made this module an AttributeError at import the moment
+# the two merged. A code no worker emits needs no arm; were one ever to arrive
+# it falls to the crash path, which parks and resumes rather than deciding an
+# outcome on behalf of a worker that decided none.
 #
 # A TRADE THIS SET MAKES, stated here rather than left in the literal (REVIEW-A
 # round 1). `EXIT_BUDGET` and `EXIT_STALL` are RESUMABLE conditions: before
