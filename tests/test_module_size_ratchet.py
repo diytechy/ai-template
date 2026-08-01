@@ -581,6 +581,29 @@ BASELINE = {
     # would still run and always pass. Most of the delta is the two fallback
     # arms and the comment recording that. Reviewed bump, reason here and in
     # docs/log.d/WI-280-bounded-core-decomposition.md.
+    # +93 (3098 -> 3191), WI-380: the §A5.1 ratified-vs-traced cell split — the
+    # two declared classification tables (one per spine registry, both halves
+    # named), `spine_cell_class` with the fail-safe residual, the extracted
+    # `_split_changed_cells`, and the `staged_spine_amendments` seam WI-388
+    # consumes. Most of the delta is the tables and the comment recording WHY
+    # the residual falls to ratified (a new column may be too loud, never
+    # silently un-ratified). The rule stays beside its only consumer for the
+    # WI-349 reason — moving it to a sibling would separate a rule from the
+    # single scan it governs. Reviewed bump, reason here and in
+    # docs/log.d/WI-380-ratified-vs-traced-cell-split.md. Re-stamp down with
+    # WI-280.
+    # +39 (3191 -> 3230), WI-380 REVIEW-A round 1: the MAJOR was a false SHIPPED
+    # contract (the module docstring still promised "content cells", the exact
+    # phrase §A5 quotes as the defect) and the MINOR was a seam whose record was
+    # consumable but whose scan was not callable at §A5.2's trunk-COMMIT
+    # trigger. Both are corrections of what this row already shipped, not new
+    # scope: `_spine_revs` + the `base`/`head` pair make the rev range
+    # expressible (driven: post-commit the default returns [] and
+    # `(root, "HEAD~1", "HEAD")` returns the record), and the rest is the
+    # docstring truth-telling the review demanded. The extraction held the scan
+    # at C901 20 — no complexity bump. Reviewed bump, reason here and in
+    # docs/log.d/WI-380-ratified-vs-traced-cell-split.md. Re-stamp down with
+    # WI-280.
     # +18 (3098 -> 3116), WI-384: the six-state model. The DELETION is real —
     # `parse_spec_status`'s disposition cross-check and both of its raise paths
     # are gone — and the growth is the vocabulary that replaced them: two more
@@ -596,7 +619,16 @@ BASELINE = {
     # states what is actually blind: the duplicate-id guard and the dashboard.
     # Three COMMENT lines, zero code tokens; correcting a false rationale in
     # place is cheaper than letting it ship. Reviewed bump, log 2026-08-01.
-    "check_trajectory.py": 3119,
+    # +21 net (3230 -> 3251), WI-384 merging trunk `8c4d5f78`: NOT a new bump
+    # and not a side picked. WI-380 and WI-384 re-stamped this module from the
+    # same base 3098 on parallel branches — 3230 and 3119 — and the merge
+    # conflicted here. Resolved by RE-MEASURING the merged file with the
+    # census's own metric (`len(text.splitlines())` = 3251), which is exactly
+    # 3098 + WI-380's +132 + WI-384's +21: the two changes are disjoint, so
+    # the arithmetic is a check on the resolution rather than a coincidence.
+    # Both reason chains above are preserved verbatim; neither WI's record
+    # was dropped to make the number fit. Re-stamp down with WI-280.
+    "check_trajectory.py": 3251,
     # NEW ENTRY, +25 (1498 -> 1523), WI-357: the two-stage work-branch claim
     # signal — the on-disk fast path plus the branch-history probe that
     # survives the §2.3 close commit (git log -1 over the claim path), with
