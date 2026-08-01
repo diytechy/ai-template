@@ -51,10 +51,10 @@ discovered the row's premise was refuted, and returned it to `queued/` with
 come back to the frontier. Measured: it would not; nothing reads an open
 item's state, so the park was permanent. The correction was to **cancel** the
 row instead — which was the right disposition anyway, since its refutation
-held under every possible ruling. That mis-assumption is the defect
-[WI-395](work/queued/WI-395-a-blockref-is-a-label-not-a-subscription.md)
-files: the repo's own exemplar text *promises* the self-release the mechanism
-does not provide.
+held under every possible ruling. That mis-assumption is the defect WI-395 files (its spec is in
+[docs/work/](work/); un-linked here because a row's file moves folder with
+every state change): the repo's own exemplar text *promises* the self-release
+the mechanism does not provide.
 
 ### What will park rows from now on: handbacks
 

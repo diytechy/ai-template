@@ -48,21 +48,28 @@ Everything below is scored against two fixed points:
 
 ## Execution order
 
-Ten rows, strictly serial. "Ruling" names the decision (below) that must be
-made before that row starts; everything else is claimable as specced.
+Thirteen rows, strictly serial. "Ruling" names the decision (below) that must
+be made before that row starts; everything else is claimable as specced. Rows
+are named by **plain id, deliberately un-linked**: a row's file moves folder
+with every state change (claiming one broke trunk's doc-navigability on
+2026-08-01 — the driven instance is in the log), so this table points once at
+[docs/work/](work/) and lets the id be found there.
 
 | # | Row | What it does | Direction (simplicity lens) | Ruling |
 |---|-----|--------------|------------------------------|--------|
-| 1 | [WI-397](work/complete/WI-397-a-work-branch-never-mints-an-id.md) *(minted 2026-08-01; R1 ruled; **shipped**)* | Refusal rung: a finished branch whose `docs/work/` delta adds a spec id outside its claimed set cannot merge | Constraint at the merge slot; deletes the id-reservation problem from the dispatcher's scope | **R1** |
-| 2 | WI-396 *(arrives with `wi-391`)* | Citation checker cannot see a line-suffixed reference into the kit's own tree | Prefer stripping the trailing line suffix before the shape test over growing the prefix list — one rule, fixes every prefix at once | — |
-| 3 | WI-395 *(arrives with `wi-391`)* | `blocked` rows promise a self-release that never happens | Fix the false promise in prose; do not build a cross-registry subscription | **R3** |
-| 4 | [WI-394](work/queued/WI-394-a-verified-spine-row-can-cite-evidenc.md) | A Verified spine row can cite evidence that never existed | File-existence half only; the node-id half is ruled prose | **R2** |
-| 5 | WI-393 *(arrives with `wi-391`)* | Restore the link-aware spec-archival ritual Phase 5 deleted | Genuinely constraint-shaped: one indivisible move+relink operation nobody can perform two-thirds of | — |
-| 6 | [WI-392](work/queued/WI-392-driven-figures-carry-their-command.md) | Declared figures carry the command and revision that produced them | **Rung 1 only** (presence check on opt-in markers). Rung 2 (re-derivation) is deliberately not built | — |
-| 7 | [WI-381](work/queued/WI-381-spine-barrier-batch-and-wait.md) | Dispatcher split (`dispatch.py` + `lane.py`), spine barrier, lanes dial | Scope **shrinks** under R1 — no id reservation ever gets designed. Scaffold-surface change: verify by bootstrapping a scaffold | — |
-| 8 | [WI-388](work/queued/WI-388-adjudication-mechanical-scope-judgement.md) | The adjudication kind; mechanical trunk-side WI minting | Becomes the *only* automated minting path — consistent with R1 by construction. Rules its two unclassified cells per its intake | — |
-| 9 | [WI-389](work/queued/WI-389-process-tab-station-flow.md) | Dashboard Process tab draws the station/lane model | Verify by pixels (render-dashboard-critique), not by reading the generator | — |
-| 10 | [WI-390](work/queued/WI-390-concurrency-v2-program-close.md) | Program close: spine amendment batch, connectivity, prose, stamps | **Spine class — waits, batches, runs alone, one owner sitting.** Last, by hard edges | — |
+| 1 | WI-397 *(**shipped** 2026-08-01; R1 ruled and recorded)* | Refusal rung: a finished branch whose `docs/work/` delta adds a spec id outside its claimed set cannot merge | Constraint at the merge slot; deletes the id-reservation problem from the dispatcher's scope | **R1** |
+| 2 | WI-396 | Citation checker cannot see a line-suffixed reference into the kit's own tree | Prefer stripping the trailing line suffix before the shape test over growing the prefix list — one rule, fixes every prefix at once | — |
+| 3 | WI-395 | `blocked` rows promise a self-release that never happens | Fix the false promise in prose; do not build a cross-registry subscription | **R3** |
+| 4 | WI-394 | A Verified spine row can cite evidence that never existed | File-existence half only; the node-id half is ruled prose | **R2** |
+| 5 | WI-393 | Restore the link-aware spec-archival ritual Phase 5 deleted | Genuinely constraint-shaped: one indivisible move+relink operation nobody can perform two-thirds of. A claim-time instance was driven 2026-08-01 (the claim move broke this very table's links), so the ritual is owed at claim as well as at archival | — |
+| 6 | WI-392 | Declared figures carry the command and revision that produced them | **Rung 1 only** (presence check on opt-in markers). Rung 2 (re-derivation) is deliberately not built | — |
+| 7 | WI-398 *(minted 2026-08-01 from Part 1's findings)* | A red bar's refusal message must carry the failing step's own output — today it structurally cannot (three lost diagnoses of one red) | One anchor fix + keep the bar log a refusal points at; no log-management layer | — |
+| 8 | WI-399 *(minted 2026-08-01)* | Containment is owed where a module is **added**, not where the station regenerates the inventory (second instance of the class) | Move an existing rule's firing point into the lane's own bar; no new policy | — |
+| 9 | WI-400 *(minted 2026-08-01)* | The unload must distinguish declared tool-residue from evidence — today every worker-built lane ends `UNLOAD INCOMPLETE`, forever | Shed the declared residue set, keep refusing on any remainder; don't loosen the orphan read | — |
+| 10 | WI-381 | Dispatcher split (`dispatch.py` + `lane.py`), spine barrier, lanes dial | Scope **shrinks** under R1 — no id reservation ever gets designed. Scaffold-surface change: verify by bootstrapping a scaffold | — |
+| 11 | WI-388 | The adjudication kind; mechanical trunk-side WI minting | Becomes the *only* automated minting path — consistent with R1 by construction. Rules its two unclassified cells per its intake | — |
+| 12 | WI-389 | Dashboard Process tab draws the station/lane model | Verify by pixels (render-dashboard-critique), not by reading the generator | — |
+| 13 | WI-390 | Program close: spine amendment batch, connectivity, prose, stamps | **Spine class — waits, batches, runs alone, one owner sitting.** Last, by hard edges | — |
 
 ---
 
@@ -80,10 +87,9 @@ recommended.** R3 and R4 are **pending**, with the fuller background the owner
 asked for in [rulings-context-2026-08-01.md](rulings-context-2026-08-01.md) —
 including the owner's stated direction on handback disposition (the dispatcher
 completes it; recovery is loop machinery, never a work item), held there for
-confirmation. Part 1 also produced three mechanical findings (handoff §6:
-the failure-message extractor, containment-at-add, the unload residue
-distinction) that will be minted trunk-side after row 1 and slotted with the
-quick rows.
+confirmation. Part 1's three mechanical findings (handoff §6: the
+failure-message extractor, containment-at-add, the unload residue
+distinction) are **minted** as rows 7–9 in the table above.
 
 ### R1 — Where may a new work-item id be created?
 
