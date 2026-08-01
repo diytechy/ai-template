@@ -453,7 +453,7 @@ Finally, should we remove completed work items from the work-items table?
 
 ~~~~~~~~~~~~~~~~~~~~~~
 
-Remaining pieces, please spin up other agents where appropriate (opus level where appropriate as well).  Use the openai agent as well for critical cross-review as well where appropriate.
+Remaining pieces: please spin up other agents where appropriate (opus level where appropriate as well).  Use the openai agent as well for critical cross-review as well where appropriate.
 
 Note I want this session to be fully autonomous, attestation can be performed by a new agent or a different family agent.  I will not be present, I can review the requirement document changes later, but this is restructuring a deliverable that already exists, it is a rearchitecture, so I do not expect any SNs to change.
 
@@ -472,3 +472,158 @@ Consider done when:
 - Work items noted above are complete
 - Any new work items that are constructed as a reaction to reviews both in work items and in downstream repo compatability that are critically / confidently needed are also completed.
 - After all work is complete, perform migration on the gilbert project, such that it is moved over to the new template, and it's open items are waiting for the user to re-attest it's spine changes that are necessary to adopt the new ai-template.  Again, any new learnings from migrating the new template updates to gilbert should also be applied here if confident.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Work item state:
+
+Add draft, or keep in draft folder?  Or is state derived from the folder it's in?  It seems like the state of the work item attribute in the table perhaps duplciates the state that can be derived from where that WI exists in the repo.
+
+Instead of going to "specs" in archive, they should go to a corresponding folder "Complted" or "Cancelled".  Note the retired term used earlier is also a bit ambiguous, which I think "Cancelled" firmly describes.
+
+So before: queued, active, deferred, archive
+After: draft, queued, active, deferred, cancelled, complete
+
+Yes let's bake all this into corresponding work items and an overarching design document pointing to those work itmes to make sure this concurrency problem is attacked with the right level of complexity so it does not grow out of hand.  It seems a lot of the previous moth-balling was due to constraining the overall system and building checks instead of building constraints that would have prevented the bad behavior in the first place (it's not clear to me if that was due to assumptions or adversity to arcitectural change)
+
+ ## Feedback about function calls:
+
+To be precise about which is which: drive.py has no CLI at all — it's a library agent_loop.py calls when no role flag is given, and it reads fields off the shared namespace. The multi-WI batching you're remembering is agent_loop.py --wi.
+
+drive.py — what it actually takes
+Two parameters of its own: worker=None (a test injection seam) and tier="all" (the composed-tree bar tier). Plus 14 fields read off args:
+
+Group	Fields
+Agent invocation	agent_cmd
+Routing	model, model_map, cmd_map, prompt_map, tier_map, prefer_map
+Loop control	max_iterations, stall_limit, session_timeout, wait_on_limit, limit_retry_fallback
+Console	no_session_echo, live_status
+There is no lanes/jobs input, and no way to hand it multiple WIs. It always claims ready[0] and passes wi_ids = [wid] — exactly one. So a dispatcher needs a genuinely new input; nothing existing can be repurposed.
+
+Two flag-collisions worth knowing before you design around them:
+
+--max-iterations means two different things. drive uses it as its cycle ceiling (how many WIs), and does not forward it — so the worker independently uses its own default of 40 sessions. Set --max-iterations 5 meaning "five WIs" and each worker still gets 40 sessions.
+--stall-limit also doubles: drive counts cycles that left the trunk unmoved, the worker counts consecutive no-commit sessions. This one at least is forwarded, so the number is consistent even though the unit isn't.
+agent_loop.py — 24 flags, four roles
+Role is selected by which flags appear: none → drive mode; --wi → worker; --interactive → one attached session; --dual-plan WI-### → one decomposition round.
+
+The batching cluster is the worker one:
+
+Flag	Meaning
+--wi 'WI-201;WI-204'	the ordered constituent list — this is the batch
+--train	session tag scoping logs and review evidence (defaults to branch name)
+--worktree	becomes the effective root
+--base	the integration base commit the branch was cut from
+--rework	a findings file embedded as the rework scope
+The rest are routing (--model, the five maps, --agent-cmd, --interactive-cmd), loop control (--max-iterations, --stall-limit, --pause, --session-timeout, --wait-on-limit, --limit-retry-fallback), and console (--no-session-echo, --live-status).
+
+~~~~~~~~~~~~~~~~~~~~~~~
+
+Using status.md and docs\concurrency-v2.md, I want to work through a deep redesign of some of the implimentation this ai-template has mutated into. Speciifcally around how work items are getting injested and what functionality lives where.
+
+In general always plan to prevent bad behavior, instead of making checks around bad outcomes.  The flowchart today (Workstream A — concurrency and spine authority) appears to have a signficiant number of checks which I think have grown from individual failure modes, instead of prevention.
+
+Open questions, collected and responded to.
+A. Driver and dispatcher — one module or two?
+	My initial thought is that this needs to be 2, but it needs to be carefully crafted.  It looks like drive is already doing a lot of what a dispatcher would need to do, and reintegrating into main needs to be done per workstream.  I would actually propose to take drive, rename it dispatch, and then extract the parts that are only really about driving.  The driving needs to move the work items into the in-work state in the trunk, then it needs to make that branch, and intiaite the drive for that work to be completed.  The main concern I have is that the drive then needs to wait for the dispatcher again to say it's okay to merge into trunk (since only one merge can happen at a time).  So ultimately, if it's easier to carry it in a single module that's okay, it just needs to have a definable number to define how many workstreams can be active, and whatever is doing the dispatching must follow the stateflow that was just setup.  The agent_loop.py may already be well poised for dispatching, it may just need some adjustment.
+B. What admits the spine batch — dispatcher (waits) or claim rung (refuses)?
+	I'm not sure what this is asking, a dispatcher is the only one who should kick off spine work. If a WI discovers spine work is necessary, it should clean up what it can and clarify it's scope has changed, along with what would likely be a new draft work item.
+C. The ratified-vs-traced cell split, incl. SN-Refs and Verifies.
+	Omit SN-Refs and Verifies as a ratified item to verify against.  Instead, if these change
+D. Session grouping once drain grouping exists — keep, or remove the plumbing?
+	I think this will clear up based on the flow I describe below.  We can discuss.
+E. Default lane count. (The bar is CPU-capped at 50%, so two concurrent bars contend — lanes and bar cost are coupled.)
+	I think in reality they would not contend.  One will usually be develop or review, while test bar costs only occurs right before merging and right after.
+F. Does draft/ earn the schema change?
+	In the TOML?  I think it must, if the TOML registry is the baseline for new WIs, all WIs must exist there in the form they are in, or else the registry could try to take that ID for something else.  Perhaps I misunderstand, but it makes me question how we keep the TOML status in sync with the actual folder state, or is that already a check?
+	
+
+WIs must always land back into trunk.  Branches never get to hang.  They must be closed.  If there is an issue, a adjudicator needs to run and decide how to take that work in and create follow-up work items, or it must throw away the work (which hopefully is rare), or it must find a way to quarantine the work in a way that it is accessible in the trunk so it can be picked up from a future work item.
+
+~~~~~~~~~~~~~~~~~~~~~~~
+
+This session will relate to some of the open items that surfaced from docs\rulings-context-2026-08-01.md, but I think expose some larger misalignments between the current scope of this repository and my expectations. In regard to R3, this really highlights how a work item needs to close out when it's scope has changed.  This might mean it thought a new WI was required (wi-397) or it relates to how a work item exits out (cancel, partial completion, handback).  In either case, I believe this really goes back to scope work.  For that, it needs to be addressed in a single lane, and perhaps that will cause some additional rework.  I don't think it changes much but now I would propose the total design to look like this.  Note this would then be a work item, which contradicts my last statement about no work items, but that is because I was misunderstanding the when (I didn't want a WI in process to create another WI).  Before we proceed, please review this plan, update the process diagram (which - maybe that's missing somewhere to, there should be both a mermaid diagram in the readme files and a html generated flow chart, how do those stay in sync?)  I want you to review my flow, critisize where you think it won't work, and lay out your own flow diagram with the corresponding funciton names and interface definitions along the flow path.
+
+For reference, the gates, which also play into how the dispatcher needs to select work.
+
+- **G0 - Any time a SN is in draft.
+- **G1 — Requirements/UX/Constraints.** Needs + requirements are complete,
+  measurable, and consistent with the vision; every requirement links a need;
+  usability/doc needs, constraints, and non-goals are captured. (At G1 when: SRs point to SNs)
+- **G2 — Decomposition & test coverage.** Every requirement decomposes to design
+  (LLR) and a test (TC), each TC written **failing-first**; zero trace orphans;
+  no placeholder rows; key runtime flows diagrammed. (At G2 when: TCs / LLRs all tie up into SRs, no orphans)
+- **G3 — Implementation.** Code is written **test-first** and passes the full
+  harness: format/lint, full test tier, coverage ≥ threshold, schema, every
+  in-scope requirement `Verified`, no stubs. (At G3 when: All TCs pass.)
+- **G-Release — Release readiness** *(per release)*. The release test tier
+  passes; the generated release checklist is completed and signed; version
+  bumped; changelog + interface versions updated.
+- **G-Final — Acceptance.** A human exercises the real product (including
+  manual/demonstration items) and approves.
+
+Open questions on registry-machinery-breakdown:
+
+What are permutations used for?  Why would it be listed in a system requirement?
+Phase: Must always be NUMERIC ONLY, no prepended value.
+
+Gate change detected ->
+	If gate level prose are ratified, create a work item to create the breakdown to reach the next gate.
+	If not ratified but autonomous, or gate level is NOT G2 and single attest, create a work item to perform ratification.
+	Else derive the open-items that the gate is waiting for ratification or reattestation on the project owner.  PROJECT_STATE.html should automate surfacing of these items.
+
+Continuous loop the dispatcher runs, performed each time a commit lands?:
+
+	1. Detect the current gate, because that determines what work can be consumed.
+	
+		Gate advancement and level automation (which also sets the current phase).  A gate going DOWN always incriments the phase, and phase is always derived from the phase of all items, + 1 (to get to the next phase if the gate is getting reduced).  Therefore, getting the current phase for requirement phase creation must be a method that other LLMs can use.  THIS IS DETECTED BASED ON THE CHANGE IN THE REQUIREMENT DOCUMENTATION ITSELF.  (??? Alternative - Rely on handback document?  What if these don't align?  Realistically, I should rely on mechanization.)  This means the bar should automatically run based on the detected level.  This means gate level must be mechanized:
+		
+		SN does not have an SR, or SR does not have SN -> Gate is at 0
+		TC / LLR do not have an SR or vice-versa -> Gate is at 1
+		TCs (Full) do not pass -> Gate is at 2
+		TCs (Release) do not pass -> Gate is at 3
+		
+		The tests on a repo must only pass for the current gate level OR if a work item calls for a certain gate to be met.  How can that be mechanized from the test standpoint?  This means the test call needs a single input that allows it to auto-detect the gate level?  Should precommits work the same way?  Or should precommits just warn the gate has dropped instead of failing?
+		
+		Why: Gate level determines what work can be done and if / when project owner input is required.
+	2. Detect if spine-adjuncation needs to run (based on prose field items changing), which will seperately change the status for each corresponding document to modified if the ratified fields changed prose between the last trunk commit (what a worker committed) and the previous trunk commit.  Note this mechanism assumes a trunk is committed to only once from a branch, which is how it should operate.  When this happens a function mints a new work item with "spine-adjucation" noting which commit needs adjucation.  (That is - it should point to the last commit on trunk, which itself should differ in prose from the previous commit)
+	3. Detect if any work items had a handback that needs to be addressed (did the last commit include a handback item).  If there is a handback item, create an arbiter work item detailing what was there, so that an LLM can digest that handback item compared to the larger project vision, and determine what sort of workitems are really required.  That is run in series, and done-when new workitems are minted or verifying nothing needs to be done.  The arbiter work item is considered rectified when the branch commits to trunk and removes the handback item into the archives.
+	4. If spine-adjuncation wasn't necessary (no WI created) proceed to create ratification / reattestation WIs depending on repo configuraiton.  Note if reattestation / ratification IS required but it requires the project owner, this is the point the loop exits with a loud banner, no more work can be done, the reattest / ratification should automatically populate in the open-items.html for the user to review.
+	5. Else move into the schedule and pop off the relevent work items unless a pause is active (In which case, another loud banner)
+	6. If no work items in the queue, but gate is less than G-Release, create a work item to understand what needs to be done next to mint new work items for the queue to fully close out the repository.
+	
+	
+OTHER SCRATCH NOTES RELATED TO THIS BREAKDOWN:
+
+IMPORTANT: In order to keep all of this chained mechanically, I propose a work item can exit with a single work item proposal in it's repos folder with a draft name that can be mechanically picked up by the dispatcher and renamed accordingly.  It should be sent in as a queued work item with a definition of "handback", and run as a "no-parallel" item.  It can just be named as the "WI-XXX-handback.md", and that can be the single mechanism a work item uses to communicate back to the dispatcher to open up an arbiter and resolve open items in a mechanical way.
+
+	Priority for the scheduler / dispatcher:
+        -1: Assumption: when requirement documents are adjusted, they may or may not have their field properties updated correctly.  A work item should configure it's status if necessary (change back to modified or draft), but that may not happen, that is what the mechanisms below are for.
+        0. Detection and creation of work items that occurs mechanically:
+            0A. Detect if requirement fields have been modified.
+		1. Work items that change scope first. (spine-g0; no-parallel) <- Detection mechanism is work items that declare they are for the spine, those work items are always taken on priority.
+		2. Then work items that need adjucation (spine-adjucation; no-parallel), which will determine if the prose that changed actually changed scope and what level of risk is possible, or if it is just grammer /semantic clarification.  The outcome here is only changing modified boxes back to attest, or a new work item for deeper investigation, which may need to be a duel-plan work item. <- Detection mechanism is based on detecting the requirement doc registry fields have changed (those fields have already been determined previously) and the mode of the repository is autonomous or single-ratify.  If attended, the entire chain cannot move on because it requires user review of any prose.  How should this get filed as an open item so it is apparent on opening the PROJECT_STATE.html?  Or is this documented and realized in the PROJECT_STATE.html in some other way?  Maybe it doesn't matter because it surfaces as a block on agent-resume anyways, but ideally trajectory generation and html generation would use the same method as agent-resume to detect the block and surface it.
+        3. Now all ambiguous information can be combined to flush out any scope rework.  the intended scope is clear, but the scheduler / dispatcher must make sure there are no loose ends open.  That's where the new mechanical check comes in and scans for all "WI-XXX-handback.md" items, converts them to the next available 
+		4. Then if in autonomous mode, perform ratification (spine-attestation; no-parallel).  Same issue here, if we're in single attest and ready for gate 3, we need to stop and wait for owner ratification.
+		5. Then work from the DAG (schedule.py):
+		A. Then work high-risk items (high-risk; no-parallel)
+		B. Then work critiques (critique, parallel)
+		C. Then work ordinary work items (ordinary;  parallel)
+		
+		
+		Note spine-adjucation to ratify scope change, plan new work items, and verify if current work items in queue need adjustment / cancellation (dual-plan method). (attestation; spine-serial)  Note something mechanical can build this.  A detected scope change is mechanical, the WI can be created with a derived description so it does not require an LLM at all to create the initial structure and force in a WI that must be attended to.
+		Then work per the work queue DAG.  Spine-adjucation does NOT ever run a bar, it's a judgement from the LLM to verify the scope hasn't changed, and if it hasn't it just changes the rows from modified back to attested.
+		
+	The dispatcher does the same action every time it queues work:
+		1. Changes the work item toml to indicate the work items are now in work while simultaneously moving those work items into a different folder to clarify they are running.  Right after this it commits and spins up the worker to create a branch of the current state.  This all happens in a single go.
+		2. The dispatcher then maintains how ever many workstreams / trains can be dispatched at once.  If spine work is waiting, the dispatcher does NOT kick off more workstreams.  It waits for any active workstreams / trains to return to the station so they can be completely closed out.
+		3. When a workstream / train returns to the station, there must be a method for it to indicate it is ready for integration into the trunk.  The dispatcher must allow only a single branch into the trunch at once, so it will have a single queue for integration.
+		4. The branch sees that it is queued for integration, it pulls the current main into it's branch (if it's changed), runs the full bar, and at this point normally everything would work well and it would merge into trunk.
+		5. If it CANNOT merge for some reason (which should never be the case, since when it was queued the dispatcher will not merge in any other work, and the branch should merge main into itself), it must immediately issue a repair block to determine how to close out the branch, related to the comments above.  Again, a branch should never sit hanging.  It looks like Workstream A — concurrency and spine authority shows a signficiant amount of complexity around corner cases that should never occur or should be handled in a more standardized way.  Even human input is needed, it should usually result in a new work request that touches the spine (because if something isn't clear it means scope is ambiguous).
+
+Outcomes I want:
+ - A review from your side on this flow, and to align on this entire repository template workflow from a high level.  What new questions surface when you look at this vs how the flow currently works?
+
+ - From there, I am hoping we can attack multiple loose ends in this repository, removing dead / duplicate code, cleaning up where tests / guards have become numerous and instead should have been handled at validation from the output side (instead of testing and or sanatizing on the input side).
+
+ - This analysis does NOT need to follow the rubric of this repo itself, which I beleive is part of what's hampering the current development effort.  Until the mechanized development flow is solidified, there is no reason to constrain yourself to a ruleset that may actually limit / slow down the solution space.
