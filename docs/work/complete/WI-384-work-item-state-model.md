@@ -62,7 +62,8 @@ premise that a draft in an undeclared folder is invisible to `max(id) + 1`.
 Driven on two temp trees: it is not. The shipped mint
 (`plan_artifacts._existing_wi_nums` -> `wi_convert.spec_paths`) is an unfiltered
 `rglob("WI-*.md")` that never consults `SPEC_STATUS_DIRS` and matches on the
-FILENAME, so `draft/WI-042-held.md` and an undeclared `thinking/WI-042-held.md`
+FILENAME, so a spec at draft/WI-042-held.md and one at an undeclared
+thinking/WI-042-held.md
 both mint `WI-043` — identical. What DOES go blind is everything downstream of
 `read_spec_rows`, which filters: the same drive returns `['WI-042']` for the
 declared folder and `[]` for the undeclared one, so the validator's duplicate-id
@@ -125,3 +126,26 @@ all-or-nothing. The split is a legitimate remainder rather than a dropped half:
 unlike the registry, `docs/archive/specs/` carries no state attribute, so
 mirroring it deletes no machinery and makes nothing unrepresentable — §B2 frames
 it as answering the question *without opening the file*, which is navigation.
+
+**A gap in the row's own scope-of-consequences, found by the composed-tree bar
+(REVIEW-A round 3) and recorded as a miss.** `check_doc_refs.py --strict` is not
+in the per-commit bar, so three green rounds did not see that this rename left
+dangling path references in prose — 15 on the branch, 8 on the composed tree.
+A state-model change retires a PATH, and paths live in prose; the row's
+checklist covered the scaffold surface, the readers and the migration, and never
+asked which prose now names what it retired. Fixed in three classes, judged
+apart rather than blanket-suppressed: `docs/work/archive/` DECLARED in
+`docs/declared-absences` on the `work-items.csv` precedent (a registry home
+retired by a migration) and deliberately unmarked by `LIFECYCLE:`, so the
+materialize-guard stays armed against the very state the loaders refuse;
+WI-391's two prospective destinations declared, where that guard is the feature
+(when the row lands, the entries must go); and the driven-probe fixture paths
+DE-BACKTICKED rather than declared, because they are experiment parameters in a
+temp scaffold and no "absent by design" or "history" reason would have been
+true of them. Deliberately NOT done: adding the terminal directories to
+`check_doc_refs.RECORD_PREFIXES`. I built that, measured it inert (identical
+`no dangling · 860 untraced` without it), and reverted — a record prefix widens
+a blind spot, and strictness here is what forced `docs/work/archive/` to earn a
+declaration with a reason and a guard instead of being silently swallowed. The
+full reasoning, the asymmetry that would make it safe if a real case ever
+arrives, and a filed seam about `docs/log.d/` are in the log fragment.

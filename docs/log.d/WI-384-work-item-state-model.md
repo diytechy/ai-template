@@ -47,8 +47,8 @@ undeclared folder is *"invisible to `max(id) + 1`"* so the next mint would
 reissue its id. Driven on two temp trees, and it is not so: the shipped mint is
 `plan_artifacts._existing_wi_nums` -> `wi_convert.spec_paths`, an **unfiltered**
 `rglob("WI-*.md")` that never consults `SPEC_STATUS_DIRS` and only regex-matches
-the FILENAME. `docs/work/draft/WI-042-held.md` and the same spec at an
-undeclared `docs/work/thinking/WI-042-held.md` both yield `[42]` and both mint
+the FILENAME. A spec at docs/work/draft/WI-042-held.md and the same spec at an
+undeclared docs/work/thinking/WI-042-held.md both yield `[42]` and both mint
 `WI-043`. Identical. The mint is safe either way.
 
 What IS true — and what the branch's own guard actually asserts — is the other
@@ -152,8 +152,8 @@ corrected `draft/` clause was right in the F5 comments, which scope it to an
 undeclared directory *under* `docs/work/`, and over-general in the one
 adopter-facing copy, which said "an improvised folder". Driven on a fresh
 scaffold with one spec in three places:
-`docs/work/draft/` and `docs/work/thinking/` both give `_existing_wi_nums=[0,42]`
--> next mint `WI-043`, while `docs/drafts/` gives `[0]` -> next mint `WI-001`,
+docs/work/draft/ and docs/work/thinking/ both give `_existing_wi_nums=[0,42]`
+-> next mint `WI-043`, while docs/drafts/ gives `[0]` -> next mint `WI-001`,
 which really would reissue the held id. And the validator inverts: the
 undeclared directory under `docs/work/` exits 1 naming it, while the folder
 outside reads `clean (no work items …)` and exits 0. ADOPTING.md now states
@@ -245,6 +245,80 @@ same base and the conflict surfaced at the queue, where it is most expensive.
 Under WI-386's station protocol the lane refreshes onto trunk and bars there, so
 this would have been resolved once, on the builder's side, before the queue ever
 saw it. This branch is the last one that pays it.
+
+**A gap in this row's own scope-of-consequences, found by the composed-tree bar
+(REVIEW-A round 3).** `check_doc_refs.py --strict` — wired in `docs/stack.ini`,
+and NOT part of the per-commit bar, which is why three green rounds did not see
+it — exited 1 with dangling references, every one of them a consequence of this
+row's rename. That is a real miss and it is recorded as one, not as a tidy-up:
+the row's own checklist tracked the scaffold surface, the readers and the
+migration, and did not ask *which prose now names a path this row retires*. A
+state-model change retires a PATH, and paths live in prose.
+
+15 on the branch, 8 on the composed tree — the difference is this fragment,
+which the trunk step compiles into [`log.md`](../log.md) and deletes. Three
+classes, judged separately rather than blanket-suppressed, because
+[`declared-absences`](../declared-absences) is explicit that it is a
+declaration and not a suppression list:
+
+1. **The retired registry home.** `docs/work/archive/` is declared, with the
+   `docs/requirements/work-items.csv` entry directly above it as the worked
+   precedent — a registry home retired by a migration, where prose naming it
+   before the flip is history. Deliberately NOT marked `LIFECYCLE:`, unlike the
+   claim-dir and pause entries: that path must never come back, so the
+   materialize-guard is wanted. It is the same reconciliation signal the loaders
+   enforce, stated in the second place that can catch it.
+2. **The driven-probe fixtures** (the WI-042-held.md spec under draft/ and
+   under an undeclared thinking/, and the round-2 probe directories) are
+   DE-BACKTICKED rather than declared or reclassified. They are experiment
+   parameters in a temp scaffold — paths that never existed here and never will
+   — so neither "declared absent by design" nor "history naming a path that has
+   since moved" would have been an honest reason. Getting them quiet was easy;
+   getting them quiet for the RIGHT reason is the point.
+3. **WI-391's two destinations** (`docs/archive/specs/complete/` and
+   `.../cancelled/`) are declared, and here the materialize-guard is the whole
+   value: they are paths a queued row will CREATE, so when WI-391 lands the
+   honesty test forces the entries out. Its row sits in `queued/`, which is
+   forward-looking, so no record-surface treatment could have covered it.
+
+**Where I disagree with the review, with the measurement that settles it.** The
+suggestion was to add `docs/work/complete/` and `docs/work/cancelled/` to
+`check_doc_refs.RECORD_PREFIXES`, on the ground that a closed WI's Deliverable
+is backward-only by rule R-A and so is the same genre as `docs/log.md`. The
+principle is right and the asymmetry offered with it is right — `queued/`,
+`draft/`, `deferred/` and `active/` are forward-looking and must stay strict.
+I built it, then measured it: **inert**. Re-running with the two prefixes
+removed gives the identical `no dangling · 860 untraced`, and no token in the
+repo resolves through them. So I reverted it, for two reasons beyond inertness:
+
+- A record prefix *widens a blind spot* — it makes the checker report less.
+  Widening one speculatively is the enforcement-layer growth the 2026-07-28
+  audit named as this repo's dominant failure mode, inverted: not a check added
+  where a constraint belonged, but a check weakened where nothing asked.
+- More importantly, **strictness on a Deliverable is a feature, and this row is
+  the evidence.** Because `docs/work/complete/` stayed strict, `docs/work/archive/`
+  had to be DECLARED — which produced a reason, a precedent link, and a
+  materialize-guard. A record prefix would have swallowed it silently and
+  produced none of those. The classification a reader gets is strictly better
+  for it: `untraced_reason` checks declarations FIRST, so the specific,
+  reasoned answer wins over the generic one.
+
+The apparent inconsistency — the same sentence is silent in `log.md` and strict
+in the spec that closed the WI — resolves on *who can act*, not on genre.
+`log.md` is enormous, append-only compiled history that nobody can maintain
+per-token; a Deliverable is one reviewed cell, written at close by someone who
+is right there and can declare the path with its reason. If a future row does
+hit the case — a terminal Deliverable naming a moved path not worth declaring —
+the reasoning and the asymmetry are worked out here and the change is four
+lines. It should be made then, with the case in hand.
+
+**One finding filed rather than fixed:** `docs/log.d/` is not in
+`RECORD_PREFIXES` while `docs/log.md` is, so a fragment's references are judged
+strictly until the trunk step compiles them, after which the identical text goes
+quiet. Nothing depends on it today (this fragment's own retired-path references
+are covered by the declaration above), and it is not this row's scope — but a
+fragment is `log.md`'s text before compilation, and a classification that
+changes with compile timing is a seam worth someone's attention.
 
 **Bars (final, on the merged tree).** Full suite `1718 passed, 12 skipped,
 1 failed` (6:18 wall, `-n auto`; 1712 before the merge — the +6 are WI-380's
