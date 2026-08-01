@@ -38,8 +38,15 @@ the narrative is the body.
 Three consequences worth stating, because they are the reason for the shape:
 
 - **`blocked` has no directory.** A blocked item is `queued/` plus a `blockref`
-  frontmatter key naming the reason; readiness is the scheduler's to derive, so
-  a second encoding of "not now" would be a second home for one fact.
+  frontmatter key naming the reason, so a second encoding of "not now" would be
+  a second home for one fact. The scheduler derives `blocked` from the key's
+  **presence** — it never consults the state of what the key names, so ruling
+  an open item or closing a blocking WI does not, by itself, return the row to
+  the frontier. What releases a park: a handed-back row is disposed by the
+  dispatcher's handback-intake arm, which mints the disposition row when the
+  handback merge lands (loop machinery, never another work item); any other
+  park is released by editing the row — deleting the `blockref` — in a
+  reviewed commit.
 - **`cancelled` is a move, never a deletion.** A terminal won't-build record
   that stays in the registry forever with its reason in this body. It gets its
   OWN directory rather than sharing one with `done`, because a folder holding
