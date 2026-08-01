@@ -904,7 +904,27 @@ BASELINE = {
     # paragraph to clear the conflict would show up here as a shortfall. Both
     # reason chains survive - WI-378 had none to preserve at this entry, and
     # every WI-387 line above is intact. Re-stamp DOWN with WI-390.
-    "integrate.py": 1733,
+    # +157 (1733 -> 1890), WI-397: the RULING R1 mint refusal, and the two
+    # extractions the other two ratchets asked for on the way. The rung itself
+    # (`_minted_id_refusal`) is ~25 lines of code under ~55 of docstring, and
+    # that ratio IS the justification: it is three git reads, while WHY they are
+    # those reads - the branch's own merge-base delta, so trunk minting stays as
+    # free as it is today; adds only; `--no-renames` because rename detection
+    # hides a mint inside the branch's own close (driven, not asserted, in
+    # tests/test_integrate.py) - is what a successor would otherwise rediscover
+    # from the id collision that caused the ruling. It belongs HERE and nowhere
+    # else: a refusal of the merge slot, `_claim_refusal`'s shape at the other
+    # end of the lane's life. The rest is DEDUPLICATION, not bulk: `_spec_id`
+    # replaces the inline filename split in `_claimed_specs` (one home for
+    # filename->id, since the rung's question is "is this id in that set");
+    # `_name_status` replaces the `--name-status` walk duplicated into
+    # `_abandoned_claim` (check_dupes convicted the copy - deleted rather than
+    # censused); and `_merge_refusal` lifts the slot's whole ladder out of
+    # `integrate_one`, which the new rung had pushed to C901 11 - the extraction
+    # this ratchet prefers over a bigger complexity number, the `_drop_abandoned`
+    # precedent from WI-387. Reviewed bump, log 2026-08-01; re-stamp DOWN with
+    # WI-390's deletions.
+    "integrate.py": 1890,
 }
 
 

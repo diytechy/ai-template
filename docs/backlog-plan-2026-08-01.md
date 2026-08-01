@@ -53,7 +53,7 @@ made before that row starts; everything else is claimable as specced.
 
 | # | Row | What it does | Direction (simplicity lens) | Ruling |
 |---|-----|--------------|------------------------------|--------|
-| 1 | [WI-397](work/queued/WI-397-a-work-branch-never-mints-an-id.md) *(minted 2026-08-01; R1 ruled)* | Refusal rung: a finished branch whose `docs/work/` delta adds a spec id outside its claimed set cannot merge | Constraint at the merge slot; deletes the id-reservation problem from the dispatcher's scope | **R1** |
+| 1 | [WI-397](work/complete/WI-397-a-work-branch-never-mints-an-id.md) *(minted 2026-08-01; R1 ruled; **shipped**)* | Refusal rung: a finished branch whose `docs/work/` delta adds a spec id outside its claimed set cannot merge | Constraint at the merge slot; deletes the id-reservation problem from the dispatcher's scope | **R1** |
 | 2 | WI-396 *(arrives with `wi-391`)* | Citation checker cannot see a line-suffixed reference into the kit's own tree | Prefer stripping the trailing line suffix before the shape test over growing the prefix list — one rule, fixes every prefix at once | — |
 | 3 | WI-395 *(arrives with `wi-391`)* | `blocked` rows promise a self-release that never happens | Fix the false promise in prose; do not build a cross-registry subscription | **R3** |
 | 4 | [WI-394](work/queued/WI-394-a-verified-spine-row-can-cite-evidenc.md) | A Verified spine row can cite evidence that never existed | File-existence half only; the node-id half is ruled prose | **R2** |
