@@ -324,6 +324,219 @@ def test_staged_spine_new_row_and_status_only_flip_are_silent(tmp_path):
     assert "re-attest marker" not in proc.stderr
 
 
+# --- WI-380: the §A5.1 ratified-vs-traced cell split ---------------------------
+#
+# Owner ruling 2026-07-31 (docs/concurrency-v2.md §A5.1): only what is RATIFIED
+# arms the re-attest warn. Traceability is TRACED, and a traced-only edit must
+# stay silent — WI-280 paid four review rounds and a G3->G2 gate drop for 19
+# `Module` pointers that followed moved code and altered no requirement.
+
+_SPINE_LLR_HEADER = (
+    "LLR-ID,SR-Refs,Title,Module,CodeSymbol,Detail,Rationale,TestRefs,"
+    "Status,Component,Phase\n"
+)
+_SPINE_TC_HEADER = (
+    "TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Evidence,"
+    "Status,Phase\n"
+)
+
+
+def _write_child_registries(root, llr_cells, tc_cells):
+    """Write LLR-001 / TC-001 (both `Verified`, both owned by the Verified
+    SR-001 of `_init_spine_repo`) from the two cell dicts, so a test states only
+    the cells it is varying."""
+    llr = dict(
+        {
+            "LLR-ID": "LLR-001",
+            "SR-Refs": "SR-001",
+            "Title": "Core",
+            "Module": "src/d.py",
+            "CodeSymbol": "f",
+            "Detail": "the original detail",
+            "Rationale": "why",
+            "TestRefs": "TC-001",
+            "Status": "Verified",
+            "Component": "CMP-001",
+            "Phase": "1",
+        },
+        **llr_cells,
+    )
+    tc = dict(
+        {
+            "TC-ID": "TC-001",
+            "Verifies": "SR-001",
+            "Level": "Unit",
+            "Method": "the original method",
+            "Tier": "smoke",
+            "Parameters": "n=1",
+            "Expected": "the original expectation",
+            "Automated": "Y",
+            "Evidence": "tests/test_d.py",
+            "Status": "Verified",
+            "Phase": "1",
+        },
+        **tc_cells,
+    )
+    req = root / "docs" / "requirements"
+    (req / "low-level-requirements.csv").write_text(
+        _SPINE_LLR_HEADER
+        + ",".join(llr[k] for k in _SPINE_LLR_HEADER.strip().split(","))
+        + "\n",
+        encoding="utf-8",
+    )
+    test_dir = root / "docs" / "test"
+    test_dir.mkdir(parents=True, exist_ok=True)
+    (test_dir / "test-cases.csv").write_text(
+        _SPINE_TC_HEADER
+        + ",".join(tc[k] for k in _SPINE_TC_HEADER.strip().split(","))
+        + "\n",
+        encoding="utf-8",
+    )
+
+
+def _init_full_spine_repo(root):
+    """`_init_spine_repo` plus an attested LLR-001 + TC-001 in HEAD."""
+    run_git = _init_spine_repo(root)
+    _write_child_registries(root, {}, {})
+    run_git("add", "-A")
+    run_git("commit", "-m", "attested chain")
+    return run_git
+
+
+def test_staged_spine_traced_cells_do_not_arm_the_reattest_warn(tmp_path):
+    # THE WI-380 CASE. Every traced cell of all three registries moves at once —
+    # the SR's SN-Refs/Phase/Area, the LLR's Module/CodeSymbol/TestRefs/
+    # Component/Phase (literally the WI-280 shape), the TC's Verifies/Evidence/
+    # Automated/Phase — with every ratified cell and every Status untouched.
+    # Silence is the whole point: before this split each of these armed the warn
+    # exactly as if requirement prose had changed (mutation-proof: reverting
+    # `spine_cell_class` to "everything but Status is ratified" reds this).
+    run_git = _init_full_spine_repo(tmp_path)
+    (tmp_path / "docs" / "requirements" / "system-requirements.csv").write_text(
+        _SPINE_SR_HEADER
+        + 'SR-001,Adder,SN-009,"the original attested text","why","ac",,C,'
+        "Test,Verified,4,Parallel dispatch\n",
+        encoding="utf-8",
+    )
+    _write_child_registries(
+        tmp_path,
+        {
+            "Module": "src/moved/d.py",
+            "CodeSymbol": "renamed_f",
+            "TestRefs": "TC-002",
+            "Component": "CMP-009",
+            "Phase": "4",
+        },
+        {
+            "Verifies": "LLR-001",
+            "Evidence": "tests/moved/test_d.py",
+            "Automated": "N",
+            "Phase": "4",
+        },
+    )
+    run_git("add", "-A")
+    proc = run_traj(tmp_path, "--staged")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "re-attest marker" not in proc.stderr
+
+
+def test_staged_spine_ratified_child_cells_still_arm_the_reattest_warn(tmp_path):
+    # The complement, so the narrowing cannot be mistaken for a disabling: the
+    # LLR's `Detail`/`Rationale` and the TC's `Method`/`Expected` are ratified,
+    # and amending them with the owning SR left Verified still warns per row.
+    run_git = _init_full_spine_repo(tmp_path)
+    _write_child_registries(
+        tmp_path,
+        {"Detail": "the AMENDED detail", "Rationale": "a different why"},
+        {"Method": "a different method", "Expected": "a different expectation"},
+    )
+    run_git("add", "-A")
+    proc = run_traj(tmp_path, "--staged")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "LLR-001: ratified cell(s) Detail, Rationale amended" in proc.stderr
+    assert "TC-001: ratified cell(s) Expected, Method amended" in proc.stderr
+
+
+def test_staged_spine_unknown_column_falls_to_ratified(tmp_path):
+    # THE FAIL-SAFE. A column in NEITHER §A5.1 list — one added to a registry
+    # after the ruling was written — must arm the warn, not fall through it: a
+    # spurious window is seen and dismissed, a missed window is seen by nobody.
+    # This is the direction an allowlist-only design would have gotten wrong.
+    run_git = _init_spine_repo(tmp_path)
+    (tmp_path / "docs" / "requirements" / "system-requirements.csv").write_text(
+        _SPINE_SR_HEADER.rstrip("\n")
+        + ",Novelty\n"
+        + _sr_row().rstrip("\n")
+        + ",the NEW cell\n",
+        encoding="utf-8",
+    )
+    run_git("add", "-A")
+    proc = run_traj(tmp_path, "--staged")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "SR-001: ratified cell(s) Novelty amended" in proc.stderr
+
+
+def test_spine_cell_split_classifies_every_shipped_column():
+    # The other half of the fail-safe, and the one that keeps it HONEST: the
+    # residual is silent by construction, so a new column could ride in on it
+    # unnoticed forever. This pins that it cannot — every column of this repo's
+    # live registries AND of the blank forms the kit ships must be classified
+    # explicitly, or ruled out as the id/Status key. Adding a column to a
+    # registry therefore fails HERE, at the ruling, rather than quietly.
+    ct = load_script("check_trajectory")
+    headers = []
+    for csv_path, id_col in ct.SPINE_CSVS:
+        headers.append((csv_path, id_col, ROOT / csv_path))
+        template = (
+            ROOT
+            / "project-trajectory"
+            / "registries"
+            / (os.path.basename(csv_path).replace(".csv", ".template.csv"))
+        )
+        headers.append((csv_path, id_col, template))
+    for csv_path, id_col, path in headers:
+        assert path.is_file(), path
+        with path.open(encoding="utf-8-sig", newline="") as handle:
+            columns = next(csv.reader(handle))
+        classified = (
+            set(ct.SPINE_RATIFIED_CELLS[csv_path])
+            | set(ct.SPINE_TRACED_CELLS[csv_path])
+            | {id_col, "Status"}
+        )
+        assert not set(columns) - classified, (
+            "{}: column(s) {} are classified by NEITHER half of the §A5.1 split "
+            "in check_trajectory.py — rule them ratified or traced".format(
+                path, sorted(set(columns) - classified)
+            )
+        )
+    # And the two halves must not overlap: a cell cannot be both.
+    for csv_path, _ in ct.SPINE_CSVS:
+        assert not (
+            set(ct.SPINE_RATIFIED_CELLS[csv_path])
+            & set(ct.SPINE_TRACED_CELLS[csv_path])
+        ), csv_path
+
+
+def test_staged_spine_amendments_expose_the_traced_half_for_adjudication(tmp_path):
+    # The SEAM WI-388 consumes. The warn is silent on a traced-only edit, but
+    # the change must not VANISH — adjudication is what decides whether a
+    # re-pointed SN-Refs moved scope, and it needs the row, the cell and the
+    # before/after. Asserts the structured return directly, in-process.
+    run_git = _init_spine_repo(tmp_path)
+    (tmp_path / "docs" / "requirements" / "system-requirements.csv").write_text(
+        _SPINE_SR_HEADER + _sr_row().replace("SN-001", "SN-009"), encoding="utf-8"
+    )
+    run_git("add", "-A")
+    ct = load_script("check_trajectory")
+    amendments = ct.staged_spine_amendments(tmp_path)
+    assert [(a["registry"], a["id"]) for a in amendments] == [
+        ("docs/requirements/system-requirements.csv", "SR-001")
+    ]
+    assert amendments[0]["ratified"] == {}
+    assert amendments[0]["traced"] == {"SN-Refs": ("SN-001", "SN-009")}
+    assert ct.staged_spine_findings(tmp_path) == []
+
+
 # --- WI-068: the critique-loop ratchet (--staged, warn-first) ------------------
 
 CRITIQUE_SR_ROW = (

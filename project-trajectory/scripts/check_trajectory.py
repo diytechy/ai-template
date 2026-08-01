@@ -2460,20 +2460,101 @@ SPINE_CSVS = (
     ("docs/test/test-cases.csv", "TC-ID"),
 )
 
+# The §A5.1 cell split (OWNER RULING 2026-07-31, docs/concurrency-v2.md; WI-380).
+# Only what is RATIFIED arms the re-attest warn. Traceability is TRACED, not
+# ratified: re-pointing an LLR at the module the code moved to amends no
+# attested prose. WI-280 paid for the conflation — 19 `Module` cells followed
+# moved code -> 11 owning SRs to `Modified` -> the gate dropped G3->G2 -> a
+# ratify brief and four review rounds, for a change that altered no requirement.
+#
+# BOTH halves are declared per registry, and the RESIDUAL RULE FAILS SAFE: a
+# column in neither set is treated as RATIFIED. A column added to a registry
+# after this table was written can therefore only ever be too loud — a spurious
+# window someone sees and dismisses — never silently un-ratified, which would
+# be a MISSED window nobody sees. `tests/test_trajectory_staged.py` pins both
+# halves of that: the unknown-column behaviour, and that every column of the
+# live and shipped-template headers is classified here (so a new column cannot
+# ride in on the residual unnoticed).
+SPINE_TRACED_CELLS = {
+    "docs/requirements/system-requirements.csv": frozenset(
+        {"SN-Refs", "Phase", "Area", "Lifecycle"}
+    ),
+    "docs/requirements/low-level-requirements.csv": frozenset(
+        {"Module", "CodeSymbol", "TestRefs", "Component", "Phase"}
+    ),
+    "docs/test/test-cases.csv": frozenset(
+        {"Verifies", "Evidence", "Automated", "Phase"}
+    ),
+}
+# The ratified half. `SR-Refs` (LLR) and `SupersededBy` (SR) are NOT named by
+# §A5.1: they are listed here because the residual keeps them ratified — i.e.
+# today's behaviour, deliberately NOT narrowed past what the owner ruled. That
+# `SR-Refs` is the same shape of pointer as the ruled-traced `SN-Refs` /
+# `Verifies` is a real question, and it is WI-388's to put, not this row's.
+SPINE_RATIFIED_CELLS = {
+    "docs/requirements/system-requirements.csv": frozenset(
+        {
+            "Title",
+            "Requirement",
+            "Rationale",
+            "AcceptanceCriteria",
+            "Permutations",
+            "Priority",
+            "Verification",
+            "SupersededBy",
+        }
+    ),
+    "docs/requirements/low-level-requirements.csv": frozenset(
+        {"Title", "Detail", "Rationale", "SR-Refs"}
+    ),
+    "docs/test/test-cases.csv": frozenset(
+        {"Method", "Expected", "Parameters", "Level", "Tier"}
+    ),
+}
 
-def staged_spine_findings(root):
-    """The amend-without-flip warn (WI-316; warn-first, `--staged` only).
 
-    A staged diff that changes the CONTENT cells of a spine row whose Status
-    reads `Verified` in both HEAD and the stage has amended attested prose
-    without setting the `Modified` re-attest marker (process.md §7) — the
-    write-time discipline the old RE-ATTESTATION-PENDING commit-message prose
-    never had. One warning per amended row, naming the changed cells. Returns
-    [] when not applicable; any missing git context is a silent no-op, like
-    staged_findings. Rows are parsed with the csv module over the full staged /
-    HEAD file text (spine cells are long; never line-split). A NEW row (id not
-    in HEAD) is not an amendment; a row whose Status moved (to Modified, Draft,
-    Planned, anything) made a deliberate call this warn does not second-guess."""
+def spine_cell_class(csv_path, column):
+    """`"traced"` for a column §A5.1 rules traceability, else `"ratified"`.
+
+    The residual is deliberate and fails SAFE: an unclassified column — one
+    added to a registry after the ruling — reads as ratified and keeps arming
+    the warn. See SPINE_TRACED_CELLS."""
+    return "traced" if column in SPINE_TRACED_CELLS.get(csv_path, ()) else "ratified"
+
+
+def _split_changed_cells(csv_path, id_col, head, row):
+    """One row's changed cells, split into the §A5.1 halves with their
+    before/after: `{"ratified": {cell: (before, after)}, "traced": {...}}`.
+    The id column and `Status` are not content (the id is the join key; Status
+    is the flip the caller is asking about), so neither is compared."""
+    changed = {"ratified": {}, "traced": {}}
+    for key in set(head) | set(row):
+        if key in (id_col, "Status"):
+            continue
+        before, after = (head.get(key) or ""), (row.get(key) or "")
+        if before != after:
+            changed[spine_cell_class(csv_path, key)][key] = (before, after)
+    return changed
+
+
+def staged_spine_amendments(root):
+    """The structured amendment set behind the amend-without-flip warn (WI-316,
+    narrowed by WI-380) — the seam adjudication (WI-388) consumes.
+
+    One record per Verified spine row the stage amends, each cell sorted into
+    the §A5.1 halves with its before/after:
+
+        {"registry": <csv path>, "id": <row id>,
+         "ratified": {cell: (before, after)}, "traced": {cell: (before, after)}}
+
+    A record may carry a traced change with NO ratified change — that is the
+    WI-388 case (a re-pointed `SN-Refs`/`Verifies` routes to adjudication, and
+    never arms a re-attest window directly). Rows are parsed with the csv module
+    over the full staged / HEAD file text (spine cells are long; never
+    line-split). Returns [] when not applicable; any missing git context is a
+    silent no-op, like staged_findings. A NEW row (id not in HEAD) is not an
+    amendment; a row whose Status moved (to Modified, Draft, Planned, anything)
+    made a deliberate call this does not second-guess."""
     staged = _git(root, ["diff", "--cached", "--name-only"])
     if staged is None:
         return []
@@ -2552,20 +2633,32 @@ def staged_spine_findings(root):
                 continue
             if any(_flagged_sr(s) for s in _owners(csv_path, row) if s):
                 continue  # the attestation unit flips in this commit — sanctioned
-            changed = sorted(
-                k
-                for k in set(head) | set(row)
-                if k != "Status" and (head.get(k) or "") != (row.get(k) or "")
-            )
-            if changed:
-                out.append(
-                    "{}: content cell(s) {} amended while Status stays Verified "
-                    "and no owning SR is flagged — a post-attestation amendment "
-                    "owes the Modified re-attest marker (process.md §7); flip "
-                    "the owning SR in this commit, or the sitting never sees "
-                    "the change".format(rid, ", ".join(changed))
-                )
+            changed = _split_changed_cells(csv_path, id_col, head, row)
+            if changed["ratified"] or changed["traced"]:
+                out.append(dict(changed, registry=csv_path, id=rid))
     return out
+
+
+def staged_spine_findings(root):
+    """The amend-without-flip warn (WI-316; warn-first, `--staged` only), scoped
+    by WI-380 to RATIFIED cells only.
+
+    A staged diff that changes the ratified cells of a spine row whose Status
+    reads `Verified` in both HEAD and the stage has amended attested prose
+    without setting the `Modified` re-attest marker (process.md §7) — the
+    write-time discipline the old RE-ATTESTATION-PENDING commit-message prose
+    never had. One warning per amended row, naming the changed cells. A row
+    whose only changes are TRACED (§A5.1) is silent here by ruling; it still
+    appears in `staged_spine_amendments`, which is where WI-388 picks it up."""
+    return [
+        "{}: ratified cell(s) {} amended while Status stays Verified "
+        "and no owning SR is flagged — a post-attestation amendment "
+        "owes the Modified re-attest marker (process.md §7); flip "
+        "the owning SR in this commit, or the sitting never sees "
+        "the change".format(a["id"], ", ".join(sorted(a["ratified"])))
+        for a in staged_spine_amendments(root)
+        if a["ratified"]
+    ]
 
 
 # The critique-loop ratchet (WI-068). A `Verification=Critique` SR and its latest

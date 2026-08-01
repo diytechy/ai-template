@@ -577,7 +577,9 @@ Contracts (interfaces): IF-009, IF-023, IF-077
 | `dead_dependency_findings(wis)` | Surface a live WI that hard-depends on a `retired` predecessor (WI-267). |  |
 | `backlog_staleness_findings(root, wis)` | WI-205 — the backlog-staleness warn (warn-only, the WI-129 checker stance). |  |
 | `staged_findings(root)` | The no-validation-delta warn (S0 ruling #2 corollary; warn-first). |  |
-| `staged_spine_findings(root)` | The amend-without-flip warn (WI-316; warn-first, `--staged` only). |  |
+| `spine_cell_class(csv_path, column)` | `"traced"` for a column §A5.1 rules traceability, else `"ratified"`. |  |
+| `staged_spine_amendments(root)` | The structured amendment set behind the amend-without-flip warn (WI-316, |  |
+| `staged_spine_findings(root)` | The amend-without-flip warn (WI-316; warn-first, `--staged` only), scoped |  |
 | `ratify_brief_findings(root)` | Warn-first brief lint (WI-146b): an open-items row whose decision is a |  |
 | `critique_ratchet_findings(root)` | The lax-TC ratchet for the critique loop (WI-068; warn-first, the same |  |
 | `critique_staleness_findings(root)` | The perceptual re-fire finding (WI-243; git-time staleness like |  |
