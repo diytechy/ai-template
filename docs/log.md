@@ -21310,3 +21310,1422 @@ None`): the kit's own checkout IS a claimed branch inside a claim worktree, and
 it clears when this branch stops being one. The `work/deferred/` orphans red
 this branch carried before the merge is **gone** — it was the behind-trunk
 condition, exactly as predicted, and trunk's own commits cleared it.
+
+## 2026-08-01 — WI-378: the verdict-freshness loop, measured — documentation only
+
+**One line:** the row was scoped to *measure first and possibly deliver nothing
+else*, and that is what it delivered — replaying `integrate._verdict_gate`'s
+predicate over **every** merge it has governed found the gate is mostly firing
+**correctly**, so the fail-closed gate ships unweakened and what lands is the
+ordering that shrinks the avoidable class.
+
+**The population, derived rather than chosen.** The first pass censused the four
+branches the session brief named; REVIEW-A round 1 was right that this is a
+sample, not a population, and the corrected numbers below supersede it. The
+predicate has governed every merge since the freshness comparison landed with
+`integrate.py` (`git log --reverse -S"_verdict_gate" -- .../integrate.py` →
+`e1cf5743`, plus `37dfa9ee`, WI-386's peel, which only loosens it), and
+`docs/review-policy` has read `1` since `274c64be`. So:
+
+```
+git log --format="%H%x09%s" --grep="^integrate: merge"     # 20 merges
+git merge-base --is-ancestor e1cf5743 <merge>              # true for all 20
+```
+
+**The measurement.** `_verdict_gate` refuses when the APPROVE's last commit is
+older than the branch's last commit outside `docs/reviews/` and `docs/log.d/`.
+Replayed over all 20 by walking each branch's own first-parent commits,
+classifying the paths each touches, and attributing every extra round to the
+commit(s) that staled the APPROVE before it (a CHANGES-REQUESTED round does not
+count — more work was coming regardless). **Thirteen staled nothing; these
+seven account for all 13 stalings** (13 + 7 = 20).
+
+The `rounds` column counts **commits touching `docs/reviews/WI-<n>-REVIEW-A.md`** on the branch, which is what the predicate itself reads. It *undercounts* narrative rounds whenever one commit carried more than one round's verdict — WI-277 records three rounds in a file only two commits touched, and WI-280's rounds 1–2 both arrived in `8311c75`, the commit that also carried the ratify.
+
+| Branch | rounds | APPROVEs staled | what staled them |
+|---|---|---|---|
+| WI-386 (`c2a9af1`) | 5 | 3 | `integrate.py` + tests, twice; `tests/test_wi_convert.py` |
+| WI-384 (`979d8e0`) | 5 | 3 | `ADOPTING.md` + a queued spec; `docs/declared-absences`; `check_doc_refs.py` |
+| WI-380 (`8c4d5f7`) | 3 | 1 | `c42e370` mutation-ledger correction (`docs/log.d/` + `docs/work/` only) |
+| WI-374 (`8ffc6f8`) | 3 | 2 | `drive.py`; the LLR + TC registries |
+| WI-277 (`8bde0a6`) | 2 | 1 | nine commits — a trunk merge plus six test-split slices |
+| WI-371 (`4073a6d`) | 2 | 1 | `17d70468` `Deliverable` prose fix (`docs/work/` only) |
+| WI-280 (`0fc58fb`) | 3 | 2 | `99a0596` close ceremony (`docs/work/` only); `ad2541d` hand trunk merge |
+
+**13 staled APPROVEs: nine the gate working** (a real change to shipping code or
+a declared doc — the verdict genuinely no longer described the tree), **one
+trunk moving under an open branch** (WI-280's firing #2, now structurally
+covered: `_verdict_gate` measures code-time at `_work_tip`, which peels the
+attested `refresh:` commit, and under WI-386's station protocol the lane does
+not hand-merge trunk at all), and **three a record edit that followed its own
+verdict** — WI-280's close ceremony, WI-380's mutation-ledger correction and
+WI-371's `Deliverable` prose fix. Those three, **3 of 13 (23.1 %)**, are what an
+exclusion of `docs/work/` would have suppressed; recomputing WI-380's
+`code_time` with `docs/work/` excluded gives `1785563826` against a
+`verdict_time` of `1785564586`, i.e. it would have passed.
+
+**Three corrections to the record**, the first two found by the replay and the
+third by the reviewer:
+
+1. WI-280's firing #1 was **not** caused by the ratifying spine commits. `8311c75`
+   carried `docs/reviews/WI-280-REVIEW-A.md` in the same commit as the flip, so
+   `verdict_time == code_time` and the strict `<` let it pass. The close
+   ceremony `99a0596` — `docs/work/` only — is what refused.
+2. The session's working belief was that the `docs/work/` limb cost four rounds
+   (WI-380 r3, WI-384 r4–r5, WI-386 r5). Measured, *within those four branches*
+   it cost **one**: WI-384's rounds 4 and 5 were staled by
+   `docs/declared-absences` and `check_doc_refs.py`, WI-386's round 5 by
+   `tests/test_wi_convert.py`. Those commits touch `docs/work/` too, but
+   excluding it suppresses none of them.
+3. **This WI's own first census was wrong about its population** — four branches
+   where the predicate had governed 20 — and stated a *universal* over that
+   sample ("the only two an exclusion would have suppressed"), which WI-371's
+   `17d70468` falsifies. It is the same defect one level up from the two figures
+   this row had already refused to inherit, and it is exactly what WI-392 exists
+   to catch: the command that derives the population would have enumerated 20.
+   The correction makes the decision **better** supported, not worse — the added
+   case is a `Deliverable` prose fix, the precise field this row argues a
+   reviewer must re-read after an APPROVE.
+
+4. **And the correction itself carried an underived figure.** The round-1 fix
+   restated the census as "Twelve staled nothing; these seven" — 12 + 7 = 19
+   against a population of 20; it is **thirteen**. Nobody re-derived a number
+   that fell out of a number they had just re-derived. It is worth recording
+   plainly rather than quietly fixing: this is the third occurrence of one
+   defect class in one row — a brief's figures (refused), a brief's population
+   (inherited), and now a restatement of my own corrected population — and the
+   third happened *while writing the paragraph explaining the second*. That is
+   the strongest argument available for what WI-392 is meant to build, and it
+   is why that row's constraint now sits in its Done-when rather than only in
+   its prose.
+
+**The figure after this row's own advice is taken: 2 of 11 (18.2 %).** The two
+ordering rules retire both of WI-280's stalings — the close ceremony by closing
+first, the hand trunk merge by never hand-merging — leaving 11, of which the
+exclusion buys back 2, and both of those rounds caught a false claim in the
+record. REVIEW-A round 2 derived that, having disclosed that finding the
+population error gave it an interest in the opposite conclusion; the ratio moved
+0.9 points on a 44 % change in denominator, so the decision never rested on the
+denominator, and the composition moved *against* the exclusion.
+
+**WI-380 contributed zero to this count, as expected** — none of the 13 came
+from a spurious re-attest window. The ratified/traced split acts upstream, on
+how often a window opens at all, which is exactly why this row was told to
+measure rather than to assume.
+
+**Deliverables.**
+
+- [`project-trajectory/PROCESS_OPTIONS.md`](../project-trajectory/PROCESS_OPTIONS.md),
+  "The LLM-gate verdict protocol" — the freshness rule, the census plus the
+  command that derives its population, the two ordering rules (**close before
+  the final verdict round**; **never hand-merge trunk on a work branch**) stated
+  as *necessary but not sufficient*, and that `docs/work/` is deliberately
+  inside the window.
+- [`project-trajectory/skills/session-protocol/SKILL.md`](../project-trajectory/skills/session-protocol/SKILL.md)
+  §4 (+ both materialized copies) — the same ordering as an operational bullet
+  where a closing session meets it, linking rather than restating.
+- [`project-trajectory/scripts/integrate.py`](../project-trajectory/scripts/integrate.py)
+  `_verdict_gate` docstring — **no behaviour change**; the reason `docs/work/`
+  is excluded from the exclusion, with the numbers, recorded at the predicate a
+  successor would edit, plus why `docs/log.d/` is genuinely different.
+- **WI-392 filed** ([`docs/specs/WI-392.md`](specs/WI-392.md)) — a driven
+  figure carries the command and revision that produced it, and a check verifies
+  that provenance. Three false figures landed in this one session's records
+  (WI-380's `2 failed, 7 passed`, WI-391's `109 links`, WI-384's self-falsifying
+  "two false positives"); two cost a full review round.
+
+**Deliberately not built.** Option (b), widening the exclusion: it buys back
+**3 of 13** rounds (23.1 %) and lets a spec's `safety_class`, `needs` and
+`Deliverable` change after the APPROVE unseen. Two of the three settle it —
+WI-380's round 3 paid for a correction carrying a *newly driven* figure nobody
+else had checked, and WI-371's paid for a `Deliverable` prose fix, so the
+exclusion would have shipped un-reviewed evidence in one case and an un-reviewed
+shipped claim in the other. Option (c) is unnecessary for the same reason. Also
+**not filed**: capping a record-only review round (WI-386's reviewer's proposal,
+bias disclosed by him) — the class is 3 of 13 (23.1 %) and **two of those three
+rounds caught a false claim**, which is the argument against capping them; its
+durable half became WI-392 instead.
+
+**Ordering is necessary, not sufficient — at its real strength.** WI-380, WI-384
+and WI-386 all closed — spec moved, `Deliverable` filled — *before* their round-1
+verdict this session, and no close ceremony staled an APPROVE on any of them;
+that was worth writing down, since the class cost WI-280 a round and lived only
+in its log. But an earlier draft here read that as "zero close-ceremony
+stalings", which is literally true and **masked, not clean**. WI-384's
+`dba18f2a` and WI-386's `1329bd4e` *are* post-APPROVE record edits inside
+staling windows, costing nothing only because a code change shared the window;
+and **WI-371 closed before its verdict and still bought a record-only round**,
+because its round-1 APPROVE carried the MINOR that forced the `Deliverable`
+fix — a finding that did not exist when the close was made. Ordering removes the
+anticipatable half of the class and no more.
+
+**Deviations from spec:** none in scope. The spec's Done-when box "This spec is
+archived to `docs/archive/specs/`" is met
+([`docs/archive/specs/WI-378.2026-08-01.md`](archive/specs/WI-378.2026-08-01.md),
+with the firing-#1 correction noted at its head).
+
+**Byte deltas:** `AGENTS.template.md` 9,991 → 9,991 (unchanged; 9 bytes of
+headroom under 10,000). `PROCESS.md` 64,319 → 64,319 (unchanged).
+`PROCESS_OPTIONS.md` 164,003 → **166,314** (+2,311 — the verdict-freshness
+paragraph, grown at REVIEW-A round 1 by the derived population, its command and
+the necessary-not-sufficient qualifier, and at round 2 by the post-ordering
+2-in-11 figure). The `byte-budget-guard` baseline is
+re-stamped to 166,314 and now records that **+846 of the +3,157 gap to the old
+163,157 stamp was inherited unstamped** — attributed at round 1 to
+"WI-380/384/386", which the reviewer refuted and the file sizes settle: 163,157
+at the wi-380 merge, 164,003 at wi-384, 164,003 at wi-386, so WI-380 and WI-386
+moved this file by **0 bytes and the whole +846 is WI-384's**. That is the
+silent growth the skill exists to catch.
+
+**Tests.** The full suite was driven **four times** across the row — twice before
+REVIEW-A round 1, once after its corrections, once after round 2's — reading
+`1 failed, 1744 passed, 12 skipped` every time (331.63 s / 344.97 s / 409.43 s /
+446.85 s; wall varies with sibling worktrees, the counts do not). The reviewer
+independently reproduced the same counts. `pytest -q -n auto -m smoke` →
+`1 failed, 560 passed, 4 skipped`, run six times with stable counts (wall
+12.5–33.0 s). The one red is
+`test_check_lane.py::test_this_repo_is_not_a_work_branch`, which asserts the
+checkout it runs in holds no `docs/work/active/<branch>/` claim — false by
+construction in a lane worktree, so it reds on every claimed branch and is not
+this row's. It is **not** a permanent standing red: it is fixed on trunk ahead
+of this branch (`5f292892`) and clears when the lane refreshes.
+`ruff check .` → `All checks passed!`; `ruff format --check .` →
+`146 files already formatted`; `check_trajectory.py --root . --strict` → `clean
+(390 work item(s), 366 done (94%), 16 cancelled, graph acyclic)`;
+`check_doc_refs.py --root . --strict` → `OK - no dangling path or sym:
+references`; `check_docs.py --root . --stale` → `OK - 341 doc(s), 974 intra-repo
+link(s), 0 broken` (341 rather than the 340 recorded at round 1: the verdict
+file itself is now on the branch).
+
+## 2026-08-01 — WI-383: two axes, not one class ladder (and session grouping is removed)
+
+**Summary.** `schedule.py` ran five scheduling classes on ONE ladder —
+`spine-serial | protected-serial | single-wi | ordinary | unclassified` — and
+used that one ladder for two different jobs: `_GATE_RANK` made the class decide
+**who goes first**, `classify()` made the same class decide **what may share the
+station**. Split into two independent axes per
+[`concurrency-v2.md`](concurrency-v2.md) §A1, and deleted the packing
+plumbing §A6.1 rules out of existence. Net: three constants, one exit code, one
+guard and one import gone; nothing added but two lookup tables that replace one.
+
+**Deliverables.**
+
+- **Two tables, one key set.** `_KIND_CONCURRENCY` (`exclusive` = runs alone |
+  `parallel`) and `_KIND_RANK` (integer, low first) are keyed by the same
+  declared kind and read independently; `classify()` returns
+  `(concurrency, rank, reasons)`. §A1's ruled numbers verbatim: `spine` 0,
+  `attestation`/`gate` 2, `protected` 3, `high-risk`/`PlanMode=dual` 4 exclusive;
+  **`critique` 5 and PARALLEL**, `ordinary` 6.
+- **Rank 1 is a written gap**, not an omission — it belongs to the
+  `adjudication` kind WI-388 adds. Writing the ladder whole means that row adds
+  one mapping instead of renumbering a ruled table, and a test asserts 1 stays
+  unoccupied so nobody quietly reuses it.
+- **Deleted.** `SCHED_SPINE_SERIAL`, `SCHED_PROTECTED`, `SCHED_SINGLE_WI`
+  (collapsed into the one `exclusive` value they always meant — that is the
+  whole diagnosis: `protected-serial` and `single-wi` were never different
+  things), `_GATE_RANK`, and `is_schedulable_class` → `is_schedulable`.
+- **`order_key` takes the RANK, not the classification**, so the concurrency
+  axis is not in the ordering decision. Round 1 of REVIEW-A showed that is a
+  **convention, not a guarantee** — see the retraction below.
+- **A quarantine refuses BOTH axes** — `(CONCURRENCY_UNCLASSIFIED,
+  RANK_UNCLASSIFIED)` from one `_unclassified()` helper, so no path can fail
+  closed on one axis and open on the other.
+- **Session grouping removed, not wired** (§A6.1): the §7 continuation re-check,
+  the `exit 10 ASSIGNMENT-END` arm, `EXIT_TRAIN_END` itself, the worker's
+  `sched` scheduler view, and `agent_loop`'s `schedule` import. The guard's only
+  non-refusing case was the homogeneous spine batch, so with packing gone it
+  could only ever say yes — and a check that can only say yes is not a
+  safeguard. `agent_loop --wi 'WI-201;WI-204'` **survives** with its one
+  remaining caller, the dispatcher admitting the spine batch (WI-381).
+- **Both ratchets re-stamped DOWNWARD** in the commit that earned it:
+  `agent_loop.py` 3026 → 2973 lines, `run_iteration` complexity 23 → 20.
+
+**How the two axes are pinned independently.** A test that reads only one axis
+would pass under a re-conflation, so the fixtures attack both directions — and
+after round 1, each pin is mutation-proved rather than merely written:
+
+- **Rank does not determine concurrency** — ranks 4 (`high-risk`) and 5
+  (`critique`) are ADJACENT and land on opposite concurrency values. Being
+  ranked early does not make a WI exclusive.
+- **Concurrency does not determine rank** — the five exclusive kinds hold four
+  distinct ranks. Now read off the SHIPPED `_KIND_CONCURRENCY`/`_KIND_RANK`
+  rather than off this test file's own copy of §A1; the old form asserted the
+  copy was self-consistent and passed unchanged under a `_KIND_RANK` mutation
+  that made the property maximally false (**defect 2**).
+- **A rank change does not move concurrency** — a `Priority` bump swaps the
+  frontier order of two ordinary WIs while every concurrency answer stays
+  `parallel`.
+- **The ordering axis is pinned at its CALL SITE** —
+  `test_the_frontier_orders_one_concurrency_group_by_rank` builds a frontier
+  whose leading run is four kinds that share one concurrency value and hold
+  ranks 0/2/3/4. Anything that orders on the concurrency string ties all four,
+  collapses them to id order, and drops the spine WI from first to fourth.
+  Nothing hands `order_key` a literal.
+- The declared-kind table itself is restated as data the tests read, so §A1's
+  ruling and the code disagree loudly rather than silently.
+
+`tests/test_schedule.py` constructs every registry it reads (40 tests, all
+in-process).
+
+**RETRACTION (REVIEW-A round 1, MAJOR).** Round 1 of this fragment, the
+Deliverable and `order_key`'s docstring all said the same thing in the same
+words: *"`order_key` is handed a rank, not a classification, so no concurrency
+value can reach the sort at all — the independence is structural on that side
+rather than merely tested."* **That was false.** The parameter is an untyped
+positional, nothing in the function inspects it, and the single call site in
+`evaluate` is the only thing making the sentence true. The reviewer drove the
+one-token mutation `order_key(w, rank, …)` → `order_key(w, concurrency, …)`
+and the full unfiltered suite returned **byte-identical counts** —
+`1 failed, 1755 passed, 8 skipped` — while the frontier genuinely reordered
+(`['WI-004','WI-001','WI-002','WI-003','WI-009']` shipped versus
+`['WI-001','WI-002','WI-003','WI-004','WI-009']` mutant: every exclusive kind
+ties on the string `"exclusive"`, so rank ordering inside the group is
+destroyed and the spine WI falls to fourth). It survived because the named test
+passed literal ints — it could not see what `evaluate` hands the function — and
+because the only cross-boundary ordering test was preserved by the alphabetical
+accident `"exclusive" < "parallel"`.
+
+The claim is **retracted in all three places** and replaced by what is now
+actually true: a convention held by one call site, with a test that convicts
+the edit. Re-driven here — the reviewer's exact mutation applied to a clean
+tree now gives `1 failed, 39 passed`, and the single red is the new pin
+(`At index 0 diff: 'WI-001' != 'WI-004'`); tree restored and re-verified clean
+with `git diff --exit-code`. The `_KIND_RANK` mutation behind the second
+finding likewise takes its pin from `1 passed in 0.19s` to a red.
+
+**Defect 1 of the six enumerated in "The one lesson, stated once" below**: a
+guarantee asserted in prose, resting on a convention no mechanism holds, and a
+test named after the property that cannot observe the place it breaks. The
+lesson is not "write more tests" — it is that a test which constructs its
+inputs by hand cannot pin a property of a CALL SITE.
+
+**Considered and declined:** the reviewer's other offered remedy, an
+`isinstance(rank, int)` guard in `order_key`. A defensive type check in a pure
+library function is the check-instead-of-constraint shape §0 warns against, and
+it would not catch a caller passing the wrong *integer* — it converts one
+un-pinned property into a narrower un-pinned property. **The sharpest form of
+the argument is round 2's**, and it is the one to keep: the guard converts *"the
+caller passes the rank"* into *"the caller passes an int"*, so
+`order_key(w, downstream, …)` or `order_key(w, w["priority"], …)` sails
+straight through while destroying the order. It is not merely the wrong shape —
+it is a **bad check**, and it would not even have caught the mutation actually
+driven against this WI. Reviewer and coordinator both endorsed the decline;
+recorded here so a successor does not re-propose it as an oversight.
+
+**Deviation from the spec: the `checkpoint` classifier input was deleted too.**
+Not named in the ruled table, and it did not survive the reasoning that keeps
+`critique`. Checked before removing: `load_wis` never emitted a `checkpoint`
+key, so the arm was reachable only from hand-built dicts in tests — it had no
+producer anywhere in the kit. Its entire meaning was *do not pack me*, which is
+exactly what `single-wi` meant for a critique; §A6.1 deletes what that was drawn
+against. `critique` is kept because §A1's table names it (parallel, rank 5),
+and it is honestly documented as a flag the current registry never sets.
+
+**Two things deliberately NOT done here.**
+
+1. **No `adjudication` kind.** The ruled rank table names it, but the kind
+   itself — minting, the no-bar rule, the backlog re-scope — is WI-388's scope
+   per the §"Revised breakdown". Adding an unowned vocabulary value would be
+   this row building another row's surface; the reserved rank is the whole of
+   what this row owes it.
+2. **No spine amendment — and here is the whole of what WI-390 inherits.** All
+   of these are RATIFIED cells, so amending them is not this row's to do; but
+   WI-390 only gets the scope this list writes down, so it is stated in full.
+   Round 1 caught the first draft omitting the two `checkpoint` rows — including
+   one in a row this branch edited.
+   - `SR-093` and `SR-124` describe the five-class ladder this row collapses,
+     and `SR-124` names `single-WI` specifically — a class that no longer
+     exists.
+   - **`SR-094`'s AcceptanceCriteria** — *"Spine, critique, **checkpoint**, and
+     dual-plan structure override dishonest declarations"* — names an input this
+     row DELETED. Not incidental: SR-094 is the parent SR of the rewritten
+     function, cited in `schedule.py`'s own section header and module docstring.
+   - **`TC-091`'s Description/Method** — *"Classify missing, unknown,
+     structurally contradictory, critique, **checkpoint**, and dual-plan WIs"* —
+     the same false clause, in the very row commit `b8c7cc21` edited to repoint
+     its `Evidence`. The repoint itself is fine (`Evidence` is TRACED under
+     §A5.1/WI-380, so it arms no re-attest window and is not an amendment); the
+     Description beside it was left false and is recorded here rather than
+     quietly fixed.
+   - `LLR-059`, `LLR-089`, `LLR-095`, `LLR-131` (`classify` /
+     `structural_safety`) and `LLR-058`/`LLR-123` (*"traincar ordering"*,
+     *"gate class"*) name the collapsed vocabulary too.
+
+   That is §A9.1's program close (**WI-390**), hard-blocked on this row for
+   exactly this reason.
+
+**Finding (inherited drift, recorded not absorbed — §A9.1 item 2).** `TC-091`'s
+Evidence also names `tests/test_agent_loop_dispatch.py::test_unclassified_wi_fails_closed_without_stopping_others`,
+a module deleted with the dispatcher at concurrency-restructure Phase 5. Nothing
+validates that test node ids resolve, so an Evidence cell can name a file that
+has not existed for days and every gate stays green. Worth its own WI — either
+a resolver for `Evidence` node ids, or an honest ruling that the cell is prose.
+**Confirmed by the reviewer far harder than I stated it:** they replaced the
+entry with an entirely invented `tests/this_file_has_never_existed.py::test_entirely_invented`
+— a path with no file and no history — and drove
+`trace.py --strict --no-placeholders --require-verified --strict-schema`
+(rc=0, TC-091 still `Verified`), `check_trajectory --strict` (rc=0),
+`check_doc_refs --strict` (rc=0) and the trace/registry test modules (70
+passed). Nothing anywhere convicts it. The file half is checkable with
+`Path.exists()` today; only the `::node` suffix needs pytest to adjudicate.
+
+**Filed as `WI-394`** (`docs/work/queued/`, spec-of-record
+[`docs/specs/WI-394.md`](specs/WI-394.md)) — with the option NOT picked for
+the owner, because the one thing definitely wrong today is that the current
+state implies a check nobody performs. Before filing I measured whether the
+class is wider than `Evidence`, rather than guessing:
+
+| Cell mutated to something invented | `trace.py --strict …` | `check_trajectory --strict` |
+|---|---|---|
+| LLR `Module` + `CodeSymbol` (LLR-059) | rc=0 | rc=0 |
+| LLR `TestRefs` → `(see TC-999)` | rc=0 | rc=0 |
+| TC `Evidence` (the reviewer's run) | rc=0 | rc=0 |
+| **CONTROL:** TC `Verifies` → `SR-999;LLR-999` | **rc=1** — `FINDING (orphan): TC TC-091 references unknown SR-999` | — |
+
+113 tests across `test_trace.py`, `test_registry_checks.py`,
+`test_check_flows.py`, `test_check_stubs.py`, `test_modules_registry.py` and
+`test_components_registry.py` also pass under the `Module`/`CodeSymbol`
+mutation. Every tree restored and re-verified with `git diff --exit-code`.
+
+So the boundary is crisp and it is **not** "traced cells are unchecked": a
+pointer into ANOTHER REGISTRY is joined and validated (`Verifies`, `SR-Refs`,
+`Component`); a pointer OUT of the registries into the code or test tree —
+`Evidence`, `Module`, `CodeSymbol`, `TestRefs` — is not checked at all. Those
+four are exactly the cells carrying the spine's claim to be grounded in the
+code.
+
+One datum found by writing the spec itself: `check_doc_refs --strict` flagged
+the invented `.py` path quoted in its evidence table, but passed the
+`…::test_entirely_invented` citation silently.
+
+**Round 2 corrected my reason for that (defect 3), and the correction changes
+the pricing** — so it is recorded rather than quietly swapped. I wrote that the
+PATH tier "needs the token to END in a known extension, and a `::node` suffix
+defeats that", and called it "one tokenising reason". The *behaviour* is real
+and reproduces; the *mechanism* was wrong, twice over. `is_path_shaped`
+short-circuits on `::` **before** any extension or prefix rule is reached, and
+its comment says why in as many words — *"the kit's sanctioned Evidence form …
+false-positive control is the point"*. And the rule I cited could not have
+produced the pass anyway: it is a **disjunction**, and `tests/` is already in
+`PATH_PREFIXES`. Re-driven myself:
+
+```
+is_path_shaped('tests/nope.py')                                -> True
+is_path_shaped('tests/no_extension_at_all')                    -> True    # the control
+is_path_shaped('tests/this_file_has_never_existed.py::test_…') -> False
+```
+
+So the exclusion is a **deliberate, commented decision**, not an accident —
+and round 3 found it is also **guarded by a named regression test**,
+`tests/test_check_doc_refs.py::test_node_ids_and_joined_lists_are_not_path_flagged`.
+That cuts both ways in `WI-394`: option (a) is HARDER than I priced it (a full
+resolver must overturn a deliberate, *tested* decision, not fill an
+unconsidered gap), while the file-half-only shape — now written up as option
+(c) — is CHEAPER. Both surfaces are corrected.
+
+**Round 3 then corrected my correction — defect 4, and the same class again:
+a mechanism asserted without driving it.** I wrote that
+splitting on `::` at that guard "is the whole change inside the tool". It is
+not, and applied literally it regresses. `is_path_shaped` is a **predicate** —
+it returns a bool and cannot hand a rewritten token back — while
+`path_findings` re-derives `clean` from the ORIGINAL token and stats it, so
+relaxing the guard alone makes the tool `stat` the whole `path::node` string.
+The reviewer applied my wording verbatim and got **10 dangling, four of them
+false** on files that exist. **Two sites**, and with both changed the run is
+**6 dangling, all true, zero false positives**, core change **+4/−2**.
+
+I also over-drew the (a)-vs-(c) asymmetry by saying (c) "concedes the exact
+case the guard was protecting". It does not concede it — it **re-scopes** the
+guard and reds the same guard test (a) would. Both options must amend a named,
+guarded decision; **only the size differs.** The ranking is unchanged and (c)
+still wins on cost, but it now wins for the true reason.
+
+The second half of the original datum stands untouched throughout: the tool
+scans root `*.md` + `docs/**/*.md` and never reads the CSVs at all.
+
+The row is `ordinary`, not spine, and the spec says why: `Evidence`, `Module`,
+`CodeSymbol` and `TestRefs` are all TRACED under §A5.1, so it arms no re-attest
+window. Ids 392/393 were skipped — both are minted on sibling branches in this
+wave and invisible from here, which is the id-reservation hazard §B3 describes.
+
+**Naming fix (REVIEW-A round 1, MINOR).** `CONCURRENCY_EXCLUSIVE = "exclusive"`
+landed beside the pre-existing `Exclusive` mutex-key column — two unrelated
+ideas, both spelled *exclusive*, both about not-running-together — inside the
+one module whose stated diagnosis is that an overloaded word caused the defect.
+It reached the wire: `evaluate` emitted
+`{"concurrency": "parallel", …, "exclusive": ["registry-lock"]}`, which reads as
+a self-contradiction to anyone who has not read the source. The emitted record
+key is now **`exclusive_keys`** (no live consumer outside `schedule.py`, so a
+one-line change), the distinction is stated at the axis header, at
+`_exclusive_conflicts` and in the module docstring, and the wire shape is
+asserted. `simulate`'s docstring — the one sentence that used both senses — now
+says plainly that it DOES apply the mutex keys through `frontier` and does NOT
+apply the concurrency axis. The internal `w["exclusive"]` is left alone: it
+mirrors the `Exclusive` column name across the three F5-duplicated readers, and
+renaming it there would be drift, not clarity.
+
+**Bars — every figure below re-measured after the round-6 edits, on a tree
+whose only remaining difference from this commit is this block's own text.**
+(The round-2 lesson: a figure not reproducible at its own commit is not a
+measurement — the block once read `389 work item(s)` while the same commit's
+WI-394 filing had made it `390`. Round 4 caught the header repeating the
+promise one commit early: it was measured at `94e4a4d8` with three doc changes
+landing after — so rounds 4, 5 and 6 each re-ran everything on their own tree,
+**including the full suite for a fragment-only edit**, because defect 5 forbids
+reasoning about whether a docs change can move it. Stating the *delta* rather
+than a sha is the honest form, since the last edit a bars block can ever
+contain is its own numbers.)
+
+```
+$ python -m pytest -q -n auto
+1 failed, 1756 passed, 8 skipped in 339.79s (0:05:39)
+      # the one standing red is tests/test_check_lane.py::test_this_repo_is_not_a_work_branch
+      # (this checkout IS a claimed work branch — the guard is asserting about the trunk)
+$ python -m pytest -q -n auto -m smoke
+1 failed, 572 passed in 14.00s                 # same standing red
+$ python -m ruff check .            -> All checks passed!
+$ python -m ruff format --check .   -> 146 files already formatted
+$ python project-trajectory/scripts/check_docs.py --root . --ignore docs/test/report.md --ignore "docs/work/*" --stale
+check_docs: OK - 341 doc(s), 970 intra-repo link(s), 0 broken.                              [exit 0]
+$ python project-trajectory/scripts/check_trajectory.py --root . --strict
+check_trajectory: clean (390 work item(s), 366 done (94%), 16 cancelled, graph acyclic).    [exit 0]
+$ python project-trajectory/scripts/check_doc_refs.py --root . --strict
+check_doc_refs: OK - no dangling path or sym: references · 871 untraced   [exit 0]
+```
+
+Suite counts across the rounds, on this branch: `1755` at close → `1756` after
+the round-1 fixes (the new call-site pin) → `1756` since, rounds 2–4 having
+added tests to nothing. Wall time is not a signal here — it ranged 329–588 s
+across seven runs of the same suite as the box got busier. `390` is the WI count
+including the `WI-394` this branch files. `check_doc_refs` held at
+`871 untraced / 0 dangling` **because round 4's two new backticked path tokens
+carry a `path-ok` marker**, not because nothing moved — remove the marker and
+it reports exactly those two.
+
+**CORRECTION (defect 5) — the "no `.py` changed, so the recorded result
+stands" inference was unsound, and the inference is the defect, not the
+number.** In round 3 I
+skipped the full suite on the grounds that
+`git diff --stat b19dcc8a..HEAD -- '*.py'` was empty. The counts happened to
+hold (round 4 re-ran it: `1 failed, 1756 passed, 8 skipped in 329.41s`), but
+the reasoning does not, and a successor applying it to a different row would be
+wrong.
+
+**This suite reads `docs/` as INPUT, not only `*.py`.** Measured: **twelve**
+test modules resolve a path under the live `ROOT / "docs"`, and **four** read
+the live work registry directly —
+
+```
+tests/test_dupes_census_audit.py:50   WI_WORK = ROOT / "docs/work"
+tests/test_trajectory_specs.py:188    sorted((ROOT / "docs" / "work").rglob("WI-*.md"))
+tests/test_wi_convert.py:46           WORK = ROOT / "docs" / "work"
+tests/test_dogfood_sync.py:335        ct.read_registry_rows(ROOT / "docs/requirements/work-items.csv")
+```
+
+The fourth is the subtle one and it nearly escaped this list twice. That CSV
+**does not exist** — the home retired at Phase 5 — but `read_registry_rows`
+DERIVES `docs/work/` from the path it is handed, so the call reads the live
+folder anyway. Driven: `Path(...).exists()` is `False` while the call returns
+**391** rows with `WI-394` among them. Those live rows are then rendered into
+both scratch roots the width-neutrality test compares, so the module is a live
+consumer even though the helper one frame below it
+(`_consumer_signature`, see the note at the end of this section) is not.
+
+Rounds 2–4 added exactly that kind of input. Driven the same way: the glob at
+`test_trajectory_specs.py:188` currently returns **391** spec files and
+`WI-394` is among them — this branch's own filing is a live test input. The
+independent proof is already in this record: `check_trajectory` moved
+`389 → 390` for precisely that row.
+
+**The rule, stated so it transfers:** a docs-only diff is not evidence that a
+recorded suite result stands — it is evidence about `*.py` only, and this
+harness's inputs are wider than that. Re-run, or name the specific consumers
+the diff cannot have touched. **If you take that second branch, take it from
+the list above and not from a function name** — which is exactly where round
+4's citation, and then my correction of it, each went half wrong.
+
+*The `test_dogfood_sync.py` note, because both halves matter.* Round 4 cited
+`_consumer_signature` as a live-registry reader; it is not — that helper has
+one call site (`:348`) and is handed `tmp_path` scratch roots, as its own
+docstring says. But my correction then wrote the whole MODULE out of the
+evidence while the same paragraph still counted it among the twelve, which is
+a contradiction I left standing and round 5 caught. The live read is one frame
+up at `:335`. **Right about the helper, wrong about the module** — and the gap
+had teeth, because a successor checking a docs edit against my three would have
+cleared `test_dogfood_sync.py` as untouched when its live read feeds both
+compared roots. Naming a helper is not naming a consumer.
+
+## The one lesson, stated once
+
+Six review rounds found six defects in this row's RECORD, and **no production
+code has moved since `b19dcc8a`** (`git diff b19dcc8a..HEAD -- '*.py'` is
+empty; `project-trajectory/**/*.py` likewise). They read as six different
+mistakes and they are not:
+
+| # | Where | The defect |
+|---|---|---|
+| 1 | round 1, MAJOR | a structural guarantee that was only a convention |
+| 2 | round 1, MINOR | a tautological pin, asserted over the test file's own copy |
+| 3 | round 2 | a mis-explained `check_doc_refs` guard |
+| 4 | round 3 | a one-site fix that needed two |
+| 5 | round 4 | a docs-only diff treated as proof a suite result stands |
+| 6 | round 6 | **this section's own opening sentence** — see below |
+
+**Every one was a TRUE OBSERVATION given a CAUSE THAT HAD NOT BEEN EXECUTED,
+and every one was closed by running the thing.**
+
+Each time the behaviour I reported was real and reproduced. Each time the
+mechanism I gave for it came from reading the code and reasoning, not from
+driving it — and each time the reasoning was wrong in a way that changed what a
+reader would do next: retract a guarantee, red a different test, budget two
+sites instead of one, re-run instead of infer. The plausible cause is the
+dangerous artifact, precisely because the observation around it is sound and
+lends it credibility.
+
+The remedy is not more caution in prose. It is that **a claim about a mechanism
+is a claim you can execute**, and in every one of these six cases executing it
+took under a minute: apply the mutation, call the predicate, grep the call
+sites, run the suite, `git diff` the range you are about to characterise. The
+cost of driving it was always far below the cost of one review round spent
+correcting it.
+
+### Defect 6 — this section did it too, in the paragraph generalising the class
+
+The opening sentence originally read *"none in its code since `b8c7cc21`"*.
+That is false, and round 6 drove it: `git diff --stat b8c7cc21..HEAD -- '*.py'`
+returns `schedule.py` and `test_schedule.py`, moved at `b19dcc8a` — a commit
+this same fragment cites correctly a few sections up. Round 1's naming finding
+*was* a code defect: `evaluate` emitted `exclusive` and now emits
+`exclusive_keys`, a consumer-visible output change. The true claim is narrower
+in range and **stronger** in content: no *production* code has moved since
+`b19dcc8a`.
+
+It is the class exactly — a true observation (the classifier's logic really has
+not been touched since it landed) given an unexecuted cause (a commit range I
+characterised from memory instead of running `git diff` over). Recorded as
+defect 6 rather than silently corrected, because **it is the strongest evidence
+this section can carry**: written by the author of the generalisation, in the
+paragraph making it, one round after stating it. Six rounds of attention did not
+prevent a seventh instance. That is the argument for the remedy being
+**mechanical rather than attentional** — run the command, do not resolve to be
+careful.
+
+**Disclosure, recorded here rather than only in a commit message** (the working
+surface is this log, and the arc above is worth nothing if its last instance
+hides in a commit body): while writing round 4's bars block I typed a smoke
+wall-time — `14.02s` — that I had **not yet measured**. I caught it against the
+real run and corrected it to the measured value before committing. Same class
+as the six above: a figure written from expectation rather than execution. It
+was self-caught rather than reviewer-caught, which is the only reason it is a
+near-miss rather than a numbered row — and it is recorded plainly instead of
+quietly fixed, because a record that omits its own near-misses is the same
+defect one level up.
+
+Wall time is the standing example of why: it ranged **329–588 s** across seven
+runs of an unchanged suite on this branch, so it is a number that must always
+be quoted from a run and never from memory.
+
+---
+
+No byte-budgeted file was touched. Generated artifacts (`docs/architecture.md`'s
+module map loses the `agent_loop → schedule` edge) are deliberately NOT
+regenerated here — §5.2, the trunk lane owns them.
+
+## 2026-08-01 — WI-387: three terminal outcomes, so a branch cannot hang
+
+**Summary.** "WIs always land back in trunk; branches never hang" was a rule
+someone had to follow. It is now a property of the tree.
+[`concurrency-v2.md`](concurrency-v2.md) §A3's three outcomes — **merged**,
+**cancelled**, **handback** — are all merges, and a lane declares which one it
+reached by the *directory it moved its claimed specs into*, which is the same
+move that already made the branch finished. One fact, read twice; no fourth
+option and no state file that could hold one. Two run-stops die with it (the
+`EXIT_NEEDS_HUMAN` stop and the parked-branch stop), and so does
+`drive._stranded_claims`, whose entire reason for existing was an ordering in
+`integrate.claim` that this row inverts.
+
+**Deliverables.**
+
+- **The outcome is the folder.** `integrate.OUTCOME_DIRS` +
+  `branch_outcomes(root, branch)` read the branch's own tree: `complete/` →
+  `merged`, `cancelled/` → `cancelled`, any open folder (`queued/`, `draft/`,
+  `deferred/`) → `handback`. A claimed spec that landed in no declared
+  directory — or in **more than one** — resolves to *nothing* and
+  `integrate_one` refuses on it. Both halves matter and only one was there in
+  round 1: a basename-keyed dict let a spec left in two folders resolve by
+  alphabetical last-wins, which put `queued` (handback, no verdict owed) ahead
+  of `complete` (merged, an APPROVE owed) — a contradiction resolved silently
+  toward the answer that *skips the gate*, with fail-closure depending on an
+  unrelated duplicate-id rung in another script. Per-basename outcome **sets**
+  now put it where the outcome is read. The merge commit and the console line
+  name the outcome per id (`integrate: wi-401 merged (WI-401=handback)`), so a
+  walk-away run cannot report a return as a completion.
+- **The verdict gate is keyed off the OUTCOME, not the claim.** `_verdict_gate`
+  took `wi_ids` from trunk's `active/<branch>/` and demanded an `APPROVE` for
+  every one — but a handback leaves those ids claimed at merge time, so as
+  written it demanded an approval for work being *returned*. Only `merged`
+  asserts done and owes a verdict. This is not cosmetic: a review escalation is
+  the commonest handback cause, so the unfixed gate would have deadlocked the
+  common path on itself.
+- **The claim is inverted: `write-tree`/`commit-tree` → `git branch` → advance
+  trunk.** Trunk-first had a window between the two REF writes that left a
+  claim no lane could reach — invisible to the frontier (the WI is no longer
+  queued) and to the parked-resume read (no ref) — which cost an exit-2 refusal
+  and hand repair. Branch-first moves that window to the benign side: a crash
+  leaves at worst an orphan branch whose claim commit is not an ancestor of
+  trunk while its WI is still `queued/`, which `_abandoned_claim` convicts and
+  the next claim deletes and re-cuts, printing the sha and its restore command.
+  **`drive._stranded_claims`, its exit-2 refusal and its test are deleted.**
+  `_abandoned_claim` authorises a `git branch -D`, so it convicts on **four**
+  facts, not three: the tip's subject is `_claim_subject(wi_id, branch)`
+  **exactly**; the tip is not an ancestor of trunk; its parent is; and the
+  commit **is the move this claim would make** — it ADDS this WI's spec under
+  `active/<branch>/` and touches nothing but that move and declared generated
+  paths. The fourth fact took two rounds to get right. Round 1 inferred it from
+  ancestry, which proves only *one commit ahead*, not *carrying nothing*, so a
+  hand-written `wip: nearly done -> active/wi-401 (bookkeeping)` was deleted
+  with its work on it. Round 2 replaced that with "only the RULING-6
+  bookkeeping surfaces" — still too wide, and round 2's review drove a commit
+  adding **only** a `WI-401-hours.md` log fragment being convicted and that
+  fragment lost, plus the same for a `docs/log.md` rewrite and a hand-written
+  `PROJECT_STATE.html`. The rule is now what the claim actually writes, and the
+  spec move is REQUIRED rather than merely permitted, so a regeneration that
+  moved no spec is not a claim either. Six negatives now fail if any one fact
+  is dropped. The `git branch -D` that acts on the verdict **reads its return
+  code** and names the holding worktree: it refuses a branch a worktree has
+  checked out, and round 2 printed `deleted the abandoned claim branch …` over
+  a branch that still existed — the same reports-success-on-failure shape as
+  the rename mis-parse, eight lines away.
+- **`handback.py`, a new sibling kit script** (`hand_back` + `quarantine`):
+  - `hand_back` commits the work so far **as-is** (`--no-verify` — "as-is" has
+    to mean it, and the branch's own §A2 refresh regenerates and bars this tree
+    before anything merges), moves each claimed spec back to `queued/` with a
+    `## Handback` section naming what remains and **the commit range it lives
+    in**, and sets `blockref` to the spec's own path.
+  - The blockref is load-bearing, not decoration: `schedule._disposition` reads
+    queued+blockref as `blocked`, so a returned WI leaves the ready frontier
+    until a human clears it. Without it the driver would claim, hand back and
+    re-claim the same WI forever — and because each handback *merges*, trunk
+    would move every cycle and the stall guard would never fire.
+  - `quarantine` is the ruled red arm (owner decision 1): revert the product
+    paths to the merge base, keep the failing diff as a bar-inert `.patch` in a
+    `handback/` directory under `docs/work/`. Nothing is lost — the reverted
+    commits stay reachable in trunk history once the branch merges — and
+    nothing is live.
+    Bookkeeping paths (`docs/work/`, `docs/log.d/`) are exempt by construction:
+    reverting them would revert the handback itself.
+  - **It reads `--name-status -z` as RECORDS, not pairs.** `diff.renames` has
+    defaulted true since Git 2.9, so `R<score>`/`C<score>` are ordinary output
+    and each emits **three** fields. Round 1 paired two at a time: the stream
+    desynchronised at the first rename, paths were read as statuses, the
+    bookkeeping filter went blind, the failing file fell past the loop bound,
+    and the run printed a confident *"4 path(s) reverted"* over a branch that
+    still held it — while four no-match git calls had their **return codes
+    discarded**. A rename is now two undo steps (remove the new path, restore
+    the old), a truncated stream refuses rather than quarantining a partial
+    list, every revert step's code is checked and a failure resets the lane to
+    its tip, and the artefact is staged **by name** instead of `git add -A`.
+- **`drive.py`: the decision, not the write.** `_worker_stop_code` is replaced
+  by `_lane_close`. A *decided* worker exit (`_WORKER_OUTCOMES`) hands back and
+  the run continues; a **crash** (any other code) is deliberately not a hang
+  and keeps the parked-resume path exactly as it was, bounded by the stall
+  guard. A lane that **already closed its specs** is left alone whatever it
+  exited with: its tree has named an outcome and the drain merges it on that.
+  Round 1 did not have that arm, and a review escalation lands at the *end* of
+  a lane — so a decided exit after the close made `hand_back` read a spec out
+  of an `active/` directory the lane no longer had, fail with an `OSError`, and
+  stop the run over a branch that would have merged cleanly. `_drain` gained
+  `_refresh_or_quarantine`: a red refresh still stops the run for a branch
+  whose outcome asserts *done*, but a branch that merges nothing is
+  quarantined once and refreshed again.
+- **The `## Handback` section joined the spec body grammar** — `SPEC_HANDBACK`
+  plus a four-line partition in `parse_spec_deliverable`, identical in all
+  three F5 copies (`agent_common`, `check_trajectory`, `schedule`) and in
+  `wi_convert`, which reads past it and does not reproduce it (it maps to no
+  CSV column; `--verify` round-trips from a CSV and never sees one). **This is
+  the change that made the section possible at all, not a nicety**: a sibling
+  lane confirmed today that a body the grammar does not know makes the row
+  **silently absent from the scheduler** (`read_spec_rows` skips a malformed
+  spec with no sink) while `check_trajectory` ERRORs on the same file — a
+  reader disagreement of exactly the §B3 kind, and a returned WI that vanishes
+  from the frontier without a word is a hanging branch by another route.
+
+**How the invariant is tested.** [`tests/test_handback.py`](../tests/test_handback.py)
+(13 tests, new; filed in `conftest.SLOW_MODULES` beside its two siblings — real
+claims mean the real `trunk_step --regen` subprocess) constructs every topology
+it measures. The anti-livelock property is asserted against `schedule.frontier`
+itself, driven both ways (ready before the claim, `blocked` after the return);
+the quarantine is proven bar-inert in **four** diff shapes (edit, add, delete,
+rename) *and* lossless (`git apply --check` then `git apply` restores the lane's
+work); all four registry readers are driven over one real returned spec. In
+`tests/test_drive.py` the two run-stop deletions are driven end to end against a
+**conditional** stub bar — red exactly while the lane's broken file is present,
+which is what lets the red-handback ruling be *shown* (refresh red → quarantine
+→ refresh green → merge) rather than asserted. `tests/test_integrate.py` gains
+the crashed-claim shape (re-claimed) beside four negatives, the outcome read in
+both failing shapes, and the outcome-keyed gate driven at the helper and through
+the whole slot.
+
+**Round 2 added the tests that can FAIL**, which is the honest lesson of the
+review: round 1's `_abandoned_claim` negatives were both structured so a looser
+matcher could not red them (one built two commits so the tip was a work commit;
+the other had no claim-ish subject at all), so a stated invariant shipped with
+no guard. The three new ones each ISOLATE one fact — an exact claim subject
+carrying `real-work.txt` (only the content fact can reject it); a subject that
+merely *ends* like a claim, touching **only** a bookkeeping surface (only the
+exact subject can); and a genuine claim subject for a **different id**, likewise
+bookkeeping-only (only the `wi_id` half can). Isolation was not free and the
+first attempt did not have it: a mutation run showed the suffix-match mutant
+passing all three, because every negative still carried product content that
+fact 4 rejected. Re-driven after the fix, **each mutant reds exactly the
+negative that isolates the fact it drops** — suffix-match reds two, dropping the
+content check reds one, and nothing else moves.
+
+The rename parse is pinned twice: a record-shape unit test over the exact field
+list the review drove, and the end-to-end revert in the *damaging* alignment
+(the rename sorts first, the broken file last). Both mutation-proven — restoring
+the pair-parse reds them and leaves the other 11 green. The discarded return
+codes are covered by fault injection on the last revert step: the refusal names
+the path and the lane is reset, rather than a count being printed for work that
+did not happen.
+
+**Round 3 closed two more of the same shape and mutation-proved both.** Three
+new negatives — a bookkeeping-only branch (driven over a log fragment, a
+`docs/log.md` rewrite and a hand-written `PROJECT_STATE.html`), a regeneration
+that moved no spec, and an abandoned branch a worktree still holds. Restoring
+the wide bookkeeping rule reds exactly the first two; discarding `branch -D`'s
+return code reds exactly the third; nothing else moves. The held-branch case
+also pins the failure DIRECTION: the branch survives, the spec stays claimable
+in `queued/`, and trunk is clean — it fails closed, it just used to say
+otherwise. (Building it caught a fixture trap worth naming: a lane worktree
+created *inside* the repo is untracked dirt, so the clean-trunk rung refuses
+first and the test proves nothing. It is created outside.)
+
+**One arm is defensive and is recorded as such rather than left to look dead.**
+`_revert_ops`' `C` (copy) branch cannot fire from the call `quarantine` makes:
+even at `diff.renames=copies`, plain `--name-status` reports a copied file as
+`A`, because git needs `--find-copies-harder` to emit `C`. It is kept because
+the parse and the undo have to agree about the three-field forms as a pair —
+and because a future caller that adds the flag would otherwise get a silently
+wrong revert.
+
+**One fixture was corrected rather than bent.** The content fact reads the same
+allowed set as the RULING-6 audit (bookkeeping prefixes plus the declared
+`[generated]` paths), and the claim folds `trunk_step --regen` into its own
+commit — which, with a `docs/work/` registry present, writes `PROJECT_STATE.html`.
+A fixture that declared no generated set therefore produced a claim commit its
+own reader could not recognise. That is a repo `integrate audit` would flag too,
+so the fixture now declares the set the shipped `stack.ini` template does. The
+failure direction is worth stating: an undeclared repo fails **closed** — the
+re-claim refuses instead of deleting.
+
+**Deviations from spec.**
+
+- **`hand_back`/`quarantine` ship in a new sibling module, not in
+  `integrate.py`.** The row's scope said "while the file is open"; the file is
+  a monolith ratchet away from its ceiling. The extraction is the ratchet's own
+  documented escape and the WI-374 precedent (the drive loop went to `drive.py`
+  rather than into `agent_loop.py`). It costs the scaffold surface — MAPPING
+  row, README kit-contents, `test_bootstrap` file list — all three registered.
+- **`integrate.py` crosses THRESHOLD and takes a NEW reviewed baseline entry;
+  the two siblings stay under it and need none.** What remains in it is
+  irreducibly its own: the claim, the outcome read the merge slot gates on, and
+  the verdict gate. Re-stamp DOWN with WI-390's deletions. **The figures live in
+  the stamps paragraph below and in
+  [`tests/test_module_size_ratchet.py`](../tests/test_module_size_ratchet.py),
+  and deliberately not here** — this bullet used to restate four of them, and
+  restating them is what went wrong three rounds running: 1638-vs-1643 (round
+  2), `handback.py` 353 (round 3), and `integrate.py` 1692 with `drive.py` 495
+  (round 4), the last two both caught while the correct values sat a hundred
+  lines below in this same file. The bullet had even acquired a lesson telling
+  its author to re-measure the whole sentence, and went stale again in the
+  sentence carrying the lesson. So the second home is deleted rather than
+  corrected a third time. That is the honest half I can do from here; the other
+  half is **mechanical, and it is WI-392's** — three consecutive failures under
+  deliberate attention, by someone told about it twice, is not a lapse in care,
+  it is evidence that a prose figure beside a stamped one needs a check rather
+  than a promise. (`wi-383` reached the same conclusion after six rounds.)
+- **`EXIT_BUDGET` and `EXIT_STALL` now block a WI that used to be resumable —
+  a real cost, recorded rather than traded in a set literal.** They are decided
+  exits, so under §A3 the lane hands back; `hand_back` sets a `blockref`; and
+  `schedule._disposition` reads queued+blockref as `blocked`. Before this row,
+  a worker that hit its session ceiling stopped the run with the claim parked
+  and a **relaunch resumed the same lane**, so a WI needing more than one
+  worker budget finished across relaunches with no human in the loop. Now it
+  returns blocked and an unattended run can never pick it up again. §A3's
+  ruling is "any non-zero worker exit that is not a crash" and its
+  justification is about `EXIT_NEEDS_HUMAN`, not about a ceiling — but the
+  alternative (hand back *without* a blockref so a ceiling stays resumable)
+  re-opens the claim/return/re-claim loop this row spent its effort closing,
+  bounded then only by `--max-iterations`. That is an owner call, not a
+  builder's, so it is filed below rather than decided here.
+- **No CLI subcommand for `handback`.** The driver is the only mechanical
+  caller; a lane agent that wants to cancel or hand back by hand writes the
+  move and the reason, which is a judgement, not a command.
+- **The spine is untouched**, per the standing ruling that spine work waits and
+  batches. `LLR-143` and `TC-137` still describe `_stranded_claims` and
+  "NEEDS-HUMAN propagates as exit 7"; both are false as of this merge and are
+  owed to WI-390 along with `PROCESS_OPTIONS.md`'s attended-mode
+  "the loop stops `NEEDS-HUMAN`" sentence. Nothing mechanical enforces LLR
+  `Code`/`Detail` cells, so this is prose debt, recorded rather than absorbed.
+- **`handback.py` declares no `Contracts:` line.** IF-080 already sits in the
+  interface registry with no script declaring it (§A9.1's inherited drift);
+  declaring it from the sibling rather than from `integrate.py` would
+  paper over that. The module will add a fifth `connectivity undeclared` WARN
+  once the trunk lane regenerates the arch-map — same pre-existing WARN class
+  as `drive`, `traj_graph`, `traj_panels`, `traj_render`.
+
+**Two false sentences RETRACTED from the claim rationale** (REVIEW-A round 1),
+because a wrong record is the defect class this program keeps paying for and
+`integrate.py`'s docstring is now the design's record of the inversion.
+(a) *"Crash before the branch and there is nothing but an unreferenced object
+git will collect"* — **false**. That window has the spec already `git mv`d out
+of `queued/` and the regen staged, so it leaves a **dirty trunk with no branch
+ref**; driven, the next claim refuses `the trunk working tree is dirty` and
+drive.py's cycle-top check makes it `EXIT_PREFLIGHT`. It is not a regression
+(the old order had the same window and the dirty check already fronted it), but
+there are **three** interesting points, not two, and the deletion of
+`_stranded_claims` is argued from the *second*. (b) *"the hook's live rung here
+was the generated-artifact freshness floor"* — **false by omission**. `--regen`
+covers six of the hook's ten `--run-steps`; it does not cover
+`registry-integrity`, the `trajectory` SSOT check, `skills-sync` or
+`ratify-fresh`, and outside `--run-steps` the plumbing commit also skips
+`check_privacy --author`, the **always-on secrets floor**, the `format` step and
+the `commit-msg` hook. Two of those are not vacuous: `ratify-fresh` reads the
+registry the claim mutates, and the secrets floor would otherwise scan the
+regenerated artifacts. Trunk advances to a commit no hook inspected and the next
+thing to bar it is a lane's §A2 refresh — accepted for the window it buys, not
+because nothing is given up. Both corrections are in the docstring, not only
+here.
+
+**Stamps re-stamped, each with its reason in
+[`tests/test_module_size_ratchet.py`](../tests/test_module_size_ratchet.py).**
+**This is the one home for these figures**; every other mention in this fragment
+points here. `integrate.py` NEW 1588, re-stamped to 1643 across round 2 (the
+fourth convicting fact, the exact-subject comparison, the outcome sets, and the
+corrected claim rationale), to 1692 at round 3 (the checked `branch -D`, the
+narrowed content fact, and `_drop_abandoned` extracted so `claim` stays under
+the C901 limit), and to **1733** at the trunk merge — the shipped value, equal
+to the stamp, with its arithmetic in the merge paragraph above. THRESHOLD is
+1500; `handback.py` **362** and `drive.py` **499** sit under it and carry no
+entry. `agent_common.py` 1731 → 1741 and
+`check_trajectory.py` 3251 → 3261 (the body-grammar lines, identical text in
+both by construction); `bootstrap.py` 2243 → 2250 (the scaffold registration).
+`docs/dupes-allow`: the two F5 fingerprints moved again
+(`221f967454e5` → `a17abce26cb8`, `e781cf6ec0e8` → `7a1470c3f0c1`) for the same
+structural reason as WI-384 — the new lines land *inside* the matched block in
+all three copies at once, and `check_trajectory == schedule` keeping its fp
+(`1dbf7e455ac3`) is the tell that nothing new was copied. **No byte-budgeted
+file was touched** (`AGENTS.template.md`, `PROCESS.md`, `PROCESS_OPTIONS.md`
+unchanged).
+
+**Bars (real output, repo `.venv` 3.11.9), AFTER merging trunk `4fb02de4`.**
+Full unfiltered `pytest -q -n auto` → **`1783 passed, 12 skipped in 319.20s`**,
+zero failures; `pytest -q --collect-only` → **`1795 tests collected`**, and
+1783 + 12 = 1795 exactly, so nothing was lost to an xdist worker;
+`ruff check .` and `ruff format --check .` → **All checks passed / 148 files
+already formatted**; `check_trajectory --root . --strict` → **clean**;
+`check_doc_refs --root . --strict` → **OK, no dangling path or `sym:`
+references**; configured `check_docs --stale` → **OK, 0 broken**.
+
+**There is no standing red any more, and that is a real change rather than a
+lucky run.** Every pre-merge round of this row reported "1 failed" and named
+`test_this_repo_is_not_a_work_branch` as expected-by-construction. Trunk's
+`5f292892` retired that premise: the test asserted the CURRENT checkout carries
+no claim, which is false by construction inside a lane worktree, and it was
+redding the §A2 refresh's own bar so nothing could merge at all. It was
+REPLACED, not deleted — the canary still reds a detector loose enough to match
+trunk — so the count moves by one where it used to fail.
+
+**The delta is +8, and it reconciles three ways** (the point of stating it is
+that a number which reconciles cannot be a transcription):
+round 3 ran `1 failed, 1774 passed, 12 skipped` = 1787 collected, and 1787 + 8
+= **1795**, the collection measured above; 1774 passed + 1 (the canary, now
+passing) + 8 = **1783**, the run measured above; and
+`git diff deffe026 HEAD -- tests/` is **+15 / −7** `def test_` = +8. The
+pre-merge progression stands as history — 1762 → 1771 → 1774 across rounds 1–3,
+each step that round's new guards — and the closing figure is the merged one
+above.
+
+**A CORRECTION, AND IT IS THE SERIOUS KIND.** Round 4 of this fragment claimed
+`1793 passed` and "+19 from the three sibling lanes". **That number was never
+measured.** Both runs I cited had printed `1783 passed, 12 skipped`; I reported
+1793 without opening either output file, and then built an arithmetic on top of
+it. The review caught it by re-running twice and by collection (1793 + 12 = 1805
+is ten more tests than this tree contains). This is not a stale figure like the
+size sentence next to it — it is a green I did not produce, in this row's own
+permanent claim of doneness, and this repo's rule against exactly that is the
+first thing its guide says. Recorded here rather than quietly overwritten,
+because a corrected number with no account of how it got there teaches nobody:
+the lesson is that a background run is not a measurement until its output has
+been READ, and "the suite passed" is not the same proposition as "I saw the
+suite pass".
+
+`check_doc_refs` earned its `--strict` twice on this branch, both times on THIS
+fragment: round 2 it caught prose naming a `handback/` directory that does not
+exist until a quarantine writes one, and round 3 it caught the log-fragment path
+in the sentence above, invented to describe an exploit. Both rephrased to name
+the shape without minting a path. It is a good check and asking its question
+deliberately — *which prose now names a path this branch does not have?* — is
+what catches it before a composed bar does.
+
+**And the answer to "does this want a new idiom?" is NO** — reviewed and ruled
+at round 3, recorded here so nobody re-opens it from the symptom. The repo
+already carries three forms that partition the space: `docs/declared-absences`
+(a path permanently not carried, with its reason), `path-ok` (prose whose
+SUBJECT is a path that does not exist), and the record prefixes (compiled
+history, judged loosely because it cannot be edited). A path that does not exist
+*yet, because the code has not run* is none of these: it is a **description**,
+not a reference — a reader cannot follow it — and `path-ok` would be wrong
+twice over, since it exempts the whole line and would be spent on incidental
+illustration. Rephrasing is the permanent answer, not a workaround. Being caught
+in a fragment is the design working as written: `check_doc_refs.py` records that
+`docs/log.d/` sits deliberately OUTSIDE the record prefixes so a fragment is
+"judged strictly while its author can still edit it", and WI-384 built, measured
+inert, and reverted that widening. The one thing worth adding is **guidance, not
+machinery** — a line in the `session-protocol` skill saying a fragment may not
+mint a path — and that belongs to **WI-396**, which owns this check's blind
+spot. Filed there, not built here: a sibling lane hit this three times today and
+five by the time round 3 reviewed it, so the frequency is real; the placement is
+that row's call.
+
+**Merging trunk `4fb02de4` — one conflict, and both intents kept.** This row is
+the last of four lanes, so WI-378, WI-383 and WI-391's siblings landed first.
+The single conflict is `_verdict_gate`'s docstring: WI-378 rewrote it with a
+measured census of why `docs/work/` is NOT excluded from the freshness pathspec,
+while this row rewrote the function's SIGNATURE and body to key off the outcome
+map. **Neither is falsified by the other** — theirs governs which paths make an
+APPROVE stale, mine governs which ids reach the comparison at all — so both
+paragraphs stand verbatim, and the resolution adds one bridging paragraph
+naming the single point where they meet: the freshness comparison only ever runs
+for an id whose outcome is `merged`, so WI-378's `docs/work/` reasoning governs
+exactly the branches that assert done, which is also the only place their
+ordering rule ("close before the final verdict round") can bite — the closing
+move being itself a `docs/work/` change. A returned or cancelled spec moves
+under `docs/work/` too and owes no verdict for that move to stale. Nothing of
+theirs was edited to fit.
+
+**The ratchet was re-measured, not trusted.** `tests/test_module_size_ratchet.py`
+auto-merged and kept this branch's `integrate.py: 1692`, which was stale — trunk
+carried no `integrate.py` entry at all (its copy was 1449, under THRESHOLD), so
+there was nothing to conflict with and nothing to warn. Measured on the merged
+tree with the census's own metric: **1733**. The arithmetic checks the
+resolution rather than agreeing with it — base `6b22f169` 1418, plus this
+branch's +274, plus WI-378's +31, plus the 10-line bridge = 1733 exactly, so
+dropping either side's paragraph would have shown up here as a shortfall. The
+other three auto-merged entries were cross-checked the same way and are correct
+by the same test (trunk changed none of their line counts); the siblings' sizes
+are in the stamps paragraph, not restated here.
+
+**HANDOFF, measured not guessed: the merge staled this row's own APPROVE.** The
+round-3 verdict is `deffe026` (t=1785588735); the conflict resolution is
+`de9c4deb` (t=1785592495) and it necessarily touches `integrate.py`,
+`drive.py` and `tests/` — outside the two excluded prefixes — so it becomes
+`code_time` and `_verdict_gate` now answers *"`docs/reviews/WI-387-REVIEW-A.md`
+predates the branch's last code commit"*. Driven, not inferred. This is not a
+surprise or a defect: it is precisely the class WI-378's census names — *one*
+of their thirteen staled APPROVEs was "one by a hand trunk merge" — and their
+own docstring says the ordering rules are "necessary, not sufficient". A
+conflict resolution is a content edit by definition, so no ordering could have
+placed it before the verdict. **The integrator needs a round-4 verdict on the
+merged tree before this branch can pass its own gate**; the verdict file is not
+this lane's to touch, so it is reported here rather than worked around. Nothing
+about the resolution is hidden by it — the gate is doing exactly what this row
+re-keyed it to do, to the branch that re-keyed it.
+
+**LLR-144 + TC-138 tag `handback.py` into CMP-004, and the station refresh is
+the only place that could have found it.** The first refresh redded two steps
+on one cause: `check_trajectory --strict` at `ERROR - docs/knowledge/ holds 6
+pack(s) but 1 arch-map module(s) are in no CMP-### component`, and
+`tests/test_traj_views.py::test_meta_component_top_view_smoke` at
+`assert ['scripts/handback'] == []`. Same shape as WI-374 gave `drive.py`
+(`ad2acd23`) and Phase 4 gave `integrate.py` (LLR-140/TC-132): one LLR row
+(`Module=handback.py`, `Component=CMP-004`, under SR-132) and one TC row
+(`Evidence=tests/test_handback.py`), both `Verified` on the branch review
+record as the autonomous-ratification verdict (`docs/gate-policy: autonomous`).
+**Why no builder or reviewer bar could see it:** `docs/architecture.md` is a
+trunk-owned generated artifact, so its freshness gate stands down on a work
+branch (SR-133) and the branch's copy stays trunk-vintage — `scripts/handback`
+only enters the arch-map inventory when the refresh regenerates it, which is
+after the last review round. Round 5's `check_trajectory --root . --strict`
+rc=0 is therefore honest and still not predictive. That is now the SECOND time
+this exact sequence has run (WI-374 was the first, with the same two-line
+remedy), which is the argument for the constraint being moved earlier rather
+than the check being watched harder.
+
+**The `EXIT_TRAIN_END` deviation is now live, and it was load-bearing rather
+than merely cautious.** It was excluded from `_WORKER_OUTCOMES` while WI-383's
+deletion was still in flight on a sibling lane; that deletion has landed, and
+`agent_common` now keeps only a note reserving the number. Had the set named the
+constant, this merge would have made `drive.py` an `AttributeError` at import.
+The comment is re-tensed to say the deletion happened rather than that it is
+coming.
+
+**One round-2 red was mine and is recorded rather than quietly fixed.** Adding
+the `[generated]` declaration to `claim_repo` gave every fixture built on it a
+`docs/stack.ini`, which changed the §4 refusal
+`test_integrate_refuses_and_holds_the_trunk_when_the_bar_is_undeclared` sees
+from *absent file* to *no `[product]` key* — two different refusals. The test
+now deletes the file after the claim that needed it, so it still drives the arm
+it names, instead of the assertion being softened to whichever refusal fires.
+
+**Findings for their own WI (not fixed here).**
+
+1. **A worker that reports DONE without closing its specs still parks.** One
+   of two diagonals; the other — a *non-zero* exit from a lane that already
+   closed — was found by the review and is now handled (the drain merges it on
+   the outcome its tree names). This one remains: exit 0 with specs still in
+   `active/<branch>/` leaves the branch parked and relies on the stall guard.
+   Handing that back too would make the invariant airtight, but it changes the
+   stall semantics this row was not asked to touch.
+2. **A red refresh on a `merged` branch still stops the run.** Deliberate and
+   unchanged (WI-386's rule: the lane that caused the red fixes it, and the
+   branch is retried on every relaunch rather than stranded). It is the one
+   remaining shape where a branch waits on a human, and whether it should also
+   convert to a handback is a design question for §A3, not a builder's call.
+3. **Should budget exhaustion be a handback at all?** The deviation above
+   states the cost; the question is whether `EXIT_BUDGET`/`EXIT_STALL` should
+   leave `_WORKER_OUTCOMES`, or hand back *without* a `blockref` so a ceiling
+   stays resumable. Each answer trades a different property — the walk-away
+   loop's ability to finish a long WI across relaunches, against the
+   claim/return/re-claim loop the blockref closes. §A3 rules the shape ("any
+   non-zero exit that is not a crash") but not this dial.
+4. **A second handback of the same WI accretes a second `## Handback`
+   section.** It parses correctly in all four readers (`Deliverable` stays
+   empty, `BlockRef` intact) and reads as a history of returns, which is
+   arguably right — but nobody decided that it should accrete rather than
+   replace, and a WI returned five times would carry five sections.
+5. **For WI-396, which owns the `check_doc_refs` blind spot: a fragment may
+   not mint a path.** Not a new idiom — that was weighed and refused at round 3
+   (see above); guidance, one line in the `session-protocol` skill. Filed
+   because the frequency is measured rather than felt: this branch hit it twice
+   and a sibling lane five times in one day, always in a `docs/log.d/` fragment
+   describing a path the code has not created yet. Placement is that row's
+   call, not this one's.
+
+**One residual, recorded below the filing bar** (round 3's review reached the
+same judgement independently): `_abandoned_claim` says "this WI's spec"
+singular while the code allows plural, so a commit making the real move **plus**
+a second `WI-401-*.md` file under the same claim directory is still convicted
+and that extra file lost. It stays unfiled because the only reachable content is
+a same-id duplicate the registry already rejects, the loss is bounded to that
+directory, and the sha and its restore command print — and because no honest
+flow produces it. Written down so the gap between the sentence and the code is
+a known one rather than a discovered one.
+
+## 2026-08-01 — Integrator session: the wi-387 refresh red, diagnosed and merged
+
+**Summary.** [handoff-2026-08-01.md](handoff-2026-08-01.md) §2's "one blocking
+thing" is answered, at root cause, and `wi-387` is merged (`a6321c99`). The
+answer is not the one §2 expected: the bar reds **three steps on two causes**,
+one of them **trunk's own**, and **the hypothesis §2 records as "tested and
+refuted" was the correct one** — what was wrong was the refutation.
+
+**Deliverables.**
+
+1. **`5222c487` (trunk) — `docs/backlog-plan-2026-08-01.md:109` marked
+   `path-ok`.** R2's background quotes `tests/this_file_has_never_existed.py` as
+   the *measured evidence* that an invented Evidence cell clears every strict
+   gate; `check_doc_refs --strict` reads it as a dangling repo path. This
+   reproduces at trunk `a6d68186` with no lane in the picture — **trunk had been
+   RED at the G3 `doc-refs` step since that file landed**, and no branch could
+   have refreshed past it. `path-ok` is the shipped idiom for exactly this
+   ("deliberate examples naming files that don't exist here", `check_doc_refs`
+   docstring) and [`docs/specs/WI-394.md`](specs/WI-394.md) already carries it on
+   the same quotation.
+2. **`4b4f29d6` (branch) — `LLR-144` + `TC-138` tag `handback.py` into
+   `CMP-004`.** The regenerated arch-map carries `scripts/handback`, and the
+   knowledge⇒component web (WI-153) makes an arch-map module in no `CMP-###` an
+   ERROR under `--strict`. Same remedy as `ad2acd23` gave `drive.py` and Phase 4
+   gave `integrate.py` (LLR-140/TC-132): one LLR row (SR-132, Module
+   `handback.py`, Component CMP-004) and one TC row (Evidence
+   `tests/test_handback.py`), both `Verified` on the branch review record as the
+   autonomous-ratification verdict (`docs/gate-policy: autonomous`).
+3. **`07ba9195` (branch) — REVIEW-A round 6, APPROVE findings=0.** A
+   `docs/requirements` + `docs/test` change is a non-review, non-fragment work
+   commit, so it staled the round-5 APPROVE by `_verdict_gate`'s own rule. Same
+   shape and same remedy as `b7f1a939` took for WI-374's spine rows.
+4. **`af6193bc` — the station refresh**, `bar PASS (20 steps, tier all)` in
+   10m25s; **`a6321c99` — the merge**, through `integrate.py`'s slot with the
+   ancestor constraint and the `Bar-Green:` trailer both verified, audit clean.
+
+**The diagnosis, and why it took three attempts.** The refusal message the
+refresh prints carries **no per-step error text**, and the reason is mechanical
+rather than incidental: `agent_common._failure_tail` anchors on the **LAST**
+`  FAIL  <step>` line and walks back to the nearest `=== <step> :` banner, but
+`check.py` re-prints every step's status in its **final summary block**, at any
+`--jobs` — so the last `FAIL` is always the summary copy and the extracted
+600-char window is always summary lines. Two earlier sessions lost the text to
+this; the third did too. What recovered it was reproducing the refreshed tree by
+hand — `git merge --no-ff --no-commit <trunk>`, `trunk_step.py`, `git add -A`,
+then each failing step directly — which is necessary because the refresh's
+`undo` resets the lane, so the failing tree no longer exists by the time the
+message is read. The recovered text, in full:
+
+```
+check_trajectory: ERROR - docs/knowledge/ holds 6 pack(s) but 1 arch-map
+module(s) are in no CMP-### component (docs/requirements/components.csv); tag
+them via LLR `Component` cells so the knowledge⇒component web is complete, or
+set docs/components-check: off
+
+tests/test_traj_views.py::test_meta_component_top_view_smoke
+E   AssertionError: assert ['scripts/handback'] == []
+
+check_doc_refs: WARN - docs/backlog-plan-2026-08-01.md:109:
+`tests/this_file_has_never_existed.py` does not exist in the repo
+```
+
+**Why the earlier refutation was wrong, stated so it is not repeated.** §2
+records "regenerating the arch map in the lane leaves `check_trajectory` clean".
+It does not. Driven at each end: `component_top_view(root)` reports
+`inventory 46, uncontained []` at trunk and `inventory 47, uncontained
+['scripts/handback']` on the refreshed tree, with 6 knowledge packs arming the
+rule in both. The three "clean" hand-probes must have measured a tree whose
+`docs/architecture.md` was still trunk-vintage — which is the easy mistake to
+make here, because that is exactly what a work branch's copy *is*.
+
+**The structural finding, which is the part worth keeping.**
+`docs/architecture.md` is a trunk-owned generated artifact, so check.py's
+`arch-map` freshness step SKIPs on a claimed work branch (SR-133,
+`concurrency-restructure §5.2`). A new module therefore does not enter the
+arch-map inventory until the **refresh** regenerates it — after the last review
+round. Round 5's `check_trajectory --root . --strict` rc=0 was honest and could
+not have predicted the red. So the containment remedy always lands after an
+APPROVE and always costs a round: **`WI-374`/`drive.py` was the first instance,
+`WI-387`/`handback.py` is the second, with the identical two rows.** The
+constraint-shaped answer — make the containment owed where the module is
+*added*, not where the inventory is regenerated — is written up in
+[handoff-2026-08-01.md](handoff-2026-08-01.md) §6 along with the
+`_failure_tail` defect. Neither is filed as a row: a lane may not mint an id,
+and trunk's max is 394 while the unmerged `wi-391` branch carries 395/396, so a
+trunk mint would recreate the collision this session's predecessor caused.
+
+**Deviations from the brief.** The merge slot was entered for **`wi-387` only**
+— `integrate.integrate()`'s own body (dirty check → `_slot` → `integrate_one` →
+`audit` → `_held_summary`) with the branch list restricted to one — because
+`finished_branches` also returns `wi-391`, which is another agent's lane and
+would have been refreshed and merged inside the slot by the pessimistic path.
+Neither the ancestor constraint nor the `Bar-Green:` verification was bypassed;
+only the queue's breadth was.
+
+**Bars (real output, repo `.venv` 3.11.9).** Refresh bar on the composed tree:
+`bar PASS (20 steps, tier all)`. Post-merge on trunk `a6321c99`:
+`python -m pytest -q -n auto` → **1784 passed, 11 skipped in 355.25s**, exit 0;
+`python project-trajectory/scripts/check.py --jobs 0 --tier all` (derived gate
+G3) → **20/20 PASS, RESULT: PASS**, exit 0. `trace.py --strict
+--require-verified` on the branch → rc=0, **SN=25 SR=135 LLR=127 TC=124
+orphans=0 integrity=0 component-findings=0**.
+
+**Byte deltas on budgeted files:** none — no budgeted doc
+(`AGENTS.template.md`, `PROCESS.md`, `PROCESS_OPTIONS.md`) was touched.
+
+**Unpaid remainder, deliberately.** `integrate` exits 1 with `UNLOAD INCOMPLETE
+- branch wi-387 is held by the worker worktree ... which is DIRTY (6 ...
+ignored path(s))`. The merge stands; the unload is owed and is left for the
+agent that drains `wi-391`, per this session's instruction not to unload any
+worktree.
+
+## 2026-08-01 — WI-391 cancelled: the specs-of-record mirror is refuted, not built
+
+**Outcome: CANCELLED.** WI-391 asked for concurrency-v2 §B2's second sentence —
+specs-of-record mirror the terminal folders, so a spec's location answers
+shipped-or-cancelled without opening it. It was measured, prototyped and
+**refuted** rather than built. Two independent review rounds confirmed it: round
+1 `APPROVE findings=6` (`2a4c9642`), round 2 `CHANGES-REQUESTED findings=4`
+against the write-up, with the decision itself not reopened.
+
+The row is `cancelled/`, not parked in `queued/` with a `blockref`, because
+**under both options open at OI-11 — strike the sentence or restate it — this
+row's work does not happen.** Its own fate is settled even though the design
+text's is not, and `cancelled/` is exactly the won't-build-with-the-reason state
+WI-384 built. The reason lives in the spec's `## Deliverable`, which is the home
+a cancelled row's reason is *supposed* to have — so the record needed no new
+grammar.
+
+**Observed en route, and it drove the disposition: a `queued` + `blockref` park
+never self-releases.** `blocked` is derived as `queued` plus a `blockref`, and
+the blocker's own state is never consulted — so flipping OI-11 to `ruled` would
+**not** have returned WI-391 to the frontier. The row would have sat parked with
+nobody assigned to close it. This is a property of the registry, not a one-off:
+a `blockref` is a **label, not a subscription**, so any park taken to "wait for a
+decision" needs a human to come back and unpark it. Filed as **WI-395** rather
+than left as an observation in a log entry — this row is its worked example, and
+the cost of the silence is already one mis-taken disposition.
+
+**What was measured.** Stated as this row's own convention, because conventions
+differ enough between readers that the intake's totals are best treated as
+superseded: the literal string `archive/specs/<name>.md` in
+`*.md`/`*.py`/`*.csv`/`*.html` occurs **156 times across 31 files** at
+`2a4c9642`, and **154 across 30** at `0b4774f0` — the delta is exactly this row's
+own review file, one new file carrying two occurrences, a fair demonstration
+that the reference surface accretes faster than a migration could be scheduled.
+`docs/log.md` (untouched by this branch) holds **119 occurrences on 101 lines**,
+of which **92 are markdown link targets** covering **57 unique targets by
+full-string key** — 55 by basename, 55 fragment-stripped, 57
+basename-plus-fragment, so **57 is the maximum by any key**.
+
+**A correction recorded rather than quietly fixed.** An earlier draft reported
+"61 unique targets" against those 92, and when a reviewer challenged it I
+*defended* it before re-measuring. It is wrong: 61 is the number of unique names
+among `docs/log.md`'s **119 all-occurrences**, a different and larger population
+than its 92 link targets. The figure was briefly asserted as verified against a
+correction, which is worse than inheriting a wrong number from the intake, so it
+is written down here.
+
+The relocation cost is larger than any literal-string count, because a relocation
+rewrites **resolved** links: **124 inbound targets across 25 files** resolved by
+path (the WI-288 rule), plus **91 outbound links across 43 of the 111 files**
+that a one-level-deeper move rebases (the WI-353 defect) — about **215 targets**
+against the intake's 101.
+
+**Why it was refuted.** Not cost — the one-time migration was prototyped as a dry
+run at ~70 lines, precisely to remove the "too expensive" defence, and that
+prototype also settles the rebuild-a-relinker question: one-time beats rebuilding
+machinery for a move that happens once. The argument is structural, and it is a
+measurement rather than an analogy:
+
+- **Not total.** A folder is derived data and needs a total function from state
+  to location. This one is undefined for **16 of 111** archived specs — 15 shared
+  effort docs (a first-class shape per the `docs/specs/` README lifecycle) plus
+  `WI-300-sr052-binding.2026-07-26.md`, whose name does not match `_own_spec`'s
+  own `WI-###.<date>.md` glob. A mapping whose own reader cannot name a file is
+  not a mapping.
+- **Contradictory.** `research-knowledge.2026-07-29.md` is cited by WI-138 and
+  WI-145 (`complete`) and by WI-158 (`cancelled`); R-F archives a shared doc when
+  its *last* open citer closes, so both folders are correct for it.
+- **No regenerator.** `gen_trajectory.py` contains the string `archive` **zero**
+  times, so no freshness gate could hang off the derived location — it would be
+  hand-maintained derived data, which the generated-not-hand-maintained rule
+  forbids.
+- **Already answered by location.** For the 92 attributable specs,
+  `docs/work/complete/` vs `docs/work/cancelled/` answers shipped-or-cancelled
+  one directory over. The split is **92 complete / 3 cancelled**, so the mirror
+  answers "shipped" 97% of the time for a question one `ls docs/work/` answers.
+- **No consumer.** `check_trajectory`'s `ARCHIVE_SPECS_DIR`, `_own_spec` and its
+  glob, and the archived-spec glob in `tests/test_trajectory_specs.py` (line 511)
+  would each have to **widen** to recurse — the required code change is to
+  *ignore* the distinction. The `docs/archive/specs/*` entry in
+  `docs/orphans-allow` (line 50) survives untouched only because fnmatch `*`
+  spans separators.
+
+**What review corrected.** Round 1, six findings, all taken: the intake figures
+are unreproducible and must not be reported as "reproduced exactly"; the split is
+92/3/16, not 93/3/15; the structural argument led with its weakest evidence and
+was restructured to lead with the totality/regenerator measurement; the
+one-time-vs-recurring distinction had to be stated, since the
+enforcement-layer-maintaining-enforcement-layer objection would otherwise have
+sunk this session's own follow-up; and the proposed remedy for the two
+`declared-absences` entries was **wrong** — deleting them adds **+2 dangling**
+references under `check_doc_refs --strict`, because the WI-391 spec's own title
+names both paths and survives cancellation. They are **restated**, not deleted.
+Round 2, four findings, all taken: the unique-target figure above, the
+disposition (cancel, do not park), an OI-11 that argued its own recommendation
+too hard, and an unenforceable cross-row promise, dropped.
+
+**Filed, and all four outlive this row.**
+
+- **OI-11** ([`docs/requirements/open-items.csv`](requirements/open-items.csv))
+  — whether §B2's sentence is **struck** or **restated**, `Status=pending`. It is
+  a decision about the **design text only**, and says so: WI-391 is already
+  cancelled under either answer, so nobody rules on this expecting to unblock a
+  build. Both options are argued at comparable weight, including the honest case
+  *for* striking — the kit's own state-it-once-and-link principle — and the
+  recommendation (restate) sits once, in the recommendation cell.
+- **WI-393** — rehome the link-aware archival ritual (WI-288's inbound relink,
+  WI-353's outbound rebase and their two shared primitives), deleted with
+  `agent_dispatch.py` at Phase 5 (`31ad569d`) and never rehomed. Spec archival is
+  an unassisted `git mv` again. Driven evidence: from a 4-broken-link baseline, a
+  probe spec plus an inbound link left it at 4; a bare `git mv` into the archive
+  took it to **8**, of which 3 are WI-353's defect verbatim and 1 is WI-288's
+  (`docs/archive/` is exempt from the orphan check only, not the broken-link
+  check). Constraint-shaped — one indivisible ritual no caller can do two thirds
+  of — so §0 reaches it, and unlike WI-391 it has driving necessity.
+- **WI-396** — `check_doc_refs` is structurally blind to a suffixed reference
+  into `project-trajectory/`, the half of this repo that is the product. Filed
+  small, with the limiter that the gap cannot reach an adopting repo. The
+  evidence that makes the trap a defect rather than a slip: `docs/log.md` is a
+  record surface and `docs/log.d/` is not, so the identical citation is legal in
+  the log and illegal in the fragment that *becomes* the log.
+
+Noted, not filed: WI-395's (A)-vs-(B) ruling has no OI row, so its cost surface
+is a queued WI's title rather than `docs/open-items.html`. That is correct for
+now — a row nobody has claimed is not yet a decision anyone is being asked to
+make — but it is worth raising when WI-395 is claimed, since (A) carries a
+five-module-and-a-hook blast radius that an owner would normally meet on the
+open-items surface.
+- **WI-395** — the `blockref` gap above, filed with its two honest readings and
+  neither of them ruled: either the derivation consults the blocker's state, so a
+  park releases itself (costing a cross-registry read in a deliberately
+  self-contained `schedule.py`, plus a new dangling-blockref failure mode needing
+  its own rule), or parks are human-swept and the `WI-000` exemplar and process
+  text must **say so**. What is wrong today is not the choice but the silence:
+  the mechanism implies a subscription it does not provide.
+
+**Two parallel lanes minted the same WI id.** This row and the `wi-378` lane were
+each told to file a new WI in the same wave; both mints read `docs/work/` on
+their own branch, neither could see the other's new row, and both correctly
+returned **WI-392**. The row filed here was renumbered to **WI-393**. First
+*observed* instance of the id-reservation hazard §B3 discusses — that section was
+ruled on a hypothetical, and this is the evidence. In both directions: the
+composed tree **would** have caught it, because the duplicate-id guard reads the
+whole registry. The system works; it works later than a reservation would.
+
+**A citation trap that fired three times on this branch, recorded here rather
+than in a commit body.** `check_doc_refs` reads a `path:line` token as a path, so the
+line suffix makes it name a file that does not exist. It convicted three
+citations in this fragment, then — after that lesson — one more in WI-395, and
+then a third time inside **WI-396, the row filed to document the defect**, where
+the asymmetry reproduced verbatim in the sentence describing it. This repo's
+convention is to keep line numbers **out of the path token** and put them in
+prose. Three occurrences on one branch, the last while writing about the first
+two, makes it a pattern rather than carelessness — and a commit message is not
+one of the working surfaces, so it belongs on one. A **fourth** followed
+immediately, from the same family but a different shape: quoting one of
+`RECORD_PREFIXES`' own bare prefixes — a `docs/repo-review-…` stem, which names
+no file at all — is read as a path and convicted. Then a **fifth**, writing
+*that* sentence. Both were fixed with the tool's own escape: an `…` in the
+token, which `is_path_shaped` treats as not-a-path by design. The count is not
+the point; the shape is. Every one of the five was a citation that reads
+correctly to a human, and the checker's rule — path-shaped means *ends in an
+extension or starts with a known prefix* — admits no way to say "this is a
+prefix, not a file" except a character you have to already know about.
+
+The same episode exposed a real defect, and my first account of it was **wrong in
+a way that flipped the conclusion**. I recorded that the shipped
+`project-trajectory/…` half of the citation "classifies as kit-relative and lands
+in the untraced bucket". It does not: it **never reaches classification**. Driven
+— `is_path_shaped("project-trajectory/work/WI-000.template.md:40-41")` is
+`False` while the `docs/` twin is `True`, and the counter settles it, since
+writing both as `path:line` reports `1 dangling · 887 untraced`, the same 887 as
+a clean run, where a bucketed token would have made it 888. The cause is
+`is_path_shaped`: with a `:40-41` suffix nothing ends in a path extension, so
+everything falls to `PATH_PREFIXES`, which enumerates the **downstream** layout
+and lists `registries/`, `skills/` and `ci/` *without* the `project-trajectory/`
+prefix they actually live under here. An accidental blind spot, not a deliberate
+exemption — the kit-relative rule fires only on tokens that are already
+path-shaped, so it neither defends nor can close this. Filed as **WI-396**, with
+the honest limiter that `project-trajectory/` does not exist downstream, so no
+adopter inherits the gap.
+
+**Where §0 would have caught this, and where it would not.** The reviewer's
+reading, which is the sharper version of the lesson: this is the process working,
+one step later than §0 prescribes. The intake said *at filing*, in its own words,
+that the row "deletes no machinery, closes no raise path and makes no bad state
+unrepresentable" and "must justify itself on the navigation benefit alone" — and
+§0 prescribes asking *"what constraint would make this unrepresentable?"* at
+**filing**, "where the cost is still comparable". Applied then, the answer was
+already "none, by the row's own admission". So the filing was correct given the
+ruling it inherited, and refutation is exactly what a claimed row is for; the
+available improvement is only about **where the question gets asked**, not about
+whether this row should have been written.
+
+**Bars.** Full suite, `ruff check .`, `ruff format --check .`,
+`check_trajectory.py --strict`, `check_doc_refs.py --strict` — all green in the
+session report. The one standing red is `test_this_repo_is_not_a_work_branch`,
+expected in a worktree. `docs/open-items.html` is deliberately **not** on this
+branch: `gen_open_items.py` is one of `trunk_step.py`'s regen steps, so the trunk
+lane regenerates it, and a generated view committed here went stale within the
+same session the moment the registry changed again.
+
+**Byte deltas on budgeted files:** none — `AGENTS.template.md`, `PROCESS.md` and
+`PROCESS_OPTIONS.md` untouched.

@@ -11,8 +11,11 @@ already pins it):
   * the tracked pause appearing MID-RUN stops the next cycle (exit 8);
   * a worker that reports DONE without finishing its branch trips the drive
     loop's own stall guard (the trunk-unmoved counter);
-  * NEEDS-HUMAN (7) and other worker failures propagate, with the claim left
-    parked so a relaunch resumes it;
+  * a worker that could not finish HANDS BACK (WI-387, §A3) — NEEDS-HUMAN no
+    longer stops the run, the WI returns to trunk blocked, and the loop drives
+    on to the drained banner; a red handback is reverted to a bar-inert
+    artefact and merges anyway; a CRASHED worker is not a handback and keeps
+    the parked-resume path;
   * end-to-end on a REAL scaffold: claim -> injected worker close -> the REAL
     §A2 refresh bar -> merge -> drained banner; and the same flow with a
     breaking change stops on the RED bar with the branch still parked;
@@ -203,20 +206,22 @@ def test_drive_unwired_config_still_drains_an_empty_queue_to_zero(
     assert "queue drained" in capsys.readouterr().out
 
 
-def test_drive_refuses_a_stranded_claim_rather_than_draining(tmp_path, capsys):
-    # A half-completed claim — active/<branch>/ holds specs but the branch
-    # ref is gone — is invisible to both the frontier (status=active) and the
-    # parked-resume read (no ref). The run must fail closed naming it, never
-    # report the queue drained over work nobody can reach.
+def test_a_claim_dir_with_no_branch_ref_no_longer_stops_the_run(tmp_path, capsys):
+    # WI-387 DELETED `_stranded_claims`. It existed only because the claim
+    # advanced trunk BEFORE cutting the branch, so a crash between the two
+    # writes left a claim no lane could reach; the claim now writes the branch
+    # first and that window is gone (tests/test_integrate.py drives the
+    # abandoned-claim shape it leaves instead). What remains here — a
+    # hand-made active/ directory with no branch — is residue, not a
+    # half-claim, and residue must not stop a run that has nothing to do.
     root = git_repo(tmp_path)
     write_spec(root, "active/wi-401", "WI-401", specref="seed.txt")
-    _commit(root, "claim: WI-401 -> active/wi-401 (branch cut lost)", when=T_CODE)
+    _commit(root, "residue: a hand-made claim directory", when=T_CODE)
     worker = Recorder()
 
     rc = drv.run(root, drive_args(), worker=worker)
-    assert rc == 2
-    err = capsys.readouterr().err
-    assert "NO branch ref" in err and "wi-401" in err
+    assert rc == 0
+    assert "queue drained" in capsys.readouterr().out
     assert worker.calls == []
 
 
@@ -300,26 +305,173 @@ def test_drive_resumes_a_parked_branch_and_stalls_on_no_progress(tmp_path, capsy
     assert worker.calls == [("wi-401", ("WI-401",)), ("wi-401", ("WI-401",))]
 
 
-def test_drive_propagates_needs_human_and_leaves_the_claim_parked(tmp_path, capsys):
+def test_a_crashed_worker_stays_parked_and_the_next_cycle_resumes_it(tmp_path, capsys):
+    # §A3 draws the line at DECIDED vs CRASHED. A crash (an exit code the
+    # worker's own vocabulary does not contain) is deliberately NOT a hang: the
+    # branch exists and the specs are still in active/<branch>/, so the
+    # parked-resume path handles it exactly as before and a worker that keeps
+    # dying is bounded by the stall guard rather than by a run-stop.
     root = parked_repo(tmp_path)
-    worker = Recorder(outcomes=(7,))
+    worker = Recorder(outcomes=(1, 1))
 
-    rc = drv.run(root, drive_args(), worker=worker)
-    assert rc == 7
-    assert "NEEDS-HUMAN" in capsys.readouterr().err
-    # The claim survives for the relaunch to resume.
+    rc = drv.run(root, drive_args(stall_limit=2), worker=worker)
+    assert rc == 4
+    err = capsys.readouterr().err
+    assert "CRASHED (exit 1)" in err and "STALL" in err
+    assert len(worker.calls) == 2
     assert (root / "docs" / "work" / "active" / "wi-401" / "WI-401-widget.md").is_file()
     assert "wi-401" in _git(root, "branch", "--format=%(refname:short)")
 
 
-def test_drive_stops_on_a_failing_worker_with_the_claim_parked(tmp_path, capsys):
-    root = parked_repo(tmp_path)
-    worker = Recorder(outcomes=(3,))
+# --- the third terminal outcome: HANDBACK (WI-387, §A3) -----------------------
+#
+# These run the WHOLE cycle — claim, worker, close, refresh, merge, next cycle —
+# against a stub harness rather than a bootstrapped scaffold, because what is
+# under test is the loop's decision and the shape it lands in trunk, not the
+# bar. The stub check is CONDITIONAL (red exactly while the lane's own broken
+# file is present), which is what lets the red-handback ruling be driven end to
+# end instead of asserted about: an always-red stub could not show the second
+# refresh going green. Helper shapes are copied from tests/test_integrate.py per
+# this suite's no-cross-test-import idiom.
 
-    rc = drv.run(root, drive_args(), worker=worker)
-    assert rc == 3
-    assert "stays parked" in capsys.readouterr().err
-    assert len(worker.calls) == 1
+STUB_TRUNK_STEP = "pass\n"
+
+STUB_CHECK = """import pathlib
+import sys
+
+if pathlib.Path("broken.py").exists():
+    print("  FAIL  tests+coverage   exit 1 (0.2s)")
+    sys.exit(1)
+print("  PASS  tests+coverage   0.2s")
+"""
+
+
+def stub_harness_repo(tmp_path):
+    """A trunk with WI-401 queued, a DECLARED bar, and a stub harness in the
+    tree — the smallest repo a full drive cycle can actually run in."""
+    root = git_repo(tmp_path)
+    (root / ".gitignore").write_text("out/\n", encoding="utf-8", newline="\n")
+    (root / "docs" / "stack.ini").parent.mkdir(parents=True, exist_ok=True)
+    (root / "docs" / "stack.ini").write_text(
+        "[product]\ntest = {py} -m pytest -q\n", encoding="utf-8", newline="\n"
+    )
+    (root / "docs" / "review-policy").write_text("0\n", encoding="utf-8", newline="\n")
+    scripts = root / "scripts"
+    scripts.mkdir(exist_ok=True)
+    (scripts / "trunk_step.py").write_text(
+        STUB_TRUNK_STEP, encoding="utf-8", newline="\n"
+    )
+    (scripts / "check.py").write_text(STUB_CHECK, encoding="utf-8", newline="\n")
+    write_spec(root, "queued", "WI-401", specref="seed.txt")
+    _commit(root, "seed: the stub harness, the declared bar and WI-401", when=T_CODE)
+    return root
+
+
+def building_worker(exit_code, files=()):
+    """A worker that writes `files` into its lane worktree and then reports
+    `exit_code` WITHOUT closing its specs — the shape of a session that got
+    part-way and then could not proceed."""
+
+    def worker(root, branch, wi_ids, args):
+        wt, err = drv.integrate.lane_worktree(root, branch)
+        assert err is None, err
+        for name, text in files:
+            (wt / name).write_text(text, encoding="utf-8", newline="\n")
+        return exit_code
+
+    return worker
+
+
+def _returned(root, wid="WI-401"):
+    path = root / "docs" / "work" / "queued" / "{}-widget.md".format(wid)
+    return path.read_text(encoding="utf-8") if path.is_file() else ""
+
+
+def test_a_needs_human_worker_hands_back_and_the_run_keeps_going(tmp_path, capsys):
+    # THE RUN-STOP THIS DELETES. Exit 7 used to end the whole walk-away run
+    # with the branch parked. Now the lane closes into trunk and the driver
+    # carries on to the drained banner — asserted at exit 0, not just by the
+    # absence of a 7, because "kept working" is the property that matters.
+    root = stub_harness_repo(tmp_path)
+    worker = building_worker(7, [("half-done.py", "VALUE = 1\n")])
+
+    rc = drv.run(root, drive_args(), worker=worker, tier="smoke")
+    assert rc == 0
+    out = capsys.readouterr().out
+    assert "handback: returned WI-401 from wi-401-widget" in out, out
+    assert "merged (WI-401=handback)" in out, out
+    assert "queue drained" in out, out
+
+    # The WI is back in trunk, blocked, with its note — and the branch is gone.
+    spec = _returned(root)
+    assert "## Handback" in spec and "worker exit 7 (NEEDS-HUMAN)" in spec
+    assert 'blockref = "docs/work/queued/WI-401-widget.md"' in spec
+    assert "wi-401-widget" not in _git(root, "branch", "--format=%(refname:short)")
+    # The partial work landed in trunk, which is the whole point of handing
+    # back rather than parking: a future WI can pick it up from here.
+    assert (root / "half-done.py").read_text(encoding="utf-8") == "VALUE = 1\n"
+
+
+def test_a_decided_exit_after_the_lane_closed_merges_on_its_declared_outcome(
+    tmp_path, capsys
+):
+    # THE OTHER DIAGONAL of the invariant's boundary. A review escalation lands
+    # at the END of a lane, so the close may already be written when the worker
+    # reports a decided failure — and `hand_back` reads the claimed spec out of
+    # `active/<branch>/` in the LANE, where a closed lane no longer has one. It
+    # failed with an OSError and stopped the run over a branch that would have
+    # merged cleanly (REVIEW-A round 1, driven). The tree has already named an
+    # outcome; the drain merges it on that.
+    root = stub_harness_repo(tmp_path)
+
+    def worker(root_, branch, wi_ids, args):
+        wt, err = drv.integrate.lane_worktree(root_, branch)
+        assert err is None, err
+        (wt / "shipped.py").write_text("VALUE = 1\n", encoding="utf-8", newline="\n")
+        src = wt / "docs" / "work" / "active" / branch / "WI-401-widget.md"
+        dst = wt / "docs" / "work" / "complete" / "WI-401-widget.md"
+        dst.parent.mkdir(parents=True, exist_ok=True)
+        dst.write_text(
+            src.read_text(encoding="utf-8").replace('specref = "seed.txt"\n', ""),
+            encoding="utf-8",
+            newline="\n",
+        )
+        _git(wt, "rm", "-q", "docs/work/active/{}/WI-401-widget.md".format(branch))
+        _commit(wt, "WI-401: build + close", when=T_LATER)
+        return 6  # EXIT_BUDGET, after the close was already written
+
+    rc = drv.run(root, drive_args(), worker=worker, tier="smoke")
+    assert rc == 0
+    out = capsys.readouterr().out
+    assert "already out of active/" in out, out
+    assert "merged (WI-401=merged)" in out, out
+    assert (root / "docs" / "work" / "complete" / "WI-401-widget.md").is_file()
+    assert (root / "shipped.py").is_file()
+
+
+def test_a_red_handback_is_reverted_to_a_bar_inert_artefact_and_merges(
+    tmp_path, capsys
+):
+    # THE RULED CASE (owner decision 1). The lane hands back code the bar
+    # refuses, which would be the one branch that could still hang. Instead the
+    # code is reverted, the failing diff lands as a `.patch`, the second
+    # refresh goes green and the branch merges — so trunk ends with the record
+    # and without the red.
+    root = stub_harness_repo(tmp_path)
+    worker = building_worker(7, [("broken.py", "VALUE = (\n")])
+
+    rc = drv.run(root, drive_args(), worker=worker, tier="smoke")
+    assert rc == 0
+    captured = capsys.readouterr()
+    assert "quarantining it" in captured.err, captured.err
+    assert "handback: quarantined wi-401-widget" in captured.out, captured.out
+    assert "merged (WI-401=handback)" in captured.out, captured.out
+
+    assert not (root / "broken.py").exists()  # nothing live to red anything
+    patch = root / "docs" / "work" / "handback" / "wi-401-widget.patch"
+    assert patch.is_file()
+    assert "VALUE = (" in patch.read_text(encoding="utf-8")
+    assert "## Handback" in _returned(root)
 
 
 # --- end to end against the REAL bar ------------------------------------------

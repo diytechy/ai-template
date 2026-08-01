@@ -93,12 +93,13 @@ the worker exits 3). Session logs are collision-safe
 docs/reviews/<tag>/ naming the exact reviewed commit, so parallel branches
 never collide. An assignment is ONE review scope (WI-183, SR-062): under
 managed routing + review-policy >= 1 the round is scheduled once, after the
-LAST assigned WI commits, over the combined base..HEAD diff. Before each
-successor the §7 continuation conditions are re-checked: a constituent the
-classifier no longer permits in a multi-WI grouping ends the assignment EARLY
-(exit 10) — built evidence stands and the unstarted constituents return to
-the queue. Exit 0 = every assigned WI built (and its one review cycle
-approved).
+LAST assigned WI commits, over the combined base..HEAD diff. A multi-WI list is
+no longer something the loop packs for itself: session grouping was REMOVED
+rather than wired (WI-383, docs/concurrency-v2.md §A6.1 — two lanes beat two
+WIs in one session at the same throughput, with better attribution), leaving
+one caller, the dispatcher admitting the spine batch, where N WIs genuinely
+must share one window and one owner sitting. Exit 0 = every assigned WI built
+(and its one review cycle approved).
 
 A per-worktree lockfile (out/agent-loop.lock) stops two coordinators grinding
 one checkout — a worker and an --interactive sitting both take it (one
@@ -147,7 +148,6 @@ try:
     import agent_route
     import agent_session
     import plan_runner
-    import schedule
     import score_reviews
 except ImportError:  # pragma: no cover - in-process fallback
     sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -155,7 +155,6 @@ except ImportError:  # pragma: no cover - in-process fallback
     import agent_route
     import agent_session
     import plan_runner
-    import schedule
     import score_reviews
 
 # The WI-218 split: the session-launch layer (slice B), the shared coordinator
@@ -185,7 +184,6 @@ EXIT_WAITING = agent_common.EXIT_WAITING
 EXIT_BUDGET = agent_common.EXIT_BUDGET
 EXIT_NEEDS_HUMAN = agent_common.EXIT_NEEDS_HUMAN
 EXIT_PAUSED = agent_common.EXIT_PAUSED
-EXIT_TRAIN_END = agent_common.EXIT_TRAIN_END
 END_STATES = agent_common.END_STATES
 OWNER_ONLY_PATHS = agent_common.OWNER_ONLY_PATHS
 read_declared = agent_common.read_declared
@@ -1565,20 +1563,8 @@ def build_worker_assignment(args, root):
             "assigned": assigned,
             "base": base,
             "rows": rows,
-            # The scheduler's view of the same registry, for the §7
-            # continuation re-check (classifier eligibility per constituent).
-            "sched": {
-                w["id"]: w
-                # load_registry_rows, not load_rows: the dual-read resolution
-                # (docs/concurrency-restructure.md §2, Phase 2b). Reading the CSV
-                # directly answers EMPTY in a folder-registry tree, which here
-                # would silently disarm the §7 continuation re-check.
-                for w in schedule.load_wis(
-                    schedule.load_registry_rows(
-                        root / "docs" / "requirements" / "work-items.csv"
-                    )
-                )
-            },
+            # (No scheduler view: the `sched` map existed only to feed the §7
+            # continuation re-check, deleted with session grouping — WI-383.)
             "rework": "",  # in-process rework note (a CHANGES-REQUESTED verdict)
         }
         if args.rework:
@@ -2324,53 +2310,14 @@ def run_iteration(ctx, i):
             if remaining
             else (worker.get("rework_wi") or worker["assigned"][-1])
         )
-        # §7 continuation re-check (WI-183): before the lane takes the next
-        # constituent of a MULTI-WI traincar, the classifier must still
-        # permit the grouping — a POSITIVE conflict (spine/gate/
-        # attestation/protected/high-risk/critique/checkpoint) ends the
-        # train EARLY instead of building inside a shared review scope.
-        # Missing classification is NOT a newly-visible conflict: the
-        # explicit assignment was authorized at claim time. Built evidence
-        # stands; the unstarted constituents return to the queue (SR-062).
-        # WI-204 (SR-095): a spine-serial constituent inside a
-        # HOMOGENEOUS spine-only batch is the authorized grouping —
-        # spine packs with spine, never with anything else — so it is not a
-        # newly-visible conflict; only a heterogeneous grouping refuses.
-        if remaining and len(worker["assigned"]) > 1:
-            sched_wi = worker["sched"].get(current_wi)
-            sched_class, reasons = (
-                schedule.classify(sched_wi)
-                if sched_wi is not None
-                else (schedule.SCHED_UNCLASSIFIED, ["unclassified:missing-row"])
-            )
-            if sched_class == schedule.SCHED_SPINE_SERIAL and all(
-                worker["sched"].get(w) is not None
-                and schedule.classify(worker["sched"][w])[0]
-                == schedule.SCHED_SPINE_SERIAL
-                for w in worker["assigned"]
-            ):
-                # A member with NO sched row keeps the refusal (fail closed).
-                sched_class = None  # spine-only batch: authorized, no refusal
-            if sched_class in (
-                schedule.SCHED_SPINE_SERIAL,
-                schedule.SCHED_PROTECTED,
-                schedule.SCHED_SINGLE_WI,
-            ):
-                print(
-                    "\n=== worker {} [{}]: ASSIGNMENT-END (early) ===".format(
-                        worker["train"], ";".join(worker["assigned"])
-                    )
-                )
-                print(
-                    "continuation refused at {}: {} — built {} stay(s) "
-                    "accepted on the branch; the unstarted constituent(s) "
-                    "return to the queue.".format(
-                        current_wi,
-                        ";".join(reasons),
-                        ";".join(sorted(built)) or "(none)",
-                    )
-                )
-                return EXIT_TRAIN_END
+        # (The §7 continuation re-check retired with session grouping, WI-383 /
+        # §A6.1. It re-asked, once per successor, whether the classifier still
+        # permitted a MULTI-WI grouping — a guard that only ever had work to do
+        # because the dispatcher packed independent WIs into one session. With
+        # packing deleted, the only multi-WI assignment left is the spine batch
+        # the dispatcher admits deliberately (§A4), whose constituents are
+        # homogeneous by construction: the guard's sole non-refusing case. A
+        # check that can only ever say yes is not a safeguard.)
     session = "{:03d}".format(next_session_number(iter_dir, worker["train"]))
     stamp = time.strftime("%Y%m%d-%H%M%S")
     # The WI this session claims (WI-137) — recorded as a `# wi:` header line

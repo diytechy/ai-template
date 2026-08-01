@@ -92,10 +92,10 @@ EXIT_NEEDS_HUMAN = 7
 EXIT_PAUSED = 8
 
 
-# A worker whose §7 continuation re-check refuses the next constituent ends
-# its train EARLY (WI-183, SR-062): built/blocked evidence stands, and the
-# dispatcher transactionally releases the unstarted constituents' reservations.
-EXIT_TRAIN_END = 10
+# (EXIT_TRAIN_END = 10 retired with session grouping — WI-383, §A6.1: it ended a
+# PACKED assignment early when the §7 continuation re-check refused the next
+# constituent, and nothing packs. The number stays retired rather than reused —
+# an exit code is a contract with every launcher and log that ever read it.)
 
 
 # The FB3 owner-only path(s): OWNER_SCRATCHPAD.md is free-form owner notes the
@@ -677,6 +677,12 @@ SPEC_STATUS_DIRS = {
 SPEC_EXAMPLE = "WI-000-"
 SPEC_FENCE = "+++"
 SPEC_DELIVERABLE = "\n## Deliverable\n\n"
+# The body's OTHER section (WI-387): a lane that HANDS a WI back writes a
+# `## Handback` note after the Deliverable's place, so the returned spec says
+# in trunk what remains and where the partial work is. It carries no registry
+# cell — nothing here parses it — and is recognised only so an honest
+# returned spec does not read as a malformed one.
+SPEC_HANDBACK = "\n## Handback\n"
 
 
 def spec_work_dir(csv_path):
@@ -756,7 +762,11 @@ def parse_spec_deliverable(relpath, body):
     The long cell lives in the BODY precisely because body text needs no
     escaping: it may hold newlines, quotes and markdown. This format owns the
     whole body shape, so anything that is neither empty nor one
-    `## Deliverable` section is a malformation rather than free prose."""
+    `## Deliverable` section (optionally followed by the `## Handback` note a
+    returned spec carries) is a malformation rather than free prose."""
+    if not body:
+        return ""
+    body = body.partition(SPEC_HANDBACK)[0]
     if not body:
         return ""
     if not body.startswith(SPEC_DELIVERABLE) or not body.endswith("\n"):
