@@ -114,6 +114,15 @@ def _revert_ops(status, paths):
     to go, and the OLD path is what the base had and has to come back. (For a
     copy the old path is unchanged at the base, so restoring it is a harmless
     no-op — uniform beats a special case nobody will remember.)
+
+    THE `C` ARM IS DEFENSIVE, not dead: from the call `quarantine` actually
+    makes it cannot fire, because plain `--name-status` reports a copied file
+    as `A` even at `diff.renames=copies` — git needs `--find-copies-harder` to
+    emit `C` (measured, REVIEW-A round 2). It stays because `diff_records` and
+    this function have to agree about the three-field forms as a PAIR: a caller
+    that ever adds the flag would otherwise get a parse that reads copies and
+    an undo that mishandles them, which is the silent shape this whole function
+    exists to have stopped making.
     """
     if status[:1] in ("R", "C"):
         return [("rm", paths[1]), ("checkout", paths[0])]

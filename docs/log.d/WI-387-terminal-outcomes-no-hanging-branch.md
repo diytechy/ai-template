@@ -46,11 +46,23 @@ option and no state file that could hold one. Two run-stops die with it (the
   `_abandoned_claim` authorises a `git branch -D`, so it convicts on **four**
   facts, not three: the tip's subject is `_claim_subject(wi_id, branch)`
   **exactly**; the tip is not an ancestor of trunk; its parent is; and the
-  commit **touches only the RULING-6 bookkeeping surfaces**. Round 1 shipped a
-  suffix match with no `wi_id` and inferred the last fact from ancestry —
-  which proves only *one commit ahead*, not *carrying nothing* — so a
+  commit **is the move this claim would make** — it ADDS this WI's spec under
+  `active/<branch>/` and touches nothing but that move and declared generated
+  paths. The fourth fact took two rounds to get right. Round 1 inferred it from
+  ancestry, which proves only *one commit ahead*, not *carrying nothing*, so a
   hand-written `wip: nearly done -> active/wi-401 (bookkeeping)` was deleted
-  with its work on it. Three negatives now fail if the matcher loosens again.
+  with its work on it. Round 2 replaced that with "only the RULING-6
+  bookkeeping surfaces" — still too wide, and round 2's review drove a commit
+  adding **only** `docs/log.d/WI-401-hours.md` being convicted and the fragment
+  lost, plus the same for a `docs/log.md` rewrite and a hand-written
+  `PROJECT_STATE.html`. The rule is now what the claim actually writes, and the
+  spec move is REQUIRED rather than merely permitted, so a regeneration that
+  moved no spec is not a claim either. Six negatives now fail if any one fact
+  is dropped. The `git branch -D` that acts on the verdict **reads its return
+  code** and names the holding worktree: it refuses a branch a worktree has
+  checked out, and round 2 printed `deleted the abandoned claim branch …` over
+  a branch that still existed — the same reports-success-on-failure shape as
+  the rename mis-parse, eight lines away.
 - **`handback.py`, a new sibling kit script** (`hand_back` + `quarantine`):
   - `hand_back` commits the work so far **as-is** (`--no-verify` — "as-is" has
     to mean it, and the branch's own §A2 refresh regenerates and bars this tree
@@ -144,6 +156,26 @@ codes are covered by fault injection on the last revert step: the refusal names
 the path and the lane is reset, rather than a count being printed for work that
 did not happen.
 
+**Round 3 closed two more of the same shape and mutation-proved both.** Three
+new negatives — a bookkeeping-only branch (driven over a log fragment, a
+`docs/log.md` rewrite and a hand-written `PROJECT_STATE.html`), a regeneration
+that moved no spec, and an abandoned branch a worktree still holds. Restoring
+the wide bookkeeping rule reds exactly the first two; discarding `branch -D`'s
+return code reds exactly the third; nothing else moves. The held-branch case
+also pins the failure DIRECTION: the branch survives, the spec stays claimable
+in `queued/`, and trunk is clean — it fails closed, it just used to say
+otherwise. (Building it caught a fixture trap worth naming: a lane worktree
+created *inside* the repo is untracked dirt, so the clean-trunk rung refuses
+first and the test proves nothing. It is created outside.)
+
+**One arm is defensive and is recorded as such rather than left to look dead.**
+`_revert_ops`' `C` (copy) branch cannot fire from the call `quarantine` makes:
+even at `diff.renames=copies`, plain `--name-status` reports a copied file as
+`A`, because git needs `--find-copies-harder` to emit `C`. It is kept because
+the parse and the undo have to agree about the three-field forms as a pair —
+and because a future caller that adds the flag would otherwise get a silently
+wrong revert.
+
 **One fixture was corrected rather than bent.** The content fact reads the same
 allowed set as the RULING-6 audit (bookkeeping prefixes plus the declared
 `[generated]` paths), and the claim folds `trunk_step --regen` into its own
@@ -162,10 +194,16 @@ re-claim refuses instead of deleting.
   documented escape and the WI-374 precedent (the drive loop went to `drive.py`
   rather than into `agent_loop.py`). It costs the scaffold surface — MAPPING
   row, README kit-contents, `test_bootstrap` file list — all three registered.
-- **`integrate.py` still crosses THRESHOLD (1418 → 1638) and takes a NEW
+- **`integrate.py` still crosses THRESHOLD (1418 → 1692) and takes a NEW
   reviewed baseline entry.** What remains is irreducibly its own: the claim,
   the outcome read the merge slot gates on, and the verdict gate. Re-stamp
-  DOWN with WI-390's deletions.
+  DOWN with WI-390's deletions. (Measured with the ratchet's own metric,
+  `len(text.splitlines())`, at the shipped tip — the same figure the baseline
+  carries. An earlier draft of this line said 1638, a stale mid-round number
+  that never matched a stamp; round 2's review caught the disagreement between
+  it and the 1643 stated further down, and this is the corrected, re-measured
+  value after round 2's own fixes. THRESHOLD is 1500; the two siblings sit
+  under it at `handback.py` 353 and `drive.py` 495, so neither needs an entry.)
 - **`EXIT_BUDGET` and `EXIT_STALL` now block a WI that used to be resumable —
   a real cost, recorded rather than traded in a set literal.** They are decided
   exits, so under §A3 the lane hands back; `hand_back` sets a `blockref`; and
@@ -223,7 +261,9 @@ here.
 [`tests/test_module_size_ratchet.py`](../../tests/test_module_size_ratchet.py).**
 `integrate.py` NEW 1588, re-stamped to 1643 across round 2 (the fourth
 convicting fact, the exact-subject comparison, the outcome sets, and the
-corrected claim rationale); `agent_common.py` 1731 → 1741 and
+corrected claim rationale) and to **1692** at round 3 (the checked `branch -D`,
+the narrowed content fact, and `_drop_abandoned` extracted so `claim` stays
+under the C901 limit); `agent_common.py` 1731 → 1741 and
 `check_trajectory.py` 3251 → 3261 (the body-grammar lines, identical text in
 both by construction); `bootstrap.py` 2243 → 2250 (the scaffold registration).
 `docs/dupes-allow`: the two F5 fingerprints moved again

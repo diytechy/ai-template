@@ -872,7 +872,21 @@ BASELINE = {
     # commits). Five comment lines saying so, because the failure DIRECTION is
     # the part a successor would otherwise have to rediscover. Reviewed bump,
     # log 2026-08-01.
-    "integrate.py": 1643,
+    # +34 (1643 -> 1677), REVIEW-A round 2: two more reports-success-on-failure
+    # shapes closed. `git branch -D`'s return code is read and the HOLDER named
+    # (it refuses a branch a worktree has checked out, and announcing a deletion
+    # that did not happen is what hid the rename mis-parse next door); and the
+    # content fact narrows from "only bookkeeping surfaces" — under which a
+    # commit adding just a log fragment was convicted and the fragment lost — to
+    # what the claim actually WRITES: this WI's spec move into active/<branch>/,
+    # required, plus declared generated paths, nothing else. Reviewed bump,
+    # log 2026-08-01.
+    # +15 (1677 -> 1692), same round: the orphan-deletion block extracted to
+    # `_drop_abandoned` because reading the return code pushed `claim` to C901
+    # 11. Extraction over a complexity baseline - the ratchet's stated
+    # preference - and the helper carries the WHY of both the printed sha and
+    # the checked code. Reviewed bump, log 2026-08-01.
+    "integrate.py": 1692,
 }
 
 

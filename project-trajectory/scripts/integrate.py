@@ -328,13 +328,23 @@ def _abandoned_claim(root, wi_id, branch):
       * the tip is NOT an ancestor of trunk - nothing of it reached trunk;
       * the tip's parent IS, so the branch is exactly ONE commit past a point
         trunk has; and
-      * that one commit TOUCHES ONLY BOOKKEEPING SURFACES. Being one commit
-        ahead proves nothing about what the commit carries - the same review
-        drove a one-commit branch adding `real-work.txt` - so the content is
-        read rather than inferred. A real claim commit moves a spec and folds
-        in the regeneration; anything else is somebody's work.
+      * that one commit IS THE MOVE THIS CLAIM WOULD MAKE, and nothing else:
+        it ADDS this WI's spec under `active/<branch>/`, and every path it
+        touches is that spec's move or a DECLARED generated artifact. Being one
+        commit ahead proves nothing about what the commit carries - round 1
+        drove a one-commit branch adding `real-work.txt` - and "only
+        bookkeeping surfaces" was still too wide: round 2 drove a commit adding
+        only `docs/log.d/WI-401-hours.md` being convicted and the fragment
+        lost. The claim writes a spec move plus its regeneration, so that is
+        the whole of what a claim commit may contain.
 
     Any branch failing any of the four is a real collision and still refuses.
+
+    THE FAILURE DIRECTION, stated as narrowly as the code behaves: a repo that
+    has declared no `[generated]` artifacts refuses its OWN crashed claims,
+    because the regeneration this claim folds in lands on undeclared paths. It
+    never deletes something it should not; it declines to re-cut something it
+    could have. Same declaration `audit` reads.
     """
     tip = _rev(root, "refs/heads/" + branch)
     if tip is None:
@@ -347,24 +357,73 @@ def _abandoned_claim(root, wi_id, branch):
         return False
     if ac.git(root, "merge-base", "--is-ancestor", tip + "^1", head)[0] != 0:
         return False
-    code, out = ac.git(root, "diff", "--name-only", tip + "^1", tip)
+    # --no-renames because the claim's `git mv` would otherwise arrive as ONE
+    # rename record and hide the queued side of the move; split, both paths are
+    # named and each is judged on its own.
+    code, out = ac.git(root, "diff", "--name-status", "--no-renames", tip + "^1", tip)
     if code != 0:
         return False  # a diff nobody could read is not evidence of anything
-    # The same allowed set the RULING-6 audit uses, for the same reason: it is
-    # the declared list of what a bookkeeping commit may touch. A repo that has
-    # not declared its generated artifacts therefore fails CLOSED here - its own
-    # claim commits carry the regeneration this claim folds in, so they stop
-    # LOOKING like claim commits and the branch is refused rather than deleted.
-    # That is the safe direction, and it is the same declaration `audit` would
-    # already flag the commit against.
-    allowed = list(BOOKKEEPING_PREFIXES) + _generated_paths(root)
+    generated = _generated_paths(root)
+    claimed = "{}/{}/{}-".format(ACTIVE, branch, wi_id)
+    queued = "{}/queued/{}-".format(WORK, wi_id)
+    moved_in = False
     for line in out.splitlines():
-        path = line.strip().replace("\\", "/")
-        if path and not any(
-            path == a.rstrip("/") or path.startswith(a) for a in allowed
+        parts = line.strip().split("\t")
+        if len(parts) < 2:
+            continue
+        status, path = parts[0], parts[-1].replace("\\", "/")
+        if path.startswith(claimed):
+            moved_in = moved_in or status.startswith("A")
+        elif not path.startswith(queued) and not any(
+            path == g.rstrip("/") or path.startswith(g) for g in generated
         ):
             return False
-    return True
+    # A commit that regenerated artifacts but moved no spec is not a claim.
+    return moved_in
+
+
+def _drop_abandoned(root, branch):
+    """Delete the abandoned claim branch the ladder let through, if there is
+    one. A refusal string, or None.
+
+    Only an abandoned claim survives `_claim_refusal`'s branch rung, so this is
+    the re-claim §A3 asks for rather than a clobber. Two things it does that a
+    one-liner did not: it prints the SHA and the restore command, because a
+    deletion the operator cannot reach by reflog is a deletion they cannot
+    audit; and it READS THE RETURN CODE, because `git branch -D` refuses a
+    branch a worktree has checked out. Round 2 announced
+    `deleted the abandoned claim branch ...` over a branch that still existed
+    and then refused with an unrelated message - the same
+    reports-success-on-failure shape as the rename mis-parse it sat eight lines
+    from, so the holder is named here and the caller stops.
+    """
+    orphan = _rev(root, "refs/heads/" + branch)
+    if not orphan:
+        return None
+    code, out = ac.git(root, "branch", "-D", branch)
+    if code != 0:
+        holder, is_primary = _worktree_holding(root, branch)
+        where = (
+            "no registered worktree holds it"
+            if holder is None
+            else "it is checked out in {}{}".format(
+                holder, " (the MAIN checkout)" if is_primary else ""
+            )
+        )
+        return (
+            "{} is an abandoned claim but will not delete - {}. Free the branch "
+            "(git worktree remove <path> / git -C <path> checkout <trunk>) then "
+            "re-run; nothing was claimed:\n{}".format(
+                branch, where, ac._failure_tail(out)
+            )
+        )
+    print(
+        "integrate: deleted the abandoned claim branch {} (was {}; recoverable "
+        "via git reflog / git branch {} {})".format(
+            branch, orphan[:10], branch, orphan[:10]
+        )
+    )
+    return None
 
 
 def _claim_refusal(root, wi_id, branch):
@@ -456,19 +515,9 @@ def claim(root, wi_id, branch):
     refusal = _claim_refusal(root, wi_id, branch)
     if refusal:
         return fail(refusal)
-    orphan = _rev(root, "refs/heads/" + branch)
-    if orphan:
-        # Only an abandoned claim survives the ladder's branch rung, so this is
-        # the re-claim §A3 asks for rather than a clobber. The sha is printed
-        # because a deletion the operator cannot reach by reflog is a deletion
-        # they cannot audit.
-        ac.git(root, "branch", "-D", branch)
-        print(
-            "integrate: deleted the abandoned claim branch {} (was {}; "
-            "recoverable via git reflog / git branch {} {})".format(
-                branch, orphan[:10], branch, orphan[:10]
-            )
-        )
+    refusal = _drop_abandoned(root, branch)
+    if refusal:
+        return fail(refusal)
     spec = _queued_spec(root, wi_id)
     dest_dir = root / ACTIVE / branch
     dest_dir.mkdir(parents=True, exist_ok=True)
