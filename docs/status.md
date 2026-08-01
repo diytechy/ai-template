@@ -35,6 +35,12 @@ home elsewhere — don't restate it here:
   pitfalls came from the work and which came from driving four lanes by hand
   when the shipped loop is serial — read that before deciding how to run the
   rest.
+- **The drain plan for the remaining backlog:**
+  [backlog-plan-2026-08-01.md](backlog-plan-2026-08-01.md) — the serial build
+  order for the queued rows, the standing rules every builder inherits, and the
+  four pending owner rulings, each with options and a recommendation. One rule
+  from it binds immediately: **a work branch never mints a new work-item id** —
+  minting is a serial trunk-side act only.
 - **Resuming in a new session — boot HERE, then
   [concurrency-v2.md](concurrency-v2.md), which is the spec-of-record for the
   whole queued backlog; the design is CLOSED and its ten 2026-07-31 rulings are
