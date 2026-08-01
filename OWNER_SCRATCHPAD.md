@@ -622,7 +622,7 @@ IMPORTANT: In order to keep all of this chained mechanically, I propose a work i
 		5. If it CANNOT merge for some reason (which should never be the case, since when it was queued the dispatcher will not merge in any other work, and the branch should merge main into itself), it must immediately issue a repair block to determine how to close out the branch, related to the comments above.  Again, a branch should never sit hanging.  It looks like Workstream A — concurrency and spine authority shows a signficiant amount of complexity around corner cases that should never occur or should be handled in a more standardized way.  Even human input is needed, it should usually result in a new work request that touches the spine (because if something isn't clear it means scope is ambiguous).
 
 Outcomes I want:
- - A review from your side on this flow, and to align on this entire repository template workflow from a high level.  What new questions surface when you look at this vs how the flow currently works?
+ - A review from your side on this flow, and to align on this entire repository template workflow from a high level.  What new questions surface when you look at this vs how the flow currently works?  Show me in a mermaid diagram what flow differences you would recommend, this may require multiple diagrams, but I want to see the circular flow at different levels to ensure we are aligned.
 
  - From there, I am hoping we can attack multiple loose ends in this repository, removing dead / duplicate code, cleaning up where tests / guards have become numerous and instead should have been handled at validation from the output side (instead of testing and or sanatizing on the input side).
 
