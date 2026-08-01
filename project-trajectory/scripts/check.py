@@ -39,7 +39,10 @@ Design choices that keep it honest and CI-friendly:
       one with a `docs/work/active/<branch>/` spec directory — each is reported
       SKIP with its reason instead of running. Fail-closed: off git, on a
       detached HEAD, or unclaimed, the full bar applies. See
-      `_TRUNK_FRESHNESS_STEPS`.
+      `_TRUNK_FRESHNESS_STEPS`. `--trunk-lane` forces them ON: the station
+      refresh (`integrate.py refresh`) regenerates on the branch and then bars
+      it, and that tree IS the tree that becomes trunk, so the branch stands in
+      the trunk lane for exactly that one run.
     - **Non-interactive.** No prompts; deterministic exit codes for automation.
 
 Usage:
@@ -1047,6 +1050,18 @@ _TRUNK_FRESHNESS_STEPS = frozenset(
 # by resolved root, so a test moving between fixtures gets its own answer.
 _WORK_BRANCH_CACHE = {}
 
+# Set by `--trunk-lane`. The stand-down above rests on "a work branch never
+# commits a generated artifact", which the station refresh (concurrency-v2.md
+# §A2) makes false for exactly one commit: it merges trunk in, runs trunk_step
+# ON the branch and bars the result — a tree byte-identical to the one the merge
+# produces, so it owes the trunk lane's gates. Without the flag those seven
+# steps SKIP, and the integrator reads any SKIP as a refusal, so the refresh
+# could never go green: the flag is what MAKES the mechanical bar possible, not
+# a rescue from a false pass (REVIEW-A round 1 — the first version of this
+# comment had the failure direction backwards). Opt-IN all the same, so a
+# caller that forgets it gets the stricter-for-trunk answer.
+_FORCE_TRUNK_LANE = False
+
 
 def _git_out(root, args):
     """stdout of a git command under `root`, or None on ANY failure (no git
@@ -1144,7 +1159,7 @@ def _work_branch_skip(name, root="."):
     `--list` and the summary must still name the step, or the plan would lie about
     what the gate covers. A skipped step never affects the exit code (SKIP is not
     FAIL — the same status the missing-tool guard uses)."""
-    if name not in _TRUNK_FRESHNESS_STEPS:
+    if name not in _TRUNK_FRESHNESS_STEPS or _FORCE_TRUNK_LANE:
         return None
     branch = _work_branch(root)
     if not branch:
@@ -1360,6 +1375,13 @@ def main():
         help="treat missing tools as SKIP (local dev only)",
     )
     ap.add_argument(
+        "--trunk-lane",
+        action="store_true",
+        help="run the generated-artifact freshness gates even on a claimed "
+        "work branch — the station refresh's bar (integrate.py refresh), where "
+        "the branch tree IS the tree that becomes trunk",
+    )
+    ap.add_argument(
         "--list",
         action="store_true",
         help="print the plan (with [process]/[product] layer tags) and exit",
@@ -1393,6 +1415,8 @@ def main():
         "with each step's output streamed live exactly as before",
     )
     args = ap.parse_args()
+    global _FORCE_TRUNK_LANE
+    _FORCE_TRUNK_LANE = args.trunk_lane
     # check.py resolves docs/gate, docs/stack.ini, and docs/architecture.md
     # relative to the CWD (unlike the sibling scripts, which take --root). Run it
     # anywhere but the repo root and it would silently see no profile and no gate

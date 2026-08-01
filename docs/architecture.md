@@ -61,7 +61,7 @@ graph LR
     m_scripts_gen_release_checklist["scripts/gen_release_checklist — Generate the human release checklist from the r…"]
     m_scripts_gen_skills_index["scripts/gen_skills_index — Generate the skills applicability index from th…"]
     m_scripts_gen_trajectory["scripts/gen_trajectory — Generate the offline project-state dashboard (r…"]
-    m_scripts_integrate["scripts/integrate — integrate.py — the local integrator: a serial, …"]
+    m_scripts_integrate["scripts/integrate — integrate.py — the local integrator: the statio…"]
     m_scripts_plan_artifacts["scripts/plan_artifacts — The dual-plan round artifact filer: the coordin…"]
     m_scripts_plan_briefs["scripts/plan_briefs — Redacted dual-plan brief assembler + the three …"]
     m_scripts_plan_coverage["scripts/plan_coverage — Dual-plan coverage pre-pass: make rival WI deco…"]
@@ -739,7 +739,7 @@ Contracts (interfaces): IF-011, IF-024, IF-052, IF-056, IF-071
 | `main()` |  |  |
 
 ### `scripts/integrate`
-_integrate.py — the local integrator: a serial, fail-closed merge queue._
+_integrate.py — the local integrator: the station protocol and its merge slot._
 Imports (internal): `agent_common`, `schedule`, `score_reviews`
 
 | Public item | Summary | Implements |
@@ -748,7 +748,13 @@ Imports (internal): `agent_common`, `schedule`, `score_reviews`
 | `normalize_wi_id(wi_id)` | `wi-401`/`Wi-401` -> `WI-401`; anything else is returned unchanged. |  |
 | `claim(root, wi_id, branch)` | §2.3 steps 1+2: the serial trunk claim, then the branch cut. |  |
 | `finished_branches(root)` | Claimed branches whose tip moved every spec out of active/<branch>/. |  |
-| `integrate_one(root, branch, tier, held)` | One branch through the queue. Returns None on green, else the refusal. |  |
+| `refresh_attestation(root, branch, rev)` | `(work_tip_sha, bar summary)` if `rev` is a GENUINE refresh commit for |  |
+| `lane_worktree(root, branch)` | The lane worktree holding `branch`: `(path, error)`, created if needed. |  |
+| `trunk_is_ancestor(root, branch)` | THE CONSTRAINT (§A2): is the trunk's HEAD already an ancestor of `branch`? |  |
+| `ignored_files(wt)` | Every IGNORED FILE under `wt` as a set of repo-relative posix paths, or |  |
+| `existing_directories(wt)` | Every directory under `wt` right now, as a set of paths. |  |
+| `refresh(root, branch, tier)` | The §A2 station refresh. Returns `(branch tip sha, None)` or `(None, refusal)`. |  |
+| `integrate_one(root, branch, tier, held)` | One branch through the merge slot. Returns None on green, else the refusal. |  |
 | `integrate(root, tier)` |  |  |
 | `audit(root, since)` | RULING-6 over a window: non-merge trunk commits must stay on bookkeeping |  |
 | `main(argv)` |  |  |

@@ -641,7 +641,33 @@ BASELINE = {
     # +1 (1523 -> 1524), WI-384: the claim-signal docstring line that says the
     # close moves specs to their TERMINAL directory rather than "archives"
     # them. One wrapped comment line. Reviewed bump, log 2026-08-01.
-    "check.py": 1524,
+    # +24 (1523 -> 1547), WI-386: `--trunk-lane`, the ONE deliberate exception
+    # to the rule the WI-357 entry above added. The station protocol moves the
+    # only mechanical bar in the loop onto the branch, so the branch's tree
+    # becomes the trunk's tree and owes the freshness gates the lane rule
+    # stands down. Without the flag those seven steps SKIP and the integrator
+    # reads any SKIP as a refusal, so the refresh could never go green — the
+    # flag MAKES the mechanical bar possible (REVIEW-A round 1 corrected the
+    # direction stated here: it does not rescue the bar from a false pass).
+    # 13 of the 26 added lines (24 net) are the argparse help and the comment
+    # recording why an opt-in override to a fail-closed rule is safe — the text
+    # a successor would otherwise delete as redundant — with 4 more in the
+    # module usage docstring; the behaviour is one flag, one module global, one
+    # `or`. (Round 2 corrected that count from "eleven of the 24", which erred
+    # in this entry's own favour.) Reviewed bump, reason here and in
+    # docs/log.d/WI-386-station-protocol.md. Re-stamp down with WI-280.
+    # +25 net (1523 -> 1548), WI-386 merging trunk `979d8e09`: NOT a new bump
+    # and not a side picked — the same shape WI-384 hit on this file one merge
+    # earlier, and resolved the same way. WI-384 and WI-386 re-stamped from the
+    # same base 1523 on parallel branches (1524 and 1547) and the merge
+    # conflicted here. Resolved by RE-MEASURING the merged file with the
+    # census's own metric (`len(text.splitlines())` = 1548), which is exactly
+    # 1523 + WI-384's +1 + WI-386's +24: the two changes are disjoint (a
+    # docstring line and a flag), so the arithmetic CHECKS the resolution
+    # rather than merely agreeing with it. Both reason chains above are
+    # preserved verbatim; neither WI's record was dropped to make the number
+    # fit. Re-stamp down with WI-280.
+    "check.py": 1548,
     # +1 (1916 -> 1917), WI-279: one MAPPING row registering the new
     # scripts/check_coverage.py kit gate so it ships downstream — a required
     # one-line registration, not monolith growth (the reviewed-bump escape the

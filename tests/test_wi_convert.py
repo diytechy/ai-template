@@ -32,6 +32,7 @@ the converter rather than at a subprocess's exit code.
 """
 
 import csv
+import re
 
 import pytest
 from conftest import ROOT, load_script
@@ -349,7 +350,26 @@ def test_status_becomes_the_directory_and_cancellation_stays_visible(
             if p.name.startswith(wi_id)
         )
         # The deleted attribute stays deleted: the folder is the statement.
-        assert "disposition" not in path.read_text(encoding="utf-8")
+        # Two narrowings, each doing distinct work, because a whole-file
+        # substring read convicts SEVEN of the sixteen cancelled rows (measured
+        # 2026-08-01: WI-061, -063, -108, -158, -187, -271, -356) and none of
+        # them carries the key — a repo whose own record discusses a retired
+        # concept must be allowed to say its name.
+        #   * The FRONTMATTER split gives the guard its subject. "The deleted
+        #     ATTRIBUTE stays deleted" is a claim about schema, and six of the
+        #     seven carry the word only in the Deliverable BODY, where it is
+        #     plainly prose.
+        #   * The KEY-ASSIGNMENT match separates prose from schema inside the
+        #     frontmatter, which the split cannot: WI-356's `title` quotes a
+        #     stale "By disposition" census line, so the split alone still reds
+        #     it. (The key match alone, over the whole file, reds nothing today
+        #     — but its subject would be unbounded, convicting a body that
+        #     quoted the old schema at line start.)
+        # Found on WI-386's composed tree, the first DRAINED registry this test
+        # could run against at all: `live_csv` skips while any claim is in
+        # flight, and both parents of that merge had one.
+        head = path.read_text(encoding="utf-8").split("+++", 2)[1]
+        assert not re.search(r"(?m)^\s*disposition\s*=", head)
 
 
 def test_emitted_specs_are_lf_on_every_platform(tmp_path, live_csv):
