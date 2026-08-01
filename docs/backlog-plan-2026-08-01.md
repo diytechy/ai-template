@@ -106,7 +106,7 @@ the affected row; R4 additionally clears through the open-items flow once
   mechanically. But the four cells that point *out* of the registries into the
   code and test tree — `Evidence`, `Module`, `CodeSymbol`, `TestRefs` — are
   never checked at all. Measured, not argued: an invented citation
-  (`tests/this_file_has_never_existed.py`) passes every strict gate at rc=0
+  (`tests/this_file_has_never_existed.py`) passes every strict gate at rc=0 <!-- path-ok: the invented citation R2 is ABOUT, quoted as WI-394's measured evidence; it must never exist, and the same quoting in docs/specs/WI-394.md carries the same marker -->
   while the row reads `Automated=Yes, Status=Verified`. Real dead citations
   already exist (a test module deleted 2026-07-29 is still cited as Evidence).
   A complication the spec maps honestly: the checker's current behaviour is a
