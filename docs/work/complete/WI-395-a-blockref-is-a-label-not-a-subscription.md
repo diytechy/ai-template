@@ -6,3 +6,16 @@ specref = "docs/concurrency-restructure.md#7-migration-plan-each-phase-is-itself
 buildtier = "medium"
 safety_class = "ordinary"
 +++
+
+## Deliverable
+
+The R3 wording fix, as narrowed by the 2026-08-01 amendment: the `blocked`
+bullet in the two byte-identical exemplar copies
+(`docs/work/queued/WI-000-example.md` + `project-trajectory/work/WI-000.template.md`)
+no longer promises "readiness is the scheduler's to derive". It now states the
+mechanism as built — the scheduler reads the `blockref` key's **presence** and
+never the blocker's state — and names the real release paths: the dispatcher's
+handback-intake arm (mints the disposition row when a handback merge lands;
+R3, log Decisions 2026-08-01) or a reviewed edit deleting the `blockref`.
+Option A (the cross-registry subscription) deliberately not built; verified by
+`tests/test_dogfood_sync.py` (25 passed), which reds if the copies diverge.
