@@ -23,6 +23,23 @@ is the second one.
   `git write-tree`, then refuses to leave a commit whose attestation it cannot
   itself verify. Amend, rebase, cherry-pick, a copied message and a hand-written
   trailer all fail the tree or parent check.
+- **THE BOUND, STATED PLAINLY: this defeats accident, not intent.** A lane that
+  *deliberately* constructs a valid attestation merges unbarred, and the cost is
+  **three git commands** — `add -A`, `git write-tree`, `git rev-parse <branch>`,
+  then a commit carrying those two values. Not "re-implementing the refresh":
+  round 1's fix note said that and round 2 drove the real price, landing
+  `never-barred.txt` on trunk with the bar never invoked. The format is printed
+  in every refresh commit on trunk, and the operator of this system is an agent
+  that reads the source, so the cost is reading. **This is accepted
+  deliberately**, because the only structural closure is a bar the slot itself
+  runs and cannot skip — and DECISION 3 (owner ruling 2026-07-31) deleted the
+  merge bar outright, a kept-just-in-case bar being exactly the shape §0 warns
+  against. The threat model is the one the rest of the integrator holds: bugs,
+  drift and a lane that goes wrong, not a lane that lies on purpose. **An owner
+  may want to rule on that boundary**; if it is ever reopened the answer is a
+  slot-side bar and a revisited DECISION 3, not a longer trailer. Pinned by a
+  test that asserts the LIMIT rather than a defence, so nobody later reads the
+  guarantee as stronger than it is.
 - **`integrate.py refresh`** — the lane-side station refresh, in the branch's
   own lane worktree: merge trunk in → `trunk_step.py` (compile, then regen) →
   stage → the declared bar → commit. Order pinned by recording stub harness
@@ -83,11 +100,17 @@ is the second one.
    `git status --ignored=matching` lines, because that listing collapses an
    ignored directory to one line at any `-u` setting and so could not see into a
    directory that already existed — which round 1 drove, and which is the NORMAL
-   case since the worker builds in the same lane worktree. **Scope stated
-   honestly: this does not make a lane clean.** A lane the worker already built
-   in still reports dirty at unload and the branch is still held; that is
-   WI-359's rule working as designed and it predates this WI. All the refresh
-   promises is that it adds nothing to the pile.
+   case since the worker builds in the same lane worktree. It also prunes a
+   directory its own deletions emptied, because git DOES report an emptied
+   ignored directory (measured) and the unload would refuse over it — but only
+   one absent from a directory snapshot taken before the refresh started, since
+   an empty directory that predates the lane is the lane's. Round 2 drove that
+   overreach, and this repo's own `docs/work/deferred/` is the live case of an
+   empty untracked directory being load-bearing. **Scope stated honestly: this
+   does not make a lane clean.** A lane the worker already built in still
+   reports dirty at unload and the branch is still held; that is WI-359's rule
+   working as designed and it predates this WI. All the refresh promises is that
+   it adds nothing to the pile.
 4. **`_verdict_gate` now measures code-time at `_work_tip`.** Structural
    consequence of moving the bar onto the branch: the refresh is the last commit
    before the merge and lands after the review by construction, so counting it
@@ -138,14 +161,27 @@ stands and the second branch stays finished-and-claimed). That is §A3/WI-387's
 handback outcome arriving one row early; recorded here so the next reader does
 not have to derive it from a refusal string.
 
-**Reviewed baseline bump.** `check.py` 1523 → 1547 in
-[`test_module_size_ratchet.py`](../../tests/test_module_size_ratchet.py); eleven
-of the 24 lines are the argparse help and the comment recording why an opt-in
-override to a fail-closed rule is safe. Reason at the entry. Complexity ratchet
-untouched (`main` stayed at 16 — the flag is an assignment, not a branch).
+**Reviewed baseline bump, and one decomposition instead of a second.**
+`check.py` 1523 → 1547 in
+[`test_module_size_ratchet.py`](../../tests/test_module_size_ratchet.py) — +26/−2,
+24 net, of which **13 are the argparse help (3) and the comment recording why an
+opt-in override to a fail-closed rule is safe (10)**, plus 4 more in the module
+usage docstring. Reason at the entry.
 
-**Bars.** Full unfiltered suite `pytest -q -n auto`: **1726 passed, 12 skipped,
-2 failed in 538s**; `ruff check .` and `ruff format --check .` clean (146
+The complexity ratchet is untouched, but not because nothing crossed.
+`check.py:main` stayed at 16 (the flag is an assignment, not a branch), and then
+the round-2 guards pushed **`integrate.refresh` over C901 (13 > 10)**. Per the
+ratchet's own instruction — *decomposition, not a baseline bump* — its
+preconditions moved into `_refresh_preflight`; as shipped `refresh` measures 9
+and `_refresh_preflight` 6, both under `MAX_COMPLEXITY = 10`. `integrate.py`
+carries no baseline entry at all, so a bump would have meant creating one for a
+function invented this session. No behaviour moved: the preflight runs
+`_declared_bar_or_refusal` → the primary-checkout refusal → `lane_worktree` →
+the dirty check → `_work_tip` → `reset --hard`, which is the round-1 sequence
+with exactly the one new guard inserted.
+
+**Bars.** Full unfiltered suite `pytest -q -n auto`: **1729 passed, 12 skipped,
+2 failed in 394s**; `ruff check .` and `ruff format --check .` clean (146
 files); `check_trajectory.py --root . --strict` clean (388 work items, graph
 acyclic, only the pre-existing IF-registry connectivity warns §A9.1 already
 records). Both failures are pre-existing on this branch and neither is this

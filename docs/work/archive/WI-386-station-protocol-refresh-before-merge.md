@@ -26,6 +26,19 @@ commit, a whole refresh message copied onto another commit, and
 `git commit --amend` moving the tree under a genuine one - and each of those
 landed unbarred content on trunk. All three are now regression tests.
 
+The bound is stated rather than overstated: this defeats ACCIDENT, not INTENT.
+A lane that deliberately constructs a valid attestation merges unbarred, and the
+cost is three git commands (`add -A`, `git write-tree`, `git rev-parse
+<branch>`) with no bar at all - review round 2 drove it and landed
+`never-barred.txt` on trunk. That is accepted deliberately: the only structural
+closure is a bar the slot itself runs and cannot skip, and DECISION 3 (owner
+ruling 2026-07-31) deleted the merge bar outright as the kept-just-in-case shape
+the governing principle warns against. The threat model is the integrator's
+usual one - bugs, drift and a lane that goes wrong, not a lane that lies on
+purpose. A test pins the LIMIT rather than a defence, so a later reader cannot
+mistake the guarantee for a stronger one; reopening it means a slot-side bar and
+a revisited DECISION 3, not a longer trailer.
+
 `integrate.py refresh` is the lane-side operation that makes the constraint
 true: in the branch's own lane worktree, merge trunk in, run `trunk_step.py`
 (compile then regen), stage, run the declared bar, commit. The order is pinned
@@ -68,8 +81,13 @@ its own ignored tool residue would otherwise make the §5.6 unload refuse to GC
 the lane over caches the integrator had just created - it enumerates ignored
 FILES rather than diffing `git status` lines, which collapse an ignored
 directory to one line and so cannot see into a directory the worker already
-made. It does NOT make a lane clean: a lane the worker built in still reports
-dirty at unload, which is WI-359's rule working as designed. And `refresh`
+made. It prunes a directory its own deletions emptied - git reports an emptied
+ignored directory, so the unload would otherwise refuse over it - but only one
+absent from a directory snapshot taken before the refresh ran, because an empty
+directory that predates the lane is the lane's (this repo's own
+`docs/work/deferred/` is the live case of empty being load-bearing). It does NOT
+make a lane clean: a lane the worker built in still reports dirty at unload,
+which is WI-359's rule working as designed. And `refresh`
 refuses outright when the MAIN checkout holds the branch, because trunk is
 whatever that checkout has out - refreshing there merges the branch into itself
 and attests a composition that never happened.
