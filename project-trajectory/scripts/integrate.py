@@ -43,8 +43,8 @@ Four operations:
              whole merge queue. It takes the coordinator lock ONCE (the one
              acquisition site in this file, see `_slot`) and, per FINISHED
              claimed branch, requires the policy verdicts (RULING-7), checks
-             the ancestor relation and the `Bar-Green:` attestation at the
-             branch tip, then merges --no-ff. A branch that is not
+             the ancestor relation and VERIFIES the `Bar-Green:` attestation
+             at the branch tip, then merges --no-ff. A branch that is not
              merge-ready is refreshed RIGHT THERE, inside the slot — which is
              the pessimistic sequence (take slot -> refresh -> bar -> merge)
              and is why that path can never rot: every drain that merges a
@@ -67,10 +67,12 @@ Fail-closed by construction, against the dispatcher's recorded fail-open: a
 missing docs/stack.ini, an absent or EMPTY [product] test declaration, or
 any SKIP in the bar's own report is a REFUSAL, never a pass — exit 0 alone
 is not evidence the bar ran (the `bar_failures: 0` lesson, §4.4 of the
-Phase 4 inventory). The bar is attested to a TREE, not to a run: the
-`Bar-Green:` trailer lives in the refresh commit itself, so "bar green at
-sha X" is a property of X that git adjudicates — no ref, no state file,
-nothing to go stale. Verdict freshness is git-derived the same way: the
+Phase 4 inventory). The bar is attested to a TREE, and the attestation NAMES
+that tree: the refresh commit carries `Bar-Green: tree=<sha> work=<sha>
+<summary>`, and the slot re-derives both names from git before it merges. A
+message alone would prove nothing — amend, rebase, cherry-pick and copy all
+carry words onto content nobody barred — so the trailer is checked, never
+read (`refresh_attestation`). Verdict freshness is git-derived the same way: the
 verdict's last commit on the branch must be no older than the branch's last
 non-review, non-fragment WORK commit (the disposable refresh is peeled off
 first — mechanical bookkeeping must not stale an honest APPROVE).
@@ -83,7 +85,6 @@ from __future__ import annotations
 
 import argparse
 import re
-import shutil
 import subprocess
 import sys
 import tomllib
@@ -102,10 +103,21 @@ ACTIVE = WORK + "/active"
 # already lives. §5.6's unload GCs a clean one after its merge.
 LANE_WORKTREE_SUFFIX = "-drive"
 
-# The bar's attestation, carried as a git trailer in the refresh commit. A tree,
-# not a run (§A2): the sha that carries it IS the sha that merges, so the slot
-# verifies a property of the commit rather than someone's claim about a run.
+# The bar's attestation, carried as a git trailer in the refresh commit, NAMING
+# the tree and the work commit it attests so both can be checked against git.
+# See `refresh_attestation` for why the names are the whole point: a message
+# alone rides through amend, rebase and cherry-pick onto trees nobody barred.
 BAR_GREEN = "Bar-Green:"
+_ATTEST_RE = re.compile(
+    r"^Bar-Green:\s+tree=([0-9a-f]{40})\s+work=([0-9a-f]{40})\s+(\S.*)$"
+)
+
+
+def _refresh_subject(branch):
+    """The refresh commit's subject prefix for `branch` - one home, because the
+    writer and the verifier must agree on it exactly."""
+    return "refresh: {} onto trunk ".format(branch)
+
 
 # How far back `_work_tip` will peel refresh commits. The disposable-commit rule
 # means at most ONE can ever sit on the tip, so this is a guard against a
@@ -419,23 +431,67 @@ def _commit_message(root, rev):
     return out if code == 0 else ""
 
 
-def bar_green_attestation(root, rev):
-    """The `Bar-Green:` trailer value at `rev`, or None.
+def _rev(root, rev):
+    """`rev` resolved to a full sha, or None."""
+    code, out = ac.git(root, "rev-parse", "--verify", "--quiet", rev)
+    return out.strip() if code == 0 and out.strip() else None
 
-    The refresh's whole record. A commit either carries it or it does not, so
-    the question "did the bar pass on THIS tree?" is answered by the sha alone -
-    no ref namespace, no events file, nothing that can outlive the tree it
-    describes (the §2.3 lesson the deleted dispatcher paid for).
+
+def refresh_attestation(root, branch, rev=None):
+    """`(work_tip_sha, bar summary)` if `rev` is a GENUINE refresh commit for
+    `branch`, else None. `rev` defaults to the branch tip.
+
+    The bar is attested to a TREE, and this is where that sentence is made
+    true rather than merely written down. A commit message is not evidence: it
+    can be copied, hand-written, amended onto different content, cherry-picked
+    or rebased, and every one of those carries the words onto a tree nobody
+    barred (REVIEW-A round 1, driven both ways - a forged trailer on an
+    ordinary work commit, and `commit --amend` adding a file to a real one).
+
+    So the trailer NAMES what it attests and all three names are verified
+    against git:
+
+        Bar-Green: tree=<40 hex> work=<40 hex> <bar summary>
+
+      * `tree=` must equal the commit's OWN tree. This is the load-bearing one:
+        no edit that changes content can keep it, because the tree sha IS the
+        content. `git write-tree` is what lets the refresh know the value
+        before it commits - the index it barred is the tree it commits.
+      * `work=` must equal the commit's first parent, so the disposable-commit
+        peel below has a stated target rather than a guessed one, and a
+        cherry-pick or rebase (new parent) is rejected.
+      * the SUBJECT must be this branch's own `refresh: <branch> onto trunk`,
+        so a refresh commit merged in from elsewhere is not read as this
+        branch's.
+
+    Forging all three is no longer an accident that a copied message can
+    cause; it is re-implementing the refresh. That is the honest bound, and it
+    is the same threat model the rest of this script holds (bugs and drift,
+    not an adversary with commit access).
     """
-    for line in _commit_message(root, rev).splitlines():
-        line = line.strip()
-        if line.startswith(BAR_GREEN):
-            return line[len(BAR_GREEN) :].strip()
-    return None
+    rev = rev or branch
+    message = _commit_message(root, rev)
+    lines = message.splitlines()
+    if not lines or not lines[0].strip().startswith(_refresh_subject(branch)):
+        return None
+    matched = None
+    for line in lines:
+        matched = _ATTEST_RE.match(line.strip())
+        if matched:
+            break
+    if not matched:
+        return None
+    tree, work, summary = matched.group(1), matched.group(2), matched.group(3)
+    if _rev(root, rev + "^{tree}") != tree:
+        return None  # the message rode onto a tree it does not describe
+    if _rev(root, rev + "^1") != work:
+        return None  # ...or onto a different parent than the one it names
+    return work, summary.strip()
 
 
 def _work_tip(root, branch):
-    """`branch` with any refresh commit peeled off - its last WORK commit.
+    """The branch's last WORK commit as a sha: the tip, with any refresh commit
+    peeled off at the work sha that refresh ITSELF recorded.
 
     Two callers, one meaning. `refresh` resets here before it merges (the
     §A2.1 disposable-commit rule: a retry never stacks a second merge on the
@@ -444,16 +500,21 @@ def _work_tip(root, branch):
     refresh is MECHANICAL bookkeeping - it rewrites the compiled log and the
     generated artifacts, and if that counted as code it would stale the honest
     APPROVE that had to precede it.
+
+    The peel is why `refresh_attestation` had to become a verification rather
+    than a substring test: this function feeds a `reset --hard`, so peeling one
+    commit too far DESTROYS committed work. A work commit whose message merely
+    quoted the trailer used to be peeled, and its file left the branch (REVIEW-A
+    round 1, driven). Now nothing is peeled that does not carry its own tree and
+    parent, which an ordinary commit cannot do by accident.
     """
     rev = branch
     for _ in range(_MAX_REFRESH_PEEL):
-        if bar_green_attestation(root, rev) is None:
-            return rev
-        code, out = ac.git(root, "rev-parse", "--verify", "--quiet", rev + "^")
-        if code != 0 or not out.strip():
-            return rev  # a root refresh commit: there is nothing to peel to
-        rev = out.strip()
-    return rev
+        attested = refresh_attestation(root, branch, rev)
+        if attested is None:
+            return _rev(root, rev)
+        rev = attested[0]
+    return _rev(root, rev)
 
 
 def _verdict_gate(root, branch, wi_ids):
@@ -499,11 +560,16 @@ def lane_worktree(root, branch):
     """The lane worktree holding `branch`: `(path, error)`, created if needed.
 
     Order matters. A REGISTERED holder wins - the worker's own tree, wherever
-    the operator put it (and, in attended serial work, possibly the MAIN
-    checkout) - because the refresh must land where the lane can fix a red.
-    Only when nothing holds the branch is one added at the lane home, which is
-    the ordinary case for work built by hand between runs; §5.6's unload GCs it
-    after the merge, so the creation owns no teardown of its own.
+    the operator put it - because the refresh must land where the lane can fix
+    a red. Only when nothing holds the branch is one added at the lane home,
+    which is the ordinary case for work built by hand between runs; §5.6's
+    unload GCs it after the merge, so the creation owns no teardown of its own.
+
+    The MAIN checkout can be that holder (attended serial work), and this
+    function still returns it - but `refresh` refuses that case outright, since
+    a main checkout sitting on the branch means the repo has no trunk checked
+    out to merge in. The refusal lives there rather than here because the
+    worker has no such problem.
     """
     holder, _is_primary = _worktree_holding(root, branch)
     if holder is not None:
@@ -779,39 +845,128 @@ def _unload_branch(root, branch):
     )
 
 
+def ignored_files(wt):
+    """Every IGNORED FILE under `wt` as a set of repo-relative posix paths, or
+    None when git could not answer.
+
+    Deliberately NOT `_worktree_dirt`'s listing. `git status --ignored=matching`
+    collapses an ignored directory to one `!! dir/` line whatever is inside it,
+    at any `-u` setting - so a before/after diff of those lines cannot see a
+    file added to a directory that already existed (REVIEW-A round 1: driven,
+    and it is the NORMAL case, because the worker builds in the same lane
+    worktree the refresh then bars). `ls-files -o -i` enumerates the files
+    themselves. `-z` because a path with an odd character would otherwise come
+    back quoted and have to be guessed at.
+
+    The two readings coexist on purpose: §5.6's unload asks "is there anything
+    here at all?" and the collapsed answer is right for that; this asks "which
+    files exactly?", because it is about to delete some.
+    """
+    code, out = ac.git(wt, "ls-files", "-o", "-i", "--exclude-standard", "-z")
+    if code != 0:
+        return None
+    return {p.replace("\\", "/") for p in out.split("\0") if p.strip()}
+
+
 def _shed_residue(wt, baseline):
-    """Delete the IGNORED paths this refresh's own bar added to `wt`. Names them.
+    """Delete the ignored FILES this refresh's own bar added to `wt`.
 
     The refresh's promise is that it leaves the lane worktree as it found it
     plus (at most) one commit. Without this the promise breaks in one specific
     way: the bar runs in the lane worktree now, and a declared bar leaves tool
     residue - `.pytest_cache/`, `__pycache__/`, a coverage report - which git
-    ignores and which §5.6's unload reads, correctly, as DIRT. The merge would
-    then always exit nonzero over caches the refresh itself had just created.
+    ignores and which §5.6's unload reads, correctly, as DIRT.
 
-    Narrow on purpose, in three ways, because deleting files is the one thing
-    §5.6 exists to be careful about:
-      * only paths git reports as IGNORED (`!!`) - an untracked-but-tracked-able
-        file is a surprise, and a surprise is evidence;
-      * only paths that were NOT there before the refresh started, so anything
-        the worker left behind (the `out/run-logs/` stream WI-359 names) is
-        untouched and still blocks the unload;
-      * only lines this function can parse unambiguously - a quoted (odd
-        character) path is left alone rather than guessed at.
+    What this does NOT do, stated because the first version's comment implied
+    otherwise: it does not make a lane worktree clean. A lane the worker
+    already built in carries ITS residue, this function will not touch it, and
+    §5.6 will still report the branch as held. That is WI-359's rule working as
+    designed and it predates this WI; what changed is only that the refresh no
+    longer ADDS to the pile.
+
+    Narrow on purpose, because deleting files is the one thing §5.6 exists to
+    be careful about: only IGNORED files (an untracked-but-trackable file is a
+    surprise, and a surprise is evidence), only ones absent before the refresh
+    started, and nothing at all if git could not enumerate them.
     """
-    for line in _worktree_dirt(wt):
-        if line in baseline or not line.startswith("!! ") or line.startswith('!! "'):
-            continue
-        target = wt / line[3:].strip().rstrip("/")
+    now = ignored_files(wt)
+    if now is None or baseline is None:
+        return
+    emptied = set()
+    for rel in sorted(now - baseline):
+        target = wt / rel
         try:
-            if target.is_dir():
-                shutil.rmtree(target, ignore_errors=True)
-            elif target.exists():
+            if target.is_file():
                 target.unlink()
+                emptied.add(target.parent)
         except OSError:
             # Left behind rather than fought over: the unload will report it as
             # dirt, which is a loud, recoverable outcome.
             continue
+    # A directory the bar created is residue too, but only once it is empty -
+    # a directory that still holds a pre-existing file is the lane's, not ours.
+    for directory in sorted(emptied, key=lambda p: len(p.parts), reverse=True):
+        while directory != wt and wt in directory.parents:
+            try:
+                directory.rmdir()
+            except OSError:
+                break
+            directory = directory.parent
+
+
+def _refresh_preflight(root, branch):
+    """Everything that must hold before the refresh sequence may start:
+    `(lane worktree, work tip sha, None)`, or `(None, None, refusal)`.
+
+    Ends by resetting the lane to its work tip, so the caller begins from a
+    known state whatever the previous run left. Split out from `refresh` so the
+    sequence itself reads as the four steps §A2.1 fixes the order of, with the
+    preconditions - a declared bar, a trunk to merge in, a lane that is not
+    holding uncommitted work - stated once, here.
+    """
+    refusal = _declared_bar_or_refusal(root)
+    if refusal:
+        return None, None, refusal
+    holder, is_primary = _worktree_holding(root, branch)
+    if is_primary:
+        # Trunk is "whatever the main checkout has out", so a main checkout
+        # sitting ON the branch makes trunk BE the branch: the refresh would
+        # merge the branch into itself, report "refreshed onto trunk <its own
+        # sha>" and attest a composition that never happened (REVIEW-A round 1,
+        # driven). Refuse instead of resolving trunk some other way - there is
+        # no trunk to resolve while nothing has it checked out.
+        return (
+            None,
+            None,
+            "the MAIN checkout at {} has {} checked out, so this repo has no "
+            "trunk checked out to merge IN - refreshing there would merge the "
+            "branch into itself. Switch it back (git -C {} checkout <trunk>) "
+            "and re-run: a lane worktree is added automatically.".format(
+                holder, branch, holder
+            ),
+        )
+    wt, err = lane_worktree(root, branch)
+    if err:
+        return None, None, "cannot refresh {}: {}".format(branch, err)
+    if ac.working_tree_dirty(wt):
+        return (
+            None,
+            None,
+            "the lane worktree {} is dirty - the refresh resets to the last "
+            "work commit, so it refuses rather than discard uncommitted work; "
+            "commit or stash it, then refresh".format(wt),
+        )
+    work_tip = _work_tip(root, branch)
+    code, out = ac.git(wt, "reset", "--hard", work_tip)
+    if code != 0:
+        return (
+            None,
+            None,
+            "cannot reset {} to its last work commit {}:\n{}".format(
+                branch, work_tip[:10], ac._failure_tail(out)
+            ),
+        )
+    return wt, work_tip, None
 
 
 def refresh(root, branch, tier):
@@ -823,8 +978,9 @@ def refresh(root, branch, tier):
 
     That order is fixed and load-bearing (§A2.1): the compile has to see the
     trunk's log before it appends, and the bar has to see what the compile and
-    the regen wrote. The commit carries a `Bar-Green:` trailer, which is the
-    whole attestation - the slot then verifies a sha, never a claim.
+    the regen wrote. The commit carries a `Bar-Green:` trailer NAMING the tree
+    it barred and the work commit it sits on, and refuses to exist unless it
+    verifies against git - see `refresh_attestation`.
 
     EVERY failure path leaves the branch back at its last work commit, clean.
     That is the disposable-commit rule doing double duty: it is what makes a
@@ -839,27 +995,12 @@ def refresh(root, branch, tier):
     runs it INSIDE the slot for any branch that arrives un-refreshed or stale,
     which is the pessimistic sequence and is why that sequence never rots.
     """
-    refusal = _declared_bar_or_refusal(root)
+    wt, work_tip, refusal = _refresh_preflight(root, branch)
     if refusal:
         return None, refusal
-    wt, err = lane_worktree(root, branch)
-    if err:
-        return None, "cannot refresh {}: {}".format(branch, err)
-    if ac.working_tree_dirty(wt):
-        return None, (
-            "the lane worktree {} is dirty - the refresh resets to the last "
-            "work commit, so it refuses rather than discard uncommitted work; "
-            "commit or stash it, then refresh".format(wt)
-        )
-    work_tip = _work_tip(root, branch)
-    code, out = ac.git(wt, "reset", "--hard", work_tip)
-    if code != 0:
-        return None, "cannot reset {} to its last work commit {}:\n{}".format(
-            branch, work_tip[:10], ac._failure_tail(out)
-        )
 
-    # The ignored-file baseline, read BEFORE anything runs: see `_shed_residue`.
-    baseline = set(_worktree_dirt(wt))
+    # The ignored-FILE baseline, read BEFORE anything runs: see `_shed_residue`.
+    baseline = ignored_files(wt)
 
     def undo(reason, detail):
         _shed_residue(wt, baseline)
@@ -900,17 +1041,41 @@ def refresh(root, branch, tier):
             "then refresh again".format(summary),
             bar_out,
         )
+    # The tree the bar was just handed, named BEFORE the commit that carries the
+    # name. `write-tree` writes the index - the same index `commit` will use -
+    # so the value is knowable in advance and is not a prediction. Anything that
+    # changes the tree afterwards (an amend, a rebase, a hook that rewrites a
+    # file) leaves the trailer describing a tree that is no longer there, and
+    # the self-check below refuses rather than shipping a false attestation.
+    code, tree = ac.git(wt, "write-tree")
+    if code != 0 or not tree.strip():
+        return undo("could not name the barred tree (git write-tree failed)", tree)
     code, out = ac.git(
         wt,
         "commit",
         "--allow-empty",
         "-m",
-        "refresh: {} onto trunk {}\n\nThe §A2 station refresh: trunk merged in, the §5.1 fragment compile and\n§5.2 regeneration folded on, and the declared bar run on THIS tree. The\ntrailer attests the bar to a TREE, not to a run - the merge slot verifies\nthis sha, and a --no-ff merge of a branch that contains trunk reproduces\nthis tree byte for byte.\n\n{} {} trunk={}".format(
-            branch, trunk[:10], BAR_GREEN, summary, trunk[:10]
+        "{}{}\n\nThe §A2 station refresh: trunk merged in, the §5.1 fragment compile and\n§5.2 regeneration folded on, and the declared bar run on THIS tree. The\ntrailer NAMES what it attests - the tree the bar saw and the work commit it\nsits on - so the merge slot verifies both against git instead of trusting a\nmessage. A --no-ff merge of a branch that contains trunk reproduces this\ntree byte for byte, which is why no second bar is owed at the slot.\n\n{} tree={} work={} {}".format(
+            _refresh_subject(branch),
+            trunk[:10],
+            BAR_GREEN,
+            tree.strip(),
+            work_tip,
+            summary,
         ),
     )
     if code != 0:
         return undo("the refresh commit was refused by its own floor", out)
+    if refresh_attestation(root, branch) is None:
+        # Fail CLOSED on our own output: an attestation this script cannot
+        # verify is worth less than none at all, because the slot would refuse
+        # it later with a far more confusing message.
+        return undo(
+            "the refresh commit does not verify as its own attestation - the "
+            "committed tree or parent is not the one the bar saw (a rewriting "
+            "commit hook?); nothing is attested and the branch is restored",
+            out,
+        )
     sha = _head(wt)
     print(
         "integrate: refreshed {} onto trunk {} - {} @ {}".format(
@@ -931,10 +1096,13 @@ def _merge_ready(root, branch):
     """
     if not trunk_is_ancestor(root, branch):
         return False, "trunk {} is not an ancestor of it".format(_head(root)[:10])
-    attested = bar_green_attestation(root, branch)
+    attested = refresh_attestation(root, branch)
     if attested is None:
-        return False, "its tip carries no {} attestation".format(BAR_GREEN)
-    return True, attested
+        return False, (
+            "its tip is not a verified refresh commit - no {} trailer naming "
+            "this exact tree and parent".format(BAR_GREEN)
+        )
+    return True, attested[1]
 
 
 def integrate_one(root, branch, tier, held=None):

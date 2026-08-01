@@ -415,7 +415,7 @@ def test_drive_end_to_end_claims_builds_merges_and_drains(tmp_path, capsys):
     # ...and the merged tip is the refresh commit, carrying the bar's own
     # attestation for exactly that tree.
     merged_tip = _git(repo, "rev-list", "--parents", "-n", "1", "HEAD").split()[2]
-    assert integ.BAR_GREEN in _git(repo, "log", "-1", "--format=%B", merged_tip)
+    assert integ.refresh_attestation(repo, "wi-401-widget", merged_tip) is not None
 
 
 def test_drive_stops_on_a_red_refresh_bar(tmp_path, capsys):
@@ -434,9 +434,7 @@ def test_drive_stops_on_a_red_refresh_bar(tmp_path, capsys):
     assert not (repo / "docs" / "work" / "archive" / "WI-401-widget.md").exists()
     # The lane is left exactly where the worker left it: no refresh commit, no
     # attestation, so the slot could not merge it even if something tried.
-    assert integ.BAR_GREEN not in _git(
-        repo, "log", "-1", "--format=%B", "wi-401-widget"
-    )
+    assert integ.refresh_attestation(repo, "wi-401-widget") is None
 
 
 # --- the plain-launch seam (IF-015) -------------------------------------------

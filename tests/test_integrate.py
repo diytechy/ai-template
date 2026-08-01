@@ -1049,6 +1049,11 @@ def close_branch(root, branch, wi="WI-401", slug="widget", extra=None):
     return wt
 
 
+def _lane(root, branch):
+    """The lane worktree path `station_repo`/`close_branch` put the branch in."""
+    return root.parent / (root.name + integ.LANE_WORKTREE_SUFFIX) / branch
+
+
 def _order(wt):
     path = wt.parent / "harness-order.txt"
     return path.read_text(encoding="utf-8").split() if path.is_file() else []
@@ -1089,7 +1094,7 @@ def test_merge_ready_needs_the_ancestor_relation_AND_the_attestation(tmp_path):
     # gate.
     root = station_repo(tmp_path)
     ready, why = integ._merge_ready(root, "wi-401")
-    assert not ready and "no Bar-Green:" in why  # ancestor yes, attested no
+    assert not ready and "not a verified refresh commit" in why  # ancestor ok
 
     sha, refusal = integ.refresh(root, "wi-401", "smoke")
     assert refusal is None, refusal
@@ -1144,15 +1149,15 @@ def test_the_refresh_attests_the_bar_to_the_sha_it_produced(tmp_path):
     root = station_repo(tmp_path)
     sha, refusal = integ.refresh(root, "wi-401", "smoke")
     assert refusal is None, refusal
-    assert integ.bar_green_attestation(root, sha)
-    assert integ.bar_green_attestation(root, "wi-401")
+    assert integ.refresh_attestation(root, "wi-401", sha)
+    assert integ.refresh_attestation(root, "wi-401")
 
     wt = root.parent / (root.name + integ.LANE_WORKTREE_SUFFIX) / "wi-401"
     (wt / "afterthought.txt").write_text("x\n", encoding="utf-8", newline="\n")
     _commit(wt, "WI-401: one more idea", when=T_LATER)
-    assert integ.bar_green_attestation(root, "wi-401") is None
+    assert integ.refresh_attestation(root, "wi-401") is None
     ready, why = integ._merge_ready(root, "wi-401")
-    assert not ready and "no Bar-Green:" in why
+    assert not ready and "not a verified refresh commit" in why
 
 
 def test_the_bar_residue_the_refresh_created_is_shed_but_the_lanes_is_not(tmp_path):
@@ -1273,6 +1278,14 @@ def test_slot_acquisition_has_exactly_one_call_site():
     # ...and it is inside `_slot`, not merely singular.
     body = src.split("def _slot(root):", 1)[1].split("\ndef ", 1)[0]
     assert "acquire_lock(" in body
+    # And the SLOT, not just the lock call: counting `acquire_lock(` alone let
+    # a second acquisition through the existing helper pass (REVIEW-A round 1
+    # drove it — `_extra = _slot(root)` at the top of `integrate_one` was
+    # green). `_slot(` must occur exactly twice: the definition and its one
+    # call, so a second acquisition by EITHER route reds here.
+    calls = [ln for ln in src.splitlines() if "_slot(" in ln]
+    assert len(calls) == 2, calls
+    assert any(ln.strip().startswith("def _slot(") for ln in calls), calls
 
 
 def test_the_pessimistic_sequence_runs_when_a_lane_loses_the_race(tmp_path):
@@ -1319,12 +1332,12 @@ def test_a_branch_that_never_refreshed_is_refreshed_by_the_slot(tmp_path):
     # inside the lock. That is the owner's caveat priced at one line — and it is
     # this path, so it is covered whether or not anyone ever exercises it.
     root = station_repo(tmp_path)
-    assert integ.bar_green_attestation(root, "wi-401") is None
+    assert integ.refresh_attestation(root, "wi-401") is None
 
     proc = run_py([SCRIPTS / "integrate.py", "integrate", "--tier", "smoke"], cwd=root)
     out = proc.stdout + proc.stderr
     assert proc.returncode == 0, out
-    assert "its tip carries no Bar-Green: attestation" in out, out
+    assert "not a verified refresh commit" in out, out
     assert "integrate: wi-401 merged (WI-401)" in out, out
 
 
@@ -1340,7 +1353,7 @@ def test_the_refresh_cli_is_the_lane_side_entry_point(tmp_path):
     out = proc.stdout + proc.stderr
     assert proc.returncode == 0, out
     assert "integrate: refreshed wi-401 onto trunk" in out, out
-    assert integ.bar_green_attestation(root, "wi-401")
+    assert integ.refresh_attestation(root, "wi-401")
 
     proc = run_py(
         [SCRIPTS / "integrate.py", "refresh", "--branch", "wi-999", "--tier", "smoke"],
@@ -1350,7 +1363,171 @@ def test_the_refresh_cli_is_the_lane_side_entry_point(tmp_path):
     assert "cannot refresh wi-999" in proc.stdout + proc.stderr
 
 
-# 5b.5 — the refresh must not stale an honest verdict
+# 5b.5 — the attestation is a BINDING, not a string (REVIEW-A round 1)
+#
+# Round 1 found the constraint's second half satisfiable by a message: any line
+# starting with `Bar-Green:` made a branch merge-ready, so a forged trailer, a
+# copied message and `commit --amend` all landed unbarred content on trunk, and
+# the same unbound token drove a `reset --hard` that DELETED a work commit. Each
+# of the four tests below is that exploit, kept as the regression.
+
+
+FORGED_TRAILER = "Bar-Green: tree={t} work={w} bar PASS (2 steps, tier all)".format(
+    t="0" * 40, w="1" * 40
+)
+
+
+def test_a_forged_bar_green_trailer_does_not_make_a_branch_merge_ready(tmp_path):
+    # Exploit (a), three ways, because the fix has three independent checks and
+    # a test that only drove one would let the other two rot. An ordinary
+    # subject; the refresh SUBJECT with names that belong to nothing; and the
+    # sharpest one — a genuine refresh commit's message COPIED verbatim onto a
+    # different commit, which is what amend/rebase/cherry-pick do by accident.
+    root = station_repo(tmp_path)
+    wt = _lane(root, "wi-401")
+
+    (wt / "sneaky.txt").write_text("unbarred\n", encoding="utf-8", newline="\n")
+    _commit(wt, "WI-401: a perfectly ordinary work commit\n\n" + FORGED_TRAILER)
+    ready, why = integ._merge_ready(root, "wi-401")
+    assert not ready and "not a verified refresh commit" in why
+
+    (wt / "sneaky.txt").write_text("still unbarred\n", encoding="utf-8", newline="\n")
+    _commit(
+        wt,
+        "refresh: wi-401 onto trunk 0123456789\n\n" + FORGED_TRAILER,
+        when=T_LATER,
+    )
+    assert integ.refresh_attestation(root, "wi-401") is None
+
+    # Now a REAL refresh, then its whole message re-used on a new commit.
+    _sha, refusal = integ.refresh(root, "wi-401", "smoke")
+    assert refusal is None, refusal
+    genuine = _git(root, "log", "-1", "--format=%B", "wi-401")
+    assert integ.refresh_attestation(root, "wi-401") is not None
+    (wt / "carried.txt").write_text("rode in\n", encoding="utf-8", newline="\n")
+    _commit(wt, genuine, when=T_LATER)
+    assert integ.refresh_attestation(root, "wi-401") is None, (
+        "a copied refresh message names another commit's tree and parent"
+    )
+    ready, _why = integ._merge_ready(root, "wi-401")
+    assert not ready
+
+
+def test_the_queue_refuses_to_land_a_forged_attestation_unbarred(tmp_path):
+    # The exploit end to end, which is what made it MAJOR: round 1's
+    # `integrate --tier smoke` exited 0 and put `sneaky.txt` on trunk with the
+    # recording stub harness never invoked at all. Now the slot does not
+    # believe the trailer, falls into its pessimistic arm, and the file only
+    # reaches trunk AFTER a real bar ran on it.
+    root = station_repo(tmp_path)
+    wt = _lane(root, "wi-401")
+    (wt / "sneaky.txt").write_text("unbarred\n", encoding="utf-8", newline="\n")
+    _commit(wt, "WI-401: a perfectly ordinary work commit\n\n" + FORGED_TRAILER)
+    assert _order(wt) == [], "no bar has run yet"
+
+    proc = run_py([SCRIPTS / "integrate.py", "integrate", "--tier", "smoke"], cwd=root)
+    out = proc.stdout + proc.stderr
+    assert proc.returncode == 0, out
+    assert "not a verified refresh commit" in out, out
+    # The bar DID run this time — the forgery bought nothing but a refresh.
+    assert "trunk_step" in _order(wt) and "check" in _order(wt), out
+    assert "sneaky.txt" in _git(root, "ls-tree", "-r", "--name-only", "HEAD")
+
+
+def test_amending_a_refresh_commit_revokes_its_attestation(tmp_path):
+    # Exploit (b): `commit --amend --no-edit` keeps the message while the tree
+    # moves, so round 1 landed the amended-in file with the bar not re-run. The
+    # trailer names the tree, so an amend that changes content cannot keep it.
+    root = station_repo(tmp_path)
+    wt = _lane(root, "wi-401")
+    _sha, refusal = integ.refresh(root, "wi-401", "smoke")
+    assert refusal is None, refusal
+    before = _git(root, "rev-parse", "wi-401^{tree}").strip()
+    runs = len(_order(wt))
+
+    (wt / "amended-in.txt").write_text("unbarred\n", encoding="utf-8", newline="\n")
+    _git(wt, "add", "-A")
+    _git(wt, "commit", "-q", "--amend", "--no-edit")
+    assert _git(root, "rev-parse", "wi-401^{tree}").strip() != before
+
+    assert integ.refresh_attestation(root, "wi-401") is None
+    ready, why = integ._merge_ready(root, "wi-401")
+    assert not ready and "not a verified refresh commit" in why
+    # And end to end: the amended content still reaches trunk, but only through
+    # a fresh bar — which is the correct outcome, not a refusal.
+    proc = run_py([SCRIPTS / "integrate.py", "integrate", "--tier", "smoke"], cwd=root)
+    out = proc.stdout + proc.stderr
+    assert proc.returncode == 0, out
+    assert len(_order(wt)) > runs, "the amended tree was barred before it merged"
+    assert "amended-in.txt" in _git(root, "ls-tree", "-r", "--name-only", "HEAD")
+
+
+def test_a_work_commit_that_quotes_the_trailer_is_never_peeled_away(tmp_path):
+    # The data-loss half. `_work_tip` feeds a `reset --hard`, so peeling one
+    # commit too far DESTROYS committed work: in round 1 a commit carrying
+    # `Bar-Green: I ran it locally, honest` was peeled and its file left the
+    # branch entirely. The peel now needs a commit that names its own tree and
+    # parent, which no hand-written message can do by accident.
+    root = station_repo(tmp_path)
+    wt = _lane(root, "wi-401")
+    (wt / "late.txt").write_text("real work\n", encoding="utf-8", newline="\n")
+    _commit(wt, "WI-401: late fix\n\nBar-Green: I ran it locally, honest", when=T_LATER)
+    tip = _rev(root, "wi-401")
+
+    assert integ._work_tip(root, "wi-401") == tip, "an honest tip must not peel"
+    _sha, refusal = integ.refresh(root, "wi-401", "smoke")
+    assert refusal is None, refusal
+    tracked = _git(root, "ls-tree", "-r", "--name-only", "wi-401").split()
+    assert "late.txt" in tracked, tracked
+    # ...and the genuine refresh on top of it still peels back to exactly it.
+    assert integ._work_tip(root, "wi-401") == tip
+
+
+def test_the_refresh_sheds_its_residue_inside_a_directory_that_predates_it(tmp_path):
+    # Round 1: `git status --ignored=matching` collapses an ignored directory to
+    # ONE line at any -u setting, so a before/after line diff skipped the whole
+    # directory when it already existed — and that is the NORMAL case, since the
+    # worker builds in the same lane worktree the refresh then bars. Driven with
+    # the directory pre-created, which the previous listing could not see into.
+    root = station_repo(tmp_path)
+    wt = _lane(root, "wi-401")
+    (wt / "bar-cache").mkdir()
+    (wt / "bar-cache" / "worker-run.txt").write_text(
+        "the worker's, not ours\n", encoding="utf-8", newline="\n"
+    )
+    assert integ._worktree_dirt(wt) == ["!! bar-cache/"], "the collapsed listing"
+
+    _sha, refusal = integ.refresh(root, "wi-401", "smoke")
+    assert refusal is None, refusal
+    assert not (wt / "bar-cache" / "run.txt").exists(), "the refresh's own file"
+    assert (wt / "bar-cache" / "worker-run.txt").is_file(), "the lane's own file"
+    # The directory SURVIVES, because it still holds a file that predates the
+    # refresh — and §5.6 will therefore still report this lane as dirty. That is
+    # WI-359's rule working, and the refresh's promise is only that it added
+    # nothing to the pile.
+    assert (wt / "bar-cache").is_dir()
+
+
+def test_the_refresh_refuses_when_the_main_checkout_holds_the_branch(tmp_path):
+    # Round 1: with the main checkout on the branch, `_head(root)` IS the branch,
+    # so the refresh "merged trunk in" from itself, printed a trunk sha that was
+    # the branch's own, and attested a composition that never happened. There is
+    # no trunk to resolve while nothing has it checked out, so it refuses.
+    root = station_repo(tmp_path)
+    _git(root, "worktree", "remove", str(_lane(root, "wi-401")))
+    (root / "trunk-moved.txt").write_text("x\n", encoding="utf-8", newline="\n")
+    _commit(root, "docs: trunk moves", when=T_LATER)
+    _git(root, "checkout", "-q", "wi-401")
+
+    sha, refusal = integ.refresh(root, "wi-401", "smoke")
+    assert sha is None
+    assert "MAIN checkout" in refusal and "no trunk checked out" in refusal
+    assert "checkout <trunk>" in refusal
+    assert integ.refresh_attestation(root, "wi-401") is None
+    assert not (root / "trunk-moved.txt").exists(), "nothing was merged in"
+
+
+# 5b.6 — the refresh must not stale an honest verdict
 
 
 def test_the_mechanical_refresh_does_not_stale_a_good_verdict(tmp_path):
