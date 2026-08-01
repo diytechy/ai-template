@@ -52,7 +52,7 @@ after round 1, each pin is mutation-proved rather than merely written:
   distinct ranks. Now read off the SHIPPED `_KIND_CONCURRENCY`/`_KIND_RANK`
   rather than off this test file's own copy of §A1; the old form asserted the
   copy was self-consistent and passed unchanged under a `_KIND_RANK` mutation
-  that made the property maximally false.
+  that made the property maximally false (**defect 2**).
 - **A rank change does not move concurrency** — a `Priority` bump swaps the
   frontier order of two ordinary WIs while every concurrency answer stays
   `parallel`.
@@ -94,7 +94,7 @@ tree now gives `1 failed, 39 passed`, and the single red is the new pin
 with `git diff --exit-code`. The `_KIND_RANK` mutation behind the second
 finding likewise takes its pin from `1 passed in 0.19s` to a red.
 
-**Instance 1 of the class named in "The one lesson, stated once" below**: a
+**Defect 1 of the six enumerated in "The one lesson, stated once" below**: a
 guarantee asserted in prose, resting on a convention no mechanism holds, and a
 test named after the property that cannot observe the place it breaks. The
 lesson is not "write more tests" — it is that a test which constructs its
@@ -199,8 +199,8 @@ One datum found by writing the spec itself: `check_doc_refs --strict` flagged
 the invented `.py` path quoted in its evidence table, but passed the
 `…::test_entirely_invented` citation silently.
 
-**Round 2 corrected my reason for that, and the correction changes the
-pricing** — so it is recorded rather than quietly swapped. I wrote that the
+**Round 2 corrected my reason for that (defect 3), and the correction changes
+the pricing** — so it is recorded rather than quietly swapped. I wrote that the
 PATH tier "needs the token to END in a known extension, and a `::node` suffix
 defeats that", and called it "one tokenising reason". The *behaviour* is real
 and reproduces; the *mechanism* was wrong, twice over. `is_path_shaped`
@@ -224,8 +224,8 @@ resolver must overturn a deliberate, *tested* decision, not fill an
 unconsidered gap), while the file-half-only shape — now written up as option
 (c) — is CHEAPER. Both surfaces are corrected.
 
-**Round 3 then corrected my correction — instance 3, and the same class
-again: a mechanism asserted without driving it.** I wrote that
+**Round 3 then corrected my correction — defect 4, and the same class again:
+a mechanism asserted without driving it.** I wrote that
 splitting on `::` at that guard "is the whole change inside the tool". It is
 not, and applied literally it regresses. `is_path_shaped` is a **predicate** —
 it returns a bool and cannot hand a rewritten token back — while
@@ -265,23 +265,25 @@ apply the concurrency axis. The internal `w["exclusive"]` is left alone: it
 mirrors the `Exclusive` column name across the three F5-duplicated readers, and
 renaming it there would be drift, not clarity.
 
-**Bars — every figure below re-measured after the round-5 edits, on a tree
+**Bars — every figure below re-measured after the round-6 edits, on a tree
 whose only remaining difference from this commit is this block's own text.**
 (The round-2 lesson: a figure not reproducible at its own commit is not a
 measurement — the block once read `389 work item(s)` while the same commit's
 WI-394 filing had made it `390`. Round 4 caught the header repeating the
 promise one commit early: it was measured at `94e4a4d8` with three doc changes
-landing after — so rounds 4 and 5 each re-ran everything on their own tree.
-Stating the *delta* rather than a sha is the honest form, since the last edit a
-bars block can ever contain is its own numbers.)
+landing after — so rounds 4, 5 and 6 each re-ran everything on their own tree,
+**including the full suite for a fragment-only edit**, because defect 5 forbids
+reasoning about whether a docs change can move it. Stating the *delta* rather
+than a sha is the honest form, since the last edit a bars block can ever
+contain is its own numbers.)
 
 ```
 $ python -m pytest -q -n auto
-1 failed, 1756 passed, 8 skipped in 333.49s (0:05:33)
+1 failed, 1756 passed, 8 skipped in 339.79s (0:05:39)
       # the one standing red is tests/test_check_lane.py::test_this_repo_is_not_a_work_branch
       # (this checkout IS a claimed work branch — the guard is asserting about the trunk)
 $ python -m pytest -q -n auto -m smoke
-1 failed, 572 passed in 27.35s                 # same standing red
+1 failed, 572 passed in 14.00s                 # same standing red
 $ python -m ruff check .            -> All checks passed!
 $ python -m ruff format --check .   -> 146 files already formatted
 $ python project-trajectory/scripts/check_docs.py --root . --ignore docs/test/report.md --ignore "docs/work/*" --stale
@@ -295,13 +297,13 @@ check_doc_refs: OK - no dangling path or sym: references · 871 untraced   [exit
 Suite counts across the rounds, on this branch: `1755` at close → `1756` after
 the round-1 fixes (the new call-site pin) → `1756` since, rounds 2–4 having
 added tests to nothing. Wall time is not a signal here — it ranged 329–588 s
-across six runs of the same suite as the box got busier. `390` is the WI count
+across seven runs of the same suite as the box got busier. `390` is the WI count
 including the `WI-394` this branch files. `check_doc_refs` held at
 `871 untraced / 0 dangling` **because round 4's two new backticked path tokens
 carry a `path-ok` marker**, not because nothing moved — remove the marker and
 it reports exactly those two.
 
-**CORRECTION (instance 4) — the "no `.py` changed, so the recorded result
+**CORRECTION (defect 5) — the "no `.py` changed, so the recorded result
 stands" inference was unsound, and the inference is the defect, not the
 number.** In round 3 I
 skipped the full suite on the grounds that
@@ -356,12 +358,22 @@ compared roots. Naming a helper is not naming a consumer.
 
 ## The one lesson, stated once
 
-Five review rounds found five defects in this row's RECORD and none in its code
-since `b8c7cc21`. They read as five different mistakes — a structural guarantee
-that was only a convention, a tautological pin, a mis-explained `check_doc_refs`
-guard, a one-site fix that needed two, a docs-only diff treated as proof — and
-they are not. **Every one was a TRUE OBSERVATION given a CAUSE THAT HAD NOT BEEN
-EXECUTED, and every one was closed by running the thing.**
+Six review rounds found six defects in this row's RECORD, and **no production
+code has moved since `b19dcc8a`** (`git diff b19dcc8a..HEAD -- '*.py'` is
+empty; `project-trajectory/**/*.py` likewise). They read as six different
+mistakes and they are not:
+
+| # | Where | The defect |
+|---|---|---|
+| 1 | round 1, MAJOR | a structural guarantee that was only a convention |
+| 2 | round 1, MINOR | a tautological pin, asserted over the test file's own copy |
+| 3 | round 2 | a mis-explained `check_doc_refs` guard |
+| 4 | round 3 | a one-site fix that needed two |
+| 5 | round 4 | a docs-only diff treated as proof a suite result stands |
+| 6 | round 6 | **this section's own opening sentence** — see below |
+
+**Every one was a TRUE OBSERVATION given a CAUSE THAT HAD NOT BEEN EXECUTED,
+and every one was closed by running the thing.**
 
 Each time the behaviour I reported was real and reproduced. Each time the
 mechanism I gave for it came from reading the code and reasoning, not from
@@ -372,23 +384,45 @@ dangerous artifact, precisely because the observation around it is sound and
 lends it credibility.
 
 The remedy is not more caution in prose. It is that **a claim about a mechanism
-is a claim you can execute**, and in every one of these five cases executing it
+is a claim you can execute**, and in every one of these six cases executing it
 took under a minute: apply the mutation, call the predicate, grep the call
-sites, run the suite. The cost of driving it was always far below the cost of
-one review round spent correcting it.
+sites, run the suite, `git diff` the range you are about to characterise. The
+cost of driving it was always far below the cost of one review round spent
+correcting it.
+
+### Defect 6 — this section did it too, in the paragraph generalising the class
+
+The opening sentence originally read *"none in its code since `b8c7cc21`"*.
+That is false, and round 6 drove it: `git diff --stat b8c7cc21..HEAD -- '*.py'`
+returns `schedule.py` and `test_schedule.py`, moved at `b19dcc8a` — a commit
+this same fragment cites correctly a few sections up. Round 1's naming finding
+*was* a code defect: `evaluate` emitted `exclusive` and now emits
+`exclusive_keys`, a consumer-visible output change. The true claim is narrower
+in range and **stronger** in content: no *production* code has moved since
+`b19dcc8a`.
+
+It is the class exactly — a true observation (the classifier's logic really has
+not been touched since it landed) given an unexecuted cause (a commit range I
+characterised from memory instead of running `git diff` over). Recorded as
+defect 6 rather than silently corrected, because **it is the strongest evidence
+this section can carry**: written by the author of the generalisation, in the
+paragraph making it, one round after stating it. Six rounds of attention did not
+prevent a seventh instance. That is the argument for the remedy being
+**mechanical rather than attentional** — run the command, do not resolve to be
+careful.
 
 **Disclosure, recorded here rather than only in a commit message** (the working
 surface is this log, and the arc above is worth nothing if its last instance
 hides in a commit body): while writing round 4's bars block I typed a smoke
 wall-time — `14.02s` — that I had **not yet measured**. I caught it against the
 real run and corrected it to the measured value before committing. Same class
-as the other four: a figure written from expectation rather than execution. It
-was self-caught rather than reviewer-caught, which is the only reason it belongs
-at the end of this list rather than in it — and it is recorded plainly instead
-of quietly fixed, because a record that omits its own near-misses is the same
+as the six above: a figure written from expectation rather than execution. It
+was self-caught rather than reviewer-caught, which is the only reason it is a
+near-miss rather than a numbered row — and it is recorded plainly instead of
+quietly fixed, because a record that omits its own near-misses is the same
 defect one level up.
 
-Wall time is the standing example of why: it ranged **329–588 s** across six
+Wall time is the standing example of why: it ranged **329–588 s** across seven
 runs of an unchanged suite on this branch, so it is a number that must always
 be quoted from a run and never from memory.
 
