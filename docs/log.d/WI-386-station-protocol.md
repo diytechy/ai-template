@@ -184,20 +184,50 @@ resolved so both intents survive rather than by picking a side.
   chains are preserved verbatim, and the entry's own line attribution was
   corrected there too (13 of 26 added, not "eleven of 24").
 
-**And the merge earned its keep — a real Class C composition failure, caught
-exactly where §A2 says it would be.** `tests/test_wi_convert.py`'s
-cancellation guard (WI-384's) reds on the composed tree: it asserted the string
-`"disposition"` appears nowhere in a cancelled spec, and two live rows discuss
-that retired concept **inside their `title` values** — WI-061 quotes the ruling
-that retired it, another quotes a stale *"By disposition"* census line. Neither
-branch could see it alone: `live_csv` skips while any claim is in flight, and
-this branch is the first to present a DRAINED registry, because closing WI-386
-is what drains it. Two greens, red together, attributable to the composition
-that caused it — which is the case the deleted composed-tree bar existed for and
-that §A2 said it would catch for free. Fixed at the assertion (match a KEY
-assignment, `^\s*disposition\s*=`, not a substring) and mutation-proven: adding
-a real `disposition = "retired"` key back to a cancelled spec still reds it. A
-false positive either way — no live spec carries the key.
+**The merge surfaced a red — and it is NOT the design's first Class C.**
+`tests/test_wi_convert.py`'s cancellation guard (WI-384's) reds on the composed
+tree: it asserted the string `"disposition"` appears nowhere in a cancelled
+spec. **Measured, because round 4 caught this paragraph's first version
+over-claiming on both counts:**
+
+- **Population: SEVEN of the sixteen cancelled rows trip it**, not two — WI-061,
+  -063, -108, -158, -187, -271, -356. **Zero carry a `disposition =` key.**
+- **Location: six carry the word only in the Deliverable BODY**; only WI-356
+  has it in the frontmatter, in its `title`, quoting a stale *"By disposition"*
+  census line. So the first version's claim that "neither a whole-file nor a
+  whole-frontmatter read can tell prose from schema" was **false** — a
+  frontmatter read separates six of the seven.
+- **The shipped fix makes TWO narrowings and each does distinct work**, which
+  the first version described as one. The **frontmatter split** gives the guard
+  its subject: *"the deleted ATTRIBUTE stays deleted"* is a claim about schema,
+  and six of the seven are plainly prose in the body. The **key-assignment
+  match** separates prose from schema *inside* the frontmatter, which the split
+  cannot — the split alone still reds WI-356. (Measured the other way too: the
+  key match alone over the whole file reds nothing today, but its subject would
+  be unbounded, convicting a body that quoted the old schema at line start.)
+
+**Classification — Class C by signature, Class D by cause.** The signature
+holds: `active/` held `wi-386` at the trunk parent and `wi-380` at the branch
+parent and is empty only at the merge, so `live_csv` skipped on both sides and
+neither branch could see it alone (corroborated by the suite's skips falling
+12 → 8 and `test_wi_convert.py` going to 20 passed / 0 skipped). **But the cause
+is trunk-side.** All seven offending specs exist at `979d8e09` with the word
+already in them, the guard is WI-384's, and this branch contributed no offending
+content and no offending code — only the drain, which took both sides. §A6's own
+discriminator for Class D is *"reproduces at trunk"*, and it does: trunk's
+`active/` holds nothing but `wi-386`, so trunk drains the moment this branch
+merges and the guard reds there with no second branch involved.
+
+**And decisively for the argument §A2 rests on: the composed-tree bar this WI
+deleted would have caught it at the same moment, in the same way** — the
+candidate tree carries the same drained registry. So this instance is **neutral
+evidence**, not support for "the station protocol catches Class C better than
+the bar it replaces". **It is not entered in §A6, whose Class C count stands at
+0 observed.** An over-claimed data point in support of a ruling the owner
+already made is worse than none, because it is the kind that gets cited later.
+
+Fixed at the assertion and mutation-proven: re-emitting every cancelled spec
+with a real `disposition = "retired"` key reds it, 16 of 16.
 
 **Known terminal state, for WI-387.** A genuine trunk-merge conflict at refresh
 is a loud, self-describing handback: the branch is left at its work commit with

@@ -98,9 +98,22 @@ WI-384's six-state model (and the `close_branch` test helper with it); the two
 test conflicts kept WI-384's terminal-state vocabulary alongside this WI's
 station-protocol assertions; and the size ratchet was RE-MEASURED on the merged
 tree rather than picking a side - 1548 measured, which is exactly 1523 + WI-384's
-+1 + this WI's +24, so the arithmetic checks the resolution. The merge also
-turned up a real Class C composition failure, in the place §A2 predicts one:
-WI-384's cancellation guard reds only on a DRAINED registry, which closing this
-WI is what produces, and its substring read convicted two specs that merely
-discuss the retired `disposition` concept in their titles. Fixed at the
-assertion (a key assignment, not a substring) and mutation-proven.
++1 + this WI's +24, so the arithmetic checks the resolution.
+
+The merge also surfaced a red, and the honest reading of it is narrower than a
+first draft of this record claimed. WI-384's cancellation guard asserts the
+string `disposition` appears nowhere in a cancelled spec; SEVEN of the sixteen
+trip it (measured), six in the Deliverable body and one - WI-356 - in its
+frontmatter title, and none carries the key. The fix makes two narrowings, each
+doing distinct work: splitting to the frontmatter gives the guard its subject
+(the schema), and matching a KEY ASSIGNMENT separates prose from schema inside
+it, which the split alone cannot. Mutation-proven 16 of 16.
+
+By SIGNATURE that is Class C - `live_csv` skips while any claim is in flight and
+both parents of the merge had one, so neither branch could see it alone. By
+CAUSE it is Class D: all seven specs and the guard itself are trunk-side at
+`979d8e09`, this branch contributed only the drain, and it reproduces at trunk
+the moment trunk next drains. The composed-tree bar this WI deletes would have
+caught it identically, so the instance is NEUTRAL evidence for the station
+protocol rather than support for it, and it is not entered in the design's
+failure-class table.
