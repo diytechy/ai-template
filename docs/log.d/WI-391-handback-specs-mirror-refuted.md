@@ -50,10 +50,11 @@ The argument is structural, and it is a measurement, not an analogy:
   one directory over. The split is **92 complete / 3 cancelled**, so the mirror
   answers "shipped" 97% of the time for a question one `ls docs/work/` answers.
 - **No consumer.** `check_trajectory`'s `ARCHIVE_SPECS_DIR`, `_own_spec` and its
-  glob, and `tests/test_trajectory_specs.py:511` would each have to **widen** to
-  recurse — the required code change is to *ignore* the distinction.
-  `docs/orphans-allow:50` survives untouched only because fnmatch `*` spans
-  separators.
+  glob, and the archived-spec glob in `tests/test_trajectory_specs.py` (line 511)
+  would each have to **widen** to recurse — the required code change is to
+  *ignore* the distinction. The `docs/archive/specs/*` entry in
+  `docs/orphans-allow` (line 50) survives untouched only because fnmatch `*`
+  spans separators.
 
 **What the review corrected.** Six findings, all taken: the intake figures are
 unreproducible and must not be reported as "reproduced exactly"; the split is
@@ -69,7 +70,7 @@ paths and survives any disposition. They are **restated**, not deleted.
 
 **Filed.**
 
-- **OI-11** ([`requirements/open-items.csv`](../requirements/open-items.csv)) —
+- **OI-11** ([`docs/requirements/open-items.csv`](../requirements/open-items.csv)) —
   whether §B2's sentence is **struck** or **restated**, `Status=pending`, both
   options with honest FOR/AGAINST, blast radius stated truthfully (a design
   sentence, a queued row, two `declared-absences` entries; nothing in
