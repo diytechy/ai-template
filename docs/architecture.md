@@ -61,6 +61,7 @@ graph LR
     m_scripts_gen_release_checklist["scripts/gen_release_checklist — Generate the human release checklist from the r…"]
     m_scripts_gen_skills_index["scripts/gen_skills_index — Generate the skills applicability index from th…"]
     m_scripts_gen_trajectory["scripts/gen_trajectory — Generate the offline project-state dashboard (r…"]
+    m_scripts_handback["scripts/handback — handback.py — the two lane closes that are not …"]
     m_scripts_integrate["scripts/integrate — integrate.py — the local integrator: the statio…"]
     m_scripts_plan_artifacts["scripts/plan_artifacts — The dual-plan round artifact filer: the coordin…"]
     m_scripts_plan_briefs["scripts/plan_briefs — Redacted dual-plan brief assembler + the three …"]
@@ -92,6 +93,7 @@ graph LR
     m_scripts_agent_loop --> m_scripts_score_reviews
     m_scripts_check_trajectory --> m_scripts_check_docs
     m_scripts_drive --> m_scripts_agent_common
+    m_scripts_drive --> m_scripts_handback
     m_scripts_drive --> m_scripts_integrate
     m_scripts_drive --> m_scripts_schedule
     m_scripts_gen_open_items --> m_scripts_gen_trajectory
@@ -103,6 +105,8 @@ graph LR
     m_scripts_gen_trajectory --> m_scripts_traj_render
     m_scripts_gen_trajectory --> m_scripts_traj_status
     m_scripts_gen_trajectory --> m_scripts_traj_views
+    m_scripts_handback --> m_scripts_agent_common
+    m_scripts_handback --> m_scripts_integrate
     m_scripts_integrate --> m_scripts_agent_common
     m_scripts_integrate --> m_scripts_schedule
     m_scripts_integrate --> m_scripts_score_reviews
@@ -623,7 +627,7 @@ Contracts (interfaces): IF-050, IF-051
 
 ### `scripts/drive`
 _drive.py — the serial claim->build->integrate driver (the scheduling front end)._
-Imports (internal): `agent_common`, `integrate`, `schedule`
+Imports (internal): `agent_common`, `handback`, `integrate`, `schedule`
 Contracts (interfaces): IF-015
 
 | Public item | Summary | Implements |
@@ -737,6 +741,18 @@ Contracts (interfaces): IF-011, IF-024, IF-052, IF-056, IF-071
 | `build_html(root, wis)` |  |  |
 | `main()` |  |  |
 
+### `scripts/handback`
+_handback.py — the two lane closes that are not a merge (concurrency-v2 §A3)._
+Imports (internal): `agent_common`, `integrate`
+Contracts (interfaces): IF-080
+
+| Public item | Summary | Implements |
+|---|---|---|
+| `diff_records(fields)` | `--name-status -z` fields as `[(status, [paths])]`, or None if truncated. |  |
+| `returned_spec(text, rel, note)` | `text` rewritten as a RETURNED spec: a `blockref` in the frontmatter and |  |
+| `hand_back(root, branch, reason)` | Close `branch` on the HANDBACK outcome. `(returned WI ids, None)`, or |  |
+| `quarantine(root, branch, why)` | Turn a RED non-merged lane into a BAR-INERT artefact. A refusal, or None. |  |
+
 ### `scripts/integrate`
 _integrate.py — the local integrator: the station protocol and its merge slot._
 Imports (internal): `agent_common`, `schedule`, `score_reviews`
@@ -745,8 +761,9 @@ Imports (internal): `agent_common`, `schedule`, `score_reviews`
 |---|---|---|
 | `fail(msg)` |  |  |
 | `normalize_wi_id(wi_id)` | `wi-401`/`Wi-401` -> `WI-401`; anything else is returned unchanged. |  |
-| `claim(root, wi_id, branch)` | §2.3 steps 1+2: the serial trunk claim, then the branch cut. |  |
+| `claim(root, wi_id, branch)` | §2.3 steps 1+2 in the order that makes a half-claim BENIGN (§A3). |  |
 | `finished_branches(root)` | Claimed branches whose tip moved every spec out of active/<branch>/. |  |
+| `branch_outcomes(root, branch)` | `({WI id: outcome}, [claimed filenames naming other than ONE outcome])`. |  |
 | `refresh_attestation(root, branch, rev)` | `(work_tip_sha, bar summary)` if `rev` is a GENUINE refresh commit for |  |
 | `lane_worktree(root, branch)` | The lane worktree holding `branch`: `(path, error)`, created if needed. |  |
 | `trunk_is_ancestor(root, branch)` | THE CONSTRAINT (§A2): is the trunk's HEAD already an ancestor of `branch`? |  |
