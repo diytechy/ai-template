@@ -33,17 +33,34 @@ a bar-inert `.patch` under a `handback/` directory in `docs/work/`; nothing is l
 reverted commits stay reachable in trunk history once the branch merges.
 
 `drive.py` decides, `handback.py` writes: a DECIDED worker exit hands back and
-the run keeps going, a CRASH keeps the parked-resume path unchanged, and a red
-refresh on a branch that merges nothing is quarantined once and refreshed again.
+the run keeps going, a CRASH keeps the parked-resume path unchanged, a lane that
+already closed its specs merges on the outcome its tree names, and a red refresh
+on a branch that merges nothing is quarantined once and refreshed again.
 Deleted with all of that: the `EXIT_NEEDS_HUMAN` run-stop, the parked-branch
 stop, and `drive._stranded_claims` — the last because `integrate.claim` now
-writes `commit-tree` → `git branch` → trunk advance, moving its one crash window
-to the benign side (an orphan branch `_abandoned_claim` recognises and the next
-claim re-cuts).
+writes `commit-tree` → `git branch` → trunk advance, moving the window between
+its two ref writes to the benign side (an orphan branch `_abandoned_claim`
+convicts on four facts — the exact claim subject, not an ancestor of trunk, a
+parent that is, and a commit touching only bookkeeping surfaces — and the next
+claim deletes and re-cuts, naming the sha it deleted).
 
 The `## Handback` section joined the spec body grammar in all three F5 loader
-copies plus the converter. Tests: `tests/test_handback.py` (new, 10 tests, all
-constructing their own git topologies), plus the outcome/claim-inversion groups
-in `tests/test_integrate.py` and the two run-stop deletions driven end to end in
-`tests/test_drive.py` against a conditional stub bar. Full record, deviations and
-two findings owed their own rows: `docs/log.md`.
+copies plus the converter, which is what the section needed to exist at all: a
+body the grammar does not know makes the row silently absent from the scheduler
+while `check_trajectory` ERRORs on the same file.
+
+REVIEW-A round 1 found six, all real, all fixed: the ruled red arm mis-parsed
+`git diff --name-status -z` renames (three fields, not two) and reverted the
+wrong paths while discarding four git return codes; `_abandoned_claim` matched a
+subject SUFFIX and would delete a one-commit branch carrying real work;
+`branch_outcomes` resolved a spec left in two folders silently, toward the
+outcome that skips the verdict gate; two sentences of the claim rationale were
+false and are retracted in place; a decided exit *after* a lane closed its specs
+stopped the run; and the `EXIT_BUDGET`/`EXIT_STALL` walk-away cost was unrecorded.
+
+Tests: `tests/test_handback.py` (new, 13 tests, all constructing their own git
+topologies; the rename parse mutation-proven), plus the outcome/claim-inversion
+groups in `tests/test_integrate.py` — now with negatives that fail if the
+matcher loosens — and the run-stop deletions driven end to end in
+`tests/test_drive.py` against a conditional stub bar. Full record, deviations
+and four findings owed their own rows: `docs/log.md`.

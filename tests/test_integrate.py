@@ -2096,6 +2096,12 @@ def test_integrate_refuses_and_holds_the_trunk_when_the_bar_is_undeclared(tmp_pa
     # precisely where a fail-open merge does its damage. The trunk must not move.
     root = claim_repo(tmp_path)
     assert integ.claim(root, "WI-401", "wi-401") == 0
+    # The fixture declares `[generated]` (see `declare_generated`), which is a
+    # stack.ini — and THIS test is about the file being ABSENT, which is a
+    # distinct §4 refusal from a stack.ini that declares no [product] test. So
+    # it is removed here, after the claim that needed it, rather than the
+    # assertion being softened to whichever refusal happens to fire.
+    (root / "docs" / "stack.ini").unlink()
     (root / ".gitignore").write_text("out/\n", encoding="utf-8", newline="\n")
     _commit(root, "chore: ignore the coordinator lock", when=T_VERDICT)
     trunk_before = _rev(root, "HEAD")

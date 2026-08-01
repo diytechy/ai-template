@@ -17,11 +17,16 @@ option and no state file that could hold one. Two run-stops die with it (the
   `branch_outcomes(root, branch)` read the branch's own tree: `complete/` →
   `merged`, `cancelled/` → `cancelled`, any open folder (`queued/`, `draft/`,
   `deferred/`) → `handback`. A claimed spec that landed in no declared
-  directory resolves to *nothing* and `integrate_one` refuses on it — a branch
-  that deleted its spec has stated no outcome, and guessing one would let
-  unreviewed work merge as if approved. The merge commit and the console line
-  now name the outcome per id (`integrate: wi-401 merged (WI-401=handback)`),
-  so a walk-away run cannot report a return as a completion.
+  directory — or in **more than one** — resolves to *nothing* and
+  `integrate_one` refuses on it. Both halves matter and only one was there in
+  round 1: a basename-keyed dict let a spec left in two folders resolve by
+  alphabetical last-wins, which put `queued` (handback, no verdict owed) ahead
+  of `complete` (merged, an APPROVE owed) — a contradiction resolved silently
+  toward the answer that *skips the gate*, with fail-closure depending on an
+  unrelated duplicate-id rung in another script. Per-basename outcome **sets**
+  now put it where the outcome is read. The merge commit and the console line
+  name the outcome per id (`integrate: wi-401 merged (WI-401=handback)`), so a
+  walk-away run cannot report a return as a completion.
 - **The verdict gate is keyed off the OUTCOME, not the claim.** `_verdict_gate`
   took `wi_ids` from trunk's `active/<branch>/` and demanded an `APPROVE` for
   every one — but a handback leaves those ids claimed at merge time, so as
@@ -30,15 +35,22 @@ option and no state file that could hold one. Two run-stops die with it (the
   the commonest handback cause, so the unfixed gate would have deadlocked the
   common path on itself.
 - **The claim is inverted: `write-tree`/`commit-tree` → `git branch` → advance
-  trunk.** Trunk-first had one crash window that left a claim no lane could
-  reach — invisible to the frontier (the WI is no longer queued) and to the
-  parked-resume read (no ref) — which cost an exit-2 refusal and hand repair.
-  Branch-first moves the same window to the benign side: a crash leaves at
-  worst an orphan branch whose claim commit is not an ancestor of trunk while
-  its WI is still `queued/`, which `_abandoned_claim` recognises by three facts
-  (this branch's claim subject at the tip; the tip not an ancestor of trunk;
-  its parent an ancestor of trunk) and the next claim deletes and re-cuts.
+  trunk.** Trunk-first had a window between the two REF writes that left a
+  claim no lane could reach — invisible to the frontier (the WI is no longer
+  queued) and to the parked-resume read (no ref) — which cost an exit-2 refusal
+  and hand repair. Branch-first moves that window to the benign side: a crash
+  leaves at worst an orphan branch whose claim commit is not an ancestor of
+  trunk while its WI is still `queued/`, which `_abandoned_claim` convicts and
+  the next claim deletes and re-cuts, printing the sha and its restore command.
   **`drive._stranded_claims`, its exit-2 refusal and its test are deleted.**
+  `_abandoned_claim` authorises a `git branch -D`, so it convicts on **four**
+  facts, not three: the tip's subject is `_claim_subject(wi_id, branch)`
+  **exactly**; the tip is not an ancestor of trunk; its parent is; and the
+  commit **touches only the RULING-6 bookkeeping surfaces**. Round 1 shipped a
+  suffix match with no `wi_id` and inferred the last fact from ancestry —
+  which proves only *one commit ahead*, not *carrying nothing* — so a
+  hand-written `wip: nearly done -> active/wi-401 (bookkeeping)` was deleted
+  with its work on it. Three negatives now fail if the matcher loosens again.
 - **`handback.py`, a new sibling kit script** (`hand_back` + `quarantine`):
   - `hand_back` commits the work so far **as-is** (`--no-verify` — "as-is" has
     to mean it, and the branch's own §A2 refresh regenerates and bars this tree
@@ -57,35 +69,90 @@ option and no state file that could hold one. Two run-stops die with it (the
     nothing is live.
     Bookkeeping paths (`docs/work/`, `docs/log.d/`) are exempt by construction:
     reverting them would revert the handback itself.
+  - **It reads `--name-status -z` as RECORDS, not pairs.** `diff.renames` has
+    defaulted true since Git 2.9, so `R<score>`/`C<score>` are ordinary output
+    and each emits **three** fields. Round 1 paired two at a time: the stream
+    desynchronised at the first rename, paths were read as statuses, the
+    bookkeeping filter went blind, the failing file fell past the loop bound,
+    and the run printed a confident *"4 path(s) reverted"* over a branch that
+    still held it — while four no-match git calls had their **return codes
+    discarded**. A rename is now two undo steps (remove the new path, restore
+    the old), a truncated stream refuses rather than quarantining a partial
+    list, every revert step's code is checked and a failure resets the lane to
+    its tip, and the artefact is staged **by name** instead of `git add -A`.
 - **`drive.py`: the decision, not the write.** `_worker_stop_code` is replaced
   by `_lane_close`. A *decided* worker exit (`_WORKER_OUTCOMES`) hands back and
   the run continues; a **crash** (any other code) is deliberately not a hang
   and keeps the parked-resume path exactly as it was, bounded by the stall
-  guard. `_drain` gained `_refresh_or_quarantine`: a red refresh still stops
-  the run for a branch whose outcome asserts *done*, but a branch that merges
-  nothing is quarantined once and refreshed again.
+  guard. A lane that **already closed its specs** is left alone whatever it
+  exited with: its tree has named an outcome and the drain merges it on that.
+  Round 1 did not have that arm, and a review escalation lands at the *end* of
+  a lane — so a decided exit after the close made `hand_back` read a spec out
+  of an `active/` directory the lane no longer had, fail with an `OSError`, and
+  stop the run over a branch that would have merged cleanly. `_drain` gained
+  `_refresh_or_quarantine`: a red refresh still stops the run for a branch
+  whose outcome asserts *done*, but a branch that merges nothing is
+  quarantined once and refreshed again.
 - **The `## Handback` section joined the spec body grammar** — `SPEC_HANDBACK`
   plus a four-line partition in `parse_spec_deliverable`, identical in all
   three F5 copies (`agent_common`, `check_trajectory`, `schedule`) and in
   `wi_convert`, which reads past it and does not reproduce it (it maps to no
-  CSV column; `--verify` round-trips from a CSV and never sees one).
+  CSV column; `--verify` round-trips from a CSV and never sees one). **This is
+  the change that made the section possible at all, not a nicety**: a sibling
+  lane confirmed today that a body the grammar does not know makes the row
+  **silently absent from the scheduler** (`read_spec_rows` skips a malformed
+  spec with no sink) while `check_trajectory` ERRORs on the same file — a
+  reader disagreement of exactly the §B3 kind, and a returned WI that vanishes
+  from the frontier without a word is a hanging branch by another route.
 
 **How the invariant is tested.** [`tests/test_handback.py`](../../tests/test_handback.py)
-(10 tests, new; filed in `conftest.SLOW_MODULES` beside its two siblings — real
+(13 tests, new; filed in `conftest.SLOW_MODULES` beside its two siblings — real
 claims mean the real `trunk_step --regen` subprocess) constructs every topology
 it measures. The anti-livelock property is asserted against `schedule.frontier`
 itself, driven both ways (ready before the claim, `blocked` after the return);
-the quarantine is proven bar-inert in all three diff shapes (edit, add, delete)
-*and* lossless (`git apply --check` then `git apply` restores the lane's work);
-all four registry readers are driven over one real returned spec. In
+the quarantine is proven bar-inert in **four** diff shapes (edit, add, delete,
+rename) *and* lossless (`git apply --check` then `git apply` restores the lane's
+work); all four registry readers are driven over one real returned spec. In
 `tests/test_drive.py` the two run-stop deletions are driven end to end against a
 **conditional** stub bar — red exactly while the lane's broken file is present,
 which is what lets the red-handback ruling be *shown* (refresh red → quarantine
 → refresh green → merge) rather than asserted. `tests/test_integrate.py` gains
-the crashed-claim shape (re-claimed) beside its two negatives (a branch carrying
-work, an unrelated same-named branch — both still refuse), the four-way outcome
-read, the landed-nowhere refusal, and the outcome-keyed gate driven at both the
-helper and the whole slot.
+the crashed-claim shape (re-claimed) beside four negatives, the outcome read in
+both failing shapes, and the outcome-keyed gate driven at the helper and through
+the whole slot.
+
+**Round 2 added the tests that can FAIL**, which is the honest lesson of the
+review: round 1's `_abandoned_claim` negatives were both structured so a looser
+matcher could not red them (one built two commits so the tip was a work commit;
+the other had no claim-ish subject at all), so a stated invariant shipped with
+no guard. The three new ones each ISOLATE one fact — an exact claim subject
+carrying `real-work.txt` (only the content fact can reject it); a subject that
+merely *ends* like a claim, touching **only** a bookkeeping surface (only the
+exact subject can); and a genuine claim subject for a **different id**, likewise
+bookkeeping-only (only the `wi_id` half can). Isolation was not free and the
+first attempt did not have it: a mutation run showed the suffix-match mutant
+passing all three, because every negative still carried product content that
+fact 4 rejected. Re-driven after the fix, **each mutant reds exactly the
+negative that isolates the fact it drops** — suffix-match reds two, dropping the
+content check reds one, and nothing else moves.
+
+The rename parse is pinned twice: a record-shape unit test over the exact field
+list the review drove, and the end-to-end revert in the *damaging* alignment
+(the rename sorts first, the broken file last). Both mutation-proven — restoring
+the pair-parse reds them and leaves the other 11 green. The discarded return
+codes are covered by fault injection on the last revert step: the refusal names
+the path and the lane is reset, rather than a count being printed for work that
+did not happen.
+
+**One fixture was corrected rather than bent.** The content fact reads the same
+allowed set as the RULING-6 audit (bookkeeping prefixes plus the declared
+`[generated]` paths), and the claim folds `trunk_step --regen` into its own
+commit — which, with a `docs/work/` registry present, writes `PROJECT_STATE.html`.
+A fixture that declared no generated set therefore produced a claim commit its
+own reader could not recognise. That is a repo `integrate audit` would flag too,
+so the fixture now declares the set the shipped `stack.ini` template does. The
+failure direction is worth stating: an undeclared repo fails **closed** — the
+re-claim refuses instead of deleting.
 
 **Deviations from spec.**
 
@@ -95,10 +162,24 @@ helper and the whole slot.
   documented escape and the WI-374 precedent (the drive loop went to `drive.py`
   rather than into `agent_loop.py`). It costs the scaffold surface — MAPPING
   row, README kit-contents, `test_bootstrap` file list — all three registered.
-- **`integrate.py` still crosses THRESHOLD (1418 → 1588) and takes a NEW
+- **`integrate.py` still crosses THRESHOLD (1418 → 1638) and takes a NEW
   reviewed baseline entry.** What remains is irreducibly its own: the claim,
   the outcome read the merge slot gates on, and the verdict gate. Re-stamp
   DOWN with WI-390's deletions.
+- **`EXIT_BUDGET` and `EXIT_STALL` now block a WI that used to be resumable —
+  a real cost, recorded rather than traded in a set literal.** They are decided
+  exits, so under §A3 the lane hands back; `hand_back` sets a `blockref`; and
+  `schedule._disposition` reads queued+blockref as `blocked`. Before this row,
+  a worker that hit its session ceiling stopped the run with the claim parked
+  and a **relaunch resumed the same lane**, so a WI needing more than one
+  worker budget finished across relaunches with no human in the loop. Now it
+  returns blocked and an unattended run can never pick it up again. §A3's
+  ruling is "any non-zero worker exit that is not a crash" and its
+  justification is about `EXIT_NEEDS_HUMAN`, not about a ceiling — but the
+  alternative (hand back *without* a blockref so a ceiling stays resumable)
+  re-opens the claim/return/re-claim loop this row spent its effort closing,
+  bounded then only by `--max-iterations`. That is an owner call, not a
+  builder's, so it is filed below rather than decided here.
 - **No CLI subcommand for `handback`.** The driver is the only mechanical
   caller; a lane agent that wants to cancel or hand back by hand writes the
   move and the reason, which is a judgement, not a command.
@@ -115,9 +196,34 @@ helper and the whole slot.
   once the trunk lane regenerates the arch-map — same pre-existing WARN class
   as `drive`, `traj_graph`, `traj_panels`, `traj_render`.
 
+**Two false sentences RETRACTED from the claim rationale** (REVIEW-A round 1),
+because a wrong record is the defect class this program keeps paying for and
+`integrate.py`'s docstring is now the design's record of the inversion.
+(a) *"Crash before the branch and there is nothing but an unreferenced object
+git will collect"* — **false**. That window has the spec already `git mv`d out
+of `queued/` and the regen staged, so it leaves a **dirty trunk with no branch
+ref**; driven, the next claim refuses `the trunk working tree is dirty` and
+drive.py's cycle-top check makes it `EXIT_PREFLIGHT`. It is not a regression
+(the old order had the same window and the dirty check already fronted it), but
+there are **three** interesting points, not two, and the deletion of
+`_stranded_claims` is argued from the *second*. (b) *"the hook's live rung here
+was the generated-artifact freshness floor"* — **false by omission**. `--regen`
+covers six of the hook's ten `--run-steps`; it does not cover
+`registry-integrity`, the `trajectory` SSOT check, `skills-sync` or
+`ratify-fresh`, and outside `--run-steps` the plumbing commit also skips
+`check_privacy --author`, the **always-on secrets floor**, the `format` step and
+the `commit-msg` hook. Two of those are not vacuous: `ratify-fresh` reads the
+registry the claim mutates, and the secrets floor would otherwise scan the
+regenerated artifacts. Trunk advances to a commit no hook inspected and the next
+thing to bar it is a lane's §A2 refresh — accepted for the window it buys, not
+because nothing is given up. Both corrections are in the docstring, not only
+here.
+
 **Stamps re-stamped, each with its reason in
 [`tests/test_module_size_ratchet.py`](../../tests/test_module_size_ratchet.py).**
-`integrate.py` NEW 1588; `agent_common.py` 1731 → 1741 and
+`integrate.py` NEW 1588, re-stamped to 1643 across round 2 (the fourth
+convicting fact, the exact-subject comparison, the outcome sets, and the
+corrected claim rationale); `agent_common.py` 1731 → 1741 and
 `check_trajectory.py` 3251 → 3261 (the body-grammar lines, identical text in
 both by construction); `bootstrap.py` 2243 → 2250 (the scaffold registration).
 `docs/dupes-allow`: the two F5 fingerprints moved again
@@ -128,22 +234,33 @@ all three copies at once, and `check_trajectory == schedule` keeping its fp
 file was touched** (`AGENTS.template.md`, `PROCESS.md`, `PROCESS_OPTIONS.md`
 unchanged).
 
-**Bars (real output, this branch, repo `.venv` 3.11.9).** Commit bar before each
-commit: `pytest -q -n auto -m smoke` → **1 failed, 560 passed, 4 skipped in
-13.24s**; configured `check_docs --stale` → **OK, 339 docs, 971 links, 0
-broken**. Closing bar: full unfiltered `pytest -q -n auto` → **1 failed, 1762
-passed, 12 skipped in 427.68s**; `ruff check .` and `ruff format --check .` →
-**All checks passed / 148 files already formatted**; `check_trajectory --root .
---strict` → **clean (389 work items, 366 done, 16 cancelled, graph acyclic)**,
+**Bars (real output, this branch, repo `.venv` 3.11.9; round-2 figures).**
+Commit bar before each commit: `pytest -q -n auto -m smoke` → **1 failed, 560
+passed, 4 skipped in 13.55s**; configured `check_docs --stale` → **OK, 340 docs,
+971 links, 0 broken**. Closing bar: full unfiltered `pytest -q -n auto` →
+**1 failed, 1771 passed, 12 skipped in 648.41s** (round 1 was 1762 passed;
+the +9 are this round's new guards); `ruff check .` and `ruff format --check .`
+→ **All checks passed / 148 files already formatted**; `check_trajectory --root
+. --strict` → **clean (389 work items, 366 done, 16 cancelled, graph acyclic)**,
 pre-existing WARNs only; `check_doc_refs --root . --strict` → **OK, no dangling
 path or `sym:` references**. The sole failure at both tiers is the standing
 `test_this_repo_is_not_a_work_branch`, which asserts this checkout is not a work
 branch and therefore fails by construction on one.
 
+**One round-2 red was mine and is recorded rather than quietly fixed.** Adding
+the `[generated]` declaration to `claim_repo` gave every fixture built on it a
+`docs/stack.ini`, which changed the §4 refusal
+`test_integrate_refuses_and_holds_the_trunk_when_the_bar_is_undeclared` sees
+from *absent file* to *no `[product]` key* — two different refusals. The test
+now deletes the file after the claim that needed it, so it still drives the arm
+it names, instead of the assertion being softened to whichever refusal fires.
+
 **Findings for their own WI (not fixed here).**
 
-1. **A worker that reports DONE without closing its specs still parks.** The
-   invariant covers every *non-zero* exit; exit 0 with specs still in
+1. **A worker that reports DONE without closing its specs still parks.** One
+   of two diagonals; the other — a *non-zero* exit from a lane that already
+   closed — was found by the review and is now handled (the drain merges it on
+   the outcome its tree names). This one remains: exit 0 with specs still in
    `active/<branch>/` leaves the branch parked and relies on the stall guard.
    Handing that back too would make the invariant airtight, but it changes the
    stall semantics this row was not asked to touch.
@@ -152,3 +269,15 @@ branch and therefore fails by construction on one.
    branch is retried on every relaunch rather than stranded). It is the one
    remaining shape where a branch waits on a human, and whether it should also
    convert to a handback is a design question for §A3, not a builder's call.
+3. **Should budget exhaustion be a handback at all?** The deviation above
+   states the cost; the question is whether `EXIT_BUDGET`/`EXIT_STALL` should
+   leave `_WORKER_OUTCOMES`, or hand back *without* a `blockref` so a ceiling
+   stays resumable. Each answer trades a different property — the walk-away
+   loop's ability to finish a long WI across relaunches, against the
+   claim/return/re-claim loop the blockref closes. §A3 rules the shape ("any
+   non-zero exit that is not a crash") but not this dial.
+4. **A second handback of the same WI accretes a second `## Handback`
+   section.** It parses correctly in all four readers (`Deliverable` stays
+   empty, `BlockRef` intact) and reads as a history of returns, which is
+   arguably right — but nobody decided that it should accrete rather than
+   replace, and a WI returned five times would carry five sections.
