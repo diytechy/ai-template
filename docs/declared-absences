@@ -47,6 +47,7 @@ src/ — the kit's product is project-trajectory/ + tests/, not an application t
 docs/kit-license — a stamp bootstrap.py writes into a SCAFFOLD; the kit itself is the source
 docs/kit-profile — likewise a scaffold stamp, recording which kit rung a repo adopted
 docs/release-checklist.md — a scaffolded artifact for a repo that ships releases
+docs/releases/ — gen_release_checklist.py --version files the stamped, signed checklist here; a meta-repo performs no G-Release, so the directory is created by the first one that ships (see the line above)
 
 # --- Retired surfaces: gone on purpose, and prose still names them -----------
 # A retired path is a deliberate absence with a reason, so it belongs here rather

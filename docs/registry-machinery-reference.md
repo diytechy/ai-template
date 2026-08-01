@@ -11,7 +11,8 @@ claim is made, the enforcing file is named so it can be re-derived. Line numbers
 are given as a reading aid and will drift; the function names will not.
 
 **Scope.** The four spine tiers in full, the gate derivation in full, the
-harness's gate→tier→coverage path in full. The off-spine registries
+harness's gate→tier→coverage path in full, and what sits outside the derived
+range (`G-Release`/`G-Final`, §9.5). The off-spine registries
 (IF / PB / CMP / PART / ASSET / REPO) get a summary in §10. The **work-item**
 registry (`docs/work/`) is a different machine with its own states and fields and
 is deliberately not covered here.
@@ -205,7 +206,7 @@ amendment invalidated the evidence.
 | `CodeSymbol` | ✔ | function/type name | Required non-empty. **Not checked against real code** — read only by `gen_okf.py` for the knowledge bundle. |
 | `Detail` | ✔ | decomposition detail, **not** an SR paraphrase | Ratified prose. |
 | `Rationale` | ✘ | free text | **Deliberately not required** — "a short decomposition row's why IS its parent SR's, so requiring one everywhere would manufacture the restatement the column exists to prevent." Ratified when present. |
-| `TestRefs` | ✘ | `(see TC)` | **Inert** — see §11.1. |
+| `TestRefs` | ✘ | `(see TC)` | **Inert** — see §12.1. |
 | `Status` | ✔ | open; magic as SR | `Draft` → G0 and exempt from "no TC". Otherwise **does not gate** — §4.1. |
 | `Component` | ✘ | `CMP-###` | Optional membership tag, validated against the CMP registry only when that registry is non-empty. |
 | `Phase` | ✘ | digit-parseable | = the parent SR's Phase by convention. Same arming rule. |
@@ -236,7 +237,7 @@ A `Modified` LLR is exempt — its low status is the deliberate marker, not drif
 | `Verifies` | ✔ | `;`-joined **SR / LLR / IF** ids | The downward join. Empty → orphan ("verifies nothing"); unknown token → orphan; **only IF ids** → orphan (a seam citation *supplements*, never replaces, the spine citation). |
 | `Level` | ✔ | **open** (`Unit`, …) | Required non-empty; the value is never validated. |
 | `Method` | ✔ | **open** | Required non-empty; the value is never validated. |
-| `Tier` | ✔ | **closed**: `Smoke`, `Full`, `Release` | The only closed TC vocabulary. Wrong value → schema finding. **Not mechanically joined to the harness tiers** — see §11.2. |
+| `Tier` | ✔ | **closed**: `Smoke`, `Full`, `Release` | The only closed TC vocabulary. Wrong value → schema finding. Selects release-checklist items (§9.5); **not** joined to the pytest marker that selects tests — see §12.2. |
 | `Parameters` | ✘ | `param=a; other=x` | Read as the artifact recipe in the critique brief. Not validated. |
 | `Expected` | ✔ | cite the AcceptanceCriteria **by id** | Ratified prose. |
 | `Automated` | ✔ | `Yes` / `No` (open) | **Conditional rule:** `Yes` + empty `Evidence` → schema finding ("a claimed-automated test with no cited location is a soft false-green"). |
@@ -492,6 +493,54 @@ trunk lane for exactly that one run.
 trunk, including the `derived-gate` freshness check. The gate a branch reports is
 the value as-of-base.
 
+### 9.5 What sits OUTSIDE the derived range: G-Release and G-Final
+
+G1–G3 are the derivable gates. `G-Release` and `G-Final` are **not derived, not
+cached, and not known to the harness at all** — `check.py`'s vocabulary is
+`GATES = ["G1", "G2", "G3", "all"]`, so there is no `--gate G-Release` to run.
+They are release milestones recorded separately.
+
+The distinction is one of kind, not of degree: **G3 is a state the spine reaches
+and holds; G-Release is an event performed per release** (and skipped entirely
+for a one-off deliverable). A repo can sit at G3 indefinitely without ever
+performing one.
+
+Four things separate them, only the first of which is a test run:
+
+1. **The `release` test tier runs** — the marker filter is dropped, so
+   release-marked tests execute. G3's own exit criteria name the **full** tier.
+2. **The generated release checklist is completed and signed** —
+   `gen_release_checklist.py` harvests what no automated test covers: every
+   `Demonstration`/`Manual`/`Inspection` SR, every TC with `Tier=Release` or
+   `Automated` not-yes, the SN acceptance intents, provided IF contracts, and the
+   PB budgets. The ticked copy, filed under `docs/releases/`, IS the sign-off
+   artifact.
+3. **Warn-tier perf budgets meet a human.** A PB row's `Gate` column
+   (`fail`/`warn`) is independent of its `Tier`; noisy runtime metrics default to
+   `warn` and therefore fail no gate at any tier. The checklist is the only place
+   they are confirmed.
+4. **Release admin and different sign-offs** — version bump, changed `Stable`
+   interface versions communicated to counterparts, changelog. G3 signs off
+   System Engineer + Test Engineer; G-Release adds the active domain hats and the
+   **Human**.
+
+**How a Release-tier TC is authored** — two populations, built nothing alike:
+
+- **Slow / hardware / long-running automated tests.** Structurally an ordinary
+  test carrying the `release` pytest marker. Because tiering is opt-out, marking
+  `release` is specifically the act of removing a test from the pre-merge suite.
+- **Procedure records for human-verified requirements.** Every SR owes ≥1 TC
+  *regardless of method*, so a `Demonstration`/`Manual`/`Inspection` SR's TC is
+  **not a test function at all** — it is a written procedure with
+  `Automated=No`, usually `Tier=Release`, its `Expected` citing the SR's
+  AcceptanceCriteria by id and its `Evidence` naming a procedure doc rather than
+  a pytest node. `Automated=No` also means the conditional Evidence rule (§5)
+  does not fire, so a manual TC may legally cite nothing.
+
+One deliberate detail in the harvester: a **blank** `Automated` cell counts as
+manual. An unclassified test lands on a human's checklist rather than being
+assumed covered.
+
 ---
 
 ## 10. The traced-vs-ratified cell split
@@ -554,15 +603,25 @@ column is doing unverified bookkeeping; anyone trusting it is reading a cell
 nothing maintains. The template already hints at this by shipping the literal
 `(see TC)`.
 
-### 12.2 `TC.Tier` is not joined to the harness tiers
+### 12.2 `TC.Tier` and the pytest marker are unreconciled
 
-`check.py`'s own docstring says "the `Tier` column in test-cases.csv is the
-registry source of truth" for tiering. Mechanically it is not: `TC.Tier` is
-required non-empty, enum-checked against `{Smoke, Full, Release}`, and emitted
-into the OKF bundle — and that is all. What actually selects tests is the
-**pytest marker** on the test function. Nothing compares the two, so a TC
-declared `Smoke` whose test carries no `smoke` marker is silently absent from the
-smoke tier, and the registry still reads as though it were covered.
+`TC.Tier` is genuinely load-bearing in one place: `gen_release_checklist.py`
+selects checklist items on `Tier == "Release"` **or** `Automated` not-yes, so the
+cell decides what reaches a human at G-Release (§9.5). It is also required
+non-empty, enum-checked against `{Smoke, Full, Release}`, and emitted into the
+OKF bundle.
+
+What it does **not** do is select tests. `check.py`'s docstring says "the `Tier`
+column in test-cases.csv is the registry source of truth" for tiering, but what
+actually runs a test is the **pytest marker** on the test function, and nothing
+compares the two. They are independent declarations of the same fact.
+
+The asymmetry matters in one direction. A TC row reading `Release` whose test
+lacks the marker merely runs earlier than declared — harmless. But a test marked
+`release` whose TC row reads `Full` **silently drops out of the pre-merge
+suite** while the registry still reads as pre-merge-covered. Same for a TC
+declared `Smoke` whose test carries no `smoke` marker: absent from the cheap
+gate, covered on paper.
 
 ### 12.3 The entire product bar is G3-only
 
