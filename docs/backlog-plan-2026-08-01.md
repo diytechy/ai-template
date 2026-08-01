@@ -53,7 +53,7 @@ made before that row starts; everything else is claimable as specced.
 
 | # | Row | What it does | Direction (simplicity lens) | Ruling |
 |---|-----|--------------|------------------------------|--------|
-| 1 | WI-397 *(new — mint on trunk only after `wi-391` merges)* | Refusal rung: a finished branch whose `docs/work/` delta adds a spec id outside its claimed set cannot merge | Constraint at the merge slot; deletes the id-reservation problem from the dispatcher's scope | **R1** |
+| 1 | [WI-397](work/queued/WI-397-a-work-branch-never-mints-an-id.md) *(minted 2026-08-01; R1 ruled)* | Refusal rung: a finished branch whose `docs/work/` delta adds a spec id outside its claimed set cannot merge | Constraint at the merge slot; deletes the id-reservation problem from the dispatcher's scope | **R1** |
 | 2 | WI-396 *(arrives with `wi-391`)* | Citation checker cannot see a line-suffixed reference into the kit's own tree | Prefer stripping the trailing line suffix before the shape test over growing the prefix list — one rule, fixes every prefix at once | — |
 | 3 | WI-395 *(arrives with `wi-391`)* | `blocked` rows promise a self-release that never happens | Fix the false promise in prose; do not build a cross-registry subscription | **R3** |
 | 4 | [WI-394](work/queued/WI-394-a-verified-spine-row-can-cite-evidenc.md) | A Verified spine row can cite evidence that never existed | File-existence half only; the node-id half is ruled prose | **R2** |
@@ -74,6 +74,16 @@ recommendation, and how the choice bears on the kit's purpose. An accepted
 ruling is recorded in [log.md](log.md)'s Decisions by the agent that executes
 the affected row; R4 additionally clears through the open-items flow once
 `wi-391` lands it on the owner surface.
+
+**Status 2026-08-01, after the first ruling pass:** **R1 and R2 are RULED as
+recommended.** R3 and R4 are **pending**, with the fuller background the owner
+asked for in [rulings-context-2026-08-01.md](rulings-context-2026-08-01.md) —
+including the owner's stated direction on handback disposition (the dispatcher
+completes it; recovery is loop machinery, never a work item), held there for
+confirmation. Part 1 also produced three mechanical findings (handoff §6:
+the failure-message extractor, containment-at-add, the unload residue
+distinction) that will be minted trunk-side after row 1 and slotted with the
+quick rows.
 
 ### R1 — Where may a new work-item id be created?
 
