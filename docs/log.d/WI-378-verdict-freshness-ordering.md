@@ -2,49 +2,76 @@
 
 **One line:** the row was scoped to *measure first and possibly deliver nothing
 else*, and that is what it delivered — replaying `integrate._verdict_gate`'s
-predicate over the four merged branches that exercised it found the gate is
-mostly firing **correctly**, so the fail-closed gate ships unweakened and what
-lands is the ordering that retires the avoidable class for free.
+predicate over **every** merge it has governed found the gate is mostly firing
+**correctly**, so the fail-closed gate ships unweakened and what lands is the
+ordering that shrinks the avoidable class.
+
+**The population, derived rather than chosen.** The first pass censused the four
+branches the session brief named; REVIEW-A round 1 was right that this is a
+sample, not a population, and the corrected numbers below supersede it. The
+predicate has governed every merge since the freshness comparison landed with
+`integrate.py` (`git log --reverse -S"_verdict_gate" -- .../integrate.py` →
+`e1cf5743`, plus `37dfa9ee`, WI-386's peel, which only loosens it), and
+`docs/review-policy` has read `1` since `274c64be`. So:
+
+```
+git log --format="%H%x09%s" --grep="^integrate: merge"     # 20 merges
+git merge-base --is-ancestor e1cf5743 <merge>              # true for all 20
+```
 
 **The measurement.** `_verdict_gate` refuses when the APPROVE's last commit is
 older than the branch's last commit outside `docs/reviews/` and `docs/log.d/`.
-Replayed by walking each branch's own first-parent commits, classifying the
-paths each touches, and attributing every extra round to the commit(s) that
-staled the APPROVE before it (a CHANGES-REQUESTED round does not count — more
-work was coming regardless):
+Replayed over all 20 by walking each branch's own first-parent commits,
+classifying the paths each touches, and attributing every extra round to the
+commit(s) that staled the APPROVE before it (a CHANGES-REQUESTED round does not
+count — more work was coming regardless). Twelve staled nothing; these seven:
 
 | Branch | rounds | APPROVEs staled | what staled them |
 |---|---|---|---|
-| WI-280 (`0fc58fb`) | 4 | 2 | `99a0596` close ceremony (`docs/work/` only); `ad2541d` hand trunk merge |
-| WI-380 (`8c4d5f7`) | 3 | 1 | `c42e370` mutation-ledger correction (`docs/log.d/` + `docs/work/` only) |
-| WI-384 (`979d8e0`) | 5 | 3 | `ADOPTING.md` + a queued spec; `docs/declared-absences`; `check_doc_refs.py` |
 | WI-386 (`c2a9af1`) | 5 | 3 | `integrate.py` + tests, twice; `tests/test_wi_convert.py` |
+| WI-384 (`979d8e0`) | 5 | 3 | `ADOPTING.md` + a queued spec; `docs/declared-absences`; `check_doc_refs.py` |
+| WI-380 (`8c4d5f7`) | 3 | 1 | `c42e370` mutation-ledger correction (`docs/log.d/` + `docs/work/` only) |
+| WI-374 (`8ffc6f8`) | 3 | 2 | `drive.py`; the LLR + TC registries |
+| WI-277 (`8bde0a6`) | 2 | 1 | nine commits — a trunk merge plus six test-split slices |
+| WI-371 (`4073a6d`) | 2 | 1 | `17d70468` `Deliverable` prose fix (`docs/work/` only) |
+| WI-280 (`0fc58fb`) | 3 | 2 | `99a0596` close ceremony (`docs/work/` only); `ad2541d` hand trunk merge |
 
-**Nine staled APPROVEs: six the gate working** (a real change to shipping code
-or a declared doc — the verdict genuinely no longer described the tree), **one
+**13 staled APPROVEs: nine the gate working** (a real change to shipping code or
+a declared doc — the verdict genuinely no longer described the tree), **one
 trunk moving under an open branch** (WI-280's firing #2, now structurally
 covered: `_verdict_gate` measures code-time at `_work_tip`, which peels the
 attested `refresh:` commit, and under WI-386's station protocol the lane does
-not hand-merge trunk at all), and **two a record edit that followed its own
-verdict** — WI-280's close ceremony and WI-380's mutation-ledger correction.
-Those two are the *only* ones an exclusion of `docs/work/` would have
-suppressed; recomputing WI-380's `code_time` with `docs/work/` excluded gives
-`1785563826` against a `verdict_time` of `1785564586`, i.e. it would have
-passed.
+not hand-merge trunk at all), and **three a record edit that followed its own
+verdict** — WI-280's close ceremony, WI-380's mutation-ledger correction and
+WI-371's `Deliverable` prose fix. Those three, **3 of 13 (23.1 %)**, are what an
+exclusion of `docs/work/` would have suppressed; recomputing WI-380's
+`code_time` with `docs/work/` excluded gives `1785563826` against a
+`verdict_time` of `1785564586`, i.e. it would have passed.
 
-**Two corrections to the record the row inherited**, both found by the replay:
+**Three corrections to the record**, the first two found by the replay and the
+third by the reviewer:
 
 1. WI-280's firing #1 was **not** caused by the ratifying spine commits. `8311c75`
    carried `docs/reviews/WI-280-REVIEW-A.md` in the same commit as the flip, so
    `verdict_time == code_time` and the strict `<` let it pass. The close
    ceremony `99a0596` — `docs/work/` only — is what refused.
 2. The session's working belief was that the `docs/work/` limb cost four rounds
-   (WI-380 r3, WI-384 r4–r5, WI-386 r5). Measured, it cost **one**: WI-384's
-   rounds 4 and 5 were staled by `docs/declared-absences` and
-   `check_doc_refs.py`, WI-386's round 5 by `tests/test_wi_convert.py`. Those
-   commits touch `docs/work/` too, but excluding it suppresses none of them.
+   (WI-380 r3, WI-384 r4–r5, WI-386 r5). Measured, *within those four branches*
+   it cost **one**: WI-384's rounds 4 and 5 were staled by
+   `docs/declared-absences` and `check_doc_refs.py`, WI-386's round 5 by
+   `tests/test_wi_convert.py`. Those commits touch `docs/work/` too, but
+   excluding it suppresses none of them.
+3. **This WI's own first census was wrong about its population** — four branches
+   where the predicate had governed 20 — and stated a *universal* over that
+   sample ("the only two an exclusion would have suppressed"), which WI-371's
+   `17d70468` falsifies. It is the same defect one level up from the two figures
+   this row had already refused to inherit, and it is exactly what WI-392 exists
+   to catch: the command that derives the population would have enumerated 20.
+   The correction makes the decision **better** supported, not worse — the added
+   case is a `Deliverable` prose fix, the precise field this row argues a
+   reviewer must re-read after an APPROVE.
 
-**WI-380 contributed zero to this count, as expected** — none of the nine came
+**WI-380 contributed zero to this count, as expected** — none of the 13 came
 from a spurious re-attest window. The ratified/traced split acts upstream, on
 how often a window opens at all, which is exactly why this row was told to
 measure rather than to assume.
@@ -52,10 +79,11 @@ measure rather than to assume.
 **Deliverables.**
 
 - [`project-trajectory/PROCESS_OPTIONS.md`](../../project-trajectory/PROCESS_OPTIONS.md),
-  "The LLM-gate verdict protocol" — the freshness rule, the census, the two
-  ordering rules (**close before the final verdict round**; **never hand-merge
-  trunk on a work branch**), and that `docs/work/` is deliberately inside the
-  window.
+  "The LLM-gate verdict protocol" — the freshness rule, the census plus the
+  command that derives its population, the two ordering rules (**close before
+  the final verdict round**; **never hand-merge trunk on a work branch**) stated
+  as *necessary but not sufficient*, and that `docs/work/` is deliberately
+  inside the window.
 - [`project-trajectory/skills/session-protocol/SKILL.md`](../../project-trajectory/skills/session-protocol/SKILL.md)
   §4 (+ both materialized copies) — the same ordering as an operational bullet
   where a closing session meets it, linking rather than restating.
@@ -69,21 +97,30 @@ measure rather than to assume.
   (WI-380's `2 failed, 7 passed`, WI-391's `109 links`, WI-384's self-falsifying
   "two false positives"); two cost a full review round.
 
-**Deliberately not built.** Option (b), widening the exclusion: it buys back 2
-of 9 rounds and lets a spec's `safety_class`, `needs` and `Deliverable` change
-after the APPROVE unseen. WI-380's round 3 settles it — the correction that
-round paid for carried a *newly driven* figure nobody else had checked, so the
-exclusion would have shipped un-reviewed evidence. Option (c) is unnecessary for
-the same reason. Also **not filed**: capping a record-only review round (WI-386's
-reviewer's proposal, bias disclosed by him) — the class is 2 of 9, so it
-addresses ~22 % of the cost while weakening a fail-closed gate; its durable half
-became WI-392 instead.
+**Deliberately not built.** Option (b), widening the exclusion: it buys back
+**3 of 13** rounds (23.1 %) and lets a spec's `safety_class`, `needs` and
+`Deliverable` change after the APPROVE unseen. Two of the three settle it —
+WI-380's round 3 paid for a correction carrying a *newly driven* figure nobody
+else had checked, and WI-371's paid for a `Deliverable` prose fix, so the
+exclusion would have shipped un-reviewed evidence in one case and an un-reviewed
+shipped claim in the other. Option (c) is unnecessary for the same reason. Also
+**not filed**: capping a record-only review round (WI-386's reviewer's proposal,
+bias disclosed by him) — the class is 3 of 13 (23.1 %) and **two of those three
+rounds caught a false claim**, which is the argument against capping them; its
+durable half became WI-392 instead.
 
-**Evidence the ordering is the remedy, not a consolation.** WI-380, WI-384 and
-WI-386 all closed — spec moved, `Deliverable` filled — *before* their round-1
-verdict this session, and **zero close-ceremony stalings resulted**. The class
-that cost WI-280 a round disappeared with no gate change. It was tribal
-knowledge from WI-280's log until now.
+**Ordering is necessary, not sufficient — at its real strength.** WI-380, WI-384
+and WI-386 all closed — spec moved, `Deliverable` filled — *before* their round-1
+verdict this session, and no close ceremony staled an APPROVE on any of them;
+that was worth writing down, since the class cost WI-280 a round and lived only
+in its log. But an earlier draft here read that as "zero close-ceremony
+stalings", which is literally true and **masked, not clean**. WI-384's
+`dba18f2a` and WI-386's `1329bd4e` *are* post-APPROVE record edits inside
+staling windows, costing nothing only because a code change shared the window;
+and **WI-371 closed before its verdict and still bought a record-only round**,
+because its round-1 APPROVE carried the MINOR that forced the `Deliverable`
+fix — a finding that did not exist when the close was made. Ordering removes the
+anticipatable half of the class and no more.
 
 **Deviations from spec:** none in scope. The spec's Done-when box "This spec is
 archived to `docs/archive/specs/`" is met
@@ -92,22 +129,28 @@ with the firing-#1 correction noted at its head).
 
 **Byte deltas:** `AGENTS.template.md` 9,991 → 9,991 (unchanged; 9 bytes of
 headroom under 10,000). `PROCESS.md` 64,319 → 64,319 (unchanged).
-`PROCESS_OPTIONS.md` 164,003 → **165,557** (+1,554 — the verdict-freshness
-paragraph). The `byte-budget-guard` baseline is re-stamped to 165,557 and now
-records that **+846 of the +2,400 gap to the old 163,157 stamp was inherited
-unstamped** from WI-380/384/386, which is the silent growth the skill exists to
-catch.
+`PROCESS_OPTIONS.md` 164,003 → **166,123** (+2,120 — the verdict-freshness
+paragraph, grown at REVIEW-A round 1 by the derived population, its command, and
+the necessary-not-sufficient qualifier). The `byte-budget-guard` baseline is
+re-stamped to 166,123 and now records that **+846 of the +2,966 gap to the old
+163,157 stamp was inherited unstamped** — attributed at round 1 to
+"WI-380/384/386", which the reviewer refuted and the file sizes settle: 163,157
+at the wi-380 merge, 164,003 at wi-384, 164,003 at wi-386, so WI-380 and WI-386
+moved this file by **0 bytes and the whole +846 is WI-384's**. That is the
+silent growth the skill exists to catch.
 
-**Tests.** The full suite was driven **twice**, before and after this fragment
-landed — `1 failed, 1744 passed, 12 skipped` both times (331.63 s / 344.97 s),
-the only delta between the two revisions being this fragment and its own link
-text. `pytest -q -n auto -m smoke` → `1 failed, 560 passed, 4 skipped`, run four
-times this session with stable counts (wall 12.5–24.2 s). The one red is the
-standing
+**Tests.** The full suite was driven **three times** across the row — twice
+before REVIEW-A round 1 and once after its corrections landed — reading
+`1 failed, 1744 passed, 12 skipped` every time (331.63 s / 344.97 s / 409.43 s;
+wall varies with sibling worktrees, the counts do not). The reviewer
+independently reproduced the same counts. `pytest -q -n auto -m smoke` →
+`1 failed, 560 passed, 4 skipped`, run five times with stable counts (wall
+12.5–24.2 s). The one red is the standing
 `test_check_lane.py::test_this_repo_is_not_a_work_branch` (this checkout *is* a
 work branch). `ruff check .` → `All checks passed!`; `ruff format --check .` →
 `146 files already formatted`; `check_trajectory.py --root . --strict` → `clean
 (390 work item(s), 366 done (94%), 16 cancelled, graph acyclic)`;
 `check_doc_refs.py --root . --strict` → `OK - no dangling path or sym:
-references`; `check_docs.py --root . --stale` → `OK - 340 doc(s), 974 intra-repo
-link(s), 0 broken`.
+references`; `check_docs.py --root . --stale` → `OK - 341 doc(s), 974 intra-repo
+link(s), 0 broken` (341 rather than the 340 recorded at round 1: the verdict
+file itself is now on the branch).

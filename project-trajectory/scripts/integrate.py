@@ -545,16 +545,24 @@ def _verdict_gate(root, branch, wi_ids):
     replacement for the old sha7-in-filename binding (§5.4 left it open).
 
     `docs/work/` is NOT excluded, deliberately, and WI-378 measured the price
-    before leaving it that way: replaying this predicate over four merged
-    branches (2026-08-01) found nine staled APPROVEs - six staled by a real
-    change to shipping code or a declared doc, one by a hand trunk merge, and
-    only two by a record-only edit that followed its own verdict. Adding
-    `docs/work/` here would buy back those two and nothing else, at the cost of
-    letting a spec's `safety_class`, `needs` and `Deliverable` - the claims the
-    verdict is ABOUT - change after the APPROVE, unseen. The two ordering rules
-    that retire that class for free are in process-options.md, "The LLM-gate
-    verdict protocol": close before the final verdict round, and never
-    hand-merge trunk on a work branch.
+    before leaving it that way. The population is derivable, not chosen: every
+    `integrate: merge` commit having this comparison's introducing commit as an
+    ancestor - 20 of them as of 2026-08-01, `review-policy` at 1 throughout -
+
+        git log --format="%H %s" --grep="^integrate: merge"
+        git merge-base --is-ancestor <introducing commit> <merge>
+
+    Replaying the predicate over all 20 found 13 staled APPROVEs: nine staled by
+    a real change to shipping code or a declared doc, one by a hand trunk merge,
+    and three by a record-only edit that followed its own verdict. Adding
+    `docs/work/` here would buy back those three (23%) and nothing else, at the
+    cost of letting a spec's `safety_class`, `needs` and `Deliverable` - the
+    claims the verdict is ABOUT - change after the APPROVE, unseen. One of the
+    three is exactly that: a `Deliverable` prose fix the verdict demanded. The
+    ordering rules that shrink the class - close before the final verdict round,
+    never hand-merge trunk - are in process-options.md, "The LLM-gate verdict
+    protocol"; they are necessary, not sufficient, since a verdict's own finding
+    can demand a record edit no ordering could have placed earlier.
 
     `docs/log.d/` differs on purpose: a log fragment is the narrative of work
     the verdict already read, carries no key any reader gates on, and is
