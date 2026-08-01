@@ -81,3 +81,43 @@ fragment was excluded as evidence for independence):
   passed here too).
 
 VERDICT: CHANGES-REQUESTED findings=3
+
+---
+
+## Round 2 (2026-08-01) — remedy verification
+Verdict: APPROVE
+
+Judging only the execution of the round-1 remedy, all re-driven by me on the
+tree at `e1d8bffd` (`rework: WI-395 clears SpecRef at close (REVIEW-A finding
+1, R-F)`):
+
+- **Finding 1 remedied, exactly as prescribed and nothing beyond.** The rework
+  diff on the spec is a single deleted line — `-specref =
+  "docs/concurrency-restructure.md#7-migration-plan-each-phase-is-itself-spine-class-solo-serial"`
+  — and `grep -n "^specref"
+  docs/work/complete/WI-395-a-blockref-is-a-label-not-a-subscription.md` now
+  returns nothing (rc=1), matching its completed siblings. Re-driven:
+  `check_trajectory.py --root . --strict` → `check_trajectory: clean (400 work
+  item(s), 371 done (93%), 17 cancelled, graph acyclic).`, **rc=0**, and the
+  `R-F WI-395` line is gone (grep count 0). The WARNs that remain (WI-389 +
+  WI-390 SpecRef-freshness, IF-055/IF-081, the two connectivity notes) are the
+  same set trunk shows — pre-existing, not this branch's.
+- **Blast radius of the rework is clean.** Three files only: the spec (the one
+  deleted line), the log fragment (remedy note appended), and the round-1
+  review file committed verbatim. The deliverable pair is untouched — both
+  copies still hash `0058dc13ff3a048f7cf6434121c74bf858a7ea1c`, and
+  `pytest -q tests/test_dogfood_sync.py` → `25 passed in 0.08s`. Working tree
+  matches HEAD (`git diff --stat HEAD` empty) apart from this appended round.
+- **Finding 3's disposition is recorded, not silently dropped.** The fragment
+  (readable this round, round 1 being on record) states: "REVIEW-A finding 3
+  (the retired sentence still readable at `docs/concurrency-restructure.md:361`)
+  is recorded here, not edited: that doc is design history by the §A9.1
+  standing rule." Consistent with round 1's no-remedy-owed stance, and the
+  record now sits where the next reader of the close will look.
+- **Finding 2 stands as recorded** — informational, no remedy owed; the
+  exemplar's promise lands on WI-388, and that dependency is now visible in
+  two surfaces (this review and the log's R3 Decisions entry).
+
+No new findings.
+
+VERDICT: APPROVE findings=3
