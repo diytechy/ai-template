@@ -51,19 +51,19 @@ measure rather than to assume.
 
 **Deliverables.**
 
-- [`../../project-trajectory/PROCESS_OPTIONS.md`](../../project-trajectory/PROCESS_OPTIONS.md),
+- [`project-trajectory/PROCESS_OPTIONS.md`](../../project-trajectory/PROCESS_OPTIONS.md),
   "The LLM-gate verdict protocol" — the freshness rule, the census, the two
   ordering rules (**close before the final verdict round**; **never hand-merge
   trunk on a work branch**), and that `docs/work/` is deliberately inside the
   window.
-- [`../../project-trajectory/skills/session-protocol/SKILL.md`](../../project-trajectory/skills/session-protocol/SKILL.md)
+- [`project-trajectory/skills/session-protocol/SKILL.md`](../../project-trajectory/skills/session-protocol/SKILL.md)
   §4 (+ both materialized copies) — the same ordering as an operational bullet
   where a closing session meets it, linking rather than restating.
-- [`../../project-trajectory/scripts/integrate.py`](../../project-trajectory/scripts/integrate.py)
+- [`project-trajectory/scripts/integrate.py`](../../project-trajectory/scripts/integrate.py)
   `_verdict_gate` docstring — **no behaviour change**; the reason `docs/work/`
   is excluded from the exclusion, with the numbers, recorded at the predicate a
   successor would edit, plus why `docs/log.d/` is genuinely different.
-- **WI-392 filed** ([`../specs/WI-392.md`](../specs/WI-392.md)) — a driven
+- **WI-392 filed** ([`docs/specs/WI-392.md`](../specs/WI-392.md)) — a driven
   figure carries the command and revision that produced it, and a check verifies
   that provenance. Three false figures landed in this one session's records
   (WI-380's `2 failed, 7 passed`, WI-391's `109 links`, WI-384's self-falsifying
@@ -87,7 +87,7 @@ knowledge from WI-280's log until now.
 
 **Deviations from spec:** none in scope. The spec's Done-when box "This spec is
 archived to `docs/archive/specs/`" is met
-([`../archive/specs/WI-378.2026-08-01.md`](../archive/specs/WI-378.2026-08-01.md),
+([`docs/archive/specs/WI-378.2026-08-01.md`](../archive/specs/WI-378.2026-08-01.md),
 with the firing-#1 correction noted at its head).
 
 **Byte deltas:** `AGENTS.template.md` 9,991 → 9,991 (unchanged; 9 bytes of
