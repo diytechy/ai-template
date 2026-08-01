@@ -128,6 +128,18 @@ all three copies at once, and `check_trajectory == schedule` keeping its fp
 file was touched** (`AGENTS.template.md`, `PROCESS.md`, `PROCESS_OPTIONS.md`
 unchanged).
 
+**Bars (real output, this branch, repo `.venv` 3.11.9).** Commit bar before each
+commit: `pytest -q -n auto -m smoke` → **1 failed, 560 passed, 4 skipped in
+13.24s**; configured `check_docs --stale` → **OK, 339 docs, 971 links, 0
+broken**. Closing bar: full unfiltered `pytest -q -n auto` → **1 failed, 1762
+passed, 12 skipped in 427.68s**; `ruff check .` and `ruff format --check .` →
+**All checks passed / 148 files already formatted**; `check_trajectory --root .
+--strict` → **clean (389 work items, 366 done, 16 cancelled, graph acyclic)**,
+pre-existing WARNs only; `check_doc_refs --root . --strict` → **OK, no dangling
+path or `sym:` references**. The sole failure at both tiers is the standing
+`test_this_repo_is_not_a_work_branch`, which asserts this checkout is not a work
+branch and therefore fails by construction on one.
+
 **Findings for their own WI (not fixed here).**
 
 1. **A worker that reports DONE without closing its specs still parks.** The
