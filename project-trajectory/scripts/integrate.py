@@ -543,6 +543,22 @@ def _verdict_gate(root, branch, wi_ids):
     carrying an APPROVE machine line, whose last commit on the branch is no
     older than the last non-review, non-fragment commit - the git-derived
     replacement for the old sha7-in-filename binding (§5.4 left it open).
+
+    `docs/work/` is NOT excluded, deliberately, and WI-378 measured the price
+    before leaving it that way: replaying this predicate over four merged
+    branches (2026-08-01) found nine staled APPROVEs - six staled by a real
+    change to shipping code or a declared doc, one by a hand trunk merge, and
+    only two by a record-only edit that followed its own verdict. Adding
+    `docs/work/` here would buy back those two and nothing else, at the cost of
+    letting a spec's `safety_class`, `needs` and `Deliverable` - the claims the
+    verdict is ABOUT - change after the APPROVE, unseen. The two ordering rules
+    that retire that class for free are in process-options.md, "The LLM-gate
+    verdict protocol": close before the final verdict round, and never
+    hand-merge trunk on a work branch.
+
+    `docs/log.d/` differs on purpose: a log fragment is the narrative of work
+    the verdict already read, carries no key any reader gates on, and is
+    append-compiled on the trunk rather than merged.
     """
     dial = ac.read_declared(root / "docs" / "review-policy", "0")
     try:

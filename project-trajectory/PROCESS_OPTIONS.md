@@ -398,6 +398,27 @@ A gate closes only on the verdict of an **independent LLM reviewer**:
   "Derived gate model" describes). CHANGES-REQUESTED → findings route to their
   owner hats; re-review up to `MAX_ROUNDS`, then the Blocked register.
 
+**Verdict freshness, and the ordering it buys back (WI-378).** The queue accepts
+a verdict only while it still describes the tree: `integrate._verdict_gate`
+requires the APPROVE's last commit to be **no older than the branch's last
+non-record commit** (`docs/reviews/` and `docs/log.d/` excluded; the station's
+`refresh` commit peeled off at the work tip it attests, since a mechanical
+re-merge is not a change the reviewer could conclude differently about). So
+**every commit after an APPROVE buys another round** — correct when it changed
+what ships, avoidable bookkeeping when it did not. Two ordering rules retire the
+avoidable half, and the lane owes both: **close before the final verdict round**
+(Deliverable filled, spec moved to its terminal folder, any ratifying
+Status-change commit made — so the reviewer sees the record it is blessing
+rather than invalidating it afterwards), and **never hand-merge trunk on a work
+branch** (only the station's `refresh` commit is peeled). Measured 2026-08-01 by
+replaying the predicate over four merged branches: **nine APPROVEs staled — six
+by a real change to shipping code or a declared doc, one by a hand trunk merge,
+two by a record edit that followed its own verdict** (a close ceremony, and a
+corrected evidence figure). `docs/work/` is **deliberately not excluded**, and a
+successor should not re-open that: a spec's `safety_class`, `needs` and
+`Deliverable` are claims the verdict is *about*, so the only class the exclusion
+would buy back is the one class a reviewer most needs to re-read.
+
 **The finding lifecycle: a finding is a claim, not a verdict.** A recorded
 finding names a concrete, falsifiable failure scenario (these inputs → this
 wrong behavior); its owner **confirms** it by reproducing that scenario — or
