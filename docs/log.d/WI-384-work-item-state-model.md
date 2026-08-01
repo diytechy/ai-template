@@ -132,12 +132,35 @@ reproduces `a986f553a391` exactly. The edit is inside the matched block. The
 class did not grow — the two `agent_common` blocks SHRANK (968→918 and 970→920
 tokens) by the deleted validator, and the census is 164 blocks at base and 164
 at HEAD, same three pairs. Module linecounts:
-`check_trajectory` 3098→3119, `bootstrap` 2232→2243, `agent_common` 1720→1731,
-`check` 1523→1524 — all vocabulary plus the comments recording why `draft/` must
-be declared, the last +3/+2/+3 of it being round 1's corrected rationale (pure
-comment lines, zero code tokens). Two of the four modules got SMALLER in code
-mass while their baselines rose (`check_trajectory` −38 significant tokens,
-`agent_common` −43), so these are registration, not greening.
+`bootstrap` 2232→2243, `agent_common` 1720→1731, `check` 1523→1524, and
+`check_trajectory` 3098→3119 on this branch, re-measured to **3251** at the
+merge (see the reconciliation above) — all vocabulary plus the comments
+recording why `draft/` must be declared, the last +3/+2/+3 of it being round 1's
+corrected rationale (pure comment lines, zero code tokens; round 2 re-measured
+this by the round-1 method and confirmed +0 code tokens on all three, with an
+AST-with-docstrings-stripped comparison identical base→tip for all four
+scripts). Two of the four modules got SMALLER in code mass while their baselines
+rose (`check_trajectory` −38 significant tokens, `agent_common` −43), so these
+are registration, not greening.
+
+**Two more corrections at REVIEW-A round 2, both re-driven first.** (a) WI-391
+pointed its future builder at `_spec_of_record`, which exists nowhere in the
+kit; the archived glob lives in `_own_spec` (`check_trajectory.py:1770`, glob at
+:1791, two call sites). Since that row is the only record the §B2 remainder is
+owed, both of its code pointers now carry file:line and resolve. (b) The
+corrected `draft/` clause was right in the F5 comments, which scope it to an
+undeclared directory *under* `docs/work/`, and over-general in the one
+adopter-facing copy, which said "an improvised folder". Driven on a fresh
+scaffold with one spec in three places:
+`docs/work/draft/` and `docs/work/thinking/` both give `_existing_wi_nums=[0,42]`
+-> next mint `WI-043`, while `docs/drafts/` gives `[0]` -> next mint `WI-001`,
+which really would reissue the held id. And the validator inverts: the
+undeclared directory under `docs/work/` exits 1 naming it, while the folder
+outside reads `clean (no work items …)` and exits 0. ADOPTING.md now states
+BOTH cases, because together they are the strongest form of the ruling rather
+than a retreat from it — there is nowhere else safe to put a draft: inside
+`docs/work/` the registry reads empty but the harness is loud; outside it the
+id collision is real and the harness is silent, which is the worse failure.
 
 **ADOPTING.md's migration recipe cited the wrong flag** and is corrected
 (REVIEW-A round 1): it named `git log --follow` as the staleness clock, but the
@@ -185,27 +208,61 @@ WI-001 --branch wi-001-probe` cut the branch and moved the spec into
 `'archive' is not a status directory (the spec form knows only active,
 cancelled, complete, deferred, draft, queued)`.
 
-**Reconciliation note for the integrator.** This branch DELETES
-`docs/work/archive/`. `wi-380` and `wi-386` were cut before it and will each
-close by moving their spec into that directory, so a composed tree may hold
-stray `docs/work/archive/*.md`. That is handled in code, not by luck: the
-readers refuse an undeclared status directory by name and `check_trajectory`
-exits 1, so it cannot merge silently. **The fix is to `git mv` any late arrival
-into `docs/work/complete/`** (or `cancelled/` if it was retired), which is the
-same rule ADOPTING.md now states for downstream repos.
+**The reconciliation this row predicted, and then paid.** The fragment said it
+before it happened: this branch DELETES `docs/work/archive/`, `wi-380` and
+`wi-386` were cut before it and close by moving their spec into that directory,
+so a composed tree would hold stray `docs/work/archive/*.md` — handled in code
+rather than by luck, because the readers refuse an undeclared status directory
+by name and `check_trajectory` exits 1. WI-380 merged to trunk first and the
+merge queue refused this branch with exactly that conflict, plus one more.
+Both were resolved here, on the worker's side, after REVIEW-A round 2:
 
-**Bars.** Full suite `1712 passed, 12 skipped, 1 failed` (7:11 wall, `-n auto`);
+- **`docs/work/archive/WI-380-…` (file location).** Git's own rename detection
+  proposed the answer the note states, and it is the answer taken: the spec sits
+  at `docs/work/complete/`, byte-identical to trunk's archived copy (sha256
+  `3cbe6dcbc0622b20` either side), `docs/work/archive/` is in neither the tree
+  nor the index, and `check_trajectory --strict` reads clean — the
+  undeclared-directory error staying SILENT is what confirms the directory is
+  gone rather than merely emptied.
+- **`tests/test_module_size_ratchet.py` (content).** WI-380 re-stamped
+  `check_trajectory.py` to 3230 and this row to 3119, both from the same base
+  3098 on parallel branches. Resolved by RE-MEASURING the merged file with the
+  census's own metric (`len(text.splitlines())`) rather than picking a side:
+  **3251**, which is exactly `3098 + 132 (WI-380) + 21 (WI-384)`. The two
+  changes are disjoint, so the arithmetic checks the resolution instead of
+  merely agreeing with it, and both reason chains are preserved verbatim at the
+  entry — neither WI's record was dropped to make the number fit.
+
+Trunk's generated artifacts (`PROJECT_STATE.html`, `docs/gate`,
+`docs/status.md`, `docs/architecture.md`) came in through the merge and were NOT
+regenerated here — `git diff ConcurrencyTrainRewrite` over all four is empty —
+and `docs/log.md` still differs from trunk by exactly the four link targets
+round 1 accepted, and nothing else.
+
+**Worth naming, because it is the cost this program is removing:** none of the
+above is a defect in either branch. Two lanes each did the right thing from the
+same base and the conflict surfaced at the queue, where it is most expensive.
+Under WI-386's station protocol the lane refreshes onto trunk and bars there, so
+this would have been resolved once, on the builder's side, before the queue ever
+saw it. This branch is the last one that pays it.
+
+**Bars (final, on the merged tree).** Full suite `1718 passed, 12 skipped,
+1 failed` (6:18 wall, `-n auto`; 1712 before the merge — the +6 are WI-380's
+tests arriving with it);
 the one failure is the standing work-branch expectation
 `tests/test_check_lane.py::test_this_repo_is_not_a_work_branch`, which asserts
 this checkout is NOT a claimed work branch and therefore fails on every work
 branch by construction. Smoke `557 passed, 4 skipped, 1 failed` (same one).
 `ruff check .` clean; `ruff format --check .` clean (146 files).
-`check_docs --stale` exit 0 — note it exited **1 at branch start**, on two
-pre-existing broken links to `work/deferred/` in `concurrency-v2.md` (the
-directory did not exist in this repo); materializing the declared status
-directories as `.gitkeep`s, which this row owed anyway, fixed them.
-`check_trajectory --strict` exit 0: `388 work item(s), 363 done (94%),
-16 cancelled, graph acyclic` (warnings pre-existing and unchanged).
+`check_docs --stale` exit 0: `338 doc(s), 964 intra-repo link(s), 0 broken` —
+note it exited **1 at branch start**, on two pre-existing broken links to
+`work/deferred/` in `concurrency-v2.md` (the directory did not exist in this
+repo); materializing the declared status directories as `.gitkeep`s, which this
+row owed anyway, fixed them, and trunk independently retargeted the same links.
+`check_trajectory --strict` exit 0: `389 work item(s), 364 done (94%),
+16 cancelled, graph acyclic` (389 counts WI-391, the remainder row this branch
+files; 364 counts WI-380 arriving through the merge; warnings pre-existing and
+unchanged).
 
 **Byte deltas on budgeted files.** `AGENTS.template.md` 9,991 → 9,991 (unchanged;
 the 10,000-byte budget keeps its 9 bytes of headroom). `PROCESS_OPTIONS.md`

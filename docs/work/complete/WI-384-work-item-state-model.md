@@ -100,6 +100,16 @@ cut the branch and moved the spec into `active/<branch>/`, the close moved it to
 directory this row deletes — exits 1 naming the file and listing the six
 declared directories, which is the reconciliation instruction.
 
+**That hazard then arrived, and was resolved as written.** WI-380 merged to
+trunk first, closing into `docs/work/archive/`, and the queue refused this
+branch on exactly that conflict. Its spec now sits in `docs/work/complete/`,
+byte-identical to trunk's copy, with `docs/work/archive/` gone from tree and
+index — confirmed by the undeclared-directory error staying SILENT. The second
+conflict was the size ratchet, where WI-380 and this row re-stamped
+`check_trajectory.py` from the same base on parallel branches; resolved by
+re-measuring the merged file (3251 = 3098 + 132 + 21) rather than picking a
+side, with both reason chains preserved.
+
 **Not done, and now filed as WI-391:** the "specs-of-record mirror the terminal
 folders" half of §B2. Re-measured at REVIEW-A round 1 (the first figure, "109 in
 log.md", was unreproducible and is superseded): a reference of the form
