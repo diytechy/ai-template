@@ -94,11 +94,11 @@ tree now gives `1 failed, 39 passed`, and the single red is the new pin
 with `git diff --exit-code`. The `_KIND_RANK` mutation behind the second
 finding likewise takes its pin from `1 passed in 0.19s` to a red.
 
-**This is the shape the repo keeps producing** and worth naming: a guarantee
-asserted in prose, resting on a convention no mechanism holds, and a test named
-after the property that cannot observe the place it breaks. The lesson is not
-"write more tests" — it is that a test which constructs its inputs by hand
-cannot pin a property of a CALL SITE.
+**Instance 1 of the class named in "The one lesson, stated once" below**: a
+guarantee asserted in prose, resting on a convention no mechanism holds, and a
+test named after the property that cannot observe the place it breaks. The
+lesson is not "write more tests" — it is that a test which constructs its
+inputs by hand cannot pin a property of a CALL SITE.
 
 **Considered and declined:** the reviewer's other offered remedy, an
 `isinstance(rank, int)` guard in `order_key`. A defensive type check in a pure
@@ -224,8 +224,8 @@ resolver must overturn a deliberate, *tested* decision, not fill an
 unconsidered gap), while the file-half-only shape — now written up as option
 (c) — is CHEAPER. Both surfaces are corrected.
 
-**Round 3 then corrected my correction, and the fix is in the same family as
-the original error: a mechanism asserted without driving it.** I wrote that
+**Round 3 then corrected my correction — instance 3, and the same class
+again: a mechanism asserted without driving it.** I wrote that
 splitting on `::` at that guard "is the whole change inside the tool". It is
 not, and applied literally it regresses. `is_path_shaped` is a **predicate** —
 it returns a bool and cannot hand a rewritten token back — while
@@ -265,22 +265,23 @@ apply the concurrency axis. The internal `w["exclusive"]` is left alone: it
 mirrors the `Exclusive` column name across the three F5-duplicated readers, and
 renaming it there would be drift, not clarity.
 
-**Bars — every figure below re-measured after the round-4 edits, on a tree
+**Bars — every figure below re-measured after the round-5 edits, on a tree
 whose only remaining difference from this commit is this block's own text.**
 (The round-2 lesson: a figure not reproducible at its own commit is not a
 measurement — the block once read `389 work item(s)` while the same commit's
 WI-394 filing had made it `390`. Round 4 caught the header repeating the
 promise one commit early: it was measured at `94e4a4d8` with three doc changes
-landing after. Stating the *delta* rather than a sha is the honest form, since
-the last edit a bars block can ever contain is its own numbers.)
+landing after — so rounds 4 and 5 each re-ran everything on their own tree.
+Stating the *delta* rather than a sha is the honest form, since the last edit a
+bars block can ever contain is its own numbers.)
 
 ```
 $ python -m pytest -q -n auto
-1 failed, 1756 passed, 8 skipped in 572.07s (0:09:32)
+1 failed, 1756 passed, 8 skipped in 333.49s (0:05:33)
       # the one standing red is tests/test_check_lane.py::test_this_repo_is_not_a_work_branch
       # (this checkout IS a claimed work branch — the guard is asserting about the trunk)
 $ python -m pytest -q -n auto -m smoke
-1 failed, 572 passed in 21.15s                 # same standing red
+1 failed, 572 passed in 27.35s                 # same standing red
 $ python -m ruff check .            -> All checks passed!
 $ python -m ruff format --check .   -> 146 files already formatted
 $ python project-trajectory/scripts/check_docs.py --root . --ignore docs/test/report.md --ignore "docs/work/*" --stale
@@ -294,14 +295,15 @@ check_doc_refs: OK - no dangling path or sym: references · 871 untraced   [exit
 Suite counts across the rounds, on this branch: `1755` at close → `1756` after
 the round-1 fixes (the new call-site pin) → `1756` since, rounds 2–4 having
 added tests to nothing. Wall time is not a signal here — it ranged 329–588 s
-across five runs of the same suite as the box got busier. `390` is the WI count
+across six runs of the same suite as the box got busier. `390` is the WI count
 including the `WI-394` this branch files. `check_doc_refs` held at
 `871 untraced / 0 dangling` **because round 4's two new backticked path tokens
 carry a `path-ok` marker**, not because nothing moved — remove the marker and
 it reports exactly those two.
 
-**CORRECTION — the "no `.py` changed, so the recorded result stands" inference
-was unsound, and the inference is the defect, not the number.** In round 3 I
+**CORRECTION (instance 4) — the "no `.py` changed, so the recorded result
+stands" inference was unsound, and the inference is the defect, not the
+number.** In round 3 I
 skipped the full suite on the grounds that
 `git diff --stat b19dcc8a..HEAD -- '*.py'` was empty. The counts happened to
 hold (round 4 re-ran it: `1 failed, 1756 passed, 8 skipped in 329.41s`), but
@@ -309,16 +311,26 @@ the reasoning does not, and a successor applying it to a different row would be
 wrong.
 
 **This suite reads `docs/` as INPUT, not only `*.py`.** Measured: **twelve**
-test modules resolve a path under the live `ROOT / "docs"`, and three read the
-live work registry directly —
+test modules resolve a path under the live `ROOT / "docs"`, and **four** read
+the live work registry directly —
 
 ```
 tests/test_dupes_census_audit.py:50   WI_WORK = ROOT / "docs/work"
 tests/test_trajectory_specs.py:188    sorted((ROOT / "docs" / "work").rglob("WI-*.md"))
 tests/test_wi_convert.py:46           WORK = ROOT / "docs" / "work"
+tests/test_dogfood_sync.py:335        ct.read_registry_rows(ROOT / "docs/requirements/work-items.csv")
 ```
 
-Rounds 2–4 added exactly that kind of input. Driven: the glob at
+The fourth is the subtle one and it nearly escaped this list twice. That CSV
+**does not exist** — the home retired at Phase 5 — but `read_registry_rows`
+DERIVES `docs/work/` from the path it is handed, so the call reads the live
+folder anyway. Driven: `Path(...).exists()` is `False` while the call returns
+**391** rows with `WI-394` among them. Those live rows are then rendered into
+both scratch roots the width-neutrality test compares, so the module is a live
+consumer even though the helper one frame below it
+(`_consumer_signature`, see the note at the end of this section) is not.
+
+Rounds 2–4 added exactly that kind of input. Driven the same way: the glob at
 `test_trajectory_specs.py:188` currently returns **391** spec files and
 `WI-394` is among them — this branch's own filing is a live test input. The
 independent proof is already in this record: `check_trajectory` moved
@@ -327,12 +339,60 @@ independent proof is already in this record: `check_trajectory` moved
 **The rule, stated so it transfers:** a docs-only diff is not evidence that a
 recorded suite result stands — it is evidence about `*.py` only, and this
 harness's inputs are wider than that. Re-run, or name the specific consumers
-the diff cannot have touched. Round 4's own citation for this
-(`test_dogfood_sync.py::_consumer_signature`) is the one part not to carry
-forward: that helper is only ever called on `tmp_path` scratch roots
-(`test_dogfood_sync.py:348`, and its docstring says so), so it does not read
-the live registry. The finding is right; the three modules above are its
-evidence.
+the diff cannot have touched. **If you take that second branch, take it from
+the list above and not from a function name** — which is exactly where round
+4's citation, and then my correction of it, each went half wrong.
+
+*The `test_dogfood_sync.py` note, because both halves matter.* Round 4 cited
+`_consumer_signature` as a live-registry reader; it is not — that helper has
+one call site (`:348`) and is handed `tmp_path` scratch roots, as its own
+docstring says. But my correction then wrote the whole MODULE out of the
+evidence while the same paragraph still counted it among the twelve, which is
+a contradiction I left standing and round 5 caught. The live read is one frame
+up at `:335`. **Right about the helper, wrong about the module** — and the gap
+had teeth, because a successor checking a docs edit against my three would have
+cleared `test_dogfood_sync.py` as untouched when its live read feeds both
+compared roots. Naming a helper is not naming a consumer.
+
+## The one lesson, stated once
+
+Five review rounds found five defects in this row's RECORD and none in its code
+since `b8c7cc21`. They read as five different mistakes — a structural guarantee
+that was only a convention, a tautological pin, a mis-explained `check_doc_refs`
+guard, a one-site fix that needed two, a docs-only diff treated as proof — and
+they are not. **Every one was a TRUE OBSERVATION given a CAUSE THAT HAD NOT BEEN
+EXECUTED, and every one was closed by running the thing.**
+
+Each time the behaviour I reported was real and reproduced. Each time the
+mechanism I gave for it came from reading the code and reasoning, not from
+driving it — and each time the reasoning was wrong in a way that changed what a
+reader would do next: retract a guarantee, red a different test, budget two
+sites instead of one, re-run instead of infer. The plausible cause is the
+dangerous artifact, precisely because the observation around it is sound and
+lends it credibility.
+
+The remedy is not more caution in prose. It is that **a claim about a mechanism
+is a claim you can execute**, and in every one of these five cases executing it
+took under a minute: apply the mutation, call the predicate, grep the call
+sites, run the suite. The cost of driving it was always far below the cost of
+one review round spent correcting it.
+
+**Disclosure, recorded here rather than only in a commit message** (the working
+surface is this log, and the arc above is worth nothing if its last instance
+hides in a commit body): while writing round 4's bars block I typed a smoke
+wall-time — `14.02s` — that I had **not yet measured**. I caught it against the
+real run and corrected it to the measured value before committing. Same class
+as the other four: a figure written from expectation rather than execution. It
+was self-caught rather than reviewer-caught, which is the only reason it belongs
+at the end of this list rather than in it — and it is recorded plainly instead
+of quietly fixed, because a record that omits its own near-misses is the same
+defect one level up.
+
+Wall time is the standing example of why: it ranged **329–588 s** across six
+runs of an unchanged suite on this branch, so it is a number that must always
+be quoted from a run and never from memory.
+
+---
 
 No byte-budgeted file was touched. Generated artifacts (`docs/architecture.md`'s
 module map loses the `agent_loop → schedule` edge) are deliberately NOT
