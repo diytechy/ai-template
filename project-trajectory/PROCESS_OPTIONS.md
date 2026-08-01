@@ -426,7 +426,9 @@ evidence figure, and a `Deliverable` prose fix the verdict itself demanded).
 `docs/work/` is **deliberately not excluded**, and a successor should not
 re-open that: a spec's `safety_class`, `needs` and `Deliverable` are claims the
 verdict is *about*, so the 3-in-13 an exclusion would buy back is exactly the
-class a reviewer most needs to re-read.
+class a reviewer most needs to re-read. And 3-in-13 is the figure *before* the
+two ordering rules; follow them and they retire two of the thirteen, leaving
+**2 in 11 (18.2 %)** — both of which caught a false claim in the record.
 
 **The finding lifecycle: a finding is a claim, not a verdict.** A recorded
 finding names a concrete, falsifiable failure scenario (these inputs → this

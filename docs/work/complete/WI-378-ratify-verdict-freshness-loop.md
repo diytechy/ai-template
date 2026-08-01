@@ -37,7 +37,10 @@ replayed over all **20**, by walking each branch's own first-parent commits,
 classifying the paths each touches, and attributing every extra review round to
 the commit(s) that staled the APPROVE before it. A round only counts if the
 verdict it invalidated was an **APPROVE**; a CHANGES-REQUESTED round was going
-to be followed by more work regardless. Twelve of the 20 staled nothing.
+to be followed by more work regardless. **Thirteen of the 20 staled nothing;
+these seven account for all 13 stalings** (13 + 7 = 20).
+
+The `rounds` column counts **commits touching `docs/reviews/WI-<n>-REVIEW-A.md`** on the branch, which is what the predicate itself reads. It *undercounts* narrative rounds whenever one commit carried more than one round's verdict — WI-277 records three rounds in a file only two commits touched, and WI-280's rounds 1–2 both arrived in `8311c75`, the commit that also carried the ratify.
 
 | Branch | rounds | APPROVEs staled | what staled them |
 |---|---|---|---|
@@ -68,6 +71,18 @@ to be followed by more work regardless. Twelve of the 20 staled nothing.
   touches nothing outside `docs/work/` + `docs/log.d/`; recomputing WI-380's
   `code_time` with `docs/work/` excluded gives `1785563826` against a
   `verdict_time` of `1785564586`, i.e. it would have passed).
+
+**And 3-in-13 is the figure before this row's own advice is taken.** The two
+ordering rules retire *both* of WI-280's stalings — the close ceremony by
+closing first, the hand trunk merge by never hand-merging — leaving **11**, of
+which the exclusion would buy back **2: 18.2 %**. That is the number describing
+the world a successor actually lives in, and both of those two rounds caught a
+false claim in the record (WI-380's stale mutation ledger, WI-371's `Deliverable`
+naming a gitignored path). Credit where due: REVIEW-A round 2 derived this,
+having disclosed that finding the population error gave it an interest in the
+opposite conclusion — the ratio moved 0.9 points on a 44 % change in
+denominator, so the decision never rested on the denominator, and the
+*composition* moved against the exclusion.
 
 **Three corrections to the record this row inherited.**
 
