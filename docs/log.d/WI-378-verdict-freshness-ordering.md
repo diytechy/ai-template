@@ -98,11 +98,12 @@ records that **+846 of the +2,400 gap to the old 163,157 stamp was inherited
 unstamped** from WI-380/384/386, which is the silent growth the skill exists to
 catch.
 
-**Tests** (all driven at this fragment's own revision, so the counts include it):
-`pytest -q -n auto -m smoke` → `1 failed, 560 passed, 4 skipped in 24.23s`
-(counts stable across three runs this session; wall time 12.5–24.2 s); full
-`pytest -q -n auto` → `1 failed, 1744 passed, 12 skipped in 331.63s (0:05:31)`.
-The one red is the standing
+**Tests.** The full suite was driven **twice**, before and after this fragment
+landed — `1 failed, 1744 passed, 12 skipped` both times (331.63 s / 344.97 s),
+the only delta between the two revisions being this fragment and its own link
+text. `pytest -q -n auto -m smoke` → `1 failed, 560 passed, 4 skipped`, run four
+times this session with stable counts (wall 12.5–24.2 s). The one red is the
+standing
 `test_check_lane.py::test_this_repo_is_not_a_work_branch` (this checkout *is* a
 work branch). `ruff check .` → `All checks passed!`; `ruff format --check .` →
 `146 files already formatted`; `check_trajectory.py --root . --strict` → `clean
