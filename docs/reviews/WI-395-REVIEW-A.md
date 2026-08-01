@@ -175,4 +175,20 @@ lane a red bar — is the worse outcome. Not a finding.
 
 No new findings; the round-1 total stands.
 
+---
+
+## Round 4 (2026-08-01) — format wrap `d4fe153e` (mechanical)
+Verdict: APPROVE
+
+`d4fe153e` (`rework: ruff-format the symbolic-ref line (format step red)`) is
+exactly the claimed reflow and nothing else: one file
+(`tests/test_integrate.py`, 3 insertions, 1 deletion), wrapping the round-3
+`_git(repo, "symbolic-ref", "HEAD", "refs/heads/master")` call over three
+lines with the trailing `# local init.defaultBranch varies` comment intact.
+Token-identity driven rather than eyeballed: parsing the file at `d4fe153e~1`
+and at `d4fe153e` gives `AST identical: True`, so the change is
+whitespace-only layout. The format step is green from the worktree:
+`ruff format --check project-trajectory/scripts tests` → `146 files already
+formatted`, rc=0. No new findings.
+
 VERDICT: APPROVE findings=3
