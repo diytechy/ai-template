@@ -46,9 +46,15 @@ def test_scaffold_contains_expected_files(scaffold):
         # unscaffolded, as the legacy-format reference wi_convert migrates).
         "docs/work/queued/WI-000-example.md",
         "docs/orphans-allow",
+        # The six-state vocabulary (WI-384): every state that is not `queued`
+        # (which the WI-000 exemplar already tracks) gets an empty directory, so
+        # the states are visible in a listing — including BOTH terminals, which
+        # is what removed the `disposition` attribute that told them apart.
+        "docs/work/draft/.gitkeep",
         "docs/work/active/.gitkeep",
         "docs/work/deferred/.gitkeep",
-        "docs/work/archive/.gitkeep",
+        "docs/work/cancelled/.gitkeep",
+        "docs/work/complete/.gitkeep",
         # The log's fragment drop-box (concurrency-restructure.md §5.1): empty,
         # marker-only — an exemplar here would be compiled into docs/log.md by
         # the first trunk step.

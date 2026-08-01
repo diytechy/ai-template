@@ -16,8 +16,8 @@ Two contracts live here:
 
   * **Frontier + deterministic order (SR-057).** A queued WI is *ready* when every
     hard predecessor is integrated `done` (soft `~` edges never block). The ready
-    set excludes `blocked`/`deferred`/`retired`/reserved WIs and any WI the safety
-    classifier deems ineligible, then orders the survivors by
+    set excludes `blocked`/`deferred`/`draft`/`cancelled`/reserved WIs and any WI
+    the safety classifier deems ineligible, then orders the survivors by
     `(gate class, Priority desc, transitive downstream-dependent count desc,
     remaining hard-path length desc, WI id)`.
 
@@ -85,15 +85,21 @@ _GATE_RANK = {
 }
 
 # Tracked Status vocabulary (spec §3.1). Anything other than `done` is not-ready;
-# `blocked`/`deferred`/`retired`/reserved carry their own disposition (never
-# silently scheduled) — the same fail-closed spirit. `retired` (WI-267) is a
-# TERMINAL won't-build row: like `done` it is never in the ready frontier, but
-# UNLIKE `done` a retired predecessor does NOT satisfy a successor's hard
-# dependency (a retired WI never integrates, so a live WI hard-blocked on one can
-# never run — it stays `waiting`, surfacing to the owner, rather than proceeding
-# on a will-never-happen dependency; WI-267 design-decision 3).
+# `blocked`/`deferred`/`draft`/`cancelled`/reserved carry their own disposition
+# (never silently scheduled) — the same fail-closed spirit. `cancelled` (WI-267
+# as `retired`, respelled and given its own folder by WI-384) is a TERMINAL
+# won't-build row: like `done` it is never in the ready frontier, but UNLIKE
+# `done` a cancelled predecessor does NOT satisfy a successor's hard dependency
+# (a cancelled WI never integrates, so a live WI hard-blocked on one can never
+# run — it stays `waiting`, surfacing to the owner, rather than proceeding on a
+# will-never-happen dependency; WI-267 design-decision 3).
 _DONE = "done"
-_RETIRED = "retired"
+_CANCELLED = "cancelled"
+# The two never-ready OPEN states, which differ only in what they SAY (WI-384):
+# `deferred` is a decision (we are not doing this now), `draft` is the absence of
+# one (still being figured out). Neither is schedulable and neither is terminal,
+# so each keeps its own disposition rather than being folded into the other.
+_NEVER_READY = ("deferred", "draft")
 
 
 def _utf8_console():
@@ -161,14 +167,26 @@ SPEC_SCALARS = (
     ("PlanMode", "planmode"),
 )
 SPEC_LISTS = (("SR-Refs", "sr_refs"), ("Predecessors", "needs"))
-# Directory -> Status. `archive/` holds BOTH terminal states and the frontmatter
-# `disposition` key tells them apart; `active/<branch>/` sits one level deeper,
-# so the status is the FIRST path component, never the file's parent directory.
+# Directory -> Status. The directory is the WHOLE statement (WI-384): every
+# state owns a folder — including BOTH terminals, `complete/` for work that
+# shipped and `cancelled/` for work that never will — so nothing in the
+# frontmatter disambiguates a folder and nothing can disagree with one.
+# `draft/` is thinking-in-progress, and it is DECLARED rather than left as an
+# unscanned folder because an undeclared directory's specs are skipped below:
+# they would be invisible to `max(id) + 1` and the next mint would reissue an
+# id a draft already holds. The two terminal WORDS differ for a reason:
+# `complete/` renamed a folder whose rows still read `done` (the status word
+# every consumer already speaks), while `cancelled` had no folder to rename —
+# only the `disposition = "retired"` spelling this row deleted — so the word
+# itself moved. `active/<branch>/` sits one level deeper, so the status is the
+# FIRST path component, never the file's parent directory.
 SPEC_STATUS_DIRS = {
-    "archive": "done",
+    "draft": "draft",
     "queued": "queued",
-    "deferred": "deferred",
     "active": "active",
+    "deferred": "deferred",
+    "cancelled": "cancelled",
+    "complete": "done",
 }
 # The inert EXAMPLE spec's filename prefix (the `-000` rule, applied to the
 # folder home): scaffolded documentation, never a registry entry that decides
@@ -214,14 +232,16 @@ def parse_spec_frontmatter(text, relpath):
     return data, "\n".join(lines[close + 1 :])
 
 
-def parse_spec_status(relpath, data):
-    """The Status a spec's LOCATION encodes, checked against its `disposition`.
+def parse_spec_status(relpath):
+    """The Status a spec's LOCATION encodes — the whole of it.
 
-    `archive/` holds both terminal states, so the two ways location and
-    frontmatter can disagree — an unknown disposition, and a retirement filed
-    outside `archive/` — are refusals, never silent coercions. A directory
-    nobody declared is a refusal too: dropping it into `queued` would silently
-    reclassify work, which is the catch-all shape this kit refuses on sight."""
+    Each state owns one directory, so there is no attribute to cross-check and
+    no way for location and frontmatter to disagree: WI-384 split `archive/`
+    into `complete/` + `cancelled/` and with it deleted the `disposition` key,
+    the cross-check, and both of its raise paths. One refusal survives, because
+    it is the one a folder-as-state model still needs: a directory nobody
+    declared. Dropping it into `queued` would silently reclassify work, which
+    is the catch-all shape this kit refuses on sight."""
     parts = relpath.split("/")
     status = SPEC_STATUS_DIRS.get(parts[0]) if len(parts) > 1 else None
     if status is None:
@@ -230,14 +250,7 @@ def parse_spec_status(relpath, data):
                 relpath, parts[0], ", ".join(sorted(SPEC_STATUS_DIRS))
             )
         )
-    disposition = data.get("disposition")
-    if disposition is None:
-        return status
-    if disposition != "retired":
-        raise ValueError("{}: unknown disposition {!r}".format(relpath, disposition))
-    if status != "done":
-        raise ValueError("{}: a retired spec belongs in archive/".format(relpath))
-    return "retired"
+    return status
 
 
 def parse_spec_id(relpath, data):
@@ -279,7 +292,7 @@ def parse_spec_row(text, relpath):
     data, body = parse_spec_frontmatter(text, relpath)
     row = dict.fromkeys(WI_COLUMNS, "")
     row["WI-ID"] = parse_spec_id(relpath, data)
-    row["Status"] = parse_spec_status(relpath, data)
+    row["Status"] = parse_spec_status(relpath)
     row["Deliverable"] = parse_spec_deliverable(relpath, body)
     for column, key in SPEC_SCALARS:
         if key in data:
@@ -627,34 +640,35 @@ def _exclusive_conflicts(wis, status, reserved):
 
 
 # Terminal statuses map straight to a not-in-the-frontier disposition + its own
-# reason code (WI-267): `retired` is as final as `done` — never ready, never
+# reason code (WI-267): `cancelled` is as final as `done` — never ready, never
 # packed — but keeps a distinct code so the dead-end is legible in --explain.
 _TERMINAL_DISPOSITION = {
     _DONE: ("done", "done:integrated"),
-    _RETIRED: ("retired", "retired:terminal-wont-build"),
+    _CANCELLED: ("cancelled", "cancelled:terminal-wont-build"),
 }
 
 
 def _waiting_reasons(wi, status):
     """Reason codes for a WI held `waiting` on unmet hard predecessors. WI-267
-    design-decision 3: a retired predecessor is a DEAD hard edge — it will never
-    integrate `done`, so the WI can never become ready. It is surfaced as its own
-    reason code (the WI still just waits, never silently satisfied) so the owner
-    sees the will-never-happen dependency."""
+    design-decision 3: a cancelled predecessor is a DEAD hard edge — it will
+    never integrate `done`, so the WI can never become ready. It is surfaced as
+    its own reason code (the WI still just waits, never silently satisfied) so
+    the owner sees the will-never-happen dependency."""
     unmet = [p for p in wi["preds"] if status.get(p) != _DONE]
-    dead = [p for p in unmet if status.get(p) == _RETIRED]
+    dead = [p for p in unmet if status.get(p) == _CANCELLED]
     reasons = ["waiting:hard-preds-not-done:%s" % ",".join(unmet)]
     if dead:
-        reasons.insert(0, "waiting:hard-pred-retired:%s" % ",".join(dead))
+        reasons.insert(0, "waiting:hard-pred-cancelled:%s" % ",".join(dead))
     return reasons
 
 
 def _disposition(wi, status, reserved, sched_class, class_reasons, exclusive_ready):
     """`(disposition, [reason_codes])` for one WI: ready | waiting | reserved |
-    blocked | deferred | done | retired | excluded. The reason list is its own
-    codes; the classifier's reason is carried only where classification decides the
-    outcome (`ready` shows why eligible, `unclassified` shows the fail-closed
-    cause) — never as noise on a blocked/deferred/reserved/waiting item."""
+    blocked | deferred | draft | done | cancelled | excluded. The reason list is
+    its own codes; the classifier's reason is carried only where classification
+    decides the outcome (`ready` shows why eligible, `unclassified` shows the
+    fail-closed cause) — never as noise on a blocked/deferred/reserved/waiting
+    item."""
     st = wi["status"]
     if st in _TERMINAL_DISPOSITION:
         disposition, code = _TERMINAL_DISPOSITION[st]
@@ -665,8 +679,8 @@ def _disposition(wi, status, reserved, sched_class, class_reasons, exclusive_rea
     # literal Status=blocked arm retired with the CSV home at Phase 5.)
     if st == "queued" and wi["blockref"]:
         return "blocked", ["excluded:blocked:%s" % wi["blockref"]]
-    if st == "deferred":
-        return "deferred", ["excluded:deferred"]
+    if st in _NEVER_READY:
+        return st, ["excluded:%s" % st]
     if st not in ("queued", "active"):
         # A status this scheduler does not know (the legacy literal `blocked`
         # included) is never silently ready — the same fail-closed posture as

@@ -36,16 +36,16 @@ the per-WI `SpecRef` is the forward bridge that lives while the WI is open and
 clears at close. Cross-reading `work-items.csv` and its SpecRefs mechanizes two
 rules:
   - **R-A** — a WI's `Deliverable` is non-empty **iff** its `Status` is
-    **terminal** (`done` or `retired`; WI-267). An open (queued/active/deferred)
+    **terminal** (`done` or `cancelled`; WI-267). An open (draft/queued/active/deferred)
     WI with a filled Deliverable, or a terminal WI with an empty one, is a hard
     **ERROR at every run** (no flag needed): a commit is the agent handoff point,
     so an incoherent WI state launches the next session wrong. (`done` records
-    what shipped; `retired` records why it never will.)
+    what shipped; `cancelled` records why it never will.)
   - **R-E** — every open WI carries a non-empty `SpecRef` resolving to an in-repo
     target (`path` or `path#anchor`; the path part must exist). A terminal WI is
     exempt (its SpecRef is cleared — R-F).
   - **R-F** (WI-251; WI-267) — the close side R-E leaves unstated: a **terminal**
-    (`done`/`retired`) WI's `SpecRef` is **empty**, and every live `docs/specs/`
+    (`done`/`cancelled`) WI's `SpecRef` is **empty**, and every live `docs/specs/`
     file (scaffold README/`-000` boilerplate excluded) is cited by at least one
     *open* WI — otherwise it belongs in `docs/archive/specs/` (the specs README
     lifecycle).
@@ -174,29 +174,40 @@ CMP_ID_RE = re.compile(r"^CMP-\d+$")
 # row matches this shape but is inert (skipped from the graph — see load_wis).
 WI_ID_RE = re.compile(r"^WI-\d+$")
 
-# The work-item lifecycle vocabulary (S1). `deferred` is a first-class,
-# queued-but-not-next state carrying a recorded reason; `blocked` is parked on a
-# named external dependency. `retired` (WI-267) is a TERMINAL won't-build row that
+# The work-item lifecycle vocabulary (S1). `draft` is thinking-in-progress — the
+# ABSENCE of a decision (WI-384); `deferred` is a first-class, queued-but-not-next
+# state carrying the decision's recorded reason; `blocked` is parked on a
+# named external dependency. `cancelled` (WI-267, spelled `retired` until WI-384)
+# is a TERMINAL won't-build row that
 # stays in the registry forever with its reason in the `Deliverable` column — a
 # deliberate dead-end, NOT an overload of `done` (a `done` WI shipped something; a
-# `retired` WI deliberately never will). Since Phase 5 status is the spec's
+# `cancelled` WI deliberately never will). Since Phase 5 status is the spec's
 # DIRECTORY (an unknown one is a loader refusal) and `blocked` is DERIVED
 # (queued + blockref) rather than a status; the literal stays in these sets so
 # in-memory callers keep their meaning, but no loader can produce it.
 # "Open" = anything still in flight (not one of the two TERMINAL states).
-OPEN_STATUSES = ("queued", "active", "deferred", "blocked")
+OPEN_STATUSES = ("draft", "queued", "active", "deferred", "blocked")
 # The terminal states: no further build/trace work is owed. Both require a filled
-# `Deliverable` (the shipped record for `done`; the retirement reason for
-# `retired`) and both must clear their `SpecRef` (R-A + R-F below). `retired` is
-# deliberately NOT in OPEN_STATUSES / BACKLOG_STALE_STATUSES / the ready frontier.
-TERMINAL_STATUSES = ("done", "retired")
-KNOWN_STATUSES = ("queued", "active", "done", "deferred", "blocked", "retired")
+# `Deliverable` (the shipped record for `done`; the cancellation reason for
+# `cancelled`) and both must clear their `SpecRef` (R-A + R-F below). `cancelled`
+# is deliberately NOT in OPEN_STATUSES / BACKLOG_STALE_STATUSES / the frontier.
+TERMINAL_STATUSES = ("done", "cancelled")
+KNOWN_STATUSES = (
+    "draft",
+    "queued",
+    "active",
+    "done",
+    "deferred",
+    "blocked",
+    "cancelled",
+)
 
 # Backlog-staleness (WI-205) applies to genuinely-in-flight WIs: the open set
-# minus `deferred` (a deferred WI re-enters via an owner un-defer, itself the
-# driven look, so it is EXEMPT), plus `blocked` (a WI parked on an external
+# minus `deferred` and `draft` (both re-enter via an owner look — an un-defer, or
+# the thinking finishing — which is itself the driven review, so both are
+# EXEMPT), plus `blocked` (a WI parked on an external
 # dependency is still live work whose cited requirements can drift under it).
-# `done`/`retired` are terminal and need no re-validation.
+# `done`/`cancelled` are terminal and need no re-validation.
 BACKLOG_STALE_STATUSES = ("queued", "active", "blocked")
 
 # The clause both backlog-staleness warns end with. The clock it must clear
@@ -338,14 +349,26 @@ SPEC_SCALARS = (
     ("PlanMode", "planmode"),
 )
 SPEC_LISTS = (("SR-Refs", "sr_refs"), ("Predecessors", "needs"))
-# Directory -> Status. `archive/` holds BOTH terminal states and the frontmatter
-# `disposition` key tells them apart; `active/<branch>/` sits one level deeper,
-# so the status is the FIRST path component, never the file's parent directory.
+# Directory -> Status. The directory is the WHOLE statement (WI-384): every
+# state owns a folder — including BOTH terminals, `complete/` for work that
+# shipped and `cancelled/` for work that never will — so nothing in the
+# frontmatter disambiguates a folder and nothing can disagree with one.
+# `draft/` is thinking-in-progress, and it is DECLARED rather than left as an
+# unscanned folder because an undeclared directory's specs are skipped below:
+# they would be invisible to `max(id) + 1` and the next mint would reissue an
+# id a draft already holds. The two terminal WORDS differ for a reason:
+# `complete/` renamed a folder whose rows still read `done` (the status word
+# every consumer already speaks), while `cancelled` had no folder to rename —
+# only the `disposition = "retired"` spelling this row deleted — so the word
+# itself moved. `active/<branch>/` sits one level deeper, so the status is the
+# FIRST path component, never the file's parent directory.
 SPEC_STATUS_DIRS = {
-    "archive": "done",
+    "draft": "draft",
     "queued": "queued",
-    "deferred": "deferred",
     "active": "active",
+    "deferred": "deferred",
+    "cancelled": "cancelled",
+    "complete": "done",
 }
 # The inert EXAMPLE spec's filename prefix (the `-000` rule, applied to the
 # folder home): scaffolded documentation, never a registry entry that decides
@@ -391,14 +414,16 @@ def parse_spec_frontmatter(text, relpath):
     return data, "\n".join(lines[close + 1 :])
 
 
-def parse_spec_status(relpath, data):
-    """The Status a spec's LOCATION encodes, checked against its `disposition`.
+def parse_spec_status(relpath):
+    """The Status a spec's LOCATION encodes — the whole of it.
 
-    `archive/` holds both terminal states, so the two ways location and
-    frontmatter can disagree — an unknown disposition, and a retirement filed
-    outside `archive/` — are refusals, never silent coercions. A directory
-    nobody declared is a refusal too: dropping it into `queued` would silently
-    reclassify work, which is the catch-all shape this kit refuses on sight."""
+    Each state owns one directory, so there is no attribute to cross-check and
+    no way for location and frontmatter to disagree: WI-384 split `archive/`
+    into `complete/` + `cancelled/` and with it deleted the `disposition` key,
+    the cross-check, and both of its raise paths. One refusal survives, because
+    it is the one a folder-as-state model still needs: a directory nobody
+    declared. Dropping it into `queued` would silently reclassify work, which
+    is the catch-all shape this kit refuses on sight."""
     parts = relpath.split("/")
     status = SPEC_STATUS_DIRS.get(parts[0]) if len(parts) > 1 else None
     if status is None:
@@ -407,14 +432,7 @@ def parse_spec_status(relpath, data):
                 relpath, parts[0], ", ".join(sorted(SPEC_STATUS_DIRS))
             )
         )
-    disposition = data.get("disposition")
-    if disposition is None:
-        return status
-    if disposition != "retired":
-        raise ValueError("{}: unknown disposition {!r}".format(relpath, disposition))
-    if status != "done":
-        raise ValueError("{}: a retired spec belongs in archive/".format(relpath))
-    return "retired"
+    return status
 
 
 def parse_spec_id(relpath, data):
@@ -456,7 +474,7 @@ def parse_spec_row(text, relpath):
     data, body = parse_spec_frontmatter(text, relpath)
     row = dict.fromkeys(WI_COLUMNS, "")
     row["WI-ID"] = parse_spec_id(relpath, data)
-    row["Status"] = parse_spec_status(relpath, data)
+    row["Status"] = parse_spec_status(relpath)
     row["Deliverable"] = parse_spec_deliverable(relpath, body)
     for column, key in SPEC_SCALARS:
         if key in data:
@@ -1604,7 +1622,7 @@ def ssot_findings(wis, root):
         # queued+blockref — a queued row without one is simply queued. No row
         # can reach either rule.)
         # R-A: Deliverable non-empty IFF the WI is TERMINAL. A `done` WI's
-        # Deliverable records what shipped; a `retired` WI's records the reason it
+        # Deliverable records what shipped; a `cancelled` WI's records the reason it
         # will never be built (WI-267) — either way the terminal row carries its
         # permanent backward record, and an open row's Deliverable is filled only
         # at close.
@@ -1651,14 +1669,14 @@ def spec_lifecycle_findings(root, wis):
     promotion, the R-E warn tier — so a rotting spec surface cannot reach a
     green G2/G3 gate while a plain commit stays warn-first):
 
-      - a **terminal** WI (`done` or `retired`, WI-267) whose `SpecRef` is still
+      - a **terminal** WI (`done` or `cancelled`, WI-267) whose `SpecRef` is still
         set — the terminal transition clears it (the Deliverable + log carry the
-        backward record; a `retired` row's reason lives in its Deliverable);
+        backward record; a `cancelled` row's reason lives in its Deliverable);
       - a **live** `docs/specs/` file cited by no *open* WI — archive it to
         `docs/archive/specs/` (close date appended, WI ids noted) or point an
         open WI at it. A shared effort doc therefore archives only when its
         last open citer closes; `deferred`/`blocked` are open, so their specs
-        stay, but `retired` is terminal, so a retired WI keeps no live spec. The
+        stay, but `cancelled` is terminal, so a cancelled WI keeps no live spec. The
         scaffold boilerplate (README, any `-000` exemplar) is excluded by the
         `spec_interface_findings` idiom.
 
@@ -1699,7 +1717,7 @@ def spec_lifecycle_findings(root, wis):
 # commit trailer, but a trailer means "a commit CLAIMS this WI", not "the work is
 # right" (WI-336's code landed while its row correctly stayed `queued`, because a
 # review had refuted three of its claims — a deriver would have flipped it), and
-# `deferred`/`blocked`/`retired` are decisions, not outcomes. What was missing is
+# `draft`/`deferred`/`blocked`/`cancelled` are decisions, not outcomes. What was missing is
 # not derivation but RECONCILIATION — the shape every other declared-vs-computed
 # pair here already has (`derive_gate --check` recomputes and fails on drift;
 # every generator carries `--check`). So this compares the declared cell against
@@ -2013,18 +2031,18 @@ def status_forward_only_findings(root, wis):
 
 
 def dead_dependency_findings(wis):
-    """Surface a live WI that hard-depends on a `retired` predecessor (WI-267).
+    """Surface a live WI that hard-depends on a `cancelled` predecessor (WI-267).
 
-    A `retired` WI is a terminal WON'T-BUILD row — it will never integrate
+    A `cancelled` WI is a terminal WON'T-BUILD row — it will never integrate
     `done`, so an open successor whose hard edge points at it can NEVER become
     ready. The conservative decision (WI-267 design-decision 3) is to SURFACE
-    the dead edge rather than let a retired predecessor silently "satisfy" the
+    the dead edge rather than let a cancelled predecessor silently "satisfy" the
     dependency the way `done` does: the owner must re-home the successor's edge
-    or retire it too. The scheduler already refuses to schedule such a WI
+    or cancel it too. The scheduler already refuses to schedule such a WI
     (schedule.hard_preds_satisfied requires `done`, not merely terminal); this
     makes the same dead edge visible in the validator. WARN plain, ERROR under
     `--strict`. Soft (`~`) edges are advisory and never gate readiness, so they
-    are exempt. Vacuous until a registry actually retires a still-depended-on WI.
+    are exempt. Vacuous until a registry actually cancels a still-depended-on WI.
     """
     by_id = {w["id"]: w for w in wis}
     out = []
@@ -2032,13 +2050,13 @@ def dead_dependency_findings(wis):
         if w["status"] not in OPEN_STATUSES:
             continue
         dead = sorted(
-            p for p in w["preds"] if by_id.get(p, {}).get("status") == "retired"
+            p for p in w["preds"] if by_id.get(p, {}).get("status") == "cancelled"
         )
         if dead:
             out.append(
-                "{}: open WI hard-depends on retired WI(s) {} — a retired "
+                "{}: open WI hard-depends on cancelled WI(s) {} — a cancelled "
                 "predecessor is terminal and never satisfies a hard dependency; "
-                "re-home the edge or retire this WI too".format(w["id"], ";".join(dead))
+                "re-home the edge or cancel this WI too".format(w["id"], ";".join(dead))
             )
     return out
 
@@ -2292,13 +2310,13 @@ def _head_spec_status_map(root):
     already answers the whole question the CSV needed a `git show` and a parse
     for; one subprocess, no content, no size dependence on the backlog.
 
-    Two honest limits, both benign for the close ratchets that consume this:
-    `archive/` collapses `done` and `retired` (the disposition lives in the
-    frontmatter, which is a blob), so a HEAD-retired item reads `done` — both are
-    terminal, so `_newly_closed` cannot be fooled either way; and `srs` is empty,
-    because SR-Refs are content too. `_staged_wi_registry` fills that from the
-    WORKING TREE, where the same file is unchanged unless this very commit
-    touched it."""
+    One honest limit remains, benign for the close ratchets that consume this:
+    `srs` is empty, because SR-Refs are content too. `_staged_wi_registry` fills
+    that from the WORKING TREE, where the same file is unchanged unless this very
+    commit touched it. (The second limit is GONE with WI-384: `archive/` used to
+    collapse `done` and `cancelled` behind a frontmatter key no tree listing can
+    read, so a HEAD-cancelled item read `done`. Each terminal now has its own
+    directory, so paths alone answer shipped-or-cancelled exactly.)"""
     out = _git(root, ["ls-tree", "-r", "--name-only", "HEAD", "--", WI_WORK])
     if not out or not out.strip():
         return None
@@ -2358,7 +2376,7 @@ def _staged_spec_registry(root, staged_names, work_dir):
     "The registry changed" becomes "a spec under `docs/work/` is staged", read
     with `--name-status` so a RENAME is visible as one record: a status change in
     this registry IS a rename, and `R<score>  queued/WI-360-x.md
-    archive/WI-360-x.md` is exactly what a CLOSURE looks like. The closure SET is
+    complete/WI-360-x.md` is exactly what a CLOSURE looks like. The closure SET is
     still derived by `_newly_closed` from the two status maps rather than from
     the `R` records — one home for that fact, and it stays correct even when git
     reports a move as an unpaired delete + add (rename detection is a heuristic;
@@ -3024,7 +3042,7 @@ def main():
     # unknown-status lint are WARN unless
     # --strict promotes them.
     findings = ssot_findings(wis, root)
-    # Dead dependency (WI-267): an open WI hard-depends on a retired (terminal
+    # Dead dependency (WI-267): an open WI hard-depends on a cancelled (terminal
     # WON'T-BUILD) predecessor it can never see satisfied. WARN plain, ERROR under
     # --strict — same warn-tier as R-E (no new branch in main).
     findings.extend(("dead-dep", False, msg) for msg in dead_dependency_findings(wis))
@@ -3082,14 +3100,14 @@ def main():
         return 1
 
     done = sum(1 for w in wis if w["status"] == "done")
-    # WI-267: `retired` (terminal WON'T-BUILD) rows are counted SEPARATELY, never
-    # folded into `done`; surfaced only when present so the line stays unchanged
-    # for the common no-retired registry.
-    retired = sum(1 for w in wis if w["status"] == "retired")
-    retired_note = ", {} retired".format(retired) if retired else ""
+    # WI-267: `cancelled` (terminal WON'T-BUILD) rows are counted SEPARATELY,
+    # never folded into `done`; surfaced only when present so the line stays
+    # unchanged for the common no-cancellation registry.
+    cancelled = sum(1 for w in wis if w["status"] == "cancelled")
+    cancelled_note = ", {} cancelled".format(cancelled) if cancelled else ""
     print(
         "check_trajectory: clean ({} work item(s), {} done ({}%){}, graph "
-        "acyclic).".format(len(wis), done, round(100 * done / len(wis)), retired_note)
+        "acyclic).".format(len(wis), done, round(100 * done / len(wis)), cancelled_note)
     )
     return 0
 

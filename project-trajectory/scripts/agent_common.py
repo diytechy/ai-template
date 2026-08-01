@@ -558,11 +558,12 @@ WI_TOKEN_RE = re.compile(r"^WI-\d+$")
 # (SANCTIONED_TRAIN_SUBJECT_PREFIXES and the WI-282 commit-msg trailer floor
 # retired with the dispatcher at concurrency-restructure Phase 5.)
 
-# The terminal work-item Statuses — no further build is owed (WI-267). Mirrors
-# check_trajectory.TERMINAL_STATUSES, kept inline here rather than imported: the
-# F5 self-contained-script rule keeps agent_common stdlib-only (it never pulls a
-# sibling engine). A worker must never build a WI in either state.
-TERMINAL_STATUSES = ("done", "retired")
+# The terminal work-item Statuses — no further build is owed (WI-267; the
+# won't-build half respelled `cancelled` and given its own folder by WI-384).
+# Mirrors check_trajectory.TERMINAL_STATUSES, kept inline here rather than
+# imported: the F5 self-contained-script rule keeps agent_common stdlib-only (it
+# never pulls a sibling engine). A worker must never build a WI in either state.
+TERMINAL_STATUSES = ("done", "cancelled")
 
 
 def sanitize_train(name):
@@ -646,14 +647,26 @@ SPEC_SCALARS = (
     ("PlanMode", "planmode"),
 )
 SPEC_LISTS = (("SR-Refs", "sr_refs"), ("Predecessors", "needs"))
-# Directory -> Status. `archive/` holds BOTH terminal states and the frontmatter
-# `disposition` key tells them apart; `active/<branch>/` sits one level deeper,
-# so the status is the FIRST path component, never the file's parent directory.
+# Directory -> Status. The directory is the WHOLE statement (WI-384): every
+# state owns a folder — including BOTH terminals, `complete/` for work that
+# shipped and `cancelled/` for work that never will — so nothing in the
+# frontmatter disambiguates a folder and nothing can disagree with one.
+# `draft/` is thinking-in-progress, and it is DECLARED rather than left as an
+# unscanned folder because an undeclared directory's specs are skipped below:
+# they would be invisible to `max(id) + 1` and the next mint would reissue an
+# id a draft already holds. The two terminal WORDS differ for a reason:
+# `complete/` renamed a folder whose rows still read `done` (the status word
+# every consumer already speaks), while `cancelled` had no folder to rename —
+# only the `disposition = "retired"` spelling this row deleted — so the word
+# itself moved. `active/<branch>/` sits one level deeper, so the status is the
+# FIRST path component, never the file's parent directory.
 SPEC_STATUS_DIRS = {
-    "archive": "done",
+    "draft": "draft",
     "queued": "queued",
-    "deferred": "deferred",
     "active": "active",
+    "deferred": "deferred",
+    "cancelled": "cancelled",
+    "complete": "done",
 }
 # The inert EXAMPLE spec's filename prefix (the `-000` rule, applied to the
 # folder home): scaffolded documentation, never a registry entry that decides
@@ -699,14 +712,16 @@ def parse_spec_frontmatter(text, relpath):
     return data, "\n".join(lines[close + 1 :])
 
 
-def parse_spec_status(relpath, data):
-    """The Status a spec's LOCATION encodes, checked against its `disposition`.
+def parse_spec_status(relpath):
+    """The Status a spec's LOCATION encodes — the whole of it.
 
-    `archive/` holds both terminal states, so the two ways location and
-    frontmatter can disagree — an unknown disposition, and a retirement filed
-    outside `archive/` — are refusals, never silent coercions. A directory
-    nobody declared is a refusal too: dropping it into `queued` would silently
-    reclassify work, which is the catch-all shape this kit refuses on sight."""
+    Each state owns one directory, so there is no attribute to cross-check and
+    no way for location and frontmatter to disagree: WI-384 split `archive/`
+    into `complete/` + `cancelled/` and with it deleted the `disposition` key,
+    the cross-check, and both of its raise paths. One refusal survives, because
+    it is the one a folder-as-state model still needs: a directory nobody
+    declared. Dropping it into `queued` would silently reclassify work, which
+    is the catch-all shape this kit refuses on sight."""
     parts = relpath.split("/")
     status = SPEC_STATUS_DIRS.get(parts[0]) if len(parts) > 1 else None
     if status is None:
@@ -715,14 +730,7 @@ def parse_spec_status(relpath, data):
                 relpath, parts[0], ", ".join(sorted(SPEC_STATUS_DIRS))
             )
         )
-    disposition = data.get("disposition")
-    if disposition is None:
-        return status
-    if disposition != "retired":
-        raise ValueError("{}: unknown disposition {!r}".format(relpath, disposition))
-    if status != "done":
-        raise ValueError("{}: a retired spec belongs in archive/".format(relpath))
-    return "retired"
+    return status
 
 
 def parse_spec_id(relpath, data):
@@ -764,7 +772,7 @@ def parse_spec_row(text, relpath):
     data, body = parse_spec_frontmatter(text, relpath)
     row = dict.fromkeys(WI_COLUMNS, "")
     row["WI-ID"] = parse_spec_id(relpath, data)
-    row["Status"] = parse_spec_status(relpath, data)
+    row["Status"] = parse_spec_status(relpath)
     row["Deliverable"] = parse_spec_deliverable(relpath, body)
     for column, key in SPEC_SCALARS:
         if key in data:
@@ -1675,15 +1683,15 @@ def preflight(root, template, args):
                         "WI.".format(wid)
                     )
                 elif (row.get("Status") or "").strip().lower() in TERMINAL_STATUSES:
-                    # WI-267: a WI RETIRED mid-assignment is terminal too — a
+                    # WI-267: a WI CANCELLED mid-assignment is terminal too — a
                     # worker must never build a WON'T-BUILD row. The scheduler
-                    # never freshly dispatches a retired WI, but an owner can
-                    # retire one already leased to a worker; this closes that
+                    # never freshly dispatches a cancelled WI, but an owner can
+                    # cancel one already leased to a worker; this closes that
                     # narrow mid-flight race the done-only check missed.
                     status = (row.get("Status") or "").strip().lower()
                     failures.append(
                         "assigned {} is already {} — a terminal status "
-                        "(done/retired); a stale assignment, so the dispatcher "
+                        "(done/cancelled); a stale assignment, so the dispatcher "
                         "must re-derive the frontier.".format(wid, status)
                     )
     return failures

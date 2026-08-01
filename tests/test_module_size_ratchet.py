@@ -581,7 +581,15 @@ BASELINE = {
     # would still run and always pass. Most of the delta is the two fallback
     # arms and the comment recording that. Reviewed bump, reason here and in
     # docs/log.d/WI-280-bounded-core-decomposition.md.
-    "check_trajectory.py": 3098,
+    # +18 (3098 -> 3116), WI-384: the six-state model. The DELETION is real —
+    # `parse_spec_status`'s disposition cross-check and both of its raise paths
+    # are gone — and the growth is the vocabulary that replaced them: two more
+    # SPEC_STATUS_DIRS rows, KNOWN_STATUSES exploded onto one line per status
+    # by the formatter, and the comments recording WHY `draft/` must be a
+    # DECLARED directory (id reservation) rather than a scratch folder. Net of
+    # comments the module shrank. Reviewed bump, log 2026-08-01. Re-stamp down
+    # with WI-280.
+    "check_trajectory.py": 3116,
     # NEW ENTRY, +25 (1498 -> 1523), WI-357: the two-stage work-branch claim
     # signal — the on-disk fast path plus the branch-history probe that
     # survives the §2.3 close commit (git log -1 over the claim path), with
@@ -591,7 +599,10 @@ BASELINE = {
     # zero-comment form crossed it, so this is the crossing recorded, not
     # growth approved. Reviewed bump, log 2026-07-29. Re-stamp down with
     # WI-280.
-    "check.py": 1523,
+    # +1 (1523 -> 1524), WI-384: the claim-signal docstring line that says the
+    # close moves specs to their TERMINAL directory rather than "archives"
+    # them. One wrapped comment line. Reviewed bump, log 2026-08-01.
+    "check.py": 1524,
     # +1 (1916 -> 1917), WI-279: one MAPPING row registering the new
     # scripts/check_coverage.py kit gate so it ships downstream — a required
     # one-line registration, not monolith growth (the reviewed-bump escape the
@@ -671,7 +682,13 @@ BASELINE = {
     # cycle import it UNGUARDED, so a scaffold without it could not claim work
     # at all). Required registration, not monolith growth - the same shape as
     # the trunk_step/integrate/drive rows above. Reviewed bump, log 2026-07-31.
-    "bootstrap.py": 2232,
+    # +9 (2232 -> 2241), WI-384: three more scaffolded status directories
+    # (draft/, cancelled/, complete/) in GITKEEP_DIRS plus the comment stating
+    # why `draft/` is scaffolded for a reason beyond visibility — a spec under
+    # an undeclared directory is invisible to `max(id) + 1`, so the next mint
+    # reissues a held id. Required registration, not monolith growth: the same
+    # shape as the MAPPING rows above. Reviewed bump, log 2026-08-01.
+    "bootstrap.py": 2241,
     # NEW ENTRY, +228 (1423 -> 1651), Phase 2b of the concurrency restructure
     # (docs/concurrency-restructure.md §7): the spec-folder work-item reader,
     # which crosses this module over THRESHOLD for the first time. It is one
@@ -725,7 +742,13 @@ BASELINE = {
     # parse (extraction, not sanction: the WI-304 precedent). integrate.py
     # shrank 9 in the same move. Reviewed bump, log 2026-07-29. Re-stamp
     # down with WI-280.
-    "agent_common.py": 1720,
+    # +8 (1720 -> 1728), WI-384: the six-state vocabulary in the F5 reader copy
+    # — two more SPEC_STATUS_DIRS rows and the comment recording the two
+    # terminals and the id-reservation reason, minus the disposition validator
+    # this row deleted. Identical text to the other two copies by construction
+    # (tests/test_wi_loader_sync.py). Reviewed bump, log 2026-08-01. Re-stamp
+    # down with WI-280.
+    "agent_common.py": 1728,
 }
 
 

@@ -467,12 +467,13 @@ def test_worker_unknown_or_done_wi_fails_closed(tmp_path):
     assert "already done" in out and "terminal status" in out
 
 
-def test_worker_retired_wi_fails_closed(tmp_path):
-    # WI-267: a WI RETIRED after it was assigned to this worker is terminal — the
-    # preflight guard must fail closed just like a done WI, so the worker never
-    # builds a WON'T-BUILD row (the narrow retire-mid-assignment race the
-    # done-only check missed). Retire the assigned WI-201 on its train branch
-    # (reason in Deliverable, SpecRef cleared — the terminal shape), then assign.
+def test_worker_cancelled_wi_fails_closed(tmp_path):
+    # WI-267 (respelled by WI-384): a WI CANCELLED after it was assigned to this
+    # worker is terminal — the preflight guard must fail closed just like a done
+    # WI, so the worker never builds a WON'T-BUILD row (the narrow
+    # cancel-mid-assignment race the done-only check missed). Cancel the assigned
+    # WI-201 on its train branch (reason in Deliverable, SpecRef cleared — the
+    # terminal shape), then assign.
     repo, base, ctl, fake = _setup(tmp_path)
     _write_registry(
         repo,
@@ -494,18 +495,18 @@ def test_worker_retired_wi_fails_closed(tmp_path):
                 "ws",
                 "SR-060",
                 "WI-200",
-                "retired",
+                "cancelled",
                 "superseded — will not be built",
                 "",
                 "medium",
             ],
         ],
     )
-    _git(repo, "commit", "-aqm", "retire WI-201")
+    _git(repo, "commit", "-aqm", "cancel WI-201")
     proc = _worker(repo, fake, ctl, "--wi", "WI-201", "--train", "t1")
     assert proc.returncode == agent_loop.EXIT_PREFLIGHT
     out = proc.stdout + proc.stderr
-    assert "already retired" in out and "terminal status" in out
+    assert "already cancelled" in out and "terminal status" in out
 
 
 # --- WI-080 Slice D/E: worker end-state + the assignment seam ------------------

@@ -72,45 +72,74 @@ def test_dangling_hard_pred_fails_closed():
     assert disposition(wis, "WI-002")["disposition"] == "waiting"
 
 
-# --- WI-267: `retired` is a terminal WON'T-BUILD status ------------------------
+# --- WI-267: `cancelled` is a terminal WON'T-BUILD status ---------------------
+# (Spelled `retired` until WI-384 gave it its own directory and, with it, an
+# unambiguous name — `retired` can be read as finished-and-put-out-to-pasture.)
 # Terminal like `done` (never ready, never scheduled) but — unlike `done` — a
-# retired predecessor does NOT satisfy a successor's hard dependency (design-
-# decision 3), so a live WI hard-blocked on a retired one surfaces rather than
+# cancelled predecessor does NOT satisfy a successor's hard dependency (design-
+# decision 3), so a live WI hard-blocked on a cancelled one surfaces rather than
 # proceeding on a will-never-happen dependency.
 
 
-def test_retired_wi_is_terminal_never_ready():
-    wis = sched.load_wis([row("WI-001", status="retired")])
+def test_cancelled_wi_is_terminal_never_ready():
+    wis = sched.load_wis([row("WI-001", status="cancelled")])
     assert ready_ids(wis) == []
     d = disposition(wis, "WI-001")
-    assert d["disposition"] == "retired"
-    assert d["reasons"] == ["retired:terminal-wont-build"]
+    assert d["disposition"] == "cancelled"
+    assert d["reasons"] == ["cancelled:terminal-wont-build"]
 
 
-def test_retired_predecessor_does_not_satisfy_a_hard_dependency():
-    # Decision 3 (the DEAD-edge direction): a retired predecessor never
+def test_cancelled_predecessor_does_not_satisfy_a_hard_dependency():
+    # Decision 3 (the DEAD-edge direction): a cancelled predecessor never
     # integrates, so the live successor can never become ready — it stays
-    # `waiting`, and the retired dead edge is surfaced as its own reason code.
+    # `waiting`, and the dead edge is surfaced as its own reason code.
     wis = sched.load_wis(
-        [row("WI-001", status="retired"), row("WI-002", preds="WI-001")]
+        [row("WI-001", status="cancelled"), row("WI-002", preds="WI-001")]
     )
     assert ready_ids(wis) == []  # NOT satisfied the way a `done` pred would be
     d = disposition(wis, "WI-002")
     assert d["disposition"] == "waiting"
-    assert "waiting:hard-pred-retired:WI-001" in d["reasons"]
+    assert "waiting:hard-pred-cancelled:WI-001" in d["reasons"]
 
 
 def test_done_predecessor_still_satisfies_a_hard_dependency():
     # Decision 3 (the LIVE-edge direction, the control): a `done` pred DOES
-    # satisfy — retirement is the only terminal state that leaves the edge dead.
+    # satisfy — cancellation is the only terminal that leaves the edge dead.
     wis = sched.load_wis([row("WI-001", status="done"), row("WI-002", preds="WI-001")])
     assert ready_ids(wis) == ["WI-002"]
 
 
-def test_retired_wi_is_never_scheduled_in_simulate():
+def test_cancelled_wi_is_never_scheduled_in_simulate():
     wis = sched.load_wis(
-        [row("WI-001", status="retired"), row("WI-002"), row("WI-003")]
+        [row("WI-001", status="cancelled"), row("WI-002"), row("WI-003")]
     )
+    scheduled = [wid for rnd in sched.simulate(wis, 4) for wid in rnd]
+    assert "WI-001" not in scheduled
+    assert set(scheduled) == {"WI-002", "WI-003"}
+
+
+# --- WI-384: `draft` is never-ready, exactly like `deferred` ------------------
+
+
+def test_draft_is_never_ready_and_keeps_its_own_reason_code():
+    """The two never-ready OPEN states differ only in what they SAY. Asserting
+    both in one place is what stops a later edit folding `draft` into
+    `deferred`: they would still both be excluded, and the --explain output
+    would quietly stop distinguishing a decision from the absence of one."""
+    wis = sched.load_wis(
+        [row("WI-001", status="draft"), row("WI-002", status="deferred")]
+    )
+    assert ready_ids(wis) == []
+    draft, deferred = disposition(wis, "WI-001"), disposition(wis, "WI-002")
+    assert (draft["disposition"], draft["reasons"]) == ("draft", ["excluded:draft"])
+    assert (deferred["disposition"], deferred["reasons"]) == (
+        "deferred",
+        ["excluded:deferred"],
+    )
+
+
+def test_draft_wi_is_never_scheduled_in_simulate():
+    wis = sched.load_wis([row("WI-001", status="draft"), row("WI-002"), row("WI-003")])
     scheduled = [wid for rnd in sched.simulate(wis, 4) for wid in rnd]
     assert "WI-001" not in scheduled
     assert set(scheduled) == {"WI-002", "WI-003"}

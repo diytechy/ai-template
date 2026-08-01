@@ -10,26 +10,31 @@ have not measured).
 
 Written at Phase 2a as meta-repo tooling, it became a **kit script** at Phase
 2c-i — the phase that ships the folder registry downstream (`bootstrap.py`
-scaffolds `docs/work/{queued,active,deferred,archive}/` and the `WI-000` example
-spec, and `plan_artifacts.py` imports this module as a sibling to file a new
-work item as a spec file). Running it is still the adopter's choice: it
-converts BETWEEN the two forms and never decides what the registry is — the
-folder is the one live home (Phase 5, RULING-4); the CSV form survives here
-as the legacy interchange format (migrate in, export for inspection).
+scaffolds `docs/work/{draft,queued,active,deferred,cancelled,complete}/` and the
+`WI-000` example spec, and `plan_artifacts.py` imports this module as a sibling
+to file a new work item as a spec file). Running it is still the adopter's
+choice: it converts BETWEEN the two forms and never decides what the registry
+is — the folder is the one live home (Phase 5, RULING-4); the CSV form survives
+here as the legacy interchange format (migrate in, export for inspection).
 
 The spec-file form, per §2.1/§2.2:
 
+    docs/work/draft/WI-362-still-thinking.md   # written down, not claimable
     docs/work/queued/WI-360-forge-seam.md      # filed, unclaimed
     docs/work/deferred/WI-361-something.md     # filed, not now
-    docs/work/archive/WI-359-done-thing.md     # done — or retired, which keeps
-                                               #   `disposition = "retired"`
+    docs/work/complete/WI-359-done-thing.md    # shipped
+    docs/work/cancelled/WI-358-wont-build.md   # will never ship, reason in body
 
-**Status is location.** It is deliberately NOT a frontmatter key: one home per
-fact, and a move between two distinct paths is what makes two branches claiming
-the same work item a visible git move/move conflict instead of a silent
-overwrite. The four CSV statuses map onto three directories; ANY other status
-value is a refusal naming the row, never a catch-all bucket — a classifier that
-can always finish is a classifier that has stopped classifying.
+**Status is location, and location is the WHOLE statement.** It is deliberately
+NOT a frontmatter key: one home per fact, and a move between two distinct paths
+is what makes two branches claiming the same work item a visible git move/move
+conflict instead of a silent overwrite. WI-384 finished the job by giving the
+two terminals their own directories: `archive/` used to hold both, so a
+`disposition = "retired"` key and a validator kept folder and attribute honest —
+splitting the folder deleted the key, the validator and both of its raise paths.
+The status↔directory map is now a BIJECTION; ANY other status value is a refusal
+naming the row, never a catch-all bucket — a classifier that can always finish is
+a classifier that has stopped classifying.
 
 **Frontmatter is TOML between `+++` lines** (the Hugo delimiter), read back with
 stdlib `tomllib` (3.11+, so no dependency is incurred — RULING-3). `tomllib` is
@@ -100,17 +105,19 @@ COLUMNS = [
     "PlanMode",
 ]
 
-# Status -> directory (§2.1). `retired` shares `archive/` with `done` and is
-# told apart by its `disposition` key: retirement is a MOVE with a recorded
-# reason, never a deletion, so the two live in one place and differ in one field.
+# Status <-> directory (§2.1; WI-384). One directory per state, both terminals
+# included, so the map INVERTS — there is no second fact to keep honest.
+# Cancellation is still a MOVE with a recorded reason, never a deletion; the
+# reason lives where it always did, in the Deliverable body.
 STATUS_DIRS = {
-    "done": "archive",
-    "retired": "archive",
+    "draft": "draft",
     "queued": "queued",
     "deferred": "deferred",
+    "done": "complete",
+    "cancelled": "cancelled",
 }
-RETIRED = "retired"
-ARCHIVE = "archive"
+# The inverse, built from the one table so the two directions cannot disagree.
+DIR_STATUSES = {directory: status for status, directory in STATUS_DIRS.items()}
 
 # Columns carried verbatim as single-valued frontmatter keys.
 SCALAR_FIELDS = (
@@ -267,8 +274,6 @@ def frontmatter_pairs(row, order):
         pair = _column_pair(column, row.get(column) or "")
         if pair is not None:
             pairs.append(pair)
-    if (row.get("Status") or "").strip() == RETIRED:
-        pairs.append(("disposition", RETIRED))
     if order is not None:
         pairs.append(("order", order))
     return pairs
@@ -349,33 +354,29 @@ def parse_deliverable(body, where):
     return body[len(DELIVERABLE_PREFIX) : -1]
 
 
-def status_from_location(directory, disposition, where):
+def status_from_location(directory, where):
     """The Status a spec's location encodes — the inverse of `status_dir`.
 
-    `archive/` holds both terminal states and `disposition` separates them, so
-    the two checks that can disagree (an unknown disposition; a retirement filed
-    outside `archive/`) are refusals, not silent coercions.
+    A plain table lookup since WI-384: one directory per state means the
+    location IS the status, with nothing in the frontmatter to cross-check it
+    against and so no way for the two to disagree. The only refusal left is a
+    directory nobody declared.
     """
-    if disposition is not None and disposition != RETIRED:
-        raise ConvertError("{}: unknown disposition {!r}".format(where, disposition))
-    if directory == ARCHIVE:
-        return RETIRED if disposition == RETIRED else "done"
-    if disposition == RETIRED:
-        raise ConvertError("{}: a retired spec belongs in {}/".format(where, ARCHIVE))
-    if directory in STATUS_DIRS.values():
-        return directory
-    raise ConvertError(
-        "{}: directory {!r} is not a status — the spec form knows only {}".format(
-            where, directory, ", ".join(sorted(set(STATUS_DIRS.values())))
+    status = DIR_STATUSES.get(directory)
+    if status is None:
+        raise ConvertError(
+            "{}: directory {!r} is not a status — the spec form knows only {}".format(
+                where, directory, ", ".join(sorted(DIR_STATUSES))
+            )
         )
-    )
+    return status
 
 
 def parse_spec(text, relpath, where=None):
     """`(row, order)` reconstructed from one spec file.
 
-    `relpath` supplies the Status (location is the state) and is checked against
-    the frontmatter's own `disposition`.
+    `relpath` supplies the Status, and supplies the whole of it: location is the
+    state, with no frontmatter key duplicating it (WI-384).
     """
     where = where or relpath
     frontmatter, body = split_spec(text, where)
@@ -401,7 +402,7 @@ def parse_spec(text, relpath, where=None):
             "operation (concurrency-restructure §3.2): integrate or park the "
             "branch, then convert".format(where, parts[1] if len(parts) > 2 else "?")
         )
-    row["Status"] = status_from_location(top, data.get("disposition"), where)
+    row["Status"] = status_from_location(top, where)
     row["Deliverable"] = parse_deliverable(body, where)
     for column, key in SCALAR_FIELDS:
         if key in data:

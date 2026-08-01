@@ -6,7 +6,6 @@ buildtier = "medium"
 priority = 2
 safety_class = "ordinary"
 order = 347
-disposition = "retired"
 +++
 
 ## Deliverable

@@ -18656,7 +18656,7 @@ attended-serial.
   pinned by its own test; a synthetic bite test proves the exemption is the
   marker's in both directions. `check_doc_refs.py` untouched — reasons are
   opaque text consulted only when the path is absent. Spec archived:
-  [WI-369](work/archive/WI-369-lifecycle-absences-red-the-bar-while-claimed.md).
+  [WI-369](work/complete/WI-369-lifecycle-absences-red-the-bar-while-claimed.md).
 - **Deviations from spec:** none.
 - **Suite:** full `pytest -q -n auto` (posix-shell gate satisfied):
   1669 passed / 11 skipped / 1 failed — the sole failure the standing
@@ -18690,7 +18690,7 @@ Latent until now because the grind sessions committed attended-serial
   `_run_trunk_step` and `_run_bar` (§4's "required checks on the composed
   tree" applied to the checker itself; discovery mirrors the shipped hook's
   scripts-dir probe). Spec archived:
-  [WI-368](work/archive/WI-368-the-integrator-runs-the-invokers-harness.md).
+  [WI-368](work/complete/WI-368-the-integrator-runs-the-invokers-harness.md).
 - **Tests:** tests/test_integrate.py §4b — the three resolution shapes plus
   a seam test non-vacuous against the pre-fix wiring (the invoker's copy
   exits 3, the composed copy writes a sentinel).
@@ -18933,7 +18933,7 @@ last moment the debt is a one-line trunk commit.
   specs carry a resolving ref, the e2e close clears it). Review round 1
   caught the first cut's `.exists()` under-refusing on bare-fragment and
   directory refs — fixed and re-reviewed in round 2. Spec archived:
-  [WI-370](work/archive/WI-370-claim-refuses-a-spec-without-a-specref.md).
+  [WI-370](work/complete/WI-370-claim-refuses-a-spec-without-a-specref.md).
 - **Deviations from spec:** none in scope; the rung was extracted to its
   own helper after the C901 census flagged the inline form (complexity 11)
   — extraction over baseline stamp.
@@ -18957,7 +18957,7 @@ builders lost their first BEFORE set and re-shot from a worktree).
   survive; the listing prints only PNGs; the
   [README](../scripts/dashboard-shots/README.md) states the contract.
   Spec archived:
-  [WI-371](work/archive/WI-371-shoot-mjs-deletes-session-baselines.md).
+  [WI-371](work/complete/WI-371-shoot-mjs-deletes-session-baselines.md).
 - **Deviations from spec:** none (the spec's first option, as recommended
   there). No pytest coverage, deliberately: meta-only Node dev tooling
   with no test harness — verified live (a planted `shots/before/` marker

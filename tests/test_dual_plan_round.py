@@ -111,10 +111,10 @@ def make_fixture(tmp_path, plan_mode="dual"):
         encoding="utf-8",
     )
     # The spec-folder registry home (the only home after Phase 5): one done
-    # item in archive/, the dual-plan target queued.
-    for sub in ("queued", "active", "deferred", "archive"):
+    # item in complete/, the dual-plan target queued.
+    for sub in ("draft", "queued", "active", "deferred", "cancelled", "complete"):
         (root / "docs" / "work" / sub).mkdir(parents=True)
-    (root / "docs" / "work" / "archive" / "WI-001-done-thing.md").write_text(
+    (root / "docs" / "work" / "complete" / "WI-001-done-thing.md").write_text(
         WI_001_SPEC, encoding="utf-8"
     )
     (root / "docs" / "work" / "queued" / "WI-002-widget-effort.md").write_text(

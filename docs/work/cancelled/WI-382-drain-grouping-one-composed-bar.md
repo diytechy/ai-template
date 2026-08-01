@@ -4,7 +4,6 @@ title = "Drain grouping: one composed bar per drain"
 workstream = "scripts"
 buildtier = "medium"
 safety_class = "ordinary"
-disposition = "retired"
 +++
 
 ## Deliverable
