@@ -25,6 +25,28 @@ applying that design to the kit itself.
 _Ratified or executed decisions only — the call, the alternatives passed over,
 why (one bullet each; cite ids)._
 
+- **2026-08-01 — R1: a work branch never mints a work-item id.** Ruled (owner,
+  [backlog-plan-2026-08-01.md](backlog-plan-2026-08-01.md) §R1): **minting a
+  work-item id is a serial TRUNK-side act only** — the claim's bookkeeping
+  commit, WI-388's mechanical adjudication mint when that row lands, and a
+  human trunk commit. A new item takes `max(existing id) + 1` and a lane can
+  only see its own tree, so a branch-side mint collides by construction: on
+  2026-08-01 two lanes independently minted `WI-392`, and three rows lived only
+  on the unmerged `wi-391` branch while trunk's max sat *below* them, so a
+  trunk mint in that window would have re-collided. A work branch is therefore
+  **refused at the merge slot** when its `docs/work/` delta adds a spec
+  carrying an id outside its claimed set; lane-discovered findings are recorded
+  as **prose** (the spec body, the log fragment, the review record) and take
+  their id at or after merge. Rejected: **id-reservation machinery in the
+  dispatcher** — new coordination state with crash and cleanup semantics,
+  enforcement-layer growth of exactly the shape the 2026-07-28 audit named, to
+  manage a problem this ruling deletes; and **lane-namespaced draft ids
+  renumbered at merge** — two id grammars plus a renumbering rewrite of every
+  cross-reference, worse for every future reader of the record. The collision
+  becomes unrepresentable rather than coordinated around, and the
+  id-reservation question leaves **WI-381**'s scope before that row is built.
+  Executed as **WI-397** (`integrate._minted_id_refusal`).
+
 - **2026-07-31 — Traceability is TRACED, not ratified (the spine-touch
   definition).** Ruled: only what is *ratified* counts as a spine touch, and
   ratification is on change of **scope**, defined by the **prose and the
