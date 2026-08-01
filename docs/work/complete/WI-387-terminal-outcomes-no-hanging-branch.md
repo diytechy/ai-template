@@ -74,3 +74,8 @@ groups in `tests/test_integrate.py` — now with negatives that fail if the
 matcher loosens — and the run-stop deletions driven end to end in
 `tests/test_drive.py` against a conditional stub bar. Full record, deviations
 and four findings owed their own rows: `docs/log.md`.
+
+Spine: `LLR-144` + `TC-138` tag the new `handback.py` into `CMP-004` under
+SR-132 — not the WI-390 spine batch, but the same two-row containment repair
+WI-374 made for `drive.py`, owed by any row that ships a new module and only
+visible once the station refresh regenerates the arch-map.

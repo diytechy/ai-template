@@ -400,6 +400,26 @@ this lane's to touch, so it is reported here rather than worked around. Nothing
 about the resolution is hidden by it — the gate is doing exactly what this row
 re-keyed it to do, to the branch that re-keyed it.
 
+**LLR-144 + TC-138 tag `handback.py` into CMP-004, and the station refresh is
+the only place that could have found it.** The first refresh redded two steps
+on one cause: `check_trajectory --strict` at `ERROR - docs/knowledge/ holds 6
+pack(s) but 1 arch-map module(s) are in no CMP-### component`, and
+`tests/test_traj_views.py::test_meta_component_top_view_smoke` at
+`assert ['scripts/handback'] == []`. Same shape as WI-374 gave `drive.py`
+(`ad2acd23`) and Phase 4 gave `integrate.py` (LLR-140/TC-132): one LLR row
+(`Module=handback.py`, `Component=CMP-004`, under SR-132) and one TC row
+(`Evidence=tests/test_handback.py`), both `Verified` on the branch review
+record as the autonomous-ratification verdict (`docs/gate-policy: autonomous`).
+**Why no builder or reviewer bar could see it:** `docs/architecture.md` is a
+trunk-owned generated artifact, so its freshness gate stands down on a work
+branch (SR-133) and the branch's copy stays trunk-vintage — `scripts/handback`
+only enters the arch-map inventory when the refresh regenerates it, which is
+after the last review round. Round 5's `check_trajectory --root . --strict`
+rc=0 is therefore honest and still not predictive. That is now the SECOND time
+this exact sequence has run (WI-374 was the first, with the same two-line
+remedy), which is the argument for the constraint being moved earlier rather
+than the check being watched harder.
+
 **The `EXIT_TRAIN_END` deviation is now live, and it was load-bearing rather
 than merely cautious.** It was excluded from `_WORKER_OUTCOMES` while WI-383's
 deletion was still in flight on a sibling lane; that deletion has landed, and
