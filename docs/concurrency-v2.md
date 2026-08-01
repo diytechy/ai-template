@@ -818,8 +818,13 @@ honest. That is the only reason the attribute exists.
 | `queued`, `active`, `deferred`, `archive` (+ `disposition`) | `draft`, `queued`, `active`, `deferred`, `cancelled`, `complete` |
 
 - **`draft/`** — written down, **not claimable**. Today there is nowhere honest
-  to put thinking-in-progress; `deferred` reads as *a decision*. (These very
-  rows sit in `deferred/` for want of it.)
+  to put thinking-in-progress; `deferred` reads as *a decision*, and `draft` as
+  the absence of one. **These very rows are the worked example:** while this
+  design was open they sat in `deferred/` for want of a `draft/`, which said
+  *"we decided not to do this now"* about work whose whole status was *"still
+  being figured out."* They moved to `queued/` the moment the design was ruled,
+  so the mis-filing has ended — but only because the thinking finished. The next
+  design to open has the same nowhere to sit until this lands.
 - **`cancelled/`** replaces `retired`, which is ambiguous — it can read as
   *finished and put out to pasture*. "Cancelled" cannot.
 - **`complete/`** replaces the done half of `archive/`.
