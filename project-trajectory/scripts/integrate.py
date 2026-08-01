@@ -72,7 +72,11 @@ that tree: the refresh commit carries `Bar-Green: tree=<sha> work=<sha>
 <summary>`, and the slot re-derives both names from git before it merges. A
 message alone would prove nothing — amend, rebase, cherry-pick and copy all
 carry words onto content nobody barred — so the trailer is checked, never
-read (`refresh_attestation`). Verdict freshness is git-derived the same way: the
+read. That closes ACCIDENT, not INTENT: a lane that deliberately names the
+tree and the parent (three git commands) merges unbarred, and the design
+accepts it because DECISION 3 ruled out a slot-side bar and a lane is trusted
+code (`refresh_attestation` states the bound in full). Verdict freshness is
+git-derived the same way: the
 verdict's last commit on the branch must be no older than the branch's last
 non-review, non-fragment WORK commit (the disposable refresh is peeled off
 first — mechanical bookkeeping must not stale an honest APPROVE).
@@ -84,6 +88,7 @@ own bar passed on this exact tree.
 from __future__ import annotations
 
 import argparse
+import os
 import re
 import subprocess
 import sys
@@ -464,10 +469,23 @@ def refresh_attestation(root, branch, rev=None):
         so a refresh commit merged in from elsewhere is not read as this
         branch's.
 
-    Forging all three is no longer an accident that a copied message can
-    cause; it is re-implementing the refresh. That is the honest bound, and it
-    is the same threat model the rest of this script holds (bugs and drift,
-    not an adversary with commit access).
+    THE HONEST BOUND: this defeats ACCIDENT, not INTENT. Every accidental
+    carrier refuses - a copied message, an amend, a rebase, a cherry-pick, a
+    trailer quoted in an ordinary commit. But forging one deliberately is three
+    git commands in the lane worktree and no bar at all: `add -A`, `T=$(git
+    write-tree)`, `P=$(git rev-parse <branch>)`, then commit with those two
+    values in the trailer. REVIEW-A round 2 drove exactly that and landed an
+    unbarred file on trunk. The format is printed in every refresh commit, so
+    the cost is reading, not reverse-engineering.
+
+    That is accepted, deliberately. The only structural closure is a bar the
+    slot itself runs and cannot skip, and DECISION 3 (owner ruling 2026-07-31)
+    deleted the merge bar outright: a kept-just-in-case bar is exactly the
+    shape §0's governing principle warns against. So the threat model here is
+    the same one the rest of this script holds - bugs, drift and a lane that
+    goes wrong, not a lane that lies on purpose. A lane is trusted code the
+    operator chose to run. If that ever stops being true, the answer is a
+    slot-side bar and a reopened DECISION 3, not a longer trailer.
     """
     rev = rev or branch
     message = _commit_message(root, rev)
@@ -868,7 +886,29 @@ def ignored_files(wt):
     return {p.replace("\\", "/") for p in out.split("\0") if p.strip()}
 
 
-def _shed_residue(wt, baseline):
+def existing_directories(wt):
+    """Every directory under `wt` right now, as a set of paths.
+
+    The other half of `_shed_residue`'s baseline. An empty ignored directory
+    IS reported by `git status --ignored` (measured), so a directory the bar
+    emptied has to be removed or §5.6's unload refuses over it - but a
+    directory that was already there, empty, belongs to the lane and must
+    survive. Only a snapshot can tell those apart: git lists no empty
+    directory as "pre-existing" because git does not track directories at all.
+
+    Cheap relative to what it guards - one tree walk beside an eleven-minute
+    bar. `.git` is skipped because nothing under it is ever the bar's residue.
+    """
+    found = set()
+    for parent, dirs, _files in os.walk(wt):
+        if ".git" in dirs:
+            dirs.remove(".git")
+        for name in dirs:
+            found.add(Path(parent) / name)
+    return found
+
+
+def _shed_residue(wt, baseline, baseline_dirs):
     """Delete the ignored FILES this refresh's own bar added to `wt`.
 
     The refresh's promise is that it leaves the lane worktree as it found it
@@ -903,10 +943,17 @@ def _shed_residue(wt, baseline):
             # Left behind rather than fought over: the unload will report it as
             # dirt, which is a loud, recoverable outcome.
             continue
-    # A directory the bar created is residue too, but only once it is empty -
-    # a directory that still holds a pre-existing file is the lane's, not ours.
+    # A directory the bar CREATED is residue too, once it is empty - otherwise
+    # git reports the emptied directory and the unload refuses over it. Two
+    # stops, and the second is the one REVIEW-A round 2 added: a directory that
+    # still holds a pre-existing file is the lane's (rmdir simply fails), and a
+    # directory that predates this refresh is the lane's even when it is EMPTY.
+    # Emptiness can be load-bearing - this repo's own `docs/work/deferred/` is
+    # an empty untracked directory that a link resolves through.
     for directory in sorted(emptied, key=lambda p: len(p.parts), reverse=True):
         while directory != wt and wt in directory.parents:
+            if directory in baseline_dirs:
+                break
             try:
                 directory.rmdir()
             except OSError:
@@ -1001,9 +1048,10 @@ def refresh(root, branch, tier):
 
     # The ignored-FILE baseline, read BEFORE anything runs: see `_shed_residue`.
     baseline = ignored_files(wt)
+    baseline_dirs = existing_directories(wt)
 
     def undo(reason, detail):
-        _shed_residue(wt, baseline)
+        _shed_residue(wt, baseline, baseline_dirs)
         ac.git(wt, "reset", "--hard", work_tip)
         return None, "refresh REFUSED for {} - {}:\n{}".format(
             branch, reason, ac._failure_tail(detail)
@@ -1034,7 +1082,7 @@ def refresh(root, branch, tier):
     # committed tree is therefore exactly the tree the bar was handed.
     ac.git(wt, "add", "-A")
     ok, bar_out, summary = _run_bar(wt, root, tier)
-    _shed_residue(wt, baseline)
+    _shed_residue(wt, baseline, baseline_dirs)
     if not ok:
         return undo(
             "the bar is RED on the refreshed tree ({}) - fix it on the branch, "

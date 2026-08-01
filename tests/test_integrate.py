@@ -1508,6 +1508,74 @@ def test_the_refresh_sheds_its_residue_inside_a_directory_that_predates_it(tmp_p
     assert (wt / "bar-cache").is_dir()
 
 
+def test_an_empty_directory_that_predates_the_refresh_is_not_pruned(tmp_path):
+    # REVIEW-A round 2. The prune has to exist — git DOES report an emptied
+    # ignored directory (`!! bar-cache/`), so leaving one would make §5.6's
+    # unload refuse over a directory the refresh had just emptied. But it
+    # reached one step too far: an EMPTY directory that predates the refresh is
+    # the lane's, and emptiness can be load-bearing — this repo's own
+    # `docs/work/deferred/` is an empty untracked directory a link resolves
+    # through. Driven with the directory pre-created and empty, which no git
+    # listing can distinguish from one the bar made.
+    root = station_repo(tmp_path)
+    wt = _lane(root, "wi-401")
+    (wt / "bar-cache").mkdir()  # pre-existing, EMPTY, ignored
+    assert integ.ignored_files(wt) == set(), "git lists no file for an empty dir"
+
+    _sha, refusal = integ.refresh(root, "wi-401", "smoke")
+    assert refusal is None, refusal
+    assert not (wt / "bar-cache" / "run.txt").exists(), "the bar's file is shed"
+    assert (wt / "bar-cache").is_dir(), "the lane's empty directory survives"
+
+
+def test_a_directory_the_bar_itself_created_is_pruned(tmp_path):
+    # The other answer, so the guard above is a rule with two outcomes rather
+    # than a prune that never fires. Nothing pre-exists here, so `bar-cache/`
+    # is the refresh's own and goes — otherwise git reports the emptied
+    # directory and the merge exits nonzero over the integrator's own leavings.
+    root = station_repo(tmp_path)
+    wt = _lane(root, "wi-401")
+    assert not (wt / "bar-cache").exists()
+
+    _sha, refusal = integ.refresh(root, "wi-401", "smoke")
+    assert refusal is None, refusal
+    assert not (wt / "bar-cache").exists(), "the refresh's own directory is shed"
+    assert integ._worktree_dirt(wt) == [], "...so the lane reads clean to §5.6"
+
+
+def test_a_deliberately_forged_attestation_is_a_STATED_limit_not_a_defence(tmp_path):
+    # The honest bound, pinned so nobody re-reads the guarantee as stronger than
+    # it is (REVIEW-A round 2 drove it). Naming the tree and the parent by hand
+    # is three git commands and no bar, and it VERIFIES — this test asserts the
+    # limit rather than a defence, because the only structural closure is a
+    # slot-side re-bar and DECISION 3 (owner ruling) deleted that outright.
+    # If this test ever starts failing, the design changed: re-read §A2.0 and
+    # `refresh_attestation`'s contract before "fixing" it.
+    root = station_repo(tmp_path)
+    wt = _lane(root, "wi-401")
+    (wt / "never-barred.txt").write_text("no bar\n", encoding="utf-8", newline="\n")
+    _git(wt, "add", "-A")
+    tree = _git(wt, "write-tree").strip()
+    parent = _rev(root, "wi-401")
+    _git(
+        wt,
+        "-c",
+        "commit.gpgsign=false",
+        "commit",
+        "-qm",
+        "refresh: wi-401 onto trunk deadbeef01\n\n"
+        "Bar-Green: tree={} work={} bar PASS (99 steps, tier all)".format(tree, parent),
+    )
+
+    assert integ.refresh_attestation(root, "wi-401") == (
+        parent,
+        "bar PASS (99 steps, tier all)",
+    )
+    ready, _why = integ._merge_ready(root, "wi-401")
+    assert ready, "accepted BY DESIGN - the bound is accident, not intent"
+    assert _order(wt) == [], "and no bar ever ran"
+
+
 def test_the_refresh_refuses_when_the_main_checkout_holds_the_branch(tmp_path):
     # Round 1: with the main checkout on the branch, `_head(root)` IS the branch,
     # so the refresh "merged trunk in" from itself, printed a trunk sha that was
