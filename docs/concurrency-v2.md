@@ -801,6 +801,52 @@ Every claim in Part I, scored by §0's bar — does it *remove* machinery?
 the `adjudication` kind, two folders. Net: strongly negative, which is the
 point.
 
+### A9.1 What the ledger does NOT cover — the program close
+
+**Every row above deletes its own machinery, inside its own scope.** Deferring a
+deletion to a later "cleanup" row is the mothballing §0 exists to prevent, and
+this section must never become its excuse.
+
+But three surfaces are genuinely un-ownable by a single builder, because each
+one only makes sense once *all* the rows have landed:
+
+1. **The spine amendment.** Live SRs describe the model this program replaces
+   and become **false** when it lands — `SR-093` (*Pure safety classification*)
+   and `SR-124` (*Contradiction-safe dual-plan dispatcher class*) both describe
+   the five-class ladder §A1 collapses, and `SR-124` names `single-WI`
+   specifically, a class that ceases to exist; `SR-132` (*Local integrator:
+   serial fail-closed merge queue*) describes the composed-tree bar and
+   candidate worktree §A2 deletes. `SR-131` and `SR-133` need *checking* against
+   §A3 and §A2 rather than assuming. Rows the program retires rather than amends
+   follow the existing convention — mark them `Superseded: <title>`, as Phase 5
+   did for the deleted dispatcher's SRs, never delete the row.
+2. **Connectivity and the interface registry** — the `drive.py` →
+   `dispatch.py` + `lane.py` move. Note the registry is **already drifting
+   before this program starts**: `check_trajectory` warns today that
+   `scripts/drive`, `traj_graph`, `traj_panels` and `traj_render` sit in the
+   arch-map with no `IF-###` row, and that `IF-055`/`IF-080`/`IF-081` are
+   registered with no script declaring them. Close the drift this program
+   *causes*; **record, without silently absorbing,** the drift it inherits.
+3. **The prose and the stamps** — `PROCESS_OPTIONS.md` (rewritten onto the seam
+   model at Phase 5, and the station protocol moves that seam),
+   `AGENTS.template.md`, and the size/dupes stamps. Deletions **shrink**
+   modules, so the mirror of *"retire or delete an entry, never re-stamp up"* is
+   **re-stamp down** — a generous ceiling silently permits regrowth.
+   `concurrency-restructure.md` is **history**: read it as the account of what
+   was built, never edit it into a claim about what now exists.
+
+**Why this is one `spine` row and not a checklist: §A4 applied to this design
+itself.** All spine WIs admit together as one batch, so the whole program costs
+the owner **one re-attest window and one sitting** rather than one per row —
+which is exactly the WI-280 pain the design was written to remove. Executes as
+**WI-390**, hard-blocked on every contract-changing row so the amendment
+reflects the final state.
+
+**And it is answered mechanically, not by eye.** *"Is anything left behind?"*
+has real answers here — `check_stubs.py`, `check_dupes.py`, the size ratchet,
+and `check_trajectory.py --strict` unfiltered — so the close quotes real output
+rather than reading code and concluding.
+
 ---
 
 # Workstream B — work-item state
@@ -948,6 +994,7 @@ reason recorded; three new ids carry the scope this design added.
 | **WI-381** *(rescoped)* | `drive.py` → `dispatch.py` + `lane.py`, the lane-count dial, the spine barrier (§A4) | replaces a refusal with a constraint | WI-383, WI-386, WI-387 |
 | **WI-388** *(new)* | `adjudication` kind, mechanical WI minting, backlog re-scope (§A5.2) | absorbs WI-385 | WI-380, WI-381 |
 | **WI-389** *(new)* | This flow in `PROJECT_STATE.html`'s **Process tab** — the lane/station cycle, the barrier, three outcomes converging on one merge | — (a render) | WI-381, WI-386, WI-387 |
+| **WI-390** *(new, `spine`)* | **Program close** — the spine amendment, connectivity, process prose and stamps: the surfaces no single builder owns (§A9.1) | — (closes the ledger) | all contract-changing rows; `~`WI-389 |
 | ~~**WI-382**~~ | Drain grouping | **retired** — §A2 removes the bar it was amortising | — |
 | ~~**WI-385**~~ | Backlog re-evaluation warn | **retired** — folded into WI-388 | — |
 
