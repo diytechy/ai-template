@@ -592,7 +592,19 @@ BASELINE = {
     # single scan it governs. Reviewed bump, reason here and in
     # docs/log.d/WI-380-ratified-vs-traced-cell-split.md. Re-stamp down with
     # WI-280.
-    "check_trajectory.py": 3191,
+    # +39 (3191 -> 3230), WI-380 REVIEW-A round 1: the MAJOR was a false SHIPPED
+    # contract (the module docstring still promised "content cells", the exact
+    # phrase §A5 quotes as the defect) and the MINOR was a seam whose record was
+    # consumable but whose scan was not callable at §A5.2's trunk-COMMIT
+    # trigger. Both are corrections of what this row already shipped, not new
+    # scope: `_spine_revs` + the `base`/`head` pair make the rev range
+    # expressible (driven: post-commit the default returns [] and
+    # `(root, "HEAD~1", "HEAD")` returns the record), and the rest is the
+    # docstring truth-telling the review demanded. The extraction held the scan
+    # at C901 20 — no complexity bump. Reviewed bump, reason here and in
+    # docs/log.d/WI-380-ratified-vs-traced-cell-split.md. Re-stamp down with
+    # WI-280.
+    "check_trajectory.py": 3230,
     # NEW ENTRY, +25 (1498 -> 1523), WI-357: the two-stage work-branch claim
     # signal — the on-disk fast path plus the branch-history probe that
     # survives the §2.3 close commit (git log -1 over the claim path), with

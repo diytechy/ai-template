@@ -537,6 +537,40 @@ def test_staged_spine_amendments_expose_the_traced_half_for_adjudication(tmp_pat
     assert ct.staged_spine_findings(tmp_path) == []
 
 
+def test_staged_spine_amendments_read_a_commit_range_not_only_the_index(tmp_path):
+    # REVIEW-A finding 2. The seam's RECORD was consumable but its SCAN was not
+    # callable where §A5.2 puts the trigger: adjudication is minted from a trunk
+    # COMMIT, and the scan was index-vs-HEAD, so once the change was committed
+    # the same call returned [] and WI-388's dispatcher would have got nothing.
+    # Driven both sides of the commit: the default (index) view correctly goes
+    # quiet once nothing is staged, and the rev-range view answers.
+    run_git = _init_spine_repo(tmp_path)
+    (tmp_path / "docs" / "requirements" / "system-requirements.csv").write_text(
+        _SPINE_SR_HEADER + _sr_row().replace("SN-001", "SN-009"), encoding="utf-8"
+    )
+    run_git("add", "-A")
+    run_git("commit", "-m", "re-point SN-Refs")
+    ct = load_script("check_trajectory")
+
+    assert ct.staged_spine_amendments(tmp_path) == []  # nothing staged, by design
+    ranged = ct.staged_spine_amendments(tmp_path, "HEAD~1", "HEAD")
+    assert [(a["registry"], a["id"]) for a in ranged] == [
+        ("docs/requirements/system-requirements.csv", "SR-001")
+    ]
+    assert ranged[0]["ratified"] == {}
+    assert ranged[0]["traced"] == {"SN-Refs": ("SN-001", "SN-009")}
+
+    # The ratified half survives the same trip — a rev range is not a second,
+    # weaker scan: it is the same rules read against two commits.
+    (tmp_path / "docs" / "requirements" / "system-requirements.csv").write_text(
+        _SPINE_SR_HEADER + _sr_row("the AMENDED text", "Verified"), encoding="utf-8"
+    )
+    run_git("add", "-A")
+    run_git("commit", "-m", "amend the Requirement")
+    ranged2 = ct.staged_spine_amendments(tmp_path, "HEAD~1", "HEAD")
+    assert list(ranged2[0]["ratified"]) == ["Requirement"]
+
+
 # --- WI-068: the critique-loop ratchet (--staged, warn-first) ------------------
 
 CRITIQUE_SR_ROW = (

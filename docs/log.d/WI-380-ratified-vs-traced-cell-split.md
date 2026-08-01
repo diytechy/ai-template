@@ -14,11 +14,12 @@ being thrown away.
 - `SPINE_TRACED_CELLS` + `SPINE_RATIFIED_CELLS` — the ruled table, both halves
   declared per registry, and `spine_cell_class(csv_path, column)` as the single
   place either is consulted.
-- `staged_spine_amendments(root)` — the scan, now returning one record per
-  amended `Verified` row: `{"registry", "id", "ratified": {cell: (before,
-  after)}, "traced": {...}}`. `staged_spine_findings` becomes a thin formatter
-  over it that reports the **ratified** half only.
-- Five tests in
+- `staged_spine_amendments(root, base="HEAD", head=None)` — the scan, now
+  returning one record per amended `Verified` row: `{"registry", "id",
+  "ratified": {cell: (before, after)}, "traced": {...}}`, over a rev pair
+  `_spine_revs` resolves. `staged_spine_findings` becomes a thin formatter over
+  it that reports the **ratified** half only.
+- Six tests in
   [`../../tests/test_trajectory_staged.py`](../../tests/test_trajectory_staged.py)
   (see *Tests* below), and the ratchet moves in
   `tests/test_complexity_ratchet.py` + `tests/test_module_size_ratchet.py`.
@@ -49,6 +50,58 @@ empty `ratified` half and the cell's before/after in `traced` — which is
 precisely the material §A5.2 says the derived Deliverable body is built from.
 No minting, no `safety_class`, no dial added here.
 
+## REVIEW-A round 1 — CHANGES-REQUESTED, findings=3, all three driven and all
+three real
+
+The reviewer re-drove every measurement in the first draft of this entry and all
+of them held, so none of the below is a correction of a claim — they are three
+gaps. Each was reproduced here before and after the fix.
+
+**[MAJOR] the shipped module docstring still promised the closed window.**
+`check_trajectory.py:67` read "a staged diff changing **content cells** of a
+`Verified` spine row" — the exact phrase [`../concurrency-v2.md`](../concurrency-v2.md)
+§A5 quotes as the defect. The *function* docstring 2,575 lines below had been
+rewritten; this one had not. It is the one place stating what the warn watches
+without opening the function, and the file ships downstream through
+`downstream-resync`, so the false contract would have reached every adopter.
+That is this row's own hazard pointed inward: a successor trusting it believes a
+moved `Module` pointer still arms the marker — the missed window nobody sees.
+Rewritten to the ratified/traced split, citing the ruling and naming
+`staged_spine_amendments` as the traced half's home.
+
+**[MINOR] the seam's record was consumable; its scan was not callable at the
+trigger.** Driven on a synthetic repo: an `SN-Refs` re-point **staged** gives
+`[{'ratified': {}, 'traced': {'SN-Refs': ('SN-001', 'SN-009')}, …}]`, but
+`git commit` the identical change and the same call gives `[]` — the scan was
+index-vs-HEAD while §A5.2 and `log.md`'s Decisions both put the trigger on a
+trunk **commit**. WI-388's dispatcher runs *after* the commit lands and would
+have got nothing. Took the reviewer's option (a), the cheaper and more honest
+one, because it stayed small: `_spine_revs(root, base, head)` resolves the pair
+of trees, `head=None` keeps the index default, and
+`staged_spine_amendments(root, "HEAD~1", "HEAD")` now answers the post-commit
+question. Re-driven on the same repo: default `[]`, rev range returns the
+record. `staged_spine_findings` deliberately keeps its `(root)` signature — the
+warn is the hook's question and should not grow a knob. The mechanism WI-388
+owns (minting, id allocation, the two gate-policy arms) is untouched. The
+docstring's over-claim was narrowed in the same pass: a traced-only record is
+**not** automatically the WI-388 case — only the `SN-Refs`/`Verifies` subset is;
+a `Module`-only edit is silent, traced, nothing owed.
+
+**[MINOR] the `SR-Refs`/`SupersededBy` hand-off was fiction.** The classification
+was right and stated where a maintainer of this code meets it, but the sentence
+disposing of it ("it is WI-388's to put") pointed nowhere: driven, `grep -n
+"SR-Refs\|SupersededBy" docs/work/queued/WI-388-*.md` returned **0 hits**, and
+`concurrency-v2.md` carried no `SupersededBy` at all. A question asserted as
+delegated but living only in this row's code comment dies with it. Both cells
+are now written into WI-388's spec as intake — named, with the fail-safe
+reasoning and the ruling asked for explicitly (confirm ratified with a reason,
+or move `SR-Refs` to traced beside its two siblings) — plus one line pointing at
+the delivered seam so that row's builder meets the rev pair at the claim. Same
+grep now returns **3 × `SR-Refs` + 2 × `SupersededBy`**; the registry still
+parses (`check_trajectory --strict` clean). Adding to a queued row's scope is
+intake, not scope creep, and it is recorded here because the reviewer asked that
+it be.
+
 **Tests** (all in `tests/test_trajectory_staged.py`, the module that owns this
 warn's tests; it is a `SLOW_MODULES` module, so these run at close and in CI,
 not in the smoke bar — the existing tiering, not a new choice):
@@ -63,12 +116,19 @@ not in the smoke bar — the existing tiering, not a new choice):
   described above.
 - `test_staged_spine_amendments_expose_the_traced_half_for_adjudication` — the
   WI-388 seam, asserted on the structured return in-process.
+- `test_staged_spine_amendments_read_a_commit_range_not_only_the_index`
+  (REVIEW-A round 1) — drives both sides of a real commit: the index default
+  correctly goes quiet, the rev range answers, and a second commit proves the
+  *ratified* half survives the same trip (a rev range is the same rules read
+  against two commits, not a second weaker scan).
 
-**Mutation-proved, both directions, both reds observed:** reverting
+**Mutation-proved, three directions, every red observed:** reverting
 `spine_cell_class` to the pre-WI-380 "everything but `Status` is ratified" reds
 the traced-cell test and the seam test (`2 failed, 7 passed`); flipping the
 residual to allowlist-only (`ratified` iff explicitly listed) reds the
-unknown-column test with an empty stderr — the missed window, made visible.
+unknown-column test with an empty stderr — the missed window, made visible; and
+re-inlining an index-only `_spine_revs` reds the commit-range test on `[] ==
+[('docs/requirements/system-requirements.csv', 'SR-001')]`.
 
 **Deviation from the spec, deliberate and narrow.** LLR `SR-Refs` and SR
 `SupersededBy` are columns of the live registries that §A5.1's table does not
@@ -78,16 +138,20 @@ exactly the missed-window risk this row exists to remove. That LLR `SR-Refs` is
 the same shape of pointer as the ruled-traced `SN-Refs`/`Verifies` is a real
 question; it belongs to WI-388, and the comment at the table says so.
 
-**Ratchets.** Complexity **re-keyed, not bumped**: the classification loop was
-extracted as `_split_changed_cells`, so the scan (now
+**Ratchets.** Complexity **re-keyed, not bumped, twice over**: the classification
+loop was extracted as `_split_changed_cells`, so the scan (now
 `staged_spine_amendments`) holds at its former **20** and
 `staged_spine_findings` drops under the limit and has its entry deleted — the
 decomposition escape the ratchet prefers, taken instead of the +3 bump the
-inline form measured. Module size `check_trajectory.py` **3098 → 3191 (+93)**,
-a reviewed bump with the reason at the entry: most of it is the two declared
-tables plus the comment recording why the residual falls to ratified. The rule
-stays beside its only consumer for the WI-349 reason — a sibling module would
-separate the rule from the single scan it governs.
+inline form measured (the reviewer re-inlined it and measured exactly 23). The
+round-1 `_spine_revs` extraction then absorbed the rev-pair branch and the scan
+**still measures 20**. Module size `check_trajectory.py` **3098 → 3191 (+93)**
+at build and **3191 → 3230 (+39)** at the round-1 fix — both reviewed bumps with
+their reasons at the entry; the first is the two declared tables plus the
+comment recording why the residual falls to ratified, the second is the rev
+plumbing and the docstring truth-telling the review demanded. The rule stays
+beside its only consumer for the WI-349 reason — a sibling module would separate
+the rule from the single scan it governs.
 
 **Budgeted files:** none touched (`AGENTS.template.md`, `PROCESS.md`,
 `PROCESS_OPTIONS.md` all unchanged — 0 bytes). No spine amendment, no new
@@ -102,8 +166,10 @@ regenerated for the two new public symbols (a 3-line diff, confined to the
   `tests/test_check_lane.py::test_this_repo_is_not_a_work_branch` (it asserts
   the kit's own checkout carries no `docs/work/active/<branch>/` claim, which
   is false by construction inside a claimed worktree).
-- Full (close): `pytest -q -n auto` → **2 failed, 1712 passed, 8 skipped in
-  414.15s**. Both reds are pre-existing and neither is this row's:
+- Full (after the REVIEW-A round-1 fixes): `pytest -q -n auto` → **2 failed,
+  1713 passed, 8 skipped in 469.13s** (1712 → 1713 is the new commit-range
+  test; at close before the review it read `2 failed, 1712 passed, 8 skipped in
+  414.15s`). Both reds are pre-existing and neither is this row's:
   - `tests/test_check_lane.py::test_this_repo_is_not_a_work_branch` — the
     standing work-branch conditional, as above.
   - `tests/test_check_docs.py::test_meta_repo_has_zero_unexplained_orphans` —
@@ -114,9 +180,11 @@ regenerated for the two new public symbols (a 3-line diff, confined to the
     moved to `queued/`, and git does not track empty directories, so it is
     absent from every checkout. Proved pre-existing by running the test's exact
     command against a `git archive` of trunk `54312cfa`: the identical two
-    FAILs, exit 1. Trunk therefore fails its own full bar today — filed as a
+    FAILs, exit 1. Trunk therefore failed its own full bar — filed as a
     finding, not fixed here (`concurrency-v2.md` is not this row's file, and
-    the deletion-vs-`.gitkeep` call is the design's).
+    the deletion-vs-`.gitkeep` call is the design's). **Since fixed on trunk**
+    at `22e66e51`; this branch is behind that commit and the integrator merges
+    it, so the red stands here until then.
 - `ruff check .` → *All checks passed!*; `ruff format --check .` → *146 files
   already formatted*. Both were run (a past WI shipped seven F401s by checking
   only `format`).
@@ -126,4 +194,7 @@ regenerated for the two new public symbols (a 3-line diff, confined to the
   already itemises.
 - `check_docs.py --root . --ignore docs/test/report.md --ignore "docs/work/*"
   --stale` → the same two pre-existing broken links, and otherwise clean
-  (`0 orphan(s)`; this fragment matched `docs/orphans-allow`, 106 → 107).
+  (`0 orphan(s)`; this fragment and then the round-1 verdict file each matched
+  `docs/orphans-allow`, 106 → 107 → 108).
+- `gen_arch_map.py --check --strict-parse` → *code map up to date* (it reported
+  STALE after the signature change and was regenerated; the diff is one line).

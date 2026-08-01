@@ -64,9 +64,14 @@ follow-up-on-a-done-SR ratchet, the **critique-loop ratchet** (WI-068) — a WI
 closing on a `Verification=Critique` SR while the latest `docs/reviews/*-CRITIQUE.md`
 verdict is CHANGES-REQUESTED, without the staged set touching the TC registry, the
 tests dir, or a `docs/rubrics/` file (harden the TC or add a rubric anchor) — and
-the **amend-without-flip** warn (WI-316): a staged diff changing content cells of
-a `Verified` spine row without setting the `Modified` re-attest marker
+the **amend-without-flip** warn (WI-316): a staged diff changing the **ratified**
+cells of a `Verified` spine row without setting the `Modified` re-attest marker
 (process.md §7), the write-time discipline commit-message prose never had.
+*Ratified*, not every cell — the §A5.1 cell split (owner ruling 2026-07-31;
+WI-380) rules traceability **traced, not ratified**, so a `Module`/`CodeSymbol`/
+`TestRefs`/`SN-Refs`/`Verifies` pointer following code that moved does **not**
+arm the marker. The traced half is not discarded: it is carried structurally by
+`staged_spine_amendments`, which returns both halves per amended row.
 
 **Opt-out and vacuous by default** — the posture of the always-on
 `docs/secrets-scan` floor. The check is on unless `docs/trajectory-check` reads
@@ -2537,35 +2542,66 @@ def _split_changed_cells(csv_path, id_col, head, row):
     return changed
 
 
-def staged_spine_amendments(root):
+def _spine_revs(root, base, head):
+    """`(changed-paths, old-prefix, new-prefix)` for the two trees the spine scan
+    compares, or None when git cannot answer (the silent-no-op degrade).
+
+    The prefixes are `git show` arguments: `"HEAD:"`, `"abc123:"`, or `":"` for
+    the INDEX. `head=None` means the index — the `--staged` hook case, and the
+    default. Any other value is a commit-ish, which is what §A5.2's trigger
+    needs: adjudication is minted from *a trunk commit that changed a ratified
+    cell*, and a commit is not the index."""
+    if head is None:
+        names = _git(root, ["diff", "--cached", "--name-only", base])
+        new_prefix = ":"
+    else:
+        names = _git(root, ["diff", "--name-only", base, head])
+        new_prefix = head + ":"
+    if names is None:
+        return None
+    return set(names.splitlines()), base + ":", new_prefix
+
+
+def staged_spine_amendments(root, base="HEAD", head=None):
     """The structured amendment set behind the amend-without-flip warn (WI-316,
     narrowed by WI-380) — the seam adjudication (WI-388) consumes.
 
-    One record per Verified spine row the stage amends, each cell sorted into
-    the §A5.1 halves with its before/after:
+    One record per Verified spine row amended between the two trees, each cell
+    sorted into the §A5.1 halves with its before/after:
 
         {"registry": <csv path>, "id": <row id>,
          "ratified": {cell: (before, after)}, "traced": {cell: (before, after)}}
 
-    A record may carry a traced change with NO ratified change — that is the
-    WI-388 case (a re-pointed `SN-Refs`/`Verifies` routes to adjudication, and
-    never arms a re-attest window directly). Rows are parsed with the csv module
-    over the full staged / HEAD file text (spine cells are long; never
-    line-split). Returns [] when not applicable; any missing git context is a
-    silent no-op, like staged_findings. A NEW row (id not in HEAD) is not an
-    amendment; a row whose Status moved (to Modified, Draft, Planned, anything)
-    made a deliberate call this does not second-guess."""
-    staged = _git(root, ["diff", "--cached", "--name-only"])
-    if staged is None:
+    WHICH TWO TREES is a parameter, and WI-388 needs it to be: `head=None` (the
+    default) compares the INDEX against `base`, which is the hook's `--staged`
+    question, but §A5.2 mints adjudication from a **trunk commit**, and a commit
+    is not the index — `staged_spine_amendments(root, "HEAD~1", "HEAD")` asks
+    the post-commit question the dispatcher actually has to ask. Both arms are
+    tested.
+
+    A record may carry a traced change with NO ratified change. Only the
+    `SN-Refs`/`Verifies` subset of those is the WI-388 case (§A5.1 routes a
+    re-point of what a requirement answers to, or what a test claims to cover,
+    to adjudication); a `Module`/`CodeSymbol`/`TestRefs`/`Component`/`Phase`
+    change is simply silent — traced, not pending, nothing owed. Rows are parsed
+    with the csv module over the full file text on each side (spine cells are
+    long; never line-split). Returns [] when not applicable; any missing git
+    context is a silent no-op, like staged_findings. A NEW row (id absent on the
+    base side) is not an amendment; a row whose Status moved (to Modified,
+    Draft, Planned, anything) made a deliberate call this does not
+    second-guess."""
+    revs = _spine_revs(root, base, head)
+    if revs is None:
         return []
-    staged_names = set(staged.splitlines())
+    staged_names, old_rev, new_rev = revs
     if not any(p in staged_names for p, _ in SPINE_CSVS):
         return []
 
     def _index_rows(csv_path, id_col):
-        """{id: row} of the INDEX version (`git show :path` — equals HEAD when
-        the file is not staged), or {} when unreadable."""
-        text = _git(root, ["show", ":" + csv_path])
+        """{id: row} of the NEW-side version (`git show <new_rev>path` — the
+        index by default, equal to HEAD when the file is not staged; the head
+        commit under a rev range), or {} when unreadable."""
+        text = _git(root, ["show", new_rev + csv_path])
         if text is None:
             return {}
         # F4: a committed BOM survives `git show`; strip it or the header glues
@@ -2579,7 +2615,8 @@ def staged_spine_amendments(root):
 
     # The attestation unit is the SR: an amended child whose OWNING SR flips in
     # this same commit is the sanctioned amend+flip path, so only rows whose
-    # unit stays unflagged warn. Owner resolution uses the staged (index) state.
+    # unit stays unflagged warn. Owner resolution uses the NEW-side state — the
+    # index for the hook, the head commit for a rev range.
     idx_srs = _index_rows(*SPINE_CSVS[0])
     idx_llrs = _index_rows(*SPINE_CSVS[1])
 
@@ -2611,8 +2648,8 @@ def staged_spine_amendments(root):
     for csv_path, id_col in SPINE_CSVS:
         if csv_path not in staged_names:
             continue
-        head_text = _git(root, ["show", "HEAD:" + csv_path])
-        staged_text = _git(root, ["show", ":" + csv_path])
+        head_text = _git(root, ["show", old_rev + csv_path])
+        staged_text = _git(root, ["show", new_rev + csv_path])
         if head_text is None or staged_text is None:
             continue  # first commit / newly added registry — nothing attested yet
         head_text = head_text.lstrip("﻿")  # F4, as above
@@ -2649,7 +2686,9 @@ def staged_spine_findings(root):
     write-time discipline the old RE-ATTESTATION-PENDING commit-message prose
     never had. One warning per amended row, naming the changed cells. A row
     whose only changes are TRACED (§A5.1) is silent here by ruling; it still
-    appears in `staged_spine_amendments`, which is where WI-388 picks it up."""
+    appears in `staged_spine_amendments`, which is where WI-388 picks it up.
+    Index-vs-HEAD by construction — this is the hook's question, so it takes no
+    rev arguments; the post-commit view is `staged_spine_amendments`'s."""
     return [
         "{}: ratified cell(s) {} amended while Status stays Verified "
         "and no owning SR is flagged — a post-attestation amendment "
