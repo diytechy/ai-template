@@ -13,6 +13,13 @@ it is forbidden to fix. This module pins the two halves of that rule:
   2. The skip itself — exactly the seven trunk-derived freshness steps, never
      `skills-sync` (hand-authored source on both sides) and never the registry /
      DAG / navigability gates that grade the branch's own edits.
+  3. `--trunk-lane`, its one deliberate exception (WI-386). The rule rests on "a
+     work branch never commits a generated artifact", which the station refresh
+     (docs/concurrency-v2.md §A2) makes false for exactly one commit: it merges
+     trunk in, regenerates ON the branch, and bars the result — a tree that is
+     byte-identical to the one the merge produces, so it owes the trunk lane's
+     gates. Opt-IN, so a caller that forgets the flag gets the stricter-for-the-
+     trunk answer this module's fail-closed direction already prefers.
 """
 
 import os
@@ -286,6 +293,57 @@ def test_branch_edit_gates_still_run_in_the_g3_plan(check, tmp_path, monkeypatch
     # ...while the plan still LISTS the skipped freshness steps. The skip is at
     # execution, never by deleting rows, so `--list` cannot understate the gate.
     assert check._TRUNK_FRESHNESS_STEPS <= names
+
+
+def test_trunk_lane_forces_every_freshness_step_back_on(check, tmp_path, monkeypatch):
+    # WI-386. The refresh bar runs on the branch, so without this the ONE
+    # mechanical bar in the whole loop would skip the very artifacts the trunk
+    # step had just written on that same tree — a green over unchecked output.
+    # The branch is genuinely claimed here (the detector still says so), which
+    # is what makes this a forced OVERRIDE rather than a detection change.
+    git_repo(tmp_path, branch="wi-360")
+    claim(tmp_path, "wi-360")
+    monkeypatch.chdir(tmp_path)
+    assert check._work_branch(tmp_path) == "wi-360"
+    monkeypatch.setattr(check, "_FORCE_TRUNK_LANE", True)
+    for name in check._TRUNK_FRESHNESS_STEPS:
+        assert check.run_step(name, (), FAILING, lenient=False)[0] == "FAIL", name
+    # The captured (parallel) runner shares the same decision, or `--jobs N`
+    # and `--jobs 1` would bar different things.
+    assert check.run_step_captured("okf", (), FAILING, lenient=False)[0] == "FAIL"
+
+
+def test_trunk_lane_is_opt_in_and_off_by_default(check, tmp_path, monkeypatch):
+    # The arming boundary from the other side: the same claimed branch, the same
+    # steps, no flag — every one still SKIPs. A default that had drifted to "on"
+    # would red every honest work branch for drift §5.2 forbids it to fix.
+    git_repo(tmp_path, branch="wi-360")
+    claim(tmp_path, "wi-360")
+    monkeypatch.chdir(tmp_path)
+    assert check._FORCE_TRUNK_LANE is False
+    for name in check._TRUNK_FRESHNESS_STEPS:
+        assert check.run_step(name, (), FAILING, lenient=False)[0] == "SKIP", name
+
+
+def test_trunk_lane_reaches_the_step_runner_through_the_real_cli(tmp_path):
+    # End to end as integrate.py's refresh actually invokes it: the flag must
+    # survive argparse and reach the runner, not merely exist in --help.
+    git_repo(tmp_path, branch="wi-360")
+    claim(tmp_path, "wi-360")
+    proc = run_py(
+        [SCRIPTS / "check.py", "--run-steps", "status-map", "--trunk-lane"],
+        cwd=tmp_path,
+    )
+    out = proc.stdout + proc.stderr
+    assert "skipped (work branch 'wi-360'" not in out, out
+    # Proven by the CHILD's own output, not by an exit code: the generator
+    # really executed on this claimed branch instead of being stood down.
+    assert "gen_trajectory" in out, out
+    # Without the flag, the same command on the same fixture stands down.
+    plain = run_py([SCRIPTS / "check.py", "--run-steps", "status-map"], cwd=tmp_path)
+    assert NOTICE.format(step="status-map", branch="wi-360") in (
+        plain.stdout + plain.stderr
+    )
 
 
 def test_run_steps_end_to_end_reports_the_skip_and_exits_zero(tmp_path):

@@ -1,8 +1,24 @@
-"""integrate.py — the local integrator: a serial, fail-closed merge queue.
+"""integrate.py — the local integrator: the station protocol and its merge slot.
 
 The default backend of the one integration flow (concurrency-restructure
-§1.2): branch -> change request -> required checks on the composed tree ->
-merge. Three operations:
+§1.2), rebuilt on ONE constraint (docs/concurrency-v2.md §A2):
+
+    A branch may not enter the merge queue unless trunk is already an
+    ancestor of it.
+
+`git merge-base --is-ancestor` — exact, cheap, mechanical. Everything else
+here follows from that line. A merge CONFLICT becomes unrepresentable (if
+trunk is an ancestor, the --no-ff merge is trivially clean and its tree is
+byte-identical to the branch tip), so there is no conflict arm, no `merge
+--abort` path and no half-merge to park. The composed tree IS the branch
+tree, so the bar runs ONCE per WI — on the branch, at refresh — instead of
+once by the builder and again by the integrator on a candidate worktree.
+Class C composition failures are still caught, and better: whichever branch
+merges second must refresh onto a trunk containing the first and bar THERE,
+so every pair composes exactly once, on the real tree, with the red
+attributable to the refresh that caused it.
+
+Four operations:
 
   claim      the §2.3 claim protocol, step 1+2: move a queued spec to
              docs/work/active/<branch>/ in a trunk bookkeeping commit, then
@@ -13,21 +29,33 @@ merge. Three operations:
              branch cannot scrub trunk-owned status.md at merge time), and
              when the spec carries no in-repo-resolving SpecRef (WI-370:
              the R-E debt is unpayable once the closing branch exists).
-  integrate  the serial queue: for each FINISHED claimed branch (its tip
-             moved every claimed spec out of active/<branch>/), merge
-             --no-ff onto a candidate worktree, fold the §5.1/§5.2 trunk
-             step into the merge commit (the commit must pass its own
-             pre-commit floor — the dispatcher's proven shape), run the
-             DECLARED bar on the composed tree, require the policy verdicts
-             (RULING-7), fast-forward the trunk on green, and refuse LOUDLY
-             on red (§4) — broken work is never force-merged to satisfy a
-             drain, and a red queue stops rather than skips (§5.5). The
-             merged branch is then UNLOADED: a clean worker worktree holding
-             it is GC'd, while a dirty one (ignored files included) and the
-             MAIN checkout are reported by path and left alone. §5.6's stop
-             is drained AND unloaded, so a run that merged everything but
-             left a branch held names it on stderr and exits NONZERO - the
-             merges stand, the code reports the unpaid remainder.
+  refresh    the STATION REFRESH (§A2), lane-side and mechanical: in the
+             branch's own lane worktree, merge trunk IN, run trunk_step.py
+             (compile the fragments, then regenerate), run the DECLARED bar
+             --trunk-lane, and commit the result carrying a `Bar-Green:`
+             trailer. The order is fixed and load-bearing (§A2.1). The
+             refresh commit is DISPOSABLE: a retry resets to the last work
+             commit and redoes the whole sequence, never stacks a second
+             merge on the first — docs/log.md is append-compiled from
+             docs/log.d/ fragments, and a stacked refresh would conflict on
+             the file end, the exact failure the constraint abolishes.
+  integrate  THE MERGE SLOT: the exclusive turn to advance trunk, and the
+             whole merge queue. It takes the coordinator lock ONCE (the one
+             acquisition site in this file, see `_slot`) and, per FINISHED
+             claimed branch, requires the policy verdicts (RULING-7), checks
+             the ancestor relation and the `Bar-Green:` attestation at the
+             branch tip, then merges --no-ff. A branch that is not
+             merge-ready is refreshed RIGHT THERE, inside the slot — which is
+             the pessimistic sequence (take slot -> refresh -> bar -> merge)
+             and is why that path can never rot: every drain that merges a
+             second branch reaches it, because the first merge moved trunk
+             out from under it. The merged branch is then UNLOADED: a clean
+             lane worktree holding it is GC'd, while a dirty one (ignored
+             files included) and the MAIN checkout are reported by path and
+             left alone. §5.6's stop is drained AND unloaded, so a run that
+             merged everything but left a branch held names it on stderr and
+             exits NONZERO - the merges stand, the code reports the unpaid
+             remainder.
   audit      the RULING-6 window check over the integrator's own operation:
              every trunk commit in --since..HEAD that touches product paths
              must be a merge commit. Scoped to a window because the
@@ -39,21 +67,23 @@ Fail-closed by construction, against the dispatcher's recorded fail-open: a
 missing docs/stack.ini, an absent or EMPTY [product] test declaration, or
 any SKIP in the bar's own report is a REFUSAL, never a pass — exit 0 alone
 is not evidence the bar ran (the `bar_failures: 0` lesson, §4.4 of the
-Phase 4 inventory). Verdict freshness is git-derived: under the WI-scoped
-naming (§5.4) the verdict's last commit on the branch must be no older than
-the branch's last non-review, non-fragment commit, or a stale APPROVE from
-an earlier iteration would silently clear the gate.
+Phase 4 inventory). The bar is attested to a TREE, not to a run: the
+`Bar-Green:` trailer lives in the refresh commit itself, so "bar green at
+sha X" is a property of X that git adjudicates — no ref, no state file,
+nothing to go stale. Verdict freshness is git-derived the same way: the
+verdict's last commit on the branch must be no older than the branch's last
+non-review, non-fragment WORK commit (the disposable refresh is peeled off
+first — mechanical bookkeeping must not stale an honest APPROVE).
 
-Serial on purpose: one candidate, one merge at a time, the coordinator lock
-held throughout — composed-tree gating falls out by construction (§1.2).
-Never pushes; the trunk only ever fast-forwards to a candidate the bar
-passed.
+Never pushes; the trunk only ever moves inside the slot, to a branch whose
+own bar passed on this exact tree.
 """
 
 from __future__ import annotations
 
 import argparse
 import re
+import shutil
 import subprocess
 import sys
 import tomllib
@@ -65,7 +95,22 @@ import score_reviews
 SCRIPTS = Path(__file__).resolve().parent
 WORK = "docs/work"
 ACTIVE = WORK + "/active"
-CANDIDATE_BRANCH = "integrate/candidate"
+
+# One LANE worktree home per repo, sibling to the checkout; one subdirectory per
+# claimed branch. The worker builds there and the station refresh runs there —
+# the same tree, on purpose: a red refresh has to be fixable where the lane
+# already lives. §5.6's unload GCs a clean one after its merge.
+LANE_WORKTREE_SUFFIX = "-drive"
+
+# The bar's attestation, carried as a git trailer in the refresh commit. A tree,
+# not a run (§A2): the sha that carries it IS the sha that merges, so the slot
+# verifies a property of the commit rather than someone's claim about a run.
+BAR_GREEN = "Bar-Green:"
+
+# How far back `_work_tip` will peel refresh commits. The disposable-commit rule
+# means at most ONE can ever sit on the tip, so this is a guard against a
+# hand-made pathological history, not an expected depth.
+_MAX_REFRESH_PEEL = 8
 
 # RULING-6 bookkeeping surfaces: the paths a NON-merge trunk commit may touch
 # during integrator operation. docs/log.md is here because the trunk step
@@ -368,8 +413,51 @@ def _last_commit_time(root, ref, *pathspec):
     return int(out.strip().splitlines()[0])
 
 
+def _commit_message(root, rev):
+    """The full commit message of `rev`, or "" when it cannot be read."""
+    code, out = ac.git(root, "log", "-1", "--format=%B", rev)
+    return out if code == 0 else ""
+
+
+def bar_green_attestation(root, rev):
+    """The `Bar-Green:` trailer value at `rev`, or None.
+
+    The refresh's whole record. A commit either carries it or it does not, so
+    the question "did the bar pass on THIS tree?" is answered by the sha alone -
+    no ref namespace, no events file, nothing that can outlive the tree it
+    describes (the §2.3 lesson the deleted dispatcher paid for).
+    """
+    for line in _commit_message(root, rev).splitlines():
+        line = line.strip()
+        if line.startswith(BAR_GREEN):
+            return line[len(BAR_GREEN) :].strip()
+    return None
+
+
+def _work_tip(root, branch):
+    """`branch` with any refresh commit peeled off - its last WORK commit.
+
+    Two callers, one meaning. `refresh` resets here before it merges (the
+    §A2.1 disposable-commit rule: a retry never stacks a second merge on the
+    first, because docs/log.md is append-compiled and the stack would conflict
+    on the file end). `_verdict_gate` measures code-time here, because the
+    refresh is MECHANICAL bookkeeping - it rewrites the compiled log and the
+    generated artifacts, and if that counted as code it would stale the honest
+    APPROVE that had to precede it.
+    """
+    rev = branch
+    for _ in range(_MAX_REFRESH_PEEL):
+        if bar_green_attestation(root, rev) is None:
+            return rev
+        code, out = ac.git(root, "rev-parse", "--verify", "--quiet", rev + "^")
+        if code != 0 or not out.strip():
+            return rev  # a root refresh commit: there is nothing to peel to
+        rev = out.strip()
+    return rev
+
+
 def _verdict_gate(root, branch, wi_ids):
-    """RULING-7: the dialed verdict artifacts, fresh at the branch tip.
+    """RULING-7: the dialed verdict artifacts, fresh at the branch's work tip.
 
     review-policy >= 1 demands docs/reviews/WI-<n>-REVIEW-A.md per closed WI,
     carrying an APPROVE machine line, whose last commit on the branch is no
@@ -384,7 +472,11 @@ def _verdict_gate(root, branch, wi_ids):
     if not required:
         return None
     code_time = _last_commit_time(
-        root, branch, ".", ":(exclude)docs/reviews", ":(exclude)docs/log.d"
+        root,
+        _work_tip(root, branch),
+        ".",
+        ":(exclude)docs/reviews",
+        ":(exclude)docs/log.d",
     )
     for wi in wi_ids:
         rel = "docs/reviews/{}-REVIEW-A.md".format(wi)
@@ -403,39 +495,44 @@ def _verdict_gate(root, branch, wi_ids):
     return None
 
 
-def _candidate_worktree(root):
-    """The candidate worktree, created or REUSED. A refusal deliberately parks
-    the worktree for inspection, so the next run must reuse the registration
-    (git refuses to re-add a live worktree path) — a parked half-merge is
-    aborted and the tree hard-reset to the current trunk either way."""
-    wt = root.parent / (root.name + "-integrate") / "candidate"
-    code, out = (
-        ac.git(wt, "rev-parse", "--abbrev-ref", "HEAD") if wt.is_dir() else (1, "")
-    )
-    if code == 0 and out.strip() == CANDIDATE_BRANCH:
-        ac.git(wt, "merge", "--abort")  # best-effort: clear a parked half-merge
-    else:
-        if wt.is_dir():
-            raise RuntimeError(
-                "{} exists but is not the candidate worktree - refusing to "
-                "clobber it".format(wt)
-            )
-        ac.git(root, "worktree", "prune")
-        code, _ = ac.git(
-            root, "rev-parse", "--verify", "--quiet", "refs/heads/" + CANDIDATE_BRANCH
+def lane_worktree(root, branch):
+    """The lane worktree holding `branch`: `(path, error)`, created if needed.
+
+    Order matters. A REGISTERED holder wins - the worker's own tree, wherever
+    the operator put it (and, in attended serial work, possibly the MAIN
+    checkout) - because the refresh must land where the lane can fix a red.
+    Only when nothing holds the branch is one added at the lane home, which is
+    the ordinary case for work built by hand between runs; §5.6's unload GCs it
+    after the merge, so the creation owns no teardown of its own.
+    """
+    holder, _is_primary = _worktree_holding(root, branch)
+    if holder is not None:
+        return holder, None
+    wt = root.parent / (root.name + LANE_WORKTREE_SUFFIX) / branch
+    if wt.is_dir():
+        return None, "{} exists but does not hold {} - refusing to clobber it".format(
+            wt, branch
         )
-        if code == 0:
-            cmd = ["worktree", "add", "--force", str(wt), CANDIDATE_BRANCH]
-        else:
-            cmd = ["worktree", "add", "-b", CANDIDATE_BRANCH, str(wt), "HEAD"]
-        code, out = ac.git(root, *cmd)
-        if code != 0:
-            raise RuntimeError("candidate worktree add failed: {}".format(out))
-    trunk_sha = _head(root)
-    code, out = ac.git(wt, "reset", "--hard", trunk_sha)
+    ac.git(root, "worktree", "prune")
+    code, out = ac.git(root, "worktree", "add", str(wt), branch)
     if code != 0:
-        raise RuntimeError("candidate reset failed: {}".format(out))
-    return wt
+        return None, "worktree add failed for {}: {}".format(
+            branch, ac._failure_tail(out)
+        )
+    return wt, None
+
+
+def trunk_is_ancestor(root, branch):
+    """THE CONSTRAINT (§A2): is the trunk's HEAD already an ancestor of `branch`?
+
+    One git command, and git is the arbiter - which is the whole difference
+    between this and the speculation that failed historically (§A2.0): there is
+    no reservation ref, no compare-and-swap, no run-state file to reconcile. A
+    lost race has nothing to undo, because the loser simply redoes a refresh it
+    would have owed anyway going second.
+    """
+    code, _ = ac.git(root, "merge-base", "--is-ancestor", _head(root), branch)
+    return code == 0
 
 
 def _head(root):
@@ -487,17 +584,18 @@ def _run(argv, cwd):
     return proc.returncode, out
 
 
-def _composed_tree_script(wt, root, name):
-    """The COMPOSED tree's copy of harness script `name`, else the invoker's.
+def _branch_tree_script(wt, root, name):
+    """The BRANCH tree's copy of harness script `name`, else the invoker's.
 
-    The trunk step and the bar must be the candidate's own (§4: the required
-    checks run ON the composed tree): a work branch may change a generator or
-    the harness itself, and regenerating the candidate with the invoker's
-    trunk-vintage copy writes artifacts the merge commit's own floor - which
-    runs the composed tree's version - then refuses them as stale (WI-368,
-    first hit by WI-366's renderer change). Discovery mirrors the shipped
-    hook's scripts-dir probe: the invoker's root-relative layout first, then
-    the known layouts; the invoker's copy is the fallback so a candidate that
+    The trunk step and the bar must be the refreshed branch's own: a work
+    branch may change a generator or the harness itself, and regenerating that
+    tree with the invoker's trunk-vintage copy writes artifacts the refresh
+    commit's own floor - which runs the branch's version - then refuses them as
+    stale (WI-368, first hit by WI-366's renderer change). The invoker is
+    trunk-vintage whenever drive.py drives the loop in-process, so this cannot
+    be simplified to "the module that is running". Discovery mirrors the
+    shipped hook's scripts-dir probe: the invoker's root-relative layout first,
+    then the known layouts; the invoker's copy is the fallback so a branch that
     predates the script (or a root the invoker sits outside of) still
     integrates.
     """
@@ -533,15 +631,19 @@ def _passed_steps(out):
 
 
 def _run_bar(wt, root, tier):
-    """check.py at the derived gate on the composed tree; fail-closed reading.
+    """check.py at the derived gate on the refreshed branch; fail-closed reading.
 
-    Green means: exit 0 AND the report carries no SKIP line. The candidate is
-    not a claimed work branch, so the §5.2 freshness steps all run - which is
-    the point: the composed tree is checked at the full trunk bar.
+    Green means: exit 0 AND the report carries no SKIP line. `--trunk-lane` is
+    passed because the tree being barred IS the tree that becomes trunk (the
+    --no-ff merge of a branch containing trunk reproduces it byte for byte), so
+    the §5.2 freshness gates - which stand down on a work branch, and which
+    this very step just regenerated - have to run here or nothing checks them.
     """
     py = ac.harness_python(root)
-    check = _composed_tree_script(wt, root, "check.py")
-    code, out = _run([str(py), str(check), "--jobs", "0", "--tier", tier], wt)
+    check = _branch_tree_script(wt, root, "check.py")
+    code, out = _run(
+        [str(py), str(check), "--jobs", "0", "--tier", tier, "--trunk-lane"], wt
+    )
     skips = [ln for ln in out.splitlines() if re.match(r"\s*SKIP\s", ln)]
     if code != 0:
         return False, out, "bar exit {}".format(code)
@@ -560,7 +662,7 @@ def _run_bar(wt, root, tier):
 
 def _run_trunk_step(wt, root):
     py = ac.harness_python(root)
-    step = _composed_tree_script(wt, root, "trunk_step.py")
+    step = _branch_tree_script(wt, root, "trunk_step.py")
     return _run([str(py), str(step), "--root", "."], wt)
 
 
@@ -677,14 +779,175 @@ def _unload_branch(root, branch):
     )
 
 
+def _shed_residue(wt, baseline):
+    """Delete the IGNORED paths this refresh's own bar added to `wt`. Names them.
+
+    The refresh's promise is that it leaves the lane worktree as it found it
+    plus (at most) one commit. Without this the promise breaks in one specific
+    way: the bar runs in the lane worktree now, and a declared bar leaves tool
+    residue - `.pytest_cache/`, `__pycache__/`, a coverage report - which git
+    ignores and which §5.6's unload reads, correctly, as DIRT. The merge would
+    then always exit nonzero over caches the refresh itself had just created.
+
+    Narrow on purpose, in three ways, because deleting files is the one thing
+    §5.6 exists to be careful about:
+      * only paths git reports as IGNORED (`!!`) - an untracked-but-tracked-able
+        file is a surprise, and a surprise is evidence;
+      * only paths that were NOT there before the refresh started, so anything
+        the worker left behind (the `out/run-logs/` stream WI-359 names) is
+        untouched and still blocks the unload;
+      * only lines this function can parse unambiguously - a quoted (odd
+        character) path is left alone rather than guessed at.
+    """
+    for line in _worktree_dirt(wt):
+        if line in baseline or not line.startswith("!! ") or line.startswith('!! "'):
+            continue
+        target = wt / line[3:].strip().rstrip("/")
+        try:
+            if target.is_dir():
+                shutil.rmtree(target, ignore_errors=True)
+            elif target.exists():
+                target.unlink()
+        except OSError:
+            # Left behind rather than fought over: the unload will report it as
+            # dirt, which is a loud, recoverable outcome.
+            continue
+
+
+def refresh(root, branch, tier):
+    """The §A2 station refresh. Returns `(branch tip sha, None)` or `(None, refusal)`.
+
+    Mechanical - no agent, no judgement. In the branch's own lane worktree:
+
+        merge trunk IN  ->  trunk_step (compile, then regen)  ->  bar  ->  commit
+
+    That order is fixed and load-bearing (§A2.1): the compile has to see the
+    trunk's log before it appends, and the bar has to see what the compile and
+    the regen wrote. The commit carries a `Bar-Green:` trailer, which is the
+    whole attestation - the slot then verifies a sha, never a claim.
+
+    EVERY failure path leaves the branch back at its last work commit, clean.
+    That is the disposable-commit rule doing double duty: it is what makes a
+    retry safe (a second merge stacked on the first would conflict on
+    docs/log.md's appended end), and it is why a failed refresh parks nothing
+    for a human to unpick. Reproduce a red by running the refresh again - it is
+    deterministic given the same trunk.
+
+    Called from TWO places, deliberately the same code: drive.py runs it
+    speculatively OUTSIDE the merge slot (the ruled DECISION 4 - the 11-minute
+    bar must not hold the exclusive turn to advance trunk), and `integrate_one`
+    runs it INSIDE the slot for any branch that arrives un-refreshed or stale,
+    which is the pessimistic sequence and is why that sequence never rots.
+    """
+    refusal = _declared_bar_or_refusal(root)
+    if refusal:
+        return None, refusal
+    wt, err = lane_worktree(root, branch)
+    if err:
+        return None, "cannot refresh {}: {}".format(branch, err)
+    if ac.working_tree_dirty(wt):
+        return None, (
+            "the lane worktree {} is dirty - the refresh resets to the last "
+            "work commit, so it refuses rather than discard uncommitted work; "
+            "commit or stash it, then refresh".format(wt)
+        )
+    work_tip = _work_tip(root, branch)
+    code, out = ac.git(wt, "reset", "--hard", work_tip)
+    if code != 0:
+        return None, "cannot reset {} to its last work commit {}:\n{}".format(
+            branch, work_tip[:10], ac._failure_tail(out)
+        )
+
+    # The ignored-file baseline, read BEFORE anything runs: see `_shed_residue`.
+    baseline = set(_worktree_dirt(wt))
+
+    def undo(reason, detail):
+        _shed_residue(wt, baseline)
+        ac.git(wt, "reset", "--hard", work_tip)
+        return None, "refresh REFUSED for {} - {}:\n{}".format(
+            branch, reason, ac._failure_tail(detail)
+        )
+
+    trunk = _head(root)
+    code, out = ac.git(wt, "merge", "--no-ff", "--no-commit", trunk)
+    if code != 0:
+        # The ONE place a conflict can still exist, and it is the right place:
+        # the lane owns being current with trunk, and the lane worktree is
+        # where the person (or agent) who wrote the code is working. The merge
+        # slot never sees this - by the time a branch reaches it, trunk is an
+        # ancestor and a conflict is unrepresentable.
+        return undo(
+            "merging trunk {} in CONFLICTS; resolve it on the branch in {} "
+            "(git merge {}), commit, then refresh again".format(
+                trunk[:10], wt, trunk[:10]
+            ),
+            out,
+        )
+    code, out = _run_trunk_step(wt, root)
+    if code != 0:
+        return undo("the trunk step failed on the refreshed tree", out)
+    # STAGE, then bar, then commit the staged index. The bar is the last thing
+    # to touch this tree, and a declared bar is the adopter's command: staging
+    # first means whatever it writes (a coverage report, a cache) can never be
+    # swept into the attested commit by an `add -A` that ran after it. The
+    # committed tree is therefore exactly the tree the bar was handed.
+    ac.git(wt, "add", "-A")
+    ok, bar_out, summary = _run_bar(wt, root, tier)
+    _shed_residue(wt, baseline)
+    if not ok:
+        return undo(
+            "the bar is RED on the refreshed tree ({}) - fix it on the branch, "
+            "then refresh again".format(summary),
+            bar_out,
+        )
+    code, out = ac.git(
+        wt,
+        "commit",
+        "--allow-empty",
+        "-m",
+        "refresh: {} onto trunk {}\n\nThe §A2 station refresh: trunk merged in, the §5.1 fragment compile and\n§5.2 regeneration folded on, and the declared bar run on THIS tree. The\ntrailer attests the bar to a TREE, not to a run - the merge slot verifies\nthis sha, and a --no-ff merge of a branch that contains trunk reproduces\nthis tree byte for byte.\n\n{} {} trunk={}".format(
+            branch, trunk[:10], BAR_GREEN, summary, trunk[:10]
+        ),
+    )
+    if code != 0:
+        return undo("the refresh commit was refused by its own floor", out)
+    sha = _head(wt)
+    print(
+        "integrate: refreshed {} onto trunk {} - {} @ {}".format(
+            branch, trunk[:10], summary, sha[:10]
+        )
+    )
+    return sha, None
+
+
+def _merge_ready(root, branch):
+    """`(ready, why)` - may `branch` enter the merge queue? (§A2)
+
+    Two facts, both read off git: trunk is already an ancestor, and the tip
+    carries the bar's attestation FOR THAT TIP. The second is not a second
+    check bolted onto the first - it is what makes the first sufficient, since
+    an ancestor relation alone says nothing about whether anyone barred the
+    composition.
+    """
+    if not trunk_is_ancestor(root, branch):
+        return False, "trunk {} is not an ancestor of it".format(_head(root)[:10])
+    attested = bar_green_attestation(root, branch)
+    if attested is None:
+        return False, "its tip carries no {} attestation".format(BAR_GREEN)
+    return True, attested
+
+
 def integrate_one(root, branch, tier, held=None):
-    """One branch through the queue. Returns None on green, else the refusal.
+    """One branch through the merge slot. Returns None on green, else the refusal.
+
+    Runs with the slot HELD (see `integrate`), so everything here is either
+    sub-second or the deliberate pessimistic fallback.
 
     `held` is an out-parameter list collecting the branch names whose §5.6
     unload did NOT complete. The merge itself stands (the trunk has already
-    fast-forwarded), so an incomplete unload is not a refusal - but nothing ever
-    retries it (a merged branch no longer appears in `finished_branches`), which
-    is why the caller has to carry the remainder to the run's exit code.
+    moved), so an incomplete unload is not a refusal - but nothing ever retries
+    it (a merged branch no longer appears in `finished_branches`), which is why
+    the caller has to carry the remainder to the run's exit code.
     """
     wi_ids = _claimed_wi_ids(root, branch)
     if not wi_ids:
@@ -696,58 +959,73 @@ def integrate_one(root, branch, tier, held=None):
     if refusal:
         return refusal
 
-    wt = _candidate_worktree(root)
-    code, out = ac.git(wt, "merge", "--no-ff", "--no-commit", branch)
-    if code != 0:
-        ac.git(wt, "merge", "--abort")
-        return "merge conflict against the composed tree (a rebase is the worker's):\n{}".format(
-            ac._failure_tail(out)
+    ready, why = _merge_ready(root, branch)
+    if not ready:
+        # THE PESSIMISTIC SEQUENCE - slot already held, so this is exactly
+        # "take slot -> merge trunk in -> bar -> merge". It is reached on every
+        # drain that merges a SECOND branch (the first merge moved trunk out
+        # from under it) and by any branch that never refreshed at all, so it
+        # is production code that runs and passes, not a fallback that rots
+        # waiting for the day someone restricts the design to pessimistic.
+        print(
+            "integrate: {} is not merge-ready ({}) - refreshing inside the "
+            "slot, which is the pessimistic sequence.".format(branch, why)
         )
-    # Fold the §5.1/§5.2 trunk step INTO the merge commit so the commit passes
-    # its own pre-commit floor (the WI-283 lesson; freshness gates all run on
-    # the candidate because it is not a claimed work branch).
-    code, out = _run_trunk_step(wt, root)
-    if code != 0:
-        ac.git(wt, "merge", "--abort")
-        return "trunk step failed on the composed tree:\n{}".format(
-            ac._failure_tail(out)
-        )
-    ac.git(wt, "add", "-A")
+        _sha, refusal = refresh(root, branch, tier)
+        if refusal:
+            return refusal
+        ready, why = _merge_ready(root, branch)
+        if not ready:
+            return (
+                "{} is still not merge-ready after its in-slot refresh ({}) - "
+                "the refresh reported green, so this is a real anomaly, not a "
+                "lost race; nothing was merged".format(branch, why)
+            )
     code, out = ac.git(
-        wt,
-        "commit",
+        root,
+        "merge",
+        "--no-ff",
         "-m",
-        "integrate: merge {} ({})\n\nComposed-tree merge (--no-ff) with the §5.1 fragment compile and §5.2\nregeneration folded in; the declared bar runs on this tree before the\ntrunk fast-forwards.".format(
-            branch, ", ".join(wi_ids)
+        "integrate: merge {} ({})\n\nThe §A2 merge: trunk was already an ancestor of this branch, so the\nmerge is trivially clean and its tree IS the branch tip's - the tree the\nbranch's own refresh bar passed ({}).".format(
+            branch, ", ".join(wi_ids), why
         ),
+        branch,
     )
     if code != 0:
-        ac.git(wt, "merge", "--abort")
-        return "merge commit refused by its own floor:\n{}".format(
-            ac._failure_tail(out)
-        )
-
-    ok, bar_out, summary = _run_bar(wt, root, tier)
-    if not ok:
-        ac.git(root, "branch", "-f", CANDIDATE_BRANCH + "-red", CANDIDATE_BRANCH)
-        return "the composed-tree bar is RED for {} - parked on {} for inspection:\n{}\n{}".format(
-            branch, CANDIDATE_BRANCH + "-red", summary, ac._failure_tail(bar_out)
-        )
-
-    candidate_sha = _head(wt)
-    code, out = ac.git(root, "merge", "--ff-only", candidate_sha)
-    if code != 0:
-        return "trunk fast-forward refused (trunk moved under the queue?):\n{}".format(
-            out
+        # Unreachable by construction: `_merge_ready` just proved trunk is an
+        # ancestor, and such a merge cannot conflict. So this is not a conflict
+        # arm - it is the loud stop for a git failure nobody has a model for,
+        # and it deliberately repairs nothing.
+        return (
+            "the --no-ff merge of {} FAILED although trunk is an ancestor of "
+            "it - that should be impossible, so this run repairs nothing and "
+            "stops for a human to read:\n{}".format(branch, ac._failure_tail(out))
         )
     unloaded, note = _unload_branch(root, branch)
-    print("integrate: {} merged ({}); {}".format(branch, ", ".join(wi_ids), summary))
+    print("integrate: {} merged ({}); {}".format(branch, ", ".join(wi_ids), why))
     # An incomplete unload goes to stderr rather than being swallowed - the §5.6
     # drained-and-unloaded stop is not reached while a branch or worktree lingers.
     print("integrate: {}".format(note), file=sys.stdout if unloaded else sys.stderr)
     if not unloaded and held is not None:
         held.append(branch)
     return None
+
+
+def _slot(root):
+    """TAKE THE SLOT - the exclusive turn to advance trunk. Error string or None.
+
+    THE ONE ACQUISITION SITE IN THIS FILE, and it must stay that way (§A2.0
+    requirement 1). The design is speculative: the 11-minute bar runs OUTSIDE
+    this lock, and only the ancestor check plus the merge run inside it, so the
+    slot is held for well under a second and extra lanes buy throughput instead
+    of queueing behind one bar. Restricting the design to pessimistic - the
+    owner's recorded caveat - is then a ONE-LINE change: delete drive.py's
+    speculative `integrate.refresh(...)` call, and every refresh happens under
+    this already-held lock via `integrate_one`'s not-merge-ready arm. Nothing
+    else moves, and no dial is added for a decision nobody has yet needed to
+    change.
+    """
+    return ac.acquire_lock(root / "out" / "integrate.lock")
 
 
 def integrate(root, tier):
@@ -757,7 +1035,7 @@ def integrate(root, tier):
     # predate it.
     if ac.working_tree_dirty(root):
         return fail("the trunk working tree is dirty - the queue needs a clean trunk")
-    lock_err = ac.acquire_lock(root / "out" / "integrate.lock")
+    lock_err = _slot(root)
     if isinstance(lock_err, str) and lock_err:
         return fail(lock_err)
     try:
@@ -777,7 +1055,6 @@ def integrate(root, tier):
         code = audit(root, base)
         if code != 0:
             return fail("the RULING-6 window audit flagged this run's own history")
-        _teardown(root)
         if held:
             return _held_summary(root, held)
         return 0
@@ -812,14 +1089,6 @@ def _held_summary(root, held):
         file=sys.stderr,
     )
     return 1
-
-
-def _teardown(root):
-    wt = root.parent / (root.name + "-integrate") / "candidate"
-    if wt.is_dir():
-        ac.git(root, "worktree", "remove", "--force", str(wt))
-    ac.git(root, "worktree", "prune")
-    ac.git(root, "branch", "-D", CANDIDATE_BRANCH)
 
 
 def _generated_paths(root):
@@ -899,11 +1168,20 @@ def main(argv=None):
     p_claim = sub.add_parser("claim", help="the §2.3 trunk claim + branch cut")
     p_claim.add_argument("--wi", required=True)
     p_claim.add_argument("--branch", required=True)
-    p_int = sub.add_parser("integrate", help="the serial merge queue")
+    p_ref = sub.add_parser(
+        "refresh", help="the §A2 station refresh (merge trunk in, regen, bar, commit)"
+    )
+    p_ref.add_argument("--branch", required=True)
+    p_ref.add_argument(
+        "--tier",
+        default="all",
+        help="declared bar tier for the refresh bar (default: all - the full gate bar)",
+    )
+    p_int = sub.add_parser("integrate", help="the merge slot")
     p_int.add_argument(
         "--tier",
         default="all",
-        help="declared bar tier for the composed-tree check (default: all - the full gate bar)",
+        help="declared bar tier for an in-slot refresh (default: all - the full gate bar)",
     )
     p_audit = sub.add_parser("audit", help="RULING-6 window check")
     p_audit.add_argument("--since", required=True, help="the window's base revision")
@@ -911,6 +1189,9 @@ def main(argv=None):
     root = Path(args.root).resolve()
     if args.op == "claim":
         return claim(root, normalize_wi_id(args.wi), args.branch)
+    if args.op == "refresh":
+        _sha, refusal = refresh(root, args.branch, args.tier)
+        return fail(refusal) if refusal else 0
     if args.op == "integrate":
         return integrate(root, args.tier)
     return audit(root, args.since)

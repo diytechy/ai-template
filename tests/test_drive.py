@@ -14,8 +14,13 @@ already pins it):
   * NEEDS-HUMAN (7) and other worker failures propagate, with the claim left
     parked so a relaunch resumes it;
   * end-to-end on a REAL scaffold: claim -> injected worker close -> the REAL
-    composed-tree bar -> merge -> drained banner; and the same flow with a
-    breaking change stops on the RED bar with the branch still parked.
+    §A2 refresh bar -> merge -> drained banner; and the same flow with a
+    breaking change stops on the RED bar with the branch still parked;
+  * the SPECULATIVE half of the station protocol (WI-386): `_drain` refreshes
+    every finished branch BEFORE it takes the merge slot, so the 11-minute bar
+    never holds the exclusive turn to advance trunk. That one call is the whole
+    speculation — deleting it restricts the design to pessimistic, which the
+    integrator's own suite covers from the other side.
 
 The worker seam is injected in every test (`run(root, args, worker=...)`) —
 the real subprocess launch of agent_loop.py --wi is agent_loop's own tested
@@ -42,6 +47,9 @@ from conftest import (
 pytestmark = env_gate_skipif("git")
 
 drv = load_script("drive")
+# The attestation constant has ONE home; a literal here would be a second one
+# that could drift silently past every test in this file.
+integ = drv.integrate
 
 T_BASE = 1_000_000
 T_CODE = 1_000_100
@@ -380,11 +388,12 @@ def closing_worker(src_text):
     return worker
 
 
-def test_drive_end_to_end_claims_builds_merges_and_drains(tmp_path):
+def test_drive_end_to_end_claims_builds_merges_and_drains(tmp_path, capsys):
     repo = scaffold_with_queued_wi(tmp_path)
 
     rc = drv.run(repo, drive_args(), worker=closing_worker(E2E_GOOD_SRC), tier="smoke")
     assert rc == 0
+    out = capsys.readouterr().out
 
     # The claim happened, the merge landed, the branch unloaded, the worker
     # worktree GC'd, and the drained banner counted the one integration.
@@ -396,19 +405,38 @@ def test_drive_end_to_end_claims_builds_merges_and_drains(tmp_path):
     assert "wi-401-widget" not in branches
     assert not (repo.parent / "wt-wi-401-widget").exists()
 
+    # THE SPECULATIVE HALF (WI-386): the driver refreshed the finished branch
+    # BEFORE taking the slot, so the slot found it already merge-ready and never
+    # had to fall back to refreshing in-slot. If `_drain`'s refresh call were
+    # dropped, everything above would still pass and only this would fail —
+    # which is the point of asserting it separately from "it merged".
+    assert "integrate: refreshed wi-401-widget onto trunk" in out, out
+    assert "is not merge-ready" not in out, out
+    # ...and the merged tip is the refresh commit, carrying the bar's own
+    # attestation for exactly that tree.
+    merged_tip = _git(repo, "rev-list", "--parents", "-n", "1", "HEAD").split()[2]
+    assert integ.BAR_GREEN in _git(repo, "log", "-1", "--format=%B", merged_tip)
 
-def test_drive_stops_on_a_red_composed_tree_bar(tmp_path, capsys):
-    # The worker's "close" breaks the product test: the REAL bar on the
-    # composed tree goes red, integrate parks the candidate, and the driver
-    # STOPS with the branch still claimed — nothing merged, nothing skipped.
+
+def test_drive_stops_on_a_red_refresh_bar(tmp_path, capsys):
+    # The worker's "close" breaks the product test: the REAL bar goes red at the
+    # §A2 refresh — on the branch, where the lane that caused it can fix it —
+    # and the driver STOPS with the branch still claimed. Nothing merged,
+    # nothing skipped, and (unlike the composed-tree bar this replaced) nothing
+    # parked on a candidate branch for someone to go and read.
     repo = scaffold_with_queued_wi(tmp_path)
 
     rc = drv.run(repo, drive_args(), worker=closing_worker(E2E_BAD_SRC), tier="smoke")
     assert rc == 1
     err = capsys.readouterr().err
-    assert "bar is RED" in err
+    assert "bar is RED on the refreshed tree" in err
     assert "wi-401-widget" in _git(repo, "branch", "--format=%(refname:short)")
     assert not (repo / "docs" / "work" / "archive" / "WI-401-widget.md").exists()
+    # The lane is left exactly where the worker left it: no refresh commit, no
+    # attestation, so the slot could not merge it even if something tried.
+    assert integ.BAR_GREEN not in _git(
+        repo, "log", "-1", "--format=%B", "wi-401-widget"
+    )
 
 
 # --- the plain-launch seam (IF-015) -------------------------------------------

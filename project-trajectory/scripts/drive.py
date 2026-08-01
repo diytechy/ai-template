@@ -10,7 +10,8 @@ driver joins the four existing, independently-proven parts in one serial lane:
     schedule.py frontier (IF-053)  ->  next ready WI in build order
     integrate.py claim   (IF-080)  ->  the §2.3 trunk claim + branch cut
     agent_loop.py --wi   (IF-015)  ->  one worker session on the claimed branch
-    integrate.py integrate (IF-080) -> the serial fail-closed merge queue
+    integrate.py refresh (IF-080)  ->  the §A2 station refresh, OUTSIDE the slot
+    integrate.py integrate (IF-080) -> the merge slot
 
 The frontier is re-derived from the registry at the top of EVERY cycle, so a
 WI filed mid-run (by a worker, a review, or a human) is picked up in the same
@@ -18,7 +19,7 @@ run — no restart needed.
 
 Adds ORDERING only, no authority: every refusal stays where it already lives
 (the tracked docs/work/pause, a dirty trunk, the SpecRef and status-prose
-claim rungs, the composed-tree bar, the RULING-7 verdict gate,
+claim rungs, the §A2 refresh bar, the RULING-7 verdict gate,
 docs/push-policy). Any refusal from a composed part STOPS the run loudly —
 the driver never skips past one, never force-merges, and NEVER pushes (there
 is deliberately no flag to ask it to; docs/push-policy is honored by
@@ -48,10 +49,10 @@ import schedule
 
 SCRIPTS = Path(__file__).resolve().parent
 
-# One worker worktree home per repo, sibling to the checkout like the
-# integrator's candidate home ("<repo>-integrate"); one subdirectory per
-# claimed branch. integrate.py's §5.6 unload GCs a clean one after its merge.
-WORKTREE_SUFFIX = "-drive"
+# The lane worktree home is integrate.py's to name: the worker builds there and
+# the station refresh runs there, so the two must agree by construction rather
+# than by two matching literals.
+WORKTREE_SUFFIX = integrate.LANE_WORKTREE_SUFFIX
 
 
 def _say(msg, err=False):
@@ -91,31 +92,12 @@ def _parked_branches(root):
     ]
 
 
-def _ensure_worktree(root, branch):
-    """The worker worktree for `branch`, created or reused: (path, error)."""
-    wt = root.parent / (root.name + WORKTREE_SUFFIX) / branch
-    if wt.is_dir():
-        code, out = ac.git(wt, "rev-parse", "--abbrev-ref", "HEAD")
-        if code == 0 and out.strip() == branch:
-            return wt, None
-        return None, "{} exists but does not hold {} - refusing to clobber it".format(
-            wt, branch
-        )
-    ac.git(root, "worktree", "prune")
-    code, out = ac.git(root, "worktree", "add", str(wt), branch)
-    if code != 0:
-        return None, "worktree add failed for {}: {}".format(
-            branch, ac._failure_tail(out)
-        )
-    return wt, None
-
-
 def _default_worker(root, branch, wi_ids, args):
     """Launch one worker session loop on the claimed branch's worktree and
     return its exit code. Stdio is inherited so the walk-away console shows the
     worker's own live echo; AGENT_CMD and the routing env pass through the
     environment exactly as an attended launch would see them."""
-    wt, err = _ensure_worktree(root, branch)
+    wt, err = integrate.lane_worktree(root, branch)
     if err:
         _say(err, err=True)
         return ac.EXIT_PREFLIGHT
@@ -191,6 +173,33 @@ def _session_config_refusal(root, args):
     )
 
 
+def _drain(root, tier):
+    """Refresh every finished branch, then run the merge slot. An exit code.
+
+    THE SPECULATIVE HALF of the station protocol (docs/concurrency-v2.md §A2.0,
+    ruled 2026-07-31). The 11-minute bar runs HERE, outside the slot, so the
+    exclusive turn to advance trunk is held for a sub-second ancestor check and
+    the merge itself; a lane that loses a race redoes a refresh it would have
+    owed anyway going second, and nothing else is reconciled because ancestry
+    is the only thing being speculated on.
+
+    THIS CALL IS THE WHOLE SPECULATION. Deleting the refresh loop below
+    restricts the design to pessimistic: `integrate_one` refreshes in-slot for
+    any branch that arrives un-refreshed, so the queue keeps working, one lane
+    at a time, with the bar inside the lock. That is the owner's recorded
+    caveat priced at one line.
+
+    A red refresh STOPS the run - it is the same failure a red merge bar used
+    to be, moved to where the lane that caused it can fix it.
+    """
+    for branch in integrate.finished_branches(root):
+        _sha, refusal = integrate.refresh(root, branch, tier)
+        if refusal:
+            _say(refusal, err=True)
+            return 1
+    return integrate.integrate(root, tier)
+
+
 def _stranded_claims(root):
     """active/<branch>/ directories that still hold specs but whose branch ref
     is GONE — a half-completed claim (the trunk commit landed, the branch cut
@@ -250,7 +259,7 @@ def _resume_or_claim(root, cycle, tier, merged, config_refusal):
         # runs) - drain before declaring the queue empty, and COUNT what that
         # drain merges (REVIEW-A round 1: the banner undercounted residue).
         residue = len(integrate.finished_branches(root))
-        code = integrate.integrate(root, tier)
+        code = _drain(root, tier)
         if code != 0:
             return None, None, code
         _say(
@@ -313,7 +322,7 @@ def run(root, args, worker=None, tier="all"):
     """The drive loop. `worker` is the one injection seam (tests): a callable
     `(root, branch, wi_ids, args) -> exit code` standing in for the worker
     session launch; None means the real subprocess launch. `tier` is the
-    composed-tree bar tier integrate.py runs (default: the full gate bar).
+    bar tier the §A2 refresh runs (default: the full gate bar).
 
     Lock note: the plain-launch caller (agent_loop) holds out/agent-loop.lock
     for the process lifetime; integrate.py takes and releases its own
@@ -377,10 +386,10 @@ def run(root, args, worker=None, tier="all"):
         # green drain every finished branch merged (a held branch exits
         # nonzero above), so the pre-drain count is exact.
         finished = len(integrate.finished_branches(root))
-        code = integrate.integrate(root, tier)
+        code = _drain(root, tier)
         if code != 0:
-            # Red bar / verdict refusal / held branch: integrate printed the
-            # reason; a red queue stops rather than skips (§5.5).
+            # Red refresh bar / verdict refusal / held branch: the reason is
+            # already printed; a red queue stops rather than skips (§5.5).
             return code
         merged += finished
 
