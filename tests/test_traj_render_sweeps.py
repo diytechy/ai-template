@@ -443,9 +443,19 @@ def test_a3_js_detail_maps_mirror_the_declared_palettes(tmp_path):
     cell rendered a badge in the done-green while the cell and the legend both
     said `TIER_FILL["tc"]`. The maps are now substituted from the constants;
     this holds every emitted copy byte-equal to the Python palettes, so a
-    hand-copy cannot come back."""
+    hand-copy cannot come back.
+
+    FRESH-ONLY (WI-372's truth-times rule, applied at WI-384). The claim is
+    about THIS emitter's substitution, and the committed `shipped` document was
+    written by an older renderer against an older palette — so any RENAME in the
+    vocabulary (WI-384: `retired` -> `cancelled`) reds through the stale copy
+    while the emitter under test is clean, which is the exact mis-triage that
+    note warns about. No replacement fixture is owed: every fresh document emits
+    both maps, and the per-document `seen >= 2` floor below keeps that honest."""
     gt = load_script("gen_trajectory")
     for label, page in _every_emitter_document(tmp_path):
+        if label == "shipped":
+            continue
         seen = 0
         for name, expect in (
             ("tierColor", gt.TIER_FILL),

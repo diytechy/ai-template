@@ -264,7 +264,7 @@ def test_a_folder_registry_gets_spec_files_not_csv_rows(tmp_path):
     CSV left byte-for-byte alone even though it is still on disk."""
     _seed_registry(tmp_path)
     _write_spec(
-        tmp_path, "archive", "WI-010", slug="round-parent", deliverable="shipped"
+        tmp_path, "complete", "WI-010", slug="round-parent", deliverable="shipped"
     )
     before = _wi_csv(tmp_path).read_bytes()
 
@@ -320,7 +320,7 @@ def test_ids_are_allocated_over_BOTH_homes_so_a_transition_cannot_collide(tmp_pa
     allocator: the folder is authoritative, and the HIGHEST id lives only in the
     CSV the repo has stopped reading."""
     _seed_registry(tmp_path)  # highest CSV id: WI-010
-    _write_spec(tmp_path, "archive", "WI-004", slug="older")
+    _write_spec(tmp_path, "complete", "WI-004", slug="older")
     assert pa._existing_wi_nums(_wi_csv(tmp_path)) == {0, 1, 4, 10}
     assert _file_three(tmp_path) == {"P1": "WI-011", "P2": "WI-012", "P3": "WI-013"}
 
@@ -338,7 +338,7 @@ def test_mutation_folder_mode_refuses_a_duplicate_id(tmp_path):
     files for one work item is the one state this registry cannot represent, and
     a silent overwrite would destroy the older one."""
     _seed_registry(tmp_path)
-    _write_spec(tmp_path, "archive", "WI-010", slug="round-parent")
+    _write_spec(tmp_path, "complete", "WI-010", slug="round-parent")
     # Stand in a broken allocator: WI-011 is already filed, in another status.
     _write_spec(tmp_path, "deferred", "WI-011", slug="already-here")
 
@@ -364,7 +364,11 @@ def test_check_trajectory_passes_after_filing_into_the_folder(tmp_path):
     """The CSV mode's done-condition, restated for the second home: the real
     validator exits 0 over the folder the filer just wrote."""
     _write_spec(
-        tmp_path, "archive", "WI-010", slug="round-parent", deliverable="parent shipped"
+        tmp_path,
+        "complete",
+        "WI-010",
+        slug="round-parent",
+        deliverable="parent shipped",
     )
     plan_dir = pa.allocate_round_dir(tmp_path, "fixture")
     plan_path = pa.write_stage(plan_dir, "plan-B-rev.md", PLAN_TEXT)

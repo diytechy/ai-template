@@ -385,7 +385,7 @@ c7d2e27779d5  project-trajectory/scripts/derive_gate.py == project-trajectory/sc
 5929de953fd4  project-trajectory/scripts/gen_open_items.py == project-trajectory/scripts/schedule.py
 a986f553a391  project-trajectory/scripts/plan_briefs.py == project-trajectory/scripts/plan_coverage_step.py
 6b98b4c1e7c5  project-trajectory/scripts/plan_briefs.py == project-trajectory/scripts/plan_round.py
-6b98b4c1e7c5  project-trajectory/scripts/plan_briefs.py == project-trajectory/scripts/schedule.py
+a986f553a391  project-trajectory/scripts/plan_briefs.py == project-trajectory/scripts/schedule.py
 3762ccd39230  project-trajectory/scripts/plan_briefs.py == project-trajectory/scripts/schedule.py
 0f99fcaa1f96  project-trajectory/scripts/plan_briefs.py == project-trajectory/scripts/schedule.py
 2a3ae413b478  project-trajectory/scripts/plan_coverage.py == project-trajectory/scripts/plan_coverage_step.py
@@ -645,8 +645,21 @@ b8b532ba9de4  project-trajectory/scripts/agent_loop.py == project-trajectory/scr
 # three verbatim reader copies are now THE registry reader (the F5 case is
 # unchanged), and two fingerprints below re-fingerprinted when the dual-read
 # resolvers collapsed to folder-only in all three copies at once.
-506ee17be858  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/schedule.py
-a73be88000c3  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/check_trajectory.py
+#   WI-384 re-stamp (2026-08-01), same shape, same reason: the six-state model
+# rewrote `SPEC_STATUS_DIRS` and DELETED `parse_spec_status`'s disposition
+# cross-check in all three copies at once, so the two agent_common pairs
+# re-fingerprinted (506ee17be858 -> 221f967454e5, a73be88000c3 -> e781cf6ec0e8)
+# while check_trajectory == schedule kept its fp. The class did not grow: the
+# block SHRANK by the validator this row deleted. One fingerprint outside this
+# class moved with it — the plan_briefs == schedule pair below (6b98b4c1e7c5 ->
+# a986f553a391), which now hashes equal to its plan_coverage_step sibling. The
+# cause, isolated on an otherwise-base tree at REVIEW-A round 1: the ~38-token
+# block OPENS at the module constant, and renaming `_RETIRED = "retired"` to
+# `_NEVER_READY = ("deferred", "draft")` alone reproduces a986f553a391 exactly.
+# The edit is INSIDE the matched block; an earlier note here blamed the module
+# docstring, which the isolation refutes.
+221f967454e5  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/schedule.py
+e781cf6ec0e8  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/check_trajectory.py
 1dbf7e455ac3  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/schedule.py
 4d36b43d0895  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/wi_convert.py
 

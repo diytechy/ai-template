@@ -4,7 +4,6 @@ title = "Backlog re-evaluation after a re-attest"
 workstream = "scripts"
 buildtier = "medium"
 safety_class = "ordinary"
-disposition = "retired"
 +++
 
 ## Deliverable

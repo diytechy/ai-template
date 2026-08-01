@@ -5,7 +5,6 @@ workstream = "scripts"
 needs = ["WI-034"]
 safety_class = "high-risk"
 order = 60
-disposition = "retired"
 +++
 
 ## Deliverable

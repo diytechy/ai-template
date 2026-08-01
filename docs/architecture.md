@@ -202,7 +202,7 @@ Contracts (interfaces): IF-037, IF-065
 | `spec_work_dir(csv_path)` | The `docs/work` folder that replaces the registry CSV at `csv_path` — its |  |
 | `spec_files(work_dir)` | Every `<status>/WI-*.md` spec under `work_dir`, sorted by path; `[]` when |  |
 | `parse_spec_frontmatter(text, relpath)` | `(data, body)` for one spec file: the TOML frontmatter between the `+++` |  |
-| `parse_spec_status(relpath, data)` | The Status a spec's LOCATION encodes, checked against its `disposition`. |  |
+| `parse_spec_status(relpath)` | The Status a spec's LOCATION encodes — the whole of it. |  |
 | `parse_spec_id(relpath, data)` | The work-item id, which must be a non-empty string AND must be the one |  |
 | `parse_spec_deliverable(relpath, body)` | The Deliverable cell a spec body carries, verbatim ("" when absent). |  |
 | `parse_spec_row(text, relpath)` | `(row, order)` for one spec file — a 17-key row shaped exactly like the |  |
@@ -541,7 +541,7 @@ Contracts (interfaces): IF-009, IF-023, IF-077
 | `spec_work_dir(csv_path)` | The `docs/work` folder that replaces the registry CSV at `csv_path` — its |  |
 | `spec_files(work_dir)` | Every `<status>/WI-*.md` spec under `work_dir`, sorted by path; `[]` when |  |
 | `parse_spec_frontmatter(text, relpath)` | `(data, body)` for one spec file: the TOML frontmatter between the `+++` |  |
-| `parse_spec_status(relpath, data)` | The Status a spec's LOCATION encodes, checked against its `disposition`. |  |
+| `parse_spec_status(relpath)` | The Status a spec's LOCATION encodes — the whole of it. |  |
 | `parse_spec_id(relpath, data)` | The work-item id, which must be a non-empty string AND must be the one |  |
 | `parse_spec_deliverable(relpath, body)` | The Deliverable cell a spec body carries, verbatim ("" when absent). |  |
 | `parse_spec_row(text, relpath)` | `(row, order)` for one spec file — a 17-key row shaped exactly like the |  |
@@ -574,7 +574,7 @@ Contracts (interfaces): IF-009, IF-023, IF-077
 | `tier_completion_findings(findings)` | Split reconciler findings into `(warn_only, gated)`. |  |
 | `staged_completion_findings(root)` | The close-time half of the reconciler (WI-352): a staged commit flipping a |  |
 | `status_forward_only_findings(root, wis)` | The status.md forward-only rule (WI-200) — restores the WI-180-retired R-D |  |
-| `dead_dependency_findings(wis)` | Surface a live WI that hard-depends on a `retired` predecessor (WI-267). |  |
+| `dead_dependency_findings(wis)` | Surface a live WI that hard-depends on a `cancelled` predecessor (WI-267). |  |
 | `backlog_staleness_findings(root, wis)` | WI-205 — the backlog-staleness warn (warn-only, the WI-129 checker stance). |  |
 | `staged_findings(root)` | The no-validation-delta warn (S0 ruling #2 corollary; warn-first). |  |
 | `spine_cell_class(csv_path, column)` | `"traced"` for a column §A5.1 rules traceability, else `"ratified"`. |  |
@@ -850,7 +850,7 @@ Contracts (interfaces): IF-053, IF-054
 | `spec_work_dir(csv_path)` | The `docs/work` folder that replaces the registry CSV at `csv_path` — its |  |
 | `spec_files(work_dir)` | Every `<status>/WI-*.md` spec under `work_dir`, sorted by path; `[]` when |  |
 | `parse_spec_frontmatter(text, relpath)` | `(data, body)` for one spec file: the TOML frontmatter between the `+++` |  |
-| `parse_spec_status(relpath, data)` | The Status a spec's LOCATION encodes, checked against its `disposition`. |  |
+| `parse_spec_status(relpath)` | The Status a spec's LOCATION encodes — the whole of it. |  |
 | `parse_spec_id(relpath, data)` | The work-item id, which must be a non-empty string AND must be the one |  |
 | `parse_spec_deliverable(relpath, body)` | The Deliverable cell a spec body carries, verbatim ("" when absent). |  |
 | `parse_spec_row(text, relpath)` | `(row, order)` for one spec file — a 17-key row shaped exactly like the |  |
@@ -1069,7 +1069,7 @@ Contracts (interfaces): IF-079
 | `render_spec(row, order)` | `(relative_path, text)` for one registry row. |  |
 | `split_spec(text, where)` | `(frontmatter_text, body_text)` from a spec file's raw text. |  |
 | `parse_deliverable(body, where)` | The verbatim Deliverable cell from a spec body (empty when absent). |  |
-| `status_from_location(directory, disposition, where)` | The Status a spec's location encodes — the inverse of `status_dir`. |  |
+| `status_from_location(directory, where)` | The Status a spec's location encodes — the inverse of `status_dir`. |  |
 | `parse_spec(text, relpath, where)` | `(row, order)` reconstructed from one spec file. |  |
 | `work_dir_for(csv_path)` | The `docs/work` folder that pairs with the registry CSV at `csv_path` — |  |
 | `spec_paths(work_dir)` | Every `<status>/WI-*.md` spec under `work_dir`, sorted by path; `[]` when |  |

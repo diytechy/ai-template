@@ -205,18 +205,18 @@ def _svg_role(body):
 SVG_RX = ("3", "8", "12")  # icicle cell · any node box · process chip
 
 
-# WI-267: `retired` is a TERMINAL WON'T-BUILD status with its OWN dashboard bucket
-# — a muted stone hue byte-distinct from every other fill (done/active/queued and
-# the drill tiers), never folded into done's green, so a dead-end row reads as
-# visibly terminal, not merely parked.
+# WI-267: `cancelled` is a TERMINAL WON'T-BUILD status with its OWN dashboard
+# bucket (spelled `retired` until WI-384) — a muted stone hue byte-distinct from
+# every other fill (done/active/queued and the drill tiers), never folded into
+# done's green, so a dead-end row reads as visibly terminal, not merely parked.
 STATUS_FILL = {
     "done": "#047857",
     "active": "#b45309",
     "queued": "#94a3b8",
-    "retired": "#78716c",
+    "cancelled": "#78716c",
 }
 
-# WI-272 (review M-2): the registry's SIX statuses map onto FOUR fills, and this
+# WI-272 (review M-2): the registry's SEVEN statuses map onto FOUR fills, and this
 # table is that mapping made EXPLICIT. It used to be an inline `if not in
 # STATUS_FILL: "queued"` clamp, which did not merely share a swatch — it rewrote
 # the status itself, so a `deferred` row's tooltip, accessible name, and detail
@@ -234,24 +234,26 @@ STATUS_BUCKET = {
     "done": "done",
     "active": "active",
     "queued": "queued",
+    "draft": "queued",
     "deferred": "queued",
     "blocked": "queued",
-    "retired": "retired",
+    "cancelled": "cancelled",
 }
 # The one label the shared swatch may carry: naming the bucket is what stops it
 # reading as "queued" (review M-2's "name it explicitly").
 STATUS_BUCKET_LABEL = {"queued": "not started", "done": "done", "active": "active"}
 # A3 (no-info-by-color-alone): a redundant, shape-distinct glyph per STATUS — one
-# per *status*, not per fill, so the three statuses sharing the "not started"
-# swatch stay distinguishable without colour perception at all. ○ open / ◌ parked
-# (a dotted, un-drawn ring) / ⊘ barred / ⊗ struck-out terminal.
+# per *status*, not per fill, so the four statuses sharing the "not started"
+# swatch stay distinguishable without colour perception at all. ○ open / ✎ being
+# written / ◌ parked (a dotted, un-drawn ring) / ⊘ barred / ⊗ struck-out terminal.
 STATUS_GLYPH = {
     "done": "✓",
     "active": "●",
     "queued": "○",
+    "draft": "✎",
     "deferred": "◌",
     "blocked": "⊘",
-    "retired": "⊗",
+    "cancelled": "⊗",
 }
 
 

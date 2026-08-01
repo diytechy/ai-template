@@ -691,8 +691,11 @@ table.
   region masked, like the block it replaces). If you skip the migration
   entirely, the step is **vacuous** — no registry and no view means nothing to
   render — so an adopter who never used the surface pays nothing.
-- **The terminal `retired` work-item Status (2026-07, WI-267).** The work-item
-  lifecycle gains a sixth `Status`, **`retired`** — a terminal WON'T-BUILD row
+- **The terminal `retired` work-item Status (2026-07, WI-267).** *(Superseded by
+  the WI-384 recipe below, which respells this `cancelled` and gives it its own
+  directory; an adopter resyncing past both applies them in order.)* The
+  work-item lifecycle gains a sixth `Status`, **`retired`** — a terminal
+  WON'T-BUILD row
   that stays in the registry forever with its reason in the `Deliverable` column
   (never a `done` overload). Never breaking, vacuous until used: no schema/header
   change, and a registry with no retired rows behaves exactly as before. After
@@ -723,6 +726,56 @@ table.
   freshness step once. Fix: `python scripts/derive_gate.py` and commit the
   regenerated `docs/gate` (the first-non-comment-line gate value and its
   consumers are unchanged).
+- **The six-state work-item model; `docs/work/archive/` splits and
+  `disposition` is deleted (2026-08, WI-384).** *A flagged migration — the one
+  kit change so far that MOVES files in your registry.* The status vocabulary
+  becomes `draft | queued | active | deferred | cancelled | complete`, and
+  status stays what it always was, the directory — only now the directory is the
+  **whole** statement. `archive/` held both terminal states, so it needed a
+  `disposition = "retired"` frontmatter key plus a validator to keep folder and
+  attribute honest; splitting it into `complete/` and `cancelled/` deletes the
+  key, the validator and both of its raise paths, because the inconsistent state
+  it checked for is no longer representable. Two words change with it:
+  `retired` becomes `cancelled` (it could be read as *finished and put out to
+  pasture*; `cancelled` cannot), and `draft/` is new — thinking-in-progress,
+  which previously had to sit in `deferred/` and so read as *a decision* rather
+  than *the absence of one*. Migrate in one commit:
+  1. `git mv` each `docs/work/archive/WI-*.md` carrying
+     `disposition = "retired"` to `docs/work/cancelled/`, and every other
+     `docs/work/archive/WI-*.md` to `docs/work/complete/`;
+  2. delete the `disposition = "retired"` line from the moved cancelled specs —
+     the folder is now the whole statement;
+  3. `mkdir docs/work/draft` (add a `.gitkeep`; a fresh scaffold ships it), and
+     remove the emptied `docs/work/archive/`;
+  4. rerun `check_trajectory.py --strict`: the loaders REFUSE an undeclared
+     status directory, so a spec left behind in `archive/` is a loud, named
+     error, never a silent skip.
+  Use `git mv` rather than delete+add: the backlog-staleness clock reads
+  `git log --follow --diff-filter=AM`, and it needs BOTH flags — driven on this
+  kit's own migration, `--follow` alone and `--diff-filter=AM` alone each answer
+  the rename commit (today), while the pair answers the row's true pre-migration
+  date. A rewritten history re-dates every row.
+  *Why `draft/` had to be a DECLARED directory rather than a scratch folder:*
+  because there is nowhere else safe to put a draft, and the two wrong places
+  fail differently. Both were driven on a fresh scaffold with the same spec.
+  **An undeclared directory UNDER `docs/work/`** (say `docs/work/thinking/`):
+  the readers walk `<status>/WI-*.md` and skip anything under a directory they
+  do not know, so the spec never enters the registry at all — the duplicate-id
+  guard and the dashboard go blind, `schedule ready` prints nothing and
+  `gen_trajectory` renders no document. The id mint alone survives, because it
+  reads FILENAMES through an unfiltered walk, so the id is held by accident
+  rather than by design; and `check_trajectory --strict` exits 1 naming the
+  directory, so at least the state is LOUD. **A folder outside `docs/work/`**
+  (say `docs/drafts/`) is worse in the way that matters: the mint does not see
+  it either — `_existing_wi_nums` returns the example row alone, so the next
+  mint really would reissue the held id — and **nothing reds**;
+  `check_trajectory --strict` reads `clean (no work items …)` and exits 0. So
+  declaring `draft/` is what turns an id reservation from an accident (or a
+  silent collision) into something the registry holds and the harness checks.
+  Resync the kit-owned set together
+  (`check_trajectory.py`, `schedule.py`, `agent_common.py`, `wi_convert.py`,
+  `gen_trajectory.py` + the `traj_*` renderers, `bootstrap.py`) so the loaders,
+  scheduler, converter and dashboard share one vocabulary.
 
 ### Repos whose `AGENTS.md` already means something else
 

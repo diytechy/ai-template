@@ -4,7 +4,6 @@ title = "Review cadence dial - phase-close adversarial rounds (owner proposal)"
 workstream = "unattended"
 needs = ["~WI-107", "~WI-121"]
 safety_class = "high-risk"
-disposition = "retired"
 order = 122
 +++
 

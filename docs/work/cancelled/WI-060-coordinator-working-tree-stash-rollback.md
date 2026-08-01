@@ -4,7 +4,6 @@ title = "Coordinator working-tree stash/rollback between sessions"
 workstream = "unattended"
 needs = ["WI-024"]
 safety_class = "protected"
-disposition = "retired"
 order = 59
 +++
 

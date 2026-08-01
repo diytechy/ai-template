@@ -604,7 +604,31 @@ BASELINE = {
     # at C901 20 — no complexity bump. Reviewed bump, reason here and in
     # docs/log.d/WI-380-ratified-vs-traced-cell-split.md. Re-stamp down with
     # WI-280.
-    "check_trajectory.py": 3230,
+    # +18 (3098 -> 3116), WI-384: the six-state model. The DELETION is real —
+    # `parse_spec_status`'s disposition cross-check and both of its raise paths
+    # are gone — and the growth is the vocabulary that replaced them: two more
+    # SPEC_STATUS_DIRS rows, KNOWN_STATUSES exploded onto one line per status
+    # by the formatter, and the comments recording WHY `draft/` must be a
+    # DECLARED directory (id reservation) rather than a scratch folder. Net of
+    # comments the module shrank. Reviewed bump, log 2026-08-01. Re-stamp down
+    # with WI-280.
+    # +3 (3116 -> 3119), WI-384 REVIEW-A round 1: the MAJOR finding. The ruled
+    # reason for declaring `draft/` — that an undeclared folder is invisible to
+    # `max(id) + 1` — was driven and REFUTED (the mint reads filenames through
+    # an unfiltered walk and sees it either way), so the F5 block comment now
+    # states what is actually blind: the duplicate-id guard and the dashboard.
+    # Three COMMENT lines, zero code tokens; correcting a false rationale in
+    # place is cheaper than letting it ship. Reviewed bump, log 2026-08-01.
+    # +21 net (3230 -> 3251), WI-384 merging trunk `8c4d5f78`: NOT a new bump
+    # and not a side picked. WI-380 and WI-384 re-stamped this module from the
+    # same base 3098 on parallel branches — 3230 and 3119 — and the merge
+    # conflicted here. Resolved by RE-MEASURING the merged file with the
+    # census's own metric (`len(text.splitlines())` = 3251), which is exactly
+    # 3098 + WI-380's +132 + WI-384's +21: the two changes are disjoint, so
+    # the arithmetic is a check on the resolution rather than a coincidence.
+    # Both reason chains above are preserved verbatim; neither WI's record
+    # was dropped to make the number fit. Re-stamp down with WI-280.
+    "check_trajectory.py": 3251,
     # NEW ENTRY, +25 (1498 -> 1523), WI-357: the two-stage work-branch claim
     # signal — the on-disk fast path plus the branch-history probe that
     # survives the §2.3 close commit (git log -1 over the claim path), with
@@ -614,7 +638,10 @@ BASELINE = {
     # zero-comment form crossed it, so this is the crossing recorded, not
     # growth approved. Reviewed bump, log 2026-07-29. Re-stamp down with
     # WI-280.
-    "check.py": 1523,
+    # +1 (1523 -> 1524), WI-384: the claim-signal docstring line that says the
+    # close moves specs to their TERMINAL directory rather than "archives"
+    # them. One wrapped comment line. Reviewed bump, log 2026-08-01.
+    "check.py": 1524,
     # +1 (1916 -> 1917), WI-279: one MAPPING row registering the new
     # scripts/check_coverage.py kit gate so it ships downstream — a required
     # one-line registration, not monolith growth (the reviewed-bump escape the
@@ -694,7 +721,17 @@ BASELINE = {
     # cycle import it UNGUARDED, so a scaffold without it could not claim work
     # at all). Required registration, not monolith growth - the same shape as
     # the trunk_step/integrate/drive rows above. Reviewed bump, log 2026-07-31.
-    "bootstrap.py": 2232,
+    # +9 (2232 -> 2241), WI-384: three more scaffolded status directories
+    # (draft/, cancelled/, complete/) in GITKEEP_DIRS plus the comment stating
+    # why `draft/` is scaffolded for a reason beyond visibility — a spec under
+    # an undeclared directory never enters the registry, so the duplicate-id
+    # guard and the dashboard go blind to the id it holds. Required
+    # registration, not monolith growth: the same
+    # shape as the MAPPING rows above. Reviewed bump, log 2026-08-01.
+    # +2 (2241 -> 2243), WI-384 REVIEW-A round 1: the same corrected rationale
+    # in the GITKEEP_DIRS comment. Two comment lines, zero code tokens.
+    # Reviewed bump, log 2026-08-01.
+    "bootstrap.py": 2243,
     # NEW ENTRY, +228 (1423 -> 1651), Phase 2b of the concurrency restructure
     # (docs/concurrency-restructure.md §7): the spec-folder work-item reader,
     # which crosses this module over THRESHOLD for the first time. It is one
@@ -748,7 +785,17 @@ BASELINE = {
     # parse (extraction, not sanction: the WI-304 precedent). integrate.py
     # shrank 9 in the same move. Reviewed bump, log 2026-07-29. Re-stamp
     # down with WI-280.
-    "agent_common.py": 1720,
+    # +8 (1720 -> 1728), WI-384: the six-state vocabulary in the F5 reader copy
+    # — two more SPEC_STATUS_DIRS rows and the comment recording the two
+    # terminals and the id-reservation reason, minus the disposition validator
+    # this row deleted. Identical text to the other two copies by construction
+    # (tests/test_wi_loader_sync.py). Reviewed bump, log 2026-08-01. Re-stamp
+    # down with WI-280.
+    # +3 (1728 -> 1731), WI-384 REVIEW-A round 1: the corrected `draft/`
+    # rationale in this copy of the F5 block — identical text to the other two
+    # by construction (tests/test_wi_loader_sync.py). Three comment lines, zero
+    # code tokens. Reviewed bump, log 2026-08-01.
+    "agent_common.py": 1731,
 }
 
 

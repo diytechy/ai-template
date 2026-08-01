@@ -80,11 +80,11 @@ def claim(root, branch):
 
 
 def close(root, branch):
-    """§2.3 step 3: the close MOVES the specs to docs/work/archive/ and leaves no
+    """§2.3 step 3: the close MOVES the specs to docs/work/complete/ and leaves no
     active/<branch>/ behind — including the rmdir the WI-357 workaround relied on
     nobody doing. After this the working tree carries no claim at all."""
     src = root / "docs" / "work" / "active" / branch
-    dst = root / "docs" / "work" / "archive"
+    dst = root / "docs" / "work" / "complete"
     dst.mkdir(parents=True, exist_ok=True)
     for spec in src.iterdir():
         spec.rename(dst / spec.name)
@@ -132,7 +132,7 @@ def test_slashed_branch_needs_the_nested_dir_not_a_flattened_one(check, tmp_path
 
 def test_the_closing_commit_does_not_un_claim_its_own_branch(check, tmp_path):
     # WI-357, hit three times in the Phase 4 acceptance. The close commit stages
-    # active/<branch>/ -> archive/, so at the moment its own pre-commit bar runs
+    # active/<branch>/ -> complete/, so at the moment its own pre-commit bar runs
     # the working tree holds no claim and the trunk-freshness gates re-arm inside
     # the very commit that closes the WI — demanding artifacts §5.2 forbids the
     # branch to commit. The signal has to outlive the move, and history does.
@@ -166,7 +166,7 @@ def test_a_commit_after_the_close_still_reads_as_a_work_branch(check, tmp_path):
 def test_trunk_history_full_of_other_branches_claims_is_still_the_trunk(
     check, tmp_path
 ):
-    # The realistic trunk: every merged WI left both its claim add and its archive
+    # The realistic trunk: every merged WI left both its claim add and its close
     # move in trunk history. None of that names the TRUNK's own branch, so the
     # history signal must stay silent. This is the fail-direction that matters —
     # a false positive here switches the freshness gates off on the one branch

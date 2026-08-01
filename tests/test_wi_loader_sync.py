@@ -85,7 +85,7 @@ def _row(wid, **kw):
 
 # One fixture registry exercising every decision both parsers share: the -000
 # example skip, a malformed id, a duplicate id, hard + soft (~) predecessors,
-# the six statuses, multi-ref SR cells, and a blockref.
+# the seven statuses, multi-ref SR cells, and a blockref.
 FIXTURE_ROWS = [
     _row("WI-001", Status="done", Title="root"),
     _row(
@@ -93,8 +93,9 @@ FIXTURE_ROWS = [
     ),
     _row("WI-003", Status="blocked", Predecessors="WI-002;~WI-001", BlockRef="SR-009"),
     _row("WI-004", Status="deferred"),
-    _row("WI-005", Status="retired"),
+    _row("WI-005", Status="cancelled"),
     _row("WI-006", Status="active", Predecessors="~WI-002"),
+    _row("WI-007", Status="draft"),
     _row("WI-000", Status="queued", Title="inert example row (must be skipped)"),
     _row("WI-abc", Status="queued", Title="malformed id (must be skipped)"),
     _row("WI-002", Status="done", Title="duplicate id (second occurrence skipped)"),
@@ -126,7 +127,15 @@ def test_both_skip_example_malformed_and_duplicate_ids():
         assert "WI-000" not in produced
         assert "WI-abc" not in produced
         assert produced.count("WI-002") == 1
-        assert produced == ["WI-001", "WI-002", "WI-003", "WI-004", "WI-005", "WI-006"]
+        assert produced == [
+            "WI-001",
+            "WI-002",
+            "WI-003",
+            "WI-004",
+            "WI-005",
+            "WI-006",
+            "WI-007",
+        ]
 
 
 def test_hard_and_soft_predecessor_split_agrees():
@@ -142,13 +151,14 @@ def test_hard_and_soft_predecessor_split_agrees():
 
 # --- Phase 2b: one registry, two representations, three readers ---------------
 # The spec form cannot carry every row shape above — `wi_convert` REFUSES a
-# status outside done/retired/queued/deferred (a classifier that cannot finish is
-# louder than a catch-all), and a duplicate id or a blank WI-ID has no filename.
-# Those stay CSV-only concerns, exercised above. This fixture is the part of the
-# registry both homes can express, and it deliberately keeps the cells most
-# likely to be lost in translation: the `~` soft prefix, a multi-id SR cell, an
-# int-valued Priority, a retired row (archive/ + disposition), the inert -000
-# example row, and a Deliverable carrying the punctuation an escaper breaks on.
+# status outside draft/queued/deferred/done/cancelled (a classifier that cannot
+# finish is louder than a catch-all), and a duplicate id or a blank WI-ID has no
+# filename. Those stay CSV-only concerns, exercised above. This fixture is the
+# part of the registry both homes can express, and it deliberately keeps the
+# cells most likely to be lost in translation: the `~` soft prefix, a multi-id SR
+# cell, an int-valued Priority, a cancelled row (its own directory since WI-384,
+# with no attribute left to carry), the inert -000 example row, and a Deliverable
+# carrying the punctuation an escaper breaks on.
 CONVERTIBLE_ROWS = [
     {
         "WI-ID": "WI-001",
@@ -213,8 +223,8 @@ CONVERTIBLE_ROWS = [
         "Workstream": "scripts",
         "SR-Refs": "SR-003",
         "Predecessors": "",
-        "Status": "retired",
-        "Deliverable": "retired: superseded by WI-001",
+        "Status": "cancelled",
+        "Deliverable": "cancelled: superseded by WI-001",
         "SpecRef": "",
         "BuildTier": "",
         "CritiqueBudget": "",

@@ -137,7 +137,7 @@ def drive_args(**kw):
 def parked_repo(tmp_path, wid="WI-401", branch="wi-401"):
     """An interrupted run's state: the trunk holds active/<branch>/<spec> and
     the branch exists with that same tree (unfinished — the spec never moved
-    to archive/), which is exactly what _parked_branches must resume."""
+    to complete/), which is exactly what _parked_branches must resume."""
     root = git_repo(tmp_path)
     write_spec(root, "active/" + branch, wid, specref="seed.txt")
     _commit(root, "claim: {} -> active/{}".format(wid, branch), when=T_CODE)
@@ -358,7 +358,7 @@ def scaffold_with_queued_wi(tmp_path):
 
 def closing_worker(src_text):
     """The injected worker: does what a real worker session's committed
-    evidence amounts to — one product commit + the closing move to archive/
+    evidence amounts to — one product commit + the closing move to complete/
     (SpecRef cleared per R-F) on the claimed branch, via its own worktree."""
 
     def worker(root, branch, wi_ids, args):
@@ -366,7 +366,7 @@ def closing_worker(src_text):
         _git(root, "worktree", "add", str(wt), branch)
         (wt / "src" / "demo.py").write_text(src_text, encoding="utf-8", newline="\n")
         spec = wt / "docs" / "work" / "active" / branch / "WI-401-widget.md"
-        dst = wt / "docs" / "work" / "archive" / "WI-401-widget.md"
+        dst = wt / "docs" / "work" / "complete" / "WI-401-widget.md"
         dst.parent.mkdir(parents=True, exist_ok=True)
         dst.write_text(
             spec.read_text(encoding="utf-8").replace('specref = "docs/log.md"\n', ""),
@@ -388,7 +388,7 @@ def test_drive_end_to_end_claims_builds_merges_and_drains(tmp_path):
 
     # The claim happened, the merge landed, the branch unloaded, the worker
     # worktree GC'd, and the drained banner counted the one integration.
-    assert (repo / "docs" / "work" / "archive" / "WI-401-widget.md").is_file()
+    assert (repo / "docs" / "work" / "complete" / "WI-401-widget.md").is_file()
     # git tracks files, not directories: the emptied active/<branch>/ dir may
     # linger on disk — what must be gone is any claimed SPEC.
     assert not list((repo / "docs" / "work" / "active").rglob("WI-*.md"))
@@ -408,7 +408,7 @@ def test_drive_stops_on_a_red_composed_tree_bar(tmp_path, capsys):
     err = capsys.readouterr().err
     assert "bar is RED" in err
     assert "wi-401-widget" in _git(repo, "branch", "--format=%(refname:short)")
-    assert not (repo / "docs" / "work" / "archive" / "WI-401-widget.md").exists()
+    assert not (repo / "docs" / "work" / "complete" / "WI-401-widget.md").exists()
 
 
 # --- the plain-launch seam (IF-015) -------------------------------------------

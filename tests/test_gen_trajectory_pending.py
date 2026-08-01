@@ -71,7 +71,7 @@ def _init(repo, extra_specs=()):
     Phase 5): one done item plus any `(sub, wid, slug, frontmatter, body)`
     tuples in `extra_specs`."""
     (repo / "docs" / "requirements").mkdir(parents=True)
-    _spec(repo, "archive", "WI-001", "seed", body="\n## Deliverable\n\nseeded\n")
+    _spec(repo, "complete", "WI-001", "seed", body="\n## Deliverable\n\nseeded\n")
     for sub, wid, slug, front, body in extra_specs:
         _spec(repo, sub, wid, slug, front, body)
     (repo / "docs" / "requirements" / "open-items.csv").write_text(

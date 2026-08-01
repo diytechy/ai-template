@@ -86,7 +86,8 @@ What it creates in the destination:
     .gitignore                                 <- gitignore.template
     .gitattributes                             <- gitattributes.template (eol=lf hook pin)
     .github/workflows/check.yml                <- ci/check.yml
-    src/, tests/, docs/work/{active,deferred,archive}/   (empty, with .gitkeep)
+    src/, tests/, docs/work/{draft,active,deferred,cancelled,complete}/
+                                               (empty, with .gitkeep)
 
 The agent guide lives once, in `AGENTS.md` (the cross-tool standard). `CLAUDE.md`
 and `GEMINI.md` ship as thin stubs that point back at it, because Claude Code and
@@ -1404,14 +1405,24 @@ GITKEEP_DIRS = [
     "src",
     "tests",
     # The work-item registry's spec-folder home (docs/concurrency-restructure.md
-    # §2.1): STATUS IS THE DIRECTORY, so the directories must exist for the
-    # vocabulary to be visible — an empty `deferred/` is what tells a reader
-    # parking is a first-class state rather than a convention someone invented.
-    # `queued/` is not listed: the WI-000 example spec lands there, so git
-    # already tracks it. `active/` holds one subdirectory per claiming branch.
+    # §2.1; the six-state vocabulary is WI-384's): STATUS IS THE DIRECTORY, so
+    # the directories must exist for the vocabulary to be visible — an empty
+    # `deferred/` is what tells a reader parking is a first-class state rather
+    # than a convention someone invented, and an empty `cancelled/` beside
+    # `complete/` is what says a terminal state has two outcomes and the folder
+    # names which. `draft/` must be scaffolded for a second reason beyond
+    # visibility: it is a DECLARED status directory, and specs parked in an
+    # undeclared one never enter the registry, so the duplicate-id guard and
+    # the dashboard go blind to the id a draft holds. (The mint itself reads
+    # FILENAMES through an unfiltered walk and is safe either way — measured at
+    # WI-384's review.) `queued/` is not listed: the WI-000
+    # example spec lands there, so git already tracks it. `active/` holds one
+    # subdirectory per claiming branch.
+    "docs/work/draft",
     "docs/work/active",
     "docs/work/deferred",
-    "docs/work/archive",
+    "docs/work/cancelled",
+    "docs/work/complete",
     # The log's fragment drop-box (docs/concurrency-restructure.md §5.1): a work
     # branch writes `docs/log.d/<WI-id>-<slug>.md` — a unique name, so the log
     # stops being a merge-conflict surface — and `scripts/trunk_step.py` compiles
