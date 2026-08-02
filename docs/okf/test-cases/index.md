@@ -139,3 +139,6 @@ resource: "generated"
 | [TC-140](TC-140.md) | Run the figure-provenance suite: the three 2026-08-01 false figures (the stale mutation l… |
 | [TC-141](TC-141.md) | Fixture-drive the SN-coverage rung: an uncovered ratified SN caps raw at G0 (the runnable… |
 | [TC-142](TC-142.md) | Fixture-drive --next-phase: on a spine whose non-draft max phase is 3 with a Draft row at… |
+| [TC-143](TC-143.md) | Run the dispatch admission suite: an exclusive row + a busy lane answers wait (never a pa… |
+| [TC-144](TC-144.md) | Run the dispatch loop suite on real git repos with the real bar: a spine batch claims as … |
+| [TC-145](TC-145.md) | Run the integrator claim suite: a spine claim succeeds on an idle station (the deleted sa… |

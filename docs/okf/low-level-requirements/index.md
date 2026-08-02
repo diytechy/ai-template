@@ -142,3 +142,6 @@ resource: "generated"
 | [LLR-146](LLR-146.md) | Declared-figure provenance presence check |
 | [LLR-147](LLR-147.md) | SN-coverage gate rung + uncovered basis count |
 | [LLR-148](LLR-148.md) | Derived next phase as an output mode |
+| [LLR-149](LLR-149.md) | §A8 admission: the kind x gate-policy table + the spine barrier |
+| [LLR-150](LLR-150.md) | Lane mechanics: worktree, worker subprocess, §A2 refresh subprocess |
+| [LLR-151](LLR-151.md) | Dispatch-lock claim rung + the spine batch claim |
