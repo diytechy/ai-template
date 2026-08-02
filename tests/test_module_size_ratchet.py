@@ -893,7 +893,14 @@ BASELINE = {
     # one WI-387 red). Roughly half the bump is the docstring history that
     # keeps a successor from "simplifying" back to last-FAIL. Reviewed bump,
     # log fragment 2026-08-01 (WI-398). Re-stamp down with WI-280.
-    "agent_common.py": 1784,
+    # +8 (1784 -> 1792), WI-405: the known-limit clause in `_own_step_window`'s
+    # docstring (WI-398 REVIEW-A finding 1) — bar-shaped text EMBEDDED in a
+    # step's own captured output can misanchor the window; the kept full log is
+    # the refresh path's authority. Eight docstring lines, zero code tokens;
+    # the three hostile shapes are pinned in test_agent_common_harness.py.
+    # Reviewed bump, log fragment 2026-08-02 (WI-405). Re-stamp down with
+    # WI-280.
+    "agent_common.py": 1792,
     # NEW ENTRY, WI-387 — integrate.py crossed THRESHOLD (1418 -> 1588) adding
     # the third terminal outcome. The extraction the ratchet asks for was TAKEN
     # FIRST, not argued away: `hand_back` and `quarantine`, the largest unit and

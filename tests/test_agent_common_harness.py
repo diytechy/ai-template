@@ -144,6 +144,122 @@ def test_failure_tail_reaches_the_step_output_when_statuses_only_print_in_summar
     assert "check_trajectory: OK" not in tail
 
 
+# --- WI-405: KNOWN LIMIT — bar-shaped text EMBEDDED in a step's own output ------
+
+# WI-398 REVIEW-A finding 1's three constructed shapes, pinned AS THE KNOWN
+# LIMIT, not as designed behavior: both anchors trust line SHAPE, so bar-shaped
+# text embedded in a step's own captured output silently misanchors the window
+# onto a passing step's text. The remedy stays inside WI-398's scope guard (no
+# parsing machinery): the limit is documented in `_own_step_window`'s docstring
+# and, on the refresh path, the kept full log
+# (out/run-logs/refresh-refused-<branch>.log) is the authority. The
+# outermost-banner preference was JUDGED AND DECLINED: knowing which banner is
+# outermost means knowing which lines sit inside another step's section — a
+# structural parser — and a first-to-last-match swap merely mirrors the hole
+# (it would break the symmetric shape, a failing step whose banner a LATER
+# passing step quotes, that first-match handles). These tests pin the current
+# wrong-window outcomes so the choice stays explicit; if one reds, the anchor
+# changed and the docstring's limit clause is stale.
+
+# Shape 1: a PASSING tests+coverage step's output quotes an old
+# `  FAIL  tests+coverage` log row at line start (a pasted log in test output);
+# the real red is lint (F401). The quoted row is the FIRST FAIL line, so the
+# window is the passing step's own banner section.
+WI405_QUOTED_FAIL_ROW_BAR = (
+    "\n=== tests+coverage : .venv/bin/python -m pytest -q -m smoke ===\n"
+    "all good\n"
+    "  FAIL  tests+coverage   exit 1 (3.4s)\n"
+    "4 passed in 1.0s\n"
+    "  PASS  tests+coverage   1.1s\n"
+    "\n=== lint : python -m ruff check . ===\n"
+    "scripts/x.py:3:8: F401 `os` imported but unused\n"
+    "  FAIL  lint             exit 1 (0.5s)\n"
+    "\n" + "=" * 56 + "\n"
+    "Check summary (gate G3, tier smoke):\n"
+    "  PASS  tests+coverage   1.1s\n"
+    "  FAIL  lint             exit 1 (0.5s)\n" + "=" * 56 + "\n"
+    "RESULT: FAIL (1 step(s) failed)\n"
+)
+
+
+def test_known_limit_a_quoted_fail_row_hijacks_the_window_onto_a_passing_step():
+    tail = _failure_tail(WI405_QUOTED_FAIL_ROW_BAR)
+    # PINNED LIMIT: the window is the passing quoter's section ...
+    assert "all good" in tail
+    assert "  PASS  tests+coverage" in tail
+    # ... with zero bytes of the real red.
+    assert "F401" not in tail
+    assert "  FAIL  lint" not in tail
+
+
+# Shape 2: a passing format step quotes a MOCK banner for the step that later
+# genuinely fails. The FIRST `=== tests+coverage : ` match is the quoted line,
+# so the window carries the quoting step's text; only the appended anchoring
+# FAIL row names the right step.
+WI405_QUOTED_MOCK_BANNER_BAR = (
+    "\n=== format : python -m ruff format --check . ===\n"
+    "=== tests+coverage : stub pytest -q ===\n"
+    "fixture tail\n"
+    "  PASS  format           0.4s\n"
+    "\n=== tests+coverage : .venv/bin/python -m pytest -q -m smoke ===\n"
+    "FAILED tests/test_x.py::test_y - AssertionError: REAL ERROR\n"
+    "1 failed, 3 passed in 1.0s\n"
+    "  FAIL  tests+coverage   exit 1 (1.2s)\n"
+    "\n" + "=" * 56 + "\n"
+    "Check summary (gate G3, tier smoke):\n"
+    "  PASS  format           0.4s\n"
+    "  FAIL  tests+coverage   exit 1 (1.2s)\n" + "=" * 56 + "\n"
+    "RESULT: FAIL (1 step(s) failed)\n"
+)
+
+
+def test_known_limit_a_quoted_mock_banner_carries_the_quoting_steps_text():
+    tail = _failure_tail(WI405_QUOTED_MOCK_BANNER_BAR)
+    # PINNED LIMIT: anchored on the quoted mock banner, quoter's text carried ...
+    assert "=== tests+coverage : stub pytest -q ===" in tail
+    assert "fixture tail" in tail
+    # ... the real error line never reached ...
+    assert "REAL ERROR" not in tail
+    # ... though the appended anchoring row still names the failing step.
+    assert "  FAIL  tests+coverage" in tail
+
+
+# Shape 3 (the realistic one for THIS repo): a RED tests+coverage whose pytest
+# output embeds a nested scaffold bar (captured stdout of a failing
+# integrate/check test — the STUB_CHECK_RED shape) whose FAIL row names a
+# DIFFERENT step. The nested `  FAIL  format` is the FIRST FAIL line, so the
+# window becomes the passing format step's own output — an actively wrong
+# attribution, silent. (When the nested row names the SAME step as the outer
+# red — the common stub shape — the window is correct; REVIEW-A drove that.)
+WI405_NESTED_BAR_OTHER_STEP = (
+    "\n=== format : python -m ruff format --check . ===\n"
+    "146 files already formatted\n"
+    "  PASS  format           0.2s\n"
+    "\n=== tests+coverage : .venv/bin/python -m pytest -q -m smoke ===\n"
+    "..F\n"
+    "=== format : stub ruff format --check ===\n"
+    "  FAIL  format           exit 1 (0.1s)\n"
+    "FAILED tests/test_integrate.py::test_red_bar - AssertionError: OUTER REAL\n"
+    "1 failed, 2 passed in 0.9s\n"
+    "  FAIL  tests+coverage   exit 1 (1.0s)\n"
+    "\n" + "=" * 56 + "\n"
+    "Check summary (gate G3, tier smoke):\n"
+    "  PASS  format           0.2s\n"
+    "  FAIL  tests+coverage   exit 1 (1.0s)\n" + "=" * 56 + "\n"
+    "RESULT: FAIL (1 step(s) failed)\n"
+)
+
+
+def test_known_limit_a_nested_bar_naming_another_step_misattributes_the_window():
+    tail = _failure_tail(WI405_NESTED_BAR_OTHER_STEP)
+    # PINNED LIMIT: the passing format step's output plus the nested FAIL row ...
+    assert "146 files already formatted" in tail
+    assert "  FAIL  format" in tail
+    # ... and the truly failing step is never named, its error never carried.
+    assert "OUTER REAL" not in tail
+    assert "tests+coverage" not in tail
+
+
 # --- the interpreter resolvers (WI-285/WI-286's surviving halves) ---------------
 
 
