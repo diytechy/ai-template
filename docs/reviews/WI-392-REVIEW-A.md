@@ -197,4 +197,127 @@ convention text convicting itself on every fresh scaffold is exactly the
 class this WI exists to make cheap, and it must be fixed where the
 convention lives, not waved through.
 
-VERDICT: CHANGES-REQUESTED findings=3
+Round 1 verdict: CHANGES-REQUESTED findings=3 — superseded by Round 2 below.
+
+---
+
+### REVIEWER — G3 — Round 2 (remedy) — 2026-08-01
+
+Judging only the remedy, `f5a423ae` ("rework: WI-392 scaffold-tier fig-ok +
+parser grammar"), per the finding lifecycle: fixes verified by re-driving the
+round-1 attacks, plus the one new surface the fix itself introduced (the
+placeholder-grammar rule). Note for the record: `f5a423ae` also commits this
+review file (round 1, verbatim — the crashed builder agent committed it with
+the rework); the on-disk file matched the committed bytes before this append.
+
+Verdict: APPROVE
+
+**Finding 1 (MAJOR) — FIXED, verified at the class.** Re-drove the exact
+round-1 attack: `bootstrap.py --dest <tmp>` then the docstring's own opt-in
+`check_figures.py --root <tmp> --strict` → **rc=0**, `OK - no declared
+figures`. The fix is three-layered as claimed and I drove each layer: (i)
+the convention text carries `fig-ok` at source (part-3 heading and the
+closing paragraph — read in the diff, inherited by the scaffold); (ii) the
+parser reclassifies placeholder-shaped values as grammar prose
+(`GRAMMAR_EXAMPLE` — neither flags nor counts); (iii) the missing test tier
+exists — `test_a_fresh_scaffold_passes_its_own_docstring_opt_in` bootstraps
+into tmp and runs the shipped check end-to-end, and I **mutation-drove its
+red**: with `cab612c3`'s pre-fix `PROCESS_OPTIONS.md` swapped into the tree
+the test **FAILED** (`tests/test_check_figures.py:178: AssertionError`),
+restored clean after (`git status --short` empty). The fourth class member
+(a verdict record quoting defective markers convicts the quoter — this very
+file) is handled by `SKIP_PREFIXES = ("docs/reviews/",)` with the reasoning
+in place, the **log deliberately not exempt** (stated in the code comment
+and LLR-146), covered by
+`test_a_review_record_quoting_defective_markers_is_out_of_scope` — and
+proven live: the repo's `--strict` run is rc=0 *with this
+bare-marker-quoting review committed*.
+
+**Finding 2 (MINOR) — FIXED, all three edges re-driven on the round-1
+fixtures.** (a) flush `rev=-->` now refuses: `WARN … carries cmd= but no
+rev=` on both fixture files (the wordful-value rule, `WORD` +
+`judge_marker`); (b) two half-carrying markers no longer cross-satisfy —
+the same line now yields **two** findings (`no rev=` and `no cmd=`,
+`marker_segments` per-marker ownership); (c) quoted rev **decided as
+accepted** — `rev="83ebd450"` passes (`REV` takes bare or quoted), and the
+convention text states the whole grammar where the convention lives
+(PROCESS_OPTIONS part 3 *Grammar:* sentence: placeholder values declare
+nothing, per-marker attribute ownership, bare-or-quoted `rev=`). Six new
+tests cover all of it; suite **19 passed in 1.05s**.
+
+**Finding 3 (INFO) — acknowledged as asked.** The fragment names
+`db211dd7` (targeted grep, count 1 — the fragment was not otherwise read);
+left to self-heal at the trunk-lane regen, which is the right disposition.
+
+**Census 17→16 — verified to be exactly the class I convicted.** Re-ran the
+census through the new parser: **16 declared, all passing, rc=0**; the 5
+reclassified grammar-prose lines are precisely round 1's list
+(`docs/work/complete/WI-392-…md:18,:20`, `docs/enforcement-audit.md:58`,
+plus the fragment's two grammar lines), and the 4 additions are the rework
+record's own markers (deliverable + fragment, 2 each). 17 − 5 + 4 = 16,
+derivation declared in the Deliverable with its own `fig: derived=` marker.
+Observed, acceptable: the rework's self-measurement rides
+`rev=this-rework-commit` — a commit cannot carry its own hash, and the
+record's landing commit identifies the revision; noted, not a finding.
+
+**4. MINOR (new, in the fix; recorded, non-blocking) — the placeholder
+proxy over-approximates its class, and the over-approximation is unstated.**
+Driven: `Stderr cmd, rev MISSING: 9 tests <!-- fig: cmd="pytest -q 2>&1 |
+tail -1" -->` → `OK - no declared figures` — a *defective* marker (rev
+absent) escapes both census and flagging because `>` in the cmd value trips
+`PLACEHOLDER_CHARS`; likewise a fully-provenanced `cmd="sort < in.txt |
+wc -l" rev=abc123` declaration is silently uncounted. The ratified class is
+"placeholder-grammar examples" / "placeholder-shaped (`<command>`, `…`)" —
+a real shell-redirect command is neither, so the implementation ignores
+markers the ratified text does not say it ignores. Bounded: requires `<`,
+`>` or `…` *inside a quoted value*; zero of the repo's 16 live declarations
+hit it; failure direction is silence (uncounted), never false conviction;
+same stance-precedent as check_doc_refs' `{placeholder}` skip; warn-first
+opt-in step. -> follow-up owed: narrow the proxy (e.g. treat placeholder
+chars as grammar only when no other attribute is complete, or match
+`<word>` bracket-pairs rather than bare chars) or state the
+over-approximation in the convention/docstring where the stance lives, the
+enforcement-audit bounded-gap idiom -> @owner
+
+**Registries re-read after the amendment** (the AC changed in the rework,
+so I re-read all three rows): SR-136's AcceptanceCriteria now says exactly
+what ships — marker-level judgment ("each marker on a line judged on its
+own attributes"), "empty or wordless values", "rev= (bare or quoted)", and
+the ignore list naming placeholder-grammar examples and `docs/reviews/`
+records; Requirement/Rationale/SN links/dials unchanged from the row I
+verified in round 1. LLR-146's CodeSymbol tracks the real symbols
+(`findings_for/judge_marker/marker_segments` — all exist) and its Detail
+matches the shipped behavior including the reviews skip and the
+deliberately-unskipped log; TC-140's Method adds the six new behaviors and
+they map 1:1 onto the six new tests. `check_doc_refs --strict` rc=0 over
+the registries.
+
+**Mechanical, re-driven at `f5a423ae`**: `tests/test_check_figures.py` →
+**19 passed in 1.05s**; smoke → **617 passed, 2 skipped in 9.69s**;
+`check_figures --root . --strict` rc=0 (**16 declared**);
+`check_trajectory --strict` rc=0 (clean, 401 WIs, acyclic);
+`check_doc_refs --strict` rc=0; `check_dupes` rc=0; `ruff format --check`
+clean; `wc -c PROCESS_OPTIONS.md` = **168,222** exactly as re-stamped, the
++338 argued with its reason in the byte-budget-guard row and re-stamped in
+all three skill copy homes. Worktree clean before and after (the one
+mutation probe restored from `f5a423ae`).
+
+**RATIFICATION ACT (SR-136).** Under `docs/gate-policy` `autonomous`, a
+recorded independent reviewer verdict carries ratification authority below
+G-Final. **This APPROVE is that act: SR-136 — with LLR-146 and TC-140 as
+amended at `f5a423ae` — is hereby ratified** as a row of record: the
+requirement is real and one obligation, the SN links (SN-008;SN-010) are
+honest and sibling-consistent, the amended AcceptanceCriteria state what I
+measured the shipped check to do, the traced cells resolve, and Status
+`Verified` is earned by the 19-green suite and the strict runs above.
+Finding 4 is recorded beside the act as a bounded implementation residue
+(the enforcement-audit idiom: written down, never implied covered) — it
+narrows nothing in the ratified requirement text and owes a follow-up, not
+a round.
+
+Findings this round: 1 new (MINOR, finding 4, follow-up owed). Rounds 1–2
+total: 1 MAJOR (fixed, verified), 2 MINOR (one fixed and verified, one INFO
+self-healing), 1 MINOR residual recorded. I re-attacked the remedy and it
+held everywhere the round-1 attacks broke it.
+
+VERDICT: APPROVE findings=4
