@@ -142,3 +142,6 @@ resource: "generated"
 | [TC-143](TC-143.md) | Run the dispatch admission suite: an exclusive row + a busy lane answers wait (never a pa… |
 | [TC-144](TC-144.md) | Run the dispatch loop suite on real git repos with the real bar: a spine batch claims as … |
 | [TC-145](TC-145.md) | Run the integrator claim suite: a spine claim succeeds on an idle station (the deleted sa… |
+| [TC-146](TC-146.md) | Run the schedule + integrate suites' adjudication cases: the kind classifies exclusive at… |
+| [TC-147](TC-147.md) | Run the intake suite against real git repos, red-then-green per trigger: a ratified SR am… |
+| [TC-148](TC-148.md) | Run the integrator + dispatcher suites' intake-arm cases: a merged branch that amended a … |

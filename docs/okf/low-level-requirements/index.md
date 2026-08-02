@@ -145,3 +145,6 @@ resource: "generated"
 | [LLR-149](LLR-149.md) | §A8 admission: the kind x gate-policy table + the spine barrier |
 | [LLR-150](LLR-150.md) | Lane mechanics: worktree, worker subprocess, §A2 refresh subprocess |
 | [LLR-151](LLR-151.md) | Dispatch-lock claim rung + the spine batch claim |
+| [LLR-152](LLR-152.md) | The adjudication kind: rank-1 slot + no-bar arm + the bar strictness key |
+| [LLR-153](LLR-153.md) | The unified trunk-side intake mint + the context block + the gate-policy arms |
+| [LLR-154](LLR-154.md) | The merge slot's post-merge intake arm |
