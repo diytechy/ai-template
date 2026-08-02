@@ -994,7 +994,7 @@ Contracts (interfaces): IF-001, IF-021, IF-042
 | `sn_cited_ids(srs)` | Every SN id cited by >=1 SR row's `SN-Refs` cell — the coverage set the |  |
 | `sn_integrity_findings(sn_text)` | Duplicate-id protection for the SN tier — the one tier stored as prose, |  |
 | `schema_findings(label, rows)` | Empty required fields and out-of-vocabulary Verification/Tier values, over |  |
-| `phase_ratified_findings(real)` | The ratified-phase completeness rule (process.md §4 "Phased delivery"): once |  |
+| `phase_ratified_findings(real)` | The ratified-phase NUMERIC-ONLY rule (process.md §4 "Phased delivery"; owner |  |
 | `build_forest(sn_ids, srs, llrs, tcs, orphan_ids, sn_draft)` | The SN -> SR -> LLR -> TC chain as nested nodes, plus synthetic groups for |  |
 | `outline_lines(roots)` | Indented Markdown list of the forest — pure text, so it reviews line-by- |  |
 | `reattest_model(root, srs, llrs, tcs, since, statuses)` | The STRUCTURED attestation model: one entry per SR owing an attestation, |  |

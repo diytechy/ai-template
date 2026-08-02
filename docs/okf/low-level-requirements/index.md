@@ -141,3 +141,4 @@ resource: "generated"
 | [LLR-145](LLR-145.md) | Link-aware spec-move ritual (move + relink indivisible) |
 | [LLR-146](LLR-146.md) | Declared-figure provenance presence check |
 | [LLR-147](LLR-147.md) | SN-coverage gate rung + uncovered basis count |
+| [LLR-148](LLR-148.md) | Derived next phase as an output mode |
