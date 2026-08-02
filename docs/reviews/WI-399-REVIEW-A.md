@@ -86,4 +86,91 @@ silences — both pinned by passing tests). Mechanical re-runs on this box:
 size ratchet 3359 == `wc -l` 3359 with a reasoned stamp; docs/work delta is
 WI-399-only; ruff lint + format clean on the touched files.
 
-VERDICT: CHANGES-REQUESTED findings=3
+ROUND-1 VERDICT (superseded): CHANGES-REQUESTED findings=3
+
+---
+
+# Round 2 — rework baf0d028 verified (same reviewer, same hunt posture)
+
+Note: the round-1 text above was swept into baf0d028 by the builder's `git add
+-A` (disclosed); verified byte-identical to what this reviewer wrote — a record
+surface, not an edit.
+
+Method: line-diffed `_would_be_inventoried`/`_has_internal_import` against
+`gen_arch_map.build_map`/`scan_module`/`internal_imports`/`module_contracts`/
+`first_line` arm by arm; re-ran the differential harness (17 tree shapes,
+mirror set vs a REAL `gen_arch_map` run parsed back through
+`arch_inventory`/`_norm_module`) including every predicate arm the suite does
+NOT drive; re-drove findings 1 and 3 end-to-end through `check_trajectory
+--strict` with real regenerations; re-ran the suite, smoke, strict checks,
+census, ratchet, ruff.
+
+**Finding 1 (MAJOR) — REMEDIED, re-driven.** `_would_be_inventoried` mirrors
+`build_map`'s `if not (summary or imports or contracts or rows): continue`
+faithfully: docstring-truthiness matches `first_line` (via `cleandoc`
+semantics), the public-symbol arm matches scan_module's public
+FunctionDef/AsyncFunctionDef/ClassDef rows, `_has_internal_import` matches
+`internal_imports`' non-emptiness (relative `node.level`, absolute
+first-segment-in-names, same `ast.walk`, same names universe = stems + package
+dir parts of the post-hidden-skip scan), the first-8-lines `# Contracts:`
+comment arm matches `module_contracts` (`CONTRACTS_RE` = `\bIF-\d+\b` vs
+`IF_ID_RE` = `IF-\d+` — same hits on comment lines), and SyntaxError ->
+inventoried matches the generator's kept `PARSE ERROR` entry. Driven: bare
+`pkg/__init__.py` + comment-only + private-only modules beside a tagged real
+`pkg/mod.py` are GREEN in the lane (rc=0) and GREEN after a real regen (rc=0)
+— the round-1 permanent red is gone; the untagged-real-module path still reds,
+absorbs on regen with the station holding the same red, and clears on tag
+(suite `test_differential_delta_empties_exactly_when_the_regen_absorbs`,
+watched red under the pre-rework code per the commit message). Differential
+harness, 17/17 consistent: bare `__init__`, comment-only, private-only fn,
+private-only class, public-class-only, import-only (internal abs), import-only
+(external — both skip), re-exporting `__init__` (relative import — both keep),
+contracts-comment-only, contracts comment below line 8 (both skip),
+parse-error (both keep), whitespace-only docstring (both skip), docstring-only,
+constants-only with/without docstring, nested packages, files mode.
+
+**Finding 2 (MINOR) — REMEDIED.** `shipped_modules` returns empty in files
+mode by design, and the replacement test
+(`test_files_mode_real_map_keeps_the_whole_family_dormant`) pins the honest
+claim against a REAL `--mode files` regeneration (marker-pair doc, real
+generator run, ADDED_MSG and KN_MSG both absent, rc=0 — parity, no lane-only
+hole). Deliverable rewritten to match ("Files mode is dormant by parity…",
+"symbols-mode `*.py` scope" replacing the old files-mode claim).
+
+**Finding 3 (NIT) — REMEDIED, re-driven.** `strip("/")` -> `rstrip("/")` +
+the pathlib absolute-right-operand join: an absolute `[paths] src` now scans
+the path it names. Driven end-to-end: absolute src baseline green with the
+real generator keying `scripts/a` identically, untagged add reds the lane
+naming `scripts/mod_new`; pinned by
+`test_absolute_declared_src_scans_like_the_generator`.
+
+4. [ADVISORY] tests/test_trajectory_arch.py (`regen_map` differential
+   fixtures) -> the residual, judged honestly: the emptiness-predicate mirror
+   is a second copy of generator semantics (now sanctioned, `module-path`
+   2 -> 3), and the differential tests guard the arms their fixtures contain —
+   public-symbol, bare `__init__`, comment-only, private-only, hidden-skip,
+   absolute src — but NOT the import-only arm (e.g. a re-exporting
+   `__init__.py`, the most common downstream shape), the
+   contracts-comment-only arm, or the PARSE-ERROR-stays-inventoried arm. All
+   three are consistent TODAY (driven by this review's harness), but a future
+   change to `internal_imports`/`build_map` in those arms would slip past the
+   suite, so the census stamp's "guarded, not hoped" is true only for the
+   driven arms. Non-blocking: the `regen_map` framework makes the extension a
+   three-fixture-file edit — record it as a small follow-up WI (extend the
+   differential fixtures to the un-driven arms) rather than rework. -> @owner
+
+Mechanical re-runs on this box (rework tree, baf0d028):
+`tests/test_trajectory_arch.py` 57 passed in 1.30s; smoke 619 passed /
+2 skipped in 10.12s; `check_trajectory --strict` rc=0, `check_doc_refs
+--strict` rc=0, `check_figures --strict` OK — 23 declared figure(s);
+`check_dupes` OK (49 files — the new `3d4cc5a83464` sanction covers the
+import-walk mirror, stamped with the differential-test reason); size ratchet
+3428 == `wc -l` 3428 with a reasoned stamp; ruff lint + format clean. Diff
+surface is WI-399-only; the Deliverable's rework section is dated, accurate,
+and its figure stamps carry command + revision.
+
+Findings 1-3 remedied and verified by re-drive; finding 4 is advisory,
+recorded for follow-up, not blocking. I tried to re-break the remedy across
+every predicate arm and failed.
+
+VERDICT: APPROVE findings=4
