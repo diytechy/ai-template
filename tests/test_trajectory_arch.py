@@ -809,6 +809,55 @@ def test_parse_error_module_stays_inventoried_on_both_sides(tmp_path):
     assert strict.returncode == 0, strict.stdout + strict.stderr
 
 
+# --- WI-410: the absolute-import arms, pinned (WI-406 REVIEW-A finding 1) ------
+# The WI-406 fixtures above never drive _has_internal_import's ABSOLUTE arms:
+# reducing the ImportFrom test to `if node.level:` and deleting the whole
+# ast.Import branch left all 60 tests green, so an absolute-import-ONLY module
+# could drift mirror-side without a red — the wi-387 station-first topology
+# back, for exactly that shape. The two arms are disjoint syntactic branches
+# (one import statement trips exactly one), so no single module can pin both:
+# the fixture tree ships BOTH flat-layout shapes as separately driftable
+# modules, and dropping EITHER arm alone drops exactly its module from the
+# delta and reds this one test on the name assert (watched: each single-arm
+# scratch mutation reds this fixture and nothing else; the review's
+# both-dropped probe empties the delta and reds it on the rc assert).
+
+
+def test_absolute_import_only_modules_are_inventoried_on_both_sides(tmp_path):
+    # No relative form anywhere and no other inventoried content (docstring,
+    # public symbol, Contracts comment): each module's ONLY internal reference
+    # is one absolute import, so only an absolute arm can keep it. The names
+    # universe BOTH sides build is module stems + package directory parts —
+    # the scan root's own name (`scripts`) is in NEITHER, so the flat stem
+    # (`mod_0`) is the internal shape; `from scripts import mod_0` would be
+    # external on both sides alike.
+    _contained_two_module_tree(tmp_path)
+    write_module(tmp_path, "abs_imp.py", "import mod_0\n")
+    write_module(tmp_path, "abs_from.py", "from mod_0 import run\n")
+    strict = run_traj(tmp_path, "--strict")
+    assert strict.returncode == 1
+    assert ADDED_MSG in strict.stderr
+    assert "scripts/abs_imp" in strict.stderr  # the ast.Import arm keeps it
+    assert "scripts/abs_from" in strict.stderr  # the names-membership arm keeps it
+    assert "2 shipped module(s)" in strict.stderr
+    regen_map(tmp_path)
+    strict = run_traj(tmp_path, "--strict")
+    assert strict.returncode == 1
+    assert ADDED_MSG not in strict.stderr  # the real generator absorbed both
+    assert KN_MSG in strict.stderr  # the station rule holds the same red
+    write_tagged_llrs(
+        tmp_path,
+        [
+            ("scripts/mod_0", "CMP-001"),
+            ("scripts/mod_1", "CMP-001"),
+            ("scripts/abs_imp", "CMP-001"),
+            ("scripts/abs_from", "CMP-001"),
+        ],
+    )
+    strict = run_traj(tmp_path, "--strict")
+    assert strict.returncode == 0, strict.stdout + strict.stderr
+
+
 # --- WI-093: the [phase]-[g*] archetype + phase-drop detector ------------------
 # The derived-gate model (docs/specs/derived-gate-model.md §7/§9.3): a phase's
 # pre-dev batch is a WI whose Title carries a `[<phase>]-[g<N>]` tag; the derived
