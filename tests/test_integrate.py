@@ -111,6 +111,7 @@ from conftest import (
 pytestmark = env_gate_skipif("git")
 
 integ = load_script("integrate")
+spec_move = load_script("spec_move")
 
 # Pinned commit stamps (unix seconds). Named rather than inlined so the ORDER a
 # freshness test depends on is readable at the assertion.
@@ -553,6 +554,125 @@ def test_an_md_edit_that_is_not_the_relink_still_convicts(tmp_path):
         encoding="utf-8",
         newline="\n",
     )
+    _commit(root, integ._claim_subject("WI-401", "wi-401"), when=T_VERDICT)
+    _git(root, "checkout", "-q", "main")
+
+    assert not integ._abandoned_claim(root, "WI-401", "wi-401")
+
+
+def forged_relink_claim(root, mangle, wi="WI-401", branch="wi-401"):
+    """A claim-shaped commit whose relink writes are GENUINE, with `mangle`
+    applied to the relinked log afterwards — WI-393 REVIEW-A finding 1's drive
+    recipe: exact `_claim_subject`, a real `spec_move.move_spec` move pair, one
+    commit past trunk. Every fact `_abandoned_claim` checks holds except what
+    `mangle` changed, so the relinked file's BYTES are the only thing left to
+    convict on — a fixture built any looser cannot fail if the compare
+    loosens."""
+    _git(root, "checkout", "-q", "-b", branch)
+    touched, refusal = spec_move.move_spec(
+        root,
+        "docs/work/queued/{}-widget.md".format(wi),
+        "docs/work/active/{}/{}-widget.md".format(branch, wi),
+    )
+    assert refusal is None and "docs/log.md" in (touched or [])
+    mangle(root / "docs" / "log.md")
+    _commit(root, integ._claim_subject(wi, branch), when=T_VERDICT)
+    _git(root, "checkout", "-q", "main")
+
+
+def linked_log_repo(
+    tmp_path, log_bytes=b"planned: [WI-401](work/queued/WI-401-widget.md)\n"
+):
+    """A claim_repo whose docs/log.md links the queued spec with EXACT bytes,
+    so the claim's relink genuinely touches it and a byte-level mangle has a
+    deterministic before-state."""
+    root = claim_repo(tmp_path)
+    (root / "docs" / "log.md").write_bytes(log_bytes)
+    _commit(root, "link the queued spec", when=T_CODE)
+    return root
+
+
+def test_a_trailing_newline_only_hand_edit_in_a_claim_shape_convicts(tmp_path):
+    """WI-403 (WI-393 REVIEW-A finding 1, driven excused 2026-08-01):
+    `_relinked_exactly` read both sides through `ac.git`, whose text-mode
+    success path `.strip()`s — so a hand edit consisting only of APPENDED BLANK
+    LINES on a relinked doc compared equal to the ritual's own write and the
+    branch carrying it was deleted. The oracle's reads are raw blob bytes now;
+    an EOL-margin edit is somebody's work like any other byte."""
+    root = linked_log_repo(tmp_path)
+    forged_relink_claim(root, lambda log: log.write_bytes(log.read_bytes() + b"\n\n"))
+
+    assert not integ._abandoned_claim(root, "WI-401", "wi-401")
+
+
+def test_a_whole_file_crlf_relay_in_a_claim_shape_convicts(tmp_path):
+    """WI-403 (WI-393 REVIEW-A finding 1, driven excused 2026-08-01): the
+    text-mode read's universal-newlines decode folded `\\r\\n` to `\\n` on BOTH
+    sides of the compare, so a whole-file CRLF relay of a relinked doc rode
+    through as "relink-identical". This repo treats line endings as
+    load-bearing (WI-234/WI-337 — spec_move itself preserves them via
+    `newline=""`), so a relay is a real content change the oracle must see."""
+    root = linked_log_repo(tmp_path)
+    forged_relink_claim(
+        root, lambda log: log.write_bytes(log.read_bytes().replace(b"\n", b"\r\n"))
+    )
+
+    assert not integ._abandoned_claim(root, "WI-401", "wi-401")
+
+
+def test_one_extra_mid_file_byte_still_convicts(tmp_path):
+    """The conviction the oracle always had (REVIEW-A's `one-extra-md-byte`
+    drive returned False on the text-mode read too), pinned at the byte level
+    so the raw-read rewrite cannot have loosened it: one byte in the MIDDLE of
+    a relinked doc — where no strip or EOL fold could ever hide it — is
+    somebody's work."""
+    root = linked_log_repo(tmp_path)
+
+    def one_extra_mid_file_byte(log):
+        data = log.read_bytes()
+        mid = len(data) // 2
+        log.write_bytes(data[:mid] + b"x" + data[mid:])
+
+    forged_relink_claim(root, one_extra_mid_file_byte)
+
+    assert not integ._abandoned_claim(root, "WI-401", "wi-401")
+
+
+def test_a_crashed_claim_that_relinked_a_crlf_doc_is_still_excused(tmp_path):
+    """The fairness the text-mode decode bought by ACCIDENT — folding EOLs so a
+    CRLF checkout compared equal — kept honestly by the raw read: spec_move
+    preserves a CRLF doc's line endings (`newline=""`), so the genuine relink
+    of a CRLF doc matches byte-for-byte and the crashed claim is still excused,
+    not refused, on a CRLF checkout."""
+    root = linked_log_repo(
+        tmp_path, log_bytes=b"planned: [WI-401](work/queued/WI-401-widget.md)\r\n"
+    )
+    crashed_claim(root)
+
+    assert integ._abandoned_claim(root, "WI-401", "wi-401")
+
+
+def test_a_relinked_doc_the_ritual_would_have_skipped_convicts(tmp_path):
+    """`_rewrite_md_links` SKIPS a non-UTF-8 file, so an .md modification whose
+    parent content does not decode cannot be the ritual's own write — the raw
+    read convicts it outright instead of comparing replacement-mangled text."""
+    root = linked_log_repo(
+        tmp_path,
+        log_bytes=b"planned: [WI-401](work/queued/WI-401-widget.md) \xff\n",
+    )
+
+    def hand_edit_the_skipped_file(log):
+        log.write_bytes(log.read_bytes() + b"an edit\n")
+
+    _git(root, "checkout", "-q", "-b", "wi-401")
+    touched, refusal = spec_move.move_spec(
+        root,
+        "docs/work/queued/WI-401-widget.md",
+        "docs/work/active/wi-401/WI-401-widget.md",
+    )
+    # the ritual itself skipped the undecodable log — the forge hand-edits it
+    assert refusal is None and "docs/log.md" not in (touched or [])
+    hand_edit_the_skipped_file(root / "docs" / "log.md")
     _commit(root, integ._claim_subject("WI-401", "wi-401"), when=T_VERDICT)
     _git(root, "checkout", "-q", "main")
 
