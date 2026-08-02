@@ -1395,6 +1395,66 @@ def _run_trunk_step(wt, root):
 # to strictest so a batch takes the max.
 _BAR_GATES = ("G1", "G2", "G3")
 
+# The surfaces an adjudication lane's non-refresh delta may touch and still
+# take the NO-BAR path (WI-388 REVIEW-A finding 1) — §A5.2's premise ("it
+# touches Status cells and the work registry, nothing a product bar can speak
+# to") made CHECKED rather than asserted. Derived from what the kind's ruled
+# outcomes actually write: the work registry (spec moves, dispositions,
+# drafted follow-ups), the three spine registries (the Status flip — the
+# path-level bound is the honest checkable one; the cell-level judgement
+# belongs to the amendment seam and the verdict round), the open-items
+# registry ("surface an open item" is a ruled R3 outcome), the derived gate
+# the flip recovers, and the record surfaces (the log fragment, the review
+# verdicts). The declared [generated] set joins at read time — the trunk step
+# owns those and a lane's refresh regenerates them anyway.
+_ADJUDICATION_SURFACES = (
+    "docs/work/",
+    "docs/log.d/",
+    "docs/reviews/",
+    "docs/gate",
+    "docs/requirements/system-requirements.csv",
+    "docs/requirements/low-level-requirements.csv",
+    "docs/test/test-cases.csv",
+    "docs/requirements/open-items.csv",
+)
+
+
+def _adjudication_scope_ok(root, branch):
+    """May this adjudication-only lane take the no-bar path? True only when
+    the branch's NON-REFRESH delta — merge-base(trunk, branch) to the peeled
+    work tip, the same branch-delta read `_minted_id_refusal` makes at the
+    same slot — touches nothing outside `_ADJUDICATION_SURFACES` plus the
+    declared [generated] set.
+
+    ANY other path — product code above all — fails TOWARD the full bar:
+    REVIEW-A drove a product file with a red check harness through the no-bar
+    arm onto trunk with the harness never invoked, an un-run green against
+    §A8's fixed points ("no un-run greens; the harness is still the bar").
+    Unreadable git answers False, the same direction."""
+    code, base = ac.git(root, "merge-base", _head(root), branch)
+    if code != 0 or not base.strip():
+        return False
+    code, out = ac.git(
+        root,
+        "diff",
+        "--name-only",
+        "--no-renames",
+        base.strip(),
+        _work_tip(root, branch),
+    )
+    if code != 0:
+        return False
+    allowed = list(_ADJUDICATION_SURFACES) + _generated_paths(root)
+    for raw in out.splitlines():
+        path = raw.strip().replace("\\", "/")
+        if path and not any(
+            path == entry.rstrip("/")
+            or (entry.endswith("/") and path.startswith(entry))
+            for entry in allowed
+        ):
+            return False
+    return True
+
 
 def _lane_bar_directives(root, branch):
     """The claimed rows' say over the refresh bar (WI-388): `(skip, gate,
@@ -1439,6 +1499,10 @@ def _lane_bar_directives(root, branch):
         if declared:
             bars.append(declared)
     skip = bool(kinds) and all(kind == "adjudication" for kind in kinds)
+    # The scope rung (REVIEW-A finding 1): the kind alone never earns the
+    # no-bar path — the branch's delta must LOOK like adjudication too.
+    if skip and not _adjudication_scope_ok(root, branch):
+        skip = False
     return skip, (max(bars) if bars else None), None
 
 

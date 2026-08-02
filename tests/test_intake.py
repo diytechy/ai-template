@@ -301,6 +301,38 @@ def test_a_handed_back_adjudication_row_mints_no_second_disposition(tmp_path):
     assert minted == []
 
 
+def test_a_second_handback_of_the_same_row_mints_a_second_disposition(tmp_path):
+    # REVIEW-A finding 3: the disposition title carries the handback MERGE's
+    # sha (the amendment title's sha-pair discipline, applied to trigger b),
+    # so a re-queued row's SECOND handback is a new event that mints its own
+    # disposition — never a silent dedupe that leaves nobody owed the
+    # judgement.
+    root = handback_repo(tmp_path)
+    sha1 = _rev(root)
+    first, refusal = intake.intake_after_merge(
+        root, sha1, sha1, {"WI-005": "handback"}, "wi-005"
+    )
+    assert refusal is None, refusal
+    assert len(first) == 1
+    # The row is disposed, re-queued, claimed again, handed back again: a
+    # LATER merge lands the second return.
+    (root / "seed.txt").write_text("moved\n", encoding="utf-8", newline="\n")
+    _commit(root, "the second handback merge lands", when=T_CODE + 500)
+    sha2 = _rev(root)
+    second, refusal = intake.intake_after_merge(
+        root, sha2, sha2, {"WI-005": "handback"}, "wi-005"
+    )
+    assert refusal is None, refusal
+    assert len(second) == 1, "the second RETURN event owes its own disposition"
+    assert first[0][0] != second[0][0]
+    # ...and a re-run of the SAME second event still dedupes (idempotence).
+    again, refusal = intake.intake_after_merge(
+        root, sha2, sha2, {"WI-005": "handback"}, "wi-005"
+    )
+    assert refusal is None, refusal
+    assert again == []
+
+
 def test_a_second_intake_for_the_same_handback_is_deduped(tmp_path):
     root = handback_repo(tmp_path)
     before = after = _rev(root)

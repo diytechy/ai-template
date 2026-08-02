@@ -1103,8 +1103,12 @@ BASELINE = {
     # hook point where `intake.intake_after_merge` mints inside the held slot
     # (§A5.2; the mint helper itself is the new sibling intake.py, kept under
     # the ratchet's threshold). Reviewed bump, log fragment 2026-08-02
-    # (WI-388). Re-stamp down with WI-280.
-    "integrate.py": 2353,
+    # (WI-388). Then +64 (2353 -> 2417), WI-388 REVIEW-A finding 1: the no-bar
+    # arm's diff-scope rung (`_ADJUDICATION_SURFACES` +
+    # `_adjudication_scope_ok`) — the kind alone never earns the no-bar path;
+    # the branch's non-refresh delta must stay on the §A5.2 surfaces or the
+    # full bar runs. Re-stamp down with WI-280.
+    "integrate.py": 2417,
 }
 
 

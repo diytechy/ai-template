@@ -54,7 +54,7 @@ deterministic (the amendment title carries its sha pair), so a recovery re-run
 — `python intake.py sweep --before <sha> --after <sha>` — is idempotent by
 exact-title dedup.
 
-Contracts: IF-090, IF-091 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.csv).
+Contracts: IF-090, IF-091, IF-092 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.csv).
 """
 
 from __future__ import annotations
@@ -482,7 +482,15 @@ def _returned_spec(root, wi_id):
     return None
 
 
-def _handback_drafts(root, outcomes):
+def _rev7(root, rev):
+    """`rev` resolved to its short sha (7), falling back to the raw text —
+    the event token the derived titles carry, so a symbolic `HEAD` from the
+    sweep CLI and the slot's full sha name the same event the same way."""
+    code, out = ac.git(root, "rev-parse", str(rev))
+    return out.strip()[:7] if code == 0 and out.strip() else str(rev)[:7]
+
+
+def _handback_drafts(root, outcomes, after7):
     drafts = []
     for wi_id in sorted(w for w, o in (outcomes or {}).items() if o == "handback"):
         found = _returned_spec(root, wi_id)
@@ -508,10 +516,16 @@ def _handback_drafts(root, outcomes):
             continue
         drafts.append(
             {
+                # The handback MERGE's sha is the title's event token
+                # (REVIEW-A finding 3, the amendment title's sha discipline
+                # applied to trigger b): a re-queued row's SECOND handback is
+                # a NEW event that mints its own disposition — never a silent
+                # dedupe that leaves nobody owed the judgement — while a
+                # re-run for the SAME merge still dedupes exactly.
                 "title": (
-                    "dispose: {} handed back ({}) - {} (a disposition row "
-                    "never hands back; R3)".format(
-                        wi_id, relpath, _DISPOSITION_OUTCOMES
+                    "dispose: {} handed back at {} ({}) - {} (a disposition "
+                    "row never hands back; R3)".format(
+                        wi_id, after7, relpath, _DISPOSITION_OUTCOMES
                     )
                 ),
                 "kind": "adjudication",
@@ -827,7 +841,7 @@ def intake_after_merge(root, before, after, outcomes=None, branch=""):
     refusal mints nothing (the merge itself STANDS; recovery is a trunk-side
     fix plus `python intake.py sweep --before {before} --after {after}`)."""
     drafts = _amendment_drafts(root, before, after)
-    drafts += _handback_drafts(root, outcomes)
+    drafts += _handback_drafts(root, outcomes, _rev7(root, after))
     disposition, refusal = _disposition_drafts(root, outcomes)
     if refusal:
         return [], refusal

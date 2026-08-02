@@ -1798,7 +1798,12 @@ sys.exit(1)
 
 
 def station_repo(
-    tmp_path, check_src=STUB_CHECK_GREEN, policy="0", dest="complete", **spec_kw
+    tmp_path,
+    check_src=STUB_CHECK_GREEN,
+    policy="0",
+    dest="complete",
+    product=True,
+    **spec_kw,
 ):
     """A trunk with WI-401 claimed onto `wi-401` and CLOSED, plus a stub harness.
 
@@ -1806,7 +1811,8 @@ def station_repo(
     real closing move. Only the two harness scripts are stubs, and they are
     stubs so the test can assert the ORDER they ran in — see above. `spec_kw`
     shapes the claimed spec (the WI-388 bar/no-bar tests declare `bar=` or
-    `safety=` on it).
+    `safety=` on it); `product=False` closes the lane WITHOUT the product
+    file, the pure-registry shape an honest adjudication lane has.
     """
     root = claim_repo(tmp_path, **spec_kw)
     (root / ".gitignore").write_text(
@@ -1827,11 +1833,13 @@ def station_repo(
     (scripts / "check.py").write_text(check_src, encoding="utf-8", newline="\n")
     _commit(root, "chore: the stub harness and the declared bar", when=T_CODE)
     assert integ.claim(root, "WI-401", "wi-401") == 0
-    close_branch(root, "wi-401", dest=dest)
+    close_branch(root, "wi-401", dest=dest, product=product)
     return root
 
 
-def close_branch(root, branch, wi="WI-401", slug="widget", extra=None, dest="complete"):
+def close_branch(
+    root, branch, wi="WI-401", slug="widget", extra=None, dest="complete", product=True
+):
     """Build and CLOSE `branch` in its own lane worktree: one product commit and
     the §2.3 step-3 move to its TERMINAL directory. Leaves the worktree
     registered, which is where the refresh will run — the lane's own tree, by
@@ -1841,7 +1849,8 @@ def close_branch(root, branch, wi="WI-401", slug="widget", extra=None, dest="com
     the loaders refuse it.)"""
     wt = root.parent / (root.name + integ.LANE_WORKTREE_SUFFIX) / branch
     _git(root, "worktree", "add", "-q", str(wt), branch)
-    (wt / "{}.txt".format(branch)).write_text("1\n", encoding="utf-8", newline="\n")
+    if product:
+        (wt / "{}.txt".format(branch)).write_text("1\n", encoding="utf-8", newline="\n")
     dst = wt / "docs" / "work" / dest / "{}-{}.md".format(wi, slug)
     dst.parent.mkdir(parents=True, exist_ok=True)
     src = wt / "docs" / "work" / "active" / branch / "{}-{}.md".format(wi, slug)
@@ -2089,9 +2098,20 @@ def test_an_adjudication_lane_runs_no_bar(tmp_path):
     # cells and the work registry, nothing a product bar can speak to. The
     # refresh still merges trunk in and runs the trunk step, still commits a
     # verified Bar-Green attestation (the slot's contract), but the check
-    # harness is never invoked and the summary says so.
-    root = station_repo(tmp_path, safety="adjudication")
+    # harness is never invoked and the summary says so. `product=False`: the
+    # lane's delta is the pure registry shape the kind's premise names — a
+    # spine Status edit rides along and stays inside the scope rung.
+    root = station_repo(tmp_path, safety="adjudication", product=False)
     wt = _lane(root, "wi-401")
+    (wt / "docs" / "requirements").mkdir(parents=True, exist_ok=True)
+    (wt / "docs" / "requirements" / "system-requirements.csv").write_text(
+        "SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,"
+        "Permutations,Priority,Verification,Status\n"
+        'SR-001,Adder,SN-001,"t","w","a",,C,Test,Verified\n',
+        encoding="utf-8",
+        newline="\n",
+    )
+    _commit(wt, "WI-401: the Status-cell judgement", when=T_LATER)
     sha, refusal = integ.refresh(root, "wi-401", "smoke")
     assert refusal is None, refusal
     assert _order(wt) == ["trunk_step"], "the bar must not run for adjudication"
@@ -2100,6 +2120,24 @@ def test_an_adjudication_lane_runs_no_bar(tmp_path):
     assert "no-bar" in attested[1]
     ready, why = integ._merge_ready(root, "wi-401")
     assert ready and "no-bar" in why
+
+
+def test_a_product_touching_adjudication_lane_fails_toward_the_bar(tmp_path):
+    # REVIEW-A finding 1, the reviewer's own drive kept as the regression: a
+    # product file plus a check harness that FAILS if invoked rode an
+    # adjudication-only lane through the no-bar arm onto trunk — an un-run
+    # green, against §A8's fixed points ("no un-run greens; the harness is
+    # still the bar"). The scope rung closes it: the branch's non-refresh
+    # delta touches a path outside the §A5.2 surfaces (the product file), so
+    # the refresh runs the FULL bar — which is red, and says so.
+    root = station_repo(tmp_path, check_src=STUB_CHECK_RED, safety="adjudication")
+    wt = _lane(root, "wi-401")
+    sha, refusal = integ.refresh(root, "wi-401", "smoke")
+    assert sha is None
+    assert "the bar is RED on the refreshed tree" in refusal
+    assert "check-red" in _order(wt), "the harness must have RUN"
+    ready, _why = integ._merge_ready(root, "wi-401")
+    assert not ready
 
 
 def test_a_mixed_claim_still_runs_the_bar(tmp_path):
