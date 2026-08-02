@@ -716,6 +716,99 @@ def test_absolute_declared_src_scans_like_the_generator(tmp_path):
     assert "scripts/mod_new" in strict.stderr
 
 
+# --- WI-406: the unpinned mirror arms, pinned (REVIEW-A round-2 finding 4) -----
+# The finding-1 differential fixtures above drive only the arms they contain
+# (public-symbol, bare __init__, comment-only, private-only, hidden-skip,
+# absolute src); the import-only, contracts-comment-only and parse-error arms of
+# _would_be_inventoried were consistent with the generator but UNPINNED — an
+# edit to either side of the mirror could drift them without a red. Each fixture
+# below drives one arm through the full differential: the lane reds on the
+# untagged module BEFORE any regeneration (the mirror KEEPS it), the REAL
+# gen_arch_map run absorbs it and the delta empties (the generator keeps it
+# too — a mirror-only keep would leave ADDED_MSG as a permanent red here) with
+# the station rule holding the same red, and the Component tag clears both.
+
+
+def _tag_three(tmp_path, third):
+    write_tagged_llrs(
+        tmp_path,
+        [
+            ("scripts/mod_0", "CMP-001"),
+            ("scripts/mod_1", "CMP-001"),
+            (third, "CMP-001"),
+        ],
+    )
+
+
+def test_reexporting_init_is_inventoried_on_both_sides_of_the_regen(tmp_path):
+    # The import-only arm, in its most common downstream shape: a re-exporting
+    # __init__.py whose ONLY content is a relative import of a sibling.
+    # internal_imports keeps it (node.level), so _has_internal_import must too,
+    # under the same /__init__-stripped key (scripts/pkg) _norm_module and
+    # scan_module share. `from . import notes` (module=None) isolates the
+    # node.level arm — `from .notes import x` would survive losing it via the
+    # absolute-segment-in-names arm, since the sibling's stem is in the names
+    # universe (watched: that mutation stayed green until this shape). The
+    # comment-only sibling pins the flip side in the same tree: the
+    # symbol-emptiness skip holds inside a package too, on both sides.
+    _contained_two_module_tree(tmp_path)
+    write_module(tmp_path, "__init__.py", "from . import notes\n", src="scripts/pkg")
+    write_module(tmp_path, "notes.py", "# comment-only sibling\n", src="scripts/pkg")
+    strict = run_traj(tmp_path, "--strict")
+    assert strict.returncode == 1
+    assert ADDED_MSG in strict.stderr and "scripts/pkg" in strict.stderr
+    assert "1 shipped module(s)" in strict.stderr  # the sibling is not a delta
+    assert "scripts/pkg/notes" not in strict.stderr
+    regen_map(tmp_path)
+    strict = run_traj(tmp_path, "--strict")
+    assert strict.returncode == 1
+    assert ADDED_MSG not in strict.stderr  # the real generator absorbed the key
+    assert KN_MSG in strict.stderr  # the station rule holds the same red
+    _tag_three(tmp_path, "scripts/pkg")
+    strict = run_traj(tmp_path, "--strict")
+    assert strict.returncode == 0, strict.stdout + strict.stderr
+
+
+def test_contracts_comment_only_module_is_inventoried_on_both_sides(tmp_path):
+    # The contracts-comment arm: a module whose only content is a first-8-lines
+    # `# Contracts: IF-###` comment. module_contracts keeps it (CONTRACTS_RE on
+    # comment lines), so the mirror's first-8-lines arm must too.
+    _contained_two_module_tree(tmp_path)
+    write_module(tmp_path, "seam.py", "# Contracts: IF-001\n")
+    strict = run_traj(tmp_path, "--strict")
+    assert strict.returncode == 1
+    assert ADDED_MSG in strict.stderr and "scripts/seam" in strict.stderr
+    regen_map(tmp_path)
+    strict = run_traj(tmp_path, "--strict")
+    assert strict.returncode == 1
+    assert ADDED_MSG not in strict.stderr
+    assert KN_MSG in strict.stderr
+    _tag_three(tmp_path, "scripts/seam")
+    strict = run_traj(tmp_path, "--strict")
+    assert strict.returncode == 0, strict.stdout + strict.stderr
+
+
+def test_parse_error_module_stays_inventoried_on_both_sides(tmp_path):
+    # The parse-error arm: a syntax-broken module is KEPT by the generator
+    # (rendered as a PARSE ERROR summary, rc still 0 without --strict-parse —
+    # regen_map's rc==0 assert pins that half), so the mirror's SyntaxError ->
+    # True arm must red the lane rather than skip: a skip here would let a
+    # broken shipped file dodge containment until the trunk refresh.
+    _contained_two_module_tree(tmp_path)
+    write_module(tmp_path, "broken.py", "def broken(:\n    pass\n")
+    strict = run_traj(tmp_path, "--strict")
+    assert strict.returncode == 1
+    assert ADDED_MSG in strict.stderr and "scripts/broken" in strict.stderr
+    regen_map(tmp_path)
+    strict = run_traj(tmp_path, "--strict")
+    assert strict.returncode == 1
+    assert ADDED_MSG not in strict.stderr  # the PARSE ERROR entry absorbed it
+    assert KN_MSG in strict.stderr
+    _tag_three(tmp_path, "scripts/broken")
+    strict = run_traj(tmp_path, "--strict")
+    assert strict.returncode == 0, strict.stdout + strict.stderr
+
+
 # --- WI-093: the [phase]-[g*] archetype + phase-drop detector ------------------
 # The derived-gate model (docs/specs/derived-gate-model.md §7/§9.3): a phase's
 # pre-dev batch is a WI whose Title carries a `[<phase>]-[g<N>]` tag; the derived
