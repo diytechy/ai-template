@@ -21729,7 +21729,7 @@ passed). Nothing anywhere convicts it. The file half is checkable with
 `Path.exists()` today; only the `::node` suffix needs pytest to adjudicate.
 
 **Filed as `WI-394`** (`docs/work/queued/`, spec-of-record
-[`docs/specs/WI-394.md`](specs/WI-394.md)) — with the option NOT picked for
+[`docs/specs/WI-394.md`](archive/specs/WI-394.2026-08-01.md)) — with the option NOT picked for
 the owner, because the one thing definitely wrong today is that the current
 state implies a check nobody performs. Before filing I measured whether the
 class is wider than `Evidence`, rather than guessing:
@@ -22490,7 +22490,7 @@ refuted" was the correct one** — what was wrong was the refutation.
    RED at the G3 `doc-refs` step since that file landed**, and no branch could
    have refreshed past it. `path-ok` is the shipped idiom for exactly this
    ("deliberate examples naming files that don't exist here", `check_doc_refs`
-   docstring) and [`docs/specs/WI-394.md`](specs/WI-394.md) already carries it on
+   docstring) and [`docs/specs/WI-394.md`](archive/specs/WI-394.2026-08-01.md) already carries it on
    the same quotation.
 2. **`4b4f29d6` (branch) — `LLR-144` + `TC-138` tag `handback.py` into
    `CMP-004`.** The regenerated arch-map carries `scripts/handback`, and the
