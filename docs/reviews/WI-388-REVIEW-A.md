@@ -283,3 +283,153 @@ commit predicted.
    is stale against the rev the close commit pinned it to.
 
 VERDICT: CHANGES-REQUESTED findings=5
+
+---
+
+# Round 2 — the remedy (2026-08-02, same reviewer)
+
+Judging ONLY the two rework commits (`81147e33` scope rung + disposition
+event token; `fcf8b2be` IF-092 seam + Verifies citations + honest figure).
+All five round-1 findings verify closed under my own re-drives; one new
+MINOR finding (6) is recorded against the finding-3 remedy's recovery-CLI
+edge — bounded, visible, non-blocking. The APPROVE below carries the three
+adjudication acts round 1 prepared.
+
+## Finding 1 (MAJOR) — CLOSED, and the rung survives attack
+
+**My round-1 fixture, re-driven against the shipped rung**: the SAME
+product-file + red-harness adjudication lane now RUNS the bar
+(`check-red` recorded in the stub order) and the refresh refuses —
+"the bar is RED on the refreshed tree"; `_merge_ready` answers not-ready,
+`integrate_one` refuses (the in-slot pessimistic refresh reds the same way),
+trunk never moves and the product file never reaches it (driven:
+`test_ROUND2_product_code_red_bar_now_refuses_on_adjudication_lane`). The
+complement holds: a pure registry-shape lane (spec move + a spine Status
+edit, no product path) keeps the no-bar path with the honest
+`no-bar (adjudication, §A5.2)` attestation (driven). The builder also kept
+my fixture as the shipped regression
+(`test_a_product_touching_adjudication_lane_fails_toward_the_bar`).
+
+**The rung itself, attacked.** The matcher
+(`_adjudication_scope_ok`, integrate.py) is exact-match for file entries and
+prefix-match ONLY for `/`-terminated entries, over `git diff --name-only
+--no-renames` output (which is always root-canonical — a `docs/work/../…`
+traversal is unrepresentable in that listing; git stores canonical paths).
+Hostile shapes driven, all failing TOWARD the bar: a file literally named
+`docs/gate2` and a `docs/reviewsx.md` sibling both red the refresh with the
+harness having RUN; the unit matrix pins `docs/gate` ok / `docs/gate2` no,
+`docs/work/queued/x.md` ok / `docs/workx/…` no, `docs/reviews/…` ok /
+`docs/reviewsx.md` no, `scripts/evil.py` no, and the declared [generated]
+key `PROJECT_STATE.html` ok. `_generated_paths` reads the TRUNK's stack.ini
+(root, not the branch), so a lane cannot widen its own allowance without
+touching `docs/stack.ini` — which is not on the list and forces the bar.
+Unreadable git answers False (toward the bar).
+
+*Observation, not a finding*: this repo's `[generated]` set includes
+`tests/test_module_size_ratchet.py` and `docs/dupes-allow` (stamp files), so
+an adjudication lane could re-stamp a ratchet baseline un-barred. This is
+the same trust class RULING-6 already grants those keys on non-merge trunk
+commits (the mint's own bookkeeping commit included), stamp honesty was
+never the bar's rule (a raised baseline passes its own bar in any lane —
+the reviewer owns stamp honesty), and the edit is visible in the merge
+diff. Recorded so the next reader knows the bound was seen, not missed.
+
+## Finding 2 (MAJOR) — CLOSED, verified by regen parity
+
+IF-092 declares the seam (Consumes, scripts/intake → scripts/wi_convert,
+the IF-078 precedent shape; `Stable,Stable`, so it arms no Active-seam
+warn), and intake.py's one Contracts line now carries all three ids. My
+re-run of the round-1 experiment: scratch copy of THIS tree, arch-map
+regenerated (`### \`scripts/intake\`` present with
+`Contracts (interfaces): IF-090, IF-091, IF-092`), then
+`check_trajectory --strict` **rc=0** with **11 WARNs**; the trunk baseline
+regenerated the same way is rc=0 with 11 WARNs and the two warn lists are
+**byte-identical** (diff empty) — which is simultaneously finding 4's
+proof: TC-147 cites IF-091 and TC-148 cites IF-090 in their `Verifies`
+cells (both suites genuinely drive those seams), and the two
+Active-but-uncited warns are gone. The TC-147/148 `Verifies` edits are new
+rows on this branch, so they are silent at the amendment seam by
+construction — verified: the dogfood dry-run below still returns exactly
+one record.
+
+## Finding 3 (MINOR) — CLOSED as specified; one new edge (finding 6)
+
+Driven: two handbacks of the same WI at two merge shas mint TWO
+dispositions with distinct ids, each title carrying its event sha
+(`…handed-back-at-a84a5cf…` / `…handed-back-at-6907032…`), and a re-run of
+the SAME second event dedupes to nothing
+(`test_ROUND2_two_handbacks_two_dispositions_then_dedupe`; the builder's
+`test_a_second_handback_of_the_same_row_mints_a_second_disposition` pins
+the same red-then-green).
+
+## Finding 4 (MINOR) — CLOSED (see finding 2: warn parity byte-identical).
+
+## Finding 5 (MINOR) — CLOSED
+
+`docs/stack.ini` now reads "700 keeps ~4.6% headroom over the measured 669"
+with `fig: … rev=81147e33`; my collect at the tip (docs-only commits since)
+answers exactly `669/1966 tests collected`. The integrate.py ratchet
+re-stamp (2353 → 2417) carries its reason at the entry, naming the scope
+rung.
+
+## Finding 6 (MINOR, NEW — the remedy's recovery-CLI edge; non-blocking)
+
+The event token defeats the dedupe for the BARE sweep: `_cmd_sweep`
+defaults before/after to symbolic `HEAD`, and `_rev7` resolves the CURRENT
+head — which differs from the original handback merge's sha as soon as
+anything lands (the mint's own bookkeeping commit already moves it). Driven
+(`test_ROUND2_finding6_probe_bare_sweep_re_mints_a_disposed_handback`): the
+slot mints the disposition at sha1; a bare re-sweep while the returned spec
+still carries `## Handback` (it keeps the section through a defer or
+re-queue outcome) mints a DUPLICATE disposition under the new head token.
+Bounded: only the by-hand recovery CLI reaches it (the slot path is scoped
+by the merged branch's own outcomes; a sweep re-run with the SAME
+`--before/--after` is idempotent — shipped test), and the failure shape is
+a visible extra queued row, cancellable, never a silent loss. Fix
+direction: derive the handback token from the RETURN event itself (e.g.
+`git log -1 --format=%h -- <returned spec relpath>`) rather than from
+`after`, so the slot and any sweep name one event one way — or dedupe the
+handback arm on an OPEN disposition for `(wi_id, relpath)`.
+
+## Round-2 measurements
+
+- Module suites: `244 passed in 9.33s` (intake/schedule/loader-sync/
+  wi_convert/staged/agent_loop_worker/trajectory_arch/plan_artifacts) and
+  `229 passed in 50.03s` (integrate/handback/dispatch/dupes-census/
+  size-ratchet/bootstrap).
+- Smoke: `667 passed, 2 skipped in 14.98s`; collect `669/1966`.
+- Strict at the tip: trace rc=0, check_trajectory rc=0, check_doc_refs
+  rc=0, check_figures rc=0 ("69 declared figure(s), every one carrying its
+  command and revision"), derive_gate --check rc=0. `ruff check`: "All
+  checks passed!"; `ruff format --check`: 156 files already formatted.
+- Scratch regen parity: branch copy strict rc=0 / 11 WARNs; trunk copy
+  strict rc=0 / 11 WARNs; warn lists byte-identical.
+- `docs/work` delta across the rework: the WI-388 spec's own Deliverable
+  rework record only.
+- My drive suite: 18 tests, all passing as written (the round-1 MAJOR probe
+  inverted to the remedy expectation, plus the rung attacks, the
+  two-handback sequence, and the finding-6 probe).
+
+## The adjudication acts, taken
+
+This APPROVE carries the three acts the round-1 briefs prepared:
+
+1. **LLR `SR-Refs` → TRACED, routed to adjudication — RATIFIED.** The §A5
+   principle and the question-C precedent transfer whole; the behaviour is
+   driven both ways (warn silent, mint fires; Module-only silent) and the
+   ruling is recorded at the cell-split table's home, test-pinned.
+2. **SR `SupersededBy` → RATIFIED, confirmed — RATIFIED.** A supersession
+   is a scope statement (terminates a lifecycle); confirming the residual
+   is the fail-safe direction and changes no behaviour.
+3. **TC-144's Method amendment — adjudicated NO SCOPE MOVED.**
+   `staged_spine_amendments` over `aabff213..HEAD` at the rework tip still
+   returns exactly one record (TC-144, ratified `Method`, nothing else —
+   the TC-147/148 Verifies edits are new-row-silent as disclosed), and the
+   intake trigger verified live to fire at this branch's merge
+   (`_amendment_drafts` yields the `adjudicate: TC-144 …` adjudication
+   draft). The Method text caught up with ruled behaviour (the census now
+   handed to the mint); Level/Tier/Expected unmoved; the row's Status
+   rightly never flipped. The adjudication row this merge mints should
+   close as no-scope-moved, per this act.
+
+VERDICT: APPROVE findings=6
