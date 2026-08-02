@@ -585,6 +585,8 @@ Contracts (interfaces): IF-009, IF-023, IF-077
 | `module_components(root)` | `{normalized module key: set(real-looking CMP ids)}` from the LLR |  |
 | `component_top_view(root)` | The How-SW containment derivation (WI-073), shared by the right-sizing |  |
 | `knowledge_packs(root)` | Real knowledge-pack labels under `docs/knowledge/` (research-knowledge.md |  |
+| `shipped_modules(root)` | Normalized module keys ON DISK under the declared arch-map scan root — |  |
+| `added_module_findings(root, view, packs)` | The WI-399 early firing point of the knowledge⇒component containment |  |
 | `cross_component_findings(root)` | The cross-CMP-edge-without-IF rule (WI-064; the AXES ratified model's |  |
 | `component_findings(root)` | The How-SW component-coverage finding(s) (process-options.md "Component |  |
 | `spec_interface_findings(root)` | WI-191 — a spec-of-record acts on DECLARED interface boundaries. A spec's |  |
