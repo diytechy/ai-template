@@ -137,3 +137,4 @@ resource: "generated"
 | [TC-138](TC-138.md) | Run the handback suite: a handback returns each claimed spec to queued/ with a ## Handbac… |
 | [TC-139](TC-139.md) | Run the spec_move suite: an archival move redirects inbound links from every depth (text … |
 | [TC-140](TC-140.md) | Run the figure-provenance suite: the three 2026-08-01 false figures (the stale mutation l… |
+| [TC-141](TC-141.md) | Fixture-drive the SN-coverage rung: an uncovered ratified SN caps raw at G0 (the runnable… |

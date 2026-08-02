@@ -193,3 +193,35 @@ def test_sn_draft_ids_agrees():
     ]
     for text in texts:
         assert TRACE.sn_draft_ids(text) == GATE.sn_draft_ids(text), text
+
+
+def test_sn_cited_ids_agrees():
+    # WI-401: the SN-coverage rung made SR SN-Refs a GATE input, so "which SN ids
+    # do the SRs cite" is policy duplicated across the pair — trace.py's
+    # "SN has no SR" orphan listing and derive_gate.py's coverage rung must read
+    # the SAME set, or the gate and the itemized findings contradict on one
+    # registry state (the exact WI-099 divergence class). Pin the parse
+    # equivalent across separators, empties, and absent cells.
+    batteries = [
+        [],
+        [{"SN-Refs": "SN-001"}],
+        [{"SN-Refs": "SN-001;SN-002"}, {"SN-Refs": "SN-002, SN-003"}],
+        [{"SN-Refs": " SN-004  SN-005 "}],
+        [{"SN-Refs": ""}, {"SN-Refs": None}, {}],
+        [{"SN-Refs": "SN-000"}],
+        [{"SN-Refs": "SN-006", "Status": "Draft"}],
+    ]
+    for rows in batteries:
+        assert TRACE.sn_cited_ids(rows) == GATE.sn_cited_ids(rows), rows
+    # Semantics pins: every separator splits; the function filters NOTHING itself.
+    # -000 rows are excluded by the CALLER's row filter (compute/analyze), and a
+    # Draft SR's citation is deliberately IN the set — the raw-view exemption the
+    # double-counting seam manages (derive_gate's ex-draft view re-runs the same
+    # parse on the non-draft subset instead of special-casing it here).
+    assert GATE.sn_cited_ids([{"SN-Refs": "SN-001;SN-002 SN-003,SN-000"}]) == {
+        "SN-001",
+        "SN-002",
+        "SN-003",
+        "SN-000",
+    }
+    assert TRACE.sn_cited_ids([{"SN-Refs": "SN-006", "Status": "Draft"}]) == {"SN-006"}

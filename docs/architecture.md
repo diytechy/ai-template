@@ -640,10 +640,11 @@ Contracts (interfaces): IF-050, IF-051
 | `llr_exempt(row)` | SR Verification method in LLR_EXEMPT, matched on the stripped cell. |  |
 | `phase_num(row)` | The integer a row's free-form `Phase` cell digit-parses to (`v2`->2, `2`->2); |  |
 | `sn_draft_ids(text)` | Draft SN ids (section-as-state §4a): every SN-### under a heading whose text |  |
+| `sn_cited_ids(srs)` | Every SN id cited by >=1 SR row's `SN-Refs` cell — the coverage set the |  |
 | `sr_gate(sr, has_llr, has_tc)` | The gate an SR row has reached, from its Status + whether it is decomposed. |  |
 | `maturity_gate(row)` | An LLR/TC caps the gate only when it is Draft (G0 — the new-phase signal). |  |
 | `is_modified(row)` | The post-attestation `Modified` state (WI-316, process.md §7): content |  |
-| `sn_gate(sn_id, draft_ids)` | A Draft SN (section-as-state) is G0; a ratified SN has no obligation past G1 |  |
+| `sn_gate(sn_id, draft_ids, cited_ids)` | A Draft SN (section-as-state) is G0 — and that is the ONLY rung that fires |  |
 | `compute(docs)` | Derive the gate from the spine registries under `docs`. Returns a result |  |
 | `basis_line(result)` | The single, deterministic `# basis:` comment line compared by --check |  |
 | `render_cache(result, as_of, date)` | The full docs/gate file text: static header, the compared `# basis:` line, |  |
@@ -990,6 +991,7 @@ Contracts (interfaces): IF-001, IF-021, IF-042
 | `placeholder_findings(label, raw_rows)` | Leftover template example rows (ids ending '-000') in one registry. |  |
 | `scan_sn_placeholders(sn_md)` | Sorted unique '-000' SN ids still present in stakeholder-needs.md (if it exists). |  |
 | `sn_draft_ids(text)` | The set of Draft SN ids in stakeholder-needs.md `text` (section-as-state): |  |
+| `sn_cited_ids(srs)` | Every SN id cited by >=1 SR row's `SN-Refs` cell — the coverage set the |  |
 | `sn_integrity_findings(sn_text)` | Duplicate-id protection for the SN tier — the one tier stored as prose, |  |
 | `schema_findings(label, rows)` | Empty required fields and out-of-vocabulary Verification/Tier values, over |  |
 | `phase_ratified_findings(real)` | The ratified-phase completeness rule (process.md §4 "Phased delivery"): once |  |

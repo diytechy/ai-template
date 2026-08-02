@@ -757,6 +757,17 @@ def sn_draft_ids(text):
     return draft
 
 
+def sn_cited_ids(srs):
+    """Every SN id cited by >=1 SR row's `SN-Refs` cell — the coverage set the
+    "SN has no SR" orphan rule reads (and, since WI-401, the gate input behind
+    derive_gate.py's SN-coverage rung: that rung caps the raw level, this
+    listing itemizes the ids at G2 strictness). No filtering here: -000 rows
+    are excluded by the caller's row filter, and a Draft SR's citation is
+    deliberately in the set. Duplicated in derive_gate.py per the F5 rule;
+    pinned equal by test_rule_sync."""
+    return {x for r in srs for x in refs(r.get("SN-Refs"))}
+
+
 def sn_integrity_findings(sn_text):
     """Duplicate-id protection for the SN tier — the one tier stored as prose,
     and until now the one tier without it (every CSV tier gets
@@ -1871,7 +1882,7 @@ def analyze(reg, args):
     llr_ids = {r["LLR-ID"] for r in llrs}
     llr_sr_refs = {x for r in llrs for x in refs(r.get("SR-Refs"))}
     tc_refs = {x for r in tcs for x in refs(r.get("Verifies"))}
-    sr_sn_refs = {x for r in srs for x in refs(r.get("SN-Refs"))}
+    sr_sn_refs = sn_cited_ids(srs)
 
     # orphan_ids collects the at-fault id for each finding, so the rendered views
     # below (outline/graph/HTML) can flag the same nodes the text list reports.
@@ -1928,7 +1939,10 @@ def analyze(reg, args):
 
     for u in sorted(sn_ids):
         # A Draft SN (section-as-state, §4a) is being drafted requirement-first and
-        # is exempt from the child-completeness rule, like a Draft SR.
+        # is exempt from the child-completeness rule, like a Draft SR. The gate
+        # half of this rule is derive_gate's SN-coverage rung (WI-401): same
+        # cited set (sn_cited_ids), same Draft exemption — this lists the ids,
+        # that caps the level, and neither fires twice on one fact.
         if u not in sr_sn_refs and u not in sn_draft:
             orphans.append(f"SN {u} has no SR")
             orphan_ids.add(u)
