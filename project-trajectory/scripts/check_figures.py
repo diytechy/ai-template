@@ -32,12 +32,14 @@ docstring only enforces it):
              hazard.
   exempt     a line carrying `fig-ok` is prose ABOUT the convention, never a
              declaration (the `path-ok`/`privacy-ok` idiom).
-  grammar    a marker whose values are placeholder-shaped (`<command>`, `…`)
-             is the convention quoting itself and declares nothing; each
-             marker on a line owns only the attributes that follow it, so two
-             half-carrying markers never cross-satisfy; rev= takes a bare
-             token or a quoted string, and its value must carry a word
-             character (a flush `rev=-->` is punctuation, not a revision).
+  grammar    a marker whose values are wholly placeholder tokens (`<command>`,
+             `…`) is the convention quoting itself and declares nothing — a
+             metacharacter inside a longer value (`sort < in.txt`) is command
+             text, and the marker is judged (WI-404); each marker on a line
+             owns only the attributes that follow it, so two half-carrying
+             markers never cross-satisfy; rev= takes a bare token or a quoted
+             string, and its value must carry a word character (a flush
+             `rev=-->` is punctuation, not a revision).
 
 In markdown the marker rides an HTML comment so it never renders; the check is
 line-based, so a `#` ini comment carries it the same way. Scan surface = root
@@ -91,8 +93,17 @@ DERIVED = re.compile(r'\bderived="([^"]*)"')
 # A marker whose values are placeholder-shaped is GRAMMAR PROSE quoting the
 # convention (`<command>`, `…`), not a declaration — the check_doc_refs
 # `{placeholder}`/`NNN` stance (REVIEW-A finding 1: the convention text ships
-# in every scaffold and must not read as undeclared figures there).
-PLACEHOLDER_CHARS = ("<", ">", "…")
+# in every scaffold and must not read as undeclared figures there). A value is
+# placeholder-shaped only when the WHOLE value is the convention's own example
+# grammar: an angle-bracket-wrapped token (`<command>`, `<how, from which
+# declared figures>`; the bare rev= capture stops before `>`, so a
+# whitespace-free token may arrive without its closing bracket) or the bare
+# ellipsis. A metacharacter INSIDE a longer value is legitimate command text
+# (`pytest -q 2>&1 | tail -1`, `sort < in.txt`), so the marker is judged on
+# its own attributes — the old any-char proxy excused defective markers and
+# uncounted real redirecting declarations, both silently (WI-404, REVIEW-A
+# round-2 finding 4).
+PLACEHOLDER_VALUE = re.compile(r"…|<[^<>]*>|<[^<>\s]*")
 WORD = re.compile(r"[0-9A-Za-z]")
 # Beside the markdown walk: the declared-budgets surface whose re-measure note
 # asked a human to re-derive its numbers and had no enforcer (the WI-392
@@ -130,9 +141,11 @@ def judge_marker(segment):
 
     Presence only: non-empty cmd= AND rev=, or a non-empty derived=. Empty or
     wordless values count as missing — `cmd=""` names nothing a reader could
-    rerun, and a flush `rev=-->` is punctuation, not a revision. A value
-    containing a placeholder shape (`<command>`, `…`) makes the whole marker
-    an example: grammar quoted in prose declares nothing."""
+    rerun, and a flush `rev=-->` is punctuation, not a revision. A value that
+    IS a placeholder (`<command>`, `…` — the whole value, PLACEHOLDER_VALUE)
+    makes the whole marker an example: grammar quoted in prose declares
+    nothing. A metacharacter inside a longer value is command text, and the
+    marker is judged (WI-404)."""
     derived = DERIVED.search(segment)
     cmd = CMD.search(segment)
     rev = REV.search(segment)
@@ -148,7 +161,7 @@ def judge_marker(segment):
         )
         if v is not None
     ]
-    if any(ch in v for v in values for ch in PLACEHOLDER_CHARS):
+    if any(PLACEHOLDER_VALUE.fullmatch(v.strip()) for v in values):
         return GRAMMAR_EXAMPLE
     if derived is not None:
         if derived.group(1).strip():

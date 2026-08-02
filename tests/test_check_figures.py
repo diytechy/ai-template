@@ -229,6 +229,41 @@ def test_a_quoted_rev_value_is_accepted(tmp_path):
     assert "1 declared figure(s)" in proc.stdout
 
 
+# --- WI-404 (REVIEW-A round-2 finding 4): the proxy narrowed to whole tokens --
+
+
+def test_a_defective_marker_with_metacharacters_in_cmd_still_flags(tmp_path):
+    # The reviewer's first fixture: a DEFECTIVE marker (rev= absent) whose cmd
+    # value contains shell metacharacters used to escape both census and
+    # flagging — `>` tripped the any-char placeholder proxy and the whole
+    # marker read as grammar prose. A metacharacter inside a quoted value is
+    # legitimate command text, so the marker is judged and its missing half
+    # named.
+    make_repo(
+        tmp_path,
+        "Stderr cmd, rev MISSING: 9 tests "
+        '<!-- fig: cmd="pytest -q 2>&1 | tail -1" -->\n',
+    )
+    proc = figs(tmp_path)
+    assert "no rev=" in proc.stderr, proc.stdout + proc.stderr
+    assert "1 declared figure(s) missing provenance" in proc.stdout
+    assert figs(tmp_path, "--strict").returncode == 1
+
+
+def test_a_legitimately_redirecting_declaration_counts(tmp_path):
+    # The reviewer's second fixture: a fully-provenanced declaration whose
+    # command legitimately redirects (`sort < in.txt`) was silently uncounted
+    # under the old proxy. It is a real declaration — cmd AND rev both
+    # carried — so it enters the census and passes.
+    make_repo(
+        tmp_path,
+        'Line count 41. <!-- fig: cmd="sort < in.txt | wc -l" rev=abc123 -->\n',
+    )
+    proc = figs(tmp_path, "--strict")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "1 declared figure(s)" in proc.stdout
+
+
 def test_a_review_record_quoting_defective_markers_is_out_of_scope(tmp_path):
     # A verdict record under docs/reviews/ quotes findings — including bare
     # and half-carrying markers — verbatim as evidence; judging the quotation
