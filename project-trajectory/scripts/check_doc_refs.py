@@ -50,6 +50,19 @@ classes links can't see, with false-positive control as the design center
      artifact, don't re-parse the AST). You *assert* a symbol exists and the
      check holds you to it. No module map / no symbols -> the tier skips
      cleanly (a files-mode or non-Python stack degrades gracefully).
+  3. REGISTRY TIER (WI-394, owner ruling R2 2026-08-01, option (c)): the
+     spine's Evidence-class cells — TC `Evidence`, LLR `Module`/`CodeSymbol`/
+     `TestRefs`, the four pointers OUT of the registries into the code and
+     test tree — must cite files that EXIST. These cells are exactly what
+     answers "how do you know this row is Verified", and every other link in
+     the chain is mechanized; a deletion never asks what cited the deleted
+     file, so they rot silently. A cell is a KNOWN joined list, split before
+     the shape test; the FILE half of a `tests/x.py::node` citation is
+     checked, and the `::node` selector is ruled PROSE — an accepted,
+     documented gap (docs/enforcement-audit.md), never an implied check, so a
+     renamed-but-still-present test node is deliberately NOT detected.
+     Placeholder rows (`*-000`) are skipped so scaffolded templates stay
+     copy-ready; absent registries skip the tier cleanly.
 
 Ships WARN-FIRST and product-layer like check_stubs.py: exit 0 with warnings
 unless --strict; NOT wired into check.py's required floor. Opt in per repo:
@@ -57,12 +70,14 @@ unless --strict; NOT wired into check.py's required floor. Opt in per repo:
     [step:doc-refs]
     command = {py} scripts/check_doc_refs.py --strict
 
-Scan surface = root *.md + docs/**/*.md (the check_docs surface). Stdlib only.
+Scan surface = root *.md + docs/**/*.md (the check_docs surface) + the spine
+registries' Evidence-class cells (tier 3). Stdlib only.
 
 Contracts: IF-008, IF-028, IF-072 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.csv).
 """
 
 import argparse
+import csv
 import re
 import sys
 from pathlib import Path
@@ -158,16 +173,29 @@ def _strip_line_suffix(token):
     return LINE_SUFFIX.sub("", token)
 
 
+def _strip_node_selector(token):
+    """`tests/x.py::test_name` -> `tests/x.py` (WI-394, ruling (c)). The FILE
+    half of a pytest node id is a checkable path; the `::node` selector is
+    ruled prose and never validated. Stripped at both sites, for the same
+    reason WI-396 strips the line suffix at both: `is_path_shaped` is a
+    predicate and cannot hand a rewritten token back."""
+    return token.split("::", 1)[0]
+
+
 def is_path_shaped(token):
     token = token.strip()
     if not token or "://" in token or any(c in token for c in "*{}<>$ "):
         return False
-    # `::` is a pytest node id (tests/x.py::test_name — the kit's sanctioned
-    # Evidence form, a real file plus a selector), and `;`/`,` join a list of
-    # paths; none is a single filesystem path, so they are out of the path
-    # tier's scope (false-positive control is the point).
-    if "::" in token or ";" in token or "," in token:
+    # `;`/`,` join a list of paths — not a single filesystem path, so they
+    # stay out of the path tier's scope (false-positive control is the point).
+    # `::` used to keep a whole pytest node id out with them; WI-394 (owner
+    # ruling R2, option (c)) RE-SCOPED that guard: a node id
+    # (tests/x.py::test_name — the kit's sanctioned Evidence form) is a real
+    # FILE plus a selector, so the file half is judged like any path while the
+    # selector stays prose.
+    if ";" in token or "," in token:
         return False
+    token = _strip_node_selector(token)
     # Placeholder shapes, alongside `{}`/`*` above (WI-062): `…` stands in for
     # "and the rest" and `###`/`NNN` for "your id here", so `docs/specs/WI-###.md`
     # is a FORM, not a path. `#` also opens a markdown anchor, and an anchored
@@ -276,6 +304,30 @@ def untraced_reason(token, rel, root, kit_root, record_prefixes, absences=None):
     return None
 
 
+def judge_token(
+    token, entry, bad, untraced, rel, root, kit_root, record_prefixes, absences=None
+):
+    """Judge one cited token and file its verdict under `entry` — the finding
+    label quoting the token as WRITTEN, so a reader can find it in the surface
+    that cited it. Out-of-scope and resolving tokens file nothing.
+
+    Shared by the path tier and the registry tier (WI-394), so the
+    strip/stat/reason chain lives once: the stat, the untraced classification
+    and the declared-absences lookup all take the STRIPPED path — the second
+    of the two sites WI-396 names, and the WI-394 node-selector strip rides
+    the same rule."""
+    if not is_path_shaped(token):
+        return
+    clean = _strip_line_suffix(_strip_node_selector(token.strip())).rstrip("/")
+    if (root / clean).exists():
+        return
+    why = untraced_reason(clean, rel, root, kit_root, record_prefixes, absences)
+    if why:
+        untraced.append("{} — {}".format(entry, why))
+    else:
+        bad.append("{} does not exist in the repo".format(entry))
+
+
 def path_findings(line, rel, n, root, kit_root, record_prefixes, absences=None):
     """One line's path-tier verdicts as `(dangling, untraced)` (WI-062).
 
@@ -284,20 +336,71 @@ def path_findings(line, rel, n, root, kit_root, record_prefixes, absences=None):
     is already the tool's densest function."""
     bad, untraced = [], []
     for token in BACKTICK.findall(line):
-        if not is_path_shaped(token):
+        entry = "{}:{}: `{}`".format(rel, n, token)
+        judge_token(
+            token, entry, bad, untraced, rel, root, kit_root, record_prefixes, absences
+        )
+    return bad, untraced
+
+
+# The spine cells that point OUT of the registries into the code/test tree
+# (WI-394): the four columns carrying the spine's claim to be grounded in the
+# code. Pointers BETWEEN registries (Verifies, SR-Refs, Component) are joined
+# and validated by trace.py; these are the ones nothing checked. `CodeSymbol`
+# carries `/`-joined symbol names, not paths — it is scanned so a real path
+# written there is held to the rule, and `is_path_shaped` keeps the symbol
+# joins out of scope. `TestRefs` is conventionally `(see TC-###)` — a registry
+# pointer, trace.py's side of the line — and likewise yields no path token.
+SPINE_CELLS = (
+    ("docs/test/test-cases.csv", "TC-ID", ("Evidence",)),
+    (
+        "docs/requirements/low-level-requirements.csv",
+        "LLR-ID",
+        ("Module", "CodeSymbol", "TestRefs"),
+    ),
+)
+# A registry cell is a KNOWN joined list (`;` between citations, whitespace
+# between node ids), so it is SPLIT before the shape test — unlike a backticked
+# prose token, where a joiner keeps the whole token out of the path tier.
+CELL_JOIN = re.compile(r"[\s;,]+")
+
+
+def registry_findings(
+    root, kit_root=None, record_prefixes=RECORD_PREFIXES, absences=None
+):
+    """`(dangling, untraced)` over the spine's Evidence-class cells (WI-394).
+
+    The markdown tiers never see the CSVs. Ruling (c): the FILE half of each
+    citation must exist (`Path.exists`, repo-relative); the `::node` selector
+    is ruled prose. Same classification as the path tier — a missing file with
+    a mechanical reason is untraced, the rest is dangling. Placeholder rows
+    (`*-000`) are skipped so scaffolded templates stay copy-ready; a repo
+    without the registries (or a pre-spine rung) skips the tier cleanly.
+    """
+    bad, untraced = [], []
+    for rel, idcol, cols in SPINE_CELLS:
+        reg = root / rel
+        if not reg.is_file():
             continue
-        # The stat, the untraced classification and the declared-absences
-        # lookup all take the STRIPPED path — the second of the two sites
-        # WI-396 names. The finding still quotes the token as WRITTEN, so a
-        # reader can find it in the doc.
-        clean = _strip_line_suffix(token.strip()).rstrip("/")
-        if (root / clean).exists():
-            continue
-        why = untraced_reason(clean, rel, root, kit_root, record_prefixes, absences)
-        if why:
-            untraced.append("{}:{}: `{}` — {}".format(rel, n, token, why))
-        else:
-            bad.append("{}:{}: `{}` does not exist in the repo".format(rel, n, token))
+        with reg.open(newline="", encoding="utf-8-sig") as f:
+            for row in csv.DictReader(f):
+                rid = (row.get(idcol) or "").strip()
+                if not rid or rid.endswith("-000"):
+                    continue
+                for col in cols:
+                    for token in CELL_JOIN.split(row.get(col) or ""):
+                        entry = "{}: {} {}: `{}`".format(rel, rid, col, token)
+                        judge_token(
+                            token,
+                            entry,
+                            bad,
+                            untraced,
+                            rel,
+                            root,
+                            kit_root,
+                            record_prefixes,
+                            absences,
+                        )
     return bad, untraced
 
 
@@ -427,6 +530,9 @@ def main():
         found, explained = findings_for(doc, root, oracle, kit_root, records, absences)
         findings += found
         untraced += explained
+    reg_bad, reg_untraced = registry_findings(root, kit_root, records, absences)
+    findings += reg_bad
+    untraced += reg_untraced
     for f in findings:
         print("check_doc_refs: WARN - " + f, file=sys.stderr)
     if args.show_untraced:

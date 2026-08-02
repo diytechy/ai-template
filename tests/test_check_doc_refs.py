@@ -85,15 +85,51 @@ def test_unknown_module_is_flagged(tmp_path):
     assert "not in the module map" in proc.stderr
 
 
-def test_node_ids_and_joined_lists_are_not_path_flagged(tmp_path):
-    # A2: a pytest node id (the sanctioned Evidence form) and a ;-joined path
-    # list are not single filesystem paths — the path tier must not flag them.
+def test_node_id_file_half_is_judged_and_joined_lists_stay_out_of_scope(tmp_path):
+    # WI-394 (owner ruling R2 2026-08-01, option (c)) RE-SCOPED the A2-era `::`
+    # guard this test used to pin: a pytest node id — the kit's sanctioned
+    # Evidence form — is a real FILE plus a selector, so the FILE half is now
+    # judged like any path. `;`/`,`-joined lists keep their exclusion
+    # (false-positive control, unchanged), even when one half is dead.
     make_repo(
         tmp_path,
-        "Evidence `tests/real.py::test_it` and `tests/real.py;scripts/real.py`.\n",
+        "Evidence `tests/real.py::test_it` and `tests/nowhere.py;scripts/real.py`.\n",
     )
+    (tmp_path / "tests").mkdir()
+    (tmp_path / "tests" / "real.py").write_text("x = 1\n", encoding="utf-8")
     proc = refs(tmp_path, "--strict")
     assert proc.returncode == 0, proc.stdout + proc.stderr
+
+
+def test_an_invented_node_id_citation_gates_on_its_file_half(tmp_path):
+    # The invented-citation case WI-394 was filed on: warn-first by default
+    # (the WI-062 precedent), red under --strict, and the finding quotes the
+    # token AS WRITTEN so a reader can find it in the doc.
+    make_repo(tmp_path, "Evidence `tests/never_written.py::test_invented`.\n")
+    proc = refs(tmp_path)
+    assert proc.returncode == 0, "warn-first: findings must not gate by default"
+    assert "`tests/never_written.py::test_invented` does not exist" in proc.stderr
+    assert refs(tmp_path, "--strict").returncode == 1
+
+
+def test_the_node_selector_half_is_ruled_prose_never_validated(tmp_path):
+    # The other half of ruling (c), pinned so nobody reads coverage into it: a
+    # selector naming a test the LIVE file does not define stays clean. A
+    # renamed-but-present node is an ACCEPTED gap, recorded in
+    # docs/enforcement-audit.md — not a promise waiting on a better oracle.
+    make_repo(tmp_path, "Evidence `scripts/real.py::test_no_such_node`.\n")
+    assert refs(tmp_path, "--strict").returncode == 0
+
+
+def test_a_path_ok_marked_node_id_quotation_is_exempt(tmp_path):
+    # The plan/spec quote invented citations AS EVIDENCE, marked `path-ok`; the
+    # re-scoped guard must not convict the marked quotations (the same per-line
+    # exemption the path tier has always honored).
+    make_repo(
+        tmp_path,
+        "Quoted: `tests/never.py::test_x` <!-- path-ok: driven evidence -->\n",
+    )
+    assert refs(tmp_path, "--strict").returncode == 0
 
 
 def test_generated_linguist_tree_is_not_linted(tmp_path):
@@ -330,3 +366,84 @@ def test_declared_absences_is_a_declaration_not_a_suppression_list(tmp_path):
     assert proc.returncode == 0
     assert "2 untraced" in proc.stdout
     assert "declared absent" in proc.stdout
+
+
+# --- WI-394 ruling (c): the REGISTRY tier -------------------------------------
+# The markdown tiers never see the CSVs, yet the spine's Evidence-class cells
+# (TC `Evidence`; LLR `Module`/`CodeSymbol`/`TestRefs`) are exactly the pointers
+# that carry the spine's claim to be grounded in the code. The FILE half of each
+# citation must exist; the `::node` selector is ruled PROSE (accepted gap). The
+# tier's absence-skip needs no test of its own: every fixture above runs the tool
+# without the registries and stays green.
+
+TC_HEADER = "TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Evidence,Status,Phase\n"
+LLR_HEADER = "LLR-ID,SR-Refs,Title,Module,CodeSymbol,Detail,Rationale,TestRefs,Status,Component,Phase\n"
+
+
+def spine_repo(root, evidence, module="scripts/real.py", symbol="load/save"):
+    """A repo whose spine has one TC row (Evidence as given) and one LLR row."""
+    make_repo(root, "clean doc\n")
+    (root / "docs" / "test").mkdir(parents=True)
+    (root / "docs" / "requirements").mkdir(parents=True)
+    (root / "docs" / "test" / "test-cases.csv").write_text(
+        TC_HEADER
+        + "TC-001,SR-001,Unit,run it,Full,,ok,Yes,{},Verified,1\n".format(evidence),
+        encoding="utf-8",
+    )
+    (root / "docs" / "requirements" / "low-level-requirements.csv").write_text(
+        LLR_HEADER
+        + "LLR-001,SR-001,T,{},{},detail,,(see TC-001),Verified,,1\n".format(
+            module, symbol
+        ),
+        encoding="utf-8",
+    )
+    return root
+
+
+def test_registry_citations_whose_files_exist_pass(tmp_path):
+    # Both node ids cite selectors the file does not define — clean, because the
+    # selector half is prose under ruling (c); only the FILE half is judged.
+    spine_repo(tmp_path, "tests/real.py::test_a;tests/real.py::test_b")
+    (tmp_path / "tests").mkdir()
+    (tmp_path / "tests" / "real.py").write_text("x = 1\n", encoding="utf-8")
+    proc = refs(tmp_path, "--strict")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+
+
+def test_an_invented_registry_evidence_citation_reds_under_strict(tmp_path):
+    # The WI-394 finding itself: an Automated=Yes / Status=Verified row citing
+    # a file that has never existed. Warn-first names the row and the column.
+    spine_repo(tmp_path, "tests/never_existed.py::test_invented")
+    proc = refs(tmp_path)
+    assert proc.returncode == 0, "warn-first, the WI-062 precedent"
+    assert "TC-001 Evidence" in proc.stderr
+    assert "`tests/never_existed.py::test_invented` does not exist" in proc.stderr
+    assert refs(tmp_path, "--strict").returncode == 1
+
+
+def test_registry_joined_module_list_is_split_and_judged_per_half(tmp_path):
+    # A registry cell is a KNOWN joined list — unlike a prose token, the joiner
+    # is a separator, not an out-of-scope marker. Only the dead half convicts.
+    spine_repo(tmp_path, "scripts/real.py", module="scripts/real.py;scripts/gone.py")
+    proc = refs(tmp_path, "--strict")
+    assert proc.returncode == 1
+    assert "LLR-001 Module" in proc.stderr
+    assert "`scripts/gone.py` does not exist" in proc.stderr
+    assert "`scripts/real.py`" not in proc.stderr
+
+
+def test_registry_placeholder_rows_and_symbol_joins_stay_out_of_scope(tmp_path):
+    # `*-000` example rows keep the scaffolded templates copy-ready, and a
+    # CodeSymbol's `/`-joined symbol names are not paths — neither may convict.
+    spine_repo(
+        tmp_path,
+        "scripts/real.py",
+        symbol="integrity_findings/structure_findings",
+    )
+    (tmp_path / "docs" / "test" / "test-cases.csv").write_text(
+        TC_HEADER
+        + "TC-000,SR-000,Unit,example,Full,,ok,Yes,tests/nope.py::test_x,Planned,1\n",
+        encoding="utf-8",
+    )
+    proc = refs(tmp_path, "--strict")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
