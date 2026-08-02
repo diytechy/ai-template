@@ -1026,7 +1026,15 @@ BASELINE = {
     # makes the docstring's "byte-for-byte" literally true; most of the bump
     # is the two docstrings stating the property honestly. Reviewed bump, log
     # fragment 2026-08-02 (WI-403). Re-stamp down with WI-280.
-    "integrate.py": 2103,
+    # +22 (2103 -> 2125), WI-407: the WI-400 REVIEW-A follow-ups on the shed.
+    # `ignored_files`' backslash normalization gated to Windows (on POSIX the
+    # replace MINTED an alias onto a tracked path - finding 1, driven);
+    # `docs/test/report.html` joins `_RESIDUE_FILES` on the wi-402 lane
+    # measurement (finding 2); `_sweep_residue_dirs` gains the ignored lock
+    # (`git check-ignore`, finding 3). All but four lines are the docstrings
+    # and comments recording why each guard exists. Reviewed bump, log
+    # fragment 2026-08-02 (WI-407). Re-stamp down with WI-280.
+    "integrate.py": 2125,
 }
 
 

@@ -1314,8 +1314,13 @@ def _worktree_dirt(wt):
 # nowhere else: the caches are rebuilt by the next tool run, the report by the
 # next trace.py run. A short enumerated list on purpose - not a glob
 # configuration surface and not a dial; everything outside it stays evidence.
+# Widened on measurement, once (WI-407): check.py passes --html to its trace
+# step at G2/G3, so the declared bar writes docs/test/report.html in whatever
+# lane it runs in, and on 2026-08-02 the wi-402 lane was measured holding
+# exactly that file at unload - same class as report.md, rebuilt by the next
+# bar run, sole-copy evidence never.
 _RESIDUE_DIR_NAMES = frozenset({".pytest_cache", ".ruff_cache", "__pycache__"})
-_RESIDUE_FILES = frozenset({"docs/test/report.md"})
+_RESIDUE_FILES = frozenset({"docs/test/report.md", "docs/test/report.html"})
 
 
 def _is_declared_residue(rel):
@@ -1371,7 +1376,11 @@ def _sweep_residue_dirs(wt):
     under the complexity ceiling: rmdir every now-EMPTY directory inside a
     declared cache tree, bottom-up. `rmdir` refuses a non-empty directory, so
     a cache dir still holding an undeclared or unremovable file survives to be
-    reported as dirt."""
+    reported as dirt. Locked twice like the files (WI-407, REVIEW-A finding
+    3): the name lock AND `git check-ignore` - emptiness git does not ignore
+    is the lane's, because emptiness can be load-bearing (this repo's own
+    `docs/work/deferred/` is an empty directory a link resolves through). The
+    fail direction stays closed: a check git cannot answer skips the rmdir."""
     for parent, _dirs, _files in os.walk(wt, topdown=False):
         directory = Path(parent)
         if directory == wt:
@@ -1380,6 +1389,8 @@ def _sweep_residue_dirs(wt):
         if ".git" in rel_parts or not any(
             part in _RESIDUE_DIR_NAMES for part in rel_parts
         ):
+            continue
+        if ac.git(wt, "check-ignore", "-q", "--", "/".join(rel_parts))[0] != 0:
             continue
         try:
             directory.rmdir()
@@ -1496,11 +1507,22 @@ def ignored_files(wt):
     The two readings coexist on purpose: §5.6's unload asks "is there anything
     here at all?" and the collapsed answer is right for that; this asks "which
     files exactly?", because it is about to delete some.
+
+    The separator normalization is WINDOWS-ONLY (WI-407). git itself emits "/"
+    on every platform, so the replace is pure defense - and on POSIX "\\" is an
+    ordinary filename byte, not a separator, so replacing it MINTS an alias: a
+    git-ignored file literally named `x\\__pycache__\\evil.pyc` came back as
+    `x/__pycache__/evil.pyc`, `_is_declared_residue` matched the mangled
+    segments, and the shed unlinked whatever REAL file sat at that path - the
+    tracked twin the double-lock exists to protect (WI-400 REVIEW-A finding 1,
+    driven). On POSIX the path passes through untouched.
     """
     code, out = ac.git(wt, "ls-files", "-o", "-i", "--exclude-standard", "-z")
     if code != 0:
         return None
-    return {p.replace("\\", "/") for p in out.split("\0") if p.strip()}
+    if os.name == "nt":
+        return {p.replace("\\", "/") for p in out.split("\0") if p.strip()}
+    return {p for p in out.split("\0") if p.strip()}
 
 
 def existing_directories(wt):
