@@ -271,7 +271,7 @@
 #
 # The distribution:
 #
-#   cli                   86   deliberate
+#   cli                   90   deliberate
 #   link-rebase            1   deliberate
 #   spine-loader          20   deliberate
 #   declared-file         13   deliberate
@@ -302,7 +302,7 @@
 # a census whose classification has rotted is how the false claims above
 # survived in the first place.
 
-# --- cli (86 blocks) ---------------------------------------------
+# --- cli (90 blocks) ---------------------------------------------
 # disposition: deliberate
 # the per-script CLI skeleton + _utf8_console. F5: kit scripts must stay
 # independently copy-able and stdlib-only, which is why a shared
@@ -407,6 +407,15 @@ b25e7f8619e5  project-trajectory/scripts/gen_trajectory.py == project-trajectory
 # WI-393 (2026-08-01): spec_move.py ships (the link-aware move ritual) — its
 # argparse/--root preamble joins for the same F5 reason.
 2c0c67165dac  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/spec_move.py
+# WI-392 (2026-08-01): check_figures.py ships (declared-figure provenance) —
+# its _utf8_console and argparse/--root/--strict preamble join for the same
+# F5 reason. Its substance walk is deliberately NOT here: the shared
+# GENERATED-block skip was lifted into check_doc_refs.authored_lines
+# (the IF-087 seam) rather than copied.
+b87ed5851f33  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/check_figures.py
+74572e51bafc  project-trajectory/scripts/check.py == project-trajectory/scripts/check_figures.py
+da3bd5e9dd3e  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/check_figures.py
+f9a751e72b81  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/check_figures.py
 
 # --- link-rebase (1 block) ---------------------------------------
 # disposition: deliberate

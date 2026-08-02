@@ -1322,7 +1322,7 @@ it. Once the fix lands the input is gone and the number is unfalsifiable — whi
 is indistinguishable, to a reviewer, from a number that was never true. That is
 how a false claim survives: not by being a lie, but by being uncheckable.
 
-The rule has two halves, in order:
+The rule has three parts, in order:
 
 1. **Commit the evidence first.** A measurement whose input its own fix will
    destroy lands its evidence *before* the fix, in the repo rather than in a
@@ -1334,10 +1334,34 @@ The rule has two halves, in order:
    gone is written as a *historical, non-reproducible observation* — in the same
    sentence that states it, not in a footnote. Marking it costs nothing and
    keeps it useful; restating it as a standing fact is the failure.
+3. **Declare the figure — the `fig:` marker (WI-392, rung 1).** <!-- fig-ok: this heading names the marker --> A driven
+   figure may opt in by carrying, on its own line (in markdown, inside an HTML
+   comment), `fig: cmd="<command>" rev=<revision>` — the exact command that
+   produced it and the revision it was driven at. Two bars ride the marker.
+   *Population:* when the figure is a count over a population, `cmd` is a
+   command that **enumerates** that population (`git log … | wc -l` does); a
+   hand-picked input set names its selection principle inside the cmd string —
+   a value can be right for the sample and wrong for the world. *Derived:* a
+   figure computed from declared figures (the remainder, the percentage) is
+   itself declared, `fig: derived="<how, from which declared figures>"` — or it
+   is the one figure in the paragraph nothing covers. A line carrying `fig-ok`
+   is prose about the convention, never a declaration. *Grammar:* a marker
+   whose values are placeholder-shaped (`<command>`, `…`) is the convention
+   quoting itself and declares nothing; each marker on a line owns only the
+   attributes that follow it; `rev=` takes a bare token or a quoted string.
 
-Neither half is mechanizable — no check distinguishes a live measurement from a
-recollection — so the enforcer is **Reviewer**, and it belongs in the
-enforcement audit above as one of the honestly-unbacked rules.
+The *truth* of a figure is not mechanizable — no check distinguishes a live
+measurement from a recollection — so that enforcer stays **Reviewer**, in the
+enforcement audit above with the honestly-unbacked rules. The *presence* of
+provenance on a declared figure now is: `check_figures.py` (opt-in
+`[step:figures]`, warn-first, `--strict` gates) flags a `fig:` marker <!-- fig-ok: prose naming the marker --> carrying
+neither `cmd=`+`rev=` nor a derivation — its honest claim is "declared figures
+carry provenance", never "all figures do". Re-derivation — running the recorded
+command and comparing — is **deliberately not built** (WI-392 rung 2, declined):
+commands read out of documents are an execution surface needing an allow-list,
+most figures are legitimately historical (valid only at the recorded revision),
+and some recorded commands are expensive or non-deterministic. Never imply it
+is covered.
 
 ## §7 boundary notes
 

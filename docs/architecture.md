@@ -46,6 +46,7 @@ graph LR
     m_scripts_check_doc_refs["scripts/check_doc_refs — Doc reference validation — prose that names dea…"]
     m_scripts_check_docs["scripts/check_docs — Doc navigability & staleness check: keep the ha…"]
     m_scripts_check_dupes["scripts/check_dupes — Duplicate-code lint — copy-paste blocks violate…"]
+    m_scripts_check_figures["scripts/check_figures — Declared-figure provenance — a driven figure ca…"]
     m_scripts_check_flows["scripts/check_flows — Design-time runtime-flow check: the G2 reviewer…"]
     m_scripts_check_perf["scripts/check_perf — Performance budget & regression comparator: tra…"]
     m_scripts_check_privacy["scripts/check_privacy — Secrets + privacy-leak lint — the deterministic…"]
@@ -92,6 +93,7 @@ graph LR
     m_scripts_agent_loop --> m_scripts_plan_round
     m_scripts_agent_loop --> m_scripts_plan_runner
     m_scripts_agent_loop --> m_scripts_score_reviews
+    m_scripts_check_figures --> m_scripts_check_doc_refs
     m_scripts_check_trajectory --> m_scripts_check_docs
     m_scripts_drive --> m_scripts_agent_common
     m_scripts_drive --> m_scripts_handback
@@ -141,9 +143,11 @@ graph LR
     m_scripts_agent_session -. IF-064 .-> m_scripts_agent_loop
     m_scripts_check_coverage -. IF-069 .-> m_scripts_check
     m_scripts_check_doc_refs -. IF-008 .-> m_scripts_check
+    m_scripts_check_doc_refs -. IF-087 .-> m_scripts_check_figures
     m_scripts_check_docs -. IF-002 .-> m_scripts_check
     m_scripts_check_docs -. IF-077 .-> m_scripts_check_trajectory
     m_scripts_check_dupes -. IF-007 .-> m_scripts_check
+    m_scripts_check_figures -. IF-086 .-> m_scripts_check
     m_scripts_check_flows -. IF-003 .-> m_scripts_check
     m_scripts_check_perf -. IF-004 .-> m_scripts_check
     m_scripts_check_privacy -. IF-005 .-> m_scripts_check
@@ -424,6 +428,7 @@ Contracts (interfaces): IF-008, IF-028, IF-072
 | `judge_token(token, entry, bad, untraced, rel, root, kit_root, record_prefixes, absences)` | Judge one cited token and file its verdict under `entry` — the finding |  |
 | `path_findings(line, rel, n, root, kit_root, record_prefixes, absences)` | One line's path-tier verdicts as `(dangling, untraced)` (WI-062). |  |
 | `registry_findings(root, kit_root, record_prefixes, absences)` | `(dangling, untraced)` over the spine's Evidence-class cells (WI-394). |  |
+| `authored_lines(doc)` | `(n, line)` pairs of the surface's hand-authored lines. Generated marker |  |
 | `findings_for(doc, root, oracle, kit_root, record_prefixes, absences)` | `(dangling, untraced)` — see the module docstring for the split. |  |
 | `main()` |  |  |
 
@@ -466,6 +471,18 @@ Contracts (interfaces): IF-007, IF-027
 | `read_allowlist(path)` | Parse the census into (fingerprint_or_None, pair) entries, one per |  |
 | `unallowed(findings, entries)` | The findings NOT sanctioned by the census, in order. |  |
 | `main(argv)` |  |  |
+
+### `scripts/check_figures`
+_Declared-figure provenance — a driven figure carries its command and revision_
+Imports (internal): `check_doc_refs`
+Contracts (interfaces): IF-086, IF-087
+
+| Public item | Summary | Implements |
+|---|---|---|
+| `marker_segments(line)` | The text each `fig:` marker on a line owns: from its own match to the |  |
+| `judge_marker(segment)` | None when the declared figure carries its provenance, GRAMMAR_EXAMPLE |  |
+| `findings_for(doc, root)` | `(findings, declared)` for one surface: the flagged marker lines and the |  |
+| `main()` |  |  |
 
 ### `scripts/check_flows`
 _Design-time runtime-flow check: the G2 reviewer reads diagrams, not CSV rows._

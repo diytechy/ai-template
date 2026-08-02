@@ -137,7 +137,7 @@ ratified/traced split acts upstream, on how often a window opens at all.
   of the cost while weakening a fail-closed gate — and two of those three rounds
   caught a false claim, which is the argument against capping them. Its durable
   half — making the class cheap — was filed instead.
-- **FILED: WI-392** (`docs/specs/WI-392.md`) — a driven figure carries the
+- **FILED: WI-392** (`docs/specs/WI-392.md`) <!-- path-ok: archived to docs/archive/specs/WI-392.2026-08-01.md at WI-392's close --> — a driven figure carries the
   command and revision that produced it, and a check verifies that provenance.
   Three false figures in this one session (WI-380's `2 failed, 7 passed`,
   WI-391's `109 links`, WI-384's self-falsifying "two false positives") were

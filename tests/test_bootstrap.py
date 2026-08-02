@@ -69,6 +69,7 @@ def test_scaffold_contains_expected_files(scaffold):
         "scripts/derive_gate.py",
         "scripts/check_doc_refs.py",
         "scripts/check_dupes.py",
+        "scripts/check_figures.py",
         "scripts/check_privacy.py",
         "scripts/check_vendored.py",
         "scripts/check_trajectory.py",

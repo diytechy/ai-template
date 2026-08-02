@@ -404,20 +404,17 @@ def registry_findings(
     return bad, untraced
 
 
-def findings_for(
-    doc, root, oracle, kit_root=None, record_prefixes=RECORD_PREFIXES, absences=None
-):
-    """`(dangling, untraced)` — see the module docstring for the split."""
-    out, untraced = [], []
-    rel = doc.relative_to(root).as_posix()
+def authored_lines(doc):
+    """`(n, line)` pairs of the surface's hand-authored lines. Generated marker
+    blocks (the module map, flow diagrams) are not hand-authored prose — their
+    freshness is the generator's --check contract, and their tokens (module
+    names like `src/demo`) are not disk paths — so they are skipped here, once,
+    for every doc lint that walks a surface (this module's tiers and
+    check_figures.py both read through it, WI-392)."""
     in_generated = False
     for n, line in enumerate(
         doc.read_text(encoding="utf-8-sig", errors="replace").splitlines(), 1
     ):
-        # Generated marker blocks (the module map, flow diagrams) are not
-        # hand-authored prose — their freshness is the generator's --check
-        # contract, and their tokens (module names like `src/demo`) are not
-        # disk paths. The rot this tool hunts lives outside them.
         if "<!-- BEGIN GENERATED" in line:
             in_generated = True
         if "<!-- END GENERATED" in line:
@@ -425,6 +422,16 @@ def findings_for(
             continue
         if in_generated:
             continue
+        yield n, line
+
+
+def findings_for(
+    doc, root, oracle, kit_root=None, record_prefixes=RECORD_PREFIXES, absences=None
+):
+    """`(dangling, untraced)` — see the module docstring for the split."""
+    out, untraced = [], []
+    rel = doc.relative_to(root).as_posix()
+    for n, line in authored_lines(doc):
         if "path-ok" in line:
             continue  # deliberate example naming a path that isn't here
         bad, explained = path_findings(
