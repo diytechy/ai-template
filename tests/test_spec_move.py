@@ -364,12 +364,8 @@ def test_the_cli_refuses_a_missing_source_nonzero(tmp_path):
 # --- git integration: the move is staged when the tree is a repo ----------------
 
 
-def test_inside_a_git_repo_the_move_is_a_staged_git_mv(tmp_path):
-    """`git mv` inside the worktree so the caller's `git add -A` (or the CLI
-    user's closing commit) stages the move as a move; a plain rename is the
-    fallback for an untracked file or a non-repo tree (the WI-287 shape)."""
-    skip_without_env_gates("git")
-    repo = tmp_path
+def _seeded_repo(repo):
+    """A committed git repo rooted at `repo`, with a `_git` runner returned."""
 
     def _git(*args):
         proc = subprocess.run(
@@ -385,6 +381,16 @@ def test_inside_a_git_repo_the_move_is_a_staged_git_mv(tmp_path):
     _git("config", "user.email", "t@example.com")
     _git("config", "user.name", "T")
     _git("config", "commit.gpgsign", "false")
+    return _git
+
+
+def test_inside_a_git_repo_the_move_is_a_staged_git_mv(tmp_path):
+    """`git mv` inside the worktree so the caller's `git add -A` (or the CLI
+    user's closing commit) stages the move as a move; a plain rename is the
+    fallback for an untracked file or a non-repo tree (the WI-287 shape)."""
+    skip_without_env_gates("git")
+    repo = tmp_path
+    _git = _seeded_repo(repo)
     _spec_with_links(repo)
     _git("add", "-A")
     _git("commit", "-qm", "seed")
@@ -393,3 +399,49 @@ def test_inside_a_git_repo_the_move_is_a_staged_git_mv(tmp_path):
     tracked = _git("ls-files").split()
     assert ARCHIVED in tracked
     assert "docs/specs/WI-001.md" not in tracked
+
+
+def test_the_move_stages_the_working_tree_content_not_the_stale_index_blob(tmp_path):
+    """THE WI-408 FIELD DEFECT, in the exact shape it fired (WI-401's close,
+    2026-08-02): the worker filled the spec's `## Deliverable` — an UNSTAGED
+    working-tree edit — and then ran the ritual for the close move. `git mv`
+    moves the working file but stages the rename FROM THE INDEX, so the staged
+    destination blob was the stale pre-edit content and the just-written
+    Deliverable silently vanished from the close commit; it was caught only
+    because git's rename-similarity read 100% where the edit should have
+    lowered it, and repaired by amending. The contract pinned here: after
+    `move_spec`, the destination's STAGED blob carries the source's
+    WORKING-TREE content, byte-for-byte.
+
+    The fixture spec deliberately carries NO rewritable links (fragment and
+    external only), so the rebase half cannot mask the defect by re-adding the
+    destination as one of its own rewrites — exactly the WI-401 spec shape."""
+    skip_without_env_gates("git")
+    repo = tmp_path
+    _git = _seeded_repo(repo)
+    spec = repo / "docs" / "work" / "active" / "wi-9" / "WI-9-x.md"
+    spec.parent.mkdir(parents=True)
+    spec.write_text(
+        "+++\nid = 'WI-9'\n+++\n\n"
+        "see [frag](#done-when) and [ext](https://example.invalid/spec.md)\n",
+        encoding="utf-8",
+    )
+    _git("add", "-A")
+    _git("commit", "-qm", "seed")
+    # The close shape: fill the Deliverable and do NOT stage it.
+    with spec.open("a", encoding="utf-8", newline="") as fh:
+        fh.write("\n## Deliverable\n\nShipped 2026-08-02; totals quoted.\n")
+    touched, err = sm.move_spec(
+        repo, "docs/work/active/wi-9/WI-9-x.md", "docs/work/complete/WI-9-x.md"
+    )
+    assert err is None, err
+    staged = _git("show", ":docs/work/complete/WI-9-x.md")
+    assert "Shipped 2026-08-02; totals quoted." in staged, (
+        "the unstaged Deliverable vanished from the staged blob (the stale-index"
+        " defect): " + staged
+    )
+    # No half-staged residue either: the staged blob IS the working-tree file.
+    on_disk = (repo / "docs" / "work" / "complete" / "WI-9-x.md").read_text(
+        encoding="utf-8"
+    )
+    assert staged == on_disk

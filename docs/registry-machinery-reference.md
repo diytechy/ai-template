@@ -72,7 +72,12 @@ There is **no Status column.** Maturity is the *heading the row sits under*:
 Ratifying a need = **moving the table row up** in a reviewed commit. That commit
 *is* the sign-off, and its date is the ratification date — git-derived, no
 column. Parsed by `sn_draft_ids` (a line-scanner that tracks the current heading
-and collects `SN-###` tokens under draft ones).
+and collects `SN-###` tokens under draft ones). The id *universe* those states
+partition is a **whole-text scrape** (`sn_all_ids`, an F5 twin at
+derive_gate/trace pinned by `test_rule_sync`): any `SN-###` token anywhere in
+the file counts, tables and prose alike — so an SN id mentioned only in
+ratified *prose* and cited by no SR caps the derived gate at G0 (§8.1) exactly
+as an uncovered table row does.
 
 ### 2.2 Fields
 
@@ -382,14 +387,17 @@ file** every reader in the kit shares: *the first non-empty, non-comment line*.
 Everything above it is commentary, including the machine-readable basis:
 
 ```
-# basis: SN=25 SR=136 LLR=129 TC=126 drafts=0 modified=0 uncovered=0 computed=G3 ex-draft=G3 phase=4 per-phase=1=G3;2=G3;3=G3;4=G3
+# basis: SN=25 SR=136 LLR=130 TC=127 drafts=0 modified=0 uncovered=0 computed=G3 ex-draft=G3 phase=4 per-phase=1=G3;2=G3;3=G3;4=G3
 # computed 2026-08-02 (as-of d35c3b93)
 G3
 ```
 
-`uncovered=N` (WI-401) counts the ratified SNs no SR cites — the count behind
-the coverage rung's G0 cap, so a `computed=G0` with `drafts=0` names its cause
-(before the rung, a G0 always implied a draft). Like `ex-draft=`, it is an
+`uncovered=N` (WI-401) counts the ratified SNs no SR cites — normally the count
+behind the coverage rung's G0 cap, so a `computed=G0` with `drafts=0` names its
+cause (before the rung, a G0 always implied a draft). One corner parts them:
+with **zero real SRs** the vacuous-G1 branch returns before the rung ever runs,
+so a requirements-drafting repo legitimately shows `uncovered>0` with nothing
+capped — the count staying visible there is deliberate. Like `ex-draft=`, it is an
 additive field, but the basis line is **compared whole** by `--check`: adding
 it was a cache-format change, and any repo picking up this derive_gate passes
 through it by rerunning the generator once — the ordinary

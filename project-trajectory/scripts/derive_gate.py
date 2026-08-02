@@ -149,6 +149,17 @@ def phase_num(row):
 _HEADING_RE = re.compile(r"^\s{0,3}#{1,6}\s+(.*)")
 
 
+def sn_all_ids(text):
+    """The SN id UNIVERSE: every `SN-###` token anywhere in stakeholder-needs.md
+    — a whole-text scrape, so a prose mention counts exactly like a table row
+    (registry-machinery-reference §2.1 records the sharp edge: a ratified,
+    uncited prose mention caps the gate at G0 via the coverage rung). `-000`
+    excluded. Duplicated from trace.py per the F5 rule; pinned equal by
+    test_rule_sync (WI-408) — a divergence here would let the gate and trace's
+    itemized listing disagree about which ids the rules run over."""
+    return {u for u in re.findall(r"\bSN-\d+\b", text) if not is_example(u)}
+
+
 def sn_draft_ids(text):
     """Draft SN ids (section-as-state §4a): every SN-### under a heading whose text
     contains "draft". `-000` excluded. Duplicated from trace.py per the F5 rule."""
@@ -275,7 +286,7 @@ def compute(docs):
     sn_ids, sn_draft = set(), set()
     if sn_md.exists():
         text = sn_md.read_text(encoding="utf-8-sig", errors="replace")
-        sn_ids = {u for u in re.findall(r"\bSN-\d+\b", text) if not is_example(u)}
+        sn_ids = sn_all_ids(text)
         sn_draft = sn_draft_ids(text)
 
     raw, sr_g = _raw_level(srs, llrs, tcs, sn_ids, sn_draft)
@@ -296,9 +307,12 @@ def compute(docs):
         + sum(1 for r in llrs if is_modified(r))
         + sum(1 for r in tcs if is_modified(r))
     )
-    # Ratified SNs no SR answers (WI-401): the count behind the coverage rung's
-    # G0 cap, surfaced on the basis line so a computed=G0 with drafts=0 names its
-    # cause. Counted over ALL SRs' citations (Draft included) — the same set
+    # Ratified SNs no SR answers (WI-401): normally the count behind the coverage
+    # rung's G0 cap, surfaced on the basis line so a computed=G0 with drafts=0
+    # names its cause. Not always a cap: with zero real SRs the vacuous-G1 branch
+    # in _raw_level returns before the rung runs, so the count can be nonzero
+    # with nothing capped — the requirements-drafting corner, deliberately
+    # visible. Counted over ALL SRs' citations (Draft included) — the same set
     # trace.py's "SN has no SR" orphan rule reads, so the itemized listing and
     # this count never disagree on one registry state. Draft SNs are exempt
     # (they ride the draft rung + drafts=N instead — one fact, one finding).
