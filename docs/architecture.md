@@ -417,7 +417,9 @@ Contracts (interfaces): IF-008, IF-028, IF-072
 | `load_symbol_oracle(arch_path)` | {module-tail: {symbols}} parsed from the generated module map, or {}. |  |
 | `load_declared_absences(path)` | `{path: reason}` from a declared-absences file, or `{}` when it is absent |  |
 | `untraced_reason(token, rel, root, kit_root, record_prefixes, absences)` | Why a missing path is explainable, or None when it is real rot (WI-062). |  |
+| `judge_token(token, entry, bad, untraced, rel, root, kit_root, record_prefixes, absences)` | Judge one cited token and file its verdict under `entry` — the finding |  |
 | `path_findings(line, rel, n, root, kit_root, record_prefixes, absences)` | One line's path-tier verdicts as `(dangling, untraced)` (WI-062). |  |
+| `registry_findings(root, kit_root, record_prefixes, absences)` | `(dangling, untraced)` over the spine's Evidence-class cells (WI-394). |  |
 | `findings_for(doc, root, oracle, kit_root, record_prefixes, absences)` | `(dangling, untraced)` — see the module docstring for the split. |  |
 | `main()` |  |  |
 
