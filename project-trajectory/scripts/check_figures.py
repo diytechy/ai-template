@@ -33,13 +33,21 @@ docstring only enforces it):
   exempt     a line carrying `fig-ok` is prose ABOUT the convention, never a
              declaration (the `path-ok`/`privacy-ok` idiom).
   grammar    a marker whose values are wholly placeholder tokens (`<command>`,
-             `…`) is the convention quoting itself and declares nothing — a
-             metacharacter inside a longer value (`sort < in.txt`) is command
-             text, and the marker is judged (WI-404); each marker on a line
-             owns only the attributes that follow it, so two half-carrying
-             markers never cross-satisfy; rev= takes a bare token or a quoted
-             string, and its value must carry a word character (a flush
-             `rev=-->` is punctuation, not a revision).
+             `…`) is the convention quoting itself and declares nothing — ALL
+             of its values (WI-409): a MIXED marker, one real value beside an
+             unfilled `rev=<revision>`, is a real half-filled declaration
+             judged on completeness, its placeholder value counting as
+             ABSENT; a metacharacter inside a longer value (`sort < in.txt`)
+             is command text, and the marker is judged (WI-404); each marker
+             on a line owns only the attributes that follow it, so two
+             half-carrying markers never cross-satisfy; rev= takes a bare
+             token or a quoted string, and its value must carry a word
+             character (a flush `rev=-->` is punctuation, not a revision).
+             Recorded corner (WI-404 REVIEW-A note 2): the unclosed-token
+             alternative exists for the bare rev= capture but applies per
+             value, so a marker ALL of whose values are whitespace-free
+             `<`-leading tokens (a lone `cmd="<in.txt"`) is excused — no
+             runnable command has that shape.
 
 In markdown the marker rides an HTML comment so it never renders; the check is
 line-based, so a `#` ini comment carries it the same way. Scan surface = root
@@ -90,8 +98,8 @@ CMD = re.compile(r'\bcmd="([^"]*)"')
 # pass on punctuation debris.
 REV = re.compile(r"\brev=(?:\"([^\"]*)\"|([^\s>\"'`]+))")
 DERIVED = re.compile(r'\bderived="([^"]*)"')
-# A marker whose values are placeholder-shaped is GRAMMAR PROSE quoting the
-# convention (`<command>`, `…`), not a declaration — the check_doc_refs
+# A marker ALL of whose values are placeholder-shaped is GRAMMAR PROSE quoting
+# the convention (`<command>`, `…`), not a declaration — the check_doc_refs
 # `{placeholder}`/`NNN` stance (REVIEW-A finding 1: the convention text ships
 # in every scaffold and must not read as undeclared figures there). A value is
 # placeholder-shaped only when the WHOLE value is the convention's own example
@@ -102,7 +110,9 @@ DERIVED = re.compile(r'\bderived="([^"]*)"')
 # (`pytest -q 2>&1 | tail -1`, `sort < in.txt`), so the marker is judged on
 # its own attributes — the old any-char proxy excused defective markers and
 # uncounted real redirecting declarations, both silently (WI-404, REVIEW-A
-# round-2 finding 4).
+# round-2 finding 4). One placeholder beside a real value does NOT excuse the
+# marker (WI-404 REVIEW-A finding 1): the half-filled template is judged, its
+# unfilled field counting as absent (WI-409).
 PLACEHOLDER_VALUE = re.compile(r"…|<[^<>]*>|<[^<>\s]*")
 WORD = re.compile(r"[0-9A-Za-z]")
 # Beside the markdown walk: the declared-budgets surface whose re-measure note
@@ -135,16 +145,28 @@ def marker_segments(line):
     ]
 
 
+def _placeholder(value):
+    """Whether the WHOLE value is the convention's own example grammar — an
+    unfilled field. Judged twice: every value placeholder-shaped makes the
+    marker grammar prose; one inside a judged marker counts as absent."""
+    return bool(PLACEHOLDER_VALUE.fullmatch(value.strip()))
+
+
 def judge_marker(segment):
     """None when the declared figure carries its provenance, GRAMMAR_EXAMPLE
     when the marker is convention prose, else the flag reason.
 
     Presence only: non-empty cmd= AND rev=, or a non-empty derived=. Empty or
     wordless values count as missing — `cmd=""` names nothing a reader could
-    rerun, and a flush `rev=-->` is punctuation, not a revision. A value that
-    IS a placeholder (`<command>`, `…` — the whole value, PLACEHOLDER_VALUE)
-    makes the whole marker an example: grammar quoted in prose declares
-    nothing. A metacharacter inside a longer value is command text, and the
+    rerun, and a flush `rev=-->` is punctuation, not a revision. A marker is
+    example grammar only when ALL its values are placeholders (`<command>`,
+    `…` — each the whole value, PLACEHOLDER_VALUE): grammar quoted in prose
+    declares nothing, but a MIXED marker — one real value beside an unfilled
+    `<token>` — is a real, half-filled declaration (WI-409). In that judgment
+    a placeholder-shaped value counts as ABSENT, never as satisfying: the
+    bare rev= capture arrives unclosed (`<revision`), which carries word
+    characters and would otherwise pass the half-filled template as
+    complete. A metacharacter inside a longer value is command text, and the
     marker is judged (WI-404)."""
     derived = DERIVED.search(segment)
     cmd = CMD.search(segment)
@@ -161,17 +183,17 @@ def judge_marker(segment):
         )
         if v is not None
     ]
-    if any(PLACEHOLDER_VALUE.fullmatch(v.strip()) for v in values):
+    if values and all(_placeholder(v) for v in values):
         return GRAMMAR_EXAMPLE
-    if derived is not None:
+    if derived is not None and not _placeholder(derived.group(1)):
         if derived.group(1).strip():
             return None
         return (
             "carries an empty derivation — name the declared figures it is "
             "computed from"
         )
-    has_cmd = bool(cmd and cmd.group(1).strip())
-    has_rev = bool(rev_val and WORD.search(rev_val))
+    has_cmd = bool(cmd and cmd.group(1).strip() and not _placeholder(cmd.group(1)))
+    has_rev = bool(rev_val and WORD.search(rev_val) and not _placeholder(rev_val))
     if has_cmd and has_rev:
         return None
     if has_cmd:
