@@ -169,6 +169,43 @@ def test_an_empty_frontier_answers_empty():
     assert dsp._admission([], "attended", busy=False, free=1) == ("empty", [])
 
 
+# --- the empty-frontier gap census (the WI-388 handoff seam) ------------------
+
+
+def test_gap_census_names_the_three_gap_classes_mechanically(tmp_path):
+    # Ladder rung 1 (§A4 amendment, 2026-08-01): the census is DERIVED from
+    # what trace.py already names — unverified in-scope SRs, orphan rows,
+    # draft SNs — with no model anywhere near it. WI-388's intake mint helper
+    # consumes this seam to mint concrete gap-closure rows; until it lands the
+    # dispatcher only reports.
+    req = tmp_path / "docs" / "requirements"
+    req.mkdir(parents=True)
+    (req / "stakeholder-needs.md").write_text(
+        "# Needs\n\nSN-001: The product does a thing.\n\n"
+        "## Draft needs (unratified)\n\nSN-002: A thought still forming.\n",
+        encoding="utf-8",
+        newline="\n",
+    )
+    (req / "system-requirements.csv").write_text(
+        "SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,"
+        "Permutations,Priority,Verification,Status,Phase,Area,SupersededBy\n"
+        "SR-001,Widget,SN-001,Shall widget.,Because.,Widgets.,,1,Test,"
+        "Planned,,,\n",
+        encoding="utf-8",
+        newline="\n",
+    )
+    census = dsp.gap_census(tmp_path)
+    joined = "\n".join(census)
+    assert "SR-001" in joined  # unverified in-scope SR (and its orphan rows)
+    assert "SN-002" in joined  # draft SN
+    assert any("draft" in line.lower() for line in census)
+
+
+def test_gap_census_is_empty_on_a_repo_with_no_registries(tmp_path):
+    (tmp_path / "docs").mkdir()
+    assert dsp.gap_census(tmp_path) == []
+
+
 # --- the lanes dial ladder (§A4.3) -------------------------------------------
 
 

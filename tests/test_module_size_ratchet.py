@@ -1059,7 +1059,7 @@ BASELINE = {
     # (`git check-ignore`, finding 3). All but four lines are the docstrings
     # and comments recording why each guard exists. Reviewed bump, log
     # fragment 2026-08-02 (WI-407). Re-stamp down with WI-280.
-    # +128 (2125 -> 2253), WI-381: the §A4.1 authority flip and the spine
+    # +126 (2125 -> 2251), WI-381: the §A4.1 authority flip and the spine
     # batch. The claim's `safety_class != ordinary` refusal arm is DELETED
     # (admission is the dispatcher's decision); what closes the hand-CLI hole
     # is `_dispatch_lock` — the claim REQUIRES out/agent-loop.lock, so a hand
@@ -1071,7 +1071,7 @@ BASELINE = {
     # its own refresh completes. Most of the delta is the docstrings stating
     # the authority model. Reviewed bump, log fragment 2026-08-02 (WI-381).
     # Re-stamp down with WI-280.
-    "integrate.py": 2253,
+    "integrate.py": 2251,
 }
 
 

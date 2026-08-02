@@ -680,6 +680,70 @@ def test_attended_ratification_row_drains_and_exits_zero_with_the_banner(
     assert (root / "docs" / "work" / "queued" / "WI-600-ratify.md").is_file()
 
 
+# --- the empty-frontier ladder (§A4 amendment, ruled 2026-08-01) ---------------
+
+
+def test_empty_frontier_rung_one_reports_the_gap_census_and_mints_nothing(
+    tmp_path, capfd
+):
+    # Rung 1: derive the gap census mechanically and HAND it to the intake
+    # mint (WI-388's helper). Until that row lands the dispatcher only
+    # REPORTS — exit 0, the gaps named in the log, and NOT ONE row minted (no
+    # silent planner mints).
+    root = git_repo(tmp_path)
+    req = root / "docs" / "requirements"
+    req.mkdir(parents=True)
+    (req / "system-requirements.csv").write_text(
+        "SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,"
+        "Permutations,Priority,Verification,Status,Phase,Area,SupersededBy\n"
+        "SR-001,Widget,SN-001,Shall widget.,Because.,Widgets.,,1,Test,"
+        "Planned,,,\n",
+        encoding="utf-8",
+        newline="\n",
+    )
+    (req / "stakeholder-needs.md").write_text(
+        "# Needs\n\nSN-001: The product does a thing.\n",
+        encoding="utf-8",
+        newline="\n",
+    )
+    _commit(root, "seed the registries", when=T_CODE)
+    worker = Recorder()
+
+    rc = drv.run(root, drive_args(), worker=worker)
+    assert rc == 0
+    out = capfd.readouterr().out
+    assert "registry gap(s)" in out and "WI-388" in out, out
+    assert "SR-001" in out
+    assert "no silent planner mints" in out
+    assert worker.calls == []
+    assert not list((root / "docs" / "work").rglob("WI-*.md"))
+
+
+def test_empty_frontier_rung_two_banner_derives_from_the_shared_pending_read(
+    tmp_path, capfd
+):
+    # Rung 2: census empty but a pending attestation exists — that is NOT
+    # missing work. The banner's count comes from the SAME pending_block(root)
+    # read the dashboard and open-items.html share (a blocked row with a
+    # BlockRef is one card), so agent-resume and the owner surfaces can never
+    # disagree about what is blocking.
+    root = git_repo(tmp_path)
+    path = write_spec(root, "queued", "WI-700", slug="stuck", specref="seed.txt")
+    text = path.read_text(encoding="utf-8").replace(
+        'workstream = "ws"', 'workstream = "ws"\nblockref = "docs/log.md"'
+    )
+    path.write_text(text, encoding="utf-8", newline="\n")
+    (root / "docs" / "log.md").write_text("# log\n", encoding="utf-8", newline="\n")
+    _commit(root, "file the blocked row", when=T_CODE)
+    worker = Recorder()
+
+    rc = drv.run(root, drive_args(), worker=worker)
+    assert rc == 0
+    out = capfd.readouterr().out
+    assert "queue drained - 1 ratification(s) waiting in open-items.html" in out, out
+    assert worker.calls == []
+
+
 # --- the plain-launch seam (IF-015) -------------------------------------------
 
 

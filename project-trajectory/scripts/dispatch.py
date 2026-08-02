@@ -614,13 +614,69 @@ def _budget_exit(args, state):
     return ac.EXIT_BUDGET
 
 
+def _pending_cards(root):
+    """The pending owner cards, from the SAME pending_block(root) read the
+    dashboard and open-items.html share (the WI-381 amendment, ruled
+    2026-08-01: gen_open_items reuses gen_trajectory.pending_block verbatim,
+    and the dispatcher's exit banner must derive from that one read so
+    agent-resume and the owner surfaces can never disagree about what is
+    blocking). Blocked rows with a BlockRef plus Draft/Modified spine rows;
+    the tracked-pause card is excluded because a pause has its own earlier
+    exit, and the coordinator's git-trailer reads stay for in-flight lanes
+    only.
+
+    IMPORT JUDGMENT, recorded (the spec asked): the deferred import below is
+    the FACADE, `gen_trajectory` — the same import shape gen_open_items uses —
+    rather than its traj_status internals or an agent_common F5 pin. No
+    forbidden seam is crossed: the F5 independently-copyable rule pins the
+    three registry LOADERS (schedule/check_trajectory/agent_common), not
+    sibling imports generally, and bootstrap ships gen_trajectory + the traj_*
+    family together as one set (a scaffold missing one ImportErrors on the
+    first render), so the dispatcher can no more miss it than the dashboard
+    can. Deferred so the tick loop pays the render family's import only at
+    an exit banner."""
+    import gen_trajectory as gt
+
+    blocked_lines, _ids = gt._blocked_pending(root)
+    return blocked_lines + gt._spine_pending(root)
+
+
 def _surface_banner(root, surfaced):
-    """The §A8 attended stop's banner: exit 0, naming what waits. The count is
-    the surfaced frontier rows'; WI-381's amendment wires it to the same
-    pending_block(root) read the owner surfaces share."""
+    """The §A8 attended stop's banner: exit 0, naming what waits. The count
+    derives from the shared pending read; the surfaced frontier rows are the
+    floor for the window where a gate/attestation WI is queued before its
+    cards project (the two reads agreeing is the common case)."""
     return "queue drained - {} ratification(s) waiting in open-items.html".format(
-        len(surfaced)
+        max(len(_pending_cards(root)), len(surfaced))
     )
+
+
+def gap_census(root):
+    """THE WI-388 HANDOFF SEAM — ladder rung 1 (§A4 amendment, ruled
+    2026-08-01). The mechanical registry-gap census the dispatcher derives
+    when the frontier is empty: unverified in-scope SRs, orphan rows, draft
+    SNs — exactly what trace.py already names, re-used rather than re-derived
+    (`trace.analyze` is the one orphan/status engine). WI-388's intake mint
+    helper consumes this list to mint concrete gap-closure rows with derived
+    descriptions — no model anywhere in the path; until that row lands the
+    dispatcher only REPORTS the census and mints NOTHING (no silent planner
+    mints). Returns finding strings; [] when the registries are complete (or
+    absent — a scaffold with no spine yet has no gaps to name)."""
+    import argparse as _ap
+
+    import trace as tr
+
+    reg = tr.load_registries(root / "docs")
+    flags = _ap.Namespace(
+        phase="", require_verified=True, no_placeholders=False, strict_schema=False
+    )
+    findings = tr.analyze(reg, flags)
+    census = list(findings.orphans)
+    census += list(findings.status_findings)
+    census += [
+        "SN {} is a draft need (unratified)".format(s) for s in sorted(reg.sn_draft)
+    ]
+    return census
 
 
 def _pre_admit(args, table, state, config_refusal):
@@ -769,12 +825,36 @@ def _station_exit(root, tier, verb, payload, state):
         return code
     if verb == "surface":
         _say(_surface_banner(root, payload))
-    else:
+        return ac.EXIT_DONE
+    # THE EMPTY-FRONTIER LADDER (§A4 amendment, ruled 2026-08-01), replacing
+    # the bare queue-drained exit. Rung 1: a mechanical gap census — handed to
+    # the WI-388 intake mint; reported here, NEVER minted here. Rung 2: census
+    # empty but a pending attestation exists — that is not missing work; the
+    # cards are on open-items.html and the banner counts them off the shared
+    # read. Rung 3: census empty and registries complete — honest drain.
+    census = gap_census(root)
+    if census:
+        for line in census:
+            _say("gap census: {}".format(line))
         _say(
-            "queue drained - no ready work items; {} WI(s) integrated this run.".format(
-                state["merged"] + residue
+            "empty frontier - {} registry gap(s) named above await the intake "
+            "mint (WI-388, docs/concurrency-v2.md §A5.2); nothing was minted - "
+            "no silent planner mints.".format(len(census))
+        )
+        return ac.EXIT_DONE
+    cards = _pending_cards(root)
+    if cards:
+        _say(
+            "queue drained - {} ratification(s) waiting in open-items.html".format(
+                len(cards)
             )
         )
+        return ac.EXIT_DONE
+    _say(
+        "queue drained - no ready work items; {} WI(s) integrated this run.".format(
+            state["merged"] + residue
+        )
+    )
     return ac.EXIT_DONE
 
 
