@@ -299,12 +299,19 @@ table.
   is diffable and never breaks: a registry with no phased row keeps `trace.py`'s
   ratified-Phase schema rule dormant (blank = in scope for every phase), and any
   leftover grouping column is simply ignored (read by name, no vocabulary rule).
-  Recommended convention is **bare integers** (`1`, `2`, …), but a `vN` label still
-  digit-parses everywhere (`--phase`, the derived current phase, the schema rule),
-  so a downstream that kept `vN` arms the rule and passes it. Once you phase any
-  row, phase every *ratified* SR/LLR/TC — a ratified blank/unparseable `Phase` is
-  then a `--strict-schema` finding — and the foundation (minimum) phase stays in
-  scope under `--phase`.
+  **Phase is numeric-only (2026-08, WI-402):** once any row is phased, a
+  *ratified* SR/LLR/TC `Phase` must be a **full-cell bare integer** (`1`, `2`,
+  …) — a prefixed label (`v2`, `P1`) is now a `--strict-schema` finding, because
+  the `--phase`/`--ratify` filters and the phase-drop detector match the cell
+  literally and a prefixed cell disarms them silently. A `vN` label still
+  digit-parses in those filters and the derived current phase (grandfathering),
+  so a `vN` registry **arms the rule and now fails it**: strip prefixes
+  (`v2` → `2`) across ratified rows when you take this kit version — a
+  mechanical, diffable edit (`Phase` is a *traced* cell, so no re-attest window
+  opens). Once you phase any row, phase every *ratified* SR/LLR/TC — blank
+  stays legal on `Draft` rows only — and the foundation (minimum) phase stays
+  in scope under `--phase`. `derive_gate.py --next-phase` prints the number a
+  newly confirmed phase takes.
   **Superseded-SR grounding is now an integrity error (2026-07-29):** if your
   SR registry uses the optional `SupersededBy` column, an LLR whose `SR-Refs`
   cites a superseded SR reds `trace.py` at every gate after this re-sync

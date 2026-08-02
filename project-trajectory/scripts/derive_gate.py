@@ -490,12 +490,34 @@ def main():
         action="store_true",
         help="compute and print the derived gate + basis; do not write docs/gate",
     )
+    ap.add_argument(
+        "--next-phase",
+        dest="next_phase",
+        action="store_true",
+        help="print the next delivery phase number — max(Phase over non-draft "
+        "spine rows) + 1, the basis line's phase=N plus one; an unphased spine "
+        "is the implicit foundation (1), so it prints 2. Output mode only: "
+        "docs/gate is not written",
+    )
     args = ap.parse_args()
     root = Path(args.root)
     docs = Path(args.docs) if args.docs else root / "docs"
 
     result = compute(docs)
     basis = basis_line(result)
+
+    if args.next_phase:
+        # The one derived answer to "a confirmed scope change opens a new phase
+        # — what number does it take?" (owner ruling 2026-08-01, WI-402: a phase
+        # increments on an adjudication-confirmed scope change or a ratified
+        # draft-SN batch, NEVER on the raw derived-gate drop — a spurious
+        # Modified window must not burn a phase number). Printed bare so the
+        # intake mint helper (WI-388) can int() the output. Reuses the basis
+        # line's phase=N derivation — an output mode, not a second parse; a
+        # Draft row's phase is not yet scope, so it never bumps the answer.
+        cur = result["phase"]
+        print((cur if cur is not None else 1) + 1)
+        return 0
 
     if args.print_only:
         print(basis)
