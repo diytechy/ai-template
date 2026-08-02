@@ -67,7 +67,11 @@ toward the deleted dispatcher's shape, stop and escalate as a written case
 (process-options.md, the design-escalation clause).
 
 Contracts: IF-015 (the plain-launch drive mode is agent_loop.py's seam; this
-module is its implementation, invoked only via agent_loop or in-process).
+module is its implementation, invoked only via agent_loop or in-process),
+IF-088 (the exit-banner pending read — gen_trajectory's pending_block
+internals, the one derivation the owner surfaces share), IF-089 (the
+empty-frontier gap census — trace's registry analysis, the intake mint
+handoff).
 """
 
 from __future__ import annotations
