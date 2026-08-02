@@ -1358,9 +1358,11 @@ The rule has three parts, in order:
    itself declared, `fig: derived="<how, from which declared figures>"` — or it
    is the one figure in the paragraph nothing covers. A line carrying `fig-ok`
    is prose about the convention, never a declaration. *Grammar:* a marker
-   whose values are placeholder-shaped (`<command>`, `…`) is the convention
-   quoting itself and declares nothing; each marker on a line owns only the
-   attributes that follow it; `rev=` takes a bare token or a quoted string.
+   whose values are wholly placeholder tokens (`<command>`, `…`) is the
+   convention quoting itself and declares nothing — a metacharacter inside a
+   longer value (`sort < in.txt`) is command text, and the marker is judged;
+   each marker on a line owns only the attributes that follow it; `rev=` takes
+   a bare token or a quoted string.
 
 The *truth* of a figure is not mechanizable — no check distinguishes a live
 measurement from a recollection — so that enforcer stays **Reviewer**, in the
