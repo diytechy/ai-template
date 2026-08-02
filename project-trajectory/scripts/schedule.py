@@ -452,6 +452,32 @@ def load_wis(rows):
 
 
 # --- deterministic safety classification (SR-093/SR-094) ----------------------
+def kind_of(wi, *, structural=None):
+    """The declared KIND both §A1 axis tables are keyed by — `classify`'s
+    step-1 resolution on its own, because the dispatcher's §A8 admission
+    policy is keyed per kind per gate-policy level (WI-381) and must read the
+    ONE resolution rather than re-derive it or parse it back out of reason
+    codes. Returns a `SAFETY_CLASSES` member or `"critique"`, or None exactly
+    where `classify` quarantines (missing/unknown/contradicting declarations —
+    the fail-closed rows that never reach a frontier)."""
+    declared = (wi.get("safetyclass") or "").strip().lower()
+    dual = (wi.get("planmode") or "").strip().lower() == "dual"
+    if dual:
+        if declared and declared != "high-risk":
+            return None  # PlanMode contradicts the declared class (step 1)
+        kind = "high-risk"
+    else:
+        if declared not in SAFETY_CLASSES:
+            return None  # missing or unknown (step 2)
+        struct = (structural or "").strip().lower() or None
+        if declared == "ordinary" and struct in SAFETY_CLASSES and struct != "ordinary":
+            return None  # contradicting structural evidence (step 3)
+        kind = declared
+    if kind == "ordinary" and bool(wi.get("critique")):
+        kind = "critique"  # the promotion only lifts ordinary (step 4)
+    return kind
+
+
 def classify(wi, *, structural=None):
     """`(concurrency, rank, [reason_codes])` for one WI — a pure function.
 
@@ -477,27 +503,22 @@ def classify(wi, *, structural=None):
     fails closed for itself and never blocks disjoint classified work.
     """
     declared = (wi.get("safetyclass") or "").strip().lower()
-    critique = bool(wi.get("critique"))
-
-    # A dual-plan round is the high-risk kind and never needs a second hand-set
-    # SafetyClass cell (single-source). A declared SafetyClass that contradicts
-    # the derivation quarantines — the same cross-check posture as step 3, never
-    # a silent override in either direction.
     dual = (wi.get("planmode") or "").strip().lower() == "dual"
-    if dual and declared and declared != "high-risk":
-        return _unclassified("planmode-dual-vs-declared-%s" % declared)
 
-    if not dual and declared not in SAFETY_CLASSES:
-        code = "missing" if not declared else "unknown-value:%s" % declared
-        return _unclassified(code)
-
-    struct = (structural or "").strip().lower() or None
-    if declared == "ordinary" and struct in SAFETY_CLASSES and struct != "ordinary":
+    # Steps 1-4 live ONCE, in `kind_of`; what stays here is naming the cause a
+    # quarantined row carries in --explain. A dual-plan round is the high-risk
+    # kind and never needs a second hand-set SafetyClass cell (single-source);
+    # a declared SafetyClass that contradicts the derivation quarantines — the
+    # same cross-check posture as the structural rule, never a silent override.
+    kind = kind_of(wi, structural=structural)
+    if kind is None:
+        if dual and declared and declared != "high-risk":
+            return _unclassified("planmode-dual-vs-declared-%s" % declared)
+        if not dual and declared not in SAFETY_CLASSES:
+            code = "missing" if not declared else "unknown-value:%s" % declared
+            return _unclassified(code)
+        struct = (structural or "").strip().lower()
         return _unclassified("declared-ordinary-vs-structural-%s" % struct)
-
-    kind = "high-risk" if dual else declared
-    if kind == "ordinary" and critique:
-        kind = "critique"
 
     concurrency, rank = _KIND_CONCURRENCY[kind], _KIND_RANK[kind]
     # The reason list names the concurrency answer and each signal that produced

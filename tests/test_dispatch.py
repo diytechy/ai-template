@@ -131,6 +131,7 @@ def drive_args(**kw):
         live_status=False,
         max_iterations=10,
         stall_limit=3,
+        lanes=None,
         model="",
         model_map="",
         cmd_map="",
@@ -175,7 +176,7 @@ class Recorder:
 
 
 def test_drive_refuses_an_unwired_agent_command_before_claiming(
-    tmp_path, capsys, monkeypatch
+    tmp_path, capfd, monkeypatch
 ):
     # The claim is a trunk commit; a run that would claim first and then
     # discover no worker can launch leaves a parked branch behind for nothing.
@@ -186,13 +187,13 @@ def test_drive_refuses_an_unwired_agent_command_before_claiming(
 
     rc = drv.run(root, drive_args(agent_cmd=None), worker=None)
     assert rc == 2
-    assert "no agent command wired" in capsys.readouterr().err
+    assert "no agent command wired" in capfd.readouterr().err
     assert (root / "docs" / "work" / "queued" / "WI-401-widget.md").is_file()
     assert "wi-401-widget" not in _git(root, "branch", "--format=%(refname:short)")
 
 
 def test_drive_unwired_config_still_drains_an_empty_queue_to_zero(
-    tmp_path, capsys, monkeypatch
+    tmp_path, capfd, monkeypatch
 ):
     # The config preflight is applied only when work needs a worker: an inert
     # scaffold (empty AGENT_CMD, no enable-list) with an EMPTY queue is a
@@ -203,10 +204,10 @@ def test_drive_unwired_config_still_drains_an_empty_queue_to_zero(
 
     rc = drv.run(root, drive_args(agent_cmd=None), worker=None)
     assert rc == 0
-    assert "queue drained" in capsys.readouterr().out
+    assert "queue drained" in capfd.readouterr().out
 
 
-def test_a_claim_dir_with_no_branch_ref_no_longer_stops_the_run(tmp_path, capsys):
+def test_a_claim_dir_with_no_branch_ref_no_longer_stops_the_run(tmp_path, capfd):
     # WI-387 DELETED `_stranded_claims`. It existed only because the claim
     # advanced trunk BEFORE cutting the branch, so a crash between the two
     # writes left a claim no lane could reach; the claim now writes the branch
@@ -221,11 +222,11 @@ def test_a_claim_dir_with_no_branch_ref_no_longer_stops_the_run(tmp_path, capsys
 
     rc = drv.run(root, drive_args(), worker=worker)
     assert rc == 0
-    assert "queue drained" in capsys.readouterr().out
+    assert "queue drained" in capfd.readouterr().out
     assert worker.calls == []
 
 
-def test_drive_refuses_a_dirty_trunk_before_resuming(tmp_path, capsys):
+def test_drive_refuses_a_dirty_trunk_before_resuming(tmp_path, capfd):
     # The claim rung's clean-trunk refusal, hoisted to the cycle top: the
     # parked-resume path must meet it too, BEFORE a worker session runs.
     root = parked_repo(tmp_path)
@@ -234,11 +235,11 @@ def test_drive_refuses_a_dirty_trunk_before_resuming(tmp_path, capsys):
 
     rc = drv.run(root, drive_args(), worker=worker)
     assert rc == 2
-    assert "working tree is dirty" in capsys.readouterr().err
+    assert "working tree is dirty" in capfd.readouterr().err
     assert worker.calls == []
 
 
-def test_drive_empty_frontier_drains_and_exits_zero(tmp_path, capsys):
+def test_drive_empty_frontier_drains_and_exits_zero(tmp_path, capfd):
     # A finished queue is SUCCESS: the drained banner at exit 0 (the done-when
     # names this outcome explicitly — an empty frontier is not an error).
     root = git_repo(tmp_path)
@@ -246,7 +247,7 @@ def test_drive_empty_frontier_drains_and_exits_zero(tmp_path, capsys):
 
     rc = drv.run(root, drive_args(), worker=worker)
     assert rc == 0
-    out = capsys.readouterr().out
+    out = capfd.readouterr().out
     assert "queue drained" in out and "0 WI(s) integrated" in out
     assert worker.calls == []
 
@@ -254,7 +255,7 @@ def test_drive_empty_frontier_drains_and_exits_zero(tmp_path, capsys):
 # --- the composed refusals stop the run ---------------------------------------
 
 
-def test_drive_claim_refusal_stops_the_run(tmp_path, capsys):
+def test_drive_claim_refusal_stops_the_run(tmp_path, capfd):
     # The SpecRef rung (WI-370) fires inside integrate.claim; the driver must
     # surface it and STOP — never skip to the next WI, never talk past it.
     root = git_repo(tmp_path)
@@ -264,12 +265,12 @@ def test_drive_claim_refusal_stops_the_run(tmp_path, capsys):
 
     rc = drv.run(root, drive_args(), worker=worker)
     assert rc == 1
-    assert "carries no SpecRef" in capsys.readouterr().err
+    assert "carries no SpecRef" in capfd.readouterr().err
     assert worker.calls == []
     assert (root / "docs" / "work" / "queued" / "WI-401-widget.md").is_file()
 
 
-def test_drive_pause_appearing_mid_run_stops_the_next_cycle(tmp_path, capsys):
+def test_drive_pause_appearing_mid_run_stops_the_next_cycle(tmp_path, capfd):
     # §5.6: pause = stop claiming. The check sits at the top of EVERY cycle,
     # so a pause dropped while a worker ran stops the next claim — with the
     # pause banner (exit 8), not a claim-rung refusal.
@@ -286,12 +287,12 @@ def test_drive_pause_appearing_mid_run_stops_the_next_cycle(tmp_path, capsys):
     worker = Recorder(outcomes=(0,), effect=drop_pause)
     rc = drv.run(root, drive_args(), worker=worker)
     assert rc == 8
-    err = capsys.readouterr().err
+    err = capfd.readouterr().err
     assert "PAUSED" in err and "owner says stop" in err
     assert len(worker.calls) == 1
 
 
-def test_drive_resumes_a_parked_branch_and_stalls_on_no_progress(tmp_path, capsys):
+def test_drive_resumes_a_parked_branch_and_stalls_on_no_progress(tmp_path, capfd):
     # A parked claim from an interrupted run is picked up FIRST (resume, not
     # refuse) — and a worker that keeps reporting DONE without finishing its
     # branch cannot loop forever: the trunk never moves, so the drive loop's
@@ -301,11 +302,11 @@ def test_drive_resumes_a_parked_branch_and_stalls_on_no_progress(tmp_path, capsy
 
     rc = drv.run(root, drive_args(stall_limit=2), worker=worker)
     assert rc == 4
-    assert "STALL" in capsys.readouterr().err
+    assert "STALL" in capfd.readouterr().err
     assert worker.calls == [("wi-401", ("WI-401",)), ("wi-401", ("WI-401",))]
 
 
-def test_a_crashed_worker_stays_parked_and_the_next_cycle_resumes_it(tmp_path, capsys):
+def test_a_crashed_worker_stays_parked_and_the_next_cycle_resumes_it(tmp_path, capfd):
     # §A3 draws the line at DECIDED vs CRASHED. A crash (an exit code the
     # worker's own vocabulary does not contain) is deliberately NOT a hang: the
     # branch exists and the specs are still in active/<branch>/, so the
@@ -316,7 +317,7 @@ def test_a_crashed_worker_stays_parked_and_the_next_cycle_resumes_it(tmp_path, c
 
     rc = drv.run(root, drive_args(stall_limit=2), worker=worker)
     assert rc == 4
-    err = capsys.readouterr().err
+    err = capfd.readouterr().err
     assert "CRASHED (exit 1)" in err and "STALL" in err
     assert len(worker.calls) == 2
     assert (root / "docs" / "work" / "active" / "wi-401" / "WI-401-widget.md").is_file()
@@ -387,7 +388,7 @@ def _returned(root, wid="WI-401"):
     return path.read_text(encoding="utf-8") if path.is_file() else ""
 
 
-def test_a_needs_human_worker_hands_back_and_the_run_keeps_going(tmp_path, capsys):
+def test_a_needs_human_worker_hands_back_and_the_run_keeps_going(tmp_path, capfd):
     # THE RUN-STOP THIS DELETES. Exit 7 used to end the whole walk-away run
     # with the branch parked. Now the lane closes into trunk and the driver
     # carries on to the drained banner — asserted at exit 0, not just by the
@@ -397,7 +398,7 @@ def test_a_needs_human_worker_hands_back_and_the_run_keeps_going(tmp_path, capsy
 
     rc = drv.run(root, drive_args(), worker=worker, tier="smoke")
     assert rc == 0
-    out = capsys.readouterr().out
+    out = capfd.readouterr().out
     assert "handback: returned WI-401 from wi-401-widget" in out, out
     assert "merged (WI-401=handback)" in out, out
     assert "queue drained" in out, out
@@ -413,7 +414,7 @@ def test_a_needs_human_worker_hands_back_and_the_run_keeps_going(tmp_path, capsy
 
 
 def test_a_decided_exit_after_the_lane_closed_merges_on_its_declared_outcome(
-    tmp_path, capsys
+    tmp_path, capfd
 ):
     # THE OTHER DIAGONAL of the invariant's boundary. A review escalation lands
     # at the END of a lane, so the close may already be written when the worker
@@ -442,16 +443,14 @@ def test_a_decided_exit_after_the_lane_closed_merges_on_its_declared_outcome(
 
     rc = drv.run(root, drive_args(), worker=worker, tier="smoke")
     assert rc == 0
-    out = capsys.readouterr().out
+    out = capfd.readouterr().out
     assert "already out of active/" in out, out
     assert "merged (WI-401=merged)" in out, out
     assert (root / "docs" / "work" / "complete" / "WI-401-widget.md").is_file()
     assert (root / "shipped.py").is_file()
 
 
-def test_a_red_handback_is_reverted_to_a_bar_inert_artefact_and_merges(
-    tmp_path, capsys
-):
+def test_a_red_handback_is_reverted_to_a_bar_inert_artefact_and_merges(tmp_path, capfd):
     # THE RULED CASE (owner decision 1). The lane hands back code the bar
     # refuses, which would be the one branch that could still hang. Instead the
     # code is reverted, the failing diff lands as a `.patch`, the second
@@ -462,7 +461,7 @@ def test_a_red_handback_is_reverted_to_a_bar_inert_artefact_and_merges(
 
     rc = drv.run(root, drive_args(), worker=worker, tier="smoke")
     assert rc == 0
-    captured = capsys.readouterr()
+    captured = capfd.readouterr()
     assert "quarantining it" in captured.err, captured.err
     assert "handback: quarantined wi-401-widget" in captured.out, captured.out
     assert "merged (WI-401=handback)" in captured.out, captured.out
@@ -540,12 +539,12 @@ def closing_worker(src_text):
     return worker
 
 
-def test_drive_end_to_end_claims_builds_merges_and_drains(tmp_path, capsys):
+def test_drive_end_to_end_claims_builds_merges_and_drains(tmp_path, capfd):
     repo = scaffold_with_queued_wi(tmp_path)
 
     rc = drv.run(repo, drive_args(), worker=closing_worker(E2E_GOOD_SRC), tier="smoke")
     assert rc == 0
-    out = capsys.readouterr().out
+    out = capfd.readouterr().out
 
     # The claim happened, the merge landed, the branch unloaded, the worker
     # worktree GC'd, and the drained banner counted the one integration.
@@ -570,7 +569,7 @@ def test_drive_end_to_end_claims_builds_merges_and_drains(tmp_path, capsys):
     assert integ.refresh_attestation(repo, "wi-401-widget", merged_tip) is not None
 
 
-def test_drive_stops_on_a_red_refresh_bar(tmp_path, capsys):
+def test_drive_stops_on_a_red_refresh_bar(tmp_path, capfd):
     # The worker's "close" breaks the product test: the REAL bar goes red at the
     # §A2 refresh — on the branch, where the lane that caused it can fix it —
     # and the driver STOPS with the branch still claimed. Nothing merged,
@@ -580,13 +579,105 @@ def test_drive_stops_on_a_red_refresh_bar(tmp_path, capsys):
 
     rc = drv.run(repo, drive_args(), worker=closing_worker(E2E_BAD_SRC), tier="smoke")
     assert rc == 1
-    err = capsys.readouterr().err
+    err = capfd.readouterr().err
     assert "bar is RED on the refreshed tree" in err
     assert "wi-401-widget" in _git(repo, "branch", "--format=%(refname:short)")
     assert not (repo / "docs" / "work" / "complete" / "WI-401-widget.md").exists()
     # The lane is left exactly where the worker left it: no refresh commit, no
     # attestation, so the slot could not merge it even if something tried.
     assert integ.refresh_attestation(repo, "wi-401-widget") is None
+
+
+# --- the spine barrier, end to end (WI-381, §A4/§A8) ---------------------------
+
+
+def closing_all_worker(recorder=None):
+    """A worker that closes EVERY claimed spec on its branch (specref cleared
+    per R-F) — the batch-aware sibling of `closing_worker`, driving the
+    admitted assignment exactly as one agent_loop --wi 'A;B' session would."""
+    calls = recorder if recorder is not None else []
+
+    def worker(root, branch, wi_ids, args):
+        calls.append((branch, tuple(wi_ids)))
+        wt, err = drv.integrate.lane_worktree(root, branch)
+        assert err is None, err
+        for spec in sorted((wt / "docs" / "work" / "active" / branch).glob("WI-*.md")):
+            dst = wt / "docs" / "work" / "complete" / spec.name
+            dst.parent.mkdir(parents=True, exist_ok=True)
+            dst.write_text(
+                spec.read_text(encoding="utf-8").replace('specref = "seed.txt"\n', ""),
+                encoding="utf-8",
+                newline="\n",
+            )
+            _git(
+                wt,
+                "rm",
+                "-q",
+                "docs/work/active/{}/{}".format(branch, spec.name),
+            )
+        _commit(wt, "{}: build + close".format(";".join(wi_ids)), when=T_LATER)
+        return 0
+
+    worker.calls = calls
+    return worker
+
+
+def test_the_spine_batch_admits_first_and_together(tmp_path, capfd):
+    # §A4: spine rows sort first (rank 0) and admit TOGETHER as one batch on
+    # one branch — the worker seam receives the whole batch (`agent_loop --wi
+    # 'A;B'`, its one surviving caller) — and the ordinary row behind the
+    # barrier waits for the window to close before it is admitted.
+    root = stub_harness_repo(tmp_path)
+    write_spec(
+        root, "queued", "WI-501", slug="alpha", safety="spine", specref="seed.txt"
+    )
+    write_spec(
+        root, "queued", "WI-502", slug="beta", safety="spine", specref="seed.txt"
+    )
+    _commit(root, "file the spine batch", when=T_LATER)
+    worker = closing_all_worker()
+
+    rc = drv.run(root, drive_args(), worker=worker, tier="smoke")
+    assert rc == 0
+    out = capfd.readouterr().out
+    assert worker.calls == [
+        ("wi-501-alpha", ("WI-501", "WI-502")),
+        ("wi-401-widget", ("WI-401",)),
+    ]
+    assert "claiming WI-501;WI-502 on wi-501-alpha (exclusive)" in out, out
+    complete = root / "docs" / "work" / "complete"
+    for name in ("WI-501-alpha.md", "WI-502-beta.md", "WI-401-widget.md"):
+        assert (complete / name).is_file(), name
+    assert "queue drained" in out
+
+
+def test_attended_ratification_row_drains_and_exits_zero_with_the_banner(
+    tmp_path, capfd
+):
+    # THE HONEST CORRECTION (§A8): before WI-381 a queued gate row sorted
+    # first, the driver claimed ready[0], `_claim_refusal` rejected it and the
+    # run stopped NONZERO — a failure banner over a machine that had finished
+    # everything it was allowed to do. Under `attended` the dispatcher must
+    # not dispatch a ratification: drain, leave the cards on open-items.html,
+    # exit 0 with the honest banner — and take no ordinary work past the
+    # pending ratification either (the §A8 premise: no work can be taken).
+    root = git_repo(tmp_path)
+    write_spec(
+        root, "queued", "WI-600", slug="ratify", safety="gate", specref="seed.txt"
+    )
+    write_spec(root, "queued", "WI-401", specref="seed.txt")
+    (root / "docs" / "gate-policy").write_text(
+        "attended\n", encoding="utf-8", newline="\n"
+    )
+    _commit(root, "file the ratification row", when=T_CODE)
+    worker = Recorder()
+
+    rc = drv.run(root, drive_args(), worker=worker)
+    assert rc == 0
+    out = capfd.readouterr().out
+    assert "ratification(s) waiting in open-items.html" in out, out
+    assert worker.calls == []
+    assert (root / "docs" / "work" / "queued" / "WI-600-ratify.md").is_file()
 
 
 # --- the plain-launch seam (IF-015) -------------------------------------------

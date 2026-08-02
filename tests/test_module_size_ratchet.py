@@ -366,12 +366,13 @@ BASELINE = {
     # `schedule` import all go with it. The only multi-WI assignment left is the
     # spine batch the dispatcher admits, whose constituents are homogeneous by
     # construction: the one case the guard never refused. Ratcheted DOWN.
-    # +2 (2973 -> 2975), WI-381: the plain launch's entry follows the rename —
-    # `_drive_entry` imports the sibling as `dispatch` (drive.py -> dispatch.py,
-    # lane.py extracted; docs/concurrency-v2.md §A4.2) and its docstring names
-    # the split. Two docstring lines, no logic. Reviewed bump, log fragment
-    # 2026-08-02 (WI-381). Re-stamp down with WI-280.
-    "agent_loop.py": 2975,
+    # +12 (2973 -> 2985), WI-381: the plain launch's entry follows the rename
+    # — `_drive_entry` imports the sibling as `dispatch` (drive.py ->
+    # dispatch.py, lane.py extracted; docs/concurrency-v2.md §A4.2) — and the
+    # `--lanes` flag joins the argparse surface (the §A4.3 dial's CLI rung).
+    # Reviewed bump, log fragment 2026-08-02 (WI-381). Re-stamp down with
+    # WI-280.
+    "agent_loop.py": 2985,
     # +30 (2206 -> 2236), WI-065: `tc_citation_findings` — the TC-`Verifies`
     # rules lifted out of `analyze` so the cell could accept `IF-###` seam ids.
     # Most of the bump is that helper's docstring, which is where the RULING now
@@ -917,7 +918,14 @@ BASELINE = {
     # the three hostile shapes are pinned in test_agent_common_harness.py.
     # Reviewed bump, log fragment 2026-08-02 (WI-405). Re-stamp down with
     # WI-280.
-    "agent_common.py": 1792,
+    # +32 (1792 -> 1824), WI-381: `dispatch_lock_path` (the ONE home for the
+    # lock the dispatcher holds and `integrate claim` now requires — §A4.1's
+    # authority flip needs holder and requirer to name the same file by
+    # construction), `_open_lock_fd` (the open+flock primitive extracted so
+    # integrate's dispatch-lock rung shares it instead of copying it), and
+    # the `lanes` dial row in AGENT_LOOP_DIALS. Reviewed bump, log fragment
+    # 2026-08-02 (WI-381). Re-stamp down with WI-280.
+    "agent_common.py": 1824,
     # NEW ENTRY, WI-387 — integrate.py crossed THRESHOLD (1418 -> 1588) adding
     # the third terminal outcome. The extraction the ratchet asks for was TAKEN
     # FIRST, not argued away: `hand_back` and `quarantine`, the largest unit and
@@ -1051,11 +1059,19 @@ BASELINE = {
     # (`git check-ignore`, finding 3). All but four lines are the docstrings
     # and comments recording why each guard exists. Reviewed bump, log
     # fragment 2026-08-02 (WI-407). Re-stamp down with WI-280.
-    # +1 (2125 -> 2126), WI-381: the refresh docstring names its two callers
-    # after the split (the dispatcher's drain / lane.py's refresh subprocess)
-    # — one comment line, no logic. Reviewed bump, log fragment 2026-08-02
-    # (WI-381). Re-stamp down with WI-280.
-    "integrate.py": 2126,
+    # +128 (2125 -> 2253), WI-381: the §A4.1 authority flip and the spine
+    # batch. The claim's `safety_class != ordinary` refusal arm is DELETED
+    # (admission is the dispatcher's decision); what closes the hand-CLI hole
+    # is `_dispatch_lock` — the claim REQUIRES out/agent-loop.lock, so a hand
+    # claim during live lanes is unrepresentable rather than refused — and
+    # `claim`/`_claim_refusal`/`_abandoned_claim`/`_claim_delta` go
+    # batch-aware (§A4: all spine WIs admit together as ONE claim commit;
+    # `_relinked_exactly` takes the whole move remap). `integrate()` gains the
+    # `branches=` restriction so the dispatcher merges each lane's branch as
+    # its own refresh completes. Most of the delta is the docstrings stating
+    # the authority model. Reviewed bump, log fragment 2026-08-02 (WI-381).
+    # Re-stamp down with WI-280.
+    "integrate.py": 2253,
 }
 
 

@@ -127,13 +127,18 @@ def read_declared(path, default):
 # The coordinator dials that live once in docs/stack.ini [agent-loop] instead of
 # being duplicated across the agent-resume.{cmd,sh,command} launchers (IF-068,
 # WI-274 part B). Each maps a stack.ini key to the AGENT_* env slot it now backs.
-AGENT_LOOP_DIALS = ("jobs", "model", "model-map")
+# `lanes` (WI-381, concurrency-v2 §A4.3) is the dispatcher's worker-lane
+# ceiling: the TEMPLATE seeds 2, but an ABSENT key means 1 — docs/stack.ini is
+# adopter-owned, so a re-sync never writes the key and a code default of 2
+# would upgrade a long-adopted repo into concurrency silently.
+AGENT_LOOP_DIALS = ("jobs", "model", "model-map", "lanes")
 
 
 def read_agent_loop_config(docs):
     """The declared coordinator dials — the ``[agent-loop]`` section of
     ``docs/stack.ini`` (IF-068, WI-274). Returns a dict of the present dial keys
-    (``jobs`` / ``model`` / ``model-map``) with surrounding whitespace stripped;
+    (``jobs`` / ``model`` / ``model-map`` / ``lanes``) with surrounding
+    whitespace stripped;
     an empty value, absent key/section/file, or an unreadable/malformed stack.ini
     all yield ``{}`` for that key (fail-soft — the AGENT_* env slots and the
     built-in defaults still apply, so a repo without the section behaves exactly
@@ -981,6 +986,39 @@ def _read_holder(lock_path):
         return ""
 
 
+def dispatch_lock_path(root):
+    """The DISPATCH lock's one home: ``out/agent-loop.lock`` under `root`.
+
+    The per-checkout coordinator lock the plain-launch dispatcher holds for its
+    process lifetime (agent_loop `_coordinator_lock`) — and, since WI-381
+    (concurrency-v2 §A4.1), the lock `integrate claim` REQUIRES: admission is
+    the dispatcher's scheduling decision, so a hand claim while a dispatcher's
+    lanes are live is unrepresentable (the lock cannot be taken), while a hand
+    claim on an idle station still works. One path builder, because the holder
+    and the requirer must name the same file by construction."""
+    return Path(root) / "out" / "agent-loop.lock"
+
+
+def _open_lock_fd(lock_path):
+    """Open the lock file and try the kernel advisory lock, non-blocking:
+    `(fd, None)` when locked, `(fd, exc)` when NOT — with the descriptor left
+    OPEN either way, because the two callers disagree about what a failure
+    keeps: `acquire_lock`'s degraded-filesystem arm writes diagnostics through
+    it, while integrate.py's dispatch-lock rung (WI-381) closes it and
+    refuses. One home for the open flags (O_BINARY keeps the diagnostic
+    newlines untranslated on Windows)."""
+    lock_path.parent.mkdir(parents=True, exist_ok=True)
+    flags = os.O_RDWR | os.O_CREAT
+    if hasattr(os, "O_BINARY"):
+        flags |= os.O_BINARY
+    fd = os.open(str(lock_path), flags, 0o644)
+    try:
+        _take_os_lock(fd)
+    except OSError as exc:
+        return fd, exc
+    return fd, None
+
+
 def acquire_lock(lock_path):
     """Take the per-worktree coordinator lock, or return an error string.
 
@@ -994,14 +1032,8 @@ def acquire_lock(lock_path):
     filesystem that cannot lock at all (ENOLCK/ENOTSUP) degrades to a warning and
     runs unguarded rather than fail-closed on a legitimate run."""
     global _LOCK_FD
-    lock_path.parent.mkdir(parents=True, exist_ok=True)
-    flags = os.O_RDWR | os.O_CREAT
-    if hasattr(os, "O_BINARY"):
-        flags |= os.O_BINARY  # keep the diagnostic newlines untranslated on Windows
-    fd = os.open(str(lock_path), flags, 0o644)
-    try:
-        _take_os_lock(fd)
-    except OSError as exc:
+    fd, exc = _open_lock_fd(lock_path)
+    if exc is not None:
         if os.name != "nt" and exc.errno in _UNSUPPORTED_LOCK_ERRNOS:
             # This filesystem cannot do advisory locks (a network / exotic mount).
             # Degrade to a warning and proceed WITHOUT the guard rather than block

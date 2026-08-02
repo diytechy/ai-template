@@ -1301,6 +1301,16 @@ def parse_args():
         help="consecutive no-commit sessions before abort (default 3)",
     )
     ap.add_argument(
+        "--lanes",
+        type=int,
+        default=None,
+        help=(
+            "worker-lane ceiling for the plain-launch dispatcher (WI-381); "
+            "resolves CLI > AGENT_LANES > docs/stack.ini [agent-loop] lanes > "
+            "1 — an absent dial means serial"
+        ),
+    )
+    ap.add_argument(
         "--model",
         default=None,
         help="default model tier for {model}; precedence CLI flag > AGENT_MODEL "
@@ -2561,7 +2571,7 @@ def _coordinator_lock(root):
     exit. Returns None when held, else the EXIT_PREFLIGHT the caller returns
     — the ONE home of the acquire/report/register sequence, shared by the
     drive mode and the explicit-role path."""
-    lock_path = root / "out" / "agent-loop.lock"
+    lock_path = agent_common.dispatch_lock_path(root)
     lock_err = acquire_lock(lock_path)
     if lock_err:
         print("agent_loop: {}".format(lock_err), file=sys.stderr)

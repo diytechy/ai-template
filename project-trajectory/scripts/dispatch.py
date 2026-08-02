@@ -15,19 +15,42 @@ of refusing, and the dispatcher composes the independently-proven parts:
     integrate.py refresh (IF-080)  ->  the §A2 station refresh, OUTSIDE the slot
     integrate.py integrate (IF-080) -> the merge slot
 
-The frontier is re-derived from the registry at the top of EVERY cycle, so a
+The frontier is re-derived from the registry at the top of EVERY tick, so a
 WI filed mid-run (by a worker, a review, or a human) is picked up in the same
-run — no restart needed.
+run — no restart needed. Up to `lanes` worker lanes run at once (the §A4.3
+dial: CLI --lanes > AGENT_LANES > docs/stack.ini [agent-loop] lanes > 1; the
+template seeds 2, an absent key means 1 so no adopter is upgraded into
+concurrency silently). At lanes=1 this degenerates to the serial loop it grew
+from.
 
-Adds ORDERING only, no authority: every refusal stays where it already lives
-(the tracked docs/work/pause, a dirty trunk, the SpecRef and status-prose
-claim rungs, the §A2 refresh bar, the RULING-7 verdict gate,
-docs/push-policy). Any refusal from a composed part STOPS the run loudly —
-the dispatcher never skips past one, never force-merges, and NEVER pushes (there
-is deliberately no flag to ask it to; docs/push-policy is honored by
-construction). A parked claimed branch from an interrupted run is resumed
-(worker relaunched on it) rather than refused, so the walk-away loop restarts
-with the same double-click that started it.
+ADMISSION IS THE ONE SCHEDULING DECISION THIS MODULE OWNS (§A4.1/§A8, the
+authority the deleted `_claim_refusal` safety arm moved here). The §A8 policy
+table, per kind x gate-policy level: ordinary/critique dispatch parallel at
+every level; high-risk/protected dispatch exclusive at every level; a `spine`
+row dispatches at every level — building a scope change is WORK, not a
+ratification — but EXCLUSIVELY and BATCHED: an exclusive-kind row on the
+frontier stops new admission, the dispatcher waits for every lane back in the
+station, then admits ALL spine rows TOGETHER as one batch (one branch, one
+`agent_loop --wi 'A;B'` worker, one re-attest window, one owner sitting). An
+`attestation`/`gate` row does NOT dispatch under `attended`: the lanes drain,
+the cards stay on open-items.html, and the run exits 0 — the machine finished
+everything it was allowed to do (`agent_route.failure_action("attended")` is
+the contract this implements). Under `single-ratify` those rows dispatch only
+as the queued batch once nothing else remains; under `autonomous` they
+dispatch (a recorded fresh-context reviewer verdict ratifies). The fixed
+points hold at every level: G-Final is the human's, no un-run greens, the
+harness is still the bar, ratified owner decisions are never re-decided.
+
+Beyond admission it adds ORDERING only, no authority: every refusal stays
+where it already lives (the tracked docs/work/pause, a dirty trunk, the
+SpecRef and status-prose claim rungs, the §A2 refresh bar, the RULING-7
+verdict gate, docs/push-policy). Any refusal from a composed part STOPS the
+run loudly — admission halts, the in-flight lanes drain, and the run exits
+with the refusal's code; the dispatcher never skips past one, never
+force-merges, and NEVER pushes (there is deliberately no flag to ask it to;
+docs/push-policy is honored by construction). A parked claimed branch from an
+interrupted run is resumed (worker relaunched on it) rather than refused, so
+the walk-away loop restarts with the same double-click that started it.
 
 EVERY LANE ENDS IN A MERGE (docs/concurrency-v2.md §A3, WI-387). A worker that
 cannot finish no longer stops the run: the dispatcher reads its exit code, and a
@@ -51,6 +74,7 @@ from __future__ import annotations
 
 import os
 import sys
+import time
 from pathlib import Path
 
 import agent_common as ac
@@ -149,6 +173,12 @@ def _drain(root, tier):
     exception the ruling covers: see `_refresh_or_quarantine`.
     """
     for branch in integrate.finished_branches(root):
+        ready, _why = integrate._merge_ready(root, branch)
+        if ready:
+            # A lane's own refresh (or a hand refresh) already attested this
+            # exact tip against the current trunk — redoing the disposable
+            # commit would spend a full bar to reproduce it.
+            continue
         refusal = _refresh_or_quarantine(root, branch, tier)
         if refusal:
             _say(refusal, err=True)
@@ -184,69 +214,140 @@ def _refresh_or_quarantine(root, branch, tier):
     return refusal
 
 
-def _resume_or_claim(root, cycle, tier, merged, config_refusal):
-    """One cycle's assignment: `(branch, wi_ids, None)` to build, or
-    `(None, None, exit_code)` when the run ends here — the drained queue
-    (EXIT_DONE), a claim refusal's code, or a registry/frontier mismatch.
-    `config_refusal` (string or None) is applied only when there is work that
-    needs a worker — BEFORE a claim would park a branch, but never blocking an
-    empty queue from draining to success.
+def _kind_action(kind, level):
+    """The §A8 policy table — what the dispatcher does with a frontier row of
+    `kind` at gate-policy `level`, and the one place this module must not
+    invent policy:
 
-    (`_stranded_claims` retired with WI-387. It existed only because the claim
-    advanced trunk BEFORE cutting the branch, so a crash between the two writes
-    left a claim no lane could reach; `integrate.claim` now writes the branch
-    first, and the crash window leaves an orphan branch the next claim deletes
-    and re-cuts — a benign shape, so there is nothing left to refuse over.)"""
-    parked = _parked_branches(root)
-    if parked:
-        if config_refusal:
-            _say(config_refusal, err=True)
-            return None, None, ac.EXIT_PREFLIGHT
-        branch = parked[0]
-        wi_ids = integrate._claimed_wi_ids(root, branch)
-        _say(
-            "cycle {} - resuming parked branch {} ({})".format(
-                cycle, branch, ";".join(wi_ids)
-            )
-        )
-        return branch, wi_ids, None
-    ready = [
-        r for r in schedule.frontier(schedule._load(root)) if r["status"] == "queued"
+        kind                  attended         single-ratify    autonomous
+        ordinary, critique    parallel         parallel         parallel
+        high-risk, protected  exclusive        exclusive        exclusive
+        spine                 batch            batch            batch
+        attestation, gate     surface          surface*         exclusive
+
+    A `spine` row dispatches at EVERY level because building a scope change is
+    WORK, not a ratification — it opens a window; closing it is the next row's
+    job. `attestation`/`gate` close a window, which under `attended` is the
+    human's act (drain, surface the cards, exit 0), under `single-ratify`
+    dispatches only as the queued batch at the close (*`_admission` applies
+    that: surfaced rows admit once nothing else remains), and under
+    `autonomous` dispatches — a recorded fresh-context reviewer verdict
+    ratifies. The last arm also covers `adjudication` when WI-388 adds the
+    kind: exclusive, like every non-parallel kind."""
+    if kind in ("ordinary", "critique"):
+        return "parallel"
+    if kind == "spine":
+        return "batch"
+    if kind in ("attestation", "gate"):
+        return "exclusive" if level == "autonomous" else "surface"
+    return "exclusive"
+
+
+def _admission(ready_kinds, level, busy, free):
+    """THE SPINE BARRIER, as a pure decision (§A4/§A8): what may start now?
+
+    `ready_kinds` is the ordered frontier as `(wi_id, kind)` pairs (rank
+    already sorted spine first), `busy` whether any lane is out, `free` how
+    many lanes are open. Returns `(verb, payload)`:
+
+      ("admit", [batch, ...])       fill lanes with parallel rows, one per lane
+      ("admit-exclusive", batch)    ONE batch that must run alone — all spine
+                                    rows together, or the first exclusive row,
+                                    or single-ratify's queued ratification
+                                    batch at the close
+      ("wait", [])                  an exclusive-kind row is pending: stop
+                                    admitting and let the lanes come home
+      ("surface", ids)              attestation/gate rows that may not dispatch
+                                    at this level: drain, surface, exit 0
+      ("empty", [])                 nothing ready at all
+
+    The barrier property is the wait arm: any exclusive-kind row on the
+    frontier (they all sort ahead of parallel kinds by rank) stops NEW
+    admission outright — nothing slips past it into a free lane — and the
+    batch admits only into an idle station, as the sole toucher of trunk."""
+    if not ready_kinds:
+        return "empty", []
+    surfaced = [w for w, k in ready_kinds if _kind_action(k, level) == "surface"]
+    dispatchable = [
+        (w, k) for w, k in ready_kinds if _kind_action(k, level) != "surface"
     ]
-    if not ready:
-        # A finished branch may still be waiting (e.g. built by hand between
-        # runs) - drain before declaring the queue empty, and COUNT what that
-        # drain merges (REVIEW-A round 1: the banner undercounted residue).
-        residue = len(integrate.finished_branches(root))
-        code = _drain(root, tier)
-        if code != 0:
-            return None, None, code
-        _say(
-            "queue drained - no ready work items; {} WI(s) integrated this run.".format(
-                merged + residue
+    if surfaced and level != "single-ratify":
+        # The attended stop (§A8 premise: once a ratification is pending, no
+        # work can be taken): drain and exit 0 into the owner's queue.
+        return "surface", surfaced
+    if not dispatchable:
+        if not surfaced:
+            return "empty", []
+        # single-ratify's close: only the queued ratification batch remains.
+        if busy:
+            return "wait", []
+        return "admit-exclusive", surfaced
+    first_w, first_k = dispatchable[0]
+    action = _kind_action(first_k, level)
+    if action in ("batch", "exclusive"):
+        if busy:
+            return "wait", []
+        if action == "batch":
+            return "admit-exclusive", [w for w, k in dispatchable if k == first_k]
+        return "admit-exclusive", [first_w]
+    batches = [[w] for w, k in dispatchable if _kind_action(k, level) == "parallel"]
+    batches = batches[: max(0, free)]
+    if not batches:
+        return "wait", []
+    return "admit", batches
+
+
+def _lane_count(args, root):
+    """The lanes dial (§A4.3, ruled 2026-07-31), on the established ladder:
+    CLI --lanes > AGENT_LANES > docs/stack.ini [agent-loop] lanes > 1.
+
+    The TEMPLATE seeds `lanes = 2` — the smallest count that proves the
+    barrier, the merge slot and the refresh race are real rather than vacuous
+    — but an ABSENT key means 1: docs/stack.ini is adopter-owned (a re-sync
+    never overwrites it), so a kit-seeded key never appears in an existing
+    adopter's file and a code default of 2 would have switched long-adopted
+    repos from serial to concurrent SILENTLY on upgrade. A malformed or sub-1
+    value falls to 1, loudly — fail toward serial, never toward concurrency."""
+    declared = getattr(args, "lanes", None)
+    if declared is None:
+        raw = os.environ.get("AGENT_LANES", "").strip()
+        if not raw:
+            raw = ac.read_agent_loop_config(root / "docs").get("lanes", "")
+        if not raw:
+            return 1
+        try:
+            declared = int(raw)
+        except ValueError:
+            _say(
+                "lanes value {!r} is not an integer - running serial (lanes=1)".format(
+                    raw
+                ),
+                err=True,
             )
-        )
-        return None, None, ac.EXIT_DONE
-    if config_refusal:
-        _say(config_refusal, err=True)
-        return None, None, ac.EXIT_PREFLIGHT
-    wid = ready[0]["id"]
-    branch = _branch_for(root, wid)
-    if branch is None or ac.git(root, "check-ref-format", "--branch", branch)[0] != 0:
+            return 1
+    if declared < 1:
         _say(
-            "no single queued spec matches {}, or its filename does not map "
-            "to a valid git branch name - fix the spec folder, then "
-            "relaunch".format(wid),
+            "lanes value {} is below 1 - running serial (lanes=1)".format(declared),
             err=True,
         )
-        return None, None, ac.EXIT_PREFLIGHT
-    _say("cycle {} - claiming {} on {}".format(cycle, wid, branch))
-    code = integrate.claim(root, wid, branch)
-    if code != 0:
-        # The refusal ladder already printed its reason - a refusing rung
-        # STOPS the run (never skipped, never talked past).
-        return None, None, code
-    return branch, [wid], None
+        return 1
+    return declared
+
+
+def _branch_exclusive(root, branch):
+    """Must this claimed branch run ALONE? Read off the TRUNK's claimed specs,
+    the same one-home read the merge slot uses for outcomes — a parked branch
+    predates this run, so its kind exists nowhere else. Unreadable
+    frontmatter fails toward exclusivity, never toward sharing the station."""
+    specs = integrate._claimed_specs(root, branch)
+    for _wid, name in specs:
+        try:
+            meta = integrate._spec_frontmatter(root / integrate.ACTIVE / branch / name)
+        except (OSError, ValueError):
+            return True
+        if (meta.get("safety_class") or "").strip().lower() != "ordinary":
+            return True
+    return False
 
 
 # The exit codes a worker DECIDES on: it ran, reached a conclusion, and said so.
@@ -342,102 +443,430 @@ def _lane_close(root, branch, code):
     return None
 
 
-def _cycle_stall(root, head_before, stall):
-    """The stall counter after one green cycle: a cycle that leaves the trunk
-    unmoved — a worker that reported DONE without finishing its branch merges
-    nothing — increments it; any trunk advance resets it."""
-    head_after = ac.git(root, "rev-parse", "HEAD")[1].strip()
-    return stall + 1 if head_after == head_before else 0
+class _Lane:
+    """One live lane, dispatcher-side: which branch, which WIs, which phase.
+
+    The MECHANICS live in lane.py (the worker subprocess, the refresh
+    subprocess); this record is only the dispatcher's bookkeeping. There is
+    deliberately no state FILE (§A4.2): the tree signals (specs moved out of
+    active/<branch>/) plus these in-memory handles are the whole protocol, so
+    a crashed dispatcher leaves nothing to reconcile beyond the parked
+    branches the next run already resumes."""
+
+    def __init__(self, branch, wi_ids, exclusive, head):
+        self.branch = branch
+        self.wi_ids = list(wi_ids)
+        self.exclusive = exclusive
+        self.head = head  # trunk head at admission — the stall baseline
+        self.phase = "worker"  # -> "refresh" -> closed (removed from table)
+        self.proc = None  # the live subprocess handle of the current phase
+        self.code = None  # a sync-injected worker's already-decided exit
+        self.retried = False  # the one §A3 quarantine retry
+
+
+def _launch(root, table, branch, wi_ids, exclusive, args, worker):
+    """Create the live lane record for `branch` and start its worker — the
+    injected sync callable (tests), or lane.py's real subprocess. The lane is
+    ALWAYS appended: a spawn failure becomes the lane's own EXIT_PREFLIGHT
+    outcome, so it closes through the one §A3 decision path (`_lane_close`)
+    instead of a side exit."""
+    ln = _Lane(branch, wi_ids, exclusive, ac.git(root, "rev-parse", "HEAD")[1].strip())
+    if worker is not None:
+        ln.code = worker(root, branch, wi_ids, args)
+    else:
+        proc, err = lane.spawn_worker(root, branch, wi_ids, args)
+        if err:
+            _say(err, err=True)
+            ln.code = ac.EXIT_PREFLIGHT
+        else:
+            ln.proc = proc
+    table.append(ln)
+
+
+def _advance(root, ln, tier):
+    """Advance one lane's state machine by one poll: None while busy, else a
+    `(verb, code)` event —
+
+      ("merged", 0)     the lane's branch merged through the slot; lane closed
+      ("closed", None)  closed without a merge: a crash (parked for the next
+                        tick's resume) or a DONE worker that finished nothing
+                        (the stall candidate)
+      ("fatal", code)   the run must end with `code` once the station drains
+    """
+    if ln.phase == "worker":
+        code = ln.code if ln.proc is None else ln.proc.poll()
+        if code is None:
+            return None
+        ln.proc = None
+        if code != ac.EXIT_DONE:
+            rc = _lane_close(root, ln.branch, code)
+            if rc is not None:
+                return ("fatal", rc)
+        if ln.branch in integrate.finished_branches(root):
+            # The lane's tree named an outcome — run ITS refresh in ITS own
+            # subprocess (§A4.3: N bars must overlap, not queue here).
+            ln.phase = "refresh"
+            ln.proc = lane.spawn_refresh(root, ln.branch, tier)
+            return None
+        return ("closed", None)
+    rc = ln.proc.poll()
+    if rc is None:
+        return None
+    ln.proc = None
+    if rc == 0:
+        # THE MERGE SLOT, scoped to this lane's branch: another lane may be
+        # mid-refresh on its own branch and must not be pulled into the slot
+        # half-attested.
+        code = integrate.integrate(root, tier, branches=[ln.branch])
+        if code != 0:
+            return ("fatal", code)
+        return ("merged", 0)
+    return _refresh_failed(root, ln, tier, rc)
+
+
+def _refresh_failed(root, ln, tier, rc):
+    """The §A3 red-refresh ruling for a lane whose refresh subprocess exited
+    nonzero — the same decision `_refresh_or_quarantine` makes for residue
+    branches, read off the subprocess's exit code (its refusal detail is its
+    own stderr in the walk-away log, plus the retained out/run-logs file):
+    fatal for a branch that asserts DONE, quarantine-once for one that merges
+    nothing, and a second red after the quarantine is a real anomaly."""
+    outcomes, unresolved = integrate.branch_outcomes(root, ln.branch)
+    if unresolved or "merged" in outcomes.values() or ln.retried:
+        _say(
+            "the refresh is RED for {} (exit {}){} - the reason is printed "
+            "above by the refresh itself; the run stops for the lane to fix "
+            "it.".format(ln.branch, rc, " after its quarantine" if ln.retried else ""),
+            err=True,
+        )
+        return ("fatal", 1)
+    _say(
+        "refresh exit {} for {} - quarantining it (§A3: it merges nothing).".format(
+            rc, ln.branch
+        ),
+        err=True,
+    )
+    refusal = handback.quarantine(
+        root,
+        ln.branch,
+        "the §A2 refresh bar refused (exit {}; see the run log above and "
+        "out/run-logs/refresh-refused-*.log)".format(rc),
+    )
+    if refusal:
+        _say("cannot quarantine {}: {}".format(ln.branch, refusal), err=True)
+        return ("fatal", 1)
+    ln.retried = True
+    ln.proc = lane.spawn_refresh(root, ln.branch, tier)
+    return None
+
+
+def _poll(root, table, args, tier, state):
+    """One poll pass over the live lanes; True when any lane moved. Outcome
+    bookkeeping: a merge resets the stall counter, a lane that closed with
+    the trunk exactly where its admission found it increments it (a worker
+    that keeps reporting DONE without finishing cannot loop forever), and the
+    first fatal event freezes admission while the station drains."""
+    event = False
+    for ln in list(table):
+        adv = _advance(root, ln, tier)
+        if adv is None:
+            continue
+        event = True
+        verb, code = adv
+        table.remove(ln)
+        if verb == "fatal":
+            if state["fatal"] is None:
+                state["fatal"] = code
+        elif verb == "merged":
+            state["merged"] += 1
+            state["stall"] = 0
+        else:
+            head_now = ac.git(root, "rev-parse", "HEAD")[1].strip()
+            state["stall"] = state["stall"] + 1 if head_now == ln.head else 0
+            if state["stall"] >= max(1, args.stall_limit):
+                _say(
+                    "STALL - {} consecutive cycle(s) left the trunk unmoved; "
+                    "aborting rather than looping.".format(state["stall"]),
+                    err=True,
+                )
+                if state["fatal"] is None:
+                    state["fatal"] = ac.EXIT_STALL
+    return event
+
+
+def _cycle_gate(args, table, state):
+    """May another lane be admitted inside the iteration budget? "ok" to
+    admit, "wait" to let the live lanes drain first, "budget" to end the run
+    (station idle, ceiling reached, work remaining)."""
+    if state["cycles"] < max(1, args.max_iterations):
+        return "ok"
+    return "wait" if table else "budget"
+
+
+def _budget_exit(args, state):
+    _say(
+        "iteration ceiling ({}) reached with work remaining - relaunch to "
+        "continue ({} WI(s) integrated this run).".format(
+            args.max_iterations, state["merged"]
+        ),
+        err=True,
+    )
+    return ac.EXIT_BUDGET
+
+
+def _surface_banner(root, surfaced):
+    """The §A8 attended stop's banner: exit 0, naming what waits. The count is
+    the surfaced frontier rows'; WI-381's amendment wires it to the same
+    pending_block(root) read the owner surfaces share."""
+    return "queue drained - {} ratification(s) waiting in open-items.html".format(
+        len(surfaced)
+    )
+
+
+def _pre_admit(args, table, state, config_refusal):
+    """The rungs every admission owes before a lane may launch — the session
+    config preflight (applied only when work actually needs a worker), then
+    the iteration budget. `(action, code)`: "ok" to admit, "hold" to let the
+    live lanes drain first, "exit" to end the run with `code`."""
+    if config_refusal:
+        if table:
+            return "hold", None
+        _say(config_refusal, err=True)
+        return "exit", ac.EXIT_PREFLIGHT
+    gate = _cycle_gate(args, table, state)
+    if gate == "wait":
+        return "hold", None
+    if gate == "budget":
+        return "exit", _budget_exit(args, state)
+    return "ok", None
+
+
+def _admit_parked(root, table, args, worker, parked, free, config_refusal, state):
+    """Resume interrupted lanes first — an unfinished claim must come home
+    before any barrier can open. `(admitted, exit_code)`."""
+    admitted = False
+    for branch in parked:
+        if free <= 0:
+            break
+        excl = _branch_exclusive(root, branch)
+        if excl and table:
+            break  # an exclusive resume waits for an idle station
+        action, code = _pre_admit(args, table, state, config_refusal)
+        if action != "ok":
+            return admitted, code
+        state["cycles"] += 1
+        wi_ids = integrate._claimed_wi_ids(root, branch)
+        _say(
+            "cycle {} - resuming parked branch {} ({})".format(
+                state["cycles"], branch, ";".join(wi_ids)
+            )
+        )
+        _launch(root, table, branch, wi_ids, excl, args, worker)
+        admitted = True
+        free -= 1
+        if excl:
+            break
+    return admitted, None
+
+
+def _claim_lanes(root, table, args, worker, batches, exclusive, config_refusal, state):
+    """Claim and launch one lane per batch. `(admitted, exit_code)`. A claim
+    refusal stops the run (never skipped, never talked past) — with lanes
+    live it freezes admission and lets the station drain first."""
+    admitted = False
+    for batch in batches:
+        action, code = _pre_admit(args, table, state, config_refusal)
+        if action != "ok":
+            return admitted, code
+        branch = _branch_for(root, batch[0])
+        if (
+            branch is None
+            or ac.git(root, "check-ref-format", "--branch", branch)[0] != 0
+        ):
+            _say(
+                "no single queued spec matches {}, or its filename does not map "
+                "to a valid git branch name - fix the spec folder, then "
+                "relaunch".format(batch[0]),
+                err=True,
+            )
+            if table:
+                state["fatal"] = (
+                    ac.EXIT_PREFLIGHT if state["fatal"] is None else state["fatal"]
+                )
+                return admitted, None
+            return admitted, ac.EXIT_PREFLIGHT
+        state["cycles"] += 1
+        _say(
+            "cycle {} - claiming {} on {}{}".format(
+                state["cycles"],
+                ";".join(batch),
+                branch,
+                " (exclusive)" if exclusive else "",
+            )
+        )
+        code = integrate.claim(root, batch, branch, dispatch_lock_held=True)
+        if code != 0:
+            if table:
+                state["fatal"] = code if state["fatal"] is None else state["fatal"]
+                return admitted, None
+            return admitted, code
+        _launch(root, table, branch, batch, exclusive, args, worker)
+        admitted = True
+    return admitted, None
+
+
+def _admit(root, table, args, worker, tier, level, lanes_total, config_refusal, state):
+    """One tick's admission, enacted: `(admitted, exit_code)`. The exit code
+    is non-None only when the run ends here — the drained queue, the surfaced
+    ratifications, a refusal — and only ever with the station idle."""
+    exclusive_live = any(ln.exclusive for ln in table)
+    free = 0 if exclusive_live else max(0, lanes_total - len(table))
+    if free == 0:
+        return False, None
+    busy = bool(table)
+    live = {ln.branch for ln in table}
+    parked = [b for b in _parked_branches(root) if b not in live]
+    if parked:
+        return _admit_parked(
+            root, table, args, worker, parked, free, config_refusal, state
+        )
+    wis = schedule._load(root)
+    ready = [r for r in schedule.frontier(wis) if r["status"] == "queued"]
+    kinds = {w["id"]: schedule.kind_of(w) for w in wis}
+    verb, payload = _admission(
+        [(r["id"], kinds.get(r["id"])) for r in ready], level, busy, free
+    )
+    if verb in ("surface", "empty"):
+        if busy:
+            return False, None  # drain the lanes, THEN exit into the queue
+        return False, _station_exit(root, tier, verb, payload, state)
+    if verb == "wait":
+        return False, None
+    if verb == "admit-exclusive":
+        # THE BARRIER OPENS. The station is idle by construction (`_admission`
+        # answers wait while any lane is out); settle any residue so the batch
+        # runs as the sole toucher of trunk.
+        code = _drain(root, tier)
+        if code != 0:
+            return False, code
+        return _claim_lanes(
+            root, table, args, worker, [payload], True, config_refusal, state
+        )
+    return _claim_lanes(
+        root, table, args, worker, payload, False, config_refusal, state
+    )
+
+
+def _station_exit(root, tier, verb, payload, state):
+    """The run's two honest ends, station idle: the surfaced-ratification stop
+    (§A8 attended: drain, leave the cards, exit 0) and the drained queue. A
+    finished branch may still be waiting (e.g. built by hand between runs), so
+    both drain the residue first — and the drained banner COUNTS what that
+    drain merges (REVIEW-A round 1: the banner undercounted residue)."""
+    residue = len(integrate.finished_branches(root))
+    code = _drain(root, tier)
+    if code != 0:
+        return code
+    if verb == "surface":
+        _say(_surface_banner(root, payload))
+    else:
+        _say(
+            "queue drained - no ready work items; {} WI(s) integrated this run.".format(
+                state["merged"] + residue
+            )
+        )
+    return ac.EXIT_DONE
+
+
+# The tick loop's poll cadence while lanes are busy: long enough not to spin,
+# short enough that a finished worker starts its refresh promptly (the bars
+# behind it run minutes, so half a second is noise).
+_POLL_SECONDS = 0.5
 
 
 def run(root, args, worker=None, tier="all"):
-    """The dispatch loop. `worker` is the one injection seam (tests): a callable
-    `(root, branch, wi_ids, args) -> exit code` standing in for the worker
-    session launch; None means the real subprocess launch. `tier` is the
-    bar tier the §A2 refresh runs (default: the full gate bar).
+    """The dispatch loop (docs/concurrency-v2.md §A4). `worker` is the one
+    injection seam (tests): a callable `(root, branch, wi_ids, args) -> exit
+    code` standing in for the worker session launch, run synchronously at
+    admission; None means lane.py's real subprocess launch. `tier` is the bar
+    tier the §A2 refresh runs (default: the full gate bar).
 
-    Lock note: the plain-launch caller (agent_loop) holds out/agent-loop.lock
-    for the process lifetime; integrate.py takes and releases its own
-    out/integrate.lock per drain inside the same process. agent_common keeps
-    one held-descriptor slot, so the coordinator lock's descriptor is simply
-    left to the OS's exit-time release — exactly the guard's intended span.
+    EACH TICK: poll the live lanes (a worker exit decides an outcome; a
+    finished branch refreshes in its own subprocess; a green refresh merges
+    through the slot), then admit per `_admission` — the §A8 policy table plus
+    the spine barrier. A fatal event (a red refresh of a done-asserting
+    branch, a failed handback, a merge refusal, the stall guard) freezes
+    admission at once, drains the in-flight lanes, and exits with the first
+    fatal code.
+
+    Lock note: the plain-launch caller (agent_loop) holds the DISPATCH lock
+    (out/agent-loop.lock) for the process lifetime — which is why the claims
+    here pass `dispatch_lock_held=True`, and why a hand `integrate claim`
+    against a live dispatcher cannot happen at all (§A4.1). integrate.py takes
+    and releases its own out/integrate.lock per merge inside the same process;
+    agent_common keeps one held-descriptor slot, so the coordinator lock's
+    descriptor is simply left to the OS's exit-time release — exactly the
+    guard's intended span.
     """
-    worker = worker or lane.run_worker
-    # Computed once, APPLIED lazily: _resume_or_claim refuses on it only when
-    # work actually needs a worker, so an empty queue still drains to exit 0
-    # on an unwired scaffold (the spec's empty-frontier contract; codex
+    lanes_total = _lane_count(args, root)
+    level = ac.read_declared(root / "docs" / "gate-policy", "attended").strip().lower()
+    # Computed once, APPLIED lazily: admission refuses on it only when work
+    # actually needs a worker, so an empty queue still drains to exit 0 on an
+    # unwired scaffold (the spec's empty-frontier contract; codex
     # cross-review finding, round 1).
-    config_refusal = (
-        _session_config_refusal(root, args) if worker is lane.run_worker else None
-    )
-    merged = 0
-    stall = 0
-    for cycle in range(1, max(1, args.max_iterations) + 1):
-        # The pause is checked at the top of every cycle so one appearing
+    config_refusal = _session_config_refusal(root, args) if worker is None else None
+    state = {"merged": 0, "stall": 0, "cycles": 0, "fatal": None}
+    table = []
+    while True:
+        # The pause is checked at the top of every tick so one appearing
         # MID-RUN stops the next claim, not just the first (§5.6: pause means
-        # stop claiming; the claim rung would refuse anyway - this stops with
-        # the banner instead of a refusal exit).
+        # stop claiming; in-flight lanes finish and integrate first).
         paused = ac.tracked_pause(root / "docs")
-        if paused is not None:
+        if paused is not None and not table:
             _say(
                 "PAUSED - docs/work/pause is present (since {}: {}); {} WI(s) "
                 "integrated before the stop. Unpausing is a reviewed deletion "
                 "commit.".format(
-                    paused.get("since", ""), paused.get("reason", ""), merged
+                    paused.get("since", ""), paused.get("reason", ""), state["merged"]
                 ),
                 err=True,
             )
             return ac.EXIT_PAUSED
-        # The claim rung's clean-trunk refusal, hoisted to the cycle top so
-        # the PARKED-resume path meets it too - otherwise a worker session
-        # runs (in its own worktree) only for the merge to refuse on dirt
-        # that was visible before it started (codex cross-review, round 1).
-        if ac.working_tree_dirty(root):
+        # The claim rung's clean-trunk refusal, hoisted to the tick top so the
+        # PARKED-resume path meets it too; with lanes live it only freezes
+        # admission (their own merges refuse on dirt by themselves).
+        dirty = ac.working_tree_dirty(root)
+        if dirty and not table:
             _say(
                 "the trunk working tree is dirty - claims, resumes and merges "
                 "all need a clean trunk; commit or stash it, then relaunch "
-                "({} WI(s) integrated before the stop).".format(merged),
+                "({} WI(s) integrated before the stop).".format(state["merged"]),
                 err=True,
             )
             return ac.EXIT_PREFLIGHT
 
-        head_before = ac.git(root, "rev-parse", "HEAD")[1].strip()
-        branch, wi_ids, code = _resume_or_claim(
-            root, cycle, tier, merged, config_refusal
-        )
-        if branch is None:
-            return code
+        event = _poll(root, table, args, tier, state)
+        if state["fatal"] is not None:
+            if table:
+                time.sleep(_POLL_SECONDS)
+                continue
+            return state["fatal"]
 
-        code = worker(root, branch, wi_ids, args)
-        if code != ac.EXIT_DONE:
-            code = _lane_close(root, branch, code)
+        admitted = False
+        if paused is None and not dirty:
+            admitted, code = _admit(
+                root,
+                table,
+                args,
+                worker,
+                tier,
+                level,
+                lanes_total,
+                config_refusal,
+                state,
+            )
             if code is not None:
                 return code
-
-        # Count what the drain will actually merge — every finished branch,
-        # residue included, not just this cycle's own (REVIEW-A round 2: the
-        # branch-gone read undercounted a mixed residue+claim drain). On a
-        # green drain every finished branch merged (a held branch exits
-        # nonzero above), so the pre-drain count is exact.
-        finished = len(integrate.finished_branches(root))
-        code = _drain(root, tier)
-        if code != 0:
-            # Red refresh bar / verdict refusal / held branch: the reason is
-            # already printed; a red queue stops rather than skips (§5.5).
-            return code
-        merged += finished
-
-        stall = _cycle_stall(root, head_before, stall)
-        if stall >= max(1, args.stall_limit):
-            _say(
-                "STALL - {} consecutive cycle(s) left the trunk unmoved; "
-                "aborting rather than looping.".format(stall),
-                err=True,
-            )
-            return ac.EXIT_STALL
-    _say(
-        "iteration ceiling ({}) reached with work remaining - relaunch to "
-        "continue ({} WI(s) integrated this run).".format(args.max_iterations, merged),
-        err=True,
-    )
-    return ac.EXIT_BUDGET
+        if not (event or admitted):
+            # Nothing moved this tick: wait for a subprocess rather than spin.
+            time.sleep(_POLL_SECONDS if table else 0.05)
