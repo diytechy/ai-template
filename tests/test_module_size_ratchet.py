@@ -680,7 +680,13 @@ BASELINE = {
     # the whole family is dormant there), and an absolute [paths] src scans the
     # path it names (finding 3). Drift-pinned by the differential tests that run
     # the real generator. Reviewed bump; re-stamp down with WI-280.
-    "check_trajectory.py": 3428,
+    # +25 (3428 -> 3453), WI-388: the `Bar` loader-table column + the
+    # `## Context` body-grammar clip (both F5-mirrored edits), and the two
+    # unclassified-cell RULINGS recorded at the §A5.1 split's home (LLR
+    # `SR-Refs` -> traced/routed, SR `SupersededBy` -> ratified confirmed) —
+    # most of the bump is that recorded reasoning. Reviewed bump, log fragment
+    # 2026-08-02 (WI-388). Re-stamp down with WI-280.
+    "check_trajectory.py": 3453,
     # NEW ENTRY, +25 (1498 -> 1523), WI-357: the two-stage work-branch claim
     # signal — the on-disk fast path plus the branch-history probe that
     # survives the §2.3 close commit (git log -1 over the claim path), with
@@ -925,7 +931,10 @@ BASELINE = {
     # integrate's dispatch-lock rung shares it instead of copying it), and
     # the `lanes` dial row in AGENT_LOOP_DIALS. Reviewed bump, log fragment
     # 2026-08-02 (WI-381). Re-stamp down with WI-280.
-    "agent_common.py": 1824,
+    # +15 (1824 -> 1839), WI-388: the F5-mirrored loader edits (`Bar` column,
+    # `SPEC_CONTEXT` + its clip in `parse_spec_deliverable`). Reviewed bump,
+    # log fragment 2026-08-02 (WI-388). Re-stamp down with WI-280.
+    "agent_common.py": 1839,
     # NEW ENTRY, WI-387 — integrate.py crossed THRESHOLD (1418 -> 1588) adding
     # the third terminal outcome. The extraction the ratchet asks for was TAKEN
     # FIRST, not argued away: `hand_back` and `quarantine`, the largest unit and
@@ -1071,7 +1080,13 @@ BASELINE = {
     # its own refresh completes. Most of the delta is the docstrings stating
     # the authority model. Reviewed bump, log fragment 2026-08-02 (WI-381).
     # Re-stamp down with WI-280.
-    "integrate.py": 2251,
+    # +80 (2251 -> 2331), WI-388: the adjudication no-bar arm + the `bar`
+    # strictness key — `_lane_bar_directives` (the claimed rows' say over the
+    # refresh bar, read off the same trunk claim the slot reads), `_refresh_bar`
+    # (the extraction that keeps `refresh` under the complexity ratchet), and
+    # `_run_bar`'s --gate pin. Reviewed bump, log fragment 2026-08-02 (WI-388).
+    # Re-stamp down with WI-280.
+    "integrate.py": 2331,
 }
 
 

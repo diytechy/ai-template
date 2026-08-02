@@ -1346,7 +1346,7 @@ def _passed_steps(out):
     return names
 
 
-def _run_bar(wt, root, tier):
+def _run_bar(wt, root, tier, gate=None):
     """check.py at the derived gate on the refreshed branch; fail-closed reading.
 
     Green means: exit 0 AND the report carries no SKIP line. `--trunk-lane` is
@@ -1354,12 +1354,18 @@ def _run_bar(wt, root, tier):
     --no-ff merge of a branch containing trunk reproduces it byte for byte), so
     the §5.2 freshness gates - which stand down on a work branch, and which
     this very step just regenerated - have to run here or nothing checks them.
+
+    `gate` (WI-388, the `bar` frontmatter key) pins check.py's --gate: a row
+    claimed to deliver evidence at a level still bars at that level if
+    docs/gate moves mid-flight. None keeps check.py on its own derived-gate
+    read, exactly as before.
     """
     py = ac.harness_python(root)
     check = _branch_tree_script(wt, root, "check.py")
-    code, out = _run(
-        [str(py), str(check), "--jobs", "0", "--tier", tier, "--trunk-lane"], wt
-    )
+    argv = [str(py), str(check), "--jobs", "0", "--tier", tier, "--trunk-lane"]
+    if gate:
+        argv += ["--gate", gate]
+    code, out = _run(argv, wt)
     skips = [ln for ln in out.splitlines() if re.match(r"\s*SKIP\s", ln)]
     if code != 0:
         return False, out, "bar exit {}".format(code)
@@ -1372,7 +1378,9 @@ def _run_bar(wt, root, tier):
     return (
         True,
         out,
-        "bar PASS ({} steps, tier {})".format(len(_passed_steps(out)), tier),
+        "bar PASS ({} steps, tier {}{})".format(
+            len(_passed_steps(out)), tier, ", gate " + gate if gate else ""
+        ),
     )
 
 
@@ -1380,6 +1388,58 @@ def _run_trunk_step(wt, root):
     py = ac.harness_python(root)
     step = _branch_tree_script(wt, root, "trunk_step.py")
     return _run([str(py), str(step), "--root", "."], wt)
+
+
+# The `bar` frontmatter key's vocabulary (WI-388): bar declares verification
+# strictness for this row's lane; it never affects scheduling. Ordered weakest
+# to strictest so a batch takes the max.
+_BAR_GATES = ("G1", "G2", "G3")
+
+
+def _lane_bar_directives(root, branch):
+    """The claimed rows' say over the refresh bar (WI-388): `(skip, gate,
+    refusal)`.
+
+    * `skip` — True when EVERY claimed spec declares the `adjudication` kind:
+      adjudication runs NO bar (§A5.2 — its outputs are Status cells and the
+      work registry, nothing a product bar can speak to; that is why the kind
+      needs its own no-bar arm rather than a tier). Fails TOWARD the bar: an
+      unreadable frontmatter or a mixed batch runs it.
+    * `gate` — the strictest `bar` key among the claimed rows (G1 < G2 < G3),
+      handed to check.py --gate. None when no row declares one.
+    * `refusal` — a malformed bar value. Refused loudly rather than silently
+      barred at whatever the derived gate happens to read (the drift the key
+      exists to pin); the claimed spec is on the branch, so the fix is a
+      lane-side edit.
+
+    Read off the TRUNK's claimed specs — the same one-home read the merge slot
+    and `dispatch._branch_exclusive` use — so the directive cannot disagree
+    with the claim being merged.
+    """
+    kinds, bars = [], []
+    for _wid, name in _claimed_specs(root, branch):
+        try:
+            meta = _spec_frontmatter(root / ACTIVE / branch / name)
+        except (OSError, ValueError):
+            return False, None, None  # unreadable: run the bar, fail toward it
+        kinds.append(str(meta.get("safety_class") or "").strip().lower())
+        declared = str(meta.get("bar") or "").strip().upper()
+        if declared and declared not in _BAR_GATES:
+            return (
+                False,
+                None,
+                "{} declares bar = {!r} ({}), which is not one of {} - the bar "
+                "key declares verification strictness for this row's lane (it "
+                "never affects scheduling), so a value check.py cannot run is "
+                "refused rather than silently dropped; fix the claimed spec on "
+                "the branch, then refresh".format(
+                    branch, str(meta.get("bar")), name, "|".join(_BAR_GATES)
+                ),
+            )
+        if declared:
+            bars.append(declared)
+    skip = bool(kinds) and all(kind == "adjudication" for kind in kinds)
+    return skip, (max(bars) if bars else None), None
 
 
 def _worktree_holding(root, branch):
@@ -1827,6 +1887,13 @@ def refresh(root, branch, tier):
     runs it INSIDE the slot for any branch that arrives un-refreshed or stale,
     which is the pessimistic sequence and is why that sequence never rots.
     """
+    # The claimed rows' say over the bar (WI-388): the adjudication no-bar arm
+    # and the `bar` strictness pin, both read before anything runs so a
+    # malformed key refuses with the lane untouched.
+    skip_bar, bar_gate, refusal = _lane_bar_directives(root, branch)
+    if refusal:
+        return None, "refresh REFUSED for {} - {}".format(branch, refusal)
+
     wt, work_tip, refusal = _refresh_preflight(root, branch)
     if refusal:
         return None, refusal
@@ -1869,7 +1936,7 @@ def refresh(root, branch, tier):
     # swept into the attested commit by an `add -A` that ran after it. The
     # committed tree is therefore exactly the tree the bar was handed.
     ac.git(wt, "add", "-A")
-    ok, bar_out, summary = _run_bar(wt, root, tier)
+    ok, bar_out, summary = _refresh_bar(wt, root, tier, skip_bar, bar_gate)
     _shed_residue(wt, baseline, baseline_dirs)
     if not ok:
         return undo(
@@ -1919,6 +1986,19 @@ def refresh(root, branch, tier):
         )
     )
     return sha, None
+
+
+def _refresh_bar(wt, root, tier, skip_bar, bar_gate):
+    """The refresh's bar step, with the WI-388 no-bar arm: `(ok, out, summary)`.
+
+    `skip_bar` is the adjudication arm (§A5.2): the trunk step still ran and
+    the refresh commit still attests THIS tree — the trailer verifies the same
+    way — but no product bar is invoked, and the summary says so honestly,
+    because the kind has nothing a product bar can speak to. Extracted from
+    `refresh` so the sequence stays readable under the complexity ratchet."""
+    if skip_bar:
+        return True, "", "no-bar (adjudication, §A5.2)"
+    return _run_bar(wt, root, tier, bar_gate)
 
 
 def _merge_ready(root, branch):

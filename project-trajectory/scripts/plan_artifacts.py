@@ -72,6 +72,7 @@ WI_HEADER = [
     "EstTokens",
     "SafetyClass",
     "PlanMode",
+    "Bar",
 ]
 
 # A round directory: `DP-<digits>-<slug>` under docs/plans/.

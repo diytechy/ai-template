@@ -10,7 +10,7 @@ DERIVED from the tracked WI registry plus any reservations the caller passes
 in; it is never copied into prose. The registry home is the spec folder
 `docs/work/` (`load_registry_rows`; the CSV home retired at
 concurrency-restructure Phase 5, RULING-4). Everything past that one function
-— `load_wis` included — sees the same 17-key rows.
+— `load_wis` included — sees the same 18-key rows.
 
 Two contracts live here:
 
@@ -72,8 +72,20 @@ WI_ID_RE = re.compile(r"^WI-\d+$")
 REGISTRY = "docs/requirements/work-items.csv"
 
 # --- safety classification vocabulary (SR-093/SR-094; spec §4 "Deterministic safety
-# classification"). The DECLARED values a WI may carry in its SafetyClass cell. ---
-SAFETY_CLASSES = ("ordinary", "spine", "gate", "attestation", "protected", "high-risk")
+# classification"). The DECLARED values a WI may carry in its SafetyClass cell.
+# `adjudication` (WI-388, docs/concurrency-v2.md §A5.2) is the mechanical
+# scope-judgement kind minted trunk-side at intake: exclusive, rank 1, and its
+# lane runs NO product bar (integrate.refresh's no-bar arm) — its outputs are
+# Status cells and the work registry, nothing a product bar can speak to. ---
+SAFETY_CLASSES = (
+    "ordinary",
+    "spine",
+    "gate",
+    "attestation",
+    "protected",
+    "high-risk",
+    "adjudication",
+)
 
 # --- the two axes the classifier RETURNS (docs/concurrency-v2.md §A1) ---------
 # One declared kind answered two different questions through ONE five-value
@@ -103,6 +115,7 @@ CONCURRENCY_UNCLASSIFIED = "unclassified"  # fail closed — never scheduled
 # prevent.
 _KIND_CONCURRENCY = {
     "spine": CONCURRENCY_EXCLUSIVE,
+    "adjudication": CONCURRENCY_EXCLUSIVE,
     "attestation": CONCURRENCY_EXCLUSIVE,
     "gate": CONCURRENCY_EXCLUSIVE,
     "protected": CONCURRENCY_EXCLUSIVE,
@@ -112,13 +125,15 @@ _KIND_CONCURRENCY = {
 }
 
 # Axis 2 — RANK by declared kind: low first, the leading term of the order key.
-# The numbers are §A1's ruled table verbatim, INCLUDING its gap: rank 1 belongs
-# to the `adjudication` kind, which WI-388 adds. Writing the ladder whole means
-# that row adds one mapping instead of renumbering a ruled table (and a reader
-# who wonders where 1 went finds the answer here rather than in the diff).
+# The numbers are §A1's ruled table verbatim. Rank 1 was written as a RESERVED
+# gap for the `adjudication` kind; WI-388 filled it — one mapping added, no
+# ruled number renumbered. Adjudication sorts behind spine (the scope change
+# itself) and ahead of the window-closing kinds, because its judgement is what
+# makes the narrowed detector (WI-380) safe: it must land before anything else
+# builds on a premise the diff may have moved.
 _KIND_RANK = {
     "spine": 0,
-    # 1 — `adjudication` (WI-388, §A5.2): exclusive, runs no bar.
+    "adjudication": 1,  # WI-388, §A5.2: exclusive, runs no bar
     "attestation": 2,
     "gate": 2,
     "protected": 3,
@@ -168,7 +183,7 @@ def load_rows(path):
 # --- the spec-folder registry reader (duplicated per the F5 rule) -------------
 # `docs/work/<status>/WI-###-<slug>.md`: one Markdown spec per work item, its
 # STATUS encoded as the DIRECTORY (docs/concurrency-restructure.md §2.1, Phase
-# 2b). The reader emits rows carrying the SAME 17 keys `csv.DictReader` yields
+# 2b). The reader emits rows carrying the SAME 18 keys `csv.DictReader` yields
 # for `work-items.csv`, so the dual-read happens at the ROW level, once, here —
 # `load_wis` and every consumer past it never learn which home is authoritative.
 # The format's definition is `scripts/wi_convert.py` (`parse_spec` /
@@ -197,6 +212,7 @@ WI_COLUMNS = (
     "EstTokens",
     "SafetyClass",
     "PlanMode",
+    "Bar",
 )
 SPEC_SCALARS = (
     ("Title", "title"),
@@ -211,6 +227,10 @@ SPEC_SCALARS = (
     ("EstTokens", "est_tokens"),
     ("SafetyClass", "safety_class"),
     ("PlanMode", "planmode"),
+    # WI-388: bar declares verification strictness for this row's lane; it
+    # never affects scheduling. (G1|G2|G3 — integrate.refresh passes it to
+    # check.py --gate; load_wis deliberately does not parse it.)
+    ("Bar", "bar"),
 )
 SPEC_LISTS = (("SR-Refs", "sr_refs"), ("Predecessors", "needs"))
 # Directory -> Status. The directory is the WHOLE statement (WI-384): every
@@ -249,6 +269,13 @@ SPEC_DELIVERABLE = "\n## Deliverable\n\n"
 # cell — nothing here parses it — and is recognised only so an honest
 # returned spec does not read as a malformed one.
 SPEC_HANDBACK = "\n## Handback\n"
+# The body's THIRD section (WI-388): the advisory `## Context` block the
+# intake mint writes into every minted row (pure registry joins — precedent,
+# open items, the code map, knowledge packs), advisory-never-gating. Like the
+# Handback note it carries no registry cell and is read PAST, so a minted row
+# whose body is context-only parses with an empty Deliverable rather than as
+# a malformation.
+SPEC_CONTEXT = "\n## Context\n"
 
 
 def spec_work_dir(csv_path):
@@ -328,11 +355,14 @@ def parse_spec_deliverable(relpath, body):
     The long cell lives in the BODY precisely because body text needs no
     escaping: it may hold newlines, quotes and markdown. This format owns the
     whole body shape, so anything that is neither empty nor one
-    `## Deliverable` section (optionally followed by the `## Handback` note a
-    returned spec carries) is a malformation rather than free prose."""
+    `## Deliverable` section (optionally joined by the `## Handback` note a
+    returned spec carries, or the advisory `## Context` block a minted spec
+    carries — both clipped off before the cell is read) is a malformation
+    rather than free prose."""
     if not body:
         return ""
     body = body.partition(SPEC_HANDBACK)[0]
+    body = body.partition(SPEC_CONTEXT)[0]
     if not body:
         return ""
     if not body.startswith(SPEC_DELIVERABLE) or not body.endswith("\n"):
@@ -343,7 +373,7 @@ def parse_spec_deliverable(relpath, body):
 
 
 def parse_spec_row(text, relpath):
-    """`(row, order)` for one spec file — a 17-key row shaped exactly like the
+    """`(row, order)` for one spec file — an 18-key row shaped exactly like the
     CSV's. Raises ValueError NAMING the file on any malformation: invalid TOML, a
     missing or non-string `id`, an id the filename disagrees with, a directory
     that is not a status, or a body that is not the single `## Deliverable`

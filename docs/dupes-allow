@@ -733,8 +733,16 @@ c4546434439b  project-trajectory/scripts/schedule.py == project-trajectory/scrip
 # three files, the same one block, ten lines longer — and
 # check_trajectory == schedule again kept its fp (1dbf7e455ac3), which is the
 # tell that the change is inside the shared region rather than a new copy.
-a17abce26cb8  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/schedule.py
-7a1470c3f0c1  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/check_trajectory.py
+# WI-388 re-fingerprinted the two agent_common pairs a third time
+# (a17abce26cb8 -> 7212302b90d0, 7a1470c3f0c1 -> 6bc2b2913689), same
+# structural reason as WI-387's: the `Bar` scalar joined the loader tables and
+# the `## Context` section joined the body grammar (`SPEC_CONTEXT` + one more
+# partition in `parse_spec_deliverable`) in all three copies at once. The
+# class did not grow — same three files, same one block — and
+# check_trajectory == schedule again kept its fp (1dbf7e455ac3), the tell
+# that the change is inside the shared region rather than a new copy.
+7212302b90d0  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/schedule.py
+6bc2b2913689  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/check_trajectory.py
 1dbf7e455ac3  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/schedule.py
 4d36b43d0895  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/wi_convert.py
 
@@ -752,9 +760,16 @@ a17abce26cb8  project-trajectory/scripts/agent_common.py == project-trajectory/s
 # names is the small-stable-helper shape the F5 ruling covers; the schema
 # itself is pinned against the shipped template by test_dogfood_sync and
 # test_wi_convert, so the copies cannot drift apart silently.
-760d32e34d84  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/plan_artifacts.py
+# WI-388 re-stamped four of the six: the schema gained its 18th column (`Bar`
+# — bar declares verification strictness for this row's lane; it never
+# affects scheduling), so every copy of the bare column list re-fingerprinted
+# (760d32e34d84 -> a7e859f1af8f twice, b83181696230 -> 261eae4aed7d,
+# 8df9b7757333 -> d7bc90bd2333) while the two map-direction blocks that end
+# before the new row kept theirs. Same six blocks, same class, one column
+# wider.
+a7e859f1af8f  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/plan_artifacts.py
 63ecb0abf993  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/wi_convert.py
-760d32e34d84  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/wi_convert.py
-b83181696230  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/wi_convert.py
+a7e859f1af8f  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/wi_convert.py
+261eae4aed7d  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/wi_convert.py
 462810722e11  project-trajectory/scripts/plan_artifacts.py == project-trajectory/scripts/wi_convert.py
-8df9b7757333  project-trajectory/scripts/plan_artifacts.py == project-trajectory/scripts/wi_convert.py
+d7bc90bd2333  project-trajectory/scripts/plan_artifacts.py == project-trajectory/scripts/wi_convert.py

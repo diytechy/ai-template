@@ -179,6 +179,7 @@ def spec_text(
     order=0,
     deliverable="A widget, shipped.",
     specref=None,
+    bar=None,
 ):
     """One work-item spec in the format `scripts/wi_convert.py` emits (the
     tests/test_wi_folder_loaders.py `spec_text` shape).
@@ -200,6 +201,8 @@ def spec_text(
     ]
     if specref:
         lines.append('specref = "{}"'.format(specref))
+    if bar:
+        lines.append('bar = "{}"'.format(bar))
     text = "+++\n" + "".join(ln + "\n" for ln in lines) + "+++\n"
     if deliverable:
         text += "\n## Deliverable\n\n" + deliverable + "\n"
@@ -1794,14 +1797,18 @@ sys.exit(1)
 """
 
 
-def station_repo(tmp_path, check_src=STUB_CHECK_GREEN, policy="0", dest="complete"):
+def station_repo(
+    tmp_path, check_src=STUB_CHECK_GREEN, policy="0", dest="complete", **spec_kw
+):
     """A trunk with WI-401 claimed onto `wi-401` and CLOSED, plus a stub harness.
 
     Everything the slot reads is real: a real claim commit, a real branch, a
     real closing move. Only the two harness scripts are stubs, and they are
-    stubs so the test can assert the ORDER they ran in — see above.
+    stubs so the test can assert the ORDER they ran in — see above. `spec_kw`
+    shapes the claimed spec (the WI-388 bar/no-bar tests declare `bar=` or
+    `safety=` on it).
     """
-    root = claim_repo(tmp_path)
+    root = claim_repo(tmp_path, **spec_kw)
     (root / ".gitignore").write_text(
         "out/\nbar-cache/\n", encoding="utf-8", newline="\n"
     )
@@ -1977,6 +1984,89 @@ def test_the_bar_residue_the_refresh_created_is_shed_but_the_lanes_is_not(tmp_pa
     assert refusal is None, refusal
     assert (wt / "bar-cache").is_dir() is False, "the bar's own residue stays"
     assert (logs / "session.md").read_text(encoding="utf-8") == "the only copy\n"
+
+
+# 5b.2-wi388 — the adjudication no-bar arm and the `bar` strictness key
+
+
+def test_the_bar_key_reaches_check_gate(tmp_path):
+    # WI-388 (5): an optional frontmatter `bar = G1|G2|G3` pins the lane's
+    # verification strictness — the refresh passes it to check.py as --gate, so
+    # a row claimed to deliver evidence at a level still bars at that level if
+    # docs/gate moves mid-flight. Asserted off the recording stub's OWN argv.
+    root = station_repo(tmp_path, bar="G2")
+    wt = _lane(root, "wi-401")
+    sha, refusal = integ.refresh(root, "wi-401", "smoke")
+    assert refusal is None, refusal
+    order = _order(wt)
+    assert "--gate" in order and "G2" in order, order
+    assert order.index("--gate") + 1 == order.index("G2")
+
+
+def test_without_a_bar_key_the_refresh_passes_no_gate(tmp_path):
+    # The complement, so the key cannot be mistaken for a default: an undeclared
+    # bar leaves check.py on its own derived-gate read, exactly as before.
+    root = station_repo(tmp_path)
+    wt = _lane(root, "wi-401")
+    _sha, refusal = integ.refresh(root, "wi-401", "smoke")
+    assert refusal is None, refusal
+    assert "--gate" not in _order(wt)
+
+
+def test_a_malformed_bar_value_refuses_the_refresh(tmp_path):
+    # Fail closed and loud: a typo'd bar silently ignored would bar at whatever
+    # docs/gate happens to read — the exact drift the key exists to pin. The
+    # claimed spec lives on the branch, so the fix is a lane-side edit.
+    root = station_repo(tmp_path, bar="G9")
+    sha, refusal = integ.refresh(root, "wi-401", "smoke")
+    assert sha is None
+    assert "bar" in refusal and "G9" in refusal
+
+
+def test_an_adjudication_lane_runs_no_bar(tmp_path):
+    # WI-388 (1): adjudication runs NO BAR (§A5.2) — its outputs are Status
+    # cells and the work registry, nothing a product bar can speak to. The
+    # refresh still merges trunk in and runs the trunk step, still commits a
+    # verified Bar-Green attestation (the slot's contract), but the check
+    # harness is never invoked and the summary says so.
+    root = station_repo(tmp_path, safety="adjudication")
+    wt = _lane(root, "wi-401")
+    sha, refusal = integ.refresh(root, "wi-401", "smoke")
+    assert refusal is None, refusal
+    assert _order(wt) == ["trunk_step"], "the bar must not run for adjudication"
+    attested = integ.refresh_attestation(root, "wi-401", sha)
+    assert attested is not None
+    assert "no-bar" in attested[1]
+    ready, why = integ._merge_ready(root, "wi-401")
+    assert ready and "no-bar" in why
+
+
+def test_a_mixed_claim_still_runs_the_bar(tmp_path):
+    # Fail toward the bar: the no-bar arm arms only when EVERY claimed spec is
+    # the adjudication kind. A batch claim holding one ordinary row beside the
+    # adjudication row bars as usual.
+    root = claim_repo(tmp_path, safety="adjudication")
+    write_spec(root, "queued", "WI-402", slug="extra", specref="seed.txt")
+    (root / ".gitignore").write_text(
+        "out/\nbar-cache/\n", encoding="utf-8", newline="\n"
+    )
+    (root / "docs" / "stack.ini").write_text(
+        "[product]\ntest = {py} -m pytest -q\n", encoding="utf-8", newline="\n"
+    )
+    declare_generated(root)
+    scripts = root / "scripts"
+    scripts.mkdir(exist_ok=True)
+    (scripts / "trunk_step.py").write_text(
+        STUB_TRUNK_STEP, encoding="utf-8", newline="\n"
+    )
+    (scripts / "check.py").write_text(STUB_CHECK_GREEN, encoding="utf-8", newline="\n")
+    _commit(root, "chore: the stub harness and the declared bar", when=T_CODE)
+    assert integ.claim(root, ["WI-401", "WI-402"], "wi-401") == 0
+    wt, err = integ.lane_worktree(root, "wi-401")
+    assert err is None, err
+    _sha, refusal = integ.refresh(root, "wi-401", "smoke")
+    assert refusal is None, refusal
+    assert "check" in _order(wt)
 
 
 # 5b.3 — the disposable-commit rule (§A2.1)

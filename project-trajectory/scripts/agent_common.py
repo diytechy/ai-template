@@ -607,7 +607,7 @@ def parse_wi_list(spec):
 # --- the spec-folder registry reader (duplicated per the F5 rule) -------------
 # `docs/work/<status>/WI-###-<slug>.md`: one Markdown spec per work item, its
 # STATUS encoded as the DIRECTORY (docs/concurrency-restructure.md §2.1, Phase
-# 2b). The reader emits rows carrying the SAME 17 keys `csv.DictReader` yields
+# 2b). The reader emits rows carrying the SAME 18 keys `csv.DictReader` yields
 # for `work-items.csv`, so the dual-read happens at the ROW level, once, here —
 # `load_wis` and every consumer past it never learn which home is authoritative.
 # The format's definition is `scripts/wi_convert.py` (`parse_spec` /
@@ -636,6 +636,7 @@ WI_COLUMNS = (
     "EstTokens",
     "SafetyClass",
     "PlanMode",
+    "Bar",
 )
 SPEC_SCALARS = (
     ("Title", "title"),
@@ -650,6 +651,10 @@ SPEC_SCALARS = (
     ("EstTokens", "est_tokens"),
     ("SafetyClass", "safety_class"),
     ("PlanMode", "planmode"),
+    # WI-388: bar declares verification strictness for this row's lane; it
+    # never affects scheduling. (G1|G2|G3 — integrate.refresh passes it to
+    # check.py --gate; load_wis deliberately does not parse it.)
+    ("Bar", "bar"),
 )
 SPEC_LISTS = (("SR-Refs", "sr_refs"), ("Predecessors", "needs"))
 # Directory -> Status. The directory is the WHOLE statement (WI-384): every
@@ -688,6 +693,13 @@ SPEC_DELIVERABLE = "\n## Deliverable\n\n"
 # cell — nothing here parses it — and is recognised only so an honest
 # returned spec does not read as a malformed one.
 SPEC_HANDBACK = "\n## Handback\n"
+# The body's THIRD section (WI-388): the advisory `## Context` block the
+# intake mint writes into every minted row (pure registry joins — precedent,
+# open items, the code map, knowledge packs), advisory-never-gating. Like the
+# Handback note it carries no registry cell and is read PAST, so a minted row
+# whose body is context-only parses with an empty Deliverable rather than as
+# a malformation.
+SPEC_CONTEXT = "\n## Context\n"
 
 
 def spec_work_dir(csv_path):
@@ -767,11 +779,14 @@ def parse_spec_deliverable(relpath, body):
     The long cell lives in the BODY precisely because body text needs no
     escaping: it may hold newlines, quotes and markdown. This format owns the
     whole body shape, so anything that is neither empty nor one
-    `## Deliverable` section (optionally followed by the `## Handback` note a
-    returned spec carries) is a malformation rather than free prose."""
+    `## Deliverable` section (optionally joined by the `## Handback` note a
+    returned spec carries, or the advisory `## Context` block a minted spec
+    carries — both clipped off before the cell is read) is a malformation
+    rather than free prose."""
     if not body:
         return ""
     body = body.partition(SPEC_HANDBACK)[0]
+    body = body.partition(SPEC_CONTEXT)[0]
     if not body:
         return ""
     if not body.startswith(SPEC_DELIVERABLE) or not body.endswith("\n"):
@@ -782,7 +797,7 @@ def parse_spec_deliverable(relpath, body):
 
 
 def parse_spec_row(text, relpath):
-    """`(row, order)` for one spec file — a 17-key row shaped exactly like the
+    """`(row, order)` for one spec file — an 18-key row shaped exactly like the
     CSV's. Raises ValueError NAMING the file on any malformation: invalid TOML, a
     missing or non-string `id`, an id the filename disagrees with, a directory
     that is not a status, or a body that is not the single `## Deliverable`
@@ -848,7 +863,7 @@ def load_wi_registry(root):
     checked-out copy on the train branch, so a worker reads the same registry
     state its base commit fixed. Malformed/duplicate ids are skipped (the
     validator's finding, not the worker's crash). Reads whichever home is
-    authoritative via `load_registry_rows`; the rows are the same 17 keys either
+    authoritative via `load_registry_rows`; the rows are the same 18 keys either
     way, so every caller of this map is unaffected by the migration."""
     rows = load_registry_rows(root)
     out = {}

@@ -3,7 +3,7 @@
 
 The registry home is the spec folder `docs/work/` (one file per work item,
 status = directory; the CSV home retired at concurrency-restructure Phase 5,
-RULING-4). Every rule below reads the same 17-key rows `read_registry_rows`
+RULING-4). Every rule below reads the same 18-key rows `read_registry_rows`
 emits. A stray resurrected `work-items.csv` is itself an integrity ERROR here
 — a second, unread encoding of the registry — which is the difference between
 this copy of the reader and the scheduler's silent one.
@@ -310,7 +310,7 @@ def read_rows(path):
 # --- the spec-folder registry reader (duplicated per the F5 rule) -------------
 # `docs/work/<status>/WI-###-<slug>.md`: one Markdown spec per work item, its
 # STATUS encoded as the DIRECTORY (docs/concurrency-restructure.md §2.1, Phase
-# 2b). The reader emits rows carrying the SAME 17 keys `csv.DictReader` yields
+# 2b). The reader emits rows carrying the SAME 18 keys `csv.DictReader` yields
 # for `work-items.csv`, so the dual-read happens at the ROW level, once, here —
 # `load_wis` and every consumer past it never learn which home is authoritative.
 # The format's definition is `scripts/wi_convert.py` (`parse_spec` /
@@ -339,6 +339,7 @@ WI_COLUMNS = (
     "EstTokens",
     "SafetyClass",
     "PlanMode",
+    "Bar",
 )
 SPEC_SCALARS = (
     ("Title", "title"),
@@ -353,6 +354,10 @@ SPEC_SCALARS = (
     ("EstTokens", "est_tokens"),
     ("SafetyClass", "safety_class"),
     ("PlanMode", "planmode"),
+    # WI-388: bar declares verification strictness for this row's lane; it
+    # never affects scheduling. (G1|G2|G3 — integrate.refresh passes it to
+    # check.py --gate; load_wis deliberately does not parse it.)
+    ("Bar", "bar"),
 )
 SPEC_LISTS = (("SR-Refs", "sr_refs"), ("Predecessors", "needs"))
 # Directory -> Status. The directory is the WHOLE statement (WI-384): every
@@ -391,6 +396,13 @@ SPEC_DELIVERABLE = "\n## Deliverable\n\n"
 # cell — nothing here parses it — and is recognised only so an honest
 # returned spec does not read as a malformed one.
 SPEC_HANDBACK = "\n## Handback\n"
+# The body's THIRD section (WI-388): the advisory `## Context` block the
+# intake mint writes into every minted row (pure registry joins — precedent,
+# open items, the code map, knowledge packs), advisory-never-gating. Like the
+# Handback note it carries no registry cell and is read PAST, so a minted row
+# whose body is context-only parses with an empty Deliverable rather than as
+# a malformation.
+SPEC_CONTEXT = "\n## Context\n"
 
 
 def spec_work_dir(csv_path):
@@ -470,11 +482,14 @@ def parse_spec_deliverable(relpath, body):
     The long cell lives in the BODY precisely because body text needs no
     escaping: it may hold newlines, quotes and markdown. This format owns the
     whole body shape, so anything that is neither empty nor one
-    `## Deliverable` section (optionally followed by the `## Handback` note a
-    returned spec carries) is a malformation rather than free prose."""
+    `## Deliverable` section (optionally joined by the `## Handback` note a
+    returned spec carries, or the advisory `## Context` block a minted spec
+    carries — both clipped off before the cell is read) is a malformation
+    rather than free prose."""
     if not body:
         return ""
     body = body.partition(SPEC_HANDBACK)[0]
+    body = body.partition(SPEC_CONTEXT)[0]
     if not body:
         return ""
     if not body.startswith(SPEC_DELIVERABLE) or not body.endswith("\n"):
@@ -485,7 +500,7 @@ def parse_spec_deliverable(relpath, body):
 
 
 def parse_spec_row(text, relpath):
-    """`(row, order)` for one spec file — a 17-key row shaped exactly like the
+    """`(row, order)` for one spec file — an 18-key row shaped exactly like the
     CSV's. Raises ValueError NAMING the file on any malformation: invalid TOML, a
     missing or non-string `id`, an id the filename disagrees with, a directory
     that is not a status, or a body that is not the single `## Deliverable`
@@ -2682,18 +2697,27 @@ SPINE_TRACED_CELLS = {
     "docs/requirements/system-requirements.csv": frozenset(
         {"SN-Refs", "Phase", "Area", "Lifecycle"}
     ),
+    # `SR-Refs` is here BY RULING (WI-388, closing WI-380 REVIEW-A finding 3 —
+    # the cell §A5.1 left unclassified): it is the same shape of pointer as
+    # the ruled-traced `SN-Refs`/`Verifies` — which SR owns this decomposition
+    # row — and re-pointing it changes no attested prose on either side.
+    # Whether the re-point moved scope is exactly the judgement the
+    # adjudication kind exists to make, so a changed `SR-Refs` ROUTES to
+    # adjudication (intake.ROUTED_TRACED_CELLS) like its two siblings; it
+    # never arms a re-attest window directly.
     "docs/requirements/low-level-requirements.csv": frozenset(
-        {"Module", "CodeSymbol", "TestRefs", "Component", "Phase"}
+        {"Module", "CodeSymbol", "TestRefs", "Component", "Phase", "SR-Refs"}
     ),
     "docs/test/test-cases.csv": frozenset(
         {"Verifies", "Evidence", "Automated", "Phase"}
     ),
 }
-# The ratified half. `SR-Refs` (LLR) and `SupersededBy` (SR) are NOT named by
-# §A5.1: they are listed here because the residual keeps them ratified — i.e.
-# today's behaviour, deliberately NOT narrowed past what the owner ruled. That
-# `SR-Refs` is the same shape of pointer as the ruled-traced `SN-Refs` /
-# `Verifies` is a real question, and it is WI-388's to put, not this row's.
+# The ratified half. `SupersededBy` (SR) is not named by §A5.1 and is RATIFIED
+# BY RULING (WI-388, the same intake): a supersession is a SCOPE statement —
+# it terminates a requirement's lifecycle in favour of another — precisely the
+# "prose and relevant field attributes" the owner's spine-touch definition
+# names. Unlike the three traced pointers it re-points no live chain; it ends
+# one, and a silent supersession would be a missed window nobody sees.
 SPINE_RATIFIED_CELLS = {
     "docs/requirements/system-requirements.csv": frozenset(
         {
@@ -2708,7 +2732,7 @@ SPINE_RATIFIED_CELLS = {
         }
     ),
     "docs/requirements/low-level-requirements.csv": frozenset(
-        {"Title", "Detail", "Rationale", "SR-Refs"}
+        {"Title", "Detail", "Rationale"}
     ),
     "docs/test/test-cases.csv": frozenset(
         {"Method", "Expected", "Parameters", "Level", "Tier"}
@@ -2778,9 +2802,10 @@ def staged_spine_amendments(root, base="HEAD", head=None):
     tested.
 
     A record may carry a traced change with NO ratified change. Only the
-    `SN-Refs`/`Verifies` subset of those is the WI-388 case (§A5.1 routes a
-    re-point of what a requirement answers to, or what a test claims to cover,
-    to adjudication); a `Module`/`CodeSymbol`/`TestRefs`/`Component`/`Phase`
+    `SN-Refs`/`Verifies`/`SR-Refs` subset of those is the WI-388 case (§A5.1
+    routes a re-point of what a requirement answers to, what a test claims to
+    cover, or which SR owns an LLR — the last ruled traced at WI-388 — to
+    adjudication); a `Module`/`CodeSymbol`/`TestRefs`/`Component`/`Phase`
     change is simply silent — traced, not pending, nothing owed. Rows are parsed
     with the csv module over the full file text on each side (spine cells are
     long; never line-split). Returns [] when not applicable; any missing git

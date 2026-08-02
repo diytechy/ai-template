@@ -261,8 +261,11 @@ def test_legacy_blocked_status_is_excluded_fail_closed():
 # because a re-conflation would pass any test that only ever reads one of them.
 
 # §A1's ruled table, restated as data the tests read: kind -> (concurrency, rank).
+# Rank 1 was RESERVED for `adjudication` when the ladder was written whole
+# (§A1's gap); WI-388 fills it — exclusive, rank 1, the §A5.2 no-bar kind.
 RULED_TABLE = {
     "spine": (EXCL, 0),
+    "adjudication": (EXCL, 1),
     "attestation": (EXCL, 2),
     "gate": (EXCL, 2),
     "protected": (EXCL, 3),
@@ -286,12 +289,15 @@ def test_classify_every_declared_value_is_deterministic():
         assert sched.classify(wi) == expected, declared  # idempotent/deterministic
 
 
-def test_rank_1_is_reserved_and_unoccupied():
-    """The `adjudication` gap. §A1 ranks adjudication 1 and WI-388 fills it; the
-    ladder is written whole so that row adds a mapping instead of renumbering a
-    ruled table. If a later edit quietly reuses 1, this says so."""
-    assert 1 not in sched._KIND_RANK.values()
-    assert sorted(sched._KIND_RANK.values()) == [0, 2, 2, 3, 4, 5, 6]
+def test_rank_1_is_the_adjudication_kind():
+    """The `adjudication` gap, FILLED (WI-388). §A1 reserved rank 1 for the
+    kind; filling it adds one mapping instead of renumbering a ruled table.
+    The slot's occupant is pinned by name so a later edit cannot quietly hand
+    1 to something else."""
+    assert sched._KIND_RANK["adjudication"] == 1
+    assert sched._KIND_CONCURRENCY["adjudication"] == EXCL
+    assert "adjudication" in sched.SAFETY_CLASSES
+    assert sorted(sched._KIND_RANK.values()) == [0, 1, 2, 2, 3, 4, 5, 6]
 
 
 def test_the_two_axes_are_declared_separately_over_the_same_kinds():
@@ -311,7 +317,7 @@ def test_rank_does_not_determine_concurrency():
 
 
 def test_concurrency_does_not_determine_rank():
-    # And the reverse: the five exclusive kinds hold four distinct ranks, so
+    # And the reverse: the six exclusive kinds hold five distinct ranks, so
     # "exclusive" says nothing about order. (This is the pair `protected-serial`
     # and `single-wi` used to encode as two classes — both mean run alone.)
     #
@@ -322,7 +328,7 @@ def test_concurrency_does_not_determine_rank():
     ranks = {}
     for kind, concurrency in sched._KIND_CONCURRENCY.items():
         ranks.setdefault(concurrency, set()).add(sched._KIND_RANK[kind])
-    assert ranks == {EXCL: {0, 2, 3, 4}, PAR: {5, 6}}
+    assert ranks == {EXCL: {0, 1, 2, 3, 4}, PAR: {5, 6}}
 
 
 def test_reordering_the_frontier_never_moves_the_concurrency_axis():

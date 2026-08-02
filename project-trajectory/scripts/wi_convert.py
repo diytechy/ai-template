@@ -103,6 +103,7 @@ COLUMNS = [
     "EstTokens",
     "SafetyClass",
     "PlanMode",
+    "Bar",
 ]
 
 # Status <-> directory (§2.1; WI-384). One directory per state, both terminals
@@ -132,6 +133,10 @@ SCALAR_FIELDS = (
     ("EstTokens", "est_tokens"),
     ("SafetyClass", "safety_class"),
     ("PlanMode", "planmode"),
+    # WI-388: bar declares verification strictness for this row's lane; it
+    # never affects scheduling. (G1|G2|G3 — integrate.refresh passes it to
+    # check.py --gate; the scheduler deliberately does not parse it.)
+    ("Bar", "bar"),
 )
 # Columns carried as TOML arrays. Split on ';' WITHOUT stripping, so ';'.join()
 # is an exact inverse for every possible cell — including the `~WI-013` SOFT
@@ -164,6 +169,12 @@ DELIVERABLE_PREFIX = "\n## Deliverable\n\n"
 # returned spec must not refuse, and `--to-specs` starts from a CSV that never
 # had one. (`--verify` round-trips CSV -> specs -> CSV, so it never sees one.)
 HANDBACK_PREFIX = "\n## Handback\n"
+# The body's THIRD section (WI-388): the advisory `## Context` block the intake
+# mint writes into every minted row (pure registry joins). It maps to no CSV
+# column, so this converter READS past it exactly like the Handback note —
+# `--to-csv` must not refuse a minted spec, and `--to-specs` starts from a CSV
+# that never had one.
+CONTEXT_PREFIX = "\n## Context\n"
 # Slug source width: enough of a title to be recognizable in a directory
 # listing, short enough to keep paths sane.
 SLUG_CHARS = 40
@@ -349,10 +360,13 @@ def split_spec(text, where):
 
 
 def parse_deliverable(body, where):
-    """The verbatim Deliverable cell from a spec body (empty when absent)."""
+    """The verbatim Deliverable cell from a spec body (empty when absent).
+    The `## Handback` and `## Context` sections are read past, not carried —
+    neither maps to a CSV column."""
     if body == "":
         return ""
     body = body.partition(HANDBACK_PREFIX)[0]
+    body = body.partition(CONTEXT_PREFIX)[0]
     if body == "":
         return ""
     if not body.startswith(DELIVERABLE_PREFIX) or not body.endswith("\n"):
@@ -478,7 +492,7 @@ def folder_is_authoritative(csv_path):
 # --- file-level operations ---------------------------------------------------
 def load_csv(path):
     """The registry's rows, header-preserving. Refuses a header that is not the
-    declared 17-column schema — a converter that guesses at an unknown shape is
+    declared 18-column schema — a converter that guesses at an unknown shape is
     how a column gets dropped."""
     with Path(path).open(newline="", encoding="utf-8-sig") as handle:
         reader = csv.DictReader(handle)
@@ -492,7 +506,7 @@ def load_csv(path):
 
 
 def write_csv(path, rows):
-    """Write `rows` back as the 17-column registry: QUOTE_MINIMAL, LF."""
+    """Write `rows` back as the 18-column registry: QUOTE_MINIMAL, LF."""
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", encoding="utf-8", newline="\n") as handle:
