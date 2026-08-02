@@ -273,7 +273,7 @@
 #
 #   cli                   90   deliberate
 #   link-rebase            1   deliberate
-#   spine-loader          20   deliberate
+#   spine-loader          21   deliberate
 #   declared-file         12   deliberate
 #   markdown-table        11   deliberate
 #   git-wrapper            7   deliberate
@@ -447,7 +447,7 @@ d298066d8071  project-trajectory/scripts/agent_common.py == project-trajectory/s
 d47d5975c21b  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/schedule.py
 f800f0c60265  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/schedule.py
 
-# --- spine-loader (20 blocks) ------------------------------------
+# --- spine-loader (21 blocks) ------------------------------------
 # disposition: deliberate
 # spine-registry loaders (load_csv/refs, the SR/LLR/TC/IF/OI row filters,
 # the draft-heading scan). Several carry an explicit in-code note -
@@ -460,6 +460,10 @@ f800f0c60265  project-trajectory/scripts/check_trajectory.py == project-trajecto
 # files, so the draft-heading-scan block grew to span the pair —
 # 5a474f5d87b5 re-fingerprinted to e933a42ec7f5, same class, count 20
 # unchanged.
+# WI-408 (2026-08-02): sn_all_ids — the SN id-universe scrape, extracted
+# to a NAMED twin in both files so the third SN policy duplicate has a
+# test_rule_sync pin like its siblings (WI-401 REVIEW-A finding 2). One
+# new block (5d6159709c2c), same class, count 20 -> 21.
 fd8bed87fb54  project-trajectory/scripts/agent_loop.py == project-trajectory/scripts/check_trajectory.py
 aa845026a358  project-trajectory/scripts/check_flows.py == project-trajectory/scripts/plan_coverage.py
 84e2717e93b1  project-trajectory/scripts/check_perf.py == project-trajectory/scripts/gen_release_checklist.py
@@ -471,6 +475,7 @@ bea18e2ff5f7  project-trajectory/scripts/derive_gate.py == project-trajectory/sc
 019630ddf2c7  project-trajectory/scripts/derive_gate.py == project-trajectory/scripts/trace.py
 1177b53ad58e  project-trajectory/scripts/derive_gate.py == project-trajectory/scripts/trace_text.py
 9de6491460d5  project-trajectory/scripts/derive_gate.py == project-trajectory/scripts/trace.py
+5d6159709c2c  project-trajectory/scripts/derive_gate.py == project-trajectory/scripts/trace.py
 e933a42ec7f5  project-trajectory/scripts/derive_gate.py == project-trajectory/scripts/trace.py
 3de7dcefd27c  project-trajectory/scripts/derive_gate.py == project-trajectory/scripts/trace.py
 b455a7e5955d  project-trajectory/scripts/derive_gate.py == project-trajectory/scripts/trace.py

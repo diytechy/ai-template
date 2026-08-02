@@ -195,6 +195,36 @@ def test_sn_draft_ids_agrees():
         assert TRACE.sn_draft_ids(text) == GATE.sn_draft_ids(text), text
 
 
+def test_sn_all_ids_agrees():
+    # WI-408 (WI-401 REVIEW-A finding 2): the SN id-UNIVERSE scrape is the third
+    # SN policy duplicate in the pair — both files decide WHICH ids the draft and
+    # coverage rules run over with the same whole-text scrape, and it was the one
+    # duplicate the WI-401 "both surfaces read the same state" promise rested on
+    # that no pin held. If the two scrapes diverge, the gate and the itemized
+    # listing can disagree about which ids exist — the exact WI-099 class the
+    # sn_cited_ids pin exists to prevent. Pin the parse equivalent across prose
+    # mentions, table rows, draft sections, -000 placeholders, and empty text.
+    texts = [
+        "",
+        "SN-001 mentioned in prose, no table row at all\n",
+        "| SN-002 | a table row |\n\n## Draft\n\nSN-003\n",
+        "SN-000 placeholder only\n",
+        "## Ratified\n\nSN-004 twice SN-004, then SN-005.\nAnd SN-006#frag.\n",
+        "no ids here\n",
+    ]
+    for text in texts:
+        assert TRACE.sn_all_ids(text) == GATE.sn_all_ids(text), text
+    # Semantics pins: the scrape is WHOLE-TEXT — a prose-mentioned id is in the
+    # universe exactly like a table row (the §2.1 sharp edge: ratified + uncited
+    # means the coverage rung caps the gate at G0). Draft-section ids are
+    # included (the draft/coverage split happens later, on sn_draft_ids); only
+    # -000 placeholders are excluded.
+    assert GATE.sn_all_ids("prose SN-010\n## Draft\nSN-011 and SN-000\n") == {
+        "SN-010",
+        "SN-011",
+    }
+
+
 def test_sn_cited_ids_agrees():
     # WI-401: the SN-coverage rung made SR SN-Refs a GATE input, so "which SN ids
     # do the SRs cite" is policy duplicated across the pair — trace.py's

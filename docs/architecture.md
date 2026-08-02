@@ -639,6 +639,7 @@ Contracts (interfaces): IF-050, IF-051
 | `is_verified(row)` | The terminal `Verified` state, matched case-insensitively — the SAME rule as |  |
 | `llr_exempt(row)` | SR Verification method in LLR_EXEMPT, matched on the stripped cell. |  |
 | `phase_num(row)` | The integer a row's free-form `Phase` cell digit-parses to (`v2`->2, `2`->2); |  |
+| `sn_all_ids(text)` | The SN id UNIVERSE: every `SN-###` token anywhere in stakeholder-needs.md |  |
 | `sn_draft_ids(text)` | Draft SN ids (section-as-state §4a): every SN-### under a heading whose text |  |
 | `sn_cited_ids(srs)` | Every SN id cited by >=1 SR row's `SN-Refs` cell — the coverage set the |  |
 | `sr_gate(sr, has_llr, has_tc)` | The gate an SR row has reached, from its Status + whether it is decomposed. |  |
@@ -990,6 +991,7 @@ Contracts (interfaces): IF-001, IF-021, IF-042
 | `tc_citation_findings(tcs, spine_ids, ifs)` | Every TC-`Verifies` orphan rule, as ``[(at_fault_id, finding), ...]``. |  |
 | `placeholder_findings(label, raw_rows)` | Leftover template example rows (ids ending '-000') in one registry. |  |
 | `scan_sn_placeholders(sn_md)` | Sorted unique '-000' SN ids still present in stakeholder-needs.md (if it exists). |  |
+| `sn_all_ids(text)` | The SN id UNIVERSE: every `SN-###` token anywhere in stakeholder-needs.md |  |
 | `sn_draft_ids(text)` | The set of Draft SN ids in stakeholder-needs.md `text` (section-as-state): |  |
 | `sn_cited_ids(srs)` | Every SN id cited by >=1 SR row's `SN-Refs` cell — the coverage set the |  |
 | `sn_integrity_findings(sn_text)` | Duplicate-id protection for the SN tier — the one tier stored as prose, |  |

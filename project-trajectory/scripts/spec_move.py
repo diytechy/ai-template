@@ -257,7 +257,17 @@ def _place_moved_file(root, src_rel, dest_rel, new_text):
     with a plain rename as the fallback for an untracked file or a non-repo
     tree — or, with `new_text`, a rewrite-on-the-way move (write the new text
     at the destination, remove the source) for callers like the handback whose
-    return changes the spec's own content. A refusal string or None."""
+    return changes the spec's own content. A refusal string or None.
+
+    Both arms end by `git add`ing the destination, and for the `git mv` arm
+    that add is THE FIX for this module's first field defect (WI-408): `git mv`
+    moves the working-tree file but stages the rename from the INDEX blob, so
+    a source carrying unstaged edits — a worker who has just filled the spec's
+    `## Deliverable` and then runs the close move — had those edits silently
+    dropped from the staged copy (WI-401's close, 2026-08-02; caught only
+    because rename-similarity read 100% where the edit should have lowered
+    it). Re-adding the destination stages its WORKING-TREE content, so an
+    unstaged edit rides the move instead of vanishing."""
     src = Path(root) / src_rel
     dest = Path(root) / dest_rel
     if new_text is None:
@@ -267,18 +277,18 @@ def _place_moved_file(root, src_rel, dest_rel, new_text):
                 src.replace(dest)
             except OSError as exc:
                 return "cannot move {} -> {}: {}".format(src_rel, dest_rel, exc)
-        return None
-    try:
-        with dest.open("w", encoding="utf-8", newline="") as fh:
-            fh.write(new_text)
-    except OSError as exc:
-        return "cannot write {}: {}".format(dest_rel, exc)
-    code, _out = ac.git(root, "rm", "-q", "--", src_rel)
-    if code != 0:
+    else:
         try:
-            src.unlink()
+            with dest.open("w", encoding="utf-8", newline="") as fh:
+                fh.write(new_text)
         except OSError as exc:
-            return "cannot remove the moved source {}: {}".format(src_rel, exc)
+            return "cannot write {}: {}".format(dest_rel, exc)
+        code, _out = ac.git(root, "rm", "-q", "--", src_rel)
+        if code != 0:
+            try:
+                src.unlink()
+            except OSError as exc:
+                return "cannot remove the moved source {}: {}".format(src_rel, exc)
     ac.git(root, "add", "--", dest_rel)
     return None
 

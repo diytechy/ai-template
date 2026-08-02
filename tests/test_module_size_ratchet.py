@@ -459,7 +459,13 @@ BASELINE = {
     # grandfathering stance that keeps phase_num digit-extract), which is the
     # reason a successor must not "simplify" the rule back to the parse.
     # Reviewed bump, log 2026-08-02.
-    "trace.py": 2919,
+    # +11 (2919 -> 2930), WI-408 (WI-401 REVIEW-A finding 2): sn_all_ids — the
+    # SN id-universe scrape, previously an inline one-liner duplicated in
+    # derive_gate.py with NO test_rule_sync pin, extracted to a named twin so
+    # the third SN policy duplicate is pinned like its siblings. The growth is
+    # the docstring recording the whole-text sharp edge (a ratified prose
+    # mention caps the gate at G0). Reviewed bump, log 2026-08-02.
+    "trace.py": 2930,
     # +132 (1926 -> 2058; the last +10 is the F4 BOM hardening: read_rows utf-8-sig + git-show strips), WI-316: staged_spine_findings — the amend-without-
     # flip warn (--staged): content cells of a Verified spine row changed
     # without the Modified marker, suppressed when the owning SR flips in the

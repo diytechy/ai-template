@@ -739,6 +739,17 @@ def scan_sn_placeholders(sn_md):
 _HEADING_RE = re.compile(r"^\s{0,3}#{1,6}\s+(.*)")
 
 
+def sn_all_ids(text):
+    """The SN id UNIVERSE: every `SN-###` token anywhere in stakeholder-needs.md
+    `text`, whole-text — a prose mention counts exactly like a table row, which
+    is the sharp edge registry-machinery-reference §2.1 records (ratified +
+    uncited caps the derived gate at G0 since WI-401). `-000` placeholders
+    excluded. Duplicated in derive_gate.py per the F5 rule; pinned equal by
+    test_rule_sync (WI-408), because this scrape decides which ids BOTH
+    surfaces run their rules over."""
+    return {u for u in re.findall(r"\bSN-\d+\b", text) if not is_example(u)}
+
+
 def sn_draft_ids(text):
     """The set of Draft SN ids in stakeholder-needs.md `text` (section-as-state):
     every SN-### that appears under a heading whose text contains "draft". `-000`
@@ -1854,7 +1865,7 @@ def load_registries(docs):
         # heading regexes) and one stray cp1252 byte must degrade, not crash
         # the gate chain (the C8 convention, applied to content reads too).
         sn_text = sn_md.read_text(encoding="utf-8-sig", errors="replace")
-        sn_ids = {u for u in re.findall(r"\bSN-\d+\b", sn_text) if not is_example(u)}
+        sn_ids = sn_all_ids(sn_text)
         # Section-as-state maturity (derived-gate §4a): SNs under a "draft" heading
         # are unratified (G0) and exempt from the "SN with no SR" child rule below.
         sn_draft = sn_draft_ids(sn_text)
