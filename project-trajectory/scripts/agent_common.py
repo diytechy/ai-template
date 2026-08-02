@@ -1118,11 +1118,13 @@ def git(root, *args):
     return proc.returncode, out
 
 
-# WI-240: the harness/hook banner shape a structured failure prints — a
-# `=== <step> : <cmd> ===` banner per step, then that step's output, then a
-# `  {STATUS}  <step>  <detail>` line (check.py --run-steps / the check summary).
+# WI-240 -> WI-398: the harness/hook banner shape a structured failure prints —
+# a `=== <step> : <cmd> ===` banner per step, then that step's output, then a
+# `  {STATUS}  <step>  <detail>` line — PLUS check.py's closing summary block,
+# which re-prints every step's status after a bare `====...` rule at any --jobs.
 _FAILTAIL_FAIL_RE = re.compile(r"^\s*FAIL\s")
 _FAILTAIL_BANNER_RE = re.compile(r"^\s*=== ")
+_FAILTAIL_RULE_RE = re.compile(r"^\s*={8,}\s*$")
 
 
 def _failure_tail(out, budget=600):
@@ -1130,29 +1132,70 @@ def _failure_tail(out, budget=600):
 
     Park/quarantine/journal details once kept only the leading 200 chars — the
     HEAD — so a multi-step hook failure journaled the FIRST (passing) banner and
-    cut the actual error (the WI-229 blocked-disposition loop: three runs of
-    `disposition commit failed: === derived-gate : ...python.exe ...` while the
-    real `check_trajectory: ERROR - blocked-ref ...` / `  FAIL  trajectory` was
-    off the end). This prefers the LAST `  FAIL  <step>` block — that step's
-    `=== <step> :` banner through its FAIL line — else the TAIL of the output;
-    always tail-bounded, so the error survives even when the banner is long."""
+    cut the actual error (the WI-229 blocked-disposition loop). WI-240's answer
+    — the LAST `  FAIL  <step>` line, walked back to the nearest banner — broke
+    on a full check.py run: the closing summary RE-prints every step's status,
+    so the last FAIL was always the summary copy, the nearest banner above it
+    the LAST step's, and the extracted window was summary rows — the failing
+    step's own output structurally never reached a refusal, at any --jobs
+    (WI-398; the WI-387 refresh red cost three lost diagnoses of one failure).
+
+    Now the FIRST `  FAIL  <step>` line names the failing step, and the window
+    is that step's OWN `=== <step> :` banner down to the next banner or the
+    summary rule, with the anchoring FAIL line appended when it sits outside
+    the window (the --jobs 1 shape, where statuses print only in the summary).
+    No banner names the step -> the nearest banner above that FAIL line; no
+    FAIL marker at all -> the TAIL of the output; always tail-bounded, so the
+    error survives even when the window is long."""
     text = (out or "").rstrip()
     if not text:
         return ""
     lines = text.splitlines()
-    fail_idx = None
-    for i, line in enumerate(lines):
-        if _FAILTAIL_FAIL_RE.match(line):
-            fail_idx = i
+    fail_idx = next(
+        (i for i, ln in enumerate(lines) if _FAILTAIL_FAIL_RE.match(ln)), None
+    )
     if fail_idx is None:
         return text[-budget:].lstrip()
-    start = 0
-    for j in range(fail_idx - 1, -1, -1):
-        if _FAILTAIL_BANNER_RE.match(lines[j]):
-            start = j
+    block = _own_step_window(lines, fail_idx)
+    if block is None:
+        # No banner names the step (a bare git/tool failure): the WI-240
+        # window, anchored on the FIRST FAIL rather than the summary's copy.
+        start = 0
+        for j in range(fail_idx - 1, -1, -1):
+            if _FAILTAIL_BANNER_RE.match(lines[j]):
+                start = j
+                break
+        block = lines[start : fail_idx + 1]
+    return "\n".join(block)[-budget:].lstrip()
+
+
+def _own_step_window(lines, fail_idx):
+    """The failing step's OWN banner-to-end block, or None (`_failure_tail`).
+
+    `lines[fail_idx]` is a `  FAIL  <step>  <detail>` line; the window is the
+    first `=== <step> : ` banner (startswith, not an interpolated regex — step
+    names carry regex metacharacters, "tests+coverage") down to the next banner
+    or the summary rule, with the anchoring FAIL line appended when it sits
+    outside the window (the --jobs 1 shape). None when the line carries no step
+    name or no banner names it, so the caller keeps its bounded fallback."""
+    parts = lines[fail_idx].split()
+    if len(parts) < 2:
+        return None
+    marker = "=== {} : ".format(parts[1])
+    start = next(
+        (j for j, ln in enumerate(lines) if ln.lstrip().startswith(marker)), None
+    )
+    if start is None:
+        return None
+    end = len(lines)
+    for j in range(start + 1, len(lines)):
+        if _FAILTAIL_BANNER_RE.match(lines[j]) or _FAILTAIL_RULE_RE.match(lines[j]):
+            end = j
             break
-    block = "\n".join(lines[start : fail_idx + 1])
-    return block[-budget:].lstrip()
+    block = lines[start:end]
+    if not start <= fail_idx < end:
+        block = block + [lines[fail_idx]]
+    return block
 
 
 def head_sha(root):

@@ -69,6 +69,81 @@ def test_failure_tail_no_fail_marker_is_bounded_tail_not_head():
     assert _failure_tail(None) == ""
 
 
+# --- WI-398: the refusal carries the failing STEP's output, never the summary ---
+
+# A full `check.py --jobs 0` red, the `_run_bar` shape: each step's captured
+# output prints under the lane lock with its own inline status line, and then
+# the closing summary block RE-prints every step's status after a `====` rule.
+# The WI-240 anchor (LAST `  FAIL` line) always landed in that summary copy, so
+# the window walked back to the LAST step's banner and the refusal carried
+# summary rows instead of the failing step's own output — the WI-387 refresh
+# red cost three lost diagnoses of one failure exactly this way.
+WI398_JOBS_BAR_OUT = (
+    "\n=== format : python -m ruff format --check . ===\n"
+    "74 files already formatted\n"
+    "  PASS  format           0.4s\n"
+    "\n=== tests+coverage : .venv/bin/python -m pytest -q -m smoke ===\n"
+    "..F..F.\n"
+    "=========================== short test summary info ===========================\n"
+    "FAILED tests/test_refresh.py::test_the_lost_diagnosis - AssertionError: gone\n"
+    "FAILED tests/test_refresh.py::test_the_other_red - AssertionError\n"
+    "2 failed, 5 passed in 3.2s\n"
+    "  FAIL  tests+coverage   exit 1 (3.4s)\n"
+    "\n=== trajectory : python check_trajectory.py --root . ===\n"
+    "check_trajectory: OK (58 rows)\n"
+    "  PASS  trajectory       0.3s\n"
+    "\n" + "=" * 56 + "\n"
+    "Check summary (gate G3, tier smoke):\n"
+    "  PASS  format           0.4s\n"
+    "  FAIL  tests+coverage   exit 1 (3.4s)\n"
+    "  PASS  trajectory       0.3s\n" + "=" * 56 + "\n"
+    "RESULT: FAIL (1 step(s) failed)\n"
+)
+
+
+def test_failure_tail_extracts_the_failing_steps_own_output_not_the_summary():
+    tail = _failure_tail(WI398_JOBS_BAR_OUT)
+    # The step's OWN output — the failing test names a re-run had to recover.
+    assert "FAILED tests/test_refresh.py::test_the_lost_diagnosis" in tail
+    assert "FAILED tests/test_refresh.py::test_the_other_red" in tail
+    # ... still names the failing step and its exit ...
+    assert "  FAIL  tests+coverage" in tail
+    # ... and NEVER the summary re-print or a later passing step's window.
+    assert "Check summary" not in tail
+    assert "RESULT: FAIL" not in tail
+    assert "check_trajectory: OK" not in tail
+
+
+# The same red at `--jobs 1`: step output STREAMS with no inline status line, so
+# the only `  FAIL` markers in the whole output are the summary rows. The window
+# must still be the failing step's own banner-to-end block (found by the NAME the
+# summary row carries), with that row appended so the refusal names the step.
+WI398_SEQ_BAR_OUT = (
+    "\n=== format : python -m ruff format --check . ===\n"
+    "74 files already formatted\n"
+    "\n=== tests+coverage : .venv/bin/python -m pytest -q -m smoke ===\n"
+    "..F.\n"
+    "FAILED tests/test_refresh.py::test_the_lost_diagnosis - AssertionError: gone\n"
+    "1 failed, 3 passed in 2.1s\n"
+    "\n=== trajectory : python check_trajectory.py --root . ===\n"
+    "check_trajectory: OK (58 rows)\n"
+    "\n" + "=" * 56 + "\n"
+    "Check summary (gate G3, tier smoke):\n"
+    "  PASS  format           0.4s\n"
+    "  FAIL  tests+coverage   exit 1 (2.3s)\n"
+    "  PASS  trajectory       0.3s\n" + "=" * 56 + "\n"
+    "RESULT: FAIL (1 step(s) failed)\n"
+)
+
+
+def test_failure_tail_reaches_the_step_output_when_statuses_only_print_in_summary():
+    tail = _failure_tail(WI398_SEQ_BAR_OUT)
+    assert "FAILED tests/test_refresh.py::test_the_lost_diagnosis" in tail
+    assert "  FAIL  tests+coverage" in tail  # the anchoring row rides along
+    assert "Check summary" not in tail
+    assert "check_trajectory: OK" not in tail
+
+
 # --- the interpreter resolvers (WI-285/WI-286's surviving halves) ---------------
 
 
