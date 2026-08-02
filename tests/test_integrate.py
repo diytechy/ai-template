@@ -1609,7 +1609,18 @@ import sys
 pathlib.Path("..", "harness-order.txt").open("a", encoding="utf-8").write(
     "check-red\\n"
 )
+print("=== format : stub ruff format --check ===")
+print("  PASS  format           0.1s")
+print("=== tests+coverage : stub pytest -q ===")
+print("FAILED tests/test_widget.py::test_value - AssertionError: VALUE")
+print("1 failed, 3 passed in 0.2s")
 print("  FAIL  tests+coverage   exit 1 (0.2s)")
+print("=" * 56)
+print("Check summary (gate G3, tier smoke):")
+print("  PASS  format           0.1s")
+print("  FAIL  tests+coverage   exit 1 (0.2s)")
+print("=" * 56)
+print("RESULT: FAIL (1 step(s) failed)")
 sys.exit(1)
 """
 
@@ -1867,6 +1878,38 @@ def test_a_red_refresh_bar_commits_nothing_and_leaves_the_branch_clean(tmp_path)
     assert _git(wt, "status", "--porcelain").strip() == ""
     ready, _why = integ._merge_ready(root, "wi-401")
     assert not ready
+
+
+def test_a_red_refusal_carries_the_steps_own_output_and_names_the_kept_log(tmp_path):
+    # WI-398, driven end-to-end. Two halves of one loss: (1) the refusal's
+    # bounded tail must be the failing STEP's own output — not check.py's
+    # closing summary re-print, which is all the WI-240 anchor could ever reach
+    # on a full bar; (2) the undo below resets the very tree that produced the
+    # evidence, so the FULL bar output must survive OUTSIDE the lane worktree,
+    # at a path the refusal message itself names. The WI-387 red cost three
+    # lost diagnoses of one failure because neither half held.
+    root = station_repo(tmp_path, check_src=STUB_CHECK_RED)
+    wt = _lane(root, "wi-401")
+
+    sha, refusal = integ.refresh(root, "wi-401", "smoke")
+    assert sha is None
+    # (1) the failing step's own output reached the refusal text ...
+    assert "FAILED tests/test_widget.py::test_value" in refusal
+    assert "  FAIL  tests+coverage" in refusal
+    # ... and the summary re-print did not (the kept file holds it instead).
+    assert "Check summary" not in refusal
+    assert "RESULT: FAIL" not in refusal
+    # (2) the message NAMES the retained full log, outside the lane worktree,
+    # and the file really holds the WHOLE bar output — summary included.
+    kept = root / "out" / "run-logs" / "refresh-refused-wi-401.log"
+    assert str(kept) in refusal
+    text = kept.read_text(encoding="utf-8")
+    assert "FAILED tests/test_widget.py::test_value" in text
+    assert "Check summary" in text and "RESULT: FAIL" in text
+    # The evidence home survives the undo and leaves the lane clean: the next
+    # refresh (or a hand rebuild) starts from the work tip, evidence in hand.
+    assert _git(wt, "status", "--porcelain").strip() == ""
+    assert _git(root, "status", "--porcelain").strip() == ""  # gitignored home
 
 
 def test_the_refresh_refuses_rather_than_discard_uncommitted_lane_work(tmp_path):

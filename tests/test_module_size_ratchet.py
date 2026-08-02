@@ -853,7 +853,16 @@ BASELINE = {
     # Identical text to the other two F5 copies by construction
     # (tests/test_wi_loader_sync.py). Reviewed bump, log 2026-08-01. Re-stamp
     # down with WI-280.
-    "agent_common.py": 1741,
+    # +43 (1741 -> 1784), WI-398: `_failure_tail` re-anchored on the failing
+    # step's OWN banner-to-end window (found by the name the FIRST FAIL line
+    # carries, extracted as `_own_step_window` — the C901 ratchet's preferred
+    # shape) instead of the LAST FAIL line — which check.py's closing summary
+    # re-prints at any --jobs, so the old window was structurally always
+    # summary rows and never the step's error text (three lost diagnoses of
+    # one WI-387 red). Roughly half the bump is the docstring history that
+    # keeps a successor from "simplifying" back to last-FAIL. Reviewed bump,
+    # log fragment 2026-08-01 (WI-398). Re-stamp down with WI-280.
+    "agent_common.py": 1784,
     # NEW ENTRY, WI-387 — integrate.py crossed THRESHOLD (1418 -> 1588) adding
     # the third terminal outcome. The extraction the ratchet asks for was TAKEN
     # FIRST, not argued away: `hand_back` and `quarantine`, the largest unit and
@@ -950,7 +959,15 @@ BASELINE = {
     # both ways in tests/test_integrate.py: the relinked crash re-cuts, the
     # non-relink .md edit still convicts. Reviewed bump, log fragment
     # 2026-08-01 (WI-393); re-stamp DOWN with WI-390's deletions.
-    "integrate.py": 1946,
+    # +31 (1946 -> 1977), WI-398: `_keep_refused_output` — a refused refresh
+    # retains its FULL output at root/out/run-logs/refresh-refused-<branch>.log
+    # (outside the lane worktree, so the undo's reset and `_shed_residue`
+    # cannot sweep the evidence) and the refusal message names the path. One
+    # file per branch, overwritten; deliberately NO rotation/indexing (the
+    # WI-398 scope guard), stated in the docstring that is most of the bump.
+    # Reviewed bump, log fragment 2026-08-01 (WI-398). Re-stamp down with
+    # WI-280.
+    "integrate.py": 1977,
 }
 
 

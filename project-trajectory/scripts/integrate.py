@@ -1507,6 +1507,32 @@ def _refresh_preflight(root, branch):
     return wt, work_tip, None
 
 
+def _keep_refused_output(root, branch, detail):
+    """Retain a refused refresh's FULL output; returns the sentence naming it.
+
+    The refusal message carries only `_failure_tail`'s bounded window, and the
+    undo resets the very tree that produced the evidence — so before WI-398 a
+    red's full diagnosis survived NOWHERE (the WI-387 refresh red was diagnosed
+    three times and lost three times, each refusal all that remained). One
+    retained file per branch in the ROOT checkout's gitignored `out/run-logs/`
+    home — outside the lane worktree, so neither the reset nor `_shed_residue`
+    can sweep it, and overwritten by the branch's next refusal. Deliberately no
+    rotation, indexing or pruning (WI-398's scope guard): the latest refusal is
+    the one being fixed. Fail-soft — a log that cannot be written must not mask
+    the refusal it documents — and empty output keeps nothing (a message naming
+    an empty file would send the reader to a second dead end)."""
+    if not (detail or "").strip():
+        return ""
+    name = re.sub(r"[^A-Za-z0-9._-]", "-", branch)
+    path = Path(root) / "out" / "run-logs" / "refresh-refused-{}.log".format(name)
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(detail, encoding="utf-8", errors="replace", newline="\n")
+    except OSError:
+        return ""
+    return "\n(full output kept at {})".format(path)
+
+
 def refresh(root, branch, tier):
     """The §A2 station refresh. Returns `(branch tip sha, None)` or `(None, refusal)`.
 
@@ -1525,7 +1551,9 @@ def refresh(root, branch, tier):
     retry safe (a second merge stacked on the first would conflict on
     docs/log.md's appended end), and it is why a failed refresh parks nothing
     for a human to unpick. Reproduce a red by running the refresh again - it is
-    deterministic given the same trunk.
+    deterministic given the same trunk. The refusal carries the failing step's
+    own output window and NAMES the retained full log (`_keep_refused_output`),
+    because the undo erases the tree that produced the evidence (WI-398).
 
     Called from TWO places, deliberately the same code: drive.py runs it
     speculatively OUTSIDE the merge slot (the ruled DECISION 4 - the 11-minute
@@ -1544,8 +1572,11 @@ def refresh(root, branch, tier):
     def undo(reason, detail):
         _shed_residue(wt, baseline, baseline_dirs)
         ac.git(wt, "reset", "--hard", work_tip)
-        return None, "refresh REFUSED for {} - {}:\n{}".format(
-            branch, reason, ac._failure_tail(detail)
+        return None, "refresh REFUSED for {} - {}:\n{}{}".format(
+            branch,
+            reason,
+            ac._failure_tail(detail),
+            _keep_refused_output(root, branch, detail),
         )
 
     trunk = _head(root)
