@@ -115,6 +115,7 @@ from pathlib import Path
 
 import agent_common as ac
 import score_reviews
+import spec_move
 
 SCRIPTS = Path(__file__).resolve().parent
 WORK = "docs/work"
@@ -356,13 +357,18 @@ def _abandoned_claim(root, wi_id, branch):
         trunk has; and
       * that one commit IS THE MOVE THIS CLAIM WOULD MAKE, and nothing else:
         it ADDS this WI's spec under `active/<branch>/`, and every path it
-        touches is that spec's move or a DECLARED generated artifact. Being one
+        touches is that spec's move, a DECLARED generated artifact, or an
+        `.md` MODIFICATION that is byte-for-byte the inbound relink of that
+        move (WI-393: the claim's move is the link-aware ritual, so its commit
+        carries the redirect writes — `_relinked_exactly` re-derives them from
+        the commit's own move pair and `spec_move.expected_relink`; an edit
+        the oracle cannot reproduce is somebody's work). Being one
         commit ahead proves nothing about what the commit carries - round 1
         drove a one-commit branch adding `real-work.txt` - and "only
         bookkeeping surfaces" was still too wide: round 2 drove a commit adding
         only `docs/log.d/WI-401-hours.md` being convicted and the fragment
-        lost. The claim writes a spec move plus its regeneration, so that is
-        the whole of what a claim commit may contain.
+        lost. The claim writes a spec move plus its regeneration and relinks,
+        so that is the whole of what a claim commit may contain.
 
     Any branch failing any of the four is a real collision and still refuses.
 
@@ -383,25 +389,72 @@ def _abandoned_claim(root, wi_id, branch):
         return False
     if ac.git(root, "merge-base", "--is-ancestor", tip + "^1", head)[0] != 0:
         return False
+    delta = _claim_delta(root, tip, branch, wi_id)
+    if delta is None:
+        return False
+    moved_in, src, dest, relinked = delta
+    # A commit that regenerated artifacts but moved no spec is not a claim.
+    if not moved_in:
+        return False
+    return not relinked or _relinked_exactly(root, tip, src, dest, relinked)
+
+
+def _claim_delta(root, tip, branch, wi_id):
+    """Classify the candidate claim commit's own diff, or None to convict.
+
+    `(moved_in, src, dest, relinked)` where `moved_in` says the claimed spec
+    was ADDED under active/<branch>/, src/dest are the commit's own move pair
+    (the D under queued/ and that A), and `relinked` is every other `.md`
+    MODIFICATION — the paths only the WI-393 oracle may excuse. Any path
+    outside those shapes is somebody's work and the whole read is None."""
     # --no-renames because the claim's `git mv` would otherwise arrive as ONE
     # rename record and hide the queued side of the move; split, both paths are
     # named and each is judged on its own.
     code, out = ac.git(root, "diff", "--name-status", "--no-renames", tip + "^1", tip)
     if code != 0:
-        return False  # a diff nobody could read is not evidence of anything
+        return None  # a diff nobody could read is not evidence of anything
     generated = _generated_paths(root)
     claimed = "{}/{}/{}-".format(ACTIVE, branch, wi_id)
     queued = "{}/queued/{}-".format(WORK, wi_id)
-    moved_in = False
+    moved_in, src, dest, relinked = False, None, None, []
     for status, path in _name_status(out):
         if path.startswith(claimed):
-            moved_in = moved_in or status.startswith("A")
-        elif not path.startswith(queued) and not any(
-            path == g.rstrip("/") or path.startswith(g) for g in generated
-        ):
+            if status.startswith("A"):
+                moved_in, dest = True, path
+        elif path.startswith(queued):
+            if status.startswith("D"):
+                src = path
+        elif any(path == g.rstrip("/") or path.startswith(g) for g in generated):
+            continue
+        elif status.startswith("M") and path.endswith(".md"):
+            relinked.append(path)
+        else:
+            return None
+    return moved_in, src, dest, relinked
+
+
+def _relinked_exactly(root, tip, src, dest, paths):
+    """Are these `.md` modifications EXACTLY the inbound relink the claim's own
+    move would write (WI-393)? The remap is re-derived from the commit's own
+    A/D pair, and each path's new content must equal `spec_move.expected_relink`
+    over its parent content — byte-for-byte, so the clause excuses only what the
+    ritual provably wrote and a hand edit riding in a claim-shaped commit still
+    convicts. Both sides are read through the same `git show` decode, so the
+    comparison is fair on any checkout's line endings."""
+    if not (src and dest):
+        return False
+    remap = {src: dest}
+    for path in paths:
+        code, old = ac.git(root, "show", "{}^1:{}".format(tip, path))
+        if code != 0:
             return False
-    # A commit that regenerated artifacts but moved no spec is not a claim.
-    return moved_in
+        code, new = ac.git(root, "show", "{}:{}".format(tip, path))
+        if code != 0:
+            return False
+        doc_dir = path.rsplit("/", 1)[0] if "/" in path else ""
+        if spec_move.expected_relink(old, doc_dir, remap) != new:
+            return False
+    return True
 
 
 def _drop_abandoned(root, branch):
@@ -543,14 +596,17 @@ def claim(root, wi_id, branch):
     spec = _queued_spec(root, wi_id)
     dest_dir = root / ACTIVE / branch
     dest_dir.mkdir(parents=True, exist_ok=True)
-    code, out = ac.git(
+    # The move is the link-aware ritual (WI-393), not a bare `git mv`: the
+    # spec's own relative links rebase onto active/<branch>/ and every inbound
+    # link follows the move, all inside this one claim commit — the 2026-08-01
+    # claim that broke the backlog plan's row links is the driven instance.
+    _touched, refusal = spec_move.move_spec(
         root,
-        "mv",
-        str(spec.relative_to(root)),
-        str((dest_dir / spec.name).relative_to(root)),
+        spec.relative_to(root).as_posix(),
+        (dest_dir / spec.name).relative_to(root).as_posix(),
     )
-    if code != 0:
-        return fail("git mv failed: {}".format(out))
+    if refusal:
+        return fail("the claim move failed: {}".format(refusal))
     # The claim changes the registry, which is a generated-artifact input, so
     # the regeneration folds into the claim commit (RULING-6: claims and
     # regeneration are the one bookkeeping lane) - otherwise the claim is

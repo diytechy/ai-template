@@ -72,6 +72,7 @@ graph LR
     m_scripts_run_menu["scripts/run_menu — The run capability menu — one launcher that pre…"]
     m_scripts_schedule["scripts/schedule — Derive the dependency-ready WI frontier and its…"]
     m_scripts_score_reviews["scripts/score_reviews — The substance scorer — score a review verdict b…"]
+    m_scripts_spec_move["scripts/spec_move — spec_move.py — the link-aware spec-move ritual:…"]
     m_scripts_subagent_gate["scripts/subagent_gate — Subagent spawn gate — deny-by-default fan-out c…"]
     m_scripts_trace["scripts/trace — Traceability join + orphan report for the SN->S…"]
     m_scripts_trace_text["scripts/trace_text — Spine-row TEXT rules and the row primitives the…"]
@@ -107,9 +108,11 @@ graph LR
     m_scripts_gen_trajectory --> m_scripts_traj_views
     m_scripts_handback --> m_scripts_agent_common
     m_scripts_handback --> m_scripts_integrate
+    m_scripts_handback --> m_scripts_spec_move
     m_scripts_integrate --> m_scripts_agent_common
     m_scripts_integrate --> m_scripts_schedule
     m_scripts_integrate --> m_scripts_score_reviews
+    m_scripts_integrate --> m_scripts_spec_move
     m_scripts_plan_artifacts --> m_scripts_wi_convert
     m_scripts_plan_runner --> m_scripts_agent_route
     m_scripts_plan_runner --> m_scripts_agent_session
@@ -117,6 +120,7 @@ graph LR
     m_scripts_plan_runner --> m_scripts_plan_briefs
     m_scripts_plan_runner --> m_scripts_plan_coverage_step
     m_scripts_plan_runner --> m_scripts_plan_round
+    m_scripts_spec_move --> m_scripts_agent_common
     m_scripts_trace --> m_scripts_trace_text
     m_scripts_traj_panels --> m_scripts_traj_graph
     m_scripts_traj_panels --> m_scripts_traj_parse
@@ -745,7 +749,7 @@ Contracts (interfaces): IF-011, IF-024, IF-052, IF-056, IF-071
 
 ### `scripts/handback`
 _handback.py — the two lane closes that are not a merge (concurrency-v2 §A3)._
-Imports (internal): `agent_common`, `integrate`
+Imports (internal): `agent_common`, `integrate`, `spec_move`
 Contracts (interfaces): IF-080
 
 | Public item | Summary | Implements |
@@ -757,7 +761,7 @@ Contracts (interfaces): IF-080
 
 ### `scripts/integrate`
 _integrate.py — the local integrator: the station protocol and its merge slot._
-Imports (internal): `agent_common`, `schedule`, `score_reviews`
+Imports (internal): `agent_common`, `schedule`, `score_reviews`, `spec_move`
 
 | Public item | Summary | Implements |
 |---|---|---|
@@ -916,6 +920,18 @@ Contracts (interfaces): IF-046, IF-047
 | `read_scoreboard(path)` | Parse the scoreboard: ({provider: (substance, rounds)}, [round dict, ...]). |  |
 | `write_scoreboard(path, providers, rounds)` | Write the scoreboard deterministically (LF, providers sorted). |  |
 | `record_round(path, round_info, provider_substance)` | Append a round to the scoreboard and decay the provider tallies. |  |
+| `main(argv)` |  |  |
+
+### `scripts/spec_move`
+_spec_move.py — the link-aware spec-move ritual: move a registry/spec file and_
+Imports (internal): `agent_common`
+
+| Public item | Summary | Implements |
+|---|---|---|
+| `rewrite_text(text, rewrite_target)` | `text` with `rewrite_target(target) -> new\|None` applied to every inline |  |
+| `expected_relink(text, doc_dir, remap)` | What `text` (held at posix directory `doc_dir`) WOULD say after the |  |
+| `move_spec(root, src_rel, dest_rel, *, new_text)` | THE RITUAL — move `src_rel` to `dest_rel` and keep every repo link true, |  |
+| `archive_dest(src_rel, stamp)` | The spec-of-record archival destination for `src_rel` (the |  |
 | `main(argv)` |  |  |
 
 ### `scripts/subagent_gate`

@@ -438,6 +438,40 @@ def test_claim_moves_the_spec_commits_the_trunk_and_cuts_the_branch(tmp_path, ca
     assert _rev(root, "wi-401") == _rev(root, "HEAD")
 
 
+def test_claim_runs_the_link_aware_move_ritual(tmp_path):
+    """WI-393: the claim's move IS the indivisible ritual (WI-288/WI-353,
+    rehomed in spec_move.py). Driven 2026-08-01: a claim's bare `git mv` broke
+    the backlog plan's inbound row links, and WI-391 REVIEW-A measured a bare
+    move reproducing both halves of the defect. The move, the inbound redirect
+    and the outbound rebase land in the ONE claim commit, so no two-thirds
+    state can reach trunk."""
+    root = claim_repo(tmp_path)
+    spec = root / "docs" / "work" / "queued" / "WI-401-widget.md"
+    spec.write_text(
+        spec.read_text(encoding="utf-8") + "\nSee [the seed](../../../seed.txt).\n",
+        encoding="utf-8",
+        newline="\n",
+    )
+    (root / "docs" / "log.md").write_text(
+        "planned: [WI-401](work/queued/WI-401-widget.md#deliverable)\n",
+        encoding="utf-8",
+        newline="\n",
+    )
+    _commit(root, "link the queued spec", when=T_CODE)
+
+    assert integ.claim(root, "WI-401", "wi-401") == 0
+
+    claimed = root / "docs" / "work" / "active" / "wi-401" / "WI-401-widget.md"
+    text = claimed.read_text(encoding="utf-8")
+    # the moved spec's OWN link resolves from one directory deeper (WI-353)
+    assert "](../../../../seed.txt)" in text
+    # the inbound link follows the move, text untouched, fragment carried (WI-288)
+    log = (root / "docs" / "log.md").read_text(encoding="utf-8")
+    assert "[WI-401](work/active/wi-401/WI-401-widget.md#deliverable)" in log
+    # both rewrites are IN the claim commit — a claim may not leave a dirty trunk
+    assert _git(root, "status", "--porcelain").strip() == ""
+
+
 def crashed_claim(root, wi="WI-401", branch="wi-401"):
     """The state a crash inside the INVERTED claim leaves (WI-387, §A3): the
     branch exists on a claim commit, and trunk never moved onto it.
@@ -466,6 +500,63 @@ def test_a_crashed_claim_leaves_an_orphan_branch_the_next_claim_re_cuts(tmp_path
     assert integ.claim(root, "WI-401", "wi-401") == 0
     assert (root / "docs" / "work" / "active" / "wi-401" / "WI-401-widget.md").is_file()
     assert _rev(root, "wi-401") == _rev(root, "HEAD")
+
+
+def test_a_crashed_claim_that_relinked_docs_is_still_re_cut(tmp_path):
+    """WI-393 x WI-387: the claim commit now carries the relink writes, so the
+    conviction's content fact must recognise them as the claim's OWN — an
+    M-status markdown path whose new content is EXACTLY the redirect this claim
+    would make. Without that clause the ritual would break the crashed-claim
+    re-cut, and a crash between `git branch` and the trunk advance would be
+    back to hand repair."""
+    root = claim_repo(tmp_path)
+    (root / "docs" / "log.md").write_text(
+        "planned: [WI-401](work/queued/WI-401-widget.md)\n",
+        encoding="utf-8",
+        newline="\n",
+    )
+    _commit(root, "link the queued spec", when=T_CODE)
+    crashed_claim(root)
+
+    # trunk rewound: the spec is back in queued/ and the log links it there
+    assert (root / "docs" / "work" / "queued" / "WI-401-widget.md").is_file()
+    assert "work/queued" in (root / "docs" / "log.md").read_text(encoding="utf-8")
+
+    assert integ._abandoned_claim(root, "WI-401", "wi-401")
+    assert integ.claim(root, "WI-401", "wi-401") == 0
+    assert _rev(root, "wi-401") == _rev(root, "HEAD")
+
+
+def test_an_md_edit_that_is_not_the_relink_still_convicts(tmp_path):
+    """The narrowing that keeps the new clause honest: an .md modification the
+    relink oracle cannot reproduce byte-for-byte is somebody's WORK, and the
+    branch holding it is a collision, never an abandoned claim to delete."""
+    root = claim_repo(tmp_path)
+    (root / "docs" / "log.md").write_text(
+        "planned: [WI-401](work/queued/WI-401-widget.md)\n",
+        encoding="utf-8",
+        newline="\n",
+    )
+    _commit(root, "link the queued spec", when=T_CODE)
+    # Forge the exact claim shape — subject, spec move, one commit past trunk —
+    # PLUS a log edit that is not the redirect the claim would have written.
+    _git(root, "checkout", "-q", "-b", "wi-401")
+    (root / "docs" / "work" / "active" / "wi-401").mkdir(parents=True)
+    _git(
+        root,
+        "mv",
+        "docs/work/queued/WI-401-widget.md",
+        "docs/work/active/wi-401/WI-401-widget.md",
+    )
+    (root / "docs" / "log.md").write_text(
+        "rewritten by hand - hours of prose, no link left\n",
+        encoding="utf-8",
+        newline="\n",
+    )
+    _commit(root, integ._claim_subject("WI-401", "wi-401"), when=T_VERDICT)
+    _git(root, "checkout", "-q", "main")
+
+    assert not integ._abandoned_claim(root, "WI-401", "wi-401")
 
 
 def forged_branch(root, subject, files, branch="wi-401"):

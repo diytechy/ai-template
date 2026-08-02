@@ -773,7 +773,12 @@ BASELINE = {
     # the omission this repo learned to fear — a scaffold-surface change that
     # ships without its MAPPING row breaks every fresh scaffold while the kit's
     # own tree stays green). Reviewed bump, log 2026-08-01.
-    "bootstrap.py": 2250,
+    # +7 (2250 -> 2257), WI-393: the scaffold registration of the new sibling
+    # spec_move.py (the link-aware move ritual) — one MAPPING row, its
+    # four-line reason, and two docstring lines in the kit-contents listing.
+    # Required registration, not monolith growth: exactly the WI-387 handback
+    # shape directly above. Reviewed bump, log fragment 2026-08-01 (WI-393).
+    "bootstrap.py": 2257,
     # NEW ENTRY, +228 (1423 -> 1651), Phase 2b of the concurrency restructure
     # (docs/concurrency-restructure.md §7): the spec-folder work-item reader,
     # which crosses this module over THRESHOLD for the first time. It is one
@@ -924,7 +929,23 @@ BASELINE = {
     # this ratchet prefers over a bigger complexity number, the `_drop_abandoned`
     # precedent from WI-387. Reviewed bump, log 2026-08-01; re-stamp DOWN with
     # WI-390's deletions.
-    "integrate.py": 1890,
+    # +56 (1890 -> 1946), WI-393: the claim's move becomes the link-aware
+    # ritual, and the RITUAL ITSELF went to the new sibling spec_move.py (under
+    # THRESHOLD - the WI-374/WI-387 escape this ratchet documents), NOT here.
+    # What lands here is only what belongs to the claim: the `spec_move.move_spec`
+    # call replacing the bare `git mv` (with the comment naming the 2026-08-01
+    # driven instance), and the widened content fact in `_abandoned_claim` -
+    # the conviction must now recognise the relink writes inside a crashed
+    # claim's one commit, and it does so by ORACLE (`_relinked_exactly`:
+    # byte-for-byte against `spec_move.expected_relink` over the commit's own
+    # move pair), not by widening to "any .md edit" - the round-2 narrowing
+    # lesson kept. `_claim_delta` is the same clause's C901 extraction (the
+    # diff-walk classification out of `_abandoned_claim`, which the new arm had
+    # pushed to 14 - the `_drop_abandoned`/`_merge_refusal` precedent). Driven
+    # both ways in tests/test_integrate.py: the relinked crash re-cuts, the
+    # non-relink .md edit still convicts. Reviewed bump, log fragment
+    # 2026-08-01 (WI-393); re-stamp DOWN with WI-390's deletions.
+    "integrate.py": 1946,
 }
 
 
