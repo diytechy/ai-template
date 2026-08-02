@@ -1177,7 +1177,15 @@ def _own_step_window(lines, fail_idx):
     names carry regex metacharacters, "tests+coverage") down to the next banner
     or the summary rule, with the anchoring FAIL line appended when it sits
     outside the window (the --jobs 1 shape). None when the line carries no step
-    name or no banner names it, so the caller keeps its bounded fallback."""
+    name or no banner names it, so the caller keeps its bounded fallback.
+
+    Known limit (WI-398 REVIEW-A finding 1, pinned by WI-405): both anchors
+    trust line SHAPE, so bar-shaped text EMBEDDED in a step's own captured
+    output — a quoted FAIL row, a quoted banner, a nested scaffold bar naming
+    another step — can silently misanchor the window onto a passing step's
+    text; deliberately not parsed away (WI-398's scope guard), and on the
+    refresh path the kept full log (out/run-logs/refresh-refused-<branch>.log)
+    is the authority."""
     parts = lines[fail_idx].split()
     if len(parts) < 2:
         return None
