@@ -94,6 +94,7 @@ measure no better and far more slowly. The real bar is still the one that
 decides green, in the e2e above.
 """
 
+import os
 import re
 import shutil
 import subprocess
@@ -2795,7 +2796,8 @@ MEASURED_RESIDUE = (
 # This repo's own ignore rules for those paths, mirrored so the fixture lane
 # reads them as IGNORED (untracked-not-ignored would test the wrong ladder rung).
 LANE_IGNORE = (
-    "__pycache__/\n*.py[cod]\n.pytest_cache/\n.ruff_cache/\ndocs/test/report.md\nout/\n"
+    "__pycache__/\n*.py[cod]\n.pytest_cache/\n.ruff_cache/\n"
+    "docs/test/report.md\ndocs/test/report.html\nout/\n"
 )
 
 
@@ -2878,6 +2880,13 @@ def test_the_declared_residue_set_is_exactly_the_bars_own_leavings():
     # declared residue; every name that CAN hold sole-copy evidence is not.
     for rel in MEASURED_RESIDUE:
         assert integ._is_declared_residue(rel), rel
+    # Widened on measurement, the WI-400 scope guard working as designed:
+    # check.py passes --html to its trace step at G2/G3, so the DECLARED bar
+    # writes docs/test/report.html in whatever lane it runs in, and on
+    # 2026-08-02 the wi-402 lane was measured holding exactly that file at
+    # unload. Same class as report.md — rebuilt by the next bar run, sole-copy
+    # evidence never (WI-407, REVIEW-A finding 2).
+    assert integ._is_declared_residue("docs/test/report.html")
     for rel in (
         "out/run-logs/session.md",
         ".env",
@@ -2886,6 +2895,96 @@ def test_the_declared_residue_set_is_exactly_the_bars_own_leavings():
         "src/widget.pyc",
     ):
         assert not integ._is_declared_residue(rel), rel
+
+
+def test_a_lane_holding_the_bars_html_report_unloads_clean(tmp_path):
+    # REVIEW-A finding 2's judgment, taken with its test: the measured residue
+    # set plus the bar's OWN html report unloads clean through the integrator's
+    # arm — and the shed still operates only inside the lane, so the repo-root
+    # out/ (WI-398's refresh-refused logs, outside any lane) is never reached.
+    repo, worker = residue_lane(tmp_path)
+    html = worker / "docs" / "test" / "report.html"
+    html.write_text("<html>trace report</html>\n", encoding="utf-8", newline="\n")
+    root_log = repo / "out" / "run-logs" / "refresh-refused-wi-401.log"
+    root_log.parent.mkdir(parents=True)
+    root_log.write_text("refresh refused\n", encoding="utf-8", newline="\n")
+
+    unloaded, note = integ._unload_branch(repo, "wi-401")
+    assert unloaded, note
+    assert not worker.exists()
+    assert "wi-401" not in _branches(repo)
+    assert _worktree_count(repo) == 1
+    assert root_log.read_text(encoding="utf-8") == "refresh refused\n"
+
+
+@pytest.mark.skipif(os.name == "nt", reason="backslash is a separator on Windows")
+def test_a_posix_backslash_name_no_longer_aliases_onto_a_tracked_path(tmp_path):
+    # REVIEW-A finding 1, the reviewer's driven fixture: on POSIX a git-ignored
+    # file literally NAMED x\__pycache__\evil.pyc was reported by
+    # `ignored_files` as x/__pycache__/evil.pyc — `_is_declared_residue`
+    # matched the mangled segments and the shed unlinked the TRACKED twin the
+    # double-lock exists to protect. The normalization is Windows-only now: the
+    # raw name has no "/" segments, matches nothing, and the alias file is
+    # ordinary undeclared dirt — the unload refuses, and the twin SURVIVES.
+    repo = merged_branch_repo(tmp_path, ignore=LANE_IGNORE)
+    worker = tmp_path / "worker"
+    _git(repo, "worktree", "add", str(worker), "wi-401")
+    twin = worker / "x" / "__pycache__" / "evil.pyc"
+    twin.parent.mkdir(parents=True)
+    twin.write_text("tracked twin\n", encoding="utf-8", newline="\n")
+    _git(worker, "add", "-f", "x/__pycache__/evil.pyc")
+    _commit(worker, "feat: force-added tracked twin", when=T_LATER)
+    _git(repo, "merge", "-q", "wi-401")  # keep the branch fully merged
+    alias = worker / "x\\__pycache__\\evil.pyc"
+    alias.write_text("ignored alias\n", encoding="utf-8", newline="\n")
+
+    unloaded, note = integ._unload_branch(repo, "wi-401")
+    assert not unloaded
+    assert "UNLOAD INCOMPLETE" in note and "DIRTY" in note
+    assert twin.read_text(encoding="utf-8") == "tracked twin\n", (
+        "the shed deleted the tracked twin through the mangled alias"
+    )
+    assert alias.is_file(), "the alias file itself is evidence, never shed"
+    assert "wi-401" in _branches(repo)
+
+
+def test_the_backslash_normalization_is_windows_only(monkeypatch):
+    # The mechanism behind the fixture above, unit-pinned on both arms so each
+    # platform drives the other's behaviour too: git itself emits "/" on every
+    # platform, so the replace is pure defense — legitimate only on Windows,
+    # where "\" is a separator and never a filename byte. On POSIX it is a
+    # filename byte, and normalizing it MINTS the alias.
+    from pathlib import Path
+
+    reported = (0, "x\\__pycache__\\evil.pyc\0sub/cache.pyc\0")
+    monkeypatch.setattr(integ.ac, "git", lambda *a: reported)
+    monkeypatch.setattr(os, "name", "posix")
+    assert integ.ignored_files(Path("unused")) == {
+        "x\\__pycache__\\evil.pyc",
+        "sub/cache.pyc",
+    }
+    monkeypatch.setattr(os, "name", "nt")
+    assert integ.ignored_files(Path("unused")) == {
+        "x/__pycache__/evil.pyc",
+        "sub/cache.pyc",
+    }
+
+
+def test_the_sweep_leaves_a_non_ignored_empty_cache_directory_alone(tmp_path):
+    # REVIEW-A finding 3: the directory half of the shed carried only the NAME
+    # lock — an empty untracked x/__pycache__/keep/ in a repo whose rules do
+    # NOT ignore __pycache__ was rmdir'd although it is the lane's (emptiness
+    # can be load-bearing: the docstring's own docs/work/deferred/ example).
+    # The sweep now carries the ignored lock too: git check-ignore must claim
+    # the directory before it is removed.
+    repo = merged_branch_repo(tmp_path)  # no ignore rules at all
+    worker = tmp_path / "worker"
+    _git(repo, "worktree", "add", str(worker), "wi-401")
+    keep = worker / "x" / "__pycache__" / "keep"
+    keep.mkdir(parents=True)
+
+    integ._shed_declared_residue(worker)
+    assert keep.is_dir(), "emptiness git does not ignore belongs to the lane"
 
 
 def test_unload_run_from_inside_the_lane_steps_out_before_removing(

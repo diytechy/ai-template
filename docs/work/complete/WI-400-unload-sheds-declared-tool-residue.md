@@ -36,8 +36,21 @@ the integrator's own arm with no `--force` anywhere; the same lane plus ONE
 untracked file refuses and names it (and no longer names the shed caches);
 the ignored-stream and root-`out/` boundaries hold; the inside-the-lane
 unload leaves the process standing in a directory that exists. Scope guard
-held: no new policy surface; `docs/test/report.html` deliberately left <!-- path-ok: a generated, gitignored output named to record its EXCLUSION from the declared set; it exists in no tracked tree by design -->
-undeclared (the bar never generates it — widen only if measured). Class B
+held: no new policy surface; `docs/test/report.html` deliberately left
+undeclared (the 2026-08-01 drain lanes ran plain `trace.py`, which writes
+only the markdown report, so the measured set never showed the html one —
+widen only if measured). **Record correction 2026-08-02 (WI-407, REVIEW-A
+finding 2):** the parenthetical above originally read "the bar never
+generates it" — FALSE, corrected in place: `check.py` passes `--html` to its
+trace step at G2/G3 (check.py:449-455, in the bar since 2026-06-28), so the
+declared bar writes the html report in whatever lane it runs in; what was
+true is only the narrower drain fact now stated. The exclusion DECISION
+stood on the honest scope guard regardless (enumerate the measured set,
+widen only on measurement) — and on 2026-08-02 the wi-402 lane was measured
+holding the file at unload, so WI-407 declared it into `_RESIDUE_FILES`
+under the same double-lock, with a test; the absence ledger
+(`docs/declared-absences`) now carries the path beside the markdown
+report's row. Class B
 registration judgment: internals of the LLR-140/SR-132 unload, no new rows
 owed; size ratchet re-stamped 1977 → 2079 with reason in the baseline
 comment. Totals on the build commit, 2026-08-02:
