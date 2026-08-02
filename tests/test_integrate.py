@@ -179,6 +179,7 @@ def spec_text(
     order=0,
     deliverable="A widget, shipped.",
     specref=None,
+    bar=None,
 ):
     """One work-item spec in the format `scripts/wi_convert.py` emits (the
     tests/test_wi_folder_loaders.py `spec_text` shape).
@@ -200,6 +201,8 @@ def spec_text(
     ]
     if specref:
         lines.append('specref = "{}"'.format(specref))
+    if bar:
+        lines.append('bar = "{}"'.format(bar))
     text = "+++\n" + "".join(ln + "\n" for ln in lines) + "+++\n"
     if deliverable:
         text += "\n## Deliverable\n\n" + deliverable + "\n"
@@ -1794,14 +1797,24 @@ sys.exit(1)
 """
 
 
-def station_repo(tmp_path, check_src=STUB_CHECK_GREEN, policy="0", dest="complete"):
+def station_repo(
+    tmp_path,
+    check_src=STUB_CHECK_GREEN,
+    policy="0",
+    dest="complete",
+    product=True,
+    **spec_kw,
+):
     """A trunk with WI-401 claimed onto `wi-401` and CLOSED, plus a stub harness.
 
     Everything the slot reads is real: a real claim commit, a real branch, a
     real closing move. Only the two harness scripts are stubs, and they are
-    stubs so the test can assert the ORDER they ran in — see above.
+    stubs so the test can assert the ORDER they ran in — see above. `spec_kw`
+    shapes the claimed spec (the WI-388 bar/no-bar tests declare `bar=` or
+    `safety=` on it); `product=False` closes the lane WITHOUT the product
+    file, the pure-registry shape an honest adjudication lane has.
     """
-    root = claim_repo(tmp_path)
+    root = claim_repo(tmp_path, **spec_kw)
     (root / ".gitignore").write_text(
         "out/\nbar-cache/\n", encoding="utf-8", newline="\n"
     )
@@ -1820,11 +1833,13 @@ def station_repo(tmp_path, check_src=STUB_CHECK_GREEN, policy="0", dest="complet
     (scripts / "check.py").write_text(check_src, encoding="utf-8", newline="\n")
     _commit(root, "chore: the stub harness and the declared bar", when=T_CODE)
     assert integ.claim(root, "WI-401", "wi-401") == 0
-    close_branch(root, "wi-401", dest=dest)
+    close_branch(root, "wi-401", dest=dest, product=product)
     return root
 
 
-def close_branch(root, branch, wi="WI-401", slug="widget", extra=None, dest="complete"):
+def close_branch(
+    root, branch, wi="WI-401", slug="widget", extra=None, dest="complete", product=True
+):
     """Build and CLOSE `branch` in its own lane worktree: one product commit and
     the §2.3 step-3 move to its TERMINAL directory. Leaves the worktree
     registered, which is where the refresh will run — the lane's own tree, by
@@ -1834,7 +1849,8 @@ def close_branch(root, branch, wi="WI-401", slug="widget", extra=None, dest="com
     the loaders refuse it.)"""
     wt = root.parent / (root.name + integ.LANE_WORKTREE_SUFFIX) / branch
     _git(root, "worktree", "add", "-q", str(wt), branch)
-    (wt / "{}.txt".format(branch)).write_text("1\n", encoding="utf-8", newline="\n")
+    if product:
+        (wt / "{}.txt".format(branch)).write_text("1\n", encoding="utf-8", newline="\n")
     dst = wt / "docs" / "work" / dest / "{}-{}.md".format(wi, slug)
     dst.parent.mkdir(parents=True, exist_ok=True)
     src = wt / "docs" / "work" / "active" / branch / "{}-{}.md".format(wi, slug)
@@ -1977,6 +1993,179 @@ def test_the_bar_residue_the_refresh_created_is_shed_but_the_lanes_is_not(tmp_pa
     assert refusal is None, refusal
     assert (wt / "bar-cache").is_dir() is False, "the bar's own residue stays"
     assert (logs / "session.md").read_text(encoding="utf-8") == "the only copy\n"
+
+
+# 5b.2-wi388 — the adjudication no-bar arm and the `bar` strictness key
+
+
+def test_the_merge_slot_mints_the_adjudication_row_at_intake(tmp_path):
+    # WI-388's post-merge arm, end to end through the slot: the merged branch
+    # amended a ratified SR cell of a Verified row without the flip, so the
+    # intake mints ONE adjudication row as its own bookkeeping commit inside
+    # the same held slot — serial by construction, derived description, no
+    # model in the path (§A5.2; rulings R1/R3).
+    root = claim_repo(tmp_path)
+    req = root / "docs" / "requirements"
+    req.mkdir(parents=True, exist_ok=True)
+    sr_header = (
+        "SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,"
+        "Permutations,Priority,Verification,Status\n"
+    )
+    (req / "system-requirements.csv").write_text(
+        sr_header + 'SR-001,Adder,SN-001,"the original text","why","ac",,C,'
+        "Test,Verified\n",
+        encoding="utf-8",
+        newline="\n",
+    )
+    (root / ".gitignore").write_text(
+        "out/\nbar-cache/\n", encoding="utf-8", newline="\n"
+    )
+    (root / "docs" / "stack.ini").write_text(
+        "[product]\ntest = {py} -m pytest -q\n"
+        "[generated]\nPROJECT_STATE.html = trajectory\n",
+        encoding="utf-8",
+        newline="\n",
+    )
+    (root / "docs" / "review-policy").write_text("0\n", encoding="utf-8", newline="\n")
+    scripts = root / "scripts"
+    scripts.mkdir(exist_ok=True)
+    (scripts / "trunk_step.py").write_text(
+        STUB_TRUNK_STEP, encoding="utf-8", newline="\n"
+    )
+    (scripts / "check.py").write_text(STUB_CHECK_GREEN, encoding="utf-8", newline="\n")
+    _commit(root, "the attested spine + the stub harness", when=T_CODE)
+    assert integ.claim(root, "WI-401", "wi-401") == 0
+    wt = close_branch(root, "wi-401")
+    (wt / "docs" / "requirements" / "system-requirements.csv").write_text(
+        sr_header + 'SR-001,Adder,SN-001,"the AMENDED text","why","ac",,C,'
+        "Test,Verified\n",
+        encoding="utf-8",
+        newline="\n",
+    )
+    _commit(wt, "WI-401: amend the requirement without the flip", when=T_LATER)
+
+    refusal = integ.integrate_one(root, "wi-401", "smoke")
+    assert refusal is None, refusal
+
+    minted = sorted((root / "docs" / "work" / "queued").glob("WI-402-*.md"))
+    assert len(minted) == 1, minted
+    text = minted[0].read_text(encoding="utf-8")
+    assert 'safety_class = "adjudication"' in text
+    assert "SR-001" in text and "## Context" in text
+    assert "the original text" in text and "the AMENDED text" in text
+    # The mint is its OWN bookkeeping commit, after the merge, on trunk.
+    subjects = _git(root, "log", "--format=%s").splitlines()
+    assert subjects[0].startswith("mint: WI-402"), subjects[:3]
+    assert subjects[1].startswith("integrate: merge wi-401"), subjects[:3]
+
+
+def test_the_bar_key_reaches_check_gate(tmp_path):
+    # WI-388 (5): an optional frontmatter `bar = G1|G2|G3` pins the lane's
+    # verification strictness — the refresh passes it to check.py as --gate, so
+    # a row claimed to deliver evidence at a level still bars at that level if
+    # docs/gate moves mid-flight. Asserted off the recording stub's OWN argv.
+    root = station_repo(tmp_path, bar="G2")
+    wt = _lane(root, "wi-401")
+    sha, refusal = integ.refresh(root, "wi-401", "smoke")
+    assert refusal is None, refusal
+    order = _order(wt)
+    assert "--gate" in order and "G2" in order, order
+    assert order.index("--gate") + 1 == order.index("G2")
+
+
+def test_without_a_bar_key_the_refresh_passes_no_gate(tmp_path):
+    # The complement, so the key cannot be mistaken for a default: an undeclared
+    # bar leaves check.py on its own derived-gate read, exactly as before.
+    root = station_repo(tmp_path)
+    wt = _lane(root, "wi-401")
+    _sha, refusal = integ.refresh(root, "wi-401", "smoke")
+    assert refusal is None, refusal
+    assert "--gate" not in _order(wt)
+
+
+def test_a_malformed_bar_value_refuses_the_refresh(tmp_path):
+    # Fail closed and loud: a typo'd bar silently ignored would bar at whatever
+    # docs/gate happens to read — the exact drift the key exists to pin. The
+    # claimed spec lives on the branch, so the fix is a lane-side edit.
+    root = station_repo(tmp_path, bar="G9")
+    sha, refusal = integ.refresh(root, "wi-401", "smoke")
+    assert sha is None
+    assert "bar" in refusal and "G9" in refusal
+
+
+def test_an_adjudication_lane_runs_no_bar(tmp_path):
+    # WI-388 (1): adjudication runs NO BAR (§A5.2) — its outputs are Status
+    # cells and the work registry, nothing a product bar can speak to. The
+    # refresh still merges trunk in and runs the trunk step, still commits a
+    # verified Bar-Green attestation (the slot's contract), but the check
+    # harness is never invoked and the summary says so. `product=False`: the
+    # lane's delta is the pure registry shape the kind's premise names — a
+    # spine Status edit rides along and stays inside the scope rung.
+    root = station_repo(tmp_path, safety="adjudication", product=False)
+    wt = _lane(root, "wi-401")
+    (wt / "docs" / "requirements").mkdir(parents=True, exist_ok=True)
+    (wt / "docs" / "requirements" / "system-requirements.csv").write_text(
+        "SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,"
+        "Permutations,Priority,Verification,Status\n"
+        'SR-001,Adder,SN-001,"t","w","a",,C,Test,Verified\n',
+        encoding="utf-8",
+        newline="\n",
+    )
+    _commit(wt, "WI-401: the Status-cell judgement", when=T_LATER)
+    sha, refusal = integ.refresh(root, "wi-401", "smoke")
+    assert refusal is None, refusal
+    assert _order(wt) == ["trunk_step"], "the bar must not run for adjudication"
+    attested = integ.refresh_attestation(root, "wi-401", sha)
+    assert attested is not None
+    assert "no-bar" in attested[1]
+    ready, why = integ._merge_ready(root, "wi-401")
+    assert ready and "no-bar" in why
+
+
+def test_a_product_touching_adjudication_lane_fails_toward_the_bar(tmp_path):
+    # REVIEW-A finding 1, the reviewer's own drive kept as the regression: a
+    # product file plus a check harness that FAILS if invoked rode an
+    # adjudication-only lane through the no-bar arm onto trunk — an un-run
+    # green, against §A8's fixed points ("no un-run greens; the harness is
+    # still the bar"). The scope rung closes it: the branch's non-refresh
+    # delta touches a path outside the §A5.2 surfaces (the product file), so
+    # the refresh runs the FULL bar — which is red, and says so.
+    root = station_repo(tmp_path, check_src=STUB_CHECK_RED, safety="adjudication")
+    wt = _lane(root, "wi-401")
+    sha, refusal = integ.refresh(root, "wi-401", "smoke")
+    assert sha is None
+    assert "the bar is RED on the refreshed tree" in refusal
+    assert "check-red" in _order(wt), "the harness must have RUN"
+    ready, _why = integ._merge_ready(root, "wi-401")
+    assert not ready
+
+
+def test_a_mixed_claim_still_runs_the_bar(tmp_path):
+    # Fail toward the bar: the no-bar arm arms only when EVERY claimed spec is
+    # the adjudication kind. A batch claim holding one ordinary row beside the
+    # adjudication row bars as usual.
+    root = claim_repo(tmp_path, safety="adjudication")
+    write_spec(root, "queued", "WI-402", slug="extra", specref="seed.txt")
+    (root / ".gitignore").write_text(
+        "out/\nbar-cache/\n", encoding="utf-8", newline="\n"
+    )
+    (root / "docs" / "stack.ini").write_text(
+        "[product]\ntest = {py} -m pytest -q\n", encoding="utf-8", newline="\n"
+    )
+    declare_generated(root)
+    scripts = root / "scripts"
+    scripts.mkdir(exist_ok=True)
+    (scripts / "trunk_step.py").write_text(
+        STUB_TRUNK_STEP, encoding="utf-8", newline="\n"
+    )
+    (scripts / "check.py").write_text(STUB_CHECK_GREEN, encoding="utf-8", newline="\n")
+    _commit(root, "chore: the stub harness and the declared bar", when=T_CODE)
+    assert integ.claim(root, ["WI-401", "WI-402"], "wi-401") == 0
+    wt, err = integ.lane_worktree(root, "wi-401")
+    assert err is None, err
+    _sha, refusal = integ.refresh(root, "wi-401", "smoke")
+    assert refusal is None, refusal
+    assert "check" in _order(wt)
 
 
 # 5b.3 — the disposable-commit rule (§A2.1)

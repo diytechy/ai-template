@@ -517,6 +517,43 @@ def test_spine_cell_split_classifies_every_shipped_column():
         ), csv_path
 
 
+def test_the_two_wi388_cell_rulings_are_recorded_in_the_split():
+    # WI-388's intake from WI-380 REVIEW-A finding 3: the two live cells §A5.1
+    # does not name, RULED at WI-388 rather than left to the residual.
+    #   * LLR `SR-Refs` -> TRACED, routed to adjudication like its two pointer
+    #     siblings (`SN-Refs`, `Verifies`): re-pointing which SR owns a
+    #     decomposition row changes no attested prose on either side, and
+    #     whether the re-point moved scope is exactly adjudication's judgement.
+    #   * SR `SupersededBy` -> RATIFIED, confirmed: a supersession IS a scope
+    #     statement — it terminates a requirement's lifecycle in favour of
+    #     another — so a silent one would be a missed window nobody sees.
+    ct = load_script("check_trajectory")
+    llr = "docs/requirements/low-level-requirements.csv"
+    sr = "docs/requirements/system-requirements.csv"
+    assert "SR-Refs" in ct.SPINE_TRACED_CELLS[llr]
+    assert "SR-Refs" not in ct.SPINE_RATIFIED_CELLS[llr]
+    assert "SupersededBy" in ct.SPINE_RATIFIED_CELLS[sr]
+    assert "SupersededBy" not in ct.SPINE_TRACED_CELLS[sr]
+
+
+def test_staged_llr_sr_refs_repoint_is_traced_not_a_reattest_warn(tmp_path):
+    # The ruled behaviour, driven: an LLR re-pointed at a different owning SR
+    # stays SILENT at the amend-without-flip warn (traced, per the WI-388
+    # ruling above) but does NOT vanish — the amendment record carries it in
+    # the traced half, which is where the intake mint routes it (§A5.1: a
+    # changed pointer routes to adjudication, never straight to a window).
+    run_git = _init_full_spine_repo(tmp_path)
+    _write_child_registries(tmp_path, {"SR-Refs": "SR-002"}, {})
+    run_git("add", "-A")
+    ct = load_script("check_trajectory")
+    assert ct.staged_spine_findings(tmp_path) == []
+    amendments = ct.staged_spine_amendments(tmp_path)
+    llr_records = [a for a in amendments if a["id"] == "LLR-001"]
+    assert len(llr_records) == 1
+    assert llr_records[0]["ratified"] == {}
+    assert llr_records[0]["traced"] == {"SR-Refs": ("SR-001", "SR-002")}
+
+
 def test_staged_spine_amendments_expose_the_traced_half_for_adjudication(tmp_path):
     # The SEAM WI-388 consumes. The warn is silent on a traced-only edit, but
     # the change must not VANISH — adjudication is what decides whether a

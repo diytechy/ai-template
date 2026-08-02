@@ -268,7 +268,7 @@ WORKER_PROMPT = (
     "- SR-Refs: {srs} | SpecRef: {specref}\n"
     "- Branch: {train} (its claim is docs/work/active/{train}/; integration "
     "base {base})\n"
-    "{pred_block}{diff_block}{rework_block}"
+    "{pred_block}{context_block}{diff_block}{rework_block}"
     "\n"
     "Rules (the branch discipline, docs/concurrency-restructure.md §2.3/§5):\n"
     "- Work ONLY the assigned WI. Do not resume from docs/status.md and do not "
@@ -452,6 +452,27 @@ def worker_prompt(root, wi_rows, wi, train, base, rework_text=""):
         else ""
     )
 
+    # The WI-388 context block (consumer 2): computed FRESH at claim for every
+    # WI — pure registry joins (cancelled precedent with reasons, pending OIs,
+    # the LLR/TC code map, knowledge packs, IF seams, precedent reviews),
+    # advisory-never-gating, clipped like the blocks around it. The lazy
+    # import keeps this module launchable even where a stripped-down copy
+    # ships without the intake sibling.
+    try:
+        import intake
+
+        # rows=None: the block re-reads the registry from disk, so the joins
+        # are as-of the CLAIM, not as-of whenever wi_rows was loaded.
+        joins = intake.context_block(root, row)
+    except Exception:  # advisory: a missing/broken join is no join
+        joins = ""
+    context_block = (
+        "- Context (advisory registry joins; read the Context refs below "
+        "before starting):\n" + "\n".join("  " + ln for ln in joins.splitlines()) + "\n"
+        if joins
+        else ""
+    )
+
     _c1, log_out = git(
         root, "log", "--oneline", "--no-decorate", "{}..HEAD".format(base)
     )
@@ -481,6 +502,7 @@ def worker_prompt(root, wi_rows, wi, train, base, rework_text=""):
         train=train,
         base=base,
         pred_block=pred_block,
+        context_block=context_block,
         diff_block=diff_block,
         rework_block=rework_block,
     )

@@ -65,6 +65,10 @@ What it creates in the destination:
                                                 handback + its bar-inert quarantine; WI-387)
     scripts/spec_move.py                       (the link-aware spec-move ritual:
                                                 move + relink as one operation; WI-393)
+    scripts/intake.py                          (the unified trunk-side intake mint:
+                                                three triggers + drafts-not-mints,
+                                                the context block, the gate-policy
+                                                flip arms; WI-388)
     scripts/agent_route.py, scripts/score_reviews.py   (S8 coordinator routing + review scorer)
     docs/agents.csv                            <- agents.template.csv (model registry; inert until docs/agents-enabled)
     scripts/setup.{sh,ps1}, scripts/check.{sh,ps1}   (cross-platform launchers)
@@ -1391,6 +1395,13 @@ MAPPING = [
     # handback.py's return import it unguarded; workers run its CLI for the
     # terminal close moves and the spec-of-record archival.
     ("scripts/spec_move.py", "scripts/spec_move.py"),
+    # The unified trunk-side intake mint (WI-388, concurrency-v2 §A5.2;
+    # rulings R1/R3): a WI id is created only by a human trunk commit or this
+    # helper. integrate.py's post-merge arm and dispatch.py's empty-frontier
+    # ladder import it unguarded, so a scaffold without it cannot merge or
+    # run the walk-away loop; agent_loop.py imports it lazily (the worker
+    # prompt's advisory context block).
+    ("scripts/intake.py", "scripts/intake.py"),
     # The WI-218 split of the coordinator engine: the headless session layer,
     # the shared primitives, and the dual-plan runner agent_loop.py imports as
     # siblings. (The parallel dispatcher retired at concurrency-restructure

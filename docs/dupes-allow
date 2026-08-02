@@ -271,7 +271,7 @@
 #
 # The distribution:
 #
-#   cli                   90   deliberate
+#   cli                   96   deliberate
 #   link-rebase            1   deliberate
 #   spine-loader          21   deliberate
 #   declared-file         12   deliberate
@@ -283,6 +283,7 @@
 #   ctx-unpack             3   deliberate
 #   okf-row                1   deliberate
 #   import-fallback        2   deliberate
+#   intake-mint            9   deliberate
 #   module-path            3   deliberate
 #   signature-echo         2   deliberate
 #   child-capture          1   deliberate
@@ -303,7 +304,7 @@
 # a census whose classification has rotted is how the false claims above
 # survived in the first place.
 
-# --- cli (90 blocks) ---------------------------------------------
+# --- cli (96 blocks) ---------------------------------------------
 # disposition: deliberate
 # the per-script CLI skeleton + _utf8_console. F5: kit scripts must stay
 # independently copy-able and stdlib-only, which is why a shared
@@ -389,7 +390,17 @@ a986f553a391  project-trajectory/scripts/plan_briefs.py == project-trajectory/sc
 6b98b4c1e7c5  project-trajectory/scripts/plan_briefs.py == project-trajectory/scripts/plan_round.py
 a986f553a391  project-trajectory/scripts/plan_briefs.py == project-trajectory/scripts/schedule.py
 3762ccd39230  project-trajectory/scripts/plan_briefs.py == project-trajectory/scripts/schedule.py
-0f99fcaa1f96  project-trajectory/scripts/plan_briefs.py == project-trajectory/scripts/schedule.py
+# (0f99fcaa1f96 plan_briefs == schedule left the emitted census at WI-388:
+# with intake.py's main() present the matcher reports that same argparse
+# boilerplate through the intake pairs below instead - nothing was edited
+# in either file.)
+577c2f20f412  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/intake.py
+c7d2e27779d5  project-trajectory/scripts/derive_gate.py == project-trajectory/scripts/intake.py
+7b8bc6c56a7e  project-trajectory/scripts/intake.py == project-trajectory/scripts/schedule.py
+386d4419858c  project-trajectory/scripts/intake.py == project-trajectory/scripts/plan_briefs.py
+386d4419858c  project-trajectory/scripts/intake.py == project-trajectory/scripts/schedule.py
+288c88cdad6f  project-trajectory/scripts/intake.py == project-trajectory/scripts/plan_briefs.py
+288c88cdad6f  project-trajectory/scripts/intake.py == project-trajectory/scripts/schedule.py
 2a3ae413b478  project-trajectory/scripts/plan_coverage.py == project-trajectory/scripts/plan_coverage_step.py
 ae679b73acd2  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/wi_convert.py
 d588a4299326  project-trajectory/scripts/check_privacy.py == project-trajectory/scripts/wi_convert.py
@@ -733,8 +744,16 @@ c4546434439b  project-trajectory/scripts/schedule.py == project-trajectory/scrip
 # three files, the same one block, ten lines longer — and
 # check_trajectory == schedule again kept its fp (1dbf7e455ac3), which is the
 # tell that the change is inside the shared region rather than a new copy.
-a17abce26cb8  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/schedule.py
-7a1470c3f0c1  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/check_trajectory.py
+# WI-388 re-fingerprinted the two agent_common pairs a third time
+# (a17abce26cb8 -> 7212302b90d0, 7a1470c3f0c1 -> 6bc2b2913689), same
+# structural reason as WI-387's: the `Bar` scalar joined the loader tables and
+# the `## Context` section joined the body grammar (`SPEC_CONTEXT` + one more
+# partition in `parse_spec_deliverable`) in all three copies at once. The
+# class did not grow — same three files, same one block — and
+# check_trajectory == schedule again kept its fp (1dbf7e455ac3), the tell
+# that the change is inside the shared region rather than a new copy.
+7212302b90d0  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/schedule.py
+6bc2b2913689  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/check_trajectory.py
 1dbf7e455ac3  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/schedule.py
 4d36b43d0895  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/wi_convert.py
 
@@ -752,9 +771,49 @@ a17abce26cb8  project-trajectory/scripts/agent_common.py == project-trajectory/s
 # names is the small-stable-helper shape the F5 ruling covers; the schema
 # itself is pinned against the shipped template by test_dogfood_sync and
 # test_wi_convert, so the copies cannot drift apart silently.
-760d32e34d84  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/plan_artifacts.py
+# WI-388 re-stamped four of the six: the schema gained its 18th column (`Bar`
+# — bar declares verification strictness for this row's lane; it never
+# affects scheduling), so every copy of the bare column list re-fingerprinted
+# (760d32e34d84 -> a7e859f1af8f twice, b83181696230 -> 261eae4aed7d,
+# 8df9b7757333 -> d7bc90bd2333) while the two map-direction blocks that end
+# before the new row kept theirs. Same six blocks, same class, one column
+# wider.
+a7e859f1af8f  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/plan_artifacts.py
 63ecb0abf993  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/wi_convert.py
-760d32e34d84  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/wi_convert.py
-b83181696230  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/wi_convert.py
+a7e859f1af8f  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/wi_convert.py
+261eae4aed7d  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/wi_convert.py
 462810722e11  project-trajectory/scripts/plan_artifacts.py == project-trajectory/scripts/wi_convert.py
-8df9b7757333  project-trajectory/scripts/plan_artifacts.py == project-trajectory/scripts/wi_convert.py
+d7bc90bd2333  project-trajectory/scripts/plan_artifacts.py == project-trajectory/scripts/wi_convert.py
+
+# --- intake-mint (9 blocks) --------------------------------------
+# disposition: deliberate
+# WI-388's unified intake mint (intake.py). Four shapes, each ~30-45 tokens:
+#   * the claim-shaped bookkeeping commit (intake == integrate, 4 blocks):
+#     `_bookkeeping_commit` MIRRORS `_claim_locked`'s write sequence
+#     (write-tree / commit-tree -p HEAD / reset --hard) BY DESIGN - the mint
+#     is "the claim's bookkeeping shape without the branch cut", and the two
+#     must fail the same way; extraction was declined because integrate.py
+#     must import nothing of intake (intake is imported FROM integrate's
+#     post-merge arm, deferred) and the sequence is load-bearing prose in
+#     both homes.
+#   * the captured-subprocess run shape (intake == trunk_step, 1): the same
+#     capture keywords every kit runner uses - the F5 small-helper case.
+#   * the restore-on-refusal shape (intake == spec_move, 1) and the two
+#     intra-file intake pairs (the per-status glob walk in the sweep and the
+#     handback scan; the mkdir/write pair) - small stable shapes, each under
+#     ~35 tokens, where a helper would obscure more than it saves.
+#   * the claimed-spec frontmatter-read loop (dispatch == handback, 1):
+#     `_branch_exclusive` and `_no_recursion_refusal` read the same trunk
+#     claim the same way on purpose - two refusals that must agree about what
+#     a claimed spec declares.
+ed365941fdea  project-trajectory/scripts/dispatch.py == project-trajectory/scripts/handback.py
+c33c341149cb  project-trajectory/scripts/intake.py == project-trajectory/scripts/intake.py
+c94067d37723  project-trajectory/scripts/intake.py == project-trajectory/scripts/intake.py
+745577ef4bfc  project-trajectory/scripts/intake.py == project-trajectory/scripts/trunk_step.py
+faccaf0237c5  project-trajectory/scripts/intake.py == project-trajectory/scripts/integrate.py
+7654fcf20d27  project-trajectory/scripts/intake.py == project-trajectory/scripts/integrate.py
+71da68d30661  project-trajectory/scripts/intake.py == project-trajectory/scripts/integrate.py
+de0546d2361d  project-trajectory/scripts/intake.py == project-trajectory/scripts/integrate.py
+# (1fea271d8b0c -> 5a35a2689e40 when intake main() grew the adjudicate
+# subparser - same block, shifted content.)
+5a35a2689e40  project-trajectory/scripts/intake.py == project-trajectory/scripts/spec_move.py

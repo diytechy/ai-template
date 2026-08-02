@@ -76,6 +76,7 @@ def _row(wid, **kw):
         "EstTokens": "",
         "SafetyClass": "ordinary",
         "PlanMode": "",
+        "Bar": "",
         "Deliverable": "",
         "SpecRef": "",
     }
@@ -178,6 +179,7 @@ CONVERTIBLE_ROWS = [
         "EstTokens": "1200",
         "SafetyClass": "ordinary",
         "PlanMode": "",
+        "Bar": "",
     },
     {
         "WI-ID": "WI-002",
@@ -197,6 +199,10 @@ CONVERTIBLE_ROWS = [
         "EstTokens": "",
         "SafetyClass": "spine",
         "PlanMode": "dual",
+        # The WI-388 strictness key, carried where the cells most likely to be
+        # lost in translation live: bar declares verification strictness for
+        # this row's lane; it never affects scheduling.
+        "Bar": "G2",
     },
     {
         "WI-ID": "WI-003",
@@ -216,6 +222,7 @@ CONVERTIBLE_ROWS = [
         "EstTokens": "",
         "SafetyClass": "",
         "PlanMode": "",
+        "Bar": "",
     },
     {
         "WI-ID": "WI-005",
@@ -235,6 +242,7 @@ CONVERTIBLE_ROWS = [
         "EstTokens": "",
         "SafetyClass": "ordinary",
         "PlanMode": "",
+        "Bar": "",
     },
     {
         "WI-ID": "WI-000",
@@ -254,6 +262,7 @@ CONVERTIBLE_ROWS = [
         "EstTokens": "",
         "SafetyClass": "",
         "PlanMode": "",
+        "Bar": "",
     },
 ]
 
@@ -312,6 +321,54 @@ def test_the_two_representations_are_the_same_registry(both_homes):
     csv_rows = sched.load_rows(csv_path)
     folder_rows = sched.read_spec_rows(work_dir)
     assert _cell_diff(csv_rows, folder_rows) == []
+
+
+def test_the_bar_key_is_carried_by_every_reader(both_homes):
+    """The WI-388 `bar` column crosses both representations and all three F5
+    readers together (the loader tables gain the column as one edit): bar
+    declares verification strictness for this row's lane; it never affects
+    scheduling — so the scheduler's own load_wis deliberately does NOT parse
+    it into the decision dicts."""
+    csv_path, work_dir = both_homes
+    for rows in (sched.load_rows(csv_path),) + tuple(
+        mod.read_spec_rows(work_dir) for _name, mod in SPEC_READERS
+    ):
+        by_id = {r["WI-ID"]: r for r in rows}
+        assert by_id["WI-002"]["Bar"] == "G2"
+        assert by_id["WI-001"]["Bar"] == ""
+    # Never a scheduling input: the WI dicts the frontier is computed from
+    # carry no bar key at all — structurally, not by convention.
+    for wi in sched.load_wis(sched.read_spec_rows(work_dir)):
+        assert "bar" not in wi
+
+
+def test_a_context_section_is_read_past_by_all_three_readers(tmp_path):
+    """The WI-388 `## Context` body section (advisory registry joins, written
+    at mint) is body furniture the loaders read PAST: the Deliverable cell
+    stays exactly what the `## Deliverable` section holds, whether the Context
+    block leads the body (an open minted row) or follows the Deliverable (a
+    closed one)."""
+    work = tmp_path / "docs" / "work"
+    (work / "queued").mkdir(parents=True)
+    (work / "complete").mkdir(parents=True)
+    (work / "queued" / "WI-011-minted.md").write_text(
+        '+++\nid = "WI-011"\ntitle = "minted"\n+++\n'
+        "\n## Context\n\n- precedent: WI-009 (cancelled) shared SR-001\n",
+        encoding="utf-8",
+        newline="\n",
+    )
+    (work / "complete" / "WI-012-closed.md").write_text(
+        '+++\nid = "WI-012"\ntitle = "closed"\n+++\n'
+        "\n## Deliverable\n\nshipped the thing\n"
+        "\n## Context\n\n- advisory joins, kept for the record\n",
+        encoding="utf-8",
+        newline="\n",
+    )
+    for name, mod in SPEC_READERS:
+        rows = {r["WI-ID"]: r for r in mod.read_spec_rows(work)}
+        assert set(rows) == {"WI-011", "WI-012"}, name
+        assert rows["WI-011"]["Deliverable"] == "", name
+        assert rows["WI-012"]["Deliverable"] == "shipped the thing", name
 
 
 def _cell_diff(csv_rows, folder_rows):

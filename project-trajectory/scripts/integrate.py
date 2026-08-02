@@ -1346,7 +1346,7 @@ def _passed_steps(out):
     return names
 
 
-def _run_bar(wt, root, tier):
+def _run_bar(wt, root, tier, gate=None):
     """check.py at the derived gate on the refreshed branch; fail-closed reading.
 
     Green means: exit 0 AND the report carries no SKIP line. `--trunk-lane` is
@@ -1354,12 +1354,18 @@ def _run_bar(wt, root, tier):
     --no-ff merge of a branch containing trunk reproduces it byte for byte), so
     the §5.2 freshness gates - which stand down on a work branch, and which
     this very step just regenerated - have to run here or nothing checks them.
+
+    `gate` (WI-388, the `bar` frontmatter key) pins check.py's --gate: a row
+    claimed to deliver evidence at a level still bars at that level if
+    docs/gate moves mid-flight. None keeps check.py on its own derived-gate
+    read, exactly as before.
     """
     py = ac.harness_python(root)
     check = _branch_tree_script(wt, root, "check.py")
-    code, out = _run(
-        [str(py), str(check), "--jobs", "0", "--tier", tier, "--trunk-lane"], wt
-    )
+    argv = [str(py), str(check), "--jobs", "0", "--tier", tier, "--trunk-lane"]
+    if gate:
+        argv += ["--gate", gate]
+    code, out = _run(argv, wt)
     skips = [ln for ln in out.splitlines() if re.match(r"\s*SKIP\s", ln)]
     if code != 0:
         return False, out, "bar exit {}".format(code)
@@ -1372,7 +1378,9 @@ def _run_bar(wt, root, tier):
     return (
         True,
         out,
-        "bar PASS ({} steps, tier {})".format(len(_passed_steps(out)), tier),
+        "bar PASS ({} steps, tier {}{})".format(
+            len(_passed_steps(out)), tier, ", gate " + gate if gate else ""
+        ),
     )
 
 
@@ -1380,6 +1388,122 @@ def _run_trunk_step(wt, root):
     py = ac.harness_python(root)
     step = _branch_tree_script(wt, root, "trunk_step.py")
     return _run([str(py), str(step), "--root", "."], wt)
+
+
+# The `bar` frontmatter key's vocabulary (WI-388): bar declares verification
+# strictness for this row's lane; it never affects scheduling. Ordered weakest
+# to strictest so a batch takes the max.
+_BAR_GATES = ("G1", "G2", "G3")
+
+# The surfaces an adjudication lane's non-refresh delta may touch and still
+# take the NO-BAR path (WI-388 REVIEW-A finding 1) — §A5.2's premise ("it
+# touches Status cells and the work registry, nothing a product bar can speak
+# to") made CHECKED rather than asserted. Derived from what the kind's ruled
+# outcomes actually write: the work registry (spec moves, dispositions,
+# drafted follow-ups), the three spine registries (the Status flip — the
+# path-level bound is the honest checkable one; the cell-level judgement
+# belongs to the amendment seam and the verdict round), the open-items
+# registry ("surface an open item" is a ruled R3 outcome), the derived gate
+# the flip recovers, and the record surfaces (the log fragment, the review
+# verdicts). The declared [generated] set joins at read time — the trunk step
+# owns those and a lane's refresh regenerates them anyway.
+_ADJUDICATION_SURFACES = (
+    "docs/work/",
+    "docs/log.d/",
+    "docs/reviews/",
+    "docs/gate",
+    "docs/requirements/system-requirements.csv",
+    "docs/requirements/low-level-requirements.csv",
+    "docs/test/test-cases.csv",
+    "docs/requirements/open-items.csv",
+)
+
+
+def _adjudication_scope_ok(root, branch):
+    """May this adjudication-only lane take the no-bar path? True only when
+    the branch's NON-REFRESH delta — merge-base(trunk, branch) to the peeled
+    work tip, the same branch-delta read `_minted_id_refusal` makes at the
+    same slot — touches nothing outside `_ADJUDICATION_SURFACES` plus the
+    declared [generated] set.
+
+    ANY other path — product code above all — fails TOWARD the full bar:
+    REVIEW-A drove a product file with a red check harness through the no-bar
+    arm onto trunk with the harness never invoked, an un-run green against
+    §A8's fixed points ("no un-run greens; the harness is still the bar").
+    Unreadable git answers False, the same direction."""
+    code, base = ac.git(root, "merge-base", _head(root), branch)
+    if code != 0 or not base.strip():
+        return False
+    code, out = ac.git(
+        root,
+        "diff",
+        "--name-only",
+        "--no-renames",
+        base.strip(),
+        _work_tip(root, branch),
+    )
+    if code != 0:
+        return False
+    allowed = list(_ADJUDICATION_SURFACES) + _generated_paths(root)
+    for raw in out.splitlines():
+        path = raw.strip().replace("\\", "/")
+        if path and not any(
+            path == entry.rstrip("/")
+            or (entry.endswith("/") and path.startswith(entry))
+            for entry in allowed
+        ):
+            return False
+    return True
+
+
+def _lane_bar_directives(root, branch):
+    """The claimed rows' say over the refresh bar (WI-388): `(skip, gate,
+    refusal)`.
+
+    * `skip` — True when EVERY claimed spec declares the `adjudication` kind:
+      adjudication runs NO bar (§A5.2 — its outputs are Status cells and the
+      work registry, nothing a product bar can speak to; that is why the kind
+      needs its own no-bar arm rather than a tier). Fails TOWARD the bar: an
+      unreadable frontmatter or a mixed batch runs it.
+    * `gate` — the strictest `bar` key among the claimed rows (G1 < G2 < G3),
+      handed to check.py --gate. None when no row declares one.
+    * `refusal` — a malformed bar value. Refused loudly rather than silently
+      barred at whatever the derived gate happens to read (the drift the key
+      exists to pin); the claimed spec is on the branch, so the fix is a
+      lane-side edit.
+
+    Read off the TRUNK's claimed specs — the same one-home read the merge slot
+    and `dispatch._branch_exclusive` use — so the directive cannot disagree
+    with the claim being merged.
+    """
+    kinds, bars = [], []
+    for _wid, name in _claimed_specs(root, branch):
+        try:
+            meta = _spec_frontmatter(root / ACTIVE / branch / name)
+        except (OSError, ValueError):
+            return False, None, None  # unreadable: run the bar, fail toward it
+        kinds.append(str(meta.get("safety_class") or "").strip().lower())
+        declared = str(meta.get("bar") or "").strip().upper()
+        if declared and declared not in _BAR_GATES:
+            return (
+                False,
+                None,
+                "{} declares bar = {!r} ({}), which is not one of {} - the bar "
+                "key declares verification strictness for this row's lane (it "
+                "never affects scheduling), so a value check.py cannot run is "
+                "refused rather than silently dropped; fix the claimed spec on "
+                "the branch, then refresh".format(
+                    branch, str(meta.get("bar")), name, "|".join(_BAR_GATES)
+                ),
+            )
+        if declared:
+            bars.append(declared)
+    skip = bool(kinds) and all(kind == "adjudication" for kind in kinds)
+    # The scope rung (REVIEW-A finding 1): the kind alone never earns the
+    # no-bar path — the branch's delta must LOOK like adjudication too.
+    if skip and not _adjudication_scope_ok(root, branch):
+        skip = False
+    return skip, (max(bars) if bars else None), None
 
 
 def _worktree_holding(root, branch):
@@ -1827,6 +1951,13 @@ def refresh(root, branch, tier):
     runs it INSIDE the slot for any branch that arrives un-refreshed or stale,
     which is the pessimistic sequence and is why that sequence never rots.
     """
+    # The claimed rows' say over the bar (WI-388): the adjudication no-bar arm
+    # and the `bar` strictness pin, both read before anything runs so a
+    # malformed key refuses with the lane untouched.
+    skip_bar, bar_gate, refusal = _lane_bar_directives(root, branch)
+    if refusal:
+        return None, "refresh REFUSED for {} - {}".format(branch, refusal)
+
     wt, work_tip, refusal = _refresh_preflight(root, branch)
     if refusal:
         return None, refusal
@@ -1869,7 +2000,7 @@ def refresh(root, branch, tier):
     # swept into the attested commit by an `add -A` that ran after it. The
     # committed tree is therefore exactly the tree the bar was handed.
     ac.git(wt, "add", "-A")
-    ok, bar_out, summary = _run_bar(wt, root, tier)
+    ok, bar_out, summary = _refresh_bar(wt, root, tier, skip_bar, bar_gate)
     _shed_residue(wt, baseline, baseline_dirs)
     if not ok:
         return undo(
@@ -1919,6 +2050,19 @@ def refresh(root, branch, tier):
         )
     )
     return sha, None
+
+
+def _refresh_bar(wt, root, tier, skip_bar, bar_gate):
+    """The refresh's bar step, with the WI-388 no-bar arm: `(ok, out, summary)`.
+
+    `skip_bar` is the adjudication arm (§A5.2): the trunk step still ran and
+    the refresh commit still attests THIS tree — the trailer verifies the same
+    way — but no product bar is invoked, and the summary says so honestly,
+    because the kind has nothing a product bar can speak to. Extracted from
+    `refresh` so the sequence stays readable under the complexity ratchet."""
+    if skip_bar:
+        return True, "", "no-bar (adjudication, §A5.2)"
+    return _run_bar(wt, root, tier, bar_gate)
 
 
 def _merge_ready(root, branch):
@@ -1986,6 +2130,15 @@ def integrate_one(root, branch, tier, held=None):
     moved), so an incomplete unload is not a refusal - but nothing ever retries
     it (a merged branch no longer appears in `finished_branches`), which is why
     the caller has to carry the remainder to the run's exit code.
+
+    THE POST-MERGE ARM IS THE INTAKE (WI-388, §A5.2): once the merge lands —
+    and only then — the unified mint helper reads what landed (the ratified/
+    routed spine diff, a returned spec's `## Handback`, a merged adjudication
+    row's `## Dispositions` drafts) and mints the rows the event forces, as
+    ONE bookkeeping commit on trunk, inside this same held slot (serial by
+    construction; rulings R1/R3: a WI id is created only by a human trunk
+    commit or that helper). A mint refusal stops the run LOUDLY but the merge
+    stands; recovery is a trunk-side fix plus `python intake.py sweep`.
     """
     wi_ids = _claimed_wi_ids(root, branch)
     outcomes, refusal = _merge_refusal(root, branch, wi_ids)
@@ -2014,6 +2167,7 @@ def integrate_one(root, branch, tier, held=None):
                 "the refresh reported green, so this is a real anomaly, not a "
                 "lost race; nothing was merged".format(branch, why)
             )
+    pre_merge_head = _head(root)
     code, out = ac.git(
         root,
         "merge",
@@ -2050,6 +2204,18 @@ def integrate_one(root, branch, tier, held=None):
     print("integrate: {}".format(note), file=sys.stdout if unloaded else sys.stderr)
     if not unloaded and held is not None:
         held.append(branch)
+    # The WI-388 intake, at the one honest hook point: the merge has landed,
+    # the slot is still held, trunk is serial. Deferred import — intake sits
+    # ABOVE this module (it imports nothing of integrate, but dispatch imports
+    # both), and the deferral keeps a plain `integrate.py claim` from paying
+    # the mint family's import.
+    import intake
+
+    _minted, mint_refusal = intake.intake_after_merge(
+        root, pre_merge_head, _head(root), outcomes, branch
+    )
+    if mint_refusal:
+        return mint_refusal
     return None
 
 

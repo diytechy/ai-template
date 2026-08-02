@@ -486,6 +486,23 @@ def test_an_empty_deliverable_and_an_empty_optional_cell_round_trip(tmp_path):
     assert "workstream" not in spec
 
 
+def test_the_bar_cell_round_trips_and_a_context_body_is_read_past(tmp_path):
+    """WI-388: the `Bar` column (bar declares verification strictness for this
+    row's lane; it never affects scheduling) crosses the round trip like any
+    scalar, and the advisory `## Context` body section a minted spec carries is
+    read PAST exactly like `## Handback` — `--to-csv` on a minted folder must
+    not refuse, and the section maps to no CSV column."""
+    rows = [_row("WI-001", Status="queued", Bar="G2")]
+    back = _round_trip(tmp_path, rows)
+    assert back[0]["Bar"] == "G2"
+    assert _cell_mismatches(rows, back) == []
+    # A minted, context-only body parses with an empty Deliverable...
+    assert wi_convert.parse_deliverable("\n## Context\n\n- advisory joins\n", "w") == ""
+    # ...and a closed row's Deliverable survives with the Context clipped off.
+    body = "\n## Deliverable\n\nshipped\n\n## Context\n\n- joins, kept\n"
+    assert wi_convert.parse_deliverable(body, "w") == "shipped"
+
+
 def test_row_order_survives_a_registry_that_is_not_id_sorted(tmp_path, live_csv):
     """The live registry is NOT id-sorted, which is why `order` is carried
     explicitly. Reconstructing by id would silently reorder an authoritative

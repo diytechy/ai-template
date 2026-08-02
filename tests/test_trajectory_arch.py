@@ -465,6 +465,72 @@ def test_coupling_needs_an_arch_map_inventory(tmp_path):
     assert KN_MSG not in proc.stderr
 
 
+# --- WI-388 (consumer 3 of the context block): the pack-citation warn ----------
+# A hand-authored OPEN spec whose rows' components declare knowledge packs the
+# spec never cites is warned, warn-FIRST (never an exit-code change, like
+# backlog staleness): the pack is the recorded how-knowledge behind the rows
+# the WI touches, so a spec that never names it is building blind. A minted
+# row's ## Context block cites the packs at mint, so minted rows satisfy the
+# rule by construction — the warn reaches exactly the hand-authored residue.
+
+PACK_MSG = "the spec never cites"
+
+
+def _pack_repo(tmp_path, spec_body=""):
+    write_cmps(tmp_path, "CMP-001,Core,software,docs/knowledge/widgetry,built,,,,\n")
+    write_pack(tmp_path, "widgetry")  # the token must RESOLVE to a real pack
+    write_tagged_llrs(tmp_path, [("scripts/mod_0", "CMP-001")])
+    work = tmp_path / "docs" / "work" / "queued"
+    work.mkdir(parents=True, exist_ok=True)
+    (work / "WI-005-thing.md").write_text(
+        '+++\nid = "WI-005"\ntitle = "a thing"\nsr_refs = ["SR-001"]\n'
+        'specref = "docs/requirements/components.csv"\n+++\n' + spec_body,
+        encoding="utf-8",
+        newline="\n",
+    )
+    return tmp_path
+
+
+def test_an_open_spec_that_never_cites_its_packs_warns(tmp_path):
+    _pack_repo(tmp_path)
+    proc = run_traj(tmp_path)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "WI-005" in proc.stderr and PACK_MSG in proc.stderr
+    assert "docs/knowledge/widgetry" in proc.stderr
+    # Warn-first means warn-ONLY: --strict does not promote it (advisory,
+    # never gating — the block's contract).
+    strict = run_traj(tmp_path, "--strict")
+    assert PACK_MSG not in [ln for ln in strict.stderr.splitlines() if "ERROR" in ln], (
+        strict.stderr
+    )
+
+
+def test_a_spec_that_cites_its_packs_is_silent(tmp_path):
+    _pack_repo(
+        tmp_path,
+        "\n## Context\n\n- packs: docs/knowledge/widgetry (read first)\n",
+    )
+    proc = run_traj(tmp_path)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert PACK_MSG not in proc.stderr
+
+
+def test_rows_without_declared_packs_stay_silent(tmp_path):
+    write_cmps(tmp_path, "CMP-001,Core,software,,built,,,,\n")
+    write_tagged_llrs(tmp_path, [("scripts/mod_0", "CMP-001")])
+    work = tmp_path / "docs" / "work" / "queued"
+    work.mkdir(parents=True, exist_ok=True)
+    (work / "WI-005-thing.md").write_text(
+        '+++\nid = "WI-005"\ntitle = "a thing"\nsr_refs = ["SR-001"]\n'
+        'specref = "docs/requirements/components.csv"\n+++\n',
+        encoding="utf-8",
+        newline="\n",
+    )
+    proc = run_traj(tmp_path)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert PACK_MSG not in proc.stderr
+
+
 # --- WI-399: containment owed where a module is ADDED --------------------------
 # docs/architecture.md is trunk-owned, so its freshness gate SKIPs on a claimed
 # work branch (SR-133) and a module a branch adds enters the committed arch-map

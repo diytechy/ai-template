@@ -372,7 +372,12 @@ BASELINE = {
     # `--lanes` flag joins the argparse surface (the §A4.3 dial's CLI rung).
     # Reviewed bump, log fragment 2026-08-02 (WI-381). Re-stamp down with
     # WI-280.
-    "agent_loop.py": 2985,
+    # +22 (2985 -> 3007), WI-388: the worker prompt's Context block (consumer
+    # 2 of intake.context_block) — computed fresh at claim, advisory, one new
+    # instruction line; the lazy import keeps a stripped copy launchable.
+    # Reviewed bump, log fragment 2026-08-02 (WI-388). Re-stamp down with
+    # WI-280.
+    "agent_loop.py": 3007,
     # +30 (2206 -> 2236), WI-065: `tc_citation_findings` — the TC-`Verifies`
     # rules lifted out of `analyze` so the cell could accept `IF-###` seam ids.
     # Most of the bump is that helper's docstring, which is where the RULING now
@@ -680,7 +685,19 @@ BASELINE = {
     # the whole family is dormant there), and an absolute [paths] src scans the
     # path it names (finding 3). Drift-pinned by the differential tests that run
     # the real generator. Reviewed bump; re-stamp down with WI-280.
-    "check_trajectory.py": 3428,
+    # +25 (3428 -> 3453), WI-388: the `Bar` loader-table column + the
+    # `## Context` body-grammar clip (both F5-mirrored edits), and the two
+    # unclassified-cell RULINGS recorded at the §A5.1 split's home (LLR
+    # `SR-Refs` -> traced/routed, SR `SupersededBy` -> ratified confirmed) —
+    # most of the bump is that recorded reasoning. Reviewed bump, log fragment
+    # 2026-08-02 (WI-388). Re-stamp down with WI-280.
+    # +78 (3453 -> 3531), WI-388 consumer 3: the pack-citation warn
+    # (`knowledge_pack_findings` + `_declared_packs` + `_spec_text_for`) —
+    # warn-ONLY, the LLR.Component -> CMP.Knowledge join re-derived under this
+    # module's F5 independence (the shipped hook imports no sibling).
+    # Reviewed bump, log fragment 2026-08-02 (WI-388). Re-stamp down with
+    # WI-280.
+    "check_trajectory.py": 3531,
     # NEW ENTRY, +25 (1498 -> 1523), WI-357: the two-stage work-branch claim
     # signal — the on-disk fast path plus the branch-history probe that
     # survives the §2.3 close commit (git log -1 over the claim path), with
@@ -832,7 +849,11 @@ BASELINE = {
     # stays green), and the docstring listing carries the two names. Required
     # registration, not monolith growth: the WI-392/WI-393 shape directly
     # above. Reviewed bump, log fragment 2026-08-02 (WI-381).
-    "bootstrap.py": 2267,
+    # +11 (2267 -> 2278), WI-388: the intake.py MAPPING row + its kit-contents
+    # listing entry — the scaffold surface gained the unified intake mint.
+    # Reviewed bump, log fragment 2026-08-02 (WI-388). Re-stamp down with
+    # WI-280.
+    "bootstrap.py": 2278,
     # NEW ENTRY, +228 (1423 -> 1651), Phase 2b of the concurrency restructure
     # (docs/concurrency-restructure.md §7): the spec-folder work-item reader,
     # which crosses this module over THRESHOLD for the first time. It is one
@@ -925,7 +946,10 @@ BASELINE = {
     # integrate's dispatch-lock rung shares it instead of copying it), and
     # the `lanes` dial row in AGENT_LOOP_DIALS. Reviewed bump, log fragment
     # 2026-08-02 (WI-381). Re-stamp down with WI-280.
-    "agent_common.py": 1824,
+    # +15 (1824 -> 1839), WI-388: the F5-mirrored loader edits (`Bar` column,
+    # `SPEC_CONTEXT` + its clip in `parse_spec_deliverable`). Reviewed bump,
+    # log fragment 2026-08-02 (WI-388). Re-stamp down with WI-280.
+    "agent_common.py": 1839,
     # NEW ENTRY, WI-387 — integrate.py crossed THRESHOLD (1418 -> 1588) adding
     # the third terminal outcome. The extraction the ratchet asks for was TAKEN
     # FIRST, not argued away: `hand_back` and `quarantine`, the largest unit and
@@ -1071,7 +1095,20 @@ BASELINE = {
     # its own refresh completes. Most of the delta is the docstrings stating
     # the authority model. Reviewed bump, log fragment 2026-08-02 (WI-381).
     # Re-stamp down with WI-280.
-    "integrate.py": 2251,
+    # +102 (2251 -> 2353), WI-388: the adjudication no-bar arm + the `bar`
+    # strictness key — `_lane_bar_directives` (the claimed rows' say over the
+    # refresh bar, read off the same trunk claim the slot reads), `_refresh_bar`
+    # (the extraction that keeps `refresh` under the complexity ratchet),
+    # `_run_bar`'s --gate pin — and the post-merge INTAKE arm: the one honest
+    # hook point where `intake.intake_after_merge` mints inside the held slot
+    # (§A5.2; the mint helper itself is the new sibling intake.py, kept under
+    # the ratchet's threshold). Reviewed bump, log fragment 2026-08-02
+    # (WI-388). Then +64 (2353 -> 2417), WI-388 REVIEW-A finding 1: the no-bar
+    # arm's diff-scope rung (`_ADJUDICATION_SURFACES` +
+    # `_adjudication_scope_ok`) — the kind alone never earns the no-bar path;
+    # the branch's non-refresh delta must stay on the §A5.2 surfaces or the
+    # full bar runs. Re-stamp down with WI-280.
+    "integrate.py": 2417,
 }
 
 

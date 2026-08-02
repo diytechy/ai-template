@@ -63,6 +63,7 @@ graph LR
     m_scripts_gen_skills_index["scripts/gen_skills_index — Generate the skills applicability index from th…"]
     m_scripts_gen_trajectory["scripts/gen_trajectory — Generate the offline project-state dashboard (r…"]
     m_scripts_handback["scripts/handback — handback.py — the two lane closes that are not …"]
+    m_scripts_intake["scripts/intake — intake.py — the unified trunk-side intake mint …"]
     m_scripts_integrate["scripts/integrate — integrate.py — the local integrator: the statio…"]
     m_scripts_lane["scripts/lane — lane.py — one lane's mechanics (docs/concurrenc…"]
     m_scripts_plan_artifacts["scripts/plan_artifacts — The dual-plan round artifact filer: the coordin…"]
@@ -91,6 +92,7 @@ graph LR
     m_scripts_agent_loop --> m_scripts_agent_route
     m_scripts_agent_loop --> m_scripts_agent_session
     m_scripts_agent_loop --> m_scripts_dispatch
+    m_scripts_agent_loop --> m_scripts_intake
     m_scripts_agent_loop --> m_scripts_plan_round
     m_scripts_agent_loop --> m_scripts_plan_runner
     m_scripts_agent_loop --> m_scripts_score_reviews
@@ -99,6 +101,7 @@ graph LR
     m_scripts_dispatch --> m_scripts_agent_common
     m_scripts_dispatch --> m_scripts_gen_trajectory
     m_scripts_dispatch --> m_scripts_handback
+    m_scripts_dispatch --> m_scripts_intake
     m_scripts_dispatch --> m_scripts_integrate
     m_scripts_dispatch --> m_scripts_lane
     m_scripts_dispatch --> m_scripts_schedule
@@ -115,7 +118,13 @@ graph LR
     m_scripts_handback --> m_scripts_agent_common
     m_scripts_handback --> m_scripts_integrate
     m_scripts_handback --> m_scripts_spec_move
+    m_scripts_intake --> m_scripts_agent_common
+    m_scripts_intake --> m_scripts_check_trajectory
+    m_scripts_intake --> m_scripts_dispatch
+    m_scripts_intake --> m_scripts_schedule
+    m_scripts_intake --> m_scripts_wi_convert
     m_scripts_integrate --> m_scripts_agent_common
+    m_scripts_integrate --> m_scripts_intake
     m_scripts_integrate --> m_scripts_schedule
     m_scripts_integrate --> m_scripts_score_reviews
     m_scripts_integrate --> m_scripts_spec_move
@@ -160,6 +169,7 @@ graph LR
     m_scripts_check_stubs -. IF-006 .-> m_scripts_check
     m_scripts_check_trajectory -. IF-009 .-> m_scripts_check
     m_scripts_check_trajectory -. IF-056 .-> m_scripts_gen_trajectory
+    m_scripts_check_trajectory -. IF-091 .-> m_scripts_intake
     m_scripts_check_trajectory -. IF-082 .-> m_scripts_traj_parse
     m_scripts_check_trajectory -. IF-084 .-> m_scripts_traj_status
     m_scripts_check_trajectory -. IF-083 .-> m_scripts_traj_views
@@ -168,6 +178,7 @@ graph LR
     m_scripts_gen_okf -. IF-012 .-> m_scripts_check
     m_scripts_gen_trajectory -. IF-011 .-> m_scripts_check
     m_scripts_gen_trajectory -. IF-088 .-> m_scripts_dispatch
+    m_scripts_intake -. IF-090 .-> m_scripts_integrate
     m_scripts_plan_artifacts -. IF-061 .-> m_scripts_plan_runner
     m_scripts_plan_coverage -. IF-060 .-> m_scripts_plan_coverage_step
     m_scripts_plan_round -. IF-058 .-> m_scripts_plan_runner
@@ -181,6 +192,7 @@ graph LR
     m_scripts_trace -. IF-089 .-> m_scripts_dispatch
     m_scripts_trace -. IF-075 .-> m_scripts_gen_open_items
     m_scripts_trace_text -. IF-076 .-> m_scripts_trace
+    m_scripts_wi_convert -. IF-092 .-> m_scripts_intake
     m_scripts_wi_convert -. IF-078 .-> m_scripts_plan_artifacts
 ```
 <!-- END GENERATED DEPENDENCY DIAGRAM -->
@@ -224,7 +236,7 @@ Contracts (interfaces): IF-037, IF-065
 | `parse_spec_status(relpath)` | The Status a spec's LOCATION encodes — the whole of it. |  |
 | `parse_spec_id(relpath, data)` | The work-item id, which must be a non-empty string AND must be the one |  |
 | `parse_spec_deliverable(relpath, body)` | The Deliverable cell a spec body carries, verbatim ("" when absent). |  |
-| `parse_spec_row(text, relpath)` | `(row, order)` for one spec file — a 17-key row shaped exactly like the |  |
+| `parse_spec_row(text, relpath)` | `(row, order)` for one spec file — an 18-key row shaped exactly like the |  |
 | `read_spec_rows(work_dir, on_error)` | The spec folder's rows in REGISTRY order — by the explicit `order` key, |  |
 | `load_registry_rows(root)` | The work-item rows from the one registry home, `docs/work/` (the spec |  |
 | `load_wi_registry(root)` | {WI-ID: raw row dict} from the worktree's tracked WI registry — the |  |
@@ -258,7 +270,7 @@ Contracts (interfaces): IF-037, IF-065
 
 ### `scripts/agent_loop`
 _Headless session engine: one claimed worker assignment, a reviewer/critique_
-Imports (internal): `agent_common`, `agent_route`, `agent_session`, `dispatch`, `plan_round`, `plan_runner`, `score_reviews`
+Imports (internal): `agent_common`, `agent_route`, `agent_session`, `dispatch`, `intake`, `plan_round`, `plan_runner`, `score_reviews`
 Contracts (interfaces): IF-015, IF-068
 
 | Public item | Summary | Implements |
@@ -579,7 +591,7 @@ Contracts (interfaces): IF-009, IF-023, IF-077
 | `parse_spec_status(relpath)` | The Status a spec's LOCATION encodes — the whole of it. |  |
 | `parse_spec_id(relpath, data)` | The work-item id, which must be a non-empty string AND must be the one |  |
 | `parse_spec_deliverable(relpath, body)` | The Deliverable cell a spec body carries, verbatim ("" when absent). |  |
-| `parse_spec_row(text, relpath)` | `(row, order)` for one spec file — a 17-key row shaped exactly like the |  |
+| `parse_spec_row(text, relpath)` | `(row, order)` for one spec file — an 18-key row shaped exactly like the |  |
 | `read_spec_rows(work_dir, on_error)` | The spec folder's rows in REGISTRY order — by the explicit `order` key, |  |
 | `read_registry_rows(path, errors)` | The work-item rows from the one registry home — the spec folder beside |  |
 | `registry_home(root)` | The repo-relative path of the registry home — `docs/work/`, the one |  |
@@ -612,6 +624,7 @@ Contracts (interfaces): IF-009, IF-023, IF-077
 | `staged_completion_findings(root)` | The close-time half of the reconciler (WI-352): a staged commit flipping a |  |
 | `status_forward_only_findings(root, wis)` | The status.md forward-only rule (WI-200) — restores the WI-180-retired R-D |  |
 | `dead_dependency_findings(wis)` | Surface a live WI that hard-depends on a `cancelled` predecessor (WI-267). |  |
+| `knowledge_pack_findings(root, wis)` | The WI-388 pack-citation warn (consumer 3 of the intake context block) |  |
 | `backlog_staleness_findings(root, wis)` | WI-205 — the backlog-staleness warn (warn-only, the WI-129 checker stance). |  |
 | `staged_findings(root)` | The no-validation-delta warn (S0 ruling #2 corollary; warn-first). |  |
 | `spine_cell_class(csv_path, column)` | `"traced"` for a column §A5.1 rules traceability, else `"ratified"`. |  |
@@ -663,7 +676,7 @@ Contracts (interfaces): IF-050, IF-051
 
 ### `scripts/dispatch`
 _dispatch.py — the dispatcher: tick loop, admission, merge slot (the scheduling front end)._
-Imports (internal): `agent_common`, `gen_trajectory`, `handback`, `integrate`, `lane`, `schedule`, `trace`
+Imports (internal): `agent_common`, `gen_trajectory`, `handback`, `intake`, `integrate`, `lane`, `schedule`, `trace`
 Contracts (interfaces): IF-015
 
 | Public item | Summary | Implements |
@@ -790,9 +803,26 @@ Contracts (interfaces): IF-080
 | `hand_back(root, branch, reason)` | Close `branch` on the HANDBACK outcome. `(returned WI ids, None)`, or |  |
 | `quarantine(root, branch, why)` | Turn a RED non-merged lane into a BAR-INERT artefact. A refusal, or None. |  |
 
+### `scripts/intake`
+_intake.py — the unified trunk-side intake mint (WI-388; docs/concurrency-v2.md §A5.2)._
+Imports (internal): `agent_common`, `check_trajectory`, `dispatch`, `schedule`, `wi_convert`
+Contracts (interfaces): IF-090, IF-091, IF-092
+
+| Public item | Summary | Implements |
+|---|---|---|
+| `next_wi_id(root)` | `max(existing) + 1` over EVERY spec filename under docs/work/ — every |  |
+| `tier_signal(trigger, *, rows_touched, gate_moved, reason)` | `buildtier` from MEASURABLE inputs (the amendment's clause 2): rows |  |
+| `context_block(root, wi_row, rows)` | The WI-388 context block: what the registries already know about this |  |
+| `parse_dispositions(text, where)` | `(drafts, refusal)` — the `## Dispositions` section's fenced TOML |  |
+| `intake_after_merge(root, before, after, outcomes, branch)` | THE MERGE-SLOT ARM: triggers (a), (b) and (d) for one landed merge. |  |
+| `mint_gap_rows(root, census)` | THE DISPATCHER'S RUNG-1 ARM (trigger c): the gap census, minted as |  |
+| `adjudication_action(level)` | May adjudication FLIP `Modified` -> `Verified`? Ruled decision 2: |  |
+| `flip_verified(root, ids)` | Enact — or recommend — the adjudication row's cheap outcome for spine |  |
+| `main(argv)` |  |  |
+
 ### `scripts/integrate`
 _integrate.py — the local integrator: the station protocol and its merge slot._
-Imports (internal): `agent_common`, `schedule`, `score_reviews`, `spec_move`
+Imports (internal): `agent_common`, `intake`, `schedule`, `score_reviews`, `spec_move`
 
 | Public item | Summary | Implements |
 |---|---|---|
@@ -924,7 +954,7 @@ Contracts (interfaces): IF-053, IF-054
 | `parse_spec_status(relpath)` | The Status a spec's LOCATION encodes — the whole of it. |  |
 | `parse_spec_id(relpath, data)` | The work-item id, which must be a non-empty string AND must be the one |  |
 | `parse_spec_deliverable(relpath, body)` | The Deliverable cell a spec body carries, verbatim ("" when absent). |  |
-| `parse_spec_row(text, relpath)` | `(row, order)` for one spec file — a 17-key row shaped exactly like the |  |
+| `parse_spec_row(text, relpath)` | `(row, order)` for one spec file — an 18-key row shaped exactly like the |  |
 | `read_spec_rows(work_dir, on_error)` | The spec folder's rows in REGISTRY order — by the explicit `order` key, |  |
 | `load_registry_rows(path)` | The work-item rows from the one registry home — the spec folder beside |  |
 | `load_wis(rows)` | Parse work-item rows into a list of scheduler WI dicts (skips the inert |  |
@@ -1161,7 +1191,7 @@ Contracts (interfaces): IF-079
 | `spec_paths(work_dir)` | Every `<status>/WI-*.md` spec under `work_dir`, sorted by path; `[]` when |  |
 | `folder_is_authoritative(csv_path)` | True when the spec folder beside `csv_path` holds at least one REAL spec. |  |
 | `load_csv(path)` | The registry's rows, header-preserving. Refuses a header that is not the |  |
-| `write_csv(path, rows)` | Write `rows` back as the 17-column registry: QUOTE_MINIMAL, LF. |  |
+| `write_csv(path, rows)` | Write `rows` back as the 18-column registry: QUOTE_MINIMAL, LF. |  |
 | `to_specs(csv_path, work_dir, force)` | Write one spec file per CSV row under `work_dir`. Returns the relative |  |
 | `write_spec_file(work_dir, row, order)` | Write one registry row as a spec file under `work_dir`; return its |  |
 | `read_specs(work_dir)` | `[(row, order, relpath)]` for every `*.md` under `work_dir`, sorted into |  |
