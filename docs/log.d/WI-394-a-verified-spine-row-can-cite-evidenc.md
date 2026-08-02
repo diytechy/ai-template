@@ -20,10 +20,12 @@ flipped to pin the new behavior both ways.
   docstring); `tests/test_check_doc_refs.py` (7 new/amended tests, watched red
   first); the enforcement-audit row; the citation triage (below); the WI spec
   closed to `docs/work/complete/` with `specref` cleared (R-F).
-- **The census, quoted (check_doc_refs --root . --strict).** Before: **13
-  dangling**. After: **0 dangling, rc=0** (untraced 873 → 876, the three
-  reclassified `report.md` references). The 6 true registry findings and their
-  triage:
+- **The census, quoted (check_doc_refs --root . --strict, measured at the
+  triage sitting; rc=0 re-confirmed at the REVIEW-A rework HEAD).** Before:
+  **13 dangling**. After: **0 dangling, rc=0** (untraced 873 → 876 in those
+  runs — the three reclassified `report.md` references; the absolute count
+  varies with the gitignored generated report's local presence). The 6 true
+  registry findings and their triage:
   1. `TC-076` Evidence `tests/test_agent_loop_dualplan.py::test_full_round_unattended_selects_and_files` <!-- path-ok: the dead citations this row triaged, quoted as record -->
      → same node in `tests/test_dual_plan_round.py` (preserved verbatim by
      31ad569d's "preserved before deletion" clause).
@@ -54,19 +56,26 @@ flipped to pin the new behavior both ways.
   RATIFIED cells naming deleted inputs (TC-091 Description/Method, SR-094
   AcceptanceCriteria, LLR-096/132 Detail) deliberately untouched — WI-390's
   program close. **Two `docs/log.md` link TARGETS redirected at the spec's
-  archival** (`specs/WI-394.md` → `archive/specs/WI-394.2026-08-01.md`, text
-  untouched): `check_trajectory --strict`'s R-F remedy demands the archive
+  archival** — old target `docs/specs/WI-394.md` (log-relative as written) <!-- path-ok: the redirect's BEFORE-target, quoted as record — the spec moved at this very close, so the old path resolves nowhere by construction -->
+  → `docs/archive/specs/WI-394.2026-08-01.md`, link text
+  untouched: `check_trajectory --strict`'s R-F remedy demands the archive
   move, and moving without redirecting inbound links is the exact defect
   WI-288 named ("one indivisible ritual — no caller can do half of it") — its
   `_relink_archived_specs` machinery died with the dispatcher (31ad569d), so
   the ritual was applied by hand, target-only per the WI-288 convention.
   `check_docs` measured back at its pre-existing 4 broken links, none added.
 - **Byte deltas on budgeted files:** none (no budgeted doc touched).
-- **Verification (watched):** `pytest -q tests/test_check_doc_refs.py
-  tests/test_dupes_census_audit.py` — **39 passed**; smoke tier
-  (`pytest -q -n auto -m smoke`) — **578 passed, 6 skipped in 8.96s**; full
+- **Verification (watched; at-remedy totals re-measured 2026-08-01 at the
+  REVIEW-A rework HEAD unless dated):** `pytest -q
+  tests/test_check_doc_refs.py` — **27 passed in 0.88s**; `pytest -q
+  tests/test_dupes_census_audit.py` — **12 passed in 0.50s**; smoke tier
+  (`pytest -q -n auto -m smoke`) — **582 passed, 2 skipped in 9.20s**; full
   unfiltered suite (`pytest -q -n auto`) — **1802 passed, 10 skipped in
-  276.37s (0:04:36)**; `trace.py --strict-integrity` rc=0;
-  `check_doc_refs --root . --strict` rc=0. Pre-existing and NOT this lane's:
-  `check_docs.py --stale` reds on 4 broken links in old `docs/work/complete/`
-  specs (reproduced with this branch's changes stashed).
+  276.37s (0:04:36)**, measured at the pre-close tree; `trace.py
+  --strict-integrity` rc=0 (triage sitting); `check_doc_refs --root .
+  --strict` **rc=0** at the rework HEAD — the close commit itself stood at
+  rc=1 (2 dangling: this fragment's own redirect quotation, REVIEW-A finding
+  1), fixed by the path-ok-marked rewrite above. Pre-existing and NOT this
+  lane's: `check_docs.py --stale` reds on 4 broken links in old
+  `docs/work/complete/` specs (reproduced with this branch's changes
+  stashed).

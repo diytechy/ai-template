@@ -52,6 +52,12 @@ Not done, per the ruling: no pytest/node-id resolver, no `CodeSymbol` symbol
 oracle (option (a) declined); the RATIFIED Description/Method cells naming
 deleted inputs stay with WI-390.
 
-Verification: module suite 39 passed; smoke 578 passed / 6 skipped; full
-suite 1802 passed / 10 skipped in 4:36; `check_doc_refs --root . --strict`
-rc=0 with 0 dangling.
+Verification (as watched, dated): `pytest -q tests/test_check_doc_refs.py`
+**27 passed** and `pytest -q tests/test_dupes_census_audit.py` **12 passed**,
+smoke tier **582 passed / 2 skipped** — re-measured 2026-08-01 at the
+REVIEW-A rework HEAD; full unfiltered suite **1802 passed / 10 skipped in
+4:36**, measured 2026-08-01 at the pre-close tree.
+`check_doc_refs --root . --strict`: rc=0 with 0 dangling at the triage
+commit; the close commit itself stood at rc=1 (2 dangling in the new log
+fragment's own redirect quotation — REVIEW-A finding 1) until the rework
+fix; rc=0 re-measured at the rework HEAD.
