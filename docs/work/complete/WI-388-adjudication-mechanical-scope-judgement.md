@@ -60,10 +60,27 @@ d5805460), every clause of the amended title built:
   1839, agent_loop 3007, bootstrap 2278), dupes census re-stamped (+ the
   intake-mint class), smoke max-tests 660→700.
 
-Watched 2026-08-02: full suite 1959 passed / 5 skipped (0:05:14)
+REVIEW-A rework (2026-08-02, CHANGES-REQUESTED findings=5, all closed;
+docs/reviews/WI-388-REVIEW-A.md): (1) the no-bar arm gained its DIFF-SCOPE
+RUNG — `_adjudication_scope_ok`: the branch's non-refresh delta must stay on
+the §A5.2 surfaces (docs/work/, the three spine CSVs, open-items.csv,
+docs/gate, docs/log.d/, docs/reviews/, + the declared [generated] set) or
+the FULL bar runs; the reviewer's product-file + red-harness drive is now
+the shipped regression, red-then-green both ways. (2) the intake→wi_convert
+cross-CMP seam declared (IF-092, the IF-078 shape; Contracts line updated) —
+post-regen `check_trajectory --strict` rc=0 on a scratch copy, warn list
+byte-identical to the trunk baseline (11). (3) the disposition title carries
+the handback merge's sha, so a re-queued row's second handback mints its own
+disposition (two-handback sequence driven red-then-green). (4) TC-147/148
+Verifies cite IF-091/IF-090. (5) the smoke-budget figure re-measured under
+its own rev pin (669 collected at 81147e33).
+
+Watched 2026-08-02 (pre-rework close): full suite 1959 passed / 5 skipped (0:05:14)
 <!-- fig: cmd="python -m pytest -q -n auto" rev=d5805460 -->
-smoke 662 passed / 6 skipped
-<!-- fig: cmd="python -m pytest -q -n auto -m smoke" rev=d5805460 -->
+post-rework: full suite 1961 passed / 5 skipped (0:05:18)
+<!-- fig: cmd="python -m pytest -q -n auto" rev=81147e33 -->
+smoke 667 passed / 2 skipped
+<!-- fig: cmd="python -m pytest -q -n auto -m smoke" rev=81147e33 -->
 trace/check_trajectory/check_doc_refs/check_figures all rc=0 under --strict;
 derive_gate --check rc=0. Full detail, the deviations (including the
 TC-144 Method amendment this row's own merge is expected to adjudicate), and

@@ -133,12 +133,40 @@ No byte-budgeted doc (AGENTS.template.md / PROCESS.md / PROCESS_OPTIONS.md)
 was touched. `docs/gate` re-derived (basis counts moved with the three new
 LLR + three new TC rows; value G3 unchanged).
 
+**REVIEW-A rework (2026-08-02; CHANGES-REQUESTED findings=5, all closed —
+the verdict record is [WI-388-REVIEW-A.md](../reviews/WI-388-REVIEW-A.md)).**
+Finding 1 (MAJOR): the no-bar arm was kind-gated only, and the reviewer
+drove a product file with a red check harness through an adjudication-only
+lane onto trunk unbarred — an un-run green against §A8's fixed points. Closed
+structurally with the diff-scope rung: `integrate._adjudication_scope_ok`
+honours the no-bar path only when the branch's non-refresh delta
+(merge-base → peeled work tip, the `_minted_id_refusal` read) stays on the
+§A5.2 surfaces — docs/work/, the three spine registries, open-items.csv
+(the R3 surface-an-open-item outcome), docs/gate, docs/log.d/,
+docs/reviews/, plus the declared [generated] set; ANY other path fails
+toward the full bar. The reviewer's drive is the shipped regression
+(red-then-green: the harness now RUNS and reds; the pure-registry lane with
+a spine Status edit keeps no-bar). Finding 2 (MAJOR): the intake→wi_convert
+cross-component import was undeclared and the branch would have redded its
+own merge refresh at the arch-map regen; IF-092 (Consumes, the IF-078
+shape) + the Contracts line close it — verified by scratch regen:
+`check_trajectory --strict` rc=0 and the warn list byte-identical to the
+trunk baseline (11 warns, zero delta), which also proves finding 4's
+TC-147/148 Verifies citations (IF-091/IF-090) cleared the two Active-seam
+warns. Finding 3: the disposition title now carries the handback MERGE's
+sha (`_rev7`), so a re-queued row's second handback mints its own
+disposition — two-handback sequence driven red-then-green, same-event
+re-runs still dedupe. Finding 5: the smoke-budget figure re-measured under
+its own rev pin (669 collected at 81147e33; budget 700, ~4.6% headroom).
+Sizes: integrate 2353→2417 (the rung, reasoned at the entry).
+
 **Verification** (watched, this tree):
-full suite 1959 passed / 5 skipped in 314.31s (a first run red one test on
-the stale `docs/gate` cache mid-close; re-derived, then fully green)
-<!-- fig: cmd="python -m pytest -q -n auto" rev=d5805460 -->
-smoke tier 662 passed / 6 skipped
-<!-- fig: cmd="python -m pytest -q -n auto -m smoke" rev=d5805460 -->
+full suite, post-rework: 1961 passed / 5 skipped in 318.50s (0:05:18)
+<!-- fig: cmd="python -m pytest -q -n auto" rev=81147e33 -->
+(the pre-rework close measured 1959/5 at d5805460; a first run there red one
+test on the stale `docs/gate` cache mid-close, re-derived then fully green)
+smoke tier, post-rework: 667 passed / 2 skipped
+<!-- fig: cmd="python -m pytest -q -n auto -m smoke" rev=81147e33 -->
 `trace.py --strict` rc=0 · `check_trajectory.py --strict` rc=0 ·
 `check_doc_refs.py --strict` rc=0 · `check_figures.py --strict` rc=0 ·
 `derive_gate.py --check` rc=0.
