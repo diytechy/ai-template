@@ -637,7 +637,28 @@ BASELINE = {
     # +10 (3251 -> 3261), WI-387: the `## Handback` section joins the spec body
     # grammar in this F5 copy — identical text to the other two by construction
     # (tests/test_wi_loader_sync.py). Reviewed bump, log 2026-08-01.
-    "check_trajectory.py": 3261,
+    # +98 (3261 -> 3359), WI-399: the knowledge⇒component containment rule
+    # gains its EARLY firing point (`shipped_modules`/`added_module_findings`) —
+    # the shipped-module delta a work branch can see without the trunk-owned
+    # arch-map regeneration (SR-133), so a lane that adds a module reds its own
+    # bar, not the station's. The rule belongs beside its siblings in
+    # `component_findings` (one containment home, the F5 stance) rather than in
+    # a new module that would itself owe registration; the stack.ini reads
+    # collapsed onto one `_stack_ini_get` (shrinking `_tests_dir` and killing a
+    # sanctioned dupe block), and roughly half the remaining bump is the
+    # mechanism comment recording WHY the firing point moved (WI-374/WI-387,
+    # twice-driven). Reviewed bump, log fragment docs/log.d 2026-08-02; re-stamp
+    # down with WI-280.
+    # +69 (3359 -> 3428), WI-399 rework (REVIEW-A finding 1): the delta now
+    # mirrors build_map's symbol-emptiness skip (`_would_be_inventoried` +
+    # `_has_internal_import`) — without it a bare `__init__.py` or comment-only
+    # module redded --strict FOREVER (the regeneration skips it from the map, so
+    # the delta could never empty: accidental new policy). Files mode returns
+    # empty by design (finding 2 — a real files-mode map has no module headers,
+    # the whole family is dormant there), and an absolute [paths] src scans the
+    # path it names (finding 3). Drift-pinned by the differential tests that run
+    # the real generator. Reviewed bump; re-stamp down with WI-280.
+    "check_trajectory.py": 3428,
     # NEW ENTRY, +25 (1498 -> 1523), WI-357: the two-stage work-branch claim
     # signal — the on-disk fast path plus the branch-history probe that
     # survives the §2.3 close commit (git log -1 over the claim path), with

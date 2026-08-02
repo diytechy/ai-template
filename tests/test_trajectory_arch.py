@@ -465,6 +465,257 @@ def test_coupling_needs_an_arch_map_inventory(tmp_path):
     assert KN_MSG not in proc.stderr
 
 
+# --- WI-399: containment owed where a module is ADDED --------------------------
+# docs/architecture.md is trunk-owned, so its freshness gate SKIPs on a claimed
+# work branch (SR-133) and a module a branch adds enters the committed arch-map
+# inventory only when the trunk lane's refresh regenerates it — AFTER the last
+# review round, which made the station the FIRST place the knowledge⇒component
+# red could exist (WI-374/drive.py, WI-387/handback.py). The same rule now also
+# fires in the lane's own bar on the ADDED modules: shipped source files on disk
+# under the declared arch-map scan root that the committed inventory lacks. Same
+# pack arming, same components-check opt-out, same WARN-plain/ERROR-strict tier;
+# the station's own rule is untouched (the backstop).
+
+ADDED_MSG = "not yet in the committed arch-map"
+
+# A module body gen_arch_map WOULD inventory (docstring summary + a public
+# symbol). The fixtures must ship real-symbol modules: build_map SKIPS
+# symbol-empty files (bare __init__.py, comment-only, private-only) from the
+# MODULE MAP, and the lane delta mirrors that skip (REVIEW-A finding 1), so an
+# empty body could never red anything on either side.
+MODULE_BODY = '"""M."""\n\n\ndef run():\n    """go"""\n'
+
+
+def write_module(root, name, text=MODULE_BODY, src="scripts"):
+    d = root / src
+    d.mkdir(parents=True, exist_ok=True)
+    (d / name).write_text(text, encoding="utf-8")
+
+
+def write_arch_src(root, files, src="scripts", mode=None):
+    """Write docs/stack.ini declaring the arch-map scan root (+ optional mode)
+    and the shipped module files on disk under it — the lane-visible set. `.py`
+    files get a real inventoried body (MODULE_BODY), anything else a comment."""
+    (root / "docs").mkdir(parents=True, exist_ok=True)
+    ini = "[paths]\nsrc = {}\n".format(src)
+    if mode:
+        ini += "\n[arch-map]\nmode = {}\n".format(mode)
+    (root / "docs" / "stack.ini").write_text(ini, encoding="utf-8")
+    for name in files:
+        write_module(root, name, MODULE_BODY if name.endswith(".py") else "# m\n", src)
+
+
+def regen_map(root, src="scripts", mode=None):
+    """Run the REAL gen_arch_map over the fixture tree — the differential pin
+    (REVIEW-A finding 1): the lane delta must be empty exactly when the
+    regenerated map absorbs a module, so the mirror of build_map's
+    symbol-emptiness skip cannot drift without a red here."""
+    cmd = [SCRIPTS / "gen_arch_map.py", "--src", src, "--doc", "docs/architecture.md"]
+    if mode:
+        cmd += ["--mode", mode]
+    proc = run_py(cmd, cwd=root)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+
+
+def _contained_two_module_tree(tmp_path, src="scripts"):
+    """A pack-armed tree whose committed 2-module arch-map is fully contained —
+    clean under the station rule — with the map's modules also on disk."""
+    write_arch(tmp_path, _arch_n(2))
+    write_pack(tmp_path, "prompt-image")
+    write_cmps(tmp_path, "CMP-001,Core,software,,built,,,,\n")
+    write_tagged_llrs(
+        tmp_path, [("scripts/mod_0", "CMP-001"), ("scripts/mod_1", "CMP-001")]
+    )
+    write_arch_src(tmp_path, ["mod_0.py", "mod_1.py"], src=src)
+
+
+def test_added_module_without_component_tag_reds_the_lane_bar(tmp_path):
+    # The wi-387 topology, the class this row closes: the committed arch-map is
+    # STALE (trunk-vintage — no regeneration on a work branch) and clean under
+    # the station rule, yet the tree ships a new module with no Component tag.
+    # The lane bar itself reds, so the station can never be the first to know.
+    _contained_two_module_tree(tmp_path)
+    write_module(tmp_path, "mod_new.py")
+    plain = run_traj(tmp_path)
+    assert plain.returncode == 0, plain.stdout + plain.stderr
+    assert ADDED_MSG in plain.stderr
+    assert "scripts/mod_new" in plain.stderr
+    # The station rule has nothing to say here (the stale map IS contained) —
+    # only the early firing point sees the red. That is the station-first shape.
+    assert KN_MSG not in plain.stderr
+    strict = run_traj(tmp_path, "--strict")
+    assert strict.returncode == 1
+    assert ADDED_MSG in strict.stderr
+    assert "1 shipped module(s)" in strict.stderr
+
+
+def test_added_module_greens_when_the_component_tag_lands(tmp_path):
+    # The two-registry-row remedy (an LLR Component cell) clears the finding in
+    # the same tree — no arch-map regeneration required.
+    _contained_two_module_tree(tmp_path)
+    write_module(tmp_path, "mod_new.py")
+    write_tagged_llrs(
+        tmp_path,
+        [
+            ("scripts/mod_0", "CMP-001"),
+            ("scripts/mod_1", "CMP-001"),
+            ("scripts/mod_new", "CMP-001"),
+        ],
+    )
+    proc = run_traj(tmp_path, "--strict")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert ADDED_MSG not in proc.stderr
+
+
+def test_fresh_map_module_is_the_station_rules_not_the_deltas(tmp_path):
+    # A module IN the committed map but untagged is the existing rule's finding;
+    # the added-module firing point must not double-report it (the delta is
+    # exactly the modules the map lacks).
+    write_arch(tmp_path, _arch_n(3))
+    write_pack(tmp_path, "prompt-image")
+    write_cmps(tmp_path, "CMP-001,Core,software,,built,,,,\n")
+    write_tagged_llrs(
+        tmp_path, [("scripts/mod_0", "CMP-001"), ("scripts/mod_1", "CMP-001")]
+    )
+    write_arch_src(tmp_path, ["mod_0.py", "mod_1.py", "mod_2.py"])
+    strict = run_traj(tmp_path, "--strict")
+    assert strict.returncode == 1
+    assert KN_MSG in strict.stderr
+    assert ADDED_MSG not in strict.stderr
+
+
+def test_added_module_check_shares_the_pack_arming(tmp_path):
+    # No pack -> dormant at the early firing point too: this row moves WHERE the
+    # containment rule fires, never WHEN it arms (no new policy).
+    write_arch(tmp_path, _arch_n(2))
+    write_arch_src(tmp_path, ["mod_0.py", "mod_1.py", "mod_new.py"])
+    strict = run_traj(tmp_path, "--strict")
+    assert strict.returncode == 0, strict.stdout + strict.stderr
+    assert ADDED_MSG not in strict.stderr
+
+
+def test_added_module_check_respects_components_check_off(tmp_path):
+    # The one opt-out silences the early firing point exactly as it does the
+    # station rule (shared switch, shared policy).
+    _contained_two_module_tree(tmp_path)
+    write_module(tmp_path, "mod_new.py")
+    (tmp_path / "docs" / "components-check").write_text("off\n", encoding="utf-8")
+    strict = run_traj(tmp_path, "--strict")
+    assert strict.returncode == 0, strict.stdout + strict.stderr
+    assert ADDED_MSG not in strict.stderr
+
+
+def test_added_module_check_needs_an_arch_map_inventory(tmp_path):
+    # A pack + shipped modules but NO committed arch-map -> dormant, exactly as
+    # the station rule is (a pre-arch-map repo is not punished for adopting it
+    # late; the arming is shared, not new).
+    write_pack(tmp_path, "prompt-image")
+    write_arch_src(tmp_path, ["mod_new.py"])
+    strict = run_traj(tmp_path, "--strict")
+    assert strict.returncode == 0, strict.stdout + strict.stderr
+    assert ADDED_MSG not in strict.stderr
+
+
+def test_added_module_delta_symbols_mode_sees_only_python(tmp_path):
+    # Default symbols mode scans `*.py` exactly as gen_arch_map does: a .sh file
+    # the regeneration would never inventory must not red the lane either — the
+    # delta mirrors what the refresh WOULD add, no more.
+    _contained_two_module_tree(tmp_path)
+    (tmp_path / "scripts" / "helper.sh").write_text("# h\n", encoding="utf-8")
+    strict = run_traj(tmp_path, "--strict")
+    assert strict.returncode == 0, strict.stdout + strict.stderr
+    assert ADDED_MSG not in strict.stderr
+
+
+def test_files_mode_real_map_keeps_the_whole_family_dormant(tmp_path):
+    # REVIEW-A finding 2, the honest claim: a REAL files-mode map (gen_arch_map
+    # --mode files) is a table with no `### ` module headers, so arch_inventory
+    # reads it as EMPTY and the whole containment family is dormant there —
+    # station rule and early firing point alike. Parity, no lane-only hole: the
+    # lane must NOT invent a delta the regeneration could never absorb.
+    write_arch(tmp_path, _arch_n(0))  # just the marker pair
+    write_pack(tmp_path, "prompt-image")
+    write_arch_src(tmp_path, ["mod_0.py", "helper.sh"], mode="files")
+    regen_map(tmp_path, mode="files")
+    strict = run_traj(tmp_path, "--strict")
+    assert strict.returncode == 0, strict.stdout + strict.stderr
+    assert ADDED_MSG not in strict.stderr
+    assert KN_MSG not in strict.stderr
+
+
+def test_added_module_delta_skips_hidden_and_pycache(tmp_path):
+    # The scan mirrors gen_arch_map's hidden-part rule (dot- and __pycache__-
+    # prefixed parts under the root are not source), so caches never red a lane
+    # — pinned with REAL module bodies, so the skip is the hidden rule, not the
+    # symbol-emptiness mirror.
+    _contained_two_module_tree(tmp_path)
+    for sub in ("__pycache__", ".vendored"):
+        write_module(tmp_path, "mod_cache.py", src="scripts/" + sub)
+    strict = run_traj(tmp_path, "--strict")
+    assert strict.returncode == 0, strict.stdout + strict.stderr
+    assert ADDED_MSG not in strict.stderr
+
+
+def test_differential_delta_empties_exactly_when_the_regen_absorbs(tmp_path):
+    # REVIEW-A finding 1's pin, the wi-387 lifecycle against the REAL
+    # generator: the lane reds on the added public-symbol module BEFORE any
+    # regeneration; the real gen_arch_map run absorbs it and the delta empties
+    # (ADDED_MSG gone) with the station rule now holding the same red — the
+    # backstop equivalence — and the Component tag clears both.
+    _contained_two_module_tree(tmp_path)
+    write_module(tmp_path, "mod_new.py")
+    strict = run_traj(tmp_path, "--strict")
+    assert strict.returncode == 1
+    assert ADDED_MSG in strict.stderr and "scripts/mod_new" in strict.stderr
+    regen_map(tmp_path)
+    strict = run_traj(tmp_path, "--strict")
+    assert strict.returncode == 1
+    assert ADDED_MSG not in strict.stderr  # the delta emptied on absorption
+    assert KN_MSG in strict.stderr  # the station rule holds the same red
+    write_tagged_llrs(
+        tmp_path,
+        [
+            ("scripts/mod_0", "CMP-001"),
+            ("scripts/mod_1", "CMP-001"),
+            ("scripts/mod_new", "CMP-001"),
+        ],
+    )
+    strict = run_traj(tmp_path, "--strict")
+    assert strict.returncode == 0, strict.stdout + strict.stderr
+
+
+def test_symbol_empty_module_reds_neither_side_of_the_regen(tmp_path):
+    # REVIEW-A finding 1, the class: build_map SKIPS symbol-empty modules
+    # (bare __init__.py, comment-only, private-only), so the regeneration can
+    # never absorb one — a lane red on it would be PERMANENT (still red after
+    # regen, forever), which is new policy by accident. The mirror must skip
+    # exactly what the generator skips: green in the lane AND green after the
+    # real regen (the differential, both sides).
+    _contained_two_module_tree(tmp_path)
+    write_module(tmp_path, "__init__.py", "", src="scripts/pkg")
+    write_module(tmp_path, "notes.py", "# comment-only, no symbols\n")
+    write_module(tmp_path, "priv.py", "def _hidden():\n    pass\n")
+    strict = run_traj(tmp_path, "--strict")
+    assert strict.returncode == 0, strict.stdout + strict.stderr
+    assert ADDED_MSG not in strict.stderr
+    regen_map(tmp_path)
+    strict = run_traj(tmp_path, "--strict")
+    assert strict.returncode == 0, strict.stdout + strict.stderr
+    assert ADDED_MSG not in strict.stderr
+
+
+def test_absolute_declared_src_scans_like_the_generator(tmp_path):
+    # REVIEW-A finding 3: an absolute [paths] src must scan the directory the
+    # generator would (gen_arch_map treats --src as a path, absolute or not),
+    # not remap to a silent repo-relative miss.
+    _contained_two_module_tree(tmp_path, src=str(tmp_path / "scripts"))
+    write_module(tmp_path, "mod_new.py")
+    strict = run_traj(tmp_path, "--strict")
+    assert strict.returncode == 1
+    assert ADDED_MSG in strict.stderr
+    assert "scripts/mod_new" in strict.stderr
+
+
 # --- WI-093: the [phase]-[g*] archetype + phase-drop detector ------------------
 # The derived-gate model (docs/specs/derived-gate-model.md §7/§9.3): a phase's
 # pre-dev batch is a WI whose Title carries a `[<phase>]-[g<N>]` tag; the derived

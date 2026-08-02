@@ -274,7 +274,7 @@
 #   cli                   90   deliberate
 #   link-rebase            1   deliberate
 #   spine-loader          20   deliberate
-#   declared-file         13   deliberate
+#   declared-file         12   deliberate
 #   markdown-table        11   deliberate
 #   git-wrapper            7   deliberate
 #   wi-schema-columns      6   deliberate
@@ -283,7 +283,7 @@
 #   ctx-unpack             3   deliberate
 #   okf-row                1   deliberate
 #   import-fallback        2   deliberate
-#   module-path            2   deliberate
+#   module-path            3   deliberate
 #   signature-echo         2   deliberate
 #   child-capture          1   deliberate
 #   graph-walk             1   deliberate
@@ -530,7 +530,7 @@ a55d35181e85  project-trajectory/scripts/gen_okf.py == project-trajectory/script
 d2ff16e89265  project-trajectory/scripts/plan_artifacts.py == project-trajectory/scripts/plan_coverage.py
 451248328e57  project-trajectory/scripts/plan_artifacts.py == project-trajectory/scripts/plan_coverage.py
 
-# --- declared-file (13 blocks) -----------------------------------
+# --- declared-file (12 blocks) -----------------------------------
 # disposition: deliberate
 # declared-file readers (policy files, stack.ini, coverage.json). F5: each
 # script reads its own declaration rather than importing a sibling. Every entry
@@ -552,9 +552,15 @@ d2ff16e89265  project-trajectory/scripts/plan_artifacts.py == project-trajectory
 # WI-280 S3: gen_trajectory's declared-file readers (_gate_value and the OKF
 # frontmatter walk) moved verbatim to traj_parse.py, so its three pairings
 # re-homed there — same fingerprints, same class.
+# SHRUNK at WI-399 (13 -> 12, 2026-08-02): the bootstrap == check_trajectory
+# sanction (c6270a4626d4, check_trajectory's `_tests_dir` stack.ini read) went
+# DEAD — adding a second in-file copy of that read for the arch-scan profile
+# would have grown the class, so both collapsed onto ONE `_stack_ini_get`
+# home instead and the cross-script block no longer exists. Removed, not
+# kept: the census only tightens. bootstrap's own reader stays (F5 — it may
+# not import a sibling); its remaining pairings are unchanged.
 3864c24be1f4  project-trajectory/scripts/bootstrap.py == project-trajectory/scripts/gen_skills_index.py
 1726b03a8cdf  project-trajectory/scripts/bootstrap.py == project-trajectory/scripts/check_doc_refs.py
-c6270a4626d4  project-trajectory/scripts/bootstrap.py == project-trajectory/scripts/check_trajectory.py
 14c5e5641e80  project-trajectory/scripts/check_coverage.py == project-trajectory/scripts/check_perf.py
 fdc493cdecdb  project-trajectory/scripts/check_docs.py == project-trajectory/scripts/check_privacy.py
 fdc493cdecdb  project-trajectory/scripts/check_docs.py == project-trajectory/scripts/check_trajectory.py
@@ -592,10 +598,12 @@ b68a8ce88cdb  project-trajectory/scripts/check.py == project-trajectory/scripts/
 b68a8ce88cdb  project-trajectory/scripts/check.py == project-trajectory/scripts/trunk_step.py
 3d5196d5678c  project-trajectory/scripts/check.py == project-trajectory/scripts/derive_gate.py
 
-# --- module-path (2 blocks) --------------------------------------
+# --- module-path (3 blocks) --------------------------------------
 # disposition: deliberate
-# the module-path normaliser and the generated-block scanner, shared by the
-# arch map, the validator and trace.
+# check_trajectory mirroring gen_arch_map's grammar under F5 (no sibling
+# import): the module-path normaliser and the generated-block scanner, shared
+# by the arch map, the validator and trace — and, since WI-399, the
+# internal-import walk.
 #
 # WAS 4. WI-345's `fresh_verdict_path` extraction in agent_loop.py dissolved the
 # two `agent_common == agent_loop` blocks (`0e8a5f4a0f99`) as a SIDE EFFECT —
@@ -603,6 +611,15 @@ b68a8ce88cdb  project-trajectory/scripts/check.py == project-trajectory/scripts/
 # no longer matches agent_common's. A real removal, not a re-stamp: the two
 # sanctions went dead and NO new block appeared over that pair. The remaining two
 # are the cross-script pair the F5 reason above actually describes.
+#
+# GREW at WI-399 rework (2 -> 3, 2026-08-02, REVIEW-A finding 1):
+# `_has_internal_import` mirrors `gen_arch_map.internal_imports`' ast.walk /
+# ImportFrom-level test — the symbol-emptiness predicate must skip exactly what
+# build_map skips, and check_trajectory may not import the generator (F5).
+# Drift is pinned by the DIFFERENTIAL tests (tests/test_trajectory_arch.py
+# `regen_map` runs the real generator and asserts the delta empties exactly
+# when the map absorbs a module), so this sanction is guarded, not hoped.
+3d4cc5a83464  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/gen_arch_map.py
 a96fdbede5b0  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/gen_arch_map.py
 a96fdbede5b0  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/trace.py
 
