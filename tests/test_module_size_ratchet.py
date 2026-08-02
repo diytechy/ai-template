@@ -1011,7 +1011,15 @@ BASELINE = {
     # Roughly half the bump is the docstrings/comments that keep the shed
     # narrow. Reviewed bump, log fragment 2026-08-02 (WI-400). Re-stamp down
     # with WI-280.
-    "integrate.py": 2079,
+    # +24 (2079 -> 2103), WI-403: the abandoned-claim oracle's byte-clean
+    # reads. WI-393 REVIEW-A finding 1 drove `_relinked_exactly` excusing a
+    # trailing-newline-only hand edit and a whole-file CRLF relay, because its
+    # reads went through `ac.git`'s text-mode `.strip()`/EOL-fold.
+    # `_blob_bytes` (raw `git cat-file blob`) plus the strict-decode compare
+    # makes the docstring's "byte-for-byte" literally true; most of the bump
+    # is the two docstrings stating the property honestly. Reviewed bump, log
+    # fragment 2026-08-02 (WI-403). Re-stamp down with WI-280.
+    "integrate.py": 2103,
 }
 
 

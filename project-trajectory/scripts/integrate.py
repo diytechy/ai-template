@@ -433,26 +433,50 @@ def _claim_delta(root, tip, branch, wi_id):
     return moved_in, src, dest, relinked
 
 
+def _blob_bytes(root, rev_path):
+    """The raw bytes of `<rev>:<path>` (`git cat-file blob`), or None.
+
+    NOT `ac.git`: that helper is text-mode — universal-newlines decode folds
+    `\\r\\n`/`\\r` to `\\n` and its success path `.strip()`s — which is exactly
+    the mangle WI-393 REVIEW-A finding 1 drove through the oracle below (a
+    trailing-newline-only hand edit and a whole-file CRLF relay both excused
+    as "relink-identical"). A byte-for-byte compare needs byte reads."""
+    proc = subprocess.run(
+        ["git", "-C", str(root), "cat-file", "blob", rev_path],
+        capture_output=True,
+        stdin=subprocess.DEVNULL,
+    )
+    return proc.stdout if proc.returncode == 0 else None
+
+
 def _relinked_exactly(root, tip, src, dest, paths):
     """Are these `.md` modifications EXACTLY the inbound relink the claim's own
     move would write (WI-393)? The remap is re-derived from the commit's own
-    A/D pair, and each path's new content must equal `spec_move.expected_relink`
-    over its parent content — byte-for-byte, so the clause excuses only what the
-    ritual provably wrote and a hand edit riding in a claim-shaped commit still
-    convicts. Both sides are read through the same `git show` decode, so the
-    comparison is fair on any checkout's line endings."""
+    A/D pair, and each path's new BYTES must equal `spec_move.expected_relink`
+    over its parent bytes — byte-for-byte LITERALLY (WI-403): both sides are
+    read raw, the parent side decoded strictly and the expectation re-encoded,
+    so nothing is stripped or EOL-folded before the compare and the clause
+    excuses only what the ritual provably wrote. A hand edit riding in a
+    claim-shaped commit convicts even at the whitespace/EOL margin, where this
+    repo's own discipline (WI-234/WI-337) says the bytes are load-bearing —
+    and the ritual preserves line endings (`newline=""`), so a genuine relink
+    on a CRLF checkout still matches without any folding. A parent that does
+    not decode as UTF-8 convicts too: `_rewrite_md_links` SKIPS such a file,
+    so a modification to it cannot be the ritual's write."""
     if not (src and dest):
         return False
     remap = {src: dest}
     for path in paths:
-        code, old = ac.git(root, "show", "{}^1:{}".format(tip, path))
-        if code != 0:
+        old = _blob_bytes(root, "{}^1:{}".format(tip, path))
+        new = _blob_bytes(root, "{}:{}".format(tip, path))
+        if old is None or new is None:
             return False
-        code, new = ac.git(root, "show", "{}:{}".format(tip, path))
-        if code != 0:
+        try:
+            old_text = old.decode("utf-8")
+        except UnicodeDecodeError:
             return False
         doc_dir = path.rsplit("/", 1)[0] if "/" in path else ""
-        if spec_move.expected_relink(old, doc_dir, remap) != new:
+        if spec_move.expected_relink(old_text, doc_dir, remap).encode("utf-8") != new:
             return False
     return True
 
