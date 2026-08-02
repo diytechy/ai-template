@@ -849,7 +849,11 @@ BASELINE = {
     # stays green), and the docstring listing carries the two names. Required
     # registration, not monolith growth: the WI-392/WI-393 shape directly
     # above. Reviewed bump, log fragment 2026-08-02 (WI-381).
-    "bootstrap.py": 2267,
+    # +11 (2267 -> 2278), WI-388: the intake.py MAPPING row + its kit-contents
+    # listing entry — the scaffold surface gained the unified intake mint.
+    # Reviewed bump, log fragment 2026-08-02 (WI-388). Re-stamp down with
+    # WI-280.
+    "bootstrap.py": 2278,
     # NEW ENTRY, +228 (1423 -> 1651), Phase 2b of the concurrency restructure
     # (docs/concurrency-restructure.md §7): the spec-folder work-item reader,
     # which crosses this module over THRESHOLD for the first time. It is one
