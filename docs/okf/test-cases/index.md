@@ -135,3 +135,4 @@ resource: "generated"
 | [TC-136](TC-136.md) | Run the pending-surface pause suite: the block renders since/reason verbatim (no clock), … |
 | [TC-137](TC-137.md) | Run the drive suite: an unwired agent command refuses before any claim while an empty que… |
 | [TC-138](TC-138.md) | Run the handback suite: a handback returns each claimed spec to queued/ with a ## Handbac… |
+| [TC-139](TC-139.md) | Run the spec_move suite: an archival move redirects inbound links from every depth (text … |

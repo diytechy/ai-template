@@ -271,7 +271,8 @@
 #
 # The distribution:
 #
-#   cli                   85   deliberate
+#   cli                   86   deliberate
+#   link-rebase            1   deliberate
 #   spine-loader          20   deliberate
 #   declared-file         13   deliberate
 #   markdown-table        11   deliberate
@@ -301,7 +302,7 @@
 # a census whose classification has rotted is how the false claims above
 # survived in the first place.
 
-# --- cli (85 blocks) ---------------------------------------------
+# --- cli (86 blocks) ---------------------------------------------
 # disposition: deliberate
 # the per-script CLI skeleton + _utf8_console. F5: kit scripts must stay
 # independently copy-able and stdlib-only, which is why a shared
@@ -403,6 +404,24 @@ f7d5136e6d5d  project-trajectory/scripts/derive_gate.py == project-trajectory/sc
 # Phase 4 (2026-07-29): integrate.py's preamble joins for the same reason.
 4e246982c55c  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/integrate.py
 b25e7f8619e5  project-trajectory/scripts/gen_trajectory.py == project-trajectory/scripts/integrate.py
+# WI-393 (2026-08-01): spec_move.py ships (the link-aware move ritual) — its
+# argparse/--root preamble joins for the same F5 reason.
+2c0c67165dac  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/spec_move.py
+
+# --- link-rebase (1 block) ---------------------------------------
+# disposition: deliberate
+# the inline-link rewrite closure (`_sub` over MD_LINK_TARGET_RE.sub): the
+# 5-line traversal core shared by trunk_step.rebase_links (fragment links,
+# log.d-relative -> docs-relative, at compile time) and spec_move.rewrite_text
+# (the WI-393 move ritual's pure core). The SAME class existed for the same
+# trunk_step pairing against the dispatcher's copy until Phase 5 retired that
+# module (see the Phase 5 note above); WI-393 rehomes the ritual and the
+# pairing returns. Kept apart per F5: the serial trunk step must stay
+# independently copy-able, and the two callers' per-link DECISION functions
+# differ (trunk_step's is fragment-specific with no directory parameters) —
+# only the traversal shape is shared, below the bar a helper module would have
+# to clear.
+622ee862f81b  project-trajectory/scripts/spec_move.py == project-trajectory/scripts/trunk_step.py
 
 # --- wi-registry (3 blocks) --------------------------------------
 # disposition: deliberate

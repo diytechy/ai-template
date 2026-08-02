@@ -204,6 +204,61 @@ def test_every_registry_reader_parses_a_returned_spec(tmp_path):
     assert row["Status"] == "queued" and row["Deliverable"] == ""
 
 
+def test_the_return_move_runs_the_link_aware_ritual(tmp_path):
+    """WI-393: the return is the same indivisible move+relink the claim and the
+    archival run (WI-288/WI-353, rehomed in spec_move.py). queued/ is one
+    directory SHALLOWER than active/<branch>/, so a returned spec's own links
+    must shorten, and every inbound link written against the active path must
+    follow it back — in the same handback commit, never as residue."""
+    # The link sits in the Deliverable section: the registry loaders drop a
+    # spec whose body prose lives under no recognised heading.
+    body = spec_text("WI-401", deliverable="See [the log](../../log.md).")
+    root = claimed_repo(
+        tmp_path,
+        extra=(
+            ("docs/work/queued/WI-401-widget.md", body),
+            (
+                "docs/log.md",
+                "# Log\n\nplanned: [WI-401](work/queued/WI-401-widget.md)\n",
+            ),
+        ),
+    )
+    # The claim already ran the ritual: the spec's own link is one deeper and
+    # the inbound link follows it — the premise the return move must invert.
+    claimed = root / "docs" / "work" / "active" / "wi-401" / "WI-401-widget.md"
+    assert "[the log](../../../log.md)" in claimed.read_text(encoding="utf-8")
+    assert "work/active/wi-401" in (root / "docs" / "log.md").read_text(
+        encoding="utf-8"
+    )
+
+    wt = lane(root)
+    # A fragment written during the lane's life links the ACTIVE spec path —
+    # the inbound shape the return would otherwise strand.
+    frag = wt / "docs" / "log.d" / "WI-401-notes.md"
+    frag.parent.mkdir(parents=True, exist_ok=True)
+    frag.write_text(
+        "## note\n\nspec: [WI-401](../work/active/wi-401/WI-401-widget.md)\n",
+        encoding="utf-8",
+        newline="\n",
+    )
+
+    ids, refusal = hb.hand_back(root, "wi-401", "worker exit 7")
+    assert refusal is None, refusal
+    assert ids == ["WI-401"]
+
+    returned = (wt / "docs" / "work" / "queued" / "WI-401-widget.md").read_text(
+        encoding="utf-8"
+    )
+    assert "[the log](../../log.md)" in returned, returned
+    assert "../../../log.md" not in returned
+    for doc in (wt / "docs" / "log.md", wt / "docs" / "log.d" / "WI-401-notes.md"):
+        text = doc.read_text(encoding="utf-8")
+        assert "work/active/wi-401" not in text, (doc, text)
+        assert "work/queued/WI-401-widget.md" in text, (doc, text)
+    # the relinks are IN the handback commit, not left dirty in the lane
+    assert _git(wt, "status", "--porcelain").strip() == ""
+
+
 def test_a_returned_spec_keeps_a_deliverable_that_was_already_there(tmp_path):
     # The grammar is Deliverable-then-Handback, not either/or: a spec carrying
     # both must still yield its cell verbatim. Without the ordering rule the

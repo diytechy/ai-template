@@ -138,3 +138,4 @@ resource: "generated"
 | [LLR-142](LLR-142.md) | Trunk-step artifact regen (dependency order) |
 | [LLR-143](LLR-143.md) | Plain-launch drive loop (claim->build->integrate) |
 | [LLR-144](LLR-144.md) | Terminal lane outcomes (handback + quarantine) |
+| [LLR-145](LLR-145.md) | Link-aware spec-move ritual (move + relink indivisible) |

@@ -47,6 +47,7 @@ import subprocess
 
 import agent_common as ac
 import integrate
+import spec_move
 
 # Where a quarantined red handback's failing diff lands. Under `docs/work/`
 # because that is where the work item's own record lives, and as a `.patch`
@@ -253,18 +254,22 @@ def hand_back(root, branch, reason):
     note = _note(branch, reason, _span(root, branch))
     for _wi_id, name in specs:
         rel = "{}/queued/{}".format(integrate.WORK, name)
-        src = wt / integrate.ACTIVE / branch / name
+        src_rel = "{}/{}/{}".format(integrate.ACTIVE, branch, name)
         try:
-            returned = returned_spec(src.read_text(encoding="utf-8"), rel, note)
+            returned = returned_spec(
+                (wt / src_rel).read_text(encoding="utf-8"), rel, note
+            )
         except OSError as exc:
             return None, "cannot read the claimed spec {}: {}".format(name, exc)
         if returned is None:
             return None, "{}: no +++ frontmatter - refusing to return it".format(name)
-        dst = wt / rel
-        dst.parent.mkdir(parents=True, exist_ok=True)
-        dst.write_text(returned, encoding="utf-8", newline="\n")
-        ac.git(wt, "rm", "-q", "--", "{}/{}/{}".format(integrate.ACTIVE, branch, name))
-        ac.git(wt, "add", "--", rel)
+        # The return is the link-aware move ritual (WI-393): the rewritten spec
+        # lands in queued/ with its own links rebased one directory SHALLOWER
+        # and every inbound link to the active path redirected — staged into
+        # this same handback commit, never as relink residue.
+        _touched, refusal = spec_move.move_spec(wt, src_rel, rel, new_text=returned)
+        if refusal:
+            return None, "cannot return {}: {}".format(name, refusal)
     code, out = ac.git(
         wt,
         "commit",
