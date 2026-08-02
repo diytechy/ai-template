@@ -273,15 +273,20 @@ def test_write_text_accepts_newline_on_the_declared_floor():
 
     `Path.write_text(newline=)` is 3.10+; `Path.read_text(newline=)` is 3.13+.
     Confusing them cost a 17-site rewrite and a shipped crash, so the difference
-    is pinned where a successor will see it."""
+    is pinned where a successor will see it — on both sides of the 3.13 floor,
+    since the suite runs on whatever interpreter the machine has."""
+    import sys
     import tempfile
     from pathlib import Path
 
     p = Path(tempfile.mkdtemp()) / "x.txt"
     p.write_text("a\nb\n", encoding="utf-8", newline="\n")
     assert p.read_bytes() == b"a\nb\n"
-    with pytest.raises(TypeError):
-        p.read_text(encoding="utf-8", newline="")
+    if sys.version_info >= (3, 13):
+        assert p.read_text(encoding="utf-8", newline="") == "a\nb\n"
+    else:
+        with pytest.raises(TypeError):
+            p.read_text(encoding="utf-8", newline="")
 
 
 @pytest.mark.parametrize(
