@@ -32,6 +32,12 @@ docstring only enforces it):
              hazard.
   exempt     a line carrying `fig-ok` is prose ABOUT the convention, never a
              declaration (the `path-ok`/`privacy-ok` idiom).
+  grammar    a marker whose values are placeholder-shaped (`<command>`, `…`)
+             is the convention quoting itself and declares nothing; each
+             marker on a line owns only the attributes that follow it, so two
+             half-carrying markers never cross-satisfy; rev= takes a bare
+             token or a quoted string, and its value must carry a word
+             character (a flush `rev=-->` is punctuation, not a revision).
 
 In markdown the marker rides an HTML comment so it never renders; the check is
 line-based, so a `#` ini comment carries it the same way. Scan surface = root
@@ -75,20 +81,75 @@ from check_doc_refs import authored_lines, doc_files
 # exemption is checked first.
 MARKER = re.compile(r"(?<![\w-])fig:")
 CMD = re.compile(r'\bcmd="([^"]*)"')
-REV = re.compile(r"\brev=([^\s>\"']+)")
+# rev= takes a bare token or a quoted string (REVIEW-A finding 2: the quoted
+# form used to fail closed). Backticks are excluded from the bare form so
+# prose naming `rev=` never reads as a value, and the captured value must
+# still carry a word character (judge_marker) so a flush `rev=-->` cannot
+# pass on punctuation debris.
+REV = re.compile(r"\brev=(?:\"([^\"]*)\"|([^\s>\"'`]+))")
 DERIVED = re.compile(r'\bderived="([^"]*)"')
+# A marker whose values are placeholder-shaped is GRAMMAR PROSE quoting the
+# convention (`<command>`, `…`), not a declaration — the check_doc_refs
+# `{placeholder}`/`NNN` stance (REVIEW-A finding 1: the convention text ships
+# in every scaffold and must not read as undeclared figures there).
+PLACEHOLDER_CHARS = ("<", ">", "…")
+WORD = re.compile(r"[0-9A-Za-z]")
 # Beside the markdown walk: the declared-budgets surface whose re-measure note
 # asked a human to re-derive its numbers and had no enforcer (the WI-392
 # motivating case). Line-based, so `#` comments carry the marker unchanged.
 EXTRA_SURFACES = ("docs/stack.ini",)
+# A verdict record quotes findings — including bare and half-carrying markers
+# — verbatim as evidence, and judging the quotation convicts the quoter: every
+# branch a review lands on would red on the review's own repro lines. Reviews
+# are records, not declaration surfaces (the check_doc_refs record stance),
+# so they are out of scope by design. The log is deliberately NOT here: its
+# watched totals are exactly the figures this convention exists to cover.
+SKIP_PREFIXES = ("docs/reviews/",)
 
 
-def judge_line(line):
-    """None when the declared figure carries its provenance, else the reason.
+# The sentinel judge_marker returns for grammar prose: the marker declares
+# nothing, so it neither flags nor counts toward the declared-figures census.
+GRAMMAR_EXAMPLE = "placeholder-grammar example"
 
-    Presence only: non-empty cmd= AND rev=, or a non-empty derived=. Empty
-    values count as missing — `cmd=""` names nothing a reader could rerun."""
-    derived = DERIVED.search(line)
+
+def marker_segments(line):
+    """The text each `fig:` marker on a line owns: from its own match to the
+    next marker (or end of line). Judged separately (REVIEW-A finding 2), so
+    a cmd=-only marker and a rev=-only marker on one line are two findings,
+    never one cross-satisfied declaration."""
+    ms = list(MARKER.finditer(line))
+    return [
+        line[m.end() : ms[i + 1].start()] if i + 1 < len(ms) else line[m.end() :]
+        for i, m in enumerate(ms)
+    ]
+
+
+def judge_marker(segment):
+    """None when the declared figure carries its provenance, GRAMMAR_EXAMPLE
+    when the marker is convention prose, else the flag reason.
+
+    Presence only: non-empty cmd= AND rev=, or a non-empty derived=. Empty or
+    wordless values count as missing — `cmd=""` names nothing a reader could
+    rerun, and a flush `rev=-->` is punctuation, not a revision. A value
+    containing a placeholder shape (`<command>`, `…`) makes the whole marker
+    an example: grammar quoted in prose declares nothing."""
+    derived = DERIVED.search(segment)
+    cmd = CMD.search(segment)
+    rev = REV.search(segment)
+    rev_val = None
+    if rev:
+        rev_val = rev.group(1) if rev.group(1) is not None else rev.group(2)
+    values = [
+        v
+        for v in (
+            cmd.group(1) if cmd else None,
+            rev_val,
+            derived.group(1) if derived else None,
+        )
+        if v is not None
+    ]
+    if any(ch in v for v in values for ch in PLACEHOLDER_CHARS):
+        return GRAMMAR_EXAMPLE
     if derived is not None:
         if derived.group(1).strip():
             return None
@@ -96,10 +157,8 @@ def judge_line(line):
             "carries an empty derivation — name the declared figures it is "
             "computed from"
         )
-    cmd = CMD.search(line)
-    rev = REV.search(line)
     has_cmd = bool(cmd and cmd.group(1).strip())
-    has_rev = bool(rev and rev.group(1).strip())
+    has_rev = bool(rev_val and WORD.search(rev_val))
     if has_cmd and has_rev:
         return None
     if has_cmd:
@@ -121,15 +180,18 @@ def findings_for(doc, root):
     for n, line in authored_lines(doc):
         if "fig-ok" in line:
             continue
-        if not MARKER.search(line):
-            continue
-        declared += 1
-        why = judge_line(line)
-        if why:
-            snippet = line.strip()
-            if len(snippet) > 80:
-                snippet = snippet[:77] + "…"
-            out.append('{}:{}: declared figure {} — "{}"'.format(rel, n, why, snippet))
+        for segment in marker_segments(line):
+            why = judge_marker(segment)
+            if why is GRAMMAR_EXAMPLE:
+                continue  # convention prose — declares nothing, counts nothing
+            declared += 1
+            if why:
+                snippet = line.strip()
+                if len(snippet) > 80:
+                    snippet = snippet[:77] + "…"
+                out.append(
+                    '{}:{}: declared figure {} — "{}"'.format(rel, n, why, snippet)
+                )
     return out, declared
 
 
@@ -159,7 +221,11 @@ def main():
     )
     args = ap.parse_args()
     root = Path(args.root).resolve()
-    surfaces = doc_files(root)
+    surfaces = [
+        d
+        for d in doc_files(root)
+        if not d.relative_to(root).as_posix().startswith(SKIP_PREFIXES)
+    ]
     surfaces += [root / p for p in EXTRA_SURFACES if (root / p).is_file()]
     findings, declared = [], 0
     for doc in surfaces:

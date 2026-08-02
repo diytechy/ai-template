@@ -23,12 +23,18 @@ absence, not implied as covered.
   convention text: the cmd must ENUMERATE the population when the figure is a
   count over one (a hand-picked set names its selection principle), and a
   derived figure is itself declared. Every other surface links here.
+  Grammar (REVIEW-A rework): a marker whose values are placeholder-shaped
+  is the convention quoting itself and declares nothing; each marker on a
+  line owns only the attributes that follow it; rev= takes a bare token
+  or a quoted string, and a wordless value counts as missing.
 - **The check:** `project-trajectory/scripts/check_figures.py` — presence,
   never truth; warn-first, `--strict` exits 1; honest claim ("declared
   figures carry provenance", never "all figures do") in the docstring. Scans
   root `*.md` + `docs/**/*.md` through `check_doc_refs.doc_files` and the
   lifted `authored_lines` (IF-087, so the two doc checks agree on the walk)
-  plus `docs/stack.ini`; `fig-ok` lines and GENERATED blocks exempt. Wired
+  plus `docs/stack.ini`, with `docs/reviews/` records out of scope (a
+  verdict quotes defective markers as evidence); `fig-ok` lines and
+  GENERATED blocks exempt. Wired
   opt-in as `[step:figures]` (G3, product layer) in `docs/stack.ini`, whose
   re-measure note now points at the check instead of asking a human.
 - **The fixtures:** the three 2026-08-01 false figures drive
@@ -75,3 +81,20 @@ absence, not implied as covered.
   <!-- fig: derived="167,884 minus the 166,314 WI-378 baseline stamp, both wc -c readings" -->
   for the convention text; baseline re-stamped in the byte-budget-guard
   skill copies in the same commit.
+
+**REVIEW-A rework (2026-08-01, findings 1-2), measured on the rework
+commit's tree (the one commit after cab612c3):** the parser refuses
+placeholder-grammar examples as declarations, judges each marker on its
+own attributes, accepts a bare or quoted rev= while a wordless value
+counts as missing, and skips `docs/reviews/` records; the convention's
+own prose is fig-ok'd at source so a fresh bootstrap scaffold passes the
+docstring opt-in end-to-end (the new scaffold-tier test, watched red on
+the pre-fix tree at docs/process-options.md:1337 and :1354). The honest
+census at this commit: 16 declared figures, rc=0
+<!-- fig: cmd="python project-trajectory/scripts/check_figures.py --root . --strict" rev=this-rework-commit -->
+— the close commit's 17 included 5 grammar-prose lines (2 in this
+Deliverable, 2 in the log fragment, 1 in the enforcement audit) that
+were never declarations, and this rework's own record adds 4 markers
+<!-- fig: derived="17 minus the 5 placeholder-grammar lines the fixed parser refuses, plus the 4 markers this rework paragraph and the fragment add" -->.
+Module suite 19 passed; byte budget 167,884 -> 168,222 (+338 rework,
++1,908 total on the 166,314 baseline), re-stamped.

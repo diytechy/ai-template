@@ -157,3 +157,90 @@ def test_docs_tree_is_scanned_beside_the_root(tmp_path):
     )
     proc = figs(tmp_path)
     assert "docs/log.md:1" in proc.stderr
+
+
+# --- REVIEW-A rework (findings 1-2) ------------------------------------------
+
+
+def test_a_fresh_scaffold_passes_its_own_docstring_opt_in(tmp_path):
+    # Finding 1, the WI-280 scaffold lesson: the check ships in the scaffold
+    # BESIDE the convention text it enforces (docs/process-options.md), so a
+    # fresh bootstrap must exit 0 under the docstring's own opt-in wiring —
+    # the convention's grammar prose (placeholder examples, the fig-ok note)
+    # must never read as undeclared figures downstream.
+    dest = tmp_path / "fresh"
+    boot = run_py([SCRIPTS / "bootstrap.py", "--dest", dest], cwd=tmp_path)
+    assert boot.returncode == 0, boot.stdout + boot.stderr
+    check = run_py(
+        [dest / "scripts" / "check_figures.py", "--root", dest, "--strict"],
+        cwd=dest,
+    )
+    assert check.returncode == 0, check.stdout + check.stderr
+
+
+def test_a_placeholder_grammar_example_declares_nothing(tmp_path):
+    # Finding 1's class fix: a marker whose values are placeholder-shaped is
+    # grammar prose, not a declaration — it neither flags nor inflates the
+    # declared-figures count.
+    make_repo(
+        tmp_path,
+        'Write `fig: cmd="<command>" rev=<revision>` on the figure line.\n'
+        'Derived: `fig: derived="<how, from which declared figures>"`.\n'
+        'Audit shorthand: `fig: cmd="…" rev=…` is grammar, not a declaration.\n',
+    )
+    proc = figs(tmp_path, "--strict")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "no declared figures" in proc.stdout
+
+
+def test_a_wordless_rev_value_counts_as_missing(tmp_path):
+    # Finding 2: a flush `rev=-->` used to pass with `--` captured — an
+    # empty-value shape under SR-136's AC. A rev must carry a word character.
+    make_repo(tmp_path, 'Total 20 merges. <!-- fig: cmd="git log" rev=-->\n')
+    proc = figs(tmp_path)
+    assert "no rev=" in proc.stderr
+    assert figs(tmp_path, "--strict").returncode == 1
+
+
+def test_two_half_markers_on_one_line_do_not_cross_satisfy(tmp_path):
+    # Finding 2: each marker owns only the attributes that follow it, so a
+    # cmd=-only marker and a rev=-only marker on one line are two findings,
+    # never one satisfied declaration.
+    make_repo(
+        tmp_path,
+        'A 12 <!-- fig: cmd="wc -l a" --> and B 30 <!-- fig: rev=83ebd450 -->\n',
+    )
+    proc = figs(tmp_path)
+    assert "no rev=" in proc.stderr
+    assert "no cmd=" in proc.stderr
+    assert "2 declared figure(s) missing provenance" in proc.stdout
+    assert figs(tmp_path, "--strict").returncode == 1
+
+
+def test_a_quoted_rev_value_is_accepted(tmp_path):
+    # Finding 2: a quoted rev= failed closed; the parser now takes a bare
+    # token or a quoted string.
+    make_repo(
+        tmp_path,
+        'smoke: 607 passed <!-- fig: cmd="pytest -q -m smoke" rev="83ebd450" -->\n',
+    )
+    proc = figs(tmp_path, "--strict")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "1 declared figure(s)" in proc.stdout
+
+
+def test_a_review_record_quoting_defective_markers_is_out_of_scope(tmp_path):
+    # A verdict record under docs/reviews/ quotes findings — including bare
+    # and half-carrying markers — verbatim as evidence; judging the quotation
+    # would convict the quoter and red every branch a review lands on. The
+    # check_doc_refs record-surface stance, applied: reviews are skipped.
+    make_repo(tmp_path, "No figures at the root.\n")
+    reviews = tmp_path / "docs" / "reviews"
+    reviews.mkdir(parents=True)
+    (reviews / "WI-000-REVIEW-A.md").write_text(
+        "Repro: `2 failed, 7 passed <!-- fig: -->` flagged as expected.\n",
+        encoding="utf-8",
+    )
+    proc = figs(tmp_path, "--strict")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "no declared figures" in proc.stdout

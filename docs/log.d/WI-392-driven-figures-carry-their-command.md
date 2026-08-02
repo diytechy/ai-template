@@ -78,3 +78,32 @@ some commands are expensive or non-deterministic.
   <!-- fig: derived="167,884 minus the 166,314 WI-378 baseline, both wc -c readings" -->
   for the convention text and the enforcement-split paragraph, baseline
   re-stamped in every tracked skill copy in the same commit.
+- **REVIEW-A rework (findings 1-2, same day):** a fresh scaffold red on
+  the convention's own prose (docs/process-options.md:1337 and :1354 —
+  watched red in the new scaffold-tier test, which bootstraps into tmp
+  and runs the docstring opt-in), and the census was inflated by grammar
+  prose. The class fixes: placeholder-shaped values are the convention
+  quoting itself and declare nothing; each marker on a line is judged on
+  its own attributes (no cross-satisfying halves); rev= takes a bare or
+  quoted value and a wordless one counts as missing; docs/reviews/
+  records are out of scope (a verdict quotes defective markers as
+  evidence — judging the quotation convicts the quoter); the convention
+  text carries its own fig-ok exemptions at source. SR-136's
+  AcceptanceCriteria was amended to say exactly that (the parser was
+  fixed to match its empty-values intent; the ignore classes are now
+  named); LLR-146 and TC-140 track it. Corrected census at this commit:
+  16 declared figures, rc=0
+  <!-- fig: cmd="python project-trajectory/scripts/check_figures.py --root . --strict" rev=this-rework-commit -->
+  — the close commit message's 17 included 5 placeholder-grammar lines
+  that were never declarations, and this rework's own record adds 4
+  markers
+  <!-- fig: derived="17 minus the 5 grammar-prose lines the fixed parser refuses, plus the 4 markers this rework and the Deliverable add" -->.
+  Byte budget: 167,884 -> 168,222 (+338, the grammar sentence + two
+  fig-ok comments), +1,908 total on the 166,314 baseline, re-stamped in
+  every tracked skill copy.
+- **Provenance footnote (REVIEW-A finding 3), fitting for this WI's
+  subject:** `docs/gate`'s `as-of db211dd7` names the pre-amend twin of
+  the build commit — the regen ran before the amend folded it in, so the
+  recorded revision is reflog-only. Generated-artifact freshness is the
+  trunk lane's; the stamp self-heals at the next trunk regen and is left
+  for it.

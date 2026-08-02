@@ -1334,7 +1334,7 @@ The rule has three parts, in order:
    gone is written as a *historical, non-reproducible observation* — in the same
    sentence that states it, not in a footnote. Marking it costs nothing and
    keeps it useful; restating it as a standing fact is the failure.
-3. **Declare the figure — the `fig:` marker (WI-392, rung 1).** A driven
+3. **Declare the figure — the `fig:` marker (WI-392, rung 1).** <!-- fig-ok: this heading names the marker --> A driven
    figure may opt in by carrying, on its own line (in markdown, inside an HTML
    comment), `fig: cmd="<command>" rev=<revision>` — the exact command that
    produced it and the revision it was driven at. Two bars ride the marker.
@@ -1345,13 +1345,16 @@ The rule has three parts, in order:
    figure computed from declared figures (the remainder, the percentage) is
    itself declared, `fig: derived="<how, from which declared figures>"` — or it
    is the one figure in the paragraph nothing covers. A line carrying `fig-ok`
-   is prose about the convention, never a declaration.
+   is prose about the convention, never a declaration. *Grammar:* a marker
+   whose values are placeholder-shaped (`<command>`, `…`) is the convention
+   quoting itself and declares nothing; each marker on a line owns only the
+   attributes that follow it; `rev=` takes a bare token or a quoted string.
 
 The *truth* of a figure is not mechanizable — no check distinguishes a live
 measurement from a recollection — so that enforcer stays **Reviewer**, in the
 enforcement audit above with the honestly-unbacked rules. The *presence* of
 provenance on a declared figure now is: `check_figures.py` (opt-in
-`[step:figures]`, warn-first, `--strict` gates) flags a `fig:` marker carrying
+`[step:figures]`, warn-first, `--strict` gates) flags a `fig:` marker <!-- fig-ok: prose naming the marker --> carrying
 neither `cmd=`+`rev=` nor a derivation — its honest claim is "declared figures
 carry provenance", never "all figures do". Re-derivation — running the recorded
 command and comparing — is **deliberately not built** (WI-392 rung 2, declined):
