@@ -2521,19 +2521,25 @@ def _worktree_count(root):
     return len([ln for ln in _git(root, "worktree", "list").splitlines() if ln.strip()])
 
 
-def merged_branch_repo(tmp_path, ignore=None):
+def merged_branch_repo(tmp_path, ignore=None, files=None):
     """A trunk that has just merged `wi-401` --no-ff — the exact state
     `integrate_one` reaches immediately before it unloads the branch.
 
     `ignore` (a .gitignore body) is committed BEFORE the branch cut, so the rules
     are live on `wi-401` too: a worktree checked out from a branch that predates
     the .gitignore sees those paths as untracked, which would test the wrong
-    read entirely."""
+    read entirely. `files` (rel path -> body) are TRACKED neighbors committed the
+    same way, for tests that need a lane-owned file standing beside residue."""
     repo = tmp_path / "repo"
     repo.mkdir()
     git_repo(repo)
     if ignore:
         (repo / ".gitignore").write_text(ignore, encoding="utf-8", newline="\n")
+    for rel, body in (files or {}).items():
+        target = repo / rel
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(body, encoding="utf-8", newline="\n")
+    if ignore or files:
         _commit(repo, "chore: declare the ignore rules", when=T_BASE)
     _git(repo, "checkout", "-q", "-b", "wi-401")
     (repo / "widget.txt").write_text("1\n", encoding="utf-8", newline="\n")
@@ -2650,6 +2656,139 @@ def test_a_worktree_holding_only_gitignored_files_is_dirty(tmp_path):
         "the only copy of this session\n"
     )
     assert "wi-401" in _branches(repo)
+
+
+# The 2026-08-01 drain's holding set, verbatim (docs/backlog-plan-2026-08-01.md
+# row 9): every one of the five lane merges exited 1 at unload over these same
+# six ignored paths — pure tool caches plus the gitignored generated trace
+# report — and each worktree had to be removed by hand with --force. As files,
+# one representative per measured path.
+MEASURED_RESIDUE = (
+    ".pytest_cache/v/cache/lastfailed",
+    ".ruff_cache/0.8.0/12345",
+    "__pycache__/conftest.cpython-313.pyc",
+    "docs/test/report.md",
+    "project-trajectory/scripts/__pycache__/integrate.cpython-313.pyc",
+    "tests/__pycache__/test_widget.cpython-313.pyc",
+)
+
+# This repo's own ignore rules for those paths, mirrored so the fixture lane
+# reads them as IGNORED (untracked-not-ignored would test the wrong ladder rung).
+LANE_IGNORE = (
+    "__pycache__/\n*.py[cod]\n.pytest_cache/\n.ruff_cache/\ndocs/test/report.md\nout/\n"
+)
+
+
+def residue_lane(tmp_path):
+    """A merged lane worktree dirtied with EXACTLY the measured residue set,
+    plus a tracked neighbor in `docs/test/` so the shed's reach is visible."""
+    repo = merged_branch_repo(
+        tmp_path,
+        ignore=LANE_IGNORE,
+        files={"docs/test/test-cases.csv": "TC-ID\n"},
+    )
+    worker = tmp_path / "worker"
+    _git(repo, "worktree", "add", str(worker), "wi-401")
+    for rel in MEASURED_RESIDUE:
+        target = worker / rel
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text("tool residue\n", encoding="utf-8", newline="\n")
+    return repo, worker
+
+
+def test_unload_sheds_the_declared_tool_residue_and_removes_the_lane(tmp_path):
+    # The defect this WI closes: a lane whose worker ever ran the suite arrives
+    # at the merge slot holding tool caches git ignores, `_worktree_dirt` reads
+    # them as dirt, and the unload refuses FOREVER — five of five lanes in the
+    # 2026-08-01 drain. A lane dirty with exactly the DECLARED residue now
+    # unloads clean through the integrator's own arm, with no --force anywhere.
+    repo, worker = residue_lane(tmp_path)
+    assert integ._worktree_dirt(worker), "fixture must start dirty to git"
+
+    unloaded, note = integ._unload_branch(repo, "wi-401")
+    assert unloaded, note
+    assert not worker.exists()
+    assert "wi-401" not in _branches(repo)
+    assert _worktree_count(repo) == 1
+
+
+def test_one_undeclared_file_beside_the_residue_still_refuses_named(tmp_path):
+    # The orphan read is NOT loosened: the same lane plus ONE undeclared file
+    # still refuses, and the refusal names the actual remainder rather than the
+    # residue that was shed around it — the distinction, observable.
+    repo, worker = residue_lane(tmp_path)
+    (worker / "orphan.txt").write_text(
+        "the only copy\n", encoding="utf-8", newline="\n"
+    )
+
+    unloaded, note = integ._unload_branch(repo, "wi-401")
+    assert not unloaded
+    assert "UNLOAD INCOMPLETE" in note and "DIRTY" in note
+    assert "orphan.txt" in note
+    assert ".pytest_cache" not in note, note
+    assert (worker / "orphan.txt").read_text(encoding="utf-8") == "the only copy\n"
+    assert "wi-401" in _branches(repo)
+
+
+def test_the_shed_never_touches_an_ignored_stream_or_the_root_out(tmp_path):
+    # Two boundaries at once. An ignored `out/run-logs/` session stream is
+    # UNDECLARED — the 2026-07-26 lesson's canonical sole-copy file — so the
+    # unload still refuses over it and the stream survives byte-for-byte. And
+    # the shed operates only inside the lane: the repo-root `out/` (home of
+    # WI-398's refresh-refused-<branch>.log, which lives OUTSIDE any lane
+    # worktree) is never reached.
+    repo, worker = residue_lane(tmp_path)
+    stream = worker / "out" / "run-logs" / "session.md"
+    stream.parent.mkdir(parents=True)
+    stream.write_text("the only copy of this session\n", encoding="utf-8", newline="\n")
+    root_log = repo / "out" / "run-logs" / "refresh-refused-wi-401.log"
+    root_log.parent.mkdir(parents=True)
+    root_log.write_text("refresh refused\n", encoding="utf-8", newline="\n")
+
+    unloaded, note = integ._unload_branch(repo, "wi-401")
+    assert not unloaded
+    assert "UNLOAD INCOMPLETE" in note and "DIRTY" in note
+    assert stream.read_text(encoding="utf-8") == "the only copy of this session\n"
+    assert root_log.read_text(encoding="utf-8") == "refresh refused\n"
+    assert "wi-401" in _branches(repo)
+
+
+def test_the_declared_residue_set_is_exactly_the_bars_own_leavings():
+    # The declaration, stated as data: every measured 2026-08-01 path is
+    # declared residue; every name that CAN hold sole-copy evidence is not.
+    for rel in MEASURED_RESIDUE:
+        assert integ._is_declared_residue(rel), rel
+    for rel in (
+        "out/run-logs/session.md",
+        ".env",
+        "orphan.txt",
+        "docs/test/notes.md",
+        "src/widget.pyc",
+    ):
+        assert not integ._is_declared_residue(rel), rel
+
+
+def test_unload_run_from_inside_the_lane_steps_out_before_removing(
+    tmp_path, monkeypatch
+):
+    # The second driven fact from the same day (the WI-397 close): `git
+    # worktree remove` run from INSIDE the lane fails "Permission denied"
+    # AFTER half-unregistering the worktree, leaving an empty directory. The
+    # unload arm steps out of the lane before removing it, so the inside
+    # invocation is safe — and the process ends standing somewhere that exists.
+    from pathlib import Path
+
+    repo = merged_branch_repo(tmp_path)
+    worker = tmp_path / "worker"
+    _git(repo, "worktree", "add", str(worker), "wi-401")
+    monkeypatch.chdir(worker)
+
+    unloaded, note = integ._unload_branch(repo, "wi-401")
+    assert unloaded, note
+    assert not worker.exists()
+    # Raises on Linux (and reads as a deleted dir elsewhere) if the guard is
+    # gone: without the chdir the process is left inside the removed lane.
+    assert Path.cwd().exists()
 
 
 def test_a_dirt_read_git_cannot_perform_counts_as_dirty(tmp_path):

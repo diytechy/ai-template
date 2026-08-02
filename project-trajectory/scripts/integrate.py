@@ -1281,6 +1281,88 @@ def _worktree_dirt(wt):
     return [ln for ln in out.splitlines() if ln.strip()]
 
 
+# The DECLARED tool-residue set §5.6's unload may shed before judging dirt
+# (WI-400). Measured 2026-08-01: every lane of that day's drain arrived at the
+# merge slot holding the IDENTICAL six ignored paths - .pytest_cache/,
+# .ruff_cache/, __pycache__/ trees and the gitignored generated trace report -
+# so every worker-built lane ended UNLOAD INCOMPLETE forever, and each unload
+# was finished by hand. None of these names can hold evidence that exists
+# nowhere else: the caches are rebuilt by the next tool run, the report by the
+# next trace.py run. A short enumerated list on purpose - not a glob
+# configuration surface and not a dial; everything outside it stays evidence.
+_RESIDUE_DIR_NAMES = frozenset({".pytest_cache", ".ruff_cache", "__pycache__"})
+_RESIDUE_FILES = frozenset({"docs/test/report.md"})
+
+
+def _is_declared_residue(rel):
+    """True when repo-relative posix path `rel` is DECLARED tool-residue.
+
+    Two shapes only: an exact generated-report path, or a file anywhere inside
+    a directory carrying one of the declared cache names (the caches appear at
+    every depth the tools run at - `__pycache__/` beside each package,
+    `.pytest_cache/` at the rootdir). The file's own NAME never matches - a
+    file merely named `.pytest_cache` is a surprise, and a surprise is
+    evidence."""
+    if rel in _RESIDUE_FILES:
+        return True
+    return any(part in _RESIDUE_DIR_NAMES for part in rel.split("/")[:-1])
+
+
+def _shed_declared_residue(wt):
+    """Delete the declared tool-residue from a merged lane worktree.
+
+    `_shed_residue` cannot cover this case by design: it sheds only what the
+    REFRESH'S OWN bar added (a before/after baseline), while the residue that
+    held every 2026-08-01 lane was the WORKER'S - written before the station
+    ever saw the branch. So the unload gets its own shed, locked twice: a path
+    must be IGNORED by git (`ignored_files`; a trackable file is evidence) AND
+    match the declared set. Nothing is deleted when git cannot enumerate - the
+    fail direction stays closed, like `_worktree_dirt`'s.
+
+    Directories go the same way: after the files, `_sweep_residue_dirs` clears
+    the emptied cache trees (git status --ignored reports an empty ignored
+    directory, so leaving the husk would re-refuse the unload over nothing).
+    The caller re-reads the dirt afterwards and judges on what is actually
+    left - this function returns nothing.
+    """
+    ignored = ignored_files(wt)
+    if ignored is None:
+        return
+    for rel in sorted(ignored):
+        if not _is_declared_residue(rel):
+            continue
+        target = wt / rel
+        try:
+            if target.is_file() or target.is_symlink():
+                target.unlink()
+        except OSError:
+            # Left behind rather than fought over: the re-read reports it as
+            # dirt, which is a loud, recoverable outcome.
+            continue
+    _sweep_residue_dirs(wt)
+
+
+def _sweep_residue_dirs(wt):
+    """`_shed_declared_residue`'s directory half, split out to keep each half
+    under the complexity ceiling: rmdir every now-EMPTY directory inside a
+    declared cache tree, bottom-up. `rmdir` refuses a non-empty directory, so
+    a cache dir still holding an undeclared or unremovable file survives to be
+    reported as dirt."""
+    for parent, _dirs, _files in os.walk(wt, topdown=False):
+        directory = Path(parent)
+        if directory == wt:
+            continue
+        rel_parts = directory.relative_to(wt).parts
+        if ".git" in rel_parts or not any(
+            part in _RESIDUE_DIR_NAMES for part in rel_parts
+        ):
+            continue
+        try:
+            directory.rmdir()
+        except OSError:
+            continue
+
+
 def _unload_branch(root, branch):
     """§5.6 unload of a merged work branch: (fully_unloaded, message).
 
@@ -1292,7 +1374,9 @@ def _unload_branch(root, branch):
     and the delete retried; a DIRTY one is reported and LEFT, never forced, and
     the MAIN checkout is never removed at all. A worktree can hold orphaned
     files that exist nowhere else (2026-07-26), so dirt is evidence, not
-    garbage.
+    garbage - but the DECLARED tool-residue set is shed first (WI-400), because
+    a cache the bar rebuilds on every run is the one kind of dirt that
+    provably is.
     """
     code, out = ac.git(root, "branch", "-d", branch)
     if code == 0:
@@ -1316,6 +1400,12 @@ def _unload_branch(root, branch):
         )
     dirty = _worktree_dirt(holder)
     if dirty:
+        # Shed the declared residue, then judge again on what is actually
+        # there: a lane dirty ONLY with tool caches unloads clean, a lane
+        # holding one real file still refuses below, naming it.
+        _shed_declared_residue(holder)
+        dirty = _worktree_dirt(holder)
+    if dirty:
         return False, (
             "UNLOAD INCOMPLETE - branch {} is held by the worker worktree {}, "
             "which is DIRTY ({} uncommitted or ignored path(s)) - NOT removed "
@@ -1331,6 +1421,18 @@ def _unload_branch(root, branch):
                 "\n".join("  " + ln for ln in dirty[:10]),
             )
         )
+    # Measured 2026-08-01 (the WI-397 close): `git worktree remove` run from
+    # INSIDE the lane fails "Permission denied" AFTER half-unregistering the
+    # worktree, leaving an empty directory - and on platforms where it
+    # succeeds, the process is left standing in a deleted directory. The
+    # removal must run from outside the lane, so step out first.
+    try:
+        cwd = Path.cwd().resolve()
+    except OSError:
+        cwd = None
+    lane = holder.resolve()
+    if cwd is not None and (cwd == lane or lane in cwd.parents):
+        os.chdir(root)
     code, rm_out = ac.git(root, "worktree", "remove", str(holder))
     if code != 0:
         return False, (

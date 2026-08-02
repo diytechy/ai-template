@@ -988,7 +988,20 @@ BASELINE = {
     # WI-398 scope guard), stated in the docstring that is most of the bump.
     # Reviewed bump, log fragment 2026-08-01 (WI-398). Re-stamp down with
     # WI-280.
-    "integrate.py": 1977,
+    # +102 (1977 -> 2079), WI-400: the unload's DECLARED tool-residue shed.
+    # Every worker-built lane in the 2026-08-01 drain ended UNLOAD INCOMPLETE
+    # over the identical six ignored paths (caches + the generated trace
+    # report), because `_shed_residue` covers only what the refresh's own bar
+    # added. `_unload_branch` now sheds the short enumerated declared set
+    # (`_RESIDUE_DIR_NAMES`/`_RESIDUE_FILES` + `_is_declared_residue` +
+    # `_shed_declared_residue`/`_sweep_residue_dirs`, split per this file's
+    # extraction precedent) then re-reads the dirt and still refuses on any
+    # remainder, naming it; plus the step-out-of-the-lane guard before
+    # `git worktree remove` (the WI-397 close's half-unregistered lane).
+    # Roughly half the bump is the docstrings/comments that keep the shed
+    # narrow. Reviewed bump, log fragment 2026-08-02 (WI-400). Re-stamp down
+    # with WI-280.
+    "integrate.py": 2079,
 }
 
 
