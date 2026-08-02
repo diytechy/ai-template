@@ -21487,7 +21487,7 @@ measure rather than to assume.
   `_verdict_gate` docstring — **no behaviour change**; the reason `docs/work/`
   is excluded from the exclusion, with the numbers, recorded at the predicate a
   successor would edit, plus why `docs/log.d/` is genuinely different.
-- **WI-392 filed** ([`docs/specs/WI-392.md`](specs/WI-392.md)) — a driven
+- **WI-392 filed** ([`docs/specs/WI-392.md`](archive/specs/WI-392.2026-08-01.md)) — a driven
   figure carries the command and revision that produced it, and a check verifies
   that provenance. Three false figures landed in this one session's records
   (WI-380's `2 failed, 7 passed`, WI-391's `109 links`, WI-384's self-falsifying
