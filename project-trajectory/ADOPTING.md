@@ -564,8 +564,8 @@ table.
   agent legs too.
 - **Unattended coordinator (`scripts/agent_loop.py` + root `agent-resume.*`).**
   Newer kits ship a walk-away entry (process-options.md "Unattended
-  operation"): a plain launch drives the serial claim→build→integrate loop
-  (`drive.py`; one hands-on session via `--interactive`) and the launchers
+  operation"): a plain launch drives the claim→build→integrate loop
+  (`dispatch.py` + `lane.py`; one hands-on session via `--interactive`) and the launchers
   ship **inert** until their `AGENT_CMD` slot is wired. To adopt: copy the engine
   (kit-owned, overwrite freely on later re-syncs) + the three launchers
   (yours after seeding — like `run.*`), and merge the `out/run-logs/` line
@@ -583,9 +583,23 @@ table.
   `docs/work/active/<branch>/`, branch cut from the claim commit), merging is
   `integrate.py integrate` (the serial fail-closed queue — full bar on the
   composed tree, RULING-7 verdict gate), and a **plain `agent-resume` launch
-  drives** the loop serially (`drive.py`): frontier → claim → worker session →
+  drives** the loop (`dispatch.py`): frontier → claim → worker session →
   merge, the frontier re-derived every cycle so mid-run-filed WIs are picked
-  up in the same run. **The upgrade recipe** (the **downstream-resync skill**
+  up in the same run.
+  **The dispatcher split (2026-08, WI-381; `docs/concurrency-v2.md` §A4):**
+  `scripts/drive.py` is renamed `scripts/dispatch.py` with `scripts/lane.py`
+  extracted (one lane's mechanics: worktree, worker subprocess, the §A2
+  refresh). On re-sync, copy both new scripts and **delete your old
+  `scripts/drive.py`** — a stale copy would shadow nothing (agent_loop imports
+  `dispatch`) but would drift silently. The dispatcher now admits by the §A8
+  gate-policy table: spine-class WIs wait for the lanes to drain and then
+  admit **together as one batch**, and a pending ratification drains the
+  lanes and exits 0 naming the cards in `open-items.html` instead of
+  refusing nonzero. The worker-lane count is a new declared dial —
+  `lanes` in `docs/stack.ini [agent-loop]` (CLI `--lanes` > `AGENT_LANES` >
+  stack.ini > default). **An absent key means 1**: your repo stays exactly as
+  serial as it was until you add the line (fresh scaffolds seed `lanes = 2`);
+  no re-sync ever changes your lane count, because `docs/stack.ini` is yours. **The upgrade recipe** (the **downstream-resync skill**
   walks it step by step): re-sync the kit, convert the WI registry CSV to the
   spec folder (`wi_convert.py --verify` → `--to-specs` → delete the CSV),
   drain or hand-finish any live train worktrees/branches from the old scheme,

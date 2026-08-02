@@ -112,7 +112,8 @@ def test_scaffold_contains_expected_files(scaffold):
         "agent-resume.sh",
         "agent-resume.command",
         "scripts/agent_loop.py",
-        "scripts/drive.py",
+        "scripts/dispatch.py",
+        "scripts/lane.py",
         "scripts/handback.py",
         "scripts/agent_session.py",
         "scripts/agent_common.py",
@@ -135,6 +136,16 @@ def test_scaffold_stack_ini_declares_generated_artifact_set(scaffold):
         "| <!-- END GENERATED STATUS -->",
     ):
         assert row in ini, "scaffolded [generated] must carry the default: " + row
+
+
+def test_scaffold_stack_ini_seeds_the_lanes_dial(scaffold):
+    # WI-381 (§A4.3, ruled): the TEMPLATE seeds lanes = 2 so a fresh scaffold
+    # exercises the barrier/merge-slot/refresh machinery for real — while the
+    # ABSENT-key-means-1 rule (tests/test_dispatch_admission.py) keeps every
+    # existing adopter serial until they add the line themselves.
+    ini = (scaffold / "docs" / "stack.ini").read_text(encoding="utf-8")
+    assert "\n[agent-loop]" in ini
+    assert "\nlanes = 2" in ini
 
 
 def test_workflows_pin_actions_and_reduce_token_permissions(scaffold):

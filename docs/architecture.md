@@ -54,7 +54,7 @@ graph LR
     m_scripts_check_trajectory["scripts/check_trajectory — Validate the work-item registry — stdlib only."]
     m_scripts_check_vendored["scripts/check_vendored — Drift check for vendored third-party docs (stdl…"]
     m_scripts_derive_gate["scripts/derive_gate — Derive the active gate from artifact states — t…"]
-    m_scripts_drive["scripts/drive — drive.py — the serial claim->build->integrate d…"]
+    m_scripts_dispatch["scripts/dispatch — dispatch.py — the dispatcher: tick loop, admiss…"]
     m_scripts_gen_arch_map["scripts/gen_arch_map — Generate the module/function map for `architect…"]
     m_scripts_gen_cases["scripts/gen_cases — Generate test-case combinations from a requirem…"]
     m_scripts_gen_okf["scripts/gen_okf — OKF export — the traceability graph as a portab…"]
@@ -64,6 +64,7 @@ graph LR
     m_scripts_gen_trajectory["scripts/gen_trajectory — Generate the offline project-state dashboard (r…"]
     m_scripts_handback["scripts/handback — handback.py — the two lane closes that are not …"]
     m_scripts_integrate["scripts/integrate — integrate.py — the local integrator: the statio…"]
+    m_scripts_lane["scripts/lane — lane.py — one lane's mechanics (docs/concurrenc…"]
     m_scripts_plan_artifacts["scripts/plan_artifacts — The dual-plan round artifact filer: the coordin…"]
     m_scripts_plan_briefs["scripts/plan_briefs — Redacted dual-plan brief assembler + the three …"]
     m_scripts_plan_coverage["scripts/plan_coverage — Dual-plan coverage pre-pass: make rival WI deco…"]
@@ -89,16 +90,19 @@ graph LR
     m_scripts_agent_loop --> m_scripts_agent_common
     m_scripts_agent_loop --> m_scripts_agent_route
     m_scripts_agent_loop --> m_scripts_agent_session
-    m_scripts_agent_loop --> m_scripts_drive
+    m_scripts_agent_loop --> m_scripts_dispatch
     m_scripts_agent_loop --> m_scripts_plan_round
     m_scripts_agent_loop --> m_scripts_plan_runner
     m_scripts_agent_loop --> m_scripts_score_reviews
     m_scripts_check_figures --> m_scripts_check_doc_refs
     m_scripts_check_trajectory --> m_scripts_check_docs
-    m_scripts_drive --> m_scripts_agent_common
-    m_scripts_drive --> m_scripts_handback
-    m_scripts_drive --> m_scripts_integrate
-    m_scripts_drive --> m_scripts_schedule
+    m_scripts_dispatch --> m_scripts_agent_common
+    m_scripts_dispatch --> m_scripts_gen_trajectory
+    m_scripts_dispatch --> m_scripts_handback
+    m_scripts_dispatch --> m_scripts_integrate
+    m_scripts_dispatch --> m_scripts_lane
+    m_scripts_dispatch --> m_scripts_schedule
+    m_scripts_dispatch --> m_scripts_trace
     m_scripts_gen_open_items --> m_scripts_gen_trajectory
     m_scripts_gen_open_items --> m_scripts_trace
     m_scripts_gen_trajectory --> m_scripts_check_trajectory
@@ -115,6 +119,8 @@ graph LR
     m_scripts_integrate --> m_scripts_schedule
     m_scripts_integrate --> m_scripts_score_reviews
     m_scripts_integrate --> m_scripts_spec_move
+    m_scripts_lane --> m_scripts_agent_common
+    m_scripts_lane --> m_scripts_integrate
     m_scripts_plan_artifacts --> m_scripts_wi_convert
     m_scripts_plan_runner --> m_scripts_agent_route
     m_scripts_plan_runner --> m_scripts_agent_session
@@ -161,6 +167,7 @@ graph LR
     m_scripts_gen_arch_map -. IF-010 .-> m_scripts_check
     m_scripts_gen_okf -. IF-012 .-> m_scripts_check
     m_scripts_gen_trajectory -. IF-011 .-> m_scripts_check
+    m_scripts_gen_trajectory -. IF-088 .-> m_scripts_dispatch
     m_scripts_plan_artifacts -. IF-061 .-> m_scripts_plan_runner
     m_scripts_plan_coverage -. IF-060 .-> m_scripts_plan_coverage_step
     m_scripts_plan_round -. IF-058 .-> m_scripts_plan_runner
@@ -171,6 +178,7 @@ graph LR
     m_scripts_schedule -. IF-085 .-> m_scripts_traj_parse
     m_scripts_score_reviews -. IF-046 .-> m_scripts_agent_loop
     m_scripts_trace -. IF-001 .-> m_scripts_check
+    m_scripts_trace -. IF-089 .-> m_scripts_dispatch
     m_scripts_trace -. IF-075 .-> m_scripts_gen_open_items
     m_scripts_trace_text -. IF-076 .-> m_scripts_trace
     m_scripts_wi_convert -. IF-078 .-> m_scripts_plan_artifacts
@@ -222,6 +230,7 @@ Contracts (interfaces): IF-037, IF-065
 | `load_wi_registry(root)` | {WI-ID: raw row dict} from the worktree's tracked WI registry — the |  |
 | `latest_trailer_evidence(log_out)` | Fold a newest-first trailer log (TRAILER_EVIDENCE_FMT) into |  |
 | `train_evidence(root, base)` | (built, blocked) read from the train branch's committed trailers in |  |
+| `dispatch_lock_path(root)` | The DISPATCH lock's one home: ``out/agent-loop.lock`` under `root`. |  |
 | `acquire_lock(lock_path)` | Take the per-worktree coordinator lock, or return an error string. |  |
 | `release_lock(lock_path)` | Drop the coordinator lock: closing the descriptor releases the OS lock. |  |
 | `parse_map(spec)` | Parse a KEY=value phase map — shared by --model-map/--cmd-map/--prompt-map/ |  |
@@ -249,7 +258,7 @@ Contracts (interfaces): IF-037, IF-065
 
 ### `scripts/agent_loop`
 _Headless session engine: one claimed worker assignment, a reviewer/critique_
-Imports (internal): `agent_common`, `agent_route`, `agent_session`, `drive`, `plan_round`, `plan_runner`, `score_reviews`
+Imports (internal): `agent_common`, `agent_route`, `agent_session`, `dispatch`, `plan_round`, `plan_runner`, `score_reviews`
 Contracts (interfaces): IF-015, IF-068
 
 | Public item | Summary | Implements |
@@ -652,14 +661,15 @@ Contracts (interfaces): IF-050, IF-051
 | `parse_cache(text)` | `(gate_value, basis_line)` from a cached docs/gate: the first non-comment |  |
 | `main()` |  |  |
 
-### `scripts/drive`
-_drive.py — the serial claim->build->integrate driver (the scheduling front end)._
-Imports (internal): `agent_common`, `handback`, `integrate`, `schedule`
+### `scripts/dispatch`
+_dispatch.py — the dispatcher: tick loop, admission, merge slot (the scheduling front end)._
+Imports (internal): `agent_common`, `gen_trajectory`, `handback`, `integrate`, `lane`, `schedule`, `trace`
 Contracts (interfaces): IF-015
 
 | Public item | Summary | Implements |
 |---|---|---|
-| `run(root, args, worker, tier)` | The drive loop. `worker` is the one injection seam (tests): a callable |  |
+| `gap_census(root)` | THE WI-388 HANDOFF SEAM — ladder rung 1 (§A4 amendment, ruled |  |
+| `run(root, args, worker, tier)` | The dispatch loop (docs/concurrency-v2.md §A4). `worker` is the one |  |
 
 ### `scripts/gen_arch_map`
 _Generate the module/function map for `architecture.md` from the source tree._
@@ -788,7 +798,7 @@ Imports (internal): `agent_common`, `schedule`, `score_reviews`, `spec_move`
 |---|---|---|
 | `fail(msg)` |  |  |
 | `normalize_wi_id(wi_id)` | `wi-401`/`Wi-401` -> `WI-401`; anything else is returned unchanged. |  |
-| `claim(root, wi_id, branch)` | §2.3 steps 1+2 in the order that makes a half-claim BENIGN (§A3). |  |
+| `claim(root, wi_ids, branch, dispatch_lock_held)` | §2.3 steps 1+2 in the order that makes a half-claim BENIGN (§A3). |  |
 | `finished_branches(root)` | Claimed branches whose tip moved every spec out of active/<branch>/. |  |
 | `branch_outcomes(root, branch)` | `({WI id: outcome}, [claimed filenames naming other than ONE outcome])`. |  |
 | `refresh_attestation(root, branch, rev)` | `(work_tip_sha, bar summary)` if `rev` is a GENUINE refresh commit for |  |
@@ -798,9 +808,21 @@ Imports (internal): `agent_common`, `schedule`, `score_reviews`, `spec_move`
 | `existing_directories(wt)` | Every directory under `wt` right now, as a set of paths. |  |
 | `refresh(root, branch, tier)` | The §A2 station refresh. Returns `(branch tip sha, None)` or `(None, refusal)`. |  |
 | `integrate_one(root, branch, tier, held)` | One branch through the merge slot. Returns None on green, else the refusal. |  |
-| `integrate(root, tier)` |  |  |
+| `integrate(root, tier, branches)` |  |  |
 | `audit(root, since)` | RULING-6 over a window: non-merge trunk commits must stay on bookkeeping |  |
 | `main(argv)` |  |  |
+
+### `scripts/lane`
+_lane.py — one lane's mechanics (docs/concurrency-v2.md §A4.2, WI-381)._
+Imports (internal): `agent_common`, `integrate`
+
+| Public item | Summary | Implements |
+|---|---|---|
+| `ensure_worktree(root, branch)` | The lane worktree holding `branch`: `(path, error)`, created if needed. |  |
+| `worker_argv(root, wt, branch, wi_ids, args)` | The worker session's argv: one agent_loop.py --wi run on the lane |  |
+| `spawn_worker(root, branch, wi_ids, args)` | Launch one worker session loop on the claimed branch's worktree, |  |
+| `run_worker(root, branch, wi_ids, args)` | The BLOCKING worker launch — `spawn_worker` waited to completion, with |  |
+| `spawn_refresh(root, branch, tier)` | The §A2 station refresh for `branch`, NON-blocking: a Popen running |  |
 
 ### `scripts/plan_artifacts`
 _The dual-plan round artifact filer: the coordinator's write-side of a round_
@@ -906,7 +928,8 @@ Contracts (interfaces): IF-053, IF-054
 | `read_spec_rows(work_dir, on_error)` | The spec folder's rows in REGISTRY order — by the explicit `order` key, |  |
 | `load_registry_rows(path)` | The work-item rows from the one registry home — the spec folder beside |  |
 | `load_wis(rows)` | Parse work-item rows into a list of scheduler WI dicts (skips the inert |  |
-| `classify(wi, *, structural)` | `(concurrency, rank, [reason_codes])` for one WI — a pure function. | SR-093, SR-094, SR-107 |
+| `kind_of(wi, *, structural)` | The declared KIND both §A1 axis tables are keyed by — `classify`'s | SR-093, SR-094 |
+| `classify(wi, *, structural)` | `(concurrency, rank, [reason_codes])` for one WI — a pure function. | SR-107 |
 | `is_schedulable(concurrency)` | Only a positively-classified WI is eligible; unclassified fails closed. |  |
 | `hard_preds_satisfied(wi, status)` | Every hard predecessor is integrated `done`. An unknown predecessor id |  |
 | `downstream_counts(wis)` | `{id: transitive hard-descendant count}` — how many distinct WIs depend on |  |

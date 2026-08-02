@@ -32,8 +32,7 @@ flow end-to-end:
     active/<branch>/` and the branch cut from that commit, and the eight refusals
     that stand in front of it: the tracked pause (§5.6), a dirty trunk, a branch
     that already exists, a branch name that would not map to a flat claim
-    directory, a spec whose `safety_class` is not `ordinary` (spine runs
-    attended as the §3.2 barrier), (WI-370) a spec whose `SpecRef` is empty or
+    directory, (WI-370) a spec whose `SpecRef` is empty or
     does not resolve in-repo — the R-E debt that becomes unpayable once the
     closing branch exists, hoisted the same way R-D was — a WI that is not on
     the scheduler's ready frontier, and (WI-358) a claimed id named in
@@ -332,18 +331,67 @@ def test_claim_refuses_a_branch_name_that_is_not_a_flat_claim_dir(
     assert not (root / "docs" / "work" / "active").exists()
 
 
-def test_claim_refuses_a_spec_that_is_not_safety_class_ordinary(tmp_path, capsys):
-    # §3.2: a spine work item is a BARRIER, not a lane — it excludes all other
-    # work and runs attended, solo. The integrator claims `ordinary` only, and
-    # says which class it saw so the refusal is actionable.
+def test_a_spine_claim_succeeds_on_an_idle_station(tmp_path):
+    # QUESTION B RULED (WI-381, docs/concurrency-v2.md §A4.1): admission is the
+    # DISPATCHER's scheduling decision, so `_claim_refusal`'s blunt
+    # `safety_class != ordinary` arm is DELETED — a hard stop replaced by a
+    # wait. A hand claim of a spine WI on an IDLE station works (useful, and
+    # attended-serial per RULING-8); what keeps mid-flight authority safe is
+    # the dispatch-lock constraint below, not a class refusal here.
     root = claim_repo(tmp_path, safety="spine")
 
-    assert integ.claim(root, "WI-401", "wi-401") == 1
-    err = capsys.readouterr().err
-    assert "WI-401 is safety_class='spine'" in err
-    assert "claims ordinary work only" in err
-    assert (root / "docs" / "work" / "queued" / "WI-401-widget.md").is_file()
-    assert "wi-401" not in _branches(root)
+    assert integ.claim(root, "WI-401", "wi-401") == 0
+    assert (root / "docs" / "work" / "active" / "wi-401" / "WI-401-widget.md").is_file()
+    assert "wi-401" in _branches(root)
+
+
+def test_a_hand_claim_during_live_lanes_is_unrepresentable(tmp_path, capsys):
+    # §A4.1's authority hole, closed by a CONSTRAINT rather than a re-added
+    # refusal: `integrate claim` is a hand-runnable CLI, and the claim now
+    # REQUIRES the dispatch lock — the same out/agent-loop.lock a live
+    # dispatcher holds for its whole process lifetime. While lanes are live
+    # the lock cannot be taken, so the hand-claim-mid-flight STATE cannot be
+    # written at all; on an idle station every other claim test in this file
+    # is the proof it still works.
+    root = claim_repo(tmp_path)
+    (root / ".gitignore").write_text("out/\n", encoding="utf-8", newline="\n")
+    _commit(root, "ignore the lock home", when=T_VERDICT)
+    lock = integ.ac.dispatch_lock_path(root)
+    assert integ.ac.acquire_lock(lock) is None  # stand in for the dispatcher
+    try:
+        assert integ.claim(root, "WI-401", "wi-401") == 1
+        err = capsys.readouterr().err
+        assert "the dispatch lock" in err and "unrepresentable" in err
+        assert (root / "docs" / "work" / "queued" / "WI-401-widget.md").is_file()
+        assert "wi-401" not in _branches(root)
+        # The one caller that already holds the lock IS the dispatcher: its
+        # in-process claim says so and proceeds.
+        assert integ.claim(root, "WI-401", "wi-401", dispatch_lock_held=True) == 0
+    finally:
+        integ.ac.release_lock()
+
+
+def test_a_spine_batch_claims_as_one_commit(tmp_path):
+    # §A4 (WI-381): ALL spine WIs admit together — one branch, ONE claim
+    # commit moving every batched spec into active/<branch>/, so N spine
+    # changes cost one re-attest window and one owner sitting rather than N.
+    root = git_repo(tmp_path)
+    write_spec(
+        root, "queued", "WI-501", slug="alpha", safety="spine", specref="seed.txt"
+    )
+    write_spec(
+        root, "queued", "WI-502", slug="beta", safety="spine", specref="seed.txt"
+    )
+    declare_generated(root)
+    _commit(root, "file the spine batch", when=T_CODE)
+
+    assert integ.claim(root, ["WI-501", "WI-502"], "wi-501-alpha") == 0
+    active = root / "docs" / "work" / "active" / "wi-501-alpha"
+    assert (active / "WI-501-alpha.md").is_file()
+    assert (active / "WI-502-beta.md").is_file()
+    subject = _git(root, "log", "-1", "--format=%s").strip()
+    assert subject == "claim: WI-501;WI-502 -> active/wi-501-alpha (bookkeeping)"
+    assert integ._claimed_wi_ids(root, "wi-501-alpha") == ["WI-501", "WI-502"]
 
 
 def test_claim_refuses_a_spec_without_a_specref(tmp_path, capsys):

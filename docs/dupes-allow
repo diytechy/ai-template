@@ -290,6 +290,7 @@
 #   skills-materialize     1   deliberate
 #   trailer-fold           1   deliberate
 #   warn-tier-dispatch     1   deliberate
+#   kind-resolution        1   deliberate
 #
 # The two facts worth carrying: cross-module duplication here is dominated by
 # SMALL STABLE HELPERS the F5 ruling deliberately duplicates (a shared
@@ -677,6 +678,17 @@ b8b532ba9de4  project-trajectory/scripts/agent_loop.py == project-trajectory/scr
 # and those tiers differ per check; a table-driven loop would move that
 # reasoning away from the check it explains. Two sites, not growing.
 558577071d47  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/check_trajectory.py
+
+# --- kind-resolution (1 block)  ----------------------------------
+# disposition: deliberate
+# schedule.kind_of is classify's step-1 resolution extracted for the
+# dispatcher's SA8 admission table (WI-381) - one home for WHICH KIND a row
+# is. classify still reads the same declared/planmode cells beside it,
+# because it names quarantine CAUSES and --explain reason codes from those
+# cells, which kind_of's None cannot carry; folding cause-naming into
+# kind_of would widen its contract for one caller. Two reads of two cells,
+# same file, pinned equal by test_dispatch_admission's cross-check.
+c4546434439b  project-trajectory/scripts/schedule.py == project-trajectory/scripts/schedule.py
 
 # --- spec-folder-reader (4 blocks) -------------------------------
 # disposition: deliberate
