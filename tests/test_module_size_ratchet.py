@@ -449,7 +449,11 @@ BASELINE = {
     # nonexistent successor, the Draft-not-exempt statement). The shipped
     # guard the ruling asked for, not monolith drift. Reviewed bump,
     # log 2026-07-29. Re-stamp down with WI-280.
-    "trace.py": 2895,
+    # +14 (2895 -> 2909), WI-401: `sn_cited_ids` — the SN-Refs coverage parse
+    # named so the SN-coverage gate rung's F5 duplicate in derive_gate.py has a
+    # pinnable twin (test_rule_sync), plus the two seam comments tying the
+    # orphan listing to the gate rung. Reviewed bump, log 2026-08-02.
+    "trace.py": 2909,
     # +132 (1926 -> 2058; the last +10 is the F4 BOM hardening: read_rows utf-8-sig + git-show strips), WI-316: staged_spine_findings — the amend-without-
     # flip warn (--staged): content cells of a Verified spine row changed
     # without the Modified marker, suppressed when the owning SR flips in the

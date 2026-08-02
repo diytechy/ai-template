@@ -17,8 +17,14 @@ freshness discipline the kit already runs for the arch-map / OKF / dashboard.
 Per-artifact gate (docs/specs/derived-gate-model.md §3), on the ladder
 G0 < G1 < G2 < G3:
   - **SN** — Draft (under a stakeholder-needs.md heading containing "draft",
-    section-as-state §4a) => G0; ratified => it has no obligation past G1, so it
-    never caps the repo (contributes G3 to the min).
+    section-as-state §4a) => G0; ratified AND cited by >=1 SR `SN-Refs` => it has
+    no obligation past G1, so it never caps the repo (contributes G3 to the min);
+    ratified but cited by NO SR (WI-401) => G0 — a ratified-but-unanswered need
+    means G1 is not earned. The `uncovered=N` basis count surfaces the cause
+    beside `drafts=N`/`modified=N` (a Draft SN is exempt from the coverage rung —
+    it already reads G0 via the draft rung, one fact one rung; the itemized
+    "SN has no SR" listing stays trace.py's orphan finding at G2 strictness,
+    this rung being the gate-input half of that same split).
   - **SR** — Draft (Status) => G0; ratified but not decomposed => G1; decomposed
     (has its required LLR — unless the Verification is LLR-exempt
     Analysis/Inspection/Attest — AND a TC) => G2; decomposed AND Status=Verified
@@ -159,6 +165,16 @@ def sn_draft_ids(text):
     return draft
 
 
+def sn_cited_ids(srs):
+    """Every SN id cited by >=1 SR row's `SN-Refs` cell — the coverage set the
+    SN-coverage rung reads (WI-401). No filtering here: -000 rows are excluded
+    by the caller's row filter, and a Draft SR's citation is deliberately in the
+    set (the raw view matches trace.py's orphan exemption; the ex-draft
+    counterfactual re-runs this on the non-draft subset instead). Duplicated in
+    trace.py per the F5 rule; pinned equal by test_rule_sync."""
+    return {x for r in srs for x in refs(r.get("SN-Refs"))}
+
+
 # --- per-artifact gate rules (docs/specs/derived-gate-model.md §3) -------------
 def sr_gate(sr, has_llr, has_tc):
     """The gate an SR row has reached, from its Status + whether it is decomposed."""
@@ -195,25 +211,39 @@ def is_modified(row):
     return (row.get("Status") or "").strip().lower() == "modified"
 
 
-def sn_gate(sn_id, draft_ids):
-    """A Draft SN (section-as-state) is G0; a ratified SN has no obligation past G1
-    and so never caps the repo (contributes G3 to the min)."""
-    return G0 if sn_id in draft_ids else G3
+def sn_gate(sn_id, draft_ids, cited_ids):
+    """A Draft SN (section-as-state) is G0 — and that is the ONLY rung that fires
+    on a draft: it is exempt from the coverage rung below exactly as it is exempt
+    from trace.py's orphan rule, so one fact never fires two findings at once.
+    A RATIFIED SN must be cited by >=1 SR's `SN-Refs` (WI-401, owner ruling
+    2026-08-01): ratified-but-uncovered caps the raw level at G0, because a
+    ratified need no SR answers has not earned G1. This rung is the GATE INPUT;
+    the itemized "SN {id} has no SR" listing stays trace.py's orphan finding at
+    G2 strictness — the same states-here/structure-there split the module
+    docstring describes. A covered ratified SN has no obligation past G1 and
+    never caps the repo (contributes G3 to the min)."""
+    if sn_id in draft_ids:
+        return G0
+    return G3 if sn_id in cited_ids else G0
 
 
 def _raw_level(srs, llrs, tcs, sn_ids, sn_draft):
     """`(raw_level, sr_gates)` over ONE set of spine rows.
 
     The raw level is the min over every in-scope artifact's gate (SN drafts, SR
-    maturity, LLR/TC maturity); a set with no real SRs is G1
+    maturity, LLR/TC maturity — including WI-401's SN-coverage rung, whose cited
+    set is built from THIS call's `srs`); a set with no real SRs is G1
     (requirements-drafting), never a vacuous G3 from ratified-SN-only. Taken as
     a function of its rows rather than of `docs` so `compute` can ask it the
     counterfactual question too — the same arithmetic, over the non-draft
     subset (`ex-draft`), which is what tells a mature spine held down by drafts
-    apart from an early one (WI-341).
+    apart from an early one (WI-341). The coverage rung rides that subset
+    consistently: a citation on a removed Draft SR leaves with its row, so the
+    counterfactual never fabricates coverage a ratified spine does not have.
     """
     llr_sr_refs = {x for r in llrs for x in refs(r.get("SR-Refs"))}
     tc_refs = {x for r in tcs for x in refs(r.get("Verifies"))}
+    cited = sn_cited_ids(srs)
     sr_g = {
         r["SR-ID"]: sr_gate(r, r["SR-ID"] in llr_sr_refs, r["SR-ID"] in tc_refs)
         for r in srs
@@ -222,7 +252,7 @@ def _raw_level(srs, llrs, tcs, sn_ids, sn_draft):
         return G1, sr_g
     raw = min(
         [sr_g[k] for k in sr_g]
-        + [sn_gate(u, sn_draft) for u in sn_ids]
+        + [sn_gate(u, sn_draft, cited) for u in sn_ids]
         + [maturity_gate(r) for r in llrs]
         + [maturity_gate(r) for r in tcs]
     )
@@ -266,6 +296,14 @@ def compute(docs):
         + sum(1 for r in llrs if is_modified(r))
         + sum(1 for r in tcs if is_modified(r))
     )
+    # Ratified SNs no SR answers (WI-401): the count behind the coverage rung's
+    # G0 cap, surfaced on the basis line so a computed=G0 with drafts=0 names its
+    # cause. Counted over ALL SRs' citations (Draft included) — the same set
+    # trace.py's "SN has no SR" orphan rule reads, so the itemized listing and
+    # this count never disagree on one registry state. Draft SNs are exempt
+    # (they ride the draft rung + drafts=N instead — one fact, one finding).
+    cited = sn_cited_ids(srs)
+    n_uncovered = sum(1 for u in sn_ids if u not in sn_draft and u not in cited)
 
     # The same arithmetic with the DRAFT rows taken out — "what would the gate be
     # if nothing were pending?" (WI-341). A Draft reads G0, so it drops the repo's
@@ -298,6 +336,7 @@ def compute(docs):
         "counts": {"SN": len(sn_ids), "SR": len(srs), "LLR": len(llrs), "TC": len(tcs)},
         "drafts": n_draft,
         "modified": n_modified,
+        "uncovered": n_uncovered,
         "raw": raw,
         "ex_draft": ex_draft,
         "per_phase": per_phase,
@@ -363,23 +402,26 @@ def basis_line(result):
     breakdown — everything that must stay in step with the states, excluding the
     volatile compute date).
 
-    `ex-draft=` is additive (WI-341): a reader that does not know the field is
-    unaffected, and check.py falls back to the older per-phase heuristic when it
-    is absent, so a gate file written by an earlier derive_gate keeps working
-    until it is next regenerated. Regenerating IS required — `--check` compares
-    this line whole — which is the ordinary regenerate-a-generated-artifact step.
+    `ex-draft=` (WI-341) and `uncovered=` (WI-401) are additive: a reader that
+    does not know a field is unaffected, and check.py falls back to the older
+    per-phase heuristic when `ex-draft` is absent, so a gate file written by an
+    earlier derive_gate keeps working until it is next regenerated. Regenerating
+    IS required — `--check` compares this line whole, so any new field is a
+    cache-format change a downstream repo passes through by rerunning
+    derive_gate once — the ordinary regenerate-a-generated-artifact step.
     """
     c = result["counts"]
     per_phase = ";".join(f"{k}={v}" for k, v in result["per_phase"].items())
     return (
         "# basis: SN={SN} SR={SR} LLR={LLR} TC={TC} drafts={d} modified={m} "
-        "computed={raw} ex-draft={ed} phase={ph} per-phase={pp}".format(
+        "uncovered={u} computed={raw} ex-draft={ed} phase={ph} per-phase={pp}".format(
             SN=c["SN"],
             SR=c["SR"],
             LLR=c["LLR"],
             TC=c["TC"],
             d=result["drafts"],
             m=result["modified"],
+            u=result["uncovered"],
             raw=GATE_NAMES[result["raw"]],
             ed=GATE_NAMES[result["ex_draft"]],
             ph=result["phase"] if result["phase"] is not None else "(none)",

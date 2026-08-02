@@ -146,8 +146,11 @@ def test_maturity_and_sn_gate_rules():
     assert GATE.maturity_gate({"Status": "Draft"}) == GATE.G0
     assert GATE.maturity_gate({"Status": "Implemented"}) == GATE.G3
     assert GATE.maturity_gate({"Status": "Verified"}) == GATE.G3
-    assert GATE.sn_gate("SN-009", {"SN-009"}) == GATE.G0  # draft section
-    assert GATE.sn_gate("SN-001", {"SN-009"}) == GATE.G3  # ratified: never caps
+    assert GATE.sn_gate("SN-009", {"SN-009"}, set()) == GATE.G0  # draft section
+    # WI-401: a ratified SN must be cited by >=1 SR SN-Refs to contribute G3;
+    # ratified-and-uncovered caps at G0 (an unanswered need has not earned G1).
+    assert GATE.sn_gate("SN-001", {"SN-009"}, {"SN-001"}) == GATE.G3  # covered
+    assert GATE.sn_gate("SN-001", {"SN-009"}, set()) == GATE.G0  # uncovered
 
 
 # --- aggregation over a real scaffold -----------------------------------------
@@ -215,7 +218,7 @@ def test_modified_sr_reads_g2_and_is_counted(scaffold):
     assert result["modified"] == 1
     assert result["drafts"] == 0
     # The emitted basis line surfaces the count between drafts and computed.
-    assert "drafts=0 modified=1 computed=G2" in GATE.basis_line(result)
+    assert "drafts=0 modified=1 uncovered=0 computed=G2" in GATE.basis_line(result)
 
 
 def test_modified_children_are_counted_but_never_gate(scaffold):
@@ -345,6 +348,87 @@ def test_draft_sn_drops_the_gate(scaffold):
     result = _derive(scaffold)
     assert result["raw"] == GATE.G0
     assert result["drafts"] == 1
+    # The double-counting seam (WI-401): SN-050 is cited by no SR, but a Draft
+    # SN is EXEMPT from the coverage rung (as from trace's orphan rule) — the
+    # one fact fires exactly one rung, the draft drop above.
+    assert result["uncovered"] == 0
+
+
+# --- WI-401: the SN-coverage rung ---------------------------------------------
+def _append_ratified_sn(scaffold, row):
+    """Append one table row to the fixture's ratified needs table (no draft
+    heading above it, so the id is ratified by section-as-state)."""
+    sn = scaffold / "docs" / "requirements" / "stakeholder-needs.md"
+    sn.write_text(sn.read_text(encoding="utf-8") + row, encoding="utf-8")
+
+
+def test_uncovered_ratified_sn_caps_the_gate(scaffold):
+    # WI-401 (owner ruling 2026-08-01): a ratified SN cited by zero SR SN-Refs is
+    # an unanswered need — G1 is not earned. The raw level caps at G0, the
+    # runnable value floors to G1, and the basis carries uncovered=N so the cause
+    # never hides (drafts=0 here: before this rung, computed=G0 implied a draft).
+    make_minimal_project(scaffold)
+    _append_ratified_sn(
+        scaffold, "| SN-002 | Subtract two numbers. | Demo. | M | sub(3,2) is 1. |\n"
+    )
+    result = _derive(scaffold)
+    assert result["raw"] == GATE.G0
+    assert result["gate"] == "G1"
+    assert result["drafts"] == 0
+    assert result["uncovered"] == 1
+    assert "uncovered=1 computed=G0" in GATE.basis_line(result)
+
+
+def test_covering_the_sn_restores_the_prior_level(scaffold):
+    # The counter-half: citing the need from an SR's SN-Refs releases the cap —
+    # the same registry state otherwise reads G3 again, uncovered=0.
+    make_minimal_project(scaffold)
+    _append_ratified_sn(
+        scaffold, "| SN-002 | Subtract two numbers. | Demo. | M | sub(3,2) is 1. |\n"
+    )
+    _write(scaffold, srs=_sr("SR-001", sn="SN-001;SN-002"))
+    result = _derive(scaffold)
+    assert result["raw"] == GATE.G3
+    assert result["gate"] == "G3"
+    assert result["uncovered"] == 0
+    assert "uncovered=0 computed=G3" in GATE.basis_line(result)
+
+
+def test_example_rows_are_ignored_by_the_coverage_rung(scaffold):
+    # -000 rows on BOTH sides of the join are out of scope: an SN-000 placeholder
+    # never fires the rung, and an example SR-000 row is filtered before the
+    # coverage set is built, so its SN-Refs cannot fake coverage of a real need.
+    make_minimal_project(scaffold)
+    _append_ratified_sn(scaffold, "| SN-000 | Example placeholder. | M | n/a |\n")
+    result = _derive(scaffold)
+    assert result["uncovered"] == 0
+    assert result["gate"] == "G3"
+    # A real ratified need answered ONLY by an example SR row stays uncovered.
+    _append_ratified_sn(scaffold, "| SN-002 | Real need. | M | tbd |\n")
+    _write(scaffold, srs=_sr("SR-001") + _sr("SR-000", sn="SN-002"))
+    result = _derive(scaffold)
+    assert result["uncovered"] == 1
+    assert result["raw"] == GATE.G0
+
+
+def test_ex_draft_treats_the_coverage_rung_consistently(scaffold):
+    # A ratified SN answered ONLY by a Draft SR. In the RAW view the citation
+    # stands — trace.py's orphan rule reads the same cited set, so neither
+    # surface calls the need uncovered (the Draft SR itself is what drops raw to
+    # G0, one fact one finding). In the ex-draft counterfactual the SAME
+    # arithmetic runs over the non-draft subset: the citation leaves with its
+    # row, the need reads unanswered, and ex-draft stays G0 — removing a draft
+    # answer must not fabricate coverage or a level the spine never earned.
+    make_minimal_project(scaffold)
+    _append_ratified_sn(
+        scaffold, "| SN-002 | Subtract two numbers. | Demo. | M | sub(3,2) is 1. |\n"
+    )
+    _write(scaffold, srs=_sr("SR-001") + _sr("SR-002", status="Draft", sn="SN-002"))
+    result = _derive(scaffold)
+    assert result["raw"] == GATE.G0
+    assert result["drafts"] == 1
+    assert result["uncovered"] == 0  # the Draft SR's citation counts in the raw view
+    assert result["ex_draft"] == GATE.G0  # ...but does not survive its row's removal
 
 
 # --- WI-188: the derived current phase ----------------------------------------

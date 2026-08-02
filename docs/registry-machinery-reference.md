@@ -67,7 +67,7 @@ There is **no Status column.** Maturity is the *heading the row sits under*:
 | Section | State | Effect |
 |---|---|---|
 | any heading whose text contains **"draft"** (case-insensitive) | **Draft** (G0) | exempt from "every SN needs an SR"; **drops the derived gate to G0** |
-| any other heading (`## Core needs`, `## Edge-case expectations`) | **Ratified** (G1) | must have ≥1 SR referencing it |
+| any other heading (`## Core needs`, `## Edge-case expectations`) | **Ratified** (G1) | must have ≥1 SR referencing it — an uncovered ratified SN is both an orphan finding (§6) **and caps the derived gate at G0** (the WI-401 coverage rung, §8.1) |
 
 Ratifying a need = **moving the table row up** in a reviewed commit. That commit
 *is* the sign-off, and its date is the ratification date — git-derived, no
@@ -278,6 +278,10 @@ Rules 1–11 are **gate-scoped** — they fail `--strict`, which the harness run
 from G2. Rules 12–13 are **always wrong** and sit on the integrity floor the
 pre-commit hook runs on every commit.
 
+Rule 1 also has a **gate-input twin** since WI-401: an uncovered ratified SN
+caps the *derived gate* at G0 (§8.1) — same cited set, same Draft exemption, so
+the itemized listing and the cap can never disagree on one registry state.
+
 ---
 
 ## 7. Finding classes, flags, and exit codes
@@ -310,13 +314,28 @@ it; you ratify artifacts and regenerate.
 
 | Tier | G0 | G1 | G2 | G3 |
 |---|---|---|---|---|
-| **SN** | under a "draft" heading | ratified | — | ratified SNs owe nothing past G1, so they contribute G3 and **never cap** |
+| **SN** | under a "draft" heading, **or ratified with no covering SR** (the WI-401 coverage rung) | — | — | ratified **and cited by ≥1 SR `SN-Refs`**: such an SN owes nothing past G1, so it contributes G3 and **never caps** |
 | **SR** | `Status=Draft` | ratified, **not decomposed** | **decomposed** = has its required LLR (unless `Verification ∈ LLR_EXEMPT`) **AND** a TC | decomposed **AND** `Status=Verified` |
 | **LLR / TC** | `Status=Draft` | — | — | once present, contributes G3 and **never caps** |
 
 A `Modified` SR needs no rule of its own: it is decomposed-but-not-Verified, so
 it reads **G2**. That is the deliberate gate pull that makes a pending re-attest
 visible.
+
+The SN column's two G0 rungs are deliberately disjoint (WI-401, owner ruling
+2026-08-01). A **Draft** SN fires only the draft rung — it is exempt from the
+coverage rung exactly as it is exempt from trace.py's orphan rule, so one fact
+never fires two findings at once. A **ratified** SN cited by zero SR `SN-Refs`
+is an unanswered need: G1 is not earned, so it caps the raw level at G0. The
+split of labor with `trace.py` is the module pair's usual one — this rung is
+the *gate input*; the itemized `SN … has no SR` listing stays trace.py's orphan
+finding at G2 strictness — and both read the **same cited set**
+(`sn_cited_ids`, an F5 duplicate pinned equal by `test_rule_sync`), so the gate
+and the listing cannot contradict on one registry state. The cited set is
+built from the rows in scope: in the raw view a Draft SR's citation counts
+(the draft itself already drops the gate), while the `ex-draft` counterfactual
+rebuilds it over the non-draft subset — so removing a draft answer never
+fabricates coverage.
 
 ### 8.2 Aggregation
 
@@ -339,10 +358,18 @@ file** every reader in the kit shares: *the first non-empty, non-comment line*.
 Everything above it is commentary, including the machine-readable basis:
 
 ```
-# basis: SN=25 SR=135 LLR=127 TC=124 drafts=0 modified=0 computed=G3 ex-draft=G3 phase=4 per-phase=1=G3;2=G3;3=G3;4=G3
-# computed 2026-08-01 (as-of e3da653a)
+# basis: SN=25 SR=136 LLR=129 TC=126 drafts=0 modified=0 uncovered=0 computed=G3 ex-draft=G3 phase=4 per-phase=1=G3;2=G3;3=G3;4=G3
+# computed 2026-08-02 (as-of d35c3b93)
 G3
 ```
+
+`uncovered=N` (WI-401) counts the ratified SNs no SR cites — the count behind
+the coverage rung's G0 cap, so a `computed=G0` with `drafts=0` names its cause
+(before the rung, a G0 always implied a draft). Like `ex-draft=`, it is an
+additive field, but the basis line is **compared whole** by `--check`: adding
+it was a cache-format change, and any repo picking up this derive_gate passes
+through it by rerunning the generator once — the ordinary
+regenerate-a-generated-artifact step.
 
 - `resolve_gate` in `check.py` reads that first non-comment line. An
   out-of-vocabulary value is a hard exit, not a fallback.
@@ -374,6 +401,12 @@ good evidence, which is the subtlety:
   draft rows removed. If that clears G2 and sits above the level the drafts
   produced, the spine has demonstrably climbed and the drafts alone are holding
   it down.
+
+Since WI-401 an **uncovered ratified SN** opens the same kind of window (the
+gate drops to G1, the G2/G3 steps stop running), with `uncovered>0` on the
+basis line naming the cause. `window_open` does **not** read that field — its
+signals remain `drafts`/`modified` — an honest gap: the warn is absent, but the
+drop itself and its count are on the basis line in plain sight.
 
 ---
 
