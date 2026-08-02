@@ -867,11 +867,133 @@ def _cmd_sweep(args):
     before = args.before or "HEAD"
     after = args.after or "HEAD"
     minted, refusal = intake_after_merge(root, before, after, outcomes)
+    return _cli_result(refusal, "sweep minted {} row(s).".format(len(minted)))
+
+
+# --- the gate-policy arms (ruled decision 2, owner 2026-07-31; §A8) ------------
+
+
+def adjudication_action(level):
+    """May adjudication FLIP `Modified` -> `Verified`? Ruled decision 2:
+    **recommend-only under `attended`** — the flip is a Status change that
+    RECOVERS THE GATE, i.e. a ratification, and under attended ratification is
+    the human's act, so adjudication prepares the brief ("these cells are
+    traced-only, no scope moved, recommend re-verify") and stops; **flip under
+    `single-ratify` and `autonomous`**, where an LLM verdict already carries
+    ratification authority. An unknown level fails toward `recommend` — never
+    toward a machine ratification. Attended is the kit DEFAULT even though
+    this repo runs autonomous, which is why both arms are built and tested."""
+    return "flip" if level in ("single-ratify", "autonomous") else "recommend"
+
+
+def flip_verified(root, ids):
+    """Enact — or recommend — the adjudication row's cheap outcome for spine
+    rows judged no-scope-moved: `Modified` -> `Verified`. Returns
+    `(action, flipped_ids, refusal)`.
+
+    The policy is read from `docs/gate-policy`, never passed by hand (the
+    dial's one home). Under `recommend` NOTHING is touched and the prepared
+    brief prints — the adjudication worker writes it into its spec and the
+    open-items card carries the Modified rows to the sitting. Under `flip`
+    only the named rows' Status cells move; every other cell of every row
+    stays CELL-exact (and the live registries byte-identical — measured:
+    their quoting is all by necessity, which QUOTE_MINIMAL reproduces), a
+    row already past `Modified` is skipped (idempotent), and an unknown id
+    refuses — a typo on a mechanical tool must never half-apply. The flipped
+    registry still owes its regeneration (`derive_gate` recovers the gate);
+    the lane's own refresh runs it."""
+    root = Path(root)
+    level = ac.read_declared(root / "docs" / "gate-policy", "attended").strip()
+    action = adjudication_action(level.lower())
+    wanted = {i.strip() for i in ids if i.strip()}
+    located, tables = _locate_spine_rows(root, wanted)
+    missing = sorted(wanted - set(located))
+    if missing:
+        return (
+            action,
+            [],
+            "row id(s) {} exist in no spine registry - nothing was flipped".format(
+                ", ".join(missing)
+            ),
+        )
+    if action == "recommend":
+        for rid in sorted(wanted):
+            _say(
+                "recommend re-verify: {} (Status={}) - judged no-scope-moved; "
+                "under gate-policy '{}' the flip is the human's (ruled "
+                "decision 2). Write this brief into the adjudication row's "
+                "spec; the open-items card carries the Modified rows.".format(
+                    rid, located[rid][1], level
+                )
+            )
+        return action, [], None
+    flipped = _apply_flips(root, tables, located)
+    for rid in flipped:
+        _say("flipped {} Modified -> Verified (gate-policy '{}')".format(rid, level))
+    return action, flipped, None
+
+
+def _locate_spine_rows(root, wanted):
+    """`({id: (csv path, status, row, status_ix)}, {csv path: rows})` over the
+    three spine registries — ONE parse, shared by the brief and the flip (the
+    row objects are the live lists the rewrite mutates, so nothing scans
+    twice)."""
+    import csv
+
+    located, tables = {}, {}
+    for csv_rel, _id_col in check_trajectory.SPINE_CSVS:
+        path = root / csv_rel
+        if not path.is_file():
+            continue
+        with path.open(newline="", encoding="utf-8-sig") as fh:
+            rows = list(csv.reader(fh))
+        tables[csv_rel] = rows
+        header = rows[0] if rows else []
+        status_ix = header.index("Status") if "Status" in header else None
+        for row in rows[1:]:
+            rid = row[0].strip() if row else ""
+            if rid in wanted and status_ix is not None and len(row) > status_ix:
+                located[rid] = (csv_rel, row[status_ix].strip(), row, status_ix)
+    return located, tables
+
+
+def _apply_flips(root, tables, located):
+    """Mutate each located `Modified` row to `Verified` and rewrite exactly
+    the registries that changed; the sorted flipped ids."""
+    import csv
+
+    flipped, changed = [], set()
+    for rid, (csv_rel, status, row, status_ix) in located.items():
+        if status == "Modified":
+            row[status_ix] = "Verified"
+            flipped.append(rid)
+            changed.add(csv_rel)
+    for csv_rel in changed:
+        with (root / csv_rel).open("w", newline="", encoding="utf-8") as fh:
+            csv.writer(fh, quoting=csv.QUOTE_MINIMAL, lineterminator="\n").writerows(
+                tables[csv_rel]
+            )
+    return sorted(flipped)
+
+
+def _cli_result(refusal, ok_message):
+    """The CLI subcommands' one ending: the refusal to stderr and 1, or the
+    summary line and 0."""
     if refusal:
         _say(refusal, err=True)
         return 1
-    _say("sweep minted {} row(s).".format(len(minted)))
+    _say(ok_message)
     return 0
+
+
+def _cmd_adjudicate(args):
+    """The adjudication worker's mechanical tool: enact (or recommend) the
+    no-scope-moved outcome per the declared gate-policy."""
+    root = Path(args.root).resolve()
+    action, flipped, refusal = flip_verified(root, _split(args.rows))
+    return _cli_result(
+        refusal, "action: {} ({} row(s) flipped)".format(action, len(flipped))
+    )
 
 
 def _cmd_census(args):
@@ -885,15 +1007,12 @@ def _cmd_census(args):
         _say("the registries name no gaps - nothing to mint.")
         return 0
     minted, refusal = mint_gap_rows(root, census)
-    if refusal:
-        _say(refusal, err=True)
-        return 1
-    _say(
+    return _cli_result(
+        refusal,
         "census named {} gap(s); minted {} row(s) (the rest have open rows).".format(
             len(census), len(minted)
-        )
+        ),
     )
-    return 0
 
 
 def main(argv=None):
@@ -912,6 +1031,14 @@ def main(argv=None):
         "census", help="derive the gap census and mint gap-closure rows"
     )
     census.set_defaults(func=_cmd_census)
+    adj = sub.add_parser(
+        "adjudicate",
+        help="enact (or recommend) the no-scope-moved flip per docs/gate-policy",
+    )
+    adj.add_argument(
+        "--rows", required=True, help="spine row id(s), ;-joined (SR-/LLR-/TC-)"
+    )
+    adj.set_defaults(func=_cmd_adjudicate)
     args = ap.parse_args(argv)
     if not getattr(args, "cmd", None):
         ap.print_help()

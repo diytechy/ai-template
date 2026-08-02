@@ -814,4 +814,6 @@ faccaf0237c5  project-trajectory/scripts/intake.py == project-trajectory/scripts
 7654fcf20d27  project-trajectory/scripts/intake.py == project-trajectory/scripts/integrate.py
 71da68d30661  project-trajectory/scripts/intake.py == project-trajectory/scripts/integrate.py
 de0546d2361d  project-trajectory/scripts/intake.py == project-trajectory/scripts/integrate.py
-1fea271d8b0c  project-trajectory/scripts/intake.py == project-trajectory/scripts/spec_move.py
+# (1fea271d8b0c -> 5a35a2689e40 when intake main() grew the adjudicate
+# subparser - same block, shifted content.)
+5a35a2689e40  project-trajectory/scripts/intake.py == project-trajectory/scripts/spec_move.py

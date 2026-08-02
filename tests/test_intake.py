@@ -538,3 +538,108 @@ def test_the_census_mints_gap_rows_and_dedupes_on_rerun(tmp_path):
     again, refusal = intake.mint_gap_rows(root, census)
     assert refusal is None, refusal
     assert again == []
+
+
+# --- the gate-policy arms (ruled decision 2, owner 2026-07-31; §A8) ------------
+
+
+def _policy_repo(tmp_path, level):
+    """A repo with one Modified SR, one Verified SR, one Modified LLR, and the
+    declared gate-policy `level` — the state an adjudication row's cheap
+    outcome (no scope moved -> re-verify) acts on."""
+    root = git_repo(tmp_path)
+    req = root / "docs" / "requirements"
+    req.mkdir(parents=True, exist_ok=True)
+    (req / "system-requirements.csv").write_text(
+        SR_HEADER
+        + 'SR-001,Adder,SN-001,"the text","why","ac",,C,Test,Modified\n'
+        + 'SR-002,Widget,SN-001,"other text","why","ac",,C,Test,Verified\n',
+        encoding="utf-8",
+        newline="\n",
+    )
+    (req / "low-level-requirements.csv").write_text(
+        LLR_HEADER
+        + 'LLR-001,SR-001,Core,src/d.py,f,"the detail","why",TC-001,Modified,'
+        "CMP-001,1\n",
+        encoding="utf-8",
+        newline="\n",
+    )
+    (root / "docs" / "gate-policy").write_text(
+        level + "\n", encoding="utf-8", newline="\n"
+    )
+    _commit(root, "the flagged spine + the declared policy", when=T_CODE)
+    return root
+
+
+def test_under_attended_adjudication_recommends_and_never_flips(tmp_path, capsys):
+    # Ruled decision 2: under `attended` the flip is a Status change that
+    # RECOVERS THE GATE — a ratification, and ratification is the human's act.
+    # The helper prepares the brief and touches NOTHING.
+    root = _policy_repo(tmp_path, "attended")
+    before = (root / "docs" / "requirements" / "system-requirements.csv").read_bytes()
+    action, flipped, refusal = intake.flip_verified(root, ["SR-001", "LLR-001"])
+    assert refusal is None, refusal
+    assert action == "recommend"
+    assert flipped == []
+    out = capsys.readouterr().out
+    assert "recommend" in out and "SR-001" in out and "LLR-001" in out
+    assert (
+        root / "docs" / "requirements" / "system-requirements.csv"
+    ).read_bytes() == before
+
+
+def test_under_single_ratify_and_autonomous_the_flip_is_enacted(tmp_path):
+    # The other arm: at those levels an LLM verdict already carries
+    # ratification authority, so the helper flips Modified -> Verified — and
+    # ONLY the Status cells move (the registries stay byte-identical
+    # elsewhere; a re-run is an idempotent no-op).
+    for i, level in enumerate(("single-ratify", "autonomous")):
+        (tmp_path / str(i)).mkdir()
+        root = _policy_repo(tmp_path / str(i), "x")  # placeholder level
+        (root / "docs" / "gate-policy").write_text(
+            level + "\n", encoding="utf-8", newline="\n"
+        )
+        import csv as _csv
+
+        sr_csv = root / "docs" / "requirements" / "system-requirements.csv"
+        with sr_csv.open(newline="", encoding="utf-8") as fh:
+            before_rows = list(_csv.DictReader(fh))
+        action, flipped, refusal = intake.flip_verified(root, ["SR-001", "LLR-001"])
+        assert refusal is None, refusal
+        assert action == "flip"
+        assert flipped == ["LLR-001", "SR-001"]
+        with sr_csv.open(newline="", encoding="utf-8") as fh:
+            after_rows = list(_csv.DictReader(fh))
+        # ONLY the named row's Status cell moved; every other cell of every
+        # row is exactly what it was (cell-exact — and byte-identical on the
+        # live registries, where quoting is by necessity; measured).
+        for b, a in zip(before_rows, after_rows):
+            for col in b:
+                if b["SR-ID"] == "SR-001" and col == "Status":
+                    assert (b[col], a[col]) == ("Modified", "Verified")
+                else:
+                    assert b[col] == a[col], (b["SR-ID"], col)
+        llr = (root / "docs" / "requirements" / "low-level-requirements.csv").read_text(
+            encoding="utf-8"
+        )
+        assert "Modified" not in llr
+        again = intake.flip_verified(root, ["SR-001", "LLR-001"])
+        assert again == ("flip", [], None)  # idempotent: nothing left Modified
+
+
+def test_an_unknown_row_id_refuses_the_flip(tmp_path):
+    root = _policy_repo(tmp_path, "autonomous")
+    action, flipped, refusal = intake.flip_verified(root, ["SR-999"])
+    assert flipped == []
+    assert refusal is not None and "SR-999" in refusal
+
+
+def test_an_unknown_policy_level_fails_toward_recommend(tmp_path):
+    # Fail toward the human, never toward a machine ratification.
+    root = _policy_repo(tmp_path, "some-future-level")
+    action, _flipped, refusal = intake.flip_verified(root, ["SR-001"])
+    assert refusal is None, refusal
+    assert action == "recommend"
+    assert intake.adjudication_action("attended") == "recommend"
+    assert intake.adjudication_action("single-ratify") == "flip"
+    assert intake.adjudication_action("autonomous") == "flip"
