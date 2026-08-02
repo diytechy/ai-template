@@ -582,11 +582,11 @@ def claim(root, wi_id, branch):
        already staged, so a crash here leaves a DIRTY TRUNK with the spec
        moved and no branch. That window is unchanged by the inversion (the old
        order had it too) and it is not this function's to close: the next
-       claim's `working_tree_dirty` rung refuses it by name, and drive.py's
+       claim's `working_tree_dirty` rung refuses it by name, and dispatch.py's
        cycle-top check turns it into EXIT_PREFLIGHT. Hand repair, but LOUD and
        already fronted.
     2. Between `git branch` and the trunk advance - THE WINDOW THE INVERSION
-       MOVES, and the entire reason `drive._stranded_claims` existed. TRUNK
+       MOVES, and the entire reason the driver's `_stranded_claims` existed. TRUNK
        FIRST left a claim no lane could reach: the spec sat in
        `active/<branch>/` on trunk with no branch to build it, invisible to
        the frontier (the WI is no longer queued) and to the parked-resume read
@@ -1191,7 +1191,7 @@ def _branch_tree_script(wt, root, name):
     tree with the invoker's trunk-vintage copy writes artifacts the refresh
     commit's own floor - which runs the branch's version - then refuses them as
     stale (WI-368, first hit by WI-366's renderer change). The invoker is
-    trunk-vintage whenever drive.py drives the loop in-process, so this cannot
+    trunk-vintage whenever dispatch.py drives the loop in-process, so this cannot
     be simplified to "the module that is running". Discovery mirrors the
     shipped hook's scripts-dir probe: the invoker's root-relative layout first,
     then the known layouts; the invoker's copy is the fallback so a branch that
@@ -1703,8 +1703,9 @@ def refresh(root, branch, tier):
     own output window and NAMES the retained full log (`_keep_refused_output`),
     because the undo erases the tree that produced the evidence (WI-398).
 
-    Called from TWO places, deliberately the same code: drive.py runs it
-    speculatively OUTSIDE the merge slot (the ruled DECISION 4 - the 11-minute
+    Called from TWO places, deliberately the same code: the dispatcher runs it
+    speculatively OUTSIDE the merge slot (via lane.py's refresh subprocess or
+    dispatch.py's drain) (the ruled DECISION 4 - the 11-minute
     bar must not hold the exclusive turn to advance trunk), and `integrate_one`
     runs it INSIDE the slot for any branch that arrives un-refreshed or stale,
     which is the pessimistic sequence and is why that sequence never rots.
@@ -1943,8 +1944,8 @@ def _slot(root):
     this lock, and only the ancestor check plus the merge run inside it, so the
     slot is held for well under a second and extra lanes buy throughput instead
     of queueing behind one bar. Restricting the design to pessimistic - the
-    owner's recorded caveat - is then a ONE-LINE change: delete drive.py's
-    speculative `integrate.refresh(...)` call, and every refresh happens under
+    owner's recorded caveat - is then a ONE-LINE change: delete dispatch.py's
+    speculative refresh call, and every refresh happens under
     this already-held lock via `integrate_one`'s not-merge-ready arm. Nothing
     else moves, and no dial is added for a decision nobody has yet needed to
     change.

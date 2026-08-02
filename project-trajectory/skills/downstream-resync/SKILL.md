@@ -78,8 +78,10 @@ Apply only the ones your diff actually contains.
   of `concurrency-restructure`; claiming and merging now run through
   `integrate.py` (`claim` = queued spec → `docs/work/active/<branch>/` +
   branch cut; `integrate` = the serial fail-closed merge queue), and a
-  **plain `agent-resume` launch drives the serial loop** (frontier → claim →
-  worker → merge, re-derived every cycle; `drive.py`). To cross it:
+  **plain `agent-resume` launch drives the loop** (frontier → claim →
+  worker → merge, re-derived every cycle; `dispatch.py` + `lane.py` — renamed
+  from `drive.py` at WI-381: delete the old `scripts/drive.py` copy when you
+  re-sync). To cross it:
   1. **Registry flip** — convert `docs/requirements/work-items.csv` to the
      spec folder (`scripts/wi_convert.py --verify`, then `--to-specs`, then
      delete the CSV); status is the directory now. Map any status the

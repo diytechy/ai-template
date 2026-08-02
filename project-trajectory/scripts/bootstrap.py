@@ -76,8 +76,11 @@ What it creates in the destination:
     run.{cmd,sh,command}                       <- run.template.*  (root product launchers)
     agent-resume.{cmd,sh,command}              <- agent-resume.template.*  (root agent launchers)
     scripts/agent_loop.py                      (worker/reviewer/critique session engine; entry point)
-    scripts/drive.py                           (the serial claim->build->integrate driver a plain
-                                                agent-resume launch runs; WI-374)
+    scripts/dispatch.py                        (the dispatcher a plain agent-resume
+                                                launch runs: tick loop, admission +
+                                                spine barrier, merge slot; WI-374/WI-381)
+    scripts/lane.py                            (one lane's mechanics: worktree, worker
+                                                subprocess, the §A2 refresh; WI-381)
     scripts/agent_session.py, agent_common.py, plan_runner.py
                                                (the WI-218 split: session launch / shared primitives / dual-plan runner)
     .githooks/pre-commit                       <- hooks/pre-commit  (opt-in process floor)
@@ -1272,7 +1275,7 @@ MAPPING = [
     ("scripts/check_trajectory.py", "scripts/check_trajectory.py"),
     # The ready-frontier/safety-classification library (IF-053). Shipped
     # because it is a SIBLING IMPORT of the integration seam, not a nicety:
-    # integrate.py's claim refusal ladder and drive.py's cycle both
+    # integrate.py's claim refusal ladder and dispatch.py's cycle both
     # `import schedule` UNGUARDED, so a scaffold without it cannot claim work
     # or run the walk-away loop at all (WI-379 — a fresh scaffold raised
     # ModuleNotFoundError from the frontier check). check_trajectory and the
@@ -1367,11 +1370,17 @@ MAPPING = [
     # when --agents chose an agent); deletable like run.* — see the module
     # docstring and process-options.md "Unattended operation".
     ("scripts/agent_loop.py", "scripts/agent_loop.py"),
-    # The scheduling front end (WI-374): the serial claim->build->integrate
-    # driver a plain agent-resume launch runs — agent_loop.py imports it as a
-    # sibling when no role flag is given. Composes schedule.py / integrate.py /
-    # the worker role; adds ordering only, never authority.
-    ("scripts/drive.py", "scripts/drive.py"),
+    # The scheduling front end (WI-374; renamed drive.py -> dispatch.py with
+    # lane.py extracted at WI-381, concurrency-v2 §A4.2): the dispatcher a
+    # plain agent-resume launch runs — agent_loop.py imports it as a sibling
+    # when no role flag is given. Composes schedule.py / integrate.py / the
+    # lane.py worker launch; admission (the §A8 policy table + spine barrier)
+    # is its scheduling decision, every other refusal stays where it lives.
+    ("scripts/dispatch.py", "scripts/dispatch.py"),
+    # One lane's mechanics (WI-381): ensure the lane worktree, launch the
+    # worker subprocess, run the §A2 refresh as its own subprocess. dispatch.py
+    # imports it unguarded, so a scaffold without it cannot run the loop.
+    ("scripts/lane.py", "scripts/lane.py"),
     # The two lane closes that are NOT a merge (WI-387, concurrency-v2 §A3):
     # handback (the work so far committed as-is, the specs back in queued/) and
     # its ruled red arm, quarantine. drive.py imports it unguarded, so a

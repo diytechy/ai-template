@@ -26,7 +26,7 @@ required for the minimum profile). Rows are in document order; each maps to the
 | Lifecycle phase | install/startup/steady-state requirements are easy to miss (most non-trivial products) | lifecycle tags on SRs |
 | Gate authority levels | a repo declares a non-default `docs/gate-policy` | `docs/gate-policy` + an attestation / deviation register |
 | Agent iteration branch & sync | you want agent-driven work to land as curated, reviewable history | a branch + sync cadence, wired into hooks |
-| Unattended operation | a coordinator grinds work from one entry point while nobody watches | `agent_loop.py` + `drive.py`, `integrate.py`, `agents.csv`, the launchers |
+| Unattended operation | a coordinator grinds work from one entry point while nobody watches | `agent_loop.py` + `dispatch.py`/`lane.py`, `integrate.py`, `agents.csv`, the launchers |
 | Critique verification & the critique loop | a requirement's acceptance is **subjective** | a critique round + `Attest`/critique TCs |
 | Dual-plan decomposition | a goal is design-shaping enough that one planner's WI decomposition should not go unchallenged | two rival plans + a coverage diff + one critique round + an arbiter verdict (`docs/plans/`) |
 | Tier-conditional guardrails | an unattended run maps different model tiers to different phases | `docs/guardrails-policy` |

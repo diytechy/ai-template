@@ -1,9 +1,9 @@
-"""drive.py — the serial claim->build->integrate driver (WI-374).
+"""dispatch.py — the dispatcher loop (WI-374; renamed from drive.py at WI-381).
 
-The drive loop is COMPOSITION: schedule.py's frontier picks, integrate.py
-claims and merges, agent_loop.py's worker role builds. What this module pins
-is the loop's own contract — the joints, not the parts (each part's own suite
-already pins it):
+The dispatch loop is COMPOSITION: schedule.py's frontier picks, integrate.py
+claims and merges, agent_loop.py's worker role builds (launched by lane.py).
+What this module pins is the loop's own contract — the joints, not the parts
+(each part's own suite already pins it):
 
   * an unwired agent command refuses BEFORE anything is claimed;
   * an empty frontier drains the queue and exits 0 — success, not an error;
@@ -49,7 +49,7 @@ from conftest import (
 
 pytestmark = env_gate_skipif("git")
 
-drv = load_script("drive")
+drv = load_script("dispatch")
 # The attestation constant has ONE home; a literal here would be a second one
 # that could drift silently past every test in this file.
 integ = drv.integrate

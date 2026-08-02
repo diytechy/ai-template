@@ -77,7 +77,7 @@ SLOW_MODULES = frozenset(
         # concurrency-restructure Phase 5.)
         "test_dual_plan_round",  # the dual-plan round end-to-end (WI-199)
         "test_integrate",  # local integrator: real git repos + a real check.py bar
-        "test_drive",  # the drive loop: real git repos + the real bar (WI-374)
+        "test_dispatch",  # the dispatch loop: real git repos + the real bar (WI-374/WI-381)
         # The two lane closes: real claims (so the real trunk_step --regen
         # subprocess), real lane worktrees, real reverts — the same heavy class
         # as its two siblings above, filed with them rather than left to the

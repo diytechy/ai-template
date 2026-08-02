@@ -7,7 +7,7 @@ Implements the session half of the walk-away protocol (process-options.md
 sibling integrate.py (the serial integration seam, concurrency-restructure
 §1.2/§2.3); the parallel dispatcher this module once fronted retired at Phase 5
 of that restructure. A plain invocation (no role flag) runs the serial DRIVE
-mode (WI-374, the sibling drive.py): claim the next ready WI in build order,
+mode (WI-374, the sibling dispatch.py): claim the next ready WI in build order,
 run a worker session on the claimed branch, drain the merge queue, repeat —
 the walk-away front end the dispatcher's deletion had removed. The explicit
 roles below are unchanged. Ported from a field-proven PowerShell coordinator
@@ -2571,14 +2571,16 @@ def _coordinator_lock(root):
 
 
 def _drive_entry(root, args):
-    """The WI-374 plain-launch drive mode: coordinator lock, then the serial
-    claim->build->integrate loop in the sibling drive.py."""
-    import drive
+    """The plain-launch drive mode (WI-374): coordinator lock, then the
+    claim->build->integrate loop in the sibling dispatch.py — the dispatcher,
+    renamed from drive.py with lane.py extracted at WI-381
+    (docs/concurrency-v2.md §A4.2)."""
+    import dispatch
 
     code = _coordinator_lock(root)
     if code is not None:
         return code
-    return drive.run(root, args)
+    return dispatch.run(root, args)
 
 
 def main():
@@ -2609,7 +2611,7 @@ def main():
     # A plain launch (no role) is the DRIVE mode (WI-374): the serial
     # claim->build->integrate front end, restored after the parallel
     # dispatcher's Phase 5 deletion took the scheduling front half with it.
-    # The loop itself lives in the sibling drive.py — ordering only, no new
+    # The loop itself lives in the sibling dispatch.py — ordering only, no new
     # authority; every refusal stays where it already lives. It takes the
     # same per-checkout coordinator lock the explicit roles take below (the
     # worker subprocesses it spawns lock their own worktrees).

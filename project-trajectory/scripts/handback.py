@@ -29,7 +29,7 @@ mechanised here is what a lane that has already stopped deciding cannot do for
 itself.
 
 A one-way sibling of `integrate.py`: this module imports it (for the lane
-worktree, the claim read and the sha helpers), never the reverse. `drive.py`
+worktree, the claim read and the sha helpers), never the reverse. `dispatch.py`
 calls both — it decides which outcome a cycle reached, and the writes live here.
 
 No `Contracts:` line, deliberately: the integrator seam this extends is IF-080,
