@@ -264,6 +264,43 @@ def test_a_legitimately_redirecting_declaration_counts(tmp_path):
     assert "1 declared figure(s)" in proc.stdout
 
 
+# --- WI-409 (WI-404 REVIEW-A finding 1): the excusal needs ALL values ---------
+
+
+def test_a_mixed_marker_with_a_placeholder_rev_flags_its_missing_rev(tmp_path):
+    # The reviewer's mixed fixture: a half-filled template — a real command
+    # typed, `rev=<revision>` left unfilled — was excused wholesale by the
+    # any-value excusal, the silent direction. Under the ratified all-values
+    # Grammar sentence it is a REAL marker, and the placeholder value counts
+    # as ABSENT in the completeness judgment (the trap the reviewer named:
+    # the bare rev= capture arrives unclosed as `<revision`, which carries
+    # word characters and would otherwise satisfy has_rev, silently passing
+    # the half-filled template as complete — this assertion convicts both
+    # the old excusal and the naive all-values flip).
+    make_repo(
+        tmp_path,
+        'Bytes 1234. <!-- fig: cmd="wc -c README.md" rev=<revision> -->\n',
+    )
+    proc = figs(tmp_path)
+    assert "no rev=" in proc.stderr, proc.stdout + proc.stderr
+    assert "1 declared figure(s) missing provenance" in proc.stdout
+    assert figs(tmp_path, "--strict").returncode == 1
+
+
+def test_a_mixed_marker_with_a_placeholder_cmd_flags_its_missing_cmd(tmp_path):
+    # The reviewer's mixed fixture, other way round: an unfilled `<command>`
+    # beside a real revision names nothing a reader could rerun — the
+    # placeholder cmd counts as absent and the marker flags loudly.
+    make_repo(
+        tmp_path,
+        'Total 40. <!-- fig: cmd="<command>" rev=abc1234 -->\n',
+    )
+    proc = figs(tmp_path)
+    assert "no cmd=" in proc.stderr, proc.stdout + proc.stderr
+    assert "1 declared figure(s) missing provenance" in proc.stdout
+    assert figs(tmp_path, "--strict").returncode == 1
+
+
 def test_a_review_record_quoting_defective_markers_is_out_of_scope(tmp_path):
     # A verdict record under docs/reviews/ quotes findings — including bare
     # and half-carrying markers — verbatim as evidence; judging the quotation
