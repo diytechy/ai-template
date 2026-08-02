@@ -136,3 +136,4 @@ resource: "generated"
 | [TC-137](TC-137.md) | Run the drive suite: an unwired agent command refuses before any claim while an empty que… |
 | [TC-138](TC-138.md) | Run the handback suite: a handback returns each claimed spec to queued/ with a ## Handbac… |
 | [TC-139](TC-139.md) | Run the spec_move suite: an archival move redirects inbound links from every depth (text … |
+| [TC-140](TC-140.md) | Run the figure-provenance suite: the three 2026-08-01 false figures (the stale mutation l… |

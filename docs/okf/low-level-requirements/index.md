@@ -139,3 +139,4 @@ resource: "generated"
 | [LLR-143](LLR-143.md) | Plain-launch drive loop (claim->build->integrate) |
 | [LLR-144](LLR-144.md) | Terminal lane outcomes (handback + quarantine) |
 | [LLR-145](LLR-145.md) | Link-aware spec-move ritual (move + relink indivisible) |
+| [LLR-146](LLR-146.md) | Declared-figure provenance presence check |

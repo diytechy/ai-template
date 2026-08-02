@@ -146,3 +146,4 @@ resource: "generated"
 | [SR-133](SR-133.md) | Work-branch lane skip for freshness steps |
 | [SR-134](SR-134.md) | Trunk step regenerates the declared artifacts in dependency order |
 | [SR-135](SR-135.md) | Pending surface renders the declared pause verbatim |
+| [SR-136](SR-136.md) | Declared-figure provenance |
