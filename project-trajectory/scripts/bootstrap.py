@@ -50,7 +50,7 @@ What it creates in the destination:
     docs/rubrics/README.md, docs/rubrics/rubric-000.md <- rubrics/*.template.md  (critique rubrics)
     docs/test/test-cases.csv                   <- registries/test-cases.template.csv
     scripts/trace.py, trace_text.py, derive_gate.py, check.py, check_flows.py, check_docs.py, check_perf.py,
-    scripts/check_stubs.py, check_dupes.py, check_coverage.py, check_doc_refs.py, check_privacy.py, check_vendored.py, check_trajectory.py,
+    scripts/check_stubs.py, check_dupes.py, check_coverage.py, check_doc_refs.py, check_figures.py, check_privacy.py, check_vendored.py, check_trajectory.py,
     scripts/subagent_gate.py, gen_arch_map.py, gen_release_checklist.py, gen_cases.py, gen_trajectory.py, gen_open_items.py, gen_okf.py
     scripts/traj_graph.py, traj_parse.py, traj_render.py, traj_views.py, traj_panels.py, traj_status.py
                                                (the WI-280 gen_trajectory.py split — copied with it, always)
@@ -1262,6 +1262,7 @@ MAPPING = [
     ("scripts/check_flows.py", "scripts/check_flows.py"),
     ("scripts/check_docs.py", "scripts/check_docs.py"),
     ("scripts/check_doc_refs.py", "scripts/check_doc_refs.py"),
+    ("scripts/check_figures.py", "scripts/check_figures.py"),
     ("scripts/check_perf.py", "scripts/check_perf.py"),
     ("scripts/check_stubs.py", "scripts/check_stubs.py"),
     ("scripts/check_dupes.py", "scripts/check_dupes.py"),

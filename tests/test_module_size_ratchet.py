@@ -778,7 +778,12 @@ BASELINE = {
     # four-line reason, and two docstring lines in the kit-contents listing.
     # Required registration, not monolith growth: exactly the WI-387 handback
     # shape directly above. Reviewed bump, log fragment 2026-08-01 (WI-393).
-    "bootstrap.py": 2257,
+    # +1 (2257 -> 2258), WI-392: the scaffold registration of the new sibling
+    # check_figures.py (declared-figure provenance) — one MAPPING row; the
+    # docstring listing absorbed the name on its existing check_* line.
+    # Required registration, not monolith growth: the WI-393/WI-387 shape
+    # directly above. Reviewed bump, log fragment 2026-08-01 (WI-392).
+    "bootstrap.py": 2258,
     # NEW ENTRY, +228 (1423 -> 1651), Phase 2b of the concurrency restructure
     # (docs/concurrency-restructure.md §7): the spec-folder work-item reader,
     # which crosses this module over THRESHOLD for the first time. It is one

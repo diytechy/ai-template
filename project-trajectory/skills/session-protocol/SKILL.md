@@ -85,7 +85,12 @@ cadence"). New behavior needs new tests
   its `## Deliverable` body (status is the directory, never a field), and
   record a session entry for `docs/log.md`: one-line summary, deliverables,
   **deviations from spec**, **byte deltas on budgeted files**, and the
-  `pytest -q` totals (match the style already there). **Where it goes:** on
+  `pytest -q` totals (match the style already there). A **driven figure** in
+  the fragment/Deliverable — a total, a census count, a timing — follows the
+  declared-figure convention (process-options.md "Signed measurements",
+  WI-392): its line carries the producing command + revision (or its
+  derivation) under the `fig:` marker, held to presence by
+  `check_figures.py`. **Where it goes:** on
   the serial trunk lane, append to `docs/log.md` directly; on a work branch,
   write it as a fragment `docs/log.d/<WI-id>-<slug>.md` (starting with its
   `## <YYYY-MM-DD> — <title>` heading; links authored relative to
