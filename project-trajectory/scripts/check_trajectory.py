@@ -133,6 +133,7 @@ Contracts: IF-009, IF-023, IF-077 — the interface seams this module declares (
 """
 
 import argparse
+import ast
 import configparser
 import csv
 import difflib
@@ -1205,28 +1206,96 @@ def _arch_scan_profile(root):
     )
 
 
+def _has_internal_import(tree, internal_names):
+    """Whether `gen_arch_map.internal_imports` would find ≥1 in-tree import: a
+    relative import, or an absolute one whose first segment names a scanned
+    module/package. Non-emptiness only — the mirror needs no edge list."""
+    for node in ast.walk(tree):
+        if isinstance(node, ast.ImportFrom):
+            if node.level or (node.module or "").split(".")[0] in internal_names:
+                return True
+        elif isinstance(node, ast.Import):
+            if any(a.name.split(".")[0] in internal_names for a in node.names):
+                return True
+    return False
+
+
+def _would_be_inventoried(path, internal_names):
+    """Mirror of `gen_arch_map.build_map`'s symbol-emptiness skip (its
+    `if not (summary or imports or contracts or rows): continue`, REVIEW-A
+    finding 1): a module with no docstring summary, no internal import, no
+    top-of-file `Contracts: IF-###` comment and no public top-level symbol —
+    a bare `__init__.py`, a comment-only or private-only file — never enters
+    the MODULE MAP, so the delta must not red it: the regeneration could never
+    absorb it and the red would be permanent. A syntax-broken module IS kept
+    by the generator (rendered `PARSE ERROR`), so it counts here too; an
+    unreadable file cannot be judged and is left out (fail-quiet, warn-tier).
+    A `Contracts` line inside the docstring needs no arm of its own — any
+    docstring line at all already makes the summary non-empty."""
+    try:
+        tree = ast.parse(text := path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError):
+        return False
+    except SyntaxError:
+        return True  # rendered as a PARSE ERROR entry — still inventoried
+    if (ast.get_docstring(tree) or "").strip():
+        return True  # a summary line exists
+    if any(
+        isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef))
+        and not n.name.startswith("_")
+        for n in tree.body
+    ):
+        return True  # a public row exists
+    if _has_internal_import(tree, internal_names):
+        return True
+    for line in text.splitlines()[:8]:
+        if "Contracts" in line and line.lstrip().startswith("#"):
+            if IF_ID_RE.search(line):
+                return True  # a Contracts declaration exists
+    return False
+
+
 def shipped_modules(root):
     """Normalized module keys ON DISK under the declared arch-map scan root —
     the shipped-module set a trunk-lane regeneration would inventory. Mirrors
-    `gen_arch_map`'s collectors (keys relative to the scan root's PARENT; dot-
-    and `__pycache__`-parts under the root skipped; `*.py` in symbols mode,
-    every regular file in files mode) so the delta against `arch_inventory` is
-    exactly the modules the refresh WOULD add — no more. Empty when the root is
-    absent, so a repo with no declared source tree costs nothing."""
+    `gen_arch_map`'s symbol-mode collector exactly (keys relative to the scan
+    root's PARENT; an absolute declared src scanned as the path it names; dot-
+    and `__pycache__`-parts under the root skipped; symbol-EMPTY modules
+    skipped — `_would_be_inventoried`), so the delta against `arch_inventory`
+    is exactly the modules the refresh WOULD add — no more. Empty when the
+    root is absent, so a repo with no declared source tree costs nothing.
+    Files mode returns empty by design (REVIEW-A finding 2): a real files-mode
+    map is a table with no `### ` module headers, `arch_inventory` reads it as
+    EMPTY, and the whole containment family is dormant there — station rule
+    and early firing point alike; scanning anyway would invent a delta the
+    regeneration could never absorb."""
     src, mode = _arch_scan_profile(root)
-    src_dir = root / src.strip().strip("/").replace("\\", "/")
+    if mode == "files":
+        return set()
+    # An absolute [paths] src stays the path it names (pathlib: an absolute
+    # right operand replaces the left), exactly as gen_arch_map treats --src.
+    src_dir = root / src.strip().replace("\\", "/").rstrip("/")
     if not src_dir.is_dir():
         return set()
     # gen_arch_map keys a module relative to the root's parent (`scripts/check`
     # for --src project-trajectory/scripts); a root that IS the repo root keys
     # relative to itself (its `root.name == ""` arm).
     base = src_dir.parent if src_dir != root else src_dir
-    out = set()
-    for path in src_dir.rglob("*.py" if mode != "files" else "*"):
+    files, names = [], set()
+    for path in src_dir.rglob("*.py"):
         if not path.is_file():
             continue
         rel = path.relative_to(src_dir)
         if any(p.startswith((".", "__pycache__")) for p in rel.parts):
+            continue
+        files.append(path)
+        # The coupling-name universe build_map hands internal_imports: every
+        # scanned module stem + every package directory part.
+        names.add(path.stem)
+        names.update(rel.parts[:-1])
+    out = set()
+    for path in files:
+        if not _would_be_inventoried(path, names):
             continue
         key = _norm_module(path.relative_to(base).as_posix())
         if key:

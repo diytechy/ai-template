@@ -649,7 +649,16 @@ BASELINE = {
     # mechanism comment recording WHY the firing point moved (WI-374/WI-387,
     # twice-driven). Reviewed bump, log fragment docs/log.d 2026-08-02; re-stamp
     # down with WI-280.
-    "check_trajectory.py": 3359,
+    # +69 (3359 -> 3428), WI-399 rework (REVIEW-A finding 1): the delta now
+    # mirrors build_map's symbol-emptiness skip (`_would_be_inventoried` +
+    # `_has_internal_import`) — without it a bare `__init__.py` or comment-only
+    # module redded --strict FOREVER (the regeneration skips it from the map, so
+    # the delta could never empty: accidental new policy). Files mode returns
+    # empty by design (finding 2 — a real files-mode map has no module headers,
+    # the whole family is dormant there), and an absolute [paths] src scans the
+    # path it names (finding 3). Drift-pinned by the differential tests that run
+    # the real generator. Reviewed bump; re-stamp down with WI-280.
+    "check_trajectory.py": 3428,
     # NEW ENTRY, +25 (1498 -> 1523), WI-357: the two-stage work-branch claim
     # signal — the on-disk fast path plus the branch-history probe that
     # survives the §2.3 close commit (git log -1 over the claim path), with

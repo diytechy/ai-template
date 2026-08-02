@@ -283,7 +283,7 @@
 #   ctx-unpack             3   deliberate
 #   okf-row                1   deliberate
 #   import-fallback        2   deliberate
-#   module-path            2   deliberate
+#   module-path            3   deliberate
 #   signature-echo         2   deliberate
 #   child-capture          1   deliberate
 #   graph-walk             1   deliberate
@@ -598,10 +598,12 @@ b68a8ce88cdb  project-trajectory/scripts/check.py == project-trajectory/scripts/
 b68a8ce88cdb  project-trajectory/scripts/check.py == project-trajectory/scripts/trunk_step.py
 3d5196d5678c  project-trajectory/scripts/check.py == project-trajectory/scripts/derive_gate.py
 
-# --- module-path (2 blocks) --------------------------------------
+# --- module-path (3 blocks) --------------------------------------
 # disposition: deliberate
-# the module-path normaliser and the generated-block scanner, shared by the
-# arch map, the validator and trace.
+# check_trajectory mirroring gen_arch_map's grammar under F5 (no sibling
+# import): the module-path normaliser and the generated-block scanner, shared
+# by the arch map, the validator and trace — and, since WI-399, the
+# internal-import walk.
 #
 # WAS 4. WI-345's `fresh_verdict_path` extraction in agent_loop.py dissolved the
 # two `agent_common == agent_loop` blocks (`0e8a5f4a0f99`) as a SIDE EFFECT —
@@ -609,6 +611,15 @@ b68a8ce88cdb  project-trajectory/scripts/check.py == project-trajectory/scripts/
 # no longer matches agent_common's. A real removal, not a re-stamp: the two
 # sanctions went dead and NO new block appeared over that pair. The remaining two
 # are the cross-script pair the F5 reason above actually describes.
+#
+# GREW at WI-399 rework (2 -> 3, 2026-08-02, REVIEW-A finding 1):
+# `_has_internal_import` mirrors `gen_arch_map.internal_imports`' ast.walk /
+# ImportFrom-level test — the symbol-emptiness predicate must skip exactly what
+# build_map skips, and check_trajectory may not import the generator (F5).
+# Drift is pinned by the DIFFERENTIAL tests (tests/test_trajectory_arch.py
+# `regen_map` runs the real generator and asserts the delta empties exactly
+# when the map absorbs a module), so this sanction is guarded, not hoped.
+3d4cc5a83464  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/gen_arch_map.py
 a96fdbede5b0  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/gen_arch_map.py
 a96fdbede5b0  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/trace.py
 

@@ -20,9 +20,13 @@ regeneration — so the station can never again be the first to know.
   `added_module_findings` + `shipped_modules` + `_arch_scan_profile`, wired as
   the fourth rule of `component_findings`): the shipped-module set is derived
   from the declared arch-map scan root — `docs/stack.ini` `[paths] src` +
-  `[arch-map] mode`, the exact inventory `gen_arch_map` reads (`*.py` in
-  symbols mode, every non-hidden source file in files mode, the same
-  dot/`__pycache__` skip, keys relative to the root's parent) — and the delta
+  `[arch-map] mode` — and mirrors `gen_arch_map.build_map`'s symbol-mode
+  collection exactly: `*.py` under the root (absolute or repo-relative), the
+  same dot/`__pycache__` skip, keys relative to the root's parent, and the
+  same symbol-emptiness skip (`_would_be_inventoried`; the REVIEW-A rework
+  below). Files mode is dormant by parity — a real files-mode map has no
+  `### ` module headers, so `arch_inventory` is empty and the whole family is
+  off there. The delta
   against the COMMITTED inventory (`arch_inventory`) is joined through the LLR
   `Component` cells exactly as the station rule joins. A delta module with no
   real-CMP membership is the same finding class at the same tier (WARN plain,
@@ -31,18 +35,19 @@ regeneration — so the station can never again be the first to know.
   the refresh) makes the delta empty, so the station's own rule — untouched —
   never double-fires and stays the backstop. No new policy, no new registry
   surface: the existing rule, an earlier firing point.
-- **Driven, red-then-green** (`tests/test_trajectory_arch.py`, 9 new tests):
+- **Driven, red-then-green** (`tests/test_trajectory_arch.py`, 12 new tests
+  after the rework):
   the wi-387 topology reproduced as the class this row closes — a
   stale-but-contained committed map plus an untagged on-disk module REDS the
   lane bar naming the module, while the station rule itself has nothing to say
   (the station-first shape, now impossible); the LLR `Component` tag greens the
   same tree with no regeneration. Pinned around it: no double-report when the
   map is fresh, shared pack arming (dormant without packs), shared opt-out,
-  pre-arch-map vacuity, symbols-mode `*.py` scope, files-mode breadth, and the
-  hidden/`__pycache__` skip. Watched red first: 2 failed on the
-  pre-implementation tree (`test_added_module_without_component_tag_reds_the_lane_bar`,
-  `test_added_module_delta_follows_files_mode`) — historical, that tree is
-  gone; all 9 green under the fix.
+  pre-arch-map vacuity, symbols-mode `*.py` scope, files-mode dormancy parity,
+  the hidden/`__pycache__` skip, and the differential harness (below). Watched
+  red first: 2 failed on the
+  pre-implementation tree (`test_added_module_without_component_tag_reds_the_lane_bar`
+  plus the since-replaced files-mode test) — historical, that tree is gone.
 - **The lane seam, verified live:** on this claimed branch
   `check.py --run-step trajectory` runs the step (PASS, not SKIP) — the
   `trajectory` step was already branch-runnable (not in
@@ -96,3 +101,50 @@ full unfiltered suite 1853 passed / 10 skipped in 282.47s (0:04:42)
 already carries all 49 shipped modules
 <!-- fig: derived="ls project-trajectory/scripts/*.py | wc -l == grep -c '^### `scripts/' docs/architecture.md, both 49 at 278eea0f" -->,
 so the kit's own bar is green by construction, not by exemption).
+
+**REVIEW-A rework (2026-08-02, CHANGES-REQUESTED findings=3, one commit).**
+
+1. **(MAJOR) The delta over-collected against the generator it claimed to
+   mirror.** `gen_arch_map.build_map` SKIPS symbol-empty modules (bare
+   `__init__.py`, comment-only, private-only) from the MODULE MAP, so the
+   first cut's every-non-hidden-`*.py` scan redded such a module under
+   `--strict` and kept it red after the trunk regen FOREVER (the map never
+   absorbs it, the delta never empties) — accidental new policy, the scope
+   guard breached. Fixed at the class: `_would_be_inventoried` mirrors the
+   generator's emptiness predicate (`summary or imports or contracts or
+   rows`; a PARSE ERROR module stays inventoried), with
+   `_has_internal_import` mirroring the import-walk arm. The pin is
+   DIFFERENTIAL, not synthetic: `regen_map` runs the REAL `gen_arch_map`
+   over the fixture tree, and the tests assert the delta empties exactly
+   when the regenerated map absorbs the module —
+   `test_differential_delta_empties_exactly_when_the_regen_absorbs` (lane
+   red → regen absorbs → `ADDED` message gone with the station rule holding
+   the same red → tag clears both) and
+   `test_symbol_empty_module_reds_neither_side_of_the_regen` (green on BOTH
+   sides). Watched red first: the symbol-empty test failed under the build
+   commit's code (rc=1 where green was owed), green under the mirror.
+2. **(MINOR) The files-mode test pinned an unreachable state** (a synthetic
+   symbols-shaped map under a `files` declaration). Replaced by the honest
+   claim, driven against a real `--mode files` regeneration:
+   `test_files_mode_real_map_keeps_the_whole_family_dormant` — no `### `
+   headers, empty inventory, the whole family dormant, parity with the
+   station rule (`shipped_modules` now returns empty in files mode by
+   design rather than scanning what could never be absorbed).
+3. **(NIT) An absolute `[paths] src` was silently remapped repo-relative**
+   by the `strip("/")`; it now scans the path it names, as `gen_arch_map`
+   treats `--src` — watched red
+   (`test_absolute_declared_src_scans_like_the_generator` failed under the
+   build commit's code, no red where one was owed) then green.
+
+Bookkeeping: `check_trajectory.py` baseline 3359 → 3428 (reason in the
+stamp); the import-walk mirror sanctioned under the F5 `module-path` class
+(2 → 3 blocks, drift-guarded by the differential tests — the census note
+says so in place).
+
+**Watched after the rework (the tree of the rework commit):**
+`tests/test_trajectory_arch.py` 57 passed in 1.28s
+<!-- fig: cmd="python -m pytest -q -n auto tests/test_trajectory_arch.py" rev=this-rework-commit -->;
+smoke tier 619 passed / 2 skipped in 9.98s
+<!-- fig: cmd="python -m pytest -q -n auto -m smoke" rev=this-rework-commit -->;
+`check_trajectory --strict` / `check_doc_refs --strict` / `check_figures
+--strict` all rc=0.
