@@ -353,8 +353,16 @@ def stub_harness_repo(tmp_path):
     root = git_repo(tmp_path)
     (root / ".gitignore").write_text("out/\n", encoding="utf-8", newline="\n")
     (root / "docs" / "stack.ini").parent.mkdir(parents=True, exist_ok=True)
+    # [generated] declared the way the shipped template does it: the WI-388
+    # intake mint commits its regeneration in the same bookkeeping commit
+    # (RULING-6), so a repo that has not declared its generated artifacts
+    # would flag its own intake — same reason test_integrate.declare_generated
+    # gives for the claim.
     (root / "docs" / "stack.ini").write_text(
-        "[product]\ntest = {py} -m pytest -q\n", encoding="utf-8", newline="\n"
+        "[product]\ntest = {py} -m pytest -q\n"
+        "[generated]\nPROJECT_STATE.html = trajectory\n",
+        encoding="utf-8",
+        newline="\n",
     )
     (root / "docs" / "review-policy").write_text("0\n", encoding="utf-8", newline="\n")
     scripts = root / "scripts"
@@ -388,13 +396,43 @@ def _returned(root, wid="WI-401"):
     return path.read_text(encoding="utf-8") if path.is_file() else ""
 
 
+def then_closing(first_worker):
+    """`first_worker` for call 1, the closing shape for every later call.
+
+    A handback's merge now MINTS the disposition row at intake (WI-388, R3),
+    and the same run drives it — so a stub worker that fails every call would
+    stop the run at the R3 no-recursion refusal (the invariant working, but
+    not these tests' subject). The second session records its judgement by
+    closing the disposition row, the way a real adjudication session ends."""
+    calls = []
+
+    def worker(root, branch, wi_ids, args):
+        calls.append((branch, tuple(wi_ids)))
+        if len(calls) == 1:
+            return first_worker(root, branch, wi_ids, args)
+        wt, err = drv.integrate.lane_worktree(root, branch)
+        assert err is None, err
+        for spec in sorted((wt / "docs" / "work" / "active" / branch).glob("WI-*.md")):
+            dst = wt / "docs" / "work" / "complete" / spec.name
+            dst.parent.mkdir(parents=True, exist_ok=True)
+            dst.write_text(
+                spec.read_text(encoding="utf-8"), encoding="utf-8", newline="\n"
+            )
+            _git(wt, "rm", "-q", "docs/work/active/{}/{}".format(branch, spec.name))
+        _commit(wt, "{}: adjudicated + closed".format(";".join(wi_ids)), when=T_LATER)
+        return 0
+
+    worker.calls = calls
+    return worker
+
+
 def test_a_needs_human_worker_hands_back_and_the_run_keeps_going(tmp_path, capfd):
     # THE RUN-STOP THIS DELETES. Exit 7 used to end the whole walk-away run
     # with the branch parked. Now the lane closes into trunk and the driver
     # carries on to the drained banner — asserted at exit 0, not just by the
     # absence of a 7, because "kept working" is the property that matters.
     root = stub_harness_repo(tmp_path)
-    worker = building_worker(7, [("half-done.py", "VALUE = 1\n")])
+    worker = then_closing(building_worker(7, [("half-done.py", "VALUE = 1\n")]))
 
     rc = drv.run(root, drive_args(), worker=worker, tier="smoke")
     assert rc == 0
@@ -411,6 +449,10 @@ def test_a_needs_human_worker_hands_back_and_the_run_keeps_going(tmp_path, capfd
     # The partial work landed in trunk, which is the whole point of handing
     # back rather than parking: a future WI can pick it up from here.
     assert (root / "half-done.py").read_text(encoding="utf-8") == "VALUE = 1\n"
+    # ...and the handback's merge MINTED the disposition row at intake
+    # (WI-388, ruling R3), which this same run then drove to a close.
+    assert worker.calls[1][1] == ("WI-402",), worker.calls
+    assert list((root / "docs" / "work" / "complete").glob("WI-402-*.md"))
 
 
 def test_a_decided_exit_after_the_lane_closed_merges_on_its_declared_outcome(
@@ -457,7 +499,7 @@ def test_a_red_handback_is_reverted_to_a_bar_inert_artefact_and_merges(tmp_path,
     # refresh goes green and the branch merges — so trunk ends with the record
     # and without the red.
     root = stub_harness_repo(tmp_path)
-    worker = building_worker(7, [("broken.py", "VALUE = (\n")])
+    worker = then_closing(building_worker(7, [("broken.py", "VALUE = (\n")]))
 
     rc = drv.run(root, drive_args(), worker=worker, tier="smoke")
     assert rc == 0
@@ -683,14 +725,24 @@ def test_attended_ratification_row_drains_and_exits_zero_with_the_banner(
 # --- the empty-frontier ladder (§A4 amendment, ruled 2026-08-01) ---------------
 
 
-def test_empty_frontier_rung_one_reports_the_gap_census_and_mints_nothing(
-    tmp_path, capfd
-):
-    # Rung 1: derive the gap census mechanically and HAND it to the intake
-    # mint (WI-388's helper). Until that row lands the dispatcher only
-    # REPORTS — exit 0, the gaps named in the log, and NOT ONE row minted (no
-    # silent planner mints).
+def census_repo(tmp_path):
+    """A drivable repo (declared bar + stub harness) whose registries name
+    gaps and whose queue is EMPTY — the rung-1 state."""
     root = git_repo(tmp_path)
+    (root / "docs").mkdir(exist_ok=True)
+    (root / "docs" / "stack.ini").write_text(
+        "[product]\ntest = {py} -m pytest -q\n"
+        "[generated]\nPROJECT_STATE.html = trajectory\n",
+        encoding="utf-8",
+        newline="\n",
+    )
+    (root / "docs" / "review-policy").write_text("0\n", encoding="utf-8", newline="\n")
+    scripts = root / "scripts"
+    scripts.mkdir(exist_ok=True)
+    (scripts / "trunk_step.py").write_text(
+        STUB_TRUNK_STEP, encoding="utf-8", newline="\n"
+    )
+    (scripts / "check.py").write_text(STUB_CHECK, encoding="utf-8", newline="\n")
     req = root / "docs" / "requirements"
     req.mkdir(parents=True)
     (req / "system-requirements.csv").write_text(
@@ -706,17 +758,45 @@ def test_empty_frontier_rung_one_reports_the_gap_census_and_mints_nothing(
         encoding="utf-8",
         newline="\n",
     )
-    _commit(root, "seed the registries", when=T_CODE)
-    worker = Recorder()
+    _commit(root, "seed the registries + the stub harness", when=T_CODE)
+    return root
 
-    rc = drv.run(root, drive_args(), worker=worker)
+
+def test_empty_frontier_rung_one_mints_gap_rows_then_drives_them(tmp_path, capfd):
+    # Rung 1, LIVE (WI-388): the census is handed to the intake mint, each gap
+    # becomes a concrete gap-closure row in ONE bookkeeping commit, and the
+    # run KEEPS DRIVING — the same walk-away loop claims, builds and merges
+    # the rows it just minted. When the frontier empties again the census
+    # still names the gaps (the stub worker fixed nothing), and the dedup
+    # answers: every gap already carries a minted row, honest exit 0 — the
+    # ladder cannot mint the same gap forever.
+    root = census_repo(tmp_path)
+    worker = closing_all_worker()
+
+    rc = drv.run(root, drive_args(), worker=worker, tier="smoke")
     assert rc == 0
     out = capfd.readouterr().out
-    assert "registry gap(s)" in out and "WI-388" in out, out
-    assert "SR-001" in out
-    assert "no silent planner mints" in out
-    assert worker.calls == []
-    assert not list((root / "docs" / "work").rglob("WI-*.md"))
+    assert "minted" in out and "gap-closure" in out, out
+    assert "WI-388" in out
+    # The minted rows were DRIVEN in this same run...
+    assert worker.calls, out
+    assert list((root / "docs" / "work" / "complete").glob("WI-*.md"))
+    # ...the mint was a trunk bookkeeping commit, not a hand write...
+    assert "mint: WI-" in _git(root, "log", "--format=%s")
+    # ...and the second idle pass deduped rather than re-minting.
+    assert "already carry minted rows" in out, out
+
+
+def test_the_census_mint_refusal_stops_the_run_loudly(tmp_path, capfd, monkeypatch):
+    # A mint that cannot complete must never be driven past: the run stops
+    # with the refusal named (the merge-slot arm has the same contract).
+    root = census_repo(tmp_path)
+    monkeypatch.setattr(
+        drv.intake, "mint_gap_rows", lambda *_a, **_k: ([], "the mint REFUSED (stub)")
+    )
+    rc = drv.run(root, drive_args(), worker=Recorder(), tier="smoke")
+    assert rc == 1
+    assert "the mint REFUSED (stub)" in capfd.readouterr().err
 
 
 def test_empty_frontier_rung_two_banner_derives_from_the_shared_pending_read(

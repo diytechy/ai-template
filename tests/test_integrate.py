@@ -1989,6 +1989,67 @@ def test_the_bar_residue_the_refresh_created_is_shed_but_the_lanes_is_not(tmp_pa
 # 5b.2-wi388 — the adjudication no-bar arm and the `bar` strictness key
 
 
+def test_the_merge_slot_mints_the_adjudication_row_at_intake(tmp_path):
+    # WI-388's post-merge arm, end to end through the slot: the merged branch
+    # amended a ratified SR cell of a Verified row without the flip, so the
+    # intake mints ONE adjudication row as its own bookkeeping commit inside
+    # the same held slot — serial by construction, derived description, no
+    # model in the path (§A5.2; rulings R1/R3).
+    root = claim_repo(tmp_path)
+    req = root / "docs" / "requirements"
+    req.mkdir(parents=True, exist_ok=True)
+    sr_header = (
+        "SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,"
+        "Permutations,Priority,Verification,Status\n"
+    )
+    (req / "system-requirements.csv").write_text(
+        sr_header + 'SR-001,Adder,SN-001,"the original text","why","ac",,C,'
+        "Test,Verified\n",
+        encoding="utf-8",
+        newline="\n",
+    )
+    (root / ".gitignore").write_text(
+        "out/\nbar-cache/\n", encoding="utf-8", newline="\n"
+    )
+    (root / "docs" / "stack.ini").write_text(
+        "[product]\ntest = {py} -m pytest -q\n"
+        "[generated]\nPROJECT_STATE.html = trajectory\n",
+        encoding="utf-8",
+        newline="\n",
+    )
+    (root / "docs" / "review-policy").write_text("0\n", encoding="utf-8", newline="\n")
+    scripts = root / "scripts"
+    scripts.mkdir(exist_ok=True)
+    (scripts / "trunk_step.py").write_text(
+        STUB_TRUNK_STEP, encoding="utf-8", newline="\n"
+    )
+    (scripts / "check.py").write_text(STUB_CHECK_GREEN, encoding="utf-8", newline="\n")
+    _commit(root, "the attested spine + the stub harness", when=T_CODE)
+    assert integ.claim(root, "WI-401", "wi-401") == 0
+    wt = close_branch(root, "wi-401")
+    (wt / "docs" / "requirements" / "system-requirements.csv").write_text(
+        sr_header + 'SR-001,Adder,SN-001,"the AMENDED text","why","ac",,C,'
+        "Test,Verified\n",
+        encoding="utf-8",
+        newline="\n",
+    )
+    _commit(wt, "WI-401: amend the requirement without the flip", when=T_LATER)
+
+    refusal = integ.integrate_one(root, "wi-401", "smoke")
+    assert refusal is None, refusal
+
+    minted = sorted((root / "docs" / "work" / "queued").glob("WI-402-*.md"))
+    assert len(minted) == 1, minted
+    text = minted[0].read_text(encoding="utf-8")
+    assert 'safety_class = "adjudication"' in text
+    assert "SR-001" in text and "## Context" in text
+    assert "the original text" in text and "the AMENDED text" in text
+    # The mint is its OWN bookkeeping commit, after the merge, on trunk.
+    subjects = _git(root, "log", "--format=%s").splitlines()
+    assert subjects[0].startswith("mint: WI-402"), subjects[:3]
+    assert subjects[1].startswith("integrate: merge wi-401"), subjects[:3]
+
+
 def test_the_bar_key_reaches_check_gate(tmp_path):
     # WI-388 (5): an optional frontmatter `bar = G1|G2|G3` pins the lane's
     # verification strictness — the refresh passes it to check.py as --gate, so

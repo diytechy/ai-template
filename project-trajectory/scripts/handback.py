@@ -217,6 +217,29 @@ def _span(root, branch):
     )
 
 
+def _no_recursion_refusal(root, branch, specs):
+    """THE NO-RECURSION INVARIANT (WI-388, ruling R3): a DISPOSITION row — the
+    adjudication kind — may never itself hand back. Enforced HERE, at the
+    machinery that would perform the act, not by prose: the refusal stops the
+    run for a human, because a disposition that cannot dispose is the one
+    state the outcome model cannot express. Read off the TRUNK's claimed copy
+    (the same one-home read the slot uses); an unreadable frontmatter falls
+    through — the return path's own read fails on it by name."""
+    for _wi_id, name in specs:
+        try:
+            meta = integrate._spec_frontmatter(root / integrate.ACTIVE / branch / name)
+        except (OSError, ValueError):
+            continue
+        if (meta.get("safety_class") or "").strip().lower() == "adjudication":
+            return (
+                "{} claims the adjudication row {} - a disposition row never "
+                "hands back (ruling R3, no recursion: its outcomes are cancel "
+                "/ defer / re-queue with drafted follow-up / surface an open "
+                "item). The run stops for a human to read the lane".format(branch, name)
+            )
+    return None
+
+
 def hand_back(root, branch, reason):
     """Close `branch` on the HANDBACK outcome. `(returned WI ids, None)`, or
     `(None, refusal)`.
@@ -233,6 +256,7 @@ def hand_back(root, branch, reason):
     if not specs:
         return None, "trunk holds no claimed specs for {}".format(branch)
     wt, err = _lane(root, branch)
+    err = err or _no_recursion_refusal(root, branch, specs)
     if err:
         return None, "cannot hand back {}: {}".format(branch, err)
     ids = [wi_id for wi_id, _name in specs]

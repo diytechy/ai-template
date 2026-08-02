@@ -290,6 +290,31 @@ def test_handback_refuses_a_branch_trunk_holds_no_claim_for(tmp_path):
     assert ids is None and "no claimed specs" in refusal
 
 
+def test_a_disposition_rows_own_handback_is_refused_structurally(tmp_path):
+    # WI-388 / ruling R3, the no-recursion invariant at the MACHINERY end: a
+    # disposition row (the adjudication kind) may never itself hand back — its
+    # only outcomes are cancel / defer / re-queue with drafted follow-up /
+    # surface an open item. The refusal is structural (the function that would
+    # perform the act refuses), never prose, and it leaves the claim exactly
+    # where it was for a human to read.
+    root = claimed_repo(tmp_path)
+    spec = root / "docs" / "work" / "active" / "wi-401" / "WI-401-widget.md"
+    spec.write_text(
+        spec.read_text(encoding="utf-8").replace(
+            'safety_class = "ordinary"', 'safety_class = "adjudication"'
+        ),
+        encoding="utf-8",
+        newline="\n",
+    )
+    _commit(root, "fixture: the claim is an adjudication row", when=T_CODE)
+
+    ids, refusal = hb.hand_back(root, "wi-401", "worker exit 7 (NEEDS-HUMAN)")
+    assert ids is None
+    assert "never hands back" in refusal and "R3" in refusal
+    assert spec.is_file()  # the claim did not move
+    assert not (root / "docs" / "work" / "queued" / "WI-401-widget.md").exists()
+
+
 # --- the quarantine (the RULED red arm) ---------------------------------------
 
 

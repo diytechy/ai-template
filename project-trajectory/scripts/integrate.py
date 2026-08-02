@@ -2066,6 +2066,15 @@ def integrate_one(root, branch, tier, held=None):
     moved), so an incomplete unload is not a refusal - but nothing ever retries
     it (a merged branch no longer appears in `finished_branches`), which is why
     the caller has to carry the remainder to the run's exit code.
+
+    THE POST-MERGE ARM IS THE INTAKE (WI-388, §A5.2): once the merge lands —
+    and only then — the unified mint helper reads what landed (the ratified/
+    routed spine diff, a returned spec's `## Handback`, a merged adjudication
+    row's `## Dispositions` drafts) and mints the rows the event forces, as
+    ONE bookkeeping commit on trunk, inside this same held slot (serial by
+    construction; rulings R1/R3: a WI id is created only by a human trunk
+    commit or that helper). A mint refusal stops the run LOUDLY but the merge
+    stands; recovery is a trunk-side fix plus `python intake.py sweep`.
     """
     wi_ids = _claimed_wi_ids(root, branch)
     outcomes, refusal = _merge_refusal(root, branch, wi_ids)
@@ -2094,6 +2103,7 @@ def integrate_one(root, branch, tier, held=None):
                 "the refresh reported green, so this is a real anomaly, not a "
                 "lost race; nothing was merged".format(branch, why)
             )
+    pre_merge_head = _head(root)
     code, out = ac.git(
         root,
         "merge",
@@ -2130,6 +2140,18 @@ def integrate_one(root, branch, tier, held=None):
     print("integrate: {}".format(note), file=sys.stdout if unloaded else sys.stderr)
     if not unloaded and held is not None:
         held.append(branch)
+    # The WI-388 intake, at the one honest hook point: the merge has landed,
+    # the slot is still held, trunk is serial. Deferred import — intake sits
+    # ABOVE this module (it imports nothing of integrate, but dispatch imports
+    # both), and the deferral keeps a plain `integrate.py claim` from paying
+    # the mint family's import.
+    import intake
+
+    _minted, mint_refusal = intake.intake_after_merge(
+        root, pre_merge_head, _head(root), outcomes, branch
+    )
+    if mint_refusal:
+        return mint_refusal
     return None
 
 

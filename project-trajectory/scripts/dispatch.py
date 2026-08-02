@@ -83,6 +83,7 @@ from pathlib import Path
 
 import agent_common as ac
 import handback
+import intake
 import integrate
 import lane
 import schedule
@@ -660,12 +661,12 @@ def gap_census(root):
     2026-08-01). The mechanical registry-gap census the dispatcher derives
     when the frontier is empty: unverified in-scope SRs, orphan rows, draft
     SNs — exactly what trace.py already names, re-used rather than re-derived
-    (`trace.analyze` is the one orphan/status engine). WI-388's intake mint
-    helper consumes this list to mint concrete gap-closure rows with derived
-    descriptions — no model anywhere in the path; until that row lands the
-    dispatcher only REPORTS the census and mints NOTHING (no silent planner
-    mints). Returns finding strings; [] when the registries are complete (or
-    absent — a scaffold with no spine yet has no gaps to name)."""
+    (`trace.analyze` is the one orphan/status engine). `intake.mint_gap_rows`
+    consumes this list at `_station_exit` rung 1 to mint concrete gap-closure
+    rows with derived descriptions — no model anywhere in the path, and the
+    mint dedupes so one gap can never mint twice. Returns finding strings; []
+    when the registries are complete (or absent — a scaffold with no spine yet
+    has no gaps to name)."""
     import argparse as _ap
 
     import trace as tr
@@ -818,11 +819,13 @@ def _admit(root, table, args, worker, tier, level, lanes_total, config_refusal, 
 
 
 def _station_exit(root, tier, verb, payload, state):
-    """The run's two honest ends, station idle: the surfaced-ratification stop
-    (§A8 attended: drain, leave the cards, exit 0) and the drained queue. A
-    finished branch may still be waiting (e.g. built by hand between runs), so
-    both drain the residue first — and the drained banner COUNTS what that
-    drain merges (REVIEW-A round 1: the banner undercounted residue)."""
+    """The run's honest ends, station idle: the surfaced-ratification stop
+    (§A8 attended: drain, leave the cards, exit 0) and the drained queue — or,
+    on rung 1, NOT an end at all: a minted gap row re-fills the frontier and
+    the return is None (keep driving). A finished branch may still be waiting
+    (e.g. built by hand between runs), so every arm drains the residue first —
+    and the drained banner COUNTS what that drain merges (REVIEW-A round 1:
+    the banner undercounted residue)."""
     residue = len(integrate.finished_branches(root))
     code = _drain(root, tier)
     if code != 0:
@@ -831,19 +834,33 @@ def _station_exit(root, tier, verb, payload, state):
         _say(_surface_banner(root, payload))
         return ac.EXIT_DONE
     # THE EMPTY-FRONTIER LADDER (§A4 amendment, ruled 2026-08-01), replacing
-    # the bare queue-drained exit. Rung 1: a mechanical gap census — handed to
-    # the WI-388 intake mint; reported here, NEVER minted here. Rung 2: census
-    # empty but a pending attestation exists — that is not missing work; the
-    # cards are on open-items.html and the banner counts them off the shared
-    # read. Rung 3: census empty and registries complete — honest drain.
+    # the bare queue-drained exit. Rung 1: a mechanical gap census — HANDED to
+    # the WI-388 intake mint, which turns each gap into a concrete gap-closure
+    # row (derived description, no model in the path) and dedupes against the
+    # rows that already exist, so the ladder cannot mint one gap forever.
+    # Rung 2: census empty but a pending attestation exists — that is not
+    # missing work; the cards are on open-items.html and the banner counts
+    # them off the shared read. Rung 3: census empty and registries complete —
+    # honest drain.
     census = gap_census(root)
     if census:
+        minted, refusal = intake.mint_gap_rows(root, census)
+        if refusal:
+            _say(refusal, err=True)
+            return 1
+        if minted:
+            _say(
+                "empty frontier - {} registry gap(s); minted {} gap-closure "
+                "row(s) at intake (WI-388, docs/concurrency-v2.md §A5.2): "
+                "{}.".format(len(census), len(minted), ", ".join(w for w, _ in minted))
+            )
+            return None  # the frontier is no longer empty — keep driving
         for line in census:
             _say("gap census: {}".format(line))
         _say(
-            "empty frontier - {} registry gap(s) named above await the intake "
-            "mint (WI-388, docs/concurrency-v2.md §A5.2); nothing was minted - "
-            "no silent planner mints.".format(len(census))
+            "empty frontier - {} registry gap(s) named above already carry "
+            "minted rows (open or built); nothing new to mint - the remainder "
+            "is the owner's to read.".format(len(census))
         )
         return ac.EXIT_DONE
     cards = _pending_cards(root)

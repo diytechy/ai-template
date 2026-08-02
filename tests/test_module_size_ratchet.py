@@ -1080,13 +1080,16 @@ BASELINE = {
     # its own refresh completes. Most of the delta is the docstrings stating
     # the authority model. Reviewed bump, log fragment 2026-08-02 (WI-381).
     # Re-stamp down with WI-280.
-    # +80 (2251 -> 2331), WI-388: the adjudication no-bar arm + the `bar`
+    # +102 (2251 -> 2353), WI-388: the adjudication no-bar arm + the `bar`
     # strictness key — `_lane_bar_directives` (the claimed rows' say over the
     # refresh bar, read off the same trunk claim the slot reads), `_refresh_bar`
-    # (the extraction that keeps `refresh` under the complexity ratchet), and
-    # `_run_bar`'s --gate pin. Reviewed bump, log fragment 2026-08-02 (WI-388).
-    # Re-stamp down with WI-280.
-    "integrate.py": 2331,
+    # (the extraction that keeps `refresh` under the complexity ratchet),
+    # `_run_bar`'s --gate pin — and the post-merge INTAKE arm: the one honest
+    # hook point where `intake.intake_after_merge` mints inside the held slot
+    # (§A5.2; the mint helper itself is the new sibling intake.py, kept under
+    # the ratchet's threshold). Reviewed bump, log fragment 2026-08-02
+    # (WI-388). Re-stamp down with WI-280.
+    "integrate.py": 2353,
 }
 
 
