@@ -24,11 +24,13 @@ the wi-387 station-first topology back, for the dotted shape.
   filter) while never itself entering the delta, and the whole dotted name
   `pkg.notes` is in the universe on NEITHER side — only a first-segment read
   can keep the two dotted modules.
-- **The recorded terminus.** Per the WI-410 arm inventory this exhausts the
-  mirror's arms: every branch of `_would_be_inventoried` and every arm of
-  `_has_internal_import` — including, now, the first-segment read inside
-  both absolute arms — is fixture-pinned; the section comment states it, so
-  the pinning series (WI-399 → WI-406 → WI-410 → WI-411) has a recorded end.
+- **The recorded terminus — with one named residue** (wording corrected by
+  the REVIEW-A rework, below): every branch of `_would_be_inventoried` and
+  every arm of `_has_internal_import` — including the first-segment read
+  inside both absolute arms and the REVIEW-A-unmasked docstring /
+  public-symbol pair — is fixture-pinned EXCEPT the read-failure branch;
+  the section comment states it, so the pinning series
+  (WI-399 → WI-406 → WI-410 → WI-411) has a recorded end.
 - **No production-code change** — the fixture was GREEN on its first watched
   run (1 passed in 0.23s): no divergence exposed (generator and mirror both
   split the first segment), so no mirror fix was owed.
@@ -68,3 +70,31 @@ Green-on-first-run is the correct watched outcome for this WI: the fixture
 pins semantics the review's probe had already measured consistent on both
 sides; red would have meant a real divergence, and the mutation drive
 supplied the red-side evidence instead.
+
+**Rework (2026-08-02, REVIEW-A CHANGES-REQUESTED findings=2, one commit).**
+Finding 1 (MAJOR): the terminus over-claimed — the reviewer's mutations
+dropped the mirror's docstring arm alone and public-symbol arm alone and
+each left all 62 tests green, because MODULE_BODY satisfies both arms at
+once. Remedied with two one-form fixtures in the same real-regen
+differential pattern (a docstring-ONLY and a public-symbol-ONLY module,
+both green on their first watched runs); scratch drives: docstring-arm
+drop 1 failed / 64 passed redding exactly the doc-only fixture on its rc
+assert, public-symbol-arm drop 1 failed / 64 passed redding exactly the
+sym-only fixture on its rc assert. Finding 2 (MINOR): the read-failure
+branch (OSError/UnicodeDecodeError -> False) was omitted from the terminus
+enumeration and cannot be driven green-green — the crash probe was re-run,
+not taken on faith: gen_arch_map on a non-UTF-8 .py dies with
+UnicodeDecodeError in scan_module's read_text, rc 1, so there is no absorb
+side. The terminus comment now names it as the argued exception, and the
+UnicodeDecodeError half carries a LANE-SIDE-only pin (a deterministic
+invalid-start-byte fixture — judged worth its few lines since either drift
+direction reds: flip-to-True 1 failed / 64 passed, except-drop
+1 failed / 64 passed; the OSError half is not stageable portably and stays
+argued). The original three first-segment drives re-red exactly the dotted
+fixture in the enlarged suite (1 failed / 64 passed, all three); scratch
+restored byte-identical, re-green 65 passed. Watched on the rework tree
+(91462f79 + the rework diff; tests/ byte-identical to the rework commit):
+`tests/test_trajectory_arch.py` 65 passed in 1.84s
+<!-- fig: cmd="python -m pytest -q -n auto tests/test_trajectory_arch.py" rev="91462f79 plus the rework diff, tests identical to the rework commit" -->;
+smoke tier 629 passed / 2 skipped in 10.16s
+<!-- fig: cmd="python -m pytest -q -n auto -m smoke" rev="91462f79 plus the rework diff, tests identical to the rework commit" -->.

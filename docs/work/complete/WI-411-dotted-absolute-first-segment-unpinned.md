@@ -32,12 +32,36 @@ never the worktree): dropping the ImportFrom split alone, the ast.Import
 split alone, and the review's both-dropped probe (previously all-green
 across 61 tests) each red EXACTLY this fixture — 1 failed, 61 passed, all
 three; two name asserts, one rc assert — with the scratch restored
-byte-identical and re-green (62 passed). Per the WI-410 arm inventory this
-EXHAUSTS the mirror's arms — the pinning series' recorded terminus, stated
-in the section comment. Registration judged: none owed — a fixture inside
+byte-identical and re-green (62 passed). Per the WI-410 arm inventory the
+pinning series' terminus is recorded WITH ONE NAMED RESIDUE — REVIEW-A
+finding 2 corrected the original exhausts-the-arms claim (reworked
+2026-08-02, next paragraph): every arm is fixture-pinned except the
+read-failure branch. Registration judged: none owed — a fixture inside
 the already-cited `tests/test_trajectory_arch.py` suite, no module added,
 no new LLR/TC rows (the WI-406 REVIEW-A precedent). Budgeted docs
 untouched.
+
+Reworked 2026-08-02 on REVIEW-A (CHANGES-REQUESTED findings=2), one rework
+commit, still fixtures-only. (1) The masked pair: the reviewer's mutations
+dropped the docstring arm alone and the public-symbol arm alone — each
+left all 62 tests green, MODULE_BODY satisfying both arms at once — so two
+one-form fixtures now pin the pair (a docstring-ONLY and a
+public-symbol-ONLY module through the same real-regen lifecycle, both
+green on their first watched runs); each single-arm scratch drop reds
+EXACTLY its fixture on the rc assert — 1 failed, 64 passed, both. (2) The
+honest terminus: every arm of `_would_be_inventoried` and
+`_has_internal_import` is fixture-pinned EXCEPT the read-failure branch
+(OSError/UnicodeDecodeError -> False), which the green-green differential
+cannot drive — gen_arch_map itself CRASHES on a non-UTF-8 .py (probed:
+UnicodeDecodeError in scan_module's read_text, rc 1), so there is no
+absorb side. Its UnicodeDecodeError half is pinned LANE-SIDE only (a
+deterministic invalid-start-byte fixture; either drift direction reds:
+flip-to-True 1 failed / 64 passed, except-drop 1 failed / 64 passed); the
+OSError half — an unreadable file, not stageable portably — stays the
+argued exception, named in the section comment. The original three
+first-segment drives re-red exactly the dotted fixture in the enlarged
+suite (1 failed, 64 passed, all three); scratch restored byte-identical,
+re-green 65 passed.
 
 Watched on 91462f79: tests/test_trajectory_arch.py 62 passed in 1.64s
 <!-- fig: cmd="python -m pytest -q -n auto tests/test_trajectory_arch.py" rev=91462f79 -->;
@@ -45,3 +69,10 @@ smoke 625 passed / 6 skipped in 10.29s
 <!-- fig: cmd="python -m pytest -q -n auto -m smoke" rev=91462f79 -->;
 full suite 1893 passed / 10 skipped in 0:05:04
 <!-- fig: cmd="python -m pytest -q -n auto" rev=91462f79 -->.
+
+Watched on the rework tree (91462f79 + the REVIEW-A rework; tests/
+byte-identical to the rework commit): tests/test_trajectory_arch.py
+65 passed in 1.84s
+<!-- fig: cmd="python -m pytest -q -n auto tests/test_trajectory_arch.py" rev="91462f79 plus the rework diff, tests identical to the rework commit" -->;
+smoke 629 passed / 2 skipped in 10.16s
+<!-- fig: cmd="python -m pytest -q -n auto -m smoke" rev="91462f79 plus the rework diff, tests identical to the rework commit" -->.
