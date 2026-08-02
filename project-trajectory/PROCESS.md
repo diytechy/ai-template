@@ -425,13 +425,16 @@ the tool.
 
 **Phased delivery (version subsets) — opt-in.** *Applies when* a roadmap ships
 phase 1 before 2/3. Every ratified SR/LLR/TC carries the **`Phase`** it was
-ratified in — a bare integer (a downstream `v2` still parses); an SN's phase is
+ratified in — a bare integer, digits only (a ratified prefixed/blank cell is a
+schema finding once any row is phased); an SN's phase is
 derived from its SRs. The project's **current phase is derived** = the highest
-ratified phase, mirroring the derived gate, so a scope change surfaces as a phase
-bump. Traceability stays phase-blind while the G3 Verified criterion and G-Release
+ratified phase, mirroring the derived gate (`derive_gate.py --next-phase` prints
+the next number); a phase increments only when re-opened scope is **confirmed**
+— an adjudication verdict that scope moved, or a ratified draft-SN batch —
+never on the raw derived-gate drop.
+Traceability stays phase-blind while the G3 Verified criterion and G-Release
 scope by phase (`check.py --gate G3 --phase 1`; the foundation phase is always in
-scope), reporting out-of-phase SRs as **phase-deferred**; a ratified row whose
-Phase is blank or unparseable is a schema finding (armed once any row is phased).
+scope), reporting out-of-phase SRs as **phase-deferred**.
 Full semantics in
 [`process-options.md`](process-options.md#phased-delivery); standalone single-shot
 deliverables skip it.

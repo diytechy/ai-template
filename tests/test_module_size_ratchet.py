@@ -453,7 +453,13 @@ BASELINE = {
     # named so the SN-coverage gate rung's F5 duplicate in derive_gate.py has a
     # pinnable twin (test_rule_sync), plus the two seam comments tying the
     # orphan listing to the gate rung. Reviewed bump, log 2026-08-02.
-    "trace.py": 2909,
+    # +10 (2909 -> 2919), WI-402: phase_ratified_findings tightens to
+    # numeric-only (owner ruling 2026-08-01) — the docstring now records WHY
+    # (the two literal joins a prefixed cell silently disarms, and the
+    # grandfathering stance that keeps phase_num digit-extract), which is the
+    # reason a successor must not "simplify" the rule back to the parse.
+    # Reviewed bump, log 2026-08-02.
+    "trace.py": 2919,
     # +132 (1926 -> 2058; the last +10 is the F4 BOM hardening: read_rows utf-8-sig + git-show strips), WI-316: staged_spine_findings — the amend-without-
     # flip warn (--staged): content cells of a Verified spine row changed
     # without the Modified marker, suppressed when the owning SR flips in the

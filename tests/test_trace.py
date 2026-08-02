@@ -957,9 +957,6 @@ def test_phase_ratified_rule_arms_and_fires():
     # Armed by SR-001's phase; SR-002 ratified with a blank phase -> one finding.
     fired = f(_real(["SR-001,Verified,1", "SR-002,Verified,"]))
     assert len(fired) == 1 and "SR-002" in fired[0]
-    # A vN-tagged ratified registry arms the rule AND passes (the compatibility
-    # guarantee — the filter/parse are digit-based, so a downstream `vN` is legal).
-    assert f(_real(["SR-001,Verified,v1", "SR-002,Verified,v2"])) == []
     # An unparseable ratified phase fails (armed by SR-001).
     fired = f(_real(["SR-001,Verified,1", "SR-002,Verified,later"]))
     assert len(fired) == 1 and "SR-002" in fired[0]
@@ -970,6 +967,29 @@ def test_phase_ratified_rule_arms_and_fires():
         _real(["SR-001,Verified,1"], ["LLR-001,Verified,"], ["TC-001,Verified,2"])
     )
     assert len(fired) == 1 and "LLR-001" in fired[0]
+
+
+def test_phase_ratified_rule_is_numeric_only():
+    # Owner ruling 2026-08-01 (WI-402): once armed, a ratified Phase cell is a
+    # BARE INTEGER — digits only, full cell. A prefixed label still digit-parses
+    # (phase_num is untouched, so legacy labels keep arming/filtering/deriving —
+    # grandfathering), but the literal joins (--phase/--ratify scope match,
+    # check_trajectory's per-phase= vs [phase]-[gN] anchor join) miss it
+    # SILENTLY, which is worse than a crash — so the live cell must be numeric.
+    f = TRACE.phase_ratified_findings
+    # A vN-tagged ratified registry now arms the rule AND fails it, per cell
+    # (the pre-WI-402 vN-passes compatibility guarantee, deliberately retired).
+    fired = f(_real(["SR-001,Verified,v1", "SR-002,Verified,v2"]))
+    assert len(fired) == 2
+    assert all("bare integer" in msg for msg in fired)
+    # A single prefixed cell beside bare integers fires alone, naming the row.
+    fired = f(_real(["SR-001,Verified,1", "SR-002,Verified,P1"]))
+    assert len(fired) == 1 and "SR-002" in fired[0]
+    # Bare integers stay green (surrounding whitespace is stripped, not judged).
+    assert f(_real(["SR-001,Verified,1", "SR-002,Verified, 2 "])) == []
+    # A Draft row is exempt even with a prefixed cell (its phase is not yet
+    # ratified scope; it takes its bare number at ratification).
+    assert f(_real(["SR-001,Verified,1", "SR-002,Draft,v9"])) == []
 
 
 def _phase_scaffold(scaffold, sr="1", llr="1", tc="1"):
@@ -1005,6 +1025,19 @@ def test_ratified_blank_phase_fails_strict_schema(scaffold):
     assert proc.returncode == 1, proc.stdout + proc.stderr
     report = (scaffold / "docs" / "test" / "report.md").read_text(encoding="utf-8")
     assert "ratified but its Phase" in report and "TC-001" in report
+
+
+def test_ratified_prefixed_phase_fails_strict_schema(scaffold):
+    # WI-402: a prefixed-but-parseable cell (P1) arms the rule (digit-extract
+    # arming) and fails it — the silently-vacuous literal-join shape, now a
+    # schema finding rather than a quiet disarm.
+    make_minimal_project(scaffold)
+    _phase_scaffold(scaffold, sr="1", llr="1", tc="P1")
+    proc = run_py(["scripts/trace.py", "--strict", "--strict-schema"], cwd=scaffold)
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+    report = (scaffold / "docs" / "test" / "report.md").read_text(encoding="utf-8")
+    assert "ratified but its Phase" in report and "TC-001" in report
+    assert "bare integer" in report
 
 
 # --- repo-review 2026-07-21 regressions ---------------------------------------

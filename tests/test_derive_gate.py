@@ -466,6 +466,44 @@ def test_derived_phase_none_when_unphased(scaffold):
     assert _derive(scaffold)["phase"] is None
 
 
+# --- WI-402: --next-phase, the derived next phase as an output mode -----------
+def test_next_phase_prints_max_plus_one(scaffold):
+    # --next-phase = max(phase over non-draft spine rows) + 1, printed bare so
+    # the intake mint helper (WI-388) can shell out and int() the answer when a
+    # confirmed scope change opens a new phase. A Draft row's phase is not yet
+    # scope, so it never bumps the answer — same derivation as the basis line's
+    # phase=N, exposed as an output mode.
+    make_minimal_project(scaffold)
+    (scaffold / "docs" / "requirements" / "system-requirements.csv").write_text(
+        SRS_H.rstrip("\n")
+        + ",Phase\n"
+        + _sr("SR-001").rstrip("\n")
+        + ",1\n"
+        + _sr("SR-002").rstrip("\n")
+        + ",3\n"
+        + _sr("SR-003", status="Draft").rstrip("\n")
+        + ",4\n",
+        encoding="utf-8",
+    )
+    gate_file = scaffold / "docs" / "gate"
+    before = gate_file.read_text(encoding="utf-8")
+    proc = run_py(["scripts/derive_gate.py", "--next-phase"], cwd=scaffold)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert proc.stdout.strip() == "4"  # max ratified = 3; the Draft 4 is excluded
+    # An output mode over the existing derivation: docs/gate is not rewritten.
+    assert gate_file.read_text(encoding="utf-8") == before
+
+
+def test_next_phase_on_an_unphased_spine(scaffold):
+    # An unphased spine is the implicit foundation (phase 1) — what blank bought
+    # before the phase model — so the first opened phase is 2, never 1, which
+    # would collapse the new scope into the foundation the blank rows occupy.
+    make_minimal_project(scaffold)
+    proc = run_py(["scripts/derive_gate.py", "--next-phase"], cwd=scaffold)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert proc.stdout.strip() == "2"
+
+
 def test_per_phase_resolves_tc_citing_only_its_llr(scaffold):
     # Repo-review 2026-07-21 M-6: a Draft TC citing only its LLR (a legal shape
     # the orphan rules accept) dropped the repo's raw min while the per-phase

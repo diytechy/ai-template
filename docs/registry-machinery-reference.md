@@ -131,7 +131,7 @@ all key off the SR row.
 | `Priority` | ✔ | **open** (`M`/`S`/`C` by convention) | Required non-empty under `--strict-schema`; the *value* is never checked. |
 | `Verification` | ✔ | **closed**: `Test`, `Demonstration`, `Manual`, `Analysis`, `Inspection`, `Attest`, `Critique` | The highest-leverage cell — §3.1. |
 | `Status` | ✔ | open; magic: `Draft`, `Verified`, `Modified` | Drives the gate — §3.2. |
-| `Phase` | ✘ | digit-parseable (`2`, `v2`) | Optional delivery phase — §3.3. |
+| `Phase` | ✘ | bare integer (`2`) on ratified rows once armed | Optional delivery phase — §3.3. |
 | `Area` | ✘ | free text | **Reporting only** — `trace.py` emits per-Area SR counts and never gates on it. |
 
 ¹ under `--strict-schema` (G3). ² `name=range[min..max]`; `name=set{a,b,c}`;
@@ -183,13 +183,37 @@ amendment invalidated the evidence.
 ### 3.3 `Phase` — optional phased delivery
 
 - Parsed by `phase_num` — **the first digit run wins**, so `v2`, `2` and
-  `phase-2` all parse to `2`.
-- **The rule arms itself.** `phase_ratified_findings` is vacuous until ≥1 spine
-  row is phased; once *anything* is phased, **every ratified SR/LLR/TC must carry
-  a numeric Phase**. A Draft row may always leave it blank.
-- `--phase v1,v2` scopes `--require-verified`. A blank Phase is always in scope
+  `phase-2` all parse to `2`. The lenient parse is **grandfathering** (owner
+  ruling 2026-08-01, WI-402): historical labels keep filtering and deriving,
+  but a live ratified cell must be a bare integer — next bullet.
+- **The rule arms itself, and is NUMERIC-ONLY.** `phase_ratified_findings` is
+  vacuous until ≥1 spine row is phased (digit-parse arming — a `v2` cell arms
+  it too); once *anything* is phased, **every ratified SR/LLR/TC `Phase` must
+  be a full-cell bare integer** — digits only, no prefix — under
+  `--strict-schema` (G3, where the schema tier already bites). A Draft row may
+  always leave it blank. Numeric-only is a correctness rule, not a style: two
+  joins match the cell **literally**, never by parse — the `--phase`/`--ratify`
+  scope filters (`in_phase`/`_scope_srs`) and check_trajectory's phase-drop
+  join of `docs/gate`'s `per-phase=` labels against `[phase]-[g<N>]` WI title
+  anchors — so a reformatted `P1`/`v2` cell went silently vacuous there,
+  disarming the warn without telling anyone. (Legacy `[v3]`-style title anchors
+  in `docs/work/complete/` are history — never rewritten; the rule bites live
+  registry cells only.)
+- `--phase 1,2` scopes `--require-verified`. A blank Phase is always in scope
   (downstream compatibility), and the **foundation phase** — `min()` over all SR
-  phases — is never deferred.
+  phases — is never deferred. The `tag in phases` match itself stays literal
+  (CLI label-agnostic) — which is exactly why the cells must be numeric.
+- **The phase boundary is a confirmation event** (owner ruling 2026-08-01). The
+  current phase is derived — `max()` over non-draft spine rows, the `phase=N`
+  field on the `docs/gate` basis line (§8.3) — and it increments only when
+  re-opened scope is **confirmed**: an adjudication verdict that scope moved,
+  or a new draft-SN batch ratified into scope — **never on the raw derived-gate
+  drop**. A spurious `Modified` window must not burn a phase number (WI-280 is
+  the counterexample: 19 traced cells, 11 SRs flipped, no scope moved).
+  `derive_gate.py --next-phase` prints that max + 1 — the one derived call
+  every agent and the intake mint helper (WI-388) use for a newly confirmed
+  phase's number (an unphased spine is the implicit foundation `1`, so it
+  prints `2`; a Draft row's phase is not yet scope and never bumps the answer).
 
 ---
 
@@ -685,7 +709,7 @@ enforced by nobody. Only `SR.Verification` and `TC.Tier` are closed sets.
 ### 12.7 The phase rule arms globally from one row
 
 Phase a single SR anywhere and *every* ratified SR, LLR and TC across the repo
-instantly owes a numeric `Phase` or `--strict-schema` reds. Intended, but a
+instantly owes a bare-integer `Phase` or `--strict-schema` reds. Intended, but a
 cliff rather than a ramp — worth knowing before someone phases one row to try it.
 
 ### 12.8 `refs()` splits on whitespace
@@ -721,11 +745,13 @@ python project-trajectory/scripts/trace.py --strict --no-placeholders --html
 
 # the G3 bar
 python project-trajectory/scripts/trace.py --strict --no-placeholders --html \
-    --require-verified --strict-schema [--phase v2]
+    --require-verified --strict-schema [--phase 2]
 
 # what gate do the registries derive to, and on what basis
 python project-trajectory/scripts/derive_gate.py --print
 python project-trajectory/scripts/derive_gate.py --check     # freshness guard
+python project-trajectory/scripts/derive_gate.py --next-phase  # the number a newly
+                                                # confirmed phase takes (§3.3)
 
 # the whole harness at a chosen gate/tier
 python project-trajectory/scripts/check.py --gate G3 --tier full

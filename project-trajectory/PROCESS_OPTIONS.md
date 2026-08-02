@@ -230,20 +230,32 @@ membership legible and durable.
 2/3; a single-shot deliverable skips it. Builds on the **Derived gate model**
 above: just as the gate is computed from artifact states, the project's **current
 phase is derived** — the highest phase any ratified spine row carries — so a scope
-change (a new ratified SN/SR/LLR/TC) surfaces as a phase bump, never a hand-set marker.
+change surfaces as a phase bump, never a hand-set marker. **The phase boundary is
+a confirmation event** (owner ruling 2026-08-01): a phase increments when
+re-opened scope is *confirmed* — an adjudication verdict that scope moved, or a
+new draft-SN batch ratified into scope — **never on the raw derived-gate drop**;
+a spurious `Modified` window must not burn a phase number (the counterexample:
+19 traced cells once flipped 11 SRs and dropped the gate, and no scope had
+moved). `derive_gate.py --next-phase` prints the derived max + 1 — the one call
+every agent (and the intake mint helper) uses for a newly confirmed phase's
+number.
 
 A roadmap that ships phase 1 before 2/3 needs gates that close *per phase* without
 dishonesty. **Every ratified SR/LLR/TC carries the `Phase` it was ratified in** — a
-bare integer (`1`, `2`, `3`…); an SN's phase is *derived* as the minimum phase of its
-referencing SRs (no `stakeholder-needs.md` schema change). `Phase` is a free-form
-string: bare integers are the recommended convention, but a downstream repo that kept
-`vN` labels still works everywhere — the `--phase` filter matches literally, while the
-derived-max and the completeness rule **digit-parse** (`v2` → 2, `2` → 2, the same
-parse `derive_gate` uses), so a `vN` registry arms the rule and passes it. Semantics:
+**bare integer** (`1`, `2`, `3`…), digits only, full cell; an SN's phase is
+*derived* as the minimum phase of its
+referencing SRs (no `stakeholder-needs.md` schema change). Numeric-only is a
+correctness rule, not a style (owner ruling 2026-08-01): the `--phase`/`--ratify`
+scope filters and the phase-drop detector's `per-phase=`-to-anchor join match the
+cell **literally**, so a prefixed label (`v2`, `P1`) does not fail them — it goes
+*silently vacuous*, disarming a warn without telling anyone, which is worse than
+a crash. The digit-extract parse is retained for grandfathering (`phase_num`:
+`v2` → 2, `2` → 2, the same parse `derive_gate` uses), so legacy labels still
+filter and derive while `--strict-schema` migrates the live cells. Semantics:
 
 - **A blank `Phase` is legal only on a pre-ratification (`Draft`) row.** A ratified
-  SR/LLR/TC (Planned/Verified) — and transitively a ratified SN — must carry a Phase
-  that digit-parses to a number, or `trace.py --strict-schema` reports a schema
+  SR/LLR/TC (Planned/Verified) — and transitively a ratified SN — must carry a
+  full-cell bare-integer Phase, or `trace.py --strict-schema` reports a schema
   finding. The rule is **vacuous until ≥1 artifact is phased** (the same arming idiom
   the component checks use), so a fully-blank downstream registry stays green: the
   rule is unarmed and the `--phase` filter treats blank as always-in-scope — exactly
