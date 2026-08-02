@@ -69,4 +69,5 @@ docs/run-state — retired at Phase 5 with the dispatcher, its only writer; the 
 docs/pause — the legacy untracked pause marker; retired at Phase 5 (the tracked docs/work/pause is the one home)
 docs/work/pause — LIFECYCLE: present only while a pause is DECLARED; absence = not paused, the documented default
 docs/work/active/ — LIFECYCLE: holds per-branch claim directories only while work is claimed; empty/absent at a drained stop
+docs/test/report.md — LIFECYCLE: the traceability matrix trace.py writes on demand (gitignored, never committed — .gitignore "Generated reports"); prose naming it describes the generator's destination, and absence until a run writes it is the documented state
 tools/wi_convert.py — the converter's pre-2c meta-repo home, named as history in the spec; it moved to project-trajectory/scripts/wi_convert.py
