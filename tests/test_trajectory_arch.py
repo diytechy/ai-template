@@ -858,6 +858,130 @@ def test_absolute_import_only_modules_are_inventoried_on_both_sides(tmp_path):
     assert strict.returncode == 0, strict.stdout + strict.stderr
 
 
+# --- WI-411: the dotted-absolute first segment, pinned (WI-410 REVIEW-A f.1) ---
+# The WI-410 modules above pin the two absolute ARMS, but their flat stems are
+# whole names IN the names universe, so dropping the `.split(".")[0]`
+# first-segment read inside either arm (whole-name membership) left all 61
+# tests green: a module whose ONLY internal reference is a DOTTED absolute
+# import — first segment a scanned package directory, the whole dotted name in
+# the universe on NEITHER side — could drift mirror-side station-first, the
+# WI-406-finding-1 way. The WI-410 lesson holds one grain finer: the arms are
+# disjoint syntactic branches, so each arm's split must be dropped against its
+# own one-form module — two dotted modules, and dropping EITHER split alone
+# drops exactly its module from the delta and reds this one test on the name
+# assert (watched: each single-split scratch mutation reds this fixture and
+# nothing else; the review's both-dropped probe empties the delta and reds it
+# on the rc assert). REVIEW-A drove two corrections, folded in below. (1) The
+# docstring and public-symbol arms were MASKED, not pinned: MODULE_BODY
+# satisfies both at once, so dropping either alone left the whole suite green
+# — a docstring-ONLY and a public-symbol-ONLY module pin the pair (watched:
+# each single-arm drop reds exactly its fixture, on the rc assert — the
+# mutated mirror empties that tree's one-module delta). (2) The honest
+# terminus: every arm of _would_be_inventoried (parse-error keep, docstring,
+# public symbol, internal import, Contracts comment, symbol-empty skip) and
+# of _has_internal_import (relative node.level, absolute ImportFrom
+# membership, ast.Import membership, the first-segment read inside both) is
+# fixture-pinned EXCEPT the read-failure branch (OSError/UnicodeDecodeError
+# -> False), which the green-green differential cannot drive: gen_arch_map
+# itself CRASHES on a non-UTF-8 .py (probed: UnicodeDecodeError in
+# scan_module's read_text, rc 1), so there is no absorb side to run. Its
+# UnicodeDecodeError half is pinned LANE-SIDE only below; the OSError half
+# (an unreadable file — not stageable portably) stays the argued exception.
+# That is the pinning series' recorded terminus, with the one named residue.
+
+
+def test_dotted_absolute_import_modules_are_inventoried_on_both_sides(tmp_path):
+    # The comment-only pkg/notes.py is the names-universe donor: both sides
+    # collect stems + package directory parts from every scanned file BEFORE
+    # the symbol-emptiness filter, so it contributes `pkg` and `notes` while
+    # never itself entering the delta or the map. `pkg.notes` as a whole is in
+    # the universe on neither side: only a first-segment read keeps these two.
+    _contained_two_module_tree(tmp_path)
+    write_module(tmp_path, "notes.py", "# names-universe donor\n", src="scripts/pkg")
+    write_module(tmp_path, "dot_imp.py", "import pkg.notes\n")
+    write_module(tmp_path, "dot_from.py", "from pkg.notes import go\n")
+    strict = run_traj(tmp_path, "--strict")
+    assert strict.returncode == 1
+    assert ADDED_MSG in strict.stderr
+    assert "scripts/dot_imp" in strict.stderr  # the ast.Import first segment
+    assert "scripts/dot_from" in strict.stderr  # the ImportFrom first segment
+    assert "2 shipped module(s)" in strict.stderr  # the donor is not a delta
+    regen_map(tmp_path)
+    strict = run_traj(tmp_path, "--strict")
+    assert strict.returncode == 1
+    assert ADDED_MSG not in strict.stderr  # the real generator absorbed both
+    assert KN_MSG in strict.stderr  # the station rule holds the same red
+    write_tagged_llrs(
+        tmp_path,
+        [
+            ("scripts/mod_0", "CMP-001"),
+            ("scripts/mod_1", "CMP-001"),
+            ("scripts/dot_imp", "CMP-001"),
+            ("scripts/dot_from", "CMP-001"),
+        ],
+    )
+    strict = run_traj(tmp_path, "--strict")
+    assert strict.returncode == 0, strict.stdout + strict.stderr
+
+
+def test_docstring_only_module_is_inventoried_on_both_sides(tmp_path):
+    # REVIEW-A finding 1, first of the masked pair: every MODULE_BODY fixture
+    # carries a docstring AND a public symbol, so each arm alone was covered
+    # by the other. This module's ONLY inventoried content is its docstring —
+    # the generator keeps it (summary non-empty), so only the mirror's
+    # docstring arm can keep it lane-side.
+    _contained_two_module_tree(tmp_path)
+    write_module(tmp_path, "doc_only.py", '"""Docstring-only module."""\n')
+    strict = run_traj(tmp_path, "--strict")
+    assert strict.returncode == 1
+    assert ADDED_MSG in strict.stderr and "scripts/doc_only" in strict.stderr
+    regen_map(tmp_path)
+    strict = run_traj(tmp_path, "--strict")
+    assert strict.returncode == 1
+    assert ADDED_MSG not in strict.stderr  # the real generator absorbed it
+    assert KN_MSG in strict.stderr  # the station rule holds the same red
+    _tag_three(tmp_path, "scripts/doc_only")
+    strict = run_traj(tmp_path, "--strict")
+    assert strict.returncode == 0, strict.stdout + strict.stderr
+
+
+def test_public_symbol_only_module_is_inventoried_on_both_sides(tmp_path):
+    # REVIEW-A finding 1, second of the masked pair: no docstring, one public
+    # def — the generator keeps it (a public row exists), so only the mirror's
+    # public-symbol arm can keep it lane-side.
+    _contained_two_module_tree(tmp_path)
+    write_module(tmp_path, "sym_only.py", "def run():\n    pass\n")
+    strict = run_traj(tmp_path, "--strict")
+    assert strict.returncode == 1
+    assert ADDED_MSG in strict.stderr and "scripts/sym_only" in strict.stderr
+    regen_map(tmp_path)
+    strict = run_traj(tmp_path, "--strict")
+    assert strict.returncode == 1
+    assert ADDED_MSG not in strict.stderr
+    assert KN_MSG in strict.stderr
+    _tag_three(tmp_path, "scripts/sym_only")
+    strict = run_traj(tmp_path, "--strict")
+    assert strict.returncode == 0, strict.stdout + strict.stderr
+
+
+def test_undecodable_module_is_skipped_lane_side_without_a_crash(tmp_path):
+    # REVIEW-A finding 2, the read-failure branch — the one arm the
+    # green-green differential CANNOT drive: gen_arch_map itself crashes on a
+    # non-UTF-8 .py (probed: UnicodeDecodeError in scan_module's read_text,
+    # rc 1), so there is no absorb side. Lane-side pin only: the mirror's
+    # UnicodeDecodeError -> False must skip the file quietly — no delta red,
+    # no crash (either drift direction reds here: a raise crashes the run, a
+    # True puts the never-absorbable file in the delta). \xff is an invalid
+    # UTF-8 start byte on every platform, so the fixture is deterministic;
+    # the OSError half (an unreadable file — not stageable portably) stays
+    # the argued exception.
+    _contained_two_module_tree(tmp_path)
+    (tmp_path / "scripts" / "bin_mod.py").write_bytes(b"\xff\xfe\x00not utf-8")
+    strict = run_traj(tmp_path, "--strict")
+    assert strict.returncode == 0, strict.stdout + strict.stderr
+    assert ADDED_MSG not in strict.stderr
+
+
 # --- WI-093: the [phase]-[g*] archetype + phase-drop detector ------------------
 # The derived-gate model (docs/specs/derived-gate-model.md §7/§9.3): a phase's
 # pre-dev batch is a WI whose Title carries a `[<phase>]-[g<N>]` tag; the derived
