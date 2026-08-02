@@ -1161,6 +1161,108 @@ def knowledge_packs(root):
     return sorted(p.stem for p in d.glob("*.md") if p.name.lower() != "readme.md")
 
 
+# --- WI-399: containment owed where a module is ADDED --------------------------
+# docs/architecture.md is trunk-owned: its freshness gate SKIPs on a claimed work
+# branch (SR-133, concurrency-restructure §5.2), so a module a branch adds enters
+# the committed arch-map inventory only when the trunk lane's refresh regenerates
+# the map — AFTER the last review round, which made the station the FIRST place
+# the knowledge⇒component red could exist (WI-374/drive.py, WI-387/handback.py:
+# identical two-registry-row remedies, each costing a review round). The delta
+# below is what the LANE can see with no regeneration: shipped source files on
+# disk under the declared arch-map scan root that the committed inventory lacks.
+# `component_findings` applies the SAME containment rule to those ADDED modules —
+# same pack arming, same opt-out, same WARN-plain/ERROR-strict tier — so the red
+# surfaces beside the module's first commit; the station's own rule is untouched
+# and stays the backstop.
+
+
+def _stack_ini_get(root, section, option):
+    """ONE lenient docs/stack.ini read (absent file / broken profile / missing
+    option all → None), shared by `_arch_scan_profile` and `_tests_dir` so the
+    idiom has a single home here — check.py owns the loud parse of the same
+    profile."""
+    ini = root / "docs" / "stack.ini"
+    if not ini.exists():
+        return None
+    cp = configparser.ConfigParser(interpolation=None)
+    try:
+        cp.read_string(ini.read_text(encoding="utf-8", errors="replace"))
+        if cp.has_option(section, option):
+            return cp.get(section, option).strip()
+    except configparser.Error:
+        pass
+    return None
+
+
+def _arch_scan_profile(root):
+    """`(src, mode)` from docs/stack.ini — the same `[paths] src` and
+    `[arch-map] mode` check.py hands gen_arch_map — read leniently
+    (`_stack_ini_get`): an absent or broken profile degrades to the defaults
+    (`src`, `symbols`) rather than crashing a warn-tier rule."""
+    return (
+        _stack_ini_get(root, "paths", "src") or "src",
+        _stack_ini_get(root, "arch-map", "mode") or "symbols",
+    )
+
+
+def shipped_modules(root):
+    """Normalized module keys ON DISK under the declared arch-map scan root —
+    the shipped-module set a trunk-lane regeneration would inventory. Mirrors
+    `gen_arch_map`'s collectors (keys relative to the scan root's PARENT; dot-
+    and `__pycache__`-parts under the root skipped; `*.py` in symbols mode,
+    every regular file in files mode) so the delta against `arch_inventory` is
+    exactly the modules the refresh WOULD add — no more. Empty when the root is
+    absent, so a repo with no declared source tree costs nothing."""
+    src, mode = _arch_scan_profile(root)
+    src_dir = root / src.strip().strip("/").replace("\\", "/")
+    if not src_dir.is_dir():
+        return set()
+    # gen_arch_map keys a module relative to the root's parent (`scripts/check`
+    # for --src project-trajectory/scripts); a root that IS the repo root keys
+    # relative to itself (its `root.name == ""` arm).
+    base = src_dir.parent if src_dir != root else src_dir
+    out = set()
+    for path in src_dir.rglob("*.py" if mode != "files" else "*"):
+        if not path.is_file():
+            continue
+        rel = path.relative_to(src_dir)
+        if any(p.startswith((".", "__pycache__")) for p in rel.parts):
+            continue
+        key = _norm_module(path.relative_to(base).as_posix())
+        if key:
+            out.add(key)
+    return out
+
+
+def added_module_findings(root, view, packs):
+    """The WI-399 early firing point of the knowledge⇒component containment
+    rule: shipped modules the committed inventory LACKS (the would-be
+    regeneration delta) that no LLR `Component` cell joins to a real CMP.
+    Same arming as the station rule (a real pack + a non-empty committed
+    inventory); the caller shares the opt-out and the WARN/ERROR promotion. A
+    fresh map (delta empty — every trunk checkout after the refresh) is
+    vacuous, so this never double-reports what the station rule already
+    finds."""
+    if not (packs and view["inventory"]):
+        return []
+    added = sorted(shipped_modules(root) - set(view["inventory"]))
+    if not added:
+        return []
+    cmp_ids = set(view["by_id"])
+    raw = module_components(root)
+    missing = [n for n in added if not (raw.get(n, set()) & cmp_ids)]
+    if not missing:
+        return []
+    return [
+        "docs/knowledge/ holds {} pack(s) but {} shipped module(s) not yet in "
+        "the committed arch-map are in no CMP-### component ({}); tag them via "
+        "LLR `Component` cells in the commit that adds them — the arch-map "
+        "regenerates only on the trunk lane (SR-133), and the station must not "
+        "be the first to see this red — or set docs/components-check: "
+        "off".format(len(packs), len(missing), ", ".join(missing))
+    ]
+
+
 def cross_component_findings(root):
     """The cross-CMP-edge-without-IF rule (WI-064; the AXES ratified model's
     "Enforceability" ruling, process-options.md "Component layer"): an internal
@@ -1233,7 +1335,7 @@ def component_findings(root):
     """The How-SW component-coverage finding(s) (process-options.md "Component
     layer"). Returns the finding strings ([] when opted out or clean). The caller
     prints them WARN plain and promotes them to ERROR under `--strict` (G2+).
-    Opt-out via `docs/components-check: off`. Three rules, all off the arch-map ⇒
+    Opt-out via `docs/components-check: off`. Four rules, all off the arch-map ⇒
     CMP join:
 
     - **Top-view right-sizing** (WI-073/FB5): vacuous when the arch-map inventory
@@ -1248,6 +1350,10 @@ def component_findings(root):
       the *how* and that web must be robust wherever packs are enabled. Arms the
       existing join from pack presence; invents no new join, and is dormant (no
       cost to a non-adopter) until `docs/knowledge/` holds a real pack.
+    - **Containment owed where a module is ADDED** (WI-399): the SAME
+      knowledge⇒component rule fired early, on the shipped modules the committed
+      arch-map inventory lacks (`added_module_findings`) — so a lane that adds a
+      module reds its own bar instead of the station's post-regeneration one.
     - **Cross-CMP edges need a declared seam** (WI-064): see
       `cross_component_findings` — an import edge between two components with
       no covering IF-### row."""
@@ -1263,6 +1369,7 @@ def component_findings(root):
             "knowledge⇒component web is complete, or set docs/components-check: "
             "off".format(len(packs), len(view["uncontained"]), CMP_CSV)
         )
+    out.extend(added_module_findings(root, view, packs))
     if len(view["inventory"]) > TOP_VIEW_MAX and view["count"] > TOP_VIEW_MAX:
         out.append(
             "How-SW top view has {} items ({} top-level component(s) + {} "
@@ -2294,16 +2401,7 @@ def backlog_staleness_findings(root, wis):
 def _tests_dir(root):
     """The declared tests root (docs/stack.ini [paths] tests), default `tests` —
     the surface a real validation-logic change would touch."""
-    ini = root / "docs" / "stack.ini"
-    if ini.exists():
-        cp = configparser.ConfigParser(interpolation=None)
-        try:
-            cp.read_string(ini.read_text(encoding="utf-8", errors="replace"))
-            if cp.has_option("paths", "tests"):
-                return cp.get("paths", "tests").strip() or "tests"
-        except configparser.Error:
-            pass
-    return "tests"
+    return _stack_ini_get(root, "paths", "tests") or "tests"
 
 
 def _wi_status_map(rows):
