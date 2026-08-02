@@ -858,6 +858,61 @@ def test_absolute_import_only_modules_are_inventoried_on_both_sides(tmp_path):
     assert strict.returncode == 0, strict.stdout + strict.stderr
 
 
+# --- WI-411: the dotted-absolute first segment, pinned (WI-410 REVIEW-A f.1) ---
+# The WI-410 modules above pin the two absolute ARMS, but their flat stems are
+# whole names IN the names universe, so dropping the `.split(".")[0]`
+# first-segment read inside either arm (whole-name membership) left all 61
+# tests green: a module whose ONLY internal reference is a DOTTED absolute
+# import — first segment a scanned package directory, the whole dotted name in
+# the universe on NEITHER side — could drift mirror-side station-first, the
+# WI-406-finding-1 way. The WI-410 lesson holds one grain finer: the arms are
+# disjoint syntactic branches, so each arm's split must be dropped against its
+# own one-form module — two dotted modules, and dropping EITHER split alone
+# drops exactly its module from the delta and reds this one test on the name
+# assert (watched: each single-split scratch mutation reds this fixture and
+# nothing else; the review's both-dropped probe empties the delta and reds it
+# on the rc assert). Per the WI-410 arm inventory this EXHAUSTS the mirror's
+# arms: every branch of _would_be_inventoried (parse-error keep, docstring,
+# public symbol, internal import, Contracts comment, symbol-empty skip) and
+# every arm of _has_internal_import (relative node.level, absolute ImportFrom
+# membership, ast.Import membership, and now the first-segment read inside
+# both) is fixture-pinned — the pinning series' recorded terminus.
+
+
+def test_dotted_absolute_import_modules_are_inventoried_on_both_sides(tmp_path):
+    # The comment-only pkg/notes.py is the names-universe donor: both sides
+    # collect stems + package directory parts from every scanned file BEFORE
+    # the symbol-emptiness filter, so it contributes `pkg` and `notes` while
+    # never itself entering the delta or the map. `pkg.notes` as a whole is in
+    # the universe on neither side: only a first-segment read keeps these two.
+    _contained_two_module_tree(tmp_path)
+    write_module(tmp_path, "notes.py", "# names-universe donor\n", src="scripts/pkg")
+    write_module(tmp_path, "dot_imp.py", "import pkg.notes\n")
+    write_module(tmp_path, "dot_from.py", "from pkg.notes import go\n")
+    strict = run_traj(tmp_path, "--strict")
+    assert strict.returncode == 1
+    assert ADDED_MSG in strict.stderr
+    assert "scripts/dot_imp" in strict.stderr  # the ast.Import first segment
+    assert "scripts/dot_from" in strict.stderr  # the ImportFrom first segment
+    assert "2 shipped module(s)" in strict.stderr  # the donor is not a delta
+    regen_map(tmp_path)
+    strict = run_traj(tmp_path, "--strict")
+    assert strict.returncode == 1
+    assert ADDED_MSG not in strict.stderr  # the real generator absorbed both
+    assert KN_MSG in strict.stderr  # the station rule holds the same red
+    write_tagged_llrs(
+        tmp_path,
+        [
+            ("scripts/mod_0", "CMP-001"),
+            ("scripts/mod_1", "CMP-001"),
+            ("scripts/dot_imp", "CMP-001"),
+            ("scripts/dot_from", "CMP-001"),
+        ],
+    )
+    strict = run_traj(tmp_path, "--strict")
+    assert strict.returncode == 0, strict.stdout + strict.stderr
+
+
 # --- WI-093: the [phase]-[g*] archetype + phase-drop detector ------------------
 # The derived-gate model (docs/specs/derived-gate-model.md §7/§9.3): a phase's
 # pre-dev batch is a WI whose Title carries a `[<phase>]-[g<N>]` tag; the derived
