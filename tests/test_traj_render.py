@@ -659,23 +659,22 @@ def test_a2_landmark_names_are_distinct(tmp_path):
 
 def test_u1_process_tab_type_scale_matches_the_shared_tokens(tmp_path):
     """dashboard-uniformity.md U1 (WI-295, 119-CRITIQUE MINOR): the Process tab's
-    "working loops" SVG (`.stgt`/`.stgn`/`.hooplab`/`.hubname`) used to hardcode
-    12px/9.5px/13px/13px, deviating from the --nlabel:10px/--nsub:8.5px every
-    other emitter (icicle/dag/knowledge) shares. `.stgt`/`.stgn` are the same
-    per-node-label role as --nlabel/--nsub and now reuse them directly;
-    `.hooplab`/`.hubname` are a once-per-diagram HEADLINE label, a genuinely
-    different role, so they get the ONE documented scale step --nhead (not two
-    independently drifting magic numbers)."""
+    SVG labels used to hardcode 12px/9.5px/13px/13px, deviating from the
+    --nlabel:10px/--nsub:8.5px every other emitter (icicle/dag/knowledge)
+    shares. `.stgt`/`.stgn` are the same per-node-label role as --nlabel/--nsub
+    and reuse them directly; `.slotname` (WI-389: the station cycle's emphasized
+    merge-slot node, the successor of the hoops' `.hubname` headline role) gets
+    the ONE documented scale step --nhead — never an independently drifting
+    magic number."""
     with_gate(tmp_path, "G2")  # the Process tab's render condition
     assert gen(tmp_path).returncode == 0
     css = html_of(tmp_path)
     assert "--nhead:" in css
     assert "#process .stgt{fill:var(--text);font-size:var(--nlabel)" in css
     assert "#process .stgn{fill:var(--muted);font-size:var(--nsub)" in css
-    assert "#process .hooplab{fill:var(--accent);font-size:var(--nhead)" in css
-    assert "#process .hubname{fill:#fff;font-size:var(--nhead)" in css
-    # no ad-hoc px sizes remain on these four selectors
-    for selector in (".stgt", ".stgn", ".hooplab", ".hubname"):
+    assert "#process .slotname{fill:#fff;font-size:var(--nhead)" in css
+    # no ad-hoc px sizes remain on these selectors
+    for selector in (".stgt", ".stgn", ".slotname"):
         rule = re.search(r"#process " + re.escape(selector) + r"\{([^}]*)\}", css)
         assert rule, selector
         assert "px" not in rule.group(1), (selector, rule.group(1))

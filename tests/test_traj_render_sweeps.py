@@ -671,8 +671,10 @@ def test_a4_the_vocabulary_sweep_is_closed_and_every_member_clears_the_floors():
 # force a classification, so a new `fill:var(--x)` fails until a human states
 # its role — and the roles that carry white text get the both-themes floor.
 A4_FILL_TOKEN_ROLES = {
-    "--hub": "white-text-fill",  # the Process hub rect, white label on it
-    "--accent": "ink",  # .hooplab headline TEXT colour, not a fill behind text
+    # WI-389: the Process tab's emphasized node is the merge slot (--hub renamed
+    # --slot with the station-cycle redraw); same white-text-fill role and floor.
+    "--slot": "white-text-fill",  # the merge-slot rect, white label on it
+    "--accent": "ink",  # barrier-glyph TEXT colour, not a fill behind text
     "--muted": "ink",  # sub-label / edge text colour
     "--text": "ink",  # body text colour used as SVG fill
     "--surface": "container-fill",  # component boxes; dark --text sits on it
@@ -689,7 +691,7 @@ def test_a4_every_css_fill_token_is_classified_and_floor_checked(tmp_path):
     BOTH themes (the WI-293 lesson — a per-theme token passed light and shipped
     2.98:1 in dark), and `container-fill` roles keep the page's own `--text`
     readable on them in both themes."""
-    with_gate(tmp_path, "G2")  # the Process tab renders --hub, the widest set
+    with_gate(tmp_path, "G2")  # the Process tab renders --slot, the widest set
     assert gen(tmp_path).returncode == 0
     css = html_of(tmp_path)
     used = set(re.findall(r"fill:\s*var\((--[\w-]+)", css))
