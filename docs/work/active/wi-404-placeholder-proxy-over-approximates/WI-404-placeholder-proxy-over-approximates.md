@@ -1,8 +1,0 @@
-+++
-id = "WI-404"
-title = "check_figures' placeholder proxy over-approximates (WI-392 REVIEW-A round-2 finding 4, minted trunk-side at intake per the R3 invariant). DRIVEN by the reviewer at f5a423ae: a DEFECTIVE marker whose cmd contains shell metacharacters — cmd of pytest -q piped to tail with rev MISSING — escapes both the census and the flagging because PLACEHOLDER_CHARS treats the angle bracket/pipe as example-grammar; and a REAL declaration whose command legitimately redirects (sort < in.txt) is silently uncounted. Both errors point the SILENT direction on a warn-first step, and zero live declarations hit the class today — which is why the finding rode the APPROVE as a bounded recorded gap (the enforcement-audit idiom) instead of a third round. THE FIX SHAPE: narrow the placeholder proxy so it excuses only genuine example grammar (the angle-bracket-wrapped whole-token placeholder shape the convention text uses) rather than any metacharacter anywhere; a metacharacter inside a quoted cmd value is legitimate command text and the marker must still be judged complete (cmd AND rev both carried). State the rule in the convention text (PROCESS_OPTIONS.md Signed measurements Grammar sentence) so the proxy is documented, not folklore. Tests: the reviewer's two fixtures both ways — the defective piped-cmd marker with missing rev must FLAG, the legitimate redirecting declaration must COUNT — plus the existing placeholder-prose exemptions staying exempt (the scaffold-tier test from f5a423ae must stay green). Scope: check_figures.py + its tests + the one Grammar sentence; no new rungs, rung 2 stays a declared absence."
-workstream = "scripts"
-specref = "docs/reviews/WI-392-REVIEW-A.md"
-buildtier = "quick"
-safety_class = "ordinary"
-+++
