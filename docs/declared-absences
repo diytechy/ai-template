@@ -72,3 +72,10 @@ docs/work/active/ — LIFECYCLE: holds per-branch claim directories only while w
 docs/test/report.md — LIFECYCLE: the traceability matrix trace.py writes on demand (gitignored, never committed — .gitignore "Generated reports"); prose naming it describes the generator's destination, and absence until a run writes it is the documented state
 docs/test/report.html — LIFECYCLE: the html render of the same matrix, written when the bar's check.py passes --html to the trace step at G2/G3 (gitignored, never committed — the same .gitignore block); declared tool-residue since WI-407 (measured holding the wi-402 lane at unload, 2026-08-02), and absence until a bar run writes it is the documented state
 tools/wi_convert.py — the converter's pre-2c meta-repo home, named as history in the spec; it moved to project-trajectory/scripts/wi_convert.py
+# The dispatcher split (concurrency-v2 SA4.2): drive.py renamed dispatch.py
+# with lane.py extracted; historical records (closed WI specs) and the
+# not-yet-regenerated trunk surfaces legitimately name the old paths until
+# the connectivity batch (SA9.1) retires them.
+scripts/drive.py — renamed scripts/dispatch.py (+ scripts/lane.py) at the dispatcher split; closed specs name the old kit path as history
+project-trajectory/scripts/drive.py — renamed project-trajectory/scripts/dispatch.py; LLR-143's Module pointer follows in the SA9.1 connectivity batch, after the trunk-side arch-map regeneration drops the old inventory entry
+tests/test_drive.py — renamed tests/test_dispatch.py with the module it pins; closed specs name the old path as history
