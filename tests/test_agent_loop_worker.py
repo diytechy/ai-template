@@ -213,6 +213,38 @@ def _setup(tmp_path, train="t1", wis=("WI-201",)):
 # --- the worker contract end-to-end -------------------------------------------
 
 
+def test_worker_prompt_carries_the_context_block_computed_fresh(tmp_path):
+    # WI-388 clause 4, consumer 2: `worker_prompt` computes the context block
+    # FRESH at claim for every WI (pure registry joins, advisory) and carries
+    # the one new instruction line. A repo with no joinable registries gets no
+    # block and no dangling header — advisory means absent, never broken.
+    work = tmp_path / "docs" / "work"
+    (work / "cancelled").mkdir(parents=True)
+    (work / "cancelled" / "WI-002-refuted.md").write_text(
+        '+++\nid = "WI-002"\ntitle = "refuted"\nsr_refs = ["SR-001"]\n+++\n'
+        "\n## Deliverable\n\ncancelled: REFUTED - no driving necessity\n",
+        encoding="utf-8",
+        newline="\n",
+    )
+    row = {
+        "WI-ID": "WI-005",
+        "Title": "the assignment",
+        "SR-Refs": "SR-001",
+        "Predecessors": "",
+        "SpecRef": "seed.txt",
+    }
+    prompt = agent_loop.worker_prompt(
+        tmp_path, {"WI-005": row}, "WI-005", "wi-005", "0" * 7
+    )
+    assert "read the Context refs below before starting" in prompt
+    assert "WI-002" in prompt and "REFUTED" in prompt
+
+    bare = tmp_path / "bare"
+    bare.mkdir()
+    prompt2 = agent_loop.worker_prompt(bare, {"WI-005": row}, "WI-005", "w", "0" * 7)
+    assert "Context refs" not in prompt2
+
+
 def test_worker_builds_assignment_and_exits_done(tmp_path):
     repo, base, ctl, fake = _setup(tmp_path)
     proc = _worker(repo, fake, ctl, "--wi", "WI-201", "--train", "t1")

@@ -161,6 +161,194 @@ def _existing_titles(root):
     return {r["Title"]: r["Status"] for r in rows if r.get("Title")}
 
 
+# --- the context block (clause 4): pure registry joins, advisory ---------------
+
+# Bounds, in the pred_block spirit (agent_loop.worker_prompt clips predecessor
+# deliverables at 200 chars and the diff at 30/60 lines): per-section item
+# caps, per-item clips, and one whole-block line cap at the end.
+_SECTION_ITEMS = 6
+_BLOCK_LINES = 48
+_OPEN = frozenset({"draft", "queued", "active", "deferred"})
+
+
+# The registry CSV read and the ref-cell splitter are agent_common's
+# (`_read_csv_rows`: [] on absent/unreadable, BOM-safe; `_refs`) — imported,
+# not copied: intake is not one of the F5 independently-copyable three, so a
+# shared reader beats another verbatim copy.
+_csv_rows = ac._read_csv_rows
+_split = ac._refs
+
+
+def context_block(root, wi_row, rows=None):
+    """The WI-388 context block: what the registries already know about this
+    row's neighbourhood, as PURE joins — advisory, NEVER gating (any failure
+    answers ""), clipped like `pred_block`. Content order by failure cost:
+
+      1. cancelled precedent sharing `sr_refs`, WITH ITS REASONS — prevents
+         re-proposing the refuted (the measured WI-391 failure mode);
+      2. pending OIs whose WI-Refs intersect self / predecessors / siblings
+         (premise risk);
+      3. the LLR/TC decomposition rows with their Module/CodeSymbol/TestRefs
+         code map;
+      4. LLR.Component -> CMP.Knowledge packs;
+      5. IF seams via LLR.Module;
+      6. docs/reviews/ records of precedent rows.
+
+    Excluded BY DESIGN: docs/status.md (not a resume surface, WI-210), the OKF
+    bundle (generated copy — workers read its sources), and implementer
+    self-assessments (review independence).
+
+    Three consumers: written into every minted row's body at mint (minted rows
+    have no spec author); computed fresh in `agent_loop.worker_prompt` at
+    claim; and the warn-first pack-citation check on hand-authored specs
+    (`check_trajectory.knowledge_pack_findings` makes the same
+    Component->Knowledge join under its F5 independence)."""
+    try:
+        return _context_block(Path(root), wi_row or {}, rows)
+    except Exception:  # advisory-never-gating: a broken join is no join
+        return ""
+
+
+def _context_block(root, wi_row, rows):
+    rows = ac.read_spec_rows(root / WORK) if rows is None else rows
+    wid = wi_row.get("WI-ID") or ""
+    srs = set(_split(wi_row.get("SR-Refs")))
+    preds = {p.lstrip("~") for p in _split(wi_row.get("Predecessors"))}
+    cancelled = [
+        r
+        for r in rows
+        if r.get("Status") == "cancelled" and srs & set(_split(r.get("SR-Refs")))
+    ]
+    siblings = {
+        r["WI-ID"]
+        for r in rows
+        if r.get("WI-ID") != wid
+        and r.get("Status") in _OPEN
+        and srs & set(_split(r.get("SR-Refs")))
+    }
+    llrs = [
+        r
+        for r in _csv_rows(root / "docs/requirements/low-level-requirements.csv")
+        if srs & set(_split(r.get("SR-Refs")))
+    ]
+    sections = [
+        (
+            "Cancelled precedent on the same SRs (do not re-propose the refuted)",
+            [
+                "- {} (cancelled) {} — reason: {}".format(
+                    r["WI-ID"],
+                    _clip(r.get("Title"), 70),
+                    _clip(r.get("Deliverable") or "(none recorded)", 160),
+                )
+                for r in cancelled
+            ],
+        ),
+        (
+            "Pending open items whose WI-Refs touch this row's kin (premise risk)",
+            _pending_oi_lines(root, {wid} | preds | siblings),
+        ),
+        (
+            "Decomposition code map (LLR/TC on the same SRs)",
+            _code_map_lines(root, llrs, srs),
+        ),
+        (
+            "Knowledge packs the touched components declare (read before building)",
+            _pack_lines(root, llrs),
+        ),
+        ("Interface seams via the touched modules", _seam_lines(root, llrs)),
+        (
+            "Review records of precedent rows",
+            _review_lines(root, preds | {r["WI-ID"] for r in cancelled}),
+        ),
+    ]
+    lines = []
+    for header, items in sections:
+        if items:
+            lines += ["### " + header] + items[:_SECTION_ITEMS] + [""]
+    if not lines:
+        return ""
+    body = "Advisory registry joins (WI-388; never gating):\n\n" + "\n".join(lines)
+    return ac._clip(body.rstrip("\n"), _BLOCK_LINES)
+
+
+def _pending_oi_lines(root, kin):
+    return [
+        "- {} (pending): {}".format(
+            o.get("OI-ID"), _clip(o.get("OneLine") or o.get("Title"), 160)
+        )
+        for o in _csv_rows(root / "docs/requirements/open-items.csv")
+        if (o.get("Status") or "").strip().lower() == "pending"
+        and kin & set(_split(o.get("WI-Refs")))
+    ]
+
+
+def _code_map_lines(root, llrs, srs):
+    lines = [
+        "- {} [{} :: {}] tests: {} — {}".format(
+            r.get("LLR-ID"),
+            r.get("Module") or "?",
+            r.get("CodeSymbol") or "?",
+            r.get("TestRefs") or "-",
+            _clip(r.get("Title"), 60),
+        )
+        for r in llrs
+    ]
+    llr_ids = {r.get("LLR-ID") for r in llrs}
+    lines += [
+        "- {} -> {}".format(t.get("TC-ID"), t.get("Evidence") or "(no evidence yet)")
+        for t in _csv_rows(root / "docs/test/test-cases.csv")
+        if (srs | llr_ids) & set(_split(t.get("Verifies")))
+    ]
+    return lines
+
+
+def _pack_lines(root, llrs):
+    comps = {r.get("Component") for r in llrs} - {"", None}
+    return [
+        "- {} {}: {}".format(
+            c.get("CMP-ID"), _clip(c.get("Name"), 40), c.get("Knowledge")
+        )
+        for c in _csv_rows(root / "docs/requirements/components.csv")
+        if c.get("CMP-ID") in comps and (c.get("Knowledge") or "").strip()
+    ]
+
+
+def _seam_lines(root, llrs):
+    stems = {
+        Path(r.get("Module") or "").stem
+        for r in llrs
+        if (r.get("Module") or "").strip()
+    }
+    return [
+        "- {} ({}) {} <-> {}: {}".format(
+            i.get("IF-ID"),
+            i.get("Direction"),
+            i.get("ThisProject"),
+            i.get("Counterpart"),
+            _clip(i.get("Contract"), 110),
+        )
+        for i in _csv_rows(root / "docs/requirements/interfaces.csv")
+        if Path(i.get("ThisProject") or "").name in stems
+        or Path(i.get("Counterpart") or "").name in stems
+    ]
+
+
+def _review_lines(root, precedent_ids):
+    reviews = root / "docs" / "reviews"
+    if not reviews.is_dir():
+        return []
+    return [
+        "- docs/reviews/" + path.name
+        for path in sorted(reviews.glob("WI-*.md"))
+        if path.name.split("-", 2)[:2] != [] and _review_id(path.name) in precedent_ids
+    ]
+
+
+def _review_id(name):
+    matched = re.match(r"^(WI-\d+)-", name)
+    return matched.group(1) if matched else ""
+
+
 # --- trigger (a): the ratified-cell diff on the merged commit ------------------
 
 
@@ -529,7 +717,8 @@ def _mint(root, drafts, subject_verb):
     `([(wi_id, relpath)], refusal)`; all-or-nothing — a refusal restores trunk
     and reports zero minted."""
     root = Path(root)
-    titles = _existing_titles(root)
+    registry = ac.read_spec_rows(root / WORK)
+    titles = {r["Title"] for r in registry if r.get("Title")}
     drafts = [d for d in drafts if str(d["title"]).strip() not in titles]
     if not drafts:
         return [], None
@@ -544,7 +733,13 @@ def _mint(root, drafts, subject_verb):
             ac.git(root, "clean", "-fd", "--", WORK)
             return [], "the mint could not write {}: {}".format(wi_id, exc)
         path = root / WORK / rel
+        # The trigger's derived context, then the registry joins (clause 4,
+        # consumer 1: minted rows have no spec author, so the block is written
+        # at mint — advisory, and computed over the pre-mint registry).
         context = str(draft.get("context") or "").rstrip("\n")
+        joins = context_block(root, row, registry)
+        if joins:
+            context = (context + "\n\n" if context else "") + joins
         if context:
             with path.open("a", encoding="utf-8", newline="\n") as fh:
                 fh.write("\n## Context\n\n" + context + "\n")

@@ -372,7 +372,12 @@ BASELINE = {
     # `--lanes` flag joins the argparse surface (the §A4.3 dial's CLI rung).
     # Reviewed bump, log fragment 2026-08-02 (WI-381). Re-stamp down with
     # WI-280.
-    "agent_loop.py": 2985,
+    # +22 (2985 -> 3007), WI-388: the worker prompt's Context block (consumer
+    # 2 of intake.context_block) — computed fresh at claim, advisory, one new
+    # instruction line; the lazy import keeps a stripped copy launchable.
+    # Reviewed bump, log fragment 2026-08-02 (WI-388). Re-stamp down with
+    # WI-280.
+    "agent_loop.py": 3007,
     # +30 (2206 -> 2236), WI-065: `tc_citation_findings` — the TC-`Verifies`
     # rules lifted out of `analyze` so the cell could accept `IF-###` seam ids.
     # Most of the bump is that helper's docstring, which is where the RULING now
@@ -686,7 +691,13 @@ BASELINE = {
     # `SR-Refs` -> traced/routed, SR `SupersededBy` -> ratified confirmed) —
     # most of the bump is that recorded reasoning. Reviewed bump, log fragment
     # 2026-08-02 (WI-388). Re-stamp down with WI-280.
-    "check_trajectory.py": 3453,
+    # +78 (3453 -> 3531), WI-388 consumer 3: the pack-citation warn
+    # (`knowledge_pack_findings` + `_declared_packs` + `_spec_text_for`) —
+    # warn-ONLY, the LLR.Component -> CMP.Knowledge join re-derived under this
+    # module's F5 independence (the shipped hook imports no sibling).
+    # Reviewed bump, log fragment 2026-08-02 (WI-388). Re-stamp down with
+    # WI-280.
+    "check_trajectory.py": 3531,
     # NEW ENTRY, +25 (1498 -> 1523), WI-357: the two-stage work-branch claim
     # signal — the on-disk fast path plus the branch-history probe that
     # survives the §2.3 close commit (git log -1 over the claim path), with

@@ -2414,6 +2414,77 @@ def _wi_row_times(root, open_wis):
     )
 
 
+def _declared_packs(root):
+    """`{CMP-ID: [pack token]}` — the Knowledge cells that resolve to a REAL
+    pack file (`docs/knowledge/<name>.md`, or a direct path, with or without
+    the `.md`). A Knowledge token that resolves to nothing (a skill name, a
+    planned pack) is not a citation debt, so it never arms the warn."""
+    packs = {}
+    for r in read_rows(root / CMP_CSV):
+        cid = (r.get("CMP-ID") or "").strip()
+        if not cid:
+            continue
+        resolved = []
+        for token in _split_refs(r.get("Knowledge") or ""):
+            candidates = (token, token + ".md", "docs/knowledge/" + token + ".md")
+            if any((root / cand).is_file() for cand in candidates):
+                resolved.append(token)
+        if resolved:
+            packs[cid] = resolved
+    return packs
+
+
+def _spec_text_for(work_dir, wid):
+    for path in spec_files(work_dir):
+        if path.name.startswith(wid + "-"):
+            try:
+                return path.read_text(encoding="utf-8", errors="replace")
+            except OSError:
+                return None
+    return None
+
+
+def knowledge_pack_findings(root, wis):
+    """The WI-388 pack-citation warn (consumer 3 of the intake context block)
+    — WARN-ONLY, never the exit code, not even under --strict (advisory is
+    the block's contract): a hand-authored OPEN spec (queued/active) whose
+    rows' components declare knowledge packs the spec never cites is building
+    blind on rows whose how-knowledge is recorded. The join is the same
+    LLR.Component -> CMP.Knowledge join `intake.context_block` makes,
+    re-derived here under this module's F5 independence (the shipped hook
+    imports no sibling). A minted row's `## Context` block cites the packs at
+    mint, so minted rows satisfy the rule by construction — the warn reaches
+    exactly the hand-authored residue. A pack is cited by its full token or
+    its basename; vacuous with no CMP Knowledge cells or no resolving pack."""
+    packs = _declared_packs(root)
+    if not packs:
+        return []
+    sr_comps = {}
+    for r in read_rows(root / LLR_CSV):
+        comp = (r.get("Component") or "").strip()
+        if comp in packs:
+            for sr in _split_refs(r.get("SR-Refs") or ""):
+                sr_comps.setdefault(sr, set()).add(comp)
+    findings = []
+    work_dir = spec_work_dir(root / WI_CSV)
+    for w in wis:
+        if w["status"] not in ("queued", "active"):
+            continue
+        comps = sorted({c for sr in w["srs"] for c in sr_comps.get(sr, ())})
+        owed = sorted({p for c in comps for p in packs[c]})
+        if not owed:
+            continue
+        text = _spec_text_for(work_dir, w["id"]) or ""
+        cited = any(p in text or Path(p).name in text for p in owed)
+        if not cited:
+            findings.append(
+                "{}: component(s) {} declare knowledge pack(s) {} the spec "
+                "never cites — read them before building (WI-388 context; "
+                "advisory)".format(w["id"], ", ".join(comps), "; ".join(owed))
+            )
+    return findings
+
+
 def backlog_staleness_findings(root, wis):
     """WI-205 — the backlog-staleness warn (warn-only, the WI-129 checker stance).
 
@@ -3373,7 +3444,14 @@ def main():
     # was amended AFTER the WI row was last touched is re-flagged for a driven
     # re-validation. WARN-ONLY: it never joins the exit code, not even under
     # --strict (the WI-129 warn-tier-checker stance); silent off-git.
-    for msg in backlog_staleness_findings(root, wis):
+    # ...and the pack-citation warn (WI-388, consumer 3 of the intake context
+    # block) rides the same WARN-ONLY tier: never the exit code even under
+    # --strict — advisory is the block's contract, and minted rows satisfy it
+    # by construction (their ## Context cites the packs), so it reaches
+    # exactly the hand-authored residue.
+    for msg in backlog_staleness_findings(root, wis) + knowledge_pack_findings(
+        root, wis
+    ):
         print("check_trajectory: WARN - {}".format(msg), file=sys.stderr)
     # The SSOT coherence layer: R-A is always an error; R-E, the
     # unknown-status lint are WARN unless

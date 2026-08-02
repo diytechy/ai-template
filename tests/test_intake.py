@@ -391,6 +391,130 @@ def test_a_draft_declaring_the_adjudication_kind_is_refused(tmp_path):
     assert refusal is not None and "adjudication" in refusal
 
 
+# --- the context block (WI-388 clause 4): pure registry joins ------------------
+
+
+def context_repo(tmp_path):
+    """A repo whose registries hold one of EVERY join the context block makes:
+    a cancelled precedent with its reason, a pending OI naming kin, the LLR/TC
+    code map, a component knowledge pack, an IF seam via the LLR's module, and
+    a review record of the precedent row."""
+    root = git_repo(tmp_path)
+    req = root / "docs" / "requirements"
+    req.mkdir(parents=True, exist_ok=True)
+    write_sr(root)
+    (req / "low-level-requirements.csv").write_text(
+        LLR_HEADER + 'LLR-001,SR-001,Core,src/widget.py,widget_f,"the detail","why",'
+        "TC-001,Verified,CMP-001,1\n",
+        encoding="utf-8",
+        newline="\n",
+    )
+    test_dir = root / "docs" / "test"
+    test_dir.mkdir(parents=True, exist_ok=True)
+    (test_dir / "test-cases.csv").write_text(
+        "TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,"
+        "Evidence,Status,Phase\n"
+        "TC-001,SR-001;LLR-001,Unit,run it,smoke,,works,Y,tests/test_widget.py,"
+        "Verified,1\n",
+        encoding="utf-8",
+        newline="\n",
+    )
+    (req / "components.csv").write_text(
+        "CMP-ID,Name,Category,Knowledge,State,SupersededBy,PartOf,DetailDoc,"
+        "Notes\n"
+        "CMP-001,Widget core,software,docs/knowledge/widgetry,built,,,,\n",
+        encoding="utf-8",
+        newline="\n",
+    )
+    (req / "interfaces.csv").write_text(
+        "IF-ID,Direction,ThisProject,Counterpart,Contract,SR-Refs,Version,"
+        "Stability,Status,Component,Notes\n"
+        'IF-001,Provides,scripts/widget,scripts/check,"widget CLI: exits 1 on '
+        'a bad widget",SR-001,v1,Stable,Active,CMP-001,\n',
+        encoding="utf-8",
+        newline="\n",
+    )
+    (req / "open-items.csv").write_text(
+        "OI-ID,Title,Status,Raised,OneLine,Decision,BlastRadius,Options,"
+        "Recommendation,WI-Refs,RuledDate,RulingRef\n"
+        "OI-002,widget premise,pending,2026-08-01,is the widget premise still "
+        "true,,,,,WI-005,,\n",
+        encoding="utf-8",
+        newline="\n",
+    )
+    reviews = root / "docs" / "reviews"
+    reviews.mkdir(parents=True, exist_ok=True)
+    (reviews / "WI-002-REVIEW-A.md").write_text(
+        "VERDICT: CHANGES-REQUESTED findings=2\n", encoding="utf-8", newline="\n"
+    )
+    write_spec(
+        root,
+        "cancelled",
+        "WI-002",
+        slug="refuted",
+        sr_refs=["SR-001"],
+        body=(
+            "\n## Deliverable\n\ncancelled: REFUTED - proposed navigation "
+            "with no driving necessity\n"
+        ),
+    )
+    write_spec(root, "queued", "WI-005", sr_refs=["SR-001"], specref="seed.txt")
+    _commit(root, "the joined registries", when=T_CODE)
+    return root
+
+
+def test_the_context_block_renders_from_real_joins_in_failure_cost_order(tmp_path):
+    root = context_repo(tmp_path)
+    acommon = load_script("agent_common")
+    rows = acommon.read_spec_rows(root / "docs" / "work")
+    row = next(r for r in rows if r["WI-ID"] == "WI-005")
+    text = intake.context_block(root, row, rows)
+    # Every join present...
+    assert "WI-002" in text and "REFUTED" in text  # precedent WITH ITS REASONS
+    assert "OI-002" in text  # pending OI whose WI-Refs intersect
+    assert "LLR-001" in text and "src/widget.py" in text and "widget_f" in text
+    assert "tests/test_widget.py" in text  # the TC evidence map
+    assert "docs/knowledge/widgetry" in text  # LLR.Component -> CMP.Knowledge
+    assert "IF-001" in text  # IF seams via LLR.Module
+    assert "docs/reviews/WI-002-REVIEW-A.md" in text  # precedent reviews
+    # ...in the ruled order (content order by failure cost: the refuted
+    # precedent first, premise risk second, then the maps).
+    assert (
+        text.index("WI-002")
+        < text.index("OI-002")
+        < text.index("LLR-001")
+        < text.index("docs/knowledge/widgetry")
+        < text.index("IF-001")
+        < text.index("docs/reviews/WI-002-REVIEW-A.md")
+    )
+
+
+def test_the_context_block_is_advisory_never_gating(tmp_path):
+    # No registries, no git, a half-empty row: the block answers "" or partial
+    # text — never a raise. Advisory means the caller cannot be broken by it.
+    (tmp_path / "empty").mkdir()
+    assert intake.context_block(tmp_path / "empty", {"WI-ID": "WI-001"}) == ""
+    assert (
+        intake.context_block(tmp_path / "does-not-exist", {}) == ""
+    )  # nothing to join
+
+
+def test_minted_rows_carry_the_context_block(tmp_path):
+    # Consumer 1: minted rows have no spec author, so the mint writes the
+    # block into the body at mint — the cancelled precedent's REASON included
+    # (the measured WI-391 failure mode: re-proposing the refuted).
+    root = context_repo(tmp_path)
+    write_sr(root, requirement="the AMENDED text")
+    before = _rev(root, "HEAD")
+    _commit(root, "the merged delta", when=T_CODE + 100)
+    minted, refusal = intake.intake_after_merge(root, before, _rev(root), {}, "b")
+    assert refusal is None, refusal
+    assert len(minted) == 1
+    text = (root / minted[0][1]).read_text(encoding="utf-8")
+    assert "## Context" in text
+    assert "WI-002" in text and "REFUTED" in text
+
+
 # --- trigger (c): the gap census mints concrete gap-closure rows ---------------
 
 
