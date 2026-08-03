@@ -243,3 +243,29 @@ The merged-range amendment probe confirmed no ratified-cell edit in the triggeri
 - AGREE — R-A holds, strict check_trajectory exits 0, and intake._disposition_drafts returns zero drafts with no refusal.
 
 VERDICT: REWORK
+
+---
+
+## Rounds 4 & 5 — APPROVE
+
+Round 4 confirmed the substantive corrections held and found two record defects
+(an overreaching claim that `## Context` is not machine-consumed, and an
+orphaned sentence left by a botched string replacement). Round 5 verified both
+fixed and returned **APPROVE**.
+
+### Round 5 verdict, verbatim
+
+No findings.
+
+- `## Context` characterization is precise: registry parsing clips it, while the knowledge-pack advisory reads the full spec (`check_trajectory.py:479-499`, `2437-2485`). The Context-only citation regression test passed (`test_trajectory_arch.py:508-515`).
+- The Deliverable paragraph is complete, headed, and explains that filing the other arm would duplicate WI-390 (`WI-414-adjudicate-tc-056-ratified-routed-cel.md:71-79`).
+- Neither correction introduces a new inaccuracy.
+- Mechanical checks:
+  - strict `check_trajectory`: exit 0; clean, with only existing advisory warnings.
+  - Registry integrity: 0; R-A findings: 0.
+  - `_disposition_drafts`: 0 drafts; refusal `None`.
+  - `check_docs`: exit 0; 0 broken links, with existing warn-only status/staleness output.
+  - Focused regression: 1 passed.
+  - Worktree remains clean.
+
+VERDICT: APPROVE
