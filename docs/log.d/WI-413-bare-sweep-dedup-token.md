@@ -1,49 +1,56 @@
-## 2026-08-02 — WI-413: the token names the return, not the sweep that saw it
+## 2026-08-02 — WI-413: identify the return by its own note, not by git archaeology
 
-**Summary.** Closed WI-388 REVIEW-A finding 6: a bare `intake.py sweep`, re-run
+**Summary.** Closed WI-388 REVIEW-A finding 6 — a bare `intake.py sweep`, re-run
 while a returned spec still carried its `## Handback` section, minted a
-duplicate disposition every pass.
+duplicate disposition every pass. The independent REVIEW-A (cross-family, OpenAI
+`gpt-5.6-sol`) returned **REWORK** against the first attempt, with 1 BLOCKING
+and 2 MAJOR findings; the shipped design is the reworked one.
 
-**The defect.** The disposition title's event token came from `after7` — the
-merge sha at the slot, but symbolic `HEAD` from the by-hand recovery CLI, which
-`_rev7` resolves to whatever is checked out *now*. The mint's own bookkeeping
-commit already moves it, so the same return event kept getting new names. The
-row's blast radius was small (visible extra queued row, cancellable, by-hand CLI
-only), which is why it rode an APPROVE as a recorded finding rather than
-blocking.
+**The defect.** The token came from `after7`: the merge sha at the slot, but
+symbolic `HEAD` from the recovery CLI, which `_rev7` resolves to whatever is
+checked out *now* — and the mint's own bookkeeping commit already moved it.
 
-**The fix, and why this one.** `_return_event7` derives the token from the
-return event itself — `git log -1` on the returned spec's path. One event, one
-name, however many sweeps observe it. The reviewer offered a second direction,
-deduping the handback arm against an OPEN disposition for the row; that was
-declined because it cannot satisfy both halves of the row's own test list. It
-would suppress the second return's disposition *precisely* while the first is
-still open, and the row requires a genuinely new handback to still mint. The
-token approach gets both, because `handback.returned_spec` rewrites the spec (a
-`blockref` plus a `## Handback` note naming the lane and its commit span), so a
-second return necessarily lands a new commit on that path.
+**Round 1 took the reviewer's first offered direction and it did not hold.**
+Deriving the token from the returned spec's last-touch commit names the last
+touch for *any* reason. REVIEW-A drove three breaks: clearing a `blockref` to
+re-queue moved it; moving a still-marked spec `queued/` → `deferred/` moved both
+it and the path embedded in the title; untracked or shallow history had no
+answer and silently fell back to the changing observer. Worst of all, `%h`
+returns an *unambiguous* abbreviation that git lengthens on collision, so
+truncating to seven could make two distinct returns share a token and suppress a
+judgement somebody was owed — an owed judgement disappearing silently is a worse
+failure than a visible duplicate.
 
-**The limit, stated rather than hidden.** Two returns whose rewritten spec text
-came out byte-identical would leave no new commit on the path and would share a
-token. The note embeds the lane and span, which makes that unreachable in
-practice — but it is the assumption the fix rests on, and it lives in
-`_return_event7`'s docstring, not in someone's memory.
+**What shipped.** `_return_token` digests the return's own `## Handback` note —
+the record `handback._note` writes, naming the lane and the commit span of the
+work that did not finish. No git history is consulted, so shallow clones and
+untracked trees behave like any other tree; re-queue, defer and rename do not
+move it, because none of them rewrite the note; a genuinely new return does
+rewrite it and mints its own disposition. The relpath also came **out** of the
+title, which is the dedup key: a still-marked spec legitimately moves, and a
+move is not an event. The path still travels on `specref`, as a pointer rather
+than an identity.
 
-**An existing green test was changed, deliberately and visibly.**
-`test_a_second_handback_of_the_same_row_mints_a_second_disposition` simulated
-its second handback by committing an *unrelated* file and relying on the merge
-sha moving. That stood in for a return only while the token *was* the merge sha;
-under a token naming the return event it is not a second handback in any sense —
-and it never was one in the repo either, since a real return rewrites the spec.
-The fixture now does what the shipped code does. Flagged here and in the commit
-message because editing a twice-reviewed green test to make one's own change
-pass is the move that most deserves an independent look.
+**The limit, stated precisely this time.** Round 1 claimed the limit was two
+returns producing byte-identical spec text; the reviewer disproved it — a
+handback *moves* the spec, so git records a touch whatever the content. The real
+limit is narrower and inherent: two returns whose `## Handback` sections are
+byte-identical share a token, meaning the same lane, the same span and the same
+reason — a return that recorded nothing new.
 
-**Verification** (lane worktree, work commit `b05dca68`):
+**A green test was changed, deliberately and visibly.** The existing
+second-handback test simulated its second return by committing an *unrelated*
+file. Under a token naming the event that is not a second handback in any sense,
+and it never was one in the repo either. The fixture now does what the shipped
+code does. It was flagged to the reviewer rather than left in the diff; the
+reviewer agreed the new fixture is the faithful one and caught that the test's
+opening comment still said "merge sha", which is now corrected.
 
-intake suite: 21 passed in 4.65s
+**Verification** (lane worktree, round-2 rework):
+
+intake suite: 23 passed in 5.05s
 <!-- fig: cmd="python -m pytest -q tests/test_intake.py" rev=b05dca68 -->
-full suite: 1963 passed / 10 skipped / 0 failed in 337.85s (0:05:37)
+full suite: 1969 passed / 6 skipped / 0 failed in 330.63s (0:05:30)
 <!-- fig: cmd="python -m pytest -q -n auto" rev=b05dca68 -->
-mutation: reverting the token to the observer's `HEAD` fails the new
-bare-sweep drive.
+mutation: reverting to the round-1 last-touch derivation fails both the
+lifecycle drive (re-queue / defer-move) and the no-history drive.

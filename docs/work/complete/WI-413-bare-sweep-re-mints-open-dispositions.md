@@ -8,44 +8,63 @@ safety_class = "ordinary"
 
 ## Deliverable
 
-Shipped 2026-08-02, work commit `b05dca68`.
+Shipped 2026-08-02, work commit `b05dca68` (round 1) and the round-2 rework
+below. REVIEW-A returned **REWORK** (1 BLOCKING, 2 MAJOR, 1 MINOR) against the
+round-1 design; what shipped is the reworked one.
 
 THE DEFECT. The disposition title's event token came from `after7`: the merge
 sha at the slot, but symbolic `HEAD` from the by-hand recovery CLI, which
 `_rev7` resolves to whatever is checked out *now*. The mint's own bookkeeping
 commit already moves it, so a bare `intake.py sweep` re-run — while the
-returned spec still carried its `## Handback` section, which it keeps through a
-defer or a re-queue — named one event with a fresh token and minted a duplicate
+returned spec still carried its `## Handback` section — minted a duplicate
 disposition on every pass.
 
-THE FIX, and why this one of the two offered. `_return_event7` derives the
-token from the return event itself (`git log -1` on the returned spec's path):
-one event, one name, however many sweeps observe it. The reviewer's alternative
-— dedupe the handback arm against an OPEN disposition for the row — was
-declined because it cannot satisfy both halves of this row's own test list: it
-would suppress the second return's disposition exactly while the first is still
-open, and the row requires a genuinely new handback to still mint. The token
-approach gets both, because `handback.returned_spec` rewrites the spec (a
-`blockref` plus a `## Handback` note naming the lane and its commit span), so a
-second return necessarily lands a new commit on that path.
+ROUND 1 TOOK THE REVIEWER'S FIRST DIRECTION AND IT DID NOT HOLD. Deriving the
+token from the returned spec's last-touch commit (`git log -1 -- <path>`) names
+the last touch for ANY reason, not the return. REVIEW-A drove three breaks:
+clearing a `blockref` to re-queue moved the token; moving a still-marked spec
+`queued/` → `deferred/` moved the token AND the path embedded in the title;
+untracked or shallow history had no answer and fell back to the changing
+observer. Worse, `%h` returns an *unambiguous* abbreviation that git lengthens
+on collision, so truncating it to seven could make two distinct returns share a
+token and silently suppress a judgement somebody was owed — the worst failure
+class available here.
 
-THE LIMIT, STATED. Two returns whose rewritten spec text came out
-byte-identical would leave no new commit on the path and would share a token.
-The note embeds the lane name and commit span, which makes that unreachable in
-practice — but it is the assumption the fix rests on, and it is written into
-`_return_event7`'s docstring rather than left for someone to discover.
+WHAT SHIPPED. `_return_token` identifies the return by a digest of its own `##
+Handback` note — the record `handback._note` writes, naming the lane and the
+commit span of the work that did not finish. It needs no git history, so
+shallow clones and untracked trees behave like any other; it does not move when
+the spec is re-queued, deferred or renamed, because none of those rewrite the
+note; and a genuinely new return rewrites it and mints its own disposition. The
+relpath also came OUT of the title, which is the dedup key — a still-marked
+spec legitimately moves, and that is not a new event. The path still travels on
+`specref`, where it is a pointer rather than an identity.
+
+THE LIMIT, STATED PRECISELY THIS TIME. Round 1 claimed the limit was two
+returns producing byte-identical spec text; REVIEW-A disproved it (a handback
+MOVES the spec `active/` → `queued/`, so git records a touch whatever the
+content). The real limit is narrower and inherent: two returns whose `##
+Handback` sections are byte-identical share a token — the same lane, the same
+commit span and the same reason, i.e. a return that recorded nothing new.
+
+THE OTHER DIRECTION, DECLINED WITH A REASON. Deduping the handback arm against
+an OPEN disposition for the row cannot satisfy both halves of this row's own
+test list: it would suppress the second return's disposition precisely while
+the first is still open, and the row requires a genuinely new handback to still
+mint.
 
 AN EXISTING GREEN TEST WAS CHANGED, DELIBERATELY AND VISIBLY.
 `test_a_second_handback_of_the_same_row_mints_a_second_disposition` simulated
-its second handback by committing an *unrelated* file and relying on the merge
-sha moving. That stood in for a return only while the token was the merge sha;
-under a token naming the return event it is not a second handback in any sense
-— and it never was one in the repo either. The fixture now does what the
-shipped code does. This is called out in the commit message and here because
-editing a twice-reviewed green test to make one's own change pass is the move
-that most deserves an independent look.
+its second handback by committing an *unrelated* file. That stood in for a
+return only while the token was the merge sha. The fixture now rewrites the
+spec, which is what the shipped code does. Called out because editing a
+twice-reviewed green test so one's own change passes is the move that most
+deserves an independent look — and REVIEW-A did look, and agreed the new
+fixture is the faithful one while flagging that the test's opening comment
+still said "merge sha"; that comment is corrected.
 
-TESTS. Two new drives: a bare sweep run three times against one still-marked
-spec mints exactly ONE disposition, and a genuinely new return (a real spec
-rewrite) still mints its own. Mutation-checked — reverting the token to the
-observer's `HEAD` fails the first.
+TESTS, MUTATION-CHECKED. A bare sweep run three times against one still-marked
+spec mints exactly ONE disposition; a genuinely new return still mints its own;
+a re-queue, a defer-move and an untracked (uncommitted) returned spec each mint
+nothing further. Reverting to the round-1 last-touch derivation fails the
+lifecycle and no-history drives.

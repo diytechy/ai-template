@@ -302,8 +302,8 @@ def test_a_handed_back_adjudication_row_mints_no_second_disposition(tmp_path):
 
 
 def test_a_second_handback_of_the_same_row_mints_a_second_disposition(tmp_path):
-    # REVIEW-A finding 3: the disposition title carries the handback MERGE's
-    # sha (the amendment title's sha-pair discipline, applied to trigger b),
+    # The disposition title carries a token naming the RETURN EVENT (a digest
+    # of its own `## Handback` note; WI-413 corrected this from the merge sha,
     # so a re-queued row's SECOND handback is a new event that mints its own
     # disposition — never a silent dedupe that leaves nobody owed the
     # judgement.
@@ -390,6 +390,76 @@ def test_the_bare_sweep_re_run_does_not_re_mint_an_open_disposition(tmp_path, ca
     assert (
         sorted((root / "docs" / "work" / "queued").glob("WI-*-dispose-*.md")) == first
     )
+
+
+def test_the_token_survives_requeue_defer_and_rename(tmp_path, capfd):
+    # REVIEW-A round 1 BLOCKING, driven three ways. The first attempt derived
+    # the token from `git log -1` on the spec path, which names the last touch
+    # for ANY reason — so ordinary lifecycle activity re-minted. None of these
+    # is a new return event and none may mint a second disposition.
+    root = handback_repo(tmp_path)
+    assert _sweep(root) == 0
+    capfd.readouterr()
+    first = sorted((root / "docs" / "work" / "queued").glob("WI-*-dispose-*.md"))
+    assert len(first) == 1
+
+    queued = root / "docs" / "work" / "queued" / "WI-005-returned.md"
+
+    # (a) a human clears the blockref to put it back on the ready frontier
+    queued.write_text(
+        "\n".join(
+            ln
+            for ln in queued.read_text(encoding="utf-8").splitlines()
+            if not ln.startswith("blockref")
+        )
+        + "\n",
+        encoding="utf-8",
+        newline="\n",
+    )
+    _commit(root, "clear the blockref - back on the frontier", when=T_CODE + 300)
+    assert _sweep(root) == 0
+    assert (
+        sorted((root / "docs" / "work" / "queued").glob("WI-*-dispose-*.md")) == first
+    )
+
+    # (b) the still-marked spec is deferred: new directory, new path, same event
+    deferred = root / "docs" / "work" / "deferred"
+    deferred.mkdir(parents=True, exist_ok=True)
+    moved = deferred / "WI-005-returned.md"
+    moved.write_text(queued.read_text(encoding="utf-8"), encoding="utf-8", newline="\n")
+    queued.unlink()
+    _commit(root, "defer the returned row", when=T_CODE + 400)
+    assert _sweep(root) == 0
+    after_move = sorted((root / "docs" / "work").glob("*/WI-*-dispose-*.md"))
+    assert len(after_move) == 1, "a MOVE is not a new return event"
+
+
+def test_the_token_needs_no_git_history_at_all(tmp_path, capfd):
+    # REVIEW-A round 1 MAJOR: the last-touch derivation fell back to the
+    # changing observer (HEAD) whenever history could not answer - an untracked
+    # spec, a shallow clone - and re-minted on the next sweep. A digest of the
+    # note is answerable from the working tree alone, so these are ordinary.
+    root = handback_repo(tmp_path)
+    extra = root / "docs" / "work" / "queued" / "WI-009-returned.md"
+    extra.write_text(
+        (root / "docs" / "work" / "queued" / "WI-005-returned.md")
+        .read_text(encoding="utf-8")
+        .replace("WI-005", "WI-009"),
+        encoding="utf-8",
+        newline="\n",
+    )  # deliberately NOT committed
+
+    assert _sweep(root) == 0
+    capfd.readouterr()
+    minted = sorted((root / "docs" / "work" / "queued").glob("WI-*-dispose-*.md"))
+    assert len(minted) == 2, minted
+
+    assert _sweep(root) == 0
+    out = capfd.readouterr().out
+    assert (
+        sorted((root / "docs" / "work" / "queued").glob("WI-*-dispose-*.md")) == minted
+    )
+    assert "sweep minted 0 row(s)." in out, out
 
 
 def test_the_bare_sweep_still_mints_for_a_genuinely_new_return(tmp_path, capfd):
