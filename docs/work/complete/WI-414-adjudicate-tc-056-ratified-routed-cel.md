@@ -68,7 +68,10 @@ scope-moved path the Status movement that IS owed — Modified plus re-attest on
 the ratified cells — opens with WI-390's amendment, at the owner sitting that
 row exists to cost exactly once.
 
-row takes the other arm: WI-390's spec now carries a `### Re-scope (WI-414,
+THE §A5.2 OUTPUT THIS ROW PRODUCES. The scope-moved path authorizes filing a
+real spine WI and/or re-scoping the queued rows whose premises moved. Filing a
+second spine row would duplicate WI-390, so this row takes the other arm:
+WI-390's spec now carries a `### Re-scope (WI-414,
 2026-08-02)` subsection under its `## Context` block, naming three affected
 surfaces — SR-055, LLR-056 and TC-056's Method/Expected — with this row and the
 adjudicated range as origin, and retaining WI-389's broader ratified-prose route

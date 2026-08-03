@@ -34,10 +34,13 @@ warning.
 `## Deliverable` / `## Handback` / `## Context`, and a queued row's Deliverable
 must stay empty under R-A — so a bare `## Re-scope` heading is a malformation,
 which `check_trajectory` said immediately. The note lives as a sub-heading under
-`## Context`. The structured loaders deliberately discard that block, so it is
-not a machine-consumed surface; it is legible to the reader the session protocol
-requires — whoever opens the scoped WI spec before building it, which for WI-390
-is its owner sitting.
+`## Context`. The structured registry loaders clip that block, so it does not
+reach the row's registry cells — but it is NOT unread by machine:
+`check_trajectory` consumes the full spec including Context citations for its
+knowledge-pack advisory, with a regression test pinning that a citation inside
+`## Context` is seen. Its primary reader is still the human one the session
+protocol requires — whoever opens the scoped WI spec before building it, which
+for WI-390 is its owner sitting.
 
 **No Status flip is available here**, which differs from declining one. TC-056 is
 already `Verified`, so no Modified → Verified flip exists; that arm belongs to the
