@@ -5,4 +5,11 @@ specref = "docs/reviews/WI-388-REVIEW-A.md"
 workstream = "scripts"
 buildtier = "quick"
 safety_class = "ordinary"
+blockref = "docs/work/queued/WI-413-bare-sweep-re-mints-open-dispositions.md"
 +++
+
+## Handback
+
+Returned unfinished from lane `wi-413-bare-sweep-dedup-token`: NEEDS-HUMAN: a correct fix needs a return-event identity PERSISTED AT HANDBACK TIME (an immutable id written into the returned spec by handback.py), which is outside this row's declared scope of "intake.py's sweep arm + tests". Two independent REVIEW-A rounds rejected both derivations available inside that scope - the spec's last-touch commit, and a digest of the `## Handback` note. Owner ruling needed on widening scope, plus a migration answer for specs already returned. Both verdicts: docs/reviews/WI-413-REVIEW-A.md
+
+**What remains:** whatever this spec asks for that `51224025ab..b5ea06478e` did not finish. Read that range (`git log --oneline 51224025ab..b5ea06478e`, `git diff 51224025ab..b5ea06478e`) before re-claiming — the work so far is in trunk, not on a branch. Clearing the `blockref` puts this back on the ready frontier.
