@@ -490,6 +490,34 @@ def _rev7(root, rev):
     return out.strip()[:7] if code == 0 and out.strip() else str(rev)[:7]
 
 
+def _return_event7(root, relpath, fallback7):
+    """The token naming the RETURN EVENT itself: the last commit to touch the
+    returned spec.
+
+    WHY NOT THE MERGE SHA. The slot passes the handback merge, which *is* the
+    return event, so both agree there. But the by-hand recovery CLI
+    (`intake.py sweep`) defaults `--after` to symbolic `HEAD`, which resolves
+    to whatever is checked out NOW — and the mint's own bookkeeping commit has
+    already moved it. So every bare re-sweep, while the returned spec still
+    carries its `## Handback` section (it keeps it through a defer or a
+    re-queue), named one event with a different token and minted a DUPLICATE
+    disposition (WI-388 REVIEW-A finding 6).
+
+    Deriving from the spec's own last-touch commit gives ONE event ONE name
+    however many sweeps run, while a genuinely new return still mints its own:
+    `handback.returned_spec` rewrites the spec — a `blockref` plus a `##
+    Handback` note naming the lane and its commit span — so a second return is
+    necessarily a new commit on that path.
+
+    THE LIMIT, STATED RATHER THAN HIDDEN: two returns whose rewritten spec text
+    came out byte-identical would leave no new commit on the path and would
+    share a token. The note embeds the lane name and commit span, which makes
+    that unreachable in practice, but it is the assumption this rests on."""
+    code, out = ac.git(root, "log", "-1", "--format=%h", "--", relpath)
+    token = out.strip().splitlines()[0].strip() if code == 0 and out.strip() else ""
+    return token[:7] if token else fallback7
+
+
 def _handback_drafts(root, outcomes, after7):
     drafts = []
     for wi_id in sorted(w for w, o in (outcomes or {}).items() if o == "handback"):
@@ -503,6 +531,8 @@ def _handback_drafts(root, outcomes, after7):
             )
             continue
         relpath, meta, reason = found
+        # The token names the RETURN, not the sweep: see `_return_event7`.
+        event7 = _return_event7(root, relpath, after7)
         if (meta.get("safety_class") or "").strip().lower() == "adjudication":
             # The no-recursion invariant, intake end: a disposition row never
             # spawns a disposition row. hand_back refuses this shape too; a
@@ -516,16 +546,18 @@ def _handback_drafts(root, outcomes, after7):
             continue
         drafts.append(
             {
-                # The handback MERGE's sha is the title's event token
-                # (REVIEW-A finding 3, the amendment title's sha discipline
-                # applied to trigger b): a re-queued row's SECOND handback is
-                # a NEW event that mints its own disposition — never a silent
-                # dedupe that leaves nobody owed the judgement — while a
-                # re-run for the SAME merge still dedupes exactly.
+                # The RETURN EVENT's own sha is the title's event token
+                # (WI-413; REVIEW-A finding 3's sha discipline, corrected at
+                # WI-388 REVIEW-A finding 6 to name the event rather than the
+                # observer): a re-queued row's SECOND handback is a NEW event
+                # that mints its own disposition — never a silent dedupe that
+                # leaves nobody owed the judgement — while ANY number of
+                # re-sweeps of the same return dedupe exactly, including the
+                # bare `sweep` whose HEAD has moved on.
                 "title": (
                     "dispose: {} handed back at {} ({}) - {} (a disposition "
                     "row never hands back; R3)".format(
-                        wi_id, after7, relpath, _DISPOSITION_OUTCOMES
+                        wi_id, event7, relpath, _DISPOSITION_OUTCOMES
                     )
                 ),
                 "kind": "adjudication",

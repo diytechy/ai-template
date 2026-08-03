@@ -316,7 +316,24 @@ def test_a_second_handback_of_the_same_row_mints_a_second_disposition(tmp_path):
     assert len(first) == 1
     # The row is disposed, re-queued, claimed again, handed back again: a
     # LATER merge lands the second return.
-    (root / "seed.txt").write_text("moved\n", encoding="utf-8", newline="\n")
+    #
+    # FIXTURE CORRECTED AT WI-413, and the correction is load-bearing. This
+    # used to commit an unrelated file (seed.txt) and rely on the merge sha
+    # moving. That stood in for a second return only while the token WAS the
+    # merge sha; now that it names the return event itself, an unrelated commit
+    # is no longer a second handback in any sense — and it never was one in the
+    # repo either. A real second return runs `handback.returned_spec`, which
+    # REWRITES the spec (a blockref plus a `## Handback` note naming the lane
+    # and its commit span), so the fixture now does what the shipped code does.
+    spec = root / "docs" / "work" / "queued" / "WI-005-returned.md"
+    spec.write_text(
+        spec.read_text(encoding="utf-8").replace(
+            "Returned unfinished from lane `wi-005`: worker exit 7 (NEEDS-HUMAN)",
+            "Returned unfinished from lane `wi-005-again`: worker exit 7 (NEEDS-HUMAN)",
+        ),
+        encoding="utf-8",
+        newline="\n",
+    )
     _commit(root, "the second handback merge lands", when=T_CODE + 500)
     sha2 = _rev(root)
     second, refusal = intake.intake_after_merge(
@@ -331,6 +348,76 @@ def test_a_second_handback_of_the_same_row_mints_a_second_disposition(tmp_path):
     )
     assert refusal is None, refusal
     assert again == []
+
+
+def _sweep(root, before=None, after=None):
+    """The by-hand recovery CLI exactly as a human runs it: `intake.py sweep`
+    with no --before/--after, which is the shape WI-388 REVIEW-A finding 6
+    reached (both default to symbolic HEAD)."""
+    import argparse
+
+    return intake._cmd_sweep(
+        argparse.Namespace(root=str(root), before=before, after=after)
+    )
+
+
+def test_the_bare_sweep_re_run_does_not_re_mint_an_open_disposition(tmp_path, capfd):
+    # WI-413, the reviewer's drive (WI-388 REVIEW-A finding 6). The bare sweep
+    # resolves symbolic HEAD, and the mint's OWN bookkeeping commit moves it —
+    # so while the returned spec still carries its `## Handback` section (it
+    # keeps it through a defer or a re-queue), every re-sweep used to name the
+    # same return with a fresh token and mint a DUPLICATE disposition.
+    root = handback_repo(tmp_path)
+
+    assert _sweep(root) == 0
+    capfd.readouterr()
+    first = sorted((root / "docs" / "work" / "queued").glob("WI-*-dispose-*.md"))
+    assert len(first) == 1, first
+
+    # HEAD has moved (the mint committed), and the spec is STILL marked.
+    assert intake.ac.SPEC_HANDBACK in (
+        root / "docs" / "work" / "queued" / "WI-005-returned.md"
+    ).read_text(encoding="utf-8")
+
+    assert _sweep(root) == 0
+    out = capfd.readouterr().out
+    again = sorted((root / "docs" / "work" / "queued").glob("WI-*-dispose-*.md"))
+    assert again == first, "one return event owes exactly ONE disposition"
+    assert "sweep minted 0 row(s)." in out, out
+
+    # ...and a third, for the "however many sweeps" half of the contract.
+    assert _sweep(root) == 0
+    assert (
+        sorted((root / "docs" / "work" / "queued").glob("WI-*-dispose-*.md")) == first
+    )
+
+
+def test_the_bare_sweep_still_mints_for_a_genuinely_new_return(tmp_path, capfd):
+    # The other half, and the reason this is a TOKEN fix rather than an
+    # open-disposition dedupe: a second return is a new event and owes its own
+    # judgement even while the first disposition is still open. A real return
+    # rewrites the spec (handback.returned_spec), so it lands a new commit on
+    # that path and therefore a new token.
+    root = handback_repo(tmp_path)
+    assert _sweep(root) == 0
+    capfd.readouterr()
+    first = sorted((root / "docs" / "work" / "queued").glob("WI-*-dispose-*.md"))
+    assert len(first) == 1
+
+    spec = root / "docs" / "work" / "queued" / "WI-005-returned.md"
+    spec.write_text(
+        spec.read_text(encoding="utf-8").replace(
+            "lane `wi-005`", "lane `wi-005-again`"
+        ),
+        encoding="utf-8",
+        newline="\n",
+    )
+    _commit(root, "the SECOND return lands", when=T_CODE + 900)
+
+    assert _sweep(root) == 0
+    second = sorted((root / "docs" / "work" / "queued").glob("WI-*-dispose-*.md"))
+    assert len(second) == 2, "a new return event owes its own disposition"
+    assert set(first) < set(second)
 
 
 def test_a_second_intake_for_the_same_handback_is_deduped(tmp_path):
