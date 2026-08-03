@@ -100,3 +100,5 @@ resource: "generated"
 | [IF-090](IF-090.md) |  |
 | [IF-091](IF-091.md) |  |
 | [IF-092](IF-092.md) |  |
+| [IF-093](IF-093.md) |  |
+| [IF-094](IF-094.md) |  |
