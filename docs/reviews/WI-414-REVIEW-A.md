@@ -135,3 +135,111 @@ Builder judgment (1): DISAGREE.
 Builder judgment (2): DISAGREE overall. I agree that Method/Expected are stale, but disagree that a new ordinary/quick disposition is correct; the staleness is part of the real scope movement and is already owned by WI-390.
 
 VERDICT: REWORK
+
+---
+
+## Round 2 & 3
+
+Round 2 accepted **scope moved** and that WI-390 owns the amendment, but returned
+BLOCKING: "route to WI-390 and produce nothing" is not an authorized §A5.2
+outcome. Round 3 accepted the re-scope of WI-390 as authorized, substantively
+sufficient and legitimately placed, and confirmed the SpecRef-clock warning
+cleared for the intended reason; it returned two record-accuracy defects (a log
+fragment still carrying the superseded account, and an overstated claim about
+the notes shape), both since corrected.
+
+### Round 3 verdict, verbatim
+
+## Subject
+
+REVIEW-A round 3 of HEAD 9823b951 against claim base 536a19a7. Read-only review; worktree clean. Primary risks examined: a nominal re-scope invisible to WI-390’s future worker, a falsely cleared SpecRef clock, and disagreement between the completed spec and permanent log fragment.
+
+## What I ran
+
+Worktree and whitespace:
+
+```text
+## wi-414-adjudicate-tc-056
+git diff --check rc=0
+```
+
+Current strict trajectory check:
+
+```text
+check_trajectory: clean (414 work item(s), 393 done (95%), 17 cancelled, graph acyclic).
+```
+
+It emitted ten unrelated connectivity warnings and no WI-390 warning. Running the same checker in a detached clone at parent 225dccdf reproduced the removed warning:
+
+```text
+check_trajectory: WARN - WI-390: its SpecRef docs/concurrency-v2.md changed after the WI row was last touched — re-validate the WI against the amended requirement ...
+check_trajectory: clean (414 work item(s), 393 done (95%), 17 cancelled, graph acyclic).
+```
+
+The clock cleared for the designed reason: backlog_staleness_findings accepts a body-content edit at the same path as a re-affirmation; WI-390 was last touched by 9823b951 after the SpecRef’s f822e336 amendment. This was neither a status move nor filename rename. Source: project-trajectory/scripts/check_trajectory.py:2488-2553.
+
+Direct R-A and intake probe:
+
+```text
+loader integrity=0 R-A=0
+disposition drafts=0 refusal=None
+```
+
+Context/parser/worker-prompt probe:
+
+```text
+agent_common WI-390 status/deliverable chars: queued/0
+schedule WI-390 status/deliverable chars: queued/0
+check_trajectory WI-390 status/deliverable chars: queued/0
+worker prompt contains Re-scope heading: False
+worker prompt contains TC-056: False
+raw queued spec contains Re-scope heading: True
+```
+
+Focused tests:
+
+```text
+.......                                                                  [100%]
+7 passed in 0.83s
+```
+
+The merged-range amendment probe confirmed no ratified-cell edit in the triggering range: LLR-056 changed traced CodeSymbol; TC-056 changed traced Evidence and routed-traced Verifies. Source: docs/concurrency-v2.md:604-616.
+
+## Findings
+
+1. MAJOR — The permanent log fragment still records the superseded “route only” account and omits the real §A5.2 output.
+
+   docs/log.d/WI-414-adjudicate-tc-056.md:29-48 says “Routed, not filed” but never records that WI-390’s spec was amended with the WI-414 re-scope note. The session protocol requires the fragment to record material deliverables; once compiled, this becomes the durable session account.
+
+   The fragment also retains both MINOR formulations that were corrected only in the Deliverable:
+
+   - Lines 8-18 still emphasize “only then” ordering without stating that Verifies is traced and that endpoint disagreement carries the judgment.
+   - Lines 44-47 say “Flipping TC-056 would assert…”, although TC-056 is already Verified and no Modified → Verified flip exists.
+
+   Update the fragment to record the WI-390 amendment and use the corrected endpoint/status reasoning. Source: .agents/skills/session-protocol/SKILL.md:80-98.
+
+2. MINOR — The Deliverable overstates the note’s exact shape.
+
+   docs/work/complete/WI-414-adjudicate-tc-056-ratified-routed-cel.md:71-76 says WI-390 carries a `## Re-scope` section “naming the three cells.” The actual structure is `## Context` containing a `### Re-scope` subsection, and it names three affected rows/surfaces—not three cells. SR-055 and LLR-056 contain multiple stale ratified fields, while TC-056 alone names Method and Expected explicitly.
+
+   The note remains sufficient for routing because it incorporates WI-389’s broader “ratified prose” route and leaves exact amendment construction to WI-390’s owner sitting. Correct the structural/counting claim.
+
+## Explicit determinations
+
+- AGREE — Re-scoping WI-390 is authorized. §A5.2 says:
+
+  > “Its only outputs are (a) flipping `Modified` rows back to `Verified` … or (b) filing real WIs — a `spine` WI for the scope change, and cancellations or re-scopes of queued WIs whose premise moved.”
+
+  Source: docs/concurrency-v2.md:638-642.
+
+- AGREE — This note is substantively sufficient. It identifies WI-414 and range 7894457..5211f07 as origin; names SR-055, LLR-056, and TC-056; retains WI-389’s broader route; and leaves Modified/re-attest work to WI-390.
+
+- AGREE, qualified — `## Context` is valid on a queued row and preserves R-A. The structured loaders deliberately discard it, and agent_loop’s generated worker prompt does not include the stored note. Nevertheless it is not invisible to every mandated reader: session-protocol explicitly requires opening the scoped WI spec. Sources: project-trajectory/scripts/agent_common.py:696-702,776-796; project-trajectory/scripts/agent_loop.py:423-474; .agents/skills/session-protocol/SKILL.md:21-27.
+
+- AGREE — The SpecRef-clock warning cleared, for the intended same-path content-edit reason.
+
+- AGREE — Both corrections in the Deliverable are now correct. DISAGREE that they were corrected across the complete permanent record; the fragment remains stale.
+
+- AGREE — R-A holds, strict check_trajectory exits 0, and intake._disposition_drafts returns zero drafts with no refusal.
+
+VERDICT: REWORK

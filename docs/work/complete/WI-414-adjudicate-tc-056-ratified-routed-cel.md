@@ -68,13 +68,12 @@ scope-moved path the Status movement that IS owed — Modified plus re-attest on
 the ratified cells — opens with WI-390's amendment, at the owner sitting that
 row exists to cost exactly once.
 
-THE §A5.2 OUTPUT THIS ROW PRODUCES. Scope-moved authorizes filing a real spine
-WI and/or re-scoping the queued rows whose premises moved. Filing a second spine
-row would duplicate WI-390, so this row takes the other arm: WI-390's spec now
-carries a `## Re-scope (WI-414, 2026-08-02)` section naming the three cells and
-this row as its origin. That is a work-registry output, not a pointer buried in
-a closed Deliverable — and it re-dates WI-390 against its amended SpecRef, which
-is the re-affirmation the standing `check_trajectory` clock warning asks for.
+row takes the other arm: WI-390's spec now carries a `### Re-scope (WI-414,
+2026-08-02)` subsection under its `## Context` block, naming three affected
+surfaces — SR-055, LLR-056 and TC-056's Method/Expected — with this row and the
+adjudicated range as origin, and retaining WI-389's broader ratified-prose route
+(which also names SR-050/LLR-051/TC-051). Constructing the exact amendment stays
+WI-390's.
 
 ## Context
 
