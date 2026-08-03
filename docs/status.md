@@ -46,17 +46,26 @@ home elsewhere — don't restate it here:
 - **The drain plan for the remaining backlog:**
   [backlog-plan-2026-08-01.md](backlog-plan-2026-08-01.md) — the serial build
   order for the queued rows, the standing rules every builder inherits, and the
-  owner rulings with their context. Two of its rules now bind mechanically:
-  **a work branch never mints a new work-item id** (the merge-slot rung
-  shipped 2026-08-01), and **implementation is PARKED** — `docs/work/pause`
-  is present (owner direction 2026-08-01), so the claim rung refuses new
-  claims until the owner rules the two pending decisions and deletes the
-  pause file in a tracked commit.
+  owner rulings with their context. One of its rules still binds
+  mechanically: **a work branch never mints a new work-item id** (the
+  merge-slot rung shipped 2026-08-01). Its **park is LIFTED** — the two
+  decisions that park waited on were ruled (no live row remains in
+  [requirements/open-items.csv](requirements/open-items.csv)), the
+  2026-08-02 park that replaced it was a context-budget pause only, and
+  `docs/work/pause` was deleted in a tracked commit on 2026-08-02 to open
+  this drain.
 - **Resuming in a new session — boot HERE, then
   [concurrency-v2.md](concurrency-v2.md), which is the spec-of-record for the
   whole queued backlog; the design is CLOSED and its ten 2026-07-31 rulings are
   in the [log's Decisions](log.md#decisions-log).** The backlog is claimable as
-  it stands — a plain `agent-resume` launch will take the frontier in order.
+  it stands, but **do not drain it with a plain `agent-resume` launch**: two
+  queued rows rewrite the machinery the loop itself runs — WI-412 the
+  dispatcher's banner arithmetic, WI-413 `intake.py`'s sweep arm — and
+  `integrate.py` calls intake at every merge slot, so an unattended pass
+  would integrate the later rows through code the earlier ones had just
+  rewritten, with no review of that composition. Owner direction 2026-08-02:
+  drain WI-412/413/414/415 **serially through the station in a session**,
+  then WI-390 with the owner present.
   The older
   [handoff-2026-07-29.md](handoff-2026-07-29.md) is now **history, not a
   queue** — its sequenced work is all closed; read it for the post-Phase-5
