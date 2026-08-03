@@ -104,7 +104,7 @@ REVIEW_PROBE predrain_residue_wis=2
 REVIEW_PROBE rc=1 state_merged=0 good_on_trunk=True bad_on_trunk=False
 ```
 
-No success count was printed. This confirms [dispatch.py](/Users/diytechy/Documents/ai-template-drive/wi-412-dispatcher-banner-counts/project-trajectory/scripts/dispatch.py:174) now describes the actual sequential, non-transactional behavior.
+No success count was printed. This confirms `dispatch.py` `_drain` (line 174 at review time) now describes the actual sequential, non-transactional behavior.
 
 ## Fresh probes
 
