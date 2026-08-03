@@ -1,5 +1,13 @@
 # WI-389 — REVIEW-A (2026-08-02)
 
+_Two rounds: round 1 APPROVE findings=2 (its record below, unedited); after
+it, the station refresh redded the branch on two undeclared cross-component
+seams the round-1 tier could not see (they fire only when the arch map
+regenerates). Round 2 judges the rework `575610f2` only — see the Round 2
+section at the end. The verdict stands at APPROVE, findings total unchanged._
+
+## Round 1
+
 Verdict: APPROVE — the drawn cycle is the shipped machinery. I walked every
 edge and label of the station SVG against `dispatch.py` / `lane.py` /
 `integrate.py` / `intake.py` (not against the design doc), mutation-tested all
@@ -189,5 +197,89 @@ one-string vocabulary correction the merge does not need to wait for (it is
 the design doc's own shorthand, wrong only against the sharper truth the
 shipped code earned) and a recorded 390px observation. Neither changes what a
 reader takes away: every lane ends in a merge, through one serial slot.
+
+## Round 2 (2026-08-02) — the seam rework, judged on its own evidence
+
+Verdict: APPROVE — rework `575610f2` (interfaces.csv +2 rows, TC-056's
+Verifies cell, the complete spec's corrected Deliverable, the traj_panels
+docstring Contracts line, the unread `docs/log.d/` fragment; nothing else)
+remedies the station red honestly, and every claim in it was re-driven here
+rather than read. An honest note first: the defect the station caught —
+the derived-vocabulary imports I verified in round 1 (`traj_panels` →
+`integrate` / `schedule`, CMP-002 → CMP-004) are cross-component seams owed
+IF rows — was invisible to the round-1 tier BY CONSTRUCTION: `check_
+trajectory --strict` against the committed arch map ran rc=0, and the
+cross-component conviction fires only when the map regenerates over the new
+imports, which the station refresh does and this review's tier did not.
+Round 2 closes that gap with an A/B regen.
+
+- **The red was real, and the rework is exactly what clears it — A/B proven
+  in the worktree.** A-side: registry + docstring reverted to `8874f695`,
+  arch map regenerated (`gen_arch_map.py --strict-parse --src
+  project-trajectory/scripts --doc docs/architecture.md`, rc=0), then
+  `check_trajectory --strict` → **rc=1** with exactly the two convicted
+  seams: `ERROR - cross-component import scripts/traj_panels (CMP-002) ->
+  scripts/integrate (CMP-004) has no declared IF-### seam` and the same for
+  `-> scripts/schedule (CMP-004)`; `2 error(s)`. B-side: rework files
+  restored, map regenerated again (rc=0) → `check_trajectory --strict`
+  **rc=0, zero ERRORs**, and the WARN sets diffed line-for-line: **12 → 11,
+  the single removed line being** `connectivity undeclared: module
+  'scripts/traj_panels' is in the arch-map but no IF-### row names it` —
+  trunk baseline minus the now-named module, nothing added (no "declares no
+  Provides seam" warn: IF-093's Notes carries the first-word `sink` marker,
+  which held; no "no script declares it" warn for either new id: the
+  Contracts citation harvested). The regenerated map carries the harvest —
+  `Contracts (interfaces): IF-093, IF-094` under traj_panels and both
+  `-. IF-09x .->` seam edges in the component graph. `docs/architecture.md`
+  then restored via `git checkout --`, worktree clean (§5.2 trunk-owned,
+  uncommitted — matching the rework's own claim).
+- **The Contracts citation is one physical line — the harvester trap
+  avoided.** `grep -n "Contracts:" traj_panels.py` → line 14 only, the whole
+  citation (`Contracts: IF-093, IF-094 — the constants-only Consumes seams
+  on integrate (OUTCOME_DIRS, BAR_GREEN) and schedule (the kind tables);
+  rows of record in docs/requirements/interfaces.csv.`) on that single line,
+  and `ruff check` on the file still passes with it.
+- **The seam rows say what the code does — checked against round 1's own
+  walk.** IF-093 names `OUTCOME_DIRS` + `BAR_GREEN`, IF-094 names
+  `_KIND_CONCURRENCY`/`_KIND_RANK`/`CONCURRENCY_EXCLUSIVE` — precisely the
+  constants my round-1 truth-walk verified `_outcome_cards`,
+  `_station_svg`'s bar label and `_exclusive_kinds` reading, constants-only,
+  no call, no write. The "seam driven by TC-056's sync pins" claim is true
+  on round-1 evidence: my own mutations proved the OUTCOME_DIRS derivation
+  follows the integrator and the kind-table pin reds on a one-cell change —
+  those tests are TC-056's Evidence, so wiring both IF ids into TC-056's
+  Verifies (the WI-388 finding-4 shape) points the seams at tests that
+  genuinely drive them.
+- **The spine delta stays traced-only over the WHOLE range.**
+  `staged_spine_amendments(root, 78944578, 575610f2)` → still exactly 3
+  records, ALL `ratified: {}` — LLR-056 `CodeSymbol`, TC-051 `Evidence`,
+  TC-056 now `Evidence` + `Verifies`. No ratified cell anywhere in the
+  branch. (Stated for the record: `Verifies` is in the WI-388 ROUTED traced
+  subset, so the merge intake will mint its adjudication row for this cell —
+  the designed §A5.2 path, not a silent slip; interfaces.csv is not a spine
+  CSV, so the two ADDED IF rows are registry additions vetted by
+  trace/check_trajectory, not amendments.)
+- **The record, re-run at `575610f2`.** `trace.py --strict --no-placeholders
+  --html --require-verified --strict-schema` → rc=0, **interfaces=91
+  interface-findings=0** (the Deliverable's exact figures; the regenerated
+  report then restored). `tests/test_traj_panels.py` → **34 passed in
+  6.04s**; smoke → **667 passed, 2 skipped in 12.75s**; `check_figures
+  --strict` rc=0, **72 declared figure(s)**; `check_doc_refs --strict` rc=0;
+  `ruff check` on traj_panels: All checks passed. The rework delta is
+  WI-389-only (the five files above; `PROJECT_STATE.html` and
+  `docs/architecture.md` both absent from it), and the corrected Deliverable
+  now records the conviction of its own earlier "none owed" judgment in
+  place, dated, with the scratch-regen proof — every number in it matching
+  my measurements.
+
+**ROUND 2 IS AN APPROVE:** the station caught a real registration debt my
+round 1 missed for a stated, structural reason; the rework declares the two
+seams on the established constants-Consumes precedent, cites them where the
+harvester reads, wires them to the tests that already drive them, and
+corrects the record that claimed none were owed. A/B regen shows the fix is
+exactly load-bearing — red without it, baseline-clean with it. No new
+findings; the two round-1 findings stand as filed (finding 1's one-string
+fix remains open for a future pass or the WI-390 batch, finding 2 remains an
+observation).
 
 VERDICT: APPROVE findings=2
