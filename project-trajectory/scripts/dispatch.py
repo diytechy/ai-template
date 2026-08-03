@@ -647,12 +647,41 @@ def _pending_cards(root):
 
 
 def _surface_banner(root, surfaced):
-    """The §A8 attended stop's banner: exit 0, naming what waits. The count
-    derives from the shared pending read; the surfaced frontier rows are the
-    floor for the window where a gate/attestation WI is queued before its
-    cards project (the two reads agreeing is the common case)."""
-    return "queue drained - {} ratification(s) waiting in open-items.html".format(
-        max(len(_pending_cards(root)), len(surfaced))
+    """The §A8 attended stop's banner: exit 0, naming what waits — and naming
+    the RIGHT surface, which is the whole of WI-412 (WI-381 REVIEW-A finding
+    1).
+
+    The count used to be `max(cards, surfaced)`. The floor existed for the
+    window where a gate/attestation WI is queued before its cards project, but
+    `max` does not merely round up — it MISLABELS: with a queued gate row and
+    zero pending cards it sent the owner to open-items.html to read a page
+    rendering "None - no durable owner action is pending", exactly the
+    disagreement the ruled amendment forbids ("must derive from the SAME
+    pending_block(root) read ... can never disagree").
+
+    JUDGED, and the judgment is why this is not the two-number form the WI
+    floated ("N card(s), M queued attestation row(s)"): the two populations
+    OVERLAP. `_pending_cards` yields blocked rows with a BlockRef plus
+    Draft/Modified spine rows; `surfaced` yields queued gate/attestation
+    frontier rows — and one row can be both, which is the docstring's "common
+    case" of the two reads agreeing. Printing both numbers would report a
+    single waiting row twice, trading an over-count for a double-count and a
+    new way to disagree with the owner surfaces.
+
+    So the arms are made EXCLUSIVE instead. Cards are the authority the
+    amendment names, and when any exist the banner is exactly what it always
+    was. Only when the shared read is empty does the queued row get named, in
+    its own words, without pointing at a page that has nothing on it. No
+    disagreement is representable in either arm, and no row is counted twice.
+    """
+    cards = _pending_cards(root)
+    if cards:
+        return "queue drained - {} ratification(s) waiting in open-items.html".format(
+            len(cards)
+        )
+    return (
+        "queue drained - {} queued attestation row(s); no card has projected "
+        "to open-items.html yet".format(len(surfaced))
     )
 
 
@@ -807,9 +836,20 @@ def _admit(root, table, args, worker, tier, level, lanes_total, config_refusal, 
         # THE BARRIER OPENS. The station is idle by construction (`_admission`
         # answers wait while any lane is out); settle any residue so the batch
         # runs as the sole toucher of trunk.
+        #
+        # COUNT IT BEFORE THE DRAIN, exactly as `_station_exit` does: after
+        # the drain those branches have merged and are no longer residue, so
+        # the number is unrecoverable at exit. Crediting it here is what keeps
+        # the banner's contract — every WI integrated in the run is counted,
+        # whatever admission path merged it — true for the barrier-open arm
+        # too (WI-412, WI-381 REVIEW-A finding 3; the same undercount rounds 1
+        # and 2 fixed for the exit arm). The credit is deliberately AFTER the
+        # code check: a drain that failed merged nothing to claim.
+        residue = len(integrate.finished_branches(root))
         code = _drain(root, tier)
         if code != 0:
             return False, code
+        state["merged"] += residue
         return _claim_lanes(
             root, table, args, worker, [payload], True, config_refusal, state
         )
