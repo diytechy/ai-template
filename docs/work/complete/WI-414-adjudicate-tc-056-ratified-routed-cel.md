@@ -37,9 +37,12 @@ ratified definitions it hangs from still describe the old one:
 So the stale `Method`/`Expected` are not, as first judged, an unrelated defect
 that happened to sit in the same row. They are direct evidence that the merge
 moved the test case's behavioral scope without moving its ratified definition.
-Under `PROCESS_OPTIONS.md`'s rule that `Verifies` states everything a test
-verifies (IF contracts included), adding two contracts to a case whose subject
-had just been swapped is a scope change, not a citation fix.
+The judgment rests on the ENDPOINT COMPARISON, not on the order of edits
+inside the branch. `Verifies` is a TRACED cell, not a ratified one, so
+registering IF-093/IF-094 can be perfectly accurate seam bookkeeping in its own
+right; what moved scope is that across the range the case's subject was swapped
+while its ratified definitions were not. The amendment is the visible edge of
+that, not the whole of it.
 
 WHERE IT IS ROUTED, AND WHY NOTHING IS MINTED HERE. §A5.2 routes a real scope
 change to a `spine` row, and that row already exists and already owns this.
@@ -58,10 +61,20 @@ have minted a redundant row alongside WI-390's existing scope rather than
 colliding with it; and it was too narrow anyway, naming only TC-056 when SR-055
 and LLR-056 are equally false.
 
-NO STATUS FLIP EITHER. Flipping TC-056 would assert the case is verified against
-definitions that currently contradict the code. The Modified/re-attest flow
-belongs to WI-390's amendment, with the owner present, which is the sitting that
+NO STATUS FLIP IS AVAILABLE HERE, which is a different statement from
+declining one. TC-056 is already `Verified`, so there is no Modified -> Verified
+flip to make; the flip arm belongs to the no-scope-moved path. On the
+scope-moved path the Status movement that IS owed — Modified plus re-attest on
+the ratified cells — opens with WI-390's amendment, at the owner sitting that
 row exists to cost exactly once.
+
+THE §A5.2 OUTPUT THIS ROW PRODUCES. Scope-moved authorizes filing a real spine
+WI and/or re-scoping the queued rows whose premises moved. Filing a second spine
+row would duplicate WI-390, so this row takes the other arm: WI-390's spec now
+carries a `## Re-scope (WI-414, 2026-08-02)` section naming the three cells and
+this row as its origin. That is a work-registry output, not a pointer buried in
+a closed Deliverable — and it re-dates WI-390 against its amended SpecRef, which
+is the re-affirmation the standing `check_trajectory` clock warning asks for.
 
 ## Context
 
