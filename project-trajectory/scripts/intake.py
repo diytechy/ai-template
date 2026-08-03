@@ -60,6 +60,7 @@ Contracts: IF-090, IF-091, IF-092 — the interface seams this module declares (
 from __future__ import annotations
 
 import argparse
+import hashlib
 import re
 import sys
 import tomllib
@@ -459,9 +460,12 @@ def _amendment_drafts(root, before, after):
 
 
 def _returned_spec(root, wi_id):
-    """The handed-back spec's `(relpath, frontmatter, handback_reason)` on the
-    post-merge trunk — searched across the OPEN directories a handback may
-    return to (queued/draft/deferred). None when it cannot be found/read."""
+    """The handed-back spec's `(relpath, frontmatter, handback_reason, note)`
+    on the post-merge trunk — searched across the OPEN directories a handback
+    may return to (queued/draft/deferred). None when it cannot be found/read.
+
+    `note` is the whole `## Handback` section verbatim: the return event's own
+    written record, and the thing `_return_token` identifies it by."""
     for status_dir in ("queued", "draft", "deferred"):
         hits = sorted((Path(root) / WORK / status_dir).glob(wi_id + "-*.md"))
         for hit in hits:
@@ -474,11 +478,13 @@ def _returned_spec(root, wi_id):
                 continue
             reason = ""
             _, sep, note = text.partition(ac.SPEC_HANDBACK)
-            if sep:
+            if not sep:
+                note = ""
+            else:
                 reason = next(
                     (ln.strip() for ln in note.splitlines() if ln.strip()), ""
                 )
-            return hit.relative_to(Path(root)).as_posix(), meta, reason
+            return hit.relative_to(Path(root)).as_posix(), meta, reason, note
     return None
 
 
@@ -488,6 +494,43 @@ def _rev7(root, rev):
     sweep CLI and the slot's full sha name the same event the same way."""
     code, out = ac.git(root, "rev-parse", str(rev))
     return out.strip()[:7] if code == 0 and out.strip() else str(rev)[:7]
+
+
+def _return_token(note):
+    """The token naming the RETURN EVENT itself: a digest of its own `##
+    Handback` note.
+
+    WHY NOT THE MERGE SHA (the original defect, WI-388 REVIEW-A finding 6). The
+    slot passes the handback merge, but the by-hand `intake.py sweep` defaults
+    `--after` to symbolic `HEAD`, which resolves to whatever is checked out
+    NOW — and the mint's own bookkeeping commit has already moved it. Every
+    bare re-sweep named one event differently and minted a duplicate.
+
+    WHY NOT THE SPEC'S LAST-TOUCH COMMIT either, which was this row's first
+    attempt and what REVIEW-A rejected: `git log -1 -- <path>` names the last
+    touch for ANY reason. Clearing a `blockref` to re-queue moves it. Moving a
+    still-marked spec `queued/` -> `deferred/` moves it AND the path. Untracked
+    or shallow history has no answer and fell back to the changing observer.
+    And `%h` returns an *unambiguous* abbreviation git lengthens on collision,
+    so truncating it could make two distinct returns share a token and silently
+    suppress a judgement somebody was owed — the worst failure available here.
+
+    THE NOTE IS THE EVENT'S OWN RECORD, so identify it by that and nothing
+    else. `handback.returned_spec` writes the section; `_note` fills it with
+    the lane name and the commit span of the work that did not finish. It needs
+    no git history, so shallow clones and untracked trees behave the same as
+    any other; it does not move when the spec is re-queued, deferred or
+    renamed, because none of those rewrite the note; and a genuinely new return
+    rewrites it (new lane, new span) and so mints its own disposition.
+
+    THE LIMIT, STATED PRECISELY THIS TIME: two returns whose `## Handback`
+    sections are byte-identical share a token. That means the same lane name
+    AND the same commit span AND the same reason — i.e. a return that recorded
+    nothing new about what happened. The span moves whenever any work landed,
+    which is what a lane that ran at all produces.
+    """
+    digest = hashlib.sha256(note.strip().encode("utf-8")).hexdigest()
+    return digest[:12]
 
 
 def _handback_drafts(root, outcomes, after7):
@@ -502,7 +545,9 @@ def _handback_drafts(root, outcomes, after7):
                 err=True,
             )
             continue
-        relpath, meta, reason = found
+        relpath, meta, reason, note = found
+        # The token names the RETURN EVENT itself: see `_return_token`.
+        event7 = _return_token(note)
         if (meta.get("safety_class") or "").strip().lower() == "adjudication":
             # The no-recursion invariant, intake end: a disposition row never
             # spawns a disposition row. hand_back refuses this shape too; a
@@ -516,16 +561,23 @@ def _handback_drafts(root, outcomes, after7):
             continue
         drafts.append(
             {
-                # The handback MERGE's sha is the title's event token
-                # (REVIEW-A finding 3, the amendment title's sha discipline
-                # applied to trigger b): a re-queued row's SECOND handback is
-                # a NEW event that mints its own disposition — never a silent
-                # dedupe that leaves nobody owed the judgement — while a
-                # re-run for the SAME merge still dedupes exactly.
+                # The RETURN EVENT's own sha is the title's event token
+                # (WI-413; REVIEW-A finding 3's sha discipline, corrected at
+                # WI-388 REVIEW-A finding 6 to name the event rather than the
+                # observer): a re-queued row's SECOND handback is a NEW event
+                # that mints its own disposition — never a silent dedupe that
+                # leaves nobody owed the judgement — while ANY number of
+                # re-sweeps of the same return dedupe exactly, including the
+                # bare `sweep` whose HEAD has moved on.
+                # The relpath is deliberately NOT in the title: the title
+                # is the dedup key, and a still-marked spec legitimately moves
+                # (queued/ -> deferred/, or a rename) without that being a new
+                # return. The path still travels on `specref` below, where it
+                # is a pointer rather than an identity.
                 "title": (
-                    "dispose: {} handed back at {} ({}) - {} (a disposition "
+                    "dispose: {} handed back ({}) - {} (a disposition "
                     "row never hands back; R3)".format(
-                        wi_id, after7, relpath, _DISPOSITION_OUTCOMES
+                        wi_id, event7, _DISPOSITION_OUTCOMES
                     )
                 ),
                 "kind": "adjudication",
