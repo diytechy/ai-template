@@ -48,6 +48,23 @@ cells moved here. Byte deltas on budgeted files: none (AGENTS.template.md /
 PROCESS.md / PROCESS_OPTIONS.md untouched). PROJECT_STATE.html not
 committed on the branch (§5.2 trunk-owned).
 
+**Rework (station red, 2026-08-02):** the refresh's `check_trajectory
+--strict` convicted the derived-vocabulary imports as undeclared
+cross-component seams (traj_panels CMP-002 → integrate/schedule CMP-004;
+kept log `out/run-logs/refresh-refused-wi-389-process-tab-station-flow.log`).
+Declared in one rework commit: IF-093/IF-094 Consumes rows (the
+IF-092/IF-078 constants shape; IF-093 Notes carries the `sink` marker so the
+render leaf owes no boilerplate Provides row), the single-line
+`Contracts: IF-093, IF-094` docstring citation in traj_panels, and TC-056
+Verifies extended with both IF ids (its evidence tests are the driving sync
+pins — the WI-388 finding-4 lesson). Proof, watched: scratch-regen of the
+arch map rc=0, then `check_trajectory.py --strict` rc=0 — both ERRORs gone,
+WARN list at trunk baseline minus the now-named traj_panels connectivity
+WARN; `trace.py --strict --no-placeholders --html --require-verified
+--strict-schema` rc=0 (interfaces=91, interface-findings=0).
+docs/architecture.md restored un-committed (§5.2). This corrects the
+Deliverable's original "registration: none owed" judgment.
+
 **Verification** (watched, work commit 56dc580d):
 tests/test_traj_panels.py 34 passed in 6.12s
 <!-- fig: cmd="python -m pytest -q tests/test_traj_panels.py" rev=56dc580d -->

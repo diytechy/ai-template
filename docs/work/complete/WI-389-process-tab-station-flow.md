@@ -54,10 +54,26 @@ lost-race dashed edge emerged from under the slot card's shadow (start moved
 clear). PROJECT_STATE.html is not committed on this branch (§5.2
 trunk-owned); the station refresh regenerates it at merge.
 
-Registration judged: none owed — an existing registered module redrawn; the
-TRACED pointer cells follow the code (TC-051/TC-056 Evidence → the real test
-nodes in tests/test_traj_panels.py; LLR-056 CodeSymbol →
-process_panel/_station_panel). DEVIATION, recorded for WI-390: the RATIFIED
+Registration: the station refresh convicted the original "none owed"
+judgment — the derived-vocabulary imports are CROSS-COMPONENT (traj_panels
+CMP-002 → integrate/schedule CMP-004) and owed declared seams. Reworked
+2026-08-02 (station red, one rework commit): IF-093 (traj_panels Consumes
+integrate.OUTCOME_DIRS + BAR_GREEN; Notes carries the `sink` marker — a
+render leaf provides nothing across components) and IF-094 (traj_panels
+Consumes schedule's kind tables) in docs/requirements/interfaces.csv, the
+single-line `Contracts: IF-093, IF-094` docstring citation in traj_panels
+(the WI-381 wrapped-paragraph trap avoided), and TC-056's Verifies extended
+with both IF ids — its evidence tests are the sync pins that genuinely drive
+the seams (the WI-388 finding-4 lesson). Proven by scratch-regen: arch map
+regenerated rc=0, then `check_trajectory.py --strict` rc=0 with both
+cross-component ERRORs gone and the WARN list at trunk baseline minus the
+now-named traj_panels connectivity WARN; `trace.py --strict
+--no-placeholders --html --require-verified --strict-schema` rc=0
+(interfaces=91, interface-findings=0); docs/architecture.md restored
+un-committed (§5.2 trunk-owned). The TRACED pointer cells follow the code
+(TC-051/TC-056 Evidence → the real test nodes in tests/test_traj_panels.py;
+LLR-056 CodeSymbol → process_panel/_station_panel). DEVIATION, recorded for
+WI-390: the RATIFIED
 prose of SR-050/SR-055/LLR-051/LLR-056/TC-051/TC-056 still describes the
 resume-loop/hoops picture — amending it is the program close's spine scope,
 not this ordinary row's.

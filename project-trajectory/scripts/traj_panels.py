@@ -9,7 +9,10 @@ landing-hero Next-work card. The facade re-exports, so consumers are unchanged.
 outcomes, the bar attestation label, the kind tables): the station render
 derives its stage vocabulary from the modules that ship the flow, instead of
 restating it as literals that drift (the 2026-08-01 diagram review's ruling —
-the dashboard must never be pinned to itself)."""
+the dashboard must never be pinned to itself).
+
+Contracts: IF-093, IF-094 — the constants-only Consumes seams on integrate (OUTCOME_DIRS, BAR_GREEN) and schedule (the kind tables); rows of record in docs/requirements/interfaces.csv.
+"""
 
 import html
 import json
