@@ -1,44 +1,56 @@
-## 2026-08-02 — WI-414: TC-056's amended cell is clean; its Method is not
+## 2026-08-02 — WI-414: scope moved, and WI-390 already owns it
 
 **Summary.** The first fully machine-minted adjudication (WI-388's intake fired
-it at the wi-389 merge) reached its judgment: the amended cell moved no scope,
-and adjudicating it surfaced a real defect elsewhere in the same row, which is
-drafted as a follow-up rather than waved through.
+it at the wi-389 merge) reached its judgment: **scope moved**. Nothing is minted
+and no Status is flipped, because the amendment this row adjudicates is one
+visible edge of a re-scope the queued spine row WI-390 already owns.
 
-**The adjudicated cell — scope did not move.** `TC-056 Verifies` went
-`SR-055;LLR-056` → `SR-055;LLR-056;IF-093;IF-094`. Both added ids are the
-derived-vocabulary seams WI-389 declared, and the interfaces registry says so in
-their own rows: IF-093 is "seam driven by TC-056's WI-389 station sync pins",
-IF-094 names `test_station_barrier_and_admission_arms_pin_to_the_dispatcher`
-explicitly. Those are the tests already in this row's `Evidence`. The amendment
-made the citation accurate; it did not widen what the case covers. No flip was
-owed — the row is already `Verified`.
+**The first judgment was wrong, and that is the useful part of this entry.** It
+read the `Verifies` amendment (`SR-055;LLR-056` → `+IF-093;IF-094`) against the
+state *inside* the WI-389 branch — where the station tests already existed and
+the commit merely registered the two seams — and concluded the citation had been
+made accurate rather than widened. Independent REVIEW-A rejected it: this row
+adjudicates the merged range `7894457..5211f07`, not one intra-branch commit.
+Across the whole range TC-056's `Evidence` was *replaced* (hoop tests out,
+station-cycle tests in) and only then did `Verifies` gain two interface
+contracts. **An argument that depends on intra-branch commit order is not an
+argument about the range under adjudication** — that is the reasoning error, and
+it is the kind a green harness cannot catch.
 
-**What the adjudication found instead.** `TC-056`'s `Method` and `Expected`
-still describe the render WI-389 **deleted**: two intersecting hoops, the shared
-`LLM_Agent` hub, loop A / loop B, and the "6 + 5 = 11" edge count of the WI-250
-picture — while `Evidence` cites the station-cycle tests WI-389 shipped.
-Verified by grep, not by eye: the only surviving mention of that render in
-`traj_panels.py` is a comment recording that it was replaced.
+**What the range actually did.** The case now verifies a different render while
+its ratified definitions still describe the old one: `SR-055` still requires
+"two circular working loops" and one shared `LLM_Agent` hub and is still
+`Verified`; `LLR-056` still describes those loops; TC-056's own
+`Method`/`Expected` still specify two hoops and the 6+5=11 edge count; and the
+shipped render emits one station cycle. So the stale prose is not a defect that
+happens to share a row with the amendment — it is evidence the merge moved the
+case's behavioral scope without moving its ratified definition.
 
-So a `Verified` case carries a method nobody can run and an Expected describing
-artefacts the render no longer emits. **The reason this rot was invisible is the
-uncomfortable part:** the row's Evidence tests all pass, and they test the *new*
-render, so every mechanical check stayed green while the prose describing what
-is being proved quietly stopped being true. Rewriting those cells is outside
-this row's scope (it adjudicates the amended cell), so it is drafted in
-`## Dispositions` and the intake mints it at this row's merge — drafts-not-mints,
-ruling R1.
+**Routed, not filed.** §A5.2 sends a real scope change to a `spine` row, and
+that row exists. WI-389's own Deliverable says so in as many words: "DEVIATION,
+recorded for WI-390: the RATIFIED prose of
+SR-050/SR-055/LLR-051/LLR-056/TC-051/TC-056 still describes the
+resume-loop/hoops picture — amending it is the program close's spine scope, not
+this ordinary row's."
 
-**Verification.** The draft parses with intake's own parser rather than by
-inspection: `_disposition_drafts` returns 1 draft, `refusal=None`, with the
-derived `context` and `kind` filled in.
+**The drafted disposition was removed.** The first attempt filed a
+`## Dispositions` row for TC-056's Method/Expected at `ordinary`/`quick`. Review
+made three concrete objections and all three hold: editing ratified cells owes a
+re-attest and §A5.2 routes that to `spine`; intake dedupes only by exact title,
+so the row would have been *minted alongside* WI-390's scope rather than
+colliding with it; and it named only TC-056 when SR-055 and LLR-056 are equally
+false. No cancellation and no open item are warranted either — the work and the
+authority are already settled.
+
+**No Status flip.** Flipping TC-056 would assert the case is verified against
+definitions that presently contradict the code. The Modified/re-attest flow
+belongs to WI-390's amendment, with the owner present — the single sitting that
+row exists to cost exactly once.
 
 **A sharp edge worth recording for the next adjudication row.** A minted spec
 carries an advisory `## Context` block, and `parse_spec_deliverable` clips the
-body at `## Context` *before* it looks for `## Deliverable`. So a Deliverable
-written after the Context block is clipped away entirely and R-A reports it
-empty, with a message ("status=done but the Deliverable is empty") that points
-at the symptom rather than the ordering. The section order a closed minted row
-needs is **`## Deliverable` → `## Context` → `## Dispositions`**; the draft
-parser partitions on `## Dispositions` independently, so it is unaffected.
+body at `## Context` *before* looking for `## Deliverable`. A Deliverable
+written after Context is clipped away entirely and R-A reports it empty, with a
+message naming the symptom rather than the ordering. Required order:
+**`## Deliverable` → `## Context`**. REVIEW-A independently confirmed this is
+the format's real contract, not a workaround.

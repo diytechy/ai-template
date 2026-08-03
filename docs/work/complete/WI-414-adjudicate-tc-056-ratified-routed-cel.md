@@ -8,34 +8,60 @@ safety_class = "adjudication"
 
 ## Deliverable
 
-Adjudicated 2026-08-02. The judgment, and the follow-up it surfaced:
+Adjudicated 2026-08-02. **SCOPE MOVED.** No new row is filed and no Status is
+flipped: the amendment this row adjudicates is one visible edge of a re-scope
+that WI-390 already owns.
 
-**The adjudicated cell: SCOPE DID NOT MOVE.** `TC-056 Verifies` went
-`SR-055;LLR-056` -> `SR-055;LLR-056;IF-093;IF-094`. Both added ids are the
-derived-vocabulary seams WI-389 declared, and the interfaces registry says so in
-their own rows rather than leaving it to be inferred: IF-093 is "seam driven by
-TC-056's WI-389 station sync pins", IF-094 is "seam driven by TC-056's WI-389
-station sync pin (`test_station_barrier_and_admission_arms_pin_to_the_dispatcher`:
-the rendered exclusive-kind list must equal the schedule-derived one)". Those are
-the very tests already sitting in this row's own `Evidence` cell. The amendment
-therefore recorded what the case already verified — it made the citation
-accurate, it did not widen what the case covers. No flip is owed either: the row
-is already `Verified`.
+THE FIRST JUDGMENT WAS WRONG, AND THE ERROR IS WORTH RECORDING. It read the
+`Verifies` amendment (`SR-055;LLR-056` -> `+IF-093;IF-094`) against the state
+*inside* the WI-389 branch, where the station tests already existed and the
+commit merely registered the two seams — and concluded the citation had been
+made accurate rather than widened. REVIEW-A rejected that: this row adjudicates
+the merged range `7894457..5211f07`, not one intra-branch commit. Across the
+whole range TC-056's `Evidence` was *replaced* — hoop tests out, station-cycle
+tests in — and only then did `Verifies` gain two new interface contracts. An
+argument that depends on intra-branch commit order is not an argument about the
+range under adjudication.
 
-**But the adjudication surfaced a real defect in the same row, and it gets its
-own follow-up rather than a silent pass.** `TC-056`'s `Method` and `Expected`
-still describe the render WI-389 DELETED — "two intersecting hoops", the shared
-`LLM_Agent` hub, "loop A"/"loop B", and a stage-and-arrow count ("6 for the
-5-stage intake loop + 5 for the 4-stage decision loop = 11") that belongs to the
-WI-250 picture. Meanwhile its `Evidence` cites the station-cycle tests WI-389
-shipped. Verified by grep rather than by eye: the only surviving mention of that
-render in `traj_panels.py` is line 454's comment recording that it was
-*replaced*.
+WHAT THE RANGE ACTUALLY DID. The case now verifies a different render, while the
+ratified definitions it hangs from still describe the old one:
 
-That leaves a `Verified` test case whose stated method cannot be run against the
-code, and whose Expected describes artefacts the render no longer emits — a
-proof text that has quietly stopped being true. It is out of this row's scope to
-rewrite (this row adjudicates the amended cell), so it is drafted below.
+- `SR-055` still requires "two circular working loops" and one shared
+  `LLM_Agent` hub — still `Verified`.
+- `LLR-056` still describes those loops.
+- `TC-056`'s own `Method`/`Expected` still specify two intersecting hoops and
+  the 6+5=11 edge count.
+- The shipped render emits ONE station cycle; the only surviving mention of the
+  hoops in `traj_panels.py` is the comment recording their replacement.
+
+So the stale `Method`/`Expected` are not, as first judged, an unrelated defect
+that happened to sit in the same row. They are direct evidence that the merge
+moved the test case's behavioral scope without moving its ratified definition.
+Under `PROCESS_OPTIONS.md`'s rule that `Verifies` states everything a test
+verifies (IF contracts included), adding two contracts to a case whose subject
+had just been swapped is a scope change, not a citation fix.
+
+WHERE IT IS ROUTED, AND WHY NOTHING IS MINTED HERE. §A5.2 routes a real scope
+change to a `spine` row, and that row already exists and already owns this.
+WI-389's own Deliverable records it in as many words: "DEVIATION, recorded for
+WI-390: the RATIFIED prose of SR-050/SR-055/LLR-051/LLR-056/TC-051/TC-056 still
+describes the resume-loop/hoops picture — amending it is the program close's
+spine scope, not this ordinary row's." WI-390 is queued, spine class, and its
+title claims THE SPINE AMENDMENT plus "any further amendments the seven builds
+surface".
+
+The first attempt drafted a `## Dispositions` row for TC-056's Method/Expected.
+That section is REMOVED, for three reasons the review made concrete: it declared
+`ordinary`/`quick` for work that edits ratified cells and owes a re-attest,
+which §A5.2 routes to `spine`; intake dedupes only by exact title, so it would
+have minted a redundant row alongside WI-390's existing scope rather than
+colliding with it; and it was too narrow anyway, naming only TC-056 when SR-055
+and LLR-056 are equally false.
+
+NO STATUS FLIP EITHER. Flipping TC-056 would assert the case is verified against
+definitions that currently contradict the code. The Modified/re-attest flow
+belongs to WI-390's amendment, with the owner present, which is the sitting that
+row exists to cost exactly once.
 
 ## Context
 
@@ -50,13 +76,3 @@ Outcomes (§A5.2): flip rows back to Verified where no scope moved
 2), or draft the real scope-change / re-scope / cancellation rows in
 a `## Dispositions` section of THIS spec — intake mints them at this
 row's merge (drafts-not-mints, R1).
-
-## Dispositions
-
-```toml
-title = "TC-056's Method and Expected still describe the DELETED WI-250 two-hoop render (LLM_Agent hub, loop A/loop B, the 6+5=11 edge count) while its Evidence cites the WI-389 station-cycle tests - rewrite both cells onto the station cycle actually rendered (_station_svg/_station_panel: the directed ring, the three terminal outcomes, the serial merge-slot waist, the spine-barrier gate glyph, the intake mint arm), so the case's stated method is one somebody can run. Surfaced by WI-414's adjudication of the Verifies amendment; the Verifies cell itself was judged scope-not-moved. Verify by regenerating and re-reading, not by eye - the render's own tests are the Evidence and they already pass, which is exactly why this rot was invisible."
-workstream = "process"
-buildtier = "quick"
-safety_class = "ordinary"
-specref = "docs/test/test-cases.csv"
-```
