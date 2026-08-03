@@ -7,3 +7,30 @@ buildtier = "medium"
 safety_class = "spine"
 needs = ["WI-380", "WI-381", "WI-383", "WI-384", "WI-386", "WI-387", "WI-388", "~WI-389"]
 +++
+
+## Context
+
+### Re-scope (WI-414, 2026-08-02)
+
+Added by the WI-414 adjudication of `TC-056 Verifies` on merged trunk
+`7894457..5211f07`, as the §A5.2 scope-moved output. This row's spine amendment
+explicitly covers the ratified prose WI-389 left describing the deleted
+two-intersecting-hoops render, which the merge made false:
+
+- `SR-055` — still requires "two circular working loops" and one shared
+  `LLM_Agent` hub; still `Verified`.
+- `LLR-056` — still describes those loops.
+- `TC-056` `Method` + `Expected` — still specify two hoops and the 6+5=11 edge
+  count, while the row's `Evidence` now cites the station-cycle tests and the
+  shipped render emits ONE station cycle.
+
+WI-389's own Deliverable already routed these here ("amending it is the program
+close's spine scope, not this ordinary row's") and names SR-050/LLR-051/TC-051
+alongside them; WI-414 confirms the routing from the adjudication side and adds
+nothing new to own. The Modified/re-attest flow for these cells belongs to this
+row's owner sitting — deliberately NOT flipped at WI-414, which is why no Status
+moved there.
+
+This section also re-dates this row against its amended SpecRef
+(`docs/concurrency-v2.md`), which is the re-affirmation the standing
+`check_trajectory` SpecRef-clock warning asks for.
