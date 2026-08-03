@@ -693,29 +693,42 @@ def test_the_spine_batch_admits_first_and_together(tmp_path, capfd):
     assert "queue drained" in out
 
 
-def hand_finished_branch(root, wid="WI-777", branch="wi-777", slug="residue"):
-    """A lane finished BETWEEN runs, by hand: trunk still shows the spec under
-    active/, while the branch has already moved it to complete/. That is what
-    `finished_branches` calls residue at the next tick — finished, unmerged,
-    and settled by whichever drain reaches it first. Trunk must already hold
-    everything it is going to hold when this is called: the branch is cut from
-    HEAD, and §A2 admits it only while trunk is still its ancestor."""
-    write_spec(root, "active/" + branch, wid, slug=slug, specref="seed.txt")
-    _commit(root, "claim: {} -> active/{} (by hand)".format(wid, branch), when=T_CODE)
+def hand_finished_branch(root, rows=(("WI-777", "residue"),), branch="wi-777"):
+    """A lane finished BETWEEN runs, by hand: trunk still shows its spec(s)
+    under active/, while the branch has already moved them to complete/. That
+    is what `finished_branches` calls residue at the next tick — finished,
+    unmerged, and settled by whichever drain reaches it first.
+
+    `rows` is a list because ONE branch may carry SEVERAL WIs (that is what an
+    exclusive batch is), and a residue count that credits branches instead of
+    WIs is only visible when a residue branch carries more than one. Trunk must
+    already hold everything it is going to hold when this is called: the branch
+    is cut from HEAD, and §A2 admits it only while trunk is still its
+    ancestor."""
+    for wid, slug in rows:
+        write_spec(root, "active/" + branch, wid, slug=slug, specref="seed.txt")
+    _commit(
+        root,
+        "claim: {} -> active/{} (by hand)".format(
+            ";".join(w for w, _s in rows), branch
+        ),
+        when=T_CODE,
+    )
     _git(root, "branch", branch)
     wt, err = drv.integrate.lane_worktree(root, branch)
     assert err is None, err
-    name = "{}-{}.md".format(wid, slug)
-    src = wt / "docs" / "work" / "active" / branch / name
-    dst = wt / "docs" / "work" / "complete" / name
-    dst.parent.mkdir(parents=True, exist_ok=True)
-    dst.write_text(
-        src.read_text(encoding="utf-8").replace('specref = "seed.txt"\n', ""),
-        encoding="utf-8",
-        newline="\n",
-    )
-    _git(wt, "rm", "-q", "docs/work/active/{}/{}".format(branch, name))
-    _commit(wt, "{}: hand-finished between runs".format(wid), when=T_LATER)
+    for wid, slug in rows:
+        name = "{}-{}.md".format(wid, slug)
+        src = wt / "docs" / "work" / "active" / branch / name
+        dst = wt / "docs" / "work" / "complete" / name
+        dst.parent.mkdir(parents=True, exist_ok=True)
+        dst.write_text(
+            src.read_text(encoding="utf-8").replace('specref = "seed.txt"\n', ""),
+            encoding="utf-8",
+            newline="\n",
+        )
+        _git(wt, "rm", "-q", "docs/work/active/{}/{}".format(branch, name))
+    _commit(wt, "hand-finished between runs", when=T_LATER)
     return branch
 
 
@@ -730,11 +743,20 @@ def test_residue_settled_at_barrier_open_is_counted_in_the_drained_banner(
     # has counted its residue this way since REVIEW-A round 1; this is the
     # same contract, on the other admission path.
     root = stub_harness_repo(tmp_path)
+    # TWO spine rows, deliberately: they admit as ONE batch on ONE branch, so a
+    # count that credits branches instead of WIs reports 3 where 4 integrated.
+    # A single-WI batch cannot tell those two units apart (REVIEW-A finding 1).
     write_spec(
         root, "queued", "WI-501", slug="alpha", safety="spine", specref="seed.txt"
     )
-    _commit(root, "file the spine row", when=T_LATER)
-    hand_finished_branch(root)
+    write_spec(
+        root, "queued", "WI-502", slug="beta", safety="spine", specref="seed.txt"
+    )
+    _commit(root, "file the spine batch", when=T_LATER)
+    # ...and the residue branch carries TWO as well, for the same reason on the
+    # other counting path: the barrier-open credit is taken from the residue
+    # branches, so a single-WI residue branch cannot tell WIs from branches.
+    hand_finished_branch(root, rows=(("WI-777", "residue"), ("WI-778", "second")))
     worker = closing_all_worker()
 
     rc = drv.run(root, drive_args(), worker=worker, tier="smoke")
@@ -743,12 +765,21 @@ def test_residue_settled_at_barrier_open_is_counted_in_the_drained_banner(
     complete = root / "docs" / "work" / "complete"
     # All three really did integrate: the residue at barrier-open, the spine
     # batch it made way for, and the ordinary row behind the barrier.
-    for name in ("WI-777-residue.md", "WI-501-alpha.md", "WI-401-widget.md"):
+    for name in (
+        "WI-777-residue.md",
+        "WI-778-second.md",
+        "WI-501-alpha.md",
+        "WI-502-beta.md",
+        "WI-401-widget.md",
+    ):
         assert (complete / name).is_file(), name
-    assert "3 WI(s) integrated this run." in out, out
-    # The pre-fix undercount, pinned by name so a regression cannot pass by
-    # merely containing a plausible-looking number.
-    assert "2 WI(s) integrated this run." not in out
+    assert "5 WI(s) integrated this run." in out, out
+    # Every way this count has been wrong, pinned by name so no regression can
+    # pass by printing a merely plausible number: 3 dropped the residue
+    # entirely (the original finding), and 4 is either unit counted as
+    # branches — the batch's second WI, or the residue branch's.
+    for wrong in ("2 WI(s)", "3 WI(s)", "4 WI(s)"):
+        assert wrong + " integrated this run." not in out, (wrong, out)
 
 
 def test_attended_ratification_row_drains_and_exits_zero_with_the_banner(
@@ -786,23 +817,29 @@ def test_attended_ratification_row_drains_and_exits_zero_with_the_banner(
     assert (root / "docs" / "work" / "queued" / "WI-600-ratify.md").is_file()
 
 
-def test_surface_banner_counts_cards_alone_and_never_double_reports(
-    tmp_path, monkeypatch
-):
-    # The other arm, and the reason WI-412 did not take the two-number form
-    # the spec floated: `_pending_cards` and `surfaced` OVERLAP — one waiting
-    # row can be both a projected card and a queued gate row on the frontier
-    # (the "two reads agreeing" common case). Printing both numbers would
-    # report that single row twice. With cards present the banner is exactly
-    # the classic line, counted off the shared pending read alone.
+def test_surface_banner_names_both_sources_and_never_sums_them(tmp_path, monkeypatch):
+    # The mixed arm. `_pending_cards` and `surfaced` OVERLAP — one waiting row
+    # can be both a projected card and a queued gate row — so they must never
+    # be SUMMED. Review drove the cost of the first fix, which suppressed the
+    # queued rows entirely whenever any card existed: one unrelated card hid
+    # two real attestation rows. Both are named, separately, with the overlap
+    # stated; no total is asserted that neither read supports.
     root = git_repo(tmp_path)
     monkeypatch.setattr(drv, "_pending_cards", lambda _root: ["one waiting card"])
 
-    line = drv._surface_banner(root, ["WI-600"])
+    line = drv._surface_banner(root, ["WI-600", "WI-601"])
 
-    assert line == ("queue drained - 1 ratification(s) waiting in open-items.html")
-    assert "2" not in line
-    assert "queued attestation row" not in line
+    assert "1 ratification(s) waiting in open-items.html" in line, line
+    assert "2 queued attestation row(s) on the frontier" in line, line
+    assert "the two reads may name the same row" in line, line
+    # never summed: 1 card + 2 rows must not be reported as 3 of anything
+    assert "3" not in line, line
+
+    # ...and with nothing queued, the cards arm is still exactly the classic
+    # line the ruled amendment names.
+    assert drv._surface_banner(root, []) == (
+        "queue drained - 1 ratification(s) waiting in open-items.html"
+    )
 
 
 # --- the empty-frontier ladder (§A4 amendment, ruled 2026-08-01) ---------------

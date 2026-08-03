@@ -156,8 +156,31 @@ def _session_config_refusal(root, args):
     )
 
 
+def _residue_wi_count(root):
+    """How many WI **ids** the finished-but-unmerged branches carry.
+
+    The banner promises "N WI(s) integrated", and that is not the branch count:
+    a spine batch is ONE branch carrying several WIs, and the barrier-open
+    drain is exactly where batches turn up. Counted off the TRUNK's claim
+    directories (`integrate._claimed_wi_ids`) — the same evidence the merge
+    slot reads — so the banner and the merge can never disagree about how many
+    WIs a branch was carrying (REVIEW-A finding 1)."""
+    return sum(
+        len(integrate._claimed_wi_ids(root, branch))
+        for branch in integrate.finished_branches(root)
+    )
+
+
 def _drain(root, tier):
     """Refresh every finished branch, then run the merge slot. An exit code.
+
+    NOT TRANSACTIONAL, and no caller may assume it is: `integrate.integrate`
+    merges the finished branches in sequence and stops at the first refusal, so
+    a NONZERO return can still have merged some of them (driven at REVIEW-A
+    finding 3). Both call sites answer that by printing no success count at all
+    rather than crediting a partial drain; a caller that ever needs the partial
+    figure must have this function report what it actually integrated instead
+    of counting beforehand.
 
     THE SPECULATIVE HALF of the station protocol (docs/concurrency-v2.md §A2.0,
     ruled 2026-07-31). The 11-minute bar runs HERE, outside the slot, so the
@@ -583,7 +606,10 @@ def _poll(root, table, args, tier, state):
             if state["fatal"] is None:
                 state["fatal"] = code
         elif verb == "merged":
-            state["merged"] += 1
+            # WI(s), NOT lanes: an exclusive spine batch is ONE branch carrying
+            # several WIs, so crediting the lane under-reports exactly the
+            # admission path the barrier exists for (REVIEW-A finding 1).
+            state["merged"] += len(ln.wi_ids)
             state["stall"] = 0
         else:
             head_now = ac.git(root, "rev-parse", "HEAD")[1].strip()
@@ -648,40 +674,45 @@ def _pending_cards(root):
 
 def _surface_banner(root, surfaced):
     """The §A8 attended stop's banner: exit 0, naming what waits — and naming
-    the RIGHT surface, which is the whole of WI-412 (WI-381 REVIEW-A finding
-    1).
+    the RIGHT surface, which is the whole of this row (REVIEW-A finding 1).
 
-    The count used to be `max(cards, surfaced)`. The floor existed for the
-    window where a gate/attestation WI is queued before its cards project, but
-    `max` does not merely round up — it MISLABELS: with a queued gate row and
-    zero pending cards it sent the owner to open-items.html to read a page
-    rendering "None - no durable owner action is pending", exactly the
-    disagreement the ruled amendment forbids ("must derive from the SAME
-    pending_block(root) read ... can never disagree").
+    The count used to be `max(cards, surfaced)`. That did not merely
+    over-report, it MISLABELED: with a queued gate row and zero pending cards
+    it sent the owner to open-items.html to read "None - no durable owner
+    action is pending", exactly the disagreement the ruled amendment forbids
+    ("must derive from the SAME pending_block(root) read ... can never
+    disagree").
 
-    JUDGED, and the judgment is why this is not the two-number form the WI
-    floated ("N card(s), M queued attestation row(s)"): the two populations
-    OVERLAP. `_pending_cards` yields blocked rows with a BlockRef plus
-    Draft/Modified spine rows; `surfaced` yields queued gate/attestation
-    frontier rows — and one row can be both, which is the docstring's "common
-    case" of the two reads agreeing. Printing both numbers would report a
-    single waiting row twice, trading an over-count for a double-count and a
-    new way to disagree with the owner surfaces.
+    THE JUDGMENT, REVISED UNDER REVIEW. The first attempt made the two arms
+    exclusive: cards if any exist, else the queued rows. That still could not
+    disagree with `pending_block`, but review drove the cost — one unrelated
+    card silently SUPPRESSED two genuinely queued attestation rows, hiding
+    work the owner had every reason to see. The reason given for suppressing
+    them (that the populations overlap, since `_pending_cards` yields blocked
+    rows with a BlockRef plus Draft/Modified spine rows while `surfaced`
+    yields queued gate/attestation frontier rows, and one row can be both)
+    justifies never SUMMING them — it does not justify hiding one.
 
-    So the arms are made EXCLUSIVE instead. Cards are the authority the
-    amendment names, and when any exist the banner is exactly what it always
-    was. Only when the shared read is empty does the queued row get named, in
-    its own words, without pointing at a page that has nothing on it. No
-    disagreement is representable in either arm, and no row is counted twice.
-    """
-    cards = _pending_cards(root)
+    So both are named, separately labelled, never added together, with the
+    possible overlap stated in the line itself. A reader can see each source
+    for what it is; no arithmetic asserts a total that neither read supports;
+    and the cards arm still says exactly what it always said, off the shared
+    read the amendment names."""
+    cards = len(_pending_cards(root))
+    queued = len(surfaced)
+    if cards and queued:
+        return (
+            "queue drained - {} ratification(s) waiting in open-items.html; "
+            "{} queued attestation row(s) on the frontier (the two reads may "
+            "name the same row)".format(cards, queued)
+        )
     if cards:
         return "queue drained - {} ratification(s) waiting in open-items.html".format(
-            len(cards)
+            cards
         )
     return (
         "queue drained - {} queued attestation row(s); no card has projected "
-        "to open-items.html yet".format(len(surfaced))
+        "to open-items.html yet".format(queued)
     )
 
 
@@ -843,9 +874,10 @@ def _admit(root, table, args, worker, tier, level, lanes_total, config_refusal, 
         # the banner's contract — every WI integrated in the run is counted,
         # whatever admission path merged it — true for the barrier-open arm
         # too (WI-412, WI-381 REVIEW-A finding 3; the same undercount rounds 1
-        # and 2 fixed for the exit arm). The credit is deliberately AFTER the
-        # code check: a drain that failed merged nothing to claim.
-        residue = len(integrate.finished_branches(root))
+        # and 2 fixed for the exit arm). Credited only on a GREEN drain - a
+        # red one CAN also have merged branches, but that arm prints no count,
+        # so there is nothing to misreport (see `_drain`).
+        residue = _residue_wi_count(root)
         code = _drain(root, tier)
         if code != 0:
             return False, code
@@ -866,7 +898,7 @@ def _station_exit(root, tier, verb, payload, state):
     (e.g. built by hand between runs), so every arm drains the residue first —
     and the drained banner COUNTS what that drain merges (REVIEW-A round 1:
     the banner undercounted residue)."""
-    residue = len(integrate.finished_branches(root))
+    residue = _residue_wi_count(root)
     code = _drain(root, tier)
     if code != 0:
         return code
