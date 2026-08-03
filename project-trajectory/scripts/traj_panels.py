@@ -2,13 +2,23 @@
 gen_trajectory.py).
 
 The OKF concept graph + type-tiered drill, the method-reference Process tab
-(lifecycle x gates, the resume loop, the two working-loop hoops), and the
-landing-hero Next-work card. The facade re-exports, so consumers are unchanged."""
+(lifecycle x gates, the station/lane cycle, the slice cadence), and the
+landing-hero Next-work card. The facade re-exports, so consumers are unchanged.
+
+`integrate` and `schedule` are imported for their CONSTANTS only (the terminal
+outcomes, the bar attestation label, the kind tables): the station render
+derives its stage vocabulary from the modules that ship the flow, instead of
+restating it as literals that drift (the 2026-08-01 diagram review's ruling —
+the dashboard must never be pinned to itself).
+
+Contracts: IF-093, IF-094 — the constants-only Consumes seams on integrate (OUTCOME_DIRS, BAR_GREEN) and schedule (the kind tables); rows of record in docs/requirements/interfaces.csv.
+"""
 
 import html
 import json
-import math
 
+import integrate
+import schedule
 import traj_parse
 from traj_graph import GraphGeom, flat_graph
 from traj_parse import OKF_TIER_ORDER, _gate_value, _okf_nodes, _process_doc
@@ -436,226 +446,402 @@ def _know_panel(root, svg, details):
 # the spine registries, work-item counts from work-items.csv — and linking out to
 # the process docs everywhere a canonical home exists. The in-view restatement
 # is limited to the relationships no single doc states as one picture (the
-# lifecycle x gates ordering, the loop chips, the slice -> phase -> gate-bar
+# lifecycle x gates ordering, the station cycle, the slice -> phase -> gate-bar
 # cadence) — the WI-085 anti-duplication ruling.
 
-# --- the two intersecting working-loop hoops (SR-055) ---------------------------
+# --- the station/lane cycle (WI-389, docs/concurrency-v2.md ruled 2026-07-31) ---
 #
-# WI-250 render redesign. The former render laid the two loops out as CSS-grid
-# "racetracks" — pill borders drawn around a grid of stage cards. A render
-# critique (the render-dashboard-critique skill) judged the actual pixels: the
-# flow direction was invisible (a border is not a directed cycle) and the "both
-# loops start here" junction read as a box off to the side, not as the point
-# where the two hoops meet. This render draws the honest picture SR-055 asks
-# for: two directed hoops (a real cycle of stage cards wired by curved,
-# arrow-headed edges) that overlap at one shared LLM_Agent hub in the middle —
-# the AI-terminal / resume-script entry both loops pass through. Fully server-
-# computed (fixed trig, `.1f` rounding, sorted/no-clock) so the `--check`
-# freshness byte-compare stays stable and a data-less repo renders identically.
+# WI-389 render redesign, replacing the WI-250 two-intersecting-hoops picture
+# (which drew the pre-station serial loop). One directed closed cycle at the
+# level the tab's audience reads: claim -> lane build -> the three terminal
+# outcomes converging on the station refresh -> the serial merge slot -> trunk
+# advance -> the post-merge intake mint -> the dispatcher tick — with the spine
+# barrier and the intake arm visible. The 2026-08-01 diagram review's
+# constraint governs the vocabulary: stage names are DERIVED from the shipped
+# modules' own constants (integrate.OUTCOME_DIRS, integrate.BAR_GREEN,
+# schedule's kind tables) wherever one exists, and every label that must stay a
+# literal here is held by a sync pin against the module it mirrors
+# (tests/test_traj_panels.py, the station suite) — the dashboard is never again
+# pinned to itself. Fully server-computed (fixed coordinates, `.1f` rounding,
+# sorted derivations, no clocks) so the `--check` freshness byte-compare stays
+# stable and a data-less repo renders identically.
 
-LOOP_GEOM = {
-    "cy": 320.0,  # shared vertical center of both hoops
-    "r": 210.0,  # hoop radius
-    "ax": 280.0,  # loop-A (intake) hoop center x
-    "bx": 560.0,  # loop-B (human-decision) hoop center x — overlaps A (dist 280<2r)
-    "gap": 120.0,  # angular window (deg) reserved hub-side; no stage sits in it
-    "cardw": 136.0,  # stage-card width
-    "cardh": 48.0,  # stage-card height
-    "hubw": 138.0,  # LLM_Agent hub width
-    "hubh": 60.0,  # LLM_Agent hub height
-    "bow": 30.0,  # how far a loop edge bows outward from the hoop center
-    "labely": 30.0,  # hoop-name label baseline (top margin, clear of top cards)
-    "width": 840.0,  # viewBox width
-    "height": 620.0,  # viewBox height
-    "notemax": 30,  # note char budget before it truncates to fit the card
+STATION_GEOM = {
+    "colL": 150.0,  # left column x — dispatcher tick / intake mint / trunk advance
+    "colM": 450.0,  # middle column x — claim / merge slot (+ the property caption)
+    "colR": 750.0,  # right column x — lane build / outcomes / station refresh
+    "rowT": 70.0,  # top-row card centers
+    "rowB": 420.0,  # bottom-row card centers
+    "oy": (175.0, 245.0, 315.0),  # outcome-card centers, top -> bottom
+    "iy": 245.0,  # intake-mint card center (left column midpoint)
+    "cardw": 176.0,  # station-card width
+    "cardh": 62.0,  # station-card height (title + two note lines)
+    "outw": 168.0,  # outcome-card width
+    "outh": 44.0,  # outcome-card height (title + one note line)
+    "width": 900.0,  # viewBox width
+    "height": 545.0,  # viewBox height
+    "notemax": 34,  # note char budget before it truncates to fit its card
 }
 
-
-def _loop_node_xy(cx, cy, r, deg):
-    """Circle point at `deg` (math angle: 0°=right, 90°=up), SVG y-down."""
-    rad = math.radians(deg)
-    return cx + r * math.cos(rad), cy - r * math.sin(rad)
-
-
-def _loop_stage_angles(jdeg, spin, n, gap):
-    """The `n` stage angles around a hoop: evenly spread over the (360−gap)° arc
-    the hub gap leaves open, walking from the hub in `spin` (±1) direction, so the
-    listed order reads as the flow around the ring and the two stages nearest the
-    hub sit gap/2 clear of it (no crowding at the shared lens)."""
-    seg = (360.0 - gap) / n
-    return [jdeg + spin * (gap / 2.0 + (k + 0.5) * seg) for k in range(n)]
+# The admission-arm vocabulary (the §A8 policy table). HARDCODED because the
+# dispatcher exports no constant for it (`dispatch._kind_action` returns these
+# as literals); the sync pin — test_station_barrier_and_admission_arms_pin_to_
+# the_dispatcher — recomputes the set from `_kind_action` over every kind x
+# gate-policy level and reds here the moment the dispatcher's vocabulary moves.
+_ADMISSION_ARMS = ("parallel", "exclusive", "batch", "surface")
 
 
-def _loop_svg(hub_xy, loops):
-    """One SVG drawing the working loops as intersecting hoops. `loops` is a list
-    of (loop_id, name, hoop_center_x, junction_deg, spin, stages); each stage is
-    (title, note, href_or_None). Stages sit around their hoop (the junction angle
-    reserved for the shared hub), wired hub→s1→…→sn→hub by curved arrows that bow
-    outward so the sequence traces the hoop; `spin` ±1 picks the rotation sense.
-    The hub is drawn last, on top, at `hub_xy`."""
-    g = LOOP_GEOM
-    cy, r = g["cy"], g["r"]
-    hx, hy = hub_xy
-
-    edge_layer, card_layer, region_layer = [], [], []
-    for loop_id, name, cx, jdeg, spin, stages in loops:
-        angles = _loop_stage_angles(jdeg, spin, len(stages), g["gap"])
-        pts = [_loop_node_xy(cx, cy, r, a) for a in angles]
-
-        # A faint filled hoop-region disc behind each loop makes the two
-        # overlapping rings — and their shared lens — legible at a glance. Each
-        # hoop is a closed cycle (hub→…→hub), marked `data-cycle="closed"`. The
-        # loop name rides the top margin above its hoop, clear of every card, and
-        # is emitted here (before the cards) so a stage's loop membership is
-        # readable in source order too.
-        region_layer.append(
-            '<circle class="hoop hoop-{}" data-cycle="closed" '
-            'cx="{:.1f}" cy="{:.1f}" r="{:.1f}"/>'
-            '<text class="hooplab" x="{:.1f}" y="{:.1f}" text-anchor="middle">'
-            "{}</text>".format(esc(loop_id), cx, cy, r, cx, g["labely"], esc(name))
+def _exclusive_kinds():
+    """The kinds the spine barrier holds for, DERIVED from schedule's ruled
+    tables (§A1/§A8), in rank order — the frontier's own sort."""
+    return [
+        kind
+        for kind in sorted(
+            schedule._KIND_CONCURRENCY,
+            key=lambda k: (schedule._KIND_RANK[k], k),
         )
+        if schedule._KIND_CONCURRENCY[kind] == schedule.CONCURRENCY_EXCLUSIVE
+    ]
 
-        # The directed cycle: hub → stage1 → … → stageN → hub. Each edge bows
-        # outward from the hoop center so the strand of arrows traces the ring.
-        chain = [(hx, hy)] + pts + [(hx, hy)]
-        for i in range(len(chain) - 1):
-            x1, y1 = chain[i]
-            x2, y2 = chain[i + 1]
-            mx, my = (x1 + x2) / 2, (y1 + y2) / 2
-            ox, oy = mx - cx, my - cy  # outward normal from hoop center
-            olen = math.hypot(ox, oy) or 1.0
-            cxp, cyp = mx + ox / olen * g["bow"], my + oy / olen * g["bow"]
-            # Trim both ends so the arrow starts/lands just outside the cards.
-            x1t, y1t = _shorten(x1, y1, cxp, cyp, 28.0)
-            x2t, y2t = _shorten(x2, y2, cxp, cyp, 32.0)
-            edge_layer.append(
-                '<path class="floop" d="M{:.1f},{:.1f} Q{:.1f},{:.1f} {:.1f},{:.1f}" '
-                'marker-end="url(#floparrow)"/>'.format(x1t, y1t, cxp, cyp, x2t, y2t)
-            )
 
-        for i, ((title, note, href), (px, py)) in enumerate(zip(stages, pts), 1):
-            card_layer.append(_loop_card(loop_id, i, title, note, href, px, py))
+def _outcome_cards():
+    """The terminal outcomes as (name, [declaring dirs]) pairs, DERIVED from
+    integrate.OUTCOME_DIRS — the same one-home read the merge slot uses to
+    classify a finished lane (§A3: the outcome IS the directory the claimed
+    specs moved into; there is no fourth answer). Sorted for determinism."""
+    by_outcome = {}
+    for status_dir, outcome in integrate.OUTCOME_DIRS.items():
+        by_outcome.setdefault(outcome, []).append(status_dir)
+    return [(outcome, sorted(dirs)) for outcome, dirs in sorted(by_outcome.items())]
 
-    hub = (
-        '<g class="hub"><rect x="{:.1f}" y="{:.1f}" width="{:.1f}" height="{:.1f}" '
-        'rx="12"/><text x="{:.1f}" y="{:.1f}" text-anchor="middle">'
-        '<tspan class="hubname" x="{:.1f}" dy="-5">LLM_Agent</tspan>'
-        '<tspan class="hubsub" x="{:.1f}" dy="16">shared entry · both loops</tspan>'
-        '<tspan class="hubsub" x="{:.1f}" dy="12">start here</tspan></text></g>'.format(
-            hx - g["hubw"] / 2,
-            hy - g["hubh"] / 2,
-            g["hubw"],
-            g["hubh"],
-            hx,
-            hy,
-            hx,
-            hx,
-            hx,
-        )
+
+def _station_card(key, title, notes, href, cx, cy, w, h):
+    """One station card centered at (cx, cy): a rounded rect, a bold title and
+    up to two (fit-truncated) note lines, wrapped in an `<a>` when a canonical
+    home exists. The full text always rides a `<title>` so truncation never
+    loses information."""
+    g = STATION_GEOM
+    x, y = cx - w / 2, cy - h / 2
+    shown = [
+        n if len(n) <= g["notemax"] else n[: g["notemax"] - 1] + "…" for n in notes
+    ]
+    spans = '<tspan class="stgt" x="{:.1f}" dy="{:.0f}">{}</tspan>'.format(
+        cx, -12.0 if len(notes) > 1 else -2.0, esc(title)
     )
-    defs = _arrow_markers(("floparrow", "floparrow-head"))
-    body = defs + "".join(region_layer + edge_layer + card_layer) + hub
-    return (
-        '<svg class="loopsvg" viewBox="0 0 {:.0f} {:.0f}" '
-        'preserveAspectRatio="xMidYMid meet" role="{}" '
-        'aria-label="The two working loops drawn as intersecting hoops sharing '
-        'one central entry hub">{}</svg>'.format(
-            g["width"], g["height"], _svg_role(body), body
+    for i, note in enumerate(shown):
+        spans += '<tspan class="stgn" x="{:.1f}" dy="{}">{}</tspan>'.format(
+            cx, 14 if i == 0 else 12, esc(note)
         )
-    )
-
-
-def _shorten(x, y, tx, ty, dist):
-    """Point `dist` px from (x,y) toward (tx,ty) — trims an edge off a card."""
-    dx, dy = tx - x, ty - y
-    d = math.hypot(dx, dy) or 1.0
-    f = min(dist / d, 1.0)
-    return x + dx * f, y + dy * f
-
-
-def _loop_card(loop_id, idx, title, note, href, px, py):
-    """One stage card centered at (px, py): a rounded rect with a bold title and a
-    (fit-truncated) note, wrapped in an `<a>` when a canonical home exists. The
-    full note always rides a `<title>` so truncation never loses information."""
-    g = LOOP_GEOM
-    w, h = g["cardw"], g["cardh"]
-    x, y = px - w / 2, py - h / 2
-    shown = note if len(note) <= g["notemax"] else note[: g["notemax"] - 1] + "…"
     body = (
         "<title>{}</title>"
         '<rect x="{:.1f}" y="{:.1f}" width="{:.1f}" height="{:.1f}" rx="8"/>'
-        '<text x="{:.1f}" y="{:.1f}" text-anchor="middle">'
-        '<tspan class="stgt" x="{:.1f}" dy="-2">{}</tspan>'
-        '<tspan class="stgn" x="{:.1f}" dy="14">{}</tspan></text>'.format(
-            esc(title + " — " + note),
-            x,
-            y,
-            w,
-            h,
-            px,
-            py,
-            px,
-            esc(title),
-            px,
-            esc(shown),
+        '<text x="{:.1f}" y="{:.1f}" text-anchor="middle">{}</text>'.format(
+            esc(title + " — " + " · ".join(notes)), x, y, w, h, cx, cy, spans
         )
     )
-    attrs = 'class="stg" data-node="{}-{}"'.format(esc(loop_id), idx)
+    attrs = 'class="stg" data-node="st-{}"'.format(esc(key))
     if href:
         return '<a href="{}" {}>{}</a>'.format(esc(href), attrs, body)
     return "<g {}>{}</g>".format(attrs, body)
 
 
-def _loop_panel(root):
-    """The two intersecting working-loop hoops (SR-055) as one self-contained
-    `<div class="loops">` block: the intake loop (A) and the human-decision
-    loop (B), drawn as two directed hoops that overlap at a single shared
-    LLM_Agent hub rendered once. Each stage links to its canonical home *when
-    that home exists in this repo*, so every emitted href resolves (a repo
-    missing the file renders the stage as a plain card — still deterministic;
-    the tab itself is gated on docs/gate upstream). No clocks, no repo counts:
-    the loop structure is the method's, not the repo's data, so it renders
-    byte-identically regardless of the registries."""
+def _st_edge(edge_id, x1, y1, x2, y2, qx=None, qy=None, alt=False):
+    """One directed station edge (a straight segment, or a quadratic when a
+    bow point is given), arrow-headed and keyed by `data-edge` so the tests
+    can assert the flow topology rather than coordinates."""
+    if qx is None:
+        d = "M{:.1f},{:.1f} L{:.1f},{:.1f}".format(x1, y1, x2, y2)
+    else:
+        d = "M{:.1f},{:.1f} Q{:.1f},{:.1f} {:.1f},{:.1f}".format(x1, y1, qx, qy, x2, y2)
+    return (
+        '<path class="{}" data-edge="{}" d="{}" marker-end="url(#stnarrow)"/>'.format(
+            "stedge alt" if alt else "stedge", esc(edge_id), d
+        )
+    )
+
+
+def _station_svg(root):
+    """The station cycle as one self-contained SVG. Layout is a fixed rounded-
+    rectangle circuit (three columns x two rows): the top row runs dispatcher
+    tick -> claim -> lane build, the right column fans build out into the
+    derived terminal outcomes and back into the station refresh (three arrows
+    into one merge — the §A3 property, made unmissable), the bottom row runs
+    refresh -> merge slot -> trunk advance, and the left column closes the ring
+    through the intake mint back to the tick. Every edge carries an arrowhead
+    (the WI-250 critique's lesson: a border is not a directed cycle)."""
 
     def home(rel):
         return rel if (root / rel).exists() else None
 
     # The work-item registry's home, whichever it is (Phase 2b): the spec folder
-    # when this repo has migrated, else the CSV. `home` is an existence probe, so
-    # asking it for both and taking the first that answers keeps every emitted
-    # href resolvable without the panel knowing which home won.
+    # when this repo has migrated, else the CSV (an existence probe, so every
+    # emitted href resolves; a repo missing a home renders a plain card).
     wi_home = home("docs/work") or home("docs/requirements/work-items.csv")
-    intake_loop = [
-        ("Intake", "owner/agent hands work in", home("docs/status.md")),
-        ("Triage → WIs", "scoped work items with spec detail", wi_home),
-        ("Resume loop", "scheduler derives the ready frontier", wi_home),
-        ("Build / review", "BUILD then REVIEW-A/B", home("docs/log.md")),
-        ("Merge", "verdicts merged; the loop repeats", home("docs/log.md")),
-    ]
-    decide_loop = [
-        (
-            "Open items",
-            "incl. the gate-ratification table",
-            home("docs/open-items.html"),
+    log_home = home("docs/log.md")
+    opts_doc = _process_doc(
+        root, "docs/process-options.md", "project-trajectory/PROCESS_OPTIONS.md"
+    )
+
+    g = STATION_GEOM
+    L, M, R = g["colL"], g["colM"], g["colR"]
+    T, B, iy = g["rowT"], g["rowB"], g["iy"]
+    w, h = g["cardw"], g["cardh"]
+    ow, oh = g["outw"], g["outh"]
+    oy = g["oy"]
+    outcomes = _outcome_cards()
+    bar_label = integrate.BAR_GREEN.rstrip(":")
+
+    # The ring edges + the outcome fan, one closed directed cycle. Anchors are
+    # card-edge points; ends stop 5px short so the arrowheads land cleanly.
+    edges = [
+        _st_edge("tick-claim", L + 93.0, T, M - 93.0, T),
+        _st_edge("claim-build", M + 88.0, T, R - 93.0, T),
+        _st_edge("build-{}".format(outcomes[0][0]), R, T + h / 2, R, oy[0] - 27.0),
+        _st_edge(
+            "build-{}".format(outcomes[1][0]),
+            R - 88.0,
+            T + 16.0,
+            R - 89.0,
+            oy[1],
+            qx=585.0,
+            qy=170.0,
         ),
-        ("Human review", "the owner reviews and rules", home("docs/open-items.html")),
-        ("Decisions record", "the ruling appends to the log", home("docs/log.md")),
-        ("Merge", "the item leaves the surface; repeats", home("docs/log.md")),
+        _st_edge(
+            "build-{}".format(outcomes[2][0]),
+            R - 88.0,
+            T + 26.0,
+            R - 89.0,
+            oy[2],
+            qx=560.0,
+            qy=206.0,
+        ),
+        _st_edge(
+            "{}-refresh".format(outcomes[0][0]),
+            R + 84.0,
+            oy[0],
+            R + 68.0,
+            B - 36.0,
+            qx=898.0,
+            qy=282.0,
+        ),
+        _st_edge(
+            "{}-refresh".format(outcomes[1][0]),
+            R + 84.0,
+            oy[1],
+            R + 36.0,
+            B - 36.0,
+            qx=880.0,
+            qy=317.0,
+        ),
+        _st_edge("{}-refresh".format(outcomes[2][0]), R, oy[2] + 22.0, R, B - 36.0),
+        _st_edge("refresh-slot", R - 88.0, B, M + 93.0, B),
+        _st_edge("slot-advance", M - 88.0, B, L + 93.0, B),
+        _st_edge("advance-intake", L, B - h / 2, L, iy + 36.0),
+        _st_edge("intake-tick", L, iy - h / 2, L, T + 36.0),
+        # The one bounded retry: a lost slot race re-refreshes (dashed).
+        _st_edge(
+            "slot-refresh",
+            M + 64.0,
+            B + 35.0,
+            R - 20.0,
+            B + 34.0,
+            qx=605.0,
+            qy=512.0,
+            alt=True,
+        ),
     ]
 
-    g = LOOP_GEOM
-    hub_xy = ((g["ax"] + g["bx"]) / 2, g["cy"])
-    svg = _loop_svg(
-        hub_xy,
-        [
-            # loop A hub-gap faces right (toward the hub); it spins CCW.
-            ("a", "A · Intake loop", g["ax"], 0.0, +1, intake_loop),
-            # loop B hub-gap faces left (toward the hub); it spins CW so the two
-            # hoops mirror around the shared junction.
-            ("b", "B · Human-decision loop", g["bx"], 180.0, -1, decide_loop),
-        ],
+    # The spine barrier, drawn as a gate ON the admission edge (tick -> claim):
+    # an exclusive-kind row stops new admission until the station is idle.
+    barrier = (
+        '<g class="stbarrier"><title>The spine barrier — an exclusive-kind row '
+        "({}) stops new admission; the lanes drain; the batch runs alone as the "
+        "sole toucher of trunk.</title>"
+        '<rect class="stbar" x="288.5" y="58.0" width="3.5" height="24.0"/>'
+        '<rect class="stbar" x="296.5" y="58.0" width="3.5" height="24.0"/>'
+        '<text class="stbarlab" x="294.0" y="96.0" text-anchor="middle">'
+        "spine barrier</text></g>".format(esc(" · ".join(_exclusive_kinds())))
     )
-    return '<div class="loops">{}</div>'.format(svg)
+
+    # The §A3 property, stated once in the ring's empty center; line two is the
+    # derived outcome vocabulary itself.
+    center = (
+        '<text class="stprop" x="{:.1f}" y="238.0" text-anchor="middle">'
+        "every lane ends in a merge</text>"
+        '<text class="stprop2" x="{:.1f}" y="256.0" text-anchor="middle">'
+        "{} — a branch never hangs</text>".format(
+            M, M, esc(" · ".join(name for name, _ in outcomes))
+        )
+    )
+    race_label = (
+        '<text class="stlab" x="600.0" y="505.0" text-anchor="middle">'
+        "lost race → refresh again</text>"
+    )
+
+    # Lane multiplicity: the build card renders over a stacked shadow pair —
+    # up to `lanes` worker lanes run this leg in parallel (§A4.3).
+    shadows = "".join(
+        '<rect class="stshadow" x="{:.1f}" y="{:.1f}" width="{:.1f}" '
+        'height="{:.1f}" rx="8"/>'.format(R - w / 2 + d, T - h / 2 + d, w, h)
+        for d in (16.0, 8.0)
+    )
+
+    cards = [
+        _station_card(
+            "tick",
+            "Dispatcher tick",
+            ("frontier → admission by kind", "exclusive row ⇒ the barrier"),
+            opts_doc,
+            L,
+            T,
+            w,
+            h,
+        ),
+        _station_card(
+            "claim",
+            "Claim",
+            ("serial trunk commit · branch cut", "specs → active/<branch>/"),
+            wi_home,
+            M,
+            T,
+            w,
+            h,
+        ),
+        shadows,
+        _station_card(
+            "build",
+            "Lane build",
+            ("one worker session per lane", "own worktree · parallel lanes"),
+            log_home,
+            R,
+            T,
+            w,
+            h,
+        ),
+    ]
+    for (name, dirs), y in zip(outcomes, oy):
+        target = "queued" if "queued" in dirs else dirs[0]
+        cards.append(
+            _station_card(
+                name,
+                name,
+                ("specs → " + " ".join(d + "/" for d in dirs),),
+                home("docs/work/" + target),
+                R,
+                y,
+                ow,
+                oh,
+            )
+        )
+    cards += [
+        _station_card(
+            "refresh",
+            "Station refresh",
+            (
+                "merge trunk in · trunk_step · bar",
+                "green ⇒ {} @ branch tip".format(bar_label),
+            ),
+            opts_doc,
+            R,
+            B,
+            w,
+            h,
+        ),
+        # The merge slot, the cycle's serial waist — the emphasized node,
+        # emitted in flow order (refresh → slot → advance): nothing overlaps
+        # it, so source order can read as the ring reads.
+        '<g class="slot" data-node="st-slot"><title>The merge slot — the '
+        "exclusive turn to advance trunk. Serial and sub-second: the bar runs "
+        "outside it, the slot only re-checks ancestry and merges.</title>"
+        '<rect x="{:.1f}" y="{:.1f}" width="{:.1f}" height="{:.1f}" rx="12"/>'
+        '<text x="{:.1f}" y="{:.1f}" text-anchor="middle">'
+        '<tspan class="slotname" x="{:.1f}" dy="-12">Merge slot</tspan>'
+        '<tspan class="slotsub" x="{:.1f}" dy="15">serial · one branch at a time'
+        "</tspan>"
+        '<tspan class="slotsub" x="{:.1f}" dy="12">ancestor check → --no-ff '
+        "merge</tspan></text></g>".format(M - w / 2, B - h / 2, w, h, M, B, M, M, M),
+        _station_card(
+            "advance",
+            "Trunk advance",
+            ("ff trunk to the barred tree", "unload the lane worktree"),
+            log_home,
+            L,
+            B,
+            w,
+            h,
+        ),
+        _station_card(
+            "intake",
+            "Intake mint",
+            ("new rows at the landed merge:", "amendment · disposition · drafts"),
+            wi_home,
+            L,
+            iy,
+            w,
+            h,
+        ),
+    ]
+
+    defs = _arrow_markers(("stnarrow", "stnarrow-head"))
+    body = (
+        defs
+        + '<g class="ring" data-cycle="closed">'
+        + "".join(edges)
+        + "</g>"
+        + barrier
+        + center
+        + race_label
+        + "".join(cards)
+    )
+    return (
+        '<svg class="stationsvg" viewBox="0 0 {:.0f} {:.0f}" '
+        'preserveAspectRatio="xMidYMid meet" role="{}" '
+        'aria-label="The station cycle drawn as one directed loop: dispatcher '
+        "tick, claim, lane build, the terminal outcomes converging on the "
+        "station refresh, the serial merge slot, trunk advance and the intake "
+        'mint">{}</svg>'.format(g["width"], g["height"], _svg_role(body), body)
+    )
+
+
+def _station_panel(root):
+    """The station cycle (the concurrency-v2 flow as shipped by dispatch.py /
+    lane.py / integrate.py / intake.py) as a self-contained block: the SVG ring
+    plus the escalation notes no card has room to state — the barrier, the
+    admission arms, the empty-frontier ladder and the two bounded retries.
+    Stage links resolve via existence probes; no clocks, no repo counts: the
+    structure is the method's, not the repo's data, so it renders
+    byte-identically regardless of the registries."""
+
+    def home(rel):
+        return rel if (root / rel).exists() else None
+
+    oi_home = home("docs/open-items.html")
+    oi_link = (
+        '<a href="{}">open-items.html</a>'.format(esc(oi_home))
+        if oi_home
+        else "open-items.html"
+    )
+    notes = (
+        '<ul class="esc">\n'
+        "<li><b>Spine barrier</b> — an exclusive-kind row ({kinds}) stops new "
+        "admission; the lanes drain; the batch runs alone — one window, one "
+        "owner sitting.</li>\n"
+        "<li><b>Admission arms</b> — what the dispatcher does with a ready row, "
+        "by kind × the declared gate policy: {arms}. Surfaced ratifications "
+        "drain to cards on {oi}; the run exits 0 with the asks visible.</li>\n"
+        "<li><b>Empty frontier</b> — the exit ladder: a registry gap census "
+        "hands the intake its mint (gap-closure rows re-fill the frontier); "
+        "else pending ratifications surface; else an honest drain.</li>\n"
+        "<li><b>Red bar · lost race</b> — a red refresh goes back to the lane "
+        "to fix on the branch; a slot ancestor miss re-refreshes, and after one "
+        "lost race the branch takes the slot for its retry.</li>\n"
+        "</ul>"
+    ).format(
+        kinds=esc(" · ".join(_exclusive_kinds())),
+        arms=esc(" · ".join(_ADMISSION_ARMS)),
+        oi=oi_link,
+    )
+    return '<div class="station">{}</div>\n{}'.format(_station_svg(root), notes)
 
 
 def process_panel(root, wis, stats):
@@ -663,12 +849,12 @@ def process_panel(root, wis, stats):
     docs/gate (the tab is then omitted -> a gate-less repo renders
     byte-identically; the Knowledge-tab vacuity idiom). Three linked panels:
     artifact lifecycle x gates (live tier counts; the stages the current
-    derived gate spans are highlighted), the agent-resume loop (the managed
-    agent_loop phase vocabulary with its escalation edges), slices ->
-    phase -> gates (commit bar vs gate bar), and (SR-055) the two circular working loops — intake and
-    human-decision — sharing one LLM_Agent entry, each stage linking to its
-    canonical home. Fully self-contained (style inside the panel, no script
-    needed — the shared tab switcher handles it); sorted inputs, no clocks."""
+    derived gate spans are highlighted), the station cycle (WI-389 — the
+    concurrency-v2 station/lane model as shipped, its stage vocabulary derived
+    from the flow modules' own constants), and slices -> phase -> gates
+    (commit bar vs gate bar). Fully self-contained (style inside the panel, no
+    script needed — the shared tab switcher handles it); sorted inputs, no
+    clocks."""
     gate = _gate_value(root)
     if not gate:
         return None
@@ -726,26 +912,10 @@ def process_panel(root, wis, stats):
         for b, n in bars
     )
 
-    # Panel 2 — the resume loop (the agent_loop.py phase vocabulary; CRITIQUE is
-    # tier-conditional, so its chip renders dashed).
-    loop_steps = [
-        ("read status", ""),
-        ("PLAN", ""),
-        ("BUILD", ""),
-        ("REVIEW-A/B", ""),
-        ("CRITIQUE", "opt"),
-        ("INTEGRATE", ""),
-        ("commit", ""),
-        ("hook / gate", ""),
-        ("repeat", ""),
-    ]
-    loop_lis = "".join(
-        '<li class="stg{}"><b>{}</b></li>'.format(" " + cls if cls else "", esc(s))
-        for s, cls in loop_steps
-    )
-
-    # Panel 4 — the two circular working loops (SR-055).
-    loops_html = _loop_panel(root)
+    # Panel 2 — the station cycle (WI-389). The pre-station resume-loop chips
+    # died with the serial loop they drew; the station render derives its own
+    # vocabulary (see _station_svg).
+    station_html = _station_panel(root)
 
     style = (
         "<style>"
@@ -773,21 +943,18 @@ def process_panel(root, wis, stats):
         "#process ul.esc{font-size:var(--body);color:var(--muted);margin:.4rem 0 0;"
         "padding-left:1.2rem;}"
         "#process ul.esc b{color:var(--text);}"
-        # Panel 4 — the two intersecting working-loop hoops sharing one LLM_Agent
-        # hub. Drawn as a single self-contained SVG (`.loopsvg`); the two `.hoop`
-        # discs overlap so their shared lens is where the hub sits, `.floop`
-        # edges carry the directional arrows, and the `.hub` card renders last on
-        # top. Scales down with the panel; no grid tracks / pseudo-element arrows.
-        "#process .loops{margin:.7rem 0;}"
-        "#process .loopsvg{display:block;width:100%;height:auto;max-width:720px;"
+        # Panel 2 — the station cycle, a single self-contained SVG
+        # (`.stationsvg`): `.stedge` paths carry the directional arrows (the
+        # dashed `.alt` edge is the bounded lost-race retry), `.stg` cards are
+        # the stations, and the `.slot` node — the serial merge waist — renders
+        # last, emphasized on its own theme-invariant fill token.
+        "#process .station{margin:.7rem 0;}"
+        "#process .stationsvg{display:block;width:100%;height:auto;max-width:860px;"
         "margin:0 auto;font-family:inherit;}"
-        "#process .hoop{fill:var(--accent);opacity:var(--o-wash);stroke:var(--accent);"
-        "stroke-opacity:var(--o-ghost);stroke-width:var(--w-line);}"
-        "#process .hooplab{fill:var(--accent);font-size:var(--nhead);font-weight:700;"
-        "letter-spacing:.01em;}"
-        "#process .floop{fill:none;stroke:var(--muted);stroke-width:var(--w-line);"
+        "#process .stedge{fill:none;stroke:var(--muted);stroke-width:var(--w-line);"
         "opacity:var(--o-muted);}"
-        "#process .floparrow-head{fill:var(--muted);}"
+        "#process .stedge.alt{stroke-dasharray:5 4;}"
+        "#process .stnarrow-head{fill:var(--muted);}"
         "#process a.stg{cursor:pointer;}"
         "#process .stg rect{fill:var(--surface);stroke:var(--border);"
         "stroke-width:var(--w-line);filter:drop-shadow(0 1px 2px rgba(15,23,42,.12));}"
@@ -796,13 +963,21 @@ def process_panel(root, wis, stats):
         "#process .stg:focus{outline:none;}"
         "#process .stgt{fill:var(--text);font-size:var(--nlabel);font-weight:700;}"
         "#process .stgn{fill:var(--muted);font-size:var(--nsub);}"
-        "#process .hub rect{fill:var(--hub);stroke:var(--hub);"
+        "#process .stshadow{fill:var(--surface);stroke:var(--border);"
+        "stroke-width:var(--w-line);}"
+        "#process .stbar{fill:var(--accent);}"
+        "#process .stbarlab{fill:var(--accent);font-size:var(--nsub);"
+        "font-weight:700;letter-spacing:.02em;}"
+        "#process .stlab{fill:var(--muted);font-size:var(--nsub);}"
+        "#process .stprop{fill:var(--text);font-size:var(--nlabel);font-weight:700;}"
+        "#process .stprop2{fill:var(--muted);font-size:var(--nsub);}"
+        "#process .slot rect{fill:var(--slot);stroke:var(--slot);"
         "filter:drop-shadow(0 2px 5px rgba(15,23,42,.28));}"
-        "#process .hubname{fill:#fff;font-size:var(--nhead);font-weight:800;}"
-        # A4 (WI-293): no fill-opacity discount on hub sub-labels — the same rule
-        # `.sub`/`.bsub` already follow. At .85 the effective ink dropped to
-        # 2.57:1 in dark theme; at full opacity on --hub it is 6.29:1.
-        "#process .hubsub{fill:#fff;font-size:var(--nsub);}"
+        "#process .slotname{fill:#fff;font-size:var(--nhead);font-weight:800;}"
+        # A4 (WI-293): no fill-opacity discount on slot sub-labels — the same
+        # rule `.sub`/`.bsub` already follow. At .85 the effective ink dropped
+        # to 2.57:1 in dark theme; at full opacity on --slot it is 6.29:1.
+        "#process .slotsub{fill:#fff;font-size:var(--nsub);}"
         "</style>"
     )
     panel = (
@@ -824,22 +999,18 @@ def process_panel(root, wis, stats):
         'in <a href="' + esc(proc_doc) + '">' + esc(proc_doc) + "</a>. Counts are "
         "live from this repo's registries.</p>\n"
         '<ol class="pflow">' + "".join(stage_lis) + "</ol>\n"
-        "<h3>2 · The resume loop</h3>\n"
-        '<p class="cap">The managed <code>agent_loop.py</code> walk-away flow — '
-        'the full contract is <a href="'
+        "<h3>2 · The station cycle</h3>\n"
+        '<p class="cap">One work item, once around the loop: claimed off the '
+        "ready frontier onto its own lane, built by one worker session, closed "
+        "into a terminal outcome, refreshed against trunk, and merged through "
+        "the serial slot — the intake mint then feeds the registry back to the "
+        'dispatcher. The full contract is <a href="'
         + esc(opts_doc)
         + '">'
         + esc(opts_doc)
-        + "</a> “Unattended operation”. The dashed CRITIQUE phase is "
-        "tier-conditional.</p>\n"
-        '<ol class="pflow">' + loop_lis + "</ol>\n"
-        '<ul class="esc">\n'
-        "<li><b>DESIGN-CHECK</b> — a review finding that indicts the design "
-        "routes the next session to a design pass, not a re-build.</li>\n"
-        "<li><b>Page the human</b> — nothing routable, or the declared gate "
-        "policy requires a human act: the loop parks with the ask recorded in "
-        "<code>docs/status.md</code>.</li>\n"
-        "</ul>\n"
+        + "</a> “Unattended operation” · “Parallel work”.</p>\n"
+        + station_html
+        + "\n"
         "<h3>3 · Slices → phase → gates</h3>\n"
         '<p class="cap">A per-WI slice ends at the <strong>commit bar</strong>; '
         "a phase closes at the <strong>gate bar</strong> — the commit-bar-vs-gate-bar "
@@ -854,13 +1025,6 @@ def process_panel(root, wis, stats):
         + esc(wi_done)
         + " done.</p>\n"
         '<ol class="pflow">' + bar_lis + "</ol>\n"
-        "<h3>4 · The working loops</h3>\n"
-        '<p class="cap">Two circular flows close the method — how work '
-        "<strong>enters</strong> (A) and how the human <strong>decides</strong> "
-        "(B) — both entered by the same agent. Each stage links to its canonical "
-        "home (<code>status.md</code>, <code>work-items.csv</code>, "
-        "<code>open-items.html</code>, <code>log.md</code>); the loop structure is "
-        "the method's, not this repo's data.</p>\n" + loops_html + "\n"
         "</section>"
     )
     return tab_button("process", "Process"), panel

@@ -180,13 +180,15 @@ def test_process_tab_renders_three_panels_from_live_data(tmp_path):
     # SR-050: with a docs/gate the dashboard gains the Process tab — the three
     # linked panels, each joining a canonical data source (docs/gate, the spine
     # registries, the docs/work/ registry) rather than restating hand-set numbers.
+    # WI-389: panel 2 is the station cycle (the concurrency-v2 flow that now
+    # ships), replacing the pre-station serial resume-loop chips.
     with_gate(tmp_path, "G2")
     assert gen(tmp_path).returncode == 0
     text = html_of(tmp_path)
     assert 'data-tab="process"' in text and 'id="process"' in text
     # the three panels are present and titled
     assert "Artifact lifecycle × gates" in text
-    assert "The resume loop" in text
+    assert "The station cycle" in text
     assert "Slices → phase → gates" in text
     # panel 1 joins the spine registries (make_repo: 1 SN, 2 SR / 1 Verified,
     # 3 LLR, 4 TC) — live counts, not prose
@@ -194,10 +196,11 @@ def test_process_tab_renders_three_panels_from_live_data(tmp_path):
     assert "2 SR · 1 verified" in text
     assert "3 LLR" in text and "4 TC" in text
     assert "1 of 2 SR verified" in text
-    # panel 2 carries the real agent_loop phase vocabulary + escalation edges
-    for phase in ("PLAN", "BUILD", "REVIEW-A/B", "CRITIQUE", "INTEGRATE"):
-        assert phase in text
-    assert "DESIGN-CHECK" in text and "Page the human" in text
+    # the pre-station picture is gone: the serial resume-loop chips and their
+    # escalation bullets do not survive the redraw (their successors are the
+    # handback outcome and the surface arm, asserted by the station tests).
+    assert "The resume loop" not in text
+    assert "Page the human" not in text
     # panel 3 states the two bars and joins the WI registry (4 WIs, 1 done)
     assert "commit bar" in text and "gate bar" in text
     assert "4 work items · 1 done." in text
@@ -306,13 +309,20 @@ def test_meta_process_tab_smoke():
         assert (ROOT / href).exists(), href
 
 
-# --- WI-142 / SR-055: the two circular working-loop panels ----------------------
+# --- WI-389: the station/lane cycle (docs/concurrency-v2.md, ruled 2026-07-31) --
+# The station model replaced the WI-250 two-intersecting-hoops picture. The 2026-
+# 08-01 diagram review's constraint governs this suite: the stage vocabulary must
+# never again pin the dashboard to itself — every assertable stage name is either
+# DERIVED in the panel from the shipped module's own constant (integrate.
+# OUTCOME_DIRS, integrate.BAR_GREEN, schedule's kind tables) or, where a label
+# has no exported constant, held by a sync pin against the module it mirrors
+# (dispatch._kind_action, intake.tier_signal), so drift reds.
 
 
-def _loops_div(text):
-    """The `<div class="loops">…</div>` block (Panel 4), balanced across its
+def _station_div(text):
+    """The `<div class="station">…</div>` block (Panel 2), balanced across its
     nested `<div>`s, sliced from the rendered panel/HTML."""
-    start = text.index('<div class="loops">')
+    start = text.index('<div class="station">')
     depth, i = 0, start
     while i < len(text):
         if text.startswith("<div", i):
@@ -322,107 +332,181 @@ def _loops_div(text):
             if depth == 0:
                 return text[start : i + len("</div>")]
         i += 1
-    raise AssertionError("unbalanced loops div")
+    raise AssertionError("unbalanced station div")
 
 
-def test_process_tab_renders_intake_and_decision_loops(tmp_path):
-    # SR-055: the Process tab renders both circular loops as linked flow panels,
-    # each with its ordered stages, and the gate-ratification stage lives in
-    # loop B (the human-decision loop). WI-250: the render is a single SVG
-    # drawing the loops as intersecting hoops, so the assertions target the SVG
-    # structure (hoop discs, arrow-wired stage cards) rather than a CSS grid.
+def test_process_tab_renders_the_station_cycle(tmp_path):
+    # WI-389: the Process tab draws the station/lane model as one self-contained
+    # SVG — the ring claim → lane build → (terminal outcomes) → station refresh
+    # → merge slot → trunk advance → intake mint → dispatcher tick, drawn as a
+    # single directed closed cycle.
     with_gate(tmp_path, "G2")
     assert gen(tmp_path).returncode == 0
     text = html_of(tmp_path)
-    assert "The working loops" in text
-    loops = _loops_div(text)
-    # one self-contained SVG with both named hoops
-    assert 'class="loopsvg"' in loops
-    assert "A · Intake loop" in loops and "B · Human-decision loop" in loops
-    # loop A's ordered stage titles (each a card's bold <tspan> label)
-    for stg in ("Intake", "Triage → WIs", "Resume loop", "Build / review", "Merge"):
-        assert ">" + stg + "<" in loops, stg
-    # loop B's ordered stage titles, incl. the gate-ratification stage
-    for stg in ("Open items", "Human review", "Decisions record"):
-        assert ">" + stg + "<" in loops, stg
-    assert "gate-ratification table" in loops
-    # the gate-ratification stage sits in loop B: its card carries a loop-B node
-    # key, and it appears after the loop-B label emitted with that hoop.
-    b_start = loops.index("B · Human-decision loop")
-    assert loops.index("gate-ratification table") > b_start
-    assert 'data-node="b-1"' in loops  # Open items — loop B, stage 1
-    # Both hoops are explicitly closed cycles (hub → … → hub), not open rows.
-    assert loops.count('data-cycle="closed"') == 2
-    assert 'class="hoop hoop-a"' in loops
-    assert 'class="hoop hoop-b"' in loops
+    assert "The station cycle" in text
+    station = _station_div(text)
+    assert 'class="stationsvg"' in station
+    # the ring stations, present and in source order (the flow reads clockwise)
+    ring = (
+        "Dispatcher tick",
+        "Claim",
+        "Lane build",
+        "Station refresh",
+        "Merge slot",
+        "Trunk advance",
+        "Intake mint",
+    )
+    at = -1
+    for stg in ring:
+        assert ">" + stg + "<" in station, stg
+        nxt = station.index(">" + stg + "<")
+        assert nxt > at, "ring order broken at " + stg
+        at = nxt
+    # one directed closed cycle, every edge arrow-headed
+    assert station.count('data-cycle="closed"') == 1
+    # 6 ring edges + 3 fan-out + 3 fan-in + the dashed lost-race retry = 13
+    assert station.count('marker-end="url(#stnarrow)"') == 13
+    assert 'class="stedge alt" data-edge="slot-refresh"' in station  # lost race
     # still fully offline
     low = text.lower()
     assert "http://" not in low and "https://" not in low
 
 
-def test_process_loops_share_one_llm_agent_entry(tmp_path):
-    # The LLM_Agent entry hub is rendered exactly once as the shared central
-    # junction of both hoops (not duplicated per loop).
+def test_station_outcomes_derive_from_the_integrator(tmp_path):
+    # THE SYNC PIN for §A3: the three terminal-outcome cards are DERIVED from
+    # integrate.OUTCOME_DIRS — the same one-home read the merge slot uses — and
+    # all three converge on the station refresh (three arrows into one merge:
+    # a reader cannot come away thinking a branch may hang). If the integrator's
+    # outcome vocabulary moves, this test moves with it and the render follows.
+    integ = load_script("integrate")
+    outcomes = sorted(set(integ.OUTCOME_DIRS.values()))
+    assert len(outcomes) == 3  # the §A3 table: merged / cancelled / handback
     with_gate(tmp_path, "G2")
     assert gen(tmp_path).returncode == 0
-    loops = _loops_div(html_of(tmp_path))
-    assert loops.count(">LLM_Agent<") == 1
-    assert loops.count('class="hub"') == 1
-    # both hoops are present around that one hub
-    assert 'class="hoop hoop-a"' in loops and 'class="hoop hoop-b"' in loops
+    station = _station_div(html_of(tmp_path))
+    for outcome in outcomes:
+        assert ">" + outcome + "<" in station, outcome
+        # each outcome converges on the refresh — the fan-in edge exists
+        assert 'data-edge="{}-refresh"'.format(outcome) in station, outcome
+        # and the build stage fans out into it
+        assert 'data-edge="build-{}"'.format(outcome) in station, outcome
+    # the outcome notes carry the declaring spec directories, also derived
+    for status_dir in integ.OUTCOME_DIRS:
+        assert status_dir + "/" in station, status_dir
 
 
-def test_process_loop_layout_is_a_shared_circular_junction(tmp_path):
-    # WI-250: the render draws two overlapping hoop discs whose directed edges
-    # (one arrowhead each) trace each loop and converge on the single shared hub.
+def test_station_slot_is_the_serial_waist(tmp_path):
+    # The merge slot renders exactly once, as the emphasized (filled) node, and
+    # says what makes it the waist: serial, one branch at a time, the ancestor
+    # check. The slot fill is the theme-invariant --slot token (the A4 lesson).
     with_gate(tmp_path, "G2")
     assert gen(tmp_path).returncode == 0
     text = html_of(tmp_path)
-    loops = _loops_div(text)
-    # two hoop discs, each a closed cycle, sharing one hub
-    assert loops.count('class="hoop hoop-') == 2
-    assert loops.count('data-cycle="closed"') == 2
-    assert loops.count('class="hub"') == 1
-    # every loop edge is directional: hub→s1→…→sn→hub is (n+1) arrows per loop,
-    # 6 for the 5-stage intake loop + 5 for the 4-stage decision loop = 11.
-    assert loops.count('marker-end="url(#floparrow)"') == 11
-    # the SVG-loop CSS replaced the old grid racetrack entirely.
-    assert "#process .loopsvg{" in text
-    assert "#process .hoop{" in text
-    assert "#process .loops{display:grid" not in text
-    assert "#process div.loop{" not in text
-    assert "#process .pflow.loop" not in text
+    station = _station_div(text)
+    assert station.count('class="slot"') == 1
+    assert "one branch at a time" in station
+    assert "ancestor" in station
+    assert "fill:var(--slot)" in text
 
 
-def test_process_loop_stage_links_resolve():
-    # Over the real meta repo (where every canonical home exists): each stage
-    # links to its canonical doc and every emitted href resolves.
+def test_station_refresh_pins_the_bar_attestation(tmp_path):
+    # THE SYNC PIN for §A2: the refresh card carries the shipped attestation
+    # label (integrate.BAR_GREEN, the trailer the merge slot verifies) and the
+    # refresh sequence the integrator actually runs (merge trunk in, trunk_step,
+    # the bar) — derived/pinned, never folklore.
+    integ = load_script("integrate")
+    with_gate(tmp_path, "G2")
+    assert gen(tmp_path).returncode == 0
+    station = _station_div(html_of(tmp_path))
+    assert integ.BAR_GREEN.rstrip(":") in station
+    assert "trunk_step" in station
+    assert "merge trunk in" in station
+
+
+def test_station_barrier_and_admission_arms_pin_to_the_dispatcher(tmp_path):
+    # THE SYNC PIN for §A4/§A8: the spine barrier is visible, its exclusive-kind
+    # vocabulary is derived from schedule's ruled tables, and the admission-arm
+    # labels the panel hardcodes (they have no exported constant) are pinned to
+    # dispatch._kind_action over every kind x gate-policy level — a renamed or
+    # added arm reds here before the dashboard can drift.
+    sched = load_script("schedule")
+    disp = load_script("dispatch")
+    tp = load_script("traj_panels")
+    levels = ("attended", "single-ratify", "autonomous")
+    truth = {
+        disp._kind_action(kind, level)
+        for kind in sched._KIND_CONCURRENCY
+        for level in levels
+    }
+    assert set(tp._ADMISSION_ARMS) == truth
+    # the exclusive kinds the barrier holds for, derived in rank order
+    exclusive = [
+        k
+        for k in sorted(sched._KIND_CONCURRENCY, key=lambda k: (sched._KIND_RANK[k], k))
+        if sched._KIND_CONCURRENCY[k] == sched.CONCURRENCY_EXCLUSIVE
+    ]
+    assert tp._exclusive_kinds() == exclusive
+    with_gate(tmp_path, "G2")
+    assert gen(tmp_path).returncode == 0
+    text = html_of(tmp_path)
+    assert "Spine barrier" in text
+    station = _station_div(text)
+    assert "spine barrier" in station  # the glyph label on the tick→claim edge
+    for arm in truth:
+        assert arm in text, arm
+    for kind in exclusive:
+        assert kind in text, kind
+
+
+def test_station_intake_arm_pins_to_the_intake_mint(tmp_path):
+    # THE SYNC PIN for §A5.2: the intake arm's trigger labels mirror intake.py's
+    # shipped mint machinery. The pins are behavioral where a name is only a
+    # literal inside the module: tier_signal must RECOGNIZE the amendment and
+    # handback triggers (distinct tiering), and the three merge-slot draft arms
+    # plus the dispatcher's rung-1 census handoff must exist as callables — a
+    # reshaped intake reds here.
+    ink = load_script("intake")
+    disp = load_script("dispatch")
+    assert ink.tier_signal("amendment", rows_touched=4) == "strong"
+    assert ink.tier_signal("amendment", rows_touched=1) == "medium"
+    assert ink.tier_signal("handback", reason="NEEDS-HUMAN wanted") == "strong"
+    for arm in (
+        ink._amendment_drafts,
+        ink._handback_drafts,
+        ink._disposition_drafts,
+        ink.intake_after_merge,
+        ink.mint_gap_rows,
+        disp.gap_census,
+    ):
+        assert callable(arm)
+    with_gate(tmp_path, "G2")
+    assert gen(tmp_path).returncode == 0
+    text = html_of(tmp_path)
+    station = _station_div(text)
+    for word in ("amendment", "disposition", "draft"):
+        assert word in station, word
+    assert "gap census" in text  # the empty-frontier ladder, rung 1
+
+
+def test_station_links_resolve():
+    # Over the real meta repo (where every canonical home exists): each linked
+    # stage resolves, and the station's canonical homes are the ones the flow
+    # actually lands on — the WI registry (claim/intake), the log (the merged
+    # record), and the owner surface (the surfaced ratification cards).
     gt = load_script("gen_trajectory")
-    loops = gt._loop_panel(ROOT)
-    hrefs = re.findall(r'href="([^"]+)"', loops)
-    assert hrefs, "loop stages should link to their canonical homes"
+    station = gt._station_panel(ROOT)
+    hrefs = re.findall(r'href="([^"]+)"', station)
+    assert hrefs, "station stages should link to their canonical homes"
     for href in hrefs:
         assert (ROOT / href).exists(), href
-    # every canonical home named by SR-055 is linked (docs/next-wi retired, WI-180:
-    # the Resume-loop stage now links the WI registry it derives the frontier from)
-    for home in (
-        "docs/status.md",
-        # Phase 2c: the WI registry's home is the docs/work/ spec folder (the
-        # panel's dual-home probe prefers it; the CSV href would no longer
-        # resolve here).
-        "docs/work",
-        # WI-322: the human-decision loop lands on the GENERATED owner surface,
-        # not the retired markdown file.
-        "docs/open-items.html",
-        "docs/log.md",
-    ):
-        assert 'href="{}"'.format(home) in loops, home
+    for home in ("docs/work", "docs/log.md", "docs/open-items.html"):
+        assert 'href="{}"'.format(home) in station, home
 
 
-def test_process_loops_byte_identical_without_data(tmp_path):
-    # The loop structure is the method's, not the repo's data: the loops block
+def test_station_byte_identical_without_data(tmp_path):
+    # The station structure is the method's, not the repo's data: the block
     # renders byte-for-byte the same whether the registry is minimal or
-    # work-item-rich (SR-055 "a data-less repo renders byte-identically").
+    # work-item-rich (a data-less repo renders byte-identically).
     minimal = tmp_path / "min"
     minimal.mkdir()
     with_gate(minimal, "G2")
@@ -431,21 +515,22 @@ def test_process_loops_byte_identical_without_data(tmp_path):
     rich.mkdir()
     with_gate(rich, "G2", SMALL_WIS)
     assert gen(rich).returncode == 0
-    assert _loops_div(html_of(minimal)) == _loops_div(html_of(rich))
+    assert _station_div(html_of(minimal)) == _station_div(html_of(rich))
 
 
 def test_a4_no_sub_label_opacity_discount(tmp_path):
     # A4: the emitted CSS must not discount sub-label text opacity (which dropped
-    # the effective contrast below the floor). No `.sub`/`.bsub`/`.hubsub`
-    # `{ ... opacity }` — `.hubsub` joined the rule in WI-293, where a surviving
-    # `fill-opacity:.85` put the dark-theme hub sub-label at 2.57:1.
-    # Fixture is with_gate, not with_bundle: `.hubsub` only exists once the
+    # the effective contrast below the floor). No `.sub`/`.bsub`/`.slotsub`
+    # `{ ... opacity }` — the rule the old `.hubsub` joined in WI-293 (a
+    # surviving `fill-opacity:.85` put the dark-theme sub-label at 2.57:1);
+    # WI-389's redraw renamed the emphasized node hub → slot, same guard.
+    # Fixture is with_gate, not with_bundle: `.slotsub` only exists once the
     # Process tab renders, so under with_bundle this guard was vacuous for it.
     with_gate(tmp_path, "G2")
     assert gen(tmp_path).returncode == 0
     css = html_of(tmp_path)
-    assert ".hubsub{" in css, "Process tab did not render — guard would be vacuous"
-    assert re.search(r"\.(?:sub|bsub|hubsub)\s*\{[^}]*opacity", css) is None
+    assert ".slotsub{" in css, "Process tab did not render — guard would be vacuous"
+    assert re.search(r"\.(?:sub|bsub|slotsub)\s*\{[^}]*opacity", css) is None
 
 
 def test_a4_theme_token_fills_behind_white_text_meet_the_floor(tmp_path):
@@ -454,16 +539,16 @@ def test_a4_theme_token_fills_behind_white_text_meet_the_floor(tmp_path):
 
     The sibling A4 tests check palette CONSTANTS (STATUS_FILL, PHASE_ACCENTS, …),
     so a `fill:var(--token)` whose value differs per theme was invisible to them —
-    which is exactly how the Process hub shipped white-on-#818cf8 at 2.98:1 in
-    dark while measuring 6.29:1 in light. Any token used as a fill behind white
-    text is checked against both declarations here.
+    which is exactly how the Process hub (now the merge slot, WI-389) shipped
+    white-on-#818cf8 at 2.98:1 in dark while measuring 6.29:1 in light. Any token
+    used as a fill behind white text is checked against both declarations here.
     """
     with_gate(tmp_path, "G2")  # the Process tab's render condition
     assert gen(tmp_path).returncode == 0
     css = html_of(tmp_path)
     # every custom property used as a fill under a white-text selector
-    white_text_fill_tokens = {"--hub"}
-    assert "fill:var(--hub)" in css, "hub fill token missing from emitted CSS"
+    white_text_fill_tokens = {"--slot"}
+    assert "fill:var(--slot)" in css, "slot fill token missing from emitted CSS"
     for token in sorted(white_text_fill_tokens):
         for dark in (False, True):
             value = _css_var(css, token, dark=dark)
@@ -471,16 +556,16 @@ def test_a4_theme_token_fills_behind_white_text_meet_the_floor(tmp_path):
             assert ratio >= 4.5, (token, "dark" if dark else "light", value, ratio)
 
 
-def test_a4_hub_fill_is_not_the_page_accent(tmp_path):
+def test_a4_slot_fill_is_not_the_page_accent(tmp_path):
     """WI-293 regression guard: --accent is tuned as INK on the page background
-    and lightens in dark theme, so re-pointing the hub fill at it silently
-    reintroduces the 2.98:1 defect. The hub keeps its own token."""
+    and lightens in dark theme, so re-pointing the slot fill at it silently
+    reintroduces the 2.98:1 defect. The merge slot keeps its own token."""
     with_gate(tmp_path, "G2")  # the Process tab's render condition
     assert gen(tmp_path).returncode == 0
     css = html_of(tmp_path)
-    hub_rule = re.search(r"#process \.hub rect\{([^}]*)\}", css)
-    assert hub_rule, "hub rect rule missing"
-    assert "var(--accent)" not in hub_rule.group(1), hub_rule.group(1)
+    slot_rule = re.search(r"#process \.slot rect\{([^}]*)\}", css)
+    assert slot_rule, "slot rect rule missing"
+    assert "var(--accent)" not in slot_rule.group(1), slot_rule.group(1)
 
 
 def test_t1_hero_names_the_active_work_item(tmp_path):

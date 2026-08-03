@@ -225,9 +225,9 @@ from traj_panels import (  # noqa: F401
     _NEXT_WORK_CAP,
     _NEXT_WORK_TITLE,
     _know_panel,
-    _loop_panel,
     _next_work_html,
     _next_work_title,
+    _station_panel,
     know_graph,
     know_view,
     process_panel,
@@ -271,14 +271,16 @@ HTML_TEMPLATE = string.Template("""<!doctype html>
     color-scheme: light dark;
     --bg:#f8fafc; --surface:#ffffff; --border:#e2e8f0; --text:#0f172a;
     --muted:#64748b; --accent:#4f46e5;
-    /* A4 (WI-293): the Process hub carries WHITE text on its own fill, so its
-       fill is a THEME-INVARIANT token, not --accent. --accent is tuned for
-       readability *as ink* on the page background and lightens to #818cf8 in
-       dark, which as a *fill* behind white text measures 2.98:1 — under the
-       4.5:1 AA floor. Declared here and deliberately NOT overridden in the dark
-       block: #fff on #4f46e5 is 6.29:1 in both themes. Keep any successor
-       palette change (WI-292) off this token unless it re-checks white-on-fill. */
-    --hub:#4f46e5;
+    /* A4 (WI-293): the Process tab's emphasized node (the merge slot since the
+       WI-389 station-cycle redraw; the hub before it) carries WHITE text on its
+       own fill, so its fill is a THEME-INVARIANT token, not --accent. --accent
+       is tuned for readability *as ink* on the page background and lightens to
+       #818cf8 in dark, which as a *fill* behind white text measures 2.98:1 —
+       under the 4.5:1 AA floor. Declared here and deliberately NOT overridden
+       in the dark block: #fff on #4f46e5 is 6.29:1 in both themes. Keep any
+       successor palette change (WI-292) off this token unless it re-checks
+       white-on-fill. */
+    --slot:#4f46e5;
     --done:#047857; --active:#b45309; --queued:#94a3b8; --cancelled:#78716c;
     /* ===== THE TYPE SCALE (U1 core, WI-309) =================================
        Every font-size in this document resolves to a step declared here —

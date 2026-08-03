@@ -139,6 +139,8 @@ graph LR
     m_scripts_plan_runner --> m_scripts_plan_round
     m_scripts_spec_move --> m_scripts_agent_common
     m_scripts_trace --> m_scripts_trace_text
+    m_scripts_traj_panels --> m_scripts_integrate
+    m_scripts_traj_panels --> m_scripts_schedule
     m_scripts_traj_panels --> m_scripts_traj_graph
     m_scripts_traj_panels --> m_scripts_traj_parse
     m_scripts_traj_panels --> m_scripts_traj_render
@@ -179,6 +181,7 @@ graph LR
     m_scripts_gen_trajectory -. IF-011 .-> m_scripts_check
     m_scripts_gen_trajectory -. IF-088 .-> m_scripts_dispatch
     m_scripts_intake -. IF-090 .-> m_scripts_integrate
+    m_scripts_integrate -. IF-093 .-> m_scripts_traj_panels
     m_scripts_plan_artifacts -. IF-061 .-> m_scripts_plan_runner
     m_scripts_plan_coverage -. IF-060 .-> m_scripts_plan_coverage_step
     m_scripts_plan_round -. IF-058 .-> m_scripts_plan_runner
@@ -186,6 +189,7 @@ graph LR
     m_scripts_schedule -. IF-053 .-> m_scripts_check_trajectory
     m_scripts_schedule -. IF-071 .-> m_scripts_gen_trajectory
     m_scripts_schedule -. IF-055 .-> m_scripts_integrate
+    m_scripts_schedule -. IF-094 .-> m_scripts_traj_panels
     m_scripts_schedule -. IF-085 .-> m_scripts_traj_parse
     m_scripts_score_reviews -. IF-046 .-> m_scripts_agent_loop
     m_scripts_trace -. IF-001 .-> m_scripts_check
@@ -1094,13 +1098,14 @@ _Pure graph layout and wire routing for the project-state dashboard._
 
 ### `scripts/traj_panels`
 _The Knowledge / Process / Next-work dashboard panels (WI-280 split of_
-Imports (internal): `traj_graph`, `traj_parse`, `traj_render`, `traj_status`
+Imports (internal): `integrate`, `schedule`, `traj_graph`, `traj_parse`, `traj_render`, `traj_status`
+Contracts (interfaces): IF-093, IF-094
 
 | Public item | Summary | Implements |
 |---|---|---|
 | `know_graph(root)` | The OKF concept graph as (svg, details), or None when there is no bundle |  |
 | `know_view(root)` | The OKF concept graph as a START-COLLAPSED, type-tiered Simulink-style drill | SR-089 |
-| `process_panel(root, wis, stats)` | The Process tab + panel as (tab, panel), or None when there is no | SR-055 |
+| `process_panel(root, wis, stats)` | The Process tab + panel as (tab, panel), or None when there is no |  |
 
 ### `scripts/traj_parse`
 _Parse/sources for the project-state dashboard — registries, docs, git._
