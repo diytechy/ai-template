@@ -24917,3 +24917,55 @@ full suite: 1959 passed / 10 skipped in 317.08s (0:05:17)
 <!-- fig: cmd="python -m pytest -q -n auto" rev=56dc580d -->
 `check_trajectory.py --strict` rc=0 · `check_doc_refs.py --strict` rc=0 ·
 `check_figures.py --strict` rc=0.
+
+## 2026-08-02 — session: the drain reopens (unpause, and why not `agent-resume`)
+
+**Summary.** Lifted the 2026-08-02 context-budget park and opened the queued
+drain, after ruling how it should be driven. Owner asked whether the queue
+could simply be resumed under `agent-resume`; the answer is no, and the reason
+is recorded here rather than in `status.md`, which is forward-only.
+
+**The hazard.** Two queued rows rewrite the machinery the unattended loop runs:
+WI-412 rewrites the dispatcher's banner arithmetic in `dispatch.py`, and
+WI-413 rewrites `intake.py`'s sweep arm. `dispatch.py` imports `intake`
+directly, and `integrate.py` calls `intake.intake_after_merge` at the merge
+slot — "the one honest hook point", so intake runs at *every* merge in a
+drain. An unattended pass over the queue would therefore integrate the later
+rows through code the earlier rows had just rewritten, with nothing reviewing
+that composition. The failure mode is not a hot-patched process (Python has
+already loaded its modules) but an unreviewed floor: each new merge invokes
+the changed code, and the loop has no way to notice. WI-414 (a registry
+adjudication) and WI-415 (`traj_panels`, the dashboard renderer) touch nothing
+the loop executes and carry no such coupling.
+
+**Ruling (owner, 2026-08-02).** Drain WI-412/413/414/415 serially through the
+station in a session — claim → build → independent REVIEW-A → refresh →
+integrate — with the adversarial review leg drawn from the OpenAI family
+(cross-family diversity, `docs/agents.csv`). WI-390, the concurrency-v2
+program close, is spine class: it waits, batches, runs alone, and costs the
+owner one sitting, so it is held for a session with the owner present.
+
+**Preconditions verified, not assumed.** The *earlier* 2026-08-01 park had
+waited on two owner decisions; both are ruled — `requirements/open-items.csv`
+carries no live pending row, only the shipped example row. The 2026-08-02 park
+that replaced it was a context-budget pause carrying its own resume recipe.
+
+**Deviations / notes.**
+- A first attempt to record the hazard *in* `status.md` named the row ids in
+  prose. `integrate.py claim` refused the WI-412 claim for exactly that reason
+  (forward-only: those tokens red R-D the moment each row closes, and a work
+  branch cannot scrub trunk-owned `status.md`). The refusal was correct and is
+  the reason this entry exists; `status.md` now describes the hazard without
+  naming ids and points here.
+- The strong tier's `CLAUDE_CODE_EFFORT_LEVEL` dropped xhigh → medium by owner
+  directive in its own commit ahead of the drain. Recorded consequence: the
+  medium `ANTHROPIC-OPUS` row stays at `high`, so the effort ladder is now
+  inverted against the tier ladder and no row draws xhigh. Legible, not
+  derived — `Env` and `Tier` are independent columns — and reversible; all
+  three stale xhigh claims in the registry were re-stamped in the same commit.
+
+**Verification** (trunk, commits 37329268 + 9d9f8790):
+smoke tier: 667 passed / 2 skipped in 13.38s
+<!-- fig: cmd="python -m pytest -q -n auto -m smoke" rev=9d9f8790 -->
+`check_docs.py` (harness ignore globs) — 371 doc(s), 1022 intra-repo link(s),
+0 broken. Pre-commit battery green on both commits.

@@ -58,14 +58,16 @@ home elsewhere — don't restate it here:
   [concurrency-v2.md](concurrency-v2.md), which is the spec-of-record for the
   whole queued backlog; the design is CLOSED and its ten 2026-07-31 rulings are
   in the [log's Decisions](log.md#decisions-log).** The backlog is claimable as
-  it stands, but **do not drain it with a plain `agent-resume` launch**: two
-  queued rows rewrite the machinery the loop itself runs — WI-412 the
-  dispatcher's banner arithmetic, WI-413 `intake.py`'s sweep arm — and
-  `integrate.py` calls intake at every merge slot, so an unattended pass
-  would integrate the later rows through code the earlier ones had just
-  rewritten, with no review of that composition. Owner direction 2026-08-02:
-  drain WI-412/413/414/415 **serially through the station in a session**,
-  then WI-390 with the owner present.
+  it stands, but **do not drain it with a plain `agent-resume` launch**: some
+  queued rows rewrite the very machinery the loop runs (the dispatcher's
+  banner arithmetic; `intake.py`'s sweep arm), and `integrate.py` calls
+  intake at every merge slot — so an unattended pass would integrate the
+  later rows through code the earlier ones had just rewritten, with nothing
+  reviewing that composition. Owner direction 2026-08-02: drain the queue
+  **serially through the station in a session**, and hold the spine-class
+  program close for a sitting with the owner present. The row ids and the
+  full reasoning are in the 2026-08-02 session entry in [log.md](log.md);
+  the queue itself is [work/queued/](work/queued/).
   The older
   [handoff-2026-07-29.md](handoff-2026-07-29.md) is now **history, not a
   queue** — its sequenced work is all closed; read it for the post-Phase-5
