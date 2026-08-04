@@ -165,6 +165,9 @@ home elsewhere — don't restate it here:
   a hard predecessor edge on the cell-split row, so the ordering is mechanical
   rather than prose — read both in [work/queued/](work/queued/).
 - **Design history:** [archive/](archive/README.md).
+- **OPEN RULING (2026-08-03):** [handback-contract.md](handback-contract.md) —
+  whether a returned lane writes a per-return document instead of mutating its
+  own spec. Paused mid-grind; the rows downstream of it wait on the ruling.
 - **Process (kit source):** [PROCESS.md](../project-trajectory/PROCESS.md) ·
   [PROCESS_OPTIONS.md](../project-trajectory/PROCESS_OPTIONS.md) (this repo has
   no scaffolded `docs/process.md`; the masters are the reference).
