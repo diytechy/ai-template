@@ -626,4 +626,15 @@ Outcomes I want:
 
  - From there, I am hoping we can attack multiple loose ends in this repository, removing dead / duplicate code, cleaning up where tests / guards have become numerous and instead should have been handled at validation from the output side (instead of testing and or sanatizing on the input side).
 
- - This analysis does NOT need to follow the rubric of this repo itself, which I beleive is part of what's hampering the current development effort.  Until the mechanized development flow is solidified, there is no reason to constrain yourself to a ruleset that may actually limit / slow down the solution space.
+ - This analysis does NOT need to follow the rubric of this repo itself, which I beleive is part of what's hampering the current development effort.  Until the mechanized development flow is solidified, there is no reason to constrain yourself to a rulesets in this repo that may actually limit / slow down the solution.  If you believe that it may be safer for me to move this to a different folder temporarily while excluding / deleting other skills / claude.md / agents.md from that copy in order that they do not influence this review and subsequent fixes, please let me know.
+
+ ~~~~~~~~~~~~~~
+
+ Related to "One key, one flag that already exists, and a WI claimed to deliver G3 evidence still bars at G3 even if a concurrent window dropped docs/gate to G2 mid-flight.", shouldn't this generally not be possible?  Since a gate drop should only ever happen on a serial round.  A work item that didn't declare itself as scope / gate work, should NOT perform that sort of work, and instead should give it back as a handback file.
+
+
+ ~~~~~~~~~~~~~~~~~~~
+
+ Make sure all process diagrams from Project_State.html are instead contructed from the readme.md in the process folder.
+
+ Make sure all used functions are removed / cleaned.
