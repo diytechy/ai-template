@@ -1,5 +1,11 @@
 # Plan — SN build-out for the fully mechanized loop (2026-08-08)
 
+> **Superseded as a plan (2026-08-08):** the plan of record is
+> [stakeholder-needs-build-plan-2026-08-08.md](stakeholder-needs-build-plan-2026-08-08.md),
+> which absorbs this document's measured details and the addendum below per
+> [plan-arbitration-2026-08-08.md](plan-arbitration-2026-08-08.md). This document
+> is retained as the current-state survey and reconciliation record.
+
 Owner-directed planning pass over the six new stakeholder needs (A–F) plus the
 end-of-plan cleanup items. **Nothing here executes until reviewed.** Built from
 five parallel exploration passes over the live machinery (handback, gate/

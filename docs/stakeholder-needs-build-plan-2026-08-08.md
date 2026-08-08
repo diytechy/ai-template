@@ -2,6 +2,11 @@
 
 **Status:** proposed for owner review; this plan records recommended rulings and
 an executable dependency order, but does not itself ratify spine changes.
+**Composite:** this is the plan of record per
+[plan-arbitration-2026-08-08.md](plan-arbitration-2026-08-08.md); it absorbs the
+measured details and amendments from the otherwise-superseded
+[plan-2026-08-08-mechanized-loop.md](plan-2026-08-08-mechanized-loop.md), which
+is retained as the current-state survey and reconciliation record.
 **Scope:** the reusable kit under `project-trajectory/` and this meta-repo's
 self-adopted instance. **Execution exception:** because this program replaces
 the machinery that would normally drive it, build it on one controlled branch
@@ -13,9 +18,11 @@ with explicit reviews and manual integration checkpoints; do not run the live
 1. Keep the Python 3.11+ core and the three thin `.cmd` / `.sh` / `.command`
    starters. The core is already Python; a launcher rewrite would add migration
    cost without addressing the configuration problem.
-2. Replace the scattered behavioral configuration with one validated
-   `docs/config.toml`. Python 3.11's `tomllib` is the relevant new capability:
-   nested typed tables and arrays are available in the standard library.
+2. Replace the scattered behavioral configuration with one validated,
+   adopter-owned `docs/config.toml` that a kit re-sync never clobbers. Python
+   3.11's `tomllib` (the floor since WI-262, already imported in seven kit
+   modules) is the relevant new capability: nested typed tables and arrays are
+   available in the standard library.
 3. Separate two derived facts that the current `docs/gate` conflates:
    **spine stage** (which artifact tier is in process) and **verification gate**
    (which harness bar applies).
@@ -97,15 +104,21 @@ folding them into SN-003/SN-004/SN-025/SN-027 would turn those rows into
 multi-obligation statements.
 
 Draft SN-028..032 and resolve the 21 already-Modified SRs in **one combined
-drafting-plus-re-attestation sitting**. The temporary G0/G1 result is the
-derived model honestly exposing in-process scope, not a regression.
+drafting-plus-re-attestation sitting**. Mechanics: the new needs are drafted
+under a `## Draft needs` heading in `stakeholder-needs.md`, so
+`derive_gate.py`'s section-as-state rule holds the gate down honestly while
+they are worked (`sn_draft_ids`), and `ex-draft=` keeps the ex-draft window
+arithmetic honest. WI-390's still-needed spine/prose/connectivity close rides
+the same sitting (handback-contract §11's one-sitting rule; see §13). The
+temporary G0/G1 result is the derived model honestly exposing in-process scope,
+not a regression.
 
 | Spine action | Acceptance intent | Existing rows to reconcile, not duplicate |
 |---|---|---|
-| New SN-028 — single processing configuration | One validated file controls harness, automation policy, routing, and prompt selection; a detector proves no retired config source still affects behavior. | SN-003, SN-004, SN-025, SN-026 |
+| New SN-028 — single processing configuration | One validated file controls harness, automation policy, routing, and prompt selection; a detector proves no retired config source still affects behavior. The file is adopter-owned and never clobbered on kit re-sync (the SR-036 preserve contract); the kit ships the template plus a legacy converter, and bootstrap/re-sync runs the converter automatically. | SN-003, SN-004, SN-025, SN-026 |
 | New SN-029 — configurable human ratification boundary | A cumulative numeric boundary controls which spine-tier ratifications require a human; meaning changes regress the derived stage; an independent final-review request is durable and visible. | SN-004, SN-006, SN-025 |
 | New SN-030 — autonomous adjudication loop | One deterministic resume planner orders outcome adjudication, prose adjudication, human stops, spine batches, ordinary work, and red-bar remediation. | SN-006, SN-025, SN-027 |
-| New SN-031 — immutable scoped attempt | A worker records Complete, Cancelled, or Partial without changing scope; adjudication may override; the attempted WI never returns to the frontier. | SN-025, SN-027 |
+| New SN-031 — immutable scoped attempt | A worker records Complete, Cancelled, or Partial without changing scope; adjudication may override; the attempted WI never returns to the frontier. Partial/Cancelled always adjudicate; Complete adjudicates on declared risk triggers or a configured sampling rate, not by default. | SN-025, SN-027 |
 | New SN-032 — adjudicated queue admission | Every transition to queued has a recorded, current conflict verdict against spine and queued/active work. | SN-002, SN-025, SN-027 |
 | Amend SN-026 — declared job routing and prompt contracts | Planner, reviewer, implementer, adjudicator, critic, and arbiter resolve through declared weighted pools with capability and same-or-stronger fallback; every launched prompt is reviewable and attributable. | SN-024 and the existing SN-026 SR chain |
 
@@ -114,23 +127,43 @@ they state observable stakeholder value.
 
 ## 5. Single configuration authority
 
-Use `docs/config.toml` as the only editable source for behavior. It owns:
+Use `docs/config.toml` as the only editable source for behavior. (The narrower
+alternative — a `process.toml` of policy dials only, with `stack.ini` and
+`agents.csv` kept as-is — was considered in the loop plan and rejected: SN-028's
+acceptance covers harness, automation, routing, and prompt selection, so the
+one file owns all four.) `config.toml` inherits `stack.ini`'s adopter-owned,
+never-clobber-on-re-sync property: the kit ships `config.toml.template` and the
+converter, never overwrites an adopter's filled file, and bootstrap/re-sync runs
+the converter automatically so no adopter meets the mixed-config refusal (staged
+migration below) unaided. It owns:
 
 - product commands, tiers, paths, coverage, custom steps, and generated owners;
 - lane count, timeouts, blackout, review/critique policy, push/privacy/
   guardrail policy, and ratification policy;
-- provider/model access routes, enabled routes, capability/strength metadata,
-  role pools, weights, and fallback rules; and
+- provider/model access routes, capability/strength metadata, per-route
+  failure-context notes, role pools, weights, and fallback rules; and
 - prompt ids, template paths, allowed input classes, and output schemas.
 
 It does **not** own credentials, generated state (`docs/gate`, dashboards), live
-events (`docs/work/pause`, outcome/attestation requests), requirement/WI
-records, or measured baselines. Those are state or evidence, not configuration.
+events (`docs/work/pause`, outcome/attestation requests), the routing consent
+surface (`docs/agents-enabled` — presence-as-consent, like the pause file's
+deletion-as-an-act), requirement/WI records, or measured baselines. Those are
+state, consent, or evidence, not configuration.
 
-The shell hooks are an explicit migration constraint. The recommended target is
-a tiny Python 3.11 config-query entry point used by pre-commit, commit-msg, and
+The shell hooks are an explicit migration constraint, and their history pins
+the requirement: repo-review M-42 (2026-07-21) required a Python-less box to
+still fail closed on a declared privacy policy, which is why
+`hooks/pre-commit:46`, `commit-msg:36`, and `pre-push:73,142` read
+`privacy-check`/`review-policy` with a first-non-comment-line `grep`/`head`
+parse — the only shape that parse rule can read. The recommended target is a
+tiny Python 3.11 config-query entry point used by pre-commit, commit-msg, and
 pre-push; a missing or below-floor interpreter refuses clearly and therefore
-preserves the current fail-closed security behavior. During migration, tests
+preserves — in fact strengthens — the M-42 fail-closed behavior. The recorded
+fallback, if hooks must stay Python-less: keep the two security keys
+keyed-greppable by a one-`key = value`-per-line convention (`grep -E
+'^privacy-check *= *true'`) with a cheap cross-parser agreement test (the
+WI-1.21 pattern). The Python entry point is preferred: one typed, validated
+reader instead of a perpetual dual-parse convention. During migration, tests
 drive the old shell read and the TOML read over the same matrix and require
 agreement. No second policy file or generated mirror survives cutover: a mirror
 would immediately violate the single-authority need it was meant to support.
@@ -173,8 +206,11 @@ output_schema = "adjudication-v1"
 ```
 
 Use argv arrays for new route declarations, not shell command strings. Continue
-to send prompts on stdin. Secrets remain in provider CLI state or environment;
-the config may name a credential profile but never contain its token.
+to send prompts on stdin. Each route carries a `notes` key inheriting the
+agents.csv failure-context culture (install/sign-in hints echoed at
+preflight-missing, cooldown, and the no-routable page). Secrets remain in
+provider CLI state or environment; the config may name a credential profile but
+never contain its token.
 
 Migration is staged: strict loader and validator; read-only converter/report;
 old-shell/new-Python agreement tests for security keys; behavior-parity run;
@@ -232,7 +268,10 @@ SpecRef, referenced requirements, acceptance/deliverable definition,
 predecessors, safety class, build tier, and plan mode. The branch may only move
 the unchanged file to a terminal folder.
 
-Every attempted branch writes one immutable outcome event outside `docs/work/`:
+Every attempted branch writes one immutable outcome event outside `docs/work/`
+(e.g. `docs/outcome-events/` — never a `WI-*.md` under `docs/work/`, which
+`agent_common.spec_files` would rglob into the status parsers; the
+handback-contract §8 trap):
 
 - WI id, claim-base and branch-tip commits, scope digest;
 - worker outcome (`complete`, `cancelled`, `partial`);
@@ -263,9 +302,15 @@ needed, moves the same byte-identical spec to the corrected terminal folder;
 the worker's original claim remains visible in the outcome event. Leaving a
 misjudged WI in its original folder would contradict the directory-as-status
 contract. A Partial outcome drafts a successor for the remaining scope and the
-integrator refuses it until the keep/discard/quarantine split is complete. It
-never edits or requeues the original. Existing `returned/`, self-`blockref`,
-and mutable `## Handback` proposals are retired by this contract.
+integrator refuses it until the keep/discard/quarantine split is complete
+(the 2026-08-03 incident, `08e6c08a`: a green-merged handback landed rejected
+code as-is — the split makes the revert decision the adjudicator's explicit
+call). It never edits or requeues the original. Existing `returned/`,
+self-`blockref`, and mutable `## Handback` proposals are retired by this
+contract (the general `blockref` mechanism — 47 sites, predating handback —
+stays for ordinary blocked rows). Data migration is zero- to one-file: with
+WI-413 cancelled at P0 (§13), the only live `## Handback` carrier leaves the
+frontier.
 
 ## 8. Queue admission as one transaction
 
@@ -289,12 +334,18 @@ digest.
 For LLR/TC work, partition by the connected components of the declared
 SN/SR/LLR/TC + Component + IF graph. A component is independent only when no
 trace or interface edge crosses the proposed partition. Missing ownership or a
-cross-edge collapses the work to one project-wide spine batch.
+cross-edge collapses the work to one project-wide spine batch. A secondary
+size-threshold dial (split only batches larger than N) may ride as an optional,
+default-off config knob — a throttle, never the independence criterion.
 
 ## 9. Resume state machine
 
-Safety preflight and crash recovery always run before judgments. The pure
-planner then executes this precedence on every cycle:
+This formalizes — does not wholesale replace — today's `dispatch.run` tick
+(pause → dirty-trunk → lane poll → §A8 admission → the idle-exit ladder of
+gap-census mint, surface banner, honest drain). The deltas are the precedence
+below, the adjudicator templates (§10), and the remediation estimator (the
+red-bar rung). Safety preflight and crash recovery always run before judgments.
+The pure planner then executes this precedence on every cycle:
 
 ```mermaid
 flowchart TD
@@ -339,12 +390,12 @@ Current prompt influence is only partly reviewable:
 
 | Prompt/input | Current home | Current strength / risk |
 |---|---|---|
-| Worker assignment | embedded `WORKER_PROMPT` in `agent_loop.py` | Scope is explicit, but prose review requires reading Python. |
-| Reviewer | embedded `REVIEWER_PROMPT` | Strong redaction/adversarial clauses; optional file override has no declared slot schema. |
-| Critique | embedded `CRITIQUE_PROMPT` | Rubric-driven and redacted; same embedded-prose problem. |
+| Worker assignment | embedded `WORKER_PROMPT` (`agent_loop.py:259`) | Scope is explicit, but prose review requires reading Python. |
+| Reviewer | embedded `REVIEWER_PROMPT` (`agent_loop.py:299`) | Strong redaction/adversarial clauses; optional file override has no declared slot schema. |
+| Critique | embedded `CRITIQUE_PROMPT` (`agent_loop.py:347`) | Rubric-driven and redacted; same embedded-prose problem. |
 | Dual-plan planner/critic/arbiter | three Markdown templates under `project-trajectory/prompts/` | Best current pattern: strict slot allowlist and unfilled-slot refusal. |
 | Guardrails core | external Markdown selected by policy | Reviewable source, but not catalogued with the operational prompts. |
-| Derived WI context, rework, handback reason | assembled in Python | Facts and judgments are not consistently typed; WI-417/WI-418 show how free prose can select tier or anchor the next judge. |
+| Derived WI context, rework, handback reason | assembled in Python | Facts and judgments are not consistently typed; WI-417/WI-418 show how free prose can select tier (`intake.py:152`'s `NEEDS-HUMAN` substring) or anchor the next judge. |
 
 The target uses the dual-plan pattern for every role:
 
@@ -360,7 +411,9 @@ The target uses the dual-plan pattern for every role:
    fail before launch. Prompts always travel on stdin.
 4. Delimit injected values as typed, untrusted evidence. A worker's outcome is
    an enum plus a separately delimited rationale; it can never become an
-   instruction, tier selector, or `NEEDS-HUMAN` magic string.
+   instruction, tier selector, or `NEEDS-HUMAN` magic string. A judge's brief
+   never includes the judged party's self-assessment — the reviewer-prompt
+   redaction rule, generalized (WI-418).
 5. State the template authoring and source-separation rules once in
    `prompts/README.md`, then generate a prompt catalog showing job, source template, input dataflow,
    prohibited inputs, output parser, template hash, and deterministic fixture
@@ -384,10 +437,10 @@ spine amendment is ratified. “Dual” means two independent plans plus arbiter
 |---|---|---|---|
 | P0 | Ratify glossary and the decisions in §§1, 3, 5–8; freeze old unattended execution; disposition current conflicting WIs; declare one combined sitting with the 21 already-Modified SRs. | owner review | strong · dual |
 | P1 | Draft/ratify SN-028..032, amend SN-026, and decompose SR/LLR/TC acceptance, including the two-axis `spine_stage`/`verification_gate` contract. | P0 | strong · dual |
-| P2 | Implement pure `config.toml` schema, typed loader, validator, legacy conversion/diff report, and fail-closed shell-hook migration/agreement tests; no runtime callers switch yet. | P0 | strong · dual |
+| P2 | Implement pure `config.toml` schema, typed loader, validator, legacy conversion/diff report, and fail-closed shell-hook migration/agreement tests; no runtime callers switch yet. The schema documents the adopter-owned never-clobber re-sync contract, and bootstrap/re-sync gains the automatic converter run. | P0 | strong · dual |
 | P3 | Implement canonical normative-cell snapshots/digests plus append-only attestation and final-review request ledgers. | P1 | strong · dual |
 | P4 | Externalize existing prompts; add the four purpose-specific adjudicator templates, `prompts/README.md`, strict rendering, output schemas, as-launched tests, prompt catalog, and prompt provenance. | P2 | medium · standard |
-| P5 | Normalize provider routes and job pools onto config; add routed adjudicator and arbiter; preserve equal-or-stronger and diversity behavior. | P2, P4 | medium · standard |
+| P5 | Normalize provider routes and job pools onto config; add routed adjudicator and arbiter (the adjudicator draw prefers cross-family, same reasoning as reviewers); preserve equal-or-stronger and diversity behavior. | P2, P4 | medium · standard |
 | P6 | Add `partial/`, immutable scope-at-claim enforcement, one outcome event for every terminal result, and mandatory keep/discard/quarantine classification for Partial. | P1 | strong · dual |
 | P7 | Implement mandatory Partial/Cancelled adjudication, risk-triggered/sampled Complete adjudication, authoritative folder override, successor drafting, and worker/adjudicator audit history. | P3, P4, P5, P6 | strong · standard |
 | P8 | Centralize Draft→Queued admission and add mechanical overlap graph + adjudicator conflict verdict/freshness gate. | P3, P7 | strong · dual |
@@ -395,7 +448,7 @@ spine amendment is ratified. “Dual” means two independent plans plus arbiter
 | P10 | Replace commit-local prose detection with ledger-vs-current semantic candidates; cover SN and sanctioned Modified changes; enact clarity/meaning/override. | P3, P7, P9 | strong · dual |
 | P11 | Implement the pure resume planner and wire it to dispatch/intake in the precedence of §9, including component-safe spine batching. | P8, P9, P10 | strong · dual |
 | P12 | Persist branch/full-trunk bar-failure events and exactly-once remediation drafting with adjudicated effort/tier/plan mode. | P7, P8, P11 | medium · standard |
-| P13 | Cut runtime readers to canonical config; simplify launchers; migrate self-adoption and bootstrapped fixtures; update architecture/process/dashboard/Open Items. | P2, P5, P9, P11, P12 | medium · standard |
+| P13 | Cut runtime readers to canonical config; simplify launchers; migrate self-adoption and bootstrapped fixtures; verify a simulated re-sync converts legacy files and never clobbers an adopter-edited config; update architecture/process/dashboard/Open Items. | P2, P5, P9, P11, P12 | medium · standard |
 | P14 | Mint and execute one measured unused-function sweep; delete legacy readers/files, mutable handback, and magic-string routing; disposition (rather than assume) any newly stale live WIs; run the complete migration and scaffold matrix. | P13 | medium · mechanical + review |
 
 ```mermaid
@@ -432,10 +485,16 @@ group it into reviewable compositions and keep the replacement loop runnable:
 | C — immutable outcomes and admission | P6–P8 | all worker/final outcome combinations, Partial keep/discard refusal, conflict-verdict freshness |
 | D — human boundary and prose semantics | P9–P10 | 0–3 boundary matrix, final-review request, SN/SR/LLR/TC clarity/meaning cases |
 | E — complete resume loop | P11–P12 | ordered end-to-end loop, component batch proof, exactly-once real-harness remediation |
-| F — cutover and cleanup | P13–P14 | canonical-config-only scaffold, no legacy behavior readers, measured unused-symbol disposition |
+| F — cutover and cleanup | P13–P14 | canonical-config-only scaffold, re-sync conversion/no-clobber proof, no legacy behavior readers, measured unused-symbol disposition |
 
 Every checkpoint ends with the full unfiltered suite and the applicable full
 `check.py` gate bar, not only the per-slice smoke bar.
+
+Risk notes for the reviewer: P7 carries the largest blast radius (~27 named
+tests plus the §A3/R3 prose amendments — but a zero- to one-file data
+migration, §7). P9 is wide but shallow (enum→ordinal at five call sites, each
+already isolated behind `read_declared`). P2's old/new agreement matrix is what
+keeps the security behavior continuous through the config migration.
 
 ## 12. Primary code, document, and test touchpoints
 
@@ -472,8 +531,9 @@ closure additionally requires:
 - stage-wide/component spine batches, ordinary parallel work, human stops, and
   exactly-once red-bar remediation in an end-to-end resume fixture; and
 - Windows/POSIX fresh bootstrap, legacy conversion, mixed-config refusal,
-  canonical-config-only operation, full suite, full gate bar, and generated
-  artifact freshness.
+  canonical-config-only operation, re-sync conversion that never clobbers an
+  adopter-edited config, full suite, full gate bar, and generated artifact
+  freshness.
 
 ## 13. Current WI disposition at program start
 
