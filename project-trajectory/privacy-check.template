@@ -1,3 +1,11 @@
+# RETIRED SCAFFOLD SOURCE (SN-028). This dial now lives in
+# process.toml.template -> docs/process.toml as `[policies] privacy_check`, and
+# bootstrap.py no longer copies this file into a new repo — shipping both
+# homes would hand every scaffold the mixed-config refusal. The file stays
+# in the kit as the reference for the legacy vocabulary that
+# `bootstrap.py --migrate-config` reads when converting an existing
+# adoption; the text below describes that legacy home, not today's.
+#
 # Privacy-check toggle (process-options.md "Commit identity & privacy";
 # .githooks/{pre-commit,commit-msg,pre-push}, scripts/check_privacy.py). One
 # value on the last line:

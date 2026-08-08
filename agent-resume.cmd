@@ -6,13 +6,13 @@ REM repo root (project-trajectory/PROCESS_OPTIONS.md "Unattended operation
 REM (walk-away runs)"). This is the kit's own launcher applied to the kit
 REM repo itself: the booted session inherits the committed context -
 REM CLAUDE.md, AGENTS.md, docs/status.md, the docs/work/ registry,
-REM docs/log.md, docs/gate-policy (the live working surfaces;
+REM docs/log.md, docs/process.toml (the live working surfaces;
 REM IMPROVEMENT_PLAN.md is archived history, not a working surface). Read it
 REM first; it only exports the slots below and runs the coordinator engine.
 REM
 REM CONSENT: the unattended loop runs the agent CLI headless; the permission-
 REM bypass flag in AGENT_CMD means sessions edit without prompts. You consent
-REM by keeping the slot filled, declaring docs/gate-policy, and running this.
+REM by keeping the slot filled, declaring docs/process.toml, and running this.
 
 REM --- EDIT FOR YOUR PROJECT ---------------------------------------------------
 REM The agent command template; {model} and {prompt} are substituted per
@@ -50,7 +50,7 @@ REM the resolved tier. Empty since 2026-07-19: docs/agents-enabled order already
 REM leads each tier with the ANTHROPIC row. Keep agent-resume.sh in sync.
 set "AGENT_PREFER_MAP="
 REM Optional per-phase COMMAND template map (cross-provider routing; pairs
-REM with the docs/review-policy reviewer dial), e.g.:
+REM with the the process.toml reviewer dial reviewer dial), e.g.:
 REM   set "AGENT_CMD_MAP=REVIEW-B=gemini -p {prompt} --model {model}"
 REM Empty here: under managed routing each enabled row's own CmdTemplate drives
 REM its launch (docs/agents.csv spans THREE families - ANTHROPIC/claude,
@@ -80,7 +80,7 @@ cd /d "%~dp0"
 if not defined AGENT_CMD (
   echo agent-resume.cmd: no agent command wired yet.
   echo Edit AGENT_CMD in this file - see the EDIT FOR YOUR PROJECT block - and
-  echo in agent-resume.sh. Filling it ^(and declaring docs/gate-policy^) is your
+  echo in agent-resume.sh. Filling it ^(and declaring docs/process.toml^) is your
   echo consent to unattended agent sessions; see
   echo project-trajectory/PROCESS_OPTIONS.md "Unattended operation".
   pause

@@ -197,7 +197,7 @@ OPEN_STATUSES = ("draft", "queued", "active", "deferred", "blocked")
 # `Deliverable` (the shipped record for `done`; the cancellation reason for
 # `cancelled`) and both must clear their `SpecRef` (R-A + R-F below). `cancelled`
 # is deliberately NOT in OPEN_STATUSES / BACKLOG_STALE_STATUSES / the frontier.
-TERMINAL_STATUSES = ("done", "cancelled")
+TERMINAL_STATUSES = ("done", "cancelled", "partial")
 KNOWN_STATUSES = (
     "draft",
     "queued",
@@ -206,6 +206,7 @@ KNOWN_STATUSES = (
     "deferred",
     "blocked",
     "cancelled",
+    "partial",
 )
 
 # Backlog-staleness (WI-205) applies to genuinely-in-flight WIs: the open set
@@ -340,6 +341,14 @@ WI_COLUMNS = (
     "SafetyClass",
     "PlanMode",
     "Bar",
+    # SN-031 LINEAGE. Partial work continues by MINTING A SUCCESSOR, never by
+    # reviving the closed row — so the successor must be able to say which row
+    # it continues, or the thread is lost at the id change. A real column, not
+    # a frontmatter-only key, because `intake`'s drafts-not-mints arm writes
+    # successors through `wi_convert.write_spec_file`, which serializes from
+    # this table: a key that is not here would be silently dropped at the one
+    # moment it matters.
+    "Supersedes",
 )
 SPEC_SCALARS = (
     ("Title", "title"),
@@ -358,6 +367,7 @@ SPEC_SCALARS = (
     # never affects scheduling. (G1|G2|G3 — integrate.refresh passes it to
     # check.py --gate; load_wis deliberately does not parse it.)
     ("Bar", "bar"),
+    ("Supersedes", "supersedes"),
 )
 SPEC_LISTS = (("SR-Refs", "sr_refs"), ("Predecessors", "needs"))
 # Directory -> Status. The directory is the WHOLE statement (WI-384): every
@@ -376,12 +386,24 @@ SPEC_LISTS = (("SR-Refs", "sr_refs"), ("Predecessors", "needs"))
 # only the `disposition = "retired"` spelling this row deleted — so the word
 # itself moved. `active/<branch>/` sits one level deeper, so the status is the
 # FIRST path component, never the file's parent directory.
+# `partial/` (SN-031) is the THIRD terminal, and the one that made the outcome
+# model honest. A lane that stops early used to move back to `queued/` carrying
+# a `## Handback` note and a `blockref` — which meant the return event had no
+# artifact of its own, only a mutable, movable, self-referencing spec. Five
+# successive dedup mechanisms tried to reconstruct "did a return happen, and was
+# it judged?" from that spec, and every one leaked: an owed judgement silently
+# not happening. `partial/` is TERMINAL — nothing re-claims it, so nothing
+# strands — and the per-close report under docs/handbacks/ IS the event's
+# identity. Continuing the work MINTS A SUCCESSOR (carrying `supersedes`),
+# because a closed row is never revived and a scope definition never changes to
+# mean something else.
 SPEC_STATUS_DIRS = {
     "draft": "draft",
     "queued": "queued",
     "active": "active",
     "deferred": "deferred",
     "cancelled": "cancelled",
+    "partial": "partial",
     "complete": "done",
 }
 # The inert EXAMPLE spec's filename prefix (the `-000` rule, applied to the

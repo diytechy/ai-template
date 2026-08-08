@@ -469,11 +469,33 @@ def _lane_close(root, branch, code):
         )
         return None
     reason = "worker exit {}{}".format(
-        code, " (NEEDS-HUMAN)" if code == ac.EXIT_NEEDS_HUMAN else ""
+        code, " (NEEDS-JUDGEMENT)" if code == ac.EXIT_NEEDS_HUMAN else ""
     )
-    _ids, refusal = handback.hand_back(root, branch, reason)
+    # SN-031: the dispatcher's own close carries the TYPED fields the report
+    # schema declares, rather than smuggling them through the reason string.
+    # The tier is keyed off the EXIT-CODE CLASS — a fact the dispatcher already
+    # holds — not off a substring of prose: `NEEDS_HUMAN`, `needs human` or any
+    # typo used to downgrade a disposition silently, because a case-folded
+    # search for `NEEDS-HUMAN` was the tier's only input. The label in the
+    # reason is now decoration; the field is the contract.
+    fields = {
+        "suggested_tier": "strong" if code == ac.EXIT_NEEDS_HUMAN else "medium",
+        # THE DISPATCHER CANNOT JUDGE THE KEEP/DISCARD SPLIT and says so, in a
+        # typed field, rather than leaving the report silent. It has no view of
+        # the work at all — the worker exited or crashed — so the honest answer
+        # is that the split is OWED, and the disposition row this close mints is
+        # what owes it. Silence here is the shape that let a rejected diff merge
+        # as-is; an explicit deferral is not.
+        "split_decided_by": "adjudicator",
+        "not_delivered": (
+            "The worker exited {} before moving its specs out of active/{}/, "
+            "so nothing in this row's Done-when can be assumed met. Read the "
+            "commit range above.".format(code, branch)
+        ),
+    }
+    _ids, refusal = handback.close_partial(root, branch, reason, fields)
     if refusal:
-        _say("cannot hand back {}: {}".format(branch, refusal), err=True)
+        _say("cannot close {} as partial: {}".format(branch, refusal), err=True)
         return ac.EXIT_PREFLIGHT
     return None
 

@@ -92,12 +92,12 @@ chasing it.
     rubric (numbered good/bad anchors, derived from the SN/SR intent, never the
     authoring session), iterating rework toward the bar and escalating on budget
     exhaustion; a lax-TC ratchet keeps the fix landing in the chain (SN-024).
-  - Optional **tier-conditional guardrails** — `docs/guardrails-policy`
+  - Optional **tier-conditional guardrails** — the `guardrails` dial
     injects a vendored discipline core into weaker-tier sessions, drift-checked
     by `check_vendored.py`.
-  - Consent is explicit via one-word declared-policy files scaffolded into
-    `docs/`: `gate-policy` (who advances gates), `push-policy` (who may push),
-    and `privacy-check` (the PII/identity gate, enforced by the git hooks +
+  - Consent is explicit via the dials scaffolded into `docs/process.toml`:
+    `gate_policy` (who advances gates), `push` (who may push), and
+    `privacy_check` (the PII/identity gate, enforced by the git hooks +
     `check_privacy.py`).
 - **Agent-neutral skills and hooks** (SN-005):
   - Opt-in skills ([`skills/`](project-trajectory/skills/)), materialized per
@@ -220,8 +220,8 @@ python project-trajectory/scripts/bootstrap.py --dest /path/to/repo --agents cla
 This scaffolds:
 - `AGENTS.md` (the agent guide; `CLAUDE.md`/`GEMINI.md` stubs point at it)
 - `docs/` — process, status + log + plan, architecture, interfaces, the
-  registries, and the declared-policy files (`gate`, `gate-policy`,
-  `push-policy`, `privacy-check`) — plus `docs/log.d/`, the log's fragment
+  registries, the generated `gate` and the one policy home `process.toml` —
+  plus `docs/log.d/`, the log's fragment
   drop-box: a work branch writes `docs/log.d/<WI-id>-<slug>.md` instead of
   hand-merging `docs/log.md`, and
   [`trunk_step.py`](project-trajectory/scripts/trunk_step.py) compiles the
@@ -313,24 +313,33 @@ process**, traced by its own `SN→SR→LLR→TC` spine and gated by its own
 
 ### Configuration at a glance (defaults vs. this repo)
 
-Every runtime knob is a small declared file under `docs/` — stated once, read
-by the hooks, `check.py`, and the coordinator; **each file's own header is its
-canonical doc** (this table is the map, checked against this repo's tree). What
-a fresh scaffold gets, which way each option toggles, and how this repo is set:
+Every **process** dial — how work is processed — is declared once in
+[`docs/process.toml`](docs/process.toml), one `key = value` per line so the git
+hooks can read the privacy dials in pure sh and a Python-less box still fails
+closed. The remaining knobs stay small declared files under `docs/`, either
+because presence itself is the semantic or because an independently copyable
+checker reads them. Everything is stated once and read by the hooks,
+`check.py`, and the coordinator; **each file's (or key's) own header comment is
+its canonical doc** (this table is the map, checked against this repo's tree).
+What a fresh scaffold gets, which way each option toggles, and how this repo is
+set:
 
 | Option (`docs/…`) | Fresh-scaffold default | Turn on / off | This repo |
 |---|---|---|---|
 | `gate` | **generated** — `derive_gate.py` computes it from artifact states (a fresh scaffold reads `G1`) | never hand-edited; advances by *ratifying* artifacts | `G3` (derived) |
-| `gate-policy` | `attended` | opt-in levels `single-ratify` / `autonomous` (each scaffolds a deviation register) | **`autonomous`** + [register](docs/gate-policy.md) |
-| `push-policy` | `human` | opt-in `agent-iteration` / `agent` | `human` |
-| `review-policy` | `1` | reviewer dial `0`–`2` | `1` |
-| `privacy-check` | `false` | **opt-in** `true` (PII/identity layer) | `false` |
-| `secrets-scan` | on (no file) | **opt-out** `off` | on |
+| `process.toml` `gate_policy` | `"attended"` | opt-in levels `"single-ratify"` / `"autonomous"` (each scaffolds a deviation register) | **`"autonomous"`** + [register](docs/gate-policy.md) |
+| `process.toml` `human_ratification_through` | `4` (every tier human-held) | lower the ordinal — `3` SNs+SRs+LLRs, … `0` nothing human-held | `0` |
+| `process.toml` `push` | `"human"` | opt-in `"agent-iteration"` / `"agent"` | `"human"` |
+| `process.toml` `review_rounds` | `1` | reviewer dial `0`–`2` (an **int**, not a word) | `1` |
+| `process.toml` `privacy_check` | `false` | **opt-in** `true` (PII/identity layer) | `false` |
+| `process.toml` `secrets_scan` | `true` | **opt-out** `false` | `true` |
+| `process.toml` `privacy_review` | `"require"` | opt-down `"warn-unwired"` (the unwired reviewer warns instead of blocking) | `"require"` |
+| `process.toml` `blackout` | `"12:00-19:00"` (UTC, Mon–Fri) | empty value (or start == end) disables | `"12:00-19:00"` |
+| `process.toml` `guardrails` | `"off"` | **opt-in** model-substring allowlist / `"all except …"` | `"off"` (no vendored core — reason in the key's comment) |
 | `okf-export` | on (no file) | **opt-out** `off` | on (`docs/okf/` committed) |
 | `interfaces-check` | on, warn-first (no file) | **opt-out** `off` | on — declared seams checked |
 | `components-check` | on, warn-first (no file) | **opt-out** `off` | on — 5 components |
 | `agents.csv` + `agents-enabled` | registry seeded **inert**; no enable-list | **opt-in** — creating `agents-enabled` turns managed routing on | **on** — 8 pair rows / 3 families (ANTHROPIC / OPENAI / OPENCODE; tiers `strong/medium/quick`; Anthropic-led per tier — Fable strong, Opus medium) |
-| `guardrails-policy` | off (no file) | **opt-in** model-substring allowlist / `all except …` | `off` (no vendored core — reason in the file) |
 | `subagent-gate` | off (no file) | **opt-in** `ask` / `deny` (Claude hook example) | off |
 | `[step:dupes]` + `dupes-allow` | not wired | **opt-in** `stack.ini` step | not wired (deferred) |
 

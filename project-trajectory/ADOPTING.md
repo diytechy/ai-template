@@ -328,6 +328,20 @@ table.
   `bootstrap.py --dest .`** — it re-reads `docs/kit-profile` (explicit
   `--stack`/`--omit` flags override it), regenerates them with the same
   structural choices, and re-stamps `kit-version` + `kit-profile`.
+- **Overwrite, then re-apply your dials (kit-owned, but hand-edited):**
+  `docs/process.toml` — the one home for every process dial (gate authority,
+  the human-ratification level, push authority, the reviewer count, the privacy
+  and secrets gates, guardrails, the blackout window). Unlike `docs/stack.ini`
+  it is **kit-owned**: its explanatory header and its key set come from
+  `process.toml.template`, so take the kit's version on re-sync and re-apply
+  your non-default values in the same commit — by hand, or by re-running the
+  scaffold pass with `--gate-policy` / `--push-policy` / `--privacy-check`,
+  which rewrite one key in place instead of replacing the file. `--force`
+  **rewrites the whole file and resets every dial to the kit defaults**; never
+  aim it at a live repo without a diff pass. A repo still carrying the legacy
+  one-word policy files under `docs/` converts *before* anything else — see the
+  one-policy-home recipe below; running with both homes live is refused, not
+  resolved by precedence.
 - **Preserve always (yours, kit only seeds them):** `docs/stack.ini` (your
   declared toolchain — the kit seeds the Python reference once and never
   re-touches it; its `[generated]` section — the integrator's auto-resolution
@@ -519,18 +533,46 @@ table.
   (downstream greps and the §5 wording rely on them), and leave the
   `History: docs/log.md` pointer in status.md's header. Don't rewrite the moved
   entries — they are the historical record.
-- **Privacy-check toggle (`docs/privacy-check`) — replaces the old
+- **One policy home (`docs/process.toml`, 2026-08).** The ~10 one-word policy
+  files under `docs/` — the gate-authority word, the push policy, the reviewer
+  count, the privacy toggle, the secrets floor, the privacy-review posture,
+  guardrails, the blackout window — collapse into a single hand-edited,
+  machine-read TOML. The old idiom was never a ruling: it accreted around the
+  git hooks' pure-sh parse (a Python-less box must still fail closed on a
+  declared privacy policy), and a `head -n 1` read is the only thing that
+  format buys. The hooks now do a **keyed** match instead, so the file's shape
+  is load-bearing: one `key = value` per line under a bare `[section]` header,
+  no dotted keys, no inline tables, no multi-line strings — checked, not merely
+  conventional. To adopt: re-sync the three hooks + the scripts, take
+  `process.toml.template` → `docs/process.toml`, then run
+  **`python scripts/bootstrap.py --migrate-config --dest .`**. It folds every
+  legacy file it finds into the matching key, **deletes that file**, and is
+  idempotent — and a full `bootstrap.py --dest .` scaffold pass runs it for you.
+  Two dials change *type*, not meaning: the reviewer count becomes an integer
+  (`review_rounds = 1`) and the toggles become booleans (`privacy_check =
+  false`, `secrets_scan = true` — the legacy `off` word reads as `false`).
+  **Running with both homes live is REFUSED, not resolved by precedence**, so
+  land the conversion in one commit rather than half-way. What deliberately
+  stays a file, each for its own reason: `docs/stack.ini` (adopter-owned
+  product toolchain, never under a kit-owned template), the
+  presence-as-semantics markers `docs/work/pause` and `docs/agents-enabled` (a
+  key cannot express deletion-as-an-act), the generated cache `docs/gate`, and
+  the six check-enablement toggles — `docs/trajectory-check`,
+  `docs/interfaces-check`, `docs/components-check`, `docs/subagent-gate`,
+  `docs/live-status`, `docs/okf-export` — each read by an independently
+  copyable checker that would otherwise need its own local TOML reader.
+- **Privacy-check toggle (`[policies] privacy_check`) — replaces the old
   `docs/commit-identity` glob.** Newer kits split *identity* from *privacy*
   (process-options.md "Commit identity & privacy"): which account authors is
-  the user's own git config (no longer pinned by a repo file), and a one-value
-  toggle `docs/privacy-check` (`true`/`false`) runs the privacy gate — the
+  the user's own git config (no longer pinned by a repo file), and a boolean
+  dial `privacy_check` (`true`/`false`) runs the privacy gate — the
   commit author email and committed content/messages are scanned for PII, with
   the exempt-email allowlist (`EXEMPT_EMAILS`, default `*noreply*`) in
   `check_privacy.py`. To adopt: overwrite the hooks (`pre-commit`, the new
-  `commit-msg`, `pre-push`) + `check_privacy.py` + `setup.*` from the kit, and
-  replace `docs/commit-identity` with `privacy-check.template` → `docs/privacy-check`
-  (set `true` if you had a non-`inherit` glob, else `false`). Migrating from an
-  older kit: delete `docs/commit-identity`; the pre-commit author check is now a
+  `commit-msg`, `pre-push`) + `check_privacy.py` + `setup.*` from the kit, delete
+  `docs/commit-identity`, and set `privacy_check` in `docs/process.toml`
+  (`true` if you had a non-`inherit` glob, else `false`). Migrating from an
+  older kit: the pre-commit author check is now a
   Python `--author` step, so a Python-less machine no longer enforces identity
   (deliberate — that pin moved to git config). The guard covers **future commits
   in clones that ran setup** only — history already committed with a private
@@ -546,19 +588,20 @@ table.
   pre-push hook scans the outgoing range. **That is the point** — but if the
   repo legitimately holds secret-shaped content (test fixtures, sample keys),
   mark those lines with the inline `privacy-ok` marker, and only as a last
-  resort track the one word `off` in `docs/secrets-scan` to disable the floor
+  resort set `secrets_scan = false` in `docs/process.toml` to disable the floor
   repo-wide (a reviewed, recorded decision). No new scaffolded file is required;
-  absent `docs/secrets-scan` reads *on*.
-- **Push policy + agent iteration branch (`docs/push-policy`).** Newer kits
+  the scaffolded default is `true`, and a repo migrating from the one-word
+  file's *absent = on* convention lands on the same value.
+- **Push policy + agent iteration branch (`[policies] push`).** Newer kits
   declare who may publish (process-options.md "Agent iteration branch &
-  sync"): a one-word file — `human` (default: an agent never pushes, even if
+  sync"): one word — `human` (default: an agent never pushes, even if
   asked mid-session; it prepares the branch and requests), `agent-iteration`
   (only the scrubbed `llm/<branch>` iteration branch), or `agent`. To adopt:
-  copy `push-policy.template` → `docs/push-policy` and pick the value in a
+  set `push` in `docs/process.toml` in a
   reviewed commit. The full iteration-branch discipline (agent work on
   `llm/<branch>`, history scrubbed and collated into categorical commits
   before landing on the dev branch) is an **opt-in layer** for agent-driven
-  repos — a repo without agent-driven work keeps the default file and pays
+  repos — a repo without agent-driven work keeps the default value and pays
   nothing. If you adopt the layer, add `"llm/**"` to your CI push triggers
   (the newer shipped `check.yml` already carries it) so the floor runs on
   agent legs too.
@@ -661,11 +704,11 @@ table.
   recorded attestation), or mark them `Draft` if not yet ratified. The
   verification-basis report is now three-way (mechanized / demonstrated-observed /
   attested); no registry schema change.
-- **Integrator verdict-gate unanimity + review-policy dial redefinition (2026-07,
+- **Integrator verdict-gate unanimity + reviewer-dial redefinition (2026-07,
   WI-260).** The parallel-dispatch integrator no longer clears on a *count* of
   approving phases: **every scheduled verdict phase's latest verdict at the
   reviewed head must be APPROVE** (REVIEW-A, REVIEW-B, and CRITIQUE on a
-  render-surface train). The `review-policy` dial now counts **reviewer** phases
+  render-surface train). The reviewer dial (`review_rounds`) now counts **reviewer** phases
   scheduled (0/1/2); CRITIQUE is orthogonal — required on every render-surface
   train regardless of dial. A same-head CHANGES-REQUESTED→APPROVE flip escalates
   NEEDS-HUMAN rather than silently winning; a never-filed required phase pages

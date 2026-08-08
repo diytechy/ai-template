@@ -42,7 +42,7 @@ gates, and the ID scheme. The short version needed every session:
   test before the code that satisfies it: red → green → refactor. This is *how*
   G3 code gets written — within the traceability spine, not instead of it.
 - **Gates G1→G2→G3→(G-Release)→G-Final close per the declared gate authority**
-  (`docs/gate-policy`; default: pause for human approval). Never self-advance
+  (`docs/process.toml`; default: pause for human approval). Never self-advance
   a gate; log it in `docs/log.md`.
 - **The check harness is the bar:** `python scripts/check.py` runs format,
   lint, tests, coverage, traceability, flow checks, and map freshness at the
@@ -63,7 +63,7 @@ gates, and the ID scheme. The short version needed every session:
 - **Start each session** with the *Current State* header of
   [docs/status.md](docs/status.md); end each turn by updating it (gate, what
   changed, next action). **Commit early and often** — a
-  small, green commit per logical step. Pushing follows `docs/push-policy`
+  small, green commit per logical step. Pushing follows the `push` dial
   (default: the human publishes). End sessions with a clean tree.
 
 ## Code we want (readability for humans *and* agents)

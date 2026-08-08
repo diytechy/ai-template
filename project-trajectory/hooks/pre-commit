@@ -43,21 +43,57 @@ REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null) || REPO_ROOT=$(cd "$(dirn
 # that matters most, moved up to where the leak would first land in history.
 #   SN-028 re-key: the policy's home is now docs/process.toml, and THIS parse
 # is the reason every value there is written one `key = value` per line — a
-# first-line parse cannot read a TOML file, but a KEYED match can, and a keyed
-# match is what the owner remembered wanting all along. Precedence mirrors
-# agent_common.declared_policy exactly: process.toml when it DECLARES the key
-# (either value), else the legacy one-word file. A cross-parser agreement test
-# pins this ERE and tomllib to the same answer. POSIX ERE only — no \s, no -P.
+# first-line parse cannot read a TOML file, but a KEYED match can.
+#
+# TWO GRAMMARS READ ONE FILE, so the read below is deliberately asymmetric.
+# `tomllib` understands far more than a `grep -E` can follow, and every shape
+# only one of them sees is a silent flip of a security gate. So:
+#   * the DECLARED test is BROAD — any `privacy_check =` occurrence on a
+#     non-comment line, whatever precedes it;
+#   * the OFF test is NARROW — only a value that is provably `false`;
+#   * anything in between reads ON. FAIL CLOSED: a key we cannot prove is off
+#     is on, which is loud, and the alternative is the M-42 failure itself.
+# `agent_common.process_shape_findings` refuses the shapes this cannot follow
+# (dotted keys, inline tables, multi-line strings, the key under the wrong
+# section), and tests/test_process_config.py drives this exact function
+# against `tomllib` over a table of adversarial files. POSIX ERE only — no \s,
+# no -P, no -o.
+#
+# A MIXED config (both homes live) refuses outright rather than picking one:
+# the Python readers do the same, and "which file wins" is not a question a
+# privacy gate should have an opinion about.
+_ptoml_body() {
+  grep -v '^[[:space:]]*#' "$1" 2>/dev/null || true
+}
+
+process_declares() {
+  [ -f "$1" ] || return 1
+  _ptoml_body "$1" | grep -Eq '(^|[^A-Za-z0-9_])'"$2"'[[:space:]]*='
+}
+
+mixed_config_refusal() {
+  ptoml="$REPO_ROOT/docs/process.toml"
+  process_declares "$ptoml" privacy_check || return 1
+  [ -f "$REPO_ROOT/docs/privacy-check" ] || return 1
+  echo "$1: docs/process.toml AND the legacy docs/privacy-check both declare" >&2
+  echo "  the privacy policy. REFUSING — a mixed config is where two readers" >&2
+  echo "  disagree about the same gate. Run:" >&2
+  echo "    python scripts/bootstrap.py --migrate-config --dest ." >&2
+  return 0
+}
+
 privacy_declared_true() {
   ptoml="$REPO_ROOT/docs/process.toml"
-  if [ -f "$ptoml" ] && grep -Eq '^[[:space:]]*privacy_check[[:space:]]*=' "$ptoml"; then
-    grep -Eq '^[[:space:]]*privacy_check[[:space:]]*=[[:space:]]*true[[:space:]]*$' "$ptoml"
-    return $?
+  if process_declares "$ptoml" privacy_check; then
+    _ptoml_body "$ptoml" | grep -Eq '(^|[^A-Za-z0-9_])privacy_check[[:space:]]*=[[:space:]]*false([[:space:]]|#|$)' && return 1
+    return 0
   fi
   [ -f "$REPO_ROOT/docs/privacy-check" ] || return 1
   p=$(grep -v '^[[:space:]]*#' "$REPO_ROOT/docs/privacy-check" | grep -v '^[[:space:]]*$' | head -n 1 | tr -d '[:space:]' || true)
   [ "$p" = "true" ]
 }
+
+if mixed_config_refusal "pre-commit"; then exit 1; fi
 
 # Find a Python 3 interpreter. Prefer the project venv (setup.sh creates ./.venv
 # with the toolchain), so tool-backed steps like format actually RUN instead of

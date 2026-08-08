@@ -1,19 +1,20 @@
 # Gate-authority deviation register — `autonomous`
 
-**Status:** ACTIVE — owner directive 2026-07-15 (in-chat) flipped
-`docs/gate-policy` `single-ratify` → **`autonomous`** to let phases iterate
+**Status:** ACTIVE — owner directive 2026-07-15 (in-chat) flipped the declared
+gate authority `single-ratify` → **`autonomous`** to let phases iterate
 through their gates without a human g2-close sitting. **Reversible / temporary:**
 the owner may restore a lower level at any time. Keep in version control.
 
 _Prior level:_ **`single-ratify`** — RATIFIED 2026-07-13 (OI-2; owner review of
 the WI-107 enablement commit, [log.md](log.md) "GATE: G3 re-attestation" +
 Decisions). That level and its ratification stand as history and may be restored
-by a one-line revert of `docs/gate-policy` + this register.
+by a one-line revert of `gate_policy` in [process.toml](process.toml) + this
+register.
 
 **What this is:** this repo declares the `autonomous` gate authority
-(`docs/gate-policy`; process.md §4). The kit-owned process doc is never edited
-per-repo (a re-sync overwrites it); this register amends it (process-options.md
-"Gate authority levels"). Where the two disagree, this file wins — **except the
+(`[attestation] gate_policy` in [process.toml](process.toml); process.md §4).
+The kit-owned process doc is never edited per-repo (a re-sync overwrites it);
+this register amends it (process-options.md "Gate authority levels"). Where the two disagree, this file wins — **except the
 fixed points at the bottom, which nothing overrides.**
 
 **This repo (the ai-template META-repo):** the kit's own unattended layer,

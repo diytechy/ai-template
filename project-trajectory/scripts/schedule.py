@@ -156,6 +156,7 @@ RANK_UNCLASSIFIED = 7
 # will-never-happen dependency; WI-267 design-decision 3).
 _DONE = "done"
 _CANCELLED = "cancelled"
+_PARTIAL = "partial"
 # The two never-ready OPEN states, which differ only in what they SAY (WI-384):
 # `deferred` is a decision (we are not doing this now), `draft` is the absence of
 # one (still being figured out). Neither is schedulable and neither is terminal,
@@ -213,6 +214,14 @@ WI_COLUMNS = (
     "SafetyClass",
     "PlanMode",
     "Bar",
+    # SN-031 LINEAGE. Partial work continues by MINTING A SUCCESSOR, never by
+    # reviving the closed row — so the successor must be able to say which row
+    # it continues, or the thread is lost at the id change. A real column, not
+    # a frontmatter-only key, because `intake`'s drafts-not-mints arm writes
+    # successors through `wi_convert.write_spec_file`, which serializes from
+    # this table: a key that is not here would be silently dropped at the one
+    # moment it matters.
+    "Supersedes",
 )
 SPEC_SCALARS = (
     ("Title", "title"),
@@ -231,6 +240,7 @@ SPEC_SCALARS = (
     # never affects scheduling. (G1|G2|G3 — integrate.refresh passes it to
     # check.py --gate; load_wis deliberately does not parse it.)
     ("Bar", "bar"),
+    ("Supersedes", "supersedes"),
 )
 SPEC_LISTS = (("SR-Refs", "sr_refs"), ("Predecessors", "needs"))
 # Directory -> Status. The directory is the WHOLE statement (WI-384): every
@@ -249,12 +259,24 @@ SPEC_LISTS = (("SR-Refs", "sr_refs"), ("Predecessors", "needs"))
 # only the `disposition = "retired"` spelling this row deleted — so the word
 # itself moved. `active/<branch>/` sits one level deeper, so the status is the
 # FIRST path component, never the file's parent directory.
+# `partial/` (SN-031) is the THIRD terminal, and the one that made the outcome
+# model honest. A lane that stops early used to move back to `queued/` carrying
+# a `## Handback` note and a `blockref` — which meant the return event had no
+# artifact of its own, only a mutable, movable, self-referencing spec. Five
+# successive dedup mechanisms tried to reconstruct "did a return happen, and was
+# it judged?" from that spec, and every one leaked: an owed judgement silently
+# not happening. `partial/` is TERMINAL — nothing re-claims it, so nothing
+# strands — and the per-close report under docs/handbacks/ IS the event's
+# identity. Continuing the work MINTS A SUCCESSOR (carrying `supersedes`),
+# because a closed row is never revived and a scope definition never changes to
+# mean something else.
 SPEC_STATUS_DIRS = {
     "draft": "draft",
     "queued": "queued",
     "active": "active",
     "deferred": "deferred",
     "cancelled": "cancelled",
+    "partial": "partial",
     "complete": "done",
 }
 # The inert EXAMPLE spec's filename prefix (the `-000` rule, applied to the
@@ -768,6 +790,14 @@ def _exclusive_conflicts(wis, status, reserved):
 _TERMINAL_DISPOSITION = {
     _DONE: ("done", "done:integrated"),
     _CANCELLED: ("cancelled", "cancelled:terminal-wont-build"),
+    # SN-031: `partial` is as final as the other two — a lane stopped early and
+    # said so, and the disposition row it mints decides what happens next by
+    # MINTING A SUCCESSOR, never by putting this row back on the frontier.
+    # Read FIRST in `_disposition`, ahead of the queued+blockref arm, which is
+    # the whole anti-livelock property: the old contract returned the spec to
+    # `queued/` and leaned on a `blockref` to keep the driver from claiming,
+    # handing back and re-claiming the same row forever.
+    _PARTIAL: ("partial", "partial:terminal-stopped-early"),
 }
 
 

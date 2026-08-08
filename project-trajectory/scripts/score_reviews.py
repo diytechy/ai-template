@@ -83,6 +83,12 @@ NEAR_DUP_THRESHOLD = 0.8
 # match on one never catches the other (WI-167).
 REVIEW_POLICY_PATHS = (
     "docs/reviews/",
+    # SN-028 folded the reviewer dial into docs/process.toml. BOTH stay listed:
+    # the new home is where an implementer would now set `review_rounds = 0` in
+    # the same diff as the work it would stop reviewing, and the legacy path
+    # still exists in un-migrated repos. A tripwire that follows a dial to its
+    # new home a release late is a tripwire that was blind for a release.
+    "docs/process.toml",
     "docs/review-policy",
     "docs/agents.csv",
     "docs/agents-enabled",

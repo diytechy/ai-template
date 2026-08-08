@@ -546,11 +546,11 @@ def test_run_launchers_delegate_to_run_menu(scaffold):
 def test_scaffold_ships_every_policy_dial_in_one_home(scaffold):
     # SN-028: docs/process.toml carries every dial a fresh scaffold declares,
     # and each is TYPED (a bool is a bool, the reviewer count is an int) rather
-    # than a one-word string every reader re-parses. The blackout window is
-    # EMPTY by default here — WI-148 shipped 12:00-19:00 in the one-word file,
-    # and folding it in was the moment to ask whether a kit should impose a
-    # window on a repo that never asked for one. It should not: an empty value
-    # disables it, exactly as an absent docs/blackout always did.
+    # than a one-word string every reader re-parses. Every VALUE is the one the
+    # file it replaced shipped — including WI-148's 12:00-19:00 blackout
+    # window. Folding a file into another file is a MOVE; a default reversed
+    # inside a refactor is a prior ruling overturned without its own review,
+    # and a comment is not where that decision gets made.
     cfg = process_toml(scaffold)
     assert cfg["attestation"]["gate_policy"] == "attended"
     assert cfg["attestation"]["human_ratification_through"] == 4
@@ -561,7 +561,7 @@ def test_scaffold_ships_every_policy_dial_in_one_home(scaffold):
         "secrets_scan": True,
         "privacy_review": "require",
         "guardrails": "off",
-        "blackout": "",
+        "blackout": "12:00-19:00",
     }
     for legacy in (
         "gate-policy",
@@ -682,14 +682,6 @@ def test_force_overwrites_existing_files(scaffold):
 
 
 # --- Privacy-check toggle (Thread 38 -> identity/privacy reframe) --------------
-
-
-def _policy_lines(path):
-    return [
-        ln
-        for ln in path.read_text(encoding="utf-8").splitlines()
-        if ln.strip() and not ln.startswith("#")
-    ]
 
 
 def test_privacy_check_defaults_to_false(scaffold):

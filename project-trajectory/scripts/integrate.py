@@ -121,19 +121,25 @@ SCRIPTS = Path(__file__).resolve().parent
 WORK = "docs/work"
 ACTIVE = WORK + "/active"
 
-# THE THREE TERMINAL OUTCOMES (§A3), and the whole of how a lane declares one:
-# the directory it moved its claimed specs INTO. `complete/` asserts the work is
-# done, `cancelled/` asserts it never will be, and any OPEN folder asserts it is
-# being handed back unfinished for a future lane to pick up out of trunk. There
-# is no fourth answer and no state file that could hold one, which is what makes
-# "every lane ends in a merge, branches never hang" a property of the tree
-# rather than a rule someone has to remember.
+# THE THREE TERMINAL OUTCOMES (§A3 as amended by SN-031), and the whole of how a
+# lane declares one: the directory it moved its claimed specs INTO. `complete/`
+# asserts the work is done, `cancelled/` asserts it never will be, `partial/`
+# asserts it stopped early. There is no fourth answer and no state file that
+# could hold one, which is what makes "every lane ends in a merge, branches never
+# hang" a property of the tree rather than a rule someone has to remember.
+#
+# EVERY OUTCOME IS NOW TERMINAL. Before SN-031 a close into any OPEN folder
+# (`queued`/`draft`/`deferred`) read as a handback, which meant the returned row
+# went straight back on the frontier and needed a `blockref` to stop the driver
+# claiming, closing and re-claiming it forever. Those three rows are GONE from
+# this table on purpose: a lane that now closes into an open folder names NO
+# outcome and the merge refuses "exactly ONE declared state directory" — which
+# is the correct fail-closed posture, because under this contract stopping early
+# is a state with a name and a report, not a return to the queue.
 OUTCOME_DIRS = {
     "complete": "merged",
     "cancelled": "cancelled",
-    "queued": "handback",
-    "draft": "handback",
-    "deferred": "handback",
+    "partial": "partial",
 }
 
 # One LANE worktree home per repo, sibling to the checkout; one subdirectory per
@@ -1425,6 +1431,11 @@ _ADJUDICATION_SURFACES = (
     "docs/requirements/low-level-requirements.csv",
     "docs/test/test-cases.csv",
     "docs/requirements/open-items.csv",
+    # SN-031's per-close reports: an adjudication lane READS them and, on an
+    # override, may write a corrective one. Without this row a lane that
+    # touches a report falls off the no-bar path into the full bar — a
+    # ~11-minute penalty for editing a document no product bar can speak to.
+    "docs/handbacks/",
 )
 
 
@@ -2094,6 +2105,37 @@ def _merge_ready(root, branch):
     return True, attested[1]
 
 
+def _partial_report_refusal(root, branch, outcomes):
+    """SN-031: a `partial` close must carry a readable report that states the
+    KEEP/DISCARD split. A refusal string, or None.
+
+    This rung exists because of a live incident (2026-08-03): a lane handed
+    work back, the branch merged green, and the code the lane had REJECTED
+    landed on trunk as-is — because nothing had asked which of its commits
+    should survive. The split turns that into the adjudicator's explicit call
+    instead of a hand cleanup someone has to notice is owed.
+
+    Read off the BRANCH's tree, like `branch_outcomes`, so the report and the
+    move it describes are one fact read once."""
+    import handback
+
+    for wi_id in sorted(w for w, o in (outcomes or {}).items() if o == "partial"):
+        rel = handback.report_path(branch, wi_id)
+        code, text = ac.git(root, "show", "{}:{}".format(branch, rel))
+        meta = None
+        if code == 0:
+            match = re.search(r"\+\+\+\n(.*?)\n\+\+\+", text, re.S)
+            if match is not None:
+                meta = ac.read_toml_text(match.group(1))
+        refusal = handback.report_refusal(meta)
+        if refusal:
+            return (
+                "{} closed {} as `partial` but {} ({}); nothing was "
+                "merged".format(branch, wi_id, refusal, rel)
+            )
+    return None
+
+
 def _merge_refusal(root, branch, wi_ids):
     """The merge slot's refusal ladder: `(outcomes, refusal)` - the first reason
     this branch may not merge, or the outcomes the merge needs and None.
@@ -2119,6 +2161,9 @@ def _merge_refusal(root, branch, wi_ids):
         )
     # Sequential, not a tuple of calls: a tuple would EVALUATE every rung before
     # testing the first, which is exactly the cheapest-first ordering thrown away.
+    refusal = _partial_report_refusal(root, branch, outcomes)  # SN-031
+    if refusal:
+        return outcomes, refusal
     refusal = _minted_id_refusal(root, branch, wi_ids)  # RULING R1
     if refusal:
         return outcomes, refusal

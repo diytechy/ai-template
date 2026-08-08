@@ -18,9 +18,10 @@ adopters. The requirement spine it renders lives in
 - **Enforcement floor** (`project-trajectory/hooks/*`) — the pre-commit /
   pre-push / commit-msg hooks that run the integrity + secrets floor
   agent-neutrally (SR-019/SR-020/SR-021).
-- **Declared config** (`docs/stack.ini`, `docs/gate`, `docs/*-policy`,
-  `docs/privacy-check`) — read once by the harness and the coordinator so a
-  behavior is declared in text, not baked into a script (SR-007/SR-031).
+- **Declared config** (`docs/stack.ini`, the generated `docs/gate`, and
+  `docs/process.toml` — the one home for every process dial) — read once by the
+  harness and the coordinator so a behavior is declared in text, not baked into
+  a script (SR-007/SR-031).
 - **The unattended station** (`agent_loop.py` + `dispatch.py` + `lane.py` +
   `integrate.py` + `handback.py` + `intake.py`, over `schedule.py`'s frontier)
   — the only subsystem here that is a *running* thing rather than a command:
@@ -1289,11 +1290,11 @@ sequenceDiagram
     participant Dev as commit / push
     participant Hook as pre-commit / pre-push (SR-019/SR-020)
     participant Priv as check_privacy.py
-    participant Policy as docs/privacy-check
+    participant Policy as docs/process.toml
     Dev->>Hook: staged diff / outgoing range
     Hook->>Priv: scan (always-on secrets floor, SR-017/LLR-017)
     Priv->>Policy: read declared toggle (SR-031/LLR-031 shared parse)
-    alt privacy-check on
+    alt privacy_check true
         Priv->>Priv: add PII/identity classes, honor EXEMPT_EMAILS (SR-018/LLR-018)
     end
     alt secret or (gated) identity found

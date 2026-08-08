@@ -1155,8 +1155,7 @@ def test_the_outcome_is_read_off_the_folder_the_specs_landed_in(tmp_path):
     for directory, outcome in (
         ("complete", "merged"),
         ("cancelled", "cancelled"),
-        ("queued", "handback"),
-        ("draft", "handback"),
+        ("partial", "partial"),
     ):
         home = tmp_path / directory
         home.mkdir()
@@ -1167,6 +1166,26 @@ def test_the_outcome_is_read_off_the_folder_the_specs_landed_in(tmp_path):
         assert integ.branch_outcomes(root, "wi-401") == ({"WI-401": outcome}, [])
 
 
+def test_a_close_into_an_OPEN_folder_names_no_outcome_at_all(tmp_path):
+    """SN-031 made every outcome terminal. A lane that closes into `queued/`,
+    `draft/` or `deferred/` used to read as a handback — the row went straight
+    back on the frontier, and only a `blockref` stopped the driver claiming and
+    closing it forever. Those three are gone from `OUTCOME_DIRS`, so such a
+    close now names NOTHING and the merge refuses: stopping early is a state
+    with a name and a report, not a return to the queue."""
+    for directory in ("queued", "draft", "deferred"):
+        home = tmp_path / ("open-" + directory)
+        home.mkdir()
+        root = claim_repo(home)
+        assert integ.claim(root, "WI-401", "wi-401") == 0
+        _close_to(root, "wi-401", directory)
+        outcomes, unresolved = integ.branch_outcomes(root, "wi-401")
+        assert outcomes == {}, directory
+        assert unresolved == ["WI-401-widget.md"], directory
+        _outcomes, refusal = integ._merge_refusal(root, "wi-401", ["WI-401"])
+        assert refusal is not None and "exactly ONE declared state" in refusal
+
+
 def test_a_claimed_spec_that_landed_TWICE_names_no_outcome_either(tmp_path):
     # The other half of "exactly one folder". A basename-keyed dict let the last
     # `ls-tree` line win — plain alphabetical precedence, which puts `queued`
@@ -1174,7 +1193,7 @@ def test_a_claimed_spec_that_landed_TWICE_names_no_outcome_either(tmp_path):
     # so a contradiction resolved silently toward the answer that SKIPS the
     # gate. REVIEW-A round 1 drove all three pairs. Fail-closure now lives where
     # the outcome is read, not in another script's duplicate-id rung.
-    for first, second in (("complete", "queued"), ("cancelled", "queued")):
+    for first, second in (("complete", "partial"), ("cancelled", "partial")):
         home = tmp_path / (first + "-" + second)
         home.mkdir()
         root = claim_repo(home)
@@ -1302,28 +1321,54 @@ def test_a_branchs_own_terminal_outcome_move_is_admitted(tmp_path):
         assert integ._minted_id_refusal(root, "wi-401", claimed) is None, directory
 
 
-def test_a_handbacks_return_to_queued_and_its_artefact_are_admitted(tmp_path):
-    # The third outcome (§A3). A handback ADDS its own spec back under `queued/`
-    # and drops a bar-inert `.patch` beside it — the shape `handback.py` writes.
-    # Neither is a mint: the returned spec's id is claimed, and the artefact
-    # carries no spec filename at all.
+def test_a_partial_close_its_report_and_its_artefact_are_admitted(tmp_path):
+    # The third outcome (§A3 as amended by SN-031). A partial close ADDS its own
+    # spec back under `partial/`, writes an immutable per-close REPORT under
+    # docs/handbacks/, and may drop a bar-inert `.patch` beside it. None of the
+    # three is a mint: the closed spec's id is claimed, and neither the report
+    # nor the artefact carries a spec filename at all — the report deliberately
+    # lives OUTSIDE docs/work/ so `spec_files`' rglob never walks it.
     root = claim_repo(tmp_path)
     assert integ.claim(root, "WI-401", "wi-401") == 0
     _git(root, "checkout", "-q", "wi-401")
+    (root / "docs" / "work" / "partial").mkdir(parents=True, exist_ok=True)
     _git(
         root,
         "mv",
         "docs/work/active/wi-401/WI-401-widget.md",
-        "docs/work/queued/WI-401-widget.md",
+        "docs/work/partial/WI-401-widget.md",
+    )
+    report = root / "docs" / "handbacks" / "WI-401-wi-401.md"
+    report.parent.mkdir(parents=True, exist_ok=True)
+    report.write_text(
+        "\n".join(
+            [
+                "+++",
+                'wi = "WI-401"',
+                'branch = "wi-401"',
+                'claimed_outcome = "partial"',
+                'reason = "stopped early"',
+                'commit_range = "aaa..bbb"',
+                'suggested_tier = "medium"',
+                'keep_commits = ["aaa"]',
+                "discard_commits = []",
+                "+++",
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+        newline="\n",
     )
     patch = root / "docs" / "work" / "handback" / "wi-401.patch"
     patch.parent.mkdir(parents=True, exist_ok=True)
     patch.write_text("--- a/x\n+++ b/x\n", encoding="utf-8", newline="\n")
-    _commit(root, "handback: WI-401 -> queued/", when=T_VERDICT)
+    _commit(root, "partial: WI-401 -> partial/", when=T_VERDICT)
     _git(root, "checkout", "-q", "main")
 
-    assert integ.branch_outcomes(root, "wi-401") == ({"WI-401": "handback"}, [])
+    assert integ.branch_outcomes(root, "wi-401") == ({"WI-401": "partial"}, [])
     assert integ._minted_id_refusal(root, "wi-401", ["WI-401"]) is None
+    # ...and the keep/discard rung passes on a report that declares the split.
+    assert integ._partial_report_refusal(root, "wi-401", {"WI-401": "partial"}) is None
 
 
 def test_a_trunk_side_mint_after_the_claim_is_not_the_branchs(tmp_path):

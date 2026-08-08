@@ -49,6 +49,12 @@ checklist.
   versions: **delete the two files, then re-run `bootstrap.py --dest .`** — it
   re-reads `docs/kit-profile`, regenerates them with the same structural
   choices, and refreshes both stamps (ADOPTING.md §6).
+- **Overwrite, then re-apply your dials (kit-owned, hand-edited):**
+  `docs/process.toml` — the one home for every process dial. Unlike
+  `docs/stack.ini` it is kit-owned, so take the kit's copy and re-apply your
+  non-default values in the same commit (or re-run the scaffold pass with
+  `--gate-policy` / `--push-policy` / `--privacy-check`, which rewrite one key
+  in place). `--force` rewrites the file and resets **every** dial.
 - **Preserve always (yours):** every registry CSV, `stakeholder-needs.md`,
   `docs/status.md`, `docs/log.md`, `docs/plan.md` (your work plan — the kit
   seeds the block-list skeleton once), `docs/architecture.md` hand-written overview
@@ -57,7 +63,26 @@ checklist.
   **skips existing files**, so a plain re-run won't clobber these — never run
   `--force` against a live repo without a diff pass.
 
-## 3. Apply the migration recipes
+## 3. Fold the legacy policy files into `docs/process.toml`
+
+If this repo still carries the one-word policy files under `docs/` (the
+gate-authority word, the push policy, the reviewer count, the privacy toggle,
+the secrets floor, the privacy-review posture, guardrails, the blackout
+window), convert them **before running anything else**:
+
+```
+python scripts/bootstrap.py --migrate-config --dest .
+```
+
+It folds each legacy file into its `[section] key` and deletes the file; it is
+idempotent, and a full `bootstrap.py --dest .` scaffold pass runs it for you.
+Running with **both** homes live is refused, not resolved by precedence, so land
+the conversion in one commit. Two dials change type: `review_rounds` is an int
+and `privacy_check` / `secrets_scan` are booleans (the legacy `off` reads as
+`false`). Full recipe + what deliberately stays a file: ADOPTING.md §6 "One
+policy home".
+
+## 4. Apply the migration recipes
 
 Read the **"Migration recipes"** list in ADOPTING.md §6 for the specific changes
 in your diff range (e.g. `process.md` split into `process.md` +
@@ -103,7 +128,7 @@ Apply only the ones your diff actually contains.
   A `SafetyClass` on every open WI still matters — the claim rung refuses
   non-`ordinary` work (spine/gate classes run attended as the §3.2 barrier).
 
-## 4. Re-stamp and verify
+## 5. Re-stamp and verify
 
 - Re-run bootstrap to refresh generated pieces — it also **re-stamps
   `docs/kit-version` + `docs/kit-profile`**; commit them as the **last** step,

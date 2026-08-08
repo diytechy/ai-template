@@ -55,11 +55,18 @@ docs/releases/ — gen_release_checklist.py --version files the stamped, signed 
 # free: test_scaffold_omissions_list_is_current fails if the path ever
 # MATERIALIZES, so recreating a retired surface trips a test.
 docs/open-items.md — RETIRED by WI-322; the owner surface is docs/requirements/open-items.csv rendered to docs/open-items.html
+docs/blackout — RETIRED by SN-028; the weekday blackout window is the `[policies] blackout` dial in docs/process.toml, and prose naming the one-word file describes the legacy home the migrator converts
+docs/gate-policy — RETIRED by SN-028 with the rest of the one-word policy idiom; the dial is `[attestation] gate_policy` in docs/process.toml (the one policy home). Design history, the SN-028 plan and closed WI specs legitimately name the legacy file — it is the vocabulary `bootstrap.py --migrate-config` converts, and a repo carrying BOTH homes is refused rather than resolved by precedence.
+docs/push-policy — RETIRED by SN-028 with the rest of the one-word policy idiom; the dial is `[policies] push` in docs/process.toml (the one policy home). Design history, the SN-028 plan and closed WI specs legitimately name the legacy file — it is the vocabulary `bootstrap.py --migrate-config` converts, and a repo carrying BOTH homes is refused rather than resolved by precedence.
+docs/review-policy — RETIRED by SN-028 with the rest of the one-word policy idiom; the dial is `[policies] review_rounds` in docs/process.toml (the one policy home). Design history, the SN-028 plan and closed WI specs legitimately name the legacy file — it is the vocabulary `bootstrap.py --migrate-config` converts, and a repo carrying BOTH homes is refused rather than resolved by precedence.
+docs/privacy-check — RETIRED by SN-028 with the rest of the one-word policy idiom; the dial is `[policies] privacy_check` in docs/process.toml (the one policy home). Design history, the SN-028 plan and closed WI specs legitimately name the legacy file — it is the vocabulary `bootstrap.py --migrate-config` converts, and a repo carrying BOTH homes is refused rather than resolved by precedence.
+docs/secrets-scan — RETIRED by SN-028 with the rest of the one-word policy idiom; the dial is `[policies] secrets_scan` in docs/process.toml (the one policy home). Design history, the SN-028 plan and closed WI specs legitimately name the legacy file — it is the vocabulary `bootstrap.py --migrate-config` converts, and a repo carrying BOTH homes is refused rather than resolved by precedence.
+docs/privacy-review — RETIRED by SN-028 with the rest of the one-word policy idiom; the dial is `[policies] privacy_review` in docs/process.toml (the one policy home). Design history, the SN-028 plan and closed WI specs legitimately name the legacy file — it is the vocabulary `bootstrap.py --migrate-config` converts, and a repo carrying BOTH homes is refused rather than resolved by precedence.
+docs/guardrails-policy — RETIRED by SN-028 with the rest of the one-word policy idiom; the dial is `[policies] guardrails` in docs/process.toml (the one policy home). Design history, the SN-028 plan and closed WI specs legitimately name the legacy file — it is the vocabulary `bootstrap.py --migrate-config` converts, and a repo carrying BOTH homes is refused rather than resolved by precedence.
 
 # --- Declared policy files where ABSENT is a legal, documented state ----------
 # Naming one of these in prose is CORRECT: the reader treats absence as the
 # stated default, so the file exists only when a repo overrides that default.
-docs/blackout — absent = disabled, byte-identical, by the template's own spec
 docs/review-cadence — absent = `slice` (per-slice review), the default cadence
 docs/subagent-gate — absent = deny; a research-enabled repo writes `allow`
 docs/components-check — absent = the component-findings gate stays warn-first
@@ -79,3 +86,15 @@ tools/wi_convert.py — the converter's pre-2c meta-repo home, named as history 
 scripts/drive.py — renamed scripts/dispatch.py (+ scripts/lane.py) at the dispatcher split; closed specs name the old kit path as history
 project-trajectory/scripts/drive.py — renamed project-trajectory/scripts/dispatch.py; LLR-143's Module pointer follows in the SA9.1 connectivity batch, after the trunk-side arch-map regeneration drops the old inventory entry
 tests/test_drive.py — renamed tests/test_dispatch.py with the module it pins; closed specs name the old path as history
+prompts/ — the SCAFFOLD destination for the kit's prompt templates (plan §8), absent HERE by construction. `scripts/prompts.py` resolves templates script-relatively as `KIT/prompts/`, where KIT is the parent of the scripts dir: downstream that is `<repo>/prompts/` (which bootstrap.py's MAPPING rows create), and in this meta-repo it is `project-trajectory/prompts/` — the kit's own home, which IS present and IS what every test and every session here loads. A copy at this repo's root would be a second home for the same files with nothing keeping the two in step, i.e. exactly the drift the one-home rule exists to prevent. The downstream path is not left unproven: tests/test_prompts.py bootstraps a scaffold and asserts every shipped template lands and loads from it.
+prompts/README.md — see the `prompts/` line above; the authoring rules ship to the scaffold's prompts/ dir, and this repo reads them at project-trajectory/prompts/README.md.
+prompts/worker.template.md — see the `prompts/` line above (kit home: project-trajectory/prompts/worker.template.md).
+prompts/reviewer.template.md — see the `prompts/` line above (kit home: project-trajectory/prompts/reviewer.template.md).
+prompts/critique.template.md — see the `prompts/` line above (kit home: project-trajectory/prompts/critique.template.md).
+prompts/adjudicate-amendment.template.md — see the `prompts/` line above (kit home: project-trajectory/prompts/adjudicate-amendment.template.md).
+prompts/adjudicate-disposition.template.md — see the `prompts/` line above (kit home: project-trajectory/prompts/adjudicate-disposition.template.md).
+prompts/adjudicate-conflict.template.md — see the `prompts/` line above (kit home: project-trajectory/prompts/adjudicate-conflict.template.md).
+prompts/adjudicate-red-tc.template.md — see the `prompts/` line above (kit home: project-trajectory/prompts/adjudicate-red-tc.template.md).
+prompts/dual-plan-planner.template.md — see the `prompts/` line above (kit home: project-trajectory/prompts/dual-plan-planner.template.md).
+prompts/dual-plan-critic.template.md — see the `prompts/` line above (kit home: project-trajectory/prompts/dual-plan-critic.template.md).
+prompts/dual-plan-arbiter.template.md — see the `prompts/` line above (kit home: project-trajectory/prompts/dual-plan-arbiter.template.md).

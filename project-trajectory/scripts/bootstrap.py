@@ -18,11 +18,11 @@ What it creates in the destination:
     docs/process.md                            <- PROCESS.md  (load-bearing core)
     docs/process-options.md                    <- PROCESS_OPTIONS.md  (opt-in layers)
     docs/gate                                  <- gate.template  (active gate: G1)
-    docs/gate-policy                           <- gate-policy.template  (authority: attended)
-    docs/privacy-check                         <- privacy-check.template  (privacy: off)
-    docs/push-policy                           <- push-policy.template  (policy: human)
-    docs/blackout                              <- blackout.template  (window: 12:00-19:00 UTC)
-    docs/review-policy                         <- review-policy.template  (reviewers: 1)
+    docs/process.toml                          <- process.toml.template  (EVERY policy dial:
+                                                  gate authority, the human-ratification level,
+                                                  push, reviewer count, privacy + secrets,
+                                                  guardrails, blackout — SN-028's one home)
+    prompts/*.template.md                      <- prompts/  (every brief the loop sends)
     docs/status.md                             <- STATUS.template.md  (working surface)
     docs/log.md                                <- LOG.template.md  (append-only history)
     docs/plan.md                               <- PLAN.template.md  (plan/build session blocks)
@@ -816,43 +816,71 @@ def _toml_scalar(value):
     return '"{}"'.format(text)
 
 
-def set_process_key(dest, section, key, value, dry_run=False):
+def set_process_key(dest, section, key, value, dry_run=False, add_if_missing=False):
     """Set `[section] key = value` in `docs/process.toml`, IN PLACE.
 
     A LINE REWRITE, not a re-serialization: stdlib has no TOML writer, and the
     file's explanatory header is most of its value (the same reason the legacy
     appliers kept the template's `#` lines). The one-`key = value`-per-line
-    convention this file already owes the git hooks is exactly what makes a
-    line rewrite exact. Returns True when the file changed.
+    convention this file owes the git hooks is exactly what makes a line
+    rewrite exact.
 
-    Refuses silently (returns False) when the file or the key is absent — the
-    caller is scaffolding from the kit template, which always carries every
-    key, so an absent key means someone deleted it deliberately and a bootstrap
-    flag must not resurrect it in the wrong section.
+    Returns `"set"` (written), `"same"` (already that value) or `"missing"`
+    (no such file/section/key, nothing written). THREE states, not a bool: the
+    MIGRATOR must be able to tell "already correct" from "I could not write
+    it", because deleting a legacy file on the strength of a write that never
+    happened destroys a declared policy and reports success. It did exactly
+    that once, on a hand-trimmed process.toml.
+
+    `add_if_missing` appends the key (creating the `[section]` header when
+    needed) instead of answering `"missing"` — what the migrator passes, so a
+    conversion is TOTAL. The scaffold flags leave it off: there, an absent key
+    means someone deleted it deliberately.
     """
-    if dry_run:
-        return False
     path = Path(dest) / PROCESS_TOML_REL
     if not path.is_file():
-        return False
-    lines = path.read_text(encoding="utf-8").splitlines()
+        return "missing"
+    lines = path.read_text(encoding="utf-8-sig").splitlines()
     want = "{} = {}".format(key, _toml_scalar(value))
-    in_section = False
+    header = "[{}]".format(section)
+    at, append_at = _locate_process_key(lines, header, key)
+    if at is not None:
+        if lines[at] == want:
+            return "same"
+        if not dry_run:
+            lines[at] = want
+            _write_text_lf(path, "\n".join(lines) + "\n")
+        return "set"
+    if not add_if_missing:
+        return "missing"
+    if not dry_run:
+        if header in [ln.strip() for ln in lines]:
+            lines.insert(append_at if append_at is not None else len(lines), want)
+        else:
+            lines.extend(["", header, want])
+        _write_text_lf(path, "\n".join(lines) + "\n")
+    return "set"
+
+
+def _locate_process_key(lines, header, key):
+    """`(index_of_key, index_to_append_at)` for `key` under `header`.
+
+    The pure SCAN half of `set_process_key`, split from the write half so
+    neither sits at the C901 ceiling — and because "where is it" and "what do I
+    write" are two questions. Either value is None when there is no answer."""
+    in_section, append_at = False, None
     for i, line in enumerate(lines):
         stripped = line.strip()
         if stripped.startswith("[") and stripped.endswith("]"):
-            in_section = stripped == "[{}]".format(section)
+            in_section = stripped == header
             continue
         if not in_section:
             continue
-        head = stripped.split("=", 1)[0].strip() if "=" in stripped else ""
-        if head == key:
-            if lines[i] == want:
-                return False
-            lines[i] = want
-            _write_text_lf(path, "\n".join(lines) + "\n")
-            return True
-    return False
+        if "=" in stripped and stripped.split("=", 1)[0].strip() == key:
+            return i, None
+        if stripped:
+            append_at = i + 1
+    return None, append_at
 
 
 def apply_gate_policy(dest, level, dry_run):
@@ -876,7 +904,8 @@ def apply_gate_policy(dest, level, dry_run):
             "**Status:** DRAFT — ratify with the owner, then keep in version "
             "control.\n"
             "**What this is:** this repo declares the `{level}` gate authority "
-            "(`docs/gate-policy`; process.md §4). The kit-owned process doc is "
+            "(`docs/process.toml` `[attestation] gate_policy`; process.md §4). "
+            "The kit-owned process doc is "
             "never edited per-repo (a re-sync overwrites it); this register "
             'amends it (process-options.md "Gate authority levels"). Where '
             "the two disagree, this file wins — except the fixed points at "
@@ -1001,11 +1030,47 @@ def migrate_legacy_config(dest, dry_run=False):
                 "place; fix it, then re-run --migrate-config".format(legacy_name, word)
             )
             continue
+        # THE WRITE DECIDES THE DELETE. `set_process_key` can answer "missing"
+        # (a hand-trimmed process.toml, a renamed section, a dial this kit
+        # version does not carry) — and unlinking on the strength of a write
+        # that never happened is how a declared policy disappears under a
+        # green `migrated:` line. `add_if_missing` makes the write total, and
+        # the guard below is the belt beside that brace.
+        wrote = set_process_key(
+            dest, section, key, value, dry_run=dry_run, add_if_missing=True
+        )
+        if wrote == "missing":
+            notes.append(
+                "docs/{} could NOT be folded into {} [{}] {} — the legacy file "
+                "is LEFT IN PLACE with its value intact. Fix the TOML, then "
+                "re-run --migrate-config.".format(
+                    legacy_name, PROCESS_TOML_REL, section, key
+                )
+            )
+            continue
+        if _has_comment_lines(path):
+            notes.append(
+                "docs/{} carried its own comment lines; the VALUE migrated and "
+                "the notes went with the file. Re-state them in {} if they "
+                "still matter.".format(legacy_name, PROCESS_TOML_REL)
+            )
         if not dry_run:
-            set_process_key(dest, section, key, value)
             path.unlink()
         moved.append("docs/" + legacy_name)
     return moved, notes
+
+
+def _has_comment_lines(path):
+    """Whether a legacy policy file carries `#` lines an adopter may have
+    written (the kit's own templates do, so this is only interesting as a
+    reminder, never as a refusal)."""
+    try:
+        return any(
+            ln.lstrip().startswith("#")
+            for ln in path.read_text(encoding="utf-8", errors="replace").splitlines()
+        )
+    except OSError:
+        return False
 
 
 # (The opt-in parallel-tracks layer is retired outright, WI-210: the
@@ -1281,6 +1346,27 @@ MAPPING = [
     # --privacy-check flags now rewrite a KEY in this file rather than writing
     # their own file.
     ("process.toml.template", "docs/process.toml"),
+    # THE PROMPTS (plan §8). Every brief the loop sends is a FILE now, not a
+    # Python string constant, and `scripts/prompts.py` resolves them
+    # SCRIPT-RELATIVELY — in a scaffolded repo `scripts/` sits at the root, so
+    # the templates must land in `prompts/` or every worker, reviewer and
+    # critique session downstream loses its brief. (Before this, the three
+    # dual-plan hats were the only templates here and nothing copied them: the
+    # opt-in round simply PAGEd "hat template unreadable". That degrade was
+    # tolerable for an opt-in layer and is not for the ordinary session path.)
+    # Kit-owned: a re-sync overwrites them, and a repo that wants different
+    # prose wires its own file through --prompt-map instead of editing these.
+    ("prompts/README.md", "prompts/README.md"),
+    ("prompts/worker.template.md", "prompts/worker.template.md"),
+    ("prompts/reviewer.template.md", "prompts/reviewer.template.md"),
+    ("prompts/critique.template.md", "prompts/critique.template.md"),
+    ("prompts/adjudicate-amendment.template.md", "prompts/adjudicate-amendment.template.md"),
+    ("prompts/adjudicate-disposition.template.md", "prompts/adjudicate-disposition.template.md"),
+    ("prompts/adjudicate-conflict.template.md", "prompts/adjudicate-conflict.template.md"),
+    ("prompts/adjudicate-red-tc.template.md", "prompts/adjudicate-red-tc.template.md"),
+    ("prompts/dual-plan-planner.template.md", "prompts/dual-plan-planner.template.md"),
+    ("prompts/dual-plan-critic.template.md", "prompts/dual-plan-critic.template.md"),
+    ("prompts/dual-plan-arbiter.template.md", "prompts/dual-plan-arbiter.template.md"),
     # The model REGISTRY the coordinator's router reads (WI-059, S8): one row per
     # usable model keyed [PROVIDER]-[MODEL_NAME]-[VERSION], with example rows for
     # the verified headless shapes. Present but INERT until docs/agents-enabled
@@ -1289,10 +1375,13 @@ MAPPING = [
     # "Unattended operation" -> routing/escalation). Absent both files = today's
     # single AGENT_CMD/AGENT_MODEL behavior.
     ("agents.template.csv", "docs/agents.csv"),
-    # (The privacy-check / push-policy / blackout one-word files folded into
-    # docs/process.toml at SN-028 — see the process.toml.template row above.
-    # Their `*.template` files are kept in the kit as the CONVERTER's reference
-    # for the legacy vocabulary, not as scaffold sources.)
+    # (The gate-policy / push-policy / review-policy / privacy-check / blackout
+    # one-word files folded into docs/process.toml at SN-028 — see the
+    # process.toml.template row above. Their `*.template` files stay in the kit
+    # marked RETIRED, as a HUMAN's reference for the legacy vocabulary when
+    # reading an un-migrated adoption. `migrate_legacy_config` does NOT read
+    # them: it reads the adopting repo's own `docs/<file>`, so the templates
+    # are documentation, not an input.)
     ("STATUS.template.md", "docs/status.md"),
     # The owner decision briefs status.md's Needs-<human> bullets link to
     # (process-options.md "Trajectory / work-items layer"): one OI-N section
@@ -1419,6 +1508,10 @@ MAPPING = [
     ("scripts/plan_coverage.py", "scripts/plan_coverage.py"),
     ("scripts/plan_round.py", "scripts/plan_round.py"),
     ("scripts/plan_briefs.py", "scripts/plan_briefs.py"),
+    # The prompt-template loader + strict single-brace fill (plan §8): every
+    # brief the loop sends resolves through it, so it ships wherever
+    # agent_loop.py does.
+    ("scripts/prompts.py", "scripts/prompts.py"),
     ("scripts/plan_coverage_step.py", "scripts/plan_coverage_step.py"),
     ("scripts/plan_artifacts.py", "scripts/plan_artifacts.py"),
     # The work-item registry's CSV <-> spec-folder converter (§2 of
@@ -1572,7 +1665,20 @@ GITKEEP_DIRS = [
     "docs/work/active",
     "docs/work/deferred",
     "docs/work/cancelled",
+    # SN-031's third terminal, scaffolded for the same visibility reason: a lane
+    # that stopped early closes HERE, not back into `queued/` with a blockref,
+    # and an empty `partial/` beside the other two terminals is what tells a
+    # reader "stopped early" is a state the process has a name for.
+    "docs/work/partial",
     "docs/work/complete",
+    # SN-031's per-close reports: one immutable document per non-merged-clean
+    # lane close. OUTSIDE docs/work/ deliberately — `spec_files` is an rglob for
+    # `WI-*.md` filtered only on "not directly in work_dir", so a report living
+    # under docs/work/ would be walked, raise on its undeclared directory, and
+    # then be SILENTLY SKIPPED by the registry readers, while its id counted as
+    # taken by the mint. The report is the return event's identity; it must not
+    # be a half-visible spec.
+    "docs/handbacks",
     # The log's fragment drop-box (docs/concurrency-restructure.md §5.1): a work
     # branch writes `docs/log.d/<WI-id>-<slug>.md` — a unique name, so the log
     # stops being a merge-conflict surface — and `scripts/trunk_step.py` compiles

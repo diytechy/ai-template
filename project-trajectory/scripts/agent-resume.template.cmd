@@ -10,7 +10,7 @@ REM the slots below and runs scripts/agent_loop.py.
 REM
 REM CONSENT: the unattended loop runs the agent CLI headless; a permission-
 REM bypass flag in AGENT_CMD means sessions edit without prompts. You consent
-REM by filling the slot, declaring docs/gate-policy, and running this.
+REM by filling the slot, declaring docs/process.toml, and running this.
 REM No agent-driven work in this repo? Delete the agent-resume.* launchers.
 
 REM --- EDIT FOR YOUR PROJECT ---------------------------------------------------
@@ -35,7 +35,7 @@ REM   set "AGENT_PREFER_MAP=BUILD=OPENAI-SOL"
 REM Unknown/cooling ids fall through to docs/agents-enabled order.
 set "AGENT_PREFER_MAP="
 REM Optional per-phase COMMAND template map (cross-provider routing; pairs
-REM with the docs/review-policy reviewer dial - cross-provider dual review
+REM with the the process.toml reviewer dial reviewer dial - cross-provider dual review
 REM is the recommended review-policy 2 config), e.g.:
 REM   set "AGENT_CMD_MAP=REVIEW-B=gemini -p {prompt} --model {model}"
 set "AGENT_CMD_MAP="
@@ -61,7 +61,7 @@ cd /d "%~dp0"
 if not defined AGENT_CMD (
   echo agent-resume.cmd: no agent command wired yet.
   echo Edit AGENT_CMD in this file - see the EDIT FOR YOUR PROJECT block - and
-  echo in agent-resume.sh. Filling it ^(and declaring docs/gate-policy^) is your
+  echo in agent-resume.sh. Filling it ^(and declaring docs/process.toml^) is your
   echo consent to unattended agent sessions; see docs/process-options.md
   echo "Unattended operation".
   pause

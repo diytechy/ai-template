@@ -4,17 +4,24 @@ The invariant under test is "every lane ends in a merge, branches never hang",
 and the only honest way to test it is to CONSTRUCT the topology: real temp git
 repos, a real claim, a real lane worktree, real commits. What each group pins:
 
-  * the RETURN is a real registry move — the spec is back in `queued/`, the
-    branch is FINISHED by the integrator's own read, and `branch_outcomes`
-    reads `handback` off the same move;
-  * the returned spec LEAVES THE READY FRONTIER (queued + blockref = blocked).
-    That is not decoration: without it the driver would claim, hand back and
-    re-claim the same WI forever, so the anti-livelock property is asserted
-    against `schedule.frontier` itself rather than against the blockref cell;
-  * every registry reader still parses a returned spec. The `## Handback`
-    section widened a body grammar that four copies enforce, so all four are
-    driven over one returned file — the drift this repo closes by test rather
-    than by extraction (WI-291);
+  * the PARTIAL CLOSE is a real registry move to a TERMINAL folder — the spec
+    is in `partial/` with its definition byte-identical, an immutable per-close
+    REPORT sits beside it under docs/handbacks/, the branch is FINISHED by the
+    integrator's own read, and `branch_outcomes` reads `partial` off the same
+    move;
+  * the closed spec LEAVES THE READY FRONTIER — and now STRUCTURALLY, because
+    the folder is terminal. The old contract returned the row to `queued/` (the
+    ready state) and bought the property with a `blockref`, so it depended on
+    an attribute being written and nobody clearing it; without it the driver
+    would claim, close and re-claim the same WI forever. The assertion is
+    against `schedule.frontier` itself, either way;
+  * a `partial` report that omits the KEEP/DISCARD split refuses the merge —
+    the rung a live incident bought, where a green close merged rejected code
+    onto trunk because nothing had asked which commits should survive;
+  * every registry reader still parses a closed spec. `partial/` widened a
+    status vocabulary that four copies enforce, so all four are driven over one
+    real file — the drift this repo closes by test rather than by extraction
+    (WI-291);
   * the QUARANTINE is bar-inert AND lossless: the product paths go back to the
     base byte for byte, the `.patch` re-applies, and the bookkeeping the
     handback just wrote survives untouched.
@@ -114,8 +121,15 @@ def lane(root, branch="wi-401"):
     return wt
 
 
-def returned_spec_path(root, wid="WI-401"):
-    return root / "docs" / "work" / "queued" / "{}-widget.md".format(wid)
+def closed_spec_path(root, wid="WI-401"):
+    """SN-031: an early close is TERMINAL — the spec lands in `partial/`, not
+    back in the ready `queued/` where the old contract left it leaning on a
+    blockref to keep the driver from re-claiming it."""
+    return root / "docs" / "work" / "partial" / "{}-widget.md".format(wid)
+
+
+def report_path(root, wid="WI-401", branch="wi-401"):
+    return root / "docs" / "handbacks" / "{}-{}.md".format(wid, branch)
 
 
 def merge_branch(root, branch="wi-401"):
@@ -128,21 +142,28 @@ def merge_branch(root, branch="wi-401"):
 # --- the return itself ---------------------------------------------------------
 
 
-def test_handback_returns_the_spec_to_queued_and_finishes_the_branch(tmp_path):
+def test_the_partial_close_lands_terminal_with_its_report_and_finishes_the_branch(
+    tmp_path,
+):
     root = claimed_repo(tmp_path)
     wt = lane(root)
     (wt / "half-done.py").write_text("VALUE = 1\n", encoding="utf-8", newline="\n")
 
-    ids, refusal = hb.hand_back(root, "wi-401", "worker exit 7 (NEEDS-HUMAN)")
+    ids, refusal = hb.close_partial(
+        root,
+        "wi-401",
+        "worker exit 7 (NEEDS-JUDGEMENT)",
+        {"suggested_tier": "strong", "keep_commits": ["abc1234"]},
+    )
     assert refusal is None, refusal
     assert ids == ["WI-401"]
 
     # The branch is now FINISHED by the integrator's own read — the same move
-    # that returns the spec is the one that closes the lane, so there is no
+    # that closes the spec is the one that closes the lane, so there is no
     # second fact to keep in agreement.
     assert integ.finished_branches(root) == ["wi-401"]
     outcomes, unresolved = integ.branch_outcomes(root, "wi-401")
-    assert outcomes == {"WI-401": "handback"} and unresolved == []
+    assert outcomes == {"WI-401": "partial"} and unresolved == []
 
     # ...and the work so far is COMMITTED, not discarded: the lane worktree is
     # clean and the file is in the branch's tree.
@@ -151,19 +172,69 @@ def test_handback_returns_the_spec_to_queued_and_finishes_the_branch(tmp_path):
     assert _git(wt, "status", "--porcelain").strip() == ""
 
     merge_branch(root)
-    spec = returned_spec_path(root).read_text(encoding="utf-8")
-    assert "## Handback" in spec
-    assert 'blockref = "docs/work/queued/WI-401-widget.md"' in spec
-    assert "worker exit 7 (NEEDS-HUMAN)" in spec
+    # THE SPEC ITSELF IS UNCHANGED. Its definition did not move — only where it
+    # sits and what the report says about delivery. "Scope definitions never
+    # change; only whether they were fully delivered."
+    spec = closed_spec_path(root).read_text(encoding="utf-8")
+    assert "## Handback" not in spec, "the note moved OUT of the spec"
+    assert "blockref" not in spec, "a terminal row needs no blockref to hold it"
     assert not list((root / "docs" / "work" / "active").rglob("WI-*.md"))
 
+    # The REPORT is the event's identity, and it carries typed fields — not a
+    # magic substring inside prose (the `NEEDS-HUMAN` defect).
+    report = report_path(root).read_text(encoding="utf-8")
+    assert 'wi = "WI-401"' in report
+    assert 'claimed_outcome = "partial"' in report
+    assert 'suggested_tier = "strong"' in report
+    assert 'keep_commits = ["abc1234"]' in report
+    assert "worker exit 7 (NEEDS-JUDGEMENT)" in report
+    meta = hb.read_report(report_path(root))
+    assert meta["claimed_outcome"] == "partial"
+    assert hb.report_refusal(meta) is None
 
-def test_the_returned_spec_leaves_the_ready_frontier(tmp_path):
-    # THE ANTI-LIVELOCK PROPERTY, asserted where it actually bites. A handback
-    # puts the WI back in `queued/`, which is the ready state — so if the
-    # blockref did not take, the driver would claim, hand back and re-claim the
-    # same WI forever, moving trunk each time and never tripping the stall
-    # guard. Driven both ways: ready before the claim, BLOCKED after the return.
+
+def test_a_partial_report_silent_about_the_keep_discard_split_refuses(tmp_path):
+    """The rung a LIVE incident bought (2026-08-03): a close merged green and
+    the code the lane had REJECTED landed on trunk as-is, because nothing had
+    asked which commits should survive.
+
+    What is refused is SILENCE, not indecision — and the difference is the
+    whole design. The two closers know different things: a lane judged its own
+    work and can name the split; the dispatcher closing a lane whose worker
+    exited has no view of it at all. So `split_decided_by = "adjudicator"` is a
+    valid, actionable answer (the disposition row then owes the call), and a
+    report carrying neither a split nor a decider is not."""
+    silent = {"claimed_outcome": "partial", "reason": "stopped early"}
+    refusal = hb.report_refusal(silent)
+    assert refusal is not None
+    assert "SILENT" in refusal and "split_decided_by" in refusal
+
+    # The two actionable shapes both pass.
+    assert hb.report_refusal(dict(silent, keep_commits=["abc1234"])) is None
+    assert hb.report_refusal(dict(silent, split_decided_by="adjudicator")) is None
+    # ...and a decider outside the vocabulary is not a way through.
+    assert hb.report_refusal(dict(silent, split_decided_by="nobody")) is not None
+
+    # End to end: the writer never PRODUCES a silent report — an omitted split
+    # is written as an explicit deferral, so the rung passes on its own output.
+    root = claimed_repo(tmp_path)
+    lane(root)
+    assert hb.close_partial(root, "wi-401", "stopped early")[1] is None
+    assert integ._partial_report_refusal(root, "wi-401", {"WI-401": "partial"}) is None
+    merge_branch(root)
+    report = report_path(root).read_text(encoding="utf-8")
+    assert 'split_decided_by = "adjudicator"' in report
+    assert "the disposition row minted for this close is what owes it" in report
+
+
+def test_the_closed_spec_leaves_the_ready_frontier(tmp_path):
+    # THE ANTI-LIVELOCK PROPERTY, asserted where it actually bites — and it is
+    # now STRUCTURAL rather than bought with a blockref. The old contract put
+    # the row back in `queued/`, the ready state, so only a `blockref` stopped
+    # the driver claiming, closing and re-claiming it forever (moving trunk each
+    # time, so the stall guard never fired). `partial/` is TERMINAL: there is
+    # no attribute to forget. Driven both ways: ready before the claim,
+    # terminal after the close.
     root = claimed_repo(tmp_path)
 
     _git(root, "checkout", "-q", "-b", "probe", "HEAD~1")
@@ -172,44 +243,44 @@ def test_the_returned_spec_leaves_the_ready_frontier(tmp_path):
     _git(root, "checkout", "-q", "main")
 
     lane(root)
-    _ids, refusal = hb.hand_back(root, "wi-401", "worker exit 7")
+    _ids, refusal = hb.close_partial(root, "wi-401", "worker exit 7")
     assert refusal is None, refusal
     merge_branch(root)
 
     records = {r["id"]: r for r in sched.evaluate(sched._load(root))}
-    assert records["WI-401"]["status"] == "queued"
-    assert records["WI-401"]["disposition"] == "blocked"
+    assert records["WI-401"]["status"] == "partial"
+    assert records["WI-401"]["disposition"] == "partial"
+    assert "partial:terminal-stopped-early" in records["WI-401"]["reasons"]
     assert [r["id"] for r in sched.frontier(sched._load(root))] == []
 
 
-def test_every_registry_reader_parses_a_returned_spec(tmp_path):
-    # The `## Handback` section widened a body grammar FOUR copies enforce
-    # (agent_common, check_trajectory, schedule per the F5 rule, plus the
-    # converter). A returned spec that one reader accepted and another called
-    # malformed would split the registry in half — schedule would see a blocked
-    # row the validator had dropped — so all four are driven over one real file.
+def test_every_registry_reader_parses_a_closed_spec(tmp_path):
+    # `partial/` widened a status vocabulary FOUR copies enforce (agent_common,
+    # check_trajectory, schedule per the F5 rule, plus the converter). A spec
+    # that one reader placed and another called an unknown directory would
+    # split the registry in half — schedule would see a terminal row the
+    # validator had dropped — so all four are driven over one real file.
     root = claimed_repo(tmp_path)
     lane(root)
-    assert hb.hand_back(root, "wi-401", "worker exit 7")[1] is None
+    assert hb.close_partial(root, "wi-401", "worker exit 7")[1] is None
     merge_branch(root)
-    text = returned_spec_path(root).read_text(encoding="utf-8")
-    rel = "queued/WI-401-widget.md"
+    text = closed_spec_path(root).read_text(encoding="utf-8")
+    rel = "partial/WI-401-widget.md"
 
     for reader in (acommon, ctraj, sched):
         row, _order = reader.parse_spec_row(text, rel)
-        assert row["Status"] == "queued", reader.__name__
-        assert row["Deliverable"] == "", reader.__name__
-        assert row["BlockRef"] == "docs/work/queued/WI-401-widget.md", reader.__name__
+        assert row["Status"] == "partial", reader.__name__
+        assert row["BlockRef"] == "", reader.__name__
     row, _order = wi_convert.parse_spec(text, rel)
-    assert row["Status"] == "queued" and row["Deliverable"] == ""
+    assert row["Status"] == "partial"
 
 
 def test_the_return_move_runs_the_link_aware_ritual(tmp_path):
-    """WI-393: the return is the same indivisible move+relink the claim and the
-    archival run (WI-288/WI-353, rehomed in spec_move.py). queued/ is one
-    directory SHALLOWER than active/<branch>/, so a returned spec's own links
+    """WI-393: the close is the same indivisible move+relink the claim and the
+    archival run (WI-288/WI-353, rehomed in spec_move.py). `partial/` is one
+    directory SHALLOWER than active/<branch>/, so a closed spec's own links
     must shorten, and every inbound link written against the active path must
-    follow it back — in the same handback commit, never as residue."""
+    follow it back — in the same close commit, never as residue."""
     # The link sits in the Deliverable section: the registry loaders drop a
     # spec whose body prose lives under no recognised heading.
     body = spec_text("WI-401", deliverable="See [the log](../../log.md).")
@@ -242,51 +313,75 @@ def test_the_return_move_runs_the_link_aware_ritual(tmp_path):
         newline="\n",
     )
 
-    ids, refusal = hb.hand_back(root, "wi-401", "worker exit 7")
+    ids, refusal = hb.close_partial(root, "wi-401", "worker exit 7")
     assert refusal is None, refusal
     assert ids == ["WI-401"]
 
-    returned = (wt / "docs" / "work" / "queued" / "WI-401-widget.md").read_text(
+    closed = (wt / "docs" / "work" / "partial" / "WI-401-widget.md").read_text(
         encoding="utf-8"
     )
-    assert "[the log](../../log.md)" in returned, returned
-    assert "../../../log.md" not in returned
+    assert "[the log](../../log.md)" in closed, closed
+    assert "../../../log.md" not in closed
     for doc in (wt / "docs" / "log.md", wt / "docs" / "log.d" / "WI-401-notes.md"):
         text = doc.read_text(encoding="utf-8")
         assert "work/active/wi-401" not in text, (doc, text)
-        assert "work/queued/WI-401-widget.md" in text, (doc, text)
-    # the relinks are IN the handback commit, not left dirty in the lane
+        assert "work/partial/WI-401-widget.md" in text, (doc, text)
+    # the relinks are IN the close commit, not left dirty in the lane
     assert _git(wt, "status", "--porcelain").strip() == ""
 
 
-def test_a_returned_spec_keeps_a_deliverable_that_was_already_there(tmp_path):
-    # The grammar is Deliverable-then-Handback, not either/or: a spec carrying
-    # both must still yield its cell verbatim. Without the ordering rule the
-    # partition would swallow the Deliverable, which no reader would report —
-    # it would simply go blank.
-    note = hb._note("wi-401", "worker exit 7", "aaaaaaaaaa..bbbbbbbbbb")
-    text = hb.returned_spec(
-        spec_text("WI-401", deliverable="A widget, half-shipped."),
-        "docs/work/queued/WI-401-widget.md",
-        note,
+def test_a_closed_spec_keeps_its_deliverable_untouched(tmp_path):
+    # The old contract APPENDED a `## Handback` section to the spec body, so
+    # the grammar had to be Deliverable-then-Handback and a bad partition would
+    # silently blank the Deliverable cell. SN-031 deletes the whole hazard: the
+    # close writes a separate report and the spec's body is not edited at all.
+    # The assertion that matters is therefore the stronger one — BYTE-IDENTICAL.
+    root = claimed_repo(
+        tmp_path,
+        extra=(
+            (
+                "docs/work/queued/WI-401-widget.md",
+                spec_text("WI-401", deliverable="A widget, half-shipped."),
+            ),
+        ),
     )
-    assert text.index("## Deliverable") < text.index("## Handback")
-    row, _order = acommon.parse_spec_row(text, "queued/WI-401-widget.md")
+    claimed = root / "docs" / "work" / "active" / "wi-401" / "WI-401-widget.md"
+    before = claimed.read_text(encoding="utf-8")
+
+    lane(root)
+    assert hb.close_partial(root, "wi-401", "worker exit 7")[1] is None
+    merge_branch(root)
+
+    after = closed_spec_path(root).read_text(encoding="utf-8")
+    assert after == before, "an early close must not edit the spec's definition"
+    row, _order = acommon.parse_spec_row(after, "partial/WI-401-widget.md")
     assert row["Deliverable"] == "A widget, half-shipped."
 
 
-def test_a_spec_that_already_declares_a_blockref_keeps_its_own(tmp_path):
-    text = spec_text("WI-401").replace(
-        'specref = "seed.txt"', 'specref = "seed.txt"\nblockref = "docs/ratify/OI-9.md"'
-    )
-    out = hb.returned_spec(text, "docs/work/queued/WI-401-widget.md", "\n## Handback\n")
-    assert 'blockref = "docs/ratify/OI-9.md"' in out
-    assert out.count("blockref") == 1
+def test_a_close_writes_no_blockref_because_the_folder_is_terminal(tmp_path):
+    # The old contract bought its anti-livelock property with a `blockref`,
+    # which meant the property depended on an ATTRIBUTE being written by the
+    # close and never cleared by anyone. `partial/` is terminal, so there is
+    # nothing to write and nothing to forget. (A spec cannot ARRIVE carrying a
+    # blockref — a blocked row is not claimable — so the only honest form of
+    # this assertion is that the close introduces none.)
+    root = claimed_repo(tmp_path)
+    lane(root)
+    assert hb.close_partial(root, "wi-401", "worker exit 7")[1] is None
+    merge_branch(root)
+
+    out = closed_spec_path(root).read_text(encoding="utf-8")
+    assert "blockref" not in out
+    rows = {w["id"]: w for w in sched._load(root)}
+    assert rows["WI-401"]["blockref"] == ""
+    records = {r["id"]: r for r in sched.evaluate(sched._load(root))}
+    assert records["WI-401"]["disposition"] == "partial"
+    assert [r["id"] for r in sched.frontier(sched._load(root))] == []
 
 
 def test_handback_refuses_a_branch_trunk_holds_no_claim_for(tmp_path):
     root = claimed_repo(tmp_path)
-    ids, refusal = hb.hand_back(root, "wi-999", "worker exit 7")
+    ids, refusal = hb.close_partial(root, "wi-999", "worker exit 7")
     assert ids is None and "no claimed specs" in refusal
 
 
@@ -308,9 +403,9 @@ def test_a_disposition_rows_own_handback_is_refused_structurally(tmp_path):
     )
     _commit(root, "fixture: the claim is an adjudication row", when=T_CODE)
 
-    ids, refusal = hb.hand_back(root, "wi-401", "worker exit 7 (NEEDS-HUMAN)")
+    ids, refusal = hb.close_partial(root, "wi-401", "worker exit 7 (NEEDS-HUMAN)")
     assert ids is None
-    assert "never hands back" in refusal and "R3" in refusal
+    assert "never closes early" in refusal and "R3" in refusal
     assert spec.is_file()  # the claim did not move
     assert not (root / "docs" / "work" / "queued" / "WI-401-widget.md").exists()
 
@@ -327,7 +422,7 @@ def quarantined_repo(tmp_path):
     (wt / "added.py").write_text("BROKEN = (\n", encoding="utf-8", newline="\n")
     (wt / ".gitignore").unlink()
     _commit(wt, "WI-401: half a widget")
-    assert hb.hand_back(root, "wi-401", "worker exit 7")[1] is None
+    assert hb.close_partial(root, "wi-401", "worker exit 7")[1] is None
     return root, wt
 
 
@@ -404,7 +499,7 @@ def test_quarantine_reverts_a_rename_and_keeps_the_failing_file(tmp_path):
     _git(wt, "mv", "Aold.py", "Anew.py")
     (wt / "z_broken.py").write_text("VALUE = (\n", encoding="utf-8", newline="\n")
     _commit(wt, "WI-401: rename a module and break a file")
-    assert hb.hand_back(root, "wi-401", "worker exit 7")[1] is None
+    assert hb.close_partial(root, "wi-401", "worker exit 7")[1] is None
 
     assert hb.quarantine(root, "wi-401", "bar exit 1") is None
 
@@ -464,9 +559,13 @@ def test_quarantine_leaves_the_handback_bookkeeping_alone(tmp_path):
     _commit(wt, "log: WI-401 fragment")
 
     assert hb.quarantine(root, "wi-401", "bar exit 1") is None
-    assert (wt / "docs" / "work" / "queued" / "WI-401-widget.md").is_file()
+    assert (wt / "docs" / "work" / "partial" / "WI-401-widget.md").is_file()
     assert fragment.is_file()
-    assert integ.branch_outcomes(root, "wi-401")[0] == {"WI-401": "handback"}
+    # The per-close REPORT is bookkeeping too — reverting it would destroy the
+    # event identity the disposition mint keys off, leaving a terminal row that
+    # nothing is owed a judgement for.
+    assert (wt / "docs" / "handbacks" / "WI-401-wi-401.md").is_file()
+    assert integ.branch_outcomes(root, "wi-401")[0] == {"WI-401": "partial"}
 
 
 def test_quarantine_refuses_when_the_red_is_not_the_lanes_own_code(tmp_path):
@@ -475,7 +574,7 @@ def test_quarantine_refuses_when_the_red_is_not_the_lanes_own_code(tmp_path):
     # only buy a second identical bar run. It says so instead.
     root = claimed_repo(tmp_path)
     lane(root)
-    assert hb.hand_back(root, "wi-401", "worker exit 7")[1] is None
+    assert hb.close_partial(root, "wi-401", "worker exit 7")[1] is None
 
     refusal = hb.quarantine(root, "wi-401", "bar exit 1")
     assert refusal is not None

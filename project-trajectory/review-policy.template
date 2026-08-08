@@ -1,3 +1,11 @@
+# RETIRED SCAFFOLD SOURCE (SN-028). This dial now lives in
+# process.toml.template -> docs/process.toml as `[policies] review_rounds`, and
+# bootstrap.py no longer copies this file into a new repo — shipping both
+# homes would hand every scaffold the mixed-config refusal. The file stays
+# in the kit as the reference for the legacy vocabulary that
+# `bootstrap.py --migrate-config` reads when converting an existing
+# adoption; the text below describes that legacy home, not today's.
+#
 # Review policy (process-options.md "Unattended operation" — the reviewer
 # dial). One value on the last line — how many independent fresh-context
 # review verdicts a completed work item gets before the integrator accepts it:

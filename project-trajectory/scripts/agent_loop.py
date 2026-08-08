@@ -148,6 +148,7 @@ try:
     import agent_route
     import agent_session
     import plan_runner
+    import prompts
     import score_reviews
 except ImportError:  # pragma: no cover - in-process fallback
     sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -155,6 +156,7 @@ except ImportError:  # pragma: no cover - in-process fallback
     import agent_route
     import agent_session
     import plan_runner
+    import prompts
     import score_reviews
 
 # The WI-218 split: the session-launch layer (slice B), the shared coordinator
@@ -251,130 +253,35 @@ RESUME_RECONCILE_NOTE = (
 )
 
 
-# The worker-assignment prompt (WI-181, SR-060). Assembled per session from the
-# WI row + SpecRef + predecessor context + branch diff + rework finding — NEVER
-# from docs/status.md (not a resume surface) or docs/next-wi (retired). The
-# format slots are filled by worker_prompt(); the trailer protocol is the
-# worker's ONLY result channel (committed evidence — workers have no lane
-# files). Re-grounded on the §2.3 claim model at concurrency-restructure
-# Phase 5: the branch is the claim branch `integrate.py claim` cut, and the
-# claimed spec sits in docs/work/active/<branch>/.
-WORKER_PROMPT = (
-    "You are a worker session for a CLAIMED work item "
-    "(scripts/agent_loop.py --wi, on a branch cut by `integrate.py claim`) — "
-    "assume no human is watching. You are assigned ONE work item on ONE claimed "
-    "branch; this assignment is your whole scope. Read AGENTS.md first, then "
-    "the SpecRef and SR rows below — they are the spec of record.\n"
-    "\n"
-    "Assignment:\n"
-    "- WI: {wi} — {title}\n"
-    "- SR-Refs: {srs} | SpecRef: {specref}\n"
-    "- Branch: {train} (its claim is docs/work/active/{train}/; integration "
-    "base {base})\n"
-    "{pred_block}{context_block}{diff_block}{rework_block}"
-    "\n"
-    "Rules (the branch discipline, docs/concurrency-restructure.md §2.3/§5):\n"
-    "- Work ONLY the assigned WI. Do not resume from docs/status.md and do not "
-    "look for docs/next-wi (retired) — the assignment above is authoritative.\n"
-    "- Run the declared harness (docs/stack.ini) and keep it green; commit "
-    "coherent progress. End your FINAL commit for this WI with the trailer:\n"
-    "    WI: {wi}\n"
-    "- NEVER edit root coordination truth on this branch: docs/status.md, "
-    "docs/log.md (write your session record as a fragment "
-    "docs/log.d/<WI-id>-<slug>.md instead; the trunk step compiles it), "
-    "another branch's docs/work/active/ claims, or generated artifacts "
-    "(docs/iteration_index.md, dashboards, generated maps). The trunk lane "
-    "regenerates generated artifacts after each merge (§5.2); the integrator "
-    "merges this branch only through its fail-closed queue.\n"
-    "- If the WI cannot proceed for a non-predecessor reason, commit the "
-    "evidence you have with the trailers `Blocked-WI: {wi}` and `BlockRef: "
-    "<OI-N | spec anchor | named external condition>` INSTEAD of the WI "
-    "trailer, and stop."
-)
+# The three session-engine prompts are FILES now, not string constants
+# (plan §8): `project-trajectory/prompts/{worker,reviewer,critique}.template.md`,
+# loaded through `prompts.py`. Prompt prose is what steers the sessions this
+# loop launches, and it had been reviewable only by reading Python source — so
+# it moved to where a diff shows it, under the same machinery the dual-plan
+# hats already used.
+#
+# LOADED LAZILY, never at import: a missing template must be a named PREFLIGHT
+# refusal (`map_preflight`), not an ImportError for every consumer of this
+# module — dispatch, plan_runner and most of the suite import agent_loop
+# without composing a single prompt. The fill idioms are UNCHANGED
+# (`WORKER_PROMPT.format(...)`, `.replace("{verdict}", ...)`), because the
+# single-brace vocabulary is also every operator override file's contract.
 
-# The redacted reviewer prompt (S8). Ships as the embedded default for the
-# REVIEW-A/REVIEW-B phases; a repo overrides it per phase with a prompt-template
-# FILE via --prompt-map / AGENT_PROMPT_MAP. Redacted BY CONSTRUCTION: the
-# reviewer gets the diff + the requirement surface and NEVER the implementer's
-# self-assessment (leaking it collapses finding rates several-fold). No debate
-# rounds — independent parallel reviews, mechanically merged. `{verdict}` is
-# substituted with the repo path the reviewer must write its verdict to.
-REVIEWER_PROMPT = (
-    "You are an INDEPENDENT reviewer launched by the unattended coordinator "
-    "(scripts/agent_loop.py) — a fresh context that did NOT write this code. "
-    "Assume the implementer was careful but missed something, and hunt for it. "
-    "Review ONLY (1) the diff of the work under review — run `git log` / `git "
-    "diff` yourself to see it — and (2) the requirement surface it must satisfy: "
-    "AGENTS.md, docs/process.md, the docs/requirements registries, and the "
-    "docs/specs spec-of-record for the open work item. If this diff adds or "
-    "changes requirement rows (SN/SR/TC under docs/requirements), also sweep "
-    "them against the EXISTING registries — the new rows AND the historical "
-    "rows they touch — for any contradiction, overlap, or attribute/limit "
-    "conflict, and raise each as a finding (mark it 'for clarity' at MINOR when "
-    "it is a wording ambiguity sharper SN/SR/TC language would resolve, not a "
-    "defect). If the diff under review is a G1/G2 ratification (a Status-change "
-    "commit closing a `[phase]-[g*]` gate), the batch-scoped ratification "
-    "hierarchy is a REQUIRED input: generate it with `scripts/trace.py --ratify "
-    "<phase>` and confirm the ratified SN->SR->LLR/TC batch — its Requirement/AC, "
-    "LLR Detail, TC Method/Expected, and any cited rubric — is coherent and "
-    "complete before endorsing the gate. Flag status.md prose that contradicts a "
-    "declared policy file's current value as a finding. Do NOT read or trust the "
-    "implementer's own session notes or self-assessment — a leaked "
-    "self-assessment collapses review finding-rates several-fold. Run the "
-    "harness yourself (python scripts/check.py, scripts/trace.py) and quote real "
-    "output; believe nothing you did not observe. Drive the diff's REAL shipped "
-    "code paths — construct the scenario and run the actual function or flow it "
-    "changes; primitive probes and plausibility reading are supporting evidence, "
-    "never the verdict's basis. Before hunting, name the worst failure classes "
-    "THIS change admits (silent wrong content, fail-open, data loss) and hunt "
-    "those first, severity-ordered. An APPROVE must mean you tried to break it "
-    "and failed: map each spec Done-when item to its covering test or call it "
-    "UNCOVERED, and where the diff adds a regression test for a fixed defect, "
-    "confirm that test fails on the pre-fix behavior. This is an INDEPENDENT parallel "
-    "review — do not debate another reviewer. Write your verdict to {verdict} in "
-    "the log.md block format: one `- [BLOCKER|MAJOR|MINOR] <file:line> -> issue "
-    "-> the concrete change -> @owner` line per finding, then exactly one machine "
-    "line:\n"
-    "    VERDICT: APPROVE|CHANGES-REQUESTED findings=N\n"
-    "Commit that verdict file (a review is a recorded verdict — its one home) and "
-    "stop. Do not edit the code you are reviewing."
-)
 
-# The embedded CRITIQUE prompt (WI-068; process-options.md "Critique verification
-# & the critique loop"). Ships as the default for the CRITIQUE phase; a repo
-# overrides it with a prompt-template FILE via --prompt-map/AGENT_PROMPT_MAP under
-# the key `CRITIQUE`. Redacted BY CONSTRUCTION like the reviewer prompt: the critic
-# gets the RUBRIC + the SN/SR intent + the artifact recipe — and NEVER the
-# implementer's self-assessment (status.md / log.md / session notes). `{brief}` is
-# slotted with the rubric+intent+recipe block; `{verdict}` with the verdict path.
-CRITIQUE_PROMPT = (
-    "You are an INDEPENDENT critic launched by the unattended coordinator "
-    "(scripts/agent_loop.py) — a fresh context that did NOT produce this artifact, "
-    "wearing a DIFFERENT hat from the implementer. Your job is subjective-quality "
-    "judgment: say WHERE and WHY the artifact is or is not good enough, judged "
-    "ONLY against the WRITTEN RUBRIC below — never a fresh opinion of your own, and "
-    "never a lax test case. Do NOT read or trust the implementer's session notes, "
-    "docs/status.md, docs/log.md, or any self-assessment (a leaked self-assessment "
-    "collapses a critic's finding rate). Produce the artifact yourself from the "
-    "recipe below (agent CLIs read local images/renders natively; if your model "
-    "cannot, judge the text/description proxy and SAY SO), inspect it, and score it "
-    "against the rubric's numbered anchors.\n\n"
-    "--- RUBRIC + SN/SR INTENT + ARTIFACT RECIPE (the only context you get) ---\n"
-    "{brief}\n"
-    "--- END ---\n\n"
-    "Write your verdict to {verdict} in the log.md block format: one "
-    "`- [BLOCKER|MAJOR|MINOR] <rubric-anchor> -> where/why it fails -> the concrete "
-    "change -> @owner` line per finding, each CITING a rubric anchor id (B1/G2/…) "
-    "and locating the region/aspect of the artifact it fails on. A finding that "
-    "names a NEW failure mode must propose it as a new `B#` anchor for the rubric "
-    "(the accumulation rule). You MAY add `- [TC-HARDEN] ...` lines proposing "
-    "measurable sub-criteria — these route through change-intake (process.md §5); "
-    "you NEVER edit the spine or the artifact yourself. Then exactly one machine "
-    "line:\n"
-    "    VERDICT: APPROVE|CHANGES-REQUESTED findings=N\n"
-    "Commit that verdict file (a critique is a recorded verdict — its one home) and "
-    "stop."
-)
+def _kit_prompt(key):
+    """One shipped prompt's text, cached per key for the process lifetime.
+
+    Read once and held because `worker_prompt` runs at EVERY claim and the
+    reviewer/critique briefs at every review round; the file is kit-owned and
+    does not change mid-run. A refusal propagates as `prompts.PromptError`,
+    which `route_session`'s callers surface by name."""
+    cached = _PROMPT_CACHE.get(key)
+    if cached is None:
+        cached = _PROMPT_CACHE[key] = prompts.load(key)
+    return cached
+
+
+_PROMPT_CACHE = {}
 
 # The review-phase names the loop schedules (the in-process phase in {PLAN,
 # BUILD, REVIEW-A, REVIEW-B, INTEGRATE}). A committing non-review session
@@ -497,7 +404,7 @@ def worker_prompt(root, wi_rows, wi, train, base, rework_text=""):
         else ""
     )
 
-    return WORKER_PROMPT.format(
+    return _kit_prompt(prompts.WORKER).format(
         wi=wi,
         title=(row.get("Title") or "(row missing from the registry)").strip(),
         srs=(row.get("SR-Refs") or "—").strip() or "—",
@@ -584,7 +491,7 @@ def reviewer_prompt(prompt_templates, phase, verdict_path):
     REVIEWER_PROMPT — with {verdict} resolved to the path the reviewer must
     write. Never carries the implementer's self-assessment (redaction by
     construction)."""
-    base = prompt_templates.get(phase, REVIEWER_PROMPT)
+    base = prompt_templates.get(phase, _kit_prompt(prompts.REVIEWER))
     return base.replace("{verdict}", str(verdict_path))
 
 
@@ -776,7 +683,7 @@ def critique_prompt(prompt_templates, verdict_path, brief):
     """The redacted critique prompt: the CRITIQUE prompt-map template (a FILE the
     operator wired) if present, else the embedded CRITIQUE_PROMPT — with {verdict}
     and {brief} resolved. Never carries the implementer's self-assessment."""
-    base = prompt_templates.get("CRITIQUE", CRITIQUE_PROMPT)
+    base = prompt_templates.get("CRITIQUE", _kit_prompt(prompts.CRITIQUE))
     return base.replace("{verdict}", str(verdict_path)).replace("{brief}", brief)
 
 
@@ -1455,6 +1362,14 @@ def map_preflight(
     prefer checks) into one list, reading each mapped prompt file once.
     Returns (failures, prompt_templates)."""
     failures = preflight(root, template, args)
+    # THE SHIPPED PROMPTS (plan §8). Now that the worker / reviewer / critique
+    # briefs are files, a missing or unreadable one is a launchability failure
+    # exactly like a broken --prompt-map entry — and it must fail HERE, before
+    # iteration 1, rather than at the first session that needs that brief. This
+    # is the rung that makes the constants-to-files move safe: without it, a
+    # scaffold whose prompts/ dir never landed would run, claim, and only then
+    # discover it has nothing to send.
+    failures.extend(prompts.preflight())
     # Every per-phase template must be as launchable as the default one — a
     # broken REVIEW-B entry must fail before iteration 1, not at the first
     # review session mid-run (the preflight contract).
@@ -1697,8 +1612,8 @@ def print_run_banner(
         )
     print(
         "gate-policy: {} | push-policy: {} (the coordinator never pushes "
-        "under 'human') | review-policy: {} (docs/review-policy — the reviewer "
-        "dial: {})".format(
+        "under 'human') | review-policy: {} (docs/process.toml [policies] "
+        "review_rounds — the reviewer dial: {})".format(
             gate_policy,
             push_policy,
             review_policy,
@@ -1718,9 +1633,9 @@ def print_run_banner(
             )
         )
     print(
-        "guardrails-policy: {} (docs/guardrails-policy — the vendored core is "
-        "injected per session when the policy selects that session's "
-        "model)".format(guardrails_policy)
+        "guardrails-policy: {} (docs/process.toml [policies] guardrails — the "
+        "vendored core is injected per session when the policy selects that "
+        "session's model)".format(guardrails_policy)
     )
     print("agent command: {}".format(template))
     for ph in sorted(cmd_map):
@@ -1735,8 +1650,9 @@ def print_run_banner(
     privacy_on = declared_policy(docs, "privacy-check", "false").lower() == "true"
     if privacy_on and not (branch or "").startswith("llm/"):
         print(
-            "WARNING: privacy-checked repo (docs/privacy-check) but the "
-            "current branch {!r} is not an llm/ iteration branch — see "
+            "WARNING: privacy-checked repo (docs/process.toml [policies] "
+            "privacy_check) but the current branch {!r} is not an llm/ "
+            "iteration branch — see "
             'process-options.md "Agent iteration branch & sync".'.format(
                 branch or "(none)"
             )
@@ -2764,7 +2680,8 @@ def main():
     blackout_line = declared_policy(docs, "blackout", "")
     if blackout_line and parse_blackout(blackout_line) is None:
         print(
-            "agent_loop: WARNING - docs/blackout {!r} is malformed (expected "
+            "agent_loop: WARNING - the blackout window {!r} (docs/process.toml "
+            "[policies] blackout) is malformed (expected "
             "HH:MM-HH:MM); the blackout window is DISABLED this run.".format(
                 blackout_line
             ),
@@ -2772,7 +2689,8 @@ def main():
         )
     if (review_policy or "").strip() not in ("0", "1", "2"):
         print(
-            "agent_loop: WARNING - docs/review-policy {!r} is not 0|1|2; "
+            "agent_loop: WARNING - the reviewer dial {!r} (docs/process.toml "
+            "[policies] review_rounds) is not 0|1|2; "
             "parsed leniently (unparseable -> 1, out-of-range clamped).".format(
                 review_policy
             ),

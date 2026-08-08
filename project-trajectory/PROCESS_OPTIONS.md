@@ -24,18 +24,18 @@ required for the minimum profile). Rows are in document order; each maps to the
 | Derived gate model | **always**, once you use gates — the default: the gate is computed from artifact states, not declared | `docs/gate` (generated) + `derive_gate.py` |
 | Phased delivery | a roadmap ships phase 1 before 2/3 (a single-shot deliverable skips it) | a `Phase` on every ratified SR/LLR/TC + a derived current phase + a per-phase gate |
 | Lifecycle phase | install/startup/steady-state requirements are easy to miss (most non-trivial products) | lifecycle tags on SRs |
-| Gate authority levels | a repo declares a non-default `docs/gate-policy` | `docs/gate-policy` + an attestation / deviation register |
+| Gate authority levels | a repo declares a non-default `gate_policy` | `docs/process.toml` `[attestation] gate_policy` + an attestation / deviation register |
 | Agent iteration branch & sync | you want agent-driven work to land as curated, reviewable history | a branch + sync cadence, wired into hooks |
 | Unattended operation | a coordinator grinds work from one entry point while nobody watches | `agent_loop.py` + `dispatch.py`/`lane.py`, `integrate.py`, `agents.csv`, the launchers |
 | Critique verification & the critique loop | a requirement's acceptance is **subjective** | a critique round + `Attest`/critique TCs |
 | Dual-plan decomposition | a goal is design-shaping enough that one planner's WI decomposition should not go unchallenged | two rival plans + a coverage diff + one critique round + an arbiter verdict (`docs/plans/`) |
-| Tier-conditional guardrails | an unattended run maps different model tiers to different phases | `docs/guardrails-policy` |
+| Tier-conditional guardrails | an unattended run maps different model tiers to different phases | `docs/process.toml` `[policies] guardrails` |
 | Enforcement audit | your process outgrew one reader's head and you want to know which rules actually bind | `docs/enforcement-audit.md` |
 | Signed measurements | you are about to write a measured number into a doc, log or registry row | a commit-the-evidence-first rule + a historical-observation marker |
 | §7 boundary notes | onboarding contributors, wiring a workstation, or a contested tooling boundary | prose (setup-script + boundary calls) |
 | Skills layer | an AI agent works the repo and you want it to load reusable skills | `skills/` + a per-agent fan-out |
 | Trajectory / work-items layer | you want to track **how** work executes — cross-track order, %-complete | `docs/work/` specs + `PROJECT_STATE.html` + `gen_trajectory.py` |
-| Commit identity & privacy | you must keep a real, contactable identity out of published commits | `docs/privacy-check` + commit-identity config |
+| Commit identity & privacy | you must keep a real, contactable identity out of published commits | `docs/process.toml` `[policies] privacy_check` + commit-identity config |
 | §8 purchased parts | the product incorporates purchased/external parts it buys rather than builds | a parts registry (`PB`/`PART`) |
 | Binary assets | the project ships unavoidably-binary deliverables (art, audio, video) | an assets registry (provenance / license / hash) |
 | Intra-repo interfaces & the architecture graph | more than one module, and you want the arch view to show how they connect | an `IF-###` seam registry + the `architecture.md` graph |
@@ -45,6 +45,23 @@ required for the minimum profile). Rows are in document order; each maps to the
 | §9 perf comparator | you have captured `PB-###` budgets you want tracked over time | a perf comparator over `PB` rows |
 | §10 several modules, one repo | a repo grows distinct sub-systems that still build and release as one (scale rung 2) | a module map |
 | Parallel work — the integration seam (multi-lane operation) | one repo runs many WIs concurrently — git + the serial integrator (the track-lane and dispatcher machinery are retired) | claims + the fail-closed merge queue |
+
+**Where the dials live.** Every *process* dial this file names — gate authority,
+the human-ratification level, push authority, the reviewer count, the privacy
+and secrets gates, guardrails, the blackout window — is declared once in
+**`docs/process.toml`**, one `key = value` per line under a bare `[section]`
+header; the file's own header explains the shape and why it is checked (the git
+hooks read the privacy dials in pure sh, so a Python-less box still fails
+closed). It is **kit-owned**: a re-sync takes the kit's copy and the repo
+re-applies its values. A repo carrying the retired one-word files under `docs/`
+converts with `python scripts/bootstrap.py --migrate-config --dest .` — running
+with both homes live is refused, not resolved by precedence. Three kinds of
+declared file stay outside it: the adopter-owned toolchain `docs/stack.ini`, the
+presence-as-semantics markers (`docs/work/pause`, `docs/agents-enabled`), and
+the generated `docs/gate` — plus the per-checker enablement toggles
+(`docs/trajectory-check`, `docs/interfaces-check`, `docs/components-check`,
+`docs/subagent-gate`, `docs/live-status`, `docs/okf-export`), which answer "is
+this check on", not "how is work processed".
 
 **Byte budget.** This file is **byte-watched** the way [`process.md`](process.md)
 is: its baseline lives in the `byte-budget-guard` skill, and any growth must be
@@ -336,7 +353,7 @@ the set when the scope needs them.
 ## Gate authority levels
 
 *Referenced from PROCESS.md §4.* **Applies when** a repo declares a
-non-default `docs/gate-policy` — i.e. wants gates accepted by something other
+non-default `gate_policy` — i.e. wants gates accepted by something other
 than a per-gate human pause. The default **`attended`** level needs none of
 this section — it is exactly the §4/§5 flow. Generalized
 from a field adoption's ratified deviation register (a spatial-capture
@@ -348,7 +365,8 @@ owner, with an agent recommendation from the project brief
 KICKOFF_PROMPT.md carries the recommendation step). Calibrate on the §6
 risk axis: safety, money, privacy, or irreversibility ⇒ `attended`; low-risk
 creative/tooling scopes are `autonomous`-eligible. Changing the level later is
-a reviewed commit that edits `docs/gate-policy` and the register below.
+a reviewed commit that edits `[attestation] gate_policy` in `docs/process.toml`
+and the register below.
 
 **The deviation register (`docs/gate-policy.md`).** The kit-owned process doc
 is never edited per-repo (it is overwritten on re-sync); a non-default level
@@ -431,7 +449,7 @@ Measured 2026-08-01 over the **whole** population the predicate has governed —
 every `integrate: merge` commit having the freshness comparison's introducing
 commit as an ancestor (`git log --grep="^integrate: merge"`, filtered with
 `git merge-base --is-ancestor <that commit> <merge>`; 20 of them, with
-`review-policy` at `1` throughout): **13 APPROVEs staled — nine by a real change
+`review_rounds` at `1` throughout): **13 APPROVEs staled — nine by a real change
 to shipping code or a declared doc, one by a hand trunk merge, and three by a
 record edit that followed its own verdict** (a close ceremony, a corrected
 evidence figure, and a `Deliverable` prose fix the verdict itself demanded).
@@ -490,11 +508,11 @@ disguised as `Test`. G-Final is where the owner's eyes replace these.
 
 *Referenced from PROCESS.md §3 ("Commit cadence") and §7 ("Push authority").*
 **Applies when** a repo wants agent-driven work to land as curated, reviewable
-history — and, on a privacy-checked repo (`docs/privacy-check` = `true`),
+history — and, on a privacy-checked repo (`privacy_check = true`),
 wants privacy to be **structural** rather than filtered at publish time.
 This is the heaviest ritual in the kit: opt in deliberately. A repo without
 agent-driven work skips the whole layer and pays nothing. (The
-`docs/push-policy` file below ships in every scaffold regardless — declared
+`push` dial below ships in every scaffold regardless — declared
 push authority is useful even without the branch discipline.)
 
 **The model.** The agent never commits to the development branch. All agent
@@ -514,7 +532,7 @@ gate closes, or the project's scope is complete. Five steps:
 1. **Backup.** Snapshot the iteration history first — a dated backup ref,
    e.g. tag `backup/llm-<branch>-<YYYYMMDD>` — so a failed reintegration can
    never lose work. Retire it once the sync lands.
-2. **Scrub** *(privacy-checked repos only — `docs/privacy-check` = `true`).*
+2. **Scrub** *(privacy-checked repos only — `privacy_check = true`).*
    A separate fresh-context agent walks every commit since divergence —
    diffs, **commit messages**, and any committed session/iteration logs —
    removing or anonymizing PII via history rewrite, with the deterministic
@@ -526,7 +544,7 @@ gate closes, or the project's scope is complete. Five steps:
    **can't run** at a sync point, the sync **fails closed**: it waits, and
    nothing lands unscrubbed — a missing tool is never a pass at the one
    boundary that matters.
-3. **Optional push of the iteration branch** — only if `docs/push-policy`
+3. **Optional push of the iteration branch** — only if the `push` dial
    allows agent pushes; preserves the granular (scrubbed) history remotely
    for backup and forensics.
 4. **Collate.** A separate agent reorganizes the leg's commits into
@@ -547,8 +565,8 @@ gate closes, or the project's scope is complete. Five steps:
    the human may push several at once; the run pauses only when intervention
    is *required*, never merely because a sync happened.
 
-**Push authority is a declared policy — `docs/push-policy`** (one word,
-tracked like `docs/gate`; scaffolded `human` in every repo):
+**Push authority is a declared policy — `[policies] push`** in
+`docs/process.toml` (one word, tracked; scaffolded `human` in every repo):
 
 - **`human`** *(default)* — the agent **never pushes, even if asked
   mid-session**; it prepares the branch and requests the push. Publication is
@@ -614,8 +632,8 @@ SpecRef + predecessor context + branch diff), never a "resume from
 `status.md`" prompt — until the assignment's evidence reads DONE/BLOCKED, a
 stall guard trips (N consecutive sessions without a commit), or an iteration
 budget ceiling hits. Work happens on claimed branches (never the development
-branch), merging is the serial fail-closed queue and honors
-`docs/push-policy` — under the default `human` the coordinator never pushes,
+branch), merging is the serial fail-closed queue and honors the declared
+`push` policy — under the default `human` the coordinator never pushes,
 even if asked. At worker start a dirty worktree (residue from an interrupted
 run) is surfaced into the first session's prompt as a reconcile instruction;
 stash/rollback is deliberately *not* automated — that judgment belongs to the
@@ -659,14 +677,14 @@ worker". Absent = not paused, so an adopter who never creates it pays nothing.
 (The legacy *untracked* `docs/pause` marker retired with the dispatcher at
 concurrency-restructure Phase 5 — the tracked file is the one home.)
 
-**Optional `docs/blackout`** (first line `HH:MM-HH:MM`, UTC, Mon–Fri): a
+**The blackout window — `[policies] blackout`** (`HH:MM-HH:MM`, UTC, Mon–Fri): a
 recurring window inside which the coordinator starts **no new session** — the
 same stop-claiming graceful semantic as `docs/work/pause`, but temporal and
 self-clearing. The in-flight session wraps normally, then the loop **waits the
 window out and resumes automatically**, so one walk-away launch survives a daily
 blackout (unlike a pause, no unpause commit needed). The window is half-open
 `[start, end)` — 12:00–19:00 blocks 12:00 through 18:59 and releases at 19:00.
-`start == end` disables, and so does deleting the file (absent = disabled,
+`start == end` disables, and so does an empty value (disabled is
 byte-identical to before); the scaffold ships a **12:00–19:00** default so a
 fresh repo gets it without a hidden built-in.
 
@@ -742,12 +760,12 @@ The cadence needs no coordinator to be useful — an attended human alternating
 "plan on the strong tier, execute on the cheap one" across hands-on sessions is
 the same protocol with a person as the model map.
 
-**The reviewer dial + cross-provider routing (`docs/review-policy` +
-`AGENT_CMD_MAP`).** `docs/review-policy` declares how many independent
+**The reviewer dial + cross-provider routing (`review_rounds` +
+`AGENT_CMD_MAP`).** `[policies] review_rounds` declares how many independent
 fresh-context review verdicts a completed work item gets before the integrator
-accepts it — **`0 | 1 | 2`, default `1`** (the file's comment block carries the
+accepts it — **`0 | 1 | 2`, default `1`** (the key's comment block carries the
 full semantics). Floors sit *above* the dial: a gate advance under
-`gate-policy: autonomous` always needs ≥1 recorded verdict, and a WI touching
+`gate_policy = "autonomous"` always needs ≥1 recorded verdict, and a WI touching
 the spine registries recommends `2`. Two reviewers split **charters**, never
 duplicate coverage — A = method/risk/corner cases, B = process/trace/prose —
 because two samples of one model share blind spots; for the same reason
@@ -950,7 +968,7 @@ behavior**, so a fresh scaffold pays nothing.
   tripwire. The constants ship as legible **per-repo-overridable defaults**
   (`AGENT_ROUTE_MARGIN`, `AGENT_ROUTE_SWAP_AFTER`, `AGENT_ROUTE_PAGE_TOP_TIER_FAILS`)
   — calibration values, not spine facts.
-- **Failure semantics follow `docs/gate-policy`.** On a page-the-human condition
+- **Failure semantics follow the declared `gate_policy`.** On a page-the-human condition
   the causing WI **and its hard-edge dependents pause** in every mode; the mode
   decides what happens around that — **attended:** start nothing new, let
   in-flight sessions close out, then the loop stops `NEEDS-HUMAN` and alerts;
@@ -1025,7 +1043,7 @@ permission-bypass flag. The human consents by (1) filling the launcher's
 `AGENT_CMD` slot, (2) declaring the gate policy, and (3) running it — and the
 loop banner and README say so plainly. git + CI remain the enforcement floor.
 The coordinator's preflight refuses to start iteration 1 while
-`docs/privacy-check` is on and the configured git author email is not exempt
+`privacy_check` is on and the configured git author email is not exempt
 (an unattended run under a private identity is the history-leak disaster case)
 or the agent CLI is missing —
 report and nonzero exit, never a hang.
@@ -1048,7 +1066,7 @@ because "the agent didn't know how to judge it, it just shipped it"), and the
 original TC may have been lax. `Critique` gives another agent a **different hat**:
 an independent critical eye that says *where and why* something isn't good enough
 and drives rework toward a written bar. Built on the S8 chassis (fresh sessions,
-redacted prompts, verdict files, `gate-policy`-keyed escalation).
+redacted prompts, verdict files, `gate_policy`-keyed escalation).
 
 - **`Critique` is a first-class Verification value** (PROCESS.md §4). A perceptual
   TC declares `Verification=Critique`; its `Method` names the critique procedure and
@@ -1072,7 +1090,7 @@ redacted prompts, verdict files, `gate-policy`-keyed escalation).
   available (`agent_route`), strong-tier by default.
 - **The optimization loop, bounded.** BUILD → CRITIQUE → rework, iterating until
   `APPROVE` or the budget (`AGENT_CRITIQUE_MAX`, default **3**, env-overridable
-  like the S8 knobs) trips the `gate-policy` page-the-human path. A WI row may
+  like the S8 knobs) trips the `gate_policy` page-the-human path. A WI row may
   override that run-wide default with `CritiqueBudget=n|inf` (`inf` means iterate
   until `APPROVE`) and set `CritiqueExhaustion=move-on|block`; absent/invalid cells
   preserve the global default + move-on, while `block` forces `NEEDS-HUMAN` under
@@ -1090,7 +1108,7 @@ redacted prompts, verdict files, `gate-policy`-keyed escalation).
 - **The arbiter split.** Working default: **the critic gates iteration; the human
   owns acceptance.** A critic `APPROVE` ends rework; gate closure still carries the
   human `Attest` (the strong-model floor and the attested-vs-mechanized split
-  stand). Under `gate-policy: autonomous` the critic verdict closes
+  stand). Under `gate_policy = "autonomous"` the critic verdict closes
   iteration-level acceptance and the recorded-verdict rules govern the gate as they
   do today. (This does not contradict the S8 "no LLM-judge tiebreaker" ruling —
   that ruled out an LLM arbitrating between *reviewers' scores*; here the quality
@@ -1167,7 +1185,7 @@ files, `agent_route` family heterogeneity, budgets) — **no new engine**:
    `verdict.md` with the ports), the verdict summarized in `log.md`. The
    selected plan's rows are then filed as real WIs through normal intake.
 7. **Acceptance:** human `Attest` closes the round per the gate philosophy;
-   under `gate-policy: autonomous` the recorded-verdict rules govern, as they
+   under `gate_policy = "autonomous"` the recorded-verdict rules govern, as they
    do for the critique loop.
 
 The three hat prompts ship as kit templates —
@@ -1214,8 +1232,8 @@ should, mutating **nothing** in the workspace.
   always-on file; its `BEGIN/END KIT CORE` block is what gets injected (the
   whole file if it carries no such markers). Playbooks (`PLAN.md`, `CODE.md`, …)
   sit beside it so the core's routing table resolves.
-- **`docs/guardrails-policy`** (same first-line parse as every declared-policy
-  file; absent = `off`, not scaffolded). The value is case-insensitive:
+- **`[policies] guardrails`** in `docs/process.toml` (scaffolded `off`). The
+  value is case-insensitive:
   - `off` → never inject; `all` → every session.
   - `<sub> [<sub> …]` — an **allowlist** of model substrings: guard when the
     model matches any (e.g. `opus sonnet`). Name the weaker tier(s).
@@ -1264,7 +1282,7 @@ docs/guardrails/core.md = CLAUDE.md
 docs/guardrails/PLAN.md = docs/guardrails/PLAN.md
 ```
 
-and set the recommended `guardrails-policy: all except <your frontier model>`.
+and set the recommended `guardrails = "all except <your frontier model>"`.
 (It is agent-behavior *content*, adapted independently — never redistributed by
 this kit; the pin + a reviewed re-vendor commit are the supply-chain control.)
 
@@ -1858,7 +1876,8 @@ vacuous**: a fresh scaffold carries only the inert `WI-000` placeholder, so both
 `check_trajectory.py` and `gen_trajectory.py --check` pass **vacuously** (no work
 items → nothing to validate, nothing to render, no `PROJECT_STATE.html` written). A
 repo that wants the layer gone entirely silences it with the one word `off` in
-`docs/trajectory-check` — the same first-line-parse toggle as `docs/secrets-scan`.
+`docs/trajectory-check` — one of the six per-checker enablement toggles that
+deliberately stay their own files ("Where the dials live" above).
 The cost to a project that ignores the layer is therefore exactly zero, which is
 why it ships opt-out rather than opt-in.
 
@@ -1892,12 +1911,12 @@ after a push is a history rewrite — so the gate checks the identity *actually
 configured* rather than pinning one, and the highest-risk shape (an unattended
 run committing many sessions under a private identity) is a preflight failure.
 
-- **The toggle `docs/privacy-check`** (one value, tracked, like `docs/gate`):
-  `true` runs the privacy gate at every boundary below; `false` / absent = off,
-  zero cost (the successor to the old `inherit`). It declares *intent* only and
-  is safe to publish. Set it at repo creation (`bootstrap.py --privacy-check
-  true|false`, the cheap moment) or adopt later. Deliberately **repo-wide** — the
-  gate constrains every contributor equally.
+- **The toggle `[policies] privacy_check`** (a TOML boolean in
+  `docs/process.toml`, tracked): `true` runs the privacy gate at every boundary
+  below; `false` = off, zero cost (the successor to the old `inherit`). It
+  declares *intent* only and is safe to publish. Set it at repo creation
+  (`bootstrap.py --privacy-check true|false`, the cheap moment) or adopt later.
+  Deliberately **repo-wide** — the gate constrains every contributor equally.
 - **The exempt-email allowlist lives in code**, not the toggle:
   `scripts/check_privacy.py` holds `EXEMPT_EMAILS` — the addresses that may
   appear as author or in content without flagging. The shipped default is
@@ -1920,22 +1939,21 @@ security net an ordinary identified project gets too, because a committed key is
 a leak regardless of who authored it. It runs in the same modes as the privacy
 lint (staged diff at pre-commit, the commit message at commit-msg, `--repo` at
 every gate, `--range` at pre-push), in **all** repos, privacy-check on or off.
-Opt out with the one word `off`
-in **`docs/secrets-scan`** (one-word declared policy, absent = on) — the
-deliberate exit for a repo whose content *is* secret-shaped; mark individual
-false positives with the inline `privacy-ok` marker first and reserve `off` for
-a repo that drowns in them. Still a pattern floor, not a DLP product — deep
+Opt out with **`secrets_scan = false`** in `docs/process.toml`
+(scaffolded `true`) — the deliberate exit for a repo whose content *is*
+secret-shaped; mark individual false positives with the inline `privacy-ok`
+marker first and reserve the opt-out for a repo that drowns in them. Still a pattern floor, not a DLP product — deep
 secrets scanning stays the named external category (gitleaks, trufflehog),
 never rebuilt in the kit. *Adoption note:* a repo that had no scanning starts
 failing on a committed token when it takes this kit version — that is the point,
-and `off` is the escape (ADOPTING.md §6).
+and `secrets_scan = false` is the escape (ADOPTING.md §6).
 
 **Content & message privacy (privacy-check on).** The author field is the
 smaller leak surface; **content and commit messages** are the bigger one — an
 absolute path carrying the OS username, the real identity from global git config
 pasted into a doc, an email in a test fixture, a bio detail in a README, an
 address in a commit-message trailer. These **privacy** classes run only when
-`docs/privacy-check` is `true`; a privacy-off repo pays zero for them (the
+`privacy_check` is `true`; a privacy-off repo pays zero for them (the
 secrets floor above still runs).
 
 - **Layer 1 — deterministic lint, per commit.** `scripts/check_privacy.py`
@@ -1969,9 +1987,9 @@ secrets floor above still runs).
   policy demands review but the reviewer can't run, the hook **fails closed**
   — a missing tool is never a pass at the one boundary that matters. One
   **declared opt-down** exists for the adopted-but-not-wired-yet window: track
-  the word `warn-unwired` in **`docs/privacy-review`** (one-word declared
-  policy, absent = require) and an *unwired* reviewer warns instead of
-  blocking, leaving the deterministic lint as the floor — a recorded,
+  the value `warn-unwired` in **`[policies] privacy_review`** (any other
+  value, including a typo, reads as require) and an *unwired* reviewer warns
+  instead of blocking, leaving the deterministic lint as the floor — a recorded,
   reviewable decision, never a silent default, and it softens *only* the
   unwired case (lint findings and a wired reviewer's BLOCK still block; the
   hook's failure message names this escape at the moment it fires). Honesty:
@@ -2406,7 +2424,7 @@ hand-rolled forge with git itself.
 
 **What stays repo-singular (trunk-owned, never forked per branch):** the one
 `SN→SR→LLR→TC` requirement spine and every registry, `docs/gate` +
-`gate-policy` + `push-policy` + `privacy-check` + `guardrails-policy`, the
+`docs/process.toml` (every declared dial in one home), the
 root `status.md`/`log.md`, `AGENTS.md`, and every generated artifact. The
 spine is **deliberately singular** (§10): `trace.py --strict` still demands
 **0 orphans across the whole repo, seams included**. Workers **propose**; the
@@ -2448,7 +2466,7 @@ composed tree **is** the candidate, by construction — a one-page merge
 queue), the trunk step folded into the merge commit, and the **declared bar**
 run on the composed tree read fail-closed — a missing or empty check
 declaration is a **refusal**, never a skip, and any SKIP in the report
-refuses (the fail-open lesson, stated as a contract). The gate-policy dial
+refuses (the fail-open lesson, stated as a contract). The `gate_policy` dial
 (RULING-7) is enforced by requiring the corresponding **verdict artifact**
 (review file `docs/reviews/WI-<n>-<PHASE>.md`, critique, attestation) with
 git-derived freshness before the trunk fast-forwards; a red queue parks
@@ -2478,7 +2496,7 @@ ends fully merged and quiet, or fully merged except N branches parked red,
 each red a finding. Status generation surfaces `Paused since <date>:
 <reason>` so an open pause is a visible accruing cost. What no file can do —
 stop a running session — stays stated plainly: that remains "kill the
-worker." A blackout window (`docs/blackout`) still starts no new session.
+worker." A declared blackout window still starts no new session.
 
 **One coordinator per checkout.** A **per-worktree lock**
 (`out/agent-loop.lock`) refuses a second coordinator in one checkout: a

@@ -36,6 +36,7 @@ wi_convert = load_script("wi_convert")
 
 T_BASE = 1_000_000
 T_CODE = 1_000_100
+T_LATER = 1_000_200
 
 
 # --- fixtures (the tests/test_integrate.py shapes, copied per the suite idiom
@@ -249,31 +250,57 @@ def test_the_id_is_max_plus_one_over_every_status_directory(tmp_path):
 # --- trigger (b): a merged handback mints the disposition row ------------------
 
 
-def handback_repo(tmp_path, safety="ordinary"):
+def close_repo(tmp_path, safety="ordinary", tier="strong", branch="wi-005"):
+    """A trunk where WI-005 closed EARLY: the spec is terminal in `partial/` and
+    its immutable per-close report sits under docs/handbacks/.
+
+    The report — not the spec — is the event's identity (SN-031). The old
+    fixture wrote a `## Handback` section into the spec and let the merge sha
+    stand in for the event, which is the shape five successive dedup mechanisms
+    leaked through."""
     root = git_repo(tmp_path)
     write_sr(root)
     write_spec(
         root,
-        "queued",
+        "partial",
         "WI-005",
         slug="returned",
         specref="seed.txt",
         safety_class=safety,
-        blockref="docs/work/queued/WI-005-returned.md",
-        body=(
-            "\n## Handback\n\nReturned unfinished from lane `wi-005`: worker "
-            "exit 7 (NEEDS-HUMAN)\n"
-        ),
     )
-    _commit(root, "the handback merge landed", when=T_CODE)
+    write_close_report(root, "WI-005", branch, tier=tier)
+    _commit(root, "the early close landed", when=T_CODE)
     return root
 
 
+def write_close_report(root, wi, branch, tier="strong", reason="stopped early"):
+    """One per-close report, the shape `handback.close_partial` writes."""
+    path = root / "docs" / "handbacks" / "{}-{}.md".format(wi, branch)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    text = "\n".join(
+        [
+            '+++',
+            'wi = "{wi}"',
+            'branch = "{branch}"',
+            'claimed_outcome = "partial"',
+            'reason = "{reason}"',
+            'commit_range = "aaa..bbb"',
+            'suggested_tier = "{tier}"',
+            'keep_commits = ["aaa"]',
+            'discard_commits = []',
+            '+++',
+        ]
+    ).format(wi=wi, branch=branch, reason=reason, tier=tier) + "\n"
+    with path.open("w", encoding="utf-8", newline="\n") as fh:
+        fh.write(text)
+    return path
+
+
 def test_a_merged_handback_mints_the_disposition_row(tmp_path):
-    root = handback_repo(tmp_path)
+    root = close_repo(tmp_path)
     before = after = _rev(root)
     minted, refusal = intake.intake_after_merge(
-        root, before, after, {"WI-005": "handback"}, "wi-005"
+        root, before, after, {"WI-005": "partial"}, "wi-005"
     )
     assert refusal is None, refusal
     assert len(minted) == 1
@@ -283,65 +310,71 @@ def test_a_merged_handback_mints_the_disposition_row(tmp_path):
     # The four outcomes are in the row's face, and hand-back is NOT one of them.
     for outcome in ("cancel", "defer", "re-queue", "open item"):
         assert outcome in row["Title"]
-    # A NEEDS-HUMAN reason class routes the judgement to the strong tier.
+    # The tier is the report's TYPED `suggested_tier` field — not a
+    # case-folded substring search of a free-prose reason, which is what a typo
+    # used to downgrade silently.
     assert row["BuildTier"] == "strong"
-    # The spec-of-record is the returned spec itself.
-    assert row["SpecRef"] == "docs/work/queued/WI-005-returned.md"
+    # The spec-of-record is the closed spec itself, terminal in partial/.
+    assert row["SpecRef"] == "docs/work/partial/WI-005-returned.md"
+    # ...and the row's Context names the REPORT and does not quote the lane.
+    body = (root / minted[0][1]).read_text(encoding="utf-8")
+    assert "docs/handbacks/WI-005-wi-005.md" in body
+    assert "READ IT FIRST" in body
+    assert "stopped early" not in body, (
+        "a judge's brief must not open with the defendant's own words"
+    )
 
 
 def test_a_handed_back_adjudication_row_mints_no_second_disposition(tmp_path):
     # The no-recursion invariant at the INTAKE end: a disposition row that
     # somehow lands handed back must not spawn another disposition row.
-    root = handback_repo(tmp_path, safety="adjudication")
+    root = close_repo(tmp_path, safety="adjudication")
     before = after = _rev(root)
     minted, refusal = intake.intake_after_merge(
-        root, before, after, {"WI-005": "handback"}, "wi-005"
+        root, before, after, {"WI-005": "partial"}, "wi-005"
     )
     assert refusal is None, refusal
     assert minted == []
 
 
-def test_a_second_handback_of_the_same_row_mints_a_second_disposition(tmp_path):
-    # REVIEW-A finding 3: the disposition title carries the handback MERGE's
-    # sha (the amendment title's sha-pair discipline, applied to trigger b),
-    # so a re-queued row's SECOND handback is a new event that mints its own
-    # disposition — never a silent dedupe that leaves nobody owed the
-    # judgement.
-    root = handback_repo(tmp_path)
+def test_a_second_close_of_the_same_row_mints_a_second_disposition(tmp_path):
+    # THE STARVATION CLASS, closed structurally. A second close is a SECOND
+    # REPORT — a new file with its own path — so the derived title differs and
+    # the mint is owed. The five mechanisms this replaces all tried to
+    # reconstruct "was this event judged?" from the mutable spec (a merge sha
+    # the bare sweep read as symbolic HEAD, the spec's last-touch commit, a
+    # digest of a note, an open-disposition state read, field co-occurrence)
+    # and every one could silently drop an owed judgement.
+    root = close_repo(tmp_path)
     sha1 = _rev(root)
     first, refusal = intake.intake_after_merge(
-        root, sha1, sha1, {"WI-005": "handback"}, "wi-005"
+        root, sha1, sha1, {"WI-005": "partial"}, "wi-005"
     )
     assert refusal is None, refusal
     assert len(first) == 1
-    # The row is disposed, re-queued, claimed again, handed back again: a
-    # LATER merge lands the second return.
-    (root / "seed.txt").write_text("moved\n", encoding="utf-8", newline="\n")
-    _commit(root, "the second handback merge lands", when=T_CODE + 500)
+
+    # A genuinely SECOND close of the same row: a new branch, so a new report.
+    write_close_report(root, "WI-005", "wi-005-second", tier="medium")
+    _commit(root, "a second close of WI-005", when=T_LATER)
     sha2 = _rev(root)
     second, refusal = intake.intake_after_merge(
-        root, sha2, sha2, {"WI-005": "handback"}, "wi-005"
+        root, sha2, sha2, {"WI-005": "partial"}, "wi-005-second"
     )
     assert refusal is None, refusal
-    assert len(second) == 1, "the second RETURN event owes its own disposition"
-    assert first[0][0] != second[0][0]
-    # ...and a re-run of the SAME second event still dedupes (idempotence).
-    again, refusal = intake.intake_after_merge(
-        root, sha2, sha2, {"WI-005": "handback"}, "wi-005"
-    )
-    assert refusal is None, refusal
-    assert again == []
+    assert len(second) == 1, "the second CLOSE event owes its own disposition"
+    titles = {queued_rows(root)[wid]["Title"] for wid, _rel in first + second}
+    assert len(titles) == 2, titles
 
 
 def test_a_second_intake_for_the_same_handback_is_deduped(tmp_path):
-    root = handback_repo(tmp_path)
+    root = close_repo(tmp_path)
     before = after = _rev(root)
     first, _ = intake.intake_after_merge(
-        root, before, after, {"WI-005": "handback"}, "wi-005"
+        root, before, after, {"WI-005": "partial"}, "wi-005"
     )
     assert len(first) == 1
     again, refusal = intake.intake_after_merge(
-        root, before, after, {"WI-005": "handback"}, "wi-005"
+        root, before, after, {"WI-005": "partial"}, "wi-005"
     )
     assert refusal is None, refusal
     assert again == []

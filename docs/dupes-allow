@@ -271,7 +271,7 @@
 #
 # The distribution:
 #
-#   cli                   96   deliberate
+#   cli                  100   deliberate
 #   link-rebase            1   deliberate
 #   spine-loader          21   deliberate
 #   declared-file         12   deliberate
@@ -283,7 +283,7 @@
 #   ctx-unpack             3   deliberate
 #   okf-row                1   deliberate
 #   import-fallback        2   deliberate
-#   intake-mint            9   deliberate
+#   intake-mint            8   deliberate
 #   module-path            3   deliberate
 #   signature-echo         2   deliberate
 #   child-capture          1   deliberate
@@ -305,7 +305,7 @@
 # a census whose classification has rotted is how the false claims above
 # survived in the first place.
 
-# --- cli (96 blocks) ---------------------------------------------
+# --- cli (100 blocks) ---------------------------------------------
 # disposition: deliberate
 # the per-script CLI skeleton + _utf8_console. F5: kit scripts must stay
 # independently copy-able and stdlib-only, which is why a shared
@@ -426,6 +426,12 @@ b25e7f8619e5  project-trajectory/scripts/gen_trajectory.py == project-trajectory
 # GENERATED-block skip was lifted into check_doc_refs.authored_lines
 # (the IF-087 seam) rather than copied.
 b87ed5851f33  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/check_figures.py
+# plan §8 added prompts.py (the prompt-template loader + strict fill): a new
+# kit script inherits the same CLI skeleton every other one carries.
+b87ed5851f33  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/prompts.py
+744b556ca01e  project-trajectory/scripts/check_vendored.py == project-trajectory/scripts/prompts.py
+30e9743d9e27  project-trajectory/scripts/gen_open_items.py == project-trajectory/scripts/prompts.py
+8020da247b1b  project-trajectory/scripts/plan_briefs.py == project-trajectory/scripts/prompts.py
 74572e51bafc  project-trajectory/scripts/check.py == project-trajectory/scripts/check_figures.py
 da3bd5e9dd3e  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/check_figures.py
 f9a751e72b81  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/check_figures.py
@@ -753,8 +759,8 @@ c4546434439b  project-trajectory/scripts/schedule.py == project-trajectory/scrip
 # class did not grow — same three files, same one block — and
 # check_trajectory == schedule again kept its fp (1dbf7e455ac3), the tell
 # that the change is inside the shared region rather than a new copy.
-7212302b90d0  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/schedule.py
-6bc2b2913689  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/check_trajectory.py
+a0dec0331b29  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/schedule.py
+347bd74231c3  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/check_trajectory.py
 1dbf7e455ac3  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/schedule.py
 4d36b43d0895  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/wi_convert.py
 
@@ -779,14 +785,22 @@ c4546434439b  project-trajectory/scripts/schedule.py == project-trajectory/scrip
 # 8df9b7757333 -> d7bc90bd2333) while the two map-direction blocks that end
 # before the new row kept theirs. Same six blocks, same class, one column
 # wider.
-a7e859f1af8f  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/plan_artifacts.py
+# SN-031 re-stamped FIVE of the six: the schema gained its 19th column
+# (`Supersedes` — a successor drafted by a disposition names the row it
+# continues, so partial work keeps its thread across the id change), so the
+# copies whose block spans the end of the list re-fingerprinted, in both
+# directions of the map (the bare column list and the column ->
+# frontmatter-key pairs). Same six blocks, same class, one column wider —
+# and the schema stays pinned against the shipped template by
+# test_dogfood_sync and test_plan_artifacts, so the copies cannot drift.
+5d82f01d9892  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/plan_artifacts.py
+a220ff7dc8d8  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/wi_convert.py
+5d82f01d9892  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/wi_convert.py
 63ecb0abf993  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/wi_convert.py
-a7e859f1af8f  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/wi_convert.py
-261eae4aed7d  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/wi_convert.py
+f26377b40a51  project-trajectory/scripts/plan_artifacts.py == project-trajectory/scripts/wi_convert.py
 462810722e11  project-trajectory/scripts/plan_artifacts.py == project-trajectory/scripts/wi_convert.py
-d7bc90bd2333  project-trajectory/scripts/plan_artifacts.py == project-trajectory/scripts/wi_convert.py
 
-# --- intake-mint (9 blocks) --------------------------------------
+# --- intake-mint (8 blocks) --------------------------------------
 # disposition: deliberate
 # WI-388's unified intake mint (intake.py). Four shapes, each ~30-45 tokens:
 #   * the claim-shaped bookkeeping commit (intake == integrate, 4 blocks):
@@ -799,16 +813,17 @@ d7bc90bd2333  project-trajectory/scripts/plan_artifacts.py == project-trajectory
 #     both homes.
 #   * the captured-subprocess run shape (intake == trunk_step, 1): the same
 #     capture keywords every kit runner uses - the F5 small-helper case.
-#   * the restore-on-refusal shape (intake == spec_move, 1) and the two
-#     intra-file intake pairs (the per-status glob walk in the sweep and the
-#     handback scan; the mkdir/write pair) - small stable shapes, each under
+#   * the restore-on-refusal shape (intake == spec_move, 1) and the ONE
+#     remaining intra-file intake pair (the mkdir/write pair). The second
+#     one — the per-status glob walk in the by-hand sweep — is GONE rather
+#     than sanctioned: SN-031 re-keyed the sweep onto the terminal folders
+#     and the two loops folded into one walk over a folder->outcome map - small stable shapes, each under
 #     ~35 tokens, where a helper would obscure more than it saves.
 #   * the claimed-spec frontmatter-read loop (dispatch == handback, 1):
 #     `_branch_exclusive` and `_no_recursion_refusal` read the same trunk
 #     claim the same way on purpose - two refusals that must agree about what
 #     a claimed spec declares.
 ed365941fdea  project-trajectory/scripts/dispatch.py == project-trajectory/scripts/handback.py
-c33c341149cb  project-trajectory/scripts/intake.py == project-trajectory/scripts/intake.py
 c94067d37723  project-trajectory/scripts/intake.py == project-trajectory/scripts/intake.py
 745577ef4bfc  project-trajectory/scripts/intake.py == project-trajectory/scripts/trunk_step.py
 faccaf0237c5  project-trajectory/scripts/intake.py == project-trajectory/scripts/integrate.py

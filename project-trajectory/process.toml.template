@@ -9,16 +9,25 @@
 # read; the old 3.8 floor's lack of `tomllib` did the rest.
 #
 # Both reasons are spent. The floor is 3.11 (`tomllib` is stdlib), and the
-# hooks now do a KEYED match instead of a first-line one:
+# hooks now do a KEYED match instead of a first-line one — asymmetrically, so
+# the two grammars cannot disagree in the dangerous direction:
 #
-#     grep -Eq '^[[:space:]]*privacy_check[[:space:]]*=[[:space:]]*true' docs/process.toml
+#     declared?  any `privacy_check =` on a non-comment line  (BROAD)
+#     off?       only a value provably `false`                 (NARROW)
+#     otherwise  ON — fail closed
 #
-# which is why every value below is written ONE `key = value` PER LINE with no
-# inline tables and no multi-line strings. Python consumers read it with
-# `tomllib` and a cross-parser agreement test pins the two readings equal, so
-# the greppable form can never drift from the parsed one.
+# which is why every value below is written ONE `key = value` PER LINE, under a
+# bare [section] header, with no dotted keys, no inline tables and no
+# multi-line strings. That shape is CHECKED, not merely conventional
+# (`agent_common.process_shape_findings` refuses anything else), and
+# tests/test_process_config.py drives the shipped hooks' sh against `tomllib`
+# over a table of adversarial files — because a claim of agreement that no test
+# drives is exactly how two parsers diverge.
 #
-# THREE DELIBERATE EXCEPTIONS stay outside this file, each for a stated reason:
+# WHAT IS IN SCOPE: every dial that answers "how is work PROCESSED" — gate
+# authority, the human-ratification level, push authority, the reviewer count,
+# the privacy and secrets gates, guardrails, the blackout window. Those eight
+# are here. What stays outside, and why:
 #
 #   1. `docs/stack.ini` — the PRODUCT TOOLCHAIN, not a process dial. It is
 #      adopter-owned across re-syncs (ADOPTING.md "Preserve always"), has five
@@ -29,6 +38,16 @@
 #      managed routing). A key in a shared file cannot express deletion-as-an-
 #      act, nor survive as a one-line reviewed diff.
 #   3. `docs/gate` — a GENERATED CACHE (derive_gate.py), not configuration.
+#   4. SIX CHECK-ENABLEMENT TOGGLES are NOT YET HERE, and this file would be
+#      lying if it did not say so: `docs/trajectory-check`,
+#      `docs/interfaces-check`, `docs/components-check` (check_trajectory.py),
+#      `docs/subagent-gate` (subagent_gate.py), `docs/live-status`
+#      (agent_loop.py) and `docs/okf-export` (gen_okf.py). Each is read by an
+#      INDEPENDENTLY COPYABLE checker that imports nothing of this layer, so
+#      each would need its own local TOML reader — a real cost, and outside
+#      what SN-028 scoped. They are tracked as their own row rather than
+#      quietly omitted; until it lands, those six answer "is this CHECK on",
+#      not "how is work processed", which is the line this file draws.
 #
 # MIGRATION: a repo that still carries the legacy one-word files is converted
 # automatically by `python scripts/bootstrap.py --migrate-config --dest .`
@@ -106,5 +125,8 @@ privacy_review = "require"
 #   "off" | "all" | "all except <sub> …" | "<sub> …"
 guardrails = "off"
 # The weekday blackout window, UTC, HH:MM-HH:MM — was docs/blackout. An empty
-# value (or start == end) disables it.
-blackout = ""
+# value (or start == end) disables it. WI-148 shipped this default so a fresh
+# scaffold gets the owner's "always on" window from the machinery rather than
+# from a hidden built-in; folding the file into this one is a MOVE, not an
+# occasion to re-decide it.
+blackout = "12:00-19:00"

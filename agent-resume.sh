@@ -5,14 +5,14 @@
 # runs)"). This is the kit's own launcher applied to the kit repo itself: the
 # booted session inherits the committed context — CLAUDE.md, AGENTS.md,
 # docs/status.md, the docs/work/ registry, docs/log.md, and
-# docs/gate-policy (the live working surfaces; IMPROVEMENT_PLAN.md is archived
+# docs/process.toml (the live working surfaces; IMPROVEMENT_PLAN.md is archived
 # history, not a working surface). Read it first; it only exports the slots
 # below and runs the coordinator engine.
 # macOS: agent-resume.command is the double-clickable Finder wrapper.
 #
 # CONSENT: the unattended loop runs the agent CLI headless; the permission-
 # bypass flag in AGENT_CMD means sessions edit without prompts. You consent
-# by keeping the slot filled, declaring docs/gate-policy, and running this.
+# by keeping the slot filled, declaring docs/process.toml, and running this.
 
 # --- EDIT FOR YOUR PROJECT ----------------------------------------------------
 # The agent command template; {model} and {prompt} are substituted per
@@ -49,7 +49,7 @@ AGENT_TIER_MAP=""
 # each tier with the ANTHROPIC row. Keep agent-resume.cmd in sync.
 AGENT_PREFER_MAP=""
 # Optional per-phase COMMAND template map (cross-provider routing; pairs
-# with the docs/review-policy reviewer dial), e.g.:
+# with the the process.toml reviewer dial reviewer dial), e.g.:
 #   AGENT_CMD_MAP="REVIEW-B=gemini -p {prompt} --model {model}"
 # Empty here: under managed routing each enabled row's own CmdTemplate drives
 # its launch (docs/agents.csv spans THREE families — ANTHROPIC/claude,
@@ -78,7 +78,7 @@ cd "$(dirname "$0")" || exit 1
 if [ -z "$AGENT_CMD" ]; then
   echo "agent-resume.sh: no agent command wired yet." >&2
   echo "Edit AGENT_CMD in this file and in agent-resume.cmd. Filling it (and" >&2
-  echo "declaring docs/gate-policy) is your consent to unattended agent" >&2
+  echo "declaring docs/process.toml) is your consent to unattended agent" >&2
   echo "sessions; see project-trajectory/PROCESS_OPTIONS.md 'Unattended operation'." >&2
   exit 1
 fi

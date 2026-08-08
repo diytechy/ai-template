@@ -358,7 +358,7 @@ def test_mutation_a_wrong_header_count_reds_the_count_check():
     broken = parse_census(
         _mutate(
             CENSUS.read_text(encoding="utf-8"),
-            "# --- cli (96 blocks)",
+            "# --- cli (100 blocks)",
             "# --- cli (89 blocks)",
         )
     )
@@ -369,7 +369,7 @@ def test_mutation_a_stale_distribution_row_reds_the_table_check():
     broken = parse_census(
         _mutate(
             CENSUS.read_text(encoding="utf-8"),
-            "#   cli                   96",
+            "#   cli                  100",
             "#   cli                   82",
         )
     )

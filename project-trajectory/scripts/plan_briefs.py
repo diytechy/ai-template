@@ -49,6 +49,15 @@ import re
 import sys
 from pathlib import Path
 
+# The sanctioned-sibling import (the agent_loop / gen_trajectory idiom): the
+# prompt-template LOCATION and the dispatcher-notes rule have one home now that
+# the session-engine briefs are files too.
+try:
+    import prompts
+except ImportError:  # pragma: no cover - in-process fallback
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    import prompts
+
 # --- the three dual-plan hats and their prompt-map override keys --------------
 # Each key is the phase key an operator wires on --prompt-map / AGENT_PROMPT_MAP
 # (agent_loop.py); the value is the kit template shipped under prompts/.
@@ -127,13 +136,14 @@ def strip_dispatcher_block(text):
     """Return the prompt body with a leading HTML-comment dispatcher block
     (`<!-- ... -->`, the operator notes at the top of each kit template)
     removed. Text without a leading comment block is returned left-stripped and
-    otherwise unchanged."""
-    body = text.lstrip()
-    if body.startswith("<!--"):
-        end = body.find("-->")
-        if end != -1:
-            return body[end + len("-->") :].lstrip()
-    return body
+    otherwise unchanged.
+
+    DELEGATES to `prompts.strip_dispatcher_block` (plan §8): once the worker /
+    reviewer / critique briefs became files too, two copies of this three-line
+    rule would have been an intra-repo duplicate of the one thing every kit
+    template's header depends on. The name stays here because `plan_runner`
+    and the hat tests call it through this module."""
+    return prompts.strip_dispatcher_block(text)
 
 
 # --- the allowlist-only registry surface --------------------------------------
@@ -211,20 +221,17 @@ def assemble(hat, slots, template_text):
     Note the unfilled check is computed from the template's own placeholder set,
     not by re-scanning the output, so a slot VALUE that happens to contain a
     `{{...}}`-looking string is passed through verbatim rather than mis-flagged."""
-    present = _placeholders(template_text)
-    unknown = sorted(set(slots) - present)
-    if unknown:
-        raise ValueError(
-            "{}: unknown slot key(s) {} — the template's placeholders are {}".format(
-                hat, ", ".join(unknown), ", ".join(sorted(present)) or "(none)"
-            )
-        )
-    unfilled = sorted(present - set(slots))
-    if unfilled:
-        raise ValueError(
-            "{}: unfilled placeholder(s) {} — every {{{{NAME}}}} slot must be "
-            "provided (redaction leaves no hole)".format(hat, ", ".join(unfilled))
-        )
+    # The strictness itself lives ONCE, in prompts.strict_check — the two slot
+    # syntaxes differ, the rule they enforce does not. `ValueError` is passed
+    # through so this function's exception contract (and the tests that assert
+    # it) are unchanged by the extraction.
+    prompts.strict_check(
+        hat,
+        present=_placeholders(template_text),
+        provided=set(slots),
+        form="{{NAME}}",
+        error=ValueError,
+    )
     return PLACEHOLDER_RE.sub(lambda m: str(slots[m.group(1)]), template_text)
 
 

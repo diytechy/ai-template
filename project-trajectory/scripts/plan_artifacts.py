@@ -73,6 +73,7 @@ WI_HEADER = [
     "SafetyClass",
     "PlanMode",
     "Bar",
+    "Supersedes",
 ]
 
 # A round directory: `DP-<digits>-<slug>` under docs/plans/.

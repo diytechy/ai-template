@@ -31,19 +31,45 @@ REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null) || REPO_ROOT=$(cd "$(dirn
 # silently — parse the policy in pure sh (the pre-push pattern) and refuse.
 # The trade, recorded: a privacy-checked repo cannot commit without a working
 # Python 3 + findable scripts dir; a non-privacy repo keeps the free skip.
-# SN-028 re-key: docs/process.toml's keyed match first, legacy file second —
-# byte-identical to pre-commit's copy (the same F5 duplication the two hooks
-# already share for every probe). POSIX ERE only.
+# SN-028 re-key: docs/process.toml's keyed match first, legacy file second.
+# BYTE-IDENTICAL to pre-commit's copy — the same F5 duplication the two hooks
+# already share for every probe, and here it is load-bearing: two hooks that
+# disagreed about whether privacy is on would gate one boundary and not the
+# other. The asymmetry (broad "declared", narrow "off", fail closed in
+# between) and the mixed-config refusal are documented in full at
+# hooks/pre-commit. POSIX ERE only.
+_ptoml_body() {
+  grep -v '^[[:space:]]*#' "$1" 2>/dev/null || true
+}
+
+process_declares() {
+  [ -f "$1" ] || return 1
+  _ptoml_body "$1" | grep -Eq '(^|[^A-Za-z0-9_])'"$2"'[[:space:]]*='
+}
+
+mixed_config_refusal() {
+  ptoml="$REPO_ROOT/docs/process.toml"
+  process_declares "$ptoml" privacy_check || return 1
+  [ -f "$REPO_ROOT/docs/privacy-check" ] || return 1
+  echo "$1: docs/process.toml AND the legacy docs/privacy-check both declare" >&2
+  echo "  the privacy policy. REFUSING — a mixed config is where two readers" >&2
+  echo "  disagree about the same gate. Run:" >&2
+  echo "    python scripts/bootstrap.py --migrate-config --dest ." >&2
+  return 0
+}
+
 privacy_declared_true() {
   ptoml="$REPO_ROOT/docs/process.toml"
-  if [ -f "$ptoml" ] && grep -Eq '^[[:space:]]*privacy_check[[:space:]]*=' "$ptoml"; then
-    grep -Eq '^[[:space:]]*privacy_check[[:space:]]*=[[:space:]]*true[[:space:]]*$' "$ptoml"
-    return $?
+  if process_declares "$ptoml" privacy_check; then
+    _ptoml_body "$ptoml" | grep -Eq '(^|[^A-Za-z0-9_])privacy_check[[:space:]]*=[[:space:]]*false([[:space:]]|#|$)' && return 1
+    return 0
   fi
   [ -f "$REPO_ROOT/docs/privacy-check" ] || return 1
   p=$(grep -v '^[[:space:]]*#' "$REPO_ROOT/docs/privacy-check" | grep -v '^[[:space:]]*$' | head -n 1 | tr -d '[:space:]' || true)
   [ "$p" = "true" ]
 }
+
+if mixed_config_refusal "commit-msg"; then exit 1; fi
 
 # Find a Python 3 interpreter (same probe as pre-commit: run it, don't just find
 # it — Windows' Store alias resolves on PATH but exits nonzero). No Python =

@@ -462,17 +462,23 @@ def test_station_intake_arm_pins_to_the_intake_mint(tmp_path):
     # THE SYNC PIN for §A5.2: the intake arm's trigger labels mirror intake.py's
     # shipped mint machinery. The pins are behavioral where a name is only a
     # literal inside the module: tier_signal must RECOGNIZE the amendment and
-    # handback triggers (distinct tiering), and the three merge-slot draft arms
+    # early-CLOSE triggers (distinct tiering), and the three merge-slot draft arms
     # plus the dispatcher's rung-1 census handoff must exist as callables — a
     # reshaped intake reds here.
     ink = load_script("intake")
     disp = load_script("dispatch")
     assert ink.tier_signal("amendment", rows_touched=4) == "strong"
     assert ink.tier_signal("amendment", rows_touched=1) == "medium"
-    assert ink.tier_signal("handback", reason="NEEDS-HUMAN wanted") == "strong"
+    # SN-031 folded WI-417: a disposition's tier is no longer read off a magic
+    # substring in a free-prose reason (a typo silently downgraded the
+    # judgement). It is the close report's TYPED `suggested_tier`, so
+    # `tier_signal` has no `reason` parameter left to key off at all, and the
+    # trigger-(b) draft builder is keyed on the report rather than the spec.
+    assert "reason" not in ink.tier_signal.__code__.co_varnames
+    assert not hasattr(ink, "_handback_drafts")
     for arm in (
         ink._amendment_drafts,
-        ink._handback_drafts,
+        ink._close_drafts,
         ink._disposition_drafts,
         ink.intake_after_merge,
         ink.mint_gap_rows,

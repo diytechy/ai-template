@@ -595,6 +595,10 @@ def steps(coverage, tier, gate, phase=None, profile=None):
                 # R-A/R-E) is check_trajectory's job, not this checker's.
                 "--ignore",
                 "docs/work/*",
+                # SN-031's per-close reports: same posture, same reason (an
+                # immutable generated record, not navigable prose).
+                "--ignore",
+                "docs/handbacks/*",
                 "--stale",
             ],
             {"G1", "G2", "G3"},

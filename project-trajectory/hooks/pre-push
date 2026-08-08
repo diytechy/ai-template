@@ -72,12 +72,34 @@ find_scripts_dir() {
 # Python-less box — M-42), the legacy one-word file second.
 PROCESS_TOML="$REPO_ROOT/docs/process.toml"
 PRIVACY_FILE="$REPO_ROOT/docs/privacy-check"
+
+_ptoml_body() {
+  grep -v '^[[:space:]]*#' "$1" 2>/dev/null || true
+}
+
+process_declares() {
+  [ -f "$1" ] || return 1
+  _ptoml_body "$1" | grep -Eq '(^|[^A-Za-z0-9_])'"$2"'[[:space:]]*='
+}
+
+# A MIXED config refuses at the push boundary too — this is the LAST look
+# before history publishes, so it is the worst place to let two readers
+# disagree about whether the privacy gate is on.
+if process_declares "$PROCESS_TOML" privacy_check && [ -f "$PRIVACY_FILE" ]; then
+  echo "pre-push: docs/process.toml AND the legacy docs/privacy-check both" >&2
+  echo "  declare the privacy policy. REFUSING — run:" >&2
+  echo "    python scripts/bootstrap.py --migrate-config --dest ." >&2
+  exit 1
+fi
+
 privacy=""
-if [ -f "$PROCESS_TOML" ] && grep -Eq '^[[:space:]]*privacy_check[[:space:]]*=' "$PROCESS_TOML"; then
-  if grep -Eq '^[[:space:]]*privacy_check[[:space:]]*=[[:space:]]*true[[:space:]]*$' "$PROCESS_TOML"; then
-    privacy="true"
-  else
+if process_declares "$PROCESS_TOML" privacy_check; then
+  # Broad "declared", narrow "off", fail CLOSED in between — see
+  # hooks/pre-commit for the full reasoning.
+  if _ptoml_body "$PROCESS_TOML" | grep -Eq '(^|[^A-Za-z0-9_])privacy_check[[:space:]]*=[[:space:]]*false([[:space:]]|#|$)'; then
     privacy="false"
+  else
+    privacy="true"
   fi
 elif [ -f "$PRIVACY_FILE" ]; then
   privacy=$(grep -v '^[[:space:]]*#' "$PRIVACY_FILE" | grep -v '^[[:space:]]*$' | head -n 1 | tr -d '[:space:]' || true)
@@ -152,8 +174,10 @@ fi
 # latter; the misleading name has cost two readings of this block.
 review_policy=""
 PRIVACY_REVIEW_FILE="$REPO_ROOT/docs/privacy-review"
-if [ -f "$PROCESS_TOML" ] && grep -Eq '^[[:space:]]*privacy_review[[:space:]]*=' "$PROCESS_TOML"; then
-  if grep -Eq '^[[:space:]]*privacy_review[[:space:]]*=[[:space:]]*"warn-unwired"[[:space:]]*$' "$PROCESS_TOML"; then
+if process_declares "$PROCESS_TOML" privacy_review; then
+  # This one is already fail-closed by its own vocabulary: EXACTLY
+  # `warn-unwired` opts down, anything else — including a typo — requires.
+  if _ptoml_body "$PROCESS_TOML" | grep -Eq '(^|[^A-Za-z0-9_])privacy_review[[:space:]]*=[[:space:]]*"warn-unwired"([[:space:]]|#|$)'; then
     review_policy="warn-unwired"
   else
     review_policy="require"

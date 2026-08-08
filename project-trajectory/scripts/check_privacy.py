@@ -170,42 +170,85 @@ def _first_declared_line(path):
     return None
 
 
-def _process_bool(root, key):
-    """One `[policies]` boolean out of `docs/process.toml` (SN-028), or None
-    when the file/section/key is absent or the file does not parse.
+def _process_gate(root, key):
+    """One `[policies]` gate out of `docs/process.toml` (SN-028), read the way
+    the git hooks read it — which is the whole point of this function.
+
+    Returns True (on), False (off), or None (this file has nothing to say;
+    fall through to the legacy one-word file).
+
+    FAILS CLOSED IN THE SAME DIRECTION THE HOOKS DO. Two grammars read this
+    file — `tomllib` here, a pure-sh `grep -E` in the hooks (M-42: a
+    Python-less box must still refuse to skip a declared privacy gate) — and
+    every shape only one of them understands is a silent flip of a security
+    gate. So a file that EXISTS but does not parse, or that declares the key
+    as something other than a boolean, reads ON here exactly as it does there:
+    loud, and never a quiet opt-out. A MIXED config (this file and the legacy
+    one both declaring the gate) reads ON for the same reason.
 
     A LOCAL reader, per the F5 independently-copyable-script rule that already
     keeps `_first_declared_line` here rather than importing the coordinator
-    layer (agent_common carries the twin; a cross-parser agreement test pins
-    them equal). Returns None — never a default — so the caller can fall
-    through to the legacy one-word file during the migration window, and so a
-    malformed TOML never reads as an opted-OUT policy.
-    """
+    layer. `tests/test_process_config.py` pins this and the hooks' sh equal
+    over a table of adversarial file shapes."""
     path = root / "docs" / "process.toml"
     if not path.is_file():
         return None
     try:
-        data = tomllib.loads(path.read_text(encoding="utf-8"))
+        # utf-8-sig: a BOM is not legal TOML but is invisible to the hooks'
+        # read — the two must not diverge over one byte.
+        data = tomllib.loads(path.read_text(encoding="utf-8-sig"))
     except (OSError, UnicodeDecodeError, tomllib.TOMLDecodeError):
-        return None
+        return True  # unparseable but present: fail closed, like the hooks
     table = data.get("policies")
-    if not isinstance(table, dict):
-        return None
-    value = table.get(key)
-    return value if isinstance(value, bool) else None
+    value = table.get(key) if isinstance(table, dict) else None
+    if value is None:
+        # The key may still be somewhere the hooks WILL act on (a dotted key,
+        # the wrong section). Their read is textual, so ours must be too
+        # before it concludes "not declared".
+        return True if _text_declares(path, key) else None
+    return value if isinstance(value, bool) else True
+
+
+_DECLARED_RE_CACHE = {}
+
+
+def _text_declares(path, key):
+    """Whether the file's TEXT declares `key` on a non-comment line — the
+    hooks' broad `declared` test, mirrored so this reader cannot conclude
+    "absent" about a key they would act on."""
+    pattern = _DECLARED_RE_CACHE.get(key)
+    if pattern is None:
+        pattern = _DECLARED_RE_CACHE[key] = re.compile(
+            r"(?:^|[^A-Za-z0-9_])" + re.escape(key) + r"\s*="
+        )
+    try:
+        text = path.read_text(encoding="utf-8-sig", errors="replace")
+    except OSError:
+        return False
+    return any(
+        pattern.search(line)
+        for line in text.splitlines()
+        if not line.lstrip().startswith("#")
+    )
 
 
 def read_privacy_enabled(root):
     """Whether the privacy layer is on: `docs/process.toml` `[policies]
     privacy_check = true`, else (migration window) docs/privacy-check's first
     non-comment line being `true` (any case). Absent/any other value → False
-    (off) — the successor to the old commit-identity `inherit` default."""
-    declared = _process_bool(root, "privacy_check")
-    if declared is not None:
-        return declared
-    return (
+    (off) — the successor to the old commit-identity `inherit` default.
+
+    A MIXED config — both homes declaring the gate — reads ON. The Python
+    coordinator layer REFUSES that state outright; this checker cannot refuse
+    (it is called from hooks that must still make a decision), so it takes the
+    only safe reading."""
+    declared = _process_gate(root, "privacy_check")
+    legacy = (
         _first_declared_line(root / "docs" / "privacy-check") or ""
     ).lower() == "true"
+    if declared is None:
+        return legacy
+    return bool(declared) or legacy
 
 
 def email_ok(email):
@@ -224,9 +267,9 @@ def read_secrets_scan(root):
     `docs/secrets-scan` with the one word `off`; absent or any other value
     reads on (the safe default) — so an ordinary repo gets the floor without
     declaring anything."""
-    declared = _process_bool(root, "secrets_scan")
+    declared = _process_gate(root, "secrets_scan")
     if declared is not None:
-        return declared
+        return bool(declared)
     return (_first_declared_line(root / "docs" / "secrets-scan") or "").lower() != "off"
 
 
@@ -515,8 +558,8 @@ def main():
     secrets_on = read_secrets_scan(root)
     if not privacy_on and not secrets_on:
         print(
-            "check_privacy: privacy check off (docs/privacy-check) and "
-            "docs/secrets-scan 'off' — nothing to check."
+            "check_privacy: privacy check and secrets floor are both OFF "
+            "(docs/process.toml [policies]) — nothing to check."
         )
         return 0
 
@@ -532,7 +575,8 @@ def main():
         # apply to an email. A no-op when the privacy layer is off.
         if not privacy_on:
             print(
-                "check_privacy: privacy check off (docs/privacy-check) — "
+                "check_privacy: privacy check off (docs/process.toml "
+                "[policies] privacy_check) — "
                 "author not checked."
             )
             return 0

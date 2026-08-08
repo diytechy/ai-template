@@ -296,8 +296,8 @@ outside the kit's required path.
 ## 4. Objectives, gates, and exit criteria
 
 Advance only when criteria pass. **Who accepts an advance is the repo's
-declared gate authority** — the one-word `docs/gate-policy` file (tracked like
-`docs/gate`), one of three levels: **`attended`** *(default)* — **pause for
+declared gate authority** — the `[attestation] gate_policy` dial in
+`docs/process.toml`, one of three levels: **`attended`** *(default)* — **pause for
 human approval at each gate**; **`single-ratify`** — LLM-gate review through
 G1+G2 with every human call queued, one human ratification sitting at G2
 close, autonomous rules after; **`autonomous`** — every gate except G-Final
@@ -701,7 +701,7 @@ Without a project-active gate, CI would apply the end-state G3 bar from day one 
 stay red for months — training everyone to ignore it.
 
 **Push authority.** Who may *publish* (`git push`) is likewise declared, not
-assumed: the one-line `docs/push-policy` (default **`human`** — an agent never
+assumed: the `[policies] push` dial (default **`human`** — an agent never
 pushes, even if asked mid-session; it prepares the branch and requests). A
 process rule honored by agent drivers, not a hook guarantee (hooks are
 per-clone). Levels + the iteration-branch sync ritual:

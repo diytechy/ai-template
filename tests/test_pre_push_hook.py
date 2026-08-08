@@ -85,9 +85,6 @@ def set_privacy(root, value="true"):
     set_process_key(root, "policies", "privacy_check", value == "true")
 
 
-def set_privacy_review(root, value):
-    set_process_key(root, "policies", "privacy_review", value)
-
 
 def push_line(head, remote_sha):
     return "refs/heads/main {} refs/heads/main {}\n".format(head, remote_sha)

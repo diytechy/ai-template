@@ -13,8 +13,8 @@ scope: kit
 Advancing a gate is a **decision recorded in a reviewed commit**, backed by
 a green harness at that gate's bar. Never self-advance; never report a green you
 didn't run. Authority: `docs/process.md` §4 (gates), §5 (verdict protocol), §7
-(the active gate). The gate's **acceptor** is whoever `docs/gate-policy`
-declares (default `attended` = a human at every gate; the other levels + the
+(the active gate). The gate's **acceptor** is whoever the `gate_policy` dial in
+`docs/process.toml` declares (default `attended` = a human at every gate; the other levels + the
 deviation register: process-options.md "Gate authority levels") — on a
 non-default repo, read "human" in this skill as that declared acceptor.
 
@@ -74,7 +74,7 @@ the `## OI-N` brief. `check_trajectory.py` warns (never fails) when a
 `[phase]-[g1|g2]` ratification brief carries no such link.
 
 This preserves the reviewed-commit discipline while making the marker computed. It
-**composes with the gate-authority levels** (`docs/gate-policy`): `attended` = the
+**composes with the gate-authority levels** (`gate_policy`): `attended` = the
 human ratifies each batch; `single-ratify` = the batch is ratified once at its
 `[phase]-[g2]` close (one review per phase gate — a natural fit); `autonomous` = a
 fresh-context reviewer's recorded verdict ratifies. **An agent may make the
@@ -104,10 +104,10 @@ Run the gate bar with `scripts/check.py` (it selects the gate's checks from
 
 ## Sync before you ratify (iteration-branch repos)
 
-**Policy-flip sweep.** A change to `docs/gate-policy`, `docs/push-policy`,
-`docs/review-policy`, or `docs/guardrails-policy` is a status-staleness event:
-in the same sitting, grep `docs/status.md` for old
-pause/stop/approval wording and point it to the declared policy file rather than
+**Policy-flip sweep.** A change to any dial in `docs/process.toml` —
+`gate_policy`, `push`, `review_rounds`, `guardrails` — is a status-staleness
+event: in the same sitting, grep `docs/status.md` for old
+pause/stop/approval wording and point it to the declared dial rather than
 paraphrasing the value.
 
 If the repo runs the **agent iteration branch & sync** layer
@@ -115,10 +115,10 @@ If the repo runs the **agent iteration branch & sync** layer
 branch is curated), a gate closure is a **sync point**. Run the five-step
 ritual before the ratifying commit lands: backup ref → scrub (privacy-checked
 repos only; fail closed if the scrub agent can't run) → optional iteration-branch
-push per `docs/push-policy` → collate into categorical commits → land on the
+push per the `push` dial → collate into categorical commits → land on the
 development branch. The ratification (the `Status`-change commit + the regenerated
 `docs/gate`) rides the landed, collated history. Landing is not a stopping point —
-but *pushing* follows `docs/push-policy` (default `human`: an agent never pushes;
+but *pushing* follows the `push` dial (default `human`: an agent never pushes;
 the human publishes at leisure).
 
 ## Honest verification where machines can't (`Attest`)

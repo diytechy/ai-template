@@ -104,6 +104,14 @@ COLUMNS = [
     "SafetyClass",
     "PlanMode",
     "Bar",
+    # SN-031 LINEAGE. Partial work continues by MINTING A SUCCESSOR, never by
+    # reviving the closed row — so the successor must be able to say which row
+    # it continues, or the thread is lost at the id change. A real column, not
+    # a frontmatter-only key, because `intake`'s drafts-not-mints arm writes
+    # successors through `wi_convert.write_spec_file`, which serializes from
+    # this table: a key that is not here would be silently dropped at the one
+    # moment it matters.
+    "Supersedes",
 ]
 
 # Status <-> directory (§2.1; WI-384). One directory per state, both terminals
@@ -116,6 +124,10 @@ STATUS_DIRS = {
     "deferred": "deferred",
     "done": "complete",
     "cancelled": "cancelled",
+    # SN-031's third terminal: a lane that stopped early. Terminal, so nothing
+    # re-claims it and nothing strands; the per-close report under
+    # docs/handbacks/ carries what was and was not delivered.
+    "partial": "partial",
 }
 # The inverse, built from the one table so the two directions cannot disagree.
 DIR_STATUSES = {directory: status for status, directory in STATUS_DIRS.items()}
@@ -137,6 +149,7 @@ SCALAR_FIELDS = (
     # never affects scheduling. (G1|G2|G3 — integrate.refresh passes it to
     # check.py --gate; the scheduler deliberately does not parse it.)
     ("Bar", "bar"),
+    ("Supersedes", "supersedes"),
 )
 # Columns carried as TOML arrays. Split on ';' WITHOUT stripping, so ';'.join()
 # is an exact inverse for every possible cell — including the `~WI-013` SOFT

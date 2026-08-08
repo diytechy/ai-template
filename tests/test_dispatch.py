@@ -438,14 +438,25 @@ def test_a_needs_human_worker_hands_back_and_the_run_keeps_going(tmp_path, capfd
     rc = drv.run(root, drive_args(), worker=worker, tier="smoke")
     assert rc == 0
     out = capfd.readouterr().out
-    assert "handback: returned WI-401 from wi-401-widget" in out, out
-    assert "merged (WI-401=handback)" in out, out
+    assert "handback: closed WI-401 as partial from wi-401-widget" in out, out
+    assert "merged (WI-401=partial)" in out, out
     assert "queue drained" in out, out
 
     # The WI is back in trunk, blocked, with its note — and the branch is gone.
     spec = _returned(root)
-    assert "## Handback" in spec and "worker exit 7 (NEEDS-HUMAN)" in spec
-    assert 'blockref = "docs/work/queued/WI-401-widget.md"' in spec
+    # SN-031: the spec's DEFINITION is untouched — the close's record is a
+    # separate immutable report, and the folder (terminal `partial/`) is
+    # what keeps the row off the frontier, so no blockref is written.
+    assert "## Handback" not in spec
+    assert "blockref" not in spec
+    report = (
+        root / "docs" / "handbacks" / "WI-401-wi-401-widget.md"
+    ).read_text(encoding="utf-8")
+    assert 'claimed_outcome = "partial"' in report
+    assert "worker exit 7 (NEEDS-JUDGEMENT)" in report
+    # The dispatcher cannot judge the keep/discard split and SAYS so,
+    # rather than leaving the report silent about it.
+    assert 'split_decided_by = "adjudicator"' in report
     assert "wi-401-widget" not in _git(root, "branch", "--format=%(refname:short)")
     # The partial work landed in trunk, which is the whole point of handing
     # back rather than parking: a future WI can pick it up from here.
@@ -507,13 +518,18 @@ def test_a_red_handback_is_reverted_to_a_bar_inert_artefact_and_merges(tmp_path,
     captured = capfd.readouterr()
     assert "quarantining it" in captured.err, captured.err
     assert "handback: quarantined wi-401-widget" in captured.out, captured.out
-    assert "merged (WI-401=handback)" in captured.out, captured.out
+    assert "merged (WI-401=partial)" in captured.out, captured.out
 
     assert not (root / "broken.py").exists()  # nothing live to red anything
     patch = root / "docs" / "work" / "handback" / "wi-401-widget.patch"
     assert patch.is_file()
     assert "VALUE = (" in patch.read_text(encoding="utf-8")
-    assert "## Handback" in _returned(root)
+    # The close report survives the quarantine: it is BOOKKEEPING, and
+    # reverting it would destroy the event identity the disposition mint
+    # keys off — a terminal row nothing is owed a judgement for.
+    assert (
+        root / "docs" / "handbacks" / "WI-401-wi-401-widget.md"
+    ).is_file()
 
 
 # --- end to end against the REAL bar ------------------------------------------

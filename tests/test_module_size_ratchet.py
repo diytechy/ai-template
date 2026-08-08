@@ -379,8 +379,16 @@ BASELINE = {
     # WI-280.
     # +7 (3007 -> 3014), SN-028: the four policy dials re-pointed at
     # `declared_policy` plus the three re-exports the sibling modules read.
-    # Reviewed bump. Re-stamp down with WI-280.
-    "agent_loop.py": 3014,
+    # Reviewed bump. Then -85 (3014 -> 2929), plan §8: the WORKER / REVIEWER /
+    # CRITIQUE prompt constants left this module for
+    # `project-trajectory/prompts/*.template.md`, loaded through prompts.py.
+    # A RE-STAMP DOWN, which this ratchet requires in the same commit — the
+    # assertion fires on shrink too, exactly so a monolith cannot quietly keep
+    # a generous ceiling after the work that earned it moved out. What is left
+    # here is the lazy loader and its cache; the prose is a diff away.
+    # Then +3 (2929 -> 2932), SN-028 REVIEW round 1: the operator-facing
+    # banner strings named files that no longer exist.
+    "agent_loop.py": 2932,
     # +30 (2206 -> 2236), WI-065: `tc_citation_findings` — the TC-`Verifies`
     # rules lifted out of `analyze` so the cell could accept `IF-###` seam ids.
     # Most of the bump is that helper's docstring, which is where the RULING now
@@ -700,7 +708,9 @@ BASELINE = {
     # module's F5 independence (the shipped hook imports no sibling).
     # Reviewed bump, log fragment 2026-08-02 (WI-388). Re-stamp down with
     # WI-280.
-    "check_trajectory.py": 3531,
+    # Then +22 (3531 -> 3553), SN-031: `partial` joins the status/terminal vocabularies and the
+    # `Supersedes` column joins the F5-copied schema. Reviewed bump.
+    "check_trajectory.py": 3553,
     # NEW ENTRY, +25 (1498 -> 1523), WI-357: the two-stage work-branch claim
     # signal — the on-disk fast path plus the branch-history probe that
     # survives the §2.3 close commit (git log -1 over the claim path), with
@@ -739,7 +749,10 @@ BASELINE = {
     # rather than merely agreeing with it. Both reason chains above are
     # preserved verbatim; neither WI's record was dropped to make the number
     # fit. Re-stamp down with WI-280.
-    "check.py": 1548,
+    # Then +8 (1548 -> 1556), SN-031: the doc-navigability step ignores `docs/handbacks/*` — the
+    # per-close reports are DATA, and orphan-warning every lane close is
+    # how a checker earns the ignore that makes it useless. Reviewed bump.
+    "check.py": 1552,
     # +1 (1916 -> 1917), WI-279: one MAPPING row registering the new
     # scripts/check_coverage.py kit gate so it ships downstream — a required
     # one-line registration, not monolith growth (the reviewed-bump escape the
@@ -863,7 +876,16 @@ BASELINE = {
     # `migrate_legacy_config`, the `--migrate-config` mode and its report.
     # Against it: four MAPPING rows and two of the three appliers' bodies
     # deleted. Reviewed bump. Re-stamp down with WI-280.
-    "bootstrap.py": 2443,
+    # Then +89 (2443 -> 2532), SN-028 REVIEW round 1: `set_process_key`
+    # returns THREE states, not a bool — the migrator deleted a legacy file on
+    # the strength of a write that never happened and reported success,
+    # destroying a declared `privacy_check = true`. Plus `add_if_missing` (so a
+    # conversion is total), the `_locate_process_key` split that keeps both
+    # halves under the complexity ceiling, and the prompt-template MAPPING rows.
+    # Then +14 (2535 -> 2549), SN-031: `docs/work/partial/` and `docs/handbacks/` scaffolded, and the
+    # module docstring re-pointed at the surfaces that actually ship.
+    # Reviewed bump.
+    "bootstrap.py": 2549,
     # NEW ENTRY, +228 (1423 -> 1651), Phase 2b of the concurrency restructure
     # (docs/concurrency-restructure.md §7): the spec-folder work-item reader,
     # which crosses this module over THRESHOLD for the first time. It is one
@@ -968,7 +990,17 @@ BASELINE = {
     # policy without passing through agent_loop.main). Reviewed bump; the
     # counterweight is ~10 one-word files and their five ad-hoc parsers
     # retiring. Re-stamp down with WI-280.
-    "agent_common.py": 2013,
+    # Then +120 (2013 -> 2133), SN-028 REVIEW round 1: the review drove five
+    # file shapes where the sh hooks and `tomllib` DISAGREED about the privacy
+    # gate — three of them fail-OPEN. Two grammars read one file, so the file's
+    # SHAPE became a checked contract (`process_shape_findings`) rather than a
+    # convention, `_coerce` stopped substituting a default for a wrong-typed
+    # dial, and `config_conflicts` grew the shape + type findings. Most of the
+    # delta is the reasoning, which is the part that must not be lost.
+    # Then +33 (2133 -> 2166), SN-031: `partial/` declared in the F5-triplicated status table, the
+    # `Supersedes` lineage column, `read_toml_text`, and the prose each
+    # needs. Reviewed bump.
+    "agent_common.py": 2166,
     # NEW ENTRY, WI-387 — integrate.py crossed THRESHOLD (1418 -> 1588) adding
     # the third terminal outcome. The extraction the ratchet asks for was TAKEN
     # FIRST, not argued away: `hand_back` and `quarantine`, the largest unit and
@@ -1131,7 +1163,11 @@ BASELINE = {
     # through `declared_policy` and folds `config_conflicts` in ahead of it —
     # the merge slot must not pick one of two declared homes. Reviewed bump.
     # Re-stamp down with WI-280.
-    "integrate.py": 2426,
+    # Then +45 (2426 -> 2471), SN-031: `OUTCOME_DIRS` re-mapped onto the three TERMINAL outcomes, the
+    # keep/discard rung (`_partial_report_refusal`) a live incident
+    # bought, and `docs/handbacks/` on the adjudication no-bar surface.
+    # Reviewed bump.
+    "integrate.py": 2471,
 }
 
 

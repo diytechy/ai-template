@@ -77,6 +77,7 @@ def _row(wid, **kw):
         "SafetyClass": "ordinary",
         "PlanMode": "",
         "Bar": "",
+        "Supersedes": "",
         "Deliverable": "",
         "SpecRef": "",
     }
@@ -180,6 +181,7 @@ CONVERTIBLE_ROWS = [
         "SafetyClass": "ordinary",
         "PlanMode": "",
         "Bar": "",
+        "Supersedes": "",
     },
     {
         "WI-ID": "WI-002",
@@ -203,6 +205,7 @@ CONVERTIBLE_ROWS = [
         # lost in translation live: bar declares verification strictness for
         # this row's lane; it never affects scheduling.
         "Bar": "G2",
+        "Supersedes": "WI-000",
     },
     {
         "WI-ID": "WI-003",
@@ -223,6 +226,7 @@ CONVERTIBLE_ROWS = [
         "SafetyClass": "",
         "PlanMode": "",
         "Bar": "",
+        "Supersedes": "",
     },
     {
         "WI-ID": "WI-005",
@@ -243,6 +247,7 @@ CONVERTIBLE_ROWS = [
         "SafetyClass": "ordinary",
         "PlanMode": "",
         "Bar": "",
+        "Supersedes": "",
     },
     {
         "WI-ID": "WI-000",
@@ -263,6 +268,7 @@ CONVERTIBLE_ROWS = [
         "SafetyClass": "",
         "PlanMode": "",
         "Bar": "",
+        "Supersedes": "",
     },
 ]
 

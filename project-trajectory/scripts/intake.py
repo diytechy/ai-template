@@ -106,10 +106,25 @@ _DRAFT_KEYS = frozenset(
         "needs",
         "priority",
         "bar",
+        # SN-031 lineage: a successor drafted by a disposition names the row it
+        # continues, so partial work keeps its thread ACROSS the id change. It
+        # is a lineage fact, not a revival — the superseded row stays terminal
+        # and its scope stays exactly what it was.
+        "supersedes",
     }
 )
 
 _WI_FILE_RE = re.compile(r"^WI-(\d+)-.+\.md$")
+# SN-031: the per-close reports' home, and the `+++` block inside one. Outside
+# `docs/work/` deliberately — `spec_files` rglobs `WI-*.md` there and would walk
+# a report, raise on its undeclared directory, then SILENTLY SKIP it while the
+# id mint counted it as taken.
+REPORTS = "docs/handbacks"
+_REPORT_FRONT_RE = re.compile(r"\+\+\+\n(.*?)\n\+\+\+", re.S)
+# The folder -> outcome map the by-hand sweep walks. Stated once here rather
+# than inlined per loop; `integrate.OUTCOME_DIRS` is its production twin (the
+# sweep cannot import the integrator — that arrow runs the other way).
+SWEEP_OUTCOMES = {"partial": "partial", "cancelled": "cancelled", "complete": "merged"}
 # Clip widths for derived text: one cell value, one census line, one title.
 _CELL_CLIP = 120
 _LINE_CLIP = 140
@@ -140,16 +155,21 @@ def next_wi_id(root):
     return "WI-{:03d}".format(top + 1)
 
 
-def tier_signal(trigger, *, rows_touched=0, gate_moved=False, reason=""):
+def tier_signal(trigger, *, rows_touched=0, gate_moved=False):
     """`buildtier` from MEASURABLE inputs (the amendment's clause 2): rows
-    touched + gate delta for an amendment, the handback reason class for a
-    disposition, and the census kind for a gap row. Deeper review is a drafted
-    follow-up with `planmode = "dual"`, never a tier here and never a second
-    kind."""
+    touched + gate delta for an amendment, the census kind for a gap row.
+    Deeper review is a drafted follow-up with `planmode = "dual"`, never a tier
+    here and never a second kind.
+
+    THE `handback` ARM IS GONE (SN-031, folding WI-417). It read
+    `"NEEDS-HUMAN" in reason.upper()` — a magic substring inside free prose,
+    with no constant, no validation and no refusal on a miss, so `NEEDS_HUMAN`
+    or `needs human` silently downgraded a disposition's review tier. A close
+    now states `suggested_tier` as a TYPED field in its own report, and
+    `_close_drafts` reads it there: prose that carries control flow must be a
+    typed field."""
     if trigger == "amendment":
         return "strong" if gate_moved or rows_touched > 3 else "medium"
-    if trigger == "handback":
-        return "strong" if "NEEDS-HUMAN" in (reason or "").upper() else "medium"
     return "medium"  # census gap closure: mechanical registry work
 
 
@@ -458,28 +478,46 @@ def _amendment_drafts(root, before, after):
 # --- trigger (b): a merged handback mints the disposition row ------------------
 
 
-def _returned_spec(root, wi_id):
-    """The handed-back spec's `(relpath, frontmatter, handback_reason)` on the
-    post-merge trunk — searched across the OPEN directories a handback may
-    return to (queued/draft/deferred). None when it cannot be found/read."""
-    for status_dir in ("queued", "draft", "deferred"):
+def _closed_spec(root, wi_id):
+    """The early-closed spec's `(relpath, frontmatter)` on the post-merge trunk
+    — searched across the TERMINAL directories a close may land in. None when it
+    cannot be found or read."""
+    for status_dir in ("partial", "cancelled"):
         hits = sorted((Path(root) / WORK / status_dir).glob(wi_id + "-*.md"))
         for hit in hits:
             try:
                 text = hit.read_text(encoding="utf-8")
-                meta, body = ac.parse_spec_frontmatter(
+                meta, _body = ac.parse_spec_frontmatter(
                     text, hit.relative_to(Path(root)).as_posix()
                 )
             except (OSError, ValueError, UnicodeDecodeError):
                 continue
-            reason = ""
-            _, sep, note = text.partition(ac.SPEC_HANDBACK)
-            if sep:
-                reason = next(
-                    (ln.strip() for ln in note.splitlines() if ln.strip()), ""
-                )
-            return hit.relative_to(Path(root)).as_posix(), meta, reason
+            return hit.relative_to(Path(root)).as_posix(), meta
     return None
+
+
+def _close_reports(root, wi_id):
+    """Every per-close report on trunk for `wi_id`, newest-name last.
+
+    THE REPORT IS THE EVENT'S IDENTITY (SN-031). Five earlier mechanisms tried
+    to answer "is a judgement still owed for THIS close?" by reconstructing the
+    event from the closed spec — a mutable, movable, self-referencing object —
+    and every one leaked an owed judgement. An immutable document dissolves the
+    question: a second close is a second file, and a disposition CITING a file
+    is positive provenance rather than an inference."""
+    directory = Path(root) / REPORTS
+    if not directory.is_dir():
+        return []
+    return sorted(directory.glob(wi_id + "-*.md"))
+
+
+def _report_meta(path):
+    """One report's frontmatter dict, or `{}`."""
+    match = _REPORT_FRONT_RE.search(path.read_text(encoding="utf-8", errors="replace"))
+    if match is None:
+        return {}
+    data = ac.read_toml_text(match.group(1))
+    return data if isinstance(data, dict) else {}
 
 
 def _rev7(root, rev):
@@ -490,61 +528,104 @@ def _rev7(root, rev):
     return out.strip()[:7] if code == 0 and out.strip() else str(rev)[:7]
 
 
-def _handback_drafts(root, outcomes, after7):
+def _close_drafts(root, outcomes):
+    """Trigger (b): one disposition row per EARLY CLOSE, keyed off the close's
+    own immutable report.
+
+    Every `partial` and `cancelled` close gets a disposition — both carry a
+    claim about what was NOT delivered, and a claim is what an adjudicator is
+    for. `complete` closes are spot-checked at a declared rate rather than
+    gated: the merge slot already ran the declared bar on the composed tree and
+    the review rounds already judged the work, so adjudicating every green close
+    would rebuild the verdict gate under a new name.
+    """
     drafts = []
-    for wi_id in sorted(w for w, o in (outcomes or {}).items() if o == "handback"):
-        found = _returned_spec(root, wi_id)
+    for wi_id in sorted(
+        w for w, o in (outcomes or {}).items() if o in ("partial", "cancelled")
+    ):
+        found = _closed_spec(root, wi_id)
         if found is None:
             _say(
-                "{} merged as a handback but its returned spec is not "
-                "readable in an open directory - no disposition minted; "
-                "sweep by hand".format(wi_id),
+                "{} merged as an early close but its spec is not readable in a "
+                "terminal directory - no disposition minted; sweep by "
+                "hand".format(wi_id),
                 err=True,
             )
             continue
-        relpath, meta, reason = found
+        relpath, meta = found
         if (meta.get("safety_class") or "").strip().lower() == "adjudication":
             # The no-recursion invariant, intake end: a disposition row never
-            # spawns a disposition row. hand_back refuses this shape too; a
-            # hand-made handback that slipped past still dead-ends HERE.
+            # spawns a disposition row. `close_partial` refuses this shape too;
+            # a hand-made close that slipped past still dead-ends HERE.
             _say(
-                "{} is an adjudication row handed back - NO disposition row "
-                "is minted for it (R3: no recursion); its return is the "
+                "{} is an adjudication row closed early - NO disposition row "
+                "is minted for it (R3: no recursion); its close is the "
                 "owner's to read".format(wi_id),
                 err=True,
             )
             continue
-        drafts.append(
-            {
-                # The handback MERGE's sha is the title's event token
-                # (REVIEW-A finding 3, the amendment title's sha discipline
-                # applied to trigger b): a re-queued row's SECOND handback is
-                # a NEW event that mints its own disposition — never a silent
-                # dedupe that leaves nobody owed the judgement — while a
-                # re-run for the SAME merge still dedupes exactly.
-                "title": (
-                    "dispose: {} handed back at {} ({}) - {} (a disposition "
-                    "row never hands back; R3)".format(
-                        wi_id, after7, relpath, _DISPOSITION_OUTCOMES
-                    )
-                ),
-                "kind": "adjudication",
-                "workstream": "process",
-                "buildtier": tier_signal("handback", reason=reason),
-                "specref": relpath,
-                "context": (
-                    "The handed-back spec is `{}`; its `## Handback` section "
-                    "says:\n\n> {}\n\nOutcomes (R3): {}. Clearing its "
-                    "blockref re-queues it; moving it to cancelled/ (reason "
-                    "in the Deliverable) cancels it; a drafted follow-up "
-                    "goes in THIS row's ## Dispositions section; an open "
-                    "item goes to docs/requirements/open-items.csv.".format(
-                        relpath, _clip(reason, _LINE_CLIP), _DISPOSITION_OUTCOMES
-                    )
-                ),
-            }
-        )
+        for report in _close_reports(root, wi_id):
+            rel_report = report.relative_to(Path(root)).as_posix()
+            rmeta = _report_meta(report)
+            tier = str(rmeta.get("suggested_tier") or "medium")
+            if tier not in ("quick", "medium", "strong"):
+                tier = "medium"
+            drafts.append(
+                {
+                    # THE REPORT PATH is the title's event token. It is stable
+                    # (an immutable document never moves) and unique per close,
+                    # which is what makes exact-title dedup CORRECT here: a
+                    # re-run dedupes exactly, and a genuinely second close is a
+                    # second report and so a second row. No sha, no digest, no
+                    # archaeology.
+                    "title": (
+                        "dispose: {} closed as {} ({}) - {} (a disposition row "
+                        "never closes early; R3)".format(
+                            wi_id,
+                            rmeta.get("claimed_outcome") or "partial",
+                            rel_report,
+                            _DISPOSITION_OUTCOMES,
+                        )
+                    ),
+                    "kind": "adjudication",
+                    "workstream": "process",
+                    # The TYPED field, not a substring of prose (SN-031 / the
+                    # `NEEDS-HUMAN` fold): the close states the tier it thinks
+                    # its judgement needs, and a value outside the vocabulary
+                    # falls to `medium` rather than silently to whatever a
+                    # case-folded search happened to match.
+                    "buildtier": tier,
+                    "specref": relpath,
+                    "context": _close_context(relpath, rel_report),
+                }
+            )
     return drafts
+
+
+def _close_context(relpath, rel_report):
+    """The minted row's `## Context`. It names the report and STOPS.
+
+    Deliberately free of the closing lane's own words. A judge's brief must not
+    open with the defendant's verdict — that was measured: a returned spec's
+    reason was clipped into the disposition's Context, so the adjudication began
+    by reading the lane's own conclusion, truncated mid-word. The report is one
+    `Read:` away and carries every typed field; quoting it here would buy
+    nothing and cost the judgement's independence."""
+    return (
+        "The closed spec is `{spec}`.\n\n"
+        "Its per-close report is `{report}` — READ IT FIRST. The report is the "
+        "close EVENT's own immutable record: what the lane claims it delivered "
+        "and did not, the commit range, the keep/discard split, and the review "
+        "tier it suggests. The lane's claimed outcome is a CLAIM under "
+        "judgement here, not this row's premise.\n\n"
+        "Outcomes (R3): {outcomes}. Continuing the work MINTS A SUCCESSOR "
+        "(drafted in THIS row's `## Dispositions` section, carrying "
+        "`supersedes`), never a revival of the closed row — a closed row is "
+        "never re-opened and a scope definition never changes to mean "
+        "something else. An override moves the byte-identical spec to the "
+        "corrected terminal folder; the report stays on record as the claim it "
+        "was. An open item goes to docs/requirements/open-items.csv."
+    ).format(spec=relpath, report=rel_report, outcomes=_DISPOSITION_OUTCOMES)
 
 
 # --- drafts-not-mints: the ## Dispositions section -----------------------------
@@ -841,7 +922,7 @@ def intake_after_merge(root, before, after, outcomes=None, branch=""):
     refusal mints nothing (the merge itself STANDS; recovery is a trunk-side
     fix plus `python intake.py sweep --before {before} --after {after}`)."""
     drafts = _amendment_drafts(root, before, after)
-    drafts += _handback_drafts(root, outcomes, _rev7(root, after))
+    drafts += _close_drafts(root, outcomes)
     disposition, refusal = _disposition_drafts(root, outcomes)
     if refusal:
         return [], refusal
@@ -867,17 +948,26 @@ def _cmd_sweep(args):
     follow-ups."""
     root = Path(args.root).resolve()
     outcomes = {}
-    for status_dir in ("queued", "draft", "deferred"):
-        for path in sorted((root / WORK / status_dir).glob("WI-*.md")):
+    # THE WI-413 FIX, and the reason that row cancels as superseded rather than
+    # being built. The bare sweep used to scan open directories for a
+    # `## Handback` section and tokenize the disposition title with the CURRENT
+    # head — so a still-marked returned spec re-minted a duplicate disposition
+    # on EVERY run. There is no token to get wrong now: a close is a REPORT, an
+    # immutable file, and `_close_drafts` titles the disposition with that
+    # file's path. Sweeping twice produces the same title twice and the mint's
+    # exact-title dedup answers it; a genuinely second close is a second report
+    # and so a second row.
+    # One walk over the three TERMINAL folders, not one loop per outcome: the
+    # only thing that differs is the folder -> outcome name, which
+    # `integrate.OUTCOME_DIRS` already states once.
+    for status_dir, outcome in sorted(SWEEP_OUTCOMES.items()):
+        directory = root / WORK / status_dir
+        if not directory.is_dir():
+            continue
+        for path in sorted(directory.glob("WI-*.md")):
             matched = _WI_FILE_RE.match(path.name)
-            if matched and ac.SPEC_HANDBACK in path.read_text(
-                encoding="utf-8", errors="replace"
-            ):
-                outcomes["WI-" + matched.group(1)] = "handback"
-    for path in sorted((root / WORK / "complete").glob("WI-*.md")):
-        matched = _WI_FILE_RE.match(path.name)
-        if matched:
-            outcomes["WI-" + matched.group(1)] = "merged"
+            if matched:
+                outcomes["WI-" + matched.group(1)] = outcome
     before = args.before or "HEAD"
     after = args.after or "HEAD"
     minted, refusal = intake_after_merge(root, before, after, outcomes)
@@ -917,6 +1007,13 @@ def flip_verified(root, ids):
     registry still owes its regeneration (`derive_gate` recovers the gate);
     the lane's own refresh runs it."""
     root = Path(root)
+    # SN-028: the mixed-config refusal, at the third entry point that reads
+    # policy without passing through agent_loop.main. This arm decides whether
+    # an LLM verdict carries RATIFICATION authority, so it is the last place
+    # a half-migrated config should be resolved by precedence.
+    conflicts = ac.config_conflicts(root / "docs")
+    if conflicts:
+        return "recommend", [], conflicts[0]
     level = ac.declared_policy(root / "docs", "gate-policy", "attended").strip()
     action = adjudication_action(level.lower())
     wanted = {i.strip() for i in ids if i.strip()}

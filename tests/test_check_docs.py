@@ -416,9 +416,11 @@ def test_harness_wires_stale_into_doc_navigability():
     # lying-map heuristic runs inside the harness.
     src = (SCRIPTS / "check.py").read_text(encoding="utf-8")
     i = src.index("check_docs.py")
-    # 600, not 200: the step's arg list now carries the docs/work scoping
-    # comment between the ignores and --stale (Phase 2c).
-    assert "--stale" in src[i : i + 600]
+    # 1000, not 600: the arg list carries the docs/work scoping comment (Phase
+    # 2c) and now the docs/handbacks one too (SN-031) between the ignores and
+    # --stale. The window is a readability bound on the search, not a claim
+    # about the file — widen it when a reason is added, never drop it.
+    assert "--stale" in src[i : i + 1000]
 
 
 def test_harness_runs_doc_navigability_at_g1(scaffold):

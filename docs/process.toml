@@ -107,4 +107,4 @@ privacy_review = "require"
 guardrails = "off"
 # The weekday blackout window, UTC, HH:MM-HH:MM — was docs/blackout. An empty
 # value (or start == end) disables it.
-blackout = ""
+blackout = "12:00-19:00"

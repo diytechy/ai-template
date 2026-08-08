@@ -34,8 +34,8 @@ kit's design history — the old thread specs and the WI-1.x log — is archived
   this into the session prompt; the judgment is yours — it never auto-stashes.)
 - **Treat a declared-policy change as a status-staleness event.** In the same
   sitting, grep `docs/status.md` for pause/stop/approval
-  language predicated on the old `gate-policy`, `push-policy`, `review-policy`,
-  or `guardrails-policy` value; point to the policy file instead of paraphrasing it.
+  language predicated on the old `gate_policy`, `push`, `review_rounds`, or
+  `guardrails` value; point to `docs/process.toml` instead of paraphrasing it.
 
 ## 2. Respect the constraints
 
@@ -96,7 +96,7 @@ cadence"). New behavior needs new tests
   `## <YYYY-MM-DD> — <title>` heading; links authored relative to
   `docs/log.d/`) — `trunk_step.py` compiles fragments into the log in merge
   order and deletes them. Never hand-edit `docs/log.md` on a work branch.
-- **Order the close against the verdict round.** Under `review-policy >= 1` the
+- **Order the close against the verdict round.** Under `review_rounds >= 1` the
   merge queue wants the APPROVE no older than the branch's last **non-record**
   commit (`docs/reviews/` + `docs/log.d/` are excluded; `docs/work/` is not), so
   anything committed after it buys another round. Close **first** — Deliverable

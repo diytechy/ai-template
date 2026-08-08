@@ -142,23 +142,45 @@ def read_declared(path, default):
 PROCESS_TOML = "process.toml"
 
 PROCESS_KEYS = {
-    "push-policy": ("policies", "push", "str", "human"),
-    "review-policy": ("policies", "review_rounds", "int", "1"),
-    "privacy-check": ("policies", "privacy_check", "bool", "false"),
-    "secrets-scan": ("policies", "secrets_scan", "bool", "on"),
-    "privacy-review": ("policies", "privacy_review", "str", "require"),
-    "guardrails-policy": ("policies", "guardrails", "str", "off"),
-    "blackout": ("policies", "blackout", "str", ""),
+    "push-policy": ("policies", "push", "str"),
+    "review-policy": ("policies", "review_rounds", "int"),
+    "privacy-check": ("policies", "privacy_check", "bool"),
+    "secrets-scan": ("policies", "secrets_scan", "bool"),
+    "privacy-review": ("policies", "privacy_review", "str"),
+    "guardrails-policy": ("policies", "guardrails", "str"),
+    "blackout": ("policies", "blackout", "str"),
     # The gate-authority dial retires into an ORDINAL at SN-029; the legacy
     # enum file is still read through the same window so the migration is one
     # act rather than two.
-    "gate-policy": ("attestation", "gate_policy", "str", "attended"),
+    "gate-policy": ("attestation", "gate_policy", "str"),
 }
 
-# The two keys the git hooks match in pure sh (M-42 fail-closed). They are
-# listed here so the cross-parser agreement test knows exactly which lines must
-# stay keyed-greppable — the hooks' ERE and tomllib must never disagree.
+# The two keys the git hooks match in pure sh (M-42 fail-closed). Named here
+# because the cross-parser agreement test (tests/test_process_config.py) is
+# driven from this tuple: for every one of these keys the hooks' ERE and
+# `tomllib` must return the SAME answer over a table of adversarial file
+# shapes. A claim of agreement that no test drives is how the two parsers
+# diverge.
 GREPPABLE_KEYS = ("privacy_check", "privacy_review")
+
+# THE GREPPABLE SHAPE, and why it is a CHECKED contract rather than a
+# convention. The git hooks read this file in pure sh so a Python-less box
+# still fails closed (M-42) — which means two grammars read one file, and two
+# grammars WILL disagree unless the file's shape is narrowed to where they
+# cannot. TOML is far more expressive than a `grep -E` can follow: a dotted key
+# (`policies.privacy_check = true`), an inline table (`policies = { … }`), a
+# key in a multi-line string, a key under the wrong section header — every one
+# of those parses to something `tomllib` sees and the hook does not, or the
+# reverse. Each is a silent flip of the privacy gate.
+#
+# So the file is CONSTRAINED and the constraint is enforced: one `key = value`
+# per line, under a bare `[section]` header, no dotted keys, no inline tables,
+# no multi-line strings. `process_shape_findings` refuses anything else, and
+# the hooks fail CLOSED (a declared key they cannot prove `false` reads as ON)
+# so the residual is loud rather than permissive.
+_SECTION_RE = re.compile(r"^\s*\[([^]]*)\]\s*(#.*)?$")
+_KEY_RE = re.compile(r"^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*?)\s*$")
+_MULTILINE_RE = re.compile(r'"""|\'\'\'')
 
 
 def _process_toml_path(docs):
@@ -180,6 +202,16 @@ def process_config(docs):
     return data if isinstance(data, dict) else {}
 
 
+def read_toml_text(text):
+    """`tomllib.loads(text)`, or None when it does not parse. The TEXT twin of
+    `read_toml` — `handback.read_report` has already extracted a `+++` block
+    and has no file left to hand over."""
+    try:
+        return tomllib.loads(text)
+    except tomllib.TOMLDecodeError:
+        return None
+
+
 def read_toml(path):
     """`tomllib.loads` of `path`, or None when it is absent, unreadable,
     mis-encoded or malformed — the module's ONE tracked-TOML read.
@@ -193,30 +225,111 @@ def read_toml(path):
     try:
         if not path.is_file():
             return None
-        return tomllib.loads(path.read_text(encoding="utf-8"))
+        # utf-8-SIG: a BOM is not legal TOML, so `tomllib` would raise on a
+        # file some editors write by default — while the git hooks' sh read is
+        # unaffected by a BOM at offset 0 and would keep acting on the same
+        # file. The two readings must not diverge over an invisible byte.
+        return tomllib.loads(path.read_text(encoding="utf-8-sig"))
     except (OSError, UnicodeDecodeError, tomllib.TOMLDecodeError):
         return None
 
 
-def _coerce(value, kind, default):
+def _coerce(value, kind):
     """A TOML value rendered in the STRING vocabulary every legacy consumer
-    already speaks, so the dual-read window changes no downstream comparison.
-    A bool renders `true`/`false`; an int renders its digits; a string passes
-    through. A value of the wrong TOML type falls back to `default` — a typed
-    file that disagrees with its own schema must not become a silent policy."""
+    already speaks, so the migration changes no downstream comparison. A bool
+    renders `true`/`false`; an int renders its digits; a string passes through.
+
+    A value of the WRONG TOML type returns None — never a substituted default.
+    That distinction is load-bearing: `review_rounds = "2"` (a plausible hand
+    edit, since every other value in `[policies]` is quoted) once silently
+    became the integrator's `"0"` default, i.e. NO review verdict required, on
+    a repo whose owner had just asked for two. A type mismatch is a REFUSAL
+    (`config_conflicts` reports it and the three guarded entry points stop),
+    not a value."""
     if value is None:
-        return default
+        return None
     if kind == "bool":
-        if isinstance(value, bool):
-            return "true" if value else "false"
-        return default
+        return ("true" if value else "false") if isinstance(value, bool) else None
     if kind == "int":
         if isinstance(value, bool) or not isinstance(value, int):
-            return default
+            return None
         return str(value)
     if isinstance(value, bool) or not isinstance(value, str):
-        return default
+        return None
     return value
+
+
+def process_shape_findings(docs):
+    """Refusal strings for a `docs/process.toml` written in a shape the git
+    hooks' pure-sh read cannot follow (see the constants above).
+
+    Checks the file as LINES, not as parsed TOML, because what is being
+    verified is precisely that the two readings agree: a dotted key, an inline
+    table, a multi-line string or a key outside a `[section]` all parse fine
+    and are all invisible-or-worse to a `grep -E`. Only the greppable keys are
+    enforced this strictly — the rest of the file is Python-read only.
+    """
+    path = _process_toml_path(docs)
+    if not path.is_file():
+        return []
+    try:
+        text = path.read_text(encoding="utf-8-sig")
+    except (OSError, UnicodeDecodeError) as exc:
+        return ["docs/{} cannot be read: {}".format(PROCESS_TOML, exc)]
+    out = []
+    if _MULTILINE_RE.search(text):
+        out.append(
+            "docs/{} contains a multi-line string. The git hooks read this "
+            "file line-by-line in pure sh (M-42), and a key inside a "
+            "multi-line string is a key they will act on. Use single-line "
+            "values only.".format(PROCESS_TOML)
+        )
+    section = None
+    for lineno, raw in enumerate(text.splitlines(), 1):
+        head = _SECTION_RE.match(raw)
+        if head:
+            section = head.group(1).strip()
+            continue
+        out.extend(_line_shape_findings(raw, lineno, section))
+    return out
+
+
+def _line_shape_findings(raw, lineno, section):
+    """The per-line half of `process_shape_findings` — split out so neither
+    half sits at the C901 ceiling, and because the loop above is about
+    SECTIONS while this is about KEYS."""
+    line = raw.strip()
+    if not line or line.startswith("#") or "=" not in line:
+        return []
+    # The dotted-key test runs BEFORE the key match, not inside it: a dotted
+    # key does not match `_KEY_RE` at all, so a check placed after it is
+    # unreachable — which is what a first cut of this function did, and the
+    # shape it silently let through is the one that flips the gate.
+    if "." in line.split("=", 1)[0]:
+        return [
+            "docs/{}:{} uses a DOTTED key ({}). One `key = value` per line "
+            "under a bare [section] header — a dotted key is invisible to the "
+            "hooks' keyed read.".format(PROCESS_TOML, lineno, line)
+        ]
+    key = _KEY_RE.match(raw)
+    if key is None:
+        return []
+    name, value = key.group(1), key.group(2)
+    out = []
+    if value.startswith("{"):
+        out.append(
+            "docs/{}:{} uses an INLINE TABLE ({}). The hooks cannot read one; "
+            "write each key on its own line.".format(PROCESS_TOML, lineno, name)
+        )
+    if name in GREPPABLE_KEYS and section != "policies":
+        out.append(
+            "docs/{}:{} declares the hook-read key `{}` under [{}], not "
+            "[policies]. Python would ignore it and the hooks would act on it "
+            "— the two must never disagree about a security gate.".format(
+                PROCESS_TOML, lineno, name, section or "(no section)"
+            )
+        )
+    return out
 
 
 def declared_policy(docs, legacy_name, default):
@@ -234,10 +347,17 @@ def declared_policy(docs, legacy_name, default):
     mixed config is exactly the state where two readers disagree about the same
     policy and neither is wrong.
     """
-    section, key, kind, _scaffold = PROCESS_KEYS[legacy_name]
+    section, key, kind = PROCESS_KEYS[legacy_name]
     table = process_config(docs).get(section)
     if isinstance(table, dict) and key in table:
-        return _coerce(table[key], kind, default)
+        value = _coerce(table[key], kind)
+        # A wrong-typed value is NOT silently a default here — `config_conflicts`
+        # refuses it upstream, and this fall-through only ever runs on a path
+        # that already declined to refuse (a caller outside the three guarded
+        # entry points). Falling to the legacy file / default keeps such a
+        # caller working rather than crashing it.
+        if value is not None:
+            return value
     return read_declared(Path(docs) / legacy_name, default)
 
 
@@ -264,23 +384,33 @@ def config_conflicts(docs):
     path = _process_toml_path(docs)
     if not path.is_file():
         return []
-    out = []
-    try:
-        data = tomllib.loads(path.read_text(encoding="utf-8"))
-        if not isinstance(data, dict):
-            raise ValueError("top level is not a table")
-    except (OSError, UnicodeDecodeError, tomllib.TOMLDecodeError, ValueError) as exc:
+    data = read_toml(path)
+    if not isinstance(data, dict):
         return [
-            "docs/{} does not parse ({}) - every policy dial would silently "
-            "read its default. Fix the file; do not delete it.".format(
-                PROCESS_TOML, exc
-            )
+            "docs/{} does not parse — every policy dial would silently read "
+            "its default while the git hooks keep acting on the text. Fix the "
+            "file; do not delete it.".format(PROCESS_TOML)
         ]
+    out = process_shape_findings(docs)
     for legacy_name in sorted(PROCESS_KEYS):
-        section, key, _kind, _scaffold = PROCESS_KEYS[legacy_name]
+        section, key, kind = PROCESS_KEYS[legacy_name]
         table = data.get(section)
-        declared_here = isinstance(table, dict) and key in table
-        if declared_here and _legacy_present(docs, legacy_name):
+        if not (isinstance(table, dict) and key in table):
+            continue
+        if _coerce(table[key], kind) is None:
+            out.append(
+                "docs/{} [{}] {} = {!r} is a {}, expected {} — a wrong-typed "
+                "dial must never fall through to a default (a quoted "
+                "`review_rounds` once meant NO review verdict was required).".format(
+                    PROCESS_TOML,
+                    section,
+                    key,
+                    table[key],
+                    type(table[key]).__name__,
+                    kind,
+                )
+            )
+        if _legacy_present(docs, legacy_name):
             out.append(
                 "policy '{}' is declared TWICE - docs/{} [{}] {} and the legacy "
                 "docs/{}. Run `python scripts/bootstrap.py --migrate-config "
@@ -736,7 +866,9 @@ WI_TOKEN_RE = re.compile(r"^WI-\d+$")
 # Mirrors check_trajectory.TERMINAL_STATUSES, kept inline here rather than
 # imported: the F5 self-contained-script rule keeps agent_common stdlib-only (it
 # never pulls a sibling engine). A worker must never build a WI in either state.
-TERMINAL_STATUSES = ("done", "cancelled")
+# SN-031 adds `partial`: a worker must refuse an assignment whose spec has
+# already closed early exactly as it refuses one that shipped or was cancelled.
+TERMINAL_STATUSES = ("done", "cancelled", "partial")
 
 
 def sanitize_train(name):
@@ -805,6 +937,14 @@ WI_COLUMNS = (
     "SafetyClass",
     "PlanMode",
     "Bar",
+    # SN-031 LINEAGE. Partial work continues by MINTING A SUCCESSOR, never by
+    # reviving the closed row — so the successor must be able to say which row
+    # it continues, or the thread is lost at the id change. A real column, not
+    # a frontmatter-only key, because `intake`'s drafts-not-mints arm writes
+    # successors through `wi_convert.write_spec_file`, which serializes from
+    # this table: a key that is not here would be silently dropped at the one
+    # moment it matters.
+    "Supersedes",
 )
 SPEC_SCALARS = (
     ("Title", "title"),
@@ -823,6 +963,7 @@ SPEC_SCALARS = (
     # never affects scheduling. (G1|G2|G3 — integrate.refresh passes it to
     # check.py --gate; load_wis deliberately does not parse it.)
     ("Bar", "bar"),
+    ("Supersedes", "supersedes"),
 )
 SPEC_LISTS = (("SR-Refs", "sr_refs"), ("Predecessors", "needs"))
 # Directory -> Status. The directory is the WHOLE statement (WI-384): every
@@ -841,12 +982,24 @@ SPEC_LISTS = (("SR-Refs", "sr_refs"), ("Predecessors", "needs"))
 # only the `disposition = "retired"` spelling this row deleted — so the word
 # itself moved. `active/<branch>/` sits one level deeper, so the status is the
 # FIRST path component, never the file's parent directory.
+# `partial/` (SN-031) is the THIRD terminal, and the one that made the outcome
+# model honest. A lane that stops early used to move back to `queued/` carrying
+# a `## Handback` note and a `blockref` — which meant the return event had no
+# artifact of its own, only a mutable, movable, self-referencing spec. Five
+# successive dedup mechanisms tried to reconstruct "did a return happen, and was
+# it judged?" from that spec, and every one leaked: an owed judgement silently
+# not happening. `partial/` is TERMINAL — nothing re-claims it, so nothing
+# strands — and the per-close report under docs/handbacks/ IS the event's
+# identity. Continuing the work MINTS A SUCCESSOR (carrying `supersedes`),
+# because a closed row is never revived and a scope definition never changes to
+# mean something else.
 SPEC_STATUS_DIRS = {
     "draft": "draft",
     "queued": "queued",
     "active": "active",
     "deferred": "deferred",
     "cancelled": "cancelled",
+    "partial": "partial",
     "complete": "done",
 }
 # The inert EXAMPLE spec's filename prefix (the `-000` rule, applied to the
