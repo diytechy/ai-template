@@ -140,7 +140,15 @@ _CONST_ENV = {
 # candidate); a negative or non-integer weight is a malformed line (preflight
 # fails). Unannotated ids weigh 1 everywhere, so an unannotated file selects
 # byte-identically to before (uniform weight == today's line-order tie-break).
-WEIGHT_PHASES = ("BUILD", "REVIEW", "CRITIQUE", "DESIGN-CHECK")
+# SN-026 (SN-030 §7): `ADJUDICATE` joins the vocabulary. An adjudication row is
+# not a build — it judges a CLAIM another session made (a lane's partial close,
+# an amendment's meaning-vs-clarity, a red TC under a closed row) — so it is a
+# job type in exactly the sense the phase weights exist to express, and routing
+# it as an ordinary BUILD drew from the implementer pool at the implementer
+# tier. Cross-family preference is ON for it, for the reviewers' reason: a judge
+# that shares the family of the party it is judging corroborates rather than
+# checks.
+WEIGHT_PHASES = ("BUILD", "REVIEW", "CRITIQUE", "DESIGN-CHECK", "ADJUDICATE")
 _WEIGHT_PHASE_ALIAS = {"REVIEW": ("REVIEW-A", "REVIEW-B")}
 # A weight is an unsigned ASCII decimal integer — no sign prefix, no whitespace
 # (`+3`/`-1`/` 3` all fail). Python ints are unbounded, so a very large weight is
@@ -906,7 +914,13 @@ def failure_action(human_held, keep_nondependent=False):
     return {
         "mode": "loop-held",
         "pause_wi": True,
-        "keep_nondependent": True,
+        # The DECLARED dial, not a hardcoded True. The two questions are
+        # independent — that is the entire reason the enum's three words became
+        # two dials — so a loop-held tier that was told to drain must drain.
+        # Hardcoding it here made the returned dict, documented as "what the
+        # coordinator enacts and logs", report the opposite of the owner's
+        # explicit setting.
+        "keep_nondependent": bool(keep_nondependent),
         "design_check": True,
         "note": "loop-held tier: schedule a fresh strong-tier, different-family design-check session to rule grind-through vs redesign, document every assumption, and continue (redesign re-enters process.md 5)",
     }

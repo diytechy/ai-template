@@ -261,9 +261,7 @@ def test_a_partial_close_is_CLEAN_under_the_real_trajectory_check(tmp_path):
 
     hard = [f for f in ctraj.ssot_findings(rows, root) if f[0] == "R-A"]
     assert hard == [], "R-A must not fire on a partial close: {}".format(hard)
-    lifecycle = [
-        f for f in ctraj.spec_lifecycle_findings(root, rows) if "WI-401" in f
-    ]
+    lifecycle = [f for f in ctraj.spec_lifecycle_findings(root, rows) if "WI-401" in f]
     assert lifecycle == [], "R-F must not fire on a partial close: {}".format(lifecycle)
 
 
@@ -284,7 +282,7 @@ def test_a_terminal_spec_with_no_close_report_is_LOUD(tmp_path):
 
 
 def test_the_report_is_immutable_and_a_refused_close_leaves_no_residue(tmp_path):
-    """"Immutable" has to be enforced, not asserted. The report IS the close
+    """ "Immutable" has to be enforced, not asserted. The report IS the close
     event's identity, and an identity that can be overwritten is a mutable proxy
     again — the exact shape five dedup mechanisms died on. A refused second
     close also used to leave the rewritten report STAGED in a dirty lane, which

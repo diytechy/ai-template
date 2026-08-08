@@ -1905,6 +1905,106 @@ def ssot_findings(wis, root):
     return out
 
 
+# --- SN-030 rung 3: queue-conflict vetting (the mechanical pre-filter) --------
+# Two rows are OPEN AT ONCE and overlap. Nothing here is an error: overlap is
+# frequently correct (two rows may legitimately answer one SR from different
+# sides), and a checker that cannot tell those apart must not block. What it CAN
+# do is refuse to let the overlap be invisible — which is the whole failure this
+# rung addresses, a queue that silently grows two rows for one job because
+# nobody compared the mint against what was already queued.
+#
+# The ADJUDICATOR half of the vetting (does this row's scope contradict the
+# spine, or another queued row's intent?) is a judgement and lives in the
+# `adjudicate-conflict` prompt, run inside the session that minted the row —
+# not here. This is deliberately the cheap half.
+
+# Title tokens too common to carry meaning — a shared "the" is not a signal.
+_TITLE_STOPWORDS = frozenset(
+    {"a", "an", "and", "at", "for", "in", "of", "on", "the", "to", "with"}
+)
+# Jaccard over title token SETS. 0.8 is deliberately high: this rung's job is to
+# catch the same job minted twice (near-identical wording), not to editorialize
+# about two rows in the same area. A lower bar turns a useful warn into noise
+# that gets ignored, which is worse than not having it.
+_TITLE_SIMILARITY = 0.8
+
+
+def _title_tokens(title):
+    """A title's comparable token set: case-folded, punctuation-split,
+    stopwords and pure-number tokens dropped (a WI id or a phase number is not
+    subject matter)."""
+    words = re.split(r"[^0-9a-z]+", (title or "").lower())
+    return {w for w in words if w and w not in _TITLE_STOPWORDS and not w.isdigit()}
+
+
+_TITLE_CLIP = 90
+
+
+def _clip_title(title):
+    """A title bounded for a one-line finding: whitespace collapsed, clipped."""
+    text = " ".join(str(title or "").split())
+    return text if len(text) <= _TITLE_CLIP else text[: _TITLE_CLIP - 1] + "…"
+
+
+def queue_conflict_findings(wis):
+    """SN-030 rung 3, mechanical half: pairs of OPEN rows that overlap.
+
+    Three signals, warn-only, each named with both row ids so the message is
+    actionable without opening the registry:
+
+      near-duplicate title  Jaccard >= 0.8 over title token sets — the same job
+                            minted twice, which is what a mint that never
+                            compared against the queue produces.
+      shared SR-Refs        two open rows answering the same requirement. Often
+                            correct; worth seeing.
+      shared SpecRef        two open rows pointing at ONE spec document. This is
+                            the sharpest of the three: a spec is a row's
+                            definition, so two open rows sharing one is either a
+                            duplicate or a split that never got written down.
+
+    Deterministic order (sorted by the id pair), and each pair is reported once
+    per signal, never once per direction."""
+    open_rows = [
+        w for w in wis if (w.get("status") or "").strip().lower() in OPEN_STATUSES
+    ]
+    tokens = {w["id"]: _title_tokens(w.get("title")) for w in open_rows}
+    out = []
+    for i, a in enumerate(open_rows):
+        for b in open_rows[i + 1 :]:
+            first, second = sorted((a["id"], b["id"]))
+            ta, tb = tokens[a["id"]], tokens[b["id"]]
+            union = ta | tb
+            if union and len(ta & tb) / len(union) >= _TITLE_SIMILARITY:
+                out.append(
+                    "{} and {} are both open with near-identical titles - one "
+                    "job minted twice? ({!r} / {!r})".format(
+                        first,
+                        second,
+                        # CLIPPED. A WI title in this repo is routinely a
+                        # multi-thousand-character paragraph, so interpolating
+                        # two raw ones produced a ~6 KB stderr line per pair —
+                        # a warn nobody reads is a warn that does not exist.
+                        _clip_title(a.get("title")),
+                        _clip_title(b.get("title")),
+                    )
+                )
+            shared_srs = sorted(set(a.get("srs") or ()) & set(b.get("srs") or ()))
+            if shared_srs:
+                out.append(
+                    "{} and {} are both open and both answer {}".format(
+                        first, second, ";".join(shared_srs)
+                    )
+                )
+            spec = (a.get("specref") or "").split("#", 1)[0]
+            if spec and spec == (b.get("specref") or "").split("#", 1)[0]:
+                out.append(
+                    "{} and {} are both open and share one spec of record ({})".format(
+                        first, second, spec
+                    )
+                )
+    return sorted(out)
+
+
 def spec_lifecycle_findings(root, wis):
     """The spec-lifecycle close-side rule **R-F** (WI-251) — the mechanical half
     of the close ritual R-E's open half leaves unstated: *Deliverable filled,
@@ -2872,7 +2972,11 @@ def spine_cell_class(csv_path, column):
 # Explicitly NOT `docs/work/` (the `spec_files` rglob trap) and not `docs/log.md`
 # (prose: evidence, never normative).
 ATTESTATIONS_CSV = "docs/requirements/attestations.csv"
-ATTESTATION_DECISIONS = ("ratified", "clarity", "meaning", "override")
+# `superseded` is the RETIREMENT decision: the artifact left the spine and its
+# anchor is deliberately dangling. It exists because the alternative to naming
+# that state is deleting the ledger row, and a ledger you delete from is not
+# append-only — the one property the whole rung rests on.
+ATTESTATION_DECISIONS = ("ratified", "clarity", "meaning", "override", "superseded")
 # The field separator inside a digest's canonical text. A unit separator, so it
 # cannot occur in a cell and two different splits cannot collide.
 _DIGEST_SEP = "\x1f"
@@ -3000,7 +3104,24 @@ def attestation_findings(root):
     if not anchors:
         return []
     findings = []
-    for artifact, current in sorted(current_digests(root).items()):
+    digests = current_digests(root)
+    # THE GHOST ANCHOR, checked first because iterating the REGISTRY alone can
+    # never see it: a ledger row keyed on an artifact that is not a current
+    # spine row (deleted, renamed, or simply a typo'd `Artifact` cell) anchors
+    # nothing at all, and reads as a perfectly clean ledger while doing it. A
+    # `SR-01` typo is indistinguishable from an untraced requirement otherwise.
+    for artifact in sorted(anchors):
+        retired = (anchors[artifact].get("Decision") or "").strip().lower()
+        if artifact not in digests and retired != "superseded":
+            findings.append(
+                "{} is attested by {} but is not a current spine row or SN — "
+                "the ledger row anchors nothing. Either the artifact was "
+                "removed (append a `superseded` row saying so) or the "
+                "`Artifact` cell is a typo.".format(
+                    artifact, anchors[artifact].get("ATT-ID") or "the ledger"
+                )
+            )
+    for artifact, current in sorted(digests.items()):
         anchor = anchors.get(artifact)
         if anchor is None:
             continue
@@ -3057,15 +3178,36 @@ def staged_attestation_rewrite_findings(root, base="HEAD", head=None):
     two trees, rather than appended.
 
     Uses the same two-tree read `staged_spine_amendments` does, so the hook's
-    `--staged` question and a post-commit rev range are one mechanism."""
+    `--staged` question and a post-commit rev range are one mechanism.
+
+    DELETION IS THE CASE THIS HAD TO GROW A RULE FOR. Truncating the ledger to
+    zero bytes was caught (the old lines are gone from a file that still
+    exists); `git rm`-ing it was not, because `git show :<path>` then fails and
+    the guard read that as "no git context" and returned clean — which also
+    silenced the drift and integrity rungs, since an absent ledger has no rows
+    to check. The strongest form of rewriting a ledger was the one form it
+    could not see. A rename is the same act wearing a different hat, so the
+    diff is read with `--no-renames` (`_spine_revs`) and the old path shows up
+    as a deletion."""
     revs = _spine_revs(root, base, head, touches=(ATTESTATIONS_CSV,))
     if revs is None:
         return []
     _staged_names, old_rev, new_rev = revs
     before = _git(root, ["show", old_rev + ATTESTATIONS_CSV])
     after = _git(root, ["show", new_rev + ATTESTATIONS_CSV])
-    if before is None or after is None:
+    if before is None:
+        # Nothing to compare against — the ledger is being CREATED, which is
+        # every first attestation and not a rewrite.
         return []
+    if after is None:
+        return [
+            "{} was REMOVED. An attestation ledger that can be deleted is not "
+            "an anchor at all, and its absence silences the drift and "
+            "integrity rungs too — every reader falls back to deriving "
+            "ratification from git history, which is what this file "
+            "replaced. Restore it; retire individual rows with a "
+            "`superseded` decision instead.".format(ATTESTATIONS_CSV)
+        ]
     old_lines = [ln for ln in before.lstrip("﻿").splitlines() if ln.strip()]
     new_lines = [ln for ln in after.lstrip("﻿").splitlines() if ln.strip()]
     if new_lines[: len(old_lines)] == old_lines:
@@ -3108,11 +3250,15 @@ def _spine_revs(root, base, head, touches=()):
     answer" and "git answered, and nothing relevant moved" produce the identical
     `return []` degrade in every consumer, and writing that pair twice is the
     intra-file duplication WI-347 rules a defect."""
+    # `--no-renames` so a MOVED registry shows up as its old path too. With
+    # rename detection on, `git diff --name-only` reports only the destination,
+    # so `git mv docs/requirements/attestations.csv elsewhere.csv` was invisible
+    # to every `touches` test here — the append-only guard included.
     if head is None:
-        names = _git(root, ["diff", "--cached", "--name-only", base])
+        names = _git(root, ["diff", "--cached", "--name-only", "--no-renames", base])
         new_prefix = ":"
     else:
-        names = _git(root, ["diff", "--name-only", base, head])
+        names = _git(root, ["diff", "--name-only", "--no-renames", base, head])
         new_prefix = head + ":"
     if names is None:
         return None
@@ -3586,23 +3732,26 @@ def critique_staleness_findings(root):
 
 
 def _report_attestations(root, strict):
-    """Print the SN-029 attestation ledger's findings; return the ERROR subset.
+    """Print the SN-029 attestation ledger's WARNs; return the ERROR subset.
 
     The DRIFT rung is warn/strict like the other registry findings; the ledger's
     own INTEGRITY is hard, because a ledger that does not parse is not an anchor
     at all and every reader downstream would silently fall back to the
     git-history derivation it replaces. Lifted out of `main` to hold the C901
-    ceiling — the standing rule there is simplify, never bump."""
+    ceiling — the standing rule there is simplify, never bump.
+
+    Only the WARN tier prints here. The errors are RETURNED and printed by
+    whichever exit the caller reaches, exactly like `comp_errors`: printing
+    them here as well made a strict-promoted drift finding appear twice, once
+    as WARN and once as ERROR, under a tally that counted it once."""
     errors = []
     for w in attestation_findings(root):
-        print("check_trajectory: WARN - {}".format(w), file=sys.stderr)
         if strict:
             errors.append(w)
-    for w in attestation_integrity_findings(root) + staged_attestation_rewrite_findings(
-        root
-    ):
-        print("check_trajectory: ERROR - {}".format(w), file=sys.stderr)
-        errors.append(w)
+        else:
+            print("check_trajectory: WARN - {}".format(w), file=sys.stderr)
+    errors.extend(attestation_integrity_findings(root))
+    errors.extend(staged_attestation_rewrite_findings(root))
     return errors
 
 
@@ -3648,11 +3797,16 @@ def main():
             staged_findings(root)
             + critique_ratchet_findings(root)
             + staged_spine_findings(root)
-            # SN-029: the attestation ledger's two rungs ride the same warn
-            # tier the amend-without-flip warn does — one is the DRIFT (the
-            # text moved away from what was accepted), the other the ledger's
-            # own append-only shape. Warn here, gated under --strict below.
+            # SN-029: the attestation ledger's three rungs ride the same warn
+            # tier the amend-without-flip warn does — the DRIFT (the text moved
+            # away from what was accepted), the ledger's own SHAPE, and its
+            # append-only guard. All three warn here and are gated under
+            # --strict below. The shape rung is included deliberately: a
+            # malformed ledger is an ERROR at the full run, and the commit is
+            # the one moment it is cheap to fix, so staying silent here would
+            # save the diagnostic for after it stops being cheap.
             + attestation_findings(root)
+            + attestation_integrity_findings(root)
             + staged_attestation_rewrite_findings(root)
             + staged_completion_findings(root)
         ):
@@ -3748,8 +3902,15 @@ def main():
     # --strict — advisory is the block's contract, and minted rows satisfy it
     # by construction (their ## Context cites the packs), so it reaches
     # exactly the hand-authored residue.
-    for msg in backlog_staleness_findings(root, wis) + knowledge_pack_findings(
-        root, wis
+    # ...as does SN-030's queue-conflict pre-filter (rung 3): overlap between
+    # two OPEN rows is frequently correct, so this rung's whole contribution is
+    # making it visible. Never the exit code, not even under --strict — a
+    # checker that cannot tell a legitimate split from a duplicate must not
+    # block on the difference.
+    for msg in (
+        backlog_staleness_findings(root, wis)
+        + knowledge_pack_findings(root, wis)
+        + queue_conflict_findings(wis)
     ):
         print("check_trajectory: WARN - {}".format(msg), file=sys.stderr)
     # The SSOT coherence layer: R-A is always an error; R-E, the

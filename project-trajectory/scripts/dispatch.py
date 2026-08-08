@@ -32,12 +32,15 @@ ratification — but EXCLUSIVELY and BATCHED: an exclusive-kind row on the
 frontier stops new admission, the dispatcher waits for every lane back in the
 station, then admits ALL spine rows TOGETHER as one batch (one branch, one
 `agent_loop --wi 'A;B'` worker, one re-attest window, one owner sitting). An
-`attestation`/`gate` row does NOT dispatch under `attended`: the lanes drain,
-the cards stay on open-items.html, and the run exits 0 — the machine finished
-everything it was allowed to do (`agent_route.failure_action("attended")` is
-the contract this implements). Under `single-ratify` those rows dispatch only
-as the queued batch once nothing else remains; under `autonomous` they
-dispatch (a recorded fresh-context reviewer verdict ratifies). The fixed
+`attestation`/`gate` row does NOT dispatch while the tier in process is still
+HUMAN-HELD: the lanes drain, the cards stay on open-items.html, and the run
+exits 0 — the machine finished everything it was allowed to do
+(`agent_route.failure_action(human_held=True)` is the contract this
+implements). With `keep_nondependent` those rows dispatch only as the queued
+batch once nothing else remains; on a LOOP-HELD tier they dispatch outright (a
+recorded fresh-context reviewer verdict ratifies). The three retired enum words
+(`attended` / `single-ratify` / `autonomous`) each named one cell of that
+two-dial table, which is why they could not express the fourth. The fixed
 points hold at every level: G-Final is the human's, no un-run greens, the
 harness is still the bar, ratified owner decisions are never re-decided.
 
@@ -77,6 +80,7 @@ handoff).
 from __future__ import annotations
 
 import os
+import re
 import sys
 import time
 from pathlib import Path
@@ -281,6 +285,27 @@ def _kind_action(kind, human_held):
     return "exclusive"
 
 
+def _judgement_first(ready_kinds):
+    """SN-030 rung 1 — DISPOSE FIRST: `adjudication` rows move to the head of
+    the frontier, everything else keeping its relative order.
+
+    A stable partition, not a re-sort: `schedule._KIND_RANK` is §A1's RULED
+    table and is not renumbered here (renumbering it would migrate every
+    downstream repo's ordering for a rung that belongs to admission anyway).
+    Where the two disagree — and they disagree in exactly one place, spine
+    (rank 0) vs adjudication (rank 1) — the loop-order contract wins AT
+    ADMISSION only, and the rank table still gives `--explain` its total order.
+
+    WHY dispositions outrank even a scope change: an adjudication row exists
+    because a lane CLAIMED an outcome (a partial close, a cancellation, an
+    amendment that may have moved meaning) and nothing has judged that claim
+    yet. A spine batch re-attests requirements. Running the batch first
+    re-ratifies a spine on a premise the pending judgement may overturn, and a
+    ratification is the one thing this loop cannot cheaply take back — the
+    attestation ledger is append-only by design. Judge, then build."""
+    return sorted(ready_kinds, key=lambda wk: wk[1] != "adjudication")
+
+
 def _admission(ready_kinds, human_held, busy, free, keep_nondependent=False):
     """THE SPINE BARRIER, as a pure decision (§A4/§A8): what may start now?
 
@@ -308,6 +333,7 @@ def _admission(ready_kinds, human_held, busy, free, keep_nondependent=False):
     batch admits only into an idle station, as the sole toucher of trunk."""
     if not ready_kinds:
         return "empty", []
+    ready_kinds = _judgement_first(ready_kinds)
     surfaced = [w for w, k in ready_kinds if _kind_action(k, human_held) == "surface"]
     dispatchable = [
         (w, k) for w, k in ready_kinds if _kind_action(k, human_held) != "surface"
@@ -319,10 +345,22 @@ def _admission(ready_kinds, human_held, busy, free, keep_nondependent=False):
     if not dispatchable:
         if not surfaced:
             return "empty", []
-        # The close under `keep_nondependent`: only the ratification batch left.
+        # THE CLOSE UNDER `keep_nondependent`: the non-dependent work has all
+        # drained and only the ratification rows remain. They still SURFACE.
+        #
+        # This arm used to admit them, inherited from the retired
+        # `single-ratify` word — "dispatches only as the queued batch once
+        # nothing else remains". Under the ordinal that is a contradiction:
+        # `human_held` is TRUE here, which is the statement that this tier is
+        # the human's to ratify, and `keep_nondependent` answers an entirely
+        # different question — may OTHER lanes keep running while a
+        # ratification is queued. Letting the second dial override the first is
+        # the machine ratifying what a human declared theirs, reached by a
+        # combination the enum could not even express (level 4 +
+        # keep_nondependent, the fourth cell).
         if busy:
             return "wait", []
-        return "admit-exclusive", surfaced
+        return "surface", surfaced
     first_w, first_k = dispatchable[0]
     action = _kind_action(first_k, human_held)
     if action in ("batch", "exclusive"):
@@ -778,7 +816,125 @@ def gap_census(root):
     census += [
         "SN {} is a draft need (unratified)".format(s) for s in sorted(reg.sn_draft)
     ]
+    census += red_tc_census(root, reg)
     return census
+
+
+# SN-030 rung 6's marker. The census is a list of STRINGS by contract (the seam
+# `intake.mint_gap_rows` consumes), so a distinct class announces itself with a
+# distinct prefix rather than by growing the seam a second shape. `intake.
+# _census_drafts` routes on exactly this token; nothing else parses the line.
+RED_TC_PREFIX = "red TC "
+
+# The three statuses this rung does NOT call red, each because another rung
+# owns it. Stated as exemptions because Status is an open vocabulary — see
+# `red_tc_census`.
+_TC_NOT_RED = frozenset({"verified", "draft", "modified"})
+
+
+def red_tc_census(root, reg=None):
+    """SN-030 rung 6: TEST CASES LEFT RED UNDER A CLAIMED IMPLEMENTATION.
+
+    A TC that is not `Verified` is ordinary unfinished work — unless something
+    already claims to have BUILT what it verifies, and that is the state this
+    names: a TC outside the three exempt statuses, all of whose `Verifies`
+    targets are cited by at least one WI recorded `done`. The pair is a
+    contradiction the registries state plainly and nothing was reading: the work
+    is closed and the evidence for it is red.
+
+    Status is an OPEN vocabulary, so the rule is stated as exemptions rather
+    than as a list of red words — anything else is red, which fails toward
+    naming a gap rather than toward missing one:
+
+      Verified  green, by definition.
+      Draft     pre-ratification; "not yet green" is its CORRECT state.
+      Modified  the post-attestation amendment state, which the §A5.1 amendment
+                adjudication already owns. Minting here too would put two
+                judgement rows on one event.
+
+    A TC whose targets no closed row cites is also exempt: that is work not
+    started, which the orphan/status rungs already cover, and a second row for
+    it would double-count. Same for `partial`/`cancelled` closers — see
+    `_implemented_ids`."""
+
+    import trace as tr
+
+    root = Path(root)
+    if reg is None:
+        reg = tr.load_registries(root / "docs")
+    claimed = _implemented_ids(root)
+    if not claimed:
+        return []
+    census = []
+    for row in reg.tcs:
+        tc_id = (row.get("TC-ID") or "").strip()
+        status = (row.get("Status") or "").strip().lower()
+        if not tc_id or tc_id.endswith("-000") or status in _TC_NOT_RED:
+            continue
+        targets = [t for t in ac._refs(row.get("Verifies")) if not t.endswith("-000")]
+        if not targets or not all(t in claimed for t in targets):
+            continue
+        census.append(_red_tc_line(tc_id, status, targets))
+    return census
+
+
+def _red_tc_line(tc_id, status, targets):
+    """Format ONE red-TC census line. Paired with `parse_red_tc` below, and the
+    two must stay adjacent: the seam carries strings, so this grammar is a
+    contract between two modules and gets exactly one home."""
+    return (
+        "{}{} [{}] is {} under a claimed implementation (a closed row "
+        "claims the work; its evidence is not green)".format(
+            RED_TC_PREFIX, tc_id, ";".join(targets), status or "unset"
+        )
+    )
+
+
+_RED_TC_RE = re.compile(re.escape(RED_TC_PREFIX) + r"(\S+) \[([^\]]*)\]")
+
+
+def parse_red_tc(line):
+    """`(tc_id, [target, ...])` for a red-TC census line, or None for any other
+    line. The ONE reader of `_red_tc_line`'s grammar — `intake._census_drafts`
+    routes through this rather than re-splitting the prose, because prose that
+    carries control flow has to be a parsed field with a refusal, not a
+    substring search that silently matches nothing (the `NEEDS-HUMAN` lesson,
+    SN-031)."""
+    matched = _RED_TC_RE.match(line or "")
+    if not matched:
+        return None
+    return matched.group(1), [t for t in matched.group(2).split(";") if t]
+
+
+def _implemented_ids(root):
+    """The set of SR/LLR ids some `done` work item cites — "somebody claims to
+    have built this".
+
+    Read off `SR-Refs` (the WI registry's only requirement link) plus the LLRs
+    those SRs own, because a TC usually verifies the LLR while the work item
+    cites the SR. A row in any non-`done` status contributes nothing: `partial`
+    and `cancelled` are precisely the outcomes that say the work is NOT
+    delivered, so a red TC under one of those is expected, not a contradiction —
+    and its close already earned a disposition row of its own."""
+    import trace as tr
+
+    wis = schedule.load_wis(ac.read_spec_rows(Path(root) / intake.WORK))
+    srs = {
+        ref
+        for w in wis
+        if (w.get("status") or "").strip().lower() == "done"
+        for ref in (w.get("srs") or ())
+    }
+    if not srs:
+        return set()
+    reg = tr.load_registries(Path(root) / "docs")
+    claimed = set(srs)
+    for row in reg.llrs:
+        owner = ac._refs(row.get("SR-Refs"))
+        if owner and all(o in srs for o in owner):
+            claimed.add((row.get("LLR-ID") or "").strip())
+    claimed.discard("")
+    return claimed
 
 
 def _pre_admit(args, table, state, config_refusal):
@@ -995,11 +1151,36 @@ def _station_exit(root, tier, verb, payload, state):
             )
         )
         return ac.EXIT_DONE
-    _say(
+    drained = (
         "queue drained - no ready work items; {} WI(s) integrated this run.".format(
             state["merged"] + residue
         )
     )
+    # SN-029's separate end-of-run hold. The ordinal answers "which TIER is the
+    # human's"; this answers "do I get a last look before the run walks away",
+    # and they are different questions — which is exactly why it is its own
+    # dial. Without a reader it was a declared, type-checked promise that
+    # nothing kept: a run at level 0 with `final_review = "always"` closed
+    # silently, which is the state an owner sets this dial to prevent.
+    _say(drained)
+    if ac.final_review(root / "docs"):
+        # EXIT_DONE, deliberately, and this is the part worth being careful
+        # about. `NEEDS-HUMAN` means BLOCKED — something is owed before work can
+        # continue — and a clean drain is the opposite of that: everything
+        # merged, the bar is green, nothing is owed by the machine. Returning 7
+        # here would make every successful walk-away run report failure to the
+        # launchers, which is how a dial meant to add a READ ends up inverting
+        # an exit-code contract.
+        #
+        # What the dial actually buys is that the run does not close SILENTLY:
+        # the loop stops (this IS the end of the run) and says so loudly enough
+        # that a human reads it rather than discovering it in a log later.
+        _say(
+            "FINAL REVIEW - the run is COMPLETE and nothing is blocked, but "
+            "docs/process.toml [attestation] final_review is not 'off', so it "
+            "ends here for a human read rather than closing quietly. Read the "
+            "run; set the dial to 'off' when you no longer want the stop."
+        )
     return ac.EXIT_DONE
 
 

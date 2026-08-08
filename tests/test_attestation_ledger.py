@@ -41,7 +41,9 @@ SR_HEADER = (
 def _spine(root, requirement="the original text", status="Verified"):
     req = root / "docs" / "requirements"
     req.mkdir(parents=True, exist_ok=True)
-    with (req / "system-requirements.csv").open("w", encoding="utf-8", newline="\n") as fh:
+    with (req / "system-requirements.csv").open(
+        "w", encoding="utf-8", newline="\n"
+    ) as fh:
         fh.write(
             SR_HEADER
             + 'SR-001,Adder,SN-001,"{}","why","ac",,M,Test,{}\n'.format(
@@ -64,7 +66,15 @@ def _ledger(root, rows):
     with (req / "attestations.csv").open("w", encoding="utf-8", newline="") as fh:
         writer = csv.writer(fh, lineterminator="\n")
         writer.writerow(
-            ["ATT-ID", "Artifact", "TextDigest", "AcceptedCommit", "Decision", "Date", "Ref"]
+            [
+                "ATT-ID",
+                "Artifact",
+                "TextDigest",
+                "AcceptedCommit",
+                "Decision",
+                "Date",
+                "Ref",
+            ]
         )
         for row in rows:
             writer.writerow(row)
@@ -117,7 +127,9 @@ def test_an_sn_digest_is_the_raw_table_line(tmp_path):
     assert ct.sn_normative_text(text, "SN-999") is None
     # Whitespace-collapsed, so re-indenting a table is not an amendment.
     spaced = text.replace("| SN-001 |", "|   SN-001   |")
-    assert ct.sn_normative_text(spaced, "SN-001") == ct.sn_normative_text(text, "SN-001")
+    assert ct.sn_normative_text(spaced, "SN-001") == ct.sn_normative_text(
+        text, "SN-001"
+    )
 
 
 # --- the gap this closes -------------------------------------------------------
@@ -164,7 +176,17 @@ def test_the_ledger_catches_what_the_seam_cannot(tmp_path):
     accepted = ct.current_digests(root)
     _ledger(
         root,
-        [["ATT-001", "SR-001", accepted["SR-001"], "abc1234", "ratified", "2026-08-08", ""]],
+        [
+            [
+                "ATT-001",
+                "SR-001",
+                accepted["SR-001"],
+                "abc1234",
+                "ratified",
+                "2026-08-08",
+                "",
+            ]
+        ],
     )
     assert ct.attestation_findings(root) == [], "an unamended row owes nothing"
 
@@ -185,13 +207,25 @@ def test_an_SN_gets_an_anchor_it_structurally_lacks(tmp_path):
     assert "SN-001" in accepted
     _ledger(
         root,
-        [["ATT-001", "SN-001", accepted["SN-001"], "abc1234", "ratified", "2026-08-08", ""]],
+        [
+            [
+                "ATT-001",
+                "SN-001",
+                accepted["SN-001"],
+                "abc1234",
+                "ratified",
+                "2026-08-08",
+                "",
+            ]
+        ],
     )
     assert ct.attestation_findings(root) == []
 
     sn = root / "docs" / "requirements" / "stakeholder-needs.md"
     sn.write_text(
-        sn.read_text(encoding="utf-8").replace("The original need.", "A DIFFERENT need."),
+        sn.read_text(encoding="utf-8").replace(
+            "The original need.", "A DIFFERENT need."
+        ),
         encoding="utf-8",
         newline="\n",
     )
@@ -213,14 +247,60 @@ def test_a_meaning_decision_is_the_recorded_state_not_a_finding(tmp_path):
 
 
 def test_an_artifact_with_no_ledger_row_is_silent(tmp_path):
-    # The honest degrade: a repo mid-migration has rows nothing has attested
-    # yet, and a ledger that nagged about every one of them would be noise
-    # nobody could act on.
+    # The honest degrade, and now the test actually drives it: a repo
+    # mid-migration has spine rows nothing has attested yet, and a ledger that
+    # nagged about every one of them would be noise nobody could act on. SR-001
+    # is real and unattested; the ledger anchors SR-002 instead.
     root = tmp_path / "repo"
     root.mkdir()
     _spine(root)
-    _ledger(root, [["ATT-001", "SR-999", "sha256:x", "abc", "ratified", "2026-08-08", ""]])
+    # SN-001 is real and attested; SR-001 is real and attested by nothing.
+    digest = ct.current_digests(root)["SN-001"]
+    _ledger(
+        root,
+        [["ATT-001", "SN-001", digest, "abc", "ratified", "2026-08-08", ""]],
+    )
+    assert "SR-001" in ct.current_digests(root), "the unattested row really exists"
     assert ct.attestation_findings(root) == []
+
+
+def test_a_ledger_row_anchoring_NOTHING_is_LOUD(tmp_path):
+    # THE GHOST ANCHOR. The drift rung iterates the REGISTRY, so a ledger row
+    # keyed on an id that is not a current spine row can never be reached by
+    # it — and reads as a perfectly clean ledger while anchoring nothing. An
+    # `SR-01` typo is indistinguishable from a requirement nobody attested.
+    #
+    # This test previously asserted SILENCE here, under a name and comment
+    # describing the (correct) reverse case above. A test can pin a hole as
+    # firmly as it pins a behaviour; that is what this one was doing.
+    root = tmp_path / "repo"
+    root.mkdir()
+    _spine(root)
+    _ledger(
+        root,
+        [["ATT-001", "SR-999", "sha256:x", "abc", "ratified", "2026-08-08", ""]],
+    )
+    found = ct.attestation_findings(root)
+    assert len(found) == 1
+    assert "SR-999" in found[0] and "anchors nothing" in found[0]
+
+
+def test_a_SUPERSEDED_decision_retires_an_anchor_without_deleting_it(tmp_path):
+    # The way out that keeps the ledger append-only. An artifact legitimately
+    # leaves the spine; the alternative to naming that state would be deleting
+    # its ledger row, and a ledger you delete from is not an anchor.
+    root = tmp_path / "repo"
+    root.mkdir()
+    _spine(root)
+    _ledger(
+        root,
+        [
+            ["ATT-001", "SR-999", "sha256:x", "abc", "ratified", "2026-08-08", ""],
+            ["ATT-002", "SR-999", "sha256:x", "abc", "superseded", "2026-08-08", ""],
+        ],
+    )
+    assert ct.attestation_findings(root) == []
+    assert ct.attestation_integrity_findings(root) == []
 
 
 # --- the ledger's own shape ----------------------------------------------------
@@ -258,9 +338,13 @@ def test_the_ledger_is_append_only(tmp_path):
         ["config", "commit.gpgsign", "false"],
     ):
         subprocess.run(["git", "-C", str(root), *args], capture_output=True)
-    _ledger(root, [["ATT-001", "SR-001", "sha256:a", "abc", "ratified", "2026-08-08", ""]])
+    _ledger(
+        root, [["ATT-001", "SR-001", "sha256:a", "abc", "ratified", "2026-08-08", ""]]
+    )
     subprocess.run(["git", "-C", str(root), "add", "-A"], capture_output=True)
-    subprocess.run(["git", "-C", str(root), "commit", "-qm", "ledger"], capture_output=True)
+    subprocess.run(
+        ["git", "-C", str(root), "commit", "-qm", "ledger"], capture_output=True
+    )
 
     # APPENDING is fine.
     _ledger(
@@ -271,19 +355,31 @@ def test_the_ledger_is_append_only(tmp_path):
         ],
     )
     subprocess.run(["git", "-C", str(root), "add", "-A"], capture_output=True)
-    subprocess.run(["git", "-C", str(root), "commit", "-qm", "append"], capture_output=True)
+    subprocess.run(
+        ["git", "-C", str(root), "commit", "-qm", "append"], capture_output=True
+    )
     assert ct.staged_attestation_rewrite_findings(root, "HEAD~1", "HEAD") == []
 
     # REWRITING an earlier row is not.
     _ledger(
         root,
         [
-            ["ATT-001", "SR-001", "sha256:REWRITTEN", "abc", "ratified", "2026-08-08", ""],
+            [
+                "ATT-001",
+                "SR-001",
+                "sha256:REWRITTEN",
+                "abc",
+                "ratified",
+                "2026-08-08",
+                "",
+            ],
             ["ATT-002", "SR-002", "sha256:b", "def", "clarity", "2026-08-08", ""],
         ],
     )
     subprocess.run(["git", "-C", str(root), "add", "-A"], capture_output=True)
-    subprocess.run(["git", "-C", str(root), "commit", "-qm", "rewrite"], capture_output=True)
+    subprocess.run(
+        ["git", "-C", str(root), "commit", "-qm", "rewrite"], capture_output=True
+    )
     findings = ct.staged_attestation_rewrite_findings(root, "HEAD~1", "HEAD")
     assert len(findings) == 1 and "REWRITTEN, not appended" in findings[0]
 
@@ -335,3 +431,93 @@ def test_the_shipped_template_is_a_valid_empty_ledger():
 def test_this_repos_own_ledger_is_shaped_correctly():
     # Dogfood: whatever this repo carries must satisfy the rules it ships.
     assert ct.attestation_integrity_findings(ROOT) == []
+
+
+# --- the ledger's own survival -------------------------------------------------
+
+
+def _git_repo(root):
+    import subprocess
+
+    for args in (
+        ["init", "-q"],
+        ["config", "user.email", "t@example.com"],
+        ["config", "user.name", "T"],
+        ["config", "commit.gpgsign", "false"],
+    ):
+        subprocess.run(["git", "-C", str(root), *args], capture_output=True)
+    return root
+
+
+def _git(root, *args):
+    import subprocess
+
+    return subprocess.run(
+        ["git", "-C", str(root), *args], capture_output=True, text=True
+    )
+
+
+def test_DELETING_the_ledger_is_caught_by_the_append_only_guard(tmp_path):
+    """THE STRONGEST FORM OF REWRITING WAS THE ONE FORM IT COULD NOT SEE.
+
+    Truncating the file to zero bytes was caught — the old lines are gone from
+    a file that still exists. `git rm`-ing it was not: `git show :<path>` then
+    fails, the guard read that as "no git context" and returned clean, and the
+    drift and integrity rungs went quiet too, because an absent ledger has no
+    rows to check. So the one act that destroys the anchor outright produced
+    silence from all three rungs at once."""
+    root = _git_repo(tmp_path / "repo")
+    root.mkdir(parents=True, exist_ok=True)
+    _git_repo(root)
+    _spine(root)
+    _ledger(
+        root, [["ATT-001", "SR-001", "sha256:a", "abc", "ratified", "2026-08-08", ""]]
+    )
+    _git(root, "add", "-A")
+    _git(root, "commit", "-qm", "attested")
+
+    _git(root, "rm", "-q", "--", "docs/requirements/attestations.csv")
+    found = ct.staged_attestation_rewrite_findings(root)
+    assert len(found) == 1
+    assert "REMOVED" in found[0]
+
+
+def test_RENAMING_the_ledger_is_caught_too(tmp_path):
+    # Same act, different hat. With git's rename detection on, `--name-only`
+    # reports only the DESTINATION, so the old path never appeared in the
+    # changed set and every `touches` test missed it.
+    root = tmp_path / "repo"
+    root.mkdir(parents=True, exist_ok=True)
+    _git_repo(root)
+    _spine(root)
+    _ledger(
+        root, [["ATT-001", "SR-001", "sha256:a", "abc", "ratified", "2026-08-08", ""]]
+    )
+    _git(root, "add", "-A")
+    _git(root, "commit", "-qm", "attested")
+
+    _git(
+        root,
+        "mv",
+        "docs/requirements/attestations.csv",
+        "docs/requirements/old-attestations.csv",
+    )
+    found = ct.staged_attestation_rewrite_findings(root)
+    assert len(found) == 1
+    assert "REMOVED" in found[0]
+
+
+def test_CREATING_the_ledger_is_not_a_rewrite(tmp_path):
+    # Every first attestation is a file that did not exist on the base side.
+    root = tmp_path / "repo"
+    root.mkdir(parents=True, exist_ok=True)
+    _git_repo(root)
+    _spine(root)
+    _git(root, "add", "-A")
+    _git(root, "commit", "-qm", "spine only")
+
+    _ledger(
+        root, [["ATT-001", "SR-001", "sha256:a", "abc", "ratified", "2026-08-08", ""]]
+    )
+    _git(root, "add", "-A")
+    assert ct.staged_attestation_rewrite_findings(root) == []

@@ -215,7 +215,12 @@ _DECLARED_RE_CACHE = {}
 def _text_declares(path, key):
     """Whether the file's TEXT declares `key` on a non-comment line — the
     hooks' broad `declared` test, mirrored so this reader cannot conclude
-    "absent" about a key they would act on."""
+    "absent" about a key they would act on.
+
+    TRAILING comments are stripped, exactly as `_ptoml_body` strips them: a key
+    that appears ONLY inside a comment is not a declaration, and the hooks stop
+    acting on it, so concluding otherwise here would re-open the divergence in
+    the other direction."""
     pattern = _DECLARED_RE_CACHE.get(key)
     if pattern is None:
         pattern = _DECLARED_RE_CACHE[key] = re.compile(
@@ -226,10 +231,25 @@ def _text_declares(path, key):
     except OSError:
         return False
     return any(
-        pattern.search(line)
+        pattern.search(_strip_comment(line))
         for line in text.splitlines()
         if not line.lstrip().startswith("#")
     )
+
+
+_TRAILING_COMMENT_RE = re.compile(r"\s*#.*$")
+
+
+def _strip_comment(line):
+    """One line with its TRAILING comment removed — the sh `sed
+    's/[[:space:]]*#.*$//'` in `_ptoml_body`, mirrored.
+
+    Why the hooks strip at all, recorded here because this copy is the half a
+    Python reader sees: `privacy_check = true # privacy_check = false` is legal
+    TOML whose value is `true`, and the hooks' narrow "provably false" test
+    matched the decoy INSIDE the comment — so the gate switched off while
+    Python read it on, and the hook is the thing that blocks the commit."""
+    return _TRAILING_COMMENT_RE.sub("", line)
 
 
 def read_privacy_enabled(root):

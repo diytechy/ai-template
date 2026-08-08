@@ -39,7 +39,24 @@ REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null) || REPO_ROOT=$(cd "$(dirn
 # between) and the mixed-config refusal are documented in full at
 # hooks/pre-commit. POSIX ERE only.
 _ptoml_body() {
-  grep -v '^[[:space:]]*#' "$1" 2>/dev/null || true
+  # The greppable body of docs/process.toml: whole-line comments dropped, then
+  # TRAILING comments stripped.
+  #
+  # The trailing strip is not tidiness — without it the two grammars that read
+  # this file disagree in the FAIL-OPEN direction. `privacy_check = true #
+  # privacy_check = false` is legal TOML whose value is `true`, but the narrow
+  # "provably false" test below matched the decoy inside the comment and the
+  # gate silently switched off, while Python read it as ON. That is the M-42
+  # contract inverted: the hook is what blocks the commit, so the hook reading
+  # `false` is the one that decides.
+  #
+  # Stripping at the first `#` can truncate a string value that legitimately
+  # contains one. Every consequence of that runs the SAFE way: a truncated
+  # value is LESS able to prove `false` (so privacy stays ON), and
+  # `privacy_review` treats anything that is not exactly `warn-unwired` as
+  # require. The declaration test cannot be affected at all — `key =` sits
+  # before any `#` on its line.
+  grep -v '^[[:space:]]*#' "$1" 2>/dev/null | sed 's/[[:space:]]*#.*$//' || true
 }
 
 process_declares() {

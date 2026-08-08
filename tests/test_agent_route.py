@@ -310,12 +310,22 @@ def test_failure_action_keyed_to_the_ratification_level():
     assert held_but_running["design_check"] is False
     assert "non-dependent" in held_but_running["note"]
 
-    loop = route.failure_action(False)
+    loop = route.failure_action(False, keep_nondependent=True)
     assert loop["mode"] == "loop-held"
     assert loop["pause_wi"] is True
     assert loop["keep_nondependent"] is True
     assert loop["design_check"] is True
     assert "design-check" in loop["note"]
+
+    # THE FOURTH CELL, and the reason the returned dict must REPORT the dial
+    # rather than assume it. A loop-held tier that was told to drain must
+    # drain: this arm used to hardcode True, so the dict documented as "what
+    # the coordinator enacts and logs" reported the opposite of an owner's
+    # explicit `keep_nondependent = false` — which is this repo's own setting.
+    drains = route.failure_action(False)
+    assert drains["mode"] == "loop-held"
+    assert drains["keep_nondependent"] is False
+    assert drains["design_check"] is True
 
     # The failure direction: an unreadable dial resolves to human-held upstream
     # (`agent_common.human_holds`), so the strictest cell is what it reaches.

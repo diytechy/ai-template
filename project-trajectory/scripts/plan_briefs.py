@@ -39,7 +39,7 @@ documentation aid; the module is library-first):
     python scripts/plan_briefs.py surface [--root .]   # print the SR+IF surface
     python scripts/plan_briefs.py hats                 # print the hat->template map
 
-Contracts: IF-059 — the interface seam this module declares (process.md §8; rows
+Contracts: IF-059, IF-100 — the interface seam this module declares (process.md §8; rows
 of record in docs/requirements/interfaces.csv).
 """
 

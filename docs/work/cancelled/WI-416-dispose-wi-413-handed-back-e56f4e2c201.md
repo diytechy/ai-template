@@ -2,14 +2,19 @@
 id = "WI-416"
 title = "dispose: WI-413 handed back (e56f4e2c201a) - cancel / defer / re-queue with drafted follow-up / surface an open item (a disposition row never hands back; R3)"
 workstream = "process"
-specref = "docs/work/queued/WI-413-bare-sweep-re-mints-open-dispositions.md"
 buildtier = "strong"
 safety_class = "adjudication"
 +++
 
+## Deliverable
+
+CANCELLED as SUPERSEDED (plan §11.9). This was the disposition row for WI-413's handback, and its whole question — what should happen to that work — is answered by the ruling this program implemented rather than by a session judging it: WI-413 cancels as superseded.
+
+A disposition row whose subject has been disposed by a ratified ruling has nothing left to decide, and running it anyway would ask a strong-tier session to re-open a question the owner's plan closed.
+
 ## Context
 
-The handed-back spec is `docs/work/queued/WI-413-bare-sweep-re-mints-open-dispositions.md`.
+The handed-back spec is `docs/work/cancelled/WI-413-bare-sweep-re-mints-open-dispositions.md`.
 
 **Amended trunk-side before claim (owner, 2026-08-03).** The mint's derived Context quoted the returned spec's `## Handback` first line clipped at `_LINE_CLIP` = 140, which made THIS row's premise a *verdict* ("NEEDS-HUMAN … Owner ruling needed on widening scope") instead of a finding — the lane prescribing the disposition that R3 gives to the disposition row (`rulings-context-2026-08-01.md` §R3 point 2: surface an open item *"where a human ruling is genuinely needed"* — that judgement is this row's). The returned spec's `## Handback` note is deliberately UNTOUCHED: it is the permanent record of what that lane concluded. Only this brief is corrected. (The clip-anchors-the-judge defect itself is filed separately, not here.)
 

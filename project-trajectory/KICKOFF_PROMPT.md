@@ -118,7 +118,7 @@ low-level requirement (links SR, names module/symbol) → `TC-###` test case
 ## Gates (advance only when criteria pass)
 
 Each gate closes per the repo's **declared gate authority** — the
-`[attestation] gate_policy` dial in `docs/process.toml`, the one home for every
+`[attestation] human_ratification_through` dial in `docs/process.toml`, the one home for every
 process dial (default `attended`: pause for human approval at each
 gate; the `single-ratify`/`autonomous` levels and their mechanics:
 `PROCESS.md` §4 + `PROCESS_OPTIONS.md` "Gate authority levels").
@@ -195,7 +195,7 @@ record an explicit n/a where one truly doesn't apply.
    §6 decision-surfacing dial (safety / money / privacy / irreversibility ⇒
    `attended`; low-risk creative/tooling ⇒ `autonomous`-eligible). Record the
    recommendation + the owner's choice in `docs/status.md`; the owner sets
-   `gate_policy` in `docs/process.toml` (non-default levels get the deviation
+   `human_ratification_through` in `docs/process.toml` (non-default levels get the deviation
    register — `PROCESS_OPTIONS.md` "Gate authority levels").
 3. Scaffold the artifacts and the check harness (empty registries + headers).
 4. Run **G1**: as Stakeholder, write SN-### (incl. edge cases); as UX, capture

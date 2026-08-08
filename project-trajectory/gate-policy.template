@@ -1,5 +1,8 @@
 # RETIRED SCAFFOLD SOURCE (SN-028). This dial now lives in
-# process.toml.template -> docs/process.toml as `[attestation] gate_policy`, and
+# process.toml.template -> docs/process.toml. SN-029 then RETIRED the
+# three-value enum itself: the dial is `[attestation]
+# human_ratification_through` (0-4) plus `keep_nondependent` and
+# `final_review`, and
 # bootstrap.py no longer copies this file into a new repo — shipping both
 # homes would hand every scaffold the mixed-config refusal. The file stays
 # in the kit as the reference for the legacy vocabulary that

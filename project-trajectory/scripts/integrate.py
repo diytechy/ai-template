@@ -2129,9 +2129,8 @@ def _partial_report_refusal(root, branch, outcomes):
                 meta = ac.read_toml_text(match.group(1))
         refusal = handback.report_refusal(meta)
         if refusal:
-            return (
-                "{} closed {} as `partial` but {} ({}); nothing was "
-                "merged".format(branch, wi_id, refusal, rel)
+            return "{} closed {} as `partial` but {} ({}); nothing was merged".format(
+                branch, wi_id, refusal, rel
             )
     return None
 
@@ -2161,7 +2160,7 @@ def _merge_refusal(root, branch, wi_ids):
             "handback).".format(
                 branch,
                 ", ".join(unresolved),
-                " | ".join(sorted(OUTCOME_DIRS) ) + "/",
+                " | ".join(d + "/" for d in sorted(OUTCOME_DIRS)),
             )
         )
     # Sequential, not a tuple of calls: a tuple would EVALUATE every rung before

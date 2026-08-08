@@ -394,7 +394,18 @@ BASELINE = {
     # drain policy, computed once in `main` and carried on the context rather
     # than re-derived at each of the five sites that used to string-compare.
     # Reviewed bump.
-    "agent_loop.py": 2946,
+    # Then +75 (2946 -> 3021), SN-026/SN-032: the ADJUDICATE routing phase (its
+    # own `route_intent` arm — cross-family like the reviewers, tier pinned by
+    # the row's measured estimate, deliberately deaf to the implementer's
+    # escalation overrides), `adjudicating` + `row_routing` (the row's two
+    # routing facts, extracted rather than inlined — which took `route_session`
+    # BELOW the complexity limit and deleted its baseline entry), and
+    # `prompt_source` for the telemetry. Reviewed bump; the counterweight is
+    # that the same slice DROPPED two complexity baselines.
+    # Then -1 (3021 -> 3020), the same slice: `ruff format`'s reflow
+    # after the SN-028..032 edits (the `format` step is advisory at this gate but
+    # the tree is kept formatted anyway). Mechanical; no behaviour moved.
+    "agent_loop.py": 3020,
     # +30 (2206 -> 2236), WI-065: `tc_citation_findings` — the TC-`Verifies`
     # rules lifted out of `analyze` so the cell could accept `IF-###` seam ids.
     # Most of the bump is that helper's docstring, which is where the RULING now
@@ -497,7 +508,14 @@ BASELINE = {
     # registry schema (loader row + column contract) so the ledger the
     # attestation rungs read is traced like every other spine registry rather
     # than being a file only one checker knows about. Reviewed bump.
-    "trace.py": 2974,
+    # Then +20 (2974 -> 2994), SN-029 REVIEW round 1: `_resolvable` guards the
+    # ledger-first baseline. An `AcceptedCommit` git cannot resolve (a rebase
+    # or squash rewrote the sha, a shallow clone, the off-git placeholder) made
+    # `_rows_at` answer {} — so every current row classified as `added` and the
+    # brief said "everything here is new", with `no_baseline_reason` EMPTY, so
+    # the honest degrade written for exactly this case never rendered.
+    # Reviewed bump.
+    "trace.py": 2994,
     # +132 (1926 -> 2058; the last +10 is the F4 BOM hardening: read_rows utf-8-sig + git-show strips), WI-316: staged_spine_findings — the amend-without-
     # flip warn (--staged): content cells of a Verified spine row changed
     # without the Modified marker, suppressed when the owning SR flips in the
@@ -734,7 +752,28 @@ BASELINE = {
     # OWN local and folded in at both exits, because the rung runs BEFORE the
     # WI-vacuity return (a corrupt ledger in a repo with no work items must
     # still fail) and `errors` is not bound until after it.
-    "check_trajectory.py": 3830,
+    # Then +146 (3830 -> 3976), SN-029 REVIEW round 1 + SN-030 rung 3. The
+    # review's three ledger holes: a `git rm`/`git mv` of the ledger returned
+    # CLEAN from all three rungs at once (the strongest form of rewriting was
+    # the one form the guard could not see — now an explicit removal finding,
+    # with `--no-renames` so a move shows its old path), a ledger row keyed on
+    # an id that is not a current spine row anchored NOTHING while reading as a
+    # clean ledger (the ghost anchor, with `superseded` added to the decision
+    # vocabulary as the way to retire one without deleting a row), and the
+    # `--staged` arm skipped the integrity rung at the one moment it is cheap
+    # to fix. Plus `queue_conflict_findings` (SN-030's mechanical
+    # queue-conflict pre-filter — warn-only, never the exit code). Reviewed
+    # bump; this module remains the first WI-280 decomposition candidate.
+    # Then -1 (3976 -> 3975), the same slice: `ruff format`'s reflow
+    # after the SN-028..032 edits (the `format` step is advisory at this gate but
+    # the tree is kept formatted anyway). Mechanical; no behaviour moved.
+    # Then +16 (3975 -> 3991), same pass: `_clip_title` bounds the
+    # queue-conflict finding text. A WI title here is routinely a
+    # multi-thousand-character paragraph, so interpolating two raw ones
+    # produced a ~6 KB stderr line per pair — a warn nobody can read is a warn
+    # that does not exist. The duplicated open-status set folded into the
+    # module's existing `OPEN_STATUSES` in the same pass (WI-347).
+    "check_trajectory.py": 3991,
     # NEW ENTRY, +25 (1498 -> 1523), WI-357: the two-stage work-branch claim
     # signal — the on-disk fast path plus the branch-history probe that
     # survives the §2.3 close commit (git log -1 over the claim path), with
@@ -912,7 +951,21 @@ BASELINE = {
     # Then +6 (2549 -> 2555), SN-029: `attestations.csv` and the
     # `adjudicate-amendment` brief template join the scaffold MAPPING — two
     # rows, no new logic. Reviewed bump.
-    "bootstrap.py": 2555,
+    # Then +92 (2555 -> 2647), SN-029 REVIEW round 1 BLOCKER: `--gate-policy`
+    # STORED the enum word beside the template's `human_ratification_through =
+    # 4`, and since the readers prefer the ordinal, every repo that chose a
+    # non-default posture scaffolded FULLY ATTENDED with no diagnostic
+    # anywhere. The word is TRANSLATED now, not stored — `LEGACY_RATIFICATION`
+    # (F5-duplicated from agent_common, pinned by test_rule_sync because this
+    # module imports no kit sibling) plus `_migrate_gate_policy`, the one
+    # legacy file whose single word expands to three dials and so cannot be a
+    # `LEGACY_CONFIG` row. Reviewed bump.
+    # Then +7 (2647 -> 2654), the same slice: `ruff format`'s reflow
+    # after the SN-028..032 edits (the `format` step is advisory at this gate but
+    # the tree is kept formatted anyway). Mechanical; no behaviour moved.
+    # Then +2 (2654 -> 2656), same pass: the scaffolded deviation register
+    # stopped naming the retired `gate_policy` key.
+    "bootstrap.py": 2656,
     # NEW ENTRY, +228 (1423 -> 1651), Phase 2b of the concurrency restructure
     # (docs/concurrency-restructure.md §7): the spec-folder work-item reader,
     # which crosses this module over THRESHOLD for the first time. It is one
@@ -1035,7 +1088,30 @@ BASELINE = {
     # `spine_stage_of`. Five consumers stopped string-comparing policy words;
     # the growth is the definition plus the reasoning for the two ends.
     # Reviewed bump.
-    "agent_common.py": 2261,
+    # Then +90 (2261 -> 2351), SN-029 REVIEW round 1. The review drove the
+    # ordinal's own defects: `LEGACY_RATIFICATION` states all THREE dials a
+    # retired enum word meant instead of collapsing it to a level (translating
+    # `single-ratify` to "level 2" silently gave it a per-tier hold it never
+    # had), `human_holds` compares STRICTLY LESS-THAN against a cumulative
+    # count, an out-of-range level FALLS BACK rather than clamping (`-1`
+    # clamped to 0 — the one input that read as LESS human involvement than
+    # asked for), and `PROCESS_ONLY_KEYS`/`PROCESS_KEY_RANGES` +
+    # `_key_value_findings` give the process.toml-only dials the type check the
+    # legacy-file dials already had. Reviewed bump; most of the delta is the
+    # reasoning for the two ends of the ordinal.
+    # Then +26 (2351 -> 2377), SN-032: `prompt_fingerprint` and the two session
+    # telemetry keys it feeds (`prompt-template`, `prompt-sha`) — a session's
+    # instruction becomes auditable after the fact without keeping every
+    # rendered prompt on disk. Reviewed bump.
+    # Then +63 (2377 -> 2440), the FINAL review's fix pass: `final_review` and
+    # `complete_review` gained the READERS they shipped without — three
+    # declared, type-checked dials that no code consulted, so the promised
+    # final human read and the promised clean-close spot-check both happened
+    # exactly never. Plus the level-4 restore in `human_holds` (a fully
+    # verified spine is stage 4, which is precisely when a gate-advance row
+    # runs, so `4 < 4` let the SHIPPED DEFAULT self-ratify the final gate).
+    # Reviewed bump.
+    "agent_common.py": 2440,
     # NEW ENTRY, WI-387 — integrate.py crossed THRESHOLD (1418 -> 1588) adding
     # the third terminal outcome. The extraction the ratchet asks for was TAKEN
     # FIRST, not argued away: `hand_back` and `quarantine`, the largest unit and
@@ -1206,7 +1282,26 @@ BASELINE = {
     # the adjudication no-bar diff scope — an adjudication records its verdict
     # in the ledger, so the ledger must be a surface that arm may touch.
     # Reviewed bump.
-    "integrate.py": 2476,
+    # Then -1 (2476 -> 2475), the same slice: `ruff format`'s reflow
+    # after the SN-028..032 edits (the `format` step is advisory at this gate but
+    # the tree is kept formatted anyway). Mechanical; no behaviour moved.
+    # NEW ENTRY (2026-08-08). intake.py crosses the 1500-line monolith
+    # threshold for the first time, at 1575. What put it over is the FINAL
+    # review's fix pass: `_mint_shape_refusal` (no mint may write a row the
+    # scheduler cannot classify — the red-TC draft was emitting
+    # `adjudication` + `planmode=dual`, which reads UNCLASSIFIED, so the row
+    # was minted and then permanently parked while the census reported the gap
+    # as handled) and `_complete_spot_checks` (the clean-close sample that
+    # `complete_review` had promised and nothing implemented). Both are
+    # genuinely this module's job — it is the one place a row is created — so
+    # this is a reviewed ENTRY, not a decomposition dodged: the module is now
+    # the fourth over the threshold and belongs in WI-280's queue behind
+    # check_trajectory.py.
+    # +2 (1575 -> 1577) in the same pass:  extracted so R3's
+    # no-recursion test is one predicate rather than a copy in each close arm
+    # (WI-347 rules an intra-file copy a defect however small).
+    "intake.py": 1577,
+    "integrate.py": 2475,
 }
 
 

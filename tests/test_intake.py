@@ -283,20 +283,23 @@ def write_close_report(root, wi, branch, tier="strong", reason="stopped early"):
     """One per-close report, the shape `handback.close_partial` writes."""
     path = root / "docs" / "handbacks" / "{}-{}.md".format(wi, branch)
     path.parent.mkdir(parents=True, exist_ok=True)
-    text = "\n".join(
-        [
-            '+++',
-            'wi = "{wi}"',
-            'branch = "{branch}"',
-            'claimed_outcome = "partial"',
-            'reason = "{reason}"',
-            'commit_range = "aaa..bbb"',
-            'suggested_tier = "{tier}"',
-            'keep_commits = ["aaa"]',
-            'discard_commits = []',
-            '+++',
-        ]
-    ).format(wi=wi, branch=branch, reason=reason, tier=tier) + "\n"
+    text = (
+        "\n".join(
+            [
+                "+++",
+                'wi = "{wi}"',
+                'branch = "{branch}"',
+                'claimed_outcome = "partial"',
+                'reason = "{reason}"',
+                'commit_range = "aaa..bbb"',
+                'suggested_tier = "{tier}"',
+                'keep_commits = ["aaa"]',
+                "discard_commits = []",
+                "+++",
+            ]
+        ).format(wi=wi, branch=branch, reason=reason, tier=tier)
+        + "\n"
+    )
     with path.open("w", encoding="utf-8", newline="\n") as fh:
         fh.write(text)
     return path
@@ -725,7 +728,7 @@ def test_below_the_human_level_the_flip_is_enacted(tmp_path):
 
 
 def test_an_unknown_row_id_refuses_the_flip(tmp_path):
-    root = _policy_repo(tmp_path, "autonomous")
+    root = _policy_repo(tmp_path, 0)
     action, flipped, refusal = intake.flip_verified(root, ["SR-999"])
     assert flipped == []
     assert refusal is not None and "SR-999" in refusal

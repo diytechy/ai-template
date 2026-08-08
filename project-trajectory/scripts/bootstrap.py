@@ -884,14 +884,25 @@ def _locate_process_key(lines, header, key):
 
 
 def apply_gate_policy(dest, level, dry_run):
-    """Write a non-default gate-authority level: set `[attestation] gate_policy`
-    in docs/process.toml (SN-028 — the dial's one home; the explanatory header
-    stays put) and scaffold the deviation-register skeleton
-    (docs/gate-policy.md) pre-filled for the level. Returns the list of
-    dest-relative paths written."""
+    """Write a non-default gate-authority posture, as the THREE DIALS it is.
+
+    `--gate-policy` still takes the familiar word, because that is how the
+    posture is talked about — but the word is TRANSLATED here (SN-029,
+    `LEGACY_RATIFICATION` above) rather than stored. Storing it was the
+    defect: the template ships `human_ratification_through = 4`, and
+    `ratification_level` prefers that key, so a `gate_policy = "autonomous"`
+    written beside it was read by nothing and every repo that chose a
+    non-default posture scaffolded as fully attended — silently, since neither
+    dial is wrong on its own and `config_conflicts` had no rule against the
+    pair.
+
+    Also scaffolds the deviation-register skeleton (docs/gate-policy.md)
+    pre-filled for the level — prose, and still keyed by the word. Returns the
+    list of dest-relative paths written."""
     if level == "attended" or dry_run:
         return []
-    set_process_key(dest, "attestation", "gate_policy", level)
+    for key, value in sorted(LEGACY_RATIFICATION.get(level, {}).items()):
+        set_process_key(dest, "attestation", key, value)
     register = dest / "docs" / "gate-policy.md"
     written = [PROCESS_TOML_REL]
     if not register.exists():
@@ -904,7 +915,9 @@ def apply_gate_policy(dest, level, dry_run):
             "**Status:** DRAFT — ratify with the owner, then keep in version "
             "control.\n"
             "**What this is:** this repo declares the `{level}` gate authority "
-            "(`docs/process.toml` `[attestation] gate_policy`; process.md §4). "
+            "(`docs/process.toml` `[attestation] human_ratification_through` "
+            "plus `keep_nondependent` and `final_review`; process.md "
+            "§4). "
             "The kit-owned process doc is "
             "never edited per-repo (a re-sync overwrites it); this register "
             'amends it (process-options.md "Gate authority levels"). Where '
@@ -948,6 +961,36 @@ def apply_privacy_check(dest, value, dry_run):
     )
 
 
+# SN-029: the retired gate-authority enum, translated to the three dials that
+# replaced it. DUPLICATED from `agent_common.LEGACY_RATIFICATION` under the F5
+# rule — bootstrap imports no kit sibling, because it is the one script an
+# adopter may run from a bare download before anything else exists — and pinned
+# equal by tests/test_rule_sync.py, which is how this kit keeps a duplicated
+# POLICY (as opposed to duplicated plumbing) from drifting.
+#
+# What each word meant, and why one key could not hold it: `attended` held every
+# tier and drained the station at a ratification; `single-ratify` held NO tier
+# (LLM-gate review ran through G1+G2) but sat ONE human at the close and kept
+# non-dependent work running; `autonomous` did the same without the final read.
+LEGACY_RATIFICATION = {
+    "attended": {
+        "human_ratification_through": 4,
+        "keep_nondependent": False,
+        "final_review": "always",
+    },
+    "single-ratify": {
+        "human_ratification_through": 0,
+        "keep_nondependent": True,
+        "final_review": "always",
+    },
+    "autonomous": {
+        "human_ratification_through": 0,
+        "keep_nondependent": True,
+        "final_review": "off",
+    },
+}
+
+
 # --- SN-028: the legacy one-word -> docs/process.toml converter ---------------
 # Ordered like process.toml's own sections so a converted file reads the way a
 # scaffolded one does. Each row: legacy docs/<file> -> (section, key, how to
@@ -967,8 +1010,10 @@ def _legacy_int(word):
         return None
 
 
+# `gate-policy` is DELIBERATELY ABSENT from this table: its one word expands to
+# THREE dials (SN-029), so it cannot be a one-key row, and `_migrate_gate_policy`
+# owns it below.
 LEGACY_CONFIG = (
-    ("gate-policy", "attestation", "gate_policy", str.strip),
     ("push-policy", "policies", "push", str.strip),
     ("review-policy", "policies", "review_rounds", _legacy_int),
     ("privacy-check", "policies", "privacy_check", _legacy_bool_true),
@@ -1011,6 +1056,7 @@ def migrate_legacy_config(dest, dry_run=False):
     if not target.is_file():
         return [], ["{} is absent — nothing to migrate into".format(PROCESS_TOML_REL)]
     moved, notes = [], []
+    _migrate_gate_policy(dest, moved, notes, dry_run)
     for legacy_name, section, key, coerce in LEGACY_CONFIG:
         path = dest / "docs" / legacy_name
         if not path.is_file():
@@ -1058,6 +1104,52 @@ def migrate_legacy_config(dest, dry_run=False):
             path.unlink()
         moved.append("docs/" + legacy_name)
     return moved, notes
+
+
+def _migrate_gate_policy(dest, moved, notes, dry_run):
+    """Fold a legacy `docs/gate-policy` word into the THREE dials it meant.
+
+    Its own arm rather than a `LEGACY_CONFIG` row because it is the one legacy
+    file that is not a one-key rename: `single-ratify` carried a tier hold, a
+    drain policy AND an end-of-run hold at once, and folding it to a single key
+    is what loses two of the three (SN-029). The translation itself lives in
+    `agent_common.LEGACY_RATIFICATION`, so the migrator and the readers cannot
+    disagree about what a word meant."""
+    path = dest / "docs" / "gate-policy"
+    if not path.is_file():
+        return
+    word = _first_declared_line(path)
+    dials = LEGACY_RATIFICATION.get((word or "").strip().lower())
+    if word is not None and dials is None:
+        notes.append(
+            "docs/gate-policy holds {!r}, which is not one of {} — left in "
+            "place; fix it, then re-run --migrate-config.".format(
+                word, " / ".join(sorted(LEGACY_RATIFICATION))
+            )
+        )
+        return
+    for key, value in sorted((dials or {}).items()):
+        if (
+            set_process_key(
+                dest, "attestation", key, value, dry_run=dry_run, add_if_missing=True
+            )
+            == "missing"
+        ):
+            notes.append(
+                "docs/gate-policy could NOT be folded into {} [attestation] {} "
+                "— the legacy file is LEFT IN PLACE with its value intact. Fix "
+                "the TOML, then re-run --migrate-config.".format(PROCESS_TOML_REL, key)
+            )
+            return
+    if _has_comment_lines(path):
+        notes.append(
+            "docs/gate-policy carried its own comment lines; the VALUE migrated "
+            "and the notes went with the file. Re-state them in {} if they "
+            "still matter.".format(PROCESS_TOML_REL)
+        )
+    if not dry_run:
+        path.unlink()
+    moved.append("docs/gate-policy")
 
 
 def _has_comment_lines(path):
@@ -1360,9 +1452,18 @@ MAPPING = [
     ("prompts/worker.template.md", "prompts/worker.template.md"),
     ("prompts/reviewer.template.md", "prompts/reviewer.template.md"),
     ("prompts/critique.template.md", "prompts/critique.template.md"),
-    ("prompts/adjudicate-amendment.template.md", "prompts/adjudicate-amendment.template.md"),
-    ("prompts/adjudicate-disposition.template.md", "prompts/adjudicate-disposition.template.md"),
-    ("prompts/adjudicate-conflict.template.md", "prompts/adjudicate-conflict.template.md"),
+    (
+        "prompts/adjudicate-amendment.template.md",
+        "prompts/adjudicate-amendment.template.md",
+    ),
+    (
+        "prompts/adjudicate-disposition.template.md",
+        "prompts/adjudicate-disposition.template.md",
+    ),
+    (
+        "prompts/adjudicate-conflict.template.md",
+        "prompts/adjudicate-conflict.template.md",
+    ),
     ("prompts/adjudicate-red-tc.template.md", "prompts/adjudicate-red-tc.template.md"),
     ("prompts/dual-plan-planner.template.md", "prompts/dual-plan-planner.template.md"),
     ("prompts/dual-plan-critic.template.md", "prompts/dual-plan-critic.template.md"),

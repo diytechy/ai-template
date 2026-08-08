@@ -9,19 +9,45 @@ gate-authority claim across the kit's prose.
 
 import re
 
-from conftest import KIT, SCRIPTS, process_key, run_py
+from conftest import KIT, SCRIPTS, load_script, process_key, run_py
+
+COMMON = load_script("agent_common")
+
+
+def _posture(root):
+    """The declared gate authority, read as the THREE DIALS it now is.
+
+    SN-028 moved the one-word `docs/gate-policy` file into
+    `docs/process.toml`; SN-029 then RETIRED the enum key itself, because
+    shipping `gate_policy` beside `human_ratification_through` meant the
+    template's default silently shadowed whatever word bootstrap had written.
+    So a posture is read back as a dict and compared against the translation,
+    never as a stored word."""
+    return {
+        key: process_key(root, "attestation", key)
+        for key in ("human_ratification_through", "keep_nondependent", "final_review")
+    }
 
 
 def _level(root):
-    """The declared gate authority — SN-028 moved it out of the one-word
-    docs/gate-policy file into `docs/process.toml [attestation] gate_policy`."""
-    return process_key(root, "attestation", "gate_policy")
+    """The posture, named by the legacy word it corresponds to — so these tests
+    can keep speaking the vocabulary the CLI flag and the register still use."""
+    posture = _posture(root)
+    for word, dials in COMMON.LEGACY_RATIFICATION.items():
+        if posture == dials:
+            return word
+    return posture
 
 
 def test_scaffold_gate_policy_defaults_attended(scaffold):
     # The scaffolded authority is `attended` — today's behavior, so existing
     # adopters and default scaffolds see zero change; no register is laid down.
     assert _level(scaffold) == "attended"
+    # ...and the retired enum key is not shipped at all. This is the assertion
+    # the shadowing defect needed: with both keys present, `ratification_level`
+    # prefers the ordinal, so every repo that chose a non-default posture
+    # scaffolded fully attended and nothing anywhere said so.
+    assert process_key(scaffold, "attestation", "gate_policy") is None
     assert not (scaffold / "docs" / "gate-policy.md").exists(), (
         "the deviation register is for non-default levels only"
     )
@@ -42,6 +68,9 @@ def test_gate_policy_autonomous_scaffolds_register(tmp_path):
     dest = _bootstrap(tmp_path, "--gate-policy", "autonomous")
     policy = dest / "docs" / "process.toml"
     assert _level(dest) == "autonomous"
+    assert COMMON.ratification_level(dest / "docs") == 0, (
+        "the posture must READ as loop-held, which is the whole point"
+    )
     assert policy.read_text(encoding="utf-8").startswith("#"), "header kept"
     register = (dest / "docs" / "gate-policy.md").read_text(encoding="utf-8")
     assert "`autonomous`" in register

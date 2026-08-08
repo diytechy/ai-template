@@ -89,9 +89,7 @@ ROUTED_TRACED_CELLS = {
 # frontier, so continuing the work means DRAFTING A SUCCESSOR (minted at this
 # row's own merge, carrying `supersedes`). `handback._no_recursion_refusal`
 # states the same four; the two homes must not disagree about a row's authority.
-_DISPOSITION_OUTCOMES = (
-    "cancel / defer / draft a successor / surface an open item"
-)
+_DISPOSITION_OUTCOMES = "cancel / defer / draft a successor / surface an open item"
 
 # A fenced TOML draft inside the ## Dispositions section.
 _TOML_FENCE_RE = re.compile(r"```toml\s*\n(.*?)```", re.S)
@@ -174,6 +172,14 @@ def tier_signal(trigger, *, rows_touched=0, gate_moved=False):
     typed field."""
     if trigger == "amendment":
         return "strong" if gate_moved or rows_touched > 3 else "medium"
+    if trigger == "red-tc":
+        # SN-030 rung 6. One target is a local question (is this TC stale, or
+        # was the close optimistic?); several mean the closed row's claim spans
+        # requirements, and the judgement has to hold all of them at once. Same
+        # shape as the amendment arm — breadth, counted, never judged — with the
+        # threshold at 1 rather than 3 because a red TC is already a
+        # contradiction, not a routine registry edit.
+        return "strong" if rows_touched > 1 else "medium"
     return "medium"  # census gap closure: mechanical registry work
 
 
@@ -428,7 +434,8 @@ def _amendment_context(records):
     lines += [
         "",
         "Outcomes (§A5.2): flip rows back to Verified where no scope moved",
-        "(per docs/gate-policy — recommend-only under attended, ruled decision",
+        "(per the declared ratification level in docs/process.toml — "
+        "recommend-only while the tier is HUMAN-HELD, ruled decision",
         "2), or draft the real scope-change / re-scope / cancellation rows in",
         "a `## Dispositions` section of THIS spec — intake mints them at this",
         "row's merge (drafts-not-mints, R1).",
@@ -482,11 +489,16 @@ def _amendment_drafts(root, before, after):
 # --- trigger (b): a merged handback mints the disposition row ------------------
 
 
-def _closed_spec(root, wi_id):
-    """The early-closed spec's `(relpath, frontmatter)` on the post-merge trunk
-    — searched across the TERMINAL directories a close may land in. None when it
-    cannot be found or read."""
-    for status_dir in ("partial", "cancelled"):
+def _closed_spec(root, wi_id, dirs=("partial", "cancelled")):
+    """The closed spec's `(relpath, frontmatter)` on the post-merge trunk —
+    searched across the terminal directories the CALLER names. None when it
+    cannot be found or read.
+
+    The default is the EARLY-close pair on purpose: the disposition arm must
+    not find a `complete/` spec and mint an early-close judgement for a clean
+    one. The spot-check arm passes `("complete",)` explicitly, so which
+    directory a caller means is always written down."""
+    for status_dir in dirs:
         hits = sorted((Path(root) / WORK / status_dir).glob(wi_id + "-*.md"))
         for hit in hits:
             try:
@@ -562,8 +574,13 @@ def _close_drafts(root, outcomes):
     gated: the merge slot already ran the declared bar on the composed tree and
     the review rounds already judged the work, so adjudicating every green close
     would rebuild the verdict gate under a new name.
+
+    That last sentence described a dial nothing read for one review round —
+    `complete_review` and `complete_sample_rate` were shipped, type-checked and
+    consulted by no code, so the promised spot-check happened exactly never.
+    `_complete_spot_checks` is its reader.
     """
-    drafts = []
+    drafts = _complete_spot_checks(root, outcomes)
     for wi_id, outcome in sorted(
         (w, o) for w, o in (outcomes or {}).items() if o in ("partial", "cancelled")
     ):
@@ -577,7 +594,7 @@ def _close_drafts(root, outcomes):
             )
             continue
         relpath, meta = found
-        if (meta.get("safety_class") or "").strip().lower() == "adjudication":
+        if _is_adjudication(meta):
             # The no-recursion invariant, intake end: a disposition row never
             # spawns a disposition row. `close_partial` refuses this shape too;
             # a hand-made close that slipped past still dead-ends HERE.
@@ -669,6 +686,88 @@ def _close_drafts(root, outcomes):
                     "context": _close_context(relpath, rel_report),
                 }
             )
+    return drafts
+
+
+def _merged_ids(outcomes):
+    """The WI ids this merge closed CLEANLY, sorted — the one read of the
+    outcomes map three arms make."""
+    return sorted(w for w, o in (outcomes or {}).items() if o == "merged")
+
+
+def _judgeable_close(root, wi_id, dirs):
+    """The closed spec's relpath when a disposition may judge it, else None.
+
+    Two conditions, and the second is R3's no-recursion invariant at the intake
+    end: a disposition row never spawns a disposition row. `close_partial`
+    refuses that shape at the other end too, so a hand-made close that slipped
+    past still dead-ends here. Written once because both arms — the early-close
+    disposition and the clean-close spot check — owe exactly this pair, and
+    WI-347 rules an intra-file copy a defect however small."""
+    found = _closed_spec(root, wi_id, dirs=dirs)
+    if found is None:
+        return None
+    relpath, meta = found
+    return None if _is_adjudication(meta) else relpath
+
+
+def _is_adjudication(meta):
+    """Whether a spec's frontmatter declares the adjudication kind — R3's
+    no-recursion test, read off the same cell `schedule.classify` reads."""
+    return (meta.get("safety_class") or "").strip().lower() == "adjudication"
+
+
+def _complete_spot_checks(root, outcomes):
+    """Disposition drafts for CLEAN closes, per `[attestation] complete_review`.
+
+    `"off"` -> none. `"always"` -> every one. `"sample"` -> a DETERMINISTIC
+    every-Nth over the sorted ids, not a random draw: a walk-away loop must
+    produce the same registry from the same inputs, and a sampler nobody can
+    reproduce is one nobody can audit. The id's own numeric tail is the
+    selector, so which closes get checked does not depend on how many landed in
+    one merge.
+
+    The brief is deliberately thinner than the partial/cancelled one: there is
+    no claim under judgement here. The question is only whether the shipped
+    work matches what the row asked for — a spot-check, not an adjudication of
+    a failure."""
+    mode, rate = ac.complete_review(Path(root) / "docs")
+    if mode == "off":
+        return []
+    drafts = []
+    for wi_id in _merged_ids(outcomes):
+        digits = "".join(ch for ch in wi_id if ch.isdigit())
+        if mode == "sample" and (not digits or int(digits) % rate):
+            continue
+        judgeable = _judgeable_close(root, wi_id, ("complete",))
+        if judgeable is None:
+            continue
+        relpath = judgeable
+        drafts.append(
+            {
+                "title": (
+                    "spot-check the clean close of {} - does the shipped work "
+                    "match what the row asked for? ({})".format(
+                        wi_id, _DISPOSITION_OUTCOMES
+                    )
+                ),
+                "kind": "adjudication",
+                "workstream": "process",
+                "buildtier": "medium",
+                "specref": relpath,
+                "context": (
+                    "This close was GREEN: the merge slot ran the declared bar "
+                    "on the composed tree and the review rounds judged the "
+                    "work. Nothing is alleged. It is here because "
+                    "`docs/process.toml [attestation] complete_review` is "
+                    "{mode!r}, and a process that only ever looks at its "
+                    "failures learns nothing about its successes.\n\n"
+                    "Read `{spec}` and ask ONE question: does what shipped "
+                    "answer what the row asked for? A finding is a successor "
+                    "row, never a reversal — the close stands."
+                ).format(mode=mode, spec=relpath),
+            }
+        )
     return drafts
 
 
@@ -793,7 +892,7 @@ def _draft_refusal(data, where, index):
 def _disposition_drafts(root, outcomes):
     """Trigger (d): drafts from every MERGED adjudication row's spec body."""
     drafts = []
-    for wi_id in sorted(w for w, o in (outcomes or {}).items() if o == "merged"):
+    for wi_id in _merged_ids(outcomes):
         hits = sorted((Path(root) / WORK / "complete").glob(wi_id + "-*.md"))
         for hit in hits:
             relpath = hit.relative_to(Path(root)).as_posix()
@@ -829,6 +928,7 @@ _CENSUS_SPECREFS = (
     ("TC-", "docs/test/test-cases.csv"),
 )
 _SR_CSV = "docs/requirements/system-requirements.csv"
+_TC_CSV = "docs/test/test-cases.csv"
 
 
 def _census_specref(root, line):
@@ -844,15 +944,17 @@ def _census_drafts(root, census):
     # clearing its gap must not re-mint on the next idle tick (the walk-away
     # loop would otherwise mint the same gap forever) — re-opening a gap whose
     # row failed is a judgement, so it stays a human trunk commit.
+    import dispatch
+
     titles = _existing_titles(root)
     drafts = []
     for line in census:
-        title = "close registry gap: {}".format(_clip(line, _LINE_CLIP))
-        if title in titles:
-            continue
-        drafts.append(
-            {
-                "title": title,
+        red = dispatch.parse_red_tc(line)
+        if red is not None:
+            draft = _red_tc_draft(root, line, red[1])
+        else:
+            draft = {
+                "title": "close registry gap: {}".format(_clip(line, _LINE_CLIP)),
                 "kind": "ordinary",
                 "workstream": "registry",
                 "buildtier": tier_signal("census"),
@@ -865,8 +967,71 @@ def _census_drafts(root, census):
                     "> {}".format(line)
                 ),
             }
-        )
+        if draft["title"] in titles:
+            continue
+        drafts.append(draft)
     return drafts
+
+
+def _red_tc_draft(root, line, targets):
+    """SN-030 rung 6: a red TC under a claimed implementation becomes an
+    ADJUDICATION row, not an ordinary gap-closure row.
+
+    The difference is who decides. An ordinary gap row says "the registry is
+    missing a link; go add it" — mechanical, medium tier, mint and go. A red TC
+    says something stronger and unresolved: a work item is CLOSED and the test
+    for it is not green. That is one of three quite different situations — the
+    TC is stale and its Status simply owes an update; the close was optimistic
+    and owes a fix-to-green successor; or the requirement moved and the TC is
+    now testing the wrong thing — and picking between them is a judgement, which
+    is exactly what the `adjudication` kind is for.
+
+    The tier is ESTIMATED rather than defaulted (§4 rung 1's "estimator"): the
+    breadth of the contradiction is what makes it expensive to judge, and that
+    is countable — `targets` comes from `dispatch.parse_red_tc`, the one reader
+    of the census grammar, never from re-splitting this line's prose.
+
+    NO `planmode` CELL, and the reason is a defect this row shipped with for
+    exactly one review round: `planmode = "dual"` beside `safety_class =
+    "adjudication"` is a shape `schedule.classify` REFUSES — it reads
+    `unclassified`, drops off the frontier, and can never be re-minted because
+    exact-title dedup has already claimed the title. The contradiction SN-030
+    rung 6 exists to surface would have been minted and then permanently
+    parked, silently. `_draft_refusal` already refused that pair for a HUMAN
+    draft; the automated mint went straight to `_draft_row` and bypassed it,
+    which is why `_mint` now runs every draft past `_mint_shape_refusal`."""
+    return {
+        # Keyed on the census line, like every derived title: it is
+        # deterministic for the (TC, targets, status) event, so a re-run
+        # dedupes exactly and a status change is legitimately a new judgement.
+        "title": "adjudicate {}".format(_clip(line, _LINE_CLIP)),
+        "kind": "adjudication",
+        "workstream": "process",
+        "buildtier": tier_signal("red-tc", rows_touched=len(targets)),
+        "specref": _TC_CSV if (Path(root) / _TC_CSV).is_file() else "",
+        "context": _red_tc_context(line, targets),
+    }
+
+
+def _red_tc_context(line, targets):
+    """The judge's brief for a red TC. Names the contradiction and the three
+    live readings WITHOUT choosing between them — a brief that pre-selects an
+    outcome is not a brief."""
+    return (
+        "The dispatcher's census found a TEST CASE that is not green while the "
+        "work claiming to satisfy it is CLOSED. The census line, verbatim:\n\n"
+        "> {line}\n\n"
+        "Read `{tc}` for the TC row and the `docs/work/complete/` (or "
+        "`partial/`) spec of whichever row cites {targets} — the contradiction "
+        "is between those two documents and nothing here has judged it.\n\n"
+        "Three readings are live and this row does not pick one: (1) the TC's "
+        "Status is merely STALE and owes an update — the evidence is green and "
+        "the registry is behind; (2) the close was OPTIMISTIC and owes a "
+        "fix-to-green successor row (draft it with `supersedes` naming the "
+        "closed row, so the thread survives the id change); (3) the "
+        "REQUIREMENT moved and the TC now verifies the wrong thing, which is "
+        "an amendment, not a bug. Say which, and why, before proposing work."
+    ).format(line=line, tc=_TC_CSV, targets=";".join(targets) or "its targets")
 
 
 # --- the mint itself -----------------------------------------------------------
@@ -894,6 +1059,41 @@ def _draft_row(wi_id, draft):
     return row
 
 
+def _mint_shape_refusal(draft, subject_verb):
+    """Refuse a draft this mint would write as an UNSCHEDULABLE row.
+
+    THE GAP THIS CLOSES. `_draft_refusal` validates follow-ups a human wrote
+    into a `## Dispositions` block, and it is thorough. Every DERIVED draft —
+    the amendment row, the disposition rows, the census rows — went straight to
+    `_draft_row` and was validated by nothing, so the one shape that mattered
+    got through: `planmode = "dual"` beside `safety_class = "adjudication"`
+    reads `unclassified` at `schedule.classify`, drops off the frontier, and
+    exact-title dedup then guarantees it is never minted again. A row minted
+    with nobody watching and quarantined with nobody watching is worse than one
+    never minted, because the census reports the gap as handled.
+
+    So the mint checks the two properties a row must have to be WORK AT ALL:
+    a kind the scheduler classifies, and no kind/planmode contradiction. This
+    is deliberately narrower than `_draft_refusal` — it is the floor every
+    minted row must clear, not the full grammar a hand-authored block owes."""
+    kind = str(draft.get("kind") or "").strip().lower()
+    if kind and kind not in schedule.SAFETY_CLASSES:
+        return (
+            "{}: draft {!r} declares unknown safety_class {!r} - nothing minted".format(
+                subject_verb, draft.get("title"), kind
+            )
+        )
+    dual = str(draft.get("planmode") or "").strip().lower() == "dual"
+    if dual and kind and kind != "high-risk":
+        return (
+            "{}: draft {!r} declares planmode = dual beside safety_class = "
+            "{!r} - schedule.classify reads that pair as UNCLASSIFIED, so the "
+            "row would be minted and then permanently parked off the "
+            "frontier; nothing minted".format(subject_verb, draft.get("title"), kind)
+        )
+    return None
+
+
 def _mint(root, drafts, subject_verb):
     """Write every draft as a queued spec, then ONE bookkeeping commit.
     `([(wi_id, relpath)], refusal)`; all-or-nothing — a refusal restores trunk
@@ -904,6 +1104,10 @@ def _mint(root, drafts, subject_verb):
     drafts = [d for d in drafts if str(d["title"]).strip() not in titles]
     if not drafts:
         return [], None
+    for draft in drafts:
+        refusal = _mint_shape_refusal(draft, subject_verb)
+        if refusal:
+            return [], refusal
     minted = []
     for draft in drafts:
         wi_id = next_wi_id(root)
@@ -1173,7 +1377,12 @@ def record_attestations(root, artifacts, decision, ref=""):
         return []
     digests = check_trajectory.current_digests(root)
     code, sha = ac.git(root, "rev-parse", "HEAD")
-    commit = sha.strip()[:10] if code == 0 and sha.strip() else "no-git"
+    # EMPTY off-git, never a placeholder word. `trace._attested_baseline`
+    # reads this cell as a commit-ish, and a literal `no-git` resolves to
+    # nothing — which used to make every current row classify as `added`
+    # while the honest "I have no baseline" degrade stayed silent. A blank
+    # cell reaches that degrade; a word that looks like a sha does not.
+    commit = sha.strip()[:10] if code == 0 and sha.strip() else ""
     code, date = ac.git(root, "log", "-1", "--format=%cs")
     stamp = date.strip() if code == 0 and date.strip() else ""
     path = root / check_trajectory.ATTESTATIONS_CSV
@@ -1327,7 +1536,9 @@ def main(argv=None):
     census.set_defaults(func=_cmd_census)
     adj = sub.add_parser(
         "adjudicate",
-        help="enact (or recommend) the no-scope-moved flip per docs/gate-policy",
+        help="enact (or recommend) the no-scope-moved flip — which of the two "
+        "depends on whether the tier in process is still human-held "
+        "(docs/process.toml [attestation] human_ratification_through)",
     )
     adj.add_argument(
         "--rows", required=True, help="spine row id(s), ;-joined (SR-/LLR-/TC-)"

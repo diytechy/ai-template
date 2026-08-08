@@ -318,8 +318,13 @@ def page_action(human_held, keep_nondependent=False):
 
     `human_held` is `agent_common.human_holds`' answer — anything unreadable
     already resolved to True there, which is why this takes a bool rather than
-    re-deriving one. The strictest cell (stop and page) is what an unreadable
-    dial reaches, the same direction every other consumer of this dial fails."""
+    re-deriving one. But `bool(None)` is False, i.e. the MOST PERMISSIVE cell,
+    so a caller that passes an un-resolved value reaches the opposite of the
+    fail-safe direction this module claims. Since this is an independently
+    copyable script with a public API, `None` is normalised here to the
+    strictest cell rather than trusted to never arrive."""
+    if human_held is None:
+        human_held = True
     return _PAGE_ACTIONS[(bool(human_held), bool(keep_nondependent))]
 
 

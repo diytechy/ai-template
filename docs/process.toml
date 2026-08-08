@@ -37,14 +37,6 @@
 # the state where two readers disagree about the same policy.
 
 [attestation]
-# TRANSITIONAL (SN-028 -> SN-029): the three-value gate-authority enum that
-# `human_ratification_through` below replaces. It is still the value the
-# admission table and the adjudication flip arm read; the ordinal takes over
-# when SN-029's consumers land, and this key is deleted in the same commit.
-#   "attended"      a human ratifies each gate advance (the kit default)
-#   "single-ratify" LLM-gate review through G1+G2; one human sitting at close
-#   "autonomous"    every gate but G-Final closes on a recorded LLM verdict
-gate_policy = "autonomous"
 # How far up the SN -> SR -> LLR -> TC spine a HUMAN ratifies, cumulatively
 # ("through" this tier). The dispatcher compares the IN-PROCESS stage of a row
 # against this number: at or below it, work SURFACES for the human; above it,
@@ -57,6 +49,11 @@ gate_policy = "autonomous"
 # Named `human_ratification_through`, never "attest level": `Attest` is already
 # a Verification method in the SR vocabulary and the collision would be
 # permanent.
+# THIS REPO RUNS LOOP-HELD (owner directive 2026-07-15, re-expressed on
+# SN-029's ordinal). The retired `gate_policy = "autonomous"` that used
+# to sit above is DELETED rather than left inert: shipping it beside the
+# ordinal is the shadowing defect the template names, and the kit must
+# not carry in its own config the shape it refuses downstream.
 human_ratification_through = 0
 # The separate "always show me the full breakdown at the end" hold, split out
 # because it is flipped far more often than the level itself.

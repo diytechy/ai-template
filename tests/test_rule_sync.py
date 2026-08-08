@@ -255,3 +255,38 @@ def test_sn_cited_ids_agrees():
         "SN-000",
     }
     assert TRACE.sn_cited_ids([{"SN-Refs": "SN-006", "Status": "Draft"}]) == {"SN-006"}
+
+
+def test_the_legacy_ratification_translation_agrees():
+    # SN-029. `bootstrap.py` imports no kit sibling — it is the one script an
+    # adopter may run from a bare download — so it carries its own copy of the
+    # retired gate-authority enum's translation. This is duplicated POLICY, not
+    # plumbing: if the migrator and the readers disagreed about what
+    # `single-ratify` meant, a repo would scaffold with one posture and run with
+    # another, which is precisely the shadowing defect SN-029 removed.
+    BOOT = load_script("bootstrap")
+    COMMON = load_script("agent_common")
+    assert BOOT.LEGACY_RATIFICATION == COMMON.LEGACY_RATIFICATION
+    assert set(BOOT.LEGACY_RATIFICATION) == {"attended", "single-ratify", "autonomous"}
+    # And the two ends are what the words always meant, stated here so a future
+    # edit to either copy has to argue with a named expectation rather than
+    # merely keeping two dictionaries equal to each other.
+    assert BOOT.LEGACY_RATIFICATION["attended"]["human_ratification_through"] == 4
+    assert BOOT.LEGACY_RATIFICATION["autonomous"]["human_ratification_through"] == 0
+
+
+def test_the_retired_enum_key_is_no_longer_shipped():
+    # The shadowing defect, pinned so it cannot come back: the template used to
+    # ship BOTH `gate_policy = "attended"` and `human_ratification_through = 4`,
+    # and since `ratification_level` prefers the ordinal, every repo that chose
+    # a non-default posture scaffolded as fully attended with no diagnostic.
+    from conftest import KIT
+
+    text = (KIT / "process.toml.template").read_text(encoding="utf-8")
+    declared = [
+        ln
+        for ln in text.splitlines()
+        if ln.strip().startswith("gate_policy") and "=" in ln
+    ]
+    assert declared == [], declared
+    assert "human_ratification_through = 4" in text

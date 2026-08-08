@@ -449,9 +449,9 @@ def test_a_needs_human_worker_hands_back_and_the_run_keeps_going(tmp_path, capfd
     # what keeps the row off the frontier, so no blockref is written.
     assert "## Handback" not in spec
     assert "blockref" not in spec
-    report = (
-        root / "docs" / "handbacks" / "WI-401-wi-401-widget.md"
-    ).read_text(encoding="utf-8")
+    report = (root / "docs" / "handbacks" / "WI-401-wi-401-widget.md").read_text(
+        encoding="utf-8"
+    )
     assert 'claimed_outcome = "partial"' in report
     assert "worker exit 7 (NEEDS-JUDGEMENT)" in report
     # The dispatcher cannot judge the keep/discard split and SAYS so,
@@ -527,9 +527,7 @@ def test_a_red_handback_is_reverted_to_a_bar_inert_artefact_and_merges(tmp_path,
     # The close report survives the quarantine: it is BOOKKEEPING, and
     # reverting it would destroy the event identity the disposition mint
     # keys off — a terminal row nothing is owed a judgement for.
-    assert (
-        root / "docs" / "handbacks" / "WI-401-wi-401-widget.md"
-    ).is_file()
+    assert (root / "docs" / "handbacks" / "WI-401-wi-401-widget.md").is_file()
 
 
 # --- end to end against the REAL bar ------------------------------------------

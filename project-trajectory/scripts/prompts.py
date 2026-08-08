@@ -196,9 +196,7 @@ def strict_check(label, present, provided, form, error=None):
     if unfilled:
         raise error(
             "{}: unfilled slot(s) {} — every {} must be provided "
-            "(a brief never ships with a hole)".format(
-                label, ", ".join(unfilled), form
-            )
+            "(a brief never ships with a hole)".format(label, ", ".join(unfilled), form)
         )
 
 
@@ -238,7 +236,9 @@ def catalog_rows():
         if not path.is_file():
             continue
         text = load(key)
-        rows.append((key, KIT_PROMPTS[key], ";".join(sorted(slots(text))), digest(text)))
+        rows.append(
+            (key, KIT_PROMPTS[key], ";".join(sorted(slots(text))), digest(text))
+        )
     return rows
 
 

@@ -39,9 +39,44 @@ from pathlib import Path
 
 
 def split_cmd(template):
-    """Split a command template into tokens, quote-aware but with backslash
-    escaping disabled so Windows paths survive (shlex's posix escape rules
-    would eat C:\\path separators)."""
+    """Split a command template into tokens.
+
+    TWO ACCEPTED FORMS, and the second exists because the first cannot be made
+    unambiguous. A `CmdTemplate` may be:
+
+      a JSON ARRAY   `["claude", "-p", "--model", "{model}"]` — the tokens are
+                     the tokens, full stop. No quoting rules, no shell grammar,
+                     nothing for a Windows path or an embedded quote to trip
+                     over. This is the form to declare a NEW route in
+                     (plan §11.7).
+      a SHELL STRING `claude -p --model {model}` — the historical form, split
+                     quote-aware with backslash escaping DISABLED so Windows
+                     paths survive (shlex's posix escape rules would eat
+                     drive-letter separators). Every shipped row and every
+                     existing adopter registry uses it, so it is read exactly
+                     as before.
+
+    The array form is recognised only when the value parses as a JSON list;
+    anything else — including a string that merely starts with a bracket —
+    falls through to the shell split, so no existing template can change
+    meaning. A JSON array holding a NON-STRING token raises rather than being
+    stringified into a command nobody wrote: a registry is config a human
+    edits, and a silent coercion there is a launch that does not match its
+    declaration."""
+    text = (template or "").strip()
+    if text.startswith("["):
+        try:
+            parsed = json.loads(text)
+        except ValueError:
+            parsed = None
+        if isinstance(parsed, list):
+            bad = [tok for tok in parsed if not isinstance(tok, str)]
+            if bad:
+                raise ValueError(
+                    "CmdTemplate is a JSON array but holds a non-string token "
+                    "{!r} — argv tokens are strings".format(bad[0])
+                )
+            return list(parsed)
     lex = shlex.shlex(template, posix=True)
     lex.whitespace_split = True
     lex.escape = ""

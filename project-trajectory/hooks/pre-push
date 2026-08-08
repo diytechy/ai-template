@@ -74,7 +74,24 @@ PROCESS_TOML="$REPO_ROOT/docs/process.toml"
 PRIVACY_FILE="$REPO_ROOT/docs/privacy-check"
 
 _ptoml_body() {
-  grep -v '^[[:space:]]*#' "$1" 2>/dev/null || true
+  # The greppable body of docs/process.toml: whole-line comments dropped, then
+  # TRAILING comments stripped.
+  #
+  # The trailing strip is not tidiness — without it the two grammars that read
+  # this file disagree in the FAIL-OPEN direction. `privacy_check = true #
+  # privacy_check = false` is legal TOML whose value is `true`, but the narrow
+  # "provably false" test below matched the decoy inside the comment and the
+  # gate silently switched off, while Python read it as ON. That is the M-42
+  # contract inverted: the hook is what blocks the commit, so the hook reading
+  # `false` is the one that decides.
+  #
+  # Stripping at the first `#` can truncate a string value that legitimately
+  # contains one. Every consequence of that runs the SAFE way: a truncated
+  # value is LESS able to prove `false` (so privacy stays ON), and
+  # `privacy_review` treats anything that is not exactly `warn-unwired` as
+  # require. The declaration test cannot be affected at all — `key =` sits
+  # before any `#` on its line.
+  grep -v '^[[:space:]]*#' "$1" 2>/dev/null | sed 's/[[:space:]]*#.*$//' || true
 }
 
 process_declares() {
@@ -136,7 +153,8 @@ if [ "$privacy" != "true" ]; then
     if ! "$PY" "$SCRIPTS_DIR/check_privacy.py" --root "$REPO_ROOT" --range "$range" < /dev/null; then
       echo "pre-push: secrets floor found key/token shapes in the outgoing" >&2
       echo "  range $local_ref ($range). Rewrite LOCAL history before it" >&2
-      echo "  publishes, or set docs/secrets-scan to 'off' for a deliberate" >&2
+      echo "  publishes, or set secrets_scan = false in docs/process.toml" >&2
+  echo "  [policies] for a deliberate" >&2
       echo "  fixture (process-options.md \"Commit identity & privacy\")." >&2
       status=1
     fi
@@ -230,7 +248,8 @@ while read -r local_ref local_sha remote_ref remote_sha; do
     echo "             git config privacy.reviewcmd '<agent cmd>')" >&2
     echo "  It is invoked as: \$REVIEW_CMD <dump-file>; print APPROVE or BLOCK." >&2
     echo "  Not set up yet, deliberately? Track the recorded opt-down instead:" >&2
-    echo "    echo warn-unwired > docs/privacy-review   (deterministic lint" >&2
+    echo "    set privacy_review = \"warn-unwired\" in docs/process.toml" >&2
+    echo "    [policies]                            (deterministic lint" >&2
     echo "  still blocks findings; a wired reviewer's BLOCK still blocks)." >&2
     status=1
     continue

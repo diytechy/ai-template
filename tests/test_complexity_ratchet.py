@@ -50,12 +50,21 @@ BASELINE = {
     ("agent_loop.py", "critique_brief"): 11,
     ("agent_loop.py", "main"): 27,
     ("agent_loop.py", "map_preflight"): 19,
-    ("agent_loop.py", "route_intent"): 13,
+    # SN-026 (2026-08-08): 13 -> 12. The ADJUDICATE arm would have taken this
+    # to 16; instead the four JUDGING phases (review, critique, adjudicate,
+    # design-check) became ONE arm — they all rule on work someone else did and
+    # all take the same heterogeneity rule for the same reason, so writing it
+    # four times was the duplication, not the branch count. Re-stamped DOWNWARD.
+    ("agent_loop.py", "route_intent"): 12,
     # WI-345: 13 -> 11. Both managed arms lost their inline
     # exists/read/parse-verdict branch to `read_verdict`, so the tier decision is
     # all that is left here. Re-stamped DOWNWARD, which is the direction this
     # ratchet exists to hold.
-    ("agent_loop.py", "route_session"): 11,
+    # SN-026 (2026-08-08): DELETED, now under the limit. The row's two routing
+    # facts — does its declared class re-key the phase, and does its BuildTier
+    # pin the tier — went out to `row_routing`, which is one decision stated
+    # once rather than two branches inlined here. The ADJUDICATE re-key would
+    # have taken this to 12; the extraction took it below 11 instead.
     # WI-383: 23 -> 20. The §7 continuation re-check — a `remaining and
     # len(assigned) > 1` guard wrapping a spine-only-batch `all(...)` and a
     # three-class membership test — left with session grouping (§A6.1).

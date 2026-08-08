@@ -296,7 +296,7 @@ outside the kit's required path.
 ## 4. Objectives, gates, and exit criteria
 
 Advance only when criteria pass. **Who accepts an advance is the repo's
-declared gate authority** — the `[attestation] gate_policy` dial in
+declared gate authority** — the `[attestation] human_ratification_through` dial in
 `docs/process.toml`, one of three levels: **`attended`** *(default)* — **pause for
 human approval at each gate**; **`single-ratify`** — LLM-gate review through
 G1+G2 with every human call queued, one human ratification sitting at G2

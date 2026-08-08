@@ -85,7 +85,6 @@ def set_privacy(root, value="true"):
     set_process_key(root, "policies", "privacy_check", value == "true")
 
 
-
 def push_line(head, remote_sha):
     return "refs/heads/main {} refs/heads/main {}\n".format(head, remote_sha)
 
@@ -232,7 +231,14 @@ def test_review_policy_typo_stays_fail_closed(repo):
     proc = run_hook(root, push_line(head, base))
     assert proc.returncode != 0
     assert "FAILING CLOSED" in proc.stderr
-    assert "docs/privacy-review" in proc.stderr
+    # The remediation names the LIVE home. It used to say
+    # `echo warn-unwired > docs/privacy-review`, which the same hook stopped
+    # reading first at SN-028 — so an operator blocked from pushing followed
+    # the advice and stayed blocked with no explanation. Advice that does
+    # nothing is worse than no advice: it spends the reader's trust.
+    assert "privacy_review" in proc.stderr
+    assert "warn-unwired" in proc.stderr
+    assert "docs/process.toml" in proc.stderr
 
 
 def test_approve_proceeds_and_reviewer_sees_full_range(repo, tmp_path):

@@ -154,7 +154,18 @@ def test_keep_nondependent_keeps_non_dependent_work_running():
         ready, True, busy=False, free=1, keep_nondependent=True
     )
     assert verb == "admit" and payload == [["WI-401"]]
-    # The close: only the queued ratification batch remains, lanes idle.
+    # THE CLOSE: the non-dependent work has drained and only the ratification
+    # rows remain — and they SURFACE, they are not admitted.
+    #
+    # This arm used to admit them, inherited from the retired `single-ratify`
+    # word ("dispatches only as the queued batch once nothing else remains").
+    # Under the ordinal that is a contradiction: `human_held=True` IS the
+    # statement that this tier is the human's to ratify, and
+    # `keep_nondependent` answers a different question entirely — may other
+    # lanes keep running meanwhile. Letting the second dial override the first
+    # is a machine ratifying what a human declared theirs, reached by a
+    # combination the enum could not even express (level 4 + keep_nondependent,
+    # the fourth cell).
     verb, payload = dsp._admission(
         [("WI-600", "attestation"), ("WI-601", "gate")],
         True,
@@ -162,7 +173,7 @@ def test_keep_nondependent_keeps_non_dependent_work_running():
         free=1,
         keep_nondependent=True,
     )
-    assert verb == "admit-exclusive" and payload == ["WI-600", "WI-601"]
+    assert verb == "surface" and payload == ["WI-600", "WI-601"]
     # ...but not while a lane is still out.
     verb, _payload = dsp._admission(
         [("WI-600", "attestation")], True, busy=True, free=1, keep_nondependent=True

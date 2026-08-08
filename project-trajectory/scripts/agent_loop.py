@@ -117,7 +117,7 @@ docs/privacy-check is enabled and the effective git author email is not in the
 exempt allowlist — an unattended run under a private identity is the
 history-leak disaster case (process-options.md "Commit identity & privacy").
 
-Contracts: IF-015, IF-068 — the interface seams this module declares
+Contracts: IF-015, IF-068, IF-099 — the interface seams this module declares
 (process.md §8; rows of record in docs/requirements/interfaces.csv). IF-068
 (WI-274 part B) is the coordinator-dial read: main() resolves model/model-map
 from docs/stack.ini [agent-loop] (via agent_common.read_agent_loop_config)
@@ -302,6 +302,14 @@ DEFAULT_PHASE_TIER = {
     # Perceptual judgment is exactly where model capability + multimodal support
     # matter (WI-068), so a critic routes strong by default (tier-up-never-down).
     "CRITIQUE": "strong",
+    # SN-026: an adjudicator rules on a CLAIM — was this delivered, did this
+    # amendment move meaning, is this queued row a duplicate — and every one of
+    # those is a judgement whose cost of being wrong is a wrong ratification.
+    # Strong by default, like the other two judging phases. The per-row
+    # `BuildTier` still pins it down where a disposition estimated cheaper
+    # (`intake.tier_signal`), because that estimate is measured; this is the
+    # floor for a row that names nothing.
+    "ADJUDICATE": "strong",
 }
 
 # A model whose session fails to start / stalls goes on cooldown this long (its
@@ -317,6 +325,12 @@ NON_BUILD_PHASES = frozenset(REVIEW_PHASES) | {
     "INTEGRATE",
     "DESIGN-CHECK",
     "CRITIQUE",
+    # SN-026: an adjudication commit changes Status cells and the work
+    # registry, which is what its lane runs no product bar for
+    # (`integrate.refresh`'s no-bar arm). A review round over it would be a
+    # fresh-context reviewer asked to judge a judgement, with no product diff
+    # to judge — the corroboration loop the review rounds exist to avoid.
+    "ADJUDICATE",
 }
 
 
@@ -473,6 +487,51 @@ def guardrails_inert(policy, models):
 # (status_size_warning retired with the serial driver, WI-210: no session
 # inherits status.md as its resume surface any more — status.md is a
 # generated integrator artifact whose size the generator owns.)
+
+
+def prompt_source(prompt_templates, phase):
+    """Which template a phase's session composed from: an operator override's
+    declared phase key, else `kit:<PHASE>` for the shipped file.
+
+    Names the SOURCE, not the text — the text's fingerprint is the row's
+    `prompt-sha`. Kept deliberately coarse: an override map is keyed by phase,
+    so that is the finest distinction this can honestly report."""
+    if phase and phase in (prompt_templates or {}):
+        return "override:" + phase
+    return "kit:" + (phase or "BUILD")
+
+
+def row_routing(phase, row):
+    """`(phase, pinned_tier)` for a claimed WI row — the two routing facts a
+    row's own declaration carries.
+
+    THE PHASE RE-KEY COMES FIRST, and must, because it changes what the tier
+    default and the heterogeneity rule are: an `adjudication` row is not a
+    build (SN-026), and routing it as one drew from the implementer pool at the
+    implementer tier — i.e. the judge could be the same family as the party
+    whose claim it is judging. THE TIER PIN is WI-181's per-row `BuildTier`,
+    normalized and validated against the tier vocabulary; an escalation
+    override still wins over it for a BUILD (`route_intent`).
+
+    Only a BUILD-ish phase is re-keyed: a queued review or critique round is
+    the round's, not the row's, and must not be renamed by whatever WI happens
+    to be claimed."""
+    if phase not in ("BUILD", "") or not row:
+        return phase, None
+    if adjudicating(row):
+        phase = "ADJUDICATE"
+    tier = agent_route.normalize_tier((row.get("BuildTier") or "").strip().lower())
+    return phase, (tier if tier in agent_route.TIER_ORDER else None)
+
+
+def adjudicating(row):
+    """Whether a claimed WI row is an ADJUDICATION row (SN-026).
+
+    Read off the declared `SafetyClass`, which is the same cell
+    `schedule.classify` reads to make the row exclusive and rank it — one
+    declaration, two consumers, no second vocabulary. A pure function so the
+    routing consequence is drivable without a session."""
+    return (row.get("SafetyClass") or "").strip().lower() == "adjudication"
 
 
 def phase_tier(phase, tier_map):
@@ -810,17 +869,35 @@ class RoutingState:
         tier = phase_tier(phase, tier_map)
         exclude = set()
         prefer_different = False
-        if is_review:
+        if is_review or is_critique or phase in ("ADJUDICATE", "DESIGN-CHECK"):
+            # THE JUDGING PHASES, one arm: a reviewer, a critic, an adjudicator
+            # and a design-check all rule on work someone else did, and all
+            # take the same heterogeneity rule for the same reason — a judge
+            # that shares the family of the party it judges corroborates rather
+            # than checks. What differs between them is only the tier, which
+            # `phase_tier` already answered, plus the two riders below.
             prefer_different = True
             if self.last_impl_family:
                 exclude.add(self.last_impl_family)
+        if is_review:
             for _ph, _v, fam, _mid in self.round_verdicts:
                 if fam:
                     exclude.add(fam)  # REVIEW-B differs from REVIEW-A too
-        elif is_critique:
-            prefer_different = True
-            if self.last_impl_family:
-                exclude.add(self.last_impl_family)
+        elif phase == "ADJUDICATE":
+            # SN-026. Both HALVES apply, which is why this is its own arm
+            # rather than a member of either neighbour's:
+            #   * it JUDGES, so it takes the heterogeneity rule the reviewers
+            #     and the design-check take — a judge that shares the family of
+            #     the party it judges corroborates rather than checks;
+            #   * its tier is PINNED by the row, because `intake.tier_signal`
+            #     estimated it from measured breadth (rows touched, gate moved,
+            #     targets in a red-TC contradiction) and a measured estimate
+            #     beats a phase default.
+            # The escalation overrides are deliberately NOT read here: they
+            # describe the implementer's trouble, and an adjudication row is
+            # not the implementer's work.
+            if pinned_tier is not None:
+                tier = pinned_tier
         elif phase == "BUILD" or phase == "":
             if pinned_tier is not None:
                 tier = pinned_tier
@@ -829,10 +906,6 @@ class RoutingState:
             if self.impl_exclude:
                 exclude = set(self.impl_exclude)
                 prefer_different = True
-        elif phase == "DESIGN-CHECK":
-            prefer_different = True
-            if self.last_impl_family:
-                exclude.add(self.last_impl_family)
         return tier, exclude, prefer_different
 
     def note_build_tier(self, tier):
@@ -1707,15 +1780,9 @@ def route_session(ctx, i, current_wi, session, resume_reconcile, now):
         # default covers an empty cell, and an escalation override still wins
         # (tier-up-never-down). Computed here (the caller owns the worker row
         # read); route_intent folds it in against the phase default.
-        pinned_tier = None
-        if (phase == "BUILD" or phase == "") and worker and current_wi:
-            row_tier = agent_route.normalize_tier(
-                (worker["rows"].get(current_wi, {}).get("BuildTier") or "")
-                .strip()
-                .lower()
-            )
-            if row_tier in agent_route.TIER_ORDER:
-                pinned_tier = row_tier
+        phase, pinned_tier = row_routing(
+            phase, worker["rows"].get(current_wi) if worker and current_wi else None
+        )
         tier, exclude, prefer_different = st.route_intent(
             phase, is_review, is_critique, tier_map, pinned_tier
         )
@@ -1883,7 +1950,6 @@ def session_bookkeeping(
     worker = ctx.worker
     managed = ctx.managed
     registry = ctx.registry
-    gate_policy = ctx.gate_policy
     human_held = getattr(ctx, "human_held", True)
     keep_going = getattr(ctx, "keep_nondependent", False)
     scoreboard = ctx.scoreboard
@@ -2403,6 +2469,14 @@ def run_iteration(ctx, i):
         "effort": effort,
         "fast": fast,
         "prompt-chars": len(prompt),
+        # SN-026: WHICH template, and what it rendered to. The pair is what
+        # makes a session's instruction auditable after the fact — the source
+        # is a file `prompts/CATALOG.md` lists by digest, the result is this
+        # row's own fingerprint, and neither requires keeping rendered prompts
+        # on disk. An override path shows HERE rather than only in the launch
+        # flags, so a substituted prompt is visible in the telemetry.
+        "prompt-template": prompt_source(ctx.prompt_templates, phase),
+        "prompt-sha": agent_common.prompt_fingerprint(prompt),
         "exit-code": code,
     }
     log_path = write_session_log(iter_dir, meta, output)

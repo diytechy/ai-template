@@ -293,6 +293,9 @@
 #   warn-tier-dispatch     1   deliberate
 #   kind-resolution        1   deliberate
 #   toml-scalar            1   deliberate
+#   ratification-translation  2   deliberate
+#   registry-row-filter    1   deliberate
+#   generator-preamble     1   deliberate
 #
 # The two facts worth carrying: cross-module duplication here is dominated by
 # SMALL STABLE HELPERS the F5 ruling deliberately duplicates (a shared
@@ -832,6 +835,46 @@ de0546d2361d  project-trajectory/scripts/intake.py == project-trajectory/scripts
 # (1fea271d8b0c -> 5a35a2689e40 when intake main() grew the adjudicate
 # subparser - same block, shifted content.)
 5a35a2689e40  project-trajectory/scripts/intake.py == project-trajectory/scripts/spec_move.py
+
+# --- generator-preamble (1 block) --------------------------------
+# disposition: deliberate
+# The `argparse` + `sys.path.insert(__file__.parent)` + sibling-import preamble
+# every small generator opens with (gen_open_items == gen_prompt_catalog).
+# Cross-script, ~33 tokens, and the F5 small-helper case exactly: each
+# generator must run standing on its own script directory, which is what the
+# path insert buys, so there is nowhere shared to put it that does not defeat
+# the point.
+35331fd5c249  project-trajectory/scripts/gen_open_items.py == project-trajectory/scripts/gen_prompt_catalog.py
+
+# --- ratification-translation (2 blocks) -------------------------
+# disposition: deliberate
+# SN-029 (the gate-authority enum retired into an ordinal). One shape, two
+# blocks: `LEGACY_RATIFICATION` — the table saying what `attended` /
+# `single-ratify` / `autonomous` each meant in terms of the three dials that
+# replaced them — carried by BOTH `agent_common` (which the readers import) and
+# `bootstrap` (which the migrator and the `--gate-policy` flag use).
+#
+# Extraction was DECLINED for the same reason `toml-scalar` below was:
+# bootstrap.py is the scaffolder and is deliberately sibling-import-free — it
+# must run standing on nothing but the kit directory it is copying FROM. This
+# is duplicated POLICY rather than plumbing, which is a sharper risk than the
+# usual F5 case (a migrator and a reader disagreeing about what a word meant
+# would let a repo scaffold with one posture and run with another — the exact
+# shadowing defect SN-029 removed), so it is pinned equal by
+# tests/test_rule_sync.py rather than left to prose, the same treatment
+# LLR_EXEMPT and `is_draft` get.
+9ac5eeed0f79  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/bootstrap.py
+a510ce1c39b6  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/bootstrap.py
+
+# --- registry-row-filter (1 block) -------------------------------
+# disposition: deliberate
+# The three-line id/status read every registry walk opens with: strip the id
+# cell, case-fold the status cell, skip the `-000` example row. `check_docs`
+# does it over open-items.csv, `dispatch.red_tc_census` over test-cases.csv.
+# Cross-script, and neither module may import the other (check_docs is one of
+# the independently copyable checkers; dispatch is the scheduling front end),
+# so this is the F5 small-helper case exactly. ~31 tokens.
+44695e9138dc  project-trajectory/scripts/check_docs.py == project-trajectory/scripts/dispatch.py
 
 # --- toml-scalar (1 block) ---------------------------------------
 # disposition: deliberate

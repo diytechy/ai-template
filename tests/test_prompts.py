@@ -76,7 +76,10 @@ def test_the_three_engine_briefs_load_and_carry_their_load_bearing_clauses():
 
     # The worker's structural lines — the fake CLIs parse these with regexes.
     assert "- WI: {wi} — {title}" in worker
-    assert "- Branch: {train} (its claim is docs/work/active/{train}/; integration " in worker
+    assert (
+        "- Branch: {train} (its claim is docs/work/active/{train}/; integration "
+        in worker
+    )
     assert "base {base})" in worker
     assert "    WI: {wi}" in worker
 
@@ -153,9 +156,7 @@ JUDGING = (
 # rule exists because a magic substring in free prose (`NEEDS-HUMAN`) was once
 # the ONLY input selecting a disposition's review tier — no constant, no
 # validation, and a typo silently downgraded the judgement.
-MACHINE_LINE = re.compile(
-    r"^\s*(VERDICT|OUTCOME): [A-Z-]+(\|[A-Z-]+)+ [a-z]+=", re.M
-)
+MACHINE_LINE = re.compile(r"^\s*(VERDICT|OUTCOME): [A-Z-]+(\|[A-Z-]+)+ [a-z]+=", re.M)
 
 
 @pytest.mark.parametrize("key", JUDGING)
@@ -174,9 +175,14 @@ def test_no_judging_brief_asks_for_the_judged_partys_self_assessment(key):
     # in. So the check is on the SLOTS, which are what actually carry content.
     text = pr.load(key)
     for slot in pr.slots(text):
-        assert slot not in {"status", "log", "notes", "self_assessment", "session_log"}, (
-            "{}: slot {{{}}} would carry a self-assessment into a judge's "
-            "brief".format(key, slot)
+        assert slot not in {
+            "status",
+            "log",
+            "notes",
+            "self_assessment",
+            "session_log",
+        }, "{}: slot {{{}}} would carry a self-assessment into a judge's brief".format(
+            key, slot
         )
 
 

@@ -44,7 +44,9 @@ HOOK = KIT / "hooks" / "pre-commit"
 
 def write_toml(root, text):
     (root / "docs").mkdir(parents=True, exist_ok=True)
-    with (root / "docs" / "process.toml").open("w", encoding="utf-8", newline="\n") as fh:
+    with (root / "docs" / "process.toml").open(
+        "w", encoding="utf-8", newline="\n"
+    ) as fh:
         fh.write(text)
 
 
@@ -59,7 +61,14 @@ def sh_privacy_declared_true(root):
     sh = shutil.which("sh")
     script = (
         'REPO_ROOT="$1"\n'
-        "_ptoml_body() { grep -v '^[[:space:]]*#' \"$1\" 2>/dev/null || true; }\n"
+        # EVERY function comes out of the shipped hook, `_ptoml_body` INCLUDED.
+        # It used to be re-implemented on the line below, which is exactly the
+        # defect this docstring warns about — and the warning did not save it:
+        # the local copy went stale, so this table kept passing while the
+        # shipped reader failed OPEN on a trailing-comment decoy. A guard that
+        # carries its own copy of the thing under test can only agree with
+        # itself.
+        + _extract_function(HOOK, "_ptoml_body")
         + _extract_function(HOOK, "privacy_declared_true")
         + _extract_function(HOOK, "process_declares")
         + "if privacy_declared_true; then echo TRUE; else echo FALSE; fi\n"
@@ -83,18 +92,55 @@ def _extract_function(path, name):
 # Every one of these was a real disagreement in the first cut, or is the
 # control that proves the fix did not over-correct.
 SHAPES = [
-    ("plain-true", '[policies]\nprivacy_check = true\n', True),
-    ("plain-false", '[policies]\nprivacy_check = false\n', False),
-    ("no-spaces", '[policies]\nprivacy_check=true\n', True),
-    ("tabs", '[policies]\nprivacy_check\t=\ttrue\n', True),
-    ("leading-space", '[policies]\n  privacy_check = true\n', True),
-    ("trailing-comment-true", '[policies]\nprivacy_check = true  # on\n', True),
-    ("trailing-comment-false", '[policies]\nprivacy_check = false  # off\n', False),
-    ("crlf", '[policies]\r\nprivacy_check = true\r\n', True),
-    ("bom", '﻿[policies]\nprivacy_check = true\n', True),
-    ("commented-decoy", '[policies]\n# privacy_check = true\nsecrets_scan = true\n', None),
-    ("similar-key", '[policies]\nx_privacy_check = true\n', None),
-    ("absent", '[policies]\nsecrets_scan = true\n', None),
+    ("plain-true", "[policies]\nprivacy_check = true\n", True),
+    ("plain-false", "[policies]\nprivacy_check = false\n", False),
+    ("no-spaces", "[policies]\nprivacy_check=true\n", True),
+    ("tabs", "[policies]\nprivacy_check\t=\ttrue\n", True),
+    ("leading-space", "[policies]\n  privacy_check = true\n", True),
+    ("trailing-comment-true", "[policies]\nprivacy_check = true  # on\n", True),
+    ("trailing-comment-false", "[policies]\nprivacy_check = false  # off\n", False),
+    # THE DECOY PAIR — the shape the FINAL review found failing OPEN, and the
+    # reason `_ptoml_body` strips TRAILING comments rather than only whole-line
+    # ones. `privacy_check = true # privacy_check = false` is legal TOML whose
+    # value is `true`; the hook's narrow "provably false" test matched the decoy
+    # INSIDE the comment, so the gate switched off while Python read it ON. The
+    # hook is what blocks the commit, so the hook's answer is the one that
+    # decides — this was the M-42 contract inverted.
+    (
+        "decoy-false-in-comment",
+        "[policies]\nprivacy_check = true # privacy_check = false\n",
+        True,
+    ),
+    (
+        "decoy-true-in-comment",
+        "[policies]\nprivacy_check = false # privacy_check = true\n",
+        False,
+    ),
+    # A `#` inside a legal string value: the strip can truncate it, and every
+    # consequence runs the SAFE way (a truncated value is LESS able to prove
+    # `false`), so the two readers still agree.
+    (
+        "hash-inside-a-string",
+        '[policies]\nprivacy_review = "a#b"\nprivacy_check = true\n',
+        True,
+    ),
+    # A key mentioned ONLY in a trailing comment declares nothing — which is
+    # what `tomllib` says, so the broad test must agree with it rather than
+    # fail closed on a decoy.
+    (
+        "key-only-in-a-comment",
+        "[policies]\nsecrets_scan = true # privacy_check = true\n",
+        None,
+    ),
+    ("crlf", "[policies]\r\nprivacy_check = true\r\n", True),
+    ("bom", "﻿[policies]\nprivacy_check = true\n", True),
+    (
+        "commented-decoy",
+        "[policies]\n# privacy_check = true\nsecrets_scan = true\n",
+        None,
+    ),
+    ("similar-key", "[policies]\nx_privacy_check = true\n", None),
+    ("absent", "[policies]\nsecrets_scan = true\n", None),
 ]
 
 
@@ -111,9 +157,9 @@ def test_the_hook_sh_and_tomllib_agree_on_every_shape(tmp_path, label, text, exp
 
 
 UNPARSEABLE = [
-    ("uppercase-TRUE", '[policies]\nprivacy_check = TRUE\n'),
-    ("malformed", '[policies\nprivacy_check = true\n'),
-    ("bare-word", '[policies]\nprivacy_check = yes\n'),
+    ("uppercase-TRUE", "[policies]\nprivacy_check = TRUE\n"),
+    ("malformed", "[policies\nprivacy_check = true\n"),
+    ("bare-word", "[policies]\nprivacy_check = yes\n"),
 ]
 
 
@@ -128,10 +174,10 @@ def test_an_unparseable_file_reads_ON_in_both_readers(tmp_path, label, text):
 
 
 NON_GREPPABLE = [
-    ("dotted-key", 'policies.privacy_check = true\n'),
-    ("inline-table", 'policies = { privacy_check = true }\n'),
+    ("dotted-key", "policies.privacy_check = true\n"),
+    ("inline-table", "policies = { privacy_check = true }\n"),
     ("multiline-string", '[policies]\nnote = """\nprivacy_check = true\n"""\n'),
-    ("wrong-section", '[attestation]\nprivacy_check = true\n'),
+    ("wrong-section", "[attestation]\nprivacy_check = true\n"),
 ]
 
 
@@ -265,7 +311,18 @@ def test_migration_folds_every_dial_in_and_deletes_the_file(tmp_path):
     )
     assert len(moved) == 6, moved
     cfg = ac.process_config(tmp_path / "docs")
-    assert cfg["attestation"]["gate_policy"] == "autonomous"
+    # SN-029: `gate-policy` is the one legacy file that is NOT a rename. Its
+    # word expands to the THREE dials it always meant — folding it to a single
+    # key is what lost two of the three and let a repo scaffold with one
+    # posture while running with another.
+    assert cfg["attestation"]["human_ratification_through"] == 0
+    assert cfg["attestation"]["keep_nondependent"] is True
+    assert cfg["attestation"]["final_review"] == "off"
+    assert "gate_policy" not in cfg["attestation"]
+    assert ac.ratification_level(tmp_path / "docs") == 0
+    assert ac.human_holds(tmp_path / "docs", 0) is False, (
+        "the whole point: `autonomous` must actually read as loop-held"
+    )
     assert cfg["policies"] == {
         "push": "agent",
         "review_rounds": 2,
@@ -291,7 +348,7 @@ def test_migration_never_deletes_a_file_it_could_not_write(tmp_path):
     the honest assertion is that the value SURVIVES — either folded in or left
     on disk — never that it is silently gone."""
     _docs(tmp_path)
-    write_toml(tmp_path, "# my customized file\n[policies]\npush = \"human\"\n")
+    write_toml(tmp_path, '# my customized file\n[policies]\npush = "human"\n')
     (tmp_path / "docs" / "privacy-check").write_text("true\n", encoding="utf-8")
     (tmp_path / "docs" / "review-policy").write_text("2\n", encoding="utf-8")
 

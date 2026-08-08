@@ -41,7 +41,7 @@ resource: "generated"
 | [TC-028](TC-028.md) | Run the agent-loop suite; a zero-commit repo is guarded and an all-ERROR region reads as … |
 | [TC-029](TC-029.md) | Run the agent-loop suite's lock tests (ported from the retired tracks suite): a hard-exit… |
 | [TC-030](TC-030.md) | Run the agent-loop suite's lock tests (ported from the retired tracks suite): a second co… |
-| [TC-031](TC-031.md) | Run the gate-policy and push-policy suites; each reader returns the first declared line. |
+| [TC-031](TC-031.md) | Run the process-config and policy suites: every enforcer reads one value per dial from do… |
 | [TC-032](TC-032.md) | Run the onboard/dev-setup suite; the scaffolded scripts run to a green setup and dev-setu… |
 | [TC-033](TC-033.md) | Run gen_release_checklist.py over a warn-tier PB budget; assert the generated checklist l… |
 | [TC-034](TC-034.md) | Run the dependency-ledger suite; an AST scan asserts every kit script's top-level imports… |
@@ -87,8 +87,8 @@ resource: "generated"
 | [TC-081](TC-081.md) | Generate dashboard and architecture views with and without declared seams. |
 | [TC-082](TC-082.md) | Run review-policy 0/1/2, prompt-map, redaction, selection logging, verdict, and unmanaged… |
 | [TC-083](TC-083.md) | Run substance components, corroboration, tripwires, decay, verdict parsing, and CLI cases. |
-| [TC-084](TC-084.md) | Drive swap, tier-up, shared failure, contradiction, tripwire, and gate-policy escalation … |
-| [TC-085](TC-085.md) | Run critique approval, rework, configured-cap exhaustion, and gate-policy disposition cas… |
+| [TC-084](TC-084.md) | Drive swap, tier-up, shared failure, contradiction, tripwire, and the ratification-level … |
+| [TC-085](TC-085.md) | Run critique approval, rework, configured-cap exhaustion, and the ratification-level disp… |
 | [TC-086](TC-086.md) | Run Critique vocabulary/LLR-completeness and staged closure-ratchet cases. |
 | [TC-087](TC-087.md) | Generate nested/flat How-SW containment and boundary aggregation cases. |
 | [TC-088](TC-088.md) | Run component-to-module How-SW tier and top-width-bound cases. |
@@ -96,7 +96,7 @@ resource: "generated"
 | [TC-090](TC-090.md) | Exercise pointer/keyboard descent and breadcrumb restoration. |
 | [TC-091](TC-091.md) | Classify missing, unknown, structurally contradictory, critique, checkpoint, and dual-pla… |
 | [TC-097](TC-097.md) | Run direct worker/flag refusal and PlanMode-derived classification/contradiction cases. |
-| [TC-098](TC-098.md) | Run dispatcher SELECT, attended PAGE, autonomous PAGE continuation, regeneration failure,… |
+| [TC-098](TC-098.md) | Run dispatcher SELECT, human-held PAGE, loop-held PAGE continuation, regeneration failure… |
 | [TC-099](TC-099.md) | Inspect the eleven legacy SR rows, their SupersededBy graph, replacement targets, and pos… |
 | [TC-100](TC-100.md) | Run check_trajectory over registries with a done+SpecRef row, an uncited live spec, a def… |
 | [TC-101](TC-101.md) | Run the check_coverage suite; a module below its floor exits 1 naming it, a declared modu… |
@@ -134,7 +134,7 @@ resource: "generated"
 | [TC-135](TC-135.md) | Run the trunk-step regen suite: --regen skips absent artifact families with a notice and … |
 | [TC-136](TC-136.md) | Run the pending-surface pause suite: the block renders since/reason verbatim (no clock), … |
 | [TC-137](TC-137.md) | Run the drive suite: an unwired agent command refuses before any claim while an empty que… |
-| [TC-138](TC-138.md) | Run the handback suite: a handback returns each claimed spec to queued/ with a ## Handbac… |
+| [TC-138](TC-138.md) | Run the handback suite: a partial close moves each claimed spec to the terminal partial/ … |
 | [TC-139](TC-139.md) | Run the spec_move suite: an archival move redirects inbound links from every depth (text … |
 | [TC-140](TC-140.md) | Run the figure-provenance suite: the three 2026-08-01 false figures (the stale mutation l… |
 | [TC-141](TC-141.md) | Fixture-drive the SN-coverage rung: an uncovered ratified SN caps raw at G0 (the runnable… |
@@ -143,6 +143,14 @@ resource: "generated"
 | [TC-144](TC-144.md) | Run the dispatch loop suite on real git repos with the real bar: a spine batch claims as … |
 | [TC-145](TC-145.md) | Run the integrator claim suite: a spine claim succeeds on an idle station (the deleted sa… |
 | [TC-146](TC-146.md) | Run the schedule + integrate suites' adjudication cases: the kind classifies exclusive at… |
-| [TC-147](TC-147.md) | Run the intake suite against real git repos, red-then-green per trigger: a ratified SR am… |
+| [TC-147](TC-147.md) | Run the intake suite against real git repos, red-then-green per trigger (trigger (b) keys… |
 | [TC-148](TC-148.md) | Run the integrator + dispatcher suites' intake-arm cases: a merged branch that amended a … |
 | [TC-149](TC-149.md) | Run the shipped-tier suite; it derives the adopter-facing check set from check.py's own l… |
+| [TC-150](TC-150.md) | Run the process-config suite: it sources the SHIPPED hook's own sh functions and drives t… |
+| [TC-151](TC-151.md) | Run the ratification-level suite: the full level x stage matrix against the ladder the sh… |
+| [TC-152](TC-152.md) | Run the migration cases in the process-config suite: a full conversion deletes every lega… |
+| [TC-153](TC-153.md) | Run the attestation-ledger suite: it DRIVES the premise (the amendment seam reports an am… |
+| [TC-154](TC-154.md) | Run the loop-order suite: an adjudication row admits ahead of a ready spine batch while t… |
+| [TC-155](TC-155.md) | Run the queue-conflict cases: each of the three signals fires with both ids in determinis… |
+| [TC-156](TC-156.md) | Run the handback suite over real git worktrees: a partial close is clean under the REAL t… |
+| [TC-157](TC-157.md) | Run the prompts and routing suites: strict slot filling and its refusals, the preflight o… |

@@ -81,8 +81,13 @@ cadence"). New behavior needs new tests
 
 - Close the WI by MOVING its spec file to the terminal directory its outcome
   names — `docs/work/complete/` when it shipped, `docs/work/cancelled/` when it
-  never will — and filling
-  its `## Deliverable` body (status is the directory, never a field), and
+  never will, `docs/work/partial/` when you could not finish (that one is
+  TERMINAL too, and it owes an immutable per-close report under
+  `docs/handbacks/`: the report IS the close event, and the disposition row an
+  adjudicator gets keys on its path) — and filling
+  its `## Deliverable` body (status is the directory, never a field — and a
+  `partial/` close leaves the Deliverable EMPTY, because the report carries the
+  record and the spec's definition is deliberately byte-identical), and
   record a session entry for `docs/log.md`: one-line summary, deliverables,
   **deviations from spec**, **byte deltas on budgeted files**, and the
   `pytest -q` totals (match the style already there). A **driven figure** in

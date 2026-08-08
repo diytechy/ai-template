@@ -147,3 +147,13 @@ resource: "generated"
 | [SR-134](SR-134.md) | Trunk step regenerates the declared artifacts in dependency order |
 | [SR-135](SR-135.md) | Pending surface renders the declared pause verbatim |
 | [SR-136](SR-136.md) | Declared-figure provenance |
+| [SR-137](SR-137.md) | One policy home, with a checked shape |
+| [SR-138](SR-138.md) | Legacy config converts automatically and totally |
+| [SR-139](SR-139.md) | Ratification as an ordinal over a derived spine stage |
+| [SR-140](SR-140.md) | An append-only attestation ledger anchors what was accepted |
+| [SR-141](SR-141.md) | The loop's priority order is stated and pinned |
+| [SR-142](SR-142.md) | Red test cases under a closed implementation are named and judged |
+| [SR-143](SR-143.md) | Queue overlap is made visible, never blocked |
+| [SR-144](SR-144.md) | Every lane close is a terminal state with an immutable record |
+| [SR-145](SR-145.md) | A lane's outcome is a claim; the adjudicator overrules by minting |
+| [SR-146](SR-146.md) | Prompts are files with an audit trail; routes may be argv |

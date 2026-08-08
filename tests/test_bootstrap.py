@@ -552,7 +552,11 @@ def test_scaffold_ships_every_policy_dial_in_one_home(scaffold):
     # inside a refactor is a prior ruling overturned without its own review,
     # and a comment is not where that decision gets made.
     cfg = process_toml(scaffold)
-    assert cfg["attestation"]["gate_policy"] == "attended"
+    # SN-029: the gate-authority posture is the ORDINAL plus its two orthogonal
+    # dials, not a stored enum word. The default is the conservative end.
+    assert cfg["attestation"]["human_ratification_through"] == 4
+    assert cfg["attestation"]["keep_nondependent"] is False
+    assert "gate_policy" not in cfg["attestation"]
     assert cfg["attestation"]["human_ratification_through"] == 4
     assert cfg["policies"] == {
         "push": "human",

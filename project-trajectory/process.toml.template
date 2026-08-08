@@ -56,14 +56,24 @@
 # the state where two readers disagree about the same policy.
 
 [attestation]
-# TRANSITIONAL (SN-028 -> SN-029): the three-value gate-authority enum that
-# `human_ratification_through` below replaces. It is still the value the
-# admission table and the adjudication flip arm read; the ordinal takes over
-# when SN-029's consumers land, and this key is deleted in the same commit.
-#   "attended"      a human ratifies each gate advance (the kit default)
-#   "single-ratify" LLM-gate review through G1+G2; one human sitting at close
-#   "autonomous"    every gate but G-Final closes on a recorded LLM verdict
-gate_policy = "attended"
+# THE GATE-AUTHORITY DIAL. This section used to open with a three-value enum
+# (`gate_policy = "attended" | "single-ratify" | "autonomous"`). SN-029 RETIRED
+# it and this file no longer ships the key, because shipping both was itself
+# the bug: the template's `human_ratification_through = 4` shadowed whatever
+# word `bootstrap --gate-policy` had written, so a repo that chose `autonomous`
+# scaffolded as fully attended with no diagnostic anywhere.
+#
+# The three words map onto the dials below (`agent_common.LEGACY_RATIFICATION`
+# is the one home for the translation, and `bootstrap.py --migrate-config`
+# applies it to a legacy `docs/gate-policy` file):
+#
+#   attended       human_ratification_through = 4, keep_nondependent = false
+#   single-ratify  = 0, keep_nondependent = true, final_review = "always"
+#   autonomous     = 0, keep_nondependent = true, final_review = "off"
+#
+# Note what that makes visible: the enum's words were never one axis. Each
+# bundled a tier hold, a drain policy and an end-of-run hold, which is exactly
+# why four separate tables had to re-interpret the same word.
 # How far up the SN -> SR -> LLR -> TC spine a HUMAN ratifies, cumulatively
 # ("through" this tier). The dispatcher compares the IN-PROCESS stage of a row
 # against this number: at or below it, work SURFACES for the human; above it,

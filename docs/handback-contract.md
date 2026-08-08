@@ -1,7 +1,7 @@
 # The handback contract — the context an owner ruling needs (2026-08-03)
 
 Written at the owner's request, mid-grind, after three REVIEW-A rounds on
-[WI-416](work/queued/WI-416-dispose-wi-413-handed-back-e56f4e2c201.md) surfaced
+[WI-416](work/cancelled/WI-416-dispose-wi-413-handed-back-e56f4e2c201.md) surfaced
 a pattern the rounds themselves could not fix. **Nothing here executes until
 ruled.** The grind is paused: WI-416 is open and uncommitted, and every row
 downstream of it waits on this.
@@ -107,7 +107,7 @@ belongs to the adjudicator.**
 Choosing `complete/` versus `cancelled/` asserts whether the row's goal was met.
 A lane that stopped early declaring itself complete is a self-assessment — the
 same layering violation as a lane writing `NEEDS-HUMAN`, which is already filed
-as [WI-417](work/queued/WI-417-handback-reason-does-two-jobs.md).
+as [WI-417](work/cancelled/WI-417-handback-reason-does-two-jobs.md).
 
 The structure survives intact with one change: **a single terminal state for
 "stopped early"** — a `returned/` directory. That is a *fact* the lane can
@@ -155,16 +155,23 @@ blockref` per file, `grep -c "def test_" tests/test_handback.py`, and
 **The handback document must not be a `WI-*.md` file under `docs/work/`.**
 
 `agent_common.spec_files` is `work_dir.rglob("WI-*.md")` filtered only on "not
-directly in `work_dir`". So `docs/work/handbacks/WI-413-handback-01.md` *would*
-be walked, `parse_spec_status("handbacks")` would raise, and `read_spec_rows`
-would silently skip it — the exact §B3 invisible-spec trap that made `draft/` a
-declared directory. Putting the documents outside `docs/work/` (say
-`docs/handbacks/`) avoids the question entirely.
+directly in `work_dir`". So a report at `docs/work/handbacks/WI-nnn-<branch>.md`
+*would* be walked, `parse_spec_status("handbacks")` would raise, and
+`read_spec_rows` would silently skip it — the exact §B3 invisible-spec trap that
+made `draft/` a declared directory, and worse here, because `intake.next_wi_id`
+counts filenames and would have treated the report's id as TAKEN.
+
+**Ruled, and shipped in SN-031:** the reports live at
+[`docs/handbacks/`](handbacks/README.md), outside `docs/work/` entirely, which
+avoids the question rather than answering it. That directory's
+[README](handbacks/README.md) states the two rules the design rests on — never
+edit a report, never delete one — and why the terminal
+[`docs/work/partial/`](work/partial/) state is its other half.
 
 ## 9. Migration
 
 **One file.** `grep -rl "^## Handback" docs/work` returns exactly
-[WI-413](work/queued/WI-413-bare-sweep-re-mints-open-dispositions.md) and
+[WI-413](work/cancelled/WI-413-bare-sweep-re-mints-open-dispositions.md) and
 nothing else. Whatever is ruled, the migration is a single hand edit — the same
 measurement that made the *old* fix's migration question a non-issue.
 
@@ -184,7 +191,7 @@ measurement that made the *old* fix's migration question a non-issue.
 - WI-416's disposition is re-decided in light of the ruling and its review round
   re-run; the tree is uncommitted, so nothing needs unwinding.
 - WI-413 is re-scoped or deferred.
-- [WI-417](work/queued/WI-417-handback-reason-does-two-jobs.md) is checked
+- [WI-417](work/cancelled/WI-417-handback-reason-does-two-jobs.md) is checked
   against the ruling — its judgement (2) asks whether a handback reason is
   constrained at all, which a per-document contract reopens.
 - The `## Dispositions` drafts already written into WI-416 are minted by the

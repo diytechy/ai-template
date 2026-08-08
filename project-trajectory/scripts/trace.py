@@ -1157,6 +1157,16 @@ def _ledger_baseline(root, sr_id):
     return (commit or None), (row.get("ATT-ID") or "").strip() or None
 
 
+def _resolvable(root, rev):
+    """Whether git can resolve `rev` to a commit in THIS clone. Cheap
+    (`rev-parse --verify`), and false off-git — the same silent degrade every
+    other git reader here takes."""
+    return (
+        _git_out(root, ["rev-parse", "--verify", "--quiet", str(rev) + "^{commit}"])
+        is not None
+    )
+
+
 def _attested_baseline(root, sr_id):
     """The commit whose text `sr_id` was last attested against.
 
@@ -1173,8 +1183,18 @@ def _attested_baseline(root, sr_id):
     streak depth (typically 1-2 revisions). None: off-git, or the row was never
     Verified in committed history (first attestation still pending)."""
     accepted, _att = _ledger_baseline(root, sr_id)
-    if accepted:
+    if accepted and _resolvable(root, accepted):
         return accepted
+    # AN UNRESOLVABLE ANCHOR IS NOT AN ANCHOR, and returning it anyway was
+    # worse than having none: `_rows_at` answers `{}` for a ref git cannot
+    # resolve, so every current row classified as `added` and the brief said
+    # "everything here is new" — with `no_baseline_reason` EMPTY, so the honest
+    # degrade that exists for exactly this case never rendered. The ledger can
+    # legitimately hold such a ref (a rebase or squash rewrote the sha, a
+    # shallow clone never fetched it, `record_attestations` wrote its off-git
+    # placeholder), so this falls through to the derivation rather than
+    # refusing — but it falls through LOUDLY, by taking the path that knows how
+    # to say it has no baseline.
     log = _git_out(root, ["log", "--format=%H", "--", SPINE_FILES[0][0]])
     if log is None:
         return None

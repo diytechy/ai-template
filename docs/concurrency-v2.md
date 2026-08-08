@@ -533,6 +533,42 @@ Two modules, and the seam is thinner than the sketch feared:
 At `lanes = 1` `dispatch.py` degenerates to today's serial loop, so the split
 is safe to land before any concurrency is switched on.
 
+### A4.4 Component-scoped spine batching (SN-030 §4 rung 4) — DESIGN NOTE, not built
+
+The spine batch is one branch, one worker session, one re-attest window (§A4).
+That is exactly right while the batch is small, and it is the wrong shape once
+it is not: at ratification levels 2 and 3 the human holds SRs and LLRs, so a
+broad requirements pass puts every in-process row into a single session whose
+context is the union of all of them.
+
+The obvious split is by `Component` — the LLR registry already carries that
+column, so the partition needs no new field and no judgement. (The TC registry
+does NOT: `TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,
+Evidence,Status,Phase`. A TC would inherit its component through the LLR it
+verifies, which is a JOIN, not a cell — the plan's own §12.4 erratum corrects
+exactly this claim, and repeating it here would be the error the program
+already caught.) Each
+part still gets its own single re-attest window. What it costs is the property
+the batch exists for: **one window over the whole spine** means an amendment
+cannot land half-attested. Split by component and two parts can disagree about
+a shared premise, with nothing holding them together.
+
+So this stays a design note with an explicit shape rather than a default:
+
+- **Dial**, not behaviour — an opt-in key, absent meaning today's whole-spine
+  batch, so no adopter's ordering changes on upgrade.
+- **Threshold, not always** — splitting a batch of three helps nobody; the
+  cost above is only worth paying when the union genuinely does not fit.
+- **The split must be recorded**, because the re-attest window is what the
+  attestation ledger anchors: a component-scoped batch that does not say so in
+  its attestation rows makes the ledger claim a window that never existed.
+
+Nothing in the loop assumes the whole-spine batch is the only shape (admission
+returns a list of ids either way), so this is additive when it is wanted. It is
+not wanted yet: no repo running this kit has a spine large enough to pay for
+it, and shipping the dial before the need would be a policy surface with no
+reader.
+
 ### A4.3 Lane count (question E) — the contention answer, corrected
 
 The sketch expects no contention: *"one will usually be develop or review,

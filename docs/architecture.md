@@ -66,10 +66,11 @@ graph LR
     m_scripts_gen_cases["scripts/gen_cases — Generate test-case combinations from a requirem…"]
     m_scripts_gen_okf["scripts/gen_okf — OKF export — the traceability graph as a portab…"]
     m_scripts_gen_open_items["scripts/gen_open_items — The owner decision surface, generated (WI-322, …"]
+    m_scripts_gen_prompt_catalog["scripts/gen_prompt_catalog — Generate the shipped prompt catalogue — `projec…"]
     m_scripts_gen_release_checklist["scripts/gen_release_checklist — Generate the human release checklist from the r…"]
     m_scripts_gen_skills_index["scripts/gen_skills_index — Generate the skills applicability index from th…"]
     m_scripts_gen_trajectory["scripts/gen_trajectory — Generate the offline project-state dashboard (r…"]
-    m_scripts_handback["scripts/handback — handback.py — the two lane closes that are not …"]
+    m_scripts_handback["scripts/handback — handback.py — the lane closes that are not a cl…"]
     m_scripts_intake["scripts/intake — intake.py — the unified trunk-side intake mint …"]
     m_scripts_integrate["scripts/integrate — integrate.py — the local integrator: the statio…"]
     m_scripts_lane["scripts/lane — lane.py — one lane's mechanics (docs/concurrenc…"]
@@ -79,6 +80,7 @@ graph LR
     m_scripts_plan_coverage_step["scripts/plan_coverage_step — Coverage step adapter: run the dual-plan covera…"]
     m_scripts_plan_round["scripts/plan_round — The dual-plan round state machine: a pure, side…"]
     m_scripts_plan_runner["scripts/plan_runner — The dual-plan round RUNNER: the coordinator fan…"]
+    m_scripts_prompts["scripts/prompts — prompts.py — the kit's prompt templates as FILE…"]
     m_scripts_run_menu["scripts/run_menu — The run capability menu — one launcher that pre…"]
     m_scripts_schedule["scripts/schedule — Derive the dependency-ready WI frontier and its…"]
     m_scripts_score_reviews["scripts/score_reviews — The substance scorer — score a review verdict b…"]
@@ -102,6 +104,7 @@ graph LR
     m_scripts_agent_loop --> m_scripts_intake
     m_scripts_agent_loop --> m_scripts_plan_round
     m_scripts_agent_loop --> m_scripts_plan_runner
+    m_scripts_agent_loop --> m_scripts_prompts
     m_scripts_agent_loop --> m_scripts_score_reviews
     m_scripts_check_figures --> m_scripts_check_doc_refs
     m_scripts_check_trajectory --> m_scripts_check_docs
@@ -115,6 +118,7 @@ graph LR
     m_scripts_dispatch --> m_scripts_trace
     m_scripts_gen_open_items --> m_scripts_gen_trajectory
     m_scripts_gen_open_items --> m_scripts_trace
+    m_scripts_gen_prompt_catalog --> m_scripts_prompts
     m_scripts_gen_trajectory --> m_scripts_check_trajectory
     m_scripts_gen_trajectory --> m_scripts_traj_graph
     m_scripts_gen_trajectory --> m_scripts_traj_panels
@@ -131,6 +135,7 @@ graph LR
     m_scripts_intake --> m_scripts_schedule
     m_scripts_intake --> m_scripts_wi_convert
     m_scripts_integrate --> m_scripts_agent_common
+    m_scripts_integrate --> m_scripts_handback
     m_scripts_integrate --> m_scripts_intake
     m_scripts_integrate --> m_scripts_schedule
     m_scripts_integrate --> m_scripts_score_reviews
@@ -138,6 +143,7 @@ graph LR
     m_scripts_lane --> m_scripts_agent_common
     m_scripts_lane --> m_scripts_integrate
     m_scripts_plan_artifacts --> m_scripts_wi_convert
+    m_scripts_plan_briefs --> m_scripts_prompts
     m_scripts_plan_runner --> m_scripts_agent_route
     m_scripts_plan_runner --> m_scripts_agent_session
     m_scripts_plan_runner --> m_scripts_plan_artifacts
@@ -193,6 +199,9 @@ graph LR
     m_scripts_plan_coverage -. IF-060 .-> m_scripts_plan_coverage_step
     m_scripts_plan_round -. IF-058 .-> m_scripts_plan_runner
     m_scripts_plan_runner -. IF-066 .-> m_scripts_agent_loop
+    m_scripts_prompts -. IF-099 .-> m_scripts_agent_loop
+    m_scripts_prompts -. IF-098 .-> m_scripts_gen_prompt_catalog
+    m_scripts_prompts -. IF-100 .-> m_scripts_plan_briefs
     m_scripts_schedule -. IF-053 .-> m_scripts_check_trajectory
     m_scripts_schedule -. IF-071 .-> m_scripts_gen_trajectory
     m_scripts_schedule -. IF-055 .-> m_scripts_integrate
@@ -225,7 +234,20 @@ Contracts (interfaces): IF-037, IF-065
 
 | Public item | Summary | Implements |
 |---|---|---|
-| `read_declared(path, default)` | Read a one-word declared-policy file (docs/gate, docs/gate-policy, …): |  |
+| `read_declared(path, default)` | Read a one-word declared-policy file (docs/gate, the legacy | SN-028 |
+| `process_config(docs)` | The parsed `docs/process.toml` as a dict of sections, or `{}` when the |  |
+| `read_toml_text(text)` | `tomllib.loads(text)`, or None when it does not parse. The TEXT twin of |  |
+| `read_toml(path)` | `tomllib.loads` of `path`, or None when it is absent, unreadable, |  |
+| `process_shape_findings(docs)` | Refusal strings for a `docs/process.toml` written in a shape the git |  |
+| `declared_policy(docs, legacy_name, default)` | The value of one policy dial, `docs/process.toml` first. | SN-028 |
+| `legacy_ratification(word, key)` | One dial's value under a legacy `gate-policy` word, or None when the word |  |
+| `ratification_level(docs)` | `[attestation] human_ratification_through` as an int 0-4. |  |
+| `human_holds(docs, stage)` | Is work at spine `stage` still the HUMAN's to ratify? |  |
+| `final_review(docs)` | Does the run stop for a FINAL human read even when the level let it |  |
+| `complete_review(docs)` | `(mode, rate)` for adjudicating a CLEAN close — `"off" \| "sample" \| |  |
+| `keep_nondependent(docs)` | The orthogonal dial the ordinal cannot carry: may other lanes keep |  |
+| `spine_stage_of(root)` | This repo's derived spine stage, read off the generated `docs/gate` |  |
+| `config_conflicts(docs)` | The SN-028 MIXED-CONFIG refusal (plan §11.8): refusal strings naming | SN-028 |
 | `read_agent_loop_config(docs)` | The declared coordinator dials — the ``[agent-loop]`` section of |  |
 | `resolve_coordinator_dials(args, docs)` | ``(model, model_map)`` for the session engine, each resolved by the |  |
 | `tracked_pause(docs_dir)` | The **tracked** pause declaration — `docs/work/pause` |  |
@@ -264,6 +286,7 @@ Contracts (interfaces): IF-037, IF-065
 | `current_state_excerpt(status_path, max_lines)` | The '## Current State' section of a status.md — the root dispatcher's or |  |
 | `bounded_transcript(output)` | Head + capped tail of a session transcript (the tracked-log bound). |  |
 | `redact_secrets(text)` | Best-effort redaction of well-known credential shapes, applied before a |  |
+| `prompt_fingerprint(text)` | A short, stable fingerprint of a rendered prompt — `sha256:` + 12 hex. |  |
 | `write_session_log(iter_dir, meta, transcript)` | Write the tracked, size-bounded per-session log: a `# key: value` |  |
 | `read_log_meta(path)` | Parse the `# key: value` metadata header of one session log. |  |
 | `per_turn_pace(meta)` | API seconds per turn from a log's header meta — the like-for-like speed |  |
@@ -281,8 +304,8 @@ Contracts (interfaces): IF-037, IF-065
 
 ### `scripts/agent_loop`
 _Headless session engine: one claimed worker assignment, a reviewer/critique_
-Imports (internal): `agent_common`, `agent_route`, `agent_session`, `dispatch`, `intake`, `plan_round`, `plan_runner`, `score_reviews`
-Contracts (interfaces): IF-015, IF-068
+Imports (internal): `agent_common`, `agent_route`, `agent_session`, `dispatch`, `intake`, `plan_round`, `plan_runner`, `prompts`, `score_reviews`
+Contracts (interfaces): IF-015, IF-068, IF-099
 
 | Public item | Summary | Implements |
 |---|---|---|
@@ -290,6 +313,9 @@ Contracts (interfaces): IF-015, IF-068
 | `guardrails_apply(policy, model)` | Whether to inject the guardrails core for a session on `model`, under |  |
 | `guardrails_core(root)` | The always-on core to prepend to a quick-tier session's prompt, or None. |  |
 | `guardrails_inert(policy, models)` | True when a *guarding* policy (not off / bare all) would guard none of the |  |
+| `prompt_source(prompt_templates, phase)` | Which template a phase's session composed from: an operator override's |  |
+| `row_routing(phase, row)` | `(phase, pinned_tier)` for a claimed WI row — the two routing facts a | SN-026 |
+| `adjudicating(row)` | Whether a claimed WI row is an ADJUDICATION row (SN-026). | SN-026 |
 | `phase_tier(phase, tier_map)` | The routing tier for a phase: the declared --tier-map / AGENT_TIER_MAP |  |
 | `reviewer_prompt(prompt_templates, phase, verdict_path)` | The redacted reviewer prompt for a review phase: the per-phase prompt-map |  |
 | `session_model(model_map, default_model)` | The legacy/interactive route: the tracked docs/run-phase file is retired |  |
@@ -347,7 +373,7 @@ Contracts (interfaces): IF-044, IF-045
 | `pool_context(enabled, registry, cooldowns, now)` | The enabled pool, one line per row, for a page-human/failure banner: |  |
 | `load_constants(env)` | The escalation constants: the per-repo-overridable defaults, each read from |  |
 | `escalate(rounds, constants, swapped, at_top_tier, fails_since)` | The fixed win-stay/lose-shift decision after a review round. |  |
-| `failure_action(gate_policy)` | What a page-the-human escalation does, keyed to docs/gate-policy (ruled). |  |
+| `failure_action(human_held, keep_nondependent)` | What a page-the-human escalation does, keyed to SN-029's ordinal | SN-029 |
 | `PlannerSession (class)` | One planner-hat session selection — a routed (model x route) pick for a |  |
 | `PlannerPair (class)` | The result of routing the two planner hats: the two `PlannerSession`s (or |  |
 | `planner_pair(enabled, registry, tier, now, cooldowns, preferred_ids, hats)` | Route the two planner hats to two FRESH sessions (DP-001 plan P3, case a/b). |  |
@@ -360,7 +386,7 @@ Contracts (interfaces): IF-041, IF-064
 
 | Public item | Summary | Implements |
 |---|---|---|
-| `split_cmd(template)` | Split a command template into tokens, quote-aware but with backslash |  |
+| `split_cmd(template)` | Split a command template into tokens. |  |
 | `build_argv(template, model, prompt)` | Build the session argv from a CmdTemplate and decide how the prompt is |  |
 | `parse_json_result(output)` | Best-effort parse of a --output-format json / stream-json run: the last |  |
 | `summarize_session_line(line)` | Parse one line of session output into zero or more compact console |  |
@@ -387,9 +413,11 @@ Contracts (interfaces): IF-014, IF-039
 | `record_agent_choice(dest, choice, skills, dry_run)` | Append a one-line setup note to docs/status.md recording the agent choice |  |
 | `prompt_choice(prompt, choices, default)` | Ask on a TTY; return `default` immediately when stdin isn't interactive |  |
 | `prompt_text(prompt, default)` | Free-text prompt on a TTY; `default` when stdin isn't interactive |  |
-| `apply_gate_policy(dest, level, dry_run)` | Write a non-default gate-authority level: set docs/gate-policy (keeping |  |
-| `apply_push_policy(dest, policy, dry_run)` | Write a non-default push policy into docs/push-policy, keeping the |  |
-| `apply_privacy_check(dest, value, dry_run)` | Write the privacy-check toggle into docs/privacy-check, keeping the |  |
+| `set_process_key(dest, section, key, value, dry_run, add_if_missing)` | Set `[section] key = value` in `docs/process.toml`, IN PLACE. |  |
+| `apply_gate_policy(dest, level, dry_run)` | Write a non-default gate-authority posture, as the THREE DIALS it is. | SN-029 |
+| `apply_push_policy(dest, policy, dry_run)` | Write a non-default push policy into `[policies] push` of | SN-028 |
+| `apply_privacy_check(dest, value, dry_run)` | Write the privacy-check toggle into `[policies] privacy_check` of |  |
+| `migrate_legacy_config(dest, dry_run)` | Fold every legacy one-word policy file into docs/process.toml and DELETE |  |
 | `profile_stub(axis)` | The resolvable one-liner an omitted profile region leaves behind: the |  |
 | `strip_markers(text, omit, where)` | Generate a scaffold doc from a master: drop kit-only regions, keep or |  |
 | `read_kit_profile(dest)` | The recorded profile of an existing adoption (docs/kit-profile), or None. |  |
@@ -410,9 +438,10 @@ Contracts (interfaces): IF-014, IF-039
 | `copy_kit_files(dest, plan)` | The MAPPING copy pass + the GITKEEP_DIRS placeholders, as a |  |
 | `apply_stack_extras(dest, plan, outcome)` | The declared stack's two follow-ups: the harness-rewiring checklist a |  |
 | `materialize_agent_layer_phase(dest, plan, outcome)` | The chosen agent's layer: its matched skills into the native skills dir |  |
-| `apply_declared_policies(dest, plan, outcome)` | The three declared-authority files: a non-default level overwrites the |  |
+| `apply_declared_policies(dest, plan, outcome)` | The three declared authorities: a non-default level overwrites the key | SN-028 |
 | `report_outcome(plan, outcome)` | The per-file report + the one-line summary, in the order the phases |  |
 | `write_stamps(dest, plan)` | The generated stamps — kit-version / kit-profile / kit-license — plus |  |
+| `run_migrate_config(dest, dry_run)` | The `--migrate-config` report (SN-028). Its own function so `main` keeps | SN-028 |
 | `main()` |  |  |
 
 ### `scripts/check`
@@ -556,9 +585,9 @@ Contracts (interfaces): IF-005, IF-032, IF-043
 
 | Public item | Summary | Implements |
 |---|---|---|
-| `read_privacy_enabled(root)` | Whether the privacy layer is on: docs/privacy-check's first non-comment |  |
+| `read_privacy_enabled(root)` | Whether the privacy layer is on: `docs/process.toml` `[policies] |  |
 | `email_ok(email)` | True when an email is exempt from privacy flagging: an RFC 2606 example |  |
-| `read_secrets_scan(root)` | Whether the always-on secrets floor is enabled. `docs/secrets-scan` with |  |
+| `read_secrets_scan(root)` | Whether the always-on secrets floor is enabled. `docs/process.toml` |  |
 | `git(root, *args)` | Run git in the repo; returns (returncode, stdout). Never raises on a |  |
 | `Scanner (class)` | Compiles the active leak classes for one run. |  |
 | `  methods` | scan_line |  |
@@ -629,6 +658,7 @@ Contracts (interfaces): IF-009, IF-023, IF-077
 | `nearest_anchor(frag, anchors)` | The closest existing slug to `frag`, or None. A wrong anchor is nearly |  |
 | `specref_findings(root, w)` | R-E's SpecRef rule for ONE open WI, as a list of messages (the caller tags |  |
 | `ssot_findings(wis, root)` | The work-items.csv coherence findings (R-A + R-E) + the unknown-status |  |
+| `queue_conflict_findings(wis)` | SN-030 rung 3, mechanical half: pairs of OPEN rows that overlap. | SN-030 |
 | `spec_lifecycle_findings(root, wis)` | The spec-lifecycle close-side rule **R-F** (WI-251) — the mechanical half |  |
 | `completion_reconciliation_findings(root, wis)` | Disagreements between a WI's declared `Status` and its completion evidence, |  |
 | `tier_completion_findings(findings)` | Split reconciler findings into `(warn_only, gated)`. |  |
@@ -639,6 +669,15 @@ Contracts (interfaces): IF-009, IF-023, IF-077
 | `backlog_staleness_findings(root, wis)` | WI-205 — the backlog-staleness warn (warn-only, the WI-129 checker stance). |  |
 | `staged_findings(root)` | The no-validation-delta warn (S0 ruling #2 corollary; warn-first). |  |
 | `spine_cell_class(csv_path, column)` | `"traced"` for a column §A5.1 rules traceability, else `"ratified"`. |  |
+| `normative_text(csv_path, row)` | The canonical text a digest is taken over, for one SR/LLR/TC row. |  |
+| `sn_normative_text(sn_md_text, sn_id)` | The canonical text for one STAKEHOLDER NEED: its `\| SN-### \| … \|` table |  |
+| `digest(text)` | `sha256:<hex>` of `text`. Full width — this is an ANCHOR, and a truncated |  |
+| `read_attestations(root)` | The ledger's rows, oldest-first, `[]` when absent. `-000` dropped. |  |
+| `newest_attestations(root)` | `{artifact id: row}` — the LAST ledger row per artifact, which is its |  |
+| `current_digests(root)` | `{artifact id: digest}` over every real spine row and every SN. |  |
+| `attestation_findings(root)` | Artifacts whose NORMATIVE TEXT has moved since the ledger accepted it. |  |
+| `attestation_integrity_findings(root)` | The ledger's own shape: APPEND-ONLY, and every row well-formed. |  |
+| `staged_attestation_rewrite_findings(root, base, head)` | The APPEND-ONLY guard: ledger lines that were CHANGED or REMOVED between |  |
 | `staged_spine_amendments(root, base, head)` | The structured amendment set behind the amend-without-flip warn (WI-316, |  |
 | `staged_spine_findings(root)` | The amend-without-flip warn (WI-316; warn-first, `--staged` only), scoped |  |
 | `ratify_brief_findings(root)` | Warn-first brief lint (WI-146b): an open-items row whose decision is a |  |
@@ -679,6 +718,8 @@ Contracts (interfaces): IF-050, IF-051
 | `maturity_gate(row)` | An LLR/TC caps the gate only when it is Draft (G0 — the new-phase signal). |  |
 | `is_modified(row)` | The post-attestation `Modified` state (WI-316, process.md §7): content |  |
 | `sn_gate(sn_id, draft_ids, cited_ids)` | A Draft SN (section-as-state) is G0 — and that is the ONLY rung that fires |  |
+| `spine_stage(srs, llrs, tcs, sn_ids, sn_draft)` | The tier currently IN PROCESS, 0-4 — the axis a human-ratification level |  |
+| `stage_to_gate(stage)` | THE DECLARED MAPPING between the two axes — stated once, here, so the |  |
 | `compute(docs)` | Derive the gate from the spine registries under `docs`. Returns a result |  |
 | `basis_line(result)` | The single, deterministic `# basis:` comment line compared by --check |  |
 | `render_cache(result, as_of, date)` | The full docs/gate file text: static header, the compared `# basis:` line, |  |
@@ -693,6 +734,8 @@ Contracts (interfaces): IF-015
 | Public item | Summary | Implements |
 |---|---|---|
 | `gap_census(root)` | THE WI-388 HANDOFF SEAM — ladder rung 1 (§A4 amendment, ruled |  |
+| `red_tc_census(root, reg)` | SN-030 rung 6: TEST CASES LEFT RED UNDER A CLAIMED IMPLEMENTATION. | SN-030 |
+| `parse_red_tc(line)` | `(tc_id, [target, ...])` for a red-TC census line, or None for any other | SN-031 |
 | `run(root, args, worker, tier)` | The dispatch loop (docs/concurrency-v2.md §A4). `worker` is the one |  |
 
 ### `scripts/gen_arch_map`
@@ -769,6 +812,16 @@ Contracts (interfaces): IF-073, IF-074, IF-075
 | `pending_block_text(root)` | The pending-projection markdown item text, reused from gen_trajectory |  |
 | `main(argv)` |  |  |
 
+### `scripts/gen_prompt_catalog`
+_Generate the shipped prompt catalogue — `project-trajectory/prompts/CATALOG.md`._
+Imports (internal): `prompts`
+Contracts (interfaces): IF-098
+
+| Public item | Summary | Implements |
+|---|---|---|
+| `render()` | The catalogue's full text. Pure — takes no arguments and touches no |  |
+| `main(argv)` |  |  |
+
 ### `scripts/gen_release_checklist`
 _Generate the human release checklist from the registries._
 Contracts (interfaces): IF-018, IF-034
@@ -803,15 +856,18 @@ Contracts (interfaces): IF-011, IF-024, IF-052, IF-056, IF-071
 | `main()` |  |  |
 
 ### `scripts/handback`
-_handback.py — the two lane closes that are not a merge (concurrency-v2 §A3)._
+_handback.py — the lane closes that are not a clean merge (concurrency-v2 §A3,_
 Imports (internal): `agent_common`, `integrate`, `spec_move`
 Contracts (interfaces): IF-080
 
 | Public item | Summary | Implements |
 |---|---|---|
 | `diff_records(fields)` | `--name-status -z` fields as `[(status, [paths])]`, or None if truncated. |  |
-| `returned_spec(text, rel, note)` | `text` rewritten as a RETURNED spec: a `blockref` in the frontmatter and |  |
-| `hand_back(root, branch, reason)` | Close `branch` on the HANDBACK outcome. `(returned WI ids, None)`, or |  |
+| `report_path(branch, wi_id)` | The repo-relative path of one close's report. |  |
+| `render_report(wi_id, branch, claimed_outcome, reason, span, fields)` | The report TEXT: TOML frontmatter carrying every typed field, then the |  |
+| `read_report(path)` | One report's frontmatter as a dict, or None when it is unreadable or |  |
+| `report_refusal(meta)` | Why a report is not actionable, or None. |  |
+| `close_partial(root, branch, reason, fields)` | Close `branch` on the PARTIAL outcome. `(closed WI ids, None)`, or |  |
 | `quarantine(root, branch, why)` | Turn a RED non-merged lane into a BAR-INERT artefact. A refusal, or None. |  |
 
 ### `scripts/intake`
@@ -822,18 +878,20 @@ Contracts (interfaces): IF-090, IF-091, IF-092
 | Public item | Summary | Implements |
 |---|---|---|
 | `next_wi_id(root)` | `max(existing) + 1` over EVERY spec filename under docs/work/ — every |  |
-| `tier_signal(trigger, *, rows_touched, gate_moved, reason)` | `buildtier` from MEASURABLE inputs (the amendment's clause 2): rows |  |
+| `tier_signal(trigger, *, rows_touched, gate_moved)` | `buildtier` from MEASURABLE inputs (the amendment's clause 2): rows | SN-031 |
 | `context_block(root, wi_row, rows)` | The WI-388 context block: what the registries already know about this |  |
 | `parse_dispositions(text, where)` | `(drafts, refusal)` — the `## Dispositions` section's fenced TOML |  |
 | `intake_after_merge(root, before, after, outcomes, branch)` | THE MERGE-SLOT ARM: triggers (a), (b) and (d) for one landed merge. |  |
 | `mint_gap_rows(root, census)` | THE DISPATCHER'S RUNG-1 ARM (trigger c): the gap census, minted as |  |
-| `adjudication_action(level)` | May adjudication FLIP `Modified` -> `Verified`? Ruled decision 2: |  |
+| `adjudication_action(human_held)` | May adjudication FLIP `Modified` -> `Verified`? Ruled decision 2, re-keyed | SN-029 |
 | `flip_verified(root, ids)` | Enact — or recommend — the adjudication row's cheap outcome for spine |  |
+| `next_att_id(root)` | `max(existing) + 1` over the ledger's own ids. |  |
+| `record_attestations(root, artifacts, decision, ref)` | APPEND one ledger row per artifact, recording the digest of the |  |
 | `main(argv)` |  |  |
 
 ### `scripts/integrate`
 _integrate.py — the local integrator: the station protocol and its merge slot._
-Imports (internal): `agent_common`, `intake`, `schedule`, `score_reviews`, `spec_move`
+Imports (internal): `agent_common`, `handback`, `intake`, `schedule`, `score_reviews`, `spec_move`
 
 | Public item | Summary | Implements |
 |---|---|---|
@@ -880,7 +938,8 @@ Contracts (interfaces): IF-061, IF-078
 
 ### `scripts/plan_briefs`
 _Redacted dual-plan brief assembler + the three hat prompt-map keys (DP-001_
-Contracts (interfaces): IF-059
+Imports (internal): `prompts`
+Contracts (interfaces): IF-059, IF-100
 
 | Public item | Summary | Implements |
 |---|---|---|
@@ -927,7 +986,7 @@ Contracts (interfaces): IF-058
 | `ready_steps(state)` | The steps the coordinator may dispatch now (parallel-friendly: both |  |
 | `record(state, step, plan, stage, run, **result)` | Record one finished step and return the round's disposition. |  |
 | `disposition(state)` | The round's current disposition: PAGE / SELECTED / CONTINUE. |  |
-| `page_action(gate_policy)` | The documented failure-semantics action for a PAGE under the declared |  |
+| `page_action(human_held, keep_nondependent)` | The documented failure-semantics action for a PAGE at the declared | SN-029 |
 | `main()` |  |  |
 
 ### `scripts/plan_runner`
@@ -939,6 +998,24 @@ Contracts (interfaces): IF-066
 |---|---|---|
 | `wi_plan_mode(row)` | The WI row's declared plan mode: `dual` fires the round; anything else |  |
 | `run_dual_plan_round(root, wi, row, template, model, timeout, prompt_map)` | Run one dual-plan decomposition round for `wi` unattended and return |  |
+
+### `scripts/prompts`
+_prompts.py — the kit's prompt templates as FILES, and their strict fill._
+Contracts (interfaces): IF-097
+
+| Public item | Summary | Implements |
+|---|---|---|
+| `PromptError (class)` | A template could not be loaded or filled. Raised, not returned: every |  |
+| `strip_dispatcher_block(text)` | The prompt body with a leading `<!-- ... -->` operator-notes block |  |
+| `template_path(key, override)` | The FILE a prompt key resolves to: the operator's `--prompt-map` override |  |
+| `load(key, override)` | The prompt TEXT for `key`, dispatcher notes stripped and the trailing |  |
+| `slots(text)` | The set of single-brace slot names present in `text`. |  |
+| `fill(key, text, values)` | STRICT single-brace fill — the `{{NAME}}` hats' guarantee, in the |  |
+| `strict_check(label, present, provided, form, error)` | THE strictness both slot syntaxes share, stated once. |  |
+| `digest(text)` | `sha256:<12 hex>` of the NORMALIZED text — line endings folded to `\n` |  |
+| `preflight(keys, overrides)` | Refusal strings for every kit prompt that cannot be loaded — the |  |
+| `catalog_rows()` | `[(key, file, slots, digest)]` over every shipped kit prompt, sorted by |  |
+| `main(argv)` |  |  |
 
 ### `scripts/run_menu`
 _The run capability menu — one launcher that presents every major capability._

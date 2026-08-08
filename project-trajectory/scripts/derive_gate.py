@@ -272,35 +272,57 @@ def spine_stage(srs, llrs, tcs, sn_ids, sn_draft):
     """The tier currently IN PROCESS, 0-4 — the axis a human-ratification level
     is compared against.
 
-      0  SNs in process: some need is still a draft, or nothing is ratified yet
-      1  SNs ratified, SRs in process (a requirement is Draft, or one is
-         ratified-but-undecomposed)
-      2  ...and the LLRs are in process
-      3  ...and the TCs are in process
+      0  SNs in process: a need is a draft, none is ratified, or a ratified one
+         has no SR answering it
+      1  SNs settled, SRs in process: a requirement is Draft, or one is
+         `Modified` (amended after attestation, so its RE-ratification is owed)
+      2  ...and the LLRs are in process: one is missing or Draft
+      3  ...and the TCs are in process: one is missing or Draft
       4  nothing in process: every tier is decomposed and Verified
 
-    Read as the LOWEST unfinished tier, because that is the one work is
-    happening at and therefore the one a human boundary has to be compared
-    against. The empty-spine corner is explicit: a repo with no real SRs at all
-    is at stage 0 (SNs in process), NOT stage 4 — the vacuous-G1 short circuit
-    in `_raw_level` exists for the gate's own arithmetic and would read as
-    "everything is finished" here, which is precisely backwards."""
+    Read as the LOWEST unfinished tier — the one work is happening at, and
+    therefore the one a human boundary has to be compared against.
+
+    WHICH TIER OWNS A MISSING ARTIFACT: the tier the artifact belongs to, not
+    its parent. An SR with no LLR yet puts the spine at stage 2, because what is
+    being written is an LLR. Reading it as stage 1 (the older shape) made stages
+    2 and 3 unreachable during exactly the period they describe — every SR had
+    to be fully decomposed before a Draft child could be seen at all — which
+    left the axis unable to express "TCs are human-held but LLRs are not", the
+    distinction the axis exists for.
+
+    WHICH TIER OWNS AN UNVERIFIED SR: `Modified` is the SR's own tier and is
+    checked FIRST, because it means the requirement's text moved after it was
+    attested and a fresh ratification is owed on the SR itself. Any OTHER
+    not-yet-Verified SR is checked LAST, after the children: an SR reaches
+    Verified only once its LLRs and TCs are green, so while a child is still in
+    flight the child's tier is the honest answer.
+
+    Two corners are explicit. A repo with no real SRs at all is stage 0, NOT
+    stage 4 — the vacuous-G1 short circuit in `_raw_level` exists for the gate's
+    own arithmetic and would read as "everything is finished" here, which is
+    precisely backwards. And a RATIFIED-BUT-UNCITED SN is stage 0, applying
+    WI-401's coverage rung on the same subset `_raw_level` uses: a need with no
+    requirement answering it is unfinished work at the SN tier, and without this
+    such a spine read stage 4 while the gate arithmetic put it at G0."""
     if any(u in sn_draft for u in sn_ids) or not sn_ids:
         return STAGE_SN
     if not srs:
         return STAGE_SN
     if any(is_draft(r) for r in srs):
         return STAGE_SR
+    if any(u not in sn_cited_ids(srs) for u in sn_ids):
+        return STAGE_SN
+    if any(is_modified(r) for r in srs):
+        return STAGE_SR
     llr_sr_refs, tc_refs = _decomposed_sr_ids(llrs, tcs)
-    for sr in srs:
-        exempt = llr_exempt(sr)
-        if not exempt and sr["SR-ID"] not in llr_sr_refs:
-            return STAGE_SR
-        if sr["SR-ID"] not in tc_refs:
-            return STAGE_SR
-    if any(is_draft(r) for r in llrs):
+    if any(
+        not llr_exempt(sr) and sr.get("SR-ID") not in llr_sr_refs for sr in srs
+    ) or any(is_draft(r) for r in llrs):
         return STAGE_LLR
-    if any(is_draft(r) for r in tcs):
+    if any(sr.get("SR-ID") not in tc_refs for sr in srs) or any(
+        is_draft(r) for r in tcs
+    ):
         return STAGE_TC
     if not all(is_verified(r) for r in srs):
         return STAGE_TC

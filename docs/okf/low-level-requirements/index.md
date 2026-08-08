@@ -125,7 +125,7 @@ resource: "generated"
 | [LLR-124](LLR-124.md) | Generated status + run-state |
 | [LLR-130](LLR-130.md) | Dashboard staleness check |
 | [LLR-131](LLR-131.md) | Contradiction-safe dual-plan class |
-| [LLR-132](LLR-132.md) | PAGE gate-policy mapping |
+| [LLR-132](LLR-132.md) | PAGE ratification-level mapping |
 | [LLR-133](LLR-133.md) | Spine stand-alone rule |
 | [LLR-134](LLR-134.md) | Requirement form rules |
 | [LLR-135](LLR-135.md) | Paraphrase advisory |
@@ -142,9 +142,19 @@ resource: "generated"
 | [LLR-146](LLR-146.md) | Declared-figure provenance presence check |
 | [LLR-147](LLR-147.md) | SN-coverage gate rung + uncovered basis count |
 | [LLR-148](LLR-148.md) | Derived next phase as an output mode |
-| [LLR-149](LLR-149.md) | §A8 admission: the kind x gate-policy table + the spine barrier |
+| [LLR-149](LLR-149.md) | §A8 admission: the kind x ratification-level table + the spine barrier |
 | [LLR-150](LLR-150.md) | Lane mechanics: worktree, worker subprocess, §A2 refresh subprocess |
 | [LLR-151](LLR-151.md) | Dispatch-lock claim rung + the spine batch claim |
 | [LLR-152](LLR-152.md) | The adjudication kind: rank-1 slot + no-bar arm + the bar strictness key |
-| [LLR-153](LLR-153.md) | The unified trunk-side intake mint + the context block + the gate-policy arms |
+| [LLR-153](LLR-153.md) | The unified trunk-side intake mint + the context block + the ratification-level arms |
 | [LLR-154](LLR-154.md) | The merge slot's post-merge intake arm |
+| [LLR-155](LLR-155.md) | The config layer: one reader, checked shape, one comparison |
+| [LLR-156](LLR-156.md) | The legacy converter, and the one word that is not a rename |
+| [LLR-157](LLR-157.md) | The second axis: which tier is in process |
+| [LLR-158](LLR-158.md) | The ledger's three rungs and their tiers |
+| [LLR-159](LLR-159.md) | Admission order and the red-TC census |
+| [LLR-160](LLR-160.md) | The mechanical queue-overlap pre-filter |
+| [LLR-161](LLR-161.md) | The close ritual and the disposition it owes |
+| [LLR-162](LLR-162.md) | Prompts as loaded files, catalogued and fingerprinted |
+| [LLR-163](LLR-163.md) | Argv arrays, and the adjudicator as a routed phase |
+| [LLR-164](LLR-164.md) | The generated prompt catalogue and its freshness gate |

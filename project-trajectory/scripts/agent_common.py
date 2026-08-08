@@ -27,6 +27,7 @@ Contracts: IF-037, IF-065 — the interface seams this module declares (process.
 
 import csv
 import datetime
+import hashlib
 import errno
 import os
 import re
@@ -149,11 +150,32 @@ PROCESS_KEYS = {
     "privacy-review": ("policies", "privacy_review", "str"),
     "guardrails-policy": ("policies", "guardrails", "str"),
     "blackout": ("policies", "blackout", "str"),
-    # The gate-authority dial retires into an ORDINAL at SN-029; the legacy
-    # enum file is still read through the same window so the migration is one
-    # act rather than two.
+    # The gate-authority dial retired into the ORDINAL below at SN-029. The
+    # legacy `docs/gate-policy` FILE is still read (an un-migrated repo keeps
+    # working), and the enum key is still type-checked if a repo hand-wrote it,
+    # but nothing SHIPS it any more — see PROCESS_ONLY_KEYS.
     "gate-policy": ("attestation", "gate_policy", "str"),
 }
+
+# Dials with NO legacy one-word file — born in docs/process.toml, so they can
+# never be double-declared and appear here rather than in PROCESS_KEYS. They
+# still need the type check: the failure PROCESS_KEYS' check exists to stop (a
+# quoted `review_rounds` reading as "no review required") applies verbatim to a
+# quoted `human_ratification_through`, which would read as 4 with no diagnostic
+# and look exactly like a repo that never set it.
+PROCESS_ONLY_KEYS = {
+    ("attestation", "human_ratification_through"): "int",
+    ("attestation", "keep_nondependent"): "bool",
+    ("attestation", "final_review"): "str",
+    ("attestation", "complete_review"): "str",
+    ("attestation", "complete_sample_rate"): "int",
+}
+
+# Dials whose value must also fall in a RANGE. `human_ratification_through` is
+# the one that matters: `-1` is not merely odd, it is the single input that
+# reads as LESS human involvement than the owner asked for, so it is refused
+# here and falls back conservatively at the reader (`ratification_level`).
+PROCESS_KEY_RANGES = {("attestation", "human_ratification_through"): (0, 4)}
 
 # The two keys the git hooks match in pure sh (M-42 fail-closed). Named here
 # because the cross-parser agreement test (tests/test_process_config.py) is
@@ -369,34 +391,75 @@ def declared_policy(docs, legacy_name, default):
 # at still human-held? — and an enum cannot express "TCs are human-held but LLRs
 # are not", which is the distinction the 0-4 spine stage exists to make.
 #
-# The legacy words map onto the ordinal so an un-migrated repo keeps its exact
-# behaviour through the window: `attended` held every tier, `autonomous` held
-# none, and `single-ratify` held the requirements tiers while letting
-# non-dependent work run (that last half is orthogonal and became its own dial,
-# `keep_nondependent`, because no ordinal can carry it).
-LEGACY_RATIFICATION_LEVEL = {"attended": 4, "single-ratify": 2, "autonomous": 0}
+# THE LEGACY TRANSLATION, stated as all THREE dials rather than as a level.
+# The enum's three words were never one axis: each of them bundled a tier hold,
+# a drain policy and an end-of-run hold, which is precisely why four tables had
+# to re-interpret the same word. Translating to a level alone loses two of the
+# three facts — the shape of the original SN-029 bug, where `single-ratify`
+# became "level 2" and so silently acquired a per-tier hold it never had.
+#
+#   attended       every tier is the human's; lanes drain at a ratification
+#   single-ratify  LLM-gate review through G1+G2, ONE human sitting at the
+#                  close — so NO per-tier hold (level 0), a final read, and
+#                  the non-dependent work kept running that distinguished it
+#   autonomous     every gate but G-Final closes on a recorded LLM verdict
+LEGACY_RATIFICATION = {
+    "attended": {
+        "human_ratification_through": 4,
+        "keep_nondependent": False,
+        "final_review": "always",
+    },
+    "single-ratify": {
+        "human_ratification_through": 0,
+        "keep_nondependent": True,
+        "final_review": "always",
+    },
+    "autonomous": {
+        "human_ratification_through": 0,
+        "keep_nondependent": True,
+        "final_review": "off",
+    },
+}
 # Fail toward MORE human involvement on anything unreadable: a dial nobody can
 # parse must not silently hand ratification authority to the loop.
 RATIFICATION_FALLBACK = 4
+
+
+def legacy_ratification(word, key):
+    """One dial's value under a legacy `gate-policy` word, or None when the word
+    is not one of the three. The single home for the translation, so the
+    migrator and the fallback readers cannot disagree about what a word meant."""
+    return LEGACY_RATIFICATION.get(str(word).strip().lower(), {}).get(key)
 
 
 def ratification_level(docs):
     """`[attestation] human_ratification_through` as an int 0-4.
 
     0 = nothing is human-held (the loop ratifies every tier itself)
-    1 = the human ratifies SNs · 2 = ...and SRs · 3 = ...and LLRs
+    1 = the human ratifies SNs — 2 = ...and SRs — 3 = ...and LLRs
     4 = ...and TCs — every tier human-held, the most conservative setting
 
-    Falls back through the legacy `gate-policy` enum, then to 4. Every failure
-    direction is toward MORE human involvement, because the failure that
-    matters is a machine ratifying something a human meant to hold."""
+    Falls back through the legacy `gate-policy` enum, then to 4.
+
+    AN OUT-OF-RANGE INT IS MALFORMED, NOT CLAMPED. Clamping looks kind and is
+    the one behaviour that can fail in the dangerous direction: `-1` clamps to
+    0, which reads as "nothing is human-held" — a typo silently disarming
+    every ratification hold in the repo. A value outside 0-4 is a declaration
+    nobody can honour, so it takes the same conservative fallback an unparseable
+    file does. (`config_conflicts` refuses it loudly upstream; this is the
+    behaviour for callers that did not run that gate.)"""
     table = process_config(docs).get("attestation")
     if isinstance(table, dict):
         value = table.get("human_ratification_through")
-        if isinstance(value, int) and not isinstance(value, bool):
-            return max(0, min(4, value))
-    legacy = declared_policy(docs, "gate-policy", "attended").strip().lower()
-    return LEGACY_RATIFICATION_LEVEL.get(legacy, RATIFICATION_FALLBACK)
+        if isinstance(value, int) and not isinstance(value, bool) and 0 <= value <= 4:
+            return value
+        if value is not None:
+            return RATIFICATION_FALLBACK
+    legacy = legacy_ratification(
+        declared_policy(docs, "gate-policy", "attended"),
+        "human_ratification_through",
+    )
+    return RATIFICATION_FALLBACK if legacy is None else legacy
 
 
 def human_holds(docs, stage):
@@ -406,16 +469,33 @@ def human_holds(docs, stage):
     `derive_gate.spine_stage`'s 0-4 answer — the tier currently in process —
     and a row at or below the declared level surfaces rather than dispatching.
 
-    THE TWO ENDS ARE ABSOLUTE; only the middle consults the stage. Level 0 means
-    "nothing is human-held" and level 4 means "every tier is" — both are
-    statements the owner made outright, so neither may be quietly overruled by a
-    stage this reader could not determine. (Without that rule an explicit 0 was
-    unreachable in any repo whose `docs/gate` predates the `stage=` field, which
-    is every repo at upgrade time: the dial would have read as its own
-    opposite.) Between the ends the stage decides, and an unreadable one is
-    treated as human-held — the same conservative direction as an unreadable
-    level, because the failure that matters is a machine ratifying something a
-    human meant to hold."""
+    THE COMPARISON IS STRICTLY LESS-THAN, and the off-by-one it avoids is not
+    academic. The stages are 0=SN, 1=SR, 2=LLR, 3=TC, 4=nothing-in-process; the
+    levels are cumulative COUNTS ("through this tier"), so level 1 = "the human
+    ratifies SNs" = hold stage 0 only. Written `stage <= level` there is no
+    setting that holds SNs without also holding SRs, and level 3 becomes
+    behaviourally identical to level 4 in every state where work exists.
+
+    BOTH ENDS OF THE LADDER ARE ABSOLUTE, and the top end is not symmetry for
+    its own sake — it closes a hole the strictly-less-than fix opened. Stage 4
+    means "nothing in process: every tier decomposed and Verified", which is
+    PRECISELY the state a gate-advance row runs in. With `4 < 4` reading as
+    not-held, the shipped default — documented as "every tier human-held; the
+    most conservative setting" — let the loop dispatch and self-ratify the final
+    gate. So level 4 holds everything including the close, and level 0 holds
+    nothing; only the middle consults the stage.
+
+    Level 0 is stated explicitly even though `stage < 0` can never be true: it
+    is a declaration the owner made outright ("nothing is human-held") and
+    saying so here means no later stage arithmetic — including a negative stage
+    from some future caller — can reach past it.
+
+    Stage 4 is held by level 4 ALONE. Below that the ladder is about which tier
+    is being worked, and there is no tier in process to hold; the separate
+    end-of-run read is `final_review`, which is why that is its own dial rather
+    than a fifth rung here. An UNREADABLE stage is treated as human-held — the
+    same conservative direction as an unreadable level, because the failure
+    that matters is a machine ratifying something a human meant to hold."""
     level = ratification_level(docs)
     if level <= 0:
         return False
@@ -423,7 +503,58 @@ def human_holds(docs, stage):
         return True
     if not isinstance(stage, int) or isinstance(stage, bool):
         return True
-    return stage <= level
+    return stage < level
+
+
+def final_review(docs):
+    """Does the run stop for a FINAL human read even when the level let it
+    close? `True` for the declared `"always"`, `False` for anything else.
+
+    The separate end-of-run hold, split out from the ordinal because it is
+    flipped far more often than the level is — and because conflating them
+    would mean you could not ask for a closing read without also holding every
+    tier. Defaults to holding: the shipped template declares `"always"`, and an
+    unreadable value takes the same conservative direction every other dial in
+    this module takes."""
+    table = process_config(docs).get("attestation")
+    if isinstance(table, dict):
+        value = table.get("final_review")
+        if isinstance(value, str):
+            return value.strip().lower() != "off"
+    legacy = legacy_ratification(
+        declared_policy(docs, "gate-policy", "attended"), "final_review"
+    )
+    return legacy != "off"
+
+
+def complete_review(docs):
+    """`(mode, rate)` for adjudicating a CLEAN close — `"off" | "sample" |
+    "always"` and the sampling denominator.
+
+    `partial` and `cancelled` closes are ALWAYS adjudicated: each carries a
+    claim about what was not delivered, and a claim is what an adjudicator is
+    for. A green close already passed the declared bar and the review rounds,
+    so gating every one of them would rebuild the verdict gate under a new
+    name — but never looking at any of them means the review rounds are the
+    only thing that ever judged the work. The sample is the middle.
+
+    An unreadable mode falls to `"sample"` (the shipped default) and a
+    non-positive or unreadable rate to 4, because the failure that matters here
+    is silently adjudicating NOTHING."""
+    table = process_config(docs).get("attestation")
+    mode, rate = "sample", 4
+    if isinstance(table, dict):
+        declared = table.get("complete_review")
+        if isinstance(declared, str) and declared.strip().lower() in (
+            "off",
+            "sample",
+            "always",
+        ):
+            mode = declared.strip().lower()
+        n = table.get("complete_sample_rate")
+        if isinstance(n, int) and not isinstance(n, bool) and n > 0:
+            rate = n
+    return mode, rate
 
 
 def keep_nondependent(docs):
@@ -434,8 +565,10 @@ def keep_nondependent(docs):
     table = process_config(docs).get("attestation")
     if isinstance(table, dict) and isinstance(table.get("keep_nondependent"), bool):
         return table["keep_nondependent"]
-    legacy = declared_policy(docs, "gate-policy", "attended").strip().lower()
-    return legacy == "single-ratify"
+    legacy = legacy_ratification(
+        declared_policy(docs, "gate-policy", "attended"), "keep_nondependent"
+    )
+    return bool(legacy)
 
 
 def spine_stage_of(root):
@@ -458,6 +591,37 @@ def spine_stage_of(root):
 
 def _legacy_present(docs, legacy_name):
     return (Path(docs) / legacy_name).is_file()
+
+
+def _key_value_findings(data, section, key, kind):
+    """Type + range findings for ONE declared dial ([] when absent or sound).
+
+    Shared by both halves of `config_conflicts` — the legacy-file dials and the
+    process.toml-only ones — because "a wrong-typed dial must never fall through
+    to a default" is one rule, not two that happen to agree today."""
+    table = data.get(section)
+    if not (isinstance(table, dict) and key in table):
+        return []
+    value = table[key]
+    if _coerce(value, kind) is None:
+        return [
+            "docs/{} [{}] {} = {!r} is a {}, expected {} — a wrong-typed "
+            "dial must never fall through to a default (a quoted "
+            "`review_rounds` once meant NO review verdict was required).".format(
+                PROCESS_TOML, section, key, value, type(value).__name__, kind
+            )
+        ]
+    low_high = PROCESS_KEY_RANGES.get((section, key))
+    if low_high and not (low_high[0] <= value <= low_high[1]):
+        return [
+            "docs/{} [{}] {} = {!r} is outside {}-{}. It falls back to the "
+            "most conservative setting rather than being clamped: clamping a "
+            "negative value would read as 'nothing is human-held' and "
+            "silently disarm every ratification hold in the repo.".format(
+                PROCESS_TOML, section, key, value, low_high[0], low_high[1]
+            )
+        ]
+    return []
 
 
 def config_conflicts(docs):
@@ -487,24 +651,14 @@ def config_conflicts(docs):
             "file; do not delete it.".format(PROCESS_TOML)
         ]
     out = process_shape_findings(docs)
+    for (section, key), kind in sorted(PROCESS_ONLY_KEYS.items()):
+        out.extend(_key_value_findings(data, section, key, kind))
     for legacy_name in sorted(PROCESS_KEYS):
         section, key, kind = PROCESS_KEYS[legacy_name]
         table = data.get(section)
         if not (isinstance(table, dict) and key in table):
             continue
-        if _coerce(table[key], kind) is None:
-            out.append(
-                "docs/{} [{}] {} = {!r} is a {}, expected {} — a wrong-typed "
-                "dial must never fall through to a default (a quoted "
-                "`review_rounds` once meant NO review verdict was required).".format(
-                    PROCESS_TOML,
-                    section,
-                    key,
-                    table[key],
-                    type(table[key]).__name__,
-                    kind,
-                )
-            )
+        out.extend(_key_value_findings(data, section, key, kind))
         if _legacy_present(docs, legacy_name):
             out.append(
                 "policy '{}' is declared TWICE - docs/{} [{}] {} and the legacy "
@@ -1790,6 +1944,20 @@ def redact_secrets(text):
     return text, hits
 
 
+def prompt_fingerprint(text):
+    """A short, stable fingerprint of a rendered prompt — `sha256:` + 12 hex.
+
+    Identification, not authentication: it answers "did these two sessions see
+    the same instruction?" and "did the template change between these rows?"
+    without keeping every rendered prompt on disk. Taken over the text as
+    launched, so a slot fill that changed the prompt shows even when the
+    template did not."""
+    if text is None:
+        return ""
+    digest = hashlib.sha256(text.encode("utf-8", "replace")).hexdigest()
+    return "sha256:" + digest[:12]
+
+
 def write_session_log(iter_dir, meta, transcript):
     """Write the tracked, size-bounded per-session log: a `# key: value`
     metadata header (what the index is regenerated from) + the transcript
@@ -1819,6 +1987,17 @@ def write_session_log(iter_dir, meta, transcript):
         "effort",
         "fast",
         "prompt-chars",
+        # SN-026 (plan §11.7): WHICH TEMPLATE, and WHAT IT RENDERED TO.
+        # `prompt-chars` alone answers "how big was it", which is the least
+        # interesting question about a prompt. A prompt is now a reviewable
+        # FILE (§8's externalization), so the useful telemetry is a pointer to
+        # the source and a fingerprint of the result: two sessions that
+        # disagree can be compared without keeping every rendered prompt on
+        # disk, and a template edit becomes visible as a hash change across
+        # otherwise identical rows. Truncated sha256 — this identifies, it does
+        # not authenticate, and a full digest per row would dominate the header.
+        "prompt-template",
+        "prompt-sha",
         "exit-code",
     ):
         header.append("# {}: {}".format(key, meta.get(key, "")))

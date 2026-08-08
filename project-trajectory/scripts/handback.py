@@ -261,7 +261,9 @@ def render_report(wi_id, branch, claimed_outcome, reason, span, fields=None):
         tier = "medium"
     keep = fields.pop("keep_commits", [])
     discard = fields.pop("discard_commits", [])
-    decider = fields.pop("split_decided_by", "lane" if (keep or discard) else "adjudicator")
+    decider = fields.pop(
+        "split_decided_by", "lane" if (keep or discard) else "adjudicator"
+    )
     if decider not in SPLIT_DECIDERS:
         decider = "adjudicator"
     delivered = fields.pop("delivered", "")
@@ -271,7 +273,7 @@ def render_report(wi_id, branch, claimed_outcome, reason, span, fields=None):
         'wi = "{}"'.format(wi_id),
         'branch = "{}"'.format(branch),
         'claimed_outcome = "{}"'.format(claimed_outcome),
-        'reason = {}'.format(_toml_str(reason)),
+        "reason = {}".format(_toml_str(reason)),
         'commit_range = "{}"'.format(span),
         'suggested_tier = "{}"'.format(tier),
         "keep_commits = [{}]".format(", ".join(_toml_str(c) for c in keep)),
@@ -426,6 +428,27 @@ def _no_recursion_refusal(root, branch, specs):
     return None
 
 
+def _restore(wt, written, refusal):
+    """Un-write every report this close produced, then return `refusal` — the
+    same restore-on-refusal shape `_revert` and the mint's
+    `_bookkeeping_commit` use. Leaving a staged report behind would leave the
+    lane DIRTY (§5.6 refuses to GC one) and would leave a record on disk for a
+    close that did not happen."""
+    for rel in reversed(written):
+        # `git rm` on an UNTRACKED path fails and leaves the file — and the
+        # `cannot stage the close report` arm is reached with the report
+        # written but not yet added, so that is exactly the arm the restore
+        # most needs to work in. Unlink after, unconditionally: the file was
+        # created by this call, and a report on disk for a close that did not
+        # happen is the dirty lane §5.6 refuses to GC.
+        ac.git(wt, "rm", "-q", "-f", "--", rel)
+        try:
+            (wt / rel).unlink()
+        except OSError:
+            pass
+    return refusal
+
+
 def close_partial(root, branch, reason, fields=None):
     """Close `branch` on the PARTIAL outcome. `(closed WI ids, None)`, or
     `(None, refusal)`.
@@ -466,6 +489,12 @@ def close_partial(root, branch, reason, fields=None):
                 branch, ac._failure_tail(out)
             )
     span = _span(root, branch)
+    # Every report THIS CALL has written, so a refusal on spec #3 restores #1
+    # and #2 as well. A per-iteration undo only ever cleaned up the current
+    # spec, so a multi-spec lane could refuse and still leave earlier reports
+    # staged beside specs already moved to `partial/` — a half-close, which is
+    # the one state this all-or-nothing ritual exists to make unrepresentable.
+    written = []
     for wi_id, name in specs:
         rel = "{}/partial/{}".format(integrate.WORK, name)
         src_rel = "{}/{}/{}".format(integrate.ACTIVE, branch, name)
@@ -481,18 +510,25 @@ def close_partial(root, branch, reason, fields=None):
         # honest act is to refuse rather than to rewrite the record of the
         # first close.
         if dest.exists():
-            return None, (
+            return None, _restore(
+                wt,
+                written,
                 "a close report already exists at {} - the report is the close "
                 "EVENT's immutable identity, so a second close of {} on {} is "
-                "refused rather than overwriting it".format(rep_rel, wi_id, branch)
+                "refused rather than overwriting it".format(rep_rel, wi_id, branch),
             )
         dest.parent.mkdir(parents=True, exist_ok=True)
         with dest.open("w", encoding="utf-8", newline="\n") as fh:
             fh.write(render_report(wi_id, branch, "partial", reason, span, fields))
+        written.append(rep_rel)
         code, out = ac.git(wt, "add", "--", rep_rel)
         if code != 0:
-            return None, "cannot stage the close report {}:\n{}".format(
-                rep_rel, ac._failure_tail(out)
+            return None, _restore(
+                wt,
+                written,
+                "cannot stage the close report {}:\n{}".format(
+                    rep_rel, ac._failure_tail(out)
+                ),
             )
         # The move is the link-aware ritual (WI-393): the spec lands in
         # `partial/` with its own links rebased and every inbound link
@@ -506,8 +542,9 @@ def close_partial(root, branch, reason, fields=None):
             # `_bookkeeping_commit`). Leaving the staged report behind would
             # leave the lane DIRTY — which §5.6 refuses to GC — and would leave
             # a report on disk for a close that did not happen.
-            ac.git(wt, "rm", "-q", "-f", "--", rep_rel)
-            return None, "cannot close {}: {}".format(name, refusal)
+            return None, _restore(
+                wt, written, "cannot close {}: {}".format(name, refusal)
+            )
     code, out = ac.git(
         wt,
         "commit",

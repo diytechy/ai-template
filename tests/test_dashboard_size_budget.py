@@ -57,7 +57,17 @@ DASHBOARD = REPO_ROOT / "PROJECT_STATE.html"
 # matching the 14-21% every earlier stamp kept.
 # Measured AFTER the last edit in this commit, per this file's own 129-REVIEW-A
 # lesson: 1,899,614 at the commit carrying the stamp. Reason in the log.
-MAX_BYTES = 2_185_000
+# 2,185,000 -> 2,615,000, the 2026-08-08 mechanized-loop program. Measured
+# 2,271,984 AFTER the last edit in the commit carrying this stamp, per the
+# lesson above. The growth is ORDINARY PER-ROW COST, not a rendering change:
+# ten SRs, ten LLRs, eight TCs, five draft SNs, two new queued rows and four
+# rows moved to `cancelled/` with their Deliverables — the dashboard renders
+# every one of them. Nothing about `gen_trajectory.py` changed in this program.
+# Restamped to ~15% headroom, matching the 14-21% every earlier stamp kept, and
+# deliberately NOT to current+something-small: this file's own history records
+# the same defect twice (0.6% and 0.02% of headroom), where a ceiling meant as
+# a growth SENSOR had quietly become an exact freeze that the next merge trips.
+MAX_BYTES = 2_615_000
 
 
 def test_dashboard_stays_within_its_size_budget():

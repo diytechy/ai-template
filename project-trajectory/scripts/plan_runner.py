@@ -188,7 +188,7 @@ def run_dual_plan_round(root, wi, row, template, model, timeout, prompt_map=None
     """Run one dual-plan decomposition round for `wi` unattended and return
     `(outcome, detail)` — outcome `SELECTED` (verdict recorded, the selected
     plan's rows filed as queued WIs) or `PAGE` (the round's page reason;
-    the caller maps it onto the `docs/gate-policy` failure semantics via
+    the caller maps it onto the declared ratification level's failure semantics via
     plan_round.page_action). The protocol, its caps, and every safeguard live
     in the WI-194..WI-198 modules — this runner only drives them through the
     existing session machinery and writes the artifacts."""
@@ -481,8 +481,9 @@ def run_dual_plan_round(root, wi, row, template, model, timeout, prompt_map=None
         plan_artifacts.append_log_summary(
             root,
             "## dual-plan round {} ({}): SELECT plan {}, ports={}\n\n"
-            "Artifacts: {}/. Filed: {}. Route: {}. Acceptance follows "
-            "docs/gate-policy (the recorded-verdict rules).".format(
+            "Artifacts: {}/. Filed: {}. Route: {}. Acceptance follows the "
+            "declared ratification level in docs/process.toml (the "
+            "recorded-verdict rules).".format(
                 round_dir.name,
                 wi,
                 winner,

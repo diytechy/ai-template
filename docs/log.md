@@ -25237,3 +25237,177 @@ unfinished. It rides SR-034's open window and appears in the re-attest brief.
 `trace.py --strict --strict-integrity`: `SN=27 SR=136 LLR=137 TC=135 orphans=0
 integrity=0`, exit 0.
 <!-- fig: python3 project-trajectory/scripts/trace.py --root . --strict --strict-integrity @ WI-420 -->
+---
+
+### 2026-08-08 — the mechanized-loop program (SN-028..032), built outside the standard workflow
+
+**What ran, and under what authority.** The owner's plan
+([plan-2026-08-08-mechanized-loop.md](plan-2026-08-08-mechanized-loop.md))
+sanctioned its own execution model: one dedicated infrastructure branch, no WI
+minted per change, the **full unfiltered suite** as the bar at each phase close,
+and the spine rows filed as the *record* at the end rather than as the vehicle.
+That is a deviation from §5, taken deliberately and recorded here rather than
+inferred from the diff.
+
+**Six commits, one per plan phase.** P1a folded ~10 one-word policy files into
+`docs/process.toml`; P1b moved the three highest-traffic prompts out of Python
+constants into files; P2 replaced the handback shape with the `partial/` outcome
+model and per-close reports; P3 landed the ratification ordinal and the
+attestation ledger; P4 the loop-order rungs; P5 the ADJUDICATE routing phase,
+argv arrays and the prompt catalogue.
+
+**Five review agents ran against the landed commits, and the review pass was
+worth more than the build pass.** Two BLOCKERs and four MAJORs came back on P3
+alone, and every one was a case of the new machinery being *quietly wrong in the
+permissive direction* — the direction this kit's whole gate discipline exists to
+prevent:
+
+1. **The template shadowed the flag.** `bootstrap --gate-policy autonomous`
+   wrote `gate_policy = "autonomous"` beside the template's shipped
+   `human_ratification_through = 4`. The readers prefer the ordinal, so **every
+   freshly scaffolded or re-synced repo that chose a non-default posture became
+   fully attended, with no diagnostic anywhere.** Fixed by RETIRING the enum key
+   from the shipped template — the template had already promised that deletion
+   and had not made good on it — and translating the CLI word into all three
+   dials it always meant (`LEGACY_RATIFICATION`, F5-duplicated into bootstrap
+   because that script imports no kit sibling, and pinned by `test_rule_sync`).
+2. **The stage axis mis-tiered an amendment.** A `Modified` SR reported stage 3,
+   so at `human_ratification_through = 2` — "the human ratifies SNs and SRs" —
+   the loop mechanically flipped `Modified → Verified`. A machine ratifying an
+   SR the owner declared human-held is the exact failure `human_holds` exists to
+   prevent. `Modified` is now the SR's own tier and is checked first.
+3. **`stage <= level` was off by one** against the ladder the shipped template
+   documents. The levels are cumulative counts, so level 1 ("ratifies SNs") must
+   hold stage 0 only; written `<=`, no setting held SNs without also holding
+   SRs, and level 3 was behaviourally identical to level 4 in every state where
+   work exists.
+4. **`max(0, min(4, value))` clamped toward LESS human involvement.** `-1` read
+   as "nothing is human-held" and disarmed every hold in the repo. An
+   out-of-range level now falls back conservatively *and* is refused loudly; the
+   process.toml-only dials gained the type check the legacy-file dials had.
+5. **The ledger could be deleted.** `git rm`-ing `attestations.csv` made the
+   append-only guard, the drift rung and the integrity rung all return clean at
+   once — the strongest form of rewriting a ledger was the one form the guard
+   could not see. A rename was invisible for a different reason (rename
+   detection reports only the destination). Both are errors now.
+6. **A ledger row could anchor nothing.** The drift rung iterated the registry,
+   so a row keyed on a deleted or typo'd id read as a perfectly clean ledger.
+   Now reported, with a `superseded` decision as the way to retire an anchor
+   *without* deleting a row — because a ledger you delete from is not one.
+
+**Two defects the RATCHETS caught, both fixed rather than stamped around.**
+`_report_attestations`' findings were appended to a name not bound until after
+the WI-vacuity return: clean-ledger repos never executed the loop, so it read as
+working and any real finding raised `UnboundLocalError`. And two intra-file
+duplications (WI-347 rules those a defect, unlike the cross-script copies F5
+sanctions) folded into `_spine_revs(touches=)` and `_decomposed_sr_ids` —
+**dropping** a census entry and a complexity baseline rather than raising them.
+
+**The C901 ceiling was held by decomposition, never by a bump**, per its standing
+instruction. Six module-size baselines were raised with reasons; the honest note
+is that `check_trajectory.py` is now the kit's largest module at 3976 lines and
+is the first WI-280 decomposition candidate.
+
+**Dispositions** (plan §5.5 as amended by §11.9): WI-413 and WI-416 cancel as
+SUPERSEDED — SN-031 dissolves the defect class rather than fixing the instance,
+so there is no longer a dedup token to get wrong; WI-417 and WI-418 cancel as
+FOLDED, their generalized rules recorded in `prompts/README.md` (*prose that
+carries control flow must be a typed field*; *a judge's brief never contains the
+claim under judgement*). WI-413 carried the repo's last `## Handback` section —
+the one-file migration SN-031 measured. Two new rows minted: WI-422 (measured
+dead-symbol sweep — nothing in the kit catches an *orphaned* symbol, since
+deleting its last caller makes the module smaller, which every ratchet reads as
+an improvement) and WI-423 (decide the six unfolded check toggles, either way,
+rather than leaving the shipped template describing an open question).
+
+**THE GATE DROPPED TO G1, AND THAT IS THE POINT.** SN-028..032 and their
+decomposition (SR-137..146, LLR-155..164, TC-150..157) are filed `Draft`:
+**ratification is the owner's act**, and the plan's own §10 reserves it for the
+P0 sitting. A Draft SN reads G0, so `drafts=33 modified=21` and the derived gate
+fell from G2 to G1 — the "a new phase is due" signal `docs/gate` exists to give.
+The code is built and tested; the requirements behind it are proposed, not
+accepted. What the sitting owes is in [status.md](status.md)'s Current State.
+
+**THEN THREE MORE REVIEWS RAN, and they found more than the build did.** A
+second adversarial pass over P4/P5, a documentation-drift sweep, and a FINAL
+adversarial review driven through the OpenAI CLI (`codex exec --model
+gpt-5.6-sol`, medium effort) over the whole program. Between them: six more
+BLOCKERs, and the pattern was the same one round 1 established — the new
+machinery quietly wrong in the PERMISSIVE direction.
+
+- **The privacy gate failed OPEN again, through a shape the agreement table did
+  not cover.** `privacy_check = true # privacy_check = false` is legal TOML
+  whose value is `true`; `_ptoml_body` stripped only whole-line comments, so
+  the hooks' narrow "provably false" test matched the decoy INSIDE the comment
+  and disabled the gate while Python read it on. The hook is what blocks the
+  commit, so the hook's answer is the one that decides — the M-42 contract
+  inverted. **And the test that exists to catch exactly this carried its own
+  stale copy of `_ptoml_body`**, which is the defect its own docstring warns
+  about; it now sources every function from the shipped hook.
+- **The strictly-less-than fix opened a hole at the top of the ladder.** Stage
+  4 means "nothing in process: every tier decomposed and Verified" — precisely
+  when a gate-advance row runs. With `4 < 4` reading as not-held, the SHIPPED
+  DEFAULT (level 4, documented "the most conservative setting") let the loop
+  dispatch and self-ratify the final gate. Both ends of the ladder are absolute
+  now; only the middle consults the stage.
+- **`keep_nondependent` could override a human-held stop.** Inherited from the
+  retired `single-ratify` word. Under the ordinal it is a contradiction:
+  `human_held` IS the statement that the tier is the human's, and
+  `keep_nondependent` answers whether OTHER lanes keep running. Reachable at
+  level 4 + keep_nondependent — the fourth cell the enum could not express.
+- **The red-TC mint produced an UNSCHEDULABLE row.** `planmode = "dual"` beside
+  `safety_class = "adjudication"` reads `unclassified` at `schedule.classify`,
+  so the row dropped off the frontier and exact-title dedup guaranteed it was
+  never minted again: the contradiction rung 6 exists to surface would have
+  been minted and then permanently parked, while the census reported the gap as
+  handled. Fixed structurally — `_mint_shape_refusal` now validates every
+  DERIVED draft, not just the hand-authored ones.
+- **Three dials shipped with no reader.** `final_review`, `complete_review` and
+  `complete_sample_rate` were declared, type-checked and consulted by nothing,
+  so the promised final human read and the promised clean-close spot-check
+  happened exactly never. Both are wired; the sample is DETERMINISTIC (every
+  Nth by id), because a sampler nobody can reproduce is one nobody can audit.
+- **The program amended NO existing spine row.** The drift sweep's worst
+  finding, and the correct one: 10 SRs, 10 LLRs and 8 TCs were added and
+  nothing was touched, so ~19 `Verified` rows described machinery that had been
+  retired underneath them — `hand_back`, `## Handback`, `docs/gate-policy`,
+  `attended`/`single-ratify`, and two TCs citing renamed tests. A `Verified` row
+  whose text is false is the worst thing this registry can carry. All are
+  amended and flipped to `Modified`, and `docs/ratify/2026-08-08-mechanized-loop.md`
+  is the combined 41-row brief for the sitting.
+- **The shipped docs still taught the retired dial.** `PROCESS.md` §4,
+  `KICKOFF_PROMPT.md` (the text an adopter pastes into a fresh agent),
+  `README.md`, the scaffolded deviation register, the `session-protocol` skill
+  (which omitted `partial/` entirely, so a session stopping early would
+  mis-file or be refused), and two git-hook remediation messages that had gone
+  INERT — one of which advised creating a file that now manufactures a
+  mixed-config refusal.
+
+**Deferred, with the reason recorded rather than rushed:** WI-424 — the four
+adjudicator briefs are authored, catalogued and consumed by nothing, so an
+adjudication row routes to the right model at the right tier and then receives
+an implementer's prose. Wiring it needs a typed discriminator and faithful
+evidence slots, and a brief whose `{evidence}` reads as a completed
+investigation that found nothing is worse than a generic one — which is the
+WI-418 rule this program just generalized.
+
+**Evidence**, taken AFTER the last edit in the commit that carries it.
+Full unfiltered suite: **2152 passed, 8 skipped**.
+<!-- fig: cmd="python -m pytest -q -n auto" rev=3de2c9bc -->
+`check.py --tier smoke` at the derived gate: **RESULT: PASS** (the higher-gate
+steps run advisory during the amendment window, which is the window working).
+`check_trajectory.py --root .`: clean, 422 work items, graph acyclic, exit 0.
+`check_docs.py --stale`: 380 docs, 1056 intra-repo links, 0 broken.
+`trace.py --root . --strict-schema`: `orphans=0 integrity=0 schema-findings=0
+form-findings=0`.
+`check_dupes.py`: no unsanctioned duplicate blocks in 53 files.
+`ruff check` / `ruff format --check`: clean.
+
+The three fixes worth re-stating as behaviour, because each was a silent
+inversion rather than a crash:
+
+| | before | after |
+|---|---|---|
+| `privacy_check = true # privacy_check = false` | shipped sh hook read FALSE, Python read True — **gate silently off** | both read ON |
+| shipped default (level 4), fully verified spine | `admit-exclusive` — the loop **self-ratified the final gate** | `surface` |
+| level 4 + `keep_nondependent` (the enum's unreachable fourth cell) | `admit-exclusive` — machine ratified a **human-held** row | `surface`, other lanes keep running |
