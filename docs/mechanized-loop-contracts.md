@@ -44,8 +44,19 @@ okf_export = true
 
 [harness]
 # The declared toolchain. Mirrors docs/stack.ini's [paths]/[product]/[tiers]/
-# [coverage]/[step:*]/[generated] sections; stack.ini stays the live source until
-# the P13 cutover, and the two are proved to agree by the parity tests.
+# [coverage]/[step:*]/[generated] sections. stack.ini STAYS THE LIVE SOURCE until
+# the P13 cutover; nothing reads these keys yet.
+#
+# CORRECTION, ruled 2026-08-08: this comment previously claimed the two are
+# "proved to agree by the parity tests". No such test exists — the review swept
+# for it and found only a loader assertion against a literal fixture, plus a rung
+# that deliberately leaves `harness.*` out of the mixed-source watch list. The
+# claim is withdrawn rather than quietly kept: an unproved parity claim about a
+# duplicated toolchain declaration is exactly the kind of green this kit refuses.
+# P13 owes ONE of two things, and must say which it did: land the parity test, or
+# delete these keys and read the toolchain from stack.ini alone. Until then, a
+# divergence between the two is undetected — and this repo's own config already
+# has one, which is how the review found it.
 src = "project-trajectory/scripts"
 tests = "tests"
 
@@ -81,12 +92,37 @@ pool = [ { route = "ANTHROPIC-OPUS-STRONG", weight = 1 },
          { route = "OPENAI-SOL", weight = 1 } ]
 
 [prompts.reviewer]
-template = "project-trajectory/prompts/reviewer.md"
-required_slots = ["WI_ID", "SCOPE", "DIFF", "BAR_RESULT"]
+template = "prompts/reviewer.md"
+required_slots = ["VERDICT"]
 allowed_sources = ["registry", "diff", "harness"]
 prohibited_sources = ["self-assessment"]
 output_schema = "review-v1"
 ```
+
+> **Two corrections to this sample, ruled 2026-08-08 after the P4 slice drove it.**
+>
+> `required_slots` for the reviewer is **`["VERDICT"]`**, not the four-slot brief
+> the first draft showed. The reviewer prompt deliberately carries **no diff**:
+> it tells the reviewer to run `git log` / `git diff` itself, and that is the
+> prompt's redaction *by construction* — the implementer's account never enters
+> the brief because the brief contains nothing but the verdict contract. Adding
+> four slots would have been a rewrite of a reviewed prompt, not a move of it.
+> The lesson generalises: a slot list is DERIVED from the template, and declaring
+> one by hand is just a second place to be wrong. `prompt_render.py check`
+> compares the two and refuses on a mismatch.
+>
+> `template` is **repo-relative and layout-specific**. A scaffold receives the
+> templates at `prompts/`, so an adopter's converted config says `prompts/…`
+> (shown above). This kit *is* the product, so its own instance says
+> `project-trajectory/prompts/…`. The renderer resolves the declared path against
+> the repo root and carries **no special case** for either layout — which is
+> exactly why the two instances differ here, and only here.
+>
+> `allowed_sources` / `prohibited_sources` draw from `prompt_render`'s **closed**
+> class vocabulary (`registry`, `spec`, `diff`, `harness`, `ledger`, `graph`,
+> `rubric`, `owner-prompt`, `self-assessment`, `worker-rationale`, `rival-plan`,
+> `provenance`). `worker-rationale` is the one that carries SR-156: it is the
+> judged party's own account, and it is prohibited in every judging brief.
 
 **Declared jobs:** `planner`, `critic`, `arbiter`, `implementer`, `reviewer`,
 `adjudicator`. **Declared prompts:** the six jobs plus the four adjudicator
@@ -200,7 +236,7 @@ number — never a silently skipped record.
 | `config.py` | `load_config`, `DEFAULTS`, `SCHEMA`, `mixed_source_findings`, `Config` | P2 |
 | `config_query.py` | `main` | P2 |
 | `config_migrate.py` | `convert`, `LEGACY_MAP` | P2 |
-| `attest.py` | `normative_digest`, `NORMATIVE_CELLS`, `append_event`, `accepted_anchor`, `requires_human`, `review_requests`, `detect_candidates` | P3 |
+| `attest.py` | `normative_digest`, `NORMATIVE_CELLS`, `append_event`, `accepted_anchor`, `requires_human`, `tier_routing`, `ratification_projection`, `review_requests`, `detect_candidates` | P3/P9 |
 | `derive_gate.py` | `spine_stage`, `verification_gate_for`, `STAGE_GATE` | P3 |
 | `outcome.py` | `write_outcome`, `scope_digest`, `classify_groups`, `failure_event`, `OUTCOMES` | P6 |
 | `adjudicate.py` | `adjudicate`, `draft_successor`, `needs_adjudication` | P7 |

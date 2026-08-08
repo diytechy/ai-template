@@ -315,12 +315,16 @@ def spine_stage(docs):
     claimed a green it never saw would be the dishonest-green shape (SN-008) in
     a new place.
 
-    Two conservative edges. An EMPTY spine returns 0, never a vacuous 4 — the
-    same refusal `_raw_level` makes when a repo with no real SRs would otherwise
-    compute G3 from ratified-SN-only. And a tree with no attestation ledger
-    reads 0 honestly: nothing has been attested, so the needs are in process.
-    `attest.py` missing entirely (a partial re-sync) returns None, which the
-    basis line prints as `(none)` — an unknown fact, not a fabricated one."""
+    Two conservative edges. An EMPTY TIER returns that tier's index, never a
+    vacuous 4 — the same refusal `_raw_level` makes when a repo with no real SRs
+    would otherwise compute G3 from ratified-SN-only. A tier with no rows has
+    nothing accepted, so it is the lowest tier still in process: an SN-only
+    spine reads 1 (the requirements are the work), and a ratified SN+SR spine
+    with no LLRs yet — the canonical completed-G1 state — reads 2, not 4. And a
+    tree with no attestation ledger reads 0 honestly: nothing has been attested,
+    so the needs are in process. `attest.py` missing entirely (a partial
+    re-sync) returns None, which the basis line prints as `(none)` — an unknown
+    fact, not a fabricated one."""
     try:
         import attest  # deferred by contract (contracts §6): a sibling slice
     except ImportError:
@@ -328,10 +332,15 @@ def spine_stage(docs):
     docs = Path(docs)
     chains = attest.chain_map(attest.read_events(docs / "events" / attest.ATTESTATION))
     artifacts = attest.load_artifacts(docs)
-    if not any(artifacts.get(kind) for kind in attest.TIERS):
-        return 0
     for index, kind in enumerate(attest.TIERS):
-        for row in artifacts.get(kind, []):
+        rows = artifacts.get(kind) or []
+        # An empty tier is not a satisfied tier. Falling through it would let a
+        # partially-decomposed spine — every SN ratified, no LLR written yet —
+        # reach `return len(TIERS)` and publish stage 4 -> G3, and would make the
+        # stage move BACKWARDS the moment the first row of that tier appeared.
+        if not rows:
+            return index
+        for row in rows:
             key = (kind, attest.row_id(kind, row))
             digest = attest.normative_digest(kind, row)
             if attest.chain_state(chains.get(key, []), digest) != attest.ACCEPTED:

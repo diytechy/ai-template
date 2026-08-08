@@ -48,9 +48,11 @@ The optional schema columns (`Priority`, `Exclusive`, `BlockRef`, `EstTokens`,
 every value as its documented default — `Priority=0`, empty `Exclusive`,
 `SafetyClass` absent => `unclassified` (empty is never silently `ordinary`).
 
-Usage:
-    python scripts/schedule.py ready [--explain] [--format text|json] [--root .]
-    python scripts/schedule.py simulate --jobs N [--root .] [--format text|json]
+Usage — `--root` is a GLOBAL option, so it precedes the subcommand (the shape
+intake.py, integrate.py and prompt_render.py all use); argparse rejects the
+trailing spelling with exit 2:
+    python scripts/schedule.py [--root .] ready [--explain] [--format text|json]
+    python scripts/schedule.py [--root .] simulate --jobs N [--format text|json]
 
 Small CSV loaders are duplicated from trace.py / check_trajectory.py per the kit's
 independently-copyable-script convention (the F5 rule): schedule.py stays a

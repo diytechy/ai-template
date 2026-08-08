@@ -65,12 +65,24 @@ ship as legible per-repo-overridable defaults (calibration values, not spine
 facts); the scoreboard (`score_reviews.py`) stays **advisory** — the declared
 policy picks, nothing auto-optimizes.
 
+Beside all of that sits a SECOND, parallel routing path — the config-driven job
+pools (`draw_for_job`, SR-154/LLR-181, contracts §1). The registry above answers
+"which model for which PHASE"; the pools answer "which route for which JOB"
+(planner, critic, arbiter, implementer, reviewer, adjudicator), read from
+`docs/config.toml` through `config.load_config`. The two paths coexist on
+purpose: nothing that reads `docs/agents.csv` today changes shape here, and the
+cutover that retires it is its own slice. What the job layer adds over the phase
+layer is a declared CAPABILITY bar — a route may only be drawn for work it
+declares itself fit for — and the rule that a fallback may never buy
+availability with strength or with capability.
+
 Contracts: IF-044, IF-045 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.csv).
 """
 
 import argparse
 import csv
 import os
+import random
 import re
 import sys
 from pathlib import Path
@@ -1106,6 +1118,375 @@ def planner_fallback(
     return PlannerPair((a, b), PAIR_RUNTIME_FALLBACK, True, detail)
 
 
+# --- the config-driven job-pool draw (SR-154 / LLR-181) -------------------- #
+# `docs/config.toml`'s `[[routes]]` + `[jobs.*]` are the successor of the
+# registry x enable-list pair above, and this layer is added BESIDE it: every
+# function above keeps its behavior byte-for-byte, so a repo that has not
+# written a config.toml routes exactly as it did before.
+#
+# The job layer's own contribution is the CAPABILITY bar. `docs/agents.csv` had
+# no capability column at all, so "may this model review?" was answered by the
+# enable-list's line order and by nothing else. A route now declares what it may
+# be drawn FOR, and the order of operations below is the whole point of the
+# requirement: filter to the capable routes FIRST, and only then let a fallback
+# range over what is left. Filter-then-fall-back and fall-back-then-filter differ
+# exactly when it matters — when the preferred route is gone — and the second
+# order would let an outage silently buy a route past the bar the adopter set.
+
+# The DEFAULT capability each declared job requires of a route — the answer when
+# the job declares no `requires_capability` of its own.
+#
+# This started as the only answer, because `config.JOB_FIELDS` had no capability
+# key at all: the requirement was a property of the ROLE, identical in every
+# repo, and there was nowhere for an adopter to say otherwise. That was a gap,
+# not a design — SR-154 says "the job's DECLARED capability requirement", and a
+# requirement nobody can declare is not one. `requires_capability` now exists in
+# the schema and wins when set; this map is what an unset job falls back to, so
+# no existing configuration changes meaning.
+#
+# Three of the six tokens are fixed by contracts §1's sample route
+# (`implementation`, `review`, `adjudication`); the other three are the same
+# nominalization of the job name, so the vocabulary reads as one set. The
+# vocabulary is now CLOSED (`config.CAPABILITIES`), so a typo in a route's
+# `capabilities` array refuses at load instead of silently making the route
+# incapable — the comparison below still folds case, which is now belt and
+# braces rather than the only defence.
+JOB_CAPABILITY = {
+    "planner": "planning",
+    "critic": "critique",
+    "arbiter": "arbitration",
+    "implementer": "implementation",
+    "reviewer": "review",
+    "adjudicator": "adjudication",
+}
+
+# Jobs whose draw prefers a different family from the ones already in play,
+# whatever the config says. A reviewer drawn from the implementer's family
+# shares its blind spots; an adjudicator drawn from the family it is judging
+# shares them for the same reason, and it rules on the outcome rather than
+# merely commenting on it. So the preference is pinned by role: a
+# `prefer_cross_family = false` on these two cannot switch independence off, it
+# can only fail to add it. Pinning it is safe because cross-family is a
+# PREFERENCE and never a requirement — the degraded same-family draw below stays
+# legal exactly as it is for the phase-layer reviewer — so this can bias a draw
+# but can never wedge one.
+#
+# The arbiter is deliberately NOT here. `plan_runner` already records a
+# shared-family arbiter as a degraded case mitigated by the position swap and
+# the anonymized plan labels, so its preference is left to the declared
+# `prefer_cross_family` dial rather than pinned behind the adopter's back.
+CROSS_FAMILY_JOBS = frozenset(("reviewer", "adjudicator"))
+
+
+def strength_tier(strength):
+    """The `TIER_ORDER` token for a config `strength` (1=quick, 2=medium,
+    3=strong), or None when it is off the ladder. The two vocabularies are one
+    ladder read from opposite ends, and deriving each from `TIER_ORDER` is what
+    keeps them from drifting apart as separate constants would."""
+    index = int(strength) - 1
+    return TIER_ORDER[index] if 0 <= index < len(TIER_ORDER) else None
+
+
+def tier_strength(tier):
+    """The config strength (1..3) for a registry tier token, or None. The
+    inverse of `strength_tier`, and legacy-`weak`-aware through
+    `normalize_tier`."""
+    t = normalize_tier(tier)
+    return TIER_ORDER.index(t) + 1 if t in TIER_ORDER else None
+
+
+class JobDraw:
+    """One job's routing answer: the drawn `route` (a `config` route section) or
+    None, the `capability` it had to clear, the `reason` line the coordinator
+    LOGS before launch (the no-silent-swap rule the phase layer's `select` also
+    obeys), whether the draw was `degraded` to a same-family route, and the
+    `findings` that refused it."""
+
+    __slots__ = ("job", "route", "capability", "reason", "degraded", "findings")
+
+    def __init__(self, job, route, capability, reason, degraded=False, findings=()):
+        self.job = job
+        self.route = route
+        self.capability = capability
+        self.reason = reason
+        self.degraded = degraded
+        self.findings = tuple(findings)
+
+    @property
+    def refusals(self):
+        """The findings in the program's one refusal shape (contracts §5),
+        formatted by `config`, which owns that shape — every finding, never the
+        first, so a caller fixing a pool learns all of it in one run."""
+        import config
+
+        return tuple(config.refusal_lines(self.findings, "agent_route"))
+
+    def __repr__(self):
+        return "JobDraw(job={!r}, route={!r}, degraded={!r}, findings={})".format(
+            self.job,
+            self.route.id if self.route is not None else None,
+            self.degraded,
+            len(self.findings),
+        )
+
+
+def _pool_draw(entries, rng):
+    """Draw one route from `entries` [(route, weight)] in DECLARED PROPORTION.
+
+    `rng` is a `random.Random` — a seeded one under test, a fresh one in
+    production — and the slot it yields indexes the cumulative weight ranges, so
+    over N draws each route lands its declared share. Seedability is the whole
+    reason the generator is a parameter: a draw a test cannot reproduce is a
+    test that reports weather.
+
+    The zero-weight rule is `_weighted_rotation`'s, unchanged: weight 0 is
+    FALLBACK-ONLY — held out while any positive-weight route is drawable, taken
+    when it is the only one left, so routing never dead-ends on a 0. What is
+    deliberately NOT shared is that function's uniform-weights shortcut. There,
+    returning the first candidate when every weight is equal IS the documented
+    answer (enable-list order, byte-identical to the era before weights existed).
+    Here it would be a bug: contracts §1's sample pool and every pool this repo's
+    own converter wrote are uniform, so the shortcut would pin each job to the
+    head of its pool forever and no second family would ever be drawn.
+    """
+    if not entries:
+        return None
+    positives = [(route, weight) for route, weight in entries if weight > 0]
+    if not positives:
+        return entries[0][0]  # all fallback-only: declared pool order decides
+    total = sum(weight for _route, weight in positives)
+    slot = (rng if rng is not None else random.Random()).randrange(total)
+    accumulated = 0
+    for route, weight in positives:
+        accumulated += weight
+        if slot < accumulated:
+            return route
+    return positives[-1][0]
+
+
+def _capability_inventory(entries):
+    """`id=[capabilities]` for each pool route, for the no-capable-route refusal.
+    A refusal that names only what was missing leaves the reader diffing two
+    files; naming what each route actually declares makes the fix visible in the
+    message (an all-empty inventory is the just-converted registry, which
+    contracts §1 says an adopter must fill before routing binds)."""
+    return ", ".join(
+        "{}=[{}]".format(route.id, ",".join(route.capabilities))
+        for route, _w in entries
+    )
+
+
+def _pool_entries(job, table, routes, findings):
+    """`[(route, weight)]` for one job's declared pool, appending a finding per
+    unresolvable entry and one more if the pool ends up empty.
+
+    Extracted from `draw_for_job` because it answers a question about the CONFIG
+    — does every pool entry name a declared route? — while everything after it
+    answers questions about this DRAW. Keeping the two apart also means a pool
+    naming a route id that does not exist is reported by name rather than
+    silently shrinking the field a later rung then calls empty.
+    """
+    import config  # deferred (contracts §6)
+
+    by_id = {route.id: route for route in routes}
+    entries = []
+    for n, entry in enumerate(table.pool):
+        route = by_id.get(entry.route)
+        if route is None:
+            findings.append(
+                config.Finding(
+                    "jobs.{}.pool[{}].route".format(job, n),
+                    "names {!r}, which is not a declared [[routes]] id".format(
+                        entry.route
+                    ),
+                )
+            )
+            continue
+        entries.append((route, entry.weight))
+    if not entries and not findings:
+        findings.append(
+            config.Finding(
+                "jobs.{}.pool".format(job), "is empty, so the job has nothing to draw"
+            )
+        )
+    return entries
+
+
+def draw_for_job(root, job, *, exclude=(), rng=None):
+    """Draw a route for one declared `job` from `docs/config.toml`. Returns a
+    `JobDraw`; `route is None` means REFUSED and `findings` says why.
+
+    `exclude` names ROUTE IDS that may not be drawn this time — the route that
+    just went dark, the one already cooling (the phase layer's `available()` map
+    stays the caller's, and a cooling route arrives here as an exclusion), or the
+    one that did the work now being judged. Their FAMILIES are also what a
+    cross-family-preferring job prefers against, which is why the parameter names
+    ids and not families: the caller already knows which route it used, and
+    making it restate that route's family would be two facts to keep in step
+    where one will do. An id that is not in the pool is a no-op, not an error.
+
+    The order of the rules is the requirement (SR-154):
+
+      1. **Capability first.** Only routes declaring the job's capability
+         survive; an empty pool at this step REFUSES rather than downgrading.
+         This step happens before any fallback so that no outage can hand a job
+         to a route the adopter never cleared for it.
+      2. **Then the strength floor.** The bar is the job's declared
+         `minimum_strength`, and nothing that follows lowers it — that is what
+         "falls back only to an equal or stronger route" means in practice. A
+         route dropping out does not move the bar down to meet what is left; it
+         just leaves fewer candidates, and if none remain the job refuses.
+      3. **Then availability**, then the cross-family preference, then the
+         weighted draw over whatever survived. Renormalization is implicit, the
+         same way it is for the phase layer: an excluded route is simply absent,
+         so the remaining shares recompute over the survivors.
+
+    Deliberately NOT here: reading `docs/agents.csv`. This is the second path,
+    not a replacement, and the caller that still wants the phase layer calls
+    `select`.
+    """
+    import config  # deferred (contracts §6): P2's module, resolved at call time
+
+    def refuse(findings, capability=None):
+        return JobDraw(job, None, capability, "REFUSED", False, findings)
+
+    cfg, findings = config.load_config(root)
+    # The DECLARED requirement wins; the role default is the fallback. Reading it
+    # this way round is what makes SR-154's word "declared" true — an adopter who
+    # needs a job to require something other than its role default can now say so,
+    # and one who does not is unaffected.
+    # `cfg.jobs` is a name-keyed DICT, so it is read with `.get`: `getattr` on it
+    # answered None for every job name, and the declared bar — which the file
+    # still advertises as enforced — silently lost to the role default every time.
+    declared_job = cfg.jobs.get(job)
+    capability = getattr(declared_job, "requires_capability", "") or JOB_CAPABILITY.get(
+        job
+    )
+    if capability is None:
+        findings.append(
+            config.Finding(
+                "jobs.{}".format(job),
+                "is not a declared job; expected one of {}".format(
+                    "|".join(config.JOBS)
+                ),
+            )
+        )
+    if not cfg.routing.enabled:
+        findings.append(
+            config.Finding(
+                "routing.enabled",
+                "is false, so no job may draw a route; managed routing is opt-in "
+                "and the caller keeps its ambient model until it is turned on",
+            )
+        )
+    table = declared_job
+    if table is None and capability is not None:
+        findings.append(
+            config.Finding(
+                "jobs.{}".format(job),
+                "declares no pool in {}".format(config.CONFIG_REL),
+            )
+        )
+    if findings:
+        return refuse(findings, capability)
+
+    entries = _pool_entries(job, table, cfg.routes, findings)
+    if findings:
+        return refuse(findings, capability)
+
+    # (1) capability, before anything else can widen the field.
+    capable = [
+        (route, weight)
+        for route, weight in entries
+        if capability in {c.strip().lower() for c in route.capabilities}
+    ]
+    if not capable:
+        return refuse(
+            [
+                config.Finding(
+                    "jobs.{}.pool".format(job),
+                    "has no route declaring the {!r} capability ({}); a pool with "
+                    "no capable route refuses rather than downgrading".format(
+                        capability, _capability_inventory(entries)
+                    ),
+                )
+            ],
+            capability,
+        )
+
+    # (2) the strength floor, which nothing below may lower.
+    bar = table.minimum_strength
+    at_bar = [(route, weight) for route, weight in capable if route.strength >= bar]
+    if not at_bar:
+        return refuse(
+            [
+                config.Finding(
+                    "jobs.{}.minimum_strength".format(job),
+                    "is {} but the strongest {}-capable route in the pool is {}; a "
+                    "fallback may only go to an equal or stronger route".format(
+                        bar, capability, max(r.strength for r, _w in capable)
+                    ),
+                )
+            ],
+            capability,
+        )
+
+    # (3) availability, the cross-family preference, then the weighted draw.
+    excluded = set(exclude)
+    drawable = [(route, weight) for route, weight in at_bar if route.id not in excluded]
+    if not drawable:
+        return refuse(
+            [
+                config.Finding(
+                    "jobs.{}.pool".format(job),
+                    "has no drawable route: every {}-capable route at or above "
+                    "minimum_strength {} is excluded ({})".format(
+                        capability,
+                        bar,
+                        ", ".join(sorted(route.id for route, _w in at_bar)),
+                    ),
+                )
+            ],
+            capability,
+        )
+
+    prefer_cross = bool(table.prefer_cross_family) or job in CROSS_FAMILY_JOBS
+    # The families a cross-family-preferring job prefers AGAINST. Derived from
+    # every declared route, not only the pool's, because an excluded route can be
+    # one this job cannot draw at all (the implementer's route, when the reviewer
+    # is drawing) and its family is exactly what must be avoided.
+    family_of = {route.id: route.family for route in cfg.routes}
+    barred = {family_of[rid] for rid in excluded if rid in family_of}
+    pool, degraded, suffix = drawable, False, ""
+    if prefer_cross and barred:
+        different = [(r, w) for r, w in drawable if r.family not in barred]
+        if different:
+            pool = different
+        else:
+            # The phase layer's documented degraded mode, kept legal here for the
+            # same reason: a second opinion from a same-family route corroborates
+            # weakly, but skipping the second opinion corroborates not at all.
+            degraded = True
+            suffix = (
+                " — DEGRADED: no different-family route available, same-family "
+                "{} (weaker corroboration)".format(job)
+            )
+    chosen = _pool_draw(pool, rng)
+    reason = "drew {} [{}, {}] for {} — declares {}, strength {} >= minimum {}, {} of {} pool routes drawable{}".format(
+        chosen.id,
+        strength_tier(chosen.strength),
+        chosen.family,
+        job,
+        capability,
+        chosen.strength,
+        bar,
+        len(drawable),
+        len(entries),
+        suffix,
+    )
+    return JobDraw(job, chosen, capability, reason, degraded, ())
+
+
 def main(argv=None):
     _utf8_console()
     ap = argparse.ArgumentParser(
@@ -1132,7 +1513,40 @@ def main(argv=None):
         default=[],
         help="a family to prefer against (repeatable); implies --prefer-different",
     )
+    ap.add_argument(
+        "--job",
+        default=None,
+        help="draw a route for one declared job from docs/config.toml's "
+        "[[routes]] + [jobs.*] (the config-driven path, beside --select's "
+        "registry path) and print the reason line",
+    )
+    ap.add_argument(
+        "--root", default=".", help="repo root holding docs/config.toml (with --job)"
+    )
+    ap.add_argument(
+        "--seed",
+        type=int,
+        default=None,
+        help="seed the weighted job draw so it is reproducible (with --job)",
+    )
     args = ap.parse_args(argv)
+
+    if args.job is not None:
+        # Deliberately NOT wired to --exclude: that flag names FAMILIES for the
+        # registry path, and draw_for_job's exclusions are route ids. One flag
+        # with two meanings is the ambiguity this program is spending a whole
+        # config schema to remove.
+        draw = draw_for_job(
+            Path(args.root),
+            args.job,
+            rng=random.Random(args.seed) if args.seed is not None else None,
+        )
+        if draw.route is None:
+            for line in draw.refusals:
+                print(line, file=sys.stderr)
+            return 1
+        print(draw.reason)
+        return 0
 
     registry, errors = load_registry(args.registry)
     for e in errors:

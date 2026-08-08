@@ -70,12 +70,12 @@ LEGACY_MAP = (
     ),
     Legacy("docs/push-policy", "policy.push", "line", "word"),
     Legacy("docs/review-policy", "policy.review_rounds", "line", "int"),
-    Legacy("docs/privacy-check", "policy.privacy_check", "line", "true-yes"),
+    Legacy("docs/privacy-check", "policy.privacy_check", "line", "true-exact"),
     Legacy("docs/secrets-scan", "policy.secrets_scan", "line", "off-no"),
     Legacy("docs/privacy-review", "policy.privacy_review", "line", "word-or-require"),
     Legacy("docs/guardrails-policy", "policy.guardrails", "line", "line-or-off"),
     Legacy("docs/blackout", "automation.blackout", "line", "word"),
-    Legacy("docs/live-status", "policy.live_status", "line", "true-yes"),
+    Legacy("docs/live-status", "policy.live_status", "line", "true-fold"),
     Legacy("docs/subagent-gate", "policy.subagent_gate", "line", "word-or-off"),
     Legacy("docs/status-lint", "policy.status_lint", "line", "int-or-off"),
     Legacy("docs/trajectory-check", "policy.trajectory_check", "line", "off-no"),
@@ -182,7 +182,42 @@ def ini_value(path, section, key):
     return None
 
 
-def _coerce(token, raw, source, report):
+def _true_word(token, raw, source, key, report):
+    """A retired on/off file's word -> a boolean, or None to write nothing.
+
+    Two tokens for one idiom, split by FIDELITY rather than style: the retired
+    files are parsed differently in production, so "what did this repo actually
+    do?" has a different answer per file.
+
+      true-fold   `docs/live-status`, whose ONE reader is
+                  `read_declared(...).lower() == "true"`. Folding is faithful.
+      true-exact  `docs/privacy-check`, whose readers DISAGREE: the three git
+                  hooks test `[ "$p" = "true" ]` (exact) while `agent_loop` and
+                  `agent_common` fold. For a file spelling `TRUE` the commit
+                  gates were off and the loop's identity check was on, so no
+                  canonical value is faithful — it is reported, never picked.
+                  Picking either way would hand the repo a privacy policy nobody
+                  chose, and the adopter would never learn a question was asked.
+    """
+    if token == "true-fold":
+        return raw.lower() == "true"
+    if raw != "true" and raw.lower() == "true":
+        report.append(
+            Unmapped(
+                source,
+                raw,
+                ("{} = true".format(key), "{} = false".format(key)) if key else (),
+                "reads ON to the loop's Python readers (which fold case) and OFF "
+                'to the git hooks (which test `= "true"` exactly), so the retired '
+                "sources disagree with each other and no canonical value is "
+                "faithful — choose one deliberately",
+            )
+        )
+        return None
+    return raw == "true"
+
+
+def _coerce(token, raw, source, report, key=None):
     """The canonical value for one declared word, or `None` to write nothing.
 
     Every token is one of the idioms the retired files actually used, named so
@@ -195,9 +230,12 @@ def _coerce(token, raw, source, report):
                     one, so a deleted file can never quietly soften a gate
       int           a decimal integer
       int-or-off    an integer, with `off` meaning 0 (the budget's disable)
-      true-yes      exactly `true` is on; anything else is off
-      off-no        exactly `off` is off; anything else (incl. absent) is on
+      true-exact    BYTE-exactly `true` is on; a case variant is REPORTED
+      true-fold     `true` in any case is on; anything else is off
+      off-no        `off` in any case is off; anything else (incl. absent) is on
       gate          the gate-authority enum, mostly ambiguous (see AMBIGUOUS)
+
+    The two `true-*` tokens are one idiom split by FIDELITY; see `_true_word`.
     """
     if token in ("word", "line-or-off"):
         return raw
@@ -215,8 +253,8 @@ def _coerce(token, raw, source, report):
                 Unmapped(source, raw, (), "is not an integer, so it has no target")
             )
             return None
-    if token == "true-yes":
-        return raw.lower() == "true"
+    if token in ("true-exact", "true-fold"):
+        return _true_word(token, raw, source, key, report)
     if token == "off-no":
         return raw.lower() != "off"
     if token == "gate":
@@ -231,12 +269,70 @@ def _coerce(token, raw, source, report):
     return None
 
 
+def _row_env(row):
+    """One registry row's `Env` cell (`KEY=value;KEY2=value2`) as a dict.
+
+    Lenient exactly like `agent_route.parse_env`: an entry with no `=` or an
+    empty key is skipped rather than failing the row, because a stray separator
+    is not a routing decision.
+    """
+    env = {}
+    for pair in (row.get("Env") or "").replace(";", ",").split(","):
+        name, sep, value = pair.strip().partition("=")
+        if sep and name.strip():
+            env[name.strip()] = value.strip()
+    return env
+
+
+def _route_schema_refusal(route, report):
+    """True when the SCHEMA would refuse this converted route — reported, skipped.
+
+    Asks `config.ROUTE_FIELDS` rather than restating `agents.csv`'s row rules,
+    which is what makes the parity hold BY CONSTRUCTION: the id shape and the
+    shell-safe model slug that `agent_route.load_registry` refuses on the way IN
+    are declared patterns on the way OUT, so a rung added to the schema binds
+    here without anyone remembering to mirror it.
+
+    Mirroring matters most for the model slug. `load_registry` refuses a Model
+    cell with characters outside `[A-Za-z0-9._:/-]` because that cell rides
+    `{model}` into a session argv (repo-review 2026-07-21 H-4); a converter that
+    carried the same cell into `docs/config.toml` would launder a row the old
+    reader rejected into a canonical route nothing rejects.
+    """
+    config = _load_config_module()
+    for spec in config.ROUTE_FIELDS:
+        value = route.get(spec.path)
+        reason = config._type_reason(spec.type, value) or config._constraint_reason(
+            spec, value
+        )
+        if reason is None:
+            continue
+        report.append(
+            Unmapped(
+                "docs/agents.csv",
+                "{} {}={!r}".format(route.get("id"), spec.path, value),
+                ("routes.{}".format(spec.path),),
+                "{} — the schema refuses it, so the row is not converted".format(
+                    reason
+                ),
+            )
+        )
+        return True
+    return False
+
+
 def routes_from_csv(path, report):
     """`docs/agents.csv` rows -> `[[routes]]` tables.
 
     The registry carries no capability column, so `capabilities` converts to an
     empty array and the report says so ONCE: an invented capability list would
     be a routing decision made by a script.
+
+    Every row rung `agent_route.load_registry` applies to the SAME file applies
+    here too — the placeholder skip, the id shape, uniqueness, the tier
+    vocabulary and the shell-safe model slug. A converter that mirrored only some
+    of them would be a hole rather than a migration: the rows the live reader
+    refuses would arrive in the canonical document as ordinary routes.
     """
     try:
         with path.open(newline="", encoding="utf-8-sig", errors="replace") as fh:
@@ -244,10 +340,26 @@ def routes_from_csv(path, report):
     except OSError as exc:
         report.append(Unmapped(str(path), "", (), "cannot be read: {}".format(exc)))
         return []
-    routes = []
+    routes, seen = [], set()
     for row in rows:
         rid = (row.get("Id") or "").strip()
         if not rid or rid.startswith("#"):
+            continue
+        # The kit's inert-placeholder convention: a `-000` id ships as an example
+        # and is skipped by every registry reader. Converting it would mint a
+        # live [[routes]] table for the example row in every adopter's config.
+        if rid.endswith("-000"):
+            continue
+        if rid in seen:
+            report.append(
+                Unmapped(
+                    "docs/agents.csv",
+                    rid,
+                    (),
+                    "is a duplicate id; the registry reader refuses the second "
+                    "row rather than choosing between them",
+                )
+            )
             continue
         tier = (row.get("Tier") or "").strip().lower()
         strength = TIER_STRENGTH.get(tier)
@@ -263,23 +375,20 @@ def routes_from_csv(path, report):
                 )
             )
             continue
-        env = {}
-        for pair in (row.get("Env") or "").replace(";", ",").split(","):
-            name, sep, value = pair.strip().partition("=")
-            if sep and name.strip():
-                env[name.strip()] = value.strip()
-        routes.append(
-            {
-                "id": rid,
-                "family": (row.get("Family") or "").strip(),
-                "model": (row.get("Model") or "").strip(),
-                "strength": strength,
-                "argv": (row.get("CmdTemplate") or "").split(),
-                "env": env,
-                "capabilities": [],
-                "notes": (row.get("Notes") or "").strip(),
-            }
-        )
+        route = {
+            "id": rid,
+            "family": (row.get("Family") or "").strip(),
+            "model": (row.get("Model") or "").strip(),
+            "strength": strength,
+            "argv": (row.get("CmdTemplate") or "").split(),
+            "env": _row_env(row),
+            "capabilities": [],
+            "notes": (row.get("Notes") or "").strip(),
+        }
+        if _route_schema_refusal(route, report):
+            continue
+        seen.add(rid)
+        routes.append(route)
     if routes:
         report.append(
             Unmapped(
@@ -614,7 +723,7 @@ def _convert_line(row, path, values, converted, report):
             )
         )
         return
-    value = _coerce(row.coerce, raw or "", row.source, report)
+    value = _coerce(row.coerce, raw or "", row.source, report, key=row.key)
     if value is None:
         return
     if _schema_refusal(row.key, value, row.source, raw or "", report):

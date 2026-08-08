@@ -379,6 +379,41 @@ def _claim_commit(root, branch, name):
     return out.strip() if code == 0 and out.strip() else None
 
 
+def _record_was_written(root, branch, name):
+    """Was a scope record EVER written for this branch's claim path?
+
+    `_claim_commit` answers "which commit does the branch present as its claim",
+    and a branch can change that answer about itself: delete and re-add its own
+    spec, or amend the claim commit's message. Either way the presented commit
+    carries no trailer and the migration stand-down below would let the branch
+    merge a scope it rewrote — the freeze stood down by the thing it constrains.
+
+    So the record is looked for where a branch cannot reach it: across the whole
+    reachable history of the branch AND of TRUNK, over that one path. The claim
+    is written on trunk and the branch is cut from it (see `_claim_locked`), so
+    an amend rewrites the branch's copy and leaves trunk's original standing, and
+    a delete-and-re-add leaves the original as the branch's own ancestor. A claim
+    that genuinely predates this record has no such commit on either side, which
+    is exactly the difference between "never had one" and "had one and lost it".
+    """
+    code, out = ac.git(
+        root,
+        "log",
+        "--format=%H",
+        "--full-history",
+        "--diff-filter=A",
+        branch,
+        "HEAD",
+        "--",
+        "{}/{}/{}".format(ACTIVE, branch, name),
+    )
+    if code != 0:
+        return False
+    return any(
+        _SCOPE_TRAILER_RE.search(_commit_message(root, sha)) for sha in out.split()
+    )
+
+
 def _landed_specs(root, branch):
     """`[(spec filename, status dir, branch path)]` for every spec sitting in a
     DECLARED outcome directory on `branch`.
@@ -474,6 +509,12 @@ def _scope_at_claim(root, branch, specs):
     merge. The allowance can only weaken this rung to yesterday's behaviour; it
     can never accept a scope change that WAS recorded.
 
+    WHICH IS WHY THE ALLOWANCE IS NOT REACHABLE BY DESTROYING A RECORD. "No
+    trailer" has two causes and they are not the same fact: one is a claim from
+    before the record existed, the other is a branch that HAD a record and made
+    it disappear (`_record_was_written` separates them). The second is not a
+    migration case, it is the attack this rung exists to stop, so it refuses.
+
     EVERY spec is judged, not the first to fail: a batch claim (WI-381) is one
     branch carrying several obligations, and a lane fixing one of them should
     learn about the others in the same run (contracts §5).
@@ -481,10 +522,27 @@ def _scope_at_claim(root, branch, specs):
     if not specs:
         return None
     claim = _claim_commit(root, branch, specs[0][1])
-    if claim is None:
-        return None
-    recorded = dict(_SCOPE_TRAILER_RE.findall(_commit_message(root, claim)))
+    recorded = (
+        dict(_SCOPE_TRAILER_RE.findall(_commit_message(root, claim)))
+        if claim is not None
+        else {}
+    )
     if not recorded:
+        if _record_was_written(root, branch, specs[0][1]):
+            return (
+                "{} may not merge - a claimed work item's scope is frozen at "
+                "claim (SR-148), and the branch does not write it:\n  the claim "
+                "commit {} presents no scope record, but one WAS written for "
+                "{}/{}/{} - a branch that deletes and re-adds its own claimed "
+                "spec, or amends its own claim commit, does not thereby earn the "
+                "pre-record migration allowance".format(
+                    branch,
+                    (claim or "(none)")[:10],
+                    ACTIVE,
+                    branch,
+                    specs[0][1],
+                )
+            )
         return None
     landed = _terminal_spec_paths(root, branch)
     findings = [

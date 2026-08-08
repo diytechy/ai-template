@@ -220,9 +220,18 @@ def test_the_one_non_literal_site_in_the_kit_is_lf():
         for node, _label, _declared, value in text_write_calls(_parsed(path))
         if value == "<non-literal>"
     ]
-    assert sites == [("gen_open_items.py", 764)], sites
+    # Pinned by FILE, not by line: the line number moved (764 -> 921) when the
+    # ratification band was added above it, and a pinned line teaches a reader to
+    # bump the number rather than to ask whether a SECOND non-literal site has
+    # appeared — which is the only thing this test is for. The count and the file
+    # are the property; where in the file it sits is not.
+    assert [name for name, _line in sites] == ["gen_open_items.py"], sites
+    # Read the pinned line THROUGH the site the scan found, so the two can never
+    # drift apart: a hardcoded index would go on asserting about whatever line
+    # happened to move into that position.
+    line = sites[0][1]
     source = (SCRIPTS / "gen_open_items.py").read_text(encoding="utf-8").splitlines()
-    assert "chr(10)" in source[763], source[763]
+    assert "chr(10)" in source[line - 1], (line, source[line - 1])
 
 
 def test_a_non_literal_newline_is_reported_not_accepted(tmp_path):

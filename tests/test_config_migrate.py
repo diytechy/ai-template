@@ -239,6 +239,70 @@ def test_the_agents_registry_converts_to_routes(tmp_path):
     assert all(route["capabilities"] == [] for route in document["routes"])
 
 
+HOSTILE_CSV = (
+    "Id,Family,Model,Version,Tier,CmdTemplate,Env,Notes\n"
+    'EVIL-ROUTE,ANTHROPIC,"opus"" & calc.exe &",4.8,strong,claude -p {model},,\n'
+    "BAD ID!,ANTHROPIC,opus,4.8,strong,claude -p {model},,\n"
+    "DUPE,ANTHROPIC,opus,4.8,strong,claude -p {model},,\n"
+    "DUPE,OPENAI,gpt,5.6,medium,codex exec,,\n"
+    "AGENTS-EXAMPLE-000,EXAMPLE,example,0,quick,your-cli -p,,placeholder\n"
+    "GOOD-ROUTE,ANTHROPIC,opus,4.8,strong,claude -p {model},,\n"
+)
+
+
+def test_a_row_the_registry_reader_refuses_is_not_converted(tmp_path):
+    """Every row rung `agent_route.load_registry` applies to `docs/agents.csv`
+    applies to the conversion of that same file.
+
+    The load-bearing one is the model slug: `load_registry` refuses a Model cell
+    with characters outside `[A-Za-z0-9._:/-]` because the cell rides `{model}`
+    into a session argv (H-4). Mirroring only the tier rung turned the migration
+    into a laundering path — a row the live reader refused arrived in the
+    canonical document as an ordinary route, and nothing downstream re-checked
+    it.
+    """
+    registry = load_script("agent_route")
+    legacy(tmp_path, "docs/agents.csv", HOSTILE_CSV)
+    _models, errors = registry.load_registry(tmp_path / "docs" / "agents.csv")
+    assert len(errors) == 3, errors  # the shell-unsafe model, the id, the dupe
+
+    text, report = MIGRATE.convert(tmp_path)
+    document = tomllib.loads(text)
+    ids = [route["id"] for route in document.get("routes", [])]
+    assert ids == ["DUPE", "GOOD-ROUTE"], ids
+    # The payload survives ONLY as a quoted report comment naming what was
+    # refused; no declared value carries it.
+    live = [
+        line for line in text.splitlines() if line.strip() and not line.startswith("#")
+    ]
+    assert not [line for line in live if "calc.exe" in line], live
+    reported = " | ".join(item.value + " " + item.why for item in report)
+    for expected in ("EVIL-ROUTE", "BAD ID!", "DUPE"):
+        assert expected in reported, expected
+    # And the placeholder ships inert, exactly as it does through load_registry:
+    # a `-000` example row must not become a live route in every adopter's config.
+    assert "AGENTS-EXAMPLE-000" not in reported
+    assert "AGENTS-EXAMPLE-000" not in ids
+
+    # The whole point: what IS written still loads clean.
+    _, findings = CONFIG.validate(tomllib.loads(text))
+    assert findings == [], CONFIG.refusal_lines(findings)
+
+
+def test_the_shipped_registry_template_converts_to_no_placeholder_route(tmp_path):
+    legacy(
+        tmp_path,
+        "docs/agents.csv",
+        (ROOT / "project-trajectory" / "agents.template.csv").read_text(
+            encoding="utf-8"
+        ),
+    )
+    document, _ = converted(tmp_path)
+    assert all(not route["id"].endswith("-000") for route in document["routes"]), (
+        document["routes"]
+    )
+
+
 def test_the_legacy_weak_tier_still_reads_as_quick(tmp_path):
     legacy(
         tmp_path,
@@ -321,6 +385,65 @@ def test_the_surviving_stack_ini_dials_are_reported(tmp_path):
     assert any(item.value.startswith("model =") for item in report)
 
 
+# --- values the retired readers themselves disagree about ---------------------
+def test_a_malformed_blackout_window_is_reported_not_round_tripped(tmp_path):
+    """`docs/blackout` holding an out-of-range window must not become a config
+    value that reads as a window and behaves as OFF.
+
+    Today `agent_loop` at least WARNS off the legacy file ("the blackout window
+    is DISABLED this run"). A conversion that copied the string through would
+    delete the only warning that exists and leave the schema — whose whole
+    purpose is to end silent-off — endorsing it.
+    """
+    legacy(tmp_path, "docs/blackout", "25:00-99:99\n")
+    document, report = converted(tmp_path)
+    assert "automation" not in document, "a window no reader accepts was written"
+    (item,) = report
+    assert item.source == "docs/blackout"
+    assert item.value == "25:00-99:99"
+    assert item.targets == ("automation.blackout",)
+
+
+@pytest.mark.parametrize("raw", ["TRUE", "True"])
+def test_a_case_variant_privacy_check_is_reported_not_guessed(tmp_path, raw):
+    """The one value the retired sources disagree with EACH OTHER about.
+
+    The three git hooks test `[ "$p" = "true" ]` (exact), so the commit gates saw
+    `TRUE` as off; `agent_loop`/`agent_common` fold case, so the loop's identity
+    check saw it as on. Neither answer is the repo's policy, so the converter
+    reports it. Folding silently (what it did) turns a privacy gate ON for a repo
+    whose commit hooks never enforced it; matching the hooks silently turns it
+    OFF for a loop that did.
+    """
+    legacy(tmp_path, "docs/privacy-check", raw + "\n")
+    document, report = converted(tmp_path)
+    assert "policy" not in document, "a disputed value was guessed"
+    (item,) = report
+    assert item.source == "docs/privacy-check"
+    assert item.value == raw
+    assert item.targets == (
+        "policy.privacy_check = true",
+        "policy.privacy_check = false",
+    )
+
+
+def test_the_exact_lowercase_privacy_check_still_converts(tmp_path):
+    # The agreed values are unaffected: every reader reads `true` the same way.
+    legacy(tmp_path, "docs/privacy-check", "true\n")
+    document, report = converted(tmp_path)
+    assert document["policy"]["privacy_check"] is True
+    assert report == []
+
+
+def test_live_status_still_folds_case_because_its_only_reader_does(tmp_path):
+    # `agent_loop` reads it as `.lower() == "true"` and nothing else reads it, so
+    # folding is faithful here — the split token is a fidelity rule, not a style.
+    legacy(tmp_path, "docs/live-status", "TRUE\n")
+    document, report = converted(tmp_path)
+    assert document["policy"]["live_status"] is True
+    assert report == []
+
+
 # --- the retired source the contract names but this kit never carried ---------
 def test_a_retired_source_with_no_canonical_key_is_reported(tmp_path):
     legacy(tmp_path, "docs/critique-policy", "strict\n")
@@ -367,10 +490,47 @@ def test_the_converters_declared_line_matches_the_old_reader(tmp_path):
     assert MIGRATE.declared_line(tmp_path / "docs" / "absent") is None
 
 
-def test_converting_this_repo_reproduces_its_committed_config():
-    # docs/config.toml is this repo's own converted instance; if the converter
-    # moves, the committed file is stale and this says so.
-    document, _ = MIGRATE.convert(ROOT)
-    assert document == (ROOT / "docs" / "config.toml").read_text(encoding="utf-8"), (
-        "regenerate docs/config.toml with scripts/config_migrate.py"
+def test_the_committed_config_agrees_with_the_converter_wherever_the_converter_speaks():
+    """Every value the converter PRODUCES must match the committed file.
+
+    This asserted byte-equality once, and that was wrong in a way worth
+    recording: `docs/config.toml` is **adopter-owned**, and this repo is its own
+    adopter. It legitimately carries content the converter cannot produce —
+    `[prompts.*]`, which has no retired source at all, and each route's
+    `capabilities`, which `docs/agents.csv` has no column for (the converter
+    emits `[]` and reports the gap, exactly as SR-140 requires).
+
+    Byte-equality therefore forbade the one thing SR-141 exists to protect: an
+    adopter filling in what conversion could not. The property that actually
+    matters is **agreement where the converter speaks** — which still catches a
+    converter that drifts from the committed instance, and no longer punishes a
+    file for being more complete than its source.
+    """
+    document, report = MIGRATE.convert(ROOT)
+    produced = tomllib.loads(document)
+    committed = tomllib.loads(
+        (ROOT / "docs" / "config.toml").read_text(encoding="utf-8")
     )
+
+    # Fields the converter is DOCUMENTED as unable to fill. Kept as a named set
+    # rather than a loose comparison so adding a third one is a decision.
+    UNFILLABLE = {"capabilities"}
+    assert any("capabilit" in u.why for u in report), (
+        "the converter no longer reports the capability gap; if it can now fill "
+        "capabilities, drop it from UNFILLABLE and compare it too"
+    )
+
+    for key, value in produced.items():
+        assert key in committed, "the committed config dropped {!r}".format(key)
+        if key == "routes":
+            for made, have in zip(value, committed[key]):
+                for field, made_value in made.items():
+                    if field in UNFILLABLE:
+                        continue
+                    assert have.get(field) == made_value, (
+                        "route {} field {} drifted".format(made.get("id"), field)
+                    )
+            continue
+        assert committed[key] == value, (
+            "{} drifted from the converter; regenerate or reconcile".format(key)
+        )

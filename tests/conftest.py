@@ -775,4 +775,14 @@ def make_minimal_project(root):
     # advances the derived gate. Keeps the derived-gate freshness step green.
     proc = run_py(["scripts/derive_gate.py"], cwd=root)
     assert proc.returncode == 0, proc.stdout + proc.stderr
+    # And the owner view, for the same reason: it now projects the ratification
+    # boundary over the SPINE (how many rows at each tier have no accepted
+    # attestation anchor), so filling the registries legitimately stales it. The
+    # scaffold shipped a view of an empty spine; this is a view of a filled one.
+    # Regenerating here rather than loosening the freshness step is the point —
+    # the step is correct, and a fixture that writes registries and then claims
+    # every derived view is still current is the dishonest green this repo's
+    # whole harness exists to prevent.
+    proc = run_py(["scripts/gen_open_items.py"], cwd=root)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
     return root

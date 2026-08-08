@@ -51,6 +51,20 @@ BASELINE = {
     # `_convert_line` / `_convert_ini` / `_report_unkeyed_dials` rather than
     # stamped here. If one of the four below ever grows a rung that is not
     # another vocabulary item, it should be split too.
+    # --- mechanized-loop P4/P5: extracted first, THEN baselined ---------------
+    # Both crossed on arrival and both were DECOMPOSED rather than stamped at
+    # the number they landed on, per this repo's rule:
+    #   check_sources 21 -> 13, by lifting out the two rungs that judge the
+    #     DECLARATION (_declaration_findings, same answer for every render)
+    #     and the one rung that reads the LAUNCHED prompt (_residue_findings,
+    #     the only count-delta arithmetic in the module).
+    #   draw_for_job 15 -> 12, by lifting out the pool resolution
+    #     (_pool_entries), which asks about the config rather than the draw.
+    # What remains in each is a sequence of REFUSALS, one per precondition,
+    # each naming the offending thing — the shape contracts §5 requires, and
+    # collapsing them would trade a specific message for a smaller number.
+    ("prompt_render.py", "check_sources"): 13,
+    ("agent_route.py", "draw_for_job"): 12,
     ("config.py", "_type_reason"): 12,  # one rung per declared value type
     ("config.py", "validate"): 12,  # one rung per declared section shape
     ("config_migrate.py", "_coerce"): 11,  # one rung per retired file idiom

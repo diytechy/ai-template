@@ -148,6 +148,9 @@ SPEC_FENCE = "+++"
 _MD_LINK_TARGET_RE = re.compile(r"(\]\()([^)\s]+)(\))")
 _URL_SCHEME_RE = re.compile(r"^(?:[a-z][a-z0-9+.-]*:|//)", re.I)
 _HEADING_RE = re.compile(r"^##\s+(.+?)\s*$", re.M)
+# A CommonMark fenced-code opener/closer: up to three leading spaces, then a run
+# of at least three backticks or tildes, then the info string.
+_FENCE_LINE_RE = re.compile(r"^ {0,3}(`{3,}|~{3,})([^\n]*)$", re.M)
 
 _WI_RE = re.compile(r"^WI-\d+$")
 _SHA_RE = re.compile(r"^[0-9a-f]{40}$")
@@ -250,13 +253,50 @@ def parse_spec(spec_text):
     return data, "\n".join(lines[close + 1 :])
 
 
+def _fenced_spans(text):
+    """`[(start, stop)]` for every fenced code block in `text`.
+
+    A `##` line inside a fence is CONTENT, not structure. Specs quote markdown
+    all the time — a `## Deliverable` reporting "the template section now reads:"
+    followed by a fenced snippet is ordinary work — and a scanner blind to fences
+    reads that quoted heading as a real one. Either way the freeze then refuses
+    an honest close: a quoted heading whose name is new mints a frozen region the
+    claim-time copy never had, and one that repeats an existing name appends the
+    post-fence remainder onto that region.
+
+    An UNCLOSED fence runs to the end of the text, which is CommonMark's rule and
+    also the safe direction here: the headings it swallows go missing from the
+    terminal side's regions, and a region present on one side only already reads
+    as a change."""
+    spans, open_at, open_token = [], None, None
+    for match in _FENCE_LINE_RE.finditer(text):
+        token, info = match.group(1), match.group(2)
+        if open_at is None:
+            # A backtick fence's info string may not itself contain a backtick,
+            # so ```` ``a`` ```` opens nothing (CommonMark 4.5).
+            if token[0] != "`" or "`" not in info:
+                open_at, open_token = match.start(), token
+        elif token[0] == open_token[0] and len(token) >= len(open_token):
+            if not info.strip():
+                spans.append((open_at, match.end()))
+                open_at = open_token = None
+    if open_at is not None:
+        spans.append((open_at, len(text)))
+    return spans
+
+
 def _body_sections(body):
     """`{heading: text}` for a spec body; the pre-heading preamble keys on `""`.
 
     A repeated heading ACCUMULATES rather than overwriting: two `## Context`
     blocks are two pieces of one obligation, and letting the later one win would
     quietly drop the earlier from the frozen region."""
-    marks = [(m.start(), m.end(), m.group(1)) for m in _HEADING_RE.finditer(body)]
+    fenced = _fenced_spans(body)
+    marks = [
+        (m.start(), m.end(), m.group(1))
+        for m in _HEADING_RE.finditer(body)
+        if not any(start <= m.start() < stop for start, stop in fenced)
+    ]
     out = {}
     preamble = body[: marks[0][0]] if marks else body
     if preamble.strip():
@@ -351,11 +391,17 @@ def scope_change(claim_text, terminal_text):
     for name in sorted(set(before) | set(after)):
         if before.get(name) == after.get(name):
             continue
+        # DELETED AND EMPTIED ARE ONE ACT. `wi_convert.frontmatter_pairs` states
+        # it for this registry ("absent and empty mean the same thing") and rule
+        # R-F reads `(r.get("SpecRef") or "").strip()`, so both spellings are a
+        # legal terminal clearing. Excusing only the deletion made the other
+        # honest close refuse the merge — and `docs/work/complete` is full of
+        # specs closed with `specref = ""`.
         cleared_at_close = (
             name.partition(":")[0] == "front"
             and name.partition(":")[2] in CLOSE_CLEARED_KEYS
             and name in before
-            and name not in after
+            and not (after.get(name) or "").strip()
         )
         if not cleared_at_close:
             changed.append(name)
@@ -392,7 +438,17 @@ def read_events(path):
     A malformed line is a HARD read error naming the file and the line number,
     never a silently skipped record (contracts §2): a ledger that quietly drops
     what it cannot parse would answer "no such event" to the duplicate check,
-    which is the one question it exists to answer correctly."""
+    which is the one question it exists to answer correctly.
+
+    AND THE ID IS RE-DERIVED ON EVERY READ, which is what makes contracts §2's
+    third property ("a reader can verify the ledger rather than trusting it")
+    true here rather than merely available. Without it a hand-edited line reads
+    as authoritative with its stale id sitting right there unchecked — and the
+    edit worth catching is not a flipped verdict but a flipped `claim_base`,
+    which makes `write_outcome`'s `(wi, claim_base)` scan miss and lets a SECOND
+    outcome land for one attempt. Guarded on presence, exactly like
+    `attest._check_derived_id`: a line carrying no id has none to disagree
+    with."""
     path = Path(path)
     if not path.is_file():
         return []
@@ -416,6 +472,16 @@ def read_events(path):
                 _refuse(
                     "{} line {} is not a JSON object".format(path.as_posix(), number),
                     "one ledger line is one event",
+                )
+            )
+        if "id" in record and record["id"] != event_id(record):
+            raise ValueError(
+                _refuse(
+                    "{} line {} carries id {!r}, which its payload does not "
+                    "derive".format(path.as_posix(), number, record.get("id")),
+                    "the id is the digest of the payload with `id`/`ts` removed, "
+                    "so a line whose id no longer derives was edited after it was "
+                    "written; the ledger is append-only and never rewritten",
                 )
             )
         out.append(record)
@@ -644,6 +710,23 @@ _DURATION_RE = re.compile(r"\b\d+(?:\.\d+)?\s?(?:s|ms|sec|secs|seconds)\b")
 _HEX_RE = re.compile(r"\b(?:0x)?[0-9a-f]{7,}\b", re.I)
 
 
+def _root_spelling(root):
+    """The declared root as ONE absolute spelling, or `""` when there is none.
+
+    `.` and the absolute path it names are the same checkout, so they must erase
+    to the same `<root>` or the fingerprint stops being a property of the
+    failure. `resolve()` also folds a trailing separator and a symlinked
+    spelling, which are the other two ways one root arrives written two ways.
+    Failure to resolve (a root that does not exist) falls back to the literal
+    spelling rather than raising: normalisation is not the place to refuse."""
+    if root is None or not str(root):
+        return ""
+    try:
+        return str(Path(root).resolve())
+    except (OSError, ValueError):
+        return str(root)
+
+
 def normalise_failure(root, output):
     """A harness failure's OBSERVER-INVARIANT form — the fingerprint's input.
 
@@ -653,9 +736,16 @@ def normalise_failure(root, output):
 
       1. Unicode NFC, CRLF/CR -> LF (the checkout, again).
       2. ANSI colour escapes — present or absent depending on the terminal.
-      3. The repo root, in both its native and posix spellings, -> `<root>`;
-         then remaining backslashes inside path-ish tokens -> `/`, so the same
-         failure fingerprints alike on Windows and POSIX.
+      3. The repo root, RESOLVED TO AN ABSOLUTE PATH first and then in both its
+         native and posix spellings, -> `<root>`; then remaining backslashes
+         inside path-ish tokens -> `/`, so the same failure fingerprints alike on
+         Windows and POSIX. The resolve is load-bearing, not tidiness: `.` is the
+         ordinary spelling of "this repo", and substituting it literally replaces
+         every PERIOD in the harness text — `test_widget<root>py:42` — which both
+         mangles the stored excerpt past reading and makes one failure fingerprint
+         two ways depending on how the caller spelled the root it passed. A
+         degenerate spelling (a bare separator or a drive root) is skipped rather
+         than substituted, since erasing it would erase every path separator.
       4. Timestamps, durations and long hex runs (shas, addresses, temp-dir
          suffixes) -> typed placeholders.
       5. Runs of spaces/tabs collapsed and every line stripped; blank lines
@@ -675,9 +765,11 @@ def normalise_failure(root, output):
     one. A second event for one defect is the acceptable error here."""
     text = _canonical_text(output or "")
     text = _ANSI_RE.sub("", text)
-    root_text = str(root)
+    root_text = _root_spelling(root)
     for spelling in (root_text, root_text.replace("\\", "/")):
-        if spelling:
+        # `strip("\\/:")` reduces `/`, `C:\` and `C:/` to nothing usable; a root
+        # that short is a separator, not a prefix anyone can erase.
+        if len(spelling.strip("\\/:")) > 1:
             text = text.replace(spelling, "<root>")
     text = re.sub(r"(?<=[\w>])\\(?=[\w.])", "/", text)
     text = _TIMESTAMP_RE.sub("<ts>", text)
@@ -952,12 +1044,31 @@ def _write_patch(wt, base, branch, group, records, artefacts):
             "quarantine keeps the record; a group with no record is a discard "
             "wearing the wrong label",
         )
-    rel = "{}/{}-{}.patch".format(
-        artefacts, branch, re.sub(r"[^A-Za-z0-9._-]", "-", group)
+    # THE SLUG IS LOSSY AND THE FILE NAME MAY NOT BE. `group_key` is a posix
+    # DIRECTORY, so a group legitimately contains `/` — and `/`, space, `+` and
+    # every non-ASCII character all fold to `-`, which makes `a/b/c`, `a-b/c`,
+    # `a/b-c` and `a-b-c` one filename. The old name then overwrote: two groups,
+    # one patch on disk, and the record the quarantine label exists to KEEP
+    # silently replaced by another group's. The digest of the exact key restores
+    # injectivity; the slug stays in front of it so the name is still readable.
+    tag = hashlib.sha256(group.encode("utf-8")).hexdigest()[:8]
+    rel = "{}/{}-{}-{}.patch".format(
+        artefacts, branch, re.sub(r"[^A-Za-z0-9._-]", "-", group), tag
     )
     dest = Path(wt) / rel
     dest.parent.mkdir(parents=True, exist_ok=True)
-    dest.write_text(patch, encoding="utf-8", newline="")
+    body = patch.encode("utf-8")
+    # Re-enacting one classification rewrites the same bytes and is not a loss;
+    # DIFFERENT bytes under one name are, so that case refuses instead.
+    if dest.is_file() and dest.read_bytes() != body:
+        return None, _refuse(
+            "{}'s group {!r} would overwrite the existing record at {}".format(
+                branch, group, rel
+            ),
+            "quarantine keeps the record; replacing one is a discard wearing the "
+            "wrong label",
+        )
+    dest.write_bytes(body)
     return rel, None
 
 

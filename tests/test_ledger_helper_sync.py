@@ -27,9 +27,17 @@ Three families are pinned, each named in the census's `mechanized-loop` class:
     declares one envelope for every ledger; two writers that disagreed about it
     would produce a history no single reader could replay.
 
-Each guard is mutation-proven at the bottom: a guard nobody has seen fail is not
-a guard (WI-293).
+Each family's agreement guard is mutation-proven at the bottom — a guard nobody
+has seen fail is not a guard (WI-293). Each proof derives what a DRIFTED COPY
+would return and asserts the comparison reds. That shape is the point: a proof
+that merely fed the guard two different INPUTS shows nothing about the guard's
+ability to see drift, which is how family 3's first proof stayed green against a
+copy that had forgotten the `id`/`ts` exclusion its own docstring calls
+load-bearing.
 """
+
+import hashlib
+import json
 
 import pytest
 from conftest import load_script
@@ -133,14 +141,33 @@ def test_both_frontmatter_parses_refuse_the_same_malformations(bad):
         acommon.parse_spec_frontmatter(bad, "fixture.md")
     except Exception as exc:  # noqa: BLE001
         theirs = type(exc)
-    assert (mine is None) == (theirs is None), (mine, theirs)
+    # The TYPE, not merely "did it raise". Two copies that refuse the same text
+    # with different exception types are already drifted for any caller that
+    # catches by type, and the weaker `(mine is None) == (theirs is None)` this
+    # line used to carry could not see that — while the `noqa` above claimed it
+    # could.
+    assert mine == theirs, (mine, theirs)
 
 
 # --- family 3: the append-only JSONL ledger -----------------------------------
+# A line as it comes BACK off disk, carrying the derived id and the timestamp.
+# Both copies exclude those two keys before hashing, and both docstrings call the
+# exclusion load-bearing (`ts` is why observing one fact twice is one event, not
+# two). Without a fixture that carries them the agreement guard never exercises
+# the exclusion at all: a copy that had forgotten it would still agree with its
+# sibling on every other fixture below.
+REPLAYED_EVENT = {
+    "kind": "probe",
+    "a": 1,
+    "id": "0123456789abcdef",
+    "ts": "2026-08-08T07:37:43Z",
+}
+
 LEDGER_EVENTS = [
     {"kind": "probe", "a": 1},
     {"kind": "probe", "a": 1, "nested": {"b": [1, 2, 3]}},
     {"kind": "probe", "unicode": "re-wrap — em dash"},
+    REPLAYED_EVENT,
 ]
 
 
@@ -200,7 +227,54 @@ def test_mutation_a_diverged_diff_walk_reds_the_guard():
     assert drifted != handback.diff_records(list(stream))
 
 
+def test_mutation_a_diverged_frontmatter_parse_reds_the_guard():
+    """Prove family 2's guard fires — on BOTH halves it compares.
+
+    Family 2 shipped with no proof at all while the module docstring claimed one,
+    which is the same defect class this module exists to catch: a sanction
+    standing in for a guard.
+    """
+    text = SPECS[1]
+    data, body = acommon.parse_spec_frontmatter(text, "fixture.md")
+    assert isinstance(data.get("sr_refs"), list), "the fixture must carry an array"
+
+    # A copy that stopped carrying array values across. `sr_refs` is exactly that
+    # shape, and it is inside the frozen scope digest, so the divergence would be
+    # invisible until an integrator refused a merge nobody had changed.
+    dropped_arrays = {k: v for k, v in data.items() if not isinstance(v, list)}
+    assert dropped_arrays != outcome.parse_spec(text)[0]
+
+    # A copy whose body split kept the closing fence — the off-by-one that would
+    # put `+++` inside every frozen region.
+    kept_fence = outcome.SPEC_FENCE + "\n" + body
+    assert kept_fence != outcome.parse_spec(text)[1]
+
+
+def _event_id_forgetting_the_exclusion(payload):
+    """`event_id` as a copy that dropped the `id`/`ts` exclusion would compute it.
+
+    Written out here rather than monkeypatched onto a module: the drift being
+    modelled is a source divergence between two independently-copyable files, so
+    the proof has to show the guard SEEING a different derivation, not a module
+    being handed a different answer.
+    """
+    return hashlib.sha256(
+        json.dumps(
+            payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False
+        ).encode("utf-8")
+    ).hexdigest()[:16]
+
+
 def test_mutation_a_diverged_event_id_reds_the_guard():
-    """Prove family 3's guard fires: any change to the payload changes the id."""
-    payload = {"kind": "probe", "a": 1}
-    assert attest.event_id(dict(payload)) != outcome.event_id(dict(payload, a=2))
+    """Prove family 3's guard fires against the drift both docstrings name.
+
+    The first version of this proof compared `event_id({a: 1})` with
+    `event_id({a: 2})` — two different payloads — so it restated that hashing is
+    injective and stayed green against a copy that had genuinely drifted. It
+    never touched the `id`/`ts` exclusion, which is what makes the same fact
+    observed twice one event rather than two.
+    """
+    assert "id" in REPLAYED_EVENT and "ts" in REPLAYED_EVENT, REPLAYED_EVENT
+    drifted = _event_id_forgetting_the_exclusion(dict(REPLAYED_EVENT))
+    assert drifted != attest.event_id(dict(REPLAYED_EVENT))
+    assert drifted != outcome.event_id(dict(REPLAYED_EVENT))

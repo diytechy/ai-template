@@ -1486,6 +1486,24 @@ MAPPING = [
     # classification a partial attempt owes (SR-150). integrate.py imports it,
     # so a scaffold without it cannot accept a branch.
     ("scripts/outcome.py", "scripts/outcome.py"),
+    # Every operational prompt as a reviewed asset, plus the one strict renderer
+    # over them (SR-155/SR-156/SR-157). The three highest-traffic prompts were
+    # Python constants inside agent_loop.py, reviewable only by reading source;
+    # the four adjudicator briefs are deliberately separate documents because a
+    # judge's evidence set differs per judgement. SCAFFOLDED, unlike the
+    # dual-plan hats (which ship kit-only and get copied in when a goal trips
+    # their applies-when): a session launches these every day. `prompts/` at the
+    # scaffold root is where plan_briefs.py already looks for kit templates, so
+    # the two halves of the prompt layer land in one place.
+    ("scripts/prompt_render.py", "scripts/prompt_render.py"),
+    ("prompts/README.md", "prompts/README.md"),
+    ("prompts/worker.md", "prompts/worker.md"),
+    ("prompts/reviewer.md", "prompts/reviewer.md"),
+    ("prompts/critique.md", "prompts/critique.md"),
+    ("prompts/adjudicate-amendment.md", "prompts/adjudicate-amendment.md"),
+    ("prompts/adjudicate-disposition.md", "prompts/adjudicate-disposition.md"),
+    ("prompts/adjudicate-conflict.md", "prompts/adjudicate-conflict.md"),
+    ("prompts/adjudicate-red-test.md", "prompts/adjudicate-red-test.md"),
     ("scripts/agent-resume.template.cmd", "agent-resume.cmd"),
     ("scripts/agent-resume.template.sh", "agent-resume.sh"),
     ("scripts/agent-resume.template.command", "agent-resume.command"),
@@ -1520,10 +1538,10 @@ GITKEEP_DIRS = [
     # §2.1; the six-state vocabulary is WI-384's): STATUS IS THE DIRECTORY, so
     # the directories must exist for the vocabulary to be visible — an empty
     # `deferred/` is what tells a reader parking is a first-class state rather
-    # than a convention someone invented, and an empty `cancelled/` beside
-    # `complete/` is what says a terminal state has two outcomes and the folder
-    # names which. `draft/` must be scaffolded for a second reason beyond
-    # visibility: it is a DECLARED status directory, and specs parked in an
+    # than a convention someone invented, and empty `cancelled/` and `partial/`
+    # beside `complete/` are what say a terminal state has THREE outcomes and
+    # the folder names which. `draft/` must be scaffolded for a second reason
+    # beyond visibility: it is a DECLARED status directory, and specs parked in an
     # undeclared one never enter the registry, so the duplicate-id guard and
     # the dashboard go blind to the id a draft holds. (The mint itself reads
     # FILENAMES through an unfiltered walk and is safe either way — measured at
@@ -1535,6 +1553,11 @@ GITKEEP_DIRS = [
     "docs/work/deferred",
     "docs/work/cancelled",
     "docs/work/complete",
+    # The THIRD terminal (decision D-2, contracts §6): an attempt that tried and
+    # stopped. Its scripts already ship the word — `SPEC_STATUS_DIRS`,
+    # `TERMINAL_STATUSES` and `outcome.OUTCOMES` all carry `partial` — so a
+    # scaffold without the folder declares a status that has nowhere to live.
+    "docs/work/partial",
     # The log's fragment drop-box (docs/concurrency-restructure.md §5.1): a work
     # branch writes `docs/log.d/<WI-id>-<slug>.md` — a unique name, so the log
     # stops being a merge-conflict surface — and `scripts/trunk_step.py` compiles

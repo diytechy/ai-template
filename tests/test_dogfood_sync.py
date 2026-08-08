@@ -392,16 +392,24 @@ def _stale_declared_absences(entries, exists):
 
 def _mapping_unaccounted():
     """MAPPING destinations neither present, nor kit-served in place, nor
-    declared. A dest under scripts/ whose source ships in project-trajectory/
-    is the meta-repo's in-place equivalent (CLAUDE.md repo map: the kit runs
-    its own scripts from project-trajectory/scripts/, never copies them onto
-    itself — that copy would be the drift this module exists to prevent)."""
+    declared. A dest under scripts/ or prompts/ whose source ships in
+    project-trajectory/ is the meta-repo's in-place equivalent (CLAUDE.md repo
+    map: the kit runs its own scripts from project-trajectory/scripts/, never
+    copies them onto itself — that copy would be the drift this module exists to
+    prevent).
+
+    `prompts/` joined `scripts/` when the operational prompts were externalized:
+    the kit reads its own templates from project-trajectory/prompts/ exactly as
+    it reads its own scripts, so they are kit-served in place too. The
+    alternative — declaring eight SCAFFOLD_OMISSIONS — would have been false:
+    an omission says the kit does not carry the file, and the kit does."""
+    kit_served = ("scripts/", "prompts/")
     bootstrap = load_script("bootstrap")
     out = []
     for src, dst in bootstrap.MAPPING:
         if (ROOT / dst).exists():
             continue
-        if dst.startswith("scripts/") and (ROOT / "project-trajectory" / src).exists():
+        if dst.startswith(kit_served) and (ROOT / "project-trajectory" / src).exists():
             continue
         if dst in SCAFFOLD_OMISSIONS:
             continue

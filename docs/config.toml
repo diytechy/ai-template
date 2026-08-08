@@ -76,7 +76,7 @@ argv = [
     "--dangerously-skip-permissions",
 ]
 env = { CLAUDE_CODE_EFFORT_LEVEL = "high" }
-capabilities = []
+capabilities = ["text", "planning", "critique", "arbitration", "implementation", "review", "adjudication"]
 notes = "newest Claude frontier family - leads gate-bearing kit work (PLAN/DESIGN-CHECK/CRITIQUE; BUILD relaxed to medium 2026-07-12 evening WI-121); CATALOG-ONLY since 2026-07-22 (owner has no Fable access; dropped from docs/agents-enabled and ANTHROPIC-OPUS-STRONG took the strong slot) - re-add to the enable-list to restore; auth: run claude once interactively (or claude setup-token)"
 
 [[routes]]
@@ -95,7 +95,7 @@ argv = [
     "--dangerously-skip-permissions",
 ]
 env = { CLAUDE_CODE_EFFORT_LEVEL = "medium" }
-capabilities = []
+capabilities = ["text", "planning", "critique", "arbitration", "implementation", "review", "adjudication"]
 notes = "strong tier = Opus (owner directive 2026-07-22: Fable temporarily inaccessible, so Opus takes the strong Anthropic slot, matching the medium ANTHROPIC-OPUS row - one model x two tier-routes, the pair-row model); PLAN/DESIGN-CHECK/CRITIQUE ride here; effort dialed to medium (owner directive 2026-08-02, for the small well-scoped queue; was xhigh from WI-331 2026-07-29) - NOTE this now sits BELOW the medium ANTHROPIC-OPUS row's high, so the effort ladder is inverted against the tier ladder; bump back to high if review quality regresses; auth: run claude once interactively"
 
 [[routes]]
@@ -114,7 +114,7 @@ argv = [
     "--dangerously-skip-permissions",
 ]
 env = { CLAUDE_CODE_EFFORT_LEVEL = "high" }
-capabilities = []
+capabilities = ["text", "planning", "critique", "arbitration", "implementation", "review", "adjudication"]
 notes = "medium tier (owner re-lineup 2026-07-12); BUILD + iteration reviews ride here (BUILD since the 2026-07-12-evening dial turn WI-121; tier-up escalation re-raises to strong); effort re-swept to high at WI-331 (2026-07-29): the WI-110 xhigh dial-up predated the current model generation, and effort is the primary cost/latency lever (the strong row's own xhigh was later dialed to medium by owner directive 2026-08-02, so this row now draws MORE effort than the strong row - see the header note); WI-124 s/turn telemetry is the sensor if BUILD quality regresses; auth: run claude once interactively"
 
 [[routes]]
@@ -133,7 +133,7 @@ argv = [
     "--dangerously-skip-permissions",
 ]
 env = { CLAUDE_CODE_EFFORT_LEVEL = "high" }
-capabilities = []
+capabilities = ["text", "planning", "critique", "arbitration", "implementation", "review", "adjudication"]
 notes = "quick tier; the tier guardrails would guard once a core is vendored (docs/guardrails-policy)"
 
 [[routes]]
@@ -149,7 +149,7 @@ argv = [
     "--dangerously-bypass-approvals-and-sandbox",
 ]
 env = {}
-capabilities = []
+capabilities = ["text", "planning", "critique", "arbitration", "implementation", "review", "adjudication"]
 notes = "GPT-5.6 flagship (Sol) - the strong-tier cross-family draw (its WI-160 preferred-BUILD pin was retired by the owner directive 2026-07-19: Anthropic leads BUILD per tier); provider CLI (codex) replaces opencode for the OPENAI family (WI-160); install: npm i -g @openai/codex; sign in: codex login"
 
 [[routes]]
@@ -165,7 +165,7 @@ argv = [
     "--dangerously-bypass-approvals-and-sandbox",
 ]
 env = {}
-capabilities = []
+capabilities = ["text", "planning", "critique", "arbitration", "implementation", "review", "adjudication"]
 notes = "GPT-5.6 balanced (Terra) - the cross-family review leg; provider CLI (codex) replaces opencode (WI-160); install: npm i -g @openai/codex; sign in: codex login"
 
 [[routes]]
@@ -181,7 +181,7 @@ argv = [
     "--dangerously-bypass-approvals-and-sandbox",
 ]
 env = {}
-capabilities = []
+capabilities = ["text", "planning", "critique", "arbitration", "implementation", "review", "adjudication"]
 notes = "GPT-5.6 fast/affordable (Luna); provider CLI (codex) replaces opencode (WI-160); install: npm i -g @openai/codex; sign in: codex login"
 
 [[routes]]
@@ -191,7 +191,7 @@ model = "opencode-go/kimi-k3"
 strength = 3
 argv = ["opencode", "run", "-m", "{model}", "--auto"]
 env = {}
-capabilities = []
+capabilities = ["text", "planning", "critique", "arbitration", "implementation", "review", "adjudication"]
 notes = "Kimi K3 (Moonshot; GA 2026-07-16; frontier-class per Artificial Analysis debut) - intended judge/CRITIQUE draw + strong review leg; install: curl -fsSL https://opencode.ai/install | bash (or npm i -g opencode-ai / scoop install opencode); sign in: opencode auth login with MOONSHOT_API_KEY (platform.moonshot.ai; OpenAI-compatible) or OPENROUTER_API_KEY; pathway FULLY verified 2026-07-19 (live PONG via stdin) - ENABLED, see family comment"
 
 [[routes]]
@@ -201,7 +201,7 @@ model = "opencode-go/grok-4.5"
 strength = 2
 argv = ["opencode", "run", "-m", "{model}", "--auto"]
 env = {}
-capabilities = []
+capabilities = ["text", "planning", "critique", "arbitration", "implementation", "review", "adjudication"]
 notes = "Grok 4.5 (xAI; GA 2026-07-16; frontier-class - slotted medium as the reviewer-pool leg per owner intent + Opus-at-medium precedent) - cross-family review leg 3; install: curl -fsSL https://opencode.ai/install | bash; sign in: opencode auth login with XAI_API_KEY (x.ai console; OpenAI-compatible) or OpenRouter (catalog slug confirmed post-auth); pathway FULLY verified 2026-07-19 (live PONG via stdin) - ENABLED, see family comment"
 
 [jobs.planner]
@@ -275,3 +275,96 @@ pool = [
     { route = "ANTHROPIC-SONNET", weight = 1 },
     { route = "OPENAI-LUNA", weight = 1 },
 ]
+
+# --- prompts ------------------------------------------------------------------
+# One declaration per job plus the purpose-specific briefs: the four adjudicator
+# templates and the dual-plan critic. The critic has two because the kit ships
+# two critic templates — critique.md is the artifact critique loop (the `critic`
+# job's default brief, the way adjudicate-disposition.md is the adjudicator's),
+# and dual-plan-critic.template.md is the planning-phase hat. Declaring only one
+# left the other unrenderable and invisible to `prompt_render check`.
+# `template` is REPO-RELATIVE. THIS repo is the kit, so its own templates live
+# under project-trajectory/prompts/ and the paths below say so; an adopted repo
+# receives them at prompts/ and its converted config says THAT. The renderer
+# resolves the declared path against the repo root and adds no special case for
+# either layout, which is why the two instances differ here and only here.
+# `prohibited_sources` is the load-bearing cell: a judging role may never see the
+# judged party's own assessment (SR-156), which is the general form of a live
+# defect where an adjudication brief opened with the defendant's verdict.
+
+[prompts.planner]
+template = "project-trajectory/prompts/dual-plan-planner.template.md"
+required_slots = ["GOAL_BRIEF", "IF_REGISTRY", "SR_SURFACE"]
+allowed_sources = ["registry", "owner-prompt", "rubric"]
+prohibited_sources = ["self-assessment", "rival-plan"]
+output_schema = "plan-v1"
+
+[prompts.critic]
+template = "project-trajectory/prompts/critique.md"
+required_slots = ["BRIEF", "VERDICT"]
+allowed_sources = ["rubric", "registry"]
+prohibited_sources = ["self-assessment"]
+output_schema = "critique-v1"
+
+[prompts."dual-plan-critic"]
+template = "project-trajectory/prompts/dual-plan-critic.template.md"
+required_slots = ["COVERAGE_REPORT", "GOAL_BRIEF", "IF_REGISTRY", "PLAN", "RUBRIC", "SR_SURFACE"]
+allowed_sources = ["registry", "owner-prompt", "rubric", "rival-plan"]
+prohibited_sources = ["self-assessment"]
+output_schema = "critique-v1"
+
+[prompts.arbiter]
+template = "project-trajectory/prompts/dual-plan-arbiter.template.md"
+required_slots = ["COVERAGE_REPORT", "GOAL_BRIEF", "OWNER_PROMPT", "PLAN_A", "PLAN_B", "RUBRIC"]
+allowed_sources = ["registry", "owner-prompt", "rubric", "rival-plan"]
+prohibited_sources = ["self-assessment"]
+output_schema = "arbitration-v1"
+
+[prompts.implementer]
+template = "project-trajectory/prompts/worker.md"
+required_slots = ["BASE", "SPECREF", "SRS", "TITLE", "WI"]
+allowed_sources = ["registry", "spec", "diff"]
+prohibited_sources = ["self-assessment"]
+output_schema = "worker-v1"
+
+[prompts.reviewer]
+template = "project-trajectory/prompts/reviewer.md"
+required_slots = ["VERDICT"]
+allowed_sources = ["registry", "diff", "harness"]
+prohibited_sources = ["self-assessment"]
+output_schema = "review-v1"
+
+[prompts.adjudicator]
+template = "project-trajectory/prompts/adjudicate-disposition.md"
+required_slots = ["BRANCH_CHANGES", "BRANCH_COMMITS", "CLASSIFICATION", "DECLARED_OUTCOME", "DOWNSTREAM", "HARNESS_RESULT", "SCOPE_AT_CLAIM", "SCOPE_DIGEST", "WI_ID", "WI_TITLE"]
+allowed_sources = ["registry", "spec", "ledger", "harness", "diff"]
+prohibited_sources = ["self-assessment", "worker-rationale"]
+output_schema = "disposition-v1"
+
+[prompts."adjudicate-amendment"]
+template = "project-trajectory/prompts/adjudicate-amendment.md"
+required_slots = ["AFFECTED_WORK", "ANCHOR", "ARTIFACT_ID", "ARTIFACT_KIND", "CELLS_AFTER", "CELLS_BEFORE", "CONNECTED_ROWS", "EVIDENCE"]
+allowed_sources = ["registry", "spec", "diff", "ledger"]
+prohibited_sources = ["self-assessment"]
+output_schema = "amendment-v1"
+
+[prompts."adjudicate-disposition"]
+template = "project-trajectory/prompts/adjudicate-disposition.md"
+required_slots = ["BRANCH_CHANGES", "BRANCH_COMMITS", "CLASSIFICATION", "DECLARED_OUTCOME", "DOWNSTREAM", "HARNESS_RESULT", "SCOPE_AT_CLAIM", "SCOPE_DIGEST", "WI_ID", "WI_TITLE"]
+allowed_sources = ["registry", "spec", "ledger", "harness", "diff"]
+prohibited_sources = ["self-assessment", "worker-rationale"]
+output_schema = "disposition-v1"
+
+[prompts."adjudicate-conflict"]
+template = "project-trajectory/prompts/adjudicate-conflict.md"
+required_slots = ["ACTIVE_CLAIMS", "BATCH_LIMIT", "CANDIDATE_ID", "CANDIDATE_SCOPE", "OVERLAP_GRAPH", "QUEUE"]
+allowed_sources = ["registry", "graph", "spec"]
+prohibited_sources = ["self-assessment"]
+output_schema = "admission-v1"
+
+[prompts."adjudicate-red-test"]
+template = "project-trajectory/prompts/adjudicate-red-test.md"
+required_slots = ["BAR_STEP", "CODE_MAP", "FAILURE_OUTPUT", "FINGERPRINT", "REQUIREMENT_ROWS", "TREE"]
+allowed_sources = ["harness", "registry", "spec"]
+prohibited_sources = ["self-assessment"]
+output_schema = "remediation-v1"

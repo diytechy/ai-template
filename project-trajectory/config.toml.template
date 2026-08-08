@@ -26,7 +26,7 @@ schema = 1
 # Wall-clock ceiling for one worker session.
 # session_timeout_seconds = 7200
 # UTC Mon-Fri window "HH:MM-HH:MM" the coordinator starts no new session
-# inside; "" disables it.
+# inside; "" disables it. Hours 00-23, minutes 00-59.
 # blackout = ""
 
 [policy]
@@ -76,7 +76,8 @@ schema = 1
 # Fraction of Complete outcomes that draw a dedicated adjudicator even with
 # no risk trigger.
 # complete_sampling_rate = 0.0
-# Safety classes whose Complete outcome always adjudicates.
+# Safety classes whose Complete outcome always adjudicates. Tokens from the
+# declared SAFETY_CLASSES vocabulary.
 # risk_safety_classes = ["spine", "gate", "attestation", "high-risk", "adjudication"]
 
 [admission]
@@ -93,26 +94,27 @@ schema = 1
 # Model routes, one [[routes]] table each. Convert an existing
 # docs/agents.csv with `python scripts/config_migrate.py --write` rather
 # than writing these by hand.
-#   id — Stable route id, e.g. ANTHROPIC-OPUS-STRONG.
+#   id — Stable route id, e.g. ANTHROPIC-OPUS-STRONG; uppercase, digits, dot and hyphen.
 #   family — Provider family; drives cross-family draws.
-#   model — Model slug substituted into {model}.
+#   model — Model slug substituted into {model}; [A-Za-z0-9._:/-] only (anything else is shell-unsafe in a .cmd-shim argv).
 #   strength — 1=quick 2=medium 3=strong.
 #   argv — Invocation argv; {model} is substituted.
 #   env — Environment merged over the inherited one.
-#   capabilities — What this route may be drawn for.
+#   capabilities — What this route may be drawn for; tokens from CAPABILITIES.
 #   notes — Failure-context hint echoed at preflight.
 
 # Per-job weighted pools, one [jobs.<name>] table each. Declared jobs:
 # planner, critic, arbiter, implementer, reviewer, adjudicator.
 #   minimum_strength — Weakest drawable route.
-#   fallback — What to draw when the pool is out.
+#   fallback — What to draw when the preferred route is out. One legal value.
 #   prefer_cross_family — Prefer a different family.
+#   requires_capability — Capability a route must declare to serve this job; empty = the job's default token.
 #   pool — Weighted route entries: {route=..., weight=...}.
 
 # Reviewed prompt templates, one [prompts.<name>] table each. Declared
 # prompts: planner, critic, arbiter, implementer, reviewer, adjudicator,
-# adjudicate-amendment, adjudicate-disposition, adjudicate-conflict,
-# adjudicate-red-test.
+# dual-plan-critic, adjudicate-amendment, adjudicate-disposition,
+# adjudicate-conflict, adjudicate-red-test.
 #   template — Repo-relative Markdown template path.
 #   required_slots — Slots the render must fill.
 #   allowed_sources — Evidence sources the prompt may cite.

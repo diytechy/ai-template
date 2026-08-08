@@ -83,6 +83,7 @@ graph LR
     m_scripts_plan_coverage_step["scripts/plan_coverage_step — Coverage step adapter: run the dual-plan covera…"]
     m_scripts_plan_round["scripts/plan_round — The dual-plan round state machine: a pure, side…"]
     m_scripts_plan_runner["scripts/plan_runner — The dual-plan round RUNNER: the coordinator fan…"]
+    m_scripts_prompt_render["scripts/prompt_render — Every operational prompt as a reviewed asset, r…"]
     m_scripts_run_menu["scripts/run_menu — The run capability menu — one launcher that pre…"]
     m_scripts_schedule["scripts/schedule — Derive the dependency-ready WI frontier and its…"]
     m_scripts_score_reviews["scripts/score_reviews — The substance scorer — score a review verdict b…"]
@@ -107,6 +108,7 @@ graph LR
     m_scripts_agent_loop --> m_scripts_plan_round
     m_scripts_agent_loop --> m_scripts_plan_runner
     m_scripts_agent_loop --> m_scripts_score_reviews
+    m_scripts_agent_route --> m_scripts_config
     m_scripts_attest --> m_scripts_config
     m_scripts_bootstrap --> m_scripts_config_migrate
     m_scripts_check_figures --> m_scripts_check_doc_refs
@@ -122,6 +124,7 @@ graph LR
     m_scripts_dispatch --> m_scripts_lane
     m_scripts_dispatch --> m_scripts_schedule
     m_scripts_dispatch --> m_scripts_trace
+    m_scripts_gen_open_items --> m_scripts_attest
     m_scripts_gen_open_items --> m_scripts_gen_trajectory
     m_scripts_gen_open_items --> m_scripts_trace
     m_scripts_gen_trajectory --> m_scripts_check_trajectory
@@ -154,6 +157,7 @@ graph LR
     m_scripts_plan_runner --> m_scripts_plan_briefs
     m_scripts_plan_runner --> m_scripts_plan_coverage_step
     m_scripts_plan_runner --> m_scripts_plan_round
+    m_scripts_prompt_render --> m_scripts_config
     m_scripts_spec_move --> m_scripts_agent_common
     m_scripts_trace --> m_scripts_trace_text
     m_scripts_traj_panels --> m_scripts_integrate
@@ -334,6 +338,7 @@ Contracts (interfaces): IF-015, IF-068
 
 ### `scripts/agent_route`
 _Model routing for the unattended coordinator — the enable-list + availability_
+Imports (internal): `config`
 Contracts (interfaces): IF-044, IF-045
 
 | Public item | Summary | Implements |
@@ -362,6 +367,11 @@ Contracts (interfaces): IF-044, IF-045
 | `PlannerPair (class)` | The result of routing the two planner hats: the two `PlannerSession`s (or |  |
 | `planner_pair(enabled, registry, tier, now, cooldowns, preferred_ids, hats)` | Route the two planner hats to two FRESH sessions (DP-001 plan P3, case a/b). |  |
 | `planner_fallback(failed, enabled, registry, tier, now, cooldowns, preferred_ids, hats)` | The runtime-nonresponse fallback (DP-001 plan P3, case c) — the entry the |  |
+| `strength_tier(strength)` | The `TIER_ORDER` token for a config `strength` (1=quick, 2=medium, |  |
+| `tier_strength(tier)` | The config strength (1..3) for a registry tier token, or None. The |  |
+| `JobDraw (class)` | One job's routing answer: the drawn `route` (a `config` route section) or |  |
+| `  methods` | refusals |  |
+| `draw_for_job(root, job, *, exclude, rng)` | Draw a route for one declared `job` from `docs/config.toml`. Returns a | SR-154 |
 | `main(argv)` |  |  |
 
 ### `scripts/agent_session`
@@ -387,10 +397,13 @@ Imports (internal): `config`
 |---|---|---|
 | `canonical_cell(value)` | One cell reduced to its MEANING-BEARING form (contracts §4), in order: | LLR-163 |
 | `row_id(kind, row)` | The artifact id in `row`, refusing a kind this module has no cell list for |  |
+| `cells_for(kind, row)` | The declared normative cells for ONE row — per TABLE, not per kind. |  |
 | `normative_digest(kind, row)` | The SHA-256 hex of one artifact's declared normative cells, canonicalised. |  |
 | `is_example(rid)` |  |  |
 | `load_csv(path)` |  |  |
-| `sn_rows(text)` | The SN table rows of stakeholder-needs.md as `{SN-ID, Need, Why, Priority, |  |
+| `sn_table_of(heading)` | Which declared table a heading opens: `edge` for the edge-case |  |
+| `sn_is_draft(heading)` | True for a heading that declares its rows unratified (section-as-state |  |
+| `sn_rows(text)` | The SN table rows of stakeholder-needs.md, example `-000` rows excluded. |  |
 | `load_artifacts(docs)` | `{kind: [row, ...]}` for the four tiers under `docs`, example rows excluded. |  |
 | `events_dir(root)` | `<root>/docs/events` — outside `docs/work/` so `agent_common.spec_files`' | LLR-164 |
 | `ledger_path(root, kind)` |  |  |
@@ -409,9 +422,12 @@ Imports (internal): `config`
 | `detect_candidates(root, docs)` | Every artifact whose current normative text is not accepted, tier order. |  |
 | `review_requests(root)` | The OPEN full-spine review requests, derived by replaying the ledger. | SR-144 |
 | `full_spine_block(root, policy)` | Why the full-spine checkpoint is blocked, or None. |  |
-| `boundary_from_config(root)` | `[attestation] human_ratification_through` from `docs/config.toml`, or the | LLR-162 |
+| `attestation_config(root)` | `(boundary, final_full_spine_review, [refusal, ...])` — the two attestation | LLR-162 |
+| `boundary_from_config(root)` | `[attestation] human_ratification_through` from `docs/config.toml`, or the |  |
 | `requires_human(tier_index, boundary)` | True when a ratification at `tier_index` owes a HUMAN decision. |  |
-| `seed(root, docs, by, ts)` | Write a `ratified` anchor for every current spine row that has none. |  |
+| `tier_routing(boundary)` | The whole ratification matrix for one boundary: one entry per spine tier, | SR-142, SR-144 |
+| `ratification_projection(root, docs)` | What an owner must SEE about ratification: `{boundary, policy, tiers, |  |
+| `seed(root, docs, by, ts)` | Write a `baseline` anchor for every current spine row that has NO history. |  |
 | `main(argv)` |  |  |
 
 ### `scripts/bootstrap`
@@ -842,7 +858,7 @@ Contracts (interfaces): IF-012, IF-033
 
 ### `scripts/gen_open_items`
 _The owner decision surface, generated (WI-322, OI-10 ruled option (b))._
-Imports (internal): `gen_trajectory`, `trace`
+Imports (internal): `attest`, `gen_trajectory`, `trace`
 Contracts (interfaces): IF-073, IF-074, IF-075
 
 | Public item | Summary | Implements |
@@ -856,6 +872,7 @@ Contracts (interfaces): IF-073, IF-074, IF-075
 | `word_diff(before, after)` | A unified word-level diff as HTML: unchanged runs wrapped `.eq` (so the |  |
 | `changed_percent(before, after)` | How much of the cell moved, counting WORDS — whitespace runs are dropped |  |
 | `md_inline(text)` | The few markdown inline forms the reused pointer lines actually use — |  |
+| `boundary_projection(root)` | The ratification-boundary facts, computed by `attest.ratification_projection`. |  |
 | `render(root, since)` | The whole page. Deterministic: every input is sorted upstream. |  |
 | `pending_block_text(root)` | The pending-projection markdown item text, reused from gen_trajectory |  |
 | `main(argv)` |  |  |
@@ -1053,6 +1070,29 @@ Contracts (interfaces): IF-066
 |---|---|---|
 | `wi_plan_mode(row)` | The WI row's declared plan mode: `dual` fires the round; anything else |  |
 | `run_dual_plan_round(root, wi, row, template, model, timeout, prompt_map)` | Run one dual-plan decomposition round for `wi` unattended and return |  |
+
+### `scripts/prompt_render`
+_Every operational prompt as a reviewed asset, rendered once, strictly._
+Imports (internal): `config`
+
+| Public item | Summary | Implements |
+|---|---|---|
+| `fold_newlines(text)` | CRLF and CR folded to LF. |  |
+| `canonical_text(text)` | `fold_newlines` plus exactly one trailing newline. |  |
+| `sha256_of(text)` | The SHA-256 of `text` as canonical UTF-8 — a property of the content, not |  |
+| `strip_dispatcher_block(text)` | The prompt body with a leading `<!-- DISPATCHER NOTES ... -->` block |  |
+| `template_slots(body)` | The `{{NAME}}` slot names present in a template body. |  |
+| `evidence(value)` | One slot value as `Evidence`. |  |
+| `declarations(root, cfg)` | `({job: Declaration}, [Finding])` for every `[prompts.*]` the repo at |  |
+| `declaration(root, job, cfg)` | `(Declaration, [Finding])` for one job; `(None, [Finding])` when the repo |  |
+| `read_template(declaration)` | `(canonical template text, [Finding])` for a declaration's template file. |  |
+| `render(declaration, slots)` | `(Rendered, [])` for a complete, clean fill; `(None, [Finding])` for any |  |
+| `check_sources(declaration, slots, rendered)` | `[Finding]` for one render's sources: the label rung, the per-value | SR-156 |
+| `provenance(rendered)` | The prompt half of one session record: the job, the template path, the | SR-157 |
+| `catalog(root, cfg)` | `([CatalogRow], [Finding])` — one row per declared prompt, in the closed |  |
+| `catalog_table(rows)` | The catalog as one Markdown table. Generated on demand and never stored: |  |
+| `refusal_lines(findings, module)` | The printable refusal for each finding, in the kit's one refusal shape: |  |
+| `main(argv)` |  |  |
 
 ### `scripts/run_menu`
 _The run capability menu — one launcher that presents every major capability._

@@ -292,7 +292,9 @@
 #   trailer-fold           1   deliberate
 #   warn-tier-dispatch     1   deliberate
 #   kind-resolution        1   deliberate
-#   mechanized-loop        46  deliberate
+#   mechanized-loop        52  deliberate
+#   mechanized-loop        52  deliberate
+#   mechanized-loop        52  deliberate
 #
 # The two facts worth carrying: cross-module duplication here is dominated by
 # SMALL STABLE HELPERS the F5 ruling deliberately duplicates (a shared
@@ -803,7 +805,7 @@ de0546d2361d  project-trajectory/scripts/intake.py == project-trajectory/scripts
 # subparser - same block, shifted content.)
 
 
-# --- mechanized-loop (46 blocks) ---------------------------------------
+# --- mechanized-loop (52 blocks) ---------------------------------------
 # disposition: deliberate
 # The F5 copies the mechanized-loop foundations were instructed to make,
 # plus the re-fingerprinted loader copies. Deliberate, and PINNED rather
@@ -830,7 +832,6 @@ de0546d2361d  project-trajectory/scripts/intake.py == project-trajectory/scripts
 1fea271d8b0c  project-trajectory/scripts/config_migrate.py == project-trajectory/scripts/spec_move.py
 22420b9162f0  project-trajectory/scripts/intake.py == project-trajectory/scripts/spec_move.py
 2a4539fd14d3  project-trajectory/scripts/handback.py == project-trajectory/scripts/outcome.py
-2c42f7691ba1  project-trajectory/scripts/handback.py == project-trajectory/scripts/outcome.py
 376bfa227be6  project-trajectory/scripts/attest.py == project-trajectory/scripts/derive_gate.py
 376bfa227be6  project-trajectory/scripts/attest.py == project-trajectory/scripts/trace.py
 522063f3d037  project-trajectory/scripts/attest.py == project-trajectory/scripts/outcome.py
@@ -858,7 +859,6 @@ cd8df88185e2  project-trajectory/scripts/agent_common.py == project-trajectory/s
 d197495619aa  project-trajectory/scripts/attest.py == project-trajectory/scripts/plan_briefs.py
 d197495619aa  project-trajectory/scripts/attest.py == project-trajectory/scripts/trunk_step.py
 d7ade64a48fa  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/integrate.py
-e479393e60d0  project-trajectory/scripts/attest.py == project-trajectory/scripts/attest.py
 e8e9f301fe93  project-trajectory/scripts/config_migrate.py == project-trajectory/scripts/config_migrate.py
 f34060b64afe  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/check_figures.py
 f34060b64afe  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/check_trajectory.py
@@ -866,3 +866,15 @@ f34060b64afe  project-trajectory/scripts/check_doc_refs.py == project-trajectory
 f34060b64afe  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/gen_okf.py
 f9dc8da90ca5  project-trajectory/scripts/attest.py == project-trajectory/scripts/intake.py
 fcbf00f3fd33  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/outcome.py
+
+
+288c88cdad6f  project-trajectory/scripts/intake.py == project-trajectory/scripts/prompt_render.py
+386d4419858c  project-trajectory/scripts/intake.py == project-trajectory/scripts/prompt_render.py
+5a801b6ea3e2  project-trajectory/scripts/plan_briefs.py == project-trajectory/scripts/prompt_render.py
+6bdf78fdcec4  project-trajectory/scripts/attest.py == project-trajectory/scripts/attest.py
+7b8bc6c56a7e  project-trajectory/scripts/intake.py == project-trajectory/scripts/prompt_render.py
+84fc8d398630  project-trajectory/scripts/plan_briefs.py == project-trajectory/scripts/prompt_render.py
+a61e47dc0614  project-trajectory/scripts/attest.py == project-trajectory/scripts/prompt_render.py
+
+
+c6d66ff311c0  project-trajectory/scripts/attest.py == project-trajectory/scripts/attest.py

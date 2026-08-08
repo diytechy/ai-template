@@ -862,7 +862,15 @@ BASELINE = {
     # config.py, config_query.py, config_migrate.py, attest.py, outcome.py. A
     # MAPPING row that is not shipped is the measured scaffold defect the H-2
     # program found, so the rows are the point.
-    "bootstrap.py": 2365,
+    # +18 (2365 -> 2383), mechanized-loop P4: MAPPING rows for prompt_render.py
+    # and the eight externalized prompt templates. Data rows in a table, not
+    # new logic — and a MAPPING row that is not shipped is the measured
+    # scaffold defect the H-2 program found, so the rows ARE the deliverable.
+    # +5 (2383 -> 2388), review-B remediation: `docs/work/partial` joins
+    # GITKEEP_DIRS. A terminal status directory that a fresh scaffold does not
+    # have is the exact defect class this repo calls its most expensive, and it
+    # was found by BOOTSTRAPPING a scaffold rather than by reading the table.
+    "bootstrap.py": 2388,
     # NEW ENTRY, +228 (1423 -> 1651), Phase 2b of the concurrency restructure
     # (docs/concurrency-restructure.md §7): the spec-folder work-item reader,
     # which crosses this module over THRESHOLD for the first time. It is one
@@ -961,6 +969,16 @@ BASELINE = {
     # +15 (1839 -> 1854), mechanized-loop P6: the `partial` status directory in
     # F5 copy #1 (SPEC_STATUS_DIRS + TERMINAL_STATUSES).
     "agent_common.py": 1854,
+    # FIRST baseline for agent_route.py, established (not bumped) at the
+    # mechanized-loop P5 slice: 1589 lines. The module had never carried one
+    # because it had never crossed the threshold; the config-driven job-pool
+    # draw put it over. Recorded here so the NEXT growth is a decision rather
+    # than a surprise — which is the whole job of this ratchet.
+    # +3 (1589 -> 1592), review-B remediation: the declared
+    # `requires_capability` dial was read with getattr() off a DICT, so it was
+    # always None and a declared capability bar failed open. Reading it
+    # correctly costs three lines.
+    "agent_route.py": 1592,
     # NEW ENTRY, WI-387 — integrate.py crossed THRESHOLD (1418 -> 1588) adding
     # the third terminal outcome. The extraction the ratchet asks for was TAKEN
     # FIRST, not argued away: `hand_back` and `quarantine`, the largest unit and
@@ -1125,7 +1143,15 @@ BASELINE = {
     # _claim_locked was answered by EXTRACTION (_claim_moves), per this repo's
     # rule, not by a bigger complexity number; the line growth is the new rung
     # plus its six helpers and their reasons.
-    "integrate.py": 2640,
+    # +58 (2640 -> 2698), review-B remediation: the SR-148 scope freeze could be
+    # stood down by the branch it constrains — deleting and re-adding its own
+    # claimed spec, or amending its own claim commit, left the rung finding no
+    # record and falling through the migration stand-down meant for branches
+    # claimed by a PRE-RECORD integrator. `_record_was_written` now separates
+    # "never had a record" from "had one and it is gone" and refuses the second.
+    # The growth is that distinction plus its refusal; the review found that the
+    # only test of the path drove exactly the amend, so the test PROVED the hole.
+    "integrate.py": 2698,
 }
 
 

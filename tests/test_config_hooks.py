@@ -23,12 +23,11 @@ TC-153's remaining permutations — each hook blocking when the query refuses �
 are discharged at P13, where the call sites exist to drive.
 """
 
-import os
 import shutil
 import subprocess
 
 import pytest
-from conftest import KIT, SCRIPTS, augment_env, env_gate_skipif, run_py
+from conftest import KIT, SCRIPTS, env_gate_skipif, run_py
 
 pytestmark = env_gate_skipif("posix-shell", "git")
 
@@ -45,14 +44,24 @@ LEGACY_PIPELINE = (
 
 CONFIG_SCRIPTS = ("config.py", "config_query.py", "config_migrate.py")
 
-# Each retired security file, its canonical key, and the two predicates that say
-# whether THE GATE IS LIVE — one reading the retired word, one reading the new
-# answer. The predicates are the whole point: the two readers legitimately differ
-# in representation (`off` vs `false`, absent vs defaulted) and may never differ
-# in verdict, so comparing raw strings would either fail on nothing or pass on
-# nothing. Note the two OPT-DOWN idioms, where absence is the STRICT answer:
-# `secrets-scan` scans unless the file says `off`, and `privacy-review` blocks
-# unless the file says `warn-unwired`. Getting either backwards is a fail-open.
+# Each retired security file, its canonical key, the RETIRED readers that decide
+# whether THE GATE IS LIVE, the same question asked of the new answer, and the
+# declared values to drive. The verdict is what is compared, never the raw
+# string: the readers legitimately differ in representation (`off` vs `false`,
+# absent vs defaulted) and may never differ in effect. Note the two OPT-DOWN
+# idioms, where absence is the STRICT answer: `secrets-scan` scans unless the
+# file says `off`, and `privacy-review` blocks unless the file says
+# `warn-unwired`. Getting either backwards is a fail-open.
+#
+# The retired side is a LIST of NAMED readers, not one predicate, because a
+# retired file can have more than one reader and for `docs/privacy-check` the two
+# disagree TODAY — the shell hooks compare `[ "$p" = "true" ]` while
+# `check_privacy.read_privacy_enabled` lowercases first. One predicate would have
+# to misquote a real reader, and the first draft did exactly that in the other
+# direction: it modelled `docs/secrets-scan` as `raw != "off"` when its only
+# production reader is `raw.lower() != "off"`. That is a booby trap rather than a
+# rounding error — it makes `OFF` read as a converter bug when the converter is
+# the side that matches production.
 #
 # `privacy-review` was missing from the first draft of the contracts doc — the
 # retired list named `docs/critique-policy`, which does not exist in this kit,
@@ -61,30 +70,65 @@ SECURITY_KEYS = (
     (
         "privacy-check",
         "policy.privacy_check",
-        lambda raw: raw == "true",
+        (
+            # hooks/pre-commit, commit-msg, pre-push: `[ "$p" = "true" ]`.
+            ("the git hooks", lambda raw: raw == "true"),
+            # check_privacy.py read_privacy_enabled: `(...).lower() == "true"`.
+            ("check_privacy.read_privacy_enabled", lambda raw: raw.lower() == "true"),
+        ),
         lambda ans: ans == "true",
-        ("true", "false", "# only a comment", "\n\n#c\n  true  ", None),
+        (
+            "true",
+            "TRUE",
+            "True",
+            "false",
+            "# only a comment",
+            "\n\n#c\n  true  ",
+            None,
+        ),
     ),
     (
         "secrets-scan",
         "policy.secrets_scan",
-        lambda raw: raw != "off",
+        # check_privacy.py read_secrets_scan is the only reader: no hook parses
+        # this file; pre-push defers the whole floor to the script.
+        (("check_privacy.read_secrets_scan", lambda raw: raw.lower() != "off"),),
         lambda ans: ans == "true",
-        ("off", "on", "# only a comment", "\n\n#c\n  off  ", None),
+        ("off", "OFF", "Off", "on", "# only a comment", "\n\n#c\n  off  ", None),
     ),
     (
         "privacy-review",
         "policy.privacy_review",
-        lambda raw: raw != "warn-unwired",
+        # hooks/pre-push is the only reader: `[ "$review_policy" = "warn-unwired" ]`,
+        # case-sensitive, so any other spelling reads as require (the strict side).
+        (("hooks/pre-push", lambda raw: raw != "warn-unwired"),),
         lambda ans: ans != "warn-unwired",
         (
             "warn-unwired",
+            "WARN-UNWIRED",
+            "Warn-Unwired",
             "require",
             "# only a comment",
             "\n\n#c\n  warn-unwired  ",
             None,
         ),
     ),
+)
+
+# Declared values on which one file's retired readers disagree WITH EACH OTHER,
+# so "the retired verdict" is not a single fact and there is nothing for the
+# cutover to preserve. Enumerated rather than tolerated: each entry is a case a
+# reader can check, and a NEW split — one an edit to the hooks or to
+# check_privacy introduces — has nowhere to hide.
+#
+# Both entries are the same case: `docs/privacy-check` spelled with any capital.
+# The git hooks read it as OFF, check_privacy reads it as ON. `config_migrate`'s
+# `true-exact` coercion answers this by REPORTING the value and writing nothing,
+# so the canonical key stays unset and resolves to its schema default — a policy
+# the adopter is told to choose rather than one the converter picked for them.
+# That refusal is the property asserted below; agreement is not available here.
+SPLIT_RETIRED_READERS = frozenset(
+    {("privacy-check", "TRUE"), ("privacy-check", "True")}
 )
 
 
@@ -121,10 +165,15 @@ def tree(_hook_tree):
 
 def _legacy_value(root, name):
     """What the retired shell pipeline reads out of `docs/<name>` — run through a
-    real `sh`, not re-implemented."""
+    real `sh`, not re-implemented.
+
+    An absent file reads as the empty string, which is what every production
+    reader sees: the hooks initialise `privacy=""` before the `-f` test, and
+    check_privacy's readers spell it `(_first_declared_line(...) or "")`.
+    """
     path = root / "docs" / name
     if not path.exists():
-        return None
+        return ""
     proc = subprocess.run(
         [shutil.which("sh"), "-c", LEGACY_PIPELINE, "sh", str(path)],
         capture_output=True,
@@ -143,12 +192,12 @@ def _query(root, key):
 
 # --- the agreement bar --------------------------------------------------------
 def _agreement_cases():
-    for legacy_name, key, old_live, new_live, declared_values in SECURITY_KEYS:
+    for legacy_name, key, old_readers, new_live, declared_values in SECURITY_KEYS:
         for declared in declared_values:
             yield pytest.param(
                 legacy_name,
                 key,
-                old_live,
+                old_readers,
                 new_live,
                 declared,
                 id="{}-{}".format(
@@ -158,16 +207,23 @@ def _agreement_cases():
 
 
 @pytest.mark.parametrize(
-    "legacy_name,key,old_live,new_live,declared", list(_agreement_cases())
+    "legacy_name,key,old_readers,new_live,declared", list(_agreement_cases())
 )
 def test_old_shell_read_and_new_query_decide_alike(
-    tree, legacy_name, key, old_live, new_live, declared
+    tree, legacy_name, key, old_readers, new_live, declared
 ):
-    """One declared value, two readers, one verdict.
+    """One declared value, every reader of it, one verdict.
 
     The verdict compared is the SECURITY question the hook asks — "is this gate
-    live?" — not the raw string, because the two readers legitimately differ in
+    live?" — not the raw string, because the readers legitimately differ in
     representation and may never differ in effect.
+
+    Where the retired readers of one file disagree with each other there is no
+    old verdict to preserve, so the bar changes shape: the case must be declared
+    in `SPLIT_RETIRED_READERS`, and the converter must REFUSE it out loud and
+    leave the canonical key unset. A converter that quietly picked a side would
+    hand the repo a security policy nobody chose, in whichever direction it
+    happened to prefer — the failure this module exists to make impossible.
     """
     if declared is not None:
         (tree / "docs" / legacy_name).write_text(
@@ -176,7 +232,8 @@ def test_old_shell_read_and_new_query_decide_alike(
             newline="\n",
         )
 
-    was_live = old_live(_legacy_value(tree, legacy_name))
+    raw = _legacy_value(tree, legacy_name)
+    was_live = {name: predicate(raw) for name, predicate in old_readers}
 
     convert = run_py(
         [tree / "scripts" / "config_migrate.py", "--root", str(tree), "--write"],
@@ -189,8 +246,36 @@ def test_old_shell_read_and_new_query_decide_alike(
     answer = got.stdout.strip().lower()
     is_live = new_live(answer)
 
-    assert is_live == was_live, (
-        "{}: the retired pipeline read {!r} (live={}) but {} answered {!r} "
+    verdicts = set(was_live.values())
+    if len(verdicts) > 1:
+        assert (legacy_name, declared) in SPLIT_RETIRED_READERS, (
+            "{}: the retired readers of docs/{} disagree about {!r} ({}) and "
+            "nothing declares the split. Add the case to SPLIT_RETIRED_READERS "
+            "with the reason, or fix the reader that is wrong."
+        ).format(legacy_name, legacy_name, declared, was_live)
+        told = convert.stdout + convert.stderr
+        assert "NOT CONVERTED" in told and legacy_name in told, (
+            "{}: the retired readers split on {!r} ({}) and the converter said "
+            "nothing — a silently picked side is a security policy nobody "
+            "chose.\n{}"
+        ).format(legacy_name, declared, was_live, told)
+        # Assignments only. The report names the key in its candidate list, so a
+        # substring test over the whole document would pass on the comment and
+        # never see a written value.
+        assignments = [
+            line
+            for line in (tree / "docs" / "config.toml")
+            .read_text(encoding="utf-8")
+            .splitlines()
+            if line.startswith(key.split(".")[-1] + " = ")
+        ]
+        assert assignments == [], (
+            "{}: {} was written anyway, so the report was decoration: {}"
+        ).format(legacy_name, key, assignments)
+        return
+
+    assert is_live == verdicts.pop(), (
+        "{}: the retired readers read {!r} as {} but {} answered {!r} "
         "(live={}). The cutover may not change behaviour."
     ).format(legacy_name, declared, was_live, key, answer, is_live)
 
@@ -341,16 +426,57 @@ def test_a_refused_configuration_exits_non_zero(tree):
 
 
 def test_an_interpreter_below_the_floor_refuses_by_name(tree):
-    """A below-floor interpreter must refuse rather than answer.
+    """A below-floor interpreter BLOCKS the commit instead of answering it.
 
-    Driven through the module's own declared floor rather than by finding an old
-    Python: the property is that the check exists and names the floor, which is
-    what a hook's error message has to be able to quote.
+    Driven, not grepped. The previous form of this test asserted only that the
+    string "3.11" appeared somewhere in the source, which survives deleting
+    `floor_refusal` and its call site outright — a green that proves nothing
+    about the behaviour its own name claims.
+
+    The below-floor box is simulated by raising the tree's COPY of the declared
+    floor above every real interpreter. That is faithful because `floor_refusal`
+    decides on nothing but `sys.version_info[:2] >= MIN_PYTHON`: moving the floor
+    up and moving the interpreter down drive the identical comparison, and the
+    copy is the shipped file byte for byte apart from that one constant. There is
+    no below-floor Python to hand this suite, and a test-only argument on `main`
+    would be a second contract. The `tree` fixture re-copies the scripts for
+    every test, so the edit cannot leak.
+
+    Driven through a SUBPROCESS rather than an import because that is how a hook
+    calls it: what the hook acts on is the exit code, and what it shows a human
+    is the stderr line — so an empty stdout and a named floor are the properties,
+    not the presence of a version string in the source.
     """
-    body = (SCRIPTS / "config_query.py").read_text(encoding="utf-8")
-    assert "3, 11" in body or "3.11" in body, (
-        "config_query.py declares no interpreter floor; a below-floor box would "
-        "then fail on a syntax error rather than with a named refusal"
+    (tree / "docs" / "config.toml").write_text(
+        "schema = 1\n\n[policy]\nprivacy_check = true\n",
+        encoding="utf-8",
+        newline="\n",
     )
-    env = augment_env(dict(os.environ))
-    assert env is not None
+    live = _query(tree, "policy.privacy_check")
+    assert live.returncode == 0 and live.stdout.strip() == "true", (
+        "control: this call must ANSWER while the floor is satisfied, or the "
+        "refusal below would not be evidence about the floor: "
+        + live.stdout
+        + live.stderr
+    )
+
+    script = tree / "scripts" / "config_query.py"
+    source = script.read_text(encoding="utf-8")
+    below_floor = source.replace("MIN_PYTHON = (3, 11)", "MIN_PYTHON = (99, 0)")
+    assert below_floor != source, (
+        "config_query.py no longer declares `MIN_PYTHON = (3, 11)`, so this "
+        "simulation is not moving the floor and the drive below is vacuous"
+    )
+    script.write_text(below_floor, encoding="utf-8", newline="\n")
+
+    proc = _query(tree, "policy.privacy_check")
+    assert proc.returncode != 0, proc.stdout + proc.stderr
+    assert proc.stdout == "", (
+        "a below-floor box must print NOTHING on stdout: a hook capturing the "
+        "answer would otherwise read a value nobody resolved"
+    )
+    assert "config_query: REFUSED" in proc.stderr, proc.stderr
+    assert "99.0" in proc.stderr, (
+        "the refusal must NAME the floor it wants — it is the whole of what a "
+        "hook can show a human: " + proc.stderr
+    )

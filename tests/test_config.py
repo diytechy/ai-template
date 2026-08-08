@@ -268,6 +268,167 @@ def test_out_of_range_value_is_refused_by_name(tmp_path, body, key):
     assert keys(findings) == [key]
 
 
+# --- the closed vocabularies are actually CHECKED -----------------------------
+# A vocabulary the validator never applies is a vocabulary in name only: the
+# typo it was closed to catch sails through, and the refusal that eventually
+# lands names a pool or a work item instead of the misspelled word.
+@pytest.mark.parametrize(
+    "body,key,typo",
+    [
+        (
+            '[[routes]]\nid = "R"\nfamily = "F"\nmodel = "m"\n'
+            'capabilities = ["text", "reveiw"]\n',
+            "routes[0].capabilities",
+            "reveiw",
+        ),
+        (
+            '[outcomes]\nrisk_safety_classes = ["spine", "protexted"]\n',
+            "outcomes.risk_safety_classes",
+            "protexted",
+        ),
+    ],
+)
+def test_a_typo_in_a_closed_array_vocabulary_is_refused_by_name(
+    tmp_path, body, key, typo
+):
+    _, findings = CONFIG.load_config(write_config(tmp_path, "schema = 1\n\n" + body))
+    assert keys(findings) == [key]
+    assert typo in findings[0].reason, findings[0].reason
+
+
+@pytest.mark.parametrize(
+    "body",
+    [
+        '[[routes]]\nid = "R"\nfamily = "F"\nmodel = "m"\ncapabilities = ["Review"]\n',
+        '[outcomes]\nrisk_safety_classes = ["Spine", " gate "]\n',
+    ],
+)
+def test_a_case_variant_of_a_declared_token_still_loads(tmp_path, body):
+    # The consumers fold and strip before comparing (agent_route's capability
+    # filter, intake's safety-class check), so the validator must too — a token
+    # must not be legal to one and a typo to the other.
+    _, findings = CONFIG.load_config(write_config(tmp_path, "schema = 1\n\n" + body))
+    assert findings == [], CONFIG.refusal_lines(findings)
+
+
+def test_the_safety_class_vocabulary_is_the_schedulers():
+    # config.SAFETY_CLASSES is an F5 copy, not an import (the git hooks load this
+    # module and must not pay for the dispatcher). Pinned equal here so the copy
+    # cannot drift into accepting a class the classifier refuses.
+    schedule = load_script("schedule")
+    assert CONFIG.SAFETY_CLASSES == schedule.SAFETY_CLASSES
+
+
+def test_the_capability_vocabulary_covers_every_declared_job():
+    # One token per role, or a job could never be served by any legal route.
+    route = load_script("agent_route")
+    assert set(route.JOB_CAPABILITY.values()) <= set(CONFIG.CAPABILITIES)
+
+
+# --- the route row rungs are the registry's, restated as schema ---------------
+def test_the_route_patterns_are_the_agents_csv_readers_rules():
+    # `docs/agents.csv` and `docs/config.toml` are the same routing facts before
+    # and after the migration, so the canonical document must face the same bar.
+    route = load_script("agent_route")
+    assert route.ID_RE.pattern.strip("^$") == CONFIG.ROUTE_ID_PATTERN
+    assert route.MODEL_SLUG_RE.pattern.strip("^$") == CONFIG.MODEL_SLUG_PATTERN
+
+
+@pytest.mark.parametrize(
+    "route_body,key",
+    [
+        ('id = "BAD ID!"\nfamily = "F"\nmodel = "m"\n', "routes[0].id"),
+        ('id = "lower"\nfamily = "F"\nmodel = "m"\n', "routes[0].id"),
+        # The H-4 shape: a quote re-arms `&` as a live operator when a Windows
+        # .cmd shim re-parses the argv this slug is substituted into.
+        (
+            'id = "EVIL"\nfamily = "F"\nmodel = \'opus" & calc.exe &\'\n',
+            "routes[0].model",
+        ),
+        ('id = "R"\nfamily = "F"\nmodel = "opus prompt"\n', "routes[0].model"),
+    ],
+)
+def test_a_route_id_or_model_the_registry_would_refuse_is_refused_here(
+    tmp_path, route_body, key
+):
+    _, findings = CONFIG.load_config(
+        write_config(tmp_path, "schema = 1\n\n[[routes]]\n" + route_body)
+    )
+    assert keys(findings) == [key]
+
+
+def test_a_legal_router_style_model_slug_still_loads(tmp_path):
+    # `org/model` and `us.anthropic....` are legal slugs; the pattern must not
+    # narrow the registry's own vocabulary while closing the injection hole.
+    _, findings = CONFIG.load_config(
+        write_config(
+            tmp_path,
+            'schema = 1\n\n[[routes]]\nid = "OPENCODE-KIMI"\nfamily = "OPENCODE"\n'
+            'model = "opencode-go/kimi-k3"\n',
+        )
+    )
+    assert findings == [], CONFIG.refusal_lines(findings)
+
+
+def test_duplicate_route_ids_are_refused_rather_than_shadowed(tmp_path):
+    # Every consumer keys routes by id, so a second declaration makes the first
+    # unreachable — and the no-capable-route refusal then quotes capabilities the
+    # adopter can see their file does not give that route.
+    cfg, findings = CONFIG.load_config(
+        write_config(
+            tmp_path,
+            'schema = 1\n\n[[routes]]\nid = "A"\nfamily = "F1"\nmodel = "m1"\n'
+            'capabilities = ["review"]\n\n'
+            '[[routes]]\nid = "A"\nfamily = "F2"\nmodel = "m2"\n'
+            'capabilities = ["text"]\n',
+        )
+    )
+    assert keys(findings) == ["routes[1].id"]
+    assert "duplicates routes[0].id" in findings[0].reason
+    assert "'A'" in findings[0].reason
+
+
+def test_distinct_route_ids_are_not_reported_as_duplicates(tmp_path):
+    _, findings = CONFIG.load_config(
+        write_config(
+            tmp_path,
+            'schema = 1\n\n[[routes]]\nid = "A"\nfamily = "F"\nmodel = "m"\n\n'
+            '[[routes]]\nid = "B"\nfamily = "F"\nmodel = "m"\n',
+        )
+    )
+    assert findings == [], CONFIG.refusal_lines(findings)
+
+
+# --- the blackout window is validated as a TIME, not as a shape ---------------
+@pytest.mark.parametrize("window", ["25:00-99:99", "24:00-01:00", "12:60-13:00"])
+def test_an_out_of_range_blackout_window_is_refused(tmp_path, window):
+    # The shape-only pattern accepted these, and the only reader
+    # (`agent_common.parse_blackout`) then returns None — which DISABLES the
+    # window. A typo that reads as "no blackout" is the exact silent-off defect
+    # this module exists to end.
+    _, findings = CONFIG.load_config(
+        write_config(
+            tmp_path, 'schema = 1\n\n[automation]\nblackout = "{}"\n'.format(window)
+        )
+    )
+    assert keys(findings) == ["automation.blackout"]
+
+
+@pytest.mark.parametrize("window", ["", "00:00-23:59", "22:30-06:00", "12:00-19:00"])
+def test_every_accepted_blackout_window_parses_for_its_only_reader(tmp_path, window):
+    # The agreement that makes the refusal above honest: what the schema accepts,
+    # the live parser must understand.
+    common = load_script("agent_common")
+    _, findings = CONFIG.load_config(
+        write_config(
+            tmp_path, 'schema = 1\n\n[automation]\nblackout = "{}"\n'.format(window)
+        )
+    )
+    assert findings == [], CONFIG.refusal_lines(findings)
+    if window:
+        assert common.parse_blackout(window) is not None, window
+
+
 def test_a_rate_may_be_written_as_an_integer(tmp_path):
     # TOML `0` and `0.0` are different types but the same honest answer.
     cfg, findings = CONFIG.load_config(
@@ -510,12 +671,36 @@ def test_the_declared_job_and_prompt_vocabularies_match_the_contract():
         "reviewer",
         "adjudicator",
     }
+    # The prompt vocabulary is the jobs plus one PURPOSE-SPECIFIC brief per
+    # extra reviewed template the kit ships: the four adjudicator briefs, and
+    # `dual-plan-critic` for the second of the two critic templates. Contracts §1
+    # still says "the six jobs plus the four adjudicator templates" and owes this
+    # name — it was written before the second critic template was counted, and
+    # with ten names one of the two shipped critic prompts was undeclared,
+    # unrenderable and invisible to `prompt_render check`.
     assert set(CONFIG.PROMPTS) == set(CONFIG.JOBS) | {
+        "dual-plan-critic",
         "adjudicate-amendment",
         "adjudicate-disposition",
         "adjudicate-conflict",
         "adjudicate-red-test",
     }
+
+
+def test_every_shipped_prompt_template_is_declared_by_this_repos_config():
+    """No orphan templates: a reviewed prompt this config never names cannot be
+    rendered by any code path — `declarations()` iterates the CLOSED vocabulary,
+    and `render` takes a job name, never a file. `critique.md` was exactly that:
+    shipped to every adopter by bootstrap, and unreachable."""
+    cfg, findings = CONFIG.load_config(ROOT)
+    assert findings == [], CONFIG.refusal_lines(findings)
+    declared = {entry.template for entry in cfg.prompts.values()}
+    shipped = {
+        "project-trajectory/prompts/" + p.name
+        for p in sorted((KIT / "prompts").glob("*.md"))
+        if p.name != "README.md"
+    }
+    assert shipped - declared == set(), "undeclared prompt template(s)"
 
 
 def test_this_repos_own_config_validates_clean():

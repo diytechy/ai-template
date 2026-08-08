@@ -25399,3 +25399,80 @@ the inherited suite, not this program's scope, and fixing them would mix an
 unrelated repair into a spine-class change. A successor should own them as their
 own row — and should note that (1) is the sharpest of the three, because a test
 that crashes the runner when it fails makes every OTHER failure invisible.
+
+
+## 2026-08-08 — mechanized-loop checkpoint B: adversarial review (55 raised, 39 confirmed) and its remediation
+
+Five read-only reviewers over the foundations (fail-closed behaviour, correctness,
+honest greens, contract drift, downstream scaffold), then **one adversarial
+verifier per finding, instructed to REFUTE it and defaulting to refuted**. 55
+raised, 39 survived. Sixteen were killed by the verify pass — which is the point
+of having one: each of those would otherwise have cost an implementer real work.
+
+### The four that mattered most, all DRIVEN rather than reasoned to
+
+1. **`attest.py --seed` re-ratified amended text and walked over a standing human
+   `meaning` verdict.** The guard asked "is the current text already accepted?"
+   when the migration's question is "does this row have ANY history?". A verifier
+   drove it: append " NOT." to a stakeholder need, run `--seed`, and the negated
+   need is recorded `ratified` with the candidate list empty. Worse, a chain
+   reading `[ratified/seed, meaning/peter, ratified/seed]` — a machine erasing a
+   human refusal at a tier inside the human boundary. Fixed at the guard, and the
+   migration now writes a distinct decision word **`baseline`**, so this repo's
+   523 machine anchors can never be read as 523 ratifications.
+2. **`spine_stage` returned 4 — the vacuous 4 its own docstring said it refused.**
+   Any partially-decomposed spine read "fully implemented and validated" and
+   mapped to G3. An empty tier has nothing accepted, so it is the lowest tier
+   still in process; it now says so. **This repo's own honest answer moved from
+   `spine-stage=4` to `spine-stage=1`.**
+3. **A typo'd `[attestation]` section answered "checkpoint clear" on a policy that
+   said `always`.** The findings filter listed the correctly-spelled key names, so
+   by construction no misspelling could match it. A dial that could not be read is
+   never a dial that said no. Inverted the test: a finding is ours unless it is
+   attributable to another declared section.
+4. **The SR-148 scope freeze could be stood down by the branch it constrains.**
+   Delete and re-add your own claimed spec, or amend your own claim commit, and
+   the rung found no record and fell through the stand-down meant for branches
+   claimed by a *pre-record* integrator. The sharpest part of the finding: the
+   only test of that path drove exactly the amend, so **the test proved the hole.**
+   `_record_was_written` now separates "never had a record" from "had one and it
+   is gone" and refuses the second.
+
+### Also fixed
+
+A security regression in the migration path — `routes_from_csv` dropped four of
+`load_registry`'s row rungs including the **H-4 shell-injection refusal**, so a
+row the old reader refused converted into a canonical route nothing rejected. A
+declared `requires_capability` read with `getattr` off a **dict**, so a declared
+capability bar failed open on every draw. An `id`-less ledger line accepted
+unverified and then crashing readers with a bare `KeyError`. An SN digest that
+silently dropped every cell past the fifth pipe — an edit there changed meaning
+and moved no digest. The edge-case needs table digested under the core table's
+cell names. `docs/work/partial` missing from the scaffold entirely, found by
+BOOTSTRAPPING one rather than by reading the table.
+
+### Four of the findings were about OUR OWN tests, and they are the ones to keep
+
+- `test_an_interpreter_below_the_floor_refuses_by_name` greps the source for a
+  version string. A verifier deleted the floor check from `config_query.py` and
+  the test stayed green. It now drives the refusal.
+- `test_ledger_helper_sync.py` claimed "each guard is mutation-proven"; one family
+  had no proof and another mutated the *input* rather than the copy. The
+  agreement guard was provably blind to the exact drift its own docstring calls
+  load-bearing.
+- The P2 agreement bar — the entire justification for the P13 cutover being a
+  behaviour no-op — never drove a case variant, and one predicate contradicted the
+  production reader it stood in for. Adding `TRUE`/`Off` variants RED-ed it
+  immediately.
+- `docs/mechanized-loop-contracts.md` claimed the `[harness]` block was "proved to
+  agree by the parity tests". **No such test exists.** The claim is withdrawn
+  rather than quietly kept, and P13 owes either the test or the deletion.
+
+Every fix carries a test that **fails without it**, and the remediation reported
+its mutation proofs by un-applying each fix in an isolated copy and recording the
+red. That is the bar this repo sets for a guard, applied to the guards themselves.
+
+**Bar:** full unfiltered suite **2577 passed, 8 skipped, 2 failed** — both the
+inherited host defects already accounted for (plus the third, deselected because
+it crashes the xdist worker rather than merely failing). ruff clean; check_docs 0
+broken; derive_gate G2 / `spine-stage=1`.

@@ -271,6 +271,59 @@ def test_tc166_the_close_may_clear_the_specref_and_may_not_repoint_it():
 
 
 @pytest.mark.smoke
+def test_tc166_an_emptied_specref_is_the_same_clearing_as_a_deleted_one():
+    """Rule R-F's terminal clearing has TWO legal spellings and the excuse has to
+    cover both. `check_trajectory` reads `(r.get("SpecRef") or "").strip()` and
+    `wi_convert.frontmatter_pairs` says outright that "absent and empty mean the
+    same thing in this registry" — so excusing only the deletion made
+    `scope_change` the one piece of code in the program that told them apart, and
+    it refused the merge of an honest close. `docs/work/complete` is full of
+    specs closed with `specref = ""`.
+
+    The direction is still one-way: a REPOINT is not a clearing."""
+    claimed = spec_text(specref="docs/specs/WI-401.md")
+    closed = "\n## Deliverable\n\nShipped.\n"
+    deleted = claimed.replace('specref = "docs/specs/WI-401.md"\n', "") + closed
+    emptied = claimed.replace('specref = "docs/specs/WI-401.md"', 'specref = ""')
+    repointed = claimed.replace("WI-401.md", "WI-999.md") + closed
+    assert deleted != claimed and emptied != claimed
+
+    assert outcome.scope_change(claimed, deleted) == []
+    assert outcome.scope_change(claimed, emptied + closed) == []
+    assert outcome.scope_change(claimed, repointed) == ["front:specref"]
+
+
+@pytest.mark.smoke
+def test_tc166_a_markdown_heading_quoted_inside_a_fence_is_not_a_section():
+    """`## Deliverable` is the close's own record and specs QUOTE markdown in it
+    all the time. A scanner blind to code fences reads a quoted `## Steps` as a
+    real heading: it mints a frozen region the claim-time copy never had (or, if
+    the quoted name repeats a real one, appends the post-fence remainder onto
+    that frozen region) and the merge is refused over a section nobody edited.
+
+    The discrimination is the other half: a heading OUTSIDE a fence is still a
+    section, so the fence-awareness excuses quoting and nothing else."""
+    claimed = spec_text()
+    quoted_new = spec_text(
+        deliverable=(
+            "Shipped it. The template section now reads:\n\n"
+            "```markdown\n## Steps\n\n1. run it\n```\n"
+        )
+    )
+    quoted_frozen = spec_text(
+        deliverable=(
+            "Shipped it:\n\n```markdown\n## Context\n\nQuoted, not written.\n```\n\nDone."
+        )
+    )
+    forged = spec_text(deliverable="Shipped it.\n\n## Steps\n\n1. run it")
+
+    assert outcome.scope_change(claimed, quoted_new) == []
+    assert outcome.scope_change(claimed, quoted_frozen) == []
+    assert outcome.scope_digest(claimed) == outcome.scope_digest(quoted_frozen)
+    assert outcome.scope_change(claimed, forged) == ["body:Steps"]
+
+
+@pytest.mark.smoke
 def test_tc166_the_clearing_allowance_covers_that_cell_and_no_other():
     """The mutation proof for `CLOSE_CLEARED_KEYS`: a DELETED cell is excused
     only for the one key R-F mandates. Deleting `needs` or `safety_class` at
@@ -517,6 +570,61 @@ def test_a_malformed_ledger_line_is_a_hard_read_error_naming_the_line(tmp_path):
     assert any("line 2" in r for r in refusals), refusals
 
 
+@pytest.mark.smoke
+def test_a_hand_edited_ledger_line_is_refused_because_its_id_no_longer_derives(
+    tmp_path,
+):
+    """Contracts §2's third property — "a reader can verify the ledger rather
+    than trusting it" — is only true if a reader actually does it. Without the
+    re-derivation the stale id sat in the line, unchecked, while the edited
+    payload was read as authoritative.
+
+    Driven on the edit that defeats the module's central rung rather than on a
+    flipped verdict: tampering with `claim_base` makes `write_outcome`'s
+    `(wi, claim_base)` scan miss, so a SECOND outcome lands for one attempt —
+    exactly the "which one is it" state the event exists to delete."""
+    first, refusals = outcome.write_outcome(
+        tmp_path, "WI-401", "partial", CLAIM_BASE, BRANCH_TIP, SCOPE
+    )
+    assert refusals == [] and first is not None
+    ledger = tmp_path / "docs/events/outcomes.jsonl"
+    ledger.write_text(
+        ledger.read_text(encoding="utf-8").replace(CLAIM_BASE, _sha("forged")),
+        encoding="utf-8",
+        newline="\n",
+    )
+
+    with pytest.raises(ValueError) as excinfo:
+        outcome.read_events(ledger)
+    assert "line 1" in str(excinfo.value) and "does not derive" in str(excinfo.value)
+
+    second, refusals = outcome.write_outcome(
+        tmp_path, "WI-401", "complete", CLAIM_BASE, OTHER_TIP, SCOPE
+    )
+    assert second is None
+    assert any("does not derive" in r for r in refusals), refusals
+
+    # The guard is on PRESENCE, like attest's: a line carrying no id has no id
+    # to disagree with, so a hand-written fixture is still readable.
+    idless = tmp_path / "idless.jsonl"
+    idless.write_text('{"kind":"outcome"}\n', encoding="utf-8", newline="\n")
+    assert outcome.read_events(idless) == [{"kind": "outcome"}]
+
+
+def test_a_fresh_scaffold_carries_every_terminal_status_directory(scaffold):
+    """STATUS IS THE DIRECTORY, so a declared status with no directory is a
+    vocabulary the scaffold cannot express. `partial` was declared everywhere the
+    scripts read it — `SPEC_STATUS_DIRS`, `TERMINAL_STATUSES`,
+    `outcome.OUTCOMES` — and scaffolded nowhere.
+
+    Driven by BOOTSTRAPPING a scaffold rather than by reading the table, which is
+    the only way this class of defect has ever been caught here."""
+    work = scaffold / "docs" / "work"
+    missing = [word for word in outcome.OUTCOMES if not (work / word).is_dir()]
+    assert missing == [], sorted(p.name for p in work.iterdir())
+    assert (work / "partial" / ".gitkeep").is_file()
+
+
 # --- TC-165: exactly-once remediation (SR-147 / LLR-171) ----------------------
 
 
@@ -596,6 +704,38 @@ def test_tc165_a_different_tree_is_a_different_failure(tmp_path):
     one, _ = outcome.failure_event(root, first_tree, "tests", text)
     two, refusals = outcome.failure_event(root, _tree_of(root), "tests", text)
     assert refusals == [] and one["id"] != two["id"]
+
+
+def test_tc165_a_relative_root_fingerprints_as_the_absolute_one_does(
+    tmp_path, monkeypatch
+):
+    """`.` is the ordinary spelling of "this repo", and the substitution took the
+    caller's spelling literally: every PERIOD in the harness text became `<root>`
+    (`test_widget<root>py:42`, `in 12<root><dur>`), the excerpt persisted in that
+    state, and the real checkout path was never erased at all — so ONE failure
+    minted TWO events depending only on how the observer spelled the root.
+
+    Driven as the exactly-once property itself, because that is what breaks: the
+    second observation must be refused as the same failure."""
+    root = git_repo(tmp_path).resolve()
+    monkeypatch.chdir(root)
+    tree = _tree_of(root)
+    text = failure_text(root)
+
+    normalised = outcome.normalise_failure(".", text)
+    assert str(root) not in normalised and "<root>" in normalised
+    assert "test_widget.py:42" in normalised
+    assert "<dur>" in normalised
+
+    # The same over-substitution one level up: `/` and `C:\` are separators, not
+    # prefixes, so a root that resolves to one is skipped rather than erased.
+    assert "<root>" not in outcome.normalise_failure("/", text)
+
+    absolute, refusals = outcome.failure_event(root, tree, "tests", text, gate="G2")
+    assert refusals == [] and "<root>" in absolute["excerpt"]
+    relative, refusals = outcome.failure_event(".", tree, "tests", text, gate="G2")
+    assert relative is None
+    assert len(refusals) == 1 and "exactly-once" in refusals[0]
 
 
 @pytest.mark.smoke
@@ -783,6 +923,42 @@ def test_tc169_each_label_has_the_effect_it_names(tmp_path):
     assert "BAD = True" in patch.read_text(encoding="utf-8")
 
 
+def test_tc169_two_groups_whose_names_slug_alike_keep_two_records(tmp_path):
+    """`group_key` is a posix DIRECTORY, so a group legitimately contains `/` —
+    and the patch name folded `/`, space, `+` and every non-ASCII character to
+    `-`. `src/a/b` and `src-a-b` therefore named ONE file, and the second write
+    overwrote the first: two `quarantine` labels, two reverts, and one record on
+    disk. Quarantine exists to keep the record, so losing one silently is the
+    label doing the opposite of what it says.
+
+    Hyphenated path segments are not exotic — 75 of this repo's 106 tracked
+    directories carry one."""
+    root = git_repo(tmp_path)
+    _git(root, "checkout", "-q", "-b", "wi-401")
+    nested = root / "src" / "a" / "b"
+    flat = root / "src-a-b"
+    nested.mkdir(parents=True)
+    flat.mkdir()
+    (nested / "nested.txt").write_text("NESTED\n", encoding="utf-8", newline="\n")
+    (flat / "flat.txt").write_text("FLAT\n", encoding="utf-8", newline="\n")
+    _commit(root, "two groups that slug alike", when=T_CODE)
+
+    base = _git(root, "merge-base", "wi-401", "main").strip()
+    labels = {"src/a/b": "quarantine", "src-a-b": "quarantine"}
+    groups, refusals = outcome.classify_groups(root, "wi-401", labels, base=base)
+    assert refusals == [] and sorted(groups) == ["src-a-b", "src/a/b"]
+
+    actions, refusals = outcome.apply_classification(
+        root, base, "wi-401", groups, labels
+    )
+    assert refusals == []
+    one = root / actions["src/a/b"].split(":", 1)[1]
+    two = root / actions["src-a-b"].split(":", 1)[1]
+    assert one != two
+    assert "NESTED" in one.read_text(encoding="utf-8")
+    assert "FLAT" in two.read_text(encoding="utf-8")
+
+
 def test_tc169_the_enactment_refuses_a_group_that_reached_it_unlabelled(tmp_path):
     """`classify_groups` is what proves a classification COMPLETE; the enactment
     refuses rather than defaulting, so a caller that skipped the proof cannot
@@ -866,6 +1042,27 @@ def test_tc167_a_repointed_specref_is_refused_where_a_cleared_one_is_not(tmp_pat
     assert refusal is not None and "front:specref" in refusal
 
 
+def test_tc167_a_close_that_empties_its_specref_clears_the_merge_ladder(tmp_path):
+    """The same R-F clearing in its other legal spelling, driven on the live
+    ladder rather than on `scope_change` alone — because the refusal a branch
+    actually hits is `_scope_at_claim`'s, and no earlier rung reads `specref`."""
+    root = claim_repo(tmp_path)
+    assert integ.claim(root, "WI-401", "wi-401") == 0
+    claimed = (root / "docs/work/active/wi-401/WI-401-widget.md").read_text(
+        encoding="utf-8"
+    )
+    _close_to(
+        root,
+        "wi-401",
+        "complete",
+        new_text=claimed.replace('specref = "seed.txt"', 'specref = ""')
+        + "\n## Deliverable\n\nShipped the widget.\n",
+    )
+
+    specs = integ._claimed_specs(root, "wi-401")
+    assert integ._scope_at_claim(root, "wi-401", specs) is None
+
+
 def test_tc167_a_terminal_move_that_edited_the_scope_is_refused_by_region(tmp_path):
     """The permutation the requirement exists for: a branch narrowing its own
     obligation. The refusal must name the REGION, because "the scope changed"
@@ -927,6 +1124,23 @@ def test_tc167_a_partial_close_goes_through_the_same_freeze(tmp_path):
     assert refusal is not None and "front:title" in refusal
 
 
+def _pre_record_claim(root, branch="wi-401", name="WI-401-widget.md"):
+    """The claim a PRE-RECORD integrator produced, built by hand: the queued spec
+    moved into `active/<branch>/` on TRUNK by a commit whose message carries no
+    `Scope-At-Claim:` trailer, with the branch cut from it.
+
+    By hand because `integrate.claim` cannot produce this shape any more, and
+    that is precisely the point — the migration allowance covers claims this code
+    never wrote. Amending a REAL claim commit is not a stand-in for it: that
+    leaves a record on trunk, which is the attack below, not the migration."""
+    src = (root / "docs/work/queued" / name).relative_to(root).as_posix()
+    dest = (root / "docs/work/active" / branch / name).relative_to(root).as_posix()
+    (root / "docs/work/active" / branch).mkdir(parents=True, exist_ok=True)
+    _git(root, "mv", src, dest)
+    _commit(root, "claim: WI-401 -> active/{} (old form)".format(branch), when=T_CODE)
+    _git(root, "branch", branch)
+
+
 def test_tc167_a_claim_with_no_recorded_scope_stands_the_rung_down(tmp_path):
     """The migration allowance, stated as a test so its narrowness is pinned: a
     branch claimed before this record existed has nothing to compare against,
@@ -934,14 +1148,64 @@ def test_tc167_a_claim_with_no_recorded_scope_stands_the_rung_down(tmp_path):
     lane ends in a merge. The allowance can only weaken the rung to yesterday's
     behaviour; it can never accept a change that WAS recorded."""
     root = claim_repo(tmp_path)
-    assert integ.claim(root, "WI-401", "wi-401") == 0
-    # Rewrite the claim commit's message without its trailer — the shape a
-    # pre-record integrator would have produced.
-    _git(root, "checkout", "-q", "wi-401")
-    _git(root, "commit", "-q", "--amend", "--no-edit", "-m", "claim: WI-401 (old form)")
+    _pre_record_claim(root)
     _close_to(
         root, "wi-401", "complete", new_text='+++\nid = "WI-401"\ntitle = "X"\n+++\n'
     )
 
     specs = integ._claimed_specs(root, "wi-401")
     assert integ._scope_at_claim(root, "wi-401", specs) is None
+
+
+@pytest.mark.parametrize("attack", ["amend", "delete-and-re-add"])
+def test_tc167_a_branch_may_not_stand_the_freeze_down_by_losing_its_own_record(
+    tmp_path, attack
+):
+    """SR-148's freeze may not be stood down by the branch it constrains.
+
+    Both attacks reach the migration allowance the same way — make
+    `_claim_commit` resolve to a commit with no trailer — and they differ only in
+    how. `amend` rewrites the branch's copy of the claim commit (trunk keeps the
+    original); `delete-and-re-add` leaves the original standing as the branch's
+    own ancestor and puts a newer adder in front of it. Either way the branch
+    then narrows `sr_refs`, which the control tests above prove is refused when
+    the record is intact.
+
+    "No record" therefore has to mean "no record was ever written", not "the
+    commit this branch presents does not carry one" — the second is a fact the
+    branch authors, and a freeze whose stand-down the constrained party can
+    author is not a freeze."""
+    root = claim_repo(tmp_path)
+    assert integ.claim(root, "WI-401", "wi-401") == 0
+    rel = "docs/work/active/wi-401/WI-401-widget.md"
+    _git(root, "checkout", "-q", "wi-401")
+    claimed = (root / rel).read_text(encoding="utf-8")
+    if attack == "amend":
+        _git(
+            root,
+            "commit",
+            "-q",
+            "--amend",
+            "--no-edit",
+            "-m",
+            integ._claim_subject("WI-401", "wi-401"),
+        )
+    else:
+        _git(root, "rm", "-q", rel)
+        _commit(root, "wip: park the spec", when=T_CODE)
+        (root / rel).parent.mkdir(parents=True, exist_ok=True)
+        (root / rel).write_text(claimed, encoding="utf-8", newline="\n")
+        _commit(root, "wip: restore the spec", when=T_CODE)
+    _git(root, "checkout", "-q", "main")
+    _close_to(
+        root,
+        "wi-401",
+        "complete",
+        new_text=claimed.replace('sr_refs = ["SR-001"]', "sr_refs = []")
+        + "\n## Deliverable\n\nShipped what was left.\n",
+    )
+
+    specs = integ._claimed_specs(root, "wi-401")
+    refusal = integ._scope_at_claim(root, "wi-401", specs)
+    assert refusal is not None, attack
+    assert "scope record" in refusal and "SR-148" in refusal

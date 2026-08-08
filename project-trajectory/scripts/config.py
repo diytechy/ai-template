@@ -87,6 +87,43 @@ Key = collections.namedtuple(
 Finding = collections.namedtuple("Finding", "key reason")
 
 
+# --- the closed vocabularies --------------------------------------------------
+# Declared ABOVE the schema because array-valued rows below cite them as their
+# per-element `choices`. A vocabulary a validator does not check is a vocabulary
+# in name only: the typo it was closed to catch sails through and the refusal
+# lands three modules away, naming a pool or a work item instead of the word.
+
+# The CLOSED capability vocabulary. Closed on purpose: an open list cannot be
+# validated, so `capabilities = ["reveiw"]` would silently make a route
+# incapable and the job that needed it would refuse with a message naming the
+# pool rather than the typo. One token per declared job, plus `text` for a route
+# that can hold a conversation but is not trusted with a role.
+CAPABILITIES = (
+    "text",
+    "planning",
+    "critique",
+    "arbitration",
+    "implementation",
+    "review",
+    "adjudication",
+)
+
+# The safety classes a work item may declare — a COPY of `schedule.SAFETY_CLASSES`
+# under the kit's F5 independently-copyable rule, pinned equal by
+# `tests/test_config.py` rather than imported: this module is loaded by the git
+# hooks through `config_query`, and pulling the scheduler in to read one tuple
+# would make every commit pay for the whole dispatcher.
+SAFETY_CLASSES = (
+    "ordinary",
+    "spine",
+    "gate",
+    "attestation",
+    "protected",
+    "high-risk",
+    "adjudication",
+)
+
+
 # --- the declared dials -------------------------------------------------------
 # Every key of contracts §1, in the section order the document uses. Editing
 # this table is the ONLY way to add a dial: the loader, the query entry point,
@@ -123,13 +160,19 @@ SCHEMA = (
         rng=(1, None),
         doc="Wall-clock ceiling for one worker session.",
     ),
+    # The pattern validates the RANGE, not merely the shape. `\d{2}` accepted
+    # "25:00-99:99", which `agent_common.parse_blackout` then rejects by
+    # returning None — and a None window is DISABLED, so a typo read as "no
+    # blackout" instead of as a refusal. That is the exact defect this module's
+    # docstring says it exists to end, so the hours and minutes are bounded here
+    # to the same range the parser accepts.
     Key(
         "automation.blackout",
         "str",
         "",
-        pattern=r"(\d{2}:\d{2}-\d{2}:\d{2})?",
+        pattern=r"(([01]\d|2[0-3]):[0-5]\d-([01]\d|2[0-3]):[0-5]\d)?",
         doc='UTC Mon-Fri window "HH:MM-HH:MM" the coordinator starts no new '
-        'session inside; "" disables it.',
+        'session inside; "" disables it. Hours 00-23, minutes 00-59.',
     ),
     Key(
         "policy.push",
@@ -247,7 +290,9 @@ SCHEMA = (
         "outcomes.risk_safety_classes",
         "str[]",
         ("spine", "gate", "attestation", "high-risk", "adjudication"),
-        doc="Safety classes whose Complete outcome always adjudicates.",
+        choices=SAFETY_CLASSES,
+        doc="Safety classes whose Complete outcome always adjudicates. Tokens "
+        "from the declared SAFETY_CLASSES vocabulary.",
     ),
     Key(
         "admission.max_batch_size",
@@ -285,21 +330,63 @@ SECTIONS = tuple(dict.fromkeys(k.path.split(".", 1)[0] for k in SCHEMA))
 # Both are closed vocabularies: an undeclared job or prompt name is a finding,
 # because a typo'd `[jobs.reviewr]` would otherwise silently never be drawn.
 JOBS = ("planner", "critic", "arbiter", "implementer", "reviewer", "adjudicator")
+# A prompt name is a job name OR a purpose-specific brief for one of those jobs —
+# the four adjudicator templates, plus `dual-plan-critic`. That last one is not a
+# flourish: the kit ships TWO critic templates (`critique.md`, the artifact
+# critique loop, and `dual-plan-critic.template.md`, the planning-phase hat), and
+# with one `critic` slot between them one of the two was undeclared, so nothing
+# could render it and `prompt_render check` could not see it existed. A closed
+# vocabulary must have a name for every reviewed template it ships, or "closed"
+# just means "some of the tree is invisible".
 PROMPTS = JOBS + (
+    "dual-plan-critic",
     "adjudicate-amendment",
     "adjudicate-disposition",
     "adjudicate-conflict",
     "adjudicate-red-test",
 )
 
+# The shapes a route id and a model slug may take. Both are the `agents.csv`
+# reader's rules, restated as declared patterns so the canonical document faces
+# the SAME bar its retired source did (`agent_route.ID_RE` / `MODEL_SLUG_RE`,
+# pinned equal by tests/test_config.py).
+#
+# The model pattern is a SECURITY rung, not tidiness: the slug rides `{model}`
+# substitution into a session argv, and on Windows a `.cmd`-shim CLI re-parses
+# that line under cmd.exe, where an embedded quote re-arms `&`/`|` as live
+# operators (repo-review 2026-07-21 H-4). A tracked config must not be a
+# command-injection vector.
+ROUTE_ID_PATTERN = r"[A-Z0-9][A-Z0-9.\-]*"
+MODEL_SLUG_PATTERN = r"[A-Za-z0-9._:/\-]+"
+
 ROUTE_FIELDS = (
-    Key("id", "str", REQUIRED, doc="Stable route id, e.g. ANTHROPIC-OPUS-STRONG."),
+    Key(
+        "id",
+        "str",
+        REQUIRED,
+        pattern=ROUTE_ID_PATTERN,
+        doc="Stable route id, e.g. ANTHROPIC-OPUS-STRONG; uppercase, digits, "
+        "dot and hyphen.",
+    ),
     Key("family", "str", REQUIRED, doc="Provider family; drives cross-family draws."),
-    Key("model", "str", REQUIRED, doc="Model slug substituted into {model}."),
+    Key(
+        "model",
+        "str",
+        REQUIRED,
+        pattern=MODEL_SLUG_PATTERN,
+        doc="Model slug substituted into {model}; [A-Za-z0-9._:/-] only "
+        "(anything else is shell-unsafe in a .cmd-shim argv).",
+    ),
     Key("strength", "int", 2, rng=(1, 3), doc="1=quick 2=medium 3=strong."),
     Key("argv", "str[]", (), doc="Invocation argv; {model} is substituted."),
     Key("env", "str{}", {}, doc="Environment merged over the inherited one."),
-    Key("capabilities", "str[]", (), doc="What this route may be drawn for."),
+    Key(
+        "capabilities",
+        "str[]",
+        (),
+        choices=CAPABILITIES,
+        doc="What this route may be drawn for; tokens from CAPABILITIES.",
+    ),
     Key("notes", "str", "", doc="Failure-context hint echoed at preflight."),
 )
 
@@ -310,8 +397,32 @@ POOL_FIELDS = (
 
 JOB_FIELDS = (
     Key("minimum_strength", "int", 1, rng=(1, 3), doc="Weakest drawable route."),
-    Key("fallback", "str", "same-or-higher", doc="What to draw when the pool is out."),
+    # Declared with its ONE legal value rather than left open. SR-154 mandates
+    # same-or-higher unconditionally, so a second value would need its semantics
+    # stated somewhere before it could mean anything; pinning the choice makes a
+    # typo refuse instead of being read as a policy nobody defined.
+    Key(
+        "fallback",
+        "str",
+        "same-or-higher",
+        choices=("same-or-higher",),
+        doc="What to draw when the preferred route is out. One legal value.",
+    ),
     Key("prefer_cross_family", "bool", False, doc="Prefer a different family."),
+    # The capability a route must declare to be drawable for this job. Was NOT
+    # declarable at first, so the requirement lived as a role->token map inside
+    # agent_route.py — which meant an adopter could not state it, and the SR that
+    # says "the job's DECLARED capability requirement" had nowhere to declare it.
+    # Empty means "use the job's own name-derived default" so no existing config
+    # changes meaning.
+    Key(
+        "requires_capability",
+        "str",
+        "",
+        choices=("",) + CAPABILITIES,
+        doc="Capability a route must declare to serve this job; empty = the "
+        "job's default token.",
+    ),
     Key("pool", "pool", (), doc="Weighted route entries: {route=..., weight=...}."),
 )
 
@@ -506,8 +617,23 @@ def _coerce(token, value):
 
 def _constraint_reason(spec, value):
     """Why an accepted-type `value` is out of the declared range, choice set or
-    pattern, or None."""
-    if spec.choices is not None and value not in spec.choices:
+    pattern, or None.
+
+    On an ARRAY row (`str[]`) `choices` declares the per-ELEMENT vocabulary.
+    Testing the whole list against it — the shape this had first — refuses every
+    legal document, which is why `capabilities` and `risk_safety_classes` shipped
+    with a closed vocabulary the validator never applied. The element match folds
+    case and strips, because every consumer compares that way
+    (`agent_route.draw_for_job`'s capability filter, `intake`'s safety-class
+    check): a case variant must not mean one thing here and another there.
+    """
+    if spec.choices is not None and spec.type == "str[]":
+        for element in value:
+            if element.strip().lower() not in spec.choices:
+                return "element {!r} is not one of {}".format(
+                    element, "|".join(str(c) for c in spec.choices)
+                )
+    elif spec.choices is not None and value not in spec.choices:
         return "expected one of {}".format("|".join(str(c) for c in spec.choices))
     if spec.rng is not None:
         lo, hi = spec.rng
@@ -610,16 +736,40 @@ def _check_named_tables(label, declared, fields, table, findings):
 
 
 def _check_routes(value, findings):
+    """The `[[routes]]` array. Ids are UNIQUE: every consumer keys routes by id
+    (`_pool_entries`' `{route.id: route}`, the pool's `route = "..."`), so a
+    second declaration of one id makes the first unreachable and the last one
+    silently answer for both — including in the no-capable-route refusal, which
+    would then quote capabilities the adopter can see their file does not give
+    that route. A duplicate is refused rather than merged: which declaration was
+    meant is a question only the adopter can answer."""
     if not isinstance(value, list):
         findings.append(Finding("routes", "expected an array of tables"))
         return ()
     routes = []
+    seen = {}
     for n, entry in enumerate(value):
         label = "routes[{}]".format(n)
         if not isinstance(entry, dict):
             findings.append(Finding(label, "expected a table, got {!r}".format(entry)))
             continue
-        routes.append(_check_table(label, ROUTE_FIELDS, entry, findings))
+        route = _check_table(label, ROUTE_FIELDS, entry, findings)
+        rid = route.id
+        if isinstance(rid, str):
+            if rid in seen:
+                findings.append(
+                    Finding(
+                        "{}.id".format(label),
+                        "duplicates routes[{}].id {!r}; route ids are the join "
+                        "key every pool and every refusal message uses, so a "
+                        "second declaration would shadow the first".format(
+                            seen[rid], rid
+                        ),
+                    )
+                )
+            else:
+                seen[rid] = n
+        routes.append(route)
     return tuple(routes)
 
 

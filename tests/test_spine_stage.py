@@ -196,6 +196,61 @@ def test_an_empty_spine_reads_stage_zero(tmp_path):
     assert GATE.spine_stage(docs) == 0
 
 
+# --- review-B 33: an EMPTY tier is not a satisfied tier -----------------------
+def partial_docs(root, tiers):
+    """A spine decomposed only as far as `tiers` — the later registries exist but
+    hold nothing, which is what a repo between G1 and its first LLR looks like."""
+    req = root / "docs" / "requirements"
+    req.mkdir(parents=True, exist_ok=True)
+    (root / "docs" / "test").mkdir(parents=True, exist_ok=True)
+    (req / "stakeholder-needs.md").write_text(SN_MD, encoding="utf-8", newline="\n")
+    (req / "system-requirements.csv").write_text(
+        SRS_H + (SRS if "SR" in tiers else ""), encoding="utf-8", newline="\n"
+    )
+    (req / "low-level-requirements.csv").write_text(
+        LLRS_H + (LLRS if "LLR" in tiers else ""), encoding="utf-8", newline="\n"
+    )
+    (root / "docs" / "test" / "test-cases.csv").write_text(
+        TCS_H + (TCS if "TC" in tiers else ""), encoding="utf-8", newline="\n"
+    )
+    return root / "docs"
+
+
+@pytest.mark.parametrize(
+    "tiers,expected",
+    [
+        ((), 1),  # SN ratified, no SR yet — requirements are the work
+        (("SR",), 2),  # the canonical COMPLETED-G1 state, not a finished spine
+        (("SR", "LLR"), 3),  # decomposed, no test cases written
+    ],
+)
+def test_a_partially_decomposed_spine_never_reads_stage_four(tmp_path, tiers, expected):
+    # The loop returned an index only when it found an UNACCEPTED row, so an
+    # empty tier was silently passed and control fell through to `len(TIERS)` —
+    # publishing stage 4 -> G3 for a spine nobody had decomposed. The `not any()`
+    # guard fired only when ALL FOUR tiers were empty.
+    docs = partial_docs(tmp_path, tiers)
+    ATTEST.seed(tmp_path, docs, by="test")
+    assert ATTEST.detect_candidates(tmp_path, docs) == []
+    assert GATE.spine_stage(docs) == expected
+    assert GATE.verification_gate_for(GATE.spine_stage(docs)) != "G3"
+
+
+def test_decomposing_the_next_tier_moves_the_stage_forwards(tmp_path):
+    # The tell that the old answer was vacuous: an SN-only spine reported 4, and
+    # writing the first SR DROPPED it to 1 — progress reading as regression. A
+    # stage that is already at its maximum cannot move forward on real work.
+    docs = partial_docs(tmp_path, ())
+    ATTEST.seed(tmp_path, docs, by="test")
+    before = GATE.spine_stage(docs)
+    assert before == 1
+    (docs / "requirements" / "system-requirements.csv").write_text(
+        SRS_H + SRS, encoding="utf-8", newline="\n"
+    )
+    ATTEST.seed(tmp_path, docs, by="test")
+    assert GATE.spine_stage(docs) > before
+
+
 # --- TC-159: the meaning verdict at each tier (SR-143 / LLR-165) -------------
 # need | requirement | low-level | test-case | clarity
 MEANING_CASES = {

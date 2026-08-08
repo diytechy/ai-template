@@ -46,15 +46,23 @@ def test_scaffold_contains_expected_files(scaffold):
         # unscaffolded, as the legacy-format reference wi_convert migrates).
         "docs/work/queued/WI-000-example.md",
         "docs/orphans-allow",
-        # The six-state vocabulary (WI-384): every state that is not `queued`
-        # (which the WI-000 exemplar already tracks) gets an empty directory, so
-        # the states are visible in a listing — including BOTH terminals, which
+        # The state vocabulary (WI-384): every state that is not `queued` (which
+        # the WI-000 exemplar already tracks) gets an empty directory, so the
+        # states are visible in a listing — including ALL THREE terminals, which
         # is what removed the `disposition` attribute that told them apart.
+        # `partial` is the third, and it is listed here rather than left to the
+        # subset loop for a measured reason: it was ADDED to the loader tables and
+        # to the integrator's outcome map but not to bootstrap's directory list,
+        # so a fresh scaffold had no docs/work/partial/ at all while the meta repo
+        # stayed green. That is the scaffold-surface defect class this repo's own
+        # history names as its most expensive, and it is only pinned if the file
+        # is named here.
         "docs/work/draft/.gitkeep",
         "docs/work/active/.gitkeep",
         "docs/work/deferred/.gitkeep",
         "docs/work/cancelled/.gitkeep",
         "docs/work/complete/.gitkeep",
+        "docs/work/partial/.gitkeep",
         # The log's fragment drop-box (concurrency-restructure.md §5.1): empty,
         # marker-only — an exemplar here would be compiled into docs/log.md by
         # the first trunk step.

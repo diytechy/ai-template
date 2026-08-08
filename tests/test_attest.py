@@ -13,6 +13,7 @@ Both are invisible to the diff-shaped check and must be caught here.
 """
 
 import json
+import re
 
 import pytest
 from conftest import load_script
@@ -682,7 +683,13 @@ def test_cli_seed_then_candidates_reports_a_moved_row(tmp_path, capsys):
 def test_cli_request_open_decide_round_trip(tmp_path, capsys):
     args = ["--root", str(tmp_path)]
     assert ATTEST.main(args + ["--request", "final look", "--by", "owner"]) == 0
-    request_id = capsys.readouterr().out.strip().split()[-1].rstrip(".")
+    # Matched, not scraped off the last token: the arm also names the generated
+    # artifacts the write staled, and a positional parse reads one of those.
+    recorded = re.search(
+        r"recorded review request ([0-9a-f]{16})", capsys.readouterr().out
+    )
+    assert recorded
+    request_id = recorded.group(1)
     assert ATTEST.main(args + ["--open"]) == 0
     assert "final look" in capsys.readouterr().out
     assert ATTEST.main(args + ["--decide", request_id, "--by", "owner"]) == 0
@@ -700,3 +707,332 @@ def test_cli_refuses_an_unattributed_ask_and_a_corrupt_ledger(tmp_path, capsys):
     docs = make_docs(tmp_path)
     assert ATTEST.main(["--root", str(tmp_path), "--docs", str(docs), "--seed"]) == 1
     assert "attestation.jsonl:1" in capsys.readouterr().err
+
+
+# --- review-B 2 / 5 / 20: the id must be THERE, or nothing can verify the line -
+def write_lines(root, ledger_kind, *payloads):
+    """Hand-write raw ledger lines, the way an editor or a repair script would."""
+    path = ATTEST.ledger_path(root, ledger_kind)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    body = "".join(
+        json.dumps(p, sort_keys=True, separators=(",", ":")) + "\n" for p in payloads
+    )
+    path.write_text(body, encoding="utf-8", newline="\n")
+    return path
+
+
+ID_LESS_ANCHOR = {
+    "schema": 1,
+    "kind": "attestation",
+    "artifact_kind": "SR",
+    "artifact_id": "SR-001",
+    "digest": "deadbeef",
+    "decision": "ratified",
+    "parent": None,
+}
+ID_LESS_REQUEST = {
+    "schema": 1,
+    "kind": "review-request",
+    "artifact_kind": "review",
+    "artifact_id": "full-spine",
+    "reason": "hand-written",
+    "by": "someone",
+    "parent": None,
+}
+
+
+def test_an_id_less_line_is_refused_on_read_rather_than_trusted_as_an_anchor(tmp_path):
+    # Dropping `id` was the one edit that passed every rung: the derived-id check
+    # was gated on the presence of the field it checks, so the line was accepted
+    # unverified and then trusted as THE accepted anchor.
+    path = write_lines(tmp_path, "attestation", ID_LESS_ANCHOR)
+    with pytest.raises(ValueError) as exc:
+        ATTEST.read_events(path)
+    assert "REFUSED" in str(exc.value)
+    assert "attestation.jsonl:1" in str(exc.value)
+    assert "no `id`" in str(exc.value)
+    with pytest.raises(ValueError):
+        ATTEST.accepted_anchor(tmp_path, "SR", "SR-001")
+
+
+def test_an_id_less_line_refuses_the_next_append_by_name_not_with_a_key_error(tmp_path):
+    # The reader crashed with a bare `KeyError: 'id'` at `chain[-1]["id"]`, which
+    # `main()` does not catch — so the declared refusal shape was never printed.
+    write_lines(tmp_path, "attestation", ID_LESS_ANCHOR)
+    with pytest.raises(ValueError) as exc:
+        ATTEST.append_event(
+            tmp_path, ATTEST.attestation_event("SR", "SR-001", "d2", "ratified", None)
+        )
+    assert "REFUSED" in str(exc.value)
+
+
+def test_an_id_less_review_request_refuses_the_cli_instead_of_tracebacking(
+    tmp_path, capsys
+):
+    # `_open_requests` indexes the open set BY id, so an id-less request line
+    # killed --checkpoint/--open/--request with a KeyError escaping main().
+    write_lines(tmp_path, "review-request", ID_LESS_REQUEST)
+    docs = make_docs(tmp_path)
+    args = ["--root", str(tmp_path), "--docs", str(docs)]
+    assert ATTEST.main(args + ["--checkpoint"]) == 1
+    assert "REFUSED" in capsys.readouterr().err
+    assert ATTEST.main(args + ["--open"]) == 1
+    assert "review-requests.jsonl:1" in capsys.readouterr().err
+
+
+# --- review-B 6 / 8 / 23 / 37: what the one-time migration may NOT do ---------
+def amend_sr(docs, text="add three numbers"):
+    (docs / "requirements" / "system-requirements.csv").write_text(
+        SRS_H + SRS.replace("add two numbers", text), encoding="utf-8", newline="\n"
+    )
+
+
+def chain_of(root, kind, rid):
+    events = ATTEST.read_events(ATTEST.ledger_path(root, "attestation"))
+    return [
+        (e["decision"], e.get("by"))
+        for e in events
+        if ATTEST.chain_key(e) == (kind, rid)
+    ]
+
+
+def test_seed_does_not_re_ratify_an_amended_row(tmp_path):
+    # The guard asked "is the current text accepted?" when the migration's
+    # question is "does this row have ANY history?" — so an amended row fell
+    # through and got a fresh accepting anchor at the NEW digest, with no human
+    # decision and no clarity-vs-meaning call.
+    docs = make_docs(tmp_path)
+    ATTEST.seed(tmp_path, docs, by="seed")
+    amend_sr(docs)
+    assert [c["state"] for c in ATTEST.detect_candidates(tmp_path, docs)] == [
+        ATTEST.CHANGED
+    ]
+    assert ATTEST.seed(tmp_path, docs, by="seed")["SR"] == 0
+    assert len(chain_of(tmp_path, "SR", "SR-001")) == 1
+    assert [c["id"] for c in ATTEST.detect_candidates(tmp_path, docs)] == ["SR-001"]
+
+
+def test_seed_does_not_walk_over_a_standing_meaning_verdict(tmp_path):
+    # `meaning` is the one decision the module documents as never accepting. A
+    # migration command answering it — with `by="seed"` — is the ratification
+    # boundary being crossed by a machine.
+    docs = make_docs(tmp_path)
+    ATTEST.seed(tmp_path, docs, by="seed")
+    amend_sr(docs)
+    candidate = ATTEST.detect_candidates(tmp_path, docs)[0]
+    ATTEST.append_event(
+        tmp_path,
+        ATTEST.attestation_event(
+            "SR",
+            "SR-001",
+            candidate["digest"],
+            "meaning",
+            head_id(tmp_path, "attestation", "SR", "SR-001"),
+            "peter",
+        ),
+    )
+    ATTEST.seed(tmp_path, docs, by="seed")
+    assert chain_of(tmp_path, "SR", "SR-001") == [
+        (ATTEST.BASELINE, "seed"),
+        ("meaning", "peter"),
+    ]
+    assert ATTEST.detect_candidates(tmp_path, docs)[0]["state"] == ATTEST.PENDING
+
+
+def test_a_seeded_anchor_says_baseline_not_ratified(tmp_path):
+    # 523 machine migrations must not be readable as 523 human ratifications:
+    # `is_accepting` decides from the decision WORD alone, and `by` is optional
+    # and read by no attestation consumer.
+    docs = make_docs(tmp_path)
+    ATTEST.seed(tmp_path, docs, by="seed")
+    events = ATTEST.read_events(ATTEST.ledger_path(tmp_path, "attestation"))
+    assert {e["decision"] for e in events} == {ATTEST.BASELINE}
+    assert ATTEST.BASELINE not in ATTEST.VERDICTS
+    assert ATTEST.BASELINE in ATTEST.ACCEPTING  # still an anchor, just not a verdict
+
+
+DRAFT_ROW = (
+    "| SN-090 | A team can subtract. | Nobody has agreed to this yet. | S |"
+    " sub(3,1) gives 2. |"
+)
+SN_WITH_DRAFT = (
+    SN_MD
+    + """
+## Draft needs (unratified)
+
+Ratifying a need = moving its row up into Core needs in a reviewed commit.
+
+| SN-ID | Need (plain language) | Why it matters | Priority | Acceptance intent |
+|---|---|---|---|---|
+"""
+    + DRAFT_ROW
+    + "\n"
+)
+
+
+def test_the_migration_does_not_anchor_a_need_parked_under_a_draft_heading(tmp_path):
+    # Anchoring a Draft need makes the declared ratification act — moving the row
+    # up into the core table — produce no candidate and no event, because the row
+    # is already accepted at exactly that text.
+    docs = make_docs(tmp_path)
+    (docs / "requirements" / "stakeholder-needs.md").write_text(
+        SN_WITH_DRAFT, encoding="utf-8", newline="\n"
+    )
+    assert ATTEST.seed(tmp_path, docs, by="seed")["SN"] == 1
+    assert chain_of(tmp_path, "SN", "SN-090") == []
+    # Ratifying it = MOVING the row up into Core needs. That must raise a
+    # candidate; with a draft anchor already standing at that very text it
+    # raised none, and the reviewed commit passed unnoticed.
+    (docs / "requirements" / "stakeholder-needs.md").write_text(
+        SN_WITH_DRAFT.replace(DRAFT_ROW + "\n", "").replace(
+            SN_MD, SN_MD + DRAFT_ROW + "\n"
+        ),
+        encoding="utf-8",
+        newline="\n",
+    )
+    assert [c["id"] for c in ATTEST.detect_candidates(tmp_path, docs)] == ["SN-090"]
+
+
+# --- review-B 7 / 11 / 21 / 29: the SN digest is per-table, and it is TOTAL ----
+SN_TWO_TABLES = """# Stakeholder Needs
+
+## Core needs
+
+| SN-ID | Need | Why it matters | Priority | Acceptance intent |
+|---|---|---|---|---|
+| SN-001 | A team can add two numbers. | It is the demo need. | M | add(1,2) gives 3. |
+
+## Edge-case expectations
+
+| SN-ID | Lifecycle | Scenario | Expected behavior |
+|---|---|---|---|
+| SN-013 | Provision | No Python 3 interpreter on PATH | Reports clearly; never crashes. |
+"""
+
+
+def test_the_edge_case_table_records_its_own_declared_cell_names():
+    # Contracts §4 declares the cells PER TABLE and names the single-table read
+    # as the rejected shape: the cell NAMES are inside the hashed bytes, so
+    # recording `Lifecycle` under the name `Need` misleads anyone reading a diff.
+    rows = {r["SN-ID"]: r for r in ATTEST.sn_rows(SN_TWO_TABLES)}
+    assert ATTEST.SN_TABLES["edge"] == ("Lifecycle", "Scenario", "Expected")
+    edge = rows["SN-013"]
+    assert edge["SN-Table"] == "edge"
+    assert edge["Lifecycle"] == "Provision"
+    assert edge["Expected"] == "Reports clearly; never crashes."
+    assert "Need" not in edge and "Priority" not in edge
+    assert rows["SN-001"]["SN-Table"] == "core"
+
+
+def test_one_table_of_cells_cannot_answer_for_the_other():
+    # The digest reads the cells of the table the row came from, so the same
+    # prose under two different tables is two different records.
+    core, edge = ATTEST.sn_rows(SN_TWO_TABLES)
+    assert ATTEST.cells_for("SN", core) == ATTEST.NORMATIVE_CELLS["SN"]
+    assert ATTEST.cells_for("SN", edge) == ATTEST.SN_TABLES["edge"]
+    same_prose = {"SN-ID": "SN-013", "Lifecycle": "x", "Scenario": "y", "Expected": "z"}
+    as_edge = ATTEST.normative_digest("SN", dict(same_prose, **{"SN-Table": "edge"}))
+    as_core = ATTEST.normative_digest(
+        "SN", {"SN-ID": "SN-013", "Need": "x", "Why": "y", "Priority": "z"}
+    )
+    assert as_edge != as_core
+
+
+def test_a_cell_past_the_declared_width_refuses_instead_of_dropping_out_of_the_hash():
+    # A row was padded to five fields and read positionally, with no counterpart
+    # for a LONG row: every field past the fifth was discarded silently, so an
+    # edit there changed meaning and moved no digest.
+    wide = SN_TWO_TABLES.replace(
+        "| SN-013 | Provision | No Python 3 interpreter on PATH |"
+        " Reports clearly; never crashes. |",
+        "| SN-013 | Provision | No Python 3 interpreter on PATH |"
+        " Reports clearly; never crashes. | THE-LOOP-MAY-SELF-BLESS |",
+    )
+    with pytest.raises(ValueError) as exc:
+        ATTEST.sn_rows(wide)
+    assert "REFUSED" in str(exc.value)
+    assert "SN-013" in str(exc.value)
+    assert "would not be digested" in str(exc.value)
+
+
+def test_a_genuinely_empty_last_cell_is_still_a_cell():
+    # Only ONE trailing field is dropped (the closing pipe's), so an under-filled
+    # row still pads rather than refusing.
+    rows = ATTEST.sn_rows("## Core needs\n\n| SN-002 | Need text | Why text | M | |\n")
+    assert rows[0]["Acceptance"] == ""
+    assert rows[0]["Priority"] == "M"
+
+
+# --- review-B 9: a dial that could not be READ never said "no" ----------------
+def write_config(root, body):
+    (root / "docs").mkdir(parents=True, exist_ok=True)
+    (root / "docs" / "config.toml").write_text(body, encoding="utf-8", newline="\n")
+
+
+@pytest.mark.parametrize(
+    "body,needle",
+    [
+        (
+            "schema = 1\n\n[attestaton]\nhuman_ratification_through = 3\n"
+            'final_full_spine_review = "always"\n',
+            "attestaton",
+        ),
+        (
+            "schema = 1\n\n[attestation]\nhuman_ratification_through = 1\n"
+            'final_full_spine_reveiw = "always"\n',
+            "final_full_spine_reveiw",
+        ),
+    ],
+)
+def test_a_misspelled_attestation_dial_blocks_the_checkpoint(
+    tmp_path, capsys, body, needle
+):
+    # The filter compared against the CORRECTLY-SPELLED key names, so by
+    # construction no misspelling of an attestation dial could ever match — and a
+    # policy the adopter wrote as `always` answered "checkpoint clear", exit 0.
+    docs = make_docs(tmp_path)
+    write_config(tmp_path, body)
+    projection = ATTEST.ratification_projection(tmp_path, docs)
+    assert any(needle in f for f in projection["findings"]), projection["findings"]
+    assert projection["boundary"] is None
+    assert projection["tiers"] == []
+    args = ["--root", str(tmp_path), "--docs", str(docs)]
+    assert ATTEST.main(args + ["--checkpoint"]) == 1
+    assert "checkpoint clear" not in capsys.readouterr().out
+
+
+def test_a_finding_on_a_declared_unrelated_dial_is_still_not_ours(tmp_path):
+    # The negative half, kept beside the fix: scoping is what keeps the one line
+    # that changes what a human owes from being buried under the whole config
+    # report. A key the loader RECOGNISED and attributed elsewhere stays there.
+    docs = make_docs(tmp_path)
+    write_config(
+        tmp_path,
+        "schema = 1\n\n[attestation]\nhuman_ratification_through = 2\n\n"
+        "[policy]\npush = 'nobody'\nreview_rouunds = 1\n",
+    )
+    projection = ATTEST.ratification_projection(tmp_path, docs)
+    assert projection["findings"] == []
+    assert projection["boundary"] == 2
+
+
+# --- review-B 38: the tool that broke the tree is the one that says so --------
+def test_a_ledger_write_names_the_generated_artifacts_it_staled(tmp_path, capsys):
+    # `docs/open-items.html` and `docs/gate` both render these ledgers, and
+    # pre-commit checks both unconditionally — so the documented way to ask for a
+    # review left the tree uncommittable with no hint from the tool that did it.
+    docs = make_docs(tmp_path)
+    assert ATTEST.main(["--root", str(tmp_path), "--docs", str(docs), "--seed"]) == 0
+    seeded = capsys.readouterr().out
+    assert "NOTE" in seeded
+    assert "docs/gate" in seeded and "derive_gate.py" in seeded
+    assert "docs/open-items.html" in seeded and "gen_open_items.py" in seeded
+    assert (
+        ATTEST.main(["--root", str(tmp_path), "--request", "look", "--by", "owner"])
+        == 0
+    )
+    asked = capsys.readouterr().out
+    assert "NOTE" in asked and "docs/open-items.html" in asked
+    # A seed that anchored nothing broke nothing, so it must not cry stale.
+    assert ATTEST.main(["--root", str(tmp_path), "--docs", str(docs), "--seed"]) == 0
+    assert "NOTE" not in capsys.readouterr().out

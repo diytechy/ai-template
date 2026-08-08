@@ -19,7 +19,15 @@ WHAT IT RENDERS, in the order an owner needs it:
   1. PENDING DECISIONS — one card per `Status=pending` row of the registry:
      the one-line, what is being decided, blast radius, options, recommendation,
      and the WI rows that carry the work.
-  2. RATIFICATION & RE-ATTESTATION — every SR whose `Status` is `Draft` (owes a
+  2. RATIFICATION & RE-ATTESTATION — headed by WHO may ratify each spine tier
+     under the configured `human_ratification_through` boundary, how many rows of
+     each tier are waiting, and every open full-spine review request with its
+     reason and its asker (SR-142/SR-144). That card heads the band rather than
+     forming a fourth one because it answers the question the cards beneath it
+     raise: a reader looking at "re-attest owed" needs to know whether that
+     signature is theirs to give or an adjudicator's to enact, and a boundary
+     printed three screens away is a boundary nobody reads. Then every SR whose
+     `Status` is `Draft` (owes a
      first ratification) or `Modified` (owes a re-attest), with its whole chain:
      per-cell before/after, unchanged runs collapsible, additions and deletions
      marked, and THE BASELINE REVISION PRINTED ON EVERY SECTION. An empty
@@ -35,10 +43,12 @@ WHAT IT RENDERS, in the order an owner needs it:
      verbatim rather than recomputed.
 
 ANTI-DUPLICATION, deliberately: the git archaeology and the cell comparison live
-in `trace.reattest_model`, and the pending projection lives in
-`gen_trajectory.pending_block`. This module imports both and RENDERS. It owns no
-second opinion about what is pending or what changed — if this view and the
-`--ratify` brief ever disagree, the brief is authoritative and this is the bug.
+in `trace.reattest_model`, the pending projection lives in
+`gen_trajectory.pending_block`, and the boundary matrix plus the open-request set
+live in `attest.ratification_projection`. This module imports all three and
+RENDERS. It owns no second opinion about what is pending or what changed — if
+this view and the `--ratify` brief ever disagree, the brief is authoritative and
+this is the bug.
 
 Freshness: `--check` byte-compares the regenerated view against the file — a
 pure function of the committed tree since the dispatcher-era machine-local
@@ -485,6 +495,152 @@ def _chain_row(row):
     )
 
 
+def boundary_projection(root):
+    """The ratification-boundary facts, computed by `attest.ratification_projection`.
+
+    This module RENDERS; it owns no second opinion about what a human owes — the
+    same rule that sends the diff depth to `trace.reattest_model`. The import is
+    deferred (contracts §6) so a partially re-synced adopter whose tree has no
+    `attest.py` still gets a page, carrying a finding that says why the band is
+    thin rather than a traceback or — worse — a silent omission on the one
+    document a human rules from."""
+    try:
+        import attest  # deferred by contract (contracts §6), see the docstring
+
+        return attest.ratification_projection(root)
+    except (ImportError, ValueError, OSError) as exc:
+        return {
+            "boundary": None,
+            "policy": None,
+            "tiers": [],
+            "requests": [],
+            "block": None,
+            "findings": [str(exc)],
+        }
+
+
+def _refusal_lines(findings):
+    """Every refusal, one paragraph each — never just the first (contracts §5).
+    An owner fixing a config learns all of it in one regeneration."""
+    return "".join('<p class="empty">REFUSED — {}</p>'.format(esc(f)) for f in findings)
+
+
+def _boundary_tier_rows(tiers):
+    """One row per spine tier: who may ratify it, and how many of its rows are
+    actually waiting. The count is what turns a rule into a queue length."""
+    rows = []
+    for entry in tiers:
+        pending = entry["pending"]
+        rows.append(
+            '<div class="row"><div class="row-head">'
+            '<span class="rid">{t}</span><span class="pill{cls}">{d}</span>'
+            '<span class="hint">{p}</span></div></div>'.format(
+                t=esc(entry["tier"]),
+                cls=" ratify" if entry["requires_human"] else "",
+                d="human ratification required"
+                if entry["requires_human"]
+                else "an adjudicator may enact",
+                p="row count unavailable"
+                if pending is None
+                else "{} row(s) awaiting a decision".format(pending),
+            )
+        )
+    return "".join(rows)
+
+
+def _review_request_rows(requests):
+    """Every OPEN full-spine review request, with its reason and its asker.
+
+    Both cells are the point: a request whose reason is not on the page is an
+    instruction to stop with no way to judge whether it still applies, and an
+    unattributed one is nobody's to close."""
+    if not requests:
+        return (
+            '<p class="empty">No open full-spine review request. A one-off ask is '
+            "an EVENT, not a config edit — <code>attest.py --request "
+            "&quot;why&quot; --by NAME</code> — so it survives a relaunch without "
+            "becoming a permanent dial nobody remembers turning back.</p>"
+        )
+    rows = []
+    for request in requests:
+        rows.append(
+            '<div class="row"><div class="row-head">'
+            '<span class="rid">{i}</span>'
+            '<span class="pill ratify">full-spine review requested</span></div>'
+            '<div class="field"><span class="k">reason</span>'
+            '<span class="v">{r}</span></div>'
+            '<div class="field"><span class="k">asked by</span>'
+            '<span class="v">{b}{t}</span></div></div>'.format(
+                i=esc(request.get("id")),
+                r=esc(request.get("reason")),
+                b=esc(request.get("by")),
+                t=" on {}".format(esc(request["ts"])) if request.get("ts") else "",
+            )
+        )
+    return "".join(rows)
+
+
+def _checkpoint_line(projection):
+    """Clear, blocked, or NOT CERTIFIED — three sentences on purpose. An input
+    that could not be read must never render the word that means "go"; that is
+    the difference between a checkpoint and a decoration."""
+    if projection["findings"]:
+        return (
+            '<p class="empty">Full-spine checkpoint <strong>NOT CERTIFIED</strong> '
+            "— the refusal(s) above mean this view cannot say whether it is "
+            "clear.</p>"
+        )
+    if projection["block"]:
+        return (
+            '<p class="empty">Full-spine checkpoint <strong>BLOCKED</strong> — '
+            "{}. It closes only on a recorded human decision "
+            "(<code>attest.py --decide &lt;id&gt; --by NAME</code>).</p>".format(
+                esc(projection["block"])
+            )
+        )
+    return (
+        '<p class="hint">Full-spine checkpoint clear — no open request and '
+        "<code>final_full_spine_review={}</code>.</p>".format(esc(projection["policy"]))
+    )
+
+
+def _boundary_card(projection):
+    """Band 2's first card: who may ratify each spine tier, what is waiting, and
+    every open full-spine review request.
+
+    A refused dial renders NO matrix. The schema default it fell back to is not
+    what the adopter wrote, and a printed matrix is read as the configured one —
+    so the honest output is the refusal and a blank where the table would be."""
+    parts = [_refusal_lines(projection["findings"])]
+    if projection["boundary"] is None:
+        parts.append(
+            '<p class="empty">The ratification boundary is <strong>not shown'
+            "</strong>: the configured value could not be trusted, and the schema "
+            "default is not what this repo declared. Fix "
+            "<code>docs/config.toml</code> and regenerate.</p>"
+        )
+    else:
+        parts.append(
+            '<p class="sub">Boundary <strong>{b}</strong> '
+            "(<code>attestation.human_ratification_through</code>) — cumulative "
+            "and inclusive: at or below it a ratification owes a recorded human "
+            "decision; above it an adjudicator may enact one.</p>".format(
+                b=projection["boundary"]
+            )
+        )
+        parts.append(_boundary_tier_rows(projection["tiers"]))
+    parts.append('<div class="ctxhead">open full-spine review requests</div>')
+    parts.append(_review_request_rows(projection["requests"]))
+    parts.append(_checkpoint_line(projection))
+    return (
+        '<article class="card" id="ratification-boundary">'
+        '<h3><span class="rid">boundary</span>'
+        "<span>Who may ratify each spine tier</span></h3>{}</article>".format(
+            "".join(parts)
+        )
+    )
+
+
 def _attestation_cards(model, srs_by_id=None):
     """One card per SR owing a ratification or re-attest, its chain beneath.
 
@@ -636,7 +792,7 @@ def render(root, since=None):
         "row's remaining cells, and the SR text a chain-only amendment hangs "
         "from</span></div>\n"
         '<section class="band"><p class="eyebrow">2 · Ratification &amp; '
-        "re-attestation</p>{attestations}</section>\n"
+        "re-attestation</p>{boundary}{attestations}</section>\n"
         '<section class="band"><p class="eyebrow">3 · Pending owner actions '
         "(derived)</p>{pointers}</section>\n"
         "<footer>Source: <code>docs/requirements/open-items.csv</code> + the spine "
@@ -651,6 +807,7 @@ def render(root, since=None):
         js=JS,
         basemark=BASELINE_MARK.format(since or ""),
         briefs=_brief_cards(items),
+        boundary=_boundary_card(boundary_projection(root)),
         attestations=_attestation_cards(
             model, {r.get("SR-ID"): r for r in reg.srs if r.get("SR-ID")}
         ),

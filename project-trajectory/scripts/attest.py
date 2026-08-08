@@ -25,11 +25,28 @@ the whole design, and each is a refusal:
     rewritten, and a malformed line is a hard read error naming file and line —
     never a silently skipped record, which is how a ledger loses the one event
     that mattered.
+  * **A migration is not a decision.** `seed` writes `baseline`, never
+    `ratified`: acceptance is read off the decision WORD, so a ledger of machine
+    baselines spelled `ratified` is later counted as that many human approvals.
+    It only ever writes a FIRST anchor — a row with any history at all, and a
+    need parked under a heading that says it is unratified, are both left alone.
   * **The open set is derived, never stored.** A full-spine review request lives
     as an event and its open-ness is recomputed by replaying request and
     decision events in order (SR-144). That is exactly why it survives a
     relaunch — which is precisely when an unattended loop would otherwise walk
     past the ask.
+
+`requires_human` routes ONE cell; `ratification_projection` is the other half of
+SR-142 and SR-144 — what an owner SEES and what therefore blocks. It answers the
+sixteen cells the boundary dial is actually choosing between, how many rows of
+each tier are waiting, every open request with its reason and its asker, and
+whether the full-spine checkpoint is blocked. It is computed here rather than in
+`gen_open_items.py` because that generator renders and owns no second opinion
+about what is pending. Nothing in it raises: an unvalidatable config, a
+hand-edited ledger line or an unparseable registry becomes a *finding*, and the
+answer it would have produced is OMITTED rather than guessed — a surface showing
+the DEFAULT matrix while the configured one was unreadable would be telling a
+human the wrong thing about what they owe.
 
 `detect_candidates` is the reason the digest exists. `check_trajectory.
 staged_spine_amendments` can only see an amendment that is *staged in one diff*
@@ -54,6 +71,8 @@ Usage (from the repo root):
     python scripts/attest.py --open                  # open full-spine requests
     python scripts/attest.py --request "why" --by NAME
     python scripts/attest.py --decide <request-id> --by NAME [--verdict V]
+    python scripts/attest.py --boundary              # the configured tier matrix
+    python scripts/attest.py --checkpoint            # exit 1 while it is blocked
 
 The small CSV/markdown loaders below are duplicated from trace.py / derive_gate.py
 per the kit's independently-copyable-script convention (the F5 rule).
@@ -106,6 +125,8 @@ ID_COLUMN = {"SN": "SN-ID", "SR": "SR-ID", "LLR": "LLR-ID", "TC": "TC-ID"}
 # move without invalidating an anchor, which is what keeps a re-attestation
 # about obligation rather than bookkeeping.
 NORMATIVE_CELLS = {
+    # The CORE stakeholder-needs table only. That file carries a SECOND table
+    # with a different shape, declared beside this one in `SN_TABLES`.
     "SN": ("Need", "Why", "Priority", "Acceptance"),
     "SR": (
         "Title",
@@ -120,6 +141,24 @@ NORMATIVE_CELLS = {
     "TC": ("Verifies", "Level", "Method", "Parameters", "Expected"),
 }
 
+# `stakeholder-needs.md` carries TWO tables with different shapes, and the digest
+# declares BOTH rather than assuming the first (contracts §4). The cell NAMES are
+# inside the hashed bytes, so reading the edge-case table with the core table's
+# names records `Lifecycle` under the name `Need` — a record that would mislead
+# anyone reading a diff, which is exactly why §4 declares them per table.
+SN_TABLES = {
+    "core": NORMATIVE_CELLS["SN"],
+    "edge": ("Lifecycle", "Scenario", "Expected"),
+}
+
+# Two facts about the section a need sits under, carried on the row so the digest
+# and `seed` can each ask for the one they need. They are ORTHOGONAL: the shipped
+# template's Draft table is the CORE shape, so draft-ness is not a third set of
+# cell names. Neither key is a normative cell — a row's table is a property of
+# the file's structure, and a heading rename is not an amendment.
+SN_TABLE_KEY = "SN-Table"
+SN_DRAFT_KEY = "SN-Draft"
+
 # Where each tier's rows live, relative to the docs directory.
 SN_MD = ("requirements", "stakeholder-needs.md")
 REGISTRIES = {
@@ -128,11 +167,22 @@ REGISTRIES = {
     "TC": ("test", "test-cases.csv"),
 }
 
-# The four verdicts an attestation may record (decisions §1 glossary).
-DECISIONS = ("ratified", "clarity", "meaning", "override")
-# The three that make an event an ACCEPTED anchor. `override` accepts only when
-# it says so — a human override is as often a refusal as a blessing.
-ACCEPTING = ("ratified", "clarity")
+# The one word `seed` writes. It is NOT a verdict: the migration decided
+# nothing, it only recorded what the text said when the ledger opened. Kept
+# distinct from `ratified` because `is_accepting` reads the decision word and
+# nothing else, so a ledger of machine baselines spelled `ratified` reads — to
+# every later counter, card and adjudicator — as that many human ratifications.
+BASELINE = "baseline"
+
+# The four verdicts an attestation may record (decisions §1 glossary), plus the
+# migration's own word above.
+VERDICTS = ("ratified", "clarity", "meaning", "override")
+DECISIONS = VERDICTS + (BASELINE,)
+# The ones that make an event an ACCEPTED anchor. `override` accepts only when
+# it says so — a human override is as often a refusal as a blessing. `baseline`
+# accepts: it is the text the ledger opened on, and a migration that left every
+# row unattested would make the first `--candidates` run pure noise.
+ACCEPTING = ("ratified", "clarity", BASELINE)
 
 # What a chain says about one artifact's CURRENT text.
 ACCEPTED, PENDING, CHANGED, UNATTESTED = (
@@ -151,6 +201,21 @@ REVIEW_KIND = "review"
 # `human_ratification_through`). Read through `boundary_from_config` so the
 # default lives in ONE place once config.py exists.
 DEFAULT_BOUNDARY = 1
+
+# The persistent whole-spine review policy a tree with no configuration answers
+# to. Beside the boundary for the same reason: a repo that has not adopted
+# docs/config.toml must still get an answer rather than a crash.
+DEFAULT_FINAL_REVIEW = "never"
+
+# The two dotted config paths this module reads, named once so the projection,
+# the CLI and the refusal messages cannot spell them three ways.
+BOUNDARY_KEY = "attestation.human_ratification_through"
+FINAL_REVIEW_KEY = "attestation.final_full_spine_review"
+
+# Who may enact a ratification at one tier. Declared words rather than a bare
+# boolean, because these are printed on the owner's surface: "adjudicator" tells
+# a reader what happens next, where `False` only tells them what does not.
+HUMAN, ADJUDICATOR = "human", "adjudicator"
 
 TS_FORMAT = "%Y-%m-%dT%H:%M:%SZ"
 
@@ -210,6 +275,31 @@ def row_id(kind, row):
     return rid
 
 
+def cells_for(kind, row=None):
+    """The declared normative cells for ONE row — per TABLE, not per kind.
+
+    Only `SN` has more than one shape: `stakeholder-needs.md` carries a core and
+    an edge-case table (contracts §4), and `sn_rows` stamps each row with the one
+    it came from. A row with no stamp (a hand-built dict, a caller holding a
+    registry row) reads as the core table, which is the shape every other reader
+    of that file assumes."""
+    if kind not in NORMATIVE_CELLS:
+        raise _refuse(
+            "{!r} is not a spine artifact kind (expected one of {})".format(
+                kind, ", ".join(TIERS)
+            )
+        )
+    if kind != "SN":
+        return NORMATIVE_CELLS[kind]
+    table = (row or {}).get(SN_TABLE_KEY) or "core"
+    if table not in SN_TABLES:
+        raise _refuse(
+            "an SN row names table {!r}, which is not one of the declared "
+            "stakeholder-needs tables ({})".format(table, ", ".join(sorted(SN_TABLES)))
+        )
+    return SN_TABLES[table]
+
+
 def normative_digest(kind, row):
     """The SHA-256 hex of one artifact's declared normative cells, canonicalised.
 
@@ -221,7 +311,7 @@ def normative_digest(kind, row):
     not disturb."""
     rid = row_id(kind, row)  # also the kind check — one gate, not two
     blob = "{}\n{}\n{}\n".format(DIGEST_PREFIX, kind, rid)
-    for name in NORMATIVE_CELLS[kind]:
+    for name in cells_for(kind, row):
         blob += name + _FS + canonical_cell(row.get(name)) + _RS
     return hashlib.sha256(blob.encode("utf-8")).hexdigest()
 
@@ -246,43 +336,88 @@ _SN_ROW_RE = re.compile(r"\|\s*(SN-\d+)\s*\|")
 # Cells split on an UNESCAPED pipe: a `\|` inside a cell is table syntax, not a
 # boundary, and splitting on it would shift every later cell by one.
 _SN_CELL_SPLIT_RE = re.compile(r"(?<!\\)\|")
+# The markdown heading a row sits under. Same shape derive_gate/trace use, so
+# "which section is this row in" has one answer across the kit.
+_SN_HEADING_RE = re.compile(r"^\s{0,3}#{1,6}\s+(.*)")
+
+
+def sn_table_of(heading):
+    """Which declared table a heading opens: `edge` for the edge-case
+    expectations, `core` otherwise (contracts §4).
+
+    Matched on the heading TEXT rather than on an exact title, the same
+    section-as-state read `derive_gate.sn_draft_ids` makes — so an adopter who
+    retitles the section still gets the three-cell shape their table actually
+    has, instead of silently recording it under the core table's names."""
+    return "edge" if "edge" in (heading or "").lower() else "core"
+
+
+def sn_is_draft(heading):
+    """True for a heading that declares its rows unratified (section-as-state
+    §4a). The SAME substring rule `derive_gate.sn_draft_ids` applies, duplicated
+    per the F5 rule — the two must not drift, because a draft heading this call
+    misses is a need `seed` would anchor as though someone had approved it."""
+    return "draft" in (heading or "").lower()
 
 
 def sn_rows(text):
-    """The SN table rows of stakeholder-needs.md as `{SN-ID, Need, Why, Priority,
-    Acceptance}` dicts, example `-000` rows excluded.
+    """The SN table rows of stakeholder-needs.md, example `-000` rows excluded.
 
-    Cells 1..4 after the id are the four normative cells (contracts §4). A row
-    with fewer cells — the file's second, edge-case table is 3 wide — pads with
-    empty strings rather than being dropped: an edge-case need is still a need,
-    and digesting the cells it HAS is what lets it be attested at all.
+    Each row carries its id, its table's DECLARED cells (contracts §4: core is
+    need/why/priority/acceptance, the edge-case table is lifecycle/scenario/
+    expected), and the two structural facts `SN-Table` / `SN-Draft`.
+
+    A row with fewer cells than its table declares pads with empty strings rather
+    than being dropped — an under-filled need is still a need, and digesting the
+    cells it HAS is what lets it be attested at all. A row with MORE cells is
+    REFUSED: silently reading the first N would drop the tail out of the hash, so
+    an edit past the last declared cell would change meaning and move no digest.
 
     An `SN-###` mentioned only in prose has no cells and is therefore not a row
     here, while derive_gate's `sn_all_ids` scrapes the whole text. The two
     universes answer different questions (what can be attested vs. what the
     coverage rung must account for) and are deliberately not merged."""
     rows = []
+    heading = ""
     for line in text.splitlines():
+        found = _SN_HEADING_RE.match(line)
+        if found:
+            heading = found.group(1)
+            continue
         if not _SN_ROW_RE.search(line):
             continue
         cells = [c.strip() for c in _SN_CELL_SPLIT_RE.split(line.strip())]
-        # A leading pipe yields an empty first field; drop it so cells[0] is the id.
+        # The opening and closing pipes each yield one empty field; they are
+        # syntax, not cells. Only ONE trailing field is dropped, so a genuinely
+        # empty last cell still counts.
         if cells and not cells[0]:
             cells = cells[1:]
+        if cells and not cells[-1]:
+            cells = cells[:-1]
         if not cells or not _SN_ROW_RE.search("|{}|".format(cells[0])):
             continue
         if is_example(cells[0]):
             continue
-        cells += [""] * (5 - len(cells))
-        rows.append(
-            {
-                "SN-ID": cells[0],
-                "Need": cells[1],
-                "Why": cells[2],
-                "Priority": cells[3],
-                "Acceptance": cells[4],
-            }
-        )
+        table = sn_table_of(heading)
+        names = SN_TABLES[table]
+        values = cells[1:]
+        if len(values) > len(names):
+            raise _refuse(
+                "{} carries {} cells but the {} stakeholder-needs table declares "
+                "{} ({}) — the content past the last declared cell would not be "
+                "digested, so an edit there would change meaning and move no "
+                "digest".format(
+                    cells[0], len(values), table, len(names), ", ".join(names)
+                )
+            )
+        values += [""] * (len(names) - len(values))
+        row = {
+            "SN-ID": cells[0],
+            SN_TABLE_KEY: table,
+            SN_DRAFT_KEY: sn_is_draft(heading),
+        }
+        row.update(zip(names, values))
+        rows.append(row)
     return rows
 
 
@@ -382,17 +517,22 @@ def chain_map(events):
     return out
 
 
-def _validate_event(event, where=None):
+def _validate_event(event, where=None, require_id=False):
     """Refuse an event whose shape, kind, decision or derived id is wrong.
 
     Run on WRITE and on every READ. Verifying the id on read is what turns the
     ledger from something trusted into something checked: a hand-edited line
-    recomputes to a different id and is refused by name, naming file and line."""
+    recomputes to a different id and is refused by name, naming file and line.
+
+    `require_id` is the difference between the two callers. On READ the id must
+    be THERE — a line carrying none is unverifiable, and an unverifiable line is
+    not evidence. On WRITE it must be absent, because `append_event` mints it
+    from the facts after this call."""
     at = "{}: ".format(where) if where else ""
     _check_envelope(event, at)
     if event["kind"] == "attestation":
         _check_attestation(event, at)
-    _check_derived_id(event, at)
+    _check_derived_id(event, at, require_id)
     return event
 
 
@@ -453,8 +593,22 @@ def _check_attestation(event, at):
         )
 
 
-def _check_derived_id(event, at):
-    if "id" in event and event["id"] != event_id(event):
+def _check_derived_id(event, at, require_id=False):
+    """Verify the derived id — and, on a read, that there IS one.
+
+    Gating the check on the presence of the field it checks would make dropping
+    `id` the one edit that passes every rung: the line would then be trusted as
+    an anchor, and the first reader to index it by id would die on a bare
+    KeyError instead of refusing by name."""
+    if "id" not in event:
+        if require_id:
+            raise _refuse(
+                "{}{} event carries no `id` — the id derives from the facts, so "
+                "a line without one cannot be checked against its payload and is "
+                "not evidence".format(at, event.get("kind"))
+            )
+        return
+    if event["id"] != event_id(event):
         raise _refuse(
             "{}event id {!r} does not match its payload (derives {!r}) — the "
             "line was edited after it was written".format(
@@ -484,7 +638,7 @@ def read_events(path):
             obj = json.loads(s)
         except json.JSONDecodeError as exc:
             raise _refuse("{} is not one JSON object ({})".format(where, exc.msg))
-        events.append(_validate_event(obj, where))
+        events.append(_validate_event(obj, where, require_id=True))
     return events
 
 
@@ -737,26 +891,83 @@ def full_spine_block(root, policy="never"):
 
 
 # --- the human-ratification boundary (LLR-162) --------------------------------
+def attestation_config(root):
+    """`(boundary, final_full_spine_review, [refusal, ...])` — the two attestation
+    dials as configured, plus every reason a reader should not trust them.
+
+    Lazily imported (contracts §6) so this module never fails to import because
+    a sibling slice has not landed — and so a downstream repo that has not
+    adopted the config file still gets the declared defaults rather than a
+    crash.
+
+    The refusal list is deliberately SCOPED to the findings that make *these two
+    dials* untrustworthy: the dials themselves, the document-level ones (an
+    absent `schema`, unreadable bytes, malformed TOML) under which every resolved
+    value is a default standing in for text nobody could read, and every finding
+    the loader could NOT attribute to a declared section. A finding on some
+    unrelated dial is `config_query`'s report to make; repeating the whole config
+    report on the ratification card would bury the one line that changes what a
+    human owes. But an UNRECOGNISED key is not an unrelated dial — `[attestaton]`
+    and `final_full_spine_reveiw` are the likeliest way these two dials go
+    unread, and a dial nobody could read must never answer "checkpoint clear".
+
+    Refusals are strings, not the loader's `Finding` tuples: this value crosses
+    into a renderer, and a renderer that had to know the loader's record shape
+    would be the second opinion this projection exists to avoid."""
+    try:
+        import config  # deferred by contract (contracts §6), see the docstring
+    except ImportError:
+        return DEFAULT_BOUNDARY, DEFAULT_FINAL_REVIEW, []
+    try:
+        cfg, findings = config.load_config(root)
+        boundary = int(cfg.attestation.human_ratification_through)
+        policy = str(cfg.attestation.final_full_spine_review)
+    except (AttributeError, KeyError, TypeError, ValueError):
+        # The sibling slice's accessor shape is not this module's to assert. An
+        # unreadable dial falls back to the declared default rather than
+        # crashing a caller that only wanted to route one tier.
+        return DEFAULT_BOUNDARY, DEFAULT_FINAL_REVIEW, []
+    scoped = ("schema", config.CONFIG_REL, BOUNDARY_KEY, FINAL_REVIEW_KEY)
+    refusals = [
+        "{} ({})".format(f.key, f.reason)
+        for f in findings
+        if f.key in scoped or not _elsewhere(config, f.key)
+    ]
+    return boundary, policy, refusals
+
+
+# The array-valued tables. They are not `config.SECTIONS` entries (they have no
+# scalar defaults), but a finding on one is still attributable to a declared
+# place that is not this section.
+_DECLARED_TABLES = ("routes", "jobs", "prompts")
+
+
+def _elsewhere(config, key):
+    """True when a finding's key belongs to a declared config section that is
+    NOT `[attestation]` — the only findings the ratification card may drop.
+
+    Membership is tested the other way round from the obvious spelling, and that
+    is the whole point: a filter that listed the correctly-spelled dials could by
+    construction never match a MISSPELLING of one, so `[attestaton]` and
+    `final_full_spine_reveiw` — the two findings that most make these dials
+    untrustworthy — were the two it could not see."""
+    head = key.split(".", 1)[0].split("[", 1)[0]
+    if head == BOUNDARY_KEY.split(".", 1)[0]:
+        return False  # anything under our own section is ours to report
+    # `getattr`, not attribute access: a sibling slice that has not landed its
+    # section table yet must make this card MORE careful, never crash it.
+    sections = getattr(config, "SECTIONS", ())
+    return head in sections or head in _DECLARED_TABLES
+
+
 def boundary_from_config(root):
     """`[attestation] human_ratification_through` from `docs/config.toml`, or the
     kit default when the loader is not present yet.
 
-    Lazily imported (contracts §6) so this module never fails to import because
-    a sibling slice has not landed — and so a downstream repo that has not
-    adopted the config file still gets the declared default rather than a
-    crash."""
-    try:
-        import config  # deferred by contract (contracts §6), see the docstring
-    except ImportError:
-        return DEFAULT_BOUNDARY
-    try:
-        cfg, _findings = config.load_config(root)
-        return int(cfg.attestation.human_ratification_through)
-    except (AttributeError, KeyError, TypeError, ValueError):
-        # The sibling slice's accessor shape is not this module's to assert. An
-        # unreadable boundary falls back to the declared default rather than
-        # crashing a caller that only wanted to route one tier.
-        return DEFAULT_BOUNDARY
+    One line over `attestation_config` rather than a second reader: two paths to
+    one dial is two places for the fallback to drift, and the fallback is the
+    whole reason a caller can ask at all."""
+    return attestation_config(root)[0]
 
 
 def requires_human(tier_index, boundary):
@@ -792,15 +1003,115 @@ def _check_ordinal(value, what):
         )
 
 
+# --- the projection: what an owner sees, and what blocks (SR-142 / SR-144) ----
+def tier_routing(boundary):
+    """The whole ratification matrix for one boundary: one entry per spine tier,
+    in spine order, each naming who may decide.
+
+    `requires_human` answers one cell; an adopter setting the dial is choosing
+    between the four ROWS of this table, and the owner surface and the CLI both
+    print it. Built on that predicate rather than beside it, so the matrix a
+    human reads and the routing a caller obeys cannot disagree — including the
+    refusal: an out-of-range boundary raises here too, so a projection can never
+    show a table the router would not honour."""
+    matrix = []
+    for index, tier in enumerate(TIERS):
+        human = requires_human(index, boundary)
+        matrix.append(
+            {
+                "tier": tier,
+                "index": index,
+                "requires_human": human,
+                "decider": HUMAN if human else ADJUDICATOR,
+            }
+        )
+    return matrix
+
+
+def _pending_by_tier(root, docs, findings):
+    """`{tier: count}` of rows whose current text is not accepted — or `{}` plus a
+    finding when the ledger or the registries refuse to be read.
+
+    Counting is what turns "SR ratifications are the human's" from a rule into a
+    queue length. `findings` is appended to rather than raised through, so one
+    unreadable input costs the owner that one line and not the whole card."""
+    try:
+        candidates = detect_candidates(root, docs)
+    except (ValueError, OSError) as exc:
+        findings.append(str(exc))
+        return {}
+    counts = {tier: 0 for tier in TIERS}
+    for candidate in candidates:
+        counts[candidate["kind"]] += 1
+    return counts
+
+
+def ratification_projection(root, docs=None):
+    """What an owner must SEE about ratification: `{boundary, policy, tiers,
+    requests, block, findings}` (module docstring for why it lives here).
+
+    `boundary` is None exactly when the configured value could not be trusted,
+    and `tiers` is then empty: a refused dial must render NO matrix, because the
+    default it fell back to is not what the adopter wrote and a printed matrix is
+    read as the configured one. `findings` is the refusal list — a caller treats
+    a non-empty one as blocking, since "we could not tell" and "nothing is
+    pending" must never print the same word."""
+    boundary, policy, findings = attestation_config(root)
+    tiers = []
+    if findings:
+        boundary = None
+    else:
+        try:
+            tiers = tier_routing(boundary)
+        except ValueError as exc:
+            findings.append(str(exc))
+            boundary = None
+    pending = _pending_by_tier(root, docs, findings)
+    for entry in tiers:
+        entry["pending"] = pending.get(entry["tier"])
+    requests, block = [], None
+    try:
+        requests = review_requests(root)
+        # `full_spine_block` re-reads the (tiny) ledger rather than being
+        # reassembled from `requests` here: the sentence a blocked checkpoint
+        # prints has ONE home, and two homes for it is how a gate and its
+        # explanation drift into disagreeing.
+        block = full_spine_block(root, policy)
+    except (ValueError, OSError) as exc:
+        findings.append(str(exc))
+    return {
+        "boundary": boundary,
+        "policy": policy,
+        "tiers": tiers,
+        "requests": requests,
+        "block": block,
+        "findings": findings,
+    }
+
+
 # --- CLI ----------------------------------------------------------------------
 def seed(root, docs=None, by="seed", ts=None):
-    """Write a `ratified` anchor for every current spine row that has none.
+    """Write a `baseline` anchor for every current spine row that has NO history.
 
     The one-time migration: without it every row reads as changed on the first
     run, which would make the first `--candidates` report pure noise and teach
-    its reader to ignore it. Idempotent by construction — a row already accepted
-    at its current digest is skipped, so re-running after an amendment seeds only
-    what is genuinely new."""
+    its reader to ignore it. It is a MIGRATION, not a decision, so it writes
+    `baseline` rather than `ratified` — a machine cannot ratify, and a ledger of
+    machine baselines spelled `ratified` is later counted as that many human
+    approvals.
+
+    Two rows it must never touch, and both are refusals of the same shape — the
+    migration may only ever ADD a first anchor, never answer a question:
+
+      * a row with ANY history. The guard asks "does this chain exist?", not "is
+        the current text accepted?": a row whose text moved reads `changed` and a
+        row a human marked `meaning` reads `pending`, and an `== ACCEPTED` test
+        lets BOTH through — re-ratifying an amendment and writing straight over
+        the one verdict this module documents as never accepting.
+      * a need parked under a heading that says it is unratified. Anchoring a
+        Draft need would make the declared ratification act — moving the row up
+        into the core table in a reviewed commit — produce no candidate and no
+        event, because the row would already be accepted at that very text."""
     docs = Path(docs) if docs else Path(root) / DOCS_DIR
     ts = ts or datetime.datetime.now(datetime.timezone.utc).strftime(TS_FORMAT)
     chains = chain_map(read_events(ledger_path(root, "attestation")))
@@ -809,14 +1120,15 @@ def seed(root, docs=None, by="seed", ts=None):
     for kind in TIERS:
         for row in artifacts.get(kind, []):
             rid = row_id(kind, row)
-            digest = normative_digest(kind, row)
-            chain = chains.get((kind, rid), [])
-            if chain_state(chain, digest) == ACCEPTED:
+            if chains.get((kind, rid)):
                 continue
-            parent = chain[-1]["id"] if chain else None
+            if row.get(SN_DRAFT_KEY):
+                continue
             event = append_event(
                 root,
-                attestation_event(kind, rid, digest, "ratified", parent, by),
+                attestation_event(
+                    kind, rid, normative_digest(kind, row), BASELINE, None, by
+                ),
                 ts=ts,
             )
             chains.setdefault((kind, rid), []).append(event)
@@ -831,11 +1143,39 @@ def _print_candidates(root, docs):
     if not candidates:
         print("attest: OK - every spine row matches its accepted anchor.")
         return 0
+    # The VERDICTS, not DECISIONS: `baseline` is the migration's word and is not
+    # something a human may answer a candidate with.
     print(
-        "attest: {} row(s) need a decision (ratified | clarity | meaning | "
-        "override).".format(len(candidates))
+        "attest: {} row(s) need a decision ({}).".format(
+            len(candidates), " | ".join(VERDICTS)
+        )
     )
     return 1
+
+
+# The generated artifacts that read these ledgers, per ledger, with the command
+# that rewrites each. `pre-commit` runs both as unconditional `--check` steps, so
+# any append here leaves the tree UNCOMMITTABLE until they are regenerated. The
+# tool that broke the tree is the one that must say so: a refusal at commit time
+# naming a generator the author never ran reads as a mystery, and the documented
+# way to ASK for a review must not be the thing that silently reds the bar.
+_GEN = "python project-trajectory/scripts/{} --root ."
+STALES = {
+    ATTESTATION: (
+        ("docs/gate", _GEN.format("derive_gate.py")),
+        ("docs/open-items.html", _GEN.format("gen_open_items.py")),
+    ),
+    REVIEW_REQUESTS: (("docs/open-items.html", _GEN.format("gen_open_items.py")),),
+}
+
+
+def _note_staled(ledger):
+    """Name, on stdout, every generated artifact this ledger write just staled."""
+    for artifact, command in STALES.get(ledger, ()):
+        print(
+            "attest: NOTE - this write staled {} (a pre-commit step checks it); "
+            "regenerate with `{}`.".format(artifact, command)
+        )
 
 
 def _arm_seed(root, docs, by):
@@ -846,6 +1186,8 @@ def _arm_seed(root, docs, by):
             " ".join("{}={}".format(k, written[k]) for k in TIERS),
         )
     )
+    if sum(written.values()):
+        _note_staled(ATTESTATION)
 
 
 def _review_head(root):
@@ -860,6 +1202,7 @@ def _arm_request(root, reason, by):
         raise _refuse("--request needs --by (an unattributed ask is not one)")
     event = append_event(root, review_request_event(reason, by, _review_head(root)))
     print("attest: recorded review request {}.".format(event["id"]))
+    _note_staled(REVIEW_REQUESTS)
 
 
 def _arm_decide(root, request_id, verdict, by):
@@ -869,6 +1212,60 @@ def _arm_decide(root, request_id, verdict, by):
         root, review_decision_event(request_id, verdict, by, _review_head(root))
     )
     print("attest: closed review request {}.".format(request_id))
+    _note_staled(REVIEW_REQUESTS)
+
+
+def _arm_boundary(root, docs):
+    """Print the configured boundary and the matrix it implies.
+
+    Exits non-zero when a dial was refused and prints no table: a matrix that is
+    not the configured one is worse than no matrix, because a reader acts on
+    it."""
+    projection = ratification_projection(root, docs)
+    for refusal in projection["findings"]:  # every finding, never just the first
+        print("attest: REFUSED - {}".format(refusal), file=sys.stderr)
+    if projection["boundary"] is None:
+        return 1
+    print(
+        "attest: boundary {} ({}) - at or below it a human decides.".format(
+            projection["boundary"], BOUNDARY_KEY
+        )
+    )
+    for entry in projection["tiers"]:
+        pending = entry["pending"]
+        print(
+            "attest: {} ({}) -> {} - {} row(s) awaiting a decision".format(
+                entry["tier"],
+                entry["index"],
+                entry["decider"],
+                "?" if pending is None else pending,
+            )
+        )
+    print("attest: {}={}".format(FINAL_REVIEW_KEY, projection["policy"]))
+    return 0
+
+
+def _arm_checkpoint(root, docs):
+    """The full-spine checkpoint as a GATE: exit 1 while it is blocked.
+
+    Fail-closed by construction — an input that could not be read blocks too,
+    which is the difference between a checkpoint and a decoration."""
+    projection = ratification_projection(root, docs)
+    for refusal in projection["findings"]:
+        print("attest: REFUSED - {}".format(refusal), file=sys.stderr)
+    if projection["block"]:
+        # The reason already names every open request and the persistent policy
+        # (`full_spine_block`), so nothing is re-listed here.
+        print("attest: CHECKPOINT BLOCKED - {}".format(projection["block"]))
+        return 1
+    if projection["findings"]:
+        return 1
+    print(
+        "attest: checkpoint clear - no open review request, {}={}.".format(
+            FINAL_REVIEW_KEY, projection["policy"]
+        )
+    )
+    return 0
 
 
 def _arm_open(root):
@@ -895,7 +1292,8 @@ def main(argv=None):
     ap.add_argument(
         "--seed",
         action="store_true",
-        help="write a ratified anchor for every current spine row that has none",
+        help="write a baseline anchor for every current spine row that has no "
+        "history at all (the one-time migration; it decides nothing)",
     )
     ap.add_argument(
         "--candidates",
@@ -911,12 +1309,27 @@ def main(argv=None):
     ap.add_argument("--decide", default=None, help="close the named review request")
     ap.add_argument("--verdict", default="reviewed", help="verdict for --decide")
     ap.add_argument(
+        "--boundary",
+        action="store_true",
+        help="print the configured human-ratification boundary and the tier "
+        "routing it implies; exit 1 when a dial was refused",
+    )
+    ap.add_argument(
+        "--checkpoint",
+        action="store_true",
+        help="exit 1 while the full-spine checkpoint is blocked (an open review "
+        "request, the persistent policy, or an input that could not be read)",
+    )
+    ap.add_argument(
         "--by", default=None, help="who is recording this (required to ask)"
     )
     args = ap.parse_args(argv)
     root = Path(args.root)
     docs = Path(args.docs) if args.docs else root / DOCS_DIR
 
+    # Arms compose in one run, so the exit code is the WORST of them: a blocked
+    # checkpoint beside a successful --seed must not report success.
+    code = 0
     try:
         if args.seed:
             _arm_seed(root, docs, args.by)
@@ -926,12 +1339,16 @@ def main(argv=None):
             _arm_decide(root, args.decide, args.verdict, args.by)
         if args.open_:
             _arm_open(root)
+        if args.boundary:
+            code = max(code, _arm_boundary(root, docs))
+        if args.checkpoint:
+            code = max(code, _arm_checkpoint(root, docs))
         if args.candidates:
-            return _print_candidates(root, docs)
+            return max(code, _print_candidates(root, docs))
     except ValueError as exc:
         print(str(exc), file=sys.stderr)
         return 1
-    return 0
+    return code
 
 
 if __name__ == "__main__":
