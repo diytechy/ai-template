@@ -25,7 +25,8 @@ records where each one bites.
 | Code map is generated, never hand-edited | Harness | `gen_arch_map.py --check` (pre-commit + G3) |
 | Trajectory dashboard / OKF bundle stay fresh | Harness | `check.py --run-step trajectory-map / okf` (pre-commit + G3) |
 | `status.md` stays forward-only (no closed-WI id accretes) | Harness | `check_trajectory` done-id rule (warn / ERROR `--strict`; WI-200 restored the WI-180-retired R-D, mode-aware — the generated splice block alone is exempt, its freshness being the `status-map` step's job; the hand-authored remainder stays policed, 2026-07-21) |
-| Kit scripts are stdlib-only | Test | `tests/test_stdlib_only.py` (TC-034) |
+| No *unargued* dependency: every non-stdlib import in a kit script is a reviewed ledger row | Test | `tests/test_dependency_ledger.py` (TC-034; WI-420 re-pointed it here from the retired `test_stdlib_only.py`, which asserted the pre-RULING-3 absolute "stdlib-only" and had become stricter than SR-034 permits) |
+| An **adopter-facing** dependency (reached by a `layer="process"` check) is `Tier=shipped` **and** owner-ruled | Test | `tests/test_shipped_tier.py` (TC-149; WI-420 — derives the adopter-facing set from `check.py`'s own layer tags and walks transitive sibling imports) |
 | No secret committed or pushed | Harness | `check_privacy.py` floor + `hooks/pre-commit`, `hooks/pre-push` |
 | Runtime flows diagrammed and current | Harness | `check_flows.py` (G2/G3) |
 | No stub/placeholder at G3 | Harness | `check_stubs.py` (G3) |
@@ -62,10 +63,22 @@ records where each one bites.
 
 ## Findings from this audit
 
-1. **Stdlib-only was an Inspection; now a Test.** SR-034/TC-034 were
-   `Verification=Inspection` ("confirmed by inspecting imports") — an eyeball
-   that never fires in CI. Promoted to `tests/test_stdlib_only.py` (an AST
-   import scan with a positive-control case). **Resolved.**
+1. **Stdlib-only was an Inspection; then a Test; now the right two tests.**
+   SR-034/TC-034 were `Verification=Inspection` ("confirmed by inspecting
+   imports") — an eyeball that never fires in CI. Promoted to an AST import scan
+   with a positive-control case. **Resolved** — but WI-419 then widened SN-011
+   from "no pip installs" to the RULING-3 bar ("no *unargued* dependencies"),
+   which left that test asserting **stricter than its own requirement**, and a
+   second scan (`test_dependency_ledger.py`) already made the identical
+   assertion with the ledger term included. WI-420 deleted the duplicate and
+   spent it on the clause that had **no enforcer at all**: the `Tier` column was
+   never read, so nothing distinguished a `coordinator` dependency (this repo
+   installs it) from a `shipped` one (**every adopter** is forced to install
+   it). `tests/test_shipped_tier.py` now derives the adopter-facing check set
+   from `check.py`'s own `layer="process"` tags — not a hand-copied list — and
+   holds its transitive import closure to `Tier=shipped` + a recorded ruling.
+   **Resolved, and the honest gap it exposed is now closed rather than
+   recorded.**
 2. **The `Implements:` back-link convention is unenforced.** `gen_arch_map.py`
    *harvests* an `Implements: SR-/LLR-` docstring tag into the code map's third
    column, and the working agreement asks for it — but nothing **requires** it,

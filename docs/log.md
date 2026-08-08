@@ -25176,3 +25176,64 @@ Full unfiltered suite (spine-touching change, so the slice bar is the full one):
 pass, both mine: the closed WI's id had leaked into forward-only `status.md`, and
 a terminal WI still carried a `SpecRef`. Both fixed, not suppressed.
 Generated artifacts re-derived in `REGEN_STEPS` order (`trunk_step.py --regen`).
+
+## 2026-08-07 — WI-420: two tests were one test, so the spare bought real coverage
+
+Follow-on to WI-419's SN-011 amendment, landed **inside** the same attestation
+window (process.md §4's own advice: sequence requirement-text work into an open
+window, not after it).
+
+**The discussion the WI asked for changed the answer.** The spec proposed
+teaching `test_stdlib_only.py` to read the ledger. Laid side by side, the two
+scans turned out to be the same test:
+
+- `test_stdlib_only.py` — `allowed = stdlib ∪ siblings`
+- `test_dependency_ledger.py` — `allowed = stdlib ∪ siblings ∪ ledger(Kind=python)`
+
+Same AST walk, same directory, one union term apart — and that term is **empty**
+(zero `Kind=python` rows; only the `git`/`gh` `system` substrates). They were
+bit-identical in behavior, so the proposed fix would have reproduced the other
+file verbatim. The owner's "a list of modules permitted on top of stdlib" is
+exactly what `docs/dependencies.md` already is.
+
+**What was actually unenforced.** SN-011/SR-034 distinguish a `coordinator`
+dependency (only this repo installs it) from a `shipped` one — every adopter
+forced to install it, so it needs an owner ruling with stdlib still *preferred*.
+**Nothing read the `Tier` column.** The ledger suite asks only *is it declared?*,
+so a coordinator-tier or unruled package imported by `trace.py` would have
+reached every adopting repo with a green suite. That is the half of SR-034 that
+protects people downstream, and it had no enforcer at all.
+
+So: deleted `test_stdlib_only.py`, re-pointed **TC-034** at
+`test_dependency_ledger.py`, and spent the freed test on the shipped bar as
+**TC-149** (`tests/test_shipped_tier.py`). It derives the adopter-facing set from
+`check.py`'s own `layer="process"` tags rather than a hand-copied list — 15
+steps, 11 entry scripts — walks their **transitive** sibling imports, and
+requires every non-stdlib module in that closure to be `Tier=shipped` with a
+non-empty `Ruled` cell. The ledger's table grammar stays in one home: the new
+module imports a `ledger_rows()` added to `test_dependency_ledger.py` rather
+than growing a second parser.
+
+**The real assertion is vacuously green today** — the closure is pure stdlib —
+which is precisely when a guard must prove it can fail. Four mutation proofs sit
+in the file: coordinator-tier, unruled-shipped and undeclared imports are each
+driven through fixture trees and asserted **caught**, and a properly ruled
+shipped row is asserted **allowed**, so the check cannot silently become the
+stdlib-only ban it replaced. A fifth test fails if `trace.py`/`derive_gate.py`/
+`check_docs.py` stop being process-layer entry points — if the derivation goes
+blind, that is a red, not a silent pass.
+
+`docs/enforcement-audit.md`'s row still read *"Kit scripts are stdlib-only →
+test_stdlib_only.py"* — the pre-amendment world. Replaced by two rows, and
+finding 1 now records the full Inspection → Test → *right two tests* arc.
+
+**Called out, not hidden:** TC-149 was minted directly `Verified` rather than
+`Draft`. Its evidence exists and passes, and a `Draft` TC reads G0 in the derived
+gate — it would have dropped the gate below the window's G2 for a row that is not
+unfinished. It rides SR-034's open window and appears in the re-attest brief.
+
+**Evidence.** Full unfiltered suite: **1971 passed, 5 skipped**.
+<!-- fig: python3 -m pytest -q -n auto @ WI-420 -->
+`trace.py --strict --strict-integrity`: `SN=27 SR=136 LLR=137 TC=135 orphans=0
+integrity=0`, exit 0.
+<!-- fig: python3 project-trajectory/scripts/trace.py --root . --strict --strict-integrity @ WI-420 -->

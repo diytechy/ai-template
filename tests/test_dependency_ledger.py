@@ -24,6 +24,39 @@ SCRIPTS = REPO / "project-trajectory" / "scripts"
 LEDGER = REPO / "docs" / "dependencies.md"
 
 _ROW = re.compile(r"^\|\s*(?P<name>[\w.-]+)\s*\|\s*(?P<kind>\w+)\s*\|")
+# Full-row form: | Name | Kind | Tier | Replaces | Why hand-rolling is worse | Ruled |
+_FULL_ROW = re.compile(
+    r"^\|\s*(?P<name>[\w.-]+)\s*\|\s*(?P<kind>\w+)\s*\|\s*(?P<tier>\w+)\s*\|"
+    r"(?P<replaces>[^|]*)\|(?P<why>[^|]*)\|(?P<ruled>[^|]*)\|?\s*$"
+)
+
+
+def ledger_rows(text: str | None = None) -> list[dict]:
+    """Every declared row of the ledger table as a dict.
+
+    THE one home for the ledger's table grammar (WI-420): `ledger_declared`
+    below and `tests/test_shipped_tier.py`'s adopter-facing bar both read the
+    same parse, so the Kind/Tier/Ruled columns can never be read two ways.
+    Keys: name, kind, tier, replaces, why, ruled — all lowercased for kind/tier,
+    stripped otherwise.
+    """
+    text = LEDGER.read_text(encoding="utf-8") if text is None else text
+    rows = []
+    for line in text.splitlines():
+        m = _FULL_ROW.match(line.strip())
+        if not m:
+            continue
+        rows.append(
+            {
+                "name": m.group("name"),
+                "kind": m.group("kind").lower(),
+                "tier": m.group("tier").lower(),
+                "replaces": m.group("replaces").strip(),
+                "why": m.group("why").strip(),
+                "ruled": m.group("ruled").strip(),
+            }
+        )
+    return rows
 
 
 def ledger_declared(kind: str, text: str | None = None) -> set[str]:

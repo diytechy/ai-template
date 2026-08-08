@@ -44,7 +44,7 @@ resource: "generated"
 | [TC-031](TC-031.md) | Run the gate-policy and push-policy suites; each reader returns the first declared line. |
 | [TC-032](TC-032.md) | Run the onboard/dev-setup suite; the scaffolded scripts run to a green setup and dev-setu… |
 | [TC-033](TC-033.md) | Run gen_release_checklist.py over a warn-tier PB budget; assert the generated checklist l… |
-| [TC-034](TC-034.md) | Run the stdlib-only suite; an AST scan asserts every kit script's top-level imports resol… |
+| [TC-034](TC-034.md) | Run the dependency-ledger suite; an AST scan asserts every kit script's top-level imports… |
 | [TC-035](TC-035.md) | Analyze the CI matrix result across Linux/Windows/macOS x Python 3.11/latest. |
 | [TC-036](TC-036.md) | Inspect a re-sync done per ADOPTING.md section 6 against the docs/kit-version diff — kit-… |
 | [TC-037](TC-037.md) | Run WI id, predecessor, cycle, placeholder, absent-registry, and opt-out validation cases. |
@@ -145,3 +145,4 @@ resource: "generated"
 | [TC-146](TC-146.md) | Run the schedule + integrate suites' adjudication cases: the kind classifies exclusive at… |
 | [TC-147](TC-147.md) | Run the intake suite against real git repos, red-then-green per trigger: a ratified SR am… |
 | [TC-148](TC-148.md) | Run the integrator + dispatcher suites' intake-arm cases: a merged branch that amended a … |
+| [TC-149](TC-149.md) | Run the shipped-tier suite; it derives the adopter-facing check set from check.py's own l… |
