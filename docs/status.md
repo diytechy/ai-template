@@ -168,6 +168,14 @@ home elsewhere — don't restate it here:
 - **OPEN RULING (2026-08-03):** [handback-contract.md](handback-contract.md) —
   whether a returned lane writes a per-return document instead of mutating its
   own spec. Paused mid-grind; the rows downstream of it wait on the ruling.
+- **PROPOSED PROGRAM (2026-08-08):**
+  [stakeholder-needs-build-plan-2026-08-08.md](stakeholder-needs-build-plan-2026-08-08.md)
+  — owner-review plan for the single configuration authority, numeric human
+  ratification boundary, immutable worker outcomes with adjudicator override,
+  queue-conflict admission, role/model pools, and reviewable prompt templates.
+  It supersedes the handback contract's fact-only `returned/` recommendation
+  with the owner's Complete/Cancelled/Partial worker judgment plus a separately
+  recorded adjudicator disposition; nothing in the plan is ratified yet.
 - **Process (kit source):** [PROCESS.md](../project-trajectory/PROCESS.md) ·
   [PROCESS_OPTIONS.md](../project-trajectory/PROCESS_OPTIONS.md) (this repo has
   no scaffolded `docs/process.md`; the masters are the reference).
