@@ -391,3 +391,81 @@ shallow (enum→ordinal at five call sites, each already isolated behind
 `read_declared`); P1's dual-read window is what keeps downstream adopters
 unbroken. Everything in P4 composes from parts P1–P3 built, which is why it
 sits late despite being the headline need.
+
+---
+
+## 11. Addendum (2026-08-08) — reconciliation with the independent second plan
+
+A second, independently authored plan ("Sol's plan") was cross-reviewed against
+this one. The two agree on the core architecture (one TOML config; per-event
+immutable outcome documents; lane claims + adjudicator override-by-minting;
+`partial/` as a terminal state; SN E/F stay unminted; prompt externalization on
+the dual-plan pattern; dedicated-branch execution outside the live loop). The
+following points from that plan are **adopted here**, superseding this doc
+where they conflict:
+
+1. **Detection-gap correction (fact, verified in source).** §3's claim that
+   meaning-change detection is "built end-to-end" was too strong:
+   `staged_spine_amendments` deliberately ignores any row whose Status moved in
+   the same commit (`check_trajectory.py:2884` — "a deliberate call this does
+   not second-guess"), so the *sanctioned* amend+flip path never reaches
+   intake's adjudication mint. The meaning-vs-clarity adjudicator therefore
+   cannot key off the commit-local diff alone; it must compare current
+   normative text against the last **accepted anchor** (next item).
+2. **Append-only attestation ledger** (artifact id + normative-text digest +
+   accepted commit + decision `ratified|clarity|meaning|override`), replacing
+   §3's "keep deriving the baseline from git log". This is the same medicine
+   §5 prescribes for handbacks — an immutable event record instead of a
+   reconstructed proxy — applied to attestation. It also fixes item 1 (ledger
+   digest vs current text catches amend+flip) and gives **SN prose** an anchor
+   it structurally lacks today (SNs have no Status cell). No per-row hash
+   columns, as both plans agree.
+3. **Two derived axes instead of one.** The owner's 0–3 scale separates LLRs
+   (2) from TCs (3); the current `G0–G3` arithmetic cannot express that (G2
+   conflates "LLRs and TCs exist" and also doubles as the Modified pull). So:
+   `spine_stage` 0–4 (workflow/admission input, the axis the human boundary
+   compares against) derived separately from `verification_gate` G1–G3 (the
+   unchanged `check.py` harness contract), with a declared mapping function.
+   §3's "compare the level against the existing derived gate" is superseded.
+4. **Naming**: `human_ratification_through` (cumulative, "through" this tier)
+   instead of "human-attest-level" — `Attest` already names a Verification
+   method in the SR vocabulary, and the collision would be permanent.
+5. **Queue admission as one trunk-side transaction** (every `→ queued/` move
+   through one API; mechanical overlap graph + adjudicator verdict recorded
+   with the scope/spine digests it judged; `--strict` rejects a queued spec
+   whose verdict is absent or stale). Stronger than §6's warn-first rung, and
+   the digest-freshness requirement is what keeps a verdict from rotting.
+6. **Adjudicator override moves the byte-identical spec** to the corrected
+   terminal folder (folder stays the single truth of final status), rather
+   than §5's "never reverse the move" — history is preserved by the outcome
+   events, so both goals hold.
+7. **argv arrays** for new route declarations instead of shell `CmdTemplate`
+   strings, and **template + rendered-prompt hashes recorded per session**
+   plus a generated prompt catalog (extends §8).
+8. **Hard mixed-config refusal** (preflight fails naming the conflicting keys
+   when old and new sources are both live) instead of §2's silent dual-read
+   precedence — provided bootstrap/resync runs the legacy converter
+   automatically, so a downstream adopter never meets the refusal un-aided.
+9. **WI dispositions**: WI-413 *and* WI-416 cancel as superseded (this doc had
+   defer / re-decide); WI-390's still-valid spine-close content is absorbed
+   into the P0 sitting rather than executed against the contract this program
+   replaces.
+
+Points this doc **retains against** the second plan, for the owner to weigh:
+
+- **The M-42 hook constraint is real and unaddressed there.** The git hooks
+  parse `privacy-check`/`review-policy` in pure sh so a Python-less box fails
+  closed (repo-review 2026-07-21 M-42; `hooks/pre-commit:46`). The
+  consolidation must either keep those two keys keyed-greppable
+  (`grep -E '^privacy-check *= *true'`) with a cross-parser agreement test, or
+  explicitly rule that hooks fail closed on a missing interpreter. "The
+  convention, not grep, is why files stayed one-value" is only half the
+  history.
+- **Adjudicating every `complete/` close** matches the owner's stated intent
+  but prices a strong-tier session onto every green close, on top of the
+  review rounds that already judged the work. Recommendation: make review
+  depth a config dial — always adjudicate `partial`/`cancelled`; `complete`
+  at a declared tier/sampling rate — rather than fixing it in the SN text.
+- **`stack.ini`'s adopter-owned never-clobber property** must carry over to
+  whatever absorbs it; the second plan folds it into `config.toml` without
+  stating that resync contract.
