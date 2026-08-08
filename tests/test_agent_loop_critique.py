@@ -10,7 +10,7 @@ import subprocess
 import sys
 
 import pytest
-from conftest import SCRIPTS, load_script, run_py, write_wi_registry
+from conftest import set_process_key, SCRIPTS, load_script, run_py, write_wi_registry
 
 agent_loop = load_script("agent_loop")
 
@@ -154,9 +154,7 @@ def critique_repo(tmp_path):
     (repo / "docs" / "test").mkdir(parents=True)
     (repo / "docs" / "rubrics").mkdir(parents=True)
     (repo / "docs" / "status.md").write_text(STATUS_MD, encoding="utf-8")
-    (repo / "docs" / "review-policy").write_text(
-        "0\n", encoding="utf-8"
-    )  # critique only
+    set_process_key(repo, "policies", "review_rounds", 0)  # critique only
     (repo / "docs" / "requirements" / "system-requirements.csv").write_text(
         SR_HEADER + SR_CRITIQUE, encoding="utf-8"
     )
@@ -365,9 +363,10 @@ def test_per_wi_exhaustion_disposition_overrides_autonomous(
 ):
     repo, ctl, cmd = critique_repo
     _set_critique_control(repo, "1", disposition)
-    (repo / "docs/gate-policy").write_text("autonomous\n", encoding="utf-8")
-    _git(repo, "add", "docs/gate-policy")
-    _git(repo, "commit", "-qm", "set autonomous policy")
+    # SN-029: the loop-held end of the ordinal.
+    set_process_key(repo, "attestation", "human_ratification_through", 0)
+    _git(repo, "add", "docs/process.toml")
+    _git(repo, "commit", "-qm", "set the loop-held ratification level")
     (ctl / "verdict.txt").write_text(CHANGES, encoding="utf-8")
     proc = _loop(repo, cmd, "--max-iterations", "3")
     assert proc.returncode == expected, proc.stdout + proc.stderr

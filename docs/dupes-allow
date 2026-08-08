@@ -273,7 +273,7 @@
 #
 #   cli                  100   deliberate
 #   link-rebase            1   deliberate
-#   spine-loader          21   deliberate
+#   spine-loader          20   deliberate
 #   declared-file         12   deliberate
 #   markdown-table        11   deliberate
 #   git-wrapper            7   deliberate
@@ -466,7 +466,7 @@ d298066d8071  project-trajectory/scripts/agent_common.py == project-trajectory/s
 d47d5975c21b  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/schedule.py
 f800f0c60265  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/schedule.py
 
-# --- spine-loader (21 blocks) ------------------------------------
+# --- spine-loader (20 blocks) ------------------------------------
 # disposition: deliberate
 # spine-registry loaders (load_csv/refs, the SR/LLR/TC/IF/OI row filters,
 # the draft-heading scan). Several carry an explicit in-code note -
@@ -500,7 +500,6 @@ e933a42ec7f5  project-trajectory/scripts/derive_gate.py == project-trajectory/sc
 b455a7e5955d  project-trajectory/scripts/derive_gate.py == project-trajectory/scripts/trace.py
 e756d21c8ca6  project-trajectory/scripts/derive_gate.py == project-trajectory/scripts/trace.py
 1f37852f250b  project-trajectory/scripts/derive_gate.py == project-trajectory/scripts/trace.py
-108925d1de82  project-trajectory/scripts/derive_gate.py == project-trajectory/scripts/trace.py
 c54131b73567  project-trajectory/scripts/gen_arch_map.py == project-trajectory/scripts/plan_briefs.py
 f3ea6bf955e3  project-trajectory/scripts/gen_arch_map.py == project-trajectory/scripts/plan_briefs.py
 b0b9cc04d152  project-trajectory/scripts/gen_release_checklist.py == project-trajectory/scripts/trace.py

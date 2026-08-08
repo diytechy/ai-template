@@ -123,7 +123,12 @@ BASELINE = {
     # taken this to 23 was extracted as `_split_changed_cells` instead, holding
     # the scan at its old 20: decomposition, which is the escape this ratchet
     # prefers over a bump.
-    ("check_trajectory.py", "staged_spine_amendments"): 20,
+    # SN-029 (2026-08-08): 20 -> 19. The "git could not answer" and "nothing
+    # relevant changed" degrades are one `return None` inside `_spine_revs` now
+    # (its `touches=` argument), because writing that pair twice — once here and
+    # once in the new `staged_attestation_rewrite_findings` — is the intra-file
+    # duplication WI-347 rules a defect. One branch left this scan with it.
+    ("check_trajectory.py", "staged_spine_amendments"): 19,
     ("gen_arch_map.py", "build_dependency_diagram"): 14,
     ("gen_arch_map.py", "main"): 17,
     ("gen_cases.py", "all_pairs"): 13,

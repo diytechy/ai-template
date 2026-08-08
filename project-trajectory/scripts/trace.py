@@ -1123,14 +1123,58 @@ def _rows_at(root, rev, rel_path, id_col):
     }
 
 
+def _ledger_baseline(root, sr_id):
+    """`(commit, ATT-id)` from the newest attestation-ledger row for `sr_id`, or
+    `(None, None)`.
+
+    THE ANCHOR, READ RATHER THAN RECONSTRUCTED (SN-029). The git walk below is
+    sound only while every amendment flips its row's Status in the same commit
+    — and the SANCTIONED amend+flip path is precisely the one the staged-
+    amendment guard deliberately ignores, so a derived baseline can point at a
+    commit whose text already carries an unratified change. A row written at
+    acceptance time cannot drift that way.
+
+    Kept as its own small reader, not folded into `_attested_baseline`, because
+    the two answer different questions: this one asks what was ACCEPTED, the
+    other asks what git happens to remember."""
+    path = Path(root) / "docs" / "requirements" / "attestations.csv"
+    if not path.is_file():
+        return None, None
+    newest = {}
+    try:
+        with path.open(newline="", encoding="utf-8-sig", errors="replace") as fh:
+            for row in csv.DictReader(fh):
+                artifact = (row.get("Artifact") or "").strip()
+                att = (row.get("ATT-ID") or "").strip()
+                if artifact and att and not att.endswith("-000"):
+                    newest[artifact] = row
+    except OSError:
+        return None, None
+    row = newest.get(sr_id)
+    if row is None:
+        return None, None
+    commit = (row.get("AcceptedCommit") or "").strip()
+    return (commit or None), (row.get("ATT-ID") or "").strip() or None
+
+
 def _attested_baseline(root, sr_id):
-    """The newest commit at which `sr_id`'s SR row read `Verified` — the
-    attestation boundary. Correct by construction under the amend+flip regime
-    (an amendment flips the row in the same commit, so every commit where the
-    row still reads Verified predates the pending streak). Walks the SR
-    registry's commits newest-first; bounded in practice by the streak depth
-    (typically 1-2 revisions). None: off-git, or the row was never Verified in
-    committed history (first attestation still pending)."""
+    """The commit whose text `sr_id` was last attested against.
+
+    LEDGER FIRST (SN-029): the attestation ledger records the accepted commit
+    at acceptance time, so it is an anchor rather than a reconstruction. When no
+    ledger row exists — an un-migrated repo, or an artifact never attested — it
+    falls through to the historical derivation, which is the newest commit at
+    which the SR row read `Verified`. That walk is correct by construction ONLY
+    under the amend+flip regime, and its known blind spot is exactly why the
+    ledger exists; degrading to it keeps every repo working while the ledger
+    fills, and the honest-degrade prose downstream already says which is which.
+
+    Walks the SR registry's commits newest-first; bounded in practice by the
+    streak depth (typically 1-2 revisions). None: off-git, or the row was never
+    Verified in committed history (first attestation still pending)."""
+    accepted, _att = _ledger_baseline(root, sr_id)
+    if accepted:
+        return accepted
     log = _git_out(root, ["log", "--format=%H", "--", SPINE_FILES[0][0]])
     if log is None:
         return None

@@ -2155,8 +2155,13 @@ def _merge_refusal(root, branch, wi_ids):
             "{} left claimed spec(s) without exactly ONE declared state "
             "directory ({}) - the folder a spec lands in IS the lane's outcome "
             "(§A3), so one that landed nowhere names none of the three and one "
-            "that landed twice names two; nothing was merged".format(
-                branch, ", ".join(unresolved)
+            "that landed twice names two; nothing was merged. The three are "
+            "{}. If this lane stopped early, close it into partial/ with a "
+            "per-close report (SN-031 retired the close-into-queued/ "
+            "handback).".format(
+                branch,
+                ", ".join(unresolved),
+                " | ".join(sorted(OUTCOME_DIRS) ) + "/",
             )
         )
     # Sequential, not a tuple of calls: a tuple would EVALUATE every rung before

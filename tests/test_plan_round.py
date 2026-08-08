@@ -166,12 +166,18 @@ def test_recording_into_a_closed_round_is_a_cap_error():
         pr.record(state, pr.STEP_PLAN, plan="A", ok=True)
 
 
-def test_page_action_maps_gate_policies_and_fails_safe():
-    assert pr.page_action("attended") == "stop-needs-human"
-    assert pr.page_action("single-ratify") == "surface-block-continue-others"
-    assert pr.page_action("autonomous") == "design-check-session"
-    assert pr.page_action(None) == "stop-needs-human"
-    assert pr.page_action("bogus") == "stop-needs-human"
+def test_page_action_maps_the_ratification_level_and_fails_safe():
+    """SN-029: keyed on the two independent bits the retired enum bundled.
+    `attended` was (human-held, stop), `single-ratify` (human-held, keep
+    going), `autonomous` (loop-held) — and the fourth cell, which the enum
+    could not name at all, resolves the same way its sibling does."""
+    assert pr.page_action(True, False) == "stop-needs-human"
+    assert pr.page_action(True, True) == "surface-block-continue-others"
+    assert pr.page_action(False, False) == "design-check-session"
+    assert pr.page_action(False, True) == "design-check-session"
+    # Defaulted: the strictest cell, which is where an unreadable dial lands
+    # (`agent_common.human_holds` resolves anything unreadable to human-held).
+    assert pr.page_action(True) == "stop-needs-human"
 
 
 def test_cli_walk_prints_the_happy_path(tmp_path):

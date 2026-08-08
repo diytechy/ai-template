@@ -68,9 +68,14 @@ DEFAULT_ROUND_BUDGET = 14
 # (process-options.md "Unattended operation", failure-semantics bullet). The
 # coordinator owns executing these; the map keeps the wording in one place.
 _PAGE_ACTIONS = {
-    "attended": "stop-needs-human",
-    "single-ratify": "surface-block-continue-others",
-    "autonomous": "design-check-session",
+    # SN-029: keyed on the two independent bits the retired three-value enum
+    # bundled — (is the tier human-held, may other work keep running) — so each
+    # dial means exactly one thing and the third combination stops being
+    # unreachable.
+    (True, False): "stop-needs-human",
+    (True, True): "surface-block-continue-others",
+    (False, False): "design-check-session",
+    (False, True): "design-check-session",
 }
 
 
@@ -307,10 +312,15 @@ def disposition(state):
     return DISP_CONTINUE
 
 
-def page_action(gate_policy):
-    """The documented failure-semantics action for a PAGE under the declared
-    `docs/gate-policy` (unknown/absent policies fail safe to attended)."""
-    return _PAGE_ACTIONS.get((gate_policy or "").strip(), _PAGE_ACTIONS["attended"])
+def page_action(human_held, keep_nondependent=False):
+    """The documented failure-semantics action for a PAGE at the declared
+    ratification level (SN-029).
+
+    `human_held` is `agent_common.human_holds`' answer — anything unreadable
+    already resolved to True there, which is why this takes a bool rather than
+    re-deriving one. The strictest cell (stop and page) is what an unreadable
+    dial reaches, the same direction every other consumer of this dial fails."""
+    return _PAGE_ACTIONS[(bool(human_held), bool(keep_nondependent))]
 
 
 def main():

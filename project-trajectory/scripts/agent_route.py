@@ -873,35 +873,42 @@ def escalate(rounds, constants=None, swapped=False, at_top_tier=False, fails_sin
     }
 
 
-def failure_action(gate_policy):
-    """What a page-the-human escalation does, keyed to docs/gate-policy (ruled).
-    In every mode the causing WI and its hard-edge dependents PAUSE; the mode
-    decides what happens around that. Redesign re-enters the change-intake flow
-    (process.md §5 — linked, not restated). Returns a dict the coordinator enacts
-    and logs."""
-    gp = (gate_policy or "attended").strip().lower()
-    if gp == "single-ratify":
+def failure_action(human_held, keep_nondependent=False):
+    """What a page-the-human escalation does, keyed to SN-029's ordinal
+    comparison rather than the retired three-value enum.
+
+    In every mode the causing WI and its hard-edge dependents PAUSE; what
+    differs is what happens AROUND that — and those are two genuinely separate
+    questions, which is why the enum needed three values to express two bits.
+    Is the tier in process still the human's to ratify (`human_held`), and may
+    other work keep running meanwhile (`keep_nondependent`)? The old
+    `single-ratify` and `autonomous` differed only in the design-check leg while
+    sharing the second answer; splitting them makes each dial mean one thing.
+
+    Redesign re-enters the change-intake flow (process.md §5 — linked, not
+    restated). Returns a dict the coordinator enacts and logs."""
+    if human_held:
         return {
-            "mode": "single-ratify",
+            "mode": "human-held",
             "pause_wi": True,
-            "keep_nondependent": True,
+            "keep_nondependent": bool(keep_nondependent),
             "design_check": False,
-            "note": "single-ratify: keep working non-dependent work items to completion; surface the block for ratification",
-        }
-    if gp == "autonomous":
-        return {
-            "mode": "autonomous",
-            "pause_wi": True,
-            "keep_nondependent": True,
-            "design_check": True,
-            "note": "autonomous: schedule a fresh strong-tier, different-family design-check session to rule grind-through vs redesign, document every assumption, and continue (redesign re-enters process.md 5)",
+            "note": (
+                "human-held tier: surface the block for ratification"
+                + (
+                    "; keep working non-dependent work items to completion"
+                    if keep_nondependent
+                    else "; start nothing new, let in-flight sessions close "
+                    "out, then alert the user"
+                )
+            ),
         }
     return {
-        "mode": "attended",
+        "mode": "loop-held",
         "pause_wi": True,
-        "keep_nondependent": False,
-        "design_check": False,
-        "note": "attended: start nothing new, let in-flight sessions close out, then alert the user",
+        "keep_nondependent": True,
+        "design_check": True,
+        "note": "loop-held tier: schedule a fresh strong-tier, different-family design-check session to rule grind-through vs redesign, document every assumption, and continue (redesign re-enters process.md 5)",
     }
 
 

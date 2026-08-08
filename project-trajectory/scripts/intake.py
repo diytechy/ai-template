@@ -85,8 +85,12 @@ ROUTED_TRACED_CELLS = {
 
 # The disposition row's face: the R3 outcome vocabulary, verbatim in the title
 # so the claiming worker reads its whole authority off the row.
+# SN-031 retired R3's `re-queue`: a terminal row is never put back on the
+# frontier, so continuing the work means DRAFTING A SUCCESSOR (minted at this
+# row's own merge, carrying `supersedes`). `handback._no_recursion_refusal`
+# states the same four; the two homes must not disagree about a row's authority.
 _DISPOSITION_OUTCOMES = (
-    "cancel / defer / re-queue with drafted follow-up / surface an open item"
+    "cancel / defer / draft a successor / surface an open item"
 )
 
 # A fenced TOML draft inside the ## Dispositions section.
@@ -512,12 +516,32 @@ def _close_reports(root, wi_id):
 
 
 def _report_meta(path):
-    """One report's frontmatter dict, or `{}`."""
-    match = _REPORT_FRONT_RE.search(path.read_text(encoding="utf-8", errors="replace"))
+    """One report's frontmatter dict, or `{}` — SAYING SO when the block is
+    there but unreadable.
+
+    A quiet `{}` is the WI-417 shape at a new site: `suggested_tier` would fall
+    to `medium` and the row's derived text would describe a close it never
+    read. Every sibling spec parser raises on a bad fence; this one cannot (a
+    mint must not die on one malformed record), so it is loud instead."""
+    text = path.read_text(encoding="utf-8", errors="replace")
+    match = _REPORT_FRONT_RE.search(text)
     if match is None:
+        _say(
+            "{} has no +++ frontmatter - the close's typed fields are "
+            "unreadable and the disposition falls back to defaults".format(path),
+            err=True,
+        )
         return {}
     data = ac.read_toml_text(match.group(1))
-    return data if isinstance(data, dict) else {}
+    if not isinstance(data, dict):
+        _say(
+            "{}'s +++ frontmatter does not parse as TOML - the close's typed "
+            "fields are unreadable and the disposition falls back to "
+            "defaults".format(path),
+            err=True,
+        )
+        return {}
+    return data
 
 
 def _rev7(root, rev):
@@ -540,8 +564,8 @@ def _close_drafts(root, outcomes):
     would rebuild the verdict gate under a new name.
     """
     drafts = []
-    for wi_id in sorted(
-        w for w, o in (outcomes or {}).items() if o in ("partial", "cancelled")
+    for wi_id, outcome in sorted(
+        (w, o) for w, o in (outcomes or {}).items() if o in ("partial", "cancelled")
     ):
         found = _closed_spec(root, wi_id)
         if found is None:
@@ -564,7 +588,46 @@ def _close_drafts(root, outcomes):
                 err=True,
             )
             continue
-        for report in _close_reports(root, wi_id):
+        reports = _close_reports(root, wi_id)
+        if not reports and outcome == "cancelled":
+            # A CANCELLED close needs no report, and asking for one would be
+            # asking for a second copy of a record that already exists. The
+            # lane's own Deliverable carries the reason (R-A makes that a hard
+            # rule, not a convention), and `cancelled/` is terminal, so the
+            # SPEC PATH is a sound event identity: a row cancels exactly once.
+            # `partial` cannot lean on that — the spec's definition is left
+            # byte-identical there, so it says nothing about the close at all.
+            drafts.append(
+                {
+                    "title": (
+                        "dispose: the cancellation recorded at {} - {} (a "
+                        "disposition row never closes early; R3)".format(
+                            relpath, _DISPOSITION_OUTCOMES
+                        )
+                    ),
+                    "kind": "adjudication",
+                    "workstream": "process",
+                    "buildtier": "medium",
+                    "specref": relpath,
+                    "context": _cancel_context(relpath),
+                }
+            )
+            continue
+        if not reports:
+            # F6: suppression must never be silent. A terminal spec whose close
+            # report is missing (hand-deleted, renamed, or never written) has
+            # an owed judgement nobody is holding — exactly the starvation this
+            # contract exists to end — so it says so rather than minting zero
+            # rows quietly.
+            _say(
+                "{} is closed in {} but NO per-close report exists at {}/{}-*.md "
+                "- the close event has no record, so no disposition was minted. "
+                "Write the report (or re-run the close) and sweep "
+                "again".format(wi_id, relpath, REPORTS, wi_id),
+                err=True,
+            )
+            continue
+        for report in reports:
             rel_report = report.relative_to(Path(root)).as_posix()
             rmeta = _report_meta(report)
             tier = str(rmeta.get("suggested_tier") or "medium")
@@ -578,13 +641,20 @@ def _close_drafts(root, outcomes):
                     # re-run dedupes exactly, and a genuinely second close is a
                     # second report and so a second row. No sha, no digest, no
                     # archaeology.
+                    # THE TITLE KEYS ON THE REPORT PATH AND NOTHING ELSE.
+                    # `_mint` dedups on the exact title, so every token in it
+                    # is part of the event's identity — and the report path is
+                    # the only one that cannot move: the file is immutable and
+                    # its name is `<wi>-<branch>`. An earlier cut folded the
+                    # report's `claimed_outcome` in as well, which re-read a
+                    # MUTABLE field on every sweep, so one edit to a report
+                    # minted a second disposition for the same close. That is
+                    # the F1/F2 starvation class returning through a new proxy;
+                    # the outcome belongs in the Context, where nothing dedups.
                     "title": (
-                        "dispose: {} closed as {} ({}) - {} (a disposition row "
-                        "never closes early; R3)".format(
-                            wi_id,
-                            rmeta.get("claimed_outcome") or "partial",
-                            rel_report,
-                            _DISPOSITION_OUTCOMES,
+                        "dispose: the close recorded at {} - {} (a disposition "
+                        "row never closes early; R3)".format(
+                            rel_report, _DISPOSITION_OUTCOMES
                         )
                     ),
                     "kind": "adjudication",
@@ -600,6 +670,23 @@ def _close_drafts(root, outcomes):
                 }
             )
     return drafts
+
+
+def _cancel_context(relpath):
+    """The minted row's `## Context` for a CANCELLED close.
+
+    Like its `partial` sibling it does not quote the lane: a judge's brief must
+    not open with the defendant's verdict, and here the verdict IS the
+    Deliverable. It is one `Read:` away."""
+    return (
+        "The cancelled spec is `{spec}` — READ ITS `## Deliverable` FIRST. That "
+        "cell is where the lane recorded why this will never be built, and it "
+        "is a CLAIM under judgement here, not this row's premise.\n\n"
+        "Outcomes (R3): {outcomes}. An override moves the byte-identical spec "
+        "to the corrected terminal folder and records the overridden claim; the "
+        "cancellation itself is never reversed in place. An open item goes to "
+        "docs/requirements/open-items.csv."
+    ).format(spec=relpath, outcomes=_DISPOSITION_OUTCOMES)
 
 
 def _close_context(relpath, rel_report):
@@ -977,17 +1064,21 @@ def _cmd_sweep(args):
 # --- the gate-policy arms (ruled decision 2, owner 2026-07-31; §A8) ------------
 
 
-def adjudication_action(level):
-    """May adjudication FLIP `Modified` -> `Verified`? Ruled decision 2:
-    **recommend-only under `attended`** — the flip is a Status change that
-    RECOVERS THE GATE, i.e. a ratification, and under attended ratification is
-    the human's act, so adjudication prepares the brief ("these cells are
-    traced-only, no scope moved, recommend re-verify") and stops; **flip under
-    `single-ratify` and `autonomous`**, where an LLM verdict already carries
-    ratification authority. An unknown level fails toward `recommend` — never
-    toward a machine ratification. Attended is the kit DEFAULT even though
-    this repo runs autonomous, which is why both arms are built and tested."""
-    return "flip" if level in ("single-ratify", "autonomous") else "recommend"
+def adjudication_action(human_held):
+    """May adjudication FLIP `Modified` -> `Verified`? Ruled decision 2, re-keyed
+    onto SN-029's ordinal: **recommend-only while the tier is HUMAN-HELD** — the
+    flip is a Status change that RECOVERS THE GATE, i.e. a ratification, and a
+    human-held tier's ratification is the human's act, so adjudication prepares
+    the brief ("these cells are traced-only, no scope moved, recommend
+    re-verify") and stops; **flip once the tier is loop-held**, where a recorded
+    LLM verdict already carries ratification authority.
+
+    Anything unreadable upstream resolves to human-held — `agent_common.
+    human_holds` fails that way deliberately — so the failure direction is
+    `recommend`, never a machine ratification. The kit DEFAULT holds every tier
+    even though this repo holds none, which is why both arms are built and
+    tested."""
+    return "recommend" if human_held else "flip"
 
 
 def flip_verified(root, ids):
@@ -1014,8 +1105,12 @@ def flip_verified(root, ids):
     conflicts = ac.config_conflicts(root / "docs")
     if conflicts:
         return "recommend", [], conflicts[0]
-    level = ac.declared_policy(root / "docs", "gate-policy", "attended").strip()
-    action = adjudication_action(level.lower())
+    # SN-029: the ordinal comparison, not the retired enum. `spine_stage_of`
+    # reads the tier currently in process off the generated docs/gate basis
+    # line; `human_holds` compares it against `human_ratification_through`.
+    human_held = ac.human_holds(root / "docs", ac.spine_stage_of(root))
+    level = "human-held" if human_held else "loop-held"
+    action = adjudication_action(human_held)
     wanted = {i.strip() for i in ids if i.strip()}
     located, tables = _locate_spine_rows(root, wanted)
     missing = sorted(wanted - set(located))
@@ -1039,9 +1134,81 @@ def flip_verified(root, ids):
             )
         return action, [], None
     flipped = _apply_flips(root, tables, located)
+    # SN-029: the flip and the LEDGER APPEND are one act. A ratification whose
+    # anchor is written later (or by a different tool) is a window where the
+    # registry says `Verified` and nothing records what text was blessed —
+    # which is the state the derived-from-git-history baseline lived in
+    # permanently.
+    recorded = record_attestations(root, flipped, "ratified")
     for rid in flipped:
         _say("flipped {} Modified -> Verified (gate-policy '{}')".format(rid, level))
+    for att in recorded:
+        _say("attested {} at {}".format(att, check_trajectory.ATTESTATIONS_CSV))
     return action, flipped, None
+
+
+def next_att_id(root):
+    """`max(existing) + 1` over the ledger's own ids."""
+    top = 0
+    for row in check_trajectory.read_attestations(root):
+        match = re.match(r"^ATT-(\d+)$", (row.get("ATT-ID") or "").strip())
+        if match:
+            top = max(top, int(match.group(1)))
+    return "ATT-{:03d}".format(top + 1)
+
+
+def record_attestations(root, artifacts, decision, ref=""):
+    """APPEND one ledger row per artifact, recording the digest of the
+    normative text as it stands NOW. Returns the minted `ATT-###` ids.
+
+    Append-only in the plainest possible way — the file is opened for append
+    and nothing re-reads or rewrites an earlier line. `check_trajectory`'s
+    `staged_attestation_rewrite_findings` is the guard that says so, and this
+    writer is the reason that guard can be simple."""
+    import csv
+
+    root = Path(root)
+    artifacts = [a for a in artifacts if a]
+    if not artifacts or decision not in check_trajectory.ATTESTATION_DECISIONS:
+        return []
+    digests = check_trajectory.current_digests(root)
+    code, sha = ac.git(root, "rev-parse", "HEAD")
+    commit = sha.strip()[:10] if code == 0 and sha.strip() else "no-git"
+    code, date = ac.git(root, "log", "-1", "--format=%cs")
+    stamp = date.strip() if code == 0 and date.strip() else ""
+    path = root / check_trajectory.ATTESTATIONS_CSV
+    fresh = not path.is_file()
+    path.parent.mkdir(parents=True, exist_ok=True)
+    minted = []
+    with path.open("a", newline="", encoding="utf-8") as fh:
+        writer = csv.writer(fh, quoting=csv.QUOTE_MINIMAL, lineterminator="\n")
+        if fresh:
+            writer.writerow(
+                [
+                    "ATT-ID",
+                    "Artifact",
+                    "TextDigest",
+                    "AcceptedCommit",
+                    "Decision",
+                    "Date",
+                    "Ref",
+                ]
+            )
+        for artifact in sorted(artifacts):
+            if artifact not in digests:
+                _say(
+                    "{} has no normative text to attest (not a spine row or an "
+                    "SN) - no ledger row appended".format(artifact),
+                    err=True,
+                )
+                continue
+            att = next_att_id(root)
+            writer.writerow(
+                [att, artifact, digests[artifact], commit, decision, stamp, ref]
+            )
+            fh.flush()
+            minted.append(att)
+    return minted
 
 
 def _locate_spine_rows(root, wanted):
@@ -1097,6 +1264,22 @@ def _cli_result(refusal, ok_message):
     return 0
 
 
+def _cmd_attest(args):
+    """`intake.py attest --rows "SR-001;SN-028" --decision ratified`."""
+    root = Path(args.root).resolve()
+    ids = [i.strip() for i in str(args.rows).split(";") if i.strip()]
+    minted = record_attestations(root, ids, args.decision, args.ref)
+    if not minted:
+        return _cli_result(
+            "no ledger row was appended - none of {} has normative text to "
+            "attest".format(", ".join(ids) or "(none)"),
+            "",
+        )
+    for att in minted:
+        _say("appended {} ({})".format(att, args.decision))
+    return _cli_result(None, "attested {} artifact(s).".format(len(minted)))
+
+
 def _cmd_adjudicate(args):
     """The adjudication worker's mechanical tool: enact (or recommend) the
     no-scope-moved outcome per the declared gate-policy."""
@@ -1150,6 +1333,28 @@ def main(argv=None):
         "--rows", required=True, help="spine row id(s), ;-joined (SR-/LLR-/TC-)"
     )
     adj.set_defaults(func=_cmd_adjudicate)
+    att = sub.add_parser(
+        "attest",
+        help="APPEND attestation-ledger rows (SN-029): record the digest of "
+        "each artifact's normative text as accepted, with a decision. The "
+        "same subcommand a human runs at a sitting and the flip arm runs "
+        "mechanically, so machine and human rows are byte-identical.",
+    )
+    att.add_argument(
+        "--rows",
+        required=True,
+        help="artifact id(s), ;-joined (SN-/SR-/LLR-/TC-)",
+    )
+    att.add_argument(
+        "--decision",
+        default="ratified",
+        choices=list(check_trajectory.ATTESTATION_DECISIONS),
+        help="ratified (a first acceptance) | clarity (an amendment judged "
+        "wording-only) | meaning (the obligation moved; a fresh ratification "
+        "is owed) | override (a human overruling an adjudicator)",
+    )
+    att.add_argument("--ref", default="", help="provenance: a brief path or WI id")
+    att.set_defaults(func=_cmd_attest)
     args = ap.parse_args(argv)
     if not getattr(args, "cmd", None):
         ap.print_help()

@@ -388,7 +388,13 @@ BASELINE = {
     # here is the lazy loader and its cache; the prose is a diff away.
     # Then +3 (2929 -> 2932), SN-028 REVIEW round 1: the operator-facing
     # banner strings named files that no longer exist.
-    "agent_loop.py": 2932,
+    # Then +14 (2932 -> 2946), SN-029: the mode words the loop compared against
+    # ("attended", "single-ratify") are no longer a vocabulary — the loop asks
+    # `human_holds` for the LEVEL and `keep_nondependent` for the orthogonal
+    # drain policy, computed once in `main` and carried on the context rather
+    # than re-derived at each of the five sites that used to string-compare.
+    # Reviewed bump.
+    "agent_loop.py": 2946,
     # +30 (2206 -> 2236), WI-065: `tc_citation_findings` — the TC-`Verifies`
     # rules lifted out of `analyze` so the cell could accept `IF-###` seam ids.
     # Most of the bump is that helper's docstring, which is where the RULING now
@@ -487,7 +493,11 @@ BASELINE = {
     # the third SN policy duplicate is pinned like its siblings. The growth is
     # the docstring recording the whole-text sharp edge (a ratified prose
     # mention caps the gate at G0). Reviewed bump, log 2026-08-02.
-    "trace.py": 2930,
+    # +44 (2930 -> 2974), SN-029: `docs/requirements/attestations.csv` joins the
+    # registry schema (loader row + column contract) so the ledger the
+    # attestation rungs read is traced like every other spine registry rather
+    # than being a file only one checker knows about. Reviewed bump.
+    "trace.py": 2974,
     # +132 (1926 -> 2058; the last +10 is the F4 BOM hardening: read_rows utf-8-sig + git-show strips), WI-316: staged_spine_findings — the amend-without-
     # flip warn (--staged): content cells of a Verified spine row changed
     # without the Modified marker, suppressed when the owning SR flips in the
@@ -710,7 +720,21 @@ BASELINE = {
     # WI-280.
     # Then +22 (3531 -> 3553), SN-031: `partial` joins the status/terminal vocabularies and the
     # `Supersedes` column joins the F5-copied schema. Reviewed bump.
-    "check_trajectory.py": 3553,
+    # Then +272 (3553 -> 3825), SN-029: the attestation LEDGER's three rungs —
+    # `attestation_findings` (the DRIFT rung: a Verified row whose normative
+    # text no longer digests to what was accepted), `attestation_integrity_
+    # findings` (the ledger's own shape), `staged_attestation_rewrite_findings`
+    # (append-only) — plus `normative_text`/`sn_normative_text`/`digest` and the
+    # excluded-column contract that says WHICH cells are normative. This is the
+    # biggest single bump the module has taken and it buys the anchor the whole
+    # ordinal rests on: without a recorded digest, "has this been ratified" is
+    # re-derived from git history at every read. Reviewed bump; this module is
+    # now the kit's largest and is the first WI-280 decomposition candidate.
+    # Then +5 (3825 -> 3830), same slice: the ledger's errors are held in their
+    # OWN local and folded in at both exits, because the rung runs BEFORE the
+    # WI-vacuity return (a corrupt ledger in a repo with no work items must
+    # still fail) and `errors` is not bound until after it.
+    "check_trajectory.py": 3830,
     # NEW ENTRY, +25 (1498 -> 1523), WI-357: the two-stage work-branch claim
     # signal — the on-disk fast path plus the branch-history probe that
     # survives the §2.3 close commit (git log -1 over the claim path), with
@@ -885,7 +909,10 @@ BASELINE = {
     # Then +14 (2535 -> 2549), SN-031: `docs/work/partial/` and `docs/handbacks/` scaffolded, and the
     # module docstring re-pointed at the surfaces that actually ship.
     # Reviewed bump.
-    "bootstrap.py": 2549,
+    # Then +6 (2549 -> 2555), SN-029: `attestations.csv` and the
+    # `adjudicate-amendment` brief template join the scaffold MAPPING — two
+    # rows, no new logic. Reviewed bump.
+    "bootstrap.py": 2555,
     # NEW ENTRY, +228 (1423 -> 1651), Phase 2b of the concurrency restructure
     # (docs/concurrency-restructure.md §7): the spec-folder work-item reader,
     # which crosses this module over THRESHOLD for the first time. It is one
@@ -1000,7 +1027,15 @@ BASELINE = {
     # Then +33 (2133 -> 2166), SN-031: `partial/` declared in the F5-triplicated status table, the
     # `Supersedes` lineage column, `read_toml_text`, and the prose each
     # needs. Reviewed bump.
-    "agent_common.py": 2166,
+    # Then +95 (2166 -> 2261), SN-029: the ORDINAL's one home — `ratification_
+    # level` (with `LEGACY_RATIFICATION_LEVEL` mapping the retired enum and
+    # `RATIFICATION_FALLBACK` naming the conservative default), `human_holds`
+    # (the single comparison every consumer makes, including the ruling that
+    # both ENDS of the ordinal are absolute), `keep_nondependent` and
+    # `spine_stage_of`. Five consumers stopped string-comparing policy words;
+    # the growth is the definition plus the reasoning for the two ends.
+    # Reviewed bump.
+    "agent_common.py": 2261,
     # NEW ENTRY, WI-387 — integrate.py crossed THRESHOLD (1418 -> 1588) adding
     # the third terminal outcome. The extraction the ratchet asks for was TAKEN
     # FIRST, not argued away: `hand_back` and `quarantine`, the largest unit and
@@ -1167,7 +1202,11 @@ BASELINE = {
     # keep/discard rung (`_partial_report_refusal`) a live incident
     # bought, and `docs/handbacks/` on the adjudication no-bar surface.
     # Reviewed bump.
-    "integrate.py": 2471,
+    # Then +5 (2471 -> 2476), SN-029: `docs/requirements/attestations.csv` joins
+    # the adjudication no-bar diff scope — an adjudication records its verdict
+    # in the ledger, so the ledger must be a surface that arm may touch.
+    # Reviewed bump.
+    "integrate.py": 2476,
 }
 
 

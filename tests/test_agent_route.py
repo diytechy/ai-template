@@ -289,14 +289,37 @@ def test_constants_overridable_from_env():
     assert c["margin"] == route.DEFAULT_CONSTANTS["margin"]  # bad value ignored
 
 
-def test_failure_action_keyed_to_gate_policy():
-    assert route.failure_action("attended")["mode"] == "attended"
-    sr = route.failure_action("single-ratify")
-    assert sr["keep_nondependent"] and sr["pause_wi"] and not sr["design_check"]
-    au = route.failure_action("autonomous")
-    assert au["design_check"] and au["pause_wi"]
-    # Absent/unknown defaults to attended (the safe stop).
-    assert route.failure_action("")["mode"] == "attended"
+def test_failure_action_keyed_to_the_ratification_level():
+    """SN-029: the page-escalation is keyed to the ORDINAL comparison, not the
+    retired three-value enum — and to the orthogonal dial the enum bundled with
+    it. Every mode still pauses the causing WI and its hard-edge dependents;
+    what differs is what happens around that.
+
+    The three old values collapse to (human_held, keep_nondependent):
+    `attended` = (True, False), `single-ratify` = (True, True), `autonomous` =
+    (False, *). The fourth cell was unreachable under the enum."""
+    held_alone = route.failure_action(True)
+    assert held_alone["mode"] == "human-held"
+    assert held_alone["pause_wi"] is True
+    assert held_alone["keep_nondependent"] is False
+    assert held_alone["design_check"] is False
+    assert "start nothing new" in held_alone["note"]
+
+    held_but_running = route.failure_action(True, keep_nondependent=True)
+    assert held_but_running["keep_nondependent"] is True
+    assert held_but_running["design_check"] is False
+    assert "non-dependent" in held_but_running["note"]
+
+    loop = route.failure_action(False)
+    assert loop["mode"] == "loop-held"
+    assert loop["pause_wi"] is True
+    assert loop["keep_nondependent"] is True
+    assert loop["design_check"] is True
+    assert "design-check" in loop["note"]
+
+    # The failure direction: an unreadable dial resolves to human-held upstream
+    # (`agent_common.human_holds`), so the strictest cell is what it reaches.
+    assert route.failure_action(True) == held_alone
 
 
 def test_cli_list_select_and_status(tmp_path):

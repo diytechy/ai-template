@@ -18,7 +18,7 @@ import os
 import subprocess
 import sys
 
-from conftest import SCRIPTS, augment_env, run_py
+from conftest import set_process_key, SCRIPTS, augment_env, run_py
 
 AGENT_LOOP = SCRIPTS / "agent_loop.py"
 
@@ -272,12 +272,16 @@ def test_arbiter_disagreement_pages(tmp_path):
     assert "position-unstable" in proc.stderr
 
 
-def test_arbiter_disagreement_autonomous_stalls_not_pages(tmp_path):
-    # The same position-unstable PAGE under gate-policy autonomous must NOT
-    # hard-gate a human: the single-shot flag reaches the pause-free end
-    # state — EXIT_STALL (attention), never NEEDS-HUMAN.
+def test_arbiter_disagreement_on_a_loop_held_tier_stalls_not_pages(tmp_path):
+    # The same position-unstable PAGE on a LOOP-HELD tier must NOT hard-gate
+    # a human: the single-shot flag reaches the pause-free end state —
+    # EXIT_STALL (attention), never NEEDS-HUMAN.
     root, fake = make_fixture(tmp_path)
-    (root / "docs" / "gate-policy").write_text("autonomous\n", encoding="utf-8")
+    # SN-029: the loop-held tier — the ordinal's 0 end, where a recorded
+    # verdict carries ratification authority. Declared as the LEVEL, not as
+    # the retired enum word.
+    set_process_key(root, "attestation", "human_ratification_through", 0)
+
     fake.write_text(
         FAKE_CLI.replace('label = "A" if "ALPHA" in a else "B"', 'label = "A"'),
         encoding="utf-8",
@@ -285,16 +289,19 @@ def test_arbiter_disagreement_autonomous_stalls_not_pages(tmp_path):
     proc = run_dualplan(root, fake)
     assert proc.returncode == 4, proc.stdout + proc.stderr  # EXIT_STALL: attention
     assert "position-unstable" in proc.stderr
-    assert "design-check-session" in proc.stderr  # the autonomous page action
+    assert "design-check-session" in proc.stderr  # the loop-held page action
 
 
-def test_arbiter_disagreement_single_ratify_stalls_not_pages(tmp_path):
+def test_arbiter_disagreement_with_keep_nondependent_stalls_not_pages(tmp_path):
     # single-ratify rides the SAME pause-free else-arm as autonomous (both are
     # non-stop-needs-human page actions), so the flag path must reach
     # EXIT_STALL, never NEEDS-HUMAN. Braces SR-108's "autonomous/
     # single-ratify" clause at the --dual-plan entry (113-REVIEW-A follow-up).
     root, fake = make_fixture(tmp_path)
-    (root / "docs" / "gate-policy").write_text("single-ratify\n", encoding="utf-8")
+    # The retired `single-ratify` level was two facts: a human-held tier PLUS
+    # `keep_nondependent`. Both are declared now, separately.
+    set_process_key(root, "attestation", "human_ratification_through", 4)
+    set_process_key(root, "attestation", "keep_nondependent", True)
     fake.write_text(
         FAKE_CLI.replace('label = "A" if "ALPHA" in a else "B"', 'label = "A"'),
         encoding="utf-8",

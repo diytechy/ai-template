@@ -249,47 +249,53 @@ def _refresh_or_quarantine(root, branch, tier):
     return refusal
 
 
-def _kind_action(kind, level):
+def _kind_action(kind, human_held):
     """The §A8 policy table — what the dispatcher does with a frontier row of
-    `kind` at gate-policy `level`, and the one place this module must not
-    invent policy:
+    `kind`, and the one place this module must not invent policy:
 
-        kind                  attended         single-ratify    autonomous
-        ordinary, critique    parallel         parallel         parallel
-        high-risk, protected  exclusive        exclusive        exclusive
-        spine                 batch            batch            batch
-        attestation, gate     surface          surface*         exclusive
+        kind                  human-held tier      loop-held tier
+        ordinary, critique    parallel             parallel
+        high-risk, protected  exclusive            exclusive
+        spine                 batch                batch
+        attestation, gate     surface              exclusive
 
-    A `spine` row dispatches at EVERY level because building a scope change is
+    `human_held` is the SN-029 comparison already made: is the tier this repo's
+    spine is currently in process at still the human's to ratify
+    (`agent_common.human_holds`)? It replaces the three-value gate-policy enum,
+    which could not express "TCs are human-held but LLRs are not" — the whole
+    reason the ratification dial became an ordinal on the same 0-4 ladder the
+    spine stage uses.
+
+    A `spine` row dispatches EITHER WAY because building a scope change is
     WORK, not a ratification — it opens a window; closing it is the next row's
-    job. `attestation`/`gate` close a window, which under `attended` is the
-    human's act (drain, surface the cards, exit 0), under `single-ratify`
-    dispatches only as the queued batch at the close (*`_admission` applies
-    that: surfaced rows admit once nothing else remains), and under
-    `autonomous` dispatches — a recorded fresh-context reviewer verdict
-    ratifies. The last arm also covers `adjudication` when WI-388 adds the
-    kind: exclusive, like every non-parallel kind."""
+    job. `attestation`/`gate` close a window, which on a human-held tier is the
+    human's act (drain, surface the cards, exit 0) and otherwise dispatches — a
+    recorded fresh-context reviewer verdict ratifies. The last arm also covers
+    `adjudication`: exclusive, like every non-parallel kind."""
     if kind in ("ordinary", "critique"):
         return "parallel"
     if kind == "spine":
         return "batch"
     if kind in ("attestation", "gate"):
-        return "exclusive" if level == "autonomous" else "surface"
+        return "surface" if human_held else "exclusive"
     return "exclusive"
 
 
-def _admission(ready_kinds, level, busy, free):
+def _admission(ready_kinds, human_held, busy, free, keep_nondependent=False):
     """THE SPINE BARRIER, as a pure decision (§A4/§A8): what may start now?
 
     `ready_kinds` is the ordered frontier as `(wi_id, kind)` pairs (rank
-    already sorted spine first), `busy` whether any lane is out, `free` how
-    many lanes are open. Returns `(verb, payload)`:
+    already sorted spine first), `human_held` the SN-029 comparison (is the
+    tier in process still the human's to ratify?), `busy` whether any lane is
+    out, `free` how many lanes are open, and `keep_nondependent` the orthogonal
+    dial an ordinal cannot carry — may other work keep running while a
+    ratification is queued? Returns `(verb, payload)`:
 
       ("admit", [batch, ...])       fill lanes with parallel rows, one per lane
       ("admit-exclusive", batch)    ONE batch that must run alone — all spine
                                     rows together, or the first exclusive row,
-                                    or single-ratify's queued ratification
-                                    batch at the close
+                                    or the queued ratification batch at the
+                                    close under `keep_nondependent`
       ("wait", [])                  an exclusive-kind row is pending: stop
                                     admitting and let the lanes come home
       ("surface", ids)              attestation/gate rows that may not dispatch
@@ -302,30 +308,32 @@ def _admission(ready_kinds, level, busy, free):
     batch admits only into an idle station, as the sole toucher of trunk."""
     if not ready_kinds:
         return "empty", []
-    surfaced = [w for w, k in ready_kinds if _kind_action(k, level) == "surface"]
+    surfaced = [w for w, k in ready_kinds if _kind_action(k, human_held) == "surface"]
     dispatchable = [
-        (w, k) for w, k in ready_kinds if _kind_action(k, level) != "surface"
+        (w, k) for w, k in ready_kinds if _kind_action(k, human_held) != "surface"
     ]
-    if surfaced and level != "single-ratify":
-        # The attended stop (§A8 premise: once a ratification is pending, no
+    if surfaced and not keep_nondependent:
+        # The human-held stop (§A8 premise: once a ratification is pending, no
         # work can be taken): drain and exit 0 into the owner's queue.
         return "surface", surfaced
     if not dispatchable:
         if not surfaced:
             return "empty", []
-        # single-ratify's close: only the queued ratification batch remains.
+        # The close under `keep_nondependent`: only the ratification batch left.
         if busy:
             return "wait", []
         return "admit-exclusive", surfaced
     first_w, first_k = dispatchable[0]
-    action = _kind_action(first_k, level)
+    action = _kind_action(first_k, human_held)
     if action in ("batch", "exclusive"):
         if busy:
             return "wait", []
         if action == "batch":
             return "admit-exclusive", [w for w, k in dispatchable if k == first_k]
         return "admit-exclusive", [first_w]
-    batches = [[w] for w, k in dispatchable if _kind_action(k, level) == "parallel"]
+    batches = [
+        [w] for w, k in dispatchable if _kind_action(k, human_held) == "parallel"
+    ]
     batches = batches[: max(0, free)]
     if not batches:
         return "wait", []
@@ -865,7 +873,18 @@ def _claim_lanes(root, table, args, worker, batches, exclusive, config_refusal, 
     return admitted, None
 
 
-def _admit(root, table, args, worker, tier, level, lanes_total, config_refusal, state):
+def _admit(
+    root,
+    table,
+    args,
+    worker,
+    tier,
+    human_held,
+    keep_going,
+    lanes_total,
+    config_refusal,
+    state,
+):
     """One tick's admission, enacted: `(admitted, exit_code)`. The exit code
     is non-None only when the run ends here — the drained queue, the surfaced
     ratifications, a refusal — and only ever with the station idle."""
@@ -884,7 +903,11 @@ def _admit(root, table, args, worker, tier, level, lanes_total, config_refusal, 
     ready = [r for r in schedule.frontier(wis) if r["status"] == "queued"]
     kinds = {w["id"]: schedule.kind_of(w) for w in wis}
     verb, payload = _admission(
-        [(r["id"], kinds.get(r["id"])) for r in ready], level, busy, free
+        [(r["id"], kinds.get(r["id"])) for r in ready],
+        human_held,
+        busy,
+        free,
+        keep_going,
     )
     if verb in ("surface", "empty"):
         if busy:
@@ -1011,7 +1034,12 @@ def run(root, args, worker=None, tier="all"):
     guard's intended span.
     """
     lanes_total = _lane_count(args, root)
-    level = ac.declared_policy(root / "docs", "gate-policy", "attended").strip().lower()
+    # SN-029: one ordinal comparison, made once per run, threaded down exactly
+    # as the enum was. `spine_stage_of` reads the tier currently in process off
+    # the generated docs/gate basis line; `human_holds` compares it against the
+    # declared `human_ratification_through`.
+    human_held = ac.human_holds(root / "docs", ac.spine_stage_of(root))
+    keep_going = ac.keep_nondependent(root / "docs")
     # Computed once, APPLIED lazily: admission refuses on it only when work
     # actually needs a worker, so an empty queue still drains to exit 0 on an
     # unwired scaffold (the spec's empty-frontier contract; codex
@@ -1062,7 +1090,8 @@ def run(root, args, worker=None, tier="all"):
                 args,
                 worker,
                 tier,
-                level,
+                human_held,
+                keep_going,
                 lanes_total,
                 config_refusal,
                 state,

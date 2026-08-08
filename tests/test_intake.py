@@ -27,11 +27,17 @@ the real spec folder — no seam is stubbed.
 
 import subprocess
 
-from conftest import env_gate_skipif, load_script, skip_without_env_gates
+from conftest import (
+    env_gate_skipif,
+    load_script,
+    set_process_key,
+    skip_without_env_gates,
+)
 
 pytestmark = env_gate_skipif("git")
 
 intake = load_script("intake")
+ac = load_script("agent_common")
 wi_convert = load_script("wi_convert")
 
 T_BASE = 1_000_000
@@ -307,9 +313,18 @@ def test_a_merged_handback_mints_the_disposition_row(tmp_path):
     row = queued_rows(root)[minted[0][0]]
     assert row["SafetyClass"] == "adjudication"
     assert "dispose" in row["Title"] and "WI-005" in row["Title"]
-    # The four outcomes are in the row's face, and hand-back is NOT one of them.
-    for outcome in ("cancel", "defer", "re-queue", "open item"):
+    # The four outcomes are in the row's face, and closing early is NOT one of
+    # them. SN-031 retired R3's `re-queue`: a terminal row is never put back on
+    # the frontier, so continuing means DRAFTING A SUCCESSOR.
+    for outcome in ("cancel", "defer", "draft a successor", "open item"):
         assert outcome in row["Title"]
+    assert "re-queue" not in row["Title"]
+    # The title keys on the REPORT PATH and nothing else — every token in it is
+    # part of the dedup key, and the report is the only one that cannot move.
+    assert "docs/handbacks/WI-005-wi-005.md" in row["Title"]
+    assert "partial" not in row["Title"], (
+        "a MUTABLE field in the title re-mints on an edit (F1/F2)"
+    )
     # The tier is the report's TYPED `suggested_tier` field — not a
     # case-folded substring search of a free-prose reason, which is what a typo
     # used to downgrade silently.
@@ -629,18 +644,36 @@ def _policy_repo(tmp_path, level):
         encoding="utf-8",
         newline="\n",
     )
-    (root / "docs" / "gate-policy").write_text(
-        level + "\n", encoding="utf-8", newline="\n"
-    )
+    _declare_level(root, level)
     _commit(root, "the flagged spine + the declared policy", when=T_CODE)
     return root
+
+
+def _declare_level(root, level):
+    """Declare BOTH halves of SN-029's comparison: the human-ratification level
+    in docs/process.toml, and the spine stage the derived gate reports.
+
+    The stage is written into a docs/gate basis line rather than derived from a
+    real spine, because what is under test here is the COMPARISON — a fixture
+    that had to build a whole spine to move one side of it would be testing
+    derive_gate instead."""
+    set_process_key(root, "attestation", "human_ratification_through", level)
+    gate = root / "docs" / "gate"
+    gate.parent.mkdir(parents=True, exist_ok=True)
+    with gate.open("w", encoding="utf-8", newline="\n") as fh:
+        fh.write(
+            "# DERIVED GATE\n"
+            "# basis: SN=1 SR=2 LLR=1 TC=0 drafts=0 modified=2 uncovered=0 "
+            "computed=G2 ex-draft=G2 phase=1 per-phase=1=G2 stage=3\n"
+            "G2\n"
+        )
 
 
 def test_under_attended_adjudication_recommends_and_never_flips(tmp_path, capsys):
     # Ruled decision 2: under `attended` the flip is a Status change that
     # RECOVERS THE GATE — a ratification, and ratification is the human's act.
     # The helper prepares the brief and touches NOTHING.
-    root = _policy_repo(tmp_path, "attended")
+    root = _policy_repo(tmp_path, 4)
     before = (root / "docs" / "requirements" / "system-requirements.csv").read_bytes()
     action, flipped, refusal = intake.flip_verified(root, ["SR-001", "LLR-001"])
     assert refusal is None, refusal
@@ -653,17 +686,16 @@ def test_under_attended_adjudication_recommends_and_never_flips(tmp_path, capsys
     ).read_bytes() == before
 
 
-def test_under_single_ratify_and_autonomous_the_flip_is_enacted(tmp_path):
-    # The other arm: at those levels an LLM verdict already carries
-    # ratification authority, so the helper flips Modified -> Verified — and
-    # ONLY the Status cells move (the registries stay byte-identical
-    # elsewhere; a re-run is an idempotent no-op).
-    for i, level in enumerate(("single-ratify", "autonomous")):
+def test_below_the_human_level_the_flip_is_enacted(tmp_path):
+    # The other arm: once the tier in process sits ABOVE the human's declared
+    # ratification level, a recorded LLM verdict already carries ratification
+    # authority, so the helper flips Modified -> Verified — and ONLY the Status
+    # cells move (the registries stay byte-identical elsewhere; a re-run is an
+    # idempotent no-op). The fixture's spine stage is 3, so levels 0..2 are the
+    # loop-held side; both ends of that range are driven.
+    for i, level in enumerate((0, 2)):
         (tmp_path / str(i)).mkdir()
-        root = _policy_repo(tmp_path / str(i), "x")  # placeholder level
-        (root / "docs" / "gate-policy").write_text(
-            level + "\n", encoding="utf-8", newline="\n"
-        )
+        root = _policy_repo(tmp_path / str(i), level)
         import csv as _csv
 
         sr_csv = root / "docs" / "requirements" / "system-requirements.csv"
@@ -699,12 +731,22 @@ def test_an_unknown_row_id_refuses_the_flip(tmp_path):
     assert refusal is not None and "SR-999" in refusal
 
 
-def test_an_unknown_policy_level_fails_toward_recommend(tmp_path):
-    # Fail toward the human, never toward a machine ratification.
-    root = _policy_repo(tmp_path, "some-future-level")
+def test_an_unreadable_level_fails_toward_recommend(tmp_path):
+    # Fail toward the human, never toward a machine ratification. Every input
+    # this rung can fail on resolves the same way: an out-of-vocabulary dial, a
+    # docs/gate with no stage field (a repo that predates SN-029), and an
+    # unparseable one all read as HUMAN-HELD.
+    root = _policy_repo(tmp_path, 4)
     action, _flipped, refusal = intake.flip_verified(root, ["SR-001"])
     assert refusal is None, refusal
     assert action == "recommend"
-    assert intake.adjudication_action("attended") == "recommend"
-    assert intake.adjudication_action("single-ratify") == "flip"
-    assert intake.adjudication_action("autonomous") == "flip"
+
+    assert intake.adjudication_action(True) == "recommend"
+    assert intake.adjudication_action(False) == "flip"
+
+    # The upstream comparison's own failure directions.
+    docs = root / "docs"
+    assert ac.human_holds(docs, None) is True, "an unknown stage is human-held"
+    assert ac.human_holds(docs, "3") is True, "a non-int stage is human-held"
+    set_process_key(root, "attestation", "human_ratification_through", "four")
+    assert ac.ratification_level(docs) == 4, "a wrong-typed dial holds every tier"

@@ -238,6 +238,93 @@ def sn_gate(sn_id, draft_ids, cited_ids):
     return G3 if sn_id in cited_ids else G0
 
 
+# --- SN-029: the SECOND derived axis --------------------------------------------
+# WHY TWO AXES. The gate answers "how strict is the harness right now" — its
+# vocabulary is `G1|G2|G3` and `check.py` selects steps from it. The human
+# ratification level answers a different question: "how far up the spine is a
+# HUMAN still the acceptor". Those are not the same ladder, and G-numbering
+# cannot express the second: G2 conflates "LLRs and TCs exist" AND doubles as
+# the pull a `Modified` row applies, so there is no G that means "TCs are in
+# process". Forcing one axis to carry both is how a dial ends up meaning
+# something subtly different at each of its five reading sites.
+#
+# So `spine_stage` is derived SEPARATELY, on its own 0-4 ladder, and
+# `stage_to_gate` is the declared mapping between them — one auditable place
+# rather than an arithmetic coincidence. The runnable gate value is untouched;
+# the stage rides the `# basis:` line as an appended field.
+STAGE_SN, STAGE_SR, STAGE_LLR, STAGE_TC, STAGE_DONE = 0, 1, 2, 3, 4
+
+
+def _decomposed_sr_ids(llrs, tcs):
+    """`(SR ids some LLR answers, SR ids some TC verifies)` — the decomposition
+    index both the stage axis and the gate arithmetic ask for.
+
+    One home because two copies of a join rule is exactly how the two axes would
+    drift apart while still agreeing on the day they were written (WI-347: the
+    cross-SCRIPT duplication F5 sanctions never licensed intra-file copies)."""
+    return (
+        {x for r in llrs for x in refs(r.get("SR-Refs"))},
+        {x for r in tcs for x in refs(r.get("Verifies"))},
+    )
+
+
+def spine_stage(srs, llrs, tcs, sn_ids, sn_draft):
+    """The tier currently IN PROCESS, 0-4 — the axis a human-ratification level
+    is compared against.
+
+      0  SNs in process: some need is still a draft, or nothing is ratified yet
+      1  SNs ratified, SRs in process (a requirement is Draft, or one is
+         ratified-but-undecomposed)
+      2  ...and the LLRs are in process
+      3  ...and the TCs are in process
+      4  nothing in process: every tier is decomposed and Verified
+
+    Read as the LOWEST unfinished tier, because that is the one work is
+    happening at and therefore the one a human boundary has to be compared
+    against. The empty-spine corner is explicit: a repo with no real SRs at all
+    is at stage 0 (SNs in process), NOT stage 4 — the vacuous-G1 short circuit
+    in `_raw_level` exists for the gate's own arithmetic and would read as
+    "everything is finished" here, which is precisely backwards."""
+    if any(u in sn_draft for u in sn_ids) or not sn_ids:
+        return STAGE_SN
+    if not srs:
+        return STAGE_SN
+    if any(is_draft(r) for r in srs):
+        return STAGE_SR
+    llr_sr_refs, tc_refs = _decomposed_sr_ids(llrs, tcs)
+    for sr in srs:
+        exempt = llr_exempt(sr)
+        if not exempt and sr["SR-ID"] not in llr_sr_refs:
+            return STAGE_SR
+        if sr["SR-ID"] not in tc_refs:
+            return STAGE_SR
+    if any(is_draft(r) for r in llrs):
+        return STAGE_LLR
+    if any(is_draft(r) for r in tcs):
+        return STAGE_TC
+    if not all(is_verified(r) for r in srs):
+        return STAGE_TC
+    return STAGE_DONE
+
+
+def stage_to_gate(stage):
+    """THE DECLARED MAPPING between the two axes — stated once, here, so the
+    reconciliation is auditable instead of implied.
+
+    It is deliberately LOSSY in one direction only: several stages map to one
+    gate (0 and 1 both read G1, because the harness has the same strictness
+    while requirements are being drafted whether or not the needs are settled),
+    and no stage maps to a gate the harness does not know. Nothing derives the
+    gate FROM the stage in production — `compute` still computes the gate from
+    the artifact states exactly as it always did — so this is a reader's
+    reconciliation, not a second source of truth."""
+    if stage >= STAGE_DONE:
+        return "G3"
+    if stage >= STAGE_LLR:
+        return "G2"
+    return "G1"
+
+
 def _raw_level(srs, llrs, tcs, sn_ids, sn_draft):
     """`(raw_level, sr_gates)` over ONE set of spine rows.
 
@@ -252,8 +339,7 @@ def _raw_level(srs, llrs, tcs, sn_ids, sn_draft):
     consistently: a citation on a removed Draft SR leaves with its row, so the
     counterfactual never fabricates coverage a ratified spine does not have.
     """
-    llr_sr_refs = {x for r in llrs for x in refs(r.get("SR-Refs"))}
-    tc_refs = {x for r in tcs for x in refs(r.get("Verifies"))}
+    llr_sr_refs, tc_refs = _decomposed_sr_ids(llrs, tcs)
     cited = sn_cited_ids(srs)
     sr_g = {
         r["SR-ID"]: sr_gate(r, r["SR-ID"] in llr_sr_refs, r["SR-ID"] in tc_refs)
@@ -348,6 +434,8 @@ def compute(docs):
 
     return {
         "counts": {"SN": len(sn_ids), "SR": len(srs), "LLR": len(llrs), "TC": len(tcs)},
+        # SN-029's second axis, derived from the same rows (never from the gate).
+        "stage": spine_stage(srs, llrs, tcs, sn_ids, sn_draft),
         "drafts": n_draft,
         "modified": n_modified,
         "uncovered": n_uncovered,
@@ -428,7 +516,8 @@ def basis_line(result):
     per_phase = ";".join(f"{k}={v}" for k, v in result["per_phase"].items())
     return (
         "# basis: SN={SN} SR={SR} LLR={LLR} TC={TC} drafts={d} modified={m} "
-        "uncovered={u} computed={raw} ex-draft={ed} phase={ph} per-phase={pp}".format(
+        "uncovered={u} computed={raw} ex-draft={ed} phase={ph} per-phase={pp} "
+        "stage={st}".format(
             SN=c["SN"],
             SR=c["SR"],
             LLR=c["LLR"],
@@ -440,6 +529,7 @@ def basis_line(result):
             ed=GATE_NAMES[result["ex_draft"]],
             ph=result["phase"] if result["phase"] is not None else "(none)",
             pp=per_phase or "(none)",
+            st=result["stage"],
         )
     )
 

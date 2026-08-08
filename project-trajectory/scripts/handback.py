@@ -121,6 +121,11 @@ SUGGESTED_TIERS = ("quick", "medium", "strong")
 # from saying nothing. Both are actionable; only silence is not.
 SPLIT_DECIDERS = ("lane", "adjudicator")
 
+# R3's outcome vocabulary, stated ONCE and imported by intake for the
+# disposition row's title. `re-queue` retired with SN-031: a terminal row is
+# never put back on the frontier, so continuing means drafting a SUCCESSOR.
+DISPOSITION_OUTCOMES = "cancel / defer / draft a successor / surface an open item"
+
 
 def _git_stdout(cwd, *args):
     """One git call whose STDOUT survives byte for byte: `(code, stdout)`.
@@ -413,9 +418,10 @@ def _no_recursion_refusal(root, branch, specs):
         if (meta.get("safety_class") or "").strip().lower() == "adjudication":
             return (
                 "{} claims the adjudication row {} - a disposition row never "
-                "closes early (ruling R3, no recursion: its outcomes are cancel "
-                "/ defer / draft a successor / surface an open item). The run "
-                "stops for a human to read the lane".format(branch, name)
+                "closes early (ruling R3, no recursion: its outcomes are {}). "
+                "The run stops for a human to read the lane".format(
+                    branch, name, DISPOSITION_OUTCOMES
+                )
             )
     return None
 
@@ -467,6 +473,19 @@ def close_partial(root, branch, reason, fields=None):
         # is the artifact-less return this contract exists to end.
         rep_rel = report_path(branch, wi_id)
         dest = wt / rep_rel
+        # IMMUTABLE MEANS IMMUTABLE. The report IS the close event's identity,
+        # and an identity that can be overwritten is a mutable proxy again —
+        # the exact shape five dedup mechanisms died on. A second close of the
+        # same (wi, branch) is not a thing this contract permits (`partial/` is
+        # terminal), so meeting one means something upstream is wrong and the
+        # honest act is to refuse rather than to rewrite the record of the
+        # first close.
+        if dest.exists():
+            return None, (
+                "a close report already exists at {} - the report is the close "
+                "EVENT's immutable identity, so a second close of {} on {} is "
+                "refused rather than overwriting it".format(rep_rel, wi_id, branch)
+            )
         dest.parent.mkdir(parents=True, exist_ok=True)
         with dest.open("w", encoding="utf-8", newline="\n") as fh:
             fh.write(render_report(wi_id, branch, "partial", reason, span, fields))
@@ -483,6 +502,11 @@ def close_partial(root, branch, reason, fields=None):
         # "scope definitions never change; only whether they were delivered".
         _touched, refusal = spec_move.move_spec(wt, src_rel, rel)
         if refusal:
+            # RESTORE, like every sibling refusal path (`_revert`, the mint's
+            # `_bookkeeping_commit`). Leaving the staged report behind would
+            # leave the lane DIRTY — which §5.6 refuses to GC — and would leave
+            # a report on disk for a close that did not happen.
+            ac.git(wt, "rm", "-q", "-f", "--", rep_rel)
             return None, "cannot close {}: {}".format(name, refusal)
     code, out = ac.git(
         wt,

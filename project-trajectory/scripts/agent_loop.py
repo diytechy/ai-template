@@ -1884,6 +1884,8 @@ def session_bookkeeping(
     managed = ctx.managed
     registry = ctx.registry
     gate_policy = ctx.gate_policy
+    human_held = getattr(ctx, "human_held", True)
+    keep_going = getattr(ctx, "keep_nondependent", False)
     scoreboard = ctx.scoreboard
     rp_int = ctx.rp_int
     st = ctx.st
@@ -2036,9 +2038,11 @@ def session_bookkeeping(
             # not read page_fails_since.
             st.apply_decision(decision["action"], merged, decision.get("next_primary"))
             if decision["action"] == "page-human":
-                fa = agent_route.failure_action(gate_policy)
+                fa = agent_route.failure_action(human_held, keep_going)
                 print("route/failure ({}): {}".format(fa["mode"], fa["note"]))
-                if fa["mode"] == "attended":
+                # SN-029: the stop is keyed on the MODE the ordinal produced
+                # (), not on the retired enum word .
+                if fa["mode"] == "human-held" and not fa["keep_nondependent"]:
                     # A worker has no lane files — its exit code and the
                     # stop banner carry the page.
                     stop_banner(
@@ -2088,14 +2092,16 @@ def session_bookkeeping(
                 # to docs/gate-policy (same failure_action the review round
                 # uses). The critic gates iteration; the human owns final
                 # acceptance via Attest at gate closure.
-                fa = agent_route.failure_action(gate_policy)
+                fa = agent_route.failure_action(human_held, keep_going)
                 print(
                     "critique/budget ({}): {} CHANGES-REQUESTED round(s) >= "
                     "{} -> page-human: {}".format(
                         fa["mode"], pre_rounds + 1, st.critique_limit, fa["note"]
                     )
                 )
-                if fa["mode"] == "attended" or st.critique_exhaustion == "block":
+                if (
+                    fa["mode"] == "human-held" and not fa["keep_nondependent"]
+                ) or st.critique_exhaustion == "block":
                     stop_banner(
                         status_path,
                         "PAGE-HUMAN — critique budget exhausted",
@@ -2647,7 +2653,13 @@ def main():
     # (docs/process.toml, legacy one-word file as the migration fallback). The
     # four LOCALS stay — `print_run_banner` takes them positionally and a dozen
     # tests read the banner — so this is a reader swap, not a signature change.
-    gate_policy = declared_policy(docs, "gate-policy", "attended")
+    # SN-029: the three-value gate-authority enum retires for an ORDINAL
+    # comparison — is the tier the spine is currently in process at still the
+    # human's to ratify? `human_holds` makes it once; `keep_nondependent` is
+    # the orthogonal dial the enum bundled and an ordinal cannot carry.
+    human_held = agent_common.human_holds(docs, agent_common.spine_stage_of(root))
+    keep_going = agent_common.keep_nondependent(docs)
+    gate_policy = "human-held" if human_held else "loop-held"
     push_policy = declared_policy(docs, "push-policy", "human")
     review_policy = declared_policy(docs, "review-policy", "1")
     _, branch = git(root, "branch", "--show-current")
@@ -2761,7 +2773,7 @@ def main():
         if outcome == "SELECTED":
             print("agent_loop: dual-plan {}: {}".format(wid, detail))
             return EXIT_DONE
-        action = _plan_round.page_action(gate_policy)
+        action = _plan_round.page_action(human_held, keep_going)
         print(
             "agent_loop: dual-plan {} PAGED: {} (gate-policy {} -> {})".format(
                 wid, detail, gate_policy or "attended", action
@@ -2892,6 +2904,8 @@ def main():
     ctx.prefer_map = prefer_map
     ctx.weight_map = weight_map
     ctx.gate_policy = gate_policy
+    ctx.human_held = human_held
+    ctx.keep_nondependent = keep_going
     ctx.guardrails_policy = guardrails_policy
     ctx.warned_no_core = warned_no_core
     ctx.start_dirty = start_dirty

@@ -361,6 +361,101 @@ def declared_policy(docs, legacy_name, default):
     return read_declared(Path(docs) / legacy_name, default)
 
 
+# --- SN-029: the human-ratification level, as an ORDINAL ----------------------
+# THE DIAL, and why it replaces a three-value enum. `attended | single-ratify |
+# autonomous` answered "who ratifies" with three words that four independent
+# tables then re-interpreted, each with its own fail-safe direction. What the
+# dispatcher actually needs is an ORDINAL comparison — is the tier this row sits
+# at still human-held? — and an enum cannot express "TCs are human-held but LLRs
+# are not", which is the distinction the 0-4 spine stage exists to make.
+#
+# The legacy words map onto the ordinal so an un-migrated repo keeps its exact
+# behaviour through the window: `attended` held every tier, `autonomous` held
+# none, and `single-ratify` held the requirements tiers while letting
+# non-dependent work run (that last half is orthogonal and became its own dial,
+# `keep_nondependent`, because no ordinal can carry it).
+LEGACY_RATIFICATION_LEVEL = {"attended": 4, "single-ratify": 2, "autonomous": 0}
+# Fail toward MORE human involvement on anything unreadable: a dial nobody can
+# parse must not silently hand ratification authority to the loop.
+RATIFICATION_FALLBACK = 4
+
+
+def ratification_level(docs):
+    """`[attestation] human_ratification_through` as an int 0-4.
+
+    0 = nothing is human-held (the loop ratifies every tier itself)
+    1 = the human ratifies SNs · 2 = ...and SRs · 3 = ...and LLRs
+    4 = ...and TCs — every tier human-held, the most conservative setting
+
+    Falls back through the legacy `gate-policy` enum, then to 4. Every failure
+    direction is toward MORE human involvement, because the failure that
+    matters is a machine ratifying something a human meant to hold."""
+    table = process_config(docs).get("attestation")
+    if isinstance(table, dict):
+        value = table.get("human_ratification_through")
+        if isinstance(value, int) and not isinstance(value, bool):
+            return max(0, min(4, value))
+    legacy = declared_policy(docs, "gate-policy", "attended").strip().lower()
+    return LEGACY_RATIFICATION_LEVEL.get(legacy, RATIFICATION_FALLBACK)
+
+
+def human_holds(docs, stage):
+    """Is work at spine `stage` still the HUMAN's to ratify?
+
+    The one comparison every consumer makes, stated once. `stage` is
+    `derive_gate.spine_stage`'s 0-4 answer — the tier currently in process —
+    and a row at or below the declared level surfaces rather than dispatching.
+
+    THE TWO ENDS ARE ABSOLUTE; only the middle consults the stage. Level 0 means
+    "nothing is human-held" and level 4 means "every tier is" — both are
+    statements the owner made outright, so neither may be quietly overruled by a
+    stage this reader could not determine. (Without that rule an explicit 0 was
+    unreachable in any repo whose `docs/gate` predates the `stage=` field, which
+    is every repo at upgrade time: the dial would have read as its own
+    opposite.) Between the ends the stage decides, and an unreadable one is
+    treated as human-held — the same conservative direction as an unreadable
+    level, because the failure that matters is a machine ratifying something a
+    human meant to hold."""
+    level = ratification_level(docs)
+    if level <= 0:
+        return False
+    if level >= 4:
+        return True
+    if not isinstance(stage, int) or isinstance(stage, bool):
+        return True
+    return stage <= level
+
+
+def keep_nondependent(docs):
+    """The orthogonal dial the ordinal cannot carry: may other lanes keep
+    running while a ratification is queued? Defaults FALSE — a queued
+    ratification drains the station, which is what `attended` and `autonomous`
+    both did; only the retired `single-ratify` level did otherwise."""
+    table = process_config(docs).get("attestation")
+    if isinstance(table, dict) and isinstance(table.get("keep_nondependent"), bool):
+        return table["keep_nondependent"]
+    legacy = declared_policy(docs, "gate-policy", "attended").strip().lower()
+    return legacy == "single-ratify"
+
+
+def spine_stage_of(root):
+    """This repo's derived spine stage, read off the generated `docs/gate`
+    basis line — the same read `traj_status` does for every other basis field.
+
+    Read rather than recomputed: `docs/gate` is a freshness-gated generated
+    artifact, so the cached value is either current or the `derived-gate` step
+    is already red. Returns None when the file predates the field, which
+    `human_holds` treats as human-held."""
+    try:
+        text = (Path(root) / "docs" / "gate").read_text(
+            encoding="utf-8", errors="replace"
+        )
+    except OSError:
+        return None
+    match = re.search(r"#\s*basis:.*\bstage=(\d+)\b", text)
+    return int(match.group(1)) if match else None
+
+
 def _legacy_present(docs, legacy_name):
     return (Path(docs) / legacy_name).is_file()
 

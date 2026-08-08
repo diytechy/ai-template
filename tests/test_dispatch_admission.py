@@ -72,29 +72,32 @@ def test_kind_of_fails_closed_exactly_where_classify_quarantines():
 
 
 def test_the_kind_action_table_is_a8_verbatim():
-    for level in ("attended", "single-ratify", "autonomous"):
-        assert dsp._kind_action("ordinary", level) == "parallel"
-        assert dsp._kind_action("critique", level) == "parallel"
-        assert dsp._kind_action("high-risk", level) == "exclusive"
-        assert dsp._kind_action("protected", level) == "exclusive"
-        # spine dispatches at EVERY level: building a scope change is WORK,
-        # not a ratification — it opens a window; closing it is the next
-        # row's job.
-        assert dsp._kind_action("spine", level) == "batch"
+    """The §A8 table, both columns. SN-029 replaced the three-value gate-policy
+    enum with ONE BOOL — is the tier the spine is currently in process at still
+    the human's to ratify — so the table is two columns wide, not three. The
+    column that went (`single-ratify`) was never a third ANSWER to this
+    question: it differed only in whether OTHER work kept running, which is an
+    orthogonal dial and now lives in `_admission`, where it belongs."""
+    for kind in ("ordinary", "critique"):
+        for held in (True, False):
+            assert dsp._kind_action(kind, held) == "parallel", (kind, held)
+    for kind in ("high-risk", "protected", "adjudication"):
+        for held in (True, False):
+            assert dsp._kind_action(kind, held) == "exclusive", (kind, held)
+    for held in (True, False):
+        assert dsp._kind_action("spine", held) == "batch", held
+    # The one arm the level decides: a window-CLOSING row is the human's act
+    # while the tier is human-held, and dispatches once it is not.
     for kind in ("attestation", "gate"):
-        assert dsp._kind_action(kind, "attended") == "surface"
-        assert dsp._kind_action(kind, "single-ratify") == "surface"
-        assert dsp._kind_action(kind, "autonomous") == "exclusive"
-
-
-# --- the barrier: batch-and-wait ---------------------------------------------
+        assert dsp._kind_action(kind, True) == "surface", kind
+        assert dsp._kind_action(kind, False) == "exclusive", kind
 
 
 def test_an_exclusive_row_with_a_busy_lane_does_not_admit():
     # THE BARRIER. A spine row on the frontier stops the dispatcher admitting
     # new work — including the ordinary rows behind it — while a lane is busy.
     ready = [("WI-500", "spine"), ("WI-401", "ordinary")]
-    verb, payload = dsp._admission(ready, "autonomous", busy=True, free=1)
+    verb, payload = dsp._admission(ready, False, busy=True, free=1)
     assert verb == "wait"
     # ...and the same frontier with NO exclusive row keeps filling lanes.
     verb, payload = dsp._admission(
@@ -108,65 +111,73 @@ def test_lanes_back_in_the_station_the_spine_batch_admits_together():
     # spine row on the frontier admits as ONE batch (agent_loop --wi 'A;B'),
     # ahead of the ordinary work behind it.
     ready = [("WI-500", "spine"), ("WI-501", "spine"), ("WI-401", "ordinary")]
-    verb, payload = dsp._admission(ready, "attended", busy=False, free=2)
+    verb, payload = dsp._admission(ready, True, busy=False, free=2)
     assert verb == "admit-exclusive"
     assert payload == ["WI-500", "WI-501"]
 
 
 def test_high_risk_admits_alone_not_batched():
     ready = [("WI-500", "high-risk"), ("WI-501", "high-risk")]
-    verb, payload = dsp._admission(ready, "autonomous", busy=False, free=2)
+    verb, payload = dsp._admission(ready, False, busy=False, free=2)
     assert verb == "admit-exclusive"
     assert payload == ["WI-500"]
 
 
 def test_parallel_rows_fill_free_lanes_in_frontier_order():
     ready = [("WI-401", "ordinary"), ("WI-402", "ordinary"), ("WI-403", "critique")]
-    verb, payload = dsp._admission(ready, "autonomous", busy=True, free=2)
+    verb, payload = dsp._admission(ready, False, busy=True, free=2)
     assert verb == "admit"
     assert payload == [["WI-401"], ["WI-402"]]
 
 
-def test_attended_attestation_surfaces_instead_of_dispatching():
+def test_a_human_held_tier_surfaces_an_attestation_instead_of_dispatching():
     # §A8 attended row: do not dispatch — drain the lanes, surface the cards,
     # exit 0 into the owner's queue. Ordinary rows behind it do NOT slip past:
     # today's behaviour the owner confirmed must keep working is "no work can
     # be taken" once a ratification is pending.
     ready = [("WI-600", "gate"), ("WI-401", "ordinary")]
-    verb, payload = dsp._admission(ready, "attended", busy=False, free=1)
+    verb, payload = dsp._admission(ready, True, busy=False, free=1)
     assert verb == "surface"
     assert payload == ["WI-600"]
 
 
-def test_single_ratify_keeps_non_dependent_work_running():
-    # §A8 single-ratify: keep working non-dependent WIs; the queued batch
-    # dispatches only at the close, when nothing else remains.
+def test_keep_nondependent_keeps_non_dependent_work_running():
+    # SN-029 split the retired `single-ratify` level into its two independent
+    # bits. This is the second one: the tier is HUMAN-HELD (so a ratification
+    # row surfaces rather than dispatching), and the `keep_nondependent` dial
+    # says other work keeps going around it; the queued batch dispatches only
+    # at the close, when nothing else remains. Under the enum these two facts
+    # could only be expressed together, which is why a repo that wanted one
+    # had to take the other.
     ready = [("WI-600", "attestation"), ("WI-401", "ordinary")]
-    verb, payload = dsp._admission(ready, "single-ratify", busy=False, free=1)
+    verb, payload = dsp._admission(
+        ready, True, busy=False, free=1, keep_nondependent=True
+    )
     assert verb == "admit" and payload == [["WI-401"]]
     # The close: only the queued ratification batch remains, lanes idle.
     verb, payload = dsp._admission(
         [("WI-600", "attestation"), ("WI-601", "gate")],
-        "single-ratify",
+        True,
         busy=False,
         free=1,
+        keep_nondependent=True,
     )
     assert verb == "admit-exclusive" and payload == ["WI-600", "WI-601"]
     # ...but not while a lane is still out.
     verb, _payload = dsp._admission(
-        [("WI-600", "attestation")], "single-ratify", busy=True, free=1
+        [("WI-600", "attestation")], True, busy=True, free=1, keep_nondependent=True
     )
     assert verb == "wait"
 
 
-def test_autonomous_gate_rows_dispatch_exclusive():
+def test_a_loop_held_tier_dispatches_gate_rows_exclusive():
     ready = [("WI-600", "gate"), ("WI-401", "ordinary")]
-    verb, payload = dsp._admission(ready, "autonomous", busy=False, free=1)
+    verb, payload = dsp._admission(ready, False, busy=False, free=1)
     assert verb == "admit-exclusive" and payload == ["WI-600"]
 
 
 def test_an_empty_frontier_answers_empty():
-    assert dsp._admission([], "attended", busy=False, free=1) == ("empty", [])
+    assert dsp._admission([], True, busy=False, free=1) == ("empty", [])
 
 
 # --- the empty-frontier gap census (the WI-388 handoff seam) ------------------

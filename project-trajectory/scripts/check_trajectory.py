@@ -137,6 +137,7 @@ import ast
 import configparser
 import csv
 import difflib
+import hashlib
 import io
 import re
 import subprocess
@@ -1852,12 +1853,26 @@ def ssot_findings(wis, root):
         # loader refusal before any row exists, and `blocked` is DERIVED as
         # queued+blockref — a queued row without one is simply queued. No row
         # can reach either rule.)
-        # R-A: Deliverable non-empty IFF the WI is TERMINAL. A `done` WI's
-        # Deliverable records what shipped; a `cancelled` WI's records the reason it
-        # will never be built (WI-267) — either way the terminal row carries its
-        # permanent backward record, and an open row's Deliverable is filled only
-        # at close.
-        if st in TERMINAL_STATUSES and not w["deliverable"]:
+        # R-A: Deliverable non-empty IFF the WI is TERMINAL — with `partial`
+        # exempt, and the exemption is the rule working rather than a hole in
+        # it. What R-A is FOR is that a terminal row carries a permanent
+        # backward record: a `done` WI's Deliverable records what shipped, a
+        # `cancelled` WI's records the reason it never will (WI-267).
+        #
+        # A `partial` close carries that record too, and carries it BETTER: an
+        # immutable per-close report under docs/handbacks/ with the commit
+        # range, what was and was not delivered, the keep/discard split and who
+        # decides it. Demanding a Deliverable cell as WELL would be demanding a
+        # second, weaker copy of a record that already exists — and it is
+        # unsatisfiable by construction, because SN-031's whole point is that
+        # an early close leaves the spec's DEFINITION byte-identical ("scope
+        # definitions never change; only whether they were fully delivered").
+        # A rule no honest close can satisfy is not a rule; it is a red at
+        # every run, and in the loop it is worse than that — the dispatcher's
+        # refresh reds, `_refresh_failed` quarantines the lane's work, the
+        # retry reds again (the spec move is bookkeeping and exempt from the
+        # revert) and the run dies. Driven at review.
+        if st in TERMINAL_STATUSES and not w["deliverable"] and st != "partial":
             reason = (
                 "records what shipped"
                 if st == "done"
@@ -1922,6 +1937,15 @@ def spec_lifecycle_findings(root, wis):
         if not spec:
             continue
         if w["status"] in OPEN_STATUSES:
+            open_cited.add(spec.split("#", 1)[0].strip())
+        elif w["status"] == "partial":
+            # SN-031: a `partial` row's SpecRef STAYS. R-F exists so a closed
+            # row stops pointing at a live spec-of-record that a reader would
+            # take as current — but partial work continues by MINTING A
+            # SUCCESSOR, and the successor's `supersedes` lineage is worth
+            # nothing if the thread it continues has already been cut. The spec
+            # is still the record of what was asked for; only the delivery
+            # question is closed.
             open_cited.add(spec.split("#", 1)[0].strip())
         elif w["status"] in TERMINAL_STATUSES:
             out.append(
@@ -2842,6 +2866,217 @@ def spine_cell_class(csv_path, column):
     return "traced" if column in SPINE_TRACED_CELLS.get(csv_path, ()) else "ratified"
 
 
+# --- SN-029: the attestation ledger, and the digest that anchors it -----------
+# THE LEDGER'S HOME. `docs/requirements/` because it IS a registry, and placing
+# it there buys `trace.structure_findings`' column-count integrity for free.
+# Explicitly NOT `docs/work/` (the `spec_files` rglob trap) and not `docs/log.md`
+# (prose: evidence, never normative).
+ATTESTATIONS_CSV = "docs/requirements/attestations.csv"
+ATTESTATION_DECISIONS = ("ratified", "clarity", "meaning", "override")
+# The field separator inside a digest's canonical text. A unit separator, so it
+# cannot occur in a cell and two different splits cannot collide.
+_DIGEST_SEP = "\x1f"
+_SN_ROW_RE = re.compile(r"^\|\s*(SN-\d+)\s*\|")
+
+
+def normative_text(csv_path, row):
+    """The canonical text a digest is taken over, for one SR/LLR/TC row.
+
+    Its columns in HEADER ORDER, filtered by `spine_cell_class(...) ==
+    "ratified"`, stripped and joined with a unit separator. Reusing the
+    predicate rather than a second list is what keeps the digest and the
+    amend-without-flip warn from ever disagreeing about what "normative" means —
+    and it inherits the residual's fail-safe direction, so a column added later
+    joins the digest automatically and can only ever be too loud.
+    """
+    return _DIGEST_SEP.join(
+        (row.get(col) or "").strip()
+        for col in row
+        if col
+        and col not in _DIGEST_EXCLUDED
+        and spine_cell_class(csv_path, col) == "ratified"
+    )
+
+
+# Neither the id nor `Status` is CONTENT — the id is the join key the digest is
+# looked up BY, and `Status` is the attestation marker itself, so folding it in
+# would make every flip look like an amendment and every amendment invisible
+# behind its own flip. The same two exclusions `_split_changed_cells` makes,
+# for the same reason.
+_DIGEST_EXCLUDED = frozenset({"SR-ID", "LLR-ID", "TC-ID", "Status"})
+
+
+def sn_normative_text(sn_md_text, sn_id):
+    """The canonical text for one STAKEHOLDER NEED: its `| SN-### | … |` table
+    line, whitespace-collapsed. None when the file declares no such row.
+
+    THE RAW LINE, deliberately — not a parsed projection. The three SN table
+    parsers in this kit map `need=col0, why=col1, acceptance=col3`, which is the
+    Core-needs shape; the edge-case table has a DIFFERENT four-column shape, so
+    those rows parse to a garbled projection and a digest built on it would hash
+    the garbling. The line is well-defined because `sn_integrity_findings`
+    already refuses a duplicated SN row.
+
+    This is the anchor an SN structurally lacks: it has no Status cell, so the
+    amend-without-flip machinery cannot see it change at all."""
+    for line in sn_md_text.splitlines():
+        match = _SN_ROW_RE.match(line.strip())
+        if match and match.group(1) == sn_id:
+            return " ".join(line.split())
+    return None
+
+
+def digest(text):
+    """`sha256:<hex>` of `text`. Full width — this is an ANCHOR, and a truncated
+    one is a collision waiting to be the reason an amendment went unnoticed."""
+    return "sha256:" + hashlib.sha256(text.encode("utf-8")).hexdigest()
+
+
+def read_attestations(root):
+    """The ledger's rows, oldest-first, `[]` when absent. `-000` dropped."""
+    path = Path(root) / ATTESTATIONS_CSV
+    if not path.is_file():
+        return []
+    with path.open(newline="", encoding="utf-8-sig", errors="replace") as fh:
+        return [
+            r
+            for r in csv.DictReader(fh)
+            if (r.get("ATT-ID") or "").strip()
+            and not r["ATT-ID"].strip().endswith("-000")
+        ]
+
+
+def newest_attestations(root):
+    """`{artifact id: row}` — the LAST ledger row per artifact, which is its
+    current anchor. Append-only means later wins; nothing rewrites a row."""
+    out = {}
+    for row in read_attestations(root):
+        artifact = (row.get("Artifact") or "").strip()
+        if artifact:
+            out[artifact] = row
+    return out
+
+
+def current_digests(root):
+    """`{artifact id: digest}` over every real spine row and every SN."""
+    root = Path(root)
+    out = {}
+    for csv_path, id_col in SPINE_CSVS:
+        for row in read_rows(root / csv_path):
+            rid = (row.get(id_col) or "").strip()
+            if rid and not rid.endswith("-000"):
+                out[rid] = digest(normative_text(csv_path, row))
+    sn_md = root / "docs" / "requirements" / "stakeholder-needs.md"
+    if sn_md.is_file():
+        text = sn_md.read_text(encoding="utf-8-sig", errors="replace")
+        for sn_id in sorted(set(re.findall(r"\bSN-\d+\b", text))):
+            if sn_id.endswith("-000"):
+                continue
+            line = sn_normative_text(text, sn_id)
+            if line is not None:
+                out[sn_id] = digest(line)
+    return out
+
+
+def attestation_findings(root):
+    """Artifacts whose NORMATIVE TEXT has moved since the ledger accepted it.
+
+    THE GAP THIS CLOSES. `staged_spine_amendments` — the seam the
+    amend-without-flip warn and the adjudication mint both consume — drops a
+    record when either the row's own Status is not `Verified` on both sides OR
+    its owning SR is flagged on the new side. Both exits are deliberate (a
+    Status move is a call this does not second-guess), and together they mean
+    the SANCTIONED amend+flip path never reaches either consumer. So an
+    amendment made the blessed way is invisible to both.
+
+    A digest recorded at ACCEPTANCE time is visible regardless of any Status
+    movement: the text either matches what was accepted or it does not. That is
+    also the only anchor an SN can have, since an SN has no Status cell at all.
+
+    Warn-tier by construction (a list of strings, like every finding here);
+    `main` promotes it under `--strict` beside the other registry findings.
+    """
+    anchors = newest_attestations(root)
+    if not anchors:
+        return []
+    findings = []
+    for artifact, current in sorted(current_digests(root).items()):
+        anchor = anchors.get(artifact)
+        if anchor is None:
+            continue
+        recorded = (anchor.get("TextDigest") or "").strip()
+        decision = (anchor.get("Decision") or "").strip().lower()
+        if not recorded or recorded == current:
+            continue
+        if decision == "meaning":
+            # The ledger already says this text owes a fresh ratification; the
+            # divergence is the RECORDED state, not a new finding.
+            continue
+        findings.append(
+            "{} normative text has changed since {} accepted it ({}, {}) — the "
+            "attestation no longer covers what the row says. Adjudicate it "
+            "(meaning or clarity?) and append a ledger row.".format(
+                artifact,
+                anchor.get("ATT-ID") or "the ledger",
+                (anchor.get("AcceptedCommit") or "?")[:10],
+                anchor.get("Date") or "?",
+            )
+        )
+    return findings
+
+
+def attestation_integrity_findings(root):
+    """The ledger's own shape: APPEND-ONLY, and every row well-formed.
+
+    Integrity-class, not advisory. A ledger that can be rewritten is not an
+    anchor — it is a second mutable proxy, which is the whole failure mode this
+    replaces."""
+    findings = []
+    seen = set()
+    for row in read_attestations(root):
+        att = (row.get("ATT-ID") or "").strip()
+        if att in seen:
+            findings.append("{}: duplicate ledger id".format(att))
+        seen.add(att)
+        decision = (row.get("Decision") or "").strip().lower()
+        if decision not in ATTESTATION_DECISIONS:
+            findings.append(
+                "{}: Decision {!r} is not one of {}".format(
+                    att, row.get("Decision"), "|".join(ATTESTATION_DECISIONS)
+                )
+            )
+        if not (row.get("TextDigest") or "").strip().startswith("sha256:"):
+            findings.append("{}: TextDigest is not a sha256: digest".format(att))
+        if not (row.get("Artifact") or "").strip():
+            findings.append("{}: names no Artifact".format(att))
+    return findings
+
+
+def staged_attestation_rewrite_findings(root, base="HEAD", head=None):
+    """The APPEND-ONLY guard: ledger lines that were CHANGED or REMOVED between
+    two trees, rather than appended.
+
+    Uses the same two-tree read `staged_spine_amendments` does, so the hook's
+    `--staged` question and a post-commit rev range are one mechanism."""
+    revs = _spine_revs(root, base, head, touches=(ATTESTATIONS_CSV,))
+    if revs is None:
+        return []
+    _staged_names, old_rev, new_rev = revs
+    before = _git(root, ["show", old_rev + ATTESTATIONS_CSV])
+    after = _git(root, ["show", new_rev + ATTESTATIONS_CSV])
+    if before is None or after is None:
+        return []
+    old_lines = [ln for ln in before.lstrip("﻿").splitlines() if ln.strip()]
+    new_lines = [ln for ln in after.lstrip("﻿").splitlines() if ln.strip()]
+    if new_lines[: len(old_lines)] == old_lines:
+        return []
+    return [
+        "{} was REWRITTEN, not appended to — an attestation ledger whose "
+        "earlier rows can move is not an anchor. Append a new row recording "
+        "the correction instead.".format(ATTESTATIONS_CSV)
+    ]
+
+
 def _split_changed_cells(csv_path, id_col, head, row):
     """One row's changed cells, split into the §A5.1 halves with their
     before/after: `{"ratified": {cell: (before, after)}, "traced": {...}}`.
@@ -2857,7 +3092,7 @@ def _split_changed_cells(csv_path, id_col, head, row):
     return changed
 
 
-def _spine_revs(root, base, head):
+def _spine_revs(root, base, head, touches=()):
     """`(changed-paths, old-prefix, new-prefix)` for the two trees the spine scan
     compares, or None when git cannot answer (the silent-no-op degrade).
 
@@ -2865,7 +3100,14 @@ def _spine_revs(root, base, head):
     the INDEX. `head=None` means the index — the `--staged` hook case, and the
     default. Any other value is a commit-ish, which is what §A5.2's trigger
     needs: adjudication is minted from *a trunk commit that changed a ratified
-    cell*, and a commit is not the index."""
+    cell*, and a commit is not the index.
+
+    `touches` is the caller's applicability test — the registry paths at least
+    one of which must appear in the changed set for the scan to have anything to
+    say. It lives HERE rather than at each call site because "git could not
+    answer" and "git answered, and nothing relevant moved" produce the identical
+    `return []` degrade in every consumer, and writing that pair twice is the
+    intra-file duplication WI-347 rules a defect."""
     if head is None:
         names = _git(root, ["diff", "--cached", "--name-only", base])
         new_prefix = ":"
@@ -2874,7 +3116,10 @@ def _spine_revs(root, base, head):
         new_prefix = head + ":"
     if names is None:
         return None
-    return set(names.splitlines()), base + ":", new_prefix
+    changed = set(names.splitlines())
+    if touches and not any(p in changed for p in touches):
+        return None
+    return changed, base + ":", new_prefix
 
 
 def staged_spine_amendments(root, base="HEAD", head=None):
@@ -2906,12 +3151,10 @@ def staged_spine_amendments(root, base="HEAD", head=None):
     base side) is not an amendment; a row whose Status moved (to Modified,
     Draft, Planned, anything) made a deliberate call this does not
     second-guess."""
-    revs = _spine_revs(root, base, head)
+    revs = _spine_revs(root, base, head, touches=[p for p, _ in SPINE_CSVS])
     if revs is None:
         return []
     staged_names, old_rev, new_rev = revs
-    if not any(p in staged_names for p, _ in SPINE_CSVS):
-        return []
 
     def _index_rows(csv_path, id_col):
         """{id: row} of the NEW-side version (`git show <new_rev>path` — the
@@ -3342,6 +3585,27 @@ def critique_staleness_findings(root):
     ]
 
 
+def _report_attestations(root, strict):
+    """Print the SN-029 attestation ledger's findings; return the ERROR subset.
+
+    The DRIFT rung is warn/strict like the other registry findings; the ledger's
+    own INTEGRITY is hard, because a ledger that does not parse is not an anchor
+    at all and every reader downstream would silently fall back to the
+    git-history derivation it replaces. Lifted out of `main` to hold the C901
+    ceiling — the standing rule there is simplify, never bump."""
+    errors = []
+    for w in attestation_findings(root):
+        print("check_trajectory: WARN - {}".format(w), file=sys.stderr)
+        if strict:
+            errors.append(w)
+    for w in attestation_integrity_findings(root) + staged_attestation_rewrite_findings(
+        root
+    ):
+        print("check_trajectory: ERROR - {}".format(w), file=sys.stderr)
+        errors.append(w)
+    return errors
+
+
 def main():
     _utf8_console()
     ap = argparse.ArgumentParser(
@@ -3384,6 +3648,12 @@ def main():
             staged_findings(root)
             + critique_ratchet_findings(root)
             + staged_spine_findings(root)
+            # SN-029: the attestation ledger's two rungs ride the same warn
+            # tier the amend-without-flip warn does — one is the DRIFT (the
+            # text moved away from what was accepted), the other the ledger's
+            # own append-only shape. Warn here, gated under --strict below.
+            + attestation_findings(root)
+            + staged_attestation_rewrite_findings(root)
             + staged_completion_findings(root)
         ):
             print("check_trajectory: WARN - {}".format(w), file=sys.stderr)
@@ -3401,6 +3671,12 @@ def main():
     # batch-scoped hierarchy view. Vacuous without a ratification brief.
     for w in ratify_brief_findings(root):
         print("check_trajectory: WARN - {}".format(w), file=sys.stderr)
+
+    # Held in its own local, NOT appended to `errors`: that name is not bound
+    # until after the WI-vacuity return below, and this rung deliberately runs
+    # BEFORE it — the ledger is a property of the SPINE, so a repo with a
+    # corrupt attestations.csv and no work items at all must still fail.
+    att_errors = _report_attestations(root, args.strict)
 
     # How-SW top-view right-sizing (WI-073/FB5) — WARN plain, ERROR under --strict
     # (G2+). Runs before the WI vacuity return too (the bound is a property of the
@@ -3425,12 +3701,13 @@ def main():
     wis, integrity = load_wis(wi_rows)
     integrity = registry_errors + integrity
     if not wis and not integrity:
-        if comp_errors:
-            for e in comp_errors:
+        vacuous = comp_errors + att_errors
+        if vacuous:
+            for e in vacuous:
                 print("check_trajectory: ERROR - {}".format(e), file=sys.stderr)
             print(
-                "check_trajectory: {} architecture finding(s).".format(
-                    len(comp_errors)
+                "check_trajectory: {} architecture/attestation finding(s).".format(
+                    len(vacuous)
                 ),
                 file=sys.stderr,
             )
@@ -3447,7 +3724,7 @@ def main():
     for w in phase_findings(root, wis):
         print("check_trajectory: WARN - {}".format(w), file=sys.stderr)
 
-    errors = comp_errors + integrity + validate(wis, load_known_srs(root))
+    errors = comp_errors + att_errors + integrity + validate(wis, load_known_srs(root))
     # Specs act on declared interface boundaries (WI-191) — WARN plain, ERROR
     # under --strict (G2+); vacuous until a spec adopts an `## Interfaces` section.
     for msg in spec_interface_findings(root):

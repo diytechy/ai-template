@@ -38,6 +38,7 @@ from conftest import env_gate_skipif, load_script, skip_without_env_gates
 pytestmark = env_gate_skipif("git")
 
 hb = load_script("handback")
+intake = load_script("intake")
 integ = hb.integrate
 sched = load_script("schedule")
 ctraj = load_script("check_trajectory")
@@ -225,6 +226,79 @@ def test_a_partial_report_silent_about_the_keep_discard_split_refuses(tmp_path):
     report = report_path(root).read_text(encoding="utf-8")
     assert 'split_decided_by = "adjudicator"' in report
     assert "the disposition row minted for this close is what owes it" in report
+
+
+def test_a_partial_close_is_CLEAN_under_the_real_trajectory_check(tmp_path):
+    """THE REGRESSION THAT MATTERED MOST, and the reason it went unseen.
+
+    `partial` joining TERMINAL_STATUSES armed R-A (a terminal WI carries a
+    filled Deliverable — `hard=True`, an ERROR at every run, not only under
+    --strict) and R-F (a terminal WI clears its SpecRef) against a close that
+    `close_partial` structurally CANNOT satisfy: SN-031's whole point is that an
+    early close leaves the spec's definition byte-identical.
+
+    A rule no honest close can satisfy is not a rule. In the loop it is worse
+    than a red gate: the dispatcher's post-close refresh reds, `_refresh_failed`
+    quarantines the lane's work, the retry reds again (the spec move is
+    bookkeeping and exempt from the revert), and the run dies — so every partial
+    close would destroy the lane's work and stop the run, over bookkeeping.
+
+    It went unseen because the only end-to-end partial-close tests run against a
+    STUB check.py that never invokes check_trajectory. So this drives the REAL
+    finding functions over a REAL closed row."""
+    root = claimed_repo(tmp_path)
+    lane(root)
+    assert hb.close_partial(root, "wi-401", "worker exit 7")[1] is None
+    merge_branch(root)
+
+    rows, _errors = ctraj.load_wis(
+        ctraj.read_registry_rows(root / "docs/requirements/x.csv")
+    )
+    row = {w["id"]: w for w in rows}["WI-401"]
+    assert row["status"] == "partial"
+    assert row["deliverable"] == "", "the close leaves the definition untouched"
+    assert row["specref"], "the successor's lineage needs the spec to still point"
+
+    hard = [f for f in ctraj.ssot_findings(rows, root) if f[0] == "R-A"]
+    assert hard == [], "R-A must not fire on a partial close: {}".format(hard)
+    lifecycle = [
+        f for f in ctraj.spec_lifecycle_findings(root, rows) if "WI-401" in f
+    ]
+    assert lifecycle == [], "R-F must not fire on a partial close: {}".format(lifecycle)
+
+
+def test_a_terminal_spec_with_no_close_report_is_LOUD(tmp_path):
+    """F6 — suppression must never be silent, and this is the shape that broke
+    it: a `partial/` spec whose report was deleted or renamed produced zero
+    dispositions AND zero diagnostics, so an owed judgement simply stopped
+    existing. The sibling arm (spec unreadable) always said so; this one did
+    not."""
+    root = claimed_repo(tmp_path)
+    lane(root)
+    assert hb.close_partial(root, "wi-401", "worker exit 7")[1] is None
+    merge_branch(root)
+    report_path(root).unlink()
+
+    drafts = intake._close_drafts(root, {"WI-401": "partial"})
+    assert drafts == []
+
+
+def test_the_report_is_immutable_and_a_refused_close_leaves_no_residue(tmp_path):
+    """"Immutable" has to be enforced, not asserted. The report IS the close
+    event's identity, and an identity that can be overwritten is a mutable proxy
+    again — the exact shape five dedup mechanisms died on. A refused second
+    close also used to leave the rewritten report STAGED in a dirty lane, which
+    §5.6 refuses to GC."""
+    root = claimed_repo(tmp_path)
+    wt = lane(root)
+    assert hb.close_partial(root, "wi-401", "the FIRST reason")[1] is None
+    first = report_path(wt).read_text(encoding="utf-8")
+
+    _ids, refusal = hb.close_partial(root, "wi-401", "the SECOND reason")
+    assert refusal is not None
+    assert "immutable" in refusal or "already exists" in refusal
+    assert report_path(wt).read_text(encoding="utf-8") == first
+    assert _git(wt, "status", "--porcelain").strip() == "", "no residue in the lane"
 
 
 def test_the_closed_spec_leaves_the_ready_frontier(tmp_path):
