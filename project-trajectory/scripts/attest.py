@@ -224,7 +224,14 @@ REVIEW_KIND = "review"
 # The boundary a tree with no configuration answers to (contracts §1's
 # `human_ratification_through`). Read through `boundary_from_config` so the
 # default lives in ONE place once config.py exists.
-DEFAULT_BOUNDARY = 1
+#
+# 3, matching `config.SCHEMA` (pinned equal by tests/test_config_cutover.py). It
+# was 1 until the P13 cutover moved the schema default: the retired
+# `docs/gate-policy` shipped `attended`, which converts to 3, and a fallback of
+# 1 would have handed LLR and TC ratification to an adjudicator in every repo
+# that never chose anything. A fallback must be the SAFE answer, not the
+# convenient one.
+DEFAULT_BOUNDARY = 3
 
 # The persistent whole-spine review policy a tree with no configuration answers
 # to. Beside the boundary for the same reason: a repo that has not adopted
@@ -1248,20 +1255,28 @@ def enact(root, docs, rid, verdict, by, actor=HUMAN, accepted=None, note=None, t
     if refusal:
         raise _refuse(refusal)
     boundary, _policy, dial_refusals = attestation_config(root)
-    action = verdict_action(kind, boundary, actor)
-    if action == RECOMMEND:
-        return action, None, digest
     # `attestation_config` falls back to the DECLARED DEFAULT when the dial
     # could not be read, which is right for a reader and wrong for a writer: a
-    # machine would then enact under a boundary the adopter never wrote. A human
+    # machine would then act under a boundary the adopter never wrote. A human
     # is unaffected — they enact at every tier by definition, so no dial was
     # consulted on their behalf.
+    #
+    # Checked BEFORE the boundary is consulted, not after. It used to sit below
+    # the `RECOMMEND` early return, and the P13 cutover showed why that was
+    # fragile rather than merely late: moving the default boundary to 3 made
+    # every tier a human's, so the early return swallowed the refusal and the
+    # guard silently stopped firing at all. A guard whose reach depends on the
+    # default being PERMISSIVE is a guard that disappears the moment someone
+    # tightens the default — the safest edit in the file.
     if dial_refusals and actor != HUMAN:
         raise _refuse(
-            "{} may not enact a verdict on {} while the ratification boundary "
+            "{} may not act on a verdict for {} while the ratification boundary "
             "cannot be read ({}) — an unreadable dial must never authorise a "
             "machine".format(actor, rid, "; ".join(dial_refusals))
         )
+    action = verdict_action(kind, boundary, actor)
+    if action == RECOMMEND:
+        return action, None, digest
     extra = {"note": note} if note else {}
     if verdict == "override":
         extra["accepted"] = bool(accepted)

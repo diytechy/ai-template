@@ -1,10 +1,17 @@
-"""Gate authority as declared policy (Thread 32, process.md §4).
+"""Gate authority after the dial moved (Thread 32 -> decision D-4/§1.4).
 
-Who accepts a gate advance is a one-word `docs/gate-policy` value, stated
-canonically in process.md §4 and referenced (never restated) everywhere else;
-a non-default level ships with a repo-local deviation register. The tripwire
-test keeps the de-duplication honest: a future edit must not re-scatter the
-gate-authority claim across the kit's prose.
+Who accepts a gate advance used to be the one-word `docs/gate-policy` value,
+scaffolded into every repo and settable with `bootstrap.py --gate-policy`. The
+P13 cutover replaced the enum with the numeric
+`attestation.human_ratification_through`, and P14 deleted the file, its
+template and the flag. The three tests that drove the scaffolded file and its
+deviation register went with the feature.
+
+What SURVIVES here is the part that was never about the file: the de-dup
+tripwire. Gate authority is asserted once in process.md §4 and *referenced*
+everywhere else, and a future edit must not re-scatter the claim across the
+kit's prose. It is the one test in this module that can still fail for a
+reason worth knowing about.
 """
 
 import re
@@ -12,61 +19,32 @@ import re
 from conftest import KIT, SCRIPTS, run_py
 
 
-def _policy_lines(path):
-    return [
-        ln
-        for ln in path.read_text(encoding="utf-8").splitlines()
-        if ln.strip() and not ln.startswith("#")
-    ]
+def test_no_scaffold_lays_down_the_retired_gate_policy_file(scaffold):
+    # The successor is `attestation.human_ratification_through`, whose SCHEMA
+    # default 3 is exactly what the retired template's `attended` converted to
+    # — so a default scaffold's behaviour is unchanged, and the kit now ships
+    # that default ONCE. (Before P14 it shipped twice, and
+    # tests/test_config_cutover.py had to pin the pair equal.)
+    assert not (scaffold / "docs" / "gate-policy").exists()
+    assert not (scaffold / "docs" / "gate-policy.md").exists()
+    assert not (KIT / "gate-policy.template").exists()
 
 
-def test_scaffold_gate_policy_defaults_attended(scaffold):
-    # The scaffolded authority is `attended` — today's behavior, so existing
-    # adopters and default scaffolds see zero change; no register is laid down.
-    assert _policy_lines(scaffold / "docs" / "gate-policy") == ["attended"]
-    assert not (scaffold / "docs" / "gate-policy.md").exists(), (
-        "the deviation register is for non-default levels only"
+def test_the_retired_scaffold_flag_is_gone(tmp_path):
+    # Driven, not grepped: argparse must REFUSE it. A flag that parsed and did
+    # nothing would leave an adopter believing they had declared an authority.
+    proc = run_py(
+        [
+            SCRIPTS / "bootstrap.py",
+            "--dest",
+            tmp_path / "repo",
+            "--gate-policy",
+            "autonomous",
+        ],
+        cwd=tmp_path,
     )
-
-
-def _bootstrap(tmp_path, *extra):
-    dest = tmp_path / "repo"
-    proc = run_py([SCRIPTS / "bootstrap.py", "--dest", dest, *extra], cwd=tmp_path)
-    assert proc.returncode == 0, proc.stdout + proc.stderr
-    return dest
-
-
-def test_gate_policy_autonomous_scaffolds_register(tmp_path):
-    dest = _bootstrap(tmp_path, "--gate-policy", "autonomous")
-    policy = dest / "docs" / "gate-policy"
-    assert _policy_lines(policy) == ["autonomous"]
-    assert policy.read_text(encoding="utf-8").startswith("#"), "header kept"
-    register = (dest / "docs" / "gate-policy.md").read_text(encoding="utf-8")
-    assert "`autonomous`" in register
-    assert "LLM-GATE" in register  # the verdict mechanism is pre-filled
-    # The fixed points nothing overrides ship with every register.
-    for point in (
-        "G-Final is the human's",
-        "No un-run greens",
-        "The harness is still the bar",
-        "never re-decided by an agent",
-    ):
-        assert point in register, "missing fixed point: " + point
-
-
-def test_gate_policy_single_ratify_scaffolds_register(tmp_path):
-    dest = _bootstrap(tmp_path, "--gate-policy", "single-ratify")
-    assert _policy_lines(dest / "docs" / "gate-policy") == ["single-ratify"]
-    register = (dest / "docs" / "gate-policy.md").read_text(encoding="utf-8")
-    assert "G2 close" in register  # the fixed ratification point (Q5)
-    assert "Blocked register" in register  # MEDIUM/HIGH routing (Q6 Hybrid)
-    assert "G-Final is the human's" in register
-
-
-def test_gate_policy_explicit_attended_matches_default(tmp_path):
-    dest = _bootstrap(tmp_path, "--gate-policy", "attended")
-    assert _policy_lines(dest / "docs" / "gate-policy") == ["attended"]
-    assert not (dest / "docs" / "gate-policy.md").exists()
+    assert proc.returncode != 0
+    assert "--gate-policy" in (proc.stderr + proc.stdout)
 
 
 # The gate-authority claim, in the variants the kit's prose has historically

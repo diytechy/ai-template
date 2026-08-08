@@ -7,12 +7,11 @@ Two classes of pattern, two gates (Thread 44; identity->privacy reframe):
     universal credential shapes (GitHub, Slack, AWS, `sk-…` API keys) have
     nothing to do with identity, so they are scanned in **every** repo — the
     security net an ordinary identified project gets too. Opt out by tracking
-    the one word `off` in `docs/secrets-scan` (same first-line parse as every
-    declared-policy file; absent or any other value reads *on*, the safe
-    default) — the deliberate exit for a repo whose content *is* secret-shaped
+    declaring `policy.secrets_scan = false` in `docs/config.toml` (absent reads
+    *on*, the safe default) — the deliberate exit for a repo whose content *is* secret-shaped
     (mark individual lines with `privacy-ok` first; `off` is the last resort).
 
-  * **Privacy layer — toggle-gated.** Only when `docs/privacy-check` is `true`
+  * **Privacy layer — toggle-gated.** Only when `policy.privacy_check` is true
     does the repo run the PII/identity-leak classes. It defends *privacy* (no
     real, contactable person), not *attribution* (which account authored is the
     user's own git config, not pinned here):
@@ -27,7 +26,7 @@ Two classes of pattern, two gates (Thread 44; identity->privacy reframe):
       - the real name/email from **global** git config appearing in content
         (only when that global identity is not itself exempt).
 
-A repo with `docs/privacy-check` off and `docs/secrets-scan: off` therefore
+A repo with `policy.privacy_check` and `policy.secrets_scan` both off therefore
 exits 0 immediately, paying nothing; every other repo runs at least the
 secrets floor.
 
@@ -38,7 +37,7 @@ Modes (each runs whichever of the two layers is active):
     --author         check the commit **author email** (git var
                      GIT_AUTHOR_IDENT) against the exempt allowlist — wired into
                      `.githooks/pre-commit`; a private author blocks. Privacy
-                     layer only (a no-op when docs/privacy-check is off).
+                     layer only (a no-op when policy.privacy_check is off).
     --message <file> scan a **commit-message file** — wired into
                      `.githooks/commit-msg`, so a leak in the title/body blocks
                      at the first commit, not only at push.
@@ -157,25 +156,43 @@ def _utf8_console():
             pass
 
 
-def _first_declared_line(path):
-    """The first non-empty, non-comment line of a declared-policy file, or None
-    (absent/empty) — the parse every reader shares (hooks, agent_loop.py)."""
-    if not path.exists():
-        return None
-    for line in path.read_text(encoding="utf-8", errors="replace").splitlines():
-        line = line.strip()
-        if line and not line.startswith("#"):
-            return line
-    return None
+# (`_first_declared_line` — this module's copy of the retired
+# first-non-comment-line parse — went with its last caller at the P13 cutover.
+# It is deleted rather than kept "in case": an unused reader of a retired file
+# is the shape a fail-open grows back in.)
 
 
-def read_privacy_enabled(root):
-    """Whether the privacy layer is on: docs/privacy-check's first non-comment
-    line is `true` (any case). Absent file or any other value → False (off) —
-    the successor to the old commit-identity `inherit` default."""
-    return (
-        _first_declared_line(root / "docs" / "privacy-check") or ""
-    ).lower() == "true"
+# The two canonical dials this scanner reads. Named once so the loader call, the
+# refusal message and the fail-closed comment cannot spell them three ways.
+PRIVACY_KEYS = ("policy.privacy_check", "policy.secrets_scan")
+
+
+def read_policy(root):
+    """`(privacy_on, secrets_on, refusals)` from the canonical configuration.
+
+    Switched off `docs/privacy-check` / `docs/secrets-scan` at the P13 cutover:
+    the scanner is a RUNTIME READER like the coordinator and the integrator, and
+    leaving it on the retired files would have meant the hooks asked
+    config_query one question while the scanner they invoke answered a different
+    one — the two-live-sources divergence this program exists to end. Worse, it
+    would have been a fail-open timed for P14: delete the retired files and this
+    scanner would read nothing and quietly turn the privacy layer off in every
+    repo at once.
+
+    `refusals` non-empty means the CALLER stops. `main` treats it as a block, so
+    an unreadable policy is never a quiet "off" — the same posture the hooks take
+    one level up, kept here too because check.py and CI invoke this directly.
+    """
+    try:
+        import config
+    except ImportError:  # pragma: no cover - in-process fallback
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        import config
+    cfg, findings = config.load_config(root)
+    findings = list(findings) + config.unconverted_findings(root, PRIVACY_KEYS, cfg=cfg)
+    if findings:
+        return False, False, config.refusal_lines(findings, module="check_privacy")
+    return cfg.policy.privacy_check, cfg.policy.secrets_scan, []
 
 
 def email_ok(email):
@@ -186,13 +203,6 @@ def email_ok(email):
     if domain in EXAMPLE_DOMAINS or domain.endswith(EXAMPLE_SUFFIXES):
         return True
     return any(fnmatch.fnmatchcase(email, pat.lower()) for pat in EXEMPT_EMAILS)
-
-
-def read_secrets_scan(root):
-    """Whether the always-on secrets floor is enabled. `docs/secrets-scan` with
-    the one word `off` opts out; absent or any other value reads on (the safe
-    default) — so an ordinary repo gets the floor without declaring anything."""
-    return (_first_declared_line(root / "docs" / "secrets-scan") or "").lower() != "off"
 
 
 def git(root, *args):
@@ -382,7 +392,7 @@ def report(findings, what, layers_desc):
         "check_privacy: {} finding(s) in {} [{}]. Remove/rotate the secret or "
         "anonymize the content before it lands; a documented example line may "
         "carry '{}' to be exempt. The always-on secrets floor is opt-out via "
-        'docs/secrets-scan (process-options.md "Commit identity & '
+        'policy.secrets_scan (process-options.md "Commit identity & '
         'privacy").'.format(len(findings), what, layers_desc, ALLOW_MARKER)
     )
     return 1
@@ -437,6 +447,38 @@ def scan_message(msg_path, scanner, layers_desc):
     return report(findings, "commit message", layers_desc)
 
 
+def _policy_gate(privacy_on, secrets_on, refusals):
+    """The exit code this run owes BEFORE any scanning, or None to proceed.
+
+    Two answers, and they must not be confused with each other: an unreadable
+    policy is `1` (fail closed — the posture is unknown, so the scan cannot be
+    skipped), and both-layers-off is `0` (the declared zero-cost path). The
+    retired code said the second by re-reading two files and the first not at
+    all.
+
+    Extracted rather than left inline for this repo's ratchet rule — a crossing
+    is answered by decomposing — and the extraction pays for itself: `main` is
+    left with one `if early is not None`, and the two exits that mean opposite
+    things sit side by side where a reader can see they are different.
+    """
+    if refusals:
+        for line in refusals:
+            print(line, file=sys.stderr)
+        print(
+            "check_privacy: the declared configuration could not be read, so the "
+            "privacy/secrets posture is unknown. FAILING CLOSED.",
+            file=sys.stderr,
+        )
+        return 1
+    if not privacy_on and not secrets_on:
+        print(
+            "check_privacy: policy.privacy_check is off and policy.secrets_scan "
+            "is off — nothing to check."
+        )
+        return 0
+    return None
+
+
 def main():
     _utf8_console()
     ap = argparse.ArgumentParser(
@@ -476,14 +518,10 @@ def main():
     args = ap.parse_args()
     root = Path(args.root).resolve()
 
-    privacy_on = read_privacy_enabled(root)
-    secrets_on = read_secrets_scan(root)
-    if not privacy_on and not secrets_on:
-        print(
-            "check_privacy: privacy check off (docs/privacy-check) and "
-            "docs/secrets-scan 'off' — nothing to check."
-        )
-        return 0
+    privacy_on, secrets_on, refusals = read_policy(root)
+    early = _policy_gate(privacy_on, secrets_on, refusals)
+    if early is not None:
+        return early
 
     layers = []
     if privacy_on:
@@ -496,10 +534,7 @@ def main():
         # Author identity is a privacy-layer concern; the secrets floor does not
         # apply to an email. A no-op when the privacy layer is off.
         if not privacy_on:
-            print(
-                "check_privacy: privacy check off (docs/privacy-check) — "
-                "author not checked."
-            )
+            print("check_privacy: policy.privacy_check is off — author not checked.")
             return 0
         return check_author(root)
 

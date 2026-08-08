@@ -42,23 +42,19 @@ interfaces_check = true
 components_check = true
 okf_export = true
 
-[harness]
-# The declared toolchain. Mirrors docs/stack.ini's [paths]/[product]/[tiers]/
-# [coverage]/[step:*]/[generated] sections. stack.ini STAYS THE LIVE SOURCE until
-# the P13 cutover; nothing reads these keys yet.
+# [harness] — RETIRED at P13, and this is the record of which branch was taken.
 #
-# CORRECTION, ruled 2026-08-08: this comment previously claimed the two are
-# "proved to agree by the parity tests". No such test exists — the review swept
-# for it and found only a loader assertion against a literal fixture, plus a rung
-# that deliberately leaves `harness.*` out of the mixed-source watch list. The
-# claim is withdrawn rather than quietly kept: an unproved parity claim about a
-# duplicated toolchain declaration is exactly the kind of green this kit refuses.
-# P13 owes ONE of two things, and must say which it did: land the parity test, or
-# delete these keys and read the toolchain from stack.ini alone. Until then, a
-# divergence between the two is undetected — and this repo's own config already
-# has one, which is how the review found it.
-src = "project-trajectory/scripts"
-tests = "tests"
+# The block declared `src` and `tests`, duplicating docs/stack.ini's [paths], and
+# an earlier draft of this document claimed the two were "proved to agree by the
+# parity tests". The review swept for that test and it did not exist. The claim
+# was withdrawn, and P13 was given an either/or it had to answer out loud: land
+# the parity test, or DELETE the keys and read the toolchain from stack.ini alone.
+#
+# **It deleted.** A second declaration of the toolchain, unread and unproved, is
+# not configuration — it is a place for the truth to diverge. `docs/stack.ini`
+# remains the single source for the harness, and `tests/test_config.py`'s
+# `SAMPLE_SECTIONS_RETIRED_SINCE` is the mechanical record: emptying that tuple
+# is what closes the debt.
 
 [outcomes]
 # Complete normally takes its verdict from the independent reviewer plus the
@@ -138,9 +134,30 @@ templates `adjudicate-amendment`, `adjudicate-disposition`,
   `routes[2].strength`).
 - Unknown key, wrong type, out-of-range value and unsupported `schema` are each a
   finding. An absent file is **not** a finding — it yields `DEFAULTS`.
-- `config.mixed_source_findings(root)` → findings for every canonical key whose
-  retired declared-policy file is still present *and* whose canonical key is set.
+- `config.mixed_source_findings(root, keys=None)` → findings for every canonical
+  key whose retired declared-policy file is still present *and* whose canonical
+  key is set. **`keys` is the caller's own read set, and it is load-bearing**:
+  a pair whose canonical side has no reader yet is not ambiguous, it is merely
+  un-cut-over, so the refusal must not fire for it. Passing the read set makes
+  the rung start biting the day a caller declares it reads the key — which is
+  what let the routing keys be converted ahead of their own slice. `keys=None`
+  reports the whole schema, which is what an audit wants.
 - Values are read through typed accessors, never by dict-walking at call sites.
+
+> **DELETED at P14** (each verified to have no remaining reader, by an AST
+> path-construction scan plus `rg` over every kit file type — not by test
+> coverage, which the plan explicitly forbids as a reachability oracle):
+> `docs/gate-policy`, `push-policy`, `review-policy`, `privacy-check`,
+> `privacy-review`, `secrets-scan`, `guardrails-policy`, `blackout`,
+> `live-status`, and their five shipped templates.
+>
+> **STILL LIVE, and must be kept** — each still has a reader the cutover did
+> not reach: `docs/status-lint` (`check_docs`), `docs/trajectory-check`,
+> `docs/interfaces-check`, `docs/components-check` (`check_trajectory`),
+> `docs/okf-export` (`gen_okf`), `docs/subagent-gate` (`subagent_gate`), and
+> `docs/agents.csv` + `docs/agents-enabled` (the routing seam). Their canonical
+> keys exist and are inert; converting those six readers is what lets the files
+> go, and it is a P13-shaped job that has not been done.
 
 **Retired sources** (the converter's input, the mixed-source detector's watch
 list): `docs/gate-policy`, `docs/push-policy`, `docs/review-policy`,

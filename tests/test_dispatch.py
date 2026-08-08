@@ -11,7 +11,7 @@ What this module pins is the loop's own contract — the joints, not the parts
   * the tracked pause appearing MID-RUN stops the next cycle (exit 8);
   * a worker that reports DONE without finishing its branch trips the drive
     loop's own stall guard (the trunk-unmoved counter);
-  * a worker that could not finish HANDS BACK (WI-387, §A3) — NEEDS-HUMAN no
+  * a worker that could not finish HANDS BACK (WI-387, §A3) — NEEDS-JUDGEMENT no
     longer stops the run, the WI returns to trunk blocked, and the loop drives
     on to the drained banner; a red handback is reverted to a bar-inert
     artefact and merges anyway; a CRASHED worker is not a handback and keeps
@@ -40,6 +40,7 @@ import subprocess
 
 from conftest import (
     SCRIPTS,
+    declare_config,
     env_gate_skipif,
     load_script,
     make_minimal_project,
@@ -364,7 +365,7 @@ def stub_harness_repo(tmp_path):
         encoding="utf-8",
         newline="\n",
     )
-    (root / "docs" / "review-policy").write_text("0\n", encoding="utf-8", newline="\n")
+    declare_config(root, review_rounds=0)
     scripts = root / "scripts"
     scripts.mkdir(exist_ok=True)
     (scripts / "trunk_step.py").write_text(
@@ -443,7 +444,7 @@ def test_a_needs_human_worker_hands_back_and_the_run_keeps_going(tmp_path, capfd
 
     # The WI is back in trunk, blocked, with its note — and the branch is gone.
     spec = _returned(root)
-    assert "## Handback" in spec and "worker exit 7 (NEEDS-HUMAN)" in spec
+    assert "## Handback" in spec and "worker exit 7 (NEEDS-JUDGEMENT)" in spec
     assert 'blockref = "docs/work/queued/WI-401-widget.md"' in spec
     assert "wi-401-widget" not in _git(root, "branch", "--format=%(refname:short)")
     # The partial work landed in trunk, which is the whole point of handing
@@ -545,7 +546,7 @@ def scaffold_with_queued_wi(tmp_path):
     proc = run_py([SCRIPTS / "bootstrap.py", "--dest", repo], cwd=tmp_path)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     make_minimal_project(repo)
-    (repo / "docs" / "review-policy").write_text("0\n", encoding="utf-8", newline="\n")
+    declare_config(repo, review_rounds=0)
     with (repo / ".gitignore").open("a", encoding="utf-8", newline="\n") as fh:
         fh.write("out/\n")
     write_spec(repo, "queued", "WI-401", specref="docs/log.md")
@@ -797,9 +798,10 @@ def test_attended_ratification_row_drains_and_exits_zero_with_the_banner(
         root, "queued", "WI-600", slug="ratify", safety="gate", specref="seed.txt"
     )
     write_spec(root, "queued", "WI-401", specref="seed.txt")
-    (root / "docs" / "gate-policy").write_text(
-        "attended\n", encoding="utf-8", newline="\n"
-    )
+    # `attended` is boundary 3 (config_migrate.GATE_AUTHORITY), which is
+    # also the schema default — declared explicitly so the fixture states its
+    # policy rather than inheriting one.
+    declare_config(root, human_ratification_through=3)
     _commit(root, "file the ratification row", when=T_CODE)
     worker = Recorder()
 
@@ -856,7 +858,7 @@ def census_repo(tmp_path):
         encoding="utf-8",
         newline="\n",
     )
-    (root / "docs" / "review-policy").write_text("0\n", encoding="utf-8", newline="\n")
+    declare_config(root, review_rounds=0)
     scripts = root / "scripts"
     scripts.mkdir(exist_ok=True)
     (scripts / "trunk_step.py").write_text(

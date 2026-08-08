@@ -10,12 +10,16 @@ Compiled 2026-08-01 by reading the scripts rather than the prose docs. Where a
 claim is made, the enforcing file is named so it can be re-derived. Line numbers
 are given as a reading aid and will drift; the function names will not.
 
-**Scope.** The four spine tiers in full, the gate derivation in full, the
+**Scope.** The four spine tiers in full, the gate derivation in full — **both**
+derived axes, the harness's `verification_gate` and the workflow's
+`spine_stage` (§8.5) — the attestation ledger the second axis reads (§8.6), the
 harness's gate→tier→coverage path in full, and what sits outside the derived
 range (`G-Release`/`G-Final`, §9.5). The off-spine registries
-(IF / PB / CMP / PART / ASSET / REPO) get a summary in §10. The **work-item**
+(IF / PB / CMP / PART / ASSET / REPO) get a summary in §11. The **work-item**
 registry (`docs/work/`) is a different machine with its own states and fields and
-is deliberately not covered here.
+is deliberately not covered here — with one named exception, §8.7's admission
+verdict, because that rung expires on a **spine** edit and so is spine
+machinery a reader of this document needs.
 
 ---
 
@@ -387,7 +391,7 @@ file** every reader in the kit shares: *the first non-empty, non-comment line*.
 Everything above it is commentary, including the machine-readable basis:
 
 ```
-# basis: SN=25 SR=136 LLR=130 TC=127 drafts=0 modified=0 uncovered=0 computed=G3 ex-draft=G3 phase=4 per-phase=1=G3;2=G3;3=G3;4=G3
+# basis: SN=25 SR=136 LLR=130 TC=127 drafts=0 modified=0 uncovered=0 computed=G3 ex-draft=G3 phase=4 spine-stage=4 per-phase=1=G3;2=G3;3=G3;4=G3
 # computed 2026-08-02 (as-of d35c3b93)
 G3
 ```
@@ -439,6 +443,212 @@ gate drops to G1, the G2/G3 steps stop running), with `uncovered>0` on the
 basis line naming the cause. `window_open` does **not** read that field — its
 signals remain `drafts`/`modified` — an honest gap: the warn is absent, but the
 drop itself and its count are on the basis line in plain sight.
+
+### 8.5 The SECOND derived axis: `spine_stage`
+
+Everything above computes **one** number, and that number was answering two
+different questions at once: *which `check.py` step tier applies* and *which
+tier of the spine is still being worked*. Those are separate facts with
+separate owners, so they are now separate derivations (decisions §3), and
+**no caller infers one from the other** — a caller that needs both asks for
+both.
+
+| Axis | Function | Vocabulary | The question it answers |
+|---|---|---|---|
+| **verification gate** | `derive_gate.compute` → `docs/gate` | `G1`\|`G2`\|`G3` | which harness step tier runs (§8.1–8.4, unchanged) |
+| **spine stage** | `derive_gate.spine_stage(docs)` | `0`…`4`, or `None` | which artifact tier of `SN→SR→LLR→TC` is still in process |
+
+`spine_stage` is the **workflow/admission** input: it is what a resume planner
+consults to decide whether the next thing owed is a need, a requirement, a
+design or a test. It is derived from the same rows the gate reads **plus**
+`docs/events/attestation.jsonl` (§8.6), so the two axes cannot disagree about
+which artifacts exist.
+
+| Stage | Meaning | Entry condition |
+|---:|---|---|
+| 0 | stakeholder needs in process | at least one current SN has no accepted normative-text anchor |
+| 1 | system requirements in process | every current SN is accepted; at least one SR is not |
+| 2 | low-level requirements in process | every current SR is accepted; at least one required LLR is not |
+| 3 | test cases in process | every required LLR is accepted; at least one required TC is not |
+| 4 | the breakdown is complete **and attested** | every required TC has an accepted anchor |
+
+The join to the harness axis is **one declared table**, `STAGE_GATE`:
+
+| `spine_stage` | 0 | 1 | 2 | 3 | 4 |
+|---|---|---|---|---|---|
+| `verification_gate_for(stage)` | `G1` | `G1` | `G2` | `G2` | `G3` |
+
+`verification_gate_for` **refuses an out-of-range stage by name rather than
+clamping** — clamping is how a caller with an off-by-one silently runs the
+wrong step tier and then calls the result a gate. (`True` and `2.0` are refused
+explicitly too: both hash equal to a declared key, so a bare membership test
+would have answered a caller that never held a stage at all.)
+
+**Three conservative edges, each of which is a refusal to fabricate:**
+
+- **An empty tier returns that tier's index, never a vacuous 4.** A tier with
+  no rows has nothing accepted, so it is the lowest tier still in process: an
+  SN-only spine reads `1` (the requirements *are* the work), and the canonical
+  completed-G1 state — ratified SNs and SRs, no LLRs written yet — reads `2`.
+  This is the same refusal `_raw_level` makes for a repo with no real SRs, and
+  it was a real bug: before it, any partially-decomposed spine read "fully
+  implemented and validated" and mapped straight to G3.
+- **A tree with no attestation ledger reads `0`**, honestly: nothing has been
+  attested, so the needs are in process.
+- **`attest.py` missing entirely** (a partial re-sync) returns `None`, which
+  the basis line prints as `spine-stage=(none)` — an unknown fact, not a
+  fabricated one.
+
+**Stage 4 is deliberately only HALF of "done."** The condition was originally
+written as "all required TCs are validated *and the full declared harness is
+green*", which mixes an attestation fact with a harness fact. `spine_stage`
+reads registries and a ledger; it cannot observe harness greenness without
+running the harness, and a *cached* stage asserting a green it never watched is
+exactly the dishonest green the kit exists to prevent. So the fact is split
+three ways and nobody claims anyone else's: **`spine_stage` owns the
+attestation half**, **`check.py` owns the harness half**, and the resume
+planner **joins** them — attested stage 4 *plus* a red declared bar is what
+produces a failure event and a remediation draft.
+
+The stage is published on the same `# basis:` line as an additive
+`spine-stage=N` field, exactly as `ex-draft=` and `uncovered=` were added
+before it (so, like them, it is a cache-format change a repo passes through by
+regenerating once). Because the two axes are independent, they routinely
+disagree — a spine can be fully decomposed and attested at every tier while the
+gate still reads `G2` because rows carry `Modified`, and *that separation is
+the point*: "which text is approved" and "which bar runs" stopped being one
+number pretending to be two.
+
+### 8.6 The attestation ledger and the ACCEPTED ANCHOR
+
+`Status` is a **word in a row** (§3.2). A word survives an edit, and it is
+written by the same hand that made the edit — so it cannot answer the question
+a checkpoint actually asks: *is the text a human approved still the text that
+is there?* `attest.py` stops trusting the word and keeps the evidence.
+
+**The digest.** Each artifact has a set of **normative cells** — the subset
+whose change alters its *meaning*. Everything outside the set (evidence
+pointers, phase labels, areas, status words) may change without invalidating an
+anchor.
+
+| Kind | Normative cells |
+|---|---|
+| **SN** (core table) | `Need`, `Why`, `Priority`, `Acceptance` |
+| **SN** (edge-case table) | `Lifecycle`, `Scenario`, `Expected` |
+| **SR** | `Title`, `SN-Refs`, `Requirement`, `AcceptanceCriteria`, `Permutations`, `Priority`, `Verification` |
+| **LLR** | `SR-Refs`, `Title`, `Detail` |
+| **TC** | `Verifies`, `Level`, `Method`, `Parameters`, `Expected` |
+
+`stakeholder-needs.md` carries **two tables with different shapes**, and the
+digest declares both rather than assuming the first. The cell *names* are
+inside the hashed bytes, so reading the edge-case table with the core table's
+names would record `Lifecycle` under the name `Need` — a record that misleads
+anyone reading a diff.
+
+Each cell is canonicalized before hashing, in this order: **NFC** → **CRLF/CR
+to LF** → **every run of spaces and tabs to one space** → **strip each line and
+then the whole**. So reflowing a paragraph costs nobody a re-attestation, while
+one reworded obligation is caught. The digest input carries the schema version
+`attest-v1` as a prefix: changing the rule changes the prefix, so old anchors
+read as *recognisably old* rather than as silently agreeing.
+
+> **The boundary is deliberately asymmetric.** Step 3 collapses runs of spaces
+> and tabs, **not newlines** — so inserting a hard line break inside a cell
+> *does* move the digest and *does* raise a candidate. Over-detection costs one
+> adjudication (`clarity`, and the anchor advances); under-detection is a hole,
+> because a rule that collapsed every whitespace run would also collapse the
+> difference between a list rendered as one line and as four, and there are
+> cells where that genuinely changes obligation. A cheap false positive beats a
+> silent miss on the artifact the whole gate rests on.
+
+**The ledger.** `docs/events/attestation.jsonl` — one JSON object per line,
+newest last, **never rewritten**. It sits outside `docs/work/` on purpose, so
+`agent_common.spec_files`' `rglob("WI-*.md")` cannot see it. The event `id` is
+**derived, not random**: the first 16 hex of the SHA-256 of the canonical
+payload with `id` and `ts` removed — so a holder of the payload can *verify*
+the ledger rather than trusting it, and observing the same fact twice is not
+two events. Three rules keep it a history rather than a set:
+
+- **`parent` must equal the current head of that artifact's chain.** Two
+  writers therefore cannot interleave into a record that reads as one sequence.
+- **Nothing is ever rewritten.** A reversal is one more line; the derived state
+  simply re-reads.
+- **A malformed line is a hard read error naming file and line number**, never
+  a silently skipped record — which is how a ledger loses the one event that
+  mattered.
+
+**The decision words**, and what each one does:
+
+| Decision | Accepts? | Effect |
+|---|---|---|
+| `ratified` | yes | the text is approved at this digest |
+| `clarity` | yes | the digest moved but the meaning did not — the anchor **advances to the new digest** (never re-accepts the old one) and the stage is **not** lowered |
+| `meaning` | no | the change alters obligation — writes a *pending* record and pulls `spine_stage` back to that artifact's tier |
+| `override` | only when it says so | a human reversing an adjudicator's enactment; as often a refusal as a blessing, so acceptance is explicit |
+| `baseline` | yes | the **migration** word `--seed` writes |
+
+`baseline` exists because `is_accepting` reads the decision word and nothing
+else: a ledger of machine baselines spelled `ratified` would read — to every
+later counter, card and adjudicator — as that many *human* ratifications.
+`--seed` also only ever writes a FIRST anchor; a row with any history at all,
+and a need parked under a heading that says it is unratified, are both left
+alone.
+
+**"Accepted anchor" and "current state" are two different reads, and the
+difference is load-bearing:**
+
+- **`accepted_anchor`** is the **newest accepting event** in the chain — *what
+  the current attested text IS*. A later pending event does not erase it.
+- **`chain_state`** is what the chain says about **the text standing in the
+  tree right now**, and **the head decides, not the anchor**: a head naming a
+  different digest reads `changed`; a head naming this digest but not accepting
+  it (a `meaning` verdict, or an override that refused) reads `pending`; an
+  empty chain reads `unattested`.
+
+`spine_stage` (§8.5) is computed from `chain_state`, which is why a standing
+`meaning` verdict regresses the stage even though the older anchor is still
+readable as history.
+
+**How this relates to the traced/ratified split (§10).** They answer the same
+question from opposite ends and are read together. `staged_spine_amendments`
+reads **one staged diff** and deliberately skips a row whose `Status` moved —
+so the sanctioned amend-and-flip-to-`Modified`, and any change that landed in
+an earlier commit, are invisible to it. `attest.detect_candidates` compares the
+**current** digest to the accepted anchor: it asks the *tree*, not the diff, and
+therefore has neither blind spot. Neither replaces the other — the staged check
+is the cheap write-side warn, the digest comparison is the total tree-side one.
+
+### 8.7 Where the spine digest is read OUTSIDE the gate: the admission verdict
+
+One rung outside this doc's four tiers reads spine rows, and it is worth naming
+here because **amending a requirement expires a ruling about work that cites
+it**. Every move of a work spec into `docs/work/queued/` goes through one
+transaction (`admit.py`), which records an **admission verdict** — one of
+`no-conflict`, `compatible-overlap` or `conflict` — *carrying the scope and
+spine digests it was computed against*.
+`check_trajectory.admission_verdict_findings` then has three rungs:
+
+1. **absent** — a queued row with no admission event at all, which is what a
+   direct write into the queue looks like from here;
+2. **stale scope** — the verdict names a scope digest the spec's frozen scope no
+   longer produces, so the ruling judged different text;
+3. **stale spine** — the verdict names a spine digest the referenced rows no
+   longer produce, so the ruling judged a different requirement tree.
+
+A newest verdict of `conflict` counts as **absent**, deliberately: a ruling that
+refused admission is not a ruling that permits the row to sit in the queue.
+
+Two properties make the rung adoptable rather than merely correct. It is
+**vacuous until the ledger exists** — `docs/events/admissions.jsonl`'s
+*presence* is the consent signal (the same presence-as-consent shape
+`docs/agents-enabled` uses), so a repo that never ran an admission is not told
+once per row that it never ran an admission. And the migration for a queue that
+predates the transaction is a **`pre-transaction` baseline event per unruled
+row**, carrying the digests measured at migration — not an id exemption. A
+legacy row therefore passes rung 1 while remaining subject to rungs 2 and 3:
+edit its scope, or amend a requirement it cites, and it reds, and the fix is a
+real admission. An id list would have exempted those rows from all three rungs
+forever and left no trace of the debt.
 
 ---
 
@@ -756,10 +966,20 @@ python project-trajectory/scripts/trace.py --strict --no-placeholders --html \
     --require-verified --strict-schema [--phase 2]
 
 # what gate do the registries derive to, and on what basis
+# (the `# basis:` line also carries the SECOND axis, spine-stage=N — §8.5)
 python project-trajectory/scripts/derive_gate.py --print
 python project-trajectory/scripts/derive_gate.py --check     # freshness guard
 python project-trajectory/scripts/derive_gate.py --next-phase  # the number a newly
                                                 # confirmed phase takes (§3.3)
+
+# the attestation ledger (§8.6): which rows' current text is NOT accepted,
+# and the first-anchor migration for a spine that predates the ledger
+python project-trajectory/scripts/attest.py --candidates
+python project-trajectory/scripts/attest.py --seed            # writes `baseline`
+
+# the queue-admission transaction and its recorded verdict (§8.7)
+python project-trajectory/scripts/admit.py --seed              # `pre-transaction`
+                                                # baselines for a legacy queue
 
 # the whole harness at a chosen gate/tier
 python project-trajectory/scripts/check.py --gate G3 --tier full

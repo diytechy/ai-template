@@ -340,8 +340,8 @@ def test_routingstate_note_session_and_stall_verdict():
         ((None, False, "DONE", True, {"is_error": False}, 0), ("DONE", False)),
         ((None, False, "BLOCKED", True, {"is_error": False}, 0), ("BLOCKED", False)),
         (
-            (None, False, "NEEDS-HUMAN", True, {"is_error": False}, 0),
-            ("NEEDS-HUMAN", False),
+            (None, False, "NEEDS-JUDGEMENT", True, {"is_error": False}, 0),
+            ("NEEDS-JUDGEMENT", False),
         ),
         # A commit with no end-state -> COMMITTED, not errored.
         ((None, False, "RUNNING", True, {}, 0), ("COMMITTED", False)),

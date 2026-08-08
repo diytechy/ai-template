@@ -154,9 +154,14 @@ def critique_repo(tmp_path):
     (repo / "docs" / "test").mkdir(parents=True)
     (repo / "docs" / "rubrics").mkdir(parents=True)
     (repo / "docs" / "status.md").write_text(STATUS_MD, encoding="utf-8")
-    (repo / "docs" / "review-policy").write_text(
-        "0\n", encoding="utf-8"
-    )  # critique only
+    # critique only: the reviewer dial off, declared canonically (the P13 cutover
+    # retired docs/review-policy — a repo that still carries it while the key is
+    # unset is REFUSED at preflight, which is the point of the rung).
+    (repo / "docs" / "config.toml").write_text(
+        "schema = 1\n\n[policy]\nreview_rounds = 0\n",
+        encoding="utf-8",
+        newline="\n",
+    )
     (repo / "docs" / "requirements" / "system-requirements.csv").write_text(
         SR_HEADER + SR_CRITIQUE, encoding="utf-8"
     )
@@ -309,7 +314,7 @@ def test_prompt_map_slots_a_custom_critique_template(critique_repo):
 
 def test_critique_budget_exhaustion_pages_human(critique_repo):
     # A perpetually CHANGES-REQUESTED critique trips the budget after
-    # AGENT_CRITIQUE_MAX rounds and pages the human (attended -> NEEDS-HUMAN, 7).
+    # AGENT_CRITIQUE_MAX rounds and pages the human (attended -> NEEDS-JUDGEMENT, 7).
     import os
 
     repo, ctl, cmd = critique_repo
@@ -365,9 +370,16 @@ def test_per_wi_exhaustion_disposition_overrides_autonomous(
 ):
     repo, ctl, cmd = critique_repo
     _set_critique_control(repo, "1", disposition)
-    (repo / "docs/gate-policy").write_text("autonomous\n", encoding="utf-8")
-    _git(repo, "add", "docs/gate-policy")
-    _git(repo, "commit", "-qm", "set autonomous policy")
+    # `autonomous` is now a DERIVED word: the dial is the ratification boundary,
+    # and 0 is the only value the converter names as autonomous's candidate.
+    (repo / "docs" / "config.toml").write_text(
+        "schema = 1\n\n[attestation]\nhuman_ratification_through = 0\n\n"
+        "[policy]\nreview_rounds = 0\n",
+        encoding="utf-8",
+        newline="\n",
+    )
+    _git(repo, "add", "docs/config.toml")
+    _git(repo, "commit", "-qm", "set the autonomous ratification boundary")
     (ctl / "verdict.txt").write_text(CHANGES, encoding="utf-8")
     proc = _loop(repo, cmd, "--max-iterations", "3")
     assert proc.returncode == expected, proc.stdout + proc.stderr

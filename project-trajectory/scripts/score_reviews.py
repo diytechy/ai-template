@@ -83,7 +83,11 @@ NEAR_DUP_THRESHOLD = 0.8
 # match on one never catches the other (WI-167).
 REVIEW_POLICY_PATHS = (
     "docs/reviews/",
-    "docs/review-policy",
+    # docs/config.toml replaced docs/review-policy at the P13 cutover: the
+    # referee dial and the route registry are cells in it now, so touching it
+    # is the same tripwire the one-word file used to be. (docs/agents.csv is
+    # still listed BECAUSE it is still read — routing binds at P5.)
+    "docs/config.toml",
     "docs/agents.csv",
     "docs/agents-enabled",
     "scripts/score_reviews.py",

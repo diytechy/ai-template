@@ -133,7 +133,7 @@ def test_handback_returns_the_spec_to_queued_and_finishes_the_branch(tmp_path):
     wt = lane(root)
     (wt / "half-done.py").write_text("VALUE = 1\n", encoding="utf-8", newline="\n")
 
-    ids, refusal = hb.hand_back(root, "wi-401", "worker exit 7 (NEEDS-HUMAN)")
+    ids, refusal = hb.hand_back(root, "wi-401", "worker exit 7 (NEEDS-JUDGEMENT)")
     assert refusal is None, refusal
     assert ids == ["WI-401"]
 
@@ -154,7 +154,7 @@ def test_handback_returns_the_spec_to_queued_and_finishes_the_branch(tmp_path):
     spec = returned_spec_path(root).read_text(encoding="utf-8")
     assert "## Handback" in spec
     assert 'blockref = "docs/work/queued/WI-401-widget.md"' in spec
-    assert "worker exit 7 (NEEDS-HUMAN)" in spec
+    assert "worker exit 7 (NEEDS-JUDGEMENT)" in spec
     assert not list((root / "docs" / "work" / "active").rglob("WI-*.md"))
 
 
@@ -308,7 +308,7 @@ def test_a_disposition_rows_own_handback_is_refused_structurally(tmp_path):
     )
     _commit(root, "fixture: the claim is an adjudication row", when=T_CODE)
 
-    ids, refusal = hb.hand_back(root, "wi-401", "worker exit 7 (NEEDS-HUMAN)")
+    ids, refusal = hb.hand_back(root, "wi-401", "worker exit 7 (NEEDS-JUDGEMENT)")
     assert ids is None
     assert "never hands back" in refusal and "R3" in refusal
     assert spec.is_file()  # the claim did not move

@@ -23,9 +23,9 @@ Empty template -> guidance and exit 2 (the launchers ship inert, like run.*).
 
 CONSENT: an unattended run typically wires the agent CLI's permission-bypass
 flag into AGENT_CMD — sessions then run with no permission prompts. The human
-consents by filling the slot, declaring the gate policy (docs/gate-policy),
-and running this; git + CI remain the enforcement floor. The banner restates
-this every run.
+consents by filling the slot, declaring the ratification boundary
+(`attestation.human_ratification_through` in docs/config.toml), and running
+this; git + CI remain the enforcement floor. The banner restates this every run.
 
 During worker/review sessions this module:
   - picks the model per the in-process phase: --model-map
@@ -47,13 +47,15 @@ During worker/review sessions this module:
     stop claiming/starting, at the next session boundary — the in-flight
     session finishes and commits normally, never a mid-session kill; unpausing
     is a reviewed deletion commit;
-  - honors docs/blackout: a declared `HH:MM-HH:MM` UTC WEEKDAY-ONLY window
-    (Mon–Fri; weekends are never blacked out, by blackout_wake's contract)
-    inside which no new session starts — the in-flight one wraps normally, then
-    the agent-resume -> agent_loop path waits the window out and resumes
-    automatically (a single launch survives the blackout), printing a banner and
-    a periodic countdown so the wait reads as deliberate, not hung. Absent/empty/
-    malformed or start==end = disabled; the scaffold ships a 12:00–19:00 default;
+  - honors `automation.blackout`: a declared `HH:MM-HH:MM` UTC WEEKDAY-ONLY
+    window (Mon–Fri; weekends are never blacked out, by blackout_wake's
+    contract) inside which no new session starts — the in-flight one wraps
+    normally, then the agent-resume -> agent_loop path waits the window out and
+    resumes automatically (a single launch survives the blackout), printing a
+    banner and a periodic countdown so the wait reads as deliberate, not hung.
+    Unset/empty or start==end = disabled, which is the default: the retired
+    `docs/blackout` template shipped a 12:00–19:00 window nobody chose, and it
+    was deleted with the file at P14;
   - counts a no-commit worker session toward the stall guard (git HEAD unmoved) —
     except limit-hit sessions (below), which never count as a stall. A session
     that errored *before it could work* (the CLI reported is_error, or it could
@@ -108,12 +110,12 @@ coordinator per checkout; the OS releases it on process death).
 Exit codes: 0 DONE · 2 preflight/config failure (incl. the inert unfilled
 slot) · 3 BLOCKED · 4 stall abort (work stall or an all-ERROR agent-unavailable
 run — the banner distinguishes them) · 5 WAITING on a rate limit · 6 iteration
-budget exhausted while still RUNNING · 7 NEEDS-HUMAN (act, then re-run) · 8
+budget exhausted while still RUNNING · 7 NEEDS-JUDGEMENT (act, then re-run) · 8
 paused (the tracked docs/work/pause present — unpause and re-run to resume).
 
 Preflight refuses to start iteration 1 when: the AGENT_CMD executable is
 missing (report, never a hang); the working directory is not a git repo; or
-docs/privacy-check is enabled and the effective git author email is not in the
+`policy.privacy_check` is enabled and the effective git author email is not in the
 exempt allowlist — an unattended run under a private identity is the
 history-leak disaster case (process-options.md "Commit identity & privacy").
 
@@ -182,11 +184,28 @@ EXIT_BLOCKED = agent_common.EXIT_BLOCKED
 EXIT_STALL = agent_common.EXIT_STALL
 EXIT_WAITING = agent_common.EXIT_WAITING
 EXIT_BUDGET = agent_common.EXIT_BUDGET
-EXIT_NEEDS_HUMAN = agent_common.EXIT_NEEDS_HUMAN
+EXIT_NEEDS_JUDGEMENT = agent_common.EXIT_NEEDS_JUDGEMENT
 EXIT_PAUSED = agent_common.EXIT_PAUSED
 END_STATES = agent_common.END_STATES
 OWNER_ONLY_PATHS = agent_common.OWNER_ONLY_PATHS
 read_declared = agent_common.read_declared
+
+# Every canonical dial this coordinator reads, declared as ONE list so the
+# unconverted-source rung (agent_common.declared_config) covers exactly the set
+# `main` consumes — no more (a refusal about a dial nobody reads is noise) and no
+# less (a dial read without being listed would slip past the rung silently). The
+# retired one-word files these replace: docs/gate-policy, docs/push-policy,
+# docs/review-policy, docs/guardrails-policy, docs/blackout, docs/live-status,
+# docs/privacy-check.
+LOOP_CONFIG_KEYS = (
+    "attestation.human_ratification_through",
+    "policy.push",
+    "policy.review_rounds",
+    "policy.guardrails",
+    "automation.blackout",
+    "policy.live_status",
+    "policy.privacy_check",
+)
 read_agent_loop_config = agent_common.read_agent_loop_config
 resolve_coordinator_dials = agent_common.resolve_coordinator_dials
 pause_reason = agent_common.pause_reason
@@ -411,7 +430,7 @@ NON_BUILD_PHASES = frozenset(REVIEW_PHASES) | {
 
 
 # (read_ask retired with the serial driver, WI-210: the engine composes
-# its NEEDS-HUMAN banners from the ask it just generated — the `ask:` line in
+# its NEEDS-JUDGEMENT banners from the ask it just generated — the `ask:` line in
 # docs/run-state remains the WI-127 contract for humans and launchers.)
 
 
@@ -517,7 +536,7 @@ KIT_CORE_RE = re.compile(
 
 def guardrails_apply(policy, model):
     """Whether to inject the guardrails core for a session on `model`, under
-    docs/guardrails-policy (case-insensitive). The grammar:
+    `policy.guardrails` (case-insensitive). The grammar:
       - `off` / absent          -> never.
       - `all`                   -> every session.
       - `all except <sub> ...`  -> every session EXCEPT models matching a listed
@@ -610,7 +629,7 @@ def compose_session_prompt(
     """The session prompt: `body` (the worker assignment, a redacted reviewer
     prompt, or a critique brief — WI-210 retired the resume-from-status
     default) with the vendored guardrails core prepended when
-    docs/guardrails-policy selects this session's model (Thread 41). A
+    `policy.guardrails` selects this session's model (Thread 41). A
     loop-start dirty tree adds the WI-076 reconcile note ahead of the body for
     the first session (resume_reconcile). Returns (prompt, guarded); a
     selected-but-absent core warns once, then runs without it (guardrails
@@ -625,7 +644,7 @@ def compose_session_prompt(
     if not warned_no_core:
         warned_no_core.append(True)
         print(
-            "agent_loop: guardrails-policy={!r} selects model {!r} but "
+            "agent_loop: policy.guardrails={!r} selects model {!r} but "
             "docs/guardrails/core.md is absent — running without the "
             "guardrails core (vendor it per process-options.md "
             '"Tier-conditional guardrails").'.format(guardrails_policy, model),
@@ -1410,8 +1429,8 @@ def parse_args():
         action="store_true",
         help="upgrade the scrolling session echo to one in-place status line "
         "per workstream (WI-136) — only when stdout is a TTY (a pipe / CI log "
-        "keeps the append-only scroll); also enabled by a docs/live-status "
-        "file reading 'true'. Overridden by --no-session-echo.",
+        "keeps the append-only scroll); also enabled by `policy.live_status` "
+        "in docs/config.toml. Overridden by --no-session-echo.",
     )
     ap.add_argument(
         "--wait-on-limit",
@@ -1680,9 +1699,14 @@ def print_run_banner(
     cmd_map,
     prompt_map,
     docs,
+    privacy_on,
 ):
     """The unattended-coordinator launch banner: the run's identity, its
-    policies, the routing/guardrails posture, and the privacy warning."""
+    policies, the routing/guardrails posture, and the privacy warning.
+
+    `privacy_on` is PASSED, not re-read: since the P13 cutover the dial lives in
+    docs/config.toml, `main` has already loaded and validated it, and a banner
+    that re-opened the question would be a second reader of a security policy."""
     print("=== session engine (scripts/agent_loop.py) ===")
     print("repo: {} | branch: {}".format(root, branch or "(none)"))
     if worker:
@@ -1692,9 +1716,15 @@ def print_run_banner(
                 worker["train"], ";".join(worker["assigned"]), worker["base"][:12]
             )
         )
+    # The three labels name CANONICAL keys, not the one-word files they came
+    # from: those files were deleted at P14, and a banner telling an operator
+    # "gate-policy: autonomous" would send them looking for a file that is not
+    # there. The gate-authority WORD survives as the derived vocabulary the
+    # ruled §A8 / paging / adjudication tables speak (agent_common.BOUNDARY_LEVEL),
+    # so the value is unchanged — only the label moved.
     print(
-        "gate-policy: {} | push-policy: {} (the coordinator never pushes "
-        "under 'human') | review-policy: {} (docs/review-policy — the reviewer "
+        "ratification boundary: {} | policy.push: {} (the coordinator never "
+        "pushes under 'human') | policy.review_rounds: {} (the reviewer "
         "dial: {})".format(
             gate_policy,
             push_policy,
@@ -1715,9 +1745,8 @@ def print_run_banner(
             )
         )
     print(
-        "guardrails-policy: {} (docs/guardrails-policy — the vendored core is "
-        "injected per session when the policy selects that session's "
-        "model)".format(guardrails_policy)
+        "policy.guardrails: {} (the vendored core is injected per session when "
+        "the policy selects that session's model)".format(guardrails_policy)
     )
     print("agent command: {}".format(template))
     for ph in sorted(cmd_map):
@@ -1729,10 +1758,9 @@ def print_run_banner(
         "AGENT_CMD means unattended edits without prompts — you consented by "
         "wiring it and running this. Ctrl+C is safe; re-running resumes."
     )
-    privacy_on = read_declared(docs / "privacy-check", "false").lower() == "true"
     if privacy_on and not (branch or "").startswith("llm/"):
         print(
-            "WARNING: privacy-checked repo (docs/privacy-check) but the "
+            "WARNING: privacy-checked repo (policy.privacy_check) but the "
             "current branch {!r} is not an llm/ iteration branch — see "
             'process-options.md "Agent iteration branch & sync".'.format(
                 branch or "(none)"
@@ -1751,7 +1779,7 @@ def route_session(ctx, i, current_wi, session, resume_reconcile, now):
     """Pick the phase + model + prompt for this worker session (managed
     routing or the single-model path; WI-210 — every loop session is a
     claimed worker session). Returns an int exit code to end the
-    run (no routable model -> EXIT_NEEDS_HUMAN; a {model} template with no
+    run (no routable model -> EXIT_NEEDS_JUDGEMENT; a {model} template with no
     model -> EXIT_PREFLIGHT) or a `plan` dict the caller launches."""
     args = ctx.args
     root = ctx.root
@@ -1847,7 +1875,7 @@ def route_session(ctx, i, current_wi, session, resume_reconcile, now):
             # the stop banner + exit code carry the outcome.)
             stop_banner(
                 status_path,
-                "NEEDS-HUMAN — no routable model",
+                "NEEDS-JUDGEMENT — no routable model",
                 reason + " (add/enable a model of this tier, or wait for a "
                 "cooldown; the loop never silently drops to a weaker tier).\n"
                 # Per-row state + the Notes cell — the declared home for the
@@ -1856,7 +1884,7 @@ def route_session(ctx, i, current_wi, session, resume_reconcile, now):
                 # paged (WI-109).
                  + agent_route.pool_context(enabled, registry, st.cooldowns, now),
             )
-            return EXIT_NEEDS_HUMAN
+            return EXIT_NEEDS_JUDGEMENT
         m = registry[route_id]
         model = m.model or route_id
         route_family = m.family
@@ -2127,7 +2155,7 @@ def session_bookkeeping(
                         "PAGE-HUMAN — review escalation",
                         decision["reason"] + " | " + fa["note"],
                     )
-                    return EXIT_NEEDS_HUMAN
+                    return EXIT_NEEDS_JUDGEMENT
                 if fa.get("design_check"):
                     st.set_design_check()
     elif managed and is_critique:
@@ -2183,7 +2211,7 @@ def session_bookkeeping(
                         "the critique loop hit its {}-round budget still "
                         "CHANGES-REQUESTED | {}".format(st.critique_limit, fa["note"]),
                     )
-                    return EXIT_NEEDS_HUMAN
+                    return EXIT_NEEDS_JUDGEMENT
                 if fa.get("design_check"):
                     st.set_design_check()
             # action == "rework" (next_phase set to BUILD) / "approved" (the
@@ -2280,7 +2308,9 @@ def run_iteration(ctx, i):
     skipped)."""
     args = ctx.args
     root = ctx.root
-    lane = ctx.lane
+    # (`lane` retired from this unpack at the P13 cutover: its ONE use here was
+    # the per-iteration `read_declared(lane / "blackout", ...)`, and the window
+    # is now resolved once at loop start as ctx.blackout_line.)
     status_path = ctx.status_path
     worker = ctx.worker
     managed = ctx.managed
@@ -2298,7 +2328,10 @@ def run_iteration(ctx, i):
     # (we sleep inline, never `continue`), so a single walk-away launch
     # survives the blackout and resumes automatically. Absent/disabled file
     # => a no-op (byte-identical to today).
-    blackout_line = read_declared(lane / "blackout", "")
+    # Resolved once at loop start (ctx), not re-read per iteration: the dial is
+    # a validated config value now, and re-opening a document mid-run would let
+    # a half-saved edit change policy between iterations.
+    blackout_line = ctx.blackout_line
     wake = blackout_wake(blackout_line, datetime.datetime.utcnow())
     if wake:
         resume_at = datetime.datetime.utcnow() + datetime.timedelta(seconds=wake)
@@ -2541,7 +2574,7 @@ def run_iteration(ctx, i):
             "resume at: {} (re-run agent-resume.* then)".format(reset_hint),
         )
         return EXIT_WAITING
-    # (The run-state DONE/BLOCKED/NEEDS-HUMAN ladder retired with the serial
+    # (The run-state DONE/BLOCKED/NEEDS-JUDGEMENT ladder retired with the serial
     # driver, WI-210: a worker's state is always RUNNING here — its end
     # states are judged from committed evidence, below, and the coordinator
     # generates the root run-state.)
@@ -2724,12 +2757,34 @@ def main():
     lane.mkdir(parents=True, exist_ok=True)
     status_path = lane / "status.md"
 
-    gate_policy = read_declared(docs / "gate-policy", "attended")
-    push_policy = read_declared(docs / "push-policy", "human")
-    review_policy = read_declared(docs / "review-policy", "1")
+    # THE CANONICAL CONFIGURATION, read ONCE for every dial this coordinator
+    # consumes (the P13 cutover). Seven `read_declared` calls over seven
+    # one-word files became one validated read of one document, and the
+    # difference is not tidiness: each of those files had its own parse, its own
+    # default and its own way to be silently wrong, so a typo read as "absent"
+    # and absent nearly always meant OFF. A refusal here — a malformed document,
+    # or an UNCONVERTED repo whose retired file still declares a dial the
+    # canonical one leaves unset — stops the run at preflight instead of being
+    # answered with a policy nobody chose.
+    cfg, refusals = agent_common.declared_config(root, LOOP_CONFIG_KEYS)
+    if refusals:
+        print("agent_loop: preflight failed —", file=sys.stderr)
+        for line in refusals:
+            print("  - " + line, file=sys.stderr)
+        return EXIT_PREFLIGHT
+    # The ruled gate-authority word, DERIVED from the numeric boundary (the
+    # dial's one home is now `attestation.human_ratification_through`); the §A8
+    # / paging / escalation tables keep their ruled vocabulary — see
+    # agent_common.BOUNDARY_LEVEL for why the inverse is read off the
+    # converter's tables rather than invented.
+    gate_policy = agent_common.escalation_level(
+        cfg.attestation.human_ratification_through
+    )
+    push_policy = cfg.policy.push
+    review_policy = cfg.policy.review_rounds
     _, branch = git(root, "branch", "--show-current")
 
-    guardrails_policy = read_declared(docs / "guardrails-policy", "off")
+    guardrails_policy = cfg.policy.guardrails
     # Surface a stale/typo'd policy token before the run: if it names a substring
     # that matches none of the models this run could use, the guard is inert.
     possible_models = {m for m in [args.model, *model_map.values()] if m}
@@ -2743,34 +2798,20 @@ def main():
         }
     if guardrails_inert(guardrails_policy, possible_models):
         print(
-            "agent_loop: WARNING - guardrails-policy {!r} would guard none of "
+            "agent_loop: WARNING - policy.guardrails {!r} would guard none of "
             "the configured models ({}); the guard is inert — fix the token or "
             'the model map (process-options.md "Tier-conditional guardrails").'.format(
                 guardrails_policy, ", ".join(sorted(possible_models)) or "none"
             ),
             file=sys.stderr,
         )
-    # A malformed declared policy must not silently disable itself — blackout
-    # and review-policy are consent surfaces like agents-enabled (repo-review
-    # 2026-07-21 M-20). Behavior is unchanged for compat (blackout off /
-    # review-policy lenient-parse); the SILENCE was the defect.
-    blackout_line = read_declared(docs / "blackout", "")
-    if blackout_line and parse_blackout(blackout_line) is None:
-        print(
-            "agent_loop: WARNING - docs/blackout {!r} is malformed (expected "
-            "HH:MM-HH:MM); the blackout window is DISABLED this run.".format(
-                blackout_line
-            ),
-            file=sys.stderr,
-        )
-    if (review_policy or "").strip() not in ("0", "1", "2"):
-        print(
-            "agent_loop: WARNING - docs/review-policy {!r} is not 0|1|2; "
-            "parsed leniently (unparseable -> 1, out-of-range clamped).".format(
-                review_policy
-            ),
-            file=sys.stderr,
-        )
+    # (The M-20 warn-on-malformed pair for docs/blackout and docs/review-policy
+    # RETIRED at the cutover, and by promotion rather than by deletion: the
+    # schema declares `automation.blackout` with an hour/minute-bounded pattern
+    # and `policy.review_rounds` with the closed choice set 0|1|2, so a malformed
+    # value is now a loader REFUSAL that stopped this run above. A warning that
+    # can no longer fire is not a guard — it is a comment that costs a branch.)
+    blackout_line = cfg.automation.blackout
     warned_no_core = []
 
     # WI-076: snapshot the working tree BEFORE the coordinator creates its own
@@ -2838,17 +2879,17 @@ def main():
             return EXIT_DONE
         action = _plan_round.page_action(gate_policy)
         print(
-            "agent_loop: dual-plan {} PAGED: {} (gate-policy {} -> {})".format(
+            "agent_loop: dual-plan {} PAGED: {} (escalation level {} -> {})".format(
                 wid, detail, gate_policy or "attended", action
             ),
             file=sys.stderr,
         )
         if action == "stop-needs-human":
-            stop_banner(docs / "status.md", "NEEDS-HUMAN", detail)
-            return EXIT_NEEDS_HUMAN
+            stop_banner(docs / "status.md", "NEEDS-JUDGEMENT", detail)
+            return EXIT_NEEDS_JUDGEMENT
         # autonomous / single-ratify: honor the pause-free invariant (WI-204,
         # WI-209): an attention-only outcome lands on EXIT_STALL, never a
-        # NEEDS-HUMAN gate. The PAGE evidence is on disk under docs/plans/DP-*;
+        # NEEDS-JUDGEMENT gate. The PAGE evidence is on disk under docs/plans/DP-*;
         # relaunching re-runs the round. (page_action's non-stop-needs-human
         # strings are intent labels.)
         stop_banner(
@@ -2873,20 +2914,18 @@ def main():
         cmd_map,
         prompt_map,
         docs,
+        cfg.policy.privacy_check,
     )
 
     raw_dir = root / "out" / "run-logs"
     iter_dir = lane / "iteration"
     tag = "{}-".format(worker["train"])
     # Console rendering (WI-125 scroll / WI-136 live line). --no-session-echo
-    # silences it; otherwise --live-status (or a docs/live-status file) upgrades
+    # silences it; otherwise --live-status (or `policy.live_status`) upgrades
     # the scroll to one in-place line per workstream — but only when stdout is a
     # TTY with VT enabled, so a pipe / CI log keeps the append-only scroll
     # (never-breaking). Decided once: the TTY/VT facts don't change mid-run.
-    live_status_on = (
-        args.live_status
-        or read_declared(docs / "live-status", "false").lower() == "true"
-    )
+    live_status_on = args.live_status or cfg.policy.live_status
     use_live = live_status_on and _stdout_is_tty() and _enable_windows_vt()
     # A worker has no lane run-state (spec §10) — its state is always RUNNING
     # until its committed evidence says otherwise (worker_endstate below).
@@ -2897,11 +2936,10 @@ def main():
     # (WI-080 Slice C). All no-ops when the enable-list is absent, so the legacy
     # path is byte-for-byte unchanged. The parse/env blocks that feed the
     # constructor stay exactly as before. ----------------------------------------
-    try:
-        rp_int = int(review_policy)
-    except ValueError:
-        rp_int = 1
-    rp_int = max(0, min(2, rp_int))
+    # Already an int in 0..2: the schema's closed choice set refused anything
+    # else at load. The retired lenient parse (unparseable -> 1, out-of-range
+    # clamped) is gone with the file it forgave.
+    rp_int = review_policy
     try:
         cooldown_seconds = int(
             os.environ.get("AGENT_COOLDOWN_SECONDS", DEFAULT_COOLDOWN_SECONDS)
@@ -2967,6 +3005,7 @@ def main():
     ctx.prefer_map = prefer_map
     ctx.weight_map = weight_map
     ctx.gate_policy = gate_policy
+    ctx.blackout_line = blackout_line
     ctx.guardrails_policy = guardrails_policy
     ctx.warned_no_core = warned_no_core
     ctx.start_dirty = start_dirty

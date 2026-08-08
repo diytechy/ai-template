@@ -519,17 +519,20 @@ table.
   (downstream greps and the §5 wording rely on them), and leave the
   `History: docs/log.md` pointer in status.md's header. Don't rewrite the moved
   entries — they are the historical record.
-- **Privacy-check toggle (`docs/privacy-check`) — replaces the old
+- **Privacy-check toggle (`policy.privacy_check`) — replaces the old
   `docs/commit-identity` glob.** Newer kits split *identity* from *privacy*
   (process-options.md "Commit identity & privacy"): which account authors is
   the user's own git config (no longer pinned by a repo file), and a one-value
-  toggle `docs/privacy-check` (`true`/`false`) runs the privacy gate — the
+  toggle `policy.privacy_check` (`true`/`false`) runs the privacy gate — the
   commit author email and committed content/messages are scanned for PII, with
   the exempt-email allowlist (`EXEMPT_EMAILS`, default `*noreply*`) in
   `check_privacy.py`. To adopt: overwrite the hooks (`pre-commit`, the new
   `commit-msg`, `pre-push`) + `check_privacy.py` + `setup.*` from the kit, and
-  replace `docs/commit-identity` with `privacy-check.template` → `docs/privacy-check`
-  (set `true` if you had a non-`inherit` glob, else `false`). Migrating from an
+  delete `docs/commit-identity` and set `policy.privacy_check` in
+  `docs/config.toml` (`true` if you had a non-`inherit` glob, else leave it
+  unset — the default is `false`). *Kits before 2026-08 shipped a
+  `privacy-check.template` → `docs/privacy-check` one-word file; it is deleted,
+  and a copy of it left in your tree is now a mixed-source refusal.* Migrating from an
   older kit: delete `docs/commit-identity`; the pre-commit author check is now a
   Python `--author` step, so a Python-less machine no longer enforces identity
   (deliberate — that pin moved to git config). The guard covers **future commits
@@ -546,16 +549,17 @@ table.
   pre-push hook scans the outgoing range. **That is the point** — but if the
   repo legitimately holds secret-shaped content (test fixtures, sample keys),
   mark those lines with the inline `privacy-ok` marker, and only as a last
-  resort track the one word `off` in `docs/secrets-scan` to disable the floor
-  repo-wide (a reviewed, recorded decision). No new scaffolded file is required;
-  absent `docs/secrets-scan` reads *on*.
-- **Push policy + agent iteration branch (`docs/push-policy`).** Newer kits
+  resort set `policy.secrets_scan = false` in `docs/config.toml` to disable the
+  floor repo-wide (a reviewed, recorded decision). Nothing needs declaring to
+  keep it: an unset key reads *on*.
+- **Push policy + agent iteration branch (`policy.push`).** Newer kits
   declare who may publish (process-options.md "Agent iteration branch &
-  sync"): a one-word file — `human` (default: an agent never pushes, even if
+  sync"): one declared value — `human` (default: an agent never pushes, even if
   asked mid-session; it prepares the branch and requests), `agent-iteration`
   (only the scrubbed `llm/<branch>` iteration branch), or `agent`. To adopt:
-  copy `push-policy.template` → `docs/push-policy` and pick the value in a
-  reviewed commit. The full iteration-branch discipline (agent work on
+  set `policy.push` in `docs/config.toml` in a reviewed commit. *Kits before
+  2026-08 shipped a `push-policy.template` → `docs/push-policy` one-word file;
+  it is deleted.* The full iteration-branch discipline (agent work on
   `llm/<branch>`, history scrubbed and collated into categorical commits
   before landing on the dev branch) is an **opt-in layer** for agent-driven
   repos — a repo without agent-driven work keeps the default file and pays
@@ -668,7 +672,8 @@ table.
   render-surface train). The `review-policy` dial now counts **reviewer** phases
   scheduled (0/1/2); CRITIQUE is orthogonal — required on every render-surface
   train regardless of dial. A same-head CHANGES-REQUESTED→APPROVE flip escalates
-  NEEDS-HUMAN rather than silently winning; a never-filed required phase pages
+  `NEEDS-JUDGEMENT` rather than silently winning (the signal was spelled
+  `NEEDS-HUMAN` until the 2026-08-08 rename below); a never-filed required phase pages
   instead of stalling. **Downstream impact** *(historical — the v4 dispatcher
   retired at the Phase 5 restructure; `integrate.py`'s serial verdict gate
   keeps the same every-scheduled-phase-APPROVE rule)*: a train that previously
@@ -797,6 +802,75 @@ table.
   (`check_trajectory.py`, `schedule.py`, `agent_common.py`, `wi_convert.py`,
   `gen_trajectory.py` + the `traj_*` renderers, `bootstrap.py`) so the loaders,
   scheduler, converter and dashboard share one vocabulary.
+- **A THIRD terminal, `partial/`; the mutating handback retired (2026-08,
+  decisions D-2/D-4).** *A flagged migration — it adds a directory and removes a
+  contract.* The status vocabulary gains `partial`: an attempt that was made and
+  stopped short, as distinct from `complete` (it shipped) and `cancelled` (it
+  never will). Three steps:
+  1. `mkdir docs/work/partial` and add a `.gitkeep` — a fresh scaffold ships it,
+     and the loaders already carry the word (`SPEC_STATUS_DIRS`,
+     `TERMINAL_STATUSES`, `outcome.OUTCOMES`), so a repo without the folder
+     declares a status that has nowhere to live;
+  2. re-sync the loader set together (`agent_common.py`, `schedule.py`,
+     `check_trajectory.py`, `wi_convert.py`, `integrate.py`, `bootstrap.py`) plus
+     the new `scripts/outcome.py` — a partial spec under a loader that has not
+     learned the word is refused by name, which is loud but stops the run;
+  3. **stop calling `handback.py`'s `hand_back`.** Its contract — commit the work
+     as-is and move each claimed spec back to `queued/` carrying a `## Handback`
+     section and a self-`blockref` — is retired: a branch that rewrites its own
+     obligation makes its own account unfalsifiable, which is what let a
+     green-merged handback land rejected code as-is (the 2026-08-03 incident).
+     The replacement is: move the byte-identical spec to `partial/`, write one
+     immutable **outcome event** outside `docs/work/`, and let an adjudicator
+     mint the remaining scope as a NEW work item with `supersedes` lineage.
+     `quarantine` — revert the code the bar refuses, keep the failing diff as a
+     bar-inert `.patch` — **survives**, generalized into the Partial
+     keep/discard/quarantine classification.
+  **The general `blockref` is NOT affected.** A blocked row is still `queued/`
+  plus a `blockref` naming what must clear, released by deleting the key in a
+  reviewed commit; only the *self*-blockref handback use is gone. If your repo
+  has rows parked by a past handback, they are ordinary blocked rows now —
+  dispose of each by hand (clear the `blockref`, or move the row to a terminal)
+  rather than waiting for loop machinery that no longer exists. Existing
+  `complete/` and `cancelled/` rows are untouched: nothing is re-classified
+  retroactively, because nobody adjudicated them under the new model.
+- **`NEEDS-HUMAN` is renamed `NEEDS-JUDGEMENT` (2026-08, decision D-6).** A
+  prose-only change with one hard promise: **exit code 7 does not move**, so
+  every wrapper, CI condition and launcher that keys off the code keeps working
+  untouched. What changes is the word in banners and docs — it names the owed
+  *act*, and *who* supplies the judgement follows from the declared ratification
+  boundary rather than from the label. Two spellings deliberately stay: the
+  **open-items bucket** (`bootstrap`'s stack checklist, `check_docs`'s
+  `NEEDS-HUMAN` heading pattern) keeps the old name, because there an owner call
+  genuinely is the point. If you grep your own scripts for the banner string,
+  update those greps — and prefer keying off exit 7, which is the contract.
+- **One `docs/config.toml` replaces the one-word policy files (2026-08,
+  SR-137…SR-141).** Each of `docs/gate-policy`, `push-policy`, `review-policy`,
+  `privacy-check`, `privacy-review`, `secrets-scan`, `guardrails-policy`,
+  `blackout`, `live-status`, `subagent-gate`, `status-lint`, `trajectory-check`,
+  `interfaces-check`, `components-check`, `okf-export`, plus `docs/agents.csv` /
+  `docs/agents-enabled` and `stack.ini`'s `[agent-loop]` section, was its own
+  parser, its own default, and its own way to be silently wrong.
+  `scripts/config.py` is the authoritative inventory of that retired set. To
+  migrate: run `python scripts/config_migrate.py`, **read its report** — values
+  it cannot map losslessly are reported, never guessed — fix those by hand, and
+  commit `docs/config.toml`. It is **adopter-owned**: a re-sync never overwrites
+  a filled one (SR-141), and bootstrap/re-sync runs the converter for you.
+  `[routing] enabled` defaults to **false**; the converter writes an explicit
+  `true` only when you had an `agents-enabled` list, which is how the
+  presence-as-consent property survives the move.
+
+  **The deletion landed (2026-08, P14).** `docs/gate-policy`, `push-policy`,
+  `review-policy`, `privacy-check`, `privacy-review`, `secrets-scan`,
+  `guardrails-policy`, `blackout` and `live-status` have no reader left, their
+  templates are gone, and bootstrap no longer scaffolds any of them — so
+  **convert, then delete your copies**. A retired file present alongside its
+  canonical key is a `mixed_source_findings` **refusal** at the coordinator's
+  preflight, not a silent precedence, and that is deliberate: it converts a
+  permanent ambiguity into a one-time migration step. `docs/subagent-gate`,
+  `status-lint`, `trajectory-check`, `interfaces-check`, `components-check`,
+  `okf-export`, `docs/agents.csv` and `docs/agents-enabled` are **still read**
+  and must stay until their readers cut over.
 
 ### Repos whose `AGENTS.md` already means something else
 

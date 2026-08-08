@@ -153,16 +153,33 @@ def next_wi_id(root):
     return "WI-{:03d}".format(top + 1)
 
 
+# The worker exit code inside a handback reason, e.g. "worker exit 7
+# (NEEDS-JUDGEMENT)". The CODE decides the tier; the parenthesised word beside
+# it is a label for a human reading the line.
+_EXIT_CODE_RE = re.compile(r"\bexit\s+(\d+)\b")
+
+
 def tier_signal(trigger, *, rows_touched=0, gate_moved=False, reason=""):
     """`buildtier` from MEASURABLE inputs (the amendment's clause 2): rows
-    touched + gate delta for an amendment, the handback reason class for a
+    touched + gate delta for an amendment, the worker's EXIT-CODE CLASS for a
     disposition, and the census kind for a gap row. Deeper review is a drafted
     follow-up with `planmode = "dual"`, never a tier here and never a second
-    kind."""
+    kind.
+
+    The disposition arm read a SUBSTRING of the reason prose until P14, and
+    decision D-6 judgement 1 retires that: a tier decision keys off the
+    exit-code class, never off words in a sentence. The old form was wrong twice
+    over — a reason that merely MENTIONED the label ("not a NEEDS-HUMAN case")
+    read as strong, and D-6's rename of that label would silently have re-tiered
+    every caller still spelling it the old way. The code is the contract the
+    worker actually emits.
+    """
     if trigger == "amendment":
         return "strong" if gate_moved or rows_touched > 3 else "medium"
     if trigger == "handback":
-        return "strong" if "NEEDS-HUMAN" in (reason or "").upper() else "medium"
+        found = _EXIT_CODE_RE.search(reason or "")
+        code = int(found.group(1)) if found else None
+        return "strong" if code == ac.EXIT_NEEDS_JUDGEMENT else "medium"
     return "medium"  # census gap closure: mechanical registry work
 
 
@@ -1066,8 +1083,10 @@ def flip_verified(root, ids):
     rows judged no-scope-moved: `Modified` -> `Verified`. Returns
     `(action, flipped_ids, refusal)`.
 
-    The policy is read from `docs/gate-policy`, never passed by hand (the
-    dial's one home). Under `recommend` NOTHING is touched and the prepared
+    The policy is read from the canonical configuration
+    (`attestation.human_ratification_through`, via `agent_common.
+    ratification_level`), never passed by hand — the dial's one home. Under
+    `recommend` NOTHING is touched and the prepared
     brief prints — the adjudication worker writes it into its spec and the
     open-items card carries the Modified rows to the sitting. Under `flip`
     only the named rows' Status cells move; every other cell of every row
@@ -1078,8 +1097,14 @@ def flip_verified(root, ids):
     registry still owes its regeneration (`derive_gate` recovers the gate);
     the lane's own refresh runs it."""
     root = Path(root)
-    level = ac.read_declared(root / "docs" / "gate-policy", "attended").strip()
-    action = adjudication_action(level.lower())
+    # The declared authority, derived from the canonical ratification boundary
+    # since the P13 cutover. A refusal is returned as the refusal — a flip is a
+    # RATIFICATION, and enacting one under a policy nobody could read is the
+    # exact act this dial exists to gate.
+    level, refusals = ac.ratification_level(root)
+    if refusals:
+        return "recommend", [], "; ".join(refusals)
+    action = adjudication_action(level)
     wanted = {i.strip() for i in ids if i.strip()}
     located, tables = _locate_spine_rows(root, wanted)
     missing = sorted(wanted - set(located))

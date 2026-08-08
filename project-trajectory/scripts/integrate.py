@@ -1446,12 +1446,20 @@ def _verdict_gate(root, branch, outcomes):
     cancelled spec moves under `docs/work/` too, and owes no verdict for that
     move to stale.
     """
-    dial = ac.read_declared(root / "docs" / "review-policy", "0")
-    try:
-        required = int(dial or "0") >= 1
-    except ValueError:
-        return "docs/review-policy is not an integer: {!r} (fail closed)".format(dial)
-    if not required:
+    # THE DIVERGENT DEFAULT, resolved by the cutover. This call site read
+    # docs/review-policy with a default of "0" while `agent_loop` read the SAME
+    # file with a default of "1" — so an adopter who declared nothing saw the
+    # coordinator's banner announce "review-policy: 1" while the integrator
+    # required no verdict at all. The canonical schema has ONE default and it is
+    # 1: it is the stricter of the two, it is what the loop already told the
+    # operator was in force, and a merge bar is the wrong place for the lenient
+    # reading. The recorded consequence: a repo that declared nothing and never
+    # wired reviews now needs a verdict file (or an explicit
+    # `policy.review_rounds = 0`) before a branch asserting done will merge.
+    cfg, refusals = ac.declared_config(root, ("policy.review_rounds",))
+    if refusals:
+        return "; ".join(refusals)
+    if cfg.policy.review_rounds < 1:
         return None
     code_time = _last_commit_time(
         root,

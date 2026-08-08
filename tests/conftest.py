@@ -684,6 +684,60 @@ def write_wi_registry(repo, rows, header=None):
         wc.write_spec_file(work, row, order=n)
 
 
+def declare_config(root, **dials):
+    """Set canonical `docs/config.toml` dials on a fixture repo (the P13 cutover).
+
+    Dials are named by their LEAF (`review_rounds=0`, `privacy_check=True`,
+    `human_ratification_through=0`) and placed in whichever section the SCHEMA
+    declares them in, so a fixture says what it means rather than where it
+    lives — and an undeclared leaf raises HERE, naming itself, instead of
+    quietly landing in a file the loader will then refuse.
+
+    Calls MERGE. The retired one-file-per-dial fixtures got that for free (two
+    dials, two files); the canonical document is one file, so a second call has
+    to read the first one back rather than replace it. This is the single
+    fixture-side reason `docs/config.toml` is not just written as a literal.
+
+    Why fixtures had to move at all: since the cutover a repo carrying a retired
+    one-word file whose canonical key is unset is REFUSED — that is the rung
+    protecting every adopter from the measured fail-open — so a fixture that
+    kept writing `docs/review-policy` would be testing an unconverted repo and
+    reading its refusal as a behaviour change.
+    """
+    config = load_script("config")
+    section_of = {
+        k.path.split(".", 1)[1]: k.path.split(".", 1)[0] for k in config.SCHEMA
+    }
+    path = Path(root) / "docs" / "config.toml"
+    document = {}
+    if path.is_file():
+        import tomllib
+
+        document = tomllib.loads(path.read_text(encoding="utf-8-sig"))
+    for leaf, value in dials.items():
+        section = section_of.get(leaf)
+        assert section is not None, "{!r} is not a declared dial".format(leaf)
+        document.setdefault(section, {})[leaf] = value
+
+    def _fmt(value):
+        if value is True or value is False:
+            return "true" if value else "false"
+        if isinstance(value, str):
+            return '"{}"'.format(value.replace("\\", "\\\\").replace('"', '\\"'))
+        return str(value)
+
+    lines = ["schema = {}".format(config.SCHEMA_VERSION)]
+    for section in sorted(k for k in document if k != "schema"):
+        lines.extend(["", "[{}]".format(section)])
+        lines.extend(
+            "{} = {}".format(leaf, _fmt(value))
+            for leaf, value in sorted(document[section].items())
+        )
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8", newline="\n")
+    return path
+
+
 @pytest.fixture
 def scaffold(tmp_path):
     """A fresh repo bootstrapped from the kit (the documented quick-start)."""

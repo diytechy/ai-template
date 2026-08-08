@@ -43,10 +43,6 @@ interfaces_check = false
 components_check = false
 okf_export = false
 
-[harness]
-src = "project-trajectory/scripts"
-tests = "tests"
-
 [outcomes]
 complete_sampling_rate = 0.25
 risk_safety_classes = ["spine", "gate"]
@@ -105,7 +101,6 @@ def test_well_formed_document_loads_to_a_typed_model(tmp_path):
     assert cfg.attestation.human_ratification_through == 2
     assert cfg.automation.lanes == 3
     assert cfg.automation.blackout == "12:00-19:00"
-    assert cfg.harness.src == "project-trajectory/scripts"
     assert cfg.outcomes.complete_sampling_rate == 0.25
     assert cfg.outcomes.risk_safety_classes == ("spine", "gate")
     assert cfg.admission.max_batch_size == 4
@@ -562,11 +557,16 @@ def test_a_malformed_config_sets_no_keys_so_nothing_conflicts(tmp_path):
     assert CONFIG.mixed_source_findings(tmp_path) == []
 
 
-def test_harness_paths_are_a_declared_mirror_not_a_watched_pair(tmp_path):
-    # docs/stack.ini [paths] stays the live source until the cutover; refusing
-    # on the mirror would refuse the transition itself.
+def test_the_harness_paths_have_no_canonical_mirror_at_all(tmp_path):
+    # The P13 cutover DELETED `[harness] src`/`tests` rather than landing the
+    # parity test the contracts doc said it owed one of. Nothing ever read them,
+    # the mirror of docs/stack.ini [paths] was never proved, and this repo's own
+    # instance had already diverged. So there is no pair to watch and no section
+    # to declare — docs/stack.ini is simply the one home of the toolchain.
     assert "harness.src" not in CONFIG.LEGACY_SOURCES
     assert "harness.tests" not in CONFIG.LEGACY_SOURCES
+    assert "harness" not in CONFIG.SECTIONS
+    assert not any(k.path.startswith("harness.") for k in CONFIG.SCHEMA)
 
 
 # --- the schema table is the one table ---------------------------------------
@@ -632,11 +632,27 @@ def _contract_document():
     return tomllib.loads(body)
 
 
+# Sections the contract SAMPLE still shows that the schema no longer declares.
+#
+# EMPTY, and the emptying is the point. It held exactly one entry — `harness` —
+# by the contracts doc's own ruling: §1 said P13 owed either a parity test for
+# `[harness]` or its deletion, and had to say WHICH. It deleted; the cutover
+# slice does not edit the two mechanized-loop documents, so the doc amendment was
+# owed and this tuple was the mechanical record of that debt rather than a quiet
+# tolerance. The amendment landed, the guard below said so in as many words, and
+# the tuple is now empty.
+#
+# Leave it here. A future retirement gets one line and a reason, and the guard
+# tells whoever lands the doc half that they may remove it — which is the only
+# way a "we'll fix the doc later" stays visible instead of becoming folklore.
+SAMPLE_SECTIONS_RETIRED_SINCE = ()
+
+
 def test_every_key_of_the_contract_sample_is_declared():
     document = _contract_document()
     assert "schema" in document
     for name, value in document.items():
-        if name == "schema":
+        if name == "schema" or name in SAMPLE_SECTIONS_RETIRED_SINCE:
             continue
         if name == "routes":
             declared = {f.path for f in CONFIG.ROUTE_FIELDS}
@@ -656,7 +672,13 @@ def test_every_key_of_the_contract_sample_is_declared():
 
 
 def test_the_contract_sample_document_validates_clean():
-    _, findings = CONFIG.validate(_contract_document())
+    document = _contract_document()
+    for retired in SAMPLE_SECTIONS_RETIRED_SINCE:
+        assert document.pop(retired, None) is not None, (
+            "the contracts sample no longer shows [{}] — the doc amendment "
+            "landed, so drop it from SAMPLE_SECTIONS_RETIRED_SINCE".format(retired)
+        )
+    _, findings = CONFIG.validate(document)
     assert findings == [], CONFIG.refusal_lines(findings)
 
 

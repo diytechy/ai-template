@@ -3,14 +3,14 @@
 # tier, or the unattended coordinator loop, from the repo root
 # (process-options.md "Unattended operation (walk-away runs)"). The booted
 # session inherits the whole committed context — AGENTS.md, docs/status.md,
-# docs/gate + gate-policy — so resuming work never requires
+# docs/gate + docs/config.toml — so resuming work never requires
 # recalling an incantation. Read it first; it only exports the slots below
 # and runs scripts/agent_loop.py.
 # macOS: agent-resume.command is the double-clickable Finder wrapper.
 #
 # CONSENT: the unattended loop runs the agent CLI headless; a permission-
 # bypass flag in AGENT_CMD means sessions edit without prompts. You consent
-# by filling the slot, declaring docs/gate-policy, and running this.
+# by filling the slot, declaring docs/config.toml, and running this.
 # No agent-driven work in this repo? Delete the agent-resume.* launchers.
 
 # --- EDIT FOR YOUR PROJECT ----------------------------------------------------
@@ -34,8 +34,8 @@ AGENT_MODEL_MAP=""
 # Unknown/cooling ids fall through to docs/agents-enabled order.
 AGENT_PREFER_MAP=""
 # Optional per-phase COMMAND template map (cross-provider routing; pairs with
-# the docs/review-policy reviewer dial — cross-provider dual review is the
-# recommended review-policy 2 config), e.g.:
+# the policy.review_rounds reviewer dial — cross-provider dual review is the
+# recommended policy.review_rounds = 2 config), e.g.:
 #   AGENT_CMD_MAP="REVIEW-B=gemini -p {prompt} --model {model}"
 AGENT_CMD_MAP=""
 # Optional hands-on template for --interactive (defaults to AGENT_CMD):
@@ -60,7 +60,7 @@ cd "$(dirname "$0")" || exit 1
 if [ -z "$AGENT_CMD" ]; then
   echo "agent-resume.sh: no agent command wired yet." >&2
   echo "Edit AGENT_CMD in this file and in agent-resume.cmd. Filling it (and" >&2
-  echo "declaring docs/gate-policy) is your consent to unattended agent" >&2
+  echo "declaring docs/config.toml) is your consent to unattended agent" >&2
   echo "sessions; see docs/process-options.md 'Unattended operation'." >&2
   exit 1
 fi

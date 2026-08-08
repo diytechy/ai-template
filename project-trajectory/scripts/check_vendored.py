@@ -88,9 +88,10 @@ def fetch(url, timeout):
 # blindly, and both sides get the same treatment, because the fetched remote may
 # itself be served with either ending.
 
-# A NUL byte is the standard is-this-binary heuristic (git's own): no text
-# encoding the kit accepts produces one, and every common binary container does.
-_NUL = b"\x00"
+# (A `_NUL` constant lived here for the is-this-binary heuristic git uses.
+# 130-REVIEW-A REFUTED that heuristic -- see `looks_text` -- and the constant
+# outlived the rule it served. Deleted at P14's measured sweep; the positive
+# text test below is the whole discrimination now.)
 
 # Control bytes that legitimately occur in text. Everything else below 0x20 is
 # not something a vendored document contains.

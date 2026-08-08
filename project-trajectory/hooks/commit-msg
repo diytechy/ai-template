@@ -10,7 +10,7 @@
 # first commit, not the push.
 #
 # The script self-gates: the always-on SECRETS FLOOR scans every repo's message,
-# and the PRIVACY layer adds its classes only when docs/privacy-check is `true`.
+# and the PRIVACY layer adds its classes only when policy.privacy_check is on.
 # Both off => it exits 0 fast (zero cost). Enabled by
 # `git config core.hooksPath .githooks` (setup.sh / setup.ps1 already set it).
 #
@@ -26,15 +26,20 @@ REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null) || REPO_ROOT=$(cd "$(dirn
 # Phase 5: no llm/train/* branch exists to guard, and the integrator's verdict
 # gate binds a review to its exact commit by git-derived freshness instead.)
 
-# Fail-closed guard for the skips below (M-42, same as pre-commit): a repo that
-# declared docs/privacy-check `true` must never have its message scan skipped
-# silently — parse the policy in pure sh (the pre-push pattern) and refuse.
-# The trade, recorded: a privacy-checked repo cannot commit without a working
-# Python 3 + findable scripts dir; a non-privacy repo keeps the free skip.
-privacy_declared_true() {
-  [ -f "$REPO_ROOT/docs/privacy-check" ] || return 1
-  p=$(grep -v '^[[:space:]]*#' "$REPO_ROOT/docs/privacy-check" | grep -v '^[[:space:]]*$' | head -n 1 | tr -d '[:space:]' || true)
-  [ "$p" = "true" ]
+# Fail-closed guard for the skips below (M-42, same as pre-commit), rebuilt at
+# the P13 cutover: the retired docs/privacy-check grep is gone and the policy is
+# read through scripts/config_query.py, where a NON-ZERO EXIT IS A BLOCK
+# (decision D-1; pre-commit's header states the full reasoning once).
+#
+# The one surviving skip is the one this hook can PROVE is safe in pure sh: a
+# repo that has declared nothing at all has every dial at its schema default, so
+# the privacy layer is off. Anything else — a declaration we cannot read —
+# blocks.
+repo_declares_policy() {
+  [ -f "$REPO_ROOT/docs/config.toml" ] && return 0
+  [ -f "$REPO_ROOT/docs/privacy-check" ] && return 0
+  [ -f "$REPO_ROOT/docs/privacy-review" ] && return 0
+  return 1
 }
 
 # Find a Python 3 interpreter (same probe as pre-commit: run it, don't just find
@@ -47,12 +52,14 @@ for cand in python3 python; do
   fi
 done
 if [ -z "$PY" ]; then
-  if privacy_declared_true; then
-    echo "commit-msg: docs/privacy-check is true but Python 3 is unavailable —" >&2
-    echo "  the message scan cannot run, so refusing to skip it. FAILING CLOSED." >&2
+  if repo_declares_policy; then
+    echo "commit-msg: this repo declares behaviour (docs/config.toml or a retired" >&2
+    echo "  policy file) but Python 3 is unavailable, so the declaration cannot be" >&2
+    echo "  read and the message scan cannot run. FAILING CLOSED." >&2
     exit 1
   fi
-  echo "commit-msg: Python 3 not found on PATH; skipping message scan." >&2
+  echo "commit-msg: Python 3 not found on PATH and this repo declares no policy;" >&2
+  echo "  skipping message scan." >&2
   exit 0
 fi
 
@@ -76,14 +83,24 @@ if [ -z "$SCRIPTS_DIR" ] || [ ! -d "$SCRIPTS_DIR" ]; then
   done
 fi
 if [ -z "$SCRIPTS_DIR" ] || [ ! -d "$SCRIPTS_DIR" ]; then
-  if privacy_declared_true; then
-    echo "commit-msg: docs/privacy-check is true but the kit scripts dir cannot" >&2
-    echo "  be found (KIT_SCRIPTS_DIR or scripts/), so the message scan cannot" >&2
-    echo "  run — refusing to skip it. FAILING CLOSED." >&2
+  if repo_declares_policy; then
+    echo "commit-msg: this repo declares behaviour (docs/config.toml or a retired" >&2
+    echo "  policy file) but the kit scripts dir cannot be found (KIT_SCRIPTS_DIR" >&2
+    echo "  or scripts/), so config_query.py cannot read it and the message scan" >&2
+    echo "  cannot run. FAILING CLOSED." >&2
     exit 1
   fi
   echo "commit-msg: cannot find the kit scripts dir (KIT_SCRIPTS_DIR or scripts/) under $REPO_ROOT; skipping message scan." >&2
   exit 0
+fi
+
+# The declared configuration must be READABLE before the scan runs; a refusal
+# (malformed document, undeclared key, unconverted repo) BLOCKS the commit. The
+# answer itself is check_privacy.py's to act on — it self-gates.
+if ! "$PY" "$SCRIPTS_DIR/config_query.py" --root "$REPO_ROOT" policy.privacy_check >/dev/null; then
+  echo "commit-msg: the declared configuration could not be read (refusal above)," >&2
+  echo "  so the privacy posture of this message is unknown. FAILING CLOSED." >&2
+  exit 1
 fi
 
 # Scan the message file git handed us ($1). Nonzero exit aborts the commit.

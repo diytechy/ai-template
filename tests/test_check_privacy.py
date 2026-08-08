@@ -16,7 +16,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from conftest import env_gate_skipif, augment_env, run_py
+from conftest import augment_env, declare_config, env_gate_skipif, run_py
 
 SCRIPT = "scripts/check_privacy.py"
 # This kit repo (a git checkout) and its real check_privacy.py, for the
@@ -52,11 +52,17 @@ def run_lint(cwd, *args):
 
 
 def set_privacy(root, value="true"):
-    (root / "docs" / "privacy-check").write_text(value + "\n", encoding="utf-8")
+    """The privacy toggle, in its ONE home since the P13 cutover.
+
+    The signature keeps the retired file's `"true"`/`"false"` vocabulary so the
+    ~20 call sites below read unchanged; only where the value lands moved."""
+    declare_config(root, privacy_check=value.strip().lower() == "true")
 
 
 def set_secrets_scan(root, value):
-    (root / "docs" / "secrets-scan").write_text(value + "\n", encoding="utf-8")
+    """The secrets floor. `"off"` is the retired file's opt-out word, mapped to
+    the canonical boolean here rather than at each call site."""
+    declare_config(root, secrets_scan=value.strip().lower() != "off")
 
 
 def git(root, *args):

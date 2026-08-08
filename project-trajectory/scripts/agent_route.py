@@ -886,7 +886,10 @@ def escalate(rounds, constants=None, swapped=False, at_top_tier=False, fails_sin
 
 
 def failure_action(gate_policy):
-    """What a page-the-human escalation does, keyed to docs/gate-policy (ruled).
+    """What a page-the-human escalation does, keyed to the ruled gate-authority
+    word. Since the P13 cutover that word is DERIVED from the canonical dial
+    `attestation.human_ratification_through` (agent_common.escalation_level);
+    the retired docs/gate-policy file is read by nothing.
     In every mode the causing WI and its hard-edge dependents PAUSE; the mode
     decides what happens around that. Redesign re-enters the change-intake flow
     (process.md §5 — linked, not restated). Returns a dict the coordinator enacts

@@ -27,9 +27,18 @@ Three properties, each deliberate:
 
 Deliberately NOT done here: the mixed-source refusal (`config.mixed_source_
 findings`). That belongs to the configuration PREFLIGHT, which runs once per
-session. A repo mid-migration legitimately carries both a canonical key and its
-retired source for the length of the migration, and folding that refusal into
-the per-commit hook read would stop the migration from ever being committed.
+session — and since P14 it HAS that call site, inside
+`agent_common.declared_config`. A repo mid-migration legitimately carries both a
+canonical key and its retired source for the length of the migration, and
+folding that refusal into the per-commit hook read would stop the migration from
+ever being committed: the commit that DELETES the retired file is itself made
+from a tree that still has it.
+
+Deliberately DONE here, since the P13 cutover: the **unconverted** refusal
+(`config.unconverted_findings`), which is the opposite state and the dangerous
+one. Both-present is a repo mid-migration; retired-present-and-canonical-unset
+is a repo whose declared policy nothing obeys, and answering it with a schema
+default is the measured fail-open this entry point exists to end.
 
 Usage:
     python scripts/config_query.py [--root DIR] policy.privacy_check
@@ -115,6 +124,18 @@ def main(argv=None):
         print(refusal, file=sys.stderr)
         return 1
 
+    # Emit UTF-8 whatever the console codepage is — the same guard every other
+    # kit CLI takes (`config_migrate.main`, `check.py`, `derive_gate.py`). It
+    # earns its place here specifically: a refusal QUOTES the converter's own
+    # reason strings, which carry non-ASCII punctuation, and on a cp1252 console
+    # that raised instead of printing. A refusal that cannot be printed is a
+    # refusal nobody reads. No import — `reconfigure` is a method on the stream.
+    for stream in (sys.stdout, sys.stderr):
+        try:
+            stream.reconfigure(encoding="utf-8")
+        except (AttributeError, ValueError):
+            pass
+
     root, key, error = parse_args(argv)
     if error is not None:
         print("config_query: REFUSED - {} ({})".format(error, USAGE), file=sys.stderr)
@@ -142,6 +163,19 @@ def main(argv=None):
             ),
             file=sys.stderr,
         )
+        return 1
+
+    # THE CUTOVER'S FAIL-CLOSED RUNG. An unconverted repo — one whose retired
+    # file still declares this dial while the canonical key is unset — is
+    # REFUSED, never answered with the default. This is the exact fail-open the
+    # program measured: a tree carrying `docs/privacy-check = true` was answered
+    # `false` and lost its privacy gate in silence. A repo that has converted, or
+    # that never declared anything different, pays nothing (config.py's
+    # `unconverted_findings` states the three cases).
+    unconverted = config.unconverted_findings(root, (key,), cfg=cfg)
+    if unconverted:
+        for line in config.refusal_lines(unconverted, module="config_query"):
+            print(line, file=sys.stderr)
         return 1
 
     print(render(value))

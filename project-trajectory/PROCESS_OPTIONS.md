@@ -631,11 +631,16 @@ control input — was retired):
   mid-run.
 - **Drained-queue handling** is the run's **end-state banner** — the run
   reports what integrated, what needs attention, and what remains queued.
-- **NEEDS-HUMAN surfacing** is the **stop banner + exit code 7**, with one
+- **`NEEDS-JUDGEMENT` surfacing** is the **stop banner + exit code 7**, with one
   `ask: <one-line ask>` headline (the dispatcher-era generated
   `docs/run-state` file retired with the dispatcher at
   concurrency-restructure Phase 5 — git history and the integrator's own
-  refusals are the durable record). **A wrong DONE is a false green** (§4);
+  refusals are the durable record). The signal was spelled `NEEDS-HUMAN` until
+  the 2026-08-08 rename: it names the owed **act**, and who supplies it follows
+  from the declared ratification boundary, not from the label. **Exit code 7
+  does not move** — a label migration, not a protocol change. The open-items
+  *bucket* of the old name keeps its spelling, because there an owner call
+  genuinely is the point. **A wrong DONE is a false green** (§4);
   a worker's exit code and committed trailers are its whole result channel.
 - **The resume-from-`status.md` prompt is retired** with the path: the
   generated `status.md` block (`gen_trajectory.py --status`) is a snapshot for
@@ -953,7 +958,7 @@ behavior**, so a fresh scaffold pays nothing.
 - **Failure semantics follow `docs/gate-policy`.** On a page-the-human condition
   the causing WI **and its hard-edge dependents pause** in every mode; the mode
   decides what happens around that — **attended:** start nothing new, let
-  in-flight sessions close out, then the loop stops `NEEDS-HUMAN` and alerts;
+  in-flight sessions close out, then the loop stops `NEEDS-JUDGEMENT` and alerts;
   **single-ratify:** keep working non-dependent WIs to completion, surface the
   block for ratification; **autonomous:** schedule a fresh **design-check
   session** (different provider, strong tier) to rule grind-through vs. genuine
@@ -1075,7 +1080,7 @@ redacted prompts, verdict files, `gate-policy`-keyed escalation).
   like the S8 knobs) trips the `gate-policy` page-the-human path. A WI row may
   override that run-wide default with `CritiqueBudget=n|inf` (`inf` means iterate
   until `APPROVE`) and set `CritiqueExhaustion=move-on|block`; absent/invalid cells
-  preserve the global default + move-on, while `block` forces `NEEDS-HUMAN` under
+  preserve the global default + move-on, while `block` forces `NEEDS-JUDGEMENT` under
   every gate policy. `inf` remains bounded operationally by `--max-iterations`,
   the per-session CLI limits, and the declared pause/blackout controls. In a
   batched build, `inf` and `block` win; otherwise the largest budget wins. The trigger is a
@@ -1615,7 +1620,8 @@ independent tracks meet, which task is in flight, how far along the whole is. A
 - it moves through a **lifecycle**: `draft → queued → active → done`; `draft`
   holds thinking-in-progress (written down, not claimable), `deferred` parks
   intentionally postponed work, `blocked` parks work on a named `BlockRef`, and
-  `cancelled` is a **terminal** won't-build row (its reason in `Deliverable`).
+  `cancelled` / `partial` are **terminal** — never built, and attempted-then-
+  stopped (each with its reason in `Deliverable`).
 
 A WI is the machine-readable *how* beneath an SR's *what*. Plans and discussion
 retain the *why*; the registry complements rather than replaces that narrative.
@@ -1626,8 +1632,9 @@ Enabling this layer **supersedes the plan/build cadence's `docs/plan.md`**
 **Registry.** The **`docs/work/` spec folder**: one Markdown file per work
 item, **status encoded as its directory, and the directory is the whole
 statement** (`draft/`, `queued/`, `active/<branch>/`, `deferred/`, `complete/`
-for `done`, `cancelled/` for the won't-build terminal — WI-384 gave the second
-terminal its own folder and with it deleted the `disposition` frontmatter key,
+for `done`, `cancelled/` for the won't-build terminal, `partial/` for an attempt
+that stopped short — WI-384 gave the second terminal its own folder and decision
+D-2 the third, and with the second went the `disposition` frontmatter key,
 its validator and both raise paths: an inconsistent state stopped being
 checked-for and became unrepresentable), TOML `+++` frontmatter carrying the metadata
 (`id`, `title`, `workstream`, `sr_refs`, `needs` — `~` prefix = soft edge —
@@ -1639,8 +1646,8 @@ once it holds a real spec, both-present is an integrity error, and
 `scripts/wi_convert.py` migrates a CSV with a round-trip proof. Off-spine and
 optional like `procurement.csv` / `assets.csv`: `trace.py` does not read
 `WI-` ids — the trajectory tooling owns them. `Status ∈
-{draft,queued,active,done,deferred,blocked,cancelled}`; `draft` is the ABSENCE
-of a decision (still being figured out) where `deferred` is one (not now) —
+{draft,queued,active,done,deferred,blocked,cancelled,partial}`; `draft` is the
+ABSENCE of a decision (still being figured out) where `deferred` is one (not now) —
 both never-ready, differing only in what they say, and `draft/` is a DECLARED
 directory because specs in an undeclared one are skipped by every reader and so
 never enter the registry — the duplicate-id guard and the dashboard go blind to
@@ -1648,9 +1655,14 @@ the id a draft is holding (the mint itself reads filenames and is safe either
 way, so the declaration makes the reservation checked, not merely possible);
 `blocked` is
 `queued/` plus a `blockref` naming what must clear (no directory — readiness is
-derived, one home per fact); and `cancelled` (WI-267, spelled `retired` until
+derived, one home per fact); `cancelled` (WI-267, spelled `retired` until
 WI-384) is terminal — a deliberate won't-build, counted separately
-from `done`, never scheduled, its reason in the body. An unknown status
+from `done`, never scheduled, its reason in the body; and `partial` (decision
+D-2) is the THIRD terminal — an attempt that stopped short. Its branch
+judgement is never a field here: it is an immutable **outcome event** written
+outside `docs/work/`, and the remaining scope re-enters the queue as a NEWLY
+minted successor carrying `supersedes` lineage and its own admission verdict,
+never as the same row revived. An unknown status
 refuses rather than buckets.
 
 **Validation** — `check_trajectory.py`, wired as the `trajectory` gate step from
@@ -2498,6 +2510,6 @@ used there.
 
 **Throughput caution.** Under `attended` gate authority, every branch's human
 asks converge on **one** ratifier; parallel branches multiply the
-`NEEDS-HUMAN` queue. Two to three concurrently *active* branches is the
+`NEEDS-JUDGEMENT` queue. Two to three concurrently *active* branches is the
 realistic ceiling while one human ratifies — a queued spec costs nothing
 until claimed.

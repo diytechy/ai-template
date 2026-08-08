@@ -482,7 +482,15 @@ def test_station_intake_arm_pins_to_the_intake_mint(tmp_path):
     disp = load_script("dispatch")
     assert ink.tier_signal("amendment", rows_touched=4) == "strong"
     assert ink.tier_signal("amendment", rows_touched=1) == "medium"
-    assert ink.tier_signal("handback", reason="NEEDS-HUMAN wanted") == "strong"
+    # D-6 judgement 1: the tier keys off the worker EXIT-CODE CLASS, not off a
+    # word in the prose. Both variants are driven — the label alone must NOT
+    # tier up, which is the substring form this replaced.
+    assert (
+        ink.tier_signal("handback", reason="worker exit 7 (NEEDS-JUDGEMENT)")
+        == "strong"
+    )
+    assert ink.tier_signal("handback", reason="NEEDS-JUDGEMENT wanted") == "medium"
+    assert ink.tier_signal("handback", reason="worker exit 3 (blocked)") == "medium"
     for arm in (
         ink._amendment_drafts,
         ink._handback_drafts,

@@ -86,6 +86,7 @@ graph LR
     m_scripts_plan_round["scripts/plan_round — The dual-plan round state machine: a pure, side…"]
     m_scripts_plan_runner["scripts/plan_runner — The dual-plan round RUNNER: the coordinator fan…"]
     m_scripts_prompt_render["scripts/prompt_render — Every operational prompt as a reviewed asset, r…"]
+    m_scripts_resume_plan["scripts/resume_plan — resume_plan.py — the pure resume planner: what …"]
     m_scripts_run_menu["scripts/run_menu — The run capability menu — one launcher that pre…"]
     m_scripts_schedule["scripts/schedule — Derive the dependency-ready WI frontier and its…"]
     m_scripts_score_reviews["scripts/score_reviews — The substance scorer — score a review verdict b…"]
@@ -108,6 +109,7 @@ graph LR
     m_scripts_adjudicate --> m_scripts_spec_move
     m_scripts_adjudicate --> m_scripts_wi_convert
     m_scripts_agent_common --> m_scripts_agent_session
+    m_scripts_agent_common --> m_scripts_config
     m_scripts_agent_loop --> m_scripts_agent_common
     m_scripts_agent_loop --> m_scripts_agent_route
     m_scripts_agent_loop --> m_scripts_agent_session
@@ -120,8 +122,10 @@ graph LR
     m_scripts_attest --> m_scripts_config
     m_scripts_bootstrap --> m_scripts_config_migrate
     m_scripts_check_figures --> m_scripts_check_doc_refs
+    m_scripts_check_privacy --> m_scripts_config
     m_scripts_check_trajectory --> m_scripts_admit
     m_scripts_check_trajectory --> m_scripts_check_docs
+    m_scripts_config --> m_scripts_config_migrate
     m_scripts_config_migrate --> m_scripts_config
     m_scripts_config_query --> m_scripts_config
     m_scripts_derive_gate --> m_scripts_attest
@@ -131,6 +135,7 @@ graph LR
     m_scripts_dispatch --> m_scripts_intake
     m_scripts_dispatch --> m_scripts_integrate
     m_scripts_dispatch --> m_scripts_lane
+    m_scripts_dispatch --> m_scripts_resume_plan
     m_scripts_dispatch --> m_scripts_schedule
     m_scripts_dispatch --> m_scripts_trace
     m_scripts_gen_open_items --> m_scripts_attest
@@ -168,6 +173,12 @@ graph LR
     m_scripts_plan_runner --> m_scripts_plan_coverage_step
     m_scripts_plan_runner --> m_scripts_plan_round
     m_scripts_prompt_render --> m_scripts_config
+    m_scripts_resume_plan --> m_scripts_adjudicate
+    m_scripts_resume_plan --> m_scripts_admit
+    m_scripts_resume_plan --> m_scripts_attest
+    m_scripts_resume_plan --> m_scripts_derive_gate
+    m_scripts_resume_plan --> m_scripts_outcome
+    m_scripts_resume_plan --> m_scripts_schedule
     m_scripts_spec_move --> m_scripts_agent_common
     m_scripts_trace --> m_scripts_trace_text
     m_scripts_traj_panels --> m_scripts_integrate
@@ -192,6 +203,7 @@ graph LR
     m_scripts_agent_session -. IF-064 .-> m_scripts_agent_loop
     m_scripts_attest -. IF-097 .-> m_scripts_gen_open_items
     m_scripts_attest -. IF-098 .-> m_scripts_intake
+    m_scripts_attest -. IF-101 .-> m_scripts_resume_plan
     m_scripts_check_coverage -. IF-069 .-> m_scripts_check
     m_scripts_check_doc_refs -. IF-008 .-> m_scripts_check
     m_scripts_check_doc_refs -. IF-087 .-> m_scripts_check_figures
@@ -212,6 +224,7 @@ graph LR
     m_scripts_config -. IF-095 .-> m_scripts_attest
     m_scripts_config -. IF-096 .-> m_scripts_config_migrate
     m_scripts_derive_gate -. IF-050 .-> m_scripts_check
+    m_scripts_derive_gate -. IF-102 .-> m_scripts_resume_plan
     m_scripts_gen_arch_map -. IF-010 .-> m_scripts_check
     m_scripts_gen_okf -. IF-012 .-> m_scripts_check
     m_scripts_gen_trajectory -. IF-011 .-> m_scripts_check
@@ -294,12 +307,15 @@ _admit.py — the ONE transaction that owns every move into the queue._
 
 ### `scripts/agent_common`
 _Shared coordinator primitives, extracted VERBATIM from agent_loop.py_
-Imports (internal): `agent_session`
+Imports (internal): `agent_session`, `config`
 Contracts (interfaces): IF-037, IF-065
 
 | Public item | Summary | Implements |
 |---|---|---|
-| `read_declared(path, default)` | Read a one-word declared-policy file (docs/gate, docs/gate-policy, …): |  |
+| `read_declared(path, default)` | Read a one-word declared STATE file — the first non-empty, non-comment |  |
+| `declared_config(root, keys)` | `(cfg, refusals)` — the repo's validated configuration and the refusal |  |
+| `escalation_level(boundary)` | The ruled gate-authority word for one ratification boundary. |  |
+| `ratification_level(root)` | `(level, refusals)` — the ruled gate-authority word this repo's declared |  |
 | `read_agent_loop_config(docs)` | The declared coordinator dials — the ``[agent-loop]`` section of |  |
 | `resolve_coordinator_dials(args, docs)` | ``(model, model_map)`` for the session engine, each resolved by the |  |
 | `tracked_pause(docs_dir)` | The **tracked** pause declaration — `docs/work/pause` |  |
@@ -389,7 +405,7 @@ Contracts (interfaces): IF-015, IF-068
 | `map_preflight(root, template, args, cmd_map, prompt_map, tier_map, prefer_map, managed, registry, enabled, reg_errors, enable_errors)` | Assemble every up-front launchability failure (default template, |  |
 | `build_worker_assignment(args, root)` | The explicit worker assignment (--wi, on a claimed branch): parse the |  |
 | `run_interactive(args, root, model_map, cmd_map, template, guardrails_policy, warned_no_core)` | Boot exactly one hands-on session (stdio attached) and return its |  |
-| `print_run_banner(root, branch, worker, gate_policy, push_policy, review_policy, managed, enabled, registry, guardrails_policy, template, cmd_map, prompt_map, docs)` | The unattended-coordinator launch banner: the run's identity, its |  |
+| `print_run_banner(root, branch, worker, gate_policy, push_policy, review_policy, managed, enabled, registry, guardrails_policy, template, cmd_map, prompt_map, docs, privacy_on)` | The unattended-coordinator launch banner: the run's identity, its |  |
 | `LoopContext (class)` | Everything one iteration reads, built once at loop start; the |  |
 | `route_session(ctx, i, current_wi, session, resume_reconcile, now)` | Pick the phase + model + prompt for this worker session (managed |  |
 | `session_bookkeeping(ctx, plan, outcome, code, commits, after, reset_hint, now, session, wi_label)` | The managed-routing / reviewer-dispatch consequences of one session |  |
@@ -422,7 +438,7 @@ Contracts (interfaces): IF-044, IF-045
 | `pool_context(enabled, registry, cooldowns, now)` | The enabled pool, one line per row, for a page-human/failure banner: |  |
 | `load_constants(env)` | The escalation constants: the per-repo-overridable defaults, each read from |  |
 | `escalate(rounds, constants, swapped, at_top_tier, fails_since)` | The fixed win-stay/lose-shift decision after a review round. |  |
-| `failure_action(gate_policy)` | What a page-the-human escalation does, keyed to docs/gate-policy (ruled). |  |
+| `failure_action(gate_policy)` | What a page-the-human escalation does, keyed to the ruled gate-authority |  |
 | `PlannerSession (class)` | One planner-hat session selection — a routed (model x route) pick for a |  |
 | `PlannerPair (class)` | The result of routing the two planner hats: the two `PlannerSession`s (or |  |
 | `planner_pair(enabled, registry, tier, now, cooldowns, preferred_ids, hats)` | Route the two planner hats to two FRESH sessions (DP-001 plan P3, case a/b). |  |
@@ -513,10 +529,7 @@ Contracts (interfaces): IF-014, IF-039
 | `record_agent_choice(dest, choice, skills, dry_run)` | Append a one-line setup note to docs/status.md recording the agent choice |  |
 | `prompt_choice(prompt, choices, default)` | Ask on a TTY; return `default` immediately when stdin isn't interactive |  |
 | `prompt_text(prompt, default)` | Free-text prompt on a TTY; `default` when stdin isn't interactive |  |
-| `apply_gate_policy(dest, level, dry_run)` | Write a non-default gate-authority level: set docs/gate-policy (keeping |  |
-| `apply_push_policy(dest, policy, dry_run)` | Write a non-default push policy into docs/push-policy, keeping the |  |
 | `sync_config(dest, dry_run)` | `docs/config.toml` — the one file a re-sync must never touch (SR-141). | SR-141 |
-| `apply_privacy_check(dest, value, dry_run)` | Write the privacy-check toggle into docs/privacy-check, keeping the |  |
 | `profile_stub(axis)` | The resolvable one-liner an omitted profile region leaves behind: the |  |
 | `strip_markers(text, omit, where)` | Generate a scaffold doc from a master: drop kit-only regions, keep or |  |
 | `read_kit_profile(dest)` | The recorded profile of an existing adoption (docs/kit-profile), or None. |  |
@@ -537,7 +550,6 @@ Contracts (interfaces): IF-014, IF-039
 | `copy_kit_files(dest, plan)` | The MAPPING copy pass + the GITKEEP_DIRS placeholders, as a |  |
 | `apply_stack_extras(dest, plan, outcome)` | The declared stack's two follow-ups: the harness-rewiring checklist a |  |
 | `materialize_agent_layer_phase(dest, plan, outcome)` | The chosen agent's layer: its matched skills into the native skills dir |  |
-| `apply_declared_policies(dest, plan, outcome)` | The three declared-authority files: a non-default level overwrites the |  |
 | `report_outcome(plan, outcome)` | The per-file report + the one-line summary, in the order the phases |  |
 | `write_stamps(dest, plan)` | The generated stamps — kit-version / kit-profile / kit-license — plus |  |
 | `main()` |  |  |
@@ -679,13 +691,13 @@ Contracts (interfaces): IF-004, IF-031
 
 ### `scripts/check_privacy`
 _Secrets + privacy-leak lint — the deterministic floor (stdlib only)._
+Imports (internal): `config`
 Contracts (interfaces): IF-005, IF-032, IF-043
 
 | Public item | Summary | Implements |
 |---|---|---|
-| `read_privacy_enabled(root)` | Whether the privacy layer is on: docs/privacy-check's first non-comment |  |
+| `read_policy(root)` | `(privacy_on, secrets_on, refusals)` from the canonical configuration. |  |
 | `email_ok(email)` | True when an email is exempt from privacy flagging: an RFC 2606 example |  |
-| `read_secrets_scan(root)` | Whether the always-on secrets floor is enabled. `docs/secrets-scan` with |  |
 | `git(root, *args)` | Run git in the repo; returns (returncode, stdout). Never raises on a |  |
 | `Scanner (class)` | Compiles the active leak classes for one run. |  |
 | `  methods` | scan_line |  |
@@ -789,6 +801,7 @@ Contracts (interfaces): IF-016, IF-036
 
 ### `scripts/config`
 _The one editable authority for how a repo BEHAVES — `docs/config.toml`._
+Imports (internal): `config_migrate`
 
 | Public item | Summary | Implements |
 |---|---|---|
@@ -799,7 +812,9 @@ _The one editable authority for how a repo BEHAVES — `docs/config.toml`._
 | `config_path(root)` | `<root>/docs/config.toml` as a Path, built from parts so no separator is |  |
 | `load_config(root)` | `(Config, [Finding])` for the repo at `root`. |  |
 | `explicit_keys(root)` | The dotted paths a repo's `docs/config.toml` actually SETS. |  |
-| `mixed_source_findings(root)` | One finding per canonical key whose retired declared-policy source is | SR-138 |
+| `live_legacy_source(root, key)` | `(LegacySource, Path)` when `key`'s retired source is LIVE in this tree, |  |
+| `mixed_source_findings(root, keys)` | One finding per canonical key whose retired declared-policy source is | SR-138 |
+| `unconverted_findings(root, keys, cfg)` | One finding per requested key whose retired source is still live, whose |  |
 | `refusal_lines(findings, module)` | The printable refusal for each finding, in the kit's one refusal shape: |  |
 
 ### `scripts/config_migrate`
@@ -859,13 +874,13 @@ Contracts (interfaces): IF-050, IF-051
 
 ### `scripts/dispatch`
 _dispatch.py — the dispatcher: tick loop, admission, merge slot (the scheduling front end)._
-Imports (internal): `agent_common`, `gen_trajectory`, `handback`, `intake`, `integrate`, `lane`, `schedule`, `trace`
+Imports (internal): `agent_common`, `gen_trajectory`, `handback`, `intake`, `integrate`, `lane`, `resume_plan`, `schedule`, `trace`
 Contracts (interfaces): IF-015
 
 | Public item | Summary | Implements |
 |---|---|---|
 | `gap_census(root)` | THE WI-388 HANDOFF SEAM — ladder rung 1 (§A4 amendment, ruled |  |
-| `run(root, args, worker, tier)` | The dispatch loop (docs/concurrency-v2.md §A4). `worker` is the one |  |
+| `run(root, args, worker, tier, bar_probe)` | The dispatch loop (docs/concurrency-v2.md §A4). `worker` is the one |  |
 
 ### `scripts/gen_arch_map`
 _Generate the module/function map for `architecture.md` from the source tree._
@@ -1160,6 +1175,25 @@ Imports (internal): `config`
 | `catalog_table(rows)` | The catalog as one Markdown table. Generated on demand and never stored: |  |
 | `refusal_lines(findings, module)` | The printable refusal for each finding, in the kit's one refusal shape: |  |
 | `main(argv)` |  |  |
+
+### `scripts/resume_plan`
+_resume_plan.py — the pure resume planner: what does this tree owe next?_
+Imports (internal): `adjudicate`, `admit`, `attest`, `derive_gate`, `outcome`, `schedule`
+
+| Public item | Summary | Implements |
+|---|---|---|
+| `Bar (class)` | One declared-harness result, as the planner needs it. |  |
+| `Partition (class)` | The answer of `spine_components`: the batches, and why (if at all) the |  |
+| `  methods` | collapsed |  |
+| `Snapshot (class)` | Everything `plan` is allowed to depend on, read once and frozen. |  |
+| `Decision (class)` | ONE answer. `rung` says which precedence rung was selected, `action` what |  |
+| `  methods` | rank |  |
+| `spine_components(rows, trace)` | LLR-170 — partition candidate spine rows into independently admissible | LLR-155, LLR-170, SR-140, SR-146 |
+| `plan(snapshot)` | LLR-168 — the whole precedence, as one pure function over one snapshot. | LLR-168 |
+| `trace_edges(root)` | `{id: [ids it traces to]}` for the declared spine and interface graph. |  |
+| `snapshot(root, *, docs, bar, config)` | LLR-169 — every input the decision depends on, read once, returned frozen. | LLR-169 |
+| `Remediation (class)` | What the red-bar rung did: the failure event's id, the repair candidate's | SR-147 |
+| `remediate(root, bar, *, effort, ledger, work, **cells)` | SR-147 — persist the ONE failure event for a red declared bar and draft | LLR-171, LLR-186, SR-147 |
 
 ### `scripts/run_menu`
 _The run capability menu — one launcher that presents every major capability._

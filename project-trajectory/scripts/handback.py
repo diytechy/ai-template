@@ -10,7 +10,7 @@
               branch then merges like any other, which is the whole point: the
               return is a trunk fact, the partial work is reachable history a
               future WI can pick up, and the run keeps going. This is what
-              replaces the `EXIT_NEEDS_HUMAN` run-stop and the parked-branch
+              replaces the `EXIT_NEEDS_JUDGEMENT` run-stop and the parked-branch
               stop — one WI wanting a human used to freeze a walk-away run and
               leave its work where nobody would look.
 

@@ -34,6 +34,7 @@ the narrative is the body.
 | `docs/work/deferred/WI-###-<slug>.md` | `deferred` — parked with its reason |
 | `docs/work/complete/WI-###-<slug>.md` | `done` — it shipped |
 | `docs/work/cancelled/WI-###-<slug>.md` | `cancelled` — it never will |
+| `docs/work/partial/WI-###-<slug>.md` | `partial` — it was attempted and stopped short |
 
 Three consequences worth stating, because they are the reason for the shape:
 
@@ -42,18 +43,27 @@ Three consequences worth stating, because they are the reason for the shape:
   a second home for one fact. The scheduler derives `blocked` from the key's
   **presence** — it never consults the state of what the key names, so ruling
   an open item or closing a blocking WI does not, by itself, return the row to
-  the frontier. What releases a park: a handed-back row is disposed by the
-  dispatcher's handback-intake arm, which mints the disposition row when the
-  handback merge lands (loop machinery, never another work item); any other
-  park is released by editing the row — deleting the `blockref` — in a
-  reviewed commit.
-- **`cancelled` is a move, never a deletion.** A terminal won't-build record
-  that stays in the registry forever with its reason in this body. It gets its
-  OWN directory rather than sharing one with `done`, because a folder holding
-  two states needs an attribute to tell them apart and a validator to keep the
-  two honest — the shape this format deliberately does not have. A cancelled
-  predecessor does **not** satisfy a successor's hard dependency (it never
-  integrates), so a work item hard-blocked on one stays visibly waiting.
+  the frontier. **What releases a park is one act: editing the row — deleting
+  the `blockref` — in a reviewed commit.** There is no second, automatic route:
+  a lane that cannot finish does not write a `blockref` back onto its own spec,
+  so no park is ever minted by the loop (see the terminals below). The general
+  `blockref` is untouched by that — it stays the one home for "not now, because
+  of *that*", and an ordinary blocked row still reads exactly as it always did.
+- **A terminal is a move, never a deletion — and each terminal gets its OWN
+  directory.** There are three: `complete/` shipped it, `cancelled/` never
+  will, `partial/` was attempted and stopped short. Each record stays in the
+  registry forever with its reason in this body. They are three folders rather
+  than one, because a folder holding two states needs an attribute to tell them
+  apart and a validator to keep folder and attribute honest — the shape this
+  format deliberately does not have. Neither a `cancelled` nor a `partial`
+  predecessor satisfies a successor's hard dependency (neither delivered the
+  scope, and neither ever will under that id), so a work item hard-blocked on
+  one stays visibly waiting. **An attempted item is never revived in place:**
+  the remaining scope of a `partial` is a NEWLY minted work item carrying
+  `supersedes` lineage and its own queue-admission verdict. Which is also why
+  the attempt's own verdict is not a field here — it is an immutable outcome
+  event recorded outside `docs/work/`, so the branch that made the attempt
+  cannot restate its own obligation and then report against the restatement.
 - **`draft` is the absence of a decision**, where `deferred` is a decision:
   `deferred` says *not now*, `draft` says *still being figured out*. Both are
   never-ready to the scheduler and differ only in what they say. `draft/` is a
@@ -93,12 +103,18 @@ a wall of `= ""`.
   (`dual` opts into dual-plan decomposition) are the scheduler's optional
   inputs. `safety_class` **fails closed**: absent reads as `unclassified` and is
   never scheduled, so a repo enables parallelism only after its own audit.
+- `supersedes` / `source_event` — the **lineage** a successor carries: the id(s)
+  whose remaining scope it picks up, and the outcome event that produced it. A
+  successor to a `partial` attempt states both; ordinary work omits them. They
+  are the reason an attempt never needs reviving — the history is a link, not a
+  rewritten row.
 - `order` — a migration artifact written by `wi_convert.py` to reproduce a CSV
   whose row order the ids do not describe. A hand-filed spec omits it and sorts
   after the numbered ones, by id.
 
 **This body is backward-only (rule R-A).** `## Deliverable` stays EMPTY while
-the work is open and is filled with what actually shipped when it closes — the
+the work is open and is filled when the item reaches ANY terminal — what
+shipped, why it never will, or what a stopped attempt actually landed — the
 `specref` above is the forward-looking half. A spec whose body is neither empty
 nor exactly one `## Deliverable` section is a malformation the readers name by
 filename; the long record lives in the body precisely because body text needs no

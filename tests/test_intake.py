@@ -262,7 +262,7 @@ def handback_repo(tmp_path, safety="ordinary"):
         blockref="docs/work/queued/WI-005-returned.md",
         body=(
             "\n## Handback\n\nReturned unfinished from lane `wi-005`: worker "
-            "exit 7 (NEEDS-HUMAN)\n"
+            "exit 7 (NEEDS-JUDGEMENT)\n"
         ),
     )
     _commit(root, "the handback merge landed", when=T_CODE)
@@ -283,7 +283,7 @@ def test_a_merged_handback_mints_the_disposition_row(tmp_path):
     # The four outcomes are in the row's face, and hand-back is NOT one of them.
     for outcome in ("cancel", "defer", "re-queue", "open item"):
         assert outcome in row["Title"]
-    # A NEEDS-HUMAN reason class routes the judgement to the strong tier.
+    # A NEEDS-JUDGEMENT reason class routes the judgement to the strong tier.
     assert row["BuildTier"] == "strong"
     # The spec-of-record is the returned spec itself.
     assert row["SpecRef"] == "docs/work/queued/WI-005-returned.md"
@@ -575,10 +575,33 @@ def test_the_census_mints_gap_rows_and_dedupes_on_rerun(tmp_path):
 # --- the gate-policy arms (ruled decision 2, owner 2026-07-31; §A8) ------------
 
 
+# The ratification boundary that implies each ruled gate-authority word, read
+# off the PRODUCTION inverse rather than restated here: the P13 cutover moved the
+# dial to `attestation.human_ratification_through`, and a fixture carrying its
+# own copy of the mapping would keep passing after the real one changed.
+def _level_boundary(level):
+    acommon = load_script("agent_common")
+    return acommon.BOUNDARY_LEVEL.index(level)
+
+
+def _declare_boundary(root, level):
+    """Write the canonical dial that yields `level`, in the one document that
+    decides it since the cutover."""
+    (root / "docs").mkdir(parents=True, exist_ok=True)
+    (root / "docs" / "config.toml").write_text(
+        "schema = 1\n\n[attestation]\nhuman_ratification_through = {}\n".format(
+            _level_boundary(level)
+        ),
+        encoding="utf-8",
+        newline="\n",
+    )
+
+
 def _policy_repo(tmp_path, level):
     """A repo with one Modified SR, one Verified SR, one Modified LLR, and the
-    declared gate-policy `level` — the state an adjudication row's cheap
-    outcome (no scope moved -> re-verify) acts on."""
+    declared ratification boundary that implies gate authority `level` — the
+    state an adjudication row's cheap outcome (no scope moved -> re-verify)
+    acts on."""
     root = git_repo(tmp_path)
     req = root / "docs" / "requirements"
     req.mkdir(parents=True, exist_ok=True)
@@ -596,9 +619,7 @@ def _policy_repo(tmp_path, level):
         encoding="utf-8",
         newline="\n",
     )
-    (root / "docs" / "gate-policy").write_text(
-        level + "\n", encoding="utf-8", newline="\n"
-    )
+    _declare_boundary(root, level)
     _commit(root, "the flagged spine + the declared policy", when=T_CODE)
     return root
 
@@ -627,10 +648,7 @@ def test_under_single_ratify_and_autonomous_the_flip_is_enacted(tmp_path):
     # elsewhere; a re-run is an idempotent no-op).
     for i, level in enumerate(("single-ratify", "autonomous")):
         (tmp_path / str(i)).mkdir()
-        root = _policy_repo(tmp_path / str(i), "x")  # placeholder level
-        (root / "docs" / "gate-policy").write_text(
-            level + "\n", encoding="utf-8", newline="\n"
-        )
+        root = _policy_repo(tmp_path / str(i), level)
         import csv as _csv
 
         sr_csv = root / "docs" / "requirements" / "system-requirements.csv"
@@ -666,12 +684,28 @@ def test_an_unknown_row_id_refuses_the_flip(tmp_path):
     assert refusal is not None and "SR-999" in refusal
 
 
-def test_an_unknown_policy_level_fails_toward_recommend(tmp_path):
+def test_an_unreadable_dial_fails_toward_recommend(tmp_path):
     # Fail toward the human, never toward a machine ratification.
-    root = _policy_repo(tmp_path, "some-future-level")
-    action, _flipped, refusal = intake.flip_verified(root, ["SR-001"])
-    assert refusal is None, refusal
+    #
+    # The shape of "unreadable" got STRICTER at the P13 cutover. The retired file
+    # could hold `some-future-level`, which no reader recognised and every reader
+    # silently rounded down to `recommend`; the canonical dial is an ordinal the
+    # loader REFUSES outside 0..3, so the same mistake now names itself. Both
+    # halves are asserted — nothing flips, AND the caller is told why, rather
+    # than left to infer which arm ran from an empty list.
+    root = _policy_repo(tmp_path, "attended")
+    (root / "docs" / "config.toml").write_text(
+        "schema = 1\n\n[attestation]\nhuman_ratification_through = 9\n",
+        encoding="utf-8",
+        newline="\n",
+    )
+    action, flipped, refusal = intake.flip_verified(root, ["SR-001"])
     assert action == "recommend"
+    assert flipped == []
+    assert refusal is not None and "human_ratification_through" in refusal, refusal
+
+    # The ruled table still speaks the three words (LLR-153); only the dial that
+    # selects one of them moved.
     assert intake.adjudication_action("attended") == "recommend"
     assert intake.adjudication_action("single-ratify") == "flip"
     assert intake.adjudication_action("autonomous") == "flip"

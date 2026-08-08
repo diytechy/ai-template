@@ -34,6 +34,7 @@ import pytest
 from conftest import (
     env_gate_skipif,
     SCRIPTS,
+    declare_config,
     load_script,
     run_py,
     wi_registry_header,
@@ -427,7 +428,7 @@ def test_worker_review_evidence_names_exact_reviewed_commit(tmp_path):
     (repo / "docs" / "agents-enabled").write_text(
         "PROVA-BUILD-1\nPROVB-REV-1\n", encoding="utf-8"
     )
-    (repo / "docs" / "review-policy").write_text("1\n", encoding="utf-8")
+    declare_config(repo, review_rounds=1)
     _git(repo, "add", "-A")
     _git(repo, "commit", "-q", "-m", "wire managed routing")
     proc = _worker(repo, fake, ctl, "--wi", "WI-201", "--train", "t1")

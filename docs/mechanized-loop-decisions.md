@@ -111,6 +111,28 @@ does not re-litigate them.
   self-`blockref` convention and the mutable `## Handback` section. The
   `quarantine` arm survives and is generalized into the Partial
   keep/discard/quarantine classification.
+
+  > **STATUS 2026-08-08: RULED, NOT LANDED — and the gap is deliberate.** P14
+  > applied the rule it was given (*every caller moves to the outcome-event path
+  > first, or the deletion does not happen*) and stopped, because **the ruling
+  > this decision depends on does not exist**: `hand_back`'s only caller is
+  > `dispatch._lane_close`, which is precisely the case where a worker exited
+  > non-zero having decided **nothing**. D-5 gives the path where the *worker*
+  > writes its own outcome event and moves its own spec; it says nothing about
+  > who authors a `partial` outcome event **on behalf of** a worker that
+  > crashed, nor what `parent` and rationale that event carries.
+  >
+  > Everything downstream waits on that one answer: `intake._returned_spec` /
+  > `_handback_drafts` detect a return by reading the `## Handback` *section* off
+  > the merged spec, and `integrate.OUTCOME_DIRS` still maps
+  > `queued|draft|deferred -> handback` as a fourth answer the tree can give.
+  >
+  > Inventing the missing ruling inside a deletion slice would have been the
+  > "policy change dressed as a cutover" the cutover slice had already refused
+  > once. **What is owed is one owner ruling, not more code.** What DID land from
+  > this decision's dependency set: `intake.tier_signal` no longer keys the build
+  > tier off a prose substring (D-6 judgement 1), which was one of the couplings
+  > that made the deletion expensive.
 - **D-5 — `docs/agents.csv` and `docs/agents-enabled` are converted, not
   kept.** Routes move into `config.toml`; the **consent** property of
   `agents-enabled` (presence-as-consent) moves to an explicit

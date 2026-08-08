@@ -10,7 +10,13 @@ import subprocess
 import sys
 
 import pytest
-from conftest import SCRIPTS, load_script, run_py, write_wi_registry
+from conftest import (
+    SCRIPTS,
+    declare_config,
+    load_script,
+    run_py,
+    write_wi_registry,
+)
 
 agent_loop = load_script("agent_loop")
 
@@ -329,7 +335,7 @@ def _routes(stdout, phase):
 
 def test_review_policy_1_dispatches_one_heterogeneous_reviewer(managed_repo):
     repo, ctl, cmd = managed_repo
-    (repo / "docs" / "review-policy").write_text("1\n", encoding="utf-8")
+    declare_config(repo, review_rounds=1)
     (ctl / "done_after").write_text("2", encoding="utf-8")
     proc = _loop(repo, cmd)
     assert proc.returncode == 0, proc.stdout + proc.stderr
@@ -346,7 +352,7 @@ def test_review_policy_1_dispatches_one_heterogeneous_reviewer(managed_repo):
 
 def test_prefer_map_routes_build_then_reviewer_heterogeneity_wins(managed_repo):
     repo, ctl, cmd = managed_repo
-    (repo / "docs" / "review-policy").write_text("1\n", encoding="utf-8")
+    declare_config(repo, review_rounds=1)
     (ctl / "done_after").write_text("2", encoding="utf-8")
     proc = _loop(repo, cmd, "--prefer-map", "BUILD=PROVB-REV-1")
     assert proc.returncode == 0, proc.stdout + proc.stderr
@@ -364,7 +370,7 @@ def test_invalid_prefer_map_id_fails_preflight(managed_repo):
 
 def test_review_policy_2_schedules_two_providers(managed_repo):
     repo, ctl, cmd = managed_repo
-    (repo / "docs" / "review-policy").write_text("2\n", encoding="utf-8")
+    declare_config(repo, review_rounds=2)
     (ctl / "done_after").write_text("2", encoding="utf-8")
     proc = _loop(repo, cmd)
     assert proc.returncode == 0, proc.stdout + proc.stderr
@@ -378,7 +384,7 @@ def test_review_policy_2_schedules_two_providers(managed_repo):
 
 def test_review_policy_0_schedules_no_reviewer(managed_repo):
     repo, ctl, cmd = managed_repo
-    (repo / "docs" / "review-policy").write_text("0\n", encoding="utf-8")
+    declare_config(repo, review_rounds=0)
     (ctl / "done_after").write_text("2", encoding="utf-8")
     proc = _loop(repo, cmd)
     assert proc.returncode == 0, proc.stdout + proc.stderr
@@ -389,7 +395,7 @@ def test_review_policy_0_schedules_no_reviewer(managed_repo):
 
 def test_reviewer_prompt_is_redacted_by_construction(managed_repo):
     repo, ctl, cmd = managed_repo
-    (repo / "docs" / "review-policy").write_text("1\n", encoding="utf-8")
+    declare_config(repo, review_rounds=1)
     (ctl / "done_after").write_text("2", encoding="utf-8")
     proc = _loop(repo, cmd)
     assert proc.returncode == 0, proc.stdout + proc.stderr
@@ -410,7 +416,7 @@ def test_reviewer_prompt_carries_requirement_consistency_sweep(managed_repo):
     # flag wording that sharper SN/SR/TC language would clarify. Assert the
     # standing directive rides the deployed reviewer prompt.
     repo, ctl, cmd = managed_repo
-    (repo / "docs" / "review-policy").write_text("1\n", encoding="utf-8")
+    declare_config(repo, review_rounds=1)
     (ctl / "done_after").write_text("2", encoding="utf-8")
     proc = _loop(repo, cmd)
     assert proc.returncode == 0, proc.stdout + proc.stderr
@@ -428,7 +434,7 @@ def test_reviewer_prompt_carries_adversarial_clauses(managed_repo):
     # match (not full-text equality — no brittleness), and that the pre-existing
     # redaction sentence + verdict machine line survived byte-for-byte.
     repo, ctl, cmd = managed_repo
-    (repo / "docs" / "review-policy").write_text("1\n", encoding="utf-8")
+    declare_config(repo, review_rounds=1)
     (ctl / "done_after").write_text("2", encoding="utf-8")
     proc = _loop(repo, cmd)
     assert proc.returncode == 0, proc.stdout + proc.stderr
@@ -456,7 +462,7 @@ def test_reviewer_prompt_carries_adversarial_clauses(managed_repo):
 
 def test_prompt_map_slots_a_custom_reviewer_template(managed_repo):
     repo, ctl, cmd = managed_repo
-    (repo / "docs" / "review-policy").write_text("1\n", encoding="utf-8")
+    declare_config(repo, review_rounds=1)
     (ctl / "done_after").write_text("2", encoding="utf-8")
     tmpl = repo / "docs" / "prompts" / "rev.md"
     tmpl.parent.mkdir(parents=True)
@@ -489,9 +495,9 @@ def test_enabled_id_not_in_registry_fails_preflight(managed_repo):
 def test_two_top_tier_failures_page_the_human(managed_repo):
     # Strong-tier BUILD + reviewer, both rounds CHANGES-REQUESTED -> the
     # shared-failure regime pages the human; under attended the loop stops
-    # NEEDS-HUMAN (exit 7).
+    # NEEDS-JUDGEMENT (exit 7).
     repo, ctl, cmd = managed_repo
-    (repo / "docs" / "review-policy").write_text("1\n", encoding="utf-8")
+    declare_config(repo, review_rounds=1)
     (ctl / "done_after").write_text("1", encoding="utf-8")
     # The worker pins the BUILD tier from the WI row (WI-181), so the row —
     # not just the tier-map — must declare strong for a top-tier build. Re-writing
@@ -517,7 +523,7 @@ def test_changes_requested_rework_finding_reaches_the_next_build(managed_repo):
     # pointer is retired with the serial driver); the next build session's
     # prompt embeds the finding so the rework happens before new work.
     repo, ctl, cmd = managed_repo
-    (repo / "docs" / "review-policy").write_text("1\n", encoding="utf-8")
+    declare_config(repo, review_rounds=1)
     (ctl / "done_after").write_text("1", encoding="utf-8")
     (ctl / "verdict_body.txt").write_text(
         "- [MAJOR] work.txt:1 -> broken -> fix -> @owner\n"
@@ -546,7 +552,7 @@ def test_absent_enable_list_keeps_legacy_behavior(managed_repo):
 
 
 def test_no_routable_model_pages_with_pool_context(managed_repo):
-    # WI-109: the NEEDS-HUMAN "no routable model" banner lists the enabled pool
+    # WI-109: the NEEDS-JUDGEMENT "no routable model" banner lists the enabled pool
     # with each row's Notes — so an exhausted/misconfigured pool tells the human
     # what to DO (here: the opencode sign-in hint). Staged by enabling ONLY a
     # weak row while BUILD routes medium: select() finds nothing at tier+.
@@ -620,7 +626,7 @@ def test_changes_requested_swaps_implementer_family(managed_repo):
     # sessions 1/3 build PROVA, 2/4 review CHANGES-REQUESTED, 5 is the swapped
     # build (done_after=3 ends the run there).
     repo, ctl, cmd = managed_repo
-    (repo / "docs" / "review-policy").write_text("1\n", encoding="utf-8")
+    declare_config(repo, review_rounds=1)
     (ctl / "verdict_body.txt").write_text(CHANGES_REQUESTED_BODY, encoding="utf-8")
     (ctl / "done_after").write_text("1", encoding="utf-8")
     # Cadence: b1(trailer) r1(CR) b2 r2(CR -> swap) b3(swapped) — the budget
@@ -642,7 +648,7 @@ def test_escalation_tiers_up_after_swap(managed_repo):
     # strong row is enabled, so the pick is the DEGRADED PROVA-STRONG-1 — the tier
     # is the observable that matters. done_after=4 ends the run on that build.
     repo, ctl, cmd = managed_repo
-    (repo / "docs" / "review-policy").write_text("1\n", encoding="utf-8")
+    declare_config(repo, review_rounds=1)
     (ctl / "verdict_body.txt").write_text(CHANGES_REQUESTED_BODY, encoding="utf-8")
     (ctl / "done_after").write_text("1", encoding="utf-8")
     # Cadence: b1(trailer) r1(CR) b2 r2(CR -> swap) b3 r3(CR -> tier-up) b4
@@ -663,7 +669,7 @@ def test_managed_rate_limit_cools_and_reroutes(managed_repo):
     # exit). The next session re-routes to the other enabled same-tier family and
     # the run finishes DONE.
     repo, ctl, cmd = managed_repo
-    (repo / "docs" / "review-policy").write_text("0\n", encoding="utf-8")  # build-only
+    declare_config(repo, review_rounds=0)  # build-only
     (ctl / "fail_model").write_text("builda", encoding="utf-8")
     (ctl / "fail_mode").write_text("limit", encoding="utf-8")
     (ctl / "done_after").write_text("1", encoding="utf-8")
@@ -682,7 +688,7 @@ def test_review_no_verdict_cools_and_reroutes_same_phase(managed_repo):
     # re-dispatched to a different enabled reviewer next iteration; the round still
     # completes (a REVIEW-A verdict lands from the re-routed reviewer).
     repo, ctl, cmd = managed_repo
-    (repo / "docs" / "review-policy").write_text("1\n", encoding="utf-8")
+    declare_config(repo, review_rounds=1)
     (ctl / "skip_verdict_model").write_text("revb", encoding="utf-8")
     (ctl / "done_after").write_text("2", encoding="utf-8")
     (repo.parent / "fake.py").write_text(FAKE_REVIEWER_SKIPS, encoding="utf-8")
@@ -702,7 +708,7 @@ def test_managed_error_session_cools_and_reroutes(managed_repo):
     # A managed BUILD session that ERRORS (nonzero exit, no JSON) cools that model
     # and re-routes to the other enabled same-tier family the next iteration.
     repo, ctl, cmd = managed_repo
-    (repo / "docs" / "review-policy").write_text("0\n", encoding="utf-8")  # build-only
+    declare_config(repo, review_rounds=0)  # build-only
     (ctl / "fail_model").write_text("builda", encoding="utf-8")
     (ctl / "fail_mode").write_text("error", encoding="utf-8")
     (ctl / "done_after").write_text("1", encoding="utf-8")
@@ -721,7 +727,7 @@ def test_review_unparseable_verdict_cools_and_reroutes_same_phase(managed_repo):
     # cool the reviewer and re-route the SAME phase; the round then completes
     # via the other reviewer's parseable verdict.
     repo, ctl, cmd = managed_repo
-    (repo / "docs" / "review-policy").write_text("1\n", encoding="utf-8")
+    declare_config(repo, review_rounds=1)
     (ctl / "done_after").write_text("2", encoding="utf-8")
     bodies = json.loads((ctl / "bodies.json").read_text(encoding="utf-8"))
     bodies["revb"] = (
@@ -778,7 +784,7 @@ def _winstay_repo(tmp_path):
     (repo / "docs" / "requirements").mkdir(parents=True)
     (repo / "docs" / "status.md").write_text(STATUS_MD, encoding="utf-8")
     (repo / "docs" / "run-phase").write_text("BUILD\n", encoding="utf-8")
-    (repo / "docs" / "review-policy").write_text("2\n", encoding="utf-8")
+    declare_config(repo, review_rounds=2)
     write_wi_registry(repo, [_wi_201_row("medium")])
     (repo / ".gitignore").write_text("out/\n", encoding="utf-8")
     _git(repo, "init")

@@ -9,9 +9,10 @@
 #
 # Converted sources — each of these is STILL PRESENT in the tree,
 # so `config.mixed_source_findings` reports every key below as
-# double-declared until the retired file is deleted. That is the
-# expected transitional state, and the refusal binds at the cutover:
-# no runtime reader consults this file yet.
+# double-declared until the retired file is deleted (P14). That refusal
+# has no runtime call site yet, which is what lets this repo carry both
+# for the length of the migration.
+#   docs/gate-policy      (resolved by hand — see THE ONE HUMAN CHOICE below)
 #   docs/push-policy
 #   docs/review-policy
 #   docs/privacy-check
@@ -19,13 +20,23 @@
 #   docs/agents.csv
 #   docs/agents-enabled
 #
+# THE ONE HUMAN CHOICE, made at the P13 cutover and recorded here rather
+# than buried in a commit message. The converter REFUSED to map
+# `docs/gate-policy: autonomous` and said why: "autonomous permitted NO
+# early human checkpoint, while the boundary is inclusive and its lowest
+# value (0) still keeps stakeholder needs with the human — so there is no
+# value that means what autonomous meant." It named exactly one boundary
+# candidate, 0, and that is what is set below. The residual difference is
+# real and is not papered over: under the boundary, SN ratifications are
+# the human's, where `autonomous` left them to a recorded fresh-context
+# reviewer verdict. That is a TIGHTENING of this repo's own policy, chosen
+# in the fail-closed direction, and the owner may lower nothing further —
+# 0 is the floor. The cutover could not leave the key unset: an unset key
+# beside a live `docs/gate-policy` is exactly what
+# `config.unconverted_findings` refuses, so the loop would not run at all.
+#
 # NOT CONVERTED — each of these needs a human decision. Nothing
 # below was guessed; the values are simply absent until chosen:
-#   docs/gate-policy: 'autonomous' autonomous permitted NO early human
-#   checkpoint, while the boundary is inclusive and its lowest value (0)
-#   still keeps stakeholder needs with the human — so there is no value that
-#   means what autonomous meant
-#     candidates: attestation.human_ratification_through = 0; attestation.final_full_spine_review = "never"
 #   docs/agents.csv: 'capabilities' the registry has no capability column,
 #   so every converted route carries an empty list — fill it before routing
 #   binds
@@ -39,6 +50,19 @@
 #   stay an AGENT_* / stack.ini concern until routing binds
 
 schema = 1
+
+[attestation]
+# Inclusive human checkpoints: 0=SN; 1=SN+SR; 2=SN+SR+LLR; 3=SN+SR+LLR+TC.
+# At or below the boundary a ratification needs a human decision; above it
+# an adjudicator may enact. Set to 0 at the P13 cutover as the converter's
+# single named candidate for this repo's retired `autonomous` — see THE ONE
+# HUMAN CHOICE in the header.
+human_ratification_through = 0
+# Persistent policy for a whole-spine human review at stage 4. The
+# converter's second candidate for `autonomous`, and the schema default; set
+# explicitly so the pair reads as one deliberate answer rather than one
+# answer and one omission.
+final_full_spine_review = "never"
 
 [policy]
 # Who may publish this repo: human (an agent never pushes), agent-iteration

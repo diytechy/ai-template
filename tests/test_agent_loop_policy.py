@@ -169,7 +169,10 @@ def test_blackout_banner_names_policy_window_weekday_and_resume():
     ac = load_script("agent_common")
     resume_at = datetime.datetime(2026, 7, 13, 19, 0)  # a Monday, 19:00 UTC
     banner = ac.blackout_banner("12:00-19:00", resume_at, 7 * 3600)
-    assert "docs/blackout" in banner  # the policy file is named
+    assert "automation.blackout" in banner  # the policy SOURCE is named
+    # P14 deleted docs/blackout; a banner naming it would send a waiting
+    # operator to a file that is not there, which is worse than saying nothing.
+    assert "docs/blackout" not in banner
     assert "12:00-19:00" in banner  # the actual window is shown
     assert "weekday" in banner.lower()  # weekday-only scope stated plainly
     assert "19:00 UTC" in banner  # the resume time
@@ -251,12 +254,19 @@ def test_seconds_until_reset_parses_both_clock_formats():
         assert agent_loop.seconds_until_reset(garbage, now=noon) is None
 
 
-def test_declared_policy_parsers_agree():
-    # One parse rule for the one-word policy files (docs/gate, gate-policy,
-    # push-policy, privacy-check, run-state): the FIRST non-empty, non-comment
-    # line — the rule the git hooks (head -n 1 of the non-comment lines) already
-    # enforce. agent_loop and check_privacy must agree, or a multi-line file
-    # would pass one gate and fail another.
+def test_the_declared_state_parse_reads_the_first_non_comment_line():
+    # The one-word parse survives the P13 cutover only for the STATE surfaces
+    # (docs/gate, run-state): the FIRST non-empty, non-comment line.
+    #
+    # This test used to pin `agent_loop.read_declared` and
+    # `check_privacy._first_declared_line` EQUAL, because a multi-line policy
+    # file that passed one gate and failed another would be a silent split. Both
+    # sides of that pairing are gone in the direction the pairing wanted: the
+    # behaviour dials moved to one validated document, so check_privacy has no
+    # parser of its own to disagree with — it reads `policy.privacy_check`
+    # through `config.load_config` like everything else, and its copy of the
+    # parse was deleted with its last caller. What remains worth pinning is the
+    # rule itself, on the surfaces that still use it.
     import tempfile
     from pathlib import Path
 
@@ -265,16 +275,20 @@ def test_declared_policy_parsers_agree():
     with tempfile.TemporaryDirectory() as td:
         root = Path(td)
         (root / "docs").mkdir()
-        policy = root / "docs" / "privacy-check"
-        policy.write_text(
+        state = root / "docs" / "gate"
+        state.write_text(
             "# comment header, as the shipped templates carry\n"
             "\n"
             "first-value\n"
             "second-value\n",
             encoding="utf-8",
         )
-        assert agent_loop.read_declared(policy, "false") == "first-value"
-        assert check_privacy._first_declared_line(policy) == "first-value"
+        assert agent_loop.read_declared(state, "G1") == "first-value"
+    assert not hasattr(check_privacy, "_first_declared_line"), (
+        "check_privacy grew back a private declared-file parser. Its policy has "
+        "ONE reader now (config.load_config); a second one is how the two "
+        "answers drift apart again."
+    )
 
 
 # --- WI-080 Slice A golden net: model-map / {model} preflight guards -----------

@@ -15,7 +15,7 @@ schema = 1
 # Inclusive human checkpoints: 0=SN; 1=SN+SR; 2=SN+SR+LLR; 3=SN+SR+LLR+TC.
 # At or below the boundary a ratification needs a human decision; above it
 # an adjudicator may enact.
-# human_ratification_through = 1
+# human_ratification_through = 3
 # Persistent policy for a whole-spine human review at stage 4. A one-off ask
 # is a review-request event, not a config edit.
 # final_full_spine_review = "never"
@@ -63,14 +63,6 @@ schema = 1
 # components_check = true
 # Generate and freshness-check the docs/okf/ knowledge bundle.
 # okf_export = true
-
-[harness]
-# Product source root. Mirrors docs/stack.ini [paths] src; stack.ini stays
-# the live source until the cutover and the two are proved equal by the
-# parity tests.
-# src = "src"
-# Test root. Mirrors docs/stack.ini [paths] tests (see harness.src).
-# tests = "tests"
 
 [outcomes]
 # Fraction of Complete outcomes that draw a dedicated adjudicator even with

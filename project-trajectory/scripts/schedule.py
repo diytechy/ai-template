@@ -584,10 +584,8 @@ def is_schedulable(concurrency):
 
 
 # --- graph derivations (SR-057) ----------------------------------------------
-def _by_id(wis):
-    return {w["id"]: w for w in wis}
-
-
+# (`_by_id` sat here — the whole-row index beside `_status`'s id->status one. No
+# caller ever wanted the row, only the status. Deleted at P14's measured sweep.)
 def _status(wis):
     return {w["id"]: w["status"] for w in wis}
 

@@ -101,6 +101,7 @@ import subprocess
 import pytest
 from conftest import (
     SCRIPTS,
+    declare_config,
     env_gate_skipif,
     load_script,
     make_minimal_project,
@@ -1411,12 +1412,24 @@ VERDICT: CHANGES-REQUESTED findings=2
 
 
 def verdict_repo(tmp_path, policy="1"):
-    """A trunk carrying the declared review-policy dial, plus a work branch with
-    one code commit on it (pinned at T_CODE)."""
+    """A trunk carrying the declared reviewer dial, plus a work branch with one
+    code commit on it (pinned at T_CODE).
+
+    `policy` keeps the retired file's string vocabulary so the call sites read
+    unchanged; a value that is not an integer is written RAW, which is how the
+    malformed case is driven now — the schema refuses the wrong type where the
+    retired file's own reader had to catch it by hand."""
     root = git_repo(tmp_path)
     docs = root / "docs"
     docs.mkdir(exist_ok=True)
-    (docs / "review-policy").write_text(policy + "\n", encoding="utf-8", newline="\n")
+    try:
+        declare_config(root, review_rounds=int(policy))
+    except ValueError:
+        (docs / "config.toml").write_text(
+            'schema = 1\n\n[policy]\nreview_rounds = "{}"\n'.format(policy),
+            encoding="utf-8",
+            newline="\n",
+        )
     _commit(root, "declare the review policy", when=T_BASE)
     _git(root, "checkout", "-q", "-b", "wi-401")
     (root / "src").mkdir(exist_ok=True)
@@ -1528,8 +1541,8 @@ def test_a_malformed_review_policy_fails_closed(tmp_path):
     root = verdict_repo(tmp_path, policy="sometimes")
     refusal = integ._verdict_gate(root, "wi-401", {"WI-401": "merged"})
     assert refusal is not None
-    assert "docs/review-policy is not an integer" in refusal
-    assert "sometimes" in refusal and "fail closed" in refusal
+    assert "policy.review_rounds" in refusal
+    assert "sometimes" in refusal, "the refusal must quote what it read: " + refusal
 
 
 # --- 4. the declared bar (§4): undeclared is a refusal, never a skip ----------
@@ -1822,9 +1835,7 @@ def station_repo(
         "[product]\ntest = {py} -m pytest -q\n", encoding="utf-8", newline="\n"
     )
     declare_generated(root)
-    (root / "docs" / "review-policy").write_text(
-        policy + "\n", encoding="utf-8", newline="\n"
-    )
+    declare_config(root, review_rounds=int(policy))
     scripts = root / "scripts"
     scripts.mkdir(exist_ok=True)
     (scripts / "trunk_step.py").write_text(
@@ -2026,7 +2037,7 @@ def test_the_merge_slot_mints_the_adjudication_row_at_intake(tmp_path):
         encoding="utf-8",
         newline="\n",
     )
-    (root / "docs" / "review-policy").write_text("0\n", encoding="utf-8", newline="\n")
+    declare_config(root, review_rounds=0)
     scripts = root / "scripts"
     scripts.mkdir(exist_ok=True)
     (scripts / "trunk_step.py").write_text(
@@ -2643,7 +2654,7 @@ def test_the_mechanical_refresh_does_not_stale_a_good_verdict(tmp_path):
     # the neighbouring stale-APPROVE tests are what prove this is an exclusion
     # rather than a broken comparison.
     root = station_repo(tmp_path)
-    (root / "docs" / "review-policy").write_text("1\n", encoding="utf-8", newline="\n")
+    declare_config(root, review_rounds=1)
     _commit(root, "policy: require a verdict", when=T_CODE)
     wt = root.parent / (root.name + integ.LANE_WORKTREE_SUFFIX) / "wi-401"
     verdict = wt / "docs" / "reviews" / "WI-401-REVIEW-A.md"
@@ -2707,7 +2718,7 @@ def scaffolded_closed_branch(tmp_path):
     assert proc.returncode == 0, proc.stdout + proc.stderr
     make_minimal_project(repo)
 
-    (repo / "docs" / "review-policy").write_text("0\n", encoding="utf-8", newline="\n")
+    declare_config(repo, review_rounds=0)
     with (repo / ".gitignore").open("a", encoding="utf-8", newline="\n") as fh:
         fh.write("out/\n")
     # A queued spec owes a resolving SpecRef (the WI-370 claim rung); the

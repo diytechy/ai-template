@@ -72,6 +72,14 @@ BASELINE = {
     # Collapsing them would trade a specific refusal for a smaller number, and
     # this is the function whose whole job is to say precisely why it refused.
     ("adjudicate.py", "adjudicate"): 13,
+    # round 4: the spine-batch partition. 15 is the connectivity walk — build the
+    # adjacency from three edge sources (declared refs, declared interfaces, and
+    # the trace edges the registries hold), then union-find, then the two collapse
+    # rules (a row with no declared owner, and an edge crossing the ownership
+    # partition). Splitting a graph walk from its own collapse rules would leave a
+    # reader unable to answer "when is this one batch?" from either half, and that
+    # question is the entire safety property SR-146 states.
+    ("resume_plan.py", "spine_components"): 15,
     ("config.py", "_type_reason"): 12,  # one rung per declared value type
     ("config.py", "validate"): 12,  # one rung per declared section shape
     ("config_migrate.py", "_coerce"): 11,  # one rung per retired file idiom
@@ -88,7 +96,13 @@ BASELINE = {
     # sync_agent_skills the M-14 orphan-deletion sweep; run_dual_plan_round
     # the L-29 unfileable-plan PAGE guard.
     ("agent_loop.py", "critique_brief"): 11,
-    ("agent_loop.py", "main"): 27,
+    # 27 -> 26, mechanized-loop P13 (the cutover). Re-stamped DOWNWARD, which is
+    # the direction this ratchet exists to hold: seven `read_declared` calls plus
+    # the M-20 malformed-blackout / malformed-review-policy warn-branches and the
+    # lenient `rp_int` reparse collapsed into ONE validated read, because the
+    # schema now refuses what those branches used to warn about. The one branch
+    # added back is the preflight refusal.
+    ("agent_loop.py", "main"): 26,
     ("agent_loop.py", "map_preflight"): 19,
     ("agent_loop.py", "route_intent"): 13,
     # WI-345: 13 -> 11. Both managed arms lost their inline

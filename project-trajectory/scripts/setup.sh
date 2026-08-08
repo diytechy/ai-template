@@ -50,17 +50,29 @@ if [ -f .githooks/pre-commit ] && git rev-parse --is-inside-work-tree >/dev/null
   echo "Enabled pre-commit hook (core.hooksPath=.githooks; undo: git config --unset core.hooksPath)."
 fi
 
-# Privacy-check advisory (docs/privacy-check — process-options.md "Commit
+# Privacy-check advisory (policy.privacy_check — process-options.md "Commit
 # identity & privacy"). Identity is USER-owned: setup no longer pins or sets an
 # author identity. But when the privacy gate is on, the author email must be in
 # the exempt allowlist (no private/contactable address) or commits are blocked —
 # so warn early if this clone's identity would fail. Advisory only; the hooks are
 # the enforcement. Reuses check_privacy.py --author to single-source the list.
-if [ -f docs/privacy-check ] && git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-  privacy=$(grep -v '^[[:space:]]*#' docs/privacy-check | grep -v '^[[:space:]]*$' | head -n 1 | tr -d '[:space:]' || true)
+#
+# The dial is read through config_query.py, the ONE entry point (decision D-1),
+# not by grepping a one-word file: docs/privacy-check was deleted at P14. A
+# refusal here WARNS rather than blocks, and that is not a fail-open — setup is
+# advisory by construction and the hooks are the gate. It still says so out
+# loud, because a silent skip is how an unreadable policy becomes an unnoticed
+# one.
+if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  privacy=$("$PY" scripts/config_query.py --root . policy.privacy_check 2>/dev/null) || {
+    privacy=""
+    echo "WARNING: could not read policy.privacy_check (docs/config.toml) — the" >&2
+    echo "  identity advisory is skipped. Run scripts/config_query.py yourself" >&2
+    echo "  to see the refusal; the git hooks will BLOCK until it is fixed." >&2
+  }
   if [ "$privacy" = "true" ] && ! "$PY" scripts/check_privacy.py --author >/dev/null 2>&1; then
     email=$(git config user.email 2>/dev/null || true)
-    echo "WARNING: docs/privacy-check is on, but this clone's git author email" >&2
+    echo "WARNING: policy.privacy_check is on, but this clone's git author email" >&2
     echo "  '${email:-unset}' is not in the exempt allowlist (scripts/check_privacy.py" >&2
     echo "  EXEMPT_EMAILS), so commits will be blocked. Set a no-reply identity:" >&2
     echo "    git config user.email <you>@users.noreply.github.com   (repo-local)" >&2

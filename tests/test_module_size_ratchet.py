@@ -377,7 +377,19 @@ BASELINE = {
     # instruction line; the lazy import keeps a stripped copy launchable.
     # Reviewed bump, log fragment 2026-08-02 (WI-388). Re-stamp down with
     # WI-280.
-    "agent_loop.py": 3007,
+    # +32 (3007 -> 3039), mechanized-loop P13 (the cutover): SEVEN
+    # `read_declared` calls over seven one-word files become ONE validated read
+    # plus a preflight refusal, and the net is positive only because the refusal
+    # and its LOOP_CONFIG_KEYS declaration are new surface. Two warn-blocks came
+    # OUT in the same change (the M-20 malformed-blackout and
+    # malformed-review-policy warnings, now unreachable because the schema
+    # refuses both), and so did the lenient `rp_int` reparse.
+    # +7 (3039 -> 3046), mechanized-loop P14 (the deletion): the operator-facing
+    # banner labels stopped naming the one-word files that are now deleted and
+    # name their canonical keys instead, plus the comment saying why a label is
+    # not free to lag — a banner that points at a missing file is worse than one
+    # that says nothing. Pure prose/format lines; no branch was added.
+    "agent_loop.py": 3046,
     # +30 (2206 -> 2236), WI-065: `tc_citation_findings` — the TC-`Verifies`
     # rules lifted out of `analyze` so the cell could accept `IF-###` seam ids.
     # Most of the bump is that helper's docstring, which is where the RULING now
@@ -876,8 +888,17 @@ BASELINE = {
     # GITKEEP_DIRS. A terminal status directory that a fresh scaffold does not
     # have is the exact defect class this repo calls its most expensive, and it
     # was found by BOOTSTRAPPING a scaffold rather than by reading the table.
-    # +13 (2388 -> 2401), round 3: MAPPING rows for adjudicate.py and admit.py.
-    "bootstrap.py": 2401,
+    # +20 (2388 -> 2408), rounds 3-4: MAPPING rows for adjudicate.py, admit.py
+    # and resume_plan.py. Data rows in a shipped-file table; a module missing
+    # from MAPPING is the measured scaffold defect this repo calls its most
+    # expensive, so the rows are the deliverable.
+    # -263 (2408 -> 2145), mechanized-loop P14 (the deletion): five MAPPING rows,
+    # three scaffold-time writers (`apply_gate_policy` + its deviation-register
+    # skeleton, `apply_push_policy`, `apply_privacy_check`), their three CLI
+    # flags, their three ASK ladders and three ScaffoldPlan fields all left with
+    # the retired one-word files. Re-stamped DOWNWARD in the same commit, per
+    # this table's own rule.
+    "bootstrap.py": 2145,
     # NEW ENTRY, +228 (1423 -> 1651), Phase 2b of the concurrency restructure
     # (docs/concurrency-restructure.md §7): the spec-folder work-item reader,
     # which crosses this module over THRESHOLD for the first time. It is one
@@ -975,7 +996,31 @@ BASELINE = {
     # log fragment 2026-08-02 (WI-388). Re-stamp down with WI-280.
     # +15 (1839 -> 1854), mechanized-loop P6: the `partial` status directory in
     # F5 copy #1 (SPEC_STATUS_DIRS + TERMINAL_STATUSES).
-    "agent_common.py": 1854,
+    # +101 (1854 -> 1955), mechanized-loop P13 (the cutover): the canonical
+    # configuration accessors every runtime reader now shares — `declared_config`
+    # (loader findings + the unconverted-source rung, over the CALLER's own read
+    # set), the `BOUNDARY_LEVEL` inverse that lets the ruled §A8 / paging /
+    # adjudication tables keep their vocabulary while the DIAL moves, and
+    # `ratification_level`. Roughly two thirds of the bump is the comments
+    # stating WHY the inverse is read off `config_migrate`'s tables rather than
+    # invented — the one thing a successor cannot reconstruct. Not extracted: a
+    # fourth module between the loop and `config.py` would put the three call
+    # sites one more hop from the dial they are being wired to. (+6 of the 101
+    # is `read_declared`'s docstring, rewritten to say what it is still FOR now
+    # that no behaviour dial goes through it — the one comment that stops the
+    # retired reader growing new callers.)
+    # +19 (1961 -> 1980), mechanized-loop P14 (the deletion): `declared_config`
+    # gained its THIRD rung — `mixed_source_findings`, which had no runtime
+    # caller until the retired files were deleted — and the docstring stating
+    # why the two migration rungs are complementary halves of one question
+    # rather than one rung with a flag. The rest is the blackout comment block,
+    # rewritten because it described a scaffolded 12:00-19:00 default that no
+    # longer exists, and the banner signature wrapping to fit the new source
+    # name, plus the END_STATES note carrying D-6's ruling that the label was
+    # renamed NEEDS-JUDGEMENT while exit code 7 did NOT move -- a wire contract
+    # with every worker and launcher this repo cannot see. One call, two
+    # docstrings; no branch was added.
+    "agent_common.py": 1986,
     # FIRST baseline for agent_route.py, established (not bumped) at the
     # mechanized-loop P5 slice: 1589 lines. The module had never carried one
     # because it had never crossed the threshold; the config-driven job-pool
@@ -985,7 +1030,12 @@ BASELINE = {
     # `requires_capability` dial was read with getattr() off a DICT, so it was
     # always None and a declared capability bar failed open. Reading it
     # correctly costs three lines.
-    "agent_route.py": 1592,
+    # +3 (1592 -> 1595), mechanized-loop P13: `failure_action`'s docstring says
+    # the gate-authority word is DERIVED from the canonical boundary now. The
+    # table it documents is unchanged — what changed is where its input comes
+    # from, and a reader who did not know that would go looking for a file
+    # nothing reads.
+    "agent_route.py": 1595,
     # FIRST baselines for the two modules the mechanized-loop program added that
     # cross the threshold, ESTABLISHED rather than bumped — there is no earlier
     # number to have grown past. Both are single transactions whose parts are
@@ -1002,7 +1052,12 @@ BASELINE = {
     # If either grows again, the next stamp should ask what came OUT rather
     # than what went in.
     "admit.py": 1602,
-    "attest.py": 1656,
+    # +15 (1656 -> 1671), mechanized-loop P13: the unreadable-dial refusal moved
+    # ABOVE the boundary consultation. Its reach used to depend on the default
+    # boundary being permissive enough to authorise a machine — so raising the
+    # default to 3 silently switched the guard off, which is how the move was
+    # found. The growth is that comment.
+    "attest.py": 1671,
     # NEW ENTRY, WI-387 — integrate.py crossed THRESHOLD (1418 -> 1588) adding
     # the third terminal outcome. The extraction the ratchet asks for was TAKEN
     # FIRST, not argued away: `hand_back` and `quarantine`, the largest unit and
@@ -1175,7 +1230,12 @@ BASELINE = {
     # "never had a record" from "had one and it is gone" and refuses the second.
     # The growth is that distinction plus its refusal; the review found that the
     # only test of the path drove exactly the amend, so the test PROVED the hole.
-    "integrate.py": 2698,
+    # +8 (2698 -> 2706), mechanized-loop P13: the review-verdict requirement
+    # reads `policy.review_rounds` instead of `docs/review-policy`, and the
+    # DIVERGENT DEFAULT is resolved in the comment there — this call site
+    # defaulted to 0 while agent_loop defaulted to 1 over the same file, so the
+    # banner announced a reviewer dial the integrator did not enforce.
+    "integrate.py": 2706,
 }
 
 

@@ -12,6 +12,7 @@ import shutil
 import subprocess
 
 from conftest import (
+    declare_config,
     KIT,
     LLRS,
     make_minimal_project,
@@ -266,8 +267,14 @@ def test_hook_honors_kit_scripts_dir_override(scaffold):
     # meta-repo, under project-trajectory/scripts/) points the shipped hook via
     # KIT_SCRIPTS_DIR, so one hook fits any layout. Positive: an explicit override
     # to the real dir runs green (the override branch produces a working
-    # SCRIPTS_DIR); negative: a bogus override skips CLEARLY (a wrong override must
-    # never silently pass as if the tree were clean).
+    # SCRIPTS_DIR); negative: a bogus override BLOCKS clearly.
+    #
+    # The negative leg used to assert exit 0 with a clear message — "skip, not
+    # crash". The P13 cutover moved it to a refusal, and this is the better
+    # answer for the same reason it was ever tested: a wrong override must never
+    # pass as if the tree were clean, and a scaffold DECLARES behaviour that
+    # nothing can now read without the scripts dir. The message still has to
+    # name what it could not find; that half is unchanged.
     skip_without_env_gates("posix-shell", "git")
     sh = shutil.which("sh")
     make_minimal_project(scaffold)
@@ -289,15 +296,23 @@ def test_hook_honors_kit_scripts_dir_override(scaffold):
         text=True,
         env=dict(os.environ, KIT_SCRIPTS_DIR="nope-not-here"),
     )
-    assert bad.returncode == 0, bad.stdout + bad.stderr  # skip, not crash
-    assert "cannot find" in bad.stderr.lower(), bad.stderr
+    assert bad.returncode != 0, bad.stdout + bad.stderr  # refuse, not crash
+    assert "cannot be found" in bad.stderr.lower(), bad.stderr
+    assert "failing closed" in bad.stderr.lower(), bad.stderr
 
 
-def test_hook_skips_clearly_when_no_working_python3(scaffold):
+def test_hook_reports_clearly_when_no_working_python3(scaffold):
     # SN-013 / SR-021: python3 may resolve on PATH yet exit nonzero (the Windows
     # Store app-execution alias). The hook probes by *running* a candidate, so it
-    # must skip-or-report clearly, never crash. Shadow python3/python with fakes
-    # that exit nonzero and confirm the hook exits 0 with a clear message.
+    # must report clearly, never crash.
+    #
+    # WHAT THE P13 CUTOVER CHANGED, and why it is the ratified direction (D-1):
+    # the policy now lives in docs/config.toml and only Python can read it, so a
+    # repo that DECLARES anything and has no interpreter fails CLOSED instead of
+    # skipping. A bootstrapped scaffold declares (it has a config document), so
+    # this case blocks. The free skip survives only where the hook can PROVE it
+    # is safe in pure sh — no config document and no retired policy file, i.e.
+    # every dial at its default — which the next test drives.
     skip_without_env_gates("posix-shell", "git")
     sh = shutil.which("sh")
     make_minimal_project(scaffold)
@@ -311,6 +326,30 @@ def test_hook_skips_clearly_when_no_working_python3(scaffold):
     # Prepend the fakes so they shadow any real interpreter; keep the rest of PATH
     # so sh/git/coreutils stay available.
     env = dict(os.environ, PATH=str(fakebin) + os.pathsep + os.environ.get("PATH", ""))
+    proc = subprocess.run(
+        [sh, HOOK], cwd=str(scaffold), capture_output=True, text=True, env=env
+    )
+    assert proc.returncode != 0, proc.stdout + proc.stderr
+    assert "failing closed" in proc.stderr.lower(), proc.stderr
+    assert "python 3" in proc.stderr.lower(), proc.stderr
+
+
+def test_hook_still_skips_for_a_repo_that_declares_nothing(scaffold):
+    # The other side of the cutover's fail-closed rule, and the reason it is a
+    # RULE rather than a blanket: a repo that has declared no behaviour at all
+    # has every dial at its schema default, so the privacy layer is provably off
+    # and skipping is honest rather than hopeful. This is what keeps the
+    # non-Python retrofit path (ADOPTING.md) working. Proven by REMOVING the
+    # declarations, so the two tests differ in exactly the fact that decides.
+    skip_without_env_gates("posix-shell", "git")
+    sh = shutil.which("sh")
+    make_minimal_project(scaffold)
+    subprocess.run(["git", "init"], cwd=str(scaffold), capture_output=True)
+    for declaration in ("config.toml", "privacy-check", "privacy-review"):
+        target = scaffold / "docs" / declaration
+        if target.exists():
+            target.unlink()
+    env = _shadow_python(scaffold)
     proc = subprocess.run(
         [sh, HOOK], cwd=str(scaffold), capture_output=True, text=True, env=env
     )
@@ -339,13 +378,13 @@ def test_hook_fails_closed_when_privacy_on_but_no_python(scaffold):
     sh = shutil.which("sh")
     make_minimal_project(scaffold)
     subprocess.run(["git", "init"], cwd=str(scaffold), capture_output=True)
-    (scaffold / "docs" / "privacy-check").write_text("true\n", encoding="utf-8")
+    declare_config(scaffold, privacy_check=True)
     env = _shadow_python(scaffold)
     proc = subprocess.run(
         [sh, HOOK], cwd=str(scaffold), capture_output=True, text=True, env=env
     )
     assert proc.returncode != 0, "privacy-true + no python must FAIL CLOSED"
-    assert "refusing to skip" in proc.stderr.lower(), proc.stderr
+    assert "failing closed" in proc.stderr.lower(), proc.stderr
 
 
 def test_commit_msg_hook_fails_closed_when_privacy_on_but_no_python(scaffold):
@@ -367,15 +406,24 @@ def test_commit_msg_hook_fails_closed_when_privacy_on_but_no_python(scaffold):
             env=env,
         )
 
-    # Privacy off (scaffold default): the skip stays free.
+    # A repo that declares NOTHING keeps the free skip (see the pre-commit twin
+    # for why that is the only skip the cutover leaves).
+    saved = {}
+    for declaration in ("config.toml", "privacy-check", "privacy-review"):
+        target = scaffold / "docs" / declaration
+        if target.exists():
+            saved[declaration] = target.read_text(encoding="utf-8")
+            target.unlink()
     ok = run_msg_hook()
     assert ok.returncode == 0, ok.stdout + ok.stderr
     assert "not found" in ok.stderr.lower(), ok.stderr
+    for declaration, body in saved.items():
+        (scaffold / "docs" / declaration).write_text(body, encoding="utf-8")
     # Privacy declared true: fail closed with the named reason.
-    (scaffold / "docs" / "privacy-check").write_text("true\n", encoding="utf-8")
+    declare_config(scaffold, privacy_check=True)
     blocked = run_msg_hook()
     assert blocked.returncode != 0, "privacy-true + no python must FAIL CLOSED"
-    assert "refusing to skip" in blocked.stderr.lower(), blocked.stderr
+    assert "failing closed" in blocked.stderr.lower(), blocked.stderr
 
 
 def test_hook_secrets_floor_blocks_staged_key_with_privacy_off(scaffold):
@@ -406,7 +454,7 @@ def test_hook_secrets_floor_blocks_staged_key_with_privacy_off(scaffold):
     assert "private key header" in (blocked.stdout + blocked.stderr)
 
     # The opt-out lifts the floor for a repo that needs it.
-    (scaffold / "docs" / "secrets-scan").write_text("off\n", encoding="utf-8")
+    declare_config(scaffold, secrets_scan=False)
     ok = subprocess.run([sh, HOOK], cwd=str(scaffold), capture_output=True, text=True)
     assert ok.returncode == 0, ok.stdout + ok.stderr
 
@@ -434,19 +482,20 @@ def test_hook_privacy_author_guard(scaffold):
             [sh, HOOK], cwd=str(scaffold), capture_output=True, text=True
         )
 
-    # The scaffolded default is privacy-check false: any identity passes.
-    policy = scaffold / "docs" / "privacy-check"
-    body = [
-        ln
-        for ln in policy.read_text(encoding="utf-8").splitlines()
-        if ln.strip() and not ln.startswith("#")
-    ]
-    assert body == ["false"], "scaffold must default privacy-check to false"
+    # The scaffolded default is privacy OFF, so any identity passes. Asserted
+    # through the canonical reader rather than by re-parsing a file: since the
+    # P13 cutover that reader is the only thing whose answer the hook obeys.
+    answer = run_py(
+        ["scripts/config_query.py", "--root", ".", "policy.privacy_check"],
+        cwd=scaffold,
+    )
+    assert answer.returncode == 0, answer.stdout + answer.stderr
+    assert answer.stdout.strip() == "false", "a scaffold must default privacy off"
     ok = run_hook()
     assert ok.returncode == 0, ok.stdout + ok.stderr
 
-    # privacy-check on + a private (non-exempt) author: a designed block.
-    policy.write_text("true\n", encoding="utf-8")
+    # privacy on + a private (non-exempt) author: a designed block.
+    declare_config(scaffold, privacy_check=True)
     blocked = run_hook()
     assert blocked.returncode != 0, "a private author must be blocked"
     assert "exempt allowlist" in blocked.stderr
@@ -496,7 +545,7 @@ def test_commit_msg_hook_scans_message(scaffold):
 
     # Privacy layer on: the same private email now blocks; the exempt no-reply
     # co-author trailer passes.
-    (scaffold / "docs" / "privacy-check").write_text("true\n", encoding="utf-8")
+    declare_config(scaffold, privacy_check=True)
     blocked = run_msg("fix\n\nReported-by: real.person@gmail.com\n")
     assert blocked.returncode != 0, "a private email in the message must block when on"
     assert "exempt allowlist" in (blocked.stdout + blocked.stderr)

@@ -71,9 +71,12 @@ PROMPTS = KIT / "prompts"
 SR_CSV = "docs/requirements/system-requirements.csv"
 IF_CSV = "docs/requirements/interfaces.csv"
 
-# The registry columns each surface exposes (a stable, minimal excerpt — never
-# the whole row, so Rationale/Notes prose never rides along into a brief).
-SR_SURFACE_COLUMNS = ("SR-ID", "Title", "Requirement")
+# The registry columns the IF surface exposes (a stable, minimal excerpt — never
+# the whole row, so Rationale/Notes prose never rides along into a brief). There
+# was an SR_SURFACE_COLUMNS beside it, deleted at P14's measured sweep: the SR
+# surface is rendered as BULLET LINES by `_sr_surface`, not as a table, so the
+# tuple named columns nobody read. Its excerpt discipline is enforced there, in
+# the only place that builds it.
 IF_SURFACE_COLUMNS = (
     "IF-ID",
     "Direction",

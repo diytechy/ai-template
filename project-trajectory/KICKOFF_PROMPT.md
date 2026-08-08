@@ -117,10 +117,11 @@ low-level requirement (links SR, names module/symbol) → `TC-###` test case
 
 ## Gates (advance only when criteria pass)
 
-Each gate closes per the repo's **declared gate authority** — the one-word
-`docs/gate-policy` file (default `attended`: pause for human approval at each
-gate; the `single-ratify`/`autonomous` levels and their mechanics:
-`PROCESS.md` §4 + `PROCESS_OPTIONS.md` "Gate authority levels").
+Each gate closes per the repo's **declared ratification boundary** —
+`attestation.human_ratification_through` in `docs/config.toml` (default `3`:
+the human decides at every tier, the old `attended`; the `single-ratify` /
+`autonomous` levels are derived from lower boundaries — `PROCESS.md` §4 +
+`PROCESS_OPTIONS.md` "Gate authority levels").
 
 - **G1 — Requirements, UX & constraints.** SN list complete with priorities,
   measurable acceptance intent, and **edge-case expectations covering each
@@ -194,8 +195,8 @@ record an explicit n/a where one truly doesn't apply.
    §6 decision-surfacing dial (safety / money / privacy / irreversibility ⇒
    `attended`; low-risk creative/tooling ⇒ `autonomous`-eligible). Record the
    recommendation + the owner's choice in `docs/status.md`; the owner sets
-   `docs/gate-policy` (non-default levels get the deviation register —
-   `PROCESS_OPTIONS.md` "Gate authority levels").
+   `attestation.human_ratification_through` in `docs/config.toml`
+   (`PROCESS_OPTIONS.md` "Gate authority levels").
 3. Scaffold the artifacts and the check harness (empty registries + headers).
 4. Run **G1**: as Stakeholder, write SN-### (incl. edge cases); as UX, capture
    usability/doc needs; as System Engineer, derive measurable SR-###. Reconcile,

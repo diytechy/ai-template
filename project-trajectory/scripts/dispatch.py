@@ -66,6 +66,18 @@ run-state files, disposition arms. If a change starts to grow this module
 toward the deleted dispatcher's shape, stop and escalate as a written case
 (process-options.md, the design-escalation clause).
 
+THE PLANNER FORMALIZES THIS TICK; IT DOES NOT REPLACE IT (plan §9, SR-145).
+`resume_plan.plan` is the pure function that answers "what next" — and the word
+`next` is the whole of its remit. Everything that decides whether the loop may
+ACT AT ALL still runs first and still lives here: the tracked pause, the dirty
+trunk, the parked-branch resume, the session-config preflight, the iteration
+budget. Only once those pass is the planner asked, and only then because the
+question it answers ("is there an unadjudicated outcome, an unaccepted
+requirement, a draft awaiting admission, a checkpoint?") is one this module had
+no way to ask. Its lower rungs — current-stage spine work and other ready work
+— are enacted by the §A8 machinery below exactly as before: the planner names
+the rung, `_admission` still owns the barrier, the batch and the merge slot.
+
 Contracts: IF-015 (the plain-launch drive mode is agent_loop.py's seam; this
 module is its implementation, invoked only via agent_loop or in-process),
 IF-088 (the exit-banner pending read — gen_trajectory's pending_block
@@ -405,7 +417,7 @@ def _branch_exclusive(root, branch):
 # never pick that WI up again until a human clears it. §A3's ruling is "any
 # non-zero worker exit that is not a crash", and its justification (the dominant
 # shape is green-but-not-approved or cannot-proceed-for-config-reasons) is about
-# EXIT_NEEDS_HUMAN, not about a ceiling. The alternative — hand back WITHOUT a
+# EXIT_NEEDS_JUDGEMENT, not about a ceiling. The alternative — hand back WITHOUT a
 # blockref so a ceiling stays resumable — re-opens the claim/return/re-claim
 # loop this row closed, bounded then only by --max-iterations, so it is an owner
 # call rather than a builder's: filed as a finding, not decided here.
@@ -416,7 +428,7 @@ _WORKER_OUTCOMES = frozenset(
         ac.EXIT_STALL,
         ac.EXIT_WAITING,
         ac.EXIT_BUDGET,
-        ac.EXIT_NEEDS_HUMAN,
+        ac.EXIT_NEEDS_JUDGEMENT,
         ac.EXIT_PAUSED,
     }
 )
@@ -426,7 +438,7 @@ def _lane_close(root, branch, code):
     """What a non-DONE worker outcome does to the lane: None to keep driving,
     else the exit code the run ends with (§A3).
 
-    THE RUN-STOPS THIS REPLACES. `EXIT_NEEDS_HUMAN` used to end the whole drive
+    THE RUN-STOPS THIS REPLACES. `EXIT_NEEDS_JUDGEMENT` used to end the whole drive
     loop and any other non-zero exit stopped it with the branch parked — so one
     WI wanting a human froze a walk-away run, and its partial work sat where
     nobody would find it. Neither is an exceptional outcome that deserves an
@@ -462,7 +474,7 @@ def _lane_close(root, branch, code):
         )
         return None
     reason = "worker exit {}{}".format(
-        code, " (NEEDS-HUMAN)" if code == ac.EXIT_NEEDS_HUMAN else ""
+        code, " (NEEDS-JUDGEMENT)" if code == ac.EXIT_NEEDS_JUDGEMENT else ""
     )
     _ids, refusal = handback.hand_back(root, branch, reason)
     if refusal:
@@ -744,6 +756,151 @@ def gap_census(root):
     return census
 
 
+# --- the resume planner's rungs (plan §9, SR-145/SR-147) ----------------------
+# Deferred imports, per the kit's convention: the planner and its siblings are
+# reached only when the loop actually consults them, so a scaffold missing one
+# never breaks this module's import chain.
+
+
+def _planner_banner(decision):
+    """One line naming the rung, what it wants, and what it is about."""
+    items = ", ".join(str(i) for i in decision.items[:6])
+    if len(decision.items) > 6:
+        items += ", … ({} total)".format(len(decision.items))
+    return "planner rung {} [{}] - {}{}".format(
+        decision.rung, decision.action, decision.reason, ": " + items if items else ""
+    )
+
+
+def _planner_gate(root, tier, state):
+    """The planner's UPPER rungs, consulted once the station is idle and every
+    safety rung has passed. `None` to fall through to §A8 admission, else the
+    exit code the run ends with.
+
+    Only the four rungs above the work rungs are enacted here, and the split is
+    deliberate. `outcomes`, `digests`, `drafts` and `checkpoint` are all
+    judgements this loop cannot make unattended today — an adjudicator draw, a
+    ratification, an admission verdict — so the honest response to each is the
+    same one §A8 already gives a pending ratification: drain the residue,
+    name what is waiting, exit 0 into the owner's queue. The `spine` and
+    `ordinary` rungs fall THROUGH, because the machinery that enacts them (the
+    barrier, the batch, the merge slot) is `_admission`'s and re-deciding it
+    here would be a second scheduler. The `remediation` rung falls through too:
+    it belongs at the drained end of the ladder, where the mermaid puts it and
+    where a bar result can be had.
+
+    A `REFUSE` decision — a rung whose input would not read — exits NON-ZERO. A
+    corrupt outcomes ledger is not an empty one, and a loop that treated the
+    difference as nothing would dispatch work past the very record that might
+    have withdrawn it."""
+    import resume_plan
+
+    decision = resume_plan.plan(resume_plan.snapshot(root))
+    if decision.rung in (
+        resume_plan.SPINE,
+        resume_plan.ORDINARY,
+        resume_plan.REMEDIATION,
+        resume_plan.DRAINED,
+    ):
+        return None
+    refused = decision.action == resume_plan.REFUSE
+    # Count the residue BEFORE the drain, exactly as `_station_exit` does: after
+    # it those branches have merged and the number is unrecoverable.
+    residue = _residue_wi_count(root)
+    code = _drain(root, tier)
+    if code != 0:
+        return code
+    state["merged"] += residue
+    _say(_planner_banner(decision), err=refused)
+    return ac.EXIT_PREFLIGHT if refused else ac.EXIT_DONE
+
+
+def _failing_step(out):
+    """The name of the FIRST step check.py's report calls red, or `"bar"`.
+
+    SKIP is read as red too, and second, because `integrate._run_bar` already
+    rules a skipped step a refusal — a step that did not run is not a step that
+    passed. `"bar"` stands in when the report names nothing at all, which is
+    what a probe that could not launch produces: a bar nobody could run is a red
+    the owner must see, never a green by omission."""
+    import re as _re
+
+    for pattern in (r"\s*FAIL\s+(\S+)", r"\s*SKIP\s+(\S+)"):
+        for line in out.splitlines():
+            match = _re.match(pattern, line)
+            if match:
+                return match.group(1)
+    return "bar"
+
+
+def _trunk_bar(root, gate, tier):
+    """Run the DECLARED bar on trunk and report it as a `resume_plan.Bar`.
+
+    The default probe for the remediation rung, and the one place in this module
+    that asks the harness a question. THE RUN ITSELF IS `integrate._run_bar`,
+    not a second invocation built beside it: that function already owns how this
+    kit runs its declared bar — the repo's own `check.py` (so a tree that
+    changed its harness is barred by its own copy), `--trunk-lane`, and the
+    fail-closed reading in which a SKIP is a refusal rather than a pass. A
+    private copy here would be a second answer to "was the bar green", and the
+    two would drift the first time either is corrected.
+
+    What this adds is the FAILURE KEY: the tree the bar ran against and the name
+    of the first red step, which with the normalised output are
+    `outcome.failure_event`'s three halves."""
+    import resume_plan
+
+    ok, out, _detail = integrate._run_bar(root, root, tier, gate or None)
+    if ok:
+        return resume_plan.Bar(True, gate=gate or "")
+    tree = ac.git(root, "rev-parse", "HEAD^{tree}")[1].strip()
+    return resume_plan.Bar(
+        False, tree=tree, step=_failing_step(out), output=out, gate=gate or ""
+    )
+
+
+def _remediation_rung(root, tier, bar_probe):
+    """The §9 red-bar rung: `None` to keep walking the empty-frontier ladder,
+    else the exit code the run ends with.
+
+    Two facts are joined here and NEITHER is guessed from the other (decisions
+    §3): `spine_stage == 4` is the attestation half — every required TC has an
+    accepted anchor — and the bar's colour is `check.py`'s. The probe runs ONLY
+    at stage 4, so a repo whose breakdown is still in process never pays for it,
+    and a stage the planner could not derive is not a stage 4.
+
+    A red bar EXITS NON-ZERO. Recording the failure and then exiting 0 would be
+    this kit's own dishonest green (SN-008): the queue really is drained, and
+    trunk really is broken, and the second fact is the one that decides the exit
+    code. Exactly-once lives entirely in `resume_plan.remediate` — a repeat of
+    the same failure records nothing new and still stops the run, naming the row
+    that already carries it."""
+    import resume_plan
+
+    snap = resume_plan.snapshot(root)
+    if snap.stage != 4:
+        return None
+    probe = bar_probe if bar_probe is not None else _trunk_bar
+    bar = probe(root, snap.gate, tier)
+    decision = resume_plan.plan(snap._replace(bar=bar))
+    if decision.rung != resume_plan.REMEDIATION:
+        return None
+    result = resume_plan.remediate(root, bar)
+    for line in result.findings:
+        _say(line, err=True)
+    _say(
+        "TRUNK BAR RED at stage 4 - step {!r}; failure event {}; repair "
+        "candidate {} (SR-147: one event and one draft per tree/step/"
+        "fingerprint, whatever cycle observes it).".format(
+            bar.step,
+            result.event or "(none)",
+            result.draft or "already drafted for this failure",
+        ),
+        err=True,
+    )
+    return 1
+
+
 def _pre_admit(args, table, state, config_refusal):
     """The rungs every admission owes before a lane may launch — the session
     config preflight (applied only when work actually needs a worker), then
@@ -836,7 +993,18 @@ def _claim_lanes(root, table, args, worker, batches, exclusive, config_refusal, 
     return admitted, None
 
 
-def _admit(root, table, args, worker, tier, level, lanes_total, config_refusal, state):
+def _admit(
+    root,
+    table,
+    args,
+    worker,
+    tier,
+    level,
+    lanes_total,
+    config_refusal,
+    state,
+    bar_probe=None,
+):
     """One tick's admission, enacted: `(admitted, exit_code)`. The exit code
     is non-None only when the run ends here — the drained queue, the surfaced
     ratifications, a refusal — and only ever with the station idle."""
@@ -848,9 +1016,19 @@ def _admit(root, table, args, worker, tier, level, lanes_total, config_refusal, 
     live = {ln.branch for ln in table}
     parked = [b for b in _parked_branches(root) if b not in live]
     if parked:
+        # CRASH RECOVERY OUTRANKS EVERY JUDGEMENT (plan §9: "safety preflight
+        # and crash recovery always run before judgments"). An unfinished claim
+        # must come home before the planner is asked anything at all.
         return _admit_parked(
             root, table, args, worker, parked, free, config_refusal, state
         )
+    if not busy:
+        # THE PLANNER'S UPPER RUNGS, station idle. Asked only when idle for two
+        # reasons: every one of its stops drains first anyway, and a tick spent
+        # polling live lanes should not pay for a full registry + ledger read.
+        code = _planner_gate(root, tier, state)
+        if code is not None:
+            return False, code
     wis = schedule._load(root)
     ready = [r for r in schedule.frontier(wis) if r["status"] == "queued"]
     kinds = {w["id"]: schedule.kind_of(w) for w in wis}
@@ -860,7 +1038,7 @@ def _admit(root, table, args, worker, tier, level, lanes_total, config_refusal, 
     if verb in ("surface", "empty"):
         if busy:
             return False, None  # drain the lanes, THEN exit into the queue
-        return False, _station_exit(root, tier, verb, payload, state)
+        return False, _station_exit(root, tier, verb, payload, state, bar_probe)
     if verb == "wait":
         return False, None
     if verb == "admit-exclusive":
@@ -890,7 +1068,7 @@ def _admit(root, table, args, worker, tier, level, lanes_total, config_refusal, 
     )
 
 
-def _station_exit(root, tier, verb, payload, state):
+def _station_exit(root, tier, verb, payload, state, bar_probe=None):
     """The run's honest ends, station idle: the surfaced-ratification stop
     (§A8 attended: drain, leave the cards, exit 0) and the drained queue — or,
     on rung 1, NOT an end at all: a minted gap row re-fills the frontier and
@@ -905,6 +1083,14 @@ def _station_exit(root, tier, verb, payload, state):
     if verb == "surface":
         _say(_surface_banner(root, payload))
         return ac.EXIT_DONE
+    # THE §9 RED-BAR RUNG, before the census because that is where the flowchart
+    # puts it: it is reached exactly when "non-spine work ready?" answers no.
+    # The order is nearly moot in practice — at stage 4 the registries are
+    # complete, so the census is empty by construction — but a rung placed by
+    # accident is a rung nobody can reason about, so it is placed on purpose.
+    code = _remediation_rung(root, tier, bar_probe)
+    if code is not None:
+        return code
     # THE EMPTY-FRONTIER LADDER (§A4 amendment, ruled 2026-08-01), replacing
     # the bare queue-drained exit. Rung 1: a mechanical gap census — HANDED to
     # the WI-388 intake mint, which turns each gap into a concrete gap-closure
@@ -957,12 +1143,44 @@ def _station_exit(root, tier, verb, payload, state):
 _POLL_SECONDS = 0.5
 
 
-def run(root, args, worker=None, tier="all"):
+def _run_preflight(root, args, worker):
+    """`(lanes_total, level, config_refusal, exit_code)` — everything the tick
+    loop needs decided ONCE, before the first claim.
+
+    Extracted at the P13 cutover rather than added inline: the cutover replaced
+    `read_declared(docs/gate-policy)` with a validated read that can REFUSE, and
+    a refusal needs a branch. `run` sat exactly at this repo's complexity
+    ceiling, and the repo's rule is to answer a crossing by decomposing, not by
+    stamping a larger number — so the two other once-per-run decisions came out
+    with it and `run` is left with one `if code is not None`.
+
+    `level` is the §A8 admission word, DERIVED from the canonical ratification
+    boundary (`attestation.human_ratification_through`). A repo whose declared
+    authority cannot be read must not have its queue admitted under a guess, so
+    that refusal is preflight — unlike `config_refusal`, which is computed here
+    and applied LAZILY at admission, so an empty queue still drains to exit 0 on
+    an unwired scaffold (the spec's empty-frontier contract).
+    """
+    lanes_total = _lane_count(args, root)
+    level, refusals = ac.ratification_level(root)
+    if refusals:
+        for line in refusals:
+            _say(line, err=True)
+        return lanes_total, None, None, ac.EXIT_PREFLIGHT
+    config_refusal = _session_config_refusal(root, args) if worker is None else None
+    return lanes_total, level, config_refusal, None
+
+
+def run(root, args, worker=None, tier="all", bar_probe=None):
     """The dispatch loop (docs/concurrency-v2.md §A4). `worker` is the one
     injection seam (tests): a callable `(root, branch, wi_ids, args) -> exit
     code` standing in for the worker session launch, run synchronously at
     admission; None means lane.py's real subprocess launch. `tier` is the bar
-    tier the §A2 refresh runs (default: the full gate bar).
+    tier the §A2 refresh runs (default: the full gate bar). `bar_probe` is the
+    SECOND injection seam, for the §9 red-bar rung: a callable
+    `(root, gate, tier) -> resume_plan.Bar` standing in for the trunk bar,
+    consulted only at spine stage 4; None means `_trunk_bar`'s real check.py
+    subprocess.
 
     EACH TICK: poll the live lanes (a worker exit decides an outcome; a
     finished branch refreshes in its own subprocess; a green refresh merges
@@ -981,13 +1199,9 @@ def run(root, args, worker=None, tier="all"):
     descriptor is simply left to the OS's exit-time release — exactly the
     guard's intended span.
     """
-    lanes_total = _lane_count(args, root)
-    level = ac.read_declared(root / "docs" / "gate-policy", "attended").strip().lower()
-    # Computed once, APPLIED lazily: admission refuses on it only when work
-    # actually needs a worker, so an empty queue still drains to exit 0 on an
-    # unwired scaffold (the spec's empty-frontier contract; codex
-    # cross-review finding, round 1).
-    config_refusal = _session_config_refusal(root, args) if worker is None else None
+    lanes_total, level, config_refusal, code = _run_preflight(root, args, worker)
+    if code is not None:
+        return code
     state = {"merged": 0, "stall": 0, "cycles": 0, "fatal": None}
     table = []
     while True:
@@ -1037,6 +1251,7 @@ def run(root, args, worker=None, tier="all"):
                 lanes_total,
                 config_refusal,
                 state,
+                bar_probe,
             )
             if code is not None:
                 return code

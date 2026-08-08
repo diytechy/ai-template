@@ -5,6 +5,8 @@ import re
 
 from conftest import KIT, ROOT, SCRIPTS, load_script, run_py
 
+CONFIG = load_script("config")
+
 
 _ACTION_PINS = {
     "actions/checkout": "de0fac2e4500dabe0009e67214ff5f5447ce83dd",  # v6.0.2
@@ -24,11 +26,12 @@ def test_scaffold_contains_expected_files(scaffold):
         "docs/process.md",
         "docs/process-options.md",
         "docs/gate",
-        "docs/gate-policy",
-        "docs/privacy-check",
-        "docs/push-policy",
-        "docs/blackout",
-        "docs/review-policy",
+        # docs/gate-policy, docs/privacy-check, docs/push-policy, docs/blackout
+        # and docs/review-policy were rows HERE until P14. Every dial they
+        # carried is in docs/config.toml now; scaffolding them beside it would
+        # be mixed-source on day one. docs/agents.csv stays because its readers
+        # are not cut over yet (routing binds at P5).
+        "docs/config.toml",
         "docs/agents.csv",
         "docs/kit-profile",
         "docs/status.md",
@@ -544,15 +547,20 @@ def test_run_launchers_delegate_to_run_menu(scaffold):
     assert "\n[run]" not in ini, "a fresh scaffold ships the [run] examples commented"
 
 
-def test_scaffold_blackout_ships_the_default_window(scaffold):
-    # WI-148: a fresh scaffold ships the 12:00–19:00 UTC weekday default, so the
-    # owner's "always on" blackout is honored by the scaffold, not a hidden
-    # built-in (the value is the last non-comment line, like the other policies).
-    text = (scaffold / "docs" / "blackout").read_text(encoding="utf-8")
-    value = [
-        ln.strip() for ln in text.splitlines() if ln.strip() and not ln.startswith("#")
-    ][-1]
-    assert value == "12:00-19:00"
+def test_scaffold_ships_no_blackout_window_at_all(scaffold):
+    # WI-148 scaffolded a 12:00–19:00 UTC weekday default into docs/blackout,
+    # "so the owner's always-on blackout is honored by the scaffold". P14 deleted
+    # both the file and the window, and the reason is measured rather than
+    # tidy-minded: the canonical `automation.blackout` default is `""`, so a
+    # scaffold shipping `12:00-19:00` put every freshly bootstrapped repo in the
+    # UNCONVERTED state — the coordinator refused at preflight, by name, on day
+    # one. (Driven at P14: plant the retired file back and
+    # agent_common.declared_config returns that refusal.) A window nobody
+    # declared was also one adopter's policy imposed on all of them.
+    assert not (scaffold / "docs" / "blackout").exists()
+    assert not (KIT / "blackout.template").exists()
+    text = (scaffold / "docs" / "config.toml").read_text(encoding="utf-8")
+    assert '# blackout = ""' in text, "the dial is still offered, just unset"
 
 
 def test_agent_resume_launchers_ship_inert_with_edit_slots(scaffold):
@@ -669,31 +677,33 @@ def _policy_lines(path):
     ]
 
 
-def test_privacy_check_defaults_to_false(scaffold):
-    # The scaffolded toggle is `false` — the privacy gate is off by default, so
-    # existing adopters and default scaffolds see zero change (the always-on
-    # secrets floor still runs regardless).
-    assert _policy_lines(scaffold / "docs" / "privacy-check") == ["false"]
+def test_privacy_check_is_declared_once_and_defaults_off(scaffold):
+    # The gate is still off by default — `policy.privacy_check = false` in
+    # config.py's SCHEMA — so existing adopters and default scaffolds see zero
+    # change, and the always-on secrets floor still runs regardless. What
+    # changed at P14 is WHERE: the one-word docs/privacy-check and its
+    # --privacy-check flag are gone, so there is exactly one place to look and
+    # exactly one place to be wrong.
+    assert not (scaffold / "docs" / "privacy-check").exists()
+    assert not (KIT / "privacy-check.template").exists()
+    assert CONFIG.DEFAULTS["policy.privacy_check"] is False
 
 
-def test_privacy_check_flag_sets_toggle(tmp_path):
-    # --privacy-check sets the toggle at repo creation, keeping the template's
-    # explanatory header above the value.
-    dest = tmp_path / "repo"
+def test_the_retired_privacy_check_flag_is_gone(tmp_path):
+    # Driven: argparse must REFUSE it, rather than accept a flag that writes a
+    # second source or (worse) writes nothing while the adopter believes it did.
     proc = run_py(
         [
             SCRIPTS / "bootstrap.py",
             "--dest",
-            dest,
+            tmp_path / "repo",
             "--privacy-check",
             "true",
         ],
         cwd=tmp_path,
     )
-    assert proc.returncode == 0, proc.stdout + proc.stderr
-    policy = dest / "docs" / "privacy-check"
-    assert _policy_lines(policy) == ["true"]
-    assert policy.read_text(encoding="utf-8").startswith("#"), "header kept"
+    assert proc.returncode != 0
+    assert "--privacy-check" in (proc.stderr + proc.stdout)
 
 
 def test_setup_scripts_advise_on_privacy_not_pin_identity():
@@ -703,7 +713,11 @@ def test_setup_scripts_advise_on_privacy_not_pin_identity():
     # global git config.
     for name in ("setup.sh", "setup.ps1"):
         text = (KIT / "scripts" / name).read_text(encoding="utf-8")
-        assert "privacy-check" in text, name + " must read the privacy toggle"
+        assert "policy.privacy_check" in text, name + " must read the privacy toggle"
+        assert "config_query.py" in text, (
+            name + " must read it through the one entry point (decision D-1), "
+            "not by grepping a file that no longer exists"
+        )
         assert "git config --global" not in text, name + " must stay repo-local"
 
 

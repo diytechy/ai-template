@@ -63,27 +63,35 @@ try {
         }
     }
 
-    # Privacy-check advisory (docs/privacy-check — process-options.md "Commit
+    # Privacy-check advisory (policy.privacy_check — process-options.md "Commit
     # identity & privacy"). Identity is USER-owned: setup no longer pins or
     # sets an author identity. But when the privacy gate is on, the author email
     # must be in the exempt allowlist (no private/contactable address) or commits
     # are blocked — so warn early if this clone's identity would fail. Advisory
     # only; the hooks are the enforcement. Reuses check_privacy.py --author.
-    if (Test-Path "docs/privacy-check") {
-        $privacy = (Get-Content "docs/privacy-check" |
-            Where-Object { $_.Trim() -and -not $_.Trim().StartsWith("#") } |
-            Select-Object -First 1)
-        if ($privacy) { $privacy = $privacy.Trim() }
-        if ($privacy -eq "true") {
-            & $python scripts/check_privacy.py --author 2>$null | Out-Null
-            if ($LASTEXITCODE -ne 0) {
-                $email = ""
-                try { $email = (git config user.email 2>$null) } catch {}
-                Write-Warning ("docs/privacy-check is on, but this clone's git author email '" +
-                    "$(if ($email) { $email } else { 'unset' })' is not in the exempt allowlist " +
-                    "(scripts/check_privacy.py EXEMPT_EMAILS), so commits will be blocked. Set a " +
-                    "no-reply identity: git config user.email <you>@users.noreply.github.com (repo-local).")
-            }
+    #
+    # Read through config_query.py, the ONE entry point (decision D-1): the
+    # one-word docs/privacy-check this used to grep was deleted at P14. A
+    # refusal WARNS rather than blocks — setup is advisory by construction and
+    # the hooks are the gate — but it says so, because a silent skip is how an
+    # unreadable policy becomes an unnoticed one.
+    $privacy = (& $python scripts/config_query.py --root . policy.privacy_check 2>$null)
+    if ($LASTEXITCODE -ne 0) {
+        $privacy = ""
+        Write-Warning ("could not read policy.privacy_check (docs/config.toml) - the identity " +
+            "advisory is skipped. Run scripts/config_query.py yourself to see the refusal; " +
+            "the git hooks will BLOCK until it is fixed.")
+    }
+    if ($privacy) { $privacy = "$privacy".Trim() }
+    if ($privacy -eq "true") {
+        & $python scripts/check_privacy.py --author 2>$null | Out-Null
+        if ($LASTEXITCODE -ne 0) {
+            $email = ""
+            try { $email = (git config user.email 2>$null) } catch {}
+            Write-Warning ("policy.privacy_check is on, but this clone's git author email '" +
+                "$(if ($email) { $email } else { 'unset' })' is not in the exempt allowlist " +
+                "(scripts/check_privacy.py EXEMPT_EMAILS), so commits will be blocked. Set a " +
+                "no-reply identity: git config user.email <you>@users.noreply.github.com (repo-local).")
         }
     }
 

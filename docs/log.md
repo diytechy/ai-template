@@ -25528,3 +25528,70 @@ Also closed: six cross-component seams the new modules created now carry declare
 inherited host defects). Smoke **1260 passed in 29.6 s**. ruff clean;
 `check_trajectory --strict` 0 errors; `check_docs --stale` 0 broken; `check_dupes`
 clean (the census re-anchored to one 91-block `mechanized-loop` class).
+
+
+## 2026-08-08 — mechanized-loop P11/P12/P13/P14: the planner, the cutover, and the deletion that partly refused
+
+**P11/P12 `resume_plan.py`** — a PURE planner: `snapshot(root)` freezes the tree's
+state, `plan(snapshot)` returns one typed `Decision` and touches nothing. The
+precedence is plan §9's, mutation-proven per rung (reversing the declared order
+reds 32 of 80 tests). `spine_components` partitions a spine batch by connectivity
+and collapses to one project-wide batch when ownership is missing or an edge
+crosses the partition. The red-bar rung persists one failure event and drafts
+exactly one remediation.
+
+**P13 the cutover** — every runtime reader moved to `docs/config.toml` in one
+change, behind a new fail-closed rung (`config.unconverted_findings`) that makes
+an unconverted repo REFUSE by name instead of silently answering the schema
+default. The hooks moved with it, which is the change that produced this
+program's one real fail-open earlier — this time the conversion lands with the
+reader.
+
+**P14 the deletion** — nine retired one-word files and five templates deleted,
+each verified unreachable by an AST path-construction scan plus `rg` over every
+kit file type. Six dead symbols removed, each named with what it was and why it
+went. The full migration matrix driven 5/5.
+
+### Three things this pair got right by refusing
+
+**D-4 did not land, and that is the correct outcome.** P14 was given the rule
+*every caller moves to the outcome-event path first, or the deletion does not
+happen* — and it stopped, because **the ruling D-4 depends on does not exist**.
+`hand_back`'s only caller is `dispatch._lane_close`, the case where a worker
+exited non-zero having decided *nothing*; D-5 gives the path where the WORKER
+authors its own outcome event, and says nothing about who authors a `partial`
+event on behalf of a crashed one. Inventing that ruling inside a deletion slice
+would have been the policy-change-dressed-as-a-cutover the cutover slice had
+already refused once. **What is owed is one owner ruling, not more code.**
+
+**Eight of seventeen retired files were kept**, each with its live reader named:
+`status-lint`, `trajectory-check`, `interfaces-check`, `components-check`,
+`okf-export`, `subagent-gate` (dials the cutover did not reach) and
+`agents.csv` + `agents-enabled` (the routing seam). The all-or-nothing rule was
+applied PER FILE — nothing anywhere reads a file that is gone.
+
+**A deleted template fixed a live bug.** `blackout.template` shipped
+`12:00-19:00` while the schema default is `""`, so every freshly bootstrapped
+repo was unconverted and refused its own coordinator at preflight on day one. A
+fresh scaffold now reports zero refusals — and no longer ships a blackout window
+the kit chose on every adopter's behalf.
+
+### Two defaults moved, and both are adopter-visible
+
+`attestation.human_ratification_through` defaults to **3**, not 1: the kit ships
+this answer twice, and `gate-policy.template` scaffolded `attended`, which IS
+boundary 3. At default 1 the cutover would have silently handed LLR and TC
+ratification to an adjudicator in every repo that asked for nothing.
+`policy.review_rounds` defaults to 1 at the merge bar, where the retired reader
+defaulted to 0 — one of the two divergent defaults the survey found, resolved in
+the safe direction.
+
+`[harness]` was **deleted, not parity-tested** — the contracts doc had demanded
+P13 answer that either/or out loud, and `tests/test_config.py`'s
+`SAMPLE_SECTIONS_RETIRED_SINCE` tuple carried the debt until the doc amendment
+landed. The guard told the doc's editor it could be emptied; it is now empty.
+
+**Bar:** full unfiltered suite **2913 passed, 8 skipped, 2 failed** (both the
+inherited host defects). Smoke **1369 passed in 29.1 s**. ruff clean;
+`check_trajectory --strict` 0 errors; `check_docs --stale` 0 broken; `check_dupes`
+clean; derive_gate **G2 / spine-stage=1**.

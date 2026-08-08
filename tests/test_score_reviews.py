@@ -129,7 +129,10 @@ def test_tripwire_near_duplicate():
 
 def test_tripwire_implementer_touched_review_path():
     assert score.tripwire_implementer_touched_review(["docs/reviews/012-REVIEW-A.md"])
-    assert score.tripwire_implementer_touched_review(["docs/review-policy"])
+    # docs/review-policy is retired; the dial it carried is a cell of
+    # docs/config.toml, so THAT is the path an implementer must not touch.
+    assert score.tripwire_implementer_touched_review(["docs/config.toml"])
+    assert not score.tripwire_implementer_touched_review(["docs/review-policy"])
     assert not score.tripwire_implementer_touched_review(["src/a.py", "docs/x.md"])
 
 
@@ -220,7 +223,7 @@ def test_fired_tripwires_aggregates():
     bad = score.parse_verdict(
         "- [MAJOR] src/a.py:1 -> x -> y\nVERDICT: APPROVE findings=5"
     )
-    fired = score.fired_tripwires([va, bad], changed_paths=["docs/review-policy"])
+    fired = score.fired_tripwires([va, bad], changed_paths=["docs/config.toml"])
     assert "finding-count-mismatch" in fired
     assert "implementer-touched-review-path" in fired
 

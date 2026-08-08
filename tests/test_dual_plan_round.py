@@ -18,7 +18,7 @@ import os
 import subprocess
 import sys
 
-from conftest import SCRIPTS, augment_env, run_py
+from conftest import SCRIPTS, augment_env, declare_config, run_py
 
 AGENT_LOOP = SCRIPTS / "agent_loop.py"
 
@@ -273,11 +273,13 @@ def test_arbiter_disagreement_pages(tmp_path):
 
 
 def test_arbiter_disagreement_autonomous_stalls_not_pages(tmp_path):
-    # The same position-unstable PAGE under gate-policy autonomous must NOT
-    # hard-gate a human: the single-shot flag reaches the pause-free end
-    # state — EXIT_STALL (attention), never NEEDS-HUMAN.
+    # The same position-unstable PAGE under the autonomous gate authority must
+    # NOT hard-gate a human: the single-shot flag reaches the pause-free end
+    # state — EXIT_STALL (attention), never NEEDS-JUDGEMENT. The word is DERIVED
+    # from the canonical boundary since the P13 cutover; 0 is the converter's
+    # one named candidate for what `autonomous` meant.
     root, fake = make_fixture(tmp_path)
-    (root / "docs" / "gate-policy").write_text("autonomous\n", encoding="utf-8")
+    declare_config(root, human_ratification_through=0)
     fake.write_text(
         FAKE_CLI.replace('label = "A" if "ALPHA" in a else "B"', 'label = "A"'),
         encoding="utf-8",
@@ -291,10 +293,12 @@ def test_arbiter_disagreement_autonomous_stalls_not_pages(tmp_path):
 def test_arbiter_disagreement_single_ratify_stalls_not_pages(tmp_path):
     # single-ratify rides the SAME pause-free else-arm as autonomous (both are
     # non-stop-needs-human page actions), so the flag path must reach
-    # EXIT_STALL, never NEEDS-HUMAN. Braces SR-108's "autonomous/
+    # EXIT_STALL, never NEEDS-JUDGEMENT. Braces SR-108's "autonomous/
     # single-ratify" clause at the --dual-plan entry (113-REVIEW-A follow-up).
     root, fake = make_fixture(tmp_path)
-    (root / "docs" / "gate-policy").write_text("single-ratify\n", encoding="utf-8")
+    # `single-ratify` is boundaries 1 and 2 (config_migrate.AMBIGUOUS); 1 is
+    # taken here as the lower of the two.
+    declare_config(root, human_ratification_through=1)
     fake.write_text(
         FAKE_CLI.replace('label = "A" if "ALPHA" in a else "B"', 'label = "A"'),
         encoding="utf-8",

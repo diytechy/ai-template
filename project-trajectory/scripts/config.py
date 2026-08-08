@@ -37,10 +37,18 @@ commitments, and what each one refuses:
     precedence rule would hide the divergence — the adopter reads one file and
     the loop obeys the other — rather than end it.
 
-This module changes NO existing runtime reader: `agent_common.read_declared` and
-every current caller keep working byte-for-byte until the cutover. What exists
-here is the authority — declared, validated, and provably in agreement with the
-files it will replace.
+Since the P13 cutover this module IS the authority every runtime reader
+consults — the git hooks (through `config_query`), the coordinator, the
+dispatcher, the intake mint and the integrator. `agent_common.read_declared`
+survives only for the surfaces that are STATE rather than configuration
+(`docs/gate`, `docs/work/pause`).
+
+The cutover carries one rung the naive version of it did not, and it is the
+reason that version failed: `unconverted_findings`. Switching readers to a
+canonical key that no repo had SET made a tree carrying `docs/privacy-check =
+true` answer `false` — the privacy gate gone, in silence. So a reader must be
+able to tell an unconverted repo from a repo that chose the default, and it
+refuses rather than guessing.
 """
 
 import collections
@@ -129,10 +137,28 @@ SAFETY_CLASSES = (
 # this table is the ONLY way to add a dial: the loader, the query entry point,
 # the template renderer and the converter all read it.
 SCHEMA = (
+    # Default 3, NOT the 1 the contracts' sample document shows — that sample is
+    # a FILLED instance, the same way its `[routing] enabled = true` is. Three
+    # reasons, and the third is the one that decides it:
+    #   - 3 is what the retired dial's shipped default MEANT. bootstrap
+    #     scaffolds `docs/gate-policy: attended`, and the converter's own
+    #     GATE_AUTHORITY maps `attended` to 3. A default of 1 would silently hand
+    #     LLR and TC ratification to an adjudicator in every repo that asked for
+    #     nothing — a policy change smuggled in as a migration.
+    #   - it is the fail-closed direction: the human keeps every tier until an
+    #     adopter dials down, never the reverse.
+    #   - it is what made `unconverted_findings` VACUOUS on a fresh scaffold.
+    #     The kit shipped this default TWICE — here and in gate-policy.template
+    #     — and the cutover's rung compared the two; had they disagreed, every
+    #     newly bootstrapped repo would have met a refusal it did nothing to
+    #     earn, and the rung would have been trained out of usefulness on day
+    #     one. P14 deleted the template, so this is now the ONE home and the
+    #     agreement is unfalsifiable rather than merely true. The third reason
+    #     is kept because it is why the number is 3 and not 1.
     Key(
         "attestation.human_ratification_through",
         "int",
-        1,
+        3,
         rng=(0, 3),
         doc="Inclusive human checkpoints: 0=SN; 1=SN+SR; 2=SN+SR+LLR; "
         "3=SN+SR+LLR+TC. At or below the boundary a ratification needs a human "
@@ -264,20 +290,17 @@ SCHEMA = (
         True,
         doc="Generate and freshness-check the docs/okf/ knowledge bundle.",
     ),
-    Key(
-        "harness.src",
-        "str",
-        "src",
-        doc="Product source root. Mirrors docs/stack.ini [paths] src; stack.ini "
-        "stays the live source until the cutover and the two are proved equal "
-        "by the parity tests.",
-    ),
-    Key(
-        "harness.tests",
-        "str",
-        "tests",
-        doc="Test root. Mirrors docs/stack.ini [paths] tests (see harness.src).",
-    ),
+    # (`[harness] src` / `tests` DELETED at the P13 cutover.) The contracts doc
+    # ruled that this slice owed ONE of two things and must say which: land the
+    # parity test that proves these mirror docs/stack.ini [paths], or delete them
+    # and read the toolchain from stack.ini alone. **Deleted.** Nothing ever read
+    # them, the mirror was never proved, and this repo's own instance already
+    # diverged (stack.ini says `project-trajectory/scripts`; the unset key
+    # resolved to `src`). A duplicated declaration with no reader and no guard is
+    # not a seam under construction — it is a second place to be wrong, and the
+    # honest close is to have one home. docs/stack.ini remains the declared
+    # toolchain; if config.toml ever absorbs it, it absorbs it, rather than
+    # shadowing it.
     Key(
         "outcomes.complete_sampling_rate",
         "float",
@@ -445,10 +468,10 @@ PROMPT_FIELDS = (
 # is the declared toolchain), so its mere presence proves nothing — the pair is
 # live only when that section actually declares the dial.
 #
-# Deliberately NOT here: docs/stack.ini's [paths], mirrored by harness.src /
-# harness.tests. That mirror is a declared parity, not a divergence — stack.ini
-# stays the live source until the cutover and the parity tests hold the two
-# equal, so refusing on it would refuse the transition itself.
+# Deliberately NOT here: docs/stack.ini's [paths]. It has no canonical mirror at
+# all since the cutover deleted `harness.src`/`harness.tests` (see the SCHEMA
+# note above), so there is nothing to be mixed with — stack.ini is simply the
+# one home of the declared toolchain.
 LegacySource = collections.namedtuple("LegacySource", "path section key")
 
 LEGACY_SOURCES = {
@@ -929,7 +952,36 @@ def explicit_keys(root):
     return present
 
 
-def mixed_source_findings(root):
+def live_legacy_source(root, key):
+    """`(LegacySource, Path)` when `key`'s retired source is LIVE in this tree,
+    else `(LegacySource-or-None, None)`.
+
+    "Live" is not "the file exists": for the one retired source that is a
+    SECTION of a surviving file (`docs/stack.ini`'s `[agent-loop]`), the pair
+    counts only when that section actually declares the dial — stack.ini is in
+    every repo, so its presence proves nothing.
+
+    Extracted because the two rungs that ask this question — `mixed_source_
+    findings` (both live) and `unconverted_findings` (only the retired one live)
+    — had grown the same six-line walk, and the kit's F5 duplication licence is
+    explicitly about CROSS-SCRIPT copy-ability: it does not extend inside a
+    file. One home also means a retired source added to the table above cannot
+    be interpreted two ways by the two callers.
+    """
+    legacy = LEGACY_SOURCES.get(key)
+    if legacy is None:
+        return None, None
+    path = Path(root).joinpath(*legacy.path.split("/"))
+    if not path.is_file():
+        return legacy, None
+    if legacy.section is not None and legacy.key not in _ini_section_keys(
+        path, legacy.section
+    ):
+        return legacy, None
+    return legacy, path
+
+
+def mixed_source_findings(root, keys=None):
     """One finding per canonical key whose retired declared-policy source is
     still present AND whose canonical key is set (SR-138).
 
@@ -937,20 +989,33 @@ def mixed_source_findings(root):
     resolves the ambiguity silently, so the adopter reads one file while the
     loop obeys the other. Refusing converts a permanent silent divergence into
     a one-time migration step — delete the retired file, or unset the key.
+
+    `keys` narrows the report to a caller's OWN read set, the same discipline
+    `unconverted_findings` applies and for the same reason: a refusal about a
+    dial this caller never reads is noise. It also does one thing no exemption
+    list could do as honestly. `routes` / `routing.enabled` are converted in
+    THIS repo's document while `docs/agents.csv` and `docs/agents-enabled` are
+    still the live sources — routing binds at P5 — so a whole-schema report
+    would refuse the very tree that converted them. It is not ambiguous today:
+    with no reader on the canonical side, the retired file wins deterministically.
+    The moment a caller lists `routes` in its read set the refusal starts
+    firing, which is exactly when the ambiguity becomes real. Nothing has to
+    remember to delete an exemption.
+
+    `keys=None` (the default) reports the whole schema — what an audit or a
+    migration tool wants.
     """
     root = Path(root)
     present = explicit_keys(root)
+    watched = sorted(LEGACY_SOURCES) if keys is None else sorted(set(keys))
     findings = []
-    for key in sorted(LEGACY_SOURCES):
-        if key not in present:
+    for key in watched:
+        if key not in present or key not in LEGACY_SOURCES:
             continue
-        legacy = LEGACY_SOURCES[key]
-        path = root.joinpath(*legacy.path.split("/"))
-        if not path.is_file():
+        legacy, path = live_legacy_source(root, key)
+        if path is None:
             continue
         if legacy.section is not None:
-            if legacy.key not in _ini_section_keys(path, legacy.section):
-                continue
             where = "{} [{}] {}".format(legacy.path, legacy.section, legacy.key)
         else:
             where = legacy.path
@@ -959,6 +1024,152 @@ def mixed_source_findings(root):
                 key,
                 "is set in {} while its retired source {} is still live; delete "
                 "the retired source or unset the key".format(CONFIG_REL, where),
+            )
+        )
+    return findings
+
+
+# --- the unconverted-source refusal (the P13 cutover's fail-closed rung) ------
+# docs/stack.ini SURVIVES the migration — it is the declared toolchain, present
+# in every repo whether or not the behaviour dials were ever converted. Its mere
+# presence is therefore no evidence of an unconverted repo, so the rung below
+# skips it rather than refusing every tree in the world.
+SURVIVING_LEGACY = ("docs/stack.ini",)
+
+
+def _converter():
+    """The sibling converter module, imported LAZILY — one home for the import
+    so the two callers below cannot drift into two fallbacks (and so the git
+    hooks, which load this module through `config_query`, never pay for the
+    converter's `csv`/`json`/`argparse` unless a retired file actually exists)."""
+    try:
+        import config_migrate
+    except ImportError:  # pragma: no cover - in-process fallback
+        import sys
+
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        import config_migrate
+    return config_migrate
+
+
+def _legacy_reading(path, key, module=None):
+    """`(value, reason)` — the canonical value the retired source at `path`
+    still declares, or `(None, reason)` when it has no canonical form.
+
+    `(None, None)` means "nothing to compare" (no conversion rule, or an empty
+    file), which is not this rung's business.
+
+    The conversion is DELEGATED to `config_migrate` rather than restated here.
+    "What does this retired word become?" has exactly one answer in this kit,
+    and a second copy of it in the reader would be a second place for the
+    cutover to be wrong — in the one direction (a security dial read as absent)
+    the program has already measured once. The import is lazy and happens only
+    when a retired file actually exists, so a converted repo — every repo, once
+    the retired files are deleted — never pays for it.
+    """
+    if module is None:
+        module = _converter()
+    row = next((r for r in module.LEGACY_MAP if r.key == key), None)
+    if row is None:
+        return None, None
+    # Presence IS the value for the consent surface (decision D-5): the file
+    # says nothing inside it, so there is no line to read.
+    if row.reader == "agents-enabled":
+        return True, None
+    if row.reader != "line":
+        return None, None
+    raw = module.declared_line(path)
+    if raw is None:
+        return None, None
+    report = []
+    value = module._coerce(row.coerce, raw, row.source, report, key=key)
+    if value is None:
+        return None, (report[0].why if report else "has no conversion rule")
+    # A value the SCHEMA refuses is not a divergence — it is junk, and the
+    # converter already decided what happens to it: report it and write nothing,
+    # so the declared default stands. Comparing it would refuse a repo whose
+    # retired file says `push-policy: nonsense`, where the retired reader and the
+    # canonical one reach the same place anyway (nothing but `agent` ever let an
+    # agent push). The rung exists for a policy that was CHOSEN and is being
+    # dropped, not for a typo the schema already answers.
+    if module._schema_refusal(key, value, row.source, raw, []):
+        return None, None
+    return value, None
+
+
+def unconverted_findings(root, keys, cfg=None):
+    """One finding per requested key whose retired source is still live, whose
+    canonical key is UNSET, and whose retired value would decide DIFFERENTLY
+    from the answer this loader gives.
+
+    **This rung is why the P13 cutover is safe, and it exists because the
+    failure was measured.** Wiring the git hooks to a canonical key that no repo
+    had set made a tree carrying `docs/privacy-check = true` answer `false`: the
+    privacy gate vanished and `pre-push` exited 0 on a reviewer `BLOCK`. The
+    lesson is not "convert first and hope" — it is that a reader must be able to
+    tell an unconverted repo from a repo that chose the default. So it refuses,
+    by name, and every caller treats a refusal as a BLOCK. Fail closed.
+
+    Three states, and only the third is a finding:
+
+    - **the canonical key is SET** — the repo has converted. The retired file
+      may sit beside it for the length of the migration; that pair is
+      `mixed_source_findings`' business at preflight, not this rung's (a repo
+      cannot commit its own migration otherwise).
+    - **the retired source is absent, or says exactly what the canonical answer
+      says** — nothing was lost, so nothing is reported. A freshly scaffolded
+      repo lives here: its `docs/push-policy` says `human` and so does the
+      schema, its `docs/gate-policy` says `attended` and so does the boundary.
+      A default the kit ships in two places must not cost every adopter a
+      refusal.
+    - **the retired source says something ELSE, or something with no canonical
+      form at all** (`docs/gate-policy: autonomous`) — the caller would obey a
+      policy the adopter never wrote. Refused, quoting the converter's own
+      reason, and the fix is one command: `config_migrate.py --write`.
+
+    `keys` is the caller's OWN read set, never the whole schema: a refusal about
+    a dial this caller does not read would be noise, and noise is how a real
+    refusal gets ignored.
+    """
+    root = Path(root)
+    present = explicit_keys(root)
+    if cfg is None:
+        cfg, _ = load_config(root)
+    findings, module = [], None
+    for key in keys:
+        if key in present or key not in DEFAULTS:
+            continue
+        legacy, path = live_legacy_source(root, key)
+        if path is None or legacy.path in SURVIVING_LEGACY:
+            continue
+        if module is None:
+            module = _converter()
+        value, reason = _legacy_reading(path, key, module)
+        if reason is not None:
+            findings.append(
+                Finding(
+                    key,
+                    "is unset in {} while its retired source {} still declares a "
+                    "value the converter REFUSES to map ({}); this repo has not "
+                    "converted, and the default would be a policy nobody chose. "
+                    "Run `python scripts/config_migrate.py --root . --write`, "
+                    "then set the key deliberately".format(
+                        CONFIG_REL, legacy.path, reason
+                    ),
+                )
+            )
+            continue
+        if value is None or value == cfg.get(key):
+            continue
+        findings.append(
+            Finding(
+                key,
+                "is unset in {} (so it resolves to {!r}) while its retired "
+                "source {} declares {!r}; this repo has not converted and the "
+                "answer would be a policy nobody chose. Run `python "
+                "scripts/config_migrate.py --root . --write`".format(
+                    CONFIG_REL, cfg.get(key), legacy.path, value
+                ),
             )
         )
     return findings

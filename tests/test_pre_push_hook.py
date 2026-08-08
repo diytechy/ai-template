@@ -14,7 +14,7 @@ import shutil
 import subprocess
 
 import pytest
-from conftest import augment_env, env_gate_skipif
+from conftest import augment_env, declare_config, env_gate_skipif
 
 HOOK = ".githooks/pre-push"
 ZERO = "0" * 40
@@ -78,7 +78,9 @@ def run_hook(root, stdin_text, review_cmd=None):
 
 
 def set_privacy(root, value="true"):
-    (root / "docs" / "privacy-check").write_text(value + "\n", encoding="utf-8")
+    """The privacy gate, in its ONE home since the P13 cutover. The `"true"` /
+    `"false"` vocabulary is kept so the call sites below read unchanged."""
+    declare_config(root, privacy_check=value.strip().lower() == "true")
 
 
 def push_line(head, remote_sha):
@@ -96,7 +98,12 @@ def test_pre_push_honors_kit_scripts_dir(repo):
     # secrets floor at the push boundary too — not just pre-commit. Relocate the
     # harness and point the env var at it: a key in the outgoing range still
     # blocks (scripts found via the override); without the var, scripts/ is
-    # absent at the root so the floor can't run and the push would slip through.
+    # absent at the root so the floor cannot run — and since the P13 cutover
+    # that no longer SLIPS THROUGH. This repo declares behaviour (it has a
+    # docs/config.toml), so an unreadable declaration fails CLOSED at the push
+    # boundary, which is the direction D-1 ratified. The negative leg is kept
+    # rather than deleted: it is what proves the override is load-bearing, and
+    # its verdict flipping is the whole visible effect of the cutover here.
     root, base, _head = repo
     shutil.move(str(root / "scripts"), str(root / "harness_scripts"))
     key = "-----BEGIN RSA " + "PRIVATE KEY-----\n"  # split so this line isn't a match
@@ -121,8 +128,9 @@ def test_pre_push_honors_kit_scripts_dir(repo):
     blocked = run(with_override=True)
     assert blocked.returncode != 0, blocked.stdout + blocked.stderr
     assert "secrets floor" in blocked.stderr
-    slipped = run(with_override=False)  # harness unfindable -> floor skips, exit 0
-    assert slipped.returncode == 0, slipped.stdout + slipped.stderr
+    unfindable = run(with_override=False)
+    assert unfindable.returncode != 0, unfindable.stdout + unfindable.stderr
+    assert "FAILING CLOSED" in unfindable.stderr, unfindable.stderr
 
 
 def test_privacy_off_is_inert(repo):
@@ -151,7 +159,7 @@ def test_secrets_scan_off_lets_it_through(repo):
     # The opt-out reaches the push boundary: docs/secrets-scan off disables the
     # floor, so the same key does not block an unconcerned repo's push.
     root, base, head = repo
-    (root / "docs" / "secrets-scan").write_text("off\n", encoding="utf-8")
+    declare_config(root, secrets_scan=False)
     key = "-----BEGIN RSA " + "PRIVATE KEY-----\n"
     leaky = commit_file(root, "cfg.txt", key, "add cfg")
     proc = run_hook(root, push_line(leaky, head))
@@ -170,7 +178,8 @@ def test_missing_reviewer_fails_closed(repo):
 
 
 def set_review_policy(root, value):
-    (root / "docs" / "privacy-review").write_text(value + "\n", encoding="utf-8")
+    """The unwired-reviewer opt-down, now `policy.privacy_review`."""
+    declare_config(root, privacy_review=value)
 
 
 def test_warn_unwired_optdown_warns_and_proceeds(repo):
@@ -224,7 +233,7 @@ def test_review_policy_typo_stays_fail_closed(repo):
     proc = run_hook(root, push_line(head, base))
     assert proc.returncode != 0
     assert "FAILING CLOSED" in proc.stderr
-    assert "docs/privacy-review" in proc.stderr
+    assert "policy.privacy_review" in proc.stderr
 
 
 def test_approve_proceeds_and_reviewer_sees_full_range(repo, tmp_path):

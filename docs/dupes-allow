@@ -271,10 +271,10 @@
 #
 # The distribution:
 #
-#   cli                   78   deliberate
+#   cli                   79   deliberate
 #   link-rebase            1   deliberate
 #   spine-loader          20   deliberate
-#   declared-file         12   deliberate
+#   declared-file          9   deliberate
 #   markdown-table        11   deliberate
 #   git-wrapper            7   deliberate
 #   wi-schema-columns      6   deliberate
@@ -282,7 +282,8 @@
 #   spec-folder-reader     2   deliberate
 #   ctx-unpack             3   deliberate
 #   okf-row                1   deliberate
-#   import-fallback        2   deliberate
+#   config-read            1   deliberate
+#   import-fallback        3   deliberate
 #   intake-mint            8   deliberate
 #   module-path            3   deliberate
 #   signature-echo         2   deliberate
@@ -308,22 +309,25 @@
 # a census whose classification has rotted is how the false claims above
 # survived in the first place.
 
-# --- cli (78 blocks) ---------------------------------------------
+# --- cli (79 blocks) ---------------------------------------------
 # disposition: deliberate
 # the per-script CLI skeleton + _utf8_console. F5: kit scripts must stay
 # independently copy-able and stdlib-only, which is why a shared
 # _kitcommon.py was REJECTED (owner ruling 2026-07-12). check_stubs.py says
 # so in its own code: 'verbatim across the kit'.
+0f127b4b0147  project-trajectory/scripts/check_privacy.py == project-trajectory/scripts/wi_convert.py
+69e3088d9924  project-trajectory/scripts/config_migrate.py == project-trajectory/scripts/config_query.py
+97a89c4259f1  project-trajectory/scripts/config_migrate.py == project-trajectory/scripts/config_query.py
 ae679b73acd2  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/agent_route.py
 ae679b73acd2  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/bootstrap.py
 ae679b73acd2  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/check.py
+ae679b73acd2  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/check_privacy.py
 b87ed5851f33  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/check_coverage.py
 b87ed5851f33  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/check_doc_refs.py
 ae679b73acd2  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/check_docs.py
 b87ed5851f33  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/check_dupes.py
 ae679b73acd2  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/check_flows.py
 ae679b73acd2  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/check_perf.py
-b87ed5851f33  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/check_privacy.py
 b87ed5851f33  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/check_stubs.py
 b87ed5851f33  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/check_trajectory.py
 b87ed5851f33  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/check_vendored.py
@@ -377,7 +381,6 @@ b76043ee462f  project-trajectory/scripts/check_dupes.py == project-trajectory/sc
 0e8403279f2d  project-trajectory/scripts/attest.py == project-trajectory/scripts/check_perf.py
 96547fd3a5ae  project-trajectory/scripts/attest.py == project-trajectory/scripts/check_perf.py
 93d508e214f3  project-trajectory/scripts/check_perf.py == project-trajectory/scripts/trace.py
-2bc803394d18  project-trajectory/scripts/check_privacy.py == project-trajectory/scripts/check_trajectory.py
 f3c532f40a67  project-trajectory/scripts/check_stubs.py == project-trajectory/scripts/gen_arch_map.py
 59ca47b1f04b  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/gen_trajectory.py
 744b556ca01e  project-trajectory/scripts/check_vendored.py == project-trajectory/scripts/score_reviews.py
@@ -395,7 +398,6 @@ a986f553a391  project-trajectory/scripts/plan_briefs.py == project-trajectory/sc
 288c88cdad6f  project-trajectory/scripts/adjudicate.py == project-trajectory/scripts/intake.py
 2a3ae413b478  project-trajectory/scripts/plan_coverage.py == project-trajectory/scripts/plan_coverage_step.py
 ae679b73acd2  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/wi_convert.py
-d588a4299326  project-trajectory/scripts/check_privacy.py == project-trajectory/scripts/wi_convert.py
 f7d5136e6d5d  project-trajectory/scripts/derive_gate.py == project-trajectory/scripts/wi_convert.py
 # Phase 3 (2026-07-29): trunk_step.py ships — its _utf8_console and
 # argparse/--root preamble join the class (same F5 reason: the serial trunk
@@ -503,7 +505,33 @@ b0b9cc04d152  project-trajectory/scripts/gen_release_checklist.py == project-tra
 # generator (sw_containment's subtree walk — traj_views.py since WI-280 S5).
 a2fa21743919  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/traj_views.py
 
-# --- import-fallback (2 blocks) ----------------------------------
+# --- config-read (1 blocks)  --------------------------------------
+# disposition: deliberate
+# The P13 cutover's two in-process readers of docs/config.toml:
+# agent_common.declared_config (which the coordinator, the dispatcher, the
+# intake mint and the integrator share) and check_privacy.read_policy. Both
+# do the same three things - lazy-import config, load it, then append the
+# unconverted-source findings - because both must fail closed on the same
+# input, and check_privacy is invoked DIRECTLY by check.py, CI and the git
+# hooks, not only through a caller that has already loaded. F5: it must stay
+# independently copy-able, so it does not import agent_common.
+# NOT merely sanctioned. The property that matters is not that the two blocks
+# are byte-equal but that the two readers reach the SAME VERDICT, and that is
+# driven end to end: tests/test_config_hooks.py runs the retired pipeline and
+# the new reader over one matrix of declared values, and
+# tests/test_config_cutover.py drives all three hooks against an unconverted
+# repo - where a disagreement between these two readers is exactly what would
+# show up as a hook letting a commit through.
+# P14 SHRANK this block on purpose, which is why the fingerprint moved.
+# `declared_config` gained a THIRD rung - mixed_source_findings - and
+# check_privacy deliberately did NOT: it is invoked BY the per-commit hooks,
+# and a hook that refused a both-sources tree could never make the commit that
+# deletes the retired file. Same ruling config_query.py already carries. The
+# blocks still share the lazy-import-and-load half; the divergence is the
+# refusal set, and it is the one difference these two readers are ALLOWED.
+952a385dcec8  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/check_privacy.py
+
+# --- import-fallback (3 blocks) ----------------------------------
 # disposition: deliberate
 # the sibling-import fallback and command-template substitution — the
 # preamble that lets a kit script run both as a script and in-process.
@@ -511,6 +539,7 @@ a2fa21743919  project-trajectory/scripts/check_trajectory.py == project-trajecto
 # Phase 5.)
 be3d9855f5b5  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/plan_runner.py
 982bbeb7eb27  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/check.py
+d6db696a52cb  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/config_migrate.py
 
 # --- skills-materialize (1 blocks)  -------------------------------
 # disposition: deliberate
@@ -537,7 +566,7 @@ a55d35181e85  project-trajectory/scripts/gen_okf.py == project-trajectory/script
 d2ff16e89265  project-trajectory/scripts/plan_artifacts.py == project-trajectory/scripts/plan_coverage.py
 451248328e57  project-trajectory/scripts/plan_artifacts.py == project-trajectory/scripts/plan_coverage.py
 
-# --- declared-file (12 blocks) -----------------------------------
+# --- declared-file (9 blocks) -----------------------------------
 # disposition: deliberate
 # declared-file readers (policy files, stack.ini, coverage.json). F5: each
 # script reads its own declaration rather than importing a sibling. Every entry
@@ -569,11 +598,8 @@ d2ff16e89265  project-trajectory/scripts/plan_artifacts.py == project-trajectory
 3864c24be1f4  project-trajectory/scripts/bootstrap.py == project-trajectory/scripts/gen_skills_index.py
 1726b03a8cdf  project-trajectory/scripts/bootstrap.py == project-trajectory/scripts/check_doc_refs.py
 14c5e5641e80  project-trajectory/scripts/check_coverage.py == project-trajectory/scripts/check_perf.py
-fdc493cdecdb  project-trajectory/scripts/check_docs.py == project-trajectory/scripts/check_privacy.py
+eff0eac572a0  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/traj_parse.py
 fdc493cdecdb  project-trajectory/scripts/check_docs.py == project-trajectory/scripts/check_trajectory.py
-4493f2c1d5f8  project-trajectory/scripts/check_privacy.py == project-trajectory/scripts/check_trajectory.py
-eff0eac572a0  project-trajectory/scripts/check_privacy.py == project-trajectory/scripts/traj_parse.py
-c16d14a4efc4  project-trajectory/scripts/check_privacy.py == project-trajectory/scripts/check_trajectory.py
 75b2bcbfcc04  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/traj_parse.py
 8e99e263cf71  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/traj_parse.py
 # Phase 3 (2026-07-29): trunk_step.py builds the arch-map CLI from stack.ini
@@ -645,8 +671,8 @@ c5e35c61e3a6  project-trajectory/scripts/agent_common.py == project-trajectory/s
 # single call site; agent_route pairs planner_pair's keyword tail with
 # planner_fallback's, which is a deliberately uniform routing API. Nothing
 # to extract — the second occurrence IS the use of the first.
-a5b7a7b890c2  project-trajectory/scripts/agent_loop.py == project-trajectory/scripts/agent_loop.py
 021fec5dccbd  project-trajectory/scripts/agent_route.py == project-trajectory/scripts/agent_route.py
+e8749741c170  project-trajectory/scripts/agent_loop.py == project-trajectory/scripts/agent_loop.py
 
 # --- child-capture (1 blocks)  -----------------------------------
 # disposition: deliberate
@@ -819,7 +845,7 @@ de0546d2361d  project-trajectory/scripts/intake.py == project-trajectory/scripts
 #                                  F5 families, now anchored on the new
 #                                  modules because they sort first.
 03f5fc601330  project-trajectory/scripts/adjudicate.py == project-trajectory/scripts/attest.py
-0669c647fde4  project-trajectory/scripts/check_privacy.py == project-trajectory/scripts/config_migrate.py
+0669c647fde4  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/config_migrate.py
 0a97a192c0b1  project-trajectory/scripts/handback.py == project-trajectory/scripts/outcome.py
 14e71bf4c19b  project-trajectory/scripts/adjudicate.py == project-trajectory/scripts/check_trajectory.py
 14e71bf4c19b  project-trajectory/scripts/adjudicate.py == project-trajectory/scripts/gen_okf.py

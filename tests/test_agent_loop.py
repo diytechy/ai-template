@@ -22,6 +22,7 @@ import pytest
 from conftest import (
     SCRIPTS,
     augment_env,
+    declare_config,
     load_script,
     run_py,
     write_wi_registry,
@@ -332,9 +333,7 @@ def test_blackout_present_but_inactive_does_not_block(loop_repo):
     # 2026-07-21 L-17.)
     start = (now + datetime.timedelta(minutes=30)).strftime("%H:%M")
     end = (now + datetime.timedelta(minutes=31)).strftime("%H:%M")
-    (repo / "docs" / "blackout").write_text(
-        "{}-{}\n".format(start, end), encoding="utf-8"
-    )
+    declare_config(repo, blackout="{}-{}".format(start, end))
     (ctl / "actions.txt").write_text("done", encoding="utf-8")
     proc = _loop(repo, template)
     assert proc.returncode == 0, proc.stdout + proc.stderr
@@ -354,16 +353,19 @@ def test_cmd_map_broken_entry_fails_preflight(loop_repo):
 
 
 def test_review_policy_surfaced_in_banner(loop_repo):
-    # WI-042: docs/review-policy (the reviewer dial) is surfaced at run start —
-    # and only surfaced: the loop never enforces it (R2's zero-code convention).
+    # WI-042: the reviewer dial (`policy.review_rounds`; docs/review-policy until
+    # the P13 cutover) is surfaced at run start — and only surfaced HERE: the
+    # loop never enforces it (R2's zero-code convention). The integrator does,
+    # which is where the two call sites' divergent defaults were resolved.
     repo, ctl, template = loop_repo
     (ctl / "actions.txt").write_text("done", encoding="utf-8")
-    (repo / "docs" / "review-policy").write_text(
-        "# reviewer dial\n2\n", encoding="utf-8"
-    )
+    declare_config(repo, review_rounds=2)
     proc = _loop(repo, template)
     assert proc.returncode == 0, proc.stdout + proc.stderr
-    assert "review-policy: 2" in proc.stdout
+    # The LABEL is the canonical key since P14 — docs/review-policy is deleted,
+    # and a banner naming it would point an operator at nothing.
+    assert "policy.review_rounds: 2" in proc.stdout
+    assert "review-policy:" not in proc.stdout
 
 
 def _vendor_core(repo, body):
@@ -411,7 +413,7 @@ def test_guardrails_all_injects_only_the_kit_core_block(loop_repo):
         "<!-- BEGIN KIT CORE v1.0 -->\nMARKER-CORE rules.\n<!-- END KIT CORE -->\n"
         "upstream footer ignored\n",
     )
-    (repo / "docs" / "guardrails-policy").write_text("all\n", encoding="utf-8")
+    declare_config(repo, guardrails="all")
     (ctl / "actions.txt").write_text("done", encoding="utf-8")
     proc = _loop(repo, template)
     assert proc.returncode == 0, proc.stdout + proc.stderr
@@ -426,7 +428,7 @@ def test_guardrails_weak_tier_injects_only_matching_model(loop_repo):
     # guarded. The model map still declares the pool so the policy is not inert.
     repo, ctl, template = loop_repo
     _vendor_core(repo, "MARKER-CORE\n")
-    (repo / "docs" / "guardrails-policy").write_text("opus\n", encoding="utf-8")
+    declare_config(repo, guardrails="opus")
     (ctl / "actions.txt").write_text("done", encoding="utf-8")
     proc = _loop(
         repo, template, "--model", "claude-opus-4-8", "--model-map", "PLAN=fable-5"
@@ -441,7 +443,7 @@ def test_guardrails_strong_tier_is_not_injected(loop_repo):
     # declared pool, so the policy is not inert — it just doesn't match this run).
     repo, ctl, template = loop_repo
     _vendor_core(repo, "MARKER-CORE\n")
-    (repo / "docs" / "guardrails-policy").write_text("opus\n", encoding="utf-8")
+    declare_config(repo, guardrails="opus")
     (ctl / "actions.txt").write_text("done", encoding="utf-8")
     proc = _loop(
         repo, template, "--model", "fable-5", "--model-map", "BUILD=claude-opus-4-8"
@@ -454,7 +456,7 @@ def test_guardrails_selected_but_missing_core_warns_and_runs(loop_repo):
     # policy selects the model but no vendored core -> warn once, run anyway
     # (guardrails accelerate weak tiers; they never gate a run).
     repo, ctl, template = loop_repo
-    (repo / "docs" / "guardrails-policy").write_text("all\n", encoding="utf-8")
+    declare_config(repo, guardrails="all")
     (ctl / "actions.txt").write_text("done", encoding="utf-8")
     proc = _loop(repo, template)
     assert proc.returncode == 0, proc.stdout + proc.stderr
@@ -480,7 +482,7 @@ def test_guardrails_inert_policy_warns_at_startup(loop_repo):
     # A policy token matching no configured model warns that the guard is inert
     # (the stale-substring rot), but the run still proceeds.
     repo, ctl, template = loop_repo
-    (repo / "docs" / "guardrails-policy").write_text("opus\n", encoding="utf-8")
+    declare_config(repo, guardrails="opus")
     (ctl / "actions.txt").write_text("done", encoding="utf-8")
     proc = _loop(repo, template)  # --model default-tier, no map -> no 'opus'
     assert proc.returncode == 0, proc.stdout + proc.stderr
@@ -490,7 +492,7 @@ def test_guardrails_inert_policy_warns_at_startup(loop_repo):
 def test_guardrails_matched_policy_does_not_warn(loop_repo):
     # When the token matches a model in the map, no inert warning fires.
     repo, ctl, template = loop_repo
-    (repo / "docs" / "guardrails-policy").write_text("opus\n", encoding="utf-8")
+    declare_config(repo, guardrails="opus")
     (repo / "docs" / "run-phase").write_text("BUILD\n", encoding="utf-8")
     (ctl / "actions.txt").write_text("done", encoding="utf-8")
     proc = _loop(repo, template, "--model-map", "BUILD=claude-opus-4-8")
@@ -505,9 +507,7 @@ def test_guardrails_all_except_guards_non_frontier(loop_repo):
     # guarded (a spaced, multi-token policy flows through read_declared intact).
     repo, ctl, template = loop_repo
     _vendor_core(repo, "MARKER-CORE\n")
-    (repo / "docs" / "guardrails-policy").write_text(
-        "all except fable\n", encoding="utf-8"
-    )
+    declare_config(repo, guardrails="all except fable")
     (repo / "docs" / "run-phase").write_text("BUILD\n", encoding="utf-8")
     (ctl / "actions.txt").write_text("done", encoding="utf-8")
     proc = _loop(
@@ -669,7 +669,7 @@ def test_privacy_check_author_violation_blocks_iteration_one(loop_repo):
     # private (non-exempt) author is the history-leak disaster case — preflight
     # refuses to start.
     repo, ctl, template = loop_repo
-    (repo / "docs" / "privacy-check").write_text("true\n", encoding="utf-8")
+    declare_config(repo, privacy_check=True)
     # A genuinely private author (loop_repo's default loop@example.com is an
     # exempt RFC 2606 domain, so it would pass).
     subprocess.run(

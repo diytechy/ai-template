@@ -18,11 +18,6 @@ What it creates in the destination:
     docs/process.md                            <- PROCESS.md  (load-bearing core)
     docs/process-options.md                    <- PROCESS_OPTIONS.md  (opt-in layers)
     docs/gate                                  <- gate.template  (active gate: G1)
-    docs/gate-policy                           <- gate-policy.template  (authority: attended)
-    docs/privacy-check                         <- privacy-check.template  (privacy: off)
-    docs/push-policy                           <- push-policy.template  (policy: human)
-    docs/blackout                              <- blackout.template  (window: 12:00-19:00 UTC)
-    docs/review-policy                         <- review-policy.template  (reviewers: 1)
     docs/config.toml                           <- config.toml.template, or the
                                                 converted values of any retired
                                                 declared-policy file already in
@@ -72,8 +67,8 @@ What it creates in the destination:
                                                 move + relink as one operation; WI-393)
     scripts/intake.py                          (the unified trunk-side intake mint:
                                                 three triggers + drafts-not-mints,
-                                                the context block, the gate-policy
-                                                flip arms; WI-388)
+                                                the context block, the ratification-
+                                                boundary flip arms; WI-388)
     scripts/agent_route.py, scripts/score_reviews.py   (S8 coordinator routing + review scorer)
     docs/agents.csv                            <- agents.template.csv (model registry; inert until docs/agents-enabled)
     scripts/setup.{sh,ps1}, scripts/check.{sh,ps1}   (cross-platform launchers)
@@ -164,7 +159,7 @@ another repo **or between its own modules** (process.md §8). `trace.py`
 integrity-checks the seam registry (id shape, SR-Refs back-link, WI-056) and
 `check_trajectory.py` runs the **architecture-connectivity coverage** over the
 arch-map inventory. That coverage is **opt-out, default-on** (the
-`docs/secrets-scan` / `docs/trajectory-check` posture — absence reads on): a
+`docs/trajectory-check` posture — absence reads on): a
 multi-module arch-map with no declared seams warns "connectivity undeclared"
 rather than passing vacuously, so like those layers there is no file to scaffold —
 silence it with the one word `off` in `docs/interfaces-check`, or a single-module
@@ -210,28 +205,27 @@ plain-SVG layered DAG of the work items, no CDN; its `--check` is the
 `trajectory-map` freshness gate at G3 (regenerate + byte-compare, like `arch-map`).
 Both are generated *views*, never a source of truth.
 
-`docs/privacy-check` (process-options.md "Commit identity & privacy") toggles
-the privacy gate: `false` (the scaffolded default — off) or `true` to scan the
-commit author email and committed content for PII / identity leaks. Identity
-(which account authors) is the user's own git config, not pinned here; the gate
-defends *privacy*. `--privacy-check <true|false>` sets it at scaffold time; run
-interactively without the flag and bootstrap ASKS (the same consent-first shape
-as --agents; non-interactive runs keep `false`). The always-on secrets floor
-(docs/secrets-scan) runs regardless. Enforcement lives in .githooks/pre-commit
-(author + staged content), .githooks/commit-msg (the message), and
-.githooks/pre-push (the outgoing range + LLM review).
+`policy.privacy_check` in docs/config.toml (process-options.md "Commit identity
+& privacy") toggles the privacy gate: `false` (the default — off) or `true` to
+scan the commit author email and committed content for PII / identity leaks.
+Identity (which account authors) is the user's own git config, not pinned here;
+the gate defends *privacy*. The always-on secrets floor (`policy.secrets_scan`)
+runs regardless. Enforcement lives in .githooks/pre-commit (author + staged
+content), .githooks/commit-msg (the message), and .githooks/pre-push (the
+outgoing range + LLM review).
 
-`docs/push-policy` (process-options.md "Agent iteration branch & sync")
-declares who may publish (`git push`): `human` (the scaffolded default — an
-agent never pushes, even if asked mid-session; it prepares the branch and
-requests), `agent-iteration` (only the scrubbed llm/<branch> iteration
-branch), or `agent` (the development branch after a landed sync).
-`--push-policy` sets it at scaffold time; run interactively without the flag
-and bootstrap ASKS (the same consent-first shape as --gate-policy;
-non-interactive runs keep `human`). It is a process rule honored by agent
-drivers and coordinators, not a hook guarantee — hooks are per-clone and can
-only assist, which is why the authority is declared rather than enforced at
-push time.
+`policy.push` (process-options.md "Agent iteration branch & sync") declares who
+may publish (`git push`): `human` (the default — an agent never pushes, even if
+asked mid-session; it prepares the branch and requests), `agent-iteration`
+(only the scrubbed llm/<branch> iteration branch), or `agent` (the development
+branch after a landed sync). It is a process rule honored by agent drivers and
+coordinators, not a hook guarantee — hooks are per-clone and can only assist,
+which is why the authority is declared rather than enforced at push time.
+
+Neither is a scaffold-time flag any more: both were one-word files with a
+`--flag` that wrote them, and both moved into the one configuration document at
+the P13 cutover. Asking at scaffold time would now mean writing a second source
+beside it, which is exactly what `config.mixed_source_findings` refuses.
 
 `docs/stack.ini` (Thread 30, process.md §7) declares the product toolchain
 **once** — the format/lint/test commands, the `src`/`tests` paths, the test-tier
@@ -727,150 +721,15 @@ def prompt_text(prompt, default):
     return ans or default
 
 
-# The three gate-authority levels (Thread 32, process.md §4). The level is
-# chosen before the kit is ported — a one-word docs/gate-policy value; a
-# non-default level also gets the repo-local deviation register that amends
-# the untouched, kit-owned process.md (process-options.md "Gate authority
-# levels" — the NotHomeWrecker-proven pattern).
-GATE_POLICY_CHOICES = ("attended", "single-ratify", "autonomous")
-
-# Per-level deviation rows for the register skeleton: (process.md clause,
-# standard behavior, this repo). The fixed points are appended for every level.
-GATE_POLICY_DEVIATIONS = {
-    "single-ratify": [
-        (
-            "§4 acceptor, G1+G2",
-            "a human approves each gate",
-            "LLM-gate review; every human call queued as a `Needs <human>` "
-            "Open item (+ provisional decision where the driver proceeded)",
-        ),
-        (
-            "§4 ratification point",
-            "per-gate approval",
-            "one human sitting at **G2 close** ratifies/amends the queue; "
-            "ratified decisions move to docs/log.md (relocating the point = "
-            "amending this register)",
-        ),
-        (
-            "§4 acceptor, G3→G-Release",
-            "a human approves each gate",
-            "autonomous rules after ratification (LLM-gate verdicts)",
-        ),
-        (
-            "§4 consistency review 'pause and ask'",
-            "solicit the human",
-            "route by revert-cost: LOW → decide + record (log.md Decisions "
-            "log); MEDIUM/HIGH → the Blocked register; never a mid-run pause",
-        ),
-    ],
-    "autonomous": [
-        (
-            "§4 acceptor, G1→G-Release",
-            "a human approves each gate",
-            "LLM-gate: an independent fresh-context reviewer runs the harness "
-            "itself; verdict recorded in docs/log.md with `Model:` + "
-            "`Role: LLM-GATE`; the driver makes the ratifying Status-change "
-            "commit + regenerates docs/gate (derive_gate.py) citing it",
-        ),
-        (
-            "mid-run escalation to the human",
-            "escalate and wait",
-            "Blocked register in status.md; continue independent work; all "
-            "blocks surface in the end-of-run report",
-        ),
-        (
-            "ask-the-human / solicit clarification",
-            "pause and ask",
-            "decide + record in the log.md Decisions log; HIGH revert-cost "
-            "gets an independent peer-tier second opinion before execution",
-        ),
-        (
-            "§4 `Attest` (named human judgment)",
-            "a human attests",
-            "LLM-Attest: named *model* judgment, reported honestly as machine "
-            "attestation in the trace report's attested-vs-mechanized split",
-        ),
-    ],
-}
-
-GATE_POLICY_FIXED_POINTS = """## Fixed points (nothing in this file overrides these)
-
-- **G-Final is the human's.**
-- **No un-run greens** — a verdict or test result that wasn't actually
-  executed is a process violation regardless of tier.
-- **The harness is still the bar** — LLM judgment supplements the checks; it
-  never waives a red one.
-- **Ratified owner decisions are never re-decided by an agent** — flag a
-  problematic one as Blocked instead.
-"""
-
-
-def apply_gate_policy(dest, level, dry_run):
-    """Write a non-default gate-authority level: set docs/gate-policy (keeping
-    the template's explanatory header) and scaffold the deviation-register
-    skeleton (docs/gate-policy.md) pre-filled for the level. Returns the list
-    of dest-relative paths written."""
-    if level == "attended" or dry_run:
-        return []
-    header = [
-        ln
-        for ln in (KIT / "gate-policy.template")
-        .read_text(encoding="utf-8")
-        .splitlines()
-        if ln.startswith("#")
-    ]
-    policy = dest / "docs" / "gate-policy"
-    policy.parent.mkdir(parents=True, exist_ok=True)
-    _write_text_lf(policy, "\n".join(header + [level]) + "\n")
-    register = dest / "docs" / "gate-policy.md"
-    written = ["docs/gate-policy"]
-    if not register.exists():
-        rows = "\n".join(
-            "| {} | {} | {} |".format(*row) for row in GATE_POLICY_DEVIATIONS[level]
-        )
-        _write_text_lf(
-            register,
-            "# Gate-authority deviation register — `{level}`\n\n"
-            "**Status:** DRAFT — ratify with the owner, then keep in version "
-            "control.\n"
-            "**What this is:** this repo declares the `{level}` gate authority "
-            "(`docs/gate-policy`; process.md §4). The kit-owned process doc is "
-            "never edited per-repo (a re-sync overwrites it); this register "
-            'amends it (process-options.md "Gate authority levels"). Where '
-            "the two disagree, this file wins — except the fixed points at "
-            "the bottom, which nothing overrides.\n\n"
-            "## Deviation register\n\n"
-            "| process.md clause | Standard behavior | This repo |\n"
-            "|---|---|---|\n"
-            "{rows}\n\n"
-            "{fixed}".format(level=level, rows=rows, fixed=GATE_POLICY_FIXED_POINTS),
-        )
-        written.append("docs/gate-policy.md")
-    return written
-
-
-# Who may publish (Thread 40, process-options.md "Agent iteration branch &
-# sync"). Declared once at scaffold time like the gate authority; the value is
-# honored by agent drivers/coordinators as a process rule (hooks are per-clone
-# and can only assist).
-PUSH_POLICY_CHOICES = ("human", "agent-iteration", "agent")
-
-
-def apply_push_policy(dest, policy, dry_run):
-    """Write a non-default push policy into docs/push-policy, keeping the
-    template's explanatory header (same shape as apply_privacy_check)."""
-    if policy == "human" or dry_run:
-        return
-    header = [
-        ln
-        for ln in (KIT / "push-policy.template")
-        .read_text(encoding="utf-8")
-        .splitlines()
-        if ln.startswith("#")
-    ]
-    target = dest / "docs" / "push-policy"
-    target.parent.mkdir(parents=True, exist_ok=True)
-    _write_text_lf(target, "\n".join(header + [policy]) + "\n")
+# The gate-authority ENUM, the push-authority enum and the privacy toggle
+# were scaffold-time writers into docs/gate-policy / docs/push-policy /
+# docs/privacy-check. All three files are retired (P14) and their writers
+# went with them; the deviation-register skeleton `apply_gate_policy` also
+# laid down went too, because its whole vocabulary was those three words and
+# the kit no longer has a dial spelled that way — a register asserting an
+# authority level nothing reads would be a document that outranks nothing.
+# What survives is the boundary: `attestation.human_ratification_through`
+# in docs/config.toml, whose 0..3 an adopter sets by editing that one file.
 
 
 def sync_config(dest, dry_run=False):
@@ -924,24 +783,6 @@ def sync_config(dest, dry_run=False):
             target, (KIT / "config.toml.template").read_text(encoding="utf-8")
         )
     return ["docs/config.toml"], report
-
-
-def apply_privacy_check(dest, value, dry_run):
-    """Write the privacy-check toggle into docs/privacy-check, keeping the
-    template's explanatory header. Set at repo creation — an explicitly
-    passed/answered `true` overwrites the scaffolded default (`false`)."""
-    if dry_run:
-        return
-    header = [
-        ln
-        for ln in (KIT / "privacy-check.template")
-        .read_text(encoding="utf-8")
-        .splitlines()
-        if ln.startswith("#")
-    ]
-    target = dest / "docs" / "privacy-check"
-    target.parent.mkdir(parents=True, exist_ok=True)
-    _write_text_lf(target, "\n".join(header + [value]) + "\n")
 
 
 # (The opt-in parallel-tracks layer is retired outright, WI-210: the
@@ -1206,36 +1047,24 @@ MAPPING = [
     # regenerating. The scaffold ships a legacy one-liner (accepted value-only);
     # `python scripts/derive_gate.py` migrates it to the generated form.
     ("gate.template", "docs/gate"),
-    # The declared gate authority (Thread 32, process.md §4): who accepts a
-    # gate advance. Scaffolds `attended`; --gate-policy sets a non-default
-    # level and pre-fills the deviation-register skeleton for it.
-    ("gate-policy.template", "docs/gate-policy"),
-    # The reviewer dial (process-options.md "Unattended
-    # operation"): how many independent fresh-context review verdicts a WI
-    # gets (0|1|2). Default `1`; floors above the dial live in the file.
-    ("review-policy.template", "docs/review-policy"),
+    # docs/gate-policy, docs/review-policy, docs/privacy-check, docs/push-policy
+    # and docs/blackout were rows HERE until P14. They are retired: every dial
+    # they carried now lives in docs/config.toml, which `sync_config` lays down
+    # BEFORE this pass. Scaffolding them beside it would have put every fresh
+    # repo in the mixed-source state the loader refuses — and `docs/blackout`
+    # would have done worse, because the template declared a 12:00-19:00 window
+    # the schema default (`""`) does not, so the coordinator's unconverted rung
+    # refused every freshly bootstrapped repo. Driven both ways at P14.
     # The model REGISTRY the coordinator's router reads (WI-059, S8): one row per
     # usable model keyed [PROVIDER]-[MODEL_NAME]-[VERSION], with example rows for
     # the verified headless shapes. Present but INERT until docs/agents-enabled
     # (the ordered enable-list / consent surface, deliberately NOT scaffolded) is
     # created — routing then selects from that pool (process-options.md
     # "Unattended operation" -> routing/escalation). Absent both files = today's
-    # single AGENT_CMD/AGENT_MODEL behavior.
+    # single AGENT_CMD/AGENT_MODEL behavior. STILL SCAFFOLDED at P14: unlike the
+    # rows above, this one's readers (agent_route / agent_loop / plan_runner /
+    # dispatch) have not been cut over to `[[routes]]` yet — routing binds at P5.
     ("agents.template.csv", "docs/agents.csv"),
-    # The privacy-check toggle (Thread 38 -> identity/privacy reframe,
-    # process-options.md "Commit identity & privacy"): `false` by default;
-    # --privacy-check overrides.
-    ("privacy-check.template", "docs/privacy-check"),
-    # The declared push authority (Thread 40, process-options.md "Agent
-    # iteration branch & sync"): who may publish. `human` by default — an
-    # agent never pushes; --push-policy overrides.
-    ("push-policy.template", "docs/push-policy"),
-    # The weekday blackout window (WI-148, process-options.md "Unattended
-    # operation"): a `HH:MM-HH:MM` UTC Mon–Fri window the coordinator starts no
-    # new session inside (it waits the window out, then resumes). Ships the
-    # 12:00–19:00 default so a fresh scaffold gets it; delete the file or set
-    # start==end to disable (absent = disabled, byte-identical to before).
-    ("blackout.template", "docs/blackout"),
     ("STATUS.template.md", "docs/status.md"),
     # The owner decision briefs status.md's Needs-<human> bullets link to
     # (process-options.md "Trajectory / work-items layer"): one OI-N section
@@ -1499,6 +1328,13 @@ MAPPING = [
     # on one leaves every Partial and Cancelled row terminal with nobody able to
     # say what happens to the remaining scope.
     ("scripts/adjudicate.py", "scripts/adjudicate.py"),
+    # The pure resume planner (SR-145/SR-146/SR-147): the §9 precedence, the
+    # connected-component spine batch, and the exactly-once red-bar rung.
+    # dispatch.py imports it at every idle tick and at the drained end of its
+    # ladder, so a scaffold without it cannot run the walk-away loop at all —
+    # which is why it ships beside dispatch's other siblings rather than
+    # staying kit-only.
+    ("scripts/resume_plan.py", "scripts/resume_plan.py"),
     # Every operational prompt as a reviewed asset, plus the one strict renderer
     # over them (SR-155/SR-156/SR-157). The three highest-traffic prompts were
     # Python constants inside agent_loop.py, reviewable only by reading source;
@@ -1895,9 +1731,10 @@ def write_kit_license(dest, dry_run, verb):
 @dataclass(frozen=True)
 class ScaffoldPlan:
     """Everything the resolution ladders decided, before a byte is written:
-    the declared profile (stack/omit), the agent layer, the three declared
-    policies, and the two write modes. Frozen — a phase reads the plan, it
-    never re-decides."""
+    the declared profile (stack/omit), the agent layer, and the two write
+    modes. Frozen — a phase reads the plan, it never re-decides. (The three
+    declared-policy answers left with their one-word files at P14; behaviour
+    is declared once, in docs/config.toml.)"""
 
     stack: str
     omit: frozenset
@@ -1905,9 +1742,6 @@ class ScaffoldPlan:
     agents: list
     domain: str
     skills: list
-    gate_policy: str
-    push_policy: str
-    privacy_check: str
     force: bool
     dry_run: bool
 
@@ -1988,35 +1822,13 @@ def build_parser():
         "pack sets; any/omitted materializes no packs. Omitted + interactive "
         "agent setup -> ASK; non-interactive -> no filter.",
     )
-    ap.add_argument(
-        "--gate-policy",
-        choices=GATE_POLICY_CHOICES,
-        default=None,
-        help="declared gate authority for docs/gate-policy (process.md §4): "
-        "attended|single-ratify|autonomous. Omitted + interactive TTY -> ASK; "
-        "non-interactive -> 'attended' (the default level; zero change). A "
-        "non-default level also scaffolds the deviation-register skeleton "
-        "(docs/gate-policy.md) pre-filled for it.",
-    )
-    ap.add_argument(
-        "--push-policy",
-        choices=PUSH_POLICY_CHOICES,
-        default=None,
-        help="declared push authority for docs/push-policy (process-options.md "
-        '"Agent iteration branch & sync"): human|agent-iteration|agent. '
-        "Omitted + interactive TTY -> ASK; non-interactive -> 'human' (the "
-        "default: an agent never pushes; it prepares the branch and requests).",
-    )
-    ap.add_argument(
-        "--privacy-check",
-        choices=("true", "false"),
-        default=None,
-        help="privacy gate for docs/privacy-check: 'true' runs the PII/identity "
-        "leak scan (author email + content must be non-private), 'false' (the "
-        "default) leaves it off. The always-on secrets floor runs regardless. "
-        "Omitted + interactive TTY -> ASK; non-interactive -> 'false' "
-        '(process-options.md "Commit identity & privacy").',
-    )
+    # --gate-policy / --push-policy / --privacy-check were RETIRED at P14 with
+    # the one-word files they wrote. Behaviour is declared once, in
+    # docs/config.toml (decision 2), and a scaffold-time flag that wrote a
+    # SECOND source would put every fresh repo in the mixed-source state the
+    # loader refuses. The scaffold ships the blank form (or the converted one);
+    # the adopter sets `attestation.human_ratification_through`,
+    # `policy.push` and `policy.privacy_check` there.
     return ap
 
 
@@ -2076,49 +1888,13 @@ def resolve_choices(args, stack, omit):
     else:
         skills = []
 
-    # Resolve the gate-authority level the same consent-first way: explicit
-    # flag wins; else ASK on an interactive TTY; else 'attended' (CI-safe —
-    # the scaffolded default file already says attended). Selection belongs
-    # before the port: the level shapes how every later gate is run.
-    gate_policy = (
-        args.gate_policy
-        if args.gate_policy is not None
-        else prompt_choice(
-            "Gate authority for this repo? (who accepts a gate advance — "
-            "process.md §4)",
-            GATE_POLICY_CHOICES,
-            "attended",
-        )
-    )
-
-    # Resolve the push authority the same consent-first way: explicit flag
-    # wins; else ASK on an interactive TTY; else 'human' (CI-safe — the
-    # scaffolded default file already says human, so nothing extra happens).
-    push_policy = (
-        args.push_policy
-        if args.push_policy is not None
-        else prompt_choice(
-            "Push policy for this repo? (who may `git push` — "
-            'process-options.md "Agent iteration branch & sync")',
-            PUSH_POLICY_CHOICES,
-            "human",
-        )
-    )
-
-    # Resolve the privacy-check toggle the same consent-first way: explicit flag
-    # wins; else ASK on an interactive TTY; else 'false' (CI-safe — the
-    # scaffolded default file already says false, so nothing extra happens).
-    privacy_check = (
-        args.privacy_check
-        if args.privacy_check is not None
-        else prompt_choice(
-            "Enable the privacy gate for this repo? (scan author + content for "
-            'PII / identity leaks — process-options.md "Commit identity & '
-            'privacy")',
-            ("false", "true"),
-            "false",
-        )
-    )
+    # The three declared-policy ASKs (gate authority, push authority, privacy
+    # gate) are gone with their files (P14). They asked at the cheapest moment,
+    # which is a real loss — but each answer wrote a one-word file that
+    # `docs/config.toml` now owns, and asking here would have meant either
+    # writing a second source (mixed-source on day one, which the loader
+    # refuses) or teaching the scaffold to edit TOML it also promises never to
+    # overwrite. The dials are one edit away in the file the scaffold ships.
     return ScaffoldPlan(
         stack=stack,
         omit=omit,
@@ -2126,9 +1902,6 @@ def resolve_choices(args, stack, omit):
         agents=agents,
         domain=domain,
         skills=skills,
-        gate_policy=gate_policy,
-        push_policy=push_policy,
-        privacy_check=privacy_check,
         force=args.force,
         dry_run=args.dry_run,
     )
@@ -2257,34 +2030,6 @@ def materialize_agent_layer_phase(dest, plan, outcome):
         )
 
 
-def apply_declared_policies(dest, plan, outcome):
-    """The three declared-authority files: a non-default level overwrites the
-    scaffolded default (which the copy pass just laid down) and says so."""
-    # A declared non-default gate authority overwrites the scaffolded default
-    # and lays down the deviation-register skeleton for the level.
-    for rel in apply_gate_policy(dest, plan.gate_policy, plan.dry_run):
-        if rel not in outcome.created:
-            outcome.created.append(rel)
-    if plan.gate_policy != "attended":
-        print("  gate-authority level: {}".format(plan.gate_policy))
-
-    # A declared non-default push authority overwrites the scaffolded default
-    # (the file itself was just copied with `human` on its value line).
-    if plan.push_policy != "human":
-        apply_push_policy(dest, plan.push_policy, plan.dry_run)
-        if "docs/push-policy" not in outcome.created:
-            outcome.created.append("docs/push-policy")
-        print("  push policy: {}".format(plan.push_policy))
-
-    # A `true` privacy-check overwrites the scaffolded default (`false`) — set
-    # at repo creation, the cheap moment.
-    if plan.privacy_check and plan.privacy_check != "false":
-        apply_privacy_check(dest, plan.privacy_check, plan.dry_run)
-        if "docs/privacy-check" not in outcome.created:
-            outcome.created.append("docs/privacy-check")
-        print("  privacy-check: {}".format(plan.privacy_check))
-
-
 def report_outcome(plan, outcome):
     """The per-file report + the one-line summary, in the order the phases
     appended to it."""
@@ -2382,7 +2127,6 @@ def main():
         )
     apply_stack_extras(dest, plan, outcome)
     materialize_agent_layer_phase(dest, plan, outcome)
-    apply_declared_policies(dest, plan, outcome)
     report_outcome(plan, outcome)
     write_stamps(dest, plan)
 

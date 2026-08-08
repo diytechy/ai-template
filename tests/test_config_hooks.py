@@ -1,26 +1,25 @@
 """The old shell read and the new config query decide alike (SR-139, TC-153 part 1).
 
-**Read this before "finishing" the wiring.** The hooks deliberately still parse
-their retired one-value files. That is not an oversight and not a half-done
-slice — it is the plan's staging: P2 builds the reader, proves it agrees with
-what it will replace, and switches **no runtime caller**; P13 performs the
-cutover in one reviewed change, together with deleting the retired files.
+The staging this module was written for is now history, and the history is the
+point: P2 built the reader and switched **no runtime caller**; P13 performed the
+cutover in one reviewed change. The reason for that order was **driven**, not
+procedural — wiring the hooks to the query in the same slice that built it made
+every hook read a canonical key that no repo had set yet, so a tree carrying only
+`docs/privacy-check = true` lost its privacy gate and `pre-push` exited 0 on a
+reviewer `BLOCK`. Fourteen shipped hook tests caught it. A security floor is
+exactly the wrong place to land a reader and its cutover in one step, because the
+failure mode is silence.
 
-The staging is not bureaucratic. It was **driven**: wiring the hooks to the
-query in the same slice that built it made every hook read a canonical key that
-no repo had set yet, so a tree carrying only `docs/privacy-check = true` lost its
-privacy gate and `pre-push` exited 0 on a reviewer `BLOCK`. Fourteen shipped hook
-tests caught it. A security floor is exactly the wrong place to land a reader and
-its cutover in one step, because the failure mode is silence.
+What this module proves is the **agreement bar**: the literal retired pipeline
+and the new entry point, driven over one matrix of declared values, reach the
+same verdict. Agreement is what makes the cutover a no-op for behaviour rather
+than a policy change smuggled in as a refactor — and it stays green after the
+cutover because the retired files are still in the tree (P14 deletes them),
+which is exactly what keeps the cutover revertible.
 
-So what P2 owes, and what this module proves, is the **agreement bar**: the
-literal retired pipeline and the new entry point, driven over one matrix of
-declared values, must reach the same verdict. Agreement is what makes the P13
-cutover a no-op for behaviour rather than a policy change smuggled in as a
-refactor.
-
-TC-153's remaining permutations — each hook blocking when the query refuses —
-are discharged at P13, where the call sites exist to drive.
+TC-153's remaining permutations — each hook blocking when the query refuses, and
+the unconverted repo that caused the incident — are discharged in
+`tests/test_config_cutover.py`, where the call sites now exist to drive.
 """
 
 import shutil
@@ -220,10 +219,15 @@ def test_old_shell_read_and_new_query_decide_alike(
 
     Where the retired readers of one file disagree with each other there is no
     old verdict to preserve, so the bar changes shape: the case must be declared
-    in `SPLIT_RETIRED_READERS`, and the converter must REFUSE it out loud and
-    leave the canonical key unset. A converter that quietly picked a side would
-    hand the repo a security policy nobody chose, in whichever direction it
-    happened to prefer — the failure this module exists to make impossible.
+    in `SPLIT_RETIRED_READERS`, the converter must REFUSE it out loud and leave
+    the canonical key unset, and — SINCE THE P13 CUTOVER — the query must refuse
+    it too rather than answering the schema default. That last clause is the
+    cutover's own strengthening: before it, "the adopter is told to choose" left
+    the loop quietly obeying a default in the meantime; now an unconverted repo
+    cannot commit until the choice is made. A converter that quietly picked a
+    side would hand the repo a security policy nobody chose, in whichever
+    direction it happened to prefer — the failure this module exists to make
+    impossible.
     """
     if declared is not None:
         (tree / "docs" / legacy_name).write_text(
@@ -242,9 +246,6 @@ def test_old_shell_read_and_new_query_decide_alike(
     assert convert.returncode == 0, convert.stdout + convert.stderr
 
     got = _query(tree, key)
-    assert got.returncode == 0, got.stdout + got.stderr
-    answer = got.stdout.strip().lower()
-    is_live = new_live(answer)
 
     verdicts = set(was_live.values())
     if len(verdicts) > 1:
@@ -272,8 +273,17 @@ def test_old_shell_read_and_new_query_decide_alike(
         assert assignments == [], (
             "{}: {} was written anyway, so the report was decoration: {}"
         ).format(legacy_name, key, assignments)
+        assert got.returncode != 0, (
+            "{}: the retired readers split on {!r}, the converter wrote nothing, "
+            "and the query ANSWERED anyway — with a default the adopter was "
+            "supposed to be choosing. Since the cutover that is the fail-open "
+            "the unconverted rung exists to close.\n{}"
+        ).format(legacy_name, declared, got.stdout + got.stderr)
         return
 
+    assert got.returncode == 0, got.stdout + got.stderr
+    answer = got.stdout.strip().lower()
+    is_live = new_live(answer)
     assert is_live == verdicts.pop(), (
         "{}: the retired readers read {!r} as {} but {} answered {!r} "
         "(live={}). The cutover may not change behaviour."
@@ -351,26 +361,36 @@ def _code_lines(hook):
 
 
 @pytest.mark.parametrize("hook", HOOKS)
-def test_the_hooks_still_read_the_retired_files_until_the_cutover(hook):
-    """The deliberate not-yet-switched state, pinned so it is a decision.
+def test_the_hooks_read_the_canonical_configuration_since_the_cutover(hook):
+    """INVERTED at P13, exactly as the pre-cutover form of this test said it
+    would be.
 
-    An unpinned "we'll wire it later" is indistinguishable from a forgotten
-    slice. When P13 lands, this test INVERTS: it becomes
-    `test_no_hook_still_parses_the_retired_privacy_file`, and the retired files
-    are deleted in the same change. Until then, a hook that quietly stopped
-    reading its legacy file would be the fail-open this module exists to prevent.
+    It used to pin the deliberate not-yet-switched state ("the hooks still
+    parse their retired one-value files"), because an unpinned "we'll wire it
+    later" is indistinguishable from a forgotten slice. The cutover landed, so
+    the pin turns around: every hook must now call the canonical reader, and
+    none may carry the retired first-non-comment-line pipeline.
+
+    Deleting the test instead would have thrown away the only mechanical record
+    that this migration has TWO states and that the tree is in one of them. What
+    a REVERT of the cutover then meets is a red test naming the file, which is
+    the point of pinning a migration in both directions.
+
+    (The retired FILES survive this slice on purpose — they are what makes the
+    cutover revertible; P14 deletes them. What must be gone here is the PARSE.
+    `tests/test_config_cutover.py` drives the behaviour; this stays the cheap
+    source-level pin beside the agreement bar it belongs to.)
     """
     code = _code_lines(hook)
-    reads_legacy = "privacy-check" in code or "privacy-review" in code
-    assert reads_legacy, (
-        "{} no longer parses its retired policy file. If this is the P13 cutover, "
-        "invert this test and delete the retired files in the same change; if it "
-        "is not, the security floor just lost its only reader."
+    assert "config_query.py" in code, (
+        "{} does not call config_query.py. The P13 cutover moved every policy "
+        "read to the canonical entry point; a hook that skipped it is reading a "
+        "dial nobody maintains."
     ).format(hook)
-    assert "config_query.py" not in code, (
-        "{} calls config_query.py, but the P13 cutover has not landed. Wiring the "
-        "reader before any repo has set the canonical key is the measured "
-        "fail-open: a tree carrying only docs/privacy-check=true loses its gate."
+    assert "tr -d '[:space:]'" not in code, (
+        "{} still carries the retired first-non-comment-line pipeline. Two live "
+        "readers of one security dial is the divergence this program exists to "
+        "end — and the retired one wins silently, because it never refuses."
     ).format(hook)
 
 
