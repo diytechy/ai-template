@@ -14,7 +14,7 @@ import shutil
 import subprocess
 
 import pytest
-from conftest import augment_env, env_gate_skipif
+from conftest import augment_env, env_gate_skipif, set_process_key
 
 HOOK = ".githooks/pre-push"
 ZERO = "0" * 40
@@ -78,7 +78,15 @@ def run_hook(root, stdin_text, review_cmd=None):
 
 
 def set_privacy(root, value="true"):
-    (root / "docs" / "privacy-check").write_text(value + "\n", encoding="utf-8")
+    # SN-028: the toggle's home is docs/process.toml [policies] privacy_check,
+    # which the hook reads with a KEYED grep (the M-42 pure-sh fail-closed path
+    # survives the move; the file is written one `key = value` per line for
+    # exactly this reason).
+    set_process_key(root, "policies", "privacy_check", value == "true")
+
+
+def set_privacy_review(root, value):
+    set_process_key(root, "policies", "privacy_review", value)
 
 
 def push_line(head, remote_sha):
@@ -151,7 +159,7 @@ def test_secrets_scan_off_lets_it_through(repo):
     # The opt-out reaches the push boundary: docs/secrets-scan off disables the
     # floor, so the same key does not block an unconcerned repo's push.
     root, base, head = repo
-    (root / "docs" / "secrets-scan").write_text("off\n", encoding="utf-8")
+    set_process_key(root, "policies", "secrets_scan", False)
     key = "-----BEGIN RSA " + "PRIVATE KEY-----\n"
     leaky = commit_file(root, "cfg.txt", key, "add cfg")
     proc = run_hook(root, push_line(leaky, head))
@@ -170,7 +178,10 @@ def test_missing_reviewer_fails_closed(repo):
 
 
 def set_review_policy(root, value):
-    (root / "docs" / "privacy-review").write_text(value + "\n", encoding="utf-8")
+    # NOTE the historical name: this is the unwired-REVIEWER posture
+    # (docs/privacy-review -> [policies] privacy_review), NOT the reviewer-count
+    # dial. No hook has ever read docs/review-policy.
+    set_process_key(root, "policies", "privacy_review", value)
 
 
 def test_warn_unwired_optdown_warns_and_proceeds(repo):

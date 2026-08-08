@@ -74,6 +74,7 @@ import re
 import socket
 import subprocess
 import sys
+import tomllib
 from pathlib import Path
 
 # The inline allowlist marker: a line carrying it is never flagged.
@@ -169,10 +170,39 @@ def _first_declared_line(path):
     return None
 
 
+def _process_bool(root, key):
+    """One `[policies]` boolean out of `docs/process.toml` (SN-028), or None
+    when the file/section/key is absent or the file does not parse.
+
+    A LOCAL reader, per the F5 independently-copyable-script rule that already
+    keeps `_first_declared_line` here rather than importing the coordinator
+    layer (agent_common carries the twin; a cross-parser agreement test pins
+    them equal). Returns None — never a default — so the caller can fall
+    through to the legacy one-word file during the migration window, and so a
+    malformed TOML never reads as an opted-OUT policy.
+    """
+    path = root / "docs" / "process.toml"
+    if not path.is_file():
+        return None
+    try:
+        data = tomllib.loads(path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError, tomllib.TOMLDecodeError):
+        return None
+    table = data.get("policies")
+    if not isinstance(table, dict):
+        return None
+    value = table.get(key)
+    return value if isinstance(value, bool) else None
+
+
 def read_privacy_enabled(root):
-    """Whether the privacy layer is on: docs/privacy-check's first non-comment
-    line is `true` (any case). Absent file or any other value → False (off) —
-    the successor to the old commit-identity `inherit` default."""
+    """Whether the privacy layer is on: `docs/process.toml` `[policies]
+    privacy_check = true`, else (migration window) docs/privacy-check's first
+    non-comment line being `true` (any case). Absent/any other value → False
+    (off) — the successor to the old commit-identity `inherit` default."""
+    declared = _process_bool(root, "privacy_check")
+    if declared is not None:
+        return declared
     return (
         _first_declared_line(root / "docs" / "privacy-check") or ""
     ).lower() == "true"
@@ -189,9 +219,14 @@ def email_ok(email):
 
 
 def read_secrets_scan(root):
-    """Whether the always-on secrets floor is enabled. `docs/secrets-scan` with
-    the one word `off` opts out; absent or any other value reads on (the safe
-    default) — so an ordinary repo gets the floor without declaring anything."""
+    """Whether the always-on secrets floor is enabled. `docs/process.toml`
+    `[policies] secrets_scan = false` opts out; else (migration window)
+    `docs/secrets-scan` with the one word `off`; absent or any other value
+    reads on (the safe default) — so an ordinary repo gets the floor without
+    declaring anything."""
+    declared = _process_bool(root, "secrets_scan")
+    if declared is not None:
+        return declared
     return (_first_declared_line(root / "docs" / "secrets-scan") or "").lower() != "off"
 
 

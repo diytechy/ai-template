@@ -15,7 +15,9 @@ from conftest import (
     KIT,
     LLRS,
     make_minimal_project,
+    process_key,
     run_py,
+    set_process_key,
     skip_without_env_gates,
     write_wi_registry,
 )
@@ -339,7 +341,7 @@ def test_hook_fails_closed_when_privacy_on_but_no_python(scaffold):
     sh = shutil.which("sh")
     make_minimal_project(scaffold)
     subprocess.run(["git", "init"], cwd=str(scaffold), capture_output=True)
-    (scaffold / "docs" / "privacy-check").write_text("true\n", encoding="utf-8")
+    set_process_key(scaffold, "policies", "privacy_check", True)
     env = _shadow_python(scaffold)
     proc = subprocess.run(
         [sh, HOOK], cwd=str(scaffold), capture_output=True, text=True, env=env
@@ -372,7 +374,7 @@ def test_commit_msg_hook_fails_closed_when_privacy_on_but_no_python(scaffold):
     assert ok.returncode == 0, ok.stdout + ok.stderr
     assert "not found" in ok.stderr.lower(), ok.stderr
     # Privacy declared true: fail closed with the named reason.
-    (scaffold / "docs" / "privacy-check").write_text("true\n", encoding="utf-8")
+    set_process_key(scaffold, "policies", "privacy_check", True)
     blocked = run_msg_hook()
     assert blocked.returncode != 0, "privacy-true + no python must FAIL CLOSED"
     assert "refusing to skip" in blocked.stderr.lower(), blocked.stderr
@@ -406,7 +408,7 @@ def test_hook_secrets_floor_blocks_staged_key_with_privacy_off(scaffold):
     assert "private key header" in (blocked.stdout + blocked.stderr)
 
     # The opt-out lifts the floor for a repo that needs it.
-    (scaffold / "docs" / "secrets-scan").write_text("off\n", encoding="utf-8")
+    set_process_key(scaffold, "policies", "secrets_scan", False)
     ok = subprocess.run([sh, HOOK], cwd=str(scaffold), capture_output=True, text=True)
     assert ok.returncode == 0, ok.stdout + ok.stderr
 
@@ -435,18 +437,14 @@ def test_hook_privacy_author_guard(scaffold):
         )
 
     # The scaffolded default is privacy-check false: any identity passes.
-    policy = scaffold / "docs" / "privacy-check"
-    body = [
-        ln
-        for ln in policy.read_text(encoding="utf-8").splitlines()
-        if ln.strip() and not ln.startswith("#")
-    ]
-    assert body == ["false"], "scaffold must default privacy-check to false"
+    assert process_key(scaffold, "policies", "privacy_check") is False, (
+        "scaffold must default privacy_check to false"
+    )
     ok = run_hook()
     assert ok.returncode == 0, ok.stdout + ok.stderr
 
     # privacy-check on + a private (non-exempt) author: a designed block.
-    policy.write_text("true\n", encoding="utf-8")
+    set_process_key(scaffold, "policies", "privacy_check", True)
     blocked = run_hook()
     assert blocked.returncode != 0, "a private author must be blocked"
     assert "exempt allowlist" in blocked.stderr
@@ -496,7 +494,7 @@ def test_commit_msg_hook_scans_message(scaffold):
 
     # Privacy layer on: the same private email now blocks; the exempt no-reply
     # co-author trailer passes.
-    (scaffold / "docs" / "privacy-check").write_text("true\n", encoding="utf-8")
+    set_process_key(scaffold, "policies", "privacy_check", True)
     blocked = run_msg("fix\n\nReported-by: real.person@gmail.com\n")
     assert blocked.returncode != 0, "a private email in the message must block when on"
     assert "exempt allowlist" in (blocked.stdout + blocked.stderr)

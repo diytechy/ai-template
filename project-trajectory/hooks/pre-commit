@@ -41,7 +41,19 @@ REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null) || REPO_ROOT=$(cd "$(dirn
 # trade, recorded: a privacy-checked repo cannot commit without a working
 # Python 3; that is the same stance pre-push already takes at the boundary
 # that matters most, moved up to where the leak would first land in history.
+#   SN-028 re-key: the policy's home is now docs/process.toml, and THIS parse
+# is the reason every value there is written one `key = value` per line — a
+# first-line parse cannot read a TOML file, but a KEYED match can, and a keyed
+# match is what the owner remembered wanting all along. Precedence mirrors
+# agent_common.declared_policy exactly: process.toml when it DECLARES the key
+# (either value), else the legacy one-word file. A cross-parser agreement test
+# pins this ERE and tomllib to the same answer. POSIX ERE only — no \s, no -P.
 privacy_declared_true() {
+  ptoml="$REPO_ROOT/docs/process.toml"
+  if [ -f "$ptoml" ] && grep -Eq '^[[:space:]]*privacy_check[[:space:]]*=' "$ptoml"; then
+    grep -Eq '^[[:space:]]*privacy_check[[:space:]]*=[[:space:]]*true[[:space:]]*$' "$ptoml"
+    return $?
+  fi
   [ -f "$REPO_ROOT/docs/privacy-check" ] || return 1
   p=$(grep -v '^[[:space:]]*#' "$REPO_ROOT/docs/privacy-check" | grep -v '^[[:space:]]*$' | head -n 1 | tr -d '[:space:]' || true)
   [ "$p" = "true" ]

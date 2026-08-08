@@ -67,9 +67,19 @@ find_scripts_dir() {
 
 # Privacy gate — same parse as pre-commit / commit-msg. Off / absent = not a
 # privacy-checked repo (the secrets-floor-only branch below still guards it).
+# SN-028: docs/process.toml's KEYED match first (that file is written one
+# `key = value` per line precisely so this pure-sh read stays possible on a
+# Python-less box — M-42), the legacy one-word file second.
+PROCESS_TOML="$REPO_ROOT/docs/process.toml"
 PRIVACY_FILE="$REPO_ROOT/docs/privacy-check"
 privacy=""
-if [ -f "$PRIVACY_FILE" ]; then
+if [ -f "$PROCESS_TOML" ] && grep -Eq '^[[:space:]]*privacy_check[[:space:]]*=' "$PROCESS_TOML"; then
+  if grep -Eq '^[[:space:]]*privacy_check[[:space:]]*=[[:space:]]*true[[:space:]]*$' "$PROCESS_TOML"; then
+    privacy="true"
+  else
+    privacy="false"
+  fi
+elif [ -f "$PRIVACY_FILE" ]; then
   privacy=$(grep -v '^[[:space:]]*#' "$PRIVACY_FILE" | grep -v '^[[:space:]]*$' | head -n 1 | tr -d '[:space:]' || true)
 fi
 if [ "$privacy" != "true" ]; then
@@ -136,10 +146,20 @@ fi
 # Declared unwired-reviewer posture (docs/privacy-review, header comment):
 # exactly `warn-unwired` opts the unwired case down to warn-and-proceed; any
 # other value — including a typo — reads as require, the stricter direction.
+#   SN-028: the same two-tier read. NOTE the variable name is historical — the
+# file this reads is docs/privacy-review (the unwired-REVIEWER posture), NOT
+# docs/review-policy (the reviewer-count dial). No hook has ever read the
+# latter; the misleading name has cost two readings of this block.
 review_policy=""
-REVIEW_POLICY_FILE="$REPO_ROOT/docs/privacy-review"
-if [ -f "$REVIEW_POLICY_FILE" ]; then
-  review_policy=$(grep -v '^[[:space:]]*#' "$REVIEW_POLICY_FILE" | grep -v '^[[:space:]]*$' | head -n 1 | tr -d '[:space:]' || true)
+PRIVACY_REVIEW_FILE="$REPO_ROOT/docs/privacy-review"
+if [ -f "$PROCESS_TOML" ] && grep -Eq '^[[:space:]]*privacy_review[[:space:]]*=' "$PROCESS_TOML"; then
+  if grep -Eq '^[[:space:]]*privacy_review[[:space:]]*=[[:space:]]*"warn-unwired"[[:space:]]*$' "$PROCESS_TOML"; then
+    review_policy="warn-unwired"
+  else
+    review_policy="require"
+  fi
+elif [ -f "$PRIVACY_REVIEW_FILE" ]; then
+  review_policy=$(grep -v '^[[:space:]]*#' "$PRIVACY_REVIEW_FILE" | grep -v '^[[:space:]]*$' | head -n 1 | tr -d '[:space:]' || true)
 fi
 
 # stdin: one line per ref being pushed: <local ref> <local sha> <remote ref> <remote sha>

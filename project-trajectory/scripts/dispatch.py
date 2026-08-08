@@ -135,6 +135,13 @@ def _session_config_refusal(root, args):
     managed-routing enable-list means every worker would refuse at its own
     preflight - AFTER the claim had already parked a branch. Refuse here
     instead, with nothing claimed yet. Returns the refusal string, or None."""
+    # SN-028: the mixed-config refusal rides HERE, not at the policy read
+    # itself - `run` reads the level once at :985 and a raised exception there
+    # would rewrite an exit-code contract. This rung already gates every claim,
+    # so a half-migrated config can never reach the dispatcher's policy read.
+    conflicts = ac.config_conflicts(root / "docs")
+    if conflicts:
+        return conflicts[0]
     template = (
         args.agent_cmd
         if args.agent_cmd is not None
@@ -982,7 +989,7 @@ def run(root, args, worker=None, tier="all"):
     guard's intended span.
     """
     lanes_total = _lane_count(args, root)
-    level = ac.read_declared(root / "docs" / "gate-policy", "attended").strip().lower()
+    level = ac.declared_policy(root / "docs", "gate-policy", "attended").strip().lower()
     # Computed once, APPLIED lazily: admission refuses on it only when work
     # actually needs a worker, so an empty queue still drains to exit 0 on an
     # unwired scaffold (the spec's empty-frontier contract; codex

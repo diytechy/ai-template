@@ -469,3 +469,45 @@ Points this doc **retains against** the second plan, for the owner to weigh:
 - **`stack.ini`'s adopter-owned never-clobber property** must carry over to
   whatever absorbs it; the second plan folds it into `config.toml` without
   stating that resync contract.
+
+---
+
+## 12. Erratum (2026-08-08) — six claims corrected against source
+
+Written during execution, after every load-bearing claim in §§1–11 was
+re-measured in the tree. Each correction below was **verified in source**, not
+inferred; the plan's design is unaffected, but an implementer grepping for the
+original wording would have found nothing (or the wrong thing) five times out
+of six.
+
+1. **§3/§4 name `intake.reattest_flip`. No such symbol exists.** The shipped
+   pair is `intake.adjudication_action(level)` and `intake.flip_verified(root,
+   ids)`, driven by `python intake.py adjudicate --rows`.
+2. **§2's "the git hooks read `docs/privacy-check` / `docs/review-policy`" is
+   half wrong.** The hooks read `docs/privacy-check` (all three) and
+   `docs/privacy-review` (pre-push only). **No hook has ever read
+   `docs/review-policy`** — the confusion comes from a misleading shell
+   variable named `REVIEW_POLICY_FILE` that points at `docs/privacy-review`.
+   The variable is renamed in this program. The M-42 constraint itself is real
+   and is honored: the two keys stay keyed-greppable in `docs/process.toml`.
+3. **§8 cites `intake.py:151` for the `NEEDS-HUMAN` magic substring; it is
+   line 152.**
+4. **§4 row 4 says "the LLR/TC registries already carry [`Component`]".** LLR
+   does; **TC does not** — its header has no `Component` column. Component-
+   scoped batching therefore has no TC-side cell to key on, and the WI→Component
+   join it needs (`WI.SR-Refs → LLR.SR-Refs → LLR.Component`) does not exist
+   today. This is why that rung ships as a dial defaulting **off**.
+5. **§1 says "21 `Modified` SRs".** Measured: **20** `Modified` SRs, 0 LLRs and
+   **1** `Modified` TC (`TC-034`). `docs/gate`'s `modified=21` sums all three
+   registries, which is what the sentence read off.
+6. **§3's claim that meaning-change detection is "built end-to-end" is a
+   TWO-clause gap, not one** — §11.1 correctly flags it, and this is the
+   precise shape. `check_trajectory.staged_spine_amendments` drops a record
+   when *either* the row's own Status is not `Verified` on both sides **or**
+   its owning SR is flagged on the new side. Either clause removes the record
+   from the **return value**, and `intake._routed_amendments` consumes that
+   same return — so the sanctioned amend+flip path never reaches the
+   adjudication mint. A fix that addresses only the docstring's "Status moved"
+   sentence still misses the child-amended-with-SR-flipped case. Both clauses
+   are pinned by tests and are *preserved* for the warn; the ledger (§11.2)
+   routes around them instead of loosening them.

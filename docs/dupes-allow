@@ -292,6 +292,7 @@
 #   trailer-fold           1   deliberate
 #   warn-tier-dispatch     1   deliberate
 #   kind-resolution        1   deliberate
+#   toml-scalar            1   deliberate
 #
 # The two facts worth carrying: cross-module duplication here is dominated by
 # SMALL STABLE HELPERS the F5 ruling deliberately duplicates (a shared
@@ -817,3 +818,19 @@ de0546d2361d  project-trajectory/scripts/intake.py == project-trajectory/scripts
 # (1fea271d8b0c -> 5a35a2689e40 when intake main() grew the adjudicate
 # subparser - same block, shifted content.)
 5a35a2689e40  project-trajectory/scripts/intake.py == project-trajectory/scripts/spec_move.py
+
+# --- toml-scalar (1 block) ---------------------------------------
+# disposition: deliberate
+# SN-028 (docs/process.toml, the one policy home). One shape, ~32 tokens:
+#   * the TOML SCALAR WRITER (bootstrap == wi_convert): `bootstrap._toml_scalar`
+#     and `wi_convert.toml_value` both render bool -> `true|false`, int -> its
+#     digits, anything else -> a quoted basic string. Extraction was DECLINED,
+#     not deferred: bootstrap.py is the scaffolder and is deliberately
+#     sibling-import-free (it must run standing on nothing but the kit dir it
+#     is copying FROM), while wi_convert.py is the CSV<->spec interchange tool
+#     whose writer also handles arrays this one never needs. Merging them would
+#     give the scaffolder a dependency on the interchange format for the sake
+#     of three `isinstance` branches. This is the F5 small-helper case the
+#     census exists for; if bootstrap ever needs arrays too, that is the signal
+#     to reopen it.
+31835da4147d  project-trajectory/scripts/bootstrap.py == project-trajectory/scripts/wi_convert.py

@@ -105,6 +105,7 @@ from conftest import (
     load_script,
     make_minimal_project,
     run_py,
+    set_process_key,
     skip_without_env_gates,
 )
 
@@ -2707,7 +2708,10 @@ def scaffolded_closed_branch(tmp_path):
     assert proc.returncode == 0, proc.stdout + proc.stderr
     make_minimal_project(repo)
 
-    (repo / "docs" / "review-policy").write_text("0\n", encoding="utf-8", newline="\n")
+    # SN-028: the scaffold already carries docs/process.toml, so the dial is set
+    # THERE — writing the legacy file beside it is the mixed config the reader
+    # now refuses outright.
+    set_process_key(repo, "policies", "review_rounds", 0)
     with (repo / ".gitignore").open("a", encoding="utf-8", newline="\n") as fh:
         fh.write("out/\n")
     # A queued spec owes a resolving SpecRef (the WI-370 claim rung); the

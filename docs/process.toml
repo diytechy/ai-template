@@ -1,0 +1,110 @@
+# docs/process.toml — HOW ITEMS ARE PROCESSED. Hand-edited, machine-read.
+#
+# One home for every POLICY DIAL (SN-028). Before this file the dials lived in
+# ~10 one-word files under docs/ (docs/gate-policy, docs/push-policy, …). That
+# idiom was never a ruling — it accreted, and the one constraint that really
+# held it in place was the git hooks' pure-sh parse (repo-review M-42,
+# 2026-07-21: a Python-less box must still FAIL CLOSED on a declared privacy
+# policy). A one-word-per-file format is the only thing a `head -n 1` parse can
+# read; the old 3.8 floor's lack of `tomllib` did the rest.
+#
+# Both reasons are spent. The floor is 3.11 (`tomllib` is stdlib), and the
+# hooks now do a KEYED match instead of a first-line one:
+#
+#     grep -Eq '^[[:space:]]*privacy_check[[:space:]]*=[[:space:]]*true' docs/process.toml
+#
+# which is why every value below is written ONE `key = value` PER LINE with no
+# inline tables and no multi-line strings. Python consumers read it with
+# `tomllib` and a cross-parser agreement test pins the two readings equal, so
+# the greppable form can never drift from the parsed one.
+#
+# THREE DELIBERATE EXCEPTIONS stay outside this file, each for a stated reason:
+#
+#   1. `docs/stack.ini` — the PRODUCT TOOLCHAIN, not a process dial. It is
+#      adopter-owned across re-syncs (ADOPTING.md "Preserve always"), has five
+#      Python consumers and a working format. Folding it in here would put an
+#      adopter-owned file under a kit-owned template.
+#   2. PRESENCE-AS-SEMANTICS files stay files: `docs/work/pause` (delete-to-
+#      resume IS the contract) and `docs/agents-enabled` (presence = consent to
+#      managed routing). A key in a shared file cannot express deletion-as-an-
+#      act, nor survive as a one-line reviewed diff.
+#   3. `docs/gate` — a GENERATED CACHE (derive_gate.py), not configuration.
+#
+# MIGRATION: a repo that still carries the legacy one-word files is converted
+# automatically by `python scripts/bootstrap.py --migrate-config --dest .`
+# (bootstrap and the downstream re-sync run it for you). Running with BOTH
+# sources live is REFUSED, not silently resolved — a mixed config is exactly
+# the state where two readers disagree about the same policy.
+
+[attestation]
+# TRANSITIONAL (SN-028 -> SN-029): the three-value gate-authority enum that
+# `human_ratification_through` below replaces. It is still the value the
+# admission table and the adjudication flip arm read; the ordinal takes over
+# when SN-029's consumers land, and this key is deleted in the same commit.
+#   "attended"      a human ratifies each gate advance (the kit default)
+#   "single-ratify" LLM-gate review through G1+G2; one human sitting at close
+#   "autonomous"    every gate but G-Final closes on a recorded LLM verdict
+gate_policy = "autonomous"
+# How far up the SN -> SR -> LLR -> TC spine a HUMAN ratifies, cumulatively
+# ("through" this tier). The dispatcher compares the IN-PROCESS stage of a row
+# against this number: at or below it, work SURFACES for the human; above it,
+# the loop dispatches and an LLM verdict carries ratification authority.
+#   0 = nothing is human-held; the loop ratifies every tier itself
+#   1 = the human ratifies SNs
+#   2 = ... and SRs
+#   3 = ... and LLRs
+#   4 = ... and TCs (every tier human-held; the most conservative setting)
+# Named `human_ratification_through`, never "attest level": `Attest` is already
+# a Verification method in the SR vocabulary and the collision would be
+# permanent.
+human_ratification_through = 0
+# The separate "always show me the full breakdown at the end" hold, split out
+# because it is flipped far more often than the level itself.
+#   "always" — the loop stops for a final human read even when the level would
+#              have let it close
+#   "off"    — no final hold
+final_review = "always"
+# Keep NON-DEPENDENT work running while a ratification is queued? This is an
+# ORTHOGONAL policy an ordinal cannot express (it was the old `single-ratify`
+# level's distinguishing behaviour). false = a queued ratification drains the
+# station and stops the run; true = other lanes keep going around it.
+keep_nondependent = false
+# How a CLEAN (`complete/`) lane close is adjudicated. `partial` and
+# `cancelled` closes are ALWAYS adjudicated — they carry a claim about what was
+# not delivered. A green close already passed the declared bar and the review
+# rounds, so adjudicating every one of them prices a strong-tier session onto
+# work two gates already judged.
+#   "off"    — never (the review rounds are the judgement)
+#   "sample" — spot-check at `complete_sample_rate`
+#   "always" — adjudicate every clean close too
+complete_review = "sample"
+complete_sample_rate = 4
+
+[policies]
+# Who may publish (`git push`) this repo — was docs/push-policy.
+#   "human"           the default: an agent never pushes, even if asked
+#   "agent-iteration" an agent may push only the scrubbed llm/<branch>
+#   "agent"           full delegation, still gated by the sync ritual
+push = "human"
+# How many independent fresh-context review verdicts a completed work item gets
+# before the integrator accepts it — was docs/review-policy. 0 | 1 | 2.
+review_rounds = 1
+# Run the PII / identity-leak gate — was docs/privacy-check. The always-on
+# secrets floor below is separate and runs regardless.
+# KEYED-GREPPABLE: the three git hooks match this exact line shape so a
+# Python-less box still fails closed (M-42).
+privacy_check = false
+# The always-on secrets floor (key/token shapes in the staged diff, message and
+# outgoing range) — was docs/secrets-scan, where ABSENCE read as on.
+secrets_scan = true
+# The unwired-privacy-reviewer posture at the push boundary — was
+# docs/privacy-review. Exactly "warn-unwired" opts the unwired case down to
+# warn-and-proceed; any other value — including a typo — reads as require.
+# KEYED-GREPPABLE, like privacy_check.
+privacy_review = "require"
+# Vendored-core guardrail injection — was docs/guardrails-policy.
+#   "off" | "all" | "all except <sub> …" | "<sub> …"
+guardrails = "off"
+# The weekday blackout window, UTC, HH:MM-HH:MM — was docs/blackout. An empty
+# value (or start == end) disables it.
+blackout = ""

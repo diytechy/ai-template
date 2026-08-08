@@ -12,6 +12,7 @@ import os
 import shutil
 import subprocess
 import sys
+import tomllib
 from pathlib import Path
 
 import pytest
@@ -613,6 +614,42 @@ WI_REGISTRY_COLUMNS = [
     "SafetyClass",
     "BlockRef",
 ]
+
+
+# --- SN-028: docs/process.toml, the one policy home ---------------------------
+# Every test that used to write a one-word docs/<policy> file goes through these
+# two helpers, so the file's shape is stated ONCE for the whole suite. The
+# writer DELEGATES to bootstrap.set_process_key rather than carrying a second
+# line-rewriter: a test helper that re-implements the thing under test can only
+# ever agree with itself (the F3 lesson recorded in test_derive_gate).
+
+
+def process_toml(root):
+    """The parsed `docs/process.toml` under `root`, or `{}` when absent."""
+    path = Path(root) / "docs" / "process.toml"
+    if not path.is_file():
+        return {}
+    return tomllib.loads(path.read_text(encoding="utf-8"))
+
+
+def process_key(root, section, key):
+    """One `docs/process.toml` dial's value, or None."""
+    table = process_toml(root).get(section)
+    return table.get(key) if isinstance(table, dict) else None
+
+
+def set_process_key(root, section, key, value, *, seed=True):
+    """Set one `docs/process.toml` dial under `root`, seeding the file from the
+    kit template first when `seed` and it is absent (so a bare tmp repo can
+    declare a policy in one call, the way the old one-word writes did)."""
+    root = Path(root)
+    path = root / "docs" / "process.toml"
+    if seed and not path.is_file():
+        path.parent.mkdir(parents=True, exist_ok=True)
+        text = (KIT / "process.toml.template").read_text(encoding="utf-8")
+        with path.open("w", encoding="utf-8", newline="\n") as fh:
+            fh.write(text)
+    return load_script("bootstrap").set_process_key(root, section, key, value)
 
 
 def wi_registry_header(columns=10):

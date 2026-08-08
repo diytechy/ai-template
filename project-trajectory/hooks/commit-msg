@@ -31,7 +31,15 @@ REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null) || REPO_ROOT=$(cd "$(dirn
 # silently — parse the policy in pure sh (the pre-push pattern) and refuse.
 # The trade, recorded: a privacy-checked repo cannot commit without a working
 # Python 3 + findable scripts dir; a non-privacy repo keeps the free skip.
+# SN-028 re-key: docs/process.toml's keyed match first, legacy file second —
+# byte-identical to pre-commit's copy (the same F5 duplication the two hooks
+# already share for every probe). POSIX ERE only.
 privacy_declared_true() {
+  ptoml="$REPO_ROOT/docs/process.toml"
+  if [ -f "$ptoml" ] && grep -Eq '^[[:space:]]*privacy_check[[:space:]]*=' "$ptoml"; then
+    grep -Eq '^[[:space:]]*privacy_check[[:space:]]*=[[:space:]]*true[[:space:]]*$' "$ptoml"
+    return $?
+  fi
   [ -f "$REPO_ROOT/docs/privacy-check" ] || return 1
   p=$(grep -v '^[[:space:]]*#' "$REPO_ROOT/docs/privacy-check" | grep -v '^[[:space:]]*$' | head -n 1 | tr -d '[:space:]' || true)
   [ "$p" = "true" ]

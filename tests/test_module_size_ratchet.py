@@ -377,7 +377,10 @@ BASELINE = {
     # instruction line; the lazy import keeps a stripped copy launchable.
     # Reviewed bump, log fragment 2026-08-02 (WI-388). Re-stamp down with
     # WI-280.
-    "agent_loop.py": 3007,
+    # +7 (3007 -> 3014), SN-028: the four policy dials re-pointed at
+    # `declared_policy` plus the three re-exports the sibling modules read.
+    # Reviewed bump. Re-stamp down with WI-280.
+    "agent_loop.py": 3014,
     # +30 (2206 -> 2236), WI-065: `tc_citation_findings` — the TC-`Verifies`
     # rules lifted out of `analyze` so the cell could accept `IF-###` seam ids.
     # Most of the bump is that helper's docstring, which is where the RULING now
@@ -853,7 +856,14 @@ BASELINE = {
     # listing entry — the scaffold surface gained the unified intake mint.
     # Reviewed bump, log fragment 2026-08-02 (WI-388). Re-stamp down with
     # WI-280.
-    "bootstrap.py": 2278,
+    # +165 (2278 -> 2443), SN-028: the scaffolder is where a migration has to
+    # live if adopters are never to meet the mixed-config refusal un-aided —
+    # `set_process_key` (a LINE rewrite, since stdlib has no TOML writer and
+    # the file's header is most of its value), the `LEGACY_CONFIG` table,
+    # `migrate_legacy_config`, the `--migrate-config` mode and its report.
+    # Against it: four MAPPING rows and two of the three appliers' bodies
+    # deleted. Reviewed bump. Re-stamp down with WI-280.
+    "bootstrap.py": 2443,
     # NEW ENTRY, +228 (1423 -> 1651), Phase 2b of the concurrency restructure
     # (docs/concurrency-restructure.md §7): the spec-folder work-item reader,
     # which crosses this module over THRESHOLD for the first time. It is one
@@ -949,7 +959,16 @@ BASELINE = {
     # +15 (1824 -> 1839), WI-388: the F5-mirrored loader edits (`Bar` column,
     # `SPEC_CONTEXT` + its clip in `parse_spec_deliverable`). Reviewed bump,
     # log fragment 2026-08-02 (WI-388). Re-stamp down with WI-280.
-    "agent_common.py": 1839,
+    # +174 (1839 -> 2013), SN-028: docs/process.toml, the ONE policy home.
+    # `read_toml` + `process_config` + `declared_policy` + `config_conflicts` +
+    # the PROCESS_KEYS migration table — most of the growth is the table and
+    # the prose that has to survive here, because this module is where the
+    # dual-read window's precedence and the hard mixed-config refusal are
+    # DEFINED for every consumer (dispatch, intake and integrate each read
+    # policy without passing through agent_loop.main). Reviewed bump; the
+    # counterweight is ~10 one-word files and their five ad-hoc parsers
+    # retiring. Re-stamp down with WI-280.
+    "agent_common.py": 2013,
     # NEW ENTRY, WI-387 — integrate.py crossed THRESHOLD (1418 -> 1588) adding
     # the third terminal outcome. The extraction the ratchet asks for was TAKEN
     # FIRST, not argued away: `hand_back` and `quarantine`, the largest unit and
@@ -1108,7 +1127,11 @@ BASELINE = {
     # `_adjudication_scope_ok`) — the kind alone never earns the no-bar path;
     # the branch's non-refresh delta must stay on the §A5.2 surfaces or the
     # full bar runs. Re-stamp down with WI-280.
-    "integrate.py": 2417,
+    # +9 (2417 -> 2426), SN-028: the verdict gate reads the reviewer dial
+    # through `declared_policy` and folds `config_conflicts` in ahead of it —
+    # the merge slot must not pick one of two declared homes. Reviewed bump.
+    # Re-stamp down with WI-280.
+    "integrate.py": 2426,
 }
 
 

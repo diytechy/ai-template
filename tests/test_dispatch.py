@@ -44,6 +44,7 @@ from conftest import (
     load_script,
     make_minimal_project,
     run_py,
+    set_process_key,
     skip_without_env_gates,
 )
 
@@ -545,7 +546,8 @@ def scaffold_with_queued_wi(tmp_path):
     proc = run_py([SCRIPTS / "bootstrap.py", "--dest", repo], cwd=tmp_path)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     make_minimal_project(repo)
-    (repo / "docs" / "review-policy").write_text("0\n", encoding="utf-8", newline="\n")
+    # SN-028: one policy home — the scaffold ships docs/process.toml.
+    set_process_key(repo, "policies", "review_rounds", 0)
     with (repo / ".gitignore").open("a", encoding="utf-8", newline="\n") as fh:
         fh.write("out/\n")
     write_spec(repo, "queued", "WI-401", specref="docs/log.md")

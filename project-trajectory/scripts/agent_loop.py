@@ -187,6 +187,9 @@ EXIT_PAUSED = agent_common.EXIT_PAUSED
 END_STATES = agent_common.END_STATES
 OWNER_ONLY_PATHS = agent_common.OWNER_ONLY_PATHS
 read_declared = agent_common.read_declared
+declared_policy = agent_common.declared_policy
+process_config = agent_common.process_config
+config_conflicts = agent_common.config_conflicts
 read_agent_loop_config = agent_common.read_agent_loop_config
 resolve_coordinator_dials = agent_common.resolve_coordinator_dials
 pause_reason = agent_common.pause_reason
@@ -1729,7 +1732,7 @@ def print_run_banner(
         "AGENT_CMD means unattended edits without prompts — you consented by "
         "wiring it and running this. Ctrl+C is safe; re-running resumes."
     )
-    privacy_on = read_declared(docs / "privacy-check", "false").lower() == "true"
+    privacy_on = declared_policy(docs, "privacy-check", "false").lower() == "true"
     if privacy_on and not (branch or "").startswith("llm/"):
         print(
             "WARNING: privacy-checked repo (docs/privacy-check) but the "
@@ -2298,7 +2301,7 @@ def run_iteration(ctx, i):
     # (we sleep inline, never `continue`), so a single walk-away launch
     # survives the blackout and resumes automatically. Absent/disabled file
     # => a no-op (byte-identical to today).
-    blackout_line = read_declared(lane / "blackout", "")
+    blackout_line = declared_policy(lane, "blackout", "")
     wake = blackout_wake(blackout_line, datetime.datetime.utcnow())
     if wake:
         resume_at = datetime.datetime.utcnow() + datetime.timedelta(seconds=wake)
@@ -2724,12 +2727,16 @@ def main():
     lane.mkdir(parents=True, exist_ok=True)
     status_path = lane / "status.md"
 
-    gate_policy = read_declared(docs / "gate-policy", "attended")
-    push_policy = read_declared(docs / "push-policy", "human")
-    review_policy = read_declared(docs / "review-policy", "1")
+    # SN-028: the four dials now read through the one policy home
+    # (docs/process.toml, legacy one-word file as the migration fallback). The
+    # four LOCALS stay — `print_run_banner` takes them positionally and a dozen
+    # tests read the banner — so this is a reader swap, not a signature change.
+    gate_policy = declared_policy(docs, "gate-policy", "attended")
+    push_policy = declared_policy(docs, "push-policy", "human")
+    review_policy = declared_policy(docs, "review-policy", "1")
     _, branch = git(root, "branch", "--show-current")
 
-    guardrails_policy = read_declared(docs / "guardrails-policy", "off")
+    guardrails_policy = declared_policy(docs, "guardrails-policy", "off")
     # Surface a stale/typo'd policy token before the run: if it names a substring
     # that matches none of the models this run could use, the guard is inert.
     possible_models = {m for m in [args.model, *model_map.values()] if m}
@@ -2754,7 +2761,7 @@ def main():
     # and review-policy are consent surfaces like agents-enabled (repo-review
     # 2026-07-21 M-20). Behavior is unchanged for compat (blackout off /
     # review-policy lenient-parse); the SILENCE was the defect.
-    blackout_line = read_declared(docs / "blackout", "")
+    blackout_line = declared_policy(docs, "blackout", "")
     if blackout_line and parse_blackout(blackout_line) is None:
         print(
             "agent_loop: WARNING - docs/blackout {!r} is malformed (expected "

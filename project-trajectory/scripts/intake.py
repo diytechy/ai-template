@@ -917,7 +917,7 @@ def flip_verified(root, ids):
     registry still owes its regeneration (`derive_gate` recovers the gate);
     the lane's own refresh runs it."""
     root = Path(root)
-    level = ac.read_declared(root / "docs" / "gate-policy", "attended").strip()
+    level = ac.declared_policy(root / "docs", "gate-policy", "attended").strip()
     action = adjudication_action(level.lower())
     wanted = {i.strip() for i in ids if i.strip()}
     located, tables = _locate_spine_rows(root, wanted)

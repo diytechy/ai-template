@@ -43,6 +43,17 @@ home elsewhere — don't restate it here:
   by hand when the shipped loop is serial — read that before deciding how to run
   the rest, and read its **§6** for the two findings the resolution produced that
   have no id yet.
+- **THE PROGRAM IN FLIGHT — the fully mechanized loop (SN-028…SN-032):**
+  [plan-2026-08-08-mechanized-loop.md](plan-2026-08-08-mechanized-loop.md).
+  Read its **§11 Addendum first** — it supersedes the earlier sections where
+  they conflict — then **§12, the erratum**, which corrects six claims in the
+  plan's own text that were re-verified against source (a function name that
+  does not exist, a hook that reads a different file, an off-by-one line
+  number, a column that is not on the TC registry, a mis-stated `Modified`
+  count). Executed on a dedicated infra branch **outside the loop's own
+  machinery**, per the plan's execution-mode directive: these changes rewrite
+  that machinery, so the spine rows the program mints are the *record* of the
+  work, ratified at the end, not the vehicle for it.
 - **The drain plan for the remaining backlog:**
   [backlog-plan-2026-08-01.md](backlog-plan-2026-08-01.md) — the serial build
   order for the queued rows, the standing rules every builder inherits, and the

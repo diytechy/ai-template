@@ -3,7 +3,15 @@
 import ast
 import re
 
-from conftest import KIT, ROOT, SCRIPTS, load_script, run_py
+from conftest import (
+    KIT,
+    ROOT,
+    SCRIPTS,
+    load_script,
+    process_key,
+    process_toml,
+    run_py,
+)
 
 
 _ACTION_PINS = {
@@ -24,11 +32,10 @@ def test_scaffold_contains_expected_files(scaffold):
         "docs/process.md",
         "docs/process-options.md",
         "docs/gate",
-        "docs/gate-policy",
-        "docs/privacy-check",
-        "docs/push-policy",
-        "docs/blackout",
-        "docs/review-policy",
+        # SN-028: the ~10 one-word policy files collapsed into ONE home. A
+        # fresh scaffold ships only this; the legacy files are absent by
+        # design (shipping both would be the mixed-config refusal on day one).
+        "docs/process.toml",
         "docs/agents.csv",
         "docs/kit-profile",
         "docs/status.md",
@@ -536,15 +543,39 @@ def test_run_launchers_delegate_to_run_menu(scaffold):
     assert "\n[run]" not in ini, "a fresh scaffold ships the [run] examples commented"
 
 
-def test_scaffold_blackout_ships_the_default_window(scaffold):
-    # WI-148: a fresh scaffold ships the 12:00–19:00 UTC weekday default, so the
-    # owner's "always on" blackout is honored by the scaffold, not a hidden
-    # built-in (the value is the last non-comment line, like the other policies).
-    text = (scaffold / "docs" / "blackout").read_text(encoding="utf-8")
-    value = [
-        ln.strip() for ln in text.splitlines() if ln.strip() and not ln.startswith("#")
-    ][-1]
-    assert value == "12:00-19:00"
+def test_scaffold_ships_every_policy_dial_in_one_home(scaffold):
+    # SN-028: docs/process.toml carries every dial a fresh scaffold declares,
+    # and each is TYPED (a bool is a bool, the reviewer count is an int) rather
+    # than a one-word string every reader re-parses. The blackout window is
+    # EMPTY by default here — WI-148 shipped 12:00-19:00 in the one-word file,
+    # and folding it in was the moment to ask whether a kit should impose a
+    # window on a repo that never asked for one. It should not: an empty value
+    # disables it, exactly as an absent docs/blackout always did.
+    cfg = process_toml(scaffold)
+    assert cfg["attestation"]["gate_policy"] == "attended"
+    assert cfg["attestation"]["human_ratification_through"] == 4
+    assert cfg["policies"] == {
+        "push": "human",
+        "review_rounds": 1,
+        "privacy_check": False,
+        "secrets_scan": True,
+        "privacy_review": "require",
+        "guardrails": "off",
+        "blackout": "",
+    }
+    for legacy in (
+        "gate-policy",
+        "push-policy",
+        "review-policy",
+        "privacy-check",
+        "secrets-scan",
+        "privacy-review",
+        "guardrails-policy",
+        "blackout",
+    ):
+        assert not (scaffold / "docs" / legacy).exists(), (
+            "SN-028: docs/" + legacy + " must not ship beside docs/process.toml"
+        )
 
 
 def test_agent_resume_launchers_ship_inert_with_edit_slots(scaffold):
@@ -665,7 +696,7 @@ def test_privacy_check_defaults_to_false(scaffold):
     # The scaffolded toggle is `false` — the privacy gate is off by default, so
     # existing adopters and default scaffolds see zero change (the always-on
     # secrets floor still runs regardless).
-    assert _policy_lines(scaffold / "docs" / "privacy-check") == ["false"]
+    assert process_key(scaffold, "policies", "privacy_check") is False
 
 
 def test_privacy_check_flag_sets_toggle(tmp_path):
@@ -683,9 +714,12 @@ def test_privacy_check_flag_sets_toggle(tmp_path):
         cwd=tmp_path,
     )
     assert proc.returncode == 0, proc.stdout + proc.stderr
-    policy = dest / "docs" / "privacy-check"
-    assert _policy_lines(policy) == ["true"]
+    policy = dest / "docs" / "process.toml"
+    assert process_key(dest, "policies", "privacy_check") is True
     assert policy.read_text(encoding="utf-8").startswith("#"), "header kept"
+    # KEYED-GREPPABLE (M-42): the git hooks read this exact line shape in pure
+    # sh, so a Python-less box still fails closed on a declared privacy policy.
+    assert "\nprivacy_check = true\n" in policy.read_text(encoding="utf-8")
 
 
 def test_setup_scripts_advise_on_privacy_not_pin_identity():

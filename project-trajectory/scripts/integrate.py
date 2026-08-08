@@ -1173,10 +1173,19 @@ def _verdict_gate(root, branch, outcomes):
     cancelled spec moves under `docs/work/` too, and owes no verdict for that
     move to stale.
     """
-    dial = ac.read_declared(root / "docs" / "review-policy", "0")
+    # SN-028: the mixed-config refusal first - a repo declaring the reviewer
+    # dial in BOTH homes must not have the merge slot pick one of them.
+    conflicts = ac.config_conflicts(root / "docs")
+    if conflicts:
+        return conflicts[0]
+    dial = ac.declared_policy(root / "docs", "review-policy", "0")
     try:
         required = int(dial or "0") >= 1
     except ValueError:
+        # The message still names the LEGACY file: it is the shape an operator
+        # can be holding either way, and `declared_policy` renders the TOML int
+        # in the same string vocabulary, so a non-integer here means a
+        # hand-edited legacy file (a TOML non-int falls back to the default).
         return "docs/review-policy is not an integer: {!r} (fail closed)".format(dial)
     if not required:
         return None

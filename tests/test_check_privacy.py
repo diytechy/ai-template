@@ -16,7 +16,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from conftest import env_gate_skipif, augment_env, run_py
+from conftest import env_gate_skipif, augment_env, run_py, set_process_key
 
 SCRIPT = "scripts/check_privacy.py"
 # This kit repo (a git checkout) and its real check_privacy.py, for the
@@ -52,11 +52,14 @@ def run_lint(cwd, *args):
 
 
 def set_privacy(root, value="true"):
-    (root / "docs" / "privacy-check").write_text(value + "\n", encoding="utf-8")
+    # SN-028: the toggle lives in docs/process.toml [policies] privacy_check as
+    # a TOML boolean; the legacy one-word vocabulary survives at this seam only.
+    set_process_key(root, "policies", "privacy_check", value == "true")
 
 
 def set_secrets_scan(root, value):
-    (root / "docs" / "secrets-scan").write_text(value + "\n", encoding="utf-8")
+    # `off` was the legacy opt-out word; the key is a boolean now.
+    set_process_key(root, "policies", "secrets_scan", value != "off")
 
 
 def git(root, *args):

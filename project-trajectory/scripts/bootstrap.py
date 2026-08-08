@@ -800,25 +800,72 @@ GATE_POLICY_FIXED_POINTS = """## Fixed points (nothing in this file overrides th
 """
 
 
+PROCESS_TOML_REL = "docs/process.toml"
+
+
+def _toml_scalar(value):
+    """A Python value as the TOML literal `set_process_key` writes. Bool and int
+    render bare; everything else renders as a basic string. Deliberately tiny —
+    stdlib has no TOML WRITER, and the only values this scaffolder sets are
+    one-word policy tokens, an ordinal and a boolean."""
+    if isinstance(value, bool):
+        return "true" if value else "false"
+    if isinstance(value, int):
+        return str(value)
+    text = str(value).replace("\\", "\\\\").replace('"', '\\"')
+    return '"{}"'.format(text)
+
+
+def set_process_key(dest, section, key, value, dry_run=False):
+    """Set `[section] key = value` in `docs/process.toml`, IN PLACE.
+
+    A LINE REWRITE, not a re-serialization: stdlib has no TOML writer, and the
+    file's explanatory header is most of its value (the same reason the legacy
+    appliers kept the template's `#` lines). The one-`key = value`-per-line
+    convention this file already owes the git hooks is exactly what makes a
+    line rewrite exact. Returns True when the file changed.
+
+    Refuses silently (returns False) when the file or the key is absent — the
+    caller is scaffolding from the kit template, which always carries every
+    key, so an absent key means someone deleted it deliberately and a bootstrap
+    flag must not resurrect it in the wrong section.
+    """
+    if dry_run:
+        return False
+    path = Path(dest) / PROCESS_TOML_REL
+    if not path.is_file():
+        return False
+    lines = path.read_text(encoding="utf-8").splitlines()
+    want = "{} = {}".format(key, _toml_scalar(value))
+    in_section = False
+    for i, line in enumerate(lines):
+        stripped = line.strip()
+        if stripped.startswith("[") and stripped.endswith("]"):
+            in_section = stripped == "[{}]".format(section)
+            continue
+        if not in_section:
+            continue
+        head = stripped.split("=", 1)[0].strip() if "=" in stripped else ""
+        if head == key:
+            if lines[i] == want:
+                return False
+            lines[i] = want
+            _write_text_lf(path, "\n".join(lines) + "\n")
+            return True
+    return False
+
+
 def apply_gate_policy(dest, level, dry_run):
-    """Write a non-default gate-authority level: set docs/gate-policy (keeping
-    the template's explanatory header) and scaffold the deviation-register
-    skeleton (docs/gate-policy.md) pre-filled for the level. Returns the list
-    of dest-relative paths written."""
+    """Write a non-default gate-authority level: set `[attestation] gate_policy`
+    in docs/process.toml (SN-028 — the dial's one home; the explanatory header
+    stays put) and scaffold the deviation-register skeleton
+    (docs/gate-policy.md) pre-filled for the level. Returns the list of
+    dest-relative paths written."""
     if level == "attended" or dry_run:
         return []
-    header = [
-        ln
-        for ln in (KIT / "gate-policy.template")
-        .read_text(encoding="utf-8")
-        .splitlines()
-        if ln.startswith("#")
-    ]
-    policy = dest / "docs" / "gate-policy"
-    policy.parent.mkdir(parents=True, exist_ok=True)
-    _write_text_lf(policy, "\n".join(header + [level]) + "\n")
+    set_process_key(dest, "attestation", "gate_policy", level)
     register = dest / "docs" / "gate-policy.md"
-    written = ["docs/gate-policy"]
+    written = [PROCESS_TOML_REL]
     if not register.exists():
         rows = "\n".join(
             "| {} | {} | {} |".format(*row) for row in GATE_POLICY_DEVIATIONS[level]
@@ -852,38 +899,113 @@ PUSH_POLICY_CHOICES = ("human", "agent-iteration", "agent")
 
 
 def apply_push_policy(dest, policy, dry_run):
-    """Write a non-default push policy into docs/push-policy, keeping the
-    template's explanatory header (same shape as apply_privacy_check)."""
+    """Write a non-default push policy into `[policies] push` of
+    docs/process.toml (SN-028; same shape as apply_privacy_check)."""
     if policy == "human" or dry_run:
         return
-    header = [
-        ln
-        for ln in (KIT / "push-policy.template")
-        .read_text(encoding="utf-8")
-        .splitlines()
-        if ln.startswith("#")
-    ]
-    target = dest / "docs" / "push-policy"
-    target.parent.mkdir(parents=True, exist_ok=True)
-    _write_text_lf(target, "\n".join(header + [policy]) + "\n")
+    set_process_key(dest, "policies", "push", policy)
 
 
 def apply_privacy_check(dest, value, dry_run):
-    """Write the privacy-check toggle into docs/privacy-check, keeping the
-    template's explanatory header. Set at repo creation — an explicitly
-    passed/answered `true` overwrites the scaffolded default (`false`)."""
+    """Write the privacy-check toggle into `[policies] privacy_check` of
+    docs/process.toml. Set at repo creation — an explicitly passed/answered
+    `true` overwrites the scaffolded default (`false`). `value` arrives as the
+    legacy one-word string; it is written as a TOML BOOLEAN, which is the shape
+    the keyed git-hook grep matches (M-42)."""
     if dry_run:
         return
-    header = [
-        ln
-        for ln in (KIT / "privacy-check.template")
-        .read_text(encoding="utf-8")
-        .splitlines()
-        if ln.startswith("#")
-    ]
-    target = dest / "docs" / "privacy-check"
-    target.parent.mkdir(parents=True, exist_ok=True)
-    _write_text_lf(target, "\n".join(header + [value]) + "\n")
+    set_process_key(
+        dest, "policies", "privacy_check", str(value).strip().lower() == "true"
+    )
+
+
+# --- SN-028: the legacy one-word -> docs/process.toml converter ---------------
+# Ordered like process.toml's own sections so a converted file reads the way a
+# scaffolded one does. Each row: legacy docs/<file> -> (section, key, how to
+# turn its one word into a TOML value).
+def _legacy_bool_true(word):
+    return word.strip().lower() == "true"
+
+
+def _legacy_not_off(word):
+    return word.strip().lower() != "off"
+
+
+def _legacy_int(word):
+    try:
+        return int(word.strip())
+    except ValueError:
+        return None
+
+
+LEGACY_CONFIG = (
+    ("gate-policy", "attestation", "gate_policy", str.strip),
+    ("push-policy", "policies", "push", str.strip),
+    ("review-policy", "policies", "review_rounds", _legacy_int),
+    ("privacy-check", "policies", "privacy_check", _legacy_bool_true),
+    ("secrets-scan", "policies", "secrets_scan", _legacy_not_off),
+    ("privacy-review", "policies", "privacy_review", str.strip),
+    ("guardrails-policy", "policies", "guardrails", str.strip),
+    ("blackout", "policies", "blackout", str.strip),
+)
+
+
+def _first_declared_line(path):
+    """The legacy one-word parse (first non-empty non-comment line), or None."""
+    try:
+        lines = path.read_text(encoding="utf-8", errors="replace").splitlines()
+    except OSError:
+        return None
+    for line in lines:
+        line = line.strip()
+        if line and not line.startswith("#"):
+            return line
+    return None
+
+
+def migrate_legacy_config(dest, dry_run=False):
+    """Fold every legacy one-word policy file into docs/process.toml and DELETE
+    it. Returns `(moved, notes)` — the dest-relative legacy paths absorbed, and
+    human-readable lines for anything skipped.
+
+    This is what makes plan §11.8's hard mixed-config refusal safe to ship: a
+    downstream adopter never meets the refusal un-aided, because bootstrap runs
+    this on every scaffold pass and ADOPTING.md §6's re-sync names it. Deleting
+    the legacy file is the point — leaving it would BE the mixed config.
+
+    Idempotent: a repo with no legacy files answers `([], [])`. A legacy file
+    whose value does not parse (a non-integer reviewer dial) is left in place
+    and named in `notes`, never silently dropped.
+    """
+    dest = Path(dest)
+    target = dest / PROCESS_TOML_REL
+    if not target.is_file():
+        return [], ["{} is absent — nothing to migrate into".format(PROCESS_TOML_REL)]
+    moved, notes = [], []
+    for legacy_name, section, key, coerce in LEGACY_CONFIG:
+        path = dest / "docs" / legacy_name
+        if not path.is_file():
+            continue
+        word = _first_declared_line(path)
+        if word is None:
+            # An empty/comment-only legacy file declared nothing; deleting it is
+            # the whole migration.
+            if not dry_run:
+                path.unlink()
+            moved.append("docs/" + legacy_name)
+            continue
+        value = coerce(word)
+        if value is None:
+            notes.append(
+                "docs/{} holds {!r}, which is not a valid value — left in "
+                "place; fix it, then re-run --migrate-config".format(legacy_name, word)
+            )
+            continue
+        if not dry_run:
+            set_process_key(dest, section, key, value)
+            path.unlink()
+        moved.append("docs/" + legacy_name)
+    return moved, notes
 
 
 # (The opt-in parallel-tracks layer is retired outright, WI-210: the
@@ -1148,14 +1270,17 @@ MAPPING = [
     # regenerating. The scaffold ships a legacy one-liner (accepted value-only);
     # `python scripts/derive_gate.py` migrates it to the generated form.
     ("gate.template", "docs/gate"),
-    # The declared gate authority (Thread 32, process.md §4): who accepts a
-    # gate advance. Scaffolds `attended`; --gate-policy sets a non-default
-    # level and pre-fills the deviation-register skeleton for it.
-    ("gate-policy.template", "docs/gate-policy"),
-    # The reviewer dial (process-options.md "Unattended
-    # operation"): how many independent fresh-context review verdicts a WI
-    # gets (0|1|2). Default `1`; floors above the dial live in the file.
-    ("review-policy.template", "docs/review-policy"),
+    # THE ONE POLICY HOME (SN-028). Every process dial — gate authority, the
+    # human-ratification level, push authority, the reviewer count, the privacy
+    # toggle, the secrets floor, guardrails, the blackout window — declared once
+    # here instead of in ~10 one-word files. A FRESH SCAFFOLD GETS ONLY THIS
+    # FILE: shipping both homes would hand every new repo the mixed-config
+    # refusal on its first run. An EXISTING repo converts with
+    # `bootstrap.py --migrate-config`, which bootstrap runs for you (see
+    # `migrate_legacy_config`). The three --gate-policy/--push-policy/
+    # --privacy-check flags now rewrite a KEY in this file rather than writing
+    # their own file.
+    ("process.toml.template", "docs/process.toml"),
     # The model REGISTRY the coordinator's router reads (WI-059, S8): one row per
     # usable model keyed [PROVIDER]-[MODEL_NAME]-[VERSION], with example rows for
     # the verified headless shapes. Present but INERT until docs/agents-enabled
@@ -1164,20 +1289,10 @@ MAPPING = [
     # "Unattended operation" -> routing/escalation). Absent both files = today's
     # single AGENT_CMD/AGENT_MODEL behavior.
     ("agents.template.csv", "docs/agents.csv"),
-    # The privacy-check toggle (Thread 38 -> identity/privacy reframe,
-    # process-options.md "Commit identity & privacy"): `false` by default;
-    # --privacy-check overrides.
-    ("privacy-check.template", "docs/privacy-check"),
-    # The declared push authority (Thread 40, process-options.md "Agent
-    # iteration branch & sync"): who may publish. `human` by default — an
-    # agent never pushes; --push-policy overrides.
-    ("push-policy.template", "docs/push-policy"),
-    # The weekday blackout window (WI-148, process-options.md "Unattended
-    # operation"): a `HH:MM-HH:MM` UTC Mon–Fri window the coordinator starts no
-    # new session inside (it waits the window out, then resumes). Ships the
-    # 12:00–19:00 default so a fresh scaffold gets it; delete the file or set
-    # start==end to disable (absent = disabled, byte-identical to before).
-    ("blackout.template", "docs/blackout"),
+    # (The privacy-check / push-policy / blackout one-word files folded into
+    # docs/process.toml at SN-028 — see the process.toml.template row above.
+    # Their `*.template` files are kept in the kit as the CONVERTER's reference
+    # for the legacy vocabulary, not as scaffold sources.)
     ("STATUS.template.md", "docs/status.md"),
     # The owner decision briefs status.md's Needs-<human> bullets link to
     # (process-options.md "Trajectory / work-items layer"): one OI-N section
@@ -1876,10 +1991,21 @@ def build_parser():
         "agent setup -> ASK; non-interactive -> no filter.",
     )
     ap.add_argument(
+        "--migrate-config",
+        action="store_true",
+        help="SN-028: fold every legacy one-word policy file (docs/gate-policy, "
+        "docs/push-policy, docs/review-policy, docs/privacy-check, "
+        "docs/secrets-scan, docs/privacy-review, docs/guardrails-policy, "
+        "docs/blackout) into docs/process.toml and DELETE it, then exit. "
+        "Idempotent. A full scaffold pass runs this for you; the flag is for a "
+        "repo that wants the conversion WITHOUT a re-sync.",
+    )
+    ap.add_argument(
         "--gate-policy",
         choices=GATE_POLICY_CHOICES,
         default=None,
-        help="declared gate authority for docs/gate-policy (process.md §4): "
+        help="declared gate authority, written to docs/process.toml "
+        "[attestation] gate_policy (process.md §4): "
         "attended|single-ratify|autonomous. Omitted + interactive TTY -> ASK; "
         "non-interactive -> 'attended' (the default level; zero change). A "
         "non-default level also scaffolds the deviation-register skeleton "
@@ -2145,8 +2271,20 @@ def materialize_agent_layer_phase(dest, plan, outcome):
 
 
 def apply_declared_policies(dest, plan, outcome):
-    """The three declared-authority files: a non-default level overwrites the
-    scaffolded default (which the copy pass just laid down) and says so."""
+    """The three declared authorities: a non-default level overwrites the key
+    docs/process.toml just scaffolded (SN-028) and says so.
+
+    Runs the LEGACY CONVERTER first. On a fresh scaffold that is a no-op; on a
+    re-sync onto a repo that predates SN-028 it is what keeps the hard
+    mixed-config refusal from ever reaching a human — the legacy files are
+    folded in and deleted before anything reads a policy.
+    """
+    moved, notes = migrate_legacy_config(dest, plan.dry_run)
+    for rel in moved:
+        print("  migrated into docs/process.toml (SN-028): {}".format(rel))
+    for note in notes:
+        print("  NOTE: {}".format(note))
+
     # A declared non-default gate authority overwrites the scaffolded default
     # and lays down the deviation-register skeleton for the level.
     for rel in apply_gate_policy(dest, plan.gate_policy, plan.dry_run):
@@ -2159,16 +2297,16 @@ def apply_declared_policies(dest, plan, outcome):
     # (the file itself was just copied with `human` on its value line).
     if plan.push_policy != "human":
         apply_push_policy(dest, plan.push_policy, plan.dry_run)
-        if "docs/push-policy" not in outcome.created:
-            outcome.created.append("docs/push-policy")
+        if PROCESS_TOML_REL not in outcome.created:
+            outcome.created.append(PROCESS_TOML_REL)
         print("  push policy: {}".format(plan.push_policy))
 
     # A `true` privacy-check overwrites the scaffolded default (`false`) — set
     # at repo creation, the cheap moment.
     if plan.privacy_check and plan.privacy_check != "false":
         apply_privacy_check(dest, plan.privacy_check, plan.dry_run)
-        if "docs/privacy-check" not in outcome.created:
-            outcome.created.append("docs/privacy-check")
+        if PROCESS_TOML_REL not in outcome.created:
+            outcome.created.append(PROCESS_TOML_REL)
         print("  privacy-check: {}".format(plan.privacy_check))
 
 
@@ -2224,6 +2362,22 @@ def write_stamps(dest, plan):
         )
 
 
+def run_migrate_config(dest, dry_run):
+    """The `--migrate-config` report (SN-028). Its own function so `main` keeps
+    its complexity baseline — the same reason `sync_agent_skills` has one."""
+    moved, notes = migrate_legacy_config(dest, dry_run)
+    verb = "would migrate" if dry_run else "migrated"
+    for rel in moved:
+        print("  {}: {}".format(verb, rel))
+    for note in notes:
+        print("  NOTE: {}".format(note))
+    print(
+        "\n{} legacy policy file(s) {} into docs/process.toml.".format(
+            len(moved), "to migrate" if dry_run else "folded"
+        )
+    )
+
+
 def main():
     _utf8_console()
     ap = build_parser()
@@ -2245,6 +2399,17 @@ def main():
                 len(refreshed), "to refresh" if args.dry_run else "refreshed"
             )
         )
+        return
+
+    # --migrate-config (SN-028): a FOCUSED conversion of the legacy one-word
+    # policy files into docs/process.toml, nothing else — kept separate from the
+    # full scaffold pass for the same reason --sync is, so an existing repo can
+    # take the migration without re-stamping kit-version or re-running the
+    # generators. The scaffold pass runs the same function. Extracted from
+    # `main` rather than inlined: `main` sits at the C901 ratchet's edge and the
+    # ratchet's standing instruction is to simplify, never to bump.
+    if args.migrate_config:
+        run_migrate_config(dest, args.dry_run)
         return
 
     stack, omit = resolve_profile(ap, args, dest)

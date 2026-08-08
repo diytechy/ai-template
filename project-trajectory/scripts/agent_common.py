@@ -110,9 +110,14 @@ OWNER_ONLY_PATHS = ("OWNER_SCRATCHPAD.md",)
 
 
 def read_declared(path, default):
-    """Read a one-word declared-policy file (docs/gate, docs/gate-policy, …):
-    the first non-empty, non-comment line — the same rule the git hooks and
-    check_privacy.py apply — or `default` when absent/empty."""
+    """Read a one-word declared-policy file (docs/gate, the legacy
+    docs/push-policy, …): the first non-empty, non-comment line — the same rule
+    the git hooks and check_privacy.py apply — or `default` when absent/empty.
+
+    Still the reader for `docs/gate` (a generated cache with a one-value last
+    line) and for the LEGACY half of the SN-028 dual-read window. New policy
+    reads go through `declared_policy` below, which prefers `docs/process.toml`.
+    """
     try:
         lines = path.read_text(encoding="utf-8").splitlines()
     except OSError:
@@ -122,6 +127,169 @@ def read_declared(path, default):
         if ln and not ln.startswith("#"):
             return ln
     return default
+
+
+# --- SN-028: docs/process.toml, the one policy home ---------------------------
+# THE MIGRATION TABLE, stated once. Each row maps a legacy one-word file under
+# docs/ to the `[section] key` in docs/process.toml that replaced it, and the
+# type the TOML value carries. Three readers stand on this single statement —
+# the value reader, the mixed-config refusal, and bootstrap's converter — so a
+# key can never be migrated in one of them and forgotten in another.
+#
+# NOT here, deliberately (each documented in process.toml.template's header):
+# docs/stack.ini (adopter-owned product toolchain), docs/work/pause and
+# docs/agents-enabled (presence-as-semantics), docs/gate (a generated cache).
+PROCESS_TOML = "process.toml"
+
+PROCESS_KEYS = {
+    "push-policy": ("policies", "push", "str", "human"),
+    "review-policy": ("policies", "review_rounds", "int", "1"),
+    "privacy-check": ("policies", "privacy_check", "bool", "false"),
+    "secrets-scan": ("policies", "secrets_scan", "bool", "on"),
+    "privacy-review": ("policies", "privacy_review", "str", "require"),
+    "guardrails-policy": ("policies", "guardrails", "str", "off"),
+    "blackout": ("policies", "blackout", "str", ""),
+    # The gate-authority dial retires into an ORDINAL at SN-029; the legacy
+    # enum file is still read through the same window so the migration is one
+    # act rather than two.
+    "gate-policy": ("attestation", "gate_policy", "str", "attended"),
+}
+
+# The two keys the git hooks match in pure sh (M-42 fail-closed). They are
+# listed here so the cross-parser agreement test knows exactly which lines must
+# stay keyed-greppable — the hooks' ERE and tomllib must never disagree.
+GREPPABLE_KEYS = ("privacy_check", "privacy_review")
+
+
+def _process_toml_path(docs):
+    return Path(docs) / PROCESS_TOML
+
+
+def process_config(docs):
+    """The parsed `docs/process.toml` as a dict of sections, or `{}` when the
+    file is absent, unreadable or malformed.
+
+    FAILS CLOSED on a malformed file in the same shape `tracked_pause` does —
+    `except (OSError, UnicodeDecodeError, tomllib.TOMLDecodeError)` — rather
+    than `read_declared`'s narrower `except OSError`, which lets a BOM'd or
+    mis-encoded policy file crash the coordinator while degrading everywhere
+    else. `config_conflicts` reports the malformation loudly; this returns `{}`
+    so a caller that only wants a value gets the DEFAULT, never a half-parse.
+    """
+    data = read_toml(_process_toml_path(docs))
+    return data if isinstance(data, dict) else {}
+
+
+def read_toml(path):
+    """`tomllib.loads` of `path`, or None when it is absent, unreadable,
+    mis-encoded or malformed — the module's ONE tracked-TOML read.
+
+    Extracted because `process_config` and `tracked_pause` had it verbatim, and
+    the F5 cross-script sanction covers copies between INDEPENDENTLY COPYABLE
+    scripts, never two copies inside one file (WI-347). The union of failure
+    modes is deliberate: a caller that cannot tell "absent" from "malformed"
+    apart on the return value must not be reading policy, and both callers
+    below distinguish them by their own second read."""
+    try:
+        if not path.is_file():
+            return None
+        return tomllib.loads(path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError, tomllib.TOMLDecodeError):
+        return None
+
+
+def _coerce(value, kind, default):
+    """A TOML value rendered in the STRING vocabulary every legacy consumer
+    already speaks, so the dual-read window changes no downstream comparison.
+    A bool renders `true`/`false`; an int renders its digits; a string passes
+    through. A value of the wrong TOML type falls back to `default` — a typed
+    file that disagrees with its own schema must not become a silent policy."""
+    if value is None:
+        return default
+    if kind == "bool":
+        if isinstance(value, bool):
+            return "true" if value else "false"
+        return default
+    if kind == "int":
+        if isinstance(value, bool) or not isinstance(value, int):
+            return default
+        return str(value)
+    if isinstance(value, bool) or not isinstance(value, str):
+        return default
+    return value
+
+
+def declared_policy(docs, legacy_name, default):
+    """The value of one policy dial, `docs/process.toml` first.
+
+    `legacy_name` is the legacy file's basename (`"push-policy"`, …) — the key
+    of `PROCESS_KEYS` — so every call site names the dial it already named and
+    the migration table does the rest. Returns the value in the same STRING
+    vocabulary the legacy file carried, so no comparison downstream changes.
+
+    Precedence, and only two tiers by design: the TOML when the file declares
+    that key, else the legacy one-word file, else `default`. There is NO third
+    "both" tier — a repo carrying both sources is refused by `config_conflicts`
+    at preflight rather than silently resolved (SN-028 / plan §11.8), because a
+    mixed config is exactly the state where two readers disagree about the same
+    policy and neither is wrong.
+    """
+    section, key, kind, _scaffold = PROCESS_KEYS[legacy_name]
+    table = process_config(docs).get(section)
+    if isinstance(table, dict) and key in table:
+        return _coerce(table[key], kind, default)
+    return read_declared(Path(docs) / legacy_name, default)
+
+
+def _legacy_present(docs, legacy_name):
+    return (Path(docs) / legacy_name).is_file()
+
+
+def config_conflicts(docs):
+    """The SN-028 MIXED-CONFIG refusal (plan §11.8): refusal strings naming
+    every dial declared in BOTH `docs/process.toml` and its legacy one-word
+    file, plus one line when process.toml exists but does not parse.
+
+    Returns a LIST and never raises. Three entry points read policy without
+    ever passing through `agent_loop.main` — `dispatch.run`, `intake`'s
+    adjudication arm and `integrate`'s verdict gate — so the refusal has to
+    live where the value is read, not at five call sites; and `dispatch.run`
+    sits in the tick loop's caller, where a raised exception would rewrite an
+    exit-code contract. Callers fold these into their own refusal lists.
+
+    A downstream adopter never meets this un-aided: `bootstrap.py
+    --migrate-config` converts the legacy files and deletes them, and both
+    bootstrap and the documented re-sync run it.
+    """
+    path = _process_toml_path(docs)
+    if not path.is_file():
+        return []
+    out = []
+    try:
+        data = tomllib.loads(path.read_text(encoding="utf-8"))
+        if not isinstance(data, dict):
+            raise ValueError("top level is not a table")
+    except (OSError, UnicodeDecodeError, tomllib.TOMLDecodeError, ValueError) as exc:
+        return [
+            "docs/{} does not parse ({}) - every policy dial would silently "
+            "read its default. Fix the file; do not delete it.".format(
+                PROCESS_TOML, exc
+            )
+        ]
+    for legacy_name in sorted(PROCESS_KEYS):
+        section, key, _kind, _scaffold = PROCESS_KEYS[legacy_name]
+        table = data.get(section)
+        declared_here = isinstance(table, dict) and key in table
+        if declared_here and _legacy_present(docs, legacy_name):
+            out.append(
+                "policy '{}' is declared TWICE - docs/{} [{}] {} and the legacy "
+                "docs/{}. Run `python scripts/bootstrap.py --migrate-config "
+                "--dest .` to fold the legacy file in and delete it; a mixed "
+                "config is refused, never resolved by precedence.".format(
+                    legacy_name, PROCESS_TOML, section, key, legacy_name
+                )
+            )
+    return out
 
 
 # The coordinator dials that live once in docs/stack.ini [agent-loop] instead of
@@ -222,10 +390,10 @@ def tracked_pause(docs_dir):
     path = Path(docs_dir) / "work" / "pause"
     if not path.is_file():
         return None
-    try:
-        data = tomllib.loads(path.read_text(encoding="utf-8"))
-    except (OSError, UnicodeDecodeError, tomllib.TOMLDecodeError):
-        data = None
+    # `read_toml` folds absent into unreadable; the `is_file` guard above is
+    # what keeps "no pause declared" (None) apart from "a pause declared in a
+    # file we cannot parse" (PAUSED, malformed) — the fail-closed direction.
+    data = read_toml(path)
     if not isinstance(data, dict) or not isinstance(data.get("reason"), str):
         return {"reason": PAUSE_MALFORMED, "since": ""}
     since = data.get("since")
@@ -1724,8 +1892,14 @@ def preflight(root, template, args):
             "progress signal.".format(root)
         )
     else:
+        # SN-028: the mixed-config refusal rides the launchability preflight —
+        # the one rung EVERY coordinator launch passes. The three entry points
+        # that bypass agent_loop.main (dispatch, intake, integrate) each fold
+        # `config_conflicts` into their own refusal, so no reader can be
+        # reached through a half-migrated config.
+        failures.extend(config_conflicts(root / "docs"))
         enabled = (
-            read_declared(root / "docs" / "privacy-check", "false").lower() == "true"
+            declared_policy(root / "docs", "privacy-check", "false").lower() == "true"
         )
         if enabled:
             # Single-source the exempt allowlist: let check_privacy.py judge the

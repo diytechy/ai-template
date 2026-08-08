@@ -9,23 +9,25 @@ gate-authority claim across the kit's prose.
 
 import re
 
-from conftest import KIT, SCRIPTS, run_py
+from conftest import KIT, SCRIPTS, process_key, run_py
 
 
-def _policy_lines(path):
-    return [
-        ln
-        for ln in path.read_text(encoding="utf-8").splitlines()
-        if ln.strip() and not ln.startswith("#")
-    ]
+def _level(root):
+    """The declared gate authority — SN-028 moved it out of the one-word
+    docs/gate-policy file into `docs/process.toml [attestation] gate_policy`."""
+    return process_key(root, "attestation", "gate_policy")
 
 
 def test_scaffold_gate_policy_defaults_attended(scaffold):
     # The scaffolded authority is `attended` — today's behavior, so existing
     # adopters and default scaffolds see zero change; no register is laid down.
-    assert _policy_lines(scaffold / "docs" / "gate-policy") == ["attended"]
+    assert _level(scaffold) == "attended"
     assert not (scaffold / "docs" / "gate-policy.md").exists(), (
         "the deviation register is for non-default levels only"
+    )
+    assert not (scaffold / "docs" / "gate-policy").exists(), (
+        "SN-028: a fresh scaffold gets ONE policy home, never both — shipping "
+        "the legacy file too would hand every new repo the mixed-config refusal"
     )
 
 
@@ -38,8 +40,8 @@ def _bootstrap(tmp_path, *extra):
 
 def test_gate_policy_autonomous_scaffolds_register(tmp_path):
     dest = _bootstrap(tmp_path, "--gate-policy", "autonomous")
-    policy = dest / "docs" / "gate-policy"
-    assert _policy_lines(policy) == ["autonomous"]
+    policy = dest / "docs" / "process.toml"
+    assert _level(dest) == "autonomous"
     assert policy.read_text(encoding="utf-8").startswith("#"), "header kept"
     register = (dest / "docs" / "gate-policy.md").read_text(encoding="utf-8")
     assert "`autonomous`" in register
@@ -56,7 +58,7 @@ def test_gate_policy_autonomous_scaffolds_register(tmp_path):
 
 def test_gate_policy_single_ratify_scaffolds_register(tmp_path):
     dest = _bootstrap(tmp_path, "--gate-policy", "single-ratify")
-    assert _policy_lines(dest / "docs" / "gate-policy") == ["single-ratify"]
+    assert _level(dest) == "single-ratify"
     register = (dest / "docs" / "gate-policy.md").read_text(encoding="utf-8")
     assert "G2 close" in register  # the fixed ratification point (Q5)
     assert "Blocked register" in register  # MEDIUM/HIGH routing (Q6 Hybrid)
@@ -65,7 +67,7 @@ def test_gate_policy_single_ratify_scaffolds_register(tmp_path):
 
 def test_gate_policy_explicit_attended_matches_default(tmp_path):
     dest = _bootstrap(tmp_path, "--gate-policy", "attended")
-    assert _policy_lines(dest / "docs" / "gate-policy") == ["attended"]
+    assert _level(dest) == "attended"
     assert not (dest / "docs" / "gate-policy.md").exists()
 
 
