@@ -25595,3 +25595,60 @@ landed. The guard told the doc's editor it could be emptied; it is now empty.
 inherited host defects). Smoke **1369 passed in 29.1 s**. ruff clean;
 `check_trajectory --strict` 0 errors; `check_docs --stale` 0 broken; `check_dupes`
 clean; derive_gate **G2 / spine-stage=1**.
+
+
+## 2026-08-08 — FINAL ADVERSARIAL REVIEW (OpenAI gpt-5.6-sol, medium): NOT SOUND ENOUGH TO HAND OVER
+
+Owner-directed, run through `codex exec --model gpt-5.6-sol -c
+model_reasoning_effort=medium` against commit `5a9bba21`. Full record:
+[reviews/mechanized-loop-FINAL-REVIEW.md](reviews/mechanized-loop-FINAL-REVIEW.md).
+
+**Its verdict, unedited:** *"Not sound enough to hand over. The isolated APIs are
+generally well tested, but the operational cutover is incomplete: several runtime
+paths bypass the new machinery or report success while required adjudication has
+not occurred. The largest risk is therefore a convincing green suite around
+components that the shipped unattended loop and fresh scaffold do not actually
+use."*
+
+That is the correct diagnosis and it is recorded rather than argued with. **3
+BLOCKER + 3 MAJOR, every one driven, none of them refuted on inspection:**
+
+1. **BLOCKER — a Python-less box with no declared config skips the default-ON
+   secrets floor.** Verified independently: `test_hook_still_skips_for_a_repo_
+   that_declares_nothing` asserts `returncode == 0`, while `config.py` declares
+   `policy.secrets_scan` defaults to `true`. An unreadable default-on gate is
+   being read as permission to commit. The old world had the same skip, but the
+   program's own schema is what makes it newly indefensible: absence now means a
+   declared ON, not an unknown.
+2. **BLOCKER — queue admission is neither universal nor crash-safe.** `admit()`
+   moves Draft→Queued BEFORE its first ledger append, so an interrupted first
+   admission leaves a queued row, no ledger, and a strict gate that is silent by
+   design (the presence-as-consent adoption rule this program itself added). And
+   `intake` and `plan_artifacts` still write straight into `queued/`, which
+   contradicts SR-152's "one transaction owns every move" in as many words.
+3. **BLOCKER — the planner reports success instead of adjudicating.** A valid
+   unadjudicated Partial selects the `outcomes/adjudicate` rung and then
+   `_planner_gate` drains, changes no ledger state and exits 0 — forever. The
+   autonomous adjudication loop names the rung and does not execute it.
+4. **MAJOR — the attestation chain's single-head claim races.** Head check and
+   append are separate unlocked operations; two threads appended two children of
+   one parent and the reader accepted the fork.
+5. **MAJOR — id-less ledger records are actionable.** The envelope requires a
+   reproducible id; the outcome readers verify it only when present, so an
+   id-less Partial becomes a pending outcome and the planner asks to adjudicate
+   the empty string. A repository test asserts that acceptance.
+6. **MAJOR — the prompt/routing/provenance cutover did not happen.** Live
+   sessions still use the embedded constants and `agents.csv`; `draw_for_job`
+   and `prompt_render.provenance` have no production caller; a fresh scaffold
+   reports `OK, 0 declared prompt(s)` and its G1 harness passes anyway.
+
+**The through-line is one lesson, and it is the one this repo cares most about.**
+Every phase closed with a real, driven green — 2913 tests, ratchets measured, a
+55-finding internal review remediated with mutation proofs. And the suite was
+green around machinery the shipped loop does not call. SN-008 says a green must
+never hide an unmet criterion; these greens hid an unmet *integration*. A
+component test proves a component. Only an as-launched test on a fresh scaffold
+proves the loop.
+
+**Nothing here is fixed.** The findings are open, the branch is not merged,
+`docs/work/pause` is still in place, and the remaining work is named above.
