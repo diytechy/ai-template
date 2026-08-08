@@ -635,6 +635,50 @@ Outcomes I want:
 
  ~~~~~~~~~~~~~~~~~~~
 
- Make sure all process diagrams from Project_State.html are instead contructed from the readme.md in the process folder.
+ Miscillaneous updates:
 
- Make sure all used functions are removed / cleaned.
+ Provision the mermaid skill online if not already done to ensure better mermaid diagram construction in this repository.
+
+ Make sure all process diagrams from Project_State.html are instead contructed from the readme.md in the process folder, or make sure the readme.md in the process folder no longer contains the mermaid diagrams and instead point to the process documentation in the html file (this likely is cleaner, given the limitations in the pure mermaid diagrams.)
+ 
+ Then make a plan to build out new stakeholder needs and all depdendencies.  (These may exist in some form already, how does it affect the current spine definition?) You may wish to use docs/architecture.md which for the most part should be up-to-date ==>
+
+ New SN A: All configurations for how items are processed are in a single configuration file for downstream users to adopt and modify (Note currently this is not the case, I do not recall why, I think grep could only return the first line or some other limitation, I would like to explore alternatives here.  Is it better to just convert the entire spine and trace validation to a python only layer with cmd / command / sh starters?  Does python 3.11 - the new floor- introduce new capabilities?)
+
+ New SN B: A human attest level (there may be better word-smithing here) will be a numeric value that indicates what gate level requires human attestation. This could also be an enum, but then special strings need to be tracked everywhere.  At least a comment or comment value should exist above the numeric to clarify what value maps to what spine level.
+0 -> Only stakeholder needs, 1 -> 0 + System requirements, 2 -> 1 + LLRs, 3 -> 2 + TCs.  (Note this effectively replaces gate-policy, to better enforce it's the policy at which a human must take action)
+
+IMPORTANT: Values here indicate what is IN PROCESS, not what is RATIFIED.  Thus, a value of 0 means stakeholder needs are still being developed, 1 means system requirements are being developed and that stakeholder needs have been ratified, etc.  So if the derived gate-level is 1 (stakeholder needs ratified), any change in stakeholder needs that is considered to have changed meaning must force the gate level back to 0.
+
+Seperately, a human will need at times to always require attestation at level 4 (After all test cases have been validated), just to give themselves an opportunity to review the full breakdown.  How does this get set?  This would likely change more frequently then the human attest level, but they are very closely related.
+
+ New SN C.1: (Likely considered an edge-case exception) The agent resume command shall ensure as much autonomy as possible so that implimentation can travel as far as possible for the current gate, and ensure the human has clear reason for when action can no longer be taken.  (This means the mechanical flow likely needs to follow a loop that was previously outlined, this is where most of the planning should go):
+ 1. First, the adjudicator will go through any handback documents and if needed will create work items to capture those spine changes at the approriate attestation level, while ensuring any new work items do not conflict with current queued work items.  Note the adjudicator -when making work items- is in charge of estimating the agent model level required for the task at hand.  (duel plan, standard plan ,etc)
+ 2. If any spine related prose change, on mechanical detection, an adjudicator shall be spawned with a template to verify if prose indicates change in meaning or change in clarity.  If tthere is no change in meaning, the specific row should remain attested, but if it does appear to have changed meaning, the row should drop back to needs-reattest, and the derived gate level should follow automatically.  (How does the system know on which comparison to make?  It needs to be the last attestation commit, which means each row likely needs to carry the trunk git hash for before those items changed)
+ 3. If there are no handback documents, and the current derived attestation level in process is at the human attest level and all queued work items are above the human attest level, the agent resume dispatcher will EXIT and surface a banner indicating the current gate requires attestation.  All attestations in need will surface in Open-Items.html.  (Note this is largely already automated today) 
+ 4. Otherwise, all work items at the current attest level for spine changes shall be taken into a single session.  (Note: At level 2/3, for LLR / TC creation, it might not be tenable to span the entire scope of the project, if arcitecture is derived by then from a component level, these could feasibly be handled at a component level.)
+ 5. Otherwise if there are no work items for the spine, non-spine items will be taken either in parallel or in series as required.
+ 6. Otherwise if test cases are failing after full implimentation is claimed, an adjudicator shall make an initial inference of effort involved and draft a dedicated work item to change it to green.
+
+ New SN C.2: (Likely considered an edge-case exception) A branch that is created to complete a work-item is judged by it's worker to it's level of completion, and moves it's work item document to 1 of 3 folders:
+ 1) Complete
+ 2) Cancelled
+ 3) Partial
+
+Note: In a branch, a work item is non-mutable.  Work item definitions can only be changed in trunk.
+
+ New SN C.3: (Likely considered an edge-case exception)
+ Any work item that chages to a queued state must be vetted that it does not conflict with the current scope of the spine or other work items in queue.
+
+
+ New SN D: The user shall have a method / table to configure which CLI model providers, models, and arguments they want to use, what types of jobs they want different models to perform, and the ratio pool of models to run for different job types.  Ex: Planner, Reviewer, Implimenter, Adjudicator, and Arbiter.  Noting that an unavailable model will automatically fall back to the same strength their model or higher.
+
+ New SN E: Placeholder
+
+ New SN F: (Likely considered an edge-case exception) Placeholder
+
+ At the end:
+
+ Make sure all unused functions are removed / cleaned.   There is likely already a work item for this.  Likewise remove any dead work items that no longer have context.
+
+ IMPORTANT: Because these changes affect the heart of the repo mechanics, those mechanics do NOT need to be followed for this implimentation, as that will likely create more challenges working around a changing infrastructure.
