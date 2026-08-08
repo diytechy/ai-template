@@ -148,3 +148,34 @@ resource: "generated"
 | [LLR-152](LLR-152.md) | The adjudication kind: rank-1 slot + no-bar arm + the bar strictness key |
 | [LLR-153](LLR-153.md) | The unified trunk-side intake mint + the context block + the gate-policy arms |
 | [LLR-154](LLR-154.md) | The merge slot's post-merge intake arm |
+| [LLR-155](LLR-155.md) | Typed configuration schema and loader |
+| [LLR-156](LLR-156.md) | Declared defaults for an absent configuration |
+| [LLR-157](LLR-157.md) | Mixed-source detection over the retired policy files |
+| [LLR-158](LLR-158.md) | Single-key query entry point for the hooks |
+| [LLR-159](LLR-159.md) | Hook call sites read policy through the query entry point |
+| [LLR-160](LLR-160.md) | Legacy-to-canonical conversion table |
+| [LLR-161](LLR-161.md) | Re-sync preserves an adopter-edited configuration |
+| [LLR-162](LLR-162.md) | Boundary-to-tier routing table |
+| [LLR-163](LLR-163.md) | Canonical normative cells and digest |
+| [LLR-164](LLR-164.md) | Append-only attestation ledger |
+| [LLR-165](LLR-165.md) | Derived spine stage from the ledger and the registries |
+| [LLR-166](LLR-166.md) | Declared stage-to-gate mapping |
+| [LLR-167](LLR-167.md) | Durable review-request events |
+| [LLR-168](LLR-168.md) | Pure cycle planner |
+| [LLR-169](LLR-169.md) | Planner snapshot reader |
+| [LLR-170](LLR-170.md) | Connected-component partition of the spine graph |
+| [LLR-171](LLR-171.md) | Failure-event identity and exactly-once minting |
+| [LLR-172](LLR-172.md) | Scope digest over the frozen spec region |
+| [LLR-173](LLR-173.md) | Claim-time scope record and terminal comparison |
+| [LLR-174](LLR-174.md) | Outcome event writer |
+| [LLR-175](LLR-175.md) | Change-group classification for a partial attempt |
+| [LLR-176](LLR-176.md) | Terminal work items are never schedulable |
+| [LLR-177](LLR-177.md) | Successor drafting with recorded lineage |
+| [LLR-178](LLR-178.md) | Admission transaction |
+| [LLR-179](LLR-179.md) | Mechanical overlap graph |
+| [LLR-180](LLR-180.md) | Verdict freshness gate |
+| [LLR-181](LLR-181.md) | Weighted job pool draw with strength fallback |
+| [LLR-182](LLR-182.md) | Strict slot renderer |
+| [LLR-183](LLR-183.md) | Prohibited source classes per role |
+| [LLR-184](LLR-184.md) | Prompt provenance record |
+| [LLR-185](LLR-185.md) | Generated prompt catalog |

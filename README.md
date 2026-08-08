@@ -74,6 +74,24 @@ chasing it.
     stays serialized and gated behind one fail-closed integrator (SN-027).
   - A per-phase model map (keyed on the in-process phase), reactive rate-limit
     backoff, a stall guard, and tracked per-session logs in `docs/iteration/`.
+  - **One validated `docs/config.toml`** owns how the process behaves — harness,
+    automation policy, routing and prompt selection — with a strict loader, a
+    converter for the retired one-value policy files, and an adopter-edited file
+    that survives a kit re-sync byte-for-byte (SN-028).
+  - A **numeric human-ratification boundary** (`0–3`, cumulative) says which
+    spine tiers a human signs off, a meaning-changing amendment regresses the
+    derived stage to that tier, and a full-spine review request persists across
+    relaunches (SN-029).
+  - A **pure resume planner** returns one typed decision per cycle in a declared
+    precedence, and a red declared bar becomes exactly one owned remediation
+    draft instead of a stop (SN-030).
+  - **Immutable scoped attempts**: scope is frozen at claim, every attempt writes
+    one immutable outcome event, a partial attempt classifies every change group
+    as keep/discard/quarantine, and remaining scope returns only as a successor
+    with recorded lineage (SN-031).
+  - **Adjudicated queue admission**: one trunk-side transaction performs every
+    move into the queue and records a conflict verdict that expires when the
+    scope or spine it judged moves (SN-032).
   - Optional **multi-family, heterogeneous scheduling** (SN-026) — several LLM
     families are declared as (family × model × tier) pair-rows in
     `docs/agents.csv` and selected **per job and per level**; when

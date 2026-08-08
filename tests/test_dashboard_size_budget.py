@@ -57,7 +57,18 @@ DASHBOARD = REPO_ROOT / "PROJECT_STATE.html"
 # matching the 14-21% every earlier stamp kept.
 # Measured AFTER the last edit in this commit, per this file's own 129-REVIEW-A
 # lesson: 1,899,614 at the commit carrying the stamp. Reason in the log.
-MAX_BYTES = 2_185_000
+# 2,185,000 -> 2,680,000, mechanized-loop P1 (2026-08-08). The combined spine
+# sitting added 82 rows in one commit — 21 SR (SR-137..158), 31 LLR
+# (LLR-155..185) and 30 TC (TC-150..179) — every one of which renders a node
+# with its detail JSON. MEASURED: 2,159,708 at the parent commit, 2,332,896
+# after, so 173,188 bytes for 82 rows = **2,112 bytes/row**, BELOW the ~2.6 kB/row
+# every earlier stamp measured for WI rows (a spine row carries no Deliverable).
+# Per-row cost unchanged => registry growth, not a rendering blow-up, which is
+# exactly the discrimination this sensor exists to make. Restamped to ~15%
+# headroom on the post-edit figure, matching the 14-21% every earlier stamp kept
+# and avoiding the exact-freeze failure the two stamps above diagnose at 0.6%
+# and 0.02%. Measured AFTER the last edit in this commit. Reason in the log.
+MAX_BYTES = 2_680_000
 
 
 def test_dashboard_stays_within_its_size_budget():

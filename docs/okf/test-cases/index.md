@@ -146,3 +146,33 @@ resource: "generated"
 | [TC-147](TC-147.md) | Run the intake suite against real git repos, red-then-green per trigger: a ratified SR am… |
 | [TC-148](TC-148.md) | Run the integrator + dispatcher suites' intake-arm cases: a merged branch that amended a … |
 | [TC-149](TC-149.md) | Run the shipped-tier suite; it derives the adopter-facing check set from check.py's own l… |
+| [TC-150](TC-150.md) | Load a well-formed configuration, then load documents carrying an unknown key, a wrong-ty… |
+| [TC-151](TC-151.md) | Place a canonical key and its retired declared-policy source in one tree and run the conf… |
+| [TC-152](TC-152.md) | Query a declared key, an undeclared key, and a key under a simulated below-floor interpre… |
+| [TC-153](TC-153.md) | Drive the pre-commit, commit-msg and pre-push hooks against a tree whose configuration qu… |
+| [TC-154](TC-154.md) | Convert each retired declared-policy source, including a gate-authority value with no los… |
+| [TC-155](TC-155.md) | Simulate a kit re-sync onto a scaffold with an edited configuration and onto one with non… |
+| [TC-156](TC-156.md) | Resolve the human-or-adjudicator routing for each spine tier at each boundary value, and … |
+| [TC-157](TC-157.md) | Digest an artifact, re-wrap its prose without changing meaning, then change a normative c… |
+| [TC-158](TC-158.md) | Append events to one artifact's chain, including a write naming a stale parent. |
+| [TC-159](TC-159.md) | Derive the spine stage for a meaning verdict at each of the four tiers and for a clarity … |
+| [TC-160](TC-160.md) | Map every spine stage to its verification gate and read the stage back from the cached ga… |
+| [TC-161](TC-161.md) | Record a full-spine review request, restart the process, and close it with a recorded hum… |
+| [TC-162](TC-162.md) | Run the planner twice over one snapshot, then over snapshots satisfying exactly one prece… |
+| [TC-163](TC-163.md) | Build a planner snapshot from a fixture tree and assert the planner performs no write. |
+| [TC-164](TC-164.md) | Partition candidate spine rows whose graph is disconnected, then connected by a trace edg… |
+| [TC-165](TC-165.md) | Fail the declared bar on a fully implemented trunk, repeat the identical failure, then ch… |
+| [TC-166](TC-166.md) | Digest a spec, edit a frozen field, then edit a field a terminal move legitimately change… |
+| [TC-167](TC-167.md) | Claim a work item, move it terminally byte-identically, then move it with an edited scope. |
+| [TC-168](TC-168.md) | Write an outcome event for each worker outcome, then attempt a second write for one attem… |
+| [TC-169](TC-169.md) | Present a partial branch with an unclassified group, then a fully classified one carrying… |
+| [TC-170](TC-170.md) | Evaluate the frontier with an item in each terminal state and with a successor drafted fr… |
+| [TC-171](TC-171.md) | Draft a successor from a partial outcome event and read back its lineage. |
+| [TC-172](TC-172.md) | Admit candidates failing each declared precondition in turn, then a passing candidate, th… |
+| [TC-173](TC-173.md) | Compute the overlap graph for candidates sharing a requirement, a component, an interface… |
+| [TC-174](TC-174.md) | Queue specs carrying a current verdict, no verdict, and a verdict computed against a supe… |
+| [TC-175](TC-175.md) | Draw for each declared job with a full pool, an unavailable preferred route, and a pool w… |
+| [TC-176](TC-176.md) | Render a template with a complete slot set, an unknown slot, a missing required slot and … |
+| [TC-177](TC-177.md) | Render a judging brief with permitted sources and with a source class the role prohibits. |
+| [TC-178](TC-178.md) | Render one template twice with one input, then after editing the template. |
+| [TC-179](TC-179.md) | Generate the prompt catalog and compare it against the declared templates. |

@@ -36,5 +36,10 @@ resource: "generated"
 | [SN-023](SN-023.md) | A reviewer can see the project's progress and how its parts connect from one dashboard-li… |
 | [SN-024](SN-024.md) | Subjective/perceptual acceptance — a realistic-looking render, an artifact comparison wit… |
 | [SN-025](SN-025.md) | A single command from the repo root (agent-resume) lets a configured LLM agent implement … |
-| [SN-026](SN-026.md) | Several LLM families are configurable — selected per job and per capability level — and w… |
+| [SN-026](SN-026.md) | Several LLM families are configurable — selected per *job* and per capability level — and… |
 | [SN-027](SN-027.md) | Ready work fans out across bounded parallel lanes, while mutation of the integration bran… |
+| [SN-028](SN-028.md) | One validated file controls how the process behaves — harness, automation policy, model r… |
+| [SN-029](SN-029.md) | A single number says which parts of the requirement tree a human must sign off, and a cha… |
+| [SN-030](SN-030.md) | One deterministic planner decides what the unattended loop does next, in a declared order… |
+| [SN-031](SN-031.md) | A work item's scope is fixed when it is claimed, the attempt records its own verdict immu… |
+| [SN-032](SN-032.md) | Nothing enters the work queue without a recorded, current ruling that it does not conflic… |

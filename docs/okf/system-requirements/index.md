@@ -147,3 +147,25 @@ resource: "generated"
 | [SR-134](SR-134.md) | Trunk step regenerates the declared artifacts in dependency order |
 | [SR-135](SR-135.md) | Pending surface renders the declared pause verbatim |
 | [SR-136](SR-136.md) | Declared-figure provenance |
+| [SR-137](SR-137.md) | Validated single configuration file |
+| [SR-138](SR-138.md) | Mixed-source refusal without silent precedence |
+| [SR-139](SR-139.md) | Fail-closed configuration query for the shell hooks |
+| [SR-140](SR-140.md) | Legacy configuration conversion with unmapped-value reporting |
+| [SR-141](SR-141.md) | Adopter-owned configuration survives re-sync |
+| [SR-142](SR-142.md) | Cumulative numeric human ratification boundary |
+| [SR-143](SR-143.md) | Meaning-changing amendment regresses the derived spine stage |
+| [SR-144](SR-144.md) | Durable final-review request |
+| [SR-145](SR-145.md) | Deterministic resume precedence |
+| [SR-146](SR-146.md) | Component-partitioned exclusive spine batch |
+| [SR-147](SR-147.md) | Exactly-once remediation for a red declared bar |
+| [SR-148](SR-148.md) | Scope frozen at claim |
+| [SR-149](SR-149.md) | One immutable outcome event per attempt |
+| [SR-150](SR-150.md) | Partial attempts classify every change group |
+| [SR-151](SR-151.md) | An attempted work item never returns to the frontier |
+| [SR-152](SR-152.md) | One transaction owns every move into the queue |
+| [SR-153](SR-153.md) | Recorded, current conflict verdict per queued item |
+| [SR-154](SR-154.md) | Declared weighted job pools with capability fallback |
+| [SR-155](SR-155.md) | Strict rendering of every operational prompt |
+| [SR-156](SR-156.md) | A judge's brief excludes the judged party's self-assessment |
+| [SR-157](SR-157.md) | Prompt and route provenance in every session record |
+| [SR-158](SR-158.md) | Stale admission verdicts are refused |

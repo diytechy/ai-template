@@ -25237,3 +25237,57 @@ unfinished. It rides SR-034's open window and appears in the re-attest brief.
 `trace.py --strict --strict-integrity`: `SN=27 SR=136 LLR=137 TC=135 orphans=0
 integrity=0`, exit 0.
 <!-- fig: python3 project-trajectory/scripts/trace.py --root . --strict --strict-integrity @ WI-420 -->
+
+
+## 2026-08-08 — SPINE CHANGE (mechanized-loop P1: the combined sitting): SN-028..032 added, SN-026 amended, SR-137..158 / LLR-155..185 / TC-150..179 decomposed
+
+**Program:** the [stakeholder-needs build plan](stakeholder-needs-build-plan-2026-08-08.md),
+executed outside the standard workflow on the controlled branch `mechanized-loop`
+per the plan's own execution exception; terminology and decisions ratified at P0 in
+[mechanized-loop-decisions.md](mechanized-loop-decisions.md).
+
+**The sitting.** Plan §4 declared one *combined* drafting-plus-re-attestation
+sitting rather than a draft window followed by a second sitting. Executed as
+declared: five new needs, one amendment, and the full SR/LLR/TC decomposition in
+one batch.
+
+- **SN-028** single processing configuration · **SN-029** configurable human
+  ratification boundary · **SN-030** autonomous adjudication loop · **SN-031**
+  immutable scoped attempt · **SN-032** adjudicated queue admission. Each is
+  cited by a README bullet (the Must/Should citation floor is armed) and answered
+  by its own SR chain, so no need enters the registry uncovered.
+- **SN-026 amended** — it already owned the provider/model/family routing intent
+  and was already inside the same Modified window, so a second need would have
+  duplicated it. The amendment widens it from *routing* to *routing plus prompt
+  contracts*: pools per job with capability and same-or-stronger fallback, plus
+  reviewable templates and attributable sessions. Its existing chain
+  (SR-079/080/083/084) was already `Modified` and stays so.
+- **SN-E / SN-F remain placeholders** — no ids, no rows, per plan §4. They state
+  no observable stakeholder value yet.
+
+**Why the new rows are `Planned`, not `Verified`.** The decomposition is the
+*specification* the rest of the program builds against — each LLR names the module
+and symbol a builder must create, and each TC names the test file that must prove
+it. Minting them `Verified` would assert a green that does not exist yet. They
+read G2 in the derived gate (ratified and decomposed, not verified), which is the
+honest state, and the derived gate is unchanged at **G2** with a new `phase=5`.
+The flip to `Verified` is owed at P13/P14, together with the 21 already-`Modified`
+rows this sitting deliberately did not flip: those rows describe machinery this
+program is in the middle of replacing, and re-attesting them now would buy one
+sitting and immediately owe another.
+
+**Two form corrections made during the sitting, recorded rather than smoothed
+over.** Four requirements were written carrying two `shall` clauses each. Three
+were genuinely one obligation phrased twice and were rewritten. The fourth was
+genuinely two obligations — recording a conflict verdict, and refusing a stale one
+— and was **split** into SR-153 and SR-158 rather than reworded into a single
+sentence. The rule earned its keep: the reworded version would have hidden a
+second obligation behind a subordinate clause with no id to report a partial pass
+against.
+
+**Evidence.** `trace.py --strict --no-placeholders --strict-schema`:
+`SN=32 SR=158 LLR=168 TC=165 orphans=0 integrity=0 schema-findings=0
+form-findings=0 component-findings=0 interface-findings=0`, exit 0.
+`derive_gate.py`: `G2 (# basis: SN=32 SR=158 LLR=168 TC=165 drafts=0 modified=21
+uncovered=0 computed=G2 ex-draft=G2 phase=5 per-phase=1=G2;2=G3;3=G3;4=G2;5=G2)`.
+`check_docs.py --stale`: 381 docs, 1054 links, 0 broken.
