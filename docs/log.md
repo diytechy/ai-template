@@ -25089,3 +25089,90 @@ ordinary/quick disposition; round 2 accepted scope-moved but rejected
 "route and produce nothing" as an unauthorized §A5.2 outcome; round 3 accepted
 the re-scope as authorized, sufficient and correctly placed. Artifact:
 [WI-414-REVIEW-A](reviews/WI-414-REVIEW-A.md).
+
+## 2026-08-07 — WI-419: the dependency bar, and splitting one need into three
+
+**Owner-directed cleanup of the stakeholder needs**, landed on the trunk lane as
+one amendment batch. Three asks, one of which turned out to be a standing drift
+rather than a preference.
+
+**SN-011 had drifted from a ruling we already made.** The need said the kit's
+scripts run on "a clean Python 3.11+ with **no pip installs**". But RULING-3
+(owner, 2026-07-28, [dependencies.md](dependencies.md)) settled the opposite
+framing — *not "no dependencies", "no unargued dependencies"* — and built the
+ledger plus `tests/test_dependency_ledger.py` to enforce it. So the registry and
+the ledger were giving two answers to one question, and the registry's answer was
+the one that forbids a better design. SN-011 now reads *stdlib by default, a
+non-stdlib dependency admitted only through a reviewed ledger row*, with the
+`shipped`-tier stdlib-**preferred** bar preserved in the acceptance intent (a
+dependency an adopter is forced to install stays the highest bar, ideally never).
+SR-034 was reworded to match — and its first draft carried two `shall`s, which
+`trace.py`'s requirement-form check caught immediately; the shipped-tier clause
+moved into AcceptanceCriteria where a second obligation belongs.
+
+**SN-025 was a spec wearing a need's clothes.** One row carried both the
+single-command autonomy claim and the parallel-fan-out/serialized-integration
+claim, with 13 live SRs hanging off it. The owner chose the three-way split over
+narrowing it and re-homing the strays:
+
+- **SN-025** keeps the autonomy half — one command from the repo root, fully
+  autonomous where enabled, **no human curating what comes next** (SR-057, 059,
+  060, 115, 116).
+- **SN-027** (new) carries throughput — bounded parallel lanes, with mutation of
+  the integration branch serialized and gated behind one fail-closed integrator
+  (SR-093, 094, 130–135; SR-057 cites both, deriving the frontier *and* feeding
+  the fan-out).
+
+**The multi-family gap was real, and it was load-bearing.** No SN mentioned model
+families or capability levels at all, yet `docs/agents.csv` (family × model ×
+tier pair-rows), `docs/agents-enabled` (the consent surface) and
+`docs/review-policy` are a fully built subsystem, and four **Verified** SRs
+implement it: SR-079 (pair-row routing with family preference/fallback), SR-080
+(managed review-session scheduling), SR-083 (planner pair across families),
+SR-084 (family-heterogeneous critique dispatch). All four cited SN-006/SN-016/
+SN-024 — needs about *unattended operation* and *independent critique*, neither
+of which says a word about who supplies the model. **SN-026** now states it: several
+families configurable, selected per job and per level, with an automatic
+cross-family draw where configured, and the *documented* degraded same-family
+mode rather than a silently skipped second opinion. The four rows re-anchored,
+Rationale cells updated with them so SN-Refs and prose never disagree.
+
+**This opens an attestation window — by design.** An SN has no `Status` cell, so
+a changed ratified need rides its SR chain's `Modified` (process.md §4). 20 SRs
+now read `Modified` and the derived gate dropped **G3 → G2**: basis
+`SN=27 SR=136 LLR=137 TC=134 drafts=0 modified=20 uncovered=0 computed=G2
+ex-draft=G2 per-phase=1=G2;2=G3;3=G3;4=G2`. `ex-draft=G2` is the tell that this
+is amendment pressure, not new drafting. Before this sitting the owner queue held
+no pending attestation; it now holds one, and per the process's own advice this
+was landed as a **single batch** so one reading covers all 20 rows.
+
+**Deviation — TC-034 is now stricter than SR-034.** `tests/test_stdlib_only.py`
+asserts *pure* stdlib; the amended requirement permits ledger-declared imports.
+Vacuously green today (no `Kind=python` row exists), red the day one is admitted.
+Not retargeted here — a code change outside an SN-cleanup scope — filed as
+**WI-420**, which also asks whether it now duplicates
+`test_dependency_ledger.py` from the other direction.
+
+**A bar-reading correction worth recording.** Run bare, `check_docs --stale`
+reports 4 broken links + 409 orphans and exits FAIL — which looked like a red
+until the declared bar was read: status.md's commit bar passes
+`--ignore docs/test/report.md --ignore "docs/work/*"`, and all four broken links
+live in `docs/work/complete/`. With the declared flags: **`OK — 376 doc(s), 1040
+intra-repo link(s), 0 broken`**. They are pre-existing either way (byte-identical
+on a stashed baseline) and were left alone rather than folded into a requirements
+commit — but the bar was never red. Run the bar as declared, not the script as
+convenient.
+
+**Evidence.** `trace.py --strict --strict-integrity`: `SN=27 SR=136 LLR=137
+TC=134 orphans=0 integrity=0 verified-mechanized=89 verified-demonstrated=27
+components=5 interfaces=91 interface-findings=0`, exit 0.
+<!-- fig: python3 project-trajectory/scripts/trace.py --root . --strict --strict-integrity @ WI-419 -->
+`pytest -q -n auto -m smoke`: **667 passed, 2 skipped in 13.65s**.
+<!-- fig: python3 -m pytest -q -n auto -m smoke @ WI-419 -->
+Full unfiltered suite (spine-touching change, so the slice bar is the full one):
+**1966 passed, 5 skipped in 339.32s**.
+<!-- fig: python3 -m pytest -q -n auto @ WI-419 -->
+`check_trajectory.py --strict` exits 0 — it caught two real errors on the first
+pass, both mine: the closed WI's id had leaked into forward-only `status.md`, and
+a terminal WI still carried a `SpecRef`. Both fixed, not suppressed.
+Generated artifacts re-derived in `REGEN_STEPS` order (`trunk_step.py --regen`).

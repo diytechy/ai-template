@@ -35,8 +35,11 @@ chasing it.
   silently skips** (SN-004, SN-008).
 - **A traceability spine** — `SN → SR → LLR → TC` registries joined by a
   generated matrix that must report **zero orphans** before each gate (SN-002).
-- **Runnable scripts** — stdlib-only Python 3.11+, no pip needed for the kit
-  itself (SN-011). Cross-platform `setup`/`check` launchers (`.sh` + `.ps1`)
+- **Runnable scripts** — Python 3.11+ on the standard library, with any
+  non-stdlib dependency admitted only through a reviewed row in
+  [`docs/dependencies.md`](docs/dependencies.md) — *no unargued dependencies*,
+  and nothing extra to install for the checks an adopter runs (SN-011).
+  Cross-platform `setup`/`check` launchers (`.sh` + `.ps1`)
   ship for Linux/macOS and Windows. The **authoritative per-script table**
   (one home, one row per script) is the kit README:
   [`project-trajectory/README.md`](project-trajectory/README.md). Headliners:
@@ -56,7 +59,10 @@ chasing it.
 - **Unattended agent operation** (SN-006):
   - Root `agent-resume.*` launchers boot an agent session at the declared
     tier, or the walk-away coordinator loop
-    ([`agent_loop.py`](project-trajectory/scripts/agent_loop.py)).
+    ([`agent_loop.py`](project-trajectory/scripts/agent_loop.py)) — **one
+    command from the repo root**, with nothing for a human to curate: what runs
+    next is derived from the WI DAG plus Git, never a hand-maintained pointer
+    (SN-025).
   - Fresh headless **worker sessions** build explicit dispatcher assignments —
     each scoped by its WI row, spec, and train context, never a `status.md`
     resume — and the stop banner + exit codes carry the run's
@@ -65,13 +71,16 @@ chasing it.
     [`parallel-wi-dispatch.md`](docs/archive/specs/parallel-wi-dispatch.2026-07-20.md))*: a plain
     launch **is** the dispatcher: it fans out every dependency-ready work item
     across bounded worker lanes, while mutation of the integration branch
-    stays serialized and gated (SN-025).
+    stays serialized and gated behind one fail-closed integrator (SN-027).
   - A per-phase model map (keyed on the in-process phase), reactive rate-limit
     backoff, a stall guard, and tracked per-session logs in `docs/iteration/`.
-  - Optional **heterogeneous scheduling** — when `docs/agents-enabled` opts in,
+  - Optional **multi-family, heterogeneous scheduling** (SN-026) — several LLM
+    families are declared as (family × model × tier) pair-rows in
+    `docs/agents.csv` and selected **per job and per level**; when
+    `docs/agents-enabled` opts in,
     a committing build schedules separate fresh **reviewer** sessions (redacted
     of the implementer's self-assessment), with the model chosen from the
-    `docs/agents.csv` enable-list by tier + provider heterogeneity + cooldown,
+    `docs/agents.csv` enable-list by tier + cross-family heterogeneity + cooldown,
     a mechanical substance scorer, and a fixed **win-stay/lose-shift**
     escalation policy (degraded availability — one provider — is legal); absent
     the enable-list, behavior is unchanged (see

@@ -44,7 +44,7 @@ resource: "generated"
 | [SR-031](SR-031.md) | Declared-policy readers agree |
 | [SR-032](SR-032.md) | Onboarding and dev-setup scaffold |
 | [SR-033](SR-033.md) | Release checklist generation |
-| [SR-034](SR-034.md) | Scripts are stdlib-only |
+| [SR-034](SR-034.md) | Kit scripts run on stdlib plus ledger-declared dependencies |
 | [SR-035](SR-035.md) | Stack-agnostic across OSes |
 | [SR-036](SR-036.md) | Deliberate re-sync integration |
 | [SR-037](SR-037.md) | Superseded: Work-item registry validation |
