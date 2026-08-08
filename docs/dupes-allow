@@ -271,7 +271,7 @@
 #
 # The distribution:
 #
-#   cli                   83   deliberate
+#   cli                   78   deliberate
 #   link-rebase            1   deliberate
 #   spine-loader          20   deliberate
 #   declared-file         12   deliberate
@@ -292,9 +292,10 @@
 #   trailer-fold           1   deliberate
 #   warn-tier-dispatch     1   deliberate
 #   kind-resolution        1   deliberate
-#   mechanized-loop        52  deliberate
-#   mechanized-loop        52  deliberate
-#   mechanized-loop        52  deliberate
+#   mechanized-loop        91  deliberate
+#   mechanized-loop        91  deliberate
+#   mechanized-loop        91  deliberate
+#   mechanized-loop        91  deliberate
 #
 # The two facts worth carrying: cross-module duplication here is dominated by
 # SMALL STABLE HELPERS the F5 ruling deliberately duplicates (a shared
@@ -307,7 +308,7 @@
 # a census whose classification has rotted is how the false claims above
 # survived in the first place.
 
-# --- cli (83 blocks) ---------------------------------------------
+# --- cli (78 blocks) ---------------------------------------------
 # disposition: deliberate
 # the per-script CLI skeleton + _utf8_console. F5: kit scripts must stay
 # independently copy-able and stdlib-only, which is why a shared
@@ -367,9 +368,9 @@ da3bd5e9dd3e  project-trajectory/scripts/check_doc_refs.py == project-trajectory
 da3bd5e9dd3e  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/gen_cases.py
 da3bd5e9dd3e  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/gen_okf.py
 da3bd5e9dd3e  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/gen_release_checklist.py
-14e71bf4c19b  project-trajectory/scripts/attest.py == project-trajectory/scripts/check_doc_refs.py
-14e71bf4c19b  project-trajectory/scripts/attest.py == project-trajectory/scripts/check_figures.py
-7146728c91d1  project-trajectory/scripts/attest.py == project-trajectory/scripts/gen_trajectory.py
+14e71bf4c19b  project-trajectory/scripts/adjudicate.py == project-trajectory/scripts/check_doc_refs.py
+14e71bf4c19b  project-trajectory/scripts/adjudicate.py == project-trajectory/scripts/check_figures.py
+7146728c91d1  project-trajectory/scripts/adjudicate.py == project-trajectory/scripts/gen_trajectory.py
 2e8985c8fcb3  project-trajectory/scripts/check_docs.py == project-trajectory/scripts/check_vendored.py
 b76043ee462f  project-trajectory/scripts/check_dupes.py == project-trajectory/scripts/gen_cases.py
 3b4335f77810  project-trajectory/scripts/check_flows.py == project-trajectory/scripts/plan_coverage.py
@@ -385,17 +386,13 @@ e7f0db69c9ff  project-trajectory/scripts/derive_gate.py == project-trajectory/sc
 a986f553a391  project-trajectory/scripts/plan_briefs.py == project-trajectory/scripts/plan_coverage_step.py
 6b98b4c1e7c5  project-trajectory/scripts/plan_briefs.py == project-trajectory/scripts/plan_round.py
 a986f553a391  project-trajectory/scripts/plan_briefs.py == project-trajectory/scripts/schedule.py
-3762ccd39230  project-trajectory/scripts/plan_briefs.py == project-trajectory/scripts/schedule.py
 # (0f99fcaa1f96 plan_briefs == schedule left the emitted census at WI-388:
 # with intake.py's main() present the matcher reports that same argparse
 # boilerplate through the intake pairs below instead - nothing was edited
 # in either file.)
-577c2f20f412  project-trajectory/scripts/attest.py == project-trajectory/scripts/spec_move.py
-7b8bc6c56a7e  project-trajectory/scripts/intake.py == project-trajectory/scripts/schedule.py
-386d4419858c  project-trajectory/scripts/intake.py == project-trajectory/scripts/plan_briefs.py
-386d4419858c  project-trajectory/scripts/intake.py == project-trajectory/scripts/schedule.py
-288c88cdad6f  project-trajectory/scripts/intake.py == project-trajectory/scripts/plan_briefs.py
-288c88cdad6f  project-trajectory/scripts/intake.py == project-trajectory/scripts/schedule.py
+577c2f20f412  project-trajectory/scripts/adjudicate.py == project-trajectory/scripts/admit.py
+386d4419858c  project-trajectory/scripts/adjudicate.py == project-trajectory/scripts/intake.py
+288c88cdad6f  project-trajectory/scripts/adjudicate.py == project-trajectory/scripts/intake.py
 2a3ae413b478  project-trajectory/scripts/plan_coverage.py == project-trajectory/scripts/plan_coverage_step.py
 ae679b73acd2  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/wi_convert.py
 d588a4299326  project-trajectory/scripts/check_privacy.py == project-trajectory/scripts/wi_convert.py
@@ -405,7 +402,6 @@ f7d5136e6d5d  project-trajectory/scripts/derive_gate.py == project-trajectory/sc
 # step must stay independently copy-able).
 b87ed5851f33  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/trunk_step.py
 f7d5136e6d5d  project-trajectory/scripts/derive_gate.py == project-trajectory/scripts/trunk_step.py
-3762ccd39230  project-trajectory/scripts/plan_briefs.py == project-trajectory/scripts/trunk_step.py
 # Phase 4 (2026-07-29): integrate.py's preamble joins for the same reason.
 b25e7f8619e5  project-trajectory/scripts/gen_trajectory.py == project-trajectory/scripts/integrate.py
 # WI-393 (2026-08-01): spec_move.py ships (the link-aware move ritual) — its
@@ -805,7 +801,7 @@ de0546d2361d  project-trajectory/scripts/intake.py == project-trajectory/scripts
 # subparser - same block, shifted content.)
 
 
-# --- mechanized-loop (52 blocks) ---------------------------------------
+# --- mechanized-loop (91 blocks) ---------------------------------------
 # disposition: deliberate
 # The F5 copies the mechanized-loop foundations were instructed to make,
 # plus the re-fingerprinted loader copies. Deliberate, and PINNED rather
@@ -822,59 +818,100 @@ de0546d2361d  project-trajectory/scripts/intake.py == project-trajectory/scripts
 #                                  refs, the _git wrapper - the established
 #                                  F5 families, now anchored on the new
 #                                  modules because they sort first.
-03f5fc601330  project-trajectory/scripts/attest.py == project-trajectory/scripts/outcome.py
+03f5fc601330  project-trajectory/scripts/adjudicate.py == project-trajectory/scripts/attest.py
 0669c647fde4  project-trajectory/scripts/check_privacy.py == project-trajectory/scripts/config_migrate.py
 0a97a192c0b1  project-trajectory/scripts/handback.py == project-trajectory/scripts/outcome.py
-0b17a34a9343  project-trajectory/scripts/attest.py == project-trajectory/scripts/config_migrate.py
-14e71bf4c19b  project-trajectory/scripts/attest.py == project-trajectory/scripts/check_trajectory.py
-14e71bf4c19b  project-trajectory/scripts/attest.py == project-trajectory/scripts/gen_okf.py
-1fea271d8b0c  project-trajectory/scripts/config_migrate.py == project-trajectory/scripts/intake.py
-1fea271d8b0c  project-trajectory/scripts/config_migrate.py == project-trajectory/scripts/spec_move.py
+14e71bf4c19b  project-trajectory/scripts/adjudicate.py == project-trajectory/scripts/check_trajectory.py
+14e71bf4c19b  project-trajectory/scripts/adjudicate.py == project-trajectory/scripts/gen_okf.py
+1fea271d8b0c  project-trajectory/scripts/admit.py == project-trajectory/scripts/config_migrate.py
+1fea271d8b0c  project-trajectory/scripts/admit.py == project-trajectory/scripts/intake.py
 22420b9162f0  project-trajectory/scripts/intake.py == project-trajectory/scripts/spec_move.py
 2a4539fd14d3  project-trajectory/scripts/handback.py == project-trajectory/scripts/outcome.py
 376bfa227be6  project-trajectory/scripts/attest.py == project-trajectory/scripts/derive_gate.py
 376bfa227be6  project-trajectory/scripts/attest.py == project-trajectory/scripts/trace.py
-522063f3d037  project-trajectory/scripts/attest.py == project-trajectory/scripts/outcome.py
+522063f3d037  project-trajectory/scripts/adjudicate.py == project-trajectory/scripts/attest.py
 58bc9df6ee62  project-trajectory/scripts/derive_gate.py == project-trajectory/scripts/trace.py
 59f068682081  project-trajectory/scripts/handback.py == project-trajectory/scripts/outcome.py
 69e3088d9924  project-trajectory/scripts/config_migrate.py == project-trajectory/scripts/gen_open_items.py
-7146728c91d1  project-trajectory/scripts/attest.py == project-trajectory/scripts/integrate.py
-88de9ccdc189  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/check_figures.py
-88de9ccdc189  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/gen_okf.py
-88de9ccdc189  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/gen_open_items.py
-88de9ccdc189  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/spec_move.py
-88de9ccdc189  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/trunk_step.py
-8b2b9256c52d  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/outcome.py
+7146728c91d1  project-trajectory/scripts/adjudicate.py == project-trajectory/scripts/integrate.py
+88de9ccdc189  project-trajectory/scripts/admit.py == project-trajectory/scripts/check_doc_refs.py
+88de9ccdc189  project-trajectory/scripts/admit.py == project-trajectory/scripts/check_figures.py
+88de9ccdc189  project-trajectory/scripts/admit.py == project-trajectory/scripts/gen_okf.py
+88de9ccdc189  project-trajectory/scripts/admit.py == project-trajectory/scripts/gen_open_items.py
+88de9ccdc189  project-trajectory/scripts/admit.py == project-trajectory/scripts/spec_move.py
 902014796b45  project-trajectory/scripts/config_migrate.py == project-trajectory/scripts/config_migrate.py
 9370254d8ee0  project-trajectory/scripts/attest.py == project-trajectory/scripts/schedule.py
 97a89c4259f1  project-trajectory/scripts/config_migrate.py == project-trajectory/scripts/gen_open_items.py
-a61e47dc0614  project-trajectory/scripts/attest.py == project-trajectory/scripts/schedule.py
-a99e71ecd062  project-trajectory/scripts/attest.py == project-trajectory/scripts/gen_open_items.py
+a61e47dc0614  project-trajectory/scripts/adjudicate.py == project-trajectory/scripts/attest.py
 aef46acb8c6f  project-trajectory/scripts/derive_gate.py == project-trajectory/scripts/trace.py
-b1f26131ee6e  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/check_trajectory.py
 b262398b145a  project-trajectory/scripts/config.py == project-trajectory/scripts/config_migrate.py
 b87ed5851f33  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/attest.py
-cb807a799326  project-trajectory/scripts/attest.py == project-trajectory/scripts/derive_gate.py
-cd8df88185e2  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/schedule.py
-d197495619aa  project-trajectory/scripts/attest.py == project-trajectory/scripts/plan_briefs.py
-d197495619aa  project-trajectory/scripts/attest.py == project-trajectory/scripts/trunk_step.py
-d7ade64a48fa  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/integrate.py
+d197495619aa  project-trajectory/scripts/adjudicate.py == project-trajectory/scripts/gen_open_items.py
+d7ade64a48fa  project-trajectory/scripts/admit.py == project-trajectory/scripts/integrate.py
 e8e9f301fe93  project-trajectory/scripts/config_migrate.py == project-trajectory/scripts/config_migrate.py
 f34060b64afe  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/check_figures.py
 f34060b64afe  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/check_trajectory.py
 f34060b64afe  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/derive_gate.py
 f34060b64afe  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/gen_okf.py
-f9dc8da90ca5  project-trajectory/scripts/attest.py == project-trajectory/scripts/intake.py
-fcbf00f3fd33  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/outcome.py
+f9dc8da90ca5  project-trajectory/scripts/adjudicate.py == project-trajectory/scripts/config_migrate.py
+fcbf00f3fd33  project-trajectory/scripts/adjudicate.py == project-trajectory/scripts/agent_common.py
 
 
-288c88cdad6f  project-trajectory/scripts/intake.py == project-trajectory/scripts/prompt_render.py
-386d4419858c  project-trajectory/scripts/intake.py == project-trajectory/scripts/prompt_render.py
-5a801b6ea3e2  project-trajectory/scripts/plan_briefs.py == project-trajectory/scripts/prompt_render.py
 6bdf78fdcec4  project-trajectory/scripts/attest.py == project-trajectory/scripts/attest.py
-7b8bc6c56a7e  project-trajectory/scripts/intake.py == project-trajectory/scripts/prompt_render.py
 84fc8d398630  project-trajectory/scripts/plan_briefs.py == project-trajectory/scripts/prompt_render.py
-a61e47dc0614  project-trajectory/scripts/attest.py == project-trajectory/scripts/prompt_render.py
 
 
 c6d66ff311c0  project-trajectory/scripts/attest.py == project-trajectory/scripts/attest.py
+
+
+00255abe2cf1  project-trajectory/scripts/admit.py == project-trajectory/scripts/outcome.py
+093adee288c9  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/check_trajectory.py
+0f99fcaa1f96  project-trajectory/scripts/adjudicate.py == project-trajectory/scripts/plan_briefs.py
+0f99fcaa1f96  project-trajectory/scripts/adjudicate.py == project-trajectory/scripts/prompt_render.py
+0f99fcaa1f96  project-trajectory/scripts/adjudicate.py == project-trajectory/scripts/schedule.py
+1247459b7345  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/outcome.py
+1629a2864dbc  project-trajectory/scripts/adjudicate.py == project-trajectory/scripts/outcome.py
+19df0576fd5c  project-trajectory/scripts/admit.py == project-trajectory/scripts/admit.py
+1ac5dcd540b2  project-trajectory/scripts/adjudicate.py == project-trajectory/scripts/intake.py
+1b01539e955a  project-trajectory/scripts/adjudicate.py == project-trajectory/scripts/outcome.py
+1fea271d8b0c  project-trajectory/scripts/admit.py == project-trajectory/scripts/spec_move.py
+24a31fc433be  project-trajectory/scripts/adjudicate.py == project-trajectory/scripts/plan_briefs.py
+24a31fc433be  project-trajectory/scripts/adjudicate.py == project-trajectory/scripts/trunk_step.py
+33a79ad66f7b  project-trajectory/scripts/admit.py == project-trajectory/scripts/outcome.py
+3653e73f9ba9  project-trajectory/scripts/attest.py == project-trajectory/scripts/derive_gate.py
+43a0d57f1188  project-trajectory/scripts/attest.py == project-trajectory/scripts/config_migrate.py
+4db618fe9a77  project-trajectory/scripts/admit.py == project-trajectory/scripts/agent_common.py
+4db618fe9a77  project-trajectory/scripts/admit.py == project-trajectory/scripts/check_trajectory.py
+4db618fe9a77  project-trajectory/scripts/admit.py == project-trajectory/scripts/schedule.py
+51648c458bbe  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/check_trajectory.py
+51648c458bbe  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/schedule.py
+577c2f20f412  project-trajectory/scripts/adjudicate.py == project-trajectory/scripts/spec_move.py
+66666c420ccb  project-trajectory/scripts/admit.py == project-trajectory/scripts/admit.py
+875b6da5dafd  project-trajectory/scripts/adjudicate.py == project-trajectory/scripts/derive_gate.py
+8877887e8e6a  project-trajectory/scripts/adjudicate.py == project-trajectory/scripts/schedule.py
+88de9ccdc189  project-trajectory/scripts/admit.py == project-trajectory/scripts/trunk_step.py
+8a4743b7d979  project-trajectory/scripts/admit.py == project-trajectory/scripts/outcome.py
+953292001514  project-trajectory/scripts/adjudicate.py == project-trajectory/scripts/outcome.py
+996283465299  project-trajectory/scripts/adjudicate.py == project-trajectory/scripts/outcome.py
+9ac5937ce530  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/check_trajectory.py
+9ac5937ce530  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/schedule.py
+a86d0f7c4ba3  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/check_trajectory.py
+a86d0f7c4ba3  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/schedule.py
+ae06245bf0ad  project-trajectory/scripts/adjudicate.py == project-trajectory/scripts/adjudicate.py
+b880a42da8f2  project-trajectory/scripts/admit.py == project-trajectory/scripts/admit.py
+b8f0624877af  project-trajectory/scripts/adjudicate.py == project-trajectory/scripts/outcome.py
+c3737f762615  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/schedule.py
+c73b92d674df  project-trajectory/scripts/adjudicate.py == project-trajectory/scripts/outcome.py
+cc8808f346cf  project-trajectory/scripts/admit.py == project-trajectory/scripts/admit.py
+d095aeedf3ac  project-trajectory/scripts/adjudicate.py == project-trajectory/scripts/outcome.py
+dabaf45cb6f7  project-trajectory/scripts/attest.py == project-trajectory/scripts/gen_open_items.py
+dd367aea5687  project-trajectory/scripts/admit.py == project-trajectory/scripts/agent_common.py
+dd367aea5687  project-trajectory/scripts/admit.py == project-trajectory/scripts/check_trajectory.py
+dd367aea5687  project-trajectory/scripts/admit.py == project-trajectory/scripts/schedule.py
+e638a6b12eea  project-trajectory/scripts/adjudicate.py == project-trajectory/scripts/agent_common.py
+e638a6b12eea  project-trajectory/scripts/adjudicate.py == project-trajectory/scripts/check_trajectory.py
+e638a6b12eea  project-trajectory/scripts/adjudicate.py == project-trajectory/scripts/schedule.py
+f463a627bd79  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/check_trajectory.py
+f82ae7606099  project-trajectory/scripts/adjudicate.py == project-trajectory/scripts/prompt_render.py
+fcbf00f3fd33  project-trajectory/scripts/adjudicate.py == project-trajectory/scripts/check_trajectory.py
+fcbf00f3fd33  project-trajectory/scripts/adjudicate.py == project-trajectory/scripts/schedule.py

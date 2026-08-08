@@ -92,6 +92,17 @@ SLOW_MODULES = frozenset(
         "test_config_hooks",  # the retired shell parse vs the new query, via real sh
         "test_bootstrap_config",  # re-sync no-clobber, on real bootstraps
         "test_outcome",  # scope-at-claim + outcome events on real git repos
+        # Round 3, re-tiered on a MEASUREMENT rather than a guess: the smoke tier
+        # hit 60.45 s against its own 60 s bar, so the wall clock — the thing the
+        # membership count is only a proxy for — was the number that had actually
+        # breached. These three are the git-driving ones (real repos for
+        # `classify_groups`' diff, spec_move's move ritual, and a per-test
+        # attestation seed): 9.3 s + 5.7 s + 5.4 s measured, a third of the
+        # overage between them. Raising the ceiling instead would have kept the
+        # count honest and let the bar it stands for rot.
+        "test_adjudicate",  # disposition verdicts on real git repos
+        "test_admit",  # the admission transaction's move ritual
+        "test_boundary_projection",  # ~15 attest.py subprocesses per module
         # WI-281: subprocess/scaffold-heavy modules moved to slow to hold the
         # <= 60 s commit-bar budget. Each is dominated by run_py subprocesses
         # (running gen_trajectory / trace / check* / agent_loop) or the scaffold

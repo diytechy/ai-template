@@ -25476,3 +25476,55 @@ red. That is the bar this repo sets for a guard, applied to the guards themselve
 inherited host defects already accounted for (plus the third, deselected because
 it crashes the xdist worker rather than merely failing). ruff clean; check_docs 0
 broken; derive_gate G2 / `spine-stage=1`.
+
+
+## 2026-08-08 — mechanized-loop P7/P8/P10: adjudication, queue admission, and ledger-vs-current prose semantics
+
+- **P7 `adjudicate.py`** — the authority that confirms or overrides a worker's
+  judgement. Partial and Cancelled always adjudicate; **Complete normally does
+  not** (its authoritative verdict already comes from the independent reviewer
+  plus the composed-tree bar, and rebuilding that gate under a new name would be
+  a second verdict with no new evidence). A dedicated adjudicator runs on four
+  declared triggers only, and the sampling one is derived from the event id so
+  the same tree adjudicates the same way twice.
+- **P8 `admit.py`** — one transaction owns every move into `queued/`, with a
+  recorded conflict verdict carrying the scope and spine digests it was computed
+  against, and `check_trajectory.admission_verdict_findings` refusing a queued row
+  whose verdict is absent or stale.
+- **P10** — `attest.detect_candidates` becomes the live detector through a new
+  `intake.py candidates` arm, and the clarity/meaning/override verdicts are
+  enactable. Both of the staged detector's blind cases are driven: a row amended
+  while it stays `Verified`, and the sanctioned amend-and-flip it skips on purpose.
+
+### Three integration decisions worth the ink
+
+**A new rung must not red a repo that never adopted the thing it checks.** P8's
+verdict-freshness finding red every fixture tree in the suite that builds a queued
+spec — seven modules — because those trees have no admissions ledger and never
+ran an admission. The rung now keys off the ledger's PRESENCE, the same
+presence-as-consent shape `docs/agents-enabled` already uses: silent until the
+repo has adopted the transaction, total from then on. And the migration is a
+`pre-transaction` baseline event per legacy row rather than an id exemption, so
+the debt stays CURRENT — edit such a row's scope and it reds.
+
+**A hole this program had specified but not closed.** `outcome.SCOPE_KEYS` did not
+cover the admission declaration cells, so a queued row's components, interfaces or
+likely files — the blast radius a conflict verdict is *computed from* — could be
+edited without moving the scope digest that SR-158's freshness gate compares. The
+verdict would outlive the thing it judged. The keys are in the digest now.
+
+**The smoke bar broke, and the count did not notice.** The membership ceiling
+reached 1447 and the obvious move was to raise it to 1700. Measuring what the
+count is a *proxy for* said otherwise: the tier ran in **60.45 s** against its own
+60 s bar. Three git-driving modules were re-tiered on their measured cost instead
+(`test_adjudicate` 9.3 s, `test_admit` 5.7 s, `test_boundary_projection` 5.4 s),
+and the tier came back at **1260 tests / 29.6 s**. When a proxy and the thing it
+proxies for disagree, measure the thing.
+
+Also closed: six cross-component seams the new modules created now carry declared
+`IF-095`..`IF-100` rows, so `check_trajectory --strict` is clean again.
+
+**Bar:** full unfiltered suite **2806 passed, 8 skipped, 2 failed** (both the
+inherited host defects). Smoke **1260 passed in 29.6 s**. ruff clean;
+`check_trajectory --strict` 0 errors; `check_docs --stale` 0 broken; `check_dupes`
+clean (the census re-anchored to one 91-block `mechanized-loop` class).

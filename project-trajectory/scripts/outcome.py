@@ -124,6 +124,24 @@ SCOPE_KEYS = (
     "planmode",
     "bar",
     "exclusive",
+    # The DECLARED BLAST RADIUS (SR-152's admission declaration). Added when the
+    # admission transaction landed and found the hole: a conflict verdict is
+    # COMPUTED FROM these cells, and if they are not in the digest then a queued
+    # row can have its components, its interfaces or its likely files edited
+    # without moving the scope digest — so SR-158's freshness gate, which
+    # compares exactly that digest, never notices that the thing it ruled on has
+    # changed underneath it. A verdict that outlives the blast radius it judged
+    # is the stale ruling the gate exists to catch.
+    "components",
+    "modules",
+    "interfaces",
+    "likely_files",
+    # Lineage: which attempt this succeeds, and the event that produced it. A
+    # successor whose lineage could be edited after admission would let a row
+    # quietly re-parent itself onto a different history.
+    "supersedes",
+    "source_event",
+    "source",
 )
 
 # The body sections a TERMINAL MOVE legitimately writes, and therefore the ones

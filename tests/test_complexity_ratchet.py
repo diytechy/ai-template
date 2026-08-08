@@ -65,6 +65,13 @@ BASELINE = {
     # collapsing them would trade a specific message for a smaller number.
     ("prompt_render.py", "check_sources"): 13,
     ("agent_route.py", "draw_for_job"): 12,
+    # round 3: the disposition verdict. 13 rungs, each a REFUSAL naming one
+    # precondition — the event must exist, the outcome must be one of three, the
+    # correction must differ from the claim, the spec must be in exactly one
+    # home, a Partial override must carry its classification, and so on.
+    # Collapsing them would trade a specific refusal for a smaller number, and
+    # this is the function whose whole job is to say precisely why it refused.
+    ("adjudicate.py", "adjudicate"): 13,
     ("config.py", "_type_reason"): 12,  # one rung per declared value type
     ("config.py", "validate"): 12,  # one rung per declared section shape
     ("config_migrate.py", "_coerce"): 11,  # one rung per retired file idiom

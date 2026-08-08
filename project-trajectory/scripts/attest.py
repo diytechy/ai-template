@@ -57,6 +57,26 @@ to the accepted anchor has neither blind spot: it asks the tree, not the diff.
 That module is left exactly as it is; this one is simply strictly better at the
 question, and the two are read together.
 
+`enact` is what ANSWERS a candidate, and the three verdicts differ in exactly
+one property each (SR-143's enactment half):
+
+  * **`clarity` advances the anchor to the NEW digest.** It writes an accepting
+    event at the text standing in the TREE — never at the digest the anchor
+    already holds. That is the subtle half: re-accepting the old digest would
+    leave every surface reading "accepted" while the anchor silently lagged the
+    text, which is the stale approval this whole module exists to end. The
+    digest is therefore computed here and cannot be passed in.
+  * **`meaning` writes a NON-accepting event** at that same digest, which is the
+    whole of the regression: `derive_gate.spine_stage` derives the stage from
+    the ledger, so the verdict is the only thing to write for "this tier is back
+    in process" to be true on every surface at once. Nothing here computes a
+    stage — that is the other component's fact (decisions §3).
+  * **`override` appends like anything else.** History is never edited, so a
+    human reversing an adjudicator's enactment is one more line and the derived
+    state simply re-reads. This is why the boundary needs no second dial: at or
+    below `human_ratification_through` the adjudicator RECOMMENDS and writes
+    nothing, above it it may enact, and a human may always decide either way.
+
 Event ids are **content-derived** (contracts §2): the first 16 hex of the
 SHA-256 of the canonical payload with `id` and `ts` removed. Duplicate detection
 and exactly-once semantics are then free, and any reader holding the payload can
@@ -73,6 +93,10 @@ Usage (from the repo root):
     python scripts/attest.py --decide <request-id> --by NAME [--verdict V]
     python scripts/attest.py --boundary              # the configured tier matrix
     python scripts/attest.py --checkpoint            # exit 1 while it is blocked
+    python scripts/attest.py --clarity SR-001 --by NAME     # anchor -> new text
+    python scripts/attest.py --meaning SR-001 --by NAME     # stage -> that tier
+    python scripts/attest.py --override SR-001 --accept --by NAME
+    python scripts/attest.py --meaning SR-001 --actor adjudicator --by ROUTE
 
 The small CSV/markdown loaders below are duplicated from trace.py / derive_gate.py
 per the kit's independently-copyable-script convention (the F5 rule).
@@ -1089,6 +1113,168 @@ def ratification_projection(root, docs=None):
     }
 
 
+# --- enacting a verdict on one artifact (SR-143's enactment half) -------------
+# Detection and enactment are two calls on purpose: `detect_candidates` reads and
+# decides nothing, so a card, a hook or an adjudicator can list what is OWED with
+# no way to accidentally record an answer while listing it.
+
+# What an actor may DO about a verdict at one tier. Two words rather than a
+# boolean for the reason `tier_routing` gives two: "recommend" tells a reader
+# what happens next, where `False` only tells them what does not. The same two
+# words `intake.adjudication_action` already answers with, so the two mechanical
+# tools an adjudication row drives speak one vocabulary.
+RECOMMEND, ENACT = "recommend", "enact"
+
+# The verdicts THIS arm writes. `ratified` is a FIRST acceptance and belongs to
+# the ratification sitting; `baseline` is the migration's word and decides
+# nothing. Enacting either here would let a mechanical tool spell an approval
+# nobody gave — the exact confusion `BASELINE` exists to prevent.
+ENACTABLE = ("clarity", "meaning", "override")
+
+
+def kind_of(rid):
+    """The spine tier an artifact id belongs to, read off its declared prefix.
+
+    Refuses an unknown prefix rather than guessing a tier: a verdict filed under
+    the wrong kind digests a different cell list AND chains under a different
+    key, so it would record an approval of something else entirely."""
+    token = (rid or "").strip().split("-", 1)[0].upper()
+    if token not in TIER_INDEX:
+        raise _refuse(
+            "{!r} carries no spine tier prefix (expected one of {})".format(
+                rid, ", ".join(t + "-" for t in TIERS)
+            )
+        )
+    return token
+
+
+def find_row(docs, rid):
+    """`(kind, row)` for the CURRENT text of one artifact, refusing an id that no
+    registry carries.
+
+    The row is read from the tree on every call and is never passed in: a caller
+    that could supply the row could supply an OLD one, and a verdict recorded
+    against text that is no longer there is precisely the stale approval this
+    module exists to end."""
+    kind = kind_of(rid)
+    for row in load_artifacts(docs).get(kind, []):
+        if row_id(kind, row) == rid:
+            return kind, row
+    raise _refuse(
+        "{} is in no current {} registry under {} (a verdict cannot be recorded "
+        "about text that is not there)".format(rid, kind, Path(docs).as_posix())
+    )
+
+
+def verdict_action(kind, boundary, actor=HUMAN):
+    """`enact` or `recommend` — what `actor` may do about a verdict at `kind`'s
+    tier, under the cumulative boundary (decisions §1).
+
+    At or below the boundary an adjudicator prepares the brief and stops; above
+    it, it may write. A HUMAN always enacts: the dial says which tiers REQUIRE a
+    human, never which tiers forbid one, and that asymmetry is what keeps a later
+    human override available at every tier without inventing a second dial."""
+    if actor not in (HUMAN, ADJUDICATOR):
+        raise _refuse(
+            "{!r} is not an actor this module knows ({} or {})".format(
+                actor, HUMAN, ADJUDICATOR
+            )
+        )
+    if kind not in TIER_INDEX:
+        raise _refuse("{!r} is not a spine tier ({})".format(kind, ", ".join(TIERS)))
+    if actor == HUMAN:
+        return ENACT
+    return RECOMMEND if requires_human(TIER_INDEX[kind], boundary) else ENACT
+
+
+def _enact_refusal(rid, verdict, accepted, chain, digest):
+    """Everything wrong with one enactment, decided BEFORE the ledger is opened
+    and returned as a string naming it (contracts §5).
+
+    The two `clarity` rungs are the ones worth reading twice. That verdict claims
+    the digest moved and the obligation did not, so a row with no history has no
+    anchor for it to advance, and a row already accepted at this very text has
+    nothing to decide. Writing either would put a decision-SHAPED record in an
+    append-only ledger that decided nothing — and every later counter, card and
+    adjudicator reads decision words, not intentions."""
+    if verdict not in ENACTABLE:
+        return "{!r} is not a verdict this arm enacts ({})".format(
+            verdict, " | ".join(ENACTABLE)
+        )
+    if verdict == "override" and not isinstance(accepted, bool):
+        return (
+            "an override of {} must say whether it ACCEPTS (--accept / --reject)"
+            " — a human override is as often a refusal".format(rid)
+        )
+    if verdict != "clarity":
+        return None
+    if not chain:
+        return (
+            "{} has no attestation event, so a clarity verdict has no anchor to "
+            "advance (seed or ratify it first)".format(rid)
+        )
+    if chain_state(chain, digest) == ACCEPTED:
+        return (
+            "{} is already accepted at its current text ({}) — a clarity verdict "
+            "here would record a decision that decided nothing".format(rid, digest[:12])
+        )
+    return None
+
+
+def enact(root, docs, rid, verdict, by, actor=HUMAN, accepted=None, note=None, ts=None):
+    """Record ONE verdict about an artifact's current text.
+    `(action, event_or_None, digest)` — `action` is `enact` (the event was
+    appended) or `recommend` (nothing was written).
+
+    What each verdict does, and why, is the module docstring's; this is the one
+    place all three are written, so they cannot drift apart at three call sites.
+    The digest is computed from the tree here and is deliberately not a
+    parameter."""
+    if not (by or "").strip():
+        raise _refuse(
+            "a verdict on {} must name who recorded it (an unattributed decision "
+            "is not one)".format(rid)
+        )
+    kind, row = find_row(docs, rid)
+    digest = normative_digest(kind, row)
+    chain = chain_map(read_events(ledger_path(root, "attestation"))).get(
+        (kind, rid), []
+    )
+    refusal = _enact_refusal(rid, verdict, accepted, chain, digest)
+    # Malformedness is judged BEFORE the boundary, so an adjudicator's
+    # recommendation can never be the thing that hides a bad verdict from its
+    # author: "we would have refused this" is what they need to hear, not
+    # "a human will decide".
+    if refusal:
+        raise _refuse(refusal)
+    boundary, _policy, dial_refusals = attestation_config(root)
+    action = verdict_action(kind, boundary, actor)
+    if action == RECOMMEND:
+        return action, None, digest
+    # `attestation_config` falls back to the DECLARED DEFAULT when the dial
+    # could not be read, which is right for a reader and wrong for a writer: a
+    # machine would then enact under a boundary the adopter never wrote. A human
+    # is unaffected — they enact at every tier by definition, so no dial was
+    # consulted on their behalf.
+    if dial_refusals and actor != HUMAN:
+        raise _refuse(
+            "{} may not enact a verdict on {} while the ratification boundary "
+            "cannot be read ({}) — an unreadable dial must never authorise a "
+            "machine".format(actor, rid, "; ".join(dial_refusals))
+        )
+    extra = {"note": note} if note else {}
+    if verdict == "override":
+        extra["accepted"] = bool(accepted)
+    event = append_event(
+        root,
+        attestation_event(
+            kind, rid, digest, verdict, chain[-1]["id"] if chain else None, by, **extra
+        ),
+        ts=ts,
+    )
+    return action, event, digest
+
+
 # --- CLI ----------------------------------------------------------------------
 def seed(root, docs=None, by="seed", ts=None):
     """Write a `baseline` anchor for every current spine row that has NO history.
@@ -1268,6 +1454,93 @@ def _arm_checkpoint(root, docs):
     return 0
 
 
+def _accepted_flag(accept, reject):
+    """The override's accept/reject pair as one tri-state (None = neither given).
+
+    Both at once is a REFUSAL rather than a precedence rule: a caller who typed
+    both does not know which they meant, and neither does this module."""
+    if accept and reject:
+        raise _refuse(
+            "--accept and --reject were both given (an override says one or the "
+            "other, never both)"
+        )
+    if accept:
+        return True
+    if reject:
+        return False
+    return None
+
+
+def _enacted_line(verdict, rid, kind, digest, event):
+    """The one sentence each enacted verdict prints — its DISTINGUISHING
+    property, since that is what a reader has to check was the intended one."""
+    if verdict == "clarity":
+        return (
+            "attest: clarity recorded for {} - the accepted anchor advances to "
+            "{}.".format(rid, digest[:12])
+        )
+    if verdict == "meaning":
+        return (
+            "attest: meaning recorded for {} - the derived spine stage pulls "
+            "back to {} ({}).".format(rid, TIER_INDEX[kind], kind)
+        )
+    return (
+        "attest: override recorded for {} - it {} the current text; history is "
+        "unchanged, the ledger only grew.".format(
+            rid, "ACCEPTS" if event.get("accepted") else "REFUSES"
+        )
+    )
+
+
+def _arm_verdict(root, docs, rid, verdict, args):
+    """One `--clarity` / `--meaning` / `--override` arm.
+
+    A recommendation exits 0, not non-zero: the adjudicator was asked and
+    answered correctly for its authority, and nothing was claimed — the row is
+    still a candidate, so the owed act remains visible on every surface. That is
+    `intake.adjudication_action`'s ruled shape (owner decision 2), kept here so
+    the two tools cannot disagree about what "recommend" costs."""
+    accepted = _accepted_flag(args.accept, args.reject)
+    action, event, digest = enact(
+        root,
+        docs,
+        rid,
+        verdict,
+        args.by,
+        actor=args.actor,
+        accepted=accepted,
+        note=args.note,
+    )
+    kind = kind_of(rid)
+    if action == RECOMMEND:
+        print(
+            "attest: RECOMMEND - {} {} at {}; {} is at or below the boundary, so "
+            "enacting it is a human's act ({}). Nothing was written.".format(
+                rid, verdict, digest[:12], kind, BOUNDARY_KEY
+            )
+        )
+        return 0
+    print(_enacted_line(verdict, rid, kind, digest, event))
+    _note_staled(ATTESTATION)
+    return 0
+
+
+def _arm_verdicts(root, docs, args):
+    """Every verdict arm one run carries, in declared order. Extracted from
+    `main` rather than inlined as three more `if`s, so the entry point stays one
+    line per arm."""
+    code = 0
+    for verdict in ENACTABLE:
+        # The option's dest IS the verdict word, so the vocabulary is declared
+        # once: a fourth enactable verdict is one `add_argument` and nothing
+        # here, and a verdict with no option would fail loudly rather than be
+        # silently unreachable.
+        rid = getattr(args, verdict)
+        if rid:
+            code = max(code, _arm_verdict(root, docs, rid, verdict, args))
+    return code
+
+
 def _arm_open(root):
     requests = review_requests(root)
     for request in requests:
@@ -1320,6 +1593,31 @@ def main(argv=None):
         help="exit 1 while the full-spine checkpoint is blocked (an open review "
         "request, the persistent policy, or an input that could not be read)",
     )
+    for verdict in ENACTABLE:
+        ap.add_argument(
+            "--" + verdict,
+            default=None,
+            metavar="ID",
+            help="record a {} verdict about that row's CURRENT text".format(verdict),
+        )
+    ap.add_argument(
+        "--accept",
+        action="store_true",
+        help="an --override that ACCEPTS the current text",
+    )
+    ap.add_argument(
+        "--reject",
+        action="store_true",
+        help="an --override that REFUSES the current text",
+    )
+    ap.add_argument(
+        "--actor",
+        choices=(HUMAN, ADJUDICATOR),
+        default=HUMAN,
+        help="who is enacting: an adjudicator only RECOMMENDS at or below "
+        "{} (default: {})".format(BOUNDARY_KEY, HUMAN),
+    )
+    ap.add_argument("--note", default=None, help="free-text note carried on the event")
     ap.add_argument(
         "--by", default=None, help="who is recording this (required to ask)"
     )
@@ -1337,6 +1635,9 @@ def main(argv=None):
             _arm_request(root, args.request, args.by)
         if args.decide:
             _arm_decide(root, args.decide, args.verdict, args.by)
+        # Before the reporting arms: a run that enacts and then reports must
+        # report the state its own write produced, not the one it walked in on.
+        code = max(code, _arm_verdicts(root, docs, args))
         if args.open_:
             _arm_open(root)
         if args.boundary:

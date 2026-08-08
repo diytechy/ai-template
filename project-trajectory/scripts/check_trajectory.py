@@ -2283,6 +2283,169 @@ def dead_dependency_findings(wis):
     return out
 
 
+# --- SR-158 / LLR-180: the admission-verdict freshness gate -------------------
+# The queue's entry condition, read from the OTHER side. `admit.py` runs the one
+# transaction that may move a candidate into `queued/`; this reads the result
+# and refuses a queued spec the transaction never ruled on, or ruled on against
+# state that has since moved. BOTH halves are needed and neither substitutes for
+# the other: without the transaction this rule has nothing to read, and without
+# this rule the transaction is merely the polite path into the queue rather than
+# the only one.
+_ADMIT_RULE_HINT = (
+    "one trunk-side transaction performs every move into the queue (SR-152) — "
+    "run `python project-trajectory/scripts/admit.py --root . <draft spec>` "
+    "rather than writing into queued/ directly"
+)
+# The queue's own folder, named from the table above rather than as a literal so
+# a renamed state directory cannot leave this rule scanning a path that no
+# longer exists (it would go silently vacuous, which is the one failure mode a
+# queue-entry gate must not have).
+SPEC_QUEUED_DIR = SPEC_STATUS_DIRS["queued"]
+
+
+def _admit_module():
+    """`admit.py`, imported at CALL time — the `check_docs` idiom above.
+
+    A tree without the module (a scaffold that has not re-synced past the slice
+    that ships it) gets None and the check goes vacuous. That degradation is the
+    same one `staged_findings` takes without git: a rule whose INSTRUMENT is
+    absent reports nothing, where a rule whose SUBJECT is absent reports a
+    finding — and the instrument's absence is a re-sync question, not a registry
+    defect this validator can speak to."""
+    try:
+        import admit
+    except ImportError:  # pragma: no cover - exercised via the sys.path fallback
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        try:
+            import admit
+        except ImportError:
+            return None
+    return admit
+
+
+def admission_verdict_findings(root):
+    """LLR-180 — a queued spec's admission verdict is present and CURRENT.
+
+    Three rungs, message-only (the caller tags the rule and owns the
+    warn-plain / error-under-`--strict` promotion, the R-E/R-F tier):
+
+      - **absent** — the row is in `queued/` with no admission event at all,
+        which is what a direct write into the queue looks like from here;
+      - **stale scope** — the verdict names a scope digest the spec's frozen
+        scope no longer has, so the ruling judged different text;
+      - **stale spine** — the verdict names a spine digest the referenced rows
+        no longer produce, so the ruling judged a different requirement tree.
+
+    A verdict that outlives the state it judged is worse than no verdict,
+    because it READS as a current ruling. Comparing the digests the verdict
+    itself names is what turns expiry into a mechanical property rather than a
+    habit somebody has to remember; the recomputation is `admit`'s own
+    `candidate_digests`, reused rather than re-derived so the transaction and
+    this gate cannot disagree about what "the current one" means.
+
+    A newest verdict of `conflict` counts as ABSENT here, and deliberately: a
+    ruling that refused admission is not a ruling that permits the row to sit in
+    the queue, so treating its presence as satisfaction would let the
+    transaction's own refusal be ignored by simply leaving the file in place.
+
+    **THIS REPO'S OWN QUEUE PREDATES THE TRANSACTION**, and the answer is a
+    MIGRATION rather than an exemption: `admit.py --seed` writes a
+    `pre-transaction` verdict per unruled queued row, carrying the digests
+    measured at migration. So a legacy row passes rung 1 while remaining subject
+    to rungs 2 and 3 — edit its scope or amend the requirement it cites and it
+    reds, and the fix is a real admission. An id list would have exempted those
+    rows from all three rungs forever and left no trace of the debt.
+
+    Vacuous on an empty queue, and vacuous without `admit.py` (see
+    `_admit_module`).
+
+    **ALSO vacuous until the repo has ADOPTED the transaction**, and the signal
+    is the ledger's PRESENCE — the same presence-as-consent shape this kit
+    already uses for `docs/agents-enabled`. A repo with no
+    `docs/events/admissions.jsonl` has never run an admission, so every queued
+    row it has necessarily predates the transaction, and refusing all of them is
+    not a finding — it is one finding per row saying the same thing about the
+    repo. Once the ledger exists, the migration has been run and the rule is
+    total: from then on a queued row with no verdict is a direct write into the
+    queue, which is exactly what SR-152 forbids.
+
+    This was not a design preference; it was DRIVEN. Without it, every fixture
+    tree in the suite that constructs a queued spec — seven modules' worth —
+    reds on a rule about a transaction those trees never adopted."""
+    queued = Path(root) / WI_WORK / SPEC_QUEUED_DIR
+    specs = [
+        p for p in sorted(queued.glob("WI-*.md")) if not p.name.startswith(SPEC_EXAMPLE)
+    ]
+    admit = _admit_module()
+    if not specs or admit is None:
+        return []
+    if not (Path(root) / "docs" / "events" / "admissions.jsonl").exists():
+        return []
+    try:
+        view = admit.spine_view(root)
+        recorded = {e.get("wi"): e for e in admit.read_admissions(root)}
+    except (ValueError, OSError) as exc:
+        # A malformed ledger line is a hard read error naming the file and the
+        # line (contracts §2) — surfaced as the finding rather than swallowed,
+        # because "the ledger is unreadable" and "no row has a verdict" are
+        # different facts and must not print the same.
+        return [str(exc)]
+    out = []
+    for path in specs:
+        match = re.match(r"^(WI-\d+)-", path.name)
+        if not match:
+            continue
+        out += _one_admission_findings(
+            root, admit, path, match.group(1), recorded, view
+        )
+    return out
+
+
+def _one_admission_findings(root, admit, path, wid, recorded, view):
+    """The admission findings for ONE queued spec."""
+    rel = "{}/{}/{}".format(WI_WORK, SPEC_QUEUED_DIR, path.name)
+    event = recorded.get(wid)
+    if event is None:
+        return [
+            "{}: queued with no admission verdict — {}".format(rel, _ADMIT_RULE_HINT)
+        ]
+    if event.get("verdict") == admit.CONFLICT:
+        return [
+            "{}: queued under a {} ruling (event {}) — a conflict ruling cancels "
+            "the candidate or replaces it with a draft; it never permits the row "
+            "to sit in the queue it was ruled out of".format(
+                rel, admit.CONFLICT, event.get("id")
+            )
+        ]
+    try:
+        scope, spine = admit.candidate_digests(
+            root, path.read_text(encoding="utf-8"), view=view
+        )
+    except (ValueError, OSError, UnicodeDecodeError) as exc:
+        return ["{}: its admission digests cannot be recomputed — {}".format(rel, exc)]
+    out = []
+    for name, recorded_digest, current in (
+        ("scope", event.get("scope"), scope),
+        ("spine", event.get("spine"), spine),
+    ):
+        if recorded_digest != current:
+            out.append(
+                "{}: its admission verdict (event {}) was computed against {} "
+                "digest {} but the current one is {} — the ruling judged {}; "
+                "re-admit the row".format(
+                    rel,
+                    event.get("id"),
+                    name,
+                    recorded_digest,
+                    current,
+                    "different text"
+                    if name == "scope"
+                    else "a different requirement tree",
+                )
+            )
+    return out
+
+
 # (run_state_findings — the WI-115 stale-end-state warn over docs/run-state —
 # retired at concurrency-restructure Phase 5 with the dispatcher that wrote
 # that file; a stale parked state is unrepresentable when no file declares
@@ -3490,6 +3653,15 @@ def main():
     # --strict tier (no new branch in main); the R-E open-half's closing
     # counterpart.
     findings.extend(("R-F", False, msg) for msg in spec_lifecycle_findings(root, wis))
+    # Admission-verdict freshness (SR-158/LLR-180) — a queued spec whose conflict
+    # ruling is absent, or was computed against a scope or spine that has since
+    # moved. Same warn-plain / error-under-`--strict` tier as R-E/R-F, joined the
+    # same way so main() gains no branch: the queue's entry condition is a
+    # registry-coherence rule, and a stale ruling must not reach a green G2/G3
+    # gate while a plain commit stays warn-first. Vacuous on an empty queue.
+    findings.extend(
+        ("admission", False, msg) for msg in admission_verdict_findings(root)
+    )
     # Completion reconciliation (WI-352) — the declared `Status` cell against the
     # spec's Done-when boxes and the `WI:` trailers. WARN plain, ERROR under
     # --strict, the same warn tier as R-E/R-F, EXCEPT the trailer signal.

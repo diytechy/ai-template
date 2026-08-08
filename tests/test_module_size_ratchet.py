@@ -701,7 +701,13 @@ BASELINE = {
     # in the F5-mirrored loader copy (SPEC_STATUS_DIRS / TERMINAL_STATUSES /
     # OPEN_STATUSES). A three-copy change by the F5 rule, not an extraction
     # candidate: the copies are pinned equal by tests/test_wi_loader_sync.py.
-    "check_trajectory.py": 3544,
+    # +172 (3544 -> 3716), round 3: `admission_verdict_findings` (LLR-180) and
+    # its two helpers, wired into --strict. A queued row whose conflict verdict
+    # is absent or computed against a superseded digest is refused; the growth
+    # is that rung plus the migration arm that keeps the meta repo honest
+    # instead of exempt (a `pre-transaction` baseline event per legacy row,
+    # which still fails the freshness rungs, so the debt stays current).
+    "check_trajectory.py": 3716,
     # NEW ENTRY, +25 (1498 -> 1523), WI-357: the two-stage work-branch claim
     # signal — the on-disk fast path plus the branch-history probe that
     # survives the §2.3 close commit (git log -1 over the claim path), with
@@ -870,7 +876,8 @@ BASELINE = {
     # GITKEEP_DIRS. A terminal status directory that a fresh scaffold does not
     # have is the exact defect class this repo calls its most expensive, and it
     # was found by BOOTSTRAPPING a scaffold rather than by reading the table.
-    "bootstrap.py": 2388,
+    # +13 (2388 -> 2401), round 3: MAPPING rows for adjudicate.py and admit.py.
+    "bootstrap.py": 2401,
     # NEW ENTRY, +228 (1423 -> 1651), Phase 2b of the concurrency restructure
     # (docs/concurrency-restructure.md §7): the spec-folder work-item reader,
     # which crosses this module over THRESHOLD for the first time. It is one
@@ -979,6 +986,23 @@ BASELINE = {
     # always None and a declared capability bar failed open. Reading it
     # correctly costs three lines.
     "agent_route.py": 1592,
+    # FIRST baselines for the two modules the mechanized-loop program added that
+    # cross the threshold, ESTABLISHED rather than bumped — there is no earlier
+    # number to have grown past. Both are single transactions whose parts are
+    # only meaningful together, and both are comment-dense rather than tangled
+    # (every function in each is under the C901 limit, which is the tangle
+    # sensor; this one measures FILE size, and the two say different things).
+    #   admit.py    1602 — ONE transaction owning every move into the queue.
+    #     Splitting its preconditions across files would re-create the
+    #     several-producers shape the module exists to remove, which is the
+    #     defect SR-152 names.
+    #   attest.py   1656 — the canonical digest, the append-only ledger, the
+    #     boundary routing and the candidate detector. The digest rule and the
+    #     ledger that stores it cannot drift apart if they share a file.
+    # If either grows again, the next stamp should ask what came OUT rather
+    # than what went in.
+    "admit.py": 1602,
+    "attest.py": 1656,
     # NEW ENTRY, WI-387 — integrate.py crossed THRESHOLD (1418 -> 1588) adding
     # the third terminal outcome. The extraction the ratchet asks for was TAKEN
     # FIRST, not argued away: `hand_back` and `quarantine`, the largest unit and

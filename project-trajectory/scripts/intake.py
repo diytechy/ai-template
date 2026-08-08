@@ -12,7 +12,8 @@ deterministic — no model anywhere in the path; a detected event becomes a row
 with a **derived** description, so the work is forced into the registry with
 nobody watching.
 
-Three triggers, plus the drafts-not-mints arm:
+Three triggers, plus the drafts-not-mints arm — and, since SR-143, one
+detection arm (a2) built beside (a) and not yet wired to a mint:
 
   (a) **the ratified-cell diff on the merged commit** — via
       `check_trajectory.staged_spine_amendments(root, before, after)` (the
@@ -29,6 +30,17 @@ Three triggers, plus the drafts-not-mints arm:
       may NEVER itself hand back. The no-recursion invariant is structural at
       both ends: `handback.hand_back` refuses to return an adjudication row,
       and this intake refuses to mint a disposition FOR one.
+  (a2) **the ledger-vs-current arm** (SR-143), built BESIDE trigger (a) rather
+      than in place of it. Trigger (a) reads a STAGED diff, so it sees only what
+      one commit touched and it deliberately skips a row whose Status moved;
+      two amendments are therefore structurally invisible to it — a row edited
+      while it stays `Verified` in an earlier commit, and the sanctioned
+      amend-and-flip-to-`Modified`. `ledger_amendments` compares the digest of
+      the text standing in the tree against the accepted anchor in
+      `docs/events/attestation.jsonl` (`attest.detect_candidates`), which has
+      neither blind spot. Which arm feeds the merge slot is the P13 cutover's
+      call, so this one is reachable today through `intake.py candidates` and
+      changes no mint.
   (c) **the dispatcher's empty-frontier gap census** — the finding strings
       `dispatch.gap_census` hands over become concrete gap-closure rows with
       derived descriptions, deduped against open rows so the ladder cannot
@@ -60,6 +72,7 @@ Contracts: IF-090, IF-091, IF-092 — the interface seams this module declares (
 from __future__ import annotations
 
 import argparse
+import hashlib
 import re
 import sys
 import tomllib
@@ -426,6 +439,23 @@ def _owning_srs(records):
     return sorted(srs)[:8]
 
 
+def _amendment_row(title, buildtier, sr_refs, specref, context):
+    """The adjudication row BOTH amendment arms mint — one home for the row's
+    shape, so the P13 cutover changes where the facts come from and not what a
+    claiming worker reads. Extracted rather than copied because this module is
+    not one of the F5 independently-copyable three (see `_csv_rows` above): here
+    a shared home beats a verbatim second copy, and `check_dupes` agrees."""
+    return {
+        "title": title,
+        "kind": "adjudication",
+        "workstream": "process",
+        "buildtier": buildtier,
+        "sr_refs": sr_refs,
+        "specref": specref,
+        "context": context,
+    }
+
+
 def _amendment_drafts(root, before, after):
     records = _routed_amendments(root, before, after)
     if not records:
@@ -439,19 +469,150 @@ def _amendment_drafts(root, before, after):
         )
     )
     return [
-        {
-            "title": title,
-            "kind": "adjudication",
-            "workstream": "process",
-            "buildtier": tier_signal(
+        _amendment_row(
+            title,
+            tier_signal(
                 "amendment",
                 rows_touched=len(records),
                 gate_moved=_gate_moved(root, before, after),
             ),
-            "sr_refs": _owning_srs(records),
-            "specref": records[0]["registry"],
-            "context": _amendment_context(records),
-        }
+            _owning_srs(records),
+            records[0]["registry"],
+            _amendment_context(records),
+        )
+    ]
+
+
+# --- arm (a2): ledger-vs-current, the two amendments a diff cannot see ---------
+
+
+def ledger_amendments(root, docs=None):
+    """The rows whose normative text has MOVED AWAY from what the attestation
+    ledger records — `attest.detect_candidates`, narrowed to the amendment case.
+
+    Strictly better than `_routed_amendments` at the question both ask, because
+    it asks the TREE rather than a diff (module docstring, arm a2). Status is not
+    a normative cell, so the sanctioned amend-and-flip is not special here — it
+    is simply a row whose digest moved.
+
+    Only the `changed` candidates are amendments, and the other two states are
+    excluded for a reason each:
+
+      * `unattested` — nothing was ever approved, so nothing was amended. That
+        row belongs to the ratification sitting, and minting adjudication for it
+        would ask an adjudicator to judge a change that never happened.
+      * `pending` — a verdict already stands at this very text. Minting again
+        would ask the same question twice and leave two rows owed one answer.
+
+    Deferred import (contracts §6) so this module still imports in a tree whose
+    sibling slice has not landed."""
+    import attest
+
+    root = Path(root)
+    docs = Path(docs) if docs else root / "docs"
+    return [
+        rec
+        for rec in attest.detect_candidates(root, docs)
+        if rec["state"] == attest.CHANGED
+    ]
+
+
+def _ledger_token(records):
+    """A deterministic 7-hex token over the `(id, digest)` pairs — this arm's
+    answer to the amendment title's sha pair.
+
+    There are no two commits to name here, so the EVENT is "these rows stand at
+    these digests". A re-run over an unchanged tree derives the same token and
+    dedupes by exact title; one further edit is a new event that mints its own
+    row, rather than a silent dedupe leaving nobody owed the judgement."""
+    blob = "\n".join(
+        "{}\t{}".format(rec["id"], rec["digest"])
+        for rec in sorted(records, key=lambda r: r["id"])
+    )
+    return hashlib.sha256(blob.encode("utf-8")).hexdigest()[:7]
+
+
+def _ledger_specref(records):
+    """The registry file the LOWEST-tier candidate lives in (R-E wants an in-repo
+    spec-of-record). Read from `attest`'s own tier->file declaration rather than
+    spelled again here, so the file an adjudicator opens is the file the detector
+    read. `detect_candidates` walks the tiers in spine order, so `records[0]` is
+    already the lowest."""
+    import attest
+
+    kind = records[0]["kind"]
+    parts = attest.SN_MD if kind == "SN" else attest.REGISTRIES[kind]
+    return "/".join((attest.DOCS_DIR,) + tuple(parts))
+
+
+def _ledger_context(records):
+    """The derived listing: each row that left its anchor, both digests, and the
+    reason `attest` gave — plus the three verdicts and the command that records
+    one, because a row minted with nobody watching has to carry its own
+    instructions."""
+    lines = [
+        "Derived from `attest.detect_candidates` (SR-143): the normative digest",
+        "of the text standing in the tree, compared with the accepted anchor in",
+        "docs/events/attestation.jsonl. Unlike the staged-diff arm this sees a",
+        "row amended in an EARLIER commit and the sanctioned amend-and-flip to",
+        "Modified - Status is not a normative cell.",
+        "",
+    ]
+    for rec in records:
+        lines.append(
+            "- {} {}: anchor {} -> now {} ({})".format(
+                rec["kind"],
+                rec["id"],
+                (rec["anchor"] or "(none)")[:12],
+                rec["digest"][:12],
+                rec["reason"],
+            )
+        )
+    lines += [
+        "",
+        "Outcomes (decisions §1): `clarity` when the digest moved but the",
+        "obligation did not - it advances the accepted anchor to the NEW digest;",
+        "`meaning` when the obligation changed - it writes a pending event and",
+        "pulls the derived spine stage back to that artifact's tier; `override`",
+        "when a human reverses either. Nothing is ever edited; the ledger grows.",
+        "",
+        "    python project-trajectory/scripts/attest.py --root . \\",
+        "        --clarity <ID> --by NAME      # or --meaning / --override",
+        "",
+        "At or below `attestation.human_ratification_through` the adjudicator",
+        "RECOMMENDS and a human decides (`--actor adjudicator` prints the brief",
+        "and writes nothing); above it the adjudicator may enact.",
+    ]
+    return "\n".join(lines)
+
+
+def ledger_amendment_drafts(root, docs=None):
+    """Arm (a2)'s drafts: ONE adjudication row listing every moved spine row,
+    shaped exactly like `_amendment_drafts`' so the P13 cutover is a change of
+    SOURCE and not of row.
+
+    The tier signal drops `gate_moved` on purpose. This arm holds no before/after
+    tree to read `docs/gate` from, and overloading that measurable with some
+    other fact would make one dial mean two things — so rows touched is the whole
+    signal, per the amendment's clause 2 (measurable, never judged)."""
+    records = ledger_amendments(root, docs)
+    if not records:
+        return []
+    title = (
+        "adjudicate: {} - normative text no longer matches the attested anchor "
+        "at {} (ledger-vs-current, SR-143); record clarity, meaning or an "
+        "override".format(
+            ", ".join(sorted(r["id"] for r in records)), _ledger_token(records)
+        )
+    )
+    return [
+        _amendment_row(
+            title,
+            tier_signal("amendment", rows_touched=len(records)),
+            sorted(r["id"] for r in records if r["id"].startswith("SR-"))[:8],
+            _ledger_specref(records),
+            _ledger_context(records),
+        )
     ]
 
 
@@ -1010,6 +1171,27 @@ def _cmd_adjudicate(args):
     )
 
 
+def _cmd_candidates(args):
+    """Arm (a2) by hand: report every row whose text left its anchor and the
+    adjudication row that would carry them. Exit 1 when any row moved, the shape
+    `attest.py --candidates` already has — this reports, it never mints, because
+    which arm feeds the merge slot is the P13 cutover's call."""
+    root = Path(args.root).resolve()
+    try:
+        drafts = ledger_amendment_drafts(root, args.docs)
+    except (ValueError, OSError) as exc:
+        # attest's refusals already name themselves and the offending line.
+        _say(str(exc), err=True)
+        return 1
+    if not drafts:
+        _say("no spine row has left its attested anchor - nothing to adjudicate.")
+        return 0
+    for draft in drafts:
+        _say("CANDIDATE ROW - {}".format(draft["title"]))
+        print(draft["context"])
+    return 1
+
+
 def _cmd_census(args):
     """Rung 1 by hand: derive the gap census (via dispatch.gap_census) and
     mint the gap-closure rows."""
@@ -1045,6 +1227,14 @@ def main(argv=None):
         "census", help="derive the gap census and mint gap-closure rows"
     )
     census.set_defaults(func=_cmd_census)
+    cand = sub.add_parser(
+        "candidates",
+        help="report the ledger-vs-current amendments (arm a2); exit 1 if any",
+    )
+    cand.add_argument(
+        "--docs", default=None, help="docs directory (default: <root>/docs)"
+    )
+    cand.set_defaults(func=_cmd_candidates)
     adj = sub.add_parser(
         "adjudicate",
         help="enact (or recommend) the no-scope-moved flip per docs/gate-policy",

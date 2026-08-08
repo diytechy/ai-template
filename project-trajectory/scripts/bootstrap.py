@@ -1486,6 +1486,19 @@ MAPPING = [
     # classification a partial attempt owes (SR-150). integrate.py imports it,
     # so a scaffold without it cannot accept a branch.
     ("scripts/outcome.py", "scripts/outcome.py"),
+    # The ONE transaction that moves a candidate from draft/ into queued/
+    # (SR-152/SR-153/SR-158): the preconditions, the mechanical overlap graph and
+    # the recorded conflict verdict. check_trajectory.py imports it lazily for
+    # the verdict-freshness rung, so a scaffold without it loses that rung
+    # silently — which is why it ships rather than staying kit-only.
+    ("scripts/admit.py", "scripts/admit.py"),
+    # The other half of the same contract (SR-147/SR-151): the disposition that
+    # confirms or overrides a worker's outcome, and the successor / repair
+    # candidates it drafts into `docs/work/draft/`. Scaffolded WITH outcome.py
+    # rather than after it — a scaffold that can record an attempt but not rule
+    # on one leaves every Partial and Cancelled row terminal with nobody able to
+    # say what happens to the remaining scope.
+    ("scripts/adjudicate.py", "scripts/adjudicate.py"),
     # Every operational prompt as a reviewed asset, plus the one strict renderer
     # over them (SR-155/SR-156/SR-157). The three highest-traffic prompts were
     # Python constants inside agent_loop.py, reviewable only by reading source;
