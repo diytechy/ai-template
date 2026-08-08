@@ -271,19 +271,19 @@
 #
 # The distribution:
 #
-#   cli                   96   deliberate
+#   cli                   83   deliberate
 #   link-rebase            1   deliberate
-#   spine-loader          21   deliberate
+#   spine-loader          20   deliberate
 #   declared-file         12   deliberate
 #   markdown-table        11   deliberate
 #   git-wrapper            7   deliberate
 #   wi-schema-columns      6   deliberate
 #   wi-registry            3   deliberate
-#   spec-folder-reader     4   deliberate
+#   spec-folder-reader     2   deliberate
 #   ctx-unpack             3   deliberate
 #   okf-row                1   deliberate
 #   import-fallback        2   deliberate
-#   intake-mint            9   deliberate
+#   intake-mint            8   deliberate
 #   module-path            3   deliberate
 #   signature-echo         2   deliberate
 #   child-capture          1   deliberate
@@ -292,6 +292,7 @@
 #   trailer-fold           1   deliberate
 #   warn-tier-dispatch     1   deliberate
 #   kind-resolution        1   deliberate
+#   mechanized-loop        46  deliberate
 #
 # The two facts worth carrying: cross-module duplication here is dominated by
 # SMALL STABLE HELPERS the F5 ruling deliberately duplicates (a shared
@@ -304,7 +305,7 @@
 # a census whose classification has rotted is how the false claims above
 # survived in the first place.
 
-# --- cli (96 blocks) ---------------------------------------------
+# --- cli (83 blocks) ---------------------------------------------
 # disposition: deliberate
 # the per-script CLI skeleton + _utf8_console. F5: kit scripts must stay
 # independently copy-able and stdlib-only, which is why a shared
@@ -364,28 +365,21 @@ da3bd5e9dd3e  project-trajectory/scripts/check_doc_refs.py == project-trajectory
 da3bd5e9dd3e  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/gen_cases.py
 da3bd5e9dd3e  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/gen_okf.py
 da3bd5e9dd3e  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/gen_release_checklist.py
-5d9524986749  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/check_trajectory.py
-5d9524986749  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/derive_gate.py
-f9a751e72b81  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/gen_okf.py
-4194ebd485fe  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/gen_open_items.py
-14e71bf4c19b  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/plan_briefs.py
-14e71bf4c19b  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/schedule.py
-7146728c91d1  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/gen_trajectory.py
+14e71bf4c19b  project-trajectory/scripts/attest.py == project-trajectory/scripts/check_doc_refs.py
+14e71bf4c19b  project-trajectory/scripts/attest.py == project-trajectory/scripts/check_figures.py
+7146728c91d1  project-trajectory/scripts/attest.py == project-trajectory/scripts/gen_trajectory.py
 2e8985c8fcb3  project-trajectory/scripts/check_docs.py == project-trajectory/scripts/check_vendored.py
 b76043ee462f  project-trajectory/scripts/check_dupes.py == project-trajectory/scripts/gen_cases.py
 3b4335f77810  project-trajectory/scripts/check_flows.py == project-trajectory/scripts/plan_coverage.py
-0e8403279f2d  project-trajectory/scripts/check_perf.py == project-trajectory/scripts/derive_gate.py
-96547fd3a5ae  project-trajectory/scripts/check_perf.py == project-trajectory/scripts/derive_gate.py
+0e8403279f2d  project-trajectory/scripts/attest.py == project-trajectory/scripts/check_perf.py
+96547fd3a5ae  project-trajectory/scripts/attest.py == project-trajectory/scripts/check_perf.py
 93d508e214f3  project-trajectory/scripts/check_perf.py == project-trajectory/scripts/trace.py
 2bc803394d18  project-trajectory/scripts/check_privacy.py == project-trajectory/scripts/check_trajectory.py
 f3c532f40a67  project-trajectory/scripts/check_stubs.py == project-trajectory/scripts/gen_arch_map.py
 59ca47b1f04b  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/gen_trajectory.py
 744b556ca01e  project-trajectory/scripts/check_vendored.py == project-trajectory/scripts/score_reviews.py
 e7f0db69c9ff  project-trajectory/scripts/derive_gate.py == project-trajectory/scripts/trace.py
-c7d2e27779d5  project-trajectory/scripts/derive_gate.py == project-trajectory/scripts/schedule.py
 96246d666080  project-trajectory/scripts/gen_arch_map.py == project-trajectory/scripts/trace.py
-5929de953fd4  project-trajectory/scripts/gen_open_items.py == project-trajectory/scripts/plan_briefs.py
-5929de953fd4  project-trajectory/scripts/gen_open_items.py == project-trajectory/scripts/schedule.py
 a986f553a391  project-trajectory/scripts/plan_briefs.py == project-trajectory/scripts/plan_coverage_step.py
 6b98b4c1e7c5  project-trajectory/scripts/plan_briefs.py == project-trajectory/scripts/plan_round.py
 a986f553a391  project-trajectory/scripts/plan_briefs.py == project-trajectory/scripts/schedule.py
@@ -394,8 +388,7 @@ a986f553a391  project-trajectory/scripts/plan_briefs.py == project-trajectory/sc
 # with intake.py's main() present the matcher reports that same argparse
 # boilerplate through the intake pairs below instead - nothing was edited
 # in either file.)
-577c2f20f412  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/intake.py
-c7d2e27779d5  project-trajectory/scripts/derive_gate.py == project-trajectory/scripts/intake.py
+577c2f20f412  project-trajectory/scripts/attest.py == project-trajectory/scripts/spec_move.py
 7b8bc6c56a7e  project-trajectory/scripts/intake.py == project-trajectory/scripts/schedule.py
 386d4419858c  project-trajectory/scripts/intake.py == project-trajectory/scripts/plan_briefs.py
 386d4419858c  project-trajectory/scripts/intake.py == project-trajectory/scripts/schedule.py
@@ -409,16 +402,12 @@ f7d5136e6d5d  project-trajectory/scripts/derive_gate.py == project-trajectory/sc
 # argparse/--root preamble join the class (same F5 reason: the serial trunk
 # step must stay independently copy-able).
 b87ed5851f33  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/trunk_step.py
-4194ebd485fe  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/trunk_step.py
 f7d5136e6d5d  project-trajectory/scripts/derive_gate.py == project-trajectory/scripts/trunk_step.py
-5929de953fd4  project-trajectory/scripts/gen_open_items.py == project-trajectory/scripts/trunk_step.py
 3762ccd39230  project-trajectory/scripts/plan_briefs.py == project-trajectory/scripts/trunk_step.py
 # Phase 4 (2026-07-29): integrate.py's preamble joins for the same reason.
-4e246982c55c  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/integrate.py
 b25e7f8619e5  project-trajectory/scripts/gen_trajectory.py == project-trajectory/scripts/integrate.py
 # WI-393 (2026-08-01): spec_move.py ships (the link-aware move ritual) — its
 # argparse/--root preamble joins for the same F5 reason.
-2c0c67165dac  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/spec_move.py
 # WI-392 (2026-08-01): check_figures.py ships (declared-figure provenance) —
 # its _utf8_console and argparse/--root/--strict preamble join for the same
 # F5 reason. Its substance walk is deliberately NOT here: the shared
@@ -427,9 +416,8 @@ b25e7f8619e5  project-trajectory/scripts/gen_trajectory.py == project-trajectory
 b87ed5851f33  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/check_figures.py
 74572e51bafc  project-trajectory/scripts/check.py == project-trajectory/scripts/check_figures.py
 da3bd5e9dd3e  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/check_figures.py
-f9a751e72b81  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/check_figures.py
 
-# --- link-rebase (1 block) ---------------------------------------
+# --- link-rebase (1 blocks) ---------------------------------------
 # disposition: deliberate
 # the inline-link rewrite closure (`_sub` over MD_LINK_TARGET_RE.sub): the
 # 5-line traversal core shared by trunk_step.rebase_links (fragment links,
@@ -459,7 +447,7 @@ d298066d8071  project-trajectory/scripts/agent_common.py == project-trajectory/s
 d47d5975c21b  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/schedule.py
 f800f0c60265  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/schedule.py
 
-# --- spine-loader (21 blocks) ------------------------------------
+# --- spine-loader (20 blocks) ------------------------------------
 # disposition: deliberate
 # spine-registry loaders (load_csv/refs, the SR/LLR/TC/IF/OI row filters,
 # the draft-heading scan). Several carry an explicit in-code note -
@@ -484,7 +472,6 @@ b17d9576c85b  project-trajectory/scripts/check_trajectory.py == project-trajecto
 4b5af82ebaa3  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/traj_status.py
 c7533358d6c4  project-trajectory/scripts/derive_gate.py == project-trajectory/scripts/gen_release_checklist.py
 bea18e2ff5f7  project-trajectory/scripts/derive_gate.py == project-trajectory/scripts/gen_release_checklist.py
-019630ddf2c7  project-trajectory/scripts/derive_gate.py == project-trajectory/scripts/trace.py
 1177b53ad58e  project-trajectory/scripts/derive_gate.py == project-trajectory/scripts/trace_text.py
 9de6491460d5  project-trajectory/scripts/derive_gate.py == project-trajectory/scripts/trace.py
 5d6159709c2c  project-trajectory/scripts/derive_gate.py == project-trajectory/scripts/trace.py
@@ -498,7 +485,7 @@ c54131b73567  project-trajectory/scripts/gen_arch_map.py == project-trajectory/s
 f3ea6bf955e3  project-trajectory/scripts/gen_arch_map.py == project-trajectory/scripts/plan_briefs.py
 b0b9cc04d152  project-trajectory/scripts/gen_release_checklist.py == project-trajectory/scripts/trace.py
 
-# --- okf-row (1 block) -------------------------------------------
+# --- okf-row (1 blocks) -------------------------------------------
 # disposition: deliberate
 # the OKF/dashboard row builders — the same (kind, title, body) tuple shape
 # emitted by gen_okf and gen_trajectory for each spine artifact.
@@ -512,7 +499,7 @@ b0b9cc04d152  project-trajectory/scripts/gen_release_checklist.py == project-tra
 # same-file pair below is untouched.
 9d770b2d948b  project-trajectory/scripts/gen_okf.py == project-trajectory/scripts/gen_okf.py
 
-# --- graph-walk (1 block)  ---------------------------------------
+# --- graph-walk (1 blocks)  ---------------------------------------
 # disposition: deliberate
 # the component-graph breadth-first walk, in the validator and the dashboard
 # generator (sw_containment's subtree walk — traj_views.py since WI-280 S5).
@@ -527,7 +514,7 @@ a2fa21743919  project-trajectory/scripts/check_trajectory.py == project-trajecto
 be3d9855f5b5  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/plan_runner.py
 982bbeb7eb27  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/check.py
 
-# --- skills-materialize (1 block)  -------------------------------
+# --- skills-materialize (1 blocks)  -------------------------------
 # disposition: deliberate
 # the per-agent skills directory walk, shared by bootstrap and the skills
 # index generator.
@@ -645,7 +632,7 @@ b68a8ce88cdb  project-trajectory/scripts/check.py == project-trajectory/scripts/
 a96fdbede5b0  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/gen_arch_map.py
 a96fdbede5b0  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/trace.py
 
-# --- trailer-fold (1 block)  -------------------------------------
+# --- trailer-fold (1 blocks)  -------------------------------------
 # disposition: deliberate
 # the two arms of latest_trailer_evidence's newest-first fold — the `WI:`
 # arm records a SET, the `Blocked-WI:` arm records a MAP keyed to a
@@ -663,7 +650,7 @@ c5e35c61e3a6  project-trajectory/scripts/agent_common.py == project-trajectory/s
 a5b7a7b890c2  project-trajectory/scripts/agent_loop.py == project-trajectory/scripts/agent_loop.py
 021fec5dccbd  project-trajectory/scripts/agent_route.py == project-trajectory/scripts/agent_route.py
 
-# --- child-capture (1 block)  -----------------------------------
+# --- child-capture (1 blocks)  -----------------------------------
 # disposition: deliberate
 # the captured-child subprocess seam: agent_common.git's capture-keyword
 # block beside integrate._run's. Cross-script - the F5 reason - and kept
@@ -682,7 +669,7 @@ b8b532ba9de4  project-trajectory/scripts/agent_loop.py == project-trajectory/scr
 21b0fbb40f6c  project-trajectory/scripts/trace.py == project-trajectory/scripts/trace.py
 7c1e98fa864e  project-trajectory/scripts/trace.py == project-trajectory/scripts/trace.py
 
-# --- warn-tier-dispatch (1 block)  -------------------------------
+# --- warn-tier-dispatch (1 blocks)  -------------------------------
 # disposition: deliberate
 # main()'s per-check warn/strict line. Each check carries its own comment
 # saying which tier it is in and why (WARN-only vs ERROR-under---strict),
@@ -690,7 +677,7 @@ b8b532ba9de4  project-trajectory/scripts/agent_loop.py == project-trajectory/scr
 # reasoning away from the check it explains. Two sites, not growing.
 558577071d47  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/check_trajectory.py
 
-# --- kind-resolution (1 block)  ----------------------------------
+# --- kind-resolution (1 blocks)  ----------------------------------
 # disposition: deliberate
 # schedule.kind_of is classify's step-1 resolution extracted for the
 # dispatcher's SA8 admission table (WI-381) - one home for WHICH KIND a row
@@ -701,7 +688,7 @@ b8b532ba9de4  project-trajectory/scripts/agent_loop.py == project-trajectory/scr
 # same file, pinned equal by test_dispatch_admission's cross-check.
 c4546434439b  project-trajectory/scripts/schedule.py == project-trajectory/scripts/schedule.py
 
-# --- spec-folder-reader (4 blocks) -------------------------------
+# --- spec-folder-reader (2 blocks) -------------------------------
 # disposition: deliberate
 # the Phase 2b spec-folder registry reader (docs/concurrency-restructure.md
 # §2.1): docs/work/<status>/WI-###.md parsed into the SAME 17-key rows
@@ -752,8 +739,6 @@ c4546434439b  project-trajectory/scripts/schedule.py == project-trajectory/scrip
 # class did not grow — same three files, same one block — and
 # check_trajectory == schedule again kept its fp (1dbf7e455ac3), the tell
 # that the change is inside the shared region rather than a new copy.
-7212302b90d0  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/schedule.py
-6bc2b2913689  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/check_trajectory.py
 1dbf7e455ac3  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/schedule.py
 4d36b43d0895  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/wi_convert.py
 
@@ -785,7 +770,7 @@ a7e859f1af8f  project-trajectory/scripts/agent_common.py == project-trajectory/s
 462810722e11  project-trajectory/scripts/plan_artifacts.py == project-trajectory/scripts/wi_convert.py
 d7bc90bd2333  project-trajectory/scripts/plan_artifacts.py == project-trajectory/scripts/wi_convert.py
 
-# --- intake-mint (9 blocks) --------------------------------------
+# --- intake-mint (8 blocks) --------------------------------------
 # disposition: deliberate
 # WI-388's unified intake mint (intake.py). Four shapes, each ~30-45 tokens:
 #   * the claim-shaped bookkeeping commit (intake == integrate, 4 blocks):
@@ -816,4 +801,68 @@ faccaf0237c5  project-trajectory/scripts/intake.py == project-trajectory/scripts
 de0546d2361d  project-trajectory/scripts/intake.py == project-trajectory/scripts/integrate.py
 # (1fea271d8b0c -> 5a35a2689e40 when intake main() grew the adjudicate
 # subparser - same block, shifted content.)
-5a35a2689e40  project-trajectory/scripts/intake.py == project-trajectory/scripts/spec_move.py
+
+
+# --- mechanized-loop (46 blocks) ---------------------------------------
+# disposition: deliberate
+# The F5 copies the mechanized-loop foundations were instructed to make,
+# plus the re-fingerprinted loader copies. Deliberate, and PINNED rather
+# than merely sanctioned: tests/test_ledger_helper_sync.py asserts the
+# copies are equal, so an edit to one that is not made to the other reds
+# the suite instead of quietly drifting. A sanction without a pin is how
+# duplication rots, which is why this file is a census and not an ignore
+# list.
+#   handback.py == outcome.py      the -z diff walk, the revert ops, the
+#                                  bar-inert .patch write
+#   agent_common.py == outcome.py  the `+++` frontmatter parse
+#   attest.py == outcome.py        the append-only JSONL ledger helpers
+#   attest.py / config*.py == *    the per-script CLI preamble, load_csv/
+#                                  refs, the _git wrapper - the established
+#                                  F5 families, now anchored on the new
+#                                  modules because they sort first.
+03f5fc601330  project-trajectory/scripts/attest.py == project-trajectory/scripts/outcome.py
+0669c647fde4  project-trajectory/scripts/check_privacy.py == project-trajectory/scripts/config_migrate.py
+0a97a192c0b1  project-trajectory/scripts/handback.py == project-trajectory/scripts/outcome.py
+0b17a34a9343  project-trajectory/scripts/attest.py == project-trajectory/scripts/config_migrate.py
+14e71bf4c19b  project-trajectory/scripts/attest.py == project-trajectory/scripts/check_trajectory.py
+14e71bf4c19b  project-trajectory/scripts/attest.py == project-trajectory/scripts/gen_okf.py
+1fea271d8b0c  project-trajectory/scripts/config_migrate.py == project-trajectory/scripts/intake.py
+1fea271d8b0c  project-trajectory/scripts/config_migrate.py == project-trajectory/scripts/spec_move.py
+22420b9162f0  project-trajectory/scripts/intake.py == project-trajectory/scripts/spec_move.py
+2a4539fd14d3  project-trajectory/scripts/handback.py == project-trajectory/scripts/outcome.py
+2c42f7691ba1  project-trajectory/scripts/handback.py == project-trajectory/scripts/outcome.py
+376bfa227be6  project-trajectory/scripts/attest.py == project-trajectory/scripts/derive_gate.py
+376bfa227be6  project-trajectory/scripts/attest.py == project-trajectory/scripts/trace.py
+522063f3d037  project-trajectory/scripts/attest.py == project-trajectory/scripts/outcome.py
+58bc9df6ee62  project-trajectory/scripts/derive_gate.py == project-trajectory/scripts/trace.py
+59f068682081  project-trajectory/scripts/handback.py == project-trajectory/scripts/outcome.py
+69e3088d9924  project-trajectory/scripts/config_migrate.py == project-trajectory/scripts/gen_open_items.py
+7146728c91d1  project-trajectory/scripts/attest.py == project-trajectory/scripts/integrate.py
+88de9ccdc189  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/check_figures.py
+88de9ccdc189  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/gen_okf.py
+88de9ccdc189  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/gen_open_items.py
+88de9ccdc189  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/spec_move.py
+88de9ccdc189  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/trunk_step.py
+8b2b9256c52d  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/outcome.py
+902014796b45  project-trajectory/scripts/config_migrate.py == project-trajectory/scripts/config_migrate.py
+9370254d8ee0  project-trajectory/scripts/attest.py == project-trajectory/scripts/schedule.py
+97a89c4259f1  project-trajectory/scripts/config_migrate.py == project-trajectory/scripts/gen_open_items.py
+a61e47dc0614  project-trajectory/scripts/attest.py == project-trajectory/scripts/schedule.py
+a99e71ecd062  project-trajectory/scripts/attest.py == project-trajectory/scripts/gen_open_items.py
+aef46acb8c6f  project-trajectory/scripts/derive_gate.py == project-trajectory/scripts/trace.py
+b1f26131ee6e  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/check_trajectory.py
+b262398b145a  project-trajectory/scripts/config.py == project-trajectory/scripts/config_migrate.py
+b87ed5851f33  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/attest.py
+cb807a799326  project-trajectory/scripts/attest.py == project-trajectory/scripts/derive_gate.py
+cd8df88185e2  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/schedule.py
+d197495619aa  project-trajectory/scripts/attest.py == project-trajectory/scripts/plan_briefs.py
+d197495619aa  project-trajectory/scripts/attest.py == project-trajectory/scripts/trunk_step.py
+d7ade64a48fa  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/integrate.py
+e479393e60d0  project-trajectory/scripts/attest.py == project-trajectory/scripts/attest.py
+e8e9f301fe93  project-trajectory/scripts/config_migrate.py == project-trajectory/scripts/config_migrate.py
+f34060b64afe  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/check_figures.py
+f34060b64afe  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/check_trajectory.py
+f34060b64afe  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/derive_gate.py
+f34060b64afe  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/gen_okf.py
+f9dc8da90ca5  project-trajectory/scripts/attest.py == project-trajectory/scripts/intake.py
+fcbf00f3fd33  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/outcome.py

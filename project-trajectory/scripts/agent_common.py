@@ -567,8 +567,14 @@ WI_TOKEN_RE = re.compile(r"^WI-\d+$")
 # won't-build half respelled `cancelled` and given its own folder by WI-384).
 # Mirrors check_trajectory.TERMINAL_STATUSES, kept inline here rather than
 # imported: the F5 self-contained-script rule keeps agent_common stdlib-only (it
-# never pulls a sibling engine). A worker must never build a WI in either state.
-TERMINAL_STATUSES = ("done", "cancelled")
+# never pulls a sibling engine). A worker must never build a WI in any of them.
+# `partial` joins the two (SR-151): an ATTEMPTED item is as terminal as a
+# shipped or cancelled one, and the remaining scope enters the queue as a
+# successor with its own id. Terminality on the READ side is what removes the
+# need for a blocking marker — the old return parked the row with a self-
+# `blockref` and a human had to clear it, which is how one lane could claim,
+# hand back and re-claim the same WI forever.
+TERMINAL_STATUSES = ("done", "cancelled", "partial")
 
 
 def sanitize_train(name):
@@ -673,6 +679,14 @@ SPEC_LISTS = (("SR-Refs", "sr_refs"), ("Predecessors", "needs"))
 # only the `disposition = "retired"` spelling this row deleted — so the word
 # itself moved. `active/<branch>/` sits one level deeper, so the status is the
 # FIRST path component, never the file's parent directory.
+# `partial/` is the THIRD terminal (SR-148..SR-151; decision D-2 supersedes the
+# `returned/` name docs/handback-contract.md §5 proposed): an attempt that
+# stopped, whose remaining scope re-enters the queue as a SUCCESSOR carrying its
+# own id — never as this row revived. Like `draft/` it must be declared in ALL
+# THREE copies of this table at once, because a folder declared in two of the
+# three is SKIPPED by the third reader: its specs never enter that reader's
+# registry, so the duplicate-id guard and the dashboard go blind to the ids they
+# hold (docs/concurrency-v2.md §B3).
 SPEC_STATUS_DIRS = {
     "draft": "draft",
     "queued": "queued",
@@ -680,6 +694,7 @@ SPEC_STATUS_DIRS = {
     "deferred": "deferred",
     "cancelled": "cancelled",
     "complete": "done",
+    "partial": "partial",
 }
 # The inert EXAMPLE spec's filename prefix (the `-000` rule, applied to the
 # folder home): scaffolded documentation, never a registry entry that decides

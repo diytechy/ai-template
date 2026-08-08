@@ -472,7 +472,14 @@ STATION_GEOM = {
     "colR": 750.0,  # right column x — lane build / outcomes / station refresh
     "rowT": 70.0,  # top-row card centers
     "rowB": 420.0,  # bottom-row card centers
-    "oy": (175.0, 245.0, 315.0),  # outcome-card centers, top -> bottom
+    # Outcome-card centers are DERIVED from how many outcomes integrate declares
+    # (see `_outcome_ys`), not listed: the count moved from three to four when
+    # `partial/` landed, and a hardcoded tuple silently drops the extra card —
+    # the render still validates, so nothing reds and the dashboard just stops
+    # telling the truth. `oyband` is the vertical span the fan may use, and
+    # `oygap` the preferred spacing inside it.
+    "oyband": (140.0, 350.0),  # outermost outcome-card centers the fan may reach
+    "oygap": 70.0,  # preferred spacing; compressed only when the band fills up
     "iy": 245.0,  # intake-mint card center (left column midpoint)
     "cardw": 176.0,  # station-card width
     "cardh": 62.0,  # station-card height (title + two note lines)
@@ -513,6 +520,72 @@ def _outcome_cards():
     for status_dir, outcome in integrate.OUTCOME_DIRS.items():
         by_outcome.setdefault(outcome, []).append(status_dir)
     return [(outcome, sorted(dirs)) for outcome, dirs in sorted(by_outcome.items())]
+
+
+def _outcome_ys(n):
+    """The `n` outcome-card centers, top -> bottom, centered in the declared band.
+
+    Spacing is the preferred gap until the band fills, then it compresses to fit
+    — so the fan grows with the outcome vocabulary instead of silently truncating
+    at whatever count the layout was hand-tuned for. At n=3 this reproduces the
+    hand-tuned (175, 245, 315) exactly, which is why the change is a
+    generalisation rather than a re-layout.
+    """
+    g = STATION_GEOM
+    lo, hi = g["oyband"]
+    if n <= 1:
+        return [(lo + hi) / 2.0]
+    gap = min(g["oygap"], (hi - lo) / (n - 1))
+    mid = (lo + hi) / 2.0
+    first = mid - gap * (n - 1) / 2.0
+    return [first + gap * i for i in range(n)]
+
+
+def _outcome_fan(outcomes, oy, R, T, B, h):
+    """The lane-build -> outcome -> station-refresh fan, one pair of edges per
+    declared outcome.
+
+    The shape is the hand-tuned one and is preserved exactly at three outcomes:
+    the FIRST outcome drops straight down out of the build card, the LAST rises
+    straight into the refresh, and every outcome between them bows — left on the
+    way in, right on the way out — each a little wider than the one above it so
+    the curves do not overlap. Expressing that as a rule instead of six literal
+    edges is what lets a fourth outcome (`partial/`) appear at all: the literals
+    indexed [0..2] and simply stopped drawing anything past the third.
+    """
+    edges = []
+    last = len(outcomes) - 1
+    for i, (name, _dirs) in enumerate(outcomes):
+        if i == 0:
+            edges.append(_st_edge("build-" + name, R, T + h / 2, R, oy[0] - 27.0))
+        else:
+            edges.append(
+                _st_edge(
+                    "build-" + name,
+                    R - 88.0,
+                    T + 16.0 + 10.0 * (i - 1),
+                    R - 89.0,
+                    oy[i],
+                    qx=585.0 - 25.0 * (i - 1),
+                    qy=170.0 + 36.0 * (i - 1),
+                )
+            )
+    for i, (name, _dirs) in enumerate(outcomes):
+        if i == last:
+            edges.append(_st_edge(name + "-refresh", R, oy[last] + 22.0, R, B - 36.0))
+        else:
+            edges.append(
+                _st_edge(
+                    name + "-refresh",
+                    R + 84.0,
+                    oy[i],
+                    R + 68.0 - 32.0 * i,
+                    B - 36.0,
+                    qx=898.0 - 18.0 * i,
+                    qy=282.0 + 35.0 * i,
+                )
+            )
+    return edges
 
 
 def _station_card(key, title, notes, href, cx, cy, w, h):
@@ -587,8 +660,8 @@ def _station_svg(root):
     T, B, iy = g["rowT"], g["rowB"], g["iy"]
     w, h = g["cardw"], g["cardh"]
     ow, oh = g["outw"], g["outh"]
-    oy = g["oy"]
     outcomes = _outcome_cards()
+    oy = _outcome_ys(len(outcomes))
     bar_label = integrate.BAR_GREEN.rstrip(":")
 
     # The ring edges + the outcome fan, one closed directed cycle. Anchors are
@@ -596,44 +669,6 @@ def _station_svg(root):
     edges = [
         _st_edge("tick-claim", L + 93.0, T, M - 93.0, T),
         _st_edge("claim-build", M + 88.0, T, R - 93.0, T),
-        _st_edge("build-{}".format(outcomes[0][0]), R, T + h / 2, R, oy[0] - 27.0),
-        _st_edge(
-            "build-{}".format(outcomes[1][0]),
-            R - 88.0,
-            T + 16.0,
-            R - 89.0,
-            oy[1],
-            qx=585.0,
-            qy=170.0,
-        ),
-        _st_edge(
-            "build-{}".format(outcomes[2][0]),
-            R - 88.0,
-            T + 26.0,
-            R - 89.0,
-            oy[2],
-            qx=560.0,
-            qy=206.0,
-        ),
-        _st_edge(
-            "{}-refresh".format(outcomes[0][0]),
-            R + 84.0,
-            oy[0],
-            R + 68.0,
-            B - 36.0,
-            qx=898.0,
-            qy=282.0,
-        ),
-        _st_edge(
-            "{}-refresh".format(outcomes[1][0]),
-            R + 84.0,
-            oy[1],
-            R + 36.0,
-            B - 36.0,
-            qx=880.0,
-            qy=317.0,
-        ),
-        _st_edge("{}-refresh".format(outcomes[2][0]), R, oy[2] + 22.0, R, B - 36.0),
         _st_edge("refresh-slot", R - 88.0, B, M + 93.0, B),
         _st_edge("slot-advance", M - 88.0, B, L + 93.0, B),
         _st_edge("advance-intake", L, B - h / 2, L, iy + 36.0),
@@ -650,6 +685,7 @@ def _station_svg(root):
             alt=True,
         ),
     ]
+    edges[2:2] = _outcome_fan(outcomes, oy, R, T, B, h)
 
     # The spine barrier, drawn as a gate ON the admission edge (tick -> claim):
     # an exclusive-kind row stops new admission until the station is idle.

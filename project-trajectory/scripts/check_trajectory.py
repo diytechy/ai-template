@@ -191,13 +191,17 @@ WI_ID_RE = re.compile(r"^WI-\d+$")
 # DIRECTORY (an unknown one is a loader refusal) and `blocked` is DERIVED
 # (queued + blockref) rather than a status; the literal stays in these sets so
 # in-memory callers keep their meaning, but no loader can produce it.
-# "Open" = anything still in flight (not one of the two TERMINAL states).
+# "Open" = anything still in flight (not one of the three TERMINAL states).
+# `partial` is deliberately ABSENT here: an attempted item is not in flight and
+# never returns to the frontier (SR-151) — what carries the remaining scope is a
+# newly identified successor, so treating the attempt as open would revive it.
 OPEN_STATUSES = ("draft", "queued", "active", "deferred", "blocked")
-# The terminal states: no further build/trace work is owed. Both require a filled
-# `Deliverable` (the shipped record for `done`; the cancellation reason for
-# `cancelled`) and both must clear their `SpecRef` (R-A + R-F below). `cancelled`
-# is deliberately NOT in OPEN_STATUSES / BACKLOG_STALE_STATUSES / the frontier.
-TERMINAL_STATUSES = ("done", "cancelled")
+# The terminal states: no further build/trace work is owed. Each requires a
+# filled `Deliverable` (the shipped record for `done`; the cancellation reason
+# for `cancelled`; what the attempt reached and did not reach for `partial`) and
+# each must clear its `SpecRef` (R-A + R-F below). None of the three is in
+# OPEN_STATUSES / BACKLOG_STALE_STATUSES / the frontier.
+TERMINAL_STATUSES = ("done", "cancelled", "partial")
 KNOWN_STATUSES = (
     "draft",
     "queued",
@@ -376,6 +380,14 @@ SPEC_LISTS = (("SR-Refs", "sr_refs"), ("Predecessors", "needs"))
 # only the `disposition = "retired"` spelling this row deleted — so the word
 # itself moved. `active/<branch>/` sits one level deeper, so the status is the
 # FIRST path component, never the file's parent directory.
+# `partial/` is the THIRD terminal (SR-148..SR-151; decision D-2 supersedes the
+# `returned/` name docs/handback-contract.md §5 proposed): an attempt that
+# stopped, whose remaining scope re-enters the queue as a SUCCESSOR carrying its
+# own id — never as this row revived. Like `draft/` it must be declared in ALL
+# THREE copies of this table at once, because a folder declared in two of the
+# three is SKIPPED by the third reader: its specs never enter that reader's
+# registry, so the duplicate-id guard and the dashboard go blind to the ids they
+# hold (docs/concurrency-v2.md §B3).
 SPEC_STATUS_DIRS = {
     "draft": "draft",
     "queued": "queued",
@@ -383,6 +395,7 @@ SPEC_STATUS_DIRS = {
     "deferred": "deferred",
     "cancelled": "cancelled",
     "complete": "done",
+    "partial": "partial",
 }
 # The inert EXAMPLE spec's filename prefix (the `-000` rule, applied to the
 # folder home): scaffolded documentation, never a registry entry that decides

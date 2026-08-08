@@ -46,6 +46,7 @@ graph LR
     m_scripts_agent_loop["scripts/agent_loop — Headless session engine: one claimed worker ass…"]
     m_scripts_agent_route["scripts/agent_route — Model routing for the unattended coordinator — …"]
     m_scripts_agent_session["scripts/agent_session — One headless agent session: argv/stdin construc…"]
+    m_scripts_attest["scripts/attest — attest.py — what the spine's text was last APPR…"]
     m_scripts_bootstrap["scripts/bootstrap — Scaffold a new project from this trajectory kit."]
     m_scripts_check["scripts/check — The check harness — one command that runs every…"]
     m_scripts_check_coverage["scripts/check_coverage — Per-module coverage floors: stop the global flo…"]
@@ -59,6 +60,9 @@ graph LR
     m_scripts_check_stubs["scripts/check_stubs — No-stub / substance detector: flag implementati…"]
     m_scripts_check_trajectory["scripts/check_trajectory — Validate the work-item registry — stdlib only."]
     m_scripts_check_vendored["scripts/check_vendored — Drift check for vendored third-party docs (stdl…"]
+    m_scripts_config["scripts/config — The one editable authority for how a repo BEHAV…"]
+    m_scripts_config_migrate["scripts/config_migrate — Convert the retired one-word policy files into …"]
+    m_scripts_config_query["scripts/config_query — Answer ONE declared configuration key, for call…"]
     m_scripts_derive_gate["scripts/derive_gate — Derive the active gate from artifact states — t…"]
     m_scripts_dispatch["scripts/dispatch — dispatch.py — the dispatcher: tick loop, admiss…"]
     m_scripts_gen_arch_map["scripts/gen_arch_map — Generate the module/function map for `architect…"]
@@ -72,6 +76,7 @@ graph LR
     m_scripts_intake["scripts/intake — intake.py — the unified trunk-side intake mint …"]
     m_scripts_integrate["scripts/integrate — integrate.py — the local integrator: the statio…"]
     m_scripts_lane["scripts/lane — lane.py — one lane's mechanics (docs/concurrenc…"]
+    m_scripts_outcome["scripts/outcome — outcome.py — an attempt's own identity: the fro…"]
     m_scripts_plan_artifacts["scripts/plan_artifacts — The dual-plan round artifact filer: the coordin…"]
     m_scripts_plan_briefs["scripts/plan_briefs — Redacted dual-plan brief assembler + the three …"]
     m_scripts_plan_coverage["scripts/plan_coverage — Dual-plan coverage pre-pass: make rival WI deco…"]
@@ -102,8 +107,13 @@ graph LR
     m_scripts_agent_loop --> m_scripts_plan_round
     m_scripts_agent_loop --> m_scripts_plan_runner
     m_scripts_agent_loop --> m_scripts_score_reviews
+    m_scripts_attest --> m_scripts_config
+    m_scripts_bootstrap --> m_scripts_config_migrate
     m_scripts_check_figures --> m_scripts_check_doc_refs
     m_scripts_check_trajectory --> m_scripts_check_docs
+    m_scripts_config_migrate --> m_scripts_config
+    m_scripts_config_query --> m_scripts_config
+    m_scripts_derive_gate --> m_scripts_attest
     m_scripts_dispatch --> m_scripts_agent_common
     m_scripts_dispatch --> m_scripts_gen_trajectory
     m_scripts_dispatch --> m_scripts_handback
@@ -131,6 +141,7 @@ graph LR
     m_scripts_intake --> m_scripts_wi_convert
     m_scripts_integrate --> m_scripts_agent_common
     m_scripts_integrate --> m_scripts_intake
+    m_scripts_integrate --> m_scripts_outcome
     m_scripts_integrate --> m_scripts_schedule
     m_scripts_integrate --> m_scripts_score_reviews
     m_scripts_integrate --> m_scripts_spec_move
@@ -368,8 +379,44 @@ Contracts (interfaces): IF-041, IF-064
 | `  methods` | event · finish |  |
 | `run_session(argv, root, timeout, env, on_line, stdin_input)` | One fresh headless driver session. Returns (exit_code, output, | SN-016 |
 
+### `scripts/attest`
+_attest.py — what the spine's text was last APPROVED TO SAY, kept as evidence._
+Imports (internal): `config`
+
+| Public item | Summary | Implements |
+|---|---|---|
+| `canonical_cell(value)` | One cell reduced to its MEANING-BEARING form (contracts §4), in order: | LLR-163 |
+| `row_id(kind, row)` | The artifact id in `row`, refusing a kind this module has no cell list for |  |
+| `normative_digest(kind, row)` | The SHA-256 hex of one artifact's declared normative cells, canonicalised. |  |
+| `is_example(rid)` |  |  |
+| `load_csv(path)` |  |  |
+| `sn_rows(text)` | The SN table rows of stakeholder-needs.md as `{SN-ID, Need, Why, Priority, |  |
+| `load_artifacts(docs)` | `{kind: [row, ...]}` for the four tiers under `docs`, example rows excluded. |  |
+| `events_dir(root)` | `<root>/docs/events` — outside `docs/work/` so `agent_common.spec_files`' | LLR-164 |
+| `ledger_path(root, kind)` |  |  |
+| `event_id(payload)` | The first 16 hex of the SHA-256 of the canonical payload with `id` and |  |
+| `chain_key(event)` | The chain one event belongs to: `(artifact_kind, artifact_id)`. Review |  |
+| `chain_map(events)` | `{chain_key: [event, ...]}`, each list oldest-first — the replay index |  |
+| `read_events(path)` | Every event in one ledger, oldest first, each verified. |  |
+| `append_event(root, event, ts)` | Append one event to its ledger and return it, stamped with `id` and `ts`. |  |
+| `attestation_event(kind, rid, digest, decision, parent, by, **extra)` | One well-formed attestation event. Built here rather than at each call |  |
+| `review_request_event(reason, by, parent, scope, **extra)` |  |  |
+| `review_decision_event(request, verdict, by, parent, scope, **extra)` |  |  |
+| `is_accepting(event)` | True when this event ACCEPTS the digest it names: `ratified`, `clarity`, |  |
+| `anchor_in(chain)` | The newest accepting event in one chain, or None — 'what the current |  |
+| `accepted_anchor(root, kind, rid)` | The accepted anchor for one artifact, read from the ledger under `root`. |  |
+| `chain_state(chain, digest)` | What one chain says about the CURRENT text: accepted / pending / changed / |  |
+| `detect_candidates(root, docs)` | Every artifact whose current normative text is not accepted, tier order. |  |
+| `review_requests(root)` | The OPEN full-spine review requests, derived by replaying the ledger. | SR-144 |
+| `full_spine_block(root, policy)` | Why the full-spine checkpoint is blocked, or None. |  |
+| `boundary_from_config(root)` | `[attestation] human_ratification_through` from `docs/config.toml`, or the | LLR-162 |
+| `requires_human(tier_index, boundary)` | True when a ratification at `tier_index` owes a HUMAN decision. |  |
+| `seed(root, docs, by, ts)` | Write a `ratified` anchor for every current spine row that has none. |  |
+| `main(argv)` |  |  |
+
 ### `scripts/bootstrap`
 _Scaffold a new project from this trajectory kit._
+Imports (internal): `config_migrate`
 Contracts (interfaces): IF-014, IF-039
 
 | Public item | Summary | Implements |
@@ -388,6 +435,7 @@ Contracts (interfaces): IF-014, IF-039
 | `prompt_text(prompt, default)` | Free-text prompt on a TTY; `default` when stdin isn't interactive |  |
 | `apply_gate_policy(dest, level, dry_run)` | Write a non-default gate-authority level: set docs/gate-policy (keeping |  |
 | `apply_push_policy(dest, policy, dry_run)` | Write a non-default push policy into docs/push-policy, keeping the |  |
+| `sync_config(dest, dry_run)` | `docs/config.toml` — the one file a re-sync must never touch (SR-141). | SR-141 |
 | `apply_privacy_check(dest, value, dry_run)` | Write the privacy-check toggle into docs/privacy-check, keeping the |  |
 | `profile_stub(axis)` | The resolvable one-liner an omitted profile region leaves behind: the |  |
 | `strip_markers(text, omit, where)` | Generate a scaffold doc from a master: drop kit-only regions, keep or |  |
@@ -658,8 +706,50 @@ Contracts (interfaces): IF-016, IF-036
 | `content_digest(data)` | The sha256 of `data` as CONTENT: CRLF and lone CR collapse to LF for text, |  |
 | `main()` |  |  |
 
+### `scripts/config`
+_The one editable authority for how a repo BEHAVES — `docs/config.toml`._
+
+| Public item | Summary | Implements |
+|---|---|---|
+| `Section (class)` | One config table read as attributes. |  |
+| `Config (class)` | The typed model of one `docs/config.toml`. |  |
+| `  methods` | get · as_dict |  |
+| `validate(document, path)` | `(Config, [Finding])` for an already-parsed TOML mapping. |  |
+| `config_path(root)` | `<root>/docs/config.toml` as a Path, built from parts so no separator is |  |
+| `load_config(root)` | `(Config, [Finding])` for the repo at `root`. |  |
+| `explicit_keys(root)` | The dotted paths a repo's `docs/config.toml` actually SETS. |  |
+| `mixed_source_findings(root)` | One finding per canonical key whose retired declared-policy source is | SR-138 |
+| `refusal_lines(findings, module)` | The printable refusal for each finding, in the kit's one refusal shape: |  |
+
+### `scripts/config_migrate`
+_Convert the retired one-word policy files into `docs/config.toml`._
+Imports (internal): `config`
+
+| Public item | Summary | Implements |
+|---|---|---|
+| `declared_line(path)` | The first non-empty, non-comment line of a declared-policy file, or None. |  |
+| `ini_value(path, section, key)` | One `key = value` of one `[section]` of an INI-ish file, or None. |  |
+| `routes_from_csv(path, report)` | `docs/agents.csv` rows -> `[[routes]]` tables. |  |
+| `enabled_pools(path, report)` | `docs/agents-enabled` -> the per-job weighted pools. |  |
+| `render_template()` | The shipped blank form: the schema version, then every declared dial as a |  |
+| `render_document(values, routes, pools, converted, report)` | The converted document: only what a retired source actually declared, |  |
+| `convert(root, *, write)` | `(document, unmapped_report)` for the repo at `root`. | TC-154 |
+| `main(argv)` |  |  |
+
+### `scripts/config_query`
+_Answer ONE declared configuration key, for callers that cannot parse TOML._
+Imports (internal): `config`
+
+| Public item | Summary | Implements |
+|---|---|---|
+| `floor_refusal(version)` | The refusal string when `version` (default: this interpreter's |  |
+| `render(value)` | The printable form of a resolved value: `true`/`false` for booleans (the |  |
+| `parse_args(argv)` | `(root, key, error)` from the tiny hand-rolled command line. Hand-rolled |  |
+| `main(argv)` |  |  |
+
 ### `scripts/derive_gate`
 _Derive the active gate from artifact states — the hybrid, cached gate._
+Imports (internal): `attest`
 Contracts (interfaces): IF-050, IF-051
 
 | Public item | Summary | Implements |
@@ -678,8 +768,10 @@ Contracts (interfaces): IF-050, IF-051
 | `maturity_gate(row)` | An LLR/TC caps the gate only when it is Draft (G0 — the new-phase signal). |  |
 | `is_modified(row)` | The post-attestation `Modified` state (WI-316, process.md §7): content |  |
 | `sn_gate(sn_id, draft_ids, cited_ids)` | A Draft SN (section-as-state) is G0 — and that is the ONLY rung that fires |  |
+| `verification_gate_for(stage)` | The verification gate a spine stage maps to (decisions §3's table). |  |
+| `spine_stage(docs)` | The lowest spine tier still in process (0..4), or None when unknowable. | SN-008 |
 | `compute(docs)` | Derive the gate from the spine registries under `docs`. Returns a result |  |
-| `basis_line(result)` | The single, deterministic `# basis:` comment line compared by --check |  |
+| `basis_line(result)` | The single, deterministic `# basis:` comment line compared by --check | SR-143 |
 | `render_cache(result, as_of, date)` | The full docs/gate file text: static header, the compared `# basis:` line, |  |
 | `parse_cache(text)` | `(gate_value, basis_line)` from a cached docs/gate: the first non-comment |  |
 | `main()` |  |  |
@@ -832,7 +924,7 @@ Contracts (interfaces): IF-090, IF-091, IF-092
 
 ### `scripts/integrate`
 _integrate.py — the local integrator: the station protocol and its merge slot._
-Imports (internal): `agent_common`, `intake`, `schedule`, `score_reviews`, `spec_move`
+Imports (internal): `agent_common`, `intake`, `outcome`, `schedule`, `score_reviews`, `spec_move`
 
 | Public item | Summary | Implements |
 |---|---|---|
@@ -863,6 +955,29 @@ Imports (internal): `agent_common`, `integrate`
 | `spawn_worker(root, branch, wi_ids, args)` | Launch one worker session loop on the claimed branch's worktree, |  |
 | `run_worker(root, branch, wi_ids, args)` | The BLOCKING worker launch — `spawn_worker` waited to completion, with |  |
 | `spawn_refresh(root, branch, tier)` | The §A2 station refresh for `branch`, NON-blocking: a Popen running |  |
+
+### `scripts/outcome`
+_outcome.py — an attempt's own identity: the frozen scope, the immutable_
+
+| Public item | Summary | Implements |
+|---|---|---|
+| `parse_spec(spec_text)` | `(frontmatter dict, body)` for one spec's text. |  |
+| `scope_regions(spec_text)` | The frozen region of one spec, as `{region name: canonical value}`. |  |
+| `scope_digest(spec_text)` | The 16-hex digest of a spec's frozen scope region (LLR-172). | LLR-172 |
+| `scope_diff(claim_text, terminal_text)` | The frozen regions that differ between two versions of one spec, sorted. |  |
+| `scope_change(claim_text, terminal_text)` | The frozen regions a terminal move actually changed: `scope_diff` with |  |
+| `event_id(payload)` | The content-derived event id (contracts §2): the first 16 hex of the |  |
+| `read_events(path)` | Every event in one ledger, in file order; `[]` when the file is absent. |  |
+| `append_event(path, payload)` | Stamp `payload` with its derived id and append it as one ledger line. |  |
+| `write_outcome(root, wi, outcome, claim_base, branch_tip, scope, ts, ledger, **facts)` | Append the ONE outcome event for one attempt: `(event, [refusals])`. | SR-151 |
+| `normalise_failure(root, output)` | A harness failure's OBSERVER-INVARIANT form — the fingerprint's input. |  |
+| `failure_fingerprint(root, output)` | The 16-hex fingerprint of a normalised failure. |  |
+| `failure_event(root, tree, step, output, gate, ts, ledger)` | Mint the ONE remediation event for one red bar: `(event, [refusals])`. |  |
+| `diff_records(fields)` | `--name-status -z` fields as `[(status, [paths])]`, or None if truncated. |  |
+| `group_key(paths)` | The change group one diff record belongs to: its directory, posix, `"."` |  |
+| `branch_groups(root, branch, base)` | `(groups, refusal)` — the branch's changes against `base`, grouped. |  |
+| `classify_groups(root, branch, labels, base)` | LLR-175: group the branch's changes and demand a label for each. | LLR-175 |
+| `apply_classification(wt, base, branch, groups, labels, artefacts)` | Enact a complete classification in worktree `wt`: `(actions, [refusals])`. |  |
 
 ### `scripts/plan_artifacts`
 _The dual-plan round artifact filer: the coordinator's write-side of a round_

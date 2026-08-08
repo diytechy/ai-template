@@ -249,6 +249,14 @@ SPEC_LISTS = (("SR-Refs", "sr_refs"), ("Predecessors", "needs"))
 # only the `disposition = "retired"` spelling this row deleted — so the word
 # itself moved. `active/<branch>/` sits one level deeper, so the status is the
 # FIRST path component, never the file's parent directory.
+# `partial/` is the THIRD terminal (SR-148..SR-151; decision D-2 supersedes the
+# `returned/` name docs/handback-contract.md §5 proposed): an attempt that
+# stopped, whose remaining scope re-enters the queue as a SUCCESSOR carrying its
+# own id — never as this row revived. Like `draft/` it must be declared in ALL
+# THREE copies of this table at once, because a folder declared in two of the
+# three is SKIPPED by the third reader: its specs never enter that reader's
+# registry, so the duplicate-id guard and the dashboard go blind to the ids they
+# hold (docs/concurrency-v2.md §B3).
 SPEC_STATUS_DIRS = {
     "draft": "draft",
     "queued": "queued",
@@ -256,6 +264,7 @@ SPEC_STATUS_DIRS = {
     "deferred": "deferred",
     "cancelled": "cancelled",
     "complete": "done",
+    "partial": "partial",
 }
 # The inert EXAMPLE spec's filename prefix (the `-000` rule, applied to the
 # folder home): scaffolded documentation, never a registry entry that decides
@@ -765,9 +774,17 @@ def _exclusive_conflicts(wis, status, reserved):
 # Terminal statuses map straight to a not-in-the-frontier disposition + its own
 # reason code (WI-267): `cancelled` is as final as `done` — never ready, never
 # packed — but keeps a distinct code so the dead-end is legible in --explain.
+# `partial` (SR-151) joins them, and THIS TABLE is where the requirement is
+# met: terminality read here is what makes "an attempted work item never
+# returns to the frontier" a property of the loader plus one lookup, instead of
+# a `blockref` park somebody has to remember to leave behind and a human has to
+# remember to clear. Its own code, for the same legibility reason — `--explain`
+# must be able to say *attempted*, not just *not ready*.
+_PARTIAL = "partial"
 _TERMINAL_DISPOSITION = {
     _DONE: ("done", "done:integrated"),
     _CANCELLED: ("cancelled", "cancelled:terminal-wont-build"),
+    _PARTIAL: ("partial", "partial:terminal-attempted"),
 }
 
 
@@ -787,11 +804,19 @@ def _waiting_reasons(wi, status):
 
 def _disposition(wi, status, reserved, concurrency, class_reasons, exclusive_ready):
     """`(disposition, [reason_codes])` for one WI: ready | waiting | reserved |
-    blocked | deferred | draft | done | cancelled | excluded. The reason list is
-    its own codes; the classifier's reason is carried only where classification
-    decides the outcome (`ready` shows why eligible, `unclassified` shows the
-    fail-closed cause) — never as noise on a blocked/deferred/reserved/waiting
-    item."""
+    blocked | deferred | draft | done | cancelled | partial | excluded. The
+    reason list is its own codes; the classifier's reason is carried only where
+    classification decides the outcome (`ready` shows why eligible,
+    `unclassified` shows the fail-closed cause) — never as noise on a
+    blocked/deferred/reserved/waiting item.
+
+    LLR-176: the three TERMINAL states are answered by one table lookup at the
+    TOP of the ladder, before readiness is considered at all — so no rung below
+    can return `ready` for an attempted item, whatever its predecessors,
+    reservations or classification say. That ordering is the requirement, not a
+    convenience: an attempted item that reached the predecessor rung could be
+    made ready again by an unrelated edit, which is the revival SR-151 forbids.
+    """
     st = wi["status"]
     if st in _TERMINAL_DISPOSITION:
         disposition, code = _TERMINAL_DISPOSITION[st]

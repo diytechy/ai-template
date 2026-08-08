@@ -1,0 +1,277 @@
+# docs/config.toml — the single configuration authority.
+#
+# CONVERTED from this repo's retired declared-policy files by
+# scripts/config_migrate.py. Only keys a retired source actually
+# declared appear below; every other dial resolves to its schema
+# default (scripts/config.py SCHEMA — see config.toml.template for the
+# full commented list). Adopter-owned: a kit re-sync never overwrites
+# this file.
+#
+# Converted sources — each of these is STILL PRESENT in the tree,
+# so `config.mixed_source_findings` reports every key below as
+# double-declared until the retired file is deleted. That is the
+# expected transitional state, and the refusal binds at the cutover:
+# no runtime reader consults this file yet.
+#   docs/push-policy
+#   docs/review-policy
+#   docs/privacy-check
+#   docs/guardrails-policy
+#   docs/agents.csv
+#   docs/agents-enabled
+#
+# NOT CONVERTED — each of these needs a human decision. Nothing
+# below was guessed; the values are simply absent until chosen:
+#   docs/gate-policy: 'autonomous' autonomous permitted NO early human
+#   checkpoint, while the boundary is inclusive and its lowest value (0)
+#   still keeps stakeholder needs with the human — so there is no value that
+#   means what autonomous meant
+#     candidates: attestation.human_ratification_through = 0; attestation.final_full_spine_review = "never"
+#   docs/agents.csv: 'capabilities' the registry has no capability column,
+#   so every converted route carries an empty list — fill it before routing
+#   binds
+#     candidates: routes.capabilities
+#   docs/stack.ini [agent-loop]: 'model = opus' has no canonical key: the
+#   fallback model dials stay an AGENT_* / stack.ini concern until routing
+#   binds
+#   docs/stack.ini [agent-loop]: 'model-map =
+#   PLAN=opus,BUILD=opus,REVIEW-A=opus,REVIEW-B=opus,DESIGN-
+#   CHECK=opus,CRITIQUE=opus' has no canonical key: the fallback model dials
+#   stay an AGENT_* / stack.ini concern until routing binds
+
+schema = 1
+
+[policy]
+# Who may publish this repo: human (an agent never pushes), agent-iteration
+# (the scrubbed iteration branch only), or agent.
+push = "human"
+# Run the privacy gate: author identity and committed content are scanned
+# for PII / identity leak classes.
+privacy_check = false
+# Independent fresh-context review verdicts a completed work item gets
+# before the integrator accepts it.
+review_rounds = 1
+# Which sessions get the vendored guardrails core prepended: off, all, `all
+# except <sub>`, or a model-substring allowlist.
+guardrails = "off"
+
+[routing]
+# Managed model routing. The explicit successor of the consent property
+# docs/agents-enabled carried by mere presence, so it is opt-in: routing is
+# off until this says otherwise.
+enabled = true
+
+[[routes]]
+id = "ANTHROPIC-FABLE"
+family = "ANTHROPIC"
+model = "claude-fable-5"
+strength = 3
+argv = [
+    "claude",
+    "-p",
+    "--model",
+    "{model}",
+    "--output-format",
+    "stream-json",
+    "--verbose",
+    "--dangerously-skip-permissions",
+]
+env = { CLAUDE_CODE_EFFORT_LEVEL = "high" }
+capabilities = []
+notes = "newest Claude frontier family - leads gate-bearing kit work (PLAN/DESIGN-CHECK/CRITIQUE; BUILD relaxed to medium 2026-07-12 evening WI-121); CATALOG-ONLY since 2026-07-22 (owner has no Fable access; dropped from docs/agents-enabled and ANTHROPIC-OPUS-STRONG took the strong slot) - re-add to the enable-list to restore; auth: run claude once interactively (or claude setup-token)"
+
+[[routes]]
+id = "ANTHROPIC-OPUS-STRONG"
+family = "ANTHROPIC"
+model = "opus"
+strength = 3
+argv = [
+    "claude",
+    "-p",
+    "--model",
+    "{model}",
+    "--output-format",
+    "stream-json",
+    "--verbose",
+    "--dangerously-skip-permissions",
+]
+env = { CLAUDE_CODE_EFFORT_LEVEL = "medium" }
+capabilities = []
+notes = "strong tier = Opus (owner directive 2026-07-22: Fable temporarily inaccessible, so Opus takes the strong Anthropic slot, matching the medium ANTHROPIC-OPUS row - one model x two tier-routes, the pair-row model); PLAN/DESIGN-CHECK/CRITIQUE ride here; effort dialed to medium (owner directive 2026-08-02, for the small well-scoped queue; was xhigh from WI-331 2026-07-29) - NOTE this now sits BELOW the medium ANTHROPIC-OPUS row's high, so the effort ladder is inverted against the tier ladder; bump back to high if review quality regresses; auth: run claude once interactively"
+
+[[routes]]
+id = "ANTHROPIC-OPUS"
+family = "ANTHROPIC"
+model = "opus"
+strength = 2
+argv = [
+    "claude",
+    "-p",
+    "--model",
+    "{model}",
+    "--output-format",
+    "stream-json",
+    "--verbose",
+    "--dangerously-skip-permissions",
+]
+env = { CLAUDE_CODE_EFFORT_LEVEL = "high" }
+capabilities = []
+notes = "medium tier (owner re-lineup 2026-07-12); BUILD + iteration reviews ride here (BUILD since the 2026-07-12-evening dial turn WI-121; tier-up escalation re-raises to strong); effort re-swept to high at WI-331 (2026-07-29): the WI-110 xhigh dial-up predated the current model generation, and effort is the primary cost/latency lever (the strong row's own xhigh was later dialed to medium by owner directive 2026-08-02, so this row now draws MORE effort than the strong row - see the header note); WI-124 s/turn telemetry is the sensor if BUILD quality regresses; auth: run claude once interactively"
+
+[[routes]]
+id = "ANTHROPIC-SONNET"
+family = "ANTHROPIC"
+model = "sonnet"
+strength = 1
+argv = [
+    "claude",
+    "-p",
+    "--model",
+    "{model}",
+    "--output-format",
+    "stream-json",
+    "--verbose",
+    "--dangerously-skip-permissions",
+]
+env = { CLAUDE_CODE_EFFORT_LEVEL = "high" }
+capabilities = []
+notes = "quick tier; the tier guardrails would guard once a core is vendored (docs/guardrails-policy)"
+
+[[routes]]
+id = "OPENAI-SOL"
+family = "OPENAI"
+model = "gpt-5.6-sol"
+strength = 3
+argv = [
+    "codex",
+    "exec",
+    "--model",
+    "{model}",
+    "--dangerously-bypass-approvals-and-sandbox",
+]
+env = {}
+capabilities = []
+notes = "GPT-5.6 flagship (Sol) - the strong-tier cross-family draw (its WI-160 preferred-BUILD pin was retired by the owner directive 2026-07-19: Anthropic leads BUILD per tier); provider CLI (codex) replaces opencode for the OPENAI family (WI-160); install: npm i -g @openai/codex; sign in: codex login"
+
+[[routes]]
+id = "OPENAI-TERRA"
+family = "OPENAI"
+model = "gpt-5.6-terra"
+strength = 2
+argv = [
+    "codex",
+    "exec",
+    "--model",
+    "{model}",
+    "--dangerously-bypass-approvals-and-sandbox",
+]
+env = {}
+capabilities = []
+notes = "GPT-5.6 balanced (Terra) - the cross-family review leg; provider CLI (codex) replaces opencode (WI-160); install: npm i -g @openai/codex; sign in: codex login"
+
+[[routes]]
+id = "OPENAI-LUNA"
+family = "OPENAI"
+model = "gpt-5.6-luna"
+strength = 1
+argv = [
+    "codex",
+    "exec",
+    "--model",
+    "{model}",
+    "--dangerously-bypass-approvals-and-sandbox",
+]
+env = {}
+capabilities = []
+notes = "GPT-5.6 fast/affordable (Luna); provider CLI (codex) replaces opencode (WI-160); install: npm i -g @openai/codex; sign in: codex login"
+
+[[routes]]
+id = "OPENCODE-KIMI"
+family = "OPENCODE"
+model = "opencode-go/kimi-k3"
+strength = 3
+argv = ["opencode", "run", "-m", "{model}", "--auto"]
+env = {}
+capabilities = []
+notes = "Kimi K3 (Moonshot; GA 2026-07-16; frontier-class per Artificial Analysis debut) - intended judge/CRITIQUE draw + strong review leg; install: curl -fsSL https://opencode.ai/install | bash (or npm i -g opencode-ai / scoop install opencode); sign in: opencode auth login with MOONSHOT_API_KEY (platform.moonshot.ai; OpenAI-compatible) or OPENROUTER_API_KEY; pathway FULLY verified 2026-07-19 (live PONG via stdin) - ENABLED, see family comment"
+
+[[routes]]
+id = "OPENCODE-GROK"
+family = "OPENCODE"
+model = "opencode-go/grok-4.5"
+strength = 2
+argv = ["opencode", "run", "-m", "{model}", "--auto"]
+env = {}
+capabilities = []
+notes = "Grok 4.5 (xAI; GA 2026-07-16; frontier-class - slotted medium as the reviewer-pool leg per owner intent + Opus-at-medium precedent) - cross-family review leg 3; install: curl -fsSL https://opencode.ai/install | bash; sign in: opencode auth login with XAI_API_KEY (x.ai console; OpenAI-compatible) or OpenRouter (catalog slug confirmed post-auth); pathway FULLY verified 2026-07-19 (live PONG via stdin) - ENABLED, see family comment"
+
+[jobs.planner]
+pool = [
+    { route = "ANTHROPIC-OPUS-STRONG", weight = 1 },
+    { route = "OPENAI-SOL", weight = 1 },
+    { route = "OPENCODE-KIMI", weight = 1 },
+    { route = "ANTHROPIC-OPUS", weight = 1 },
+    { route = "OPENAI-TERRA", weight = 1 },
+    { route = "OPENCODE-GROK", weight = 1 },
+    { route = "ANTHROPIC-SONNET", weight = 1 },
+    { route = "OPENAI-LUNA", weight = 1 },
+]
+
+[jobs.critic]
+pool = [
+    { route = "ANTHROPIC-OPUS-STRONG", weight = 1 },
+    { route = "OPENAI-SOL", weight = 1 },
+    { route = "OPENCODE-KIMI", weight = 1 },
+    { route = "ANTHROPIC-OPUS", weight = 1 },
+    { route = "OPENAI-TERRA", weight = 1 },
+    { route = "OPENCODE-GROK", weight = 1 },
+    { route = "ANTHROPIC-SONNET", weight = 1 },
+    { route = "OPENAI-LUNA", weight = 1 },
+]
+
+[jobs.arbiter]
+pool = [
+    { route = "ANTHROPIC-OPUS-STRONG", weight = 1 },
+    { route = "OPENAI-SOL", weight = 1 },
+    { route = "OPENCODE-KIMI", weight = 1 },
+    { route = "ANTHROPIC-OPUS", weight = 1 },
+    { route = "OPENAI-TERRA", weight = 1 },
+    { route = "OPENCODE-GROK", weight = 1 },
+    { route = "ANTHROPIC-SONNET", weight = 1 },
+    { route = "OPENAI-LUNA", weight = 1 },
+]
+
+[jobs.implementer]
+pool = [
+    { route = "ANTHROPIC-OPUS-STRONG", weight = 1 },
+    { route = "OPENAI-SOL", weight = 1 },
+    { route = "OPENCODE-KIMI", weight = 1 },
+    { route = "ANTHROPIC-OPUS", weight = 1 },
+    { route = "OPENAI-TERRA", weight = 1 },
+    { route = "OPENCODE-GROK", weight = 1 },
+    { route = "ANTHROPIC-SONNET", weight = 1 },
+    { route = "OPENAI-LUNA", weight = 1 },
+]
+
+[jobs.reviewer]
+pool = [
+    { route = "ANTHROPIC-OPUS-STRONG", weight = 1 },
+    { route = "OPENAI-SOL", weight = 1 },
+    { route = "OPENCODE-KIMI", weight = 1 },
+    { route = "ANTHROPIC-OPUS", weight = 1 },
+    { route = "OPENAI-TERRA", weight = 1 },
+    { route = "OPENCODE-GROK", weight = 1 },
+    { route = "ANTHROPIC-SONNET", weight = 1 },
+    { route = "OPENAI-LUNA", weight = 1 },
+]
+
+[jobs.adjudicator]
+pool = [
+    { route = "ANTHROPIC-OPUS-STRONG", weight = 1 },
+    { route = "OPENAI-SOL", weight = 1 },
+    { route = "OPENCODE-KIMI", weight = 1 },
+    { route = "ANTHROPIC-OPUS", weight = 1 },
+    { route = "OPENAI-TERRA", weight = 1 },
+    { route = "OPENCODE-GROK", weight = 1 },
+    { route = "ANTHROPIC-SONNET", weight = 1 },
+    { route = "OPENAI-LUNA", weight = 1 },
+]

@@ -355,24 +355,29 @@ def test_mutation_a_removed_disposition_reds_the_disposition_check():
 
 
 def test_mutation_a_wrong_header_count_reds_the_count_check():
+    # The header line is FOUND, not spelled: the census legitimately re-counts
+    # whenever a class gains or loses a block, and a spelled-out `cli (96 blocks)`
+    # made this proof fail for the one reason it must never fail for — the census
+    # being correctly updated. The mutation is what is under test; which class it
+    # lands on is not.
+    text = CENSUS.read_text(encoding="utf-8")
+    header = next(line for line in text.splitlines() if HEADER_RE.match(line))
+    n = int(HEADER_RE.match(header).group("n"))
     broken = parse_census(
         _mutate(
-            CENSUS.read_text(encoding="utf-8"),
-            "# --- cli (96 blocks)",
-            "# --- cli (89 blocks)",
+            text,
+            header,
+            header.replace("({} blocks".format(n), "({} blocks".format(n + 7), 1),
         )
     )
     assert check_counts(broken[0]) != []
 
 
 def test_mutation_a_stale_distribution_row_reds_the_table_check():
-    broken = parse_census(
-        _mutate(
-            CENSUS.read_text(encoding="utf-8"),
-            "#   cli                   96",
-            "#   cli                   82",
-        )
-    )
+    text = CENSUS.read_text(encoding="utf-8")
+    row = next(line for line in text.splitlines() if DISTRIBUTION_RE.match(line))
+    n = int(DISTRIBUTION_RE.match(row).group("n"))
+    broken = parse_census(_mutate(text, row, row.replace(str(n), str(n + 7), 1)))
     assert check_distribution_table(broken[0], broken[1]) != []
 
 

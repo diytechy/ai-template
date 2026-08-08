@@ -697,7 +697,11 @@ BASELINE = {
     # module's F5 independence (the shipped hook imports no sibling).
     # Reviewed bump, log fragment 2026-08-02 (WI-388). Re-stamp down with
     # WI-280.
-    "check_trajectory.py": 3531,
+    # +13 (3531 -> 3544), mechanized-loop P6: the `partial` status directory
+    # in the F5-mirrored loader copy (SPEC_STATUS_DIRS / TERMINAL_STATUSES /
+    # OPEN_STATUSES). A three-copy change by the F5 rule, not an extraction
+    # candidate: the copies are pinned equal by tests/test_wi_loader_sync.py.
+    "check_trajectory.py": 3544,
     # NEW ENTRY, +25 (1498 -> 1523), WI-357: the two-stage work-branch claim
     # signal — the on-disk fast path plus the branch-history probe that
     # survives the §2.3 close commit (git log -1 over the claim path), with
@@ -853,7 +857,12 @@ BASELINE = {
     # listing entry — the scaffold surface gained the unified intake mint.
     # Reviewed bump, log fragment 2026-08-02 (WI-388). Re-stamp down with
     # WI-280.
-    "bootstrap.py": 2278,
+    # +87 (2278 -> 2365), mechanized-loop P2/P6: sync_config (the adopter-owned
+    # never-clobber write, SR-141) plus five MAPPING rows with their reasons —
+    # config.py, config_query.py, config_migrate.py, attest.py, outcome.py. A
+    # MAPPING row that is not shipped is the measured scaffold defect the H-2
+    # program found, so the rows are the point.
+    "bootstrap.py": 2365,
     # NEW ENTRY, +228 (1423 -> 1651), Phase 2b of the concurrency restructure
     # (docs/concurrency-restructure.md §7): the spec-folder work-item reader,
     # which crosses this module over THRESHOLD for the first time. It is one
@@ -949,7 +958,9 @@ BASELINE = {
     # +15 (1824 -> 1839), WI-388: the F5-mirrored loader edits (`Bar` column,
     # `SPEC_CONTEXT` + its clip in `parse_spec_deliverable`). Reviewed bump,
     # log fragment 2026-08-02 (WI-388). Re-stamp down with WI-280.
-    "agent_common.py": 1839,
+    # +15 (1839 -> 1854), mechanized-loop P6: the `partial` status directory in
+    # F5 copy #1 (SPEC_STATUS_DIRS + TERMINAL_STATUSES).
+    "agent_common.py": 1854,
     # NEW ENTRY, WI-387 — integrate.py crossed THRESHOLD (1418 -> 1588) adding
     # the third terminal outcome. The extraction the ratchet asks for was TAKEN
     # FIRST, not argued away: `hand_back` and `quarantine`, the largest unit and
@@ -1108,7 +1119,13 @@ BASELINE = {
     # `_adjudication_scope_ok`) — the kind alone never earns the no-bar path;
     # the branch's non-refresh delta must stay on the §A5.2 surfaces or the
     # full bar runs. Re-stamp down with WI-280.
-    "integrate.py": 2417,
+    # +223 (2417 -> 2640), mechanized-loop P6: the scope-at-claim record and the
+    # terminal comparison (SR-148, LLR-173) — the rung that makes a branch
+    # narrowing its own scope unrepresentable. The crossing this caused in
+    # _claim_locked was answered by EXTRACTION (_claim_moves), per this repo's
+    # rule, not by a bigger complexity number; the line growth is the new rung
+    # plus its six helpers and their reasons.
+    "integrate.py": 2640,
 }
 
 

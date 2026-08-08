@@ -25291,3 +25291,111 @@ form-findings=0 component-findings=0 interface-findings=0`, exit 0.
 `derive_gate.py`: `G2 (# basis: SN=32 SR=158 LLR=168 TC=165 drafts=0 modified=21
 uncovered=0 computed=G2 ex-draft=G2 phase=5 per-phase=1=G2;2=G3;3=G3;4=G2;5=G2)`.
 `check_docs.py --stale`: 381 docs, 1054 links, 0 broken.
+
+
+## 2026-08-08 — mechanized-loop P2/P3/P6: the configuration authority, the attestation ledger, and immutable attempts
+
+Three foundation slices built in parallel on `mechanized-loop`, then integrated.
+Seams fixed in advance at [mechanized-loop-contracts.md](mechanized-loop-contracts.md)
+so the slices could compose without negotiating.
+
+**P2 — one validated `docs/config.toml`.** `config.py` (declared SCHEMA table
+walked by both validator and template generator), `config_query.py` (the
+fail-closed single-key reader the hooks will call), `config_migrate.py` (the
+converter, with the gate-authority values that do NOT map losslessly reported
+rather than guessed). The shipped `config.toml.template` is GENERATED from the
+schema and pinned byte-equal, so a dial cannot exist in code and not in the form.
+
+**P3 — canonical digests and the append-only ledger.** `attest.py` plus
+`spine_stage` / `verification_gate_for` in `derive_gate.py`. `spine-stage=` joins
+the `# basis:` line as an additive field, exactly as `ex-draft=` and `uncovered=`
+did. The two axes are now derivable side by side: the meta repo reads
+**spine-stage=4** (the breakdown is attested) while the gate still reads **G2**
+(21 rows carry `Modified`) — the separation the program exists to make.
+
+**P6 — `partial/`, scope frozen at claim, one immutable outcome event.**
+`outcome.py`, the fourth status directory across all three F5 loader copies plus
+`wi_convert`, and the scope-at-claim record and comparison in `integrate.py`.
+
+### Four things worth keeping from the integration
+
+**1. A slice spec error, caught by the shipped tests, that would have been a
+security fail-open.** The P2 brief told the slice to wire the git hooks to
+`config_query.py`. The plan's own P2 says **"no runtime callers switch yet"**, and
+the reason became concrete immediately: the hooks began reading a canonical key no
+repo had set, so a tree carrying only `docs/privacy-check = true` silently lost
+its privacy gate and `pre-push` exited 0 on a reviewer `BLOCK`. Fourteen shipped
+hook tests caught it. The hooks are reverted to their retired parse; what P2 owes
+and now delivers is the **agreement bar** — the literal retired pipeline and the
+new reader driven over one matrix of declared values, required to reach the same
+verdict. The cutover is P13, in one reviewed change, with the retired files
+deleted in the same commit. The lesson is recorded in
+`tests/test_config_hooks.py`'s docstring: a security floor is the wrong place to
+land a reader and its cutover in one step, because the failure mode is silence.
+
+**2. The converter wrote a document its own loader refused.** A junk word in a
+retired file was tolerated by a `grep` that only ever asked "is it exactly this
+word?"; converting it verbatim produced a canonical file that refused at preflight
+— leaving the adopter with a broken new source AND the old one as the only honest
+record. `_schema_refusal` now validates each coerced value against the same SCHEMA
+the loader reads, and reports what it cannot map (SR-140's actual words).
+
+**3. Two numeric pins were the bug they were meant to prevent.** The station
+panel's outcome fan was hand-tuned for three outcomes and indexed `[0..2]`; when
+`partial/` made it four, the fourth card was simply not drawn and the only thing
+that noticed was a test asserting `len(outcomes) == 3`. A count is not the
+property — COVERAGE is. The layout now derives its card positions from the
+outcome count (reproducing the hand-tuned three exactly), and both that test and
+the arrow-count pin derive their expectation instead of stamping it.
+
+**4. Duplication was SANCTIONED and then PINNED.** `docs/dupes-allow` was
+re-anchored surgically rather than regenerated flat — the census is a *classified*
+file and a flat rewrite would have thrown away every disposition someone assigned
+by reading. 6 blocks re-anchored (same fingerprint, new representative pair, since
+the new modules sort first), 17 retired, 46 added under a new `mechanized-loop`
+class. And because **a sanction is not a guard**,
+`tests/test_ledger_helper_sync.py` now pins the three new F5 families
+behaviourally — one fixture through both copies, mutation-proven — the way
+`test_wi_loader_sync.py` does for the registry readers.
+
+### Ratchets re-stamped, each with its measurement
+
+- module sizes: `agent_common` 1839→1854, `bootstrap` 2278→2365,
+  `check_trajectory` 3531→3544, `integrate` 2417→2640.
+- complexity: four NEW dispatch-table functions ESTABLISHED (not bumped). The one
+  new function that was not a dispatch table, `config_migrate.convert` at 19, was
+  **extracted** instead — this repo answers a crossing by decomposing.
+- smoke membership: 700→1100, MEASURED. The tier collects 983 and runs in
+  **19.8 s** against its 60 s bar; the three genuinely heavy new modules were
+  re-tiered into `conftest.SLOW_MODULES` rather than left to the opt-out default.
+- dashboard bytes: unchanged (the P1 stamp still holds).
+
+### Evidence, including what is NOT green
+
+Full unfiltered suite: **2330 passed, 8 skipped, 2 failed**. Smoke tier: **983
+passed in 21 s**. `check_docs --stale`: 0 broken. `trace.py --strict
+--no-placeholders --strict-schema`: exit 0 (`SN=32 SR=158 LLR=169 TC=166
+orphans=0 integrity=0 schema-findings=0`).
+
+**Three tests fail on this host and NONE is caused by this program — each was
+driven at the pre-program commit `1aab0816` and fails there identically:**
+
+1. `test_integrate.py::test_the_backslash_normalization_is_windows_only` —
+   monkeypatches `os.name = "posix"` on Windows, so `Path()` constructs a
+   `PosixPath` and raises. It does not merely fail: pytest's own reporter calls
+   `Path(os.getcwd())` while the patch is still live, so the failure CRASHES an
+   xdist worker and aborts the run, hiding every other result. That is why it is
+   deselected to measure the suite.
+2. `test_integrate.py::test_a_whole_file_crlf_relay_in_a_claim_shape_convicts` —
+   the SYSTEM gitconfig sets `core.autocrlf=true` (the Git-for-Windows installer
+   default) and the fixture does not pin it repo-locally, so git normalises the
+   deliberately-CRLF blob at `add` time.
+3. `test_dispatch.py::test_empty_frontier_rung_one_mints_gap_rows_then_drives_them`
+   — Windows MAX_PATH. It passes serially and fails under `-n auto`, because
+   xdist's per-worker temp path is longer and the gap-census spec name is long.
+
+They are filed here rather than fixed inline: they are host-environment defects in
+the inherited suite, not this program's scope, and fixing them would mix an
+unrelated repair into a spine-class change. A successor should own them as their
+own row — and should note that (1) is the sharpest of the three, because a test
+that crashes the runner when it fails makes every OTHER failure invisible.

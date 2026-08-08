@@ -119,7 +119,11 @@ def test_meta_repo_phases_match_an_independent_derivation_and_cache_is_fresh():
     assert proc.returncode == 0, proc.stdout + proc.stderr
     for phase, gate in expect.items():
         assert "{}={}".format(phase, gate) in proc.stdout
-    assert "phase=4" in proc.stdout
+    # The derived current phase, read from the same computation rather than
+    # stamped: this pinned `phase=4` until the mechanized-loop sitting added a
+    # Phase 5 batch, and a stamped number here only ever teaches a reader to
+    # bump it. The property is that the printed basis agrees with `compute`.
+    assert "phase={}".format(result["phase"]) in proc.stdout
     assert "modified={}".format(result["modified"]) in proc.stdout
     check = run_py([SCRIPTS / "derive_gate.py", "--check", "--root", ROOT], cwd=ROOT)
     assert check.returncode == 0, check.stdout + check.stderr

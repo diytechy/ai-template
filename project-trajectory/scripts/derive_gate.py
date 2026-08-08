@@ -270,11 +270,81 @@ def _raw_level(srs, llrs, tcs, sn_ids, sn_draft):
     return raw, sr_g
 
 
+# --- the SECOND derived axis: the spine stage (decisions §3) -------------------
+# `spine_stage` and `verification_gate` are separate derived facts, and this is
+# the whole of the join between them. The gate above answers the HARNESS's
+# question — which check.py step tier applies — from artifact STRUCTURE. The
+# stage answers the WORKFLOW's question — which tier of the spine is still in
+# process — from attested TEXT. They disagree legitimately: a spine can be fully
+# decomposed and Verified (G3) while a reworded need is pending re-attestation
+# (stage 0), which is exactly the state today's model cannot express. So no
+# caller infers one from the other; STAGE_GATE is the one declared table, and a
+# caller that needs both asks for both.
+STAGE_GATE = {0: "G1", 1: "G1", 2: "G2", 3: "G2", 4: "G3"}
+
+
+def verification_gate_for(stage):
+    """The verification gate a spine stage maps to (decisions §3's table).
+
+    Refuses an out-of-range stage by name rather than clamping: clamping is how
+    a caller with an off-by-one silently runs the WRONG step tier and calls the
+    result a gate."""
+    # `bool` and `float` are excluded explicitly: `True` and `2.0` both hash
+    # equal to a declared key, so a plain membership test would answer a caller
+    # that never held a stage at all.
+    if isinstance(stage, bool) or not isinstance(stage, int) or stage not in STAGE_GATE:
+        raise ValueError(
+            "derive_gate: REFUSED - spine stage {!r} is outside 0..{} (the "
+            "declared stage table)".format(stage, max(STAGE_GATE))
+        )
+    return STAGE_GATE[stage]
+
+
+def spine_stage(docs):
+    """The lowest spine tier still in process (0..4), or None when unknowable.
+
+    Per decisions §3: 0 = a need has no accepted normative-text anchor, 1 = the
+    needs are all accepted but a requirement is not, 2 = the LLRs, 3 = the test
+    cases, 4 = every tier's current text is accepted. Derived from the SAME rows
+    the gate reads plus `docs/events/attestation.jsonl`, so the two axes cannot
+    disagree about which artifacts exist.
+
+    Stage 4 is `attest`'s half of the ratified entry condition — every required
+    TC accepted. The other half, "the full declared harness is green", is
+    check.py's answer and is deliberately not guessed here; a cached stage that
+    claimed a green it never saw would be the dishonest-green shape (SN-008) in
+    a new place.
+
+    Two conservative edges. An EMPTY spine returns 0, never a vacuous 4 — the
+    same refusal `_raw_level` makes when a repo with no real SRs would otherwise
+    compute G3 from ratified-SN-only. And a tree with no attestation ledger
+    reads 0 honestly: nothing has been attested, so the needs are in process.
+    `attest.py` missing entirely (a partial re-sync) returns None, which the
+    basis line prints as `(none)` — an unknown fact, not a fabricated one."""
+    try:
+        import attest  # deferred by contract (contracts §6): a sibling slice
+    except ImportError:
+        return None
+    docs = Path(docs)
+    chains = attest.chain_map(attest.read_events(docs / "events" / attest.ATTESTATION))
+    artifacts = attest.load_artifacts(docs)
+    if not any(artifacts.get(kind) for kind in attest.TIERS):
+        return 0
+    for index, kind in enumerate(attest.TIERS):
+        for row in artifacts.get(kind, []):
+            key = (kind, attest.row_id(kind, row))
+            digest = attest.normative_digest(kind, row)
+            if attest.chain_state(chains.get(key, []), digest) != attest.ACCEPTED:
+                return index
+    return len(attest.TIERS)
+
+
 def compute(docs):
     """Derive the gate from the spine registries under `docs`. Returns a result
     dict: counts, the raw computed level (may be G0), the same level recomputed
-    with the drafts removed (`ex_draft`), the per-phase breakdown, and the
-    runnable gate name (raw floored to G1)."""
+    with the drafts removed (`ex_draft`), the per-phase breakdown, the runnable
+    gate name (raw floored to G1), and the second derived axis `spine_stage`
+    (which changes NO gate arithmetic — it sits beside the gate)."""
     raw_srs = load_csv(docs / "requirements" / "system-requirements.csv")
     raw_llrs = load_csv(docs / "requirements" / "low-level-requirements.csv")
     raw_tcs = load_csv(docs / "test" / "test-cases.csv")
@@ -355,6 +425,7 @@ def compute(docs):
         "ex_draft": ex_draft,
         "per_phase": per_phase,
         "phase": cur_phase,
+        "spine_stage": spine_stage(docs),
         "gate": GATE_NAMES[max(G1, raw)],  # the runnable value (floored to G1)
     }
 
@@ -416,19 +487,28 @@ def basis_line(result):
     breakdown — everything that must stay in step with the states, excluding the
     volatile compute date).
 
-    `ex-draft=` (WI-341) and `uncovered=` (WI-401) are additive: a reader that
-    does not know a field is unaffected, and check.py falls back to the older
-    per-phase heuristic when `ex-draft` is absent, so a gate file written by an
-    earlier derive_gate keeps working until it is next regenerated. Regenerating
-    IS required — `--check` compares this line whole, so any new field is a
-    cache-format change a downstream repo passes through by rerunning
-    derive_gate once — the ordinary regenerate-a-generated-artifact step.
+    `ex-draft=` (WI-341), `uncovered=` (WI-401) and `spine-stage=` (SR-143) are
+    additive: a reader that does not know a field is unaffected, and check.py
+    falls back to the older per-phase heuristic when `ex-draft` is absent, so a
+    gate file written by an earlier derive_gate keeps working until it is next
+    regenerated. Regenerating IS required — `--check` compares this line whole,
+    so any new field is a cache-format change a downstream repo passes through
+    by rerunning derive_gate once — the ordinary regenerate-a-generated-artifact
+    step.
+
+    `spine-stage=` publishes the SECOND derived axis here rather than in a file
+    of its own: it is derived from the same rows in the same pass, and a second
+    cached file would be a second thing to keep fresh. It sits BEFORE the
+    open-ended `per-phase=` list so that list stays last. It does not
+    participate in the gate value on the line below.
     """
     c = result["counts"]
     per_phase = ";".join(f"{k}={v}" for k, v in result["per_phase"].items())
+    stage = result.get("spine_stage")
     return (
         "# basis: SN={SN} SR={SR} LLR={LLR} TC={TC} drafts={d} modified={m} "
-        "uncovered={u} computed={raw} ex-draft={ed} phase={ph} per-phase={pp}".format(
+        "uncovered={u} computed={raw} ex-draft={ed} phase={ph} spine-stage={ss} "
+        "per-phase={pp}".format(
             SN=c["SN"],
             SR=c["SR"],
             LLR=c["LLR"],
@@ -439,6 +519,7 @@ def basis_line(result):
             raw=GATE_NAMES[result["raw"]],
             ed=GATE_NAMES[result["ex_draft"]],
             ph=result["phase"] if result["phase"] is not None else "(none)",
+            ss=stage if stage is not None else "(none)",
             pp=per_phase or "(none)",
         )
     )
@@ -517,7 +598,16 @@ def main():
     root = Path(args.root)
     docs = Path(args.docs) if args.docs else root / "docs"
 
-    result = compute(docs)
+    # The stage axis reads the attestation ledger, and a corrupt ledger line is
+    # a HARD error by design (contracts §2 — never a silently skipped record).
+    # Caught here so the pre-commit hook that runs this prints the refusal that
+    # names the file and line instead of a traceback; the gate arithmetic itself
+    # raises nothing.
+    try:
+        result = compute(docs)
+    except ValueError as exc:
+        print("derive_gate: FAIL - {}".format(exc), file=sys.stderr)
+        return 1
     basis = basis_line(result)
 
     if args.next_phase:

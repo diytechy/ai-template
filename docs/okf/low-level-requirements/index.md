@@ -179,3 +179,4 @@ resource: "generated"
 | [LLR-183](LLR-183.md) | Prohibited source classes per role |
 | [LLR-184](LLR-184.md) | Prompt provenance record |
 | [LLR-185](LLR-185.md) | Generated prompt catalog |
+| [LLR-186](LLR-186.md) | Remediation draft from a bar-failure event |

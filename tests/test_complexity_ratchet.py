@@ -36,6 +36,25 @@ pytestmark = pytest.mark.skipif(
 MAX_COMPLEXITY = 10
 
 BASELINE = {
+    # --- mechanized-loop P2: four DISPATCH TABLES, established not bumped ------
+    # These are new functions, so there is no baseline to grow past; what is
+    # recorded here is where they START. All four are the same shape — one
+    # `if token == ...` rung per declared vocabulary item — so their cyclomatic
+    # number counts how many kinds the vocabulary has, not how tangled the logic
+    # is. Splitting a dispatch table in half to satisfy a number would leave two
+    # half-tables and a reader who has to visit both to answer "what does this
+    # accept?", which is worse.
+    #
+    # The distinction is not a general excuse, and it was applied honestly in the
+    # same slice: `config_migrate.convert` measured 19, was NOT a dispatch table
+    # (it was a loop doing four different jobs), and was EXTRACTED into
+    # `_convert_line` / `_convert_ini` / `_report_unkeyed_dials` rather than
+    # stamped here. If one of the four below ever grows a rung that is not
+    # another vocabulary item, it should be split too.
+    ("config.py", "_type_reason"): 12,  # one rung per declared value type
+    ("config.py", "validate"): 12,  # one rung per declared section shape
+    ("config_migrate.py", "_coerce"): 11,  # one rung per retired file idiom
+    ("config_migrate.py", "render_document"): 12,  # one rung per emitted section
     ("agent_common.py", "preflight"): 17,
     # (The agent_dispatch.py rows retired with the module at
     # concurrency-restructure Phase 5.)

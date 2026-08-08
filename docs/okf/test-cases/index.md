@@ -176,3 +176,4 @@ resource: "generated"
 | [TC-177](TC-177.md) | Render a judging brief with permitted sources and with a source class the role prohibits. |
 | [TC-178](TC-178.md) | Render one template twice with one input, then after editing the template. |
 | [TC-179](TC-179.md) | Generate the prompt catalog and compare it against the declared templates. |
+| [TC-180](TC-180.md) | Draft a remediation candidate from one bar-failure event, then from a repeat of the same … |

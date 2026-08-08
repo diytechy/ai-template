@@ -83,6 +83,15 @@ SLOW_MODULES = frozenset(
         # as its two siblings above, filed with them rather than left to the
         # opt-out default where it would spend a fifth of the smoke budget.
         "test_handback",  # handback + quarantine on real git repos (WI-387)
+        # mechanized-loop foundations (2026-08-08): the same heavy class again —
+        # real POSIX `sh` driving the git hooks, real bootstraps, and real
+        # `integrate.py claim` runs (each spawning trunk_step --regen). Filed here
+        # deliberately rather than left to the opt-out default: measured at ~19 s,
+        # ~14 s and ~27 s, the three of them alone would have consumed the whole
+        # <= 60 s commit-bar budget.
+        "test_config_hooks",  # the retired shell parse vs the new query, via real sh
+        "test_bootstrap_config",  # re-sync no-clobber, on real bootstraps
+        "test_outcome",  # scope-at-claim + outcome events on real git repos
         # WI-281: subprocess/scaffold-heavy modules moved to slow to hold the
         # <= 60 s commit-bar budget. Each is dominated by run_py subprocesses
         # (running gen_trajectory / trace / check* / agent_loop) or the scaffold

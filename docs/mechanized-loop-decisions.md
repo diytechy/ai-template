@@ -7,6 +7,13 @@ for the program's ratified terminology and decisions; the build plan
 stays the *plan of record* (what to build, in what order) and does not restate
 what is settled here.
 
+**Its companion is
+[mechanized-loop-contracts.md](mechanized-loop-contracts.md)** — the *seams*
+the slices share (the `docs/config.toml` schema, the `docs/events/` envelope,
+the module/symbol map, the canonicalisation rule, the refusal form). Decisions
+here, interfaces there: a builder reads this file to learn what was ruled and
+that one to learn what to call.
+
 **Execution exception (plan §preamble, re-ratified here).** This program
 replaces the machinery that would normally drive it, so it is built on the
 single controlled branch `mechanized-loop` with explicit reviews and manual
@@ -130,7 +137,21 @@ does not re-litigate them.
 | 1 | System requirements in process | all current SNs are ratified; at least one current SR is not |
 | 2 | Low-level requirements in process | all current SRs are ratified; at least one required LLR is not |
 | 3 | Test cases in process | all required LLRs are ratified; at least one required TC is not validated |
-| 4 | Full breakdown implemented and validated | all required TCs are validated and the full declared harness is green |
+| 4 | Full breakdown implemented and validated | all required TCs are validated *(attestation half — see below)* |
+
+**Stage 4 is two facts owned by two components, ruled 2026-08-08.** The row
+originally read "all required TCs are validated **and the full declared harness
+is green**", which mixes an attestation fact with a harness fact.
+`derive_gate.spine_stage` reads registries and the ledger; it cannot observe
+harness greenness without running the harness, and a *cached* stage asserting a
+green it never watched is exactly the dishonest green SN-008 forbids. So:
+
+- **`spine_stage` derives the attestation half only** — every required TC has an
+  accepted anchor. Stage 4 means "the breakdown is complete and attested."
+- **`check.py` owns the harness half**, as it always has.
+- **The resume planner joins them** (`§9`'s red-bar rung): stage 4 *plus* a red
+  declared bar is what produces a failure event and a remediation draft. Neither
+  component claims the other's fact.
 
 `verification_gate` — the harness input, preserving today's `check.py`
 contract:

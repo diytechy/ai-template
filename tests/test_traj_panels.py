@@ -364,8 +364,13 @@ def test_process_tab_renders_the_station_cycle(tmp_path):
         at = nxt
     # one directed closed cycle, every edge arrow-headed
     assert station.count('data-cycle="closed"') == 1
-    # 6 ring edges + 3 fan-out + 3 fan-in + the dashed lost-race retry = 13
-    assert station.count('marker-end="url(#stnarrow)"') == 13
+    # 6 ring edges + the dashed lost-race retry, plus one fan-out AND one fan-in
+    # per declared terminal outcome. Derived rather than stamped: the literal 13
+    # was correct for three outcomes and became a bare number to bump when a
+    # fourth landed, which teaches a reader to bump it rather than to ask whether
+    # the new outcome is actually drawn.
+    n_outcomes = len(set(load_script("integrate").OUTCOME_DIRS.values()))
+    assert station.count('marker-end="url(#stnarrow)"') == 7 + 2 * n_outcomes
     assert 'class="stedge alt" data-edge="slot-refresh"' in station  # lost race
     # still fully offline
     low = text.lower()
@@ -373,14 +378,22 @@ def test_process_tab_renders_the_station_cycle(tmp_path):
 
 
 def test_station_outcomes_derive_from_the_integrator(tmp_path):
-    # THE SYNC PIN for §A3: the three terminal-outcome cards are DERIVED from
+    # THE SYNC PIN for §A3: the terminal-outcome cards are DERIVED from
     # integrate.OUTCOME_DIRS — the same one-home read the merge slot uses — and
-    # all three converge on the station refresh (three arrows into one merge:
+    # EVERY one converges on the station refresh (one arrow each into one merge:
     # a reader cannot come away thinking a branch may hang). If the integrator's
-    # outcome vocabulary moves, this test moves with it and the render follows.
+    # outcome vocabulary moves, the render follows it.
+    #
+    # This assertion used to pin the count at three, and that pin was the bug it
+    # was meant to prevent: when `partial/` landed the count went to four, the
+    # hand-tuned layout indexed [0..2] and simply stopped drawing the fourth
+    # card, and the only thing that noticed was this test failing on a number.
+    # A count is not the property — COVERAGE is. The loop below now fails if any
+    # declared outcome is missing a card or either of its two edges, whatever
+    # the count, so a fifth outcome is caught the same way a fourth was.
     integ = load_script("integrate")
     outcomes = sorted(set(integ.OUTCOME_DIRS.values()))
-    assert len(outcomes) == 3  # the §A3 table: merged / cancelled / handback
+    assert outcomes, "the integrator declares no terminal outcome at all"
     with_gate(tmp_path, "G2")
     assert gen(tmp_path).returncode == 0
     station = _station_div(html_of(tmp_path))

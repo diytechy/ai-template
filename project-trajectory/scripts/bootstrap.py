@@ -23,6 +23,11 @@ What it creates in the destination:
     docs/push-policy                           <- push-policy.template  (policy: human)
     docs/blackout                              <- blackout.template  (window: 12:00-19:00 UTC)
     docs/review-policy                         <- review-policy.template  (reviewers: 1)
+    docs/config.toml                           <- config.toml.template, or the
+                                                converted values of any retired
+                                                declared-policy file already in
+                                                the tree (sync_config; never
+                                                overwritten, not even --force)
     docs/status.md                             <- STATUS.template.md  (working surface)
     docs/log.md                                <- LOG.template.md  (append-only history)
     docs/plan.md                               <- PLAN.template.md  (plan/build session blocks)
@@ -868,6 +873,59 @@ def apply_push_policy(dest, policy, dry_run):
     _write_text_lf(target, "\n".join(header + [policy]) + "\n")
 
 
+def sync_config(dest, dry_run=False):
+    """`docs/config.toml` — the one file a re-sync must never touch (SR-141).
+
+    `(written, report)`: the dest-relative paths written and the converter's
+    unmapped items. Three cases, and the reason each is what it is:
+
+    - **The file EXISTS: nothing is written, not even under `--force`.** It
+      holds the adopter's whole behavioural setup; an upgrade that cost them
+      that would make upgrading the kit the expensive act it must never be.
+      This is why the file is NOT a MAPPING row — the copy pass honours
+      `--force`, and here `--force` must not reach.
+    - **Absent, with retired declared-policy files still present:** the
+      converter runs and the repo gets ITS OWN values rather than a blank form.
+      Doing this during the re-sync is what stops an upgraded adopter meeting
+      the mixed-source refusal with no idea how to answer it.
+    - **Absent with nothing to convert:** the blank form is copied.
+
+    Called BEFORE the copy pass, deliberately: the converter must see the
+    repo's own retired files, never the defaults this very run is about to
+    scaffold — converting those would declare a brand-new repo's canonical keys
+    beside the retired files it just received, i.e. mixed-source on day one.
+    """
+    target = dest / "docs" / "config.toml"
+    if target.exists():
+        return [], []
+    if dry_run:
+        return ["docs/config.toml"], []
+    try:
+        import config_migrate
+    except ImportError:  # pragma: no cover - in-process fallback
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        import config_migrate
+    import tomllib
+
+    document, report = config_migrate.convert(dest)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    # "Did a retired source actually declare anything?" is asked of the OUTPUT,
+    # not of a file-existence list: docs/stack.ini survives the migration, so
+    # its presence proves nothing, and only the converted document knows whether
+    # its [agent-loop] section held a dial worth carrying across.
+    if set(tomllib.loads(document)) - {"schema"}:
+        _write_text_lf(target, document)
+    else:
+        # Nothing converted, so the blank form is the honest starting point —
+        # but the REPORT is still returned: a source that could not be mapped is
+        # exactly the thing an adopter must be told about, and "nothing landed"
+        # is the loudest version of that, not a reason to go quiet.
+        _write_text_lf(
+            target, (KIT / "config.toml.template").read_text(encoding="utf-8")
+        )
+    return ["docs/config.toml"], report
+
+
 def apply_privacy_check(dest, value, dry_run):
     """Write the privacy-check toggle into docs/privacy-check, keeping the
     template's explanatory header. Set at repo creation — an explicitly
@@ -1409,6 +1467,25 @@ MAPPING = [
     ("scripts/agent_session.py", "scripts/agent_session.py"),
     ("scripts/agent_common.py", "scripts/agent_common.py"),
     ("scripts/plan_runner.py", "scripts/plan_runner.py"),
+    # The single configuration authority (contracts §1): the declared schema +
+    # strict loader, the one-key query entry point the POSIX git hooks call
+    # (they cannot parse TOML, and a hook that cannot read the privacy policy
+    # BLOCKS), and the legacy converter bootstrap runs through `sync_config`.
+    # docs/config.toml itself is deliberately NOT a MAPPING row: the copy pass
+    # honours --force, and an adopter-owned file must survive even that.
+    ("scripts/config.py", "scripts/config.py"),
+    ("scripts/config_query.py", "scripts/config_query.py"),
+    ("scripts/config_migrate.py", "scripts/config_migrate.py"),
+    # The canonical normative-cell digest and the append-only attestation
+    # ledger (SR-143): what "the current attested text" means, and the input to
+    # the derived spine stage. derive_gate.py imports it, so a scaffold without
+    # it cannot compute the stage its own gate file publishes.
+    ("scripts/attest.py", "scripts/attest.py"),
+    # The immutable per-attempt record (SR-149) plus the scope digest the
+    # integrator freezes at claim (SR-148) and the keep/discard/quarantine
+    # classification a partial attempt owes (SR-150). integrate.py imports it,
+    # so a scaffold without it cannot accept a branch.
+    ("scripts/outcome.py", "scripts/outcome.py"),
     ("scripts/agent-resume.template.cmd", "agent-resume.cmd"),
     ("scripts/agent-resume.template.sh", "agent-resume.sh"),
     ("scripts/agent-resume.template.command", "agent-resume.command"),
@@ -2256,7 +2333,17 @@ def main():
         else:
             dest.mkdir(parents=True)
 
+    # Before the copy pass — see sync_config's docstring for why the order is
+    # load-bearing rather than incidental.
+    config_written, config_report = sync_config(dest, plan.dry_run)
     outcome = copy_kit_files(dest, plan)
+    outcome.created.extend(config_written)
+    for item in config_report:
+        print(
+            "  docs/config.toml: NOT CONVERTED - {} {!r} ({})".format(
+                item.source, item.value, item.why
+            )
+        )
     apply_stack_extras(dest, plan, outcome)
     materialize_agent_layer_phase(dest, plan, outcome)
     apply_declared_policies(dest, plan, outcome)

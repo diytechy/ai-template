@@ -106,16 +106,24 @@ COLUMNS = [
     "Bar",
 ]
 
-# Status <-> directory (§2.1; WI-384). One directory per state, both terminals
+# Status <-> directory (§2.1; WI-384). One directory per state, every terminal
 # included, so the map INVERTS — there is no second fact to keep honest.
 # Cancellation is still a MOVE with a recorded reason, never a deletion; the
-# reason lives where it always did, in the Deliverable body.
+# reason lives where it always did, in the Deliverable body. `partial` (SR-148..
+# SR-151) is the third terminal and converts like the other two.
+#
+# `active` is ABSENT ON PURPOSE, and the asymmetry against the three readers'
+# `SPEC_STATUS_DIRS` is the point: a claim lives at `active/<branch>/`, two
+# levels deep, so an `active` row has no ONE directory this table could name.
+# The converter refuses it by name (`status_dir`) rather than filing it under a
+# branch it would have to invent — the claim is `integrate.py claim`'s to write.
 STATUS_DIRS = {
     "draft": "draft",
     "queued": "queued",
     "deferred": "deferred",
     "done": "complete",
     "cancelled": "cancelled",
+    "partial": "partial",
 }
 # The inverse, built from the one table so the two directions cannot disagree.
 DIR_STATUSES = {directory: status for status, directory in STATUS_DIRS.items()}

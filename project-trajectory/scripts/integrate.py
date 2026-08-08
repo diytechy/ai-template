@@ -128,9 +128,16 @@ ACTIVE = WORK + "/active"
 # is no fourth answer and no state file that could hold one, which is what makes
 # "every lane ends in a merge, branches never hang" a property of the tree
 # rather than a rule someone has to remember.
+# `partial/` (SR-148..SR-151, decision D-2) is the fourth ROW and the third
+# TERMINAL word: an attempt that stopped, whose remaining scope re-enters the
+# queue as a successor rather than as this row revived. It is not a handback —
+# a handback returns the spec to an OPEN folder and hands the WI back to the
+# frontier, which is the revival the successor model replaces — so it maps to
+# its own outcome and owes its own adjudication.
 OUTCOME_DIRS = {
     "complete": "merged",
     "cancelled": "cancelled",
+    "partial": "partial",
     "queued": "handback",
     "draft": "handback",
     "deferred": "handback",
@@ -315,6 +322,189 @@ def _specref_refusal(root, meta, wi_id):
             "then claim (WI-370)".format(wi_id, ref)
         )
     return None
+
+
+# The claim commit's SCOPE RECORD (LLR-173): one trailer per claimed spec,
+# naming the id and the 16-hex digest of its frozen scope region at claim time.
+# A TRAILER rather than a file, deliberately — a file under `docs/work/` would
+# be a path `_claim_delta` has no shape for (so a crashed claim would stop being
+# recognisable and re-cuttable) and a path the R1 mint rung would have to learn
+# to excuse. The message costs neither, survives the merge, and stays readable
+# long after the `active/<branch>/` blob has left the tip.
+SCOPE_TRAILER = "Scope-At-Claim:"
+_SCOPE_TRAILER_RE = re.compile(r"^Scope-At-Claim:\s+(WI-\d+)=([0-9a-f]{16})\s*$", re.M)
+
+
+def _scope_record(dest_dir, wi_ids):
+    """The claim commit's scope-record trailer block: `(text, refusal)`.
+
+    The digests are taken from the specs AS THEY SIT AT THE CLAIM PATH — after
+    the link-aware move, not before it. The move rebases the spec's own relative
+    links, so digesting the queued copy would record a scope no terminal tree
+    could ever match, and the freeze would refuse every honest close."""
+    import outcome  # sibling; deferred so a plain read of this module stays cheap
+
+    lines = []
+    for wi_id in wi_ids:
+        hits = sorted(dest_dir.glob(wi_id + "-*.md"))
+        if len(hits) != 1:
+            return None, "{} claimed spec(s) match {} at {}".format(
+                len(hits), wi_id, dest_dir.name
+            )
+        try:
+            digest = outcome.scope_digest(hits[0].read_text(encoding="utf-8"))
+        except (OSError, ValueError) as exc:
+            return None, "cannot digest {}'s frozen scope: {}".format(wi_id, exc)
+        lines.append("{} {}={}".format(SCOPE_TRAILER, wi_id, digest))
+    return "\n".join(lines), None
+
+
+def _claim_commit(root, branch, name):
+    """The commit that ADDED `branch`'s claimed spec — i.e. the claim commit.
+
+    Found by what the commit DID, not by what its message says: `--diff-filter=A`
+    over the claim path has exactly one answer on a branch, whereas re-deriving
+    `_claim_subject` here would need the claimed ids in the order the claim
+    happened to receive them, which trunk's directory listing does not preserve."""
+    code, out = ac.git(
+        root,
+        "log",
+        "--format=%H",
+        "--diff-filter=A",
+        "--max-count=1",
+        branch,
+        "--",
+        "{}/{}/{}".format(ACTIVE, branch, name),
+    )
+    return out.strip() if code == 0 and out.strip() else None
+
+
+def _landed_specs(root, branch):
+    """`[(spec filename, status dir, branch path)]` for every spec sitting in a
+    DECLARED outcome directory on `branch`.
+
+    ONE walk, because two readers now want it: `branch_outcomes` asks which
+    outcome each spec names, and the scope freeze asks where to read its
+    terminal text. Two copies of the "is this a landed spec" test would be two
+    places to teach about a new outcome directory — and the F5 rule sanctions
+    duplication ACROSS independently-copyable scripts, never inside one."""
+    landed = []
+    for path in _branch_tree_paths(root, branch, WORK) or []:
+        parts = path.split("/")
+        if len(parts) > 3 and parts[2] in OUTCOME_DIRS:
+            landed.append((parts[-1], parts[2], path))
+    return landed
+
+
+def _terminal_spec_paths(root, branch):
+    """`{spec filename: branch path}` — the terminal tree the freeze compares
+    to. A spec in two outcome directories is `branch_outcomes`' refusal, which
+    runs first, so the last-one-wins here is unreachable rather than a choice."""
+    return {name: path for name, _status_dir, path in _landed_specs(root, branch)}
+
+
+def _text_at(root, rev, path):
+    """`<rev>:<path>` decoded as UTF-8, or None. Raw blob bytes, never `ac.git`
+    — the text-mode read folds line endings and strips, and the comparison this
+    feeds treats bytes as load-bearing (the `_blob_bytes` lesson, WI-403)."""
+    blob = _blob_bytes(root, "{}:{}".format(rev, path)) if path else None
+    try:
+        return blob.decode("utf-8") if blob is not None else None
+    except UnicodeDecodeError:
+        return None
+
+
+def _frozen_scope_finding(root, branch, claim, wi_id, name, recorded, landed):
+    """One claimed spec's scope verdict: a finding string, or None if honest.
+
+    TWO READS, EACH DOING THE JOB ONLY IT CAN DO. The claim commit's
+    `Scope-At-Claim:` trailer is the RECORD — it is a complete statement of the
+    obligation, it rides through the merge, and anyone holding the claim-time
+    spec can re-derive it — so an equal digest is the fast path and needs no
+    blob at all. The claim commit's own blob is what DECIDES a mismatch, because
+    a digest can only say *something moved*: it names the region, and it is what
+    lets the close ritual's one mandated edit (clearing `specref`, rule R-F)
+    through while a repointed one still refuses. Both come from the same commit,
+    so the two readings cannot disagree about what was claimed.
+
+    An unreadable claim-time blob after a mismatched digest REFUSES. The digest
+    has already said the scope moved; not being able to say how is not a reason
+    to accept it."""
+    import outcome  # sibling; deferred, like every cross-slice read here
+
+    if recorded is None:
+        return "{} carries no scope record in claim commit {}".format(wi_id, claim[:10])
+    terminal = _text_at(root, branch, landed.get(name))
+    if terminal is None:
+        return "{}'s terminal copy of {} could not be read off {}".format(
+            wi_id, name, branch
+        )
+    try:
+        if outcome.scope_digest(terminal) == recorded:
+            return None
+        claimed = _text_at(root, claim, "{}/{}/{}".format(ACTIVE, branch, name))
+        if claimed is None:
+            return "{}'s claim-time copy could not be read off {}".format(
+                wi_id, claim[:10]
+            )
+        regions = outcome.scope_change(claimed, terminal)
+    except ValueError as exc:
+        return "{}'s scope could not be compared: {}".format(wi_id, exc)
+    if not regions:
+        return None
+    return "{} changed its FROZEN scope between claim {} and its terminal move: {} differ".format(
+        wi_id, claim[:10], ", ".join(regions)
+    )
+
+
+def _scope_at_claim(root, branch, specs):
+    """LLR-173: the claim-time scope record, compared against the terminal tree.
+    A refusal naming every differing region, or None.
+
+    SR-148's point is that the obligation and the delivery must not share an
+    author. A branch that can edit its own spec can narrow the obligation to
+    whatever it managed to finish, and then no reviewer can falsify the
+    completion claim — so the frozen region is recorded at CLAIM, on trunk,
+    before the branch exists, and compared here before the merge.
+
+    A claim commit carrying NO trailer stands the rung down. That is the
+    migration allowance and the whole of it: a branch claimed by an integrator
+    that predates this record has nothing to compare against, and hanging it
+    would break the one property every outcome depends on — every lane ends in a
+    merge. The allowance can only weaken this rung to yesterday's behaviour; it
+    can never accept a scope change that WAS recorded.
+
+    EVERY spec is judged, not the first to fail: a batch claim (WI-381) is one
+    branch carrying several obligations, and a lane fixing one of them should
+    learn about the others in the same run (contracts §5).
+    """
+    if not specs:
+        return None
+    claim = _claim_commit(root, branch, specs[0][1])
+    if claim is None:
+        return None
+    recorded = dict(_SCOPE_TRAILER_RE.findall(_commit_message(root, claim)))
+    if not recorded:
+        return None
+    landed = _terminal_spec_paths(root, branch)
+    findings = [
+        finding
+        for finding in (
+            _frozen_scope_finding(
+                root, branch, claim, wi_id, name, recorded.get(wi_id), landed
+            )
+            for wi_id, name in specs
+        )
+        if finding
+    ]
+    if not findings:
+        return None
+    return (
+        "{} may not merge - a claimed work item's scope is frozen at claim "
+        "(SR-148), and the branch does not write it:\n  {}".format(
+            branch, "\n  ".join(findings)
+        )
+    )
 
 
 def _claim_subject(wi_ids, branch):
@@ -711,14 +901,19 @@ def claim(root, wi_ids, branch, dispatch_lock_held=False):
             release()
 
 
-def _claim_locked(root, wi_ids, branch):
-    """`claim` past its ladder, with the dispatch lock settled — the write
-    sequence itself."""
-    refusal = _drop_abandoned(root, branch)
-    if refusal:
-        return fail(refusal)
-    dest_dir = root / ACTIVE / branch
-    dest_dir.mkdir(parents=True, exist_ok=True)
+def _claim_moves(root, dest_dir, wi_ids):
+    """The claim's SPEC WRITES: every batched move, then the scope record they
+    make possible. `(scope-record trailer block, None)` or `(None, refusal)`.
+
+    Extracted from `_claim_locked` rather than left inline — this repo answers a
+    C901 crossing by decomposition, not by a bigger number (the `_merge_refusal`
+    precedent) — and the two belong together anyway: the record must digest the
+    specs AS MOVED, so nothing may run between the loop and the digest.
+
+    Every failure arm restores the tree first. A half-moved claim is the one
+    state the abandoned-claim reader cannot convict, because it is not a commit
+    at all; leaving it would hand the next claim a dirty trunk to refuse over.
+    """
     # The move is the link-aware ritual (WI-393), not a bare `git mv`: the
     # spec's own relative links rebase onto active/<branch>/ and every inbound
     # link follows the move, all inside this one claim commit — the 2026-08-01
@@ -733,7 +928,29 @@ def _claim_locked(root, wi_ids, branch):
         )
         if refusal:
             ac.git(root, "reset", "--hard", "HEAD")
-            return fail("the claim move failed (tree restored): {}".format(refusal))
+            return None, "the claim move failed (tree restored): {}".format(refusal)
+    # LLR-173, the RECORD half: taken after the moves and before anything
+    # regenerates, so it digests exactly the bytes the branch is about to be
+    # handed. A spec whose scope cannot be digested never becomes a claim —
+    # freezing nothing and calling it frozen is the shape SR-148 exists to stop.
+    scope_record, refusal = _scope_record(dest_dir, wi_ids)
+    if refusal:
+        ac.git(root, "reset", "--hard", "HEAD")
+        return None, "the claim scope record failed (tree restored): {}".format(refusal)
+    return scope_record, None
+
+
+def _claim_locked(root, wi_ids, branch):
+    """`claim` past its ladder, with the dispatch lock settled — the write
+    sequence itself."""
+    refusal = _drop_abandoned(root, branch)
+    if refusal:
+        return fail(refusal)
+    dest_dir = root / ACTIVE / branch
+    dest_dir.mkdir(parents=True, exist_ok=True)
+    scope_record, refusal = _claim_moves(root, dest_dir, wi_ids)
+    if refusal:
+        return fail(refusal)
     # The claim changes the registry, which is a generated-artifact input, so
     # the regeneration folds into the claim commit (RULING-6: claims and
     # regeneration are the one bookkeeping lane) - otherwise the claim is
@@ -783,8 +1000,8 @@ def _claim_locked(root, wi_ids, branch):
         "-p",
         _head(root),
         "-m",
-        "{}\n\nThe §2.3 claim with its regeneration folded in, written BEFORE the\nbranch and before trunk moves onto it (§A3): a crash between the two\nwrites leaves at worst an orphan branch this claim re-cuts, never a\nclaim no lane can reach.".format(
-            _claim_subject(wi_ids, branch)
+        "{}\n\nThe §2.3 claim with its regeneration folded in, written BEFORE the\nbranch and before trunk moves onto it (§A3): a crash between the two\nwrites leaves at worst an orphan branch this claim re-cuts, never a\nclaim no lane can reach.\n\nThe trailer below is each claimed spec's FROZEN scope digest (SR-148): the\nobligation as it stood before the branch existed, so a reviewer compares\ndelivered work against something the worker did not write.\n\n{}".format(
+            _claim_subject(wi_ids, branch), scope_record
         ),
     )
     if code != 0 or not commit.strip():
@@ -893,10 +1110,8 @@ def branch_outcomes(root, branch):
     raise later.
     """
     landed = {}
-    for path in _branch_tree_paths(root, branch, WORK) or []:
-        parts = path.split("/")
-        if len(parts) > 3 and parts[2] in OUTCOME_DIRS:
-            landed.setdefault(parts[-1], set()).add(OUTCOME_DIRS[parts[2]])
+    for name, status_dir, _path in _landed_specs(root, branch):
+        landed.setdefault(name, set()).add(OUTCOME_DIRS[status_dir])
     outcomes, unresolved = {}, []
     for wi_id, name in _claimed_specs(root, branch):
         seen = landed.get(name) or set()
@@ -2114,6 +2329,14 @@ def _merge_refusal(root, branch, wi_ids):
     if refusal:
         return outcomes, refusal
     refusal = _declared_bar_or_refusal(root)
+    if refusal:
+        return outcomes, refusal
+    # SR-148, placed HERE on purpose: after the structural rungs (which read one
+    # ls-tree and one diff) and before the verdict gate (which shows blobs and
+    # walks commit times per closed id). It also has to run after `unresolved`,
+    # because a spec that landed in no declared folder has no terminal copy to
+    # compare against and would refuse twice for one cause.
+    refusal = _scope_at_claim(root, branch, _claimed_specs(root, branch))
     if refusal:
         return outcomes, refusal
     return outcomes, _verdict_gate(root, branch, outcomes)
