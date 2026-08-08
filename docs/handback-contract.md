@@ -1,7 +1,26 @@
 # The handback contract — the context an owner ruling needs (2026-08-03)
 
+> **RULED 2026-08-08 — this document is the DIAGNOSIS of record, not the design
+> of record.** Its central finding stands and is adopted: *the return event has
+> no immutable identity.* Its proposed remedy is superseded. The live contract is
+> [mechanized-loop-decisions.md](mechanized-loop-decisions.md) + §7 of the
+> [build plan](stakeholder-needs-build-plan-2026-08-08.md):
+>
+> - the terminal folder is **`partial/`**, not the `returned/` §5 proposes
+>   (decision **D-2**);
+> - `handback.py`'s mutating return, the self-`blockref` and the mutable
+>   `## Handback` section are **retired** (decision **D-4**) — the general
+>   `blockref` mechanism survives for ordinary blocked rows;
+> - the immutable record is a per-attempt **outcome event** under `docs/events/`,
+>   which is also this document's §8 rglob trap avoided (decision **D-3**);
+> - §11's one-sitting rule is **honored** — the combined drafting-plus-
+>   re-attestation sitting is declared at decisions §6.
+>
+> Read the rest for the measurements and the reasoning; do not read it as a
+> pending task list.
+
 Written at the owner's request, mid-grind, after three REVIEW-A rounds on
-[WI-416](work/queued/WI-416-dispose-wi-413-handed-back-e56f4e2c201.md) surfaced
+[WI-416](work/cancelled/WI-416-dispose-wi-413-handed-back-e56f4e2c201.md) surfaced
 a pattern the rounds themselves could not fix. **Nothing here executes until
 ruled.** The grind is paused: WI-416 is open and uncommitted, and every row
 downstream of it waits on this.
@@ -107,7 +126,7 @@ belongs to the adjudicator.**
 Choosing `complete/` versus `cancelled/` asserts whether the row's goal was met.
 A lane that stopped early declaring itself complete is a self-assessment — the
 same layering violation as a lane writing `NEEDS-HUMAN`, which is already filed
-as [WI-417](work/queued/WI-417-handback-reason-does-two-jobs.md).
+as [WI-417](work/cancelled/WI-417-handback-reason-does-two-jobs.md).
 
 The structure survives intact with one change: **a single terminal state for
 "stopped early"** — a `returned/` directory. That is a *fact* the lane can
@@ -164,7 +183,7 @@ declared directory. Putting the documents outside `docs/work/` (say
 ## 9. Migration
 
 **One file.** `grep -rl "^## Handback" docs/work` returns exactly
-[WI-413](work/queued/WI-413-bare-sweep-re-mints-open-dispositions.md) and
+[WI-413](work/cancelled/WI-413-bare-sweep-re-mints-open-dispositions.md) and
 nothing else. Whatever is ruled, the migration is a single hand edit — the same
 measurement that made the *old* fix's migration question a non-issue.
 
@@ -184,12 +203,12 @@ measurement that made the *old* fix's migration question a non-issue.
 - WI-416's disposition is re-decided in light of the ruling and its review round
   re-run; the tree is uncommitted, so nothing needs unwinding.
 - WI-413 is re-scoped or deferred.
-- [WI-417](work/queued/WI-417-handback-reason-does-two-jobs.md) is checked
+- [WI-417](work/cancelled/WI-417-handback-reason-does-two-jobs.md) is checked
   against the ruling — its judgement (2) asks whether a handback reason is
   constrained at all, which a per-document contract reopens.
 - The `## Dispositions` drafts already written into WI-416 are minted by the
   machinery at its close, unchanged — both defects are real under either
   contract.
 - The kit's own spine (`SR`/`LLR`/`TC`) rows describing the handback contract
-  are amended in the same window as [WI-390](work/queued/WI-390-concurrency-v2-program-close.md)'s
+  are amended in the same window as [WI-390](work/cancelled/WI-390-concurrency-v2-program-close.md)'s
   program close, per §A4's one-sitting rule.

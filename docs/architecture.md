@@ -1223,7 +1223,7 @@ the SR/LLR ids it renders (PROCESS.md §3, required at G2).
 > still specifies the composed-tree bar on a candidate worktree, SR-093 and
 > SR-124 still describe the five-class scheduling ladder — and LLR-143 still
 > names the deleted `drive.py` as its Module. Amending them is
-> [WI-390](work/queued/WI-390-concurrency-v2-program-close.md)'s spine scope
+> [WI-390](work/cancelled/WI-390-concurrency-v2-program-close.md)'s spine scope
 > (one re-attest window, one owner sitting), so this section states the code
 > truthfully and leaves the rows to their owner rather than editing spine text
 > outside a ratification. Where a diagram and a cited row disagree today, the

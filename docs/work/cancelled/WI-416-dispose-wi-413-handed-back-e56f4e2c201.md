@@ -2,10 +2,25 @@
 id = "WI-416"
 title = "dispose: WI-413 handed back (e56f4e2c201a) - cancel / defer / re-queue with drafted follow-up / surface an open item (a disposition row never hands back; R3)"
 workstream = "process"
-specref = "docs/work/queued/WI-413-bare-sweep-re-mints-open-dispositions.md"
 buildtier = "strong"
 safety_class = "adjudication"
 +++
+
+## Deliverable
+
+**CANCELLED 2026-08-08 — superseded; its disposition mechanism is no longer live.**
+
+This row was the adjudication of WI-413's handback. WI-413 is itself cancelled as
+superseded (above), and the mechanism that minted this row — `handback.py`'s
+mutating return plus `intake._handback_drafts` — is retired by decisions D-4.
+The expected result the plan §13 recorded ("cancellation/supersession once its old
+disposition mechanism is no longer live") is what happened.
+
+**Its evidence is preserved, because it is the sharpest statement of the general
+defect this program fixes:** an adjudication brief that opens with the defendant's
+own verdict, clipped mid-word. That is now a prompt-contract obligation — a judge's
+brief never includes the judged party's self-assessment (plan §10.4) — carried by
+P4's `adjudicate-disposition` template rather than by a per-incident correction.
 
 ## Context
 

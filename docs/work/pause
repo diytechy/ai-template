@@ -1,0 +1,5 @@
+# Tracked pause (concurrency-restructure §5.6). Presence stops claiming and
+# drains what is already in flight; deleting it is an auditable act, and it is
+# the OWNER's, not a builder's.
+reason = "mechanized-loop program build (docs/stakeholder-needs-build-plan-2026-08-08.md). The program replaces the machinery that would normally drive it, so the live agent-resume loop must not integrate branches through code changing beneath it — plan preamble, ratified at docs/mechanized-loop-decisions.md. Build proceeds on the controlled branch `mechanized-loop` with explicit reviews and manual integration checkpoints."
+since = "2026-08-08"
