@@ -24,8 +24,10 @@ with explicit reviews and manual integration checkpoints; do not run the live
    “through” makes the cumulative 0–3 meaning explicit.
 5. Make the branch's judgment real: its worker moves the byte-identical WI spec
    to `complete/`, `cancelled/`, or `partial/` and writes a separate immutable
-   outcome event. An adjudicator reviews every outcome and may confirm or
-   override the folder. The WI's scope text never changes on the branch.
+   outcome event. Partial and Cancelled claims always receive adjudication;
+   Complete uses the existing independent review + composed-tree bar, with a
+   dedicated adjudicator on risk triggers or sampling. Every path retains an
+   override channel. The WI's scope text never changes on the branch.
 6. Never revive an attempted WI. Any remaining work is a newly minted successor
    with explicit lineage and a fresh queue-conflict verdict.
 7. Store attestation history in an append-only ledger keyed by artifact id and
@@ -38,7 +40,7 @@ with explicit reviews and manual integration checkpoints; do not run the live
 
 | Need | Existing foundation | Gap that this program owns |
 |---|---|---|
-| A — one configuration | `stack.ini` is already parsed structurally; most substantive tools are Python. | Behavior is split across `stack.ini`, five one-value policy files, `agents.csv`, `agents-enabled`, launchers, environment variables, and CLI maps. `agent_common.read_declared()` intentionally reads only the first non-comment line; that convention, not a limitation of grep, is why those files could not grow into structured config. |
+| A — one configuration | `stack.ini` is already parsed structurally; most substantive tools are Python. | Behavior is split across `stack.ini`, five one-value policy files, `agents.csv`, `agents-enabled`, launchers, environment variables, and CLI maps. The one-value convention is load-bearing in two places: `agent_common.read_declared()` reads the first non-comment line, and security-sensitive shell hooks use a first-value `grep`/`head` parse so they can fail closed before Python tooling runs. That accreted convention—not a limitation of grep—is why the policy files did not become structured config. |
 | B — numeric human boundary | `derive_gate.py` derives `G0..G3`; Draft/Modified rows surface in Open Items; `trace.py` reconstructs an SR's latest Verified commit. | Current G2 combines LLR and TC decomposition, SNs have section-state rather than row status, and Git archaeology is not a durable row-level attestation anchor. The old `gate-policy` enum does not express the requested cumulative human boundary. |
 | C.1 — autonomous resume | `dispatch.py` has a spine barrier, exclusive adjudication, parallel ordinary work, attended-stop banner, and empty-frontier gap census. | Handback reconciliation is not an explicit first pass; sanctioned Modified changes evade the current adjudication trigger; a claimed-complete red bar stops instead of minting remediation. |
 | C.2 — worker outcome + override | Complete and cancelled are terminal; handback mints an adjudication WI. | Handback mutates the original WI and requeues it. There is no `partial/`, no immutable outcome event, and no general adjudicator confirmation/override of all three worker judgments. |
@@ -87,18 +89,25 @@ and gives SN prose an honest baseline.
 
 ## 4. Proposed stakeholder-needs amendment
 
-Mint these as real Draft SN ids only after the terminology in this plan is
-approved. They are separate needs because folding them into SN-003/SN-004/
-SN-025/SN-026 would turn those rows into multi-obligation statements.
+After the terminology is approved, mint five real Draft needs as SN-028..032
+and amend the already-existing SN-026 for item D. SN-026 already owns the
+provider/model/family routing intent and is currently in the same Modified
+window, so a second need would duplicate it. The other five are separate needs:
+folding them into SN-003/SN-004/SN-025/SN-027 would turn those rows into
+multi-obligation statements.
 
-| Proposed need | Acceptance intent | Existing rows to reconcile, not duplicate |
+Draft SN-028..032 and resolve the 21 already-Modified SRs in **one combined
+drafting-plus-re-attestation sitting**. The temporary G0/G1 result is the
+derived model honestly exposing in-process scope, not a regression.
+
+| Spine action | Acceptance intent | Existing rows to reconcile, not duplicate |
 |---|---|---|
-| SN-A — single processing configuration | One validated file controls harness, automation policy, routing, and prompt selection; a detector proves no retired config source still affects behavior. | SN-003, SN-004, SN-025, SN-026 |
-| SN-B — configurable human ratification boundary | A cumulative numeric boundary controls which spine-tier ratifications require a human; meaning changes regress the derived stage; an independent final-review request is durable and visible. | SN-004, SN-006, SN-025 |
-| SN-C1 — autonomous adjudication loop | One deterministic resume planner orders outcome adjudication, prose adjudication, human stops, spine batches, ordinary work, and red-bar remediation. | SN-006, SN-025, SN-027 |
-| SN-C2 — immutable scoped attempt | A worker records Complete, Cancelled, or Partial without changing scope; adjudication may override; the attempted WI never returns to the frontier. | SN-025, SN-027 |
-| SN-C3 — adjudicated queue admission | Every transition to queued has a recorded, current conflict verdict against spine and queued/active work. | SN-002, SN-025, SN-027 |
-| SN-D — declared job routing and prompt contracts | Planner, reviewer, implementer, adjudicator, critic, and arbiter resolve through declared weighted pools with capability and same-or-stronger fallback; every launched prompt is reviewable and attributable. | SN-024, SN-026 |
+| New SN-028 — single processing configuration | One validated file controls harness, automation policy, routing, and prompt selection; a detector proves no retired config source still affects behavior. | SN-003, SN-004, SN-025, SN-026 |
+| New SN-029 — configurable human ratification boundary | A cumulative numeric boundary controls which spine-tier ratifications require a human; meaning changes regress the derived stage; an independent final-review request is durable and visible. | SN-004, SN-006, SN-025 |
+| New SN-030 — autonomous adjudication loop | One deterministic resume planner orders outcome adjudication, prose adjudication, human stops, spine batches, ordinary work, and red-bar remediation. | SN-006, SN-025, SN-027 |
+| New SN-031 — immutable scoped attempt | A worker records Complete, Cancelled, or Partial without changing scope; adjudication may override; the attempted WI never returns to the frontier. | SN-025, SN-027 |
+| New SN-032 — adjudicated queue admission | Every transition to queued has a recorded, current conflict verdict against spine and queued/active work. | SN-002, SN-025, SN-027 |
+| Amend SN-026 — declared job routing and prompt contracts | Planner, reviewer, implementer, adjudicator, critic, and arbiter resolve through declared weighted pools with capability and same-or-stronger fallback; every launched prompt is reviewable and attributable. | SN-024 and the existing SN-026 SR chain |
 
 SN-E and SN-F remain placeholders. They receive neither ids nor trace rows until
 they state observable stakeholder value.
@@ -117,6 +126,14 @@ Use `docs/config.toml` as the only editable source for behavior. It owns:
 It does **not** own credentials, generated state (`docs/gate`, dashboards), live
 events (`docs/work/pause`, outcome/attestation requests), requirement/WI
 records, or measured baselines. Those are state or evidence, not configuration.
+
+The shell hooks are an explicit migration constraint. The recommended target is
+a tiny Python 3.11 config-query entry point used by pre-commit, commit-msg, and
+pre-push; a missing or below-floor interpreter refuses clearly and therefore
+preserves the current fail-closed security behavior. During migration, tests
+drive the old shell read and the TOML read over the same matrix and require
+agreement. No second policy file or generated mirror survives cutover: a mirror
+would immediately violate the single-authority need it was meant to support.
 
 Illustrative shape:
 
@@ -160,10 +177,11 @@ to send prompts on stdin. Secrets remain in provider CLI state or environment;
 the config may name a credential profile but never contain its token.
 
 Migration is staged: strict loader and validator; read-only converter/report;
-behavior-parity run; canonical cutover; then legacy-reader deletion. If both a
-new and an old source are live, preflight fails with the conflicting keys—there
-is no silent precedence. One-shot CLI overrides remain possible only as
-break-glass inputs recorded in the session evidence.
+old-shell/new-Python agreement tests for security keys; behavior-parity run;
+canonical cutover; then legacy-reader deletion. If both a new and an old source
+are live, preflight fails with the conflicting keys—there is no silent
+precedence. One-shot CLI overrides remain possible only as break-glass inputs
+recorded in the session evidence.
 
 The old `gate-policy` values do not map losslessly: `attended` maps naturally to
 3, while `single-ratify` also encoded cadence and `autonomous` allowed no early
@@ -219,6 +237,8 @@ Every attempted branch writes one immutable outcome event outside `docs/work/`:
 - WI id, claim-base and branch-tip commits, scope digest;
 - worker outcome (`complete`, `cancelled`, `partial`);
 - facts: files/commits, checks run and exact results, blockers, unmet criteria;
+- for Partial, an explicit keep/discard/quarantine classification of every
+  branch commit or coherent change group;
 - reviewer verdict references; and
 - no free-form instruction field that can be interpreted as dispatcher policy.
 
@@ -230,12 +250,22 @@ The worker then moves the byte-identical WI spec:
 | Cancelled | `cancelled/` | confirm, or override to Partial/Complete |
 | Partial | `partial/` | confirm, or override to Complete/Cancelled |
 
-All three are terminal and never scheduler-ready. The adjudicator records the
-final outcome in a new disposition event and, if needed, moves the same
-byte-identical spec to the corrected terminal folder. A Partial outcome drafts
-a successor for the remaining scope; it never edits or requeues the original.
-Existing `returned/`, self-`blockref`, and mutable `## Handback` proposals are
-retired by this contract.
+All three are terminal and never scheduler-ready. Partial and Cancelled always
+enter the disposition path. Complete normally receives its authoritative
+judgment from the already-independent reviewer plus composed-tree bar; a
+dedicated adjudicator runs when the review disagrees with the worker claim, the
+scope/bar evidence is incomplete, the safety class requires it, or configured
+sampling selects it. This avoids rebuilding the existing verdict gate under a
+new name while preserving review and override authority.
+
+The adjudicator records the final outcome in a new disposition event and, if
+needed, moves the same byte-identical spec to the corrected terminal folder;
+the worker's original claim remains visible in the outcome event. Leaving a
+misjudged WI in its original folder would contradict the directory-as-status
+contract. A Partial outcome drafts a successor for the remaining scope and the
+integrator refuses it until the keep/discard/quarantine split is complete. It
+never edits or requeues the original. Existing `returned/`, self-`blockref`,
+and mutable `## Handback` proposals are retired by this contract.
 
 ## 8. Queue admission as one transaction
 
@@ -298,7 +328,10 @@ A red claimed-complete branch is an outcome, not an automatic retry. A red full
 trunk after stage 4 produces a failure event keyed by tree SHA, failing step,
 and failure fingerprint so the intake can mint exactly one remediation draft.
 The adjudicator estimates effort, BuildTier, plan mode, and scope; ordinary
-queue admission still decides whether it may enter the queue.
+queue admission still decides whether it may enter the queue. The existing
+empty-frontier `gap_census` remains the discovery seam for registry symptoms,
+but the remediation event is grounded in the actual harness failure—not merely
+in a TC `Evidence` cell or an unverified status.
 
 ## 10. Prompt source, review, and provenance
 
@@ -315,8 +348,12 @@ Current prompt influence is only partly reviewable:
 
 The target uses the dual-plan pattern for every role:
 
-1. Put worker, reviewer, critic, planner, adjudicator, and arbiter prose in
-   versioned Markdown assets. `docs/config.toml` maps job → template.
+1. Put worker, reviewer, critic, planner, and arbiter prose in versioned
+   Markdown assets. Add four deliberately separate adjudicator templates from
+   day one: `adjudicate-amendment` (clarity/meaning),
+   `adjudicate-disposition` (Partial/Cancelled + successor/tier),
+   `adjudicate-conflict` (queue admission), and `adjudicate-red-test`
+   (remediation effort/scope). `docs/config.toml` maps each job to its template.
 2. Keep template metadata in config: required/allowed slots, allowed and
    prohibited source classes, output grammar, and semantic-review rubric.
 3. Use one strict renderer. Unknown, extra, missing, or still-unrendered slots
@@ -324,17 +361,18 @@ The target uses the dual-plan pattern for every role:
 4. Delimit injected values as typed, untrusted evidence. A worker's outcome is
    an enum plus a separately delimited rationale; it can never become an
    instruction, tier selector, or `NEEDS-HUMAN` magic string.
-5. Generate a prompt catalog showing job, source template, input dataflow,
+5. State the template authoring and source-separation rules once in
+   `prompts/README.md`, then generate a prompt catalog showing job, source template, input dataflow,
    prohibited inputs, output parser, template hash, and deterministic fixture
    render. A review command can render any real packet to a gitignored audit
    directory without committing secrets or large prompts.
 6. Record template id/hash, rendered-prompt hash, route id, model, arguments,
    and source-artifact hashes in every session/outcome/verdict event.
 7. Mechanize structural correctness: slot contracts, source deny-lists,
-   output-parser compatibility, stdin transport, golden renders, and required
-   policy clauses. Judge prose meaning honestly with an independent prompt
-   review against a written rubric; no string-presence test can prove prose is
-   semantically good.
+   output-parser compatibility, stdin transport, golden renders, required
+   policy clauses, and fake-CLI assertions over the **as-launched** prompt.
+   Judge prose meaning honestly with an independent prompt review against a
+   written rubric; no string-presence test can prove prose is semantically good.
 
 ## 11. Dependency-ordered implementation work
 
@@ -344,21 +382,21 @@ spine amendment is ratified. “Dual” means two independent plans plus arbiter
 
 | Plan id | Deliverable | Depends on | Suggested route |
 |---|---|---|---|
-| P0 | Ratify glossary and the decisions in §§1, 3, 5–8; freeze old unattended execution; disposition current conflicting WIs. | owner review | strong · dual |
-| P1 | Draft/ratify SN-A..D and decompose SR/LLR/TC acceptance, including the two-axis `spine_stage`/`verification_gate` contract. | P0 | strong · dual |
-| P2 | Implement pure `config.toml` schema, typed loader, validator, and legacy conversion/diff report; no runtime callers switch yet. | P0 | strong · dual |
+| P0 | Ratify glossary and the decisions in §§1, 3, 5–8; freeze old unattended execution; disposition current conflicting WIs; declare one combined sitting with the 21 already-Modified SRs. | owner review | strong · dual |
+| P1 | Draft/ratify SN-028..032, amend SN-026, and decompose SR/LLR/TC acceptance, including the two-axis `spine_stage`/`verification_gate` contract. | P0 | strong · dual |
+| P2 | Implement pure `config.toml` schema, typed loader, validator, legacy conversion/diff report, and fail-closed shell-hook migration/agreement tests; no runtime callers switch yet. | P0 | strong · dual |
 | P3 | Implement canonical normative-cell snapshots/digests plus append-only attestation and final-review request ledgers. | P1 | strong · dual |
-| P4 | Externalize prompts, implement strict rendering, output schemas, prompt catalog, and prompt provenance. | P2 | medium · standard |
+| P4 | Externalize existing prompts; add the four purpose-specific adjudicator templates, `prompts/README.md`, strict rendering, output schemas, as-launched tests, prompt catalog, and prompt provenance. | P2 | medium · standard |
 | P5 | Normalize provider routes and job pools onto config; add routed adjudicator and arbiter; preserve equal-or-stronger and diversity behavior. | P2, P4 | medium · standard |
-| P6 | Add `partial/`, immutable scope-at-claim enforcement, and one outcome event for every terminal worker result. | P1 | strong · dual |
-| P7 | Implement outcome adjudication, folder override, successor drafting, and worker/adjudicator audit history. | P3, P4, P5, P6 | strong · standard |
+| P6 | Add `partial/`, immutable scope-at-claim enforcement, one outcome event for every terminal result, and mandatory keep/discard/quarantine classification for Partial. | P1 | strong · dual |
+| P7 | Implement mandatory Partial/Cancelled adjudication, risk-triggered/sampled Complete adjudication, authoritative folder override, successor drafting, and worker/adjudicator audit history. | P3, P4, P5, P6 | strong · standard |
 | P8 | Centralize Draft→Queued admission and add mechanical overlap graph + adjudicator conflict verdict/freshness gate. | P3, P7 | strong · dual |
 | P9 | Replace gate-policy admission behavior with `human_ratification_through`, persistent final-review policy, one-shot request events, and shared Open Items/banner projection. | P2, P3 | strong · standard |
 | P10 | Replace commit-local prose detection with ledger-vs-current semantic candidates; cover SN and sanctioned Modified changes; enact clarity/meaning/override. | P3, P7, P9 | strong · dual |
 | P11 | Implement the pure resume planner and wire it to dispatch/intake in the precedence of §9, including component-safe spine batching. | P8, P9, P10 | strong · dual |
 | P12 | Persist branch/full-trunk bar-failure events and exactly-once remediation drafting with adjudicated effort/tier/plan mode. | P7, P8, P11 | medium · standard |
 | P13 | Cut runtime readers to canonical config; simplify launchers; migrate self-adoption and bootstrapped fixtures; update architecture/process/dashboard/Open Items. | P2, P5, P9, P11, P12 | medium · standard |
-| P14 | Delete legacy readers/files, mutable handback path, magic-string routing, unused functions, and stale open WIs; run the complete migration and scaffold matrix. | P13 | medium · mechanical + review |
+| P14 | Mint and execute one measured unused-function sweep; delete legacy readers/files, mutable handback, and magic-string routing; disposition (rather than assume) any newly stale live WIs; run the complete migration and scaffold matrix. | P13 | medium · mechanical + review |
 
 ```mermaid
 flowchart LR
@@ -382,6 +420,23 @@ Safe parallel lanes after P0: P1 and P2. After those foundations, P4/P5 can
 run alongside P3/P6. P7 is the first composition point; P11 is the final
 orchestration point and should not start early.
 
+### Phase-close checkpoints
+
+The granular DAG above remains the scheduling authority. These checkpoints
+group it into reviewable compositions and keep the replacement loop runnable:
+
+| Checkpoint | Plan work | Exit evidence |
+|---|---|---|
+| A — owner sitting and spine contract | P0–P1 | combined Draft/re-attest brief; approved terminology and exact transition tables |
+| B — configuration, ledger, and prompt foundations | P2–P5 | old/new behavior parity, hook fail-closed matrix, prompt catalog, routed adjudicator/arbiter |
+| C — immutable outcomes and admission | P6–P8 | all worker/final outcome combinations, Partial keep/discard refusal, conflict-verdict freshness |
+| D — human boundary and prose semantics | P9–P10 | 0–3 boundary matrix, final-review request, SN/SR/LLR/TC clarity/meaning cases |
+| E — complete resume loop | P11–P12 | ordered end-to-end loop, component batch proof, exactly-once real-harness remediation |
+| F — cutover and cleanup | P13–P14 | canonical-config-only scaffold, no legacy behavior readers, measured unused-symbol disposition |
+
+Every checkpoint ends with the full unfiltered suite and the applicable full
+`check.py` gate bar, not only the per-slice smoke bar.
+
 ## 12. Primary code, document, and test touchpoints
 
 - Configuration/routing: `agent_common.py`, `check.py`, `agent_route.py`,
@@ -403,11 +458,15 @@ closure additionally requires:
 - all 0–3 boundary transitions, meaning regressions at each artifact tier,
   clarity retention, stale anchors, autonomous decisions, and human overrides;
 - every worker/adjudicator outcome pair, byte-identical scope proof, crash
-  recovery, duplicate events, and proof an attempted WI is never ready again;
+  recovery, duplicate events, Complete risk/sampling triggers, Partial
+  keep/discard/quarantine refusal, and proof an attempted WI is never ready
+  again;
 - conflict candidates across shared SN/SR, component, interface, file and
   predecessor scope, with stale/missing admission verdicts rejected;
 - weighted pools, unavailable-route fallback at equal/higher strength, routed
   arbiter/adjudicator, degraded diversity, and provider-preflight failures;
+- shell-hook and Python config reads agreeing on security policy during
+  migration, plus a clear fail-closed result when Python 3.11 is unavailable;
 - every prompt's strict slots, prohibited-source redaction, output grammar,
   golden render, stdin transport, and logged hashes;
 - stage-wide/component spine batches, ordinary parallel work, human stops, and
@@ -422,17 +481,20 @@ closure additionally requires:
 |---|---|
 | WI-390 | Absorb its still-needed spine/prose/connectivity close into P1/P13 so there is one coherent amendment sitting; do not let it rewrite the old concurrency contract immediately before this program replaces it. |
 | WI-413 | Cancel as superseded: per-event identity removes the dedup-token problem rather than patching it again. |
-| WI-416 | Cancel after recording that its disposition contract was superseded by outcome events and P7. |
+| WI-416 | Re-decide at P0 against the approved outcome contract; expected result is cancellation/supersession once its old disposition mechanism is no longer live. |
 | WI-417 | Absorb the factual-reason / judgment / tier separation into P6/P7/P12; preserve its evidence as design input. |
 | WI-418 | Absorb into P4/P7: typed evidence and prompt contracts are the general fix for derived prose anchoring. |
 | WI-415 | Keep independent; it is ordinary dashboard polish and may run outside this program if it does not touch the new Process view. |
 
-Do not delete completed/cancelled/partial WIs merely because they are old; they
-are audit history. P14's “dead WI” cleanup applies to live Draft/Queued items
-whose SpecRef, premise, or context no longer exists: cancel or supersede them
-with a recorded reason. Delete code only after its legacy caller is removed and
-an AST/import inventory plus `rg` confirms it is unreachable; do not use test
-coverage alone as a reachability oracle.
+The current queue contains no context-free dead WI, and there is no existing
+unused-function sweep WI—WI-390 explicitly is not that sweep. Do not delete
+completed/cancelled/partial WIs merely because they are old; they are audit
+history. P14 mints one measured cleanup row and applies “dead WI” cleanup only
+to live Draft/Queued items whose SpecRef, premise, or context has become stale
+during this program: cancel or supersede them with a recorded reason. Delete
+code only after its legacy caller is removed and an AST/import inventory plus
+`rg` confirms it is unreachable; do not use test coverage alone as a
+reachability oracle.
 
 ## 14. Cutover and rollback
 
