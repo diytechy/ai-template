@@ -150,7 +150,7 @@ resource: "generated"
 | [SR-137](SR-137.md) | One policy home, with a checked shape |
 | [SR-138](SR-138.md) | Legacy config converts automatically and totally |
 | [SR-139](SR-139.md) | Ratification as an ordinal over a derived spine stage |
-| [SR-140](SR-140.md) | An append-only attestation ledger anchors what was accepted |
+| [SR-140](SR-140.md) | The attestation anchor lives on the artifact's own row |
 | [SR-141](SR-141.md) | The loop's priority order is stated and pinned |
 | [SR-142](SR-142.md) | Red test cases under a closed implementation are named and judged |
 | [SR-143](SR-143.md) | Queue overlap is made visible, never blocked |

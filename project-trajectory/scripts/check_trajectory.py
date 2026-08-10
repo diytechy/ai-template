@@ -2966,17 +2966,20 @@ def spine_cell_class(csv_path, column):
     return "traced" if column in SPINE_TRACED_CELLS.get(csv_path, ()) else "ratified"
 
 
-# --- SN-029: the attestation ledger, and the digest that anchors it -----------
-# THE LEDGER'S HOME. `docs/requirements/` because it IS a registry, and placing
-# it there buys `trace.structure_findings`' column-count integrity for free.
-# Explicitly NOT `docs/work/` (the `spec_files` rglob trap) and not `docs/log.md`
-# (prose: evidence, never normative).
-ATTESTATIONS_CSV = "docs/requirements/attestations.csv"
-# `superseded` is the RETIREMENT decision: the artifact left the spine and its
-# anchor is deliberately dangling. It exists because the alternative to naming
-# that state is deleting the ledger row, and a ledger you delete from is not
-# append-only — the one property the whole rung rests on.
-ATTESTATION_DECISIONS = ("ratified", "clarity", "meaning", "override", "superseded")
+# --- SN-029: the digest that anchors an attestation ---------------------------
+# WHAT SURVIVED THE LEDGER (docs/repo-lock.md D-1, owner ruling 2026-08-09). The
+# separate `docs/requirements/attestations.csv` registry is RETIRED: attestation
+# state was always the row's own `Status` — `derive_gate` computes the gate from
+# those cells and never referenced the ledger — and three of the ledger's seven
+# columns duplicated cells the row already carried (`Decision=ratified|meaning`
+# IS `Status`; `superseded` IS `SupersededBy`). A second registry holding a fact
+# about a row that already exists is the duplication this kit refuses elsewhere.
+#
+# What the ledger got RIGHT is kept: the canonical text a digest is taken over,
+# and the digest itself. The anchor's new home is the ARTIFACT'S OWN ROW, but
+# which columns that means depends on the carrier question (OI-12), so these
+# functions currently have no writer. They are the engine, not the mechanism —
+# do not delete them for being unreferenced.
 # The field separator inside a digest's canonical text. A unit separator, so it
 # cannot occur in a cell and two different splits cannot collide.
 _DIGEST_SEP = "\x1f"
@@ -3036,31 +3039,6 @@ def digest(text):
     return "sha256:" + hashlib.sha256(text.encode("utf-8")).hexdigest()
 
 
-def read_attestations(root):
-    """The ledger's rows, oldest-first, `[]` when absent. `-000` dropped."""
-    path = Path(root) / ATTESTATIONS_CSV
-    if not path.is_file():
-        return []
-    with path.open(newline="", encoding="utf-8-sig", errors="replace") as fh:
-        return [
-            r
-            for r in csv.DictReader(fh)
-            if (r.get("ATT-ID") or "").strip()
-            and not r["ATT-ID"].strip().endswith("-000")
-        ]
-
-
-def newest_attestations(root):
-    """`{artifact id: row}` — the LAST ledger row per artifact, which is its
-    current anchor. Append-only means later wins; nothing rewrites a row."""
-    out = {}
-    for row in read_attestations(root):
-        artifact = (row.get("Artifact") or "").strip()
-        if artifact:
-            out[artifact] = row
-    return out
-
-
 def current_digests(root):
     """`{artifact id: digest}` over every real spine row and every SN."""
     root = Path(root)
@@ -3080,143 +3058,6 @@ def current_digests(root):
             if line is not None:
                 out[sn_id] = digest(line)
     return out
-
-
-def attestation_findings(root):
-    """Artifacts whose NORMATIVE TEXT has moved since the ledger accepted it.
-
-    THE GAP THIS CLOSES. `staged_spine_amendments` — the seam the
-    amend-without-flip warn and the adjudication mint both consume — drops a
-    record when either the row's own Status is not `Verified` on both sides OR
-    its owning SR is flagged on the new side. Both exits are deliberate (a
-    Status move is a call this does not second-guess), and together they mean
-    the SANCTIONED amend+flip path never reaches either consumer. So an
-    amendment made the blessed way is invisible to both.
-
-    A digest recorded at ACCEPTANCE time is visible regardless of any Status
-    movement: the text either matches what was accepted or it does not. That is
-    also the only anchor an SN can have, since an SN has no Status cell at all.
-
-    Warn-tier by construction (a list of strings, like every finding here);
-    `main` promotes it under `--strict` beside the other registry findings.
-    """
-    anchors = newest_attestations(root)
-    if not anchors:
-        return []
-    findings = []
-    digests = current_digests(root)
-    # THE GHOST ANCHOR, checked first because iterating the REGISTRY alone can
-    # never see it: a ledger row keyed on an artifact that is not a current
-    # spine row (deleted, renamed, or simply a typo'd `Artifact` cell) anchors
-    # nothing at all, and reads as a perfectly clean ledger while doing it. A
-    # `SR-01` typo is indistinguishable from an untraced requirement otherwise.
-    for artifact in sorted(anchors):
-        retired = (anchors[artifact].get("Decision") or "").strip().lower()
-        if artifact not in digests and retired != "superseded":
-            findings.append(
-                "{} is attested by {} but is not a current spine row or SN — "
-                "the ledger row anchors nothing. Either the artifact was "
-                "removed (append a `superseded` row saying so) or the "
-                "`Artifact` cell is a typo.".format(
-                    artifact, anchors[artifact].get("ATT-ID") or "the ledger"
-                )
-            )
-    for artifact, current in sorted(digests.items()):
-        anchor = anchors.get(artifact)
-        if anchor is None:
-            continue
-        recorded = (anchor.get("TextDigest") or "").strip()
-        decision = (anchor.get("Decision") or "").strip().lower()
-        if not recorded or recorded == current:
-            continue
-        if decision == "meaning":
-            # The ledger already says this text owes a fresh ratification; the
-            # divergence is the RECORDED state, not a new finding.
-            continue
-        findings.append(
-            "{} normative text has changed since {} accepted it ({}, {}) — the "
-            "attestation no longer covers what the row says. Adjudicate it "
-            "(meaning or clarity?) and append a ledger row.".format(
-                artifact,
-                anchor.get("ATT-ID") or "the ledger",
-                (anchor.get("AcceptedCommit") or "?")[:10],
-                anchor.get("Date") or "?",
-            )
-        )
-    return findings
-
-
-def attestation_integrity_findings(root):
-    """The ledger's own shape: APPEND-ONLY, and every row well-formed.
-
-    Integrity-class, not advisory. A ledger that can be rewritten is not an
-    anchor — it is a second mutable proxy, which is the whole failure mode this
-    replaces."""
-    findings = []
-    seen = set()
-    for row in read_attestations(root):
-        att = (row.get("ATT-ID") or "").strip()
-        if att in seen:
-            findings.append("{}: duplicate ledger id".format(att))
-        seen.add(att)
-        decision = (row.get("Decision") or "").strip().lower()
-        if decision not in ATTESTATION_DECISIONS:
-            findings.append(
-                "{}: Decision {!r} is not one of {}".format(
-                    att, row.get("Decision"), "|".join(ATTESTATION_DECISIONS)
-                )
-            )
-        if not (row.get("TextDigest") or "").strip().startswith("sha256:"):
-            findings.append("{}: TextDigest is not a sha256: digest".format(att))
-        if not (row.get("Artifact") or "").strip():
-            findings.append("{}: names no Artifact".format(att))
-    return findings
-
-
-def staged_attestation_rewrite_findings(root, base="HEAD", head=None):
-    """The APPEND-ONLY guard: ledger lines that were CHANGED or REMOVED between
-    two trees, rather than appended.
-
-    Uses the same two-tree read `staged_spine_amendments` does, so the hook's
-    `--staged` question and a post-commit rev range are one mechanism.
-
-    DELETION IS THE CASE THIS HAD TO GROW A RULE FOR. Truncating the ledger to
-    zero bytes was caught (the old lines are gone from a file that still
-    exists); `git rm`-ing it was not, because `git show :<path>` then fails and
-    the guard read that as "no git context" and returned clean — which also
-    silenced the drift and integrity rungs, since an absent ledger has no rows
-    to check. The strongest form of rewriting a ledger was the one form it
-    could not see. A rename is the same act wearing a different hat, so the
-    diff is read with `--no-renames` (`_spine_revs`) and the old path shows up
-    as a deletion."""
-    revs = _spine_revs(root, base, head, touches=(ATTESTATIONS_CSV,))
-    if revs is None:
-        return []
-    _staged_names, old_rev, new_rev = revs
-    before = _git(root, ["show", old_rev + ATTESTATIONS_CSV])
-    after = _git(root, ["show", new_rev + ATTESTATIONS_CSV])
-    if before is None:
-        # Nothing to compare against — the ledger is being CREATED, which is
-        # every first attestation and not a rewrite.
-        return []
-    if after is None:
-        return [
-            "{} was REMOVED. An attestation ledger that can be deleted is not "
-            "an anchor at all, and its absence silences the drift and "
-            "integrity rungs too — every reader falls back to deriving "
-            "ratification from git history, which is what this file "
-            "replaced. Restore it; retire individual rows with a "
-            "`superseded` decision instead.".format(ATTESTATIONS_CSV)
-        ]
-    old_lines = [ln for ln in before.lstrip("﻿").splitlines() if ln.strip()]
-    new_lines = [ln for ln in after.lstrip("﻿").splitlines() if ln.strip()]
-    if new_lines[: len(old_lines)] == old_lines:
-        return []
-    return [
-        "{} was REWRITTEN, not appended to — an attestation ledger whose "
-        "earlier rows can move is not an anchor. Append a new row recording "
-        "the correction instead.".format(ATTESTATIONS_CSV)
-    ]
 
 
 def _split_changed_cells(csv_path, id_col, head, row):
@@ -3252,8 +3093,9 @@ def _spine_revs(root, base, head, touches=()):
     intra-file duplication WI-347 rules a defect."""
     # `--no-renames` so a MOVED registry shows up as its old path too. With
     # rename detection on, `git diff --name-only` reports only the destination,
-    # so `git mv docs/requirements/attestations.csv elsewhere.csv` was invisible
-    # to every `touches` test here — the append-only guard included.
+    # so `git mv docs/test/test-cases.csv elsewhere.csv` was invisible to every
+    # `touches` test here. (The append-only ledger guard was the rung that found
+    # this; the rule outlives it — D-1 retired the ledger, not the hazard.)
     if head is None:
         names = _git(root, ["diff", "--cached", "--name-only", "--no-renames", base])
         new_prefix = ":"
@@ -3731,30 +3573,6 @@ def critique_staleness_findings(root):
     ]
 
 
-def _report_attestations(root, strict):
-    """Print the SN-029 attestation ledger's WARNs; return the ERROR subset.
-
-    The DRIFT rung is warn/strict like the other registry findings; the ledger's
-    own INTEGRITY is hard, because a ledger that does not parse is not an anchor
-    at all and every reader downstream would silently fall back to the
-    git-history derivation it replaces. Lifted out of `main` to hold the C901
-    ceiling — the standing rule there is simplify, never bump.
-
-    Only the WARN tier prints here. The errors are RETURNED and printed by
-    whichever exit the caller reaches, exactly like `comp_errors`: printing
-    them here as well made a strict-promoted drift finding appear twice, once
-    as WARN and once as ERROR, under a tally that counted it once."""
-    errors = []
-    for w in attestation_findings(root):
-        if strict:
-            errors.append(w)
-        else:
-            print("check_trajectory: WARN - {}".format(w), file=sys.stderr)
-    errors.extend(attestation_integrity_findings(root))
-    errors.extend(staged_attestation_rewrite_findings(root))
-    return errors
-
-
 def main():
     _utf8_console()
     ap = argparse.ArgumentParser(
@@ -3797,17 +3615,13 @@ def main():
             staged_findings(root)
             + critique_ratchet_findings(root)
             + staged_spine_findings(root)
-            # SN-029: the attestation ledger's three rungs ride the same warn
-            # tier the amend-without-flip warn does — the DRIFT (the text moved
-            # away from what was accepted), the ledger's own SHAPE, and its
-            # append-only guard. All three warn here and are gated under
-            # --strict below. The shape rung is included deliberately: a
-            # malformed ledger is an ERROR at the full run, and the commit is
-            # the one moment it is cheap to fix, so staying silent here would
-            # save the diagnostic for after it stops being cheap.
-            + attestation_findings(root)
-            + attestation_integrity_findings(root)
-            + staged_attestation_rewrite_findings(root)
+            # The three attestation-ledger rungs that used to ride this tier are
+            # gone with the ledger (D-1). Their replacement — a co-mutation guard
+            # over the row's own anchor cells — lands with the anchor half, once
+            # OI-12 rules the carrier. Until then the amend-without-flip warn
+            # above is the only spine-amendment signal at commit time, which is
+            # exactly the state that preceded SN-029; nothing regressed, because
+            # the ledger never held a row.
             + staged_completion_findings(root)
         ):
             print("check_trajectory: WARN - {}".format(w), file=sys.stderr)
@@ -3825,12 +3639,6 @@ def main():
     # batch-scoped hierarchy view. Vacuous without a ratification brief.
     for w in ratify_brief_findings(root):
         print("check_trajectory: WARN - {}".format(w), file=sys.stderr)
-
-    # Held in its own local, NOT appended to `errors`: that name is not bound
-    # until after the WI-vacuity return below, and this rung deliberately runs
-    # BEFORE it — the ledger is a property of the SPINE, so a repo with a
-    # corrupt attestations.csv and no work items at all must still fail.
-    att_errors = _report_attestations(root, args.strict)
 
     # How-SW top-view right-sizing (WI-073/FB5) — WARN plain, ERROR under --strict
     # (G2+). Runs before the WI vacuity return too (the bound is a property of the
@@ -3855,13 +3663,12 @@ def main():
     wis, integrity = load_wis(wi_rows)
     integrity = registry_errors + integrity
     if not wis and not integrity:
-        vacuous = comp_errors + att_errors
-        if vacuous:
-            for e in vacuous:
+        if comp_errors:
+            for e in comp_errors:
                 print("check_trajectory: ERROR - {}".format(e), file=sys.stderr)
             print(
-                "check_trajectory: {} architecture/attestation finding(s).".format(
-                    len(vacuous)
+                "check_trajectory: {} architecture finding(s).".format(
+                    len(comp_errors)
                 ),
                 file=sys.stderr,
             )
@@ -3878,7 +3685,7 @@ def main():
     for w in phase_findings(root, wis):
         print("check_trajectory: WARN - {}".format(w), file=sys.stderr)
 
-    errors = comp_errors + att_errors + integrity + validate(wis, load_known_srs(root))
+    errors = comp_errors + integrity + validate(wis, load_known_srs(root))
     # Specs act on declared interface boundaries (WI-191) — WARN plain, ERROR
     # under --strict (G2+); vacuous until a spec adopts an `## Interfaces` section.
     for msg in spec_interface_findings(root):

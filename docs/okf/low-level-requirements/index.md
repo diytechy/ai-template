@@ -151,7 +151,7 @@ resource: "generated"
 | [LLR-155](LLR-155.md) | The config layer: one reader, checked shape, one comparison |
 | [LLR-156](LLR-156.md) | The legacy converter, and the one word that is not a rename |
 | [LLR-157](LLR-157.md) | The second axis: which tier is in process |
-| [LLR-158](LLR-158.md) | The ledger's three rungs and their tiers |
+| [LLR-158](LLR-158.md) | The digest that anchors an attestation |
 | [LLR-159](LLR-159.md) | Admission order and the red-TC census |
 | [LLR-160](LLR-160.md) | The mechanical queue-overlap pre-filter |
 | [LLR-161](LLR-161.md) | The close ritual and the disposition it owes |

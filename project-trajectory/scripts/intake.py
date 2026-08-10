@@ -1338,86 +1338,18 @@ def flip_verified(root, ids):
             )
         return action, [], None
     flipped = _apply_flips(root, tables, located)
-    # SN-029: the flip and the LEDGER APPEND are one act. A ratification whose
-    # anchor is written later (or by a different tool) is a window where the
-    # registry says `Verified` and nothing records what text was blessed —
-    # which is the state the derived-from-git-history baseline lived in
-    # permanently.
-    recorded = record_attestations(root, flipped, "ratified")
+    # THE ANCHOR IS STILL OWED HERE (docs/repo-lock.md D-1). The flip and the
+    # record of WHAT TEXT was blessed have to be one act: a ratification whose
+    # anchor is written later is a window in which the registry says `Verified`
+    # and nothing says what it agreed to. The ledger append that used to sit on
+    # this line is retired with `attestations.csv`; the on-row anchor replacing
+    # it waits on the carrier ruling (OI-12). Until then the flip stands alone
+    # and the baseline degrades to the git walk `trace._attested_baseline` has
+    # always fallen back to — which is where it stood before SN-029, since the
+    # ledger never held a row.
     for rid in flipped:
         _say("flipped {} Modified -> Verified (gate-policy '{}')".format(rid, level))
-    for att in recorded:
-        _say("attested {} at {}".format(att, check_trajectory.ATTESTATIONS_CSV))
     return action, flipped, None
-
-
-def next_att_id(root):
-    """`max(existing) + 1` over the ledger's own ids."""
-    top = 0
-    for row in check_trajectory.read_attestations(root):
-        match = re.match(r"^ATT-(\d+)$", (row.get("ATT-ID") or "").strip())
-        if match:
-            top = max(top, int(match.group(1)))
-    return "ATT-{:03d}".format(top + 1)
-
-
-def record_attestations(root, artifacts, decision, ref=""):
-    """APPEND one ledger row per artifact, recording the digest of the
-    normative text as it stands NOW. Returns the minted `ATT-###` ids.
-
-    Append-only in the plainest possible way — the file is opened for append
-    and nothing re-reads or rewrites an earlier line. `check_trajectory`'s
-    `staged_attestation_rewrite_findings` is the guard that says so, and this
-    writer is the reason that guard can be simple."""
-    import csv
-
-    root = Path(root)
-    artifacts = [a for a in artifacts if a]
-    if not artifacts or decision not in check_trajectory.ATTESTATION_DECISIONS:
-        return []
-    digests = check_trajectory.current_digests(root)
-    code, sha = ac.git(root, "rev-parse", "HEAD")
-    # EMPTY off-git, never a placeholder word. `trace._attested_baseline`
-    # reads this cell as a commit-ish, and a literal `no-git` resolves to
-    # nothing — which used to make every current row classify as `added`
-    # while the honest "I have no baseline" degrade stayed silent. A blank
-    # cell reaches that degrade; a word that looks like a sha does not.
-    commit = sha.strip()[:10] if code == 0 and sha.strip() else ""
-    code, date = ac.git(root, "log", "-1", "--format=%cs")
-    stamp = date.strip() if code == 0 and date.strip() else ""
-    path = root / check_trajectory.ATTESTATIONS_CSV
-    fresh = not path.is_file()
-    path.parent.mkdir(parents=True, exist_ok=True)
-    minted = []
-    with path.open("a", newline="", encoding="utf-8") as fh:
-        writer = csv.writer(fh, quoting=csv.QUOTE_MINIMAL, lineterminator="\n")
-        if fresh:
-            writer.writerow(
-                [
-                    "ATT-ID",
-                    "Artifact",
-                    "TextDigest",
-                    "AcceptedCommit",
-                    "Decision",
-                    "Date",
-                    "Ref",
-                ]
-            )
-        for artifact in sorted(artifacts):
-            if artifact not in digests:
-                _say(
-                    "{} has no normative text to attest (not a spine row or an "
-                    "SN) - no ledger row appended".format(artifact),
-                    err=True,
-                )
-                continue
-            att = next_att_id(root)
-            writer.writerow(
-                [att, artifact, digests[artifact], commit, decision, stamp, ref]
-            )
-            fh.flush()
-            minted.append(att)
-    return minted
 
 
 def _locate_spine_rows(root, wanted):
@@ -1471,22 +1403,6 @@ def _cli_result(refusal, ok_message):
         return 1
     _say(ok_message)
     return 0
-
-
-def _cmd_attest(args):
-    """`intake.py attest --rows "SR-001;SN-028" --decision ratified`."""
-    root = Path(args.root).resolve()
-    ids = [i.strip() for i in str(args.rows).split(";") if i.strip()]
-    minted = record_attestations(root, ids, args.decision, args.ref)
-    if not minted:
-        return _cli_result(
-            "no ledger row was appended - none of {} has normative text to "
-            "attest".format(", ".join(ids) or "(none)"),
-            "",
-        )
-    for att in minted:
-        _say("appended {} ({})".format(att, args.decision))
-    return _cli_result(None, "attested {} artifact(s).".format(len(minted)))
 
 
 def _cmd_adjudicate(args):
@@ -1544,28 +1460,10 @@ def main(argv=None):
         "--rows", required=True, help="spine row id(s), ;-joined (SR-/LLR-/TC-)"
     )
     adj.set_defaults(func=_cmd_adjudicate)
-    att = sub.add_parser(
-        "attest",
-        help="APPEND attestation-ledger rows (SN-029): record the digest of "
-        "each artifact's normative text as accepted, with a decision. The "
-        "same subcommand a human runs at a sitting and the flip arm runs "
-        "mechanically, so machine and human rows are byte-identical.",
-    )
-    att.add_argument(
-        "--rows",
-        required=True,
-        help="artifact id(s), ;-joined (SN-/SR-/LLR-/TC-)",
-    )
-    att.add_argument(
-        "--decision",
-        default="ratified",
-        choices=list(check_trajectory.ATTESTATION_DECISIONS),
-        help="ratified (a first acceptance) | clarity (an amendment judged "
-        "wording-only) | meaning (the obligation moved; a fresh ratification "
-        "is owed) | override (a human overruling an adjudicator)",
-    )
-    att.add_argument("--ref", default="", help="provenance: a brief path or WI id")
-    att.set_defaults(func=_cmd_attest)
+    # The `attest` subcommand retired with `attestations.csv` (docs/repo-lock.md
+    # D-1). It returns with the anchor half, writing the accepted digest to the
+    # artifact's own row instead of appending a ledger line — same name, same
+    # `--rows`/`--decision` contract, different destination.
     args = ap.parse_args(argv)
     if not getattr(args, "cmd", None):
         ap.print_help()

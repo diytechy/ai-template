@@ -672,12 +672,7 @@ Contracts (interfaces): IF-009, IF-023, IF-077
 | `normative_text(csv_path, row)` | The canonical text a digest is taken over, for one SR/LLR/TC row. |  |
 | `sn_normative_text(sn_md_text, sn_id)` | The canonical text for one STAKEHOLDER NEED: its `\| SN-### \| … \|` table |  |
 | `digest(text)` | `sha256:<hex>` of `text`. Full width — this is an ANCHOR, and a truncated |  |
-| `read_attestations(root)` | The ledger's rows, oldest-first, `[]` when absent. `-000` dropped. |  |
-| `newest_attestations(root)` | `{artifact id: row}` — the LAST ledger row per artifact, which is its |  |
 | `current_digests(root)` | `{artifact id: digest}` over every real spine row and every SN. |  |
-| `attestation_findings(root)` | Artifacts whose NORMATIVE TEXT has moved since the ledger accepted it. |  |
-| `attestation_integrity_findings(root)` | The ledger's own shape: APPEND-ONLY, and every row well-formed. |  |
-| `staged_attestation_rewrite_findings(root, base, head)` | The APPEND-ONLY guard: ledger lines that were CHANGED or REMOVED between |  |
 | `staged_spine_amendments(root, base, head)` | The structured amendment set behind the amend-without-flip warn (WI-316, |  |
 | `staged_spine_findings(root)` | The amend-without-flip warn (WI-316; warn-first, `--staged` only), scoped |  |
 | `ratify_brief_findings(root)` | Warn-first brief lint (WI-146b): an open-items row whose decision is a |  |
@@ -885,8 +880,6 @@ Contracts (interfaces): IF-090, IF-091, IF-092
 | `mint_gap_rows(root, census)` | THE DISPATCHER'S RUNG-1 ARM (trigger c): the gap census, minted as |  |
 | `adjudication_action(human_held)` | May adjudication FLIP `Modified` -> `Verified`? Ruled decision 2, re-keyed | SN-029 |
 | `flip_verified(root, ids)` | Enact — or recommend — the adjudication row's cheap outcome for spine |  |
-| `next_att_id(root)` | `max(existing) + 1` over the ledger's own ids. |  |
-| `record_attestations(root, artifacts, decision, ref)` | APPEND one ledger row per artifact, recording the digest of the |  |
 | `main(argv)` |  |  |
 
 ### `scripts/integrate`

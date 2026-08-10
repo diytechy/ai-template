@@ -31,7 +31,7 @@ themselves — not restated from the handoff.
 | TC | 128 `Verified` · 7 `Modified` · 8 `Draft` | [`test/test-cases.csv`](test/test-cases.csv) |
 | SN | 32 ids; **SN-028…032 sit in a `Draft needs (unratified)` section** | [`requirements/stakeholder-needs.md`](requirements/stakeholder-needs.md) |
 | owner surface | **35 attestation cards** = 25 `Modified` + 10 `Draft` SRs | [`open-items.html`](open-items.html) |
-| attestation ledger | **1 row, the `ATT-000` example** — zero real data | [`requirements/attestations.csv`](requirements/attestations.csv) |
+| attestation ledger | **1 row, the `ATT-000` example** — zero real data (`docs/requirements/attestations.csv`, deleted by D-1 later the same day) |
 
 The gate is G1 *because* a `Draft` SN reads G0. That is the machinery reporting
 the truth: the code is built and tested, the requirements behind it are proposed.
@@ -47,8 +47,10 @@ that document stays the record and is **not** superseded by this one.
 ### D-1 — the attestation anchor moves ONTO the spine row; `attestations.csv` is retired
 
 **Ruled by the owner, 2026-08-09**, on the handoff's §2 question. The third
-option: keep the digest, drop the separate registry. `TextDigest` and
-`AcceptedCommit` become **columns on the SR / LLR / TC rows themselves**.
+option: keep the digest, drop the separate registry. `AcceptedCommit` and
+`TextDigest` become **fields on the artifact's own row** — *which* cells that
+means is the carrier's business, ruled separately (OI-12), which is why
+SR-140's amended text says "row" and never "column".
 
 **Why this and not the ledger.** The kit preaches one-row-one-home and then
 shipped a second registry holding a fact about a row that already exists. The
@@ -191,24 +193,26 @@ OI-12.
 
 | where | what happens |
 |---|---|
-| [`requirements/attestations.csv`](requirements/attestations.csv) | delete |
-| `project-trajectory/registries/attestations.template.csv` | delete |
-| [`check_trajectory.py`](../project-trajectory/scripts/check_trajectory.py) | delete `ATTESTATIONS_CSV`, `ATTESTATION_DECISIONS`, `read_attestations`, `newest_attestations`, `attestation_findings`, `attestation_integrity_findings`, `staged_attestation_rewrite_findings`, `_report_attestations` + its `main` wiring (≈250 lines). **Keep and re-point** `normative_text`, `sn_normative_text`, `digest`, `current_digests`, `_DIGEST_SEP`, `_DIGEST_EXCLUDED` — these are the on-row model. |
-| [`trace.py`](../project-trajectory/scripts/trace.py) | delete `_ledger_baseline`; `_attested_baseline` reads the row's `AcceptedCommit` cell (no file read at all, and the unresolvable-ref degrade stays) |
-| [`intake.py`](../project-trajectory/scripts/intake.py) | `next_att_id` + `record_attestations` → a re-stamp that writes the two cells inside `_apply_flips`, so the flip and the anchor stay **one act**; the `attest` subcommand keeps its name and its `--rows`/`--decision` contract where it still means something |
-| [`bootstrap.py`](../project-trajectory/scripts/bootstrap.py) | drop the ledger from the scaffold mapping |
-| [`../tests/test_attestation_ledger.py`](../tests/test_attestation_ledger.py) | **rewritten, not deleted** (523 lines). The behaviours it drives — drift regardless of `Status`, the ghost anchor, malformation as an error — all survive; the append-only cases become co-mutation cases. |
-| `tests/test_trajectory_staged.py`, `tests/test_dogfood_sync.py`, `tests/test_module_size_ratchet.py` | column classification, header superset, module size |
-| [`registry-machinery-reference.md`](registry-machinery-reference.md), `project-trajectory/EXAMPLE.md`, `PROCESS.md` §7 | field docs + the worked chain |
-| `docs/okf/system-requirements/SR-140.md` | regenerated, not hand-edited |
+| `docs/requirements/attestations.csv` | delete — **done** |
+| `project-trajectory/registries/attestations.template.csv` | delete — **done** |
+| [`check_trajectory.py`](../project-trajectory/scripts/check_trajectory.py) | **done, −193** (3991 → 3798): `ATTESTATIONS_CSV`, `ATTESTATION_DECISIONS`, `read_attestations`, `newest_attestations`, `attestation_findings`, `attestation_integrity_findings`, `staged_attestation_rewrite_findings`, `_report_attestations` and both `main` wirings. **KEPT** — `normative_text`, `sn_normative_text`, `digest`, `current_digests`, `_DIGEST_SEP`, `_DIGEST_EXCLUDED`: the anchor's engine, currently with **no writer**, so a dead-symbol sweep must not read them as unused. |
+| [`trace.py`](../project-trajectory/scripts/trace.py) | **done, −51**: `_ledger_baseline` and the `_resolvable` guard that existed only to protect it. `_attested_baseline` is the git derivation alone again — which is what every caller was actually getting, the ledger having never held a row. It reads the row's own `AcceptedCommit` when the anchor half lands. |
+| [`intake.py`](../project-trajectory/scripts/intake.py) | **done, −85**: `next_att_id`, `record_attestations`, `_cmd_attest` and the `attest` subparser. The module drops **back under the 1500-line monolith threshold**. The flip path keeps a comment saying the anchor is still owed there; the re-stamp that writes it — and `attest` under its own name — return with the anchor half. |
+| [`bootstrap.py`](../project-trajectory/scripts/bootstrap.py) | **done, −2**: the MAPPING row goes, so an adopter scaffolds no second attestation home. |
+| `tests/test_attestation_ledger.py` (523 lines) | **rewritten, not deleted** — landed as [`../tests/test_attestation_digest.py`](../tests/test_attestation_digest.py), 4 tests. The digest-composition cases and the seam-blindness premise survive; the ledger-shape and append-only cases go, and the co-mutation cases arrive with the anchor half. |
+| `tests/test_module_size_ratchet.py` | **done**: three baselines re-stamped **downward** and `intake.py`'s entry **deleted** (under threshold). `test_trajectory_staged.py` (cell classification) and `test_dogfood_sync.py` (header superset) are untouched — they belong to the **anchor** half, which is what adds columns. |
+| [`registry-machinery-reference.md`](registry-machinery-reference.md), `project-trajectory/EXAMPLE.md`, `PROCESS.md` §7 | **not owed by the removal half** — verified: none of the three ever documented the ledger. They gain the anchor's fields with the anchor half. |
+| `docs/okf/…`, `docs/architecture.md`, `docs/gate`, `open-items.html`, `PROJECT_STATE.html` | **done** — all regenerated, none hand-edited. |
 
 **SR-140 is AMENDED, not rejected.** Its obligation stands; only the home
 changes. It stays `Draft` and is ratified in its amended form at the sitting —
 which means the sitting rules on the text D-1 produces, not on the text that
-exists today. Its chain moves with it: **LLR-158** (the three rungs, currently
-naming `attestation_findings` / `attestation_integrity_findings` /
-`staged_attestation_rewrite_findings` as its `CodeSymbol`) and **TC-153**.
-SN-029's own acceptance-intent clause naming `docs/requirements/attestations.csv`
+existed before it. **Amended 2026-08-09**, carrier-neutral: *"on the accepted
+artifact's own row … never in a second registry keyed on the same artifact"*.
+Its chain moved with it — **LLR-158** now names the four surviving digest
+symbols and says plainly that the writer and the co-mutation guard are not
+there yet, and **TC-153** points at the rewritten test module.
+SN-029's own acceptance-intent clause naming the retired ledger file
 is amended in the same pass — an SN whose text names a retired file is exactly
 the "`Verified` row whose text is false" the program spent the 2026-08-08 session
 eliminating.
@@ -523,9 +527,25 @@ mechanically supported, not wishful.
 
 ### Ship now — carrier-independent, blocked on nothing
 
-1. **The removal half of D-1.** Pure deletion; no data lost.
-2. **SR-140 / SN-029 amended to carrier-neutral prose**, so the sitting can
-   ratify the obligation without ratifying a format. LLR-158 / TC-153 follow.
+1. ~~**The removal half of D-1.**~~ **DONE 2026-08-09.** Pure deletion, no data
+   lost: `attestations.csv` + its template + its `bootstrap` MAPPING row gone;
+   `check_trajectory` −195 (the three rungs, their two readers,
+   `_report_attestations`, both constants, both `main` wirings); `trace` −51
+   (`_ledger_baseline` and the `_resolvable` guard that existed only for it);
+   `intake` −85 (`next_att_id`, `record_attestations`, `_cmd_attest`, the
+   `attest` subparser) — which drops it **back under the 1500-line monolith
+   threshold**, so its ratchet entry is deleted rather than re-stamped.
+   `test_attestation_ledger.py` (523 lines) → `test_attestation_digest.py`
+   (4 tests): the digest-composition cases survive, the ledger-shape cases go,
+   and the **premise test survives and matters more** — it drives the
+   amendment seam's blindness to a sanctioned amend+flip, which is why an
+   anchor is owed at all.
+2. ~~**SR-140 / SN-029 amended to carrier-neutral prose.**~~ **DONE
+   2026-08-09**, with LLR-158 / TC-153. SR-140 now reads *"on the accepted
+   artifact's own row … never in a second registry keyed on the same
+   artifact"* and states the two-cell rationale (the commit is reviewable and
+   diffable; the digest is what survives a squash, rebase or shallow clone) —
+   no format named, so the sitting can ratify it before OI-12 is ruled.
 
 ### Owed by the owner — two rulings, both now gating
 
@@ -833,6 +853,17 @@ done mid-program: it is a reference-doc edit with no bearing on the lock.
   digest survives. §6 gained F-5 (the full-width justification does not hold)
   and F-6 (no reusable markdown-table reader exists; five live cells already
   contain a literal `|`).
+- **2026-08-09** — **D-1's removal half SHIPPED** (§5 step 1–2, struck through
+  there). ~331 lines deleted across four modules, two registry files removed,
+  the test module rewritten around what survives, and SR-140 / LLR-158 /
+  TC-153 / SN-029 amended to carrier-neutral prose. Three ratchet baselines
+  re-stamped **downward** and `intake.py`'s entry **deleted** — it fell back
+  under the monolith threshold, which is what this repo's own rule requires
+  rather than leaving the old number standing as headroom. One thing to know
+  before touching `check_trajectory` next: `normative_text`,
+  `sn_normative_text`, `digest` and `current_digests` now have **no writer** —
+  they are the anchor's engine waiting on OI-12, and an unreferenced-symbol
+  sweep (WI-422) must not read them as dead.
 - **2026-08-09** — committed at `9b6c7fc0` (this file + OI-12 + the regenerated
   owner surface). **OI-13 filed**: what `Status` means across all six
   registries, recommended for execution *together with* OI-12. Q2 now points at

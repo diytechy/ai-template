@@ -1488,12 +1488,10 @@ MAPPING = [
     # (process-options.md "Trajectory / work-items layer"): one OI-N section
     # per pending decision, deleted when the ruling lands in log.md Decisions.
     ("registries/open-items.template.csv", "docs/requirements/open-items.csv"),
-    # SN-029's APPEND-ONLY attestation ledger: one row per accepted
-    # attestation, carrying a digest of the normative text that was
-    # accepted. It is what makes an anchor an anchor rather than a
-    # reconstruction — and the only anchor an SN can have at all, since an
-    # SN has no Status cell for the amendment machinery to watch.
-    ("registries/attestations.template.csv", "docs/requirements/attestations.csv"),
+    # (SN-029's separate attestation ledger scaffolded here until D-1 retired
+    # it — docs/repo-lock.md. The anchor it carried moves onto the artifact's
+    # own row, so there is no second registry for an adopter to scaffold; the
+    # columns arrive in the spine templates with the anchor half.)
     # The append-only history status.md points at (Thread 36, process.md §5):
     # sign-offs, verdicts, and ratified decisions append here, keeping the
     # per-session status.md reload cheap.

@@ -515,7 +515,12 @@ BASELINE = {
     # brief said "everything here is new", with `no_baseline_reason` EMPTY, so
     # the honest degrade written for exactly this case never rendered.
     # Reviewed bump.
-    "trace.py": 2994,
+    # Then -51 (2994 -> 2943), D-1 REMOVAL HALF (docs/repo-lock.md, owner ruling
+    # 2026-08-09): `_ledger_baseline` and the `_resolvable` guard above go with
+    # `attestations.csv`, and `_attested_baseline` is once again the git
+    # derivation alone. Re-stamped DOWNWARD in the same commit, per this file's
+    # own rule — a shrink is re-stamped, never left standing as headroom.
+    "trace.py": 2943,
     # +132 (1926 -> 2058; the last +10 is the F4 BOM hardening: read_rows utf-8-sig + git-show strips), WI-316: staged_spine_findings — the amend-without-
     # flip warn (--staged): content cells of a Verified spine row changed
     # without the Modified marker, suppressed when the owning SR flips in the
@@ -773,7 +778,19 @@ BASELINE = {
     # produced a ~6 KB stderr line per pair — a warn nobody can read is a warn
     # that does not exist. The duplicated open-status set folded into the
     # module's existing `OPEN_STATUSES` in the same pass (WI-347).
-    "check_trajectory.py": 3991,
+    # Then -193 (3991 -> 3798), D-1 REMOVAL HALF (docs/repo-lock.md, owner ruling
+    # 2026-08-09): the ledger's three rungs and their readers are DELETED —
+    # `attestation_findings`, `attestation_integrity_findings`,
+    # `staged_attestation_rewrite_findings`, `read_attestations`,
+    # `newest_attestations`, `_report_attestations`, the two constants and both
+    # `main` wirings. The +272 bump above is the one being paid back, and this
+    # is the honest reason it never should have been taken: the ledger held ZERO
+    # real rows for its whole life. What is KEPT is the part that was right —
+    # `normative_text`, `sn_normative_text`, `digest`, `current_digests` — which
+    # the anchor half re-homes onto the artifact's own row. This module is still
+    # the kit's largest and still the first WI-280 decomposition candidate;
+    # -193 narrows the gap, it does not close it.
+    "check_trajectory.py": 3798,
     # NEW ENTRY, +25 (1498 -> 1523), WI-357: the two-stage work-branch claim
     # signal — the on-disk fast path plus the branch-history probe that
     # survives the §2.3 close commit (git log -1 over the claim path), with
@@ -965,7 +982,10 @@ BASELINE = {
     # the tree is kept formatted anyway). Mechanical; no behaviour moved.
     # Then +2 (2654 -> 2656), same pass: the scaffolded deviation register
     # stopped naming the retired `gate_policy` key.
-    "bootstrap.py": 2656,
+    # Then -2 (2656 -> 2654), D-1 REMOVAL HALF: the attestations-ledger MAPPING
+    # row goes with the registry — an adopter scaffolds no second attestation
+    # home, and the anchor columns arrive in the spine templates instead.
+    "bootstrap.py": 2654,
     # NEW ENTRY, +228 (1423 -> 1651), Phase 2b of the concurrency restructure
     # (docs/concurrency-restructure.md §7): the spec-folder work-item reader,
     # which crosses this module over THRESHOLD for the first time. It is one
@@ -1300,7 +1320,13 @@ BASELINE = {
     # +2 (1575 -> 1577) in the same pass:  extracted so R3's
     # no-recursion test is one predicate rather than a copy in each close arm
     # (WI-347 rules an intra-file copy a defect however small).
-    "intake.py": 1577,
+    # ENTRY DELETED, -85 (1577 -> 1492), D-1 REMOVAL HALF (docs/repo-lock.md,
+    # owner ruling 2026-08-09): `next_att_id`, `record_attestations`,
+    # `_cmd_attest` and the `attest` subparser go with `attestations.csv`, and
+    # intake.py drops back UNDER THRESHOLD. Deleted rather than re-stamped, per
+    # this file's own instruction ("or delete them if now <= THRESHOLD") — the
+    # entry existed to name a monolith, and there is no longer one to name. It
+    # re-enters as a NEW ENTRY if the anchor half puts it back over.
     "integrate.py": 2475,
 }
 

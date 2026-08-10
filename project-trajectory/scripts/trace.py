@@ -1123,78 +1123,27 @@ def _rows_at(root, rev, rel_path, id_col):
     }
 
 
-def _ledger_baseline(root, sr_id):
-    """`(commit, ATT-id)` from the newest attestation-ledger row for `sr_id`, or
-    `(None, None)`.
-
-    THE ANCHOR, READ RATHER THAN RECONSTRUCTED (SN-029). The git walk below is
-    sound only while every amendment flips its row's Status in the same commit
-    — and the SANCTIONED amend+flip path is precisely the one the staged-
-    amendment guard deliberately ignores, so a derived baseline can point at a
-    commit whose text already carries an unratified change. A row written at
-    acceptance time cannot drift that way.
-
-    Kept as its own small reader, not folded into `_attested_baseline`, because
-    the two answer different questions: this one asks what was ACCEPTED, the
-    other asks what git happens to remember."""
-    path = Path(root) / "docs" / "requirements" / "attestations.csv"
-    if not path.is_file():
-        return None, None
-    newest = {}
-    try:
-        with path.open(newline="", encoding="utf-8-sig", errors="replace") as fh:
-            for row in csv.DictReader(fh):
-                artifact = (row.get("Artifact") or "").strip()
-                att = (row.get("ATT-ID") or "").strip()
-                if artifact and att and not att.endswith("-000"):
-                    newest[artifact] = row
-    except OSError:
-        return None, None
-    row = newest.get(sr_id)
-    if row is None:
-        return None, None
-    commit = (row.get("AcceptedCommit") or "").strip()
-    return (commit or None), (row.get("ATT-ID") or "").strip() or None
-
-
-def _resolvable(root, rev):
-    """Whether git can resolve `rev` to a commit in THIS clone. Cheap
-    (`rev-parse --verify`), and false off-git — the same silent degrade every
-    other git reader here takes."""
-    return (
-        _git_out(root, ["rev-parse", "--verify", "--quiet", str(rev) + "^{commit}"])
-        is not None
-    )
-
-
 def _attested_baseline(root, sr_id):
-    """The commit whose text `sr_id` was last attested against.
+    """The commit whose text `sr_id` was last attested against — DERIVED: the
+    newest commit at which the SR row read `Verified`.
 
-    LEDGER FIRST (SN-029): the attestation ledger records the accepted commit
-    at acceptance time, so it is an anchor rather than a reconstruction. When no
-    ledger row exists — an un-migrated repo, or an artifact never attested — it
-    falls through to the historical derivation, which is the newest commit at
-    which the SR row read `Verified`. That walk is correct by construction ONLY
-    under the amend+flip regime, and its known blind spot is exactly why the
-    ledger exists; degrading to it keeps every repo working while the ledger
-    fills, and the honest-degrade prose downstream already says which is which.
+    THE DERIVATION IS ONCE AGAIN THE ONLY PATH (docs/repo-lock.md D-1). SN-029
+    put a read of `attestations.csv` in front of this walk, so an anchor written
+    at acceptance time won over a reconstruction. That ledger is retired and its
+    replacement — the anchor recorded on the SR's OWN ROW — waits on the carrier
+    ruling (OI-12), so the ledger-first arm is removed rather than left pointing
+    at a file that no longer exists. Nothing regresses: the ledger never held a
+    row, so this walk is what every caller has actually been getting.
+
+    The walk's known blind spot is unchanged and is why the anchor is owed at
+    all: it is correct by construction ONLY while every amendment flips its
+    row's Status in the same commit, and the SANCTIONED amend+flip path is
+    precisely the one `check_trajectory.staged_spine_amendments` deliberately
+    ignores. Callers that need to say so have `no_baseline_reason`.
 
     Walks the SR registry's commits newest-first; bounded in practice by the
     streak depth (typically 1-2 revisions). None: off-git, or the row was never
     Verified in committed history (first attestation still pending)."""
-    accepted, _att = _ledger_baseline(root, sr_id)
-    if accepted and _resolvable(root, accepted):
-        return accepted
-    # AN UNRESOLVABLE ANCHOR IS NOT AN ANCHOR, and returning it anyway was
-    # worse than having none: `_rows_at` answers `{}` for a ref git cannot
-    # resolve, so every current row classified as `added` and the brief said
-    # "everything here is new" — with `no_baseline_reason` EMPTY, so the honest
-    # degrade that exists for exactly this case never rendered. The ledger can
-    # legitimately hold such a ref (a rebase or squash rewrote the sha, a
-    # shallow clone never fetched it, `record_attestations` wrote its off-git
-    # placeholder), so this falls through to the derivation rather than
-    # refusing — but it falls through LOUDLY, by taking the path that knows how
-    # to say it has no baseline.
     log = _git_out(root, ["log", "--format=%H", "--", SPINE_FILES[0][0]])
     if log is None:
         return None
