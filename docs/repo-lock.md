@@ -25,7 +25,7 @@ more analysis; it is blocked on rulings.
 
 | # | question | where to read it | recommendation |
 |---|---|---|---|
-| **OI-12** | Does one machine-parseable **carrier** hold all four requirement tiers? The `.md` + `.csv` split has **no recorded rationale anywhere**. | card on [`open-items.html`](open-items.html) · §6 F-7 | **TOML** as the destination; sequencing is the real question, see below |
+| **C** | Does one machine-parseable **carrier** hold all four requirement tiers? The `.md` + `.csv` split has **no recorded rationale anywhere**. | card on [`open-items.html`](open-items.html) · §6 F-7 | **TOML** as the destination; sequencing is the real question, see below |
 | **OI-13** | What does **`Status`** mean across the six registries that carry one — including [`interfaces.csv`](requirements/interfaces.csv)'s undeclared `Status` overlapping `Stability`? | card · §3 Q2 · §6 F-1, F-9 | reserve the word for ratifiable-artifact maturity, rename the rest, **execute with OI-12** |
 | **OI-14** | What is an IF row's **`Contract` cell for**? Measured: design narrative and history, 1% requirement voice, and the registry has **no schema tier at all**. | card · §6 F-10 | **declare now, split gradually** — never a 95-row sweep |
 | *(unfiled)* | The **component model**. `LLR.Component` is a *traced* cell, so the partition moves with no re-attest window — and it **decides how many IF rows must exist**. | §6 F-11 | not filed on purpose; filing it would be me setting the sitting's agenda |
@@ -39,10 +39,32 @@ them apart pays the migration cost twice.
 Ratification is a `Status` flip; the anchor that records *what* was ratified is
 the only part waiting on OI-12 (§5 step 3).
 
-**Two rulings already made** are executed, not pending: **D-1** (the attestation
-anchor moves onto the artifact's own row; `attestations.csv` retired — the
-removal half shipped) and **D-2** (stakeholder needs gain fields rather than a
-new carrier — the *shape* of those fields folded into OI-12). Both in §2.
+**Four rulings already made** are not pending: **D-1** (the attestation anchor
+moves onto the artifact's own row; `attestations.csv` retired — the removal
+half shipped), **D-2** (stakeholder needs gain fields rather than a new carrier
+— the *shape* of those fields folded into OI-12), **D-3** (a column name means
+one thing repo-wide; shared semantics ruled for `Status`, `Title`, `Phase`,
+`SR-Refs`, `Rationale` and `Priority`, with `Status` a four-rung ladder
+`Drafted → Attested → Ready → Verified`), and **D-4** (supersession is
+deletion, not a forwarding pointer — and ids must therefore never be reused).
+All four in §2.
+
+**Two things in that set need the owner's eye before they are built**, both
+recorded with recommendations: `Status`'s new `Verified` **re-points a word 370
+live rows already use with the old meaning** (§2 D-3 Q9 — recommend spending a
+fresh word instead, so a half-migration cannot hide), and D-4 **must not ship
+before an id watermark exists**, because every mint in the repo derives its
+high-water mark from the live set and a deletion frees the id (§2 D-4).
+
+**D-3 changes OI-13's status**: it answers the vocabulary question in the
+general case, so what remains on that card is the *migration* — which registries
+rename, and what happens to the IF `Status`/`Stability` pair. It also has a
+dependency the reading order above does not yet show: D-3 gives IF a shared
+`Rationale` column, which is the mechanical destination OI-14's split needs
+(§2 D-3, Q8). **D-3's own five open sub-questions** (Q5–Q9 there) are build-time
+consequences with recommendations, not new sittings — except Q6, which is a
+correction the owner should see: `Phase` is *not* the non-functional grouping
+attribute the ruling assumes.
 
 ---
 
@@ -87,8 +109,8 @@ that document stays the record and is **not** superseded by this one.
 ### D-1 — the attestation anchor moves ONTO the spine row; `attestations.csv` is retired
 
 **Ruled by the owner, 2026-08-09**, on the handoff's §2 question. The third
-option: keep the digest, drop the separate registry. `AcceptedCommit` and
-`TextDigest` become **fields on the artifact's own row** — *which* cells that
+option: keep the digest, drop the separate registry. `HashedOn` and
+`TextHash` become **fields on the artifact's own row** — *which* cells that
 means is the carrier's business, ruled separately (OI-12), which is why
 SR-140's amended text says "row" and never "column".
 
@@ -124,8 +146,8 @@ itself an argument for D-1:
 |---|---|
 | `ATT-ID` | gone — the row's own id is the key |
 | `Artifact` | gone — the row *is* the artifact |
-| `TextDigest` | **new column** |
-| `AcceptedCommit` | **new column** |
+| `TextHash` | **new column** |
+| `HashedOn` | **new column** |
 | `Decision` `ratified` / `meaning` | already `Status` — `Verified` vs `Modified` |
 | `Decision` `superseded` | already `SupersededBy` (SR) |
 | `Decision` `clarity` / `override`, `Date`, `Ref` | the log's Decisions section — evidence, never normative |
@@ -146,7 +168,7 @@ history of the CSV. Two things are worth being exact about:
   from an explicit cell is strictly better than either.
 
 The replacement guard is **co-mutation**, not equivalence: a commit that changes
-a row's `TextDigest` must write the digest of that row's text *as it stands in
+a row's `TextHash` must write the digest of that row's text *as it stands in
 that same commit*, and a commit that changes normative cells must not also
 re-stamp the digest. That is checkable with the two-tree read
 (`check_trajectory._spine_revs`) the amendment scan already uses. It is weaker
@@ -162,10 +184,10 @@ proposal.** Both attack the same objection: *a sha256 is derived data living in
 a document meant to define project information, and no human can verify it by
 eye.* The objection is correct.
 
-- **ALT-1 · `AcceptedCommit` alone; recompute the historical text from git.**
+- **ALT-1 · `HashedOn` alone; recompute the historical text from git.**
   Not hypothetical — this is *already how the word-diff works*:
   `trace._attested_baseline` returns a commit and `_rows_at` reads the row at
-  that revision through `git show`. ALT-1 is therefore "drop `TextDigest`, keep
+  that revision through `git show`. ALT-1 is therefore "drop `TextHash`, keep
   the commit, derive the comparison". **Wins:** no derived data in a reviewed
   artifact; a commit id is meaningful to a human and a digest is not; and it
   yields the whole historical row rather than a changed/unchanged bit.
@@ -191,8 +213,8 @@ eye.* The objection is correct.
 
 **Ruling recorded: keep both cells, and reframe which is primary.** They fail in
 *different directions*, which is why this is not redundancy:
-`AcceptedCommit` is the **reviewable** anchor and the input to the diff a human
-actually reads; `TextDigest` is the **git-independent tripwire** that survives
+`HashedOn` is the **reviewable** anchor and the input to the diff a human
+actually reads; `TextHash` is the **git-independent tripwire** that survives
 squash, rebase and shallow clone. The owner's objection is answered by making
 the commit the primary record — and by dropping the digest to a **short form
 (`sha256:` + 16 hex, 23 characters)**, since §6 F-5's analysis shows the
@@ -200,13 +222,93 @@ full-width justification does not hold for a pairwise comparison. That
 overturns the `digest()` docstring's stated reason and needs to be recorded as
 such when implemented.
 
+**Field names — ruled 2026-08-09.** The working names are **`TextHash`** and
+**`HashedOn`**; the earlier `TextDigest` / `AcceptedCommit` are retired
+before either cell exists, which is the cheapest moment to rename — nothing
+outside this document and two historical records uses them.
+
+- `TextDigest` → **`TextHash`**: owner preference; *hash* is the plainer word
+  for what the cell holds, and `digest()` the function keeps its name.
+- `AcceptedCommit` → **`HashedOn`**: the old name **overclaimed**. A commit is
+  a repo-wide snapshot, not an act of accepting this row's text — reading
+  `AcceptedCommit` as "this text was accepted here" invites exactly the
+  inference the adjudicator procedure below has to walk back when the commit is
+  unresolvable. `HashedOn` claims only what is true: **the commit at which
+  `TextHash` was last produced or re-verified**. It is deliberately silent
+  about acceptance, which `Status` records, and about correctness, which
+  nothing records.
+
+  The two cells now read as one statement — *this hash, taken at this commit* —
+  and that pairing is what makes the co-mutation guard expressible: a commit
+  that writes `TextHash` must write the digest of that row's text **as it
+  stands in that same commit**, and must set `HashedOn` to itself. The cell
+  therefore moves **only when the hash is written**, never on an unrelated
+  edit. `BaselineCommit` was the intermediate name and is rejected for being a
+  *consequence* rather than the fact: the commit happens to be where a diff
+  starts (`trace._attested_baseline` returns it, `_rows_at` reads the row at
+  that revision), but that is what the machinery *does with* the value, not
+  what the value *is*. Under TOML the key can carry the rest of the sentence in
+  a comment, as the owner notes — `hashed_on = "…"  # commit the hash was last
+  produced or verified at`.
+
+**On a denser encoding than hex — examined 2026-08-09 at the owner's question,
+recommendation: keep lowercase hex.** The question is fair; the measurement
+does not support the change. Re-encoding the same 64 bits saves almost nothing:
+base32 is 13 characters, base64url 11, Ascii85 10, against hex's 16 — a
+best case of **6 characters**. The `sha256:` prefix is **7 characters on its
+own**, so if width is the goal, shortening the prefix beats every alphabet
+change and costs no new rule. Against that, non-hex buys three real problems:
+it is **case-sensitive** (hex compares case-insensitively today, and a
+spreadsheet round-trip or a lowercasing cleanup would silently corrupt base64 —
+this repo already carries `gen_open_items.normalize` because a Windows-authored
+cell was mangled once); it is not **greppable by eye** against a `git show`
+output, where the whole point is that a human can spot two anchors differing;
+and it needs a **new encoding rule argued into existence**, which the kit's own
+bar makes expensive for a six-character win. Git itself is the precedent
+against packing: shas are hex, and git's answer to width is **abbreviation**,
+not re-encoding.
+
+Packing into non-ASCII Unicode is the version to refuse outright. It would be
+denser per character, but the cell would then be subject to **normalization**
+(NFC/NFD can rewrite codepoints and thus the anchor), homoglyphs make visual
+comparison worthless, and it breaks the one property a tripwire needs — that
+it survives every transport between the author and the reviewer unchanged.
+
+**And the owner's closing observation is the real resolution:** under a TOML
+carrier (OI-12) this stops mattering. `text_hash = "…"` is a key/value on its
+own line, the key name already says what the value is, and the width competes
+with nothing. Width only ever hurt in the **SN markdown table**, where a
+23-character cell sits beside 1,500-character prose — and even there the ruled
+fix is the column-count truncation (§2, D-2), not a denser alphabet.
+
+**Adjudicator recovery procedure — the degraded mode, owner-added 2026-08-09.**
+When the digest trips but `HashedOn` is unresolvable (squash-merge,
+rebase, shallow clone), no local mechanism can produce the before-text — the
+digest answers only *changed*, never *what changed*. The procedure then is:
+
+1. **Treat the row as a first ratification.** The machinery already renders
+   this honestly — `open-items.html`'s *"no baseline — awaiting its FIRST
+   ratification"* card shows the whole current content; the adjudicator
+   re-reads and re-blesses the text as it stands.
+2. **Use the children as semantic evidence, not as a mechanical check.**
+   Before re-blessing an SN whose baseline is lost, read its SR / LLR / TC
+   chain: if the decomposition still fulfills what the current prose asks —
+   as if it were a newly proposed need — the *meaning* is judged unchanged
+   even though the wording cannot be diffed. This inverts the trace direction
+   (children vouching for the parent), which is why it is an adjudicator
+   procedure recorded here and never a check a script runs.
+3. **Look for the before-text off-repo before giving up on a diff.** A squash
+   destroys the sha in the target branch, not necessarily everywhere: the PR's
+   own history on the forge, an unpruned remote branch, or a teammate's clone
+   may still hold the pre-squash commit. Worth one look; not worth a mechanism.
+
 **Mechanical consequences found while scoping this — none of them optional.**
 
 1. **The digest becomes self-referential unless the new columns are excluded.**
    `check_trajectory.normative_text` folds in *every* column that is not in
    `_DIGEST_EXCLUDED` and not classified `traced`, and the residual in
    `spine_cell_class` deliberately fails safe — an unclassified new column reads
-   as **ratified**, i.e. normative. So `TextDigest` would be hashed into its own
+   as **ratified**, i.e. normative. So `TextHash` would be hashed into its own
    digest. This is not a corner case: it makes every stamped row read as drifted,
    permanently, from the first stamp. Both new columns must join
    `_DIGEST_EXCLUDED` beside `SR-ID`/`LLR-ID`/`TC-ID`/`Status`, for the same
@@ -236,7 +338,7 @@ OI-12.
 | `docs/requirements/attestations.csv` | delete — **done** |
 | `project-trajectory/registries/attestations.template.csv` | delete — **done** |
 | [`check_trajectory.py`](../project-trajectory/scripts/check_trajectory.py) | **done, −193** (3991 → 3798): `ATTESTATIONS_CSV`, `ATTESTATION_DECISIONS`, `read_attestations`, `newest_attestations`, `attestation_findings`, `attestation_integrity_findings`, `staged_attestation_rewrite_findings`, `_report_attestations` and both `main` wirings. **KEPT** — `normative_text`, `sn_normative_text`, `digest`, `current_digests`, `_DIGEST_SEP`, `_DIGEST_EXCLUDED`: the anchor's engine, currently with **no writer**, so a dead-symbol sweep must not read them as unused. |
-| [`trace.py`](../project-trajectory/scripts/trace.py) | **done, −51**: `_ledger_baseline` and the `_resolvable` guard that existed only to protect it. `_attested_baseline` is the git derivation alone again — which is what every caller was actually getting, the ledger having never held a row. It reads the row's own `AcceptedCommit` when the anchor half lands. |
+| [`trace.py`](../project-trajectory/scripts/trace.py) | **done, −51**: `_ledger_baseline` and the `_resolvable` guard that existed only to protect it. `_attested_baseline` is the git derivation alone again — which is what every caller was actually getting, the ledger having never held a row. It reads the row's own `HashedOn` when the anchor half lands. |
 | [`intake.py`](../project-trajectory/scripts/intake.py) | **done, −85**: `next_att_id`, `record_attestations`, `_cmd_attest` and the `attest` subparser. The module drops **back under the 1500-line monolith threshold**. The flip path keeps a comment saying the anchor is still owed there; the re-stamp that writes it — and `attest` under its own name — return with the anchor half. |
 | [`bootstrap.py`](../project-trajectory/scripts/bootstrap.py) | **done, −2**: the MAPPING row goes, so an adopter scaffolds no second attestation home. |
 | `tests/test_attestation_ledger.py` (523 lines) | **rewritten, not deleted** — landed as [`../tests/test_attestation_digest.py`](../tests/test_attestation_digest.py), 4 tests. The digest-composition cases and the seam-blindness premise survive; the ledger-shape and append-only cases go, and the co-mutation cases arrive with the anchor half. |
@@ -277,6 +379,345 @@ puts the anchor inside its own digest, which is hazard 1 again in a worse form.
 The fix is a column-count truncation (drop the trailing anchor fields before
 hashing), not a semantic parse — the "raw line" property survives, slightly
 qualified, and the qualification must be written into the docstring.
+
+### D-3 — a column name means ONE thing repo-wide; the shared semantics, ruled
+
+**Owner ruling, 2026-08-09**, answering OI-13 in the general case rather than
+the `Status` case: *"all registries should use common semantics."* A column
+name is now a **repo-wide term**, not a per-registry label. Where two
+registries carry the same name they carry the same meaning; where they need
+different meanings they need different names. This subsumes OI-13's
+recommendation (reserve `Status`, rename the rest) and extends it to every
+colliding column in §6 F-9's matrix.
+
+The owner's framing of the mechanism is worth keeping verbatim, because it is
+the sharpest thing said about the registries this program: **these columns
+should probably be interface definitions themselves.** They are contracts
+between many readers, versioned, breakable — exactly what an IF row is for.
+See "the irony, and the obstacle" below; the interfaces themselves are
+**explicitly deferred** by the same ruling (*"we'll have to come back on the
+interfaces"*).
+
+#### Ruled semantics
+
+| column | ruled meaning | change from today |
+|---|---|---|
+| **`Status`** | discrete, with per-tier overload — a **four-rung ladder**, revised 2026-08-09. **`Drafted`** = the id is allocated and **nothing else about the row may be validated against it**. **`Attested`** = the text has been attested valid. **`Ready`** = the row's discharge is in place — children for a decomposable tier, an existing test for a TC. **`Verified`** = the test passes; **TC only**. **SN carries the ladder on the same terms as every other tier.** | replaces `Draft`/`Verified`/`Modified` entirely. `Modified` leaves the authored set (Q5); `Verified` is **re-pointed to a new meaning** — see the word-reuse hazard in Q9 |
+| **`Title`** | unchanged | none |
+| **`Phase`** | an integer orienting a row to a campaign/programme; a **grouping attribute**. **Added to SN.** | new on SN; but see Q6 — it is *not* non-functional today |
+| **`SR-Refs`** | unchanged — the same pointer shape it already has on LLR · IF · WI | none |
+| **`Rationale`** | unchanged | but see Q8 — extending it to IF is what fixes OI-14 |
+| **`Priority`** | a **float**, higher = work me first, negatives and decimals allowed. Ordering is **relative within a group only** — an SN's `1` is not comparable to an SR's `0`. | SR's `M`/`S`/`C` becomes a number (146 rows); WI's integer widens. See Q7 |
+
+#### What the ruling leaves open, with recommendations
+
+**Q5 · `Modified` has no place in the ruled ladder — recommend deriving it, not
+authoring it.** Today's vocabulary is `Draft`/`Verified`/`Modified`; the ladder
+names `Drafted`/`Attested`/`Ready`/`Verified` and has no rung for *"was blessed,
+then the text moved."* The clean reading is that **`Modified` stops being a
+value anyone writes**: with `TextHash` + `HashedOn` on the row, drift is
+*computable* — recompute the hash, compare. That is strictly better than the
+authored cell, which is a hand-maintained claim that can be false, and it is
+the reason the anchor is being built at all.
+
+Mechanically it is not a fifth rung but a **flag on `Attested` and above**: a
+row is `Attested` (drifted) or `Ready` (drifted), and the drift is what sends
+it back to the sitting. Rendering it as a status *value* would lose which rung
+it fell from. Consequence to accept knowingly: a row at `Attested` or beyond
+carrying **no hash** must be an *error*, not a silent pass — otherwise drift
+detection is vacuous exactly where it matters.
+
+**Q6 · `Phase` is NOT a grouping attribute today — this is a correction, not a
+quibble.** The ruling says *"doesn't have a functional impact."* Measured, it
+does: `derive_gate.py:145` and `trace.py:181` parse an integer out of it,
+[`trace.py:1052`](../project-trajectory/scripts/trace.py#L1052) **filters the
+SR set by phase**, `gen_release_checklist` groups the checklist by it, and
+`check_trajectory` lists it among the required-field sets for all three spine
+tiers. §6 F-3 classes it **mechanical**. So there are two different rulings
+available and they should not be conflated: *(a)* add `Phase` to SN as the same
+mechanical integer the spine already uses — cheap, consistent, recommended; or
+*(b)* demote `Phase` repo-wide to advisory grouping — which is a real
+migration touching gate derivation and phase-scoped selection, and needs ruling
+on its own evidence. **Recommend (a)**; the ruling's *intent* (another grouping
+axis, now available on SN) is satisfied by it without disturbing the gate.
+
+**Q7 · `Priority` as a float is fine for SR and load-bearing for WI.** On SR
+today it is `M`/`S`/`C` and F-3 classes its *value* **inert** — nothing reads
+it — so a float is a free improvement there, costing one value migration over
+146 rows. On WI it is **not** advisory: `schedule.py:495` parses it with
+`_int(..., 0)` and `schedule.py:702` sorts the dispatch frontier on
+`-wi["priority"]`, so it decides **what an agent picks up next**. A float still
+works as a sort key, but `_int` must become a float parse or `1.5` silently
+truncates to `1` — the quiet-wrong-answer failure this program keeps finding.
+The "relative within a group" rule also needs its **group declared**: within a
+registry is the natural reading and matches the owner's own SN-vs-SR example.
+
+**Q8 · The shared-`Rationale` clause quietly fixes OI-14's root cause.**
+Measured just now, the IF header is
+`IF-ID,Direction,ThisProject,Counterpart,Contract,SR-Refs,Version,Stability,Status,Component,Notes`
+— **there is no `Rationale` column**, which is precisely why F-10 found design
+narrative and defect history stuffed into `Contract` (27% of rows name a
+`WI-###`). D-3's "same definition holds everywhere" makes `Rationale` available
+to IF, and OI-14's recommended split — normative contract in `Contract`,
+history and why elsewhere — stops being a judgment call and becomes a
+**mechanical destination**. This is the strongest argument yet for ruling D-3
+*before* OI-14 rather than after.
+
+**Q9 · The test-case gray area — RESOLVED by the four-rung ladder, with one
+overlap to fix and one hazard to avoid.** The owner's question was: a TC whose
+text is attested but which cannot pass yet, because the implementation is owed
+by an open WI. The revised ladder answers it *inside* `Status` rather than
+beside it, and that works — the three axes this session identified map onto
+three rungs exactly:
+
+| axis | question | rung |
+|---|---|---|
+| 1 | is the **text** blessed? | `Attested` |
+| 2 | does the **thing** exist — children, or a written test? | `Ready` |
+| 3 | does it **pass**? | `Verified` (TC only) |
+
+So the owner's case is `Attested`: text blessed, test not yet written, and the
+WI DAG says who owes it. It advances to `Ready` when the test exists and to
+`Verified` when it runs green. Nothing is stale and nothing lies.
+
+**The ladder also dissolves an ordering trap**, which is the strongest argument
+for it. `Attested` must be reachable **without** a discharge, or the process
+deadlocks: an SN cannot have SR children before it is blessed, because SRs are
+written *from* a ratified need at G1 — so a vocabulary where blessing implies
+children makes the very first blessing illegal. Splitting "text blessed" from
+"discharge in place" into two rungs is exactly what makes the first rung
+legal, and it means the discharge is checked as a **transition into `Ready`**
+rather than as a precondition of `Attested`.
+
+**The overlap to fix — CONFIRMED by the owner 2026-08-09.** As given, `Ready`
+said *"it should either have children or if it's a test case it should be
+passing"*, and `Verified` said *"the test case passes"* — so for a TC the two
+rungs said the same thing and one was empty. The reading that makes the ladder
+monotone is that **`Ready` is the existence rung, not the passing rung**: for a
+decomposable tier the discharge is *children exist*, and for a TC it is *the
+test exists*. Passing is `Verified` alone.
+
+The owner confirmed this and supplied the semantic argument for it: *"`Verified`
+can imply the functionality is verified, when the column is just trying to say
+the requirement has been fully decomposed and ready for the next stage."*
+Exactly — which is why an SN/SR/LLR tops out at `Ready` and never reaches
+`Verified`. **`Ready` means decomposed and handed on; `Verified` means proven by
+execution, and only a test case can make that claim.**
+
+**The hazard: `Verified` is being re-pointed to a new meaning on a column that
+already holds 370 rows using the old one.** Today `Verified` means *ratified* —
+111 SRs, 131 LLRs and 128 TCs carry it right now. Under the ladder it means
+*the test passes*, and is illegal on SR and LLR entirely. A migration that is
+interrupted, partial, or merged from a stale branch therefore leaves rows whose
+`Verified` means the **opposite tier of claim** from its neighbours, and — this
+is the sharp part — **nothing can tell them apart by inspection**, because the
+cell is byte-identical either way. Every other value in the ladder is a new
+word (`Drafted`, `Attested`, `Ready`) and is self-announcing on a half-migration;
+`Verified` alone is silent. Two ways out, and the second is safer:
+
+- migrate atomically, all 370 rows in one commit, with a check that refuses any
+  `Verified` on an SR/LLR row; or
+- **spend a different word for the new rung** — `Passing` or `Proven` — so that
+  no value in the repo ever changes meaning, and a stray `Verified` anywhere is
+  unambiguously an un-migrated row. **Recommended.** It costs one word and buys
+  a migration that cannot silently half-apply, which is the failure mode this
+  program has found in the machinery four times already.
+
+Recorded because the ladder is otherwise clean, and because the objection is
+about the *word*, not the design. With the owner's confirmation above, the
+semantics are settled and **only the migration-safety question remains open**:
+`Verified` is the right word for what a TC claims, and the sole argument
+against keeping it is that reusing a word 370 rows already carry makes a
+half-applied migration invisible.
+
+**Q11 · Migrating the existing 370 rows onto the ladder — mostly derivable, with
+one FAIL-OPEN that fixes the sequencing.** The mapping needs no re-judgment:
+today's `Draft` → `Drafted`; today's `Verified` → `Attested`, then promoted to
+`Ready` wherever the discharge check passes, which is a registry join the
+scripts already compute. That is what keeps the P0 sitting **unblocked by
+D-3** — the sitting is a human judgment and the vocabulary change is a
+mechanical re-spelling of what it records.
+
+The exception is **`Modified`, and it fails in the permissive direction.** 38
+live rows carry it (25 SR · 6 LLR · 7 TC), meaning *was blessed, text has since
+moved*. Under Q5 that state stops being authored and becomes derived from
+`TextHash` — but **the hashes do not exist yet**. So a migration that retires
+the word before the anchor is stamped has nothing to derive from, and a
+migration that stamps the hash over each row's *current* text records those 38
+rows as clean `Attested`. Their drift is not detected as resolved; it is
+**laundered**, silently, in exactly the direction this program keeps finding.
+Two exits:
+
+- **Resolve the 38 at the sitting first**, then migrate — they are re-blessed,
+  their text is current, and stamping the hash over current text is *correct*
+  rather than concealing. This is already §5 step 3, so it costs nothing new.
+  **Recommended.**
+- Or seed each hash from the row's **baseline** revision rather than its
+  current text, so the drift survives the migration and re-derives.
+
+**This is a hard sequencing constraint, not a preference: the sitting must
+complete before the ladder migration**, or 38 rows lose the only record that
+they owe a re-blessing. §5 carries it.
+
+#### Superseded reasoning, retained (the two-axis analysis, before the ladder)
+
+The analysis below produced the axes the ladder now encodes, and is kept
+because the reasoning is what a ruler needs. It argued the axes should live in
+*different columns*; the owner's ladder puts them in *different rungs of one
+column*, which achieves the same separation with less schema. The one
+conclusion that survives intact is that **pass/fail must never be authored**:
+whichever column it lands in, it is read from the harness.
+
+The tension comes from the clause *"if it's a test case it should be passing"*,
+which puts a **runtime fact** inside a **maturity cell**. Those want opposite
+things: the text's maturity changes at a ratification sitting and should be
+stable between them, while pass/fail changes on every commit and is owned by
+the harness. Encoding pass/fail in `Status` would mean a human edits a
+registry cell when CI goes red, and the cell is stale the moment it is written
+— a hand-maintained duplicate of something already measured, which is the one
+shape this kit refuses everywhere else.
+
+The second axis **already exists and is already mechanical**: TC carries
+`Automated` + `Evidence`, which §6 F-3 classes mechanical. So the recommended
+reading is:
+
+- **`Status` = is the test case's *text* blessed?** `Asserted` means "this is a
+  correct statement of what must be proven" — a judgment a human makes once,
+  and one that is *worth* making before the code exists, since a reviewed test
+  case is a specification.
+- **Passing = derived from evidence, never authored.** Whether it is green is
+  read from the harness, at the moment it is asked.
+
+Then the owner's case is **fully representable and entirely ordinary**:
+`Status = Asserted`, evidence not yet green, and the WI DAG says which work
+item owes the implementation. Nothing is lying, nothing is stale, and the gate
+can still refuse to advance — because the gate reads the *evidence* axis, which
+is exactly what it should be refusing on.
+
+**The general form, which also answers the ordering trap.** `Asserted` is a
+statement about the **text**; the discharge it demands — children, or a green
+run — is an **obligation the row now carries**, checked at the **gate**, not a
+precondition of asserting. It has to work that way or the process deadlocks:
+an SN cannot have SRs before it is blessed (SRs are written *from* a ratified
+need at G1), so "asserted ⇒ has children" would make the first assertion
+illegal. So the honest state machine is `Draft` → `Asserted` (undischarged) →
+`Asserted` (discharged), where **only the middle-to-last transition is
+mechanical** and the TC gray area is simply the middle state having a name.
+
+**Q10 · `Evidence` keeps its name — the rename is withdrawn by the owner, and
+the definition is ruled.** *"A path to evidence, or a script that produces
+evidence."* The withdrawn objection was that the cell holds a **location**
+while the word promises **proof of execution** — the repo's own code agrees
+with the objection three times over (`trace.py`'s finding calls it "a cited
+**location**"; the reference doc calls it "pytest node / path / procedure
+link"; `trace_text.PROVENANCE_COLS` groups it with `Module`/`CodeSymbol`/
+`TestRefs` as "pointers by design"). The owner's rescission — *"if the test
+case passes, the file path is providing the evidence"* — answers it, and the
+ruled definition is what makes it coherent: the cell names **either the
+evidence itself or the thing that produces it**, which covers a procedure doc
+(`Automated=No`, evidence *is* the document) and a test node (`Automated=Yes`,
+evidence is what running it emits). Under the ladder the word also stops
+competing with anything, because axis 3 now has `Verified` and does not need
+the noun.
+
+**What survives the rescission, unchanged: the granularity gap.** It was never
+really a naming problem. `check_doc_refs.registry_findings` validates only the
+**file half** of the citation and rules the `::node` selector prose, so a TC
+citing `tests/test_gen_trajectory.py` is satisfied by a file **54 other TCs
+already guarantee exists**. That does not block `Attested` — but it makes the
+`Attested → Ready` transition **unenforceable**, which is the one transition
+the ladder just made load-bearing. So the selector check is now owed by D-3
+itself rather than being an optional tightening: resolving the `::node`
+selector (or, stdlib and stack-agnostically, confirming the selector token
+appears in the cited file) is *how a row earns `Ready`*. Measured: 66 of 143
+live TCs carry a selector today, so the majority of the work is already done in
+the data and unenforced in the code. §6 F-12 records the measurement.
+
+#### The irony, and the obstacle
+
+The observation that these columns *are* interfaces is correct, and §6 F-2
+already measured why it cannot be acted on today: **the IF registry has no
+shape for a data vocabulary.** It models module↔module and module↔file seams —
+of 95 rows, the five that mention `Status` all name it on the `Consumes` side,
+and **no row provides it**, because there is nothing in the schema for "a term
+that six readers agree on." Declaring D-3's semantics as IF rows would need a
+second IF row *kind* (a vocabulary/contract row with no `Direction` and no
+`Counterpart` in the module sense) — which is a change to what an interface
+*is*, and lands squarely inside OI-14's "the IF registry has never had a
+declared content contract." Correctly deferred by the ruling. Until then D-3's
+table above is the declaration, and its enforcement home is a schema tier, not
+an IF row.
+
+### D-4 — supersession is DELETION, and ids are never reused
+
+**Owner ruling, 2026-08-09.** *"For superseded: these need not live in the
+registry. If something is superseded, it should just get removed."* A
+superseded row is deleted rather than retained with a forwarding pointer. The
+history of what it said and why it went lives where history already lives —
+git, and [`log.md`](log.md)'s Decisions section — which is the same argument
+D-1 made for retiring the attestation ledger: a registry states what **is**,
+never what **was**.
+
+**What this deletes.** `SupersededBy` is live-only on SR and also present on
+CMP (§6 F-9), and it is not a passive cell — [`trace.py`](../project-trajectory/scripts/trace.py)
+carries a whole validator for it across lines 470–553 (semicolon-list shape, no
+repeats, target must exist, no self-link, **no cycles**), plus the
+`PartOf`/`SupersededBy` rule at 2018–2027, and `check_trajectory` classifies it
+**ratified** at 2932–2948. All of that goes. It also **closes §5's loose end**
+about an adopting repo inheriting the superseded-SR integrity rules without the
+column or its documentation — under D-4 there is no column to inherit, and the
+rule "an LLR citing a superseded SR must re-ground" collapses into the orphan
+check `trace.py` already runs, because a deleted SR is simply not there.
+
+**The repo's doctrine already blesses the one cost.** Archived and historical
+documents cite ids by design, and after a deletion those citations dangle.
+`check_doc_refs` has ruled this exact case for *files* already — its docstring
+says a historical document "naming a file that has since been retired is
+accurate history, not a broken pointer; 'fixing' it would falsify the record."
+D-4 extends that doctrine from files to ids, which is consistent rather than
+new. Where a live document needs a forwarding pointer, the log entry that
+recorded the supersession is it.
+
+#### The id-reuse hazard — the owner's own objection, confirmed in code
+
+*"The only remaining problem is if IDs get reused… perhaps there should be a
+counter ticking up the unique IDs for the repo."* The concern is correct, and
+it is **worse than it looks**, because every mint in this repo derives its
+high-water mark from **what currently exists**:
+
+- `intake.next_wi_id` is `max(existing) + 1` over spec **filenames**. Its
+  docstring already shows the right instinct — *"a broader read than the
+  loaders on purpose: for a MINT, an id held anywhere is an id taken"* — but
+  "held anywhere" still means *held by a live file*. Delete the file and the id
+  is free.
+- `plan_artifacts` mints `DP-###` the same way, from directory names.
+- **The spine has no mint at all.** Grepped for an `SR-`/`LLR-`/`TC-` id
+  formatter across every script: there is none. Spine ids are allocated by a
+  human or an agent reading the registry and adding one — so under D-4 the
+  reuse guard is *a convention*, with no code to fix and nothing to fail.
+
+An id is the join key of the entire traceability graph and the token every
+commit message, log entry and archived document cites. A reused id does not
+break a check; it silently **re-points history at a different meaning** — the
+worst failure available in this repo, and undetectable by inspection.
+
+**Recommended: a persisted high-water mark per id space, and mint from it —
+never from the live set.** A single repo-wide counter would satisfy the rule
+but costs readability (`SR-147` followed by `LLR-148`), so per-space marks give
+the same guarantee while keeping ids readable. Two properties make it cheap and
+safe: it is **machine-written, machine-read, never human-authored** — §6 F-3's
+**anchor** class, the same one `TextHash`/`HashedOn` created, so it needs no
+ratification and belongs in `_DIGEST_EXCLUDED` by the same argument — and it is
+checkable with two rules that need no history: *the mark never decreases*, and
+*no live id exceeds it*. Note this is worth doing **whether or not D-4 lands**:
+today's mints are already reuse-prone the moment any row is removed for any
+reason, and D-4 only makes removal routine.
+
+**Sequencing:** D-4 must not ship before the watermark exists, or the first
+supersession frees an id with nothing watching. The watermark is
+carrier-independent and could ship with the removal-half class of work; the
+`SupersededBy` deletion is a registry-schema change and belongs with OI-12's
+migration.
 
 ---
 
@@ -603,6 +1044,34 @@ mechanically supported, not wishful.
    diffable; the digest is what survives a squash, rebase or shallow clone) —
    no format named, so the sitting can ratify it before OI-12 is ruled.
 
+**Three more items joined this block on 2026-08-09 with D-3/D-4.** Each is
+needed under **every** carrier answer, touches no registry schema, and is
+therefore not part of the work that gets built twice. This is the batch that
+can start immediately — the answer to *"should implementation kick off from
+here?"* is **yes, for these three and nothing else.**
+
+3. **The id watermark — D-4's precondition, and worth doing regardless.** A
+   persisted high-water mark per id space; mint from it, never from the live
+   set. Today `intake.next_wi_id` and `plan_artifacts` both compute
+   `max(existing) + 1`, and **the spine has no mint function at all**, so any
+   removal — D-4's or otherwise — frees an id for silent reuse. Two checks
+   carry it: the mark never decreases, and no live id exceeds it. F-3 *anchor*
+   class (machine-written, machine-read), so it needs no ratification and joins
+   `_DIGEST_EXCLUDED` for the same reason the other anchors do.
+4. **The `::node` selector check — what makes `Attested → Ready` enforceable.**
+   Today only the file half of a TC's `Evidence` is validated (§6 F-12), so the
+   ladder's new middle transition has no mechanism. Resolve the selector, or —
+   stdlib and stack-agnostically — confirm the selector token appears in the
+   cited file. **The data cost is near zero and the re-attest cost is exactly
+   zero**: 66 of 143 rows already carry a selector, and `Evidence` is a
+   **traced** cell (`SPINE_RATIFIED_CELLS` for TC is `Method`/`Expected`/
+   `Parameters`/`Level`/`Tier`), so adding selectors to the remaining 77 opens
+   **no re-attest window**. Verified in source, not assumed.
+5. **The unpinned SN reader twin.** `traj_parse._sn_rows` ↔ `gen_okf.sn_rows`,
+   held equal by a docstring and nothing else, already drifted once. Promoted
+   out of the loose-ends list because it is genuinely carrier-independent and
+   has waited long enough.
+
 ### Owed by the owner — three filed rulings and one unfiled question
 
 Indexed in §0; the sequencing argument is here.
@@ -639,39 +1108,43 @@ sitting rules on) are answered inline in §3 and need no separate act.
 
 ### Then, in order
 
-3. **Hold the P0 sitting** — ratify / amend / reject SN-028…032 and their
+6. **Hold the P0 sitting** — ratify / amend / reject SN-028…032 and their
    decomposition, and work the 25-row re-attest brief
    ([`ratify/2026-08-08-mechanized-loop.md`](ratify/2026-08-08-mechanized-loop.md)).
    Every ruling appends to [`log.md`](log.md)'s Decisions. **Not blocked by the
    anchor:** ratification is a `Status` flip, and the anchor records what was
    ratified. Stamping afterwards leaves the sitting-to-stamp window
    unprotected, which is **no worse than today** — the ledger has never held a
-   row.
-4. **Build the anchor half of D-1, plus D-2, ONCE** — on the carrier OI-12
-   rules — and stamp what the sitting accepted.
-5. **Regenerate the derived artifacts** — `docs/gate`, `open-items.html`,
+   row. **Not blocked by D-3 either** — the ladder is a mechanical re-spelling
+   of what the sitting records (Q11). But it **must precede** the ladder
+   migration: the 38 `Modified` rows have no hash to derive their drift from,
+   so migrating first launders it (Q11).
+7. **Build the anchor half of D-1, plus D-2, and the D-3/D-4 schema changes,
+   ONCE** — on the carrier OI-12 rules — and stamp what the sitting accepted.
+   This is the batch that gets built twice if it starts early: the ladder's
+   values, the `Priority` float, `Phase` on SN, the `SupersededBy` deletion and
+   its ~80-line validator, and every test that asserts a column shape.
+8. **Regenerate the derived artifacts** — `docs/gate`, `open-items.html`,
    `PROJECT_STATE.html`, the OKF export — and confirm the gate rises to its
    honest ceiling. A gate that does *not* rise is a finding, not a nuisance.
-6. **Drain or dispose the open frontier** — WI-390, WI-415, WI-422, WI-423,
+9. **Drain or dispose the open frontier** — WI-390, WI-415, WI-422, WI-423,
    WI-424. WI-424 (route the adjudicator briefs) carries its own two decisions;
    see the handoff's §4.
-7. **Dispose the warn-only residue** — the handoff's §5 list, each either fixed
+10. **Dispose the warn-only residue** — the handoff's §5 list, each either fixed
    or recorded as accepted. "Known and accepted" is a disposition; "still there"
    is not.
-8. **Full bar green, stated with real output**: `pytest -q -n auto` unfiltered,
+11. **Full bar green, stated with real output**: `pytest -q -n auto` unfiltered,
    `check.py` at the derived gate, `check_trajectory.py --strict` unfiltered.
-9. **Merge to `main`** — an owner act (`push = "human"`), and the standing
+12. **Merge to `main`** — an owner act (`push = "human"`), and the standing
    deliberate item [`status.md`](status.md) already carries.
 
-Locked = the rulings made, 1–9 done, `drafts=0 modified=0`, and this file
+Locked = the rulings made, 1–12 done, `drafts=0 modified=0`, and this file
 archived.
 
 ### Loose ends this program surfaced, owed to no step above
 
-- **The unpinned SN reader twin.** `traj_parse._sn_rows` ↔ `gen_okf.sn_rows` are
-  held equal by a docstring and nothing else, and have already drifted once
-  (a phantom `SN-000` root in the dashboard icicle). Real under every carrier
-  answer, so it should not wait on OI-12.
+- ~~**The unpinned SN reader twin.**~~ — **promoted to §5 step 5**, the
+  ship-now block, because it is carrier-independent and has waited long enough.
 - **`status.md`'s ratification-level prose is stale** — it still says the level
   is `autonomous`, a value [`process.toml`](process.toml) *deleted* in favour of
   `human_ratification_through = 0`. Hand-authored owner prose; flagged, not
@@ -679,10 +1152,20 @@ archived.
 - **`status.md` is ~449 lines against a 120-line warn budget** — pre-existing
   and warn-only; this file is meant to absorb some of that depth and has begun
   to (the sitting's owed-work bullet now points here rather than restating it).
-- **`SupersededBy` is live-only on the SR registry** (§6 F-9): an adopting repo
-  inherits its integrity-class rules — including "an LLR citing a superseded SR
-  must re-ground" — **without the column or its documentation**. Reference doc
-  §12.9 records it; nothing has ruled it.
+- ~~**`SupersededBy` is live-only on the SR registry**~~ — **CLOSED by D-4**:
+  the column is deleted rather than documented, and the integrity rule it
+  carried collapses into the orphan check, because a superseded row is simply
+  not there. What the loose end becomes is D-4's **precondition**: the id
+  watermark must exist before any row is deleted.
+- **OI-12's card carries two stale claims**, and it is the surface the sitting
+  reads. Its `BlastRadius` cell still names `TextDigest` / `AcceptedCommit`
+  (renamed in §2 D-1), and — the one that matters — it still asserts *"ruling
+  this later forecloses nothing"*, which the owner **corrected on 2026-08-09**
+  and §6 F-7 now records as true of the design and **false of the labour**.
+  Left unedited on purpose: `open-items.csv` is freshness-gated against
+  [`open-items.html`](open-items.html), so the fix lands **with** a
+  regeneration, and rewriting a pending decision's own brief is a change the
+  owner should see rather than find already made.
 - **`Priority` names two incompatible vocabularies** — `M`/`S`/`C` on an SR, a
   scheduler integer on a WI, neither enum-checked (§6 F-9). Smaller than OI-13
   and the same shape of defect.
@@ -708,7 +1191,8 @@ The per-field mechanical detail already has a home —
 F-3 four column classes · F-4 the inert class · F-5 the digest's width ·
 F-6 no markdown-table reader · F-7 TOML as one carrier · F-8 constraints have
 no home · F-9 template↔live headers + the cross-registry matrix · F-10 what IF
-`Contract` encodes · F-11 components bind all three.
+`Contract` encodes · F-11 components bind all three · F-12 the TC existence
+claim is checked at file granularity only.
 
 **F-1 · There is no single `Status` vocabulary — there are six carriers, and
 only one is closed.** SR/LLR/TC `Status` is *open* with three magic values
@@ -740,7 +1224,7 @@ one D-1 creates.**
 | **mechanical** | parsed, joined, or gated | ids, `SN-Refs`, `SR-Refs`, `Verifies`, `Status`, `Verification`, `Tier`, `Automated`+`Evidence`, `Phase`, `Module`, `SupersededBy` |
 | **prose an LLM is handed** | lifted verbatim into an assembled brief | SR `Title`/`Requirement`/`Rationale`/`AcceptanceCriteria` (critique brief + dual-plan surface), TC `Parameters`/`Method` (artifact recipe + rubric-path scan), and everything in the generated OKF bundle |
 | **inert** | shipped and often *required*, but no code reads the value | `LLR.TestRefs` (nothing reads it at all), `LLR.CodeSymbol` (required, never resolved), `SR.Area`, `SR.Lifecycle`, the *values* of `SR.Priority` / `TC.Level` / `TC.Method`, every SN column, and `SR.Permutations` — a machine grammar that `gen_cases.py` only ever receives by hand via `--spec` |
-| **anchor** *(new, D-1)* | machine-written, machine-read, never human-authored | `TextDigest`, `AcceptedCommit` |
+| **anchor** *(new, D-1)* | machine-written, machine-read, never human-authored | `TextHash`, `HashedOn` |
 
 The fourth class is why the §A5.1 traced/ratified split needs a third bucket
 (§2, hazard 2): an anchor cell is not ratified prose and not a traceability
@@ -763,6 +1247,15 @@ check is `.startswith("sha256:")`, and the test fixtures use `sha256:a`. The
 reasons that *do* hold are duller (free in a CSV cell, self-describing,
 no new rule to justify), and they stop holding the moment the cell lands in a
 markdown table a human reads.
+
+**The width lever is the prefix, not the alphabet** (added 2026-08-09 with the
+encoding question in §2). Encoding the same 64 bits denser saves at most six
+characters — base32 13, base64url 11, Ascii85 10, against hex's 16 — while
+`sha256:` costs seven on its own. So the two honest levers are dropping the
+prefix (which today is the *only* shape check there is, `.startswith("sha256:")`
+— so it cannot go without replacing that check) and dropping the carrier
+constraint entirely by moving to TOML, where the key name carries what the
+prefix was carrying. §2 records the ruling: **keep lowercase hex.**
 
 **F-6 · There is no reusable markdown-table reader in this repo, and CSV→
 markdown would not be a like-for-like swap.** Two separate facts, often
@@ -1035,6 +1528,44 @@ So the reading order for the sitting is **components → IF → `Status`**:
 OI-14 assumes today's 95 IF rows are the right 95, and that assumption rests on
 a component model nobody has ruled.
 
+**F-12 · A TC's claim to have a test is checked at FILE granularity, and the
+finer pointer is already being hand-written into the wrong column.** Measured
+2026-08-09 over the 143 live TC rows, answering the owner's *"nothing here
+indicates if the test itself actually exists."*
+
+Two checks touch the claim and neither reaches it. `trace.py:837` requires that
+`Automated=Yes` cite a non-empty `Evidence`. `check_doc_refs.registry_findings`
+(WI-394) then checks that the cited path exists — but **only the file half**;
+its own comment rules the `::node` selector prose, because resolving a node id
+means running the project's test runner, which is stack-specific. So:
+
+| | |
+|---|---|
+| TCs citing `Evidence` | 143 of 143 — none blank |
+| cited files that do not exist | **0** |
+| TCs carrying a `::node` selector | **66 of 143** — unchecked even where present |
+| distinct files cited | 76 |
+| files cited by more than one TC | 27, carrying 208 citations |
+| most-shared file | `tests/test_gen_trajectory.py`, cited by **54** TCs |
+
+The concrete hole: cite `tests/test_gen_trajectory.py`, never write the test,
+and every check stays green — 54 other TCs already guarantee the file exists.
+This is the F-4 inert-cell family, but **half-enforced is worse than inert**: a
+reviewer sees WI-394 wired up and reasonably concludes the claim is covered.
+
+**And the missing granularity is already being written by hand, in
+`Parameters`.** The template declares that column as an input recipe
+(`param=a; other=x`) and the reference doc calls it "the artifact recipe in the
+critique brief. Not validated." Its one mechanical consumer is
+`agent_loop.py:718`, which lifts it into the critique brief and scans it for
+`docs/rubrics/*.md` paths to inline (narrowly scoped — test `.py` paths are
+**not** slurped; verified). Measured: filled on **24 of 143** rows; of those,
+**1** uses the declared `key=value` shape and **24 contain a repo path** —
+TC-103's reads `tests/test_gen_trajectory.py fixture tiered_repo(TIER_UNION_WIS)`.
+Authors felt the gap and filled the nearest cell. Two costs follow: the value
+is unvalidated free prose, and `Parameters` is classified **ratified**, so
+correcting the drift is a re-attestation rather than a cleanup.
+
 **Candidate follow-up, not filed:** the *prose-an-LLM-is-handed* view above
 exists nowhere as a consolidated surface —
 [`registry-machinery-reference.md`](registry-machinery-reference.md) documents
@@ -1129,6 +1660,99 @@ done mid-program: it is a reference-doc edit with no bearing on the lock.
   half ships now (zero carrier exposure, zero real ledger rows), the *anchor*
   half waits for OI-12, and SR-140 is written carrier-neutrally so the sitting
   is not blocked by either.
+- **2026-08-09** — **the ladder's rungs confirmed, and the plan re-cut around
+  what can actually start.** The owner confirmed `Ready` as the terminal rung
+  for SN/SR/LLR with the semantic argument for it — *"`Verified` can imply the
+  functionality is verified, when the column is just trying to say the
+  requirement has been fully decomposed and ready for the next stage"* — so
+  `Ready` means decomposed-and-handed-on and `Verified` means proven-by-
+  execution, which only a TC can claim. The semantics are now settled and the
+  only open question about the word is **migration safety** (Q9). **Q11 added**:
+  the 370-row migration is derivable (`Draft`→`Drafted`, `Verified`→`Attested`
+  then promoted to `Ready` where the discharge check passes), which is what
+  keeps the sitting unblocked by D-3 — **except `Modified`**, whose 38 rows have
+  no hash to derive drift from, so migrating before the sitting **launders**
+  their owed re-blessing. That makes "sitting before ladder migration" a hard
+  sequencing constraint, now carried in §5. §5 also gained **three
+  carrier-independent steps that can start now** (the id watermark, the
+  `::node` selector check, the SN reader twin) and folded the D-3/D-4 schema
+  work into the build-once step; the checklist renumbered to 1–12.
+- **2026-08-09** — **`Status` revised to a four-rung ladder, and D-4 ruled.**
+  The vocabulary is now `Drafted` (id allocated, nothing validated against it)
+  → `Attested` (text attested valid) → `Ready` (discharge in place — children,
+  or an existing test) → `Verified` (the test passes; **TC only**). This
+  **resolves Q9's gray area inside `Status`** rather than beside it: the three
+  axes this session separated — text blessed, thing exists, thing passes — are
+  three rungs, and the owner's case (attested text, unwritten test) is simply
+  `Attested`. It also dissolves the ordering trap, since `Attested` is
+  reachable without a discharge and the discharge is checked as the transition
+  into `Ready`. **Two corrections recorded:** as given, `Ready` and `Verified`
+  said the same thing for a TC, so `Ready` is read as the *existence* rung;
+  and **`Verified` re-points a word 370 live rows already carry with the old
+  meaning**, which a half-applied migration cannot announce — recommend
+  spending a fresh word (`Passing`/`Proven`) instead. **Q10** records the
+  withdrawn `Evidence` rename (owner: *"if the test case passes, the file path
+  is providing the evidence"*) and the ruled definition — a path to evidence,
+  or a script that produces it — while noting the **granularity gap survives
+  the rescission** and is now load-bearing, because it is what makes
+  `Attested → Ready` enforceable. **D-4**: a superseded row is deleted, not
+  retained — which deletes `SupersededBy`, its ~80-line validator in `trace.py`,
+  and **closes §5's live-only-`SupersededBy` loose end**. Its hazard is the
+  owner's own and confirmed in code: every mint here is `max(live) + 1`, and
+  **the spine has no mint function at all**, so a deletion frees an id for
+  silent reuse. Recommend a persisted per-space high-water mark — F-3 *anchor*
+  class, machine-only — as a **precondition** of D-4, worth doing regardless.
+  §6 gained **F-12**: the TC existence claim is checked at file granularity
+  only (66 of 143 rows carry an unchecked `::node` selector; one file is cited
+  by 54 TCs), and the missing granularity is already hand-written into
+  `Parameters` — 24 of 143 filled, 24 carrying a repo path, **1** matching that
+  column's declared `key=value` shape.
+- **2026-08-09** — **D-3 ruled: a column name means ONE thing repo-wide.**
+  Shared semantics fixed for `Status` (discrete with per-tier overload;
+  `Draft` = id allocated and nothing else validated against it, `Asserted` =
+  text asserted valid and a discharge now owed; **SN carries it like every
+  other tier**), `Title`, `Phase` (integer campaign grouping, **added to SN**),
+  `SR-Refs`, `Rationale`, and `Priority` (**float**, higher = first, negatives
+  and decimals legal, comparable only within a group). Recorded with five
+  consequences the ruling leaves open (Q5–Q9 in §2): `Modified` should become
+  **derived from the hash rather than authored**; `Phase` is **already
+  mechanical** and demoting it is a separate migration — flagged as a
+  correction; `Priority` is inert on SR but **drives the WI dispatch frontier**,
+  so the float needs a float parse in `schedule.py`; the shared `Rationale`
+  gives IF the column it lacks and thereby **fixes OI-14's root cause**; and
+  the **test-case gray area dissolves** once `Status` (text maturity) and
+  `Automated`/`Evidence` (pass/fail) are read as the two axes they already are
+  — `Asserted` but undischarged is an ordinary, fully representable state, and
+  discharge is checked at the **gate**, never as a precondition of asserting,
+  or the first assertion of an SN would be illegal. The owner's framing that
+  **these columns are themselves interfaces** is recorded and correct;
+  acting on it is blocked by F-2 (the IF registry has no shape for a data
+  vocabulary — no row *provides* one) and is deferred with the interfaces.
+- **2026-08-09** — **the anchor cells renamed before they exist**, owner
+  direction: `TextDigest` → **`TextHash`**, `AcceptedCommit` →
+  **`HashedOn`** (via an intermediate `BaselineCommit`, rejected for naming
+  the machinery's *use* of the value rather than the value itself). The second
+  is the substantive one — the old name
+  overclaimed, since a commit is a repo-wide snapshot and not an act of
+  accepting this row's text, while the cell's actual job (and the job
+  `trace._attested_baseline` / `_rows_at` already give it) is to say *where the
+  diff starts*. Free to do now: outside this document the names survive only in
+  the handoff and one ratchet bump-comment, both historical records left as
+  written. **Open follow-up:** OI-12's `BlastRadius` cell still names the old
+  pair — see §5's loose ends. D-1 also gained the measured answer to *"can a
+  denser encoding shrink the hash?"* — **no, keep lowercase hex**: the best
+  alphabet change saves six characters while the `sha256:` prefix costs seven,
+  and non-hex forfeits case-insensitive comparison and eye-grepping against a
+  `git show`. §6 F-5 gained the same measurement.
+- **2026-08-09** — D-1 gained the **adjudicator recovery procedure** for the
+  degraded mode (digest trips, `HashedOn` unresolvable after a squash /
+  rebase / shallow clone): treat the row as a first ratification, read the
+  SR / LLR / TC chain as *semantic* evidence that the meaning survived — an
+  adjudicator judgment, deliberately never a scripted check, since it inverts
+  the trace direction — and check the forge / unpruned remotes for the
+  pre-squash text before giving up on a diff. Owner-proposed; closes the
+  "the hash only says *changed*, not *what changed*" objection honestly
+  rather than pretending the digest can answer it.
 - **2026-08-09** — §6 gained **F-7**: TOML as one carrier for all four tiers.
   Strongest technical option raised; `tomllib` is stdlib, the repo already
   writes TOML two ways, and it has run this exact migration once (work-items.csv
