@@ -8,7 +8,7 @@ registry is optional: an absent file is a no-op and the bootstrapped ASSET-000
 placeholder never blocks a gate.
 """
 
-from conftest import make_minimal_project, run_py
+from conftest import make_minimal_project, run_py, record_ids
 
 ASSET_HEADER = (
     "ASSET-ID,Name,Refs,Kind,Provenance,License,Attribution,"
@@ -30,6 +30,7 @@ def report_of(root):
 
 def write_assets(root, *rows):
     asset_path(root).write_text(ASSET_HEADER + "".join(rows), encoding="utf-8")
+    record_ids(root)
 
 
 def test_clean_asset_row_passes(scaffold):

@@ -12,7 +12,7 @@ those to real pack files as a warn-only advisory (a missing pack never gates),
 and leaves skill names and URLs in the same cell alone.
 """
 
-from conftest import make_minimal_project, run_py
+from conftest import make_minimal_project, run_py, record_ids
 
 CMP_HEADER = (
     "CMP-ID,Name,Category,Knowledge,State,SupersededBy,PartOf,DetailDoc,Notes\n"
@@ -30,6 +30,7 @@ def report_of(root):
 
 def write_cmps(root, *rows):
     cmp_path(root).write_text(CMP_HEADER + "".join(rows), encoding="utf-8")
+    record_ids(root)
 
 
 def row(cid, state="planned", sup="", partof=""):
@@ -225,6 +226,7 @@ def write_if(root, component):
         ),
         encoding="utf-8",
     )
+    record_ids(root)
 
 
 def test_if_component_tag_must_resolve(scaffold):

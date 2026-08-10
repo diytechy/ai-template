@@ -10,7 +10,7 @@ The registry was formerly modules.csv / MOD-### — the legacy file + ids are
 still read (never breaking), pinned below.
 """
 
-from conftest import make_minimal_project, run_py
+from conftest import make_minimal_project, run_py, record_ids
 
 REPO_HEADER = "REPO-ID,Name,Repo,DelegatedSRs,Version,Type,Owner,Notes\n"
 ROW = "{rid},widget,https://example.com/org/widget,{delegated},v1,owned,Integration,note\n"
@@ -31,10 +31,12 @@ def report_of(root):
 
 def write_repos(root, *rows):
     repo_path(root).write_text(REPO_HEADER + "".join(rows), encoding="utf-8")
+    record_ids(root)
 
 
 def write_legacy_modules(root, *rows):
     legacy_path(root).write_text(LEGACY_HEADER + "".join(rows), encoding="utf-8")
+    record_ids(root)
 
 
 def test_registry_not_scaffolded_and_absent_file_is_noop(scaffold):

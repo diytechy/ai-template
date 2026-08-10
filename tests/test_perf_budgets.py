@@ -4,7 +4,7 @@ SR/LLR/Module, and a malformed PB id or a dangling ref fails --strict. The
 registry is optional, so its -000 placeholder never blocks a gate.
 """
 
-from conftest import make_minimal_project, run_py
+from conftest import make_minimal_project, run_py, record_ids
 
 PB_HEADER = "PB-ID,Metric,Refs,Budget,Unit,Tolerance,Direction,Tier,Gate,Owner,Notes\n"
 ROW = "{pid},Peak RAM,{refs},256,MiB,10%,lower-better,Release,warn,Integration,note\n"
@@ -20,6 +20,7 @@ def report_of(root):
 
 def write_budgets(root, *rows):
     pb_path(root).write_text(PB_HEADER + "".join(rows), encoding="utf-8")
+    record_ids(root)
 
 
 def test_clean_budget_linked_to_sr_passes(scaffold):

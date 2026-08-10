@@ -12,6 +12,7 @@ from conftest import (
     KIT,
     load_script,
     make_minimal_project,
+    record_ids,
     run_py,
 )
 
@@ -70,6 +71,7 @@ def test_strict_integrity_ignores_orphans_but_fails_bad_ids(scaffold):
     make_minimal_project(scaffold)
     srs = scaffold / "docs" / "requirements" / "system-requirements.csv"
     srs.write_text(ORPHAN_SR, encoding="utf-8")
+    record_ids(scaffold)
     proc = run_py(["scripts/trace.py", "--strict-integrity"], cwd=scaffold)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     srs.write_text(ORPHAN_SR.replace("SR-002", "SR-2x"), encoding="utf-8")
@@ -112,6 +114,7 @@ def test_phase_scopes_require_verified(scaffold):
     # A v2 SR that is not yet Verified fails an unscoped G3 check, but a
     # --phase v1 closure defers it explicitly (and the deferral is reported).
     make_phased_project(scaffold)
+    record_ids(scaffold)
     proc = run_py(["scripts/trace.py", "--strict", "--require-verified"], cwd=scaffold)
     assert proc.returncode == 1
     assert "status-findings=1" in proc.stdout
@@ -192,11 +195,13 @@ def make_attest_project(scaffold):
     (scaffold / "docs" / "test" / "test-cases.csv").write_text(
         ATTEST_TCS, encoding="utf-8"
     )
+    record_ids(scaffold)
 
 
 def test_attest_sr_is_llr_exempt_but_needs_tc(scaffold):
     # SR-002 (Attest) has no LLR yet is not an orphan; it still needs its TC.
     make_attest_project(scaffold)
+    record_ids(scaffold)
     proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     report = (scaffold / "docs" / "test" / "report.md").read_text(encoding="utf-8")
@@ -272,6 +277,7 @@ def make_demo_project(scaffold):
     (scaffold / "docs" / "test" / "test-cases.csv").write_text(
         DEMO_TCS, encoding="utf-8"
     )
+    record_ids(scaffold)
 
 
 def test_demonstrated_sr_is_its_own_category_and_gate_required(scaffold):
@@ -300,6 +306,7 @@ def test_demonstrated_sr_is_its_own_category_and_gate_required(scaffold):
         DEMO_SRS.replace(",H,Analysis,Verified", ",H,Analysis,Implemented"),
         encoding="utf-8",
     )
+    record_ids(scaffold)
     proc = run_py(["scripts/trace.py", "--strict", "--require-verified"], cwd=scaffold)
     assert proc.returncode == 1, proc.stdout + proc.stderr
     assert "status-findings=1" in proc.stdout
@@ -515,6 +522,7 @@ def test_area_values_yield_report_section(scaffold):
         "TC-002,SR-002,Manual,read the report,Full,,Sum printed,No,Verified\n",
         encoding="utf-8",
     )
+    record_ids(scaffold)
     proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     report = (scaffold / "docs" / "test" / "report.md").read_text(encoding="utf-8")
@@ -568,6 +576,7 @@ def _write_ifs(scaffold, body):
     (scaffold / "docs" / "requirements" / "interfaces.csv").write_text(
         IF_HEADER + body, encoding="utf-8"
     )
+    record_ids(scaffold)
 
 
 def _report(scaffold):
@@ -646,6 +655,7 @@ def test_legacy_interfaces_csv_without_notes_column_parses(scaffold):
         legacy + 'IF-001,Provides,src/demo,git,"x",SR-001,v1,Stable,Active,\n',
         encoding="utf-8",
     )
+    record_ids(scaffold)
     proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "interfaces=1 interface-findings=0" in proc.stdout
@@ -749,6 +759,7 @@ def test_draft_sr_is_exempt_from_decomposition(scaffold):
     make_minimal_project(scaffold)
     srs = scaffold / "docs" / "requirements" / "system-requirements.csv"
     srs.write_text(DRAFT_SR, encoding="utf-8")
+    record_ids(scaffold)
     proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "orphans=0" in proc.stdout
@@ -780,6 +791,7 @@ def test_draft_llr_is_exempt_from_tc_rule(scaffold):
     make_minimal_project(scaffold)
     llrs = scaffold / "docs" / "requirements" / "low-level-requirements.csv"
     llrs.write_text(DRAFT_LLRS, encoding="utf-8")
+    record_ids(scaffold)
     proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     report = (scaffold / "docs" / "test" / "report.md").read_text(encoding="utf-8")
@@ -818,6 +830,7 @@ def test_draft_sr_is_exempt_from_require_verified(scaffold):
     srs = req / "system-requirements.csv"
     (scaffold / "docs" / "test" / "test-cases.csv").write_text(RV_TCS, encoding="utf-8")
     # Draft SR-002 is pre-ratification: --require-verified does not flag it.
+    record_ids(scaffold)
     proc = run_py(["scripts/trace.py", "--strict", "--require-verified"], cwd=scaffold)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "status-findings=0" in proc.stdout
@@ -876,6 +889,7 @@ def test_draft_sn_is_exempt_from_sr_rule(scaffold):
     make_minimal_project(scaffold)
     sn = scaffold / "docs" / "requirements" / "stakeholder-needs.md"
     sn.write_text(DRAFT_SN_MD, encoding="utf-8")
+    record_ids(scaffold)
     proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "drafts=1" in proc.stdout

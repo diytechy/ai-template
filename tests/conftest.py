@@ -760,6 +760,20 @@ TC-001,SR-001;LLR-001,Unit,call add and assert the sum,Smoke,"a=1; b=2","Satisfi
 """
 
 
+def record_ids(root):
+    """Record hand-authored ids in the id watermark — "allocate, then record".
+
+    A fixture that writes registry rows is doing what an author does, and the
+    spine and off-spine tiers have no minter, so the ids arrive by hand. The
+    always-on integrity pass then reports every live id standing above the
+    scaffold's all-zero marks: correct, and the documented rhythm is to record
+    them (ADOPTING.md "the id watermark"). Call this after writing rows and
+    before asserting on a `--strict` run, or the assertion is really testing
+    whether the watermark was bumped."""
+    proc = run_py(["scripts/trace.py", "--bump-ids"], cwd=root)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+
+
 def make_minimal_project(root):
     """Fill a scaffold with the demo project + a fully traced registry chain,
     then refresh the generated arch map so the harness starts from truth."""
@@ -791,6 +805,7 @@ def make_minimal_project(root):
         ),
         encoding="utf-8",
     )
+    record_ids(root)
     proc = run_py(["scripts/gen_arch_map.py"], cwd=root)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     # Same "start from truth" for the OKF bundle: with real registry rows the

@@ -8,7 +8,7 @@ registry is optional: an absent file is a no-op and the bootstrapped PART-000
 placeholder never blocks a gate.
 """
 
-from conftest import make_minimal_project, run_py
+from conftest import make_minimal_project, run_py, record_ids
 
 PART_HEADER = "PART-ID,Name,IF-Ref,Vendor,Cost,Status,Quantity,Notes\n"
 ROW = "{pid},SO-101 arm,{ifref},https://example.com/vendor,199,ordered,2,note\n"
@@ -24,6 +24,7 @@ def report_of(root):
 
 def write_parts(root, *rows):
     part_path(root).write_text(PART_HEADER + "".join(rows), encoding="utf-8")
+    record_ids(root)
 
 
 def test_clean_part_row_passes(scaffold):
