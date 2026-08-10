@@ -18,87 +18,64 @@ collapses to a one-line pointer with the commit.
 
 ---
 
-## 0. Start here — the four things awaiting a decision
+## 0. Start here — four rulings owed, and nothing else is blocked on them
 
-Everything below is context for these. Nothing in this document is blocked on
-more analysis; it is blocked on rulings.
-
-| # | question | where to read it | recommendation |
+| # | question | where | recommendation |
 |---|---|---|---|
-| **C** | Does one machine-parseable **carrier** hold all four requirement tiers? The `.md` + `.csv` split has **no recorded rationale anywhere**. | card on [`open-items.html`](open-items.html) · §6 F-7 | **TOML** as the destination; sequencing is the real question, see below |
-| **OI-13** | What does **`Status`** mean across the six registries that carry one — including [`interfaces.csv`](requirements/interfaces.csv)'s undeclared `Status` overlapping `Stability`? | card · §3 Q2 · §6 F-1, F-9 | reserve the word for ratifiable-artifact maturity, rename the rest, **execute with OI-12** |
-| **OI-14** | What is an IF row's **`Contract` cell for**? Measured: design narrative and history, 1% requirement voice, and the registry has **no schema tier at all**. | card · §6 F-10 | **declare now, split gradually** — never a 95-row sweep |
-| *(unfiled)* | The **component model**. `LLR.Component` is a *traced* cell, so the partition moves with no re-attest window — and it **decides how many IF rows must exist**. | §6 F-11 | not filed on purpose; filing it would be me setting the sitting's agenda |
+| **components** | The **component model**. `LLR.Component` is *traced*, so the partition moves with no re-attest window — and it **decides how many IF rows must exist**. | §6 F-11 | not filed on purpose; filing it would be an agent setting the sitting's agenda |
+| **OI-14** | What an IF row's **`Contract` cell is for**. Measured: design narrative and history, 1% requirement voice, and the registry has **no schema tier at all**. | §6 F-10 | **declare now, split gradually** — never a 95-row sweep |
+| **OI-13** | What **`Status`** means across the six registries that carry one. | §6 F-1, F-9 | largely **answered by D-3**; what remains is the *migration* |
+| **OI-12** | Does one machine-parseable **carrier** hold all four tiers? The `.md` + `.csv` split has **no recorded rationale anywhere**. | §6 F-7 | **TOML** as the destination — and it **gates** the anchor half of D-1, D-2 and the D-3/D-4 schema work |
 
-**Read them in this order: components → IF → `Status` → carrier.** OI-14
-assumes today's 95 IF rows are the right 95, and that rests on the unruled
-component model; OI-13 and OI-12 both rewrite registry definitions, so ruling
-them apart pays the migration cost twice.
+**Read them in that order.** OI-14 assumes today's 95 IF rows are the right 95,
+and that rests on the unruled component model; OI-13 and OI-12 both rewrite
+registry definitions, so ruling them apart pays the migration twice.
 
-**Separately, and not blocked by any of the above: the P0 sitting can be held.**
-Ratification is a `Status` flip; the anchor that records *what* was ratified is
-the only part waiting on OI-12 (§5 step 3).
+**The P0 sitting is not blocked by any of them** — ratification is a `Status`
+flip. It *is* a precondition for the ladder migration (§2 D-3, Q11): the 38
+`Modified` rows have no hash to derive their drift from, so migrating first
+stamps them clean and launders the re-blessing they owe.
 
-**Four rulings already made** are not pending: **D-1** (the attestation anchor
-moves onto the artifact's own row; `attestations.csv` retired — the removal
-half shipped), **D-2** (stakeholder needs gain fields rather than a new carrier
-— the *shape* of those fields folded into OI-12), **D-3** (a column name means
-one thing repo-wide; shared semantics ruled for `Status`, `Title`, `Phase`,
-`SR-Refs`, `Rationale` and `Priority`, with `Status` a four-rung ladder
-`Drafted → Attested → Ready → Verified`), and **D-4** (supersession is
-deletion, not a forwarding pointer — and ids must therefore never be reused).
-All four in §2.
+**Four rulings are made and shipped** — D-1, D-2, D-3, D-4 in §2.
 
-**Two things in that set need the owner's eye before they are built**, both
-recorded with recommendations: `Status`'s new `Verified` **re-points a word 370
-live rows already use with the old meaning** (§2 D-3 Q9 — recommend spending a
-fresh word instead, so a half-migration cannot hide), and D-4 **must not ship
-before an id watermark exists**, because every mint in the repo derives its
-high-water mark from the live set and a deletion frees the id (§2 D-4).
-
-**D-3 changes OI-13's status**: it answers the vocabulary question in the
-general case, so what remains on that card is the *migration* — which registries
-rename, and what happens to the IF `Status`/`Stability` pair. It also has a
-dependency the reading order above does not yet show: D-3 gives IF a shared
-`Rationale` column, which is the mechanical destination OI-14's split needs
-(§2 D-3, Q8). **D-3's own five open sub-questions** (Q5–Q9 there) are build-time
-consequences with recommendations, not new sittings — except Q6, which is a
-correction the owner should see: `Phase` is *not* the non-functional grouping
-attribute the ruling assumes.
+**Two need the owner's eye before they are built**, both recorded with
+recommendations: `Status`'s new `Verified` **re-points a word 370 live rows
+already use** with the old meaning (Q9 — recommend spending a fresh word so a
+half-migration cannot hide), and the **edge-case SN tier may be mis-levelled**
+(§7's note: eight of ten rows decompose into exactly one SR, against 12.3 for a
+core need — a "need" that yields one requirement *is* the requirement, written a
+level up). The second is a **kit-level** finding: that table ships to every
+adopter.
 
 ---
 
 ## 1. Where the repo stands
 
-Measured 2026-08-09 on `infra/mechanized-loop` at `b2507c8c`, from the files
-themselves — not restated from the handoff.
+Measured 2026-08-09 on `infra/mechanized-loop` at `2b0f5d1f`.
 
-| fact | value | source |
-|---|---|---|
-| derived gate | **G1** (`computed=G0 ex-draft=G2 phase=4 stage=0`) | [`gate`](gate) |
-| SR | 111 `Verified` · **25 `Modified`** · **10 `Draft`** | [`requirements/system-requirements.csv`](requirements/system-requirements.csv) |
-| LLR | 131 `Verified` · 6 `Modified` · 10 `Draft` | [`requirements/low-level-requirements.csv`](requirements/low-level-requirements.csv) |
-| TC | 128 `Verified` · 7 `Modified` · 8 `Draft` | [`test/test-cases.csv`](test/test-cases.csv) |
-| SN | 32 ids; **SN-028…032 sit in a `Draft needs (unratified)` section** | [`requirements/stakeholder-needs.md`](requirements/stakeholder-needs.md) |
-| owner surface | **3 pending decisions** + **35 attestation cards** (25 `Modified` + 10 `Draft` SRs) | [`open-items.html`](open-items.html) |
-| attestation ledger | **gone** — it held 1 row, the `ATT-000` example, for its whole life (D-1) | — |
-
-The gate is G1 *because* a `Draft` SN reads G0. That is the machinery reporting
-the truth: the code is built and tested, the requirements behind it are proposed.
-**Nothing this program has done moves the gate**, and that is correct — no
-artifact has been ratified.
-
-**What this program has landed**, all on `infra/mechanized-loop`:
-
-| commit | what |
+| fact | value |
 |---|---|
-| `9b6c7fc0` | this document, and **OI-12** on the carrier |
-| `0156e0fe` | **OI-13** on `Status` across six registries |
-| `91831f4d` | **D-1's removal half** — the ledger retired, the digest kept |
-| `b2507c8c` | **OI-14** on the IF `Contract` cell, plus the registry audit (F-9…F-11) |
+| derived gate | **G1** — because a `Draft` SN reads G0. The code is built and tested; the requirements behind it are proposed. |
+| spine | SN 32 · SR 146 · LLR 147 · TC 144 · **34 drafts** · 38 `Modified` |
+| owner surface | **3 pending decisions** + 35 attestation cards |
+| id watermark | live, 14 spaces, three rules in the always-on integrity floor |
 
-Full detail on the program *before* this one — its commits, the measured bar,
-the warn-only residue and this machine's environment gotchas — is in
+**Nothing this program has done moves the gate, and that is correct** — no
+artifact has been ratified. One figure did move and is worth knowing: adding the
+unratified `TC-158` dropped phase 4's derived level below its closed `[4]-[g2]`
+anchor. Per the derived-gate model that drop **is the detector that a new phase
+is due** — phase identity lives in a committed `[phase]-[g*]` work item, and
+until one exists the content stays attributed to phase 4. It is a signal to open
+the next phase, not a regression in phase 4.
+
+**What shipped, all on `infra/mechanized-loop`:** the D-1 removal half; D-3/D-4
+ruled; `check_docs` stops parsing links inside `+++` frontmatter; SN-029's
+malformed row and the whole edge-case tier's field mapping fixed; 123 `Evidence`
+selectors repointed (212 of 212 now resolve); the id watermark built, adversarially
+reviewed, and its two blockers plus four majors fixed; and IF-101 declaring the
+seam the mint created.
+
+Full detail on the program *before* this one is in
 [`handoff-2026-08-08-mechanized-loop.md`](handoff-2026-08-08-mechanized-loop.md);
 that document stays the record and is **not** superseded by this one.
 
@@ -327,24 +304,17 @@ digest answers only *changed*, never *what changed*. The procedure then is:
    without the columns has a vacuous check, which is the exact "green hides a
    skipped check" failure SN-008 forbids.
 
-**Removal / rework inventory** (measured, not estimated). §5 splits this table
-along one line: everything that **deletes** is the carrier-independent *removal
-half* and ships now; the **two new columns and everything that classifies,
-guards or templates them** is the carrier-exposed *anchor half* and waits for
-OI-12.
+**The removal half is DONE** (the full per-file inventory is in git). What a
+future reader needs from it is one warning: `check_trajectory` KEPT
+`normative_text`, `sn_normative_text`, `digest`, `current_digests`,
+`_DIGEST_SEP` and `_DIGEST_EXCLUDED` — the anchor's engine, currently with **no
+writer**, so a dead-symbol sweep must not read them as unused. `intake.py` fell
+back under the 1500-line monolith threshold and its ratchet entry was deleted
+rather than left standing as headroom.
 
-| where | what happens |
-|---|---|
-| `docs/requirements/attestations.csv` | delete — **done** |
-| `project-trajectory/registries/attestations.template.csv` | delete — **done** |
-| [`check_trajectory.py`](../project-trajectory/scripts/check_trajectory.py) | **done, −193** (3991 → 3798): `ATTESTATIONS_CSV`, `ATTESTATION_DECISIONS`, `read_attestations`, `newest_attestations`, `attestation_findings`, `attestation_integrity_findings`, `staged_attestation_rewrite_findings`, `_report_attestations` and both `main` wirings. **KEPT** — `normative_text`, `sn_normative_text`, `digest`, `current_digests`, `_DIGEST_SEP`, `_DIGEST_EXCLUDED`: the anchor's engine, currently with **no writer**, so a dead-symbol sweep must not read them as unused. |
-| [`trace.py`](../project-trajectory/scripts/trace.py) | **done, −51**: `_ledger_baseline` and the `_resolvable` guard that existed only to protect it. `_attested_baseline` is the git derivation alone again — which is what every caller was actually getting, the ledger having never held a row. It reads the row's own `HashedOn` when the anchor half lands. |
-| [`intake.py`](../project-trajectory/scripts/intake.py) | **done, −85**: `next_att_id`, `record_attestations`, `_cmd_attest` and the `attest` subparser. The module drops **back under the 1500-line monolith threshold**. The flip path keeps a comment saying the anchor is still owed there; the re-stamp that writes it — and `attest` under its own name — return with the anchor half. |
-| [`bootstrap.py`](../project-trajectory/scripts/bootstrap.py) | **done, −2**: the MAPPING row goes, so an adopter scaffolds no second attestation home. |
-| `tests/test_attestation_ledger.py` (523 lines) | **rewritten, not deleted** — landed as [`../tests/test_attestation_digest.py`](../tests/test_attestation_digest.py), 4 tests. The digest-composition cases and the seam-blindness premise survive; the ledger-shape and append-only cases go, and the co-mutation cases arrive with the anchor half. |
-| `tests/test_module_size_ratchet.py` | **done**: three baselines re-stamped **downward** and `intake.py`'s entry **deleted** (under threshold). `test_trajectory_staged.py` (cell classification) and `test_dogfood_sync.py` (header superset) are untouched — they belong to the **anchor** half, which is what adds columns. |
-| [`registry-machinery-reference.md`](registry-machinery-reference.md), `project-trajectory/EXAMPLE.md`, `PROCESS.md` §7 | **not owed by the removal half** — verified: none of the three ever documented the ledger. They gain the anchor's fields with the anchor half. |
-| `docs/okf/…`, `docs/architecture.md`, `docs/gate`, `open-items.html`, `PROJECT_STATE.html` | **done** — all regenerated, none hand-edited. |
+**Still owed with the anchor half:** the two cells, `_DIGEST_EXCLUDED`, the
+third cell class, the co-mutation guard, the template columns, and
+`test_dogfood_sync`'s header rule. All carrier-exposed, so all waiting on OI-12.
 
 **SR-140 is AMENDED, not rejected.** Its obligation stands; only the home
 changes. It stays `Draft` and is ratified in its amended form at the sitting —
@@ -561,50 +531,11 @@ Two exits:
 complete before the ladder migration**, or 38 rows lose the only record that
 they owe a re-blessing. §5 carries it.
 
-#### Superseded reasoning, retained (the two-axis analysis, before the ladder)
-
-The analysis below produced the axes the ladder now encodes, and is kept
-because the reasoning is what a ruler needs. It argued the axes should live in
-*different columns*; the owner's ladder puts them in *different rungs of one
-column*, which achieves the same separation with less schema. The one
-conclusion that survives intact is that **pass/fail must never be authored**:
-whichever column it lands in, it is read from the harness.
-
-The tension comes from the clause *"if it's a test case it should be passing"*,
-which puts a **runtime fact** inside a **maturity cell**. Those want opposite
-things: the text's maturity changes at a ratification sitting and should be
-stable between them, while pass/fail changes on every commit and is owned by
-the harness. Encoding pass/fail in `Status` would mean a human edits a
-registry cell when CI goes red, and the cell is stale the moment it is written
-— a hand-maintained duplicate of something already measured, which is the one
-shape this kit refuses everywhere else.
-
-The second axis **already exists and is already mechanical**: TC carries
-`Automated` + `Evidence`, which §6 F-3 classes mechanical. So the recommended
-reading is:
-
-- **`Status` = is the test case's *text* blessed?** `Asserted` means "this is a
-  correct statement of what must be proven" — a judgment a human makes once,
-  and one that is *worth* making before the code exists, since a reviewed test
-  case is a specification.
-- **Passing = derived from evidence, never authored.** Whether it is green is
-  read from the harness, at the moment it is asked.
-
-Then the owner's case is **fully representable and entirely ordinary**:
-`Status = Asserted`, evidence not yet green, and the WI DAG says which work
-item owes the implementation. Nothing is lying, nothing is stale, and the gate
-can still refuse to advance — because the gate reads the *evidence* axis, which
-is exactly what it should be refusing on.
-
-**The general form, which also answers the ordering trap.** `Asserted` is a
-statement about the **text**; the discharge it demands — children, or a green
-run — is an **obligation the row now carries**, checked at the **gate**, not a
-precondition of asserting. It has to work that way or the process deadlocks:
-an SN cannot have SRs before it is blessed (SRs are written *from* a ratified
-need at G1), so "asserted ⇒ has children" would make the first assertion
-illegal. So the honest state machine is `Draft` → `Asserted` (undischarged) →
-`Asserted` (discharged), where **only the middle-to-last transition is
-mechanical** and the TC gray area is simply the middle state having a name.
+**The one conclusion from the pre-ladder analysis that survives:** pass/fail
+must never be AUTHORED. Whichever column it lands in, it is read from the
+harness — a hand-maintained duplicate of something already measured is stale the
+moment it is written, and would mean a human edits a registry cell when CI goes
+red.
 
 **Q10 · `Evidence` keeps its name — the rename is withdrawn by the owner, and
 the definition is ruled.** *"A path to evidence, or a script that produces
@@ -770,575 +701,99 @@ migration.
 
 ## 3. The questions, and where each one went
 
-**None of Q1–Q4 is still open as written** — §0 is the live list. This
-section is the record of how each resolved, kept because the *reasoning* is
-what a ruler needs and it does not survive compression:
+Every Q1–Q4 is closed. Kept as a map, because the *reasoning* is what a ruler
+needs and the full text is in git (`git log -p docs/repo-lock.md`).
 
-- **Q1** (where the SN anchor fields live) — **withdrawn**, folded into
-  **OI-12**: under a TOML carrier the distinction it asked about has no
-  referent.
-- **Q2** (does an SN get a `Status` cell) — **widened** into **OI-13**, once
-  the IF registry turned out to carry the same disease worse.
-- **Q3** (how far back the co-mutation guard compares) — **still genuinely
-  open**, but it is a *build-time* decision for the anchor half, not a
-  sitting decision; it needs no card.
-- **Q4** (which SR-140 text the sitting rules on) — **answered and acted on**:
-  D-1's amended, carrier-neutral text, which is why the removal half shipped
-  before the sitting.
-
-### Q1 · Where do the SN anchor fields live inside the file? — **WITHDRAWN 2026-08-09, folded into OI-12**
-
-**The owner refuted this as an independent question:** *"Won't this be impacted
-by TOML? If stakeholder needs convert to TOML, then the sha lives in the same
-row (stakeholder need element)."* Correct, and it dissolves the question. Under
-a TOML carrier an SN is an element with keys; `text_digest` is simply another
-key, and the (a)-versus-(b) distinction — *on the row* versus *in a separate
-anchor table* — **has no referent**, because there is no table. Every hour spent
-ruling and implementing Q1 is discarded if OI-12 rules (b). Q1 is therefore a
-*sub-question of the carrier*, not a peer of it, and it is answered by whatever
-OI-12 answers. The analysis below is retained as the record of what was
-examined, not as a live decision.
-
-**This question has been asked before, and the answer was ruled.** Owner
-ruling at G1, **2026-07-12**, recorded in
-[`archive/specs/derived-gate-model.2026-07-20.md`](archive/specs/derived-gate-model.2026-07-20.md)
-§4 and the WI-090 entry in [`log.md`](log.md). Three options were on the table
-for where SN maturity lives:
-
-- **(a) section-as-state** — *chosen*, for "least schema churn, git-derived date";
-- **(b) a `Status` cell appended to the SN table** — considered and not taken,
-  with the explicit note that this is *"a table column, not a spine CSV — the
-  owner's 'no new column' was scoped to SR/LLR/TC"*, i.e. widening the SN
-  markdown table was already understood to be permitted and cheap;
-- **(c) a ratification ledger `docs/requirements/ratifications.csv`
-  (`id,gate,state,who,date`)** covering SN *and* the whole spine — deferred,
-  *"revisitable only if per-artifact human attribution beyond git-author is
-  later wanted."*
-
-Two things follow, and both should be said plainly. **`attestations.csv` is
-option (c)**, rebuilt four weeks later without reference to the ruling that
-deferred it — and the trigger the ruling named (human attribution beyond
-git-author) is *not* the reason it was built. D-1 therefore returns the repo to
-the 2026-07-12 position rather than departing from it. And **D-2 is option
-(b)**, which that ruling had already priced as cheap. So Q1/Q2 are not a new
-design question: they are a **deliberate re-open** of a G1 ruling on new
-information — the amend+flip blind spot, which did not exist in July. Recording
-it as a re-open is what keeps the ruling honest.
-
-Three shapes, all consistent with D-2.
-
-- **(a) Widen the need rows.** Append the fields to the `Core needs` and
-  `Draft needs` tables, one cell each. Most direct reading of the direction;
-  every fact about a need sits on its line. Costs: a 71-character `sha256:`
-  cell on rows already carrying 1,500-character prose; and the `Edge-case
-  expectations` table (SN-013…022) has a *different* four-column shape, so
-  either it widens too or `sn_normative_text` truncates per-table.
-- **(b) One anchor table at the foot of the file**, `| SN-ID | … |`, with the
-  prose tables untouched. Keeps the reading surface exactly as it is today,
-  hashes the prose line unchanged, and handles all three table shapes with one
-  rule. Costs: two places in one file mention an SN, which reads as the
-  two-homes smell — though only one of them is prose and the other is derived
-  state.
-
-- **(c) The WI treatment — one file per need.** Not what D-2 asked for, recorded
-  because it is the honest answer to *"isn't there tooling to break a markdown
-  file into row elements?"*: **this repo already runs that pattern at scale.**
-  [`docs/work/`](work/) is a markdown registry whose rows are *files* —
-  `+++`-fenced TOML frontmatter for the typed fields, prose body beneath,
-  **directory-as-state** for status — 400+ live specs, three F5-synced loaders,
-  and the only *closed* status vocabulary in the repo (an unknown directory is a
-  loader refusal, §6 F-1). `SN-028-....md` under `docs/requirements/needs/` would
-  give every field D-1 and D-2 want, typed, with no digest-truncation trick at
-  all. **Cost: it is a carrier change, not a field addition** — so it
-  contradicts the direction — and it moves the ground under **ten** modules that
-  read `stakeholder-needs.md` today (`trace`, `derive_gate`, `check_trajectory`,
-  `check_docs`, `check_flows`, `gen_okf`, `gen_release_checklist`, `traj_parse`,
-  `intake`, `bootstrap`), plus the shipped template and every adopter.
-
-  **Five risks, examined 2026-08-09 (owner question: "WIs are a single item,
-  SNs are multiple rows").** They are recorded because the option is recorded;
-  together they are why (c) stays not-recommended.
-
-  1. **A WI has ONE axis; an SN has TWO.** Directory-as-state works for
-     `docs/work/` because a WI's directory carries its whole state. An SN
-     carries *kind* (core need vs edge-case expectation — different columns,
-     different tables) **and** *maturity* (draft vs ratified). One of the two
-     must fall back to frontmatter, so the "same as WI" claim is already only
-     half true, and the closed-vocabulary loader refusal — the property that
-     makes the WI home strong — only guards the axis that got the directory.
-  2. **SNs are read as a SET; WIs are read as a QUEUE.** Nobody reads 400 WIs
-     together; they read a frontier of five. The G1 consistency review reads
-     *every* need against the vision in one pass, and the non-goals are read as
-     a boundary around the whole set. A generated index restores the view but
-     the authoring surface becomes 32 files, and the review is a human act over
-     prose.
-  3. **The edge-case table is a FORM, not a list.** The shipped template seeds
-     13 lifecycle rows with blank `Expected behavior` cells and says "fill in
-     every phase below or mark it an explicit n/a". **The blanks are the
-     teaching.** One file per row cannot show a gap, and the scaffold loses the
-     pedagogy that makes an author write the Provision/Startup rows they
-     otherwise skip.
-  4. **A carrier change fails OPEN across those ten readers — verified, not
-     assumed.** `derive_gate.py` guards its read with `if sn_md.exists()` and
-     falls to empty sets; `check_docs._registry_needs` returns `[], []` with the
-     comment *"no needs to hold the README to (vacuous)"*. Re-point eight
-     readers and miss two and the repo gets **quieter**, not redder — the exact
-     permissive-direction failure the handoff's §7 names as the pattern to hunt
-     for in anything built on this machinery.
-  5. **It does not remove the digest problem; it swaps it.** (An earlier
-     revision of this section said "no digest-truncation trick at all" — that
-     was too generous.) A table line is trivially canonical, which is why
-     `sn_normative_text` can hash it raw. A free-form markdown body is not:
-     whitespace, heading depth and list markers all move the digest without
-     moving the meaning, so the anchor needs a canonicalization rule instead of
-     a truncation rule. Nothing digests a WI spec today, so there is no
-     precedent in the WI home to borrow.
-
-  **What survives the five.** (c)'s one real win is *typed fields, no
-  truncation trick* — and that is also what **(b)** buys, at a fraction of the
-  blast radius. The examination therefore strengthens (b) rather than (c).
-
-**I do not have a confident answer between (a) and (b).** (b) is mechanically
-cheaper and leaves the document a human reads alone; (a) is the more literal
-reading of the direction and keeps one line per need. The deciding question is
-whether the anchor is *content about the need* (→ a) or *bookkeeping about its
-acceptance* (→ b), and that is the owner's call, not a derivable fact. **(c) is
-what I would choose if the SN tier were being designed today** — and is the
-wrong size for a lock program, so it is recorded, not recommended.
-
-**On the tooling assumption behind (c):** a markdown *AST parser* would be a
-**dependency**, and [`dependencies.md`](dependencies.md) currently holds two
-rows, both `system` (git, gh) — **zero Python packages ever admitted**. A parser
-inside a shipped check forces every adopter to install it, the one tier the kit
-holds stdlib-*preferred* ("rare, ideally never"). It is admissible through a
-reviewed ledger row, but "hand-rolling is worse" is hard to argue here: the
-current SN readers are ten-line heading scanners, and `docs/work/` proves the
-pattern needs no parser at all.
-
-### Q2 · Do SNs get a `Status` cell — **WIDENED 2026-08-09 to every registry**
-
-**Owner:** *"Yes but we need to align on all the registry definitions. I'm
-afraid this will impact the interface definitions as well."* Verified — it does,
-and [`interfaces.csv`](requirements/interfaces.csv) is in worse shape than the
-spine:
-
-- **`Status` is an UNDECLARED column on the IF registry.** `PROCESS.md` §8 names
-  the IF row's fields as *"direction, counterpart, contract, the `SR-Refs` that
-  realize/rely on it, version, and stability"*. **`Status` is not among them** —
-  yet it ships in the template (`Draft`) and carries a value on all 95 live rows
-  (Stable 87 · Active 4 · Draft 4).
-- **It overlaps its own neighbour.** `Stability` is {Stable, Experimental};
-  `Status` is {Stable, Active, Draft}. *Stable* appears in both, meaning
-  different things, in adjacent columns of the same row.
-- **Their enforcement is inverted from what a reader would assume.**
-  `Stability` — the declared field — is read by exactly one consumer
-  (`gen_release_checklist`). `Status` — the undeclared one — is read by
-  **nothing mechanical at all**; its only consumer is
-  `plan_briefs.IF_SURFACE_COLUMNS`, which hands it verbatim to the dual-plan
-  **LLM briefs**. An undeclared, unvalidated, self-overlapping column is being
-  presented to a model as fact.
-
-So the real question is not *"does an SN get a `Status` cell"* but **"what does
-`Status` mean across all six registries, which of them should carry one, and
-what happens to the IF pair"** — §6 F-1's six carriers and F-2's undeclared
-contract, turned into a decision. That is a cross-registry design act, not a
-sub-question of D-2. **Filed 2026-08-09 as OI-13**, live on
-[`open-items.html`](open-items.html), with three options — declare-don't-unify ·
-reserve the word `Status` for ratifiable-artifact maturity and rename the rest
-*(recommended, executed WITH OI-12 because both rewrite registry definitions)* ·
-SN-half-only. Two things in that brief do **not** wait for the ruling: the IF
-column is a *defect* (undeclared, overlapping, unread, yet handed to LLM
-briefs), and taking SN-half-only must be a **knowing interim** rather than a
-default. The SN half stays as recommended below; it is now the *smallest* part
-of the question.
-
-#### The SN half, unchanged
-
-The handoff's gap 2 is "an SN has no `Status` cell at all". D-1 + D-2 close the
-*anchor* half. The *state* half is separate and is what determines the answer to
-§4 below (whether SNs reach the owner surface at all).
-
-Today SN draft-ness is **section-as-state (§4a)**: an SN is `Draft` because it
-sits under a heading containing the word "draft". Both `derive_gate.py` and
-`trace.py` implement that rule independently. If SNs gain a `Status` cell, that
-is **two homes for one dial** — precisely what SN-028 just shipped a REFUSAL
-for. So the two moves are coupled:
-
-- **Q2 = yes** → the `Status` cell is authoritative, section-as-state is
-  **retired** in both readers, the `Draft needs (unratified)` heading becomes
-  prose organisation only, and SNs become renderable in
-  [`open-items.html`](open-items.html) as first-class ratification cards.
-- **Q2 = no** → SNs keep section-as-state, gain only the anchor fields, and stay
-  invisible to the owner surface (§4's finding stands, mitigated only by pointing
-  at the file).
-
-**Recommendation: yes, with the retirement in the same commit** — never both. The
-kit's own doctrine says a repo declaring one dial twice is refused, and shipping
-that shape in its own registry after refusing it downstream is the shadowing
-defect [`process.toml`](process.toml) already names in its `[attestation]` note.
-
-### Q3 · How far back does the co-mutation guard compare?
-
-Inherited unchanged from the handoff's §5 (it was folded into the ledger
-question and survives it). The `--staged` arm is straightforward; the rev-range
-arm needs a declared base, and "how far back" has no obviously correct answer.
-Until it is ruled, the guard is honest but partial — and must say so in its
-docstring rather than reading as complete.
-
-### Q4 · Does the sitting rule on today's SR-140 text or on D-1's amended text?
-
-Recommended: **D-1's amended text**. Ratifying the current wording and
-immediately amending it burns a ratification on prose already known to be
-retired, and manufactures a `Modified` row on the day it is created.
-Consequence: D-1 is implemented **before** the sitting, not after it.
-
----
+| # | asked | outcome |
+|---|---|---|
+| **Q1** | where the SN anchor fields live inside the file | **withdrawn** — under a TOML carrier an SN is an element with keys, so the on-row-vs-anchor-table distinction has no referent. Folded into **OI-12**. Its examined option (c), one file per need on the `docs/work/` pattern, is recorded as *not recommended*: an SN has two axes where a WI has one, SNs are read as a set rather than a queue, and the edge-case table is a **form** whose blanks are the teaching. |
+| **Q2** | does an SN get a `Status` cell | **widened** into **OI-13** once `interfaces.csv` turned out to carry an undeclared `Status` overlapping `Stability`, read by nothing mechanical yet fed verbatim to LLM briefs. Answer for SN itself: **yes**, with section-as-state retired in the same commit — never both, or the repo declares one dial twice. |
+| **Q3** | how far back the co-mutation guard compares | **still open**, but a *build-time* decision for the anchor half. Needs a declared base for the rev-range arm; until then the guard must say in its docstring that it is partial. |
+| **Q4** | which SR-140 text the sitting rules on | **answered and shipped**: D-1's amended, carrier-neutral text. Ratifying prose already known to be retired would manufacture a `Modified` row on the day it is created. |
+| **Q5–Q12** | the consequences inside D-3 | in §2 under D-3. Q9 (the TC gray area) and Q12 (`Method` vs `Evidence`) are the two that changed the build. |
 
 ## 4. Answers to questions already asked
 
-### "Are you indicating SN-028…SN-032 have changed?"
+Both closed; kept as one line each.
 
-**No.** They are **new and never ratified**, not amended. The whole 2026-08-08
-program touched [`stakeholder-needs.md`](requirements/stakeholder-needs.md) by
-`+20 −1` lines — the new `Draft needs (unratified)` section and its heading. No
-existing need's prose moved.
-
-The word "changed" belongs to a different set: the **25 `Modified` SRs**. Those
-are `Verified` rows whose text was amended because the machinery underneath them
-was retired (`hand_back`, `## Handback`, `docs/gate-policy`,
-`attended`/`single-ratify`, two TCs citing renamed tests). They were flipped to
-`Modified` deliberately — a `Verified` row whose text is false is the worst thing
-this registry can carry. Both sets are owed at the same sitting, which is why the
-handoff bundles them; they are owed for opposite reasons.
-
-### "Are these getting pulled properly into open-items.html for straightforward review?"
-
-**Partly — and the missing part is precisely the SNs.** Measured against the
-generated file:
-
-| what an owner needs to rule | on the surface? | detail |
-|---|---|---|
-| the 25 `Modified` SRs, per-cell before/after | **yes** | with the baseline revision printed on every section |
-| the 10 new SRs (SR-137…146) | **yes** | rendered as *"ratification owed / no baseline — awaiting its FIRST ratification"*, whole current content |
-| their LLR / TC chain (LLR-155…164, TC-150…157) | **yes** | they ride the owning SR's card — all ten LLRs and all eight TCs emit a chain row (counted from the rendered row heads: 35 SR cards, 34 LLR and 39 TC chain rows in total) |
-| **SN-028…032 themselves** | **no** | they appear only as the literal token `SN-028` inside an SR's `SN-Refs` cell |
-
-The mechanism, not a guess: `gen_open_items.render` builds its model from
-`trace.reattest_model(root, reg.srs, reg.llrs, reg.tcs, statuses=("modified","draft"))`.
-**The attestation unit is the SR.** SNs are not passed in and structurally
-cannot be — `reattest_model` selects rows by `Status`, and an SN has no `Status`
-cell. The section's own empty-state text says so out loud: *"No `Draft` or
-`Modified` **SR**"*.
-
-So the concrete gap: an owner ratifying SR-137 reads the requirement in full and
-sees, as the need it serves, the bare string `SN-028`. The ~1,200 characters of
-need / why-it-matters / acceptance-intent they are actually being asked to
-ratify are in another file, and nothing on the surface says to go there. Five
-needs — the top of the chain, the tier the whole program hangs from — are the
-one thing the decision surface does not show.
-
-**Q2 is what closes this.** With a `Status` cell, SNs become selectable by
-`reattest_model` and render as their own cards; without one, no amount of work
-in the renderer can reach them. Note also that the surface is
-freshness-gated (`--check` byte-compares) and carries a stamped baseline that
-regeneration must reuse, so this change lands **with** a regeneration, never
-after it.
-
----
+- **"Are SN-028…032 changed?"** No — **new and never ratified**, not amended.
+  The word "changed" belongs to the **25 `Modified` SRs**, whose text was
+  amended because machinery under them was retired. Both sets are owed at the
+  same sitting, for opposite reasons.
+- **"Are they pulled into `open-items.html`?"** The SRs and their chains, yes;
+  **the SNs themselves, no** — `reattest_model` selects by `Status`, and an SN
+  has no `Status` cell. **OI-13/D-3 is what closes it**: with the ladder an SN
+  becomes selectable and renders as its own card.
 
 ## 5. What "locked" means — the close-out checklist
 
-Ordered by dependency, and split by **who owes what** — the distinction that
-matters, because the first block is not work and the second cannot start
-without it.
+Locked = the four rulings made, everything below done, `drafts=0 modified=0`,
+and this file archived.
 
-**Revised 2026-08-09** after the owner refuted the previous ordering on three
-counts (Q1 collapses into the carrier; `Status` alignment reaches the IF
-registry; deferring the carrier buys a second round of test rewrites). The
-revision turns on a **seam inside D-1** that the objections exposed:
+### Done — carrier-independent, shipped
 
-| half of D-1 | carrier exposure | can it ship now? |
-|---|---|---|
-| **the removal** — delete `attestations.csv` + template, ~250 lines in `check_trajectory`, `trace._ledger_baseline`, `intake.record_attestations`, the scaffold rows; rewrite `test_attestation_ledger.py` | **none** — adds no column, touches no schema | **yes**, and it costs nothing: the ledger holds **zero real rows** (only `ATT-000`), so deleting it loses no detection that exists |
-| **the anchor** — the two cells, `_DIGEST_EXCLUDED`, the third cell class, the co-mutation guard, template columns, `test_dogfood_sync` | **total** | **no** — this is the half that gets built twice |
+1. ~~**D-1's removal half**~~ — `attestations.csv` and its template gone, ~331
+   lines across four modules, `test_attestation_ledger.py` rewritten around what
+   survives. `normative_text` / `sn_normative_text` / `digest` / `current_digests`
+   are the anchor's engine and have **no writer yet** — a dead-symbol sweep must
+   not read them as unused.
+2. ~~**SR-140 / SN-029 amended to carrier-neutral prose**~~ — with LLR-158 /
+   TC-153, so the sitting can ratify before OI-12 is ruled.
+3. ~~**The id watermark**~~ — `docs/id-watermark`, 14 spaces, three rules in
+   `trace.py`'s always-on `--strict-integrity` floor, the mint wired
+   (`next_wi_id` counts from the mark), scaffolded, adopter-documented, and
+   adversarially reviewed with two blockers and four majors fixed.
+4. ~~**The `::node` selector DATA**~~ — 212 of 212 resolve, from 111 broken. The
+   selector **check** stays declined under ruling R2; Q12 made it unnecessary.
+5. ~~**The SN reader twin and its two live defects**~~ — `_sn_fields` resolves by
+   table shape in all three readers, pinned by VALUE (equality alone was
+   provably vacuous). `trace._sn_prose` was the third copy, and it feeds the
+   sitting brief.
 
-And one more thing the objections make available: **SR-140 can be written
-carrier-neutrally and ratified at the sitting.** *"The anchor is recorded on the
-artifact's own row/element"* names no format. The carrier appears only in the
-LLR's `Module` / `CodeSymbol` — which are **traced** cells, so re-pointing them
-at a TOML reader later opens **no re-attest window** (§6 F-3). That is
-mechanically supported, not wishful.
+### Owed by the owner — the four rulings
 
-### Ship now — carrier-independent, blocked on nothing
-
-1. ~~**The removal half of D-1.**~~ **DONE 2026-08-09.** Pure deletion, no data
-   lost: `attestations.csv` + its template + its `bootstrap` MAPPING row gone;
-   `check_trajectory` −195 (the three rungs, their two readers,
-   `_report_attestations`, both constants, both `main` wirings); `trace` −51
-   (`_ledger_baseline` and the `_resolvable` guard that existed only for it);
-   `intake` −85 (`next_att_id`, `record_attestations`, `_cmd_attest`, the
-   `attest` subparser) — which drops it **back under the 1500-line monolith
-   threshold**, so its ratchet entry is deleted rather than re-stamped.
-   `test_attestation_ledger.py` (523 lines) → `test_attestation_digest.py`
-   (4 tests): the digest-composition cases survive, the ledger-shape cases go,
-   and the **premise test survives and matters more** — it drives the
-   amendment seam's blindness to a sanctioned amend+flip, which is why an
-   anchor is owed at all.
-2. ~~**SR-140 / SN-029 amended to carrier-neutral prose.**~~ **DONE
-   2026-08-09**, with LLR-158 / TC-153. SR-140 now reads *"on the accepted
-   artifact's own row … never in a second registry keyed on the same
-   artifact"* and states the two-cell rationale (the commit is reviewable and
-   diffable; the digest is what survives a squash, rebase or shallow clone) —
-   no format named, so the sitting can ratify it before OI-12 is ruled.
-
-**Three more items joined this block on 2026-08-09 with D-3/D-4.** Each is
-needed under **every** carrier answer, touches no registry schema, and is
-therefore not part of the work that gets built twice. This is the batch that
-can start immediately — the answer to *"should implementation kick off from
-here?"* is **yes, for these three and nothing else.**
-
-3. ~~**The id watermark — D-4's precondition.**~~ **BUILT 2026-08-09.**
-   [`docs/id-watermark`](id-watermark) records the highest id ever allocated in
-   each of **14 spaces** (the ten in `trace.ID_PATTERNS` plus SN, WI, OI, DP),
-   one `<SPACE> = <int>` per line so a merge conflicts per space rather than per
-   file. Written by `trace.py --bump-ids`; a mark only ever rises.
-
-   **Three rules, in `trace.py`'s always-on `--strict-integrity` floor** — the
-   home matters as much as the rules. In `check_trajectory` they would sit
-   behind `docs/trajectory-check: off`; tagged `G3` they would never run in a
-   G1 repo like this one. The rules: no live id exceeds its mark (the only
-   guard the mint-less spine tiers get), every space is marked, and the mark
-   never decreases versus `git show HEAD:`.
-
-   **Every fail-open the scout named is closed, and two are worth stating.** An
-   **absent** file is an *error*, not an empty set — every other declared-file
-   reader in the kit degrades to empty, which is right for a floor or an
-   allowlist ("nothing declared") and catastrophic here ("no id is taken",
-   freeing every space at once); a malformed line is refused for the same
-   reason. And the monotonicity rule **announces when it is skipped** — off-git
-   or before the file's first commit it cannot run, and an unrun rule that
-   prints nothing is indistinguishable from one that passed.
-
-   **The scaffold ships it** (`id-watermark.template` + a `bootstrap` MAPPING
-   row), because an absent mark is an error: without it every adopter is red on
-   day one. The template is generated *from a real scaffold* rather than
-   hand-written — a fresh scaffold already holds `OI-002` from its seeded
-   example rows, so all-zeros was wrong and the bootstrap suite caught it.
-
-   **What this half does NOT do, stated plainly.** The mark now *records* every
-   id ever allocated, and refuses one authored past it. It does **not** stop a
-   deleted id from being handed out again — a re-minted `SR-003` is below the
-   mark and reads as legal. Only the **mint** reading the mark prevents that,
-   and `intake.next_wi_id` / `plan_artifacts` still compute `max(live) + 1`.
-   Demonstrated end-to-end: allocate SR-001…003, stamp the mark at 3, delete
-   SR-003 → live max falls to 2 while the mark holds at 3, so `max(live) + 1`
-   re-issues SR-003 and minting from the mark gives SR-004.
-
-   So the honest claim for this half is **"the record exists and cannot be
-   silently lowered"**, not "reuse is impossible". It is the necessary first
-   half — a mint has nothing to count from until the record exists — and it is
-   the half that needs no new seam. The mint side is a CMP-004 → CMP-001 import
-   edge and owes an `IF-###` row.
-4. **The `::node` selector — the CHECK stays blocked; the DATA is fixed.**
-   **Repointed 2026-08-09** (`b9d41833`): all 212 selectors now resolve, from
-   111 broken. Q12 is why this was the right half to do — `Ready` means the test
-   exists and `Evidence` naming a file answers it, so the selector is a
-   **pointer a human follows**, not a missing check, and 42 of 143 rows were
-   pointing at tests that had moved. Done deterministically from a name→file map
-   over every `def` in `tests/`: 102 of 103 stale citations had exactly one
-   home, zero ambiguous. The 21 bare `::selector` continuations — a convention
-   invisible to tooling, since `is_path_shaped('::x')` is False — are now fully
-   qualified. The one selector with no home was **renamed**, not deleted, and
-   `git log -S` proved it (WI-389 turned `hub_fill` into `slot_fill`).
-   Zero re-attestation: `Evidence` is traced, no Status moved, and both owner
-   surfaces still show the same 25 `Modified` SRs and 3 pending decisions.
-
-   **The check itself remains an owner decision, unchanged:** It was recommended here before the ground was
-   checked. Two findings, both verified in source, withdraw it from this block:
-
-   - **It overturns a ruling.** Owner ruling **R2 of 2026-08-01** (WI-394)
-     weighed exactly this: option (a) *build the resolver* against option (c)
-     *the file half only*, and shipped (c). `_strip_node_selector`
-     (`check_doc_refs.py:176-182`) discards the selector **by that ruling**, and
-     **two named tests pin the behaviour** —
-     `test_the_node_selector_half_is_ruled_prose_never_validated` and
-     `test_registry_citations_whose_files_exist_pass`. The WI's own record says
-     it in as many words: *"a builder must not pick this — the owner rules
-     this."* [`enforcement-audit.md`](enforcement-audit.md):40 records the gap
-     as **accepted**, *"recorded here so it is never implied as covered"*.
-   - **The data is not ready for it.** Measured over the live registry: 302
-     `Evidence` tokens, 212 carrying a selector, and **111 of those do not
-     resolve in the file they cite** — 110 because the WI-277 test-module splits
-     moved the tests out (`test_gen_trajectory.py` → `test_traj_*.py`,
-     `test_trace.py` → `test_trace_rules.py`, `test_agent_loop.py` →
-     `test_agent_loop_policy.py`) and one that exists nowhere
-     (`test_a4_hub_fill_is_not_the_page_accent`, TC-119). **42 of 143 rows would
-     turn red at once.** `docs/stack.ini`'s own comment on this step records the
-     precedent against that: wiring at scale *"would have added a wall of warns
-     to every gate run, which is exactly how a check earns the ignore."*
-
-   **So the finding is real but the fix is not this.** What F-12 measured stands
-   — `Attested → Ready` has no mechanism — but the ordering is now: **triage the
-   111 stale selectors first** (that is data rot with no ruling attached, and it
-   is what a reader of a `Ready` row is being misled by today), **then** ask the
-   owner whether R2 is re-opened by D-3 having made that transition
-   load-bearing. R2 was ruled before the ladder existed, which is a genuine
-   change of premise — but it is the owner's to weigh.
-
-   One measured fact for that decision: the cheap oracle is good enough. Over
-   all 212 live selectors, *"the token appears as a word in the cited file"* and
-   *"the token is defined as a `def` in the cited file"* **agree exactly, 0
-   disagreements** — so no pytest dependency is needed, which was option (a)'s
-   main cost. And the re-attest cost is zero: `Evidence` is a **traced** cell
-   (TC's ratified set is `Method`/`Expected`/`Parameters`/`Level`/`Tier`).
-
-   **Also found, and separately actionable: `check_doc_refs` is ALREADY RED and
-   nobody sees it.** `--root . --strict` exits 1 today with 17 dangling and 1056
-   untraced. It does not gate, for two compounding reasons: `[step:doc-refs]` is
-   `gates = G3`, and this repo's derived gate is **G1** — where an open
-   ratification window demotes every higher-gate step to *advisory, reported,
-   exit code unaffected*. So a green harness proves nothing about this check,
-   and anything built on it must be verified by running the script directly.
-5. **The unpinned SN reader twin — and the two live defects under it.**
-   `traj_parse._sn_rows` ↔ `gen_okf.sn_rows` are held equal by a docstring and
-   nothing else. Scouted 2026-08-09, and the pin is the *smaller* half:
-
-   - The two bodies are **byte-identical today**, and **both are wrong in the
-     same two ways** — so `assert _sn_rows(r) == sn_rows(r)` is `True` right now
-     over the real registry. A pure equality test would ship, go green forever,
-     and change nothing. The precedent already knows this:
-     `tests/test_rule_sync.py` pins behaviour equality **and** an absolute
-     expected value on every rule.
-   - **There is a THIRD copy.** `trace._sn_prose` carries the identical
-     positional parse and feeds the `--ratify` sitting brief — the surface a
-     human reads *before ratifying*. Its own docstring says all three change
-     together.
-   - **Defect A — FIXED 2026-08-09** (`3d8e3e3b`): SN-029's Why cell held
-     `(`attended | single-ratify | autonomous`)`, two unescaped pipes, so the
-     row was seven cells in a five-column table and its acceptance intent was
-     read out of the middle of its Why column. Done now because SN-029 is still
-     `Draft` and its raw line is its normative text — after the sitting the same
-     edit is a ratified-cell amendment.
-   - **Defect B — FIXED 2026-08-09** on the owner's ruling (*"move lifecycle to
-     why, and put a standin for priority"*). The 10 edge-case rows (SN-013…022)
-     are a **four-column** table that all three readers indexed at the
-     five-column Core offsets, so `need` read the Lifecycle word
-     (`docs/okf/stakeholder-needs/SN-013.md` was titled `"Provision"`) and
-     `acceptance` was always empty — in the OKF export, the dashboard, **and the
-     `--ratify` sitting brief a human reads before ratifying**. The mapping is
-     now a named `_sn_fields` helper resolving **by table shape**: an edge-case
-     row's Scenario is the need, its Lifecycle is why it matters, its Expected
-     behavior is the acceptance, and `priority` is the literal `n/a` — the table
-     declares none and inventing one would publish a value no author wrote.
-     Duplicated verbatim into all three copies (F5), censused
-     (`markdown-table` 11 → 13), and pinned by **value** in
-     `tests/test_rule_sync.py`, which is what the equality-only test could never
-     have caught. The `check_trajectory.py:3020-3025` docstring recording the
-     garbling as the reason `sn_normative_text` hashes the raw line is now
-     **stale in its premise** — the raw-line choice remains correct for other
-     reasons (three table shapes, one hashable line), but its stated rationale
-     should be re-worded when the anchor half lands. Promoted
-   out of the loose-ends list because it is genuinely carrier-independent and
-   has waited long enough.
-
-### Owed by the owner — three filed rulings and one unfiled question
-
-Indexed in §0; the sequencing argument is here.
-
-- **OI-12 · the carrier.** Promoted from *rulable later* to **the gating
-  decision**: Q1 folds into it and the anchor half waits on it. Recommendation
-  unchanged in substance — TOML is the right destination — but the *sequencing*
-  recommendation is withdrawn, because "defer it, nothing is foreclosed" was
-  wrong about cost (§6 F-7).
-- **OI-13 · `Status` across all six registries** (Q2 widened) — including
-  [`interfaces.csv`](requirements/interfaces.csv)'s undeclared `Status` and its
-  overlap with `Stability`. Recommendation is to reserve the word for
-  ratifiable-artifact maturity and rename the rest, **executed together with
-  OI-12**, since paying the registry-definition and downstream-migration cost
-  twice is the same double-labour trap that reordered this plan.
-- **OI-14 · the IF `Contract` cell**, and with it a schema tier for a registry
-  that has none. Recommendation: **declare now, split gradually** — the
-  declaration and the enum check cost nothing and fix the root defect (the cell
-  has never had a stated purpose), while a 95-row prose sweep is where
-  load-bearing maintainer knowledge gets quietly lost.
-- **The component model — NOT FILED, deliberately.** §6 F-11 records it:
-  membership is derived from the traced `LLR.Component` cell, so the partition
-  moves with **no re-attest window**, and `cross_component_findings` makes that
-  partition **decide how many IF rows must exist**. It is the loosest joint in
-  the arrangement and it sits *upstream* of OI-14. Left unfiled because a fourth
-  card would be an agent setting the sitting's agenda; **file it if the sitting
-  agrees it is a decision rather than a consequence of OI-13/OI-14.**
-
-**Ruling order: components → IF (OI-14) → `Status` (OI-13) → carrier (OI-12).**
-Each earlier one bounds the next. OI-13 and OI-12 then *execute* together.
-
-Q3 (how far back the co-mutation guard compares) and Q4 (which SR-140 text the
-sitting rules on) are answered inline in §3 and need no separate act.
+Indexed in §0, sequencing argued there: **components → OI-14 → OI-13 → OI-12**,
+with OI-13 and OI-12 *executing* together.
 
 ### Then, in order
 
-6. **Hold the P0 sitting** — ratify / amend / reject SN-028…032 and their
-   decomposition, and work the 25-row re-attest brief
-   ([`ratify/2026-08-08-mechanized-loop.md`](ratify/2026-08-08-mechanized-loop.md)).
-   Every ruling appends to [`log.md`](log.md)'s Decisions. **Not blocked by the
-   anchor:** ratification is a `Status` flip, and the anchor records what was
-   ratified. Stamping afterwards leaves the sitting-to-stamp window
-   unprotected, which is **no worse than today** — the ledger has never held a
-   row. **Not blocked by D-3 either** — the ladder is a mechanical re-spelling
-   of what the sitting records (Q11). But it **must precede** the ladder
-   migration: the 38 `Modified` rows have no hash to derive their drift from,
-   so migrating first launders it (Q11).
-7. **Build the anchor half of D-1, plus D-2, and the D-3/D-4 schema changes,
-   ONCE** — on the carrier OI-12 rules — and stamp what the sitting accepted.
-   This is the batch that gets built twice if it starts early: the ladder's
-   values, the `Priority` float, `Phase` on SN, the `SupersededBy` deletion and
-   its ~80-line validator, and every test that asserts a column shape.
-8. **Regenerate the derived artifacts** — `docs/gate`, `open-items.html`,
-   `PROJECT_STATE.html`, the OKF export — and confirm the gate rises to its
-   honest ceiling. A gate that does *not* rise is a finding, not a nuisance.
+6. **Hold the P0 sitting** — ratify / amend / reject SN-028…032 and work the
+   25-row re-attest brief ([`ratify/2026-08-08-mechanized-loop.md`](ratify/2026-08-08-mechanized-loop.md)).
+   Not blocked by the anchor or by D-3. **Must precede** the ladder migration
+   (Q11).
+7. **Build the anchor half of D-1, D-2 and the D-3/D-4 schema changes ONCE**, on
+   the carrier OI-12 rules. This is the batch that gets built twice if it starts
+   early: the ladder's values, the `Priority` float, `Phase` on SN, the
+   `SupersededBy` deletion and its ~80-line validator, and every test asserting
+   a column shape.
+8. **Regenerate the derived artifacts** and confirm the gate rises to its honest
+   ceiling. A gate that does *not* rise is a finding, not a nuisance.
 9. **Drain or dispose the open frontier** — WI-390, WI-415, WI-422, WI-423,
-   WI-424. WI-424 (route the adjudicator briefs) carries its own two decisions;
-   see the handoff's §4.
-10. **Dispose the warn-only residue** — the handoff's §5 list, each either fixed
-   or recorded as accepted. "Known and accepted" is a disposition; "still there"
-   is not.
-11. **Full bar green, stated with real output**: `pytest -q -n auto` unfiltered,
-   `check.py` at the derived gate, `check_trajectory.py --strict` unfiltered.
-12. **Merge to `main`** — an owner act (`push = "human"`), and the standing
-   deliberate item [`status.md`](status.md) already carries.
+   WI-424.
+10. **Dispose the warn-only residue.** "Known and accepted" is a disposition;
+    "still there" is not.
+11. **Full bar green, stated with real output.**
+12. **Merge to `main`** — an owner act (`push = "human"`).
 
-Locked = the rulings made, 1–12 done, `drafts=0 modified=0`, and this file
-archived.
+### Loose ends, owed to no step above
 
-### Loose ends this program surfaced, owed to no step above
-
-- ~~**The unpinned SN reader twin.**~~ — **promoted to §5 step 5**, the
-  ship-now block, because it is carrier-independent and has waited long enough.
-- **`status.md`'s ratification-level prose is stale** — it still says the level
-  is `autonomous`, a value [`process.toml`](process.toml) *deleted* in favour of
-  `human_ratification_through = 0`. Hand-authored owner prose; flagged, not
-  edited.
-- **`status.md` is ~449 lines against a 120-line warn budget** — pre-existing
-  and warn-only; this file is meant to absorb some of that depth and has begun
-  to (the sitting's owed-work bullet now points here rather than restating it).
-- ~~**`SupersededBy` is live-only on the SR registry**~~ — **CLOSED by D-4**:
-  the column is deleted rather than documented, and the integrity rule it
-  carried collapses into the orphan check, because a superseded row is simply
-  not there. What the loose end becomes is D-4's **precondition**: the id
-  watermark must exist before any row is deleted.
-- ~~**OI-12's card carries two stale claims**~~ — **CORRECTED 2026-08-09.** Its
-  `BlastRadius` named the retired `TextDigest` / `AcceptedCommit`, and asserted
-  *"ruling this later forecloses nothing"* — the claim the owner refuted and
-  §6 F-7 records as true of the design and **false of the labour**. Both fixed
-  in the cell, with the correction dated and its reasoning stated inline, and
-  `open-items.html` regenerated. Corrected rather than left for the owner
-  because the card is what the sitting **reads**, and a decision brief that
-  argues its own deferral is free — using a rationale already overturned — is
-  worse than one edited in front of them. The recommendation itself is
-  untouched; only the two false statements moved.
+- **`test_agent_loop_critique.py` hangs**, and with it ignored other
+  subprocess-heavy tests stall. Bisected in a clean worktree to `5c7eed95`, a
+  **markdown-only** commit, so it predates this program's code. An earlier full
+  run passed (2143 passed, 6:04), so it is environmental or flaky rather than
+  deterministic. **The full suite has not been run to completion since.**
+- **`trace.py` does not know the traced/ratified split** (`spine_cell_class`
+  lives in `check_trajectory`), so the re-attest brief diffs every cell equally
+  and cannot tell a mechanical pointer fix from a requirement amendment.
+- **`status.md`'s ratification-level prose is stale** — it still says
+  `autonomous`, a value `process.toml` deleted for `human_ratification_through`.
+  Hand-authored owner prose; flagged, not edited.
+- **`status.md` is ~450 lines against a 120-line warn budget** — pre-existing.
 - **`Priority` names two incompatible vocabularies** — `M`/`S`/`C` on an SR, a
-  scheduler integer on a WI, neither enum-checked (§6 F-9). Smaller than OI-13
-  and the same shape of defect.
+  scheduler integer on a WI, neither enum-checked. D-3 rules it a float; the
+  migration is owed.
+- **Q3** — how far back the co-mutation guard compares. Build-time, for the
+  anchor half.
 
 ---
 
@@ -1698,43 +1153,33 @@ So the reading order for the sitting is **components → IF → `Status`**:
 OI-14 assumes today's 95 IF rows are the right 95, and that assumption rests on
 a component model nobody has ruled.
 
-**F-12 · A TC's claim to have a test is checked at FILE granularity, and the
-finer pointer is already being hand-written into the wrong column.** Measured
-2026-08-09 over the 143 live TC rows, answering the owner's *"nothing here
-indicates if the test itself actually exists."*
+**F-12 · A TC's claim to have a test is checked at FILE granularity — and the
+data behind it had rotted. FIXED, except the check itself.** Two checks touch
+the claim: `trace.py` requires `Automated=Yes` to cite a non-empty `Evidence`,
+and `check_doc_refs` checks the cited path exists — but only the FILE half, since
+resolving a node id means running the project's test runner. Measured over 143
+live rows: 0 cited files missing, but **111 of 212 selectors did not resolve**,
+across 42 rows, almost all from the WI-277 test-module splits. One file was cited
+by 32 TCs, so the file-half check could never have caught it.
 
-Two checks touch the claim and neither reaches it. `trace.py:837` requires that
-`Automated=Yes` cite a non-empty `Evidence`. `check_doc_refs.registry_findings`
-(WI-394) then checks that the cited path exists — but **only the file half**;
-its own comment rules the `::node` selector prose, because resolving a node id
-means running the project's test runner, which is stack-specific. So:
+**All 212 now resolve** (`b9d41833`), repointed deterministically from a
+name→file map — 102 of 103 stale citations had exactly one home, the last was a
+rename `git log -S` proved, and 21 bare `::selector` continuations (invisible to
+tooling, since `is_path_shaped('::x')` is False) are fully qualified. `Evidence`
+is traced, so it cost no re-attestation.
 
-| | |
-|---|---|
-| TCs citing `Evidence` | 143 of 143 — none blank |
-| cited files that do not exist | **0** |
-| TCs carrying a `::node` selector | **66 of 143** — unchecked even where present |
-| distinct files cited | 76 |
-| files cited by more than one TC | 27, carrying 208 citations |
-| most-shared file | `tests/test_gen_trajectory.py`, cited by **54** TCs |
+**The check stays declined** under ruling R2, and Q12 explains why that is right
+rather than merely deferred: `Ready` means the test EXISTS, and `Evidence`
+naming a file answers that. Accepted knowingly: a TC can reach `Ready` on a file
+that exists for another TC's sake.
 
-The concrete hole: cite `tests/test_gen_trajectory.py`, never write the test,
-and every check stays green — 54 other TCs already guarantee the file exists.
-This is the F-4 inert-cell family, but **half-enforced is worse than inert**: a
-reviewer sees WI-394 wired up and reasonably concludes the claim is covered.
-
-**And the missing granularity is already being written by hand, in
-`Parameters`.** The template declares that column as an input recipe
-(`param=a; other=x`) and the reference doc calls it "the artifact recipe in the
-critique brief. Not validated." Its one mechanical consumer is
-`agent_loop.py:718`, which lifts it into the critique brief and scans it for
-`docs/rubrics/*.md` paths to inline (narrowly scoped — test `.py` paths are
-**not** slurped; verified). Measured: filled on **24 of 143** rows; of those,
-**1** uses the declared `key=value` shape and **24 contain a repo path** —
-TC-103's reads `tests/test_gen_trajectory.py fixture tiered_repo(TIER_UNION_WIS)`.
-Authors felt the gap and filled the nearest cell. Two costs follow: the value
-is unvalidated free prose, and `Parameters` is classified **ratified**, so
-correcting the drift is a re-attestation rather than a cleanup.
+**The finding underneath it survives and is not fixed:** the missing granularity
+had been hand-written into `Parameters` — declared as an input recipe
+(`param=a; other=x`), filled on 24 of 143 rows, of which **24 carry a repo path
+and exactly ONE matches the declared shape**. `Method` is required, normative,
+rendered in five surfaces, scanned by `agent_loop` for rubric paths it INLINES
+into briefs — and never validated. That is how pointers leak into columns that
+were never meant to hold them.
 
 **Candidate follow-up, not filed:** the *prose-an-LLM-is-handed* view above
 exists nowhere as a consolidated surface —
@@ -1747,235 +1192,39 @@ done mid-program: it is a reference-doc edit with no bearing on the lock.
 
 ## 7. This document's own log
 
-- **2026-08-09** — created. Records D-1 (owner ruling: the attestation anchor
-  moves onto the spine row; `attestations.csv` retired) and D-2 (owner
-  direction: stakeholder needs gain fields, not a new carrier), the four open
-  questions those raise, and the measured answer to *"are SN-028…032 on the
-  owner surface?"* — they are not, and Q2 is what would put them there.
-- **2026-08-09** — §6 added: the four reference findings from reading the
-  `Status` carriers and the column classes (F-1 six vocabularies, F-2 not an
-  interface, F-3 the four column classes including the new *anchor* class,
-  F-4 the inert-column risk).
-- **2026-08-09** — Q1 reframed as a **re-open** of the 2026-07-12 G1 ruling on
-  SN maturity (section-as-state chosen over a `Status` cell and over a
-  ratifications ledger): D-1 returns to that ruling's position, D-2 is its
-  option (b). Q1 gained option (c), the `docs/work/` one-file-per-row pattern,
-  with the dependency argument against a markdown parser. **No recorded
-  rationale exists for storing SN as markdown while SR/LLR/TC are CSV** — the
-  form is inherited from `user-needs.template.md`, described everywhere and
-  justified nowhere.
-- **2026-08-09** — Q1 option (c) examined against the owner's objection ("WIs
-  are a single item, SNs are multiple rows"). Five risks recorded; the
-  one-axis-vs-two-axes point is the deepest, and the fail-open degrade in
-  `derive_gate` / `check_docs` was verified in source rather than assumed. A
-  claim in the previous entry — that (c) removes the digest problem — is
-  corrected there: it swaps a truncation rule for a canonicalization rule. Net
-  effect: the examination strengthens **(b)**, not (c).
-- **2026-08-09** — D-1 gained the two owner-proposed alternatives to the digest
-  (ALT-1 commit-only + git recompute; ALT-2 per-requirement snapshot files) and
-  the ruling that follows: **keep both cells, make the commit primary, shorten
-  the digest to 16 hex**. The decisive finding is that ALT-1 dies silently
-  repo-wide under squash-merge or a shallow clone, which a content-derived
-  digest survives. §6 gained F-5 (the full-width justification does not hold)
-  and F-6 (no reusable markdown-table reader exists; five live cells already
-  contain a literal `|`).
-- **2026-08-09** — **brought current for a separate review session** (owner:
-  *"I'll likely review them separately and chew through them in a separate
-  session"*). Added **§0**, a start-here index of the four things awaiting a
-  decision with the ruling order and the recommendation for each; refreshed §1
-  onto `b2507c8c` with the four commits this program landed; widened §5's
-  owner block to name OI-14 and the unfiled component question; and gave §6 an
-  index plus a preamble mapping each finding to the question that produced it.
-  Two loose ends promoted out of prose into §5's list — SR's live-only
-  `SupersededBy` and `Priority`'s two vocabularies. **The document is now
-  readable cold, top to bottom, with no reference to this session's chat.**
-- **2026-08-09** — §6 gained **F-9** (template↔live headers all match; the
-  real collisions are *between* registries — the cross-registry column matrix,
-  `Priority` meaning two incompatible things, and CMP's `State` as a seventh
-  `Status` vocabulary that hides from a grep) and **F-10** (what the IF
-  `Contract` cell actually encodes, measured over all 95 rows: design narrative
-  and history, 1% requirement voice, 13% callable signatures — the owner's read
-  upheld with one correction, since every row does have a real `SR-Refs`).
-  F-10's conclusion — the IF registry has never had a declared content contract
-  — is **filed as OI-14** (declare now, split gradually, never a 95-row sweep).
-  §6 also gained **F-11**: the three open items are coupled through the
-  **component partition**, which decides how many IF rows must exist and has no
-  OI of its own — so the reading order is components → IF → `Status`.
-- **2026-08-09** — **D-1's removal half SHIPPED** (§5 step 1–2, struck through
-  there). ~331 lines deleted across four modules, two registry files removed,
-  the test module rewritten around what survives, and SR-140 / LLR-158 /
-  TC-153 / SN-029 amended to carrier-neutral prose. Three ratchet baselines
-  re-stamped **downward** and `intake.py`'s entry **deleted** — it fell back
-  under the monolith threshold, which is what this repo's own rule requires
-  rather than leaving the old number standing as headroom. One thing to know
-  before touching `check_trajectory` next: `normative_text`,
-  `sn_normative_text`, `digest` and `current_digests` now have **no writer** —
-  they are the anchor's engine waiting on OI-12, and an unreferenced-symbol
-  sweep (WI-422) must not read them as dead.
-- **2026-08-09** — committed at `9b6c7fc0` (this file + OI-12 + the regenerated
-  owner surface). **OI-13 filed**: what `Status` means across all six
-  registries, recommended for execution *together with* OI-12. Q2 now points at
-  it; §5's owner-rulings block names it.
-- **2026-08-09** — **three owner objections, all upheld, plan revised.**
-  (1) Q1 **withdrawn** as an independent ruling — under a TOML carrier an SN is
-  an element with keys and the on-row-vs-anchor-table distinction has no
-  referent, so it folds into OI-12. (2) Q2 **widened** from "does an SN get a
-  `Status` cell" to `Status` across all six registries, after verifying that
-  [`interfaces.csv`](requirements/interfaces.csv) carries an **undeclared**
-  `Status` column (absent from `PROCESS.md` §8's field list) that overlaps
-  `Stability`, is read by nothing mechanical, and is fed verbatim to the
-  dual-plan LLM briefs. (3) **"Carrier-neutral / forecloses nothing" corrected**
-  — true of the design, false of the labour; deferring the carrier buys a second
-  round of test rewrites. §5 rebuilt on the **seam inside D-1**: the *removal*
-  half ships now (zero carrier exposure, zero real ledger rows), the *anchor*
-  half waits for OI-12, and SR-140 is written carrier-neutrally so the sitting
-  is not blocked by either.
-- **2026-08-09** — **the id watermark SHIPPED** (§5 step 3), and one premise of
-  its plan was wrong. The sketch said `plan_artifacts` was sibling-import-free
-  and so the reader would have to be an F5 copy. Measured: **23 of the 53 kit
-  scripts import a sibling**, `plan_artifacts` already imports `wi_convert` via
-  a documented `try/except sys.path` idiom, and the only real cost of an import
-  is that a **cross-component** edge owes an `IF-###` row
-  (`cross_component_findings`). The repo's own decision rule is stated in that
-  same import's comment — *share when one implementation is load-bearing for
-  correctness, duplicate only small stable plumbing* — and by it the watermark
-  reader must be SHARED, since "the mint and the checker disagree about what an
-  id is" was the very hazard being designed against. Duplicating it would have
-  rebuilt the defect the check exists to catch.
-  Two ratchets shaped the result rather than merely recording it: the
-  **complexity** ratchet refused `live_max_ids` at 18 and forced it into four
-  small readers, and the **module-size** ratchet took two reviewed bumps. The
-  check is appended in `main()`, never in `analyze()`, because that function's
-  contract is *"Pure … No I/O"* and it stays true.
-- **2026-08-09** — **`Method`/`Evidence` ruled (Q12), and the SN edge-case tier
-  fixed.** The owner asked whether an automated TC should carry its pointer in
-  `Method` with `Evidence` blank. Ruled **no**, on a mechanical ground rather
-  than a taste one: `Evidence` is a **traced** cell and `Method` a **ratified**
-  one, so moving the pointer would turn every test-file rename into a
-  re-attestation — WI-277's module splits moved 110 cited tests, which would
-  have been 110 amendments for work that changed no requirement. The split is
-  already right; what is wrong is that `Method` is *required, normative,
-  rendered in five surfaces, scanned by `agent_loop` for rubric paths it
-  INLINES into briefs — and never validated*, which is how pointers leaked into
-  it and into `Parameters`. **The ruling also settles the selector question by
-  making it unnecessary**: `Ready` means the test exists, `Evidence` naming a
-  file answers that, so D-3 does not make the `::node` selector load-bearing and
-  **R2 stands**. What remains is stale data, not a missing check.
-  **Defect B fixed** on the owner's mapping (*"move lifecycle to why, and put a
-  standin for priority"*): `_sn_fields` now resolves an SN row's fields **by
-  table shape** in all three readers, so the ten edge-case rows stop publishing
-  their Lifecycle word as the need. Pinned by VALUE in `test_rule_sync.py` —
-  equality alone was provably vacuous, since the three readers were
-  byte-identical and all three wrong the same way.
-  **Also raised and NOT acted on: the edge-case tier may be mis-levelled.** The
-  owner's reading — *"most of these edge cases really look like system
-  requirements masked as stakeholder needs"* — is supported by the source and
-  the data. The shipped template seeds that table with 13 placeholder rows and
-  says the System Engineer turns each into measurable SRs, and SN-016's text is
-  that template's `Startup→Runtime` prompt filled in, which is why it reads as
-  contained by SN-006. Decomposition confirms it: core needs average **12.3**
-  SRs each, while eight of the ten edge-case rows have **exactly one**. A need
-  that decomposes into precisely one requirement is the requirement, written a
-  level up. Not filed as an OI: it is a **kit-level** finding (the template
-  ships that table to every adopter) and re-levelling ratified rows is owed to a
-  sitting — and under D-4, deleting SN ids needs the watermark first.
-- **2026-08-09** — **the ladder's rungs confirmed, and the plan re-cut around
-  what can actually start.** The owner confirmed `Ready` as the terminal rung
-  for SN/SR/LLR with the semantic argument for it — *"`Verified` can imply the
-  functionality is verified, when the column is just trying to say the
-  requirement has been fully decomposed and ready for the next stage"* — so
-  `Ready` means decomposed-and-handed-on and `Verified` means proven-by-
-  execution, which only a TC can claim. The semantics are now settled and the
-  only open question about the word is **migration safety** (Q9). **Q11 added**:
-  the 370-row migration is derivable (`Draft`→`Drafted`, `Verified`→`Attested`
-  then promoted to `Ready` where the discharge check passes), which is what
-  keeps the sitting unblocked by D-3 — **except `Modified`**, whose 38 rows have
-  no hash to derive drift from, so migrating before the sitting **launders**
-  their owed re-blessing. That makes "sitting before ladder migration" a hard
-  sequencing constraint, now carried in §5. §5 also gained **three
-  carrier-independent steps that can start now** (the id watermark, the
-  `::node` selector check, the SN reader twin) and folded the D-3/D-4 schema
-  work into the build-once step; the checklist renumbered to 1–12.
-- **2026-08-09** — **`Status` revised to a four-rung ladder, and D-4 ruled.**
-  The vocabulary is now `Drafted` (id allocated, nothing validated against it)
-  → `Attested` (text attested valid) → `Ready` (discharge in place — children,
-  or an existing test) → `Verified` (the test passes; **TC only**). This
-  **resolves Q9's gray area inside `Status`** rather than beside it: the three
-  axes this session separated — text blessed, thing exists, thing passes — are
-  three rungs, and the owner's case (attested text, unwritten test) is simply
-  `Attested`. It also dissolves the ordering trap, since `Attested` is
-  reachable without a discharge and the discharge is checked as the transition
-  into `Ready`. **Two corrections recorded:** as given, `Ready` and `Verified`
-  said the same thing for a TC, so `Ready` is read as the *existence* rung;
-  and **`Verified` re-points a word 370 live rows already carry with the old
-  meaning**, which a half-applied migration cannot announce — recommend
-  spending a fresh word (`Passing`/`Proven`) instead. **Q10** records the
-  withdrawn `Evidence` rename (owner: *"if the test case passes, the file path
-  is providing the evidence"*) and the ruled definition — a path to evidence,
-  or a script that produces it — while noting the **granularity gap survives
-  the rescission** and is now load-bearing, because it is what makes
-  `Attested → Ready` enforceable. **D-4**: a superseded row is deleted, not
-  retained — which deletes `SupersededBy`, its ~80-line validator in `trace.py`,
-  and **closes §5's live-only-`SupersededBy` loose end**. Its hazard is the
-  owner's own and confirmed in code: every mint here is `max(live) + 1`, and
-  **the spine has no mint function at all**, so a deletion frees an id for
-  silent reuse. Recommend a persisted per-space high-water mark — F-3 *anchor*
-  class, machine-only — as a **precondition** of D-4, worth doing regardless.
-  §6 gained **F-12**: the TC existence claim is checked at file granularity
-  only (66 of 143 rows carry an unchecked `::node` selector; one file is cited
-  by 54 TCs), and the missing granularity is already hand-written into
-  `Parameters` — 24 of 143 filled, 24 carrying a repo path, **1** matching that
-  column's declared `key=value` shape.
-- **2026-08-09** — **D-3 ruled: a column name means ONE thing repo-wide.**
-  Shared semantics fixed for `Status` (discrete with per-tier overload;
-  `Draft` = id allocated and nothing else validated against it, `Asserted` =
-  text asserted valid and a discharge now owed; **SN carries it like every
-  other tier**), `Title`, `Phase` (integer campaign grouping, **added to SN**),
-  `SR-Refs`, `Rationale`, and `Priority` (**float**, higher = first, negatives
-  and decimals legal, comparable only within a group). Recorded with five
-  consequences the ruling leaves open (Q5–Q9 in §2): `Modified` should become
-  **derived from the hash rather than authored**; `Phase` is **already
-  mechanical** and demoting it is a separate migration — flagged as a
-  correction; `Priority` is inert on SR but **drives the WI dispatch frontier**,
-  so the float needs a float parse in `schedule.py`; the shared `Rationale`
-  gives IF the column it lacks and thereby **fixes OI-14's root cause**; and
-  the **test-case gray area dissolves** once `Status` (text maturity) and
-  `Automated`/`Evidence` (pass/fail) are read as the two axes they already are
-  — `Asserted` but undischarged is an ordinary, fully representable state, and
-  discharge is checked at the **gate**, never as a precondition of asserting,
-  or the first assertion of an SN would be illegal. The owner's framing that
-  **these columns are themselves interfaces** is recorded and correct;
-  acting on it is blocked by F-2 (the IF registry has no shape for a data
-  vocabulary — no row *provides* one) and is deferred with the interfaces.
-- **2026-08-09** — **the anchor cells renamed before they exist**, owner
-  direction: `TextDigest` → **`TextHash`**, `AcceptedCommit` →
-  **`HashedOn`** (via an intermediate `BaselineCommit`, rejected for naming
-  the machinery's *use* of the value rather than the value itself). The second
-  is the substantive one — the old name
-  overclaimed, since a commit is a repo-wide snapshot and not an act of
-  accepting this row's text, while the cell's actual job (and the job
-  `trace._attested_baseline` / `_rows_at` already give it) is to say *where the
-  diff starts*. Free to do now: outside this document the names survive only in
-  the handoff and one ratchet bump-comment, both historical records left as
-  written. **Open follow-up:** OI-12's `BlastRadius` cell still names the old
-  pair — see §5's loose ends. D-1 also gained the measured answer to *"can a
-  denser encoding shrink the hash?"* — **no, keep lowercase hex**: the best
-  alphabet change saves six characters while the `sha256:` prefix costs seven,
-  and non-hex forfeits case-insensitive comparison and eye-grepping against a
-  `git show`. §6 F-5 gained the same measurement.
-- **2026-08-09** — D-1 gained the **adjudicator recovery procedure** for the
-  degraded mode (digest trips, `HashedOn` unresolvable after a squash /
-  rebase / shallow clone): treat the row as a first ratification, read the
-  SR / LLR / TC chain as *semantic* evidence that the meaning survived — an
-  adjudicator judgment, deliberately never a scripted check, since it inverts
-  the trace direction — and check the forge / unpruned remotes for the
-  pre-squash text before giving up on a diff. Owner-proposed; closes the
-  "the hash only says *changed*, not *what changed*" objection honestly
-  rather than pretending the digest can answer it.
-- **2026-08-09** — §6 gained **F-7**: TOML as one carrier for all four tiers.
-  Strongest technical option raised; `tomllib` is stdlib, the repo already
-  writes TOML two ways, and it has run this exact migration once (work-items.csv
-  → the `docs/work/` spec folder). **Deferred to a successor program, not
-  refused** — D-1/D-2 are carrier-neutral fields, so shipping them forecloses
-  nothing. F-6 also gained the measurement: 32 SN rows cost ~166 code lines to
-  read, 436 CSV rows cost five.
+Compressed 2026-08-09 — the blow-by-blow is in `git log docs/repo-lock.md`.
+What a reader needs is which rulings landed and which claims were **overturned**,
+because the overturned ones are where the reasoning is still worth having.
+
+**Rulings, in order:** D-1 (the anchor moves onto the artifact's own row;
+`attestations.csv` retired) → D-2 (SNs gain fields, not a new carrier) → D-3 (a
+column name means one thing repo-wide; `Status` becomes the four-rung ladder) →
+D-4 (supersession is deletion; ids are never reused).
+
+**Claims this document made and then had to withdraw** — each one cost real work,
+which is the argument for writing them down:
+
+- *"Deferring the carrier forecloses nothing."* True of the design, **false of
+  the labour** (F-7). Building the anchor on CSV and converting rewrites the
+  column-classification machinery, the header-superset rule, `structure_findings`,
+  `intake`'s writer and the attestation tests a second time. OI-12's own card
+  carried the false version until it was corrected.
+- *"The `::node` selector check is a ship-now item."* It **overturns owner ruling
+  R2 of 2026-08-01**, which weighed exactly that question and shipped the file
+  half. Recommended without checking; withdrawn. Q12 then made it unnecessary.
+- *"An equality test pins the SN reader twin."* The three readers were
+  byte-identical **and all three wrong the same way**, so equality was already
+  true while every edge-case row rendered its Lifecycle word as the need.
+- *"The `intake → trace` import owes no IF row."* It did. The component rule
+  joins on the **generated** arch-map, and I read the check before regenerating.
+- *"Counting extra ids can only raise the floor."* An adversarial review showed
+  the scan **under-counted** — it read the first id-*shaped* cell rather than the
+  id *column* — plus two blockers where the guard defeated itself through its own
+  documented remediation. All fixed at `d97cdc75`.
+
+**Two rulings that came from the owner refusing a framing**, both load-bearing:
+`Ready` means decomposed-and-handed-on while `Verified` means proven-by-execution
+(so an SN/SR/LLR never claims `Verified`); and the `Evidence` pointer stays in a
+**traced** cell rather than moving to the **ratified** `Method`, because moving it
+would turn every test-file rename into a re-attestation — 110 of them for WI-277
+alone.
