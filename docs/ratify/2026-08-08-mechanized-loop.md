@@ -308,6 +308,11 @@ _Baseline `f5a423ae2` (2026-08-01) — newest revision where SR-131 read `Verifi
   - before: SN-025;SN-016
   - after: SN-027;SN-016
 
+### TC TC-131
+- **Evidence**
+  - before: tests/test_agent_loop.py::test_pause_reason_reads_the_tracked_home; tests/test_agent_loop.py::test_legacy_pause_file_no_longer_pauses
+  - after: tests/test_agent_loop_policy.py::test_pause_reason_reads_the_tracked_home; tests/test_agent_loop_policy.py::test_legacy_pause_file_no_longer_pauses
+
 ## SR-132 — Local integrator: serial fail-closed merge queue
 
 _Baseline `f5a423ae2` (2026-08-01) — newest revision where SR-132 read `Verified`._
