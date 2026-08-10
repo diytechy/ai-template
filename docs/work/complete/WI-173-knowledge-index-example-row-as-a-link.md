@@ -9,4 +9,4 @@ order = 172
 
 ## Deliverable
 
-Changed the scaffolded pack-index example label from a code span to [`example`](README.md), a valid self-link whose row instructs replacing both label and target with the pack file; this demonstrates the reachable-pack pattern while keeping a fresh scaffold free of a fake pack and broken links. Bootstrap contract test pins the linked example.
+Changed the scaffolded pack-index example label from a code span to `` [`example`](README.md) ``, a valid self-link whose row instructs replacing both label and target with the pack file; this demonstrates the reachable-pack pattern while keeping a fresh scaffold free of a fake pack and broken links. Bootstrap contract test pins the linked example.

@@ -82,9 +82,11 @@ human owner's free-form private notes and is dropped from doc discovery entirely
 Scope (the high-value 80%): inline links `[text](dest)` and same-file/`file#frag`
 anchors against GitHub-style heading slugs (plus `{#custom-id}` suffixes and
 `<a name=...>`/`id=...`). Out of scope by design: reference-style links
-(`[t][ref]`), images (`![alt](src)` — skipped, not existence-checked), and links
-inside fenced/inline code (stripped before parsing). Anchors are only validated
-against Markdown targets the script can parse.
+(`[t][ref]`), images (`![alt](src)` — skipped, not existence-checked), links
+inside fenced/inline code, and links inside a `+++` spec frontmatter block (all
+three stripped before parsing — frontmatter is typed data, so a `title` quoting
+a link is describing one, not making one). Anchors are only validated against
+Markdown targets the script can parse.
 
 Contracts: IF-002, IF-030 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.csv).
 """
@@ -115,6 +117,10 @@ def _utf8_console():
 
 # A fenced code block opens/closes on a line of >=3 backticks or tildes.
 FENCE_RE = re.compile(r"^\s*(`{3,}|~{3,})")
+# The `docs/work/` spec frontmatter fence. Kept byte-identical to
+# `agent_common.SPEC_FENCE` — see blank_frontmatter for why the two readers must
+# agree on it.
+SPEC_FENCE = "+++"
 # Inline code span: a run of N backticks closed by a run of exactly N (CommonMark),
 # stripped so `[x](y)` written as an example isn't parsed as a real link. The
 # equal-length match matters for the double-backtick form `` `[`x`](y)` `` used
@@ -190,6 +196,28 @@ def slugify(text):
     return s
 
 
+def blank_frontmatter(text):
+    """`text` with a leading `+++`-fenced TOML block blanked (line count kept).
+
+    A `docs/work/` spec opens with typed DATA, not prose: a `title` that quotes
+    a markdown link is DESCRIBING one, never making one. Parsed as document
+    body, `title = "... ([WI-n](specs/WI-n.md)) ..."` becomes a link to a file
+    that was never meant to exist — a false positive that costs the link check
+    its authority, since a bar nobody believes is a bar nobody reads.
+
+    The fence rule matches `agent_common.parse_spec_frontmatter` exactly — line
+    one is the fence, the close is the next whole `+++` line — because two
+    readers disagreeing about where frontmatter ENDS is how one of them starts
+    existence-checking the other's data. Unfenced or unclosed returns `text`
+    untouched: a malformed fence declares no frontmatter, so nothing can hide a
+    real link behind one."""
+    lines = text.split("\n")
+    if not lines or lines[0] != SPEC_FENCE or SPEC_FENCE not in lines[1:]:
+        return text
+    close = lines.index(SPEC_FENCE, 1)
+    return "\n".join([""] * (close + 1) + lines[close + 1 :])
+
+
 def blank_fenced(text):
     """Return the lines of `text` with fenced code blocks blanked out (line
     count preserved so reported line numbers stay accurate)."""
@@ -216,7 +244,7 @@ def parse_doc(path):
     links = []  # (lineno, dest)
     anchors = set()  # slugs/ids this doc exposes as #fragments
     seen = {}  # slug -> count, for GitHub's -1/-2 disambiguation
-    unfenced = "\n".join(blank_fenced(text))
+    unfenced = "\n".join(blank_fenced(blank_frontmatter(text)))
     # Strip spans over the whole document because CommonMark permits inline code
     # to cross a line boundary. Preserve its newlines so finding line numbers do
     # not shift when a multiline span precedes a real link.

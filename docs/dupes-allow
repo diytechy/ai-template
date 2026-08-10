@@ -296,6 +296,7 @@
 #   ratification-translation  2   deliberate
 #   registry-row-filter    1   deliberate
 #   generator-preamble     1   deliberate
+#   frontmatter-fence      1   deliberate
 #
 # The two facts worth carrying: cross-module duplication here is dominated by
 # SMALL STABLE HELPERS the F5 ruling deliberately duplicates (a shared
@@ -891,3 +892,35 @@ a510ce1c39b6  project-trajectory/scripts/agent_common.py == project-trajectory/s
 #     census exists for; if bootstrap ever needs arrays too, that is the signal
 #     to reopen it.
 31835da4147d  project-trajectory/scripts/bootstrap.py == project-trajectory/scripts/wi_convert.py
+
+# --- frontmatter-fence (1 block) ----------------------------------
+# disposition: deliberate
+# WHERE A `+++` SPEC FRONTMATTER BLOCK BEGINS AND ENDS, stated twice: once by
+# `agent_common.parse_spec_frontmatter` to PARSE the TOML, and once by
+# `check_docs.blank_frontmatter` to BLANK it before the link scan. Two purposes,
+# one rule — line one is the fence, the close is the next whole `+++` line.
+#
+# The copy is the F5 case, not laziness. check_docs.py is a SHIPPED check: it
+# runs in an adopting repo's harness, must stand on the stdlib, and must not
+# take a dependency on the unattended loop's machinery to answer "is this doc
+# navigable?". agent_common.py is that machinery — 2,400 lines of lane, spec and
+# dispatch plumbing. Importing it to reuse three lines would hand every adopter
+# the loop as the price of a link check, and would owe an IF-### seam row for a
+# dependency that exists only to avoid a 31-token copy.
+#
+# WHY THE BLOCK EXISTS AT ALL (2026-08-09): check_docs had NO knowledge of `+++`
+# frontmatter, so it parsed markdown links inside the TOML of all 421 work-item
+# specs. A `title` string quoting a link — `title = "... [WI-n](specs/WI-n.md)
+# ..."` — was existence-checked as a real link and reported broken, which is how
+# two of the four broken links on this branch got there. The frontmatter's values
+# are typed DATA; a title DESCRIBING a link never made one.
+#
+# The drift guard is the point, and it is stronger than the docstring pairs this
+# census usually carries: tests/test_check_docs.py
+# ::test_frontmatter_fence_matches_the_spec_loader pins the two on the CONSTANT
+# and on BEHAVIOUR — it feeds one spec text to both and asserts that everything
+# `parse_spec_frontmatter` calls body survives `blank_frontmatter` byte for byte.
+# So the copies cannot disagree about where the data ends without a red test,
+# which is the only failure mode that matters here: if they disagreed, one of
+# them would start checking the other's values.
+edaa6a8191f0  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/check_docs.py

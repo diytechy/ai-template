@@ -122,6 +122,57 @@ def test_parse_doc_strips_multiline_inline_code_span(tmp_path):
     assert check.parse_doc(doc)["links"] == []
 
 
+def test_parse_doc_ignores_links_inside_spec_frontmatter(tmp_path):
+    # A `docs/work/` spec opens with typed TOML, and a `title` that QUOTES a
+    # markdown link is describing one, not making one. Parsed as body it became a
+    # broken link to a file nobody meant to exist (two of the four the v3 merge
+    # carried). The body's real link on the SAME doc must survive the strip, and
+    # its line number must not shift.
+    check = load_script("check_docs")
+    doc = tmp_path / "WI-1-x.md"
+    doc.write_text(
+        '+++\nid = "WI-1"\ntitle = "strands [WI-n](specs/WI-n.md) on archive"\n'
+        "+++\n\nBody cites [real](real.md).\n",
+        encoding="utf-8",
+    )
+    assert check.parse_doc(doc)["links"] == [(6, "real.md")]
+
+
+def test_parse_doc_keeps_frontmatter_links_when_fence_is_unclosed(tmp_path):
+    # Fails in the SAFE direction: a malformed fence declares no frontmatter, so
+    # it cannot become a way to hide a real link from the check.
+    check = load_script("check_docs")
+    doc = tmp_path / "d.md"
+    doc.write_text('+++\ntitle = "see [x](missing.md)"\n\nbody\n', encoding="utf-8")
+    assert [dest for _ln, dest in check.parse_doc(doc)["links"]] == ["missing.md"]
+
+
+def test_parse_doc_only_treats_a_first_line_fence_as_frontmatter(tmp_path):
+    # `+++` mid-document is prose (or a thematic break), never a frontmatter open.
+    check = load_script("check_docs")
+    doc = tmp_path / "d.md"
+    doc.write_text("intro\n+++\n[x](missing.md)\n+++\n", encoding="utf-8")
+    assert [dest for _ln, dest in check.parse_doc(doc)["links"]] == ["missing.md"]
+
+
+def test_frontmatter_fence_matches_the_spec_loader(tmp_path):
+    # The sync that matters: check_docs decides where frontmatter ENDS, and
+    # agent_common.parse_spec_frontmatter decides where the DATA ends. Let them
+    # drift and one starts existence-checking the other's values. Pinned on the
+    # constant AND on agreement over a real spec's body.
+    check = load_script("check_docs")
+    common = load_script("agent_common")
+    assert check.SPEC_FENCE == common.SPEC_FENCE
+    text = '+++\nid = "WI-1"\ntitle = "[a](b.md)"\n+++\nbody [real](real.md)\n'
+    _data, body = common.parse_spec_frontmatter(text, "WI-1-x.md")
+    blanked = check.blank_frontmatter(text)
+    # Everything the loader calls BODY survives the blanking, byte for byte.
+    assert blanked.endswith(body)
+    # ...and everything above it is gone, with the line count preserved.
+    assert blanked.count("\n") == text.count("\n")
+    assert "[a](b.md)" not in blanked
+
+
 def test_orphan_warns_by_default_and_fails_when_strict(scaffold):
     # A doc nothing links to is unreachable from the entry roots.
     (scaffold / "docs" / "lonely.md").write_text(

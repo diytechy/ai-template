@@ -500,6 +500,7 @@ Contracts (interfaces): IF-002, IF-030
 | Public item | Summary | Implements |
 |---|---|---|
 | `slugify(text)` | GitHub-style heading slug: lowercase, drop punctuation, spaces->hyphens. |  |
+| `blank_frontmatter(text)` | `text` with a leading `+++`-fenced TOML block blanked (line count kept). |  |
 | `blank_fenced(text)` | Return the lines of `text` with fenced code blocks blanked out (line |  |
 | `parse_doc(path)` | Parse one Markdown file into its outbound links and its anchor set. |  |
 | `collect_docs(root, docs_dir, ignore)` | Root-level *.md plus every *.md under docs/, de-duplicated and resolved. |  |
