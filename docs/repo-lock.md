@@ -810,6 +810,137 @@ SN-011 shape.* The rejected alternative is a new `## Design constraints` /
 the worst of the three outcomes. `architecture.md` is likewise wrong here: a G2,
 partly-generated artifact with no G1 rung and no anchor.
 
+**F-9 · Template↔live headers all match; the alignment questions are BETWEEN
+registries, not between a registry and its template.** Audited 2026-08-09
+before the owner's CSV review. Every shipped registry's live header is an
+ordered superset of its template, as `tests/test_dogfood_sync.py` requires, and
+`stakeholder-needs.md`'s three markdown tables match the template column for
+column (its sections are ordered Core / Draft / Edge-case against the
+template's Core / Edge-case / Draft, which is mechanically irrelevant —
+section-as-state matches a heading *containing* "draft"):
+
+| registry | template | live | verdict |
+|---|---|---|---|
+| **SN** | Core 5 · Edge-case 4 · Draft 5 | identical | match |
+| **SR** | 12 | 13 | ordered superset — one live-only extra, `SupersededBy` |
+| **LLR** | 11 | 11 | exact |
+| **TC** | 11 | 11 | exact |
+| IF | 11 | 11 | exact |
+| CMP | 9 | 9 | exact |
+| OI | 12 | 12 | exact |
+
+Two asymmetries worth naming rather than filing. `SupersededBy` being
+**live-only on SR** is legal under the superset rule, but an adopting repo
+inherits the *rules* — including the integrity-class "an LLR citing a
+superseded SR must re-ground" — **without the column or its documentation**
+(reference doc §12.9). And `work-items.template.csv` still ships with **no live
+counterpart**: the WI registry became the `docs/work/` spec folder at the Phase
+2c flip, and the template survives only as the legacy format `wi_convert.py`
+migrates *from* — deliberately excluded from the sync census, so do not read it
+as a live schema.
+
+**Where the columns actually collide** — the cut that matters for a
+cross-registry review:
+
+| column | appears in | note |
+|---|---|---|
+| **`Status`** | **SR · LLR · TC · IF · OI · WI** (6) | one word, six vocabularies — **OI-13** |
+| `Title` | SR · LLR · OI · WI | |
+| `Phase` | SR · LLR · TC | |
+| `SR-Refs` | LLR · IF · WI | the same pointer shape in three registries |
+| `Rationale` | SR · LLR | |
+| **`Priority`** | SR · WI | **two incompatible vocabularies under one name** — `M`/`S`/`C` on an SR, a scheduler integer on a WI; neither is enum-checked |
+| `SupersededBy` | SR · CMP | |
+| `Component` | LLR · IF | |
+| `Notes` | IF · CMP | |
+
+And a seventh `Status` vocabulary hides from a grep: **CMP calls it `State`.**
+
+**F-10 · What the IF registry's `Contract` cell actually encodes** — owner
+question, 2026-08-09: *"the prose in IF appear to be requirements, when it is
+intended to be interface definitions."* Measured over all 95 live rows:
+
+| signal | rows | share |
+|---|---|---|
+| names a `WI-###` (history) | 26 | 27% |
+| cites another IF/SR/LLR/TC id | 13 | 14% |
+| names a callable signature | 12 | 13% |
+| carries a rationale connective (*because*, *rather than*, *so that*) | 10 | 11% |
+| narrates a past defect or incident | 9 | 9% |
+| **uses `shall`/`must` (requirement voice)** | **1** | **1%** |
+
+Length: median 260, mean 323, max 968 characters; 21 rows over 500. In the
+five longest cells, **history/incident sentences outnumber everything else**.
+
+**The reading is right, with one correction.** They are *not* requirements in
+the shall-statement sense — 1% — and §8's backing rule holds mechanically:
+**zero** rows have an empty `SR-Refs`, so every seam does hang off a real
+requirement. What the cells actually carry is **design narrative**: what a
+module does across a seam, which WI split it from what, and what defect the
+shape was chosen to avoid. That is closer to `architecture.md` prose than to a
+contract in the interface-specification sense (signature, types, error modes,
+what a `Version` bump would mean).
+
+Three reasons that matters, and one reason it is defensible:
+
+- The `Provides` side is meant to hold *the authoritative spec*, and a consumer
+  "pins the version" — but nothing in the cell says which part is the pinned
+  obligation and which is background, so `Version` bumps against an unstated
+  baseline.
+- 27% naming a `WI-###` **duplicates `log.md`**, and a WI id ages: a cancelled
+  row's id sitting in a `Contract` cell still reads as authority.
+- It is fed **verbatim to LLM planning briefs**
+  (`plan_briefs.IF_SURFACE_COLUMNS` carries `Contract`), so history sentences
+  spend brief budget without constraining behaviour — and mix narrative with
+  normative statement in a prompt.
+- *Defensible, though:* the kit is stack-agnostic, so a signature cannot be
+  demanded (a seam may be a file format, a CLI, or an external actor), and the
+  IF row has **no `Rationale` or `Detail` column**, so the "why" has nowhere
+  else in the row to go. The content is not misjudged so much as **unfiled**.
+
+Nothing validates any of it — `--strict-schema` covers SR/LLR/TC only, so the
+IF registry has **no schema tier at all**. Together with OI-13's finding (an
+undeclared `Status` overlapping `Stability`), the honest summary is that **the
+IF registry has never had a declared content contract of its own**. **Filed
+2026-08-09 as OI-14** — its own row rather than more scope on OI-13, because
+that is a cross-registry *vocabulary* question and this is a single-registry
+*content* question, ruled by different reasoning. Recommendation: **declare
+now, split gradually** — write the content contract and add IF a schema tier
+(`Stability` enum-checked, `Contract` required) immediately, then let the
+history/rationale migrate per row as rows are touched, never as a 95-row sweep
+nobody can review carefully.
+
+**F-11 · The three open items are coupled through the COMPONENT partition, and
+that is the piece with no OI of its own.** `check_trajectory.cross_component_findings`
+(WI-064) makes an import edge between two components a finding **unless a
+covering `IF-###` row exists** — so the CMP partition *determines how many IF
+rows must exist*. How components themselves are defined is a two-part answer,
+and only the first part is authored:
+
+- **Declared** — one hand-written row per component in
+  [`requirements/components.csv`](requirements/components.csv): `CMP-ID`,
+  `Name`, `Category`, `Knowledge` (skill / pack refs), `State`,
+  `SupersededBy`, `PartOf` (nesting), `DetailDoc`, `Notes`. Five rows live,
+  all `State=built`, none nested.
+- **Derived, and deliberately never restated** (the shipped template says so in
+  its own `Notes`: *"Structure is DERIVED, never restated here"*) —
+  **membership** comes from the **`LLR.Component` tag joined on `LLR.Module`**
+  (`module_components`), so the registry declares the *set* and the LLR rows
+  declare *what is in it*; `PartOf` is inverted to `children_of` and resolved
+  upward to `roots_of`; and the **top view** is `top_roots` (roots containing
+  ≥1 module) plus `uncontained` (arch-map modules tagged into nothing),
+  measured against the inventory scraped from the **generated**
+  `docs/architecture.md` module map.
+
+Live: **53 arch-map modules → 5 components → 0 uncontained**, top view 5
+against a bound of 10. Note `LLR.Component` is a **traced** cell, so re-tagging
+a module's component opens no re-attest window — the partition can move
+without a sitting, and moving it changes which IF rows are owed.
+
+So the reading order for the sitting is **components → IF → `Status`**:
+OI-14 assumes today's 95 IF rows are the right 95, and that assumption rests on
+a component model nobody has ruled.
+
 **Candidate follow-up, not filed:** the *prose-an-LLM-is-handed* view above
 exists nowhere as a consolidated surface —
 [`registry-machinery-reference.md`](registry-machinery-reference.md) documents
@@ -853,6 +984,18 @@ done mid-program: it is a reference-doc edit with no bearing on the lock.
   digest survives. §6 gained F-5 (the full-width justification does not hold)
   and F-6 (no reusable markdown-table reader exists; five live cells already
   contain a literal `|`).
+- **2026-08-09** — §6 gained **F-9** (template↔live headers all match; the
+  real collisions are *between* registries — the cross-registry column matrix,
+  `Priority` meaning two incompatible things, and CMP's `State` as a seventh
+  `Status` vocabulary that hides from a grep) and **F-10** (what the IF
+  `Contract` cell actually encodes, measured over all 95 rows: design narrative
+  and history, 1% requirement voice, 13% callable signatures — the owner's read
+  upheld with one correction, since every row does have a real `SR-Refs`).
+  F-10's conclusion — the IF registry has never had a declared content contract
+  — is **filed as OI-14** (declare now, split gradually, never a 95-row sweep).
+  §6 also gained **F-11**: the three open items are coupled through the
+  **component partition**, which decides how many IF rows must exist and has no
+  OI of its own — so the reading order is components → IF → `Status`.
 - **2026-08-09** — **D-1's removal half SHIPPED** (§5 step 1–2, struck through
   there). ~331 lines deleted across four modules, two registry files removed,
   the test module rewritten around what survives, and SR-140 / LLR-158 /
