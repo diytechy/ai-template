@@ -54,6 +54,14 @@ home elsewhere — don't restate it here:
   machinery**, per the plan's execution-mode directive: these changes rewrite
   that machinery, so the spine rows the program mints are the *record* of the
   work, ratified at the end, not the vehicle for it.
+- **THE LOCK PROGRAM — living scope and decisions until the repo is locked:**
+  [repo-lock.md](repo-lock.md). Where owner rulings accumulate while the
+  mechanized-loop program is closed out: **D-1** (the attestation anchor moves
+  onto the spine row; `attestations.csv` retired), **D-2** (stakeholder needs
+  gain fields rather than a new carrier), the four open questions those raise,
+  and the ordered close-out checklist that defines "locked". Read it *with* the
+  handoff below, not instead of it — the handoff is the record of what was
+  built, this is the record of what is being decided.
 - **The drain plan for the remaining backlog:**
   [backlog-plan-2026-08-01.md](backlog-plan-2026-08-01.md) — the serial build
   order for the queued rows, the standing rules every builder inherits, and the
