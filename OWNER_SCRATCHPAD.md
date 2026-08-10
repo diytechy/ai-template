@@ -694,14 +694,21 @@ Note: In a branch, a work item is non-mutable.  Work item definitions can only b
 
  Edge cases needs to dissolve into individual system requirements that relate to the stakeholder need, but this is awkward because each "hat" must be run against each stakeholder need to see where a new requirement needs to be built out.
 
- Add stakeholder needs:
+ If we are at stakeholder needs, let's consider these items at the same time, or let me know what challenges might arise:
 
- -All stakeholder needs should be written from the perspective of the end-user, and written arount the end-user interfaces that are accessible.  They should not reference implimentation.
+ -A downstream adopter as well as this repo's stakeholder needs should be written from the perspective of the end-user, and written arount the end-user interfaces that are accessible.  They should not reference implimentation, and should be written in plane language.
 
- -A single "dev-setup" double-clickable launcher shall be available for each applicable platform (windows / linux / MacOS) which will install all dependencies a repo developer would need.
+ -A downstream adopter as well as this repo shall have a single "dev-setup" double-clickable launcher shall be available for each applicable platform (windows / linux / MacOS) which will install all dependencies a repo developer would need, downstream adopters should be aware of this capability and may adopt a similar stratagy if the repository if applicable.
 
- -A single "run" double-clickable launcher shall be available to open a menu of available actions to peform which are applicable to this repository for it's applicable platforms (Window / Linux / MacOS)
 
- -When a stakeholder need is decomposed into system requirements, it should accomidate the different "hat" perspectives of the repository given the scope of the stakeholder need and the overall veision.  Therefore, the prose handed to the adjudicator to decompose the stakeholder need must include these factors.  Those hats include the examples which are accessible to downstream users.
+ -A downstream adopter as well as this repo shall have a single "agent-resume" double-clickable launcher shall be available for each applicable platform (windows / linux / MacOS) which will install all dependencies a repo developer would need, downstream adopters should be aware of this capability and may adopt a similar stratagy if the repository if applicable.  (Note this )
 
- - 
+ -This repository shall have have a single "run" double-clickable launcher shall be available to open a menu of available actions to peform which are applicable to this repository for it's applicable platforms (Window / Linux / MacOS), downstream adopters should be aware of this capability and may adopt a similar stratagy if the repository if applicable.
+
+ - When a downstream adopter or this repo's stakeholder needs are decomposed into system requirements, it should accomidate the different "hat" perspectives of the repository given the scope of the stakeholder needs and the overall vision.  Therefore, the prose handed to the adjudicator to decompose the stakeholder need must include these "hat" perspectives.  Those hats include the examples which are accessible to downstream users.
+
+ - A downstream adopter as well as this repo's system requirements must be written with respect to their component interfaces, and for this reason system arcitecture and system requirement decomposition must occur simultaneously.  System requiprements must follow requirement standards and will reference only interfaces between the component boundaries.
+
+System Requirement:
+
+When a downstream adopter as well as this repo is undergoing autonomous or semi-autonomous development (launched through agent-resume) an llm agent shall first address handback documents from executed workitems (producing follow-up work items if needed), then address workitems in batch from stakeholder needs (which always require user attestation), system requirements, low level requirements, and test cases, each time stopping the process if the automation level requires human / external attestion.  Finally, after all test cases are laid out, impilmentation can continue autonomously through work item construction.
