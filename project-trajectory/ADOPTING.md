@@ -364,6 +364,34 @@ table.
 
 ### Migration recipes for specific kit changes
 
+- **`docs/id-watermark` becomes REQUIRED (2026-08).** A new one-line-per-space
+  file records the highest id ever allocated in each space, so that a deleted
+  row's number is never handed out again — the live tree cannot answer that,
+  because `max(live) + 1` re-issues whatever was removed. `trace.py`'s always-on
+  integrity pass now refuses an **absent** mark rather than reading it as "no id
+  is taken", so a re-sync that copies the file but not your history goes red on
+  the first commit, naming every live id above the scaffold's marks.
+
+  **Do this once, immediately after the re-sync:**
+
+  ```
+  python scripts/trace.py --bump-ids     # records your existing ids
+  git add docs/id-watermark && git commit -m "record the id watermark"
+  ```
+
+  That is the whole migration: the marks rise to your live maxima and the check
+  goes quiet. Two cautions. **Never `--force` this file** — `bootstrap.py`
+  exempts it deliberately, because every other scaffold target is a template to
+  fill or is regenerable from the tree, while this one is the only record of ids
+  that have been *deleted*, and overwriting it frees them for silent re-use.
+  And **commit it before the second commit**: until the file is in git the
+  "a mark only ever rises" rule has no baseline and reports itself as skipped
+  (it says so out loud rather than passing quietly).
+
+  Thereafter a new hand-authored id — the spine tiers have no minter — is a
+  finding until you re-run `--bump-ids`, which is the intended rhythm: allocate,
+  then record.
+
 - **`trace.py` splits into two files (2026-07).** `scripts/trace_text.py` joins
   `scripts/trace.py`, and **a re-sync must copy both** — `trace.py` imports its
   spine-row text layer from the sibling, so a repo that picks up one and not the

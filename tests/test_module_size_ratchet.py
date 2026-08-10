@@ -545,7 +545,19 @@ BASELINE = {
     # four small readers (_csv_ids / _sn_ids / _wi_ids / _dp_ids) and `--bump-ids`
     # moved out of main() into _cmd_bump_ids. More LINES, less complexity — which
     # is the trade this pair of ratchets exists to force.
-    "trace.py": 3248,
+    # Then +87 (3248 -> 3335), the ADVERSARIAL REVIEW of the watermark
+    # (2026-08-09). Two BLOCKERs and three MAJORs, all fail-open, all fixed
+    # here: `bump_watermark` caught read_watermark's refusal and rebuilt the
+    # file from the live max — the documented remediation DESTROYED the record;
+    # monotonicity read `HEAD:` only, so a merge resolved `--ours` silently
+    # dropped the other branch's marks; nothing bounded a mark UPWARD, so one
+    # edited digit retired a space's guard forever; `_csv_ids` took the first
+    # id-SHAPED cell rather than the id COLUMN, hiding a row's own id behind a
+    # reference column (and crashing on a ragged row, since surplus cells land
+    # under DictReader's `None` key as a list). `watermark_findings` split into
+    # `_mark_covers_live_findings` + `_mark_history_findings` because the
+    # complexity ratchet refused it at 11 — decompose, do not bump.
+    "trace.py": 3335,
     # +132 (1926 -> 2058; the last +10 is the F4 BOM hardening: read_rows utf-8-sig + git-show strips), WI-316: staged_spine_findings — the amend-without-
     # flip warn (--staged): content cells of a Verified spine row changed
     # without the Modified marker, suppressed when the owning SR flips in the
@@ -1013,7 +1025,12 @@ BASELINE = {
     # Then +6 (2654 -> 2660), the id watermark's MAPPING row + its docstring
     # inventory line: a fresh scaffold MUST ship docs/id-watermark, because an
     # absent mark is an error rather than "no id is taken".
-    "bootstrap.py": 2660,
+    # Then +30 (2660 -> 2690), same review: `docs/id-watermark` is now exempt
+    # from `--force`. Every other scaffold target is a template to fill or is
+    # regenerable from the tree; this one is the only record of ids that were
+    # DELETED, so forcing the fresh-scaffold marks over a live repo frees them
+    # for silent re-use and nothing can rebuild what was lost.
+    "bootstrap.py": 2690,
     # NEW ENTRY, +228 (1423 -> 1651), Phase 2b of the concurrency restructure
     # (docs/concurrency-restructure.md §7): the spec-folder work-item reader,
     # which crosses this module over THRESHOLD for the first time. It is one

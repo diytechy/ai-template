@@ -133,6 +133,7 @@ graph LR
     m_scripts_intake --> m_scripts_check_trajectory
     m_scripts_intake --> m_scripts_dispatch
     m_scripts_intake --> m_scripts_schedule
+    m_scripts_intake --> m_scripts_trace
     m_scripts_intake --> m_scripts_wi_convert
     m_scripts_integrate --> m_scripts_agent_common
     m_scripts_integrate --> m_scripts_handback
@@ -868,12 +869,12 @@ Contracts (interfaces): IF-080
 
 ### `scripts/intake`
 _intake.py — the unified trunk-side intake mint (WI-388; docs/concurrency-v2.md §A5.2)._
-Imports (internal): `agent_common`, `check_trajectory`, `dispatch`, `schedule`, `wi_convert`
+Imports (internal): `agent_common`, `check_trajectory`, `dispatch`, `schedule`, `trace`, `wi_convert`
 Contracts (interfaces): IF-090, IF-091, IF-092
 
 | Public item | Summary | Implements |
 |---|---|---|
-| `next_wi_id(root)` | `max(existing) + 1` over EVERY spec filename under docs/work/ — every |  |
+| `next_wi_id(root)` | `max(watermark, existing) + 1` — the mint counts from the WATERMARK. |  |
 | `tier_signal(trigger, *, rows_touched, gate_moved)` | `buildtier` from MEASURABLE inputs (the amendment's clause 2): rows | SN-031 |
 | `context_block(root, wi_row, rows)` | The WI-388 context block: what the registries already know about this |  |
 | `parse_dispositions(text, where)` | `(drafts, refusal)` — the `## Dispositions` section's fenced TOML |  |
@@ -1122,9 +1123,9 @@ Contracts (interfaces): IF-001, IF-021, IF-042
 | `integrity_findings(label, raw_rows)` | Duplicated or malformed ids in one registry (example '-000' rows skipped — |  |
 | `live_max_ids(root)` | `{space: highest id number currently present}` over the WHOLE repo. |  |
 | `read_watermark(root)` | `{space: int}` from `docs/id-watermark`. RAISES on absent or malformed. |  |
-| `watermark_findings(root, previous)` | The two rules, integrity-class. |  |
+| `watermark_findings(root, previous)` | The id-watermark rules, integrity-class. |  |
 | `render_watermark(marks, basis)` | The file's text. One `<SPACE> = <int>` per line, deliberately: a merge |  |
-| `committed_watermark(root)` | The mark as of HEAD, or None when git cannot say. |  |
+| `committed_watermark(root)` | The highest mark per space across HEAD **and every other parent**. |  |
 | `bump_watermark(root)` | Raise every mark to the live maximum. Returns `(marks, raised)`. |  |
 | `sr_supersession_findings(srs, llrs)` | Validate the optional SR ``SupersededBy`` extension. |  |
 | `triangle_findings(tcs, llrs)` | SR/LLR citation coherence. A TC may cite an | LLR-1, SR-1, SR-2 |

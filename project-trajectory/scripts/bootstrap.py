@@ -461,6 +461,13 @@ def select_skills(stack, domain, binary_assets):
     return chosen
 
 
+# The one scaffold destination that is never force-overwritten: it is the only
+# file whose content is HISTORY (which ids have been allocated and deleted) and
+# so cannot be rebuilt from the tree. Kept as a basename so the rule holds
+# wherever the MAPPING puts it.
+WATERMARK_DEST_NAME = "id-watermark"
+
+
 def copy_if_new(src, dst, dry_run, force):
     """The write-once scaffold copy, stated once (WI-347): True when `dst` was
     created (or would be, under `dry_run`), False when it already exists and
@@ -468,8 +475,16 @@ def copy_if_new(src, dst, dry_run, force):
 
     Deliberately does NOT test `src`: one caller copies a kit file that must be
     there, where a missing source should raise rather than be skipped silently,
-    and the caller that tolerates an absent source says so itself."""
-    if dst.exists() and not force:
+    and the caller that tolerates an absent source says so itself.
+
+    ONE DESTINATION IGNORES `force`: `docs/id-watermark`. Every other scaffold
+    target is a template to fill or is regenerable from the tree, so re-forcing
+    it costs at most re-doing an edit. The watermark is the only record of which
+    ids have been DELETED — nothing in the tree can rebuild it — so overwriting a
+    live repo's marks with the fresh-scaffold ones frees every id above them for
+    silent re-use. Write-once is the only safe rule for a file whose whole
+    content is history."""
+    if dst.exists() and (not force or dst.name == WATERMARK_DEST_NAME):
         return False
     if not dry_run:
         dst.parent.mkdir(parents=True, exist_ok=True)
@@ -1429,9 +1444,15 @@ MAPPING = [
     # `python scripts/derive_gate.py` migrates it to the generated form.
     ("gate.template", "docs/gate"),
     # The id watermark (docs/id-watermark): the high-water mark per id space, so
-    # a deleted row's number is never re-minted. Scaffolded at all-zeros — a fresh
-    # repo has allocated nothing — and REQUIRED, because trace.py treats an absent
-    # mark as an error rather than as "no id is taken".
+    # a deleted row's number is never re-minted. REQUIRED, because trace.py
+    # treats an absent mark as an error rather than as "no id is taken".
+    # NOT all-zeros: the template covers the example rows the other templates
+    # seed (OI=2), so it is generated from a real scaffold, never hand-written.
+    # NEVER --force THIS ONE onto a live repo. Every other target here is a
+    # template to fill or is regenerable from the tree (docs/gate <- derive_gate);
+    # this file is the only record of ids that have been DELETED, so overwriting
+    # it with the fresh-scaffold marks destroys information nothing can recover.
+    # `copy_file` therefore exempts it from --force (see WATERMARK_DEST).
     ("id-watermark.template", "docs/id-watermark"),
     # THE ONE POLICY HOME (SN-028). Every process dial — gate authority, the
     # human-ratification level, push authority, the reviewer count, the privacy
@@ -2418,7 +2439,16 @@ def copy_kit_files(dest, plan):
         if not src.exists():
             missing.append(src_rel)
             continue
-        if dst.exists() and not plan.force:
+        # WRITE-ONCE, and `--force` does not override it for the watermark. Every
+        # other target here is a template to fill or is regenerable from the tree,
+        # so re-forcing costs at most re-doing an edit. `docs/id-watermark` is the
+        # only file whose content is HISTORY — which ids have been allocated and
+        # DELETED — so replacing a live repo's marks with the fresh-scaffold ones
+        # frees every id above them for silent re-use, and nothing in the tree can
+        # rebuild what was lost.
+        if dst.exists() and (
+            not plan.force or Path(dst_rel).name == WATERMARK_DEST_NAME
+        ):
             skipped.append(dst_rel)
             continue
         if plan.dry_run:

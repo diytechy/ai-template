@@ -496,12 +496,21 @@ def _csv_ids(docs):
         if not directory.is_dir():
             continue
         for path in sorted(directory.glob("*.csv")):
-            for row in load_csv(path):
-                for value in row.values():
-                    match = _ANY_ID.match((value or "").strip())
-                    if match:
-                        yield match.group(1), int(match.group(2))
-                        break
+            rows = load_csv(path)
+            if not rows:
+                continue
+            # The row's OWN id is its FIRST column, never "the first id-shaped
+            # cell". Those differ the moment a registry puts a reference column
+            # first (`SN-Refs` before `SR-ID`): the scan would then yield the
+            # CITATION and skip the id, leaving that row's number unmarked and
+            # therefore free — an UNDER-count, the one direction this scan must
+            # not fail in. Surplus cells land under the `None` key as a list, so
+            # only the named first column is read.
+            id_col = next(iter(rows[0]))
+            for row in rows:
+                match = _ANY_ID.match((row.get(id_col) or "").strip())
+                if match:
+                    yield match.group(1), int(match.group(2))
 
 
 def _sn_ids(docs):
@@ -591,43 +600,72 @@ def read_watermark(root):
     return marks
 
 
-def watermark_findings(root, previous=None):
-    """The two rules, integrity-class.
-
-    1. Every space is marked, and no LIVE id exceeds its mark. A row authored
-       past the mark means the mint was bypassed — and since the spine has no
-       mint at all, that is the ONLY guard those tiers get.
-    2. The mark never decreases. Checked against `previous` (the committed
-       value); when git cannot supply one the rule is SKIPPED and says so,
-       rather than passing quietly.
-    """
+def _mark_covers_live_findings(marks, live):
+    """Rules 1 and 2, read from the working tree alone: every space is marked,
+    and no live id stands above its mark."""
     out = []
-    try:
-        marks = read_watermark(root)
-    except ValueError as exc:
-        return [str(exc)]
-    live = live_max_ids(root)
     for space in WATERMARK_SPACES:
         if space not in marks:
             out.append(
                 "id watermark declares no mark for {} — every id space must be "
                 "marked, or that space is unguarded".format(space)
             )
-            continue
-        if live.get(space, 0) > marks[space]:
+        elif live.get(space, 0) > marks[space]:
             out.append(
-                "{}-{:03d} exists but the id watermark stands at {} — an id was "
-                "allocated past the mark (mint from {}, never from max(live))".format(
-                    space, live[space], marks[space], WATERMARK
-                )
+                "{}-{:03d} exists but the id watermark stands at {} — record it "
+                "with `trace.py --bump-ids` (the spine tiers have no minter, so a "
+                "hand-authored id is expected to arrive this way; the mark is what "
+                "stops the number being handed out again after the row is "
+                "deleted)".format(space, live[space], marks[space])
             )
-    for space, was in sorted((previous or {}).items()):
+    return out
+
+
+def _mark_history_findings(marks, live, previous):
+    """Rules 3 and 4, which need the COMMITTED mark: it never falls, and it never
+    rises past what history justifies.
+
+    Both directions matter and for opposite reasons. A mark that FALLS re-opens
+    every id above the new value. A mark that RISES by hand retires that space's
+    guard permanently and silently — it would still pass "every space is marked"
+    and still pass "the mark rose". Headroom left by a DELETED row stays legal,
+    because the committed mark is what carries it."""
+    out = []
+    for space in WATERMARK_SPACES:
         now = marks.get(space)
-        if now is not None and now < was:
+        if now is None:
+            continue
+        was = previous.get(space, 0)
+        if now < was:
             out.append(
                 "id watermark for {} moved DOWN {} -> {}; a mark only ever "
                 "rises, or a retired id becomes mintable again".format(space, was, now)
             )
+            continue
+        justified = max(was, live.get(space, 0))
+        if now > justified:
+            out.append(
+                "id watermark for {} stands at {} but nothing justifies more than "
+                "{} (the highest committed mark, or the highest live id) — a mark "
+                "rises by allocating an id, never by hand".format(space, now, justified)
+            )
+    return out
+
+
+def watermark_findings(root, previous=None):
+    """The id-watermark rules, integrity-class.
+
+    `previous` is the committed mark (see `committed_watermark`). When git cannot
+    supply one, the history rules DO NOT RUN and the caller says so — an unrun
+    rule that prints nothing is indistinguishable from one that passed."""
+    try:
+        marks = read_watermark(root)
+    except ValueError as exc:
+        return [str(exc)]
+    live = live_max_ids(root)
+    out = _mark_covers_live_findings(marks, live)
+    if previous is not None:
+        out += _mark_history_findings(marks, live, previous)
     return out
 
 
@@ -653,31 +691,75 @@ def render_watermark(marks, basis=""):
     return "\n".join(head + body) + "\n"
 
 
-def committed_watermark(root):
-    """The mark as of HEAD, or None when git cannot say.
-
-    Monotonicity is the one rule that CANNOT be read from the working tree — a
-    lowered mark looks exactly like a correct one. Off-git, in a shallow clone,
-    or before the file's first commit, this returns None and the caller reports
-    the rule as SKIPPED rather than passing it quietly."""
-    text = _git_out(root, ["show", "HEAD:{}".format(WATERMARK)])
+def _watermark_at(root, rev):
+    """The mark as recorded at `rev`, or None when git cannot produce it."""
+    text = _git_out(root, ["show", "{}:{}".format(rev, WATERMARK)])
     if not text:
         return None
     marks = {}
     for line in text.splitlines():
-        m = _WATERMARK_LINE.match(line.strip())
-        if m:
-            marks[m.group(1)] = int(m.group(2))
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#"):
+            continue
+        m = _WATERMARK_LINE.match(stripped)
+        if not m:
+            # A line the reader would REFUSE must not be dropped here. Skipping
+            # it silently disables monotonicity for that space alone, which is
+            # the per-space version of the hole this rule exists to close.
+            return None
+        marks[m.group(1)] = int(m.group(2))
     return marks or None
 
 
+def committed_watermark(root):
+    """The highest mark per space across HEAD **and every other parent**.
+
+    Monotonicity cannot be read from the working tree — a lowered mark looks
+    exactly like a correct one — so it is read from git. But `HEAD:` alone is
+    FIRST-PARENT ONLY, and a merge is exactly where marks get lost: two branches
+    each allocate ids, `docs/id-watermark` conflicts (by design, one line per
+    space), and resolving it `--ours` discards the other side's marks while
+    every commit message on that branch still cites them. Comparing against the
+    max over all parents makes that resolution a finding instead of a silent
+    re-issue.
+
+    `MERGE_HEAD` covers the in-progress case (the conflict is being resolved
+    right now); `HEAD^1..^n` covers the commit after it landed. Returns None
+    only when git can supply NO baseline at all — off-git, a shallow clone, or
+    before the file's first commit — and the caller then reports the rule as
+    SKIPPED rather than passing it quietly."""
+    revs = ["HEAD"]
+    merge_head = _git_out(root, ["rev-parse", "--verify", "--quiet", "MERGE_HEAD"])
+    if merge_head:
+        revs.append(merge_head.strip())
+    parents = _git_out(root, ["rev-list", "--parents", "-n", "1", "HEAD"]) or ""
+    revs.extend(parents.split()[1:])
+    best = {}
+    seen_any = False
+    for rev in revs:
+        marks = _watermark_at(root, rev)
+        if marks is None:
+            continue
+        seen_any = True
+        for space, value in marks.items():
+            best[space] = max(best.get(space, 0), value)
+    return best if seen_any else None
+
+
 def bump_watermark(root):
-    """Raise every mark to the live maximum. Returns `(marks, raised)`."""
+    """Raise every mark to the live maximum. Returns `(marks, raised)`.
+
+    A MALFORMED file propagates its error. Only an ABSENT one starts from zero,
+    and only because that is the file's first creation. The distinction is the
+    whole safety of the writer: this is the one artifact in the repo whose
+    content cannot be recomputed, so "I could not read it" must never become "I
+    will replace it with the live maximum" — that discards every mark for an id
+    already deleted, which is precisely the record the file exists to keep. The
+    trap is real rather than theoretical, because `read_watermark`'s own error
+    text sends the reader here to regenerate."""
     live = live_max_ids(root)
-    try:
-        marks = read_watermark(root)
-    except ValueError:
-        marks = {}
+    path = Path(root) / WATERMARK
+    marks = read_watermark(root) if path.is_file() else {}
     raised = {}
     for space in WATERMARK_SPACES:
         was = marks.get(space, 0)
@@ -3210,8 +3292,13 @@ def main():
     # value of the contract is that it stays true. Integrity-class all the same:
     # appended here so --strict-integrity (the always-on pre-commit floor) gates
     # on it exactly like a duplicated id.
-    committed = committed_watermark(args.root)
-    findings.integrity += watermark_findings(args.root, committed)
+    # Follow --docs. `WATERMARK` is docs-relative, so a run pointed at another
+    # docs tree must read THAT tree's mark; using args.root regardless would
+    # check an unrelated (often empty) tree and then report integrity=0 about a
+    # spine it never looked at.
+    wm_root = docs.parent if args.docs else Path(args.root)
+    committed = committed_watermark(wm_root)
+    findings.integrity += watermark_findings(wm_root, committed)
     if committed is None:
         # SILENCE IS NOT SUCCESS. "A mark only ever rises" cannot be read from the
         # working tree — a lowered mark looks exactly like a correct one — so with

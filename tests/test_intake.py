@@ -87,6 +87,19 @@ def git_repo(root, branch="main"):
         encoding="utf-8",
         newline="\n",
     )
+    # Every repo carries an id watermark: `intake.next_wi_id` mints from it, and
+    # its reader REFUSES a missing mark rather than degrading to zero (a mint
+    # with no record of what has been allocated must not proceed on a guess).
+    # Seeded at all-zeros, which is what a repo that has allocated nothing says
+    # — the mint's `max(live, mark) + 1` then behaves exactly as it always did
+    # for these fixtures, whose ids come from spec FILENAMES. Rendered through
+    # trace's own writer so the fixture cannot drift from the reader.
+    trace = load_script("trace")
+    (root / trace.WATERMARK).write_text(
+        trace.render_watermark({s: 0 for s in trace.WATERMARK_SPACES}),
+        encoding="utf-8",
+        newline="\n",
+    )
     _commit(root, "seed", when=T_BASE)
     return root
 

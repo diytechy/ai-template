@@ -68,6 +68,7 @@ from pathlib import Path
 import agent_common as ac
 import check_trajectory
 import schedule
+import trace
 import wi_convert
 
 SCRIPTS = Path(__file__).resolve().parent
@@ -142,11 +143,20 @@ def _clip(text, width):
 
 
 def next_wi_id(root):
-    """`max(existing) + 1` over EVERY spec filename under docs/work/ — every
-    declared status directory including `active/<branch>/`, plus any residue
-    folder (a broader read than the loaders on purpose: for a MINT, an id held
-    anywhere is an id taken). Filenames only, never file contents — the same
-    rule the loaders verify per-file."""
+    """`max(watermark, existing) + 1` — the mint counts from the WATERMARK.
+
+    Filenames are still swept, for the same reason they always were (a broader
+    read than the loaders: for a MINT, an id held anywhere is an id taken, and
+    filenames never lie the way a malformed row can). But the FLOOR is now
+    `docs/id-watermark`, because the live tree cannot answer the question that
+    matters once D-4 lets a superseded row be DELETED: `max(live) + 1` re-issues
+    the number of anything removed, and a reused id silently re-points every
+    commit message and archived document that cites it.
+
+    `trace.read_watermark` RAISES when the mark is absent or malformed rather
+    than degrading to zero, and that refusal is deliberately not caught here: a
+    mint with no record of what has been allocated is the one operation that
+    must not proceed on a guess."""
     top = 0
     work = Path(root) / WORK
     if work.is_dir():
@@ -154,7 +164,8 @@ def next_wi_id(root):
             matched = _WI_FILE_RE.match(path.name)
             if matched:
                 top = max(top, int(matched.group(1)))
-    return "WI-{:03d}".format(top + 1)
+    mark = trace.read_watermark(root).get("WI", 0)
+    return "WI-{:03d}".format(max(top, mark) + 1)
 
 
 def tier_signal(trigger, *, rows_touched=0, gate_moved=False):
@@ -1130,6 +1141,13 @@ def _mint(root, drafts, subject_verb):
             with path.open("a", encoding="utf-8", newline="\n") as fh:
                 fh.write("\n## Context\n\n" + context + "\n")
         minted.append((wi_id, (Path(WORK) / rel).as_posix()))
+    # RAISE THE MARK IN THE SAME COMMIT that files the specs. A mint that
+    # allocates an id without recording it leaves the mark behind the tree, and
+    # trace.py's integrity pass reads that as "an id was allocated past the
+    # mark" — correctly, because it was. Safe against a later refusal: the
+    # restore path is `git reset --hard HEAD`, whole-tree, so a bump written
+    # before a refusal is reverted with the spec it was minted for.
+    trace.bump_watermark(root)
     refusal = _bookkeeping_commit(
         root,
         "mint: {} - {} (WI-388 intake; bookkeeping)".format(
