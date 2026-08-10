@@ -861,6 +861,63 @@ why (one bullet each; cite ids)._
   the two rows retired here are inputs to WI-384's migration, not a competing
   vocabulary.
 
+- **2026-08-10 — P0 sitting, part 1: one need attested, three ruled
+  mis-levelled and demoted, one reframed.** Ruled by the owner across the five
+  draft needs the 2026-08-08 mechanized-loop program was built against
+  ([repo-lock.md](repo-lock.md) §5 step 6). **SN-028 is ATTESTED** and moved to
+  Core needs; attestation at this tier is section membership
+  (`trace.sn_draft_ids` scans for an id under a heading containing "draft"), so
+  the move *is* the act. It obliged a README bullet — `check_docs` fails a
+  Must/Should core need that no README bullet cites, and Draft rows are exempt —
+  which is the rule working, not a nuisance. **SN-030, SN-031 and SN-032 are
+  MIS-LEVELLED and demoted to the requirement tier**, their rows deleted and
+  their ids retired. The measurement behind the ruling: they decomposed into 3,
+  2 and 1 SRs against a **core-need mean of 12.7** (SN-006 = 30, SN-025 = 23,
+  SN-027 = 9) — the same signature §0 records for the edge-case tier, where a
+  need that yields one requirement *is* that requirement written a level up.
+  Each stated a mechanism rather than a want. Children re-parented:
+  **SR-141/142/143 → SN-025** (the priority order is what replaces the human
+  curator SN-025 says it does without), **SR-144/145 → SN-027** (the need that
+  introduced lanes; SN-031 was entirely about what a lane owes when it dies),
+  **SR-146 → SN-005** (prompts as inspectable files is "enforced
+  agent-neutrally, not by trusting any one agent"). SR-146's argv-transport
+  clause was **dropped rather than moved** — it is design and **LLR-163 already
+  carried it**, so the SR was over-reaching a tier. The alternative passed over
+  for SN-031 was reframing it in place at stakeholder altitude ("no lane
+  strands, no owed judgement is skipped"), which its 53 live source citations
+  made cheaper; the owner ruled the level question on its merits, and the
+  citation count measures how much code the program touched, not the row's
+  altitude. Ids are **never re-minted** — the watermark holds `SN = 32` against
+  29 live rows (D-4). The ~71 comments still citing the retired ids are
+  **WI-425**, not silently left: nothing validates an `SN-###` token inside a
+  `.py` comment, so the tree stays green while they dangle.
+
+- **2026-08-10 — SN-029 is REFRAMED around impact rather than mechanism, and a
+  false clause is retired.** The row said what was ratified is "recorded in an
+  **append-only ledger**" — false since D-1 retired `attestations.csv`, and
+  self-contradicting, because the same row's acceptance intent already read
+  "never in a second registry keyed on the same artifact." `git log -S` confirms
+  the string entered at `cb9c36ac` and no commit removed it: `91831f4d` amended
+  the acceptance cell and **missed the Need cell**, so [repo-lock.md](repo-lock.md)
+  §2 D-1's claim that SN-029 was amended in that pass was itself half-true. The
+  owner's reframe orients the need on what an owner actually wants — *an
+  autonomous run gets as far as it honestly can*. Three corrections were applied
+  to make it true of the machinery: **(1)** the stop is scoped to *a human
+  judgement*, because eight typed exit codes plus blackout windows and
+  `docs/work/pause` are other stops and an unqualified "only pauses when" is
+  falsifiable; **(2)** "lacks confidence" became *a round that cannot converge*,
+  because no confidence self-assessment exists — the real mechanism is a
+  dual-plan round exhausting its budget into a PAGE (`plan_round.page_action`,
+  already attributed to SN-029), and at `human_ratification_through = 0` that
+  PAGE does **not** hold a question open for a human but exits `EXIT_STALL`
+  under the pause-free invariant (WI-204/209); **(3)** "introduced" became
+  *introduced or amended*, which is what gives SR-140 a home under the new
+  framing — the anchor is the detector that makes an amendment drop the derived
+  stage at all. SN-029 stays a stakeholder need rather than being demoted with
+  the other three: it declares **how much authority the owner delegates**, a
+  consent dial of the same class as SN-009's privacy gate, not a derived
+  mechanism.
+
 ## Audit log
 
 <!-- Append verdict blocks here per PROCESS.md §5. Newest at the bottom. -->

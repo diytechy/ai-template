@@ -39,7 +39,4 @@ resource: "generated"
 | [SN-026](SN-026.md) | Several LLM families are configurable — selected per job and per capability level — and w… |
 | [SN-027](SN-027.md) | Ready work fans out across bounded parallel lanes, while mutation of the integration bran… |
 | [SN-028](SN-028.md) | Every policy dial has one home — a single hand-edited, machine-read file — and a repo tha… |
-| [SN-029](SN-029.md) | How far a human ratifies is a NUMBER on the spine's own tiers, and what was ratified is r… |
-| [SN-030](SN-030.md) | The unattended loop's priority order is ratified prose the tests pin, not an emergent pro… |
-| [SN-031](SN-031.md) | A lane that cannot finish CLOSES rather than hanging, its claimed outcome is a claim an a… |
-| [SN-032](SN-032.md) | A prompt is a reviewable file with an audit trail, and a route is declared as argv rather… |
+| [SN-029](SN-029.md) | An autonomous run gets as far as it honestly can. Once triggered, the coordinator stops f… |

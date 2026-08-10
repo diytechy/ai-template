@@ -45,23 +45,38 @@ half-migration cannot hide), and the **edge-case SN tier may be mis-levelled**
 (§7's note: eight of ten rows decompose into exactly one SR, against 12.3 for a
 core need — a "need" that yields one requirement *is* the requirement, written a
 level up). The second is a **kit-level** finding: that table ships to every
-adopter.
+adopter — and it now has a **precedent rather than only a recommendation**: the
+2026-08-10 sitting applied exactly this test to the draft tier and ruled three
+of five needs mis-levelled, demoting them (see [`log.md`](log.md)'s Decisions).
+The edge-case table's ten rows are the same shape and the same argument, still
+unruled.
 
 ---
 
 ## 1. Where the repo stands
 
-Measured 2026-08-09 on `infra/mechanized-loop` at `2b0f5d1f`.
+Measured 2026-08-10 on `infra/mechanized-loop`, after the P0 sitting's first
+part (§5 step 6).
 
 | fact | value |
 |---|---|
 | derived gate | **G1** — because a `Draft` SN reads G0. The code is built and tested; the requirements behind it are proposed. |
-| spine | SN 32 · SR 146 · LLR 147 · TC 144 · **34 drafts** · 38 `Modified` |
+| spine | SN 29 · SR 146 · LLR 147 · TC 144 · **30 drafts** · 38 `Modified` |
 | owner surface | **3 pending decisions** + 35 attestation cards |
-| id watermark | live, 14 spaces, three rules in the always-on integrity floor |
+| id watermark | live, 14 spaces, three rules in the always-on integrity floor; `SN = 32` against 29 live rows after the sitting retired three ids |
 
-**Nothing this program has done moves the gate, and that is correct** — no
-artifact has been ratified. One figure did move and is worth knowing: adding the
+**The sitting has run once and the gate did not move**, which is correct: one SN
+was attested (SN-028) and three were demoted to the requirement tier, but every
+SR/LLR/TC under them is still `Draft`, so a `Draft` row still reads G0. What did
+move is `ex-draft`, G2 → G0 — and that is **declared behavior, not a
+regression**: `_raw_level`'s counterfactual drops Draft SRs, so a ratified SN
+whose only children are Draft reads uncovered, "so the counterfactual never
+fabricates coverage a ratified spine does not have." It is also inert here —
+its one consumer (`check.py`'s re-attestation advisory tier) returns True at
+`modified > 0` before ever reading it. Worth a ruling in the step-7 batch,
+because D-3's ladder makes `Attested`-before-children the normal path (Q9): does
+the counterfactual mean *if the drafts were deleted* (today) or *if they were
+ratified*? One figure did move and is worth knowing: adding the
 unratified `TC-158` dropped phase 4's derived level below its closed `[4]-[g2]`
 anchor. Per the derived-gate model that drop **is the detector that a new phase
 is due** — phase identity lives in a committed `[phase]-[g*]` work item, and
@@ -328,6 +343,19 @@ SN-029's own acceptance-intent clause naming the retired ledger file
 is amended in the same pass — an SN whose text names a retired file is exactly
 the "`Verified` row whose text is false" the program spent the 2026-08-08 session
 eliminating.
+
+> **Correction, 2026-08-10.** That pass was **half-applied, and this paragraph
+> overstated it.** It amended SN-029's *acceptance-intent* cell and **missed the
+> Need cell**, which went on saying what was ratified is "recorded in an
+> append-only ledger" — leaving the row contradicting itself, since its own
+> acceptance intent already read "never in a second registry keyed on the same
+> artifact." `git log -S"append-only ledger"` shows the string entered at
+> `cb9c36ac` and no commit removed it. Closed at the P0 sitting, where the owner
+> reframed the row around impact rather than mechanism; see the Decisions entry
+> in [`log.md`](log.md). The lesson generalizes and is the reason this is
+> recorded rather than quietly fixed: **an amendment that edits one cell of a
+> multi-cell row has not amended the row**, and nothing mechanical was checking
+> the other cells for the retired name.
 
 ### D-2 — stakeholder needs gain FIELDS rather than a new carrier
 
@@ -738,11 +766,20 @@ and this file archived.
    are the anchor's engine and have **no writer yet** — a dead-symbol sweep must
    not read them as unused.
 2. ~~**SR-140 / SN-029 amended to carrier-neutral prose**~~ — with LLR-158 /
-   TC-153, so the sitting can ratify before OI-12 is ruled.
+   TC-153, so the sitting can ratify before OI-12 is ruled. **Only SR-140 and
+   SN-029's acceptance intent actually landed**; SN-029's Need cell kept the
+   retired ledger until the 2026-08-10 sitting (§2 D-1's correction note).
 3. ~~**The id watermark**~~ — `docs/id-watermark`, 14 spaces, three rules in
    `trace.py`'s always-on `--strict-integrity` floor, the mint wired
    (`next_wi_id` counts from the mark), scaffolded, adopter-documented, and
-   adversarially reviewed with two blockers and four majors fixed.
+   adversarially reviewed with two blockers and four majors fixed. **Correction,
+   2026-08-10: it did not ship green.** The first full-suite run since
+   (`93 failed, 2073 passed, 6 skipped`, 5:58, measured on a clean worktree at
+   `601a1c19`) is **93 failures, every one of them this feature** — scaffolds
+   throughout the suite hand-write registries and now trip `FINDING (integrity):
+   … exists but the id watermark stands at 0`. The review found real defects in
+   the code and nobody ran the suite the code broke. **This is the largest open
+   item in the file and blocks step 11.**
 4. ~~**The `::node` selector DATA**~~ — 212 of 212 resolve, from 111 broken. The
    selector **check** stays declined under ruling R2; Q12 made it unnecessary.
 5. ~~**The SN reader twin and its two live defects**~~ — `_sn_fields` resolves by
@@ -757,10 +794,18 @@ with OI-13 and OI-12 *executing* together.
 
 ### Then, in order
 
-6. **Hold the P0 sitting** — ratify / amend / reject SN-028…032 and work the
-   25-row re-attest brief ([`ratify/2026-08-08-mechanized-loop.md`](ratify/2026-08-08-mechanized-loop.md)).
-   Not blocked by the anchor or by D-3. **Must precede** the ladder migration
-   (Q11).
+6. **Hold the P0 sitting** — ~~rule the five draft needs~~ **(part 1 done,
+   2026-08-10)** and work the 25-row re-attest brief
+   ([`ratify/2026-08-08-mechanized-loop.md`](ratify/2026-08-08-mechanized-loop.md)),
+   **which is what remains**. Not blocked by the anchor or by D-3. **Must
+   precede** the ladder migration (Q11). Part 1's rulings, in
+   [`log.md`](log.md)'s Decisions section: one need attested, three ruled
+   **mis-levelled** and demoted to the requirement tier (their children
+   re-parented onto needs that already existed, their ids retired against the
+   watermark), one **reframed around impact** rather than mechanism. The
+   demotions leave **~71 source comments citing retired ids** — WI-425, and the
+   reason it needs a row is that *nothing validates an `SN-###` token inside a
+   `.py` comment*, so the tree stays green while they dangle.
 7. **Build the anchor half of D-1, D-2 and the D-3/D-4 schema changes ONCE**, on
    the carrier OI-12 rules. This is the batch that gets built twice if it starts
    early: the ladder's values, the `Priority` float, `Phase` on SN, the
@@ -777,11 +822,12 @@ with OI-13 and OI-12 *executing* together.
 
 ### Loose ends, owed to no step above
 
-- **`test_agent_loop_critique.py` hangs**, and with it ignored other
-  subprocess-heavy tests stall. Bisected in a clean worktree to `5c7eed95`, a
-  **markdown-only** commit, so it predates this program's code. An earlier full
-  run passed (2143 passed, 6:04), so it is environmental or flaky rather than
-  deterministic. **The full suite has not been run to completion since.**
+- ~~**`test_agent_loop_critique.py` hangs**~~ — **not reproduced, 2026-08-10.**
+  The full suite now runs to completion in ~6:00, twice on the working tree and
+  once on a clean worktree at `601a1c19`, with that module completing each time.
+  Confirms the earlier read that it was environmental or flaky rather than
+  deterministic. What the run *did* surface is the watermark's 93 failures
+  (§5 item 3) — the reason the suite had not been run to completion since.
 - **`trace.py` does not know the traced/ratified split** (`spine_cell_class`
   lives in `check_trajectory`), so the re-attest brief diffs every cell equally
   and cannot tell a mechanical pointer fix from a requirement amendment.

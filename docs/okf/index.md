@@ -11,7 +11,7 @@ resource: "generated"
 
 Spec pin: [UPSTREAM.md](UPSTREAM.md).
 
-- [stakeholder-needs](stakeholder-needs/index.md) — 32 concept(s)
+- [stakeholder-needs](stakeholder-needs/index.md) — 29 concept(s)
 - [system-requirements](system-requirements/index.md) — 146 concept(s)
 - [low-level-requirements](low-level-requirements/index.md) — 147 concept(s)
 - [test-cases](test-cases/index.md) — 144 concept(s)

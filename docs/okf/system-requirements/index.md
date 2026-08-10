@@ -156,4 +156,4 @@ resource: "generated"
 | [SR-143](SR-143.md) | Queue overlap is made visible, never blocked |
 | [SR-144](SR-144.md) | Every lane close is a terminal state with an immutable record |
 | [SR-145](SR-145.md) | A lane's outcome is a claim; the adjudicator overrules by minting |
-| [SR-146](SR-146.md) | Prompts are files with an audit trail; routes may be argv |
+| [SR-146](SR-146.md) | Prompts are reviewable files with a per-session audit trail |

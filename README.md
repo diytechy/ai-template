@@ -98,7 +98,11 @@ chasing it.
   - Consent is explicit via the dials scaffolded into `docs/process.toml`:
     `gate_policy` (who advances gates), `push` (who may push), and
     `privacy_check` (the PII/identity gate, enforced by the git hooks +
-    `check_privacy.py`).
+    `check_privacy.py`). That file is the **one home for every policy dial**
+    (SN-028): a repo declaring the same dial twice — there and in a legacy
+    one-word file — is refused rather than resolved by precedence, and
+    `bootstrap.py --migrate-config` converts the legacy files so an adopter
+    never meets that refusal un-aided.
 - **Agent-neutral skills and hooks** (SN-005):
   - Opt-in skills ([`skills/`](project-trajectory/skills/)), materialized per
     agent by `bootstrap.py --agents`.
