@@ -440,6 +440,17 @@ _Baseline `f5a423ae2` (2026-08-01) — newest revision where SR-132 read `Verifi
 - **Status**: Verified
 - **Phase**: 4
 
+### TC TC-158 — ADDED since baseline
+- **TC-ID**: TC-158
+- **Verifies**: SR-132;IF-101
+- **Level**: Unit
+- **Method**: Run the id-watermark suite. It drives trace.py's CLI so the rules are asserted on the EXIT CODE, not just as a function call - the wiring into --strict-integrity is the guarantee, and a suite that only calls watermark_findings() survived deleting it. Covers the mint seam IF-101 declares: next_wi_id counts from the mark, so a deleted id is not re-issued, and the reader's refusal on an absent mark is NOT caught.
+- **Tier**: Smoke
+- **Expected**: A live id above its mark, a missing space, a malformed line, an absent file, a lowered mark and a hand-raised mark each fail loud; headroom left by a deleted row stays legal; the mint returns the next unused id after a deletion and refuses without a mark.
+- **Automated**: Yes
+- **Evidence**: tests/test_id_watermark.py::test_the_rules_are_actually_WIRED_INTO_the_integrity_floor; tests/test_id_watermark.py::test_the_mint_does_not_reissue_a_deleted_id
+- **Status**: Draft
+
 ## SR-133 — Work-branch lane skip for freshness steps
 
 _Baseline `f5a423ae2` (2026-08-01) — newest revision where SR-133 read `Verified`._

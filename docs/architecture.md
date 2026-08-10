@@ -212,6 +212,7 @@ graph LR
     m_scripts_trace -. IF-001 .-> m_scripts_check
     m_scripts_trace -. IF-089 .-> m_scripts_dispatch
     m_scripts_trace -. IF-075 .-> m_scripts_gen_open_items
+    m_scripts_trace -. IF-101 .-> m_scripts_intake
     m_scripts_trace_text -. IF-076 .-> m_scripts_trace
     m_scripts_wi_convert -. IF-092 .-> m_scripts_intake
     m_scripts_wi_convert -. IF-078 .-> m_scripts_plan_artifacts
@@ -870,7 +871,7 @@ Contracts (interfaces): IF-080
 ### `scripts/intake`
 _intake.py — the unified trunk-side intake mint (WI-388; docs/concurrency-v2.md §A5.2)._
 Imports (internal): `agent_common`, `check_trajectory`, `dispatch`, `schedule`, `trace`, `wi_convert`
-Contracts (interfaces): IF-090, IF-091, IF-092
+Contracts (interfaces): IF-090, IF-091, IF-092, IF-101
 
 | Public item | Summary | Implements |
 |---|---|---|

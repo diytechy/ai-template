@@ -8,12 +8,12 @@
 # A mark only ever RISES. Lowering one is refused by trace.py's integrity
 # pass, which also refuses a live id above its mark and a missing space.
 #
-# basis: CMP=5 DP=1 IF=100 LLR=164 OI=14 SN=32 SR=146 TC=157 WI=424
+# basis: CMP=5 DP=1 IF=101 LLR=164 OI=14 SN=32 SR=146 TC=158 WI=424
 #
 ASSET = 0
 CMP = 5
 DP = 1
-IF = 100
+IF = 101
 LLR = 164
 MOD = 0
 OI = 14
@@ -22,5 +22,5 @@ PB = 0
 REPO = 0
 SN = 32
 SR = 146
-TC = 157
+TC = 158
 WI = 424

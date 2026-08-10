@@ -54,7 +54,7 @@ deterministic (the amendment title carries its sha pair), so a recovery re-run
 — `python intake.py sweep --before <sha> --after <sha>` — is idempotent by
 exact-title dedup.
 
-Contracts: IF-090, IF-091, IF-092 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.csv).
+Contracts: IF-090, IF-091, IF-092, IF-101 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.csv).
 """
 
 from __future__ import annotations
