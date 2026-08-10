@@ -290,3 +290,83 @@ def test_the_retired_enum_key_is_no_longer_shipped():
     ]
     assert declared == [], declared
     assert "human_ratification_through = 4" in text
+
+
+def test_sn_field_mapping_agrees_across_all_three_readers(tmp_path):
+    # THE TWIN, PINNED. `traj_parse._sn_rows`, `gen_okf.sn_rows` and
+    # `trace._sn_prose` each parse stakeholder-needs.md independently. They were
+    # held equal by a docstring, drifted once already (one kept `-000`, one did
+    # not, rendering a phantom SN-000 root in the dashboard icicle), and nothing
+    # in tests/ called any of them.
+    #
+    # Equality ALONE would be a vacuous green and this test would be theatre: the
+    # three were byte-identical AND all three wrong the same way, so
+    # `a == b == c` was already True over the real registry while every
+    # edge-case row rendered its Lifecycle word as the need. So the battery pins
+    # the VALUES too, on a fixture carrying both table shapes — the same
+    # equality-plus-absolute-value discipline the rest of this module uses.
+    PARSE = load_script("traj_parse")
+    OKF = load_script("gen_okf")
+    TR = load_script("trace")
+
+    reg = tmp_path / "docs" / "requirements"
+    reg.mkdir(parents=True)
+    (reg / "stakeholder-needs.md").write_text(
+        "## Core needs\n"
+        "| SN-ID | Need | Why it matters | Priority | Acceptance intent |\n"
+        "|---|---|---|---|---|\n"
+        "| SN-000 | example | example | M | example |\n"
+        "| SN-001 | **The need** | The why | M | The acceptance |\n"
+        "\n## Edge-case expectations\n"
+        "| SN-ID | Lifecycle | Scenario | Expected behavior |\n"
+        "|---|---|---|---|\n"
+        "| SN-002 | Provision | The scenario | The expected behavior |\n",
+        encoding="utf-8",
+    )
+    rows = PARSE._sn_rows(tmp_path)
+    assert rows == OKF.sn_rows(tmp_path)
+    prose = TR._sn_prose((reg / "stakeholder-needs.md").read_text(encoding="utf-8"))
+    assert prose == {r["id"]: {k: v for k, v in r.items() if k != "id"} for r in rows}
+
+    # The `-000` placeholder is skipped by all three — the drift that happened.
+    assert [r["id"] for r in rows] == ["SN-001", "SN-002"]
+
+    # Core shape: four content cells, read at their own offsets.
+    assert rows[0] == {
+        "id": "SN-001",
+        "need": "The need",  # `**` stripped
+        "why": "The why",
+        "priority": "M",
+        "acceptance": "The acceptance",
+    }
+    # Edge-case shape: THREE content cells and no priority column. Pinned by
+    # value because this is the mapping that was wrong — `need` must be the
+    # Scenario, never the Lifecycle word, and `acceptance` must not be empty.
+    assert rows[1] == {
+        "id": "SN-002",
+        "need": "The scenario",
+        "why": "Provision",
+        "priority": "n/a",
+        "acceptance": "The expected behavior",
+    }
+
+
+def test_sn_edge_case_rows_are_not_titled_by_their_lifecycle_phase(tmp_path):
+    # The live regression, stated as itself: for its whole life the edge-case
+    # tier rendered `need` = the Lifecycle word, so SN-013 published as
+    # "Provision" in docs/okf/ and PROJECT_STATE.html. A future edit that
+    # restores fixed-offset indexing passes the equality test above (all three
+    # would move together) but fails here.
+    PARSE = load_script("traj_parse")
+    reg = tmp_path / "docs" / "requirements"
+    reg.mkdir(parents=True)
+    (reg / "stakeholder-needs.md").write_text(
+        "| SN-ID | Lifecycle | Scenario | Expected behavior |\n"
+        "|---|---|---|---|\n"
+        "| SN-013 | Provision | No Python 3 on PATH | Probe and fail with a remedy |\n",
+        encoding="utf-8",
+    )
+    (row,) = PARSE._sn_rows(tmp_path)
+    assert row["need"] != "Provision"
+    assert row["need"] == "No Python 3 on PATH"
+    assert row["acceptance"] == "Probe and fail with a remedy"

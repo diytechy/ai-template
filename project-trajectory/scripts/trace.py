@@ -1052,23 +1052,57 @@ def _scope_srs(scope, srs):
     return [s for s in srs if _cell(s, "Phase").lower() in phases]
 
 
+def _sn_fields(cells):
+    """The four prose fields of one SN row, resolved BY TABLE SHAPE.
+
+    `stakeholder-needs.md` carries two row widths, and reading both at the same
+    fixed offsets is what garbled the edge-case tier for its whole life:
+
+    - Core / Draft needs — `Need | Why it matters | Priority | Acceptance intent`
+    - Edge-case expectations — `Lifecycle | Scenario | Expected behavior`, three
+      cells and NO priority.
+
+    Indexed at the core offsets, an edge-case row yielded `need` = the Lifecycle
+    word (SN-013 rendered as "Provision") and `acceptance` = empty, in every
+    generated surface. So the edge-case row maps by MEANING instead: its Scenario
+    is the need, its Lifecycle is why it matters, its Expected behavior is the
+    acceptance intent, and `priority` is the literal `n/a` — the table declares
+    none, and inventing one would put a value in the export that no author wrote.
+
+    Widths above the core shape take the core mapping: it is the common form, and
+    a wider row means a stray `|` in a cell rather than a third table.
+
+    Duplicated verbatim in gen_okf.sn_rows and trace._sn_prose (F5) — change all
+    three together; tests/test_rule_sync.py pins them equal AND pins the values.
+    """
+    if len(cells) > 4:
+        return {
+            "need": cells[0],
+            "why": cells[1],
+            "priority": cells[2],
+            "acceptance": cells[3],
+        }
+    return {
+        "need": cells[1] if len(cells) > 1 else "",
+        "why": cells[0] if cells else "",
+        "priority": "n/a",
+        "acceptance": cells[2] if len(cells) > 2 else "",
+    }
+
+
 def _sn_prose(sn_text):
     """Parse each SN row's prose (Need / Why it matters / Acceptance intent) from
     stakeholder-needs.md so the ratify view renders the *top* of the chain, not a
-    bare SN id (WI-146 REVIEW-A). Mirrors gen_okf.sn_rows / gen_trajectory._sn_rows
-    field mapping (need=col0, why=col1, acceptance=col3); example `-000` rows are
-    skipped. Change all three together if the SN table columns move."""
+    bare SN id (WI-146 REVIEW-A). Mirrors gen_okf.sn_rows / traj_parse._sn_rows
+    via the duplicated `_sn_fields` mapping; example `-000` rows are skipped.
+    Change all three together if the SN table columns move."""
     meta = {}
     for line in sn_text.splitlines():
         m = re.match(r"\|\s*(SN-\d+)\s*\|(.*)", line)
         if not m or m.group(1).endswith("-000"):
             continue
         cells = [re.sub(r"\*\*|`", "", c).strip() for c in m.group(2).split("|")]
-        meta[m.group(1)] = {
-            "need": cells[0] if cells else "",
-            "why": cells[1] if len(cells) > 1 else "",
-            "acceptance": cells[3] if len(cells) > 3 else "",
-        }
+        meta[m.group(1)] = _sn_fields(cells)
     return meta
 
 

@@ -275,7 +275,7 @@
 #   link-rebase            1   deliberate
 #   spine-loader          20   deliberate
 #   declared-file         12   deliberate
-#   markdown-table        11   deliberate
+#   markdown-table        13   deliberate
 #   git-wrapper            7   deliberate
 #   wi-schema-columns      6   deliberate
 #   wi-registry            3   deliberate
@@ -543,20 +543,37 @@ be3d9855f5b5  project-trajectory/scripts/agent_common.py == project-trajectory/s
 # index generator.
 c1ad5fc6394f  project-trajectory/scripts/bootstrap.py == project-trajectory/scripts/gen_skills_index.py
 
-# --- markdown-table (11 blocks) ----------------------------------
+# --- markdown-table (13 blocks) ----------------------------------
 # disposition: deliberate
 # the markdown-table row parser (SN rows, plan tables, the release
 # checklist). gen_okf/gen_trajectory carry the in-code note 'kept byte-for-
 # byte in sync ... they once drifted'.
 # WI-280 S3: gen_trajectory's copy (_sn_rows) moved verbatim to traj_parse.py,
 # so its two gen_okf pairings re-homed there — same fingerprints, same class.
+#   2026-08-09: the class GREW 11 -> 13, and the growth is deliberate. The three
+# SN readers (traj_parse._sn_rows, gen_okf.sn_rows, trace._sn_prose) resolved
+# their four prose fields at FIXED offsets, which is the Core-needs shape; the
+# Edge-case table is three cells wide, so all ten of its rows published the
+# Lifecycle word as the need (SN-013 rendered as "Provision" in docs/okf and
+# PROJECT_STATE.html) with an always-empty acceptance. The mapping is now a
+# named `_sn_fields` helper that resolves BY SHAPE — duplicated verbatim into
+# all three, since a shared module was rejected 2026-07-12 and gen_okf is the
+# kit's deliberately sibling-import-free generator. Naming the block is what
+# grew it: two gen_okf==traj_parse fingerprints re-stamped into four, and
+# gen_okf==trace re-fingerprinted (a55d35181e85 -> 14c3cb264c42). Same three
+# files, same one rule, stated once per copy instead of inline three times.
+# The prose pin is retired with it: tests/test_rule_sync.py now pins all three
+# equal AND pins the field VALUES, because equality alone was a vacuous green —
+# the three were byte-identical and all three wrong the same way.
 5203288b8c2d  project-trajectory/scripts/check_docs.py == project-trajectory/scripts/gen_release_checklist.py
 469f0dd6e7c9  project-trajectory/scripts/check_docs.py == project-trajectory/scripts/plan_artifacts.py
 469f0dd6e7c9  project-trajectory/scripts/check_docs.py == project-trajectory/scripts/plan_coverage.py
 8c11d9f9d54a  project-trajectory/scripts/gen_okf.py == project-trajectory/scripts/traj_parse.py
-6050c334ce2f  project-trajectory/scripts/gen_okf.py == project-trajectory/scripts/traj_parse.py
+1a3c0bba3e74  project-trajectory/scripts/gen_okf.py == project-trajectory/scripts/traj_parse.py
+dc898ec4d27d  project-trajectory/scripts/gen_okf.py == project-trajectory/scripts/traj_parse.py
+9f690773cea0  project-trajectory/scripts/gen_okf.py == project-trajectory/scripts/traj_parse.py
 d576d8a2a2d6  project-trajectory/scripts/gen_okf.py == project-trajectory/scripts/trace.py
-a55d35181e85  project-trajectory/scripts/gen_okf.py == project-trajectory/scripts/trace.py
+14c3cb264c42  project-trajectory/scripts/gen_okf.py == project-trajectory/scripts/trace.py
 9483675e297d  project-trajectory/scripts/gen_release_checklist.py == project-trajectory/scripts/plan_artifacts.py
 9483675e297d  project-trajectory/scripts/gen_release_checklist.py == project-trajectory/scripts/plan_coverage.py
 d2ff16e89265  project-trajectory/scripts/plan_artifacts.py == project-trajectory/scripts/plan_coverage.py

@@ -408,6 +408,8 @@ interfaces"*).
 | **`SR-Refs`** | unchanged — the same pointer shape it already has on LLR · IF · WI | none |
 | **`Rationale`** | unchanged | but see Q8 — extending it to IF is what fixes OI-14 |
 | **`Priority`** | a **float**, higher = work me first, negatives and decimals allowed. Ordering is **relative within a group only** — an SN's `1` is not comparable to an SR's `0`. | SR's `M`/`S`/`C` becomes a number (146 rows); WI's integer widens. See Q7 |
+| **`Evidence`** | **where the proof lives** — a pointer. A test file, a node id, a procedure doc. | unchanged, and see below: it must stay a *traced* cell |
+| **`Method`** | **how you obtain the proof** — normative prose. Drive the cited test, or perform the procedure. | unchanged; it must stay a *ratified* cell, and must NOT hold the pointer |
 
 #### What the ruling leaves open, with recommendations
 
@@ -632,6 +634,51 @@ selector (or, stdlib and stack-agnostically, confirming the selector token
 appears in the cited file) is *how a row earns `Ready`*. Measured: 66 of 143
 live TCs carry a selector today, so the majority of the work is already done in
 the data and unenforced in the code. §6 F-12 records the measurement.
+
+**Q12 · `Method` vs `Evidence` — ruled 2026-08-09, and the reason is mechanical
+rather than aesthetic.** The owner's framing: *"the method indicates how to get
+the evidence (whether driving the evidence pointer test file, or performing a
+procedure)"*, with the follow-up — if a test is automated, should `Method` hold
+the pointer and `Evidence` go blank?
+
+**Ruled: no. The pointer stays in `Evidence`.** The two columns sit on opposite
+sides of the attestation split, and that is what decides it:
+
+- `Evidence` is a **traced** cell — a pointer, not in the digest. Changing it
+  opens **no re-attest window**.
+- `Method` is a **ratified** cell (TC's ratified set is `Method` · `Expected` ·
+  `Parameters` · `Level` · `Tier`) — normative text, hashed into the row's
+  attestation.
+
+So today, renaming a test file or splitting a test module is free. Move the
+pointer into `Method` and every such rename becomes a ratified-cell amendment.
+Not hypothetical: WI-277's test-module splits moved **110** cited tests, which
+under that arrangement would have been 110 re-attestations for work that changed
+no requirement. The current split is the right one and is a cleaner statement of
+the owner's own model than the columns currently manage: **`Evidence` = where the
+proof lives (cheap to change); `Method` = how you obtain it (expensive to
+change).**
+
+**What is actually wrong is that `Method` is unvalidated.** It is a required
+non-empty field (`trace.py:267`) whose value *is never checked* — the reference
+doc says so outright. It is then rendered to humans and models in five surfaces:
+the traceability graph node label (`trace.py:946`), the `--ratify` sitting brief
+(`trace.py:1571`), the OKF export, the release checklist and the dashboard — and
+`agent_loop.py:725` scans it for `docs/rubrics/*.md` paths and **inlines those
+files into critique briefs**, so a path written there has a real side effect.
+Required, normative, LLM-facing, and unvalidated is how pointers leaked into it
+and into `Parameters` (§6 F-12: 24 of 143 `Parameters` cells filled, 24 holding a
+repo path, **1** matching that column's declared shape).
+
+**And it settles the selector question by making it unnecessary.** `Ready` means
+the test exists; `Evidence` naming a file answers that. So D-3 does **not** make
+the `::node` selector load-bearing, ruling **R2 stands**, and what remains is not
+a missing check but **stale data**: 111 of 212 selectors name a test that has
+moved. Since `Evidence` is traced, repointing them costs no re-attestation.
+
+**Accepted knowingly:** file granularity means a TC can reach `Ready` on a file
+that exists for another TC's sake — 32 rows cite `tests/test_gen_trajectory.py`.
+`Ready` is a staging signal, not per-test assurance.
 
 #### The irony, and the obstacle
 
@@ -1125,17 +1172,25 @@ here?"* is **yes, for these three and nothing else.**
      read out of the middle of its Why column. Done now because SN-029 is still
      `Draft` and its raw line is its normative text — after the sitting the same
      edit is a ratified-cell amendment.
-   - **Defect B — OPEN, and it needs a ruling rather than a patch.** The 10
-     edge-case rows (SN-013…022) are a **four-column** table parsed with
-     five-column indexing, so `need` reads the Lifecycle word
-     (`docs/okf/stakeholder-needs/SN-013.md` is titled `"Provision"`) and
-     `acceptance` is always empty. This is **known**, documented at
-     `check_trajectory.py:3020-3025` — it is exactly why `sn_normative_text`
-     hashes the raw line instead of a parsed projection. But routing the
-     *digest* around it left the two surfaces an owner actually **reads** still
-     rendering it. Fixing it means choosing what a four-column row maps to, in
-     three copies at once, which is a rendering decision with more than one
-     defensible answer — so it is surfaced, not picked. Promoted
+   - **Defect B — FIXED 2026-08-09** on the owner's ruling (*"move lifecycle to
+     why, and put a standin for priority"*). The 10 edge-case rows (SN-013…022)
+     are a **four-column** table that all three readers indexed at the
+     five-column Core offsets, so `need` read the Lifecycle word
+     (`docs/okf/stakeholder-needs/SN-013.md` was titled `"Provision"`) and
+     `acceptance` was always empty — in the OKF export, the dashboard, **and the
+     `--ratify` sitting brief a human reads before ratifying**. The mapping is
+     now a named `_sn_fields` helper resolving **by table shape**: an edge-case
+     row's Scenario is the need, its Lifecycle is why it matters, its Expected
+     behavior is the acceptance, and `priority` is the literal `n/a` — the table
+     declares none and inventing one would publish a value no author wrote.
+     Duplicated verbatim into all three copies (F5), censused
+     (`markdown-table` 11 → 13), and pinned by **value** in
+     `tests/test_rule_sync.py`, which is what the equality-only test could never
+     have caught. The `check_trajectory.py:3020-3025` docstring recording the
+     garbling as the reason `sn_normative_text` hashes the raw line is now
+     **stale in its premise** — the raw-line choice remains correct for other
+     reasons (three table shapes, one hashable line), but its stated rationale
+     should be re-worded when the anchor half lands. Promoted
    out of the loose-ends list because it is genuinely carrier-independent and
    has waited long enough.
 
@@ -1727,6 +1782,38 @@ done mid-program: it is a reference-doc edit with no bearing on the lock.
   half ships now (zero carrier exposure, zero real ledger rows), the *anchor*
   half waits for OI-12, and SR-140 is written carrier-neutrally so the sitting
   is not blocked by either.
+- **2026-08-09** — **`Method`/`Evidence` ruled (Q12), and the SN edge-case tier
+  fixed.** The owner asked whether an automated TC should carry its pointer in
+  `Method` with `Evidence` blank. Ruled **no**, on a mechanical ground rather
+  than a taste one: `Evidence` is a **traced** cell and `Method` a **ratified**
+  one, so moving the pointer would turn every test-file rename into a
+  re-attestation — WI-277's module splits moved 110 cited tests, which would
+  have been 110 amendments for work that changed no requirement. The split is
+  already right; what is wrong is that `Method` is *required, normative,
+  rendered in five surfaces, scanned by `agent_loop` for rubric paths it
+  INLINES into briefs — and never validated*, which is how pointers leaked into
+  it and into `Parameters`. **The ruling also settles the selector question by
+  making it unnecessary**: `Ready` means the test exists, `Evidence` naming a
+  file answers that, so D-3 does not make the `::node` selector load-bearing and
+  **R2 stands**. What remains is stale data, not a missing check.
+  **Defect B fixed** on the owner's mapping (*"move lifecycle to why, and put a
+  standin for priority"*): `_sn_fields` now resolves an SN row's fields **by
+  table shape** in all three readers, so the ten edge-case rows stop publishing
+  their Lifecycle word as the need. Pinned by VALUE in `test_rule_sync.py` —
+  equality alone was provably vacuous, since the three readers were
+  byte-identical and all three wrong the same way.
+  **Also raised and NOT acted on: the edge-case tier may be mis-levelled.** The
+  owner's reading — *"most of these edge cases really look like system
+  requirements masked as stakeholder needs"* — is supported by the source and
+  the data. The shipped template seeds that table with 13 placeholder rows and
+  says the System Engineer turns each into measurable SRs, and SN-016's text is
+  that template's `Startup→Runtime` prompt filled in, which is why it reads as
+  contained by SN-006. Decomposition confirms it: core needs average **12.3**
+  SRs each, while eight of the ten edge-case rows have **exactly one**. A need
+  that decomposes into precisely one requirement is the requirement, written a
+  level up. Not filed as an OI: it is a **kit-level** finding (the template
+  ships that table to every adopter) and re-levelling ratified rows is owed to a
+  sitting — and under D-4, deleting SN ids needs the watermark first.
 - **2026-08-09** — **the ladder's rungs confirmed, and the plan re-cut around
   what can actually start.** The owner confirmed `Ready` as the terminal rung
   for SN/SR/LLR with the semantic argument for it — *"`Verified` can imply the

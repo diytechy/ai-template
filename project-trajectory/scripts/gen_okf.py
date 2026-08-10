@@ -106,10 +106,48 @@ def real_rows(rows, key, prefix):
     return sorted(out, key=lambda r: r[key].strip())
 
 
+def _sn_fields(cells):
+    """The four prose fields of one SN row, resolved BY TABLE SHAPE.
+
+    `stakeholder-needs.md` carries two row widths, and reading both at the same
+    fixed offsets is what garbled the edge-case tier for its whole life:
+
+    - Core / Draft needs — `Need | Why it matters | Priority | Acceptance intent`
+    - Edge-case expectations — `Lifecycle | Scenario | Expected behavior`, three
+      cells and NO priority.
+
+    Indexed at the core offsets, an edge-case row yielded `need` = the Lifecycle
+    word (SN-013 rendered as "Provision") and `acceptance` = empty, in every
+    generated surface. So the edge-case row maps by MEANING instead: its Scenario
+    is the need, its Lifecycle is why it matters, its Expected behavior is the
+    acceptance intent, and `priority` is the literal `n/a` — the table declares
+    none, and inventing one would put a value in the export that no author wrote.
+
+    Widths above the core shape take the core mapping: it is the common form, and
+    a wider row means a stray `|` in a cell rather than a third table.
+
+    Duplicated verbatim in gen_okf.sn_rows and trace._sn_prose (F5) — change all
+    three together; tests/test_rule_sync.py pins them equal AND pins the values.
+    """
+    if len(cells) > 4:
+        return {
+            "need": cells[0],
+            "why": cells[1],
+            "priority": cells[2],
+            "acceptance": cells[3],
+        }
+    return {
+        "need": cells[1] if len(cells) > 1 else "",
+        "why": cells[0] if cells else "",
+        "priority": "n/a",
+        "acceptance": cells[2] if len(cells) > 2 else "",
+    }
+
+
 def sn_rows(root):
-    # Kept byte-for-byte in sync with gen_trajectory._sn_rows (small stable
-    # helper duplicated per the F5 rule; they once drifted). Change both
-    # together: skip `-000`, id-sort.
+    # Kept byte-for-byte in sync with traj_parse._sn_rows and trace._sn_prose
+    # (small stable helper duplicated per the F5 rule; they once drifted).
+    # Change all three together: skip `-000`, id-sort.
     md = root / "docs/requirements/stakeholder-needs.md"
     rows = []
     if not md.exists():
@@ -119,14 +157,7 @@ def sn_rows(root):
         if not m or m.group(1).endswith("-000"):
             continue
         cells = [re.sub(r"\*\*|`", "", c).strip() for c in m.group(2).split("|")]
-        rows.append(
-            {
-                "id": m.group(1),
-                "need": cells[0] if cells else "",
-                "why": cells[1] if len(cells) > 1 else "",
-                "acceptance": cells[3] if len(cells) > 3 else "",
-            }
-        )
+        rows.append({"id": m.group(1), **_sn_fields(cells)})
     return sorted(rows, key=lambda r: r["id"])
 
 

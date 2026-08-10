@@ -520,7 +520,18 @@ BASELINE = {
     # `attestations.csv`, and `_attested_baseline` is once again the git
     # derivation alone. Re-stamped DOWNWARD in the same commit, per this file's
     # own rule — a shrink is re-stamped, never left standing as headroom.
-    "trace.py": 2943,
+    # Then +34 (2943 -> 2977), the SN shape fix (2026-08-09): `_sn_prose` gains
+    # the duplicated `_sn_fields` helper, which resolves an SN row's four prose
+    # fields BY TABLE SHAPE instead of at fixed Core-needs offsets. All ten
+    # Edge-case rows had been publishing their Lifecycle word as the need
+    # (SN-013 rendered "Provision") with an always-empty acceptance, in the
+    # ratify sitting brief this module builds — the surface a human reads
+    # BEFORE ratifying. The helper is verbatim in traj_parse and gen_okf too
+    # (F5; a shared module was rejected 2026-07-12), censused as
+    # `markdown-table` 11 -> 13, and pinned by value in test_rule_sync.
+    # Reviewed bump: the growth is a named rule replacing an inline one, not
+    # new responsibility.
+    "trace.py": 2977,
     # +132 (1926 -> 2058; the last +10 is the F4 BOM hardening: read_rows utf-8-sig + git-show strips), WI-316: staged_spine_findings — the amend-without-
     # flip warn (--staged): content cells of a Verified spine row changed
     # without the Modified marker, suppressed when the owning SR flips in the
