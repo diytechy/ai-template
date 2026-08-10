@@ -183,7 +183,11 @@ such when implemented.
    without the columns has a vacuous check, which is the exact "green hides a
    skipped check" failure SN-008 forbids.
 
-**Removal / rework inventory** (measured, not estimated):
+**Removal / rework inventory** (measured, not estimated). §5 splits this table
+along one line: everything that **deletes** is the carrier-independent *removal
+half* and ships now; the **two new columns and everything that classifies,
+guards or templates them** is the carrier-exposed *anchor half* and waits for
+OI-12.
 
 | where | what happens |
 |---|---|
@@ -390,8 +394,14 @@ So the real question is not *"does an SN get a `Status` cell"* but **"what does
 `Status` mean across all six registries, which of them should carry one, and
 what happens to the IF pair"** — §6 F-1's six carriers and F-2's undeclared
 contract, turned into a decision. That is a cross-registry design act, not a
-sub-question of D-2, and it wants **its own OI row** rather than a Q in a living
-document. The SN half stays as recommended below; it is now the *smallest* part
+sub-question of D-2. **Filed 2026-08-09 as OI-13**, live on
+[`open-items.html`](open-items.html), with three options — declare-don't-unify ·
+reserve the word `Status` for ratifiable-artifact maturity and rename the rest
+*(recommended, executed WITH OI-12 because both rewrite registry definitions)* ·
+SN-half-only. Two things in that brief do **not** wait for the ruling: the IF
+column is a *defect* (undeclared, overlapping, unread, yet handed to LLM
+briefs), and taking SN-half-only must be a **knowing interim** rather than a
+default. The SN half stays as recommended below; it is now the *smallest* part
 of the question.
 
 #### The SN half, unchanged
@@ -524,9 +534,12 @@ mechanically supported, not wishful.
   [`open-items.html`](open-items.html); recommendation unchanged in substance —
   TOML is the right destination — but the *sequencing* recommendation is
   withdrawn, because "defer it, nothing is foreclosed" was wrong about cost.
-- **`Status` across all six registries** (Q2 widened) — including
+- **OI-13 · `Status` across all six registries** (Q2 widened) — including
   [`interfaces.csv`](requirements/interfaces.csv)'s undeclared `Status` and its
-  overlap with `Stability`. **Wants its own OI row**; not yet filed.
+  overlap with `Stability`. **Filed 2026-08-09**; recommendation is to reserve
+  the word for ratifiable-artifact maturity and rename the rest, **executed
+  together with OI-12**, since paying the registry-definition and downstream-
+  migration cost twice is the same double-labour trap that reordered this plan.
 
 Q3 (how far back the co-mutation guard compares) and Q4 (which SR-140 text the
 sitting rules on) are answered inline in §3 and need no separate act.
@@ -820,6 +833,10 @@ done mid-program: it is a reference-doc edit with no bearing on the lock.
   digest survives. §6 gained F-5 (the full-width justification does not hold)
   and F-6 (no reusable markdown-table reader exists; five live cells already
   contain a literal `|`).
+- **2026-08-09** — committed at `9b6c7fc0` (this file + OI-12 + the regenerated
+  owner surface). **OI-13 filed**: what `Status` means across all six
+  registries, recommended for execution *together with* OI-12. Q2 now points at
+  it; §5's owner-rulings block names it.
 - **2026-08-09** — **three owner objections, all upheld, plan revised.**
   (1) Q1 **withdrawn** as an independent ruling — under a TOML carrier an SN is
   an element with keys and the on-row-vs-anchor-table distinction has no
