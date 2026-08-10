@@ -1030,7 +1030,14 @@ BASELINE = {
     # regenerable from the tree; this one is the only record of ids that were
     # DELETED, so forcing the fresh-scaffold marks over a live repo frees them
     # for silent re-use and nothing can rebuild what was lost.
-    "bootstrap.py": 2690,
+    # Then +31 (2690 -> 2721), the same feature's SHIPPED-SCAFFOLD defect:
+    # `raise_watermark` plus its call from the stack profile. The non-Python
+    # profile appends OI-3 while `id-watermark.template` ships `OI = 2`, so
+    # every node/other-stack scaffold failed its own `trace.py --strict` on the
+    # adopter's first run — the exact opposite of SN-001's "green out of the
+    # box". Raise-only, because a mark may legally stand above the live maximum
+    # (that headroom is what retires a deleted id) but must never fall.
+    "bootstrap.py": 2721,
     # NEW ENTRY, +228 (1423 -> 1651), Phase 2b of the concurrency restructure
     # (docs/concurrency-restructure.md §7): the spec-folder work-item reader,
     # which crosses this module over THRESHOLD for the first time. It is one
@@ -1372,7 +1379,13 @@ BASELINE = {
     # this file's own instruction ("or delete them if now <= THRESHOLD") — the
     # entry existed to name a monolith, and there is no longer one to name. It
     # re-enters as a NEW ENTRY if the anchor half puts it back over.
-    "integrate.py": 2475,
+    # Then +9 (2475 -> 2484), the id watermark's RULING-6 hole: `intake` raises
+    # the mark in the same bookkeeping commit that files a minted spec, but
+    # `docs/id-watermark` was in neither BOOKKEEPING_PREFIXES nor [generated],
+    # so an integrator run that minted anything flagged its OWN bookkeeping and
+    # failed the queue on a false red. Nine of the lines are the comment
+    # arguing why the path is bookkeeping and not generated.
+    "integrate.py": 2484,
 }
 
 

@@ -1412,7 +1412,38 @@ def append_stack_checklist(dest, stack, dry_run):
             if existing and not existing.endswith("\n"):
                 existing += "\n"
             _write_text_lf(open_items, existing + buf.getvalue())
+            raise_watermark(dest, "OI", 3)
     return True
+
+
+def raise_watermark(dest, space, floor):
+    """Raise `space`'s id-watermark mark to at least `floor` (never lower it).
+
+    Scaffolding a row is ALLOCATING an id, so the mark has to cover it: the
+    always-on integrity pass refuses a live id standing above its mark, and a
+    scaffold that ships one fails `trace.py --strict` on the adopter's very
+    first run — which is precisely what SN-001 promises a fresh scaffold does
+    not do. That is not hypothetical: `id-watermark.template` ships `OI = 2`
+    and the non-Python profile appends OI-3, so every node/other-stack scaffold
+    shipped internally inconsistent until this call existed.
+
+    Raise-only, because the mark is a HIGH-WATER mark: it may legally stand
+    above the live maximum (that headroom is what keeps a deleted id from being
+    re-minted), but it must never fall."""
+    path = dest / "docs" / WATERMARK_DEST_NAME
+    if not path.is_file():
+        return False
+    out, hit = [], False
+    for line in path.read_text(encoding="utf-8-sig").splitlines():
+        m = re.match(r"^([A-Z]+)\s*=\s*(-?\d+)\s*$", line.strip())
+        if m and m.group(1) == space:
+            hit = True
+            if int(m.group(2)) < floor:
+                line = "{} = {}".format(space, floor)
+        out.append(line)
+    if hit:
+        _write_text_lf(path, "\n".join(out) + "\n")
+    return hit
 
 
 def _utf8_console():

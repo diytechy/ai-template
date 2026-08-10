@@ -104,6 +104,7 @@ from conftest import (
     env_gate_skipif,
     load_script,
     make_minimal_project,
+    record_ids,
     run_py,
     set_process_key,
     skip_without_env_gates,
@@ -168,6 +169,11 @@ def git_repo(root, branch="main"):
     _git(root, "config", "commit.gpgsign", "false")
     _git(root, "symbolic-ref", "HEAD", "refs/heads/" + branch)
     (root / "seed.txt").write_text("seed\n", encoding="utf-8", newline="\n")
+    # Repo furniture, seeded BEFORE any claim: `trace._read_marks` refuses an
+    # absent watermark, and introducing it in the claim commit instead would
+    # make that commit touch an undeclared path — which RULING-6's audit reads,
+    # correctly, as a non-merge trunk commit touching product paths.
+    write_watermark(root, WI=401)
     _commit(root, "seed", when=T_BASE)
     return root
 
@@ -235,6 +241,24 @@ def _rev(root, ref):
 
 def _branches(root):
     return _git(root, "branch", "--format=%(refname:short)").split()
+
+
+def write_watermark(root, **marks):
+    """Give a fixture repo the `docs/id-watermark` every real repo carries.
+
+    These fixtures are bare git repos rather than bootstrapped scaffolds, so
+    they ship no watermark — and `trace._read_marks` REFUSES an absent file
+    rather than reading it as "no id is taken", which is the whole point of the
+    guard (ADOPTING.md). The mark has to cover the ids the fixture allocates:
+    a `WI-401` spec means the WI space stands at 401."""
+    body = "".join(
+        "{} = {}\n".format(space, marks.get(space, 0))
+        for space in ("ASSET CMP DP IF LLR MOD OI PART PB REPO SN SR TC WI".split())
+    )
+    path = root / "docs" / "id-watermark"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(body, encoding="utf-8", newline="\n")
+    return path
 
 
 def claim_repo(tmp_path, branch="main", wi="WI-401", **spec_kw):
@@ -2764,6 +2788,7 @@ def scaffolded_closed_branch(tmp_path):
     # because the closed form is what check_trajectory --strict sees on the
     # composed tree and R-F wants a terminal SpecRef empty.
     write_spec(repo, "queued", "WI-401", specref="docs/log.md")
+    record_ids(repo)  # WI-401 is an ALLOCATED id; the mark must cover it
 
     # The scaffold is committed as one seed on the default branch (bootstrap does
     # not init a repo), so the claim below is the FIRST thing the queue sees.

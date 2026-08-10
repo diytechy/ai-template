@@ -7,7 +7,14 @@ byte-for-byte with today's declared docs/gate (docs/specs/derived-gate-model.md
 §11 done-when).
 """
 
-from conftest import ROOT, SCRIPTS, load_script, make_minimal_project, run_py
+from conftest import (
+    ROOT,
+    SCRIPTS,
+    load_script,
+    make_minimal_project,
+    run_py,
+    record_ids,
+)
 
 GATE = load_script("derive_gate")
 
@@ -298,6 +305,7 @@ def test_requirement_first_lifecycle_end_to_end(scaffold):
     srs.write_text(
         SRS_H + _sr("SR-001") + _sr("SR-002", status="Draft"), encoding="utf-8"
     )
+    record_ids(scaffold)
     trace = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
     assert trace.returncode == 0, trace.stdout + trace.stderr
     r = _derive(scaffold)

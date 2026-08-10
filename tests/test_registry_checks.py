@@ -2,7 +2,7 @@
 (template-review findings F3 'placeholders → false green' and F4 'data quality').
 """
 
-from conftest import load_script, make_minimal_project, run_py
+from conftest import load_script, make_minimal_project, record_ids, run_py
 
 
 def sr_path(root):
@@ -183,6 +183,7 @@ def _write_chain(root, srs, llrs, tcs):
     req.joinpath("system-requirements.csv").write_text(srs, encoding="utf-8")
     req.joinpath("low-level-requirements.csv").write_text(llrs, encoding="utf-8")
     (root / "docs" / "test" / "test-cases.csv").write_text(tcs, encoding="utf-8")
+    record_ids(root)
 
 
 def test_incoherent_sr_llr_pair_fails_strict_integrity(scaffold):

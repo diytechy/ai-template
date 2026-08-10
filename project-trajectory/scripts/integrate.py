@@ -174,7 +174,16 @@ _MAX_REFRESH_PEEL = 8
 # compiles fragments into it; docs/status.md and the other generated homes are
 # read from stack.ini [generated] at audit time so the declared set stays the
 # one home (§5.2).
-BOOKKEEPING_PREFIXES = (WORK + "/", "docs/log.d/", "docs/log.md")
+#   docs/id-watermark is here and NOT in [generated], deliberately. The mint
+# raises the mark in the same bookkeeping commit that files the specs
+# (intake.py, "RAISE THE MARK IN THE SAME COMMIT"), so an integrator run that
+# mints anything touches this path — and without it declared, the run's own
+# audit flags its own bookkeeping and the queue fails on a false red. It does
+# not belong in [generated] because every artifact there is REGENERABLE from
+# the tree, while the watermark is the only record of ids that have been
+# DELETED; regenerating it from live rows is precisely the id re-use the mark
+# exists to prevent.
+BOOKKEEPING_PREFIXES = (WORK + "/", "docs/log.d/", "docs/log.md", "docs/id-watermark")
 
 
 def fail(msg):

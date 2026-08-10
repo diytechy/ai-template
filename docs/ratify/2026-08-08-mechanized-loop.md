@@ -450,6 +450,7 @@ _Baseline `f5a423ae2` (2026-08-01) — newest revision where SR-132 read `Verifi
 - **Automated**: Yes
 - **Evidence**: tests/test_id_watermark.py::test_the_rules_are_actually_WIRED_INTO_the_integrity_floor; tests/test_id_watermark.py::test_the_mint_does_not_reissue_a_deleted_id
 - **Status**: Draft
+- **Phase**: 4
 
 ## SR-133 — Work-branch lane skip for freshness steps
 

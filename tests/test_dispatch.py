@@ -43,6 +43,7 @@ from conftest import (
     env_gate_skipif,
     load_script,
     make_minimal_project,
+    record_ids,
     run_py,
     set_process_key,
     skip_without_env_gates,
@@ -94,8 +95,27 @@ def git_repo(root, branch="main"):
     # unignored one reads as dirt at the NEXT cycle's clean-trunk check (the
     # same stock-scaffold finding tests/test_integrate.py records).
     (root / ".gitignore").write_text("out/\n", encoding="utf-8", newline="\n")
+    write_watermark(root, WI=401)
     _commit(root, "seed", when=T_BASE)
     return root
+
+
+def write_watermark(root, **marks):
+    """Give a bare fixture repo the `docs/id-watermark` every real repo carries.
+
+    `trace.read_watermark` RAISES on an absent file rather than reading it as
+    "no id is taken" — and the intake mint reads the mark to pick the next id,
+    so a repo without one cannot mint at all. Seeded here (before any claim) so
+    the file is repo furniture rather than something a later trunk commit
+    introduces."""
+    body = "".join(
+        "{} = {}\n".format(space, marks.get(space, 0))
+        for space in "ASSET CMP DP IF LLR MOD OI PART PB REPO SN SR TC WI".split()
+    )
+    path = root / "docs" / "id-watermark"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(body, encoding="utf-8", newline="\n")
+    return path
 
 
 def spec_text(wid, safety="ordinary", specref=None, deliverable="A widget, shipped."):
@@ -565,6 +585,7 @@ def scaffold_with_queued_wi(tmp_path):
     with (repo / ".gitignore").open("a", encoding="utf-8", newline="\n") as fh:
         fh.write("out/\n")
     write_spec(repo, "queued", "WI-401", specref="docs/log.md")
+    record_ids(repo)  # WI-401 is an ALLOCATED id; the mark must cover it
     _git(repo, "init", "-q")
     _git(repo, "config", "user.email", "t@example.com")
     _git(repo, "config", "user.name", "T")
