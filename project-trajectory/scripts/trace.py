@@ -464,6 +464,236 @@ def integrity_findings(label, raw_rows):
     return found
 
 
+# --- the id watermark: an id is allocated once, for the life of the repo -------
+# Duplicate ids already error (integrity_findings above, sn_integrity_findings for
+# the prose tier, check_trajectory.load_wis for WI). REUSE does not: every one of
+# those checks reads only the LIVE tree, so an id freed by deleting its row is
+# invisible and can be minted again. That matters because a reused id silently
+# re-points history — every commit message, log entry and archived document that
+# cites it now names a different thing — and no check can see it after the fact.
+#
+# The mark closes that. It is machine-written, machine-read, never hand-authored
+# (the §6 F-3 `anchor` class), and it is the SOURCE a mint counts from, rather
+# than `max(live) + 1`.
+WATERMARK = "docs/id-watermark"
+# Every id space in the repo: the ten this module already patterns, plus the four
+# it does not (SN is the prose tier, WI is directory-as-state, OI is the owner
+# queue, DP is a plan-round directory). Keyed off ID_PATTERNS so a space added
+# there cannot be silently exempt here — tests/test_id_watermark.py pins the set.
+WATERMARK_SPACES = tuple(sorted(set(ID_PATTERNS) | {"SN", "WI", "OI", "DP"}))
+_WATERMARK_LINE = re.compile(r"^([A-Z]+)\s*=\s*(\d+)\s*$")
+_ANY_ID = re.compile(r"^([A-Z]+)-(\d+)$")
+
+
+def _csv_ids(docs):
+    """`(space, number)` for the id cell of every row in every registry CSV.
+
+    Swept by LOCATION, not by a known-file list: a registry this script never
+    joins, a project's own addition, and a legacy `work-items.csv` no reader
+    looks at all still HOLD their numbers."""
+    for sub in ("requirements", "test"):
+        directory = docs / sub
+        if not directory.is_dir():
+            continue
+        for path in sorted(directory.glob("*.csv")):
+            for row in load_csv(path):
+                for value in row.values():
+                    match = _ANY_ID.match((value or "").strip())
+                    if match:
+                        yield match.group(1), int(match.group(2))
+                        break
+
+
+def _sn_ids(docs):
+    """`("SN", number)` per stakeholder-need table row (the prose tier)."""
+    path = docs / "requirements" / "stakeholder-needs.md"
+    if not path.is_file():
+        return
+    text = path.read_text(encoding="utf-8-sig", errors="replace")
+    for line in text.splitlines():
+        match = re.match(r"\|\s*SN-(\d+)\s*\|", line.strip())
+        if match:
+            yield "SN", int(match.group(1))
+
+
+def _wi_ids(docs):
+    """`("WI", number)` per spec FILENAME under docs/work — filenames, never row
+    contents, because `read_spec_rows` drops a malformed spec silently while its
+    id stays taken."""
+    work = docs / "work"
+    if not work.is_dir():
+        return
+    for path in work.rglob("WI-*.md"):
+        match = re.match(r"^WI-(\d+)-", path.name)
+        if match:
+            yield "WI", int(match.group(1))
+
+
+def _dp_ids(docs):
+    """`("DP", number)` per dual-plan round directory."""
+    plans = docs / "plans"
+    if not plans.is_dir():
+        return
+    for path in plans.iterdir():
+        match = re.match(r"^DP-(\d+)-", path.name) if path.is_dir() else None
+        if match:
+            yield "DP", int(match.group(1))
+
+
+def live_max_ids(root):
+    """`{space: highest id number currently present}` over the WHOLE repo.
+
+    Deliberately broader than any loader, and `-000` placeholders are COUNTED:
+    for a mark that is the safe direction, since counting something extra only
+    raises the floor while missing something lowers it and frees an id.
+    (`intake.next_wi_id` states the same rule for its own mint: "for a MINT, an
+    id held anywhere is an id taken".)"""
+    docs = Path(root) / "docs"
+    top = {}
+    for reader in (_csv_ids, _sn_ids, _wi_ids, _dp_ids):
+        for space, num in reader(docs):
+            if space in WATERMARK_SPACES and num > top.get(space, 0):
+                top[space] = num
+    return top
+
+
+def read_watermark(root):
+    """`{space: int}` from `docs/id-watermark`. RAISES on absent or malformed.
+
+    Every other declared-file reader in this kit degrades to empty on a missing
+    file, and that is right for a floor, an allowlist or a census — the absence
+    means "nothing declared". Here it would mean "no id is taken", which frees
+    every space at once and is exactly the failure the mark exists to prevent.
+    So this one fails LOUD, and a malformed line is refused rather than skipped:
+    a line nobody can parse is a space with no mark, which is the same hole."""
+    path = Path(root) / WATERMARK
+    if not path.is_file():
+        raise ValueError(
+            "{} is missing — the id watermark is the only record of which ids "
+            "have ever been allocated, and without it a deleted id can be "
+            "re-minted. Regenerate with `trace.py --bump-ids`.".format(WATERMARK)
+        )
+    marks = {}
+    for lineno, line in enumerate(
+        path.read_text(encoding="utf-8-sig", errors="replace").splitlines(), 1
+    ):
+        text = line.strip()
+        if not text or text.startswith("#"):
+            continue
+        m = _WATERMARK_LINE.match(text)
+        if not m:
+            raise ValueError(
+                "{}:{}: not a `<SPACE> = <int>` line: {!r}".format(
+                    WATERMARK, lineno, line
+                )
+            )
+        marks[m.group(1)] = int(m.group(2))
+    return marks
+
+
+def watermark_findings(root, previous=None):
+    """The two rules, integrity-class.
+
+    1. Every space is marked, and no LIVE id exceeds its mark. A row authored
+       past the mark means the mint was bypassed — and since the spine has no
+       mint at all, that is the ONLY guard those tiers get.
+    2. The mark never decreases. Checked against `previous` (the committed
+       value); when git cannot supply one the rule is SKIPPED and says so,
+       rather than passing quietly.
+    """
+    out = []
+    try:
+        marks = read_watermark(root)
+    except ValueError as exc:
+        return [str(exc)]
+    live = live_max_ids(root)
+    for space in WATERMARK_SPACES:
+        if space not in marks:
+            out.append(
+                "id watermark declares no mark for {} — every id space must be "
+                "marked, or that space is unguarded".format(space)
+            )
+            continue
+        if live.get(space, 0) > marks[space]:
+            out.append(
+                "{}-{:03d} exists but the id watermark stands at {} — an id was "
+                "allocated past the mark (mint from {}, never from max(live))".format(
+                    space, live[space], marks[space], WATERMARK
+                )
+            )
+    for space, was in sorted((previous or {}).items()):
+        now = marks.get(space)
+        if now is not None and now < was:
+            out.append(
+                "id watermark for {} moved DOWN {} -> {}; a mark only ever "
+                "rises, or a retired id becomes mintable again".format(space, was, now)
+            )
+    return out
+
+
+def render_watermark(marks, basis=""):
+    """The file's text. One `<SPACE> = <int>` per line, deliberately: a merge
+    conflicts per SPACE rather than per file, and a bump can be a line rewrite."""
+    head = [
+        "# ID WATERMARK — generated by scripts/trace.py --bump-ids (do not hand-edit).",
+        "#",
+        "# The highest id ever allocated in each space. A mint counts from HERE,",
+        "# never from max(live): deleting a row frees its number in the live tree,",
+        "# and re-using it silently re-points every commit message, log entry and",
+        "# archived document that cites that id at a different thing.",
+        "#",
+        "# A mark only ever RISES. Lowering one is refused by trace.py's integrity",
+        "# pass, which also refuses a live id above its mark and a missing space.",
+        "#",
+    ]
+    if basis:
+        head.append("# basis: {}".format(basis))
+        head.append("#")
+    body = ["{} = {}".format(space, marks.get(space, 0)) for space in WATERMARK_SPACES]
+    return "\n".join(head + body) + "\n"
+
+
+def committed_watermark(root):
+    """The mark as of HEAD, or None when git cannot say.
+
+    Monotonicity is the one rule that CANNOT be read from the working tree — a
+    lowered mark looks exactly like a correct one. Off-git, in a shallow clone,
+    or before the file's first commit, this returns None and the caller reports
+    the rule as SKIPPED rather than passing it quietly."""
+    text = _git_out(root, ["show", "HEAD:{}".format(WATERMARK)])
+    if not text:
+        return None
+    marks = {}
+    for line in text.splitlines():
+        m = _WATERMARK_LINE.match(line.strip())
+        if m:
+            marks[m.group(1)] = int(m.group(2))
+    return marks or None
+
+
+def bump_watermark(root):
+    """Raise every mark to the live maximum. Returns `(marks, raised)`."""
+    live = live_max_ids(root)
+    try:
+        marks = read_watermark(root)
+    except ValueError:
+        marks = {}
+    raised = {}
+    for space in WATERMARK_SPACES:
+        was = marks.get(space, 0)
+        now = max(was, live.get(space, 0))
+        if now != was:
+            raised[space] = (was, now)
+        marks[space] = now
+    basis = " ".join(
+        "{}={}".format(s, live.get(s, 0)) for s in WATERMARK_SPACES if live.get(s)
+    )
+    (Path(root) / WATERMARK).write_text(
+        render_watermark(marks, basis), encoding="utf-8", newline="\n"
+    )
+    return marks, raised
+
+
 def _supersession_targets(row, ids):
     """Return one row's validated targets plus its local findings."""
     sid = row.get("SR-ID")
@@ -2805,11 +3035,30 @@ def exit_code(findings, args):
     return 0
 
 
+def _cmd_bump_ids(root):
+    """`--bump-ids`: raise every mark to the live maximum and report what moved."""
+    marks, raised = bump_watermark(root)
+    for space, (was, now) in sorted(raised.items()):
+        print("trace: id watermark {} {} -> {}".format(space, was, now))
+    print(
+        "trace: id watermark written -> {} ({} space(s), {} raised)".format(
+            WATERMARK, len(marks), len(raised)
+        )
+    )
+    return 0
+
+
 def main():
     _utf8_console()
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument(
         "--strict", action="store_true", help="exit 1 if any orphan / status finding"
+    )
+    ap.add_argument(
+        "--bump-ids",
+        action="store_true",
+        help="raise every id-watermark mark to the live maximum and exit — the "
+        "regeneration workflow for docs/id-watermark (a mark only ever rises)",
     )
     ap.add_argument(
         "--strict-integrity",
@@ -2900,6 +3149,11 @@ def main():
     args = ap.parse_args()
     docs = Path(args.docs) if args.docs else Path(args.root) / "docs"
 
+    # --bump-ids is a WRITER, not a checker: raise the marks and exit before any
+    # pass runs, so regenerating never depends on the tree already being clean.
+    if args.bump_ids:
+        return _cmd_bump_ids(args.root)
+
     reg = load_registries(docs)
 
     # --ratify is a generator mode, not a checker: emit the batch-scoped
@@ -2951,6 +3205,23 @@ def main():
         return 0
 
     findings = analyze(reg, args)
+    # The id-watermark rules read the FILESYSTEM and GIT, so they cannot live in
+    # analyze() — that function's contract is "Pure … No I/O", and the whole
+    # value of the contract is that it stays true. Integrity-class all the same:
+    # appended here so --strict-integrity (the always-on pre-commit floor) gates
+    # on it exactly like a duplicated id.
+    committed = committed_watermark(args.root)
+    findings.integrity += watermark_findings(args.root, committed)
+    if committed is None:
+        # SILENCE IS NOT SUCCESS. "A mark only ever rises" cannot be read from the
+        # working tree — a lowered mark looks exactly like a correct one — so with
+        # no committed baseline the rule did not run. Say so: an unrun rule that
+        # prints nothing is indistinguishable from one that passed.
+        findings.advisories.append(
+            "id-watermark monotonicity NOT checked — no committed {} to compare "
+            "against (first commit, shallow clone, or off a work tree); the "
+            "live-id and complete-space rules still ran".format(WATERMARK)
+        )
     forest = build_forest(
         reg.sn_ids, reg.srs, reg.llrs, reg.tcs, findings.orphan_ids, reg.sn_draft
     )

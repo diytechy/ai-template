@@ -1097,14 +1097,48 @@ therefore not part of the work that gets built twice. This is the batch that
 can start immediately — the answer to *"should implementation kick off from
 here?"* is **yes, for these three and nothing else.**
 
-3. **The id watermark — D-4's precondition, and worth doing regardless.** A
-   persisted high-water mark per id space; mint from it, never from the live
-   set. Today `intake.next_wi_id` and `plan_artifacts` both compute
-   `max(existing) + 1`, and **the spine has no mint function at all**, so any
-   removal — D-4's or otherwise — frees an id for silent reuse. Two checks
-   carry it: the mark never decreases, and no live id exceeds it. F-3 *anchor*
-   class (machine-written, machine-read), so it needs no ratification and joins
-   `_DIGEST_EXCLUDED` for the same reason the other anchors do.
+3. ~~**The id watermark — D-4's precondition.**~~ **BUILT 2026-08-09.**
+   [`docs/id-watermark`](id-watermark) records the highest id ever allocated in
+   each of **14 spaces** (the ten in `trace.ID_PATTERNS` plus SN, WI, OI, DP),
+   one `<SPACE> = <int>` per line so a merge conflicts per space rather than per
+   file. Written by `trace.py --bump-ids`; a mark only ever rises.
+
+   **Three rules, in `trace.py`'s always-on `--strict-integrity` floor** — the
+   home matters as much as the rules. In `check_trajectory` they would sit
+   behind `docs/trajectory-check: off`; tagged `G3` they would never run in a
+   G1 repo like this one. The rules: no live id exceeds its mark (the only
+   guard the mint-less spine tiers get), every space is marked, and the mark
+   never decreases versus `git show HEAD:`.
+
+   **Every fail-open the scout named is closed, and two are worth stating.** An
+   **absent** file is an *error*, not an empty set — every other declared-file
+   reader in the kit degrades to empty, which is right for a floor or an
+   allowlist ("nothing declared") and catastrophic here ("no id is taken",
+   freeing every space at once); a malformed line is refused for the same
+   reason. And the monotonicity rule **announces when it is skipped** — off-git
+   or before the file's first commit it cannot run, and an unrun rule that
+   prints nothing is indistinguishable from one that passed.
+
+   **The scaffold ships it** (`id-watermark.template` + a `bootstrap` MAPPING
+   row), because an absent mark is an error: without it every adopter is red on
+   day one. The template is generated *from a real scaffold* rather than
+   hand-written — a fresh scaffold already holds `OI-002` from its seeded
+   example rows, so all-zeros was wrong and the bootstrap suite caught it.
+
+   **What this half does NOT do, stated plainly.** The mark now *records* every
+   id ever allocated, and refuses one authored past it. It does **not** stop a
+   deleted id from being handed out again — a re-minted `SR-003` is below the
+   mark and reads as legal. Only the **mint** reading the mark prevents that,
+   and `intake.next_wi_id` / `plan_artifacts` still compute `max(live) + 1`.
+   Demonstrated end-to-end: allocate SR-001…003, stamp the mark at 3, delete
+   SR-003 → live max falls to 2 while the mark holds at 3, so `max(live) + 1`
+   re-issues SR-003 and minting from the mark gives SR-004.
+
+   So the honest claim for this half is **"the record exists and cannot be
+   silently lowered"**, not "reuse is impossible". It is the necessary first
+   half — a mint has nothing to count from until the record exists — and it is
+   the half that needs no new seam. The mint side is a CMP-004 → CMP-001 import
+   edge and owes an `IF-###` row.
 4. **The `::node` selector check — BLOCKED 2026-08-09, and it is an owner
    decision, not a build task.** It was recommended here before the ground was
    checked. Two findings, both verified in source, withdraw it from this block:
@@ -1782,6 +1816,23 @@ done mid-program: it is a reference-doc edit with no bearing on the lock.
   half ships now (zero carrier exposure, zero real ledger rows), the *anchor*
   half waits for OI-12, and SR-140 is written carrier-neutrally so the sitting
   is not blocked by either.
+- **2026-08-09** — **the id watermark SHIPPED** (§5 step 3), and one premise of
+  its plan was wrong. The sketch said `plan_artifacts` was sibling-import-free
+  and so the reader would have to be an F5 copy. Measured: **23 of the 53 kit
+  scripts import a sibling**, `plan_artifacts` already imports `wi_convert` via
+  a documented `try/except sys.path` idiom, and the only real cost of an import
+  is that a **cross-component** edge owes an `IF-###` row
+  (`cross_component_findings`). The repo's own decision rule is stated in that
+  same import's comment — *share when one implementation is load-bearing for
+  correctness, duplicate only small stable plumbing* — and by it the watermark
+  reader must be SHARED, since "the mint and the checker disagree about what an
+  id is" was the very hazard being designed against. Duplicating it would have
+  rebuilt the defect the check exists to catch.
+  Two ratchets shaped the result rather than merely recording it: the
+  **complexity** ratchet refused `live_max_ids` at 18 and forced it into four
+  small readers, and the **module-size** ratchet took two reviewed bumps. The
+  check is appended in `main()`, never in `analyze()`, because that function's
+  contract is *"Pure … No I/O"* and it stays true.
 - **2026-08-09** — **`Method`/`Evidence` ruled (Q12), and the SN edge-case tier
   fixed.** The owner asked whether an automated TC should carry its pointer in
   `Method` with `Evidence` blank. Ruled **no**, on a mechanical ground rather

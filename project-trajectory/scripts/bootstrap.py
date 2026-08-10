@@ -18,6 +18,7 @@ What it creates in the destination:
     docs/process.md                            <- PROCESS.md  (load-bearing core)
     docs/process-options.md                    <- PROCESS_OPTIONS.md  (opt-in layers)
     docs/gate                                  <- gate.template  (active gate: G1)
+    docs/id-watermark                          <- id-watermark.template  (id high-water marks)
     docs/process.toml                          <- process.toml.template  (EVERY policy dial:
                                                   gate authority, the human-ratification level,
                                                   push, reviewer count, privacy + secrets,
@@ -1427,6 +1428,11 @@ MAPPING = [
     # regenerating. The scaffold ships a legacy one-liner (accepted value-only);
     # `python scripts/derive_gate.py` migrates it to the generated form.
     ("gate.template", "docs/gate"),
+    # The id watermark (docs/id-watermark): the high-water mark per id space, so
+    # a deleted row's number is never re-minted. Scaffolded at all-zeros — a fresh
+    # repo has allocated nothing — and REQUIRED, because trace.py treats an absent
+    # mark as an error rather than as "no id is taken".
+    ("id-watermark.template", "docs/id-watermark"),
     # THE ONE POLICY HOME (SN-028). Every process dial — gate authority, the
     # human-ratification level, push authority, the reviewer count, the privacy
     # toggle, the secrets floor, guardrails, the blackout window — declared once

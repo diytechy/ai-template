@@ -531,7 +531,21 @@ BASELINE = {
     # `markdown-table` 11 -> 13, and pinned by value in test_rule_sync.
     # Reviewed bump: the growth is a named rule replacing an inline one, not
     # new responsibility.
-    "trace.py": 2977,
+    # Then +245 (2977 -> 3222), the ID WATERMARK (2026-08-09): live_max_ids,
+    # read_watermark, watermark_findings, render_watermark, bump_watermark,
+    # committed_watermark and their --bump-ids wiring. Reviewed bump, and this
+    # is the home ON PURPOSE: the two rules are integrity-class, and trace.py's
+    # `--strict-integrity` pass is the only always-on floor the pre-commit hook
+    # runs at every gate. In check_trajectory they would sit behind
+    # `docs/trajectory-check: off`; as a G3 step they would never run in a G1
+    # repo like this one. Note the check is appended in main(), NOT in
+    # analyze() — that function's contract is "Pure … No I/O" and it stays true.
+    # 3222 -> 3248 in the same reviewed bump: the complexity ratchet refused
+    # `live_max_ids` at 18 ("simplify these, do not bump"), so it decomposed into
+    # four small readers (_csv_ids / _sn_ids / _wi_ids / _dp_ids) and `--bump-ids`
+    # moved out of main() into _cmd_bump_ids. More LINES, less complexity — which
+    # is the trade this pair of ratchets exists to force.
+    "trace.py": 3248,
     # +132 (1926 -> 2058; the last +10 is the F4 BOM hardening: read_rows utf-8-sig + git-show strips), WI-316: staged_spine_findings — the amend-without-
     # flip warn (--staged): content cells of a Verified spine row changed
     # without the Modified marker, suppressed when the owning SR flips in the
@@ -996,7 +1010,10 @@ BASELINE = {
     # Then -2 (2656 -> 2654), D-1 REMOVAL HALF: the attestations-ledger MAPPING
     # row goes with the registry — an adopter scaffolds no second attestation
     # home, and the anchor columns arrive in the spine templates instead.
-    "bootstrap.py": 2654,
+    # Then +6 (2654 -> 2660), the id watermark's MAPPING row + its docstring
+    # inventory line: a fresh scaffold MUST ship docs/id-watermark, because an
+    # absent mark is an error rather than "no id is taken".
+    "bootstrap.py": 2660,
     # NEW ENTRY, +228 (1423 -> 1651), Phase 2b of the concurrency restructure
     # (docs/concurrency-restructure.md §7): the spec-folder work-item reader,
     # which crosses this module over THRESHOLD for the first time. It is one

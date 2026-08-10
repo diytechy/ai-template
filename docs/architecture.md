@@ -1120,6 +1120,12 @@ Contracts (interfaces): IF-001, IF-021, IF-042
 | `id_key(label)` |  |  |
 | `id_sort_key(rid)` | Numeric-then-lexical sort key for a registry id, so SR-9 orders before | SR-10, SR-9 |
 | `integrity_findings(label, raw_rows)` | Duplicated or malformed ids in one registry (example '-000' rows skipped — |  |
+| `live_max_ids(root)` | `{space: highest id number currently present}` over the WHOLE repo. |  |
+| `read_watermark(root)` | `{space: int}` from `docs/id-watermark`. RAISES on absent or malformed. |  |
+| `watermark_findings(root, previous)` | The two rules, integrity-class. |  |
+| `render_watermark(marks, basis)` | The file's text. One `<SPACE> = <int>` per line, deliberately: a merge |  |
+| `committed_watermark(root)` | The mark as of HEAD, or None when git cannot say. |  |
+| `bump_watermark(root)` | Raise every mark to the live maximum. Returns `(marks, raised)`. |  |
 | `sr_supersession_findings(srs, llrs)` | Validate the optional SR ``SupersededBy`` extension. |  |
 | `triangle_findings(tcs, llrs)` | SR/LLR citation coherence. A TC may cite an | LLR-1, SR-1, SR-2 |
 | `interface_findings(ifs, sr_ids, module_ids)` | The IF-### seam tier's back-link checks (process.md §8), closing the gap |  |
