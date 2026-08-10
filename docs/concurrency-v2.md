@@ -533,7 +533,7 @@ Two modules, and the seam is thinner than the sketch feared:
 At `lanes = 1` `dispatch.py` degenerates to today's serial loop, so the split
 is safe to land before any concurrency is switched on.
 
-### A4.4 Component-scoped spine batching (SN-030 §4 rung 4) — DESIGN NOTE, not built
+### A4.4 Component-scoped spine batching (mechanized-loop plan §4 rung 4) — DESIGN NOTE, not built
 
 The spine batch is one branch, one worker session, one re-attest window (§A4).
 That is exactly right while the batch is small, and it is the wrong shape once

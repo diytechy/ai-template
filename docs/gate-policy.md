@@ -8,11 +8,25 @@ the owner may restore a lower level at any time. Keep in version control.
 _Prior level:_ **`single-ratify`** — RATIFIED 2026-07-13 (OI-2; owner review of
 the WI-107 enablement commit, [log.md](log.md) "GATE: G3 re-attestation" +
 Decisions). That level and its ratification stand as history and may be restored
-by a one-line revert of `gate_policy` in [process.toml](process.toml) + this
+by raising `human_ratification_through` in [process.toml](process.toml) + this
 register.
 
-**What this is:** this repo declares the `autonomous` gate authority
-(`[attestation] gate_policy` in [process.toml](process.toml); process.md §4).
+**The posture is still named by the word; it is no longer STORED as one.**
+SN-029 retired the `attended` / `single-ratify` / `autonomous` enum for an
+ordinal, because the enum could not express "TCs are human-held but LLRs are
+not" and four tables each re-interpreted it. `bootstrap.py --gate-policy` still
+takes the familiar word and TRANSLATES it, which is why this register keeps it
+in the title. What the word now means here, read off
+[process.toml](process.toml) `[attestation]`:
+
+| dial | this repo | meaning |
+|---|---|---|
+| `human_ratification_through` | `0` | nothing is human-held; the loop ratifies every tier itself |
+| `keep_nondependent` | `false` | a paged round does not carry non-dependent work forward |
+| `final_review` | `"always"` | the end-of-run review is never skipped — the fixed point below, as a dial |
+
+**What this is:** this repo declares the `autonomous` gate authority (those
+three `[attestation]` dials in [process.toml](process.toml); process.md §4).
 The kit-owned process doc is never edited per-repo (a re-sync overwrites it);
 this register amends it (process-options.md "Gate authority levels"). Where the two disagree, this file wins — **except the
 fixed points at the bottom, which nothing overrides.**

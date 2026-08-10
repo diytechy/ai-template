@@ -161,7 +161,7 @@ directly in `work_dir`". So a report at `docs/work/handbacks/WI-nnn-<branch>.md`
 made `draft/` a declared directory, and worse here, because `intake.next_wi_id`
 counts filenames and would have treated the report's id as TAKEN.
 
-**Ruled, and shipped in SN-031:** the reports live at
+**Ruled, and shipped as SR-144:** the reports live at
 [`docs/handbacks/`](handbacks/README.md), outside `docs/work/` entirely, which
 avoids the question rather than answering it. That directory's
 [README](handbacks/README.md) states the two rules the design rests on — never

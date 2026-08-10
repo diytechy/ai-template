@@ -331,7 +331,7 @@ set:
 | Option (`docs/…`) | Fresh-scaffold default | Turn on / off | This repo |
 |---|---|---|---|
 | `gate` | **generated** — `derive_gate.py` computes it from artifact states (a fresh scaffold reads `G1`) | never hand-edited; advances by *ratifying* artifacts | `G3` (derived) |
-| `process.toml` `gate_policy` | `"attended"` | opt-in levels `"single-ratify"` / `"autonomous"` (each scaffolds a deviation register) | **`"autonomous"`** + [register](docs/gate-policy.md) |
+| `process.toml` `gate_policy` | **not shipped** — SN-029 retired the enum for the ordinal below; a legacy key is read only as a migration fallback | `bootstrap.py --gate-policy <word>` still takes `"attended"` / `"single-ratify"` / `"autonomous"`, but **translates** it to the dials rather than storing it (and scaffolds a deviation register) | not declared; the `"autonomous"` posture is recorded in its [register](docs/gate-policy.md) |
 | `process.toml` `human_ratification_through` | `4` (every tier human-held) | lower the ordinal — `3` SNs+SRs+LLRs, … `0` nothing human-held | `0` |
 | `process.toml` `push` | `"human"` | opt-in `"agent-iteration"` / `"agent"` | `"human"` |
 | `process.toml` `review_rounds` | `1` | reviewer dial `0`–`2` (an **int**, not a word) | `1` |

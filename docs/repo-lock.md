@@ -796,7 +796,7 @@ with OI-13 and OI-12 *executing* together.
 
 6. **Hold the P0 sitting** — ~~rule the five draft needs~~ **(part 1 done,
    2026-08-10)** and work the 25-row re-attest brief
-   ([`ratify/2026-08-08-mechanized-loop.md`](ratify/2026-08-08-mechanized-loop.md)),
+   ([`docs/ratify/2026-08-08-mechanized-loop.md`](ratify/2026-08-08-mechanized-loop.md)),
    **which is what remains**. Not blocked by the anchor or by D-3. **Must
    precede** the ladder migration (Q11). Part 1's rulings, in
    [`log.md`](log.md)'s Decisions section: one need attested, three ruled
@@ -831,9 +831,17 @@ with OI-13 and OI-12 *executing* together.
 - **`trace.py` does not know the traced/ratified split** (`spine_cell_class`
   lives in `check_trajectory`), so the re-attest brief diffs every cell equally
   and cannot tell a mechanical pointer fix from a requirement amendment.
-- **`status.md`'s ratification-level prose is stale** — it still says
-  `autonomous`, a value `process.toml` deleted for `human_ratification_through`.
-  Hand-authored owner prose; flagged, not edited.
+- ~~**`status.md`'s ratification-level prose is stale**~~ — **fixed 2026-08-10**,
+  with the owner's standing instruction to correct live documentation rather
+  than only flag it. The sweep it prompted found the same retired enum in two
+  more live surfaces, both worse than the status line: **`docs/gate-policy.md`**
+  was an *ACTIVE* register declaring `[attestation] gate_policy`, a key neither
+  this repo nor the template contains, and the **root README's options table**
+  presented `gate_policy` as a shipped dial with an `"attended"` default —
+  while `test_rule_sync.test_the_retired_enum_key_is_no_longer_shipped` pins
+  that the template ships it nowhere. Both now name the three dials
+  (`human_ratification_through` · `keep_nondependent` · `final_review`) and say
+  that `--gate-policy` still takes the WORD but translates it.
 - **`status.md` is ~450 lines against a 120-line warn budget** — pre-existing.
 - **`Priority` names two incompatible vocabularies** — `M`/`S`/`C` on an SR, a
   scheduler integer on a WI, neither enum-checked. D-3 rules it a float; the
@@ -1176,7 +1184,7 @@ rows must exist*. How components themselves are defined is a two-part answer,
 and only the first part is authored:
 
 - **Declared** — one hand-written row per component in
-  [`requirements/components.csv`](requirements/components.csv): `CMP-ID`,
+  [`docs/requirements/components.csv`](requirements/components.csv): `CMP-ID`,
   `Name`, `Category`, `Knowledge` (skill / pack refs), `State`,
   `SupersededBy`, `PartOf` (nesting), `DetailDoc`, `Notes`. Five rows live,
   all `State=built`, none nested.

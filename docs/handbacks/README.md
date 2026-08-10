@@ -1,6 +1,6 @@
 # Per-close reports — the close event's own document
 
-One immutable file per lane close that is not a clean merge (SN-031;
+One immutable file per lane close that is not a clean merge (SR-144;
 [handback-contract.md](../handback-contract.md)). `handback.close_partial`
 writes one here and moves the claimed spec to `docs/work/partial/`; the
 integrator merges the branch like any other; `intake._close_drafts` mints the
