@@ -18,25 +18,65 @@ collapses to a one-line pointer with the commit.
 
 ---
 
+## 0. Start here — the four things awaiting a decision
+
+Everything below is context for these. Nothing in this document is blocked on
+more analysis; it is blocked on rulings.
+
+| # | question | where to read it | recommendation |
+|---|---|---|---|
+| **OI-12** | Does one machine-parseable **carrier** hold all four requirement tiers? The `.md` + `.csv` split has **no recorded rationale anywhere**. | card on [`open-items.html`](open-items.html) · §6 F-7 | **TOML** as the destination; sequencing is the real question, see below |
+| **OI-13** | What does **`Status`** mean across the six registries that carry one — including [`interfaces.csv`](requirements/interfaces.csv)'s undeclared `Status` overlapping `Stability`? | card · §3 Q2 · §6 F-1, F-9 | reserve the word for ratifiable-artifact maturity, rename the rest, **execute with OI-12** |
+| **OI-14** | What is an IF row's **`Contract` cell for**? Measured: design narrative and history, 1% requirement voice, and the registry has **no schema tier at all**. | card · §6 F-10 | **declare now, split gradually** — never a 95-row sweep |
+| *(unfiled)* | The **component model**. `LLR.Component` is a *traced* cell, so the partition moves with no re-attest window — and it **decides how many IF rows must exist**. | §6 F-11 | not filed on purpose; filing it would be me setting the sitting's agenda |
+
+**Read them in this order: components → IF → `Status` → carrier.** OI-14
+assumes today's 95 IF rows are the right 95, and that rests on the unruled
+component model; OI-13 and OI-12 both rewrite registry definitions, so ruling
+them apart pays the migration cost twice.
+
+**Separately, and not blocked by any of the above: the P0 sitting can be held.**
+Ratification is a `Status` flip; the anchor that records *what* was ratified is
+the only part waiting on OI-12 (§5 step 3).
+
+**Two rulings already made** are executed, not pending: **D-1** (the attestation
+anchor moves onto the artifact's own row; `attestations.csv` retired — the
+removal half shipped) and **D-2** (stakeholder needs gain fields rather than a
+new carrier — the *shape* of those fields folded into OI-12). Both in §2.
+
+---
+
 ## 1. Where the repo stands
 
-Measured 2026-08-09 on `infra/mechanized-loop` at `a6ebc957`, from the files
+Measured 2026-08-09 on `infra/mechanized-loop` at `b2507c8c`, from the files
 themselves — not restated from the handoff.
 
 | fact | value | source |
 |---|---|---|
-| derived gate | **G1** (`computed=G0 ex-draft=G2 phase=4`) | [`gate`](gate) |
+| derived gate | **G1** (`computed=G0 ex-draft=G2 phase=4 stage=0`) | [`gate`](gate) |
 | SR | 111 `Verified` · **25 `Modified`** · **10 `Draft`** | [`requirements/system-requirements.csv`](requirements/system-requirements.csv) |
 | LLR | 131 `Verified` · 6 `Modified` · 10 `Draft` | [`requirements/low-level-requirements.csv`](requirements/low-level-requirements.csv) |
 | TC | 128 `Verified` · 7 `Modified` · 8 `Draft` | [`test/test-cases.csv`](test/test-cases.csv) |
 | SN | 32 ids; **SN-028…032 sit in a `Draft needs (unratified)` section** | [`requirements/stakeholder-needs.md`](requirements/stakeholder-needs.md) |
-| owner surface | **35 attestation cards** = 25 `Modified` + 10 `Draft` SRs | [`open-items.html`](open-items.html) |
-| attestation ledger | **1 row, the `ATT-000` example** — zero real data (`docs/requirements/attestations.csv`, deleted by D-1 later the same day) |
+| owner surface | **3 pending decisions** + **35 attestation cards** (25 `Modified` + 10 `Draft` SRs) | [`open-items.html`](open-items.html) |
+| attestation ledger | **gone** — it held 1 row, the `ATT-000` example, for its whole life (D-1) | — |
 
 The gate is G1 *because* a `Draft` SN reads G0. That is the machinery reporting
 the truth: the code is built and tested, the requirements behind it are proposed.
-Full detail — the program's commits, the measured bar, the warn-only residue and
-this machine's environment gotchas — is in
+**Nothing this program has done moves the gate**, and that is correct — no
+artifact has been ratified.
+
+**What this program has landed**, all on `infra/mechanized-loop`:
+
+| commit | what |
+|---|---|
+| `9b6c7fc0` | this document, and **OI-12** on the carrier |
+| `0156e0fe` | **OI-13** on `Status` across six registries |
+| `91831f4d` | **D-1's removal half** — the ledger retired, the digest kept |
+| `b2507c8c` | **OI-14** on the IF `Contract` cell, plus the registry audit (F-9…F-11) |
+
+Full detail on the program *before* this one — its commits, the measured bar,
+the warn-only residue and this machine's environment gotchas — is in
 [`handoff-2026-08-08-mechanized-loop.md`](handoff-2026-08-08-mechanized-loop.md);
 that document stays the record and is **not** superseded by this one.
 
@@ -240,7 +280,23 @@ qualified, and the qualification must be written into the docstring.
 
 ---
 
-## 3. Open questions — what this document is waiting on
+## 3. The questions, and where each one went
+
+**None of Q1–Q4 is still open as written** — §0 is the live list. This
+section is the record of how each resolved, kept because the *reasoning* is
+what a ruler needs and it does not survive compression:
+
+- **Q1** (where the SN anchor fields live) — **withdrawn**, folded into
+  **OI-12**: under a TOML carrier the distinction it asked about has no
+  referent.
+- **Q2** (does an SN get a `Status` cell) — **widened** into **OI-13**, once
+  the IF registry turned out to carry the same disease worse.
+- **Q3** (how far back the co-mutation guard compares) — **still genuinely
+  open**, but it is a *build-time* decision for the anchor half, not a
+  sitting decision; it needs no card.
+- **Q4** (which SR-140 text the sitting rules on) — **answered and acted on**:
+  D-1's amended, carrier-neutral text, which is why the removal half shipped
+  before the sitting.
 
 ### Q1 · Where do the SN anchor fields live inside the file? — **WITHDRAWN 2026-08-09, folded into OI-12**
 
@@ -547,19 +603,36 @@ mechanically supported, not wishful.
    diffable; the digest is what survives a squash, rebase or shallow clone) —
    no format named, so the sitting can ratify it before OI-12 is ruled.
 
-### Owed by the owner — two rulings, both now gating
+### Owed by the owner — three filed rulings and one unfiled question
+
+Indexed in §0; the sequencing argument is here.
 
 - **OI-12 · the carrier.** Promoted from *rulable later* to **the gating
-  decision**: Q1 folds into it and the anchor half waits on it. Card is live on
-  [`open-items.html`](open-items.html); recommendation unchanged in substance —
-  TOML is the right destination — but the *sequencing* recommendation is
-  withdrawn, because "defer it, nothing is foreclosed" was wrong about cost.
+  decision**: Q1 folds into it and the anchor half waits on it. Recommendation
+  unchanged in substance — TOML is the right destination — but the *sequencing*
+  recommendation is withdrawn, because "defer it, nothing is foreclosed" was
+  wrong about cost (§6 F-7).
 - **OI-13 · `Status` across all six registries** (Q2 widened) — including
   [`interfaces.csv`](requirements/interfaces.csv)'s undeclared `Status` and its
-  overlap with `Stability`. **Filed 2026-08-09**; recommendation is to reserve
-  the word for ratifiable-artifact maturity and rename the rest, **executed
-  together with OI-12**, since paying the registry-definition and downstream-
-  migration cost twice is the same double-labour trap that reordered this plan.
+  overlap with `Stability`. Recommendation is to reserve the word for
+  ratifiable-artifact maturity and rename the rest, **executed together with
+  OI-12**, since paying the registry-definition and downstream-migration cost
+  twice is the same double-labour trap that reordered this plan.
+- **OI-14 · the IF `Contract` cell**, and with it a schema tier for a registry
+  that has none. Recommendation: **declare now, split gradually** — the
+  declaration and the enum check cost nothing and fix the root defect (the cell
+  has never had a stated purpose), while a 95-row prose sweep is where
+  load-bearing maintainer knowledge gets quietly lost.
+- **The component model — NOT FILED, deliberately.** §6 F-11 records it:
+  membership is derived from the traced `LLR.Component` cell, so the partition
+  moves with **no re-attest window**, and `cross_component_findings` makes that
+  partition **decide how many IF rows must exist**. It is the loosest joint in
+  the arrangement and it sits *upstream* of OI-14. Left unfiled because a fourth
+  card would be an agent setting the sitting's agenda; **file it if the sitting
+  agrees it is a decision rather than a consequence of OI-13/OI-14.**
+
+**Ruling order: components → IF (OI-14) → `Status` (OI-13) → carrier (OI-12).**
+Each earlier one bounds the next. OI-13 and OI-12 then *execute* together.
 
 Q3 (how far back the co-mutation guard compares) and Q4 (which SR-140 text the
 sitting rules on) are answered inline in §3 and need no separate act.
@@ -590,10 +663,10 @@ sitting rules on) are answered inline in §3 and need no separate act.
 9. **Merge to `main`** — an owner act (`push = "human"`), and the standing
    deliberate item [`status.md`](status.md) already carries.
 
-Locked = both rulings made, 1–9 done, `drafts=0 modified=0`, and this file
+Locked = the rulings made, 1–9 done, `drafts=0 modified=0`, and this file
 archived.
 
-### Loose ends this discussion surfaced, owed to no step above
+### Loose ends this program surfaced, owed to no step above
 
 - **The unpinned SN reader twin.** `traj_parse._sn_rows` ↔ `gen_okf.sn_rows` are
   held equal by a docstring and nothing else, and have already drifted once
@@ -603,18 +676,39 @@ archived.
   is `autonomous`, a value [`process.toml`](process.toml) *deleted* in favour of
   `human_ratification_through = 0`. Hand-authored owner prose; flagged, not
   edited.
-- **`status.md` is 445 lines against a 120-line warn budget** — pre-existing;
-  this file is meant to absorb some of that depth, and has not yet.
+- **`status.md` is ~449 lines against a 120-line warn budget** — pre-existing
+  and warn-only; this file is meant to absorb some of that depth and has begun
+  to (the sitting's owed-work bullet now points here rather than restating it).
+- **`SupersededBy` is live-only on the SR registry** (§6 F-9): an adopting repo
+  inherits its integrity-class rules — including "an LLR citing a superseded SR
+  must re-ground" — **without the column or its documentation**. Reference doc
+  §12.9 records it; nothing has ruled it.
+- **`Priority` names two incompatible vocabularies** — `M`/`S`/`C` on an SR, a
+  scheduler integer on a WI, neither enum-checked (§6 F-9). Smaller than OI-13
+  and the same shape of defect.
 
 ---
 
-## 6. Reference findings that bear on D-1 / D-2
+## 6. Reference findings
 
-Compiled 2026-08-09 by reading source, in answer to "what are the `Status`
-options, is that an interface, and which columns are mechanical vs prose". The
-per-field mechanical detail already has a home —
+Compiled 2026-08-09 by reading source, in answer to the owner's questions
+across this session: what the `Status` options are and whether they are an
+interface (F-1, F-2); which registry columns drive machinery versus feed an LLM
+versus do nothing (F-3, F-4); the digest's width (F-5); whether markdown or
+TOML could carry the registries (F-6, F-7); where a design constraint lives
+(F-8); whether template and live headers agree (F-9); what the IF `Contract`
+cell encodes (F-10); and how components are defined, which turns out to bind
+the other three (F-11).
+
+The per-field mechanical detail already has a home —
 [`registry-machinery-reference.md`](registry-machinery-reference.md) §2–§5, §10,
 §12 — and is **not** restated here. Only what changes a decision is.
+
+**Index:** F-1 six `Status` carriers · F-2 the vocabulary is not an interface ·
+F-3 four column classes · F-4 the inert class · F-5 the digest's width ·
+F-6 no markdown-table reader · F-7 TOML as one carrier · F-8 constraints have
+no home · F-9 template↔live headers + the cross-registry matrix · F-10 what IF
+`Contract` encodes · F-11 components bind all three.
 
 **F-1 · There is no single `Status` vocabulary — there are six carriers, and
 only one is closed.** SR/LLR/TC `Status` is *open* with three magic values
@@ -984,6 +1078,16 @@ done mid-program: it is a reference-doc edit with no bearing on the lock.
   digest survives. §6 gained F-5 (the full-width justification does not hold)
   and F-6 (no reusable markdown-table reader exists; five live cells already
   contain a literal `|`).
+- **2026-08-09** — **brought current for a separate review session** (owner:
+  *"I'll likely review them separately and chew through them in a separate
+  session"*). Added **§0**, a start-here index of the four things awaiting a
+  decision with the ruling order and the recommendation for each; refreshed §1
+  onto `b2507c8c` with the four commits this program landed; widened §5's
+  owner block to name OI-14 and the unfiled component question; and gave §6 an
+  index plus a preamble mapping each finding to the question that produced it.
+  Two loose ends promoted out of prose into §5's list — SR's live-only
+  `SupersededBy` and `Priority`'s two vocabularies. **The document is now
+  readable cold, top to bottom, with no reference to this session's chat.**
 - **2026-08-09** — §6 gained **F-9** (template↔live headers all match; the
   real collisions are *between* registries — the cross-registry column matrix,
   `Priority` meaning two incompatible things, and CMP's `State` as a seventh
