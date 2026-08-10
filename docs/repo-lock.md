@@ -1058,17 +1058,84 @@ here?"* is **yes, for these three and nothing else.**
    carry it: the mark never decreases, and no live id exceeds it. F-3 *anchor*
    class (machine-written, machine-read), so it needs no ratification and joins
    `_DIGEST_EXCLUDED` for the same reason the other anchors do.
-4. **The `::node` selector check — what makes `Attested → Ready` enforceable.**
-   Today only the file half of a TC's `Evidence` is validated (§6 F-12), so the
-   ladder's new middle transition has no mechanism. Resolve the selector, or —
-   stdlib and stack-agnostically — confirm the selector token appears in the
-   cited file. **The data cost is near zero and the re-attest cost is exactly
-   zero**: 66 of 143 rows already carry a selector, and `Evidence` is a
-   **traced** cell (`SPINE_RATIFIED_CELLS` for TC is `Method`/`Expected`/
-   `Parameters`/`Level`/`Tier`), so adding selectors to the remaining 77 opens
-   **no re-attest window**. Verified in source, not assumed.
-5. **The unpinned SN reader twin.** `traj_parse._sn_rows` ↔ `gen_okf.sn_rows`,
-   held equal by a docstring and nothing else, already drifted once. Promoted
+4. **The `::node` selector check — BLOCKED 2026-08-09, and it is an owner
+   decision, not a build task.** It was recommended here before the ground was
+   checked. Two findings, both verified in source, withdraw it from this block:
+
+   - **It overturns a ruling.** Owner ruling **R2 of 2026-08-01** (WI-394)
+     weighed exactly this: option (a) *build the resolver* against option (c)
+     *the file half only*, and shipped (c). `_strip_node_selector`
+     (`check_doc_refs.py:176-182`) discards the selector **by that ruling**, and
+     **two named tests pin the behaviour** —
+     `test_the_node_selector_half_is_ruled_prose_never_validated` and
+     `test_registry_citations_whose_files_exist_pass`. The WI's own record says
+     it in as many words: *"a builder must not pick this — the owner rules
+     this."* [`enforcement-audit.md`](enforcement-audit.md):40 records the gap
+     as **accepted**, *"recorded here so it is never implied as covered"*.
+   - **The data is not ready for it.** Measured over the live registry: 302
+     `Evidence` tokens, 212 carrying a selector, and **111 of those do not
+     resolve in the file they cite** — 110 because the WI-277 test-module splits
+     moved the tests out (`test_gen_trajectory.py` → `test_traj_*.py`,
+     `test_trace.py` → `test_trace_rules.py`, `test_agent_loop.py` →
+     `test_agent_loop_policy.py`) and one that exists nowhere
+     (`test_a4_hub_fill_is_not_the_page_accent`, TC-119). **42 of 143 rows would
+     turn red at once.** `docs/stack.ini`'s own comment on this step records the
+     precedent against that: wiring at scale *"would have added a wall of warns
+     to every gate run, which is exactly how a check earns the ignore."*
+
+   **So the finding is real but the fix is not this.** What F-12 measured stands
+   — `Attested → Ready` has no mechanism — but the ordering is now: **triage the
+   111 stale selectors first** (that is data rot with no ruling attached, and it
+   is what a reader of a `Ready` row is being misled by today), **then** ask the
+   owner whether R2 is re-opened by D-3 having made that transition
+   load-bearing. R2 was ruled before the ladder existed, which is a genuine
+   change of premise — but it is the owner's to weigh.
+
+   One measured fact for that decision: the cheap oracle is good enough. Over
+   all 212 live selectors, *"the token appears as a word in the cited file"* and
+   *"the token is defined as a `def` in the cited file"* **agree exactly, 0
+   disagreements** — so no pytest dependency is needed, which was option (a)'s
+   main cost. And the re-attest cost is zero: `Evidence` is a **traced** cell
+   (TC's ratified set is `Method`/`Expected`/`Parameters`/`Level`/`Tier`).
+
+   **Also found, and separately actionable: `check_doc_refs` is ALREADY RED and
+   nobody sees it.** `--root . --strict` exits 1 today with 17 dangling and 1056
+   untraced. It does not gate, for two compounding reasons: `[step:doc-refs]` is
+   `gates = G3`, and this repo's derived gate is **G1** — where an open
+   ratification window demotes every higher-gate step to *advisory, reported,
+   exit code unaffected*. So a green harness proves nothing about this check,
+   and anything built on it must be verified by running the script directly.
+5. **The unpinned SN reader twin — and the two live defects under it.**
+   `traj_parse._sn_rows` ↔ `gen_okf.sn_rows` are held equal by a docstring and
+   nothing else. Scouted 2026-08-09, and the pin is the *smaller* half:
+
+   - The two bodies are **byte-identical today**, and **both are wrong in the
+     same two ways** — so `assert _sn_rows(r) == sn_rows(r)` is `True` right now
+     over the real registry. A pure equality test would ship, go green forever,
+     and change nothing. The precedent already knows this:
+     `tests/test_rule_sync.py` pins behaviour equality **and** an absolute
+     expected value on every rule.
+   - **There is a THIRD copy.** `trace._sn_prose` carries the identical
+     positional parse and feeds the `--ratify` sitting brief — the surface a
+     human reads *before ratifying*. Its own docstring says all three change
+     together.
+   - **Defect A — FIXED 2026-08-09** (`3d8e3e3b`): SN-029's Why cell held
+     `(`attended | single-ratify | autonomous`)`, two unescaped pipes, so the
+     row was seven cells in a five-column table and its acceptance intent was
+     read out of the middle of its Why column. Done now because SN-029 is still
+     `Draft` and its raw line is its normative text — after the sitting the same
+     edit is a ratified-cell amendment.
+   - **Defect B — OPEN, and it needs a ruling rather than a patch.** The 10
+     edge-case rows (SN-013…022) are a **four-column** table parsed with
+     five-column indexing, so `need` reads the Lifecycle word
+     (`docs/okf/stakeholder-needs/SN-013.md` is titled `"Provision"`) and
+     `acceptance` is always empty. This is **known**, documented at
+     `check_trajectory.py:3020-3025` — it is exactly why `sn_normative_text`
+     hashes the raw line instead of a parsed projection. But routing the
+     *digest* around it left the two surfaces an owner actually **reads** still
+     rendering it. Fixing it means choosing what a four-column row maps to, in
+     three copies at once, which is a rendering decision with more than one
+     defensible answer — so it is surfaced, not picked. Promoted
    out of the loose-ends list because it is genuinely carrier-independent and
    has waited long enough.
 
