@@ -2623,6 +2623,9 @@ def analyze(reg, args):
     findings.placeholders = placeholders
     findings.schema = schema
     findings.advisories = advisories
+    # Filled after analyze() returns: the id-watermark rules read the
+    # filesystem and git, which analyze()'s pure contract forbids.
+    findings.watermark_advisories = []
     findings.provenance = provenance
     findings.form = form
     findings.paraphrase = paraphrase
@@ -2987,6 +2990,7 @@ def render_console(reg, findings, args, out, html_out):
     interface_advisories = findings.interface_advisories
     knowledge_advisories = findings.knowledge_advisories
     llr_status_advis = findings.llr_status_advis
+    watermark_advis = findings.watermark_advisories
     mechanized_verified = findings.mechanized_verified
     demonstrated_verified = findings.demonstrated_verified
     attested_verified = findings.attested_verified
@@ -3011,6 +3015,7 @@ def render_console(reg, findings, args, out, html_out):
         + knowledge_advisories
         + llr_status_advis
         + paraphrase
+        + watermark_advis
     ):
         print(f"WARNING (advisory): {a}")
     for f in provenance:
@@ -3091,6 +3096,7 @@ def render_console(reg, findings, args, out, html_out):
             if llr_status_advis
             else ""
         )
+        + (f" watermark-advisories={len(watermark_advis)}" if watermark_advis else "")
         + f". Report -> {out}"
         + (f" + {html_out}" if html_out else "")
     )
@@ -3304,7 +3310,11 @@ def main():
         # working tree — a lowered mark looks exactly like a correct one — so with
         # no committed baseline the rule did not run. Say so: an unrun rule that
         # prints nothing is indistinguishable from one that passed.
-        findings.advisories.append(
+        # ITS OWN PIPE, for the reason stated where `advisories` is built:
+        # that counter names the acceptance-criteria lint, and folding an
+        # unrelated notice into it reports "ac-advisories=1" about a row whose
+        # AcceptanceCriteria is fine — which is exactly what it did until now.
+        findings.watermark_advisories.append(
             "id-watermark monotonicity NOT checked — no committed {} to compare "
             "against (first commit, shallow clone, or off a work tree); the "
             "live-id and complete-space rules still ran".format(WATERMARK)

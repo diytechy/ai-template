@@ -91,6 +91,7 @@ _Of the SRs reported `Verified`: `Test` rows rest on a runnable, re-executable c
 
 ===STDOUT===
 WARNING (advisory): LLR LLR-001 reads 'Implemented' but every citing TC is Verified — lift to Verified (the evidence already exists)
+WARNING (advisory): id-watermark monotonicity NOT checked — no committed docs/id-watermark to compare against (first commit, shallow clone, or off a work tree); the live-id and complete-space rules still ran
 FINDING (orphan): SR SR-002 has no LLR (and Verification not in Analysis/Inspection/Attest)
 FINDING (orphan): SR SR-002 has no test (TC)
-Traceability: SN=1 SR=2 LLR=1 TC=1 orphans=2 integrity=0 llr-status-advisories=1. Report -> docs/test/report.md
+Traceability: SN=1 SR=2 LLR=1 TC=1 orphans=2 integrity=0 llr-status-advisories=1 watermark-advisories=1. Report -> docs/test/report.md

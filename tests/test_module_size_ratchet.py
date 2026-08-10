@@ -557,7 +557,15 @@ BASELINE = {
     # under DictReader's `None` key as a list). `watermark_findings` split into
     # `_mark_covers_live_findings` + `_mark_history_findings` because the
     # complexity ratchet refused it at 11 — decompose, do not bump.
-    "trace.py": 3335,
+    # Then +10 (3335 -> 3345), the watermark advisory's MISLABEL: the
+    # "monotonicity NOT checked" notice was appended to `findings.advisories`,
+    # the ACCEPTANCE-CRITERIA lint's pipe — so every repo without a committed
+    # mark reported `ac-advisories=1` about a row whose AcceptanceCriteria was
+    # fine, and printed a watermark message under a heading about acceptance
+    # criteria. The comment where `advisories` is built already forbade exactly
+    # this ("a shared count would say ac-advisories about a finding that is not
+    # one"). Its own pipe + counter, per that rule.
+    "trace.py": 3345,
     # +132 (1926 -> 2058; the last +10 is the F4 BOM hardening: read_rows utf-8-sig + git-show strips), WI-316: staged_spine_findings — the amend-without-
     # flip warn (--staged): content cells of a Verified spine row changed
     # without the Modified marker, suppressed when the owning SR flips in the

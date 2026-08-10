@@ -92,7 +92,15 @@ seam the mint created.
 
 Full detail on the program *before* this one is in
 [`handoff-2026-08-08-mechanized-loop.md`](handoff-2026-08-08-mechanized-loop.md);
-that document stays the record and is **not** superseded by this one.
+that document stays the record and is **not** superseded by this one. Its
+build-out plan — how the five needs the P0 sitting has now ruled on were
+decomposed in the first place — is
+[`spine-restructure-2026-08-08.md`](spine-restructure-2026-08-08.md). Both are
+**history**: they keep their `SN-030`/`SN-031`/`SN-032` citations after the
+sitting retired those ids, on the same doctrine `check_doc_refs` applies to
+retired files (naming one is accurate history; "fixing" it falsifies the
+record). WI-425 repoints the citations that are *not* history — the ones in
+live source.
 
 ---
 
@@ -772,14 +780,28 @@ and this file archived.
 3. ~~**The id watermark**~~ — `docs/id-watermark`, 14 spaces, three rules in
    `trace.py`'s always-on `--strict-integrity` floor, the mint wired
    (`next_wi_id` counts from the mark), scaffolded, adopter-documented, and
-   adversarially reviewed with two blockers and four majors fixed. **Correction,
-   2026-08-10: it did not ship green.** The first full-suite run since
-   (`93 failed, 2073 passed, 6 skipped`, 5:58, measured on a clean worktree at
-   `601a1c19`) is **93 failures, every one of them this feature** — scaffolds
-   throughout the suite hand-write registries and now trip `FINDING (integrity):
-   … exists but the id watermark stands at 0`. The review found real defects in
-   the code and nobody ran the suite the code broke. **This is the largest open
-   item in the file and blocks step 11.**
+   adversarially reviewed with two blockers and four majors fixed.
+   **Correction, 2026-08-10: it did not ship green — and the suite was right.**
+   The first full run since (`93 failed, 2073 passed`, measured on a clean
+   worktree at `601a1c19`) turned out to be **three shipped defects plus stale
+   fixtures**, not one bucket:
+   - a **non-Python scaffold failed its own harness out of the box** —
+     `id-watermark.template` ships `OI = 2` while the non-Python profile appends
+     OI-3, so `bootstrap --stack node` produced a repo that reported an
+     integrity finding on the adopter's first `trace.py --strict`, against
+     SN-001's "green out of the box";
+   - **an integrator run that minted anything failed its own audit** — the mint
+     raises the mark in its bookkeeping commit, but `docs/id-watermark` was in
+     neither `BOOKKEEPING_PREFIXES` nor `[generated]`, so RULING-6's
+     own-history window flagged the run's own bookkeeping and the queue died on
+     a false red;
+   - the **monotonicity advisory was filed under the acceptance-criteria
+     counter**, so any repo without a committed mark reported `ac-advisories=1`
+     about a row whose AcceptanceCriteria was fine — against the explicit rule
+     written where that counter is built.
+   Fixed 2026-08-10, plus one data defect the suite exposed (TC-158's blank
+   `Phase`). **The full suite is now green: `2167 passed, 5 skipped`, 6:41.**
+   Step 11's bar is met on this branch.
 4. ~~**The `::node` selector DATA**~~ — 212 of 212 resolve, from 111 broken. The
    selector **check** stays declined under ruling R2; Q12 made it unnecessary.
 5. ~~**The SN reader twin and its two live defects**~~ — `_sn_fields` resolves by

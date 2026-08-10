@@ -14,7 +14,7 @@ reviewed) with:  UPDATE_TRACE_GOLDEN=1 python -m pytest tests/test_trace_golden.
 
 import os
 
-from conftest import make_minimal_project, run_py
+from conftest import make_minimal_project, record_ids, run_py
 
 GOLDEN = os.path.join(os.path.dirname(__file__), "golden")
 
@@ -97,6 +97,7 @@ def _make_rich(root):
     (req / "assets.csv").write_text(RICH_ASSETS, encoding="utf-8")
     (req / "components.csv").write_text(RICH_CMPS, encoding="utf-8")
     (req / "interfaces.csv").write_text(RICH_IFS, encoding="utf-8")
+    record_ids(root)
 
 
 def _normalize(text, root):
@@ -160,6 +161,7 @@ def test_golden_orphaned_spine(scaffold):
     (scaffold / "docs" / "requirements" / "system-requirements.csv").write_text(
         ORPHAN_SRS, encoding="utf-8"
     )
+    record_ids(scaffold)
     proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
     assert proc.returncode == 1
     _assert_golden("orphan.txt", _report(scaffold), proc.stdout, scaffold)

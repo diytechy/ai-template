@@ -682,3 +682,26 @@ Note: In a branch, a work item is non-mutable.  Work item definitions can only b
  Make sure all unused functions are removed / cleaned.   There is likely already a work item for this.  Likewise remove any dead work items that no longer have context.
 
  IMPORTANT: Because these changes affect the heart of the repo mechanics, those mechanics do NOT need to be followed for this implimentation, as that will likely create more challenges working around a changing infrastructure.
+
+
+ #############
+
+ Findings for post convert to TOML:
+
+ The component registry and interfaces need cleanup.
+
+ Interfaces must be INTERFACES only (Descrete vs variable), and all component breaks must have all intefaces described by their interface.  I'm not sure of the best way to enforce this mechanically.
+
+ Edge cases needs to dissolve into individual system requirements that relate to the stakeholder need, but this is awkward because each "hat" must be run against each stakeholder need to see where a new requirement needs to be built out.
+
+ Add stakeholder needs:
+
+ -All stakeholder needs should be written from the perspective of the end-user, and written arount the end-user interfaces that are accessible.  They should not reference implimentation.
+
+ -A single "dev-setup" double-clickable launcher shall be available for each applicable platform (windows / linux / MacOS) which will install all dependencies a repo developer would need.
+
+ -A single "run" double-clickable launcher shall be available to open a menu of available actions to peform which are applicable to this repository for it's applicable platforms (Window / Linux / MacOS)
+
+ -When a stakeholder need is decomposed into system requirements, it should accomidate the different "hat" perspectives of the repository given the scope of the stakeholder need and the overall veision.  Therefore, the prose handed to the adjudicator to decompose the stakeholder need must include these factors.  Those hats include the examples which are accessible to downstream users.
+
+ - 
