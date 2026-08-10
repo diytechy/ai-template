@@ -1139,8 +1139,21 @@ here?"* is **yes, for these three and nothing else.**
    half — a mint has nothing to count from until the record exists — and it is
    the half that needs no new seam. The mint side is a CMP-004 → CMP-001 import
    edge and owes an `IF-###` row.
-4. **The `::node` selector check — BLOCKED 2026-08-09, and it is an owner
-   decision, not a build task.** It was recommended here before the ground was
+4. **The `::node` selector — the CHECK stays blocked; the DATA is fixed.**
+   **Repointed 2026-08-09** (`b9d41833`): all 212 selectors now resolve, from
+   111 broken. Q12 is why this was the right half to do — `Ready` means the test
+   exists and `Evidence` naming a file answers it, so the selector is a
+   **pointer a human follows**, not a missing check, and 42 of 143 rows were
+   pointing at tests that had moved. Done deterministically from a name→file map
+   over every `def` in `tests/`: 102 of 103 stale citations had exactly one
+   home, zero ambiguous. The 21 bare `::selector` continuations — a convention
+   invisible to tooling, since `is_path_shaped('::x')` is False — are now fully
+   qualified. The one selector with no home was **renamed**, not deleted, and
+   `git log -S` proved it (WI-389 turned `hub_fill` into `slot_fill`).
+   Zero re-attestation: `Evidence` is traced, no Status moved, and both owner
+   surfaces still show the same 25 `Modified` SRs and 3 pending decisions.
+
+   **The check itself remains an owner decision, unchanged:** It was recommended here before the ground was
    checked. Two findings, both verified in source, withdraw it from this block:
 
    - **It overturns a ruling.** Owner ruling **R2 of 2026-08-01** (WI-394)
@@ -1313,15 +1326,16 @@ archived.
   carried collapses into the orphan check, because a superseded row is simply
   not there. What the loose end becomes is D-4's **precondition**: the id
   watermark must exist before any row is deleted.
-- **OI-12's card carries two stale claims**, and it is the surface the sitting
-  reads. Its `BlastRadius` cell still names `TextDigest` / `AcceptedCommit`
-  (renamed in §2 D-1), and — the one that matters — it still asserts *"ruling
-  this later forecloses nothing"*, which the owner **corrected on 2026-08-09**
-  and §6 F-7 now records as true of the design and **false of the labour**.
-  Left unedited on purpose: `open-items.csv` is freshness-gated against
-  [`open-items.html`](open-items.html), so the fix lands **with** a
-  regeneration, and rewriting a pending decision's own brief is a change the
-  owner should see rather than find already made.
+- ~~**OI-12's card carries two stale claims**~~ — **CORRECTED 2026-08-09.** Its
+  `BlastRadius` named the retired `TextDigest` / `AcceptedCommit`, and asserted
+  *"ruling this later forecloses nothing"* — the claim the owner refuted and
+  §6 F-7 records as true of the design and **false of the labour**. Both fixed
+  in the cell, with the correction dated and its reasoning stated inline, and
+  `open-items.html` regenerated. Corrected rather than left for the owner
+  because the card is what the sitting **reads**, and a decision brief that
+  argues its own deferral is free — using a rationale already overturned — is
+  worse than one edited in front of them. The recommendation itself is
+  untouched; only the two false statements moved.
 - **`Priority` names two incompatible vocabularies** — `M`/`S`/`C` on an SR, a
   scheduler integer on a WI, neither enum-checked (§6 F-9). Smaller than OI-13
   and the same shape of defect.
