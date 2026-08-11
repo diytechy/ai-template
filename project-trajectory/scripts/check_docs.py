@@ -88,7 +88,7 @@ three stripped before parsing — frontmatter is typed data, so a `title` quotin
 a link is describing one, not making one). Anchors are only validated against
 Markdown targets the script can parse.
 
-Contracts: IF-002, IF-030 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.csv).
+Contracts: IF-002, IF-030, IF-112 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.csv).
 """
 
 import argparse
@@ -100,6 +100,13 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
+
+# Sibling: the spine's registry CARRIER (repo-lock D-5/D-6).
+try:
+    import spine_carrier
+except ImportError:  # pragma: no cover - in-process fallback
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    import spine_carrier
 from urllib.parse import unquote
 
 
@@ -536,35 +543,23 @@ def _registry_needs(path):
     checked) rather than a spurious finding.
     """
     text = path.read_text(encoding="utf-8-sig", errors="replace")
+    # EXISTENCE stays the whole-file scrape, byte-for-byte the rule trace.py
+    # uses — a prose mention counts, and that is deliberate on both sides.
     all_ids = {s for s in SN_ID_RE.findall(text) if not _is_sn_example(s)}
-    must_should = set()
-    prio_col = None
-    in_draft = False
-    for line in blank_fenced(text):
-        stripped = line.lstrip()
-        heading = re.match(r"#{1,6}\s+(.*)", stripped)
-        if heading:
-            # SN maturity is section-as-state (derived-gate model §4a): a heading
-            # whose text contains "draft" marks its needs unratified (G0), so they
-            # are exempt from the Must/Should README-coverage floor below (existence
-            # still holds — a draft SN the README cites must still be a real id).
-            in_draft = "draft" in heading.group(1).lower()
-            prio_col = None
-            continue
-        if not stripped.startswith("|"):
-            prio_col = None  # a non-table line ends the current table
-            continue
-        cells = [c.strip() for c in line.strip().strip("|").split("|")]
-        lowered = [c.lower() for c in cells]
-        if "priority" in lowered:
-            prio_col = lowered.index("priority")
-            continue
-        if prio_col is None or prio_col >= len(cells):
-            continue
-        if not in_draft and cells[prio_col].upper() in ("M", "S", "MUST", "SHOULD"):
-            must_should.update(
-                s for s in SN_ID_RE.findall(line) if not _is_sn_example(s)
-            )
+    # The Must/Should FLOOR now reads each need's own fields through the carrier
+    # (repo-lock D-5), replacing a table walk that discovered a `Priority`
+    # column by header text and tracked draft-ness by heading. Both of those
+    # were shapes the markdown carrier forced; neither survives it, and the
+    # heading arm would have gone silently wrong rather than loudly — no
+    # headings in a TOML file means no draft needs, which would ADD rows to a
+    # floor that gates the README.
+    must_should = {
+        n["id"]
+        for n in spine_carrier.needs_from_text(text)
+        if n.get("kind") != "draft"
+        and not _is_sn_example(n["id"])
+        and (n.get("priority") or "").strip().upper() in ("M", "S", "MUST", "SHOULD")
+    }
     return all_ids, must_should
 
 
@@ -585,8 +580,16 @@ def check_inventory(docs, root, docs_dir):
     text = readme.read_text(encoding="utf-8-sig", errors="replace")
     if SN_INVENTORY_OFF_RE.search(text):
         return [], []  # explicit opt-out
-    registry = (root / docs_dir / "requirements" / "stakeholder-needs.md").resolve()
-    if not registry.exists():
+    # Through the CARRIER's resolver, never a literal suffix: the needs registry
+    # is TOML here and markdown in a repo that has not migrated, and an
+    # existence test on ONE suffix answers "no needs to hold the README to" for
+    # the other — turning the coverage floor off silently in exactly the repos
+    # that still have the older carrier (repo-lock D-5).
+    registry = spine_carrier.resolve(
+        (root / docs_dir / "requirements" / "stakeholder-needs.toml").resolve(),
+        spine_carrier.NEED_CARRIERS,
+    )
+    if registry is None:
         return [], []  # no needs to hold the README to (vacuous)
     src = rel(readme, root)
     cited = {s for s in SN_ID_RE.findall(text) if not _is_sn_example(s)}

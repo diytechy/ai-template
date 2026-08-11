@@ -8,15 +8,20 @@ from conftest import ROOT, SCRIPTS, load_script, run_py
 
 
 def _add_must_need(scaffold, sid="SN-005"):
-    """Append a real Must-priority need to the scaffold's SN registry, contiguous
-    with the core-needs table so the priority-column parser sees it."""
-    reg = scaffold / "docs" / "requirements" / "stakeholder-needs.md"
-    out = []
-    for line in reg.read_text(encoding="utf-8").splitlines():
-        out.append(line)
-        if line.startswith("| SN-000 |"):
-            out.append("| {} | Do the thing | matters | M | it works |".format(sid))
-    reg.write_text("\n".join(out) + "\n", encoding="utf-8")
+    """Append a real Must-priority need to the scaffold's SN registry.
+
+    A scaffold carries the TOML carrier since the cutover (repo-lock D-5), where
+    a need is a table and its priority a FIELD — no "contiguous with the core
+    table so the column parser sees it" any more, which is one of the shapes the
+    markdown carrier forced. The legacy arm stays exercised where a fixture
+    deliberately writes markdown."""
+    reg = scaffold / "docs" / "requirements" / "stakeholder-needs.toml"
+    reg.write_text(
+        reg.read_text(encoding="utf-8")
+        + '\n[need.{}]\nkind = "core"\nneed = "Do the thing"\n'
+        'why = "matters"\npriority = "M"\nacceptance = "it works"\n'.format(sid),
+        encoding="utf-8",
+    )
 
 
 def _append_readme(scaffold, text):
@@ -443,20 +448,33 @@ def test_registry_needs_exempts_draft_section_from_must_floor(tmp_path):
 
 
 def test_inventory_draft_must_need_not_required_in_readme(scaffold):
-    # End-to-end: a Must need drafted under a "## Draft needs" heading does NOT
-    # force a README citation (it is unratified); the check stays green.
-    reg = scaffold / "docs" / "requirements" / "stakeholder-needs.md"
+    # End-to-end: a Must need still at DRAFT does NOT force a README citation
+    # (it is unratified); the check stays green. Draft-ness is `kind` now, not a
+    # heading — the carrier cutover retired section-as-state (repo-lock D-5),
+    # which is what stopped a prose mention under a heading from re-drafting an
+    # attested need.
+    reg = scaffold / "docs" / "requirements" / "stakeholder-needs.toml"
     reg.write_text(
-        reg.read_text(encoding="utf-8") + "\n## Draft needs (unratified)\n\n"
-        "| SN-ID | Need | Priority | Acceptance |\n"
-        "|---|---|---|---|\n"
-        "| SN-050 | drafted must | M | x |\n",
+        reg.read_text(encoding="utf-8")
+        + '\n[need.SN-050]\nkind = "draft"\nneed = "drafted must"\n'
+        'why = "matters"\npriority = "M"\nacceptance = "x"\n',
         encoding="utf-8",
     )
     proc = run_py(
         ["scripts/check_docs.py", "--ignore", "docs/test/report.md"], cwd=scaffold
     )
     assert proc.returncode == 0, proc.stdout + proc.stderr
+    # ...and the same need at `core` DOES force it — otherwise this test would
+    # pass on a check that had simply stopped looking.
+    reg.write_text(
+        reg.read_text(encoding="utf-8").replace('kind = "draft"', 'kind = "core"'),
+        encoding="utf-8",
+    )
+    proc = run_py(
+        ["scripts/check_docs.py", "--ignore", "docs/test/report.md"], cwd=scaffold
+    )
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+    assert "SN-050" in proc.stdout
 
 
 # --- harness wiring ----------------------------------------------------------

@@ -515,13 +515,16 @@ def _csv_ids(docs):
 
 
 def _sn_ids(docs):
-    """`("SN", number)` per stakeholder-need table row (the prose tier)."""
-    path = docs / "requirements" / "stakeholder-needs.md"
-    if not path.is_file():
-        return
-    text = path.read_text(encoding="utf-8-sig", errors="replace")
-    for line in text.splitlines():
-        match = re.match(r"\|\s*SN-(\d+)\s*\|", line.strip())
+    """`("SN", number)` per declared stakeholder need, through the CARRIER.
+
+    Was a markdown-row regex, which over the TOML carrier matches NOTHING —
+    silently, and the id-watermark check it feeds would then never see an SN at
+    all: the mark could not rise, and a retired number could be handed out
+    again with nothing to say so (repo-lock D-5). `load_needs` answers whichever
+    carrier is live and yields the same ids the markdown rows did."""
+    path = docs / "requirements" / "stakeholder-needs.toml"
+    for need in spine_carrier.load_needs(path):
+        match = re.match(r"SN-(\d+)$", str(need.get("id") or "").strip())
         if match:
             yield "SN", int(match.group(1))
 
@@ -1035,8 +1038,12 @@ def placeholder_findings(label, raw_rows):
 
 
 def scan_sn_placeholders(sn_md):
-    """Sorted unique '-000' SN ids still present in stakeholder-needs.md (if it exists)."""
-    if not sn_md.exists():
+    """Sorted unique '-000' SN ids still present in the needs registry.
+
+    `sn_md` is the CARRIER-RESOLVED path the loader found, so None here means
+    the registry is genuinely absent rather than "not under the suffix I
+    guessed" (repo-lock D-5)."""
+    if sn_md is None or not sn_md.exists():
         return []
     text = sn_md.read_text(encoding="utf-8-sig", errors="replace")
     return sorted({u for u in re.findall(r"\bSN-\d+\b", text) if is_example(u)})
@@ -1444,9 +1451,9 @@ def _sn_prose(sn_text):
 # on demand, never in the pending projection (pointer-only per its charter).
 
 SPINE_FILES = (
-    ("docs/requirements/system-requirements.csv", "SR-ID"),
-    ("docs/requirements/low-level-requirements.csv", "LLR-ID"),
-    ("docs/test/test-cases.csv", "TC-ID"),
+    ("docs/requirements/system-requirements.toml", "SR-ID"),
+    ("docs/requirements/low-level-requirements.toml", "LLR-ID"),
+    ("docs/test/test-cases.toml", "TC-ID"),
 )
 
 # --- the spine carrier (repo-lock D-5) ---------------------------------------
@@ -1548,8 +1555,24 @@ def _attested_baseline(root, sr_id):
 
     Walks the SR registry's commits newest-first; bounded in practice by the
     streak depth (typically 1-2 revisions). None: off-git, or the row was never
-    Verified in committed history (first attestation still pending)."""
-    log = _git_out(root, ["log", "--format=%H", "--", SPINE_FILES[0][0]])
+    Verified in committed history (first attestation still pending).
+
+    THE PATHSPEC NAMES BOTH CARRIERS, and that is the second half of the hazard
+    repo-lock D-5 calls "the one thing that must not be forgotten" — `_rows_at`
+    being carrier-aware is NOT enough on its own. This walk asks git which
+    commits touched the registry, and after the cutover the `.toml` path has
+    exactly one commit (the cutover itself, where every amended row reads
+    `Modified`). A single-carrier pathspec therefore yields a log with no
+    `Verified` revision in it, `None` comes back, and all 25 amended rows render
+    as "no attested baseline — first attestation pending". The owner would then
+    re-bless full text with NO DIFF of what changed, which is precisely the
+    fail-open the carrier-aware read exists to prevent — reached by a different
+    door. Naming both paths makes the log the registry's real history across the
+    carrier change, and `_rows_at` then resolves each revision's own carrier."""
+    log = _git_out(
+        root,
+        ["log", "--format=%H", "--"] + spine_carrier.carriers(SPINE_FILES[0][0]),
+    )
     if log is None:
         return None
     for rev in log.split():
@@ -2223,9 +2246,15 @@ class Findings:
 
 def load_registries(docs):
     """Load the spine + off-spine registries under docs (loading only — no analysis)."""
-    raw_srs = load_csv(docs / "requirements" / "system-requirements.csv")
-    raw_llrs = load_csv(docs / "requirements" / "low-level-requirements.csv")
-    raw_tcs = load_csv(docs / "test" / "test-cases.csv")
+    # The three spine tiers read through the CARRIER (repo-lock D-5). `load_csv`
+    # stays for the off-spine registries below, which did not move.
+    raw_srs = spine_carrier.load(
+        docs / "requirements" / "system-requirements.toml", "SR-ID"
+    )
+    raw_llrs = spine_carrier.load(
+        docs / "requirements" / "low-level-requirements.toml", "LLR-ID"
+    )
+    raw_tcs = spine_carrier.load(docs / "test" / "test-cases.toml", "TC-ID")
     # Optional, off-spine coordination registry (process.md §9); absent file -> [].
     raw_pbs = load_csv(docs / "requirements" / "performance-budgets.csv")
     # Optional coordinator repo-delegation registry (REPO-###, MULTI_REPO.md, the
@@ -2277,8 +2306,14 @@ def load_registries(docs):
     sn_draft = set()
     sn_meta = {}
     sn_integrity = []
-    sn_md = docs / "requirements" / "stakeholder-needs.md"
-    if sn_md.exists():
+    # Resolved through the CARRIER, not by literal suffix (repo-lock D-5): a
+    # `.toml`-only existence test reads a markdown needs registry as ABSENT, and
+    # an absent needs tier makes every SR orphan-clean, every draft need
+    # ratified, and the whole SN half of `--strict` vacuous.
+    sn_md = spine_carrier.resolve(
+        docs / "requirements" / "stakeholder-needs.toml", spine_carrier.NEED_CARRIERS
+    )
+    if sn_md is not None:
         # utf-8-sig + replace: a BOM must not glue to line 1 (defeating the
         # heading regexes) and one stray cp1252 byte must degrade, not crash
         # the gate chain (the C8 convention, applied to content reads too).

@@ -61,37 +61,41 @@ def _independent_meta_expectations():
     "LLR/TC — Draft => G0"; first exercised by Phase 5's TC-133, a Draft TC
     under no Draft SR) — is Draft, else G2 if any SR is below Verified
     (Modified included), else G3."""
-    import csv as _csv
+    # Read with STDLIB `tomllib` straight off the file, not through
+    # spine_carrier: the independence this re-derivation buys is the point (F3),
+    # and it now covers the carrier as well as the gate arithmetic — if the
+    # kit's own loader ever mis-read a Status or a Phase, a `want` side built on
+    # it would agree with the bug.
+    import tomllib as _toml
 
-    with (ROOT / "docs" / "requirements" / "system-requirements.csv").open(
-        encoding="utf-8-sig", newline=""
-    ) as fh:
-        srs = [
-            r
-            for r in _csv.DictReader(fh)
-            if (r.get("SR-ID") or "").startswith("SR-")
-            and not r["SR-ID"].endswith("-000")
+    def _rows(rel, table, prefix):
+        text = (ROOT / rel).read_text(encoding="utf-8-sig")
+        rows = _toml.loads(text).get(table, {})
+        return [
+            dict(cells, _id=rid)
+            for rid, cells in rows.items()
+            if rid.startswith(prefix) and not rid.endswith("-000")
         ]
+
+    def _phase(row):
+        # `Phase` is a real int under this carrier; the gate groups by its text.
+        value = row.get("phase", "")
+        return str(value).strip() or "(default)"
+
+    srs = _rows("docs/requirements/system-requirements.toml", "requirement", "SR-")
+    assert srs, "no SR rows read — the re-derivation would be vacuous"
     phases = {}
     for r in srs:
-        status = (r.get("Status") or "").strip().lower()
-        phases.setdefault((r.get("Phase") or "").strip() or "(default)", []).append(
-            status
-        )
+        status = str(r.get("status") or "").strip().lower()
+        phases.setdefault(_phase(r), []).append(status)
     draft_child_phases = set()
-    for rel, idcol in (
-        ("docs/requirements/low-level-requirements.csv", "LLR-ID"),
-        ("docs/test/test-cases.csv", "TC-ID"),
+    for rel, table, prefix in (
+        ("docs/requirements/low-level-requirements.toml", "design", "LLR-"),
+        ("docs/test/test-cases.toml", "test", "TC-"),
     ):
-        with (ROOT / rel).open(encoding="utf-8-sig", newline="") as fh:
-            for r in _csv.DictReader(fh):
-                rid = r.get(idcol) or ""
-                if not rid or rid.endswith("-000"):
-                    continue
-                if (r.get("Status") or "").strip().lower() == "draft":
-                    draft_child_phases.add(
-                        (r.get("Phase") or "").strip() or "(default)"
-                    )
+        for r in _rows(rel, table, prefix):
+            if str(r.get("status") or "").strip().lower() == "draft":
+                draft_child_phases.add(_phase(r))
     expect = {}
     for phase, statuses in phases.items():
         if any(s == "draft" for s in statuses) or phase in draft_child_phases:

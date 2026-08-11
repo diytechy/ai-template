@@ -110,6 +110,7 @@ graph LR
     m_scripts_agent_loop --> m_scripts_score_reviews
     m_scripts_agent_loop --> m_scripts_spine_carrier
     m_scripts_check_doc_refs --> m_scripts_spine_carrier
+    m_scripts_check_docs --> m_scripts_spine_carrier
     m_scripts_check_figures --> m_scripts_check_doc_refs
     m_scripts_check_flows --> m_scripts_spine_carrier
     m_scripts_check_trajectory --> m_scripts_check_docs
@@ -225,6 +226,7 @@ graph LR
     m_scripts_score_reviews -. IF-046 .-> m_scripts_agent_loop
     m_scripts_spine_carrier -. IF-109 .-> m_scripts_agent_loop
     m_scripts_spine_carrier -. IF-104 .-> m_scripts_check_doc_refs
+    m_scripts_spine_carrier -. IF-112 .-> m_scripts_check_docs
     m_scripts_spine_carrier -. IF-105 .-> m_scripts_check_flows
     m_scripts_spine_carrier -. IF-106 .-> m_scripts_gen_okf
     m_scripts_spine_carrier -. IF-107 .-> m_scripts_gen_release_checklist
@@ -522,7 +524,8 @@ Contracts (interfaces): IF-008, IF-028, IF-072, IF-104
 
 ### `scripts/check_docs`
 _Doc navigability & staleness check: keep the hand-written doc set honest._
-Contracts (interfaces): IF-002, IF-030
+Imports (internal): `spine_carrier`
+Contracts (interfaces): IF-002, IF-030, IF-112
 
 | Public item | Summary | Implements |
 |---|---|---|
@@ -795,6 +798,8 @@ Contracts (interfaces): IF-017
 | `pair_key(a, va, b, vb)` |  |  |
 | `all_pairs(values)` | Greedy all-pairs (pairwise) cover over a list of per-dimension value lists. |  |
 | `boundary_corners(dims)` | All-low, all-high, and each dimension flipped to its other extreme. |  |
+| `emit_toml_rows(cases, args, strategy, param_str)` | Paste-ready TC tables, one per case. |  |
+| `emit_csv_rows(cases, args, strategy, param_str)` | Paste-ready TC rows for the LEGACY carrier. |  |
 | `main()` |  |  |
 
 ### `scripts/gen_okf`
@@ -814,6 +819,7 @@ Contracts (interfaces): IF-012, IF-033, IF-106
 | `concept(rel_dir, cid, ctype, title, description, tags, resource, body_lines)` |  |  |
 | `links(label, ids, target_dir)` |  |  |
 | `field(label, value, fmt)` | One optional labelled body section, or nothing when the cell is empty. |  |
+| `source_path(root, rel, needs)` | The registry path to CITE, resolved to the carrier that is actually live |  |
 | `emit(root)` | {relpath-under-docs/okf: content} for the whole bundle, or {} when the |  |
 | `on_disk(out_root)` |  |  |
 | `main()` |  |  |
@@ -857,7 +863,7 @@ Contracts (interfaces): IF-018, IF-034, IF-107
 |---|---|---|
 | `load_csv(path)` |  |  |
 | `is_example(rid)` |  |  |
-| `read_stakeholder_needs(md_path)` | Parse the SN core-needs markdown table -> list of (SN-ID, need, acceptance). |  |
+| `read_stakeholder_needs(md_path)` | `(SN-ID, need, acceptance)` per need, through the CARRIER (repo-lock D-5). |  |
 | `main()` |  |  |
 
 ### `scripts/gen_skills_index`
@@ -1151,8 +1157,10 @@ Contracts (interfaces): IF-102
 | `rows_from_toml(text, id_col)` | `{id: row}` under today's column names, or None when `text` does not |  |
 | `rows_from_csv(text, id_col)` | `{id: row}` from the CSV carrier. |  |
 | `rows_from_text(text, id_col, carrier)` | `{id: row}` for the named carrier (`".toml"` / `".csv"`), or None when a |  |
+| `rows_seq_from_text(text, id_col, carrier)` | Rows as a SEQUENCE in file order, duplicates included — or None when a |  |
 | `resolve(path, suffixes)` | The live carrier file for a registry, given a path under EITHER suffix. |  |
 | `load(path, id_col, keep_examples)` | The live registry as a LIST of rows in file order — the shape |  |
+| `columns(path, id_col)` | The COLUMN NAMES a live registry actually uses, id column first, in | SR-001 |
 | `needs_from_markdown(text)` | `[{id, kind, **fields}]` from the legacy prose tables, document order. | SN-013 |
 | `needs_from_toml(text)` | `[{id, kind, **fields}]` from the TOML carrier, or None when it does not |  |
 | `needs_from_text(text)` | `[{id, kind, **fields}]` for a needs registry given only its TEXT, by | SN-001 |
@@ -1204,7 +1212,7 @@ Contracts (interfaces): IF-001, IF-021, IF-042
 | `interface_findings(ifs, sr_ids, module_ids)` | The IF-### seam tier's back-link checks (process.md §8), closing the gap |  |
 | `tc_citation_findings(tcs, spine_ids, ifs)` | Every TC-`Verifies` orphan rule, as ``[(at_fault_id, finding), ...]``. |  |
 | `placeholder_findings(label, raw_rows)` | Leftover template example rows (ids ending '-000') in one registry. |  |
-| `scan_sn_placeholders(sn_md)` | Sorted unique '-000' SN ids still present in stakeholder-needs.md (if it exists). |  |
+| `scan_sn_placeholders(sn_md)` | Sorted unique '-000' SN ids still present in the needs registry. |  |
 | `sn_all_ids(text)` | The SN id UNIVERSE: every `SN-###` token anywhere in stakeholder-needs.md |  |
 | `sn_draft_ids(text)` | The set of Draft SN ids in a needs registry's `text`, through whichever |  |
 | `sn_cited_ids(srs)` | Every SN id cited by >=1 SR row's `SN-Refs` cell — the coverage set the |  |
@@ -1301,7 +1309,7 @@ Contracts (interfaces): IF-084
 
 ### `scripts/traj_views`
 _The What / When / How-SW dashboard views (WI-280 split of gen_trajectory.py)._
-Imports (internal): `check_trajectory`, `traj_graph`, `traj_parse`, `traj_render`
+Imports (internal): `check_trajectory`, `traj_graph`, `traj_parse`, `traj_parse.spine_carrier`, `traj_render`
 Contracts (interfaces): IF-083
 
 | Public item | Summary | Implements |

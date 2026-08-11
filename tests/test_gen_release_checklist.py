@@ -8,7 +8,7 @@ TC-cites-LLR-only phase resolution, blank-`Automated`-counts-as-manual, the
 --version output routing, and the empty/absent-registry degradation.
 """
 
-from conftest import SCRIPTS, run_py
+from conftest import SCRIPTS, run_py, use_legacy_spine_carrier
 
 SR_HEADER = (
     "SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,"
@@ -39,18 +39,25 @@ def tc_row(rid, verifies, tier="Full", automated="No"):
 
 
 def write_srs(root, *rows):
+    # These fixtures write the LEGACY carrier onto a scaffold that now ships the
+    # TOML one, and `spine_carrier.resolve` refuses both homes at once rather
+    # than picking by precedence — so the scaffolded counterpart goes first
+    # (conftest.use_legacy_spine_carrier states the reasoning).
+    use_legacy_spine_carrier(root)
     (root / "docs" / "requirements" / "system-requirements.csv").write_text(
         SR_HEADER + "".join(rows), encoding="utf-8"
     )
 
 
 def write_llrs(root, *rows):
+    use_legacy_spine_carrier(root)
     (root / "docs" / "requirements" / "low-level-requirements.csv").write_text(
         LLR_HEADER + "".join(rows), encoding="utf-8"
     )
 
 
 def write_tcs(root, *rows):
+    use_legacy_spine_carrier(root)
     (root / "docs" / "test" / "test-cases.csv").write_text(
         TC_HEADER + "".join(rows), encoding="utf-8"
     )

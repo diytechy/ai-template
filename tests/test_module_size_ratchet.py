@@ -597,7 +597,15 @@ BASELINE = {
     # over TOML finds no headings, reports ZERO drafts, and FLOATS the gate) and
     # `_sn_prose` drops its copy of the edge-case fold. The fold's other two
     # copies went with it, in traj_parse and gen_okf.
-    "trace.py": 3404,
+    # Then +35 (3404 -> 3439), D-5 step 3 (the CUTOVER): `_attested_baseline`'s
+    # git-log pathspec names BOTH carriers — without it the log of a registry
+    # that changed carrier has no `Verified` revision in it and all 25 amended
+    # rows render "no attested baseline", the exact fail-open step 1 exists to
+    # prevent, reached by a second door; `_sn_ids` reads the need tier through
+    # the carrier instead of a markdown-row regex that matches nothing under
+    # TOML; and both needs-file reads resolve the carrier rather than testing
+    # one suffix for existence.
+    "trace.py": 3439,
     # +132 (1926 -> 2058; the last +10 is the F4 BOM hardening: read_rows utf-8-sig + git-show strips), WI-316: staged_spine_findings — the amend-without-
     # flip warn (--staged): content cells of a Verified spine row changed
     # without the Modified marker, suppressed when the owning SR flips in the
@@ -882,7 +890,18 @@ BASELINE = {
     # Then -58 (3887 -> 3829), D-5 step 2: same move to `spine_carrier.py`.
     # Net against pre-D-5: +32 — the git shell for the two-tree read, which is
     # this module's own and does not belong in a pure carrier module.
-    "check_trajectory.py": 3829,
+    # Then +6 (3829 -> 3835), D-5 step 3 (the CUTOVER): `current_digests` reads
+    # the three tiers through the carrier (a CSV parse of TOML returns nothing,
+    # and an empty digest map says "nothing to re-attest") and resolves the
+    # needs file instead of testing one suffix.
+    # Then +60 (3835 -> 3895), same commit: `_blame_row_times` grows its TOML
+    # arm. A registry ROW is one line under CSV and a whole TABLE under TOML, so
+    # the blame walk splits into a shared line reader plus one shape per
+    # carrier — and the TOML side takes the NEWEST commit over a table's lines,
+    # because an amendment edits a value line and leaves the header alone. Read
+    # with the CSV rule the map keys on `[requirement.SR-001]`, every lookup
+    # misses, and the backlog-staleness warn passes having checked nothing.
+    "check_trajectory.py": 3895,
     # NEW ENTRY, +25 (1498 -> 1523), WI-357: the two-stage work-branch claim
     # signal — the on-disk fast path plus the branch-history probe that
     # survives the §2.3 close commit (git log -1 over the claim path), with
@@ -1446,7 +1465,11 @@ BASELINE = {
     # so an integrator run that minted anything flagged its OWN bookkeeping and
     # failed the queue on a false red. Nine of the lines are the comment
     # arguing why the path is bookkeeping and not generated.
-    "integrate.py": 2484,
+    # Then +8 (2484 -> 2492), D-5 step 3: `_ADJUDICATION_SURFACES` names BOTH
+    # carrier paths per spine tier — it is a pathspec allowlist matched against
+    # `git diff --name-only`, and a repo that has not migrated stages the `.csv`
+    # name.
+    "integrate.py": 2492,
     # NEW ENTRY, 1503, D-5 step 2d — the re-entry the D-1 removal note above
     # predicted, arriving from the CARRIER half rather than the anchor half:
     # "it re-enters as a NEW ENTRY if the anchor half puts it back over."
@@ -1461,7 +1484,18 @@ BASELINE = {
     # honest reading is that intake.py is a monolith again by the kit's own
     # definition and is a WI-280 decomposition candidate on that basis — the
     # threshold means what it says or it means nothing.
-    "intake.py": 1503,
+    # Then +67 (1503 -> 1570), D-5 step 4: the Status writer gains its TOML arm
+    # — a LINE REWRITE on bootstrap.set_process_key's pattern, plus the refusal
+    # that fires when a located row's status line cannot be found (reporting a
+    # flip that was not written is a ratification the registry does not carry).
+    # Both carriers' writers now live here because both are live: an adopting
+    # repo that has not run migrate_carrier is still on CSV.
+    # Then +22 (1570 -> 1592), same commit: `_live_registry` — the existence
+    # PROBES behind a minted row's SpecRef resolve the carrier instead of
+    # testing one suffix. A `.toml`-only probe in a repo still on CSV minted
+    # every gap row with an EMPTY SpecRef, which integrate then refuses at
+    # merge: a failure moved from authoring time to merge time.
+    "intake.py": 1592,
 }
 
 

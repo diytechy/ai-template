@@ -159,7 +159,7 @@ def sn_rows(root):
     """Every need as the core four — `spine_carrier.folded_needs`, the ONE home
     this rule now has (repo-lock D-6). Was a copy of traj_parse._sn_rows and
     trace._sn_prose kept in sync by a docstring; they drifted."""
-    return spine_carrier.folded_needs(root / "docs/requirements/stakeholder-needs.md")
+    return spine_carrier.folded_needs(root / "docs/requirements/stakeholder-needs.toml")
 
 
 def read_enabled(root):
@@ -292,6 +292,18 @@ def _doc_title_and_summary(path):
     return title, summary
 
 
+def source_path(root, rel, needs=False):
+    """The registry path to CITE, resolved to the carrier that is actually live
+    (repo-lock D-5). The bundle's whole promise is that every generated page
+    names the file its content came from, so a hardcoded suffix would print a
+    path the reader cannot open — in the one line that exists to send them back
+    to the source of truth."""
+    live = spine_carrier.resolve(
+        root / rel, spine_carrier.NEED_CARRIERS if needs else spine_carrier.CARRIERS
+    )
+    return spine_carrier.stem(rel) + (live.suffix if live is not None else ".toml")
+
+
 def emit(root):
     """{relpath-under-docs/okf: content} for the whole bundle, or {} when the
     registries are placeholder-only/absent (the vacuous case)."""
@@ -300,16 +312,21 @@ def emit(root):
     # The spine tiers read through the CARRIER (repo-lock D-5) so the bundle
     # exports the same cells whether the registries are CSV or TOML.
     srs = real_rows(
-        spine_carrier.load(req / "system-requirements.csv", "SR-ID"), "SR-ID", "SR-"
+        spine_carrier.load(req / "system-requirements.toml", "SR-ID"), "SR-ID", "SR-"
     )
     llrs = real_rows(
-        spine_carrier.load(req / "low-level-requirements.csv", "LLR-ID"),
+        spine_carrier.load(req / "low-level-requirements.toml", "LLR-ID"),
         "LLR-ID",
         "LLR-",
     )
     tcs = real_rows(
-        spine_carrier.load(root / "docs/test/test-cases.csv", "TC-ID"), "TC-ID", "TC-"
+        spine_carrier.load(root / "docs/test/test-cases.toml", "TC-ID"), "TC-ID", "TC-"
     )
+
+    sn_src = source_path(root, "docs/requirements/stakeholder-needs.toml", needs=True)
+    sr_src = source_path(root, "docs/requirements/system-requirements.toml")
+    llr_src = source_path(root, "docs/requirements/low-level-requirements.toml")
+    tc_src = source_path(root, "docs/test/test-cases.toml")
     ifs = real_rows(read_rows(req / "interfaces.csv"), "IF-ID", "IF-")
     if not (sns or srs or llrs or tcs):
         return {}
@@ -347,11 +364,11 @@ def emit(root):
             r["need"][:80],
             r["need"],
             [],
-            "docs/requirements/stakeholder-needs.md ({})".format(cid),
+            "{} ({})".format(sn_src, cid),
             body,
         )
         entries.append((cid, r["need"]))
-    add_tier("stakeholder-needs", entries, "docs/requirements/stakeholder-needs.md")
+    add_tier("stakeholder-needs", entries, sn_src)
 
     entries = []
     for r in srs:
@@ -374,13 +391,11 @@ def emit(root):
                 (r.get("Status") or "").strip(),
                 (r.get("Area") or "").strip(),
             ],
-            "docs/requirements/system-requirements.csv ({})".format(cid),
+            "{} ({})".format(sr_src, cid),
             body,
         )
         entries.append((cid, (r.get("Title") or "").strip()))
-    add_tier(
-        "system-requirements", entries, "docs/requirements/system-requirements.csv"
-    )
+    add_tier("system-requirements", entries, sr_src)
 
     entries = []
     for r in llrs:
@@ -402,14 +417,14 @@ def emit(root):
             (r.get("Title") or "").strip(),
             (r.get("Detail") or "").strip(),
             [(r.get("Status") or "").strip()],
-            "docs/requirements/low-level-requirements.csv ({})".format(cid),
+            "{} ({})".format(llr_src, cid),
             body,
         )
         entries.append((cid, (r.get("Title") or "").strip()))
     add_tier(
         "low-level-requirements",
         entries,
-        "docs/requirements/low-level-requirements.csv",
+        llr_src,
     )
 
     entries = []
@@ -441,11 +456,11 @@ def emit(root):
                 "Automated={}".format((r.get("Automated") or "").strip() or "?"),
                 (r.get("Status") or "").strip(),
             ],
-            "docs/test/test-cases.csv ({})".format(cid),
+            "{} ({})".format(tc_src, cid),
             body,
         )
         entries.append((cid, (r.get("Method") or "").strip()))
-    add_tier("test-cases", entries, "docs/test/test-cases.csv")
+    add_tier("test-cases", entries, tc_src)
 
     if ifs:
         entries = []

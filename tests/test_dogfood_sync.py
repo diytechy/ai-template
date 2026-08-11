@@ -9,9 +9,11 @@ The kit's product is the template in ``project-trajectory/``; this repo also
 
 This module is the enforcer. It asserts, for the live repo, that:
 
-  * each live registry header is an ordered SUPERSET of its template header
-    (live-only extensions like the SR ``SupersededBy`` column added in WI-229
-    are legal; a *missing* template column is drift);
+  * each live registry's COLUMN VOCABULARY agrees with its template's, by the
+    rule its carrier makes checkable — an ordered superset for the CSV
+    registries, a key-set containment for the TOML spine (see
+    ``test_spine_template_declares_every_key_the_live_registry_uses``, which
+    states why the direction had to invert);
   * the root ``agent-resume.{sh,cmd,command}`` launchers structurally match
     their templates on the engine-invocation line (normalised for the meta-repo
     ``project-trajectory/`` path prefix + ``--root .`` self-application) and the
@@ -36,10 +38,13 @@ launcher engine-line pin correctly does not reach them.
 import csv
 import io
 import re
+import tomllib
 
 import pytest
 
 from conftest import ROOT, load_script
+
+CARRIER = load_script("spine_carrier")
 
 # --- census: live registry -> its shipped template ---------------------------
 REGISTRIES = {
@@ -48,11 +53,12 @@ REGISTRIES = {
     # BOILERPLATE_COPIES below), and the CSV template survives only as the
     # legacy-format reference wi_convert.py migrates from — its schema is
     # pinned by test_wi_convert and test_plan_artifacts, not by a live copy.
-    "docs/requirements/system-requirements.csv": "system-requirements.template.csv",
-    "docs/requirements/low-level-requirements.csv": "low-level-requirements.template.csv",
+    #
+    # The three SPINE tiers left it at the carrier cutover (repo-lock D-5): they
+    # are TOML now, have no header to order, and are held by the key-set rule
+    # below instead. Only the registries that stayed CSV are checked here.
     "docs/requirements/components.csv": "components.template.csv",
     "docs/requirements/interfaces.csv": "interfaces.template.csv",
-    "docs/test/test-cases.csv": "test-cases.template.csv",
     # WI-322 / 122-REVIEW-A: the new owner-decision registry was the ONE shipped
     # registry whose header was not locked to its live counterpart. Drifting
     # Status/Raised/OneLine in the template passed all 23 dogfood tests, and a
@@ -214,14 +220,161 @@ def test_dev_setup_carries_no_engine_line_to_pin():
         assert _engine_line(text) is None, name
 
 
+# --- the spine's TOML carrier: a KEY-SET rule, not an ordered header ----------
+# (repo-lock D-5 step 5. The three tiers below moved carrier; `components`,
+# `interfaces` and `open-items` did not, and stay on the ordered rule above.)
+SPINE_REGISTRIES = {
+    "docs/requirements/system-requirements.toml": (
+        "system-requirements.template.toml",
+        "requirement",
+        "SR-ID",
+    ),
+    "docs/requirements/low-level-requirements.toml": (
+        "low-level-requirements.template.toml",
+        "design",
+        "LLR-ID",
+    ),
+    "docs/test/test-cases.toml": ("test-cases.template.toml", "test", "TC-ID"),
+}
+
+
+def _toml_keys(path, table):
+    """The union of keys the rows of one TOML registry set. UNION, never
+    intersection: an absent key is a legitimately empty cell on an individual
+    row, so a column exists in the registry iff SOME row uses it."""
+    rows = tomllib.loads(path.read_text(encoding="utf-8"))[table]
+    return {k for row in rows.values() for k in row}
+
+
+def registry_key_drift(template_keys, live_keys, vocabulary):
+    """None when the two carrier vocabularies agree, else a message.
+
+    TWO RULES, both directions checkable, neither vacuous:
+
+      * every key a LIVE row uses is declared by the template's `-000` example
+        row — the anti-drift rule, and the direction that still has a
+        declaration to compare against;
+      * every key the TEMPLATE declares is one the carrier VOCABULARY knows, so
+        a scaffold cannot ship a column the loader would silently drop.
+    """
+    undeclared = sorted(live_keys - template_keys)
+    if undeclared:
+        return "live registry uses key(s) %s the template declares nowhere" % ",".join(
+            undeclared
+        )
+    unknown = sorted(template_keys - set(vocabulary))
+    if unknown:
+        return "template declares key(s) %s the carrier cannot map" % ",".join(unknown)
+    return None
+
+
+@pytest.mark.parametrize("live_rel", sorted(SPINE_REGISTRIES))
+def test_spine_template_declares_every_key_the_live_registry_uses(live_rel):
+    """The TOML analogue of the ordered-header rule — and it had to INVERT.
+
+    Under CSV the LIVE file declared its own schema in a header, so "template
+    header is an ordered subsequence of the live header" was checkable and
+    order meant something. TOML has neither: there is no header, key order in a
+    table is not semantic, and an absent key IS the empty cell. So the live
+    registry no longer declares a column it does not use — `Permutations` is
+    the live case today, a column the CSV header carried with all 147 cells
+    empty and which simply does not exist under TOML. Holding the live side to
+    "declares every template column" would red on that legitimate state, and
+    the only way to keep it green would be to stop checking, which is the
+    "green hides a skipped check" failure SN-008 forbids.
+
+    What survives is the same class of drift read from the side that still has
+    a declaration: the template's `-000` row IS the schema now, so a live key
+    it never learned is exactly the WI-322 hazard — a fresh scaffold whose
+    tooling does not know a column the live repo relies on. It is not vacuous:
+    it caught two real drifts the ordered rule allowed by construction (the SR
+    template had never declared `SupersededBy`, live since WI-229; the LLR
+    template's `Component` cell was blank, so the converted template lost the
+    column the CSV header had declared).
+    """
+    tmpl_name, table, id_col = SPINE_REGISTRIES[live_rel]
+    live = _toml_keys(ROOT / live_rel, table)
+    tmpl = _toml_keys(TEMPLATE_DIR / tmpl_name, table)
+    assert live, live_rel  # a registry with no rows would make this vacuous
+    drift = registry_key_drift(tmpl, live, CARRIER.SPINE_COLUMN)
+    assert drift is None, "%s: %s" % (live_rel, drift)
+
+
+def test_the_live_spine_carries_more_than_the_template_example(tmp_path):
+    """The rule above is only worth having if the live registries are real.
+
+    Guards against the shape where both sides shrink to the `-000` example and
+    every containment holds trivially."""
+    for live_rel, (_t, table, _id) in SPINE_REGISTRIES.items():
+        rows = tomllib.loads((ROOT / live_rel).read_text(encoding="utf-8"))[table]
+        assert len(rows) > 10, live_rel
+
+
 # --- bite-proofs: each check FAILS on a mutated scratch copy -------------------
 def test_bite_removed_live_registry_column():
-    live = _header(ROOT / "docs/requirements/system-requirements.csv")
-    tmpl = _header(TEMPLATE_DIR / "system-requirements.template.csv")
+    live = _header(ROOT / "docs/requirements/interfaces.csv")
+    tmpl = _header(TEMPLATE_DIR / "interfaces.template.csv")
     assert registry_header_drift(tmpl, live) is None  # clean today
-    mutated = [c for c in live if c != "Priority"]  # owner drops a live column
+    mutated = [c for c in live if c != "Status"]  # owner drops a live column
     drift = registry_header_drift(tmpl, mutated)
-    assert drift is not None and "Priority" in drift
+    assert drift is not None and "Status" in drift
+
+
+def test_bite_the_spine_key_rule_fails_on_a_planted_defect(tmp_path):
+    """DRIVEN AGAINST A REAL PLANTED DEFECT, in a temp copy of the real files —
+    because a containment rule that cannot be made to fail is the vacuous green
+    this suite exists to refuse.
+
+    Two mutations, one per direction: a live row that grows a key the template
+    never declared, and a template that declares a key the carrier cannot map.
+    """
+    live_rel = "docs/requirements/system-requirements.toml"
+    tmpl_name, table, _id = SPINE_REGISTRIES[live_rel]
+    live_src = (ROOT / live_rel).read_text(encoding="utf-8")
+    tmpl_src = (TEMPLATE_DIR / tmpl_name).read_text(encoding="utf-8")
+
+    live_copy = tmp_path / "live.toml"
+    tmpl_copy = tmp_path / "tmpl.toml"
+    live_copy.write_text(live_src, encoding="utf-8")
+    tmpl_copy.write_text(tmpl_src, encoding="utf-8")
+    assert (
+        registry_key_drift(
+            _toml_keys(tmpl_copy, table),
+            _toml_keys(live_copy, table),
+            CARRIER.SPINE_COLUMN,
+        )
+        is None
+    )  # the unmutated copies are clean, so a failure below is the mutation
+
+    def _plant(text, header):
+        """Insert an undeclared key under `header`'s TABLE — matched at the start
+        of a line, because both files MENTION the header inside a comment and a
+        naive first-occurrence replace corrupts that comment instead."""
+        out = []
+        planted = False
+        for line in text.split("\n"):
+            out.append(line)
+            if not planted and line == header:
+                out.append('owner_hat = "Systems"')
+                planted = True
+        assert planted, header
+        return "\n".join(out)
+
+    # (1) a live row quietly grows a column nobody shipped.
+    live_copy.write_text(_plant(live_src, "[requirement.SR-001]"), encoding="utf-8")
+    drift = registry_key_drift(
+        _toml_keys(tmpl_copy, table), _toml_keys(live_copy, table), CARRIER.SPINE_COLUMN
+    )
+    assert drift is not None and "owner_hat" in drift
+
+    # (2) the template declares a key the carrier vocabulary cannot map, so a
+    # scaffold would write cells the loader silently drops.
+    live_copy.write_text(live_src, encoding="utf-8")
+    tmpl_copy.write_text(_plant(tmpl_src, "[requirement.SR-000]"), encoding="utf-8")
+    drift = registry_key_drift(
+        _toml_keys(tmpl_copy, table), _toml_keys(live_copy, table), CARRIER.SPINE_COLUMN
+    )
+    assert drift is not None and "owner_hat" in drift
 
 
 def test_bite_launcher_engine_line_edit():

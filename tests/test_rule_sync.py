@@ -414,23 +414,30 @@ def test_the_readers_are_the_exact_inverse_of_the_writer():
 def test_every_live_spine_column_round_trips_through_the_carrier_vocabulary():
     # The maps above could agree with each other and still both be missing a
     # column that actually exists — the vacuous-agreement failure this suite
-    # keeps finding. So drive the LIVE registry headers through the pair.
-    import csv
-
+    # keeps finding. So drive the LIVE registries' own columns through the pair.
+    #
+    # Asked through `spine_carrier.columns`, not `csv.DictReader`: over the TOML
+    # carrier the reader returns `['[requirement.SR-001]']` as the header, which
+    # is not a column, and the loop would then assert a nonsense name into
+    # MIGRATE.KEY and fail for the wrong reason — or, had the name happened to
+    # be absent from the header, check nothing at all.
+    CARRIER = load_script("spine_carrier")
+    checked = 0
     for rel, id_col in TRACE.SPINE_FILES:
-        path = ROOT / rel
-        if not path.exists():
+        columns = CARRIER.columns(ROOT / rel, id_col)
+        if not columns:
             continue
-        with path.open(newline="", encoding="utf-8-sig") as fh:
-            header = csv.DictReader(fh).fieldnames or []
-        assert header, rel
-        for column in header:
+        for column in columns:
             if column == id_col:
                 continue  # the id is the TABLE KEY, not a field
             assert column in MIGRATE.KEY, "{}: {} has no carrier key".format(
                 rel, column
             )
             assert TRACE.SPINE_COLUMN[MIGRATE.KEY[column]] == column
+            checked += 1
+    # Non-vacuous by construction: the three live tiers carry ~30 columns
+    # between them, so a resolver that quietly found nothing reds here.
+    assert checked > 20, checked
 
 
 def test_the_need_reader_agrees_with_both_heading_scrapers():

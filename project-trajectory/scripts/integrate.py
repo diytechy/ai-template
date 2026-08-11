@@ -1436,8 +1436,16 @@ _ADJUDICATION_SURFACES = (
     "docs/log.d/",
     "docs/reviews/",
     "docs/gate",
+    # BOTH carrier paths per spine tier (repo-lock D-5): this is a pathspec
+    # allowlist matched against `git diff --name-only`, and a repo that has not
+    # migrated stages the `.csv` name. Naming one suffix would fail the lane
+    # TOWARD the full bar there — safe, but wrong, and invisible until someone
+    # wonders why adjudication never takes the cheap path.
+    "docs/requirements/system-requirements.toml",
     "docs/requirements/system-requirements.csv",
+    "docs/requirements/low-level-requirements.toml",
     "docs/requirements/low-level-requirements.csv",
+    "docs/test/test-cases.toml",
     "docs/test/test-cases.csv",
     "docs/requirements/open-items.csv",
     # SN-031's per-close reports: an adjudication lane READS them and, on an

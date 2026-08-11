@@ -29,9 +29,9 @@ What it creates in the destination:
     docs/plan.md                               <- PLAN.template.md  (plan/build session blocks)
     docs/architecture.md                       <- ARCHITECTURE.template.md
     docs/interfaces.md                         <- INTERFACES.template.md
-    docs/requirements/stakeholder-needs.md     <- registries/stakeholder-needs.template.md
-    docs/requirements/system-requirements.csv  <- registries/system-requirements.template.csv
-    docs/requirements/low-level-requirements.csv
+    docs/requirements/stakeholder-needs.toml   <- registries/stakeholder-needs.template.toml
+    docs/requirements/system-requirements.toml <- registries/system-requirements.template.toml
+    docs/requirements/low-level-requirements.toml
     docs/requirements/interfaces.csv           <- registries/interfaces.template.csv
     docs/requirements/performance-budgets.csv  <- registries/performance-budgets.template.csv
     docs/requirements/procurement.csv          <- registries/procurement.template.csv
@@ -49,7 +49,7 @@ What it creates in the destination:
     docs/specs/README.md, docs/specs/WI-000.md <- specs/*.template.md  (spec-of-record dir)
     docs/knowledge/README.md                  <- knowledge/README.template.md
     docs/rubrics/README.md, docs/rubrics/rubric-000.md <- rubrics/*.template.md  (critique rubrics)
-    docs/test/test-cases.csv                   <- registries/test-cases.template.csv
+    docs/test/test-cases.toml                  <- registries/test-cases.template.toml
     scripts/trace.py, trace_text.py, derive_gate.py, check.py, check_flows.py, check_docs.py, check_perf.py,
     scripts/check_stubs.py, check_dupes.py, check_coverage.py, check_doc_refs.py, check_figures.py, check_privacy.py, check_vendored.py, check_trajectory.py,
     scripts/subagent_gate.py, gen_arch_map.py, gen_release_checklist.py, gen_cases.py, gen_trajectory.py, gen_open_items.py, gen_okf.py
@@ -1562,16 +1562,16 @@ MAPPING = [
     ("ARCHITECTURE.template.md", "docs/architecture.md"),
     ("INTERFACES.template.md", "docs/interfaces.md"),
     (
-        "registries/stakeholder-needs.template.md",
-        "docs/requirements/stakeholder-needs.md",
+        "registries/stakeholder-needs.template.toml",
+        "docs/requirements/stakeholder-needs.toml",
     ),
     (
-        "registries/system-requirements.template.csv",
-        "docs/requirements/system-requirements.csv",
+        "registries/system-requirements.template.toml",
+        "docs/requirements/system-requirements.toml",
     ),
     (
-        "registries/low-level-requirements.template.csv",
-        "docs/requirements/low-level-requirements.csv",
+        "registries/low-level-requirements.template.toml",
+        "docs/requirements/low-level-requirements.toml",
     ),
     ("registries/interfaces.template.csv", "docs/requirements/interfaces.csv"),
     (
@@ -1606,7 +1606,7 @@ MAPPING = [
     # `docs/work/*` is a declared expected-live-orphan class rather than a wall
     # of check_docs warnings (WI-228's census idiom, one glob with its reason).
     ("orphans-allow.template", "docs/orphans-allow"),
-    ("registries/test-cases.template.csv", "docs/test/test-cases.csv"),
+    ("registries/test-cases.template.toml", "docs/test/test-cases.toml"),
     # Specs-of-record (process-options.md "Trajectory / work-items layer"): the
     # per-WI spec directory the work-items.csv `SpecRef` column points at (rule
     # R-E). A README explaining the layer + an inert WI-000 example carrying the

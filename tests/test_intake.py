@@ -27,6 +27,7 @@ the real spec folder — no seam is stubbed.
 
 import subprocess
 
+import pytest
 from conftest import (
     env_gate_skipif,
     load_script,
@@ -738,6 +739,76 @@ def test_below_the_human_level_the_flip_is_enacted(tmp_path):
         assert "Modified" not in llr
         again = intake.flip_verified(root, ["SR-001", "LLR-001"])
         assert again == ("flip", [], None)  # idempotent: nothing left Modified
+
+
+SR_TOML = (
+    "# The system requirements. Comments here are LOAD-BEARING for this test.\n"
+    "\n"
+    "[requirement.SR-001]\n"
+    'title = "Adder"\n'
+    'sn_refs = ["SN-001"]\n'
+    'requirement = """the text"""\n'
+    'status = "Modified"\n'
+    "phase = 1\n"
+    "\n"
+    "# a comment BETWEEN rows, which a re-serialisation would delete\n"
+    "[requirement.SR-002]\n"
+    'title = "Widget"\n'
+    'sn_refs = ["SN-001"]\n'
+    'status = "Verified"\n'
+)
+
+
+def test_the_flip_rewrites_ONE_LINE_of_the_toml_carrier(tmp_path):
+    # Step 4 of the carrier migration (repo-lock D-5): under the TOML carrier the
+    # flip is a LINE REWRITE, on bootstrap.set_process_key's pattern. The
+    # properties that matter are what a re-serialisation would destroy —
+    # comments, ordering, and every untouched byte — so this asserts the file is
+    # byte-identical apart from the single status line of the named row.
+    root = _policy_repo(tmp_path, 0)
+    req = root / "docs" / "requirements"
+    (req / "system-requirements.csv").unlink()
+    sr_toml = req / "system-requirements.toml"
+    sr_toml.write_text(SR_TOML, encoding="utf-8", newline="\n")
+    before = sr_toml.read_text(encoding="utf-8")
+
+    action, flipped, refusal = intake.flip_verified(root, ["SR-001"])
+    assert refusal is None, refusal
+    assert (action, flipped) == ("flip", ["SR-001"])
+
+    after = sr_toml.read_text(encoding="utf-8")
+    b, a = before.split("\n"), after.split("\n")
+    assert len(b) == len(a)
+    moved = [i for i in range(len(b)) if b[i] != a[i]]
+    assert len(moved) == 1, [(b[i], a[i]) for i in moved]
+    assert (b[moved[0]], a[moved[0]]) == ('status = "Modified"', 'status = "Verified"')
+    # The comments and the untouched row survived, which is the whole reason
+    # this is a line rewrite rather than a re-emit.
+    assert "# a comment BETWEEN rows" in after
+    assert 'status = "Verified"' in after.split("[requirement.SR-002]")[1]
+    # Idempotent, and it never reaches past the row it was asked for.
+    assert intake.flip_verified(root, ["SR-001"]) == ("flip", [], None)
+
+
+def test_a_toml_row_with_no_status_line_refuses_rather_than_claiming_a_flip(tmp_path):
+    # The mutation that proves the writer can still fail: a located row whose
+    # status line the rewrite cannot find must REFUSE, because reporting a flip
+    # that was never written is a ratification the registry does not carry.
+    root = _policy_repo(tmp_path, 0)
+    req = root / "docs" / "requirements"
+    (req / "system-requirements.csv").unlink()
+    (req / "system-requirements.toml").write_text(
+        SR_TOML, encoding="utf-8", newline="\n"
+    )
+    located, tables = intake._locate_spine_rows(root, {"SR-001"})
+    # Plant the defect: the row is located as Modified, but its status line is
+    # gone from the file by the time the writer runs.
+    (req / "system-requirements.toml").write_text(
+        SR_TOML.replace('status = "Modified"\n', ""), encoding="utf-8", newline="\n"
+    )
+    with pytest.raises(SystemExit) as excinfo:
+        intake._apply_flips(root, tables, located)
+    assert "refusing to report a flip that was not written" in str(excinfo.value)
 
 
 def test_an_unknown_row_id_refuses_the_flip(tmp_path):

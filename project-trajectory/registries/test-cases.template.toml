@@ -1,0 +1,25 @@
+# Test Cases (TC-###) — the TOML registry CARRIER.
+#
+# ONE TABLE PER ROW, id-keyed with the prefix retained and the key BARE:
+# `[test.TC-000]`. `verifies` is a typed array naming the SR/LLR (and, at
+# rung 2, IF) ids this case covers; `Phase` is an int; an EMPTY CELL IS AN
+# ABSENT KEY — omit a key rather than setting it to "".
+# A duplicate id is a parse error, which is the carrier doing what a check
+# used to (docs/process.md; the carrier's reader is scripts/spine_carrier.py).
+#
+# THE `-000` ROW BELOW IS THE SCHEMA. There is no header line to declare a
+# column, so this example row is the only place the vocabulary is written
+# down: it sets EVERY key the tier has, with the guidance for each as its
+# value. Delete it on the first real entry.
+[test.TC-000]
+verifies = ["SR-000", "LLR-000"]
+level = "Unit"
+method = "EXAMPLE - delete on first real entry"
+tier = "Smoke"
+parameters = "param=a; other=x"
+expected = "Cite the verified requirement's AcceptanceCriteria by id (do not paraphrase)."
+automated = "No"
+evidence = "docs/test/manual-smoke.md"
+status = "Draft"
+phase = """Delivery phase = the max Phase of the SR/LLR it Verifies (a bare integer; blank only on a pre-ratification Draft row). See process.md 'Phased delivery'."""
+

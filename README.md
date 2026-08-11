@@ -158,10 +158,10 @@ graph LR
 
 | Registry | Ids | What it does |
 |---|---|---|
-| [`stakeholder-needs`](project-trajectory/registries/stakeholder-needs.template.md) | `SN-###` | Why the project exists — one need per row, in the stakeholder's words. The root every other row must trace back to. |
-| [`system-requirements`](project-trajectory/registries/system-requirements.template.csv) | `SR-###` | One testable *shall*-statement per row, with measurable acceptance criteria and input `Permutations` for test design; cites the `SN` it serves. |
-| [`low-level-requirements`](project-trajectory/registries/low-level-requirements.template.csv) | `LLR-###` | The design decomposition — pins an SR onto real code (`Module` + `CodeSymbol`). Adds detail; never paraphrases its parent. |
-| [`test-cases`](project-trajectory/registries/test-cases.template.csv) | `TC-###` | Verifies SR/LLR ids; states its `Method` (how it runs) and `Tier`. The verification class (Test / Demonstration / Inspection / Attest) rides the SR's `Verification` column. Written failing-first at G2. |
+| [`stakeholder-needs`](project-trajectory/registries/stakeholder-needs.template.toml) | `SN-###` | Why the project exists — one need per row, in the stakeholder's words. The root every other row must trace back to. |
+| [`system-requirements`](project-trajectory/registries/system-requirements.template.toml) | `SR-###` | One testable *shall*-statement per row, with measurable acceptance criteria and input `Permutations` for test design; cites the `SN` it serves. |
+| [`low-level-requirements`](project-trajectory/registries/low-level-requirements.template.toml) | `LLR-###` | The design decomposition — pins an SR onto real code (`Module` + `CodeSymbol`). Adds detail; never paraphrases its parent. |
+| [`test-cases`](project-trajectory/registries/test-cases.template.toml) | `TC-###` | Verifies SR/LLR ids; states its `Method` (how it runs) and `Tier`. The verification class (Test / Demonstration / Inspection / Attest) rides the SR's `Verification` column. Written failing-first at G2. |
 
 [`trace.py`](project-trajectory/scripts/trace.py) joins the four tiers into the
 traceability matrix (`docs/test/report.md`; `--html` adds a collapsible map) and
@@ -300,7 +300,7 @@ process**, traced by its own `SN→SR→LLR→TC` spine and gated by its own
 [`check.py`](project-trajectory/scripts/check.py).
 
 - Every capability above cites the
-  [stakeholder need](docs/requirements/stakeholder-needs.md) it realizes;
+  [stakeholder need](docs/requirements/stakeholder-needs.toml) it realizes;
   `check_docs.py`'s **opt-out** need-coverage guard keeps that honest — every
   Must/Should need must be cited somewhere in this README, so a requirements
   change mechanically ages it (no delimiter markers; any `SN-###` counts).

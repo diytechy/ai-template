@@ -483,38 +483,50 @@ def test_spine_cell_split_classifies_every_shipped_column():
     # live registries AND of the blank forms the kit ships must be classified
     # explicitly, or ruled out as the id/Status key. Adding a column to a
     # registry therefore fails HERE, at the ruling, rather than quietly.
+    # The COLUMN SET comes from the carrier now, not from a header line: under
+    # TOML `csv.reader` would hand back `['[requirement.SR-001]']` and the check
+    # would pass having classified nothing. `spine_carrier.columns` answers the
+    # same question for whichever carrier is live (repo-lock D-5).
     ct = load_script("check_trajectory")
-    headers = []
-    for csv_path, id_col in ct.SPINE_CSVS:
-        headers.append((csv_path, id_col, ROOT / csv_path))
-        template = (
-            ROOT
-            / "project-trajectory"
-            / "registries"
-            / (os.path.basename(csv_path).replace(".csv", ".template.csv"))
+    carrier = load_script("spine_carrier")
+    surfaces = []
+    for rel, id_col in ct.SPINE_CSVS:
+        surfaces.append((rel, id_col, ROOT / rel))
+        surfaces.append(
+            (
+                rel,
+                id_col,
+                ROOT
+                / "project-trajectory"
+                / "registries"
+                / os.path.basename(rel).replace(".toml", ".template.toml"),
+            )
         )
-        headers.append((csv_path, id_col, template))
-    for csv_path, id_col, path in headers:
+    for rel, id_col, path in surfaces:
         assert path.is_file(), path
-        with path.open(encoding="utf-8-sig", newline="") as handle:
-            columns = next(csv.reader(handle))
-        classified = (
-            set(ct.SPINE_RATIFIED_CELLS[csv_path])
-            | set(ct.SPINE_TRACED_CELLS[csv_path])
-            | {id_col, "Status"}
-        )
-        assert not set(columns) - classified, (
+        columns = carrier.columns(path, id_col)
+        assert columns, path  # an empty column set would classify nothing
+        unclassified = {c for c in columns if c not in (id_col, "Status")}
+        # Asked through the PUBLIC RULE rather than by indexing the tables: the
+        # tables are keyed by a path that carries a carrier suffix, and the rule
+        # is what every caller actually goes through.
+        unclassified = {
+            c
+            for c in unclassified
+            if c
+            not in set(ct.SPINE_RATIFIED_CELLS[rel]) | set(ct.SPINE_TRACED_CELLS[rel])
+        }
+        assert not unclassified, (
             "{}: column(s) {} are classified by NEITHER half of the §A5.1 split "
             "in check_trajectory.py — rule them ratified or traced".format(
-                path, sorted(set(columns) - classified)
+                path, sorted(unclassified)
             )
         )
     # And the two halves must not overlap: a cell cannot be both.
-    for csv_path, _ in ct.SPINE_CSVS:
+    for rel, _ in ct.SPINE_CSVS:
         assert not (
-            set(ct.SPINE_RATIFIED_CELLS[csv_path])
-            & set(ct.SPINE_TRACED_CELLS[csv_path])
-        ), csv_path
+            set(ct.SPINE_RATIFIED_CELLS[rel]) & set(ct.SPINE_TRACED_CELLS[rel])
+        ), rel
 
 
 def test_the_two_wi388_cell_rulings_are_recorded_in_the_split():
@@ -527,9 +539,19 @@ def test_the_two_wi388_cell_rulings_are_recorded_in_the_split():
     #   * SR `SupersededBy` -> RATIFIED, confirmed: a supersession IS a scope
     #     statement — it terminates a requirement's lifecycle in favour of
     #     another — so a silent one would be a missed window nobody sees.
+    # Asked through `spine_cell_class`, the rule every caller goes through, and
+    # asked under BOTH carrier suffixes: the tables are keyed by a path that
+    # carries one, and a lookup miss reads `ratified` — which would silently
+    # re-arm the window WI-388 ruled these cells out of (repo-lock D-5).
     ct = load_script("check_trajectory")
-    llr = "docs/requirements/low-level-requirements.csv"
-    sr = "docs/requirements/system-requirements.csv"
+    for suffix in (".csv", ".toml"):
+        llr = "docs/requirements/low-level-requirements" + suffix
+        sr = "docs/requirements/system-requirements" + suffix
+        assert ct.spine_cell_class(llr, "SR-Refs") == "traced", suffix
+        assert ct.spine_cell_class(sr, "SupersededBy") == "ratified", suffix
+        assert ct.spine_cell_class(sr, "SN-Refs") == "traced", suffix
+    llr = "docs/requirements/low-level-requirements.toml"
+    sr = "docs/requirements/system-requirements.toml"
     assert "SR-Refs" in ct.SPINE_TRACED_CELLS[llr]
     assert "SR-Refs" not in ct.SPINE_RATIFIED_CELLS[llr]
     assert "SupersededBy" in ct.SPINE_RATIFIED_CELLS[sr]
@@ -711,8 +733,12 @@ def test_text_smuggled_into_the_cutover_commit_is_caught(tmp_path):
     run_git("commit", "-m", "cut the carrier over to TOML")
 
     amendments = ct.staged_spine_amendments(tmp_path, "HEAD~1", "HEAD")
+    # The record names the row's NEW home — the cutover commit touches both
+    # carrier paths (it deletes one and adds the other), and the file a reader
+    # can open afterwards is the TOML one. What the check is FOR is the pair
+    # below: the smuggled cell, named, with both sides of the change.
     assert [(a["registry"], a["id"]) for a in amendments] == [
-        ("docs/requirements/system-requirements.csv", "SR-001")
+        ("docs/requirements/system-requirements.toml", "SR-001")
     ]
     assert amendments[0]["ratified"] == {
         "Requirement": ("the original attested text", "text nobody agreed to")

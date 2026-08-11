@@ -161,10 +161,10 @@ WI_CSV = "docs/requirements/work-items.csv"
 # because the git plumbing below passes it as a PATHSPEC; the reader derives
 # the same folder from the CSV path via `spec_work_dir`.
 WI_WORK = "docs/work"
-SR_CSV = "docs/requirements/system-requirements.csv"
-TC_CSV = "docs/test/test-cases.csv"
+SR_CSV = "docs/requirements/system-requirements.toml"
+TC_CSV = "docs/test/test-cases.toml"
 IF_CSV = "docs/requirements/interfaces.csv"
-LLR_CSV = "docs/requirements/low-level-requirements.csv"
+LLR_CSV = "docs/requirements/low-level-requirements.toml"
 CMP_CSV = "docs/requirements/components.csv"
 ARCH_MD = "docs/architecture.md"
 SPECS_DIR = "docs/specs"
@@ -868,7 +868,7 @@ def load_known_srs(root):
     """The set of real SR ids from system-requirements.csv (for the SR-ref warn)."""
     return {
         (r.get("SR-ID") or "").strip()
-        for r in read_rows(root / SR_CSV)
+        for r in spine_carrier.load(root / SR_CSV, "SR-ID")
         if (r.get("SR-ID") or "").startswith("SR-")
     }
 
@@ -1030,7 +1030,7 @@ def interface_findings(root):
     # Seam-TC citation: each Active IF id should be cited by >=1 TC (the rung-2
     # seam-TC rule, finally checkable now that trace reads the IF tier).
     tc_cited = set()
-    for r in read_rows(root / TC_CSV):
+    for r in spine_carrier.load(root / TC_CSV, "TC-ID"):
         tc_cited.update(IF_ID_RE.findall(r.get("Verifies", "") or ""))
     for r in ifs:
         if r["status"] == "active" and r["id"] not in tc_cited:
@@ -1123,7 +1123,7 @@ def module_components(root):
     nothing. The tag set is left unfiltered against the CMP registry here; the
     caller intersects with the real ids (a phantom tag is trace.py's finding)."""
     out = {}
-    for r in read_rows(root / LLR_CSV):
+    for r in spine_carrier.load(root / LLR_CSV, "LLR-ID"):
         lid = (r.get("LLR-ID") or "").strip()
         if not lid.startswith("LLR-") or lid.endswith("-000"):
             continue
@@ -2450,31 +2450,74 @@ def _git(root, args):
 
 
 def _blame_row_times(root, rel_path):
-    """`{row-id: committer-time-epoch}` for a registry CSV, via a single
-    `git blame --line-porcelain`. Each physical CSV row is one blame line whose
-    leading field (up to the first comma) is its id; the id maps to the committer
-    time of the commit that last touched that line. Returns {} on ANY git failure
-    — no repo, an untracked/uncommitted file, an unparseable blame — so the
-    backlog-staleness warn degrades silently off-git (never a false warn, never a
-    crash). One subprocess per file keeps the cost bounded (WI-205: ≤2 blames)."""
-    out = _git(root, ["blame", "--line-porcelain", "--", rel_path])
+    """`{row-id: committer-time-epoch}` for a registry, via a single
+    `git blame --line-porcelain`. Returns {} on ANY git failure — no repo, an
+    untracked/uncommitted file, an unparseable blame — so the backlog-staleness
+    warn degrades silently off-git (never a false warn, never a crash). One
+    subprocess per file keeps the cost bounded (WI-205: ≤2 blames).
+
+    THE ROW'S SHAPE IS THE CARRIER'S, and getting that wrong is silent. Under
+    CSV a row is ONE line whose leading field (up to the first comma) is its id.
+    Under TOML a row is a TABLE spanning many lines, its id in the `[tier.ID]`
+    header, and its time is the NEWEST commit over those lines — an amendment
+    can touch any one of them. Read with the CSV rule a TOML registry yields a
+    map keyed by `[requirement.SR-001]` and `title = "..."`, which no caller
+    ever looks up: every lookup misses, the compare never fires, and the
+    staleness warn passes because it found nothing to check (repo-lock D-5)."""
+    live = spine_carrier.resolve(Path(root) / rel_path)
+    if live is None:
+        return {}
+    blamed = spine_carrier.stem(rel_path) + live.suffix
+    out = _git(root, ["blame", "--line-porcelain", "--", blamed])
     if out is None:
         return {}
-    times = {}
+    return (_blame_toml_times if live.suffix == ".toml" else _blame_csv_times)(out)
+
+
+def _blame_lines(porcelain):
+    """`(committer_time, content)` per blamed line, in file order — the shared
+    walk both carrier readers need. `--line-porcelain` repeats the full commit
+    header for every line, so a `committer-time <epoch>` header always precedes
+    its `\\t<content>` line."""
     committer_time = None
-    for line in out.split("\n"):
-        # --line-porcelain repeats the full commit header for every line, so a
-        # `committer-time <epoch>` header always precedes its `\t<content>` line.
+    for line in porcelain.split("\n"):
         if line.startswith("committer-time "):
             try:
                 committer_time = int(line[len("committer-time ") :].strip())
             except ValueError:
                 committer_time = None
         elif line.startswith("\t"):
-            token = line[1:].split(",", 1)[0].strip()
-            if token and committer_time is not None:
-                times[token] = committer_time
+            yield committer_time, line[1:]
             committer_time = None
+
+
+def _blame_csv_times(porcelain):
+    """One CSV line is one row; its id is the leading field."""
+    times = {}
+    for committer_time, content in _blame_lines(porcelain):
+        token = content.split(",", 1)[0].strip()
+        if token and committer_time is not None:
+            times[token] = committer_time
+    return times
+
+
+_TOML_ROW_HEADER = re.compile(r"^\s*\[[A-Za-z_][\w-]*\.([A-Za-z]+-\d+)\]\s*$")
+
+
+def _blame_toml_times(porcelain):
+    """One TOML table is one row; its time is the NEWEST commit over its lines,
+    the table header included. Newest rather than the header's own time, because
+    an amendment edits a VALUE line and leaves the header untouched — taking the
+    header's time would date every amended row to its creation and report
+    nothing as stale."""
+    times, current = {}, None
+    for committer_time, content in _blame_lines(porcelain):
+        header = _TOML_ROW_HEADER.match(content)
+        if header:
+            current = header.group(1)
+        if current is None or committer_time is None:
+            continue
+        times[current] = max(times.get(current, committer_time), committer_time)
     return times
 
 
@@ -2616,7 +2659,7 @@ def knowledge_pack_findings(root, wis):
     if not packs:
         return []
     sr_comps = {}
-    for r in read_rows(root / LLR_CSV):
+    for r in spine_carrier.load(root / LLR_CSV, "LLR-ID"):
         comp = (r.get("Component") or "").strip()
         if comp in packs:
             for sr in _split_refs(r.get("SR-Refs") or ""):
@@ -2900,9 +2943,9 @@ def staged_findings(root):
 # each with its id column. The SN needs file has no Status cell (section-as-state)
 # — a changed ratified SN rides its SR chain's Modified — so it is not listed.
 SPINE_CSVS = (
-    ("docs/requirements/system-requirements.csv", "SR-ID"),
-    ("docs/requirements/low-level-requirements.csv", "LLR-ID"),
-    ("docs/test/test-cases.csv", "TC-ID"),
+    ("docs/requirements/system-requirements.toml", "SR-ID"),
+    ("docs/requirements/low-level-requirements.toml", "LLR-ID"),
+    ("docs/test/test-cases.toml", "TC-ID"),
 )
 
 # --- the spine carrier (repo-lock D-5) ---------------------------------------
@@ -2955,7 +2998,7 @@ def _spine_rows_at(root, rev_prefix, rel_path, id_col):
 # live and shipped-template headers is classified here (so a new column cannot
 # ride in on the residual unnoticed).
 SPINE_TRACED_CELLS = {
-    "docs/requirements/system-requirements.csv": frozenset(
+    "docs/requirements/system-requirements.toml": frozenset(
         {"SN-Refs", "Phase", "Area", "Lifecycle"}
     ),
     # `SR-Refs` is here BY RULING (WI-388, closing WI-380 REVIEW-A finding 3 —
@@ -2966,10 +3009,10 @@ SPINE_TRACED_CELLS = {
     # adjudication kind exists to make, so a changed `SR-Refs` ROUTES to
     # adjudication (intake.ROUTED_TRACED_CELLS) like its two siblings; it
     # never arms a re-attest window directly.
-    "docs/requirements/low-level-requirements.csv": frozenset(
+    "docs/requirements/low-level-requirements.toml": frozenset(
         {"Module", "CodeSymbol", "TestRefs", "Component", "Phase", "SR-Refs"}
     ),
-    "docs/test/test-cases.csv": frozenset(
+    "docs/test/test-cases.toml": frozenset(
         {"Verifies", "Evidence", "Automated", "Phase"}
     ),
 }
@@ -2980,7 +3023,7 @@ SPINE_TRACED_CELLS = {
 # names. Unlike the three traced pointers it re-points no live chain; it ends
 # one, and a silent supersession would be a missed window nobody sees.
 SPINE_RATIFIED_CELLS = {
-    "docs/requirements/system-requirements.csv": frozenset(
+    "docs/requirements/system-requirements.toml": frozenset(
         {
             "Title",
             "Requirement",
@@ -2992,10 +3035,10 @@ SPINE_RATIFIED_CELLS = {
             "SupersededBy",
         }
     ),
-    "docs/requirements/low-level-requirements.csv": frozenset(
+    "docs/requirements/low-level-requirements.toml": frozenset(
         {"Title", "Detail", "Rationale"}
     ),
-    "docs/test/test-cases.csv": frozenset(
+    "docs/test/test-cases.toml": frozenset(
         {"Method", "Expected", "Parameters", "Level", "Tier"}
     ),
 }
@@ -3006,8 +3049,18 @@ def spine_cell_class(csv_path, column):
 
     The residual is deliberate and fails SAFE: an unclassified column — one
     added to a registry after the ruling — reads as ratified and keeps arming
-    the warn. See SPINE_TRACED_CELLS."""
-    return "traced" if column in SPINE_TRACED_CELLS.get(csv_path, ()) else "ratified"
+    the warn. See SPINE_TRACED_CELLS.
+
+    KEYED BY THE REGISTRY, NOT BY ITS FILENAME. The two tables above are keyed
+    on paths that carry a carrier SUFFIX, and the callers do not agree on which
+    one: a staged-diff scan names whichever file git reported, while a live read
+    names the constant. Under the CSV carrier a `.toml`-keyed lookup misses, and
+    a miss here does not red — every column reads `ratified`, so a traced-only
+    edit arms a re-attest window that was ruled not to. `stem` drops the suffix,
+    which is what `spine_carrier` exists to make possible (repo-lock D-5)."""
+    key = spine_carrier.stem(csv_path)
+    traced = {spine_carrier.stem(k): v for k, v in SPINE_TRACED_CELLS.items()}
+    return "traced" if column in traced.get(key, ()) else "ratified"
 
 
 # --- SN-029: the digest that anchors an attestation ---------------------------
@@ -3088,12 +3141,18 @@ def current_digests(root):
     root = Path(root)
     out = {}
     for csv_path, id_col in SPINE_CSVS:
-        for row in read_rows(root / csv_path):
+        # Through the CARRIER (repo-lock D-5): a CSV parse of a TOML registry
+        # yields NOTHING rather than failing, and a digest map with no rows in
+        # it says "nothing to re-attest" — the amendment guard silently blind.
+        for row in spine_carrier.load(root / csv_path, id_col):
             rid = (row.get(id_col) or "").strip()
             if rid and not rid.endswith("-000"):
                 out[rid] = digest(normative_text(csv_path, row))
-    sn_md = root / "docs" / "requirements" / "stakeholder-needs.md"
-    if sn_md.is_file():
+    sn_md = spine_carrier.resolve(
+        root / "docs" / "requirements" / "stakeholder-needs.toml",
+        spine_carrier.NEED_CARRIERS,
+    )
+    if sn_md is not None:
         text = sn_md.read_text(encoding="utf-8-sig", errors="replace")
         for sn_id in sorted(set(re.findall(r"\bSN-\d+\b", text))):
             if sn_id.endswith("-000"):
@@ -3232,8 +3291,15 @@ def staged_spine_amendments(root, base="HEAD", head=None):
 
     out = []
     for csv_path, id_col in SPINE_CSVS:
-        if not any(c in staged_names for c in _spine_carriers(csv_path)):
+        # The record names the carrier file that ACTUALLY changed, not the
+        # constant: the constant carries a suffix, and reporting
+        # `system-requirements.toml` for a repo whose staged diff touched
+        # `system-requirements.csv` names a file that does not exist — in a
+        # record an adjudication row quotes back to a human (repo-lock D-5).
+        touched = [c for c in _spine_carriers(csv_path) if c in staged_names]
+        if not touched:
             continue
+        registry = touched[0]
         head_rows = _spine_rows_at(root, old_rev, csv_path, id_col)
         staged_rows = _spine_rows_at(root, new_rev, csv_path, id_col)
         if not head_rows or not staged_rows:
@@ -3250,7 +3316,7 @@ def staged_spine_amendments(root, base="HEAD", head=None):
                 continue  # the attestation unit flips in this commit — sanctioned
             changed = _split_changed_cells(csv_path, id_col, head, row)
             if changed["ratified"] or changed["traced"]:
-                out.append(dict(changed, registry=csv_path, id=rid))
+                out.append(dict(changed, registry=registry, id=rid))
     return out
 
 
@@ -3348,7 +3414,7 @@ def _load_critique_srs(root):
     makes the critique ratchet vacuous — a repo with no perceptual SR pays
     nothing."""
     out = set()
-    for r in read_rows(root / SR_CSV):
+    for r in spine_carrier.load(root / SR_CSV, "SR-ID"):
         sid = (r.get("SR-ID") or "").strip()
         if (
             sid

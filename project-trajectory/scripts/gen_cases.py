@@ -40,7 +40,7 @@ Spec grammar (one string; ';'-separated dimensions, optional '@strategy'):
   can lift a cell straight into --spec.
 
 Usage:
-    python scripts/gen_cases.py --spec "SPEC" [--strategy S] [--format table|params|csv]
+    python scripts/gen_cases.py --spec "SPEC" [--strategy S] [--format table|params|toml|csv]
                                 [--id SR-003] [--tier Full]
 
 Examples:
@@ -179,6 +179,57 @@ def _utf8_console():
             pass
 
 
+def emit_toml_rows(cases, args, strategy, param_str):
+    """Paste-ready TC tables, one per case.
+
+    `param_str` is passed in rather than imported: it closes over the spec's
+    dimension NAMES, which only `main` has parsed."""
+    # TC tables ready to paste (fill the id / verifies / expected / evidence).
+    # The KEYS match registries/test-cases.template.toml — a pasted row must
+    # speak the carrier the registry is written in, which is the whole point
+    # of this format: the repo-review M-2 defect was paste-ready rows drifting
+    # out of the registry's shape, and pasting CSV into a TOML registry is
+    # that defect with the volume turned up. `automated = "Yes"` needs a
+    # non-empty evidence cell at --strict-schema, hence the fill-me hint.
+    for c in cases:
+        print("[test.TC-xxx]")
+        print('verifies = ["{}"]'.format(args.id or "SR-xxx"))
+        print('level = "Unit"')
+        print('method = "{} combination"'.format(strategy))
+        print('tier = "{}"'.format(args.tier))
+        print('parameters = "{}"'.format(param_str(c)))
+        print(
+            'expected = "Satisfies {} AcceptanceCriteria"'.format(args.id or "SR-xxx")
+        )
+        print('automated = "Yes"')
+        print('evidence = "(fill: evidence ref)"')
+        print('status = "Draft"')
+        print()
+
+
+def emit_csv_rows(cases, args, strategy, param_str):
+    """Paste-ready TC rows for the LEGACY carrier."""
+    # The LEGACY carrier's paste form, kept for a repo that has not run
+    # migrate_carrier yet (repo-lock D-5; the TOML form above is the one the
+    # shipped registries take). Header order is the template's key order.
+    print(
+        "TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,"
+        "Evidence,Status,Phase"
+    )
+    for c in cases:
+        print(
+            'TC-xxx,{},Unit,{} combination,{},"{}",'
+            '"Satisfies {} AcceptanceCriteria",Yes,(fill: evidence ref),'
+            "Draft,".format(
+                args.id or "SR-xxx",
+                strategy,
+                args.tier,
+                param_str(c),
+                args.id or "SR-xxx",
+            )
+        )
+
+
 def main():
     _utf8_console()
     ap = argparse.ArgumentParser(
@@ -191,7 +242,9 @@ def main():
         default=None,
         help="override the spec's @strategy / the default",
     )
-    ap.add_argument("--format", choices=["table", "params", "csv"], default="table")
+    ap.add_argument(
+        "--format", choices=["table", "params", "toml", "csv"], default="table"
+    )
     ap.add_argument(
         "--id", default="", help="requirement id to label rows (e.g. SR-003)"
     )
@@ -242,28 +295,10 @@ def main():
     if args.format == "params":
         for c in cases:
             print(param_str(c))
+    elif args.format == "toml":
+        emit_toml_rows(cases, args, strategy, param_str)
     elif args.format == "csv":
-        # TC rows ready to paste (fill TC-ID / Verifies / Expected / Evidence).
-        # Header matches registries/test-cases.template.csv exactly — a pasted
-        # row must parse to the registry's column count (trace.py structure
-        # check) and Automated=Yes needs a non-empty Evidence cell at
-        # --strict-schema, hence the fill-me hint.
-        print(
-            "TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,"
-            "Evidence,Status,Phase"
-        )
-        for c in cases:
-            print(
-                'TC-xxx,{},Unit,{} combination,{},"{}",'
-                '"Satisfies {} AcceptanceCriteria",Yes,(fill: evidence ref),'
-                "Draft,".format(
-                    args.id or "SR-xxx",
-                    strategy,
-                    args.tier,
-                    param_str(c),
-                    args.id or "SR-xxx",
-                )
-            )
+        emit_csv_rows(cases, args, strategy, param_str)
     else:
         print("| # | " + " | ".join(names) + " |")
         print("|---|" + "|".join("---" for _ in names) + "|")

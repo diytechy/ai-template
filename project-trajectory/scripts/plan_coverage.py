@@ -342,7 +342,7 @@ def main():
         sys.exit(2)
 
     req = Path(args.root) / "docs" / "requirements"
-    sr_ids = spine_ids(req / "system-requirements.csv", "SR-ID")
+    sr_ids = spine_ids(req / "system-requirements.toml", "SR-ID")
     if_ids = load_registry_ids(req / "interfaces.csv", "IF-ID")
 
     findings, plans = [], []

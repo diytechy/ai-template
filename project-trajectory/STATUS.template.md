@@ -46,10 +46,10 @@ decisions, session notes — appends to the log this header points at, never her
     [open-items registry](requirements/open-items.csv), which
     `scripts/gen_open_items.py` renders to `docs/open-items.html`)_:
     - OI-1 — decide: keep or drop the legacy export flag (blocks: G1) →
-      [system-requirements.csv](requirements/system-requirements.csv)
+      [system-requirements.toml](requirements/system-requirements.toml)
   - **In flight** _(driver; no approval needed)_:
     - OI-2 — pinning SR-000's acceptance predicate →
-      [system-requirements.csv](requirements/system-requirements.csv)
+      [system-requirements.toml](requirements/system-requirements.toml)
 - **Assumptions (unattended):** _(decisions taken without sign-off while running
   unattended — each to confirm or revert at the next gate; see AGENTS.md "Ask,
   don't assume". Once ratified, move the entry to the log's Decisions log.)_

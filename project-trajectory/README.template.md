@@ -64,7 +64,7 @@ This repo follows a gated, requirement-traced process. The working brief is
 [AGENTS.md](AGENTS.md); the method is [docs/process.md](docs/process.md). Start
 with the code map in [docs/architecture.md](docs/architecture.md) and the
 current state in [docs/status.md](docs/status.md). The requirement spine starts
-at [docs/requirements/stakeholder-needs.md](docs/requirements/stakeholder-needs.md);
+at [docs/requirements/stakeholder-needs.toml](docs/requirements/stakeholder-needs.toml);
 durable project findings live in [docs/knowledge/](docs/knowledge/README.md);
 shared cross-project contracts — only if this repo provides or consumes one —
 live in [docs/interfaces.md](docs/interfaces.md).

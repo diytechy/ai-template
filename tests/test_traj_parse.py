@@ -12,6 +12,7 @@ The shim patches `gt.traj_parse.subprocess`: WI-280 moved the effects seam out o
 the facade, so patching `gt.subprocess` would now silently miss.
 """
 
+import csv
 import re
 import subprocess
 import sys
@@ -120,25 +121,23 @@ def _scrambled_spine(root):
 
 def test_spine_loader_equals_the_former_inline_filters_in_file_order(tmp_path):
     root = _scrambled_spine(tmp_path)
-    ct = load_script("check_trajectory")
     gt = load_script("gen_trajectory")
+
     # The three comprehensions the three call sites each carried before WI-346,
-    # transcribed verbatim from the pre-extraction source.
-    want_srs = [
-        r
-        for r in ct.read_rows(root / ct.SR_CSV)
-        if (r.get("SR-ID") or "").startswith("SR-")
-    ]
-    want_llrs = [
-        r
-        for r in ct.read_rows(root / "docs/requirements/low-level-requirements.csv")
-        if (r.get("LLR-ID") or "").startswith("LLR-")
-    ]
-    want_tcs = [
-        r
-        for r in ct.read_rows(root / "docs/test/test-cases.csv")
-        if (r.get("TC-ID") or "").startswith("TC-")
-    ]
+    # transcribed from the pre-extraction source — but reading the fixture's
+    # file with `csv.DictReader` DIRECTLY rather than through a kit reader.
+    # That independence is the whole point of the check and it now matters more,
+    # not less: since the carrier cutover the loader resolves TOML-or-CSV, so a
+    # `want` side built on the same resolver would compare the loader with
+    # itself. The fixture writes the legacy carrier, and stdlib reads it.
+    def _want(rel, id_col):
+        with (root / rel).open(newline="", encoding="utf-8-sig") as handle:
+            rows = list(csv.DictReader(handle))
+        return [r for r in rows if (r.get(id_col) or "").startswith(id_col[:-3])]
+
+    want_srs = _want("docs/requirements/system-requirements.csv", "SR-ID")
+    want_llrs = _want("docs/requirements/low-level-requirements.csv", "LLR-ID")
+    want_tcs = _want("docs/test/test-cases.csv", "TC-ID")
     srs, llrs, tcs = gt._spine(root)
     # Whole-row equality: the loader must hand back the rows themselves, not a
     # projection — every call site reads columns the loader never names.

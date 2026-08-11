@@ -67,12 +67,12 @@ inside it, which lays down everything below; otherwise copy + rename by hand.
   happens next (copy `STATUS.template.md`).
 - `docs/log.md` — the append-only history status.md points at: gate sign-off
   table, verdicts, ratified decisions (copy `LOG.template.md`).
-- `docs/requirements/stakeholder-needs.md` — **SN-###** (Stakeholder owns).
-- `docs/requirements/system-requirements.csv` — **SR-###** with measurable
+- `docs/requirements/stakeholder-needs.toml` — **SN-###** (Stakeholder owns).
+- `docs/requirements/system-requirements.toml` — **SR-###** with measurable
   acceptance criteria (System Engineer owns).
-- `docs/requirements/low-level-requirements.csv` — **LLR-###** ↔ code
+- `docs/requirements/low-level-requirements.toml` — **LLR-###** ↔ code
   (Software Engineer owns).
-- `docs/test/test-cases.csv` — **TC-###** ↔ requirements (Test Engineer owns).
+- `docs/test/test-cases.toml` — **TC-###** ↔ requirements (Test Engineer owns).
 - `docs/architecture.md` — one-page overview + a **generated** module/function
   map (copy `ARCHITECTURE.template.md`; refresh it with `scripts/gen_arch_map.py`).
 - `docs/interfaces.md` + `docs/requirements/interfaces.csv` — **IF-###**

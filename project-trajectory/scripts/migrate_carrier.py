@@ -60,7 +60,18 @@ SPINE = {
 
 # Cells that are REFERENCE LISTS become typed arrays. Everything else stays a
 # string: this is a carrier change, not a schema change.
-REF_COLS = {"SN-Refs", "SR-Refs", "Verifies", "SupersededBy", "TestRefs"}
+#
+# `TestRefs` is DELIBERATELY NOT HERE, and it was until the cutover measured it.
+# The column's conventional value is `(see TC-017)` — a prose pointer, which
+# check_doc_refs names as such where it declines to read a path out of it — and
+# only one row of 141 holds a bare id list. Splitting prose on whitespace made
+# `test_refs = ["(see", "TC-017)"]`, which re-joins as `(see; TC-017)`: a
+# TEXT CHANGE to 140 design rows, smuggled into a carrier-only migration, and
+# the very defect the typed array exists to retire (`SN-001 and SN-002` ->
+# "`and` is an orphan") committed in the other direction. As a plain string
+# every shape round-trips byte-exact and every consumer keeps the split rule it
+# already applied to this cell under CSV.
+REF_COLS = {"SN-Refs", "SR-Refs", "Verifies", "SupersededBy"}
 INT_COLS = {"Phase"}
 
 # column -> TOML key. EXPLICIT, never derived: a derivation turns `SR-ID` into
@@ -155,11 +166,21 @@ def rows_to_toml(table, id_col, rows, header):
 
 
 def value_to_cell(col, value):
-    """The inverse of `cell_to_value`, for the round-trip check."""
+    """The inverse of `cell_to_value`, for the round-trip check.
+
+    A ref array re-joins on `;` — the separator the registry ACTUALLY USES, not
+    a prettier one. Measured over this repo's own spine at the cutover: 271 of
+    271 multi-ref cells wrote `A;B`, none wrote `A; B`. Joining on `"; "`
+    therefore rewrote every one of them, which put ~40 spurious "cell changed"
+    entries into the re-attestation brief the owner is about to work — the
+    carrier migration manufacturing amendments in the one view that must show
+    only real ones. The separator is not the meaning (`_cells_differ` compares
+    token lists either way), which is exactly why the conversion has no licence
+    to change it."""
     if value is None:
         return ""
     if isinstance(value, list):
-        return "; ".join(value)
+        return ";".join(value)
     return str(value)
 
 

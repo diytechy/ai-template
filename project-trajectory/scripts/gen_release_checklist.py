@@ -67,30 +67,17 @@ def is_example(rid):
 
 
 def read_stakeholder_needs(md_path):
-    """Parse the SN core-needs markdown table -> list of (SN-ID, need, acceptance)."""
-    if not md_path.exists():
-        return []
-    rows = []
-    header = None
-    need_i = acc_i = None
-    for line in md_path.read_text(encoding="utf-8").splitlines():
-        if not line.strip().startswith("|"):
-            header = None
-            continue
-        cells = [c.strip() for c in line.strip().strip("|").split("|")]
-        if header is None:
-            if any("SN-ID" in c for c in cells):
-                header = cells
-                need_i = next((i for i, c in enumerate(header) if "Need" in c), 1)
-                acc_i = next(
-                    (i for i, c in enumerate(header) if "Acceptance" in c), None
-                )
-            continue
-        if cells and re.match(r"SN-\d+$", cells[0]) and not is_example(cells[0]):
-            need = cells[need_i] if need_i is not None and need_i < len(cells) else ""
-            acc = cells[acc_i] if acc_i is not None and acc_i < len(cells) else ""
-            rows.append((cells[0], need, acc))
-    return rows
+    """`(SN-ID, need, acceptance)` per need, through the CARRIER (repo-lock D-5).
+
+    Was a bespoke markdown table parse that discovered its own `Need` and
+    `Acceptance` columns by header text. Under one carrier those are fields, and
+    the edge-case fold — which this reader never had, so an edge row's need read
+    as its Lifecycle word here too — comes from the single home the fold now
+    has."""
+    return [
+        (n["id"], n["need"], n["acceptance"])
+        for n in spine_carrier.folded_needs(md_path)
+    ]
 
 
 def _utf8_console():
@@ -121,17 +108,17 @@ def main():
     args = ap.parse_args()
     docs = Path(args.docs)
 
-    needs = read_stakeholder_needs(docs / "requirements" / "stakeholder-needs.md")
+    needs = read_stakeholder_needs(docs / "requirements" / "stakeholder-needs.toml")
     srs = [
         r
         for r in spine_carrier.load(
-            docs / "requirements" / "system-requirements.csv", "SR-ID"
+            docs / "requirements" / "system-requirements.toml", "SR-ID"
         )
         if r.get("SR-ID") and not is_example(r["SR-ID"])
     ]
     tcs = [
         r
-        for r in spine_carrier.load(docs / "test" / "test-cases.csv", "TC-ID")
+        for r in spine_carrier.load(docs / "test" / "test-cases.toml", "TC-ID")
         if r.get("TC-ID") and not is_example(r["TC-ID"])
     ]
     ifs = [
@@ -184,7 +171,7 @@ def main():
     llrs = [
         r
         for r in spine_carrier.load(
-            docs / "requirements" / "low-level-requirements.csv", "LLR-ID"
+            docs / "requirements" / "low-level-requirements.toml", "LLR-ID"
         )
         if r.get("LLR-ID") and not is_example(r["LLR-ID"])
     ]

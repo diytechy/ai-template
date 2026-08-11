@@ -87,9 +87,9 @@ WORK = "docs/work"
 # recorded at check_trajectory.SPINE_TRACED_CELLS, the cell-split table's
 # home). Keyed per registry so a same-named column elsewhere never rides in.
 ROUTED_TRACED_CELLS = {
-    "docs/requirements/system-requirements.csv": frozenset({"SN-Refs"}),
-    "docs/requirements/low-level-requirements.csv": frozenset({"SR-Refs"}),
-    "docs/test/test-cases.csv": frozenset({"Verifies"}),
+    "docs/requirements/system-requirements.toml": frozenset({"SN-Refs"}),
+    "docs/requirements/low-level-requirements.toml": frozenset({"SR-Refs"}),
+    "docs/test/test-cases.toml": frozenset({"Verifies"}),
 }
 
 # The disposition row's face: the R3 outcome vocabulary, verbatim in the title
@@ -278,7 +278,7 @@ def _context_block(root, wi_row, rows):
     llrs = [
         r
         for r in spine_carrier.load(
-            root / "docs/requirements/low-level-requirements.csv", "LLR-ID"
+            root / "docs/requirements/low-level-requirements.toml", "LLR-ID"
         )
         if srs & set(_split(r.get("SR-Refs")))
     ]
@@ -347,7 +347,7 @@ def _code_map_lines(root, llrs, srs):
     llr_ids = {r.get("LLR-ID") for r in llrs}
     lines += [
         "- {} -> {}".format(t.get("TC-ID"), t.get("Evidence") or "(no evidence yet)")
-        for t in spine_carrier.load(root / "docs/test/test-cases.csv", "TC-ID")
+        for t in spine_carrier.load(root / "docs/test/test-cases.toml", "TC-ID")
         if (srs | llr_ids) & set(_split(t.get("Verifies")))
     ]
     return lines
@@ -412,7 +412,13 @@ def _routed_amendments(root, before, after):
         routed_cells = {
             cell: change
             for cell, change in rec["traced"].items()
-            if cell in ROUTED_TRACED_CELLS.get(rec["registry"], ())
+            # Keyed by the registry STEM: the record names whichever carrier
+            # file git reported, and a suffix-keyed miss here would silently
+            # reclassify a routed cell as an ordinary amendment (repo-lock D-5).
+            if cell
+            in {spine_carrier.stem(k): v for k, v in ROUTED_TRACED_CELLS.items()}.get(
+                spine_carrier.stem(rec["registry"]), ()
+            )
         }
         if rec["ratified"] or routed_cells:
             routed.append(dict(rec, routed=routed_cells))
@@ -944,20 +950,36 @@ def _disposition_drafts(root, outcomes):
 # census line -> the registry file that is the gap's spec-of-record (R-E wants
 # an in-repo file). Ordered probes; first existing wins, SR registry fallback.
 _CENSUS_SPECREFS = (
-    ("SN", "docs/requirements/stakeholder-needs.md"),
-    ("LLR-", "docs/requirements/low-level-requirements.csv"),
-    ("TC-", "docs/test/test-cases.csv"),
+    ("SN", "docs/requirements/stakeholder-needs.toml"),
+    ("LLR-", "docs/requirements/low-level-requirements.toml"),
+    ("TC-", "docs/test/test-cases.toml"),
 )
-_SR_CSV = "docs/requirements/system-requirements.csv"
-_TC_CSV = "docs/test/test-cases.csv"
+_SR_CSV = "docs/requirements/system-requirements.toml"
+_TC_CSV = "docs/test/test-cases.toml"
+
+
+def _live_registry(root, rel):
+    """`rel` under whichever carrier the repo actually holds, or "".
+
+    These are EXISTENCE PROBES (first existing wins), which is the one place a
+    literal suffix is fatal: a `.toml`-only probe finds nothing in a repo still
+    on CSV, every gap row is minted with an EMPTY SpecRef, and `integrate`
+    refuses the branch for carrying no spec-of-record — a mint that fails at
+    merge instead of at authoring (repo-lock D-5)."""
+    suffixes = (
+        spine_carrier.NEED_CARRIERS if "stakeholder-needs" in rel else None
+    ) or spine_carrier.CARRIERS
+    live = spine_carrier.resolve(Path(root) / rel, suffixes)
+    return spine_carrier.stem(rel) + live.suffix if live is not None else ""
 
 
 def _census_specref(root, line):
     for token, rel in _CENSUS_SPECREFS:
         if line.startswith(token) or token in line.split(" ", 1)[0]:
-            if (Path(root) / rel).is_file():
-                return rel
-    return _SR_CSV if (Path(root) / _SR_CSV).is_file() else ""
+            live = _live_registry(root, rel)
+            if live:
+                return live
+    return _live_registry(root, _SR_CSV)
 
 
 def _census_drafts(root, census):
@@ -1029,7 +1051,7 @@ def _red_tc_draft(root, line, targets):
         "kind": "adjudication",
         "workstream": "process",
         "buildtier": tier_signal("red-tc", rows_touched=len(targets)),
-        "specref": _TC_CSV if (Path(root) / _TC_CSV).is_file() else "",
+        "specref": _live_registry(root, _TC_CSV),
         "context": _red_tc_context(line, targets),
     }
 
@@ -1381,44 +1403,111 @@ def flip_verified(root, ids):
 
 
 def _locate_spine_rows(root, wanted):
-    """`({id: (csv path, status, row, status_ix)}, {csv path: rows})` over the
-    three spine registries — ONE parse, shared by the brief and the flip (the
-    row objects are the live lists the rewrite mutates, so nothing scans
-    twice)."""
+    """`({id: (registry rel, status, row, status_ix)}, {registry rel: rows})`
+    over the three spine registries — ONE parse, shared by the brief and the
+    flip (under the CSV carrier the row objects are the live lists the rewrite
+    mutates, so nothing scans twice).
+
+    CARRIER-AWARE (repo-lock D-5). Each registry resolves to whichever of
+    TOML/CSV is live, and the two carriers report differently because they are
+    written differently: a CSV row is a mutable list plus the column index the
+    rewrite pokes, while a TOML table is rewritten by LINE and needs neither.
+    `row`/`status_ix` are None on the TOML arm, and `tables` holds the live
+    path so the writer never re-guesses the suffix."""
     import csv
 
     located, tables = {}, {}
-    for csv_rel, _id_col in check_trajectory.SPINE_CSVS:
-        path = root / csv_rel
-        if not path.is_file():
+    for rel, id_col in check_trajectory.SPINE_CSVS:
+        live = spine_carrier.resolve(root / rel)
+        if live is None:
             continue
-        with path.open(newline="", encoding="utf-8-sig") as fh:
+        tables[rel] = (live, None)
+        if live.suffix == ".toml":
+            for row in spine_carrier.load(live, id_col):
+                rid = (row.get(id_col) or "").strip()
+                if rid in wanted:
+                    located[rid] = (rel, (row.get("Status") or "").strip(), None, None)
+            continue
+        with live.open(newline="", encoding="utf-8-sig") as fh:
             rows = list(csv.reader(fh))
-        tables[csv_rel] = rows
+        tables[rel] = (live, rows)
         header = rows[0] if rows else []
         status_ix = header.index("Status") if "Status" in header else None
         for row in rows[1:]:
             rid = row[0].strip() if row else ""
             if rid in wanted and status_ix is not None and len(row) > status_ix:
-                located[rid] = (csv_rel, row[status_ix].strip(), row, status_ix)
+                located[rid] = (rel, row[status_ix].strip(), row, status_ix)
     return located, tables
 
 
+# The one key this module ever writes on a spine row. Named rather than inlined
+# because the carrier's key and the column name differ, and a rewrite that
+# targets the wrong one is a no-op that reports success.
+_STATUS_KEY = "status"
+
+
+def _flip_status_lines(lines, table, rid):
+    """Rewrite `[<table>.<rid>]`'s `status = ...` line to `Verified`, in place.
+    True when a line moved. A LINE REWRITE ON `bootstrap.set_process_key`'s
+    PATTERN, and for its reasons (repo-lock D-5 step 4): stdlib has no TOML
+    writer, and re-serialising the registry to change one cell would normalise
+    away every comment and the file's authored ordering — a whole-file diff for
+    a one-word act, on the registry whose diffs the amendment guard reads."""
+    header = "[{}.{}]".format(table, rid)
+    in_row = False
+    for i, line in enumerate(lines):
+        stripped = line.strip()
+        if stripped.startswith("[") and stripped.endswith("]"):
+            in_row = stripped == header
+            continue
+        if in_row and stripped.split("=")[0].strip() == _STATUS_KEY:
+            lines[i] = '{} = "Verified"'.format(_STATUS_KEY)
+            return True
+    return False
+
+
 def _apply_flips(root, tables, located):
-    """Mutate each located `Modified` row to `Verified` and rewrite exactly
-    the registries that changed; the sorted flipped ids."""
+    """Move each located `Modified` row to `Verified` and rewrite exactly the
+    registries that changed; the sorted flipped ids. Per carrier: a CSV rewrite
+    re-emits the mutated rows, a TOML rewrite edits the one status LINE."""
     import csv
 
     flipped, changed = [], set()
-    for rid, (csv_rel, status, row, status_ix) in located.items():
-        if status == "Modified":
+    toml_edits = {}
+    for rid, (rel, status, row, status_ix) in sorted(located.items()):
+        if status != "Modified":
+            continue
+        live, _rows = tables[rel]
+        if live.suffix == ".toml":
+            toml_edits.setdefault(rel, []).append(rid)
+        else:
             row[status_ix] = "Verified"
-            flipped.append(rid)
-            changed.add(csv_rel)
-    for csv_rel in changed:
-        with (root / csv_rel).open("w", newline="", encoding="utf-8") as fh:
+        flipped.append(rid)
+        changed.add(rel)
+    for rel, ids in toml_edits.items():
+        live, _rows = tables[rel]
+        table = spine_carrier.SPINE_TABLE[dict(check_trajectory.SPINE_CSVS)[rel]]
+        lines = live.read_text(encoding="utf-8-sig").split("\n")
+        for rid in ids:
+            if not _flip_status_lines(lines, table, rid):
+                # A located row whose status line cannot be found is a refusal
+                # to write, never a silent skip: the caller already reported the
+                # flip, so a no-op here would claim a ratification that is not
+                # in the file.
+                raise SystemExit(
+                    "intake: {} has no `{}` line under [{}.{}] — refusing to "
+                    "report a flip that was not written".format(
+                        live, _STATUS_KEY, table, rid
+                    )
+                )
+        live.write_text("\n".join(lines), encoding="utf-8", newline="\n")
+    for rel in changed:
+        live, rows = tables[rel]
+        if rows is None:
+            continue
+        with live.open("w", newline="", encoding="utf-8") as fh:
             csv.writer(fh, quoting=csv.QUOTE_MINIMAL, lineterminator="\n").writerows(
-                tables[csv_rel]
+                rows
             )
     return sorted(flipped)
 

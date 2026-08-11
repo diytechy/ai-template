@@ -479,30 +479,39 @@ SR-002,Addition report,SN-001,"The system shall report the sum.","Realizes SN-00
 """
 
 
+def _template_keys(name, table, example_id):
+    """The keys the shipped template's `-000` example row declares.
+
+    Since the carrier cutover (repo-lock D-5) a template has no header line: the
+    example row IS the schema, so "the shipped registry carries column X" is
+    "the example row sets key X". ORDER is not asserted — TOML key order in a
+    table carries no meaning, so an ordering assertion here would pin a fact the
+    format does not have."""
+    import tomllib
+
+    text = (KIT / "registries" / name).read_text(encoding="utf-8")
+    return tomllib.loads(text)[table][example_id]
+
+
 def test_shipped_sr_template_carries_area_column():
-    # The shipped header ends with Area so a project records hat ownership
-    # without inventing its own 12th column (the Finance-Auditor field report).
-    header = (
-        (KIT / "registries" / "system-requirements.template.csv")
-        .read_text(encoding="utf-8")
-        .splitlines()[0]
-    )
-    assert header.split(",")[-1] == "Area"
+    # The shipped schema declares Area so a project records hat ownership
+    # without inventing its own extra column (the Finance-Auditor field report).
+    keys = _template_keys("system-requirements.template.toml", "requirement", "SR-000")
+    assert "area" in keys
+    # ...and it is guidance an author can act on, not an empty placeholder — the
+    # failure this replaces was a column present in name only.
+    assert keys["area"].strip()
 
 
 def test_shipped_tc_template_carries_evidence_column():
-    # Thread 51: the shipped TC header carries Evidence (between Automated and
-    # Status) so the concrete test location has a first-class home and stops
-    # overloading Parameters (which stays dimensional, the gen_cases grammar).
-    # Pinned by ordering, not tail position — the phase model appends a trailing
-    # Phase column after Status.
-    header = (
-        (KIT / "registries" / "test-cases.template.csv")
-        .read_text(encoding="utf-8")
-        .splitlines()[0]
-    )
-    assert "Automated,Evidence,Status" in header
-    assert header.split(",")[-1] == "Phase"
+    # Thread 51: the shipped TC schema carries Evidence so the concrete test
+    # location has a first-class home and stops overloading Parameters (which
+    # stays dimensional, the gen_cases grammar). Both must be declared, and
+    # distinctly — the defect was one standing in for the other.
+    keys = _template_keys("test-cases.template.toml", "test", "TC-000")
+    assert "evidence" in keys and "parameters" in keys
+    assert keys["evidence"] != keys["parameters"]
+    assert "phase" in keys and "status" in keys
 
 
 def test_area_values_yield_report_section(scaffold):

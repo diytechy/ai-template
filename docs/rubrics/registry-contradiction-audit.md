@@ -11,8 +11,8 @@ wired in PROCESS_OPTIONS ("Trajectory / work-items layer", Phase cadence), at
 phase close (with the gate bar) and before G-Final.
 
 **Scope.** All-vs-all over the **SN** rows
-([`stakeholder-needs.md`](../requirements/stakeholder-needs.md)) and **SR** rows
-([`system-requirements.csv`](../requirements/system-requirements.csv)); pull in an
+([`stakeholder-needs.toml`](../requirements/stakeholder-needs.toml)) and **SR** rows
+([`system-requirements.toml`](../requirements/system-requirements.toml)); pull in an
 **LLR/TC** row only where it *restates* a limit or attribute (a bound, default,
 or vocabulary) an SN/SR also states — the audit is about meaning-level conflict,
 not decomposition depth.

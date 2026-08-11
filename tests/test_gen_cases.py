@@ -4,6 +4,7 @@ every dimensional spec shown in the kit's own docs actually parses."""
 import csv
 import itertools
 import re
+import tomllib
 
 from conftest import KIT, SCRIPTS, load_script, run_py
 
@@ -70,16 +71,51 @@ def test_range_interior_points_are_not_boundaries():
     assert flags == [True, True, False]
 
 
-def test_csv_format_matches_shipped_registry_header(tmp_path):
-    # Repo-review 2026-07-21 M-2: the "ready to paste" rows drifted to 9
-    # columns when the registry grew Evidence/Phase — pasted raw they tripped
-    # trace.py's own structure check. Pin the emitted header to the template's
-    # and every row to its column count (the dogfood-sync idea, applied here).
-    template_header = (
-        (KIT / "registries" / "test-cases.template.csv")
-        .read_text(encoding="utf-8")
-        .splitlines()[0]
+def _template_tc_keys():
+    """The keys the shipped TC template declares — the schema, now that the
+    carrier has no header line to read (repo-lock D-5)."""
+    text = (KIT / "registries" / "test-cases.template.toml").read_text(encoding="utf-8")
+    return set(tomllib.loads(text)["test"]["TC-000"])
+
+
+def test_toml_format_matches_the_shipped_registry_schema(tmp_path):
+    # Repo-review 2026-07-21 M-2: the "ready to paste" rows drifted to 9 columns
+    # when the registry grew Evidence/Phase — pasted raw they tripped trace.py's
+    # own structure check. The carrier cutover makes the same point louder: a
+    # paste form has to speak the carrier it is pasted INTO, so the emitted
+    # tables are pinned to the template's key vocabulary, and the output must
+    # parse as TOML at all — which is the structural check the column count was
+    # standing in for.
+    proc = run_py(
+        [
+            SCRIPTS / "gen_cases.py",
+            "--spec",
+            "a=bool; b=set{x,y}",
+            "--format",
+            "toml",
+            "--id",
+            "SR-001",
+        ],
+        cwd=tmp_path,
     )
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    # The emitted tables all share the placeholder id, which is legal TOML only
+    # once — parse ONE case, and assert every case is byte-identical in shape.
+    # [0] is the dimensional-analysis preamble the tool prints first, not a row.
+    blocks = [b for b in proc.stdout.split("[test.TC-xxx]")[1:] if b.strip()]
+    assert len(blocks) > 1, proc.stdout  # the spec above yields several cases
+    template_keys = _template_tc_keys()
+    for block in blocks:
+        parsed = tomllib.loads("[test.TC-xxx]" + block)["test"]["TC-xxx"]
+        assert set(parsed) <= template_keys, sorted(set(parsed) - template_keys)
+        assert parsed["verifies"] == ["SR-001"]
+        assert parsed["parameters"]
+
+
+def test_csv_format_stays_available_for_the_legacy_carrier(tmp_path):
+    # An adopting repo that has not run migrate_carrier yet still writes CSV, so
+    # the legacy paste form ships on. Pinned to the same schema, rendered as a
+    # header: one column per template key, id first.
     proc = run_py(
         [
             SCRIPTS / "gen_cases.py",
@@ -94,10 +130,10 @@ def test_csv_format_matches_shipped_registry_header(tmp_path):
     )
     assert proc.returncode == 0, proc.stdout + proc.stderr
     lines = proc.stdout.splitlines()
-    assert template_header in lines, proc.stdout
-    data = lines[lines.index(template_header) + 1 :]
+    header = next(ln for ln in lines if ln.startswith("TC-ID,"))
+    assert len(header.split(",")) == len(_template_tc_keys()) + 1  # + the id
+    data = lines[lines.index(header) + 1 :]
     rows = [r for r in csv.reader(data) if any(cell.strip() for cell in r)]
     assert rows, proc.stdout
-    expected = len(template_header.split(","))
     for row in rows:
-        assert len(row) == expected, row
+        assert len(row) == len(header.split(",")), row

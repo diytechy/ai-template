@@ -107,7 +107,7 @@ def _sn_rows(root):
     read `spine_carrier.folded_needs`. They were three copies pinned by a
     docstring saying "change all three together" — and they drifted anyway (one
     kept `-000`, one did not), rendering a phantom SN-000 root in the icicle."""
-    return spine_carrier.folded_needs(root / "docs/requirements/stakeholder-needs.md")
+    return spine_carrier.folded_needs(root / "docs/requirements/stakeholder-needs.toml")
 
 
 def read_sns(root):
@@ -140,7 +140,11 @@ def _spine(root, skip_example=False):
 
     def rows(rel, col, prefix):
         out = []
-        for r in ct.read_rows(root / rel):
+        # Through the CARRIER (repo-lock D-5), not ct.read_rows: these are spine
+        # tiers, and a CSV parse of a TOML file yields NOTHING rather than
+        # failing — the icicle would render an empty spine and --check would
+        # happily byte-compare two empty renders.
+        for r in spine_carrier.load(root / rel, col):
             rid = r.get(col) or ""
             if not rid.startswith(prefix):
                 continue
@@ -151,8 +155,8 @@ def _spine(root, skip_example=False):
 
     return (
         rows(ct.SR_CSV, "SR-ID", "SR-"),
-        rows("docs/requirements/low-level-requirements.csv", "LLR-ID", "LLR-"),
-        rows("docs/test/test-cases.csv", "TC-ID", "TC-"),
+        rows("docs/requirements/low-level-requirements.toml", "LLR-ID", "LLR-"),
+        rows("docs/test/test-cases.toml", "TC-ID", "TC-"),
     )
 
 
@@ -243,15 +247,15 @@ def _asof(root):
     sources = [
         p
         for p in (
-            root / "docs" / "requirements" / "stakeholder-needs.md",
-            root / "docs" / "requirements" / "system-requirements.csv",
-            root / "docs" / "requirements" / "low-level-requirements.csv",
+            root / "docs" / "requirements" / "stakeholder-needs.toml",
+            root / "docs" / "requirements" / "system-requirements.toml",
+            root / "docs" / "requirements" / "low-level-requirements.toml",
             root / "docs" / "requirements" / "work-items.csv",
             # Both work-item homes (Phase 2b): whichever exists is a source of
             # this page, and `git log` over a directory is the same question
             # asked of the folder registry.
             root / "docs" / "work",
-            root / "docs" / "test" / "test-cases.csv",
+            root / "docs" / "test" / "test-cases.toml",
             root / "docs" / "architecture.md",
             root / "README.md",
         )

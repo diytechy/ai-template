@@ -406,19 +406,27 @@ def compute(docs):
     # the gate derivation below is untouched by the migration. `load_csv` stays
     # for the off-spine registries, which do not move.
     raw_srs = spine_carrier.load(
-        docs / "requirements" / "system-requirements.csv", "SR-ID"
+        docs / "requirements" / "system-requirements.toml", "SR-ID"
     )
     raw_llrs = spine_carrier.load(
-        docs / "requirements" / "low-level-requirements.csv", "LLR-ID"
+        docs / "requirements" / "low-level-requirements.toml", "LLR-ID"
     )
-    raw_tcs = spine_carrier.load(docs / "test" / "test-cases.csv", "TC-ID")
+    raw_tcs = spine_carrier.load(docs / "test" / "test-cases.toml", "TC-ID")
     srs = [r for r in raw_srs if r.get("SR-ID") and not is_example(r["SR-ID"])]
     llrs = [r for r in raw_llrs if r.get("LLR-ID") and not is_example(r["LLR-ID"])]
     tcs = [r for r in raw_tcs if r.get("TC-ID") and not is_example(r["TC-ID"])]
 
-    sn_md = docs / "requirements" / "stakeholder-needs.md"
+    # THE NEEDS FILE RESOLVES THROUGH THE CARRIER, and this is the one place in
+    # the kit where a literal suffix here would be worst: an existence test on
+    # `.toml` alone answers False for a repo still on markdown, `sn_ids` and
+    # `sn_draft` both come back EMPTY, and an empty draft set makes every draft
+    # need read as ratified — the derived gate RISES on a registry the reader
+    # simply could not find. Absent must mean absent, never "no drafts".
+    sn_md = spine_carrier.resolve(
+        docs / "requirements" / "stakeholder-needs.toml", spine_carrier.NEED_CARRIERS
+    )
     sn_ids, sn_draft = set(), set()
-    if sn_md.exists():
+    if sn_md is not None:
         text = sn_md.read_text(encoding="utf-8-sig", errors="replace")
         sn_ids = sn_all_ids(text)
         sn_draft = sn_draft_ids(text)

@@ -379,7 +379,7 @@ eliminating.
 
 **Owner direction, 2026-08-09**, given with D-1 and answering its one unsolved
 weakness (the third option "still leaves SNs — no row, no columns — unsolved"):
-extend [`stakeholder-needs.md`](requirements/stakeholder-needs.md) with
+extend [`stakeholder-needs.md`](requirements/stakeholder-needs.toml) with
 additional fields so the same anchor mechanism reaches SNs, rather than changing
 what an SN *is*. The file stays markdown prose tables; it gains capacity to
 encode information instead of a new format.

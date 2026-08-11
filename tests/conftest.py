@@ -774,12 +774,57 @@ def record_ids(root):
     assert proc.returncode == 0, proc.stdout + proc.stderr
 
 
+SPINE_TOML_RELS = (
+    "docs/requirements/stakeholder-needs.toml",
+    "docs/requirements/system-requirements.toml",
+    "docs/requirements/low-level-requirements.toml",
+    "docs/test/test-cases.toml",
+)
+
+
+def use_legacy_spine_carrier(root):
+    """Drop a scaffold's TOML spine so the fixture can write the LEGACY one.
+
+    Since the carrier cutover (repo-lock D-5) `bootstrap` scaffolds the spine as
+    TOML, while most fixtures here write the markdown/CSV carrier — and
+    `spine_carrier.resolve` REFUSES both homes at once rather than picking by
+    precedence. That refusal is the rule working, so the fixture removes the
+    home it is not using instead of the code learning to tolerate two.
+
+    Keeping these fixtures on the legacy carrier is deliberate: it is the arm
+    every un-migrated adopting repo still runs, and a suite that converted
+    wholesale would stop exercising it. The TOML arm is covered by this repo's
+    OWN registries (the whole meta-suite reads them) and end to end by
+    `test_bootstrap`'s fresh-scaffold checks."""
+    for rel in SPINE_TOML_RELS:
+        path = root / rel
+        if path.is_file():
+            path.unlink()
+    # ...and the scaffolded PROSE follows the carrier, or the repo is internally
+    # inconsistent: README.md and docs/status.md link the registry by name, and
+    # a link to the file this function just deleted is a real broken link that
+    # reds check_docs — a fixture artefact masquerading as a finding.
+    for rel in ("README.md", "docs/status.md"):
+        doc = root / rel
+        if not doc.is_file():
+            continue
+        text = doc.read_text(encoding="utf-8")
+        for toml_rel in SPINE_TOML_RELS:
+            name = toml_rel.rsplit("/", 1)[1]
+            legacy = name[: -len(".toml")] + (
+                ".md" if name.startswith("stakeholder-needs") else ".csv"
+            )
+            text = text.replace(name, legacy)
+        doc.write_text(text, encoding="utf-8")
+
+
 def make_minimal_project(root):
     """Fill a scaffold with the demo project + a fully traced registry chain,
     then refresh the generated arch map so the harness starts from truth."""
     (root / "src" / "demo.py").write_text(DEMO_SRC, encoding="utf-8")
     (root / "tests" / "conftest.py").write_text(DEMO_TEST_CONFTEST, encoding="utf-8")
     (root / "tests" / "test_demo.py").write_text(DEMO_TEST, encoding="utf-8")
+    use_legacy_spine_carrier(root)
     req = root / "docs" / "requirements"
     (req / "stakeholder-needs.md").write_text(STAKEHOLDER_NEEDS, encoding="utf-8")
     (req / "system-requirements.csv").write_text(SRS, encoding="utf-8")

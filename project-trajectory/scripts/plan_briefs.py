@@ -88,7 +88,7 @@ PROMPTS = KIT / "prompts"
 
 # The ONLY two files this module may read — the redaction allowlist, as paths
 # relative to the caller-supplied repo root.
-SR_CSV = "docs/requirements/system-requirements.csv"
+SR_CSV = "docs/requirements/system-requirements.toml"
 IF_CSV = "docs/requirements/interfaces.csv"
 
 # The registry columns each surface exposes (a stable, minimal excerpt — never

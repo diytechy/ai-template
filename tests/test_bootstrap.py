@@ -43,7 +43,7 @@ def test_scaffold_contains_expected_files(scaffold):
         "docs/log.md",
         "docs/plan.md",
         "docs/architecture.md",
-        "docs/requirements/system-requirements.csv",
+        "docs/requirements/system-requirements.toml",
         "docs/requirements/performance-budgets.csv",
         "docs/requirements/procurement.csv",
         "docs/requirements/assets.csv",
@@ -71,7 +71,7 @@ def test_scaffold_contains_expected_files(scaffold):
         "docs/knowledge/README.md",
         "docs/rubrics/README.md",
         "docs/rubrics/rubric-000.md",
-        "docs/test/test-cases.csv",
+        "docs/test/test-cases.toml",
         "scripts/check.py",
         "scripts/derive_gate.py",
         "scripts/check_doc_refs.py",
@@ -470,7 +470,7 @@ def test_readme_vision_tag_and_needs_pointer(scaffold):
     readme = (scaffold / "README.md").read_text(encoding="utf-8")
     assert "## Vision" in readme
     assert "PROJECT-VISION:" in readme
-    needs = (scaffold / "docs" / "requirements" / "stakeholder-needs.md").read_text(
+    needs = (scaffold / "docs" / "requirements" / "stakeholder-needs.toml").read_text(
         encoding="utf-8"
     )
     assert "](../../README.md#vision)" in needs

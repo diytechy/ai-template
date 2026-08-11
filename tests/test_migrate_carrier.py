@@ -122,18 +122,60 @@ def test_the_meta_repos_own_registries_convert_losslessly():
     assert written == []
 
 
-def test_sn_edge_rows_keep_their_native_fields():
+SN_MD = (
+    "## Core needs\n\n"
+    "| SN-ID | Need (plain language) | Why it matters | Priority | Acceptance |\n"
+    "|---|---|---|---|---|\n"
+    "| SN-001 | Add two numbers. | Demo. | M | add(1,2) is 3. |\n\n"
+    "## Draft needs (unratified)\n\n"
+    "| SN-ID | Need (plain language) | Why it matters | Priority | Acceptance |\n"
+    "|---|---|---|---|---|\n"
+    "| SN-002 | Subtract. | Demo. | S | tbd |\n\n"
+    "## Edge cases\n\n"
+    "| SN-ID | Lifecycle | Scenario | Expected behavior |\n"
+    "|---|---|---|---|\n"
+    "| SN-003 | Provision | Missing dependency | named refusal |\n"
+)
+
+
+def test_sn_edge_rows_keep_their_native_fields(tmp_path):
     """The edge-case table has its own columns, and the carrier keeps them.
 
     `traj_parse._sn_fields` folds an edge row onto the core four for the
     generated exports (its Scenario reads as the need). That fold is a
     PRESENTATION rule the markdown table forced; baking it into the carrier
     would make the export's reading the only reading there is.
+
+    Driven over a FIXTURE rather than the live registry (which is TOML since the
+    cutover, so it has no markdown source left to convert), and then re-asserted
+    against the live carrier below — the fixture proves the conversion rule, the
+    live half proves the repo actually carries it.
     """
-    needs = mc.read_sn(ROOT / "docs" / "requirements" / "stakeholder-needs.md")
+    src = tmp_path / "stakeholder-needs.md"
+    src.write_text(SN_MD, encoding="utf-8")
+    needs = mc.read_sn(src)
     kinds = {kind for _, kind, _ in needs}
     assert kinds == {"core", "draft", "edge"}
     edge = next(f for _, kind, f in needs if kind == "edge")
     assert set(edge) == {"lifecycle", "scenario", "expected"}
     parsed = tomllib.loads(mc.sn_to_toml(needs))["need"]
     assert all("kind" in row for row in parsed.values())
+    assert set(parsed["SN-003"]) == {"kind", "lifecycle", "scenario", "expected"}
+
+
+def test_the_live_need_carrier_holds_the_edge_fields_unfolded():
+    """The same property on the REPO'S OWN needs registry, post-cutover.
+
+    The fixture above can only prove the converter's rule; this proves the
+    conversion that actually shipped kept it — an edge need still carries
+    `lifecycle`/`scenario`/`expected` and NONE of the core four, so nothing has
+    quietly folded the tier on the way into the carrier. Non-vacuous by
+    construction: it fails if the repo has no edge needs at all.
+    """
+    live = ROOT / "docs" / "requirements" / "stakeholder-needs.toml"
+    needs = tomllib.loads(live.read_text(encoding="utf-8"))["need"]
+    edges = [n for n in needs.values() if n.get("kind") == "edge"]
+    assert edges, "the repo declares no edge-case needs — this check would be vacuous"
+    for need in edges:
+        assert {"lifecycle", "scenario", "expected"} >= set(need) - {"kind"}
+        assert not {"need", "why", "priority", "acceptance"} & set(need)

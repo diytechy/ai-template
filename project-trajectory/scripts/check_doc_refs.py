@@ -362,9 +362,9 @@ def path_findings(line, rel, n, root, kit_root, record_prefixes, absences=None):
 # joins out of scope. `TestRefs` is conventionally `(see TC-###)` — a registry
 # pointer, trace.py's side of the line — and likewise yields no path token.
 SPINE_CELLS = (
-    ("docs/test/test-cases.csv", "TC-ID", ("Evidence",)),
+    ("docs/test/test-cases.toml", "TC-ID", ("Evidence",)),
     (
-        "docs/requirements/low-level-requirements.csv",
+        "docs/requirements/low-level-requirements.toml",
         "LLR-ID",
         ("Module", "CodeSymbol", "TestRefs"),
     ),

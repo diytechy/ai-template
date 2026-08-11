@@ -138,11 +138,13 @@ def value_to_cell(value):
     """One TOML value as the cell text the CSV carrier held.
 
     The inverse of `migrate_carrier.cell_to_value`, and deliberately the same
-    rules its `value_to_cell` writes by: a ref array re-joins on the canonical
-    `; `, an int stringifies. A row read here is therefore cell-for-cell what
-    the CSV row was, which is what lets every consumer stay unchanged."""
+    rules its `value_to_cell` writes by: a ref array re-joins on `;` — the
+    separator the registries actually use, measured 271 of 271 at the cutover —
+    and an int stringifies. A row read here is therefore cell-for-cell what the
+    CSV row was, which is what lets every consumer stay unchanged and what lets
+    the amendment guard's silence across the cutover mean something."""
     if isinstance(value, list):
-        return "; ".join(str(v) for v in value)
+        return ";".join(str(v) for v in value)
     return str(value)
 
 
@@ -188,11 +190,39 @@ def rows_from_text(text, id_col, carrier):
     """`{id: row}` for the named carrier (`".toml"` / `".csv"`), or None when a
     TOML text does not parse. The `-000` template example rows are kept — the
     caller filters them, because `is_example` is trace_text's rule and this
-    module does not own the spine's semantics, only its carrier."""
+    module does not own the spine's semantics, only its carrier.
+
+    BY-ID, so a duplicated id under the CSV carrier collapses. That is correct
+    for the one question this shape answers — "what did row X say at revision
+    R" — and wrong for every question about the FILE, which is why the live
+    loader goes through `rows_seq_from_text` instead."""
     text = text.lstrip("﻿")  # F4, as above
     if carrier == ".toml":
         return rows_from_toml(text, id_col)
     return rows_from_csv(text, id_col)
+
+
+def rows_seq_from_text(text, id_col, carrier):
+    """Rows as a SEQUENCE in file order, duplicates included — or None when a
+    TOML text does not parse.
+
+    THIS EXISTS BECAUSE THE BY-ID SHAPE DESTROYS AN INTEGRITY CHECK, and it did
+    so silently. `{r[id_col]: r for r in DictReader(...)}` drops the first of
+    two rows that share an id, so a duplicated id — the very first thing
+    `--strict-integrity` is required to fail on — arrives at the checker as ONE
+    row and the check passes. Under TOML a duplicate id cannot be written at
+    all (it is a decode error, which is the carrier turning a check into a
+    property); under the CSV fallback the check has to keep working, or a repo
+    that has not migrated silently loses it.
+
+    So the LIVE read preserves the file, and only the baseline read — which
+    asks "what did row X say at revision R", a question that is by-id by
+    construction — takes the mapping."""
+    text = text.lstrip("﻿")  # F4, as above
+    if carrier == ".toml":
+        rows = rows_from_toml(text, id_col)
+        return None if rows is None else list(rows.values())
+    return [r for r in csv.DictReader(io.StringIO(text)) if r.get(id_col)]
 
 
 def resolve(path, suffixes=CARRIERS):
@@ -208,15 +238,21 @@ def resolve(path, suffixes=CARRIERS):
     error here."""
     import pathlib
 
-    base = pathlib.Path(stem(path))
-    live = [base.with_suffix(s) for s in suffixes if base.with_suffix(s).is_file()]
+    # Built by STRING concatenation on `stem`, never `Path.with_suffix`: that
+    # method treats everything after the LAST dot as the suffix, so
+    # `system-requirements.template.toml` resolves to `system-requirements.toml`
+    # — a different file, silently. `carriers()` already builds paths this way
+    # and the two must agree.
+    base = stem(path)
+    live = [pathlib.Path(base + s) for s in suffixes]
+    live = [p for p in live if p.is_file()]
     if len(live) > 1:
         raise SystemExit(
             "spine_carrier: REFUSED — {} exists under BOTH carriers ({}). Two "
             "homes for one fact is the state the migration exists to leave; "
             "delete the stale one in the same commit that wrote the other "
             "rather than letting a precedence rule pick.".format(
-                base.name, ", ".join(p.name for p in live)
+                pathlib.Path(base).name, ", ".join(p.name for p in live)
             )
         )
     return live[0] if live else None
@@ -233,9 +269,8 @@ def load(path, id_col, keep_examples=True):
     live = resolve(path)
     if live is None:
         return []
-    carrier = live.suffix
-    rows = rows_from_text(
-        live.read_text(encoding="utf-8-sig", errors="replace"), id_col, carrier
+    rows = rows_seq_from_text(
+        live.read_text(encoding="utf-8-sig", errors="replace"), id_col, live.suffix
     )
     if rows is None:
         raise SystemExit(
@@ -243,8 +278,47 @@ def load(path, id_col, keep_examples=True):
             "unreadable registry as an empty one".format(live)
         )
     return [
-        r for rid, r in rows.items() if keep_examples or not str(rid).endswith("-000")
+        r
+        for r in rows
+        if keep_examples or not str(r.get(id_col) or "").endswith("-000")
     ]
+
+
+def columns(path, id_col):
+    """The COLUMN NAMES a live registry actually uses, id column first, in
+    first-seen order — whichever carrier holds it. `[]` when it is absent.
+
+    THE TWO CARRIERS ANSWER THIS DIFFERENTLY AND BOTH ANSWERS ARE HONEST. A CSV
+    header is a declaration: every row has every column, empty or not. TOML has
+    no header at all — an absent key IS the empty cell, which is the carrier's
+    whole point — so the analogue is the UNION over rows: a column exists in
+    this registry iff some row sets it. Union, never intersection: a column one
+    row uses is a column the registry has, and intersecting would erase every
+    optional field the moment one row omitted it.
+
+    Callers that check a registry against a shipped template want exactly this,
+    and want it stated in ONE place — the three that asked it independently were
+    each reading the CSV header with `csv.reader`, which over a TOML file
+    returns the first line, `[requirement.SR-001]`, as a column name."""
+    live = resolve(path)
+    if live is None:
+        return []
+    text = live.read_text(encoding="utf-8-sig", errors="replace").lstrip("﻿")
+    if live.suffix != ".toml":
+        header = next(csv.reader(io.StringIO(text)), [])
+        return [c for c in header if c]
+    rows = rows_from_toml(text, id_col)
+    if rows is None:
+        raise SystemExit(
+            "spine_carrier: {} does not parse as TOML — refusing to report an "
+            "unreadable registry as a column-less one".format(live)
+        )
+    out = [id_col]
+    for row in rows.values():
+        for col in row:
+            if col not in out:
+                out.append(col)
+    return out
 
 
 # --- the stakeholder-need tier ------------------------------------------------
@@ -279,32 +353,79 @@ def _kind_from_heading(title):
     return "core" if ("core" in t or "need" in t) else None
 
 
+# Header text -> canonical field, first match wins. The order is deliberate:
+# every live and shipped header cell is prose ("Need (plain language)",
+# "Acceptance intent (how we'd know it's met)"), so the fields whose words could
+# appear inside another cell's gloss are matched LAST.
+_SN_HEADER_FIELD = (
+    ("lifecycle", "lifecycle"),
+    ("scenario", "scenario"),
+    ("expected", "expected"),
+    ("why", "why"),
+    ("priority", "priority"),
+    ("acceptance", "acceptance"),
+    ("need", "need"),
+)
+
+
+def _names_from_header(cells):
+    """Canonical field name per non-id column of a markdown header row, or None
+    when this row is not a need-table header."""
+    if not cells or "sn-id" not in cells[0].lower():
+        return None
+    names = []
+    for cell in cells[1:]:
+        low = cell.lower()
+        names.append(next((f for w, f in _SN_HEADER_FIELD if w in low), None))
+    return names if any(names) else None
+
+
 def needs_from_markdown(text):
     """`[{id, kind, **fields}]` from the legacy prose tables, document order.
 
-    Cells are resolved by the table's SHAPE, never by fixed offset: the three
-    tables have different widths, and reading an edge row at the core offsets is
-    what published SN-013 as "Provision" — its LIFECYCLE word — for the whole
-    life of the dashboard and the OKF bundle."""
-    kind, out = None, []
+    Cells are resolved by the table's OWN HEADER where it has one, and by the
+    table's SHAPE where it does not — never by fixed offset. The shape arm is
+    what stopped an edge row being read at the core offsets, which published
+    SN-013 as "Provision" — its LIFECYCLE word — for the whole life of the
+    dashboard and the OKF bundle.
+
+    THE HEADER ARM IS NOT A REFINEMENT, it is fidelity to the readers this
+    replaced. They found `Priority` BY HEADER TEXT, so an abbreviated core table
+    — `| SN-ID | Need | Priority | Acceptance |`, which the kit's own fixtures
+    and briefs use — read correctly. Shape alone maps that row's Priority onto
+    `why`, every need reads as priority-less, and the README Must/Should
+    coverage floor silently drops to nothing: a check that passes because it
+    found no rows to check. Legacy text must keep the semantics it was written
+    under (the same rule `draft_ids_from_text` states for section-as-state)."""
+    kind, names, out = None, None, []
     for line in text.split("\n"):
         heading = _SN_HEADING.match(line)
         if heading:
             kind = _kind_from_heading(heading.group(1))
+            names = None  # a heading ends the table above it
+            continue
+        cells = [c.strip() for c in line.split("|")[1:-1]] if "|" in line else []
+        header = _names_from_header(cells)
+        if header is not None:
+            names = header
             continue
         row = _SN_ROW.match(line)
         if not row:
             continue
-        cells = [c.strip() for c in line.split("|")[1:-1]]
         # A row with NO heading above it is resolved by the table's SHAPE, which
         # is what the readers this replaces always did: the edge table is three
         # cells wide and carries no priority, the core table four. Requiring a
         # heading would refuse a headerless fragment — and the fragment is the
         # normal case for a test fixture and for a table pasted into a brief.
         row_kind = kind or ("edge" if len(cells) - 1 == len(SN_EDGE) else "core")
-        names = SN_EDGE if row_kind == "edge" else SN_CORE
+        if names is None:
+            names = list(SN_EDGE if row_kind == "edge" else SN_CORE)
+        if kind is None and any(n in SN_EDGE for n in names if n):
+            row_kind = "edge"
         need = {"id": cells[0], "kind": row_kind}
-        need.update(dict(zip(names, cells[1 : 1 + len(names)])))
+        for name, value in zip(names, cells[1:]):
+            if name:
+                need[name] = value
         out.append(need)
     return out
 

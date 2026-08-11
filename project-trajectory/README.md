@@ -24,10 +24,10 @@ audits.
 | `LOG.template.md` | The **append-only history** status.md points at (gate sign-offs, verdicts, ratified decisions — process.md §5) → copy to `docs/log.md`. |
 | `ARCHITECTURE.template.md` | One-page overview + generated map → copy to `docs/architecture.md`. |
 | `INTERFACES.template.md` | Interface-seam contracts (IF-###) → copy to `docs/interfaces.md`. Cross-project **and** intra-repo (module↔module/file/external). |
-| `registries/stakeholder-needs.template.md` | SN-### (stakeholder needs + edge cases). |
-| `registries/system-requirements.template.csv` | SR-### with measurable acceptance criteria. |
-| `registries/low-level-requirements.template.csv` | LLR-### ↔ code. |
-| `registries/test-cases.template.csv` | TC-### ↔ requirements. |
+| `registries/stakeholder-needs.template.toml` | SN-### (stakeholder needs + edge cases). |
+| `registries/system-requirements.template.toml` | SR-### with measurable acceptance criteria. |
+| `registries/low-level-requirements.template.toml` | LLR-### ↔ code. |
+| `registries/test-cases.template.toml` | TC-### ↔ requirements. |
 | `registries/interfaces.template.csv` | IF-### ↔ directed interface seams — cross-project or intra-repo (module→module/file/external). `trace.py` integrity-checks the tier and `check_trajectory.py` runs the opt-out/default-on architecture-connectivity coverage (process-options.md "Intra-repo interfaces & the architecture graph"). |
 | `registries/performance-budgets.template.csv` | PB-### quantitative perf/resource budgets (NFRs), off-spine but back-linked to the SR/LLR/Module they bound; owned by the Integration/Coordination hat (process.md §9). Optional, like interfaces. |
 | `registries/procurement.template.csv` | PART-### purchased/external parts the project **buys rather than builds** (motors, boards, cameras). Each row's `IF-Ref` names the interface row that is its owner-of-record (`MULTI_REPO.md` §3.3); Status=needed/ordered/on-hand/backordered/obsolete, plus vendor link, cost, quantity. Off-spine and optional like interfaces/PB; `trace.py` integrity-checks the `PART-` ids. Deliberately **minimal** — full BOM tracking (alternates, per-module allocation, roll-ups) is a deferred extension (process-options.md "purchased parts"). |

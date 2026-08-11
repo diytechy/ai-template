@@ -5,7 +5,7 @@ description: "tier index"
 tags: []
 resource: "generated"
 ---
-> **GENERATED — a reference copy, not the source of truth.** Derived from docs/requirements/system-requirements.csv by scripts/gen_okf.py; edit the registry/doc, then rerun it (docs/okf-export: off silences the layer).
+> **GENERATED — a reference copy, not the source of truth.** Derived from docs/requirements/system-requirements.toml by scripts/gen_okf.py; edit the registry/doc, then rerun it (docs/okf-export: off silences the layer).
 
 # system-requirements — index
 

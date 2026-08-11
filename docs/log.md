@@ -12066,7 +12066,7 @@ DOWNWARD as decomposition lands; a bump is a reviewed baseline edit).
 new rows; the review had caught it drifting 1,145,810 → 1,148,348 unnoticed).
 
 **Recorded English-only as an explicit non-goal** (L-4): new **NG-1** in
-[stakeholder-needs.md](requirements/stakeholder-needs.md) — display strings,
+[stakeholder-needs.md](requirements/stakeholder-needs.toml) — display strings,
 CLI/policy/status/header tokens, and parsers are English-only by design; if
 localization is ever required, separate display strings from the stable machine
 tokens first. This is the SSOT home G1 already names for non-goals; no SN row,

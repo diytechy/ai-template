@@ -80,15 +80,22 @@ def load_ids(docs):
         return {r[key] for r in spine_carrier.load(path, key) if r.get(key)}
 
     known = {
-        "SR": spine_col(docs / "requirements" / "system-requirements.csv", "SR-ID"),
+        "SR": spine_col(docs / "requirements" / "system-requirements.toml", "SR-ID"),
         "LLR": spine_col(
-            docs / "requirements" / "low-level-requirements.csv", "LLR-ID"
+            docs / "requirements" / "low-level-requirements.toml", "LLR-ID"
         ),
-        "TC": spine_col(docs / "test" / "test-cases.csv", "TC-ID"),
+        "TC": spine_col(docs / "test" / "test-cases.toml", "TC-ID"),
         "SN": set(),
     }
-    sn_md = docs / "requirements" / "stakeholder-needs.md"
-    if sn_md.exists():
+    # The need tier resolves through the carrier too (repo-lock D-5). The id
+    # SCRAPE itself is carrier-blind — `SN-001` is the token under a markdown
+    # row and under `[need.SN-001]` alike — but an existence test on one suffix
+    # is not: it would report an EMPTY known-SN set for a repo still on
+    # markdown, and every `SN-###` a runtime flow cites would read as unknown.
+    sn_md = spine_carrier.resolve(
+        docs / "requirements" / "stakeholder-needs.toml", spine_carrier.NEED_CARRIERS
+    )
+    if sn_md is not None:
         known["SN"] = set(re.findall(r"\bSN-\d+\b", sn_md.read_text(encoding="utf-8")))
     return known
 

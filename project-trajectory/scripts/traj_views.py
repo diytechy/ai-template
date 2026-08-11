@@ -23,6 +23,9 @@ from traj_graph import (
     route_graph,
 )
 from traj_parse import WORKSTREAM_LABELS, _sn_rows, _spine
+from traj_parse import spine_carrier as _carrier
+
+
 from traj_render import (
     DRILL_STYLE,
     PHASE_ACCENTS,
@@ -45,6 +48,13 @@ from traj_render import (
     tab_button,
     tab_panel_open,
 )
+
+
+def _spine_rows(root, rel, id_col):
+    """One spine tier through the CARRIER, reached via the sibling that already
+    imports it (repo-lock D-6: the vocabulary has ONE home, and this module has
+    no independent need of it beyond reading a tier)."""
+    return _carrier.load(root / rel, id_col)
 
 
 # WI-306: the What-tab icicle drill ids (start-collapsed above the SR-089
@@ -898,7 +908,12 @@ def _wi_phases(root, wis):
     delivers no SR is `unphased`. Deterministic (sorted, no clocks) so the render
     stays `--check`-stable."""
     sr_phase = {}
-    for r in ct.read_rows(root / ct.SR_CSV):
+    # Through the CARRIER (repo-lock D-5), not ct.read_rows: a CSV parse of the
+    # TOML registry returns NOTHING rather than failing, and an empty SR->Phase
+    # map does not red — every WI silently reads `unphased`, so the tiered
+    # roadmap collapses to one phase and `--check` byte-compares two equally
+    # wrong renders. Same shape as traj_parse._spine, same fix.
+    for r in _spine_rows(root, ct.SR_CSV, "SR-ID"):
         sid = (r.get("SR-ID") or "").strip()
         if sid.startswith("SR-"):
             sr_phase[sid] = (r.get("Phase") or "").strip() or DEFAULT_PHASE

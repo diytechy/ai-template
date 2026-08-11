@@ -299,18 +299,18 @@
 #
 # The distribution:
 #
-#   cli                  120   deliberate
+#   cli                  123   deliberate
 #   link-rebase            1   deliberate
-#   spine-loader          16   deliberate
+#   spine-loader          20   deliberate
 #   declared-file         12   deliberate
-#   markdown-table        9   deliberate
+#   markdown-table        3   deliberate
 #   git-wrapper            6   deliberate
 #   wi-schema-columns      6   deliberate
 #   wi-registry            3   deliberate
 #   spec-folder-reader     4   deliberate
 #   ctx-unpack             3   deliberate
 #   okf-row                1   deliberate
-#   import-fallback        14   deliberate
+#   import-fallback        16   deliberate
 #   intake-mint            8   deliberate
 #   module-path            3   deliberate
 #   signature-echo         2   deliberate
@@ -325,7 +325,8 @@
 #   registry-row-filter    2   deliberate
 #   generator-preamble     1   deliberate
 #   frontmatter-fence      1   deliberate
-#   spine-carrier          2   deliberate
+#   spine-carrier          1   deliberate
+#   toml-line-rewrite      1   deliberate
 #
 # The two facts worth carrying: cross-module duplication here is dominated by
 # SMALL STABLE HELPERS the F5 ruling deliberately duplicates (a shared
@@ -338,7 +339,7 @@
 # a census whose classification has rotted is how the false claims above
 # survived in the first place.
 
-# --- cli (120 blocks) ---------------------------------------------
+# --- cli (123 blocks) ---------------------------------------------
 # disposition: deliberate
 # the per-script CLI skeleton + _utf8_console. F5: kit scripts must stay
 # independently copy-able and stdlib-only, which is why a shared
@@ -384,7 +385,10 @@ b87ed5851f33  project-trajectory/scripts/agent_common.py == project-trajectory/s
 74572e51bafc  project-trajectory/scripts/check.py == project-trajectory/scripts/check_stubs.py
 74572e51bafc  project-trajectory/scripts/check.py == project-trajectory/scripts/check_trajectory.py
 74572e51bafc  project-trajectory/scripts/check.py == project-trajectory/scripts/derive_gate.py
-74572e51bafc  project-trajectory/scripts/check.py == project-trajectory/scripts/gen_cases.py
+# RE-STAMPED at D-5 step 3: gen_cases' paste emitters were extracted out of
+# main() (the TOML arm would otherwise have bumped its C901), which moved
+# where the shared argparse preamble begins. SAME block, same reason.
+011a968c6151  project-trajectory/scripts/check.py == project-trajectory/scripts/gen_cases.py
 74572e51bafc  project-trajectory/scripts/check.py == project-trajectory/scripts/gen_okf.py
 74572e51bafc  project-trajectory/scripts/check.py == project-trajectory/scripts/gen_release_checklist.py
 495cd311f6ca  project-trajectory/scripts/check.py == project-trajectory/scripts/gen_arch_map.py
@@ -395,7 +399,6 @@ b87ed5851f33  project-trajectory/scripts/agent_common.py == project-trajectory/s
 44fc409f063d  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/gen_release_checklist.py
 d986eafa1e11  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/check_dupes.py
 da3bd5e9dd3e  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/check_stubs.py
-da3bd5e9dd3e  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/gen_cases.py
 da3bd5e9dd3e  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/gen_okf.py
 da3bd5e9dd3e  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/gen_release_checklist.py
 5d9524986749  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/check_trajectory.py
@@ -488,7 +491,11 @@ ec61ea7ff863  project-trajectory/scripts/check_doc_refs.py == project-trajectory
 9be851fc7bee  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/derive_gate.py
 9be851fc7bee  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/traj_parse.py
 87eb5749f7af  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/intake.py
-ff98292a015f  project-trajectory/scripts/derive_gate.py == project-trajectory/scripts/traj_parse.py
+85b79364b09b  project-trajectory/scripts/agent_loop.py == project-trajectory/scripts/check_docs.py
+9be851fc7bee  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/check_docs.py
+1a06e39b07ab  project-trajectory/scripts/check_docs.py == project-trajectory/scripts/derive_gate.py
+1a06e39b07ab  project-trajectory/scripts/check_docs.py == project-trajectory/scripts/traj_parse.py
+cd9fa8b9ec68  project-trajectory/scripts/derive_gate.py == project-trajectory/scripts/traj_parse.py
 # --- link-rebase (1 block) ---------------------------------------
 # disposition: deliberate
 # the inline-link rewrite closure (`_sub` over MD_LINK_TARGET_RE.sub): the
@@ -519,7 +526,7 @@ d298066d8071  project-trajectory/scripts/agent_common.py == project-trajectory/s
 d47d5975c21b  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/schedule.py
 f800f0c60265  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/schedule.py
 
-# --- spine-loader (16 blocks) ------------------------------------
+# --- spine-loader (20 blocks) ------------------------------------
 # disposition: deliberate
 # spine-registry loaders (load_csv/refs, the SR/LLR/TC/IF/OI row filters,
 # the draft-heading scan). Several carry an explicit in-code note -
@@ -553,6 +560,10 @@ b0b9cc04d152  project-trajectory/scripts/gen_release_checklist.py == project-tra
 
 0bb53cd4526d  project-trajectory/scripts/check_flows.py == project-trajectory/scripts/plan_coverage.py
 a9694b0ef407  project-trajectory/scripts/derive_gate.py == project-trajectory/scripts/trace.py
+c070c759aa57  project-trajectory/scripts/agent_loop.py == project-trajectory/scripts/check_trajectory.py
+85520d0b999b  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/trace.py
+1892afbcfb9b  project-trajectory/scripts/derive_gate.py == project-trajectory/scripts/trace.py
+436c6b386a4c  project-trajectory/scripts/derive_gate.py == project-trajectory/scripts/trace.py
 # --- okf-row (1 block) -------------------------------------------
 # disposition: deliberate
 # the OKF/dashboard row builders — the same (kind, title, body) tuple shape
@@ -565,7 +576,12 @@ a9694b0ef407  project-trajectory/scripts/derive_gate.py == project-trajectory/sc
 # arms became one `TierSpec`-driven loop, so the dashboard side no longer
 # matches gen_okf's per-tier builders. Zero new blocks; gen_okf's own
 # same-file pair below is untouched.
-9d770b2d948b  project-trajectory/scripts/gen_okf.py == project-trajectory/scripts/gen_okf.py
+# RE-STAMPED at the D-5 carrier cutover (9d770b2d948b -> 0cf8663660c4): SAME
+# block, moved extent. The per-tier concept builders now cite their source
+# through the resolved carrier name (`"{} ({})".format(sr_src, cid)`) instead of
+# a hardcoded path, which shifted where the matching run starts. One block, one
+# reason, unchanged: two tiers, one row shape.
+0cf8663660c4  project-trajectory/scripts/gen_okf.py == project-trajectory/scripts/gen_okf.py
 
 # --- graph-walk (1 block)  ---------------------------------------
 # disposition: deliberate
@@ -573,7 +589,7 @@ a9694b0ef407  project-trajectory/scripts/derive_gate.py == project-trajectory/sc
 # generator (sw_containment's subtree walk — traj_views.py since WI-280 S5).
 a2fa21743919  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/traj_views.py
 
-# --- import-fallback (14 blocks) ----------------------------------
+# --- import-fallback (16 blocks) ----------------------------------
 # disposition: deliberate
 # the sibling-import fallback and command-template substitution — the
 # preamble that lets a kit script run both as a script and in-process.
@@ -594,13 +610,15 @@ aa955d9d1693  project-trajectory/scripts/agent_loop.py == project-trajectory/scr
 aa955d9d1693  project-trajectory/scripts/agent_loop.py == project-trajectory/scripts/traj_parse.py
 fff6be73b05f  project-trajectory/scripts/agent_loop.py == project-trajectory/scripts/trace.py
 b8623bc7c3df  project-trajectory/scripts/intake.py == project-trajectory/scripts/traj_parse.py
+aa955d9d1693  project-trajectory/scripts/agent_loop.py == project-trajectory/scripts/check_docs.py
+c07de48407e4  project-trajectory/scripts/check_docs.py == project-trajectory/scripts/trace.py
 # --- skills-materialize (1 block)  -------------------------------
 # disposition: deliberate
 # the per-agent skills directory walk, shared by bootstrap and the skills
 # index generator.
 c1ad5fc6394f  project-trajectory/scripts/bootstrap.py == project-trajectory/scripts/gen_skills_index.py
 
-# --- markdown-table (9 blocks) ----------------------------------
+# --- markdown-table (3 blocks) ----------------------------------
 # disposition: deliberate
 # the markdown-table row parser (SN rows, plan tables, the release
 # checklist). gen_okf/gen_trajectory carry the in-code note 'kept byte-for-
@@ -622,16 +640,10 @@ c1ad5fc6394f  project-trajectory/scripts/bootstrap.py == project-trajectory/scri
 # The prose pin is retired with it: tests/test_rule_sync.py now pins all three
 # equal AND pins the field VALUES, because equality alone was a vacuous green —
 # the three were byte-identical and all three wrong the same way.
-5203288b8c2d  project-trajectory/scripts/check_docs.py == project-trajectory/scripts/gen_release_checklist.py
-469f0dd6e7c9  project-trajectory/scripts/check_docs.py == project-trajectory/scripts/plan_artifacts.py
-469f0dd6e7c9  project-trajectory/scripts/check_docs.py == project-trajectory/scripts/plan_coverage.py
 1a3c0bba3e74  project-trajectory/scripts/gen_okf.py == project-trajectory/scripts/traj_parse.py
 dc898ec4d27d  project-trajectory/scripts/gen_okf.py == project-trajectory/scripts/traj_parse.py
-9483675e297d  project-trajectory/scripts/gen_release_checklist.py == project-trajectory/scripts/plan_artifacts.py
-9483675e297d  project-trajectory/scripts/gen_release_checklist.py == project-trajectory/scripts/plan_coverage.py
-d2ff16e89265  project-trajectory/scripts/plan_artifacts.py == project-trajectory/scripts/plan_coverage.py
-451248328e57  project-trajectory/scripts/plan_artifacts.py == project-trajectory/scripts/plan_coverage.py
 
+580c41f8da0b  project-trajectory/scripts/plan_artifacts.py == project-trajectory/scripts/plan_coverage.py
 # --- declared-file (12 blocks) -----------------------------------
 # disposition: deliberate
 # declared-file readers (policy files, stack.ini, coverage.json). F5: each
@@ -906,6 +918,24 @@ de0546d2361d  project-trajectory/scripts/intake.py == project-trajectory/scripts
 # subparser - same block, shifted content.)
 5a35a2689e40  project-trajectory/scripts/intake.py == project-trajectory/scripts/spec_move.py
 
+# --- toml-line-rewrite (1 block) ---------------------------------
+# disposition: deliberate
+# The IN-PLACE TOML line rewrite: walk the lines, track which `[table]` you are
+# inside, and replace the one `key = value` line. bootstrap.set_process_key
+# does it for a policy dial in docs/process.toml; intake._flip_status_lines
+# does it for a spine row's Status under the carrier (repo-lock D-5 step 4,
+# which RULED the second one onto the first's pattern rather than letting it
+# re-serialize). F5 applies with force here: both are small, stable plumbing
+# whose divergence would be visible immediately, and neither module should
+# import the other — bootstrap scaffolds, intake mints.
+#
+# The two are NOT interchangeable and that is why they stay separate rather
+# than being lifted: bootstrap addresses `[section] key`, intake addresses
+# `[tier.ID] key`, and intake REFUSES when the key is absent while bootstrap
+# can append it. Sharing the walk would mean sharing the not-found policy, and
+# "add the key" is exactly wrong for a ratification.
+39affaeb2862  project-trajectory/scripts/bootstrap.py == project-trajectory/scripts/intake.py
+
 # --- generator-preamble (1 block) --------------------------------
 # disposition: deliberate
 # The `argparse` + `sys.path.insert(__file__.parent)` + sibling-import preamble
@@ -995,7 +1025,7 @@ a510ce1c39b6  project-trajectory/scripts/agent_common.py == project-trajectory/s
 # them would start checking the other's values.
 edaa6a8191f0  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/check_docs.py
 
-# --- spine-carrier (2 blocks) -------------------------------------
+# --- spine-carrier (1 block) -------------------------------------
 # disposition: deliberate
 # The spine's CSV -> TOML carrier migration (repo-lock D-5, OI-12).
 # trace.py and check_trajectory.py each carry the same three things: the tier
@@ -1019,5 +1049,4 @@ edaa6a8191f0  project-trajectory/scripts/agent_common.py == project-trajectory/s
 # LIVE spine header is driven through the pair so the agreement cannot be
 # vacuous. tests/test_trajectory_staged.py then pins their OUTPUT equal over a
 # real converted repo.
-4b36c4b8702c  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/trace.py
 55a260b00a47  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/trace.py

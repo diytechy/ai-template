@@ -225,22 +225,25 @@ def test_the_llr_carries_a_rationale_column_and_it_is_optional():
     # walls (one over 3,000) all in the rows whose reasons were richest. Rationale
     # is a requirement attribute at EVERY level in 29148; the SR had one and the
     # LLR did not, and that asymmetry was the bug.
-    import csv
-
     from conftest import ROOT, load_script
 
     trace = load_script("trace")
 
-    # The column exists in BOTH the shipped template and the kit's own registry,
-    # and sits beside the cell it splits.
+    # The column exists in BOTH the shipped template and the kit's own registry.
+    # Read through the CARRIER, which is what "the registry has this column"
+    # means now: TOML has no header, so the question is whether the key is set
+    # — by the template's `-000` schema row, and by at least one live row. The
+    # "sits beside Detail" half is retired with the header: key order inside a
+    # TOML table carries no meaning, so asserting it would pin a non-fact.
+    carrier = load_script("spine_carrier")
     for path in (
-        ROOT / "project-trajectory/registries/low-level-requirements.template.csv",
-        ROOT / "docs/requirements/low-level-requirements.csv",
+        ROOT / "project-trajectory/registries/low-level-requirements.template.toml",
+        ROOT / "docs/requirements/low-level-requirements.toml",
     ):
-        with open(path, newline="", encoding="utf-8") as fh:
-            hdr = next(csv.reader(fh))
-        assert "Rationale" in hdr, path
-        assert hdr.index("Rationale") == hdr.index("Detail") + 1, path
+        columns = carrier.columns(path, "LLR-ID")
+        assert columns, path  # an empty column set would make this vacuous
+        assert "Rationale" in columns, path
+        assert "Detail" in columns, path
 
     # The deliberate asymmetry: required on the SR, optional on the LLR. A short
     # decomposition row's why IS its parent SR's, so requiring one everywhere
@@ -414,22 +417,18 @@ def test_sr_supersession_failures_are_strict_integrity_findings(scaffold):
 
 
 def test_meta_supersession_rows_preserve_the_ratified_evidence_map():
-    import csv
-
     trace = load_script("trace")
     root = KIT.parent
-    with (root / "docs/requirements/system-requirements.csv").open(
-        newline="", encoding="utf-8-sig"
-    ) as stream:
-        srs = list(csv.DictReader(stream))
-    with (root / "docs/requirements/low-level-requirements.csv").open(
-        newline="", encoding="utf-8-sig"
-    ) as stream:
-        llrs = list(csv.DictReader(stream))
-    with (root / "docs/test/test-cases.csv").open(
-        newline="", encoding="utf-8-sig"
-    ) as stream:
-        tcs = list(csv.DictReader(stream))
+    # Read through the CARRIER: this reads the KIT'S OWN registries, which are
+    # TOML since the cutover (repo-lock D-5), and a csv.DictReader over them
+    # would hand back one nonsense row and make the whole map vacuously absent.
+    carrier = load_script("spine_carrier")
+    srs = carrier.load(root / "docs/requirements/system-requirements.toml", "SR-ID")
+    llrs = carrier.load(
+        root / "docs/requirements/low-level-requirements.toml", "LLR-ID"
+    )
+    tcs = carrier.load(root / "docs/test/test-cases.toml", "TC-ID")
+    assert srs and llrs and tcs  # a missing registry would make this vacuous
 
     expected = {
         "SR-037": "SR-067;SR-068;SR-069",
@@ -460,22 +459,18 @@ def test_phase5_supersession_rows_preserve_the_ratified_evidence_map():
     restructure Phase 5 all link to SR-132 (the local integrator), retain no
     LLR (their machinery was deleted, not re-homed), and are cited by TC-133
     exactly — the TC-099 pattern, re-applied to the deletion phase."""
-    import csv
-
     trace = load_script("trace")
     root = KIT.parent
-    with (root / "docs/requirements/system-requirements.csv").open(
-        newline="", encoding="utf-8-sig"
-    ) as stream:
-        srs = list(csv.DictReader(stream))
-    with (root / "docs/requirements/low-level-requirements.csv").open(
-        newline="", encoding="utf-8-sig"
-    ) as stream:
-        llrs = list(csv.DictReader(stream))
-    with (root / "docs/test/test-cases.csv").open(
-        newline="", encoding="utf-8-sig"
-    ) as stream:
-        tcs = list(csv.DictReader(stream))
+    # Read through the CARRIER: this reads the KIT'S OWN registries, which are
+    # TOML since the cutover (repo-lock D-5), and a csv.DictReader over them
+    # would hand back one nonsense row and make the whole map vacuously absent.
+    carrier = load_script("spine_carrier")
+    srs = carrier.load(root / "docs/requirements/system-requirements.toml", "SR-ID")
+    llrs = carrier.load(
+        root / "docs/requirements/low-level-requirements.toml", "LLR-ID"
+    )
+    tcs = carrier.load(root / "docs/test/test-cases.toml", "TC-ID")
+    assert srs and llrs and tcs  # a missing registry would make this vacuous
 
     phase5 = {
         "SR-061",

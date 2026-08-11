@@ -1,0 +1,33 @@
+# System Requirements (SR-###) — the TOML registry CARRIER.
+#
+# ONE TABLE PER ROW, id-keyed with the prefix retained and the key BARE:
+# `[requirement.SR-000]`. Refs are typed arrays, `Phase` is an int, and an
+# EMPTY CELL IS AN ABSENT KEY — omit a key rather than setting it to "".
+# A duplicate id is a parse error, which is the carrier doing what a check
+# used to (docs/process.md; the carrier's reader is scripts/spine_carrier.py).
+#
+# THE `-000` ROW BELOW IS THE SCHEMA. There is no header line to declare a
+# column, so this example row is the only place the vocabulary is written
+# down: it sets EVERY key the tier has, with the guidance for each as its
+# value. Delete it on the first real entry — and add its keys to the rows you
+# write, not from memory. Comments survive every tool that edits this file
+# (the Status flip is a line rewrite), so keep your own notes here.
+[requirement.SR-000]
+title = "EXAMPLE - delete on first real entry"
+sn_refs = ["SN-000"]
+requirement = "The system shall <single testable shall-statement>."
+rationale = "Why it exists (link the SN by id; do not restate it)."
+acceptance_criteria = "Measurable condition a test/demo asserts (the contract with the Test Engineer)."
+permutations = """Input dimensions for test design (process.md 'Dimensional coverage'); feed to scripts/gen_cases.py. Grammar: name=range[min..max]; name=set{a,b,c}; name=bool; @full|@pairwise|@boundaries. e.g. size=range[0..2GiB]; mode=set{a,b,c}; @pairwise"""
+priority = "M"
+verification = "Test"
+status = "Draft"
+phase = """Optional DELIVERY phase — a bare integer (1,2,3…), digits only, full cell: once any row is phased, a ratified row's Phase must be a bare integer (a prefixed v2 is a --strict-schema finding — the --phase/--ratify filters and the phase-drop detector match the cell literally, so a prefix disarms them silently; legacy labels still digit-parse in those filters). Blank is legal only on a pre-ratification (Draft) row, and the foundation (minimum) phase is always in scope under --phase. See process.md 'Phased delivery'. NOT the lifecycle phase: to tag WHEN in the running product's life a requirement holds (Provision/Startup/Runtime), add an optional 'Lifecycle' column instead (process.md §4 'Lifecycle phase')."""
+area = """Optional owner-hat/domain tag (blank OK — see process.md §1); trace.py reports per-Area SR counts when filled, never gates on it."""
+
+superseded_by = ["SR-000"]
+# `superseded_by` — a typed array of EXISTING SR ids that replace this row when
+# it is retired in place (process.md §7). Omit the key entirely on a live row;
+# a self-link, an unknown target, a repeated target or a cycle is an integrity
+# finding. An LLR citing a superseded SR is a finding (re-ground it on the
+# successor); a TC citing one stays legal — it is the retained evidence record.

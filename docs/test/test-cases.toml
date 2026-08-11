@@ -1,0 +1,1630 @@
+[test.TC-001]
+verifies = ["SR-001", "LLR-001"]
+level = "Integration"
+method = """Run the trace suite; a linked chain is orphan-free and an injected orphan fails --strict."""
+tier = "Full"
+expected = "Satisfies SR-001 AcceptanceCriteria"
+automated = "Yes"
+evidence = "tests/test_trace.py"
+status = "Verified"
+phase = 1
+
+[test.TC-002]
+verifies = ["SR-002", "LLR-002"]
+level = "Integration"
+method = """Run the registry-checks suite; duplicate/malformed ids and mis-columned rows fail --strict-integrity."""
+tier = "Full"
+expected = "Satisfies SR-002 AcceptanceCriteria"
+automated = "Yes"
+evidence = "tests/test_registry_checks.py"
+status = "Verified"
+phase = 1
+
+[test.TC-003]
+verifies = ["SR-003", "LLR-003"]
+level = "Integration"
+method = """Run the registry-checks suite; leftover -000 rows, empty/out-of-vocab fields, and (once the spine is phased) a ratified row whose Phase is not a full-cell bare integer (blank, prefixed like P1/v2, or unparseable) are flagged."""
+tier = "Full"
+expected = "Satisfies SR-003 AcceptanceCriteria"
+automated = "Yes"
+evidence = "tests/test_registry_checks.py"
+status = "Verified"
+phase = 1
+
+[test.TC-004]
+verifies = ["SR-004", "LLR-004"]
+level = "Unit"
+method = """Run the acceptance-criteria advisory suite; an unpinned comparative warns without changing the exit code."""
+tier = "Full"
+expected = "Satisfies SR-004 AcceptanceCriteria"
+automated = "Yes"
+evidence = "tests/test_ac_advisory.py"
+status = "Verified"
+phase = 1
+
+[test.TC-005]
+verifies = ["SR-005", "LLR-005"]
+level = "Integration"
+method = """Run the off-spine registry suites; PB and current REPO/legacy MOD back-link findings fire and -000 rows are ignored."""
+tier = "Full"
+expected = "Satisfies SR-005 AcceptanceCriteria"
+automated = "Yes"
+evidence = "tests/test_modules_registry.py;tests/test_procurement.py;tests/test_assets.py"
+status = "Verified"
+phase = 1
+
+[test.TC-006]
+verifies = ["SR-006", "LLR-006"]
+level = "Integration"
+method = """Run the check-harness suite; gate steps run and a missing required tool fails with SKIP(missing)."""
+tier = "Full"
+expected = "Satisfies SR-006 AcceptanceCriteria"
+automated = "Yes"
+evidence = "tests/test_check_harness.py"
+status = "Verified"
+phase = 1
+
+[test.TC-007]
+verifies = ["SR-007", "LLR-007"]
+level = "Integration"
+method = """Run the stack-profile suite; commands and tiers/coverage/arch-map resolve from stack.ini."""
+tier = "Full"
+expected = "Satisfies SR-007 AcceptanceCriteria"
+automated = "Yes"
+evidence = "tests/test_stack_profile.py"
+status = "Verified"
+phase = 1
+
+[test.TC-008]
+verifies = ["SR-008", "LLR-008"]
+level = "Integration"
+method = "Run the stack-profile suite; malformed/non-integer/missing-binary profiles fail loudly."
+tier = "Full"
+expected = "Satisfies SR-008 AcceptanceCriteria"
+automated = "Yes"
+evidence = "tests/test_stack_profile.py"
+status = "Verified"
+phase = 1
+
+[test.TC-009]
+verifies = ["SR-009", "LLR-009"]
+level = "Integration"
+method = """Run the profile suite; a non-Python profile omits Python-only files and seeds files-mode arch-map."""
+tier = "Full"
+expected = "Satisfies SR-009 AcceptanceCriteria"
+automated = "Yes"
+evidence = "tests/test_profile.py"
+status = "Verified"
+phase = 1
+
+[test.TC-010]
+verifies = ["SR-010", "LLR-010"]
+level = "Integration"
+method = "Run the bootstrap suite; a fresh scaffold's harness runs green."
+tier = "Full"
+expected = "Satisfies SR-010 AcceptanceCriteria"
+automated = "Yes"
+evidence = "tests/test_bootstrap.py"
+status = "Verified"
+phase = 1
+
+[test.TC-011]
+verifies = ["SR-011", "LLR-011", "SR-111", "LLR-121"]
+level = "Integration"
+method = """Run the bootstrap suite; a re-run leaves existing files unchanged, --force overwrites, and docs/kit-version is stamped."""
+tier = "Full"
+expected = "Satisfies SR-011 and SR-111 AcceptanceCriteria"
+automated = "Yes"
+evidence = "tests/test_bootstrap.py"
+status = "Verified"
+phase = 1
+
+[test.TC-012]
+verifies = ["SR-012", "LLR-012"]
+level = "Integration"
+method = "Run the check-docs suite; a broken link or missing vision tag fails --stale."
+tier = "Full"
+expected = "Satisfies SR-012 AcceptanceCriteria"
+automated = "Yes"
+evidence = "tests/test_check_docs.py"
+status = "Verified"
+phase = 1
+
+[test.TC-013]
+verifies = ["SR-013", "LLR-013"]
+level = "Integration"
+method = "Run the check-flows suite; a conformant flow passes and a malformed one fails."
+tier = "Full"
+expected = "Satisfies SR-013 AcceptanceCriteria"
+automated = "Yes"
+evidence = "tests/test_check_flows.py"
+status = "Verified"
+phase = 1
+
+[test.TC-014]
+verifies = ["SR-014", "LLR-014"]
+level = "Integration"
+method = "Run the check-perf suite; a within-tolerance metric passes and a regression fails."
+tier = "Full"
+expected = "Satisfies SR-014 AcceptanceCriteria"
+automated = "Yes"
+evidence = "tests/test_check_perf.py"
+status = "Verified"
+phase = 1
+
+[test.TC-015]
+verifies = ["SR-015", "LLR-015"]
+level = "Integration"
+method = "Run the perf-budgets suite; an unresolvable or empty PB Refs is a finding."
+tier = "Full"
+expected = "Satisfies SR-015 AcceptanceCriteria"
+automated = "Yes"
+evidence = "tests/test_perf_budgets.py"
+status = "Verified"
+phase = 1
+
+[test.TC-016]
+verifies = ["SR-016", "LLR-016"]
+level = "Integration"
+method = "Run the check-stubs suite; a stub at the declared gate fails and clean source passes."
+tier = "Full"
+expected = "Satisfies SR-016 AcceptanceCriteria"
+automated = "Yes"
+evidence = "tests/test_check_stubs.py"
+status = "Verified"
+phase = 1
+
+[test.TC-017]
+verifies = ["SR-017", "LLR-017"]
+level = "Integration"
+method = "Run the check-privacy suite; a staged secret is blocked with privacy-check off."
+tier = "Full"
+expected = "Satisfies SR-017 AcceptanceCriteria"
+automated = "Yes"
+evidence = "tests/test_check_privacy.py"
+status = "Verified"
+phase = 1
+
+[test.TC-018]
+verifies = ["SR-018", "LLR-018"]
+level = "Integration"
+method = """Run the check-privacy suite; PII/identity classes fire only with privacy-check on and honor EXEMPT_EMAILS."""
+tier = "Full"
+expected = "Satisfies SR-018 AcceptanceCriteria"
+automated = "Yes"
+evidence = "tests/test_check_privacy.py"
+status = "Verified"
+phase = 1
+
+[test.TC-019]
+verifies = ["SR-019", "LLR-019"]
+level = "Integration"
+method = "Run the pre-commit-hook suite; a failing integrity/secrets check blocks the commit."
+tier = "Full"
+expected = "Satisfies SR-019 AcceptanceCriteria"
+automated = "Yes"
+evidence = "tests/test_pre_commit_hook.py"
+status = "Verified"
+phase = 1
+
+[test.TC-020]
+verifies = ["SR-020", "LLR-020"]
+level = "Integration"
+method = "Run the pre-push-hook suite; a secret/identity in the push range blocks the push."
+tier = "Full"
+expected = "Satisfies SR-020 AcceptanceCriteria"
+automated = "Yes"
+evidence = "tests/test_pre_push_hook.py"
+status = "Verified"
+phase = 1
+
+[test.TC-021]
+verifies = ["SR-021", "LLR-021"]
+level = "Integration"
+method = """Run the hook suites' python-probe cases; a missing/aliased python3 reports clearly without crashing."""
+tier = "Full"
+expected = "Satisfies SR-021 AcceptanceCriteria"
+automated = "Yes"
+evidence = "tests/test_pre_commit_hook.py;tests/test_pre_push_hook.py"
+status = "Verified"
+phase = 1
+
+[test.TC-022]
+verifies = ["SR-022", "LLR-022"]
+level = "Integration"
+method = "Run the check-vendored suite; a drifted vendored copy is a finding."
+tier = "Full"
+expected = "Satisfies SR-022 AcceptanceCriteria"
+automated = "Yes"
+evidence = "tests/test_check_vendored.py"
+status = "Verified"
+phase = 1
+
+[test.TC-023]
+verifies = ["SR-023", "LLR-023"]
+level = "Integration"
+method = """Run the gen-arch-map suite; --check fails on a stale map and regeneration rewrites only the marker block."""
+tier = "Full"
+expected = "Satisfies SR-023 AcceptanceCriteria"
+automated = "Yes"
+evidence = "tests/test_gen_arch_map.py"
+status = "Verified"
+phase = 1
+
+[test.TC-024]
+verifies = ["SR-024", "LLR-024"]
+level = "Unit"
+method = "Run the gen-cases suite; the spec grammar expands to the expected case set."
+tier = "Full"
+expected = "Satisfies SR-024 AcceptanceCriteria"
+automated = "Yes"
+evidence = "tests/test_gen_cases.py"
+status = "Verified"
+phase = 1
+
+[test.TC-025]
+verifies = ["SR-025", "LLR-025"]
+level = "Integration"
+method = "Run the skills-index suite; INDEX.csv regenerates from the SKILL.md frontmatter."
+tier = "Full"
+expected = "Satisfies SR-025 AcceptanceCriteria"
+automated = "Yes"
+evidence = "tests/test_skills_index.py"
+status = "Verified"
+phase = 1
+
+[test.TC-026]
+verifies = ["SR-026", "LLR-026"]
+level = "Integration"
+method = """Run the agent-loop suite; the dispatcher and its workers resume headless (registry + reservations + explicit assignments) without blocking on any prompt; a no-{prompt} CmdTemplate delivers its prompt on stdin (build_argv/run_session), a large prompt surviving untruncated."""
+tier = "Full"
+expected = "Satisfies SR-026 AcceptanceCriteria"
+automated = "Yes"
+evidence = "tests/test_agent_loop.py; tests/test_session_stdin.py"
+status = "Verified"
+phase = 1
+
+[test.TC-027]
+verifies = ["SR-027", "LLR-027"]
+level = "Integration"
+method = """Run the agent-loop suite; preflight exits a typed code on a non-git dir / missing CLI / private author."""
+tier = "Full"
+expected = "Satisfies SR-027 AcceptanceCriteria"
+automated = "Yes"
+evidence = "tests/test_agent_loop.py"
+status = "Verified"
+phase = 1
+
+[test.TC-028]
+verifies = ["SR-028", "LLR-028"]
+level = "Integration"
+method = """Run the agent-loop suite; a zero-commit repo is guarded and an all-ERROR region reads as an unavailable agent."""
+tier = "Full"
+expected = "Satisfies SR-028 AcceptanceCriteria"
+automated = "Yes"
+evidence = "tests/test_agent_loop.py"
+status = "Verified"
+phase = 1
+
+[test.TC-029]
+verifies = ["SR-029", "LLR-029"]
+level = "Integration"
+method = """Run the agent-loop suite's lock tests (ported from the retired tracks suite): a hard-exited holder's kernel lock is OS-released and the next run acquires it cleanly."""
+tier = "Full"
+expected = "Satisfies SR-029 AcceptanceCriteria"
+automated = "Yes"
+evidence = "tests/test_agent_loop.py"
+status = "Verified"
+phase = 1
+
+[test.TC-030]
+verifies = ["SR-030", "LLR-030"]
+level = "Integration"
+method = """Run the agent-loop suite's lock tests (ported from the retired tracks suite): a second coordinator on a held lock is refused cross-process; a contention errno refuses; an unlockable filesystem degrades warn-only."""
+tier = "Full"
+expected = "Satisfies SR-030 AcceptanceCriteria"
+automated = "Yes"
+evidence = "tests/test_agent_loop.py"
+status = "Verified"
+phase = 1
+
+[test.TC-031]
+verifies = ["SR-031", "LLR-031"]
+level = "Integration"
+method = """Run the process-config and policy suites: every enforcer reads one value per dial from docs/process.toml, the hooks' sh and tomllib agree over the adversarial shape table, and a mixed config is refused."""
+tier = "Full"
+expected = "Satisfies SR-031 AcceptanceCriteria"
+automated = "Yes"
+evidence = "tests/test_gate_policy.py;tests/test_push_policy.py"
+status = "Modified"
+phase = 1
+
+[test.TC-032]
+verifies = ["SR-032", "LLR-032", "SR-113", "LLR-122"]
+level = "Integration"
+method = """Run the onboard/dev-setup suite; the scaffolded scripts run to a green setup and dev-setup wires the pre-commit floor (core.hooksPath)."""
+tier = "Full"
+expected = "Satisfies SR-032 and SR-113 AcceptanceCriteria"
+automated = "Yes"
+evidence = "tests/test_onboard_devsetup.py"
+status = "Verified"
+phase = 1
+
+[test.TC-033]
+verifies = ["SR-033", "LLR-033"]
+level = "Integration"
+method = """Run gen_release_checklist.py over a warn-tier PB budget; assert the generated checklist lists the budget id and its allocation."""
+tier = "Full"
+expected = "Satisfies SR-033 AcceptanceCriteria"
+automated = "Yes"
+evidence = "tests/test_check_perf.py::test_release_checklist_lists_perf_budgets"
+status = "Verified"
+phase = 1
+
+[test.TC-034]
+verifies = ["SR-034"]
+level = "Analysis"
+method = """Run the dependency-ledger suite; an AST scan asserts every kit script's top-level imports resolve to stdlib, a local sibling, or a Kind=python row in docs/dependencies.md, and the scanner is driven over a fixture tree with a genuinely undeclared import to prove it catches one."""
+tier = "Full"
+expected = "Satisfies SR-034 AcceptanceCriteria"
+automated = "Yes"
+evidence = "tests/test_dependency_ledger.py"
+status = "Modified"
+phase = 1
+
+[test.TC-035]
+verifies = ["SR-035", "SR-114"]
+level = "Analysis"
+method = "Analyze the CI matrix result across Linux/Windows/macOS x Python 3.11/latest."
+tier = "Full"
+expected = "Satisfies SR-035 and SR-114 AcceptanceCriteria"
+automated = "Yes"
+evidence = ".github/workflows/test.yml"
+status = "Verified"
+phase = 1
+
+[test.TC-036]
+verifies = ["SR-036"]
+level = "Inspection"
+method = """Inspect a re-sync done per ADOPTING.md section 6 against the docs/kit-version diff — kit-owned taken wholesale, generated docs regenerated, filled-in files preserved. Process doc + downstream-resync skill; no automated test."""
+tier = "Full"
+expected = "Satisfies SR-036 AcceptanceCriteria"
+automated = "No"
+evidence = "project-trajectory/ADOPTING.md"
+status = "Verified"
+phase = 1
+
+[test.TC-037]
+verifies = ["SR-067", "LLR-034"]
+level = "Integration"
+method = """Run WI id, predecessor, cycle, placeholder, absent-registry, and opt-out validation cases."""
+tier = "Full"
+expected = """Valid graphs pass; malformed ids, unknown predecessors and cycles fail with named offenders; vacuous cases pass."""
+automated = "Yes"
+evidence = """tests/test_trajectory.py::test_valid_graph_passes; tests/test_trajectory.py::test_cycle_fails; tests/test_trajectory.py::test_unresolved_predecessor_fails; tests/test_trajectory.py::test_malformed_id_fails; tests/test_trajectory.py::test_absent_registry_is_vacuously_clean; tests/test_trajectory.py::test_placeholder_only_is_vacuously_clean; tests/test_trajectory.py::test_opt_out_silences_even_a_broken_registry"""
+status = "Verified"
+phase = 1
+
+[test.TC-038]
+verifies = ["SR-070", "LLR-035"]
+level = "Integration"
+method = """Generate the core offline dashboard and inspect completeness, spine hierarchy, and roadmap output."""
+tier = "Full"
+expected = "One self-contained root HTML file contains all core views and no external fetches."
+automated = "Yes"
+evidence = """tests/test_gen_trajectory.py::test_generates_self_contained_dashboard; tests/test_traj_graph.py::test_dag_layers_by_dependency_rank"""
+status = "Verified"
+phase = 1
+
+[test.TC-039]
+verifies = ["SR-039", "LLR-036"]
+level = "Integration"
+method = """Run the check-dupes suite; a seeded copy-pasted helper fails naming both file:line locations (one merged finding), clean source passes, the threshold is tunable, in-block repetition does not self-report, a fingerprint+pair census line suppresses that block while a NEW distinct block in the same listed pair still fails, a same-line separate-block interior edit defeats a stale census, --emit-census round-trips to green, a legacy bare pair still coarsely suppresses, and unallowed() is count-aware."""
+tier = "Full"
+expected = "Satisfies SR-039 AcceptanceCriteria"
+automated = "Yes"
+evidence = "tests/test_check_dupes.py"
+status = "Verified"
+phase = 1
+
+[test.TC-040]
+verifies = ["SR-040", "LLR-037"]
+level = "Integration"
+method = """Run the agent-loop suite; a REVIEW-B-mapped phase invokes the second fake CLI and not the default, a broken map entry exits preflight naming the phase, the banner carries review-policy, and a bloated status.md warns without blocking."""
+tier = "Full"
+expected = "Satisfies SR-040 AcceptanceCriteria"
+automated = "Yes"
+evidence = "tests/test_agent_loop.py"
+status = "Verified"
+phase = 1
+
+[test.TC-041]
+verifies = ["SR-041", "LLR-038"]
+level = "Integration"
+method = """Run the doc-refs suite; a dangling path warns then gates under --strict, non-path backticks/URLs/globs pass, a path-ok line is exempt, a dangling or unknown-module sym: is flagged, and the symbol tier skips cleanly without an inventory."""
+tier = "Full"
+expected = "Satisfies SR-041 AcceptanceCriteria"
+automated = "Yes"
+evidence = "tests/test_check_doc_refs.py"
+status = "Verified"
+phase = 1
+
+[test.TC-042]
+verifies = ["SR-042", "LLR-039"]
+level = "Integration"
+method = """Run the gen-okf suite; typed linked concepts generate, Process Guide concepts emit for present docs with derived summaries and unmodified sources (and none on a vacuous scaffold), regeneration is byte-stable, --check trips on registry/doc edits/extras and recovers after regen, extras are pruned, placeholder-only is vacuous, off silences, and the okf step is wired at G3."""
+tier = "Full"
+expected = "Satisfies SR-042 AcceptanceCriteria"
+automated = "Yes"
+evidence = "tests/test_gen_okf.py"
+status = "Verified"
+phase = 1
+
+[test.TC-043]
+verifies = ["SR-043", "LLR-040"]
+level = "Integration"
+method = """Run the subagent-gate suite; a Task/Agent spawn under deny is refused (permissionDecision=deny, exit 2), under ask defers, off/absent and the SUBAGENT_GATE=allow override allow it, a non-spawn tool is not gated, and a malformed payload fails open (allow) with a log line."""
+tier = "Full"
+expected = "Satisfies SR-043 AcceptanceCriteria"
+automated = "Yes"
+evidence = "tests/test_subagent_gate.py"
+status = "Verified"
+phase = 1
+
+[test.TC-044]
+verifies = ["SR-073", "LLR-041"]
+level = "Integration"
+method = "Run IF id, SR back-link, Component membership, and endpoint-advisory trace cases."
+tier = "Full"
+expected = """Integrity and unresolved links fail as declared; endpoint mismatch is advisory; absent registry is vacuous."""
+automated = "Yes"
+evidence = """tests/test_trace.py::test_if_tier_integrity; tests/test_components_registry.py::test_if_component_tag_must_resolve"""
+status = "Verified"
+phase = 1
+
+[test.TC-046]
+verifies = ["SR-079", "LLR-044"]
+level = "Integration"
+method = """Run pair-row parsing, resolution, Env, cooldown, family preference/fallback, and tier-selection cases."""
+tier = "Full"
+expected = "Every routing rule is deterministic and legacy Provider registries remain compatible."
+automated = "Yes"
+evidence = """tests/test_agent_route.py::test_load_registry_parses_columns_not_the_id; tests/test_agent_route.py::test_select_honors_preference_order_and_tier; tests/test_agent_route.py::test_select_reviewer_heterogeneity_wins_over_phase_preference; tests/test_agent_route.py::test_select_tiers_up_never_down; tests/test_agent_route.py::test_family_column_and_env_parse; tests/test_agent_route.py::test_resolve_versionless_newest_skips_preview; tests/test_agent_route.py::test_acct2_row_cools_down_independently"""
+status = "Verified"
+phase = 1
+
+[test.TC-045]
+verifies = ["SR-112", "LLR-043"]
+level = "Integration"
+method = """Run the skills-sync suite: a hand-edited per-agent copy fails gen_skills_index --check-agents, bootstrap --sync restores byte-identity, a repo with no per-agent dir (and a scaffold with no neutral source) is vacuous, bootstrap --agents codex populates .agents/skills from source, and --sync never touches a non-skills file (a sentinel survives)."""
+tier = "Full"
+expected = "Satisfies SR-112 AcceptanceCriteria (checked per-agent fan-out)"
+automated = "Yes"
+evidence = "tests/test_skills_sync.py::test_drifted_copy_fails_and_sync_restores"
+status = "Verified"
+phase = 1
+
+[test.TC-047]
+verifies = ["SR-046", "LLR-047"]
+level = "Integration"
+method = """Run the run-menu suite: --list prints name<TAB>desc for each declared capability in declaration order (an empty desc renders as a trailing tab); run_menu.py <name> runs the command and returns its exit code (a nonzero passes through); the no-arg menu launches a capability from piped stdin and returns without hanging on closed stdin; an unknown name exits 2 and an absent or empty [run] section prints guidance and exits 1; a name.desc row renders in the menu; and the scaffold ships scripts/run_menu.py plus run.* launchers that delegate to it with no RUN_CMD."""
+tier = "Full"
+expected = "Satisfies SR-046 AcceptanceCriteria"
+automated = "Yes"
+evidence = "tests/test_run_menu.py"
+status = "Verified"
+phase = 1
+
+[test.TC-048]
+verifies = ["SR-084", "LLR-048"]
+level = "Integration"
+method = "Run Critique scope detection and redacted rubric/intent/artifact brief cases."
+tier = "Full"
+expected = """Only Critique-scoped builds schedule a fresh heterogeneous critic and its prompt excludes self-assessment."""
+automated = "Yes"
+evidence = """tests/test_agent_loop_critique.py::test_critique_scheduled_when_critique_sr_in_scope; tests/test_agent_loop_critique.py::test_no_critique_when_no_critique_sr; tests/test_agent_loop_critique.py::test_critique_prompt_is_redacted_and_carries_rubric_and_intent"""
+status = "Verified"
+phase = 1
+
+[test.TC-049]
+verifies = ["SR-087", "LLR-049"]
+level = "Integration"
+method = "Run TOP_VIEW_MAX, containment, nesting, opt-out, and vacuity cases."
+tier = "Full"
+expected = """Oversized uncontained views warn/fail strict; valid containment clears; nested, small, absent, and opted-out behavior matches the rule."""
+automated = "Yes"
+evidence = """tests/test_trajectory_arch.py::test_top_view_over_bound_warns_plain_fails_strict; tests/test_trajectory_arch.py::test_declaring_components_below_bound_clears_it; tests/test_trajectory_arch.py::test_nested_cmp_counts_only_at_top_level_root; tests/test_trajectory_arch.py::test_top_view_off_switch_silences; tests/test_trajectory_arch.py::test_ten_module_inventory_is_vacuous; tests/test_trajectory_arch.py::test_absent_inventory_top_view_is_vacuous"""
+status = "Verified"
+phase = 1
+
+[test.TC-050]
+verifies = ["SR-049", "LLR-050"]
+level = "Unit"
+method = """derive the gate from fixture states across every per-artifact rule and guard the cache; --print reports the derived current phase"""
+tier = "Full"
+expected = """derive_gate computes the correct gate per artifact state (draft drop, undecomposed G1, decomposed-unverified G2 - including a Modified SR, whose phase reads G2 with children counted-but-never-capping - and verified G3) and --check catches drift; the compared basis line carries modified=N beside drafts=N; --print shows the derived current phase (the meta reads phase=4)"""
+automated = "Yes"
+evidence = "tests/test_derive_gate.py"
+status = "Verified"
+phase = 1
+
+[test.TC-051]
+verifies = ["SR-050", "LLR-051"]
+level = "Integration"
+method = """Run the dashboard suite; the Process tab renders its three panels from the live registries + docs/gate (the current-gate highlight matches docs/gate and the tier counts match the spine), process-doc link-outs resolve, a bundle-/data-less repo renders byte-identically (no Process data joins), and generation stays byte-deterministic with --check tripping stale output."""
+tier = "Full"
+parameters = "tests/test_gen_trajectory.py (the process-tab cases)"
+expected = """Process tab present with data-derived joins correct; links resolve; data-less render byte-identical; deterministic; --check trips."""
+automated = "Yes"
+evidence = """tests/test_traj_panels.py::test_process_tab_renders_three_panels_from_live_data tests/test_traj_panels.py::test_process_current_gate_highlight_follows_docs_gate tests/test_traj_panels.py::test_process_link_outs_prefer_the_scaffolded_docs tests/test_traj_panels.py::test_process_wi_counts_join_work_items tests/test_traj_panels.py::test_process_tab_omitted_and_byte_identical_without_gate tests/test_traj_panels.py::test_process_tab_is_byte_deterministic_and_check_stable tests/test_traj_panels.py::test_meta_process_tab_smoke"""
+status = "Verified"
+phase = 2
+
+[test.TC-052]
+verifies = ["SR-089", "LLR-052"]
+level = "Integration"
+method = """Run When-view phase/workstream thresholds, delivery-phase labels, and parent-edge aggregation."""
+tier = "Full"
+expected = """Tier thresholds, phase display, and deduplicated parent edges match the declared hierarchy."""
+automated = "Yes"
+evidence = """tests/test_traj_views.py::test_when_view_tiers_by_phase_above_threshold; tests/test_traj_views.py::test_when_view_parent_edge_is_deduped_union_of_child_edges; tests/test_traj_views.py::test_when_view_nests_workstream_tier_inside_a_phase; tests/test_traj_views.py::test_leaf_wi_block_surfaces_delivery_phase"""
+status = "Verified"
+phase = 2
+
+[test.TC-055]
+verifies = ["SR-054", "LLR-055"]
+level = "Critique"
+method = """A fresh, family-heterogeneous CRITIQUE session (SR-084/SR-085 loop) adjudicates the generated PROJECT_STATE.html against docs/rubrics/dashboard-usability.md, receiving the rubric + SN/SR intent + the rendered PNG matrix from scripts/dashboard-shots/shoot.mjs (widths x themes x tabs) as the artifact recipe and never the implementer's self-assessment; VERDICT machine line cites numbered anchors."""
+tier = "Full"
+expected = """APPROVE citing numbered anchors. The rubric is the single home of the live-vs-retired anchor set (its header states the live set; each retired anchor carries its retirement and binding in place): a verdict cites only anchors the rubric lists live and never a retired one, and a clause a test now holds is verified through the LLR/TC chain the registry records, not by a verdict. (The live/retired enumeration formerly copied here was the third home of that fact and is deliberately not restated.)"""
+automated = "No"
+evidence = "docs/reviews/074-CRITIQUE.md"
+status = "Verified"
+phase = 3
+
+[test.TC-056]
+verifies = ["SR-055", "LLR-056", "IF-093", "IF-094"]
+level = "Integration"
+method = """Run the dashboard suite; the Process tab renders both working loops (intake loop A + human-decision loop B) as two intersecting hoops drawn in one self-contained SVG, each a directed closed cycle wired by arrow-headed edges and meeting at the single shared LLM_Agent hub, every stage's link resolving to its canonical doc, the gate-ratification stage present in loop B, a data-less repo rendering byte-identically, and generation byte-deterministic with --check tripping stale output."""
+tier = "Full"
+parameters = "tests/test_gen_trajectory.py (the process-loop cases)"
+expected = """Both loops are explicit closed cycles (data-cycle=closed on each hoop disc); the LLM_Agent hub renders exactly once as the shared central junction of both hoops; every loop edge is directional (one floparrow marker each), 6 for the 5-stage intake loop + 5 for the 4-stage decision loop = 11; loop A stages = [intake -> triage-to-WI -> scheduler-derived ready frontier -> build/review -> merge]; loop B stages = [open-items population incl. gate-ratification -> human review/ruling -> log Decisions -> merge], each card keyed to its loop (data-node a-*/b-*); all stage links resolve; data-less render byte-identical; deterministic; --check trips."""
+automated = "Yes"
+evidence = """tests/test_traj_panels.py::test_process_tab_renders_the_station_cycle tests/test_traj_panels.py::test_station_outcomes_derive_from_the_integrator tests/test_traj_panels.py::test_station_slot_is_the_serial_waist tests/test_traj_panels.py::test_station_refresh_pins_the_bar_attestation tests/test_traj_panels.py::test_station_barrier_and_admission_arms_pin_to_the_dispatcher tests/test_traj_panels.py::test_station_intake_arm_pins_to_the_intake_mint tests/test_traj_panels.py::test_station_links_resolve tests/test_traj_panels.py::test_station_byte_identical_without_data"""
+status = "Verified"
+phase = 3
+
+[test.TC-057]
+verifies = ["SR-056", "LLR-057"]
+level = "Integration"
+method = """Run the dashboard suite; the tiered decomposition views render one horizontal parent->child arrow per containment edge, each tier column no wider than the declared bound, and a persistent last-hovered highlight contract keyed to the last-hovered node; byte-deterministic with --check tripping stale output."""
+tier = "Full"
+expected = """Exactly one parent->child arrow per containment edge; each tier column width <= the declared bound MAX_TIER_COL (a named constant = the widest member label + a fixed padding - a declared value, not an adjective); the persistent-highlight attribute is present and keyed to the last-hovered node id (no flash-on-exit); deterministic; --check trips."""
+automated = "Yes"
+evidence = """tests/test_traj_views.py::test_decomposition_one_arrow_per_containment_edge tests/test_traj_views.py::test_tier_column_honors_declared_width_bound tests/test_traj_views.py::test_persistent_hover_highlight_keyed_to_last_node"""
+status = "Verified"
+phase = 3
+
+[test.TC-058]
+verifies = ["SR-057", "LLR-058", "SR-115", "LLR-123"]
+level = "Integration"
+method = """Run schedule.py against a fixture registry; the ready frontier, the exclusions with reason codes, and the deterministic traincar order match across ready --explain, ready --format json, simulate, and the dispatcher; a soft edge never blocks and Priority outranks downstream-dependent count within a gate class."""
+tier = "Full"
+expected = "Satisfies SR-057 and SR-115 AcceptanceCriteria"
+automated = "Yes"
+evidence = "tests/test_schedule.py"
+status = "Verified"
+phase = 4
+
+[test.TC-059]
+verifies = ["SR-093", "LLR-059"]
+level = "Unit"
+method = """Drive the pure classifier over every declared safety and policy input and compare consumer outputs."""
+tier = "Full"
+expected = "Each input yields one deterministic class/reason set and all consumers agree."
+automated = "Yes"
+evidence = """tests/test_schedule.py::test_classify_every_declared_value_is_deterministic; tests/test_schedule.py::test_missing_and_unknown_safetyclass_fail_closed_only_for_that_wi; tests/test_schedule.py::test_cli_ready_json_matches_library"""
+status = "Verified"
+phase = 4
+
+[test.TC-060]
+verifies = ["SR-059", "LLR-060", "SR-116", "LLR-124"]
+level = "Integration"
+method = """Drive trunk_step --regen and the status-map freshness gate on fixture repos; assert the snapshot regenerates on the trunk, fails fresh when stale, and no next-wi/run-phase surface exists."""
+tier = "Full"
+expected = "Satisfies SR-059 and SR-116 AcceptanceCriteria"
+automated = "Yes"
+evidence = "tests/test_trunk_step.py; tests/test_gen_trajectory.py"
+status = "Verified"
+phase = 4
+
+[test.TC-061]
+verifies = ["SR-060", "LLR-061"]
+level = "Integration"
+method = """Run two concurrent workers from explicit --wi/--train/worktree assignments; assert no lane-local status/next/run-state file, non-colliding logs/review evidence naming the exact reviewed commit, no root-truth mutation, and --track refused as an unknown flag (retired)."""
+tier = "Full"
+expected = "Satisfies SR-060 AcceptanceCriteria"
+automated = "Yes"
+evidence = "tests/test_agent_loop_worker.py"
+status = "Verified"
+phase = 4
+
+[test.TC-067]
+verifies = ["SR-076", "LLR-067"]
+level = "Integration"
+method = "Run the cross-component import coverage matrix."
+tier = "Smoke"
+expected = "Uncovered cross-component edges warn/fail strict; covered and vacuous cases stay silent."
+automated = "Yes"
+evidence = """tests/test_trajectory_arch.py::test_cross_cmp_import_without_seam_warns_plain_fails_strict; tests/test_trajectory_arch.py::test_cross_cmp_import_with_declared_seam_is_silent; tests/test_trajectory_arch.py::test_cross_cmp_seam_covers_either_direction; tests/test_trajectory_arch.py::test_components_check_off_silences_cross_cmp"""
+status = "Verified"
+phase = 1
+
+[test.TC-076]
+verifies = ["SR-106", "LLR-076"]
+level = "Integration"
+method = """Run the full fresh-session dual-plan round including fallback and position-swapped arbitration."""
+tier = "Full"
+expected = """True-plan agreement selects and files; runtime nonresponse falls back once; position bias, missing rubric, or no route pages."""
+automated = "Yes"
+evidence = """tests/test_dual_plan_round.py::test_full_round_unattended_selects_and_files; tests/test_dual_plan_round.py::test_arbiter_disagreement_pages; tests/test_dual_plan_round.py::test_missing_rubric_pages_honestly; tests/test_dual_plan_routing.py"""
+status = "Verified"
+phase = 4
+
+[test.TC-075]
+verifies = ["SR-069", "LLR-075"]
+level = "Unit"
+method = "Run the hand-edited/generated status source-of-truth matrix."
+tier = "Smoke"
+expected = """Hand-edited done ids warn/fail by mode; generated/open/unknown/vacuous cases stay silent."""
+automated = "Yes"
+evidence = """tests/test_trajectory.py::test_clean_status_has_no_forward_only_finding; tests/test_trajectory.py::test_done_id_in_status_warns_plain_errors_strict; tests/test_trajectory.py::test_open_ids_in_status_are_not_a_finding; tests/test_trajectory.py::test_generated_marker_stands_the_rule_down; tests/test_trajectory.py::test_forward_only_opt_out_silences; tests/test_trajectory.py::test_forward_only_vacuous_on_placeholder_registry; tests/test_trajectory.py::test_forward_only_unit_over_the_real_meta_repo"""
+status = "Verified"
+phase = 1
+
+[test.TC-074]
+verifies = ["SR-105", "LLR-074"]
+level = "Integration"
+method = """Build a fixture round and verify allocation, stable stage writes, selected-WI filing, dependency mapping, validation, line endings, and log append."""
+tier = "Smoke"
+expected = "Artifacts and queued rows are stable and registry-valid with prior content preserved."
+automated = "Yes"
+evidence = "tests/test_plan_artifacts.py"
+status = "Verified"
+phase = 4
+
+[test.TC-073]
+verifies = ["SR-104", "LLR-073"]
+level = "Integration"
+method = """Drive the coverage adapter through clean, first-finding repair, repeated finding, malformed, and implicated-plan cases."""
+tier = "Smoke"
+expected = "Each CLI result becomes the correct typed round outcome and captured report payload."
+automated = "Yes"
+evidence = "tests/test_plan_coverage_step.py"
+status = "Verified"
+phase = 4
+
+[test.TC-072]
+verifies = ["SR-083", "LLR-072"]
+level = "Unit"
+method = """Drive planner_pair and planner_fallback across diverse, degraded, cooled, nonresponsive, and unavailable pools."""
+tier = "Smoke"
+expected = "Fresh-session selection and every PAIR reason/fallback match the declared branch."
+automated = "Yes"
+evidence = """tests/test_agent_route.py::test_planner_pair_two_family_branch; tests/test_agent_route.py::test_planner_pair_one_family_pool_degrades_at_selection; tests/test_agent_route.py::test_planner_pair_single_row_pool_yields_two_fresh_same_id_sessions; tests/test_agent_route.py::test_planner_pair_no_model_available; tests/test_agent_route.py::test_planner_fallback_runtime_nonresponse_branch; tests/test_agent_route.py::test_planner_fallback_no_responding_family"""
+status = "Verified"
+phase = 1
+
+[test.TC-071]
+verifies = ["SR-103", "LLR-071"]
+level = "Unit"
+method = """Assemble every hat brief with sentinel data outside the allowlist and strict template variants."""
+tier = "Smoke"
+expected = """Only SR/IF content appears; sentinels do not; invalid slots fail; override/fallback and hat vocabulary hold."""
+automated = "Yes"
+evidence = "tests/test_plan_briefs.py"
+status = "Verified"
+phase = 4
+
+[test.TC-070]
+verifies = ["SR-102", "LLR-070"]
+level = "Unit"
+method = """Drive typed round transitions, budgets, caps, repairs, revisions, swapped arbiters, persistence, and PAGE mapping."""
+tier = "Smoke"
+expected = """Legal paths select; illegal repeats raise; unstable/exhausted paths page; state round-trips."""
+automated = "Yes"
+evidence = "tests/test_plan_round.py"
+status = "Verified"
+phase = 4
+
+[test.TC-069]
+verifies = ["SR-078", "LLR-069"]
+level = "Integration"
+method = "Run rival plan coverage, reference, graph, absent-registry, and malformed-input cases."
+tier = "Smoke"
+expected = """Clean plans emit pairwise coverage; findings exit 1; malformed inputs exit 2; absent registries note without failure."""
+automated = "Yes"
+evidence = "tests/test_plan_coverage.py"
+status = "Verified"
+phase = 1
+
+[test.TC-068]
+verifies = ["SR-077", "LLR-068"]
+level = "Integration"
+method = "Run the armed-spec interface-section matrix."
+tier = "Smoke"
+expected = """Unknown or unjustified seams warn/fail strict; resolvable, justified, intra-module, and unarmed cases pass."""
+automated = "Yes"
+evidence = """tests/test_trajectory_arch.py::test_spec_interfaces_unarmed_is_vacuous; tests/test_trajectory_arch.py::test_spec_interfaces_resolvable_passes; tests/test_trajectory_arch.py::test_spec_interfaces_unresolvable_warns_then_errors_under_strict; tests/test_trajectory_arch.py::test_spec_interfaces_proposed_needs_rationale; tests/test_trajectory_arch.py::test_spec_interfaces_intra_module_escape_passes"""
+status = "Verified"
+phase = 1
+
+[test.TC-077]
+verifies = ["SR-068", "LLR-077"]
+level = "Integration"
+method = "Run Deliverable/status coherence and strict open-SpecRef cases."
+tier = "Smoke"
+expected = """Both coherence mismatches fail every run and empty/dangling open specs fail strict; compliant rows pass."""
+automated = "Yes"
+evidence = """tests/test_trajectory.py::test_ra_open_wi_with_deliverable_fails_plain; tests/test_trajectory.py::test_ra_done_wi_with_empty_deliverable_fails_plain; tests/test_trajectory.py::test_re_empty_specref_warns_plain_fails_strict; tests/test_trajectory.py::test_re_dangling_specref_warns_plain_fails_strict; tests/test_trajectory.py::test_compliant_registry_and_status_passes_strict"""
+status = "Verified"
+phase = 1
+
+[test.TC-078]
+verifies = ["SR-071", "LLR-078"]
+level = "Integration"
+method = "Generate with and without module/component and OKF bundles."
+tier = "Full"
+expected = """Each conditional view appears only with its source and source-less generation is byte-identical."""
+automated = "Yes"
+evidence = """tests/test_traj_views.py::test_how_sw_view_renders_from_the_module_map; tests/test_traj_views.py::test_no_cmp_renders_flat_view_byte_identical; tests/test_traj_panels.py::test_knowledge_tab_renders_from_bundle; tests/test_traj_panels.py::test_knowledge_tab_omitted_and_byte_identical_without_bundle"""
+status = "Verified"
+phase = 1
+
+[test.TC-079]
+verifies = ["SR-072", "LLR-079", "SR-122", "LLR-130"]
+level = "Integration"
+method = "Run deterministic, responsive, stale/missing, Git as-of, and no-Git generation cases."
+tier = "Full"
+expected = "Satisfies SR-072 and SR-122 AcceptanceCriteria"
+automated = "Yes"
+evidence = """tests/test_gen_trajectory.py::test_mobile_responsive_shell; tests/test_gen_trajectory.py::test_generation_is_deterministic; tests/test_gen_trajectory.py::test_check_passes_fresh_and_trips_stale; tests/test_gen_trajectory.py::test_check_missing_html_is_stale; tests/test_traj_parse.py::test_asof_stamp_from_git_and_excluded_from_check; tests/test_traj_parse.py::test_no_git_means_no_stamp_and_stays_deterministic"""
+status = "Verified"
+phase = 1
+
+[test.TC-080]
+verifies = ["SR-074", "LLR-042"]
+level = "Integration"
+method = """Run endpoint/direction, source-sink, Active-citation, Contracts, opt-out, and strict non-gating coverage cases."""
+tier = "Full"
+expected = """Every declared coverage gap warns without failing and each suppression/vacuity case stays silent."""
+automated = "Yes"
+evidence = """tests/test_trajectory_arch.py::test_interface_coverage_warns; tests/test_trajectory_arch.py::test_uncovered_direction_warns; tests/test_trajectory_arch.py::test_source_sink_marker_suppresses_direction_warn; tests/test_trajectory_arch.py::test_seam_tc_citation_warn; tests/test_trajectory_arch.py::test_contracts_docstring_citation_warns; tests/test_trajectory_arch.py::test_interface_warns_never_fail_strict; tests/test_trajectory_arch.py::test_interface_check_off_silences"""
+status = "Verified"
+phase = 1
+
+[test.TC-081]
+verifies = ["SR-075", "LLR-080"]
+level = "Integration"
+method = "Generate dashboard and architecture views with and without declared seams."
+tier = "Full"
+expected = """Seams render as labeled edges in both views; absent seams retain fallback; output is deterministic."""
+automated = "Yes"
+evidence = """tests/test_traj_views.py::test_how_sw_graph_renders_seams; tests/test_traj_views.py::test_how_sw_stays_a_table_without_seams; tests/test_gen_arch_map.py::test_contracts_and_if_edges"""
+status = "Verified"
+phase = 1
+
+[test.TC-082]
+verifies = ["SR-080", "LLR-045"]
+level = "Integration"
+method = """Run review-policy 0/1/2, prompt-map, redaction, selection logging, verdict, and unmanaged cases."""
+tier = "Full"
+expected = """Managed scheduling matches policy with redacted logged routing; bad prompts fail preflight; unmanaged mode stays legacy."""
+automated = "Yes"
+evidence = """tests/test_agent_loop_review.py::test_review_policy_1_dispatches_one_heterogeneous_reviewer; tests/test_agent_loop_review.py::test_review_policy_2_schedules_two_providers; tests/test_agent_loop_review.py::test_review_policy_0_schedules_no_reviewer; tests/test_agent_loop_review.py::test_reviewer_prompt_is_redacted_by_construction; tests/test_agent_loop_review.py::test_prompt_map_missing_file_fails_preflight; tests/test_agent_loop_review.py::test_absent_enable_list_keeps_legacy_behavior"""
+status = "Verified"
+phase = 1
+
+[test.TC-083]
+verifies = ["SR-081", "LLR-046"]
+level = "Unit"
+method = """Run substance components, corroboration, tripwires, decay, verdict parsing, and CLI cases."""
+tier = "Full"
+expected = """Scores and decay match fixtures; all tripwires fire as gates; length is never positive; persistence is stable."""
+automated = "Yes"
+evidence = "tests/test_score_reviews.py"
+status = "Verified"
+phase = 1
+
+[test.TC-084]
+verifies = ["SR-082", "LLR-081"]
+level = "Integration"
+method = """Drive swap, tier-up, shared failure, contradiction, tripwire, and the ratification-level escalation branches (all four human_held x keep_nondependent cells)."""
+tier = "Smoke"
+expected = "The fixed win-stay/lose-shift sequence and every paging condition match policy."
+automated = "Yes"
+evidence = """tests/test_agent_route.py::test_escalate_swap_then_tier_up_then_page; tests/test_agent_route.py::test_escalate_pages_on_top_tier_shared_failure; tests/test_agent_route.py::test_escalate_pages_on_tripwire_and_double_contradiction; tests/test_agent_route.py::test_failure_action_keyed_to_the_ratification_level; tests/test_agent_loop_review.py::test_changes_requested_swaps_implementer_family; tests/test_agent_loop_review.py::test_escalation_tiers_up_after_swap"""
+status = "Modified"
+phase = 1
+
+[test.TC-085]
+verifies = ["SR-085", "LLR-082"]
+level = "Integration"
+method = """Run critique approval, rework, configured-cap exhaustion, and the ratification-level disposition cases."""
+tier = "Full"
+expected = "CHANGES-REQUESTED reworks within the bound and cap exhaustion pages through policy."
+automated = "Yes"
+evidence = """tests/test_agent_loop_critique.py::test_critique_budget_exhaustion_pages_human; tests/test_agent_loop_critique.py::test_per_wi_exhaustion_disposition_overrides_autonomous"""
+status = "Modified"
+phase = 1
+
+[test.TC-086]
+verifies = ["SR-086", "LLR-083", "SR-123", "LLR-084"]
+level = "Integration"
+method = "Run Critique vocabulary/LLR-completeness and staged closure-ratchet cases."
+tier = "Smoke"
+expected = "Satisfies SR-086 and SR-123 AcceptanceCriteria"
+automated = "Yes"
+evidence = """tests/test_trace.py::test_critique_verification_value; tests/test_trajectory_staged.py::test_critique_ratchet_warns_and_holds; tests/test_trajectory_staged.py::test_critique_ratchet_silent_when_verdict_approves"""
+status = "Verified"
+phase = 1
+
+[test.TC-087]
+verifies = ["SR-088", "LLR-085"]
+level = "Integration"
+method = "Generate nested/flat How-SW containment and boundary aggregation cases."
+tier = "Full"
+expected = """Contained views nest and deduplicate crossing seams; no containment stays byte-identical and deterministic."""
+automated = "Yes"
+evidence = """tests/test_traj_views.py::test_how_sw_containerizes_when_components_contain_modules; tests/test_traj_views.py::test_boundary_aggregation_dedupes_cross_component_edges; tests/test_traj_views.py::test_no_cmp_renders_flat_view_byte_identical; tests/test_traj_views.py::test_nested_components_render_inside_their_parent"""
+status = "Verified"
+phase = 1
+
+[test.TC-088]
+verifies = ["SR-090", "LLR-086"]
+level = "Integration"
+method = "Run component-to-module How-SW tier and top-width-bound cases."
+tier = "Full"
+expected = """Containment creates bounded component tiers that descend to modules; uncontained input remains flat."""
+automated = "Yes"
+evidence = """tests/test_traj_views.py::test_how_sw_collapses_above_component_threshold; tests/test_traj_views.py::test_tier_column_honors_declared_width_bound; tests/test_traj_views.py::test_no_cmp_renders_flat_view_byte_identical"""
+status = "Verified"
+phase = 2
+
+[test.TC-089]
+verifies = ["SR-091", "LLR-087"]
+level = "Integration"
+method = "Render seams at hierarchy ports and crossing container boundaries."
+tier = "Full"
+expected = """Visible endpoints use input/output ports and crossing seams aggregate without duplicates."""
+automated = "Yes"
+evidence = """tests/test_traj_views.py::test_when_view_seams_wire_to_block_ports; tests/test_traj_views.py::test_boundary_aggregation_dedupes_cross_component_edges"""
+status = "Verified"
+phase = 2
+
+[test.TC-090]
+verifies = ["SR-092", "LLR-088"]
+level = "Integration"
+method = "Exercise pointer/keyboard descent and breadcrumb restoration."
+tier = "Full"
+expected = """Each input descends one layer and breadcrumb restores the parent in the self-contained render."""
+automated = "Yes"
+evidence = """tests/test_traj_views.py::test_when_view_double_click_descends_a_layer; tests/test_traj_views.py::test_when_view_breadcrumb_restores_parent; tests/test_traj_render.py::test_a1_drill_leaf_blocks_are_keyboard_focusable"""
+status = "Verified"
+phase = 2
+
+[test.TC-091]
+verifies = ["SR-094", "LLR-089"]
+level = "Unit"
+method = """Classify missing, unknown, structurally contradictory, critique, checkpoint, and dual-plan WIs beside disjoint valid work."""
+tier = "Full"
+expected = """Only invalid rows fail closed with reason codes and disjoint valid rows remain schedulable."""
+automated = "Yes"
+evidence = """tests/test_schedule.py::test_missing_and_unknown_safetyclass_fail_closed_only_for_that_wi; tests/test_schedule.py::test_ordinary_declaration_with_structural_spine_fails_closed; tests/test_schedule.py::test_critique_is_parallel_and_ranks_ahead_of_ordinary; tests/test_schedule.py::test_planmode_dual_contradicting_safetyclass_quarantines"""
+status = "Verified"
+phase = 4
+
+[test.TC-097]
+verifies = ["SR-107", "LLR-095", "SR-124", "LLR-131"]
+level = "Integration"
+method = "Run direct worker/flag refusal and PlanMode-derived classification/contradiction cases."
+tier = "Full"
+expected = "Satisfies SR-107 and SR-124 AcceptanceCriteria"
+automated = "Yes"
+evidence = """tests/test_dual_plan_round.py::test_worker_path_refuses_a_dual_wi; tests/test_dual_plan_round.py::test_flag_on_a_non_dual_wi_is_refused; tests/test_schedule.py"""
+status = "Verified"
+phase = 4
+
+[test.TC-098]
+verifies = ["SR-108", "LLR-096", "SR-125", "LLR-132"]
+level = "Integration"
+method = """Run dispatcher SELECT, human-held PAGE, loop-held PAGE continuation, regeneration failure, and salvage cases, plus the dual-plan PAGE on a human-held tier, on a loop-held tier, and with keep_nondependent, at both the dispatcher and the --dual-plan single-shot entry."""
+tier = "Full"
+expected = "Satisfies SR-108 and SR-125 AcceptanceCriteria"
+automated = "Yes"
+evidence = """tests/test_dual_plan_round.py::test_full_round_unattended_selects_and_files; tests/test_dual_plan_round.py::test_arbiter_disagreement_pages; tests/test_dual_plan_round.py::test_arbiter_disagreement_on_a_loop_held_tier_stalls_not_pages; tests/test_dual_plan_round.py::test_arbiter_disagreement_with_keep_nondependent_stalls_not_pages"""
+status = "Modified"
+phase = 4
+
+[test.TC-099]
+verifies = ["SR-037", "SR-038", "SR-044", "SR-045", "SR-047", "SR-048", "SR-051", "SR-058", "SR-063", "SR-064", "SR-066"]
+level = "Inspection"
+method = """Inspect the eleven legacy SR rows, their SupersededBy graph, replacement targets, and post-split LLR parents."""
+tier = "Full"
+expected = """All frozen links resolve and are acyclic; no legacy row retains an LLR; this TC cites every legacy row."""
+automated = "Yes"
+evidence = """tests/test_trace_rules.py::test_meta_supersession_rows_preserve_the_ratified_evidence_map"""
+status = "Verified"
+phase = 4
+
+[test.TC-100]
+verifies = ["SR-109", "LLR-097"]
+level = "Unit"
+method = """Run check_trajectory over registries with a done+SpecRef row, an uncited live spec, a deferred-cited shared doc, and scaffold boilerplate."""
+tier = "Smoke"
+expected = """Done-with-SpecRef and orphan-spec cases WARN plain (exit 0) and fail --strict (exit 1); the deferred-cited doc and README/-000 files stay clean under --strict."""
+automated = "Yes"
+evidence = """tests/test_trajectory.py::test_rf_done_wi_with_specref_warns_plain_fails_strict; tests/test_trajectory.py::test_rf_orphan_live_spec_warns_plain_fails_strict; tests/test_trajectory.py::test_rf_shared_doc_lives_while_any_open_citer_remains; tests/test_trajectory.py::test_rf_scaffold_boilerplate_excluded"""
+status = "Verified"
+phase = 4
+
+[test.TC-101]
+verifies = ["SR-110", "LLR-098"]
+level = "Integration"
+method = """Run the check_coverage suite; a module below its floor exits 1 naming it, a declared module absent from the report exits 1, all floors holding exits 0, an absent report SKIPs, an empty census is a no-op, and a malformed floor line fails loudly."""
+tier = "Full"
+expected = "Satisfies SR-110 AcceptanceCriteria"
+automated = "Yes"
+evidence = "tests/test_check_coverage.py"
+status = "Verified"
+phase = 1
+
+[test.TC-102]
+verifies = ["SR-054", "LLR-099"]
+level = "Unit"
+method = """Generate the dashboard against two fixture registries and assert the SR-089 '>3' rule mechanically: a bundle spanning > 3 OKF types yields the start-collapsed type-tiered drill (know_view returns layers; the Knowledge section renders blocks, not a flat concept graph), a <= 3-type bundle yields None and the flat graph, and the How-SW view collapses above the component threshold on the same rule."""
+tier = "Full"
+parameters = "tests/test_gen_trajectory.py fixtures (tiered_repo / _flat_bundle)"
+expected = """Above the threshold the view is start-collapsed; at or below it renders flat. Both directions asserted. This widens to the landing What icicle: above 3 SNs it is a start-collapsed SN drill with NO leaf cell in the opening layer; at or below 3 it stays flat and byte-identical."""
+automated = "Yes"
+evidence = """tests/test_traj_panels.py::test_knowledge_graph_collapses_above_type_threshold tests/test_traj_views.py::test_how_sw_collapses_above_component_threshold tests/test_traj_views.py::test_t2_what_icicle_starts_collapsed_above_the_sn_threshold tests/test_traj_views.py::test_t2_small_spine_keeps_the_flat_icicle"""
+status = "Verified"
+phase = 3
+
+[test.TC-103]
+verifies = ["SR-054", "LLR-100"]
+level = "Unit"
+method = """Generate the dashboard from a tiered fixture registry and assert the drill emits <nav class="crumbs" with a declared data-root-crumb root label, and that the crumb-click handler truncates the trail to the clicked ancestor (trail=trail.slice(0,i+1)) so the parent view is restored."""
+tier = "Full"
+parameters = "tests/test_gen_trajectory.py fixture tiered_repo(TIER_UNION_WIS)"
+expected = "Breadcrumb nav present with a root crumb; crumb click restores the ancestor view."
+automated = "Yes"
+evidence = "tests/test_traj_views.py::test_when_view_breadcrumb_restores_parent"
+status = "Verified"
+phase = 3
+
+[test.TC-104]
+verifies = ["SR-052", "LLR-101"]
+level = "Unit"
+method = """Three complementary checks. (1) Unit: _svg_role classifies a native <a href> body, and tabindex in double/single/no quotes, as NOT img, while a static graphic whose text mentions an escaped link stays img. (2) Fixture document walk: generate from a tiered registry and walk every emitted <svg> - an svg declaring role=img must hold no focusable descendant and must carry its own accessible name. (3) Shipped-artifact walk: the same invariant over this repo's own committed PROJECT_STATE.html, which exercises every emitter that actually renders (the loops diagram included) rather than only the two the fixture happens to render. The subtree split strips <script> regions and requires an attributed <svg ...> tag, because embedded JSON prose can contain a literal <svg> that both invents a phantom subtree and swallows a real one."""
+tier = "Full"
+parameters = "tests/test_gen_trajectory.py fixture tiered_repo(TIER_UNION_WIS)"
+expected = """On the shipped artifact: 44 svg containers, 0 role=img, 0 focusable descendants inside a children-presentational subtree, 1171 focusables total (non-vacuous). Asserts NOT-children-presentational rather than role=group specifically, so dropping the role or using graphics-document would also pass - the test must not pin an implementation LLR-101 leaves open."""
+automated = "Yes"
+evidence = """tests/test_traj_render.py::test_a2_no_focusable_node_sits_inside_a_children_presentational_svg tests/test_traj_render.py::test_a2_role_predicate_counts_native_links_as_focusable tests/test_traj_render.py::test_a2_the_repos_own_shipped_dashboard_holds_the_invariant tests/test_traj_render.py::test_svg_nodes_carry_escaped_title_tooltips"""
+status = "Verified"
+phase = 3
+
+[test.TC-105]
+verifies = ["SR-053", "LLR-102"]
+level = "Unit"
+method = """Assert the U5 palette-decollision invariants directly against the declared Python constants: (1) TIER_FILL[sn/sr/llr/tc] equals OKF_TYPE_FILL[Stakeholder Need/System Requirement/Low-Level Requirement/Test Case] pairwise (the intentional mirror, checked as a bijection not a set match), (2) no hex is shared across the status / tier+type / sw / phase vocabulary groups outside that mirror, (3) no PHASE_ACCENTS entry equals the light or dark --accent token, (4) pairwise (all C(8,2) pairs) CIE76 deltaE across PHASE_ACCENTS is >= 15."""
+tier = "Full"
+parameters = "tests/test_gen_trajectory.py (pure constant math; no fixture repo needed)"
+expected = """No cross-vocabulary hex collision found; no phase equals --accent; minimum pairwise deltaE >= 15 (achieved 18.1)."""
+automated = "Yes"
+evidence = """tests/test_traj_render.py::test_u5_no_hex_reused_across_unrelated_colour_vocabularies tests/test_traj_render.py::test_u5_phase_accents_clear_a_pairwise_deltae_floor"""
+status = "Verified"
+phase = 3
+
+[test.TC-106]
+verifies = ["SR-053", "LLR-103"]
+level = "Unit"
+method = """Generate the dashboard from a tiered fixture registry and a flat OKF bundle and assert: (1) the drill focus/hl rules and the icicle/flat-DAG/knowledge hl rules all read the SAME --ring custom property (with each emitter's old hue kept only as the CSS fallback); (2) every emitter actually stamps a per-node --ring value inline; (3) the When tab's phase-accent legend emits the shared .legend/<i> markup shape, not the retired span.ph/phaselegend idiom."""
+tier = "Full"
+parameters = "tests/test_gen_trajectory.py fixtures (tiered_repo / _flat_bundle)"
+expected = """Ring token and legend markup identical in shape across every emitter; no retired span.ph/phaselegend selector remains."""
+automated = "Yes"
+evidence = """tests/test_traj_render.py::test_u3_ring_token_is_the_one_highlight_idiom_across_every_emitter tests/test_traj_render.py::test_u3_phase_legend_renders_through_the_shared_legend_component"""
+status = "Verified"
+phase = 3
+
+[test.TC-107]
+verifies = ["SR-053", "LLR-104"]
+level = "Unit"
+method = """Generate the dashboard with the Process tab enabled (G2 gate) and assert --nhead is declared, .stgt/.stgn resolve to var(--nlabel)/var(--nsub), .hooplab/.hubname resolve to var(--nhead), and none of the four selectors' rule bodies contain a raw px value."""
+tier = "Full"
+parameters = "tests/test_gen_trajectory.py (with_gate G2 fixture)"
+expected = """No ad-hoc px font-size remains on .stgt/.stgn/.hooplab/.hubname; all four resolve to a declared CSS custom property."""
+automated = "Yes"
+evidence = "tests/test_traj_render.py::test_u1_process_tab_type_scale_matches_the_shared_tokens"
+status = "Verified"
+phase = 3
+
+[test.TC-108]
+verifies = ["SR-054", "LLR-105"]
+level = "Unit"
+method = """Two halves, one floor. (a) Compute _ring_ink for every fill declared in STATUS_FILL/TIER_FILL/OKF_TYPE_FILL/SW_NODE_FILL/PHASE_ACCENTS and assert the WCAG contrast ratio against that fill is >= 3, for every fill -- not a hand-picked example. (b) resolve what a browser actually paints for the containment arrow's shaft (.cedge stroke) and marker head (.cedgehead fill) -- mirroring CSS var() fallback against each block's inline --ring and the theme's --accent -- and assert the same >= 3:1 over the same closed fill set in BOTH themes, plus the theme-token (var(--surface)) container fills the fallback still serves; then assert on the RENDERED artifact that every emitted arrow references a marker whose own --ring equals its host block's, since a shaft that passes while a shared head is painted from one hue is precisely the defect."""
+tier = "Full"
+parameters = """tests/test_gen_trajectory.py (constant math for (a); (b) also generates a tiered fixture and reads the emitted CSS + SVG)"""
+expected = """Every declared fill clears >= 3:1 against its computed ring ink; worst case observed ~4.58:1. Half (b) was proven against the pre-fix code first, failing at the critique's measured 1.0596:1 (#4f46e5 on #0369a1)."""
+automated = "Yes"
+evidence = """tests/test_traj_render.py::test_a4_ring_ink_clears_the_3to1_floor_against_every_node_fill;tests/test_traj_render.py::test_t5_containment_arrow_clears_the_3to1_floor_against_every_host_fill"""
+status = "Verified"
+phase = 3
+
+[test.TC-109]
+verifies = ["SR-053", "LLR-106"]
+level = "Unit"
+method = """Collect every #rrggbb literal declared in gen_trajectory's module-level palette collections (dicts and tuples alike - PHASE_ACCENTS is a tuple, and a dict-only sweep silently under-declares it), then render EVERY emitter and assert each document's hex set is covered by that vocabulary plus the document's own `--token:#hex` theme definitions. Two documented non-concept hexes are allowlisted by name with their reason: --ring's CSS fallback literal, and a retired hex named in the rendered palette-rationale prose (which paints nothing)."""
+tier = "Full"
+parameters = """tests/test_gen_trajectory.py - the shipped PROJECT_STATE.html plus six fixture renders (flat DAG, tiered + flat knowledge, tiered drill, How-SW, Process tab), because a single-fixture walk judges only the emitters it happens to run"""
+expected = """Every hex in every rendered document resolves to a declared vocabulary member or a theme token; no emitter paints a concept with a literal."""
+automated = "Yes"
+evidence = """tests/test_traj_render_sweeps.py::test_u2_every_concept_fill_comes_from_one_declared_vocabulary"""
+status = "Verified"
+phase = 3
+
+[test.TC-110]
+verifies = ["SR-053", "LLR-107"]
+level = "Unit"
+method = """Render every emitter, walk each node group, and assert per node kind: it carries tabindex="0", it carries its role's declared identity/detail attribute, and it carries NEITHER of the other role's attributes. Then assert every declared node kind actually rendered somewhere in the sweep, so the walk cannot degrade into 'the emitters this fixture happened to run'."""
+tier = "Full"
+parameters = """tests/test_gen_trajectory.py - the same six-fixture union as TC-109. The flat .knode concept graph renders only for a <=3-type OKF bundle, so both knowledge fixtures are required; the test's first draft passed vacuously without the flat one."""
+expected = """All four node kinds render; every node is focusable the shared way and addressed through exactly one declared attribute vocabulary."""
+automated = "Yes"
+evidence = """tests/test_traj_render_sweeps.py::test_u4_one_interaction_idiom_per_node_role_across_every_emitter"""
+status = "Verified"
+phase = 3
+
+[test.TC-113]
+verifies = ["SR-052", "LLR-108"]
+level = "Unit"
+method = """Over the shipped dashboard plus seven fixture renders, collect every focusable element (tabindex=0, button) and role=img graphic with its accessible name (aria-label, else the first child <title>, else text content) and assert: none is empty, none is a bare registry id. Separately assert navigation landmarks in one document carry distinct names."""
+tier = "Full"
+parameters = """tests/test_gen_trajectory.py - the seven-fixture emitter sweep. The landmark rule is carried mainly by the shipped artifact: each fixture renders a single drill, so only a multi-nav document exercises it (a recorded coverage limit)."""
+expected = """Every control is named, no name is a bare id, and no two navigation landmarks share a name."""
+automated = "Yes"
+evidence = """tests/test_traj_render.py::test_a2_every_control_name_is_present_and_not_a_bare_id tests/test_traj_render.py::test_a2_landmark_names_are_distinct"""
+status = "Verified"
+phase = 3
+
+[test.TC-114]
+verifies = ["SR-053", "LLR-109"]
+level = "Unit"
+method = """Enumerate every declared colour vocabulary and compute pairwise CIE76 deltaE over all cross pairs, skipping the declared tier<->okf mirror (and asserting that mirrored pair is byte-equal). Assert >= 15 within a vocabulary and >= 12 across. Pure constant arithmetic - no fixture render needed."""
+tier = "Full"
+parameters = "tests/test_gen_trajectory.py (module constants only)"
+expected = "No pair below its floor; closest surviving pair 12.5 (Process Guide vs phase[2])."
+automated = "Yes"
+evidence = """tests/test_traj_render.py::test_u5_pairwise_deltae_holds_within_and_across_every_vocabulary"""
+status = "Verified"
+phase = 3
+
+[test.TC-115]
+verifies = ["SR-053", "LLR-110"]
+level = "Unit"
+method = """Over the shipped dashboard plus seven fixture renders, assert each declared --w-*/--o-*/--r-* token is defined exactly once, and that every stroke-width, opacity, stroke-opacity and border-radius appearing in a PAINT surface (style block or style attribute) resolves to one of them. Separately assert the SVG rx literals in the emitter source, and the rx values in every render, are a subset of SVG_RX."""
+tier = "Full"
+parameters = "tests/test_gen_trajectory.py - the seven-fixture emitter sweep"
+expected = "No raw weight/alpha/corner literal and no undeclared rx value survives."
+automated = "Yes"
+evidence = """tests/test_traj_render.py::test_u3_every_weight_value_resolves_to_a_declared_token tests/test_traj_render.py::test_u3_svg_corner_radii_match_the_declared_scale"""
+status = "Verified"
+phase = 3
+
+[test.TC-116]
+verifies = ["SR-053", "LLR-111"]
+level = "Unit"
+method = """Over the shipped dashboard plus seven fixture renders, assert each declared scale step is defined exactly once and that every font-size in a PAINT surface resolves to a declared step - never a raw literal, never a token from another scale. Paint surfaces only, because the rendered document also QUOTES CSS in prose and a whole-document scan judges documentation as code. Also caps the declared set, so a scale cannot grow a step per call site."""
+tier = "Full"
+parameters = "tests/test_gen_trajectory.py - the seven-fixture emitter sweep"
+expected = "Zero raw font-size literals; every size names a declared step."
+automated = "Yes"
+evidence = "tests/test_traj_render.py::test_u1_every_font_size_resolves_to_a_declared_scale_step"
+status = "Verified"
+phase = 3
+
+[test.TC-117]
+verifies = ["SR-052", "LLR-112"]
+level = "Unit"
+method = """Over the shipped dashboard plus seven fixture renders: derive every querySelectorAll selector from the document's own scripts and assert each is classified control-or-not; for every control selector, match its elements in the script-stripped markup (quote-aware tag scan; the tiny selector grammar is matched exactly and anything richer fails loudly) and assert each match is focusable (tabindex=0, a button, or a link with href); assert every classified selector is seen somewhere and every control selector matches at least one element (non-vacuous both ways). Separately assert the only emitted tabindex values are 0 and -1, with -1 confined to roving tablist buttons."""
+tier = "Full"
+parameters = "tests/test_gen_trajectory.py - the seven-fixture emitter sweep"
+expected = """Every wired control is keyboard-focusable; no unclassified, stale, or non-literal selector; no positive tabindex; every control wiring loop that attaches click/dblclick attaches focus or keydown beside it. Verified to fail against a control losing its tabindex, a newly wired selector (single- AND double-quoted), a positive tabindex, and a wiring loop stripped of its focus path."""
+automated = "Yes"
+evidence = """tests/test_traj_render_sweeps.py::test_a1_every_wired_interaction_selector_matches_only_focusable_elements tests/test_traj_render_sweeps.py::test_a1_focus_walk_follows_document_order tests/test_traj_render_sweeps.py::test_a1_every_wired_control_pairs_click_with_focus_or_keydown"""
+status = "Verified"
+phase = 3
+
+[test.TC-118]
+verifies = ["SR-052", "LLR-113"]
+level = "Unit"
+method = """Over the shipped dashboard plus seven fixture renders: resolve the document's token definitions, collect every legend swatch carrying a non-empty word label (var() resolved), collect every vocabulary member painted in a PAINT surface of the script-stripped markup (style blocks, style attributes, fill/stroke attributes), and assert each painted member's hex appears as a worded swatch in the SAME document; assert every vocabulary is exercised somewhere in the sweep. Plus the tier-legend bijection: the icicle legend's swatch list equals TIER_FILL in declaration order."""
+tier = "Full"
+parameters = "tests/test_gen_trajectory.py - the seven-fixture emitter sweep"
+expected = """Every painted vocabulary member is explained in words in its own document; the tier legend is a TIER_FILL bijection (dict-derived, so a dropped member fails); the emitted JS tierColor/statusColor maps byte-match the Python palettes in every render; the CSS status tokens match STATUS_FILL and stay theme-invariant. Verified to fail against the stale hardcoded TC swatch, a legend entry going missing (the legend-less flat seam graph was caught live on this test's first run), the stale JS map (caught live on the committed artifact before its fix), a drifted --done token, and an emitter dropping a tier member."""
+automated = "Yes"
+evidence = """tests/test_traj_render_sweeps.py::test_a3_every_painted_vocabulary_member_is_explained_in_words tests/test_traj_render_sweeps.py::test_a3_icicle_tier_legend_swatches_are_the_painted_tier_palette tests/test_traj_render_sweeps.py::test_a3_js_detail_maps_mirror_the_declared_palettes tests/test_traj_render_sweeps.py::test_a3_css_status_tokens_mirror_status_fill"""
+status = "Verified"
+phase = 3
+
+[test.TC-119]
+verifies = ["SR-052", "LLR-114"]
+level = "Unit"
+method = """Reflect every UPPERCASE module-level constant RECURSIVELY (nested dicts/tuples/sets and bare strings) for any 3/4/6/8-digit hex member and assert the hex-bearing set is exactly the five declared vocabularies, every member canonical 6-digit lowercase, and every member clearing 4.5:1 against its label ink (white, or the declared queued dark-ink exception) and 3:1 for its computed _ring_ink. Separately derive every fill:var() token from the emitted CSS and assert each carries a declared role, with white-text-fill roles clearing 4.5:1 under white and container-fill roles keeping --text readable, in BOTH themes. The six sibling A4 tests keep owning their specific arithmetic and are cited as evidence beside the closure."""
+tier = "Full"
+parameters = """tests/test_gen_trajectory.py (constant math + one with_gate render for the CSS token sweep)"""
+expected = """Vocabulary set closed at five; every member clears both floors; every CSS fill token classified and floor-checked. Verified to fail against a rogue sixth vocabulary (flat AND nested shapes), an under-floor member (2.54:1), and an unclassified fill token."""
+automated = "Yes"
+evidence = """tests/test_traj_render_sweeps.py::test_a4_the_vocabulary_sweep_is_closed_and_every_member_clears_the_floors tests/test_traj_render_sweeps.py::test_a4_every_css_fill_token_is_classified_and_floor_checked tests/test_traj_render.py::test_a4_node_fills_meet_the_wcag_floor tests/test_traj_render.py::test_a4_every_emitted_dashboard_contrast_pair_meets_floor tests/test_traj_panels.py::test_a4_no_sub_label_opacity_discount tests/test_traj_panels.py::test_a4_theme_token_fills_behind_white_text_meet_the_floor tests/test_traj_panels.py::test_a4_slot_fill_is_not_the_page_accent"""
+status = "Verified"
+phase = 3
+
+[test.TC-120]
+verifies = ["SR-054", "LLR-115"]
+level = "Unit"
+method = """Generate the dashboard from a zero-active/all-queued fixture — the condition under which a next-work surface can exist in the emitter and render nothing plus a committed module map, then resolve each of the three core reading tasks' entry points from the emitted document and assert each is LABELLED and reachable in <= 1 tab switch: the landing Definition-completeness/Execution cards (task 1, 0 switches), the landing Next-work card (task 2, 0 switches), and the How-SW nav tab (task 3, 1 switch). Assert the next-work surface renders NAMED content (not an empty region) on the zero-active artifact; its non-emptiness across the waiting-with-predecessor and drained fixtures is owned by the next-work tests named in this row's Evidence."""
+tier = "Full"
+parameters = """tests/test_gen_trajectory.py (T1_ALL_QUEUED fixture + ARCH_MD module map; NW_HEADER SafetyClass signal)"""
+expected = """Each task's entry point is present, labelled, and <= 1 switch from the landing view; the next-work surface is non-empty under a zero-active registry. Verified to fail against the next-work surface dropped and against its label emitted empty (guard-bite; source restored byte-identical)."""
+automated = "Yes"
+evidence = """tests/test_traj_panels.py::test_t1_three_core_reading_tasks_reach_labelled_entry_points tests/test_traj_panels.py::test_t1_next_work_names_the_ready_frontier_with_zero_active tests/test_traj_panels.py::test_t1_next_work_annotates_the_blocking_predecessor tests/test_traj_panels.py::test_t1_next_work_says_all_done_when_drained"""
+status = "Verified"
+phase = 3
+
+[test.TC-121]
+verifies = ["SR-054", "LLR-116"]
+level = "Unit"
+method = """Generate the dashboard and derive EVERY emitted <svg> from the document (not a hand list, so a fourth emitter cannot skip the rule); assert each carries the responsive style and none keeps a bare fixed width; assert the emitted min/max ratio equals the declared SHRINK_FLOOR constant."""
+tier = "Full"
+parameters = "tests/test_gen_trajectory.py (8-SN fixture)"
+expected = """Every emitted svg scales to fit its container; zero svgs keep the pre-fix fixed-width shape; the shrink floor is pinned to the one declared constant rather than re-hardcoded in the test."""
+automated = "Yes"
+evidence = """tests/test_traj_views.py::test_t7_every_emitted_svg_scales_to_fit tests/test_traj_views.py::test_t7_shrink_floor_keeps_labels_legible"""
+status = "Verified"
+phase = 3
+
+[test.TC-122]
+verifies = ["SR-054", "LLR-117"]
+level = "Unit"
+method = """Sweep EVERY emitter document (the shipped artifact plus a fixture per emitter, the A2-review rule that a walk judges only what its fixture renders) and, per document: derive the theme-varying/-invariant token families from the emitted CSS; assert exactly one prefers-color-scheme block and one color-scheme declaration, both at :root; assert body's own background and ink are theme-varying; assert no CSS rule pairs a background and an ink from two families; assert no emitted SVG node pairs an inline rect fill with an inline text fill from two families. Then, accumulated ACROSS the sweep (because one document cannot distinguish -paints on the page background- from -this emitter does not render those nodes-), assert every CSS-declared SVG text fill matches the family its host nodes actually paint, or is theme-varying when it has no host anywhere."""
+tier = "Full"
+parameters = """tests/test_gen_trajectory.py (_every_emitter_document sweep: shipped + 7 emitter fixtures)"""
+expected = """One theme mechanism at :root; zero mixed-family pairs across 900+ classified node pairs and 12 CSS text fills; both families actually occur among the swept rect fills, so the sweep is not vacuous. Guard proven to bite on four independent mutations, each caught by its own assertion: dropping --text from the dark block (half-flip), a phase block's ink switched to var(--text) over its fixed fill, #ice .cell text switched to var(--text) over its invariant host, and a second prefers-color-scheme block scoped to .detail. Source restored byte-identical after each."""
+automated = "Yes"
+evidence = "tests/test_traj_render.py::test_t6_theme_lock_has_one_mechanism_and_no_mixed_family_pair"
+status = "Verified"
+phase = 3
+
+[test.TC-123]
+verifies = ["SR-049", "LLR-118"]
+level = "Unit"
+method = """Drive gen_open_items over temp repos: assert a pending registry row renders as a brief and a RULED row does not; that Draft AND Modified spine rows both surface (ratification owed vs re-attest owed) while a Verified row does not; that a section with no changed cells says CHECK THE BASELINE and never nothing-changed; that --check bites on drift, MASKS the machine-local region (and still bites outside it), and re-reads the baseline stamp the file declares; that the whole thing is vacuous with neither registry nor view; that registry prose is HTML-escaped; that the word diff marks only what moved and the percentage counts words not whitespace; and that the theme tokens equal the dashboard's emitted values (a drift guard, not an extraction)."""
+tier = "Full"
+parameters = "tests/test_gen_open_items.py (temp repos; one git-backed fixture for the baseline paths)"
+expected = """Every assertion holds, each with its negative half. Three defects were caught by these guards during the build and fixed rather than accommodated: a missing UTF-8 console guard, a changed-percent diluted by whitespace tokens, and bootstrap leaving __pycache__ in a fresh scaffold once a generator imported its siblings."""
+automated = "Yes"
+evidence = "tests/test_gen_open_items.py"
+status = "Verified"
+phase = 4
+
+[test.TC-124]
+verifies = ["SR-054", "LLR-119"]
+level = "Unit"
+method = """Generate the dashboard over a tiered fixture carrying one sentence-length stakeholder need (the shape that overflowed), then sweep EVERY drill block in the emitted document - not a per-view list, because the defect lives in the one shared label emitter that feeds four views. For each block, take its rect and each label line's own x/dy from the markup, measure the line's ink with the emitter's declared per-character widths and the font sizes the emitted CSS declares (unescaping entities first, so an apostrophe is one glyph and not six), and assert the ink box lies inside the rect on both axes. Assert the sentence-length need is actually among the swept labels, so the sweep cannot pass vacuously; separately assert the fit path itself (a second line broken on a word, then an ellipsis, with the full string still reachable) and that a sub-label which already fits keeps the untouched two-line grid. Second half: render the next-work card from a fixture carrying the 109-character _NW_LONG clause and assert it appears WHOLE with no ellipsis in the list, the fixture asserted longer than the retired 60-character budget so the check cannot pass vacuously; then, from a fixture past the declared bound, assert a native details/summary with a visible cue, that the emitted head and remainder rejoin to exactly the clause and the cut fell on a word, and that the reveal is neither script-dependent nor hidden by the emitter's own CSS."""
+tier = "Full"
+parameters = """tests/test_gen_trajectory.py (_spine_with_a_long_need: 8 SNs, SN-001 carrying the real 138-character need); NW_HEADER fixtures for the next-work card (_NW_LONG, the 109-character title clause, and one past the bound)"""
+expected = """Zero label lines outside their own block across every drill block of the emitted document; the sentence-length need present among them. Guard proven to bite on the original defect: reverted to the pre-fix emitter it fails naming SN-001's ink at x=-241..449 in a block spanning x=18..190, and the fit-path and helper guards fail with it, while the two-line-grid guard correctly passes both before and after (it guards over-application, not the defect). Source restored byte-identical. Second half: the 109-character clause renders whole; past the bound the disclosure is present, operable and lossless. Both proven to bite on the pre-fix emitter, which renders the critic's exact string 'tiering expo…' and has no _NEXT_WORK_TITLE bound at all. Source restored byte-identical."""
+automated = "Yes"
+evidence = """tests/test_traj_views.py::test_t4_no_block_label_renders_outside_its_own_box tests/test_traj_views.py::test_t4_a_sentence_length_sub_label_wraps_and_ellipsizes tests/test_traj_views.py::test_t4_a_short_sub_label_keeps_the_two_line_grid tests/test_traj_views.py::test_fit_lines_breaks_on_words_then_ellipsizes tests/test_traj_panels.py::test_t4_next_work_title_is_not_budgeted_by_character_count tests/test_traj_panels.py::test_t4_an_over_bound_next_work_title_discloses_operably"""
+status = "Verified"
+phase = 4
+
+[test.TC-125]
+verifies = ["SR-054", "LLR-120"]
+level = "Unit"
+method = """Sweep the union of emitter documents (the shipped PROJECT_STATE.html plus a fixture per emitter - the A2-review rule that a walk judges only what its fixture renders) and, per emitted <svg>: parse every node's id and rect and every wire's path data, sample each path into the polyline the router's own hit-test uses (so the test and the emitter describe one curve), drop the rects whose own port circle holds an endpoint, and assert the polyline crosses none of the rest. Assert the sweep found wires at all AND that at least one of them is a DETOUR, so a broken router cannot pass a sweep in which nothing needed re-routing."""
+tier = "Full"
+parameters = "tests/test_gen_trajectory.py (_every_emitter_document: shipped + 7 emitter fixtures)"
+expected = """Zero wires through a non-endpoint node box; the sweep non-vacuous (wires present, at least one detoured). Guard proven to bite: with the router's blocked-wire branch disabled so every wire keeps its direct cubic, it fails naming a knowledge-graph wire cutting the 'Low-Level Requirement' node at (330,18,96,46). Source restored byte-identical."""
+automated = "Yes"
+evidence = "tests/test_traj_graph.py::test_t8_no_wire_passes_through_an_unrelated_node_box"
+status = "Verified"
+phase = 4
+
+[test.TC-126]
+verifies = ["SR-126", "LLR-133"]
+level = "Unit"
+method = """Run the spine stand-alone suite; a WI id or process-doc citation in a normative cell of any spine registry is a finding, and a script name, artifact path, rubric or sibling id is not."""
+tier = "Full"
+expected = "Satisfies SR-126 AcceptanceCriteria"
+automated = "Yes"
+evidence = "tests/test_trace_rules.py::test_a_spine_row_states_the_system_not_its_own_history"
+status = "Verified"
+phase = 1
+
+[test.TC-127]
+verifies = ["SR-127", "LLR-134"]
+level = "Unit"
+method = """Run the requirement-form suite; each of the six rules fires on its own defect shape, and the negative half (Draft, zero-`shall`, `must`, a multi-clause AcceptanceCriteria, a passive with a named actor) does not."""
+tier = "Full"
+expected = "Satisfies SR-127 AcceptanceCriteria"
+automated = "Yes"
+evidence = "tests/test_trace_rules.py::test_a_requirement_states_one_testable_obligation"
+status = "Verified"
+phase = 1
+
+[test.TC-128]
+verifies = ["SR-128", "LLR-135"]
+level = "Unit"
+method = """Run the paraphrase-advisory suite; an echoing child warns while a real decomposition naming module and mechanism does not, and the exit code is unchanged either way."""
+tier = "Full"
+expected = "Satisfies SR-128 AcceptanceCriteria"
+automated = "Yes"
+evidence = "tests/test_trace_rules.py::test_a_child_that_rewords_its_parent_warns_but_never_gates"
+status = "Verified"
+phase = 1
+
+[test.TC-129]
+verifies = ["SR-129", "LLR-136"]
+level = "Unit"
+method = """Run the converter suite: the live registry round-trips in whichever home is authoritative; an unknown status is refused by name; a corrupted rebuilt spec reds the cell comparison after a clean-first control; folder->CSV->folder is parse-equal including a hand-filed spec."""
+tier = "Full"
+expected = "Satisfies SR-129 AcceptanceCriteria"
+automated = "Yes"
+evidence = """tests/test_wi_convert.py::test_the_live_registry_round_trips_in_whichever_home_is_authoritative"""
+status = "Verified"
+phase = 4
+
+[test.TC-130]
+verifies = ["SR-130", "LLR-137"]
+level = "Unit"
+method = """Run the trunk-step suite: committed fragments compile in git order with links rebased and fragments deleted; an uncommitted, heading-less or reserved-heading fragment blocks the whole batch; a fragment-free run is a clean idempotent no-op."""
+tier = "Full"
+expected = "Satisfies SR-130 AcceptanceCriteria"
+automated = "Yes"
+evidence = "tests/test_trunk_step.py::test_fragments_compile_in_git_order_and_are_deleted"
+status = "Verified"
+phase = 4
+
+[test.TC-131]
+verifies = ["SR-131", "LLR-138"]
+level = "Unit"
+method = """Run the pause suites: the tracked home pauses via pause_reason with the unchanged return contract; a stray legacy file is inert; malformation pauses fail-closed with the pinned loud placeholder."""
+tier = "Full"
+expected = "Satisfies SR-131 AcceptanceCriteria"
+automated = "Yes"
+evidence = """tests/test_agent_loop_policy.py::test_pause_reason_reads_the_tracked_home; tests/test_agent_loop_policy.py::test_legacy_pause_file_no_longer_pauses"""
+status = "Verified"
+phase = 4
+
+[test.TC-132]
+verifies = ["SR-132", "LLR-140"]
+level = "Unit"
+method = """Run the integrator suite: each claim refusal fires by name and the green claim moves the spec and cuts the branch; finished-branch detection keys on the tree; the verdict gate refuses absent, CHANGES-REQUESTED and stale-APPROVE verdicts and passes a fresh APPROVE; a missing or empty bar declaration refuses; the window audit flags a non-merge product commit and passes a bookkeeping-only window; one end-to-end claim->work->close->integrate run fast-forwards the trunk to a --no-ff merge commit."""
+tier = "Full"
+expected = "Satisfies SR-132 AcceptanceCriteria"
+automated = "Yes"
+evidence = "tests/test_integrate.py"
+status = "Verified"
+phase = 4
+
+[test.TC-133]
+verifies = ["SR-061", "SR-062", "SR-065", "SR-095", "SR-096", "SR-097", "SR-098", "SR-099", "SR-100", "SR-101", "SR-117", "SR-118", "SR-119", "SR-120", "SR-121"]
+level = "Inspection"
+method = """Inspect the fifteen Phase-5 legacy SR rows, their SupersededBy links to SR-132, and the post-deletion registries."""
+tier = "Full"
+expected = """All frozen links resolve and are acyclic; no legacy row retains an LLR; this TC cites every Phase-5 legacy row."""
+automated = "Yes"
+evidence = """tests/test_trace_rules.py::test_phase5_supersession_rows_preserve_the_ratified_evidence_map"""
+status = "Verified"
+phase = 4
+
+[test.TC-134]
+verifies = ["SR-133", "LLR-141"]
+level = "Integration"
+method = """Run the check-harness lane suite: a claimed work branch skips the declared freshness steps with the §5.2 notice and untouched exit code while non-freshness steps still run; the closing commit and its successors keep the skip (history-derived signal); the trunk lane never skips."""
+tier = "Full"
+expected = "Satisfies SR-133 AcceptanceCriteria"
+automated = "Yes"
+evidence = "tests/test_check_lane.py"
+status = "Verified"
+phase = 4
+
+[test.TC-135]
+verifies = ["SR-134", "LLR-142"]
+level = "Unit"
+method = """Run the trunk-step regen suite: --regen skips absent artifact families with a notice and stops loudly at the first failing generator, regenerating in dependency order."""
+tier = "Full"
+expected = "Satisfies SR-134 AcceptanceCriteria"
+automated = "Yes"
+evidence = """tests/test_trunk_step.py::test_regen_skips_absent_artifact_families; tests/test_trunk_step.py::test_regen_fails_loudly_on_a_broken_generator"""
+status = "Verified"
+phase = 4
+
+[test.TC-136]
+verifies = ["SR-135", "LLR-139"]
+level = "Unit"
+method = """Run the pending-surface pause suite: the block renders since/reason verbatim (no clock), omits the stamp when since is empty, matches the reader's fail-closed placeholder on malformation, clears on deletion, and is deterministic."""
+tier = "Full"
+expected = "Satisfies SR-135 AcceptanceCriteria"
+automated = "Yes"
+evidence = """tests/test_gen_trajectory_pending.py::test_tracked_pause_projects_reason_and_declared_since; tests/test_gen_trajectory_pending.py::test_pause_malformed_text_matches_the_coordinator_reader"""
+status = "Verified"
+phase = 4
+
+[test.TC-137]
+verifies = ["SR-026", "LLR-143"]
+level = "Unit"
+method = """Run the drive suite: an unwired agent command refuses before any claim while an empty queue still drains to exit 0; a refusing claim rung, a stranded claim, a dirty trunk and a red composed-tree bar each stop the run by name; the tracked pause appearing mid-run stops the next cycle at exit 8; NEEDS-HUMAN propagates at exit 7 with the claim parked; a DONE-reporting worker that finishes nothing trips the stall guard; and two end-to-end runs against the real bar prove the green path (claim->build->merge->drained banner) and the red path (candidate parked, claim intact). The plain agent_loop.py launch enters the drive mode as a subprocess."""
+tier = "Full"
+expected = "Satisfies SR-026 AcceptanceCriteria"
+automated = "Yes"
+evidence = "tests/test_dispatch.py"
+status = "Verified"
+phase = 4
+
+[test.TC-138]
+verifies = ["SR-132", "LLR-144"]
+level = "Unit"
+method = """Run the handback suite: a partial close moves each claimed spec to the terminal partial/ and writes its immutable per-close report under docs/handbacks/, leaves the branch finished, is CLEAN under the real trajectory check (R-A exempts partial — the spec's definition is deliberately byte-identical), refuses a second close without residue, and is LOUD when a terminal spec has no report; an already-declared blockref and an existing Deliverable survive; a branch trunk holds no claim for is refused. The quarantine arm reverts the product paths and keeps the failing diff as a bar-inert .patch, reverts a RENAME correctly (the --name-status -z stream read as records, not pairs - mutation-proven), leaves the handback bookkeeping alone, refuses when the red is not the lane's own code, and restores rather than reports when a revert step fails."""
+tier = "Full"
+expected = "Satisfies SR-132 AcceptanceCriteria"
+automated = "Yes"
+evidence = "tests/test_handback.py"
+status = "Modified"
+phase = 4
+
+[test.TC-139]
+verifies = ["SR-132", "LLR-145"]
+level = "Unit"
+method = """Run the spec_move suite: an archival move redirects inbound links from every depth (text untouched, fragments carried, external URLs and bare anchors left alone), rebases the moved spec's own links one directory deeper, preserves CRLF on both sides, and stages a git mv when the tree is a repo; the REAL check_docs passes over the archived fixture while the MUTATION TWIN - the same move without the rebase - fails it, so the guard reproduces the defect it fixes; a move with rewritten text (the handback shape) still runs the whole ritual; a missing source and an existing destination refuse; the CLI archives to the dated destination and refuses nonzero. The wired call sites are driven in their own suites: integrate.claim runs the ritual inside the one claim commit and a crashed relinked claim still re-cuts while a non-relink .md edit convicts (tests/test_integrate.py); the handback return runs it in reverse (tests/test_handback.py)."""
+tier = "Full"
+expected = "Satisfies SR-132 AcceptanceCriteria"
+automated = "Yes"
+evidence = "tests/test_spec_move.py"
+status = "Verified"
+phase = 4
+
+[test.TC-140]
+verifies = ["SR-136", "LLR-146"]
+level = "Integration"
+method = """Run the figure-provenance suite: the three 2026-08-01 false figures (the stale mutation ledger, the unreproducible link count, the digitless two-false-positives) each flag under a bare fig: marker, warn-first then gating under --strict; a cmd= plus rev= marker and a non-empty derived= marker pass; a half-carrying or empty-valued marker names its missing half; unmarked figure prose stays out of scope with the claim stated; fig-ok lines and GENERATED blocks are exempt; config:-shaped words never match; docs/stack.ini is scanned beside the markdown surfaces; a fresh bootstrap scaffold passes the docstring opt-in end-to-end; placeholder-grammar examples and a docs/reviews/ record quoting defective markers declare nothing; a wordless rev= counts as missing; two half-carrying markers on one line are two findings; a quoted rev= is accepted; a defective marker whose cmd= embeds shell metacharacters still flags its missing rev=; a declaration whose command legitimately redirects is counted and passes; a mixed marker - one real value beside a wholly-placeholder one - is judged as a real marker whose placeholder value counts as missing, flagging the missing half both ways (a real cmd= with a placeholder rev=, a placeholder cmd= with a real rev=)."""
+tier = "Full"
+expected = "Satisfies SR-136 AcceptanceCriteria"
+automated = "Yes"
+evidence = "tests/test_check_figures.py"
+status = "Verified"
+phase = 1
+
+[test.TC-141]
+verifies = ["SR-049", "LLR-147"]
+level = "Unit"
+method = """Fixture-drive the SN-coverage rung: an uncovered ratified SN caps raw at G0 (the runnable value floors to G1) with uncovered=1 on the basis line and drafts=0; citing the need from an SR's SN-Refs restores the prior level (uncovered=0, G3); a Draft SN keeps riding the draft rung with uncovered=0 (the double-counting seam - one fact, one rung); -000 rows on both sides of the join are ignored, so an example SR row cannot fake coverage of a real need; the ex-draft counterfactual rebuilds the cited set over the non-draft subset, so a need answered only by a Draft SR reads G0 there too; and the sn_cited_ids parse is pinned equal between trace.py and derive_gate.py across the separator/empty/absent-cell battery (tests/test_rule_sync.py)."""
+tier = "Full"
+expected = "Satisfies SR-049 AcceptanceCriteria"
+automated = "Yes"
+evidence = "tests/test_derive_gate.py"
+status = "Verified"
+phase = 4
+
+[test.TC-142]
+verifies = ["SR-049", "LLR-148"]
+level = "Unit"
+method = """Fixture-drive --next-phase: on a spine whose non-draft max phase is 3 with a Draft row at 4 it prints 4 (a Draft phase is not yet scope) and leaves docs/gate byte-identical (output mode only); on an unphased spine it prints 2 (the implicit foundation is 1)."""
+tier = "Full"
+expected = "Satisfies SR-049 AcceptanceCriteria"
+automated = "Yes"
+evidence = "tests/test_derive_gate.py"
+status = "Verified"
+phase = 4
+
+[test.TC-143]
+verifies = ["SR-093", "LLR-149"]
+level = "Unit"
+method = """Run the dispatch admission suite: an exclusive row + a busy lane answers wait (never a parallel claim slipped past the barrier) while the same frontier without one keeps filling lanes; lanes back -> every spine row admits as ONE batch ahead of ordinary work; the §A8 table verbatim per kind x level (attended surfaces attestation/gate rows, single-ratify keeps non-dependent work and admits the queued ratification batch only at the close, autonomous dispatches them exclusive); the lanes ladder resolves CLI > AGENT_LANES > stack.ini > 1 with absent/malformed/sub-1 falling to serial; gap_census names unverified SRs, orphan rows and draft SNs mechanically and answers [] on a registry-less repo; kind_of agrees with classify at every quarantine."""
+tier = "Full"
+expected = "Satisfies SR-093 AcceptanceCriteria"
+automated = "Yes"
+evidence = "tests/test_dispatch_admission.py"
+status = "Verified"
+phase = 4
+
+[test.TC-144]
+verifies = ["SR-132", "LLR-150"]
+level = "Integration"
+method = """Run the dispatch loop suite on real git repos with the real bar: a spine batch claims as one commit and its worker receives both ids together, ordinary work admitted only after the window closes; a NEEDS-HUMAN worker hands back, the lane's refresh runs as its own subprocess and the branch merges; a red refresh quarantines a merges-nothing branch once and stops the run for a done-asserting one; an attended gate row drains and exits 0 with the ratifications banner; the empty-frontier ladder hands the gap census to the intake mint (rows minted in one bookkeeping commit, driven by the same run, deduped on the next idle pass) and counts rung-2 cards off the shared pending read; pause/dirty-trunk/stall/crash-resume keep their serial-loop contracts at lanes=1."""
+tier = "Full"
+expected = "Satisfies SR-132 AcceptanceCriteria"
+automated = "Yes"
+evidence = "tests/test_dispatch.py"
+status = "Verified"
+phase = 4
+
+[test.TC-145]
+verifies = ["SR-132", "LLR-151"]
+level = "Unit"
+method = """Run the integrator claim suite: a spine claim succeeds on an idle station (the deleted safety-class arm, red-then-green); a hand claim while another holder has the dispatch lock refuses naming the lock and leaves the queue untouched, while dispatch_lock_held=True proceeds; a spine batch claims as ONE bookkeeping commit whose subject joins the ids and whose specs all land in active/<branch>/; every pre-existing single-WI claim contract (abandoned-claim re-cut, relink oracle, minted-id rung, RULING-6 audit) holds unchanged."""
+tier = "Full"
+expected = "Satisfies SR-132 AcceptanceCriteria"
+automated = "Yes"
+evidence = "tests/test_integrate.py"
+status = "Verified"
+phase = 4
+
+[test.TC-146]
+verifies = ["SR-093", "LLR-152"]
+level = "Unit"
+method = """Run the schedule + integrate suites' adjudication cases: the kind classifies exclusive at rank 1 (the reserved slot, pinned by name); an adjudication-only lane's refresh runs NO bar yet still commits a verified Bar-Green attestation whose summary says no-bar, while a mixed batch bars as usual (fail toward the bar); bar = G2 reaches check.py as --gate G2 (asserted off the recording stub's own argv), an undeclared bar passes no --gate, and a malformed value refuses the refresh naming it."""
+tier = "Full"
+expected = "Satisfies SR-093 AcceptanceCriteria"
+automated = "Yes"
+evidence = "tests/test_schedule.py; tests/test_integrate.py"
+status = "Verified"
+phase = 4
+
+[test.TC-147]
+verifies = ["SR-132", "LLR-153", "IF-091"]
+level = "Integration"
+method = """Run the intake suite against real git repos, red-then-green per trigger (trigger (b) keys on the close's immutable REPORT PATH, so a re-sweep dedupes exactly and a genuinely second close is a second row): a ratified SR amendment mints ONE adjudication row (id max+1, blockref empty, the before/after listing in ## Context) and an LLR SR-Refs re-point mints while a Module-only move stays silent (the ruled routing); a merged handback mints the disposition row (NEEDS-HUMAN reason routes strong; a handed-back adjudication row mints NOTHING and its own handback attempt is refused structurally); a merged adjudication row's ## Dispositions drafts mint at its merge with planmode=dual passing through kind-derived, and a malformed block, an unknown key, a second adjudication kind or a bad bar value refuse with nothing minted; the census mints gap rows once and dedupes on re-run; every re-run is idempotent by exact-title dedup; the context block renders every join in failure-cost order and answers the empty string on a bare repo; both gate-policy arms enact (attended recommends and leaves the registries byte-identical; single-ratify and autonomous flip only the named Status cells, cell-exact elsewhere, idempotent)."""
+tier = "Full"
+expected = "Satisfies SR-132 AcceptanceCriteria"
+automated = "Yes"
+evidence = "tests/test_intake.py"
+status = "Modified"
+phase = 4
+
+[test.TC-148]
+verifies = ["SR-132", "LLR-154", "IF-090"]
+level = "Integration"
+method = """Run the integrator + dispatcher suites' intake-arm cases: a merged branch that amended a ratified SR cell yields the adjudication row as its own mint: commit immediately after the merge commit on trunk (in-slot, serial); the dispatcher's empty-frontier rung 1 mints gap rows and KEEPS DRIVING them in the same run, then exits honestly when every gap already carries a row; a census-mint refusal stops the run loudly; the handback loop tests drive the disposition row the same run mints."""
+tier = "Full"
+expected = "Satisfies SR-132 AcceptanceCriteria"
+automated = "Yes"
+evidence = "tests/test_integrate.py; tests/test_dispatch.py"
+status = "Verified"
+phase = 4
+
+[test.TC-149]
+verifies = ["SR-034"]
+level = "Analysis"
+method = """Run the shipped-tier suite; it derives the adopter-facing check set from check.py's own layer=process step tags, walks their transitive sibling imports, and asserts every non-stdlib module in that closure is a Kind=python ledger row that is Tier=shipped with a non-empty Ruled cell. Mutation proofs drive the checker over fixture trees carrying a coordinator-tier, an unruled shipped, and an undeclared import and assert each is caught."""
+tier = "Full"
+expected = "Satisfies the shipped-tier clause of SR-034 AcceptanceCriteria"
+automated = "Yes"
+evidence = "tests/test_shipped_tier.py"
+status = "Verified"
+phase = 1
+
+[test.TC-150]
+verifies = ["SR-137", "LLR-155"]
+level = "Integration"
+method = """Run the process-config suite: it sources the SHIPPED hook's own sh functions and drives them against `tomllib` over a table of adversarial file shapes (trailing comments, dotted keys, inline tables, uppercase TRUE, BOM, CRLF, wrong section), asserts the two agree on every shape and that an unparseable file reads ON in both, and drives the mixed-config refusal and the wrong-typed-dial refusal."""
+tier = "Full"
+expected = "Satisfies SR-137 AcceptanceCriteria"
+automated = "Yes"
+evidence = "tests/test_process_config.py"
+status = "Draft"
+phase = 5
+
+[test.TC-151]
+verifies = ["SR-139", "LLR-155", "LLR-157"]
+level = "Unit"
+method = """Run the ratification-level suite: the full level x stage matrix against the ladder the shipped template documents, every malformed input (negative, out-of-range, string, float, bool, absent, unparseable), the legacy-word translation, and the spine-stage corners (draft need, empty spine, uncited need, Modified SR, missing child, LLR-exempt SR)."""
+tier = "Smoke"
+expected = "Satisfies SR-139 AcceptanceCriteria"
+automated = "Yes"
+evidence = "tests/test_ratification_level.py"
+status = "Draft"
+phase = 5
+
+[test.TC-152]
+verifies = ["SR-138", "LLR-156"]
+level = "Integration"
+method = """Run the migration cases in the process-config suite: a full conversion deletes every legacy file and lands all three ratification dials; a second pass is a no-op; a hand-trimmed process.toml leaves the legacy file in place with its value intact; the F5 translation tables are pinned equal and the retired enum key is absent from the shipped template."""
+tier = "Full"
+expected = "Satisfies SR-138 AcceptanceCriteria"
+automated = "Yes"
+evidence = "tests/test_process_config.py;tests/test_rule_sync.py"
+status = "Draft"
+phase = 5
+
+[test.TC-153]
+verifies = ["SR-140", "LLR-158"]
+level = "Integration"
+method = """Run the attestation-digest suite: it DRIVES the premise rather than asserting it - the amendment seam is shown blind to a sanctioned amend+flip over a real two-commit git repo, which is why an anchor recorded at acceptance time is owed at all - then pins what the digest is taken over (a traced cell and the Status marker must not move it; a ratified cell must), that a need's digest is its raw table line and survives re-indentation, and that current_digests covers every real spine row and every real need while excluding -000 rows and ids that appear only in prose."""
+tier = "Smoke"
+expected = "Satisfies SR-140 AcceptanceCriteria"
+automated = "Yes"
+evidence = "tests/test_attestation_digest.py"
+status = "Draft"
+phase = 5
+
+[test.TC-154]
+verifies = ["SR-141", "SR-142", "LLR-159"]
+level = "Integration"
+method = """Run the loop-order suite: an adjudication row admits ahead of a ready spine batch while the ruled rank table is unchanged; the partition is stable and cannot move work past a human-held stop; a red TC is named only under a `done` citer, with the three exempt statuses and the mixed-target case driven; the census grammar round-trips and matches nothing else."""
+tier = "Smoke"
+expected = "Satisfies SR-141 and SR-142 AcceptanceCriteria"
+automated = "Yes"
+evidence = "tests/test_loop_order.py"
+status = "Draft"
+phase = 5
+
+[test.TC-155]
+verifies = ["SR-143", "LLR-160"]
+level = "Unit"
+method = """Run the queue-conflict cases: each of the three signals fires with both ids in deterministic order, a closed row never conflicts, unrelated open rows and a shared stopword are silent, and the findings are wired on the warn-only line rather than into the exit code."""
+tier = "Smoke"
+expected = "Satisfies SR-143 AcceptanceCriteria"
+automated = "Yes"
+evidence = "tests/test_loop_order.py"
+status = "Draft"
+phase = 5
+
+[test.TC-156]
+verifies = ["SR-144", "SR-145", "LLR-161"]
+level = "Integration"
+method = """Run the handback suite over real git worktrees: a partial close is clean under the REAL trajectory check (not a stub), a terminal spec with no report is loud, a second close is refused and leaves no residue, and the disposition is keyed on the report path so a re-sweep mints nothing."""
+tier = "Full"
+expected = "Satisfies SR-144 and SR-145 AcceptanceCriteria"
+automated = "Yes"
+evidence = "tests/test_handback.py;tests/test_intake.py"
+status = "Draft"
+phase = 5
+
+[test.TC-157]
+verifies = ["SR-146", "LLR-162", "LLR-163"]
+level = "Integration"
+method = """Run the prompts and routing suites: strict slot filling and its refusals, the preflight on a missing template, the catalogue's freshness gate, the digest's line-ending normalization, the argv-array form with its fall-through and refusal cases, and the ADJUDICATE phase's tier, cross-family rule and escalation deafness."""
+tier = "Smoke"
+expected = "Satisfies SR-146 AcceptanceCriteria"
+automated = "Yes"
+evidence = "tests/test_prompts.py;tests/test_routing_and_prompts.py"
+status = "Draft"
+phase = 5
+
+[test.TC-158]
+verifies = ["SR-132", "IF-101"]
+level = "Unit"
+method = """Run the id-watermark suite. It drives trace.py's CLI so the rules are asserted on the EXIT CODE, not just as a function call - the wiring into --strict-integrity is the guarantee, and a suite that only calls watermark_findings() survived deleting it. Covers the mint seam IF-101 declares: next_wi_id counts from the mark, so a deleted id is not re-issued, and the reader's refusal on an absent mark is NOT caught."""
+tier = "Smoke"
+expected = """A live id above its mark, a missing space, a malformed line, an absent file, a lowered mark and a hand-raised mark each fail loud; headroom left by a deleted row stays legal; the mint returns the next unused id after a deletion and refuses without a mark."""
+automated = "Yes"
+evidence = """tests/test_id_watermark.py::test_the_rules_are_actually_WIRED_INTO_the_integrity_floor; tests/test_id_watermark.py::test_the_mint_does_not_reissue_a_deleted_id"""
+status = "Draft"
+phase = 4
+
+[test.TC-159]
+verifies = ["SR-147", "LLR-165"]
+level = "Integration"
+method = """Run the carrier-converter suite: it converts the live spine, re-parses the emitted TOML with tomllib and asserts the round-trip is cell-for-cell identical to the source for every row of every tier, then DRIVES the loss detector against corruption classes (a dropped row, a dropped field, a truncated value, a re-typed value, a mangled ref list) and asserts each is REFUSED with a finding naming the row and field, so the clean result is evidence rather than a check that cannot fail."""
+tier = "Smoke"
+expected = "Satisfies SR-147 AcceptanceCriteria"
+automated = "Yes"
+evidence = "tests/test_migrate_carrier.py"
+status = "Draft"
+phase = 5
+
+[test.TC-160]
+verifies = ["SR-147", "LLR-166"]
+level = "Integration"
+method = """Drive the carrier reader over a REAL repo whose spine is cut over from CSV to TOML in one commit, and assert the four properties that fail open if wrong: the pre-migration revision still reads through the carrier it used then; the post-migration revision reads through the new one presenting the same column names; a lossless cutover is SILENT to the amendment guard while text smuggled into that same commit is NAMED with its row and cell; and a carrier that does not parse - including the duplicate id the carrier turns into a decode error - is reported absent rather than empty. Then pin the vocabulary against drift: the reader is the exact inverse of the writer's KEY, and every column of every LIVE spine header is driven through the pair so the agreement cannot be vacuous."""
+tier = "Smoke"
+expected = "Satisfies SR-147 AcceptanceCriteria"
+automated = "Yes"
+evidence = "tests/test_trajectory_staged.py::test_baseline_read_survives_the_carrier_cutover"
+status = "Draft"
+phase = 5
+

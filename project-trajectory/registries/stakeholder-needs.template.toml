@@ -1,0 +1,100 @@
+# Stakeholder Needs (SN-###) — the TOML registry CARRIER.
+#
+# ONE TABLE PER NEED, id-keyed with the prefix retained and the key BARE:
+# `[need.SN-000]`. An EMPTY CELL IS AN ABSENT KEY — omit a key rather than
+# setting it to "". A duplicate id is a parse error, which is the carrier
+# doing what a check used to (the reader is scripts/spine_carrier.py).
+#
+# Every need below serves the [PROJECT-VISION](../../README.md#vision) — the G1
+# consistency review checks each against it: a need serving no part of the
+# vision is scope creep (or a missing vision clause); a need contradicting it
+# is a finding. (The link is kept in markdown form so the pointer stays
+# checkable and a human following it lands in the right place.)
+#
+# Owned by the Stakeholder hat — whoever the system serves: an end user, an
+# operator, or ANOTHER SYSTEM (represented by its owner/integrator).
+# Plain-language needs + edge-case expectations. Engineering translations live
+# in system-requirements.toml (referenced by its `sn_refs`); do not restate
+# them here. Priority: M=Must · S=Should · C=Could.
+#
+# MATURITY IS A FIELD, NOT A SECTION. `kind` is one of:
+#
+#   core   a ratified need (the steady state)
+#   draft  still being drafted — G0. trace.py exempts it from the "every SN
+#          needs an SR" rule, so it can sit in the live registry before its SR
+#          decomposition exists. RATIFY it by changing `kind` to "core" in a
+#          reviewed commit; that commit is the sign-off and its date is the
+#          ratification date. Do not leave real needs parked at draft.
+#   edge   an edge-case expectation, which carries its OWN fields
+#          (`lifecycle` / `scenario` / `expected`) instead of the core four.
+#
+# This retires the older carrier's "section-as-state", where draft-ness was
+# "appears under a heading containing the word draft" — a rule a prose MENTION
+# of an id could trip, silently re-drafting an already-ratified need.
+#
+# COVER THE WHOLE LIFECYCLE, NOT JUST STEADY STATE. For each need ask: when in
+# the running product's life must this hold? — Provision (before it runs:
+# install, dependencies), Startup (once per launch: config, migrations), or
+# Runtime (steady-state serving). Most authors write only Runtime needs and
+# discover the install/first-run ones late; tag the non-runtime ones with
+# `lifecycle` (process.md §4 "Lifecycle phase").
+#
+# CONSIDER THE COST, NOT JUST THE BEHAVIOR. Where the scope warrants it, also
+# capture non-functional needs — performance, memory/size, cost (unit/BOM,
+# licensing, cloud spend), reliability, security, observability — and route
+# each to its home (process.md §9). A prompt, not a mandate.
+
+[need.SN-000]
+kind = "core"
+need = """_EXAMPLE — replace this row; number real needs sequentially (the `-000` id is a placeholder the tooling ignores)._"""
+why = "Why it matters — the consequence of NOT meeting it, in the stakeholder's terms."
+priority = "M"
+acceptance = "Acceptance intent: how we would know it is met."
+
+# --- EDGE-CASE EXPECTATIONS ---------------------------------------------------
+#
+# How the system should behave when things go wrong — the highest-value part of
+# this registry. Be specific; the System Engineer turns each into measurable
+# SRs. COVER EVERY LIFECYCLE PHASE — which phase gets neglected depends on the
+# product. Tool authors under-write Provision/Startup rows (first-run, missing
+# dependency); authors of products that operate in a live environment — a robot,
+# a server, anything with bystanders or concurrent actors — under-write Runtime
+# rows, because those failures live in the OPERATING ENVIRONMENT, not the
+# codebase.
+#
+# An edge need looks like this — copy it, give it a real id, and fill
+# `expected`:
+#
+#   [need.SN-0nn]
+#   kind = "edge"
+#   lifecycle = "Provision"
+#   scenario = "Missing dependency / wrong version"
+#   expected = ""
+#
+# WORK THE CHECKLIST BELOW: write a need for each line, or record an explicit
+# n/a. Delete only the lines that genuinely cannot apply.
+#
+#   Provision        Missing dependency / wrong version
+#   Provision        First-run setup & discoverable docs / quick-reference
+#   Startup          Invalid / corrupt / missing config at launch
+#   Startup→Runtime  Unattended/automated run (never blocks on a prompt at
+#                    launch OR mid-run; clear failure)
+#   Runtime          Interruption / power loss / killed mid-operation
+#   Runtime          Invalid / corrupt / unsupported input
+#   Runtime          Resource exhaustion (disk / memory full)
+#   Runtime          Output target removed / locked / unwritable
+#   Runtime          Environment changed under the product mid-operation (file
+#                    edited mid-run; object moved mid-action)
+#   Runtime          A third party interferes during operation (another process
+#                    takes the lock; a person or pet enters the workspace)
+#   Runtime          An intended action is irreversible and its target is
+#                    ambiguous (delete / overwrite / discard / physical change)
+#   Runtime          Input degraded but not absent (truncated stream, noisy or
+#                    dirty sensor, partial data)
+#   Runtime          Task must be abandoned safely partway (user stop, shutdown
+#                    mid-task)
+#
+# --- DRAFT NEEDS --------------------------------------------------------------
+#
+# Draft new needs with `kind = "draft"`, then ratify them to "core". Empty is
+# the normal steady state.

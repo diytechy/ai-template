@@ -626,7 +626,7 @@ def load_critique_srs(docs):
     critique layer vacuous, exactly like an absent enable-list makes routing off."""
     out = set()
     for r in spine_carrier.load(
-        Path(docs) / "requirements" / "system-requirements.csv", "SR-ID"
+        Path(docs) / "requirements" / "system-requirements.toml", "SR-ID"
     ):
         sid = (r.get("SR-ID") or "").strip()
         if (
@@ -704,10 +704,10 @@ def critique_brief(root, docs, scope_srs):
     sr_by_id = {
         (r.get("SR-ID") or "").strip(): r
         for r in spine_carrier.load(
-            docs / "requirements" / "system-requirements.csv", "SR-ID"
+            docs / "requirements" / "system-requirements.toml", "SR-ID"
         )
     }
-    tcs = spine_carrier.load(docs / "test" / "test-cases.csv", "TC-ID")
+    tcs = spine_carrier.load(docs / "test" / "test-cases.toml", "TC-ID")
     lines, rubric_paths = [], set()
     for sid in sorted(scope_srs):
         r = sr_by_id.get(sid)
