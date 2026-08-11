@@ -274,7 +274,7 @@ def close_repo(tmp_path, safety="ordinary", tier="strong", branch="wi-005"):
     """A trunk where WI-005 closed EARLY: the spec is terminal in `partial/` and
     its immutable per-close report sits under docs/handbacks/.
 
-    The report — not the spec — is the event's identity (SN-031). The old
+    The report — not the spec — is the event's identity (SR-144). The old
     fixture wrote a `## Handback` section into the spec and let the merge sha
     stand in for the event, which is the shape five successive dedup mechanisms
     leaked through."""
@@ -331,7 +331,7 @@ def test_a_merged_handback_mints_the_disposition_row(tmp_path):
     assert row["SafetyClass"] == "adjudication"
     assert "dispose" in row["Title"] and "WI-005" in row["Title"]
     # The four outcomes are in the row's face, and closing early is NOT one of
-    # them. SN-031 retired R3's `re-queue`: a terminal row is never put back on
+    # them. SR-145 retired R3's `re-queue`: a terminal row is never put back on
     # the frontier, so continuing means DRAFTING A SUCCESSOR.
     for outcome in ("cancel", "defer", "draft a successor", "open item"):
         assert outcome in row["Title"]

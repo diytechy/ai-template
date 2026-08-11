@@ -464,7 +464,7 @@ def test_a_needs_human_worker_hands_back_and_the_run_keeps_going(tmp_path, capfd
 
     # The WI is back in trunk, blocked, with its note — and the branch is gone.
     spec = _returned(root)
-    # SN-031: the spec's DEFINITION is untouched — the close's record is a
+    # SR-144: the spec's DEFINITION is untouched — the close's record is a
     # separate immutable report, and the folder (terminal `partial/`) is
     # what keeps the row off the frontier, so no blockref is written.
     assert "## Handback" not in spec

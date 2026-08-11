@@ -1191,7 +1191,7 @@ def test_the_outcome_is_read_off_the_folder_the_specs_landed_in(tmp_path):
 
 
 def test_a_close_into_an_OPEN_folder_names_no_outcome_at_all(tmp_path):
-    """SN-031 made every outcome terminal. A lane that closes into `queued/`,
+    """SR-144 made every outcome terminal. A lane that closes into `queued/`,
     `draft/` or `deferred/` used to read as a handback — the row went straight
     back on the frontier, and only a `blockref` stopped the driver claiming and
     closing it forever. Those three are gone from `OUTCOME_DIRS`, so such a
@@ -1346,7 +1346,7 @@ def test_a_branchs_own_terminal_outcome_move_is_admitted(tmp_path):
 
 
 def test_a_partial_close_its_report_and_its_artefact_are_admitted(tmp_path):
-    # The third outcome (§A3 as amended by SN-031). A partial close ADDS its own
+    # The third outcome (§A3 as amended by SR-144). A partial close ADDS its own
     # spec back under `partial/`, writes an immutable per-close REPORT under
     # docs/handbacks/, and may drop a bar-inert `.patch` beside it. None of the
     # three is a mint: the closed spec's id is claimed, and neither the report

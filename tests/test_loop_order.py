@@ -1,4 +1,5 @@
-"""SN-030 — the loop-order contract, as a set of driven rules.
+"""SR-141 · SR-142 · SR-143 (under SN-025) — the loop-order contract, as a set
+of driven rules.
 
 The plan's §4 states the tick priority as *ratified prose the tests pin, not an
 emergent property of the tick loop*: dispositions -> amendment adjudication ->
@@ -134,7 +135,7 @@ def _spine(root, *, tc_status, wi_status="done", verifies="SR-001"):
     row = wi_row("WI-001", sr="SR-001", status=wi_status)
     if wi_status in ("partial", "cancelled"):
         # The registry writer fills a Deliverable only for `done`; `cancelled`
-        # needs one too (R-A), and `partial` must NOT have one (SN-031).
+        # needs one too (R-A), and `partial` must NOT have one (SR-144).
         row[wi_registry_header().index("Deliverable")] = (
             "" if wi_status == "partial" else "never shipped"
         )
@@ -189,7 +190,7 @@ def test_the_red_tc_line_grammar_round_trips():
     # A STRING CONTRACT BETWEEN TWO MODULES — the seam carries finding strings,
     # so the formatter and the parser are pinned against each other. The
     # alternative (intake re-splitting the prose) is prose carrying control
-    # flow, which is exactly the `NEEDS-HUMAN` defect SN-031 removed.
+    # flow, which is exactly the `NEEDS-HUMAN` defect SR-145 removed.
     line = dsp._red_tc_line("TC-042", "failed", ["SR-007", "LLR-009"])
     assert dsp.parse_red_tc(line) == ("TC-042", ["SR-007", "LLR-009"])
     assert line.startswith(dsp.RED_TC_PREFIX)

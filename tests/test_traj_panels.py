@@ -469,7 +469,7 @@ def test_station_intake_arm_pins_to_the_intake_mint(tmp_path):
     disp = load_script("dispatch")
     assert ink.tier_signal("amendment", rows_touched=4) == "strong"
     assert ink.tier_signal("amendment", rows_touched=1) == "medium"
-    # SN-031 folded WI-417: a disposition's tier is no longer read off a magic
+    # SR-145 folded WI-417: a disposition's tier is no longer read off a magic
     # substring in a free-prose reason (a typo silently downgraded the
     # judgement). It is the close report's TYPED `suggested_tier`, so
     # `tier_signal` has no `reason` parameter left to key off at all, and the

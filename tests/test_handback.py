@@ -123,7 +123,7 @@ def lane(root, branch="wi-401"):
 
 
 def closed_spec_path(root, wid="WI-401"):
-    """SN-031: an early close is TERMINAL — the spec lands in `partial/`, not
+    """SR-144: an early close is TERMINAL — the spec lands in `partial/`, not
     back in the ready `queued/` where the old contract left it leaning on a
     blockref to keep the driver from re-claiming it."""
     return root / "docs" / "work" / "partial" / "{}-widget.md".format(wid)
@@ -234,7 +234,7 @@ def test_a_partial_close_is_CLEAN_under_the_real_trajectory_check(tmp_path):
     `partial` joining TERMINAL_STATUSES armed R-A (a terminal WI carries a
     filled Deliverable — `hard=True`, an ERROR at every run, not only under
     --strict) and R-F (a terminal WI clears its SpecRef) against a close that
-    `close_partial` structurally CANNOT satisfy: SN-031's whole point is that an
+    `close_partial` structurally CANNOT satisfy: SR-144's whole point is that an
     early close leaves the spec's definition byte-identical.
 
     A rule no honest close can satisfy is not a rule. In the loop it is worse
@@ -405,7 +405,7 @@ def test_the_return_move_runs_the_link_aware_ritual(tmp_path):
 def test_a_closed_spec_keeps_its_deliverable_untouched(tmp_path):
     # The old contract APPENDED a `## Handback` section to the spec body, so
     # the grammar had to be Deliverable-then-Handback and a bad partition would
-    # silently blank the Deliverable cell. SN-031 deletes the whole hazard: the
+    # silently blank the Deliverable cell. SR-144 deletes the whole hazard: the
     # close writes a separate report and the spec's body is not edited at all.
     # The assertion that matters is therefore the stronger one — BYTE-IDENTICAL.
     root = claimed_repo(
