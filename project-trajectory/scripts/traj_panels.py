@@ -32,6 +32,7 @@ from traj_render import (
     _hscroll,
     _render_drill,
     _ring_style,
+    _svg_fit_style,
     _svg_role,
     _svg_wrap,
     esc,
@@ -763,7 +764,7 @@ def _station_svg(root):
         _station_card(
             "advance",
             "Trunk advance",
-            ("ff trunk to the barred tree", "unload the lane worktree"),
+            ("advance trunk to the barred tree", "unload the lane worktree"),
             log_home,
             L,
             B,
@@ -794,12 +795,14 @@ def _station_svg(root):
         + "".join(cards)
     )
     return (
-        '<svg class="stationsvg" viewBox="0 0 {:.0f} {:.0f}" '
+        '<svg class="stationsvg" viewBox="0 0 {:.0f} {:.0f}" style="{}" '
         'preserveAspectRatio="xMidYMid meet" role="{}" '
         'aria-label="The station cycle drawn as one directed loop: dispatcher '
         "tick, claim, lane build, the terminal outcomes converging on the "
         "station refresh, the serial merge slot, trunk advance and the intake "
-        'mint">{}</svg>'.format(g["width"], g["height"], _svg_role(body), body)
+        'mint">{}</svg>'.format(
+            g["width"], g["height"], _svg_fit_style(g["width"]), _svg_role(body), body
+        )
     )
 
 
@@ -841,7 +844,20 @@ def _station_panel(root):
         arms=esc(" · ".join(_ADMISSION_ARMS)),
         oi=oi_link,
     )
-    return '<div class="station">{}</div>\n{}'.format(_station_svg(root), notes)
+    # WI-415 (390px legibility): the ring no longer shrinks past the shared
+    # SHRINK_FLOOR (_station_svg's inline style), so a narrow viewport now
+    # overflows instead of blurring the notes to ~3.3 CSS px — the SAME
+    # scroll-signal pattern the OKF graph / drill / seam / module views already
+    # carry (WI-219/WI-256), not a new affordance invented for this panel.
+    return (
+        SCROLL_CUE
+        + '<div class="tablescroll" {}>'.format(
+            _hscroll("Station cycle, horizontally scrollable")
+        )
+        + '<div class="station">{}</div>'.format(_station_svg(root))
+        + "</div>\n"
+        + notes
+    )
 
 
 def process_panel(root, wis, stats):
@@ -949,8 +965,12 @@ def process_panel(root, wis, stats):
         # the stations, and the `.slot` node — the serial merge waist — renders
         # last, emphasized on its own theme-invariant fill token.
         "#process .station{margin:.7rem 0;}"
-        "#process .stationsvg{display:block;width:100%;height:auto;max-width:860px;"
-        "margin:0 auto;font-family:inherit;}"
+        # WI-415 (390px legibility): sizing lives in the inline `style=` attribute
+        # (`_svg_fit_style`, the same SHRINK_FLOOR-governed floor the icicle/dag/
+        # know diagrams already use), not here — a hardcoded `max-width:860px`
+        # with no `min-width` let the ring shrink all the way to the viewport,
+        # which is what rendered ~3.3 CSS px note text at 390 px.
+        "#process .stationsvg{display:block;margin:0 auto;font-family:inherit;}"
         "#process .stedge{fill:none;stroke:var(--muted);stroke-width:var(--w-line);"
         "opacity:var(--o-muted);}"
         "#process .stedge.alt{stroke-dasharray:5 4;}"

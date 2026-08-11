@@ -524,6 +524,57 @@ def test_station_byte_identical_without_data(tmp_path):
     assert _station_div(html_of(minimal)) == _station_div(html_of(rich))
 
 
+def test_station_advance_card_names_the_shipped_merge(tmp_path):
+    # WI-415 finding 1 (WI-389 REVIEW-A #1): trunk advances via integrate.py's
+    # --no-ff merge commit, never a fast-forward — a true ff is what the
+    # RULING-6 audit reds. The card used to say "ff trunk to the barred tree",
+    # misstating the shipped act; it now says "advance", which also still fits
+    # the notemax budget (no truncating "…").
+    tp = load_script("traj_panels")
+    with_gate(tmp_path, "G2")
+    assert gen(tmp_path).returncode == 0
+    station = _station_div(html_of(tmp_path))
+    assert "advance trunk to the barred tree" in station
+    assert "ff trunk to the barred tree" not in station
+    assert len("advance trunk to the barred tree") <= tp.STATION_GEOM["notemax"]
+    assert "advance trunk to the barred tree…" not in station  # not truncated
+
+
+def test_station_narrow_width_scrolls_instead_of_blurring(tmp_path):
+    # WI-415 finding 2: at 390px the ring used to scale ALL the way down with
+    # the viewport (a bare `max-width:860px`, no floor), rendering the ~8.5px
+    # note labels at ~3.3 CSS px - illegible without pinch-zoom, and silently
+    # (no overflow, no scroll cue). The fix reuses the SAME SHRINK_FLOOR-governed
+    # floor + horizontal-scroll affordance the OKF graph / drill / seam / module
+    # views already carry (WI-219/WI-256/WI-307) rather than inventing a new one:
+    # past the floor the ring stops shrinking and the container scrolls, with an
+    # explicit cue - so 390px stays HONEST about the cut instead of blurring it.
+    tr = load_script("traj_render")
+    tp = load_script("traj_panels")
+    with_gate(tmp_path, "G2")
+    assert gen(tmp_path).returncode == 0
+    text = html_of(tmp_path)
+    station_svg_tag = re.search(r'<svg class="stationsvg"[^>]*>', text).group(0)
+    m = re.search(
+        r'style="width:100%;max-width:(\d+)px;min-width:(\d+)px;height:auto"',
+        station_svg_tag,
+    )
+    assert m, station_svg_tag
+    natural, floor = int(m.group(1)), int(m.group(2))
+    assert natural == int(tp.STATION_GEOM["width"])
+    assert abs(floor - int(natural * tr.SHRINK_FLOOR)) <= 1
+    # The scroll affordance: a `.tablescroll` wrapper (JS-toggled `.cued`/`.clipr`
+    # on real overflow) immediately preceded by the shared scroll-cue paragraph,
+    # the same pairing `_hscroll` + `SCROLL_CUE` establish for every other
+    # horizontally-scrollable view in this document.
+    assert re.search(
+        r'<p class="scrollcue"[^>]*>[^<]*</p><div class="tablescroll" '
+        r'tabindex="0" role="group" aria-label="Station cycle, horizontally '
+        r'scrollable"><div class="station">',
+        text,
+    ), "station block should be wrapped in the standard scroll-cue + tablescroll pair"
+
+
 def test_a4_no_sub_label_opacity_discount(tmp_path):
     # A4: the emitted CSS must not discount sub-label text opacity (which dropped
     # the effective contrast below the floor). No `.sub`/`.bsub`/`.slotsub`
