@@ -268,15 +268,26 @@
 # `TierSpec` column declaration (traj_views.py), which also dissolved the
 # two okf-row gen_okf pairings (that class re-counts 3 -> 1). Zero new
 # blocks; render byte-identical again.
+# D-5 step 1 (2026-08-10): the carrier-aware baseline read DISSOLVED two
+# check_trajectory == trace pairings and added a new class. Net +3 blocks, and
+# the direction of each half is the point rather than the total: what went is
+# real de-duplication (spine-loader 20 -> 19 and git-wrapper 7 -> 6, because
+# `_index_rows` and the two-tree read stopped hand-rolling `git show` +
+# BOM-strip + csv.DictReader and now call one resolver), and what arrived is
+# the new `spine-carrier` class, which is duplication the F5 ruling requires
+# and three tests pin. Recorded because a census line is an ACCEPTANCE: a
+# dissolved fingerprint left standing is a sanction for code that no longer
+# exists, which is how the allowlist would start covering the next block to
+# land on that number.
 #
 # The distribution:
 #
 #   cli                  100   deliberate
 #   link-rebase            1   deliberate
-#   spine-loader          20   deliberate
+#   spine-loader          19   deliberate
 #   declared-file         12   deliberate
 #   markdown-table        13   deliberate
-#   git-wrapper            7   deliberate
+#   git-wrapper            6   deliberate
 #   wi-schema-columns      6   deliberate
 #   wi-registry            3   deliberate
 #   spec-folder-reader     4   deliberate
@@ -297,6 +308,7 @@
 #   registry-row-filter    1   deliberate
 #   generator-preamble     1   deliberate
 #   frontmatter-fence      1   deliberate
+#   spine-carrier          5   deliberate
 #
 # The two facts worth carrying: cross-module duplication here is dominated by
 # SMALL STABLE HELPERS the F5 ruling deliberately duplicates (a shared
@@ -470,7 +482,7 @@ d298066d8071  project-trajectory/scripts/agent_common.py == project-trajectory/s
 d47d5975c21b  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/schedule.py
 f800f0c60265  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/schedule.py
 
-# --- spine-loader (20 blocks) ------------------------------------
+# --- spine-loader (19 blocks) ------------------------------------
 # disposition: deliberate
 # spine-registry loaders (load_csv/refs, the SR/LLR/TC/IF/OI row filters,
 # the draft-heading scan). Several carry an explicit in-code note -
@@ -491,7 +503,6 @@ fd8bed87fb54  project-trajectory/scripts/agent_loop.py == project-trajectory/scr
 aa845026a358  project-trajectory/scripts/check_flows.py == project-trajectory/scripts/plan_coverage.py
 84e2717e93b1  project-trajectory/scripts/check_perf.py == project-trajectory/scripts/gen_release_checklist.py
 276a458797c4  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/gen_arch_map.py
-b17d9576c85b  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/trace.py
 4b5af82ebaa3  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/traj_status.py
 c7533358d6c4  project-trajectory/scripts/derive_gate.py == project-trajectory/scripts/gen_release_checklist.py
 bea18e2ff5f7  project-trajectory/scripts/derive_gate.py == project-trajectory/scripts/gen_release_checklist.py
@@ -625,14 +636,13 @@ c16d14a4efc4  project-trajectory/scripts/check_privacy.py == project-trajectory/
 # paths) beside run_menu's config read - the same cross-script F5 reason.
 1b0265df6d81  project-trajectory/scripts/integrate.py == project-trajectory/scripts/run_menu.py
 
-# --- git-wrapper (7 blocks) --------------------------------------
+# --- git-wrapper (6 blocks) --------------------------------------
 # disposition: deliberate
 # the `git` subprocess wrapper and the preflight/lock pair - small, stable,
 # per-script. (The four agent_dispatch pairings left with the module, Phase 5.)
 daf99714501b  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/check_privacy.py
 065823254083  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/derive_gate.py
 c669d0d84711  project-trajectory/scripts/check.py == project-trajectory/scripts/check_trajectory.py
-8dc145bef9c5  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/trace.py
 # WAS 12. WI-346 dissolved `f02bcce4d53d` (check.py == gen_trajectory.py) as a
 # SIDE EFFECT: it matched check.py's `_git_out` against gen_trajectory's `_git`
 # BODY, and that body is now one call to a local `_run_captured`, too short to
@@ -941,3 +951,33 @@ a510ce1c39b6  project-trajectory/scripts/agent_common.py == project-trajectory/s
 # which is the only failure mode that matters here: if they disagreed, one of
 # them would start checking the other's values.
 edaa6a8191f0  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/check_docs.py
+
+# --- spine-carrier (5 blocks) -------------------------------------
+# disposition: deliberate
+# The spine's CSV -> TOML carrier migration (repo-lock D-5, OI-12).
+# trace.py and check_trajectory.py each carry the same three things: the tier
+# table map, the carrier-key -> COLUMN-NAME map, and the reader that turns one
+# `git show` blob into `{id: row}` through whichever carrier that revision used.
+#
+# This IS the F5 case, and squarely: both are cross-SCRIPT copies, not same-file
+# ones (which WI-346/WI-347 rule an extraction, not a sanction). trace.py owns
+# the ratify brief's baseline read and check_trajectory.py owns the two-tree
+# amendment scan; each must keep working as an independently-copyable drop-in,
+# and a shared module for this was rejected at WI-078 (_kitcommon).
+#
+# WHY THE SANCTION IS SAFE HERE, which is the part a census line has to earn:
+# the risk of duplicating a VOCABULARY is that one copy learns a column the
+# other does not, and the reader that has not learned it silently returns a row
+# with that cell missing — which every consumer reads as "the cell is empty".
+# That is content loss on the registries the repo exists to make trustworthy, so
+# it is pinned three ways in tests/test_rule_sync.py rather than promised:
+# the two readers' constants are asserted EQUAL, both are asserted to be the
+# exact INVERSE of migrate_carrier.KEY (the writer), and every column of every
+# LIVE spine header is driven through the pair so the agreement cannot be
+# vacuous. tests/test_trajectory_staged.py then pins their OUTPUT equal over a
+# real converted repo.
+ef43a809fb2a  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/trace.py
+f63febad45e5  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/trace.py
+59bf59ace450  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/trace.py
+277da7591672  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/trace.py
+2386f6f70295  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/trace.py

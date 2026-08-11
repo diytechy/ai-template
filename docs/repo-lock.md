@@ -859,7 +859,7 @@ changed carrier, so the tree is still single-home.
 > of the "an amendment that edits one cell has not amended the row" lesson
 > under D-1. A per-commit smoke tier does not catch it; the full tier does.
 
-**Owed, in order:** the carrier-aware baseline read → `load_registry` (the
+**Owed, in order:** ~~the carrier-aware baseline read~~ → `load_registry` (the
 compatibility shim above) → the cutover itself, which writes the four `.toml`
 files and **deletes the `.csv`/`.md` sources in the same commit** (two homes
 for one fact is the thing the kit forbids) → `intake`'s writer becomes a TOML
@@ -867,6 +867,36 @@ emitter → `test_dogfood_sync`'s "live header is an ordered superset of the
 template header" rule, which **has no meaning over TOML keys** and needs
 redesigning → the `registries/*.template.*` files and an ADOPTING migration
 note, because **every adopting repo migrates too**.
+
+**Step 1 — the carrier-aware baseline read — is DONE.** `trace._rows_at` and
+`check_trajectory._spine_rows_at` each resolve the carrier a revision actually
+used: TOML first, CSV as the fallback, rows presented under today's column
+names either way so nothing downstream learns which answered. Two properties
+came out of it that were not in the plan and are worth keeping:
+
+- **The cutover commit is now CHECKED by the amendment guard rather than
+  invisible to it.** Because each side resolves independently, a diff across
+  the cutover reads CSV on the old side and TOML on the new one and compares
+  cells — so a lossless cutover is *silent*, and text smuggled into it is
+  named. That is a second proof of the conversion, independent of the
+  converter's own round-trip check, and the mutation test that makes the
+  silence non-vacuous is `test_text_smuggled_into_the_cutover_commit_is_caught`.
+  It also forced the `touches` applicability test to name **both** carrier
+  paths: the cutover deletes the `.csv` and adds the `.toml`, so a single-name
+  test would match neither and skip the one commit that rewrites every row.
+- **A carrier that does not parse is reported ABSENT, never EMPTY.** The two
+  are opposite claims — `{}` says "this registry had no rows", which for a
+  baseline read means "re-bless everything with no diff". `_toml_rows_text`
+  returns `None` on a decode error so the caller can tell them apart.
+
+The carrier vocabulary is now F5-duplicated across three modules (both readers
+plus `migrate_carrier`'s writer) and **pinned three ways** in
+`tests/test_rule_sync.py`: the readers' constants equal, both the exact inverse
+of the writer's `KEY`, and every column of every *live* header driven through
+the pair so the agreement cannot be vacuous. Censused in `docs/dupes-allow`
+with that reason. **The CSV fallback is deliberate dead weight with an expiry**:
+it should be dropped once no supported baseline predates the cutover, and both
+ratchet entries say so.
 
 ---
 

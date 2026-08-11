@@ -2895,6 +2895,108 @@ SPINE_CSVS = (
     ("docs/test/test-cases.csv", "TC-ID"),
 )
 
+# --- the spine carrier (repo-lock D-5) ---------------------------------------
+# F5-duplicated from trace.py, which owns the same two constants for the ratify
+# brief's baseline read, and pinned equal by tests/test_rule_sync.py. The full
+# argument for the shape — id-keyed tables, the prefix retained and bare, and
+# why the mapping is stated rather than derived — is in trace.py beside its
+# copy; it is not restated here, because two copies of a RULING is how the two
+# copies start disagreeing about it.
+SPINE_TABLE = {"SR-ID": "requirement", "LLR-ID": "design", "TC-ID": "test"}
+
+SPINE_COLUMN = {
+    "title": "Title",
+    "sn_refs": "SN-Refs",
+    "sr_refs": "SR-Refs",
+    "verifies": "Verifies",
+    "requirement": "Requirement",
+    "rationale": "Rationale",
+    "acceptance_criteria": "AcceptanceCriteria",
+    "permutations": "Permutations",
+    "priority": "Priority",
+    "verification": "Verification",
+    "status": "Status",
+    "phase": "Phase",
+    "area": "Area",
+    "superseded_by": "SupersededBy",
+    "lifecycle": "Lifecycle",
+    "detail": "Detail",
+    "module": "Module",
+    "code_symbol": "CodeSymbol",
+    "test_refs": "TestRefs",
+    "level": "Level",
+    "method": "Method",
+    "expected": "Expected",
+    "parameters": "Parameters",
+    "automated": "Automated",
+    "evidence": "Evidence",
+    "tier": "Tier",
+    "component": "Component",
+    "notes": "Notes",
+}
+
+
+def _spine_stem(rel_path):
+    """A registry path with its carrier suffix removed, so one constant can name
+    a registry across a carrier change."""
+    return rel_path.rsplit(".", 1)[0]
+
+
+def _spine_carriers(rel_path):
+    """Both carrier paths a registry can appear under. The applicability test
+    (`touches`) has to name BOTH or the cutover commit — which deletes the
+    `.csv` and adds the `.toml` — matches neither name and the scan silently
+    skips the one commit that rewrites every row it watches."""
+    return {_spine_stem(rel_path) + s for s in (".toml", ".csv")}
+
+
+def _spine_rows_at(root, rev_prefix, rel_path, id_col):
+    """{id: row} of a spine registry on ONE side of the two-tree scan, read
+    through whichever carrier that side actually uses — TOML first, CSV as the
+    fallback (repo-lock D-5). `rev_prefix` is a `git show` prefix: `"HEAD:"`,
+    `"abc123:"`, or `":"` for the index.
+
+    Each side resolves independently, and that is the point rather than a
+    convenience: across the cutover commit the old side is CSV and the new side
+    is TOML, so this scan compares the two carriers CELL FOR CELL and reports
+    any row whose ratified text did not survive. The carrier change is then not
+    exempt from the amendment guard — it is checked by it, independently of the
+    converter's own round-trip proof. A silent-no-op degrade (`{}`) is kept for
+    a side that has neither carrier, which is the pre-registry history case."""
+    for carrier in (".toml", ".csv"):
+        cand = _spine_stem(rel_path) + carrier
+        text = _git(root, ["show", rev_prefix + cand])
+        if text is None:
+            continue
+        # F4: a committed BOM survives `git show`; strip it or the header glues
+        # to the id column and the guard silently disables (fails OPEN).
+        text = text.lstrip("﻿")
+        if carrier == ".csv":
+            return {
+                r[id_col]: r
+                for r in csv.DictReader(io.StringIO(text))
+                if r.get(id_col) and not r[id_col].endswith("-000")
+            }
+        try:
+            tables = tomllib.loads(text)
+        except tomllib.TOMLDecodeError:
+            continue  # unreadable is not empty — try the other carrier
+        out = {}
+        for rid, cells in (tables.get(SPINE_TABLE[id_col]) or {}).items():
+            if rid.endswith("-000"):
+                continue
+            row = {id_col: rid}
+            for key, value in cells.items():
+                row[SPINE_COLUMN.get(key, key)] = (
+                    "; ".join(str(v) for v in value)
+                    if isinstance(value, list)
+                    else str(value)
+                )
+            out[rid] = row
+        return out
+    return {}
+
+
 # The §A5.1 cell split (OWNER RULING 2026-07-31, docs/concurrency-v2.md; WI-380).
 # Only what is RATIFIED arms the re-attest warn. Traceability is TRACED, not
 # ratified: re-pointing an LLR at the module the code moved to amends no
@@ -3139,26 +3241,21 @@ def staged_spine_amendments(root, base="HEAD", head=None):
     base side) is not an amendment; a row whose Status moved (to Modified,
     Draft, Planned, anything) made a deliberate call this does not
     second-guess."""
-    revs = _spine_revs(root, base, head, touches=[p for p, _ in SPINE_CSVS])
+    revs = _spine_revs(
+        root,
+        base,
+        head,
+        touches=sorted(c for p, _ in SPINE_CSVS for c in _spine_carriers(p)),
+    )
     if revs is None:
         return []
     staged_names, old_rev, new_rev = revs
 
     def _index_rows(csv_path, id_col):
-        """{id: row} of the NEW-side version (`git show <new_rev>path` — the
-        index by default, equal to HEAD when the file is not staged; the head
-        commit under a rev range), or {} when unreadable."""
-        text = _git(root, ["show", new_rev + csv_path])
-        if text is None:
-            return {}
-        # F4: a committed BOM survives `git show`; strip it or the header glues
-        # to the id column and the guard silently disables (fails OPEN).
-        text = text.lstrip("﻿")
-        return {
-            r[id_col]: r
-            for r in csv.DictReader(io.StringIO(text))
-            if r.get(id_col) and not r[id_col].endswith("-000")
-        }
+        """{id: row} of the NEW-side version (the index by default, equal to
+        HEAD when the file is not staged; the head commit under a rev range),
+        through whichever carrier that side uses."""
+        return _spine_rows_at(root, new_rev, csv_path, id_col)
 
     # The attestation unit is the SR: an amended child whose OWNING SR flips in
     # this same commit is the sanctioned amend+flip path, so only rows whose
@@ -3193,21 +3290,13 @@ def staged_spine_amendments(root, base="HEAD", head=None):
 
     out = []
     for csv_path, id_col in SPINE_CSVS:
-        if csv_path not in staged_names:
+        if not (_spine_carriers(csv_path) & staged_names):
             continue
-        head_text = _git(root, ["show", old_rev + csv_path])
-        staged_text = _git(root, ["show", new_rev + csv_path])
-        if head_text is None or staged_text is None:
+        head_rows = _spine_rows_at(root, old_rev, csv_path, id_col)
+        staged_rows = _spine_rows_at(root, new_rev, csv_path, id_col)
+        if not head_rows or not staged_rows:
             continue  # first commit / newly added registry — nothing attested yet
-        head_text = head_text.lstrip("﻿")  # F4, as above
-        staged_text = staged_text.lstrip("﻿")
-        head_rows = {
-            r[id_col]: r
-            for r in csv.DictReader(io.StringIO(head_text))
-            if r.get(id_col) and not r[id_col].endswith("-000")
-        }
-        for row in csv.DictReader(io.StringIO(staged_text)):
-            rid = (row.get(id_col) or "").strip()
+        for rid, row in staged_rows.items():
             head = head_rows.get(rid)
             if not rid or rid.endswith("-000") or head is None:
                 continue

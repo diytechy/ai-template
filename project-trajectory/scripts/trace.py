@@ -81,6 +81,7 @@ import io
 import re
 import subprocess
 import sys
+import tomllib
 from pathlib import Path
 
 # Sibling: the spine-row TEXT layer (WI-329). Run as a subprocess this script's
@@ -1434,6 +1435,109 @@ SPINE_FILES = (
     ("docs/test/test-cases.csv", "TC-ID"),
 )
 
+# --- the spine carrier (repo-lock D-5) ---------------------------------------
+# One TOML file per tier, id-keyed, the id PREFIX retained and BARE
+# (`[requirement.SR-137]` — TOML allows `-` in a bare key). The table name is
+# the tier, keyed here by the registry's id column so it never has to be
+# re-derived from a path: a path can be a `.csv` or a `.toml` depending on the
+# revision being read, and the tier is the thing that does not move.
+#
+# F5-duplicated into check_trajectory.py (which owns the two-tree amendment
+# scan) and pinned equal by tests/test_rule_sync.py — the same treatment
+# `is_draft` / `sn_all_ids` get, and for the same reason: two readers of one
+# vocabulary that disagree are the false green this kit exists to prevent.
+SPINE_TABLE = {"SR-ID": "requirement", "LLR-ID": "design", "TC-ID": "test"}
+
+# The carrier's keys -> today's COLUMN NAMES. STATED, never derived: no regex
+# turns `sr_id` back into `SR-ID` (nor `acceptance_criteria` into
+# `AcceptanceCriteria` without a word list), and a column name is a repo-wide
+# term (D-3) that deserves a written mapping rather than a rule nobody can
+# predict. This is the exact inverse of `migrate_carrier.KEY`, and
+# test_rule_sync pins the two as inverses so a column can never be renamed on
+# one side of the conversion only.
+SPINE_COLUMN = {
+    "title": "Title",
+    "sn_refs": "SN-Refs",
+    "sr_refs": "SR-Refs",
+    "verifies": "Verifies",
+    "requirement": "Requirement",
+    "rationale": "Rationale",
+    "acceptance_criteria": "AcceptanceCriteria",
+    "permutations": "Permutations",
+    "priority": "Priority",
+    "verification": "Verification",
+    "status": "Status",
+    "phase": "Phase",
+    "area": "Area",
+    "superseded_by": "SupersededBy",
+    "lifecycle": "Lifecycle",
+    "detail": "Detail",
+    "module": "Module",
+    "code_symbol": "CodeSymbol",
+    "test_refs": "TestRefs",
+    "level": "Level",
+    "method": "Method",
+    "expected": "Expected",
+    "parameters": "Parameters",
+    "automated": "Automated",
+    "evidence": "Evidence",
+    "tier": "Tier",
+    "component": "Component",
+    "notes": "Notes",
+}
+
+
+def _spine_stem(rel_path):
+    """A registry path with its carrier suffix removed, so one constant can name
+    a registry across a carrier change."""
+    return rel_path.rsplit(".", 1)[0]
+
+
+def _csv_rows_text(text, rel_path, id_col):
+    """{id: row} from the CSV carrier. Parsed over the FULL text, never
+    line-split — spine cells are long and RFC-4180 quoting spans lines."""
+    return {
+        r[id_col]: r
+        for r in csv.DictReader(io.StringIO(text))
+        if r.get(id_col) and not r[id_col].endswith("-000")
+    }
+
+
+def _toml_rows_text(text, rel_path, id_col):
+    """{id: row} from the TOML carrier, presented under TODAY'S COLUMN NAMES, or
+    None when the text does not parse.
+
+    An ABSENT key stays absent rather than being filled with `""`: the carrier's
+    whole point is that "unset" and "set to empty" stop being the same value,
+    and every consumer downstream already reads a cell as `.get(c) or ""`, so
+    absent and empty compare equal where it matters and stay distinguishable
+    where it does not. Typed values are rendered back to their cell text with
+    the same rules `migrate_carrier.value_to_cell` writes them by — a ref array
+    re-joins on the canonical `; `, an int stringifies — so a row read here is
+    cell-for-cell what the CSV row was.
+
+    None (not `{}`) on a decode error, because the two are opposite claims: `{}`
+    says "this registry had no rows", which for a baseline read means "re-bless
+    everything with no diff". A carrier that cannot be read is an ABSENT
+    baseline, and the caller has to be able to tell them apart."""
+    try:
+        tables = tomllib.loads(text)
+    except tomllib.TOMLDecodeError:
+        return None
+    out = {}
+    for rid, cells in (tables.get(SPINE_TABLE[id_col]) or {}).items():
+        if rid.endswith("-000"):
+            continue
+        row = {id_col: rid}
+        for key, value in cells.items():
+            row[SPINE_COLUMN.get(key, key)] = (
+                "; ".join(str(v) for v in value)
+                if isinstance(value, list)
+                else str(value)
+            )
+        out[rid] = row
+    return out
+
 
 def _git_out(root, args):
     """stdout of a git command under `root`, or None on ANY failure (no git
@@ -1452,21 +1556,48 @@ def _git_out(root, args):
 
 
 def _rows_at(root, rev, rel_path, id_col):
-    """{id: row} of a registry CSV at `rev` (`git show`, csv-parsed — spine cells
-    are long, never line-split; -000 example rows dropped). {} when the file does
-    not exist at that revision (nothing existed = an empty baseline)."""
-    text = _git_out(root, ["show", "{}:{}".format(rev, rel_path)])
-    if text is None:
-        return {}
-    # Adversarial-review F4: `git show` preserves a committed BOM, and a BOM'd
-    # header glues to the first column name so every row hides — the same
-    # hazard trace's own loaders read utf-8-sig for. Strip it before parsing.
-    text = text.lstrip("﻿")
-    return {
-        r[id_col]: r
-        for r in csv.DictReader(io.StringIO(text))
-        if r.get(id_col) and not r[id_col].endswith("-000")
-    }
+    """{id: row} of a spine registry at `rev`, read through whichever CARRIER
+    that revision actually used (`git show`; -000 example rows dropped).
+
+    CARRIER-AWARE BY NECESSITY, not for tidiness (repo-lock D-5, "the one thing
+    that must not be forgotten"). The spine moved from CSV to TOML, and a
+    baseline read that knows only the live carrier gets `None` back from
+    `git show` at every pre-migration revision — which this function's own
+    contract then reads as "nothing existed = an empty baseline". Every
+    `Modified` row would render as *"no baseline — awaiting its FIRST
+    ratification"* and the owner would re-bless full text with NO DIFF of what
+    changed, silently. That is the same fail-open shape D-1 rejected in ALT-1,
+    and it fires on the exact rows the sitting exists to judge.
+
+    So each side resolves its own carrier independently: try the TOML path at
+    that revision, fall back to the CSV path. The file WAS CSV then, so reading
+    it that way is honest history rather than a shim — and because the two
+    sides resolve separately, a diff ACROSS the cutover reads CSV on the old
+    side and TOML on the new one and compares cells. That is the property worth
+    having: the cutover commit is not exempt from the amendment guard, it is
+    proven by it, independently of the converter's own round-trip check.
+
+    Rows come back under TODAY'S COLUMN NAMES whichever carrier answered, so
+    nothing past this point learns which one did."""
+    for carrier, parse in ((".toml", _toml_rows_text), (".csv", _csv_rows_text)):
+        cand = _spine_stem(rel_path) + carrier
+        text = _git_out(root, ["show", "{}:{}".format(rev, cand)])
+        if text is None:
+            continue
+        # Adversarial-review F4: `git show` preserves a committed BOM, and a
+        # BOM'd header glues to the first column name so every row hides — the
+        # same hazard trace's own loaders read utf-8-sig for. Strip it first.
+        rows = parse(text.lstrip("﻿"), rel_path, id_col)
+        if rows is None:  # the carrier is there but does not parse — say so
+            print(
+                "WARNING (advisory): the spine carrier {} does not parse at {} —"
+                " falling back to the other carrier; a baseline that cannot be"
+                " read is reported as absent, never as empty".format(cand, rev[:12]),
+                file=sys.stderr,
+            )
+            continue
+        return rows
+    return {}
 
 
 def _attested_baseline(root, sr_id):

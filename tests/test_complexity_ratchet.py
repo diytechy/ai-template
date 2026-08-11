@@ -137,7 +137,13 @@ BASELINE = {
     # (its `touches=` argument), because writing that pair twice — once here and
     # once in the new `staged_attestation_rewrite_findings` — is the intra-file
     # duplication WI-347 rules a defect. One branch left this scan with it.
-    ("check_trajectory.py", "staged_spine_amendments"): 19,
+    # D-5 step 1 (2026-08-10): 19 -> 18, RE-STAMPED DOWN. The carrier-aware read
+    # replaced three hand-rolled `git show` + BOM-strip + csv.DictReader blocks
+    # inside this scan with one `_spine_rows_at` call, so the branch that chose
+    # between "text is None" and "text parsed" left with them. Recorded because
+    # this ratchet is symmetric on purpose: an improvement that is not
+    # re-stamped becomes headroom for the next regression to hide in.
+    ("check_trajectory.py", "staged_spine_amendments"): 18,
     ("gen_arch_map.py", "build_dependency_diagram"): 14,
     ("gen_arch_map.py", "main"): 17,
     ("gen_cases.py", "all_pairs"): 13,

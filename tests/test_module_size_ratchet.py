@@ -565,7 +565,26 @@ BASELINE = {
     # criteria. The comment where `advisories` is built already forbade exactly
     # this ("a shared count would say ac-advisories about a finding that is not
     # one"). Its own pipe + counter, per that rule.
-    "trace.py": 3345,
+    # Then +131 (3345 -> 3476), D-5 step 1 (docs/repo-lock.md, owner ruling
+    # 2026-08-10): the CARRIER-AWARE BASELINE READ. `_rows_at` resolves the
+    # carrier a revision actually used — TOML first, CSV as the fallback —
+    # because the spine is moving to TOML and a read that knows only the live
+    # carrier gets None back at every pre-migration revision, which this
+    # function's own contract turns into "nothing existed = an empty baseline".
+    # All 25 Modified rows would render as "awaiting its FIRST ratification" and
+    # be re-blessed with NO diff, silently. D-5 flags it as the one thing that
+    # must not be forgotten, and this is the module where forgetting it lands.
+    # REVIEWED BUMP, not monolith drift, and the split is worth stating: ~57
+    # lines are the two F5 constants (SPINE_TABLE + SPINE_COLUMN, pinned equal
+    # to check_trajectory's copies and to migrate_carrier's writer by
+    # test_rule_sync), ~50 are docstring recording WHY the resolution order and
+    # the None-vs-{} distinction are load-bearing, and the executable delta is
+    # ~24 lines. Decompose-don't-bump does not apply: the alternative is a
+    # shared module, which is the _kitcommon shape the F5 ruling rejected at
+    # WI-078. Re-stamp downward with WI-280, and again once the CSV fallback
+    # can be dropped — it is dead weight the day no supported baseline predates
+    # the cutover, and it should not outlive its reason.
+    "trace.py": 3476,
     # +132 (1926 -> 2058; the last +10 is the F4 BOM hardening: read_rows utf-8-sig + git-show strips), WI-316: staged_spine_findings — the amend-without-
     # flip warn (--staged): content cells of a Verified spine row changed
     # without the Modified marker, suppressed when the owning SR flips in the
@@ -835,7 +854,19 @@ BASELINE = {
     # the anchor half re-homes onto the artifact's own row. This module is still
     # the kit's largest and still the first WI-280 decomposition candidate;
     # -193 narrows the gap, it does not close it.
-    "check_trajectory.py": 3798,
+    # Then +89 (3798 -> 3887), D-5 step 1: the same carrier-aware read, on the
+    # two-tree amendment scan this module owns (`_spine_rows_at`, `_spine_stem`,
+    # `_spine_carriers` and the F5 constant pair). Smaller than trace.py's +131
+    # because the ruling's argument is stated ONCE, beside trace.py's copy, and
+    # pointed at from here — two copies of a RULING is how two copies start
+    # disagreeing about it. It also REPLACES three hand-rolled `git show` +
+    # csv.DictReader blocks with one call, which is why `staged_spine_amendments`
+    # got simpler rather than larger (complexity 19 -> 18, re-stamped down in
+    # tests/test_complexity_ratchet.py). The scan now compares CSV on the old
+    # side to TOML on the new one across the cutover, so that commit is checked
+    # by the guard rather than invisible to it. Still the kit's largest module
+    # and still the first WI-280 candidate.
+    "check_trajectory.py": 3887,
     # NEW ENTRY, +25 (1498 -> 1523), WI-357: the two-stage work-branch claim
     # signal — the on-disk fast path plus the branch-history probe that
     # survives the §2.3 close commit (git log -1 over the claim path), with

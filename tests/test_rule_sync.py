@@ -9,7 +9,7 @@ tests mechanize the "kept in sync" promise the two files used to make only in pr
 import both modules and assert they agree.
 """
 
-from conftest import load_script, make_minimal_project, run_py
+from conftest import ROOT, load_script, make_minimal_project, run_py
 
 TRACE = load_script("trace")
 GATE = load_script("derive_gate")
@@ -370,3 +370,63 @@ def test_sn_edge_case_rows_are_not_titled_by_their_lifecycle_phase(tmp_path):
     assert row["need"] != "Provision"
     assert row["need"] == "No Python 3 on PATH"
     assert row["acceptance"] == "Probe and fail with a remedy"
+
+
+# --- the spine carrier vocabulary (repo-lock D-5) -----------------------------
+# THREE modules now encode the same carrier: trace.py and check_trajectory.py
+# each carry a reader (the F5 independently-copyable rule), and
+# migrate_carrier.py carries the WRITER. A reader that disagrees with the writer
+# about which key a column became does not fail loudly — it hands back a row
+# missing that cell, which reads downstream as "the cell is empty". That is a
+# silent content loss on a registry whose whole job is to be trustworthy, so the
+# agreement is pinned rather than promised in a docstring.
+
+CHECK_TRAJ = load_script("check_trajectory")
+MIGRATE = load_script("migrate_carrier")
+
+
+def test_the_two_spine_carrier_readers_agree():
+    # trace.py owns the ratify brief's baseline read; check_trajectory.py owns
+    # the two-tree amendment scan. Both resolve a registry to a tier and a
+    # column vocabulary, and both are consulted about the SAME commit.
+    assert TRACE.SPINE_TABLE == CHECK_TRAJ.SPINE_TABLE
+    assert TRACE.SPINE_COLUMN == CHECK_TRAJ.SPINE_COLUMN
+    for rel in ("docs/test/test-cases.csv", "docs/test/test-cases.toml"):
+        assert (
+            TRACE._spine_stem(rel)
+            == CHECK_TRAJ._spine_stem(rel)
+            == "docs/test/test-cases"
+        )
+
+
+def test_the_readers_are_the_exact_inverse_of_the_writer():
+    # The reader map is `migrate_carrier.KEY` turned around. Asserting the
+    # INVERSE rather than "every reader key is known to the writer" is what
+    # catches the asymmetric half: a column the writer emits under a key no
+    # reader maps back is a cell that converts and then disappears.
+    assert TRACE.SPINE_COLUMN == {key: col for col, key in MIGRATE.KEY.items()}
+    assert len(MIGRATE.KEY) == len(TRACE.SPINE_COLUMN), (
+        "the writer maps two columns onto one key"
+    )
+
+
+def test_every_live_spine_column_round_trips_through_the_carrier_vocabulary():
+    # The maps above could agree with each other and still both be missing a
+    # column that actually exists — the vacuous-agreement failure this suite
+    # keeps finding. So drive the LIVE registry headers through the pair.
+    import csv
+
+    for rel, id_col in TRACE.SPINE_FILES:
+        path = ROOT / rel
+        if not path.exists():
+            continue
+        with path.open(newline="", encoding="utf-8-sig") as fh:
+            header = csv.DictReader(fh).fieldnames or []
+        assert header, rel
+        for column in header:
+            if column == id_col:
+                continue  # the id is the TABLE KEY, not a field
+            assert column in MIGRATE.KEY, "{}: {} has no carrier key".format(
+                rel, column
+            )
+            assert TRACE.SPINE_COLUMN[MIGRATE.KEY[column]] == column
