@@ -859,14 +859,33 @@ changed carrier, so the tree is still single-home.
 > of the "an amendment that edits one cell has not amended the row" lesson
 > under D-1. A per-commit smoke tier does not catch it; the full tier does.
 
-**Owed, in order:** ~~the carrier-aware baseline read~~ → ~~`load_registry` (the
-compatibility shim above)~~ → the cutover itself, which writes the four `.toml`
-files and **deletes the `.csv`/`.md` sources in the same commit** (two homes
-for one fact is the thing the kit forbids) → `intake`'s writer becomes a TOML
-emitter → `test_dogfood_sync`'s "live header is an ordered superset of the
-template header" rule, which **has no meaning over TOML keys** and needs
-redesigning → the `registries/*.template.*` files and an ADOPTING migration
-note, because **every adopting repo migrates too**.
+**Owed, in order — the next session's list, authoritative:**
+
+1. ~~the carrier-aware baseline read~~ **DONE** (`a35f12f6`)
+2. ~~the loader, every spine reader including the SN tier~~ **DONE**
+   (`82d5b818` · `d97f2634` · `9a5d7267` · `df840a3b`)
+3. **the cutover — RUN, NOT LANDED.** `git stash apply stash@{0}`, or
+   `git apply docs/plans/2026-08-10-carrier-cutover.patch`. Drive its ~76
+   failures to zero. **Apply it; do not rebuild it** — and read "Step 3" above
+   first, because what it CAUGHT is the reason it exists.
+4. `intake`'s writer becomes a TOML emitter. The shape is already decided by
+   precedent and is the cheap one: intake only ever flips a `Status` cell, and
+   `status = "Modified"` is a single `key = value` line — so this is
+   `bootstrap.set_process_key`'s **line rewrite**, not `wi_convert`'s
+   re-serialization. A line rewrite also preserves every comment and the file's
+   ordering, which a re-emit would silently normalise away.
+5. `test_dogfood_sync`'s "live header is an ordered superset of the template
+   header" rule, which **has no meaning over TOML keys** and needs redesigning.
+   Note it is not merely a port: the rule exists so a live registry cannot
+   quietly drop a column the template declares, and the TOML analogue is a
+   *key-set* rule over a registry where an absent key is legitimate — so the
+   replacement has to decide what "the template declares this" means when
+   absence is meaningful. Do not let it become vacuous; that is the exact
+   "green hides a skipped check" failure SN-008 forbids.
+6. the `registries/*.template.*` files and an ADOPTING migration note, because
+   **every adopting repo migrates too** — and `migrate_carrier.py` already
+   ships to them (`bootstrap.py` MAPPING, marked `Provisional` in IF-103
+   because it is scaffolding with a defined end).
 
 **Step 1 — the carrier-aware baseline read — is DONE.** `trace._rows_at` and
 `check_trajectory._spine_rows_at` each resolve the carrier a revision actually
@@ -1154,6 +1173,37 @@ with OI-13 and OI-12 *executing* together.
 12. **Merge to `main`** — an owner act (`push = "human"`).
 
 ### Loose ends, owed to no step above
+
+- **The sanctioned-sibling IMPORT GUARD scales superlinearly in the census —
+  and it is NOT the IF layer.** Worth stating the distinction, because the two
+  grew together during D-5 and are easy to conflate:
+
+  | | what it is | how it grew |
+  |---|---|---|
+  | **IF layer** | one `Consumes` row per cross-component crossing (IF-102…IF-112) | **linear** — 11 rows for 11 importers, each a seam a reviewer can read |
+  | **import guard** | the 7-line `try: import spine_carrier / except ImportError: sys.path.insert(...)` block | **quadratic** — `docs/dupes-allow` is PAIRWISE, so 7 lines × 11 scripts produced ~19 entries, and importer #12 adds 11 more by itself |
+
+  The IF growth is proportionate and needs nothing. The census growth is the
+  finding: the blocks are real duplication, the F5 sanction genuinely covers
+  them (they are the CLI-preamble idiom `check_stubs` already calls "verbatim
+  across the kit"), and every one was opened and read before filing — but the
+  *shape* is wrong. **D-6 gave the vocabulary one home and left the import
+  guard with none**, and it is the guard that scales badly. Options, none
+  ruled: give the guard one home too (which needs an import to bootstrap, so it
+  is not free); teach `check_dupes` to collapse an N-way identical block into
+  one census line instead of N(N−1)/2; or accept it and stop reading the census
+  total as a signal. **Worth a ruling before a twelfth importer**, and cheapest
+  now while the pattern is fresh.
+
+- **`intake.py` is a monolith again (1503 lines, THRESHOLD 1500).** It fell to
+  1496 when the D-1 removal deleted the attestation ledger, and its ratchet
+  entry was removed rather than left standing as headroom — with the note "it
+  re-enters as a NEW ENTRY if the anchor half puts it back over." It re-entered
+  from the **carrier** half instead: the sibling import guard plus two spine
+  reads. Recorded at 1503 rather than shaved to 1499, because trimming a
+  comment to clear a threshold buys a green by editing the guard instead of the
+  thing it measures. A WI-280 decomposition candidate by the kit's own
+  definition — and note step 4 (`intake`'s TOML writer) will push it further.
 
 - ~~**`test_agent_loop_critique.py` hangs**~~ — **not reproduced, 2026-08-10.**
   The full suite now runs to completion in ~6:00, twice on the working tree and
