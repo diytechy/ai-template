@@ -224,6 +224,43 @@ it. **A re-homing is only approvable where the verdict is PASS.**
    Either an SR should assert the universal, or the need should name the class
    it actually covers.
 
+   > **CENSUSED 2026-08-11 on the owner's question — "what other generated
+   > artifacts are also in git?" — and the answer changes the finding. There
+   > are TEN, not four, and the universal is FALSE by exactly two.**
+   >
+   > | committed generated artifact | freshness check | where it runs |
+   > |---|---|---|
+   > | `docs/architecture.md` | `gen_arch_map --check` | pre-commit + `check.py` {G3} |
+   > | `docs/okf/` (~470 files) | `gen_okf --check` | pre-commit + {G3} |
+   > | `PROJECT_STATE.html` | `gen_trajectory --check` | pre-commit + {G3} |
+   > | `docs/status.md` (generated block) | `gen_trajectory --status --check` | pre-commit + {G3} |
+   > | `docs/gate` | `derive_gate --check` | pre-commit + **{G1,G2,G3}** |
+   > | `docs/open-items.html` | `gen_open_items --check` | pre-commit + {G3} |
+   > | `docs/ratify/*.md` | `trace --ratify modified --check` | pre-commit + {G2,G3} |
+   > | `docs/id-watermark` | no flag — folded into `trace.py`'s default analyze path | every `trace.py` run (so checked *more* often, not less) |
+   > | `.claude/`+`.agents/` skill copies | `gen_skills_index --check-agents` | pre-commit + {G3} |
+   > | **`project-trajectory/prompts/CATALOG.md`** | `--check` EXISTS and works | **NOWHERE** 🚫 |
+   > | **`project-trajectory/skills/INDEX.csv`** | `--check` EXISTS and works | **NOWHERE** 🚫 (only the *different* `--check-agents` mode is wired) |
+   >
+   > Both gaps are **declared** `[generated]` in `docs/stack.ini` (lines 318,
+   > 319) and both have a working, passing `--check` — they are simply not
+   > invoked by `check.py`, the pre-commit hook, or either CI workflow. So
+   > this is not a prose problem at all: **the need is right and the harness
+   > is two lines short of honouring it.** Filed and executed as its own WI
+   > rather than reworded — narrowing SN-010 to match a weaker reality would
+   > have deleted a true obligation to protect a wiring omission, which is
+   > backwards.
+   >
+   > Two entries are legitimately special and stay as they are:
+   > `docs/gate` (already the strictest, checked at every gate) and
+   > `tests/test_module_size_ratchet.py` (declared generated but hand-stamped
+   > measurement data by design — its own comment says so). Not committed and
+   > therefore out of scope: `docs/test/report.md` (gitignored, rewritten on
+   > every `trace.py` run, never a source of truth read from history) and
+   > `docs/release-checklist.md` (absent here; and it is the one generator
+   > with **no `--check` mode at all**, worth knowing before anyone commits
+   > one).
+
 **These three should go to the sitting as decomposition findings regardless of
 whether any prose is rewritten.** They were found by the reviewer's coverage
 challenge, and they are worth more than the prose pass that surfaced them.
