@@ -25596,3 +25596,88 @@ an owner ruling. Tabled for the lock ledger.
   `agent_common.process_shape_findings` returns `[]` for both the edited
   template scaffolded as `docs/process.toml` and this repo's own copy — the
   header stayed comments-only and the one-key-per-line contract is intact.
+
+## 2026-08-11 — WI-425: the retired SN-030/031/032 citations, repointed at the SRs that now carry them
+
+The 2026-08-10 sitting retired `SN-030`/`SN-031`/`SN-032` as mis-levelled
+(each stated a mechanism, not a need) and re-parented their children onto
+`SR-141`/`142`/`143` (under `SN-025`), `SR-144`/`145` (under `SN-027`) and
+`SR-146` (under `SN-005`) — but left 69 explanatory comments/docstrings
+across kit scripts and tests citing the now-deleted ids, a dangling pointer
+nothing mechanized catches: `check_docs`' SN scan reads the registry for
+README-bullet coverage, never an `SN-###` token sitting inside a `.py`
+comment.
+
+**Read every site, no sedding.** 56 repointed by what they name, not by
+pattern-matching the token: an `SN-030` comment by its rung (1 dispose-first
+→ `SR-141`, 3 queue overlap → `SR-143`, 6 red-TC census → `SR-142`), an
+`SN-031` comment by its shape (terminal / per-close report → `SR-144`;
+lineage / successor / the typed-tier-field that replaced the `NEEDS-HUMAN`
+magic substring → `SR-145`). Two module docstrings span more than one shape
+and were repointed at all of them together
+(`tests/test_loop_order.py`'s header at `SR-141 · SR-142 · SR-143`;
+`handback.py`'s at `SR-144`/`SR-145`). One site
+(`project-trajectory/scripts/agent_route.py:143`) is a lower-confidence call,
+flagged rather than silently resolved: its `(SN-030 §7)` parenthetical
+actually traces to the 2026-08-08 plan doc's own section numbering (§7 =
+"SN D — the model/provider table", i.e. `SN-026`), not to an `SN-030` rung at
+all — repointed to `SR-141` on the surrounding prose (the `adjudication` row
+*kind* rung 1 establishes), open to correction.
+
+**11 kept as history**, each verified by re-reading rather than assumed from
+the token: `intake.py:185` narrates a completed removal ("`SN-031` retired
+X"), the PROGRAM-as-history shape the spec's own doctrine exempts; nine lines
+in `test_module_size_ratchet.py` are a dated size-delta changelog citing an
+SN id as the cause of a past byte delta, same doctrine; and
+`test_rule_sync.py:189` turned out not to be a citation at all — synthetic
+fixture text for a generic `SN-###`-token-extraction assertion, interchangeable
+with `SN-000`/`SN-010`/`SN-050` in the same literal, so repointing it would
+have manufactured a citation that was never there.
+
+**2 deferred to D-7**, not repointed: `docs/dupes-allow`'s two `SN-031`
+sites are genuine obligation citations (both would move to `SR-145`) but the
+file is scheduled for the duplication-census teardown, so fixing it here is
+work D-7 throws away — and indeed a D-7 teardown agent deleted
+`check_dupes.py`/`docs/dupes-allow`/their tests in this same tree while this
+row was closing, so both sites are gone with the file rather than repointed.
+
+`SR-146` (the `SN-032` obligation) carries **zero** repointed sites: the
+row's own mint-time census table estimated "1 kit script", but re-measuring
+against the pre-edit tree found none — only the two `SN-032` size-ratchet
+history lines above. The table's estimate was simply off, not a site this
+row missed (checked by re-grepping `git show <pre-edit-HEAD>:<path>` for
+every `.py` file under `project-trajectory/scripts`, `tests` and `scripts`).
+
+`docs/architecture.md` and `PROJECT_STATE.html` were regenerated
+(`gen_arch_map.py`, `gen_trajectory.py`): the module map's docstring excerpts
+are derived straight from the comments this row edited, so they carried the
+same dangling ids and now resolve without further action — the reason the
+sitting's own doc-rot sweep (commit `8026496d`) explicitly deferred the
+scripts/tests half of this cleanup to this row.
+
+**Bookkeeping note.** The claim directory was first named for the literal
+git branch (`docs/work/active/infra/mechanized-loop/`), which permanently
+marks a branch as a claimed work branch in its own reachable history once
+committed — `tests/test_check_lane.py::test_the_primary_checkout_is_not_a_
+work_branch` caught it immediately (this repo's own claims all use a
+WI-slug bookkeeping name instead, since work here lands directly on
+`infra/mechanized-loop` rather than a lane worktree). Recovered with
+`git reset --soft` to before the offending commits (all local, unpushed) and
+re-committed under the correct name — no history was rewritten past that
+point, and no file content was lost.
+
+**Bar.** Smoke tier right after this row's three repointing commits: **880
+passed, 6 skipped**. Full unfiltered suite at that same point: **2193
+passed, 9 skipped (349s)**.
+<!-- fig: cmd=".venv/bin/python -m pytest -q -n auto" rev=311fd487 -->
+WI-415, WI-423 and the D-5 review fix pass (`49ab1c1c`) then landed on top,
+touching `tests/` and some kit scripts again; that fix pass's own full run
+reports **2215 passed, 9 skipped** at HEAD-adjacent state, so this row did not
+re-run the full tier a second time. This row's own evidence at its actual
+close HEAD (`7aa87ca8`) is a fresh smoke run:
+<!-- fig: cmd=".venv/bin/python -m pytest -q -n auto -m smoke" rev=7aa87ca8 -->
+**900 passed, 6 skipped.** `check_docs.py --root . --stale`: 807 docs, 1099
+links, 0 broken.
+`grep -rn "SN-03[012]" project-trajectory/scripts tests scripts --include="*.py" | grep -v EXAMPLE`
+returns exactly the 11 kept-as-history lines, both right after this row's
+commits and again at close HEAD — nothing unaccounted for either time.
