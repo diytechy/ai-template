@@ -24,7 +24,7 @@ collapses to a one-line pointer with the commit.
 |---|---|---|---|
 | **components** | The **component model**. `LLR.Component` is *traced*, so the partition moves with no re-attest window — and it **decides how many IF rows must exist**. | §6 F-11 | not filed on purpose; filing it would be an agent setting the sitting's agenda |
 | **OI-14** | What an IF row's **`Contract` cell is for**. Measured: design narrative and history, 1% requirement voice, and the registry has **no schema tier at all**. | §6 F-10 | **declare now, split gradually** — never a 95-row sweep |
-| **OI-13** | What **`Status`** means across the six registries that carry one. | §6 F-1, F-9 | largely **answered by D-3**; what remains is the *migration* |
+| ~~**OI-13**~~ | ~~What **`Status`** means across the six registries that carry one.~~ **RULED 2026-08-11: `Drafted` → `Approved` → `Founded`**, three rungs, uniform across all four spine tiers; the pass rung is **deleted**, not renamed. See **D-9**. What remains is the *migration*, which Q11 holds behind the sitting. | §2 D-9 | — |
 | ~~**OI-12**~~ | ~~Does one machine-parseable **carrier** hold all four tiers?~~ **RULED 2026-08-10: one TOML carrier**, and brought FORWARD of the sitting at the owner's direction. In progress — see **D-5**. | §2 D-5 · §6 F-7 | — |
 
 **Read them in that order.** OI-14 assumes today's 95 IF rows are the right 95,
@@ -430,7 +430,7 @@ interfaces"*).
 
 | column | ruled meaning | change from today |
 |---|---|---|
-| **`Status`** | discrete, with per-tier overload — a **four-rung ladder**, revised 2026-08-09. **`Drafted`** = the id is allocated and **nothing else about the row may be validated against it**. **`Attested`** = the text has been attested valid. **`Ready`** = the row's discharge is in place — children for a decomposable tier, an existing test for a TC. **`Verified`** = the test passes; **TC only**. **SN carries the ladder on the same terms as every other tier.** | replaces `Draft`/`Verified`/`Modified` entirely. `Modified` leaves the authored set (Q5); `Verified` is **re-pointed to a new meaning** — see the word-reuse hazard in Q9 |
+| **`Status`** | ~~a **four-rung ladder** — `Drafted` / `Attested` / `Ready` / `Verified` (TC only)~~ **SUPERSEDED 2026-08-11 by D-9: THREE rungs, `Drafted` → `Approved` → `Founded`, uniform across all four tiers.** The reasoning below stands and is why D-9 went the way it did; the *words* and the fourth rung did not survive. `Attested`→`Approved` (collision with the `Attest` verification method), `Ready`→`Founded` (ambiguity, and it never fit a TC), and the pass rung is **deleted** rather than renamed — pass/fail is run, never recorded. **SN carries the ladder on the same terms as every other tier.** | replaces `Draft`/`Verified`/`Modified` entirely. `Modified` leaves the authored set (Q5); `Verified` **leaves the vocabulary altogether**, which is what dissolves Q9's word-reuse hazard |
 | **`Title`** | unchanged | none |
 | **`Phase`** | an integer orienting a row to a campaign/programme; a **grouping attribute**. **Added to SN.** | new on SN; but see Q6 — it is *not* non-functional today |
 | **`SR-Refs`** | unchanged — the same pointer shape it already has on LLR · IF · WI | none |
@@ -1168,6 +1168,137 @@ plumbing unbounded); `enforcement-audit.md` records the Harness→Test+Reviewer
 downgrade. Full bar on a detached worktree: **2188 passed, 6 skipped**, the
 −30 delta measured by collect-only counts (2224 → 2194 = exactly the 18 + 12
 deleted). `trace --strict` `SR=146 LLR=148 TC=145 orphans=0 integrity=0`.
+
+### D-9 — the `Status` ladder is THREE rungs: `Drafted` → `Approved` → `Founded`
+
+**Owner ruling, 2026-08-11**, closing **OI-13** and superseding D-3's four-rung
+table. Settled in conversation over four candidate vocabularies; the owner's
+closing note is part of the ruling: *"semantics can be modified moving
+forward"* — this fixes the vocabulary, not the last word on it.
+
+| value | means | set by |
+|---|---|---|
+| **`Drafted`** | the id is allocated, and **nothing else about the row may be validated against it** | authored |
+| **`Approved`** | **a judgement was made** — the row's text is blessed | authored; the ladder's only human judgment |
+| **`Founded`** | the artifacts this row calls for **exist**: SRs under an SN, LLR+TC under an SR, resolving code under an LLR, a written test under a TC | **computed** |
+
+**Uniform across SN · SR · LLR · TC.** No per-tier overload, no tier-only
+value — that uniformity is what three rejected candidates failed to give.
+
+**`Approved` is defined generally, not as a spine value.** The owner's
+framing: *"it just means a judgement was made, that can apply to other
+interfaces so long as the meaning is coherent."* This turns the apparent
+collision with the review verdict `APPROVE` (`score_reviews.py:58`,
+`plan_round.VERDICT_APPROVE`, `check_trajectory.py:3361`) into **coherence at
+two scopes** — one judges a diff, one judges a row's text — which satisfies
+D-3's one-name-one-meaning rule instead of straining it, and gives `IF` and
+`OI` a legitimate target if their state columns later want the same word
+rather than a rename.
+
+#### THE PASS RUNG IS DELETED, not renamed — and this is the ruling's best part
+
+D-3 had a fourth rung (`Verified` = the test passes, TC only), and §0 carried
+a standing recommendation to spend a fresh word on it (`Passing`/`Proven`)
+because re-pointing `Verified` would let a half-migration hide. The owner
+asked the better question — *"Does `passing` need to be levied here? Can't
+that be derived from running the tests?"* — and the answer is no, it does not:
+
+- **Pass/fail is a live fact.** CI answers it on every push; a cell answers
+  "did it pass whenever someone last wrote this." That is the
+  stale-duplicate failure, and Q11's surviving conclusion already forbade
+  authoring it.
+- **Deleting the rung makes the ladder uniform** — the TC-only exception was
+  the last asymmetry in the design.
+- **It dissolves the Q9 word-reuse hazard rather than working around it.**
+  `Verified` is not re-pointed; it ceases to exist. A stray `Verified`
+  anywhere is then unambiguously an un-migrated row — exactly what the fresh
+  word was meant to buy, bought by spending one word fewer.
+- **The gate does not miss it.** `derive_gate`'s G3 rung is today
+  "decomposed AND `Status=Verified`"; on a monotone ladder that is simply
+  "at `Founded`".
+
+**The owner's `GreenOn` idea — right shape, deferred with a trigger.** *"As
+long as the commit ID is updated it confirms when the last set of tests were
+run against that system requirement"* is the anchor pattern (a fact plus the
+commit it was taken at) and is sound. Built **today** it would copy one
+*repo-wide* fact ("the suite was green at commit X") onto 146 TC rows,
+because per-row demonstration needs per-test granularity and ruling **R2**
+declined that — the `Evidence` check is file-granular and 32 TCs cite one
+file (F-12). **Build it when** the suite becomes too expensive to run on
+every push, or when the `::node` selector resolves; not before.
+
+#### Words rejected, with the reason each died
+
+Recorded so none is re-proposed. This took four rounds, and every rejection
+was on evidence rather than taste:
+
+| word | why not |
+|---|---|
+| `Ready` | ambiguous (owner); reads as "ready to ship" when it means "handed on" |
+| `Verified` | re-points a word **370 live rows** carry with the old meaning, and is the ONLY value that stays silent on a half-applied migration (Q9) |
+| `Attested` | collides with `Attest`, a live `Verification` **method** value (`derive_gate.LLR_EXEMPT`), and `verified-attested=` already appears in trace's output |
+| `Granulated` | owner unenthusiastic; no home in the repo, and does not fit a TC |
+| `Distilled` | **points the wrong way** — distillation concentrates, this rung expands (measured: a core need yields **12.6** SRs). Worse, the repo already spends the word **six times, all meaning compress-to-essence** ("this brief is the distillation", "distilled into D-7's Why") |
+| `Grounded` | **proposed by me twice and withdrawn** — the repo uses "re-ground" for a child re-attaching to a valid **parent** ("an LLR citing a superseded SR must re-ground"), so grounding points UP the chain and the rung is about children |
+| `Decomposed` | the runner-up, and defensible: `PROCESS.md` ("G2 when SRs decompose into LLRs") and `derive_gate` already name this exact check. Passed over because it does not fit a TC, and because naming the **state** distinctly from the **motion** is cleaner — the prose keeps saying "decomposed" and stays true |
+
+`Founded` was checked for collisions before adoption: **zero occurrences**
+anywhere in the repo.
+
+#### What `Founded` costs to compute — three of the four tests already exist
+
+- **SN** → `derive_gate`'s coverage rung, already built and counted as
+  `uncovered=N` (WI-401): cited by ≥1 SR.
+- **SR** → `derive_gate`'s existing G2 decomposition test: its required LLR
+  (unless `Verification` is LLR-exempt) **and** a TC.
+- **TC** → the file-existence half of the `Evidence` check, already running
+  and already ruled sufficient under **R2**.
+- **LLR** → **OPEN, and it needs a ruling.** An LLR has no children in this
+  schema. The natural discharge is `CodeSymbol`/`Module` **resolving** —
+  which would give `CodeSymbol` its first real job (F-3: required today,
+  never resolved). Not assumed here.
+
+#### Consequence inventory — none optional
+
+1. **`Draft`, `Verified` and `Modified` all leave the vocabulary.** Drift
+   becomes a **derived overlay**, not a value — a row reads `Approved
+   (drifted)` or `Founded (drifted)`, preserving which rung it fell from.
+   Therefore: **a row at `Approved` or above carrying no hash is an ERROR**,
+   or drift detection is vacuous exactly where it matters (Q5).
+2. **`Founded` is computed and must never be hand-authored** — same class as
+   the anchor cells (F-3's fourth class). Open sub-question for the build:
+   does a tool **write** it into the cell (anchor-cell precedent), or does
+   the cell hold only the authored rung with `Founded` layered at read time?
+   That decides what a human sees in the file.
+3. **The SN tier's `kind` sheds `draft`.** SN carries no `status` today —
+   draft-ness is `kind = "draft"` (18 core · 10 edge · 1 draft). The ladder
+   moves state to `status` and leaves `kind` holding only the tier
+   distinction. One fact, one home.
+4. **The F5-duplicated predicates change together** — `is_draft` /
+   `is_verified` / `is_modified` live in `trace_text.py`, `trace.py` and
+   `derive_gate.py`, pinned equal by `test_rule_sync.py` (F-2). That pin is
+   the migration's safety rail and must be updated in the same commit, not
+   after.
+5. **The other carriers** (the rest of OI-13): `IF`'s `Status`
+   (`Stable`/`Active`/`Draft`) **overlaps its own `Stability` column**, with
+   `Stable` live in both meaning different things — but it lands with
+   **OI-14**, which rewrites what an IF row is. `OI`'s `Status`
+   (`pending`/`ruled`) is a workflow state — rename, or adopt `Approved`
+   under its general definition. `CMP`'s `State` is already a distinct name
+   for a distinct axis; compliant. `WI` state is the **directory**,
+   deliberately, and a work item is not a requirement — the ladder does not
+   apply.
+6. **Migration mapping, and it is mechanical:** `Draft`→`Drafted`,
+   `Verified`→`Approved`, `Modified`→resolved at the sitting→`Approved`,
+   then promoted to `Founded` wherever the discharge computes. **470 rows**
+   (SN 29 · SR 146 · LLR 149 · TC 146).
+
+**SEQUENCING — Q11 binds unchanged.** Fixing the vocabulary is safe now;
+**migrating is not.** The 38 `Modified` rows must be resolved at the sitting
+first, or stamping hashes over their current text launders the re-blessing
+they owe — and `Modified`-as-derived needs `TextHash`/`HashedOn` to exist at
+all, which is D-1's anchor half (§5 step 7). The ladder migration runs after
+the sitting, in one atomic act with the predicates and the pin.
 
 ---
 
