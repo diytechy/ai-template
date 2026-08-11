@@ -498,7 +498,7 @@ Contracts (interfaces): IF-069, IF-070
 ### `scripts/check_doc_refs`
 _Doc reference validation — prose that names dead files or symbols (Thread 49)._
 Imports (internal): `spine_carrier`
-Contracts (interfaces): IF-008, IF-028, IF-072
+Contracts (interfaces): IF-008, IF-028, IF-072, IF-104
 
 | Public item | Summary | Implements |
 |---|---|---|
@@ -570,7 +570,7 @@ Contracts (interfaces): IF-086, IF-087
 ### `scripts/check_flows`
 _Design-time runtime-flow check: the G2 reviewer reads diagrams, not CSV rows._
 Imports (internal): `spine_carrier`
-Contracts (interfaces): IF-003, IF-029
+Contracts (interfaces): IF-003, IF-029, IF-105
 
 | Public item | Summary | Implements |
 |---|---|---|
@@ -794,7 +794,7 @@ Contracts (interfaces): IF-017
 ### `scripts/gen_okf`
 _OKF export — the traceability graph as a portable knowledge bundle (Thread 48)._
 Imports (internal): `spine_carrier`
-Contracts (interfaces): IF-012, IF-033
+Contracts (interfaces): IF-012, IF-033, IF-106
 
 | Public item | Summary | Implements |
 |---|---|---|
@@ -845,7 +845,7 @@ Contracts (interfaces): IF-098
 ### `scripts/gen_release_checklist`
 _Generate the human release checklist from the registries._
 Imports (internal): `spine_carrier`
-Contracts (interfaces): IF-018, IF-034
+Contracts (interfaces): IF-018, IF-034, IF-107
 
 | Public item | Summary | Implements |
 |---|---|---|
@@ -974,7 +974,7 @@ Contracts (interfaces): IF-061, IF-078
 ### `scripts/plan_briefs`
 _Redacted dual-plan brief assembler + the three hat prompt-map keys (DP-001_
 Imports (internal): `prompts`, `spine_carrier`
-Contracts (interfaces): IF-059, IF-100
+Contracts (interfaces): IF-059, IF-100, IF-108
 
 | Public item | Summary | Implements |
 |---|---|---|
