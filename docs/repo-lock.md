@@ -1984,6 +1984,31 @@ interface a checker copied alone into a repo with no `process.toml` can
 satisfy). If the owner rejects those two grounds, (a) is a five-script change
 needing coordination.
 
+**WI-424 — the adjudicator briefs are wired via a DECLARED `Brief` column;
+two of four routed, two unrouted on named gaps (`6a1293c2` → `ced940b3`,
+2026-08-11).** The discriminator ruling went declared-not-derived on a
+measured unsoundness: an amendment to a TC row and a red-TC census row both
+carry `docs/test/test-cases.toml` as SpecRef, and their briefs give
+contradictory instructions. `disposition` and `red-tc` are wired with real
+derivations and an end-to-end fake-CLI test each; `conflict` stays unrouted
+(nothing mints such a row; `{digests}` names a pair no function computes);
+**`amendment` stays unrouted on a finding the sitting should see**: the
+machinery that mints amendment rows (`staged_spine_amendments`, fires only
+while the row stays `Verified`) and the brief's row selector
+(`reattest_model`, selects `Modified`) are **disjoint by construction** — and
+`_attested_baseline` would resolve `{baseline}` to the amendment commit
+itself, the text under judgement dressed as the accepted anchor. One
+`_ASSEMBLERS` entry closes it once a typed carrier exists for the
+before..after pair and someone rules what an un-flipped amendment's anchor
+is — the same anchor-semantics family as Q3. Wiring also found all four
+templates lacked the `WI: {wi}` result trailer, so a wired session would
+have verdicted without ever closing its row — fixed. Minor findings filed in
+the WI's Deliverable: `module_components` does not split a `;`-joined
+`Module` cell (LLR-095 carries the latent shape); `adjudicate-conflict`
+advertises a pre-filter signal that is not implemented; `WI-000.template`'s
+`safety_class` list was missing `adjudication` (fixed), still missing `bar`
+and `supersedes`.
+
 **D-5 forward-path fix pass — explicit `key = ""` REFUSES on a live read
 (fail-closed), `49ab1c1c`, 2026-08-11.** The cutover's adversarial review
 (OpenAI `gpt-5.6-sol` via codex, medium; full text in the session record)
