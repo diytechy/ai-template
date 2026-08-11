@@ -25468,3 +25468,79 @@ inversion rather than a crash:
 | `privacy_check = true # privacy_check = false` | shipped sh hook read FALSE, Python read True — **gate silently off** | both read ON |
 | shipped default (level 4), fully verified spine | `admit-exclusive` — the loop **self-ratified the final gate** | `surface` |
 | level 4 + `keep_nondependent` (the enum's unreachable fourth cell) | `admit-exclusive` — machine ratified a **human-held** row | `surface`, other lanes keep running |
+
+## 2026-08-11 — WI-415: the ff-wording one string, and the 390px ring stops blurring
+
+**Summary.** Closed the two WI-389 REVIEW-A findings against the Process
+tab's station cycle: the Trunk advance card's wording misstated the shipped
+merge shape, and at 390px the ring's note labels rendered illegibly small
+with no signal that anything was cut.
+
+**Finding 1 — the wording.** `"ff trunk to the barred tree"` named a
+fast-forward; the shipped act is `integrate.py`'s `--no-ff` merge at the
+slot, and a true fast-forward is exactly what the RULING-6 audit reds.
+Replaced with `"advance trunk to the barred tree"` (32 of the 34-char note
+budget). One string in `_station_svg` + a `gen_trajectory.py` regen.
+
+**Finding 2 — 390px legibility, judged rather than mechanized away.** The
+station SVG was the one emitted diagram in this dashboard NOT using the
+shared `_svg_fit_style`/`SHRINK_FLOOR` floor the icicle, dag, seam and module
+views already carry (WI-307/WI-219/WI-256): `#process .stationsvg` had a bare
+`max-width:860px` and no `min-width`, so the whole ring shrank in lockstep
+with the viewport. Measured before the fix: ~3.3 CSS px note labels at 390px
+— confirmed with a 1x-deviceScaleFactor Playwright crop (a 2x/3x retina crop
+reads legible regardless of the underlying size and would have hidden the
+defect; that was the wrong first read this session took before catching it).
+Weighed the spec's three options against the "do not redesign the panel"
+constraint: bigger notes / two-line wrap both touch `STATION_GEOM`'s fixed
+card geometry (redesign); dropping notes for tooltip-only at 390px is a
+legitimate fallback but discards information a smaller fix doesn't have to.
+Took the smallest fix: applied the SAME floor + `.tablescroll` scroll
+affordance (`SCROLL_CUE` + `_hscroll`) every sibling diagram already ships,
+which the station panel had simply never been wired into. After the fix,
+390px note labels sit at the SAME ~5.3 CSS px floor every other diagram in
+this dashboard already accepts (confirmed against the `dag` tab's own floor
+crop) — not a new, weaker bar. Measured: `scrollWidth=558 > clientWidth=350`
+at 390px (`cued=true`); at 1280/1680px `scrollWidth == clientWidth`
+(`cued=false`), and the rendered ring is byte-identical to before the change
+— the wide reads are undamaged, so "accept with tooltips" was not needed.
+
+**Deviation (recorded).** Two other sessions were live in the primary
+checkout on this same branch throughout (kit-script carrier work touching
+`intake.py`/`migrate_carrier.py`/`spine_carrier.py`, and a separate WI-425
+closeout on `docs/log.md`). Their uncommitted edits made `gen_arch_map.py
+--check` and the module-size/dupes-census suites red in the shared tree for
+reasons unrelated to this row (their in-flight code, not this diff) — and the
+smoke tier's collected count read over its declared budget from their added
+tests. Rather than either quote a shared-tree run that wasn't this row's own
+signal, or regenerate `docs/architecture.md`/re-stamp the budget over content
+that wasn't reviewed yet, all three of this WI's commits (claim, fix, close)
+were built and verified in an isolated `git worktree` at this branch's own
+tip — clean of both sessions' uncommitted work — then fast-forwarded onto
+`infra/mechanized-loop` (a ref move, not a merge commit; no new commit was
+created by the integration itself). The smoke/check_docs/arch-map numbers
+below are that worktree's own, honest count.
+
+**Tests.** `test_station_advance_card_names_the_shipped_merge` (finding 1:
+new wording renders, old string is gone, length still fits `notemax`) and
+`test_station_narrow_width_scrolls_instead_of_blurring` (finding 2: the
+emitted inline style matches `_svg_fit_style`'s floor ratio; the block is
+wrapped in the standard scrollcue + tablescroll pair) in
+`tests/test_traj_panels.py`.
+
+**Verification** (isolated worktree at this row's own commits):
+
+smoke tier: 880 passed, 6 skipped in 27.61s
+<!-- fig: cmd="python -m pytest -q -n auto -m smoke" rev=4614ea24 -->
+`tests/test_traj_panels.py` alone: 36 passed.
+<!-- fig: cmd="python -m pytest -q tests/test_traj_panels.py" rev=4614ea24 -->
+`check_docs.py --stale`: OK, 383 docs, 1095 intra-repo links, 0 broken.
+`gen_trajectory.py --check` / `gen_arch_map.py --check --strict-parse`: both
+up to date.
+
+Pixel evidence (gitignored per this repo's `scripts/dashboard-shots/`
+convention, not committed): the declared 390/1280/1680 x light/dark x 5-tab
+matrix via `node scripts/dashboard-shots/shoot.mjs`, plus ad-hoc
+1x/3x-deviceScaleFactor Playwright crops of `#process .station` (before and
+after) and the `dag` tab's own floor, used for the legibility comparison
+above.
