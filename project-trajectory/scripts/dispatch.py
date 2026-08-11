@@ -517,8 +517,10 @@ def _lane_close(root, branch, code):
     reason = "worker exit {}{}".format(
         code, " (NEEDS-JUDGEMENT)" if code == ac.EXIT_NEEDS_HUMAN else ""
     )
-    # SR-145: the dispatcher's own close carries the TYPED fields the report
+    # SR-144: the dispatcher's own close carries the TYPED fields the report
     # schema declares, rather than smuggling them through the reason string.
+    # (SR-144 owns the report's SHAPE; SR-145 owns what the disposition row
+    # minted from it may then do — lineage, not fields.)
     # The tier is keyed off the EXIT-CODE CLASS — a fact the dispatcher already
     # holds — not off a substring of prose: `NEEDS_HUMAN`, `needs human` or any
     # typo used to downgrade a disposition silently, because a case-folded

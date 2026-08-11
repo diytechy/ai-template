@@ -140,7 +140,7 @@ _CONST_ENV = {
 # candidate); a negative or non-integer weight is a malformed line (preflight
 # fails). Unannotated ids weigh 1 everywhere, so an unannotated file selects
 # byte-identically to before (uniform weight == today's line-order tie-break).
-# SN-026 (SR-141): `ADJUDICATE` joins the vocabulary. An adjudication row is
+# SN-026: `ADJUDICATE` joins the vocabulary. An adjudication row is
 # not a build — it judges a CLAIM another session made (a lane's partial close,
 # an amendment's meaning-vs-clarity, a red TC under a closed row) — so it is a
 # job type in exactly the sense the phase weights exist to express, and routing

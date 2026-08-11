@@ -413,7 +413,13 @@ BASELINE = {
     # keeps its single call and stays off the complexity baseline. The
     # assemblers themselves are a new module (`adjudicate_brief.py`), which is
     # why this is 48 lines and not 250. Reviewed bump.
-    "agent_loop.py": 3080,
+    # Then +78 (3080 -> 3158), WI-424 review round 2 (B3 + M5): the fail-CLOSED
+    # hold for a declared brief the kit cannot compose (an adjudication row must
+    # never dispatch as a builder), and `adjudication_bookkeeping` — the
+    # validation arm proving the session RULED rather than merely committed.
+    # The arm is its own function precisely so `session_bookkeeping`, already at
+    # complexity 31, gains no branch: its guard sits inside the callee.
+    "agent_loop.py": 3158,
     # +30 (2206 -> 2236), WI-065: `tc_citation_findings` — the TC-`Verifies`
     # rules lifted out of `analyze` so the cell could accept `IF-###` seam ids.
     # Most of the bump is that helper's docstring, which is where the RULING now
@@ -614,21 +620,7 @@ BASELINE = {
     # Then -38 (3439 -> 3401), WI-422 (the measured dead-symbol sweep): the orphaned `_sn_fields` copy. D-5 step 2d collapsed the drifting
     # triplet onto `spine_carrier.folded`, but the three copies were left
     # behind with no caller; this is the residue, not a behaviour change.
-    # Then +27 (3401 -> 3428), the ADVERSARIAL REVIEW of the carrier cutover,
-    # BLOCKER 1 — the ELEVENTH UNWIRED READER, and a live false green.
-    # `live_max_ids` swept `docs/requirements/*.csv` + `docs/test/*.csv` by
-    # LOCATION, so D-5 moved SR/LLR/TC out from under it and rule 2 of the
-    # watermark ("no live id exceeds its mark") went VACUOUS on three of the four
-    # spine tiers — the tiers with NO minter, where that rule is the only guard
-    # there is. It was not theoretical: LLR-167 and TC-161 were minted after the
-    # cutover and stood above their marks with zero findings reported. The new
-    # `_spine_ids` reads through `spine_carrier` (resolve whichever carrier is
-    # live) rather than assuming a suffix, so moving a file cannot un-wire the
-    # scan again. Twenty of the 27 lines are the docstring recording that
-    # failure mode — the executable delta is ~7. Not decomposable: this IS the
-    # decomposition, one reader per id source beside `_csv_ids`/`_sn_ids`/
-    # `_wi_ids`/`_dp_ids`.
-    "trace.py": 3428,
+    "trace.py": 3401,
     # +132 (1926 -> 2058; the last +10 is the F4 BOM hardening: read_rows utf-8-sig + git-show strips), WI-316: staged_spine_findings — the amend-without-
     # flip warn (--staged): content cells of a Verified spine row changed
     # without the Modified marker, suppressed when the owning SR flips in the
@@ -1568,7 +1560,11 @@ BASELINE = {
     # from SpecRef is provably ambiguous.
     # Then -8 (1669 -> 1661), WI-422 (the measured dead-symbol sweep): `_rev7` — WI-416 took title-token authority off the disposition mint
     # and left the resolver behind.
-    "intake.py": 1661,
+    # +9 (1661 -> 1670), WI-424 review round 2 (B3): the two report-less mint
+    # arms (a cancellation, a clean-close spot check) now declare NO brief and
+    # say why. A false declaration would page a human for routine work, because
+    # a declared-but-uncomposable brief is a hold.
+    "intake.py": 1670,
 }
 
 

@@ -28,9 +28,18 @@ TWO RULES GOVERN EVERYTHING BELOW, and both are load-bearing.
      investigation that found nothing, which is the most expensive way for this
      machinery to be wrong. So every assembler returns `(values, None)` or
      `(None, reason)`: there is no partial success, no placeholder, no "(none
-     found)" filler. On a refusal the caller sends the ordinary worker
-     assignment and PRINTS the reason — a worse brief, never a wrong one, and
-     never a silent swap.
+     found)" filler. A cell the registry never filled refuses; a target with no
+     normative text refuses; an empty census refuses.
+
+  3. **A refusal is a HOLD, not a downgrade.** The caller does not fall back to
+     the worker assignment — that would put the judge back in the builder's
+     chair, and a builder session ends DONE like any other, so the miss would
+     be silent. `agent_loop.session_body` returns the reason and
+     `route_session` pages (`EXIT_NEEDS_HUMAN`), which `dispatch._lane_close`
+     turns into an immutable per-close report plus a `blockref` — a durable
+     record, not a line in a terminal buffer. A row that declares NO brief is
+     untouched by all of this: that is an adjudication class the kit never
+     authored a brief for, not a claim it failed to honour.
 
 WHICH BRIEF: A DECLARED CELL, NOT AN INFERENCE. The row carries `Brief`
 (frontmatter `brief`), written by `intake` at the mint because the mint is what
@@ -43,8 +52,10 @@ asks for a `Status` cell to be judged). Deriving it from the TITLE instead is
 the `NEEDS-HUMAN` fold this repo wrote in blood (WI-417): prose that carries
 control flow must be a typed field. So it is a typed field.
 
-TWO OF THE FOUR BRIEFS ARE ROUTED (`ROUTED`), and the other two are left on the
-worker assignment on purpose — their evidence has no producer:
+TWO OF THE FOUR BRIEFS ARE ROUTED (`ROUTED`); the other two have no producer
+for their evidence, so a row declaring one is HELD for a human (rule 3) rather
+than built. `amendment` is minted routinely today, so this is a live hold, and
+it is the correct outcome: the anchor question below is a decision, not a bug:
 
   * `conflict` — nothing mints a queue-conflict adjudication row at all
     (`check_trajectory.queue_conflict_findings` is a warn that never becomes a
@@ -61,10 +72,17 @@ worker assignment on purpose — their evidence has no producer:
     as the accepted anchor would be the exact failure rule 2 exists to prevent.
     An amendment row still DECLARES `brief = "amendment"`: the declaration is a
     fact about the row, and routing it is one entry in `_ASSEMBLERS` away once
-    the anchor question has an answer.
+    the anchor question has an answer. Until then every such row pages, which
+    is the honest cost of not having one.
 
-Contracts: consumed by `agent_loop.route_session`; the templates and their
-strict fill are `prompts.py`'s (IF-097).
+Contracts: IF-113, IF-114, IF-115 — the interface seams this module declares
+(process.md §8; rows of record in docs/requirements/interfaces.csv). Both are
+CONSUMED sides: IF-113 is the prompt loader whose strict fill becomes this
+module's refusal (the provider side is IF-097), and IF-114 is the spine
+carrier the red-TC evidence is read through. IF-115 is what this module
+PROVIDES to `agent_loop.session_body`, its one caller — and the half of that
+contract the CALLER owes is the fail-closed rule: a row declaring a brief this
+seam cannot compose is held for a human, never dispatched as a build.
 """
 
 from __future__ import annotations
@@ -88,6 +106,11 @@ BRIEF_PROMPTS = {
 # rather than imported so this module loads without either sibling).
 REPORTS = "docs/handbacks"
 TC_REGISTRY = "docs/test/test-cases.toml"
+# The TC cells `{tcs}` lists. REQUIRED, every one: the brief's whole method is
+# "run the cited evidence and say what you observed", which a row missing its
+# Evidence, Method or Expected cannot support — and a dash there reads as
+# "checked, not applicable" rather than "the registry never said".
+TC_CELLS = ("Verifies", "Status", "Method", "Expected", "Evidence")
 SPINE_REGISTRIES = (
     ("docs/requirements/system-requirements.toml", "SR-ID", "Requirement"),
     ("docs/requirements/low-level-requirements.toml", "LLR-ID", "Detail"),
@@ -101,9 +124,66 @@ _RANGE_RE = re.compile(r"^[0-9a-fA-F]{4,40}\.\.[0-9a-fA-F]{4,40}$")
 EVIDENCE_CLIP = 80
 
 
+# The TYPED line each brief ends in: (keyword, the closed enum, the counter
+# keys). Held HERE, beside the assemblers, because the brief and the verdict it
+# demands are ONE contract — a template edit that changes the enum and a
+# checker that still expects the old one is the drift this table prevents.
+#
+# `score_reviews.parse_verdict` deliberately does not serve this: it knows only
+# `VERDICT: APPROVE|CHANGES-REQUESTED`, which is the review vocabulary. Three
+# of these four say `OUTCOME:` and none says `APPROVE`, so reusing it would
+# have parsed every adjudication verdict as unreadable.
+VERDICT_GRAMMAR = {
+    "amendment": ("VERDICT", ("MEANING", "CLARITY"), ("rows",)),
+    "disposition": ("OUTCOME", ("COMPLETE", "PARTIAL", "CANCELLED"), ("successors",)),
+    "conflict": (
+        "OUTCOME",
+        ("QUEUE", "QUEUE-WITH-EDGE", "RETURN-TO-DRAFT"),
+        ("needs",),
+    ),
+    "red-tc": ("OUTCOME", ("DRAFTED", "NEEDS-JUDGEMENT"), ("cases", "drafts")),
+}
+
+
 def declared_brief(row):
     """The row's declared `Brief` cell, normalized; `""` when it declares none."""
     return (row.get("Brief") or "").strip().lower()
+
+
+def verdict_refusal(brief, verdict_path):
+    """Why this adjudication's verdict is not acceptable evidence, or None.
+
+    THE SESSION'S OUTPUT IS THE VERDICT FILE, not its commit. A worker session
+    is judged DONE from committed `WI:` trailers, and an adjudicator that
+    committed anything at all would clear that bar while having ruled on
+    nothing — the shape where the machinery reports a judgement was made and no
+    judgement exists. So completion is gated on the artifact the brief named,
+    carrying the closed-enum line the brief demanded.
+
+    Checked in the order a reader would: is the file there, does it carry the
+    line, is the label one of the declared alternatives, are the counters
+    present. Every arm names what is wrong, because "the verdict is invalid" is
+    not something a human can act on at 3am."""
+    keyword, labels, counters = VERDICT_GRAMMAR.get(brief, (None, (), ()))
+    if keyword is None:
+        return "unknown brief {!r} — no verdict grammar".format(brief)
+    text = _read(verdict_path) if verdict_path else None
+    if text is None:
+        return "no verdict was written to {}".format(verdict_path or "(no path)")
+    matched = re.search(r"^\s*{}:\s*(\S+)(.*)$".format(keyword), text, re.M)
+    if matched is None:
+        return "{} carries no `{}:` machine line".format(verdict_path, keyword)
+    label, rest = matched.group(1).strip(), matched.group(2)
+    if label not in labels:
+        return "{} says `{}: {}` — not one of {}".format(
+            verdict_path, keyword, label, "|".join(labels)
+        )
+    missing = [c for c in counters if not re.search(r"\b{}\s*=\s*\S+".format(c), rest)]
+    if missing:
+        return "{} says `{}: {}` but omits {}".format(
+            verdict_path, keyword, label, ", ".join(missing)
+        )
+    return None
 
 
 def _clip(text, limit):
@@ -218,7 +298,13 @@ def red_tc_values(root, row):
 
     `{tcs}` is assembled from the TC registry — id, what it verifies,
     Method/Expected, and the Evidence LOCATION — because the census line alone
-    carries none of that."""
+    carries none of that. EVERY one of those cells is REQUIRED: a row missing
+    one refuses here rather than rendering a dash, because a dash in an
+    evidence listing reads as "looked for, not applicable" when the truth is
+    "the registry never said". Same for a target whose normative text is
+    absent. This is the empty-census refusal applied one level down — the rule
+    is not "refuse when there is nothing", it is "refuse when any part of the
+    evidence is missing"."""
     try:
         import dispatch
     except Exception as exc:  # a stripped-down copy without the sibling
@@ -240,40 +326,46 @@ def red_tc_values(root, row):
         if row_cells is None:
             return None, "{} is in the census but not in {}".format(tc_id, TC_REGISTRY)
         targets.update(tc_targets)
+        cells = {}
+        for name in TC_CELLS:
+            value = (row_cells.get(name) or "").strip()
+            if not value:
+                return None, (
+                    "{} has no `{}` cell, so that line of the evidence listing "
+                    "would be a placeholder".format(tc_id, name)
+                )
+            cells[name] = value
         lines.append(
-            "- {id} — verifies {ver} — Status {st}\n"
-            "  - Method/Expected: {method} / {expected}\n"
-            "  - Evidence LOCATION (not a result): {ev}".format(
-                id=tc_id,
-                ver=(row_cells.get("Verifies") or "—").strip() or "—",
-                st=(row_cells.get("Status") or "—").strip() or "—",
-                method=(row_cells.get("Method") or "—").strip() or "—",
-                expected=(row_cells.get("Expected") or "—").strip() or "—",
-                ev=(row_cells.get("Evidence") or "—").strip() or "—",
-            )
+            "- {id} — verifies {Verifies} — Status {Status}\n"
+            "  - Method/Expected: {Method} / {Expected}\n"
+            "  - Evidence LOCATION (not a result): {Evidence}".format(id=tc_id, **cells)
         )
-    spine = _spine_excerpt(root, targets)
-    if not spine:
+    spine, missing = _spine_excerpt(root, targets)
+    if missing:
         return None, (
-            "none of the census's targets ({}) resolve in the spine registries".format(
-                ", ".join(sorted(targets)) or "—"
-            )
+            "no normative text for {} — the obligation the case covers would "
+            "be a placeholder".format(", ".join(missing))
         )
     return {"tcs": "\n".join(lines), "spine": spine}, None
 
 
 def _spine_excerpt(root, ids):
-    """`- <id> — <normative text>` for each wanted SR/LLR row, registry order.
-    Registry-derived; the requirement text and nothing around it."""
-    out = []
+    """`([lines], [missing ids])` — `- <id> — <normative text>` for each wanted
+    SR/LLR row in registry order, and every wanted id that either does not
+    resolve or whose normative cell is empty. Registry-derived; the requirement
+    text and nothing around it.
+
+    Missing ids are RETURNED rather than skipped: a target silently dropped
+    from the listing is the half-filled brief in its quietest form — the
+    section still looks complete."""
+    out, found = [], set()
     for rel, id_col, text_col in SPINE_REGISTRIES:
         for cells in spine_carrier.load(Path(root) / rel, id_col):
             rid = (cells.get(id_col) or "").strip()
-            if rid in ids:
-                out.append(
-                    "- {} — {}".format(rid, (cells.get(text_col) or "—").strip() or "—")
-                )
-    return "\n".join(out)
+            if rid in ids and (cells.get(text_col) or "").strip():
+                found.add(rid)
+                out.append("- {} — {}".format(rid, (cells[text_col]).strip()))
+    return "\n".join(out), sorted(set(ids) - found)
 
 
 # The briefs whose EVERY slot has a real producer today. A key absent here is
@@ -288,8 +380,8 @@ ROUTED = tuple(sorted(_ASSEMBLERS))
 
 def compose(root, row, verdict_path, prompt_templates=None):
     """`(prompt_text, None)` when this adjudication row's declared brief could
-    be filled IN FULL, else `(None, reason)` — the caller then sends the
-    ordinary worker assignment and prints the reason.
+    be filled IN FULL, else `(None, reason)` — on which the caller HOLDS the
+    row for a human (rule 3), never quietly downgrading it to a build.
 
     An operator override wired through `--prompt-map` under the brief's prompt
     key wins over the shipped template, exactly as it does for the reviewer and

@@ -565,8 +565,10 @@ def reviewer_prompt(prompt_templates, phase, verdict_path):
 
 
 def session_body(root, worker, current_wi, session, sha, reviews_dir, templates):
-    """`(body, verdict_path)` for a NON-REVIEW session — the one fork both
-    routing arms take, so the rule has a single home.
+    """`(body, verdict_path, hold, brief)` for a NON-REVIEW session — the one
+    fork both routing arms take, so the rule has a single home. `brief` names
+    the adjudicator template the body came from ("" for an ordinary
+    assignment), which is what arms the ADJUDICATE validation arm downstream.
 
     An adjudication row is a JUDGEMENT, not a build (SN-026), and gets the
     brief its `Brief` cell declares (WI-424). Routing it to a strong
@@ -579,21 +581,28 @@ def session_body(root, worker, current_wi, session, sha, reviews_dir, templates)
     resume-from-status default (retired, WI-210) and never a repo prompt-map
     template (the assignment is the whole scope).
 
-    THE FALLBACK IS DELIBERATE and falls in the cheap direction. A judge's
-    brief whose evidence section is thin does not fail loudly — it reads as an
-    investigation that was run and found nothing, which is the most expensive
-    way for this machinery to be wrong. The generic assignment is merely a
-    WORSE brief. So `adjudicate_brief` refuses rather than half-fills, and the
-    refusal is PRINTED like every other routing decision (no silent swap)."""
+    A DECLARED BRIEF THAT CANNOT BE COMPOSED IS A HOLD, NOT A FALLBACK, and
+    that is the third value: `(None, None, reason)`. Sending the ordinary
+    assignment instead would put the judge back in the builder's chair on a
+    ROUTINELY MINTED path — `intake` mints `brief = "amendment"` rows today and
+    no assembler can serve them — which is the exact defect this seam exists to
+    close. A row that declares a brief the kit cannot produce is a gap in the
+    kit, and a gap fails CLOSED.
+
+    A row that declares NO brief keeps the ordinary assignment: that is not a
+    claim the kit failed to honour, it is an adjudication class the kit has
+    never authored a brief for (the clean-close spot check, a cancellation that
+    owes no report), and holding those would page a human for routine work."""
     row = worker["rows"].get(current_wi) if worker and current_wi else None
-    if row and adjudicating(row):
+    brief = adjudicate_brief.declared_brief(row) if row and adjudicating(row) else ""
+    if brief:
         verdict_path = fresh_verdict_path(
             reviews_dir, "{}-ADJUDICATE-{}.md".format(session, (sha or "")[:7])
         )
         body, why = adjudicate_brief.compose(root, row, verdict_path, templates)
-        if body is not None:
-            return body, verdict_path
-        print("route [ADJUDICATE]: worker assignment — {}".format(why))
+        if body is None:
+            return None, None, why, ""
+        return body, verdict_path, None, brief
     return (
         worker_prompt(
             root,
@@ -604,7 +613,25 @@ def session_body(root, worker, current_wi, session, sha, reviews_dir, templates)
             worker["rework"],
         ),
         None,
+        None,
+        "",
     )
+
+
+# What a held adjudication row tells the human, appended to the stop banner.
+# The exit code is the DURABLE half: `dispatch._lane_close` turns
+# EXIT_NEEDS_HUMAN into a `handback.close_partial` — an immutable per-close
+# report plus a `blockref` that `schedule._disposition` reads as `blocked` — so
+# an unattended run can never re-pick the row until a human clears it. A print
+# alone would be gone with the terminal buffer.
+ADJUDICATION_HOLD_NOTE = (
+    "This row is an ADJUDICATION: it exists to judge a claim, and the brief it "
+    "declares is the whole reason it routes to a strong cross-family model. "
+    "Dispatching it with the ordinary worker assignment would brief the judge "
+    "as a builder, so the loop HOLDS it instead. Either supply the missing "
+    "evidence named above, or clear the row's `brief` cell if this class of "
+    "judgement is not one the kit briefs."
+)
 
 
 def session_model(model_map, default_model):
@@ -1248,6 +1275,12 @@ def worker_endstate(root, worker, review_open, managed, rp_int, allow_block_exit
         return None
     if review_open or worker["rework"]:
         return None  # built, but the train's review cycle is still open
+    if worker.get("adjudication_owed"):
+        # An adjudication row's WI trailer proves a COMMIT, never a
+        # RULING. Its brief names a verdict path and a closed-enum line;
+        # until both exist this assignment has not delivered what it was
+        # routed to a strong cross-family judge to produce.
+        return None
     if substantive_working_tree_dirty(root):
         return None  # committed evidence only — a dirty tree (owner-only exempt) is not done
     return (
@@ -1646,6 +1679,11 @@ def build_worker_assignment(args, root):
             # (No scheduler view: the `sched` map existed only to feed the §7
             # continuation re-check, deleted with session grouping — WI-383.)
             "rework": "",  # in-process rework note (a CHANGES-REQUESTED verdict)
+            # An ADJUDICATE session whose verdict artifact is missing or
+            # untyped: assignment-scoped like `rework`, and read by
+            # `worker_endstate` for the same reason — committed evidence
+            # alone does not prove a JUDGEMENT was made.
+            "adjudication_owed": "",
         }
         if args.rework:
             rp = Path(args.rework)
@@ -1823,6 +1861,8 @@ def route_session(ctx, i, current_wi, session, resume_reconcile, now):
     is_review = False
     is_critique = False
     verdict_path = None
+    hold = None  # a declared adjudicator brief that could not be composed
+    brief_key = ""  # the adjudicator brief this session was composed from
     route_id = None  # the selected registry id (managed mode)
     route_family = None  # the selected pair row's Family (identity, not route)
     # The launch environment: None = inherit the ambient env (today's exact
@@ -1933,7 +1973,7 @@ def route_session(ctx, i, current_wi, session, resume_reconcile, now):
             brief = critique_brief(root, docs, st.critique_scope)
             body = critique_prompt(prompt_templates, verdict_path, brief)
         else:
-            body, verdict_path = session_body(
+            body, verdict_path, hold, brief_key = session_body(
                 root,
                 worker,
                 current_wi,
@@ -1942,21 +1982,13 @@ def route_session(ctx, i, current_wi, session, resume_reconcile, now):
                 reviews_dir,
                 prompt_templates,
             )
-        prompt, guarded = compose_session_prompt(
-            model,
-            body,
-            resume_reconcile,
-            guardrails_policy,
-            root,
-            warned_no_core,
-        )
     else:
         phase, model = session_model(model_map, args.model)
         tmpl = session_template(cmd_map, template, phase)
         # The same fork as the managed arm above: which BRIEF a claimed
         # adjudication row gets is a property of the ROW, not of whether a
         # routing registry happens to be configured.
-        body, verdict_path = session_body(
+        body, verdict_path, hold, brief_key = session_body(
             root,
             worker,
             current_wi,
@@ -1965,14 +1997,23 @@ def route_session(ctx, i, current_wi, session, resume_reconcile, now):
             reviews_dir,
             prompt_templates,
         )
-        prompt, guarded = compose_session_prompt(
-            model,
-            body,
-            resume_reconcile,
-            guardrails_policy,
-            root,
-            warned_no_core,
+    if hold:
+        # Fail CLOSED (SN-026 x SN-032): never hand a judge the builder's
+        # instructions. The exit code is what makes the hold durable.
+        stop_banner(
+            status_path,
+            "NEEDS-HUMAN — adjudication row {} has no usable brief".format(current_wi),
+            hold + "\n\n" + ADJUDICATION_HOLD_NOTE,
         )
+        return EXIT_NEEDS_HUMAN
+    prompt, guarded = compose_session_prompt(
+        model,
+        body,
+        resume_reconcile,
+        guardrails_policy,
+        root,
+        warned_no_core,
+    )
     if not model and "{model}" in tmpl:
         print(
             "agent_loop: the session's command template carries a {model} "
@@ -1990,10 +2031,43 @@ def route_session(ctx, i, current_wi, session, resume_reconcile, now):
         "prompt": prompt,
         "guarded": guarded,
         "verdict_path": verdict_path,
+        # The brief this session was composed from, "" for every other session
+        # — the ADJUDICATE validation arm's whole trigger, and a typed field
+        # rather than a re-derivation from the phase, which cannot say WHICH.
+        "brief": brief_key,
         "route_id": route_id,
         "route_family": route_family,
         "session_env": session_env,
     }
+
+
+def adjudication_bookkeeping(plan, worker, st, managed, route_id, now):
+    """Record whether an ADJUDICATE session actually RULED. A no-op for every
+    other session (the guard is here rather than at the call site so
+    `session_bookkeeping` gains no branch for it).
+
+    The review and critique arms have read their verdict file since they
+    existed; an adjudication had no such arm at all. Its session ends through
+    `worker_endstate`, which is judged from committed `WI:` trailers — so a
+    judge that committed ANYTHING scored DONE, and the loop reported a ruling
+    that had never been made. The deliverable of a judgement is the verdict
+    artifact the brief named, carrying the closed-enum line the brief demanded;
+    nothing else is evidence that a judgement happened.
+
+    Cleared on success, so a re-run that DOES rule can complete: this is a
+    per-session judgement, not a latch."""
+    if not plan.get("brief"):
+        return
+    owed = adjudicate_brief.verdict_refusal(plan["brief"], plan["verdict_path"])
+    worker["adjudication_owed"] = owed or ""
+    if not owed:
+        return
+    print("adjudicate [{}]: not complete — {}".format(plan["brief"], owed))
+    if managed and route_id:
+        # The unparseable-review-verdict shape: cool the model and let the next
+        # session re-route, rather than re-asking the one that just failed to
+        # answer in the required form.
+        st.cool(route_id, now)
 
 
 def session_bookkeeping(
@@ -2021,6 +2095,10 @@ def session_bookkeeping(
     verdict_path = plan["verdict_path"]
     route_id = plan["route_id"]
     route_family = plan["route_family"]
+    # The ADJUDICATE validation arm, unconditional (see the function): an
+    # adjudication row gets its brief on BOTH routing paths, so it owes its
+    # verdict on both — unlike everything below, which is managed-only.
+    adjudication_bookkeeping(plan, worker, st, managed, route_id, now)
     # --- managed routing / reviewer dispatch bookkeeping (S8) -------------
     # All of this is gated on managed mode; the legacy path never enters it.
     if managed and outcome == "WAITING":

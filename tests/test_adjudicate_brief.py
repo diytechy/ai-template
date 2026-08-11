@@ -22,6 +22,8 @@ asserted they compose would be asserting that a slot got filled with something,
 which is the failure mode.
 """
 
+import csv
+import io
 import re
 import subprocess
 import sys
@@ -179,7 +181,8 @@ def test_a_clean_close_has_no_report_so_the_disposition_brief_is_refused(tmp_pat
     """`intake._complete_spot_checks` mints a disposition row for a GREEN close,
     which writes no report. The brief is built around the lane's report, so
     composing one here would ask the judge to rule on an absence — the refusal
-    names what is missing and the caller sends the worker assignment."""
+    names what is missing, and the caller HOLDS the row rather than
+    downgrading it to a build."""
     repo = _disposition_repo(tmp_path, with_report=False)
     text, why = ab.compose(repo, DISPOSITION_ROW, repo / "docs/reviews/v.md")
     assert text is None
@@ -285,6 +288,48 @@ def test_a_census_that_has_come_clean_refuses_rather_than_briefing_an_empty_one(
     assert "census is now empty" in why
 
 
+# `Verifies` is required too, but it cannot be driven through the census: a row
+# with no targets is not red by definition (`red_tc_census` skips it), so the
+# empty-census refusal fires first. It stays in `TC_CELLS` as a guard for any
+# future caller that does not come through the census.
+@pytest.mark.parametrize("cell", [c for c in ab.TC_CELLS if c != "Verifies"])
+def test_a_tc_row_missing_any_listed_cell_refuses_rather_than_rendering_a_dash(
+    tmp_path, cell
+):
+    """The empty-census refusal, one level down. A dash in an evidence listing
+    reads as "looked for, not applicable" when the truth is "the registry never
+    said" — and this brief's whole method is *run the cited evidence and say
+    what you observed*, which a row missing its Evidence/Method/Expected cannot
+    support. So every listed cell is required, and the refusal names it."""
+    repo = _red_tc_repo(tmp_path)
+    tcs = repo / "docs" / "test" / "test-cases.csv"
+    header, row = tcs.read_text(encoding="utf-8").splitlines()[:2]
+    cells = next(csv.reader([row]))
+    cells[next(csv.reader([header])).index(cell)] = ""
+    out = io.StringIO()
+    csv.writer(out, lineterminator="\n").writerows([next(csv.reader([header])), cells])
+    tcs.write_text(out.getvalue(), encoding="utf-8")
+    text, why = ab.compose(repo, RED_TC_ROW, repo / "v.md")
+    assert text is None
+    assert cell in why and "placeholder" in why
+
+
+def test_a_target_with_no_normative_text_refuses(tmp_path):
+    """A target that does not resolve — or whose normative cell is empty — is
+    RETURNED by `_spine_excerpt`, never silently dropped. A dropped target
+    leaves a `{spine}` section that still looks complete, which is the
+    half-filled brief in its quietest form."""
+    repo = _red_tc_repo(tmp_path)
+    llrs = repo / "docs" / "requirements" / "low-level-requirements.csv"
+    llrs.write_text(
+        llrs.read_text(encoding="utf-8").replace("add() returns a + b.", ""),
+        encoding="utf-8",
+    )
+    text, why = ab.compose(repo, RED_TC_ROW, repo / "v.md")
+    assert text is None
+    assert "LLR-001" in why and "placeholder" in why
+
+
 # --- the discriminator, and the two briefs that stay unrouted ------------------
 
 
@@ -338,21 +383,27 @@ def test_every_routed_brief_names_a_shipped_template():
 # --- the mint declares it (intake) --------------------------------------------
 
 
-def test_every_minted_adjudication_row_declares_which_brief_it_wants():
-    """The declaration is written where the knowledge is: the mint knows which
-    judgement it is asking for, and nothing downstream has to re-derive it.
-    A mint site that forgot would produce an adjudication row that silently
-    falls back to the worker assignment."""
+def test_no_mint_can_declare_a_brief_the_kit_does_not_ship():
+    """The declaration is written where the knowledge is — the mint knows which
+    judgement it is asking for — and it is now LOAD-BEARING in the expensive
+    direction: a declared brief the kit cannot compose HOLDS the row for a
+    human. So a typo'd or invented value would not degrade quietly, it would
+    stop an unattended run.
+
+    Deliberately NOT asserted: that every mint site declares one. Two arms
+    (the report-less cancellation, the clean-close spot check) declare none on
+    purpose, because the kit ships no brief for them and a false declaration
+    would page a human for routine work."""
     source = (intake.__file__ or "").strip()
     assert source
     with open(source, encoding="utf-8") as handle:
-        lines = handle.read().split("\n")
-    sites = [i for i, ln in enumerate(lines) if ln.strip() == '"kind": "adjudication",']
-    assert sites, "no adjudication mint sites found — guard vacuous"
-    for i in sites:
-        assert lines[i + 1].strip().startswith('"brief": "'), lines[i + 1]
-        declared = lines[i + 1].split('"')[3]
-        assert declared in ab.BRIEF_PROMPTS, declared
+        text = handle.read()
+    declared = set(re.findall(r'"brief":\s*"([^"]*)"', text))
+    assert declared, "no brief declarations found — guard vacuous"
+    assert declared <= set(ab.BRIEF_PROMPTS), sorted(declared - set(ab.BRIEF_PROMPTS))
+    # The two the kit can actually serve must still be declared somewhere, or
+    # the routed briefs would have no producer of rows at all.
+    assert set(ab.ROUTED) <= declared
 
 
 # --- the session provably receives it (fake-CLI prompts.txt capture) ----------
@@ -377,13 +428,19 @@ if "INDEPENDENT adjudicator" in args.prompt:
     where = re.search(r"Write your verdict to (\S+)", args.prompt).group(1)
     vpath = pathlib.Path(where.rstrip(":"))
     wi = re.search(r"trailer .WI: (WI-\d+).", args.prompt).group(1)
-    vpath.parent.mkdir(parents=True, exist_ok=True)
-    vpath.write_text(
-        "- [MINOR] the claim -> why -> the concrete change\n"
-        + (ctl / "verdict").read_text(encoding="utf-8").strip() + "\n",
-        encoding="utf-8",
-    )
-    subprocess.run(["git", "add", str(vpath)], check=True)
+    line = (ctl / "verdict").read_text(encoding="utf-8").strip()
+    # NONE models the judge that commits but never rules: the WI trailer that
+    # makes a WORKER done, with no verdict artifact behind it.
+    if line != "NONE":
+        vpath.parent.mkdir(parents=True, exist_ok=True)
+        vpath.write_text(
+            "- [MINOR] the claim -> why -> the concrete change\n" + line + "\n",
+            encoding="utf-8",
+        )
+        subprocess.run(["git", "add", str(vpath)], check=True)
+    else:
+        pathlib.Path("ruled-on-nothing.txt").write_text("", encoding="utf-8")
+        subprocess.run(["git", "add", "-A"], check=True)
     subprocess.run(
         ["git", "commit", "-q", "-m", "adjudication verdict\n\nWI: " + wi + "\n"],
         check=True,
@@ -472,16 +529,154 @@ def test_a_red_tc_rows_session_receives_the_red_tc_brief(tmp_path):
     assert "OUTCOME: DRAFTED" in verdicts[0].read_text(encoding="utf-8")
 
 
-def test_an_unfillable_brief_sends_the_worker_assignment_and_says_why(tmp_path):
-    """The fallback, end to end. A clean close's disposition row has no report,
-    so the session gets the ordinary assignment — and the loop PRINTS the
-    refusal rather than swapping the brief silently."""
+def test_an_unfillable_declared_brief_HOLDS_rather_than_dispatching_a_builder(
+    tmp_path,
+):
+    """FAIL CLOSED, end to end. A row that declares a brief the kit cannot
+    assemble never reaches a session at all: the loop pages instead.
+
+    This is the property the whole seam turns on. Falling back to the ordinary
+    assignment here would re-open the defect WI-424 exists to close — the judge
+    briefed as a builder — on a routinely minted path, and it would do it
+    QUIETLY, since a builder session ends DONE like any other. `EXIT_NEEDS_HUMAN`
+    is also what makes the hold durable: `dispatch._lane_close` turns it into a
+    `handback.close_partial`, whose `blockref` keeps an unattended run from
+    re-picking the row."""
     repo = _disposition_repo(tmp_path, with_report=False)
+    _git(repo, "add", "-A")
+    _git(repo, "commit", "-q", "-m", "registry")
+    proc, prompts = _session(tmp_path, repo, "WI-301", "unused")
+    assert proc.returncode == agent_loop.EXIT_NEEDS_HUMAN, proc.stdout + proc.stderr
+    # No session ran at all — not a judge's, and emphatically not a builder's.
+    assert prompts == ""
+    assert "no usable brief" in proc.stdout
+    assert "no per-close report" in proc.stdout
+    assert "would brief the judge as a builder" in proc.stdout
+    # ...and no work was committed under the row.
+    assert "WI-301" not in _git(repo, "log", "--format=%(trailers:key=WI,valueonly)")
+
+
+def test_the_live_amendment_mint_is_held_not_dispatched(tmp_path):
+    """The specific live path the fallback re-opened. `intake._amendment_drafts`
+    mints `brief = "amendment"` today and `_ASSEMBLERS` cannot serve it (the
+    producer its slots name selects the rows its own minting condition
+    excludes), so the row must HOLD — not build."""
+    repo = _repo(tmp_path)
+    _write_rows(
+        repo,
+        [
+            {
+                "WI-ID": "WI-301",
+                "Title": "adjudicate: SR-001 - ratified cell(s) amended",
+                "SafetyClass": "adjudication",
+                "Brief": "amendment",
+                "SpecRef": "docs/requirements/system-requirements.toml",
+            }
+        ],
+    )
+    _git(repo, "add", "-A")
+    _git(repo, "commit", "-q", "-m", "seed")
+    proc, prompts = _session(tmp_path, repo, "WI-301", "unused")
+    assert proc.returncode == agent_loop.EXIT_NEEDS_HUMAN, proc.stdout + proc.stderr
+    assert prompts == ""
+    assert "no evidence assembler" in proc.stdout
+
+
+def test_an_adjudication_row_declaring_no_brief_still_builds(tmp_path):
+    """The complement, and the reason the hold keys on the DECLARATION rather
+    than on `adjudicating()`: a clean-close spot check and a report-less
+    cancellation are adjudication classes the kit has never authored a brief
+    for. Holding those would page a human for routine work, and their empty
+    `brief` cell is an honest statement rather than an unhonoured claim."""
+    repo = _disposition_repo(tmp_path, with_report=False)
+    spec = next((repo / "docs" / "work").rglob("WI-301-*.md"))
+    spec.write_text(
+        spec.read_text(encoding="utf-8").replace('brief = "disposition"\n', ""),
+        encoding="utf-8",
+    )
     _git(repo, "add", "-A")
     _git(repo, "commit", "-q", "-m", "registry")
     proc, prompts = _session(tmp_path, repo, "WI-301", "unused")
     assert proc.returncode == agent_loop.EXIT_DONE, proc.stdout + proc.stderr
     assert "INDEPENDENT adjudicator" not in prompts
     assert "- WI: WI-301 —" in prompts
-    assert "route [ADJUDICATE]: worker assignment —" in proc.stdout
-    assert "no per-close report" in proc.stdout
+
+
+# --- the ADJUDICATE validation arm (the verdict is the deliverable) -----------
+
+
+@pytest.mark.parametrize(
+    "brief,line",
+    [
+        ("disposition", "OUTCOME: PARTIAL successors=1"),
+        ("red-tc", "OUTCOME: DRAFTED cases=2 drafts=1"),
+        ("amendment", "VERDICT: MEANING rows=3"),
+        ("conflict", "OUTCOME: QUEUE-WITH-EDGE needs=WI-009"),
+    ],
+)
+def test_a_well_formed_typed_line_is_accepted_for_every_brief(tmp_path, brief, line):
+    """The grammar lives beside the assemblers because the brief and the verdict
+    it demands are ONE contract — a template whose enum moved and a checker that
+    did not is the drift this table prevents. All four are covered, including
+    the two with no assembler: an unrouted brief still has a verdict shape."""
+    path = tmp_path / "v.md"
+    path.write_text("- [MINOR] a finding -> why -> the change\n" + line + "\n")
+    assert ab.verdict_refusal(brief, path) is None
+
+
+@pytest.mark.parametrize(
+    "line,expect",
+    [
+        (None, "no verdict was written"),
+        ("the lane did fine, I think", "no `OUTCOME:` machine line"),
+        ("OUTCOME: LOOKS-OK successors=1", "not one of"),
+        ("OUTCOME: PARTIAL", "omits successors"),
+    ],
+)
+def test_an_unusable_verdict_is_refused_and_says_which_way(tmp_path, line, expect):
+    """Four ways to fail, four distinct reasons. "The verdict is invalid" is not
+    something a human can act on at 3am, so each arm names what is wrong."""
+    path = tmp_path / "v.md"
+    if line is not None:
+        path.write_text(line + "\n")
+    why = ab.verdict_refusal("disposition", path)
+    assert why and expect in why
+
+
+def test_the_review_scorer_cannot_serve_this_grammar():
+    """Why the table exists rather than reusing `score_reviews.parse_verdict`:
+    that parser knows only the REVIEW vocabulary, so three of the four
+    adjudicator lines (which say `OUTCOME:`) and the fourth (which says
+    `VERDICT: MEANING`) would all read as unparseable — and an unparseable
+    verdict is treated as no verdict."""
+    scorer = load_script("score_reviews")
+    parsed = scorer.parse_verdict("OUTCOME: PARTIAL successors=1\n")
+    assert parsed.verdict is None
+
+
+def test_a_judge_that_commits_without_ruling_does_not_complete(tmp_path):
+    """M5, end to end. The session commits the `WI:` trailer that makes a WORKER
+    done — and stays incomplete, because an adjudication's deliverable is the
+    verdict artifact, not the commit. Without this arm the loop reported a
+    ruling that was never made."""
+    repo = _disposition_repo(tmp_path)
+    _git(repo, "add", "-A")
+    _git(repo, "commit", "-q", "-m", "registry + report")
+    proc, prompts = _session(tmp_path, repo, "WI-301", "NONE")
+    assert "INDEPENDENT adjudicator" in prompts, "the brief was not even sent"
+    assert proc.returncode != agent_loop.EXIT_DONE, proc.stdout
+    assert "not complete — no verdict was written" in proc.stdout
+    # The trailer IS there — which is exactly why the trailer alone is not the bar.
+    assert "WI-301" in _git(repo, "log", "--format=%(trailers:key=WI,valueonly)")
+
+
+def test_a_malformed_outcome_line_does_not_complete(tmp_path):
+    """The other half: the artifact exists, so a presence check would pass, but
+    its machine line is outside the closed enum. A prose verdict is not a typed
+    one — the whole reason these briefs end in a closed enum."""
+    repo = _disposition_repo(tmp_path)
+    _git(repo, "add", "-A")
+    _git(repo, "commit", "-q", "-m", "registry + report")
+    proc, _prompts = _session(tmp_path, repo, "WI-301", "OUTCOME: PROBABLY-FINE")
+    assert proc.returncode != agent_loop.EXIT_DONE, proc.stdout
+    assert "not complete" in proc.stdout and "not one of" in proc.stdout

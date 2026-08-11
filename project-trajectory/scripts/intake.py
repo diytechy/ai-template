@@ -643,7 +643,12 @@ def _close_drafts(root, outcomes):
                         )
                     ),
                     "kind": "adjudication",
-                    "brief": "disposition",
+                    # NO `brief`: this arm is report-less by design (above),
+                    # and the disposition brief is built around the report. A
+                    # row must not declare a brief the kit cannot assemble -
+                    # `agent_loop` HOLDS such a row for a human rather than
+                    # dispatching it, which is right for a real gap and wrong
+                    # for a close that never owed a report.
                     "workstream": "process",
                     "buildtier": "medium",
                     "specref": relpath,
@@ -774,7 +779,11 @@ def _complete_spot_checks(root, outcomes):
                     )
                 ),
                 "kind": "adjudication",
-                "brief": "disposition",
+                # NO `brief`, for the cancellation arm's reason: a GREEN close
+                # writes no report, so the disposition brief cannot be built
+                # for it and the kit ships no "spot-check a clean close"
+                # template. Declaring one would be a claim the assembler
+                # cannot honour.
                 "workstream": "process",
                 "buildtier": "medium",
                 "specref": relpath,
