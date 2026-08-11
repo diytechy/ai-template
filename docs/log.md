@@ -26436,3 +26436,139 @@ section. It went in the **Working agreement as instructed**, because its reach i
 wider than comments — the F-10 finding that motivated it was about `Contract`
 cells in a registry, which `plan_briefs.IF_SURFACE_COLUMNS` carries verbatim into
 planning briefs.
+
+## 2026-08-11 — WI-431: batch-2 of the carrier migration — open-items and agents
+
+**One line.** `docs/requirements/open-items.csv` (7 rows) and `docs/agents.csv`
+(9 pair rows + 4 comment lines) move to the TOML carrier D-5 ruled, on the same
+converter, with their two templates — and the cutover, run first against a
+throwaway clone, found three fail-open readers that wiring-first could not have.
+
+**Deliverables.**
+
+1. **`migrate_carrier.py` generalized, not duplicated** (repo-lock §8.1). One
+   `OFFSPINE` map beside `SPINE`, one `KEY` map, one round-trip oracle. A second
+   converter is the D-6 hazard verbatim. Two shapes the spine never carried:
+   * **comments**, because `agents.csv` holds a `# tag-rank: ga>preview>beta>exp`
+     line `agent_route.load_tag_rank` **parses**. `csv.DictReader` splits the
+     prose comment on its commas and returns a nine-cell row whose `Id` is the
+     first clause — a comment becoming a model the router might launch.
+     `read_csv_records` recovers each raw line through `csv.reader.line_num`,
+     never a newline split (a quoted cell may legally span lines, and a `#`
+     inside one is not a comment), and the emitter restores each comment
+     byte-for-byte **and in place**.
+   * **dotted ids**. `[agent.ANTHROPIC-OPUS-4.8]` written bare is *valid TOML*
+     declaring nested tables, so the file parses and the row's id is gone.
+     `toml_key` quotes what TOML will not take bare, `raw_id_findings` reads ids
+     off the RAW source and demands each back, and
+     `spine_carrier.nested_table_findings` refuses the shape at LOAD — because
+     the converter is not the only thing that writes these files.
+
+2. **The cutover.** 4 files converted, 4 sources deleted in the same commit
+   (both homes at once is refused, not resolved by precedence). CARRIER ONLY:
+   no row's text changed, the OI watermark stayed at 14.
+
+3. **Reader inventory — §8.1 is wrong in two places, both material.** It names
+   3 readers of open-items; there are **8** (`+traj_status`, `+check_trajectory`,
+   `+trunk_step`, `+integrate`). It says **intake WRITES**; it does not —
+   `_pending_oi_lines` is a read and the other two mentions are prompt prose.
+   The writer is **`bootstrap.py`**, appending the scaffolded OI-3 brief.
+   <!-- fig: cmd="grep -rn 'open-items' project-trajectory/scripts tests" rev=076f3d52 -->
+
+4. **The writer's shape differs from the spine's, and the difference is real.**
+   D-5 needed a *line rewrite* because it CHANGES one cell of an existing row.
+   `bootstrap` **appends a whole row and touches nothing**, which is strictly
+   weaker and needs no rewrite machinery. It moves from a 12-cell positional
+   tuple through `csv.writer` to keyed cells and a TOML table — positional-to-a-
+   header is the shape that silently shifts when a column moves, and TOML has no
+   header to align to. **CRLF:** `csv.writer` defaults to `\r\n`; the defect is
+   now structurally absent rather than guarded (no CSV writer remains on this
+   path), and all four converted files plus the scaffolded append are asserted
+   at **0 CR bytes**.
+
+5. **The sanctioned F5 duplication, stated not smuggled.** `bootstrap.py` runs
+   before the kit is copied and may import no sibling (repo-lock §8.2), so it
+   carries its own two-line TOML emitter and its own copy of the open-items key
+   names — exactly as it already carries `_toml_scalar` for `process.toml`.
+   `tests/test_rule_sync.py` pins that key set against the converter, which is
+   the behavioural pin D-7 requires of new duplication of policy: a brief written
+   under an unmapped key renders as a brief with **no text**, and `check_docs`
+   S-3 then reports the owner ask as briefed.
+
+6. **`test_dogfood_sync` extended, not forked.** `open-items` moves off the
+   ordered-header census onto the spine's three-leg key-set rule and `agents`
+   joins it — the one shipped registry never pinned to a template at all. The
+   rule **bit on the way in**, finding that converting the two templates dropped
+   `RuledDate`/`RulingRef` and `Env`: the CSV *header* declared them with every
+   shipped cell empty, and an empty cell is an absent key. Restored into the
+   `-000` schema rows, the same call D-5 made for the LLR template's blank
+   `Component`. Driven against planted defects in both directions on both new
+   registries.
+
+7. **`gen_open_items.normalize` SURVIVES** — recorded executably, not argued.
+   TOML retires **half** the hazard: a literal CRLF inside a multi-line string is
+   folded to LF by the *parser*, so a cell can no longer pick one up from the
+   editor that wrote it. It does **not** retire the load-bearing half — the guard
+   also covers the *checkout's own* line endings, which is not a registry fact
+   and is untouched by the carrier. `esc`'s CR strip survives too: a `\r`
+   **escape** is still legal TOML.
+
+8. **ADOPTING** gains the batch-2 recipe (two deletes, the comment rule, the
+   dotted-id rule, and why interfaces/components are deliberately not in it).
+
+**Fail-open readers the cutover found** (run against a throwaway clone before a
+line was written — wiring against the old carrier can never surface these,
+because every reader looks fine while the file it expects still exists):
+`gen_open_items` rendered "0 pending decisions", `traj_status` spliced an empty
+open-items block into `status.md`, `check_trajectory`'s brief lint went vacuously
+clean. `agent_route` failed **loudly**, which is correct.
+
+**Deviations from spec.** Two, both flagged rather than taken silently.
+* **`docs/requirements/interfaces.csv` was touched — additively.**
+  `check_trajectory` ERRORs on an undeclared cross-component import, and this WI
+  adds three (`gen_open_items`, `agent_route`, `trunk_step` → `spine_carrier`).
+  IF-118/119/120 follow IF-104..IF-114's shape exactly; no existing row's text
+  changed and nothing about the `Contract` question OI-14 will settle is
+  prejudged. The alternative was leaving the gate red.
+* **`docs/log.md` and `docs/archive/` prose was DE-LINKED, not retargeted** (4
+  references). The words are the record of what was true then and stay verbatim;
+  retargeting would put a claim about today's tree inside yesterday's entry.
+  Seven further mentions in handoffs/plan docs/closed specs are **declared
+  absent** with their reason — the mechanism this repo already uses for a
+  retired path.
+
+**Byte deltas on budgeted files.** `AGENTS.template.md` unchanged.
+`PROCESS.md` unchanged. `PROCESS_OPTIONS.md` **170,454 → 170,454 unchanged** (the
+5 pointer edits are `.csv`→`.toml`, byte-neutral). No baseline re-stamp owed.
+
+**Ratchets re-stamped, each with its reason at the entry.**
+`agent_route.load_registry` **17 → 14** (the CSV header parse left for
+`_rows_from_csv` — a declared header is a property of that carrier);
+`migrate_carrier.rows_to_toml` a **new row at 12** (the emitter took a second
+job: comments); `bootstrap.py` **2723 → 2754**; `check_trajectory.py`
+**3911 → 3913**; `integrate.py` **2492 → 2493**.
+
+**The bar.** Full unfiltered suite **2282 passed, 5 skipped in 401.36s** against
+the **2258 passed / 5 skipped** baseline — **+24**, reconciled test-by-test
+(`--collect-only` **2263 → 2287**): migrate_carrier +9, spine_carrier +6,
+gen_open_items +3, dogfood_sync +4 net, rule_sync +2, profile +1, minus the
+open-items row leaving the ordered-header census (−1).
+<!-- fig: cmd=".venv/bin/python -m pytest -q -n auto" rev=955cddec -->
+`trace.py --strict` **rc 0**; `check_trajectory.py --strict` **rc 0**;
+`check_docs.py --stale` **0 broken**; `check.py --jobs 0` **RESULT: PASS** with
+the `open-items` step visibly passing; every generated surface `--check` fresh;
+`ruff format --check` clean over 168 files. The four advisory reds (`lint`,
+`doc-refs`, `figures`, `traceability`) are **byte-identical to a HEAD baseline
+measured on a detached clone** — `check_doc_refs` returns to **27** dangling, not
+34, and `ruff check` carries only its pre-existing `E741` in
+`tests/test_id_watermark.py` (not this row's file). `check_trajectory`'s WARN set
+lost one line against that baseline (`trunk_step` now declares a Consumes seam)
+and gained none. Watermarks raised by `trace.py --bump-ids`: **WI 430 → 431**,
+**IF 117 → 120**.
+
+**Findings filed, not fixed.** (a) `tests/test_generated_newlines.py` pins a
+`chr(10)` site by **hardcoded line number**; it broke three times in this one WI
+and will break on any edit above line 780 of `gen_open_items.py`. (b) The
+pre-existing `E741` above. (c) `raw_id_findings`' regex could false-positive on a
+line inside a multi-line quoted cell that happens to start `word,` — fail-closed
+noise, never a false green, and the same trade `_RAW_SN_ROW` already makes.
