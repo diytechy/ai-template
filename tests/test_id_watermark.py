@@ -138,6 +138,71 @@ def test_the_mark_counts_ids_no_loader_joins(tmp_path):
     assert live["IF"] == 42
 
 
+def _toml_repo(tmp_path, marks, rows=(("requirement", "SR-ID", ("SR-001",)),)):
+    """The same minimal tree over the TOML carrier — the LIVE one for SR/LLR/TC
+    since the D-5 cutover. `rows` is `(table, id_col, ids)` per registry."""
+    paths = {
+        "SR-ID": "docs/requirements/system-requirements.toml",
+        "LLR-ID": "docs/requirements/low-level-requirements.toml",
+        "TC-ID": "docs/test/test-cases.toml",
+    }
+    for table, id_col, ids in rows:
+        path = tmp_path / paths[id_col]
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(
+            "".join('[{}.{}]\ntitle = "t"\n\n'.format(table, i) for i in ids),
+            encoding="utf-8",
+        )
+    (tmp_path / TRACE.WATERMARK).parent.mkdir(parents=True, exist_ok=True)
+    (tmp_path / TRACE.WATERMARK).write_text(
+        TRACE.render_watermark(marks), encoding="utf-8"
+    )
+    return tmp_path
+
+
+def test_an_id_above_the_mark_is_a_finding_ON_THE_TOML_CARRIER(tmp_path):
+    # THE ELEVENTH UNWIRED READER. `live_max_ids` swept `docs/requirements/*.csv`
+    # and `docs/test/*.csv` by LOCATION, so the D-5 carrier cutover moved
+    # SR/LLR/TC out from under it and rule 2 ("no live id exceeds its mark")
+    # went VACUOUS on three of the four spine tiers — silently, and already
+    # false-green in this repo (LLR-167 and TC-161 stood above their marks with
+    # zero findings). These are the tiers with NO minter at all, so this rule is
+    # the only thing standing between a deleted id and its silent re-use.
+    root = _toml_repo(
+        tmp_path,
+        marks={s: 0 for s in TRACE.WATERMARK_SPACES} | {"SR": 1, "LLR": 1, "TC": 1},
+        rows=(
+            ("requirement", "SR-ID", ("SR-001", "SR-009")),
+            ("design", "LLR-ID", ("LLR-001", "LLR-007")),
+            ("test", "TC-ID", ("TC-001", "TC-005")),
+        ),
+    )
+    findings = TRACE.watermark_findings(root)
+    assert any("SR-009" in f and "stands at 1" in f for f in findings), findings
+    assert any("LLR-007" in f and "stands at 1" in f for f in findings), findings
+    assert any("TC-005" in f and "stands at 1" in f for f in findings), findings
+
+
+def test_bump_ids_covers_all_four_spine_tiers_over_the_toml_carrier(tmp_path):
+    # `--bump-ids` is the documented repair path, and it reads the same
+    # `live_max_ids`: if the scan cannot see a tier, the repair cannot fix it.
+    root = _toml_repo(
+        tmp_path,
+        marks={s: 0 for s in TRACE.WATERMARK_SPACES},
+        rows=(
+            ("requirement", "SR-ID", ("SR-012",)),
+            ("design", "LLR-ID", ("LLR-034",)),
+            ("test", "TC-ID", ("TC-056",)),
+        ),
+    )
+    (root / "docs" / "requirements" / "stakeholder-needs.toml").write_text(
+        '[need.SN-078]\ntitle = "t"\n', encoding="utf-8"
+    )
+    marks, raised = TRACE.bump_watermark(root)
+    assert (marks["SR"], marks["LLR"], marks["TC"], marks["SN"]) == (12, 34, 56, 78)
+    assert raised["LLR"] == (0, 34) and raised["TC"] == (0, 56)
+
+
 def test_bump_only_ever_raises(tmp_path):
     root = _repo(tmp_path, marks={s: 0 for s in TRACE.WATERMARK_SPACES} | {"SR": 9})
     marks, raised = TRACE.bump_watermark(root)
@@ -192,6 +257,50 @@ def test_the_mint_does_not_reissue_a_deleted_id(tmp_path):
     assert TRACE.live_max_ids(root).get("WI", 0) == 0  # the live tree forgot it
     assert TRACE.read_watermark(root)["WI"] == 5  # the mark did not
     assert INTAKE.next_wi_id(root) == "WI-006"  # NOT WI-005
+
+
+def _marked(tmp_path):
+    """A bare tree carrying only the watermark every real repo ships."""
+    (tmp_path / "docs").mkdir(parents=True, exist_ok=True)
+    (tmp_path / TRACE.WATERMARK).write_text(
+        TRACE.render_watermark({s: 0 for s in TRACE.WATERMARK_SPACES}),
+        encoding="utf-8",
+    )
+    return tmp_path
+
+
+# The two mints that still counted from `max(live) + 1` after `intake` moved to
+# the mark. Same defect, same proof: delete the current maximum and mint again.
+
+
+def test_the_DP_mint_does_not_reissue_a_deleted_round(tmp_path):
+    import shutil
+
+    PA = load_script("plan_artifacts")
+    root = _marked(tmp_path)
+    first = PA.allocate_round_dir(root, "first")
+    assert first.name == "DP-001-first"
+    assert TRACE.read_watermark(root)["DP"] == 1  # the mint RAISED the mark
+    shutil.rmtree(first)  # D-4: the round is superseded, so it is deleted
+    assert TRACE.live_max_ids(root).get("DP", 0) == 0  # the tree forgot it
+    assert PA.allocate_round_dir(root, "second").name == "DP-002-second"  # not 001
+
+
+def test_the_plan_filer_does_not_reissue_a_deleted_wi_id(tmp_path):
+    PA = load_script("plan_artifacts")
+    root = _marked(tmp_path)
+    plan = (
+        "| Plan-WI | Title | Covers | Interfaces | Predecessors |\n"
+        "|---|---|---|---|---|\n"
+        "| P1 | Only slice | C1 | | |\n"
+    )
+    kw = dict(spec_ref="docs/plans/DP-001-x/plan.md", workstream="unattended")
+    assert PA.file_selected_wis(root, plan, predecessor_wi="", **kw) == {"P1": "WI-001"}
+    assert TRACE.read_watermark(root)["WI"] == 1
+    queued = root / "docs" / "work" / "queued"
+    next(queued.glob("WI-001-*.md")).unlink()  # D-4: superseded, so deleted
+    assert TRACE.live_max_ids(root).get("WI", 0) == 0
+    assert PA.file_selected_wis(root, plan, predecessor_wi="", **kw) == {"P1": "WI-002"}
 
 
 def test_the_mint_still_respects_a_live_id_above_the_mark(tmp_path):

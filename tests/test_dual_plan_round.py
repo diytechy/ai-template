@@ -18,7 +18,9 @@ import os
 import subprocess
 import sys
 
-from conftest import set_process_key, SCRIPTS, augment_env, run_py
+from conftest import set_process_key, SCRIPTS, augment_env, run_py, load_script
+
+TRACE = load_script("trace")
 
 AGENT_LOOP = SCRIPTS / "agent_loop.py"
 
@@ -119,6 +121,14 @@ def make_fixture(tmp_path, plan_mode="dual"):
     )
     (root / "docs" / "work" / "queued" / "WI-002-widget-effort.md").write_text(
         WI_002_SPEC.format(plan_mode=plan_mode), encoding="utf-8"
+    )
+    # The id watermark every scaffold ships: the round's DP and WI mints count
+    # from the MARK, not from max(live) (repo-lock D-4), and `read_watermark`
+    # REFUSES an absent file rather than reading it as "no id is taken" — so a
+    # fixture without one exercises the refusal, not the round.
+    (root / TRACE.WATERMARK).write_text(
+        TRACE.render_watermark({s: 0 for s in TRACE.WATERMARK_SPACES}),
+        encoding="utf-8",
     )
     (root / "docs" / "log.md").write_text("# Log\n", encoding="utf-8")
     (root / "docs" / "status.md").write_text(

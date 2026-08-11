@@ -614,7 +614,21 @@ BASELINE = {
     # Then -38 (3439 -> 3401), WI-422 (the measured dead-symbol sweep): the orphaned `_sn_fields` copy. D-5 step 2d collapsed the drifting
     # triplet onto `spine_carrier.folded`, but the three copies were left
     # behind with no caller; this is the residue, not a behaviour change.
-    "trace.py": 3401,
+    # Then +27 (3401 -> 3428), the ADVERSARIAL REVIEW of the carrier cutover,
+    # BLOCKER 1 — the ELEVENTH UNWIRED READER, and a live false green.
+    # `live_max_ids` swept `docs/requirements/*.csv` + `docs/test/*.csv` by
+    # LOCATION, so D-5 moved SR/LLR/TC out from under it and rule 2 of the
+    # watermark ("no live id exceeds its mark") went VACUOUS on three of the four
+    # spine tiers — the tiers with NO minter, where that rule is the only guard
+    # there is. It was not theoretical: LLR-167 and TC-161 were minted after the
+    # cutover and stood above their marks with zero findings reported. The new
+    # `_spine_ids` reads through `spine_carrier` (resolve whichever carrier is
+    # live) rather than assuming a suffix, so moving a file cannot un-wire the
+    # scan again. Twenty of the 27 lines are the docstring recording that
+    # failure mode — the executable delta is ~7. Not decomposable: this IS the
+    # decomposition, one reader per id source beside `_csv_ids`/`_sn_ids`/
+    # `_wi_ids`/`_dp_ids`.
+    "trace.py": 3428,
     # +132 (1926 -> 2058; the last +10 is the F4 BOM hardening: read_rows utf-8-sig + git-show strips), WI-316: staged_spine_findings — the amend-without-
     # flip warn (--staged): content cells of a Verified spine row changed
     # without the Modified marker, suppressed when the owning SR flips in the

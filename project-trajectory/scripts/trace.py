@@ -514,6 +514,33 @@ def _csv_ids(docs):
                     yield match.group(1), int(match.group(2))
 
 
+def _spine_ids(docs):
+    """`(space, number)` per SR/LLR/TC row, through the CARRIER.
+
+    `_csv_ids` above sweeps by LOCATION, and that caught the three row tiers only
+    while they were CSVs. The D-5 carrier cutover moved them to TOML and the
+    glob then matched NOTHING for them — silently — so rule 2 ("no live id
+    exceeds its mark") went VACUOUS on three of the four spine tiers, which are
+    precisely the tiers with NO minter: a hand-authored id arriving past the
+    mark is the only signal there is. It was already false-green when found
+    (LLR-167 and TC-161 stood above their marks, zero findings reported).
+
+    So this reads through `spine_carrier` — the sanctioned reader, which
+    resolves whichever carrier is live — instead of assuming a suffix. A path
+    glob can be un-wired by moving a file; a carrier resolve cannot.
+
+    `SPINE_FILES` is defined further down the module and referenced at CALL
+    time, which is deliberate: the paths belong beside the joins that use them,
+    and duplicating them here is exactly the second home this scan is being
+    fixed for."""
+    for rel, id_col in SPINE_FILES:
+        # `SPINE_FILES` holds repo-root-relative paths; `docs` is <root>/docs.
+        for row in spine_carrier.load(docs.parent / rel, id_col):
+            match = _ANY_ID.match(str(row.get(id_col) or "").strip())
+            if match:
+                yield match.group(1), int(match.group(2))
+
+
 def _sn_ids(docs):
     """`("SN", number)` per declared stakeholder need, through the CARRIER.
 
@@ -563,7 +590,7 @@ def live_max_ids(root):
     id held anywhere is an id taken".)"""
     docs = Path(root) / "docs"
     top = {}
-    for reader in (_csv_ids, _sn_ids, _wi_ids, _dp_ids):
+    for reader in (_csv_ids, _spine_ids, _sn_ids, _wi_ids, _dp_ids):
         for space, num in reader(docs):
             if space in WATERMARK_SPACES and num > top.get(space, 0):
                 top[space] = num

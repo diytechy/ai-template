@@ -50,6 +50,13 @@ except ImportError:  # pragma: no cover - direct-path loads only
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     import wi_convert
 
+# AFTER the path fix, never as the probe — `trace` collides with a STDLIB module
+# of that name, so importing it first would resolve to the wrong module instead
+# of raising the ImportError this fallback keys on (`intake.py` orders its
+# imports the same way, for the same reason). It is the id watermark's home:
+# both mints below count from the MARK, never from `max(live)` (repo-lock D-4).
+import trace  # noqa: E402
+
 WI_CSV = "docs/requirements/work-items.csv"
 # The modern header of record for a new work-item registry. Existing registries
 # are appended in THEIR declared order so legacy or extended schemas stay
@@ -203,10 +210,21 @@ def _write_spec_rows(csv_path, rows):
 def allocate_round_dir(root, slug):
     """Create and return the next `docs/plans/DP-NNN-<slug>/` directory.
 
-    `NNN` = (max existing DP-### under docs/plans/) + 1, zero-padded to 3, so an
-    empty tree yields `DP-001` and an existing `DP-001-...` yields `DP-002`. The
-    allocation is deterministic (a pure function of the current tree) and creates
-    the directory so the caller can immediately `write_stage` into it."""
+    `NNN` = `max(live directories, docs/id-watermark's DP mark) + 1`, zero-padded
+    to 3, so an empty tree yields `DP-001` and an existing `DP-001-...` yields
+    `DP-002`. Live directories are still swept, for the same reason
+    `intake.next_wi_id` still sweeps filenames: for a MINT, an id held anywhere
+    is an id taken. But the FLOOR is the mark, because `max(live) + 1` re-issues
+    the number of any round that has been DELETED — and under repo-lock D-4
+    deletion is how supersession works, so a reused DP id silently re-points
+    every log entry and commit message citing that round.
+
+    The mark is then RAISED in the same act, matching `intake`'s mint: an
+    allocation that does not record itself leaves the mark behind the tree, and
+    `trace.py`'s integrity pass reads that as "an id was allocated past the
+    mark" — correctly, because it was. `trace.read_watermark` RAISES on an
+    absent or malformed mark and that refusal is deliberately not caught: a mint
+    with no record of what has been allocated must not proceed on a guess."""
     plans = Path(root) / "docs" / "plans"
     plans.mkdir(parents=True, exist_ok=True)
     nums = [
@@ -216,9 +234,12 @@ def allocate_round_dir(root, slug):
         for m in [DP_DIR_RE.match(p.name)]
         if m
     ]
-    nxt = (max(nums) + 1) if nums else 1
-    round_dir = plans / "DP-{:03d}-{}".format(nxt, slug)
+    mark = trace.read_watermark(root).get("DP", 0)
+    round_dir = plans / "DP-{:03d}-{}".format(max(max(nums, default=0), mark) + 1, slug)
     round_dir.mkdir(parents=True, exist_ok=False)
+    # After the mkdir: `bump_watermark` reads the LIVE tree, so the directory has
+    # to exist for the bump to see the number it just handed out.
+    trace.bump_watermark(root)
     return round_dir
 
 
@@ -268,8 +289,14 @@ def file_selected_wis(
             "would mint one real WI id for two rows".format(", ".join(dupes))
         )
 
+    # `max(live, mark) + 1` — the same mint `intake.next_wi_id` performs, and for
+    # the same reason: `max(live) + 1` re-issues the id of any spec that has been
+    # DELETED, which under repo-lock D-4 is how a superseded work item goes away.
+    # The union over both homes stays (a live id anywhere is taken); the mark is
+    # the FLOOR under it, and the reader RAISES rather than degrading to zero.
     existing = _existing_wi_nums(csv_path)
-    start = (max(existing) + 1) if existing else 1
+    mark = trace.read_watermark(root).get("WI", 0)
+    start = max(max(existing, default=0), mark) + 1
     mapping = {r["id"]: "WI-{:03d}".format(start + i) for i, r in enumerate(rows)}
 
     out_rows = []
@@ -301,6 +328,9 @@ def file_selected_wis(
     # Filing home: the spec folder, the one registry home since the CSV
     # retired (concurrency-restructure Phase 5, RULING-4).
     _write_spec_rows(csv_path, out_rows)
+    # RAISE THE MARK in the same act that files the specs (intake's rule), and
+    # only after they are on disk — `bump_watermark` reads the live tree.
+    trace.bump_watermark(root)
     return mapping
 
 

@@ -14,6 +14,25 @@ import csv
 from conftest import SCRIPTS, load_script, run_py
 
 pa = load_script("plan_artifacts")
+TRACE = load_script("trace")
+
+
+def _watermark(root):
+    """Give a bare fixture tree the `docs/id-watermark` every real repo carries.
+
+    Both mints here count from the MARK rather than `max(live) + 1` (repo-lock
+    D-4: a deleted id must never be handed out again), and `trace.read_watermark`
+    REFUSES an absent file rather than reading it as "no id is taken" — so a
+    fixture without one is not a mint that returns `DP-001`, it is a mint that
+    correctly refuses. The reuse regressions themselves live beside the rest of
+    the mark's rules in tests/test_id_watermark.py."""
+    (root / "docs").mkdir(parents=True, exist_ok=True)
+    (root / TRACE.WATERMARK).write_text(
+        TRACE.render_watermark({s: 0 for s in TRACE.WATERMARK_SPACES}),
+        encoding="utf-8",
+    )
+    return root
+
 
 # A minimal selected plan carrying a fan-in row (P3 depends on P1 AND P2) — the
 # same commensurability table plan_coverage parses.
@@ -59,6 +78,7 @@ def _write_registry(root, rows):
 
     ``newline=""`` writes the ``\\n`` bytes verbatim (no Windows translation), so
     the fixture genuinely holds LF — the convention the append must preserve."""
+    _watermark(root)
     path = _wi_csv(root)
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", encoding="utf-8", newline="") as fh:
@@ -75,14 +95,14 @@ def _rows(root):
 
 
 def test_allocate_first_round_is_dp001(tmp_path):
-    d = pa.allocate_round_dir(tmp_path, "my-slug")
+    d = pa.allocate_round_dir(_watermark(tmp_path), "my-slug")
     assert d.name == "DP-001-my-slug"
     assert d.is_dir()
 
 
 def test_allocate_next_round_increments(tmp_path):
     (tmp_path / "docs" / "plans" / "DP-001-existing").mkdir(parents=True)
-    d = pa.allocate_round_dir(tmp_path, "second")
+    d = pa.allocate_round_dir(_watermark(tmp_path), "second")
     assert d.name == "DP-002-second"
     assert d.is_dir()
 
@@ -91,7 +111,7 @@ def test_allocate_skips_the_gap_from_the_max(tmp_path):
     plans = tmp_path / "docs" / "plans"
     (plans / "DP-001-a").mkdir(parents=True)
     (plans / "DP-004-b").mkdir()
-    d = pa.allocate_round_dir(tmp_path, "c")
+    d = pa.allocate_round_dir(_watermark(tmp_path), "c")
     assert d.name == "DP-005-c"  # max + 1, not a gap-fill
 
 
@@ -99,7 +119,7 @@ def test_allocate_skips_the_gap_from_the_max(tmp_path):
 
 
 def test_write_stage_writes_named_utf8_files(tmp_path):
-    d = pa.allocate_round_dir(tmp_path, "r")
+    d = pa.allocate_round_dir(_watermark(tmp_path), "r")
     p = pa.write_stage(d, "verdict.md", "# Verdict — select plan B — em dash ✓\n")
     assert p == d / "verdict.md"
     assert p.read_text(encoding="utf-8").startswith("# Verdict")
@@ -302,7 +322,7 @@ def test_a_fresh_folder_first_scaffold_files_specs_without_resurrecting_a_csv(
     second registry. Mutation-proven by construction: the pre-2c-ii filer
     (folder_is_authoritative alone) is the mutant, and it reds this test by
     creating the CSV."""
-    _write_spec(tmp_path, "queued", "WI-000", slug="example")
+    _write_spec(_watermark(tmp_path), "queued", "WI-000", slug="example")
     mapping = _file_three(tmp_path)
     assert mapping == {"P1": "WI-001", "P2": "WI-002", "P3": "WI-003"}
     assert not _wi_csv(tmp_path).exists(), "filing resurrected the CSV home"
@@ -370,7 +390,7 @@ def test_check_trajectory_passes_after_filing_into_the_folder(tmp_path):
         slug="round-parent",
         deliverable="parent shipped",
     )
-    plan_dir = pa.allocate_round_dir(tmp_path, "fixture")
+    plan_dir = pa.allocate_round_dir(_watermark(tmp_path), "fixture")
     plan_path = pa.write_stage(plan_dir, "plan-B-rev.md", PLAN_TEXT)
     spec_ref = str(plan_path.relative_to(tmp_path)).replace("\\", "/")
     assert set(_file_three(tmp_path, spec_ref).values()) == {

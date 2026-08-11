@@ -160,6 +160,7 @@ graph LR
     m_scripts_integrate --> m_scripts_spec_move
     m_scripts_lane --> m_scripts_agent_common
     m_scripts_lane --> m_scripts_integrate
+    m_scripts_plan_artifacts --> m_scripts_trace
     m_scripts_plan_artifacts --> m_scripts_wi_convert
     m_scripts_plan_briefs --> m_scripts_prompts
     m_scripts_plan_briefs --> m_scripts_spine_carrier
@@ -975,7 +976,7 @@ Contracts (interfaces): IF-103
 
 ### `scripts/plan_artifacts`
 _The dual-plan round artifact filer: the coordinator's write-side of a round_
-Imports (internal): `wi_convert`
+Imports (internal): `trace`, `wi_convert`
 Contracts (interfaces): IF-061, IF-078
 
 | Public item | Summary | Implements |
