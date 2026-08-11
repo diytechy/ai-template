@@ -234,12 +234,28 @@ fi
 #      - skills-sync     per-agent skill copies byte-match the ONE neutral
 #                        source; one-command fix (bootstrap.py --sync); a no-op
 #                        where the kit-only generator isn't beside check.py.
+#      - skills-index    skills/INDEX.csv still matches the SKILL.md frontmatter
+#                        (WI-427). A DIFFERENT property from skills-sync above:
+#                        that one compares hand-authored copies to hand-authored
+#                        source and never reads the index. The fix is one stdlib
+#                        command (`gen_skills_index.py`) and the branch that
+#                        edited the SKILL.md is the only one that can run it —
+#                        which is exactly the floor rule stated at trajectory-map.
+#      - prompt-catalog  prompts/CATALOG.md still matches the shipped templates
+#                        (WI-427). It is the join key from a session log's
+#                        `# prompt-sha:` back to the template that produced it,
+#                        so a stale one misleads whoever is debugging a session —
+#                        and a template edit is precisely a COMMIT. Fix:
+#                        `gen_prompt_catalog.py`. Both steps are no-ops where the
+#                        kit-only generator isn't beside check.py, so a
+#                        non-adopter pays nothing.
 #    When a step reports STALE, regenerate in dependency order — arch-map ->
 #    okf -> trajectory (the dashboard consumes the other two); the gate marker via
 #    derive_gate.py, then the status snapshot via `gen_trajectory.py --status`
 #    (it reads the fresh gate), then the owner surface via `gen_open_items.py`
-#    — then re-commit.
-"$PY" "$SCRIPTS_DIR/check.py" --run-steps arch-map,okf,trajectory-map,status-map,open-items,trajectory,registry-integrity,derived-gate,skills-sync,ratify-fresh
+#    — then re-commit. The two kit-only index/catalogue steps stand alone: each
+#    regenerates with its own single command and feeds nothing else.
+"$PY" "$SCRIPTS_DIR/check.py" --run-steps arch-map,okf,trajectory-map,status-map,open-items,trajectory,registry-integrity,derived-gate,skills-sync,skills-index,prompt-catalog,ratify-fresh
 
 # 2. No-validation-delta warn (warn-first, never blocks): when this commit
 #    closes a WI that is a follow-up on an SR a previously-done WI already

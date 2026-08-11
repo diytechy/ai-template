@@ -208,6 +208,8 @@ BUILTIN_STEP_NAMES = frozenset(
         "okf",
         "ratify-fresh",
         "skills-sync",
+        "skills-index",
+        "prompt-catalog",
     }
 )
 
@@ -508,6 +510,38 @@ def steps(coverage, tier, gate, phase=None, profile=None):
         if skills_gen.exists()
         else [sys.executable, "-c", "pass"]  # kit-only generator absent: vacuous
     )
+    # The generator's OTHER half, and a DIFFERENT property (WI-427): is
+    # skills/INDEX.csv — a declared `[generated]` artifact — still what the
+    # SKILL.md frontmatter says? `--check-agents` above cannot answer that; it
+    # compares hand-authored copies to hand-authored source and never reads the
+    # index. Hence its own step: different input, different fix
+    # (gen_skills_index.py vs bootstrap.py --sync), different gate set.
+    #   `--skills` IS PASSED EXPLICITLY, derived from this script's location and
+    # never left to its CWD-relative `skills` default — in the kit's own repo the
+    # source is at project-trajectory/skills, so the default finds nothing and
+    # the generator exits 0 with "no skills dir": a step that cannot fail, the
+    # SN-008 failure this row exists to remove.
+    #   Both new commands take the kit-only shape of skills_sync_cmd above
+    # (vacuous no-op where the generator isn't beside check.py), and both
+    # generators resolve their artifact from their OWN location, so neither step
+    # depends on the CWD.
+    skills_index_cmd = (
+        [
+            sys.executable,
+            str(skills_gen),
+            "--skills",
+            str(_SCRIPTS.parent / "skills"),
+            "--check",
+        ]
+        if skills_gen.exists()
+        else [sys.executable, "-c", "pass"]  # kit-only generator absent: vacuous
+    )
+    catalog_gen = _SCRIPTS / "gen_prompt_catalog.py"
+    prompt_catalog_cmd = (
+        [sys.executable, str(catalog_gen), "--check"]
+        if catalog_gen.exists()
+        else [sys.executable, "-c", "pass"]  # kit-only generator absent: vacuous
+    )
     return [
         # --- product checks: language-specific, declared in docs/stack.ini -----
         ("format", _requires(fmt_cmd), fmt_cmd, {"G3"}, "product"),
@@ -765,6 +799,46 @@ def steps(coverage, tier, gate, phase=None, profile=None):
             (),
             skills_sync_cmd,
             {"G3"},
+            "process",
+        ),
+        # skills/INDEX.csv freshness against the SKILL.md frontmatter, and
+        # prompts/CATALOG.md freshness against the shipped templates (WI-427,
+        # IF-098). Both are declared generated in docs/stack.ini `[generated]`
+        # (`skillsindex`, `promptcatalog`), both had a working `--check`, and
+        # grep found neither in a step table, a hook or a workflow — so a stale
+        # one passed every gate. SN-010 states the freshness contract as a
+        # UNIVERSAL over generated artifacts, and a universal is false at one
+        # instance.
+        #
+        # AT EVERY GATE, not {G3} like the siblings above. That family
+        # (arch-map / trajectory-map / status-map / open-items / okf) is G3-only
+        # for a stated reason — those are views of the project's own evolving
+        # spine and "churn while the plan is still forming", so gating them early
+        # reds a repo for drift in an artifact whose inputs are still being
+        # written. These two have the opposite input profile: they index the
+        # APPARATUS (the kit's skill library, the loop's prompt templates), which
+        # does not move as a downstream plan matures, so there is no early-stage
+        # churn to protect. Their consumers are live from the first session — an
+        # agent reads INDEX.csv to decide whether a skill applies; an operator
+        # reads CATALOG.md to join a session log's `# prompt-sha:` back to the
+        # template that produced it, i.e. while debugging a session that already
+        # behaved oddly. That is `derived-gate`'s shape (an artifact the
+        # machinery's own honesty rests on), not the dashboards'. Concretely:
+        # this kit's own docs/gate reads G1 while its ratification window is
+        # open, so a {G3} step would not run in the kit's own CI for the whole
+        # duration of that window — the gap, re-created.
+        (
+            "skills-index",
+            (),
+            skills_index_cmd,
+            {"G1", "G2", "G3"},
+            "process",
+        ),
+        (
+            "prompt-catalog",
+            (),
+            prompt_catalog_cmd,
+            {"G1", "G2", "G3"},
             "process",
         ),
     ]
@@ -1049,6 +1123,14 @@ _COVERAGE_ENV_VARS = (
 # hand-authored SOURCE, so a branch editing a skill fixes its copies on the
 # branch), registry-integrity, trajectory, doc-navigability, and every product
 # step — those grade the branch's own edits, not the trunk's derived views.
+#   `skills-index` and `prompt-catalog` (WI-427) also stay out, and the reason is
+# the asymmetry docs/stack.ini `[generated]` records: `trunk_step.py --regen`
+# re-derives six DOCUMENT families and neither of these is among them. Standing
+# them down on a branch would leave the artifact ungated on the only side that
+# can fix it (the branch editing the SKILL.md / prompt template) and unfixable on
+# the side that gates it — the trunk would red with no mechanical regen to run.
+# The `[generated]` section declares OWNERSHIP, not lane; this set encodes which
+# owners the trunk can actually regenerate.
 _TRUNK_FRESHNESS_STEPS = frozenset(
     "derived-gate arch-map trajectory-map status-map open-items okf "
     "ratify-fresh".split()

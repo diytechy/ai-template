@@ -992,7 +992,22 @@ BASELINE = {
     # two more docstrings justified themselves by what the census had caught.
     # Re-worded onto reasons that survive the teardown, with the ruling named
     # so the next reader does not re-derive it. Comment only; zero code delta.
-    "check.py": 1556,
+    # Then +82 (1556 -> 1638), WI-427: SN-010 is a UNIVERSAL ("every generated
+    # artifact carries a --check freshness contract") and two declared
+    # `[generated]` artifacts falsified it — skills/INDEX.csv and
+    # prompts/CATALOG.md each had a working --check that ran NOWHERE. The two
+    # steps that make the need true land here, in the one table that owns the
+    # gate sets, because that is where every sibling freshness step lives; a
+    # step declared anywhere else is the 130-REVIEW-A failure (an adopter's
+    # older stack.ini blocking every commit with `no step named`). Most of the
+    # 82 is the reasoning this row was required to record in code — why the gate
+    # set is {G1,G2,G3} and not the {G3} family's, why the index check is its
+    # own step rather than folded into skills-sync, why --skills is passed
+    # explicitly (the default is a vacuous pass), and why neither step joins
+    # _TRUNK_FRESHNESS_STEPS. Trimmed once before stamping (1649 -> 1638) by
+    # merging the two step rationales into one block. Reviewed bump; re-stamp
+    # down with WI-280, which owns this module's decomposition.
+    "check.py": 1638,
     # +1 (1916 -> 1917), WI-279: one MAPPING row registering the new
     # scripts/check_coverage.py kit gate so it ships downstream — a required
     # one-line registration, not monolith growth (the reviewed-bump escape the

@@ -2,7 +2,7 @@
 id = "WI-427"
 title = "SN-010 says every generated artifact carries a --check freshness contract; two committed, DECLARED-generated artifacts have a working --check that runs NOWHERE, so the need is currently false. (1) project-trajectory/prompts/CATALOG.md, declared generated at docs/stack.ini [generated] as `promptcatalog`: gen_prompt_catalog.py --check works, and zero references to it exist in check.py, the pre-commit hook, .github/workflows or ci/check.yml. (2) project-trajectory/skills/INDEX.csv, declared as `skillsindex`: gen_skills_index.py --check (index-vs-SKILL.md staleness) is wired nowhere, and only the DIFFERENT --check-agents mode (per-agent copy drift) runs, as the skills-sync step - so a stale INDEX.csv passes every gate. Wire both into check.py's built-in step table and the hook's --run-steps list following the arch-map/okf/derived-gate/ratify-fresh idiom, deciding each step's GATE SET on what the artifact means rather than by copying the most common value, and deciding fold-vs-separate for the skills index on the two modes' actual properties. MAKE THEM NON-VACUOUS: plant a defect in a temp tree and prove each step REDS, with a test per step - a freshness step that cannot fail is the SN-008 green-hides-a-skipped-check failure and would be worse than the gap. ALSO verify the census claim that these are the only two gaps, reporting the full [generated]-vs-wiring table."
 workstream = "scripts"
-specref = ""
+specref = "docs/requirements/stakeholder-needs.toml"
 buildtier = "medium"
 safety_class = "ordinary"
 +++

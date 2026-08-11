@@ -133,6 +133,34 @@ def test_hook_skills_sync_step(scaffold):
     assert "--run-steps" in hook_text and "skills-sync" in hook_text
 
 
+def test_hook_skills_index_and_prompt_catalog_steps(scaffold):
+    # WI-427: the hook also runs the two generated-artifact freshness steps that
+    # SN-010 declares and nothing enforced — skills/INDEX.csv vs the SKILL.md
+    # frontmatter, and prompts/CATALOG.md vs the shipped templates.
+    #
+    # A SCAFFOLD IS THE CASE THAT MATTERS HERE. Both generators are kit-only, so
+    # downstream neither is beside check.py and both steps must degrade to a
+    # vacuous no-op that still RESOLVES — the 130-REVIEW-A failure (`check: no
+    # step named 'ratify-fresh'`, exit 1, every commit blocked for an adopter)
+    # is the reason these are built-in steps rather than docs/stack.ini
+    # `[step:]` sections. Their ability to actually go RED where the generator
+    # IS present is pinned in tests/test_generated_freshness_wiring.py.
+    make_minimal_project(scaffold)
+    for step in ("skills-index", "prompt-catalog"):
+        ok = run_py(["scripts/check.py", "--run-step", step], cwd=scaffold)
+        assert ok.returncode == 0, ok.stdout + ok.stderr
+        assert "no step named" not in (ok.stdout + ok.stderr)
+    hook_text = (KIT / "hooks" / "pre-commit").read_text(encoding="utf-8")
+    floor = [
+        ln
+        for ln in hook_text.splitlines()
+        if "--run-steps" in ln and not ln.lstrip().startswith("#")
+    ]
+    assert (
+        len(floor) == 1 and "skills-index" in floor[0] and "prompt-catalog" in floor[0]
+    )
+
+
 def test_hook_trajectory_step_is_the_ra_floor(scaffold):
     # S1: the hook runs `check.py --run-step trajectory` (the SSOT floor). It is
     # WARN-FIRST (gate=all): only R-A (Deliverable non-empty iff done) is a hard
