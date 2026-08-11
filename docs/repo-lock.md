@@ -1240,8 +1240,40 @@ with OI-13 and OI-12 *executing* together.
     still caught;
   - accept it and stop reading census churn as a signal.
 
-  **Worth a ruling before a twelfth importer**, and cheapest now while the
-  pattern is fresh.
+  **Is the census earning its keep — the evidence ledger, compiled 2026-08-10
+  at the owner's question.** Both columns, from the repo's own records:
+
+  - **Caught:** one real bug-in-waiting at the initial triage
+    (`stamped_baseline`, WI-334c — a freshness-gate/generator split waiting to
+    happen), and census-pressure-driven cleanups (WI-346, WI-304). **Post-
+    triage gate catches recorded: zero** — with the honest caveat that the
+    gate's success mode (author extracts pre-commit) leaves no log trace; but
+    every *recorded* firing, including all ~35 this session, ended in
+    "sanction", never "extract".
+  - **Structurally missed:** BOTH real duplication failures this repo has
+    suffered — the `llr_exempt` whitespace divergence (caught by review 017)
+    and the `_sn_rows` drift that shipped a phantom SN-000 root (caught by the
+    F-6 source-reading audit, weeks late). Neither *could* be caught here:
+    **diverged copies are no longer identical tokens, so the tool goes silent
+    at exactly the moment duplication becomes dangerous.** It fires on the
+    safe state and is blind to the harmful one. The actual anti-drift defenses
+    are `test_rule_sync`'s behavioral pins and D-6's one-home moves.
+  - **Costs:** its own defect chain (WI-334's false claims → WI-337 / WI-338 /
+    two review findings / the line-ending CI-red), the 12-test meta-audit
+    guarding the census's *prose*, and this session's three churn cycles.
+  - **The tell:** 28 of 30 classes are `deliberate` (~93% of 253 sanction
+    lines). The census is a register of accepted idioms; its live function is
+    "a new copy is a conscious act", and that function was designed for a real
+    need — bounding F5 (owner ruling 2026-07-12) — not speculation. What *is*
+    unsupported by evidence is the assumption that it defends against drift.
+
+  This widens the pending ruling from "fix the churn" to a scope question:
+  keep the gate cheap (member-list form) as an F5 bound while **naming
+  `test_rule_sync` as the anti-drift tool of record** — e.g. new F5
+  duplication of *policy* requires a behavioral pin, not just a census line —
+  or demote the census outright and accept F5 unbounded again, which re-opens
+  the WI-078 concern. **Worth a ruling before a twelfth importer**, and
+  cheapest now while the pattern is fresh.
 
 - **`intake.py` is a monolith again (1503 lines, THRESHOLD 1500).** It fell to
   1496 when the D-1 removal deleted the attestation ledger, and its ratchet
