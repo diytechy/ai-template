@@ -168,9 +168,58 @@ it. **A re-homing is only approvable where the verdict is PASS.**
    SR-020 cover the hooks. **No SR requires CI to run the same harness.**
    SR-114's acceptance names a CI matrix, but for *OS portability*, not as the
    enforcement floor. A `Verified` need is half-covered.
+
+   > **Measured 2026-08-11, on the owner's question of whether this is
+   > mechanically verifiable at all — the obligation is TRUE and shipped
+   > today, and the cheap half is checkable.** The kit's reference CI
+   > `project-trajectory/ci/check.yml` runs `scripts/check.py`, and says why
+   > in its own header: *"It runs the SAME harness you run locally … so a
+   > green CI means exactly what a green local run means — no second,
+   > drifting definition of 'passing'."* `bootstrap.py`'s MAPPING copies it
+   > to `.github/workflows/check.yml`, and **this repo dogfoods it** —
+   > `.github/workflows/test.yml` runs `python
+   > project-trajectory/scripts/check.py --jobs 0` as "Run the kit's own gate
+   > (docs/gate)", alongside the full suite and the smoke-budget enforcement.
+   > So CI already does more than the smoke tier.
+   >
+   > **What is cheaply checkable** is the property that actually carries the
+   > need: *one definition of passing*. A test asserting the shipped
+   > `ci/check.yml` invokes `check.py` — a stdlib string search, no YAML
+   > parser (F-6's rule) — pins it at the artifact the kit controls, and the
+   > same one line dogfoods this repo's own workflow. **Nothing pins it
+   > today, measured:** the existing tests pin the workflow's *triggers* and
+   > *shape* — `test_push_policy` asserts `ci/check.yml` carries the
+   > `"llm/**"` pattern, `test_bootstrap` asserts the file is copied, that
+   > actions are pinned, and that at least three jobs exist ("expected at
+   > least test/smoke-budget/gate") — but **no assertion reads a `run:`
+   > line**. The gate job could be renamed or gutted to run something else
+   > and every test stays green. That is a one-line gap, and closing it is
+   > what would make SN-005's CI clause enforced rather than merely true.
+   >
+   > **What is NOT worth mechanizing**, and should be said in the row rather
+   > than attempted: proving CI and local agree on *all* inputs (an
+   > equivalence claim you can only settle by running both), and anything
+   > about an **adopter's** copy — their file after copy-in, the same D-7
+   > doctrine that governs a removed check. **Recommendation: reform, don't
+   > delete.** Narrow the acceptance to the single-entry-point property the
+   > kit can hold, mint the small SR + TC under it, and let the adopter half
+   > stay advisory.
 2. **SN-007's per-change coverage obligation is undecomposed.** *"a change to a
    script is covered by a test exercised end-to-end"* has no SR requiring
    per-change coverage.
+
+   > **OWNER RULED, 2026-08-11: strike the clause.** *"I'm fine with removing
+   > the prose … which doesn't have coverage today. That's not really
+   > sustainable anyways."* So the fix is a **deletion, not a new SR** — the
+   > need stops claiming per-change coverage. Note what this makes true, which
+   > is the argument for it: **SN-007's own acceptance cell already states the
+   > sustainable version** (*"The suite bootstraps a temp scaffold and runs
+   > every script; `pytest -q` green is required before each change lands"*) —
+   > a gate on the *suite* at each change, never a per-change coverage proof.
+   > The Need cell was over-claiming against its own acceptance, so striking
+   > the clause makes the row self-consistent rather than weakening it. Lands
+   > with the prose batch at the sitting (a lone edit to a ratified need would
+   > open a re-attest window outside the batched one — §F).
 3. **SN-010's "every generated artifact" is a universal with four instances.**
    Either an SR should assert the universal, or the need should name the class
    it actually covers.
