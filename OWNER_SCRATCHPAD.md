@@ -686,6 +686,12 @@ Note: In a branch, a work item is non-mutable.  Work item definitions can only b
 
  #############
 
+Are there other csv registries here that should switch to TOML?  It tend to think perhaps they all should move... can you cross-check?
+
+Are there other duplicated funcitons in other files?  In general, should there be a common modules file to import from?  I realize this was apparently rejected in the past, but it's advantage (copying a single file) is basically moot given how things have grown.
+
+Where are agents stored again?  Perhaps this should be a TOML file as well.
+
  Findings for post convert to TOML:
 
  The component registry and interfaces need cleanup.
