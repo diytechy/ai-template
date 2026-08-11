@@ -52,9 +52,11 @@ components ruling above and should be ruled with it.
 recommendations: `Status`'s new `Verified` **re-points a word 370 live rows
 already use** with the old meaning (Q9 — recommend spending a fresh word so a
 half-migration cannot hide), and the **edge-case SN tier may be mis-levelled**
-(§7's note: eight of ten rows decompose into exactly one SR, against 12.3 for a
-core need — a "need" that yields one requirement *is* the requirement, written a
-level up). The second is a **kit-level** finding: that table ships to every
+(§7's note, **figures corrected 2026-08-11** against the actual `sn_refs`
+joins: **seven** of ten rows decompose into exactly one SR, against 12.6 for a
+core need — and two of the seven, SN-019 and SN-020, decompose into the *same*
+single SR-028, which is stronger mis-levelling evidence than any ratio — a
+"need" that yields one requirement *is* the requirement, written a level up). The second is a **kit-level** finding: that table ships to every
 adopter — and it now has a **precedent rather than only a recommendation**: the
 2026-08-10 sitting applied exactly this test to the draft tier and ruled three
 of five needs mis-levelled, demoting them (see [`log.md`](log.md)'s Decisions).
@@ -868,28 +870,18 @@ changed carrier, so the tree is still single-home.
 1. ~~the carrier-aware baseline read~~ **DONE** (`a35f12f6`)
 2. ~~the loader, every spine reader including the SN tier~~ **DONE**
    (`82d5b818` · `d97f2634` · `9a5d7267` · `df840a3b`)
-3. **the cutover — RUN, NOT LANDED.** `git stash apply stash@{0}`, or
-   `git apply docs/plans/2026-08-10-carrier-cutover.patch`. Drive its ~76
-   failures to zero. **Apply it; do not rebuild it** — and read "Step 3" above
-   first, because what it CAUGHT is the reason it exists.
-4. `intake`'s writer becomes a TOML emitter. The shape is already decided by
-   precedent and is the cheap one: intake only ever flips a `Status` cell, and
-   `status = "Modified"` is a single `key = value` line — so this is
-   `bootstrap.set_process_key`'s **line rewrite**, not `wi_convert`'s
-   re-serialization. A line rewrite also preserves every comment and the file's
-   ordering, which a re-emit would silently normalise away.
-5. `test_dogfood_sync`'s "live header is an ordered superset of the template
-   header" rule, which **has no meaning over TOML keys** and needs redesigning.
-   Note it is not merely a port: the rule exists so a live registry cannot
-   quietly drop a column the template declares, and the TOML analogue is a
-   *key-set* rule over a registry where an absent key is legitimate — so the
-   replacement has to decide what "the template declares this" means when
-   absence is meaningful. Do not let it become vacuous; that is the exact
-   "green hides a skipped check" failure SN-008 forbids.
-6. the `registries/*.template.*` files and an ADOPTING migration note, because
-   **every adopting repo migrates too** — and `migrate_carrier.py` already
-   ships to them (`bootstrap.py` MAPPING, marked `Provisional` in IF-103
-   because it is scaffolding with a defined end).
+3. ~~**the cutover**~~ **DONE** (`bb69a622`) — applied from the patch by 3-way
+   merge, ~64 red driven to zero, ten fail-open readers fixed in the landing.
+   See "LANDED, 2026-08-11" below.
+4. ~~`intake`'s writer becomes a TOML emitter~~ **DONE** (`bb69a622`) — the
+   line rewrite, as ruled: `status = "Modified"` is one `key = value` line,
+   comments and ordering preserved.
+5. ~~`test_dogfood_sync`'s header rule~~ **DONE** (`bb69a622`) — redesigned
+   with **inverted direction** ("live keys ⊆ template keys, template keys ⊆
+   carrier vocabulary"; the old direction is unmeasurable over TOML). Driven
+   against planted defects both ways; caught two pre-existing drifts on
+   arrival. Recorded as builder decision (3) in the LANDED note.
+6. ~~templates + ADOPTING~~ **DONE** (`bb69a622` + `f7be75af`).
 
 **Step 1 — the carrier-aware baseline read — is DONE.** `trace._rows_at` and
 `check_trajectory._spine_rows_at` each resolve the carrier a revision actually
@@ -996,6 +988,68 @@ the pair so the agreement cannot be vacuous. Censused in `docs/dupes-allow`
 with that reason. **The CSV fallback is deliberate dead weight with an expiry**:
 it should be dropped once no supported baseline predates the cutover, and both
 ratchet entries say so.
+
+#### LANDED, 2026-08-11 — the cutover is COMMITTED and the full bar is green
+
+`bb69a622` (the cutover: four tiers to TOML, sources deleted, plus steps 4, 5
+and 6's templates — each step's tests only became runnable once the carrier
+moved, so they landed together) and `f7be75af` (ADOPTING's migration recipe).
+Full unfiltered suite: **2197 passed, 5 skipped, 6:07**. `trace --strict`
+`SN=29 SR=147 LLR=149 TC=146 orphans=0 integrity=0`; the **38 `Modified` rows
+survived exactly** (25 SR · 6 LLR · 7 TC), no `Status` on SN, vocabulary
+unchanged — the reordering guardrail held. The re-attest brief regenerates
+**byte-identical** across the carrier change. Applied from the patch file via
+3-way merge (HEAD had moved; one `interfaces.csv` EOF conflict, resolved to
+the patch's side); `stash@{0}` verified redundant and dropped.
+
+> **Correction: step 1 was recorded as DONE above and was not done enough.**
+> `trace._rows_at` was carrier-aware; `trace._attested_baseline`'s `git log`
+> **pathspec** was not — after the cutover the `.toml` path's history contains
+> only the cutover commit, where every amended row reads `Modified`, so no
+> Verified revision is found and **all 25 rows reported "No attested
+> baseline"**. The exact fail-open D-5 flagged hardest, one function away from
+> where it was fixed. Caught at the builder's guardrail check, fixed in
+> `bb69a622` by naming both carrier paths. Two lessons: a "DONE" that means
+> "the function I looked at is done" is not a property of the *path*; and the
+> grep that "confirms" a hazard didn't fire must quote the real string — the
+> first check passed by searching this file's paraphrase of the message.
+
+**Six decisions the builder made that this file had not ruled** (recorded, not
+re-litigated — all are live in `bb69a622`): **(1)** `TestRefs` stays a plain
+string, not a ref array — its conventional `(see TC-017)` value would split
+and re-join as text damage across 140 LLR rows. **(2)** Ref arrays re-join on
+`;` bare, matching all 271 multi-ref cells as measured; the prettier `"; "`
+would have pushed ~40 spurious cell-changed entries into the sitting's brief.
+**(3)** `test_dogfood_sync`'s replacement rule **inverted direction**: "live
+keys ⊆ template keys, template keys ⊆ carrier vocabulary" — the old direction
+is unmeasurable over TOML (an all-empty column like `Permutations` legitimately
+vanishes from the live carrier). Non-vacuous by construction and by planted
+defect: it immediately caught two drifts the old rule permitted (`SupersededBy`
+never templated; the LLR template's blank `Component` silently dropping the
+key). **(4)** Fixtures stay on the legacy CSV carrier so the un-migrated
+adopter's fallback path keeps its coverage; the TOML arm rides this repo's own
+registries + fresh-scaffold tests. **(5)** `gen_cases` gained a `toml` paste
+format beside `csv`. **(6)** The needs registry's markdown guidance —
+including `## Non-goals`, a G1 deliverable with no other home — survives as
+TOML comments rather than being dropped by the row-reading converter.
+
+**Ten fail-open readers were found and fixed in the landing** — the patch's
+known three plus seven more, including three inside `spine_carrier` itself.
+The worst: `derive_gate`'s needs-registry existence probe read the markdown
+file as absent → empty draft set → **the derived gate would have RISEN**;
+`spine_carrier.load`'s `{id: row}` shape silently collapsed duplicate CSV ids,
+destroying the first thing `--strict-integrity` exists to fail on; and
+`_blame_row_times` looked rows up by the CSV shape and passed staleness having
+checked nothing. The step-3 lesson stands confirmed: the cutover is the
+detector.
+
+**Rows whose text the cutover falsifies — TABLED for the sitting, not
+amended** (the builder was instructed to stop, not amend): `SR-002` (title
+"…CSV structure", column-count clause) is the clear one; also worth a
+read-through: SR-025 · SR-129 · SR-147 · LLR-002 · LLR-025 · LLR-034 ·
+LLR-041 · LLR-118 · LLR-136 · LLR-165 · TC-025 · TC-129 · TC-160 · SN-026 —
+some may still be true (the off-spine registries and WI carrier are still
+CSV). §8.4 carries the full sitting-input list this joins.
 
 ### D-6 — the spine carrier gets ONE home; F5 is AMENDED, not ignored
 
@@ -1175,13 +1229,11 @@ with OI-13 and OI-12 *executing* together.
 > and it runs BEFORE the sitting. Steps 6 and 7 keep their numbers so every
 > cross-reference in this file and in the log still resolves.
 
-6a. **Migrate the carrier (D-5)** — the tool is shipped and proven; the cutover
-   is owed. Order inside it: the carrier-aware baseline read (**do not skip —
-   D-5 "the one thing that must not be forgotten"**) → `load_registry` →
-   the cutover commit that writes the four `.toml` files and DELETES the
-   `.csv`/`.md` sources together → `intake`'s TOML writer →
-   `test_dogfood_sync`'s header rule → templates + ADOPTING.
-   Carrier only: `Status` keeps `Modified`, or step 6 is compromised.
+6a. ~~**Migrate the carrier (D-5)**~~ **DONE 2026-08-11** (`bb69a622` +
+   `f7be75af`, full bar green at 2197/5). Carrier only, verified: `Status`
+   kept `Modified` on all 38 rows, so step 6 is uncompromised. The baseline
+   read needed a second fix in the landing (`_attested_baseline`'s pathspec —
+   see D-5's LANDED correction note).
 
 6. **Hold the P0 sitting** — ~~rule the five draft needs~~ **(part 1 done,
    2026-08-10)** and work the 25-row re-attest brief
@@ -1218,7 +1270,9 @@ with OI-13 and OI-12 *executing* together.
     it. **This is why the item is not struck through.** The bar is a *state*,
     not a trophy: it was claimed as met, was true when claimed, and was false
     one commit later. Re-run it at the end — the carrier migration is the
-    largest change still to come.
+    largest change still to come. *(Re-met a third time at the carrier cutover
+    itself, 2026-08-11: `2197 passed, 5 skipped, 0 failed`, 6:07, at
+    `bb69a622`/`f7be75af`.)*
 12. **Merge to `main`** — an owner act (`push = "human"`).
 
 ### Loose ends, owed to no step above
@@ -1811,9 +1865,14 @@ autonomously through WIs.
    3 mostly *ratifies* existing capability). `run.*` ships in the kit with
    `run_menu.py` but is **deliberately un-self-applied here** — the recorded
    stance is "a meta-repo has no product to launch," and item 4 **reverses**
-   that stance; cheap to do, but it is a reversal, not an addition. A
-   `dev-setup` *launcher* does not exist today — machinery and tests do, a
-   double-clickable does not — so item 2 is new capability.
+   that stance; cheap to do, but it is a reversal, not an addition. ~~A
+   `dev-setup` *launcher* does not exist today~~ **Corrected 2026-08-11: it
+   does.** `dev-setup.template.{sh,ps1,command,cmd}` ship, `bootstrap.py` maps
+   all four, and this repo self-applies them — in `scripts/`, not at root. So
+   item 2 is a *placement* change (root-level double-clickable), clearly
+   SR-tier by the sitting's own demotion test, not new capability. (Found by
+   the prose-rewrite pass, §8.4; Linux double-click has no defined desktop
+   contract on any platform profile — CANNOT VERIFY there.)
 4. **Item 5 changes machinery:** the "hat" roster needs a declared home, and
    `trace.py`'s `--ratify` brief generator must inject it — a WI, not a prose
    edit.
@@ -1835,3 +1894,55 @@ autonomously through WIs.
    extending it with a per-check *catch ledger* (the D-7 method, applied
    check-by-check) is the standing candidate for step 10's warn-residue
    disposal.
+
+### 8.4 · The prose legibility rewrite — PREPARED, adversarially reviewed twice, sitting-ready
+
+**Executed 2026-08-11 on §8.3 item 1's mandate.** The proposal is
+[`plans/2026-08-10-sn-sr-prose-rewrite.md`](plans/2026-08-10-sn-sr-prose-rewrite.md)
+— per-row exact replacement text for all 29 live SNs + the draft (form (i),
+all MEANING-PRESERVING with qualifiers retained verbatim), a triaged 17-SR
+exact-text batch (13 more triaged rows *dropped* rather than shipped as
+outlines), the §B.0 obligation-coverage matrix for every clause the full
+plain-language form would re-home, and the edge-case mis-levelling analysis
+(§0's corrected figures come from it). **Review record:** two rounds by
+OpenAI `gpt-5.6-sol` via codex CLI at medium effort — round 1 adversarial
+(verdict: not sitting-safe, 12 corrections, including 12 laundered-qualifier
+rows), round 2 verification (4 residuals, fixed by the coordinator in place).
+The document opens with the full disposition table. Nothing was executed
+against a registry; the sitting rules row by row.
+
+**What the pass surfaced beyond prose — each tabled here as sitting input:**
+
+1. **Two decomposition GAPS, not prose problems:** no SR anywhere carries
+   SN-005's *CI runs the same harness* obligation, and none carries SN-007's
+   *a change to a script is covered by a test* obligation. The needs assert
+   them; the requirement tier never received them. Both blocked the
+   full-plain-language form of their SN and both need an SR minted or the
+   need's claim narrowed — a ruling either way.
+2. **SR-126 (`Verified`) already PERMITS script names in spine normative
+   text** — its acceptance carves out "a script name, artifact path, rubric
+   or sibling spine id does not [open a window]". §8.3 item 1's "no
+   implementation references", applied as a mechanical rule, contradicts a
+   live enforced requirement. Rule them together.
+3. **`gate_policy` names two different things** — the retired config enum
+   *and* a live runtime label (`agent_loop.py` derives
+   `"human-held"/"loop-held"` under that name). The ambiguity generated two
+   false stale-text defects inside one analysis pass and will keep generating
+   them. Recommendation: rename the live label.
+4. **`PROCESS_OPTIONS.md` still instructs through the retired enum** at 10
+   distinct `gate_policy` token lines (11 occurrences; the two hyphenated
+   `--gate-policy`/`gate-policy.md` sites are live translated interface, not
+   residue). The `test_rule_sync` pin covers only the template, so nothing
+   mechanical sees this. Adopters read it as operative process — worse than
+   the registry residue.
+5. **Stale-text verdicts, settled honestly:** SR-040 CONFIRMED
+   (self-contradicting between adjacent cells — its exact fix is in the
+   proposal); SR-018 WITHDRAWN (the legacy `docs/privacy-check` read is a
+   deliberate, shipped migration window — the text is not false);
+   SR-082/085/108/125 CANNOT VERIFY until "gate policy" has one referent
+   (finding 3). The carrier-falsified list in D-5's LANDED note joins this
+   set as the same sitting agenda.
+6. **The §8.3 draft SR ("handbacks first") collides with SR-141**, which
+   gives `adjudication` rows top priority today; and it presumes "SN always
+   human-attested", which `human_ratification_through = 0` contradicts —
+   both flagged in the proposal for explicit ruling before intake.
