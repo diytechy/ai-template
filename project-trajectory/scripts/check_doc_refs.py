@@ -73,10 +73,11 @@ unless --strict; NOT wired into check.py's required floor. Opt in per repo:
 Scan surface = root *.md + docs/**/*.md (the check_docs surface) + the spine
 registries' Evidence-class cells (tier 3). Stdlib only.
 
-Contracts: IF-008, IF-028, IF-072, IF-104 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.csv).
+Contracts: IF-008, IF-028, IF-072, IF-104, IF-117 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.csv).
 """
 
 import argparse
+import ast
 import re
 import sys
 from pathlib import Path
@@ -415,6 +416,136 @@ def registry_findings(
     return bad, untraced
 
 
+# An LLR `CodeSymbol` cell is a JOINED LIST with no stated grammar, and the
+# census that preceded this rule (WI-429, 149 live rows) is why the splitter is
+# this wide: cells join on `/`, `+`, `;` and `,`, and their members are not all
+# symbols. Measured: module-level functions and classes (the majority), private
+# helpers (`_ring_ink`), module constants (`STATUS_FILL`), class methods, and
+# also FUNCTION LOCALS (`budget_findings`), INSTANCE ATTRIBUTES
+# (`critique_rounds`), CSS custom properties (`--nhead`) and free prose
+# (`every emitter's paint`). Only an identifier-shaped member is a symbol claim
+# at all; the rest are ruled prose, exactly as R2 ruled the `::node` half of an
+# Evidence citation prose rather than inventing a grammar after the fact.
+SYMBOL_JOIN = re.compile(r"[/;+,]+")
+IDENTIFIER = re.compile(r"^[A-Za-z_]\w*$")
+
+
+def _module_bindings(path):
+    """`gen_arch_map.module_bindings` for one file, or None when it will not
+    parse. Imported lazily so the path/registry tiers keep working on a repo
+    whose kit scripts are not importable (and so a syntax error in ONE module
+    costs that module's rule, not the whole run)."""
+    try:
+        import gen_arch_map
+    except ImportError:  # pragma: no cover - in-process fallback, spine_carrier idiom
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        import gen_arch_map
+    try:
+        return gen_arch_map.module_bindings(ast.parse(path.read_text(encoding="utf-8")))
+    except (SyntaxError, UnicodeDecodeError, OSError):
+        return None
+
+
+def _row_bindings(root, mods, cache):
+    """The UNION of module-scope names across a row's `Module` list, or None when
+    the row has nothing this rule can check.
+
+    Each skip costs a stated thing, which is why they live together here rather
+    than as branches inside the rule: a non-`.py` module (a hook, a shell
+    template) has no Python name to bind; a module absent from disk is the PATH
+    tier's finding, and reporting it twice would count one rot twice; a module
+    that will not parse is `--strict-parse`'s finding. `None` — "not checkable"
+    — is deliberately distinct from an empty set, which would mean "checked, and
+    this module binds nothing"."""
+    bound, checkable = set(), False
+    for mod in mods:
+        if not mod.endswith(".py"):
+            continue
+        path = root / mod
+        if not path.is_file():
+            continue
+        if mod not in cache:
+            cache[mod] = _module_bindings(path)
+        if cache[mod] is None:
+            continue
+        checkable = True
+        bound |= cache[mod]
+    return bound if checkable else None
+
+
+def symbol_findings(root):
+    """`(dangling, untraced)` for the LLR `CodeSymbol` ANCHOR rule (WI-429).
+
+    THE RULE: a live LLR row must carry at least ONE identifier-shaped
+    `CodeSymbol` token that BINDS in one of the `.py` modules its `Module` cell
+    names. Everything else about the cell is filed untraced.
+
+    WHY AN ANCHOR AND NOT PER-TOKEN. This is the discharge test D-9 leaves open
+    for the LLR tier — `Status = Founded` means "the artifacts this row calls
+    for exist", and for an LLR (which has no children in this schema) that is
+    resolving code. A per-token rule answers a different, harsher question —
+    "is every name in this cell exact" — and on real data it reds 31 of 149
+    rows, 18 of them for tokens that were never symbol claims: a local, an
+    attribute, a CSS variable, a prose fragment. That is a check that reds the
+    tree on arrival, enforcing a grammar no ruling ever gave the cell. The
+    anchor is the same trade ruling R2 made on the sibling cell: validate the
+    coarse claim (the code is real, at a module that is real, under a name that
+    is really there), rule the fine claim prose — and COUNT the fine misses so
+    a tightening stays possible instead of being hidden.
+
+    The `;` list in `Module` is read as a UNION, never as a positional pairing
+    with the symbol list. One live row (LLR-080) does pair them positionally,
+    nothing states that convention, and a union can only ever be the safer
+    reading: it accepts both authorings and invents no failure.
+
+    Skips are deliberate and each costs a stated thing: a placeholder row
+    (`*-000`) so a scaffold stays copy-ready; a non-`.py` module (a hook, a
+    shell template) because there is no Python name to bind; a module absent
+    from disk because the PATH tier already owns that finding and reporting it
+    twice would double-count one rot; an unparseable module because a syntax
+    error is `--strict-parse`'s finding, not this one."""
+    rel = "docs/requirements/low-level-requirements.toml"
+    bad, untraced = [], []
+    if spine_carrier.resolve(root / rel) is None:
+        return bad, untraced
+    cache = {}
+    for row in spine_carrier.load(root / rel, "LLR-ID"):
+        rid = (row.get("LLR-ID") or "").strip()
+        if not rid or rid.endswith("-000"):
+            continue
+        cell = (row.get("CodeSymbol") or "").strip()
+        mods = [m.strip() for m in (row.get("Module") or "").split(";") if m.strip()]
+        bound = _row_bindings(root, mods, cache)
+        if bound is None:
+            continue  # nothing checkable in this row's modules
+        tokens = [t.strip() for t in SYMBOL_JOIN.split(cell) if t.strip()]
+        idents = [t for t in tokens if IDENTIFIER.match(t)]
+        entry = "{}: {} CodeSymbol: `{}`".format(rel, rid, cell)
+        if not idents:
+            untraced.append(
+                entry + " — no identifier-shaped token; the cell names a file "
+                "format, a CLI/CSS token or prose, which is ruled not a symbol claim"
+            )
+            continue
+        hit = [t for t in idents if t in bound]
+        if not hit:
+            bad.append(
+                "{} — none of its symbol(s) ({}) is defined in {}".format(
+                    entry, ", ".join(sorted(set(idents))), " or ".join(mods)
+                )
+            )
+            continue
+        for miss in sorted({t for t in idents if t not in bound}):
+            untraced.append(
+                "{} — `{}` is not a module-level name in {}; the row is anchored "
+                "by `{}`, so this is counted, not gated (a local, an attribute or "
+                "a renamed helper reads the same here)".format(
+                    entry, miss, " or ".join(mods), hit[0]
+                )
+            )
+    return bad, untraced
+
+
 def authored_lines(doc):
     """`(n, line)` pairs of the surface's hand-authored lines. Generated marker
     blocks (the module map, flow diagrams) are not hand-authored prose — their
@@ -551,6 +682,9 @@ def main():
     reg_bad, reg_untraced = registry_findings(root, kit_root, records, absences)
     findings += reg_bad
     untraced += reg_untraced
+    sym_bad, sym_untraced = symbol_findings(root)
+    findings += sym_bad
+    untraced += sym_untraced
     for f in findings:
         print("check_doc_refs: WARN - " + f, file=sys.stderr)
     if args.show_untraced:

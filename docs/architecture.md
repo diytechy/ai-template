@@ -115,6 +115,7 @@ graph LR
     m_scripts_agent_loop --> m_scripts_prompts
     m_scripts_agent_loop --> m_scripts_score_reviews
     m_scripts_agent_loop --> m_scripts_spine_carrier
+    m_scripts_check_doc_refs --> m_scripts_gen_arch_map
     m_scripts_check_doc_refs --> m_scripts_spine_carrier
     m_scripts_check_docs --> m_scripts_spine_carrier
     m_scripts_check_figures --> m_scripts_check_doc_refs
@@ -213,6 +214,7 @@ graph LR
     m_scripts_check_trajectory -. IF-083 .-> m_scripts_traj_views
     m_scripts_derive_gate -. IF-050 .-> m_scripts_check
     m_scripts_gen_arch_map -. IF-010 .-> m_scripts_check
+    m_scripts_gen_arch_map -. IF-117 .-> m_scripts_check_doc_refs
     m_scripts_gen_okf -. IF-012 .-> m_scripts_check
     m_scripts_gen_trajectory -. IF-011 .-> m_scripts_check
     m_scripts_gen_trajectory -. IF-088 .-> m_scripts_dispatch
@@ -529,8 +531,8 @@ Contracts (interfaces): IF-069, IF-070
 
 ### `scripts/check_doc_refs`
 _Doc reference validation — prose that names dead files or symbols (Thread 49)._
-Imports (internal): `spine_carrier`
-Contracts (interfaces): IF-008, IF-028, IF-072, IF-104
+Imports (internal): `gen_arch_map`, `spine_carrier`
+Contracts (interfaces): IF-008, IF-028, IF-072, IF-104, IF-117
 
 | Public item | Summary | Implements |
 |---|---|---|
@@ -542,6 +544,7 @@ Contracts (interfaces): IF-008, IF-028, IF-072, IF-104
 | `judge_token(token, entry, bad, untraced, rel, root, kit_root, record_prefixes, absences)` | Judge one cited token and file its verdict under `entry` — the finding |  |
 | `path_findings(line, rel, n, root, kit_root, record_prefixes, absences)` | One line's path-tier verdicts as `(dangling, untraced)` (WI-062). |  |
 | `registry_findings(root, kit_root, record_prefixes, absences)` | `(dangling, untraced)` over the spine's Evidence-class cells (WI-394). |  |
+| `symbol_findings(root)` | `(dangling, untraced)` for the LLR `CodeSymbol` ANCHOR rule (WI-429). | LLR-080 |
 | `authored_lines(doc)` | `(n, line)` pairs of the surface's hand-authored lines. Generated marker |  |
 | `findings_for(doc, root, oracle, kit_root, record_prefixes, absences)` | `(dangling, untraced)` — see the module docstring for the split. |  |
 | `main()` |  |  |
@@ -786,6 +789,7 @@ Contracts (interfaces): IF-010, IF-025
 | `first_line(text)` | First non-empty line of a docstring, trimmed. |  |
 | `signature(node)` | Render a function/method signature from its AST args (names only). |  |
 | `implements(node, source_lines)` | Collect requirement ids annotated near a symbol (docstring + the few |  |
+| `module_bindings(tree)` | Every name a module BINDS at module scope, plus class-level `def` names. |  |
 | `module_contracts(tree, source_lines)` | The IF-### seam ids this module declares via a `Contracts: IF-###, ...` |  |
 | `internal_imports(tree, internal_names)` | In-tree modules this file imports (best-effort: relative imports, or an |  |
 | `scan_module(path, root, internal_names)` | Return (rel_module, summary, imports, contracts, rows) for one .py file. |  |

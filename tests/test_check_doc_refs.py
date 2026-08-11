@@ -28,7 +28,14 @@ def make_repo(root, body, with_arch=True):
     if with_arch:
         (root / "docs" / "architecture.md").write_text(ARCH, encoding="utf-8")
     (root / "scripts").mkdir(exist_ok=True)
-    (root / "scripts" / "real.py").write_text("x = 1\n", encoding="utf-8")
+    # `load`/`save` are the names the spine fixtures' LLR CodeSymbol cites, and
+    # they are DEFINED here so those rows are FOUNDED under the WI-429 anchor
+    # rule: a fixture whose LLR names code that does not exist would make every
+    # registry-tier test convict for the wrong reason.
+    (root / "scripts" / "real.py").write_text(
+        "x = 1\n\n\ndef load():\n    pass\n\n\ndef save():\n    pass\n",
+        encoding="utf-8",
+    )
     return root
 
 
@@ -435,11 +442,9 @@ def test_registry_joined_module_list_is_split_and_judged_per_half(tmp_path):
 def test_registry_placeholder_rows_and_symbol_joins_stay_out_of_scope(tmp_path):
     # `*-000` example rows keep the scaffolded templates copy-ready, and a
     # CodeSymbol's `/`-joined symbol names are not paths — neither may convict.
-    spine_repo(
-        tmp_path,
-        "scripts/real.py",
-        symbol="integrity_findings/structure_findings",
-    )
+    # `load/save` is the `/`-joined shape under test: two symbol names, not a
+    # path — the joiner must keep it out of the PATH tier entirely.
+    spine_repo(tmp_path, "scripts/real.py", symbol="load/save")
     (tmp_path / "docs" / "test" / "test-cases.csv").write_text(
         TC_HEADER
         + "TC-000,SR-000,Unit,example,Full,,ok,Yes,tests/nope.py::test_x,Planned,1\n",
@@ -447,3 +452,96 @@ def test_registry_placeholder_rows_and_symbol_joins_stay_out_of_scope(tmp_path):
     )
     proc = refs(tmp_path, "--strict")
     assert proc.returncode == 0, proc.stdout + proc.stderr
+
+
+# --- the LLR CodeSymbol ANCHOR rule (WI-429) ---------------------------------
+# The discharge test D-9 leaves open for the LLR tier: `Status = Founded` means
+# the artifacts a row calls for EXIST, and an LLR has no children here, so its
+# discharge is resolving code. The rule is an ANCHOR — at least one
+# identifier-shaped CodeSymbol token must bind in a named `.py` Module — for
+# the reason the census established: the cell has no stated grammar and really
+# does carry locals, attributes, CSS tokens and prose, so a per-token rule
+# would red 31 of this repo's 149 live rows on arrival.
+
+
+def test_llr_symbol_anchor_reds_on_a_planted_defect(tmp_path):
+    # NON-VACUITY, planted: a real module and a real LLR naming a real symbol
+    # is silent; the same fixture plus one row naming a symbol nothing defines
+    # is a DANGLING finding that gates under --strict.
+    spine_repo(tmp_path, "scripts/real.py")
+    assert refs(tmp_path, "--strict").returncode == 0, "the founded row is silent"
+    llr = tmp_path / "docs" / "requirements" / "low-level-requirements.csv"
+    llr.write_text(
+        llr.read_text(encoding="utf-8")
+        + "LLR-901,SR-001,Planted,scripts/real.py,no_such_symbol_anywhere,"
+        "detail,,(see TC-001),Verified,,1\n",
+        encoding="utf-8",
+    )
+    proc = refs(tmp_path)
+    assert proc.returncode == 0, "warn-first, the WI-062 precedent"
+    assert "LLR-901 CodeSymbol" in proc.stderr
+    assert "no_such_symbol_anywhere" in proc.stderr
+    assert "LLR-001" not in proc.stderr, "the founded row must not be swept in"
+    assert refs(tmp_path, "--strict").returncode == 1
+
+
+def test_llr_symbol_anchor_needs_only_one_resolving_token(tmp_path):
+    # The anchor, stated as a test: a cell whose OTHER members are a local, a
+    # CSS custom property and free prose is still founded on its one real
+    # symbol — and the misses are COUNTED as untraced, never silently dropped.
+    spine_repo(tmp_path, "scripts/real.py", symbol="load/a_local_name/--nhead")
+    proc = refs(tmp_path, "--strict", "--show-untraced")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "a_local_name" in proc.stderr, "the miss is reported"
+    assert "UNTRACED" in proc.stderr, "...as untraced, not as a gate"
+
+
+def test_llr_symbol_anchor_skips_a_non_python_module(tmp_path):
+    # A hook or a shell template has no Python name to bind, so the rule has
+    # nothing to say — it must skip, not convict.
+    spine_repo(
+        tmp_path, "scripts/real.py", module="hooks/pre-commit", symbol="pre-commit"
+    )
+    (tmp_path / "hooks").mkdir()
+    (tmp_path / "hooks" / "pre-commit").write_text("#!/bin/sh\n", encoding="utf-8")
+    proc = refs(tmp_path, "--strict")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+
+
+def test_llr_symbol_anchor_sees_private_names_and_constants(tmp_path):
+    # The reason the oracle is gen_arch_map.module_bindings and NOT the rendered
+    # module map: the map is a public-API view that drops `_`-names and every
+    # constant, and 41 of this repo's 149 live LLR rows name exactly those.
+    for i, symbol in enumerate(("_helper", "CONST", "Klass", "method")):
+        root = tmp_path / "r{}".format(i)
+        root.mkdir()
+        spine_repo(root, "scripts/real.py", symbol=symbol)
+        (root / "scripts" / "real.py").write_text(
+            "CONST = 1\n\n\ndef _helper():\n    pass\n\n\n"
+            "class Klass:\n    def method(self):\n        pass\n",
+            encoding="utf-8",
+        )
+        proc = refs(root, "--strict")
+        assert proc.returncode == 0, symbol + ": " + proc.stdout + proc.stderr
+
+
+def test_llr_symbol_anchor_does_not_double_report_a_missing_module(tmp_path):
+    # A Module that is not on disk is the PATH tier's finding. Reporting it here
+    # too would count one rot twice and make the anchor's number unreadable.
+    spine_repo(tmp_path, "scripts/real.py", module="scripts/gone.py", symbol="load")
+    proc = refs(tmp_path)
+    assert "LLR-001 Module" in proc.stderr, "the path tier still convicts"
+    assert "LLR-001 CodeSymbol" not in proc.stderr
+
+
+def test_llr_symbol_anchor_skips_placeholder_rows(tmp_path):
+    # `*-000` example rows keep a scaffolded template copy-ready.
+    spine_repo(tmp_path, "scripts/real.py")
+    llr = tmp_path / "docs" / "requirements" / "low-level-requirements.csv"
+    llr.write_text(
+        llr.read_text(encoding="utf-8")
+        + "LLR-000,SR-000,Example,scripts/real.py,your_symbol_here,"
+        "detail,,(see TC-000),Draft,,1\n",
+        encoding="utf-8",
+    )
+    assert refs(tmp_path, "--strict").returncode == 0
