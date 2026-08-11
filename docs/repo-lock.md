@@ -1200,7 +1200,9 @@ with OI-13 and OI-12 *executing* together.
    first. This is the batch that gets built twice if it starts
    early: the ladder's values, the `Priority` float, `Phase` on SN, the
    `SupersededBy` deletion and its ~80-line validator, and every test asserting
-   a column shape.
+   a column shape. **The D-7 census teardown executes here too**, as its own
+   WI: its `SR-039 → LLR-036 → TC-039` deletion is the first real supersession
+   D-4 performs, so it doubles as D-4's proving case (inventory in §2 D-7).
 8. **Regenerate the derived artifacts** and confirm the gate rises to its honest
    ceiling. A gate that does *not* rise is a finding, not a nuisance.
 9. **Drain or dispose the open frontier** — WI-390, WI-415, WI-422, WI-423,
