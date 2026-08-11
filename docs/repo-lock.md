@@ -1964,3 +1964,20 @@ standing **F5 copy-ability ruling** (a one-word file is the only toggle
 interface a checker copied alone into a repo with no `process.toml` can
 satisfy). If the owner rejects those two grounds, (a) is a five-script change
 needing coordination.
+
+**D-5 forward-path fix pass — explicit `key = ""` REFUSES on a live read
+(fail-closed), `49ab1c1c`, 2026-08-11.** The cutover's adversarial review
+(OpenAI `gpt-5.6-sol` via codex, medium; full text in the session record)
+REJECTED the forward path — 3 BLOCKERs, 4 MAJORs, 1 MINOR — while confirming
+the landed data byte-clean. All eight were reproduced first, fixed, and
+planted as tests; full bar `2215 passed, 9 skipped, 0 failed` (6:13), the 38
+`Modified` rows and G1 unchanged. One fix changed registry semantics without
+a ruling and is tabled here: repo-lock never said what a hand-authored
+`key = ""` means in a TOML registry. The builder chose **live reads refuse,
+naming row and key; baseline (historical) reads stay permissive** — rejected
+normalise-on-read because it leaves the file and the loaded row disagreeing.
+Ratify or re-rule. (The same pass gave the dogfood-sync rule its third leg —
+`spine_carrier.SPINE_TIER_KEYS` is now a *stated* per-tier schema: template ==
+schema, live ⊆ schema, schema ⊆ vocabulary — and dissolved the
+`toml-line-rewrite` duplication block by making intake's scanner genuinely
+string-aware rather than a copy of bootstrap's.)
