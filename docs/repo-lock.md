@@ -18,25 +18,31 @@ collapses to a one-line pointer with the commit.
 
 ---
 
-## 0. Start here — four rulings owed, and nothing else is blocked on them
+## 0. Start here — THREE rulings owed, and the carrier is being migrated now
 
 | # | question | where | recommendation |
 |---|---|---|---|
 | **components** | The **component model**. `LLR.Component` is *traced*, so the partition moves with no re-attest window — and it **decides how many IF rows must exist**. | §6 F-11 | not filed on purpose; filing it would be an agent setting the sitting's agenda |
 | **OI-14** | What an IF row's **`Contract` cell is for**. Measured: design narrative and history, 1% requirement voice, and the registry has **no schema tier at all**. | §6 F-10 | **declare now, split gradually** — never a 95-row sweep |
 | **OI-13** | What **`Status`** means across the six registries that carry one. | §6 F-1, F-9 | largely **answered by D-3**; what remains is the *migration* |
-| **OI-12** | Does one machine-parseable **carrier** hold all four tiers? The `.md` + `.csv` split has **no recorded rationale anywhere**. | §6 F-7 | **TOML** as the destination — and it **gates** the anchor half of D-1, D-2 and the D-3/D-4 schema work |
+| ~~**OI-12**~~ | ~~Does one machine-parseable **carrier** hold all four tiers?~~ **RULED 2026-08-10: one TOML carrier**, and brought FORWARD of the sitting at the owner's direction. In progress — see **D-5**. | §2 D-5 · §6 F-7 | — |
 
 **Read them in that order.** OI-14 assumes today's 95 IF rows are the right 95,
-and that rests on the unruled component model; OI-13 and OI-12 both rewrite
-registry definitions, so ruling them apart pays the migration twice.
+and that rests on the unruled component model. OI-13's remaining half is a
+*migration*, and it now lands on the TOML carrier rather than on CSV — which is
+the whole reason D-5 went first.
 
-**The P0 sitting is not blocked by any of them** — ratification is a `Status`
-flip. It *is* a precondition for the ladder migration (§2 D-3, Q11): the 38
-`Modified` rows have no hash to derive their drift from, so migrating first
-stamps them clean and launders the re-blessing they owe.
+**THE ORDER CHANGED ON 2026-08-10, at the owner's direction:** the carrier
+migration (D-5) runs **before** the P0 sitting, so that the owner works in the
+new format and the anchor / ladder / `SupersededBy` work lands on it **once**.
+That is safe, and the reason is narrow enough to state exactly: **Q11's hard
+constraint is about retiring the WORD `Modified`, not about the file format.**
+D-5 preserves today's `Status` vocabulary, so the 38 `Modified` rows keep the
+only record that they owe a re-blessing, and the sitting loses nothing by
+coming after. Reordering while ALSO retiring `Modified` would launder them —
+that combination is still forbidden.
 
-**Four rulings are made and shipped** — D-1, D-2, D-3, D-4 in §2.
+**Five rulings are made** — D-1, D-2, D-3, D-4 and **D-5** in §2.
 
 **Two need the owner's eye before they are built**, both recorded with
 recommendations: `Status`'s new `Verified` **re-points a word 370 live rows
@@ -733,6 +739,115 @@ carrier-independent and could ship with the removal-half class of work; the
 `SupersededBy` deletion is a registry-schema change and belongs with OI-12's
 migration.
 
+### D-5 — ONE TOML CARRIER for all four tiers, and it runs FIRST
+
+**Owner ruling, 2026-08-10**, answering OI-12 with option (b) and overriding
+that row's own *"sequence it as its own program once the repo is locked"*: the
+owner wants to work in the new format while the remaining schema decisions are
+still open, so the anchor (D-1), the ladder (D-3) and the `SupersededBy`
+deletion (D-4) land on the destination carrier **once** instead of being built
+on CSV and ported. That is exactly what §6 F-7's corrected sequencing note
+argues — *"the fields are carrier-neutral; the code and tests are not."*
+
+#### The shape, ruled with the owner
+
+```toml
+[requirement.SR-137]        # id-keyed, prefix RETAINED, and BARE
+title = "One policy home, with a checked shape"
+sn_refs = ["SN-028"]        # refs are typed arrays
+phase = 5                   # ints are ints
+requirement = """…"""       # multi-line strings hold the prose cells
+```
+
+Table names by tier: `need` · `requirement` · `design` · `test`.
+
+**Three integrity rules stop being code and become properties of the parse.** A
+**duplicate id** is a `TOMLDecodeError` (the id is the table key, and TOML
+forbids declaring one twice); a **ref list** is an array, retiring `refs()`'s
+split-on-whitespace and with it the `SN-001 and SN-002` → *"`and` is an orphan"*
+defect §12.8 records; an **empty cell** is an *absent key*, so "unset" and "set
+to empty" stop being the same value.
+
+**The id prefix stays in the key**, against the owner's own proposal of a bare
+`[stakeholder-need.137]` — decided on measurement, not taste:
+
+- TOML keys are **always strings**. `[r.137]` yields `'137'`, so a numeric key
+  buys no type change at all.
+- `001` and `1` parse as **different keys**, both legal. Our ids are
+  zero-padded, so any normalisation creates a second row instead of erroring.
+  The prefixed form has no such near-miss.
+- **~6,400 hand-authored citations** (SR 3,270 · LLR 1,163 · TC 973 · SN 967)
+  use the prefixed token, in commit messages, log entries, docstrings and
+  archived docs. Dropping it from the definition means `grep SR-137` no longer
+  finds the row that defines it.
+- `is_example(rid)` is literally `rid.endswith("-000")`.
+
+The quotes, however, are unnecessary: **TOML bare keys allow `-`**, so
+`[requirement.SR-137]` is valid unquoted.
+
+#### CARRIER ONLY — and this is the guardrail the reordering rests on
+
+`Status` keeps `Draft` / `Verified` / `Modified`. **No** ladder, **no** anchor
+cells, **no** `Priority` float, **no** `SupersededBy` deletion, **no** `Status`
+on SN. Retiring `Modified` is the ladder's job; doing it inside the carrier
+change would stamp 38 rows clean and launder the re-blessing they owe (Q11).
+Keep these apart or the sitting is compromised.
+
+#### The SN tier keeps its edge-case fields
+
+Edge-case rows carry `lifecycle` / `scenario` / `expected` as themselves, not
+folded onto the core four. `traj_parse._sn_fields`' fold — an edge row's
+Scenario read as the need — is a **presentation** rule the markdown table
+forced; baking it into the carrier would make the exporter's reading the only
+reading there is. The fold stays in the exporters, reading from TOML.
+
+Converting also **retires section-as-state**: draft-ness becomes
+`kind = "draft"` instead of *"appears under a heading containing the word
+draft"*. That is Q2's *"never both"*, and it kills a live sharp edge — during
+the 2026-08-10 sitting a prose mention of an id under the draft heading
+silently re-drafted an attested need, because `sn_all_ids` scrapes the whole
+file and `sn_draft_ids` scans by heading.
+
+#### THE ONE THING THAT MUST NOT BE FORGOTTEN
+
+**`trace._rows_at` reads the baseline through `git show <rev>:<path>` and
+CSV-parses it.** After the cutover, that path does not exist at pre-migration
+revisions, so it returns `{}` — which the code reads as *"nothing existed = an
+empty baseline"*. Every one of the 25 `Modified` rows would then render as
+*"no baseline — awaiting its FIRST ratification"* and the owner would re-bless
+full text with **no diff of what changed**, silently. It is the same fail-open
+shape as the squash-merge hazard D-1 rejected in ALT-1.
+
+So the cutover **must** carry a carrier-aware baseline read: try the TOML path
+at that revision, fall back to the CSV path. The file *was* CSV then, so
+reading it that way is honest history, not a shim. `check_trajectory`'s
+`_spine_revs` two-tree read needs the same treatment.
+
+#### Why the 16 consumer modules do not change
+
+The loader presents TOML rows using **today's column names** (`SR-ID`,
+`Title`, `SN-Refs`, …), so the carrier change is data + one loader + the
+writers, rather than a 16-module rename braided into a carrier migration.
+D-3 is the pass that renames things, and it can do so on TOML afterwards.
+
+#### State, 2026-08-10
+
+**Shipped:** `scripts/migrate_carrier.py` + `tests/test_migrate_carrier.py`
+(commit `a9b6ced3`). Round-trip clean over all **466** of this repo's own rows
+(29 SN · 146 SR · 147 LLR · 144 TC), cell for cell, with the loss detector
+driven against five corruption classes — a round-trip check that cannot fail
+would be the false green SN-008 forbids. **Nothing has moved yet**: no registry
+changed carrier, so the tree is still single-home.
+
+**Owed, in order:** the carrier-aware baseline read → `load_registry` (the
+compatibility shim above) → the cutover itself, which writes the four `.toml`
+files and **deletes the `.csv`/`.md` sources in the same commit** (two homes
+for one fact is the thing the kit forbids) → `intake`'s writer becomes a TOML
+emitter → `test_dogfood_sync`'s "live header is an ordered superset of the
+template header" rule, which **has no meaning over TOML keys** and needs
+redesigning → the `registries/*.template.*` files and an ADOPTING migration
+note, because **every adopting repo migrates too**.
+
 ---
 
 ## 3. The questions, and where each one went
@@ -816,6 +931,18 @@ with OI-13 and OI-12 *executing* together.
 
 ### Then, in order
 
+> **ORDER CHANGED 2026-08-10 (§0):** step **6a** is now the carrier migration,
+> and it runs BEFORE the sitting. Steps 6 and 7 keep their numbers so every
+> cross-reference in this file and in the log still resolves.
+
+6a. **Migrate the carrier (D-5)** — the tool is shipped and proven; the cutover
+   is owed. Order inside it: the carrier-aware baseline read (**do not skip —
+   D-5 "the one thing that must not be forgotten"**) → `load_registry` →
+   the cutover commit that writes the four `.toml` files and DELETES the
+   `.csv`/`.md` sources together → `intake`'s TOML writer →
+   `test_dogfood_sync`'s header rule → templates + ADOPTING.
+   Carrier only: `Status` keeps `Modified`, or step 6 is compromised.
+
 6. **Hold the P0 sitting** — ~~rule the five draft needs~~ **(part 1 done,
    2026-08-10)** and work the 25-row re-attest brief
    ([`docs/ratify/2026-08-08-mechanized-loop.md`](ratify/2026-08-08-mechanized-loop.md)),
@@ -829,7 +956,8 @@ with OI-13 and OI-12 *executing* together.
    reason it needs a row is that *nothing validates an `SN-###` token inside a
    `.py` comment*, so the tree stays green while they dangle.
 7. **Build the anchor half of D-1, D-2 and the D-3/D-4 schema changes ONCE**, on
-   the carrier OI-12 rules. This is the batch that gets built twice if it starts
+   the D-5 carrier — which by then exists, which is the point of running 6a
+   first. This is the batch that gets built twice if it starts
    early: the ladder's values, the `Priority` float, `Phase` on SN, the
    `SupersededBy` deletion and its ~80-line validator, and every test asserting
    a column shape.
@@ -839,7 +967,10 @@ with OI-13 and OI-12 *executing* together.
    WI-424.
 10. **Dispose the warn-only residue.** "Known and accepted" is a disposition;
     "still there" is not.
-11. **Full bar green, stated with real output.**
+11. ~~**Full bar green, stated with real output.**~~ **MET 2026-08-10** on
+    `infra/mechanized-loop`: `2167 passed, 5 skipped, 0 failed` in 6:41, from
+    `93 failed / 2073 passed`. Re-run it at the end — the bar is a state, not a
+    trophy, and the carrier migration is the largest change still to come.
 12. **Merge to `main`** — an owner act (`push = "human"`).
 
 ### Loose ends, owed to no step above
@@ -1007,9 +1138,17 @@ integrity guard — has no markdown analogue, and positional indexing is exactly
 the failure it exists to catch.
 
 **F-7 · TOML as ONE carrier for all four tiers is the strongest technical
-option raised, and the right answer for a successor program — not this one.**
-Owner question, 2026-08-09: could a `.toml` file replace the `.md` + `.csv`
-combination?
+option raised.** Owner question, 2026-08-09: could a `.toml` file replace the
+`.md` + `.csv` combination?
+
+> **VERDICT OVERTAKEN, 2026-08-10.** This finding closed with *"the right
+> answer for a successor program — not this one"*, and the owner has since
+> ruled the opposite: the migration runs **inside** this program and **ahead
+> of** the sitting (**§2 D-5**). The *measurements* below all stand and are why
+> the ruling went the way it did — what changed is the sequencing judgement,
+> and it changed on this section's own corrected argument that the code and
+> tests are not carrier-neutral. Read the paragraphs below as evidence, not as
+> a live recommendation to defer.
 
 *Why it is strong.* `tomllib` is **stdlib at the kit's 3.11 floor** — no
 dependency, unlike a markdown parser (F-6). The kit already sanctions TOML in
