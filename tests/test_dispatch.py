@@ -40,6 +40,7 @@ import subprocess
 
 from conftest import (
     SCRIPTS,
+    disable_blackout,
     env_gate_skipif,
     load_script,
     make_minimal_project,
@@ -582,6 +583,10 @@ def scaffold_with_queued_wi(tmp_path):
     make_minimal_project(repo)
     # SN-028: one policy home — the scaffold ships docs/process.toml.
     set_process_key(repo, "policies", "review_rounds", 0)
+    # WI-428: bootstrap.py copies the template's LIVE blackout window, and this
+    # module launches the coordinator for real. Left alone, a weekday run
+    # between 12:00 and 19:00 UTC would sleep instead of testing.
+    disable_blackout(repo)
     with (repo / ".gitignore").open("a", encoding="utf-8", newline="\n") as fh:
         fh.write("out/\n")
     write_spec(repo, "queued", "WI-401", specref="docs/log.md")

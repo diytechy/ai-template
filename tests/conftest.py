@@ -642,7 +642,9 @@ def process_key(root, section, key):
 def set_process_key(root, section, key, value, *, seed=True):
     """Set one `docs/process.toml` dial under `root`, seeding the file from the
     kit template first when `seed` and it is absent (so a bare tmp repo can
-    declare a policy in one call, the way the old one-word writes did)."""
+    declare a policy in one call, the way the old one-word writes did). A
+    freshly seeded scaffold has its blackout window DISABLED — see
+    `disable_blackout` for why a test scaffold must not inherit that dial."""
     root = Path(root)
     path = root / "docs" / "process.toml"
     if seed and not path.is_file():
@@ -650,7 +652,113 @@ def set_process_key(root, section, key, value, *, seed=True):
         text = (KIT / "process.toml.template").read_text(encoding="utf-8")
         with path.open("w", encoding="utf-8", newline="\n") as fh:
             fh.write(text)
+        disable_blackout(root)
     return load_script("bootstrap").set_process_key(root, section, key, value)
+
+
+# --- WI-428: a test scaffold must not inherit a LIVE policy window ------------
+# The kit template ships WI-148's `blackout = "12:00-19:00"` — the owner's real
+# weekday operating window, and a deliberate default whose own comment forbids
+# re-deciding it inside a refactor. That value is CORRECT and stays untouched
+# (test_bootstrap asserts a real bootstrap.py scaffold still carries it).
+#
+# What was wrong is that the SUITE inherited it. A scaffold seeded from the
+# template and then handed to a session-driving fixture gives `agent_loop` a
+# live window, which it correctly honors by SLEEPING: measured 2026-08-11,
+# `blackout_wake("12:00-19:00", 14:22Z) == 16650` s (4 h 37 m). The tests did
+# not fail, they never ran, and the runner reported green on the rest — so
+# "full bar green" was a function of UTC time-of-day, and a 2026-08-10 probe
+# outside the window recorded the module as "not reproduced ... flaky". It is
+# not flaky; it is deterministic in the clock.
+#
+# Test scaffolds therefore opt out through the dial's OWN documented disable
+# form (an empty value; `start == end` is the other), so a session test
+# exercises session behavior rather than the wall clock. Held by
+# tests/test_blackout_isolation.py and by the autouse sweep below.
+BLACKOUT_DISABLED = ""
+
+
+def disable_blackout(root):
+    """Disable the blackout window in a TEST scaffold's `docs/process.toml`,
+    so a session-driving fixture never hands `agent_loop` a live window to
+    wait out. Uses the dial's documented disable form (an empty value), set
+    through bootstrap's own writer rather than a second line-rewriter."""
+    return load_script("bootstrap").set_process_key(
+        Path(root), "policies", "blackout", BLACKOUT_DISABLED
+    )
+
+
+def blackout_is_live(value):
+    """True when `value` is a blackout window that would make a coordinator
+    wait. Delegates to the shipped parser + the shipped `start == end` disable
+    rule rather than re-deciding either here — a guard that re-implements the
+    thing it guards can only ever agree with itself."""
+    win = load_script("agent_common").parse_blackout(value or "")
+    return win is not None and win[0] != win[1]
+
+
+def live_blackout_scaffolds(root):
+    """Every `docs/process.toml` under `root` that declares a LIVE blackout
+    window, as a sorted list of `(path, value)`. The invariant a session-driving
+    test scaffold must satisfy is that this comes back EMPTY."""
+    found = []
+    for path in sorted(Path(root).rglob("process.toml")):
+        if path.parent.name != "docs":
+            continue
+        try:
+            value = tomllib.loads(path.read_text(encoding="utf-8"))
+            value = (value.get("policies") or {}).get("blackout")
+        except (OSError, tomllib.TOMLDecodeError):
+            continue
+        if blackout_is_live(value):
+            found.append((path, value))
+    return found
+
+
+# The session-driving modules: those that launch the coordinator as a real
+# subprocess, and (for the pre-emptive half of the guard) those that build their
+# scaffold with bootstrap.py, which copies the template's LIVE window verbatim.
+# Membership is DERIVED from each module's own source, never a hand-kept list,
+# so a new session-driving module joins the guard by existing. A module that
+# deliberately plants a live window (the guard's own non-vacuity proof) opts out
+# with a module-level `PLANTS_LIVE_BLACKOUT = True`.
+LOOP_LAUNCH_IDIOM = 'SCRIPTS / "agent_loop.py"'
+BOOTSTRAP_IDIOM = 'bootstrap.py", "--dest"'
+
+
+def module_launches_the_loop(module):
+    """True when a test module launches `agent_loop.py` as a subprocess."""
+    path = getattr(module, "__file__", None)
+    if not path or getattr(module, "PLANTS_LIVE_BLACKOUT", False):
+        return False
+    return LOOP_LAUNCH_IDIOM in Path(path).read_text(encoding="utf-8")
+
+
+@pytest.fixture(autouse=True)
+def _no_live_blackout_in_session_scaffolds(request):
+    """WI-428 guard. After any test in a module that LAUNCHES the coordinator,
+    fail if a scaffold it built declares a live blackout window — the state in
+    which the suite stops running and starts sleeping. Scoped to session-driving
+    modules on purpose: a bootstrap/profile test asserting the shipped default
+    is checking the right thing and must not be caught here."""
+    # Resolved at SETUP: a fixture value is gone by the time teardown runs.
+    watch = (
+        request.getfixturevalue("tmp_path")
+        if "tmp_path" in request.fixturenames
+        and module_launches_the_loop(request.module)
+        else None
+    )
+    yield
+    if watch is None:
+        return
+    live = live_blackout_scaffolds(watch)
+    assert not live, (
+        "WI-428: a session-driving test scaffold inherited a LIVE blackout "
+        "window — the loop under test will SLEEP rather than run, and the "
+        "suite will report green on the tests that did run. Seed through "
+        "conftest.set_process_key or call conftest.disable_blackout(root). "
+        + "; ".join("{} -> {!r}".format(p, v) for p, v in live)
+    )
 
 
 def wi_registry_header(columns=10):
