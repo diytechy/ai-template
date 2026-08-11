@@ -1181,7 +1181,26 @@ with OI-13 and OI-12 *executing* together.
   | | what it is | how it grew |
   |---|---|---|
   | **IF layer** | one `Consumes` row per cross-component crossing (IF-102…IF-112) | **linear** — 11 rows for 11 importers, each a seam a reviewer can read |
-  | **import guard** | the 7-line `try: import spine_carrier / except ImportError: sys.path.insert(...)` block | **quadratic** — `docs/dupes-allow` is PAIRWISE, so 7 lines × 11 scripts produced ~19 entries, and importer #12 adds 11 more by itself |
+  | **import guard** | the 7-line `try: import spine_carrier / except ImportError: sys.path.insert(...)` block | **churning** — see the corrected mechanism below; 7 lines × 11 scripts produced ~19 census entries plus a full re-filing cycle per membership change |
+
+  > **Correction, 2026-08-10 (same day, on reading `find_duplicates` rather
+  > than asserting):** the first version of this entry said the census is
+  > "PAIRWISE — N(N−1)/2". **Wrong.** The checker records the *first* file in
+  > scan order (alphabetical) holding each window and pairs every later
+  > occurrence against that anchor, so a class of k identical blocks emits
+  > **k−1 lines** — linear. The real cost is **anchor churn**, and it is what
+  > this session actually experienced three times: *(a)* a new member that
+  > sorts earlier **re-anchors the whole class** — when `agent_loop.py` joined
+  > it sorted before `check_doc_refs.py`, so every existing line for those
+  > blocks went stale and ~19 new anchor lines had to be filed for duplication
+  > that had not changed at all; *(b)* fingerprints are token-exact over a
+  > window including neighbors, so **any edit near the block** (a new import,
+  > a reformat) re-fingerprints it — stale + new again; *(c)* the 11 copies
+  > are several variant classes, multiplying both. The finding restated: the
+  > census's unit of account (fingerprint × file-pair, anchored on scan order)
+  > makes a deliberate N-way idiom **churn on every membership or neighborhood
+  > change**, and each cycle is manual re-filing that teaches the reviewer
+  > nothing after the first.
 
   The IF growth is proportionate and needs nothing. The census growth is the
   finding: the blocks are real duplication, the F5 sanction genuinely covers
@@ -1212,11 +1231,14 @@ with OI-13 and OI-12 *executing* together.
   - give the guard one home — self-defeating in the obvious form (a shared
     home must itself be imported, which needs the guard), though a
     stated-in-`PROCESS.md` two-liner is smaller than the current seven;
-  - **teach `check_dupes` to collapse an N-way identical block into one census
-    line instead of N(N−1)/2** — now the strongest option: the duplication is
-    deliberate and load-bearing, and only the *census's rendering* of it is
-    quadratic;
-  - accept it and stop reading the census total as a signal.
+  - **one census line per fingerprint with an explicit MEMBER LIST** — the
+    strongest option, sharpened by the mechanism correction above: it is
+    anchor-free, so a membership change edits one line instead of re-filing a
+    class; and every guard property survives — a 12th member is still a
+    finding until the list is edited (the conscious-acceptance act WI-276
+    exists for), and a *modified* copy still gets a new fingerprint and is
+    still caught;
+  - accept it and stop reading census churn as a signal.
 
   **Worth a ruling before a twelfth importer**, and cheapest now while the
   pattern is fresh.
