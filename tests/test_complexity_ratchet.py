@@ -71,7 +71,14 @@ BASELINE = {
     # Re-stamped DOWNWARD.
     ("agent_loop.py", "run_iteration"): 20,
     ("agent_loop.py", "session_bookkeeping"): 31,
-    ("agent_route.py", "load_registry"): 17,
+    # WI-431 (batch-2 carrier, repo-lock §8.1): 17 -> 14. The CSV header parse
+    # — index map, `Provider`-as-`Family` alias, five missing-column errors —
+    # left for `_rows_from_csv`, because it is a property of the CSV CARRIER
+    # rather than of the registry: TOML declares no header, so its analogue is a
+    # decode failure. What is left here is carrier resolution plus the per-row
+    # validation both carriers share. Re-stamped DOWNWARD, which is the
+    # direction this ratchet exists to hold.
+    ("agent_route.py", "load_registry"): 14,
     ("agent_session.py", "run_session"): 14,
     # WI-280 slice 10 (subsuming the retired WI-082): `main` (41 — the largest
     # single function in the kit, and the one an adopter's FIRST command runs)
@@ -157,6 +164,15 @@ BASELINE = {
     ("gen_okf.py", "emit"): 25,
     ("gen_okf.py", "main"): 13,
     ("gen_release_checklist.py", "main"): 20,
+    # WI-431 (batch-2 carrier, repo-lock §8.1): a NEW row at 12, and the growth
+    # is the emitter taking a second job rather than a branch nobody needed.
+    # `rows_to_toml` now interleaves the source's COMMENT lines with its row
+    # tables, because `agents.csv` carries a `# tag-rank:` line
+    # `agent_route.load_tag_rank` PARSES — dropping comments would silently
+    # reset the maturity vocabulary that resolves a version-less enable-list
+    # token. The alternative shape, a second comment-aware emitter beside the
+    # row emitter, is the D-6 drift hazard this migration exists to avoid.
+    ("migrate_carrier.py", "rows_to_toml"): 12,
     # WI-280 S3: _okf_nodes moved verbatim to traj_parse.py — re-keyed, same
     # measured complexity (the move is the decomposition, not a bump).
     ("traj_parse.py", "_okf_nodes"): 15,

@@ -393,3 +393,164 @@ def test_the_ADOPTING_recipe_run_verbatim_leaves_the_registries_TRACKED(tmp_path
         text=True,
     ).stdout
     assert tomllib.loads(committed)["requirement"]["SR-001"]["title"] == "Adder"
+
+
+# --- batch-2: the off-spine registries (repo-lock §8.1) ------------------------
+# open-items and agents joined the carrier on the SAME converter, which is the
+# ruling's point: a second converter drifts from the first, and the divergence
+# is silent content loss. What is genuinely new on this branch is a COMMENT
+# (agents.csv carries a `# tag-rank:` line agent_route PARSES) and a DOTTED ID
+# (`ANTHROPIC-OPUS-4.8`, which TOML reads as a table path unless quoted), so
+# both get their own planted corruption.
+
+AGENTS_CSV = (
+    "Id,Family,Model,Version,Tier,CmdTemplate,Env,Notes\n"
+    "# a prose line, with commas, that DictReader would read as a nine-cell row\n"
+    "# tag-rank: ga>preview>beta>exp\n"
+    'ANTHROPIC-OPUS-4.8,ANTHROPIC,opus,4.8,strong,"c -p {model}",K=v,note\n'
+    "# a comment BETWEEN rows, which must stay between them\n"
+    "OPENAI-GPT-5.2,OPENAI,gpt,5.2,quick,codex {model},,\n"
+)
+
+
+def _convert_agents(tmp_path, text=AGENTS_CSV):
+    src = tmp_path / "docs" / "agents.csv"
+    src.parent.mkdir(parents=True, exist_ok=True)
+    src.write_text(text, encoding="utf-8", newline="")
+    findings, written = mc.convert(tmp_path, write=True)
+    return findings, (tmp_path / "docs" / "agents.toml").read_text(encoding="utf-8")
+
+
+def test_a_dotted_id_is_quoted_so_toml_does_not_read_it_as_a_table_path(tmp_path):
+    findings, out = _convert_agents(tmp_path)
+    assert findings == [], findings
+    assert '[agent."ANTHROPIC-OPUS-4.8"]' in out
+    # ...and the id comes back WHOLE, which is the property that matters.
+    parsed = tomllib.loads(out)["agent"]
+    assert set(parsed) == {"ANTHROPIC-OPUS-4.8", "OPENAI-GPT-5.2"}
+    assert parsed["ANTHROPIC-OPUS-4.8"]["version"] == "4.8"
+
+
+def test_the_dotted_id_leg_catches_a_bare_key(tmp_path):
+    """PLANTED CORRUPTION on the oracle that exists for this defect.
+
+    Written bare, `[agent.ANTHROPIC-OPUS-4.8]` is VALID TOML — it declares two
+    nested tables — so the emitted file parses, and a checker built from the
+    converter's own key construction finds the row exactly where it put it. Only
+    reading the ids off the RAW source catches it, which is what `raw_id_findings`
+    does; this proves it can fail."""
+    _findings, out = _convert_agents(tmp_path)
+    corrupt = out.replace('[agent."ANTHROPIC-OPUS-4.8"]', "[agent.ANTHROPIC-OPUS-4.8]")
+    assert corrupt != out
+    tomllib.loads(corrupt)  # still parses — that is the whole hazard
+    findings = mc.raw_id_findings("agents.csv", "agent", AGENTS_CSV, corrupt)
+    assert findings and "ANTHROPIC-OPUS-4.8" in findings[0]
+
+
+def test_comments_survive_byte_for_byte_and_in_place(tmp_path):
+    _findings, out = _convert_agents(tmp_path)
+    lines = out.split("\n")
+    for raw in (
+        "# a prose line, with commas, that DictReader would read as a nine-cell row",
+        "# tag-rank: ga>preview>beta>exp",
+        "# a comment BETWEEN rows, which must stay between them",
+    ):
+        assert raw in lines, raw
+    # IN PLACE: the between-rows comment stays between them, so prose that
+    # documents a row keeps pointing at the row it documents.
+    assert lines.index(
+        "# a comment BETWEEN rows, which must stay between them"
+    ) > lines.index('[agent."ANTHROPIC-OPUS-4.8"]')
+    assert lines.index("# a comment BETWEEN rows, which must stay between them") < (
+        lines.index('[agent."OPENAI-GPT-5.2"]')
+    )
+
+
+def test_the_comment_leg_catches_a_dropped_comment(tmp_path):
+    """The `# tag-rank:` line is EXECUTABLE — `agent_route.load_tag_rank` parses
+    it — so a converter that silently dropped comments would reset the maturity
+    vocabulary that resolves a version-less enable-list token. Planted."""
+    _findings, out = _convert_agents(tmp_path)
+    _h, _r, comments, _f = mc.read_csv_records(AGENTS_CSV, "Id")
+    assert mc.raw_comment_findings("agents.csv", comments, out) == []
+    corrupt = out.replace("# tag-rank: ga>preview>beta>exp\n", "")
+    findings = mc.raw_comment_findings("agents.csv", comments, corrupt)
+    assert findings and "tag-rank" in findings[0]
+
+
+def test_a_comment_is_never_read_as_a_row(tmp_path):
+    """`csv.DictReader` splits the prose line on its commas and hands back a row
+    whose `Id` is the first clause — which is how a comment becomes a model the
+    router might try to launch. The record split refuses that."""
+    _h, rows, comments, _f = mc.read_csv_records(AGENTS_CSV, "Id")
+    assert [r["Id"] for r in rows] == ["ANTHROPIC-OPUS-4.8", "OPENAI-GPT-5.2"]
+    assert len(comments) == 3
+
+
+def test_a_long_open_items_cell_round_trips_cell_for_cell(tmp_path):
+    """The loudest case in the repo: open-items holds a 3,126-character cell.
+    A multi-line TOML string is what makes it representable at all."""
+    long_cell = "· ".join(
+        "option {} with its FOR and AGAINST".format(i) for i in range(90)
+    )
+    assert len(long_cell) > 3000
+    src = tmp_path / "docs" / "requirements" / "open-items.csv"
+    src.parent.mkdir(parents=True, exist_ok=True)
+    src.write_text(
+        'OI-ID,Title,Status,Options,WI-Refs\nOI-1,t,pending,"{}","WI-1;WI-2"\n'.format(
+            long_cell
+        ),
+        encoding="utf-8",
+        newline="",
+    )
+    findings, _written = mc.convert(tmp_path, write=True)
+    assert findings == [], findings
+    out = (tmp_path / "docs" / "requirements" / "open-items.toml").read_text(
+        encoding="utf-8"
+    )
+    row = tomllib.loads(out)["open_item"]["OI-1"]
+    assert row["options"] == long_cell  # byte-exact, not merely "close"
+    assert row["wi_refs"] == ["WI-1", "WI-2"]  # a ref list is a typed array
+
+
+def test_an_embedded_newline_survives_the_off_spine_branch(tmp_path):
+    """CSV *can* hold a newline inside a quoted cell, and the record splitter
+    recovers raw lines through `csv.reader.line_num` precisely so a `#` inside
+    one is not mistaken for a comment (which would cut the row in half)."""
+    src = tmp_path / "docs" / "requirements" / "open-items.csv"
+    src.parent.mkdir(parents=True, exist_ok=True)
+    src.write_text(
+        "OI-ID,Title,Status,Decision\n"
+        'OI-1,t,pending,"first line\n# not a comment\nthird line"\n',
+        encoding="utf-8",
+        newline="",
+    )
+    findings, _written = mc.convert(tmp_path, write=True)
+    assert findings == [], findings
+    out = (tmp_path / "docs" / "requirements" / "open-items.toml").read_text(
+        encoding="utf-8"
+    )
+    assert (
+        tomllib.loads(out)["open_item"]["OI-1"]["decision"]
+        == "first line\n# not a comment\nthird line"
+    )
+
+
+def test_a_cell_past_the_header_is_a_finding_not_a_silent_truncation(tmp_path):
+    """`zip(header, record)` drops a trailing cell without a word. The shape
+    check exists because a stray comma inside an unquoted cell is content, and
+    content is not this conversion's to lose."""
+    _h, _r, _c, findings = mc.read_csv_records(
+        "OI-ID,Title\nOI-1,t,an extra cell nobody declared\n", "OI-ID"
+    )
+    assert findings and "past the" in findings[0]
+
+
+def test_the_meta_repos_own_off_spine_registries_are_already_converted():
+    """Post-cutover this is the IDEMPOTENCE proof: the `.csv` sources are gone,
+    so `convert` skips them and reports nothing — the same shape that lets an
+    adopter run the tool twice."""
+    findings, written = mc.convert(ROOT, write=False)
+    assert findings == [], findings[:5]
+    for rel in ("docs/requirements/open-items.csv", "docs/agents.csv"):
+        assert not (ROOT / rel).exists(), rel

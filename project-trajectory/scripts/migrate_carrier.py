@@ -58,6 +58,28 @@ SPINE = {
     "docs/test/test-cases.csv": ("test", "TC-ID"),
 }
 
+# BATCH-2 (repo-lock.md §8.1): the off-spine registries the same ruling covers.
+# Same converter, one `KEY` map, because a SECOND converter is the D-6 hazard
+# exactly — two writers for one carrier drift, and their divergence is silent
+# content loss on the registries the kit exists to make trustworthy.
+#
+# `interfaces.csv` and `components.csv` are DELIBERATELY ABSENT and are not an
+# oversight: §8.1 sequences the first behind OI-14 (which rewrites what a
+# `Contract` cell may hold) and the second behind the components ruling (which
+# is ABOUT CMP rows). Converting either now means converting it twice.
+#
+# The TEMPLATE paths ride the same map rather than a second pass. They exist
+# only in the kit repo — a scaffold gets the filled `docs/` copy, never the
+# `*.template.*` — so `convert`'s missing-file skip makes their presence here
+# free for an adopter and keeps the kit's own conversion on the one code path
+# the round-trip check covers.
+OFFSPINE = {
+    "docs/requirements/open-items.csv": ("open_item", "OI-ID"),
+    "docs/agents.csv": ("agent", "Id"),
+    "project-trajectory/registries/open-items.template.csv": ("open_item", "OI-ID"),
+    "project-trajectory/agents.template.csv": ("agent", "Id"),
+}
+
 # Cells that are REFERENCE LISTS become typed arrays. Everything else stays a
 # string: this is a carrier change, not a schema change.
 #
@@ -71,7 +93,17 @@ SPINE = {
 # "`and` is an orphan") committed in the other direction. As a plain string
 # every shape round-trips byte-exact and every consumer keeps the split rule it
 # already applied to this cell under CSV.
-REF_COLS = {"SN-Refs", "SR-Refs", "Verifies", "SupersededBy"}
+#
+# `WI-Refs` (open-items) JOINS THEM and `Version` (agents) DOES NOT, both by the
+# same measurement the `TestRefs` paragraph above describes. Every live and
+# shipped `WI-Refs` cell is empty or a bare `WI-###`, and its only consumer
+# already splits it (`intake._pending_oi_lines` -> `agent_common._refs`), so the
+# typed array is what the cell already meant. `Version` reads numeric — `4.8`,
+# `5.6` — and is exactly the trap: as a TOML float it stops being the text the
+# registry stores, and `agent_route._version_key` parses its dotted-numeric
+# tuple out of that text. A carrier change has no licence to renormalise a
+# version string.
+REF_COLS = {"SN-Refs", "SR-Refs", "Verifies", "SupersededBy", "WI-Refs"}
 INT_COLS = {"Phase"}
 
 # column -> TOML key. EXPLICIT, never derived: a derivation turns `SR-ID` into
@@ -106,6 +138,26 @@ KEY = {
     "Tier": "tier",
     "Component": "component",
     "Notes": "notes",
+    # batch-2 (repo-lock §8.1). `Title`/`Status`/`Tier`/`Notes` are ALREADY
+    # above and are deliberately not repeated: D-3 rules that a column name
+    # means one thing repo-wide, so one map serves every registry and a second
+    # entry for the same column would be the drift the map exists to prevent.
+    # open-items:
+    "Raised": "raised",
+    "OneLine": "one_line",
+    "Decision": "decision",
+    "BlastRadius": "blast_radius",
+    "Options": "options",
+    "Recommendation": "recommendation",
+    "WI-Refs": "wi_refs",
+    "RuledDate": "ruled_date",
+    "RulingRef": "ruling_ref",
+    # agents:
+    "Family": "family",
+    "Model": "model",
+    "Version": "version",
+    "CmdTemplate": "cmd_template",
+    "Env": "env",
 }
 
 
@@ -156,14 +208,57 @@ def cell_to_value(col, raw):
     return raw
 
 
-def rows_to_toml(table, id_col, rows, header):
-    """The whole registry as TOML text, source order preserved."""
+# A TOML BARE key is `[A-Za-z0-9_-]+`. A DOT is the table-path separator, so an
+# id carrying one must be QUOTED or it silently becomes nested tables: written
+# bare, `[agent.ANTHROPIC-OPUS-4.8]` declares `agent.ANTHROPIC-OPUS-4` with a
+# child table `8`, and the row's id disappears from the registry while the file
+# still parses. The spine never met this because `SR-137` has no dot;
+# `agents.csv` ids are model versions (`ANTHROPIC-OPUS-4.8`, `OPENAI-GPT-5.2`)
+# and routinely do.
+_BARE_KEY_RE = re.compile(r"^[A-Za-z0-9_-]+$")
+
+
+def toml_key(rid):
+    """One row id as a TOML table key — bare where TOML allows it (so the file
+    reads like the spine's and the id greps as itself), quoted where it does
+    not. `raw_id_findings` is the leg that proves the choice was made
+    correctly, by reading ids off the RAW source and demanding each one back as
+    a key."""
+    if _BARE_KEY_RE.match(rid):
+        return rid
+    return '"' + rid.replace("\\", "\\\\").replace('"', '\\"') + '"'
+
+
+def rows_to_toml(table, id_col, rows, header, comments=()):
+    """The whole registry as TOML text, source order preserved.
+
+    `comments` is `[(row_index, raw_line)]` — a source comment line and the
+    index of the row it preceded (`len(rows)` for a trailing one). COMMENTS ARE
+    CARRIED, not dropped, and one of them is executable: `agents.csv` holds a
+    `# tag-rank: ga>preview>beta>exp` line that `agent_route.load_tag_rank`
+    parses, so dropping comments would silently reset the maturity vocabulary
+    used to resolve a version-less model token. TOML's comment is native and
+    identical in syntax to the CSV convention these files already used, so each
+    line survives BYTE-FOR-BYTE and in place — the prose that documents a
+    registry stays next to the rows it documents."""
+    pending = {}
+    for index, raw in comments:
+        pending.setdefault(index, []).append(raw)
     out = io.StringIO()
-    for row in rows:
+
+    def flush(index):
+        block = pending.pop(index, [])
+        for raw in block:
+            out.write(raw + "\n")
+        if block:
+            out.write("\n")
+
+    for position, row in enumerate(rows):
         rid = (row.get(id_col) or "").strip()
         if not rid:
             continue
-        out.write("[{}.{}]\n".format(table, rid))
+        flush(position)
+        out.write("[{}.{}]\n".format(table, toml_key(rid)))
         for col in header:
             if col == id_col:
                 continue
@@ -172,7 +267,112 @@ def rows_to_toml(table, id_col, rows, header):
                 continue
             out.write("{} = {}\n".format(KEY.get(col, col), toml_scalar(value)))
         out.write("\n")
+    for index in sorted(pending):
+        for raw in pending[index]:
+            out.write(raw + "\n")
     return out.getvalue()
+
+
+def read_csv_records(text, id_col):
+    """`(header, rows, comments)` for one CSV registry.
+
+    `rows` is the row dicts in file order; `comments` is `[(row_index, raw)]`,
+    the raw comment lines keyed to the row each preceded.
+
+    WHY NOT `csv.DictReader`. A comment is a RECORD in these files, not noise:
+    `docs/agents.csv` opens with three `#` lines, one of which
+    (`# tag-rank: ...`) is parsed by `agent_route.load_tag_rank`. DictReader has
+    no comment concept, so it splits
+    `# The ai-template META-repo's own routing registry (WI-107; ...` on its
+    commas and returns a nine-cell row whose `Id` is the first clause — which is
+    how a comment becomes a row, and then a row becomes a model the router might
+    try to launch. The spine's registries carry no comments, which is why its
+    branch never needed this.
+
+    The raw line is recovered through `csv.reader.line_num`, NEVER by splitting
+    the file on newlines: a quoted cell may legally span lines, and a
+    line-splitting reader would read a `#` inside one as a comment and cut the
+    row in half."""
+    lines = text.split("\n")
+    reader = csv.reader(io.StringIO(text))
+    header, rows, comments, findings, prev = [], [], [], [], 0
+    for record in reader:
+        raw = "\n".join(lines[prev : reader.line_num]).rstrip("\r")
+        prev = reader.line_num
+        if not header:
+            header = list(record)
+            continue
+        if not any(cell.strip() for cell in record):
+            continue
+        if record[0].lstrip().startswith("#"):
+            comments.append((len(rows), raw))
+            continue
+        if len(record) > len(header):
+            # Silently dropped by `zip` otherwise. A cell past the header is
+            # either a stray comma inside an unquoted cell or a column nobody
+            # declared; both are content, and content is not this conversion's
+            # to lose.
+            findings.append(
+                "{!r}: {} cell(s) past the {}-column header".format(
+                    record[0], len(record) - len(header), len(header)
+                )
+            )
+        row = dict(zip(header, record))
+        if (row.get(id_col) or "").strip():
+            rows.append(row)
+    return header, rows, comments, findings
+
+
+def raw_comment_findings(rel, comments, text):
+    """Findings for a source comment line absent from the emitted TOML.
+
+    One of the two INDEPENDENT legs for the off-spine branch. `compare` is a
+    self-oracle for comments by construction — it is handed the same record
+    split the emitter used — so it is silent about a comment the splitter
+    mis-filed. This one reads the source's own bytes back out of the result."""
+    return [
+        "{}: comment line {!r} is in the source and absent from the conversion".format(
+            rel, raw[:60]
+        )
+        for _index, raw in comments
+        if raw not in text
+    ]
+
+
+# An id at the head of a CSV record, read off the RAW source with no reference
+# to how the record splitter chose to interpret the line. `#` cannot start the
+# match, so a genuine comment is correctly not demanded back as a row.
+_RAW_ID_RE = re.compile(r'^"?([A-Za-z0-9][A-Za-z0-9._-]*)"?\s*,', re.MULTILINE)
+
+
+def raw_id_findings(rel, table, raw, text):
+    """Findings for an id present in the RAW CSV and absent from the emitted
+    TOML's table keys — the second independent leg. `raw` is the whole source;
+    its FIRST LINE is dropped, because the header's first cell (`OI-ID`, `Id`)
+    heads a record but names a column rather than a row.
+
+    THIS IS THE LEG THAT CATCHES THE DOTTED ID. `[agent.ANTHROPIC-OPUS-4.8]`
+    written bare parses cleanly as two nested tables, so the emitted file is
+    valid TOML, `compare` finds the row under a key it constructed the same
+    wrong way, and nothing reds — while the registry has quietly lost a model
+    row. Reading the ids off the source and demanding each one back as a
+    top-level key is the only check that does not inherit the mistake."""
+    try:
+        got = tomllib.loads(text).get(table, {})
+    except tomllib.TOMLDecodeError:
+        return []  # `compare` reports the decode error; one finding is enough
+    body = raw.split("\n", 1)[1] if "\n" in raw else ""
+    missing = [
+        rid
+        for rid in dict.fromkeys(_RAW_ID_RE.findall(body))
+        if not isinstance(got.get(rid), dict)
+    ]
+    return [
+        "{}: {} heads a record in the source and is not a table in the "
+        "conversion — the row was dropped, or its id was written as a bare key "
+        "TOML read as a table path".format(rel, rid)
+        for rid in missing
+    ]
 
 
 def value_to_cell(col, value):
@@ -397,7 +597,48 @@ def convert(root, write):
         }
         findings += compare(rel, table, expected, text)
         _emit(root, src, text, len(rows), "rows", write, written)
+    findings += _convert_offspine(root, write, written)
     return findings, written
+
+
+def _convert_offspine(root, write, written):
+    """The batch-2 registries (repo-lock §8.1). Findings; appends to `written`.
+
+    Its own function rather than a third arm of the spine loop, because it
+    carries a record split the spine does not need (comments) and two extra
+    oracle legs — and because a reader arriving at `convert` should be able to
+    see which registries §8.1 sequences here and which two it deliberately
+    holds back."""
+    findings = []
+    for rel, (table, id_col) in sorted(OFFSPINE.items()):
+        src = root / rel
+        if not src.is_file():
+            continue
+        # `newline=""` and NOT `read_text`: universal-newline translation would
+        # rewrite a CRLF inside a quoted cell to LF, which is a content change
+        # smuggled into a carrier conversion — and the one the open-items view
+        # already had to grow `gen_open_items.normalize` for.
+        with src.open(newline="", encoding="utf-8-sig", errors="replace") as fh:
+            raw = fh.read()
+        header, rows, comments, findings_shape = read_csv_records(raw, id_col)
+        findings += ["{}: {}".format(rel, f) for f in findings_shape]
+        text = rows_to_toml(table, id_col, rows, header, comments)
+        # THE ORACLE READS WHAT `csv` HANDED BACK — unstripped, so a conversion
+        # that trimmed content is a finding rather than a match against its own
+        # trimming (the spine branch's B2, and the same rule here).
+        expected = {
+            (r.get(id_col) or "").strip(): {
+                KEY.get(c, c): (r.get(c) or "")
+                for c in header
+                if c != id_col and (r.get(c) or "").strip()
+            }
+            for r in rows
+        }
+        findings += compare(rel, table, expected, text)
+        findings += raw_comment_findings(rel, comments, text)
+        findings += raw_id_findings(rel, table, raw, text)
+        _emit(root, src, text, len(rows), "rows", write, written)
+    return findings
 
 
 def main(argv=None):

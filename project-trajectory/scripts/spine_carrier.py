@@ -65,6 +65,22 @@ import tomllib
 # the tier is the thing that does not.
 SPINE_TABLE = {"SR-ID": "requirement", "LLR-ID": "design", "TC-ID": "test"}
 
+# BATCH-2 (repo-lock.md §8.1): the OFF-SPINE registries the same OI-12 ruling
+# covers, keyed the same way. `interfaces.csv` and `components.csv` are not here
+# yet BY SEQUENCE, not by exception — §8.1 holds the first behind OI-14 and the
+# second behind the components ruling, both of which rewrite what those rows
+# ARE, and converting a registry twice is the one cost the sequencing avoids.
+#
+# THEY LIVE IN THIS MODULE RATHER THAN A SECOND ONE for D-6's reason exactly.
+# A second carrier module would not duplicate the *vocabulary* — the columns
+# differ — it would duplicate `resolve`, `rows_from_toml`, `load`, `columns`
+# and the absent-vs-empty and None-vs-`{}` rules, which is ~150 lines of the
+# behaviour this repo has already watched drift once per copy. The union maps
+# below are what the readers consult; the SPINE_* names stay exactly what they
+# were, so a spine consumer and its pins are untouched.
+OFFSPINE_TABLE = {"OI-ID": "open_item", "Id": "agent"}
+REGISTRY_TABLE = dict(SPINE_TABLE, **OFFSPINE_TABLE)
+
 # The carrier's keys -> today's COLUMN NAMES. STATED, never derived. Two
 # reasons, and the second is the load-bearing one:
 #
@@ -108,6 +124,30 @@ SPINE_COLUMN = {
     "component": "Component",
     "notes": "Notes",
 }
+
+# The batch-2 half of the same vocabulary. `title`/`status`/`tier`/`notes` are
+# NOT repeated here: D-3 rules that a column name means one thing repo-wide, so
+# the two halves union cleanly and a second entry for a shared column would be
+# precisely the drift a single stated map exists to prevent.
+OFFSPINE_COLUMN = {
+    # open-items (the owner decision queue)
+    "raised": "Raised",
+    "one_line": "OneLine",
+    "decision": "Decision",
+    "blast_radius": "BlastRadius",
+    "options": "Options",
+    "recommendation": "Recommendation",
+    "wi_refs": "WI-Refs",
+    "ruled_date": "RuledDate",
+    "ruling_ref": "RulingRef",
+    # agents (the model routing registry)
+    "family": "Family",
+    "model": "Model",
+    "version": "Version",
+    "cmd_template": "CmdTemplate",
+    "env": "Env",
+}
+REGISTRY_COLUMN = dict(SPINE_COLUMN, **OFFSPINE_COLUMN)
 
 # THE PER-TIER SCHEMA: which keys each tier declares, keyed by its id column.
 # STATED, never derived — and the reason is the one the ordered CSV header used
@@ -168,6 +208,38 @@ SPINE_TIER_KEYS = {
     ),
 }
 
+# The same third leg for the batch-2 registries — the SAME rule, not a second
+# one (repo-lock §8.1: "reuse that shape rather than invent a second one").
+# `tests/test_dogfood_sync.py` checks template, live registry and this schema
+# against each other for every entry of REGISTRY_KEYS, so adding a column to
+# `open-items` or `agents` is a reviewed edit HERE first, exactly as it is for a
+# spine tier.
+OFFSPINE_KEYS = {
+    "OI-ID": (
+        "title",
+        "status",
+        "raised",
+        "one_line",
+        "decision",
+        "blast_radius",
+        "options",
+        "recommendation",
+        "wi_refs",
+        "ruled_date",
+        "ruling_ref",
+    ),
+    "Id": (
+        "family",
+        "model",
+        "version",
+        "tier",
+        "cmd_template",
+        "env",
+        "notes",
+    ),
+}
+REGISTRY_KEYS = dict(SPINE_TIER_KEYS, **OFFSPINE_KEYS)
+
 
 # The row tiers moved CSV -> TOML; the need tier moved markdown -> TOML. Both
 # lists are ordered NEW FIRST, because resolution prefers the destination
@@ -227,11 +299,53 @@ def rows_from_toml(text, id_col):
     except tomllib.TOMLDecodeError:
         return None
     out = {}
-    for rid, cells in (tables.get(SPINE_TABLE[id_col]) or {}).items():
+    for rid, cells in (tables.get(REGISTRY_TABLE[id_col]) or {}).items():
         row = {id_col: rid}
         for key, value in cells.items():
-            row[SPINE_COLUMN.get(key, key)] = value_to_cell(value)
+            row[REGISTRY_COLUMN.get(key, key)] = value_to_cell(value)
         out[rid] = row
+    return out
+
+
+def nested_table_findings(text, id_col, rel=""):
+    """One finding per row cell that is itself a TABLE — the shape an UNQUOTED
+    DOTTED ID silently produces.
+
+    TOML's table path is dot-separated and a bare key may not contain a dot, so
+    `[agent.ANTHROPIC-OPUS-4.8]` written bare declares
+    `agent."ANTHROPIC-OPUS-4"."8"`. The file parses, the registry loads, and the
+    model row is simply GONE — replaced by a row called `ANTHROPIC-OPUS-4` whose
+    only cell is a sub-table. Every value here passes through `value_to_cell`,
+    which would stringify that sub-table into a cell nobody can read.
+
+    The spine never met this (`SR-137` has no dot); the `agents` registry's ids are model
+    versions and routinely do, which is why the carrier gained a rule
+    (`migrate_carrier.toml_key` quotes what TOML will not take bare) and why
+    the rule needs a reader-side check that a HAND edit cannot slip past.
+    Refused rather than repaired, for `empty_value_findings`' reason: the fix is
+    a two-character edit the author must make, and silently re-nesting the row
+    would make the file and the loaded registry disagree about what it says."""
+    try:
+        tables = tomllib.loads(text)
+    except tomllib.TOMLDecodeError:
+        return []  # the caller's own parse reports this; one finding is enough
+    out = []
+    for rid, cells in sorted((tables.get(REGISTRY_TABLE[id_col]) or {}).items()):
+        for key, value in sorted(cells.items()):
+            if isinstance(value, dict):
+                out.append(
+                    "{}{}.{} is a TABLE, not a cell — an id containing a `.` "
+                    "must be QUOTED in its table header "
+                    '(`[{}."{}.{}"]`), or TOML reads the dot as a table '
+                    "path and the row's real id disappears.".format(
+                        rel and rel + ": ",
+                        rid,
+                        key,
+                        REGISTRY_TABLE[id_col],
+                        rid,
+                        key,
+                    )
+                )
     return out
 
 
@@ -373,9 +487,11 @@ def load(path, id_col, keep_examples=True):
             "unreadable registry as an empty one".format(live)
         )
     if live.suffix == ".toml":
-        empties = empty_value_findings(rows, id_col, str(live))
-        if empties:
-            raise SystemExit("spine_carrier: " + "\n".join(empties))
+        findings = nested_table_findings(
+            live.read_text(encoding="utf-8-sig", errors="replace"), id_col, str(live)
+        ) + empty_value_findings(rows, id_col, str(live))
+        if findings:
+            raise SystemExit("spine_carrier: " + "\n".join(findings))
     return [
         r
         for r in rows

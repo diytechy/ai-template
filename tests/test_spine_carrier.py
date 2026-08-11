@@ -195,3 +195,77 @@ def test_every_tier_schema_key_is_one_the_carrier_can_map():
         assert len(set(keys)) == len(keys), id_col
         for key in keys:
             assert key in sc.SPINE_COLUMN, (id_col, key)
+
+
+# --- batch-2: the off-spine registries (repo-lock §8.1) -----------------------
+
+
+def test_the_vocabulary_unions_without_redefining_a_shared_column():
+    """D-3 rules that a column name means ONE thing repo-wide, which is what
+    lets spine and batch-2 share a single map. `Title`, `Status`, `Tier` and
+    `Notes` appear in registries on both sides; if either half redefined one,
+    the union would silently take whichever half was applied second."""
+    for key in set(sc.SPINE_COLUMN) & set(sc.OFFSPINE_COLUMN):
+        assert sc.SPINE_COLUMN[key] == sc.OFFSPINE_COLUMN[key], key
+    assert sc.REGISTRY_COLUMN == dict(sc.SPINE_COLUMN, **sc.OFFSPINE_COLUMN)
+    # ...and no two keys map onto one column, which would make the inverse
+    # ambiguous and the round-trip unprovable.
+    assert len(set(sc.REGISTRY_COLUMN.values())) == len(sc.REGISTRY_COLUMN)
+
+
+def test_an_open_items_registry_that_does_not_parse_is_absent_never_empty(tmp_path):
+    """The false green this whole rule exists for: `{}` on a DECISION QUEUE
+    reads as "no open items", so an unreadable registry would publish "nothing
+    is waiting on the owner" and every gate would stay green."""
+    p = tmp_path / "open-items.toml"
+    p.write_text('[open_item.OI-1]\ntitle = "unterminated\n', encoding="utf-8")
+    assert sc.rows_from_toml(p.read_text(encoding="utf-8"), "OI-ID") is None
+    with pytest.raises(SystemExit) as exc:
+        sc.load(p, "OI-ID")
+    assert "does not parse" in str(exc.value)
+
+
+def test_an_absent_registry_is_still_an_empty_list(tmp_path):
+    # ...and the other side of that fork stays cheap: a repo carrying no
+    # decisions renders a view rather than failing.
+    assert sc.load(tmp_path / "open-items.toml", "OI-ID") == []
+    assert sc.load(tmp_path / "agents.toml", "Id") == []
+
+
+def test_an_unquoted_dotted_id_is_refused_rather_than_read_as_a_table(tmp_path):
+    """`[agent.ANTHROPIC-OPUS-4.8]` written BARE is valid TOML declaring nested
+    tables, so the file parses and the row's real id is simply gone — replaced
+    by `ANTHROPIC-OPUS-4` whose one 'cell' is a sub-table. Fail-closed, for
+    `empty_value_findings`' reason: the fix is a two-character edit the author
+    must make, and repairing it silently would leave the file and the loaded
+    registry disagreeing about what it says."""
+    p = tmp_path / "agents.toml"
+    p.write_text('[agent.ANTHROPIC-OPUS-4.8]\nfamily = "ANTHROPIC"\n', encoding="utf-8")
+    findings = sc.nested_table_findings(p.read_text(encoding="utf-8"), "Id")
+    assert findings and "must be QUOTED" in findings[0]
+    with pytest.raises(SystemExit) as exc:
+        sc.load(p, "Id")
+    assert "QUOTED" in str(exc.value)
+
+
+def test_the_quoted_form_loads_clean(tmp_path):
+    # The guard must not fire on the shape the converter actually writes.
+    p = tmp_path / "agents.toml"
+    p.write_text(
+        '[agent."ANTHROPIC-OPUS-4.8"]\nfamily = "ANTHROPIC"\ntier = "strong"\n',
+        encoding="utf-8",
+    )
+    assert sc.nested_table_findings(p.read_text(encoding="utf-8"), "Id") == []
+    rows = sc.load(p, "Id")
+    assert [r["Id"] for r in rows] == ["ANTHROPIC-OPUS-4.8"]
+    assert rows[0]["Family"] == "ANTHROPIC"  # the key -> column vocabulary
+
+
+def test_both_carriers_at_once_is_refused_for_the_new_registries(tmp_path):
+    # The dual-home refusal is the rule that makes a half-finished migration
+    # visible; it must cover the registries the migration just moved.
+    (tmp_path / "agents.toml").write_text("", encoding="utf-8")
+    (tmp_path / "agents.csv").write_text("Id\n", encoding="utf-8")
+    with pytest.raises(SystemExit) as exc:
+        sc.resolve(tmp_path / "agents.toml")
+    assert "BOTH carriers" in str(exc.value)

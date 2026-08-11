@@ -432,10 +432,48 @@ def test_the_readers_are_the_exact_inverse_of_the_writer():
     # INVERSE rather than "every reader key is known to the writer" is what
     # catches the asymmetric half: a column the writer emits under a key no
     # reader maps back is a cell that converts and then disappears.
-    assert TRACE.SPINE_COLUMN == {key: col for col, key in MIGRATE.KEY.items()}
-    assert len(MIGRATE.KEY) == len(TRACE.SPINE_COLUMN), (
+    #
+    # Pinned over the WHOLE vocabulary (`REGISTRY_COLUMN`, spine + batch-2),
+    # never the spine half alone: batch-2 put `open-items` and `agents` through
+    # the same converter, and a rule that checked only the spine would have let
+    # exactly those new columns drift — the columns with no history of being
+    # right.
+    assert SPINE.REGISTRY_COLUMN == {key: col for col, key in MIGRATE.KEY.items()}
+    assert len(MIGRATE.KEY) == len(SPINE.REGISTRY_COLUMN), (
         "the writer maps two columns onto one key"
     )
+    # ...and the spine half is still exactly the spine's, so widening the
+    # vocabulary cannot quietly redefine a tier's column.
+    assert TRACE.SPINE_COLUMN == SPINE.SPINE_COLUMN
+    assert set(SPINE.SPINE_COLUMN) < set(SPINE.REGISTRY_COLUMN)
+
+
+def test_the_schema_of_record_covers_every_registry_the_carrier_names():
+    # `REGISTRY_KEYS` is what `tests/test_dogfood_sync.py` checks templates and
+    # live registries against, so a registry the carrier can READ but the schema
+    # does not STATE is a registry whose template is pinned by nothing.
+    assert set(SPINE.REGISTRY_KEYS) == set(SPINE.REGISTRY_TABLE)
+    for id_col, keys in SPINE.REGISTRY_KEYS.items():
+        assert keys, id_col  # an empty schema passes everything
+        for key in keys:
+            assert key in SPINE.REGISTRY_COLUMN, (id_col, key)
+
+
+def test_bootstraps_scaffolded_brief_uses_the_converters_own_keys():
+    # `bootstrap.py` runs BEFORE the kit is copied and can import no sibling
+    # (repo-lock §8.2), so it carries its own TOML emitter and its own copy of
+    # the open-items key names. That duplication is DECLARED; this is the
+    # behavioural pin D-7 requires of it, because the failure it prevents is
+    # silent: a scaffolded OI-3 written under a key the reader does not map
+    # comes back as a brief with no text, and `check_docs` S-3 then reports the
+    # owner ask as briefed.
+    BOOTSTRAP = load_script("bootstrap")
+    keys = {key for key, _cell in BOOTSTRAP.STACK_OI3_ROW}
+    assert keys, "the scaffolded brief writes no cells"
+    assert keys <= set(SPINE.REGISTRY_KEYS["OI-ID"]), sorted(
+        keys - set(SPINE.REGISTRY_KEYS["OI-ID"])
+    )
+    assert BOOTSTRAP.STACK_OI3_ID.startswith("OI-")
 
 
 def test_every_live_spine_column_round_trips_through_the_carrier_vocabulary():
