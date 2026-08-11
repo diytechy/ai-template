@@ -282,9 +282,9 @@
 #
 # The distribution:
 #
-#   cli                  100   deliberate
+#   cli                  101   deliberate
 #   link-rebase            1   deliberate
-#   spine-loader          19   deliberate
+#   spine-loader          18   deliberate
 #   declared-file         12   deliberate
 #   markdown-table        13   deliberate
 #   git-wrapper            6   deliberate
@@ -293,7 +293,7 @@
 #   spec-folder-reader     4   deliberate
 #   ctx-unpack             3   deliberate
 #   okf-row                1   deliberate
-#   import-fallback        2   deliberate
+#   import-fallback        11   deliberate
 #   intake-mint            8   deliberate
 #   module-path            3   deliberate
 #   signature-echo         2   deliberate
@@ -308,7 +308,7 @@
 #   registry-row-filter    1   deliberate
 #   generator-preamble     1   deliberate
 #   frontmatter-fence      1   deliberate
-#   spine-carrier          3   deliberate
+#   spine-carrier          2   deliberate
 #
 # The two facts worth carrying: cross-module duplication here is dominated by
 # SMALL STABLE HELPERS the F5 ruling deliberately duplicates (a shared
@@ -321,7 +321,7 @@
 # a census whose classification has rotted is how the false claims above
 # survived in the first place.
 
-# --- cli (100 blocks) ---------------------------------------------
+# --- cli (101 blocks) ---------------------------------------------
 # disposition: deliberate
 # the per-script CLI skeleton + _utf8_console. F5: kit scripts must stay
 # independently copy-able and stdlib-only, which is why a shared
@@ -390,7 +390,6 @@ f9a751e72b81  project-trajectory/scripts/check_doc_refs.py == project-trajectory
 7146728c91d1  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/gen_trajectory.py
 2e8985c8fcb3  project-trajectory/scripts/check_docs.py == project-trajectory/scripts/check_vendored.py
 b76043ee462f  project-trajectory/scripts/check_dupes.py == project-trajectory/scripts/gen_cases.py
-3b4335f77810  project-trajectory/scripts/check_flows.py == project-trajectory/scripts/plan_coverage.py
 0e8403279f2d  project-trajectory/scripts/check_perf.py == project-trajectory/scripts/derive_gate.py
 96547fd3a5ae  project-trajectory/scripts/check_perf.py == project-trajectory/scripts/derive_gate.py
 93d508e214f3  project-trajectory/scripts/check_perf.py == project-trajectory/scripts/trace.py
@@ -452,6 +451,8 @@ b87ed5851f33  project-trajectory/scripts/agent_common.py == project-trajectory/s
 da3bd5e9dd3e  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/check_figures.py
 f9a751e72b81  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/check_figures.py
 
+965336f6998e  project-trajectory/scripts/check_flows.py == project-trajectory/scripts/plan_briefs.py
+965336f6998e  project-trajectory/scripts/check_flows.py == project-trajectory/scripts/plan_coverage.py
 # --- link-rebase (1 block) ---------------------------------------
 # disposition: deliberate
 # the inline-link rewrite closure (`_sub` over MD_LINK_TARGET_RE.sub): the
@@ -482,7 +483,7 @@ d298066d8071  project-trajectory/scripts/agent_common.py == project-trajectory/s
 d47d5975c21b  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/schedule.py
 f800f0c60265  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/schedule.py
 
-# --- spine-loader (19 blocks) ------------------------------------
+# --- spine-loader (18 blocks) ------------------------------------
 # disposition: deliberate
 # spine-registry loaders (load_csv/refs, the SR/LLR/TC/IF/OI row filters,
 # the draft-heading scan). Several carry an explicit in-code note -
@@ -500,7 +501,6 @@ f800f0c60265  project-trajectory/scripts/check_trajectory.py == project-trajecto
 # test_rule_sync pin like its siblings (WI-401 REVIEW-A finding 2). One
 # new block (5d6159709c2c), same class, count 20 -> 21.
 fd8bed87fb54  project-trajectory/scripts/agent_loop.py == project-trajectory/scripts/check_trajectory.py
-aa845026a358  project-trajectory/scripts/check_flows.py == project-trajectory/scripts/plan_coverage.py
 84e2717e93b1  project-trajectory/scripts/check_perf.py == project-trajectory/scripts/gen_release_checklist.py
 276a458797c4  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/gen_arch_map.py
 4b5af82ebaa3  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/traj_status.py
@@ -512,13 +512,13 @@ bea18e2ff5f7  project-trajectory/scripts/derive_gate.py == project-trajectory/sc
 5d6159709c2c  project-trajectory/scripts/derive_gate.py == project-trajectory/scripts/trace.py
 e933a42ec7f5  project-trajectory/scripts/derive_gate.py == project-trajectory/scripts/trace.py
 3de7dcefd27c  project-trajectory/scripts/derive_gate.py == project-trajectory/scripts/trace.py
-b455a7e5955d  project-trajectory/scripts/derive_gate.py == project-trajectory/scripts/trace.py
 e756d21c8ca6  project-trajectory/scripts/derive_gate.py == project-trajectory/scripts/trace.py
 1f37852f250b  project-trajectory/scripts/derive_gate.py == project-trajectory/scripts/trace.py
 c54131b73567  project-trajectory/scripts/gen_arch_map.py == project-trajectory/scripts/plan_briefs.py
 f3ea6bf955e3  project-trajectory/scripts/gen_arch_map.py == project-trajectory/scripts/plan_briefs.py
 b0b9cc04d152  project-trajectory/scripts/gen_release_checklist.py == project-trajectory/scripts/trace.py
 
+0bb53cd4526d  project-trajectory/scripts/check_flows.py == project-trajectory/scripts/plan_coverage.py
 # --- okf-row (1 block) -------------------------------------------
 # disposition: deliberate
 # the OKF/dashboard row builders — the same (kind, title, body) tuple shape
@@ -539,7 +539,7 @@ b0b9cc04d152  project-trajectory/scripts/gen_release_checklist.py == project-tra
 # generator (sw_containment's subtree walk — traj_views.py since WI-280 S5).
 a2fa21743919  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/traj_views.py
 
-# --- import-fallback (2 blocks) ----------------------------------
+# --- import-fallback (11 blocks) ----------------------------------
 # disposition: deliberate
 # the sibling-import fallback and command-template substitution — the
 # preamble that lets a kit script run both as a script and in-process.
@@ -548,6 +548,15 @@ a2fa21743919  project-trajectory/scripts/check_trajectory.py == project-trajecto
 be3d9855f5b5  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/plan_runner.py
 982bbeb7eb27  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/check.py
 
+7d3460808d1f  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/check_flows.py
+7d3460808d1f  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/gen_okf.py
+7d3460808d1f  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/gen_release_checklist.py
+7d3460808d1f  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/plan_briefs.py
+7d3460808d1f  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/plan_coverage.py
+8b895eb39be9  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/derive_gate.py
+de4437c55027  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/check_trajectory.py
+fff6be73b05f  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/trace.py
+a4dfa1dbcd8e  project-trajectory/scripts/check_flows.py == project-trajectory/scripts/plan_coverage.py
 # --- skills-materialize (1 block)  -------------------------------
 # disposition: deliberate
 # the per-agent skills directory walk, shared by bootstrap and the skills
@@ -952,7 +961,7 @@ a510ce1c39b6  project-trajectory/scripts/agent_common.py == project-trajectory/s
 # them would start checking the other's values.
 edaa6a8191f0  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/check_docs.py
 
-# --- spine-carrier (3 blocks) -------------------------------------
+# --- spine-carrier (2 blocks) -------------------------------------
 # disposition: deliberate
 # The spine's CSV -> TOML carrier migration (repo-lock D-5, OI-12).
 # trace.py and check_trajectory.py each carry the same three things: the tier
@@ -976,6 +985,5 @@ edaa6a8191f0  project-trajectory/scripts/agent_common.py == project-trajectory/s
 # LIVE spine header is driven through the pair so the agreement cannot be
 # vacuous. tests/test_trajectory_staged.py then pins their OUTPUT equal over a
 # real converted repo.
-fff6be73b05f  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/trace.py
 4b36c4b8702c  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/trace.py
 55a260b00a47  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/trace.py

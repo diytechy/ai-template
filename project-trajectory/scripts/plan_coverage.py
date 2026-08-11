@@ -45,6 +45,17 @@ import re
 import sys
 from pathlib import Path
 
+# Sibling: the spine's registry CARRIER (repo-lock D-5/D-6) — the one home for
+# the TOML tier tables, the key->column vocabulary and both readers. Run as a
+# subprocess this script's own dir is sys.path[0] so a plain import resolves;
+# the guard covers an in-process import (a test) whose sys.path does not yet
+# carry scripts/ — the sanctioned-sibling idiom trace.py uses for trace_text.
+try:
+    import spine_carrier
+except ImportError:  # pragma: no cover - in-process fallback
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    import spine_carrier
+
 
 def _utf8_console():
     """Emit UTF-8 to stdout/stderr whatever the OS console codepage is, so a
@@ -130,6 +141,19 @@ def load_registry_ids(path, key):
         return None
     with path.open(newline="", encoding="utf-8-sig") as f:
         return {r[key] for r in csv.DictReader(f) if r.get(key)}
+
+
+def spine_ids(path, key):
+    """`load_registry_ids` for a SPINE registry, which reads through the carrier
+    (repo-lock D-5) so it answers whether the tier is CSV or TOML.
+
+    Keeps the absent-means-'cannot validate' contract exactly: None when the
+    registry does not exist under either carrier, never an empty set. The
+    distinction is the whole value of this function — an empty set would report
+    every SR reference in a proposed plan as unknown."""
+    if spine_carrier.resolve(path) is None:
+        return None
+    return {r[key] for r in spine_carrier.load(path, key) if r.get(key)}
 
 
 def proposed_rationale_present(cell):
@@ -318,7 +342,7 @@ def main():
         sys.exit(2)
 
     req = Path(args.root) / "docs" / "requirements"
-    sr_ids = load_registry_ids(req / "system-requirements.csv", "SR-ID")
+    sr_ids = spine_ids(req / "system-requirements.csv", "SR-ID")
     if_ids = load_registry_ids(req / "interfaces.csv", "IF-ID")
 
     findings, plans = [], []

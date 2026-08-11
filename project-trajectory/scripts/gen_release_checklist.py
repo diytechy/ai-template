@@ -41,6 +41,17 @@ import re
 import sys
 from pathlib import Path
 
+# Sibling: the spine's registry CARRIER (repo-lock D-5/D-6) — the one home for
+# the TOML tier tables, the key->column vocabulary and both readers. Run as a
+# subprocess this script's own dir is sys.path[0] so a plain import resolves;
+# the guard covers an in-process import (a test) whose sys.path does not yet
+# carry scripts/ — the sanctioned-sibling idiom trace.py uses for trace_text.
+try:
+    import spine_carrier
+except ImportError:  # pragma: no cover - in-process fallback
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    import spine_carrier
+
 HUMAN_METHODS = {"Demonstration", "Manual", "Inspection"}
 
 
@@ -113,12 +124,14 @@ def main():
     needs = read_stakeholder_needs(docs / "requirements" / "stakeholder-needs.md")
     srs = [
         r
-        for r in load_csv(docs / "requirements" / "system-requirements.csv")
+        for r in spine_carrier.load(
+            docs / "requirements" / "system-requirements.csv", "SR-ID"
+        )
         if r.get("SR-ID") and not is_example(r["SR-ID"])
     ]
     tcs = [
         r
-        for r in load_csv(docs / "test" / "test-cases.csv")
+        for r in spine_carrier.load(docs / "test" / "test-cases.csv", "TC-ID")
         if r.get("TC-ID") and not is_example(r["TC-ID"])
     ]
     ifs = [
@@ -170,7 +183,9 @@ def main():
     # that cite only LLR ids still resolve to the right phase.
     llrs = [
         r
-        for r in load_csv(docs / "requirements" / "low-level-requirements.csv")
+        for r in spine_carrier.load(
+            docs / "requirements" / "low-level-requirements.csv", "LLR-ID"
+        )
         if r.get("LLR-ID") and not is_example(r["LLR-ID"])
     ]
     in_scope_ids = set(in_scope_sr_ids)

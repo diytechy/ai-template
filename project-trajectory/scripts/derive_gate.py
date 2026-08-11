@@ -76,6 +76,17 @@ import subprocess
 import sys
 from pathlib import Path
 
+# Sibling: the spine's registry CARRIER (repo-lock D-5/D-6) — the one home for
+# the TOML tier tables, the key->column vocabulary and both readers. Run as a
+# subprocess this script's own dir is sys.path[0] so a plain import resolves;
+# the guard covers an in-process import (a test) whose sys.path does not yet
+# carry scripts/ — the sanctioned-sibling idiom trace.py uses for trace_text.
+try:
+    import spine_carrier
+except ImportError:  # pragma: no cover - in-process fallback
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    import spine_carrier
+
 # The derived ladder. G0 = pre-ratification (draft); G1..G3 are the runnable gates
 # check.py knows. GATE_NAMES maps the internal int back to the marker string.
 G0, G1, G2, G3 = 0, 1, 2, 3
@@ -383,9 +394,17 @@ def compute(docs):
     dict: counts, the raw computed level (may be G0), the same level recomputed
     with the drafts removed (`ex_draft`), the per-phase breakdown, and the
     runnable gate name (raw floored to G1)."""
-    raw_srs = load_csv(docs / "requirements" / "system-requirements.csv")
-    raw_llrs = load_csv(docs / "requirements" / "low-level-requirements.csv")
-    raw_tcs = load_csv(docs / "test" / "test-cases.csv")
+    # The three spine tiers read through the CARRIER (repo-lock D-5), which
+    # resolves TOML or CSV and hands back rows under today's column names — so
+    # the gate derivation below is untouched by the migration. `load_csv` stays
+    # for the off-spine registries, which do not move.
+    raw_srs = spine_carrier.load(
+        docs / "requirements" / "system-requirements.csv", "SR-ID"
+    )
+    raw_llrs = spine_carrier.load(
+        docs / "requirements" / "low-level-requirements.csv", "LLR-ID"
+    )
+    raw_tcs = spine_carrier.load(docs / "test" / "test-cases.csv", "TC-ID")
     srs = [r for r in raw_srs if r.get("SR-ID") and not is_example(r["SR-ID"])]
     llrs = [r for r in raw_llrs if r.get("LLR-ID") and not is_example(r["LLR-ID"])]
     tcs = [r for r in raw_tcs if r.get("TC-ID") and not is_example(r["TC-ID"])]

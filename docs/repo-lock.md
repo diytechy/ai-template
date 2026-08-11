@@ -859,8 +859,8 @@ changed carrier, so the tree is still single-home.
 > of the "an amendment that edits one cell has not amended the row" lesson
 > under D-1. A per-commit smoke tier does not catch it; the full tier does.
 
-**Owed, in order:** ~~the carrier-aware baseline read~~ → `load_registry` (the
-compatibility shim above) → the cutover itself, which writes the four `.toml`
+**Owed, in order:** ~~the carrier-aware baseline read~~ → ~~`load_registry` (the
+compatibility shim above)~~ → the cutover itself, which writes the four `.toml`
 files and **deletes the `.csv`/`.md` sources in the same commit** (two homes
 for one fact is the thing the kit forbids) → `intake`'s writer becomes a TOML
 emitter → `test_dogfood_sync`'s "live header is an ordered superset of the
@@ -889,8 +889,39 @@ came out of it that were not in the plan and are worth keeping:
   baseline read means "re-bless everything with no diff". `_toml_rows_text`
   returns `None` on a decode error so the caller can tell them apart.
 
-The carrier vocabulary is now F5-duplicated across three modules (both readers
-plus `migrate_carrier`'s writer) and **pinned three ways** in
+**Step 2 — the live loader — is DONE for the SR/LLR/TC tiers.** Nine readers
+now go through `spine_carrier`, so each answers whichever carrier is live:
+`trace` · `check_trajectory` · `derive_gate` · `gen_okf` ·
+`gen_release_checklist` · `check_doc_refs` · `check_flows` · `plan_coverage` ·
+`plan_briefs`. **Still on `csv`/markdown and owed before the cutover:**
+`intake` (which also **writes** — step 4), `agent_loop`, `agent_common`,
+`check_docs`, and every reader of the **SN tier**, whose shape is different and
+which the cutover converts (`traj_parse._sn_rows` · `gen_okf.sn_rows` ·
+`sn_all_ids` / `sn_draft_ids` · `sn_normative_text` ·
+`check_docs._registry_needs` · `check_flows`'s inline SN regex).
+
+Three things the wiring cost, all of them the architecture layer charging for
+the ruling rather than resisting it — and worth knowing before the next step:
+
+- **Five cross-component seams had to be declared** (IF-104…IF-108): a shared
+  module imported from CMP-002/003/004 into CMP-001 needs one `Consumes` row
+  per crossing, the same convention `schedule.py` already follows. This is the
+  visible price of D-6 and it is the right price — the seam is now in the
+  registry rather than implied by an import line.
+- **The duplicate census had to be reclassified by READING each block**, not by
+  its path pair. A first pass filed all twelve new blocks under
+  `import-fallback` by inference; opening them showed three were the `cli`
+  preamble and one the `spine-loader` id reader. That is precisely the
+  bucketing failure `test_dupes_census_audit` exists to catch, caught by it.
+- **A dedent left a loop body nested under a `continue`** in
+  `check_doc_refs.registry_findings` — syntactically valid, silently scanning
+  nothing, and `ruff` has no unreachable-code rule to catch it. Found by two
+  tests that assert the check REDS on a planted defect. Recorded because it is
+  the same lesson in a new place: what saves you is the test that proves a
+  guard can still fail, not the one that proves it passes.
+
+The carrier vocabulary is now shared by three modules (both readers plus
+`migrate_carrier`'s writer) and **pinned three ways** in
 `tests/test_rule_sync.py`: the readers' constants equal, both the exact inverse
 of the writer's `KEY`, and every column of every *live* header driven through
 the pair so the agreement cannot be vacuous. Censused in `docs/dupes-allow`

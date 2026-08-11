@@ -354,23 +354,43 @@ def test_mutation_a_removed_disposition_reds_the_disposition_check():
     assert check_dispositions(broken[0]) != []
 
 
+def _biggest_section():
+    """The census's largest class, and the count it currently declares.
+
+    DERIVED, not written down. These two mutations need some section to corrupt,
+    and naming one with its literal count made them break on every legitimate
+    census edit that touched that class — which trains a maintainer to re-stamp
+    a number in a GUARD to make it green, the exact habit the guard exists to
+    prevent. The census's own rule is that every figure in it is generated
+    rather than counted by hand; the tests over it owe the same discipline."""
+    sections = parse_census(CENSUS.read_text(encoding="utf-8"))[0]
+    biggest = max(sections, key=lambda s: len(s.entries))
+    return biggest.name, biggest.declared
+
+
 def test_mutation_a_wrong_header_count_reds_the_count_check():
+    name, n = _biggest_section()
     broken = parse_census(
         _mutate(
             CENSUS.read_text(encoding="utf-8"),
-            "# --- cli (100 blocks)",
-            "# --- cli (89 blocks)",
+            "# --- {} ({} blocks)".format(name, n),
+            "# --- {} ({} blocks)".format(name, n - 11),
         )
     )
     assert check_counts(broken[0]) != []
 
 
 def test_mutation_a_stale_distribution_row_reds_the_table_check():
+    name, n = _biggest_section()
+    row = re.compile(r"^#(\s+)%s(\s+)%d\b" % (re.escape(name), n), re.M)
+    text = CENSUS.read_text(encoding="utf-8")
+    match = row.search(text)
+    assert match, "no distribution row for the largest class ({})".format(name)
     broken = parse_census(
         _mutate(
-            CENSUS.read_text(encoding="utf-8"),
-            "#   cli                  100",
-            "#   cli                   82",
+            text,
+            match.group(0),
+            "#{}{}{}{}".format(match.group(1), name, match.group(2), n - 18),
         )
     )
     assert check_distribution_table(broken[0], broken[1]) != []

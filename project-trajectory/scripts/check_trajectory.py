@@ -138,7 +138,6 @@ import configparser
 import csv
 import difflib
 import hashlib
-import io
 import re
 import subprocess
 import sys

@@ -77,11 +77,9 @@ Contracts: IF-001, IF-021, IF-042 — the interface seams this module declares (
 
 import argparse
 import csv
-import io
 import re
 import subprocess
 import sys
-import tomllib
 from pathlib import Path
 
 # Sibling: the spine-row TEXT layer (WI-329). Run as a subprocess this script's

@@ -108,9 +108,12 @@ graph LR
     m_scripts_agent_loop --> m_scripts_plan_runner
     m_scripts_agent_loop --> m_scripts_prompts
     m_scripts_agent_loop --> m_scripts_score_reviews
+    m_scripts_check_doc_refs --> m_scripts_spine_carrier
     m_scripts_check_figures --> m_scripts_check_doc_refs
+    m_scripts_check_flows --> m_scripts_spine_carrier
     m_scripts_check_trajectory --> m_scripts_check_docs
     m_scripts_check_trajectory --> m_scripts_spine_carrier
+    m_scripts_derive_gate --> m_scripts_spine_carrier
     m_scripts_dispatch --> m_scripts_agent_common
     m_scripts_dispatch --> m_scripts_gen_trajectory
     m_scripts_dispatch --> m_scripts_handback
@@ -119,9 +122,11 @@ graph LR
     m_scripts_dispatch --> m_scripts_lane
     m_scripts_dispatch --> m_scripts_schedule
     m_scripts_dispatch --> m_scripts_trace
+    m_scripts_gen_okf --> m_scripts_spine_carrier
     m_scripts_gen_open_items --> m_scripts_gen_trajectory
     m_scripts_gen_open_items --> m_scripts_trace
     m_scripts_gen_prompt_catalog --> m_scripts_prompts
+    m_scripts_gen_release_checklist --> m_scripts_spine_carrier
     m_scripts_gen_trajectory --> m_scripts_check_trajectory
     m_scripts_gen_trajectory --> m_scripts_traj_graph
     m_scripts_gen_trajectory --> m_scripts_traj_panels
@@ -148,6 +153,8 @@ graph LR
     m_scripts_lane --> m_scripts_integrate
     m_scripts_plan_artifacts --> m_scripts_wi_convert
     m_scripts_plan_briefs --> m_scripts_prompts
+    m_scripts_plan_briefs --> m_scripts_spine_carrier
+    m_scripts_plan_coverage --> m_scripts_spine_carrier
     m_scripts_plan_runner --> m_scripts_agent_route
     m_scripts_plan_runner --> m_scripts_agent_session
     m_scripts_plan_runner --> m_scripts_plan_artifacts
@@ -213,6 +220,11 @@ graph LR
     m_scripts_schedule -. IF-094 .-> m_scripts_traj_panels
     m_scripts_schedule -. IF-085 .-> m_scripts_traj_parse
     m_scripts_score_reviews -. IF-046 .-> m_scripts_agent_loop
+    m_scripts_spine_carrier -. IF-104 .-> m_scripts_check_doc_refs
+    m_scripts_spine_carrier -. IF-105 .-> m_scripts_check_flows
+    m_scripts_spine_carrier -. IF-106 .-> m_scripts_gen_okf
+    m_scripts_spine_carrier -. IF-107 .-> m_scripts_gen_release_checklist
+    m_scripts_spine_carrier -. IF-108 .-> m_scripts_plan_briefs
     m_scripts_spine_carrier -. IF-102 .-> m_scripts_trace
     m_scripts_trace -. IF-001 .-> m_scripts_check
     m_scripts_trace -. IF-089 .-> m_scripts_dispatch
@@ -485,6 +497,7 @@ Contracts (interfaces): IF-069, IF-070
 
 ### `scripts/check_doc_refs`
 _Doc reference validation — prose that names dead files or symbols (Thread 49)._
+Imports (internal): `spine_carrier`
 Contracts (interfaces): IF-008, IF-028, IF-072
 
 | Public item | Summary | Implements |
@@ -556,6 +569,7 @@ Contracts (interfaces): IF-086, IF-087
 
 ### `scripts/check_flows`
 _Design-time runtime-flow check: the G2 reviewer reads diagrams, not CSV rows._
+Imports (internal): `spine_carrier`
 Contracts (interfaces): IF-003, IF-029
 
 | Public item | Summary | Implements |
@@ -704,6 +718,7 @@ Contracts (interfaces): IF-016, IF-036
 
 ### `scripts/derive_gate`
 _Derive the active gate from artifact states — the hybrid, cached gate._
+Imports (internal): `spine_carrier`
 Contracts (interfaces): IF-050, IF-051
 
 | Public item | Summary | Implements |
@@ -778,6 +793,7 @@ Contracts (interfaces): IF-017
 
 ### `scripts/gen_okf`
 _OKF export — the traceability graph as a portable knowledge bundle (Thread 48)._
+Imports (internal): `spine_carrier`
 Contracts (interfaces): IF-012, IF-033
 
 | Public item | Summary | Implements |
@@ -828,6 +844,7 @@ Contracts (interfaces): IF-098
 
 ### `scripts/gen_release_checklist`
 _Generate the human release checklist from the registries._
+Imports (internal): `spine_carrier`
 Contracts (interfaces): IF-018, IF-034
 
 | Public item | Summary | Implements |
@@ -956,7 +973,7 @@ Contracts (interfaces): IF-061, IF-078
 
 ### `scripts/plan_briefs`
 _Redacted dual-plan brief assembler + the three hat prompt-map keys (DP-001_
-Imports (internal): `prompts`
+Imports (internal): `prompts`, `spine_carrier`
 Contracts (interfaces): IF-059, IF-100
 
 | Public item | Summary | Implements |
@@ -969,6 +986,7 @@ Contracts (interfaces): IF-059, IF-100
 
 ### `scripts/plan_coverage`
 _Dual-plan coverage pre-pass: make rival WI decompositions mechanically_
+Imports (internal): `spine_carrier`
 Contracts (interfaces): IF-057
 
 | Public item | Summary | Implements |
@@ -977,6 +995,7 @@ Contracts (interfaces): IF-057
 | `parse_plan(text)` | The plan's proposed-WI rows from the first table whose header carries a |  |
 | `split_refs(cell)` | `;`-separated (commas tolerated) ref tokens from a table cell. |  |
 | `load_registry_ids(path, key)` | The id column of an optional CSV registry, or None when it is absent — |  |
+| `spine_ids(path, key)` | `load_registry_ids` for a SPINE registry, which reads through the carrier |  |
 | `proposed_rationale_present(cell)` | True when a `Proposed:` interfaces cell carries rationale text beyond |  |
 | `find_cycle(rows)` | A predecessor cycle among plan rows (list of ids), or None. Iterative |  |
 | `check_plan(name, rows, clauses, sr_ids, if_ids)` | One plan's findings + its covered-clause set. |  |

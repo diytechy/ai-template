@@ -34,6 +34,17 @@ import re
 import sys
 from pathlib import Path
 
+# Sibling: the spine's registry CARRIER (repo-lock D-5/D-6) — the one home for
+# the TOML tier tables, the key->column vocabulary and both readers. Run as a
+# subprocess this script's own dir is sys.path[0] so a plain import resolves;
+# the guard covers an in-process import (a test) whose sys.path does not yet
+# carry scripts/ — the sanctioned-sibling idiom trace.py uses for trace_text.
+try:
+    import spine_carrier
+except ImportError:  # pragma: no cover - in-process fallback
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    import spine_carrier
+
 
 def _utf8_console():
     """Emit UTF-8 to stdout/stderr whatever the OS console codepage is, so a
@@ -61,10 +72,19 @@ def load_ids(docs):
         with path.open(newline="", encoding="utf-8-sig") as f:
             return {r[key] for r in csv.DictReader(f) if r.get(key)}
 
+    def spine_col(path, key):
+        """The id set of a spine tier, through the carrier (repo-lock D-5) so
+        it answers whichever of TOML/CSV is live. Under TOML the ids are the
+        TABLE KEYS, so this is the one reader that needs no column vocabulary
+        at all."""
+        return {r[key] for r in spine_carrier.load(path, key) if r.get(key)}
+
     known = {
-        "SR": col(docs / "requirements" / "system-requirements.csv", "SR-ID"),
-        "LLR": col(docs / "requirements" / "low-level-requirements.csv", "LLR-ID"),
-        "TC": col(docs / "test" / "test-cases.csv", "TC-ID"),
+        "SR": spine_col(docs / "requirements" / "system-requirements.csv", "SR-ID"),
+        "LLR": spine_col(
+            docs / "requirements" / "low-level-requirements.csv", "LLR-ID"
+        ),
+        "TC": spine_col(docs / "test" / "test-cases.csv", "TC-ID"),
         "SN": set(),
     }
     sn_md = docs / "requirements" / "stakeholder-needs.md"

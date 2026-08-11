@@ -42,6 +42,17 @@ import re
 import sys
 from pathlib import Path
 
+# Sibling: the spine's registry CARRIER (repo-lock D-5/D-6) — the one home for
+# the TOML tier tables, the key->column vocabulary and both readers. Run as a
+# subprocess this script's own dir is sys.path[0] so a plain import resolves;
+# the guard covers an in-process import (a test) whose sys.path does not yet
+# carry scripts/ — the sanctioned-sibling idiom trace.py uses for trace_text.
+try:
+    import spine_carrier
+except ImportError:  # pragma: no cover - in-process fallback
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    import spine_carrier
+
 OUT_DIR = "docs/okf"
 POLICY = "docs/okf-export"
 
@@ -296,9 +307,19 @@ def emit(root):
     registries are placeholder-only/absent (the vacuous case)."""
     req = root / "docs" / "requirements"
     sns = sn_rows(root)
-    srs = real_rows(read_rows(req / "system-requirements.csv"), "SR-ID", "SR-")
-    llrs = real_rows(read_rows(req / "low-level-requirements.csv"), "LLR-ID", "LLR-")
-    tcs = real_rows(read_rows(root / "docs/test/test-cases.csv"), "TC-ID", "TC-")
+    # The spine tiers read through the CARRIER (repo-lock D-5) so the bundle
+    # exports the same cells whether the registries are CSV or TOML.
+    srs = real_rows(
+        spine_carrier.load(req / "system-requirements.csv", "SR-ID"), "SR-ID", "SR-"
+    )
+    llrs = real_rows(
+        spine_carrier.load(req / "low-level-requirements.csv", "LLR-ID"),
+        "LLR-ID",
+        "LLR-",
+    )
+    tcs = real_rows(
+        spine_carrier.load(root / "docs/test/test-cases.csv", "TC-ID"), "TC-ID", "TC-"
+    )
     ifs = real_rows(read_rows(req / "interfaces.csv"), "IF-ID", "IF-")
     if not (sns or srs or llrs or tcs):
         return {}

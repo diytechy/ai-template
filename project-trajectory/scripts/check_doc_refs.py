@@ -77,10 +77,20 @@ Contracts: IF-008, IF-028, IF-072 — the interface seams this module declares (
 """
 
 import argparse
-import csv
 import re
 import sys
 from pathlib import Path
+
+# Sibling: the spine's registry CARRIER (repo-lock D-5/D-6) — the one home for
+# the TOML tier tables, the key->column vocabulary and both readers. Run as a
+# subprocess this script's own dir is sys.path[0] so a plain import resolves;
+# the guard covers an in-process import (a test) whose sys.path does not yet
+# carry scripts/ — the sanctioned-sibling idiom trace.py uses for trace_text.
+try:
+    import spine_carrier
+except ImportError:  # pragma: no cover - in-process fallback
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    import spine_carrier
 
 # A backticked token is path-shaped when it has a separator AND either a known
 # extension or a conventional top-level prefix — the bounded rule that keeps
@@ -379,28 +389,29 @@ def registry_findings(
     """
     bad, untraced = [], []
     for rel, idcol, cols in SPINE_CELLS:
-        reg = root / rel
-        if not reg.is_file():
+        # Through the CARRIER (repo-lock D-5): these are spine tiers, so the
+        # tier is read whether it is CSV or TOML and the cells arrive under the
+        # same column names either way.
+        if spine_carrier.resolve(root / rel) is None:
             continue
-        with reg.open(newline="", encoding="utf-8-sig") as f:
-            for row in csv.DictReader(f):
-                rid = (row.get(idcol) or "").strip()
-                if not rid or rid.endswith("-000"):
-                    continue
-                for col in cols:
-                    for token in CELL_JOIN.split(row.get(col) or ""):
-                        entry = "{}: {} {}: `{}`".format(rel, rid, col, token)
-                        judge_token(
-                            token,
-                            entry,
-                            bad,
-                            untraced,
-                            rel,
-                            root,
-                            kit_root,
-                            record_prefixes,
-                            absences,
-                        )
+        for row in spine_carrier.load(root / rel, idcol):
+            rid = (row.get(idcol) or "").strip()
+            if not rid or rid.endswith("-000"):
+                continue
+            for col in cols:
+                for token in CELL_JOIN.split(row.get(col) or ""):
+                    entry = "{}: {} {}: `{}`".format(rel, rid, col, token)
+                    judge_token(
+                        token,
+                        entry,
+                        bad,
+                        untraced,
+                        rel,
+                        root,
+                        kit_root,
+                        record_prefixes,
+                        absences,
+                    )
     return bad, untraced
 
 

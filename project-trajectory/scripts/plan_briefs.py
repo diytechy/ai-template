@@ -49,6 +49,17 @@ import re
 import sys
 from pathlib import Path
 
+# Sibling: the spine's registry CARRIER (repo-lock D-5/D-6) — the one home for
+# the TOML tier tables, the key->column vocabulary and both readers. Run as a
+# subprocess this script's own dir is sys.path[0] so a plain import resolves;
+# the guard covers an in-process import (a test) whose sys.path does not yet
+# carry scripts/ — the sanctioned-sibling idiom trace.py uses for trace_text.
+try:
+    import spine_carrier
+except ImportError:  # pragma: no cover - in-process fallback
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    import spine_carrier
+
 # The sanctioned-sibling import (the agent_loop / gen_trajectory idiom): the
 # prompt-template LOCATION and the dispatcher-notes rule have one home now that
 # the session-engine briefs are files too.
@@ -198,7 +209,7 @@ def build_surface(root):
     self-assessment are unreachable because this function never names them."""
     root = Path(root)
     return {
-        "SR_SURFACE": _sr_surface(_load_rows(root / SR_CSV)),
+        "SR_SURFACE": _sr_surface(spine_carrier.load(root / SR_CSV, "SR-ID")),
         "IF_REGISTRY": _if_registry(_load_rows(root / IF_CSV)),
     }
 
