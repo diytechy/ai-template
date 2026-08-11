@@ -86,6 +86,7 @@ graph LR
     m_scripts_schedule["scripts/schedule — Derive the dependency-ready WI frontier and its…"]
     m_scripts_score_reviews["scripts/score_reviews — The substance scorer — score a review verdict b…"]
     m_scripts_spec_move["scripts/spec_move — spec_move.py — the link-aware spec-move ritual:…"]
+    m_scripts_spine_carrier["scripts/spine_carrier — The requirement spine's registry CARRIER (OI-12…"]
     m_scripts_subagent_gate["scripts/subagent_gate — Subagent spawn gate — deny-by-default fan-out c…"]
     m_scripts_trace["scripts/trace — Traceability join + orphan report for the SN->S…"]
     m_scripts_trace_text["scripts/trace_text — Spine-row TEXT rules and the row primitives the…"]
@@ -109,6 +110,7 @@ graph LR
     m_scripts_agent_loop --> m_scripts_score_reviews
     m_scripts_check_figures --> m_scripts_check_doc_refs
     m_scripts_check_trajectory --> m_scripts_check_docs
+    m_scripts_check_trajectory --> m_scripts_spine_carrier
     m_scripts_dispatch --> m_scripts_agent_common
     m_scripts_dispatch --> m_scripts_gen_trajectory
     m_scripts_dispatch --> m_scripts_handback
@@ -153,6 +155,7 @@ graph LR
     m_scripts_plan_runner --> m_scripts_plan_coverage_step
     m_scripts_plan_runner --> m_scripts_plan_round
     m_scripts_spec_move --> m_scripts_agent_common
+    m_scripts_trace --> m_scripts_spine_carrier
     m_scripts_trace --> m_scripts_trace_text
     m_scripts_traj_panels --> m_scripts_integrate
     m_scripts_traj_panels --> m_scripts_schedule
@@ -210,6 +213,7 @@ graph LR
     m_scripts_schedule -. IF-094 .-> m_scripts_traj_panels
     m_scripts_schedule -. IF-085 .-> m_scripts_traj_parse
     m_scripts_score_reviews -. IF-046 .-> m_scripts_agent_loop
+    m_scripts_spine_carrier -. IF-102 .-> m_scripts_trace
     m_scripts_trace -. IF-001 .-> m_scripts_check
     m_scripts_trace -. IF-089 .-> m_scripts_dispatch
     m_scripts_trace -. IF-075 .-> m_scripts_gen_open_items
@@ -621,7 +625,7 @@ Contracts (interfaces): IF-006, IF-026
 
 ### `scripts/check_trajectory`
 _Validate the work-item registry — stdlib only._
-Imports (internal): `check_docs`
+Imports (internal): `check_docs`, `spine_carrier`
 Contracts (interfaces): IF-009, IF-023, IF-077
 
 | Public item | Summary | Implements |
@@ -923,6 +927,7 @@ Imports (internal): `agent_common`, `integrate`
 
 ### `scripts/migrate_carrier`
 _Convert the requirement registries from their `.md` + `.csv` carriers to one_
+Contracts (interfaces): IF-103
 
 | Public item | Summary | Implements |
 |---|---|---|
@@ -1109,6 +1114,21 @@ Imports (internal): `agent_common`
 | `archive_dest(src_rel, stamp)` | The spec-of-record archival destination for `src_rel` (the |  |
 | `main(argv)` |  |  |
 
+### `scripts/spine_carrier`
+_The requirement spine's registry CARRIER (OI-12 / docs/repo-lock.md D-5)._
+Contracts (interfaces): IF-102
+
+| Public item | Summary | Implements |
+|---|---|---|
+| `stem(rel_path)` | A registry path with its carrier suffix removed, so one constant can |  |
+| `carriers(rel_path)` | Both carrier paths a registry can appear under. |  |
+| `value_to_cell(value)` | One TOML value as the cell text the CSV carrier held. |  |
+| `rows_from_toml(text, id_col)` | `{id: row}` under today's column names, or None when `text` does not |  |
+| `rows_from_csv(text, id_col)` | `{id: row}` from the CSV carrier. |  |
+| `rows_from_text(text, id_col, carrier)` | `{id: row}` for the named carrier (`".toml"` / `".csv"`), or None when a |  |
+| `resolve(path)` | The live carrier file for a registry, given a path under EITHER suffix. |  |
+| `load(path, id_col, keep_examples)` | The live registry as a LIST of rows in file order — the shape |  |
+
 ### `scripts/subagent_gate`
 _Subagent spawn gate — deny-by-default fan-out control for unattended runs._
 Contracts (interfaces): IF-020, IF-038
@@ -1123,7 +1143,7 @@ Contracts (interfaces): IF-020, IF-038
 
 ### `scripts/trace`
 _Traceability join + orphan report for the SN->SR->LLR->TC registries._
-Imports (internal): `trace_text`
+Imports (internal): `spine_carrier`, `trace_text`
 Contracts (interfaces): IF-001, IF-021, IF-042
 
 | Public item | Summary | Implements |

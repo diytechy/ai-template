@@ -584,7 +584,13 @@ BASELINE = {
     # WI-078. Re-stamp downward with WI-280, and again once the CSV fallback
     # can be dropped — it is dead weight the day no supported baseline predates
     # the cutover, and it should not outlive its reason.
-    "trace.py": 3476,
+    # Then -84 (3476 -> 3392), D-5 step 2: the vocabulary and both readers moved
+    # to the `spine_carrier.py` sibling (OWNER RULING 2026-08-10, repo-lock D-6,
+    # amending the F5 rejection of a shared module). Most of the bump above was
+    # the stated key map and the docstring justifying it; both now have ONE
+    # home, and this module keeps only the git shell and the `-000` filter,
+    # which is its own rule and not the carrier's. Net against pre-D-5: +47.
+    "trace.py": 3392,
     # +132 (1926 -> 2058; the last +10 is the F4 BOM hardening: read_rows utf-8-sig + git-show strips), WI-316: staged_spine_findings — the amend-without-
     # flip warn (--staged): content cells of a Verified spine row changed
     # without the Modified marker, suppressed when the owning SR flips in the
@@ -866,7 +872,10 @@ BASELINE = {
     # side to TOML on the new one across the cutover, so that commit is checked
     # by the guard rather than invisible to it. Still the kit's largest module
     # and still the first WI-280 candidate.
-    "check_trajectory.py": 3887,
+    # Then -57 (3887 -> 3830), D-5 step 2: same move to `spine_carrier.py`.
+    # Net against pre-D-5: +32 — the git shell for the two-tree read, which is
+    # this module's own and does not belong in a pure carrier module.
+    "check_trajectory.py": 3830,
     # NEW ENTRY, +25 (1498 -> 1523), WI-357: the two-stage work-branch claim
     # signal — the on-disk fast path plus the branch-history probe that
     # survives the §2.3 close commit (git log -1 over the claim path), with
@@ -1076,7 +1085,13 @@ BASELINE = {
     # adopter's first run — the exact opposite of SN-001's "green out of the
     # box". Raise-only, because a mark may legally stand above the live maximum
     # (that headroom is what retires a deleted id) but must never fall.
-    "bootstrap.py": 2721,
+    # +11 (2721 -> 2732), D-5 step 2: two MAPPING rows and the reason each is
+    # copied — `spine_carrier.py` (a sibling import, so the trace_text.py rule
+    # applies verbatim: a scaffold without it ImportErrors on the first check)
+    # and `migrate_carrier.py` (every adopting repo migrates too, and an
+    # adopter who cannot run the round-trip proof takes the conversion on
+    # faith). Nine of the eleven lines are those reasons; the code delta is 2.
+    "bootstrap.py": 2732,
     # NEW ENTRY, +228 (1423 -> 1651), Phase 2b of the concurrency restructure
     # (docs/concurrency-restructure.md §7): the spec-folder work-item reader,
     # which crosses this module over THRESHOLD for the first time. It is one

@@ -9,6 +9,6 @@
 # Freshness is guarded by `--check` (a pre-commit + gate step). check.py / CI
 # read the first non-comment line below, exactly as before.
 #
-# basis: SN=29 SR=147 LLR=148 TC=145 drafts=33 modified=38 uncovered=0 computed=G0 ex-draft=G0 phase=4 per-phase=1=G2;2=G3;3=G3;4=G0;5=G0 stage=0
-# computed 2026-08-10 (as-of fe09dcd6)
+# basis: SN=29 SR=147 LLR=149 TC=146 drafts=35 modified=38 uncovered=0 computed=G0 ex-draft=G0 phase=4 per-phase=1=G2;2=G3;3=G3;4=G0;5=G0 stage=0
+# computed 2026-08-10 (as-of a35f12f6)
 G1

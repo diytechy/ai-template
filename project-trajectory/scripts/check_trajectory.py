@@ -145,6 +145,17 @@ import sys
 import tomllib
 from pathlib import Path
 
+# Sibling: the spine's registry carrier (repo-lock D-5/D-6). Run as a
+# subprocess this script's own dir is sys.path[0] so a plain import resolves;
+# the guard covers an in-process import (a test) whose sys.path does not yet
+# carry scripts/ — the same sanctioned-sibling idiom trace.py uses for
+# trace_text.
+try:
+    import spine_carrier
+except ImportError:  # pragma: no cover - in-process fallback
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    import spine_carrier
+
 WI_CSV = "docs/requirements/work-items.csv"
 # The spec-folder home the CSV above gives way to (Phase 2b of
 # docs/concurrency-restructure.md). Declared as a repo-relative POSIX path
@@ -2896,58 +2907,13 @@ SPINE_CSVS = (
 )
 
 # --- the spine carrier (repo-lock D-5) ---------------------------------------
-# F5-duplicated from trace.py, which owns the same two constants for the ratify
-# brief's baseline read, and pinned equal by tests/test_rule_sync.py. The full
-# argument for the shape — id-keyed tables, the prefix retained and bare, and
-# why the mapping is stated rather than derived — is in trace.py beside its
-# copy; it is not restated here, because two copies of a RULING is how the two
-# copies start disagreeing about it.
-SPINE_TABLE = {"SR-ID": "requirement", "LLR-ID": "design", "TC-ID": "test"}
-
-SPINE_COLUMN = {
-    "title": "Title",
-    "sn_refs": "SN-Refs",
-    "sr_refs": "SR-Refs",
-    "verifies": "Verifies",
-    "requirement": "Requirement",
-    "rationale": "Rationale",
-    "acceptance_criteria": "AcceptanceCriteria",
-    "permutations": "Permutations",
-    "priority": "Priority",
-    "verification": "Verification",
-    "status": "Status",
-    "phase": "Phase",
-    "area": "Area",
-    "superseded_by": "SupersededBy",
-    "lifecycle": "Lifecycle",
-    "detail": "Detail",
-    "module": "Module",
-    "code_symbol": "CodeSymbol",
-    "test_refs": "TestRefs",
-    "level": "Level",
-    "method": "Method",
-    "expected": "Expected",
-    "parameters": "Parameters",
-    "automated": "Automated",
-    "evidence": "Evidence",
-    "tier": "Tier",
-    "component": "Component",
-    "notes": "Notes",
-}
-
-
-def _spine_stem(rel_path):
-    """A registry path with its carrier suffix removed, so one constant can name
-    a registry across a carrier change."""
-    return rel_path.rsplit(".", 1)[0]
-
-
-def _spine_carriers(rel_path):
-    """Both carrier paths a registry can appear under. The applicability test
-    (`touches`) has to name BOTH or the cutover commit — which deletes the
-    `.csv` and adds the `.toml` — matches neither name and the scan silently
-    skips the one commit that rewrites every row it watches."""
-    return {_spine_stem(rel_path) + s for s in (".toml", ".csv")}
+# The vocabulary and both readers live in `spine_carrier.py`, imported as a
+# sibling — see that module's docstring for why it is ONE home and how that
+# amends the F5 ruling (owner ruling 2026-08-10, repo-lock D-6).
+SPINE_TABLE = spine_carrier.SPINE_TABLE
+SPINE_COLUMN = spine_carrier.SPINE_COLUMN
+_spine_stem = spine_carrier.stem
+_spine_carriers = spine_carrier.carriers
 
 
 def _spine_rows_at(root, rev_prefix, rel_path, id_col):
@@ -2963,37 +2929,14 @@ def _spine_rows_at(root, rev_prefix, rel_path, id_col):
     exempt from the amendment guard — it is checked by it, independently of the
     converter's own round-trip proof. A silent-no-op degrade (`{}`) is kept for
     a side that has neither carrier, which is the pre-registry history case."""
-    for carrier in (".toml", ".csv"):
-        cand = _spine_stem(rel_path) + carrier
+    for cand in _spine_carriers(rel_path):
         text = _git(root, ["show", rev_prefix + cand])
         if text is None:
             continue
-        # F4: a committed BOM survives `git show`; strip it or the header glues
-        # to the id column and the guard silently disables (fails OPEN).
-        text = text.lstrip("﻿")
-        if carrier == ".csv":
-            return {
-                r[id_col]: r
-                for r in csv.DictReader(io.StringIO(text))
-                if r.get(id_col) and not r[id_col].endswith("-000")
-            }
-        try:
-            tables = tomllib.loads(text)
-        except tomllib.TOMLDecodeError:
+        rows = spine_carrier.rows_from_text(text, id_col, "." + cand.rsplit(".", 1)[1])
+        if rows is None:
             continue  # unreadable is not empty — try the other carrier
-        out = {}
-        for rid, cells in (tables.get(SPINE_TABLE[id_col]) or {}).items():
-            if rid.endswith("-000"):
-                continue
-            row = {id_col: rid}
-            for key, value in cells.items():
-                row[SPINE_COLUMN.get(key, key)] = (
-                    "; ".join(str(v) for v in value)
-                    if isinstance(value, list)
-                    else str(value)
-                )
-            out[rid] = row
-        return out
+        return {rid: row for rid, row in rows.items() if not str(rid).endswith("-000")}
     return {}
 
 
@@ -3290,7 +3233,7 @@ def staged_spine_amendments(root, base="HEAD", head=None):
 
     out = []
     for csv_path, id_col in SPINE_CSVS:
-        if not (_spine_carriers(csv_path) & staged_names):
+        if not any(c in staged_names for c in _spine_carriers(csv_path)):
             continue
         head_rows = _spine_rows_at(root, old_rev, csv_path, id_col)
         staged_rows = _spine_rows_at(root, new_rev, csv_path, id_col)

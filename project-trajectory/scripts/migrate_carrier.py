@@ -31,6 +31,11 @@ on this carrier, in the D-3/D-4 pass.
 REVERSIBILITY IS THE POINT OF `--check`. It re-reads what it wrote and asserts
 the round-trip is cell-for-cell identical to the source, so a conversion that
 silently drops a cell fails here rather than in a gate three commits later.
+
+Contracts: IF-103 — the seam this module declares (process.md §8; row of record
+in docs/requirements/interfaces.csv).
+
+Requirements: SR-147 (one machine-parseable carrier for the spine).
 """
 
 import argparse

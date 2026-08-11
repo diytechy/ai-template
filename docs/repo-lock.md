@@ -898,6 +898,54 @@ with that reason. **The CSV fallback is deliberate dead weight with an expiry**:
 it should be dropped once no supported baseline predates the cutover, and both
 ratchet entries say so.
 
+### D-6 — the spine carrier gets ONE home; F5 is AMENDED, not ignored
+
+**Owner ruling, 2026-08-10**, taken on measurement during D-5 step 2. The
+question was where the TOML reader lives, and it was a genuine fork because two
+of the kit's own rules pointed opposite ways: D-5 says "data plus **one**
+loader", and the F5 ruling (WI-078) rejected a shared `_kitcommon.py` so every
+script stays an independently-copyable drop-in.
+
+**Ruled: one sibling module** — `project-trajectory/scripts/spine_carrier.py`,
+imported by the spine readers. This **amends F5** rather than quietly stepping
+around it, and the amendment is narrow enough to state exactly:
+
+> F5 buys cross-script copy-ability, and it was written for small stable
+> **plumbing** — a five-line CSV loader, the argparse preamble — where a
+> divergence between copies is visible and cheap. It does not cover a shared
+> **vocabulary**, whose divergence is neither.
+
+**The measurement that decided it**, taken before the ruling: two readers need
+all 28 columns, **three need none**, and the rest need between 1 and 20 — so
+the duplicated form is **~300 lines of vocabulary across eleven modules**, plus
+eleven reviewed ratchet bumps and eleven census entries. Against that, the
+failure mode is the one this program keeps finding: a copy that has not learned
+a column **does not fail loudly**. It returns a row with that cell missing,
+which every consumer downstream reads as *"the cell is empty"* — silent content
+loss on the registries the kit exists to make trustworthy. The third option
+considered and rejected — a per-script map sized to what that script reads —
+is the same hazard made routine.
+
+**What it costs, stated plainly:** "independently copyable" becomes "copyable
+with its **declared siblings**". That is what the kit already practised and had
+not said — `trace.py` has shipped with `trace_text.py` since WI-329, and
+`gen_trajectory.py` with six `traj_*` modules — so the amendment writes down an
+existing exception rather than creating a new one. `ADOPTING.md` §6 and
+`bootstrap.py`'s MAPPING carry the file, on the same rule the other siblings
+use: a scaffold missing it `ImportError`s on the first check.
+
+**Measured effect on the ratchets, both directions:** `trace.py` −84 and
+`check_trajectory.py` −57 against their step-1 bumps (the vocabulary and both
+readers left), `bootstrap.py` +11 (two MAPPING rows and the reason each is
+copied). The census lost the five `spine-carrier` blocks step 1 added and kept
+three — the constants each module still names for its own use.
+
+**Its own chain, minted with it:** `LLR-166` + `TC-160` under SR-147, and
+**IF-102** declaring the seam. `migrate_carrier.py` got **IF-103** in the same
+pass, closing a connectivity warn this program had created — and marked
+`Provisional`, because it is migration scaffolding with a defined end and
+should be retired once no supported repo is still on the legacy carriers.
+
 ---
 
 ## 3. The questions, and where each one went

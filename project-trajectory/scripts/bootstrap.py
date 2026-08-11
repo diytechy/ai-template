@@ -1631,6 +1631,17 @@ MAPPING = [
     # scaffold missing it gets an ImportError on the first check. Copied
     # together, always.
     ("scripts/trace_text.py", "scripts/trace_text.py"),
+    # OI-12 / repo-lock D-5+D-6: the spine's registry CARRIER — the one home
+    # for the TOML tier tables, the key->column vocabulary and both readers.
+    # Imported by trace.py and check_trajectory.py (and by the rest of the
+    # spine readers as they convert), so the trace_text.py rule applies
+    # verbatim: a scaffold missing it ImportErrors on the first check.
+    ("scripts/spine_carrier.py", "scripts/spine_carrier.py"),
+    # The one-shot CSV/markdown -> TOML converter (SR-147). Shipped because
+    # EVERY adopting repo migrates too, and the round-trip proof is the
+    # migration's evidence — an adopter that cannot run --check has to take the
+    # conversion on faith, which is what SR-129's 140-cell lesson forbids.
+    ("scripts/migrate_carrier.py", "scripts/migrate_carrier.py"),
     ("scripts/derive_gate.py", "scripts/derive_gate.py"),
     ("scripts/check.py", "scripts/check.py"),
     ("scripts/check_flows.py", "scripts/check_flows.py"),

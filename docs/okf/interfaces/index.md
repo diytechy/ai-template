@@ -107,3 +107,5 @@ resource: "generated"
 | [IF-099](IF-099.md) |  |
 | [IF-100](IF-100.md) |  |
 | [IF-101](IF-101.md) |  |
+| [IF-102](IF-102.md) |  |
+| [IF-103](IF-103.md) |  |

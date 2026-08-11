@@ -156,3 +156,4 @@ resource: "generated"
 | [TC-157](TC-157.md) | Run the prompts and routing suites: strict slot filling and its refusals, the preflight o… |
 | [TC-158](TC-158.md) | Run the id-watermark suite. It drives trace.py's CLI so the rules are asserted on the EXI… |
 | [TC-159](TC-159.md) | Run the carrier-converter suite: it converts the live spine, re-parses the emitted TOML w… |
+| [TC-160](TC-160.md) | Drive the carrier reader over a REAL repo whose spine is cut over from CSV to TOML in one… |

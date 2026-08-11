@@ -403,6 +403,20 @@ table.
   `ac_advisories`) and the row primitives they share are one concern — *is this
   row readable and decidable on its own?* — and pure (rows in, findings out), so
   they separate cleanly from the join that owns I/O and reporting.
+- **The spine gains a sibling: `scripts/spine_carrier.py` (2026-08).** The same
+  rule as `trace_text.py` above, and a re-sync must copy it: `trace.py` and
+  `check_trajectory.py` import it unguarded, so a repo that picks up one and not
+  the other gets an `ImportError` on its first check. `scripts/migrate_carrier.py`
+  ships beside it. `bootstrap.py` copies all of them together; a hand-managed
+  re-sync must too. *Why a shared module at all,* given the kit's own rule that
+  each script stays an independently-copyable drop-in: this one holds a
+  **vocabulary** (the carrier key → column-name map), not plumbing, and a
+  divergence between copies of a vocabulary does not fail loudly — the copy that
+  has not learned a column returns a row with that cell **missing**, which every
+  consumer reads as "the cell is empty". Owner ruling 2026-08-10: "independently
+  copyable" means **copyable with its declared siblings**, which is what the kit
+  already practised (`trace.py` + `trace_text.py`, `gen_trajectory.py` + six
+  `traj_*` modules) and had not written down.
 - **The LLR `Rationale` column (2026-07).** `low-level-requirements.csv` gains an
   optional **`Rationale`** column after `Detail`. Non-breaking and header-driven:
   a registry without it reads as blank and stays valid, so migration is adding

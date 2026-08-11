@@ -89,6 +89,7 @@ from pathlib import Path
 # in-process import (a test) whose sys.path does not yet carry scripts/ — the
 # same sanctioned-sibling-import idiom agent_loop and gen_trajectory use.
 try:
+    import spine_carrier
     from trace_text import (
         ac_advisories,
         form_findings,
@@ -100,6 +101,7 @@ try:
     )
 except ImportError:  # pragma: no cover - in-process fallback
     sys.path.insert(0, str(Path(__file__).resolve().parent))
+    import spine_carrier
     from trace_text import (
         ac_advisories,
         form_findings,
@@ -1436,107 +1438,25 @@ SPINE_FILES = (
 )
 
 # --- the spine carrier (repo-lock D-5) ---------------------------------------
-# One TOML file per tier, id-keyed, the id PREFIX retained and BARE
-# (`[requirement.SR-137]` — TOML allows `-` in a bare key). The table name is
-# the tier, keyed here by the registry's id column so it never has to be
-# re-derived from a path: a path can be a `.csv` or a `.toml` depending on the
-# revision being read, and the tier is the thing that does not move.
-#
-# F5-duplicated into check_trajectory.py (which owns the two-tree amendment
-# scan) and pinned equal by tests/test_rule_sync.py — the same treatment
-# `is_draft` / `sn_all_ids` get, and for the same reason: two readers of one
-# vocabulary that disagree are the false green this kit exists to prevent.
-SPINE_TABLE = {"SR-ID": "requirement", "LLR-ID": "design", "TC-ID": "test"}
-
-# The carrier's keys -> today's COLUMN NAMES. STATED, never derived: no regex
-# turns `sr_id` back into `SR-ID` (nor `acceptance_criteria` into
-# `AcceptanceCriteria` without a word list), and a column name is a repo-wide
-# term (D-3) that deserves a written mapping rather than a rule nobody can
-# predict. This is the exact inverse of `migrate_carrier.KEY`, and
-# test_rule_sync pins the two as inverses so a column can never be renamed on
-# one side of the conversion only.
-SPINE_COLUMN = {
-    "title": "Title",
-    "sn_refs": "SN-Refs",
-    "sr_refs": "SR-Refs",
-    "verifies": "Verifies",
-    "requirement": "Requirement",
-    "rationale": "Rationale",
-    "acceptance_criteria": "AcceptanceCriteria",
-    "permutations": "Permutations",
-    "priority": "Priority",
-    "verification": "Verification",
-    "status": "Status",
-    "phase": "Phase",
-    "area": "Area",
-    "superseded_by": "SupersededBy",
-    "lifecycle": "Lifecycle",
-    "detail": "Detail",
-    "module": "Module",
-    "code_symbol": "CodeSymbol",
-    "test_refs": "TestRefs",
-    "level": "Level",
-    "method": "Method",
-    "expected": "Expected",
-    "parameters": "Parameters",
-    "automated": "Automated",
-    "evidence": "Evidence",
-    "tier": "Tier",
-    "component": "Component",
-    "notes": "Notes",
-}
-
-
-def _spine_stem(rel_path):
-    """A registry path with its carrier suffix removed, so one constant can name
-    a registry across a carrier change."""
-    return rel_path.rsplit(".", 1)[0]
-
-
-def _csv_rows_text(text, rel_path, id_col):
-    """{id: row} from the CSV carrier. Parsed over the FULL text, never
-    line-split — spine cells are long and RFC-4180 quoting spans lines."""
-    return {
-        r[id_col]: r
-        for r in csv.DictReader(io.StringIO(text))
-        if r.get(id_col) and not r[id_col].endswith("-000")
-    }
+# The vocabulary and both readers live in `spine_carrier.py`, imported as a
+# sibling. The full argument for that home — and why it AMENDS the F5 ruling
+# rather than ignoring it (owner ruling 2026-08-10, repo-lock D-6) — is in that
+# module's docstring; the short version is that a duplicated VOCABULARY fails
+# silently, by returning a row with a cell missing, which every consumer reads
+# as "the cell is empty".
+SPINE_TABLE = spine_carrier.SPINE_TABLE
+SPINE_COLUMN = spine_carrier.SPINE_COLUMN
+_spine_stem = spine_carrier.stem
 
 
 def _toml_rows_text(text, rel_path, id_col):
-    """{id: row} from the TOML carrier, presented under TODAY'S COLUMN NAMES, or
-    None when the text does not parse.
-
-    An ABSENT key stays absent rather than being filled with `""`: the carrier's
-    whole point is that "unset" and "set to empty" stop being the same value,
-    and every consumer downstream already reads a cell as `.get(c) or ""`, so
-    absent and empty compare equal where it matters and stay distinguishable
-    where it does not. Typed values are rendered back to their cell text with
-    the same rules `migrate_carrier.value_to_cell` writes them by — a ref array
-    re-joins on the canonical `; `, an int stringifies — so a row read here is
-    cell-for-cell what the CSV row was.
-
-    None (not `{}`) on a decode error, because the two are opposite claims: `{}`
-    says "this registry had no rows", which for a baseline read means "re-bless
-    everything with no diff". A carrier that cannot be read is an ABSENT
-    baseline, and the caller has to be able to tell them apart."""
-    try:
-        tables = tomllib.loads(text)
-    except tomllib.TOMLDecodeError:
+    """{id: row} from the TOML carrier, or None when the text does not parse.
+    Thin over `spine_carrier`, keeping the `-000` filter this module's callers
+    expect (an example row is inert to every rule here — `is_example`)."""
+    rows = spine_carrier.rows_from_toml(text, id_col)
+    if rows is None:
         return None
-    out = {}
-    for rid, cells in (tables.get(SPINE_TABLE[id_col]) or {}).items():
-        if rid.endswith("-000"):
-            continue
-        row = {id_col: rid}
-        for key, value in cells.items():
-            row[SPINE_COLUMN.get(key, key)] = (
-                "; ".join(str(v) for v in value)
-                if isinstance(value, list)
-                else str(value)
-            )
-        out[rid] = row
-    return out
+    return {rid: row for rid, row in rows.items() if not is_example(rid)}
 
 
 def _git_out(root, args):
@@ -1579,15 +1499,11 @@ def _rows_at(root, rev, rel_path, id_col):
 
     Rows come back under TODAY'S COLUMN NAMES whichever carrier answered, so
     nothing past this point learns which one did."""
-    for carrier, parse in ((".toml", _toml_rows_text), (".csv", _csv_rows_text)):
-        cand = _spine_stem(rel_path) + carrier
+    for cand in spine_carrier.carriers(rel_path):
         text = _git_out(root, ["show", "{}:{}".format(rev, cand)])
         if text is None:
             continue
-        # Adversarial-review F4: `git show` preserves a committed BOM, and a
-        # BOM'd header glues to the first column name so every row hides — the
-        # same hazard trace's own loaders read utf-8-sig for. Strip it first.
-        rows = parse(text.lstrip("﻿"), rel_path, id_col)
+        rows = spine_carrier.rows_from_text(text, id_col, "." + cand.rsplit(".", 1)[1])
         if rows is None:  # the carrier is there but does not parse — say so
             print(
                 "WARNING (advisory): the spine carrier {} does not parse at {} —"
@@ -1596,7 +1512,7 @@ def _rows_at(root, rev, rel_path, id_col):
                 file=sys.stderr,
             )
             continue
-        return rows
+        return {rid: row for rid, row in rows.items() if not is_example(rid)}
     return {}
 
 
