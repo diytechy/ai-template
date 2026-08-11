@@ -70,6 +70,16 @@ unruled.
 Measured 2026-08-10 on `infra/mechanized-loop`, after the P0 sitting's first
 part (§5 step 6).
 
+> **Addendum, 2026-08-11 — after the execution burst** (32 commits: the D-5
+> cutover + its two review rounds, D-7/WI-426, WI-415/422/423/424/425, the
+> batch review round): spine now **SN 29 · SR 146 · LLR 149 · TC 146 ·
+> 37 drafts · 38 `Modified`**, interfaces 109, `orphans=0 integrity=0`
+> `component-findings=0 interface-findings=0`, both `--strict` modes exit 0,
+> full bar **2228 passed, 5 skipped** at `44d94715`. Gate still **G1** —
+> correct, because everything that moves it now waits on the owner: the §0
+> rulings and the sitting's part 2. The row below stays as the 2026-08-10
+> record.
+
 | fact | value |
 |---|---|
 | derived gate | **G1** — because a `Draft` SN reads G0. The code is built and tested; the requirements behind it are proposed. |
@@ -1967,6 +1977,40 @@ against a registry; the sitting rules row by row.
    both flagged in the proposal for explicit ruling before intake.
 
 ### 8.5 · Agent rulings made under a WI's own license — owner ratification owed
+
+**The batch adversarial review round, 2026-08-11 — 4 BLOCKERs found and
+closed** (OpenAI `gpt-5.6-sol` via codex, medium, over `49ab1c1c..a378fc77`;
+fixes in `7500e2ff`/`5ea9ad1c`/`fe24bb6d`, `a3febc03`/`16535006`,
+`44d94715`). The two systemic ones:
+
+- **The id watermark never learned the TOML carrier — the ELEVENTH unwired
+  reader.** `live_max_ids` globbed registry `*.csv` generically, so the
+  cutover left "no live id exceeds its mark" silently VACUOUS on SR/LLR/TC —
+  and already false: LLR-167 and TC-161 sat above their marks with zero
+  findings. It evaded the cutover review's explicit eleventh-reader hunt
+  because no grep for the deleted *paths* can catch a reader that never named
+  them. Fixed through `spine_carrier` (a file that moves cannot un-wire it
+  again), `--bump-ids` repaired the marks, and the reuse rule now fires on a
+  planted defect. **`plan_artifacts`' two mints** (DP dirs, filed WIs) still
+  derived from `max(live)+1` — the literal reuse was reproduced (delete the
+  max, mint, same id back) and both now mint `max(live, mark)+1` and bump,
+  with **IF-116** declaring the new watermark seam on the IF-101 model.
+- **A minted `brief = "amendment"` adjudication row fell through to the
+  generic BUILDER prompt** — the original WI-424 defect, alive on a routine
+  path. Now **fails closed**: declared-but-uncomposable briefs hold the row
+  (`EXIT_NEEDS_HUMAN` → immutable per-close report → blocked disposition),
+  two false `brief = "disposition"` declarations on report-less mint arms
+  were corrected to none, and adjudication sessions gained the missing
+  validation arm (no verdict artifact with a well-formed typed line → no
+  completion). **Runtime consequence the owner should know:** until the
+  sitting rules the amendment anchor question (the disjointness finding
+  above), a routinely minted amendment row PAGES rather than builds — the
+  doctrinally correct behavior, and a live reason to rule it soon.
+
+Also closed in the round: the red-TC assembler's placeholder dashes became
+refusals; two WI-425 repoints were corrected (`agent_route`'s needed no new
+citation at all — the live SN-026 already carried it; `dispatch`'s report
+shape belongs to SR-144, not SR-145).
 
 **WI-423 — check-enablement toggles STAY FILES (ruling (b)), `a25637b6`,
 2026-08-11.** The row licensed "somebody weighs them once and writes down the
