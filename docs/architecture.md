@@ -247,6 +247,7 @@ graph LR
     m_scripts_trace -. IF-089 .-> m_scripts_dispatch
     m_scripts_trace -. IF-075 .-> m_scripts_gen_open_items
     m_scripts_trace -. IF-101 .-> m_scripts_intake
+    m_scripts_trace -. IF-116 .-> m_scripts_plan_artifacts
     m_scripts_trace_text -. IF-076 .-> m_scripts_trace
     m_scripts_wi_convert -. IF-092 .-> m_scripts_intake
     m_scripts_wi_convert -. IF-078 .-> m_scripts_plan_artifacts
@@ -983,7 +984,7 @@ Contracts (interfaces): IF-103
 ### `scripts/plan_artifacts`
 _The dual-plan round artifact filer: the coordinator's write-side of a round_
 Imports (internal): `trace`, `wi_convert`
-Contracts (interfaces): IF-061, IF-078
+Contracts (interfaces): IF-061, IF-078, IF-116
 
 | Public item | Summary | Implements |
 |---|---|---|

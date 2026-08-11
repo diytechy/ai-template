@@ -31,7 +31,7 @@ parser is duplicated here (never a sibling import — the kit's independently
 copy-able-script convention, F5); this one only needs id/title/predecessors, so
 it stays deliberately smaller than `plan_coverage.parse_plan`.
 
-Contracts: IF-061; IF-078 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.csv).
+Contracts: IF-061; IF-078; IF-116 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.csv).
 """
 
 import csv
