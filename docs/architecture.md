@@ -74,6 +74,7 @@ graph LR
     m_scripts_intake["scripts/intake — intake.py — the unified trunk-side intake mint …"]
     m_scripts_integrate["scripts/integrate — integrate.py — the local integrator: the statio…"]
     m_scripts_lane["scripts/lane — lane.py — one lane's mechanics (docs/concurrenc…"]
+    m_scripts_migrate_carrier["scripts/migrate_carrier — Convert the requirement registries from their `…"]
     m_scripts_plan_artifacts["scripts/plan_artifacts — The dual-plan round artifact filer: the coordin…"]
     m_scripts_plan_briefs["scripts/plan_briefs — Redacted dual-plan brief assembler + the three …"]
     m_scripts_plan_coverage["scripts/plan_coverage — Dual-plan coverage pre-pass: make rival WI deco…"]
@@ -919,6 +920,21 @@ Imports (internal): `agent_common`, `integrate`
 | `spawn_worker(root, branch, wi_ids, args)` | Launch one worker session loop on the claimed branch's worktree, |  |
 | `run_worker(root, branch, wi_ids, args)` | The BLOCKING worker launch — `spawn_worker` waited to completion, with |  |
 | `spawn_refresh(root, branch, tier)` | The §A2 station refresh for `branch`, NON-blocking: a Popen running |  |
+
+### `scripts/migrate_carrier`
+_Convert the requirement registries from their `.md` + `.csv` carriers to one_
+
+| Public item | Summary | Implements |
+|---|---|---|
+| `toml_scalar(value)` | A Python str/int/list as a TOML value. |  |
+| `cell_to_value(col, raw)` | One CSV cell as the value its column means. Empty -> None (key omitted). |  |
+| `rows_to_toml(table, id_col, rows, header)` | The whole registry as TOML text, source order preserved. |  |
+| `value_to_cell(col, value)` | The inverse of `cell_to_value`, for the round-trip check. |  |
+| `compare(rel, table, expected, text)` | Findings for one converted registry. `expected` is {id: {key: text}} — |  |
+| `read_sn(path)` | [(id, kind, {field: text})] in document order, kind from the heading. |  |
+| `sn_to_toml(needs)` |  |  |
+| `convert(root, write)` | Convert every spine registry. Returns (findings, written_paths). |  |
+| `main(argv)` |  |  |
 
 ### `scripts/plan_artifacts`
 _The dual-plan round artifact filer: the coordinator's write-side of a round_
