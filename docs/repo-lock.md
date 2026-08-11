@@ -1142,6 +1142,23 @@ session.
 must land against a stable baseline first. Executes as its own WI in the step-7
 area, where the D-4 supersession machinery it exercises already lands.
 
+**EXECUTED 2026-08-11 as WI-426** (`ada89294` → `704ffd0d` → `bc829516`), all
+six inventory items, nothing deferred; the hedge found no cheaper census.
+**D-4's proving case succeeded**: SR-039 → LLR-036 → TC-039 deleted, ids
+retired, marks unchanged and both watermark rules verified could-not-break
+(interior ids, never a maximum); the log's Decisions entry is the forwarding
+pointer. Two consequences the inventory had not priced, both forced by the
+orphan check and taken: **IF-007 and IF-027 deleted** (an IF citing an
+unknown SR is a `--strict` finding, so keeping them traded one dangling
+pointer for two), and **WI-037/WI-078's machine-read `sr_refs` cleared**
+(prose keeps the history, joins cannot point at nothing). The retired paths
+joined `docs/declared-absences`; the F5 ruling re-homed from the census
+header to `test_rule_sync`'s docstring (policy owes a by-VALUE pin there,
+plumbing unbounded); `enforcement-audit.md` records the Harness→Test+Reviewer
+downgrade. Full bar on a detached worktree: **2188 passed, 6 skipped**, the
+−30 delta measured by collect-only counts (2224 → 2194 = exactly the 18 + 12
+deleted). `trace --strict` `SR=146 LLR=148 TC=145 orphans=0 integrity=0`.
+
 ---
 
 ## 3. The questions, and where each one went
@@ -1252,9 +1269,11 @@ with OI-13 and OI-12 *executing* together.
    first. This is the batch that gets built twice if it starts
    early: the ladder's values, the `Priority` float, `Phase` on SN, the
    `SupersededBy` deletion and its ~80-line validator, and every test asserting
-   a column shape. **The D-7 census teardown executes here too**, as its own
-   WI: its `SR-039 → LLR-036 → TC-039` deletion is the first real supersession
-   D-4 performs, so it doubles as D-4's proving case (inventory in §2 D-7).
+   a column shape. ~~The D-7 census teardown executes here too~~ **D-7 is
+   EXECUTED** (WI-426, 2026-08-11 — see §2 D-7's EXECUTED note): the
+   `SR-039 → LLR-036 → TC-039` deletion was the first real supersession D-4
+   performed, and its proving case passed. What remains of step 7 is the
+   schema batch itself, still gated on the sitting (Q11).
 8. **Regenerate the derived artifacts** and confirm the gate rises to its honest
    ceiling. A gate that does *not* rise is a finding, not a nuisance.
 9. **Drain or dispose the open frontier** — WI-390, WI-415, WI-422, WI-423,
