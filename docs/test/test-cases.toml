@@ -1617,3 +1617,14 @@ evidence = "tests/test_trajectory_staged.py::test_baseline_read_survives_the_car
 status = "Draft"
 phase = 5
 
+
+[test.TC-161]
+verifies = ["LLR-167"]
+level = "Integration"
+method = """Drive the real loop against a fake agent CLI over throwaway git repos, one per ROUTED brief, and capture what the session was actually handed. Assert the composed brief carries each slot's real derivation (the lane's report verbatim, the closed spec, the commit facts; the live census joined to the TC row and to the obligation it covers), that no `{slot}` survives in the output, and that the typed verdict line the brief demands is written to the path the brief named and committed with the result trailer. Then drive the refusals: a clean close (no per-close report), a report with no typed `commit_range`, and a census that has come clean each fall back to the worker assignment with the reason PRINTED. Pin the discriminator against the ambiguity it exists for - two rows with an IDENTICAL SpecRef and different declared `Brief` cells compose differently - and pin the two unrouted briefs as unrouted, naming themselves in the refusal."""
+tier = "Smoke"
+expected = "Satisfies SR-146 AcceptanceCriteria"
+automated = "Yes"
+evidence = "tests/test_adjudicate_brief.py"
+status = "Draft"
+phase = 5

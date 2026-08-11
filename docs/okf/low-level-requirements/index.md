@@ -159,3 +159,4 @@ resource: "generated"
 | [LLR-164](LLR-164.md) | The generated prompt catalogue and its freshness gate |
 | [LLR-165](LLR-165.md) | The spine carrier converter (markdown + CSV -> TOML) |
 | [LLR-166](LLR-166.md) | The spine carrier's one reader, and the dual-home refusal |
+| [LLR-167](LLR-167.md) | The adjudicator briefs' evidence, and the refusal that keeps a half-filled one unsent |

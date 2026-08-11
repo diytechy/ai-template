@@ -156,3 +156,4 @@ resource: "generated"
 | [TC-158](TC-158.md) | Run the id-watermark suite. It drives trace.py's CLI so the rules are asserted on the EXI… |
 | [TC-159](TC-159.md) | Run the carrier-converter suite: it converts the live spine, re-parses the emitted TOML w… |
 | [TC-160](TC-160.md) | Drive the carrier reader over a REAL repo whose spine is cut over from CSV to TOML in one… |
+| [TC-161](TC-161.md) | Drive the real loop against a fake agent CLI over throwaway git repos, one per ROUTED bri… |
