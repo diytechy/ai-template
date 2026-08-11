@@ -13,6 +13,7 @@
        {evidence}  the commit range and its --name-status listing, clipped at
                    80 lines. Facts, not narrative.
        {verdict}   the repo path this session writes its verdict to.
+       {wi}        this adjudication row's own id, for the result trailer.
 
      WHAT IS ABSENT: the lane's session log, docs/log.md, review verdicts, and
      any prose the lane wrote outside the typed report fields. The report's
@@ -46,4 +47,4 @@ Write your verdict to {verdict} in the log.md block format: one `- [BLOCKER|MAJO
 
     OUTCOME: COMPLETE|PARTIAL|CANCELLED successors=N
 
-`OUTCOME` is YOUR ruling on what the close means, which may differ from the lane's claim; `successors` is the number of `## Dispositions` blocks you drafted. Commit that verdict file (an adjudication is a recorded verdict — its one home) and stop. Never move a spec yourself and never edit the closed row's scope.
+`OUTCOME` is YOUR ruling on what the close means, which may differ from the lane's claim; `successors` is the number of `## Dispositions` blocks you drafted. Commit that verdict file (an adjudication is a recorded verdict — its one home), ending that commit with the trailer `WI: {wi}` — the coordinator learns a judgement is recorded from that trailer and from nothing else, so a verdict committed without it leaves this row open — and stop. Never move a spec yourself and never edit the closed row's scope.

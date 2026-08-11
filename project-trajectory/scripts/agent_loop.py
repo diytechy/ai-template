@@ -152,6 +152,7 @@ except ImportError:  # pragma: no cover - in-process fallback
 # doesn't yet carry scripts/ — the same sanctioned-sibling-import idiom
 # gen_trajectory uses.
 try:
+    import adjudicate_brief
     import agent_common
     import agent_route
     import agent_session
@@ -160,6 +161,7 @@ try:
     import score_reviews
 except ImportError:  # pragma: no cover - in-process fallback
     sys.path.insert(0, str(Path(__file__).resolve().parent))
+    import adjudicate_brief
     import agent_common
     import agent_route
     import agent_session
@@ -560,6 +562,49 @@ def reviewer_prompt(prompt_templates, phase, verdict_path):
     construction)."""
     base = prompt_templates.get(phase, _kit_prompt(prompts.REVIEWER))
     return base.replace("{verdict}", str(verdict_path))
+
+
+def session_body(root, worker, current_wi, session, sha, reviews_dir, templates):
+    """`(body, verdict_path)` for a NON-REVIEW session — the one fork both
+    routing arms take, so the rule has a single home.
+
+    An adjudication row is a JUDGEMENT, not a build (SN-026), and gets the
+    brief its `Brief` cell declares (WI-424). Routing it to a strong
+    cross-family model and then handing it the implementer's assignment was
+    the whole defect: the judge was briefed as a builder, and all four
+    authored adjudicator briefs were consumed by nothing.
+
+    EVERYTHING ELSE — and any adjudication row whose evidence could not be
+    assembled IN FULL — builds from the worker assignment: never a
+    resume-from-status default (retired, WI-210) and never a repo prompt-map
+    template (the assignment is the whole scope).
+
+    THE FALLBACK IS DELIBERATE and falls in the cheap direction. A judge's
+    brief whose evidence section is thin does not fail loudly — it reads as an
+    investigation that was run and found nothing, which is the most expensive
+    way for this machinery to be wrong. The generic assignment is merely a
+    WORSE brief. So `adjudicate_brief` refuses rather than half-fills, and the
+    refusal is PRINTED like every other routing decision (no silent swap)."""
+    row = worker["rows"].get(current_wi) if worker and current_wi else None
+    if row and adjudicating(row):
+        verdict_path = fresh_verdict_path(
+            reviews_dir, "{}-ADJUDICATE-{}.md".format(session, (sha or "")[:7])
+        )
+        body, why = adjudicate_brief.compose(root, row, verdict_path, templates)
+        if body is not None:
+            return body, verdict_path
+        print("route [ADJUDICATE]: worker assignment — {}".format(why))
+    return (
+        worker_prompt(
+            root,
+            worker["rows"],
+            current_wi,
+            worker["train"],
+            worker["base"],
+            worker["rework"],
+        ),
+        None,
+    )
 
 
 def session_model(model_map, default_model):
@@ -1888,16 +1933,14 @@ def route_session(ctx, i, current_wi, session, resume_reconcile, now):
             brief = critique_brief(root, docs, st.critique_scope)
             body = critique_prompt(prompt_templates, verdict_path, brief)
         else:
-            # Every non-review session builds from the assignment prompt —
-            # never a resume-from-status default (retired, WI-210) and never
-            # a repo prompt-map template (the assignment is the whole scope).
-            body = worker_prompt(
+            body, verdict_path = session_body(
                 root,
-                worker["rows"],
+                worker,
                 current_wi,
-                worker["train"],
-                worker["base"],
-                worker["rework"],
+                session,
+                reviewed_sha,
+                reviews_dir,
+                prompt_templates,
             )
         prompt, guarded = compose_session_prompt(
             model,
@@ -1910,16 +1953,21 @@ def route_session(ctx, i, current_wi, session, resume_reconcile, now):
     else:
         phase, model = session_model(model_map, args.model)
         tmpl = session_template(cmd_map, template, phase)
+        # The same fork as the managed arm above: which BRIEF a claimed
+        # adjudication row gets is a property of the ROW, not of whether a
+        # routing registry happens to be configured.
+        body, verdict_path = session_body(
+            root,
+            worker,
+            current_wi,
+            session,
+            head_sha(root) or "",
+            reviews_dir,
+            prompt_templates,
+        )
         prompt, guarded = compose_session_prompt(
             model,
-            worker_prompt(
-                root,
-                worker["rows"],
-                current_wi,
-                worker["train"],
-                worker["base"],
-                worker["rework"],
-            ),
+            body,
             resume_reconcile,
             guardrails_policy,
             root,

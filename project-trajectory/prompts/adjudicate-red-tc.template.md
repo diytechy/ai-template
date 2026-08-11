@@ -9,10 +9,17 @@
      Slots (single-brace, strict fill):
        {tcs}       the census lines, one per unverified TC: id, what it
                    verifies, Method/Expected, and the Evidence LOCATION it
-                   cites. Registry-derived.
+                   cites. Registry-derived. NOT CLIPPED, and RE-RUN at
+                   composition time rather than remembered from the mint —
+                   so this is every case that is red NOW, not only the line
+                   that minted this row (the template asks for one draft per
+                   distinct CAUSE, and one missing helper often explains
+                   several). A census that has since come clean sends the
+                   ordinary worker assignment instead of an empty brief.
        {spine}     the SR/LLR rows those TCs verify — the obligation the test
                    exists to prove.
        {verdict}   the repo path this session writes its verdict to.
+       {wi}        this adjudication row's own id, for the result trailer.
 
      WHAT IS ABSENT, and why it matters: the kit records no red/green RESULT
      for a test case. `Evidence` is a LOCATION (a pytest node, a script path),
@@ -54,4 +61,4 @@ is not yours to make — say which, and why, in its finding line. (The label nam
 the owed ACT, not an actor: who supplies the judgement is the gate level's
 answer, not this session's.)
 
-Commit that verdict file and stop. Never edit a `Status` cell yourself.
+Commit that verdict file, ending that commit with the trailer `WI: {wi}` — the coordinator learns a judgement is recorded from that trailer and from nothing else, so a verdict committed without it leaves this row open — and stop. Never edit a `Status` cell yourself.

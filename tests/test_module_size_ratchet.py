@@ -407,7 +407,13 @@ BASELINE = {
     # the tree is kept formatted anyway). Mechanical; no behaviour moved.
     # +12 (3020 -> 3032), D-5 step 2d: the sibling-import guard and the two SR/TC
     # reads moving to spine_carrier.load. Pure plumbing; no behaviour change.
-    "agent_loop.py": 3032,
+    # +48 (3032 -> 3080), WI-424: `session_body` — the ADJUDICATE-or-assignment
+    # fork BOTH routing arms take, extracted rather than inlined twice so the
+    # refusal-and-fall-back rule has one home, and shaped so `route_session`
+    # keeps its single call and stays off the complexity baseline. The
+    # assemblers themselves are a new module (`adjudicate_brief.py`), which is
+    # why this is 48 lines and not 250. Reviewed bump.
+    "agent_loop.py": 3080,
     # +30 (2206 -> 2236), WI-065: `tc_citation_findings` — the TC-`Verifies`
     # rules lifted out of `analyze` so the cell could accept `IF-###` seam ids.
     # Most of the bump is that helper's docstring, which is where the RULING now
@@ -906,7 +912,11 @@ BASELINE = {
     # extraction. The census is deleted, so the docstring now carries the
     # reason that OUTLIVES it (F5 buys cross-SCRIPT copy-ability, never a
     # fourth copy inside one module). Comment only; zero code delta.
-    "check_trajectory.py": 3897,
+    # +10 (3897 -> 3907), WI-424: the `Brief` column joins the F5-duplicated
+    # spec-folder reader's two schema tables. Verbatim in all three copies
+    # (agent_common/schedule/check_trajectory), so the same +10 lands here,
+    # in agent_common below, and in the un-ratcheted schedule.py.
+    "check_trajectory.py": 3907,
     # NEW ENTRY, +25 (1498 -> 1523), WI-357: the two-stage work-branch claim
     # signal — the on-disk fast path plus the branch-history probe that
     # survives the §2.3 close commit (git log -1 over the claim path), with
@@ -1131,7 +1141,10 @@ BASELINE = {
     # and its name in the docstring's scaffold listing are gone with the
     # script. Re-stamped DOWN in the same commit, per the standing rule that a
     # deletion shrinks a module and a generous ceiling silently permits regrowth.
-    "bootstrap.py": 2731,
+    # +4 (2731 -> 2735), WI-424: `adjudicate_brief.py` joins MAPPING beside
+    # prompts.py — the module that FILLS the shipped briefs is as required
+    # downstream as the briefs themselves.
+    "bootstrap.py": 2735,
     # NEW ENTRY, +228 (1423 -> 1651), Phase 2b of the concurrency restructure
     # (docs/concurrency-restructure.md §7): the spec-folder work-item reader,
     # which crosses this module over THRESHOLD for the first time. It is one
@@ -1277,7 +1290,9 @@ BASELINE = {
     # verified spine is stage 4, which is precisely when a gate-advance row
     # runs, so `4 < 4` let the SHIPPED DEFAULT self-ratify the final gate).
     # Reviewed bump.
-    "agent_common.py": 2440,
+    # +10 (2440 -> 2450), WI-424: the `Brief` column, the F5 copy of the same
+    # two-table edit recorded at check_trajectory.py above.
+    "agent_common.py": 2450,
     # NEW ENTRY, WI-387 — integrate.py crossed THRESHOLD (1418 -> 1588) adding
     # the third terminal outcome. The extraction the ratchet asks for was TAKEN
     # FIRST, not argued away: `hand_back` and `quarantine`, the largest unit and
@@ -1520,7 +1535,11 @@ BASELINE = {
     # the newline style the file arrived with, preserved rather than normalised.
     # It also DISSOLVED the `toml-line-rewrite` census block — the scanner is no
     # longer bootstrap's, which is the honest reading of what changed.
-    "intake.py": 1663,
+    # +6 (1663 -> 1669), WI-424: every adjudication mint site now DECLARES
+    # which brief it is asking for (one line each), plus the row projection.
+    # The mint is what knows which judgement it wants; inferring it later
+    # from SpecRef is provably ambiguous.
+    "intake.py": 1669,
 }
 
 

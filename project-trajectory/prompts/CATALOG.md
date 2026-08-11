@@ -18,10 +18,10 @@ is a refusal rather than a silently empty instruction.
 
 | Key | File | Digest | Slots |
 |---|---|---|---|
-| `ADJUDICATE-AMENDMENT` | [adjudicate-amendment.template.md](adjudicate-amendment.template.md) | `sha256:dee7b96e0396` | `{baseline}`, `{rows}`, `{verdict}` |
-| `ADJUDICATE-CONFLICT` | [adjudicate-conflict.template.md](adjudicate-conflict.template.md) | `sha256:5a752fa581f5` | `{candidate}`, `{digests}`, `{mechanical}`, `{open_rows}`, `{spine}`, `{verdict}` |
-| `ADJUDICATE-DISPOSITION` | [adjudicate-disposition.template.md](adjudicate-disposition.template.md) | `sha256:ff917fe05287` | `{evidence}`, `{report}`, `{spec}`, `{verdict}` |
-| `ADJUDICATE-RED-TC` | [adjudicate-red-tc.template.md](adjudicate-red-tc.template.md) | `sha256:7de8de2753db` | `{spine}`, `{tcs}`, `{verdict}` |
+| `ADJUDICATE-AMENDMENT` | [adjudicate-amendment.template.md](adjudicate-amendment.template.md) | `sha256:9aab4bdd7b3f` | `{baseline}`, `{rows}`, `{verdict}`, `{wi}` |
+| `ADJUDICATE-CONFLICT` | [adjudicate-conflict.template.md](adjudicate-conflict.template.md) | `sha256:19eb35c3acd3` | `{candidate}`, `{digests}`, `{mechanical}`, `{open_rows}`, `{spine}`, `{verdict}`, `{wi}` |
+| `ADJUDICATE-DISPOSITION` | [adjudicate-disposition.template.md](adjudicate-disposition.template.md) | `sha256:78fbd44f9078` | `{evidence}`, `{report}`, `{spec}`, `{verdict}`, `{wi}` |
+| `ADJUDICATE-RED-TC` | [adjudicate-red-tc.template.md](adjudicate-red-tc.template.md) | `sha256:6c33cffc9727` | `{spine}`, `{tcs}`, `{verdict}`, `{wi}` |
 | `CRITIQUE` | [critique.template.md](critique.template.md) | `sha256:6521dc98731d` | `{brief}`, `{verdict}` |
 | `REVIEWER` | [reviewer.template.md](reviewer.template.md) | `sha256:4fd110fa7c25` | `{verdict}` |
 | `WORKER` | [worker.template.md](worker.template.md) | `sha256:56d04331b3be` | `{base}`, `{context_block}`, `{diff_block}`, `{pred_block}`, `{rework_block}`, `{specref}`, `{srs}`, `{title}`, `{train}`, `{wi}` |

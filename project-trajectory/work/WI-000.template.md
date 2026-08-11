@@ -89,10 +89,18 @@ a wall of `= ""`.
   default plus `move-on`.
 - `priority` (integer, default 0), `exclusive` (semantic mutex keys),
   `blockref`, `est_tokens`, `safety_class`
-  (`ordinary|spine|gate|attestation|protected|high-risk`) and `planmode`
+  (`ordinary|spine|gate|attestation|protected|high-risk|adjudication`) and `planmode`
   (`dual` opts into dual-plan decomposition) are the scheduler's optional
   inputs. `safety_class` **fails closed**: absent reads as `unclassified` and is
   never scheduled, so a repo enables parallelism only after its own audit.
+- `brief` — on a `safety_class = "adjudication"` row only: which adjudicator
+  brief the unattended coordinator composes that row's session from
+  (`amendment|disposition|conflict|red-tc`, `prompts/adjudicate-*.template.md`).
+  Written by `intake.py` at the mint, because the mint is what knows which
+  judgement it is asking for. DECLARED rather than inferred from `specref`,
+  which cannot tell an amended test-case row from a red-TC census row — both
+  cite the TC registry. Absent, or a brief whose evidence cannot be assembled
+  in full, sends the ordinary worker assignment instead.
 - `order` — a migration artifact written by `wi_convert.py` to reproduce a CSV
   whose row order the ids do not describe. A hand-filed spec omits it and sorts
   after the numbered ones, by id.

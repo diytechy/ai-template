@@ -12,6 +12,7 @@
        {baseline}  the accepted anchor this diff is measured against: an
                    attestation-ledger row id plus its commit.
        {verdict}   the repo path this session writes its verdict to.
+       {wi}        this adjudication row's own id, for the result trailer.
 
      WHAT IS DELIBERATELY ABSENT: the amending session's own notes, its commit
      message, docs/log.md, and any self-assessment. WI-418 measured what
@@ -52,4 +53,4 @@ Then exactly one machine line:
 
     VERDICT: MEANING|CLARITY rows=N
 
-`CLARITY` only when EVERY row you were shown is clarity. Commit that verdict file (an adjudication is a recorded verdict — its one home) and stop. Do not edit the registries; the flip, if one is owed, is the mechanical tool's act, not yours.
+`CLARITY` only when EVERY row you were shown is clarity. Commit that verdict file (an adjudication is a recorded verdict — its one home), ending that commit with the trailer `WI: {wi}` — the coordinator learns a judgement is recorded from that trailer and from nothing else, so a verdict committed without it leaves this row open — and stop. Do not edit the registries; the flip, if one is owed, is the mechanical tool's act, not yours.

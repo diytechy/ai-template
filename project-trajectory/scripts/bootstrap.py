@@ -86,7 +86,7 @@ What it creates in the destination:
                                                 spine barrier, merge slot; WI-374/WI-381)
     scripts/lane.py                            (one lane's mechanics: worktree, worker
                                                 subprocess, the §A2 refresh; WI-381)
-    scripts/agent_session.py, agent_common.py, plan_runner.py
+    scripts/agent_session.py, agent_common.py, plan_runner.py, adjudicate_brief.py
                                                (the WI-218 split: session launch / shared primitives / dual-plan runner)
     .githooks/pre-commit                       <- hooks/pre-commit  (opt-in process floor)
     .githooks/commit-msg                       <- hooks/commit-msg  (commit-message privacy scan)
@@ -1685,6 +1685,10 @@ MAPPING = [
     # brief the loop sends resolves through it, so it ships wherever
     # agent_loop.py does.
     ("scripts/prompts.py", "scripts/prompts.py"),
+    # The adjudicator briefs' evidence assemblers: without it an
+    # ADJUDICATE session composes from the worker assignment, which is
+    # the WI-424 defect this ships to close.
+    ("scripts/adjudicate_brief.py", "scripts/adjudicate_brief.py"),
     ("scripts/plan_coverage_step.py", "scripts/plan_coverage_step.py"),
     ("scripts/plan_artifacts.py", "scripts/plan_artifacts.py"),
     # The work-item registry's CSV <-> spec-folder converter (§2 of

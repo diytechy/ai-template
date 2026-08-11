@@ -80,6 +80,7 @@ def _row(wid, **kw):
         "PlanMode": "",
         "Bar": "",
         "Supersedes": "",
+        "Brief": "",
         "Deliverable": "",
         "SpecRef": "",
     }
@@ -184,6 +185,7 @@ CONVERTIBLE_ROWS = [
         "PlanMode": "",
         "Bar": "",
         "Supersedes": "",
+        "Brief": "",
     },
     {
         "WI-ID": "WI-002",
@@ -208,6 +210,10 @@ CONVERTIBLE_ROWS = [
         # this row's lane; it never affects scheduling.
         "Bar": "G2",
         "Supersedes": "WI-000",
+        # SN-032 brief routing, carried on the same "most likely to be lost
+        # in translation" row as `Bar`: it selects which adjudicator brief
+        # the row's session is composed from, and nothing else.
+        "Brief": "disposition",
     },
     {
         "WI-ID": "WI-003",
@@ -229,6 +235,7 @@ CONVERTIBLE_ROWS = [
         "PlanMode": "",
         "Bar": "",
         "Supersedes": "",
+        "Brief": "",
     },
     {
         "WI-ID": "WI-005",
@@ -250,6 +257,7 @@ CONVERTIBLE_ROWS = [
         "PlanMode": "",
         "Bar": "",
         "Supersedes": "",
+        "Brief": "",
     },
     {
         "WI-ID": "WI-000",
@@ -271,6 +279,7 @@ CONVERTIBLE_ROWS = [
         "PlanMode": "",
         "Bar": "",
         "Supersedes": "",
+        "Brief": "",
     },
 ]
 
@@ -348,6 +357,27 @@ def test_the_bar_key_is_carried_by_every_reader(both_homes):
     # carry no bar key at all — structurally, not by convention.
     for wi in sched.load_wis(sched.read_spec_rows(work_dir)):
         assert "bar" not in wi
+
+
+def test_the_brief_key_is_carried_by_every_reader(both_homes):
+    """The SN-032 `brief` column crosses both representations and all three F5
+    readers together — the twin of the `bar` guard above, and for the same
+    reason: `agent_loop` composes an adjudication session's whole brief from
+    this cell, so a reader that silently dropped it would send the judge an
+    implementer's instructions with nothing failing.
+
+    Like `bar` it is NOT a scheduling input — which brief a session receives
+    cannot change who may run beside it — so the scheduler's decision dicts
+    deliberately carry no `brief` key."""
+    csv_path, work_dir = both_homes
+    for rows in (sched.load_rows(csv_path),) + tuple(
+        mod.read_spec_rows(work_dir) for _name, mod in SPEC_READERS
+    ):
+        by_id = {r["WI-ID"]: r for r in rows}
+        assert by_id["WI-002"]["Brief"] == "disposition"
+        assert by_id["WI-001"]["Brief"] == ""
+    for wi in sched.load_wis(sched.read_spec_rows(work_dir)):
+        assert "brief" not in wi
 
 
 def test_a_context_section_is_read_past_by_all_three_readers(tmp_path):

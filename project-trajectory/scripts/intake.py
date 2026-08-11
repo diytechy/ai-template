@@ -500,6 +500,7 @@ def _amendment_drafts(root, before, after):
         {
             "title": title,
             "kind": "adjudication",
+            "brief": "amendment",
             "workstream": "process",
             "buildtier": tier_signal(
                 "amendment",
@@ -650,6 +651,7 @@ def _close_drafts(root, outcomes):
                         )
                     ),
                     "kind": "adjudication",
+                    "brief": "disposition",
                     "workstream": "process",
                     "buildtier": "medium",
                     "specref": relpath,
@@ -702,6 +704,7 @@ def _close_drafts(root, outcomes):
                         )
                     ),
                     "kind": "adjudication",
+                    "brief": "disposition",
                     "workstream": "process",
                     # The TYPED field, not a substring of prose (SR-145 / the
                     # `NEEDS-HUMAN` fold): the close states the tier it thinks
@@ -779,6 +782,7 @@ def _complete_spot_checks(root, outcomes):
                     )
                 ),
                 "kind": "adjudication",
+                "brief": "disposition",
                 "workstream": "process",
                 "buildtier": "medium",
                 "specref": relpath,
@@ -1049,6 +1053,7 @@ def _red_tc_draft(root, line, targets):
         # dedupes exactly and a status change is legitimately a new judgement.
         "title": "adjudicate {}".format(_clip(line, _LINE_CLIP)),
         "kind": "adjudication",
+        "brief": "red-tc",
         "workstream": "process",
         "buildtier": tier_signal("red-tc", rows_touched=len(targets)),
         "specref": _live_registry(root, _TC_CSV),
@@ -1093,6 +1098,7 @@ def _draft_row(wi_id, draft):
     row["BuildTier"] = str(draft.get("buildtier") or "")
     row["SpecRef"] = str(draft.get("specref") or "")
     row["SafetyClass"] = str(draft.get("kind") or "")
+    row["Brief"] = str(draft.get("brief") or "")
     row["PlanMode"] = str(draft.get("planmode") or "")
     row["Bar"] = str(draft.get("bar") or "").upper()
     row["SR-Refs"] = ";".join(draft.get("sr_refs") or [])

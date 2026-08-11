@@ -74,6 +74,7 @@ WI_HEADER = [
     "PlanMode",
     "Bar",
     "Supersedes",
+    "Brief",
 ]
 
 # A round directory: `DP-<digits>-<slug>` under docs/plans/.

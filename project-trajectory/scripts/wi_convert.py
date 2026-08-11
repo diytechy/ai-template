@@ -112,6 +112,15 @@ COLUMNS = [
     # this table: a key that is not here would be silently dropped at the one
     # moment it matters.
     "Supersedes",
+    # SN-032 BRIEF ROUTING. Which adjudicator brief this row's session is sent
+    # (`amendment` | `disposition` | `conflict` | `red-tc`), empty on every row
+    # that is not an adjudication. DECLARED rather than inferred from `SpecRef`
+    # because the inference is provably ambiguous: an amendment to a test-case
+    # row and a red-TC census row both carry `docs/test/test-cases.toml`, and
+    # those two briefs give contradictory instructions. A real column for the
+    # same reason `Supersedes` is one — `intake` writes it through
+    # `write_spec_file`, which serializes from this table.
+    "Brief",
 ]
 
 # Status <-> directory (§2.1; WI-384). One directory per state, both terminals
@@ -150,6 +159,7 @@ SCALAR_FIELDS = (
     # check.py --gate; the scheduler deliberately does not parse it.)
     ("Bar", "bar"),
     ("Supersedes", "supersedes"),
+    ("Brief", "brief"),
 )
 # Columns carried as TOML arrays. Split on ';' WITHOUT stripping, so ';'.join()
 # is an exact inverse for every possible cell — including the `~WI-013` SOFT

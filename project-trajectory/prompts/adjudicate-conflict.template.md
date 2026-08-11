@@ -17,6 +17,7 @@
                      against, so a verdict that has gone stale is detectable
                      rather than assumed fresh.
        {verdict}     the repo path this session writes its verdict to.
+       {wi}          this adjudication row's own id, for the result trailer.
 -->
 
 You are an INDEPENDENT adjudicator launched by the unattended coordinator. A work item is about to enter the ready queue, where a lane will claim it and build it. Before that happens, one question:
@@ -55,4 +56,4 @@ Write your verdict to {verdict}: one `- [BLOCKER|MAJOR|MINOR] <the other row or 
 
     OUTCOME: QUEUE|QUEUE-WITH-EDGE|RETURN-TO-DRAFT needs=<id or ->
 
-Commit that verdict file and stop. Do not edit the candidate row or any other row.
+Commit that verdict file, ending that commit with the trailer `WI: {wi}` — the coordinator learns a judgement is recorded from that trailer and from nothing else, so a verdict committed without it leaves this row open — and stop. Do not edit the candidate row or any other row.
