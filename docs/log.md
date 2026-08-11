@@ -25826,3 +25826,95 @@ must not move the gate. Every generated surface `--check` fresh.
 (DOWN, per the standing rule that a deletion shrinks a module and a generous
 ceiling silently permits regrowth).
 
+
+- **2026-08-11 — the adjudicator briefs are ROUTED: two wired, two refused by
+  name (WI-424).** SN-032 authored four adjudicator briefs; SN-026 gave an
+  adjudication row its own phase, tier and cross-family rule. The seam between
+  them was never built — `route_session` composed EVERY non-review session from
+  the generic worker template — so an adjudication row routed to a strong
+  cross-family model and then received an implementer's instructions. The judge
+  was briefed as a builder, and all four templates were dead assets. The seam is
+  a new `scripts/adjudicate_brief.py` plus `agent_loop.session_body`, the ONE
+  fork both routing arms take (managed and single-model: which brief a claimed
+  row gets is a property of the ROW, not of whether a routing registry happens
+  to be configured).
+
+  **The discriminator is DECLARED, and the alternative was not merely worse but
+  UNSOUND.** The row now carries `Brief` (frontmatter `brief`), written by
+  `intake` at every adjudication mint. The rule was *prefer the declared field
+  unless the schema cost is real*; the cost is real, and what decided it is that
+  `SpecRef` derivation cannot tell two of the four apart: `_amendment_drafts`
+  sets `specref` to the amended registry and `ROUTED_TRACED_CELLS` routes a
+  test-case `Verifies` change, so an amendment to a TC row and a red-TC census
+  row BOTH carry `docs/test/test-cases.toml` — while their briefs give
+  contradictory instructions (one forbids touching a registry, the other asks
+  for a `Status` cell to be judged). `records[0]` is additionally arbitrary when
+  a batch spans registries. Deriving from the Title is the `NEEDS-HUMAN` fold.
+  So the declared cell was paid for, exactly as `Supersedes` was and for the
+  reason recorded there: a key absent from the schema table is silently dropped
+  by the writer `intake` mints through. **The cost forces no downstream
+  migration** — the WI CSV is retired (a stray one is an integrity ERROR), so no
+  adopter holds a registry to widen.
+
+  **What the wiring found that reading did not.** Committed trailers are the
+  worker contract's ONLY result channel (`worker_endstate`), and an adjudicator
+  brief is not the assignment that would otherwise have carried that protocol.
+  Wired without it, an adjudication session writes its verdict, commits it, and
+  the row **never closes** — the loop re-runs it to the iteration budget. All
+  four briefs now end with the result trailer `WI: {wi}` (a new declared slot;
+  `prompts/CATALOG.md` regenerated — the digest is taken over the
+  notes-stripped body, so the dispatcher-notes edits alone would not have moved
+  it). The end-to-end test caught this; reading the templates did not.
+
+  **Two briefs stay UNROUTED, with the missing derivation named rather than a
+  slot filled.** `conflict`: nothing mints a queue-conflict adjudication row at
+  all (`queue_conflict_findings` is a warn that never becomes a row), and
+  `{digests}` names a pair no function computes. `amendment` is the interesting
+  one: its `{rows}` slot names `trace.reattest_model`, which selects SRs whose
+  Status is `Modified`, while `check_trajectory.staged_spine_amendments` — the
+  function that MINTS these rows — fires only when the row and its owning SR
+  both stayed `Verified`. **The two populations are disjoint by construction**,
+  so the declared producer returns nothing for exactly the rows that exist; and
+  `_attested_baseline` then resolves `{baseline}` to the amendment commit
+  ITSELF, presenting the text under judgement as the accepted anchor. Routing it
+  would have been the failure the row was filed to avoid. It still DECLARES
+  `brief = "amendment"`, so the fix is one `_ASSEMBLERS` entry once two things
+  exist: a typed carrier for the `before..after` pair (today it lives only
+  inside the Title string) and a ruling on what an un-flipped amendment's
+  anchor IS.
+
+  **Fill in full or refuse.** Every assembler returns `(values, None)` or
+  `(None, reason)`; an unfillable brief falls back to the worker assignment and
+  PRINTS why (the no-silent-swap rule). A judge's brief with a thin evidence
+  section reads as an investigation that was run and found nothing, which is the
+  expensive direction; the generic assignment is merely a worse brief.
+
+  **Five module-size baselines re-stamped, each with its reason:**
+  `agent_loop.py` 3032 → 3080 (`session_body`, shaped so `route_session` keeps
+  its single call site and stays OFF the complexity baseline — the first shape
+  put it back on at 11), `check_trajectory.py` 3897 → 3907 and `agent_common.py`
+  2440 → 2450 (the same +10 F5 schema edit, verbatim in all three copies;
+  `schedule.py` is un-ratcheted), `intake.py` 1663 → 1669, `bootstrap.py`
+  2731 → 2735.
+
+  **The bar.** Full unfiltered suite: **2206 passed, 5 skipped in 357.63s**
+  (0 failed).
+<!-- fig: cmd=".venv/bin/python -m pytest -q -n auto" rev=bb421a74 -->
+
+  Smoke tier: **891 passed, 2 skipped in 16.87s** — inside the 60 s wall budget
+  and the 906 membership ceiling, so neither `[smoke-budget]` stamp moves.
+<!-- fig: cmd=".venv/bin/python -m pytest -q -n auto -m smoke" rev=bb421a74 -->
+
+  `check_docs --root . --stale` (with the bar's declared ignores): **0 broken**.
+  `trace.py --strict`: `orphans=0 integrity=0 component-findings=0
+  interface-findings=0`. Every generated surface `--check` fresh; `derive_gate`
+  **G1 unchanged** — only the basis counts move.
+
+  **LLR-167 / TC-161 were mandatory, not bookkeeping.** The new module first
+  shipped without a spine row, and `test_meta_component_top_view_smoke` fails
+  HARD on that: the meta suite asserts zero uncontained modules and containment
+  is read off LLR `Component` cells. Two shape rules surfaced while writing it,
+  both filed rather than fixed: `module_components` does not split a `;`-joined
+  `Module` cell (so a multi-module LLR contains NEITHER module — LLR-095 carries
+  that latent shape), and a spine row may not cite a WI id, so the rationale
+  states the anchoring effect rather than the finding that measured it.
