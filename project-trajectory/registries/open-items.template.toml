@@ -1,0 +1,48 @@
+# Open items (OI-###) — the owner DECISION registry, TOML carrier.
+#
+# ONE TABLE PER ROW, id-keyed with the prefix retained and the key BARE:
+# `[open_item.OI-1]`. An EMPTY CELL IS AN ABSENT KEY — omit a key rather than
+# setting it to "". A duplicate id is a parse error, which is the carrier doing
+# what a check used to (the reader is scripts/spine_carrier.py).
+#
+# THE `-000` ROW BELOW IS THE SCHEMA. There is no header line to declare a
+# column, so this example row is the only place the vocabulary is written down:
+# it sets EVERY key the registry has, with the guidance for each as its value.
+# Delete it on the first real entry.
+#
+# `status` leaves `pending` when the ruling lands in docs/log.md's Decisions
+# log; `scripts/gen_open_items.py` renders every pending row into the generated
+# docs/open-items.html the owner actually reads.
+[open_item.OI-000]
+title = "Example row - the shape of an owner decision brief"
+status = "pending"
+raised = "2026-01-01"
+one_line = """the one-line form status.md projects - what is being decided, and the recommendation in a clause"""
+decision = """What is being decided, who raised it and when, and any context a ruler needs that is not obvious from the one-line."""
+blast_radius = """What breaks or changes if this is ruled either way - the honest cost, not the optimistic one."""
+options = """Option (a) ... · Option (b) ... · Option (c) ... - each with its FOR and AGAINST, separated by the middot the other registries use for lists-in-cells."""
+recommendation = "The driver's recommendation and WHY, in the same voice a reviewer would argue it."
+wi_refs = ["WI-000"]
+ruled_date = """the date the ruling landed (ISO), set together with status leaving `pending` — absent while the item is open."""
+ruling_ref = """where the ruling is recorded — the docs/log.md Decisions anchor, or the design doc section that carries it. Absent while the item is open."""
+
+[open_item.OI-1]
+title = "Decide: keep or drop the legacy export flag"
+status = "pending"
+one_line = "rule the legacy export flag (blocks: G1) - rec: drop it unless a consumer is named"
+decision = "Whether the legacy export flag stays in scope for v1 (blocks: G1)."
+blast_radius = "Every consumer of the legacy format, and the SR that would carry it."
+options = "keep and specify it · drop it · defer behind a flag until a consumer asks"
+recommendation = """drop it unless a real consumer is named - an unspecified flag is a support cost with no owner."""
+wi_refs = ["WI-000"]
+
+[open_item.OI-2]
+title = "Pinning SR-000's acceptance predicate"
+status = "pending"
+one_line = "rule the acceptance predicate for SR-000 - rec: the measurable form"
+decision = "Which measurable predicate SR-000 is accepted against."
+blast_radius = "The TC that verifies it, and any LLR decomposed from it."
+options = "the measurable form · the descriptive form the draft carries"
+recommendation = "take the measurable form - a predicate a test cannot evaluate is not acceptance."
+wi_refs = ["WI-000"]
+
