@@ -25544,3 +25544,55 @@ matrix via `node scripts/dashboard-shots/shoot.mjs`, plus ad-hoc
 1x/3x-deviceScaleFactor Playwright crops of `#process .station` (before and
 after) and the `dag` tab's own floor, used for the legibility comparison
 above.
+
+## 2026-08-11 — WI-423: the six check toggles stay files, and the weak reason is struck
+
+**Ruled (b).** `docs/trajectory-check`, `docs/interfaces-check`,
+`docs/components-check`, `docs/subagent-gate`, `docs/live-status` and
+`docs/okf-export` are a different KIND of declaration from a process dial and
+stay as files. `project-trajectory/process.toml.template`'s header item 4 stops
+describing an open question ("NOT YET HERE, and this file would be lying if it
+did not say so") and states the decision. No checker, no toggle file and no
+`docs/dupes-allow` row changed — that is what the ruling means.
+
+**AGENT-RULED UNDER THE WI'S OWN LICENSE; OWNER RATIFICATION OWED AT THE P0
+SITTING.** The row licensed a decision either way and this is that decision, not
+an owner ruling. Tabled for the lock ledger.
+
+- **The row's own cost argument does not hold, and the entry says so before it
+  rules.** WI-423 anticipated that folding meant "five copies of the shape
+  contract the sh-parse hooks depend on." The hooks sh-parse exactly three keys
+  — `privacy_check`, `secrets_scan`, `privacy_review` — and none of the six is
+  among them (the pre-commit hook honors `trajectory-check` only by shelling out
+  to check_trajectory.py). Folding would not have replicated
+  `check_privacy._process_gate`'s fail-closed apparatus at all. Option (a) was
+  cheaper than the row assumed, and the ruling deliberately does not rest on
+  cost: a decision defended by a premise its own evidence contradicts is the
+  kind that gets re-opened.
+- **What actually decides it is the default.** None of the six is scaffolded (no
+  `bootstrap.py` MAPPING row; none present in this repo's `docs/`), so absence
+  IS the declaration — on for the five checks, off for the subagent gate, which
+  is already how the README dial table prints them. A TOML key cannot be absent
+  and still declare, so (a) forks and loses both ways: ship the keys and every
+  fresh scaffold carries six visible invitations to switch an on-by-default
+  check off; omit them and the "one home" is a section that does not exist until
+  an adopter writes it — more steps than the one-word file it replaced.
+- **F5 closes it.** The 2026-07-12 owner ruling rejected a shared
+  `_kitcommon.py` so each checker stays independently copy-able and stdlib-only.
+  A one-word file is the only toggle interface a checker copied ALONE, into a
+  repo carrying no `process.toml`, can still satisfy.
+- **Deviation from spec:** none in outcome; the reasoning departs from the row's
+  stated cost premise and records why (above).
+- **This repo's own `docs/process.toml`** did not carry the open-question
+  paragraph, but its "THREE DELIBERATE EXCEPTIONS" enumeration became an
+  undercount once the toggles became a fourth ruled category. Now "FOUR", with a
+  compact item 4 pointing at the template.
+- **Byte deltas on budgeted files:** none — `AGENTS.template.md`, `PROCESS.md`
+  and `PROCESS_OPTIONS.md` untouched.
+- **Bar.** `pytest -q -n auto -m smoke` → **900 passed, 6 skipped in 20.90s**.
+  `tests/test_dogfood_sync.py tests/test_rule_sync.py tests/test_process_config.py`
+  → **84 passed in 2.47s** (the modules that watch this template).
+  `check_docs.py --root . --stale` → OK, 807 docs, 1099 links, 0 broken.
+  `agent_common.process_shape_findings` returns `[]` for both the edited
+  template scaffolded as `docs/process.toml` and this repo's own copy — the
+  header stayed comments-only and the one-key-per-line contract is intact.

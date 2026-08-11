@@ -38,16 +38,25 @@
 #      managed routing). A key in a shared file cannot express deletion-as-an-
 #      act, nor survive as a one-line reviewed diff.
 #   3. `docs/gate` — a GENERATED CACHE (derive_gate.py), not configuration.
-#   4. SIX CHECK-ENABLEMENT TOGGLES are NOT YET HERE, and this file would be
-#      lying if it did not say so: `docs/trajectory-check`,
-#      `docs/interfaces-check`, `docs/components-check` (check_trajectory.py),
-#      `docs/subagent-gate` (subagent_gate.py), `docs/live-status`
-#      (agent_loop.py) and `docs/okf-export` (gen_okf.py). Each is read by an
-#      INDEPENDENTLY COPYABLE checker that imports nothing of this layer, so
-#      each would need its own local TOML reader — a real cost, and outside
-#      what SN-028 scoped. They are tracked as their own row rather than
-#      quietly omitted; until it lands, those six answer "is this CHECK on",
-#      not "how is work processed", which is the line this file draws.
+#   4. CHECK-ENABLEMENT TOGGLES stay files — RULED (WI-423), not pending.
+#      `docs/trajectory-check`, `docs/interfaces-check`,
+#      `docs/components-check` (check_trajectory.py), `docs/subagent-gate`
+#      (subagent_gate.py), `docs/live-status` (agent_loop.py) and
+#      `docs/okf-export` (gen_okf.py) answer "is this CHECK on", not "how is
+#      work PROCESSED" — the line this file draws, now drawn as a decision.
+#      The reason is sharper than the local-TOML-reader cost usually cited:
+#      the hooks never sh-parse these six, so folding them would not
+#      replicate the greppable contract above. What folding breaks is the
+#      DEFAULT. None of the six is scaffolded, so absence IS the declaration
+#      (absent reads ON for the checks, OFF for the subagent gate), and a
+#      TOML key cannot be absent and still declare. Folding therefore forks
+#      and loses both ways: ship the keys and every fresh scaffold carries
+#      six visible invitations to switch a check off; omit them and the "one
+#      home" is a section that does not exist until an adopter writes it —
+#      more steps than the one-word file it replaced. F5 closes it (owner
+#      ruling 2026-07-12, no shared `_kitcommon.py`): a one-word file is the
+#      only toggle interface a checker copied ALONE, into a repo carrying no
+#      process.toml at all, can still satisfy.
 #
 # MIGRATION: a repo that still carries the legacy one-word files is converted
 # automatically by `python scripts/bootstrap.py --migrate-config --dest .`

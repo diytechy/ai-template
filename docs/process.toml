@@ -18,7 +18,7 @@
 # `tomllib` and a cross-parser agreement test pins the two readings equal, so
 # the greppable form can never drift from the parsed one.
 #
-# THREE DELIBERATE EXCEPTIONS stay outside this file, each for a stated reason:
+# FOUR DELIBERATE EXCEPTIONS stay outside this file, each for a stated reason:
 #
 #   1. `docs/stack.ini` — the PRODUCT TOOLCHAIN, not a process dial. It is
 #      adopter-owned across re-syncs (ADOPTING.md "Preserve always"), has five
@@ -29,6 +29,14 @@
 #      managed routing). A key in a shared file cannot express deletion-as-an-
 #      act, nor survive as a one-line reviewed diff.
 #   3. `docs/gate` — a GENERATED CACHE (derive_gate.py), not configuration.
+#   4. CHECK-ENABLEMENT TOGGLES stay files — RULED (WI-423), not pending.
+#      The six (`docs/trajectory-check`, `docs/interfaces-check`,
+#      `docs/components-check`, `docs/subagent-gate`, `docs/live-status`,
+#      `docs/okf-export`) answer "is this CHECK on", not "how is work
+#      PROCESSED". None is scaffolded, so absence IS the declaration, and a
+#      TOML key cannot be absent and still declare; the shipped template's
+#      item 4 carries the full reasoning. This repo declares none of them and
+#      runs every check on, which is the ruling's own default.
 #
 # MIGRATION: a repo that still carries the legacy one-word files is converted
 # automatically by `python scripts/bootstrap.py --migrate-config --dest .`
