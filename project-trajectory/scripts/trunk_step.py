@@ -53,6 +53,9 @@ Regen (`--regen`)
 Usage:  python scripts/trunk_step.py [--root .] [--compile-log] [--regen] [--dry-run]
         (no operation flag = both, compile first, then regen)
 Exit codes: 0 all clean, 1 any failure (the §5.5 loud-block contract).
+
+Contracts: IF-120 — the interface seam this module declares (process.md §8; row
+of record in docs/requirements/interfaces.csv).
 """
 
 import argparse
@@ -62,6 +65,17 @@ import re
 import subprocess
 import sys
 from pathlib import Path
+
+# Sibling: the registry CARRIER, for the one question this module asks of a
+# registry — which carrier is live. Naming `.csv` inline instead would make the
+# open-items step SKIP silently on a migrated repo, and a skipped freshness
+# step is the shape SN-008 forbids: the generated surface simply stops being
+# regenerated and nothing says so.
+try:
+    import spine_carrier
+except ImportError:  # pragma: no cover - in-process fallback
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    import spine_carrier
 
 _SCRIPTS = Path(__file__).resolve().parent
 
@@ -396,9 +410,11 @@ def _status_block(root):
 
 
 def _open_items(root):
-    return (Path(root) / "docs" / "requirements" / "open-items.csv").exists() or (
-        Path(root) / "docs" / "open-items.html"
-    ).exists()
+    return (
+        spine_carrier.resolve(Path(root) / "docs/requirements/open-items.toml")
+        is not None
+        or (Path(root) / "docs" / "open-items.html").exists()
+    )
 
 
 # (name, applies(root) -> bool, argv(root) -> list, why-skipped).
@@ -448,7 +464,7 @@ REGEN_STEPS = (
         "open-items",
         _open_items,
         _cmd("gen_open_items.py"),
-        "neither docs/requirements/open-items.csv nor docs/open-items.html",
+        "neither docs/requirements/open-items.{toml,csv} nor docs/open-items.html",
     ),
 )
 

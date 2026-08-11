@@ -8,7 +8,8 @@ scheduling. It is **config, not a catalog**, and its registry is the
 **pair-row model** ("pairs now, factor later"): identity vs access, one row
 per (model x route) pair.
 
-  - `docs/agents.csv` is the model REGISTRY. Columns:
+  - `docs/agents.toml` is the model REGISTRY (`.csv` until a repo runs
+    `migrate_carrier.py`; either carrier resolves). Columns:
     `Id,Family,Model,Version,Tier,CmdTemplate,Env,Notes`.
       * IDENTITY = `Family` (who trained it — the heterogeneity + scorer
         corroboration key), `Model` (the provider's line identity, INCLUDING
@@ -65,7 +66,7 @@ ship as legible per-repo-overridable defaults (calibration values, not spine
 facts); the scoreboard (`score_reviews.py`) stays **advisory** — the declared
 policy picks, nothing auto-optimizes.
 
-Contracts: IF-044, IF-045 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.csv).
+Contracts: IF-044, IF-045, IF-119 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.csv).
 """
 
 import argparse
@@ -74,6 +75,17 @@ import os
 import re
 import sys
 from pathlib import Path
+
+# Sibling: the registry CARRIER (repo-lock D-6 — the vocabulary gets ONE home
+# and the readers import it; a re-sync copies this file with its declared
+# siblings, ADOPTING.md §6). The model registry joined that carrier in the
+# batch-2 sweep (repo-lock §8.1), so `agents.toml` is the destination name and
+# `agents.csv` still resolves for a repo that has not migrated.
+try:
+    import spine_carrier
+except ImportError:  # pragma: no cover - in-process fallback
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    import spine_carrier
 
 # Tier strength, ascending. Selection never picks a WEAKER tier than requested
 # (a hard rule: cheap-is-not-free, so an unavailable tier escalates UP).
@@ -107,7 +119,7 @@ REGISTRY_FIELDS = (
 
 # The maturity vocabulary + its DEFAULT rank (higher = preferred): GA/untagged
 # beats preview beats beta beats exp (a fixed set with a per-registry override —
-# a `# tag-rank: ga>preview>beta>exp` comment line in agents.csv, or the
+# a `# tag-rank: ga>preview>beta>exp` comment line in agents.toml, or the
 # AGENT_TAG_RANK env knob; see load_tag_rank). `preview`/`exp` rows are SKIPPED
 # in version-less resolution unless explicitly named or the only candidate.
 DEFAULT_TAG_RANK = {"ga": 3, "preview": 2, "beta": 1, "exp": 0}
@@ -202,29 +214,26 @@ def _utf8_console():
 MODEL_SLUG_RE = re.compile(r"^[A-Za-z0-9._:/\-]+$")
 
 
-def load_registry(path):
-    """Parse docs/agents.csv into {id: Model}, plus a list of error strings for
-    malformed rows (a duplicate/invalid id, an out-of-vocabulary tier, a short
-    row). Absent file -> ({}, []) so the caller degrades to today's behavior.
-    utf-8/errors=replace so a stray byte degrades, never crashes."""
-    path = Path(path)
-    if not path.exists():
-        return {}, []
-    models, errors = {}, []
-    try:
-        text = path.read_text(encoding="utf-8", errors="replace")
-    except OSError as exc:
-        return {}, ["cannot read {}: {}".format(path, exc)]
+def _rows_from_csv(text, name):
+    """`(rows, errors)` from the CSV carrier — each row a `{column: cell}` dict.
+
+    The HEADER CHECK lives here and only here, because it is a property of the
+    CSV carrier: that carrier declares its schema in a header, so a header
+    missing `CmdTemplate` is a registry that cannot launch anything and must
+    PAGE rather than degrade. TOML declares no header — an absent key IS the
+    empty cell — so its analogue is "the file does not parse", which the TOML
+    branch raises instead."""
+    errors = []
     rows = list(csv.reader(text.splitlines()))
     if not rows:
-        return {}, []
+        return [], []
     header = [h.strip() for h in rows[0]]
     # Map the columns we need by name so column order is not load-bearing.
     # `Provider` is accepted as the legacy alias for `Family` (never-breaking).
     idx = {
-        name: header.index(name)
-        for name in REGISTRY_FIELDS + ("Provider",)
-        if name in header
+        name_: header.index(name_)
+        for name_ in REGISTRY_FIELDS + ("Provider",)
+        if name_ in header
     }
     # Identity's Family key: the Family column, or a legacy Provider column.
     fam_key = (
@@ -232,24 +241,62 @@ def load_registry(path):
     )
     for need in ("Id", "Model", "Version", "Tier", "CmdTemplate"):
         if need not in idx:
-            errors.append(
-                "{}: header is missing the {!r} column".format(path.name, need)
-            )
+            errors.append("{}: header is missing the {!r} column".format(name, need))
     if fam_key is None:
         errors.append(
             "{}: header is missing the 'Family' column (legacy 'Provider' also "
-            "accepted)".format(path.name)
+            "accepted)".format(name)
         )
     if errors:
-        return {}, errors
-
-    def cell(row, name):
-        i = idx.get(name)
-        return row[i].strip() if (i is not None and i < len(row)) else ""
-
+        return [], errors
+    out = []
     for row in rows[1:]:
         if not any(c.strip() for c in row):
             continue  # blank line
+        cells = {
+            col: (row[i].strip() if i < len(row) else "") for col, i in idx.items()
+        }
+        cells["Family"] = cells.get(fam_key, "")
+        out.append(cells)
+    return out, []
+
+
+def load_registry(path):
+    """Parse the model registry into {id: Model}, plus a list of error strings
+    for malformed rows (a duplicate/invalid id, an out-of-vocabulary tier, a
+    short row). Absent file -> ({}, []) so the caller degrades to today's
+    behavior. utf-8/errors=replace so a stray byte degrades, never crashes.
+
+    `path` may name either carrier; `spine_carrier.resolve` returns whichever
+    is live and REFUSES both at once, so a half-finished migration cannot leave
+    the router quietly reading the stale half. An unparseable TOML registry is
+    an ERROR, never an empty pool: `{}` here means "no models are enabled",
+    which under managed routing reads as a consent decision rather than a
+    broken file — a page the human never gets."""
+    live = spine_carrier.resolve(Path(path))
+    if live is None:
+        return {}, []
+    models, errors = {}, []
+    try:
+        text = live.read_text(encoding="utf-8", errors="replace")
+    except OSError as exc:
+        return {}, ["cannot read {}: {}".format(live, exc)]
+    if live.suffix == ".toml":
+        rows = spine_carrier.rows_seq_from_text(text, "Id", ".toml")
+        if rows is None:
+            return {}, [
+                "{}: does not parse as TOML — refusing to report an unreadable "
+                "registry as an empty pool".format(live.name)
+            ]
+    else:
+        rows, errors = _rows_from_csv(text, live.name)
+        if errors:
+            return {}, errors
+
+    def cell(row, name):
+        return str(row.get(name) or "").strip()
+
+    for row in rows:
         mid = cell(row, "Id")
         if mid.startswith("#"):
             continue  # a commented row
@@ -259,17 +306,17 @@ def load_registry(path):
         if not ID_RE.match(mid):
             errors.append(
                 "{}: id {!r} is not [A-Z0-9][A-Z0-9.-]* (uppercase + digits + "
-                "hyphen + dot)".format(path.name, mid)
+                "hyphen + dot)".format(live.name, mid)
             )
             continue
         if mid in models:
-            errors.append("{}: duplicate id {!r}".format(path.name, mid))
+            errors.append("{}: duplicate id {!r}".format(live.name, mid))
             continue
         tier = normalize_tier(cell(row, "Tier"))
         if tier not in TIER_ORDER:
             errors.append(
                 "{}: id {!r} has tier {!r}; expected one of {}".format(
-                    path.name, mid, tier, "|".join(TIER_ORDER)
+                    live.name, mid, tier, "|".join(TIER_ORDER)
                 )
             )
             continue
@@ -278,19 +325,19 @@ def load_registry(path):
             # The Model cell rides `{model}` substitution into a session
             # argv; on Windows a `.cmd`-shim CLI re-parses that line under
             # cmd.exe, where an embedded quote re-arms `&`/`|` as live
-            # operators (the BatBadBut class). A tracked CSV must not be a
+            # operators (the BatBadBut class). A tracked registry must not be a
             # command-injection vector: refuse the row loudly (a preflight
             # failure under managed routing) — repo-review 2026-07-21 H-4.
             errors.append(
                 "{}: id {!r} Model {!r} has characters outside "
                 "[A-Za-z0-9._:/-]; refusing (shell-unsafe in a .cmd-shim "
-                "argv)".format(path.name, mid, model_cell)
+                "argv)".format(live.name, mid, model_cell)
             )
             continue
         tmpl = cell(row, "CmdTemplate")
         models[mid] = Model(
             id=mid,
-            family=cell(row, fam_key),
+            family=cell(row, "Family"),
             model=cell(row, "Model"),
             version=cell(row, "Version"),
             tier=tier,
@@ -330,12 +377,23 @@ def parse_tag_rank(spec):
 def load_tag_rank(path, env=None):
     """The maturity rank vocabulary for version-less resolution: the
     AGENT_TAG_RANK env knob wins, else a `# tag-rank: ...` comment line in the
-    registry file, else DEFAULT_TAG_RANK. Deterministic and offline."""
+    registry file, else DEFAULT_TAG_RANK. Deterministic and offline.
+
+    THE LINE SCAN SURVIVED THE CARRIER CHANGE UNCHANGED, and that is not a
+    coincidence: TOML's comment syntax is the `#` line this convention already
+    used, so `migrate_carrier` carries every comment across BYTE-FOR-BYTE and in
+    place. What did have to change is finding the file — `resolve` picks the
+    live carrier, and without it a migrated repo silently fell back to
+    DEFAULT_TAG_RANK, resetting the maturity vocabulary that decides which row a
+    version-less enable-list token resolves to."""
     env = os.environ if env is None else env
     if env.get("AGENT_TAG_RANK"):
         return parse_tag_rank(env["AGENT_TAG_RANK"])
+    live = spine_carrier.resolve(Path(path))
+    if live is None:
+        return dict(DEFAULT_TAG_RANK)
     try:
-        text = Path(path).read_text(encoding="utf-8", errors="replace")
+        text = live.read_text(encoding="utf-8", errors="replace")
     except OSError:
         return dict(DEFAULT_TAG_RANK)
     for ln in text.splitlines():
@@ -426,8 +484,8 @@ def resolve_enabled(enabled, registry, tag_rank=None):
         rid, reason = resolve_token(tok, registry, tag_rank)
         if rid is None:
             errors.append(
-                "{!r} is not a row in docs/agents.csv and does not resolve to "
-                "one ({})".format(tok, reason)
+                "{!r} is not a row in docs/agents.toml and does not resolve "
+                "to one ({})".format(tok, reason)
             )
             continue
         if rid not in seen:
@@ -731,11 +789,11 @@ def pool_context(enabled, registry, cooldowns=None, now=0.0):
     to actually DO — the kit itself stays provider-neutral. Lenient: an enabled
     id missing from the registry (can't happen past preflight) still renders."""
     cooldowns = cooldowns or {}
-    lines = ["enabled pool (docs/agents-enabled x docs/agents.csv):"]
+    lines = ["enabled pool (docs/agents-enabled x docs/agents.toml):"]
     for mid in enabled:
         m = registry.get(mid)
         if m is None:
-            lines.append("  - {} (not in docs/agents.csv)".format(mid))
+            lines.append("  - {} (not in docs/agents.toml)".format(mid))
             continue
         wait = cooldowns.get(mid, 0.0) - now
         state = "cooling ~{}s".format(int(wait)) if wait > 0 else "available"
@@ -1135,7 +1193,9 @@ def main(argv=None):
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     ap.add_argument(
-        "--registry", default="docs/agents.csv", help="the model registry CSV"
+        "--registry",
+        default="docs/agents.toml",
+        help="the model registry (either carrier)",
     )
     ap.add_argument(
         "--enabled", default="docs/agents-enabled", help="the ordered enable-list"

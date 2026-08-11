@@ -3,7 +3,7 @@
 
 Replaces the hand-maintained `docs/open-items.md`. Two inputs, one output:
 
-  docs/requirements/open-items.csv   pending decision briefs, one row per OI
+  docs/requirements/open-items.toml   pending decision briefs, one row per OI
   the spine registries + git         rows owing a ratification or a re-attest
   -> docs/open-items.html            the ONLY surface a human reads
 
@@ -48,11 +48,10 @@ clone.
 Stdlib only, cross-platform, deterministic (sorted inputs, no clocks) so the
 gated compare is byte-stable.
 
-Contracts: IF-073, IF-074, IF-075 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.csv).
+Contracts: IF-073, IF-074, IF-075, IF-118 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.csv).
 """
 
 import argparse
-import csv
 import difflib
 import html
 import re
@@ -62,9 +61,13 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import gen_trajectory as gt  # noqa: E402  (path set above)
+import spine_carrier  # noqa: E402
 import trace as tr  # noqa: E402
 
-OPEN_ITEMS_CSV = "docs/requirements/open-items.csv"
+# The registry names its DESTINATION carrier; `spine_carrier.resolve` finds
+# whichever of the two is live, so a repo that has not run `migrate_carrier`
+# keeps rendering from its CSV (repo-lock §8.1).
+OPEN_ITEMS_REL = "docs/requirements/open-items.toml"
 OUT_REL = "docs/open-items.html"
 
 # The view RECORDS the baseline it was rendered against, so `--check` re-renders
@@ -281,17 +284,19 @@ def esc(text):
 def load_open_items(root):
     """Rows of the open-items registry, `-000` example rows dropped (the
     copy-ready placeholder convention every other registry uses). Missing file
-    -> [] : a repo that carries no decisions yet still renders a view."""
-    path = Path(root) / OPEN_ITEMS_CSV
-    if not path.is_file():
-        return []
-    with path.open(encoding="utf-8-sig", newline="") as fh:
-        return [
-            r
-            for r in csv.DictReader(fh)
-            if (r.get("OI-ID") or "").startswith("OI-")
-            and not r["OI-ID"].endswith("-000")
-        ]
+    -> [] : a repo that carries no decisions yet still renders a view.
+
+    Through `spine_carrier.load`, which is what makes the missing-file arm safe.
+    Reading the registry directly, an UNPARSEABLE carrier came back as no rows
+    and this view rendered "no open items" — the owner's decision queue
+    reporting empty because it could not be read, which is the false green D-5
+    built the None-not-`{}` rule for. `load` raises on that and returns `[]`
+    only when the registry genuinely is not there."""
+    return [
+        r
+        for r in spine_carrier.load(Path(root) / OPEN_ITEMS_REL, "OI-ID")
+        if (r.get("OI-ID") or "").startswith("OI-") and not r["OI-ID"].endswith("-000")
+    ]
 
 
 def _tokens(text):
@@ -584,6 +589,14 @@ def _pointer_list(markdown_items):
     )
 
 
+def live_registry_rel(root):
+    """The open-items registry's path under whichever carrier is live, for the
+    pointers this view renders. Falls back to the destination carrier's name
+    when neither exists, so a vacuous render still points somewhere sane."""
+    live = spine_carrier.resolve(Path(root) / OPEN_ITEMS_REL)
+    return spine_carrier.stem(OPEN_ITEMS_REL) + (live.suffix if live else ".toml")
+
+
 def render(root, since=None):
     """The whole page. Deterministic: every input is sorted upstream.
 
@@ -624,7 +637,7 @@ def render(root, since=None):
         "<h1>Open items — owner decision surface</h1>\n"
         '<p class="sub">{pending} pending decision(s) · {attest} spine row(s) owing a '
         "ratification or re-attest, across {rows} chain row change(s). Briefs are rows "
-        "in <code>docs/requirements/open-items.csv</code>; the attestation depth is "
+        "in <code>{registry}</code>; the attestation depth is "
         "computed by <code>trace.reattest_model</code>, the same code behind "
         "<code>trace.py --ratify</code>. If the two ever disagree, the brief is "
         "authoritative and this view is the bug.</p>\n"
@@ -639,7 +652,7 @@ def render(root, since=None):
         "re-attestation</p>{attestations}</section>\n"
         '<section class="band"><p class="eyebrow">3 · Pending owner actions '
         "(derived)</p>{pointers}</section>\n"
-        "<footer>Source: <code>docs/requirements/open-items.csv</code> + the spine "
+        "<footer>Source: <code>{registry}</code> + the spine "
         "registries. Rule a decision by appending to <code>docs/log.md</code>'s "
         "Decisions log and setting the row's <code>Status</code>; bless an amendment "
         "by moving the spine row's <code>Status</code> "
@@ -655,6 +668,10 @@ def render(root, since=None):
             model, {r.get("SR-ID"): r for r in reg.srs if r.get("SR-ID")}
         ),
         pointers=_pointer_list(pure),
+        # The LIVE carrier, never a hardcoded suffix: this view is the surface
+        # an owner rules from, and a pointer at the file the repo no longer has
+        # (or has not migrated to yet) sends them to edit nothing.
+        registry=live_registry_rel(root),
         **counts,
     )
 
@@ -696,10 +713,10 @@ def main(argv=None):
     # Vacuous for a repo that carries neither the registry nor the view: the
     # surface is opt-in, exactly like the markdown block it replaces, so a
     # non-adopter (and a fresh scaffold before its first decision) pays nothing.
-    if not (root / OPEN_ITEMS_CSV).is_file() and not out.is_file():
+    if spine_carrier.resolve(root / OPEN_ITEMS_REL) is None and not out.is_file():
         print(
             "gen_open_items: no {} and no {} — nothing to render (vacuous).".format(
-                OPEN_ITEMS_CSV, OUT_REL
+                OPEN_ITEMS_REL, OUT_REL
             )
         )
         return 0
@@ -710,9 +727,9 @@ def main(argv=None):
     # planted a fabricated "WI-999 blocked" line and nothing noticed). Warn-only:
     # the migration is the owner's, and failing here would red a repo midway
     # through it.
-    if (root / "docs" / "open-items.md").is_file() and (
-        root / OPEN_ITEMS_CSV
-    ).is_file():
+    if (root / "docs" / "open-items.md").is_file() and spine_carrier.resolve(
+        root / OPEN_ITEMS_REL
+    ):
         print(
             "gen_open_items: WARN - docs/open-items.md is still present beside "
             "the registry. It was RETIRED by WI-322 and nothing regenerates its "

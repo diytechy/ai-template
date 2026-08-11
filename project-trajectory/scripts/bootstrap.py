@@ -71,7 +71,7 @@ What it creates in the destination:
                                                 the context block, the gate-policy
                                                 flip arms; WI-388)
     scripts/agent_route.py, scripts/score_reviews.py   (S8 coordinator routing + review scorer)
-    docs/agents.csv                            <- agents.template.csv (model registry; inert until docs/agents-enabled)
+    docs/agents.toml                           <- agents.template.toml (model registry; inert until docs/agents-enabled)
     scripts/setup.{sh,ps1}, scripts/check.{sh,ps1}   (cross-platform launchers)
     scripts/onboard.{sh,command,cmd}           <- onboard.template.*  (Stage-0 onboarder)
     scripts/dev-setup.{sh,ps1,command,cmd}     <- dev-setup.template.* (workstation setup)
@@ -294,8 +294,6 @@ Contracts: IF-014, IF-039 — the interface seams this module declares (process.
 
 import argparse
 import configparser
-import csv
-import io
 import re
 import shutil
 import subprocess
@@ -1322,27 +1320,45 @@ STACK_IN_FLIGHT = (
 # The Needs-<human> OI-3 carries its decision brief in the open-items REGISTRY
 # (check_docs S-3: every owner ask has its brief); the In-flight OI-4..6 are
 # driver work and need none. WI-322 retired the markdown surface — briefs are
-# ROWS in docs/requirements/open-items.csv, rendered into the generated
+# ROWS in docs/requirements/open-items, rendered into the generated
 # docs/open-items.html the owner reads — so the brief is APPENDED as a row
-# instead of spliced above a marker. `csv.writer` does the quoting: a brief cell
-# carries commas, and a hand-built string would have been a quoting bug waiting
-# for its first one.
+# instead of spliced above a marker.
+#
+# KEYS, not a positional tuple, since the carrier moved to TOML (repo-lock
+# §8.1): a 12-cell tuple aligned to a header by position is exactly the shape
+# that silently shifts when a column is inserted, and the carrier no longer has
+# a header to align to. The key names duplicate `migrate_carrier.KEY`'s
+# open-items half, and that duplication is DECLARED, not accidental:
+# `bootstrap.py` runs BEFORE the kit is copied and can import no sibling
+# (repo-lock §8.2 names this as the standing argument for standalone), so it
+# carries its own two-line TOML emitter exactly as it already carries
+# `_toml_scalar` for `docs/process.toml`. `tests/test_rule_sync.py` pins the key
+# set against the converter so the two cannot drift apart in silence — the
+# behavioural pin D-7 requires of any new duplication of POLICY.
+STACK_OI3_ID = "OI-3"
 STACK_OI3_ROW = (
-    "OI-3",
-    "Decide: the {stack} toolchain commands",
-    "pending",
-    "",
-    "rule the {stack} format / lint / test commands - rec: mirror the existing "
-    "CI commands first, then tighten",
-    "the format / lint / test commands for the {stack} stack in docs/stack.ini's "
-    "[product] section (blocks: G1).",
-    "every gate run and CI job shells these commands - a wrong entry "
-    "green-washes the harness.",
-    "the stack's conventional tools · whatever the repo already runs in CI.",
-    "mirror the existing CI commands first, then tighten.",
-    "",
-    "",
-    "",
+    ("title", "Decide: the {stack} toolchain commands"),
+    ("status", "pending"),
+    (
+        "one_line",
+        "rule the {stack} format / lint / test commands - rec: mirror the "
+        "existing CI commands first, then tighten",
+    ),
+    (
+        "decision",
+        "the format / lint / test commands for the {stack} stack in "
+        "docs/stack.ini's [product] section (blocks: G1).",
+    ),
+    (
+        "blast_radius",
+        "every gate run and CI job shells these commands - a wrong entry "
+        "green-washes the harness.",
+    ),
+    (
+        "options",
+        "the stack's conventional tools · whatever the repo already runs in CI.",
+    ),
+    ("recommendation", "mirror the existing CI commands first, then tighten."),
 )
 
 
@@ -1389,17 +1405,32 @@ def append_stack_checklist(dest, stack, dry_run):
     # OI-3 is a Needs-<human> ask, so it owes a brief (check_docs S-3): append it
     # as a row of the open-items registry, which the generated owner surface
     # renders. Idempotent — re-running bootstrap must not file OI-3 twice.
-    open_items = dest / "docs" / "requirements" / "open-items.csv"
+    #
+    # AN APPEND, NOT A RE-SERIALIZATION — the same discipline `set_process_key`
+    # states for `docs/process.toml` and `intake._apply_flips` for a spine
+    # Status flip, and for the same reason: every byte the scaffolder did not
+    # write stays exactly as the template shipped it, comments and ordering
+    # included. Under CSV this had to go through `csv.writer` for the quoting
+    # (and `lineterminator="\n"`, because the default is CRLF and this repo
+    # stores LF); under TOML there is no row-level quoting to get wrong, so the
+    # emitter is `_toml_scalar` per cell and `_write_text_lf` for the file.
+    open_items = dest / "docs" / "requirements" / "open-items.toml"
     if open_items.exists():
         existing = open_items.read_text(encoding="utf-8-sig")
-        if "\nOI-3," not in existing:
-            buf = io.StringIO()
-            csv.writer(buf, lineterminator="\n").writerow(
-                [cell.format(stack=stack) for cell in STACK_OI3_ROW]
+        table = "[open_item.{}]".format(STACK_OI3_ID)
+        if table not in existing:
+            block = "{}\n{}\n".format(
+                table,
+                "\n".join(
+                    "{} = {}".format(key, _toml_scalar(cell.format(stack=stack)))
+                    for key, cell in STACK_OI3_ROW
+                ),
             )
             if existing and not existing.endswith("\n"):
                 existing += "\n"
-            _write_text_lf(open_items, existing + buf.getvalue())
+            if existing and not existing.endswith("\n\n"):
+                existing += "\n"
+            _write_text_lf(open_items, existing + block)
             raise_watermark(dest, "OI", 3)
     return True
 
@@ -1521,7 +1552,7 @@ MAPPING = [
     # created — routing then selects from that pool (process-options.md
     # "Unattended operation" -> routing/escalation). Absent both files = today's
     # single AGENT_CMD/AGENT_MODEL behavior.
-    ("agents.template.csv", "docs/agents.csv"),
+    ("agents.template.toml", "docs/agents.toml"),
     # (The gate-policy / push-policy / review-policy / privacy-check / blackout
     # one-word files folded into docs/process.toml at SN-028 — see the
     # process.toml.template row above. Their `*.template` files stay in the kit
@@ -1533,7 +1564,7 @@ MAPPING = [
     # The owner decision briefs status.md's Needs-<human> bullets link to
     # (process-options.md "Trajectory / work-items layer"): one OI-N section
     # per pending decision, deleted when the ruling lands in log.md Decisions.
-    ("registries/open-items.template.csv", "docs/requirements/open-items.csv"),
+    ("registries/open-items.template.toml", "docs/requirements/open-items.toml"),
     # (SN-029's separate attestation ledger was scaffolded here until it was
     # retired. The anchor it carried moves onto the artifact's own row, so
     # there is no second registry for an adopter to scaffold; the columns

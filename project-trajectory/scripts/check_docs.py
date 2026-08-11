@@ -64,7 +64,7 @@ finding classes:
     `docs/status-lint` overrides with an integer or the one word `off` (which
     disables S-1..S-3); (S-2) its Open-items marker must precede the `## Scope`
     heading (open items surface at the top); (S-3) with
-    `docs/requirements/open-items.csv` present, every `OI-N` inside the
+    `docs/requirements/open-items.toml` present, every `OI-N` inside the
     Needs-<human> block has a PENDING row there (no undocumented owner ask) and
     every pending id appears in status.md (no orphan brief). S-3 **retires under
     a generated snapshot** (WI-202): once status.md carries the
@@ -92,7 +92,6 @@ Contracts: IF-002, IF-030, IF-112 — the interface seams this module declares (
 """
 
 import argparse
-import csv
 import fnmatch
 import os
 import re
@@ -813,31 +812,30 @@ def check_status_surface(root, docs_dir):
     # generated block does not own.
     # WI-322 moved briefs from markdown sections to ROWS of the open-items
     # registry (the owner reads the generated view), so the brief set is the
-    # registry's PENDING ids. Same rule, one source down: a stdlib csv read, no
+    # registry's PENDING ids. Same rule, one source down: a carrier read, no
     # heading parse. A ruled row is not a brief — its record is the log.
-    open_items = root / docs_dir / "requirements" / "open-items.csv"
-    if open_items.exists() and not _STATUS_GENERATED_RE.search(text):
+    open_items = root / docs_dir / "requirements" / "open-items.toml"
+    if spine_carrier.resolve(open_items) and not _STATUS_GENERATED_RE.search(text):
         briefed = set()
         try:
-            with open_items.open(encoding="utf-8-sig", newline="") as fh:
-                for row in csv.DictReader(fh):
-                    oid = (row.get("OI-ID") or "").strip()
-                    status = (row.get("Status") or "").strip().lower()
-                    if oid.startswith("OI-") and not oid.endswith("-000"):
-                        if status == "pending":
-                            briefed.add(oid)
+            for row in spine_carrier.load(open_items, "OI-ID"):
+                oid = (row.get("OI-ID") or "").strip()
+                status = (row.get("Status") or "").strip().lower()
+                if oid.startswith("OI-") and not oid.endswith("-000"):
+                    if status == "pending":
+                        briefed.add(oid)
         except OSError:
             return warns
         needs = set(_OI_RE.findall(_needs_human_block(text)))
         for oid in sorted(needs - briefed):
             warns.append(
                 "{}: a Needs-<human> item in status.md with no pending `{}` row "
-                "in requirements/open-items.csv (every owner ask carries its "
+                "in requirements/open-items.toml (every owner ask carries its "
                 "brief)".format(oid, oid)
             )
         for oid in sorted(briefed - set(_OI_RE.findall(text))):
             warns.append(
-                "{}: briefed in requirements/open-items.csv but never named in "
+                "{}: briefed in requirements/open-items.toml but never named in "
                 "status.md (an orphan brief — a ruled item moves to the log's "
                 "Decisions and its row leaves `pending`)".format(oid)
             )

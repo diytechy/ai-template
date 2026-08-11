@@ -88,6 +88,10 @@ REVIEW_POLICY_PATHS = (
     # new home a release late is a tripwire that was blind for a release.
     "docs/process.toml",
     "docs/review-policy",
+    # BOTH carriers: this is a pathspec allowlist matched against a diff,
+    # and a repo that has not migrated stages the `.csv` name. A tripwire
+    # that names one suffix is a tripwire the migration blinded.
+    "docs/agents.toml",
     "docs/agents.csv",
     "docs/agents-enabled",
     "scripts/score_reviews.py",

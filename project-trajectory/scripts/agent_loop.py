@@ -298,7 +298,7 @@ _PROMPT_CACHE = {}
 # triggers a review round; these phases are the round.
 REVIEW_PHASES = ("REVIEW-A", "REVIEW-B")
 
-# Default phase -> tier when routing from docs/agents.csv (AGENT_TIER_MAP /
+# Default phase -> tier when routing from docs/agents.toml (AGENT_TIER_MAP /
 # --tier-map override per phase). Iteration reviewers are cheap-but-heterogeneous
 # (the strong-model floor is a GATE-closure rule, not an iteration-loop one), the
 # strong tier plans and design-checks, and an unknown phase routes UP — never a
@@ -834,7 +834,7 @@ def launcher_exe(cmd_template):
     """`(exe, installed)` for a command template: argv[0], and whether that
     launcher is actually present — on PATH, or an explicit path that exists.
 
-    Stated once (WI-345): the per-phase cmd-map preflight and the agents.csv
+    Stated once (WI-345): the per-phase cmd-map preflight and the agents.toml
     registry preflight both ask "is this model's CLI really here", and a probe
     that answers differently in two places is a preflight that passes for one
     route and fails for another. Raises ValueError/IndexError from `build_argv`
@@ -1446,7 +1446,7 @@ def parse_args():
         default=os.environ.get("AGENT_TIER_MAP", ""),
         help='per-phase tier map "BUILD=medium,PLAN=strong" (strong|medium|quick; '
         "legacy `weak` reads as quick) "
-        "used by the docs/agents.csv router when the enable-list is present; "
+        "used by the docs/agents.toml router when the enable-list is present; "
         "falls back to the built-in phase->tier defaults (default: AGENT_TIER_MAP "
         "env var)",
     )
@@ -1567,7 +1567,7 @@ def map_preflight(
     # must be a valid tier — all up front, like cmd-map.
     if managed:
         for e in reg_errors:
-            failures.append("agents.csv: {}".format(e))
+            failures.append("agents.toml: {}".format(e))
         for e in enable_errors:
             failures.append("agents-enabled: {}".format(e))
         for mid in enabled:
@@ -1578,12 +1578,12 @@ def map_preflight(
                     # The row's Notes is the declared install/sign-in hint —
                     # surface it at the earliest failure point (WI-109).
                     failures.append(
-                        "agents.csv [{}]: CmdTemplate CLI {!r} is not on "
+                        "agents.toml [{}]: CmdTemplate CLI {!r} is not on "
                         "PATH.{}".format(mid, exe, " — " + m.notes if m.notes else "")
                     )
             except (ValueError, IndexError) as exc:
                 failures.append(
-                    "agents.csv [{}]: cannot parse CmdTemplate: {}".format(mid, exc)
+                    "agents.toml [{}]: cannot parse CmdTemplate: {}".format(mid, exc)
                 )
         for ph, tier in sorted(tier_map.items()):
             # normalize_tier: the legacy `weak` value stays a valid tier-map entry.
@@ -1602,7 +1602,7 @@ def map_preflight(
         # A malformed registry in a repo NOT using routing is only a warning —
         # the layer is off, so it changes nothing (never-breaking).
         for e in reg_errors:
-            print("agent_loop: WARNING - agents.csv: {}".format(e), file=sys.stderr)
+            print("agent_loop: WARNING - agents.toml: {}".format(e), file=sys.stderr)
     return failures, prompt_templates
 
 
@@ -2806,7 +2806,7 @@ def main():
     # loop-side reviewer dispatch on; ABSENT files keep exactly today's single
     # AGENT_CMD/AGENT_MODEL behavior, so a fresh scaffold pays nothing (no silent
     # model swap — consent = the enabled set + the declared rules).
-    registry, reg_errors = agent_route.load_registry(docs / "agents.csv")
+    registry, reg_errors = agent_route.load_registry(docs / "agents.toml")
     # Parse the enable-list WITH its optional per-phase draw-weight annotations
     # (WI-236); a malformed annotation is a preflight failure naming the line
     # (the file is the consent surface — never silently ignored).
@@ -2819,7 +2819,7 @@ def main():
     managed = bool(raw_enabled)
     # Version-less tokens resolve to concrete pair-row ids (exact-id, else newest
     # in the Family-Model line); unresolvable tokens become preflight failures.
-    tag_rank = agent_route.load_tag_rank(docs / "agents.csv")
+    tag_rank = agent_route.load_tag_rank(docs / "agents.toml")
     enabled, resolve_errors = agent_route.resolve_enabled(
         raw_enabled, registry, tag_rank
     )

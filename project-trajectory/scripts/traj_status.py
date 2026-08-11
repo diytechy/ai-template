@@ -131,18 +131,24 @@ def _open_item_oneliners(root):
     """`[(OI-id, one-liner)]` for every PENDING decision, id-order — the status
     snapshot's one-line-per-item projection.
 
-    Reads `docs/requirements/open-items.csv` (WI-322, OI-10 ruled option (b)):
+    Reads the open-items registry (WI-322, OI-10 ruled option (b); TOML since
+    repo-lock §8.1, either carrier resolves):
     the registry is the source and `docs/open-items.html` is the rendered owner
     surface, so a markdown section parse has nothing left to parse. The
     one-liner is the row's `OneLine` cell, else the first sentence of its
     `Recommendation` — the same fallback the markdown contract had, kept so a
     row that states only a recommendation still projects something useful.
     Empty when the registry is absent (a repo carrying no decisions)."""
-    p = root / "docs" / "requirements" / "open-items.csv"
-    if not p.is_file():
+    p = root / "docs" / "requirements" / "open-items.toml"
+    if ct.spine_carrier.resolve(p) is None:
         return []
     out = []
-    for row in ct.read_rows(p):  # the shared reader — BOM-safe, one CSV idiom
+    # Through the CARRIER, not `read_rows`: this projection is spliced into
+    # `status.md` and an unreadable registry that came back as no rows would
+    # publish "no pending decisions" — the owner's queue reporting empty because
+    # it could not be parsed. `load` raises there and returns [] only when the
+    # registry is genuinely absent.
+    for row in ct.spine_carrier.load(p, "OI-ID"):
         oid = (row.get("OI-ID") or "").strip()
         if not _OI_ID_RE.fullmatch(oid) or oid.endswith("-000"):
             continue
@@ -345,10 +351,18 @@ def status_block(root):
     ]
     ois = _open_item_oneliners(root)
     if ois:
+        # The LIVE carrier's name, never a hardcoded suffix: this block is
+        # spliced into status.md, and a link at the file the repo no longer has
+        # is a broken link on the working surface (check_docs's own hard
+        # finding), manufactured by a generator.
+        oi_rel = ct.spine_carrier.stem("requirements/open-items.toml") + (
+            ct.spine_carrier.resolve(
+                root / "docs" / "requirements" / "open-items.toml"
+            ).suffix
+        )
         lines.append(
-            "- **Open items** _(pending rows of "
-            "[requirements/open-items.csv](requirements/open-items.csv); each "
-            "item's blast radius, options and recommendation render in "
+            "- **Open items** _(pending rows of [{oi}]({oi}); each ".format(oi=oi_rel)
+            + "item's blast radius, options and recommendation render in "
             "[open-items.html](open-items.html), the generated owner surface):_"
         )
         lines.extend("  - **{}** — {}".format(oid, one) for oid, one in ois)

@@ -327,7 +327,7 @@ def _pending_oi_lines(root, kin):
         "- {} (pending): {}".format(
             o.get("OI-ID"), _clip(o.get("OneLine") or o.get("Title"), 160)
         )
-        for o in _csv_rows(root / "docs/requirements/open-items.csv")
+        for o in spine_carrier.load(root / "docs/requirements/open-items.toml", "OI-ID")
         if (o.get("Status") or "").strip().lower() == "pending"
         and kin & set(_split(o.get("WI-Refs")))
     ]
@@ -816,7 +816,7 @@ def _cancel_context(relpath):
         "Outcomes (R3): {outcomes}. An override moves the byte-identical spec "
         "to the corrected terminal folder and records the overridden claim; the "
         "cancellation itself is never reversed in place. An open item goes to "
-        "docs/requirements/open-items.csv."
+        "docs/requirements/open-items.toml."
     ).format(spec=relpath, outcomes=_DISPOSITION_OUTCOMES)
 
 
@@ -842,7 +842,7 @@ def _close_context(relpath, rel_report):
         "never re-opened and a scope definition never changes to mean "
         "something else. An override moves the byte-identical spec to the "
         "corrected terminal folder; the report stays on record as the claim it "
-        "was. An open item goes to docs/requirements/open-items.csv."
+        "was. An open item goes to docs/requirements/open-items.toml."
     ).format(spec=relpath, report=rel_report, outcomes=_DISPOSITION_OUTCOMES)
 
 

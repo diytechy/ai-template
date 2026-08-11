@@ -1447,6 +1447,7 @@ _ADJUDICATION_SURFACES = (
     "docs/requirements/low-level-requirements.csv",
     "docs/test/test-cases.toml",
     "docs/test/test-cases.csv",
+    "docs/requirements/open-items.toml",
     "docs/requirements/open-items.csv",
     # SR-144's per-close reports: an adjudication lane READS them and, on an
     # override, may write a corrective one. Without this row a lane that

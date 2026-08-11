@@ -80,7 +80,7 @@ def wi_plan_mode(row):
 
 def _dp_routes(root, tier):
     """The two planner hat routes as `[(label, model, template, env, note)]`.
-    With routing opted in (docs/agents-enabled + agents.csv), the pair comes
+    With routing opted in (docs/agents-enabled + agents.toml), the pair comes
     from agent_route.planner_pair (different families where the pool allows,
     else the recorded degraded reason); with routing off, both hats ride the
     ambient template/model — the recorded routing-off degraded mode. Returns
@@ -88,12 +88,12 @@ def _dp_routes(root, tier):
     import agent_route
 
     enabled = agent_route.load_enabled(root / "docs" / "agents-enabled")
-    registry, reg_errors = agent_route.load_registry(root / "docs" / "agents.csv")
+    registry, reg_errors = agent_route.load_registry(root / "docs" / "agents.toml")
     if not enabled:
         return None, None, "routing-off: one template drives every hat (degraded)"
     if not registry or reg_errors:
         # The enable-list is the consent surface: with it PRESENT, a missing/
-        # headerless/all-malformed agents.csv must PAGE loudly (the posture
+        # headerless/all-malformed agents.toml must PAGE loudly (the posture
         # map_preflight already takes for BUILD workers), never silently drop
         # both hats onto the ambient template — and a partially-malformed
         # registry must not silently shrink the pool either (repo-review
@@ -102,7 +102,7 @@ def _dp_routes(root, tier):
         return (
             None,
             registry,
-            "routing: agents.csv unreadable/malformed with agents-enabled "
+            "routing: agents.toml unreadable/malformed with agents-enabled "
             "present: {}".format("; ".join(reg_errors) or "no parseable rows"),
         )
     # resolve_enabled returns (ids, errors) — unpack it, or planner_pair iterates
@@ -113,7 +113,7 @@ def _dp_routes(root, tier):
     # skip (the main dispatcher path unpacks correctly; only these helpers did not).
     # The registry's declared tag-rank override rides along (as main() does) so
     # version-less token resolution is identical in every engine path.
-    tag_rank = agent_route.load_tag_rank(root / "docs" / "agents.csv")
+    tag_rank = agent_route.load_tag_rank(root / "docs" / "agents.toml")
     pool, resolve_errors = agent_route.resolve_enabled(enabled, registry, tag_rank)
     if resolve_errors:
         return (
@@ -148,7 +148,7 @@ def _dp_session(template, model, prompt, root, timeout, env_cell=""):
         argv, root, timeout, env=env, stdin_input=stdin_input
     )
     ok = code == 0 and not timed_out
-    # A --output-format json/stream-json template (what the real agents.csv rows
+    # A --output-format json/stream-json template (what the real agents.toml rows
     # use) captures the whole event transcript, but the round's consumers need the
     # SESSION RESULT TEXT: plan_coverage's line-oriented parser finds zero rows in
     # a one-line JSON transcript, and the {{PLAN}}/{{CRITIQUE}} brief slots must
@@ -303,7 +303,7 @@ def run_dual_plan_round(root, wi, row, template, model, timeout, prompt_map=None
                     pool, _pool_errors = agent_route.resolve_enabled(
                         agent_route.load_enabled(root / "docs" / "agents-enabled"),
                         _registry,
-                        agent_route.load_tag_rank(root / "docs" / "agents.csv"),
+                        agent_route.load_tag_rank(root / "docs" / "agents.toml"),
                     )
                     pair = agent_route.planner_fallback(
                         failed, pool, _registry, "strong"

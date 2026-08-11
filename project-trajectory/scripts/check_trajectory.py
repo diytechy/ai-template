@@ -3372,7 +3372,9 @@ CRITIQUE_VERDICT_RE = re.compile(
     re.I | re.M,
 )
 
-OPEN_ITEMS_CSV = "docs/requirements/open-items.csv"
+# The registry names its DESTINATION carrier; `spine_carrier.resolve` picks
+# whichever of the two is live (repo-lock §8.1).
+OPEN_ITEMS_REL = "docs/requirements/open-items.toml"
 # A `[<phase>]-[g1|g2]` bracketed anchor appearing anywhere in a brief cell.
 RATIFY_ANCHOR_RE = re.compile(r"\[[^\]\[]+\]-\[g[12]\]")
 # The brief satisfies the rule only by naming a ratification/hierarchy VIEW — a
@@ -3394,15 +3396,15 @@ def ratify_brief_findings(root):
     rows. WARN only — never a gate fail (the house stance for prose surfaces,
     WI-129/132).
 
-    Reads `docs/requirements/open-items.csv` since WI-322 retired the markdown
+    Reads `docs/requirements/open-items.toml` since WI-322 retired the markdown
     surface; the brief text is the row's prose cells. Vacuous when the registry
     is absent or carries no ratification brief, so a repo without the surface
     pays nothing."""
-    path = root / OPEN_ITEMS_CSV
-    if not path.is_file():
+    path = root / OPEN_ITEMS_REL
+    if spine_carrier.resolve(path) is None:
         return []
     out = []
-    for row in read_rows(path):
+    for row in spine_carrier.load(path, "OI-ID"):
         oid = (row.get("OI-ID") or "").strip()
         if not oid.startswith("OI-") or oid.endswith("-000"):
             continue
@@ -3420,7 +3422,7 @@ def ratify_brief_findings(root):
         out.append(
             "{}: a [phase]-[g1|g2] ratification brief should name the batch-scoped "
             "hierarchy view (generate it with `trace.py --ratify <phase>`) instead "
-            "of hand-copying registry rows ({})".format(oid, OPEN_ITEMS_CSV)
+            "of hand-copying registry rows ({})".format(oid, OPEN_ITEMS_REL)
         )
     return out
 

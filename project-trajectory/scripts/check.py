@@ -726,7 +726,7 @@ def steps(coverage, tier, gate, phase=None, profile=None):
             "process",
         ),
         # Owner decision-surface freshness (WI-322, OI-10 ruled option (b)):
-        # docs/open-items.html is generated from docs/requirements/open-items.csv
+        # docs/open-items.html is generated from docs/requirements/open-items.toml
         # plus the spine's Draft/Modified rows — the surface that replaced the
         # hand-maintained docs/open-items.md. Same generated-artifact contract
         # as its siblings — a pure function of the committed tree since the
