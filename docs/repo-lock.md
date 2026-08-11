@@ -1325,11 +1325,26 @@ with OI-13 and OI-12 *executing* together.
   thing it measures. A WI-280 decomposition candidate by the kit's own
   definition — and note step 4 (`intake`'s TOML writer) will push it further.
 
-- ~~**`test_agent_loop_critique.py` hangs**~~ — **not reproduced, 2026-08-10.**
-  The full suite now runs to completion in ~6:00, twice on the working tree and
-  once on a clean worktree at `601a1c19`, with that module completing each time.
-  Confirms the earlier read that it was environmental or flaky rather than
-  deterministic. What the run *did* surface is the watermark's 93 failures
+- ~~**`test_agent_loop_critique.py` hangs**~~ ~~— **not reproduced, 2026-08-10.**~~
+  **REPRODUCED AND EXPLAINED 2026-08-11 — it is NOT flaky, it is a clock.**
+  The 2026-08-10 conclusion above ("environmental or flaky rather than
+  deterministic") was wrong, and wrong in the most expensive direction: those
+  runs simply happened outside the window. The module's 10 tests **sleep**
+  during weekday **12:00–19:00 UTC**. Measured:
+  `blackout_wake("12:00-19:00", 14:22Z) = 16650 s` (~4.6 h); re-measured
+  independently at 14:49 UTC Tuesday, the module did not complete in 150 s.
+  **Mechanism:** `process.toml.template` carries `blackout = "12:00-19:00"`,
+  `conftest.set_process_key(seed=True)` seeds test scaffolds from that
+  template, and the session-driving fixtures then wait on the dial.
+  **Why it matters more than ten tests: "full bar green" is currently a
+  function of wall-clock time** — a false-green machine of exactly the class
+  SN-008 forbids, and it had already fooled this program once (the struck
+  line above). Found by WI-427's builder while wiring the freshness checks.
+  Being fixed as its own WI: the *suite* is made honest (scaffolds seed the
+  dial disabled, blackout logic gets a real fast test on an injected clock,
+  and a guard reds if a session-driving scaffold ever inherits an enabled
+  window). **The dial's VALUE is deliberately not touched** — see the tabled
+  question in §8.5. What the run *did* surface is the watermark's 93 failures
   (§5 item 3) — the reason the suite had not been run to completion since.
 - **`trace.py` does not know the traced/ratified split** (`spine_cell_class`
   lives in `check_trajectory`), so the re-attest brief diffs every cell equally
@@ -1977,6 +1992,27 @@ against a registry; the sitting rules row by row.
    both flagged in the proposal for explicit ruling before intake.
 
 ### 8.5 · Agent rulings made under a WI's own license — owner ratification owed
+
+**TABLED FOR THE OWNER — should the kit ship YOUR blackout window to every
+adopter?** `process.toml.template` ships `blackout = "12:00-19:00"` (UTC,
+weekdays), and its own comment records that as deliberate: *"WI-148 shipped
+this default so a fresh scaffold gets the owner's 'always on' window from the
+machinery rather than from a hidden built-in; folding the file into this one
+is a MOVE, not an occasion to re-decide it."* That ruling is respected and
+**nothing has changed the value** — but it is worth a conscious re-look now
+that its cost is visible, because two consequences were probably not priced
+when it was made: **(1)** an adopting team in another timezone inherits a
+business-hours blackout they did not choose, from a template rather than from
+a decision (the dial is discoverable, so this is a default-choice question,
+not a trap); and **(2)** it silently disabled ten of the kit's own tests for
+seven hours of every weekday — the false-green recorded in §5's loose ends.
+Consequence (2) is being fixed without touching the value. Consequence (1) is
+yours: keep the window as the shipped default, or ship it disabled (`""`, as
+it was at `c560f928`) and let each adopter declare their own. **Note the
+asymmetry when ruling:** a shipped-empty dial that an adopter forgets to set
+costs them agent activity at inconvenient hours; a shipped-populated dial an
+adopter does not notice costs them seven hours a day of a loop that looks
+broken.
 
 **The batch adversarial review round, 2026-08-11 — 4 BLOCKERs found and
 closed** (OpenAI `gpt-5.6-sol` via codex, medium, over `49ab1c1c..a378fc77`;
