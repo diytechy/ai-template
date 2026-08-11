@@ -26126,10 +26126,12 @@ entry — most of it is the reasoning this row was required to record in code (t
 gate-set argument, fold-vs-separate, the explicit `--skills`, the
 `_TRUNK_FRESHNESS_STEPS` exclusion); trimmed 1649 → 1638 before stamping.
 
-**The bar.** Full unfiltered suite minus the blackout-blocked module:
-**2223 passed, 9 skipped in 380.57s** of 2242 collected (the excluded module is
-10 tests).
-<!-- fig: cmd="python -m pytest -q -n auto --ignore=tests/test_agent_loop_critique.py" rev=d960d127 -->
+**The bar.** Full unfiltered suite minus the blackout-blocked module, on the
+committed tree: **2227 passed, 5 skipped in 393.96s** of 2242 collected (the
+excluded module is 10 tests). The arithmetic ties to the baseline exactly —
+2228 + 9 added − 10 excluded = 2227, skips unchanged at 5 — which is what says
+nothing regressed.
+<!-- fig: cmd="python -m pytest -q -n auto --ignore=tests/test_agent_loop_critique.py" rev=881a46ce -->
 Smoke: **917 passed, 6 skipped in 18.11s**.
 <!-- fig: cmd="python -m pytest -q -n auto -m smoke" rev=d960d127 -->
 `check.py --jobs 0`: **RESULT: PASS**, with `skills-index` and `prompt-catalog`

@@ -153,9 +153,15 @@ and again by the two real commits of this WI:
 surfaces `--check` fresh (`arch-map`, `okf`, `trajectory-map`, `status-map`,
 `open-items`, `derived-gate`, `ratify-fresh`, and now both new ones).
 
-Suite: **2223 passed, 9 skipped in 380.57s** over `2242` collected, i.e. the full
-unfiltered suite minus the **10** tests of `tests/test_agent_loop_critique.py`.
-<!-- fig: cmd="python -m pytest -q -n auto --ignore=tests/test_agent_loop_critique.py" rev=d960d127 -->
+Suite, on the committed tree: **2227 passed, 5 skipped in 393.96s** over `2242`
+collected, i.e. the full unfiltered suite minus the **10** tests of
+`tests/test_agent_loop_critique.py`.
+<!-- fig: cmd="python -m pytest -q -n auto --ignore=tests/test_agent_loop_critique.py" rev=881a46ce -->
+**The arithmetic ties to the baseline exactly**, which is the real evidence that
+nothing regressed: `2228` baseline passed `+ 9` added here `− 10` excluded
+`= 2227`, with the skip count unchanged at `5`. (An earlier run of the same
+command at `d960d127` read `2223 passed, 9 skipped` — the four extra skips are
+env-gated tests, which is why the committed-tree figure is the one quoted.)
 Smoke bar: **917 passed, 6 skipped in 18.11s**.
 <!-- fig: cmd="python -m pytest -q -n auto -m smoke" rev=d960d127 -->
 
