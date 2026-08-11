@@ -42,7 +42,11 @@ only record that they owe a re-blessing, and the sitting loses nothing by
 coming after. Reordering while ALSO retiring `Modified` would launder them —
 that combination is still forbidden.
 
-**Five rulings are made** — D-1, D-2, D-3, D-4 and **D-5** in §2.
+**Seven rulings are made** — D-1 through **D-7** in §2. **New intake for the
+sitting is in §8**: the owner's six SN-tier items + one draft SR (with the
+challenge analysis), the batch-2 registry carrier sweep, and the candidate
+**D-8** common-module question — item 6 of the SN batch lands directly on the
+components ruling above and should be ruled with it.
 
 **Two need the owner's eye before they are built**, both recorded with
 recommendations: `Status`'s new `Verified` **re-points a word 370 live rows
@@ -1704,3 +1708,128 @@ which is the argument for writing them down:
 **traced** cell rather than moving to the **ratified** `Method`, because moving it
 would turn every test-file rename into a re-attestation — 110 of them for WI-277
 alone.
+
+---
+
+## 8. Owner intake, 2026-08-10 — the carrier sweep, the common-module question, and the SN batch
+
+Recorded from the owner's direction in-session; measurements taken before
+recording. Nothing here is ruled except where marked — this section is the
+sitting's *incoming* agenda, kept beside the owed rulings in §0.
+
+### 8.1 · Should the OTHER registries move to TOML too? — measured, and yes, as a batch-2
+
+The owner leans "all of them." The shapes support it:
+
+| registry | rows | comma cells | pipe cells | longest cell | readers |
+|---|---|---|---|---|---|
+| `interfaces.csv` | 106 | 87 | 5 | 968 | trace, check_trajectory, gen_release_checklist, plan_coverage, plan_briefs |
+| `open-items.csv` | 7 | 33 | 0 | **3,126** | gen_open_items, check_docs, intake |
+| `agents.csv` | 13 | 4 | 3 | 595 | **agent_route.load_registry** (reader of record), agent_loop, plan_runner, score_reviews, bootstrap |
+| `components.csv` | 5 | 5 | 0 | 582 | trace, check_trajectory |
+| absent-but-templated | — | — | — | — | assets, performance-budgets, procurement, repos |
+
+Every argument that moved the spine applies: typed ref lists, absent-key ≠
+empty-string, duplicate-id-as-parse-error, comments, and multi-line prose —
+`open-items.csv`'s 3,126-character cells are the loudest case in the repo.
+**But sequence it as batch-2, after the spine cutover lands.** Widening D-5's
+in-flight scope while its cutover sits at ~76 red would braid two migrations.
+Two design notes for batch-2, recorded so they are not rediscovered:
+
+- **`interfaces.csv` converts WITH its schema change, not before.** OI-14 and
+  the deferred vocabulary-IF question (D-3's irony note) will rewrite what an
+  IF row *is*; converting the carrier first means converting twice.
+- **Step 5's `test_dogfood_sync` redesign should be designed for ALL
+  registries**, not just the spine — the ordered-superset rule dies once for
+  everyone, so its replacement should be written once for everyone.
+- `migrate_carrier.py` generalizes (a `KEY` map per registry); the converter
+  is not the work, the readers are — and batch-2's readers are far fewer.
+
+**Answer to "where are agents stored":** `docs/agents.csv`, reader of record
+`agent_route.load_registry`; its prose cells are LLM-facing the same way IF
+`Contract` is, which is one more reason it belongs in the sweep.
+
+### 8.2 · The common-module question — candidate **D-8**, measured both ways
+
+The owner: F5's single-file-copy advantage is *"basically moot given how
+things have grown."* Measured: **25 of 55 kit scripts already import at least
+one kit sibling** — the independently-copyable set is a minority, and D-6
+added twelve importers in one day. The census priced the doctrine at 253
+sanctioned blocks across 30 classes before D-7 tore the meter down; the
+duplication itself remains, now unmeasured.
+
+What a common module buys now: one home for `_utf8_console`, `load_csv`,
+`refs`/`is_example`, the argparse preamble, and the import guard itself. What
+still argues for standalone, and must survive any ruling: **`bootstrap.py`
+runs before the kit is copied** and can import nothing; the git-hook checkers
+run in constrained contexts; and ADOPTING's re-sync already copies
+`scripts/` directory-wise, which is the operational fact that makes the owner's
+"moot" claim true.
+
+**Recommended shape if ruled:** invert the default — kit scripts *may* import
+a declared common sibling (the resurrected `_kitcommon`, under a better name),
+with an explicit standalone-required list (`bootstrap.py`, the hook-invoked
+checkers). Execute **after the lock** as its own program: it touches ~30 files
+plus the scaffold surface, and `test_rule_sync`'s behavioral pins — the
+anti-drift tool of record per D-7 — carry the semantics either way.
+
+### 8.3 · The stakeholder-need batch — six items + one draft SR, with the challenges asked for
+
+The owner handed six SN-tier items and one SR in-session (their text is the
+record; condensed here). Two textual artifacts to resolve before the sitting:
+the **agent-resume item repeats dev-setup's "install all dependencies" text**
+(likely copy-paste — agent-resume resumes the loop, it does not install), and
+one item ends in an unfinished *"(Note this )"*.
+
+The items: **(1)** SNs written from the end-user's perspective, around
+accessible end-user interfaces, plain language, no implementation references;
+**(2)** a double-clickable `dev-setup` launcher per platform; **(3)** same for
+`agent-resume`; **(4)** a `run` launcher opening a menu of applicable actions
+*for this repo*; **(5)** SN→SR decomposition prose must carry the repo's
+"hat" perspectives; **(6)** SRs written against component-boundary interfaces,
+with architecture and SR decomposition simultaneous. Plus a draft SR: the
+agent-resume loop addresses handback documents first (minting follow-up WIs),
+then works tier-by-tier — SN (always human-attested) → SR → LLR → TC —
+halting wherever the automation level requires attestation, then implements
+autonomously through WIs.
+
+**The challenges, honestly:**
+
+1. **Timing is favorable, and this is the one scheduling fact that matters:**
+   rewriting ratified SN prose opens re-attest windows, and the sitting's
+   part 2 is already a re-blessing window — doing both at once collapses two
+   windows into one. The carrier migration helps too: plain-language prose and
+   new fields are cheap in TOML. But Q11 still binds: ladder migration after.
+2. **"No implementation references" conflicts with today's acceptance-intent
+   cells**, which cite scripts by name (`bootstrap.py`, `trace.py --strict`).
+   The mechanical acceptance needs a ruled home — most naturally the SR tier
+   inherits those citations. This is a 29-row mass amendment; every child-SR
+   paraphrase advisory will shift.
+3. **The launcher facts:** `agent-resume.*` already exists self-applied (item
+   3 mostly *ratifies* existing capability). `run.*` ships in the kit with
+   `run_menu.py` but is **deliberately un-self-applied here** — the recorded
+   stance is "a meta-repo has no product to launch," and item 4 **reverses**
+   that stance; cheap to do, but it is a reversal, not an addition. A
+   `dev-setup` *launcher* does not exist today — machinery and tests do, a
+   double-clickable does not — so item 2 is new capability.
+4. **Item 5 changes machinery:** the "hat" roster needs a declared home, and
+   `trace.py`'s `--ratify` brief generator must inject it — a WI, not a prose
+   edit.
+5. **Item 6 is the big one.** "SRs reference only component-boundary
+   interfaces, architecture simultaneous with decomposition" reorders the
+   process spine (SRs at G1, architecture at G2 today) and lands directly on
+   the **unruled components model (F-11)** and the deferred vocabulary-IF
+   question. It cannot be adopted as a sentence; it makes the components
+   ruling *more* urgent and should be ruled with it.
+6. **The draft SR** belongs to the mechanized-loop family (SN-028,
+   SR-137…146) and presumes the D-3 ladder and the attestation dials — intake
+   it as Draft at the sitting and decompose against what the loop already
+   does (handback machinery exists; "handbacks first" is partially built).
+7. **The owner's own guardrail applies to the batch:** the repo is already
+   heavy with checks of questioned validity. Every SN admitted here should
+   pass the D-7 evidence test at birth — name the failure it prevents and the
+   evidence it would leave, or it is ceremony. The worked
+   [`enforcement-audit.md`](enforcement-audit.md) is the template, and
+   extending it with a per-check *catch ledger* (the D-7 method, applied
+   check-by-check) is the standing candidate for step 10's warn-residue
+   disposal.
