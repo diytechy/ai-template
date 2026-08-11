@@ -57,8 +57,8 @@ python project-trajectory/scripts/check_docs.py --root . --stale
 
 Both must pass before **each** commit — this is the **commit bar**. `-m smoke`
 is the fast per-commit tier, re-tiered to a **budget** by WI-281: it must run
-**≤ 60 s** wall (measured 2026-07-23 on a 24-core box: ~7 s / 349 tests vs
-~4.2 min / ~1380 for the full suite, both `-n auto`) so it stays a real smoke
+**≤ 60 s** wall (measured 2026-08-11 on a 24-core box: ~17 s / ~900 tests vs
+~6 min / ~2200 for the full suite, both `-n auto`) so it stays a real smoke
 test — "is it basically alive?", not a re-run of most of the suite. Tiering is
 opt-out: smoke drops the **subprocess/scaffold-heavy** modules
 (`tests/conftest.py` `SLOW_MODULES` — the hook/gate/scaffold/heavy-script runs
@@ -101,6 +101,10 @@ cadence"). New behavior needs new tests
   `## <YYYY-MM-DD> — <title>` heading; links authored relative to
   `docs/log.d/`) — `trunk_step.py` compiles fragments into the log in merge
   order and deletes them. Never hand-edit `docs/log.md` on a work branch.
+- **Section order inside the spec file is load-bearing.**
+  `check_trajectory.parse_spec_deliverable` clips the body at `## Context`, so
+  a `## Deliverable` placed *after* Context parses as EMPTY and the close reds
+  (R-A hard error). `## Deliverable` before `## Context`, always.
 - **Order the close against the verdict round.** Under `review_rounds >= 1` the
   merge queue wants the APPROVE no older than the branch's last **non-record**
   commit (`docs/reviews/` + `docs/log.d/` are excluded; `docs/work/` is not), so

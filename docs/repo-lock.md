@@ -1946,3 +1946,21 @@ against a registry; the sitting rules row by row.
    gives `adjudication` rows top priority today; and it presumes "SN always
    human-attested", which `human_ratification_through = 0` contradicts —
    both flagged in the proposal for explicit ruling before intake.
+
+### 8.5 · Agent rulings made under a WI's own license — owner ratification owed
+
+**WI-423 — check-enablement toggles STAY FILES (ruling (b)), `a25637b6`,
+2026-08-11.** The row licensed "somebody weighs them once and writes down the
+answer"; this is that decision, not an owner ruling. Stated in
+`process.toml.template` header item 4, mirrored in `docs/process.toml` (its
+"three deliberate exceptions" became four). The ruling deliberately
+**discards the row's own stated cost premise** — measured, the sh-parse hooks
+read only three keys (`privacy_check` / `secrets_scan` / `privacy_review`)
+and none of the six toggles, so option (a) was cheaper than the row assumed —
+and rests instead on two grounds: **absence-as-declaration** (none of the six
+is scaffolded; a TOML key cannot be absent and still declare, so folding
+either ships six visible `false` invitations or an empty section) and the
+standing **F5 copy-ability ruling** (a one-word file is the only toggle
+interface a checker copied alone into a repo with no `process.toml` can
+satisfy). If the owner rejects those two grounds, (a) is a five-script change
+needing coordination.
