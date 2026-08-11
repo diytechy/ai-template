@@ -326,7 +326,6 @@
 #   generator-preamble     1   deliberate
 #   frontmatter-fence      1   deliberate
 #   spine-carrier          1   deliberate
-#   toml-line-rewrite      1   deliberate
 #
 # The two facts worth carrying: cross-module duplication here is dominated by
 # SMALL STABLE HELPERS the F5 ruling deliberately duplicates (a shared
@@ -917,24 +916,6 @@ de0546d2361d  project-trajectory/scripts/intake.py == project-trajectory/scripts
 # (1fea271d8b0c -> 5a35a2689e40 when intake main() grew the adjudicate
 # subparser - same block, shifted content.)
 5a35a2689e40  project-trajectory/scripts/intake.py == project-trajectory/scripts/spec_move.py
-
-# --- toml-line-rewrite (1 block) ---------------------------------
-# disposition: deliberate
-# The IN-PLACE TOML line rewrite: walk the lines, track which `[table]` you are
-# inside, and replace the one `key = value` line. bootstrap.set_process_key
-# does it for a policy dial in docs/process.toml; intake._flip_status_lines
-# does it for a spine row's Status under the carrier (repo-lock D-5 step 4,
-# which RULED the second one onto the first's pattern rather than letting it
-# re-serialize). F5 applies with force here: both are small, stable plumbing
-# whose divergence would be visible immediately, and neither module should
-# import the other — bootstrap scaffolds, intake mints.
-#
-# The two are NOT interchangeable and that is why they stay separate rather
-# than being lifted: bootstrap addresses `[section] key`, intake addresses
-# `[tier.ID] key`, and intake REFUSES when the key is absent while bootstrap
-# can append it. Sharing the walk would mean sharing the not-found policy, and
-# "add the key" is exactly wrong for a ratification.
-39affaeb2862  project-trajectory/scripts/bootstrap.py == project-trajectory/scripts/intake.py
 
 # --- generator-preamble (1 block) --------------------------------
 # disposition: deliberate

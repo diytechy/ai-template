@@ -1495,7 +1495,18 @@ BASELINE = {
     # testing one suffix. A `.toml`-only probe in a repo still on CSV minted
     # every gap row with an EMPTY SpecRef, which integrate then refuses at
     # merge: a failure moved from authoring time to merge time.
-    "intake.py": 1592,
+    # Then +71 (1592 -> 1663), the cutover's adversarial review: the TOML Status
+    # writer becomes STRING-AWARE. A physical-line rewrite edited a
+    # `status = ...` line inside a multi-line requirement cell, left the row's
+    # real status at `Modified`, and returned True — reporting a ratification it
+    # had not made while corrupting attested prose. Tracking multi-line
+    # delimiter state is what a line rewrite over TOML costs; the alternative
+    # (re-serialising) costs the comments and the ordering. Two further refusals
+    # land here too: an absent `status` key (absent is not "not Modified"), and
+    # the newline style the file arrived with, preserved rather than normalised.
+    # It also DISSOLVED the `toml-line-rewrite` census block — the scanner is no
+    # longer bootstrap's, which is the honest reading of what changed.
+    "intake.py": 1663,
 }
 
 

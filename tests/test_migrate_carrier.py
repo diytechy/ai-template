@@ -7,10 +7,12 @@ be exactly the "a green never hides a skipped check" failure SN-008 forbids —
 so every corruption class is driven here, not just the happy path.
 """
 
+import subprocess
+import sys
 import tomllib
 
 import pytest
-from conftest import ROOT, load_script
+from conftest import ROOT, SCRIPTS, load_script
 
 mc = load_script("migrate_carrier")
 
@@ -179,3 +181,215 @@ def test_the_live_need_carrier_holds_the_edge_fields_unfolded():
     for need in edges:
         assert {"lifecycle", "scenario", "expected"} >= set(need) - {"kind"}
         assert not {"need", "why", "priority", "acceptance"} & set(need)
+
+
+# --- the loss oracle must not be the thing under test ------------------------
+
+
+def _spine_repo(tmp_path, **files):
+    (tmp_path / "docs" / "requirements").mkdir(parents=True, exist_ok=True)
+    (tmp_path / "docs" / "test").mkdir(parents=True, exist_ok=True)
+    for rel, text in files.items():
+        (tmp_path / rel).write_text(text, encoding="utf-8")
+    return tmp_path
+
+
+def test_a_need_under_an_UNRECOGNISED_heading_is_not_silently_dropped(tmp_path):
+    """The review's BLOCKER 2(a).
+
+    `read_sn` classified a table by its heading and skipped every row under a
+    heading it did not name — and the loss oracle was built FROM `read_sn`'s
+    output, so a whole table vanished with `findings == []`. A converter cannot
+    certify its own blind spot. An unfamiliar heading is a naming choice, not a
+    statement that the rows below are not needs.
+    """
+    root = _spine_repo(
+        tmp_path,
+        **{
+            "docs/requirements/stakeholder-needs.md": (
+                "## Miscellaneous\n\n"
+                "| SN-ID | Need | Why | Priority | Acceptance |\n"
+                "|---|---|---|---|---|\n"
+                "| SN-123 | a real need | matters | M | works |\n"
+            )
+        },
+    )
+    findings, _ = mc.convert(root, write=False)
+    assert findings == [], findings
+    ids = [
+        rid
+        for rid, _kind, _f in mc.read_sn(
+            root / "docs/requirements/stakeholder-needs.md"
+        )
+    ]
+    assert ids == ["SN-123"]
+
+
+def test_the_raw_oracle_bites_when_the_READER_goes_blind(monkeypatch, tmp_path):
+    """...and the second leg, which is what makes the fix durable.
+
+    Fixing `read_sn` closes today's hole; it does nothing for tomorrow's. The
+    raw-source oracle reads need ids off the markdown with no reference to how
+    the reader interpreted it, so ANY future reader regression surfaces as a
+    finding instead of as a silent omission. Driven by blinding the reader.
+    """
+    root = _spine_repo(
+        tmp_path,
+        **{
+            "docs/requirements/stakeholder-needs.md": (
+                "## Core needs\n\n"
+                "| SN-ID | Need | Why | Priority | Acceptance |\n"
+                "|---|---|---|---|---|\n"
+                "| SN-001 | a real need | matters | M | works |\n"
+            )
+        },
+    )
+    assert mc.convert(root, write=False)[0] == []
+    monkeypatch.setattr(mc, "read_sn", lambda path: [])
+    findings, _ = mc.convert(root, write=False)
+    assert findings and "SN-001" in findings[0]
+    assert "absent from the conversion" in findings[0]
+
+
+def test_cell_whitespace_is_CONTENT_and_survives_the_conversion(tmp_path):
+    """The review's BLOCKER 2(b).
+
+    The converter stripped each cell and the oracle stripped its expectation,
+    so a cell whose leading/trailing whitespace was content lost it and the
+    round-trip check reported `findings == []` — comparing the converter's
+    output against the converter's own reading of the source.
+    """
+    padded = "  leading and trailing prose  "
+    root = _spine_repo(
+        tmp_path,
+        **{
+            "docs/requirements/system-requirements.csv": (
+                'SR-ID,Title,Requirement,Status\nSR-001,T,"{}",Verified\n'.format(
+                    padded
+                )
+            )
+        },
+    )
+    findings, _ = mc.convert(root, write=True)
+    assert findings == [], findings
+    out = tomllib.loads(
+        (root / "docs/requirements/system-requirements.toml").read_text(
+            encoding="utf-8"
+        )
+    )
+    assert out["requirement"]["SR-001"]["requirement"] == padded
+
+    # A whitespace-ONLY cell is still an empty cell — an absent key, not a
+    # cell holding spaces. That is the one place the strip survives.
+    root2 = _spine_repo(
+        tmp_path / "b",
+        **{
+            "docs/requirements/system-requirements.csv": (
+                'SR-ID,Title,Requirement,Status\nSR-001,T,"   ",Verified\n'
+            )
+        },
+    )
+    findings2, _ = mc.convert(root2, write=True)
+    assert findings2 == [], findings2
+    out2 = tomllib.loads(
+        (root2 / "docs/requirements/system-requirements.toml").read_text(
+            encoding="utf-8"
+        )
+    )
+    assert "requirement" not in out2["requirement"]["SR-001"]
+
+
+def test_the_ADOPTING_recipe_run_verbatim_leaves_the_registries_TRACKED(tmp_path):
+    """The review's BLOCKER 1, driven as the adopter would run it.
+
+    The recipe wrote four TOML files and then staged four DELETIONS with
+    `git rm`, never staging the new files — so an adopter following it verbatim
+    committed the removal of their whole spine. This lifts the fenced commands
+    OUT of ADOPTING.md and runs them, so the doc and the behaviour cannot drift:
+    a recipe nobody executes is prose.
+    """
+    import re
+
+    adopting = (ROOT / "project-trajectory" / "ADOPTING.md").read_text(encoding="utf-8")
+    block = adopting.split("**Run it, check it, then stage BOTH sides")[1]
+    recipe = block.split("```")[1]
+    # The commands, with the doc's line continuations joined and comments cut.
+    commands = [
+        line.strip()
+        for line in re.sub(r"\\\n\s+", " ", recipe).split("\n")
+        if line.strip() and not line.strip().startswith("#")
+    ]
+    assert any(c.startswith("git add") for c in commands), commands
+    assert any(c.startswith("git rm") for c in commands), commands
+
+    root = _spine_repo(
+        tmp_path,
+        **{
+            "docs/requirements/stakeholder-needs.md": (
+                "## Core needs\n\n"
+                "| SN-ID | Need | Why | Priority | Acceptance |\n"
+                "|---|---|---|---|---|\n"
+                "| SN-001 | a need | matters | M | works |\n"
+            ),
+            "docs/requirements/system-requirements.csv": (
+                "SR-ID,Title,SN-Refs,Status\nSR-001,Adder,SN-001,Verified\n"
+            ),
+            "docs/requirements/low-level-requirements.csv": (
+                "LLR-ID,SR-Refs,Title,Status\nLLR-001,SR-001,Core,Verified\n"
+            ),
+            "docs/test/test-cases.csv": (
+                "TC-ID,Verifies,Method,Status\nTC-001,SR-001;LLR-001,run,Verified\n"
+            ),
+        },
+    )
+
+    def run(*argv):
+        return subprocess.run(argv, cwd=root, check=True, capture_output=True)
+
+    run("git", "init", "-q")
+    run("git", "add", "-A")
+    run("git", "-c", "user.email=t@t", "-c", "user.name=t", "commit", "-qm", "before")
+
+    for command in commands:
+        argv = command.split("#")[0].split()
+        if argv[0] == "python":
+            # The adopter's `scripts/migrate_carrier.py` is this kit's shipped
+            # copy; everything else about the invocation is theirs, including
+            # `--root .` resolving against their repo, so it runs as a
+            # SUBPROCESS from `root` rather than in-process from the test's cwd.
+            proc = subprocess.run(
+                [sys.executable, str(SCRIPTS / "migrate_carrier.py")] + argv[2:],
+                cwd=root,
+                capture_output=True,
+                text=True,
+            )
+            assert proc.returncode == 0, command + "\n" + proc.stdout + proc.stderr
+        elif argv[:2] == ["git", "status"]:
+            continue
+        else:
+            run(*argv)
+    run("git", "-c", "user.email=t@t", "-c", "user.name=t", "commit", "-qm", "cutover")
+
+    tracked = subprocess.run(
+        ["git", "ls-files"], cwd=root, capture_output=True, text=True
+    ).stdout.split()
+    for rel in (
+        "docs/requirements/stakeholder-needs.toml",
+        "docs/requirements/system-requirements.toml",
+        "docs/requirements/low-level-requirements.toml",
+        "docs/test/test-cases.toml",
+    ):
+        assert rel in tracked, (rel, tracked)
+    for rel in (
+        "docs/requirements/stakeholder-needs.md",
+        "docs/requirements/system-requirements.csv",
+    ):
+        assert rel not in tracked, rel
+    # ...and the committed content is the CONVERSION, not an empty shell.
+    committed = subprocess.run(
+        ["git", "show", "HEAD:docs/requirements/system-requirements.toml"],
+        cwd=root,
+        capture_output=True,
+        text=True,
+    ).stdout
+    assert tomllib.loads(committed)["requirement"]["SR-001"]["title"] == "Adder"

@@ -346,8 +346,12 @@ table.
   declared toolchain — the kit seeds the Python reference once and never
   re-touches it; its `[generated]` section — the integrator's auto-resolution
   allowlist, WI-235 — is likewise project-owned: keep your own artifact rows on
-  re-sync), every registry CSV, the `docs/work/` WI spec folder, and
-  `stakeholder-needs.md`, `docs/status.md`, `docs/log.md`, `docs/plan.md`
+  re-sync), every registry — the four spine TOMLs
+  (`docs/requirements/stakeholder-needs.toml`, `system-requirements.toml`,
+  `low-level-requirements.toml`, `docs/test/test-cases.toml`) plus the off-spine
+  CSVs that did not move carrier, and their legacy `.md`/`.csv` forms in a repo
+  that has not run `migrate_carrier` yet — the `docs/work/` WI spec folder, and
+  `docs/status.md`, `docs/log.md`, `docs/plan.md`
   (**migrating a pre-flip repo:** a `docs/requirements/work-items.csv` keeps
   working via dual-read; when ready, run `scripts/wi_convert.py --verify` then
   `--to-specs` and delete the CSV — the folder wins the moment it holds a real
@@ -411,15 +415,27 @@ table.
   retained and the key bare — `[requirement.SR-137]` under the tier tables
   `need` · `requirement` · `design` · `test`.
 
-  **Run it, check it, then delete the sources in the SAME commit:**
+  **Run it, check it, then stage BOTH sides in the SAME commit:**
 
   ```
   python scripts/migrate_carrier.py --root . --check   # converts in memory, writes nothing
   python scripts/migrate_carrier.py --root .           # writes each .toml beside its source
+
+  # STAGE THE NEW FILES FIRST. They are untracked until you do, and the `git rm`
+  # below stages four deletions: commit without this line and you have deleted
+  # your registries. (If your scaffold left the shipped `-000` templates staged
+  # at these paths, this is also what replaces them with your converted rows.)
+  git add docs/requirements/stakeholder-needs.toml \
+          docs/requirements/system-requirements.toml \
+          docs/requirements/low-level-requirements.toml \
+          docs/test/test-cases.toml
+
   git rm docs/requirements/stakeholder-needs.md \
          docs/requirements/system-requirements.csv \
          docs/requirements/low-level-requirements.csv \
          docs/test/test-cases.csv
+
+  git status --short          # expect four A/M and four D — nothing else
   ```
 
   `--check` converts and re-reads what it emitted, cell for cell, and exits 1

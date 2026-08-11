@@ -132,7 +132,17 @@ def toml_scalar(value):
 
 
 def cell_to_value(col, raw):
-    """One CSV cell as the value its column means. Empty -> None (key omitted)."""
+    """One CSV cell as the value its column means. Empty -> None (key omitted).
+
+    A plain cell is carried VERBATIM, not stripped. Stripping looks harmless and
+    is not: the conversion advertises "cell for cell", and a cell whose leading
+    or trailing whitespace is content — an indented code fragment, a padded
+    fixed-width note — silently lost it. Worse, the loss detector stripped BOTH
+    sides, so it compared the converter's output against the converter's own
+    reading and reported `findings=[]` on a real change. `.strip()` survives
+    only where it decides EMPTINESS (a whitespace-only cell is an empty cell,
+    which is an absent key), and in the ref/int parses where the surrounding
+    whitespace is separator syntax rather than content."""
     text = (raw or "").strip()
     if not text:
         return None
@@ -143,7 +153,7 @@ def cell_to_value(col, raw):
             return int(text)
         except ValueError:
             return text  # a non-integer Phase is data to preserve, not to crash on
-    return text
+    return raw
 
 
 def rows_to_toml(table, id_col, rows, header):
@@ -197,6 +207,37 @@ def _cells_differ(key, before, after):
     return before != after
 
 
+# Every markdown line that IS a need row, read off the RAW source with no
+# reference to how `read_sn` chose to interpret it. `^| SN-### |` is the shape
+# the tier has always used, and it is the one thing about the legacy carrier
+# that can be asserted without re-implementing the reader.
+_RAW_SN_ROW = re.compile(r"^\|\s*(SN-\d+)\s*\|", re.MULTILINE)
+
+
+def raw_need_findings(rel, raw, text):
+    """Findings for any need present in the RAW markdown and absent from the
+    emitted TOML — the oracle `compare` cannot be, because `compare` is handed
+    the reader's output as its expectation.
+
+    THIS IS THE SECOND, INDEPENDENT LEG. The self-oracle answers "did every cell
+    the reader saw survive"; it is silent by construction about a row the reader
+    never saw. A heading it did not recognise used to make a whole table
+    invisible and still report `findings=[]` — a converter certifying its own
+    blind spot. An adopter with locally edited registries is exactly who runs
+    this, and they have no other way to find out."""
+    try:
+        got = tomllib.loads(text).get("need", {})
+    except tomllib.TOMLDecodeError:
+        return []  # `compare` reports the decode error; one finding is enough
+    missing = sorted({rid for rid in _RAW_SN_ROW.findall(raw)} - set(got))
+    return [
+        "{}: {} is a need row in the source and is absent from the conversion "
+        "— the reader did not recognise it (an unfamiliar heading?), so the "
+        "round-trip check never saw it either".format(rel, rid)
+        for rid in missing
+    ]
+
+
 def compare(rel, table, expected, text):
     """Findings for one converted registry. `expected` is {id: {key: text}} —
     built from CSV columns or from markdown cells, so ONE comparison serves
@@ -238,7 +279,21 @@ SN_EDGE = ("lifecycle", "scenario", "expected")
 
 
 def read_sn(path):
-    """[(id, kind, {field: text})] in document order, kind from the heading."""
+    """[(id, kind, {field: text})] in document order.
+
+    A ROW IS NEVER DROPPED FOR ITS HEADING. `kind` comes from the heading when
+    the heading is one this reader knows, and from the table's SHAPE when it is
+    not — the same fallback `spine_carrier.needs_from_markdown` applies, for a
+    sharper reason on this side: a heading the vocabulary does not recognise
+    ("## Miscellaneous", "## Deferred") used to make every need under it
+    invisible, and because the loss oracle was built from THIS function's
+    output, a whole table could vanish with `findings=[]`. An unrecognised
+    heading is a naming choice; it is not a statement that the rows below are
+    not needs (repo-lock D-5; the review's B2).
+
+    Cells are stripped here and that is correct: the padding around `|` is the
+    markdown table's SYNTAX, not content — unlike a CSV cell, where whitespace
+    inside the quotes is data."""
     kind, out = None, []
     for line in path.read_text(encoding="utf-8").split("\n"):
         heading = re.match(r"^#{2,}\s+(.*)$", line)
@@ -255,11 +310,15 @@ def read_sn(path):
             )
             continue
         row = re.match(r"^\|\s*(SN-\d+)\s*\|", line)
-        if not row or kind is None:
+        if not row:
             continue
         cells = [c.strip() for c in line.split("|")[1:-1]]
-        names = SN_EDGE if kind == "edge" else SN_CORE
-        out.append((cells[0], kind, dict(zip(names, cells[1 : 1 + len(names)]))))
+        # No heading, or one this reader does not name: resolve by the table's
+        # width, exactly as the live reader does — the edge table is three cells
+        # wide beside its id, the core table four.
+        row_kind = kind or ("edge" if len(cells) - 1 == len(SN_EDGE) else "core")
+        names = SN_EDGE if row_kind == "edge" else SN_CORE
+        out.append((cells[0], row_kind, dict(zip(names, cells[1 : 1 + len(names)]))))
     return out
 
 
@@ -302,6 +361,7 @@ def convert(root, write):
     findings, written = [], []
     sn_src = root / SN_REL
     if sn_src.is_file():
+        raw = sn_src.read_text(encoding="utf-8")
         needs = read_sn(sn_src)
         text = sn_to_toml(needs)
         expected = {
@@ -310,6 +370,7 @@ def convert(root, write):
             )
             for rid, kind, f in needs
         }
+        findings += raw_need_findings(SN_REL, raw, text)
         findings += compare(SN_REL, "need", expected, text)
         _emit(root, sn_src, text, len(needs), "needs", write, written)
     for rel, (table, id_col) in sorted(SPINE.items()):
@@ -321,9 +382,14 @@ def convert(root, write):
             header = list(reader.fieldnames or [])
             rows = [r for r in reader if (r.get(id_col) or "").strip()]
         text = rows_to_toml(table, id_col, rows, header)
+        # THE ORACLE READS THE RAW SOURCE, never the converter's own parse.
+        # The cell text here is exactly what `csv` handed back — unstripped, so
+        # a conversion that trimmed content is a FINDING rather than a match
+        # against its own trimming. An oracle built from the thing under test
+        # cannot fail, and this one did not (repo-lock D-5; the review's B2).
         expected = {
             (r.get(id_col) or "").strip(): {
-                KEY.get(c, c): (r.get(c) or "").strip()
+                KEY.get(c, c): (r.get(c) or "")
                 for c in header
                 if c != id_col and (r.get(c) or "").strip()
             }

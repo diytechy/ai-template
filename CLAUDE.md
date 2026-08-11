@@ -107,8 +107,8 @@ that easier to achieve in a real project — or get out of the way.
   `docs/status.md` under the declared policies (this repo runs `human_ratification_through = 0` — loop-held — with `push = "human"` and the privacy gate off).
 - **The kit's own `SN→SR→LLR→TC` spine** (Thread 47 self-adoption, *at G3*):
   [`docs/requirements/stakeholder-needs.toml`](docs/requirements/stakeholder-needs.toml)
-  + `system-requirements.csv` + `low-level-requirements.csv` +
-  `docs/test/test-cases.csv` + [`docs/architecture.md`](docs/architecture.md)
+  + `system-requirements.toml` + `low-level-requirements.toml` +
+  `docs/test/test-cases.toml` + [`docs/architecture.md`](docs/architecture.md)
   (one-page + the G2 Runtime flows) + `docs/gate` + `docs/stack.ini` +
   `docs/log.md` + the `docs/work/` WI spec registry + root `PROJECT_STATE.html`
   (the **Thread 52 trajectory layer, dogfooded** — the kit's own work-item DAG +

@@ -246,25 +246,48 @@ def _toml_keys(path, table):
     return {k for row in rows.values() for k in row}
 
 
-def registry_key_drift(template_keys, live_keys, vocabulary):
-    """None when the two carrier vocabularies agree, else a message.
+def registry_key_drift(template_keys, live_keys, schema_keys, vocabulary):
+    """None when template, live registry and the SCHEMA OF RECORD agree, else a
+    message naming the first disagreement.
 
-    TWO RULES, both directions checkable, neither vacuous:
+    THREE LEGS, because two could not close the loop. The first shipped rule
+    compared only template against live, and that pair has a blind spot with a
+    live example: `permutations` is declared by the template and used by NO live
+    SR row, so it exists on exactly one side — and DELETING it from the template
+    left both sides agreeing, silently. A rule whose two legs can both move
+    together is not an anchor.
 
-      * every key a LIVE row uses is declared by the template's `-000` example
-        row — the anti-drift rule, and the direction that still has a
-        declaration to compare against;
-      * every key the TEMPLATE declares is one the carrier VOCABULARY knows, so
-        a scaffold cannot ship a column the loader would silently drop.
+    `spine_carrier.SPINE_TIER_KEYS` is the third leg and the durable one: a
+    STATED per-tier schema that neither the template nor the registry can edit
+    by accident. The three rules:
+
+      * template keys == the schema — the template is the copy-ready form OF the
+        schema, so a dropped key and an invented key are both drift (this is the
+        direction the two-leg rule could not see);
+      * live keys ⊆ the schema — a registry may leave any column unused, but it
+        may not invent one nobody shipped;
+      * schema keys ⊆ the carrier VOCABULARY — nothing declared can be a cell
+        the loader would silently drop on the way through.
     """
-    undeclared = sorted(live_keys - template_keys)
+    missing = sorted(schema_keys - template_keys)
+    if missing:
+        return (
+            "template no longer declares key(s) %s the tier schema states"
+            % ",".join(missing)
+        )
+    invented = sorted(template_keys - schema_keys)
+    if invented:
+        return "template declares key(s) %s absent from the tier schema" % ",".join(
+            invented
+        )
+    undeclared = sorted(live_keys - schema_keys)
     if undeclared:
-        return "live registry uses key(s) %s the template declares nowhere" % ",".join(
+        return "live registry uses key(s) %s the tier schema states nowhere" % ",".join(
             undeclared
         )
-    unknown = sorted(template_keys - set(vocabulary))
+    unknown = sorted(schema_keys - set(vocabulary))
     if unknown:
-        return "template declares key(s) %s the carrier cannot map" % ",".join(unknown)
+        return "tier schema states key(s) %s the carrier cannot map" % ",".join(unknown)
     return None
 
 
@@ -283,20 +306,22 @@ def test_spine_template_declares_every_key_the_live_registry_uses(live_rel):
     the only way to keep it green would be to stop checking, which is the
     "green hides a skipped check" failure SN-008 forbids.
 
-    What survives is the same class of drift read from the side that still has
-    a declaration: the template's `-000` row IS the schema now, so a live key
-    it never learned is exactly the WI-322 hazard — a fresh scaffold whose
-    tooling does not know a column the live repo relies on. It is not vacuous:
-    it caught two real drifts the ordered rule allowed by construction (the SR
-    template had never declared `SupersededBy`, live since WI-229; the LLR
-    template's `Component` cell was blank, so the converted template lost the
-    column the CSV header had declared).
+    What survives is the same class of drift, anchored to a STATED schema
+    (`spine_carrier.SPINE_TIER_KEYS`) rather than to whichever of the two
+    artifacts happens to move. It is not vacuous: it caught two real drifts the
+    ordered rule allowed by construction (the SR template had never declared
+    `SupersededBy`, live since WI-229; the LLR template's `Component` cell was
+    blank, so the converted template lost the column the CSV header had
+    declared) — and the anchor closes the hole the first replacement still had,
+    where dropping a template-only key like `permutations` passed.
     """
     tmpl_name, table, id_col = SPINE_REGISTRIES[live_rel]
     live = _toml_keys(ROOT / live_rel, table)
     tmpl = _toml_keys(TEMPLATE_DIR / tmpl_name, table)
+    schema = set(CARRIER.SPINE_TIER_KEYS[id_col])
     assert live, live_rel  # a registry with no rows would make this vacuous
-    drift = registry_key_drift(tmpl, live, CARRIER.SPINE_COLUMN)
+    assert schema, id_col  # ...and an empty schema would pass everything
+    drift = registry_key_drift(tmpl, live, schema, CARRIER.SPINE_COLUMN)
     assert drift is None, "%s: %s" % (live_rel, drift)
 
 
@@ -321,59 +346,78 @@ def test_bite_removed_live_registry_column():
 
 
 def test_bite_the_spine_key_rule_fails_on_a_planted_defect(tmp_path):
-    """DRIVEN AGAINST A REAL PLANTED DEFECT, in a temp copy of the real files —
+    """DRIVEN AGAINST REAL PLANTED DEFECTS, in temp copies of the real files —
     because a containment rule that cannot be made to fail is the vacuous green
     this suite exists to refuse.
 
-    Two mutations, one per direction: a live row that grows a key the template
-    never declared, and a template that declares a key the carrier cannot map.
+    FOUR mutations, one per leg of the rule. The third is the one that matters
+    most: the first replacement for the ordered-header rule PASSED it. Dropping
+    `permutations` from the template moved the only side that declared it, and
+    with nothing else to compare against, both sides agreed about a column that
+    had quietly stopped being shipped. That is the shape SN-008 forbids, found
+    in the replacement rather than in the thing it replaced.
     """
     live_rel = "docs/requirements/system-requirements.toml"
-    tmpl_name, table, _id = SPINE_REGISTRIES[live_rel]
+    tmpl_name, table, id_col = SPINE_REGISTRIES[live_rel]
     live_src = (ROOT / live_rel).read_text(encoding="utf-8")
     tmpl_src = (TEMPLATE_DIR / tmpl_name).read_text(encoding="utf-8")
+    schema = set(CARRIER.SPINE_TIER_KEYS[id_col])
 
     live_copy = tmp_path / "live.toml"
     tmpl_copy = tmp_path / "tmpl.toml"
-    live_copy.write_text(live_src, encoding="utf-8")
-    tmpl_copy.write_text(tmpl_src, encoding="utf-8")
-    assert (
-        registry_key_drift(
+
+    def verdict(live_text, tmpl_text, schema_keys=None):
+        live_copy.write_text(live_text, encoding="utf-8")
+        tmpl_copy.write_text(tmpl_text, encoding="utf-8")
+        return registry_key_drift(
             _toml_keys(tmpl_copy, table),
             _toml_keys(live_copy, table),
+            schema if schema_keys is None else schema_keys,
             CARRIER.SPINE_COLUMN,
         )
-        is None
-    )  # the unmutated copies are clean, so a failure below is the mutation
 
-    def _plant(text, header):
-        """Insert an undeclared key under `header`'s TABLE — matched at the start
-        of a line, because both files MENTION the header inside a comment and a
-        naive first-occurrence replace corrupts that comment instead."""
-        out = []
-        planted = False
-        for line in text.split("\n"):
-            out.append(line)
-            if not planted and line == header:
-                out.append('owner_hat = "Systems"')
+    # Clean today, so every failure below is the mutation and not the fixture.
+    assert verdict(live_src, tmpl_src) is None
+
+    def _plant(text, header, line='owner_hat = "Systems"'):
+        """Insert a line under `header`'s TABLE — matched at the start of a
+        line, because both files MENTION the header inside a comment and a naive
+        first-occurrence replace corrupts that comment instead."""
+        out, planted = [], False
+        for text_line in text.split("\n"):
+            out.append(text_line)
+            if not planted and text_line == header:
+                out.append(line)
                 planted = True
         assert planted, header
         return "\n".join(out)
 
     # (1) a live row quietly grows a column nobody shipped.
-    live_copy.write_text(_plant(live_src, "[requirement.SR-001]"), encoding="utf-8")
-    drift = registry_key_drift(
-        _toml_keys(tmpl_copy, table), _toml_keys(live_copy, table), CARRIER.SPINE_COLUMN
-    )
+    drift = verdict(_plant(live_src, "[requirement.SR-001]"), tmpl_src)
     assert drift is not None and "owner_hat" in drift
 
-    # (2) the template declares a key the carrier vocabulary cannot map, so a
-    # scaffold would write cells the loader silently drops.
-    live_copy.write_text(live_src, encoding="utf-8")
-    tmpl_copy.write_text(_plant(tmpl_src, "[requirement.SR-000]"), encoding="utf-8")
-    drift = registry_key_drift(
-        _toml_keys(tmpl_copy, table), _toml_keys(live_copy, table), CARRIER.SPINE_COLUMN
+    # (2) the template invents a key the schema does not state.
+    drift = verdict(live_src, _plant(tmpl_src, "[requirement.SR-000]"))
+    assert drift is not None and "owner_hat" in drift
+
+    # (3) THE DROP DIRECTION — the hole the two-leg rule had. `permutations` is
+    # declared by the template and used by NO live row, so removing it from the
+    # template leaves template and live agreeing; only the stated schema still
+    # remembers it.
+    assert "permutations" in schema
+    assert "permutations" not in _toml_keys(ROOT / live_rel, table), (
+        "permutations is now used by a live row — re-pick a template-only key, "
+        "or this mutation stops exercising the drop direction"
     )
+    dropped = "\n".join(
+        line for line in tmpl_src.split("\n") if not line.startswith("permutations = ")
+    )
+    drift = verdict(live_src, dropped)
+    assert drift is not None and "permutations" in drift
+
+    # (4) the schema itself states a key the carrier vocabulary cannot map, so a
+    # scaffold would write cells the loader silently drops.
+    drift = verdict(live_src, tmpl_src, schema_keys=schema | {"owner_hat"})
     assert drift is not None and "owner_hat" in drift
 
 

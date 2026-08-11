@@ -110,6 +110,66 @@ SPINE_COLUMN = {
     "notes": "Notes",
 }
 
+# THE PER-TIER SCHEMA: which keys each tier declares, keyed by its id column.
+# STATED, never derived — and the reason is the one the ordered CSV header used
+# to provide for free.
+#
+# Under CSV the live file declared its own schema in a header, so a template
+# that quietly dropped a column diverged from something. TOML has no header and
+# an absent key IS an empty cell, so a column no row happens to use does not
+# exist in the file at all — and a rule that compares only the template against
+# the live registry cannot see the template DROP such a key. `permutations` is
+# exactly that today: declared by the template, used by no live SR. Deriving
+# this map from either side would re-create the hole, because the side that
+# dropped the key would also drop it from the derivation.
+#
+# So it is a third leg, and it is the DURABLE one: the schema of record that
+# both the template and the live registry are checked against
+# (tests/test_dogfood_sync.py). Adding a column to a tier is a reviewed edit
+# here first — which is the same discipline SPINE_COLUMN already carries, for
+# the same reason.
+SPINE_TIER_KEYS = {
+    "SR-ID": (
+        "title",
+        "sn_refs",
+        "requirement",
+        "rationale",
+        "acceptance_criteria",
+        "permutations",
+        "priority",
+        "verification",
+        "status",
+        "phase",
+        "area",
+        "superseded_by",
+    ),
+    "LLR-ID": (
+        "sr_refs",
+        "title",
+        "module",
+        "code_symbol",
+        "detail",
+        "rationale",
+        "test_refs",
+        "status",
+        "component",
+        "phase",
+    ),
+    "TC-ID": (
+        "verifies",
+        "level",
+        "method",
+        "tier",
+        "parameters",
+        "expected",
+        "automated",
+        "evidence",
+        "status",
+        "phase",
+    ),
+}
+
+
 # The row tiers moved CSV -> TOML; the need tier moved markdown -> TOML. Both
 # lists are ordered NEW FIRST, because resolution prefers the destination
 # carrier and falls back to the legacy one — never the other way round, or a
@@ -258,14 +318,50 @@ def resolve(path, suffixes=CARRIERS):
     return live[0] if live else None
 
 
+def empty_value_findings(rows, id_col, rel=""):
+    """One finding per cell written as an EXPLICIT EMPTY STRING.
+
+    THE CARRIER'S CLAIM IS THAT ABSENT MEANS UNSET, and until this check that
+    claim was only true of machine-written files: the converter omits an empty
+    cell, but nothing stopped a HAND-authored `title = ""` — and TOML parses it
+    happily, so the row came back with the key PRESENT and empty. That is the
+    third state the migration exists to abolish, re-entering through the one
+    door nobody was watching: `.get(col) or ""` reads it as empty, a key-set
+    check reads it as declared, and the two disagree about the same cell.
+
+    REJECTED rather than normalised, which is the fail-closed half of the fork.
+    Normalising (dropping the key on read) would make the file and the loaded
+    row disagree — the file says the author wrote something, the reader says
+    they did not — and every writer downstream would then re-emit a row it never
+    read. Refusing names the row and the key and asks for a one-character edit:
+    delete the line. (Owner ruling owed — repo-lock D-5 did not rule this; the
+    fail-closed option is taken and flagged.)"""
+    out = []
+    for row in rows:
+        rid = str(row.get(id_col) or "").strip() or "(unnamed row)"
+        for col, value in sorted(row.items()):
+            if col != id_col and isinstance(value, str) and value == "":
+                out.append(
+                    "{}{} sets `{}` to an EMPTY STRING — under this carrier an "
+                    "unset cell is an ABSENT KEY, and an explicit empty is a "
+                    "third state the readers disagree about. Delete the "
+                    "line.".format(rel and rel + ": ", rid, col)
+                )
+    return out
+
+
 def load(path, id_col, keep_examples=True):
     """The live registry as a LIST of rows in file order — the shape
     `csv.DictReader` returns, so a caller swaps its loader and changes nothing
     else. `[]` when the registry does not exist.
 
-    Raises SystemExit on a carrier that exists and does not parse: at a LIVE
-    read there is a file to fix and a person to tell, so degrading to "no rows"
-    here would turn a broken registry into a clean gate."""
+    Raises SystemExit on a carrier that exists and does not parse, and on a cell
+    written as an explicit empty string: at a LIVE read there is a file to fix
+    and a person to tell, so degrading to "no rows" — or to "that cell is just
+    empty" — would turn a broken registry into a clean gate. The BASELINE reads
+    stay permissive on purpose (`rows_from_text` never raises): history is not
+    editable, and a strict reader pointed at an old revision would fail a check
+    over a file nobody can fix."""
     live = resolve(path)
     if live is None:
         return []
@@ -277,6 +373,10 @@ def load(path, id_col, keep_examples=True):
             "spine_carrier: {} does not parse as TOML — refusing to report an "
             "unreadable registry as an empty one".format(live)
         )
+    if live.suffix == ".toml":
+        empties = empty_value_findings(rows, id_col, str(live))
+        if empties:
+            raise SystemExit("spine_carrier: " + "\n".join(empties))
     return [
         r
         for r in rows

@@ -964,8 +964,9 @@ Contracts (interfaces): IF-103
 | `cell_to_value(col, raw)` | One CSV cell as the value its column means. Empty -> None (key omitted). |  |
 | `rows_to_toml(table, id_col, rows, header)` | The whole registry as TOML text, source order preserved. |  |
 | `value_to_cell(col, value)` | The inverse of `cell_to_value`, for the round-trip check. |  |
+| `raw_need_findings(rel, raw, text)` | Findings for any need present in the RAW markdown and absent from the |  |
 | `compare(rel, table, expected, text)` | Findings for one converted registry. `expected` is {id: {key: text}} — |  |
-| `read_sn(path)` | [(id, kind, {field: text})] in document order, kind from the heading. |  |
+| `read_sn(path)` | [(id, kind, {field: text})] in document order. |  |
 | `sn_to_toml(needs)` |  |  |
 | `convert(root, write)` | Convert every spine registry. Returns (findings, written_paths). |  |
 | `main(argv)` |  |  |
@@ -1159,6 +1160,7 @@ Contracts (interfaces): IF-102
 | `rows_from_text(text, id_col, carrier)` | `{id: row}` for the named carrier (`".toml"` / `".csv"`), or None when a |  |
 | `rows_seq_from_text(text, id_col, carrier)` | Rows as a SEQUENCE in file order, duplicates included — or None when a |  |
 | `resolve(path, suffixes)` | The live carrier file for a registry, given a path under EITHER suffix. |  |
+| `empty_value_findings(rows, id_col, rel)` | One finding per cell written as an EXPLICIT EMPTY STRING. |  |
 | `load(path, id_col, keep_examples)` | The live registry as a LIST of rows in file order — the shape |  |
 | `columns(path, id_col)` | The COLUMN NAMES a live registry actually uses, id column first, in | SR-001 |
 | `needs_from_markdown(text)` | `[{id, kind, **fields}]` from the legacy prose tables, document order. | SN-013 |

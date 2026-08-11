@@ -55,7 +55,10 @@ checklist.
   non-default values in the same commit (or re-run the scaffold pass with
   `--gate-policy` / `--push-policy` / `--privacy-check`, which rewrite one key
   in place). `--force` rewrites the file and resets **every** dial.
-- **Preserve always (yours):** every registry CSV, `stakeholder-needs.md`,
+- **Preserve always (yours):** every registry — the four spine TOMLs
+  (`stakeholder-needs.toml`, `system-requirements.toml`,
+  `low-level-requirements.toml`, `test-cases.toml`), the off-spine CSVs, and
+  the legacy `.md`/`.csv` forms if you have not run `migrate_carrier` yet,
   `docs/status.md`, `docs/log.md`, `docs/plan.md` (your work plan — the kit
   seeds the block-list skeleton once), `docs/architecture.md` hand-written overview
   (regenerate only the marker blocks), `AGENTS.md` project content, `docs/gate`,

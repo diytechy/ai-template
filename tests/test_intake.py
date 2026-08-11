@@ -26,6 +26,7 @@ the real spec folder — no seam is stubbed.
 """
 
 import subprocess
+import tomllib
 
 import pytest
 from conftest import (
@@ -788,6 +789,105 @@ def test_the_flip_rewrites_ONE_LINE_of_the_toml_carrier(tmp_path):
     assert 'status = "Verified"' in after.split("[requirement.SR-002]")[1]
     # Idempotent, and it never reaches past the row it was asked for.
     assert intake.flip_verified(root, ["SR-001"]) == ("flip", [], None)
+
+
+# A row whose REQUIREMENT PROSE quotes registry syntax — the counterexample the
+# adversarial review used to break the first line rewrite. Every line here is
+# ordinary registry content; none of it is a key.
+SR_TOML_PROSE = (
+    "[requirement.SR-001]\n"
+    'title = "Adder"\n'
+    'requirement = """The row shall record its own state.\n'
+    "status = literal prose inside the requirement\n"
+    "[requirement.SR-999] is not a table header either.\n"
+    'End of requirement."""\n'
+    'status = "Modified"\n'
+)
+
+
+def test_the_flip_is_toml_STRING_aware_not_line_aware(tmp_path):
+    """The review's BLOCKER 3, planted verbatim.
+
+    A physical-line rewrite edited a `status = ...` line INSIDE a multi-line
+    requirement string, left the row's real status at `Modified`, and returned
+    True — so the tool reported a ratification it had not made while silently
+    rewriting attested requirement text. Two damages from one defect: a false
+    record, and a corrupted registry cell.
+    """
+    root = _policy_repo(tmp_path, 0)
+    req = root / "docs" / "requirements"
+    (req / "system-requirements.csv").unlink()
+    sr_toml = req / "system-requirements.toml"
+    sr_toml.write_text(SR_TOML_PROSE, encoding="utf-8", newline="\n")
+
+    action, flipped, refusal = intake.flip_verified(root, ["SR-001"])
+    assert refusal is None, refusal
+    assert (action, flipped) == ("flip", ["SR-001"])
+
+    after = sr_toml.read_text(encoding="utf-8")
+    # The REAL cell moved...
+    assert tomllib.loads(after)["requirement"]["SR-001"]["status"] == "Verified"
+    # ...and the prose that merely looks like registry syntax is untouched.
+    assert "status = literal prose inside the requirement" in after
+    assert "[requirement.SR-999] is not a table header either." in after
+    assert (
+        tomllib.loads(after)["requirement"]["SR-001"]["requirement"]
+        == tomllib.loads(SR_TOML_PROSE)["requirement"]["SR-001"]["requirement"]
+    )
+
+
+def test_a_row_with_no_status_key_at_all_REFUSES(tmp_path):
+    """The review's MAJOR 5: absent is not "not Modified".
+
+    A row that never carried a status cannot be re-verified, and accepting it as
+    an idempotent no-op reports a clean adjudication over a row the registry
+    never staged for one. Distinct from the existing test below, which removes
+    the line only AFTER locating a Modified row.
+    """
+    root = _policy_repo(tmp_path, 0)
+    req = root / "docs" / "requirements"
+    (req / "system-requirements.csv").unlink()
+    (req / "system-requirements.toml").write_text(
+        '[requirement.SR-001]\ntitle = "Adder"\n', encoding="utf-8", newline="\n"
+    )
+    with pytest.raises(SystemExit) as excinfo:
+        intake.flip_verified(root, ["SR-001"])
+    assert "no `status`" in str(excinfo.value)
+    assert "SR-001" in str(excinfo.value)
+
+
+def test_a_crlf_registry_keeps_its_line_endings_through_a_flip(tmp_path):
+    """The review's MAJOR 6: the writer advertises "every other byte unchanged",
+    and a wholesale CRLF -> LF conversion makes a one-word ratification a
+    whole-file diff — on the registry whose diffs the amendment guard reads."""
+    root = _policy_repo(tmp_path, 0)
+    req = root / "docs" / "requirements"
+    (req / "system-requirements.csv").unlink()
+    sr_toml = req / "system-requirements.toml"
+    sr_toml.write_text(SR_TOML, encoding="utf-8", newline="\r\n")
+    before = sr_toml.read_bytes()
+    assert before.count(b"\r\n") > 3  # a genuinely CRLF fixture
+
+    assert intake.flip_verified(root, ["SR-001"])[1] == ["SR-001"]
+
+    after = sr_toml.read_bytes()
+    assert after.count(b"\r\n") == before.count(b"\r\n")
+    changed = [
+        (b, a) for b, a in zip(before.split(b"\r\n"), after.split(b"\r\n")) if b != a
+    ]
+    assert changed == [(b'status = "Modified"', b'status = "Verified"')]
+
+
+def test_an_lf_registry_is_not_given_crlf_either(tmp_path):
+    """The other half of MAJOR 6 — preserving the style must not mean guessing
+    it. An LF file stays LF."""
+    root = _policy_repo(tmp_path, 0)
+    req = root / "docs" / "requirements"
+    (req / "system-requirements.csv").unlink()
+    sr_toml = req / "system-requirements.toml"
+    sr_toml.write_text(SR_TOML, encoding="utf-8", newline="\n")
+    intake.flip_verified(root, ["SR-001"])
+    assert b"\r\n" not in sr_toml.read_bytes()
 
 
 def test_a_toml_row_with_no_status_line_refuses_rather_than_claiming_a_flip(tmp_path):

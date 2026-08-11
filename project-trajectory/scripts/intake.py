@@ -1426,7 +1426,19 @@ def _locate_spine_rows(root, wanted):
             for row in spine_carrier.load(live, id_col):
                 rid = (row.get(id_col) or "").strip()
                 if rid in wanted:
-                    located[rid] = (rel, (row.get("Status") or "").strip(), None, None)
+                    # ABSENT status is None, not "". Under this carrier an absent
+                    # key is a real state, and it is not "not Modified": a row
+                    # with no Status at all cannot be re-verified, and treating
+                    # it as an idempotent no-op reports a clean adjudication over
+                    # a row the registry never staged for one. `_apply_flips`
+                    # refuses it (repo-lock D-5; fail closed).
+                    status = row.get("Status")
+                    located[rid] = (
+                        rel,
+                        None if status is None else status.strip(),
+                        None,
+                        None,
+                    )
             continue
         with live.open(newline="", encoding="utf-8-sig") as fh:
             rows = list(csv.reader(fh))
@@ -1446,23 +1458,62 @@ def _locate_spine_rows(root, wanted):
 _STATUS_KEY = "status"
 
 
+_TOML_MULTILINE = ('"""', "'''")
+
+
+def _multiline_delims(text):
+    """How many multi-line-string delimiters this line opens or closes, per
+    delimiter kind — the minimum TOML awareness a line rewrite needs.
+
+    Counted on the whole line, comment text included: a delimiter inside a `#`
+    comment is not a string opener, but a `#` inside a string IS just text, and
+    of the two ways to be wrong only treating a delimiter as significant is
+    safe. An ODD count toggles the state; an even one — opened and closed on the
+    same line, which is how a single-line triple-quoted cell reads — does not.
+    """
+    return {d: text.count(d) for d in _TOML_MULTILINE}
+
+
 def _flip_status_lines(lines, table, rid):
     """Rewrite `[<table>.<rid>]`'s `status = ...` line to `Verified`, in place.
     True when a line moved. A LINE REWRITE ON `bootstrap.set_process_key`'s
     PATTERN, and for its reasons (repo-lock D-5 step 4): stdlib has no TOML
     writer, and re-serialising the registry to change one cell would normalise
     away every comment and the file's authored ordering — a whole-file diff for
-    a one-word act, on the registry whose diffs the amendment guard reads."""
+    a one-word act, on the registry whose diffs the amendment guard reads.
+
+    IT TRACKS MULTI-LINE STRING STATE, and that is not defensive tidiness — it
+    is the difference between a ratification and a corruption. The spine's prose
+    cells are `\"\"\"...\"\"\"` blocks that quote registry syntax freely, so a
+    requirement can contain a line whose text reads `status = ...`. Rewriting by
+    physical line alone edited THAT line, left the row's real `status` at
+    `Modified`, and returned True — so the tool reported a flip it had not made
+    while silently rewriting attested requirement text. A line inside a string
+    is DATA; only a line at the table's top level is a key.
+
+    The same state tracking is what makes the table-header scan sound: a `[` in
+    the middle of a prose cell would otherwise read as the start of a new row
+    and end the search early."""
     header = "[{}.{}]".format(table, rid)
     in_row = False
+    open_delim = None  # the multi-line delimiter we are currently inside, if any
     for i, line in enumerate(lines):
+        counts = _multiline_delims(line)
+        if open_delim is not None:
+            # Inside a multi-line string: this line is DATA. It can only end the
+            # string, never open a table or set a key.
+            if counts[open_delim] % 2:
+                open_delim = None
+            continue
         stripped = line.strip()
-        if stripped.startswith("[") and stripped.endswith("]"):
+        opened = next((d for d in _TOML_MULTILINE if counts[d] % 2), None)
+        if stripped.startswith("[") and stripped.endswith("]") and opened is None:
             in_row = stripped == header
             continue
-        if in_row and stripped.split("=")[0].strip() == _STATUS_KEY:
+        if in_row and stripped.split("=")[0].strip() == _STATUS_KEY and opened is None:
             lines[i] = '{} = "Verified"'.format(_STATUS_KEY)
             return True
+        open_delim = opened
     return False
 
 
@@ -1475,6 +1526,18 @@ def _apply_flips(root, tables, located):
     flipped, changed = [], set()
     toml_edits = {}
     for rid, (rel, status, row, status_ix) in sorted(located.items()):
+        if status is None:
+            # The row exists and carries NO Status at all. Absent is not
+            # "not Modified" — there is nothing here to re-verify, and skipping
+            # it silently reports a clean adjudication over a row that never
+            # staged one. Fail closed, naming the row.
+            raise SystemExit(
+                "intake: {} in {} has no `{}` — a row with no status cannot be "
+                "re-verified, and treating that as a no-op would report an "
+                "adjudication the registry does not record".format(
+                    rid, tables[rel][0], _STATUS_KEY
+                )
+            )
         if status != "Modified":
             continue
         live, _rows = tables[rel]
@@ -1487,7 +1550,15 @@ def _apply_flips(root, tables, located):
     for rel, ids in toml_edits.items():
         live, _rows = tables[rel]
         table = spine_carrier.SPINE_TABLE[dict(check_trajectory.SPINE_CSVS)[rel]]
-        lines = live.read_text(encoding="utf-8-sig").split("\n")
+        # The file's OWN newline style is preserved (repo-lock D-5; the
+        # contract this writer advertises is that every byte except the one
+        # status cell is unchanged, and silently converting a CRLF registry to
+        # LF makes a one-word ratification a whole-file diff — on exactly the
+        # registry whose diffs the amendment guard reads). `newline=""` keeps
+        # the bytes; the split is on the detected terminator.
+        raw = live.read_text(encoding="utf-8-sig", newline="")
+        eol = "\r\n" if "\r\n" in raw else "\n"
+        lines = raw.split(eol)
         for rid in ids:
             if not _flip_status_lines(lines, table, rid):
                 # A located row whose status line cannot be found is a refusal
@@ -1500,7 +1571,7 @@ def _apply_flips(root, tables, located):
                         live, _STATUS_KEY, table, rid
                     )
                 )
-        live.write_text("\n".join(lines), encoding="utf-8", newline="\n")
+        live.write_text(eol.join(lines), encoding="utf-8", newline="")
     for rel in changed:
         live, rows = tables[rel]
         if rows is None:
