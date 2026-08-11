@@ -1253,10 +1253,49 @@ anywhere in the repo.
   (unless `Verification` is LLR-exempt) **and** a TC.
 - **TC** → the file-existence half of the `Evidence` check, already running
   and already ruled sufficient under **R2**.
-- **LLR** → **OPEN, and it needs a ruling.** An LLR has no children in this
-  schema. The natural discharge is `CodeSymbol`/`Module` **resolving** —
-  which would give `CodeSymbol` its first real job (F-3: required today,
-  never resolved). Not assumed here.
+- **LLR** → ~~OPEN~~ **BUILT as WI-429** (`0d161b49` → `3fac066b`,
+  2026-08-11), taken under the owner's *"proceed"*; ratification owed with
+  the ladder migration. `CodeSymbol`/`Module` **resolving** is the discharge,
+  and it gave `CodeSymbol` its first real job after a lifetime as F-3's
+  "required today, never resolved."
+
+  **The census found the rot F-3 predicted.** Of 149 live rows, **31 carried
+  at least one non-binding token** and **9 bound nothing at all**; the cell
+  turned out to have no enforced grammar, joining on `/ + ; ,` and mixing
+  module-level names with **function locals**, **instance attributes**, CSS
+  custom properties, shell script names and free prose. Classification:
+  13 rows moved module (the WI-280 `gen_trajectory` split and WI-381's
+  `drive.py`→`dispatch.py`), 1 renamed, 4 deleted, 8 local/attribute, and
+  **13 distinct tokens that never existed in any commit**. Repaired 14 rows
+  where the symbol had exactly one home (`;` read as a **union**, the only
+  safe reading — LLR-080 pairs its two lists *positionally* on a convention
+  nothing states); **left 4 unfounded with reasons rather than guessing.**
+  Those four are not a defect: **under D-9 they are LLRs that are not
+  `Founded`, which is the computation working.**
+
+  **The rule is deliberately coarse — ≥1 identifier token must bind** —
+  because per-token would red 31/149 on arrival, 18 of them for tokens that
+  were never symbol claims. That is R2's trade re-applied (coarse claim
+  gated, fine claim ruled prose), with the 28 per-token misses filed
+  *untraced* and counted so a later tightening stays available. Severity is
+  **hard under `--strict`**, argued on D-9 itself: an advisory would make
+  `Founded` vacuous for one of four tiers — the exact asymmetry D-9 deleted —
+  and the file-existence half of the *same two cells* already gates.
+  Warn-first at `gates = G3` so adopters are warned, never broken.
+
+  **A second live bug fell out of it:** `check_trajectory.module_components`
+  never split the `;`-joined `Module` cell, so **2 live rows were tagging
+  NEITHER of their modules**, silently — the same D-6 failure shape WI-424
+  had filed and this row fixed. The new oracle `gen_arch_map.module_bindings`
+  is one home for AST symbol extraction, pinned against `scan_module` by a
+  drift test, and the new cross-component import was **declared as IF-117**
+  rather than routed around.
+
+  **Owed from it:** the four unfounded LLRs need a ruling on *what the cell
+  may claim* — that belongs with the ladder migration, not a rewrite of
+  authored cells. And `docs/declared-absences:92`'s stated reason is now
+  **discharged** (the repoint it was waiting on landed); the line survives
+  because the path is cited elsewhere, but its justification is stale.
 
 #### Consequence inventory — none optional
 
