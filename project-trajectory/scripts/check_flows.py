@@ -34,7 +34,7 @@ import re
 import sys
 from pathlib import Path
 
-# Sibling: the spine's registry CARRIER (repo-lock D-5/D-6) — the one home for
+# Sibling: the spine's registry CARRIER — the one home for
 # the TOML tier tables, the key->column vocabulary and both readers. Run as a
 # subprocess this script's own dir is sys.path[0] so a plain import resolves;
 # the guard covers an in-process import (a test) whose sys.path does not yet
@@ -73,8 +73,8 @@ def load_ids(docs):
             return {r[key] for r in csv.DictReader(f) if r.get(key)}
 
     def spine_col(path, key):
-        """The id set of a spine tier, through the carrier (repo-lock D-5) so
-        it answers whichever of TOML/CSV is live. Under TOML the ids are the
+        """The id set of a spine tier, through the carrier, so it answers
+        whichever of TOML/CSV is live. Under TOML the ids are the
         TABLE KEYS, so this is the one reader that needs no column vocabulary
         at all."""
         return {r[key] for r in spine_carrier.load(path, key) if r.get(key)}
@@ -87,7 +87,7 @@ def load_ids(docs):
         "TC": spine_col(docs / "test" / "test-cases.toml", "TC-ID"),
         "SN": set(),
     }
-    # The need tier resolves through the carrier too (repo-lock D-5). The id
+    # The need tier resolves through the carrier too. The id
     # SCRAPE itself is carrier-blind — `SN-001` is the token under a markdown
     # row and under `[need.SN-001]` alike — but an existence test on one suffix
     # is not: it would report an EMPTY known-SN set for a repo still on

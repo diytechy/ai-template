@@ -101,7 +101,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-# Sibling: the spine's registry CARRIER (repo-lock D-5/D-6).
+# Sibling: the spine's registry CARRIER.
 try:
     import spine_carrier
 except ImportError:  # pragma: no cover - in-process fallback
@@ -546,8 +546,8 @@ def _registry_needs(path):
     # EXISTENCE stays the whole-file scrape, byte-for-byte the rule trace.py
     # uses — a prose mention counts, and that is deliberate on both sides.
     all_ids = {s for s in SN_ID_RE.findall(text) if not _is_sn_example(s)}
-    # The Must/Should FLOOR now reads each need's own fields through the carrier
-    # (repo-lock D-5), replacing a table walk that discovered a `Priority`
+    # The Must/Should FLOOR now reads each need's own fields through the
+    # carrier, replacing a table walk that discovered a `Priority`
     # column by header text and tracked draft-ness by heading. Both of those
     # were shapes the markdown carrier forced; neither survives it, and the
     # heading arm would have gone silently wrong rather than loudly — no
@@ -584,7 +584,7 @@ def check_inventory(docs, root, docs_dir):
     # is TOML here and markdown in a repo that has not migrated, and an
     # existence test on ONE suffix answers "no needs to hold the README to" for
     # the other — turning the coverage floor off silently in exactly the repos
-    # that still have the older carrier (repo-lock D-5).
+    # that still have the older carrier.
     registry = spine_carrier.resolve(
         (root / docs_dir / "requirements" / "stakeholder-needs.toml").resolve(),
         spine_carrier.NEED_CARRIERS,

@@ -486,7 +486,7 @@ def test_spine_cell_split_classifies_every_shipped_column():
     # The COLUMN SET comes from the carrier now, not from a header line: under
     # TOML `csv.reader` would hand back `['[requirement.SR-001]']` and the check
     # would pass having classified nothing. `spine_carrier.columns` answers the
-    # same question for whichever carrier is live (repo-lock D-5).
+    # same question for whichever carrier is live.
     ct = load_script("check_trajectory")
     carrier = load_script("spine_carrier")
     surfaces = []
@@ -542,7 +542,7 @@ def test_the_two_wi388_cell_rulings_are_recorded_in_the_split():
     # Asked through `spine_cell_class`, the rule every caller goes through, and
     # asked under BOTH carrier suffixes: the tables are keyed by a path that
     # carries one, and a lookup miss reads `ratified` — which would silently
-    # re-arm the window WI-388 ruled these cells out of (repo-lock D-5).
+    # re-arm the window WI-388 ruled these cells out of.
     ct = load_script("check_trajectory")
     for suffix in (".csv", ".toml"):
         llr = "docs/requirements/low-level-requirements" + suffix
@@ -630,7 +630,7 @@ def test_staged_spine_amendments_read_a_commit_range_not_only_the_index(tmp_path
     assert list(ranged2[0]["ratified"]) == ["Requirement"]
 
 
-# --- the carrier cutover (repo-lock D-5) --------------------------------------
+# --- the carrier cutover ------------------------------------------------------
 # The spine moves from CSV to TOML. Every check below reads a registry through
 # `git show`, so each one has a revision where the live carrier does not exist.
 # These drive the hazard rather than assert around it.
@@ -659,7 +659,7 @@ def _filled(rows):
     The two carriers are equal on what a row SAYS, and deliberately unequal on
     how it says nothing: CSV gives every column of the header (`Area: ""`),
     while TOML omits the key entirely, because "unset" and "set to empty" stop
-    being the same value under the new carrier (repo-lock D-5). Every consumer
+    being the same value under the new carrier. Every consumer
     reads a cell as `.get(c) or ""`, so the two are identical where it matters —
     which is the claim this projection makes checkable instead of assumed."""
     return {

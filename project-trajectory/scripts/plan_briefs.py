@@ -49,7 +49,7 @@ import re
 import sys
 from pathlib import Path
 
-# Sibling: the spine's registry CARRIER (repo-lock D-5/D-6) — the one home for
+# Sibling: the spine's registry CARRIER — the one home for
 # the TOML tier tables, the key->column vocabulary and both readers. Run as a
 # subprocess this script's own dir is sys.path[0] so a plain import resolves;
 # the guard covers an in-process import (a test) whose sys.path does not yet

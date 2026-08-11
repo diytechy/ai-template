@@ -45,7 +45,7 @@ import re
 import sys
 from pathlib import Path
 
-# Sibling: the spine's registry CARRIER (repo-lock D-5/D-6) — the one home for
+# Sibling: the spine's registry CARRIER — the one home for
 # the TOML tier tables, the key->column vocabulary and both readers. Run as a
 # subprocess this script's own dir is sys.path[0] so a plain import resolves;
 # the guard covers an in-process import (a test) whose sys.path does not yet
@@ -144,8 +144,8 @@ def load_registry_ids(path, key):
 
 
 def spine_ids(path, key):
-    """`load_registry_ids` for a SPINE registry, which reads through the carrier
-    (repo-lock D-5) so it answers whether the tier is CSV or TOML.
+    """`load_registry_ids` for a SPINE registry, which reads through the
+    carrier, so it answers whether the tier is CSV or TOML.
 
     Keeps the absent-means-'cannot validate' contract exactly: None when the
     registry does not exist under either carrier, never an empty set. The

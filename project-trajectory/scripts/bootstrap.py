@@ -1534,10 +1534,10 @@ MAPPING = [
     # (process-options.md "Trajectory / work-items layer"): one OI-N section
     # per pending decision, deleted when the ruling lands in log.md Decisions.
     ("registries/open-items.template.csv", "docs/requirements/open-items.csv"),
-    # (SN-029's separate attestation ledger scaffolded here until D-1 retired
-    # it — docs/repo-lock.md. The anchor it carried moves onto the artifact's
-    # own row, so there is no second registry for an adopter to scaffold; the
-    # columns arrive in the spine templates with the anchor half.)
+    # (SN-029's separate attestation ledger was scaffolded here until it was
+    # retired. The anchor it carried moves onto the artifact's own row, so
+    # there is no second registry for an adopter to scaffold; the columns
+    # arrive in the spine templates with the anchor half.)
     # The append-only history status.md points at (Thread 36, process.md §5):
     # sign-offs, verdicts, and ratified decisions append here, keeping the
     # per-session status.md reload cheap.
@@ -1619,7 +1619,7 @@ MAPPING = [
     # scaffold missing it gets an ImportError on the first check. Copied
     # together, always.
     ("scripts/trace_text.py", "scripts/trace_text.py"),
-    # OI-12 / repo-lock D-5+D-6: the spine's registry CARRIER — the one home
+    # OI-12: the spine's registry CARRIER — the one home
     # for the TOML tier tables, the key->column vocabulary and both readers.
     # Imported by trace.py and check_trajectory.py (and by the rest of the
     # spine readers as they convert), so the trace_text.py rule applies

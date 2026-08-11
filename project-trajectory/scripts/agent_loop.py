@@ -138,7 +138,7 @@ import sys
 import time
 from pathlib import Path
 
-# Sibling: the spine's registry CARRIER (repo-lock D-5/D-6) — one home for the
+# Sibling: the spine's registry CARRIER — one home for the
 # TOML tier tables, the key->column vocabulary and both readers.
 try:
     import spine_carrier

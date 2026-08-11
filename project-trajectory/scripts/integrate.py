@@ -1436,7 +1436,7 @@ _ADJUDICATION_SURFACES = (
     "docs/log.d/",
     "docs/reviews/",
     "docs/gate",
-    # BOTH carrier paths per spine tier (repo-lock D-5): this is a pathspec
+    # BOTH carrier paths per spine tier: this is a pathspec
     # allowlist matched against `git diff --name-only`, and a repo that has not
     # migrated stages the `.csv` name. Naming one suffix would fail the lane
     # TOWARD the full bar there — safe, but wrong, and invisible until someone

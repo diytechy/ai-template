@@ -33,8 +33,7 @@ gates, and the ID scheme. The short version needed every session:
 
 - **One driver wears role "hats" in sequence** (Stakeholder → UX/Docs → System
   Engineer → Software Engineer → Test Engineer). Spawn subagents deliberately
-  (process.md §6): an independent reviewer for high-risk pre-gate audits; step
-  mechanical subtasks down a tier; give bulk content a fresh-context peer.
+  (process.md §6).
 - **Everything traces:** `SN → SR → LLR → TC`. Intent lives once, as an id;
   children link to it. The matrix is generated (`scripts/trace.py`) and must
   report **0 orphans** before a gate.
@@ -42,8 +41,7 @@ gates, and the ID scheme. The short version needed every session:
   test before the code that satisfies it: red → green → refactor. This is *how*
   G3 code gets written — within the traceability spine, not instead of it.
 - **Gates G1→G2→G3→(G-Release)→G-Final close per the declared gate authority**
-  (`docs/process.toml`; default: pause for human approval). Never self-advance
-  a gate; log it in `docs/log.md`.
+  (`docs/process.toml`). Never self-advance a gate; log it in `docs/log.md`.
 - **The check harness is the bar:** `python scripts/check.py` runs format,
   lint, tests, coverage, traceability, flow checks, and map freshness at the
   repo's active gate (`docs/gate`); `--tier smoke` is the fast subset. Never report a result you didn't run —
@@ -59,12 +57,12 @@ gates, and the ID scheme. The short version needed every session:
   back-links, in [docs/architecture.md](docs/architecture.md). **Read it to
   find where a capability lives before searching the tree**; the harness keeps
   it (and the Mermaid dependency diagram) fresh — never hand-edit it or
-  between `GENERATED` markers, and never commit exported diagrams.
-- **Start each session** with the *Current State* header of
+  between `GENERATED` markers; never commit exported diagrams.
+- **Start each session** with *Current State* in
   [docs/status.md](docs/status.md); end each turn by updating it (gate, what
-  changed, next action). **Commit early and often** — a
-  small, green commit per logical step. Pushing follows the `push` dial
-  (default: the human publishes). End sessions with a clean tree.
+  changed, next action). **Commit early and often** — small and green per
+  logical step. Pushing follows the `push` dial (default: the human
+  publishes). End sessions with a clean tree.
 
 ## Code we want (readability for humans *and* agents)
 
@@ -93,7 +91,7 @@ Code a newcomer — human or model — can navigate without re-deriving the desi
 
 ### Comment for humans — and the map
 
-Comment **generously and deliberately** — the bar is that a reader never has to
+Comment **generously and deliberately** — a reader must never have to
 reverse-engineer *intent*. The generated code map **harvests module and
 public-symbol docstrings** into the index agents read first:
 
@@ -112,10 +110,10 @@ public-symbol docstrings** into the index agents read first:
 
 Every public module/function states its contract once, in its docstring, so a
 caller never has to read the body to use it safely. Cover **Inputs** (type +
-range/enum/units), **Outputs**, **Config** (keys read + constraints + where
-they live), **Raises** — and **cite requirement ids instead of restating
-constraints** that already live in an SR (its `AcceptanceCriteria` +
-`Permutations`). Reference shape:
+range/enum/units), **Outputs**, **Config** (keys + constraints + where they
+live), **Raises** — and **cite requirement ids instead of restating
+constraints** already in an SR (`AcceptanceCriteria` + `Permutations`).
+Reference shape:
 
 ```
 """Back up one source set: hash, dedup, snapshot, write manifest.
@@ -166,7 +164,7 @@ Direct and concrete; explain the *why* before the *how*.
   finding to its owner, not an inline fix.
 - **Flag uncertainty honestly — and distrust certainty**, yours or a
   reviewer's: a finding is a claim — confirm or refute it first
-  (process-options.md "finding lifecycle"). A small experiment with
+  (process-options.md "finding lifecycle"). An experiment with
   hypothesis + result beats confident guessing. Peak confidence is when the
   30-second recheck is cheapest (process.md §6).
 - **No sunk-cost shipping, keeping, or blind retries.** An approach found
@@ -179,6 +177,9 @@ Direct and concrete; explain the *why* before the *how*.
   AGENTS.md), not in agent-private memory. Promote them before closing a
   session (process.md §7). Undoing takes the same evidence as doing: read
   the record behind landed work before reverting it.
+- **State the constraint, not its history.** Cite a decision record only where
+  a reader could plausibly undo it — **at most once per module**, a header
+  pointer, never a per-site sprinkle. Provenance belongs in the archive.
 
 ---
 

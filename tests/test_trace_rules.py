@@ -420,7 +420,7 @@ def test_meta_supersession_rows_preserve_the_ratified_evidence_map():
     trace = load_script("trace")
     root = KIT.parent
     # Read through the CARRIER: this reads the KIT'S OWN registries, which are
-    # TOML since the cutover (repo-lock D-5), and a csv.DictReader over them
+    # TOML since the cutover, and a csv.DictReader over them
     # would hand back one nonsense row and make the whole map vacuously absent.
     carrier = load_script("spine_carrier")
     srs = carrier.load(root / "docs/requirements/system-requirements.toml", "SR-ID")
@@ -462,7 +462,7 @@ def test_phase5_supersession_rows_preserve_the_ratified_evidence_map():
     trace = load_script("trace")
     root = KIT.parent
     # Read through the CARRIER: this reads the KIT'S OWN registries, which are
-    # TOML since the cutover (repo-lock D-5), and a csv.DictReader over them
+    # TOML since the cutover, and a csv.DictReader over them
     # would hand back one nonsense row and make the whole map vacuously absent.
     carrier = load_script("spine_carrier")
     srs = carrier.load(root / "docs/requirements/system-requirements.toml", "SR-ID")

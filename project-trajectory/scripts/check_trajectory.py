@@ -144,7 +144,7 @@ import sys
 import tomllib
 from pathlib import Path
 
-# Sibling: the spine's registry carrier (repo-lock D-5/D-6). Run as a
+# Sibling: the spine's registry carrier. Run as a
 # subprocess this script's own dir is sys.path[0] so a plain import resolves;
 # the guard covers an in-process import (a test) whose sys.path does not yet
 # carry scripts/ — the same sanctioned-sibling idiom trace.py uses for
@@ -2469,7 +2469,7 @@ def _blame_row_times(root, rel_path):
     can touch any one of them. Read with the CSV rule a TOML registry yields a
     map keyed by `[requirement.SR-001]` and `title = "..."`, which no caller
     ever looks up: every lookup misses, the compare never fires, and the
-    staleness warn passes because it found nothing to check (repo-lock D-5)."""
+    staleness warn passes because it found nothing to check."""
     live = spine_carrier.resolve(Path(root) / rel_path)
     if live is None:
         return {}
@@ -2956,10 +2956,10 @@ SPINE_CSVS = (
     ("docs/test/test-cases.toml", "TC-ID"),
 )
 
-# --- the spine carrier (repo-lock D-5) ---------------------------------------
+# --- the spine carrier -------------------------------------------------------
 # The vocabulary and both readers live in `spine_carrier.py`, imported as a
 # sibling — see that module's docstring for why it is ONE home and how that
-# amends the F5 ruling (owner ruling 2026-08-10, repo-lock D-6).
+# amends the F5 ruling.
 SPINE_TABLE = spine_carrier.SPINE_TABLE
 SPINE_COLUMN = spine_carrier.SPINE_COLUMN
 _spine_stem = spine_carrier.stem
@@ -2969,7 +2969,7 @@ _spine_carriers = spine_carrier.carriers
 def _spine_rows_at(root, rev_prefix, rel_path, id_col):
     """{id: row} of a spine registry on ONE side of the two-tree scan, read
     through whichever carrier that side actually uses — TOML first, CSV as the
-    fallback (repo-lock D-5). `rev_prefix` is a `git show` prefix: `"HEAD:"`,
+    fallback. `rev_prefix` is a `git show` prefix: `"HEAD:"`,
     `"abc123:"`, or `":"` for the index.
 
     Each side resolves independently, and that is the point rather than a
@@ -3065,7 +3065,7 @@ def spine_cell_class(csv_path, column):
     names the constant. Under the CSV carrier a `.toml`-keyed lookup misses, and
     a miss here does not red — every column reads `ratified`, so a traced-only
     edit arms a re-attest window that was ruled not to. `stem` drops the suffix,
-    which is what `spine_carrier` exists to make possible (repo-lock D-5)."""
+    which is what `spine_carrier` exists to make possible."""
     key = spine_carrier.stem(csv_path)
     traced = {spine_carrier.stem(k): v for k, v in SPINE_TRACED_CELLS.items()}
     return "traced" if column in traced.get(key, ()) else "ratified"
@@ -3149,15 +3149,15 @@ def current_digests(root):
 
     RESERVED, NOT DEAD: this and its helpers (`normative_text`,
     `sn_normative_text`, `digest`, `_DIGEST_SEP`, `_DIGEST_EXCLUDED`) are the
-    attestation anchor's ENGINE and have **no writer yet** — D-1 landed the
-    removal half (`attestations.csv` is gone) and the on-row `TextHash` /
-    `HashedOn` writer is built after the sitting (docs/repo-lock.md §2 D-1,
-    §5 step 1). A dead-symbol sweep sees only `tests/test_attestation_digest.py`
-    consuming this and must not read that as unused. Checked 2026-08-11 (WI-422)."""
+    attestation anchor's ENGINE and have **no writer yet** — the removal half
+    landed (`attestations.csv` is gone) and the on-row `TextHash` / `HashedOn`
+    writer is built after the sitting. A dead-symbol sweep sees only
+    `tests/test_attestation_digest.py` consuming this and must not read that
+    as unused. Checked 2026-08-11 (WI-422)."""
     root = Path(root)
     out = {}
     for csv_path, id_col in SPINE_CSVS:
-        # Through the CARRIER (repo-lock D-5): a CSV parse of a TOML registry
+        # Through the CARRIER: a CSV parse of a TOML registry
         # yields NOTHING rather than failing, and a digest map with no rows in
         # it says "nothing to re-attest" — the amendment guard silently blind.
         for row in spine_carrier.load(root / csv_path, id_col):
@@ -3311,7 +3311,7 @@ def staged_spine_amendments(root, base="HEAD", head=None):
         # constant: the constant carries a suffix, and reporting
         # `system-requirements.toml` for a repo whose staged diff touched
         # `system-requirements.csv` names a file that does not exist — in a
-        # record an adjudication row quotes back to a human (repo-lock D-5).
+        # record an adjudication row quotes back to a human.
         touched = [c for c in _spine_carriers(csv_path) if c in staged_names]
         if not touched:
             continue

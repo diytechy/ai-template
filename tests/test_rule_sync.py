@@ -29,8 +29,8 @@ So the ruling now reads, in full:
   * duplicated POLICY requires a BEHAVIOURAL PIN IN THIS FILE. A second copy of
     a decision — what counts as Draft, which methods are LLR-exempt, what a
     tier's table looks like — is licensed only once these tests assert the
-    copies agree BY VALUE. Equality alone can be vacuous (repo-lock §5's
-    `_sn_fields` case proved it), so pin the value, not just the sameness.
+    copies agree BY VALUE. Equality alone can be vacuous — the `_sn_fields`
+    case proved it — so pin the value, not just the sameness.
 
 `tests/test_wi_loader_sync.py` is the same instrument aimed at the WI-registry
 readers; extend either rather than reaching for a new census.
@@ -399,7 +399,7 @@ def test_sn_edge_case_rows_are_not_titled_by_their_lifecycle_phase(tmp_path):
     assert row["acceptance"] == "Probe and fail with a remedy"
 
 
-# --- the spine carrier vocabulary (repo-lock D-5) -----------------------------
+# --- the spine carrier vocabulary ---------------------------------------------
 # THREE modules now encode the same carrier: trace.py and check_trajectory.py
 # each carry a reader (the F5 independently-copyable rule), and
 # migrate_carrier.py carries the WRITER. A reader that disagrees with the writer

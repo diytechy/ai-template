@@ -82,7 +82,7 @@ import re
 import sys
 from pathlib import Path
 
-# Sibling: the spine's registry CARRIER (repo-lock D-5/D-6) — the one home for
+# Sibling: the spine's registry CARRIER — the one home for
 # the TOML tier tables, the key->column vocabulary and both readers. Run as a
 # subprocess this script's own dir is sys.path[0] so a plain import resolves;
 # the guard covers an in-process import (a test) whose sys.path does not yet
@@ -390,7 +390,7 @@ def registry_findings(
     """
     bad, untraced = [], []
     for rel, idcol, cols in SPINE_CELLS:
-        # Through the CARRIER (repo-lock D-5): these are spine tiers, so the
+        # Through the CARRIER: these are spine tiers, so the
         # tier is read whether it is CSV or TOML and the cells arrive under the
         # same column names either way.
         if spine_carrier.resolve(root / rel) is None:

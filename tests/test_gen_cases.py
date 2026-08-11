@@ -73,7 +73,7 @@ def test_range_interior_points_are_not_boundaries():
 
 def _template_tc_keys():
     """The keys the shipped TC template declares — the schema, now that the
-    carrier has no header line to read (repo-lock D-5)."""
+    carrier has no header line to read."""
     text = (KIT / "registries" / "test-cases.template.toml").read_text(encoding="utf-8")
     return set(tomllib.loads(text)["test"]["TC-000"])
 

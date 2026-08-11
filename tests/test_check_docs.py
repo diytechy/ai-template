@@ -10,7 +10,7 @@ from conftest import ROOT, SCRIPTS, load_script, run_py
 def _add_must_need(scaffold, sid="SN-005"):
     """Append a real Must-priority need to the scaffold's SN registry.
 
-    A scaffold carries the TOML carrier since the cutover (repo-lock D-5), where
+    A scaffold carries the TOML carrier since the cutover, where
     a need is a table and its priority a FIELD — no "contiguous with the core
     table so the column parser sees it" any more, which is one of the shapes the
     markdown carrier forced. The legacy arm stays exercised where a fixture
@@ -450,7 +450,7 @@ def test_registry_needs_exempts_draft_section_from_must_floor(tmp_path):
 def test_inventory_draft_must_need_not_required_in_readme(scaffold):
     # End-to-end: a Must need still at DRAFT does NOT force a README citation
     # (it is unratified); the check stays green. Draft-ness is `kind` now, not a
-    # heading — the carrier cutover retired section-as-state (repo-lock D-5),
+    # heading — the carrier cutover retired section-as-state,
     # which is what stopped a prose mention under a heading from re-drafting an
     # attested need.
     reg = scaffold / "docs" / "requirements" / "stakeholder-needs.toml"

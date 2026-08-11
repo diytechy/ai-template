@@ -123,7 +123,7 @@ def make_fixture(tmp_path, plan_mode="dual"):
         WI_002_SPEC.format(plan_mode=plan_mode), encoding="utf-8"
     )
     # The id watermark every scaffold ships: the round's DP and WI mints count
-    # from the MARK, not from max(live) (repo-lock D-4), and `read_watermark`
+    # from the MARK, not from max(live), and `read_watermark`
     # REFUSES an absent file rather than reading it as "no id is taken" — so a
     # fixture without one exercises the refusal, not the round.
     (root / TRACE.WATERMARK).write_text(

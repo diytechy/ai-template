@@ -289,7 +289,7 @@ def read_sn(path):
     invisible, and because the loss oracle was built from THIS function's
     output, a whole table could vanish with `findings=[]`. An unrecognised
     heading is a naming choice; it is not a statement that the rows below are
-    not needs (repo-lock D-5; the review's B2).
+    not needs (the review's B2).
 
     Cells are stripped here and that is correct: the padding around `|` is the
     markdown table's SYNTAX, not content — unlike a CSV cell, where whitespace
@@ -386,7 +386,7 @@ def convert(root, write):
         # The cell text here is exactly what `csv` handed back — unstripped, so
         # a conversion that trimmed content is a FINDING rather than a match
         # against its own trimming. An oracle built from the thing under test
-        # cannot fail, and this one did not (repo-lock D-5; the review's B2).
+        # cannot fail, and this one did not (the review's B2).
         expected = {
             (r.get(id_col) or "").strip(): {
                 KEY.get(c, c): (r.get(c) or "")

@@ -26342,3 +26342,97 @@ authored cells. Also: `docs/declared-absences:92` declared
 repoint has now landed, and that line's stated reason is discharged — left in
 place because the path is still cited elsewhere, but it is now stale in its
 justification.
+
+## 2026-08-11 — WI-430: state the constraint, not its history — a new comment rule, and the citation sweep it outlaws
+
+**One line.** Adopted the kit's **first rule about what a comment may say**, and
+applied it: **98 `repo-lock` citations → 15** across `project-trajectory/scripts`
+and `tests`, every one of them classified by reading the site, with **no
+explanatory sentence deleted**.
+
+**Part 1 — the rule is NEW, not newly enforced.** Grepped before writing:
+`AGENTS.template.md` ruled comment *density*, comment *freshness* and the
+docstring *contract*, but nothing about whether a sentence may carry a decision
+id. Added to the **Working agreement**:
+
+> - **State the constraint, not its history.** Cite a decision record only where
+>   a reader could plausibly undo it — **at most once per module**, a header
+>   pointer, never a per-site sprinkle. Provenance belongs in the archive.
+
+It does not contradict the neighbouring "cite requirement ids instead of
+restating constraints": that rule is about **live join keys** the harness
+validates; this one is about **settled arguments**. No mirror is owed into this
+repo's `AGENTS.md` — it is a stub pointing at `CLAUDE.md`, whose *Communication
+style* digest already ends by deferring to the template's Working agreement for
+the full version, and `test_dogfood_sync.py` does not govern `AGENTS.md` at all.
+
+**Part 2 — the heuristic that scoped the row was wrong, and reading found why.**
+The estimate was 7 constraint / 59 provenance; read site by site the scripts
+split **~12 / 57**. The miss is a class the heuristic has no signal for:
+**obligation markers** — `intake.py`'s `THE ANCHOR IS STILL OWED HERE`,
+`spine_carrier.py`'s `(Owner ruling owed …)`, `check_trajectory.py`'s
+`RESERVED, NOT DEAD … no writer yet`. Those are neither history nor constraint
+but **live unfinished business** parked where it must land; a mechanical sweep
+would have deleted them as provenance. The 57 genuine provenance sites were one
+sentence repeated — `# Through the CARRIER (repo-lock D-5)` and the
+`# Sibling: the spine's registry CARRIER (repo-lock D-5/D-6)` header, the latter
+**verbatim in 11 modules**, each already naming the module whose docstring holds
+the argument.
+
+**Counts.** Scripts **69 → 6**, tests **29 → 9** (15 total). Biggest drops: `trace.py`
+11 → 1, `check_trajectory.py` 10 → 1, `intake.py` 9 → 1. Every survivor is a
+module docstring, a section banner, or an obligation marker — none is a
+per-site sprinkle.
+
+**Fences obeyed, and accounted for.** The three spine `*.toml` registries keep
+their one citation each (ratified row text = sitting territory).
+`docs/requirements/interfaces.csv` **deferred to OI-14 and counted, not swept**:
+**11 of 110 rows** carry a citation — IF-102, 104, 105, 106, 107, 108, 109, 110,
+111, 116, 117 — listed in the spec so OI-14 inherits the work rather than
+re-deriving it. `tests/test_module_size_ratchet.py` keeps all **6**: its
+citations are ratchet *reason* fields, and the reason IS the record — the rule
+does not apply to a file that is itself the archive.
+
+**Byte deltas on budgeted files.** `AGENTS.template.md` **9,989 → 9,991 (+2)**,
+**9 bytes** of headroom under the hard 10,000 — the rule (+235) was paid for in
+full, the largest payment being the subagent sentence, which was an *unmarked
+paraphrase of `PROCESS.md` §6* that the same bullet already cites. `PROCESS.md`
+**64,466 → 64,466 unchanged**. `PROCESS_OPTIONS.md` **170,454 → 170,454
+unchanged**. No baseline re-stamp owed.
+
+**The bar, and one failure that is not this row's.** Full unfiltered suite
+**1 failed, 2257 passed, 5 skipped in 382.77s** — same population as the
+2258/5 baseline, with one test flipped:
+`test_check_docs.py::test_meta_repo_has_zero_unexplained_orphans`.
+<!-- fig: cmd=".venv/bin/python -m pytest -q -n auto" rev=4d0b3470 -->
+**Proven pre-existing on a detached worktree at clean `HEAD` (4d0b3470)** with
+none of this row's changes present. Cause: commit **`81bf474b`** removed the only
+inbound link to `docs/spine-restructure-2026-08-08.md` (`git show
+81bf474b~1:docs/repo-lock.md` matches it once; at `81bf474b`, zero). **Filed as
+a finding, not fixed inline** — the repair is a re-link from `docs/repo-lock.md`
+(not this row's file) or an `orphans-allow` entry, and declaring an absence is an
+act of acceptance. `trace.py --strict` and `check_trajectory.py --strict` exit 0;
+`check_docs.py --stale` 0 broken; `check.py --jobs 0` **RESULT: PASS**;
+`ruff format --check` clean over 168 files; `ruff check` carries only its
+pre-existing `E741` in `tests/test_id_watermark.py`. Watermark raised by
+`trace.py --bump-ids`: **WI 429 → 430**.
+
+**A measured side-effect.** `check_doc_refs --strict` reports **27 dangling at
+HEAD and 27 after** — the sweep created no dangling pointer — while *untraced*
+references fell **1261 → 1237 (−24)**, which is exactly the `docs/repo-lock.md`
+mentions leaving the code.
+<!-- fig: cmd=".venv/bin/python project-trajectory/scripts/check_doc_refs.py --root . --strict" rev=4d0b3470 -->
+
+**Generated surfaces.** `gen_arch_map.py` harvests the **first line** of each
+docstring — where several citations sat — so the sweep is visible in the map.
+`trunk_step.py --regen` re-derived all six families; `docs/architecture.md`
+(3 cells), `PROJECT_STATE.html` (1 line) and `docs/gate` (its `as-of` stamp
+only) moved. **The gate is unchanged at G1** with identical basis counts, which
+is the point: a comment sweep must not move the gate.
+
+**Deviation.** One, flagged rather than taken silently: the topical home for a
+rule about what a *comment* may say is arguably the file's "Comment for humans"
+section. It went in the **Working agreement as instructed**, because its reach is
+wider than comments — the F-10 finding that motivated it was about `Contract`
+cells in a registry, which `plan_briefs.IF_SURFACE_COLUMNS` carries verbatim into
+planning briefs.

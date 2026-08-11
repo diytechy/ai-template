@@ -27,8 +27,7 @@ plus a loader, not a sixteen-module rename braided into a migration. D-3 is the
 pass that renames things, and it renames them on this carrier afterwards.
 
 WHY THIS IS A SIBLING MODULE AND NOT ELEVEN COPIES — OWNER RULING 2026-08-10,
-recorded as repo-lock D-6, AMENDING the F5 ruling that rejected a shared
-`_kitcommon.py` at WI-078. The F5 rule buys cross-script copy-ability, and it
+AMENDING the F5 ruling that rejected a shared `_kitcommon.py` at WI-078. The F5 rule buys cross-script copy-ability, and it
 is a good rule; it was written for small stable PLUMBING (a five-line CSV
 loader, the argparse preamble), where a divergence between copies is visible
 and cheap. This is not that. Measured before the ruling: two readers need all
@@ -334,7 +333,7 @@ def empty_value_findings(rows, id_col, rel=""):
     row disagree — the file says the author wrote something, the reader says
     they did not — and every writer downstream would then re-emit a row it never
     read. Refusing names the row and the key and asks for a one-character edit:
-    delete the line. (Owner ruling owed — repo-lock D-5 did not rule this; the
+    delete the line. (Owner ruling owed — this fork was never ruled; the
     fail-closed option is taken and flagged.)"""
     out = []
     for row in rows:
@@ -588,7 +587,7 @@ def folded(need):
     """A need projected onto the CORE four, for a reader that renders one shape.
 
     This is the PRESENTATION rule the markdown tables forced, kept out of the
-    carrier deliberately (repo-lock D-5) — but kept in ONE place, which the
+    carrier deliberately — but kept in ONE place, which the
     carrier did not previously manage. `traj_parse._sn_rows` and
     `gen_okf.sn_rows` each carried a copy pinned by nothing but a docstring
     saying "change both together"; they drifted, and the dashboard rendered a

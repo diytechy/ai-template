@@ -76,7 +76,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-# Sibling: the spine's registry CARRIER (repo-lock D-5/D-6) — the one home for
+# Sibling: the spine's registry CARRIER — the one home for
 # the TOML tier tables, the key->column vocabulary and both readers. Run as a
 # subprocess this script's own dir is sys.path[0] so a plain import resolves;
 # the guard covers an in-process import (a test) whose sys.path does not yet
@@ -173,7 +173,7 @@ def sn_all_ids(text):
 
 def sn_draft_ids(text):
     """The set of Draft SN ids in a needs registry's `text`, through whichever
-    CARRIER wrote it (repo-lock D-5).
+    CARRIER wrote it.
 
     Under TOML draft-ness is a FIELD on the need (`kind = "draft"`); under the
     legacy markdown it was SECTION-AS-STATE — every `SN-###` appearing under a
@@ -401,7 +401,7 @@ def compute(docs):
     dict: counts, the raw computed level (may be G0), the same level recomputed
     with the drafts removed (`ex_draft`), the per-phase breakdown, and the
     runnable gate name (raw floored to G1)."""
-    # The three spine tiers read through the CARRIER (repo-lock D-5), which
+    # The three spine tiers read through the CARRIER, which
     # resolves TOML or CSV and hands back rows under today's column names — so
     # the gate derivation below is untouched by the migration. `load_csv` stays
     # for the off-spine registries, which do not move.

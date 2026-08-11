@@ -42,7 +42,7 @@ import re
 import sys
 from pathlib import Path
 
-# Sibling: the spine's registry CARRIER (repo-lock D-5/D-6) — the one home for
+# Sibling: the spine's registry CARRIER — the one home for
 # the TOML tier tables, the key->column vocabulary and both readers. Run as a
 # subprocess this script's own dir is sys.path[0] so a plain import resolves;
 # the guard covers an in-process import (a test) whose sys.path does not yet
@@ -119,8 +119,8 @@ def real_rows(rows, key, prefix):
 
 def sn_rows(root):
     """Every need as the core four — `spine_carrier.folded_needs`, the ONE home
-    this rule now has (repo-lock D-6). Was a copy of traj_parse._sn_rows and
-    trace._sn_prose kept in sync by a docstring; they drifted."""
+    this rule now has. Was a copy of traj_parse._sn_rows and trace._sn_prose
+    kept in sync by a docstring; they drifted."""
     return spine_carrier.folded_needs(root / "docs/requirements/stakeholder-needs.toml")
 
 
@@ -255,8 +255,8 @@ def _doc_title_and_summary(path):
 
 
 def source_path(root, rel, needs=False):
-    """The registry path to CITE, resolved to the carrier that is actually live
-    (repo-lock D-5). The bundle's whole promise is that every generated page
+    """The registry path to CITE, resolved to the carrier that is actually
+    live. The bundle's whole promise is that every generated page
     names the file its content came from, so a hardcoded suffix would print a
     path the reader cannot open — in the one line that exists to send them back
     to the source of truth."""
@@ -271,7 +271,7 @@ def emit(root):
     registries are placeholder-only/absent (the vacuous case)."""
     req = root / "docs" / "requirements"
     sns = sn_rows(root)
-    # The spine tiers read through the CARRIER (repo-lock D-5) so the bundle
+    # The spine tiers read through the CARRIER so the bundle
     # exports the same cells whether the registries are CSV or TOML.
     srs = real_rows(
         spine_carrier.load(req / "system-requirements.toml", "SR-ID"), "SR-ID", "SR-"

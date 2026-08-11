@@ -65,7 +65,7 @@ def _sn_rows(root):
     """Full stakeholder-need rows (id, need, why, priority, acceptance) from the
     md tables, the `-000` placeholder skipped and the rows id-sorted.
 
-    ONE HOME now (repo-lock D-6): this, gen_okf.sn_rows and trace._sn_prose all
+    ONE HOME now: this, gen_okf.sn_rows and trace._sn_prose all
     read `spine_carrier.folded_needs`. They were three copies pinned by a
     docstring saying "change all three together" — and they drifted anyway (one
     kept `-000`, one did not), rendering a phantom SN-000 root in the icicle."""
@@ -102,7 +102,7 @@ def _spine(root, skip_example=False):
 
     def rows(rel, col, prefix):
         out = []
-        # Through the CARRIER (repo-lock D-5), not ct.read_rows: these are spine
+        # Through the CARRIER, not ct.read_rows: these are spine
         # tiers, and a CSV parse of a TOML file yields NOTHING rather than
         # failing — the icicle would render an empty spine and --check would
         # happily byte-compare two empty renders.

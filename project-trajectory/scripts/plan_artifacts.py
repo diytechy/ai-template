@@ -215,9 +215,9 @@ def allocate_round_dir(root, slug):
     `DP-002`. Live directories are still swept, for the same reason
     `intake.next_wi_id` still sweeps filenames: for a MINT, an id held anywhere
     is an id taken. But the FLOOR is the mark, because `max(live) + 1` re-issues
-    the number of any round that has been DELETED — and under repo-lock D-4
-    deletion is how supersession works, so a reused DP id silently re-points
-    every log entry and commit message citing that round.
+    the number of any round that has been DELETED — and deletion is how
+    supersession works, so a reused DP id silently re-points every log entry
+    and commit message citing that round.
 
     The mark is then RAISED in the same act, matching `intake`'s mint: an
     allocation that does not record itself leaves the mark behind the tree, and
@@ -291,7 +291,7 @@ def file_selected_wis(
 
     # `max(live, mark) + 1` — the same mint `intake.next_wi_id` performs, and for
     # the same reason: `max(live) + 1` re-issues the id of any spec that has been
-    # DELETED, which under repo-lock D-4 is how a superseded work item goes away.
+    # DELETED, which is how a superseded work item goes away.
     # The union over both homes stays (a live id anywhere is taken); the mark is
     # the FLOOR under it, and the reader RAISES rather than degrading to zero.
     existing = _existing_wi_nums(csv_path)

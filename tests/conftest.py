@@ -894,7 +894,7 @@ SPINE_TOML_RELS = (
 def use_legacy_spine_carrier(root):
     """Drop a scaffold's TOML spine so the fixture can write the LEGACY one.
 
-    Since the carrier cutover (repo-lock D-5) `bootstrap` scaffolds the spine as
+    Since the carrier cutover `bootstrap` scaffolds the spine as
     TOML, while most fixtures here write the markdown/CSV carrier — and
     `spine_carrier.resolve` REFUSES both homes at once rather than picking by
     precedence. That refusal is the rule working, so the fixture removes the

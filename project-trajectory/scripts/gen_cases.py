@@ -210,8 +210,8 @@ def emit_toml_rows(cases, args, strategy, param_str):
 def emit_csv_rows(cases, args, strategy, param_str):
     """Paste-ready TC rows for the LEGACY carrier."""
     # The LEGACY carrier's paste form, kept for a repo that has not run
-    # migrate_carrier yet (repo-lock D-5; the TOML form above is the one the
-    # shipped registries take). Header order is the template's key order.
+    # migrate_carrier yet (the TOML form above is the one the shipped
+    # registries take). Header order is the template's key order.
     print(
         "TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,"
         "Evidence,Status,Phase"

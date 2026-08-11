@@ -54,7 +54,7 @@ REGISTRIES = {
     # legacy-format reference wi_convert.py migrates from — its schema is
     # pinned by test_wi_convert and test_plan_artifacts, not by a live copy.
     #
-    # The three SPINE tiers left it at the carrier cutover (repo-lock D-5): they
+    # The three SPINE tiers left it at the carrier cutover: they
     # are TOML now, have no header to order, and are held by the key-set rule
     # below instead. Only the registries that stayed CSV are checked here.
     "docs/requirements/components.csv": "components.template.csv",
@@ -221,8 +221,8 @@ def test_dev_setup_carries_no_engine_line_to_pin():
 
 
 # --- the spine's TOML carrier: a KEY-SET rule, not an ordered header ----------
-# (repo-lock D-5 step 5. The three tiers below moved carrier; `components`,
-# `interfaces` and `open-items` did not, and stay on the ordered rule above.)
+# (The three tiers below moved carrier; `components`, `interfaces` and
+# `open-items` did not, and stay on the ordered rule above.)
 SPINE_REGISTRIES = {
     "docs/requirements/system-requirements.toml": (
         "system-requirements.template.toml",

@@ -65,7 +65,7 @@ import sys
 import tomllib
 from pathlib import Path
 
-# Sibling: the spine's registry CARRIER (repo-lock D-5/D-6) — one home for the
+# Sibling: the spine's registry CARRIER — one home for the
 # TOML tier tables, the key->column vocabulary and both readers.
 try:
     import spine_carrier
@@ -414,7 +414,7 @@ def _routed_amendments(root, before, after):
             for cell, change in rec["traced"].items()
             # Keyed by the registry STEM: the record names whichever carrier
             # file git reported, and a suffix-keyed miss here would silently
-            # reclassify a routed cell as an ordinary amendment (repo-lock D-5).
+            # reclassify a routed cell as an ordinary amendment.
             if cell
             in {spine_carrier.stem(k): v for k, v in ROUTED_TRACED_CELLS.items()}.get(
                 spine_carrier.stem(rec["registry"]), ()
@@ -970,7 +970,7 @@ def _live_registry(root, rel):
     literal suffix is fatal: a `.toml`-only probe finds nothing in a repo still
     on CSV, every gap row is minted with an EMPTY SpecRef, and `integrate`
     refuses the branch for carrying no spec-of-record — a mint that fails at
-    merge instead of at authoring (repo-lock D-5)."""
+    merge instead of at authoring."""
     suffixes = (
         spine_carrier.NEED_CARRIERS if "stakeholder-needs" in rel else None
     ) or spine_carrier.CARRIERS
@@ -1415,7 +1415,7 @@ def _locate_spine_rows(root, wanted):
     flip (under the CSV carrier the row objects are the live lists the rewrite
     mutates, so nothing scans twice).
 
-    CARRIER-AWARE (repo-lock D-5). Each registry resolves to whichever of
+    CARRIER-AWARE. Each registry resolves to whichever of
     TOML/CSV is live, and the two carriers report differently because they are
     written differently: a CSV row is a mutable list plus the column index the
     rewrite pokes, while a TOML table is rewritten by LINE and needs neither.
@@ -1438,7 +1438,7 @@ def _locate_spine_rows(root, wanted):
                     # with no Status at all cannot be re-verified, and treating
                     # it as an idempotent no-op reports a clean adjudication over
                     # a row the registry never staged for one. `_apply_flips`
-                    # refuses it (repo-lock D-5; fail closed).
+                    # refuses it (fail closed).
                     status = row.get("Status")
                     located[rid] = (
                         rel,
@@ -1484,7 +1484,7 @@ def _multiline_delims(text):
 def _flip_status_lines(lines, table, rid):
     """Rewrite `[<table>.<rid>]`'s `status = ...` line to `Verified`, in place.
     True when a line moved. A LINE REWRITE ON `bootstrap.set_process_key`'s
-    PATTERN, and for its reasons (repo-lock D-5 step 4): stdlib has no TOML
+    PATTERN, and for its reasons: stdlib has no TOML
     writer, and re-serialising the registry to change one cell would normalise
     away every comment and the file's authored ordering — a whole-file diff for
     a one-word act, on the registry whose diffs the amendment guard reads.
@@ -1557,7 +1557,7 @@ def _apply_flips(root, tables, located):
     for rel, ids in toml_edits.items():
         live, _rows = tables[rel]
         table = spine_carrier.SPINE_TABLE[dict(check_trajectory.SPINE_CSVS)[rel]]
-        # The file's OWN newline style is preserved (repo-lock D-5; the
+        # The file's OWN newline style is preserved (the
         # contract this writer advertises is that every byte except the one
         # status cell is unchanged, and silently converting a CRLF registry to
         # LF makes a one-word ratification a whole-file diff — on exactly the
@@ -1655,9 +1655,9 @@ def main(argv=None):
         "--rows", required=True, help="spine row id(s), ;-joined (SR-/LLR-/TC-)"
     )
     adj.set_defaults(func=_cmd_adjudicate)
-    # The `attest` subcommand retired with `attestations.csv` (docs/repo-lock.md
-    # D-1). It returns with the anchor half, writing the accepted digest to the
-    # artifact's own row instead of appending a ledger line — same name, same
+    # The `attest` subcommand retired with `attestations.csv`. It returns with
+    # the anchor half, writing the accepted digest to the artifact's own row
+    # instead of appending a ledger line — same name, same
     # `--rows`/`--decision` contract, different destination.
     args = ap.parse_args(argv)
     if not getattr(args, "cmd", None):

@@ -20,8 +20,8 @@ TRACE = load_script("trace")
 def _watermark(root):
     """Give a bare fixture tree the `docs/id-watermark` every real repo carries.
 
-    Both mints here count from the MARK rather than `max(live) + 1` (repo-lock
-    D-4: a deleted id must never be handed out again), and `trace.read_watermark`
+    Both mints here count from the MARK rather than `max(live) + 1` (a deleted
+    id must never be handed out again), and `trace.read_watermark`
     REFUSES an absent file rather than reading it as "no id is taken" — so a
     fixture without one is not a mint that returns `DP-001`, it is a mint that
     correctly refuses. The reuse regressions themselves live beside the rest of

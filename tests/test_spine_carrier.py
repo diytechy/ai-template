@@ -78,7 +78,7 @@ def test_an_EXPLICIT_empty_string_is_REFUSED_not_quietly_accepted(tmp_path):
 
     FAIL CLOSED: refused, naming the row and the key, rather than normalised
     away. Normalising would leave the file and the loaded row disagreeing about
-    what the author wrote. (Owner ruling owed; repo-lock D-5 did not rule it.)
+    what the author wrote. (Owner ruling owed; this fork was never ruled.)
     """
     path = _write(tmp_path, '[requirement.SR-001]\ntitle = ""\nstatus = "Verified"\n')
     with pytest.raises(SystemExit) as excinfo:

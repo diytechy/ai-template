@@ -143,7 +143,7 @@ def test_current_digests_covers_the_spine_AND_the_needs(tmp_path):
 def test_the_amendment_seam_is_BLIND_to_an_amend_plus_flip(tmp_path):
     """The gap, driven rather than asserted. If this ever starts failing, the
     anchor's whole justification has changed and it should be re-argued before
-    the anchor half (docs/repo-lock.md D-1) is built on it."""
+    the anchor half is built on it."""
     pytest.importorskip("subprocess")
     import subprocess
 

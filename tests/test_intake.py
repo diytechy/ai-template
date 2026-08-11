@@ -761,7 +761,7 @@ SR_TOML = (
 
 
 def test_the_flip_rewrites_ONE_LINE_of_the_toml_carrier(tmp_path):
-    # Step 4 of the carrier migration (repo-lock D-5): under the TOML carrier the
+    # Step 4 of the carrier migration: under the TOML carrier the
     # flip is a LINE REWRITE, on bootstrap.set_process_key's pattern. The
     # properties that matter are what a re-serialisation would destroy —
     # comments, ordering, and every untouched byte — so this asserts the file is

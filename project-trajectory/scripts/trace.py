@@ -547,7 +547,7 @@ def _sn_ids(docs):
     Was a markdown-row regex, which over the TOML carrier matches NOTHING —
     silently, and the id-watermark check it feeds would then never see an SN at
     all: the mark could not rise, and a retired number could be handed out
-    again with nothing to say so (repo-lock D-5). `load_needs` answers whichever
+    again with nothing to say so. `load_needs` answers whichever
     carrier is live and yields the same ids the markdown rows did."""
     path = docs / "requirements" / "stakeholder-needs.toml"
     for need in spine_carrier.load_needs(path):
@@ -1069,7 +1069,7 @@ def scan_sn_placeholders(sn_md):
 
     `sn_md` is the CARRIER-RESOLVED path the loader found, so None here means
     the registry is genuinely absent rather than "not under the suffix I
-    guessed" (repo-lock D-5)."""
+    guessed"."""
     if sn_md is None or not sn_md.exists():
         return []
     text = sn_md.read_text(encoding="utf-8-sig", errors="replace")
@@ -1099,7 +1099,7 @@ def sn_all_ids(text):
 
 def sn_draft_ids(text):
     """The set of Draft SN ids in a needs registry's `text`, through whichever
-    CARRIER wrote it (repo-lock D-5).
+    CARRIER wrote it.
 
     Under TOML draft-ness is a FIELD on the need (`kind = "draft"`); under the
     legacy markdown it was SECTION-AS-STATE — every `SN-###` appearing under a
@@ -1411,7 +1411,7 @@ def _sn_prose(sn_text):
     """Parse each SN row's prose (Need / Why it matters / Acceptance intent) from
     stakeholder-needs.md so the ratify view renders the *top* of the chain, not a
     bare SN id (WI-146 REVIEW-A). Reads `spine_carrier`, the ONE home the fold
-    now has (repo-lock D-6) — it was the third copy of a rule three modules
+    now has — it was the third copy of a rule three modules
     promised in a docstring to change together, and did not. Takes TEXT rather
     than a path because the ratify view already holds the registry's contents;
     example `-000` rows are skipped."""
@@ -1445,11 +1445,11 @@ SPINE_FILES = (
     ("docs/test/test-cases.toml", "TC-ID"),
 )
 
-# --- the spine carrier (repo-lock D-5) ---------------------------------------
+# --- the spine carrier (repo-lock D-5/D-6) -----------------------------------
 # The vocabulary and both readers live in `spine_carrier.py`, imported as a
 # sibling. The full argument for that home — and why it AMENDS the F5 ruling
-# rather than ignoring it (owner ruling 2026-08-10, repo-lock D-6) — is in that
-# module's docstring; the short version is that a duplicated VOCABULARY fails
+# rather than ignoring it (owner ruling 2026-08-10) — is in that module's
+# docstring; the short version is that a duplicated VOCABULARY fails
 # silently, by returning a row with a cell missing, which every consumer reads
 # as "the cell is empty".
 SPINE_TABLE = spine_carrier.SPINE_TABLE
@@ -1487,8 +1487,8 @@ def _rows_at(root, rev, rel_path, id_col):
     """{id: row} of a spine registry at `rev`, read through whichever CARRIER
     that revision actually used (`git show`; -000 example rows dropped).
 
-    CARRIER-AWARE BY NECESSITY, not for tidiness (repo-lock D-5, "the one thing
-    that must not be forgotten"). The spine moved from CSV to TOML, and a
+    CARRIER-AWARE BY NECESSITY, not for tidiness — this is "the one thing
+    that must not be forgotten". The spine moved from CSV to TOML, and a
     baseline read that knows only the live carrier gets `None` back from
     `git show` at every pre-migration revision — which this function's own
     contract then reads as "nothing existed = an empty baseline". Every
@@ -1528,7 +1528,7 @@ def _attested_baseline(root, sr_id):
     """The commit whose text `sr_id` was last attested against — DERIVED: the
     newest commit at which the SR row read `Verified`.
 
-    THE DERIVATION IS ONCE AGAIN THE ONLY PATH (docs/repo-lock.md D-1). SN-029
+    THE DERIVATION IS ONCE AGAIN THE ONLY PATH. SN-029
     put a read of `attestations.csv` in front of this walk, so an anchor written
     at acceptance time won over a reconstruction. That ledger is retired and its
     replacement — the anchor recorded on the SR's OWN ROW — waits on the carrier
@@ -1546,9 +1546,9 @@ def _attested_baseline(root, sr_id):
     streak depth (typically 1-2 revisions). None: off-git, or the row was never
     Verified in committed history (first attestation still pending).
 
-    THE PATHSPEC NAMES BOTH CARRIERS, and that is the second half of the hazard
-    repo-lock D-5 calls "the one thing that must not be forgotten" — `_rows_at`
-    being carrier-aware is NOT enough on its own. This walk asks git which
+    THE PATHSPEC NAMES BOTH CARRIERS, and that is the second half of "the one
+    thing that must not be forgotten" — `_rows_at` being carrier-aware is NOT
+    enough on its own. This walk asks git which
     commits touched the registry, and after the cutover the `.toml` path has
     exactly one commit (the cutover itself, where every amended row reads
     `Modified`). A single-carrier pathspec therefore yields a log with no
@@ -2235,7 +2235,7 @@ class Findings:
 
 def load_registries(docs):
     """Load the spine + off-spine registries under docs (loading only — no analysis)."""
-    # The three spine tiers read through the CARRIER (repo-lock D-5). `load_csv`
+    # The three spine tiers read through the CARRIER. `load_csv`
     # stays for the off-spine registries below, which did not move.
     raw_srs = spine_carrier.load(
         docs / "requirements" / "system-requirements.toml", "SR-ID"
@@ -2295,7 +2295,7 @@ def load_registries(docs):
     sn_draft = set()
     sn_meta = {}
     sn_integrity = []
-    # Resolved through the CARRIER, not by literal suffix (repo-lock D-5): a
+    # Resolved through the CARRIER, not by literal suffix: a
     # `.toml`-only existence test reads a markdown needs registry as ABSENT, and
     # an absent needs tier makes every SR orphan-clean, every draft need
     # ratified, and the whole SN half of `--strict` vacuous.

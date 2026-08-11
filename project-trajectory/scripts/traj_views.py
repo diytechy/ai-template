@@ -52,8 +52,8 @@ from traj_render import (
 
 def _spine_rows(root, rel, id_col):
     """One spine tier through the CARRIER, reached via the sibling that already
-    imports it (repo-lock D-6: the vocabulary has ONE home, and this module has
-    no independent need of it beyond reading a tier)."""
+    imports it (the vocabulary has ONE home, and this module has no
+    independent need of it beyond reading a tier)."""
     return _carrier.load(root / rel, id_col)
 
 
@@ -908,7 +908,7 @@ def _wi_phases(root, wis):
     delivers no SR is `unphased`. Deterministic (sorted, no clocks) so the render
     stays `--check`-stable."""
     sr_phase = {}
-    # Through the CARRIER (repo-lock D-5), not ct.read_rows: a CSV parse of the
+    # Through the CARRIER, not ct.read_rows: a CSV parse of the
     # TOML registry returns NOTHING rather than failing, and an empty SR->Phase
     # map does not red — every WI silently reads `unphased`, so the tiered
     # roadmap collapses to one phase and `--check` byte-compares two equally

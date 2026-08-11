@@ -833,7 +833,7 @@ Contracts (interfaces): IF-012, IF-033, IF-106
 | `concept(rel_dir, cid, ctype, title, description, tags, resource, body_lines)` |  |  |
 | `links(label, ids, target_dir)` |  |  |
 | `field(label, value, fmt)` | One optional labelled body section, or nothing when the cell is empty. |  |
-| `source_path(root, rel, needs)` | The registry path to CITE, resolved to the carrier that is actually live |  |
+| `source_path(root, rel, needs)` | The registry path to CITE, resolved to the carrier that is actually |  |
 | `emit(root)` | {relpath-under-docs/okf: content} for the whole bundle, or {} when the |  |
 | `on_disk(out_root)` |  |  |
 | `main()` |  |  |
@@ -877,7 +877,7 @@ Contracts (interfaces): IF-018, IF-034, IF-107
 |---|---|---|
 | `load_csv(path)` |  |  |
 | `is_example(rid)` |  |  |
-| `read_stakeholder_needs(md_path)` | `(SN-ID, need, acceptance)` per need, through the CARRIER (repo-lock D-5). |  |
+| `read_stakeholder_needs(md_path)` | `(SN-ID, need, acceptance)` per need, through the CARRIER. |  |
 | `main()` |  |  |
 
 ### `scripts/gen_skills_index`
@@ -1022,7 +1022,7 @@ Contracts (interfaces): IF-057
 | `parse_plan(text)` | The plan's proposed-WI rows from the first table whose header carries a |  |
 | `split_refs(cell)` | `;`-separated (commas tolerated) ref tokens from a table cell. |  |
 | `load_registry_ids(path, key)` | The id column of an optional CSV registry, or None when it is absent — |  |
-| `spine_ids(path, key)` | `load_registry_ids` for a SPINE registry, which reads through the carrier |  |
+| `spine_ids(path, key)` | `load_registry_ids` for a SPINE registry, which reads through the |  |
 | `proposed_rationale_present(cell)` | True when a `Proposed:` interfaces cell carries rationale text beyond |  |
 | `find_cycle(rows)` | A predecessor cycle among plan rows (list of ids), or None. Iterative |  |
 | `check_plan(name, rows, clauses, sr_ids, if_ids)` | One plan's findings + its covered-clause set. |  |

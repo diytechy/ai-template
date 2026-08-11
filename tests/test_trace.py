@@ -482,7 +482,7 @@ SR-002,Addition report,SN-001,"The system shall report the sum.","Realizes SN-00
 def _template_keys(name, table, example_id):
     """The keys the shipped template's `-000` example row declares.
 
-    Since the carrier cutover (repo-lock D-5) a template has no header line: the
+    Since the carrier cutover a template has no header line: the
     example row IS the schema, so "the shipped registry carries column X" is
     "the example row sets key X". ORDER is not asserted — TOML key order in a
     table carries no meaning, so an ordering assertion here would pin a fact the
