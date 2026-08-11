@@ -391,3 +391,80 @@ def test_if_edges_absent_registry_is_vacuous(tmp_path):
     )
     assert "-. " not in gen_arch_map.build_dependency_diagram([str(src)], [])
     assert "-. " not in gen_arch_map.build_dependency_diagram([str(src)], None)
+
+
+# --- module_bindings: the symbol oracle the spine consumes (WI-429) -----------
+
+
+def test_module_bindings_covers_every_rendered_public_item():
+    """THE DRIFT GUARD. `module_bindings` and `scan_module` are two AST walks in
+    one file — the residual cost of keeping symbol extraction in ONE module
+    rather than copying a parser into the consumer (the D-6/F5 hazard). This
+    pins them: every public item the map RENDERS for a module must be a name
+    `module_bindings` reports for that module, across every module in this repo.
+    A node type one walk learns and the other does not then reds here instead of
+    silently reporting "that symbol does not exist" on the spine."""
+    import ast
+
+    from conftest import KIT
+
+    files, internal = gen_arch_map._module_files([KIT])
+    assert files, "the kit must have modules to check"
+    checked = 0
+    for path, base in files:
+        rel, _summary, _imports, _contracts, rows = gen_arch_map.scan_module(
+            path, base, internal
+        )
+        rendered = {
+            name[: -len(" (class)")] if name.endswith(" (class)") else name
+            for name, _sig, _summ, _ids in rows
+            if name != "  methods"
+        }
+        if not rendered:
+            continue
+        bound = gen_arch_map.module_bindings(
+            ast.parse(path.read_text(encoding="utf-8"))
+        )
+        assert rendered <= bound, "{}: rendered but not bound: {}".format(
+            rel, sorted(rendered - bound)
+        )
+        checked += 1
+    assert checked > 20, "the guard must actually have walked the kit"
+
+
+def test_module_bindings_sees_what_the_rendered_map_cannot(tmp_path):
+    """The whole reason this function exists: private helpers, module constants
+    and class methods are real code the PUBLIC map deliberately drops."""
+    import ast
+
+    tree = ast.parse(
+        "CONST = 1\n"
+        "ANNOTATED: int = 2\n"
+        "def _private():\n    pass\n"
+        "def public():\n    pass\n"
+        "class Klass:\n"
+        "    def method(self):\n        pass\n"
+        "    def _hidden(self):\n        pass\n"
+    )
+    bound = gen_arch_map.module_bindings(tree)
+    assert bound == {
+        "CONST",
+        "ANNOTATED",
+        "_private",
+        "public",
+        "Klass",
+        "method",
+        "_hidden",
+    }
+
+
+def test_module_bindings_stops_at_module_scope():
+    """A function LOCAL is not a name the module offers. The census found
+    `budget_findings` and `tier_legend` cited as symbols when both are locals;
+    reporting them as bound would make the spine's answer meaningless."""
+    import ast
+
+    bound = gen_arch_map.module_bindings(
+        ast.parse("def outer():\n    a_local = 1\n    def inner():\n        pass\n")
+    )
+    assert bound == {"outer"}

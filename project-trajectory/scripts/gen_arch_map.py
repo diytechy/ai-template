@@ -175,6 +175,47 @@ def implements(node, source_lines):
     return sorted(ids)
 
 
+def module_bindings(tree):
+    """Every name a module BINDS at module scope, plus class-level `def` names.
+
+    The rendered map is deliberately a PUBLIC-API view — `scan_module` drops
+    `_`-prefixed names and never lists a module constant — so the map cannot
+    answer "does this name exist here". A spine consumer needs that question
+    answered: measured at WI-429, 41 of the kit's 149 live LLR `CodeSymbol`
+    cells name a private helper (`_ring_ink`), a module constant
+    (`STATUS_FILL`) or a class method, all of which are real code and none of
+    which the rendered table can see.
+
+    So the binding set lives HERE, next to the walk that renders the map, and
+    not in the consumer: a second AST symbol parser in a second script is the
+    D-6/F5 hazard — a copy that has not learned a node type does not fail
+    loudly, it silently reports "that symbol does not exist". Two walks inside
+    ONE file is the residual cost, and it is pinned rather than trusted:
+    `tests/test_arch_map.py` asserts every public item `scan_module` renders is
+    in this set, for every module in the repo.
+
+    Module scope only, by design. A local variable inside a function is not a
+    name the module offers, and treating one as a binding would make the
+    consumer's answer meaningless (the census found `budget_findings` and
+    `tier_legend` cited as symbols when both are function locals)."""
+    names = set()
+    for node in tree.body:
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            names.add(node.name)
+        elif isinstance(node, ast.ClassDef):
+            names.add(node.name)
+            for sub in node.body:
+                if isinstance(sub, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                    names.add(sub.name)
+        elif isinstance(node, ast.Assign):
+            for target in node.targets:
+                if isinstance(target, ast.Name):
+                    names.add(target.id)
+        elif isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name):
+            names.add(node.target.id)
+    return names
+
+
 def module_contracts(tree, source_lines):
     """The IF-### seam ids this module declares via a `Contracts: IF-###, ...`
     line in its module docstring or a top-of-file comment (WI-056). Restricted to
