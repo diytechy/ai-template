@@ -920,6 +920,51 @@ the ruling rather than resisting it — and worth knowing before the next step:
   the same lesson in a new place: what saves you is the test that proves a
   guard can still fail, not the one that proves it passes.
 
+**Step 3 — THE CUTOVER — was RUN and is NOT LANDED.** It is preserved as
+`git stash@{0}` and as [`plans/2026-08-10-carrier-cutover.patch`](plans/2026-08-10-carrier-cutover.patch);
+the branch stayed at the green commit rather than taking a red one. Run it, do
+not re-derive it — what it proved and what it exposed is the whole value:
+
+**Proved working, on the real registries:** all four tiers converted
+round-trip-clean and the `.csv`/`.md` sources deleted in the same tree;
+`trace --strict` reads TOML at `SN=29 SR=147 LLR=149 TC=146 orphans=0
+integrity=0`; `check_docs` at **0 broken links**; `derive_gate`, `okf`,
+`open-items` and `arch-map` all green; and the gating harness **PASSED** with
+the advisory set back at the session baseline.
+
+**And the hazard D-5 flagged hardest did not fire.** The 25-row re-attest brief
+regenerated across the carrier change with **zero "no baseline" cards** — real
+before/after diffs, CSV on the old side and TOML on the new. That is step 1
+doing exactly the job it was built for, verified on the real thing rather than
+on a fixture.
+
+**What it exposed — three readers that were never wired, two of them
+FAIL-OPEN:**
+
+1. `trace.load_registries` still parsed CSV, so `trace --strict` reported
+   **`SN=0 SR=0 LLR=0 TC=0 orphans=0`** — a *vacuous green*, the exact shape
+   this repo exists to prevent, and it would have passed a gate. Fixed in the
+   patch.
+2. `check_trajectory.read_rows` likewise, which emptied the AXES join and
+   reported **55 uncontained modules**. Loud rather than silent, and fixed.
+3. `traj_parse._spine` called `ct.read_rows` on TOML paths and got nothing, so
+   the dashboard would have rendered an **empty spine** — and `--check` would
+   have byte-compared two empty renders and called it fresh. Fixed.
+
+**What is still owed on the patch: ~76 test failures, not diagnosed to root.**
+One cause is known (fixtures write `.csv`, which `resolve` still finds, so
+those are *not* the failures — look past them); the rest are readers not yet
+traced and renders that changed. Do not assume the count is the work: one fix
+to `traj_parse._spine` cleared a large block of them.
+
+**The generalizable lesson, and the reason this is recorded rather than
+retried quietly:** the cutover is what found the unwired readers, because a
+carrier change turns "this reader was never converted" from invisible into
+either an empty result or a crash. Wiring readers against the OLD carrier can
+never surface them — every reader looks fine while the file it expects still
+exists. So the cutover is not the last step of the migration; it is the
+*detector*, and it should be run early and often against a throwaway tree.
+
 The carrier vocabulary is now shared by three modules (both readers plus
 `migrate_carrier`'s writer) and **pinned three ways** in
 `tests/test_rule_sync.py`: the readers' constants equal, both the exact inverse

@@ -223,12 +223,15 @@ graph LR
     m_scripts_schedule -. IF-094 .-> m_scripts_traj_panels
     m_scripts_schedule -. IF-085 .-> m_scripts_traj_parse
     m_scripts_score_reviews -. IF-046 .-> m_scripts_agent_loop
+    m_scripts_spine_carrier -. IF-109 .-> m_scripts_agent_loop
     m_scripts_spine_carrier -. IF-104 .-> m_scripts_check_doc_refs
     m_scripts_spine_carrier -. IF-105 .-> m_scripts_check_flows
     m_scripts_spine_carrier -. IF-106 .-> m_scripts_gen_okf
     m_scripts_spine_carrier -. IF-107 .-> m_scripts_gen_release_checklist
+    m_scripts_spine_carrier -. IF-110 .-> m_scripts_intake
     m_scripts_spine_carrier -. IF-108 .-> m_scripts_plan_briefs
     m_scripts_spine_carrier -. IF-102 .-> m_scripts_trace
+    m_scripts_spine_carrier -. IF-111 .-> m_scripts_traj_parse
     m_scripts_trace -. IF-001 .-> m_scripts_check
     m_scripts_trace -. IF-089 .-> m_scripts_dispatch
     m_scripts_trace -. IF-075 .-> m_scripts_gen_open_items
@@ -327,7 +330,7 @@ Contracts (interfaces): IF-037, IF-065
 ### `scripts/agent_loop`
 _Headless session engine: one claimed worker assignment, a reviewer/critique_
 Imports (internal): `agent_common`, `agent_route`, `agent_session`, `dispatch`, `intake`, `plan_round`, `plan_runner`, `prompts`, `score_reviews`, `spine_carrier`
-Contracts (interfaces): IF-015, IF-068, IF-099
+Contracts (interfaces): IF-015, IF-068, IF-099, IF-109
 
 | Public item | Summary | Implements |
 |---|---|---|
@@ -897,7 +900,7 @@ Contracts (interfaces): IF-080
 ### `scripts/intake`
 _intake.py — the unified trunk-side intake mint (WI-388; docs/concurrency-v2.md §A5.2)._
 Imports (internal): `agent_common`, `check_trajectory`, `dispatch`, `schedule`, `spine_carrier`, `trace`, `wi_convert`
-Contracts (interfaces): IF-090, IF-091, IF-092, IF-101
+Contracts (interfaces): IF-090, IF-091, IF-092, IF-101, IF-110
 
 | Public item | Summary | Implements |
 |---|---|---|
@@ -1264,7 +1267,7 @@ Contracts (interfaces): IF-093, IF-094
 ### `scripts/traj_parse`
 _Parse/sources for the project-state dashboard — registries, docs, git._
 Imports (internal): `check_trajectory`, `schedule`, `spine_carrier`
-Contracts (interfaces): IF-082, IF-085
+Contracts (interfaces): IF-082, IF-085, IF-111
 
 | Public item | Summary | Implements |
 |---|---|---|

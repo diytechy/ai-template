@@ -5,7 +5,7 @@ The spine/OKF/arch-map/gate readers, the one subprocess capture seam
 WI-280 split of gen_trajectory.py; the facade re-exports, so consumers are
 unchanged.
 
-Contracts: IF-082, IF-085 — the seams this module declares (process.md §8; rows of
+Contracts: IF-082, IF-085, IF-111 — the seams this module declares (process.md §8; rows of
 record in docs/requirements/interfaces.csv). Both are the sibling-held halves of
 gen_trajectory's own seams: IF-082 is IF-056's derivation-loader read of
 check_trajectory, IF-085 is IF-071's frontier read of schedule (whose guarded import
