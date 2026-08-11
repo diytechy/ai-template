@@ -918,6 +918,51 @@ why (one bullet each; cite ids)._
   consent dial of the same class as SN-009's privacy gate, not a derived
   mechanism.
 
+- **2026-08-11 — D-7 EXECUTED: the duplication census is torn down, and D-4
+  performs its first supersession (WI-426).** Owner ruling 2026-08-10
+  ([repo-lock.md](repo-lock.md) §2 D-7), on the evidence ledger: *"unless there
+  is a better alternative it seems to be creating more maintenance structure
+  than it really solves, so it should probably just be torn down."* One real
+  catch at the one-time triage and none since; structurally blind to a
+  **diverged** copy, which is the dangerous case (an edited copy is no longer an
+  identical token block, so the tool went quiet exactly when duplication became
+  dangerous); 93% of its lines registering accepted idioms. The alternative
+  passed over was the member-list improvement, weighed in the ruling and judged
+  not worth keeping the apparatus for; the hedge instruction — bring back a
+  genuinely cheaper form rather than build it — found nothing to bring back, and
+  the reason is structural: no cheaper variant of exact-token fingerprinting
+  sees divergence. **`check_dupes.py`, `docs/dupes-allow` and their 30 tests are
+  deleted, not archived** (a registry states what IS; git is the history — the
+  D-1/D-4 doctrine).
+
+  **THE SUPERSESSION, which is the part that sets precedent.** `SR-039 →
+  LLR-036 → TC-039` are **DELETED from the registries**, not marked — the first
+  time D-4 has been performed. `SR 147→146, LLR 149→148, TC 146→145`, with
+  `orphans=0 integrity=0`. **`IF-007`/`IF-027` went with the module they
+  describe**, because `trace.interface_findings` makes an IF row citing an
+  unknown SR a `--strict` FINDING: leaving them would have traded one dangling
+  pointer for two. **The watermark is unchanged and could not have been
+  violated** — a mark only rises, and all four deleted ids were interior, never
+  a maximum, so the headroom the marks already carried is exactly what retires
+  them (`SR = 147`, `LLR = 166`, `TC = 160`, `IF = 112` against live maxima of
+  the same). The numbers stay spent; **this entry is the forwarding pointer
+  home** for anything that cites them. The only mark that moved in this WI moved
+  at the CLAIM (`WI 425 → 426`), which is the same rule seen from the other
+  side: a mint counts from the watermark, never from `max(live)`.
+
+  **F5 IS UNBOUNDED AGAIN, and the mitigation is named rather than implied.**
+  The census header was the only live home of the 2026-07-12 ruling that
+  rejected a shared `_kitcommon.py`, so deleting it without rehoming would have
+  destroyed the statement of the rule along with its meter: the rule now lives
+  in **`tests/test_rule_sync.py`'s module docstring**. Duplicated **plumbing** is
+  accepted **unbounded** — the ledger shows that was its de-facto state anyway;
+  duplicated **policy** owes a **behavioural pin** there, asserted BY VALUE,
+  because equality alone can be vacuous (repo-lock §5's `_sn_fields` case).
+  [enforcement-audit.md](enforcement-audit.md) records the downgrade of "one
+  fact, one home" from Harness to Test-plus-Reviewer with the honest reason, and
+  ADOPTING.md tells an adopter that a re-sync deletes the script and never
+  touches their census file — keeping the check is their call.
+
 ## Audit log
 
 <!-- Append verdict blocks here per PROCESS.md §5. Newest at the bottom. -->
@@ -18283,7 +18328,7 @@ rulings' to resolve, not this sitting's).
 ## 2026-07-29 — WI-346: one local spine loader + one capture helper for gen_trajectory
 
 Two extractions inside `project-trajectory/scripts/gen_trajectory.py`, both
-charged by the census ([dupes-allow](dupes-allow)) and both explicitly *not*
+charged by the census (`docs/dupes-allow`) and both explicitly *not*
 the F5 case — F5 buys cross-**script** copy-ability, and every copy here was
 inside one file.
 
@@ -25681,3 +25726,103 @@ links, 0 broken.
 `grep -rn "SN-03[012]" project-trajectory/scripts tests scripts --include="*.py" | grep -v EXAMPLE`
 returns exactly the 11 kept-as-history lines, both right after this row's
 commits and again at close HEAD — nothing unaccounted for either time.
+
+## 2026-08-11 — WI-426: the duplication census torn down (D-7), and D-4's first supersession
+
+**Summary.** Executed [repo-lock.md](repo-lock.md) §2 D-7's six-item consequence
+inventory in full, none of it optional. The ruling and its reasoning are in the
+Decisions section above; this entry is the session record.
+
+**Deliverables.**
+
+- **Deleted:** `project-trajectory/scripts/check_dupes.py` (382 lines),
+  `docs/dupes-allow` (1033), `tests/test_check_dupes.py` (411) and
+  `tests/test_dupes_census_audit.py` (433) — **18 + 12 = 30 tests**.
+- **Unwired:** the `bootstrap.py` MAPPING row + its scaffold listing, both
+  README rows, `docs/stack.ini` `[step:dupes]` **and** its
+  `docs/dupes-allow = dupes` `[generated]` row, the `stack.ini.template`
+  `dupes` DATA-kind paragraph and `[step:dup-code]` example, and three
+  `check.py` docstrings that justified themselves by what the census caught.
+- **Spine:** `SR-039 → LLR-036 → TC-039` deleted; `IF-007`/`IF-027` deleted with
+  the module they describe; `CMP-003`'s checker list corrected.
+- **Rehomed:** the F5 rule into `tests/test_rule_sync.py`'s docstring, with the
+  policy-needs-a-pin / plumbing-is-unbounded split stated in full.
+- **Regenerated in the same commit** (the `a9b6ced3` lesson in reverse — a
+  deleted module must leave every generated surface in the same commit): arch
+  map, OKF bundle (5 concepts pruned, 7 rewritten), derived gate, dashboard,
+  status snapshot.
+
+**Deviations from spec — two, both additive, both forced by the orphan check the
+row itself demanded.** (a) `IF-007`/`IF-027` and the `CMP-003` note are not in
+D-7's six-item inventory, but deleting `SR-039` without them is a `trace.py
+--strict` red, not a warn. (b) `docs/declared-absences` gained three entries and
+five markdown **links** to the deleted files became code spans; without both,
+`check_doc_refs --strict` goes 17 → 37 dangling and `check_docs` reports 5
+broken links. Nothing in the inventory was reduced and nothing was
+re-litigated.
+
+**The citation line this row had to draw, since D-4 will keep needing it.** A
+HISTORICAL document naming a retired id or path keeps its citation — the
+`check_doc_refs` docstring already rules that "fixing" it falsifies the record —
+so the log, the archive, the reviews, the four handoffs, `docs/plans/`,
+`docs/ratify/2026-07-*` and repo-lock itself were left alone. A **machine-read
+join field** is the opposite case: `WI-037`/`WI-078` had `sr_refs =
+["SR-039"]`, which was **cleared**, while their prose kept every citation plus a
+dated note. Two QUEUED specs carry live instructions naming the tool and got
+dated Context notes rather than edits to their titles: **WI-390**'s verify list
+loses a member and gains `test_rule_sync` as the substitute; **WI-422**'s
+premise is unaffected — it argued three ratchets miss a dead symbol, and one of
+the three merely stopped existing.
+
+**Byte deltas on budgeted files.** `PROCESS.md` and `AGENTS.template.md`:
+**unchanged** — checked, neither mentions the census. `PROCESS_OPTIONS.md`:
+170,452 → **170,454** (+2, one parenthetical re-worded off `check_dupes`).
+
+**Bar — run on a CLEAN DETACHED WORKTREE, and the reason is part of the
+record.** Another agent is working WI-424 in this same checkout with uncommitted
+edits and an untracked new module (`scripts/adjudicate_brief.py`). The first
+full run in the shared tree produced three failures, **none of them this row's**:
+two were their half-written `Brief` column and one was a module-size census
+mixing both agents' line deltas. A shared checkout cannot produce evidence about
+one agent's commit, so the suite was re-run in a detached worktree at this WI's
+own commit — stricter than the pre-commit hook, not weaker. The hook was
+bypassed once for the same reason, stated in that commit message: its arch-map
+step reads the WORKING tree and demanded a map entry for a module this commit
+does not add.
+
+```
+$ pytest -q -n auto        # detached worktree @ 704ffd0d + this close's docs
+2188 passed, 6 skipped in 425.38s (0:07:05)
+```
+<!-- fig: cmd=".venv/bin/python -m pytest -q -n auto" rev=704ffd0d -->
+
+Zero failures. `2188 + 6 = 2194`, which is the collection count below — the run
+covered every collected test, so the green is a full-population result and not a
+filtered one.
+
+**The 30-test delta, measured rather than subtracted** — collection counts at
+both revisions, an exact population count:
+
+```
+pytest -q --collect-only  @ 8c0e78b3 (before)  ->  2224 tests collected
+pytest -q --collect-only  @ 704ffd0d (after)   ->  2194 tests collected
+```
+<!-- fig: cmd=".venv/bin/python -m pytest -q --collect-only" rev=704ffd0d -->
+
+`−30` exactly, matching D-7's stated 18 + 12: nothing was lost that did not
+belong to the deleted subject.
+
+**The rest of the bar.** `trace.py --strict`: `SN=29 SR=146 LLR=148 TC=145
+orphans=0 integrity=0 components=5 component-findings=0 interfaces=105
+interface-findings=0`. `check_docs --root . --stale`: **0 broken**.
+`check_doc_refs --strict`: **17 dangling**, unchanged from the pre-teardown
+baseline (the three retired paths are declared, not suppressed —
+`docs/declared-absences` carries each with its reason). `derive_gate`: **G1,
+unchanged**; only the basis counts move, which is the point — a supersession
+must not move the gate. Every generated surface `--check` fresh.
+
+**Three module-size baselines re-stamped, all comment-only:** `check.py`
+1552 → 1556, `check_trajectory.py` 3895 → 3897, `bootstrap.py` 2732 → **2731**
+(DOWN, per the standing rule that a deletion shrinks a module and a generous
+ceiling silently permits regrowth).
+
