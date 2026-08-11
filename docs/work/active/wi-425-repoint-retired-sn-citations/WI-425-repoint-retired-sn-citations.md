@@ -30,6 +30,20 @@ one of these comments at a different meaning — which is exactly the hazard the
 watermark was built for, and the reason repointing is worth doing while the
 mapping is still obvious to a reader.
 
+### Re-affirm (2026-08-11, claiming this row)
+
+`check_trajectory`'s backlog-staleness warn compares this row's own last-touched
+commit against its SpecRef (`docs/repo-lock.md`); the row was minted at
+`14925426` (2026-08-10) and repo-lock has moved four times since
+(`cb7c27a5`, `da90b487`, `bb69a622`, `f1b4e0a8`, the last landing the D-5
+carrier cutover). None of that movement touches this row's premise: repo-lock's
+§8.4/D-5 material is the carrier migration and the queued sitting record, not
+the SN-030/031/032 retirement or the SR-141…146 re-parenting this row repoints
+against — that ruling is already landed on the spine
+(`docs/requirements/system-requirements.toml`), independently verified below
+before any site is touched. This content edit is the re-affirmation the clock
+asks for.
+
 ## Deliverable
 
 The classified list, not just the diff: for each of the ~71 sites, which SR it
