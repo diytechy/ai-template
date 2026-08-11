@@ -1984,6 +1984,23 @@ interface a checker copied alone into a repo with no `process.toml` can
 satisfy). If the owner rejects those two grounds, (a) is a five-script change
 needing coordination.
 
+**WI-422 — the dead-symbol sweep executed (`67d4a117` → `3758b62d`,
+2026-08-11): 19 symbols / −222 lines deleted, zero tests deleted, the
+classified keep-inventory in the WI's Deliverable.** Two records for the
+sitting from it: **(1)** `lane.run_worker` has zero callers anywhere and its
+docstring claimed to be the dispatcher's default (it is not —
+`dispatch._launch` defaults to `spawn_worker`); the docstring is corrected
+but **`Verified` LLR-150 names the symbol and its `detail` repeats the false
+claim** — a Verified-text amendment, sitting territory, joining the D-5
+falsified-row list. **(2)** The sweep surfaced a class the WI didn't name:
+18 symbols whose only consumer is their own test — green, covered, and
+consumed by nothing; the exact orphan silhouette, recorded in the inventory
+so the next sweep starts from the judgment rather than re-deriving it. The
+sweep's method note (a raw grep found ZERO dead symbols because the
+generated arch-map indexes every symbol, and F5 triplets vouch for each
+other's definitions) is in the Deliverable and is worth reading before
+anyone re-runs one.
+
 **WI-424 — the adjudicator briefs are wired via a DECLARED `Brief` column;
 two of four routed, two unrouted on named gaps (`6a1293c2` → `ced940b3`,
 2026-08-11).** The discriminator ruling went declared-not-derived on a
