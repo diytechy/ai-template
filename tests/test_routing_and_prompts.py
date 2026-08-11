@@ -114,7 +114,7 @@ def test_the_shipped_registry_documents_the_job_type_table():
     # editing the registry will meet it.
     from conftest import KIT
 
-    text = (KIT / "agents.template.csv").read_text(encoding="utf-8")
+    text = (KIT / "agents.template.toml").read_text(encoding="utf-8")
     assert "JOB TYPE -> PHASE" in text
     for phase in ("PLAN", "BUILD", "REVIEW", "CRITIQUE", "ADJUDICATE"):
         assert phase in text, phase

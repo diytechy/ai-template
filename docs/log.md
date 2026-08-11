@@ -15087,7 +15087,7 @@ WI-322 is rewritten to match, including the migration steps and a note for
 
 OI-10's ruling, executed. `docs/open-items.md` is **gone** — here and from the
 kit's scaffold surface. Decision briefs are rows in
-[`docs/requirements/open-items.csv`](requirements/open-items.csv);
+`docs/requirements/open-items.csv`;
 `gen_open_items.py` renders them, **plus every `Draft`/`Modified` spine row's
 per-cell before/after**, into [`docs/open-items.html`](open-items.html). A new
 `open-items` harness step and pre-commit floor entry gate its freshness, with
@@ -22785,7 +22785,7 @@ too hard, and an unenforceable cross-row promise, dropped.
 
 **Filed, and all four outlive this row.**
 
-- **OI-11** ([`docs/requirements/open-items.csv`](requirements/open-items.csv))
+- **OI-11** (`docs/requirements/open-items.csv`)
   — whether §B2's sentence is **struck** or **restated**, `Status=pending`. It is
   a decision about the **design text only**, and says so: WI-391 is already
   cancelled under either answer, so nobody rules on this expecting to unblock a

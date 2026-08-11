@@ -6,7 +6,7 @@ every section short and current; history — sign-offs, verdicts, ratified
 decisions, session notes — appends to the log this header points at, never here.
 
 - **History:** [log.md](log.md) _(append-only; see process.md §5)_
-- **Owner decision surface:** [requirements/open-items.csv](requirements/open-items.csv)
+- **Owner decision surface:** [requirements/open-items.toml](requirements/open-items.toml)
   _(rendered to `docs/open-items.html` by `scripts/gen_open_items.py` — one row per
   pending Needs-\<human> decision, with blast radius, options and recommendation,
   plus the before/after of every spine row owing a ratification or re-attest. The
@@ -43,7 +43,7 @@ decisions, session notes — appends to the log this header points at, never her
   discipline.)_
   - **Needs <human>** _(state the decision wanted, per item — **gate/ratification
     blockers first**; keep each a one-liner and put the depth in the
-    [open-items registry](requirements/open-items.csv), which
+    [open-items registry](requirements/open-items.toml), which
     `scripts/gen_open_items.py` renders to `docs/open-items.html`)_:
     - OI-1 — decide: keep or drop the legacy export flag (blocks: G1) →
       [system-requirements.toml](requirements/system-requirements.toml)

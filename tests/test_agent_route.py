@@ -470,7 +470,7 @@ def test_resolve_token_unresolvable(tmp_path):
     assert rid is None and "no exact id and no Family-Model match" in reason
     ids, errors = route.resolve_enabled(["ANTHROPIC-OPUS", "GHOST-MODEL"], reg, tr)
     assert ids == ["ANTHROPIC-OPUS-4.9"]
-    assert any("not a row in docs/agents.csv" in e for e in errors)
+    assert any("not a row in docs/agents.toml" in e for e in errors)
 
 
 def test_acct2_row_cools_down_independently(tmp_path):
@@ -542,7 +542,7 @@ def test_pool_context_lists_state_and_notes(tmp_path):
     assert "ANTHROPIC-OPUS [strong, ANTHROPIC] available" in ctx
     assert "available —" not in ctx
     # An enabled id not in the registry renders honestly rather than crashing.
-    assert "GHOST-9 (not in docs/agents.csv)" in ctx
+    assert "GHOST-9 (not in docs/agents.toml)" in ctx
 
 
 # --- the two-hat planner pair + runtime-nonresponse fallback (WI-196, P3) --- #

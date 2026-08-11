@@ -26,7 +26,7 @@ required for the minimum profile). Rows are in document order; each maps to the
 | Lifecycle phase | install/startup/steady-state requirements are easy to miss (most non-trivial products) | lifecycle tags on SRs |
 | Gate authority levels | a repo declares a non-default `gate_policy` | `docs/process.toml` `[attestation] gate_policy` + an attestation / deviation register |
 | Agent iteration branch & sync | you want agent-driven work to land as curated, reviewable history | a branch + sync cadence, wired into hooks |
-| Unattended operation | a coordinator grinds work from one entry point while nobody watches | `agent_loop.py` + `dispatch.py`/`lane.py`, `integrate.py`, `agents.csv`, the launchers |
+| Unattended operation | a coordinator grinds work from one entry point while nobody watches | `agent_loop.py` + `dispatch.py`/`lane.py`, `integrate.py`, `agents.toml`, the launchers |
 | Critique verification & the critique loop | a requirement's acceptance is **subjective** | a critique round + `Attest`/critique TCs |
 | Dual-plan decomposition | a goal is design-shaping enough that one planner's WI decomposition should not go unchallenged | two rival plans + a coverage diff + one critique round + an arbiter verdict (`docs/plans/`) |
 | Tier-conditional guardrails | an unattended run maps different model tiers to different phases | `docs/process.toml` `[policies] guardrails` |
@@ -795,7 +795,7 @@ inherits that resume surface, so pruning it is the integrator's charter,
 with evidence living in `log.md` and the iteration logs.
 
 **Heterogeneous scheduling — model routing, reviewer dispatch, and the
-escalation policy (`docs/agents.csv` + `docs/agents-enabled`; WI-059).** The
+escalation policy (`docs/agents.toml` + `docs/agents-enabled`; WI-059).** The
 reviewer dial above is *surfaced* by default; when a repo opts into managed
 routing the loop *schedules* what it names — a committing build schedules the
 reviewer round(s) before the next build (the recorded verdict, not a block, is
@@ -804,7 +804,7 @@ consent-explicit (no silent model swap), and never-breaking: **absent the
 enable-list, the loop keeps exactly today's single `AGENT_CMD`/`AGENT_MODEL`
 behavior**, so a fresh scaffold pays nothing.
 
-- **A model registry, not a catalog — `docs/agents.csv`, the pair-row model.**
+- **A model registry, not a catalog — `docs/agents.toml`, the pair-row model.**
   Columns `Id,Family,Model,Version,Tier,CmdTemplate,Env,Notes`, and **one row =
   one (model × route) pair** — this model, reached this way ("pairs now, factor
   later"). The split is **identity vs access**:
@@ -861,7 +861,7 @@ behavior**, so a fresh scaffold pays nothing.
   a model line, keeping the "different model vs. newer version" trap closed).
   Among those: newest by **dotted-numeric tuple**, then a **maturity-rank
   tiebreak** (GA/untagged > `preview` > `beta` > `exp`, a fixed vocabulary with a
-  per-registry override — a `# tag-rank: …` comment line in `agents.csv` or the
+  per-registry override — a `# tag-rank: …` comment line in `agents.toml` or the
   `AGENT_TAG_RANK` env knob), then a **date-stamp** final tiebreak; `preview`/
   `exp` rows are skipped unless explicitly named or the only candidate, and
   equal-key route pairs fall to **registry row order**. "Newest" is computed only
@@ -1725,7 +1725,7 @@ generated snapshot block, which cannot accrete prose.
 status-surface lint.** The Needs-\<human> bullets in `status.md` stay
 **one-liners** (id + one-line recommendation), or the blackboard re-bloats; the
 *depth* of each pending decision — blast radius, options with pros/cons, the
-driver's recommendation — lives in **`docs/requirements/open-items.csv`**
+driver's recommendation — lives in **`docs/requirements/open-items.toml`**
 (scaffolded from `registries/open-items.template.csv`), one row per decision,
 and renders into **`docs/open-items.html`** — the generated surface the owner
 actually reads, so the review is **one page with all context**.

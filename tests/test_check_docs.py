@@ -885,29 +885,31 @@ def test_status_order_and_missing_marker_warn(scaffold):
 
 def _write_open_items(scaffold, rows):
     """The open-items REGISTRY (WI-322) — S-3's brief source since the markdown
-    surface retired."""
-    path = scaffold / "docs" / "requirements" / "open-items.csv"
+    surface retired; TOML since the batch-2 carrier cutover (repo-lock §8.1).
+
+    REPLACES the scaffolded registry rather than adding a second file: writing
+    the other carrier beside it is what `spine_carrier.resolve` REFUSES, and
+    refusing is the point — two homes for one fact is the state the migration
+    exists to leave."""
+    path = scaffold / "docs" / "requirements" / "open-items.toml"
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(
-        "OI-ID,Title,Status,Raised,OneLine,Decision,BlastRadius,Options,"
-        "Recommendation,WI-Refs,RuledDate,RulingRef\n" + rows,
-        encoding="utf-8",
-    )
+    (path.parent / "open-items.csv").unlink(missing_ok=True)
+    path.write_text(rows, encoding="utf-8")
+
+
+def _oi(oid, status="pending", title="decide the flag"):
+    return '[open_item.{}]\ntitle = "{}"\nstatus = "{}"\n\n'.format(oid, title, status)
 
 
 def test_oi_coherence_both_directions(scaffold):
     # S-3: a Needs-<human> OI with no brief warns; a briefed OI never named in
     # status.md warns; an In-flight OI needs NO brief; all warn-only (exit 0).
     _write_status(scaffold, _STATUS_SHAPED)
-    _write_open_items(
-        scaffold,
-        "OI-1,decide the flag,pending,,,...,,,,,,\n"
-        "OI-8,stale ruled item,pending,,,...,,,,,,\n",
-    )
+    _write_open_items(scaffold, _oi("OI-1") + _oi("OI-8", title="stale ruled item"))
     proc = run_py(["scripts/check_docs.py"], cwd=scaffold)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "OI-9: a Needs-<human> item" in proc.stdout  # missing brief
-    assert "OI-8: briefed in requirements/open-items.csv" in proc.stdout  # orphan
+    assert "OI-8: briefed in requirements/open-items.toml" in proc.stdout  # orphan
     assert "OI-1" not in proc.stdout  # coherent id is quiet
     assert "OI-2" not in proc.stdout  # in-flight needs no brief
 
@@ -917,9 +919,10 @@ def test_oi_coherence_vacuous_without_open_items(scaffold):
     # stay live). WI-322: a RULED row is likewise not a brief — it is history —
     # so a queue of only ruled rows is the same vacuum.
     _write_status(scaffold, _STATUS_SHAPED)
-    oi = scaffold / "docs" / "requirements" / "open-items.csv"
-    if oi.exists():
-        oi.unlink()
+    req = scaffold / "docs" / "requirements"
+    for oi in (req / "open-items.toml", req / "open-items.csv"):
+        if oi.exists():
+            oi.unlink()
     proc = run_py(["scripts/check_docs.py"], cwd=scaffold)
     assert proc.returncode == 0
     assert "OI-9" not in proc.stdout
@@ -935,11 +938,7 @@ def test_oi_coherence_retires_under_generated_marker(scaffold):
         "\n", 1
     )[1].replace("## Scope", "<!-- END GENERATED STATUS -->\n\n## Scope")
     _write_status(scaffold, marked)
-    _write_open_items(
-        scaffold,
-        "OI-1,decide the flag,pending,,,...,,,,,,\n"
-        "OI-8,stale ruled item,pending,,,...,,,,,,\n",
-    )
+    _write_open_items(scaffold, _oi("OI-1") + _oi("OI-8", title="stale ruled item"))
     proc = run_py(["scripts/check_docs.py"], cwd=scaffold)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     # both S-3 directions stand down under the marker

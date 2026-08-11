@@ -36,10 +36,10 @@ def test_scaffold_contains_expected_files(scaffold):
         # fresh scaffold ships only this; the legacy files are absent by
         # design (shipping both would be the mixed-config refusal on day one).
         "docs/process.toml",
-        "docs/agents.csv",
+        "docs/agents.toml",
         "docs/kit-profile",
         "docs/status.md",
-        "docs/requirements/open-items.csv",
+        "docs/requirements/open-items.toml",
         "docs/log.md",
         "docs/plan.md",
         "docs/architecture.md",

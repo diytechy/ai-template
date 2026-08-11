@@ -59,13 +59,15 @@ REGISTRIES = {
     # below instead. Only the registries that stayed CSV are checked here.
     "docs/requirements/components.csv": "components.template.csv",
     "docs/requirements/interfaces.csv": "interfaces.template.csv",
-    # WI-322 / 122-REVIEW-A: the new owner-decision registry was the ONE shipped
-    # registry whose header was not locked to its live counterpart. Drifting
+    # (`open-items` left this census at the batch-2 carrier cutover, repo-lock
+    # §8.1 — it is TOML now and has no header to order. The drift it was added
+    # for is NOT dropped: it moves to the key-set rule below, together with
+    # `agents`, which had never been pinned to a template at all. The WI-322 /
+    # 122-REVIEW-A finding that put it here stands — drifting
     # Status/Raised/OneLine in the template passed all 23 dogfood tests, and a
     # scaffold on that template then rendered "the owner queue is empty" for a
-    # registry holding two pending decisions — exit 0, gate green, silent wrong
-    # content on the surface a human rules from.
-    "docs/requirements/open-items.csv": "open-items.template.csv",
+    # registry holding two pending decisions: exit 0, gate green, silent wrong
+    # content on the surface a human rules from.)
 }
 TEMPLATE_DIR = ROOT / "project-trajectory" / "registries"
 
@@ -220,22 +222,41 @@ def test_dev_setup_carries_no_engine_line_to_pin():
         assert _engine_line(text) is None, name
 
 
-# --- the spine's TOML carrier: a KEY-SET rule, not an ordered header ----------
-# (The three tiers below moved carrier; `components`, `interfaces` and
-# `open-items` did not, and stay on the ordered rule above.)
-SPINE_REGISTRIES = {
+# --- the TOML carrier: a KEY-SET rule, not an ordered header ------------------
+# (`components` and `interfaces` have not moved carrier and stay on the ordered
+# rule above — repo-lock §8.1 sequences them behind the rulings that rewrite
+# what their rows ARE.)
+#
+# `template` is a path RELATIVE TO THE KIT ROOT, not a bare name, because the
+# batch-2 entries are not all in `registries/`: `agents.template.toml` ships at
+# the kit root beside the scripts. Naming the directory per row is what let the
+# `agents` registry join the rule at all rather than stay the one shipped
+# registry pinned to nothing.
+TOML_REGISTRIES = {
     "docs/requirements/system-requirements.toml": (
-        "system-requirements.template.toml",
+        "registries/system-requirements.template.toml",
         "requirement",
         "SR-ID",
     ),
     "docs/requirements/low-level-requirements.toml": (
-        "low-level-requirements.template.toml",
+        "registries/low-level-requirements.template.toml",
         "design",
         "LLR-ID",
     ),
-    "docs/test/test-cases.toml": ("test-cases.template.toml", "test", "TC-ID"),
+    "docs/test/test-cases.toml": (
+        "registries/test-cases.template.toml",
+        "test",
+        "TC-ID",
+    ),
+    # batch-2 (repo-lock §8.1) — the SAME rule, deliberately not a second one.
+    "docs/requirements/open-items.toml": (
+        "registries/open-items.template.toml",
+        "open_item",
+        "OI-ID",
+    ),
+    "docs/agents.toml": ("agents.template.toml", "agent", "Id"),
 }
+KIT = ROOT / "project-trajectory"
 
 
 def _toml_keys(path, table):
@@ -291,8 +312,8 @@ def registry_key_drift(template_keys, live_keys, schema_keys, vocabulary):
     return None
 
 
-@pytest.mark.parametrize("live_rel", sorted(SPINE_REGISTRIES))
-def test_spine_template_declares_every_key_the_live_registry_uses(live_rel):
+@pytest.mark.parametrize("live_rel", sorted(TOML_REGISTRIES))
+def test_template_declares_every_key_the_live_registry_uses(live_rel):
     """The TOML analogue of the ordered-header rule — and it had to INVERT.
 
     Under CSV the LIVE file declared its own schema in a header, so "template
@@ -307,32 +328,49 @@ def test_spine_template_declares_every_key_the_live_registry_uses(live_rel):
     "green hides a skipped check" failure SN-008 forbids.
 
     What survives is the same class of drift, anchored to a STATED schema
-    (`spine_carrier.SPINE_TIER_KEYS`) rather than to whichever of the two
+    (`spine_carrier.REGISTRY_KEYS`) rather than to whichever of the two
     artifacts happens to move. It is not vacuous: it caught two real drifts the
     ordered rule allowed by construction (the SR template had never declared
     `SupersededBy`, live since WI-229; the LLR template's `Component` cell was
     blank, so the converted template lost the column the CSV header had
     declared) — and the anchor closes the hole the first replacement still had,
     where dropping a template-only key like `permutations` passed.
+
+    BATCH-2 REUSES THIS RULE rather than growing a second one (repo-lock §8.1):
+    `open-items` moved here from the ordered-header census, and `agents` — which
+    had never been pinned to its template at all — joins on the same three
+    legs.
     """
-    tmpl_name, table, id_col = SPINE_REGISTRIES[live_rel]
+    tmpl_rel, table, id_col = TOML_REGISTRIES[live_rel]
     live = _toml_keys(ROOT / live_rel, table)
-    tmpl = _toml_keys(TEMPLATE_DIR / tmpl_name, table)
-    schema = set(CARRIER.SPINE_TIER_KEYS[id_col])
+    tmpl = _toml_keys(KIT / tmpl_rel, table)
+    schema = set(CARRIER.REGISTRY_KEYS[id_col])
     assert live, live_rel  # a registry with no rows would make this vacuous
     assert schema, id_col  # ...and an empty schema would pass everything
-    drift = registry_key_drift(tmpl, live, schema, CARRIER.SPINE_COLUMN)
+    drift = registry_key_drift(tmpl, live, schema, CARRIER.REGISTRY_COLUMN)
     assert drift is None, "%s: %s" % (live_rel, drift)
 
 
-def test_the_live_spine_carries_more_than_the_template_example(tmp_path):
+def test_the_live_registries_carry_more_than_the_template_example(tmp_path):
     """The rule above is only worth having if the live registries are real.
 
     Guards against the shape where both sides shrink to the `-000` example and
-    every containment holds trivially."""
-    for live_rel, (_t, table, _id) in SPINE_REGISTRIES.items():
+    every containment holds trivially. The floor is per-registry because the
+    registries are honestly different sizes: the spine tiers carry >10 rows, and
+    the decision queue and the model registry are small by nature — but "more
+    than the example row" is the property that matters, and a registry that
+    shrank to its example would still red here."""
+    floors = {
+        "docs/requirements/system-requirements.toml": 10,
+        "docs/requirements/low-level-requirements.toml": 10,
+        "docs/test/test-cases.toml": 10,
+        "docs/requirements/open-items.toml": 2,
+        "docs/agents.toml": 2,
+    }
+    assert set(floors) == set(TOML_REGISTRIES), "a registry joined with no floor"
+    for live_rel, (_t, table, _id) in TOML_REGISTRIES.items():
         rows = tomllib.loads((ROOT / live_rel).read_text(encoding="utf-8"))[table]
-        assert len(rows) > 10, live_rel
+        assert len(rows) > floors[live_rel], live_rel
 
 
 # --- bite-proofs: each check FAILS on a mutated scratch copy -------------------
@@ -358,10 +396,10 @@ def test_bite_the_spine_key_rule_fails_on_a_planted_defect(tmp_path):
     in the replacement rather than in the thing it replaced.
     """
     live_rel = "docs/requirements/system-requirements.toml"
-    tmpl_name, table, id_col = SPINE_REGISTRIES[live_rel]
+    tmpl_rel, table, id_col = TOML_REGISTRIES[live_rel]
     live_src = (ROOT / live_rel).read_text(encoding="utf-8")
-    tmpl_src = (TEMPLATE_DIR / tmpl_name).read_text(encoding="utf-8")
-    schema = set(CARRIER.SPINE_TIER_KEYS[id_col])
+    tmpl_src = (KIT / tmpl_rel).read_text(encoding="utf-8")
+    schema = set(CARRIER.REGISTRY_KEYS[id_col])
 
     live_copy = tmp_path / "live.toml"
     tmpl_copy = tmp_path / "tmpl.toml"
@@ -373,7 +411,7 @@ def test_bite_the_spine_key_rule_fails_on_a_planted_defect(tmp_path):
             _toml_keys(tmpl_copy, table),
             _toml_keys(live_copy, table),
             schema if schema_keys is None else schema_keys,
-            CARRIER.SPINE_COLUMN,
+            CARRIER.REGISTRY_COLUMN,
         )
 
     # Clean today, so every failure below is the mutation and not the fixture.
@@ -684,3 +722,60 @@ def test_dogfooded_boilerplate_matches_template(live_rel, tmpl_rel):
         "{} drifted from {} — re-copy it (or demote this entry with a recorded "
         "reason)".format(live_rel, tmpl_rel)
     )
+
+
+@pytest.mark.parametrize(
+    "live_rel,plant_at",
+    [
+        ("docs/requirements/open-items.toml", "[open_item.OI-000]"),
+        ("docs/agents.toml", "[agent.ANTHROPIC-FABLE]"),
+    ],
+)
+def test_bite_the_key_rule_fails_on_a_planted_batch2_defect(
+    tmp_path, live_rel, plant_at
+):
+    """The batch-2 registries get the same bite-proof, in BOTH directions.
+
+    Reusing the spine's rule is only worth claiming if the rule actually bites
+    on the new registries, and the two directions fail for different reasons: an
+    invented LIVE key is a registry growing a column nobody shipped, a dropped
+    TEMPLATE key is a scaffold that stops shipping a column the schema states.
+    The second is the direction the pre-anchor rule could not see at all, and it
+    is the direction that matters here — `agents` had never been pinned to its
+    template before this WI, and converting the two templates dropped exactly
+    the keys no shipped row had filled (`ruled_date`/`ruling_ref` on open-items,
+    `env` on agents), which is how the rule earned its place on the way in.
+    """
+    tmpl_rel, table, id_col = TOML_REGISTRIES[live_rel]
+    live_src = (ROOT / live_rel).read_text(encoding="utf-8")
+    tmpl_src = (KIT / tmpl_rel).read_text(encoding="utf-8")
+    schema = set(CARRIER.REGISTRY_KEYS[id_col])
+    live_copy, tmpl_copy = tmp_path / "live.toml", tmp_path / "tmpl.toml"
+
+    def verdict(live_text, tmpl_text):
+        live_copy.write_text(live_text, encoding="utf-8")
+        tmpl_copy.write_text(tmpl_text, encoding="utf-8")
+        return registry_key_drift(
+            _toml_keys(tmpl_copy, table),
+            _toml_keys(live_copy, table),
+            schema,
+            CARRIER.REGISTRY_COLUMN,
+        )
+
+    assert verdict(live_src, tmpl_src) is None  # clean today
+
+    # (1) a live row quietly grows a key nobody shipped.
+    planted = live_src.replace(plant_at, plant_at + '\nowner_hat = "Systems"', 1)
+    assert planted != live_src, plant_at
+    drift = verdict(planted, tmpl_src)
+    assert drift is not None and "owner_hat" in drift
+
+    # (2) the template stops declaring a key the schema states — the direction
+    # a template-vs-live comparison alone is blind to.
+    victim = sorted(schema)[0]
+    dropped = "\n".join(
+        line for line in tmpl_src.split("\n") if not line.startswith(victim + " = ")
+    )
+    assert dropped != tmpl_src, victim
+    drift = verdict(live_src, dropped)
+    assert drift is not None and victim in drift

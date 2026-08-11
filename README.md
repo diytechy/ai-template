@@ -76,11 +76,11 @@ chasing it.
     backoff, a stall guard, and tracked per-session logs in `docs/iteration/`.
   - Optional **multi-family, heterogeneous scheduling** (SN-026) — several LLM
     families are declared as (family × model × tier) pair-rows in
-    `docs/agents.csv` and selected **per job and per level**; when
+    `docs/agents.toml` and selected **per job and per level**; when
     `docs/agents-enabled` opts in,
     a committing build schedules separate fresh **reviewer** sessions (redacted
     of the implementer's self-assessment), with the model chosen from the
-    `docs/agents.csv` enable-list by tier + cross-family heterogeneity + cooldown,
+    `docs/agents.toml` enable-list by tier + cross-family heterogeneity + cooldown,
     a mechanical substance scorer, and a fixed **win-stay/lose-shift**
     escalation policy (degraded availability — one provider — is legal); absent
     the enable-list, behavior is unchanged (see
@@ -343,7 +343,7 @@ set:
 | `okf-export` | on (no file) | **opt-out** `off` | on (`docs/okf/` committed) |
 | `interfaces-check` | on, warn-first (no file) | **opt-out** `off` | on — declared seams checked |
 | `components-check` | on, warn-first (no file) | **opt-out** `off` | on — 5 components |
-| `agents.csv` + `agents-enabled` | registry seeded **inert**; no enable-list | **opt-in** — creating `agents-enabled` turns managed routing on | **on** — 8 pair rows / 3 families (ANTHROPIC / OPENAI / OPENCODE; tiers `strong/medium/quick`; Anthropic-led per tier — Fable strong, Opus medium) |
+| `agents.toml` + `agents-enabled` | registry seeded **inert**; no enable-list | **opt-in** — creating `agents-enabled` turns managed routing on | **on** — 8 pair rows / 3 families (ANTHROPIC / OPENAI / OPENCODE; tiers `strong/medium/quick`; Anthropic-led per tier — Fable strong, Opus medium) |
 | `subagent-gate` | off (no file) | **opt-in** `ask` / `deny` (Claude hook example) | off |
 
 Scaffold-time *structure* (which process sections your generated docs carry) is

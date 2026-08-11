@@ -483,7 +483,7 @@ def test_enabled_id_not_in_registry_fails_preflight(managed_repo):
     (repo / "docs" / "agents-enabled").write_text("GHOST-MODEL-9\n", encoding="utf-8")
     proc = _loop(repo, cmd)
     assert proc.returncode == 2, proc.stdout + proc.stderr
-    assert "not a row in docs/agents.csv" in proc.stderr
+    assert "not a row in docs/agents.toml" in proc.stderr
 
 
 def test_two_top_tier_failures_page_the_human(managed_repo):

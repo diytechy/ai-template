@@ -262,3 +262,44 @@ def test_node_is_a_first_class_stack_choice():
     # with --agents would materialize nothing.
     chosen = {n for n, _ in boot.select_skills("node", "any", False)}
     assert {"registry-hygiene", "downstream-resync", "gate-advance"} <= chosen
+
+
+# --- the scaffolded OI-3 brief on the TOML carrier (repo-lock §8.1) -----------
+
+
+def test_the_scaffolded_oi3_brief_is_an_append_not_a_reserialization(tmp_path):
+    """`bootstrap.py` runs BEFORE the kit is copied and can import no sibling,
+    so it carries its own two-line TOML emitter. Three properties, each of which
+    has its own way of going silently wrong:
+
+      * every byte the template shipped survives — an APPEND, so the registry's
+        header comment and its example row are untouched (the discipline
+        `set_process_key` states for `process.toml`);
+      * the appended row PARSES and comes back through the real reader, so the
+        keys it invents are the keys the reader maps (a brief written under an
+        unmapped key renders as a brief with no text, and `check_docs` S-3 then
+        reports the owner ask as briefed);
+      * the file stays LF. The CSV writer this replaced defaulted to CRLF, which
+        is the exact defect this migration was warned about.
+    """
+    carrier = load_script("spine_carrier")
+    template = (KIT / "registries" / "open-items.template.toml").read_bytes()
+    dest = _bootstrap(tmp_path, "--stack", "node")
+    registry = dest / "docs" / "requirements" / "open-items.toml"
+    raw = registry.read_bytes()
+
+    assert raw.startswith(template), "the append rewrote what the template shipped"
+    assert b"\r" not in raw, "the registry must stay LF"
+
+    rows = {r["OI-ID"]: r for r in carrier.load(registry, "OI-ID")}
+    assert "OI-3" in rows
+    assert "node toolchain commands" in rows["OI-3"]["Title"]
+    assert rows["OI-3"]["Status"] == "pending"
+    assert rows["OI-3"]["BlastRadius"]  # the cell a reader would find empty
+
+    # Idempotent: a re-sync must not file OI-3 twice, and must not append a
+    # second table (a duplicate id is a TOML decode error, so this would show up
+    # as an unreadable registry rather than a duplicate row).
+    proc = run_py([SCRIPTS / "bootstrap.py", "--dest", dest], cwd=tmp_path)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert registry.read_bytes() == raw

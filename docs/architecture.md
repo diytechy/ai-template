@@ -115,6 +115,7 @@ graph LR
     m_scripts_agent_loop --> m_scripts_prompts
     m_scripts_agent_loop --> m_scripts_score_reviews
     m_scripts_agent_loop --> m_scripts_spine_carrier
+    m_scripts_agent_route --> m_scripts_spine_carrier
     m_scripts_check_doc_refs --> m_scripts_gen_arch_map
     m_scripts_check_doc_refs --> m_scripts_spine_carrier
     m_scripts_check_docs --> m_scripts_spine_carrier
@@ -133,6 +134,7 @@ graph LR
     m_scripts_dispatch --> m_scripts_trace
     m_scripts_gen_okf --> m_scripts_spine_carrier
     m_scripts_gen_open_items --> m_scripts_gen_trajectory
+    m_scripts_gen_open_items --> m_scripts_spine_carrier
     m_scripts_gen_open_items --> m_scripts_trace
     m_scripts_gen_prompt_catalog --> m_scripts_prompts
     m_scripts_gen_release_checklist --> m_scripts_spine_carrier
@@ -192,6 +194,7 @@ graph LR
     m_scripts_traj_views --> m_scripts_traj_parse
     m_scripts_traj_views --> m_scripts_traj_render
     m_scripts_trunk_step --> m_scripts_plan_artifacts
+    m_scripts_trunk_step --> m_scripts_spine_carrier
     m_scripts_adjudicate_brief -. IF-115 .-> m_scripts_agent_loop
     m_scripts_agent_common -. IF-065 .-> m_scripts_agent_loop
     m_scripts_agent_route -. IF-044 .-> m_scripts_agent_loop
@@ -236,15 +239,18 @@ graph LR
     m_scripts_score_reviews -. IF-046 .-> m_scripts_agent_loop
     m_scripts_spine_carrier -. IF-114 .-> m_scripts_adjudicate_brief
     m_scripts_spine_carrier -. IF-109 .-> m_scripts_agent_loop
+    m_scripts_spine_carrier -. IF-119 .-> m_scripts_agent_route
     m_scripts_spine_carrier -. IF-104 .-> m_scripts_check_doc_refs
     m_scripts_spine_carrier -. IF-112 .-> m_scripts_check_docs
     m_scripts_spine_carrier -. IF-105 .-> m_scripts_check_flows
     m_scripts_spine_carrier -. IF-106 .-> m_scripts_gen_okf
+    m_scripts_spine_carrier -. IF-118 .-> m_scripts_gen_open_items
     m_scripts_spine_carrier -. IF-107 .-> m_scripts_gen_release_checklist
     m_scripts_spine_carrier -. IF-110 .-> m_scripts_intake
     m_scripts_spine_carrier -. IF-108 .-> m_scripts_plan_briefs
     m_scripts_spine_carrier -. IF-102 .-> m_scripts_trace
     m_scripts_spine_carrier -. IF-111 .-> m_scripts_traj_parse
+    m_scripts_spine_carrier -. IF-120 .-> m_scripts_trunk_step
     m_scripts_trace -. IF-001 .-> m_scripts_check
     m_scripts_trace -. IF-089 .-> m_scripts_dispatch
     m_scripts_trace -. IF-075 .-> m_scripts_gen_open_items
@@ -404,13 +410,14 @@ Contracts (interfaces): IF-015, IF-068, IF-099, IF-109
 
 ### `scripts/agent_route`
 _Model routing for the unattended coordinator — the enable-list + availability_
-Contracts (interfaces): IF-044, IF-045
+Imports (internal): `spine_carrier`
+Contracts (interfaces): IF-044, IF-045, IF-119
 
 | Public item | Summary | Implements |
 |---|---|---|
 | `normalize_tier(tier)` | Lowercase + the legacy alias: `weak` — the pre-rename bottom tier — reads |  |
 | `Model (class)` | One registry row = one (model x route) pair. The id is opaque (a join |  |
-| `load_registry(path)` | Parse docs/agents.csv into {id: Model}, plus a list of error strings for |  |
+| `load_registry(path)` | Parse the model registry into {id: Model}, plus a list of error strings |  |
 | `parse_env(spec)` | Parse an `Env` cell (`KEY=value;KEY2=value2`) into a dict, to be merged |  |
 | `parse_tag_rank(spec)` | Parse a `ga>preview>beta>exp` ordering into {tag: rank} (higher = earlier |  |
 | `load_tag_rank(path, env)` | The maturity rank vocabulary for version-less resolution: the |  |
@@ -840,8 +847,8 @@ Contracts (interfaces): IF-012, IF-033, IF-106
 
 ### `scripts/gen_open_items`
 _The owner decision surface, generated (WI-322, OI-10 ruled option (b))._
-Imports (internal): `gen_trajectory`, `trace`
-Contracts (interfaces): IF-073, IF-074, IF-075
+Imports (internal): `gen_trajectory`, `spine_carrier`, `trace`
+Contracts (interfaces): IF-073, IF-074, IF-075, IF-118
 
 | Public item | Summary | Implements |
 |---|---|---|
@@ -854,6 +861,7 @@ Contracts (interfaces): IF-073, IF-074, IF-075
 | `word_diff(before, after)` | A unified word-level diff as HTML: unchanged runs wrapped `.eq` (so the |  |
 | `changed_percent(before, after)` | How much of the cell moved, counting WORDS — whitespace runs are dropped |  |
 | `md_inline(text)` | The few markdown inline forms the reused pointer lines actually use — |  |
+| `live_registry_rel(root)` | The open-items registry's path under whichever carrier is live, for the |  |
 | `render(root, since)` | The whole page. Deterministic: every input is sorted upstream. |  |
 | `pending_block_text(root)` | The pending-projection markdown item text, reused from gen_trajectory |  |
 | `main(argv)` |  |  |
@@ -976,7 +984,11 @@ Contracts (interfaces): IF-103
 |---|---|---|
 | `toml_scalar(value)` | A Python str/int/list as a TOML value. |  |
 | `cell_to_value(col, raw)` | One CSV cell as the value its column means. Empty -> None (key omitted). |  |
-| `rows_to_toml(table, id_col, rows, header)` | The whole registry as TOML text, source order preserved. |  |
+| `toml_key(rid)` | One row id as a TOML table key — bare where TOML allows it (so the file |  |
+| `rows_to_toml(table, id_col, rows, header, comments)` | The whole registry as TOML text, source order preserved. |  |
+| `read_csv_records(text, id_col)` | `(header, rows, comments)` for one CSV registry. |  |
+| `raw_comment_findings(rel, comments, text)` | Findings for a source comment line absent from the emitted TOML. |  |
+| `raw_id_findings(rel, table, raw, text)` | Findings for an id present in the RAW CSV and absent from the emitted |  |
 | `value_to_cell(col, value)` | The inverse of `cell_to_value`, for the round-trip check. |  |
 | `raw_need_findings(rel, raw, text)` | Findings for any need present in the RAW markdown and absent from the |  |
 | `compare(rel, table, expected, text)` | Findings for one converted registry. `expected` is {id: {key: text}} — |  |
@@ -1170,6 +1182,7 @@ Contracts (interfaces): IF-102
 | `carriers(rel_path, suffixes)` | Both carrier paths a registry can appear under. |  |
 | `value_to_cell(value)` | One TOML value as the cell text the CSV carrier held. |  |
 | `rows_from_toml(text, id_col)` | `{id: row}` under today's column names, or None when `text` does not |  |
+| `nested_table_findings(text, id_col, rel)` | One finding per row cell that is itself a TABLE — the shape an UNQUOTED | SR-137 |
 | `rows_from_csv(text, id_col)` | `{id: row}` from the CSV carrier. |  |
 | `rows_from_text(text, id_col, carrier)` | `{id: row}` for the named carrier (`".toml"` / `".csv"`), or None when a |  |
 | `rows_seq_from_text(text, id_col, carrier)` | Rows as a SEQUENCE in file order, duplicates included — or None when a |  |
@@ -1339,7 +1352,8 @@ Contracts (interfaces): IF-083
 
 ### `scripts/trunk_step`
 _The serial trunk step — compile the log fragments, regenerate the trunk artifacts._
-Imports (internal): `plan_artifacts`
+Imports (internal): `plan_artifacts`, `spine_carrier`
+Contracts (interfaces): IF-120
 
 | Public item | Summary | Implements |
 |---|---|---|

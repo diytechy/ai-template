@@ -607,3 +607,74 @@ def test_sr_text_renders_when_only_a_child_row_was_amended(tmp_path):
     # The negative half: the fallback states what it is, and does not claim the
     # SR was amended — the LLR is what changed, and it still shows its diff.
     assert "<del>old</del>" in page and "<ins>NEW</ins>" in page
+
+
+# --- the batch-2 carrier (repo-lock §8.1) -------------------------------------
+
+
+def test_an_unreadable_decision_queue_refuses_rather_than_rendering_it_empty(tmp_path):
+    """THE FALSE GREEN THIS MIGRATION'S SHAPE EXISTS TO REFUSE.
+
+    Under the CSV carrier a malformed registry still parsed into *something*,
+    and a registry that vanished parsed into nothing — either way this view
+    rendered "0 pending decisions", which on the owner's decision queue reads as
+    "nothing is waiting on you". `spine_carrier.load` raises on a carrier that
+    exists and will not parse, so the surface refuses to be published wrong.
+    """
+    root = repo(tmp_path, oi_rows=None)
+    (root / "docs" / "requirements" / "open-items.toml").write_text(
+        '[open_item.OI-1]\ntitle = "unterminated\n', encoding="utf-8"
+    )
+    proc = gen(root)
+    assert proc.returncode != 0
+    assert "does not parse" in (proc.stdout + proc.stderr)
+
+
+def test_the_view_points_at_whichever_carrier_is_live(tmp_path):
+    """The pointer an owner follows to edit a brief must name a file that
+    exists. Both arms, because the kit ships to repos on either carrier."""
+    root = repo(tmp_path, oi_rows=None)
+    (root / "docs" / "requirements" / "open-items.toml").write_text(
+        '[open_item.OI-1]\ntitle = "t"\nstatus = "pending"\n', encoding="utf-8"
+    )
+    assert gen(root).returncode == 0
+    assert "docs/requirements/open-items.toml" in html_of(root)
+    assert "docs/requirements/open-items.csv" not in html_of(root)
+
+    root2 = repo(tmp_path / "csv", oi_rows="OI-1,t,pending,,,,,,,,,\n")
+    assert gen(root2).returncode == 0
+    assert "docs/requirements/open-items.csv" in html_of(root2)
+
+
+def test_normalize_survives_the_carrier_change_and_this_is_why(tmp_path):
+    """`gen_open_items.normalize` exists because a Windows-authored multi-line
+    CSV cell carried a CRLF. TOML retires HALF of that hazard and NOT the other
+    half, so the function stays — recorded executably rather than argued.
+
+    RETIRED: a literal CRLF inside a multi-line TOML string is normalised to LF
+    by the PARSER (TOML 1.0), so a registry cell can no longer pick one up from
+    the editor that wrote it.
+
+    NOT RETIRED, and this is the load-bearing half: the guard also covers the
+    *checkout's own* line endings. A clone with `core.autocrlf` on stores the
+    generated HTML with CRLF, and a byte-exact freshness compare would then red
+    every fresh worktree — which is not a registry fact at all and is untouched
+    by which carrier the registry uses. Removing `normalize` would re-break the
+    WI-322 rework's detached view worktree.
+    """
+    gen_oi = load_script("gen_open_items")
+    import tomllib
+
+    # (a) the parser really does fold a literal CRLF — the retired half.
+    parsed = tomllib.loads('[open_item.OI-1]\r\ndecision = """one\r\ntwo"""\r\n')
+    assert parsed["open_item"]["OI-1"]["decision"] == "one\ntwo"
+
+    # (b) ...but a `\r` ESCAPE is still legal TOML, so a cell CAN still hold a
+    #     CR — deliberately authored rather than picked up, and still stripped
+    #     at `esc`, the one choke point every registry value passes through.
+    escaped = tomllib.loads('[open_item.OI-1]\ndecision = "a\\rb"\n')
+    assert escaped["open_item"]["OI-1"]["decision"] == "a\rb"
+    assert "\r" not in gen_oi.esc("a\rb")
+
+    # (c) the half that keeps the function: a CRLF checkout of the ARTIFACT.
+    assert gen_oi.normalize("<p>x</p>\r\n") == gen_oi.normalize("<p>x</p>\n")

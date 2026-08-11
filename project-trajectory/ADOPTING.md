@@ -507,9 +507,39 @@ table.
   no supported baseline predates the migration — `migrate_carrier.py` is marked
   `Provisional` for the same reason.
 
+  **Batch 2 (2026-08): `open-items` and `agents` move too, on the same run.**
+  `migrate_carrier.py` converts `docs/requirements/open-items.csv` and
+  `docs/agents.csv` alongside the spine, so there is nothing extra to run — but
+  there are two things to delete and one to check:
+
+  ```
+  git rm docs/requirements/open-items.csv docs/agents.csv
+  python scripts/agent_route.py --list      # the pool must still resolve
+  python scripts/gen_open_items.py          # regenerate the owner surface
+  ```
+
+  * **Comments survive, and one of them is executable.** TOML's comment is the
+    same `#` line the CSV convention used, so the converter carries every one
+    across byte-for-byte and *in place*. That matters most for the
+    `# tag-rank: ga>preview>beta>exp` line in `agents.csv`, which
+    `agent_route.load_tag_rank` **parses** — dropped, it would silently reset
+    the maturity vocabulary that resolves a version-less enable-list token.
+  * **A model id containing a `.` must be QUOTED** — `[agent."OPENAI-GPT-5.2"]`.
+    Written bare it is still valid TOML, declaring a table called `5` under a
+    row called `OPENAI-GPT-`, so the file parses and the model row is simply
+    gone. The converter quotes what needs it; a HAND edit is where this bites,
+    and `spine_carrier` refuses such a row at load rather than reading it.
+  * **Your `docs/open-items.html` must be regenerated**, and any prose linking
+    the old paths retargeted — `check_docs` reports those as broken links.
+
+  `interfaces.csv` and `components.csv` are deliberately NOT in this batch: they
+  move with the schema rulings that change what their rows *are*, so converting
+  them first would mean converting them twice.
+
 - **The spine gains a sibling: `scripts/spine_carrier.py` (2026-08).** The same
-  rule as `trace_text.py` above, and a re-sync must copy it: `trace.py` and
-  `check_trajectory.py` import it unguarded, so a repo that picks up one and not
+  rule as `trace_text.py` above, and a re-sync must copy it: `trace.py`,
+  `check_trajectory.py`, `check_docs.py`, `trunk_step.py` and (since batch 2)
+  `agent_route.py` import it, so a repo that picks up one and not
   the other gets an `ImportError` on its first check. `scripts/migrate_carrier.py`
   ships beside it. `bootstrap.py` copies all of them together; a hand-managed
   re-sync must too. *Why a shared module at all,* given the kit's own rule that
@@ -879,7 +909,7 @@ table.
   instead of this one.)*
 - **The owner decision surface became a registry + a generated view (2026-07,
   WI-322).** `docs/open-items.md` is **retired**. Decision briefs are now ROWS in
-  `docs/requirements/open-items.csv` (scaffolded from
+  `docs/requirements/open-items.toml` (scaffolded from
   `registries/open-items.template.csv`), and `scripts/gen_open_items.py` renders
   them — together with every `Draft`/`Modified` spine row's per-cell
   before/after — into `docs/open-items.html`, the surface the owner reads. The
@@ -889,7 +919,7 @@ table.
   **Downstream impact — a one-time migration, and it is manual by design because
   only you can classify your briefs:**
   1. copy `registries/open-items.template.csv` to
-     `docs/requirements/open-items.csv`;
+     `docs/requirements/open-items.toml`;
   2. move each **pending** `## OI-N` section of your `docs/open-items.md` into a
      row (the section's fields map 1:1 onto the columns: one-line, decision,
      blast radius, options, recommendation). **Do not backfill ruled items** —

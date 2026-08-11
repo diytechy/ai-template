@@ -1313,7 +1313,7 @@ kit's, not this program's:
 
 **Placement for F-7, recommended.** It is not a constraint yet — it is an
 **unruled decision**, and the kit has a registry for exactly that.
-[`open-items.csv`](../requirements/open-items.csv) carries `OneLine` / `Decision` /
+`open-items.csv` carries `OneLine` / `Decision` /
 `BlastRadius` / `Options` / `Recommendation` / `WI-Refs` and renders as a card
 in [`open-items.html`](../open-items.html), the surface the sitting reads anyway.
 The owner queue is **currently empty** (OI-7/10/11 all ruled; only the `-000`

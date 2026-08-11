@@ -84,12 +84,12 @@ def test_dp_routes_pages_when_enable_list_present_but_registry_broken(tmp_path):
     routes, registry, note = al._dp_routes(tmp_path, "strong")
     assert routes is None
     assert registry is not None  # the caller PAGEs on this shape
-    assert "agents.csv unreadable/malformed" in note
+    assert "agents.toml unreadable/malformed" in note
     # Missing file entirely: same loud outcome.
     (docs / "agents.csv").unlink()
     routes2, registry2, note2 = al._dp_routes(tmp_path, "strong")
     assert routes2 is None and registry2 is not None
-    assert "agents.csv unreadable/malformed" in note2
+    assert "agents.toml unreadable/malformed" in note2
 
 
 # --- Bug 2: _dp_session reduces a json/stream-json transcript to result text ---

@@ -954,7 +954,11 @@ BASELINE = {
     # loop over the split cell); the other 9 record the D-6 failure mode in the
     # reader that had not learned the cell's shape, because the next reader of a
     # joined cell needs to find that written down and not re-derive it.
-    "check_trajectory.py": 3911,
+    # WI-431 (batch-2 carrier, repo-lock §8.1): +2 (3911 -> 3913). The
+    # open-items brief lint reads through `spine_carrier` instead of
+    # `read_rows`, so an unparseable decision queue refuses instead of going
+    # vacuously clean. Two lines; no behaviour beyond the carrier.
+    "check_trajectory.py": 3913,
     # NEW ENTRY, +25 (1498 -> 1523), WI-357: the two-stage work-branch claim
     # signal — the on-disk fast path plus the branch-history probe that
     # survives the §2.3 close commit (git log -1 over the claim path), with
@@ -1199,7 +1203,17 @@ BASELINE = {
     # downstream as the briefs themselves.
     # Then -12 (2735 -> 2723), WI-422 (the measured dead-symbol sweep): `prompt_text` — the free-text sibling of `prompt_choice`, born with no
     # caller and never given one.
-    "bootstrap.py": 2723,
+    # WI-431 (batch-2 carrier, repo-lock §8.1): +33 (2723 -> 2756). The
+    # scaffolded OI-3 brief moves from a 12-cell POSITIONAL tuple written by
+    # `csv.writer` to KEYED cells appended as a TOML table. The growth is the
+    # keys — a positional tuple aligned to a header is the shape that silently
+    # shifts when a column moves, and TOML has no header to align to — plus the
+    # paragraph declaring WHY this file carries its own two-line emitter:
+    # `bootstrap.py` runs before the kit is copied and can import no sibling
+    # (repo-lock §8.2), and `tests/test_rule_sync.py` pins the key set against
+    # the converter so the declared duplication cannot drift. Net +31 after the
+    # `csv`/`io` imports the CSV writer needed went with it.
+    "bootstrap.py": 2754,
     # NEW ENTRY, +228 (1423 -> 1651), Phase 2b of the concurrency restructure
     # (docs/concurrency-restructure.md §7): the spec-folder work-item reader,
     # which crosses this module over THRESHOLD for the first time. It is one
@@ -1555,7 +1569,11 @@ BASELINE = {
     # carrier paths per spine tier — it is a pathspec allowlist matched against
     # `git diff --name-only`, and a repo that has not migrated stages the `.csv`
     # name.
-    "integrate.py": 2492,
+    # WI-431 (batch-2 carrier): +1 (2492 -> 2493). One pathspec row, so the
+    # adjudication-scope allowlist names BOTH open-items carriers — an
+    # allowlist that names one suffix fails the lane toward the full bar on a
+    # migrated repo, invisibly.
+    "integrate.py": 2493,
     # NEW ENTRY, 1503, D-5 step 2d — the re-entry the D-1 removal note above
     # predicted, arriving from the CARRIER half rather than the anchor half:
     # "it re-enters as a NEW ENTRY if the anchor half puts it back over."
