@@ -181,10 +181,6 @@ _INT_KEYS = dict(INT_FIELDS)
 
 SEP = ";"
 FENCE = "+++"
-# The inert EXAMPLE spec's filename prefix — the `-000` rule applied to the
-# folder home. Scaffolded documentation, never a registry entry, so it does not
-# decide which home is authoritative (see `folder_is_authoritative`).
-EXAMPLE_PREFIX = "WI-000-"
 DELIVERABLE_PREFIX = "\n## Deliverable\n\n"
 # The body's OTHER section (WI-387): a returned WI carries a `## Handback` note
 # after the Deliverable's place. It maps to no CSV column, so this converter
@@ -497,19 +493,6 @@ def spec_paths(work_dir):
     if not work_dir.is_dir():
         return []
     return sorted(p for p in work_dir.rglob("WI-*.md") if p.parent != work_dir)
-
-
-def folder_is_authoritative(csv_path):
-    """True when the spec folder beside `csv_path` holds at least one REAL spec.
-
-    The `-000` example does not count — see `EXAMPLE_PREFIX`. That exemption is
-    what lets the folder ship additive beside the CSV in a fresh scaffold, and
-    it is the readers' rule too, so writer and readers agree by construction.
-    """
-    return any(
-        not path.name.startswith(EXAMPLE_PREFIX)
-        for path in spec_paths(work_dir_for(csv_path))
-    )
 
 
 # --- file-level operations ---------------------------------------------------

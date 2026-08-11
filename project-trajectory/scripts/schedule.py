@@ -289,10 +289,6 @@ SPEC_STATUS_DIRS = {
     "partial": "partial",
     "complete": "done",
 }
-# The inert EXAMPLE spec's filename prefix (the `-000` rule, applied to the
-# folder home): scaffolded documentation, never a registry entry that decides
-# which home is authoritative.
-SPEC_EXAMPLE = "WI-000-"
 SPEC_FENCE = "+++"
 SPEC_DELIVERABLE = "\n## Deliverable\n\n"
 # The body's OTHER section (WI-387): a lane that HANDS a WI back writes a
@@ -605,10 +601,6 @@ def is_schedulable(concurrency):
 
 
 # --- graph derivations (SR-057) ----------------------------------------------
-def _by_id(wis):
-    return {w["id"]: w for w in wis}
-
-
 def _status(wis):
     return {w["id"]: w["status"] for w in wis}
 

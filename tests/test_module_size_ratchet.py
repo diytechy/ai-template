@@ -611,7 +611,10 @@ BASELINE = {
     # the carrier instead of a markdown-row regex that matches nothing under
     # TOML; and both needs-file reads resolve the carrier rather than testing
     # one suffix for existence.
-    "trace.py": 3439,
+    # Then -38 (3439 -> 3401), WI-422 (the measured dead-symbol sweep): the orphaned `_sn_fields` copy. D-5 step 2d collapsed the drifting
+    # triplet onto `spine_carrier.folded`, but the three copies were left
+    # behind with no caller; this is the residue, not a behaviour change.
+    "trace.py": 3401,
     # +132 (1926 -> 2058; the last +10 is the F4 BOM hardening: read_rows utf-8-sig + git-show strips), WI-316: staged_spine_findings — the amend-without-
     # flip warn (--staged): content cells of a Verified spine row changed
     # without the Modified marker, suppressed when the owning SR flips in the
@@ -916,7 +919,13 @@ BASELINE = {
     # spec-folder reader's two schema tables. Verbatim in all three copies
     # (agent_common/schedule/check_trajectory), so the same +10 lands here,
     # in agent_common below, and in the un-ratcheted schedule.py.
-    "check_trajectory.py": 3907,
+    # Then -14 (3907 -> 3893), WI-422 (the measured dead-symbol sweep):
+    # `KNOWN_STATUSES` (zero readers; OPEN_STATUSES/TERMINAL_STATUSES are the
+    # live vocabulary) and the inert `SPEC_EXAMPLE` copy. Then +8 (3893 ->
+    # 3901), same WI: `current_digests` carries the repo-lock D-1 pointer
+    # saying WHY the anchor engine has no writer yet, so the NEXT sweep reads
+    # it in the code instead of re-deriving it. Comment only; zero code delta.
+    "check_trajectory.py": 3901,
     # NEW ENTRY, +25 (1498 -> 1523), WI-357: the two-stage work-branch claim
     # signal — the on-disk fast path plus the branch-history probe that
     # survives the §2.3 close commit (git log -1 over the claim path), with
@@ -1144,7 +1153,9 @@ BASELINE = {
     # +4 (2731 -> 2735), WI-424: `adjudicate_brief.py` joins MAPPING beside
     # prompts.py — the module that FILLS the shipped briefs is as required
     # downstream as the briefs themselves.
-    "bootstrap.py": 2735,
+    # Then -12 (2735 -> 2723), WI-422 (the measured dead-symbol sweep): `prompt_text` — the free-text sibling of `prompt_choice`, born with no
+    # caller and never given one.
+    "bootstrap.py": 2723,
     # NEW ENTRY, +228 (1423 -> 1651), Phase 2b of the concurrency restructure
     # (docs/concurrency-restructure.md §7): the spec-folder work-item reader,
     # which crosses this module over THRESHOLD for the first time. It is one
@@ -1292,7 +1303,9 @@ BASELINE = {
     # Reviewed bump.
     # +10 (2440 -> 2450), WI-424: the `Brief` column, the F5 copy of the same
     # two-table edit recorded at check_trajectory.py above.
-    "agent_common.py": 2450,
+    # Then -4 (2450 -> 2446), WI-422 (the measured dead-symbol sweep): the inert `SPEC_EXAMPLE` copy (F5 twin of the check_trajectory entry
+    # above; the live `-000` rule is an id-suffix test, not this literal).
+    "agent_common.py": 2446,
     # NEW ENTRY, WI-387 — integrate.py crossed THRESHOLD (1418 -> 1588) adding
     # the third terminal outcome. The extraction the ratchet asks for was TAKEN
     # FIRST, not argued away: `hand_back` and `quarantine`, the largest unit and
@@ -1539,7 +1552,9 @@ BASELINE = {
     # which brief it is asking for (one line each), plus the row projection.
     # The mint is what knows which judgement it wants; inferring it later
     # from SpecRef is provably ambiguous.
-    "intake.py": 1669,
+    # Then -8 (1669 -> 1661), WI-422 (the measured dead-symbol sweep): `_rev7` — WI-416 took title-token authority off the disposition mint
+    # and left the resolver behind.
+    "intake.py": 1661,
 }
 
 

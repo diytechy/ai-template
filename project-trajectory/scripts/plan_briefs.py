@@ -91,9 +91,10 @@ PROMPTS = KIT / "prompts"
 SR_CSV = "docs/requirements/system-requirements.toml"
 IF_CSV = "docs/requirements/interfaces.csv"
 
-# The registry columns each surface exposes (a stable, minimal excerpt — never
-# the whole row, so Rationale/Notes prose never rides along into a brief).
-SR_SURFACE_COLUMNS = ("SR-ID", "Title", "Requirement")
+# The registry columns the IF surface exposes (a stable, minimal excerpt — never
+# the whole row, so Rationale/Notes prose never rides along into a brief). The SR
+# surface is a bullet list rather than a table, so it names its own cells in
+# `_sr_surface` instead of reading a column tuple.
 IF_SURFACE_COLUMNS = (
     "IF-ID",
     "Direction",
@@ -169,7 +170,11 @@ def _skip(row_id):
 
 def _sr_surface(rows):
     """The SR surface: one entry per real SR row — `- SR-### — <Title>` plus the
-    Requirement text, id + text only."""
+    Requirement text, id + text only.
+
+    The three cells named here ARE the redaction contract: a stable, minimal
+    excerpt, never the whole row, so Rationale/Notes prose never rides along
+    into a brief. Widening it is a deliberate act, not a convenience."""
     out = []
     for r in rows:
         sid = _cell(r, "SR-ID")

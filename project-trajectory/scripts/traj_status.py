@@ -108,34 +108,7 @@ def _spine_counts(root, basis):
     }
 
 
-_ONELINE_LABEL_RE = re.compile(
-    r"(?i)^[ \t]*[-*][ \t]*\*\*one[- ]?line:?\*\*[ \t]*(.*)$"
-)
-_RECO_LABEL_RE = re.compile(
-    r"(?i)^[ \t]*[-*][ \t]*\*\*recommendation[^:*]*:?\*\*[ \t]*(.*)$"
-)
 _OI_ID_RE = re.compile(r"\bOI-\d+\b")
-
-
-def _field_value(body, label_re):
-    """The full (possibly soft-wrapped) value of a `- **Label:** …` field in a
-    brief body, or None. Markdown wraps a long field across indented continuation
-    lines; they are joined with a space, stopping at the first blank line, the
-    next `-`/`*` bullet, or a heading — so the projection captures the whole
-    sentence, not just its first physical line."""
-    lines = body.splitlines()
-    for i, line in enumerate(lines):
-        m = label_re.match(line)
-        if not m:
-            continue
-        parts = [m.group(1).strip()]
-        for nxt in lines[i + 1 :]:
-            s = nxt.strip()
-            if not s or re.match(r"[-*]\s", s) or s.startswith("#"):
-                break
-            parts.append(s)
-        return " ".join(p for p in parts if p).strip()
-    return None
 
 
 def _clean_oneliner(s):

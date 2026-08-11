@@ -1377,44 +1377,6 @@ def _scope_srs(scope, srs):
     return [s for s in srs if _cell(s, "Phase").lower() in phases]
 
 
-def _sn_fields(cells):
-    """The four prose fields of one SN row, resolved BY TABLE SHAPE.
-
-    `stakeholder-needs.md` carries two row widths, and reading both at the same
-    fixed offsets is what garbled the edge-case tier for its whole life:
-
-    - Core / Draft needs — `Need | Why it matters | Priority | Acceptance intent`
-    - Edge-case expectations — `Lifecycle | Scenario | Expected behavior`, three
-      cells and NO priority.
-
-    Indexed at the core offsets, an edge-case row yielded `need` = the Lifecycle
-    word (SN-013 rendered as "Provision") and `acceptance` = empty, in every
-    generated surface. So the edge-case row maps by MEANING instead: its Scenario
-    is the need, its Lifecycle is why it matters, its Expected behavior is the
-    acceptance intent, and `priority` is the literal `n/a` — the table declares
-    none, and inventing one would put a value in the export that no author wrote.
-
-    Widths above the core shape take the core mapping: it is the common form, and
-    a wider row means a stray `|` in a cell rather than a third table.
-
-    Duplicated verbatim in gen_okf.sn_rows and trace._sn_prose (F5) — change all
-    three together; tests/test_rule_sync.py pins them equal AND pins the values.
-    """
-    if len(cells) > 4:
-        return {
-            "need": cells[0],
-            "why": cells[1],
-            "priority": cells[2],
-            "acceptance": cells[3],
-        }
-    return {
-        "need": cells[1] if len(cells) > 1 else "",
-        "why": cells[0] if cells else "",
-        "priority": "n/a",
-        "acceptance": cells[2] if len(cells) > 2 else "",
-    }
-
-
 _SN_EMPHASIS = re.compile(r"\*\*|`")
 
 

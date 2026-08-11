@@ -269,7 +269,7 @@ def compare(rel, table, expected, text):
 # --- the SN tier: markdown prose tables, three shapes -------------------------
 # The edge-case table has its OWN columns (Lifecycle | Scenario | Expected), and
 # they are kept as themselves here rather than folded onto the core four. The
-# fold that traj_parse._sn_fields performs is a PRESENTATION rule for the
+# fold that spine_carrier.folded performs is a PRESENTATION rule for the
 # exports — an edge row's Scenario reads as the need, its Lifecycle as the why —
 # and presentation belongs in the exporter, not baked into the carrier. TOML can
 # hold both shapes; the markdown table could not, which is why the fold existed.

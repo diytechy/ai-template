@@ -456,7 +456,6 @@ Contracts (interfaces): IF-014, IF-039
 | `seed_agent_resume(dest, agents, created, dry_run)` | Fill the freshly scaffolded agent-resume launchers' AGENT_CMD/AGENT_MODEL |  |
 | `record_agent_choice(dest, choice, skills, dry_run)` | Append a one-line setup note to docs/status.md recording the agent choice |  |
 | `prompt_choice(prompt, choices, default)` | Ask on a TTY; return `default` immediately when stdin isn't interactive |  |
-| `prompt_text(prompt, default)` | Free-text prompt on a TTY; `default` when stdin isn't interactive |  |
 | `set_process_key(dest, section, key, value, dry_run, add_if_missing)` | Set `[section] key = value` in `docs/process.toml`, IN PLACE. |  |
 | `apply_gate_policy(dest, level, dry_run)` | Write a non-default gate-authority posture, as the THREE DIALS it is. | SN-029 |
 | `apply_push_policy(dest, policy, dry_run)` | Write a non-default push policy into `[policies] push` of | SN-028 |
@@ -954,7 +953,7 @@ Imports (internal): `agent_common`, `integrate`
 | `ensure_worktree(root, branch)` | The lane worktree holding `branch`: `(path, error)`, created if needed. |  |
 | `worker_argv(root, wt, branch, wi_ids, args)` | The worker session's argv: one agent_loop.py --wi run on the lane |  |
 | `spawn_worker(root, branch, wi_ids, args)` | Launch one worker session loop on the claimed branch's worktree, |  |
-| `run_worker(root, branch, wi_ids, args)` | The BLOCKING worker launch — `spawn_worker` waited to completion, with |  |
+| `run_worker(root, branch, wi_ids, args)` | The BLOCKING worker launch — `spawn_worker` waited to completion, with | LLR-150 |
 | `spawn_refresh(root, branch, tier)` | The §A2 station refresh for `branch`, NON-blocking: a Popen running |  |
 
 ### `scripts/migrate_carrier`
@@ -1364,7 +1363,6 @@ Contracts (interfaces): IF-079
 | `parse_spec(text, relpath, where)` | `(row, order)` reconstructed from one spec file. |  |
 | `work_dir_for(csv_path)` | The `docs/work` folder that pairs with the registry CSV at `csv_path` — |  |
 | `spec_paths(work_dir)` | Every `<status>/WI-*.md` spec under `work_dir`, sorted by path; `[]` when |  |
-| `folder_is_authoritative(csv_path)` | True when the spec folder beside `csv_path` holds at least one REAL spec. |  |
 | `load_csv(path)` | The registry's rows, header-preserving. Refuses a header that is not the |  |
 | `write_csv(path, rows)` | Write `rows` back as the 18-column registry: QUOTE_MINIMAL, LF. |  |
 | `to_specs(csv_path, work_dir, force)` | Write one spec file per CSV row under `work_dir`. Returns the relative |  |

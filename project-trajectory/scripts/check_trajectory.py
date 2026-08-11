@@ -209,16 +209,6 @@ OPEN_STATUSES = ("draft", "queued", "active", "deferred", "blocked")
 # `cancelled`) and both must clear their `SpecRef` (R-A + R-F below). `cancelled`
 # is deliberately NOT in OPEN_STATUSES / BACKLOG_STALE_STATUSES / the frontier.
 TERMINAL_STATUSES = ("done", "cancelled", "partial")
-KNOWN_STATUSES = (
-    "draft",
-    "queued",
-    "active",
-    "done",
-    "deferred",
-    "blocked",
-    "cancelled",
-    "partial",
-)
 
 # Backlog-staleness (WI-205) applies to genuinely-in-flight WIs: the open set
 # minus `deferred` and `draft` (both re-enter via an owner look — an un-defer, or
@@ -427,10 +417,6 @@ SPEC_STATUS_DIRS = {
     "partial": "partial",
     "complete": "done",
 }
-# The inert EXAMPLE spec's filename prefix (the `-000` rule, applied to the
-# folder home): scaffolded documentation, never a registry entry that decides
-# which home is authoritative.
-SPEC_EXAMPLE = "WI-000-"
 SPEC_FENCE = "+++"
 SPEC_DELIVERABLE = "\n## Deliverable\n\n"
 # The body's OTHER section (WI-387): a lane that HANDS a WI back writes a
@@ -3149,7 +3135,15 @@ def digest(text):
 
 
 def current_digests(root):
-    """`{artifact id: digest}` over every real spine row and every SN."""
+    """`{artifact id: digest}` over every real spine row and every SN.
+
+    RESERVED, NOT DEAD: this and its helpers (`normative_text`,
+    `sn_normative_text`, `digest`, `_DIGEST_SEP`, `_DIGEST_EXCLUDED`) are the
+    attestation anchor's ENGINE and have **no writer yet** — D-1 landed the
+    removal half (`attestations.csv` is gone) and the on-row `TextHash` /
+    `HashedOn` writer is built after the sitting (docs/repo-lock.md §2 D-1,
+    §5 step 1). A dead-symbol sweep sees only `tests/test_attestation_digest.py`
+    consuming this and must not read that as unused. Checked 2026-08-11 (WI-422)."""
     root = Path(root)
     out = {}
     for csv_path, id_col in SPINE_CSVS:

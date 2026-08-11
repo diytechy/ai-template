@@ -726,18 +726,6 @@ def prompt_choice(prompt, choices, default):
     return ans if ans in choices else default
 
 
-def prompt_text(prompt, default):
-    """Free-text prompt on a TTY; `default` when stdin isn't interactive
-    (same CI-safe contract as prompt_choice, for open-ended answers)."""
-    if not sys.stdin.isatty():
-        return default
-    try:
-        ans = input("{} (default {}): ".format(prompt, default)).strip()
-    except EOFError:
-        return default
-    return ans or default
-
-
 # The three gate-authority levels (Thread 32, process.md §4). The level is
 # chosen before the kit is ported — a one-word docs/gate-policy value; a
 # non-default level also gets the repo-local deviation register that amends

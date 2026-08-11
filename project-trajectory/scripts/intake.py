@@ -584,14 +584,6 @@ def _report_meta(path):
     return data
 
 
-def _rev7(root, rev):
-    """`rev` resolved to its short sha (7), falling back to the raw text —
-    the event token the derived titles carry, so a symbolic `HEAD` from the
-    sweep CLI and the slot's full sha name the same event the same way."""
-    code, out = ac.git(root, "rev-parse", str(rev))
-    return out.strip()[:7] if code == 0 and out.strip() else str(rev)[:7]
-
-
 def _close_drafts(root, outcomes):
     """Trigger (b): one disposition row per EARLY CLOSE, keyed off the close's
     own immutable report.

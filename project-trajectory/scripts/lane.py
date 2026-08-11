@@ -113,8 +113,15 @@ def spawn_worker(root, branch, wi_ids, args):
 def run_worker(root, branch, wi_ids, args):
     """The BLOCKING worker launch — `spawn_worker` waited to completion, with
     the refusal printed here (the sync path has no lane record to carry it).
-    Returns the worker's exit code; the dispatcher's default when no test
-    injects a worker callable."""
+    Returns the worker's exit code.
+
+    WHO CALLS THIS: nothing inside the kit — it is a DECLARED SEAM (LLR-150's
+    `code_symbol` names it) kept for a caller that wants one lane run
+    synchronously: an attended single-lane run, or a downstream driver that
+    does not want `dispatch.py`'s poll loop. `dispatch._launch`'s own default
+    is `spawn_worker` (non-blocking, so N lanes overlap), and its `worker=`
+    injection is what tests substitute — so a dead-symbol sweep sees zero
+    callers here and must not read that as dead. Verified 2026-08-11 (WI-422)."""
     proc, err = spawn_worker(root, branch, wi_ids, args)
     if err:
         print("lane: {}".format(err), file=sys.stderr, flush=True)

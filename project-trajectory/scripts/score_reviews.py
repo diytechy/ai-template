@@ -62,8 +62,6 @@ MODEL_RE = re.compile(r"^\s*Model:\s*(?P<model>.+?)\s*$", re.I)
 # An anchor of the shape file:line or file:line:col, or a bare path, or sym:...
 ANCHOR_RE = re.compile(r"^(?P<path>[\w./\-]+?)(?::(?P<line>\d+))?(?::\d+)?$")
 
-SEVERITIES = ("BLOCKER", "MAJOR", "MINOR")
-
 # Scoreboard decay: recent rounds weigh more (substance' = substance*DECAY + new).
 SCOREBOARD_DECAY = 0.7
 # Corroboration: a cross-FAMILY overlap weighs above a same-family one — two
@@ -231,10 +229,6 @@ def actionability(verdict):
     if not verdict.findings:
         return 1.0
     return sum(1 for f in verdict.findings if f.change) / len(verdict.findings)
-
-
-def _norm_anchor(f):
-    return None if f.path is None else (f.path, f.line)
 
 
 def corroboration(v_a, v_b, providers=None):
