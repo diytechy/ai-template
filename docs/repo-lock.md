@@ -839,6 +839,26 @@ driven against five corruption classes — a round-trip check that cannot fail
 would be the false green SN-008 forbids. **Nothing has moved yet**: no registry
 changed carrier, so the tree is still single-home.
 
+> **Correction, 2026-08-10 — `a9b6ced3` did not ship green, and step 11's
+> "MET" claim below did not survive it.** The converter landed with **no spine
+> row of its own**, so `migrate_carrier.py` entered the arch-map inventory as
+> an *uncontained* module and `test_meta_component_top_view_smoke` went red:
+> `assert ['scripts/migrate_carrier'] == []`. Measured on a clean checkout of
+> `fe09dcd6`: **1 failed, 2179 passed, 5 skipped** (6:30). Closed by minting
+> the chain the module always owed — **SR-147** (one machine-parseable carrier
+> for the spine, tracing SN-002 · SN-012, the same pair SR-129 traces for the
+> work-item registry's converter) → **LLR-165** (`migrate_carrier.py`, tagged
+> `CMP-005` beside `wi_convert.py`, its exact analogue) → **TC-159**
+> (`tests/test_migrate_carrier.py`), all `Draft`, watermark raised
+> SR 146→147 · LLR 164→165 · TC 158→159. Suite back to **2180 passed,
+> 5 skipped, 0 failed** (5:58).
+>
+> The lesson is narrow and worth keeping: **the containment rule fires on the
+> arch map, not on the registry**, so a new module is uncontained the moment it
+> exists and stays green only until the next full run — the module-level twin
+> of the "an amendment that edits one cell has not amended the row" lesson
+> under D-1. A per-commit smoke tier does not catch it; the full tier does.
+
 **Owed, in order:** the carrier-aware baseline read → `load_registry` (the
 compatibility shim above) → the cutover itself, which writes the four `.toml`
 files and **deletes the `.csv`/`.md` sources in the same commit** (two homes
@@ -967,10 +987,16 @@ with OI-13 and OI-12 *executing* together.
    WI-424.
 10. **Dispose the warn-only residue.** "Known and accepted" is a disposition;
     "still there" is not.
-11. ~~**Full bar green, stated with real output.**~~ **MET 2026-08-10** on
-    `infra/mechanized-loop`: `2167 passed, 5 skipped, 0 failed` in 6:41, from
-    `93 failed / 2073 passed`. Re-run it at the end — the bar is a state, not a
-    trophy, and the carrier migration is the largest change still to come.
+11. **Full bar green, stated with real output.** Met at `6e3a80cf`
+    (`2167 passed, 5 skipped, 0 failed`, 6:41, from `93 failed / 2073 passed`)
+    — then **broken by the very next commit** and re-met: `a9b6ced3` shipped
+    the converter with no spine row, leaving one module uncontained and the
+    suite at `1 failed, 2179 passed` (see D-5's correction note). Green again
+    at **2180 passed, 5 skipped, 0 failed** in 5:58, on the chain that closed
+    it. **This is why the item is not struck through.** The bar is a *state*,
+    not a trophy: it was claimed as met, was true when claimed, and was false
+    one commit later. Re-run it at the end — the carrier migration is the
+    largest change still to come.
 12. **Merge to `main`** — an owner act (`push = "human"`).
 
 ### Loose ends, owed to no step above

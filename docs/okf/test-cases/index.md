@@ -155,3 +155,4 @@ resource: "generated"
 | [TC-156](TC-156.md) | Run the handback suite over real git worktrees: a partial close is clean under the REAL t… |
 | [TC-157](TC-157.md) | Run the prompts and routing suites: strict slot filling and its refusals, the preflight o… |
 | [TC-158](TC-158.md) | Run the id-watermark suite. It drives trace.py's CLI so the rules are asserted on the EXI… |
+| [TC-159](TC-159.md) | Run the carrier-converter suite: it converts the live spine, re-parses the emitted TOML w… |

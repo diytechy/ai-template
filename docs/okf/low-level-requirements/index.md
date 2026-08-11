@@ -158,3 +158,4 @@ resource: "generated"
 | [LLR-162](LLR-162.md) | Prompts as loaded files, catalogued and fingerprinted |
 | [LLR-163](LLR-163.md) | Argv arrays, and the adjudicator as a routed phase |
 | [LLR-164](LLR-164.md) | The generated prompt catalogue and its freshness gate |
+| [LLR-165](LLR-165.md) | The spine carrier converter (markdown + CSV -> TOML) |
