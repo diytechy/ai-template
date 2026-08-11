@@ -1,5 +1,5 @@
 """handback.py — the lane closes that are not a clean merge (concurrency-v2 §A3,
-rewritten onto the SN-031 outcome model).
+rewritten onto the SR-144/SR-145 outcome model).
 
 `integrate.py` owns the ordinary outcome: a lane finishes, its specs land in
 `complete/`, the branch merges. This module owns the others, so that **every**
@@ -96,7 +96,7 @@ REPORTS = "docs/handbacks"
 CLAIMED_OUTCOMES = ("complete", "partial", "cancelled")
 
 # The review tier a close SUGGESTS for its disposition — a TYPED field, which is
-# the whole point. Before SN-031 this rode as the magic substring `NEEDS-HUMAN`
+# the whole point. Before SR-145 this rode as the magic substring `NEEDS-HUMAN`
 # inside a free-prose reason, and `tier_signal` case-folded a search for it: so
 # `NEEDS_HUMAN`, `needs human`, or a typo silently downgraded the judgement, with
 # no constant, no validation and no refusal on a miss. Prose that carries control
@@ -122,7 +122,7 @@ SUGGESTED_TIERS = ("quick", "medium", "strong")
 SPLIT_DECIDERS = ("lane", "adjudicator")
 
 # R3's outcome vocabulary, stated ONCE and imported by intake for the
-# disposition row's title. `re-queue` retired with SN-031: a terminal row is
+# disposition row's title. `re-queue` retired with SR-145: a terminal row is
 # never put back on the frontier, so continuing means drafting a SUCCESSOR.
 DISPOSITION_OUTCOMES = "cancel / defer / draft a successor / surface an open item"
 
@@ -550,7 +550,7 @@ def close_partial(root, branch, reason, fields=None):
         "commit",
         "--no-verify",
         "-m",
-        "partial: {} -> partial/ ({})\n\nThe SN-031 outcome: this lane could not finish, so each claimed spec\nmoves to the TERMINAL partial/ and an immutable per-close report lands in\ndocs/handbacks/. The report is the event's identity - the disposition row\nintake mints cites it, so 'is a judgement still owed for THIS close?' is a\npositive-provenance question rather than one of the five reconstructions\nthat leaked. The branch merges like any other; nothing hangs, and nothing\nre-claims a terminal row.".format(
+        "partial: {} -> partial/ ({})\n\nThe SR-144 outcome: this lane could not finish, so each claimed spec\nmoves to the TERMINAL partial/ and an immutable per-close report lands in\ndocs/handbacks/. The report is the event's identity - the disposition row\nintake mints cites it, so 'is a judgement still owed for THIS close?' is a\npositive-provenance question rather than one of the five reconstructions\nthat leaked. The branch merges like any other; nothing hangs, and nothing\nre-claims a terminal row.".format(
             ", ".join(ids), reason
         ),
     )

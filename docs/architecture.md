@@ -690,7 +690,7 @@ Contracts (interfaces): IF-009, IF-023, IF-077
 | `nearest_anchor(frag, anchors)` | The closest existing slug to `frag`, or None. A wrong anchor is nearly |  |
 | `specref_findings(root, w)` | R-E's SpecRef rule for ONE open WI, as a list of messages (the caller tags |  |
 | `ssot_findings(wis, root)` | The work-items.csv coherence findings (R-A + R-E) + the unknown-status |  |
-| `queue_conflict_findings(wis)` | SN-030 rung 3, mechanical half: pairs of OPEN rows that overlap. | SN-030 |
+| `queue_conflict_findings(wis)` | SR-143, mechanical half: pairs of OPEN rows that overlap. | SR-143 |
 | `spec_lifecycle_findings(root, wis)` | The spec-lifecycle close-side rule **R-F** (WI-251) — the mechanical half |  |
 | `completion_reconciliation_findings(root, wis)` | Disagreements between a WI's declared `Status` and its completion evidence, |  |
 | `tier_completion_findings(findings)` | Split reconciler findings into `(warn_only, gated)`. |  |
@@ -762,8 +762,8 @@ Contracts (interfaces): IF-015
 | Public item | Summary | Implements |
 |---|---|---|
 | `gap_census(root)` | THE WI-388 HANDOFF SEAM — ladder rung 1 (§A4 amendment, ruled |  |
-| `red_tc_census(root, reg)` | SN-030 rung 6: TEST CASES LEFT RED UNDER A CLAIMED IMPLEMENTATION. | SN-030 |
-| `parse_red_tc(line)` | `(tc_id, [target, ...])` for a red-TC census line, or None for any other | SN-031 |
+| `red_tc_census(root, reg)` | SR-142: TEST CASES LEFT RED UNDER A CLAIMED IMPLEMENTATION. | SR-142 |
+| `parse_red_tc(line)` | `(tc_id, [target, ...])` for a red-TC census line, or None for any other | SR-145 |
 | `run(root, args, worker, tier)` | The dispatch loop (docs/concurrency-v2.md §A4). `worker` is the one |  |
 
 ### `scripts/gen_arch_map`

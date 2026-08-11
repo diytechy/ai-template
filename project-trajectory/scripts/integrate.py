@@ -121,14 +121,14 @@ SCRIPTS = Path(__file__).resolve().parent
 WORK = "docs/work"
 ACTIVE = WORK + "/active"
 
-# THE THREE TERMINAL OUTCOMES (§A3 as amended by SN-031), and the whole of how a
+# THE THREE TERMINAL OUTCOMES (§A3 as amended by SR-144), and the whole of how a
 # lane declares one: the directory it moved its claimed specs INTO. `complete/`
 # asserts the work is done, `cancelled/` asserts it never will be, `partial/`
 # asserts it stopped early. There is no fourth answer and no state file that
 # could hold one, which is what makes "every lane ends in a merge, branches never
 # hang" a property of the tree rather than a rule someone has to remember.
 #
-# EVERY OUTCOME IS NOW TERMINAL. Before SN-031 a close into any OPEN folder
+# EVERY OUTCOME IS NOW TERMINAL. Before SR-144 a close into any OPEN folder
 # (`queued`/`draft`/`deferred`) read as a handback, which meant the returned row
 # went straight back on the frontier and needed a `blockref` to stop the driver
 # claiming, closing and re-claiming it forever. Those three rows are GONE from
@@ -1448,7 +1448,7 @@ _ADJUDICATION_SURFACES = (
     "docs/test/test-cases.toml",
     "docs/test/test-cases.csv",
     "docs/requirements/open-items.csv",
-    # SN-031's per-close reports: an adjudication lane READS them and, on an
+    # SR-144's per-close reports: an adjudication lane READS them and, on an
     # override, may write a corrective one. Without this row a lane that
     # touches a report falls off the no-bar path into the full bar — a
     # ~11-minute penalty for editing a document no product bar can speak to.
@@ -2123,7 +2123,7 @@ def _merge_ready(root, branch):
 
 
 def _partial_report_refusal(root, branch, outcomes):
-    """SN-031: a `partial` close must carry a readable report that states the
+    """SR-144: a `partial` close must carry a readable report that states the
     KEEP/DISCARD split. A refusal string, or None.
 
     This rung exists because of a live incident (2026-08-03): a lane handed
@@ -2173,7 +2173,7 @@ def _merge_refusal(root, branch, wi_ids):
             "(§A3), so one that landed nowhere names none of the three and one "
             "that landed twice names two; nothing was merged. The three are "
             "{}. If this lane stopped early, close it into partial/ with a "
-            "per-close report (SN-031 retired the close-into-queued/ "
+            "per-close report (SR-144 retired the close-into-queued/ "
             "handback).".format(
                 branch,
                 ", ".join(unresolved),
@@ -2182,7 +2182,7 @@ def _merge_refusal(root, branch, wi_ids):
         )
     # Sequential, not a tuple of calls: a tuple would EVALUATE every rung before
     # testing the first, which is exactly the cheapest-first ordering thrown away.
-    refusal = _partial_report_refusal(root, branch, outcomes)  # SN-031
+    refusal = _partial_report_refusal(root, branch, outcomes)  # SR-144
     if refusal:
         return outcomes, refusal
     refusal = _minted_id_refusal(root, branch, wi_ids)  # RULING R1

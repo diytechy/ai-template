@@ -94,7 +94,7 @@ ROUTED_TRACED_CELLS = {
 
 # The disposition row's face: the R3 outcome vocabulary, verbatim in the title
 # so the claiming worker reads its whole authority off the row.
-# SN-031 retired R3's `re-queue`: a terminal row is never put back on the
+# SR-145 retired R3's `re-queue`: a terminal row is never put back on the
 # frontier, so continuing the work means DRAFTING A SUCCESSOR (minted at this
 # row's own merge, carrying `supersedes`). `handback._no_recursion_refusal`
 # states the same four; the two homes must not disagree about a row's authority.
@@ -117,7 +117,7 @@ _DRAFT_KEYS = frozenset(
         "needs",
         "priority",
         "bar",
-        # SN-031 lineage: a successor drafted by a disposition names the row it
+        # SR-145 lineage: a successor drafted by a disposition names the row it
         # continues, so partial work keeps its thread ACROSS the id change. It
         # is a lineage fact, not a revival — the superseded row stays terminal
         # and its scope stays exactly what it was.
@@ -126,7 +126,7 @@ _DRAFT_KEYS = frozenset(
 )
 
 _WI_FILE_RE = re.compile(r"^WI-(\d+)-.+\.md$")
-# SN-031: the per-close reports' home, and the `+++` block inside one. Outside
+# SR-144: the per-close reports' home, and the `+++` block inside one. Outside
 # `docs/work/` deliberately — `spec_files` rglobs `WI-*.md` there and would walk
 # a report, raise on its undeclared directory, then SILENTLY SKIP it while the
 # id mint counted it as taken.
@@ -192,7 +192,7 @@ def tier_signal(trigger, *, rows_touched=0, gate_moved=False):
     if trigger == "amendment":
         return "strong" if gate_moved or rows_touched > 3 else "medium"
     if trigger == "red-tc":
-        # SN-030 rung 6. One target is a local question (is this TC stale, or
+        # SR-142. One target is a local question (is this TC stale, or
         # was the close optimistic?); several mean the closed row's claim spans
         # requirements, and the judgement has to hold all of them at once. Same
         # shape as the amendment arm — breadth, counted, never judged — with the
@@ -542,7 +542,7 @@ def _closed_spec(root, wi_id, dirs=("partial", "cancelled")):
 def _close_reports(root, wi_id):
     """Every per-close report on trunk for `wi_id`, newest-name last.
 
-    THE REPORT IS THE EVENT'S IDENTITY (SN-031). Five earlier mechanisms tried
+    THE REPORT IS THE EVENT'S IDENTITY (SR-144). Five earlier mechanisms tried
     to answer "is a judgement still owed for THIS close?" by reconstructing the
     event from the closed spec — a mutable, movable, self-referencing object —
     and every one leaked an owed judgement. An immutable document dissolves the
@@ -703,7 +703,7 @@ def _close_drafts(root, outcomes):
                     ),
                     "kind": "adjudication",
                     "workstream": "process",
-                    # The TYPED field, not a substring of prose (SN-031 / the
+                    # The TYPED field, not a substring of prose (SR-145 / the
                     # `NEEDS-HUMAN` fold): the close states the tier it thinks
                     # its judgement needs, and a value outside the vocabulary
                     # falls to `medium` rather than silently to whatever a
@@ -1017,7 +1017,7 @@ def _census_drafts(root, census):
 
 
 def _red_tc_draft(root, line, targets):
-    """SN-030 rung 6: a red TC under a claimed implementation becomes an
+    """SR-142: a red TC under a claimed implementation becomes an
     ADJUDICATION row, not an ordinary gap-closure row.
 
     The difference is who decides. An ordinary gap row says "the registry is
@@ -1038,8 +1038,8 @@ def _red_tc_draft(root, line, targets):
     exactly one review round: `planmode = "dual"` beside `safety_class =
     "adjudication"` is a shape `schedule.classify` REFUSES — it reads
     `unclassified`, drops off the frontier, and can never be re-minted because
-    exact-title dedup has already claimed the title. The contradiction SN-030
-    rung 6 exists to surface would have been minted and then permanently
+    exact-title dedup has already claimed the title. The contradiction SR-142
+    exists to surface would have been minted and then permanently
     parked, silently. `_draft_refusal` already refused that pair for a HUMAN
     draft; the automated mint went straight to `_draft_row` and bypassed it,
     which is why `_mint` now runs every draft past `_mint_shape_refusal`."""

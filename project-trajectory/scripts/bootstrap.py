@@ -1839,13 +1839,13 @@ GITKEEP_DIRS = [
     "docs/work/active",
     "docs/work/deferred",
     "docs/work/cancelled",
-    # SN-031's third terminal, scaffolded for the same visibility reason: a lane
+    # SR-144's third terminal, scaffolded for the same visibility reason: a lane
     # that stopped early closes HERE, not back into `queued/` with a blockref,
     # and an empty `partial/` beside the other two terminals is what tells a
     # reader "stopped early" is a state the process has a name for.
     "docs/work/partial",
     "docs/work/complete",
-    # SN-031's per-close reports: one immutable document per non-merged-clean
+    # SR-144's per-close reports: one immutable document per non-merged-clean
     # lane close. OUTSIDE docs/work/ deliberately — `spec_files` is an rglob for
     # `WI-*.md` filtered only on "not directly in work_dir", so a report living
     # under docs/work/ would be walked, raise on its undeclared directory, and

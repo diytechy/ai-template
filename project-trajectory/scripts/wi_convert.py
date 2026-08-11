@@ -104,7 +104,7 @@ COLUMNS = [
     "SafetyClass",
     "PlanMode",
     "Bar",
-    # SN-031 LINEAGE. Partial work continues by MINTING A SUCCESSOR, never by
+    # SR-145 LINEAGE. Partial work continues by MINTING A SUCCESSOR, never by
     # reviving the closed row — so the successor must be able to say which row
     # it continues, or the thread is lost at the id change. A real column, not
     # a frontmatter-only key, because `intake`'s drafts-not-mints arm writes
@@ -124,7 +124,7 @@ STATUS_DIRS = {
     "deferred": "deferred",
     "done": "complete",
     "cancelled": "cancelled",
-    # SN-031's third terminal: a lane that stopped early. Terminal, so nothing
+    # SR-144's third terminal: a lane that stopped early. Terminal, so nothing
     # re-claims it and nothing strands; the per-close report under
     # docs/handbacks/ carries what was and was not delivered.
     "partial": "partial",

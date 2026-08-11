@@ -286,7 +286,7 @@ def _kind_action(kind, human_held):
 
 
 def _judgement_first(ready_kinds):
-    """SN-030 rung 1 — DISPOSE FIRST: `adjudication` rows move to the head of
+    """SR-141 — DISPOSE FIRST: `adjudication` rows move to the head of
     the frontier, everything else keeping its relative order.
 
     A stable partition, not a re-sort: `schedule._KIND_RANK` is §A1's RULED
@@ -517,7 +517,7 @@ def _lane_close(root, branch, code):
     reason = "worker exit {}{}".format(
         code, " (NEEDS-JUDGEMENT)" if code == ac.EXIT_NEEDS_HUMAN else ""
     )
-    # SN-031: the dispatcher's own close carries the TYPED fields the report
+    # SR-145: the dispatcher's own close carries the TYPED fields the report
     # schema declares, rather than smuggling them through the reason string.
     # The tier is keyed off the EXIT-CODE CLASS — a fact the dispatcher already
     # holds — not off a substring of prose: `NEEDS_HUMAN`, `needs human` or any
@@ -820,7 +820,7 @@ def gap_census(root):
     return census
 
 
-# SN-030 rung 6's marker. The census is a list of STRINGS by contract (the seam
+# SR-142's marker. The census is a list of STRINGS by contract (the seam
 # `intake.mint_gap_rows` consumes), so a distinct class announces itself with a
 # distinct prefix rather than by growing the seam a second shape. `intake.
 # _census_drafts` routes on exactly this token; nothing else parses the line.
@@ -833,7 +833,7 @@ _TC_NOT_RED = frozenset({"verified", "draft", "modified"})
 
 
 def red_tc_census(root, reg=None):
-    """SN-030 rung 6: TEST CASES LEFT RED UNDER A CLAIMED IMPLEMENTATION.
+    """SR-142: TEST CASES LEFT RED UNDER A CLAIMED IMPLEMENTATION.
 
     A TC that is not `Verified` is ordinary unfinished work — unless something
     already claims to have BUILT what it verifies, and that is the state this
@@ -899,7 +899,7 @@ def parse_red_tc(line):
     routes through this rather than re-splitting the prose, because prose that
     carries control flow has to be a parsed field with a refusal, not a
     substring search that silently matches nothing (the `NEEDS-HUMAN` lesson,
-    SN-031)."""
+    SR-145)."""
     matched = _RED_TC_RE.match(line or "")
     if not matched:
         return None

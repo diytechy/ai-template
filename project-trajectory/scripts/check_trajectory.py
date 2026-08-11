@@ -352,7 +352,7 @@ WI_COLUMNS = (
     "SafetyClass",
     "PlanMode",
     "Bar",
-    # SN-031 LINEAGE. Partial work continues by MINTING A SUCCESSOR, never by
+    # SR-145 LINEAGE. Partial work continues by MINTING A SUCCESSOR, never by
     # reviving the closed row — so the successor must be able to say which row
     # it continues, or the thread is lost at the id change. A real column, not
     # a frontmatter-only key, because `intake`'s drafts-not-mints arm writes
@@ -397,7 +397,7 @@ SPEC_LISTS = (("SR-Refs", "sr_refs"), ("Predecessors", "needs"))
 # only the `disposition = "retired"` spelling this row deleted — so the word
 # itself moved. `active/<branch>/` sits one level deeper, so the status is the
 # FIRST path component, never the file's parent directory.
-# `partial/` (SN-031) is the THIRD terminal, and the one that made the outcome
+# `partial/` (SR-144) is the THIRD terminal, and the one that made the outcome
 # model honest. A lane that stops early used to move back to `queued/` carrying
 # a `## Handback` note and a `blockref` — which meant the return event had no
 # artifact of its own, only a mutable, movable, self-referencing spec. Five
@@ -1874,7 +1874,7 @@ def ssot_findings(wis, root):
         # range, what was and was not delivered, the keep/discard split and who
         # decides it. Demanding a Deliverable cell as WELL would be demanding a
         # second, weaker copy of a record that already exists — and it is
-        # unsatisfiable by construction, because SN-031's whole point is that
+        # unsatisfiable by construction, because SR-144's whole point is that
         # an early close leaves the spec's DEFINITION byte-identical ("scope
         # definitions never change; only whether they were fully delivered").
         # A rule no honest close can satisfy is not a rule; it is a red at
@@ -1915,7 +1915,7 @@ def ssot_findings(wis, root):
     return out
 
 
-# --- SN-030 rung 3: queue-conflict vetting (the mechanical pre-filter) --------
+# --- SR-143: queue-conflict vetting (the mechanical pre-filter) --------
 # Two rows are OPEN AT ONCE and overlap. Nothing here is an error: overlap is
 # frequently correct (two rows may legitimately answer one SR from different
 # sides), and a checker that cannot tell those apart must not block. What it CAN
@@ -1957,7 +1957,7 @@ def _clip_title(title):
 
 
 def queue_conflict_findings(wis):
-    """SN-030 rung 3, mechanical half: pairs of OPEN rows that overlap.
+    """SR-143, mechanical half: pairs of OPEN rows that overlap.
 
     Three signals, warn-only, each named with both row ids so the message is
     actionable without opening the registry:
@@ -2049,7 +2049,7 @@ def spec_lifecycle_findings(root, wis):
         if w["status"] in OPEN_STATUSES:
             open_cited.add(spec.split("#", 1)[0].strip())
         elif w["status"] == "partial":
-            # SN-031: a `partial` row's SpecRef STAYS. R-F exists so a closed
+            # SR-145: a `partial` row's SpecRef STAYS. R-F exists so a closed
             # row stops pointing at a live spec-of-record that a reader would
             # take as current — but partial work continues by MINTING A
             # SUCCESSOR, and the successor's `supersedes` lineage is worth
@@ -3806,7 +3806,7 @@ def main():
     # --strict — advisory is the block's contract, and minted rows satisfy it
     # by construction (their ## Context cites the packs), so it reaches
     # exactly the hand-authored residue.
-    # ...as does SN-030's queue-conflict pre-filter (rung 3): overlap between
+    # ...as does SR-143's queue-conflict pre-filter: overlap between
     # two OPEN rows is frequently correct, so this rung's whole contribution is
     # making it visible. Never the exit code, not even under --strict — a
     # checker that cannot tell a legitimate split from a duplicate must not

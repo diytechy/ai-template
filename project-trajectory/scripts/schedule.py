@@ -214,7 +214,7 @@ WI_COLUMNS = (
     "SafetyClass",
     "PlanMode",
     "Bar",
-    # SN-031 LINEAGE. Partial work continues by MINTING A SUCCESSOR, never by
+    # SR-145 LINEAGE. Partial work continues by MINTING A SUCCESSOR, never by
     # reviving the closed row — so the successor must be able to say which row
     # it continues, or the thread is lost at the id change. A real column, not
     # a frontmatter-only key, because `intake`'s drafts-not-mints arm writes
@@ -259,7 +259,7 @@ SPEC_LISTS = (("SR-Refs", "sr_refs"), ("Predecessors", "needs"))
 # only the `disposition = "retired"` spelling this row deleted — so the word
 # itself moved. `active/<branch>/` sits one level deeper, so the status is the
 # FIRST path component, never the file's parent directory.
-# `partial/` (SN-031) is the THIRD terminal, and the one that made the outcome
+# `partial/` (SR-144) is the THIRD terminal, and the one that made the outcome
 # model honest. A lane that stops early used to move back to `queued/` carrying
 # a `## Handback` note and a `blockref` — which meant the return event had no
 # artifact of its own, only a mutable, movable, self-referencing spec. Five
@@ -790,7 +790,7 @@ def _exclusive_conflicts(wis, status, reserved):
 _TERMINAL_DISPOSITION = {
     _DONE: ("done", "done:integrated"),
     _CANCELLED: ("cancelled", "cancelled:terminal-wont-build"),
-    # SN-031: `partial` is as final as the other two — a lane stopped early and
+    # SR-145: `partial` is as final as the other two — a lane stopped early and
     # said so, and the disposition row it mints decides what happens next by
     # MINTING A SUCCESSOR, never by putting this row back on the frontier.
     # Read FIRST in `_disposition`, ahead of the queued+blockref arm, which is

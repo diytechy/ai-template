@@ -238,7 +238,7 @@ STATUS_BUCKET = {
     "deferred": "queued",
     "blocked": "queued",
     "cancelled": "cancelled",
-    # SN-031's third terminal shares the `cancelled` SWATCH — both are "this
+    # SR-144's third terminal shares the `cancelled` SWATCH — both are "this
     # row will not advance" — but keeps its own glyph below, because what they
     # mean differs: cancelled is "never", partial is "not all of it, and a
     # successor may carry the rest".

@@ -1115,7 +1115,7 @@ WI_TOKEN_RE = re.compile(r"^WI-\d+$")
 # Mirrors check_trajectory.TERMINAL_STATUSES, kept inline here rather than
 # imported: the F5 self-contained-script rule keeps agent_common stdlib-only (it
 # never pulls a sibling engine). A worker must never build a WI in either state.
-# SN-031 adds `partial`: a worker must refuse an assignment whose spec has
+# SR-144 adds `partial`: a worker must refuse an assignment whose spec has
 # already closed early exactly as it refuses one that shipped or was cancelled.
 TERMINAL_STATUSES = ("done", "cancelled", "partial")
 
@@ -1186,7 +1186,7 @@ WI_COLUMNS = (
     "SafetyClass",
     "PlanMode",
     "Bar",
-    # SN-031 LINEAGE. Partial work continues by MINTING A SUCCESSOR, never by
+    # SR-145 LINEAGE. Partial work continues by MINTING A SUCCESSOR, never by
     # reviving the closed row — so the successor must be able to say which row
     # it continues, or the thread is lost at the id change. A real column, not
     # a frontmatter-only key, because `intake`'s drafts-not-mints arm writes
@@ -1231,7 +1231,7 @@ SPEC_LISTS = (("SR-Refs", "sr_refs"), ("Predecessors", "needs"))
 # only the `disposition = "retired"` spelling this row deleted — so the word
 # itself moved. `active/<branch>/` sits one level deeper, so the status is the
 # FIRST path component, never the file's parent directory.
-# `partial/` (SN-031) is the THIRD terminal, and the one that made the outcome
+# `partial/` (SR-144) is the THIRD terminal, and the one that made the outcome
 # model honest. A lane that stops early used to move back to `queued/` carrying
 # a `## Handback` note and a `blockref` — which meant the return event had no
 # artifact of its own, only a mutable, movable, self-referencing spec. Five
