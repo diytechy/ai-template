@@ -403,6 +403,64 @@ table.
   `ac_advisories`) and the row primitives they share are one concern — *is this
   row readable and decidable on its own?* — and pure (rows in, findings out), so
   they separate cleanly from the join that owns I/O and reporting.
+- **The spine's four registries become ONE TOML CARRIER (2026-08).** The
+  biggest change the kit has shipped to an existing adoption, and it has a
+  converter: `stakeholder-needs.md` (prose tables) and the SR/LLR/TC CSVs become
+  `stakeholder-needs.toml` · `system-requirements.toml` ·
+  `low-level-requirements.toml` · `test-cases.toml`, id-keyed with the prefix
+  retained and the key bare — `[requirement.SR-137]` under the tier tables
+  `need` · `requirement` · `design` · `test`.
+
+  **Run it, check it, then delete the sources in the SAME commit:**
+
+  ```
+  python scripts/migrate_carrier.py --root . --check   # converts in memory, writes nothing
+  python scripts/migrate_carrier.py --root .           # writes each .toml beside its source
+  git rm docs/requirements/stakeholder-needs.md \
+         docs/requirements/system-requirements.csv \
+         docs/requirements/low-level-requirements.csv \
+         docs/test/test-cases.csv
+  ```
+
+  `--check` converts and re-reads what it emitted, cell for cell, and exits 1
+  naming the registry, row id and field for anything that did not survive; the
+  write path refuses a lossy conversion too. **Both homes at once is REFUSED,
+  not resolved by precedence** — the readers raise rather than pick — so the
+  delete belongs in the conversion commit, not a follow-up.
+
+  *What you gain, and it is not tidiness.* Three integrity rules stop being code
+  and become properties of the parse: a **duplicate id** is a decode error (the
+  id is the table key, and TOML forbids declaring one twice); a **ref list** is a
+  typed array, retiring the split-on-whitespace rule that read `SN-001 and
+  SN-002` as citing an orphan called `and`; an **empty cell** is an *absent key*,
+  so "unset" and "set to empty" stop being the same value. On the need tier,
+  draft-ness becomes a field (`kind = "draft"`) instead of "appears under a
+  heading containing the word draft" — a rule a passing prose mention of an id
+  could trip, silently un-ratifying a need.
+
+  *Three things to know before you run it.*
+
+  1. **The template's `-000` row is now your schema.** TOML has no header line,
+     so the shipped example row is the only place the column vocabulary is
+     written down. Keep it until you have real rows to read the key names off.
+  2. **Prose around the tables is not a row, and the converter does not carry
+     it.** If your `stakeholder-needs.md` holds guidance, a vision link, or a
+     non-goals section, move it into `#` comments yourself — comments survive
+     every tool that edits these files, because the one writer that does
+     (`intake`'s `Modified` → `Verified` flip) rewrites a single line rather
+     than re-serializing.
+  3. **Your own scripts may read these paths.** Anything of yours that opens
+     `system-requirements.csv` by name gets a `FileNotFoundError` (loud, fine) —
+     but anything that CSV-parses the new file gets zero rows, silently. Read
+     through `spine_carrier.load(path, id_col)`, which resolves whichever
+     carrier is live and hands rows back under today's column names.
+
+  The legacy carriers stay readable for now: every kit reader resolves TOML
+  first and falls back, so a repo that has not migrated keeps working. That
+  fallback is **deliberate dead weight with an expiry** and will be dropped once
+  no supported baseline predates the migration — `migrate_carrier.py` is marked
+  `Provisional` for the same reason.
+
 - **The spine gains a sibling: `scripts/spine_carrier.py` (2026-08).** The same
   rule as `trace_text.py` above, and a re-sync must copy it: `trace.py` and
   `check_trajectory.py` import it unguarded, so a repo that picks up one and not
