@@ -1340,11 +1340,31 @@ with OI-13 and OI-12 *executing* together.
   function of wall-clock time** — a false-green machine of exactly the class
   SN-008 forbids, and it had already fooled this program once (the struck
   line above). Found by WI-427's builder while wiring the freshness checks.
-  Being fixed as its own WI: the *suite* is made honest (scaffolds seed the
-  dial disabled, blackout logic gets a real fast test on an injected clock,
-  and a guard reds if a session-driving scaffold ever inherits an enabled
-  window). **The dial's VALUE is deliberately not touched** — see the tabled
-  question in §8.5. What the run *did* surface is the watermark's 93 failures
+  **FIXED as WI-428** (`f0b38e49` → `bf4b5e1b`): scaffolds seed the dial
+  disabled through its own documented empty form, and the module that
+  swallowed 4.6 h now runs in **3.90 s**. The bar was produced **in-window,
+  nothing excluded** — `2244 passed, 9 skipped` at 16:40 UTC Tuesday, four
+  hours into the blackout, reconciled exactly (`2232 baseline-selected + 10
+  critique + 11 guard = 2253; 2253 − 9 = 2244`); on the closed tree at 16:58
+  UTC, `2248 passed, 5 skipped`. **The dial's VALUE is untouched** — verified
+  byte-identical in both template and live file, with a new test pinning that
+  the shipped default is still `"12:00-19:00"` *and* still really blocks, so
+  the guard cannot decay into watching an empty dial. See §8.5 for the tabled
+  policy question.
+
+  Two things it found that the report did not predict, both worth keeping:
+  **a second exposure** — `test_dispatch.py`'s `scaffold_with_queued_wi`
+  bootstraps its scaffold and so inherited the live window in a module that
+  launches the loop for real; latent, never yet sleeping, and invisible to
+  the runtime census. And the reason it was invisible is the sharp lesson:
+  **a teardown assertion never fires for a test that hangs**, so the runtime
+  autouse sweep cannot be the whole guard — a *source* rule that reds
+  pre-emptively is what caught it, on its first run. The dial's own logic
+  turned out to be genuinely well covered already (both boundaries, both
+  disable forms, malformed, Mon–Fri, midnight wrap, injected sleep, nothing
+  reading `datetime.now()`); what was missing and is now added is the
+  negative universal — 504 injected clocks asserting a *disabled* dial has no
+  time at which it waits. What the run *did* surface is the watermark's 93 failures
   (§5 item 3) — the reason the suite had not been run to completion since.
 - **`trace.py` does not know the traced/ratified split** (`spine_cell_class`
   lives in `check_trajectory`), so the re-attest brief diffs every cell equally
@@ -1360,6 +1380,16 @@ with OI-13 and OI-12 *executing* together.
   that the template ships it nowhere. Both now name the three dials
   (`human_ratification_through` · `keep_nondependent` · `final_review`) and say
   that `--gate-policy` still takes the WORD but translates it.
+- **No supported way to ask "which test scaffolds carry which declared
+  policy"** — filed by WI-428, whose census of the blackout exposure had to be
+  *improvised* (instrument `blackout_wake` in a throwaway tree, run the whole
+  suite twice inside the window, log every enabled window resolved). It
+  worked, and it is not reusable. `blackout` is only special in that it
+  **waits**; the day any other `process.toml` dial grows blocking behavior,
+  the same improvisation repeats and the same false-green is available. A
+  candidate for the enforcement-audit's catch-ledger extension (§8.3 item 7),
+  not for this program.
+
 - **`status.md` is ~450 lines against a 120-line warn budget** — pre-existing.
 - **`Priority` names two incompatible vocabularies** — `M`/`S`/`C` on an SR, a
   scheduler integer on a WI, neither enum-checked. D-3 rules it a float; the
