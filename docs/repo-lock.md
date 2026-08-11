@@ -1185,15 +1185,41 @@ with OI-13 and OI-12 *executing* together.
 
   The IF growth is proportionate and needs nothing. The census growth is the
   finding: the blocks are real duplication, the F5 sanction genuinely covers
-  them (they are the CLI-preamble idiom `check_stubs` already calls "verbatim
-  across the kit"), and every one was opened and read before filing — but the
-  *shape* is wrong. **D-6 gave the vocabulary one home and left the import
-  guard with none**, and it is the guard that scales badly. Options, none
-  ruled: give the guard one home too (which needs an import to bootstrap, so it
-  is not free); teach `check_dupes` to collapse an N-way identical block into
-  one census line instead of N(N−1)/2; or accept it and stop reading the census
-  total as a signal. **Worth a ruling before a twelfth importer**, and cheapest
-  now while the pattern is fresh.
+  them, and every one was opened and read before filing — but the *shape* is
+  wrong. **D-6 gave the vocabulary one home and left the import guard with
+  none**, and it is the guard that scales badly.
+
+  **What the guard actually protects — traced 2026-08-10, and it narrows the
+  option set.** The two normal execution modes never fire the fallback: a
+  subprocess gets its own directory at `sys.path[0]` from the interpreter, and
+  the in-process test path goes through `conftest.load_script`, which inserts
+  `scripts/` *before* exec — which is why every fallback arm is marked
+  `pragma: no cover`. What it guards is **path-naive embedding**: a consumer
+  that loads a kit script via `spec_from_file_location` (which does *not* add
+  the module's directory to `sys.path`) and did nothing about paths. Two real
+  clients exist and one is pinned: the cross-process kernel-lock probe
+  (`tests/test_agent_loop.py` `_LOCK_PROBE`) loads `agent_loop.py` exactly that
+  way in a bare subprocess, and `tests/test_gen_trajectory.py` deliberately
+  strips `scripts/` from `sys.path` and asserts the fallback works
+  ("exercises the except-branch; must not raise"). Structurally, **only the
+  first kit module such an embedder touches needs the guard** — once any copy
+  fires, `scripts/` is on the path for every later sibling import in that
+  process; the idiom is in all eleven because any module can be first contact.
+
+  Options, none ruled — with the trace applied:
+  - ~~delete the guards~~ — **not free**: it breaks the lock probe and the
+    pinned except-branch contract, and shifts the burden to every embedder;
+  - give the guard one home — self-defeating in the obvious form (a shared
+    home must itself be imported, which needs the guard), though a
+    stated-in-`PROCESS.md` two-liner is smaller than the current seven;
+  - **teach `check_dupes` to collapse an N-way identical block into one census
+    line instead of N(N−1)/2** — now the strongest option: the duplication is
+    deliberate and load-bearing, and only the *census's rendering* of it is
+    quadratic;
+  - accept it and stop reading the census total as a signal.
+
+  **Worth a ruling before a twelfth importer**, and cheapest now while the
+  pattern is fresh.
 
 - **`intake.py` is a monolith again (1503 lines, THRESHOLD 1500).** It fell to
   1496 when the D-1 removal deleted the attestation ledger, and its ratchet
