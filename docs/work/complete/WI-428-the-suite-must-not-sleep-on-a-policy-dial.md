@@ -158,8 +158,14 @@ The **4 extra skips (5 → 9) are this row's own open claim, not env gating.** T
 passing the moment the spec moves to `complete/`, so the closed tree reads
 **2248 passed, 5 skipped** — skips back to the baseline's five, which are the
 five platform/coverage gates (`test_agent_loop.py:898`, `test_check_harness.py:30`,
-`test_cpu_cap.py:140` and `:303`, `test_onboard_devsetup.py:446`). Confirmed on
-the closed tree below.
+`test_cpu_cap.py:140` and `:303`, `test_onboard_devsetup.py:446`). Confirmed by
+re-running the whole bar on the closed tree, started `16:58:06 UTC` — still
+inside the window — which lands on the predicted figure exactly:
+
+```
+2248 passed, 5 skipped in 365.88s (0:06:05)
+```
+<!-- fig: cmd=".venv/bin/python -m pytest -q -n auto" rev=c47ec2da -->
 
 The proof the defect is gone, at the same clock:
 

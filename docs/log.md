@@ -26205,7 +26205,8 @@ excluded = 2232 selected`, and this run selects `2232 + 10 (the critique module,
 now RUNNING) + 11 (the guard module) = 2253`, less 9 skipped = 2244 passed. The
 four extra skips are **this row's own open claim** (four `test_wi_convert.py`
 cases skip on an in-flight `docs/work/active/` entry), so the closed tree reads
-**2248 passed, 5 skipped** — back to the baseline's five platform/coverage gates.
+**2248 passed, 5 skipped** — measured, at `16:58:06 UTC`, still inside the
+window — back to the baseline's five platform/coverage gates.
 The module that used to swallow 4.6 hours now runs in **3.90 s at 16:38 UTC**.
 <!-- fig: cmd=".venv/bin/python -m pytest -q -n auto" rev=bea15693 -->
 Smoke: **928 passed, 6 skipped in 17.55s**.
