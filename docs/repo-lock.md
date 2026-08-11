@@ -32,7 +32,21 @@ collapses to a one-line pointer with the commit.**
 | # | question | where | recommendation |
 |---|---|---|---|
 | **components** | The **component model**. `LLR.Component` is *traced*, so the partition moves with no re-attest window — and it **decides how many IF rows must exist**. | §6 F-11 (archived) | not filed on purpose; filing it would be an agent setting the sitting's agenda |
-| **OI-14** | What an IF row's **`Contract` cell is for**. Measured: design narrative and history, 1% requirement voice, and the registry has **no schema tier at all**. | §6 F-10 (archived) | **declare now, split gradually** — never a 95-row sweep |
+| **OI-14** | What an IF row's **`Contract` cell is for**. Measured: design narrative and history, 1% requirement voice, and the registry has **no schema tier at all**. **It inherits a sweep** — see below. | §6 F-10 (archived) | **declare now, split gradually** — never a 95-row sweep |
+
+> **OI-14 has grown a second half, and it is the same finding twice.** F-10
+> measured `Contract` cells carrying design narrative and defect history rather
+> than contract, and noted the cost is not cosmetic: `plan_briefs`'
+> `IF_SURFACE_COLUMNS` feeds `Contract` **verbatim into LLM planning briefs**,
+> so history spends brief budget without constraining behaviour. **That pattern
+> then grew back** — 11 of 110 IF rows now cite `repo-lock D-n` in
+> `Contract`/`Notes`, most of it added by this program. The owner ruled the
+> general case on 2026-08-11: *"if someone wants to know the history and the
+> rationale, they should look in the archive"* — state the constraint, cite a
+> decision only where a reader could plausibly undo it, at most once per
+> module. The kit-source sweep executes now under its own WI; **the 11 IF rows
+> are deliberately NOT swept**, because OI-14 is going to rewrite what a
+> `Contract` cell may contain and sweeping first means sweeping twice.
 
 **Read them in that order:** OI-14 assumes today's IF rows are the right ones,
 and that rests on the unruled component model. §8.3 item 6 (SRs written against
