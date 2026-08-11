@@ -1126,9 +1126,19 @@ def module_components(root):
         tags = {t for t in _split_refs(r.get("Component", "")) if t.startswith("CMP-")}
         if not tags:
             continue
-        key = _norm_module(r.get("Module", ""))
-        if key:
-            out.setdefault(key, set()).update(tags)
+        # `Module` is a `;`-JOINED LIST, and this reader has to split it (WI-429).
+        # It did not, and the bug is the D-6 failure mode exactly: an unsplit
+        # `a.py;b.py` normalized to one nonsense key, so a row spanning two
+        # modules tagged NEITHER of them — silently, because a membership map
+        # that is missing an entry reads identically to a module nobody tagged.
+        # The kit's other readers of this cell (`check_doc_refs.SPINE_CELLS`,
+        # trace's back-link resolution) already split it; this one had not
+        # learned the shape, and 2 live rows were losing their tags before the
+        # WI-429 repair widened the same cells to 13.
+        for part in _split_refs(r.get("Module", "")):
+            key = _norm_module(part)
+            if key:
+                out.setdefault(key, set()).update(tags)
     return out
 
 

@@ -245,3 +245,34 @@ def test_if_component_tag_resolving_passes(scaffold):
     proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "component-findings=0" in proc.stdout
+
+
+# --- the `;`-joined Module cell in the membership join (WI-429) ---------------
+
+
+def test_module_components_splits_a_joined_module_cell(tmp_path):
+    """`LLR.Module` is a `;`-joined list, and the AXES membership join must read
+    it as one. It did not: an unsplit `a.py;b.py` normalized to a single nonsense
+    key, so a row spanning two modules tagged NEITHER — silently, because a
+    membership map missing an entry is indistinguishable from a module nobody
+    tagged. Found when the WI-429 repair widened 2 such cells to 13 and dropped
+    `scripts/traj_parse` out of every component."""
+    from conftest import load_script
+
+    ct = load_script("check_trajectory")
+    reg = tmp_path / "docs" / "requirements"
+    reg.mkdir(parents=True)
+    (reg / "low-level-requirements.toml").write_text(
+        "[design.LLR-001]\n"
+        'module = "project-trajectory/scripts/a.py;project-trajectory/scripts/b.py"\n'
+        'component = "CMP-001"\n'
+        "\n[design.LLR-002]\n"
+        'module = "project-trajectory/scripts/c.py"\n'
+        'component = "CMP-002;CMP-003"\n',
+        encoding="utf-8",
+    )
+    mapping = ct.module_components(tmp_path)
+    assert mapping["scripts/a"] == {"CMP-001"}, "the first half must be tagged"
+    assert mapping["scripts/b"] == {"CMP-001"}, "and so must the second"
+    assert not [k for k in mapping if ";" in k], "no joined key may survive"
+    assert mapping["scripts/c"] == {"CMP-002", "CMP-003"}, "tags still multi-valued"

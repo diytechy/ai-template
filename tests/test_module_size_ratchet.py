@@ -945,7 +945,16 @@ BASELINE = {
     # 3901), same WI: `current_digests` carries the repo-lock D-1 pointer
     # saying WHY the anchor engine has no writer yet, so the NEXT sweep reads
     # it in the code instead of re-deriving it. Comment only; zero code delta.
-    "check_trajectory.py": 3901,
+    # Then +10 (3901 -> 3911), WI-429: a BUG FIX and the reason it was invisible.
+    # `module_components` normalized the whole `LLR.Module` cell as one key, so a
+    # `;`-joined `a.py;b.py` produced one nonsense key and tagged NEITHER module.
+    # Two live rows were already losing their CMP tags this way, silently — a
+    # membership map missing an entry reads exactly like a module nobody tagged —
+    # and the WI-429 repoint of 13 rows turned it into a red. +1 line of code (a
+    # loop over the split cell); the other 9 record the D-6 failure mode in the
+    # reader that had not learned the cell's shape, because the next reader of a
+    # joined cell needs to find that written down and not re-derive it.
+    "check_trajectory.py": 3911,
     # NEW ENTRY, +25 (1498 -> 1523), WI-357: the two-stage work-branch claim
     # signal — the on-disk fast path plus the branch-history probe that
     # survives the §2.3 close commit (git log -1 over the claim path), with

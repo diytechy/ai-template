@@ -377,7 +377,7 @@ phase = 1
 [design.LLR-035]
 sr_refs = ["SR-070"]
 title = "Offline project-state core"
-module = "project-trajectory/scripts/gen_trajectory.py"
+module = "project-trajectory/scripts/gen_trajectory.py;project-trajectory/scripts/traj_parse.py;project-trajectory/scripts/traj_views.py"
 code_symbol = "build_html/spine_stats/arch_icicle/dag_svg"
 detail = """Renders one self-contained root HTML file with completeness tiles, the spine hierarchy, and the WI roadmap DAG."""
 test_refs = "(see TC-038)"
@@ -543,7 +543,7 @@ phase = 1
 [design.LLR-051]
 sr_refs = ["SR-050"]
 title = "Process reference tab"
-module = "project-trajectory/scripts/traj_panels.py"
+module = "project-trajectory/scripts/traj_panels.py;project-trajectory/scripts/gen_trajectory.py"
 code_symbol = "process_panel/build_html"
 detail = """Renders the Process tab as a fully self-contained conditional panel registered in build_html (the Knowledge-tab pattern: nav button + section id=process): (1) the artifact-lifecycle x gates panel derived from the live registries + docs/gate (current-gate highlight; per-tier counts from the spine), (2) the resume-loop panel (the managed agent_loop flow with its escalation edges), (3) the slices -> phase -> gates panel derived from the WI registry (docs/work/); links out to the process masters wherever a canonical home exists (bounded in-view restatement only where no single doc states the relationship); sorted inputs, no clocks; a data-less repo renders byte-identically; --check unchanged (the trajectory-map step)."""
 test_refs = "(see TC-051)"
@@ -565,7 +565,7 @@ phase = 2
 [design.LLR-055]
 sr_refs = ["SR-054"]
 title = "Dashboard usability rendering"
-module = "project-trajectory/scripts/gen_trajectory.py"
+module = "project-trajectory/scripts/gen_trajectory.py;project-trajectory/scripts/traj_views.py"
 code_symbol = "build_html/_nav/when_view"
 detail = """Adjudicated against the usability rubric (docs/rubrics/dashboard-usability.md) by the SR-084/SR-085 critique loop: labels stay readable at default zoom with no clipped or overlapping text, and the reading experience the rubric's remaining anchors describe. Byte-deterministic; --check unchanged. This row keeps ONLY what a test cannot pin: the mechanized cores have left for child rows that name the tests owning them — T2 start-collapse (LLR-099/TC-102), T3 breadcrumb-restores-parent (LLR-100/TC-103, the whole anchor, no residue here) and T1 labelled entry (LLR-115/TC-120, the whole anchor, no residue here). Do NOT restate a child's claim here: an anchor lives in exactly one row."""
 rationale = """A critique that re-judges what a test already enforces spends its budget twice and can disagree with the harness, so an anchor whose bar becomes operational leaves this row entirely rather than being kept as a duplicate. T3 and T1 are the two that left whole: a critique cannot verify T3's return path from a static shot set while a test can click the crumb, and T1's 'obvious' was always glossed as labelled-not-unlabelled, which is mechanizable once written that way."""
@@ -764,7 +764,7 @@ phase = 1
 [design.LLR-078]
 sr_refs = ["SR-071"]
 title = "Conditional architecture and knowledge views"
-module = "project-trajectory/scripts/traj_parse.py"
+module = "project-trajectory/scripts/traj_parse.py;project-trajectory/scripts/traj_panels.py"
 code_symbol = "sw_modules/cmp_rows/know_graph/_okf_nodes"
 detail = """Renders software/component and OKF views only when their source bundles exist; omits each otherwise."""
 test_refs = "(see TC-078)"
@@ -775,7 +775,7 @@ phase = 1
 [design.LLR-079]
 sr_refs = ["SR-072"]
 title = "Deterministic responsive dashboard freshness"
-module = "project-trajectory/scripts/gen_trajectory.py"
+module = "project-trajectory/scripts/gen_trajectory.py;project-trajectory/scripts/traj_parse.py"
 code_symbol = "main/_asof/ASOF_RE"
 detail = "Produces deterministic responsive HTML."
 test_refs = "(see TC-079)"
@@ -786,7 +786,7 @@ phase = 1
 [design.LLR-080]
 sr_refs = ["SR-075"]
 title = "Declared-interface graph rendering"
-module = "project-trajectory/scripts/gen_trajectory.py;project-trajectory/scripts/gen_arch_map.py"
+module = "project-trajectory/scripts/gen_trajectory.py;project-trajectory/scripts/gen_arch_map.py;project-trajectory/scripts/traj_views.py"
 code_symbol = "sw_graph/build_html;build_module_map"
 detail = """Renders IF-labeled seams in dashboard and architecture views with deterministic table fallback when absent."""
 test_refs = "(see TC-081)"
@@ -831,7 +831,7 @@ phase = 1
 sr_refs = ["SR-123"]
 title = "Critique closure ratchet"
 module = "project-trajectory/scripts/check_trajectory.py"
-code_symbol = "critique_staged_findings"
+code_symbol = "critique_ratchet_findings"
 detail = """Warns when a Critique-scoped WI closes after CHANGES-REQUESTED with no TC, test, or rubric delta."""
 test_refs = "(see TC-086)"
 status = "Verified"
@@ -940,7 +940,7 @@ phase = 1
 [design.LLR-099]
 sr_refs = ["SR-054"]
 title = "Default-density start-collapse (T2 core)"
-module = "project-trajectory/scripts/gen_trajectory.py"
+module = "project-trajectory/scripts/gen_trajectory.py;project-trajectory/scripts/traj_panels.py;project-trajectory/scripts/traj_render.py"
 code_symbol = "know_view/sw_view/_render_drill"
 detail = """The mechanized core of usability anchor T2 (docs/rubrics/dashboard-usability.md): a view whose scale EARNS tiering — a bundle spanning more than 3 OKF types, a module set above the component threshold (the SR-089 '>3' rule) — renders START-COLLAPSED as the shared type-tiered drill, one block per type or container, rather than a flat wall of nodes; at or below the threshold it stays flat. Covers the Knowledge, How-SW and landing What views; the What icicle start-collapses to one block per SN with descend-on-click, reusing _drill_layer_svg/_render_drill so the interaction idiom is single-sourced. SCOPE: T2's remaining 'reads legibly at default density' judgement stays perceptual under LLR-055/TC-055."""
 rationale = """Tiering imposed on a small project costs a click to reach what already fitted on one screen, so it is earned by scale rather than switched on globally. Capping DEPTH instead of collapsing was rejected and the emitter records why: height is leaf-proportional, so stopping at the SR lane still stacks one unit per SR and the wall returns. The What icicle is the case that forced the widening — it rendered the whole spine at LEAF scale, one unit per test case."""
@@ -988,7 +988,7 @@ phase = 3
 [design.LLR-103]
 sr_refs = ["SR-053"]
 title = "Uniform node/edge/legend/highlight styling (U3 core)"
-module = "project-trajectory/scripts/gen_trajectory.py"
+module = "project-trajectory/scripts/gen_trajectory.py;project-trajectory/scripts/traj_render.py"
 code_symbol = "_ring_ink/_ring_style/when_view legend"
 detail = """The mechanized core of uniformity anchor U3 (docs/rubrics/dashboard-uniformity.md): the hover/focus highlight ring resolves to ONE shared per-fill `--ring` custom property across every SVG emitter (drill/icicle/flat-DAG/knowledge) rather than a different hue per emitter, and the When tab's phase-accent key renders through the SAME `.legend`/`<i>` component every other legend in the document uses rather than a bespoke inline-chip idiom. SCOPE: highlight-token equality and legend-component equality, asserted structurally against the emitted CSS and markup. Spacing and exact visual weight belong to LLR-110/TC-115."""
 rationale = """A highlight that changes hue between views teaches the reader a different interaction language per tab, and a legend built twice drifts in one copy while the other stays right. Per-emitter hues were the shipped state (an accent token in the drill views, a hardcoded amber elsewhere) and were rejected precisely because nothing held them equal: sharing one token means a change lands everywhere or nowhere."""
@@ -1036,7 +1036,7 @@ phase = 3
 [design.LLR-107]
 sr_refs = ["SR-053"]
 title = "One interaction idiom per node role (U4 core)"
-module = "project-trajectory/scripts/gen_trajectory.py"
+module = "project-trajectory/scripts/gen_trajectory.py;project-trajectory/scripts/traj_render.py;project-trajectory/scripts/traj_views.py"
 code_symbol = "_drill_layer_svg/arch_icicle/dag_svg/know_graph_svg node groups"
 detail = """The mechanized core of uniformity anchor U4 (docs/rubrics/dashboard-uniformity.md). Two node roles exist and each is spelled ONE way in every emitter that renders it: an IDENTIFIED node (icicle .cell, flat-DAG .wi, knowledge .knode) advertises its registry id through `data-id`; a DETAIL-BEARING drill node (.block, in both the When and How-SW drills) advertises its detail-map key through `data-node`; and a node of either role is made focusable the same way, `tabindex="0"` on the group. Neither role ever carries the other's attribute. SCOPE: ATTRIBUTE parity, not runtime behaviour parity."""
 rationale = """One node addressed two ways means every later consumer must handle both, and the second spelling is the one that gets forgotten. Proving that two emitters' handlers BEHAVE alike was considered and rejected as out of reach without a browser harness — what is provable from the markup is that they are wired through one vocabulary, and that is the narrowing this row accepts explicitly rather than claiming more than it checks."""
@@ -1131,7 +1131,7 @@ phase = 3
 [design.LLR-115]
 sr_refs = ["SR-054"]
 title = "Task findability - labelled entry within one tab switch (T1 core)"
-module = "project-trajectory/scripts/gen_trajectory.py"
+module = "project-trajectory/scripts/gen_trajectory.py;project-trajectory/scripts/traj_panels.py"
 code_symbol = "build_html/_next_work_html/_nav"
 detail = """The mechanized core of usability anchor T1 (docs/rubrics/dashboard-usability.md). Each of the three core reading tasks the rubric concretizes — find the project state, find the next work, find how the parts connect — is reachable within one tab switch of the landing view, its entry point a LABELLED nav control or a NAMED surface on the landing view, never an unlabelled region a reader must discover by clicking. THE DESIGN CONSTRAINT that makes the check honest: it is judged against the RENDERED artifact carrying real registry data, NEVER the nav skeleton. The guard resolves each task's entry point from the emitted document (task 1 -> the landing Definition-completeness/Execution cards, 0 switches; task 2 -> the landing Next-work card, 0 switches; task 3 -> the How-SW nav tab, 1 switch), asserts each is LABELLED and within one switch, and asserts the next-work surface is NON-EMPTY on the zero-active/all-queued fixture. SCOPE — PROVEN: a labelled entry point per task, reachable in one switch, and the next-work surface non-empty across the practice fixtures (zero-active, waiting-with-predecessor, drained). DELIBERATELY NOT: whether the reader subjectively knows what to do next; T1 leaves the critique entirely, with no residue under LLR-055/TC-055."""
 rationale = """'Obvious' was always glossed as labelled-rather-than-unlabelled, and that gloss is the whole bar — once it is written operationally there is nothing perceptual left to adjudicate, so the anchor can leave the critique instead of being re-judged every round. The rendered-artifact constraint is the load-bearing part and must not be relaxed to a structural check: a next-work surface can EXIST in the emitter and render nothing when no row is active, so a nav-skeleton check passes on exactly the artifact a reader finds empty."""
@@ -1179,7 +1179,7 @@ phase = 4
 [design.LLR-119]
 sr_refs = ["SR-054"]
 title = "T4 label legibility, mechanized: ink inside its box, truncation with a reveal"
-module = "project-trajectory/scripts/gen_trajectory.py"
+module = "project-trajectory/scripts/gen_trajectory.py;project-trajectory/scripts/traj_render.py;project-trajectory/scripts/traj_panels.py"
 code_symbol = "_drill_block_label/_fit_lines/_next_work_title"
 detail = """The mechanized floor of usability anchor T4 (docs/rubrics/dashboard-usability.md), widening the anchor's existing owner rather than adding a rubric anchor. The clause made objective: no character a block renders may fall outside that block's own rect, horizontally or vertically. The emitter FITS the sub-label to the column it will actually be drawn in — a second line when one will not hold it, then an ellipsis — with three text lines the ceiling, reusing the grid the id/name wrap idiom already proved fits row_h; a sub-label that already fits one line renders byte-identically to before. SCOPE — PROVEN: for every block of every drill layer in the emitted document, each label line's ink box lies inside its own node rect, measured from the emitted geometry with the emitter's declared per-character widths and the document's declared font sizes, entities counted as the single glyph they render. Second half: this emitter does not truncate the next-work title by a fixed budget — the card emits the whole clause and lets its own width do the fitting, the declared bound _NEXT_WORK_TITLE caps ONE item's HEIGHT rather than its text, and where it bites the remainder discloses through a NATIVE <details> cut at a word so head and remainder rejoin continuously when opened. DELIBERATELY NOT: whether an ellipsis a reader meets is ACTIONABLE — truncated-without-affordance stays T4's perceptual residue under LLR-055/TC-055, so T4 remains a live critique anchor; the full string keeps its homes in the block's title, aria-label and data-summary."""
 rationale = """A label is illegible AS a label the moment its ink leaves the box it names, which is the half of this anchor a reader cannot argue with. Column right-sizing (LLR-057, SR-056) cannot absorb it: right-sizing clamps at MAX_TIER_COL, so a 400-character need asks for a 2000px column and gets 172 — the overflow is structural, not a tuning problem. A FIXED character budget was the shipped approach on the next-work card and is rejected: it spends the same budget at every width, cutting a title mid-word on a wide screen with the card half empty. Native <details> is the point of the reveal — operable by pointer AND keyboard with no script, in a file opened from disk, which is what makes the affordance assertable from the markup instead of needing a browser. The height bound is measured over 320 registry rows: median 44, p90 126, max 609 characters of leading clause."""
@@ -1251,7 +1251,7 @@ phase = 4
 [design.LLR-130]
 sr_refs = ["SR-122"]
 title = "Dashboard staleness check"
-module = "project-trajectory/scripts/gen_trajectory.py"
+module = "project-trajectory/scripts/gen_trajectory.py;project-trajectory/scripts/traj_parse.py"
 code_symbol = "main/_asof/ASOF_RE"
 detail = """Implements stale/missing --check with a git as-of stamp excluded from stamp-only comparison."""
 rationale = """Split from the determinism row: determinism is what makes the check possible, but a deterministic artifact nobody re-checks still goes stale."""
@@ -1407,7 +1407,7 @@ phase = 4
 [design.LLR-143]
 sr_refs = ["SR-026"]
 title = "Plain-launch drive loop (claim->build->integrate)"
-module = "project-trajectory/scripts/drive.py"
+module = "project-trajectory/scripts/dispatch.py"
 code_symbol = "run/_resume_or_claim/_stranded_claims/_default_worker"
 detail = """The serial scheduling front end a plain agent_loop.py launch runs: each cycle re-derives the ready frontier (schedule.frontier), refuses on the tracked pause and on a dirty trunk at the cycle top, resumes a parked claimed branch else claims the next queued WI in build order (integrate.claim, branch name check-ref-format-validated), launches one worker session on the claimed branch's worktree (agent_loop.py --worktree --wi with the session dials forwarded), drains the serial merge queue (integrate.integrate) counting merges from finished_branches, and stops loudly on any composed refusal - stranded claims (active specs with no branch ref) refuse by name, NEEDS-HUMAN propagates as exit 7, a stall aborts, an empty frontier drains to exit 0. The session-config preflight applies only when work needs a worker. Never pushes."""
 rationale = """Ordering only, no new authority: every refusal stays where it already lives, and the driver is ~400 lines of composition against the 4,042-line dispatcher it replaces."""
