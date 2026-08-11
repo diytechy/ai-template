@@ -84,6 +84,16 @@ Measured 2026-08-11 at `ac7b8261` on `infra/mechanized-loop`.
 | full bar | **2258 passed, 5 skipped** |
 | owner surface | **2 pending rulings** + the sitting's 25-row re-attest brief |
 
+**Predecessor records**, kept reachable because they are the account of the
+program *before* this one and are not superseded by it:
+[`handoff-2026-08-08-mechanized-loop.md`](handoff-2026-08-08-mechanized-loop.md)
+and its build-out plan
+[`spine-restructure-2026-08-08.md`](spine-restructure-2026-08-08.md) — how the
+five needs the sitting has now ruled on were decomposed in the first place.
+Both are **history**: they keep their `SN-030`/`SN-031`/`SN-032` citations after
+those ids were retired, on the doctrine `check_doc_refs` applies to retired
+files (naming one is accurate history; "fixing" it falsifies the record).
+
 **The gate has not moved and should not have.** One SN was attested and three
 demoted at the sitting's part 1, but every SR/LLR/TC under them is still
 `Draft`, and a `Draft` row reads G0. Worth knowing: a `[phase]-[g*]` detector
