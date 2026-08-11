@@ -437,8 +437,48 @@ work.
 The owner leans "all of them", and the shapes support it: `interfaces.csv`
 (110 rows, 5 pipe cells, 968-char longest), `open-items.csv` (**3,126-char**
 cells — the loudest case in the repo), `agents.csv`, `components.csv`. Every
-argument that moved the spine applies. **Sequence it after the spine cutover**
-(now done, so this is unblocked). Two design notes:
+argument that moved the spine applies.
+
+> **HALF DONE, 2026-08-11 — WI-431** (`f458aea7` → `fd9e9fb7`).
+> **`open-items` and `agents` are on TOML**, owner-approved; the converter and
+> `spine_carrier` learned both, every reader is wired, and the sources are
+> deleted. Bar: **2282 passed, 5 skipped**. **Remaining: `interfaces.csv`
+> (waits for OI-14, which rewrites what a `Contract` cell may contain) and
+> `components.csv` (waits for the components ruling, which is *about* CMP
+> rows).**
+>
+> **This section's reader inventory below was WRONG, in two ways that mattered.**
+> It named **3** open-items readers; there are **8** (`gen_open_items` ·
+> `check_docs` · `traj_status` · `check_trajectory` · `trunk_step` ·
+> `integrate` · `intake` · `bootstrap`). And it named **`intake` as a writer —
+> it is not**; `intake` only reads, and the **writer is `bootstrap.py`**, which
+> *appends* a whole row. That distinction changed the work: the spine's line
+> rewrite exists because it *changes a cell of an existing row*, and an append
+> touches nothing, so no rewrite machinery was owed. Treat the inventory for
+> the remaining two registries as unverified until re-measured.
+>
+> **The cutover was again the detector, and again it found fail-opens** — three
+> readers that looked fine against the old carrier: `gen_open_items` rendered
+> **"0 pending decisions"**, `traj_status` spliced an empty block into
+> `status.md`, and `check_trajectory`'s brief lint went vacuously clean. Only
+> `agent_route` failed loudly. That is the exact silent-false-green shape a
+> decision queue must never have.
+>
+> **A carrier hazard nobody had named: ids containing a dot.**
+> `[agent.ANTHROPIC-OPUS-4.8]` written bare is **valid TOML declaring nested
+> tables** — the file parses, and the row silently vanishes. Fixed at three
+> levels (the emitter quotes, the converter detects, and
+> `spine_carrier.nested_table_findings` refuses at load), so the remaining
+> batch-2 registries inherit the guard. Worth knowing because it fails in the
+> worst direction: no parse error, no finding, one fewer row.
+>
+> **`test_dogfood_sync`'s rule was extended rather than forked — and it bit on
+> the way in**, catching the template conversion dropping `RuledDate` /
+> `RulingRef` / `Env` (columns the CSV header declared with every shipped cell
+> empty). Exactly the drift the redesigned rule exists to catch, on its first
+> outing against a new registry.
+
+Two design notes:
 
 - **`interfaces.csv` converts WITH its schema change, not before** — OI-14 and
   the deferred vocabulary-IF question rewrite what an IF row *is*; converting
