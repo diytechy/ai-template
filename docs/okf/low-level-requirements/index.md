@@ -46,7 +46,6 @@ resource: "generated"
 | [LLR-033](LLR-033.md) | Release checklist generator |
 | [LLR-034](LLR-034.md) | WI dependency-DAG validation |
 | [LLR-035](LLR-035.md) | Offline project-state core |
-| [LLR-036](LLR-036.md) | Duplicate-block detector |
 | [LLR-037](LLR-037.md) | Per-phase cmd map + size tripwire |
 | [LLR-038](LLR-038.md) | Path + sym: reference checker |
 | [LLR-039](LLR-039.md) | OKF bundle emitter |

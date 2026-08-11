@@ -49,7 +49,6 @@ resource: "generated"
 | [TC-036](TC-036.md) | Inspect a re-sync done per ADOPTING.md section 6 against the docs/kit-version diff — kit-… |
 | [TC-037](TC-037.md) | Run WI id, predecessor, cycle, placeholder, absent-registry, and opt-out validation cases. |
 | [TC-038](TC-038.md) | Generate the core offline dashboard and inspect completeness, spine hierarchy, and roadma… |
-| [TC-039](TC-039.md) | Run the check-dupes suite; a seeded copy-pasted helper fails naming both file:line locati… |
 | [TC-040](TC-040.md) | Run the agent-loop suite; a REVIEW-B-mapped phase invokes the second fake CLI and not the… |
 | [TC-041](TC-041.md) | Run the doc-refs suite; a dangling path warns then gates under --strict, non-path backtic… |
 | [TC-042](TC-042.md) | Run the gen-okf suite; typed linked concepts generate, Process Guide concepts emit for pr… |

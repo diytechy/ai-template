@@ -299,14 +299,14 @@ def _step_sections(profile):
 
 def extra_steps(profile, subs):
     """Project-declared additional gate steps, from `docs/stack.ini`
-    `[step:<name>]` sections — the home for product-specific gates (dup-code,
-    license-lint, capability-integrity, …) so a project extends the plan WITHOUT
+    `[step:<name>]` sections — the home for product-specific gates (license-lint,
+    capability-integrity, …) so a project extends the plan WITHOUT
     hand-editing this take-wholesale file. A re-sync then overwrites check.py
     cleanly; the steps live in the declared profile, like the rest of the
     toolchain. Each section:
 
-        [step:dup-code]
-        command = {py} scripts/check_dupes.py {src}   # required
+        [step:capability-integrity]
+        command = {py} scripts/check_capabilities.py {src}   # required
         gates   = G2 G3                                # optional, default G3
         layer   = product                             # optional, default product
         lane    = tests+coverage                       # optional (see below)
@@ -801,8 +801,8 @@ _EX_DRAFT_RE = re.compile(r"\bex-draft=(G\d)\b")
 # would re-run the whole suite plus coverage on EVERY gate run for the life of a
 # window — measured 55.8 s at the smoke tier and ~11 min unfiltered on a
 # 24-thread box — which buys no signal and would train people to skip the gate.
-# The steps that ARE included (lint, dupes, the freshness gates, the G3
-# traceability criterion) are cheap, read-only, and genuinely stop running.
+# The steps that ARE included (lint, the freshness gates, the G3 traceability
+# criterion) are cheap, read-only, and genuinely stop running.
 #
 # `module-coverage` follows its PRODUCER out (127-REVIEW-A MAJOR 6). It grades
 # `coverage.json`, which only `tests+coverage` writes — and `_clear_stale_coverage_report`
@@ -820,11 +820,13 @@ def window_open(gate_file=None):
     below what the artifacts otherwise support.
 
     Why this exists (owner ruling 2026-07-27): a window drops the gate, and the
-    plan below then drops every step tagged for the higher gate — so `lint`,
-    `dupes` and `--require-verified` simply STOP RUNNING for the duration. That
+    plan below then drops every step tagged for the higher gate — so `lint` and
+    `--require-verified` simply STOP RUNNING for the duration. That
     is not a relaxed bar, it is a blind spot: twelve commits went green over
     those steps during the 2026-07-26/27 window and the debt surfaced in one
-    lump when the window closed (WI-333/WI-334).
+    lump when the window closed (WI-333/WI-334 — that debt was the duplication
+    census's, and the census itself was torn down later, D-7/WI-426; the ruling
+    is about the blind spot, not about which step fell into it).
 
     Deliberately NOT "any gate below G3": a project genuinely at G1 has not
     earned those steps and should not be told about them on every run. The
@@ -964,9 +966,11 @@ def advisory_plan(gate, plan, steps_at):
 
 def _print_steps(plan):
     """One `--list` line per step: name, layer, the gates that require it, and
-    the exact command. Extracted rather than repeated for the advisory tier —
-    `dupes` flagged the second copy immediately, and the standing rule is that a
-    census line IS acceptance of the duplication, never a way to green a step."""
+    the exact command. Extracted rather than repeated for the advisory tier: the
+    two tiers print the SAME line, so one printer is the only way the formats
+    cannot drift apart. (Historically the duplication census flagged the second
+    copy the moment it appeared; that census was torn down in D-7/WI-426, so the
+    extraction now stands on its own reason rather than on a tool's verdict.)"""
     for name, _requires, cmd, gates, layer in plan:
         print(
             "  - {:16} [{:7}] [{}]  {}".format(

@@ -43,8 +43,8 @@ records where each one bites.
 
 | Rule | Primary | Backup / note |
 |---|---|---|
-| One fact, one home — no copy-paste logic | Harness | `check_dupes.py` (opt-in `[step:dupes]`); Reviewer for semantic dups |
-| A census class states a rationale a reader can CHECK against its blocks (no catch-all bucket under any label) | Reviewer | Was a mechanized majority rule in `tests/test_dupes_census_audit.py`; 129-REVIEW-A **drove and bypassed** it (even split + keyword-stuffed row, WI-350), and the Phase 5 dispatcher deletion false-positived it in the opposite direction (an honest shrink concentrated the survivors). Per the 2026-07-28 audit ruling the property is not fully mechanizable — the checkable halves (per-section counts, distribution-table consistency, charged-class-names-open-WI-and-modules) stay tests; whether a class's rationale actually fits its blocks is the reviewer's read |
+| One fact, one home — no copy-paste logic | **Test (policy only) + Reviewer** | **Downgraded 2026-08-11 by owner ruling (repo-lock D-7, executed WI-426): the mechanical duplication census is GONE** — `check_dupes.py`, `docs/dupes-allow` and the `[step:dupes]` step are deleted, on the evidence that it caught once at the one-time triage and never since, went silent exactly when a copy DIVERGED (the dangerous case), and spent 93% of its census lines registering accepted idioms. What replaces it is narrower and honest: duplicated **policy** must carry a behavioural pin in [`tests/test_rule_sync.py`](../tests/test_rule_sync.py) (its docstring is now the F5 rule's live home) or [`tests/test_wi_loader_sync.py`](../tests/test_wi_loader_sync.py); duplicated **plumbing** is accepted **unbounded**, which the ledger showed was its de-facto state anyway. Reviewer remains the only enforcer for semantic dups |
+| ~~A census class states a rationale a reader can CHECK against its blocks~~ | **n/a — the subject is gone** | **RETIRED 2026-08-11 with the census itself (D-7/WI-426).** Kept as a line rather than deleted because the reasoning is reusable the next time someone proposes a classified allowlist. It was a mechanized majority rule in `tests/test_dupes_census_audit.py`; 129-REVIEW-A **drove and bypassed** it (even split + keyword-stuffed row, WI-350), and the Phase 5 dispatcher deletion false-positived it in the opposite direction (an honest shrink concentrated the survivors). Per the 2026-07-28 audit ruling the property is not fully mechanizable — the checkable halves (per-section counts, distribution-table consistency, charged-class-names-open-WI-and-modules) stay tests; whether a class's rationale actually fits its blocks is the reviewer's read |
 | Fail loudly, never silently | Test + Reviewer | scripts' own error-path tests; a bare except is a review finding |
 | Automation-safe by default (never blocks headless) | Test | `agent_loop`/hook headless tests; `preflight` guards footing |
 | Right-size; every line is a liability | Reviewer | Prose — over-engineering flagged either way (no hard check) |
@@ -99,7 +99,8 @@ records where each one bites.
    **non-empty** rationale — presence, which is checkable. But whether the
    rationale is *honest* (truly names the nearest seam) and whether a `Proposed`
    contract near-duplicates an existing `IF-###` are judgment calls:
-   `check_dupes`' token windows work on code, not contract prose. Backed by the
+   token-window duplicate detection works on code, not contract prose (and the
+   kit no longer ships any — D-7/WI-426). Backed by the
    plan/spec critique-rubric anchor
    [`docs/rubrics/spec-interface-hygiene.md`](rubrics/spec-interface-hygiene.md)
    **B1** ("proposes a near-duplicate of `IF-###` instead of consuming or

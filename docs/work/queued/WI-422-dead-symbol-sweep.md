@@ -23,3 +23,15 @@ symbol can still tell whether it died last week or was always a public seam.
 The classification is the deliverable. A list of deletions with no record of
 what was KEPT and why leaves the next sweep to re-derive the same judgements
 from scratch.
+
+**2026-08-11 (WI-426, repo-lock D-7).** This row's title lists three ratchets
+that catch adjacent failures and argues a dead symbol slips past all of them.
+One of the three is gone: the duplication census (`check_dupes.py`) was torn
+down by owner ruling, along with its census file and the spine chain
+`SR-039 → LLR-036 → TC-039`. **The row's argument is unaffected and arguably
+stronger** — the premise was that no existing check sees an orphaned symbol, and
+the census was named only as one of the three that does not. Read the title's
+third clause as history. The two live ratchets (the module-size ratchet,
+`test_complexity_ratchet`) still bound growth and complexity, and
+`gen_arch_map.py`'s symbol inventory — the candidate set this row's METHOD
+starts from — is untouched by the teardown.

@@ -456,18 +456,6 @@ phase = 1
 area = "Trajectory"
 superseded_by = ["SR-070", "SR-071", "SR-072"]
 
-[requirement.SR-039]
-title = "Duplicate-code lint"
-sn_refs = ["SN-008", "SN-012"]
-requirement = """check_dupes.py shall report any window of at least a configurable minimum of consecutive significant source tokens appearing at more than one location, and exit nonzero unless the finding's block fingerprint plus file pair (or a legacy bare file pair) is recorded in the census."""
-rationale = """Realizes SN-008 — the one-fact-one-home rule holds for prose because a reviewer reads prose; nothing reads code for it, so duplication accumulates until a fix must be applied in places nobody can enumerate. A review-only convention was rejected as unenforceable at scale. Opt-in at the product layer so a non-adopter pays nothing. Block-fingerprinted, count-aware exemptions are the preferred form because they let NEW copy-paste inside an already-listed pair fail; the coarser legacy file-pair exemption does not, which is the cost of accepting one."""
-acceptance_criteria = """A copy-pasted helper across two files exits 1 naming both file:line locations; clean source exits 0; raising --min-tokens above the block's length passes; a docs/dupes-allow fingerprint+pair line suppresses that block while a new distinct block in the same pair still fails; --emit-census regenerates the lines."""
-priority = "S"
-verification = "Test"
-status = "Verified"
-phase = 1
-area = "Duplicate lint"
-
 [requirement.SR-040]
 title = "Per-phase routing and review dial"
 sn_refs = ["SN-006", "SN-016"]

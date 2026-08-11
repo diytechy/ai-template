@@ -416,17 +416,6 @@ evidence = """tests/test_gen_trajectory.py::test_generates_self_contained_dashbo
 status = "Verified"
 phase = 1
 
-[test.TC-039]
-verifies = ["SR-039", "LLR-036"]
-level = "Integration"
-method = """Run the check-dupes suite; a seeded copy-pasted helper fails naming both file:line locations (one merged finding), clean source passes, the threshold is tunable, in-block repetition does not self-report, a fingerprint+pair census line suppresses that block while a NEW distinct block in the same listed pair still fails, a same-line separate-block interior edit defeats a stale census, --emit-census round-trips to green, a legacy bare pair still coarsely suppresses, and unallowed() is count-aware."""
-tier = "Full"
-expected = "Satisfies SR-039 AcceptanceCriteria"
-automated = "Yes"
-evidence = "tests/test_check_dupes.py"
-status = "Verified"
-phase = 1
-
 [test.TC-040]
 verifies = ["SR-040", "LLR-037"]
 level = "Integration"

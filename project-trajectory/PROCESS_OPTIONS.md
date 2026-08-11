@@ -1777,8 +1777,8 @@ ERROR under `--strict`, **vacuous-until-armed** — only a spec carrying the
 section is checked): every cited IF resolves, and a cited Proposed seam carries
 a non-empty rationale. **The honest gap is reviewer-tier:** whether a rationale
 truly names the nearest seam, and whether a Proposed contract near-duplicates an
-existing one, is a judgment call (`check_dupes`' token windows work on code, not
-contract prose) — recorded in `enforcement-audit.md` with a plan/spec
+existing one, is a judgment call (token-window duplicate detection reads code,
+not contract prose) — recorded in `enforcement-audit.md` with a plan/spec
 critique-rubric anchor (`docs/rubrics/spec-interface-hygiene.md` **B1**, which
 WI-190's plan rubric imports).
 

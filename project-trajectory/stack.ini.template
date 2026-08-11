@@ -88,19 +88,15 @@ mode = symbols
 # ABSENT section => these built-in defaults (byte-identical). The skills index
 # is deliberately absent: its neutral source lives only in the kit repo and
 # its per-agent copies are hand-authored source (WI-231).
-#   Two further DATA kinds exist for files that are measured-and-classified
+#   A further DATA kind exists for files that are measured-and-classified
 # rather than generated — re-stamped by hand with a reason (§5.3), never
 # blindly regenerated:
-#   dupes      a fingerprinted duplication census (`check_dupes.py
-#              --emit-census` prints the body; the hand-authored header is the
-#              classification record).
 #   linecounts `"<module>.py": <int>` line-count baselines whose rationale
 #              comments are the ratchet's audit trail.
-# Declare them if you keep such files, e.g.:
-#   docs/dupes-allow = dupes
+# Declare it if you keep such a file, e.g.:
 #   tests/test_module_size_ratchet.py = linecounts
-# Neither is a built-in default: whether you keep a census or a size ratchet at
-# all is your choice, and the kit ships the MECHANISM, not your paths.
+# It is not a built-in default: whether you keep a size ratchet at all is your
+# choice, and the kit ships the MECHANISM, not your paths.
 [generated]
 PROJECT_STATE.html = trajectory
 docs/okf/ = okf
@@ -163,8 +159,8 @@ lanes = 2
 #   layer    (optional, default product) process|product — the --list tag only.
 # The name may not shadow a built-in step (format, lint, tests+coverage,
 # traceability, …). Example (commented — delete the # to activate):
-# [step:dup-code]
-# command = {py} scripts/check_dupes.py {src}
+# [step:capability-integrity]
+# command = {py} scripts/check_capabilities.py {src}
 # gates = G2 G3
 #
 # [step:license-lint]

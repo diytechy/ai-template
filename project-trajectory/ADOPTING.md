@@ -368,6 +368,36 @@ table.
 
 ### Migration recipes for specific kit changes
 
+- **`scripts/check_dupes.py` is REMOVED from the kit (2026-08).** The duplicate-code
+  lint and the fingerprinted census file it read (`docs/dupes-allow`) were torn
+  down by owner ruling: over its life it caught duplication once, at the one-time
+  triage, and never again; it is structurally blind to a *diverged* copy, which
+  is the case that actually hurts (an edited copy is no longer an identical token
+  block, so the tool goes quiet exactly when the duplication becomes dangerous);
+  and 93% of its census lines were registering deliberate, accepted idioms rather
+  than restraining anything.
+
+  **A re-sync will delete the script**, because the re-sync overwrites kit-owned
+  files and `check_dupes.py` is no longer among them. **Your census file is
+  YOURS** — it lives under `docs/`, was never kit-owned, and the re-sync will not
+  touch it. Keeping the check is a legitimate choice: nothing about the ruling
+  says the tool cannot pay for itself in a repo with different duplication
+  pressure. If you keep it, pin the last shipped copy in your own tree
+  (`git show <recorded-kit-commit>:project-trajectory/scripts/check_dupes.py`) and
+  keep your `[step:dupes]` section pointing at it. If you drop it, delete three
+  things together or the harness reds: the `[step:dupes]` section in
+  `docs/stack.ini`, its `docs/dupes-allow = dupes` row in that file's
+  `[generated]` section, and any spine chain you traced the check with — under
+  the kit's supersession rule those rows are **deleted**, not marked, with the
+  act recorded in your log (see `PROCESS.md` on the id watermark: the ids stay
+  spent).
+
+  **What the kit offers instead**, and it is deliberately narrower: duplicated
+  *policy* — two modules each deciding what "Draft" means, or which methods are
+  exempt — needs a behavioural test that imports both and asserts they agree by
+  VALUE (`tests/test_rule_sync.py` in the kit repo is the worked example).
+  Duplicated *plumbing* is accepted without a bound.
+
 - **`docs/id-watermark` becomes REQUIRED (2026-08).** A new one-line-per-space
   file records the highest id ever allocated in each space, so that a deleted
   row's number is never handed out again — the live tree cannot answer that,

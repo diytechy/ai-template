@@ -10,6 +10,24 @@ needs = ["WI-380", "WI-381", "WI-383", "WI-384", "WI-386", "WI-387", "WI-388", "
 
 ## Context
 
+### The verify list lost a member (WI-426, 2026-08-11)
+
+This row's title names `check_dupes.py` in its VERIFY MECHANICALLY list and asks
+its §4 stamp step to "check whether any `docs/dupes-allow` census sanction has
+gone vacuous". **Neither is runnable any more:** repo-lock D-7 (owner ruling
+2026-08-10, executed as WI-426) tore the duplication census down — the script,
+the census file and the spine chain `SR-039 → LLR-036 → TC-039` are deleted, and
+F5 duplication is unbounded again by ruling.
+
+**The substitute, so the list stays complete rather than merely shorter:**
+`tests/test_rule_sync.py` is the anti-drift tool of record. Where this program's
+deletions leave duplicated POLICY behind (not plumbing), the obligation is a
+behavioural pin there; duplicated plumbing is accepted unbounded. Everything
+else in the verify list — `check_stubs.py`, the size ratchet, and
+`check_trajectory.py --strict` unfiltered, all quoted from real output — is
+unchanged, as is the §4 obligation to re-stamp module sizes DOWN rather than
+leave a generous ceiling. Nothing else in this row's scope moves.
+
 ### Re-scope (WI-414, 2026-08-02)
 
 Added by the WI-414 adjudication of `TC-056 Verifies` on merged trunk

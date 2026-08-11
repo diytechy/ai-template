@@ -2828,10 +2828,12 @@ def _staged_wi_registry(root):
     nothing was closed here), and no HEAD copy (first commit / file absent) — so
     a caller degrades silently off-git without restating the reason.
 
-    Extracted for WI-344 (docs/dupes-allow `staged-close-scan`), forced early by
-    WI-352 adding a fourth copy: the census fails closed on a same-file
-    duplication, and the F5 sanction buys cross-SCRIPT copy-ability, so it never
-    covers one. (The CSV-home line-diff half retired with the CSV at Phase 5;
+    Extracted for WI-344, forced early by WI-352 adding a fourth copy. The
+    reason is F5's own boundary and outlives the tool that once flagged it: the
+    F5 sanction buys cross-SCRIPT copy-ability, so it never licenses a fourth
+    copy of the same preamble INSIDE one module. (The duplication census that
+    reported this one was torn down in D-7/WI-426; the extraction stands.)
+    (The CSV-home line-diff half retired with the CSV at Phase 5;
     `_staged_spec_registry` is the one implementation.)"""
     staged = _git(root, ["diff", "--cached", "--name-only"])
     if staged is None:

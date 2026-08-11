@@ -2,8 +2,10 @@
 
 `schedule.py` (CMP-004, the pure decision engine) and `check_trajectory.py`
 (CMP-001, the validator) each carry their OWN work-item-registry parser — a
-deliberate, census-sanctioned duplication (docs/dupes-allow blocks
-`d47d5975c21b` / `f800f0c60265`). The kit's F5 working agreement keeps them
+deliberate duplication (it was fingerprinted in the duplication census until
+D-7/WI-426 tore that census down; the F5 rule's live statement now sits in
+`tests/test_rule_sync.py`, and THIS FILE is its pin for these readers). The
+kit's F5 working agreement keeps them
 separate ON PURPOSE: `schedule.py` stays stdlib-only and self-contained (no kit
 import) so it ships independently copy-able, and IF-053 fixes the dependency
 arrow (the validator consumes the scheduler, never the reverse), so a shared

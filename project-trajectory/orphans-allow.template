@@ -16,8 +16,8 @@
 #
 # This is a DECLARATION, not a suppression list. Every line carries why, so a
 # genuinely undiscoverable new doc cannot hide inside a steady wall of expected
-# ones — the same silent-growth mode `docs/dupes-allow` bounds for duplication.
-# Deleting the file restores the pre-census behavior (every orphan warns).
+# ones — the silent-growth mode every declared list in this kit exists to bound.
+# Deleting the file restores the pre-declaration behavior (every orphan warns).
 
 # The work-item registry's spec-folder home: each file IS a registry entry, not
 # a page anyone navigates to (its `id` and its DIRECTORY are what tools read).

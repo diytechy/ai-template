@@ -901,7 +901,12 @@ BASELINE = {
     # because an amendment edits a value line and leaves the header alone. Read
     # with the CSV rule the map keys on `[requirement.SR-001]`, every lookup
     # misses, and the backlog-staleness warn passes having checked nothing.
-    "check_trajectory.py": 3895,
+    # Then +2 (3895 -> 3897), WI-426 (D-7): `_staged_wi_registry`'s docstring
+    # cited the duplication census as the thing that forced the WI-344
+    # extraction. The census is deleted, so the docstring now carries the
+    # reason that OUTLIVES it (F5 buys cross-SCRIPT copy-ability, never a
+    # fourth copy inside one module). Comment only; zero code delta.
+    "check_trajectory.py": 3897,
     # NEW ENTRY, +25 (1498 -> 1523), WI-357: the two-stage work-branch claim
     # signal — the on-disk fast path plus the branch-history probe that
     # survives the §2.3 close commit (git log -1 over the claim path), with
@@ -943,7 +948,12 @@ BASELINE = {
     # Then +8 (1548 -> 1556), SN-031: the doc-navigability step ignores `docs/handbacks/*` — the
     # per-close reports are DATA, and orphan-warning every lane close is
     # how a checker earns the ignore that makes it useless. Reviewed bump.
-    "check.py": 1552,
+    # Then +4 (1552 -> 1556), WI-426 (D-7): the `[step:dupes]` example in
+    # `extra_steps`' docstring pointed at a script the kit no longer ships, and
+    # two more docstrings justified themselves by what the census had caught.
+    # Re-worded onto reasons that survive the teardown, with the ruling named
+    # so the next reader does not re-derive it. Comment only; zero code delta.
+    "check.py": 1556,
     # +1 (1916 -> 1917), WI-279: one MAPPING row registering the new
     # scripts/check_coverage.py kit gate so it ships downstream — a required
     # one-line registration, not monolith growth (the reviewed-bump escape the
@@ -1117,7 +1127,11 @@ BASELINE = {
     # and `migrate_carrier.py` (every adopting repo migrates too, and an
     # adopter who cannot run the round-trip proof takes the conversion on
     # faith). Nine of the eleven lines are those reasons; the code delta is 2.
-    "bootstrap.py": 2732,
+    # Then -1 (2732 -> 2731), WI-426 (D-7): the `check_dupes.py` MAPPING row
+    # and its name in the docstring's scaffold listing are gone with the
+    # script. Re-stamped DOWN in the same commit, per the standing rule that a
+    # deletion shrinks a module and a generous ceiling silently permits regrowth.
+    "bootstrap.py": 2731,
     # NEW ENTRY, +228 (1423 -> 1651), Phase 2b of the concurrency restructure
     # (docs/concurrency-restructure.md §7): the spec-folder work-item reader,
     # which crosses this module over THRESHOLD for the first time. It is one

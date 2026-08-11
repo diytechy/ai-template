@@ -49,7 +49,6 @@ resource: "generated"
 | [SR-036](SR-036.md) | Deliberate re-sync integration |
 | [SR-037](SR-037.md) | Superseded: Work-item registry validation |
 | [SR-038](SR-038.md) | Superseded: Offline project-state view |
-| [SR-039](SR-039.md) | Duplicate-code lint |
 | [SR-040](SR-040.md) | Per-phase routing and review dial |
 | [SR-041](SR-041.md) | Doc reference validation |
 | [SR-042](SR-042.md) | OKF knowledge-bundle export |

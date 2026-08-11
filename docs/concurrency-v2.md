@@ -865,7 +865,8 @@ one only makes sense once *all* the rows have landed:
    *causes*; **record, without silently absorbing,** the drift it inherits.
 3. **The prose and the stamps** — `PROCESS_OPTIONS.md` (rewritten onto the seam
    model at Phase 5, and the station protocol moves that seam),
-   `AGENTS.template.md`, and the size/dupes stamps. Deletions **shrink**
+   `AGENTS.template.md`, and the size stamps (the duplication-census stamp went
+   with the census — D-7/WI-426). Deletions **shrink**
    modules, so the mirror of *"retire or delete an entry, never re-stamp up"* is
    **re-stamp down** — a generous ceiling silently permits regrowth.
    `concurrency-restructure.md` is **history**: read it as the account of what
@@ -879,9 +880,12 @@ which is exactly the WI-280 pain the design was written to remove. Executes as
 reflects the final state.
 
 **And it is answered mechanically, not by eye.** *"Is anything left behind?"*
-has real answers here — `check_stubs.py`, `check_dupes.py`, the size ratchet,
-and `check_trajectory.py --strict` unfiltered — so the close quotes real output
-rather than reading code and concluding.
+has real answers here — `check_stubs.py`, the size ratchet, and
+`check_trajectory.py --strict` unfiltered — so the close quotes real output
+rather than reading code and concluding. (The duplication census was the fourth
+answer until the owner tore it down, D-7/WI-426; where this program's deletions
+leave duplicated POLICY behind, the substitute obligation is a behavioural pin
+in `tests/test_rule_sync.py`, and duplicated plumbing is accepted unbounded.)
 
 ---
 

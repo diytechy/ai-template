@@ -7,6 +7,33 @@ and policy disagreement is a false green or false red at a gate, the exact failu
 class the kit exists to prevent (repo-review-2026-07-12b.md M1 -> WI-099). These
 tests mechanize the "kept in sync" promise the two files used to make only in prose:
 import both modules and assert they agree.
+
+THE F5 RULE'S LIVE HOME, AND THE ANTI-DRIFT TOOL OF RECORD (owner ruling
+2026-08-10, repo-lock D-7; executed WI-426). F5 is the kit's standing ruling
+(owner, 2026-07-12) that a shared `_kitcommon.py` is REJECTED: each kit script
+must stay stdlib-only and independently copy-able, so small stable helpers —
+`_utf8_console`, the one-line declared-policy readers, argparse/exit
+scaffolding, the spec-folder registry reader — are duplicated on purpose. That
+ruling used to be stated in the duplication census's header (`docs/dupes-allow`,
+read by `check_dupes.py`), which BOUNDED the duplication by fingerprinting every
+sanctioned block. D-7 tore the census down: one real catch at the one-time
+triage and none since, structurally blind to a DIVERGED copy (which is the
+dangerous case, and no longer an identical token block), and 93% of its lines
+registering accepted idioms.
+
+So the ruling now reads, in full:
+
+  * duplicated PLUMBING is accepted UNBOUNDED — no census, no allowlist, no
+    count. This was its de-facto state anyway; the census recorded it rather
+    than restraining it.
+  * duplicated POLICY requires a BEHAVIOURAL PIN IN THIS FILE. A second copy of
+    a decision — what counts as Draft, which methods are LLR-exempt, what a
+    tier's table looks like — is licensed only once these tests assert the
+    copies agree BY VALUE. Equality alone can be vacuous (repo-lock §5's
+    `_sn_fields` case proved it), so pin the value, not just the sameness.
+
+`tests/test_wi_loader_sync.py` is the same instrument aimed at the WI-registry
+readers; extend either rather than reaching for a new census.
 """
 
 from conftest import ROOT, load_script, make_minimal_project, run_py

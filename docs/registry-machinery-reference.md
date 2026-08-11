@@ -415,11 +415,13 @@ regenerate-a-generated-artifact step.
 ### 8.4 The suppressed-gate window
 
 Because the gate is a `min()`, a single Draft or Modified row **drops the gate,
-and the harness then drops every step tagged for the higher gate.** `lint`,
-`dupes` and `--require-verified` simply stop running for the duration. That is
+and the harness then drops every step tagged for the higher gate.** `lint` and
+`--require-verified` simply stop running for the duration. That is
 not a relaxed bar — it is a blind spot, and it has bitten this repo: twelve
 commits went green over those steps during the 2026-07-26/27 window, and the debt
-surfaced in one lump when the window closed.
+surfaced in one lump when the window closed. (The debt of record was the
+duplication census's; that census was torn down later, D-7/WI-426. The blind
+spot is the point, not which step fell into it.)
 
 `window_open` in `check.py` detects it and warns. Its two signals are not equally
 good evidence, which is the subtlety:
@@ -472,7 +474,7 @@ keeps only the steps whose `gates` set contains the resolved gate.
 | `trajectory` | **G2, G3** | process | gains `--strict` here |
 | `arch-map` | **G3** | process | |
 | `perf-budgets` | **G3** | process | |
-| declared `[step:*]` | per section | product | this repo declares `doc-refs`, `dupes`, `module-coverage`, all at **G3** |
+| declared `[step:*]` | per section | product | this repo declares `doc-refs`, `figures`, `module-coverage`, all at **G3** |
 
 Two consequences worth internalising:
 

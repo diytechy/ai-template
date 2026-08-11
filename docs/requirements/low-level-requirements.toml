@@ -385,17 +385,6 @@ status = "Verified"
 component = "CMP-002"
 phase = 1
 
-[design.LLR-036]
-sr_refs = ["SR-039"]
-title = "Duplicate-block detector"
-module = "project-trajectory/scripts/check_dupes.py"
-code_symbol = "find_duplicates/fingerprint/unallowed"
-detail = """Tokenizes each source file (stdlib tokenize; comments/NL/indent excluded, NEWLINE kept so windows cannot stitch unrelated statements), slides a --min-tokens window (default 30), groups candidate hits by line offset, and merges only step-1-overlapping token-window offsets into one finding per block, POSIX-normalizes the file pair, and fingerprints each block (a hash of its complete token signature, line-number-free). A finding is suppressed only when its fingerprint+pair is recorded in docs/dupes-allow (count-aware: N lines sanction N identical copies) or a legacy bare pair matches; --emit-census prints the lines."""
-test_refs = "(see TC-039)"
-status = "Verified"
-component = "CMP-003"
-phase = 1
-
 [design.LLR-037]
 sr_refs = ["SR-040"]
 title = "Per-phase cmd map + size tripwire"

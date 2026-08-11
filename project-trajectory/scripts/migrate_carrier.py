@@ -339,7 +339,7 @@ def _emit(root, src, text, count, noun, write, written):
     """Write one converted registry beside its source and report it.
 
     Shared by both carriers rather than repeated per branch: the tail is
-    identical, and check_dupes says so."""
+    identical, so a change to the report line cannot land in one branch only."""
     dest = src.with_suffix(".toml")
     if write:
         dest.write_text(text, encoding="utf-8", newline="\n")

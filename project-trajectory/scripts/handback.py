@@ -76,7 +76,7 @@ import spec_move
 
 # Where a quarantined red close's failing diff lands. Under `docs/work/` because
 # that is where the work item's own record lives, and as a `.patch` because no
-# bar reads one: the doc checkers discover `*.md`, the stub/dupes checks read
+# bar reads one: the doc checkers discover `*.md`, the stub check reads
 # `src/**/*.py`, and check.py ignores `docs/work/*` outright — so the artefact is
 # inert by its extension, not by a rule someone has to keep.
 ARTEFACTS = integrate.WORK + "/handback"

@@ -7,6 +7,12 @@ a blind spot, not a lower bar. Twelve commits went green over those steps during
 the 2026-07-26/27 window; 20 ruff findings and 86 duplicate blocks surfaced in
 one lump when it closed (WI-333 / WI-334).
 
+(That is the ruling as made, and it is kept verbatim because it is the reason
+these guards exist. The `dupes` step named in it no longer exists — D-7/WI-426
+tore the duplication census down — so the assertions below pin `lint` plus a
+surviving declared `[step:]` instead. The ruling is about the blind spot, not
+about which steps happened to fall into it.)
+
 The trigger is deliberately narrow, and these guards pin that: the steps run
 advisory only when the gate was **suppressed by a window**, which
 `derive_gate.py` records as `drafts=`/`modified=` in the `# basis:` comment. A
@@ -205,9 +211,11 @@ def test_advisory_steps_are_the_ones_a_higher_gate_requires():
     owner ruled in. The no-duplication property is asserted at COMMAND level by
     `test_a_step_that_is_identical_at_both_gates_is_not_run_twice`; the old
     name-level version of it is what entrenched BLOCKER 4."""
-    # The REAL profile: `dupes` is a docs/stack.ini `[step:]`, so a None profile
-    # would silently drop it and this guard would assert against a smaller table
-    # than the harness actually runs.
+    # The REAL profile: `doc-refs`/`figures`/`module-coverage` are docs/stack.ini
+    # `[step:]` sections, so a None profile would silently drop them and this guard
+    # would assert against a smaller table than the harness actually runs. (`dupes`
+    # was the original such step; D-7/WI-426 deleted it, so the declared set this
+    # exercises is now the three above.)
     profile = check.load_profile(ROOT / "docs" / "stack.ini")
     all_steps = check.steps(80, "all", "G2", None, profile)
     plan = [s for s in all_steps if "G2" in s[3]]
@@ -227,8 +235,11 @@ def test_advisory_steps_are_the_ones_a_higher_gate_requires():
         check.window_open = real_window_open
     advisory_names = {s[0] for s in advisory}
 
-    # The steps the ruling was about are recovered.
-    assert {"lint", "dupes"} <= advisory_names, advisory_names
+    # The steps the ruling was about are recovered. `dupes` was named in the
+    # ruling too and is no longer assertable — D-7/WI-426 deleted the step — so
+    # `doc-refs` stands in for the declared-[step:] half of the claim, which is
+    # what would regress if extra_steps stopped feeding the advisory selection.
+    assert {"lint", "doc-refs"} <= advisory_names, advisory_names
     assert len(advisory_names) >= 3, advisory_names
     # The exclusion asserted as BEHAVIOUR, not as a constant. Asserting only
     # `"tests+coverage" in ADVISORY_EXCLUDE` passes even when the filter ignores
@@ -329,7 +340,7 @@ def test_the_expensive_step_is_excluded_and_says_why():
     assert "is NOT a blind spot" in source
     # The negative half: the exclusion list is a scalpel, not a bucket — the
     # steps the ruling was actually about must never be in it.
-    assert not ({"lint", "dupes"} & check.ADVISORY_EXCLUDE)
+    assert not ({"lint", "doc-refs"} & check.ADVISORY_EXCLUDE)
 
 
 WINDOW_GATE = (

@@ -17,7 +17,6 @@ resource: "generated"
 | [IF-004](IF-004.md) |  |
 | [IF-005](IF-005.md) |  |
 | [IF-006](IF-006.md) |  |
-| [IF-007](IF-007.md) |  |
 | [IF-008](IF-008.md) |  |
 | [IF-009](IF-009.md) |  |
 | [IF-010](IF-010.md) |  |
@@ -37,7 +36,6 @@ resource: "generated"
 | [IF-024](IF-024.md) |  |
 | [IF-025](IF-025.md) |  |
 | [IF-026](IF-026.md) |  |
-| [IF-027](IF-027.md) |  |
 | [IF-028](IF-028.md) |  |
 | [IF-029](IF-029.md) |  |
 | [IF-030](IF-030.md) |  |

@@ -241,8 +241,10 @@ it). Not itself evidence for or against WI-280, but the ratchet's discipline
   the attribute string. Existing tests assert adjacency between specific
   attributes (`data-tier="…" data-descend="…"`); inserting a new one in the middle
   breaks them even though the new attribute itself is unrelated.
-- **A census sanction (`docs/dupes-allow`) IS accepting the duplication.** Never reach
-  for one to green a step.
+- **Editing a declared list to clear a finding IS accepting what it measures.**
+  Never reach for a coverage floor, an orphan glob or a ratchet baseline to green
+  a step. (This entry used to name the duplication census as the worked example;
+  the census was torn down 2026-08-11 — D-7/WI-426 — and the rule survives it.)
 - **The runtime pin in `scripts/dev-setup.command` must be re-stamped** when the kit
   moves Python (currently 3.13.14). Nothing reminds you; the re-stamp command is in
   the file.

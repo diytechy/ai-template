@@ -615,8 +615,9 @@ def test_a_spec_in_an_unknown_directory_is_refused(tmp_path):
 def test_columns_are_pinned_to_the_shipped_registry_header():
     """`wi_convert.COLUMNS` is a fourth hand-maintained copy of the 17-column
     schema (beside the shipped template, `plan_artifacts.WI_HEADER`, and
-    test_plan_artifacts's fixture line). It is sanctioned as F5 duplication in
-    `docs/dupes-allow` under `wi-registry`, and the WI-291 precedent is that the
+    test_plan_artifacts's fixture line). It is sanctioned F5 duplication (the
+    rule's live home is `tests/test_rule_sync.py`, since D-7/WI-426 deleted the
+    census that used to record it), and the WI-291 precedent is that the
     duplication is fine while the DRIFT is guarded — so it is guarded here,
     against the same one truth the other three are pinned to."""
     template = ROOT / "project-trajectory" / "registries" / "work-items.template.csv"

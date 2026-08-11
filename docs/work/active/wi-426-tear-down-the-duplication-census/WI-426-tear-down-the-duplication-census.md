@@ -10,7 +10,7 @@ safety_class = "spine"
 ## Context
 
 **This is faithful execution of a ruled decision, not a re-litigation.** The
-owner ruled on the evidence ledger in [`repo-lock.md`](../../repo-lock.md) §2
+owner ruled on the evidence ledger in [`repo-lock.md`](../../../repo-lock.md) §2
 D-7: *"unless there is a better alternative it seems to be creating more
 maintenance structure than it really solves, so it should probably just be torn
 down."* The member-list improvement was on the table and was judged not worth

@@ -16,8 +16,9 @@
 # deleting would destroy history; indexing everything would bloat navigation
 # (status.md / README stay lean). This bounds the noise so a genuinely
 # undiscoverable new doc no longer hides in 60-odd steady warnings — the same
-# silent-growth mode docs/dupes-allow bounds for duplication and the C901
-# ratchet (WI-225) bounds for complexity. A GENUINE straggler is linked instead
+# silent-growth mode the C901 ratchet (WI-225) bounds for complexity. (The
+# duplication census bounded the third such mode until D-7/WI-426 deleted it;
+# duplicated plumbing is unbounded by ruling now.) A GENUINE straggler is linked instead
 # of listed: docs/specs/parallel-dispatch-design-notes.md is reached from its
 # companion plan, so it is navigable and absent below.
 

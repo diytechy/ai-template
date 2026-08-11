@@ -33,8 +33,9 @@ same tool. The tripwire is a reader who tries to satisfy both and can't.
 [anti-duplication rule](../../project-trajectory/PROCESS.md#3-traceability--anti-duplication) ("one
 fact, one home") applied to *meaning*, not text. *Bad:* two SRs each declare the
 same limit in their own words, so an amendment can move one and leave the other
-stale. *Good:* one owns it; the other references it by id. `check_dupes` catches
-token overlap; a re-worded double-home is reviewer-class.
+stale. *Good:* one owns it; the other references it by id. Nothing mechanical
+catches this — the kit's token-overlap census was torn down (D-7/WI-426), and a
+re-worded double-home was always reviewer-class anyway.
 
 **C3 — Attribute / limit conflict.** Incompatible numbers, bounds, defaults, or
 vocabularies across rows that constrain the same quantity: 8192 vs 4096 for one

@@ -22,7 +22,8 @@ Inputs (a missing one degrades safely, never a false failure):
               this run (e.g. the smoke tier, which the global floor also skips)
               => SKIP, the check_perf.py posture.
     --floors  docs/coverage-floors   one `<repo-relative module> <min percent>`
-              per line — the docs/dupes-allow census idiom: `#` comments and
+              per line — the declared-list idiom this kit uses everywhere
+              (docs/orphans-allow, docs/declared-absences): `#` comments and
               blank lines are ignored, so each floor can carry a why-note.
     --tier / --skip-tiers            the test tier check.py selected this run and
               the tiers that do NOT measure coverage (e.g. `smoke`). When --tier

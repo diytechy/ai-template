@@ -345,7 +345,6 @@ set:
 | `components-check` | on, warn-first (no file) | **opt-out** `off` | on — 5 components |
 | `agents.csv` + `agents-enabled` | registry seeded **inert**; no enable-list | **opt-in** — creating `agents-enabled` turns managed routing on | **on** — 8 pair rows / 3 families (ANTHROPIC / OPENAI / OPENCODE; tiers `strong/medium/quick`; Anthropic-led per tier — Fable strong, Opus medium) |
 | `subagent-gate` | off (no file) | **opt-in** `ask` / `deny` (Claude hook example) | off |
-| `[step:dupes]` + `dupes-allow` | not wired | **opt-in** `stack.ini` step | not wired (deferred) |
 
 Scaffold-time *structure* (which process sections your generated docs carry) is
 a separate dial — `bootstrap.py --stack/--omit`, recorded in `docs/kit-profile`.

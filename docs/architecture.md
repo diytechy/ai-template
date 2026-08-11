@@ -52,7 +52,6 @@ graph LR
     m_scripts_check_coverage["scripts/check_coverage — Per-module coverage floors: stop the global flo…"]
     m_scripts_check_doc_refs["scripts/check_doc_refs — Doc reference validation — prose that names dea…"]
     m_scripts_check_docs["scripts/check_docs — Doc navigability & staleness check: keep the ha…"]
-    m_scripts_check_dupes["scripts/check_dupes — Duplicate-code lint — copy-paste blocks violate…"]
     m_scripts_check_figures["scripts/check_figures — Declared-figure provenance — a driven figure ca…"]
     m_scripts_check_flows["scripts/check_flows — Design-time runtime-flow check: the G2 reviewer…"]
     m_scripts_check_perf["scripts/check_perf — Performance budget & regression comparator: tra…"]
@@ -192,7 +191,6 @@ graph LR
     m_scripts_check_doc_refs -. IF-087 .-> m_scripts_check_figures
     m_scripts_check_docs -. IF-002 .-> m_scripts_check
     m_scripts_check_docs -. IF-077 .-> m_scripts_check_trajectory
-    m_scripts_check_dupes -. IF-007 .-> m_scripts_check
     m_scripts_check_figures -. IF-086 .-> m_scripts_check
     m_scripts_check_flows -. IF-003 .-> m_scripts_check
     m_scripts_check_perf -. IF-004 .-> m_scripts_check
@@ -549,20 +547,6 @@ Contracts (interfaces): IF-002, IF-030, IF-112
 | `find_stale(parsed, root, lookup)` | Docs linking a non-doc file committed more recently than the doc itself. |  |
 | `check_status_surface(root, docs_dir)` | S-1 (line budget) / S-2 (Open items before ## Scope) / S-3 (OI coherence |  |
 | `main()` |  |  |
-
-### `scripts/check_dupes`
-_Duplicate-code lint — copy-paste blocks violate one-fact-one-home (Thread 53)._
-Contracts (interfaces): IF-007, IF-027
-
-| Public item | Summary | Implements |
-|---|---|---|
-| `fingerprint(block)` | Stable 12-hex fingerprint of a duplicated block's COMPLETE normalized |  |
-| `normalized_source(path)` | The file decoded with its declared encoding and with UNIVERSAL NEWLINES |  |
-| `significant_tokens(path)` | (kind, text, line) for each significant token in the file, or None when |  |
-| `find_duplicates(files, min_tokens)` | Duplicated blocks across the given files. |  |
-| `read_allowlist(path)` | Parse the census into (fingerprint_or_None, pair) entries, one per |  |
-| `unallowed(findings, entries)` | The findings NOT sanctioned by the census, in order. |  |
-| `main(argv)` |  |  |
 
 ### `scripts/check_figures`
 _Declared-figure provenance — a driven figure carries its command and revision_

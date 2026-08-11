@@ -285,8 +285,9 @@ def skip_below_floor(what):
 #
 # Deliberately NOT done, per the row: auto-prepending the directory to PATH. A
 # harness that silently repairs its own environment hides the identical fact one
-# layer down — the same standing rule that forbids reaching for a
-# `docs/dupes-allow` sanction to green a step.
+# layer down — the same standing rule that forbids editing a declared list (a
+# coverage floor, an orphan glob, a ratchet baseline) to green a step instead of
+# fixing what it measures.
 #
 # The declaration lives here rather than in docs/stack.ini (where [smoke-budget]
 # sits) because only this suite reads it: stack.ini is what the KIT SCRIPTS

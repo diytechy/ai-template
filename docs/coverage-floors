@@ -4,7 +4,8 @@
 # [step:module-coverage]). Each non-comment line is
 #   <repo-relative module path>  <min line-coverage percent>
 # `#` comments (whole-line or trailing) and blank lines are ignored, so each
-# floor can carry a why-note (the docs/dupes-allow census idiom).
+# floor can carry a why-note (the declared-list idiom this kit uses everywhere:
+# docs/orphans-allow, docs/declared-absences).
 #
 # WHY (repo-review 2026-07-22 M-4): the global [coverage] threshold (85) is ONE
 # aggregate number, so heavily-tested generators subsidize thin coverage in the
