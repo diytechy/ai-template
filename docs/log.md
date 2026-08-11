@@ -26138,3 +26138,92 @@ Smoke: **917 passed, 6 skipped in 18.11s**.
 in the gating section at gate G1. `trace.py --strict` and
 `check_trajectory.py --strict` both exit 0; every generated surface `--check`
 fresh.
+
+## 2026-08-11 — WI-428: the suite must not sleep on a policy dial
+
+A **false-green machine**, and the class this repo exists to eliminate. On a
+weekday between 12:00 and 19:00 UTC the ten tests of
+`tests/test_agent_loop_critique.py` did not fail — they never ran. Nothing
+errored, nothing was reported skipped, the runner said green on the other 2232,
+and the number the program quoted for "full bar" described 2232 of 2242
+collected. The chain: `conftest.set_process_key(seed=True)` seeds a test
+scaffold's `docs/process.toml` from `process.toml.template`; that template
+declares WI-148's real weekday window `blackout = "12:00-19:00"`; `critique_repo`
+calls it to set `review_rounds` and inherits a whole live policy file as a side
+effect; `agent_loop` then **correctly** honors it — measured
+`blackout_wake("12:00-19:00", 14:22Z) == 16650` s. It had already misled us once:
+`docs/repo-lock.md` §5 recorded the module as "not reproduced, 2026-08-10 …
+environmental or flaky". It is not flaky. It is deterministic in UTC
+time-of-day, and the probes that cleared it ran outside the window.
+
+**The policy was never the defect and is untouched.** Both the template and this
+repo's `docs/process.toml` still carry `12:00-19:00` — WI-148 ruled that
+deliberately and the re-look is the owner's, tabled at repo-lock §8.5. What
+changed is that TEST scaffolds opt out, through the dial's **own documented**
+disable form (the empty value), not a test-only special case.
+
+**The census was measured, not grepped.** `agent_common.blackout_wake` was
+instrumented in a throwaway tree to log every ENABLED window it resolved, and the
+whole suite run twice inside the window, so any scaffold carrying the shipped
+default had to announce itself — including one holding a live dial without
+reaching the check yet. Result: **`critique_repo` was the only fixture that
+slept** (32 waits across its 10 tests), the other seven session-driving modules
+carry no `docs/process.toml` at all, and `tests/test_agent_loop.py:322` authors
+its own deliberately-inactive legacy window. A **second, latent** exposure
+surfaced from the other direction: `test_dispatch.scaffold_with_queued_wi`
+bootstraps its scaffold (so it inherits the live window verbatim) in a module
+that launches the loop for real — found by the new source rule the moment that
+rule was written, which is the guard paying for itself before it shipped.
+
+**The guard is the deliverable; the seeding change is a one-off.** It has two
+halves because the failure has two shapes. An autouse teardown sweep reds if a
+scaffold under a loop-launching module's `tmp_path` declares a live window,
+with membership DERIVED from each module's own source so a new session-driving
+module joins by existing. But **a teardown assertion never fires for a test that
+hangs**, which is the actual symptom — so the second half is a pre-emptive
+source rule that reds without running anything: launch the loop against a
+`bootstrap.py` scaffold and you must call `disable_blackout`. Both were driven
+RED — the sweep against a throwaway module that re-enables the dial in a
+`tmp_path` scaffold, the source rule on `test_dispatch.py` itself — and a
+permanent in-suite test replays the plant, asserting the caught scaffold *would* 
+really have slept (`blackout_wake` = 16 680 s on an injected clock).
+
+**The dial's own coverage was VERIFIED, not rewritten.** `test_agent_loop_policy.py`
+already tested both boundaries, both disable forms, malformed lines, the Mon–Fri
+edge and the midnight wrap on an injected clock, plus `blackout_wait` with an
+injected sleep. That was never the problem. What was missing is the **negative
+universal** the fixtures depend on, now added: 504 injected clocks (7 days × 24 h
+× 3 min) asserting a disabled dial has NO time at which it waits. One spot check
+cannot establish that — and a spot check is exactly what the "not reproduced"
+verdict was.
+
+**The bar was produced INSIDE the window, which is the whole point.** Started
+`Tue Aug 11 16:40:40 UTC 2026` — 4 h 40 m into 12:00–19:00 — full unfiltered
+suite, no `--ignore`, nothing excluded: **2244 passed, 9 skipped in 378.81s**.
+The arithmetic ties exactly: the 2227/5 baseline was `2242 collected − 10
+excluded = 2232 selected`, and this run selects `2232 + 10 (the critique module,
+now RUNNING) + 11 (the guard module) = 2253`, less 9 skipped = 2244 passed. The
+four extra skips are **this row's own open claim** (four `test_wi_convert.py`
+cases skip on an in-flight `docs/work/active/` entry), so the closed tree reads
+**2248 passed, 5 skipped** — back to the baseline's five platform/coverage gates.
+The module that used to swallow 4.6 hours now runs in **3.90 s at 16:38 UTC**.
+<!-- fig: cmd=".venv/bin/python -m pytest -q -n auto" rev=bea15693 -->
+Smoke: **928 passed, 6 skipped in 17.55s**.
+<!-- fig: cmd=".venv/bin/python -m pytest -q -n auto -m smoke" rev=bea15693 -->
+`trace.py --strict` and `check_trajectory.py --strict` both exit 0;
+`check.py --jobs 0` PASS; every generated surface `--check` fresh.
+
+**Smoke budget re-stamped, 930 → 980**, with the reason in `docs/stack.ini`: the
+guard module's 11 in-process tests would have breached a ceiling WI-427 had
+already filed as thin (923 of 930). The wall clock, the real sensor, did not
+move — 17.6 s against 60 s. The margin was widened rather than re-set to +15,
+because a ceiling 7 above the current count is the near-exact freeze that file's
+own comment block warns against.
+
+**Findings filed, not fixed.** `test_blackout_present_but_inactive_does_not_block`
+still reads `datetime.now()` (safe only by a 30-minute margin an L-17 review
+already had to widen once); making it deterministic needs an injected clock
+across a subprocess boundary, so it is a design question. And the census method
+is not reusable: there is no supported way to ask which test scaffolds carry
+which declared policy, and `blackout` is only special in that it *waits* — if
+another dial ever grows a blocking behavior, the improvisation repeats.
