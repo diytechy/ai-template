@@ -1293,6 +1293,25 @@ anywhere in the repo.
    then promoted to `Founded` wherever the discharge computes. **470 rows**
    (SN 29 · SR 146 · LLR 149 · TC 146).
 
+7. **THE SAFETY PROPERTY IS NOT FREE — `Status` is open-vocabulary and
+   enum-checked NOWHERE, so the migration must close it.** Measured
+   2026-08-11: `trace.ENUM_FIELDS` covers exactly `SR.Verification` and
+   `TC.Tier`; `Status` is absent, and every predicate is a case-insensitive
+   match against a magic string (the docstrings say so deliberately —
+   *"Status is open-vocabulary"*). Driven directly, a row with
+   `Status = "Bananas"` yields **no finding** and `is_draft/is_verified/
+   is_modified` all **False**. So D-9's claim above — that a stray `Verified`
+   is *"unambiguously an un-migrated row"* — has **no enforcer today**, and
+   the failure directions are not symmetric: a half-migrated `Approved` or
+   `Verified` reads loudly (the gate drops, orphan findings appear), but an
+   unmigrated **`Modified`** read by a new drift predicate returns False and
+   the row **silently vanishes from the re-attest brief** — the exact
+   laundering direction Q11 exists to prevent. **Therefore the migration's
+   first act is to close the vocabulary** (`Status` into `ENUM_FIELDS` for
+   all four tiers), landing with the data so enum and rows agree at every
+   commit. Full checklist:
+   [`plans/2026-08-11-status-ladder-migration.md`](plans/2026-08-11-status-ladder-migration.md).
+
 **SEQUENCING — Q11 binds unchanged.** Fixing the vocabulary is safe now;
 **migrating is not.** The 38 `Modified` rows must be resolved at the sitting
 first, or stamping hashes over their current text launders the re-blessing
