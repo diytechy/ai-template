@@ -26056,3 +26056,83 @@ the docstring recording the failure mode, the executable delta is ~7.
 `trace.py --root . --strict`: `orphans=0 integrity=0`, exit 0. Arch map, OKF,
 derived gate, dashboard, status block, open-items and the ratify check all
 `--check` fresh (the pre-commit harness ran every one of them at this commit).
+
+## 2026-08-11 — WI-427: SN-010's universal was false by two, and both are now gated
+
+**Two committed artifacts declared generated in `docs/stack.ini`'s `[generated]`
+section had a working `--check` that ran NOWHERE** — `prompts/CATALOG.md` and
+`skills/INDEX.csv`. SN-010 states the freshness contract as a universal ("every
+generated artifact carries a `--check` freshness contract"), and a universal is
+false at one counterexample. Both are wired now, as built-in `check.py` steps
+`prompt-catalog` and `skills-index` plus the pre-commit floor; the full
+ten-row `[generated]`-vs-wiring table is in the WI's Deliverable
+([`docs/work/complete/WI-427-wire-the-two-unwired-freshness-checks.md`](work/complete/WI-427-wire-the-two-unwired-freshness-checks.md)).
+**The census claim held: there was no third gap.**
+
+**The gate set was decided on what the artifacts MEAN, and the deciding evidence
+was the repo's own gate.** The existing `{G3}` doc-freshness family is G3-only
+for a stated reason — those are views of the project's evolving spine and churn
+while the plan forms. These two index the *apparatus* (the skill library, the
+loop's prompt templates), whose inputs are kit source and do not move as a plan
+matures, and whose consumers are live from the first session. Then the concrete
+part: **this repo's `docs/gate` reads `G1`** (`computed=G0`, held down by
+`drafts=37 modified=38`), so a `{G3}` step would not run in the kit's own CI for
+the whole duration of the open ratification window. Wiring at `{G3}` would have
+re-created the gap while looking fixed. Both are `{G1,G2,G3}`.
+
+**Wiring the check nearly reproduced the defect it was fixing.**
+`gen_skills_index.py --check` defaults `--skills` to a CWD-relative `skills`; in
+this repo the source is at `project-trajectory/skills`, so the naive wiring exits
+**0** with `no skills dir at skills` — a permanently green check of nothing,
+which is precisely the SN-008 failure. The step passes an explicit path derived
+from the script's location, and a test asserts both the argv and the absence of
+that message end-to-end. **Every new step was driven RED** against a defect
+planted in a `tmp_path` copy of the harness (a template edited without
+regenerating; a `SKILL.md` added without regenerating), green→red→green, with the
+live tree never touched.
+
+**The index check is its own step rather than folded into `skills-sync`**,
+because `--check-agents` compares hand-authored copies to hand-authored source
+and never reads the index — different input, different fix, different gate set,
+and `check.py`'s step tuple carries exactly one argv list.
+`test_skills_sync_cannot_see_index_staleness` drives the difference: the defect
+`skills-index` catches leaves `--check-agents` green. **`ci/check.yml` needed no
+change**, verified by reading rather than assuming — it invokes `check.py` as a
+single entry point and never names a step — and a test now pins that so the
+finding cannot quietly expire.
+
+**The census is mechanized, not asserted.** `test_generated_freshness_wiring`
+parses `[generated]` and reds on any row resolving to neither a step nor a named
+non-step enforcer, in both directions, so the *third* unwired artifact fails the
+day it is declared.
+
+**Findings filed, not fixed.** The largest: **the full-suite bar is unrunnable
+for seven hours a day, and has been since `f862cc72`.**
+`conftest.set_process_key(seed=True)` seeds a test repo's `docs/process.toml`
+from `process.toml.template`, which has declared `blackout = "12:00-19:00"` since
+that commit (it shipped `""`, disabled, at `c560f928`); `critique_repo` is the
+only session-driving fixture that calls it, so `tests/test_agent_loop_critique.py`
+sleeps instead of running — measured `blackout_wake("12:00-19:00", 14:22Z) ==
+16650` s. Reproduced identically at `a1144566`, the commit before this WI's
+claim, in a detached worktree; the other ten agent_loop / dispatch / dual-plan
+modules were probed under a hard 240 s timeout and all PASS, so today's blast
+radius is exactly that one module. It wants an id. Also filed: a pre-existing
+`E741` in `tests/test_id_watermark.py:82` (the advisory `lint` FAIL), smoke
+membership at 923 of a declared `max-tests = 930`, and `skills-sync`'s `{G3}`
+resting on a copy-the-neighbors reason.
+
+**Size ratchet:** `check.py` 1556 → 1638, reviewed bump with the reason in the
+entry — most of it is the reasoning this row was required to record in code (the
+gate-set argument, fold-vs-separate, the explicit `--skills`, the
+`_TRUNK_FRESHNESS_STEPS` exclusion); trimmed 1649 → 1638 before stamping.
+
+**The bar.** Full unfiltered suite minus the blackout-blocked module:
+**2223 passed, 9 skipped in 380.57s** of 2242 collected (the excluded module is
+10 tests).
+<!-- fig: cmd="python -m pytest -q -n auto --ignore=tests/test_agent_loop_critique.py" rev=d960d127 -->
+Smoke: **917 passed, 6 skipped in 18.11s**.
+<!-- fig: cmd="python -m pytest -q -n auto -m smoke" rev=d960d127 -->
+`check.py --jobs 0`: **RESULT: PASS**, with `skills-index` and `prompt-catalog`
+in the gating section at gate G1. `trace.py --strict` and
+`check_trajectory.py --strict` both exit 0; every generated surface `--check`
+fresh.
