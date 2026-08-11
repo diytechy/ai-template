@@ -30,7 +30,14 @@ one of these comments at a different meaning — which is exactly the hazard the
 watermark was built for, and the reason repointing is worth doing while the
 mapping is still obvious to a reader.
 
-### Re-affirm (2026-08-11, claiming this row)
+### Re-affirm, take 2 (2026-08-11)
+
+The first Re-affirm paragraph below landed in the SAME commit as the
+`queued/` -> `active/` move, so git's own rename detection read the pair as
+one `R` status; `--diff-filter=AM` (the row-clock's own row-history mode)
+drops a rename whatever else the commit did (WI-362's documented blind spot),
+so the clock did not move. This paragraph is a content edit at the row's now
+STABLE path, no rename riding along, which is what actually clears the warn.
 
 `check_trajectory`'s backlog-staleness warn compares this row's own last-touched
 commit against its SpecRef (`docs/repo-lock.md`); the row was minted at
