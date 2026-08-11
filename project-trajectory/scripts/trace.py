@@ -1064,21 +1064,26 @@ def sn_all_ids(text):
 
 
 def sn_draft_ids(text):
-    """The set of Draft SN ids in stakeholder-needs.md `text` (section-as-state):
-    every SN-### that appears under a heading whose text contains "draft". `-000`
-    placeholders are excluded. Line-scanned, tracking the current heading — an SN
-    under a draft heading is Draft until the next heading changes the section."""
-    draft, in_draft = set(), False
-    for line in text.splitlines():
-        m = _HEADING_RE.match(line)
-        if m:
-            in_draft = "draft" in m.group(1).lower()
-            continue
-        if in_draft:
-            for u in re.findall(r"\bSN-\d+\b", line):
-                if not is_example(u):
-                    draft.add(u)
-    return draft
+    """The set of Draft SN ids in a needs registry's `text`, through whichever
+    CARRIER wrote it (repo-lock D-5).
+
+    Under TOML draft-ness is a FIELD on the need (`kind = "draft"`); under the
+    legacy markdown it was SECTION-AS-STATE — every `SN-###` appearing under a
+    heading containing the word "draft". Both are read; the dispatch is
+    `spine_carrier.needs_from_text`, and it is load-bearing rather than tidy: a
+    heading scan over a TOML file finds NO headings, reports ZERO drafts, and
+    every draft need reads as ratified — which floats the derived gate upward.
+    A migration whose failure mode is "the gate rises" is the one shape this
+    repo can least afford, so the carrier is sniffed rather than assumed.
+
+    Retiring section-as-state also closes a live sharp edge the 2026-08-10
+    sitting hit: a prose MENTION of an id under the draft heading silently
+    re-drafted an already-attested need, because the id universe is a whole-text
+    scrape while draft-ness was a heading scan. A field cannot be set by
+    mentioning the id in a sentence. `-000` placeholders stay excluded.
+    Duplicated in derive_gate.py per the F5 rule; pinned equal by
+    test_rule_sync."""
+    return spine_carrier.draft_ids_from_text(text)
 
 
 def sn_cited_ids(srs):
@@ -1403,20 +1408,29 @@ def _sn_fields(cells):
     }
 
 
+_SN_EMPHASIS = re.compile(r"\*\*|`")
+
+
 def _sn_prose(sn_text):
     """Parse each SN row's prose (Need / Why it matters / Acceptance intent) from
     stakeholder-needs.md so the ratify view renders the *top* of the chain, not a
-    bare SN id (WI-146 REVIEW-A). Mirrors gen_okf.sn_rows / traj_parse._sn_rows
-    via the duplicated `_sn_fields` mapping; example `-000` rows are skipped.
-    Change all three together if the SN table columns move."""
-    meta = {}
-    for line in sn_text.splitlines():
-        m = re.match(r"\|\s*(SN-\d+)\s*\|(.*)", line)
-        if not m or m.group(1).endswith("-000"):
-            continue
-        cells = [re.sub(r"\*\*|`", "", c).strip() for c in m.group(2).split("|")]
-        meta[m.group(1)] = _sn_fields(cells)
-    return meta
+    bare SN id (WI-146 REVIEW-A). Reads `spine_carrier`, the ONE home the fold
+    now has (repo-lock D-6) — it was the third copy of a rule three modules
+    promised in a docstring to change together, and did not. Takes TEXT rather
+    than a path because the ratify view already holds the registry's contents;
+    example `-000` rows are skipped."""
+    needs = spine_carrier.needs_from_text(sn_text)
+    return {
+        row["id"]: {k: v for k, v in row.items() if k != "id"}
+        for row in (
+            {
+                k: _SN_EMPHASIS.sub("", v).strip()
+                for k, v in spine_carrier.folded(n).items()
+            }
+            for n in needs
+            if not is_example(n.get("id", ""))
+        )
+    }
 
 
 # --- the re-attestation brief (--ratify modified, WI-316) ----------------------

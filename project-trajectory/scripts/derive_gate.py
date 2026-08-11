@@ -172,19 +172,26 @@ def sn_all_ids(text):
 
 
 def sn_draft_ids(text):
-    """Draft SN ids (section-as-state §4a): every SN-### under a heading whose text
-    contains "draft". `-000` excluded. Duplicated from trace.py per the F5 rule."""
-    draft, in_draft = set(), False
-    for line in text.splitlines():
-        m = _HEADING_RE.match(line)
-        if m:
-            in_draft = "draft" in m.group(1).lower()
-            continue
-        if in_draft:
-            for u in re.findall(r"\bSN-\d+\b", line):
-                if not is_example(u):
-                    draft.add(u)
-    return draft
+    """The set of Draft SN ids in a needs registry's `text`, through whichever
+    CARRIER wrote it (repo-lock D-5).
+
+    Under TOML draft-ness is a FIELD on the need (`kind = "draft"`); under the
+    legacy markdown it was SECTION-AS-STATE — every `SN-###` appearing under a
+    heading containing the word "draft". Both are read; the dispatch is
+    `spine_carrier.needs_from_text`, and it is load-bearing rather than tidy: a
+    heading scan over a TOML file finds NO headings, reports ZERO drafts, and
+    every draft need reads as ratified — which floats the derived gate upward.
+    A migration whose failure mode is "the gate rises" is the one shape this
+    repo can least afford, so the carrier is sniffed rather than assumed.
+
+    Retiring section-as-state also closes a live sharp edge the 2026-08-10
+    sitting hit: a prose MENTION of an id under the draft heading silently
+    re-drafted an already-attested need, because the id universe is a whole-text
+    scrape while draft-ness was a heading scan. A field cannot be set by
+    mentioning the id in a sentence. `-000` placeholders stay excluded.
+    Duplicated in derive_gate.py per the F5 rule; pinned equal by
+    test_rule_sync."""
+    return spine_carrier.draft_ids_from_text(text)
 
 
 def sn_cited_ids(srs):

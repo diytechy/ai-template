@@ -156,20 +156,10 @@ def _sn_fields(cells):
 
 
 def sn_rows(root):
-    # Kept byte-for-byte in sync with traj_parse._sn_rows and trace._sn_prose
-    # (small stable helper duplicated per the F5 rule; they once drifted).
-    # Change all three together: skip `-000`, id-sort.
-    md = root / "docs/requirements/stakeholder-needs.md"
-    rows = []
-    if not md.exists():
-        return rows
-    for line in md.read_text(encoding="utf-8").splitlines():
-        m = re.match(r"\|\s*(SN-\d+)\s*\|(.*)", line)
-        if not m or m.group(1).endswith("-000"):
-            continue
-        cells = [re.sub(r"\*\*|`", "", c).strip() for c in m.group(2).split("|")]
-        rows.append({"id": m.group(1), **_sn_fields(cells)})
-    return sorted(rows, key=lambda r: r["id"])
+    """Every need as the core four — `spine_carrier.folded_needs`, the ONE home
+    this rule now has (repo-lock D-6). Was a copy of traj_parse._sn_rows and
+    trace._sn_prose kept in sync by a docstring; they drifted."""
+    return spine_carrier.folded_needs(root / "docs/requirements/stakeholder-needs.md")
 
 
 def read_enabled(root):

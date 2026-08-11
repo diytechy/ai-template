@@ -57,6 +57,7 @@ Requirements: SR-147 (one machine-parseable carrier for the spine).
 """
 
 import csv
+import re
 import io
 import tomllib
 
@@ -109,7 +110,12 @@ SPINE_COLUMN = {
     "notes": "Notes",
 }
 
+# The row tiers moved CSV -> TOML; the need tier moved markdown -> TOML. Both
+# lists are ordered NEW FIRST, because resolution prefers the destination
+# carrier and falls back to the legacy one — never the other way round, or a
+# half-finished migration keeps reading the file it was supposed to leave.
 CARRIERS = (".toml", ".csv")
+NEED_CARRIERS = (".toml", ".md")
 
 
 def stem(rel_path):
@@ -118,14 +124,14 @@ def stem(rel_path):
     return str(rel_path).rsplit(".", 1)[0]
 
 
-def carriers(rel_path):
+def carriers(rel_path, suffixes=CARRIERS):
     """Both carrier paths a registry can appear under.
 
     An applicability test (`git diff --name-only` against a watched set) has to
     name BOTH or the cutover commit — which deletes the `.csv` and adds the
     `.toml` — matches neither name, and the check silently skips the one commit
     that rewrites every row it watches."""
-    return [stem(rel_path) + s for s in CARRIERS]
+    return [stem(rel_path) + s for s in suffixes]
 
 
 def value_to_cell(value):
@@ -189,7 +195,7 @@ def rows_from_text(text, id_col, carrier):
     return rows_from_csv(text, id_col)
 
 
-def resolve(path):
+def resolve(path, suffixes=CARRIERS):
     """The live carrier file for a registry, given a path under EITHER suffix.
 
     REFUSES both homes at once by raising, rather than resolving by precedence.
@@ -203,7 +209,7 @@ def resolve(path):
     import pathlib
 
     base = pathlib.Path(stem(path))
-    live = [base.with_suffix(s) for s in CARRIERS if base.with_suffix(s).is_file()]
+    live = [base.with_suffix(s) for s in suffixes if base.with_suffix(s).is_file()]
     if len(live) > 1:
         raise SystemExit(
             "spine_carrier: REFUSED — {} exists under BOTH carriers ({}). Two "
@@ -239,3 +245,211 @@ def load(path, id_col, keep_examples=True):
     return [
         r for rid, r in rows.items() if keep_examples or not str(rid).endswith("-000")
     ]
+
+
+# --- the stakeholder-need tier ------------------------------------------------
+# The SN tier is the reason the spine had TWO carriers: needs shipped as
+# markdown prose tables in three different SHAPES, and reading 32 of them cost
+# ~166 code lines across 14 functions in 8 modules while reading all 436
+# SR+LLR+TC rows cost `csv.DictReader`. Under one carrier a need is a table like
+# any other row, and two long-standing sharp edges go with the markdown:
+#
+#   * SECTION-AS-STATE is retired. Draft-ness was "appears under a heading whose
+#     text contains the word draft", scraped by one function while the id
+#     universe was scraped by another — and during the 2026-08-10 sitting a
+#     prose MENTION of an id under the draft heading silently re-drafted an
+#     already-attested need. `kind` is now a field on the need itself.
+#   * THE EDGE-CASE TIER keeps its own fields (`lifecycle` / `scenario` /
+#     `expected`) instead of being folded onto the core four at read time.
+NEED_TABLE = "need"
+SN_CORE = ("need", "why", "priority", "acceptance")
+SN_EDGE = ("lifecycle", "scenario", "expected")
+_SN_HEADING = re.compile(r"^#{2,}\s+(.*)$")
+_SN_ROW = re.compile(r"^\|\s*(SN-\d+)\s*\|")
+
+
+def _kind_from_heading(title):
+    """Which of the three tables a markdown heading opens. Legacy carrier only:
+    under TOML the need CARRIES its kind, which is the whole point."""
+    t = title.lower()
+    if "draft" in t:
+        return "draft"
+    if "edge" in t:
+        return "edge"
+    return "core" if ("core" in t or "need" in t) else None
+
+
+def needs_from_markdown(text):
+    """`[{id, kind, **fields}]` from the legacy prose tables, document order.
+
+    Cells are resolved by the table's SHAPE, never by fixed offset: the three
+    tables have different widths, and reading an edge row at the core offsets is
+    what published SN-013 as "Provision" — its LIFECYCLE word — for the whole
+    life of the dashboard and the OKF bundle."""
+    kind, out = None, []
+    for line in text.split("\n"):
+        heading = _SN_HEADING.match(line)
+        if heading:
+            kind = _kind_from_heading(heading.group(1))
+            continue
+        row = _SN_ROW.match(line)
+        if not row:
+            continue
+        cells = [c.strip() for c in line.split("|")[1:-1]]
+        # A row with NO heading above it is resolved by the table's SHAPE, which
+        # is what the readers this replaces always did: the edge table is three
+        # cells wide and carries no priority, the core table four. Requiring a
+        # heading would refuse a headerless fragment — and the fragment is the
+        # normal case for a test fixture and for a table pasted into a brief.
+        row_kind = kind or ("edge" if len(cells) - 1 == len(SN_EDGE) else "core")
+        names = SN_EDGE if row_kind == "edge" else SN_CORE
+        need = {"id": cells[0], "kind": row_kind}
+        need.update(dict(zip(names, cells[1 : 1 + len(names)])))
+        out.append(need)
+    return out
+
+
+def needs_from_toml(text):
+    """`[{id, kind, **fields}]` from the TOML carrier, or None when it does not
+    parse. Same absent-vs-empty and None-vs-`{}` rules as the row tiers."""
+    try:
+        tables = tomllib.loads(text)
+    except tomllib.TOMLDecodeError:
+        return None
+    out = []
+    for rid, cells in (tables.get(NEED_TABLE) or {}).items():
+        need = {"id": rid, "kind": "core"}
+        need.update({k: value_to_cell(v) for k, v in cells.items()})
+        out.append(need)
+    return out
+
+
+def needs_from_text(text):
+    """`[{id, kind, **fields}]` for a needs registry given only its TEXT, by
+    sniffing which carrier wrote it.
+
+    Exists because the two SN scrapers the gate depends on take TEXT, not a
+    path, and are pinned equal across `trace` and `derive_gate`. Under TOML the
+    id scrape happens to keep working — `[need.SN-001]` still contains the token
+    — but the DRAFT scan does not: it looks for a markdown heading containing
+    the word "draft", finds none, and reports zero drafts. Every draft need
+    would read as ratified and the derived gate would RISE. That is the failure
+    this dispatch exists to make impossible; it is not a convenience."""
+    parsed = needs_from_toml(text)
+    if parsed is not None and (parsed or NEED_TABLE + "." in text):
+        return parsed
+    return needs_from_markdown(text)
+
+
+def load_needs(path):
+    """Every stakeholder need, through whichever carrier is live.
+
+    `path` may name either suffix; `resolve` refuses both at once. `[]` when the
+    registry is absent, and SystemExit when a carrier exists and cannot be read
+    — an unreadable needs registry must not read as "this project has no needs",
+    which is a G0 gate and a vacuous orphan check at the same time."""
+    live = resolve(path, NEED_CARRIERS)
+    if live is None:
+        return []
+    text = live.read_text(encoding="utf-8-sig", errors="replace")
+    if live.suffix == ".md":
+        return needs_from_markdown(text)
+    needs = needs_from_toml(text)
+    if needs is None:
+        raise SystemExit(
+            "spine_carrier: {} does not parse as TOML — refusing to report an "
+            "unreadable needs registry as an empty one".format(live)
+        )
+    return needs
+
+
+def folded(need):
+    """A need projected onto the CORE four, for a reader that renders one shape.
+
+    This is the PRESENTATION rule the markdown tables forced, kept out of the
+    carrier deliberately (repo-lock D-5) — but kept in ONE place, which the
+    carrier did not previously manage. `traj_parse._sn_rows` and
+    `gen_okf.sn_rows` each carried a copy pinned by nothing but a docstring
+    saying "change both together"; they drifted, and the dashboard rendered a
+    phantom `SN-000` root (§6 F-6). An edge row reads as: the SCENARIO is the
+    need, the LIFECYCLE phase is the why, and the EXPECTED behavior is the
+    acceptance — never the lifecycle word as the title."""
+    if need.get("kind") != "edge":
+        return {k: need.get(k, "") for k in ("id",) + SN_CORE}
+    return {
+        "id": need["id"],
+        "need": need.get("scenario", ""),
+        "why": need.get("lifecycle", ""),
+        "priority": need.get("priority", "n/a"),
+        "acceptance": need.get("expected", ""),
+    }
+
+
+def draft_ids_from_text(text):
+    """Draft need ids for a needs registry given only its TEXT, per carrier.
+
+    THE TWO CARRIERS ARE DELIBERATELY NOT UNIFIED HERE, and that is the whole
+    care in this function. Under TOML draft-ness is a FIELD, which is what
+    retires section-as-state and kills the sharp edge the 2026-08-10 sitting
+    hit — a prose MENTION of an id under the draft heading silently re-drafted
+    an already-attested need, because the id universe is a whole-text scrape
+    while draft-ness was a heading scan. Under MARKDOWN the heading scan is
+    reproduced EXACTLY as it always behaved, prose mentions and all.
+
+    Reading legacy text by the new rule would be a silent behaviour change for
+    every repo that has not migrated yet: needs that were draft would stop
+    being draft, and the derived gate would rise. The ruling retires the sharp
+    edge WITH the carrier, not ahead of it, so a file gets the semantics it was
+    written under."""
+    parsed = needs_from_toml(text)
+    if parsed is not None and (parsed or NEED_TABLE + "." in text):
+        return draft_need_ids(parsed)
+    draft, in_draft = set(), False
+    for line in text.splitlines():
+        heading = _SN_HEADING.match(line)
+        if heading:
+            in_draft = "draft" in heading.group(1).lower()
+            continue
+        if in_draft:
+            draft.update(
+                u for u in re.findall(r"\bSN-\d+\b", line) if not u.endswith("-000")
+            )
+    return draft
+
+
+_SN_EMPHASIS = re.compile(r"\*\*|`")
+
+
+def folded_needs(path):
+    """Every need as the CORE four, `-000` skipped and id-sorted — the shape
+    every renderer of the need tier wants.
+
+    THIS COLLAPSES A KNOWN-DRIFTING TRIPLET. `traj_parse._sn_rows`,
+    `gen_okf.sn_rows` and `trace._sn_prose` each carried this rule with a
+    docstring saying "change all three together"; that is a promise, not a
+    mechanism, and they broke it — one kept the `-000` example row and one did
+    not, which rendered a phantom `SN-000` root in the dashboard's icicle. It is
+    the same argument that put the column vocabulary in one home (D-6): a
+    duplicated RULE whose copies disagree does not fail loudly, it renders
+    something subtly wrong on a surface a human is expected to trust.
+
+    Markdown emphasis is stripped because these cells are prose written for a
+    table and re-rendered somewhere that is not one."""
+    out = []
+    for need in load_needs(path):
+        if str(need.get("id", "")).endswith("-000"):
+            continue
+        row = folded(need)
+        out.append({k: _SN_EMPHASIS.sub("", v).strip() for k, v in row.items()})
+    return sorted(out, key=lambda r: r["id"])
+
+
+def need_ids(needs):
+    """Every declared need id — the UNIVERSE the draft set is carved out of."""
+    return {n["id"] for n in needs}
+
+
+def draft_need_ids(needs):
+    """The needs still at draft. A FIELD now, not a heading a prose mention can
+    fall under."""
+    return {n["id"] for n in needs if n.get("kind") == "draft"}

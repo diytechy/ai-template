@@ -405,7 +405,9 @@ BASELINE = {
     # Then -1 (3021 -> 3020), the same slice: `ruff format`'s reflow
     # after the SN-028..032 edits (the `format` step is advisory at this gate but
     # the tree is kept formatted anyway). Mechanical; no behaviour moved.
-    "agent_loop.py": 3020,
+    # +12 (3020 -> 3032), D-5 step 2d: the sibling-import guard and the two SR/TC
+    # reads moving to spine_carrier.load. Pure plumbing; no behaviour change.
+    "agent_loop.py": 3032,
     # +30 (2206 -> 2236), WI-065: `tc_citation_findings` — the TC-`Verifies`
     # rules lifted out of `analyze` so the cell could accept `IF-###` seam ids.
     # Most of the bump is that helper's docstring, which is where the RULING now
@@ -590,7 +592,12 @@ BASELINE = {
     # the stated key map and the docstring justifying it; both now have ONE
     # home, and this module keeps only the git shell and the `-000` filter,
     # which is its own rule and not the carrier's. Net against pre-D-5: +47.
-    "trace.py": 3390,
+    # Then +14 (3390 -> 3404), D-5 step 2d: the SN tier joins the carrier.
+    # `sn_draft_ids` dispatches on which carrier wrote the text (a heading scan
+    # over TOML finds no headings, reports ZERO drafts, and FLOATS the gate) and
+    # `_sn_prose` drops its copy of the edge-case fold. The fold's other two
+    # copies went with it, in traj_parse and gen_okf.
+    "trace.py": 3404,
     # +132 (1926 -> 2058; the last +10 is the F4 BOM hardening: read_rows utf-8-sig + git-show strips), WI-316: staged_spine_findings — the amend-without-
     # flip warn (--staged): content cells of a Verified spine row changed
     # without the Modified marker, suppressed when the owning SR flips in the
@@ -1440,6 +1447,21 @@ BASELINE = {
     # failed the queue on a false red. Nine of the lines are the comment
     # arguing why the path is bookkeeping and not generated.
     "integrate.py": 2484,
+    # NEW ENTRY, 1503, D-5 step 2d — the re-entry the D-1 removal note above
+    # predicted, arriving from the CARRIER half rather than the anchor half:
+    # "it re-enters as a NEW ENTRY if the anchor half puts it back over."
+    # intake.py fell to 1496 when the attestation ledger was deleted and its
+    # entry was removed rather than left standing as headroom; the sibling
+    # import guard plus the two spine reads moving to spine_carrier.load put it
+    # at 1503, three lines over THRESHOLD.
+    #
+    # Recorded rather than shaved, and the three lines are the point: trimming a
+    # comment to land at 1499 would buy a green by editing the GUARD instead of
+    # the thing it measures, which is the habit this file exists to prevent. The
+    # honest reading is that intake.py is a monolith again by the kit's own
+    # definition and is a WI-280 decomposition candidate on that basis — the
+    # threshold means what it says or it means nothing.
+    "intake.py": 1503,
 }
 
 

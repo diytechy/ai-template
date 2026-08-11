@@ -18,6 +18,12 @@ import subprocess
 import sys
 from pathlib import Path
 
+try:
+    import spine_carrier
+except ImportError:  # pragma: no cover - in-process fallback
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    import spine_carrier
+
 # The sanctioned sibling import (one home for registry loading/validation) —
 # plain here: the facade's guarded import is the module family's ONE sys.path
 # repair, and it runs before this module is ever imported.
@@ -97,21 +103,11 @@ def _sn_rows(root):
     """Full stakeholder-need rows (id, need, why, priority, acceptance) from the
     md tables, the `-000` placeholder skipped and the rows id-sorted.
 
-    Kept byte-for-byte in sync with gen_okf.sn_rows and trace._sn_prose (a small
-    stable helper duplicated per the F5 rule, not shared) — they once drifted
-    (one kept `-000`, one didn't), which rendered a phantom SN-000 root in the
-    icicle. Change all three together."""
-    md = root / "docs/requirements/stakeholder-needs.md"
-    rows = []
-    if not md.exists():
-        return rows
-    for line in md.read_text(encoding="utf-8").splitlines():
-        m = re.match(r"\|\s*(SN-\d+)\s*\|(.*)", line)
-        if not m or m.group(1).endswith("-000"):
-            continue
-        cells = [re.sub(r"\*\*|`", "", c).strip() for c in m.group(2).split("|")]
-        rows.append({"id": m.group(1), **_sn_fields(cells)})
-    return sorted(rows, key=lambda r: r["id"])
+    ONE HOME now (repo-lock D-6): this, gen_okf.sn_rows and trace._sn_prose all
+    read `spine_carrier.folded_needs`. They were three copies pinned by a
+    docstring saying "change all three together" — and they drifted anyway (one
+    kept `-000`, one did not), rendering a phantom SN-000 root in the icicle."""
+    return spine_carrier.folded_needs(root / "docs/requirements/stakeholder-needs.md")
 
 
 def read_sns(root):

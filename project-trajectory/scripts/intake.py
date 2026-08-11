@@ -65,6 +65,14 @@ import sys
 import tomllib
 from pathlib import Path
 
+# Sibling: the spine's registry CARRIER (repo-lock D-5/D-6) — one home for the
+# TOML tier tables, the key->column vocabulary and both readers.
+try:
+    import spine_carrier
+except ImportError:  # pragma: no cover - in-process fallback
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    import spine_carrier
+
 import agent_common as ac
 import check_trajectory
 import schedule
@@ -269,7 +277,9 @@ def _context_block(root, wi_row, rows):
     }
     llrs = [
         r
-        for r in _csv_rows(root / "docs/requirements/low-level-requirements.csv")
+        for r in spine_carrier.load(
+            root / "docs/requirements/low-level-requirements.csv", "LLR-ID"
+        )
         if srs & set(_split(r.get("SR-Refs")))
     ]
     sections = [
@@ -337,7 +347,7 @@ def _code_map_lines(root, llrs, srs):
     llr_ids = {r.get("LLR-ID") for r in llrs}
     lines += [
         "- {} -> {}".format(t.get("TC-ID"), t.get("Evidence") or "(no evidence yet)")
-        for t in _csv_rows(root / "docs/test/test-cases.csv")
+        for t in spine_carrier.load(root / "docs/test/test-cases.csv", "TC-ID")
         if (srs | llr_ids) & set(_split(t.get("Verifies")))
     ]
     return lines

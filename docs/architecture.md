@@ -108,6 +108,7 @@ graph LR
     m_scripts_agent_loop --> m_scripts_plan_runner
     m_scripts_agent_loop --> m_scripts_prompts
     m_scripts_agent_loop --> m_scripts_score_reviews
+    m_scripts_agent_loop --> m_scripts_spine_carrier
     m_scripts_check_doc_refs --> m_scripts_spine_carrier
     m_scripts_check_figures --> m_scripts_check_doc_refs
     m_scripts_check_flows --> m_scripts_spine_carrier
@@ -141,6 +142,7 @@ graph LR
     m_scripts_intake --> m_scripts_check_trajectory
     m_scripts_intake --> m_scripts_dispatch
     m_scripts_intake --> m_scripts_schedule
+    m_scripts_intake --> m_scripts_spine_carrier
     m_scripts_intake --> m_scripts_trace
     m_scripts_intake --> m_scripts_wi_convert
     m_scripts_integrate --> m_scripts_agent_common
@@ -172,6 +174,7 @@ graph LR
     m_scripts_traj_panels --> m_scripts_traj_status
     m_scripts_traj_parse --> m_scripts_check_trajectory
     m_scripts_traj_parse --> m_scripts_schedule
+    m_scripts_traj_parse --> m_scripts_spine_carrier
     m_scripts_traj_render --> m_scripts_traj_graph
     m_scripts_traj_status --> m_scripts_check_trajectory
     m_scripts_traj_status --> m_scripts_traj_parse
@@ -323,7 +326,7 @@ Contracts (interfaces): IF-037, IF-065
 
 ### `scripts/agent_loop`
 _Headless session engine: one claimed worker assignment, a reviewer/critique_
-Imports (internal): `agent_common`, `agent_route`, `agent_session`, `dispatch`, `intake`, `plan_round`, `plan_runner`, `prompts`, `score_reviews`
+Imports (internal): `agent_common`, `agent_route`, `agent_session`, `dispatch`, `intake`, `plan_round`, `plan_runner`, `prompts`, `score_reviews`, `spine_carrier`
 Contracts (interfaces): IF-015, IF-068, IF-099
 
 | Public item | Summary | Implements |
@@ -731,7 +734,7 @@ Contracts (interfaces): IF-050, IF-051
 | `llr_exempt(row)` | SR Verification method in LLR_EXEMPT, matched on the stripped cell. |  |
 | `phase_num(row)` | The integer a row's free-form `Phase` cell digit-parses to (`v2`->2, `2`->2); |  |
 | `sn_all_ids(text)` | The SN id UNIVERSE: every `SN-###` token anywhere in stakeholder-needs.md |  |
-| `sn_draft_ids(text)` | Draft SN ids (section-as-state §4a): every SN-### under a heading whose text |  |
+| `sn_draft_ids(text)` | The set of Draft SN ids in a needs registry's `text`, through whichever |  |
 | `sn_cited_ids(srs)` | Every SN id cited by >=1 SR row's `SN-Refs` cell — the coverage set the |  |
 | `sr_gate(sr, has_llr, has_tc)` | The gate an SR row has reached, from its Status + whether it is decomposed. |  |
 | `maturity_gate(row)` | An LLR/TC caps the gate only when it is Draft (G0 — the new-phase signal). |  |
@@ -801,7 +804,7 @@ Contracts (interfaces): IF-012, IF-033, IF-106
 | `read_rows(path)` |  |  |
 | `split_refs(cell)` |  |  |
 | `real_rows(rows, key, prefix)` | Real (non-placeholder) rows whose id is well-formed. The id becomes a |  |
-| `sn_rows(root)` |  |  |
+| `sn_rows(root)` | Every need as the core four — `spine_carrier.folded_needs`, the ONE home |  |
 | `read_enabled(root)` |  |  |
 | `fm(pairs)` | A YAML frontmatter block; JSON string scalars are valid YAML, so quoting |  |
 | `banner(source)` | The one-line GENERATED provenance blockquote every emitted file carries, |  |
@@ -893,7 +896,7 @@ Contracts (interfaces): IF-080
 
 ### `scripts/intake`
 _intake.py — the unified trunk-side intake mint (WI-388; docs/concurrency-v2.md §A5.2)._
-Imports (internal): `agent_common`, `check_trajectory`, `dispatch`, `schedule`, `trace`, `wi_convert`
+Imports (internal): `agent_common`, `check_trajectory`, `dispatch`, `schedule`, `spine_carrier`, `trace`, `wi_convert`
 Contracts (interfaces): IF-090, IF-091, IF-092, IF-101
 
 | Public item | Summary | Implements |
@@ -1140,13 +1143,22 @@ Contracts (interfaces): IF-102
 | Public item | Summary | Implements |
 |---|---|---|
 | `stem(rel_path)` | A registry path with its carrier suffix removed, so one constant can |  |
-| `carriers(rel_path)` | Both carrier paths a registry can appear under. |  |
+| `carriers(rel_path, suffixes)` | Both carrier paths a registry can appear under. |  |
 | `value_to_cell(value)` | One TOML value as the cell text the CSV carrier held. |  |
 | `rows_from_toml(text, id_col)` | `{id: row}` under today's column names, or None when `text` does not |  |
 | `rows_from_csv(text, id_col)` | `{id: row}` from the CSV carrier. |  |
 | `rows_from_text(text, id_col, carrier)` | `{id: row}` for the named carrier (`".toml"` / `".csv"`), or None when a |  |
-| `resolve(path)` | The live carrier file for a registry, given a path under EITHER suffix. |  |
+| `resolve(path, suffixes)` | The live carrier file for a registry, given a path under EITHER suffix. |  |
 | `load(path, id_col, keep_examples)` | The live registry as a LIST of rows in file order — the shape |  |
+| `needs_from_markdown(text)` | `[{id, kind, **fields}]` from the legacy prose tables, document order. | SN-013 |
+| `needs_from_toml(text)` | `[{id, kind, **fields}]` from the TOML carrier, or None when it does not |  |
+| `needs_from_text(text)` | `[{id, kind, **fields}]` for a needs registry given only its TEXT, by | SN-001 |
+| `load_needs(path)` | Every stakeholder need, through whichever carrier is live. |  |
+| `folded(need)` | A need projected onto the CORE four, for a reader that renders one shape. | SN-000 |
+| `draft_ids_from_text(text)` | Draft need ids for a needs registry given only its TEXT, per carrier. |  |
+| `folded_needs(path)` | Every need as the CORE four, `-000` skipped and id-sorted — the shape | SN-000 |
+| `need_ids(needs)` | Every declared need id — the UNIVERSE the draft set is carved out of. |  |
+| `draft_need_ids(needs)` | The needs still at draft. A FIELD now, not a heading a prose mention can |  |
 
 ### `scripts/subagent_gate`
 _Subagent spawn gate — deny-by-default fan-out control for unattended runs._
@@ -1191,7 +1203,7 @@ Contracts (interfaces): IF-001, IF-021, IF-042
 | `placeholder_findings(label, raw_rows)` | Leftover template example rows (ids ending '-000') in one registry. |  |
 | `scan_sn_placeholders(sn_md)` | Sorted unique '-000' SN ids still present in stakeholder-needs.md (if it exists). |  |
 | `sn_all_ids(text)` | The SN id UNIVERSE: every `SN-###` token anywhere in stakeholder-needs.md |  |
-| `sn_draft_ids(text)` | The set of Draft SN ids in stakeholder-needs.md `text` (section-as-state): |  |
+| `sn_draft_ids(text)` | The set of Draft SN ids in a needs registry's `text`, through whichever |  |
 | `sn_cited_ids(srs)` | Every SN id cited by >=1 SR row's `SN-Refs` cell — the coverage set the |  |
 | `sn_integrity_findings(sn_text)` | Duplicate-id protection for the SN tier — the one tier stored as prose, |  |
 | `schema_findings(label, rows)` | Empty required fields and out-of-vocabulary Verification/Tier values, over |  |
@@ -1251,7 +1263,7 @@ Contracts (interfaces): IF-093, IF-094
 
 ### `scripts/traj_parse`
 _Parse/sources for the project-state dashboard — registries, docs, git._
-Imports (internal): `check_trajectory`, `schedule`
+Imports (internal): `check_trajectory`, `schedule`, `spine_carrier`
 Contracts (interfaces): IF-082, IF-085
 
 | Public item | Summary | Implements |

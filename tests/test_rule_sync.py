@@ -382,6 +382,7 @@ def test_sn_edge_case_rows_are_not_titled_by_their_lifecycle_phase(tmp_path):
 # agreement is pinned rather than promised in a docstring.
 
 CHECK_TRAJ = load_script("check_trajectory")
+SPINE = load_script("spine_carrier")
 MIGRATE = load_script("migrate_carrier")
 
 
@@ -430,3 +431,78 @@ def test_every_live_spine_column_round_trips_through_the_carrier_vocabulary():
                 rel, column
             )
             assert TRACE.SPINE_COLUMN[MIGRATE.KEY[column]] == column
+
+
+def test_the_need_reader_agrees_with_both_heading_scrapers():
+    # The SN tier's id universe and draft set were SIX bespoke scanners over
+    # markdown, two of them F5 twins. spine_carrier now reads the tier through
+    # the carrier; before it replaces them it has to answer identically over the
+    # live registry, or the migration would move the gate.
+    md = ROOT / "docs/requirements/stakeholder-needs.md"
+    if not md.is_file():
+        return  # post-cutover: the twins are gone and this pin retires with them
+    text = md.read_text(encoding="utf-8")
+    needs = SPINE.load_needs(md)
+    assert SPINE.need_ids(needs) == TRACE.sn_all_ids(text) == GATE.sn_all_ids(text)
+    assert (
+        SPINE.draft_need_ids(needs)
+        == TRACE.sn_draft_ids(text)
+        == GATE.sn_draft_ids(text)
+    )
+    assert needs, "the fixture read no needs — the agreement would be vacuous"
+
+
+def test_the_edge_case_fold_is_not_titled_by_its_lifecycle_phase():
+    # The live regression F-6 records, now pinned on the ONE copy of the fold.
+    # traj_parse._sn_rows and gen_okf.sn_rows each carried their own, pinned by
+    # nothing but a docstring saying "change both together" — they drifted, and
+    # the dashboard rendered a phantom SN-000 root.
+    edge = {
+        "id": "SN-013",
+        "kind": "edge",
+        "lifecycle": "Provision",
+        "scenario": "No Python 3 on PATH",
+        "expected": "Probe and fail with a remedy",
+    }
+    assert SPINE.folded(edge) == {
+        "id": "SN-013",
+        "need": "No Python 3 on PATH",
+        "why": "Provision",
+        "priority": "n/a",
+        "acceptance": "Probe and fail with a remedy",
+    }
+    # A core need passes through unchanged — the fold is edge-only.
+    core = {
+        "id": "SN-001",
+        "kind": "core",
+        "need": "n",
+        "why": "w",
+        "priority": "M",
+        "acceptance": "a",
+    }
+    assert SPINE.folded(core) == {k: core[k] for k in ("id",) + SPINE.SN_CORE}
+
+
+def test_draft_ness_reads_by_the_rule_the_file_was_written_under():
+    # The two carriers are deliberately NOT unified. Under markdown a bare prose
+    # mention under a draft heading counts (section-as-state, warts and all);
+    # under TOML draft-ness is a FIELD, which is what retires the sharp edge the
+    # 2026-08-10 sitting hit. Reading legacy text by the new rule would silently
+    # un-draft needs in every un-migrated repo and float the derived gate.
+    legacy = "## Draft needs\nSN-000 SN-005\n"
+    assert SPINE.draft_ids_from_text(legacy) == {"SN-005"}
+    assert TRACE.sn_draft_ids(legacy) == GATE.sn_draft_ids(legacy) == {"SN-005"}
+
+    # The same claim under the new carrier is a field, and a MENTION does not
+    # set it: SN-006 is named in SN-005's prose and stays ratified.
+    modern = (
+        '[need.SN-005]\nkind = "draft"\nneed = "n"\n\n'
+        '[need.SN-006]\nkind = "core"\nneed = "supersedes SN-005"\n'
+    )
+    assert SPINE.draft_ids_from_text(modern) == {"SN-005"}
+    assert TRACE.sn_draft_ids(modern) == GATE.sn_draft_ids(modern) == {"SN-005"}
+
+    # And the id UNIVERSE keeps working unchanged across both, because the
+    # prefixed token survives into the table key — the measured reason D-5 kept
+    # the prefix rather than taking a bare numeric one.
+    assert TRACE.sn_all_ids(modern) == {"SN-005", "SN-006"}

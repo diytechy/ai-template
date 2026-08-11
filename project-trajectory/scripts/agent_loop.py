@@ -138,6 +138,14 @@ import sys
 import time
 from pathlib import Path
 
+# Sibling: the spine's registry CARRIER (repo-lock D-5/D-6) — one home for the
+# TOML tier tables, the key->column vocabulary and both readers.
+try:
+    import spine_carrier
+except ImportError:  # pragma: no cover - in-process fallback
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    import spine_carrier
+
 # Sibling scripts (the S8 routing/scoring half + the WI-218 split-out layers).
 # Run as a subprocess the loop's own dir is sys.path[0] so a plain import
 # resolves; the guard covers an in-process import (a test) whose sys.path
@@ -617,7 +625,9 @@ def load_critique_srs(docs):
     system-requirements.csv). Empty — absent file, or no such row — makes the whole
     critique layer vacuous, exactly like an absent enable-list makes routing off."""
     out = set()
-    for r in _read_csv_rows(Path(docs) / "requirements" / "system-requirements.csv"):
+    for r in spine_carrier.load(
+        Path(docs) / "requirements" / "system-requirements.csv", "SR-ID"
+    ):
         sid = (r.get("SR-ID") or "").strip()
         if (
             sid
@@ -693,9 +703,11 @@ def critique_brief(root, docs, scope_srs):
     docs = Path(docs)
     sr_by_id = {
         (r.get("SR-ID") or "").strip(): r
-        for r in _read_csv_rows(docs / "requirements" / "system-requirements.csv")
+        for r in spine_carrier.load(
+            docs / "requirements" / "system-requirements.csv", "SR-ID"
+        )
     }
-    tcs = _read_csv_rows(docs / "test" / "test-cases.csv")
+    tcs = spine_carrier.load(docs / "test" / "test-cases.csv", "TC-ID")
     lines, rubric_paths = [], set()
     for sid in sorted(scope_srs):
         r = sr_by_id.get(sid)
