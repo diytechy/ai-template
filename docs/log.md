@@ -26228,3 +26228,117 @@ across a subprocess boundary, so it is a design question. And the census method
 is not reusable: there is no supported way to ask which test scaffolds carry
 which declared policy, and `blackout` is only special in that it *waits* — if
 another dial ever grows a blocking behavior, the improvisation repeats.
+
+## 2026-08-11 — WI-429: the LLR discharge test for `Founded` — census, repair, then the check
+
+**Taken under the owner's 2026-08-11 "proceed" on the sub-question D-9 leaves
+open** ([repo-lock.md](repo-lock.md) §2 D-9): three of the four `Founded`
+discharge tests already exist, and the LLR's does not, because an LLR has no
+children in this schema. This builds the computation `Founded` will consume,
+against today's data. **Ratification is owed with the ladder migration** — no
+`Status` value and nothing in the `Draft`/`Verified`/`Modified` vocabulary is
+touched here; Q11 still holds that. Full account:
+[docs/work/complete/WI-429](work/complete/WI-429-llr-codesymbol-discharge-test.md).
+
+**Data first, check second — and the census is what decided the rule.** Read
+through `spine_carrier`, all 149 live LLR rows. `CodeSymbol` has **no enforced
+grammar**: cells join on `/`, `+`, `;` and `,`, and their members include
+module-level functions and classes, private helpers, module constants, class
+methods — and also function *locals* (`budget_findings`, `tier_legend`),
+*instance attributes* (`critique_rounds`), CSS custom properties (`--nhead`),
+shell script names (`pre-commit`) and free prose (`every emitter's paint`).
+That is F-3's "required today, never resolved" made concrete. **31 of 149 rows
+carried at least one token that binds nowhere in the module they name**, and the
+rot is two module splits plus a long tail of labels that were never symbols:
+13 rows point at code the WI-280 `gen_trajectory` split and the WI-381
+`drive.py` → `dispatch.py` rename moved, 1 names a renamed function, and
+**13 distinct tokens have zero commits in `project-trajectory/scripts/` — they
+never existed at all**.
+
+**Repaired 14 rows, left 22, and the left ones are the point.** `Module` and
+`CodeSymbol` are TRACED cells (`SPINE_TRACED_CELLS`, §A5.1), re-verified before
+the first edit, so no re-attest window opens. 13 `Module` repoints where the
+symbol had exactly one home, 1 `CodeSymbol` rename proven by `git log -S`
+returning zero commits for the old name. Nothing was guessed: `_drill_svg`,
+`_descend`, `structural_safety` and their siblings get no successor, because
+choosing one would be inventing intent. **Four rows now have no resolving symbol
+at all and stay red** — under D-9 those are simply LLRs that are **not
+`Founded`**, which is the computation working, not a defect in the run.
+
+**The check is an ANCHOR rule, and that is the argument, not a softening.**
+Wired as `symbol_findings` in `check_doc_refs.py` — the checker that already
+reads these exact cells for file existence (WI-394 / ruling R2) and already ships
+the warn-first/`--strict` split. A row must carry **at least one**
+identifier-shaped token that binds at module scope in one of its `.py` modules.
+Per-token would red 31 of 149 on arrival, 18 of them for tokens that were never
+symbol claims — a check that reds the tree on arrival, enforcing a grammar no
+ruling ever gave the cell. The anchor is the same trade **R2** made on the
+sibling cell: validate the coarse claim, rule the fine one prose — and the 28
+per-token misses file as **untraced**, counted every run, so a later tightening
+stays possible instead of hidden. **Severity: DANGLING, hard under `--strict`**,
+because D-9 makes this the LLR tier's gate input and an advisory nothing acts on
+would make `Founded` vacuous for one of four tiers; because the file-existence
+half of the same two cells already gates; and because an existence finding is
+not a paraphrase warn's matter of taste. Warn-first by default and `gates = G3`,
+so an adopter is warned, never broken.
+
+**Proved non-vacuous by a planted defect**, not by inspection: a `tmp_path`
+scaffold with a real module and a founded LLR is silent, then `LLR-901` naming
+`no_such_symbol_anywhere` in that same module produces the finding, exits 1 under
+`--strict`, and does not sweep the founded row in. Five more tests pin the
+boundaries the census made load-bearing — including that **private names and
+module constants RESOLVE**, which is why the oracle is the new
+`gen_arch_map.module_bindings` and not the rendered module map: that map is a
+public-API view, and 41 of the 149 live rows name exactly what it drops. The one
+new function lives in `gen_arch_map` because a second AST parser in the consumer
+is the D-6/F5 hazard in its dangerous form — a copy that has not learned a node
+type answers "that symbol does not exist" about live code. The two walks inside
+that one file are pinned against each other by a test over every module in the repo.
+
+**A second bug fell out of the repair, and it is the same failure mode.**
+Repointing 13 rows dropped `traj_parse` out of every CMP component and red
+`check_trajectory --strict`. The cause was not the repair:
+`module_components` normalized the whole `Module` cell as one key, so a
+`;`-joined `a.py;b.py` produced one nonsense key and tagged **neither** module —
+silently, because a membership map missing an entry reads exactly like a module
+nobody tagged. Two live rows were already losing their tags. Fixed to split on
+`;` like every other reader of that cell, with its own test.
+
+**Deviations from spec.** Two, both additive and both forced by the rule the repo
+already carries. (1) The new `check_doc_refs` → `gen_arch_map` import crosses
+CMP-003 → CMP-002 and hard-red the architecture rule, so the seam is declared as
+**IF-117** rather than the import being hidden or the rule switched off. (2)
+`symbol_findings` first measured C901 **13**; it was **simplified** (the
+per-row binding gather extracted to `_row_bindings`) rather than stamped into the
+complexity baseline.
+
+**Ratchets.** Size baseline `check_trajectory.py` **3901 → 3911**, re-stamped
+with the reason in `tests/test_module_size_ratchet.py`: +1 line of code for the
+`;` split, +9 recording the D-6 failure mode in the reader that had not learned
+the cell's shape. Complexity baseline unchanged (simplified instead). Smoke
+budget unchanged. Watermarks raised by `trace.py --bump-ids`: **WI 428 → 429**,
+**IF 116 → 117**.
+
+**The bar.** Full unfiltered suite **2258 passed, 5 skipped in 380.36s** —
+the 2248/5 baseline plus exactly the 10 tests this row adds (6 anchor-rule, 3
+`module_bindings`, 1 `module_components`), which is the whole delta.
+<!-- fig: cmd=".venv/bin/python -m pytest -q -n auto" rev=13addbcf -->
+Smoke: **938 passed, 2 skipped in 19.70s**.
+<!-- fig: cmd=".venv/bin/python -m pytest -q -n auto -m smoke" rev=13addbcf -->
+`trace.py --strict` and `check_trajectory.py --strict` both exit 0;
+`check.py --jobs 0` **RESULT: PASS**; every generated surface `--check` fresh
+(the arch map, the gate, the OKF bundle and the dashboard all moved with the
+repair and were regenerated). `ruff format --check` clean; `ruff check` carries
+its one pre-existing `E741` in `test_id_watermark.py`, unchanged by this row.
+
+**Findings filed, not fixed — the handback this row owes the owner.** Four LLRs
+(LLR-015, 087, 088, 112) have no resolving symbol and cannot be repaired without
+guessing: one correctly describes a *local variable*, two name helpers that
+never existed in any commit, and one is prose in which `tabindex` merely looks
+like an identifier. They are the residue Q11's ladder migration inherits, and
+the honest fix is a ruling about what the cell may claim — not a rewrite of
+authored cells. Also: `docs/declared-absences:92` declared
+`project-trajectory/scripts/drive.py` absent *pending exactly this repoint*; the
+repoint has now landed, and that line's stated reason is discharged — left in
+place because the path is still cited elsewhere, but it is now stale in its
+justification.
