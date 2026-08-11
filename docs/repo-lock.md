@@ -1041,6 +1041,49 @@ pass, closing a connectivity warn this program had created — and marked
 `Provisional`, because it is migration scaffolding with a defined end and
 should be retired once no supported repo is still on the legacy carriers.
 
+### D-7 — the duplication census is TORN DOWN; test_rule_sync is the anti-drift tool of record
+
+**Owner ruling, 2026-08-10**, on the evidence ledger above: *"unless there is a
+better alternative it seems to be creating more maintenance structure than it
+really solves, so it should probably just be torn down."* The member-list
+improvement was on the table and was judged not worth keeping the apparatus
+for. The hedge is recorded as an instruction: if the teardown's builder finds a
+genuinely cheaper form **mid-execution**, bring it back to the owner rather
+than building it.
+
+**Why (the ledger, §"Is the census earning its keep"):** one real catch at the
+one-time triage, zero recorded since; structurally blind to both real drift
+incidents this repo suffered (a diverged copy is no longer an identical token
+block, so the tool goes silent exactly when duplication becomes dangerous);
+93% of its 253 lines register accepted idioms; and it carried its own defect
+chain, a 12-test meta-audit over its prose, and three churn cycles in one
+session.
+
+**Consequence inventory — none optional:**
+
+1. `check_dupes.py` retires from the kit: the `bootstrap.py` MAPPING row, the
+   README kit-contents row, `docs/stack.ini` `[step:dupes]`, and `check.py`'s
+   advisory step all go with it.
+2. `docs/dupes-allow` is **deleted, not archived** — a registry states what
+   *is*; git is the history (the D-1/D-4 doctrine).
+3. `tests/test_check_dupes.py` (18 tests) and `tests/test_dupes_census_audit.py`
+   (12) are deleted with their subject.
+4. **The spine chain `SR-039 → LLR-036 → TC-039` is superseded — which under
+   D-4 means DELETED**, ids retired against the watermark, the act recorded in
+   the log's Decisions. This is the first real supersession D-4 will execute,
+   so it doubles as D-4's proving case.
+5. **F5 becomes unbounded again — the WI-078 concern re-opens, and the
+   mitigation is named rather than implied:** `test_rule_sync` is the
+   anti-drift tool of record, and new F5 duplication of **policy** requires a
+   behavioral pin there; plumbing duplication is accepted unbounded, which the
+   ledger shows was its de-facto state anyway.
+6. ADOPTING notes the removal; an adopter's copy is their file after copy-in —
+   keeping it is their call.
+
+**Sequencing:** *not* braided into the carrier cutover — the cutover's ~76 red
+must land against a stable baseline first. Executes as its own WI in the step-7
+area, where the D-4 supersession machinery it exercises already lands.
+
 ---
 
 ## 3. The questions, and where each one went
@@ -1174,106 +1217,14 @@ with OI-13 and OI-12 *executing* together.
 
 ### Loose ends, owed to no step above
 
-- **The sanctioned-sibling IMPORT GUARD scales superlinearly in the census —
-  and it is NOT the IF layer.** Worth stating the distinction, because the two
-  grew together during D-5 and are easy to conflate:
-
-  | | what it is | how it grew |
-  |---|---|---|
-  | **IF layer** | one `Consumes` row per cross-component crossing (IF-102…IF-112) | **linear** — 11 rows for 11 importers, each a seam a reviewer can read |
-  | **import guard** | the 7-line `try: import spine_carrier / except ImportError: sys.path.insert(...)` block | **churning** — see the corrected mechanism below; 7 lines × 11 scripts produced ~19 census entries plus a full re-filing cycle per membership change |
-
-  > **Correction, 2026-08-10 (same day, on reading `find_duplicates` rather
-  > than asserting):** the first version of this entry said the census is
-  > "PAIRWISE — N(N−1)/2". **Wrong.** The checker records the *first* file in
-  > scan order (alphabetical) holding each window and pairs every later
-  > occurrence against that anchor, so a class of k identical blocks emits
-  > **k−1 lines** — linear. The real cost is **anchor churn**, and it is what
-  > this session actually experienced three times: *(a)* a new member that
-  > sorts earlier **re-anchors the whole class** — when `agent_loop.py` joined
-  > it sorted before `check_doc_refs.py`, so every existing line for those
-  > blocks went stale and ~19 new anchor lines had to be filed for duplication
-  > that had not changed at all; *(b)* fingerprints are token-exact over a
-  > window including neighbors, so **any edit near the block** (a new import,
-  > a reformat) re-fingerprints it — stale + new again; *(c)* the 11 copies
-  > are several variant classes, multiplying both. The finding restated: the
-  > census's unit of account (fingerprint × file-pair, anchored on scan order)
-  > makes a deliberate N-way idiom **churn on every membership or neighborhood
-  > change**, and each cycle is manual re-filing that teaches the reviewer
-  > nothing after the first.
-
-  The IF growth is proportionate and needs nothing. The census growth is the
-  finding: the blocks are real duplication, the F5 sanction genuinely covers
-  them, and every one was opened and read before filing — but the *shape* is
-  wrong. **D-6 gave the vocabulary one home and left the import guard with
-  none**, and it is the guard that scales badly.
-
-  **What the guard actually protects — traced 2026-08-10, and it narrows the
-  option set.** The two normal execution modes never fire the fallback: a
-  subprocess gets its own directory at `sys.path[0]` from the interpreter, and
-  the in-process test path goes through `conftest.load_script`, which inserts
-  `scripts/` *before* exec — which is why every fallback arm is marked
-  `pragma: no cover`. What it guards is **path-naive embedding**: a consumer
-  that loads a kit script via `spec_from_file_location` (which does *not* add
-  the module's directory to `sys.path`) and did nothing about paths. Two real
-  clients exist and one is pinned: the cross-process kernel-lock probe
-  (`tests/test_agent_loop.py` `_LOCK_PROBE`) loads `agent_loop.py` exactly that
-  way in a bare subprocess, and `tests/test_gen_trajectory.py` deliberately
-  strips `scripts/` from `sys.path` and asserts the fallback works
-  ("exercises the except-branch; must not raise"). Structurally, **only the
-  first kit module such an embedder touches needs the guard** — once any copy
-  fires, `scripts/` is on the path for every later sibling import in that
-  process; the idiom is in all eleven because any module can be first contact.
-
-  Options, none ruled — with the trace applied:
-  - ~~delete the guards~~ — **not free**: it breaks the lock probe and the
-    pinned except-branch contract, and shifts the burden to every embedder;
-  - give the guard one home — self-defeating in the obvious form (a shared
-    home must itself be imported, which needs the guard), though a
-    stated-in-`PROCESS.md` two-liner is smaller than the current seven;
-  - **one census line per fingerprint with an explicit MEMBER LIST** — the
-    strongest option, sharpened by the mechanism correction above: it is
-    anchor-free, so a membership change edits one line instead of re-filing a
-    class; and every guard property survives — a 12th member is still a
-    finding until the list is edited (the conscious-acceptance act WI-276
-    exists for), and a *modified* copy still gets a new fingerprint and is
-    still caught;
-  - accept it and stop reading census churn as a signal.
-
-  **Is the census earning its keep — the evidence ledger, compiled 2026-08-10
-  at the owner's question.** Both columns, from the repo's own records:
-
-  - **Caught:** one real bug-in-waiting at the initial triage
-    (`stamped_baseline`, WI-334c — a freshness-gate/generator split waiting to
-    happen), and census-pressure-driven cleanups (WI-346, WI-304). **Post-
-    triage gate catches recorded: zero** — with the honest caveat that the
-    gate's success mode (author extracts pre-commit) leaves no log trace; but
-    every *recorded* firing, including all ~35 this session, ended in
-    "sanction", never "extract".
-  - **Structurally missed:** BOTH real duplication failures this repo has
-    suffered — the `llr_exempt` whitespace divergence (caught by review 017)
-    and the `_sn_rows` drift that shipped a phantom SN-000 root (caught by the
-    F-6 source-reading audit, weeks late). Neither *could* be caught here:
-    **diverged copies are no longer identical tokens, so the tool goes silent
-    at exactly the moment duplication becomes dangerous.** It fires on the
-    safe state and is blind to the harmful one. The actual anti-drift defenses
-    are `test_rule_sync`'s behavioral pins and D-6's one-home moves.
-  - **Costs:** its own defect chain (WI-334's false claims → WI-337 / WI-338 /
-    two review findings / the line-ending CI-red), the 12-test meta-audit
-    guarding the census's *prose*, and this session's three churn cycles.
-  - **The tell:** 28 of 30 classes are `deliberate` (~93% of 253 sanction
-    lines). The census is a register of accepted idioms; its live function is
-    "a new copy is a conscious act", and that function was designed for a real
-    need — bounding F5 (owner ruling 2026-07-12) — not speculation. What *is*
-    unsupported by evidence is the assumption that it defends against drift.
-
-  This widens the pending ruling from "fix the churn" to a scope question:
-  keep the gate cheap (member-list form) as an F5 bound while **naming
-  `test_rule_sync` as the anti-drift tool of record** — e.g. new F5
-  duplication of *policy* requires a behavioral pin, not just a census line —
-  or demote the census outright and accept F5 unbounded again, which re-opens
-  the WI-078 concern. **Worth a ruling before a twelfth importer**, and
-  cheapest now while the pattern is fresh.
+- ~~**The import-guard / census finding**~~ — **RULED 2026-08-10: D-7, the
+  census is torn down** (§2). The full trace that led there — what the guard
+  actually protects, the anchored-not-pairwise mechanism correction, and the
+  evidence ledger of catches vs misses vs costs — is preserved in this file's
+  git history (`git log -p docs/repo-lock.md`, entries of 2026-08-10) and
+  distilled into D-7's Why. What survives the ruling as live guidance: the
+  import guard itself STAYS (it protects path-naive embedding and two pinned
+  test contracts), and `test_rule_sync` is the anti-drift tool of record.
 
 - **`intake.py` is a monolith again (1503 lines, THRESHOLD 1500).** It fell to
   1496 when the D-1 removal deleted the attestation ledger, and its ratchet
