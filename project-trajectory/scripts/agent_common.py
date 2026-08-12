@@ -409,7 +409,7 @@ def declared_policy(docs, legacy_name, default):
 # tables then re-interpreted, each with its own fail-safe direction. What the
 # dispatcher actually needs is an ORDINAL comparison — is the tier this row sits
 # at still human-held? — and an enum cannot express "TCs are human-held but LLRs
-# are not", which is the distinction the 0-4 spine stage exists to make.
+# are not", which is the distinction the 0-5 spine stage exists to make.
 #
 # THE LEGACY TRANSLATION, stated as all THREE dials rather than as a level.
 # The enum's three words were never one axis: each of them bundled a tier hold,
@@ -486,21 +486,21 @@ def human_holds(docs, stage):
     """Is work at spine `stage` still the HUMAN's to ratify?
 
     The one comparison every consumer makes, stated once. `stage` is
-    `derive_gate.spine_stage`'s 0-4 answer — the tier currently in process —
+    `derive_gate.spine_stage`'s 0-5 answer — the tier currently in process —
     and a row at or below the declared level surfaces rather than dispatching.
 
     THE COMPARISON IS STRICTLY LESS-THAN, and the off-by-one it avoids is not
-    academic. The stages are 0=SN, 1=SR, 2=LLR, 3=TC, 4=nothing-in-process; the
+    academic. The stages are 0=SN, 1=SR, 2=LLR, 3=TC, 4=impl, 5=nothing; the
     levels are cumulative COUNTS ("through this tier"), so level 1 = "the human
     ratifies SNs" = hold stage 0 only. Written `stage <= level` there is no
     setting that holds SNs without also holding SRs, and level 3 becomes
     behaviourally identical to level 4 in every state where work exists.
 
     BOTH ENDS OF THE LADDER ARE ABSOLUTE, and the top end is not symmetry for
-    its own sake — it closes a hole the strictly-less-than fix opened. Stage 4
-    means "nothing in process: every tier decomposed and Verified", which is
-    PRECISELY the state a gate-advance row runs in. With `4 < 4` reading as
-    not-held, the shipped default — documented as "every tier human-held; the
+    its own sake — it closes a hole the strictly-less-than fix opened. The top
+    stage means "nothing in process: every tier decomposed and Verified" — the
+    state a gate-advance row runs in. With `top < 4` reading as not-held, the
+    shipped default — documented as "every tier human-held; the
     most conservative setting" — let the loop dispatch and self-ratify the final
     gate. So level 4 holds everything including the close, and level 0 holds
     nothing; only the middle consults the stage.
@@ -510,12 +510,12 @@ def human_holds(docs, stage):
     saying so here means no later stage arithmetic — including a negative stage
     from some future caller — can reach past it.
 
-    Stage 4 is held by level 4 ALONE. Below that the ladder is about which tier
-    is being worked, and there is no tier in process to hold; the separate
-    end-of-run read is `final_review`, which is why that is its own dial rather
-    than a fifth rung here. An UNREADABLE stage is treated as human-held — the
-    same conservative direction as an unreadable level, because the failure
-    that matters is a machine ratifying something a human meant to hold."""
+    Stages 4 and 5 are held by level 4 ALONE, and the 2026-08-12 rung insert
+    moved no level's meaning: the ratification tiers are the SPINE ones and
+    implementation is not one. The separate end-of-run read is `final_review`,
+    its own dial rather than a fifth rung here. An UNREADABLE stage is treated
+    as human-held — the same conservative direction as an unreadable level:
+    the failure that matters is a machine ratifying what a human meant to hold."""
     level = ratification_level(docs)
     if level <= 0:
         return False

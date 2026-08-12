@@ -864,8 +864,8 @@ def process_panel(root, wis, stats):
     """The Process tab + panel as (tab, panel), or None when there is no
     docs/gate (the tab is then omitted -> a gate-less repo renders
     byte-identically; the Knowledge-tab vacuity idiom). Three linked panels:
-    artifact lifecycle x gates (live tier counts; the stages the current
-    derived gate spans are highlighted), the station cycle (WI-389 — the
+    artifact lifecycle x gates (live tier counts; the tiers the derived
+    next-gate spans are highlighted), the station cycle (WI-389 — the
     concurrency-v2 station/lane model as shipped, its stage vocabulary derived
     from the flow modules' own constants), and slices -> phase -> gates
     (commit bar vs gate bar). Fully self-contained (style inside the panel, no
@@ -881,9 +881,11 @@ def process_panel(root, wis, stats):
     )
 
     # Panel 1 — artifact lifecycle x gates. Live counts join the spine
-    # registries; a stage is highlighted when the current gate falls in its
-    # gate span (G2 spans SR / LLR+architecture / TC — the tiers a G2 project
-    # is working across).
+    # registries; a TIER is highlighted when the derived gate falls in its
+    # gate span (G2 spans SR / LLR+architecture / TC — the tiers a project
+    # heading for G2 is working across). NB "stage" below is this panel's
+    # local name for a lifecycle TIER row, not the 0-5 spine stage of
+    # process.md §4 — the two ladders are different axes.
     stages = [
         ("Vision", "", "one home (the README tag)"),
         ("SN", "G1", "{} SN".format(stats["sn_total"])),
@@ -1009,10 +1011,10 @@ def process_panel(root, wis, stats):
         "(<code>docs/gate</code>, the spine registries, "
         "<code>work-items.csv</code>). A view — the process docs are the source "
         "of truth.</p>\n" + style + "\n"
-        '<p class="gnow">Current gate: <b>' + esc(gate) + "</b> — derived from "
-        "artifact states and cached to <code>docs/gate</code> "
-        "(<code>derive_gate.py</code>); highlighted stages are the tiers this "
-        "gate spans.</p>\n"
+        '<p class="gnow">Next gate to pass: <b>' + esc(gate) + "</b> — derived "
+        "as the min over the artifact states and cached to <code>docs/gate</code> "
+        "(<code>derive_gate.py</code>). A repo is IN a stage and PASSES a gate; "
+        "the highlighted tiers are the ones this gate spans.</p>\n"
         "<h3>1 · Artifact lifecycle × gates</h3>\n"
         '<p class="cap">Each tier decomposes the one above it and is ratified '
         "through the gate it spans — the tiers (§3) and the gate bars (§4) live "

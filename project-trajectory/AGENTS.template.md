@@ -44,7 +44,7 @@ gates, and the ID scheme. The short version needed every session:
   (`docs/process.toml`). Never self-advance a gate; log it in `docs/log.md`.
 - **The check harness is the bar:** `python scripts/check.py` runs format,
   lint, tests, coverage, traceability, flow checks, and map freshness at the
-  repo's active gate (`docs/gate`); `--tier smoke` is the fast subset. Never report a result you didn't run —
+  repo's derived gate (`docs/gate`); `--tier smoke` is the fast subset. Never report a result you didn't run —
   paste the real output.
 - **Behavior is reviewed as diagrams, not rows:** runtime flows (especially
   concurrent/non-blocking ones) are authored Mermaid sequence diagrams in

@@ -60,7 +60,7 @@ graph LR
     m_scripts_check_stubs["scripts/check_stubs — No-stub / substance detector: flag implementati…"]
     m_scripts_check_trajectory["scripts/check_trajectory — Validate the work-item registry — stdlib only."]
     m_scripts_check_vendored["scripts/check_vendored — Drift check for vendored third-party docs (stdl…"]
-    m_scripts_derive_gate["scripts/derive_gate — Derive the active gate from artifact states — t…"]
+    m_scripts_derive_gate["scripts/derive_gate — Derive the harness gate from artifact states — …"]
     m_scripts_dispatch["scripts/dispatch — dispatch.py — the dispatcher: tick loop, admiss…"]
     m_scripts_gen_arch_map["scripts/gen_arch_map — Generate the module/function map for `architect…"]
     m_scripts_gen_cases["scripts/gen_cases — Generate test-case combinations from a requirem…"]
@@ -746,7 +746,7 @@ Contracts (interfaces): IF-016, IF-036
 | `main()` |  |  |
 
 ### `scripts/derive_gate`
-_Derive the active gate from artifact states — the hybrid, cached gate._
+_Derive the harness gate from artifact states — the hybrid, cached gate._
 Imports (internal): `spine_carrier`
 Contracts (interfaces): IF-050, IF-051
 
@@ -766,10 +766,10 @@ Contracts (interfaces): IF-050, IF-051
 | `maturity_gate(row)` | An LLR/TC caps the gate only when it is Draft (G0 — the new-phase signal). |  |
 | `is_modified(row)` | The post-attestation `Modified` state (WI-316, process.md §7): content |  |
 | `sn_gate(sn_id, draft_ids, cited_ids)` | A Draft SN (section-as-state) is G0 — and that is the ONLY rung that fires |  |
-| `spine_stage(srs, llrs, tcs, sn_ids, sn_draft)` | The tier currently IN PROCESS, 0-4 — the axis a human-ratification level |  |
+| `spine_stage(srs, llrs, tcs, sn_ids, sn_draft)` | The tier currently IN PROCESS, 0-5 — the STATE axis (a repo is *in* a |  |
 | `stage_to_gate(stage)` | THE DECLARED MAPPING between the two axes — stated once, here, so the |  |
 | `compute(docs)` | Derive the gate from the spine registries under `docs`. Returns a result |  |
-| `basis_line(result)` | The single, deterministic `# basis:` comment line compared by --check |  |
+| `basis_line(result)` | The single, deterministic `# basis:` comment line compared by --check | SN-029 |
 | `render_cache(result, as_of, date)` | The full docs/gate file text: static header, the compared `# basis:` line, |  |
 | `parse_cache(text)` | `(gate_value, basis_line)` from a cached docs/gate: the first non-comment |  |
 | `main()` |  |  |

@@ -17,7 +17,7 @@ What it creates in the destination:
     GEMINI.md                                  <- GEMINI.stub.template.md (points to AGENTS.md)
     docs/process.md                            <- PROCESS.md  (load-bearing core)
     docs/process-options.md                    <- PROCESS_OPTIONS.md  (opt-in layers)
-    docs/gate                                  <- gate.template  (active gate: G1)
+    docs/gate                                  <- gate.template  (derived gate: G1)
     docs/id-watermark                          <- id-watermark.template  (id high-water marks)
     docs/process.toml                          <- process.toml.template  (EVERY policy dial:
                                                   gate authority, the human-ratification level,
@@ -1499,11 +1499,11 @@ MAPPING = [
     ("GEMINI.stub.template.md", "GEMINI.md"),
     ("PROCESS.md", "docs/process.md"),
     ("PROCESS_OPTIONS.md", "docs/process-options.md"),
-    # The machine-readable active gate (first non-comment line: G1|G2|G3).
-    # check.py and CI read it, so a young project's CI enforces the bar it is
-    # actually at. It is DERIVED from the artifact states by derive_gate.py (not
-    # hand-set); closing a gate = ratifying artifacts in a reviewed commit +
-    # regenerating. The scaffold ships a legacy one-liner (accepted value-only);
+    # The machine-readable derived gate (first non-comment line: G1|G2|G3) — the
+    # gate the repo must next PASS. check.py and CI read it, so a young project's
+    # CI enforces the bar it is actually working toward. It is DERIVED from the
+    # artifact states by derive_gate.py (not hand-set); closing a gate =
+    # ratifying artifacts in a reviewed commit + regenerating. The scaffold ships a legacy one-liner (accepted value-only);
     # `python scripts/derive_gate.py` migrates it to the generated form.
     ("gate.template", "docs/gate"),
     # The id watermark (docs/id-watermark): the high-water mark per id space, so

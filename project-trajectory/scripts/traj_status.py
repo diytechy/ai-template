@@ -302,6 +302,53 @@ def pending_block(root):
     return "{}\n\n{}".format(pure_lead, pure_body)
 
 
+# The stage ladder's labels, for the generated snapshot line. STATE units: a repo
+# is IN a stage and PASSES a gate (process.md §4 "Stages and gates"). Derived by
+# derive_gate.py and read here off `docs/gate`'s `# basis:` line, never recomputed.
+_STAGE_LABELS = {
+    "0": "needs in process",
+    "1": "requirements in process",
+    "2": "design (LLR) in process",
+    "3": "tests in process",
+    "4": "implementation in process",
+    "5": "nothing in process",
+}
+
+
+def _stage_line(gate, basis, gate_detail):
+    """The snapshot's first bullet, STAGE-first.
+
+    The gate value alone cannot say whether a gate is ahead or behind, and — being
+    a min floored by any Draft row — it reads identically for a fresh scaffold and
+    a mature spine holding one draft. The stage is the state; the gate is what
+    must next be passed, which is also the strictness the harness runs at.
+
+    A `docs/gate` predating the `stage=` field (or carrying a stage this ladder
+    does not name) degrades to the gate-only wording rather than inventing a
+    stage — the same absent-means-absent direction derive_gate takes."""
+    gate_txt = gate or "(none)"
+    stage = basis.get("stage")
+    link = "[`derive_gate.py`](../project-trajectory/scripts/derive_gate.py)"
+    if stage in _STAGE_LABELS:
+        return (
+            "- **Stage:** **{s}** ({label}) · next gate: **{g}**{detail} — a repo "
+            "is IN a stage and PASSES a gate; the harness at that gate is the "
+            "bar. {link} derives both, cached to [`docs/gate`](gate).".format(
+                s=stage,
+                label=_STAGE_LABELS[stage],
+                g=gate_txt,
+                detail=gate_detail,
+                link=link,
+            )
+        )
+    return (
+        "- **Next gate:** derived **{g}**{detail} — the harness at that gate is "
+        "the bar. {link} derives it, cached to [`docs/gate`](gate).".format(
+            g=gate_txt, detail=gate_detail, link=link
+        )
+    )
+
+
 def status_block(root):
     """The GENERATED STATUS block CONTENT (between the markers) for docs/status.md:
     the derived gate + spine snapshot (projected from `docs/gate`, the freshness-
@@ -331,11 +378,7 @@ def status_block(root):
         "project-trajectory/scripts/gen_trajectory.py --status`; do not hand-edit "
         "(the forward-only intent below is hand-authored)._",
         "",
-        "- **Active gate:** derived **{}**{} — the harness at the derived gate is "
-        "the bar; [`derive_gate.py`](../project-trajectory/scripts/derive_gate.py) "
-        "computes it, cached to [`docs/gate`](gate).".format(
-            gate or "(none)", gate_detail
-        ),
+        _stage_line(gate, basis, gate_detail),
         "- **Spine:** **SN={sn} SR={sr} LLR={llr} TC={tc}**{d} · {seams} seam{sp} · "
         "{comps} component{cp}.".format(
             sn=counts["SN"],

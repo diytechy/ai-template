@@ -356,9 +356,12 @@ specified in [`PROCESS_OPTIONS.md`](project-trajectory/PROCESS_OPTIONS.md).
 ### The gates at a glance
 
 What each approval gate certifies — full criteria in
-[`PROCESS.md`](project-trajectory/PROCESS.md) §4. The **active** gate is
-*derived*, not declared: `derive_gate.py` computes it from the artifact states
-and caches it to `docs/gate` (generated, never hand-edited); it advances when a
+[`PROCESS.md`](project-trajectory/PROCESS.md) §4, which also carries the ruled
+**stage/gate** model: a repo is *in* a stage (the tier of the decomposition
+being worked, 0–5), and *passes* a gate. The gate value in `docs/gate` is
+*derived*, not declared — `derive_gate.py` computes it from the artifact states
+and caches it (generated, never hand-edited) as **the gate that must next be
+passed**, which is also the strictness the harness runs at. It advances when a
 batch of artifacts is **ratified** in a reviewed `Status`-change commit, and it
 *pulls back* when attested content is amended — a `Status=Modified` row owes a
 re-attest and derives G2 until the sitting blesses it (`trace.py --ratify

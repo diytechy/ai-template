@@ -32,7 +32,7 @@ python scripts/trace.py --strict --no-placeholders --strict-schema --require-ver
 ```
 
 `scripts/check.py` (or `scripts/check.{sh,ps1}`) runs the gate-appropriate set
-automatically from the active gate in `docs/gate` — prefer it for a full gate run;
+automatically from the derived gate in `docs/gate` — prefer it for a full gate run;
 call `trace.py` directly to iterate on a specific finding.
 
 ## Reading findings

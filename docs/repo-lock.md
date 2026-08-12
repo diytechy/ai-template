@@ -1071,6 +1071,25 @@ review. The §8.5 pattern, continued. Entries accumulate as the rework runs.
 - **The 13 live source/test citations repoint to the archived spec**, not to
   the new `PROCESS.md` section — they cite the archived §-numbers precisely,
   and the new section carries ruled semantics, not gate arithmetic.
+- **Stage-rework execution calls (2026-08-12, builder's list, each owed a
+  glance):** (1) **`G0` survives as an internal constant** — the min-fold
+  needs a below-G1 value and `computed=G0` is a live cache format; it is
+  documented everywhere as "not a gate — say stage 0". (2) **Stage 5 maps to
+  G3** — G-Release/G-Final are named in prose only, no new rung mechanized.
+  (3) The 3-vs-4 discriminator: stage 4 ⟺ every SR decomposed, every TC
+  authored and non-Draft, not all SRs `Verified`; the G2→G3 *driver* stays
+  the `is_verified` cell (the D-9 harness fix stays owed to step 7, now
+  documented in the docstring as the interim proxy). (4) `PROCESS.md` grew
+  +2,591 bytes for the ruled subsection (§4, no §-renumbering) and the
+  byte-budget baseline was re-stamped; `PROCESS_OPTIONS.md` paid for its
+  edits by trimming duplication (net +9); `AGENTS.template.md` sits 8 bytes
+  under its hard 10,000. (5) `traj_panels`' internal "stage" variable names
+  a *different* axis (lifecycle tiers) — reworded on the surface, not
+  renamed in code, with the collision commented. (6) Full unfiltered bar
+  after the rework: **2298 passed, 5 skipped**; `trace --strict` and
+  `check_trajectory --strict` rc 0. (7) Pre-existing, untouched: `ruff
+  check`'s E741 at `tests/test_id_watermark.py:82` is red at HEAD too —
+  flagged, not fixed, not this rework's scope.
 - **SN scope field deferred into the step-7 schema batch** (§8.6 item 3) —
   "build the schema ONCE" outweighs having the field now; drafts state scope
   in text meanwhile.

@@ -45,10 +45,19 @@ LADDER = {
     1: [dg.STAGE_SN],
     2: [dg.STAGE_SN, dg.STAGE_SR],
     3: [dg.STAGE_SN, dg.STAGE_SR, dg.STAGE_LLR],
-    # Level 4 holds STAGE_DONE too — see the test below for why that is not an
-    # inconsistency in the ladder but the thing that makes the top of it mean
-    # what the shipped template says it means.
-    4: [dg.STAGE_SN, dg.STAGE_SR, dg.STAGE_LLR, dg.STAGE_TC, dg.STAGE_DONE],
+    # Level 4 holds STAGE_IMPL and STAGE_DONE too — see the test below for why
+    # that is not an inconsistency in the ladder but the thing that makes the
+    # top of it mean what the shipped template says it means. Neither of those
+    # two is a RATIFICATION tier (the dial names SN/SR/LLR/TC), which is why the
+    # 2026-08-12 rung insert moved no level's meaning.
+    4: [
+        dg.STAGE_SN,
+        dg.STAGE_SR,
+        dg.STAGE_LLR,
+        dg.STAGE_TC,
+        dg.STAGE_IMPL,
+        dg.STAGE_DONE,
+    ],
 }
 
 
@@ -59,23 +68,25 @@ def test_each_level_holds_exactly_the_tiers_the_template_documents(tmp_path, lev
     # comparison is strictly less-than — one off-by-one here and level 1 also
     # holds SRs, which no setting would then be able to avoid.
     docs = _docs(tmp_path, level)
-    held = [s for s in range(5) if ac.human_holds(docs, s)]
+    held = [s for s in range(dg.STAGE_DONE + 1) if ac.human_holds(docs, s)]
     assert held == LADDER[level]
 
 
-def test_stage_four_is_held_by_LEVEL_FOUR_ALONE(tmp_path):
+@pytest.mark.parametrize("stage", [dg.STAGE_IMPL, dg.STAGE_DONE])
+def test_stage_four_is_held_by_LEVEL_FOUR_ALONE(tmp_path, stage):
     """The hole the strictly-less-than fix opened, and the reason the top of
     the ladder is absolute.
 
-    Stage 4 means "nothing in process: every tier decomposed and Verified" —
-    which is PRECISELY the state a gate-advance row runs in. With `4 < 4`
-    reading as not-held, the SHIPPED DEFAULT (level 4, documented as "every
-    tier human-held; the most conservative setting") let the loop dispatch and
-    self-ratify the final gate. Below the top, the ladder is about which tier
-    is being worked and there is no tier in process to hold."""
+    The top stages — 4 (implementation in process) and 5 (nothing in process:
+    every tier decomposed and Verified) — cover PRECISELY the states a
+    gate-advance row runs in. With `4 < 4` reading as not-held, the SHIPPED
+    DEFAULT (level 4, documented as "every tier human-held; the most
+    conservative setting") let the loop dispatch and self-ratify the final gate.
+    Below the top, the ladder is about which SPINE tier is being worked, and
+    neither of these two is one."""
     for level in range(4):
-        assert ac.human_holds(_docs(tmp_path, level), dg.STAGE_DONE) is False, level
-    assert ac.human_holds(_docs(tmp_path, 4), dg.STAGE_DONE) is True
+        assert ac.human_holds(_docs(tmp_path, level), stage) is False, level
+    assert ac.human_holds(_docs(tmp_path, 4), stage) is True
 
 
 def test_the_shipped_default_holds_a_gate_advance(tmp_path):
@@ -222,8 +233,11 @@ def _stage(srs=(SR,), llrs=(LLR,), tcs=(TC,), sn_ids=("SN-001",), sn_draft=()):
     return dg.spine_stage(list(srs), list(llrs), list(tcs), set(sn_ids), set(sn_draft))
 
 
-def test_a_settled_spine_is_stage_four():
+def test_a_settled_spine_is_the_TOP_stage():
+    # 5 since 2026-08-12 (the implementation rung went in at 4), and the
+    # constant — not the literal — is what every consumer compares against.
     assert _stage() == dg.STAGE_DONE
+    assert dg.STAGE_DONE == 5
 
 
 def test_a_draft_need_or_an_empty_spine_is_stage_zero():
@@ -235,7 +249,7 @@ def test_a_draft_need_or_an_empty_spine_is_stage_zero():
 def test_a_ratified_but_UNCITED_need_is_stage_zero():
     # WI-401's coverage rung, which the stage axis did not apply: a need with
     # no requirement answering it is unfinished work AT THE SN TIER. Without
-    # this such a spine read stage 4 ("nothing in process") while the gate
+    # this such a spine read the top stage ("nothing in process") while the gate
     # arithmetic put the same repo at G0 — the two axes contradicting each
     # other, in the one function whose job is to reconcile them.
     assert _stage(sn_ids=("SN-001", "SN-002")) == dg.STAGE_SN
@@ -266,20 +280,55 @@ def test_an_LLR_EXEMPT_requirement_needs_no_LLR():
     assert _stage(srs=(dict(SR, Verification="Analysis"),), llrs=()) == dg.STAGE_DONE
 
 
-def test_an_unverified_SR_over_GREEN_children_is_the_TC_tier():
-    # Checked LAST, and deliberately: an SR reaches Verified only once its
-    # children are green, so while a child is in flight the child's tier is the
-    # honest answer. Once they are all green, what remains is evidence.
-    assert _stage(srs=(dict(SR, Status="Planned"),)) == dg.STAGE_TC
+def test_an_unverified_SR_over_AUTHORED_tests_is_the_IMPLEMENTATION_tier():
+    """THE RUNG INSERTED 2026-08-12, pinned in the exact state that was wrong.
+
+    Every SR decomposed, every TC authored and non-Draft, nothing Verified yet:
+    the test set is WRITTEN, so "TCs in process" is false — what is in process is
+    making them pass. This state persists for the entire implementation period,
+    which is why reading it as STAGE_TC labelled the longest stretch of a project
+    with the name of a tier that had already finished
+    (docs/plans/2026-08-11-stage-gate-semantics.md §3).
+
+    Children are still checked FIRST: an SR reaches Verified only once its LLRs
+    and TCs are green, so while a child is in flight the child's tier is the
+    honest answer — the two tests below pin that half."""
+    assert _stage(srs=(dict(SR, Status="Planned"),)) == dg.STAGE_IMPL
+    # ...and the tier still falls back to the child while a child is unfinished.
+    unverified = dict(SR, Status="Planned")
+    assert _stage(srs=(unverified,), tcs=()) == dg.STAGE_TC
+    assert _stage(srs=(unverified,), tcs=(dict(TC, Status="Draft"),)) == dg.STAGE_TC
 
 
-def test_stage_to_gate_agrees_with_the_gate_arithmetic_on_a_settled_spine():
-    # The reconciliation this function exists to make auditable.
-    assert dg.stage_to_gate(dg.STAGE_DONE) == "G3"
-    assert dg.stage_to_gate(dg.STAGE_LLR) == "G2"
-    assert dg.stage_to_gate(dg.STAGE_TC) == "G2"
-    assert dg.stage_to_gate(dg.STAGE_SN) == "G1"
-    assert dg.stage_to_gate(dg.STAGE_SR) == "G1"
+UNIFORM_STAGE_TO_GATE = {
+    dg.STAGE_SN: "G1",  # 0 needs in process        -> G1 is next
+    dg.STAGE_SR: "G1",  # 1 requirements in process -> G1 is next
+    dg.STAGE_LLR: "G2",  # 2 design in process       -> G2 is next
+    dg.STAGE_TC: "G2",  # 3 tests in process        -> G2 is next
+    dg.STAGE_IMPL: "G3",  # 4 implementation          -> G3 is next
+    dg.STAGE_DONE: "G3",  # 5 nothing in process      -> G3 passed; held to its bar
+}
+
+
+@pytest.mark.parametrize("stage,gate", sorted(UNIFORM_STAGE_TO_GATE.items()))
+def test_stage_to_gate_is_THE_NEXT_GATE_YOU_MUST_PASS(stage, gate):
+    """The ruled mapping (owner 2026-08-12), pinned whole.
+
+    Before the implementation rung went in, `4 -> G3` read achieved-not-
+    approaching and broke the pattern the other four rungs followed. With 4 =
+    implementation the rule is uniform and needs no exception: two decomposition
+    tiers sit between each pair of sittings, so two stages share the gate ahead
+    of them. Stage 5 has already passed G3 and no rung above it is mechanized
+    (G-Release / G-Final are prose), so it stays held to the G3 bar."""
+    assert dg.stage_to_gate(stage) == gate
+
+
+def test_stage_to_gate_names_no_gate_the_harness_does_not_know():
+    # The mapping's other invariant: check.py's vocabulary is G1|G2|G3, so no
+    # stage — including anything above the top rung a future ladder adds — may
+    # produce a value it cannot select steps from.
+    for stage in range(-1, dg.STAGE_DONE + 3):
+        assert dg.stage_to_gate(stage) in ("G1", "G2", "G3")
 
 
 # --- the two dials that shipped with no reader ---------------------------------

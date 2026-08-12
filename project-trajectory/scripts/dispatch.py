@@ -267,8 +267,9 @@ def _kind_action(kind, human_held):
     spine is currently in process at still the human's to ratify
     (`agent_common.human_holds`)? It replaces the three-value gate-policy enum,
     which could not express "TCs are human-held but LLRs are not" — the whole
-    reason the ratification dial became an ordinal on the same 0-4 ladder the
-    spine stage uses.
+    reason the ratification dial became an ordinal read against the 0-5 spine
+    stage ladder (the dial's own levels stay 0-4: the four SPINE tiers plus
+    "nothing", and implementation is not a ratification tier).
 
     A `spine` row dispatches EITHER WAY because building a scope change is
     WORK, not a ratification — it opens a window; closing it is the next row's

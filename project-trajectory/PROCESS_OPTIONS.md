@@ -21,7 +21,7 @@ required for the minimum profile). Rows are in document order; each maps to the
 | Layer | Applies when — skip the section if not | What it adds |
 |---|---|---|
 | Proportionality doctrine | **always** — the mindset that frames how hard every layer below is applied | nothing (tells you when *not* to reach for machinery) |
-| Derived gate model | **always**, once you use gates — the default: the gate is computed from artifact states, not declared | `docs/gate` (generated) + `derive_gate.py` |
+| Derived gate model | **not opt-in** — the model is core ([`process.md`](process.md) §4 "Stages and gates"); this expands the mechanics | `docs/gate` (generated) + `derive_gate.py` |
 | Phased delivery | a roadmap ships phase 1 before 2/3 (a single-shot deliverable skips it) | a `Phase` on every ratified SR/LLR/TC + a derived current phase + a per-phase gate |
 | Lifecycle phase | install/startup/steady-state requirements are easy to miss (most non-trivial products) | lifecycle tags on SRs |
 | Gate authority levels | a repo declares a non-default `gate_policy` | `docs/process.toml` `[attestation] gate_policy` + an attestation / deviation register |
@@ -141,30 +141,33 @@ into a straitjacket. Four points, one voice:
 
 ## Derived gate model
 
-*Referenced from PROCESS.md §4/§7.* The gate is **computed from the artifact
-states, not declared** — SSOT applied to the gate itself. This section is the
-working summary; the kit's full design + rationale is its own ratified design
-spec (`docs/specs/derived-gate-model.md` in the kit's meta-repo — not shipped
-downstream).
+*Referenced from PROCESS.md §4/§7.* **Not opt-in:** the model is core. Stages
+vs. gates, the next-gate-to-pass rule and the retirement of `G0` are ruled in
+[`process.md`](process.md) §4 **"Stages and gates"**, which governs; this section
+expands only the **mechanics** an adopter can defer until they hit them.
+(Original design + rationale: the kit meta-repo's archived
+`docs/archive/specs/derived-gate-model.2026-07-20.md`, not shipped downstream —
+where it and §4 disagree, §4 rules.)
 
-**The gate is derived.** `docs/gate` is a **generated** file:
-`scripts/derive_gate.py` computes the active gate from the spine and caches it (a
+**How the value is cached.** `docs/gate` is a **generated** file:
+`scripts/derive_gate.py` computes the value from the spine and caches it (a
 `# basis:` derivation + a compute date, then the value on the first non-comment
-line, so `check.py`'s `resolve_gate()` reads it unchanged). **The repo is at gate
-G iff every in-scope SN/SR/LLR/TC meets G's bar.** You never hand-edit the line;
-you ratify artifacts and regenerate (`python scripts/derive_gate.py`). The
-`derived-gate` step (`derive_gate.py --check`, a pre-commit floor + every gate)
-guards the cache against rot — a ratification that moved the states but not the
-cache fails loudly. **Hybrid:** the cache means the gate is known on checkout with
-no recompute; a legacy hand-set `docs/gate` with no `# basis:` line is accepted
-**value-only** until a one-time `derive_gate.py` migration (so an adopter upgrades
-without a red day).
+line, so `check.py`'s `resolve_gate()` reads it unchanged). Ratify artifacts,
+then regenerate: `python scripts/derive_gate.py`. The `derived-gate` step (`derive_gate.py --check`, a pre-commit floor + every
+gate) guards the cache against rot — a ratification that moved the states but not
+the cache fails loudly. **Hybrid:** the cache means the value is known on
+checkout with no recompute; a legacy hand-set `docs/gate` with no `# basis:` line
+is accepted **value-only** until a one-time `derive_gate.py` migration (so an
+adopter upgrades without a red day). The basis line also carries §4's `stage=N`
+and `ex-draft=`.
 
 **Artifact states (no new column).** Maturity is read from existing structure,
-gated by one `Draft` bit:
+gated by one `Draft` bit. Each row contributes its own bar to the min; `G0` below
+is `derive_gate.py`'s internal **below-G1 sentinel** for a row that has not
+earned G1 yet — a fold value, never a gate a repo sits at (§4):
 
 - **SR / LLR / TC** — the open-vocab `Status` gains a leading **`Draft`**:
-  `Draft` → `Planned`/… → `Verified`. Per-artifact gate: an SR is **G0** while
+  `Draft` → `Planned`/… → `Verified`. Per-artifact bar: an SR is **G0** while
   `Draft`, **G1** once ratified (Status past `Draft`), **G2** once decomposed (its
   LLR — unless the Verification is LLR-exempt Analysis/Inspection/Attest — plus a
   TC), **G3** once `Verified`. An LLR/TC caps only when `Draft`; once present its
@@ -190,25 +193,23 @@ a pending ratification** triggers it. The test/coverage step stays out (the
 commit bar already runs the suite, so it is not a blind spot, and re-running it
 every gate run for the life of a window buys nothing).
 
-**Draft artifacts live in the live spine.** A `Draft` SR/LLR/TC and a Draft SN are
-**exempt from the child-completeness orphan rules** (`trace.py`): a Draft SR needs
-no LLR/TC, a Draft LLR no TC, a Draft SN no SR — so a requirement is **drafted in
-the live registry before it is decomposed**. This **retires the `-000` /
-off-spine workaround** for requirement-first work. Parent-linkage + integrity
+**Draft artifacts live in the live spine** (§4) — the exemption in detail: a
+Draft SR needs no LLR/TC, a Draft LLR no TC, a Draft SN no SR (`trace.py`'s
+child-completeness orphan rules), so a requirement is drafted in the live
+registry before it is decomposed. Parent-linkage + integrity
 still apply (a Draft SR still links an SN; ids stay unique/well-formed), and a
 Draft SR is skipped by the G3 Verified criterion (it is pre-ratification).
 
-**Ratification = a reviewed Status-change commit.** Closing a gate is no longer a
-marker bump: the acceptor **marks a batch of artifacts ratified** (`Draft`→
-`Planned`, or an SN section move) **in a reviewed commit** — that commit *is* the
-sign-off, and the gate derives from it (`gate-advance` skill). It composes with
+**Ratification = a reviewed Status-change commit** (§4). That commit *is* the
+sign-off (`gate-advance` skill), and it composes with
 the gate-authority levels (below): `attended` ratifies each batch; `single-ratify`
 ratifies the batch once at its `[phase]-[g2]` close (one review per phase gate);
 `autonomous` on a fresh-context reviewer's recorded verdict. An agent may make the
 ratifying commit, governed by the level.
 
-**Phase = a derived detector + a committed anchor.** The derived gate **dropping
-below a phase's last-closed level** — new or reopened content entered — is the
+**Phase = a derived detector + a committed anchor.** §4's floor drop — the
+derived value falling **below a phase's last-closed level** because new or
+reopened content entered — is the
 *signal* that a new phase is due; `check_trajectory` warns "open a `[phase]-[g*]`"
 (warn-first). But phase **identity + membership** live in a committed
 **`[phase]-[g*]` work item** — a WI whose Title carries the `[<phase>]-[g<N>]` tag
@@ -236,10 +237,9 @@ returns to `Draft`/`Planned`, the derived gate for that phase drops, and the bat
 review sees it alongside the new work. (One sanctioned relaxation of the series
 rule: a run of *independent, off-spine* dev slices may batch into one BUILD
 session + one review round — "Dev-slice batching" under Unattended operation;
-spine-touching slices always stay per-slice.) Within a phase the derived gate only rises
-(draft → ratify → decompose → verify), so a **drop from a closed level is an
-unambiguous boundary** — the detection is robust; the committed anchor just makes
-membership legible and durable.
+spine-touching slices always stay per-slice.) Within a phase the derived value
+only rises (draft → ratify → decompose → verify), so a **drop from a closed level
+is an unambiguous boundary**; the committed anchor makes membership legible.
 
 ## Phased delivery
 

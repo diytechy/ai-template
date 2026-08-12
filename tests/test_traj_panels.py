@@ -210,12 +210,13 @@ def test_process_tab_renders_three_panels_from_live_data(tmp_path):
 
 
 def test_process_current_gate_highlight_follows_docs_gate(tmp_path):
-    # The current-gate highlight reflects docs/gate: a stage is `now` iff the
-    # gate value falls in its declared gate span.
+    # The derived-gate highlight reflects docs/gate: a lifecycle tier is `now`
+    # iff the gate value falls in its declared gate span. (The panel says "next
+    # gate to pass" since 2026-08-12 — a repo is IN a stage, PASSES a gate.)
     with_gate(tmp_path, "G1")
     assert gen(tmp_path).returncode == 0
     text = html_of(tmp_path)
-    assert "Current gate: <b>G1</b>" in text
+    assert "Next gate to pass: <b>G1</b>" in text
     assert 'class="stg now" data-gates="G1"' in text  # SN
     assert 'class="stg now" data-gates="G1→G2"' in text  # SR
     assert 'class="stg" data-gates="G2"' in text  # LLR not yet
@@ -224,7 +225,7 @@ def test_process_current_gate_highlight_follows_docs_gate(tmp_path):
     (tmp_path / "docs" / "gate").write_text("G3\n", encoding="utf-8")
     assert gen(tmp_path).returncode == 0
     text = html_of(tmp_path)
-    assert "Current gate: <b>G3</b>" in text
+    assert "Next gate to pass: <b>G3</b>" in text
     assert 'class="stg" data-gates="G1"' in text  # SN no longer highlighted
     assert 'class="stg now" data-gates="G2→G3"' in text  # TC
     assert 'class="stg now" data-gates="G3"' in text  # code+tests
@@ -302,7 +303,7 @@ def test_meta_process_tab_smoke():
     tab, panel = out
     assert 'data-tab="process"' in tab
     gate = gt._gate_value(ROOT)
-    assert gate and "Current gate: <b>{}</b>".format(gate) in panel
+    assert gate and "Next gate to pass: <b>{}</b>".format(gate) in panel
     hrefs = set(re.findall(r'href="([^"]+)"', panel))
     assert "project-trajectory/PROCESS.md" in hrefs
     for href in hrefs:

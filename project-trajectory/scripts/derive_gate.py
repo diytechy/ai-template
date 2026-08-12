@@ -1,11 +1,16 @@
 #!/usr/bin/env python3
-"""Derive the active gate from artifact states — the hybrid, cached gate.
+"""Derive the harness gate from artifact states — the hybrid, cached gate.
 
 Stack-agnostic, standard-library only. This replaces the hand-set `docs/gate`
 marker with one *computed* from the spine's own maturity states
-(docs/archive/specs/derived-gate-model.2026-07-20.md): **the repo is at gate G iff every in-scope
-SN/SR/LLR/TC meets G's bar.** SSOT applied to the gate itself — you no longer bump
-a line, you ratify artifacts (in a reviewed commit) and the gate follows.
+(docs/archive/specs/derived-gate-model.2026-07-20.md; the ruled stage/gate
+semantics are process.md §4 "Stages and gates — state vs. certified boundary").
+**A repo is IN a stage; it PASSES a gate.** The value written to `docs/gate` is
+therefore not a claim that the repo "is at" that gate: it is the gate the repo
+must next pass, taken as the **min** over every in-scope SN/SR/LLR/TC, so the
+least-mature row selects the strictness the harness holds everyone to. SSOT
+applied to that selector — you no longer bump a line, you ratify artifacts (in a
+reviewed commit) and the derived value follows.
 
 The model is **hybrid**: the computed value is *cached* to `docs/gate` (now a
 generated file) with a compute date, so the gate is known on checkout with no
@@ -14,8 +19,13 @@ freshness discipline the kit already runs for the arch-map / OKF / dashboard.
 `check.py`'s `resolve_gate()` still reads the first non-comment line of
 `docs/gate` — the value is simply derived now, not declared.
 
-Per-artifact gate (docs/archive/specs/derived-gate-model.2026-07-20.md §3), on the ladder
-G0 < G1 < G2 < G3:
+Per-artifact gate (docs/archive/specs/derived-gate-model.2026-07-20.md §3), on the
+internal ladder G0 < G1 < G2 < G3. **`G0` is NOT a gate** — the 2026-08-12 ruling
+retired it as a name for a repo state (it was "stage 0" in the wrong units). It
+survives here only as the arithmetic sentinel for *below G1*, because the min-fold
+needs a value under the lowest runnable gate and because `computed=G0` on the
+`# basis:` line is a cache format older files carry. Say "stage 0/1" of the repo;
+say `G0` only of this internal fold:
   - **SN** — Draft (under a stakeholder-needs.md heading containing "draft",
     section-as-state §4a) => G0; ratified AND cited by >=1 SR `SN-Refs` => it has
     no obligation past G1, so it never caps the repo (contributes G3 to the min);
@@ -37,15 +47,19 @@ G0 < G1 < G2 < G3:
     trace.py's --require-verified, which checks SRs, not LLR/TC status), so a
     present LLR/TC never caps below G3.
 
-Aggregation: the repo gate = **min over all in-scope artifacts** (a phase gate is
-the min over that phase's artifacts; the repo gate is the min over phases, which
-is the same set — also reported per-phase). A repo with **no** real SRs yet (a
-fresh scaffold) is at **G1** (the requirements-drafting start), never a vacuous
-G3. A draft artifact is at G0, so introducing draft/reopened content **drops** the
-derived gate — the signal that a new phase is due (the `[phase]-[g*]` detector
-lives in check_trajectory). The cached runnable value is floored at G1 (check.py's
-gate vocabulary is G1..G3); the raw computed level, including a G0 drop, is
-recorded in the `# basis:` comment so nothing hides.
+Aggregation: the derived value = **min over all in-scope artifacts** (a phase's
+value is the min over that phase's artifacts; the repo's is the min over phases,
+which is the same set — also reported per-phase). A repo with **no** real SRs yet
+(a fresh scaffold) derives **G1** (the requirements-drafting start), never a
+vacuous G3. A draft artifact reads G0, so introducing draft/reopened content
+**drops** the derived value — the signal that a new phase is due (the
+`[phase]-[g*]` detector lives in check_trajectory). The cached runnable value is
+floored at G1 (check.py's gate vocabulary is G1..G3); the raw computed level,
+including a G0 drop, is recorded in the `# basis:` comment so nothing hides.
+Because it is a min and a floor, the value answers **"what must still be passed"**,
+never "what has been achieved": a mature spine with one reopened draft derives G1
+exactly as a fresh scaffold does, and it is `ex-draft=`/`stage=` on the basis line
+that tell the two apart.
 
 This script reads STATES and picks the LEVEL; `trace.py` (run by check.py at that
 level) ENFORCES the structure — orphans/decomposition/verified — at the derived
@@ -87,8 +101,10 @@ except ImportError:  # pragma: no cover - in-process fallback
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     import spine_carrier
 
-# The derived ladder. G0 = pre-ratification (draft); G1..G3 are the runnable gates
-# check.py knows. GATE_NAMES maps the internal int back to the marker string.
+# The derived ladder. G1..G3 are the runnable gates check.py knows; G0 is the
+# INTERNAL sentinel for "below G1" (pre-ratification / draft), not a gate anyone
+# passes or sits at — see the module docstring. GATE_NAMES maps the internal int
+# back to the marker string.
 G0, G1, G2, G3 = 0, 1, 2, 3
 GATE_NAMES = {G0: "G0", G1: "G1", G2: "G2", G3: "G3"}
 
@@ -256,7 +272,7 @@ def sn_gate(sn_id, draft_ids, cited_ids):
     return G3 if sn_id in cited_ids else G0
 
 
-# --- SN-029: the SECOND derived axis --------------------------------------------
+# --- SN-029: the SECOND derived axis — the STAGE ladder -------------------------
 # WHY TWO AXES. The gate answers "how strict is the harness right now" — its
 # vocabulary is `G1|G2|G3` and `check.py` selects steps from it. The human
 # ratification level answers a different question: "how far up the spine is a
@@ -266,11 +282,35 @@ def sn_gate(sn_id, draft_ids, cited_ids):
 # process". Forcing one axis to carry both is how a dial ends up meaning
 # something subtly different at each of its five reading sites.
 #
-# So `spine_stage` is derived SEPARATELY, on its own 0-4 ladder, and
-# `stage_to_gate` is the declared mapping between them — one auditable place
-# rather than an arithmetic coincidence. The runnable gate value is untouched;
-# the stage rides the `# basis:` line as an appended field.
-STAGE_SN, STAGE_SR, STAGE_LLR, STAGE_TC, STAGE_DONE = 0, 1, 2, 3, 4
+# THE RULED MODEL (owner, 2026-08-12; process.md §4 "Stages and gates"):
+# **stages are the tiers of the decomposition — a repo is IN one; gates are the
+# subset of stage boundaries a human must certify — you PASS one.** The stage is
+# state, the gate is an event, and the boundaries that are NOT gates (0->1 and
+# 2->3) are exactly the ones with no sign-off row: you draft needs then
+# requirements without a sitting between, and designs then tests without one
+# either.
+#
+#   stage 0  needs in process
+#   stage 1  requirements in process
+#      == G1 ==  Stakeholder · UX · System Engineer
+#   stage 2  design (LLR) in process
+#   stage 3  tests in process
+#      == G2 ==  System Engineer · Test Engineer
+#   stage 4  IMPLEMENTATION in process
+#      == G3 ==  System Engineer · Test Engineer
+#   stage 5  nothing in process (G3 passed)
+#
+# Stage 4 is the rung this ladder was MISSING until 2026-08-12: with 4 meaning
+# "done", the whole implementation period — the longest stretch of a project —
+# read as stage 3, "TCs in process", labelling it with the name of a tier that
+# had already finished. G-Release / G-Final sit above stage 5 in prose only; no
+# rung past 5 is mechanized, so stage 5 stays held to the G3 bar.
+#
+# `spine_stage` is derived SEPARATELY on this 0-5 ladder and `stage_to_gate` is
+# the declared mapping between the axes — one auditable place rather than an
+# arithmetic coincidence. The runnable gate value is untouched; the stage rides
+# the `# basis:` line as an appended field.
+STAGE_SN, STAGE_SR, STAGE_LLR, STAGE_TC, STAGE_IMPL, STAGE_DONE = 0, 1, 2, 3, 4, 5
 
 
 def _decomposed_sr_ids(llrs, tcs):
@@ -287,8 +327,8 @@ def _decomposed_sr_ids(llrs, tcs):
 
 
 def spine_stage(srs, llrs, tcs, sn_ids, sn_draft):
-    """The tier currently IN PROCESS, 0-4 — the axis a human-ratification level
-    is compared against.
+    """The tier currently IN PROCESS, 0-5 — the STATE axis (a repo is *in* a
+    stage), and the one a human-ratification level is compared against.
 
       0  SNs in process: a need is a draft, none is ratified, or a ratified one
          has no SR answering it
@@ -296,10 +336,26 @@ def spine_stage(srs, llrs, tcs, sn_ids, sn_draft):
          `Modified` (amended after attestation, so its RE-ratification is owed)
       2  ...and the LLRs are in process: one is missing or Draft
       3  ...and the TCs are in process: one is missing or Draft
-      4  nothing in process: every tier is decomposed and Verified
+      4  ...and the IMPLEMENTATION is in process: every SR is decomposed and
+         every TC is authored and non-Draft, but some SR is not yet `Verified`
+      5  nothing in process: every tier is decomposed and Verified
 
     Read as the LOWEST unfinished tier — the one work is happening at, and
     therefore the one a human boundary has to be compared against.
+
+    STAGE 4 IS WHERE THE TESTS ARE WRITTEN BUT NOT YET GREEN. It is the rung
+    inserted 2026-08-12 (owner ruling; process.md §4 "Stages and gates"): before
+    it, the entire implementation period read as stage 3 — "TCs in process" —
+    which named the longest phase of a project after a tier that had already
+    finished. The discriminator between 3 and 4 is exactly the TC rung falling
+    through: stage 3 while any SR still lacks a TC or any TC is `Draft`, stage 4
+    once the test set is authored and ratified and only `Verified` is missing.
+
+    CAVEAT ON THE G2->G3 DRIVER. Stage 4 ends when every SR reads `Verified`,
+    which is a registry CELL, not a harness run. The intended signal is the
+    harness (green tests at the declared tier and coverage); the cell is today's
+    interim proxy for it, and repo-lock D-9's correction owes the swap to a later
+    batch. Nothing here should be read as proof the tests passed.
 
     WHICH TIER OWNS A MISSING ARTIFACT: the tier the artifact belongs to, not
     its parent. An SR with no LLR yet puts the spine at stage 2, because what is
@@ -317,12 +373,12 @@ def spine_stage(srs, llrs, tcs, sn_ids, sn_draft):
     flight the child's tier is the honest answer.
 
     Two corners are explicit. A repo with no real SRs at all is stage 0, NOT
-    stage 4 — the vacuous-G1 short circuit in `_raw_level` exists for the gate's
+    stage 5 — the vacuous-G1 short circuit in `_raw_level` exists for the gate's
     own arithmetic and would read as "everything is finished" here, which is
     precisely backwards. And a RATIFIED-BUT-UNCITED SN is stage 0, applying
     WI-401's coverage rung on the same subset `_raw_level` uses: a need with no
     requirement answering it is unfinished work at the SN tier, and without this
-    such a spine read stage 4 while the gate arithmetic put it at G0."""
+    such a spine read stage 5 while the gate arithmetic put it at G0."""
     if any(u in sn_draft for u in sn_ids) or not sn_ids:
         return STAGE_SN
     if not srs:
@@ -342,8 +398,13 @@ def spine_stage(srs, llrs, tcs, sn_ids, sn_draft):
         is_draft(r) for r in tcs
     ):
         return STAGE_TC
+    # THE 3-vs-4 DISCRIMINATOR. Falling through both rungs above means every SR
+    # is decomposed and every TC is authored and non-Draft — the test set is
+    # written, so "TCs in process" is no longer true. What remains is making them
+    # pass, which is stage 4. (`is_verified` is the interim proxy for that; the
+    # intended signal is the harness — see the CAVEAT above.)
     if not all(is_verified(r) for r in srs):
-        return STAGE_TC
+        return STAGE_IMPL
     return STAGE_DONE
 
 
@@ -351,14 +412,25 @@ def stage_to_gate(stage):
     """THE DECLARED MAPPING between the two axes — stated once, here, so the
     reconciliation is auditable instead of implied.
 
-    It is deliberately LOSSY in one direction only: several stages map to one
-    gate (0 and 1 both read G1, because the harness has the same strictness
-    while requirements are being drafted whether or not the needs are settled),
-    and no stage maps to a gate the harness does not know. Nothing derives the
-    gate FROM the stage in production — `compute` still computes the gate from
-    the artifact states exactly as it always did — so this is a reader's
-    reconciliation, not a second source of truth."""
-    if stage >= STAGE_DONE:
+    THE RULE IS UNIFORM: `stage_to_gate(s)` is **the next gate you must pass**.
+    Since 2026-08-12's inserted implementation rung it needs no exception —
+
+        0 -> G1   1 -> G1   2 -> G2   3 -> G2   4 -> G3   5 -> G3
+
+    — because exactly two tiers sit between each pair of sittings, so two stages
+    share the gate ahead of them. Stage 5 has already passed G3 and no rung past
+    it is mechanized (G-Release / G-Final are named in prose only), so it stays
+    held to the G3 bar rather than reporting a gate the harness does not know.
+    The strictness selector and the approaching gate are the same value for a
+    good reason: you are held to the bar you are trying to clear.
+
+    Nothing derives the gate FROM the stage in production — `compute` still
+    computes the gate from the artifact states exactly as it always did — so
+    this is a reader's reconciliation, not a second source of truth. Keep that
+    reading: a gate is NOT a pure function of stage (G1's bar includes non-goals
+    and a UX sign-off; G2's includes diagrammed runtime flows), and deriving one
+    from the other would silently drop the human half."""
+    if stage >= STAGE_IMPL:
         return "G3"
     if stage >= STAGE_LLR:
         return "G2"
@@ -560,13 +632,21 @@ def basis_line(result):
     breakdown — everything that must stay in step with the states, excluding the
     volatile compute date).
 
-    `ex-draft=` (WI-341) and `uncovered=` (WI-401) are additive: a reader that
-    does not know a field is unaffected, and check.py falls back to the older
-    per-phase heuristic when `ex-draft` is absent, so a gate file written by an
-    earlier derive_gate keeps working until it is next regenerated. Regenerating
-    IS required — `--check` compares this line whole, so any new field is a
-    cache-format change a downstream repo passes through by rerunning
-    derive_gate once — the ordinary regenerate-a-generated-artifact step.
+    `ex-draft=` (WI-341), `uncovered=` (WI-401) and `stage=` (SN-029) are
+    additive: a reader that does not know a field is unaffected, and check.py
+    falls back to the older per-phase heuristic when `ex-draft` is absent, so a
+    gate file written by an earlier derive_gate keeps working until it is next
+    regenerated. Regenerating IS required — `--check` compares this line whole,
+    so any new field is a cache-format change a downstream repo passes through
+    by rerunning derive_gate once — the ordinary regenerate-a-generated-artifact
+    step.
+
+    THE 2026-08-12 RUNG INSERT IS FIELD-COMPATIBLE, not value-compatible: a
+    cache written before it carries `stage=4` meaning "done", which now means
+    "implementation in process". Nothing reads it differently — `human_holds`
+    answers identically for stages 4 and 5 at every declared ratification level
+    (0-4) — and `--check` reports the line as stale on the first recompute, so
+    the stale meaning cannot persist past one regeneration.
     """
     c = result["counts"]
     per_phase = ";".join(f"{k}={v}" for k, v in result["per_phase"].items())
@@ -593,12 +673,25 @@ def basis_line(result):
 HEADER = [
     "# DERIVED GATE — generated by scripts/derive_gate.py (do not hand-edit).",
     "#",
-    "# The active gate is COMPUTED from artifact states, not declared",
-    "# (docs/archive/specs/derived-gate-model.2026-07-20.md): the repo is at gate G iff every in-scope",
-    "# SN/SR/LLR/TC meets G's bar. You advance it by RATIFYING artifacts in a",
-    "# reviewed commit (Draft->Planned, or moving an SN out of a draft section;",
-    "# a Modified row re-attests the same way, Modified->Verified — process.md",
-    "# section 7), not by editing this line. Regenerate: python scripts/derive_gate.py",
+    '# WHAT THIS VALUE IS. NOT "the gate the repo is at": a repo is IN a stage',
+    '# and PASSES a gate (process.md section 4, "Stages and gates"; the model:',
+    "# docs/archive/specs/derived-gate-model.2026-07-20.md). The value on the last",
+    "# line is the gate that must next be PASSED — and therefore the STRICTNESS",
+    "# SELECTOR check.py runs at. It is COMPUTED, not declared: the MIN over every",
+    "# in-scope SN/SR/LLR/TC's own bar, floored to G1. So the least-mature row",
+    "# picks it, and a Draft or Modified row DROPS it (the signal that a new phase",
+    "# is due) — which means a mature spine held down by one draft displays exactly",
+    "# what a fresh scaffold displays. The `# basis:` line below is what tells them",
+    "# apart: `stage=` is the tier actually in process (0 needs, 1 requirements,",
+    "# 2 design, 3 tests, 4 implementation, 5 done), `ex-draft=` is the value",
+    "# the same arithmetic gives with the pending rows removed, and `computed=`",
+    "# is the raw level before the G1 floor (`G0` there is the internal below-G1",
+    "# sentinel, not a gate).",
+    "#",
+    "# HOW IT MOVES. By RATIFYING artifacts in a reviewed commit (Draft->Planned,",
+    "# or moving an SN out of a draft section; a Modified row re-attests the same",
+    "# way, Modified->Verified — process.md section 4), never by editing this line.",
+    "# Regenerate: python scripts/derive_gate.py",
     "# Freshness is guarded by `--check` (a pre-commit + gate step). check.py / CI",
     "# read the first non-comment line below, exactly as before.",
     "#",

@@ -10,7 +10,7 @@
 # This is the universal *floor*; the full gate bar (placeholder rejection, schema
 # checks, tests, coverage) is gate-scoped and lives in check.py / CI. Those
 # heavier checks are deliberately NOT here: they would block legitimate
-# early-stage (G0/G1) commits. See process.md §7 (process vs product checks).
+# early-stage (stage 0/1) commits. See process.md §7 (process vs product checks).
 #
 # Enable:  git config core.hooksPath .githooks   (setup.sh / setup.ps1 do this)
 # Disable: git config --unset core.hooksPath

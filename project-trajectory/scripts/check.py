@@ -50,13 +50,13 @@ Usage:
                             [--coverage N] [--phase LIST] [--lenient] [--list]
                             [--jobs N] [--run-step NAME] [--run-steps A,B,...]
 
-    --gate      Which gate's checks to run. Default: the repo's **active gate**
-                from `docs/gate` (bootstrap starts it at G1). The value is now
-                DERIVED from the artifact states by derive_gate.py (not hand-set);
+    --gate      Which gate's checks to run. Default: the repo's **derived gate**
+                from `docs/gate` — the gate it must next PASS (a fresh scaffold
+                derives G1), computed by derive_gate.py, never hand-set;
                 closing a gate = ratifying artifacts in a reviewed commit +
                 regenerating. Else `all` when no gate file exists. This keeps a young
                 project's CI green-and-honest: it enforces the bar the project
-                is actually at, not the end-state bar. G3 (and all) also
+                is working toward, not the end-state bar. G3 (and all) also
                 requires every Verification=Test SR to be Status=Verified
                 (trace.py --require-verified).
     --tier      Which test tier to run (default: all). Mark fast critical-path
@@ -846,7 +846,7 @@ def steps(coverage, tier, gate, phase=None, profile=None):
 
 GATES = ["G1", "G2", "G3", "all"]
 
-# The machine-readable active gate (process.md §7). One line, e.g. "G1".
+# The machine-readable derived gate (process.md §4/§7). One line, e.g. "G1".
 GATE_FILE = Path("docs/gate")
 
 # `derive_gate.py` writes its inputs into a `# basis:` comment above the value.
@@ -1055,7 +1055,7 @@ def _print_steps(plan):
 
 def resolve_gate(explicit):
     """The gate to run: an explicit --gate wins; else the docs/gate file (the
-    project's active gate); else 'all' (a repo without the file gets the full bar,
+    project's derived gate); else 'all' (a repo without the file gets the full bar,
     never a silently weaker one). The file is parsed by the declared-policy rule
     every reader shares (hooks, check_privacy.py, agent_loop.py): the first
     non-empty, non-comment line — which is now DERIVED by derive_gate.py from the
@@ -1443,7 +1443,7 @@ def main():
         "--gate",
         choices=GATES,
         default=None,
-        help="gate to run (default: the active gate in docs/gate, else all)",
+        help="gate to run (default: the derived gate in docs/gate, else all)",
     )
     ap.add_argument("--tier", choices=list(TIERS), default="all")
     ap.add_argument(
