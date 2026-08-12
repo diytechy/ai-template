@@ -29,44 +29,53 @@ collapses to a one-line pointer with the commit.**
 
 ## WHAT IS LEFT — the whole list
 
-Ordered by what blocks what. **Owner acts are 1–6; everything else waits on
-them or on step 7.**
+Listed in the order they unblock each other, top to bottom. **Deliberately
+un-numbered:** this file already carries two numbering systems — the `§N`
+sections, and §5's checklist steps 6–12 — and a third would invite reading
+"item 7" as "§7". The arrow on each line is the only pointer that means
+anything.
 
-1. **Rule the component model** — it gates OI-14, the `interfaces.csv`
-   conversion, and §8.3 item 6. Nothing else in the program is blocked by so
-   much. → **§0**
-2. **Rule OI-14** (what an IF row's `Contract` cell is for) — it inherits an
-   11-row citation sweep and decides when `interfaces.csv` may convert. → **§0**
-3. **Hold the P0 sitting, part 2** — the 25-row re-attest brief, worked
-   *together with* the prose batch so two re-blessing windows collapse into
-   one. Gates the entire schema batch via Q11. → **§5 step 6**, **§8.4**
-4. **Rule the stage/gate semantics** — worked and unruled: *gate* is an event
-   used as a state, `G0` is not a gate, and the implementation period has no
-   rung. Includes deciding its **home** — the evidence says `PROCESS.md`, not
-   `PROCESS_OPTIONS.md`. → **§0**, [proposal](plans/2026-08-11-stage-gate-semantics.md)
-5. **Rule the six SN-tier intake items** — plain-language needs, the launcher
-   items, the "hats" roster, and item 6 which must be ruled *with* the
-   component model. → **§8.3**
-6. **Ratify or re-rule four agent decisions** — WI-423 (toggles stay files),
-   the `key = ""` fail-closed refusal, WI-429's LLR discharge rule, and the
-   tabled question of whether the kit ships your blackout window to every
-   adopter. → **§8.5**
-7. **Build the schema batch ONCE** — D-1's anchor half, D-2's SN fields, D-3's
-   remaining columns, D-4's `SupersededBy` deletion, **D-9's ladder migration**
-   (closing the `Status` enum *first*), and **D-10's approval-log writer**.
-   Blocked on 3. → **§5 step 7**
-8. **Repoint the `derived-gate-model.md` citations** — 23 across 18 files, of
-   which **14 are live** (8 kit source, 5 tests, 1 shipped doc). Unblocked
-   today. → **§5 loose ends**
-9. **Finish batch-2** — `interfaces.csv` (after 2) and `components.csv` (after
-   1). `open-items` and `agents` are done. → **§8.1**
-10. **Close WI-390** — the concurrency-v2 program close; it carries spine
-    amendments, so it belongs with the sitting. The last open work item.
-    → **§5 step 9**
-11. **Regenerate, and confirm the gate rises** to its honest ceiling. A gate
-    that does *not* rise is a finding. → **§5 step 8**
-12. **Dispose the warn-only residue**, then re-run the full bar and merge.
-    → **§5 steps 10–12**
+**Owner acts — everything below them waits on one of these:**
+
+- **Rule the component model** — it gates OI-14, the `interfaces.csv`
+  conversion, and §8.3 item 6. Nothing else in the program is blocked by so
+  much. → **§0**
+- **Rule OI-14** (what an IF row's `Contract` cell is for) — it inherits an
+  11-row citation sweep and decides when `interfaces.csv` may convert. → **§0**
+- **Hold the P0 sitting, part 2** — the 25-row re-attest brief, worked
+  *together with* the prose batch so two re-blessing windows collapse into one.
+  Gates the entire schema batch via Q11. → **§5 step 6**, **§8.4**
+- **Rule the stage/gate semantics** — worked and unruled: *gate* is an event
+  used as a state, `G0` is not a gate, and the implementation period has no
+  rung. Includes deciding its **home** — the evidence says `PROCESS.md`, not
+  `PROCESS_OPTIONS.md`. → **§0**, [proposal](plans/2026-08-11-stage-gate-semantics.md)
+- **Rule the six SN-tier intake items** — plain-language needs, the launcher
+  items, the "hats" roster, and the sixth which must be ruled *with* the
+  component model. → **§8.3**
+- **Ratify or re-rule four agent decisions** — WI-423 (toggles stay files), the
+  `key = ""` fail-closed refusal, WI-429's LLR discharge rule, and the tabled
+  question of whether the kit ships your blackout window to every adopter.
+  → **§8.5**
+
+**Mechanical work:**
+
+- **Build the schema batch ONCE** — D-1's anchor half, D-2's SN fields, D-3's
+  remaining columns, D-4's `SupersededBy` deletion, **D-9's ladder migration**
+  (closing the `Status` enum *first*), and **D-10's approval-log writer**.
+  Blocked on the sitting. → **§5 step 7**
+- **Repoint the `derived-gate-model.md` citations** — 23 across 18 files, of
+  which **14 are live** (8 kit source, 5 tests, 1 shipped doc). Unblocked
+  today; `SR-049` is fenced out of it as a spine amendment.
+  → **§5 loose ends**
+- **Finish batch-2** — `interfaces.csv` (after OI-14) and `components.csv`
+  (after the component model). `open-items` and `agents` are done. → **§8.1**
+- **Close WI-390** — the concurrency-v2 program close; it carries spine
+  amendments, so it belongs with the sitting. The last open work item.
+  → **§5 step 9**
+- **Regenerate, and confirm the gate rises** to its honest ceiling. A gate that
+  does *not* rise is a finding. → **§5 step 8**
+- **Dispose the warn-only residue**, then re-run the full bar and merge.
+  → **§5 steps 10–12**
 
 **Not blocking, but owed to nobody and therefore easy to lose:** the loose ends
 in **§5** — `intake.py`'s monolith, the traced/ratified split `trace.py` cannot
