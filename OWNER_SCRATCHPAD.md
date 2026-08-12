@@ -685,14 +685,19 @@ Note: In a branch, a work item is non-mutable.  Work item definitions can only b
 
 
  #############
+ 
 
-Are there other csv registries here that should switch to TOML?  It tend to think perhaps they all should move... can you cross-check?
+ Please continue the work of repo-lock.md, keeping mind of various notes below.  Spin up opus / sonnet agents where appropriate to keep your context window free to chew through all of these items as much as possible, only tabling low confidence items while moving forward with the rest.  Spin up OpenAI through CLI for adversarial reviews and for prose reviews when iterating through stakeholder needs, system requirements, etc.
+
+Related to repo-lock directly:
+
+OI-14 and the componenet model are referenced below.  And gate semantics should be retired / archived for stage semantics even though it will result in some relatively heavy rework.
+
+In regards to 8.3 - Point 2 for a double-clickable luancher should be relaxed to say where possible (since linux needs execution permissions explicitely defined I believe).  Other than that yes I think all these stakeholder needs hold, and will need to be sprinkled in along with the other needs located below (both directly and implied)
+
+Related to it's contents and braoder context, though keep in mind there may be duplicates here:
 
 Are there other duplicated funcitons in other files?  In general, should there be a common modules file to import from?  I realize this was apparently rejected in the past, but it's advantage (copying a single file) is basically moot given how things have grown.
-
-Where are agents stored again?  Perhaps this should be a TOML file as well.
-
- Findings for post convert to TOML:
 
  When a branch is created and the tiered agents are run, how are guardrails applied?  Is agents.md literally replaced?  Is process.md modified?  How do agents get the right scoping context when working in a branch?  Or should all of that be popped into the WI as prose it gets while digesting the WI (Which seems inefficient).  I tend to think this is part of the agents prose toml that is used to formulate the prompt handed over CLI.
 
@@ -700,13 +705,17 @@ Where are agents stored again?  Perhaps this should be a TOML file as well.
 
  Related, should all the prose templates (to construct the prompt mechanically that is fed into the LLM's CLI caller) also be TOML?  Why or why not?
 
+IMPORTANT: All items this template provides should chain back to a stakeholder need.  Each document / file in the template fullfills a requirement, that should be tied in.
+
  ## Components, interfaces, and decomposition into implimentation:
 
  The component registry and interfaces need cleanup.
 
+ Components are arcitecturable breakdowns, but also define the boundaries with which system requirements must be written.  That is, the inputs and outputs of a system requirements must correspond to the boundaries at the component.  For decomposition of the problem from stakeholder needs to system requirements, there might be some better / more stratigic methods available through research, but I expect layout out the inputs / outputs of the system first, and then breaking that into components with internal signals will help give shape to what the component definitions need to be and the interfaces between them.  There is probably some mathematical expression here that can help to optomize that breakdown, and that would be brand new for this repo which -from memory- has let an LLM do that strictly of it's own accord, when system breakdown can likely be viewed as an optomization problem.
+
  Interfaces must be INTERFACES only (Descrete vs variable), and all component breaks must have all intefaces described by their interface.  I'm not sure of the best way to enforce this mechanically.
 
- Edge cases needs to dissolve into individual system requirements that relate to the stakeholder need, but this is awkward because each "hat" must be run against each stakeholder need to see where a new requirement needs to be built out.  To mechanize this, perhaps it is best to ALSO create a toml for "experts" that need to be a part of the system requirement reveiew and breakdown from stakeholder needs.  This is where things become a bit strange, because a domain expert may not be a staeholder (they don't have needs), but it means every seperate need should be broken down according to "hats", do hats need to be considerations built into a toml file to drive a stakeholder decomposer while considering these different persepctives?
+ Edge cases needs to dissolve into individual system requirements that relate to the stakeholder need, but this is awkward because each "hat" must be run against each stakeholder need to see where a new requirement needs to be built out.  To mechanize this, perhaps it is best to ALSO create a toml for "experts" that need to be a part of the system requirement reveiew and breakdown from stakeholder needs.  This is where things become a bit strange, because a domain expert may not be a staeholder (they don't have needs), but it means every seperate need should be broken down according to "hats", do hats need to be considerations built into a toml file to drive a stakeholder decomposer while considering these different persepctives?  This way when an adjudicator has to break down stakeholder needs, it can know what perspectives / hats to wear as that will affect the outcomes / constraints depending on the system.
 
  If we are at stakeholder needs, let's consider these items at the same time, or let me know what challenges might arise:
 
