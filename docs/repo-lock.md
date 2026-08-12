@@ -52,17 +52,20 @@ anything.
 - **Rule the six SN-tier intake items** — plain-language needs, the launcher
   items, the "hats" roster, and the sixth which must be ruled *with* the
   component model. → **§8.3**
-- **Ratify or re-rule four agent decisions** — WI-423 (toggles stay files), the
-  `key = ""` fail-closed refusal, WI-429's LLR discharge rule, and the tabled
-  question of whether the kit ships your blackout window to every adopter.
-  → **§8.5**
+- **Ratify ONE remaining agent decision** — WI-429's LLR discharge rule
+  (`CodeSymbol` must resolve), taken under a "proceed" and now gating hard
+  under `--strict`. The other three are settled: WI-423 **overturned** and
+  re-executed, the `key = ""` refusal **ratified**, the blackout dial
+  **ruled**. → **§8.5**
 
 **Mechanical work:**
 
 - **Build the schema batch ONCE** — D-1's anchor half, D-2's SN fields, D-3's
   remaining columns, D-4's `SupersededBy` deletion, **D-9's ladder migration**
   (closing the `Status` enum *first*), and **D-10's approval-log writer**.
-  Blocked on the sitting. → **§5 step 7**
+  **Includes the one hole D-9 left: nothing drives G2→G3 once `Verified` is
+  gone** — the fix is to read the harness rather than a cell, see D-9's
+  correction note. Blocked on the sitting. → **§5 step 7**
 - **Repoint the `derived-gate-model.md` citations** — 23 across 18 files, of
   which **14 are live** (8 kit source, 5 tests, 1 shipped doc). Unblocked
   today; `SR-049` is fenced out of it as a spine amendment.
@@ -165,16 +168,16 @@ for by demoting three needs on this exact test. And the tabled items in
 
 ## 1. Where the repo stands
 
-Measured 2026-08-11 at `ac7b8261` on `infra/mechanized-loop`.
+Measured 2026-08-12 at `982109b3` on `infra/mechanized-loop`, after 70 commits.
 
 | fact | value |
 |---|---|
 | derived gate | **G1** — `computed=G0` floored to G1, because drafts exist. Correct: everything that moves it now waits on the owner. |
 | spine | SN 29 · SR 146 · LLR 149 · TC 146 · **37 drafts** · **38 `Modified`** |
-| integrity | `orphans=0 integrity=0 component-findings=0 interface-findings=0`; interfaces 110 |
+| integrity | `orphans=0 integrity=0 component-findings=0 interface-findings=0`; interfaces 113 |
 | strict modes | `trace --strict` **rc 0** · `check_trajectory --strict` **rc 0** |
-| full bar | **2258 passed, 5 skipped** |
-| owner surface | **2 pending rulings** + the sitting's 25-row re-attest brief |
+| full bar | **2291 passed, 5 skipped** |
+| owner surface | **4 rulings** (components · OI-14 · stage/gate · the SN batch) + **1 ratification** (WI-429) + the sitting's 25-row re-attest brief |
 
 **Predecessor records**, kept reachable because they are the account of the
 program *before* this one and are not superseded by it:
@@ -547,7 +550,7 @@ The **two rulings** in §0 (components → OI-14), and the **P0 sitting's part
     ledger** — the D-7 method applied check-by-check.
 11. **Full bar green, stated with real output.** The bar is a *state*, not a
     trophy — it has been claimed true and been false one commit later. Re-run
-    it at the end. Last measured **2258 passed, 5 skipped** at `ac7b8261`.
+    it at the end. Last measured **2291 passed, 5 skipped** at `982109b3`.
 12. **Merge to `main`** — an owner act (`push = "human"`).
 
 ### Loose ends, owed to no step above
@@ -597,6 +600,19 @@ The **two rulings** in §0 (components → OI-14), and the **P0 sitting's part
   amendment that opens a re-attest window, not a mechanical fix. It joins the
   carrier-falsified list in §8.4 item 7 — the same batch, the same window, and
   it must not be swept in with the other 14.
+- **A red test case cannot mint the work item that fixes it.** The
+  `adjudicate-red-tc` brief is wired (WI-424) and re-runs the census live, but
+  its typed verdict enum is **`DRAFTED | NEEDS-JUDGEMENT`** — neither of which
+  is *"mint a WI to plug the gap"*, which is the outcome the owner expects a
+  red TC to produce. Worth knowing that the repo **can** already tell the three
+  failure kinds apart, on three separate mechanisms: **not implemented** (the
+  symbol does not resolve → the LLR never reaches `Founded`, WI-429),
+  **implemented as a stub** (`check_stubs.py`, a G3 bar item), and
+  **implemented wrong** (substantive symbol, red test). So the discovery half
+  works; it is the *disposition* half that has no verdict word.
+- **`blackout.template` still ends `12:00-19:00`** — a value the kit no longer
+  ships. Low risk (the kit README already labels it a *retired scaffold
+  source*, and nothing scaffolds it), recorded rather than churned. Step 10.
 - **`status.md` is ~450 lines against a 120-line warn budget** — pre-existing.
 - **`Priority` names two incompatible vocabularies** — D-3 rules it a float;
   the migration is owed (step 7).
@@ -788,7 +804,14 @@ rows), round 2 verification (4 residuals). Dispositions are in the document.
    path (§5 loose ends). **Add `LLR-150`**, whose
    `detail` repeats a docstring claim WI-429 proved false.
 
-### 8.5 · Agent rulings owed ratification, and one tabled question
+### 8.5 · Agent rulings — three settled 2026-08-11, one still owed
+
+**The list did its job.** Of the four entries below, the owner **overturned**
+one (WI-423 — and the reversal was cheap precisely because the agent had
+measured its own row's cost premise false), **ratified** one with a scope
+correction (`key = ""`), and **ruled** the tabled question (the blackout dial).
+**Only WI-429's LLR discharge rule is still owed a yes or no** — it was taken
+under a "proceed" and is gating hard under `--strict` today.
 
 - ~~**WI-423 — check-enablement toggles STAY FILES**~~ **OVERTURNED BY THE
   OWNER, 2026-08-11.** The agent ruling rested on **absence-as-declaration** —
