@@ -592,8 +592,8 @@ table.
   spine registries as a generated `docs/okf/` bundle, **on by default** with a
   pre-commit + G3 freshness gate. After a re-sync, either run
   `python scripts/gen_okf.py` once and commit the bundle (it stays fresh via
-  the hook from then on), or opt out with the one word `off` in
-  `docs/okf-export` — a repo with placeholder-only registries needs neither
+  the hook from then on), or opt out with `[checks] okf_export = false` in
+  `docs/process.toml` — a repo with placeholder-only registries needs neither
   (vacuous). **Re-sync `check.py` together with the hook:** the hook's
   step 1b runs `check.py --run-step okf`, so an older `check.py` with no `okf`
   step fails every commit with `check: no step named 'okf'` — the same
@@ -616,15 +616,15 @@ table.
   the `IF-###` interface tier (id/SR-Refs integrity, closing the SR-002-era gap),
   `interfaces.template.csv` gains a `Notes` column (legacy rows read it empty),
   and `check_trajectory.py` runs a warn-first **connectivity coverage** over the
-  arch-map inventory. It is **opt-out, default-on** (the `docs/trajectory-check`
-  posture — no file is scaffolded; absence reads on), so after a re-sync a
+  arch-map inventory. It is **opt-out, default-on** (the `[checks]
+  trajectory_check` posture — the key ships `true`), so after a re-sync a
   **multi-module** repo with no declared seams starts warning "connectivity
   undeclared" at the hook and G3. That never fails a gate — the warns only nudge.
   To act on them, declare `IF-###` rows (process.md §8; use a `source`/`sink`
   first-word `Notes` marker for a deliberate pure source/sink) and regenerate the
-  arch-map + `PROJECT_STATE.html`; to silence the whole layer, put the one word
-  `off` in `docs/interfaces-check`. A single-module repo is vacuous and needs
-  nothing.
+  arch-map + `PROJECT_STATE.html`; to silence the whole layer, set `[checks]
+  interfaces_check = false` in `docs/process.toml`. A single-module repo is
+  vacuous and needs nothing.
 - **Conditional scaffold generation (`docs/kit-profile`).** Newer kits
   *generate* `docs/process.md` + `docs/process-options.md` from marker-carrying
   masters per a recorded profile (`docs/kit-profile`: `stack=` +
@@ -732,11 +732,16 @@ table.
   stays a file, each for its own reason: `docs/stack.ini` (adopter-owned
   product toolchain, never under a kit-owned template), the
   presence-as-semantics markers `docs/work/pause` and `docs/agents-enabled` (a
-  key cannot express deletion-as-an-act), the generated cache `docs/gate`, and
-  the six check-enablement toggles — `docs/trajectory-check`,
-  `docs/interfaces-check`, `docs/components-check`, `docs/subagent-gate`,
-  `docs/live-status`, `docs/okf-export` — each read by an independently
-  copyable checker that would otherwise need its own local TOML reader.
+  key cannot express deletion-as-an-act), and the generated cache `docs/gate`.
+  **The six check-enablement toggles came IN on 2026-08-11** (owner ruling,
+  overturning WI-423): `docs/trajectory-check`, `docs/interfaces-check`,
+  `docs/components-check`, `docs/subagent-gate`, `docs/live-status` and
+  `docs/okf-export` are now the `[checks]` section, `--migrate-config` converts
+  and deletes each one, and every checker keeps reading its old file for the
+  same migration window — so an un-converted adoption is not broken, only
+  un-migrated. The independently copyable checkers each pay for it with their
+  own small local TOML reader, which is the cost the ruling weighed and
+  accepted.
 - **Privacy-check toggle (`[policies] privacy_check`) — replaces the old
   `docs/commit-identity` glob.** Newer kits split *identity* from *privacy*
   (process-options.md "Commit identity & privacy"): which account authors is

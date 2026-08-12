@@ -29,8 +29,9 @@ these mirror the git hook for convenience; they don't replace it.
 `claude.settings.json` also carries a **`PreToolUse` subagent-spawn gate**
 (`scripts/subagent_gate.py`) for unattended runs — deny-by-default fan-out with
 the override held by the launcher, not the model (process-options.md
-"Tier-conditional guardrails" neighbours it; policy in `docs/subagent-gate`,
-absent = off, so it is a vacuous allow until you opt in). It is **Claude-only**
+"Tier-conditional guardrails" neighbours it; policy in `docs/process.toml`
+`[checks] subagent_gate`, shipped `"off"`, so it is a vacuous allow until you
+opt in). It is **Claude-only**
 here: Gemini's hook model differs and Codex has none, so the gemini config omits
 it. Like every hook, it is *supervision, not security* — a model that can edit
 files can remove it.

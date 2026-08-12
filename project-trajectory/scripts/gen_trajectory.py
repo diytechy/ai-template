@@ -902,7 +902,10 @@ def main():
         return traj_status.run_status(root, args.check)
 
     if not ct.read_trajectory_enabled(root):
-        print("gen_trajectory: off (docs/trajectory-check) — nothing to render.")
+        print(
+            "gen_trajectory: off (docs/process.toml [checks] trajectory_check) "
+            "— nothing to render."
+        )
         return 0
 
     wis, integrity = ct.load_wis(ct.read_registry_rows(root / ct.WI_CSV))

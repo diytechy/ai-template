@@ -140,6 +140,8 @@ def read_declared(path, default):
 # NOT here, deliberately (each documented in process.toml.template's header):
 # docs/stack.ini (adopter-owned product toolchain), docs/work/pause and
 # docs/agents-enabled (presence-as-semantics), docs/gate (a generated cache).
+# The six check-enablement toggles USED to be a fourth exception; the owner
+# overturned that on 2026-08-11 and they are rows below.
 PROCESS_TOML = "process.toml"
 
 PROCESS_KEYS = {
@@ -155,6 +157,24 @@ PROCESS_KEYS = {
     # working), and the enum key is still type-checked if a repo hand-wrote it,
     # but nothing SHIPS it any more — see PROCESS_ONLY_KEYS.
     "gate-policy": ("attestation", "gate_policy", "str"),
+    # The six CHECK-ENABLEMENT toggles, folded in by the 2026-08-11 overturn of
+    # WI-423 ("far better to tie those into process.toml and key them all to on
+    # / true"). They belong in THIS table, not PROCESS_ONLY_KEYS: each had a
+    # legacy one-word file, so each can be double-declared, and the mixed-config
+    # refusal + `--migrate-config` conversion both key off these rows.
+    #
+    # Only `live-status` is read through `declared_policy` — the other five are
+    # read by scripts that import nothing of this layer and carry their own
+    # local `tomllib` read (F5, no shared `_kitcommon.py`). Their rows are here
+    # anyway, because the refusal and the migration are this module's job
+    # wherever the VALUE is read: a checker that reads its own key must still
+    # not run beside a legacy file nobody converted.
+    "trajectory-check": ("checks", "trajectory_check", "bool"),
+    "interfaces-check": ("checks", "interfaces_check", "bool"),
+    "components-check": ("checks", "components_check", "bool"),
+    "okf-export": ("checks", "okf_export", "bool"),
+    "live-status": ("checks", "live_status", "bool"),
+    "subagent-gate": ("checks", "subagent_gate", "str"),
 }
 
 # Dials with NO legacy one-word file — born in docs/process.toml, so they can

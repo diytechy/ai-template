@@ -26572,3 +26572,124 @@ and will break on any edit above line 780 of `gen_open_items.py`. (b) The
 pre-existing `E741` above. (c) `raw_id_findings`' regex could false-positive on a
 line inside a multi-line quoted cell that happens to start `word,` — fail-closed
 noise, never a false green, and the same trade `_RAW_SN_ROW` already makes.
+
+## 2026-08-11 — WI-432: the six check toggles fold into `process.toml` (WI-423 overturned)
+
+**Owner ruling, 2026-08-11** (repo-lock §8.5): *"creating files to toggle
+something off is also very confusing … far better to tie those into
+process.toml and key them all to on / true."* WI-423 had ruled the opposite —
+that the six enablement toggles stay one-word files, with **absence** as the
+declaration. That is what this row reverses. The objection WI-423 rested on is
+answered rather than ignored: yes, a TOML key cannot be absent and still
+declare, and yes that means shipping six visible keys — **shipping them is the
+point**, because a repo that had decided nothing looked byte-identical to one
+that had never heard of the layer. None of the six existed in this repo.
+
+**The section, and what each key shipped as.** `[checks]` in
+`process.toml.template` and in this repo's `docs/process.toml`:
+`trajectory_check`, `interfaces_check`, `components_check`, `okf_export` =
+`true`; `live_status = false`; `subagent_gate = "off"`.
+
+**Four are on-by-default, not five.** The brief carried "five on-by-default"
+from the ruling's summary; the measurement says otherwise. `agent_loop` reads
+`read_declared(docs/live-status, "false")` — an absent file disabled the live
+console line — so `live-status` is the **second** opt-in dial, and shipping it
+`true` would have changed every fresh scaffold's console under cover of a
+re-homing. `subagent_gate` likewise stays `"off"`, and stays a **three-word
+enum**: `ask` and `deny` are different restrictions and collapsing them to a
+bool would have been a second, unrequested decision. The ruling is about the
+DECLARATION being explicit, not about arming gates —
+`test_scaffold_ships_every_policy_dial_in_one_home` now pins the exact six-key
+table, so a later `live_status = true` reds.
+
+**Both headers now state the new ruling.** The template's item 4 and its mirror
+in `docs/process.toml` described the overturned decision; both are replaced by
+the overturn, its reasoning, the F5 price and the fallback's expiry.
+
+**The F5 cost, measured rather than inherited.** Three checkers import nothing
+of the coordinator layer, so each grew its own `tomllib` read of `[checks]`:
+`check_trajectory.py` 24 lines (10 executable, whole-file +77/−33), `gen_okf.py`
+22 (10 executable, +44/−6), `subagent_gate.py` 36 (7 executable, +58/−10 — the
+longest docstring because it records a deliberate divergence).
+<!-- fig: cmd="ast span of each local reader; git diff --numstat" rev=70ce891c -->
+The prior "~15 lines in three stdlib checkers" estimate was right about the
+count of checkers and about the order of magnitude. **`agent_loop.py` grew no
+local reader** (`live-status` is the one dial routed through
+`agent_common.declared_policy`) and **`bootstrap.py` grew none either** — it
+converts and deletes the legacy files but never reads these keys, so the
+"bootstrap may need its own" contingency did not arise.
+
+**Pinned behaviourally, per D-7.** `tests/test_rule_sync.py` gained six tests
+driving all three copies over one table of file shapes — declared true/false,
+undeclared, declared under the wrong section, empty value, unparseable,
+wrong-typed — asserting the VALUE, not the sameness. It also pins the one place
+the copies deliberately disagree: an unparseable `process.toml` reads **ON** in
+the two check readers (a check that quietly stops running is the failure worth
+avoiding) and **undeclared** in `subagent_gate`, whose module contract is *fail
+OPEN with a paper trail*. **Red-proof:** drifting `gen_okf._process_check` to
+`None` on an unparseable file, plus flipping the template's `subagent_gate` to
+`"ask"`, failed **3 of 27**; restoring both returned **27 passed**.
+
+**Behaviour preserved; the fallback's expiry stated once.** Every reader takes
+`process.toml` first and falls back to its legacy one-word file — the precedent
+`check_privacy.read_privacy_enabled` / `read_secrets_scan` set for
+`docs/privacy-check` and `docs/secrets-scan`. The expiry is **SN-028's existing
+dual-read window, not a second clock**: the six join `PROCESS_KEYS` (the
+mixed-config refusal covers them) and `bootstrap.LEGACY_CONFIG`
+(`--migrate-config` converts and DELETES them), and bootstrap runs that on every
+scaffold pass — so an adopter's window is exactly **one re-sync long**. Driven
+end to end on a fresh scaffold: planting `docs/trajectory-check: off` +
+`docs/subagent-gate: ask` produced the two-line mixed-config refusal, and
+`--migrate-config` folded them to `trajectory_check = false` /
+`subagent_gate = "ask"` and deleted both files.
+
+**The remedy strings mattered most.** `check_trajectory` used to tell an adopter
+to "set docs/components-check: off" — which in a scaffolded repo is now the
+mixed-config *refusal*, not a remedy. Rewritten, along with the `gen_okf` banner
+stamped into all 594 bundle files, the two short-circuit prints, the root
+README's dial table (four "on (no file)" rows became six explicit
+`process.toml` rows), `PROCESS_OPTIONS.md` "Where the dials live" + five layer
+notes, `ADOPTING.md`, `project-trajectory/README.md`, `agent-hooks/README.md`,
+the shipped `hooks/pre-commit` comment, and `docs/declared-absences` (the six
+moved from "absence is a legal state" to RETIRED rows).
+
+**Byte deltas on budgeted files.** `AGENTS.template.md` **9,991 unchanged**.
+`PROCESS.md` **64,466 unchanged** (untouched). `PROCESS_OPTIONS.md`
+**170,459 → 170,397, −62** — the dial-home sentences read shorter as keys than
+as file paths. Both baselines **re-stamped in both skill copies**, and the
+re-stamp also reconciles a drift this WI inherited: the stamps read 170,452 and
+64,451 while the tree carried 170,459 and 64,466 (+7 / +15, landed un-flagged
+before this row). Numbers now match the tree.
+
+**Ratchets re-stamped, each with its reason at the entry.**
+`check_trajectory.py` **3,913 → 3,957** (the local reader + three TOML-first
+arms); `agent_common.py` **2,446 → 2,466** (six `PROCESS_KEYS` rows + why they
+are in that table); `bootstrap.py` **2,754 → 2,767** (six `LEGACY_CONFIG` rows +
+which coercer preserves which legacy vocabulary); `agent_loop.py`
+**3,158 → 3,160**.
+
+**The bar.** Full unfiltered suite **2288 passed, 5 skipped in 421.48s** against
+the **2282 passed / 5 skipped** baseline measured on this tree before the WI —
+**+6**, reconciled exactly: the six new `test_rule_sync.py` tests, no other
+module's count moved.
+<!-- fig: cmd=".venv/bin/python -m pytest -q -n auto" rev=70ce891c -->
+`trace.py --strict` **rc 0**; `check_trajectory.py --strict` **rc 0**;
+`check_docs.py --stale` **0 broken** (817 docs, 1,114 links); `check.py --jobs 0`
+**RESULT: PASS**; every generated surface `--check` fresh; `ruff format --check`
+clean over 170 files. A **fresh scaffold** (`bootstrap.py --dest <tmp>`) comes up
+`RESULT: PASS` on all six of its G1 steps and carries the `[checks]` section with
+none of the six legacy files beside it — SN-001's out-of-the-box bar, checked
+because both WIs change what a new repo receives. The four advisory reds
+(`lint`, `doc-refs`, `figures`, `traceability`) were re-measured at HEAD and are
+pre-existing; `doc-refs` **improved 32 → 27** dangling, because the six retired
+paths are now declared absences. Watermark raised by `trace.py --bump-ids`:
+**WI 431 → 432**.
+
+**Findings filed, not fixed.** (a) Spine registry row text (SR/LLR/TC/IF cells)
+still names `docs/trajectory-check` and friends as the dial's home — fenced for
+this row, and now imprecise. (b) The pre-existing `E741` in
+`tests/test_id_watermark.py` is still the only `ruff check` error and still
+blocks the advisory `lint` step. (c) `docs/work/complete/WI-423-*.md`'s
+Deliverable states the overturned ruling as a live conclusion; a closed spec is
+history and was not rewritten, but a reader who lands on it has no signal that
+the owner reversed it.

@@ -4,11 +4,11 @@ The bundle is a generated view, never a parallel source of truth: what matters
 is that it is deterministic (byte-stable --check), complete (one concept per
 real registry row, frontmatter typed, graph links resolving), self-pruning
 (a deleted row's file goes away; a stray hand-added file reads as stale), and
-free for non-adopters (placeholder-only registries are vacuous; docs/okf-export
+free for non-adopters (placeholder-only registries are vacuous; [checks] okf_export
 `off` silences). Exercised over the conftest minimal project.
 """
 
-from conftest import SCRIPTS, make_minimal_project, run_py
+from conftest import SCRIPTS, make_minimal_project, run_py, set_process_key
 
 
 def okf(root, *args):
@@ -92,7 +92,7 @@ def test_opt_out_silences(scaffold):
         srs.read_text(encoding="utf-8").replace("Addition", "Summation"),
         encoding="utf-8",
     )
-    (scaffold / "docs" / "okf-export").write_text("off\n", encoding="utf-8")
+    set_process_key(scaffold, "checks", "okf_export", False)
     proc = okf(scaffold, "--check")
     assert proc.returncode == 0 and "off" in proc.stdout
 
@@ -195,7 +195,10 @@ def test_generated_banner_on_every_file_type(scaffold):
     close = lines.index("---", 1)  # the closing frontmatter fence
     assert lines[close + 1].startswith(lead)
     assert "docs/requirements/system-requirements.csv (SR-001)" in lines[close + 1]
-    assert "docs/okf-export: off silences the layer" in lines[close + 1]
+    assert (
+        "docs/process.toml [checks] okf_export = false silences the layer"
+        in lines[close + 1]
+    )
     assert lines[close + 2] == ""  # blank line before the heading
     assert lines[close + 3].startswith("# SR-001")
 

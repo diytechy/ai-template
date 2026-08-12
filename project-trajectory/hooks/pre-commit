@@ -189,7 +189,7 @@ fi
 #                        same marker block works (ADOPTING.md §3).
 #      - okf             knowledge bundle fresh: a registry edit stales docs/okf/
 #                        exactly like the dashboard; vacuous for a non-adopter,
-#                        `off` in docs/okf-export silences.
+#                        [checks] okf_export = false silences.
 #      - trajectory-map  PROJECT_STATE.html fresh: reads all four spine
 #                        registries + the README vision tag + the okf bundle
 #                        (WI-070), so an ordinary requirement edit stales it,

@@ -36,7 +36,7 @@ So the ruling now reads, in full:
 readers; extend either rather than reaching for a new census.
 """
 
-from conftest import ROOT, load_script, make_minimal_project, run_py
+from conftest import KIT, ROOT, load_script, make_minimal_project, run_py
 
 TRACE = load_script("trace")
 GATE = load_script("derive_gate")
@@ -578,3 +578,176 @@ def test_draft_ness_reads_by_the_rule_the_file_was_written_under():
     # prefixed token survives into the table key — the measured reason D-5 kept
     # the prefix rather than taking a bare numeric one.
     assert TRACE.sn_all_ids(modern) == {"SN-005", "SN-006"}
+
+
+# --- the [checks] enablement readers (WI-432) ----------------------------------
+# THREE modules now carry a local `tomllib` read of `docs/process.toml`'s
+# `[checks]` section: `check_trajectory.py` (three dials), `gen_okf.py` (one) and
+# `subagent_gate.py` (one). That duplication is the price the owner's 2026-08-11
+# overturn of WI-423 weighed and accepted — F5 keeps each of those scripts
+# independently copy-able, so none of them may import the coordinator layer that
+# already knows how to read this file.
+#
+# It is duplicated POLICY, not plumbing: each copy decides "is this check on",
+# and a copy that drifts does not fail loudly — it silently stops running a
+# check, or silently starts running one an adopter switched off. So the D-7 bar
+# applies: pin the copies BY VALUE over one table of file shapes, including the
+# one place they deliberately disagree.
+CT = load_script("check_trajectory")
+OKF = load_script("gen_okf")
+SGATE = load_script("subagent_gate")
+
+# (contents of docs/process.toml, expected reading) for a BOOL dial. None means
+# "this file declares nothing — fall through to the legacy one-word file".
+_CHECK_TOML_CASES = [
+    ("[checks]\ntrajectory_check = true\n", True),
+    ("[checks]\ntrajectory_check = false\n", False),
+    # Undeclared, in every shape that is not a declaration.
+    ('[policies]\npush = "human"\n', None),
+    ("[checks]\ninterfaces_check = false\n", None),
+    ("", None),
+    ("# trajectory_check = false\n", None),
+    # Declared under the WRONG section: `tomllib` puts it nowhere this reader
+    # looks, so it is undeclared — and must be, or the legacy fallback would be
+    # skipped on the strength of a key nobody reads.
+    ("[policies]\ntrajectory_check = false\n", None),
+    # Present but broken, and present-but-wrong-typed: ON. A check that quietly
+    # stops running is the failure worth avoiding, so the residual is loud.
+    ("[checks]\ntrajectory_check = \n", True),
+    ("[checks\ntrajectory_check = false\n", True),
+    ('[checks]\ntrajectory_check = "false"\n', True),
+    ("[checks]\ntrajectory_check = 0\n", True),
+]
+
+
+def _write_toml(root, text):
+    (root / "docs").mkdir(parents=True, exist_ok=True)
+    (root / "docs" / "process.toml").write_text(text, encoding="utf-8")
+
+
+def test_the_three_local_checks_readers_agree_by_value(tmp_path):
+    # The copies are pinned against the SAME table, and against the literal
+    # expectation — equality alone can be vacuous (the `_sn_fields` case proved
+    # it), so the value is pinned, not just the sameness.
+    for i, (text, want) in enumerate(_CHECK_TOML_CASES):
+        root = tmp_path / "case{}".format(i)
+        _write_toml(root, text)
+        got_ct = CT._process_check(root, "trajectory_check")
+        # gen_okf's copy reads a different KEY out of the same section, so drive
+        # it on its own key with the same shapes.
+        _write_toml(root, text.replace("trajectory_check", "okf_export"))
+        got_okf = OKF._process_check(root, "okf_export")
+        assert got_ct is want, (text, got_ct, want)
+        assert got_okf is want, (text, got_okf, want)
+
+
+def test_an_absent_process_toml_is_undeclared_in_all_three_copies(tmp_path):
+    # The migration-window hinge: no file at all must read as "nothing declared"
+    # in every copy, or a repo that never adopted process.toml loses its legacy
+    # one-word file's declaration.
+    assert CT._process_check(tmp_path, "trajectory_check") is None
+    assert OKF._process_check(tmp_path, "okf_export") is None
+    assert SGATE.read_process_policy(tmp_path) is None
+
+
+def test_the_subagent_copy_diverges_only_where_its_module_says_it_does(tmp_path):
+    # subagent_gate's dial is a WORD, not a bool, and its module contract is
+    # "fail OPEN with a paper trail" — a broken gate must never wedge the tools.
+    # So on an unparseable file it reads UNDECLARED where the other two read ON.
+    # Pinned here because a later reader "harmonizing" the three copies would be
+    # turning an unreadable config into `ask` on every spawn.
+    _write_toml(tmp_path, '[checks]\nsubagent_gate = "deny"\n')
+    assert SGATE.read_process_policy(tmp_path) == "deny"
+    _write_toml(tmp_path, '[checks]\nSUBAGENT_GATE = "deny"\n')
+    assert SGATE.read_process_policy(tmp_path) is None
+
+    broken = tmp_path / "broken"
+    _write_toml(broken, '[checks\nsubagent_gate = "deny"\n')
+    assert SGATE.read_process_policy(broken) is None  # undeclared, not `ask`
+    assert CT._process_check(broken, "trajectory_check") is True  # ON, loudly
+    assert OKF._process_check(broken, "okf_export") is True
+
+    # A non-string value is RENDERED, not dropped, so `decide` reaches its
+    # "unrecognized … asking" arm rather than reading a garbled dial as off.
+    _write_toml(tmp_path, "[checks]\nsubagent_gate = true\n")
+    assert SGATE.read_process_policy(tmp_path) == "true"
+    assert SGATE.decide("Task", "true", "")[0] == "ask"
+
+
+def test_every_checks_dial_falls_back_to_its_legacy_file_and_toml_wins(tmp_path):
+    # The SN-028 migration window, driven end to end through the PUBLIC readers
+    # (not the private `_process_check`): with no process.toml the legacy word
+    # still governs, and once the key exists it wins. `config_conflicts` is what
+    # refuses that mixed state upstream — these readers cannot refuse, they must
+    # answer, so "TOML wins" is the answer pinned here.
+    docs = tmp_path / "docs"
+    docs.mkdir(parents=True)
+    legacy = {
+        "trajectory-check": (CT.read_trajectory_enabled, "trajectory_check"),
+        "interfaces-check": (CT.read_interfaces_check_enabled, "interfaces_check"),
+        "components-check": (CT.read_components_check_enabled, "components_check"),
+        "okf-export": (OKF.read_enabled, "okf_export"),
+    }
+    for name, (reader, key) in legacy.items():
+        assert reader(tmp_path) is True  # absent everywhere = on
+        (docs / name).write_text("off\n", encoding="utf-8")
+        assert reader(tmp_path) is False, name  # legacy file alone still governs
+    _write_toml(
+        tmp_path,
+        "[checks]\n" + "".join("{} = true\n".format(k) for _, k in legacy.values()),
+    )
+    for name, (reader, _) in legacy.items():
+        assert reader(tmp_path) is True, name  # the key wins over the file
+
+    # The subagent gate's own fallback, same two steps.
+    (docs / "subagent-gate").write_text("deny\n", encoding="utf-8")
+    (docs / "process.toml").unlink()
+    assert SGATE.read_process_policy(tmp_path) is None
+    assert SGATE.read_declared(docs / "subagent-gate") == "deny"
+    _write_toml(tmp_path, '[checks]\nsubagent_gate = "off"\n')
+    assert SGATE.read_process_policy(tmp_path) == "off"
+
+
+def test_the_shipped_template_declares_every_checks_dial_at_todays_default():
+    # The overturn's whole content: the six are VISIBLE. Absence used to be the
+    # declaration, which is exactly what the owner called confusing — so the
+    # anti-regression here is that a key is not quietly dropped again, and that
+    # the two opt-in dials did not get flipped on the way in.
+    text = (KIT / "process.toml.template").read_text(encoding="utf-8")
+    import tomllib
+
+    checks = tomllib.loads(text)["checks"]
+    assert checks == {
+        "trajectory_check": True,
+        "interfaces_check": True,
+        "components_check": True,
+        "okf_export": True,
+        "live_status": False,
+        "subagent_gate": "off",
+    }
+    # And this repo's own instance says the same thing, since it declared none
+    # of the six files and therefore ran exactly these values.
+    live = tomllib.loads((ROOT / "docs" / "process.toml").read_text(encoding="utf-8"))
+    assert live["checks"] == checks
+
+
+def test_the_migration_table_and_the_converter_name_the_same_six():
+    # Three tables have to agree about these dials or a migration half-happens:
+    # agent_common.PROCESS_KEYS (the value reader + the mixed-config refusal),
+    # bootstrap.LEGACY_CONFIG (the converter), and the shipped template. A dial
+    # migrated in one and forgotten in another is a policy that silently reverts.
+    ac = load_script("agent_common")
+    boot = load_script("bootstrap")
+    six = {
+        "trajectory-check": ("checks", "trajectory_check", "bool"),
+        "interfaces-check": ("checks", "interfaces_check", "bool"),
+        "components-check": ("checks", "components_check", "bool"),
+        "okf-export": ("checks", "okf_export", "bool"),
+        "live-status": ("checks", "live_status", "bool"),
+        "subagent-gate": ("checks", "subagent_gate", "str"),
+    }
+    for name, row in six.items():
+        assert ac.PROCESS_KEYS[name] == row, name
+    converter = {n: (s, k) for n, s, k, _ in boot.LEGACY_CONFIG}
+    for name, (section, key, _) in six.items():
+        assert converter[name] == (section, key), name

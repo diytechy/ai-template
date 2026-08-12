@@ -113,7 +113,7 @@ def test_hook_trajectory_map_step(scaffold):
         scaffold,
         [real, ["WI-002", "More work", "core", "", "WI-001", "queued", "stales it"]],
     )
-    (scaffold / "docs" / "trajectory-check").write_text("off\n", encoding="utf-8")
+    set_process_key(scaffold, "checks", "trajectory_check", False)
     ok = run_py(["scripts/check.py", "--run-step", "trajectory-map"], cwd=scaffold)
     assert ok.returncode == 0, ok.stdout + ok.stderr
     # And the hook script itself carries the delegated step (batched).

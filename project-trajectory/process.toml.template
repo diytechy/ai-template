@@ -26,8 +26,9 @@
 #
 # WHAT IS IN SCOPE: every dial that answers "how is work PROCESSED" — gate
 # authority, the human-ratification level, push authority, the reviewer count,
-# the privacy and secrets gates, guardrails, the blackout window. Those eight
-# are here. What stays outside, and why:
+# the privacy and secrets gates, guardrails, the blackout window — and, since
+# the 2026-08-11 overturn below, every dial that answers "is this CHECK on".
+# What stays outside, and why:
 #
 #   1. `docs/stack.ini` — the PRODUCT TOOLCHAIN, not a process dial. It is
 #      adopter-owned across re-syncs (ADOPTING.md "Preserve always"), has five
@@ -38,25 +39,21 @@
 #      managed routing). A key in a shared file cannot express deletion-as-an-
 #      act, nor survive as a one-line reviewed diff.
 #   3. `docs/gate` — a GENERATED CACHE (derive_gate.py), not configuration.
-#   4. CHECK-ENABLEMENT TOGGLES stay files — RULED (WI-423), not pending.
-#      `docs/trajectory-check`, `docs/interfaces-check`,
-#      `docs/components-check` (check_trajectory.py), `docs/subagent-gate`
-#      (subagent_gate.py), `docs/live-status` (agent_loop.py) and
-#      `docs/okf-export` (gen_okf.py) answer "is this CHECK on", not "how is
-#      work PROCESSED" — the line this file draws, now drawn as a decision.
-#      The reason is sharper than the local-TOML-reader cost usually cited:
-#      the hooks never sh-parse these six, so folding them would not
-#      replicate the greppable contract above. What folding breaks is the
-#      DEFAULT. None of the six is scaffolded, so absence IS the declaration
-#      (absent reads ON for the checks, OFF for the subagent gate), and a
-#      TOML key cannot be absent and still declare. Folding therefore forks
-#      and loses both ways: ship the keys and every fresh scaffold carries
-#      six visible invitations to switch a check off; omit them and the "one
-#      home" is a section that does not exist until an adopter writes it —
-#      more steps than the one-word file it replaced. F5 closes it (owner
-#      ruling 2026-07-12, no shared `_kitcommon.py`): a one-word file is the
-#      only toggle interface a checker copied ALONE, into a repo carrying no
-#      process.toml at all, can still satisfy.
+#   (There used to be a fourth exception here — the six CHECK-ENABLEMENT
+#   toggles stay one-word files, WI-423. It is OVERTURNED, owner 2026-08-11:
+#   "creating files to toggle something off is also very confusing … far
+#   better to tie those into process.toml and key them all to on / true."
+#   They are now the [checks] section at the bottom of this file. The ruling
+#   answers the objection rather than ignoring it: shipping six visible keys
+#   IS the point, because absence-as-declaration is unreadable — a repo that
+#   declares nothing looks identical to one that never heard of the layer.
+#   The cost the old text priced is real and is PAID, not hidden: the hooks
+#   never sh-parse these six, so folding them replicates no greppable
+#   contract, and each independently-copyable checker grows its own small
+#   `tomllib` read (F5 — no shared `_kitcommon.py`, owner 2026-07-12). Every
+#   checker also keeps reading its legacy one-word file as a MIGRATION-WINDOW
+#   fallback, the way check_privacy.py reads `docs/privacy-check` — see the
+#   [checks] header for the expiry.)
 #
 # MIGRATION: a repo that still carries the legacy one-word files is converted
 # automatically by `python scripts/bootstrap.py --migrate-config --dest .`
@@ -149,3 +146,67 @@ guardrails = "off"
 # from a hidden built-in; folding the file into this one is a MOVE, not an
 # occasion to re-decide it.
 blackout = "12:00-19:00"
+
+[checks]
+# IS THIS CHECK ON. Six dials that used to be one-word files under docs/ and
+# that no scaffold ever wrote, so ABSENCE was the declaration — which is what
+# the owner overturned WI-423 over (2026-08-11): a repo that has decided
+# nothing and a repo that never heard of the layer looked identical, and the
+# only way to switch a check off was to CREATE a file. They are keys now, and
+# every one of them ships VISIBLE so the decision is readable at a glance.
+#
+# WHAT THE OVERTURN DID NOT DO: change a default. Four of these are on, two are
+# opt-in and stay opt-in — "key them all to on / true" makes the DECLARATION
+# explicit, it does not arm a gate nobody asked for. A default reversed inside
+# a re-homing is a prior ruling overturned without its own review.
+#
+# WHO READS THEM, and the cost that buys: `check_trajectory.py` (the first
+# three), `gen_okf.py`, `subagent_gate.py`, `agent_loop.py`. The first three of
+# those import nothing of the coordinator layer — F5 (owner 2026-07-12, no
+# shared `_kitcommon.py`) keeps every kit script independently copy-able — so
+# each carries its OWN small `tomllib` read of this section. That duplication
+# is deliberate and BOUNDED BY A TEST: `tests/test_rule_sync.py` drives the
+# copies against one table of file shapes and fails if they disagree (D-7, the
+# anti-drift tool of record).
+#
+# LEGACY FALLBACK AND ITS EXPIRY. A checker that finds no key here still reads
+# its old one-word file (`docs/trajectory-check`, …), exactly as
+# `check_privacy.py` still reads `docs/privacy-check`. That is SN-028's ONE
+# dual-read window, not a second clock: `bootstrap.py --migrate-config` folds
+# every legacy file in and DELETES it, bootstrap runs it on every scaffold
+# pass, and running with both homes live is refused rather than resolved by
+# precedence. So an adopter's window is exactly one re-sync long, and it closes
+# for everyone when SN-028's does.
+# The work-item registry validator + its dashboard (check_trajectory.py,
+# gen_trajectory.py). `false` short-circuits both before any validation. On by
+# default and VACUOUS by default — a fresh scaffold's placeholder-only registry
+# validates and renders nothing — so leaving it true costs a non-adopter zero.
+trajectory_check = true
+# The architecture-connectivity coverage warns (WI-056): every arch-map module
+# is a declared IF-### endpoint, each Active seam is cited by a TC. All
+# warn-first — they never change an exit code — and vacuous on a ≤1-module
+# inventory. `false` silences the layer.
+interfaces_check = true
+# The How-SW top-view right-sizing bound and the knowledge⇒component coupling
+# (WI-073 / WI-153). WARN at the plain run, ERROR under `--strict` (G2+);
+# trivially passed below the 10-item bound. `false` silences both.
+components_check = true
+# The OKF knowledge-bundle export (gen_okf.py) and its freshness gate.
+# `false` silences the layer; a placeholder-only registry emits nothing anyway.
+okf_export = true
+# OPT-IN, and shipped at its current default. The coordinator console's
+# in-place one-line-per-workstream status render — `true` is the same request
+# as `agent_loop.py --live-status`, and either way it applies only when stdout
+# is a TTY with VT (a pipe or CI log keeps the append-only scroll). Off means
+# the scroll, which is what every repo gets today.
+live_status = false
+# OPT-IN, and shipped at its current default. The subagent-spawn gate
+# (subagent_gate.py, a Claude `PreToolUse` hook) — bounded fan-out for an
+# unattended run. NOT a boolean, because it was never one:
+#   "off"   allow every spawn (the default; the hook is a no-op)
+#   "ask"   defer each spawn to approval
+#   "deny"  refuse every spawn
+# `ask`/`deny` is a real restriction on what an agent may do, so it stays a
+# thing an adopter TURNS ON. Shipping it visibly at "off" is what the overturn
+# asked for — the dial is now readable without arming it.
+subagent_gate = "off"

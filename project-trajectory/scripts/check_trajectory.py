@@ -74,8 +74,9 @@ arm the marker. The traced half is not discarded: it is carried structurally by
 `staged_spine_amendments`, which returns both halves per amended row.
 
 **Opt-out and vacuous by default** — the posture of the always-on
-`docs/secrets-scan` floor. The check is on unless `docs/trajectory-check` reads
-the one word `off`; and an *absent* or *placeholder-only* registry (nothing but
+`secrets_scan` floor. The check is on unless `docs/process.toml` `[checks]
+trajectory_check` reads `false` (or, for the SN-028 migration window, the
+legacy `docs/trajectory-check` reads the one word `off`); and an *absent* or *placeholder-only* registry (nothing but
 the inert `WI-000` example row) passes vacuously. So a fresh scaffold and a repo
 that never adopts the layer both stay green for free — WI is an off-spine
 optional registry, like procurement / assets, whose placeholder never blocks a
@@ -90,7 +91,7 @@ change the exit code, at any gate) and printed at the hook. The ruled posture is
 **opt-out, default-on**: the coverage warn fires even when `interfaces.csv` is
 empty or absent — a multi-module arch-map with no declared seams reads
 "connectivity undeclared" instead of passing vacuously. It is silenced only by
-the one word `off` in `docs/interfaces-check`, or a ≤1-module inventory (nothing
+`[checks] interfaces_check = false`, or a ≤1-module inventory (nothing
 to connect). The honesty valve for a deliberate source/sink is a `source`/`sink`
 token in that module's IF row Notes (below).
 
@@ -103,7 +104,7 @@ plain/hook run, **ERROR under `--strict` (G2+)** — that drives right-sizing of
 the component designations. Membership derives from the AXES join: a `Component`
 tag on an LLR row joins its `Module` → `CMP-###`; nesting via the CMP registry's
 `PartOf` (a module counts only at its top-level root). Opt-out is the one word
-`off` in `docs/components-check` (the `interfaces-check` idiom); a repo with ≤10
+`[checks] components_check = false` (the `interfaces_check` idiom); a repo with ≤10
 modules — or no arch-map inventory — passes trivially (the bound, not the
 registry, is the rule), so a small or non-adopting repo is never broken.
 
@@ -113,7 +114,7 @@ registry, is the rule), so a small or non-adopting repo is never broken.
 finding even below the 10-item bound, because a knowledge pack ties the *what* to
 the knowledge behind the *how*, so that web must be robust wherever packs are
 enabled. It reuses the existing `Component`-tag join (no new join) and the same
-`docs/components-check` opt-out, and is dormant — costing a non-adopter nothing —
+`components_check` opt-out, and is dormant — costing a non-adopter nothing —
 until a pack (any `docs/knowledge/*.md` but the `README.md` index) exists.
 
 **Phase archetype + phase-drop detector** (WI-093; derived-gate model §7/§9.3).
@@ -258,11 +259,41 @@ def _first_declared_line(path):
     return None
 
 
+def _process_check(root, key):
+    """One `[checks]` toggle out of `docs/process.toml`, or None when this file
+    has nothing to say (fall through to the legacy one-word file).
+
+    A LOCAL reader, per the F5 independently-copyable-script rule that already
+    keeps `_first_declared_line` here rather than importing the coordinator
+    layer — the cost the 2026-08-11 overturn of WI-423 priced and accepted. A
+    file that exists but does not parse, or a key that is not a bool, reads ON:
+    a check that silently stops running is the failure worth avoiding, so the
+    residual is loud rather than permissive. `tests/test_rule_sync.py` pins this
+    copy against `gen_okf.py`'s and `subagent_gate.py`'s by value (D-7)."""
+    path = root / "docs" / "process.toml"
+    if not path.is_file():
+        return None
+    try:
+        # utf-8-sig: a BOM is not legal TOML but is invisible to a shell read.
+        data = tomllib.loads(path.read_text(encoding="utf-8-sig"))
+    except (OSError, UnicodeDecodeError, tomllib.TOMLDecodeError):
+        return True  # unparseable but present: fail loud, never a quiet opt-out
+    table = data.get("checks")
+    value = table.get(key) if isinstance(table, dict) else None
+    if value is None:
+        return None
+    return value if isinstance(value, bool) else True
+
+
 def read_trajectory_enabled(root):
-    """Whether the trajectory check is on. `docs/trajectory-check` with the one
-    word `off` opts out; absent or any other value reads on (the safe default),
-    so an ordinary repo runs it without declaring anything — opt-out, like
-    `docs/secrets-scan`."""
+    """Whether the trajectory check is on. `docs/process.toml` `[checks]
+    trajectory_check = false` opts out; else (migration window)
+    `docs/trajectory-check` with the one word `off`; absent or any other value
+    reads on (the safe default), so an ordinary repo runs it without declaring
+    anything — opt-out, like `docs/secrets-scan`."""
+    declared = _process_check(root, "trajectory_check")
+    if declared is not None:
+        return declared
     return (
         _first_declared_line(root / "docs" / "trajectory-check") or ""
     ).lower() != "off"
@@ -270,11 +301,15 @@ def read_trajectory_enabled(root):
 
 def read_interfaces_check_enabled(root):
     """Whether the architecture-connectivity coverage warns are on (S5/WI-056).
-    `docs/interfaces-check` with the one word `off` opts out; absent or any other
-    value reads on — the ruled opt-out, default-on posture (same shape as
-    `docs/trajectory-check`). Default-on means the coverage warn fires even with
-    an empty/absent `interfaces.csv`; the off-switch or a ≤1-module inventory is
-    the only silence."""
+    `docs/process.toml` `[checks] interfaces_check = false` opts out; else
+    (migration window) `docs/interfaces-check` with the one word `off`; absent
+    or any other value reads on — the ruled opt-out, default-on posture (same
+    shape as `trajectory_check`). Default-on means the coverage warn fires even
+    with an empty/absent `interfaces.csv`; the off-switch or a ≤1-module
+    inventory is the only silence."""
+    declared = _process_check(root, "interfaces_check")
+    if declared is not None:
+        return declared
     return (
         _first_declared_line(root / "docs" / "interfaces-check") or ""
     ).lower() != "off"
@@ -282,10 +317,13 @@ def read_interfaces_check_enabled(root):
 
 def read_components_check_enabled(root):
     """Whether the How-SW top-view right-sizing rule is on (WI-073/FB5).
-    `docs/components-check` with the one word `off` opts out; absent or any other
-    value reads on — the ruled opt-out, default-on posture (same shape as
-    `docs/interfaces-check`). Like that reader there is no scaffolded file:
-    absence reads on, so a repo that never declares anything is still bounded."""
+    `docs/process.toml` `[checks] components_check = false` opts out; else
+    (migration window) `docs/components-check` with the one word `off`; absent
+    or any other value reads on — the ruled opt-out, default-on posture (same
+    shape as `interfaces_check`)."""
+    declared = _process_check(root, "components_check")
+    if declared is not None:
+        return declared
     return (
         _first_declared_line(root / "docs" / "components-check") or ""
     ).lower() != "off"
@@ -960,7 +998,7 @@ def interface_findings(root):
 
     Ruled opt-out, default-on: fires even with an empty/absent `interfaces.csv`
     (a multi-module arch-map with no declared seams reads "connectivity
-    undeclared"); silenced only by `docs/interfaces-check: off` or a ≤1-module
+    undeclared"); silenced only by `[checks] interfaces_check = false` or a ≤1-module
     inventory (nothing to connect)."""
     if not read_interfaces_check_enabled(root):
         return []
@@ -972,8 +1010,8 @@ def interface_findings(root):
     if not ifs:
         return [
             "connectivity undeclared: the {}-module architecture declares no "
-            "interfaces — add IF-### rows to {}, or set docs/interfaces-check: "
-            "off".format(len(inventory), IF_CSV)
+            "interfaces — add IF-### rows to {}, or set docs/process.toml "
+            "[checks] interfaces_check = false".format(len(inventory), IF_CSV)
         ]
 
     inv_norm = {_norm_module(m): m for m in inventory}
@@ -1381,8 +1419,8 @@ def added_module_findings(root, view, packs):
         "the committed arch-map are in no CMP-### component ({}); tag them via "
         "LLR `Component` cells in the commit that adds them — the arch-map "
         "regenerates only on the trunk lane (SR-133), and the station must not "
-        "be the first to see this red — or set docs/components-check: "
-        "off".format(len(packs), len(missing), ", ".join(missing))
+        "be the first to see this red — or set docs/process.toml [checks] "
+        "components_check = false".format(len(packs), len(missing), ", ".join(missing))
     ]
 
 
@@ -1393,7 +1431,7 @@ def cross_component_findings(root):
     covered by a declared IF-### row — an undeclared cross-component coupling is
     a finding, mechanized from the same committed artifacts the other component
     rules read. The CALLER gates the opt-out (`component_findings` shares
-    `docs/components-check`) and the WARN-plain / ERROR-under-`--strict`
+    `[checks] components_check`) and the WARN-plain / ERROR-under-`--strict`
     promotion.
 
     Vacuous by construction when any input is absent (never-breaking): no
@@ -1443,7 +1481,8 @@ def cross_component_findings(root):
             out.append(
                 "cross-component import {} ({}) -> {} ({}) has no declared "
                 "IF-### seam — declare the interface row in {} or retag the "
-                "membership, or set docs/components-check: off".format(
+                "membership, or set docs/process.toml [checks] "
+                "components_check = false".format(
                     src_n,
                     "/".join(sorted(src_cmps)),
                     dst_n,
@@ -1458,7 +1497,7 @@ def component_findings(root):
     """The How-SW component-coverage finding(s) (process-options.md "Component
     layer"). Returns the finding strings ([] when opted out or clean). The caller
     prints them WARN plain and promotes them to ERROR under `--strict` (G2+).
-    Opt-out via `docs/components-check: off`. Four rules, all off the arch-map ⇒
+    Opt-out via `[checks] components_check = false`. Four rules, all off the arch-map ⇒
     CMP join:
 
     - **Top-view right-sizing** (WI-073/FB5): vacuous when the arch-map inventory
@@ -1489,8 +1528,10 @@ def component_findings(root):
         out.append(
             "docs/knowledge/ holds {} pack(s) but {} arch-map module(s) are in no "
             "CMP-### component ({}); tag them via LLR `Component` cells so the "
-            "knowledge⇒component web is complete, or set docs/components-check: "
-            "off".format(len(packs), len(view["uncontained"]), CMP_CSV)
+            "knowledge⇒component web is complete, or set docs/process.toml "
+            "[checks] components_check = false".format(
+                len(packs), len(view["uncontained"]), CMP_CSV
+            )
         )
     out.extend(added_module_findings(root, view, packs))
     if len(view["inventory"]) > TOP_VIEW_MAX and view["count"] > TOP_VIEW_MAX:
@@ -1498,7 +1539,7 @@ def component_findings(root):
             "How-SW top view has {} items ({} top-level component(s) + {} "
             "uncontained module(s)) — exceeds the bound of {}; declare CMP-### "
             "components in {} to contain modules (nest with PartOf), or set "
-            "docs/components-check: off".format(
+            "docs/process.toml [checks] components_check = false".format(
                 view["count"],
                 len(view["top_roots"]),
                 len(view["uncontained"]),
@@ -2371,7 +2412,7 @@ def status_forward_only_findings(root, wis):
     Only ids whose registry Status is `done` flag; open (queued/active/deferred/
     blocked) ids and unknown ids do not (an unknown id is R-E-adjacent). Vacuous
     when status.md is absent or the registry is placeholder-only (no real WIs ->
-    no done ids); the `docs/trajectory-check: off` opt-out is the caller's (it
+    no done ids); the `[checks] trajectory_check = false` opt-out is the caller's (it
     returns before any check runs). Returns finding-message strings."""
     path = root / STATUS_MD
     if not path.exists():
@@ -3713,7 +3754,10 @@ def main():
     root = Path(args.root).resolve()
 
     if not read_trajectory_enabled(root):
-        print("check_trajectory: off (docs/trajectory-check) — nothing to check.")
+        print(
+            "check_trajectory: off (docs/process.toml [checks] trajectory_check) "
+            "— nothing to check."
+        )
         return 0
 
     # --staged is the commit-time no-validation-delta warn only: never blocks,
@@ -3745,7 +3789,7 @@ def main():
     # Architecture-connectivity coverage (S5/WI-056; process.md §8) — warn-first,
     # never an exit-code change (even under --strict). Runs before the WI vacuity
     # return so a repo with modules + seams but no work items is still covered;
-    # vacuous under docs/interfaces-check: off or a ≤1-module arch-map.
+    # vacuous under [checks] interfaces_check = false or a ≤1-module arch-map.
     for w in interface_findings(root):
         print("check_trajectory: WARN - {}".format(w), file=sys.stderr)
 
@@ -3850,7 +3894,7 @@ def main():
     # hard=False rides the same warn-plain / error-under-strict tier as R-E,
     # so main() gains no branch. Vacuous when no perceptual SR / evidence / render
     # surface (a downstream repo without a Verification=Critique SR — none ship —
-    # pays nothing), silent off-git, and opt-out via docs/trajectory-check.
+    # pays nothing), silent off-git, and opt-out via [checks] trajectory_check.
     findings.extend(
         ("perceptual-stale", False, msg) for msg in critique_staleness_findings(root)
     )

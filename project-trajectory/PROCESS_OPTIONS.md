@@ -58,10 +58,10 @@ converts with `python scripts/bootstrap.py --migrate-config --dest .` — runnin
 with both homes live is refused, not resolved by precedence. Three kinds of
 declared file stay outside it: the adopter-owned toolchain `docs/stack.ini`, the
 presence-as-semantics markers (`docs/work/pause`, `docs/agents-enabled`), and
-the generated `docs/gate` — plus the per-checker enablement toggles
-(`docs/trajectory-check`, `docs/interfaces-check`, `docs/components-check`,
-`docs/subagent-gate`, `docs/live-status`, `docs/okf-export`), which answer "is
-this check on", not "how is work processed".
+the generated `docs/gate`. The six per-checker enablement toggles are **in** it,
+as the `[checks]` section (owner 2026-08-11, overturning WI-423: absence as a
+declaration is unreadable, so each ships as a visible key at its current
+default — four `true`, `live_status = false`, `subagent_gate = "off"`).
 
 **Byte budget.** This file is **byte-watched** the way [`process.md`](process.md)
 is: its baseline lives in the `byte-budget-guard` skill, and any growth must be
@@ -1003,7 +1003,7 @@ travels with the repo; the raw unbounded stream may additionally go to the
 gitignored `out/run-logs/` for local debugging, and is echoed **live** to the
 coordinator console as it arrives (compact one-line renderings for a
 stream-json CLI's events; `--no-session-echo` silences the console, never the
-capture; `--live-status` / a `docs/live-status` toggle upgrades the scroll to
+capture; `--live-status` / `[checks] live_status = true` upgrades the scroll to
 one in-place status line per workstream when stdout is a TTY, a pipe/CI log
 keeping the append-only scroll) — and regenerates
 `docs/iteration_index.md`: one row per session (number, date, phase, the WI it
@@ -1875,9 +1875,9 @@ freshness *before* the dashboard's for the same reason.
 vacuous**: a fresh scaffold carries only the inert `WI-000` placeholder, so both
 `check_trajectory.py` and `gen_trajectory.py --check` pass **vacuously** (no work
 items → nothing to validate, nothing to render, no `PROJECT_STATE.html` written). A
-repo that wants the layer gone entirely silences it with the one word `off` in
-`docs/trajectory-check` — one of the six per-checker enablement toggles that
-deliberately stay their own files ("Where the dials live" above).
+repo that wants the layer gone entirely silences it with `[checks]
+trajectory_check = false` in `docs/process.toml` — one of the six per-checker
+enablement toggles ("Where the dials live" above).
 The cost to a project that ignores the layer is therefore exactly zero, which is
 why it ships opt-out rather than opt-in.
 
@@ -2144,8 +2144,8 @@ empty or absent**: a multi-module arch-map with no declared seams reads
 stays a bare module list — the organized graph is *earned* by declaring seams.
 `check_trajectory.py` runs this at the hook and the gate, **all warn-first** (it
 never changes an exit code). A repo with genuinely nothing to declare silences it
-with the one word `off` in `docs/interfaces-check` (the
-`trajectory-check`/`okf-export` idiom — no file is scaffolded; absence reads on);
+with `[checks] interfaces_check = false` (the `trajectory_check`/`okf_export`
+idiom — the key ships `true`);
 a single-module inventory is vacuous. The warns: every arch-map module is a
 declared IF endpoint; each `Active` seam is cited by ≥1 TC; a `Contracts: IF-###`
 docstring line (harvested into the arch-map like `Implements:`) matches the
@@ -2271,7 +2271,7 @@ committed arch-map's `Imports (internal):` lines with the `Component`-tag
 membership and `interfaces.csv`: an import edge between two *different*
 components with no IF row covering the module pair (either endpoint direction)
 is a finding — **WARN** at the plain/hook run, **ERROR under `--strict` (G2+)**
-— sharing the `docs/components-check` opt-out. Vacuous when any input is absent
+— sharing the `[checks] components_check` opt-out. Vacuous when any input is absent
 (no imports lines, no real CMP rows, an untagged endpoint), so a non-adopting
 or small repo pays nothing. A *physical* repo's cross-CMP discipline stays
 gate-attested (`Inspection`) — the import graph is the software mechanization.
@@ -2289,8 +2289,8 @@ interface seams that cross a component boundary aggregate to **one** deduplicate
 component-to-component edge at the top level. Membership is the same
 `Component`-tag join (`LLR.Module → CMP-###`); nesting via `PartOf` counts a
 module only at its top-level root. The rule is **opt-out, default-on** like the
-connectivity coverage — silence it with the one word `off` in
-`docs/components-check` (no scaffolded file; absence reads on) — and **vacuous**
+connectivity coverage — silence it with `[checks] components_check = false` —
+and **vacuous**
 below the bound: a repo with ≤10 modules, or no arch-map inventory, passes
 trivially (the bound, not the registry, is the rule), so a small or non-adopting
 repo is never broken while a 20-module repo is *supposed* to feel it. (A CMP's

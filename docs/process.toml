@@ -18,7 +18,8 @@
 # `tomllib` and a cross-parser agreement test pins the two readings equal, so
 # the greppable form can never drift from the parsed one.
 #
-# FOUR DELIBERATE EXCEPTIONS stay outside this file, each for a stated reason:
+# THREE DELIBERATE EXCEPTIONS stay outside this file, each for a stated reason
+# (there were four until 2026-08-11 — see the note below them):
 #
 #   1. `docs/stack.ini` — the PRODUCT TOOLCHAIN, not a process dial. It is
 #      adopter-owned across re-syncs (ADOPTING.md "Preserve always"), has five
@@ -29,14 +30,14 @@
 #      managed routing). A key in a shared file cannot express deletion-as-an-
 #      act, nor survive as a one-line reviewed diff.
 #   3. `docs/gate` — a GENERATED CACHE (derive_gate.py), not configuration.
-#   4. CHECK-ENABLEMENT TOGGLES stay files — RULED (WI-423), not pending.
-#      The six (`docs/trajectory-check`, `docs/interfaces-check`,
-#      `docs/components-check`, `docs/subagent-gate`, `docs/live-status`,
-#      `docs/okf-export`) answer "is this CHECK on", not "how is work
-#      PROCESSED". None is scaffolded, so absence IS the declaration, and a
-#      TOML key cannot be absent and still declare; the shipped template's
-#      item 4 carries the full reasoning. This repo declares none of them and
-#      runs every check on, which is the ruling's own default.
+#   (The fourth exception — CHECK-ENABLEMENT TOGGLES stay files, WI-423 — is
+#   OVERTURNED, owner 2026-08-11: "creating files to toggle something off is
+#   also very confusing … far better to tie those into process.toml and key
+#   them all to on / true." The six are the [checks] section at the bottom of
+#   this file now. This repo used to declare none of them, which is precisely
+#   the confusion the ruling names: it looked identical to a repo that had
+#   never heard of the layer. The shipped template's [checks] header carries
+#   the full reasoning, the F5 cost and the legacy fallback's expiry.)
 #
 # MIGRATION: a repo that still carries the legacy one-word files is converted
 # automatically by `python scripts/bootstrap.py --migrate-config --dest .`
@@ -113,3 +114,20 @@ guardrails = "off"
 # The weekday blackout window, UTC, HH:MM-HH:MM — was docs/blackout. An empty
 # value (or start == end) disables it.
 blackout = "12:00-19:00"
+
+[checks]
+# IS THIS CHECK ON — the six dials folded in from their one-word files by the
+# 2026-08-11 overturn of WI-423. Every key below is this repo's CURRENT
+# behaviour written down, not a new decision: it declared none of these files,
+# so it ran the four checks on and the two opt-in dials off. The shipped
+# template's [checks] header is the canonical doc for each key, the F5 local-
+# reader cost, and the legacy fallback's expiry.
+trajectory_check = true
+interfaces_check = true
+components_check = true
+okf_export = true
+# Opt-in, off: this repo's coordinator console keeps the append-only scroll.
+live_status = false
+# Opt-in, off: "ask" / "deny" arm the subagent-spawn gate. This repo runs
+# subagents freely under a human-launched loop, so the gate stays a no-op.
+subagent_gate = "off"

@@ -317,12 +317,12 @@ process**, traced by its own `SN→SR→LLR→TC` spine and gated by its own
 
 ### Configuration at a glance (defaults vs. this repo)
 
-Every **process** dial — how work is processed — is declared once in
+Every **process** dial — how work is processed, and (since the 2026-08-11
+overturn of WI-423) whether each check is on — is declared once in
 [`docs/process.toml`](docs/process.toml), one `key = value` per line so the git
 hooks can read the privacy dials in pure sh and a Python-less box still fails
-closed. The remaining knobs stay small declared files under `docs/`, either
-because presence itself is the semantic or because an independently copyable
-checker reads them. Everything is stated once and read by the hooks,
+closed. The remaining knobs stay small declared files under `docs/`, because
+presence itself is the semantic. Everything is stated once and read by the hooks,
 `check.py`, and the coordinator; **each file's (or key's) own header comment is
 its canonical doc** (this table is the map, checked against this repo's tree).
 What a fresh scaffold gets, which way each option toggles, and how this repo is
@@ -340,11 +340,13 @@ set:
 | `process.toml` `privacy_review` | `"require"` | opt-down `"warn-unwired"` (the unwired reviewer warns instead of blocking) | `"require"` |
 | `process.toml` `blackout` | `"12:00-19:00"` (UTC, Mon–Fri) | empty value (or start == end) disables | `"12:00-19:00"` |
 | `process.toml` `guardrails` | `"off"` | **opt-in** model-substring allowlist / `"all except …"` | `"off"` (no vendored core — reason in the key's comment) |
-| `okf-export` | on (no file) | **opt-out** `off` | on (`docs/okf/` committed) |
-| `interfaces-check` | on, warn-first (no file) | **opt-out** `off` | on — declared seams checked |
-| `components-check` | on, warn-first (no file) | **opt-out** `off` | on — 5 components |
+| `process.toml` `trajectory_check` | `true` — the WI registry validator + its dashboard | **opt-out** `false` (vacuous anyway on a placeholder-only registry) | `true` |
+| `process.toml` `okf_export` | `true` | **opt-out** `false` | `true` (`docs/okf/` committed) |
+| `process.toml` `interfaces_check` | `true`, warn-first | **opt-out** `false` | `true` — declared seams checked |
+| `process.toml` `components_check` | `true`, warn-first | **opt-out** `false` | `true` — 5 components |
+| `process.toml` `live_status` | `false` | **opt-in** `true` (same as `agent_loop.py --live-status`; TTY-only either way) | `false` |
+| `process.toml` `subagent_gate` | `"off"` | **opt-in** `"ask"` / `"deny"` (Claude hook example) | `"off"` |
 | `agents.toml` + `agents-enabled` | registry seeded **inert**; no enable-list | **opt-in** — creating `agents-enabled` turns managed routing on | **on** — 8 pair rows / 3 families (ANTHROPIC / OPENAI / OPENCODE; tiers `strong/medium/quick`; Anthropic-led per tier — Fable strong, Opus medium) |
-| `subagent-gate` | off (no file) | **opt-in** `ask` / `deny` (Claude hook example) | off |
 
 Scaffold-time *structure* (which process sections your generated docs carry) is
 a separate dial — `bootstrap.py --stack/--omit`, recorded in `docs/kit-profile`.

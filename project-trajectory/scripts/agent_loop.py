@@ -1483,8 +1483,8 @@ def parse_args():
         action="store_true",
         help="upgrade the scrolling session echo to one in-place status line "
         "per workstream (WI-136) — only when stdout is a TTY (a pipe / CI log "
-        "keeps the append-only scroll); also enabled by a docs/live-status "
-        "file reading 'true'. Overridden by --no-session-echo.",
+        "keeps the append-only scroll); also enabled by docs/process.toml "
+        "[checks] live_status = true. Overridden by --no-session-echo.",
     )
     ap.add_argument(
         "--wait-on-limit",
@@ -3028,13 +3028,15 @@ def main():
     iter_dir = lane / "iteration"
     tag = "{}-".format(worker["train"])
     # Console rendering (WI-125 scroll / WI-136 live line). --no-session-echo
-    # silences it; otherwise --live-status (or a docs/live-status file) upgrades
-    # the scroll to one in-place line per workstream — but only when stdout is a
-    # TTY with VT enabled, so a pipe / CI log keeps the append-only scroll
-    # (never-breaking). Decided once: the TTY/VT facts don't change mid-run.
+    # silences it; otherwise --live-status (or `[checks] live_status = true`)
+    # upgrades the scroll to one in-place line per workstream — but only when
+    # stdout is a TTY with VT enabled, so a pipe / CI log keeps the append-only
+    # scroll (never-breaking). Decided once: the TTY/VT facts don't change
+    # mid-run. `declared_policy` reads docs/process.toml first and falls back to
+    # the legacy docs/live-status for the SN-028 migration window.
     live_status_on = (
         args.live_status
-        or read_declared(docs / "live-status", "false").lower() == "true"
+        or declared_policy(docs, "live-status", "false").lower() == "true"
     )
     use_live = live_status_on and _stdout_is_tty() and _enable_windows_vt()
     # A worker has no lane run-state (spec §10) — its state is always RUNNING

@@ -25,9 +25,11 @@ the spec's optional `timestamp` field is deliberately omitted so the freshness
 gate stays byte-stable). `docs/okf/UPSTREAM.md` pins the targeted spec version;
 re-targeting is a visible, human-reviewed bump, never silent drift.
 
-On by default, opt-out (owner ruling): the one word `off` in `docs/okf-export`
-silences everything; a placeholder-only or absent registry emits nothing and
-passes vacuously, so a fresh scaffold and a non-adopter pay nothing.
+On by default, opt-out (owner ruling): `docs/process.toml` `[checks]
+okf_export = false` silences everything — else, for the SN-028 migration
+window, the one word `off` in the legacy `docs/okf-export`. A placeholder-only
+or absent registry emits nothing and passes vacuously, so a fresh scaffold and
+a non-adopter pay nothing.
 
 Usage:  python scripts/gen_okf.py [--root .] [--check]
 Exit codes: 0 clean / vacuous / opted-out, 1 stale bundle under --check.
@@ -40,6 +42,7 @@ import csv
 import json
 import re
 import sys
+import tomllib
 from pathlib import Path
 
 # Sibling: the spine's registry CARRIER — the one home for
@@ -54,7 +57,11 @@ except ImportError:  # pragma: no cover - in-process fallback
     import spine_carrier
 
 OUT_DIR = "docs/okf"
-POLICY = "docs/okf-export"
+# The enablement dial's home since the 2026-08-11 overturn of WI-423, and the
+# one-word file it replaced — still read as the SN-028 migration-window
+# fallback, the way check_privacy.py still reads `docs/privacy-check`.
+POLICY = "docs/process.toml [checks] okf_export"
+LEGACY_POLICY = "docs/okf-export"
 
 # Layer B2 (Thread 48): the key process docs summarized as `Process Guide`
 # concepts, so the WHOLE repo — process knowledge + the requirement graph — is
@@ -124,8 +131,39 @@ def sn_rows(root):
     return spine_carrier.folded_needs(root / "docs/requirements/stakeholder-needs.toml")
 
 
+def _process_check(root, key):
+    """One `[checks]` toggle out of `docs/process.toml`, or None when this file
+    has nothing to say (fall through to the legacy one-word file).
+
+    A LOCAL reader, per the F5 independently-copyable-script rule — the cost the
+    2026-08-11 overturn of WI-423 priced and accepted. Unparseable-but-present,
+    or a non-bool value, reads ON: a check that silently stops running is the
+    failure worth avoiding. `tests/test_rule_sync.py` pins this copy against
+    `check_trajectory.py`'s and `subagent_gate.py`'s by value (D-7)."""
+    path = root / "docs" / "process.toml"
+    if not path.is_file():
+        return None
+    try:
+        # utf-8-sig: a BOM is not legal TOML but is invisible to a shell read.
+        data = tomllib.loads(path.read_text(encoding="utf-8-sig"))
+    except (OSError, UnicodeDecodeError, tomllib.TOMLDecodeError):
+        return True  # unparseable but present: fail loud, never a quiet opt-out
+    table = data.get("checks")
+    value = table.get(key) if isinstance(table, dict) else None
+    if value is None:
+        return None
+    return value if isinstance(value, bool) else True
+
+
 def read_enabled(root):
-    p = root / POLICY
+    """Whether the OKF export layer is on. `docs/process.toml` `[checks]
+    okf_export = false` opts out; else (migration window) the one word `off` in
+    the legacy `docs/okf-export`; absent or any other value reads on (the
+    owner-ruled default-on posture)."""
+    declared = _process_check(root, "okf_export")
+    if declared is not None:
+        return declared
+    p = root / LEGACY_POLICY
     if not p.exists():
         return True  # absent = on (the owner-ruled default-on posture)
     for ln in p.read_text(encoding="utf-8").splitlines():
@@ -160,7 +198,7 @@ def banner(source):
     return (
         "> **GENERATED — a reference copy, not the source of truth.** Derived "
         "from {} by scripts/gen_okf.py; edit the registry/doc, then rerun it "
-        "(docs/okf-export: off silences the layer).".format(source)
+        "({} = false silences the layer).".format(source, POLICY)
     )
 
 

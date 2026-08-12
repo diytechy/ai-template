@@ -668,7 +668,7 @@ def steps(coverage, tier, gate, phase=None, profile=None):
         # hard error always; R-B…R-E status coherence + SpecRef resolution, warn
         # here and ERROR under --strict, added at G2/G3 via traj_cmd above).
         # An OPT-OUT layer: an absent or placeholder-only registry passes
-        # vacuously and docs/trajectory-check `off` silences it, so a repo that
+        # vacuously and [checks] trajectory_check = false silences it, so a repo that
         # never adopts it pays nothing (the docs/secrets-scan floor's posture).
         # From G2 on, where execution planning has begun.
         (
@@ -694,8 +694,8 @@ def steps(coverage, tier, gate, phase=None, profile=None):
         # the root PROJECT_STATE.html — gen_trajectory.py --check regenerates in memory
         # and byte-compares, exactly like arch-map. G3 only (like arch-map — the
         # generated view churns while the plan is still forming). Vacuous on an
-        # absent/placeholder-only registry and silent under docs/trajectory-check
-        # `off`, so a repo without work items pays nothing.
+        # absent/placeholder-only registry and silent under
+        # [checks] trajectory_check = false, so a repo without work items pays nothing.
         (
             "trajectory-map",
             (),
@@ -744,8 +744,8 @@ def steps(coverage, tier, gate, phase=None, profile=None):
         # OKF knowledge-bundle freshness (Thread 48): docs/okf/ is a generated
         # export of the spine registries (never a parallel source of truth) —
         # gen_okf.py --check regenerates in memory and byte-compares like
-        # arch-map/trajectory-map. On by default, opt-out via the one word
-        # `off` in docs/okf-export; vacuous on placeholder-only/absent
+        # arch-map/trajectory-map. On by default, opt-out via
+        # [checks] okf_export = false; vacuous on placeholder-only/absent
         # registries, so a fresh scaffold and a non-adopter pay nothing.
         (
             "okf",

@@ -1,4 +1,4 @@
-> **GENERATED — a reference copy, not the source of truth.** Derived from the OKF spec pin by scripts/gen_okf.py; edit the registry/doc, then rerun it (docs/okf-export: off silences the layer).
+> **GENERATED — a reference copy, not the source of truth.** Derived from the OKF spec pin by scripts/gen_okf.py; edit the registry/doc, then rerun it (docs/process.toml [checks] okf_export = false silences the layer).
 
 # Upstream pin — Open Knowledge Format
 

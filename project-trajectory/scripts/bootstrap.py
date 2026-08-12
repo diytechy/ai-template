@@ -22,7 +22,8 @@ What it creates in the destination:
     docs/process.toml                          <- process.toml.template  (EVERY policy dial:
                                                   gate authority, the human-ratification level,
                                                   push, reviewer count, privacy + secrets,
-                                                  guardrails, blackout — SN-028's one home)
+                                                  guardrails, blackout, and the six
+                                                  check-enablement toggles — SN-028's one home)
     prompts/*.template.md                      <- prompts/  (every brief the loop sends)
     docs/status.md                             <- STATUS.template.md  (working surface)
     docs/log.md                                <- LOG.template.md  (append-only history)
@@ -160,10 +161,9 @@ another repo **or between its own modules** (process.md §8). `trace.py`
 integrity-checks the seam registry (id shape, SR-Refs back-link, WI-056) and
 `check_trajectory.py` runs the **architecture-connectivity coverage** over the
 arch-map inventory. That coverage is **opt-out, default-on** (the
-`docs/secrets-scan` / `docs/trajectory-check` posture — absence reads on): a
-multi-module arch-map with no declared seams warns "connectivity undeclared"
-rather than passing vacuously, so like those layers there is no file to scaffold —
-silence it with the one word `off` in `docs/interfaces-check`, or a single-module
+`secrets_scan` posture): a multi-module arch-map with no declared seams warns
+"connectivity undeclared" rather than passing vacuously — silence it with
+`docs/process.toml` `[checks] interfaces_check = false`, or a single-module
 inventory. They cost nothing to leave empty, which is why bootstrap copies them
 unconditionally rather than gating them behind a flag.
 
@@ -198,7 +198,7 @@ edges), moving `queued->active->done`. `scripts/check_trajectory.py` validates i
 as the `trajectory` gate step from G2 on. Like the always-on secrets floor it is
 OPT-OUT and vacuous by default: the shipped inert `WI-000` placeholder makes a
 fresh scaffold pass for free, and a repo that never wants the layer sets
-`docs/trajectory-check: off`. It is off-spine (like procurement / assets);
+`docs/process.toml` `[checks] trajectory_check = false`. It is off-spine (like procurement / assets);
 `trace.py` does not read WI ids — `check_trajectory.py` owns them.
 `scripts/gen_trajectory.py` renders the registry + spine into a self-contained,
 fully-offline root `PROJECT_STATE.html` dashboard — an SVG icicle of the spine and a
@@ -1023,6 +1023,19 @@ LEGACY_CONFIG = (
     ("privacy-review", "policies", "privacy_review", str.strip),
     ("guardrails-policy", "policies", "guardrails", str.strip),
     ("blackout", "policies", "blackout", str.strip),
+    # The six check-enablement toggles (2026-08-11 overturn of WI-423). Each
+    # legacy vocabulary is preserved exactly by its coercer: the four opt-out
+    # checks said `off` to disable and anything else to enable, `live-status`
+    # said `true` to enable, and `subagent-gate` carried one of three words.
+    # `set_process_key(add_if_missing=True)` writes the key even into a
+    # process.toml predating this section, so an adopter converting an old
+    # config never silently loses the declaration.
+    ("trajectory-check", "checks", "trajectory_check", _legacy_not_off),
+    ("interfaces-check", "checks", "interfaces_check", _legacy_not_off),
+    ("components-check", "checks", "components_check", _legacy_not_off),
+    ("okf-export", "checks", "okf_export", _legacy_not_off),
+    ("live-status", "checks", "live_status", _legacy_bool_true),
+    ("subagent-gate", "checks", "subagent_gate", str.strip),
 )
 
 

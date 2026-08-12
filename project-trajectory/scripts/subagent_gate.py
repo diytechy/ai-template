@@ -11,10 +11,12 @@ by the human who launched the run — not the model.
 model that can edit files can remove this. It is a bounded-fan-out guardrail for
 an unattended run, not a sandbox.
 
-Policy — `docs/subagent-gate`, first declared line (the shared declared-policy
-parse): `off` (or absent) allows everything, `ask` defers each spawn to
-approval, `deny` refuses. The env override `SUBAGENT_GATE=allow` — set in the
-launcher environment, which the model cannot write — bypasses the gate for a
+Policy — `docs/process.toml` `[checks] subagent_gate` since the 2026-08-11
+overturn of WI-423, else (SN-028 migration window) the legacy one-word
+`docs/subagent-gate`: `off` (or undeclared) allows everything, `ask` defers each
+spawn to approval, `deny` refuses. It ships VISIBLE at `"off"` — an opt-in dial
+readable without being armed. The env override `SUBAGENT_GATE=allow` — set in
+the launcher environment, which the model cannot write — bypasses the gate for a
 deliberately-supervised run.
 
 **Fail open with a paper trail:** any error (unreadable payload, missing repo)
@@ -31,12 +33,55 @@ Contracts: IF-020, IF-038 — the interface seams this module declares (process.
 import json
 import os
 import sys
+import tomllib
 from pathlib import Path
 
 # Claude Code's subagent-spawn tools. A tool not in this set is never gated
 # (the hook defers), so the gate touches only fan-out, nothing else.
 SPAWN_TOOLS = {"Task", "Agent"}
 LOG_NAME = "subagent-gate.log"
+# The policy's home since the 2026-08-11 overturn of WI-423, and the one-word
+# file it replaced — still read as the SN-028 migration-window fallback.
+POLICY = "docs/process.toml [checks] subagent_gate"
+LEGACY_POLICY = "docs/subagent-gate"
+
+
+def read_process_policy(root):
+    """`[checks] subagent_gate` out of `docs/process.toml`, lowercased, or None
+    when this file has nothing to say (fall through to the legacy one-word
+    file).
+
+    A LOCAL reader, per the F5 independently-copyable-script rule that already
+    keeps `read_declared` here rather than importing a sibling — the cost the
+    2026-08-11 overturn of WI-423 priced and accepted. A non-string value is
+    rendered rather than dropped, so it reaches `decide`'s "unrecognized …
+    asking" arm: a garbled dial on a fan-out guardrail must be loud, never a
+    quiet `off`.
+
+    THE ONE PLACE THIS READER DELIBERATELY DIFFERS from the twin in
+    `check_trajectory.py` / `gen_okf.py`: an UNPARSEABLE process.toml reads as
+    *undeclared* here, where those two read it as ON. Their failure mode is a
+    check that silently stops running; this module's is the opposite — see
+    "fail OPEN with a paper trail" above. Failing an unreadable file to `ask`
+    would defer every spawn in an unattended run, which is the wedge this
+    module exists not to be. `tests/test_rule_sync.py` pins all three copies —
+    including this divergence — by value (D-7).
+
+    Contract:
+      Inputs:  root: path-like repo root
+      Outputs: str | None — the policy token, lowercased; None if undeclared
+    """
+    path = Path(root) / "docs" / "process.toml"
+    if not path.is_file():
+        return None
+    try:
+        # utf-8-sig: a BOM is not legal TOML but is invisible to a shell read.
+        data = tomllib.loads(path.read_text(encoding="utf-8-sig"))
+    except (OSError, UnicodeDecodeError, tomllib.TOMLDecodeError):
+        return None
+    table = data.get("checks")
+    value = table.get("subagent_gate") if isinstance(table, dict) else None
+    return None if value is None else str(value).strip().lower()
 
 
 def read_declared(path):
@@ -64,7 +109,8 @@ def decide(tool_name, policy, override):
 
     Contract:
       Inputs:  tool_name: str          (the PreToolUse tool name)
-               policy: str             (docs/subagent-gate token; "" = off)
+               policy: str             (the [checks] subagent_gate token, or
+                                        the legacy file's; "" = off)
                override: str           (SUBAGENT_GATE env value, lowercased)
       Outputs: (decision, reason) where decision in
                {allow, ask, deny, defer}; `defer` = not a spawn tool, not our
@@ -77,12 +123,12 @@ def decide(tool_name, policy, override):
     if override == "allow":
         return "allow", "SUBAGENT_GATE=allow override (human-set)"
     if policy in ("", "off"):
-        return "allow", "gate off (docs/subagent-gate)"
+        return "allow", "gate off ({})".format(POLICY)
     if policy == "deny":
-        return "deny", "subagent spawns are denied (docs/subagent-gate: deny)"
+        return "deny", "subagent spawns are denied ({}: deny)".format(POLICY)
     if policy == "ask":
-        return "ask", "subagent spawn needs approval (docs/subagent-gate: ask)"
-    return "ask", "unrecognized docs/subagent-gate value {!r}; asking".format(policy)
+        return "ask", "subagent spawn needs approval ({}: ask)".format(POLICY)
+    return "ask", "unrecognized {} value {!r}; asking".format(POLICY, policy)
 
 
 def emit(decision, reason):
@@ -134,7 +180,9 @@ def main(argv=None):
         raw = sys.stdin.read()
         payload = json.loads(raw) if raw.strip() else {}
         tool_name = payload.get("tool_name") or payload.get("toolName") or ""
-        policy = read_declared(Path(root) / "docs" / "subagent-gate")
+        policy = read_process_policy(root)
+        if policy is None:
+            policy = read_declared(Path(root) / LEGACY_POLICY)
         override = (os.environ.get("SUBAGENT_GATE") or "").strip().lower()
         decision, reason = decide(tool_name, policy, override)
     except Exception as exc:  # noqa: BLE001 — deliberate fail-OPEN; see module doc

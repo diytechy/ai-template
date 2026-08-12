@@ -673,7 +673,7 @@ Contracts (interfaces): IF-009, IF-023, IF-077
 
 | Public item | Summary | Implements |
 |---|---|---|
-| `read_trajectory_enabled(root)` | Whether the trajectory check is on. `docs/trajectory-check` with the one |  |
+| `read_trajectory_enabled(root)` | Whether the trajectory check is on. `docs/process.toml` `[checks] |  |
 | `read_interfaces_check_enabled(root)` | Whether the architecture-connectivity coverage warns are on (S5/WI-056). |  |
 | `read_components_check_enabled(root)` | Whether the How-SW top-view right-sizing rule is on (WI-073/FB5). |  |
 | `read_rows(path)` | The CSV rows of `path` as dicts, or [] when the file is absent. Read |  |
@@ -834,7 +834,7 @@ Contracts (interfaces): IF-012, IF-033, IF-106
 | `split_refs(cell)` |  |  |
 | `real_rows(rows, key, prefix)` | Real (non-placeholder) rows whose id is well-formed. The id becomes a |  |
 | `sn_rows(root)` | Every need as the core four — `spine_carrier.folded_needs`, the ONE home |  |
-| `read_enabled(root)` |  |  |
+| `read_enabled(root)` | Whether the OKF export layer is on. `docs/process.toml` `[checks] |  |
 | `fm(pairs)` | A YAML frontmatter block; JSON string scalars are valid YAML, so quoting |  |
 | `banner(source)` | The one-line GENERATED provenance blockquote every emitted file carries, |  |
 | `concept(rel_dir, cid, ctype, title, description, tags, resource, body_lines)` |  |  |
@@ -1206,6 +1206,7 @@ Contracts (interfaces): IF-020, IF-038
 
 | Public item | Summary | Implements |
 |---|---|---|
+| `read_process_policy(root)` | `[checks] subagent_gate` out of `docs/process.toml`, lowercased, or None |  |
 | `read_declared(path)` | First non-comment, non-blank line lowercased, or "" — the same |  |
 | `decide(tool_name, policy, override)` | Pure decision core for one tool call. | LLR-040, SR-043 |
 | `emit(decision, reason)` | Map a decision to PreToolUse stdout + an exit code, returning the code. |  |

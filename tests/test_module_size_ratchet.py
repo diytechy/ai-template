@@ -419,7 +419,11 @@ BASELINE = {
     # validation arm proving the session RULED rather than merely committed.
     # The arm is its own function precisely so `session_bookkeeping`, already at
     # complexity 31, gains no branch: its guard sits inside the callee.
-    "agent_loop.py": 3158,
+    # WI-432 (the six check toggles fold into process.toml): +2 (3158 -> 3160).
+    # `live-status` is the ONE of the six read through the coordinator layer, so
+    # it costs a `declared_policy` swap and the comment saying why — no local
+    # reader here, which is the whole point of the F5 split recorded below.
+    "agent_loop.py": 3160,
     # +30 (2206 -> 2236), WI-065: `tc_citation_findings` — the TC-`Verifies`
     # rules lifted out of `analyze` so the cell could accept `IF-###` seam ids.
     # Most of the bump is that helper's docstring, which is where the RULING now
@@ -958,7 +962,15 @@ BASELINE = {
     # open-items brief lint reads through `spine_carrier` instead of
     # `read_rows`, so an unparseable decision queue refuses instead of going
     # vacuously clean. Two lines; no behaviour beyond the carrier.
-    "check_trajectory.py": 3913,
+    # WI-432 (owner 2026-08-11, overturning WI-423): +44 (3913 -> 3957). The
+    # F5 price of folding the six check toggles into docs/process.toml, PAID
+    # HERE AND DECLARED rather than argued down: this module is copied ALONE
+    # into repos that carry no coordinator layer, so it grows its own
+    # `_process_check` — 24 lines, of which 10 are executable and 12 are the
+    # docstring recording the fail-LOUD direction — plus the TOML-first arm on
+    # each of the three readers. Reviewed bump; tests/test_rule_sync.py pins
+    # this copy against gen_okf's and subagent_gate's by value (D-7).
+    "check_trajectory.py": 3957,
     # NEW ENTRY, +25 (1498 -> 1523), WI-357: the two-stage work-branch claim
     # signal — the on-disk fast path plus the branch-history probe that
     # survives the §2.3 close commit (git log -1 over the claim path), with
@@ -1213,7 +1225,11 @@ BASELINE = {
     # (repo-lock §8.2), and `tests/test_rule_sync.py` pins the key set against
     # the converter so the declared duplication cannot drift. Net +31 after the
     # `csv`/`io` imports the CSV writer needed went with it.
-    "bootstrap.py": 2754,
+    # WI-432: +13 (2754 -> 2767). Six LEGACY_CONFIG rows and the paragraph
+    # saying which coercer preserves which legacy vocabulary. bootstrap grows
+    # NO local TOML reader — it only converts and deletes, so it never reads
+    # these keys, which is why the F5 cost lands in the three checkers instead.
+    "bootstrap.py": 2767,
     # NEW ENTRY, +228 (1423 -> 1651), Phase 2b of the concurrency restructure
     # (docs/concurrency-restructure.md §7): the spec-folder work-item reader,
     # which crosses this module over THRESHOLD for the first time. It is one
@@ -1363,7 +1379,11 @@ BASELINE = {
     # two-table edit recorded at check_trajectory.py above.
     # Then -4 (2450 -> 2446), WI-422 (the measured dead-symbol sweep): the inert `SPEC_EXAMPLE` copy (F5 twin of the check_trajectory entry
     # above; the live `-000` rule is an id-suffix test, not this literal).
-    "agent_common.py": 2446,
+    # WI-432: +20 (2446 -> 2466). Six PROCESS_KEYS rows plus the paragraph
+    # recording why they sit in THAT table rather than PROCESS_ONLY_KEYS (each
+    # has a legacy file, so each can be double-declared, and the mixed-config
+    # refusal + --migrate-config both key off these rows).
+    "agent_common.py": 2466,
     # NEW ENTRY, WI-387 — integrate.py crossed THRESHOLD (1418 -> 1588) adding
     # the third terminal outcome. The extraction the ratchet asks for was TAKEN
     # FIRST, not argued away: `hand_back` and `quarantine`, the largest unit and

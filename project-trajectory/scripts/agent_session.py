@@ -290,7 +290,7 @@ def _enable_windows_vt():
 
 class LiveStatus:
     """One in-place console status line for a workstream (WI-136). Opt-in
-    (--live-status / docs/live-status) and used only when stdout is a TTY with
+    (--live-status / [checks] live_status) and used only when stdout is a TTY with
     VT enabled — a non-TTY keeps the scrolling echo. Each streamed event
     rewrites a single line (carriage-return + clear-to-EOL) instead of
     scrolling, so a long walk-away session shows its current step rather than

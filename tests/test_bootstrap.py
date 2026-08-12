@@ -567,6 +567,20 @@ def test_scaffold_ships_every_policy_dial_in_one_home(scaffold):
         "guardrails": "off",
         "blackout": "12:00-19:00",
     }
+    # WI-432: the six check-enablement toggles are dials here too, folded in by
+    # the 2026-08-11 overturn of WI-423 — every one VISIBLE, and every one at
+    # the default it had as an absent file. The two opt-in dials are the point
+    # of the assertion: "key them all to on / true" made the DECLARATION
+    # explicit; a `live_status = true` or `subagent_gate = "ask"` here would be
+    # a behaviour flip smuggled in under a re-homing.
+    assert cfg["checks"] == {
+        "trajectory_check": True,
+        "interfaces_check": True,
+        "components_check": True,
+        "okf_export": True,
+        "live_status": False,
+        "subagent_gate": "off",
+    }
     for legacy in (
         "gate-policy",
         "push-policy",
@@ -576,6 +590,12 @@ def test_scaffold_ships_every_policy_dial_in_one_home(scaffold):
         "privacy-review",
         "guardrails-policy",
         "blackout",
+        "trajectory-check",
+        "interfaces-check",
+        "components-check",
+        "okf-export",
+        "live-status",
+        "subagent-gate",
     ):
         assert not (scaffold / "docs" / legacy).exists(), (
             "SN-028: docs/" + legacy + " must not ship beside docs/process.toml"
