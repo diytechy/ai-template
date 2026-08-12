@@ -1775,3 +1775,15 @@ status = "Draft"
 phase = 5
 area = "Trajectory"
 
+[requirement.SR-148]
+title = "Autonomous loop phase order"
+sn_refs = ["SN-025", "SN-029"]
+requirement = """Subject to the adjudication-first admission rule, the unattended coordinator shall select work in this order: unresolved handback records, the earliest incomplete spine tier in SN-to-SR-to-LLR-to-TC order, then implementation work after test-case layout is complete; it shall apply human holds only from the declared ratification level."""
+rationale = """Without one precedence rule, the same repository can resume into implementation while returned obligations or prerequisite requirement tiers remain unresolved. That produces work against stale intent and makes repeated resumes select different next actions. A recorded selection class, source record and hold decision provide replayable evidence of the choice."""
+acceptance_criteria = """A ready adjudication row remains ahead of every class named here; otherwise an unresolved handback is selected before spine or implementation work and processing it either resolves the record or mints a provenance-linked successor exactly once. With no unresolved handback, only the earliest incomplete spine tier is eligible. At human_ratification_through = 0 no spine tier produces a human hold; levels 1 through 4 hold exactly their documented cumulative tiers. Implementation work is ineligible while any required test case remains unlaid. Every selection records the chosen class, source identifier and hold decision."""
+priority = "S"
+verification = "Test"
+status = "Draft"
+phase = 5
+area = "Unattended loop"
+

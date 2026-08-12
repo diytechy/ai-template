@@ -40,3 +40,11 @@ resource: "generated"
 | [SN-027](SN-027.md) | Ready work fans out across bounded parallel lanes, while mutation of the integration bran… |
 | [SN-028](SN-028.md) | Every policy dial has one home — a single hand-edited, machine-read file — and a repo tha… |
 | [SN-029](SN-029.md) | An autonomous run gets as far as it honestly can. Once triggered, the coordinator stops f… |
+| [SN-033](SN-033.md) | Scope: template (adopters + this repo). A stakeholder can read each stakeholder need and … |
+| [SN-034](SN-034.md) | Scope: template (adopters + this repo). A person setting up to work on the repository can… |
+| [SN-035](SN-035.md) | Scope: this repo (adopters advised). A person working on this repository can open one lau… |
+| [SN-036](SN-036.md) | Scope: template (adopters + this repo). When a stakeholder's need is turned into detailed… |
+| [SN-037](SN-037.md) | Scope: template (adopters + this repo). A stakeholder can see where each promised system … |
+| [SN-038](SN-038.md) | Scope: template (adopters + this repo). An adopter can determine why every file supplied … |
+| [SN-039](SN-039.md) | Scope: template (adopters + this repo). An adopter can tell whether each stakeholder need… |
+| [SN-040](SN-040.md) | Scope: template (adopters + this repo). A stakeholder can obtain a repeatable explanation… |
