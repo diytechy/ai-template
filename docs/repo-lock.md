@@ -1078,6 +1078,32 @@ review. The §8.5 pattern, continued. Entries accumulate as the rework runs.
   facts** — `dev-setup` is a *placement* change, `run` is a *reversal* of this
   repo's recorded non-goal ("no `run.*` product launchers"): the non-goal's
   boundary changes from "no launchers" to "no *product* launch; an
-  actions-menu launcher is in scope". `status.md`'s Scope bullet and the SN
-  registry's NG prose need the same amendment — made with the intake, flagged
-  here because it edits a recorded non-goal.
+  actions-menu launcher is in scope". The non-goal prose (`status.md` Scope,
+  `CLAUDE.md`) amends **only if the need is attested** — a draft proposing
+  the reversal while the recorded boundary stands is the honest state.
+- **The SN batch went through the §8.4 pattern — codex `gpt-5.6-sol`
+  adversarial round, then dispositions — and three of its verdicts were
+  ACCEPTED, two DISPUTED:** accepted: the plain-language/hats/interfaces/
+  chain-back rows ship with the reviewer's replacement text (restricting the
+  plain-language rule to SN `need` cells so it stops contradicting SR-126);
+  its two "missing needs" (scope visibility; reproducible component
+  decomposition) were adopted as rows; its REJECT of a separate
+  intercept-stage need was accepted — that content lands as an **amendment
+  to the SN-029 draft** (whose current text stops at "the loop halts where
+  reserved" and never says the released tiers still get a recorded,
+  delegated review), fixing the ordinal direction the reviewer caught.
+  **Disputed, for the sitting:** the reviewer says the launcher items are
+  SR-tier (dev-setup → SN-001/SR-032; agent-resume → SN-025; run-menu → a
+  one-row self-application amendment of SR-046) and the sitting's own
+  demotion precedent supports it — but the owner's intake words them as
+  needs, twice, so they enter as Draft SNs carrying the dispute in their
+  acceptance notes. The sitting settles the level; demotion costs one id
+  retirement each.
+- **The owner's agent-resume sentence read "…which will install all
+  dependencies a repo developer would need" — treated as a copy-paste slip
+  from the dev-setup item** (agent-resume resumes the loop; dev-setup
+  installs). Drafted that way; say so if wrong.
+- **"Those hats include the examples which are accessible to downstream
+  users" — interpreted as:** the roster must include downstream-user
+  perspectives (people who reach the kit only through its accessible
+  surfaces/examples). Drafted that way; say so if wrong.
