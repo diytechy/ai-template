@@ -26693,3 +26693,84 @@ blocks the advisory `lint` step. (c) `docs/work/complete/WI-423-*.md`'s
 Deliverable states the overturned ruling as a live conclusion; a closed spec is
 history and was not rewritten, but a reader who lands on it has no signal that
 the owner reversed it.
+
+## 2026-08-11 — WI-433: the blackout ships DISABLED, and the guard moves with it
+
+**Owner ruling, 2026-08-11** (repo-lock §8.5, settling the tabled question
+*"should the kit ship YOUR blackout window to every adopter?"*):
+`process.toml.template` ships `blackout = "12:00-12:00"` instead of
+`"12:00-19:00"` — **disabled, with the shape kept**. `docs/process.toml` was
+explicitly out of scope and is untouched; this repo still runs the owner's
+`"12:00-19:00"`.
+
+**The asymmetry that decided it.** A shipped-EMPTY dial an adopter forgets costs
+some odd-hours activity. A shipped-POPULATED dial an adopter does not notice
+costs seven hours a day of a loop that looks broken — and it cost exactly that
+here, silently stopping ten of the kit's own tests for seven hours of every
+weekday until WI-428 caught it. `start == end` is the dial's own documented
+disable form, written as a *window* rather than as `""` so an adopter reads the
+format off the line they edit.
+
+**Driven in a real fresh scaffold, not only in the template.**
+`bootstrap.py --dest <tmp>` produced `blackout = "12:00-12:00"`, which parses to
+`(720, 720)` and yields **0 waits across 504 probed clock times** (7 days × 24 h
+× 3 minutes). The same probe against a populated `12:00-19:00` yields **105**.
+<!-- fig: cmd="bootstrap.py --dest <tmp>; probe agent_common.blackout_wake over a 504-sample week" rev=6562239f -->
+
+**The comment offers the hours; it does not assert a vendor fact.** The
+rationale on record was that Claude models see heavier usage 12:00–19:00 UTC.
+There is no source for any vendor's aggregate load and one was not manufactured.
+The shipped comment therefore offers the window as *the kit's author observes
+heavier contention roughly 12:00–19:00 UTC*, gives the checkable half (the
+timezone mapping), states outright that this is **not a measurement of any
+vendor's load**, and points the adopter at their own contention. That framing is
+**mechanized**: a new test requires the observation phrasing and the disclaimer
+and refuses the strings `Anthropic`, `Claude models see`, `usage peaks` in the
+shipped `[policies]` block.
+
+**The pin was re-aimed, not deleted — and its non-vacuity moved somewhere real.**
+`test_the_kit_still_ships_the_owners_live_window` carried two claims in one
+test; the first is now false by ruling, and deleting it would have left this
+module guarding an empty dial, which is the vacuity trap WI-428's own docstring
+names. It is now four tests: the shipped dial is disabled **and** the disabling
+is real across a full week of injected clocks **and** the value still parses as
+a window; a **populated** window still blocks (105 waits, max 7 h, Mon–Fri only)
+— that one is where the non-vacuity went; this repo's own dial is asserted
+*present and parseable* but deliberately **not pinned to a value**, because it
+is the owner's; and the wording constraint above. The bootstrap-module guard and
+the autouse sweep are kept with rewritten rationale as the **second** line of
+defence — they are the rule that holds the day the shipped default is
+repopulated, which is the day nobody is reading this file.
+
+**Red-proof, four independent breaks:** template regressed to `"12:00-19:00"`
+→ 1 failure; `blackout_wake`'s `start == end` rule neutered → 3; its
+inside-window test forced `False` → 2; the comment reworded to assert a vendor
+fact → 1. Each restored to **14 passed**.
+
+**Byte deltas on budgeted files.** `AGENTS.template.md` **9,991 unchanged**.
+`PROCESS.md` **64,466 unchanged**. `PROCESS_OPTIONS.md` **170,397 → 170,609,
++212** — "Unattended operation" now states the ruled default and the asymmetry
+behind it where it named a value. Re-stamped in both skill copies (and the
+`.agents/` materialization re-synced, which the commit hook checks).
+
+**Ratchets re-stamped, each with its reason at the entry.** `agent_loop.py`
+**3,160 → 3,162** and `agent_common.py` **2,466 → 2,467** — both are docstring
+sentences that stated the scaffold's shipped value and would otherwise assert a
+default the template no longer carries.
+
+**The bar.** Full unfiltered suite **2291 passed, 5 skipped in 418.51s** against
+this WI's own **2288 / 5** start point — **+3**, reconciled exactly: one test
+replaced by four in `tests/test_blackout_isolation.py`, no other module moved.
+<!-- fig: cmd=".venv/bin/python -m pytest -q -n auto" rev=6562239f -->
+`trace.py --strict` **rc 0**; `check_trajectory.py --strict` **rc 0**;
+`check_docs.py --stale` **0 broken** (818 docs, 1,114 links); `check.py --jobs 0`
+**RESULT: PASS**; every generated surface `--check` fresh; `ruff format --check`
+clean over 168 files. A **fresh scaffold** comes up `RESULT: PASS` on all six G1
+steps. The four advisory reds are the same pre-existing set recorded at WI-432.
+Watermark raised by `trace.py --bump-ids`: **WI 432 → 433**.
+
+**Finding filed, not fixed.** `project-trajectory/blackout.template` still ends
+`12:00-19:00`. It is a RETIRED scaffold source kept only as the converter's
+reference for the *legacy* one-word vocabulary, so its default line describes
+the home that no longer ships — but a reader who opens it will read a value the
+kit no longer gives anyone.

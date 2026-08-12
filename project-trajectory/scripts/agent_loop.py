@@ -53,7 +53,9 @@ During worker/review sessions this module:
     the agent-resume -> agent_loop path waits the window out and resumes
     automatically (a single launch survives the blackout), printing a banner and
     a periodic countdown so the wait reads as deliberate, not hung. Absent/empty/
-    malformed or start==end = disabled; the scaffold ships a 12:00–19:00 default;
+    malformed or start==end = disabled, which is what the scaffold ships
+    (WI-433: an adopter picks their own hours rather than inheriting the kit
+    author's);
   - counts a no-commit worker session toward the stall guard (git HEAD unmoved) —
     except limit-hit sessions (below), which never count as a stall. A session
     that errored *before it could work* (the CLI reported is_error, or it could

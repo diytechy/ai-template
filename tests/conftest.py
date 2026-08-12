@@ -656,25 +656,30 @@ def set_process_key(root, section, key, value, *, seed=True):
     return load_script("bootstrap").set_process_key(root, section, key, value)
 
 
-# --- WI-428: a test scaffold must not inherit a LIVE policy window ------------
-# The kit template ships WI-148's `blackout = "12:00-19:00"` — the owner's real
-# weekday operating window, and a deliberate default whose own comment forbids
-# re-deciding it inside a refactor. That value is CORRECT and stays untouched
-# (test_bootstrap asserts a real bootstrap.py scaffold still carries it).
-#
-# What was wrong is that the SUITE inherited it. A scaffold seeded from the
-# template and then handed to a session-driving fixture gives `agent_loop` a
-# live window, which it correctly honors by SLEEPING: measured 2026-08-11,
+# --- WI-428/WI-433: a test scaffold must not inherit a LIVE policy window -----
+# The kit template USED to ship WI-148's `blackout = "12:00-19:00"` — the kit
+# author's real weekday operating window. A scaffold seeded from it and handed
+# to a session-driving fixture gave `agent_loop` a live window, which it
+# correctly honors by SLEEPING: measured 2026-08-11,
 # `blackout_wake("12:00-19:00", 14:22Z) == 16650` s (4 h 37 m). The tests did
 # not fail, they never ran, and the runner reported green on the rest — so
 # "full bar green" was a function of UTC time-of-day, and a 2026-08-10 probe
 # outside the window recorded the module as "not reproduced ... flaky". It is
 # not flaky; it is deterministic in the clock.
 #
-# Test scaffolds therefore opt out through the dial's OWN documented disable
-# form (an empty value; `start == end` is the other), so a session test
-# exercises session behavior rather than the wall clock. Held by
-# tests/test_blackout_isolation.py and by the autouse sweep below.
+# WI-433 (owner ruling 2026-08-11) removed the source rather than only the
+# symptom: the template now ships the dial DISABLED (`"12:00-12:00"`,
+# `start == end`), keeping the window SHAPE so an adopter can still read the
+# format off the line they edit. This repo's OWN dial is unchanged and still
+# the owner's to set.
+#
+# Everything below therefore stays, as defence in depth rather than as the only
+# defence. Test scaffolds still opt out explicitly through the dial's own
+# documented disable form (an empty value), so a session test exercises session
+# behavior rather than the wall clock, and the autouse sweep still reds on a
+# live window however it arrived. tests/test_blackout_isolation.py holds both
+# halves — that the shipped dial is really inert, and that a POPULATED window
+# really does block, so the machinery is proven live and not merely unused.
 BLACKOUT_DISABLED = ""
 
 

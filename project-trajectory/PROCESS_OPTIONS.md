@@ -685,8 +685,11 @@ window out and resumes automatically**, so one walk-away launch survives a daily
 blackout (unlike a pause, no unpause commit needed). The window is half-open
 `[start, end)` — 12:00–19:00 blocks 12:00 through 18:59 and releases at 19:00.
 `start == end` disables, and so does an empty value (disabled is
-byte-identical to before); the scaffold ships a **12:00–19:00** default so a
-fresh repo gets it without a hidden built-in.
+byte-identical to before). The scaffold ships it **DISABLED but shaped** —
+`"12:00-12:00"` — so a fresh repo inherits nobody's hours while still seeing
+the format it edits (owner ruling 2026-08-11, replacing the shipped
+`12:00-19:00`: a populated dial an adopter does not notice costs seven hours a
+day of a loop that looks broken).
 
 **The phase (in-process routing state).** The coordinator routes each session's
 model tier (§6 tiering, mapped per phase) from the phase it is driving. This was

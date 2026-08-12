@@ -423,7 +423,11 @@ BASELINE = {
     # `live-status` is the ONE of the six read through the coordinator layer, so
     # it costs a `declared_policy` swap and the comment saying why — no local
     # reader here, which is the whole point of the F5 split recorded below.
-    "agent_loop.py": 3160,
+    # WI-433 (the blackout ships DISABLED): +2 (3160 -> 3162). Two lines of the
+    # module docstring's dial description — the scaffold's shipped value changed
+    # and the sentence that stated it had to change with it, or the docstring
+    # would assert a default the template no longer carries.
+    "agent_loop.py": 3162,
     # +30 (2206 -> 2236), WI-065: `tc_citation_findings` — the TC-`Verifies`
     # rules lifted out of `analyze` so the cell could accept `IF-###` seam ids.
     # Most of the bump is that helper's docstring, which is where the RULING now
@@ -1383,7 +1387,10 @@ BASELINE = {
     # recording why they sit in THAT table rather than PROCESS_ONLY_KEYS (each
     # has a legacy file, so each can be double-declared, and the mixed-config
     # refusal + --migrate-config both key off these rows).
-    "agent_common.py": 2466,
+    # WI-433: +1 (2466 -> 2467). The `BLACKOUT_RE` header comment states what a
+    # fresh scaffold ships; the template stopped shipping the owner's window, so
+    # the comment stops claiming it does.
+    "agent_common.py": 2467,
     # NEW ENTRY, WI-387 — integrate.py crossed THRESHOLD (1418 -> 1588) adding
     # the third terminal outcome. The extraction the ratchet asks for was TAKEN
     # FIRST, not argued away: `hand_back` and `quarantine`, the largest unit and

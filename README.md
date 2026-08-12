@@ -338,7 +338,7 @@ set:
 | `process.toml` `privacy_check` | `false` | **opt-in** `true` (PII/identity layer) | `false` |
 | `process.toml` `secrets_scan` | `true` | **opt-out** `false` | `true` |
 | `process.toml` `privacy_review` | `"require"` | opt-down `"warn-unwired"` (the unwired reviewer warns instead of blocking) | `"require"` |
-| `process.toml` `blackout` | `"12:00-19:00"` (UTC, Mon–Fri) | empty value (or start == end) disables | `"12:00-19:00"` |
+| `process.toml` `blackout` | `"12:00-12:00"` — **disabled**, shipped in window shape so the format is visible (UTC, Mon–Fri when populated) | fill in your own `HH:MM-HH:MM`; empty value (or start == end) disables | `"12:00-19:00"` (the owner's own hours; the kit no longer ships them) |
 | `process.toml` `guardrails` | `"off"` | **opt-in** model-substring allowlist / `"all except …"` | `"off"` (no vendored core — reason in the key's comment) |
 | `process.toml` `trajectory_check` | `true` — the WI registry validator + its dashboard | **opt-out** `false` (vacuous anyway on a placeholder-only registry) | `true` |
 | `process.toml` `okf_export` | `true` | **opt-out** `false` | `true` (`docs/okf/` committed) |

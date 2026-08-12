@@ -994,8 +994,9 @@ def _declared_test_command(ini, py=None):
 # waits out the window, then resumes automatically, so a single walk-away launch
 # survives the blackout. An absent/empty/malformed file, or `start == end`,
 # disables it (byte-identical to a repo that never had the file — never-breaking);
-# a fresh scaffold ships the 12:00–19:00 default so the owner's "always on"
-# blackout is honored by the scaffold, not a hidden built-in.
+# a fresh scaffold ships `12:00-12:00`, i.e. DISABLED but written in window
+# SHAPE, so an adopter reads the format off the line they edit and inherits
+# nobody else's hours (owner ruling 2026-08-11, WI-433).
 BLACKOUT_RE = re.compile(r"^\s*(\d{1,2}):(\d{2})\s*-\s*(\d{1,2}):(\d{2})\s*$")
 
 

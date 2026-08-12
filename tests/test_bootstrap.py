@@ -547,10 +547,15 @@ def test_scaffold_ships_every_policy_dial_in_one_home(scaffold):
     # SN-028: docs/process.toml carries every dial a fresh scaffold declares,
     # and each is TYPED (a bool is a bool, the reviewer count is an int) rather
     # than a one-word string every reader re-parses. Every VALUE is the one the
-    # file it replaced shipped — including WI-148's 12:00-19:00 blackout
-    # window. Folding a file into another file is a MOVE; a default reversed
-    # inside a refactor is a prior ruling overturned without its own review,
-    # and a comment is not where that decision gets made.
+    # file it replaced shipped, with ONE deliberate exception carrying its own
+    # ruling: WI-433 (owner 2026-08-11) ships `blackout` DISABLED
+    # (`12:00-12:00`, start == end) rather than the kit author's own
+    # 12:00-19:00 window, because an adopter should not inherit a
+    # business-hours blackout in a timezone they did not choose. Folding a file
+    # into another file is a MOVE; a default reversed inside a refactor is a
+    # prior ruling overturned without its own review, and a comment is not
+    # where that decision gets made — this one has a ruling, and
+    # tests/test_blackout_isolation.py holds the rest of it.
     cfg = process_toml(scaffold)
     # SN-029: the gate-authority posture is the ORDINAL plus its two orthogonal
     # dials, not a stored enum word. The default is the conservative end.
@@ -565,7 +570,7 @@ def test_scaffold_ships_every_policy_dial_in_one_home(scaffold):
         "secrets_scan": True,
         "privacy_review": "require",
         "guardrails": "off",
-        "blackout": "12:00-19:00",
+        "blackout": "12:00-12:00",
     }
     # WI-432: the six check-enablement toggles are dials here too, folded in by
     # the 2026-08-11 overturn of WI-423 — every one VISIBLE, and every one at

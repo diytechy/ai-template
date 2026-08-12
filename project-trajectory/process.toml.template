@@ -140,12 +140,32 @@ privacy_review = "require"
 # Vendored-core guardrail injection — was docs/guardrails-policy.
 #   "off" | "all" | "all except <sub> …" | "<sub> …"
 guardrails = "off"
-# The weekday blackout window, UTC, HH:MM-HH:MM — was docs/blackout. An empty
-# value (or start == end) disables it. WI-148 shipped this default so a fresh
-# scaffold gets the owner's "always on" window from the machinery rather than
-# from a hidden built-in; folding the file into this one is a MOVE, not an
-# occasion to re-decide it.
-blackout = "12:00-19:00"
+# The weekday (Mon–Fri) blackout window, UTC, HH:MM-HH:MM — was docs/blackout.
+# The coordinator starts NO new session inside it; an in-flight session wraps
+# normally, then the loop waits the window out and resumes. An empty value, or
+# `start == end` as shipped below, DISABLES it.
+#
+# SHIPPED DISABLED, SHAPE KEPT (owner ruling 2026-08-11). This used to ship
+# `"12:00-19:00"` — the kit author's own operating window — and every adopter
+# inherited a business-hours blackout in a timezone they did not choose. The
+# asymmetry decided it: a shipped-EMPTY dial an adopter forgets costs some
+# odd-hours activity, while a shipped-POPULATED dial an adopter does not notice
+# costs seven hours a day of a loop that looks broken. It cost exactly that
+# once — it silently stopped ten of the kit's own tests for seven hours of
+# every weekday until WI-428 caught it. `"12:00-12:00"` is inert at every hour
+# of every day while still showing you what a window looks like, so filling it
+# in is an edit rather than a lookup.
+#
+# WHAT TO PUT HERE. Pick the hours your own team wants the machine quiet, in
+# UTC. If you want a starting point: the kit's author observes heavier
+# contention roughly 12:00–19:00 UTC (= 08:00–15:00 US Eastern, 05:00–12:00 US
+# Pacific) and runs that window. That is one person's operating observation,
+# offered as such — it is NOT a measurement of any vendor's load, and nothing
+# here should be read as one. Your own contention is the thing worth measuring.
+#
+# The window is half-open `[start, end)`: `12:00-19:00` blocks 12:00 through
+# 18:59 and releases at 19:00. A start after its end wraps past midnight.
+blackout = "12:00-12:00"
 
 [checks]
 # IS THIS CHECK ON. Six dials that used to be one-word files under docs/ and
