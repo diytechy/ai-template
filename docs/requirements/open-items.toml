@@ -99,7 +99,7 @@ That rules out deriving the partition by clustering today's 55 modules. Clusteri
 
 The brief previously named ONE objective, hypergraph-cut minimisation, and named `interfaces.csv`'s `SR-Refs` column as the incidence matrix -the method needs-. BOTH CLAIMS WERE TOO NARROW and are corrected here.
 
-- `SR-Refs` is one ENCODING of the coupling, available here only because 147 SRs already exist. The method needs elements plus a coupling relation; requirements are one source, shared signals from a functional decomposition another. A greenfield adopter at G1 has neither, so the shipped method cannot assume this one.
+- `SR-Refs` is one ENCODING of the coupling, available here only because 147 SRs already exist. The method needs elements plus a coupling relation; requirements are one source, shared signals from a functional decomposition another. A greenfield adopter before G1 has neither, so the shipped method cannot assume this one.
 - Cut minimisation is the SECONDARY objective. The PRIMARY one, from the stated purpose, is ONE HOME PER BEHAVIOUR - and it is a CONSTRAINT, not a cost: a candidate partition in which one behaviour is owned by two components is INVALID, not merely expensive.
 - Contradiction is the same constraint read at implementation time: two homes for one behaviour is what lets two implementations disagree.
 
@@ -110,6 +110,8 @@ THE CURRENT ARCHITECTURE ALREADY VIOLATES THE PRIMARY CONSTRAINT, measured 2026-
 - `value_to_cell` and its reader - each documented as the other's inverse, with a TypeError between them.
 
 Each is a behaviour no architecture had assigned a home, found by a census rather than by a check. That is the failure mode this ruling exists to make unrepresentable.
+
+All three are since pinned equal by `tests/test_rule_sync.py` (the rule-sync batteries commit), so the copies can no longer drift silently - but a pin contains the symptom, not the constraint: the behaviours still have 3, 5 and 2 homes, and no architecture assigns them one.
 
 ### PART A - the sequence, and the rung it needs
 
@@ -138,7 +140,7 @@ THE DRIFT HAS ACCELERATED SINCE THE ITEM WAS RAISED, which is the fact that shou
 - rows citing `repo-lock D-n` 11 of 110 to 14 of 113;
 - median cell length 260 to 325 characters, mean 323 to 372;
 - rows over 500 characters 21 to 34;
-- cross-registry citations 14 percent to 24.8 percent;
+- cross-registry citations 14 percent to 23.9 percent (27 rows name a `WI-` id in `Contract`; 34 cite any registry id; an earlier 24.8 figure was not reproducible at re-measure);
 - only the maximum is unchanged at 968, and it is the same row.
 
 THE CONTENT IS NOT MISJUDGED, IT IS UNFILED, and the reason is structural rather than careless: the kit is stack-agnostic so a type signature cannot be demanded (a seam may be a file format, a CLI, or an external actor), and the IF row has NO `Rationale` and NO `Detail` column, so the why has nowhere else in the row to go.
@@ -154,12 +156,12 @@ blast_radius = """THIS IS THE MOST BLOCKING ITEM IN THE LOCK PROGRAM, and the tw
 
 ### Part B's radius
 
-- Schema: THE WHOLE IF REGISTRY HAS NO SCHEMA TIER, re-verified 2026-08-12. `trace.py`'s required-field and enum dictionaries carry keys for SR, LLR and TC only - there is no IF key at all - so on an IF row nothing is required, nothing is enum-checked, and nothing bounds a cell's content. `Contract` is unconstrained; `Status` is undeclared (OI-13 ruled that IF's Status lands HERE); `Stability` is validated nowhere despite being one of the fields `PROCESS.md` section 8 actually names.
-- Undeclared columns: the header carries ELEVEN columns and section 8's prose names only seven of them - `ThisProject`, `Status`, `Component` and `Notes` appear in no shipped definition, and the only gloss `Status` has anywhere is a comment inside a template row. So ruling this means ADDING A SCHEMA TIER, not just writing prose - and the owner's typing rule needs that tier to exist or it is one more unvalidated column.
+- Schema: THE WHOLE IF REGISTRY HAS NO SCHEMA TIER, re-verified 2026-08-12. `trace.py`'s required-field and enum dictionaries carry keys for SR, LLR and TC only - there is no IF key at all, and no SN key either, despite SN's TOML carrier having landed - so on an IF row nothing is required, nothing is enum-checked, and nothing bounds a cell's content. The tier this item builds for IF is the same tier SN is still missing. `Contract` is unconstrained; `Status` is undeclared (OI-13 ruled that IF's Status lands HERE); `Stability` is validated nowhere despite being one of the fields `PROCESS.md` section 8 actually names.
+- Undeclared columns, CORRECTED at verification 2026-08-12: the header carries ELEVEN columns and section 8's prose names only seven of them. The other four (`ThisProject`, `Status`, `Component`, `Notes`) ARE defined - but only in `INTERFACES.template.md`'s column table, a shipped prose gloss that no check reads. The proof a prose definition does not hold: `Stability`'s own shipped vocabulary is Experimental/Stable/Deprecated, yet FOUR live rows carry `Provisional`; and `Status` re-measured at 113 rows is Stable 99 / Draft 9 / Active 5. So ruling this means ADDING A SCHEMA TIER, not writing more prose - and the owner's typing rule needs that tier to exist or it is one more unvalidated column.
 - Consumer 1, the sharpest practical cost: `plan_briefs.IF_SURFACE_COLUMNS` feeds the row VERBATIM into the dual-plan LLM planning briefs, and the surface is `IF-ID, Direction, ThisProject, Counterpart, Status, Contract` - so it hands a model BOTH the unconstrained narrative cell AND the undeclared status column as though each were a contract. This is the point that argues for splitting the cell rather than declaring alone.
 - Consumer 2: a consuming row -pins the version- per section 8, but nothing marks WHICH sentence is the pinned obligation, so a `Version` bump is measured against an unstated baseline.
 - Consumer 3: 24 percent of cells name a work-item id, duplicating the log; a work-item id ages, and a cancelled row's id sitting in a `Contract` cell still reads as authority.
-- Shared by both parts: `interfaces.csv` is the last registry still waiting to move onto the TOML carrier, and it has been waiting on this ruling precisely so it converts once rather than twice."""
+- Shared by both parts: `interfaces.csv` and `components.csv` are the last two registries still on CSV, both waiting on this ruling precisely so each converts once rather than twice."""
 options = """TWO PARTS, RULED IN ORDER. Part A is safe to rule alone; Part B is not - its migration would be redone if A changes which rows exist.
 
 ### PART A - the partition
@@ -173,8 +175,10 @@ options = """TWO PARTS, RULED IN ORDER. Part A is safe to rule alone; Part B is 
 
 The sequence needs a declared system boundary BEFORE SRs are written, and G1's bar does not ask for one. Three ways to close that, and it is a shipped process change either way.
 
+NOTE, 2026-08-12 after OI-21's re-ruling: the owner's new eight-rung ladder names -system boundary interfaces in work- as stage 1 and -high-level system architecture in work- as stage 2, so the ORDERING half of this rung is now ladder-borne for every project - the boundary precedes SRs by construction. A5/A6/A7 stay live as the ENFORCEMENT question (what the harness requires before the next rung, and for whom), and this item's partition ruling now also supplies the artifacts those two rungs gate on - which is why OI-21's program is sequenced AFTER part A.
+
 - (A5) REQUIRE IT AT G1 - the boundary is a G1 deliverable: every crossing an interface row, typed, with the set declared complete. FOR: SRs stop being blessed without a frame to be written against, which is the gap; the mechanism half-exists already (15 of 113 rows name an external counterpart). AGAINST: it hardens G1 for every adopter, including projects small enough that the boundary is obvious.
-- (A6) REQUIRE IT WITH AN APPLIES-WHEN - same obligation, opt-in by project size or profile, warn-first until a project claims G2. FOR: proportionality (SN-012) says heavy layers cost a project that does not use them nothing; a three-file project genuinely does not need a formal context declaration. AGAINST: the projects most likely to skip it are the ones whose boundary later turns out to have been guessed.
+- (A6) REQUIRE IT WITH AN APPLIES-WHEN - same obligation, opt-in by project size or profile, warn-first until a project is held to the G2 bar. FOR: proportionality (SN-012) says heavy layers cost a project that does not use them nothing; a three-file project genuinely does not need a formal context declaration. AGAINST: the projects most likely to skip it are the ones whose boundary later turns out to have been guessed.
 - (A7) LEAVE IT IMPLICIT - no boundary artifact; the external interfaces accumulate as they are noticed. FOR: zero process change; it is what happens today. AGAINST: it is also WHY only 15 rows are external - the set was never declared, so nothing says whether it is complete, and an SR can be written against a boundary nobody has stated.
 
 ### PART B - the contract
@@ -205,7 +209,7 @@ The honest answer to -I'm not sure of the best way to enforce this mechanically-
 - the schema tier proper - required fields; closed vocabularies for `Stability`, for `Status`, and for the new discrete-vs-variable type; a refusal when a component boundary has an uncovered crossing;
 - refuse a work-item id in `Contract` (would fire on 24 percent of rows today);
 - refuse a `repo-lock D-n` citation (14 rows);
-- warn on a rationale connective such as -because- or -rather than- (24 percent);
+- warn on a rationale connective such as -because- or -rather than- (18 percent - 20 rows; 24 rows if -so that- and -since- join the list);
 - warn above a length ceiling (34 rows exceed 500 characters).
 
 Those four negative rules are cheap and stdlib, and they encode the owner's own general rule that history belongs in the archive rather than in a live cell. They do not decide whether a cell is a good interface definition; they make it impossible for it to be a changelog, which is the actual observed failure.
@@ -238,8 +242,8 @@ So the direction the owner wants - one home per helper, smallest total code - is
 
 ### What the census measured, and it supports the ruling
 
-- 32 of 55 kit scripts already import a sibling; `spine_carrier` alone has 17 importers.
-- The re-sync copies `scripts/` wholesale, so a shared module adds no adopter step - the owner's -basically moot- read, confirmed.
+- 32 of 55 kit scripts already import a sibling; `spine_carrier` alone has 17 importers - and shipped shared modules already exist (`agent_common.py`, extracted from the loop at WI-218, and `spine_carrier.py`, both in `MAPPING`), so the inversion makes bootstrap a normal importer of a module class the kit already ships.
+- The re-sync copy is `MAPPING`-driven per file, so a shared module added to `MAPPING` reaches adopters with no extra step - the owner's -basically moot- read, confirmed.
 - The duplication is real and has already drifted: `is_example` had 3 copies, one of which crashed on `None`; the declared-line reader had FIVE copies with a false claim of equivalence; the carrier's value writer and reader claimed mutual inversion with a TypeError between them. All three are now pinned, which contains the class without shrinking it."""
 blast_radius = """- Migration: about 30 files across the full program; the first slice is ~9 files and deletes roughly 650 duplicated lines. Under the inverted step 2, `bootstrap.py` also loses its two declared duplicates (the retired-enum translation and its TOML row emitter), and the `test_rule_sync` pins that hold them equal become unnecessary rather than merely passing - the drift is made unrepresentable instead of detected, which is this repo's stated preference.
 - Downstream: none, provided the common module is added to `MAPPING`. That single line is the whole risk surface, and it is the line the repo has already got wrong once.
@@ -262,7 +266,7 @@ title = """The launcher needs - are they NEEDS or REQUIREMENTS, and does the run
 status = "pending"
 raised = "2026-08-12"
 one_line = """rule whether SN-034 (one-action dev-setup + agent-resume) and SN-035 (a run menu for this repo) stay needs or demote to requirements; recommendation is DEMOTE SN-034, KEEP SN-035, which carries a non-goal reversal a requirement cell cannot hold"""
-decision = """Are SN-034 and SN-035 needs, or single-requirement items belonging in an existing parent's decomposition? THE DISPUTE IS ABOUT LEVEL, NOT CONTENT, and it is recorded rather than resolved because the two authorities disagree: the owner's intake words each as a need, and an adversarial review found each decomposes into exactly ONE system requirement - the same test the 2026-08-10 sitting used to demote three needs.
+decision = """Are SN-034 and SN-035 needs, or single-requirement items belonging in an existing parent's decomposition? THE DISPUTE IS ABOUT LEVEL, NOT CONTENT, and it is recorded rather than resolved because the two authorities disagree: the owner's intake words each as a need, and an adversarial review found each decomposes into exactly ONE system requirement - the same low-decomposition test the 2026-08-10 sitting used to demote three needs (those three decomposed into 3, 2 and 1 SRs against a core-need mean of ~12.7, so these two are purer cases of the pattern than the precedent itself).
 
 Both rows were admitted as Drafts on 2026-08-12 under the owner's ruling that all six SN-tier intake items hold, with the double-click promise relaxed to -where the platform allows- (a Linux desktop needs the execute bit, so a bare double-click is unpromisable there).
 
@@ -276,7 +280,7 @@ THE FACTS THAT MATTER MORE THAN THE ARGUMENT:
 
 - SN-034's two launchers already exist. `dev-setup` launchers ship here and downstream (`.command`/`.cmd`/`.sh`/`.ps1`, scaffolded and self-applied) but live in `scripts/`, not at the root - so that item is a PLACEMENT change, not a new capability. `agent-resume.*` already exists self-applied at the root.
 - SN-035's run menu does not. `run.*` ships to adopters and is DELIBERATELY un-self-applied here, recorded as a non-goal in both `status.md` and `CLAUDE.md` on the reasoning that a meta-repo has no product to launch.
-- ONE READING FLAG: the owner's agent-resume sentence said it -will install all dependencies a repo developer would need-, which is the dev-setup item's text; it was drafted as a copy-paste slip (agent-resume resumes the loop, dev-setup installs) and should be corrected if that reading is wrong."""
+- ONE READING FLAG, RESOLVED IN THE DRAFTS: the owner's intake sentence for agent-resume said it -will install all dependencies a repo developer would need-, which is the dev-setup item's job. The drafts were WRITTEN on the reading that this was a copy-paste slip (agent-resume resumes the loop, dev-setup installs), so SN-034's stored text does NOT carry the sentence - verified 2026-08-12 against the registry and its history. It needs the owner's attention only if that reading was wrong and agent-resume really is meant to install."""
 blast_radius = """SMALL EITHER WAY, and that is itself an argument for settling it cheaply.
 
 - Demotion: one id retirement each (ids retire and are never re-minted, per D-4), plus writing the obligation into the named parent's decomposition. The ids are Draft, so no re-attest window opens.
@@ -311,7 +315,7 @@ ONLY TWO NEED A HUMAN CALL - each must be re-anchored to a core need:
 - SR-021 cites SN-013 (no Python interpreter) ALONE - candidates SN-001 or SN-011;
 - SR-029 cites SN-017 (coordinator killed mid-session) ALONE - candidates SN-006 or SN-027.
 
-Prior evidence this tier is mis-levelled, from repo-lock section 0: seven of the ten decompose into exactly ONE SR against 12.6 for a core need. This is a KIT-LEVEL decision, not just a housekeeping one - the edge-case tier ships to every adopter as part of the stakeholder-needs template."""
+Prior evidence this tier is mis-levelled, from repo-lock section 0: seven of the ten decompose into exactly ONE SR against 12.6 for a core need. RE-VERIFIED 2026-08-12 against the live `sn_refs` arrays: every co-anchor claim above holds, and the seven-of-ten count stands (the exceptions: SN-016 at 12, SN-021 at 15, SN-017 at 5); the core-need mean recomputes to ~10.4 today - SRs added since the 12.6 measure - which does not move the conclusion. This is a KIT-LEVEL decision, not just a housekeeping one - the edge-case tier ships to every adopter as part of the stakeholder-needs template."""
 blast_radius = """A SPINE AMENDMENT, but one that fits inside a window that is already open.
 
 - Re-attestation: the edge rows are RATIFIED text, so retiring them belongs with the 25-row re-attest batch rather than as a separate act.
@@ -403,37 +407,63 @@ recommendation = """(a) RATIFY AS BUILT, and rule the cell-content question in t
 wi_refs = ["WI-429"]
 
 [open_item.OI-21]
-title = """Confirm the stage-semantics reading - gates KEPT their names, and the calls taken executing that"""
+title = """The gate vocabulary retires ENTIRELY for an eight-rung stage ladder - direction ruled, four execution questions open"""
 status = "pending"
 raised = "2026-08-12"
-one_line = """confirm that -retire gate semantics for stage semantics- meant retiring gate-as-STATE while G1/G2/G3 keep their names as human-certified boundaries; recommendation is CONFIRM, because that reading is already shipped and the alternative is a second, larger rework"""
-decision = """Did -retire gate semantics for stage semantics- mean retiring gate-as-STATE, or retiring the gate VOCABULARY entirely? It was executed as the first reading: the phrase -the active gate-, the pseudo-rung `G0` and -the repo is at G1- retire, while G1/G2/G3 SURVIVE as the names of the human-certified boundaries between stages.
+one_line = """RULED 2026-08-12: every G* tag converts to stage semantics on a new eight-rung ladder (0 vision/needs .. 7 release-ready) - the tags die purposefully, because gate numbers will always be conflated with stage numbers; open for ruling: the string-vs-int carrier, the historical sweep's attestation carve-out, the sign-off successor shape, and the automation-dial keying"""
+decision = """THIS ROW WAS A CONFIRMATION BRIEF AND THE ANSWER ARRIVED: the previous brief asked whether -retire gate semantics- meant keeping G1/G2/G3 as boundary names (the reading that shipped) or retiring the vocabulary entirely, and flagged -say so explicitly if the second was the intent.- The owner said so, 2026-08-12: all G* and G-Release tags are CONVERTED to stage semantics - traceability survives, the tags die, -very purposefully, because leaving them will always be conflated with stages, which have different numeric values.- The prior brief's confirm-the-shipped-reading recommendation is MOOT; what follows replaces it.
 
-The owner ruled 2026-08-12: -gate semantics should be retired / archived for stage semantics even though it will result in some relatively heavy rework.- That ruling adopted a written proposal, and the proposal defines gates as -the subset of stage boundaries that require a human to certify- - which is the basis for the reading taken.
+### The ruled ladder
 
-The reason to surface this rather than assume it: the second reading would be a materially larger program, because every sign-off record, the `check.py --gate` interface, the per-phase gate map and every adopter's harness invocation name gates.
+- 0 - vision and stakeholder needs in work
+- 1 - system boundary interfaces in work
+- 2 - high-level system architecture in work
+- 3 - system requirement definition in work
+- 4 - LLR definition in work
+- 5 - TC definition in work
+- 6 - implementation in work
+- 7 - all complete; release checklist and formal version tagging available
 
-### The six execution calls taken under the ruling, each reversible at stated cost
+The owner adds: the ladder -would also correspond with the level of automation the user would approve-, and the stage identity could be a STRING rather than an integer (-more robust and more readable-). Historical documentation may be updated wholesale: -the meaning is the same, and if history is really desired git can be referenced-; leaving the archive unconverted is the alternative, at the cost of being -harder to read / compare.-
 
-- (1) The semantics were homed in `PROCESS.md` rather than `PROCESS_OPTIONS.md`, because the options file's own header forbids always-on layers and a stage axis has no applies-when. Reversal is moving one section.
-- (2) `G0` survives as an INTERNAL below-G1 sentinel, because the min-fold needs a value there and `computed=G0` is a live cache format. It is documented everywhere as not-a-gate.
-- (3) Stage 5 maps to G3 rather than a new G-Release rung, with G-Release and G-Final named in prose only.
-- (4) The stage 3-to-4 discriminator is: every SR decomposed, every test case authored and non-draft, and at least one SR not yet Verified.
-- (5) The G2-to-G3 DRIVER was deliberately left as the `is_verified` cell - D-9 already found that cell is an authored claim that tests pass, which the harness should answer instead, and that fix belongs to the schema batch rather than to this rework.
-- (6) The 13 stale model-spec citations were repointed at the ARCHIVED spec rather than at the new section, because they cite its section numbers precisely."""
-blast_radius = """THE READING IS ALREADY SHIPPED, which is why it is filed as a confirmation rather than a question.
+### What measurement says about tractability, 2026-08-12
 
-- Executed 2026-08-12 across 31 files.
-- Verification: full unfiltered suite green (2,303 passed, 5 skipped); strict trace and trajectory checks rc 0.
-- Confirming COSTS NOTHING; the alternative is a program. Retiring the gate vocabulary entirely would additionally touch `check.py`'s `--gate` interface and every caller, the per-phase gate map in `docs/gate`, the four gate sign-off rows and their table in the log, `derive_gate`'s entire output contract, and every adopting repo's harness invocation - a kit version bump with a migration, where this rework was not."""
-options = """- (a) CONFIRM THE READING AND THE CALLS - gates keep their names; the six calls stand. FOR: it is what shipped, it is green, and the proposal the ruling adopted says exactly this. AGAINST: nothing, if the reading is right - which is the point of asking.
-- (b) CONFIRM THE READING, OVERTURN SPECIFIC CALLS - most likely candidates are the `PROCESS.md` home (move it to the options file) or `G0`'s survival as an internal sentinel (rename it). FOR: each is individually cheap to reverse and the reasons are stated rather than buried. AGAINST: `G0`'s rename in particular would break backward compatibility with existing gate caches, which the rework deliberately preserved.
-- (c) THE VOCABULARY WAS MEANT TO GO ENTIRELY - gates stop being named at all; boundaries are numbered stages with a human-certification flag. FOR: it is the maximally consistent end state, and it removes the last place where an event is used as a label. AGAINST: it is a second rework larger than the first, it breaks the shipped `--gate` interface for every adopter, and it discards a vocabulary that four sign-off records and the whole process document are written in."""
-recommendation = """(a) CONFIRM THE READING AND THE CALLS.
+- THE AXES ARE ALREADY DECOUPLED IN PRODUCTION, which is the fact that turns this from a rewrite into a migration: `derive_gate.stage_to_gate`'s own docstring states -Nothing derives the gate FROM the stage in production.- The gate is one 4-value enum plus its readers, renamed and re-pointed; the stage machinery already computes independently.
+- The REAL edit surface is ~201 files carrying ~2,538 tags, out of 5,231 raw tags in 538 files - history and generated surfaces (okf, dashboards, report) fall away or regenerate free. Five files carry 502 of the tags: `derive_gate.py` (129), `check.py` (111), the registry-machinery reference (119), `PROCESS.md` (81), `PROCESS_OPTIONS.md` (62).
+- SIX CONTRACT BREAKS, and they are the expensive part: (1) `check.py --gate {G1,G2,G3,all}` argparse choices - a downstream-visible CLI; (2) `docs/stack.ini [step:*] gates=` - a value adopters AUTHOR; (3) the WI `bar:` frontmatter enum, refused by two scripts; (4) the `[phase]-[gN]` WI-title archetype - 20 live anchors plus review-directory names; (5) the `docs/gate` basis-line format - precedent exists and is five days old: -field-compatible, not value-compatible-, one forced regenerate; (6) `LOG.template.md`'s Gate Sign-offs table, which ships downstream and has no obvious eight-rung successor.
+- TESTS: 137 of 2,167 test functions carry a G-tag across 36 modules; 11 modules assert gate SEMANTICS (the min-fold, the window arithmetic, the per-gate step plans, the ratification matrix) and need genuine rewriting, not relabeling.
+- THE WORD -gate- IS NOT THE TAG: ~3,400 word-occurrences, and whole modules (`test_env_gates`, `subagent_gate`, `check_perf`) use it in the unrelated sense of -a check that can fail.- The TAGS die; the word survives where it means that. A blanket find-replace would destroy working code - the sweep must be tag-scoped.
 
-- The deciding reason: the proposal the ruling adopted defines gates as the human-certified subset of stage boundaries, so keeping their names is not a softening of the ruling - it IS the ruling. The confusion the owner named is real and is now fixed: a stage is a state you are IN, a gate is an event you PASS, and `G0` was never a gate.
-- The one answer that must not arrive late: say so explicitly if (c) was the intent. The cost of that answer arriving late is high and the cost of it arriving now is a sentence.
-- The call worth a second look is (5): leaving the G2-to-G3 driver as a hand-set cell means the repo still asserts -the tests pass- in a cell rather than reading the harness, and that debt is now recorded in two places but discharged in neither."""
+### The two inserted rungs are the honest cost, and they are OI-14 promoted into the ladder
+
+- Rung 1 (boundary interfaces in work) has NO machine-readable state today - OI-14's own words: the boundary step has no home, and `interfaces.csv`'s only candidate state column is an undeclared defect awaiting the OI-14 part B schema tier. The rung needs a completeness predicate (every external crossing typed and covered) that must be built.
+- Rung 2 (architecture in work) has exactly one machine-readable candidate, `CMP.State` - currently read by NOTHING that gates (the dashboard renders it, that is all) - over a 5-component partition OI-14 calls an accident and schedules for re-derivation.
+- Rung 7's -formal version tagging- machinery DOES NOT EXIST: `gen_release_checklist.py` has one CI call site (tag-triggered), is not freshness-gated, and has never been run in this repo; there is no tagging, no changelog, no release version anywhere (OI-27 measured the same absence from the re-sync side).
+- SEQUENCING FOLLOWS: this program lands AFTER OI-14 part A. Ruling the partition and boundary first gives rungs 1 and 2 the artifacts they gate on; landing the ladder first would ship two rungs computed from nothing.
+
+### The insert hazard, with a five-day-old precedent
+
+The 2026-08-12 rework inserted one rung and its own basis-line docstring records the failure mode: a cache written before it carries `stage=4` meaning done, which now means implementation in process. That insert was saved by a coincidence (`human_holds` answers identically for stages 4 and 5 at every level). Inserting rungs at positions 1 and 2 shifts EVERY number above them with no saving coincidence - under an integer ladder, every cached stage and the automation dial's comparisons go silently wrong in the direction of LESS human involvement. This is the strongest single argument for the string carrier."""
+blast_radius = """A KIT VERSION BUMP WITH A MIGRATION - and the owner has softened that cost explicitly: every adopter is inside the owner's own development sphere, nothing is released beyond it, so a breaking conversion is acceptable. The adopter-side recipe is OI-27's inaugural migration-registry row.
+
+- HISTORY: ~1,584 tags in historical surfaces. `docs/okf/`'s 37 (603 files) regenerate FREE; the real mass is `docs/log.md` (641) and `docs/archive/` (553 across 132 files). Mechanically sweepable EXCEPT ~30 sites that are ATTESTATION QUOTES: the 9 `docs/ratify/` briefs quote registry cells byte-for-byte at a pinned baseline (18 hits), and the log's dated sign-off entries record a named human ratifying a thing CALLED G1/G2/G3 at the time. Rewriting those makes the record claim something was signed that was not - the one place the owner's -the meaning is the same- does not quite hold, and git-referenced history does not fix a quote that now misquotes.
+- ONE RENAME IS CODE, NOT PROSE: `## Gate Sign-offs` is a code-pinned heading (`trunk_step.RESERVED_HEADINGS`, asserted by a bootstrap test), so even a doc-only sweep carries a code change.
+- ADOPTER SURFACE, cheaper than it looks: the teaching docs and scripts are kit-owned and overwrite free on re-sync. The real adopter-side recipe: REGENERATE `docs/gate` (ADOPTING section 6 currently classes it -preserve always-, which becomes WRONG under this migration and must be overridden in the recipe), re-apply `process.toml` dials, hand-check adopter-authored hooks/CI passing `--gate` literally, their own WI rows carrying `Bar` values, their own log sign-offs (same carve-out), and `--sync` any materialized skills.
+- THE `gate-advance` SKILL (141 lines, three enforced-identical copies) is a full rewrite, not a rename - its structure IS the gate ladder. `registry-hygiene` and `session-protocol` take light passes.
+- THE ENFORCER THIS ROW ALREADY RECORDED becomes load-bearing: no check refuses retired vocabulary in authored text, and the retired -at G1- construct regenerated in this very registry within days. The sweep ships with the refusal check (tag-scoped, archive and quoting exempted) or the tags grow back."""
+options = """THE DIRECTION IS RULED; four execution questions remain, separable and independently rulable.
+
+- (1) CARRIER - STRING (recommended) or INT. Measured: the numeric-stage surface is FIVE sites total (two ordered comparisons, one parse, one serialization, one label map that is already string-keyed), so a string ladder costs one ordered-enum constant consumed at three sites - while the codebase's existing lexicographic fragility (`check.py` compares gate names as strings, correct only because G1<G2<G3 alphabetizes) sits on the axis being DELETED. String conditions, non-negotiable: ban ordering operators on the value - every comparison routes through a STAGE_ORDER lookup that RAISES on unknown, never degrades; and keep a derived ordinal companion on the basis line (`stage=llr-definition stage-ord=4`) so joins and drift checks stay cheap. INT's failure mode is exactly this program: insert-in-the-middle shifts every number, silently.
+- (2) HISTORY - sweep wholesale WITH THE ATTESTATION CARVE-OUT (recommended): convert all prose history, regenerate the generated, but leave the ~30 attestation-quote sites verbatim with a one-line header note naming the retired vocabulary. Alternatives: sweep everything including quotes (the owner's stated lean, maximally consistent, but makes signed records misquote); or leave the archive untouched (zero risk, but a reader then needs two vocabularies to search their own history, which is the cost the owner named).
+- (3) THE SIGN-OFF SUCCESSOR - today three sitting rows exist because three gates exist; eight rungs means eight states and an unstated number of sittings. Either sign-off rows become rung-boundary transitions (up to seven rows), or sittings stay their own axis - fewer sittings than boundaries, each naming the rung range it certifies. The second preserves the current practice (not every boundary needs a sitting) and is recommended.
+- (4) THE AUTOMATION-DIAL KEYING - the owner intends the ladder to -correspond with the level of automation the user would approve.- Today `human_ratification_through` deliberately counts RATIFIABLE SPINE TIERS (0-4), not stages - SN-029 split those axes because implementation is not a ratification tier. Two honest shapes: (i) MAP the dial onto the ladder (a lookup from dial level to the rungs it holds) - keeps the axes distinct, works today; (ii) EXTEND the dial to name rungs directly - coherent ONLY once rungs 1 and 2 have ratifiable artifacts, which is exactly what OI-14's boundary/partition ruling creates, so (ii) becomes available after OI-14 lands and can supersede (i) then."""
+recommendation = """EXECUTE AS ITS OWN PROGRAM AFTER OI-14 PART A, with the string carrier, the attestation carve-out, sittings-as-their-own-axis, and the dial mapped (not collapsed) onto the ladder.
+
+- The sequencing is the deciding call and it is an asymmetry again: rungs 1 and 2 gate on artifacts OI-14 is about to define. Ladder-after-partition costs nothing; ladder-before-partition ships rungs computed from nothing and re-opens them when OI-14 lands.
+- The sweep is TAG-SCOPED and lands WITH its enforcer - the refusal check on retired vocabulary in authored surfaces - or attention becomes the only thing holding 2,538 edits in place.
+- The `docs/gate` cache migrates on the proven precedent: field-compatible, one forced regenerate, `--check` reports stale on first recompute. No compat shim.
+- OI-27 carries the adopter half: the gate-to-stage conversion is the migration registry's inaugural row, written as prose an LLM can digest (the owner's stated requirement), and it is the FIRST live test of whatever re-sync method OI-27 rules.
+- What this row still owes the sitting after all four questions are ruled: nothing - it closes when the program is scheduled. The two stale-text residues the earlier verification found (SR-006/SR-049 in OI-23's batch, IF-013/IF-022 in OI-14's rewrite) are inherited by those items and are unaffected by this re-ruling, except that their correction target is now stage vocabulary rather than -the current gate-."""
 
 [open_item.OI-22]
 title = """The SN/SR prose-legibility rewrite - adopt the prepared batch, or leave the rows as written"""
@@ -442,7 +472,7 @@ raised = "2026-08-10"
 one_line = """rule whether the prepared exact-replacement text for 29 stakeholder needs and 17 system requirements is adopted; recommendation is ADOPT at the sitting alongside the 25-row re-attest, never piecemeal, so two re-blessing windows collapse into one"""
 decision = """Is the prepared replacement text adopted, or do the rows stay as written? The text is written, twice adversarially reviewed, and waiting.
 
-- Scope: ALL 29 stakeholder needs - a single declarative form, with every qualifier retained verbatim so no obligation is silently dropped - plus a 17-row system-requirement batch. 13 further SR rows were DROPPED from that batch rather than shipped as outlines.
+- Scope: ALL 29 stakeholder needs live when the batch was prepared - a single declarative form, with every qualifier retained verbatim so no obligation is silently dropped - plus a 17-row system-requirement batch. 13 further SR rows were DROPPED from that batch rather than shipped as outlines. NOTE 2026-08-12: the intake since added SN-033..SN-040 as Drafts, so the batch now covers 29 of 37 rows; the eight Drafts are unattested, owe no re-blessing, and can be written to the target form directly when attested rather than joining this batch.
 - Review round 1, adversarial (OpenAI gpt-5.6-sol, medium effort): 12 corrections, including 12 rows where a qualifier had been laundered out of the rewrite.
 - Review round 2, verification: 4 residuals. Every disposition is recorded in the plan.
 - Why it is still waiting: it should be worked WITH the re-attest window the sitting already opens, so two windows collapse into one - doing this rewrite alone would be the more expensive order."""
@@ -476,6 +506,8 @@ SR-002 is the clear case: its text names a -CSV structure- and states a column-c
 - TC-025, TC-129, TC-160;
 - SN-026.
 
+Spot-checked at verification 2026-08-12, confirming the split the list predicts: SN-026 (names `docs/agents.csv` - now `agents.toml`), SR-129 (names `work-items.csv` - now the `docs/work/` folder) and LLR-118 (names `open-items.csv` - now `open-items.toml`) are confirmed FALSE - note these are the agents/work-items/open-items carrier moves, siblings of the spine's rather than the same migration, though the remedy is identical; SR-025, LLR-025 and TC-025 name `skills/INDEX.csv`, which IS still CSV, so they are still TRUE. The unchecked remainder still needs the reading.
+
 ### Second - the dials
 
 Six check-enablement toggles moved from one-word files into `process.toml` sections, so every spine cell naming `docs/trajectory-check` or a sibling as a dial's home is now imprecise.
@@ -483,13 +515,17 @@ Six check-enablement toggles moved from one-word files into `process.toml` secti
 ### Third - two singletons
 
 - SR-049's `rationale` cites the pre-archive path of the derived-gate model spec - and because `Rationale` is classed as RATIFIED text, correcting it is an amendment rather than the mechanical repoint the other 14 citations got.
-- LLR-150's `detail` repeats a docstring claim that a later work item proved false."""
+- LLR-150's `detail` repeats a docstring claim that a later work item proved false.
+
+### Fourth - the stage-semantics residue, added at verification 2026-08-12
+
+- SR-006 and SR-049 still say -the active gate- in ratified cells - vocabulary the 2026-08-12 stage-semantics rework retired. Same class as the carrier rows: a rework correctly fenced out of ratified text, leaving it to this batch. (IF-013 and IF-022 carry the phrase too, but those are off-spine rows OI-14 part B is about to rewrite - repairing them here would repair them twice.)"""
 blast_radius = """A RE-ATTEST WINDOW, which is the entire reason these rows are still wrong: each is a cell a human blessed, so correcting it means re-blessing it.
 
 - Batching: taken as ONE batch inside the window the sitting already opens, the cost is the reading; taken separately, each is its own window.
 - The failure the fencing prevents is real: a work item that quietly -fixes- ratified text has changed what was agreed without anyone agreeing to it.
 - A tension the sitting must hold: SR-126 deliberately PERMITS script names and artifact paths in spine text, so the answer cannot simply be -never name a file.-"""
-options = """- (a) AMEND ALL AS ONE BATCH at the sitting - read each row, correct what is false, leave what is still true. FOR: one window; the corrections are mechanical once the reading is done; it clears the last known stale-text set. AGAINST: up to 23 rows of careful reading - the 15 carrier-clause rows, the six dial-naming rows and the two singletons, with some overlap between the first two groups - in a session already carrying 46 rows of prose rewrite plus 25 re-attests.
+options = """- (a) AMEND ALL AS ONE BATCH at the sitting - read each row, correct what is false, leave what is still true. FOR: one window; the corrections are mechanical once the reading is done; it clears the last known stale-text set. AGAINST: up to 25 rows of careful reading - the 15 carrier-clause rows, the six dial-naming rows, the two singletons and the two stage-vocabulary rows, with some overlap between the groups - in a session already carrying 46 rows of prose rewrite plus 25 re-attests.
 - (b) AMEND ONLY THE PROVABLY-FALSE - SR-002, SR-049, LLR-150 and the six dial-naming rows - and leave the -may still be true- list for a later pass. FOR: it spends the reading where the answer is already known; the maybe-list is genuinely uncertain and deserves better than a tired verdict. AGAINST: the maybe-list then needs its own window later, and an unexamined row that turns out false has been shipped as attested for another month.
 - (c) RE-STATE THE ROWS AGAINST INTERFACES rather than repairing them - rewrite each to name the obligation rather than the file. FOR: it fixes the class instead of the instances, which is the standing preference here. AGAINST: it is a scope expansion mid-sitting, and it overlaps the prose-rewrite batch, which is a separate item with its own prepared text - doing both to the same rows in one pass makes neither reviewable."""
 recommendation = """(a) AMEND ALL AS ONE BATCH at the sitting.
@@ -506,7 +542,7 @@ one_line = """rule SN-005's obligation that CI runs the SAME harness a human run
 decision = """No system requirement carries SN-005's obligation that -the enforcement floor is git plus CI running the SAME harness a human runs.- Is the need narrowed, struck, or left as prose?
 
 - The obligation is TRUE AND SHIPPED: the reference CI workflow runs the kit's own check script, and this repo's workflow dogfoods it.
-- What is missing is the PIN: the existing tests assert triggers, pinned action versions and job names, and never once assert that a `run:` line invokes the same harness a human invokes. So the strongest claim in the need is the one nothing would catch breaking.
+- What is missing is the PIN: the existing tests assert triggers, pinned action versions and job names, and never once assert that a `run:` line invokes the same harness a human invokes. One adjacent test asserts the reference workflow mentions the check script AT ALL, but compares it to no documented local command - so the strongest claim in the need is still the one nothing would catch breaking.
 - The sibling gap in SN-007 was ruled on 2026-08-11 - strike the clause, because that row's own acceptance already stated the sustainable version. THIS one is different in kind and must not be struck by analogy.
 
 The honest split is between three very different asks:
@@ -537,13 +573,13 @@ decision = """`gate_policy` names two different things, and the shipped options 
 
 - The collision generated TWO FALSE stale-text defects inside a single analysis pass, because a reader - human or agent - cannot tell which `gate_policy` a given mention means.
 - The two things sharing the name: a CONFIGURATION ENUM that was retired and replaced by a cumulative ratification ordinal, and a LIVE RUNTIME LABEL that describes how a session is being held (`human-held` / `loop-held`). The second is real, current and useful; it simply took a name that was already spent.
-- Separately but in the same family: `PROCESS_OPTIONS.md` - the document an ADOPTER reads as operative process - still instructs through the retired enum at ten distinct token lines. The two hyphenated command-line occurrences are NOT residue: they are a live translated interface and must stay.
+- Separately but in the same family: `PROCESS_OPTIONS.md` - the document an ADOPTER reads as operative process - still instructs through the retired enum at ten distinct token lines. The two hyphenated occurrences are NOT residue - one is the live `bootstrap.py --gate-policy` flag, the other the `docs/gate-policy.md` deviation-register filename - and both must stay.
 - Nothing mechanical sees any of this: the anti-drift pin covers only the shipped template, so the document drifted freely.
 - Four stale-text verdicts on other rows are currently BLOCKED on this collision - they cannot be judged until it is clear which `gate_policy` their text refers to."""
 blast_radius = """SMALL, LOCAL AND SHIPPED - the awkward combination.
 
 - Migration: the rename touches the runtime label's definition and its readers, which is a contained set; the documentation sweep touches ten lines in one shipped file.
-- Re-attestation: neither is a schema change and neither opens a re-attest window UNLESS a spine cell names the label, which must be CHECKED before executing rather than assumed.
+- Re-attestation: neither is a schema change, and the precondition is now CHECKED rather than assumed (2026-08-12): no spine cell names the runtime label - the two `gate_policy` hits in the spine (LLR-156's `_migrate_gate_policy` symbol, TC-031's `tests/test_gate_policy.py` citation) are the retired CONFIG sense and survive the rename untouched - so no re-attest window opens.
 - Deferral: the four blocked stale-text verdicts unblock the moment this lands, so it is small work that is holding up other reading."""
 options = """- (a) RENAME THE RUNTIME LABEL and sweep the ten doc lines onto the current vocabulary. FOR: one name means one thing again, which is the same doctrine already ruled for registry columns; the false-finding class disappears rather than being documented; adopters stop being taught a retired enum. AGAINST: a rename in shipped prose, and any external notes or scripts referencing the old label go stale.
 - (b) SWEEP THE DOC ONLY, keep both names. FOR: fixes the adopter-facing half, which is the part with a reader outside this repo. AGAINST: it leaves the collision that produced the false findings, so the next analysis pass pays the same cost.
@@ -551,7 +587,7 @@ options = """- (a) RENAME THE RUNTIME LABEL and sweep the ten doc lines onto the
 recommendation = """(a) RENAME AND SWEEP, as one change.
 
 - Pick a runtime-label name that cannot be confused with a policy dial - it describes WHO IS HOLDING a session, so name it for that.
-- Sweep the ten instructional lines in the same commit and leave the two hyphenated command-line occurrences untouched; they are a live interface, not residue.
+- Sweep the ten instructional lines in the same commit and leave the two hyphenated occurrences (the CLI flag and the deviation-register filename) untouched; they are a live interface, not residue.
 - Sequencing: do it BEFORE the sitting rather than after - re-running the four blocked stale-text verdicts is the payoff that makes this small item worth doing first."""
 
 [open_item.OI-26]
@@ -580,3 +616,59 @@ recommendation = """(a) ADD THE MINT VERDICT, minted mechanically rather than fr
 - The required guard: the verdict must carry WHICH of the three failure kinds it diagnosed, so the minted row inherits a real scope instead of -a test is red.-
 - Reject (b): the machinery has already done the typing, and routing a typed diagnosis through a human to be retyped is the kind of step that gets skipped under load.
 - On (c): its instinct is right that the three cases differ in confidence, and the better expression of that instinct is to mint for all three but mark the confidence, so a wrong-implementation row arrives flagged for scoping rather than not arriving at all."""
+
+[open_item.OI-27]
+title = """The LLM re-sync method - no kit version was ever designated, and the mechanical paths are skip-all or clobber-all"""
+status = "pending"
+raised = "2026-08-12"
+one_line = """rule the method for re-syncing a repo on an older kit via LLM - no version was ever designated (the anchor is the write-only `docs/kit-version` SHA stamp), the mechanical paths are skip-all or clobber-all, and 34 migration recipes live as prose in two drifting homes; recommendation is a shipped migration registry with per-entry detectors - state first, SHA range as fallback"""
+decision = """The owner's ask, 2026-08-12: -we need a method for resync to be achieved from older versions of this template via LLM.- The first question that ask raises - was a version ever designated? - has a measured answer: NO. Zero git tags, no changelog, no version number, ever. Everything below was measured 2026-08-12.
+
+### What exists instead of a version
+
+- `docs/kit-version` (SR-111, Verified): bootstrap stamps every adopting repo with the kit's short SHA plus date, `-dirty` on an uncommitted tree. The SHA-not-version choice was deliberate - SR-111's rationale rejected file-hash derivation because -it reports that something differs without saying from what.-
+- The stamp is WRITE-ONLY. No script reads it back; one test asserts it is non-empty. The -diff your stamp against the target- step in ADOPTING.md section 6 is entirely a human (or an LLM) reading prose and running git by hand.
+- The stamp requires the kit's git history. A tarball adopter is stamped `unknown (kit not a git checkout)` - SILENTLY, exit 0, no warning (the loud warning fires only on `-dirty`, which is hard-coded false on the no-git path). That scaffold has no anchor and is never told so.
+
+### The mechanical surface an LLM would drive
+
+- The documented re-sync is a plain `bootstrap.py --dest .` re-run, and it is WRITE-ONCE: an existing file is skipped, so it adds new files and updates NOTHING.
+- The only updater is `--force`, which overwrites everything except `docs/id-watermark` with zero awareness of adopter edits - no hash, no mtime, no diff check anywhere in the copy path.
+- `--sync` is a false friend: despite the name it refreshes only the per-agent skills subtrees and returns before any kit file is touched.
+- So the tool offers exactly two settings - skip everything or clobber everything - with 121 MAPPING files (52 of them .py) and ADOPTING section 6's 824 lines in between, carrying 34 top-level migration recipes (19 dated), keyed by DATE and WI id while the stamp speaks SHA.
+- SR-036 declares the gap deliberate: `verification = "Inspection"`, one of a handful of non-Test SRs in the registry, its rationale stating -the operator makes the overwrite-vs-preserve call.- An LLM method mechanizes a judgment the spine currently assigns to a person, which is why this is a ruling rather than a build.
+
+### The house pattern that already answers half the question
+
+Thirteen detector-style migrations ship today, with a settled four-way taxonomy: auto-migrate (the 13-row legacy config fold, the gate-policy word), degrade-gracefully (the value-only legacy `docs/gate` check), warn-only (the retired open-items.md beside its registry), hard-refuse (a registry live under both carriers). `gen_open_items` names the idiom: -the migration has a detector, on BOTH paths.-
+
+- NOT ONE of the thirteen consults `docs/kit-version`. Every one infers the repo's actual state from its artifacts - and their existence is why version-blind re-syncs have mostly survived.
+- The recipes meanwhile have TWO HOMES and they have already drifted: ADOPTING section 6 is the authority, the `downstream-resync` skill restates it, and the skill's WI-381 note is hand-maintained duplication - the exact two-homes state the carrier migration refuses elsewhere.
+
+### The field record, which is the evidence this is real
+
+Three named adopters, three distinct re-sync breakages, each caught downstream by a human: a silent public-function rename broke PictureSorter's imports; a cwd-relative `scripts/` path broke Pictures2VideoSlideShow on its `Scripts/` casing; a bootstrap re-run clobbered FileBackup's ps1-generated architecture diagram with empty Python-AST output. And the class is untested end to end: 347 tests bootstrap a FRESH scaffold, ZERO scaffold an old kit state and sync forward - `test_bootstrap` records the blind spot in prose (-invisible to a downstream re-sync ... only a fresh scaffold reaches it-), citing the `schedule.py` omission as its shipped instance.
+
+### RULED ADDITION 2026-08-12 - the gate-to-stage conversion is this method's first job
+
+The owner, same date, ruling OI-21's vocabulary retirement: the re-sync method -needs prose for an LLM to digest-, and adopters who use gate terminology -must ALSO be converted to stage terminology.- Two consequences for this item:
+
+- COMPATIBILITY IS SOFTENED, explicitly: -no project that uses this has been released beyond my own development sphere- - so breaking conversions are acceptable, and this brief's kit-version-bump caution weighs correspondingly less for as long as that holds.
+- THE INAUGURAL REGISTRY ROW IS CHOSEN: the gate-to-stage conversion (OI-21) becomes the first migration the method carries, and it is a good first test because it exercises BOTH selector halves - it is state-DETECTABLE (a `docs/gate` cache carrying G-values, a `stack.ini` `gates=` key, a `bar:` G-value in WI frontmatter are all probes) and SHA-rangeable. The adopter-side recipe it must carry, measured: regenerate `docs/gate` rather than preserve it (ADOPTING section 6 currently classes that file -preserve always-, which this migration inverts - the recipe must override the standing rule), re-apply `process.toml` dials, hand-check adopter-authored hooks and CI that pass `--gate` literally, their own WI rows carrying `Bar` values, their own log sign-off history (OI-21's attestation carve-out applies to adopters too), and `--sync` any materialized per-agent skills."""
+blast_radius = """THE KIT'S OUTERMOST INTERFACE - the one surface every adopter meets, including the ones this repo never sees.
+
+- Build surface: a shipped registry file (and template), a selector the skill or a driver script consumes, `bootstrap.py`'s stamp machinery, ADOPTING section 6 (prose decomposes into rows or points at them), and the `downstream-resync` skill. A kit version bump, ironically for an item about versioning.
+- The REAL radius is a standing discipline, not the build: every option imposes a per-kit-change obligation (a version bump, a detector, or a registry row), and nothing today enforces -a change needing a migration note got one.- Without an enforcer the obligation holds by attention - the same class OI-21 just recorded for the retired gate vocabulary, and the reason ADOPTING section 6 already carries a stale skill duplicate.
+- Sequencing: post-lock, its own program - but every kit change until then lands its recipe as one more row of prose, so the pile grows while it waits. It also COUPLES TO OI-16: a common-module consolidation is a rename-heavy program, and a silent rename is precisely the breakage class the field record shows biting adopters - so OI-16's execution WI should land the first registry rows or detectors under whatever shape this item rules.
+- THREE DEFECTS DO NOT WAIT on the ruling: (1) the tarball path stamps an anchorless `unknown` with no warning - one warn line fixes it; (2) the skill's hand-maintained WI-381 recipe duplicates ADOPTING section 6 and has drifted - point, do not restate; (3) no test re-syncs from an old kit state - the first one (scaffold at an older kit commit, sync forward, harness green) is owed under EVERY option and is what makes any method's claims evidence rather than prose."""
+options = """- (a) DESIGNATE VERSIONS and key migrations to them - tags or release ids plus a changelog, migrations selected by the stamp-to-target range. FOR: the stamp finally gets a reader; selection becomes a query instead of an 824-line read; humans get a shared name for kit states. AGAINST: keying to DECLARED history mis-keys every repo that hand-patched, half-synced, or carries the `unknown` stamp; versioning history retroactively is guesswork; and the per-change version discipline has no enforcer yet.
+- (b) DETECT STATE, DO NOT VERSION - extend the thirteen-instance house pattern: every migration ships a detector, a driver probes the adopted repo and emits the applicable list, `kit-version` stays provenance only. FOR: state is the TRUTH - it survives hand-patches, tarballs and unknown stamps, and it is the mechanism the kit already trusts thirteen times over. AGAINST: some changes are not state-detectable - a rename reads as mere absence, which is exactly the PictureSorter defect class - and without a shared home the detectors scatter as the recipes did.
+- (c) A SHIPPED MIGRATION REGISTRY WITH PER-ENTRY DETECTORS - one TOML row per recipe (since-SHA, a detect probe where one exists, the action, a pointer to the prose), the skill consumes the registry, section 6's recipes decompose into rows so the prose has one home. Detection selects where it can; the SHA range selects the rest. FOR: it answers BOTH halves - which migrations apply (a data problem, so a registry) and is this repo in the state the recipe assumes (a truth problem, so a detector) - and it dissolves the two-home drift. AGAINST: the most machinery of the three, and a registry no check enforces rots exactly like the prose it replaces - it is only better than section 6 if its enforcer lands with it.
+- (d) LLM OVER THE EXISTING PROSE - harden the skill, keep everything as prose: diff the range, read section 6, apply. FOR: zero machinery, and reading prose is what an LLM is good at. AGAINST: it is the current state with better wording - the regime under which all three field breakages shipped - it is unverifiable, and it has nothing to offer the tarball adopter, who has no range to diff."""
+recommendation = """(c) THE REGISTRY WITH DETECTORS, sequenced post-lock as its own program, with the three do-not-wait defects taken now.
+
+- The deciding reason: the ask splits into a data problem and a truth problem, and options (a), (b) and (d) each answer only one half. The kit's own doctrine assembles the whole answer - a registry with derived views for the data half, the established detector idiom for the truth half, and the SHA range only as the selector of last resort for what neither can see.
+- THE ENFORCER LANDS WITH THE REGISTRY OR (c) IS (d): a check that a commit touching the shipped surface (MAPPING, a schema, a carrier, a launcher contract) carries a registry row. Without it the rows hold by attention, which is the failure class this program keeps re-finding.
+- The LLM's role, stated honestly: the registry and detectors bound WHAT applies; the LLM performs the merge judgment SR-036 assigns to the operator - overwrite-vs-preserve on files the adopter may have edited. SR-036's Inspection verification should be re-read at this ruling, because a mechanized selector changes what the operator is inspecting.
+- The proof is the old-kit test, not the design: scaffold at an older kit commit, run the method forward, harness green. Build it first and every later row is born with a harness to fail against.
+- If the sitting wants less machinery: (b) alone is the defensible minimum - it extends proven practice - but record knowingly that renames stay invisible to it and will keep shipping as field breakage."""

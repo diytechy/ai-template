@@ -57,8 +57,9 @@ the map, and it must never grow depth again.**
 | the **launcher tier** disputes | **OI-17** | §8.3, §8.7 |
 | dissolve the **edge-case tier** | **OI-18** | §8.6 item 2 |
 | the **hats roster** contents + home | **OI-19** | §8.6 item 2 |
-| confirm the **stage-semantics reading** | **OI-21** | §8.7 |
+| the **gate-vocabulary retirement** — *re-ruled 2026-08-12: all G\* tags convert to an eight-rung stage ladder; four execution questions open, program sequenced after OI-14 part A* | **OI-21** | §8.7 |
 | what a **red test case** may produce | **OI-26** | §5 loose ends |
+| the **LLM re-sync method** from older kit states *(raised 2026-08-12; post-lock program, but the brief carries three do-not-wait defects)* | **OI-27** | — |
 
 **Not an `OI-` row, deliberately:** the **P0 sitting's 25-row re-attest** —
 `open-items.html` already renders every row owing a ratification with its
