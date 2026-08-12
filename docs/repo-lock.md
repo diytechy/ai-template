@@ -57,16 +57,22 @@ anything.
 - **Review the agent decisions taken executing the 2026-08-12 rulings** —
   recorded as they were made. → **§8.7**
 
-**Ruled 2026-08-12 (this sitting), now mechanical:**
+**Ruled 2026-08-12 (this sitting) — and EXECUTED the same day:**
 
-- ~~**Rule the stage/gate semantics**~~ — **RULED: gate-as-state is retired
-  for stage semantics** per the
-  [proposal](plans/2026-08-11-stage-gate-semantics.md); the heavy rework is
-  accepted. Execution is underway this session. → **§0**, **§8.6**
-- ~~**Rule the six SN-tier intake items**~~ — **RULED: all six hold**, with
-  item 2 (and its launcher siblings) relaxed to double-clickable *where the
-  platform allows* (Linux needs the execute bit). They enter as Draft rows
-  together with the 2026-08-12 additions; attestation stays the sitting's.
+- ~~**Rule the stage/gate semantics**~~ — **RULED and EXECUTED: gate-as-state
+  is retired for stage semantics** per the
+  [proposal](plans/2026-08-11-stage-gate-semantics.md). The implementation
+  rung exists (stage 4; done is 5), `docs/gate`'s header tells the truth,
+  `PROCESS.md` §4 carries the model, the sweep is done, full bar green.
+  Judgment calls → **§8.7**.
+- ~~**Rule the six SN-tier intake items**~~ — **RULED and EXECUTED as
+  Drafts**: all six hold, item 2 (and its launcher siblings) relaxed to
+  double-clickable *where the platform allows*. Applied as **SN-033…SN-040 +
+  SR-148 + the SN-029 draft amendment** after a codex-sol adversarial round —
+  the batch record is
+  [`plans/2026-08-12-sn-intake.md`](plans/2026-08-12-sn-intake.md), which
+  also carries the **two tier disputes**, the **edge-dissolution map** and
+  the **hats sketch** as sitting inputs. Attestation stays the sitting's.
   → **§8.3**, **§8.6**
 
 **Mechanical work:**
@@ -189,16 +195,17 @@ for by demoting three needs on this exact test. And the tabled items in
 
 ## 1. Where the repo stands
 
-Measured 2026-08-12 at `982109b3` on `infra/mechanized-loop`, after 70 commits.
+Re-measured 2026-08-12 after the sitting's rulings were executed (stage
+semantics landed; the SN batch applied as drafts).
 
 | fact | value |
 |---|---|
-| derived gate | **G1** — `computed=G0` floored to G1, because drafts exist. Correct: everything that moves it now waits on the owner. |
-| spine | SN 29 · SR 146 · LLR 149 · TC 146 · **37 drafts** · **38 `Modified`** |
+| stage / next gate | **stage 0** (needs in process — the new drafts hold it there) · next gate **G1**. Correct: everything that moves it waits on the sitting. |
+| spine | SN **37** · SR **147** · LLR 149 · TC 146 · **46 drafts** · **38 `Modified`** |
 | integrity | `orphans=0 integrity=0 component-findings=0 interface-findings=0`; interfaces 113 |
 | strict modes | `trace --strict` **rc 0** · `check_trajectory --strict` **rc 0** |
-| full bar | **2291 passed, 5 skipped** |
-| owner surface | **4 rulings** (components · OI-14 · stage/gate · the SN batch) + **1 ratification** (WI-429) + the sitting's 25-row re-attest brief |
+| full bar | **2298 passed, 5 skipped** (post stage-rework; re-run owed at session close) |
+| owner surface | **2 rulings** (components partition · OI-14) + **1 ratification** (WI-429) + the sitting's 25-row re-attest brief + the §8.7 review list (grown today) |
 
 **Predecessor records**, kept reachable because they are the account of the
 program *before* this one and are not superseded by it:
