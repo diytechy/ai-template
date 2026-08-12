@@ -1033,14 +1033,25 @@ finish).
    DELIVERED 2026-08-12** →
    [`docs/knowledge/system-decomposition-methods.md`](knowledge/system-decomposition-methods.md).
    The short version: the owner's "lay out system I/O first" intuition **is**
-   the N2/DSM method literally, not analogously; `interfaces.csv`'s `SR-Refs`
-   column already forms the signals×requirements incidence matrix; the right
-   objective is **hypergraph-cut minimization** (count the cross-boundary IF
-   rows a partition forces — the exact thing wanted small), with raw Newman
-   modularity rejected for its resolution-limit failure at this registry's
-   size; a stdlib hill-climber can *rank and propose* partitions while the
-   human names the clusters and judges volatility (Parnas). This is the
-   worked input for the components-partition ruling in §0.
+   the N2/DSM method literally, not analogously; raw Newman modularity is
+   rejected for its resolution-limit failure at this registry's size; a stdlib
+   hill-climber can *rank and propose* partitions while the human names the
+   clusters and judges volatility (Parnas). This is the worked input for the
+   components-partition ruling in §0.
+
+   > **Corrected 2026-08-12, and the correction is load-bearing.** The pack (and
+   > this bullet) first named cut-minimization as *the* objective and
+   > `interfaces.csv`'s `SR-Refs` as the incidence matrix "the method needs".
+   > Both were too narrow. The owner stated the purpose — architecture exists
+   > *"to prevent modules and implementations from repeating the behavior in
+   > multiple places, or doing it in a way that contradicts what was done
+   > elsewhere"* — which makes **one home per behaviour a hard CONSTRAINT** and
+   > cut-count only the tie-breaker. And `SR-Refs` is *this repo's* encoding,
+   > available only because 147 SRs already exist; a greenfield adopter has
+   > none, so the shipped method cannot assume it. Most importantly the
+   > architecture is **formative, not descriptive**: clustering today's modules
+   > would ratify the duplication already in them. The owner accepts the
+   > consequence — *"that might surface more rework, and that's okay."*
    **Interfaces must be INTERFACES only** — each signal typed **discrete vs
    variable** — and every component boundary must have *all* its crossings
    described by interface rows. Mechanical enforcement method: open, part of

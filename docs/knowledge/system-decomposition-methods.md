@@ -13,6 +13,31 @@ is advisory input to that ruling, not the ruling itself.
 
 ## Recommendation
 
+> **Two corrections, owner-driven 2026-08-12 — read them before the method
+> below.**
+>
+> **1. The objective has a hard constraint above the cut count.** The owner
+> stated the purpose: a defined architecture exists *"to prevent modules and
+> implementations from repeating the behavior in multiple places, or doing it
+> in a way that contradicts what was done elsewhere."* So **one home per
+> behaviour is a CONSTRAINT** — a partition that gives one behaviour two owning
+> components is *invalid*, not merely costly — and cut minimisation below is
+> the **tie-breaker** among valid partitions. This repo already violates the
+> constraint in three measured places (`is_example` in 3 homes, one crashing on
+> `None`; the declared-line reader in 5; `value_to_cell` and its reader each
+> documented as the other's inverse with a `TypeError` between them).
+>
+> **2. The `SR-Refs` encoding is THIS REPO'S, not the method's.** The paragraph
+> below reads as though the method *requires* a requirements×signals incidence
+> — it does not. It requires *elements* plus a *coupling relation*; shared
+> signals from a functional decomposition are an equally valid source, and a
+> greenfield adopter at G1 has no SRs at all. Also note what this encoding
+> cannot do: clustering the coupling of **what already exists** ratifies the
+> duplication already in it, which is the one thing the architecture is for.
+> The architecture is **formative** — derived from the system's intended
+> inputs and outputs — and the delta against today's tree is the **rework
+> list**, not a reason to prefer the existing shape.
+
 Treat the existing `interfaces.csv` `SR-Refs` join as a **bipartite
 incidence structure** — each SR (or LLR) is a *hyperedge* over the signals
 (candidate `IF-###` rows, or finer sub-signals) it reads or writes — and

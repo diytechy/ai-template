@@ -86,13 +86,44 @@ A caveat that must be read with that mechanism: `cross_component_findings` repor
 
 ### PART A - the component partition
 
-The owner ruled the DIRECTION 2026-08-12, which changed the question from what components are FOR to which partition to adopt.
+THE PURPOSE, in the owner's words 2026-08-12, and it is the objective function rather than context: a defined architecture exists -to prevent modules and implementations from repeating the behavior in multiple places, or doing it in a way that contradicts what was done elsewhere.- The architecture is FORMATIVE - it shapes what gets built, so implementation is -not blind- - not a description of what already exists.
 
-- Components are architecturable breakdowns that -also define the boundaries with which system requirements must be written- - an SR's inputs and outputs must correspond to component-boundary interfaces.
+That rules out deriving the partition by clustering today's 55 modules. Clustering what exists ratifies whatever duplication and contradiction it already contains, which is the one thing the architecture is for. The owner accepts the consequence: -since this repository already has a form in work, that might surface more rework, and that's okay.-
+
+- Components are architecturable breakdowns that -also define the boundaries with which system requirements must be written.-
 - The prescribed method: -laying out the inputs / outputs of the system first, and then breaking that into components with internal signals will help give shape to what the component definitions need to be and the interfaces between them.-
-- The owner's suspicion that this is an OPTIMIZATION problem rather than a judgement call was researched and CONFIRMED (docs/knowledge/system-decomposition-methods.md): the described method IS the N2/DSM technique literally rather than by analogy; `interfaces.csv`'s `SR-Refs` column already constitutes the signals-by-requirements incidence matrix the method needs; and the right objective is hypergraph-cut minimisation - counting the cross-boundary interface rows a partition forces, which is exactly the quantity the owner wants small.
-- What stays human per the same research: naming the clusters, and judging which parts will CHANGE together rather than merely co-occur today (the Parnas criterion, which no metric sees).
-- TODAY'S PARTITION IS 5 COMPONENTS AND WAS NEVER DERIVED THIS WAY - it is the historical accident this ruling ratifies or replaces.
+- The method IS N2/DSM decomposition, literally rather than by analogy (docs/knowledge/system-decomposition-methods.md).
+- TODAY'S PARTITION IS 5 COMPONENTS AND WAS NEVER DERIVED THIS WAY - the accident this ruling replaces, and the delta against a derived partition IS the rework list.
+
+### PART A - the objective, corrected
+
+The brief previously named ONE objective, hypergraph-cut minimisation, and named `interfaces.csv`'s `SR-Refs` column as the incidence matrix -the method needs-. BOTH CLAIMS WERE TOO NARROW and are corrected here.
+
+- `SR-Refs` is one ENCODING of the coupling, available here only because 147 SRs already exist. The method needs elements plus a coupling relation; requirements are one source, shared signals from a functional decomposition another. A greenfield adopter at G1 has neither, so the shipped method cannot assume this one.
+- Cut minimisation is the SECONDARY objective. The PRIMARY one, from the stated purpose, is ONE HOME PER BEHAVIOUR - and it is a CONSTRAINT, not a cost: a candidate partition in which one behaviour is owned by two components is INVALID, not merely expensive.
+- Contradiction is the same constraint read at implementation time: two homes for one behaviour is what lets two implementations disagree.
+
+THE CURRENT ARCHITECTURE ALREADY VIOLATES THE PRIMARY CONSTRAINT, measured 2026-08-12, which is evidence rather than tidiness:
+
+- `is_example` - one behaviour, THREE homes, and they disagree: one copy crashes on `None`.
+- the declared-line reader - one behaviour, FIVE homes, carrying a prose claim of equivalence that was false.
+- `value_to_cell` and its reader - each documented as the other's inverse, with a TypeError between them.
+
+Each is a behaviour no architecture had assigned a home, found by a census rather than by a check. That is the failure mode this ruling exists to make unrepresentable.
+
+### PART A - the sequence, and the rung it needs
+
+The partition is not a one-shot step before or after requirements. The honest order:
+
+- declare the SYSTEM BOUNDARY - what is outside, what crosses, each crossing typed;
+- a first-cut functional decomposition - what the system must DO, as signals, from the needs;
+- PARTITION - the optimisation, which is where -how many components- is answered;
+- write SRs against the resulting boundaries (which is already this repo's practice: 76 of 147 live SRs name a script in their requirement text);
+- RE-SCORE the partition against those SRs, because SR authoring is the highest-fidelity signal inventory the project will ever have. A boundary that moves at re-score is a finding about the first cut, not churn.
+
+THE BOUNDARY STEP HAS NO HOME TODAY and is the rung this item should also rule. G1's bar requires the vision tag, complete needs, non-goals and sign-offs - it says nothing about the system boundary, so SRs are blessed without a declared frame to be written against. The mechanism already half-exists: 15 of 113 interface rows name an external counterpart (`downstream adopter`, `agent CLI`, `docs`). What is missing is the COMPLETENESS obligation and the ORDERING one.
+
+WHAT STAYS HUMAN, per the same research: naming the clusters, and judging which parts will CHANGE together rather than merely co-occur today - the Parnas criterion, which no metric sees.
 
 ### PART B - what an interface row must say
 
@@ -133,9 +164,10 @@ options = """TWO PARTS, RULED IN ORDER. Part A is safe to rule alone; Part B is 
 
 ### PART A - the partition
 
-- (A1) RATIFY THE CURRENT 5 - declare the existing partition correct. FOR: zero migration; the repo ships against it and reports `component-findings=0` today. AGAINST: it ratifies an accident the owner has just said should be derived rather than invented, and it answers the optimisation question by declining to ask it - and the zero it leans on is partly vacuous, so it is weaker evidence than it looks.
-- (A2) DERIVE CANDIDATES MECHANICALLY, RULE ONE - build the incidence matrix from the live SR and interface joins, score candidate partitions on cross-boundary interface count against the declared objective, and bring a RANKED SHORTLIST for a human to name and choose from. FOR: it is the method the owner prescribed and the research validates; it leaves the reproducible record SN-040 now requires of a decomposition; the scorer is disposable if the answer turns out to be A1 anyway. AGAINST: new machinery inside a lock program, and the objective is a PROXY - a partition can minimise cross-boundary interfaces and still cut across the volatility lines that matter, which is why the shortlist must be ranked FOR a human rather than selected BY the tool.
-- (A3) DEFER PAST THE LOCK. FOR: keeps the lock program small. AGAINST: it strands Part B, the interfaces conversion and SN-037 behind an item explicitly deferred - which does not defer their cost, only moves it behind a wall.
+- (A1) RATIFY THE CURRENT 5 - declare the existing partition correct. FOR: zero migration; the repo ships against it and reports `component-findings=0` today. AGAINST: it ratifies an accident, it answers the optimisation question by declining to ask it, the zero it leans on is partly vacuous, and it leaves the three measured one-behaviour-two-homes violations with no architecture that forbids them.
+- (A2) DERIVE FROM TODAY'S MODULE GRAPH - cluster the 55 existing modules on their import coupling. FOR: the input exists now, needs no requirements, and is cheap. AGAINST: REFUTED BY THE STATED PURPOSE - clustering what exists ratifies the duplication and contradiction already in it, which is the one thing the architecture is for. It would have drawn a boundary around all five homes of the declared-line reader and called it cohesion.
+- (A3) DERIVE FROM THE SYSTEM'S I/O, RULE ONE - declare the boundary, take a first-cut functional decomposition from the needs, score candidate partitions with ONE HOME PER BEHAVIOUR as a hard constraint and cut-count as the tie-breaker, and bring a RANKED SHORTLIST for a human to name and choose from. FOR: it is the method the owner prescribed, it is formative rather than descriptive, and it produces the rework list as a by-product - the delta between the derived partition and today's tree. It leaves the reproducible record SN-040 requires. AGAINST: the most work of the three, it will surface rework the owner has accepted in principle but not yet sized, and the tie-breaker is a proxy that cannot see volatility - so the shortlist must be ranked FOR a human, never selected BY the tool.
+- (A4) DEFER PAST THE LOCK. FOR: keeps the lock program small. AGAINST: it strands Part B, the interfaces conversion and SN-037 behind an item explicitly deferred - which does not defer their cost, only moves it behind a wall.
 
 ### PART B - the contract
 
@@ -144,7 +176,7 @@ The direction is already ruled, so these are about ENFORCEMENT and MIGRATION - w
 - (B1) DECLARE PLUS SCHEMA TIER NOW, SPLIT GRADUALLY - write the contract into `PROCESS.md` section 8 and the shipped template, add the missing columns (a `Rationale` home for the why, and the ruled discrete-vs-variable signal type), build IF's first schema tier (required fields, closed vocabularies for `Stability`, `Status` and the new type), and let existing cells migrate as rows are touched. FOR: new and amended rows land correct immediately; the schema tier is the part that makes every LATER rule cheap, including the owner's typing rule, which is unenforceable without it; no bulk prose rewrite means no chance of silently losing load-bearing knowledge. AGAINST: the 113 existing cells stay mixed for as long as nobody touches them, so the planning-brief dilution persists on the untouched majority.
 - (B2) DECLARE PLUS SCHEMA TIER PLUS SWEEP ALL 113 - migrate every cell in one batch. FOR: the corpus is correct at a known date rather than converging indefinitely; the planning briefs stop carrying narrative immediately. AGAINST: 113 prose rewrites is a commit nobody can review carefully, which is how load-bearing maintainer knowledge gets quietly deleted - and the census says the knowledge is real, just misfiled. It is also the option most likely to be redone, since Part A may change which rows should exist at all.
 - (B3) DECLARE ONLY, DEFER THE SCHEMA TIER - state the contract, build no checks, revisit with the component work. FOR: smallest immediate step; nothing is built that a partition change might invalidate. AGAINST: it is the status quo with better documentation - and the re-measurement is the argument against it, because this item has been declared-in-spirit since 2026-08-09 while every drift metric got worse. A rule with no enforcer did not hold for three days."""
-recommendation = """(A2) THEN (B1), IN ONE SITTING AND IN THAT ORDER - derive the partition against a declared objective and rule one, then declare the contract and build the schema tier that makes it enforceable.
+recommendation = """(A3) THEN (B1), IN ONE SITTING AND IN THAT ORDER - derive the partition from the system's declared inputs and outputs with one-home-per-behaviour as a hard constraint, then declare the contract and build the schema tier that makes it enforceable.
 
 - The deciding reason is the ASYMMETRY, not a preference: Part A decides which rows exist and Part B decides what they must say, so A-then-B costs one pass while B-then-A risks migrating cells on rows the partition then moves.
 - If the sitting has time for only one part, take PART A - it is safe alone and it unblocks the rest.
@@ -152,7 +184,9 @@ recommendation = """(A2) THEN (B1), IN ONE SITTING AND IN THAT ORDER - derive th
 
 ### Guards on Part A
 
-- The scorer's job is to make the trade VISIBLE - here are the candidate partitions, here is what each costs in cross-boundary interfaces, here is which requirements straddle a boundary under each - and the owner's job is to name the components and decide which boundaries are worth their crossings.
+- The scorer's job is to make the trade VISIBLE - here are the candidate partitions, here is what each costs in cross-boundary interfaces, here is which behaviours straddle a boundary under each - and the owner's job is to name the components and decide which boundaries are worth their crossings.
+- RULE THE BOUNDARY RUNG WITH IT. The sequence needs a declared system boundary before SRs are blessed, and G1's bar does not ask for one today. Adding it there costs a shipped process change, so it is the owner's to rule - and proportionality (SN-012) argues for warn-first or an applies-when, since a three-file project does not need a formal context declaration.
+- EXPECT REWORK AND SIZE IT BEFORE COMMITTING. The delta between the derived partition and today's tree is the rework list; the owner has accepted rework in principle, but the shortlist should carry its cost so the acceptance is informed rather than nominal.
 - The metric optimises COUPLING, not VOLATILITY: it cannot see that two modules co-occurring today will diverge tomorrow, which is the Parnas criterion and the one that most often decides whether a partition survives. Treat a top-ranked partition as a candidate, never a verdict.
 - Confirm the containment rule actually covers the rows `cross_component_findings` is vacuous for, rather than reading its zero as full coverage.
 
@@ -213,7 +247,7 @@ recommendation = """(a) INVERT STEP 2, and confirm it - the ruling's intent is s
 
 - The deciding reason: `bootstrap.py` is not shipped, so nothing downstream can import it. Inverting costs one `MAPPING` line and delivers the same single-home-per-helper result the owner asked for.
 - The required guard: before this lands, ASSERT what has only ever been a comment. There is no test today that `bootstrap.py` imports no kit sibling, and under (a) the rule that replaces it - `bootstrap` may import the common module and nothing else - needs an assertion of its own, plus a real scaffold bootstrap in the execution WI.
-- The sequencing: still AFTER the lock, as its own program. Nothing here is urgent; the three drift hazards the census found are already pinned, which is what buys the time to do this properly."""
+- The sequencing: still AFTER the lock, as its own program - and AFTER OI-14 part A, which is the more important dependency. The owner's stated purpose for a defined architecture is to stop a behaviour being built in more than one place; this item is the same question asked without an architecture to appeal to. Once part A assigns each behaviour an owning component, -may a script import a sibling- stops being a doctrine debate and becomes a lookup. The three drift hazards the census found are already pinned, which is what buys the time to take them in that order."""
 
 [open_item.OI-17]
 title = """The launcher needs - are they NEEDS or REQUIREMENTS, and does the run-menu reverse a recorded non-goal"""

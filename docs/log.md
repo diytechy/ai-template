@@ -27070,3 +27070,76 @@ would stay green if this site were deleted and a different one added.
 <!-- fig: cmd=".venv/bin/python -m pytest -q -n auto -m smoke" rev=6c261bc2 -->
 `trace --strict` **rc 0**; `check_trajectory --strict` **rc 0**; `check_docs`
 **0 broken** (388 docs, 1,115 links).
+
+## 2026-08-12d — the architecture is FORMATIVE, and two of my claims were wrong
+
+**The owner's correction, and it changes the objective function rather than the
+wording.** Asked whether a rung belongs between stakeholder needs and system
+requirements, I answered that the component partition could not precede the
+SRs. The owner pushed back, and was right twice over.
+
+**Wrong claim 1 — "the optimisation provably cannot precede SRs."** The
+knowledge pack says each SR *or LLR* is a hyperedge over signals; the
+requirement tier is ONE ENCODING of the coupling, not the method's input.
+What the optimiser needs is *elements* plus a *coupling relation* — shared
+signals from a functional decomposition serve equally, and a greenfield
+adopter at G1 has no SRs at all. I generalised from this repo's convenient
+`SR-Refs` join and presented it as a property of the method.
+
+**Wrong claim 2 — "SRs should be system-boundary black-box statements."**
+Measured before repeating it: **76 of 147 live SRs (52%) already name a script
+in their requirement text** (*"trace.py shall join the SN→SR→LLR→TC
+registries…"*). This repo's SR tier is already component-allocated, so that
+recommendation was a ~76-row rewrite dressed as a clarification. Measure
+first; I did not.
+
+**And the framing itself was wrong — "retrofit" was the wrong word.** The
+owner: *"there is no need to retrofit so much as there may need to be a
+redesign / restructure … since this repository already has a form in work,
+that might surface more rework, and that's okay."* The architecture is
+**formative** — it shapes what gets built so implementation is *"not blind"* —
+not a description fitted around what exists.
+
+**THE PURPOSE, stated, and it is the objective function:** a defined
+architecture exists *"to prevent modules and implementations from repeating
+the behavior in multiple places, or doing it in a way that contradicts what
+was done elsewhere."* Two consequences, both now in OI-14 part A:
+
+- **One home per behaviour is a CONSTRAINT, not a cost.** A partition giving
+  one behaviour two owning components is INVALID; cut-count is only the
+  tie-breaker among valid partitions. The brief had cut-count as the whole
+  objective.
+- **Clustering today's 55 modules is REFUTED by the purpose** — it ratifies
+  the duplication already in them. It would have drawn a boundary around all
+  five homes of the declared-line reader and called it cohesion. That is now
+  option A2, filed with its refutation rather than as a candidate.
+
+**The current architecture already violates the primary constraint**, and the
+evidence is this week's census rather than an argument: `is_example` in THREE
+homes (one crashing on `None`), the declared-line reader in FIVE (with a false
+prose claim of equivalence), `value_to_cell` and its reader each documented as
+the other's inverse with a `TypeError` between them. Behaviours no
+architecture had assigned a home, found by a census because no check could.
+
+**The connection that falls out, and it re-sequences an item.** OI-16 (may a
+script import a sibling?) is the same question asked with no architecture to
+appeal to. Once part A assigns each behaviour an owning component, the
+doctrine debate becomes a lookup — so OI-16 now depends on OI-14 part A, and
+its recommendation says so.
+
+**The sequence, corrected:** declare the SYSTEM BOUNDARY → first-cut
+functional decomposition from the needs → PARTITION (where *how many
+components* is answered) → write SRs against the resulting boundaries →
+RE-SCORE against those SRs, since SR authoring is the highest-fidelity signal
+inventory a project ever gets. A boundary that moves at re-score is a finding
+about the first cut, not churn. **The boundary step still has no home:** G1's
+bar asks for the vision tag, complete needs, non-goals and sign-offs, and
+nothing about a declared boundary — so SRs are blessed without a frame to be
+written against. 15 of 113 interface rows already name an external counterpart,
+so the mechanism half-exists; the completeness and ordering obligations do not.
+Filed as part A's third question rather than as a new stage, since a stage in
+the ruled model is a *tier of the decomposition* and a boundary is not one.
+
+Corrections propagated to the knowledge pack and repo-lock §8.6 so the
+over-claims do not outlive this entry. Structure held: longest paragraph 76
+words; 63 lists, 254 bullets, 19 sub-headings.
