@@ -738,6 +738,31 @@ git-hook checkers run in constrained contexts, and ADOPTING's re-sync copies
 declared common sibling, with an explicit standalone-required list. **Execute
 after the lock**, as its own program: ~30 files plus the scaffold surface.
 
+> **RE-MEASURED 2026-08-12 (owner re-posed the question; AST census, not
+> grep).** The figure above is stale: **32 of 55** scripts import a sibling;
+> `spine_carrier` alone has **17 importers**. The "constrained context"
+> argument is dead on inspection — `check_trajectory.py` is hook-invoked AND
+> already imports `spine_carrier` with no failure mode, and ADOPTING's §6
+> re-sync copies `scripts/` wholesale (the same mechanism that already ships
+> the declared siblings). **The standalone-required list reduces to
+> `bootstrap.py`** (its own source states why, twice; its two deliberate
+> duplicates are pinned) — plus `subagent_gate.py` as a *recommended*
+> exception on fail-open/latency grounds the owner ruled on 2026-08-11.
+> **Live drift found by the census, worth fixing regardless of D-8:**
+> `is_example` is 3-way duplicated and `trace_text`'s copy crashes on `None`
+> (unpinned, untested); the declared-line reader is a **5-way**
+> reimplementation (`read_declared` ×2 + `_first_declared_line` ×3) with a
+> false prose equivalence claim and zero cross-pins; `value_to_cell` writer
+> and reader claim mutual inversion with no round-trip test (a non-`str`
+> list element breaks one direction only). **Cheapest immediate act:** the
+> three `test_rule_sync` value-pin batteries — independent of any
+> consolidation. **Recommended D-8 shape, updated:** extend the
+> declared-sibling pattern by TOPIC (predicates → `spine_carrier`; the
+> byte-identical 9-function `spec_*` family in 3 files → delegate to
+> `agent_common`'s copies), **no monolithic `common.py`** — phase 1 is 9
+> files, 3 new import edges, 0 new modules, ~650 duplicate lines deleted.
+> Still: **execute after the lock.**
+
 ### 8.3 · The stakeholder-need batch — six items + one draft SR — **RULED 2026-08-12**
 
 **The owner: all six hold**, with item 2 — and by the same reasoning items 3
@@ -942,8 +967,18 @@ finish).
    system first, and then break that into components with internal signals"* —
    and the owner suspects the breakdown is an **optimization problem** with a
    mathematical expression behind it, rather than something an LLM should
-   freestyle (which is what this repo has historically done). Research owed →
-   a knowledge pack at `docs/knowledge/system-decomposition-methods.md`.
+   freestyle (which is what this repo has historically done). **Research
+   DELIVERED 2026-08-12** →
+   [`docs/knowledge/system-decomposition-methods.md`](knowledge/system-decomposition-methods.md).
+   The short version: the owner's "lay out system I/O first" intuition **is**
+   the N2/DSM method literally, not analogously; `interfaces.csv`'s `SR-Refs`
+   column already forms the signals×requirements incidence matrix; the right
+   objective is **hypergraph-cut minimization** (count the cross-boundary IF
+   rows a partition forces — the exact thing wanted small), with raw Newman
+   modularity rejected for its resolution-limit failure at this registry's
+   size; a stdlib hill-climber can *rank and propose* partitions while the
+   human names the clusters and judges volatility (Parnas). This is the
+   worked input for the components-partition ruling in §0.
    **Interfaces must be INTERFACES only** — each signal typed **discrete vs
    variable** — and every component boundary must have *all* its crossings
    described by interface rows. Mechanical enforcement method: open, part of
@@ -964,16 +999,47 @@ finish).
    SN batch; the enforcement candidate is a shipped-file → requirement
    mapping check.
 5. **Should the prose templates that mechanically build CLI prompts also be
-   TOML?** Asked with a why/why-not expected. Analysis running; answer lands
-   here.
+   TOML? — ANSWERED 2026-08-12: NO, and the repo's own precedent says why.**
+   The D-5/WI-431 criterion that moved the registries is **rows with
+   fields** — many records, stable columns, CSV quoting pain. The prompt
+   templates (`worker` / `reviewer` / `critique` / `dual-plan` ×3 /
+   `adjudicate-*` ×4) fail it on every axis: each is ONE document, all
+   multi-line prose with markdown structure and literal braces, so TOML adds
+   an escaping layer and buys nothing (TOML has no templating — the same
+   `str.format`/strict-fill machinery would sit on top). Diff legibility
+   *worsens* (prose wrapped in `body = """…"""` noise — re-creating the
+   "reviewable only by reading source" problem `prompts.py` was built to
+   escape). The kit already draws the right line itself: the WI spec is
+   **TOML frontmatter for typed cells + markdown body for narrative**. Keep:
+   registries/dials = TOML; templates/rubrics = markdown; typed control flow
+   = frontmatter cells, never prose (the `prompts/README.md` rule).
 6. **The common-module question (§8.2, candidate D-8), re-posed** — the owner:
    the single-file-copy advantage is *"basically moot given how things have
-   grown."* A fresh function-level duplication census is running; D-8 gets
-   decided on it.
-7. **How do guardrails reach a branch-scoped agent?** Is `AGENTS.md` replaced?
-   Is the process doc modified? The owner's hypothesis: scoping context
-   belongs in the **agents prose TOML** used to formulate the CLI prompt, not
-   re-stated per-WI. Analysis running; answer lands here.
+   grown."* **Census delivered 2026-08-12 — see the §8.2 re-measurement
+   box** (32/55 import siblings; the standalone list reduces to
+   `bootstrap.py`; three live drift hazards found; phase-1 shape is 9 files,
+   0 new modules). D-8 is now decidable on measurement.
+7. **How do guardrails reach a branch-scoped agent? — ANSWERED 2026-08-12,
+   measured against the machinery.** Facts: **`AGENTS.md` is never replaced
+   or rewritten per-branch** (claim = spec-move + regen + one commit + branch
+   cut, nothing else); **`process.md` is never modified per-branch**; the
+   worker prompt is `worker.template.md` filled with the WI row's typed
+   cells plus small *computed, clipped* blocks (predecessors, registry
+   joins, branch diff, rework findings) and it **points at** `AGENTS.md` and
+   the spec as ambient reads rather than pasting them. Tier differences are
+   routing-only (model/CLI/effort) except one model-keyed prepend:
+   `docs/guardrails/core.md` under the `[policies] guardrails` matcher —
+   dormant here (`off`). **The owner's hypothesis does not match the
+   machinery:** `docs/agents.toml` is a pure routing registry (family ×
+   model × tier × cmd_template × env × notes) carrying zero worker-facing
+   prose, and giving it scope prose would conflate "which model" with "what
+   this WI may touch." Where new guardrails go, by kind: universal → 
+   `AGENTS.md` (ambient, budget-guarded); tier/model-conditional → the
+   existing guardrails-core + policy matcher; per-WI → a **typed frontmatter
+   cell** on the WI spec joined into the context block (the kit's stated
+   rule: prose that carries control flow must be a typed field). One real
+   gap found: nothing supports guardrails finer than per-WI (per-path /
+   per-subsystem) — new machinery if ever wanted, not a re-homing.
 8. **The loop-ordering draft SR, restated:** under `agent-resume`, an agent
    first addresses handback documents from executed work items (minting
    follow-ups if needed), then works tier-by-tier in batch — SN (always
