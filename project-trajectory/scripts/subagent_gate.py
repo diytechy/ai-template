@@ -85,9 +85,20 @@ def read_process_policy(root):
 
 
 def read_declared(path):
-    """First non-comment, non-blank line lowercased, or "" — the same
-    declared-policy parse the hooks and agent_loop use (kept local per the F5
-    small-loader rule; no sibling import).
+    """First non-comment, non-blank line lowercased, or "" (kept local per the
+    F5 small-loader rule; no sibling import).
+
+    The LINE-SELECTION rule (skip blank/comment lines, take the first
+    survivor) is the one `agent_common.read_declared` and the three
+    `_first_declared_line` copies (bootstrap.py, check_privacy.py,
+    check_trajectory.py) also apply — pinned equal in tests/test_rule_sync.py.
+    This copy diverges from all four in two ways, BOTH deliberate, not just
+    the casing the name implies: the result is LOWERCASED (this module
+    compares the token against a closed, case-folded vocabulary), and the
+    not-declared sentinel is `""` rather than `None` (`decide()` below
+    documents its own `policy` param as `"" = off`, so this reader has to
+    hand back `""` to compose with that contract without a None-check at
+    every call site). Neither is a bug to harmonize away.
 
     Contract:
       Inputs:  path: path-like to a declared-policy file (may not exist)

@@ -26774,3 +26774,78 @@ Watermark raised by `trace.py --bump-ids`: **WI 432 → 433**.
 reference for the *legacy* one-word vocabulary, so its default line describes
 the home that no longer ships — but a reader who opens it will read a value the
 kit no longer gives anyone.
+
+## 2026-08-12 — the sitting that ruled stage semantics, and the session that executed it
+
+**What the owner ruled** (recorded in [repo-lock](repo-lock.md) §0/§8.3/§8.6
+before execution): **gate-as-state is retired for stage semantics** (the
+2026-08-11 proposal adopted, heavy rework accepted); **the §8.3 SN batch
+holds**, launcher double-click relaxed to *where the platform allows*; plus
+new intake — the component model's direction (boundaries define SR I/O;
+interfaces carry interfaces only, discrete vs variable), the hats roster as
+TOML, SN scope declarations, the everything-shipped-chains-back obligation,
+and three questions (prose-templates-as-TOML, common modules re-posed,
+guardrails-on-branch).
+
+**Executed, in slices** (`72124d81` → this entry's commit):
+
+- **The derived-gate-model citations repointed at the archive** — 14 live
+  sites (the measured 13 plus `hooks/pre-commit:229`, which the inventory
+  missed); the `declared-absences:92` loose end WITHDRAWN as a misreading
+  (that entry waits on WI-390).
+- **Stage semantics landed** (`51dc80a7`, 31 files): the implementation rung
+  exists (stage 4; done is 5), `stage_to_gate` is uniform
+  next-gate-to-pass, `docs/gate`'s header stops contradicting itself, `G0`
+  is an internal below-G1 sentinel only, "the active gate" left every live
+  surface, `PROCESS.md` §4 carries the ruled model (+2,591 bytes,
+  re-stamped; no §-renumbering), `PROCESS_OPTIONS.md` shed the always-on
+  layer (net +9). The G2→G3 driver deliberately stays the `is_verified`
+  cell — D-9's harness fix remains owed to the step-7 batch, now documented
+  as the interim proxy. Execution judgment calls: repo-lock §8.7.
+- **The SN batch applied as Drafts** after a two-round OpenAI review
+  (sol adversarial, terra verification — record in
+  [plans/2026-08-12-sn-intake.md](plans/2026-08-12-sn-intake.md)):
+  **SN-033…SN-040 + SR-148**, the SN-029 draft amended (delegated-review
+  clause; round 2 killed the ambiguous spatial metaphor), watermark
+  SN 32→40 / SR 147→148. Two tier disputes (launchers, run-menu) recorded
+  for the sitting rather than resolved; the edge-tier dissolution map and
+  hats sketch ride the same plan doc as sitting inputs.
+- **Three owner questions answered on measurement** (repo-lock §8.6):
+  prose templates stay markdown (rows-vs-documents, the kit's own D-5
+  criterion); guardrails reach branch agents via ambient `AGENTS.md` +
+  typed WI cells + the model-keyed core prepend — never a per-branch
+  rewrite, and `agents.toml` is routing only; the D-8 census re-measured
+  §8.2 (32/55 import siblings, standalone list = `bootstrap.py`, phase-1
+  shape 9 files / 0 new modules).
+- **The census's three drift hazards closed** the cheap way it prescribed:
+  `test_rule_sync` gained the declared-line-reader 5-way battery (the
+  `subagent_gate` divergences pinned AS deliberate and its false docstring
+  equivalence claim corrected), the carrier value round-trip battery (the
+  `value_to_cell` writer now stringifies like the reader — the two claimed
+  mutual inversion with a TypeError between them), and the `is_example`
+  battery including `None` (the unguarded `trace_text` copy fixed).
+- **Knowledge pack:**
+  [knowledge/system-decomposition-methods.md](knowledge/system-decomposition-methods.md)
+  — N2/DSM hypergraph-cut decomposition over the existing `SR-Refs`
+  incidence, the worked input for the components-partition ruling.
+
+**The smoke membership sensor bit, correctly.** The full bar's one red was
+`test_smoke_budget` at 984 collected over the 980 ceiling — today's
+in-process ladder tests plus the rule-sync batteries, wall clock unmoved
+(~20 s / 60 s). Re-stamped **980 → 1030** in `docs/stack.ini` with the
+declared figure, the same ~5% allowance the 934→980 stamp held.
+
+**The bar at close.** Smoke **982 passed, 2 skipped in 19.98s**. Full
+unfiltered suite at the pre-stamp tree: **1 failed (the sensor above),
+2302 passed, 5 skipped in 484.06s**; re-run green after the re-stamp — the
+tail is stamped in the closing commit.
+<!-- fig: cmd=".venv/bin/python -m pytest -q -n auto" rev=d3445fdf -->
+`trace.py --strict` **rc 0** (orphans=0 integrity=0, SN=37 SR=147 drafts=46);
+`check_trajectory.py --strict` **rc 0**; `derive_gate --check` fresh. The
+`[4]-[g2]` anchor WARN is the expected new-phase signal, not a regression.
+
+**Owed reviews accumulated today** live in repo-lock **§8.7** — the home the
+owner asked for mid-session: the stage-home call (`PROCESS.md`), the
+gates-keep-their-names reading of "retired", the launcher-tier disputes, the
+agent-resume copy-paste-slip reading, and the hats-include-downstream-users
+interpretation.

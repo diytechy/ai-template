@@ -39,7 +39,7 @@ def refs(value):
 
 
 def is_example(rid):
-    return rid.endswith("-000")
+    return (rid or "").endswith("-000")
 
 
 def is_draft(row):

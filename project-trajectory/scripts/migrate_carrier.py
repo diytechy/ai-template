@@ -390,7 +390,7 @@ def value_to_cell(col, value):
     if value is None:
         return ""
     if isinstance(value, list):
-        return ";".join(value)
+        return ";".join(str(v) for v in value)
     return str(value)
 
 

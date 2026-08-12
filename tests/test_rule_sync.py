@@ -751,3 +751,157 @@ def test_the_migration_table_and_the_converter_name_the_same_six():
     converter = {n: (s, k) for n, s, k, _ in boot.LEGACY_CONFIG}
     for name, (section, key, _) in six.items():
         assert converter[name] == (section, key), name
+
+
+# --- the declared-line reader, 5-way (repo-lock.md §8.2, 2026-08-12 census) ---
+# "The first non-empty, non-comment line of a one-word policy file" is written
+# out FIVE times: agent_common.read_declared and subagent_gate.read_declared
+# (same name, two different signatures), plus a third name for the identical
+# rule — `_first_declared_line` — in bootstrap.py, check_privacy.py and
+# check_trajectory.py. Plumbing this small is licensed unbounded under F5, but
+# a silent divergence between copies would mean the git hooks, the bootstrap
+# migration, agent_common's docs/gate reader and the subagent fan-out gate
+# read the SAME on-disk file five different ways. Pinned by value, over one
+# table of file shapes, so a sixth copy — or a "harmonizing" edit to one of
+# the five — has to argue with a value table rather than a prose promise.
+AGENT_COMMON = load_script("agent_common")
+SUBAGENT = load_script("subagent_gate")
+BOOTSTRAP_DECL = load_script("bootstrap")
+CHECK_PRIVACY = load_script("check_privacy")
+
+# (file contents, the declared line every None-sentinel reader returns).
+# `want` is what bootstrap/check_privacy/check_trajectory's `_first_declared_line`
+# and agent_common.read_declared(path, None) all return; None means "nothing
+# declared" (comments-only, blank, or absent), not "the file holds empty text".
+_DECLARED_LINE_CASES = [
+    ("comments-only", "# nothing here\n# still nothing\n", None),
+    ("blank", "", None),
+    ("leading-whitespace", "   deny\n", "deny"),
+    ("mixed-case-value", "# a leading comment\nDeNy\n", "DeNy"),
+    ("trailing-whitespace", "off   \n", "off"),
+]
+
+
+def test_the_three_first_declared_line_copies_agree_exactly(tmp_path):
+    # bootstrap.py, check_privacy.py and check_trajectory.py each carry their
+    # own literal `_first_declared_line` — F5 plumbing, unbounded — but a
+    # divergence here would mean git-hook enforcement (check_privacy,
+    # check_trajectory) and the bootstrap legacy-config migration read the
+    # SAME file two different ways. Pin byte-for-byte equal, including the
+    # absent-file case none of the three signatures distinguish from empty.
+    for name, text, want in _DECLARED_LINE_CASES:
+        path = tmp_path / name
+        path.write_text(text, encoding="utf-8")
+        assert BOOTSTRAP_DECL._first_declared_line(path) == want, name
+        assert CHECK_PRIVACY._first_declared_line(path) == want, name
+        assert CT._first_declared_line(path) == want, name
+    missing = tmp_path / "does-not-exist"
+    assert BOOTSTRAP_DECL._first_declared_line(missing) is None
+    assert CHECK_PRIVACY._first_declared_line(missing) is None
+    assert CT._first_declared_line(missing) is None
+
+
+def test_agent_common_read_declared_agrees_modulo_its_default(tmp_path):
+    # agent_common.read_declared is the same rule with a fourth signature: a
+    # caller-supplied `default` in place of a hard-coded `None`. Called with
+    # default=None it must read identically to the three copies above — this
+    # is the function `docs/gate` (a generated cache) is read through, and it
+    # has to agree with the hooks' reader about the same file.
+    for name, text, want in _DECLARED_LINE_CASES:
+        path = tmp_path / name
+        path.write_text(text, encoding="utf-8")
+        assert AGENT_COMMON.read_declared(path, None) == want, name
+    missing = tmp_path / "does-not-exist"
+    assert AGENT_COMMON.read_declared(missing, None) is None
+    # Its own documented divergence — a caller default rather than a
+    # hard-coded None on absence — pinned as itself, not just "not None".
+    assert AGENT_COMMON.read_declared(missing, "fallback") == "fallback"
+
+
+def test_the_subagent_copy_diverges_only_where_its_docstring_now_says(tmp_path):
+    # subagent_gate.read_declared's docstring used to call itself "the same
+    # declared-policy parse the hooks and agent_loop use" with no further
+    # qualification. Measured here: the LINE-SELECTION rule is the same —
+    # comments and blank lines are skipped identically — but the RETURN VALUE
+    # diverges in TWO ways, not the one the name ("lowercased") advertises:
+    #   1. lowercased — deliberate: this module compares the token against a
+    #      closed, case-folded vocabulary ("off"/"ask"/"deny").
+    #   2. "" instead of None on absent/blank/comments-only — also deliberate:
+    #      decide() below documents its own `policy` param as `"" = off`, so
+    #      this reader has to hand back "" to compose with that contract.
+    # Both are load-bearing (this module's fail-open posture is owner-ruled
+    # 2026-08-11 — do NOT "fix" either away), so the docstring was corrected
+    # to name divergence 2 rather than leaving the "same parse" claim to imply
+    # casing is the only difference.
+    for name, text, want in _DECLARED_LINE_CASES:
+        path = tmp_path / name
+        path.write_text(text, encoding="utf-8")
+        expect = "" if want is None else want.lower()
+        assert SUBAGENT.read_declared(path) == expect, name
+    missing = tmp_path / "does-not-exist"
+    assert SUBAGENT.read_declared(missing) == ""  # not None, unlike its siblings
+    # And the sentinel is exactly what decide() below needs: "" resolves to
+    # the gate's OFF branch, the same branch a bare absent file resolves to.
+    assert SUBAGENT.decide("Task", SUBAGENT.read_declared(missing), "")[0] == "allow"
+
+
+# --- the carrier value round trip (repo-lock.md §8.2, 2026-08-12 census) -------
+# migrate_carrier.value_to_cell is the migration's own round-trip self-check —
+# `compare()` re-derives a cell from the just-written TOML value and diffs it
+# against the original CSV cell. spine_carrier.value_to_cell is the READER
+# every production consumer of the TOML carrier goes through (`rows_from_toml`,
+# hence `spine_carrier.load`). Both docstrings claim to be `cell_to_value`'s
+# inverse, and spine_carrier's explicitly claims to match "deliberately the
+# same rules" migrate_carrier's writes by — but nothing compared them. The
+# census found a real drift: the reader stringifies each list element
+# (`";".join(str(v) for v in value)`), the writer joined raw
+# (`";".join(value)`), which raises TypeError the moment a ref array holds a
+# non-str element. Fixed here (one line, migrate_carrier.py) so the pin below
+# passes honestly rather than pinning the crash as a "divergence".
+def test_the_carrier_value_writer_and_reader_are_the_exact_inverse():
+    cases = [
+        "plain string",
+        "a;b;c",  # a string that merely CONTAINS the ref separator
+        [],
+        ["a", "b", "c"],
+        ["a", 2, "c"],  # a ref array with a non-str element — the crash case
+    ]
+    for value in cases:
+        assert MIGRATE.value_to_cell("SN-Refs", value) == SPINE.value_to_cell(
+            value
+        ), value
+
+    # And the concrete round trip both docstrings describe: a CSV ref cell,
+    # converted to a value by cell_to_value, converted back by each
+    # value_to_cell, recovers the ORIGINAL cell text — semicolon-joined,
+    # exactly as the live registries write it (WI-431's measured 271-of-271).
+    original = "a;b;c"
+    value = MIGRATE.cell_to_value("SN-Refs", original)
+    assert value == ["a", "b", "c"]
+    assert MIGRATE.value_to_cell("SN-Refs", value) == original
+    assert SPINE.value_to_cell(value) == original
+
+
+# --- is_example, including None (repo-lock.md §8.2, 2026-08-12 census) ---------
+def test_is_example_agrees_across_all_three_copies_including_none():
+    # derive_gate.is_example and gen_release_checklist.is_example both guard
+    # `(rid or "").endswith(...)`; trace_text.is_example (imported into
+    # trace.py's own namespace as `is_example`, so `TRACE.is_example` IS this
+    # function) did not, and crashed on None. Every current call site
+    # pre-guards (`r.get(...) and not is_example(...)`), so the crash was
+    # latent — unreached by any live path, and unpinned. Guarded here
+    # (trace_text.py) so the three genuinely agree rather than agreeing by
+    # omission of the one case that would have told them apart.
+    RELEASE = load_script("gen_release_checklist")
+    TEXT = load_script("trace_text")
+    cases = ["SR-000", "SR-123", "", None]
+    for rid in cases:
+        want = GATE.is_example(rid)
+        assert RELEASE.is_example(rid) == want, rid
+        assert TEXT.is_example(rid) == want, rid
+    # The values themselves, not just agreement — equality alone can be
+    # vacuous if all three are wrong the same way.
+    assert GATE.is_example("SR-000") is True
+    assert GATE.is_example("SR-123") is False
+    assert GATE.is_example("") is False
+    assert GATE.is_example(None) is False
