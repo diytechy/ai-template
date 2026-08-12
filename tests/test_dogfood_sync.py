@@ -724,6 +724,33 @@ def test_dogfooded_boilerplate_matches_template(live_rel, tmpl_rel):
     )
 
 
+def _drop_key(src, key):
+    """Remove `key` and ITS WHOLE VALUE from TOML source.
+
+    Was a one-line filter (`not line.startswith(key + " = ")`), which silently
+    assumed every value is single-line: dropping the first line of a `\"\"\"`
+    block leaves the body orphaned and the file stops PARSING, so the test
+    failed on a TOMLDecodeError instead of on the rule it exists to prove. That
+    assumption held only while the batch-2 templates happened to carry no
+    multi-line value — the spine templates always have. The intent is "drop a
+    KEY", so this drops the key's value with it."""
+    out, lines, i = [], src.split("\n"), 0
+    while i < len(lines):
+        line = lines[i]
+        if line.startswith(key + " = "):
+            # A `"""` value runs until its closing fence, which may be on the
+            # SAME line for a one-liner (`k = \"\"\"v\"\"\"`).
+            if line.count('"""') == 1:
+                i += 1
+                while i < len(lines) and '"""' not in lines[i]:
+                    i += 1
+            i += 1
+            continue
+        out.append(line)
+        i += 1
+    return "\n".join(out)
+
+
 @pytest.mark.parametrize(
     "live_rel,plant_at",
     [
@@ -773,9 +800,7 @@ def test_bite_the_key_rule_fails_on_a_planted_batch2_defect(
     # (2) the template stops declaring a key the schema states — the direction
     # a template-vs-live comparison alone is blind to.
     victim = sorted(schema)[0]
-    dropped = "\n".join(
-        line for line in tmpl_src.split("\n") if not line.startswith(victim + " = ")
-    )
+    dropped = _drop_key(tmpl_src, victim)
     assert dropped != tmpl_src, victim
     drift = verdict(live_src, dropped)
     assert drift is not None and victim in drift

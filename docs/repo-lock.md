@@ -53,7 +53,7 @@ the map, and it must never grow depth again.**
 | **SN-005**'s unpinned CI obligation | **OI-24** | §8.4 item 1 |
 | `gate_policy` **names two things** | **OI-25** | §8.4 items 3–4 |
 | ratify **WI-429**'s LLR discharge rule | **OI-20** | §8.5, D-9 |
-| the **D-8** common-module doctrine | **OI-16** | §8.2 |
+| ~~the **D-8** common-module doctrine~~ — **RULED 2026-08-12**; only the step-2 inversion needs confirming | **OI-16** | §8.2 |
 | the **launcher tier** disputes | **OI-17** | §8.3, §8.7 |
 | dissolve the **edge-case tier** | **OI-18** | §8.6 item 2 |
 | the **hats roster** contents + home | **OI-19** | §8.6 item 2 |
@@ -799,6 +799,31 @@ after the lock**, as its own program: ~30 files plus the scaffold surface.
 > `agent_common`'s copies), **no monolithic `common.py`** — phase 1 is 9
 > files, 3 new import edges, 0 new modules, ~650 duplicate lines deleted.
 > Still: **execute after the lock.**
+
+> **RULED 2026-08-12 — D-8 lands, as option (c) with one correction owed.**
+> The owner: keep `bootstrap.py`'s dependencies **contained**; **import from
+> `bootstrap.py`** where applicable; put all other shared code in **one common
+> file or several themed library files**, for the **smallest total code**. The
+> owner also **corrected this file's reasoning**: a big file is not inherently
+> the problem — *"the monolith risk was really around function size /
+> complexity, not strictly file size."* Accepted, and it has a consequence:
+> the module-size ratchet measures **lines**, which by that reasoning is the
+> wrong axis, and a consolidation that makes functions simpler will fire it.
+>
+> **The one step that cannot be built as stated — and the repo's own test
+> proves it.** `bootstrap.py` is **not in `MAPPING`**, so it is not copied
+> into a scaffold; a shipped script doing `import bootstrap` dies on a fresh
+> adopter's first run while passing here. Probed rather than argued:
+> inserting that import makes
+> `test_every_sibling_imported_module_is_shipped_by_mapping` fail with
+> *"shipped script(s) import a sibling MAPPING omits: bootstrap.py <-
+> trace.py"* — the guard built after the `schedule.py` omission did exactly
+> its job. Meanwhile bootstrap's own standalone premise is weaker than its
+> comment claims: the documented invocation is from **inside the kit**, where
+> all 55 siblings exist, so **bootstrap can import; it just cannot be
+> imported.** The fix inverts step 2 — the common module ships and
+> `bootstrap.py` imports **from** it — which delivers the same one-home-per-
+> helper result. **Owner confirmation owed on that inversion → `OI-16`.**
 
 ### 8.3 · The stakeholder-need batch — six items + one draft SR — **RULED 2026-08-12**
 

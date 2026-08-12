@@ -26961,3 +26961,112 @@ ruling owed, in two parts."*
 **The bar.** Smoke **984 passed, 2 skipped in 19.58s**; `trace --strict` and
 `check_trajectory --strict` **rc 0**; `check_docs` **0 broken** (388 docs,
 1,115 links); **12 pending briefs** render (OI-14, OI-16…OI-26).
+
+## 2026-08-12c — D-8 ruled, and the briefs learn to render
+
+**D-8 RULED by the owner:** `bootstrap.py` keeps its dependencies contained;
+other scripts import from it where applicable; all remaining shared code moves
+into **one common file or several themed library files**, for the smallest
+total code. The owner also **corrected this program's reasoning** against a
+single large module — *"big files are not inherently an issue, the monolith
+risk was really around function size / complexity, not strictly file size."*
+Accepted. Its consequence is recorded rather than acted on: the module-size
+ratchet measures **lines**, which by that reasoning is the wrong axis, and a
+consolidation that makes functions simpler will fire it.
+
+**One step cannot be built as stated, and the repo's own test proves it rather
+than an argument.** `bootstrap.py` is **not in `MAPPING`** — it is not copied
+into a scaffold — so a shipped script doing `import bootstrap` dies on an
+adopter's first run while passing here, where the kit folder holds every file.
+Probed: inserting that import into `trace.py` makes
+`test_every_sibling_imported_module_is_shipped_by_mapping` fail with *"shipped
+script(s) import a sibling MAPPING omits: bootstrap.py <- trace.py"*. That
+guard exists **because this repo already shipped this exact failure once**
+(the `schedule.py` MAPPING omission that killed every fresh scaffold while
+this repo stayed green), and it caught the replay immediately.
+
+**And bootstrap's standalone premise is weaker than its own comment claims.**
+The comment says it *"runs from a bare download before anything else exists"*,
+but the documented invocation is `python project-trajectory/scripts/bootstrap.py
+--dest <repo>` **from inside the kit**, where all 55 siblings are present. So
+**bootstrap can import; it just cannot be imported.** The correction inverts
+step 2 — the common module ships, `bootstrap.py` imports from it — delivering
+the same one-home-per-helper result the ruling asked for, and additionally
+retiring two declared duplicates whose `test_rule_sync` pins then become
+unnecessary rather than merely passing. **Owner confirmation owed**, so OI-16
+stays on the queue narrowed to that one question rather than closing as ruled.
+
+**A gap found on the way:** the rule *"bootstrap.py imports no kit sibling"* —
+load-bearing for a long time, and the premise of the whole doctrine — is
+asserted **nowhere**; it lives in source comments and a test's prose. The
+opposite direction is guarded (above); this one is not. Recorded as the
+required guard in OI-16's recommendation rather than built now, since the
+execution is post-lock work.
+
+**THE BRIEFS RENDERED AS WALLS, AND IT WAS A RENDERING DEFECT.** The owner:
+*"Most of what is in Open-Items.html is huge blocks of single bloated
+paragraphs."* Diagnosed: `gen_open_items.md_inline` renders a cell as ONE run
+of text, so paragraphs, bullets and sub-headings authored into a brief were
+flattened on the way to the screen. Fixing it in the AUTHOR (shorter cells)
+would have traded away the reasoning a ruler needs, so it was fixed in the
+RENDERER: `md_block` adds exactly three block forms — blank-line paragraphs,
+`- ` bullets, `### ` sub-headings — deliberately not a markdown parser, for
+the same reason `md_inline` gives. Unknown syntax degrades to visible literal
+text rather than vanishing, the same failure direction `_safe_link` chose.
+Pinned by three tests, including that the block path still escapes HTML and
+still refuses a `javascript:` target.
+
+**The house structure now ships.** The template's `-000` schema row —
+the only place the vocabulary is written down — gained a written contract per
+cell (what belongs in `one_line` vs `decision` vs `blast_radius` vs `options`
+vs `recommendation`, paragraph limits, when to bullet) plus an explicit
+NOT-IN-A-BRIEF list: filing history, which review found what, already-fixed
+defects, implementation design, and rebuttals of objections nobody raised.
+Every adopter's scaffold inherits it.
+
+**A test's mechanism, not its rule, had to change.** Adding multi-line values
+to the template broke `test_bite_the_key_rule_fails_on_a_planted_batch2_defect`,
+which planted its defect by deleting a LINE — orphaning a `"""` body and
+failing on a parse error instead of on the rule it exists to prove. The
+assumption held only while the batch-2 templates happened to carry no
+multi-line value. The assertion is unchanged; `_drop_key` now drops a key
+**with its value**.
+
+**The prose restructure, measured.** All eleven pending briefs rebuilt on the
+house structure, with an adversarial editorial review's cut list applied
+verbatim. **Character count is the wrong metric** (bullets and blank lines cost
+bytes while removing words) and is reported honestly: **62,627 → 58,063 chars,
+−7%**. The metric that matches the complaint is the **longest paragraph**:
+**576 words → 76**, with no paragraph anywhere now over the ~80-word house
+signal. Words fell 10,395 → 9,712. Rendered: **60 lists, 241 bullets, 17
+sub-headings, zero leaked literal markup**.
+
+**Five unsupported claims were caught and fixed rather than restructured
+around** — an unsupported "about 35 lines of stdlib" estimate (deleted); "each
+hat names a failure this repo has actually suffered" (true of several, not
+each — narrowed to the two it can evidence); "roughly sixteen ratified cells"
+(reconciled against the rows actually listed: **up to 23**, being the 15
+carrier-clause rows, the six dial-naming rows and the two singletons, with
+overlap); "the most-quoted text in the registry" (unmeasured — replaced with
+what is true, that it is the tier every requirement below it is written
+against); and a prediction about which failure kind most needs scheduled work
+(replaced with the measured fact).
+
+**Two facts were kept AGAINST the cut list**, both because a measurement is
+not throat-clearing: the 37-row registry size in OI-17 (it appears nowhere
+else), and OI-22's "13 further SR rows were DROPPED" (scope of the batch, not
+self-assessment). Only the self-congratulating clause after the latter was cut.
+
+**A second line-number pin, and the failure it produced is the argument
+against it.** `test_the_one_non_literal_site_in_the_kit_is_lf` pins the ONE
+`newline=chr(10)` site by `(file, line)`; `md_block` moved it 781 → 835. The
+module carried the number **twice** — once in the site tuple, once as a raw
+`source[780]` index — so correcting one left the other stale and the test then
+failed on the WRONG assertion, pointing at an unrelated comment line. The
+second is now DERIVED from the first. The site pin itself is kept: a count
+would stay green if this site were deleted and a different one added.
+
+**The bar.** Smoke **987 passed, 2 skipped in 19.80s**.
+<!-- fig: cmd=".venv/bin/python -m pytest -q -n auto -m smoke" rev=6c261bc2 -->
+`trace --strict` **rc 0**; `check_trajectory --strict` **rc 0**; `check_docs`
+**0 broken** (388 docs, 1,115 links).

@@ -129,6 +129,14 @@ section.band{display:flex;flex-direction:column;gap:1rem;}
 .field .k{font-size:var(--tiny);text-transform:uppercase;letter-spacing:.08em;
   color:var(--muted);font-weight:600;}
 .field .v{font-size:var(--small);}
+.field .v p{margin:0 0 .5rem;}
+.field .v p:last-child{margin-bottom:0;}
+.field .v h4{margin:.7rem 0 .35rem;font-size:var(--small);
+  text-transform:uppercase;letter-spacing:.06em;color:var(--muted);}
+.field .v h4:first-child{margin-top:0;}
+.field .v ul{margin:0 0 .5rem;padding-left:1.15rem;}
+.field .v ul:last-child{margin-bottom:0;}
+.field .v li{margin:0 0 .3rem;}
 .pill{font-size:var(--tiny);border-radius:var(--r-pill);padding:.1rem .55rem;
   border:1px solid var(--border);color:var(--muted);white-space:nowrap;
   font-variant-numeric:tabular-nums;}
@@ -356,6 +364,52 @@ def md_inline(text):
     return out
 
 
+def md_block(text):
+    """The same inline forms, plus the three BLOCK forms a decision brief needs:
+    blank-line-separated paragraphs, `- ` bullet lists, and `### ` sub-headings.
+
+    Why this exists: `md_inline` renders a cell as ONE run of text, so a brief
+    written as four paragraphs and a bulleted option list arrived on the owner's
+    screen as a single wall — the owner's words, 2026-08-12: "huge blocks of
+    single bloated paragraphs". The prose was structured; the renderer flattened
+    it. That is a rendering defect, not an authoring one, and fixing it in the
+    author (shorter cells) would have traded away the reasoning a ruler needs.
+
+    Still deliberately NOT a markdown parser, for the reason `md_inline` gives —
+    three block forms, recognized line-wise, everything else passed through as
+    paragraph text. Unknown syntax degrades to visible literal text rather than
+    disappearing, which is the same failure direction `_safe_link` chose."""
+    blocks, para, bullets = [], [], []
+
+    def flush():
+        if bullets:
+            blocks.append(
+                "<ul>" + "".join("<li>{}</li>".format(b) for b in bullets) + "</ul>"
+            )
+            bullets.clear()
+        if para:
+            blocks.append("<p>{}</p>".format(" ".join(para)))
+            para.clear()
+
+    for raw in (text or "").split("\n"):
+        line = raw.strip()
+        if not line:
+            flush()
+        elif line.startswith("### "):
+            flush()
+            blocks.append("<h4>{}</h4>".format(md_inline(line[4:].strip())))
+        elif line.startswith("- "):
+            if para:
+                flush()
+            bullets.append(md_inline(line[2:].strip()))
+        else:
+            if bullets:
+                flush()
+            para.append(md_inline(line))
+    flush()
+    return "".join(blocks)
+
+
 # A link target is emitted as an anchor ONLY when it is a fragment, a relative
 # path, or http(s). These cells are agent-authored prose landing on the one
 # document a human reads, so an unrestricted target ships a clickable
@@ -390,7 +444,7 @@ def _brief_cards(items):
             if val:
                 fields.append(
                     '<div class="field"><span class="k">{}</span>'
-                    '<span class="v">{}</span></div>'.format(esc(label), md_inline(val))
+                    '<div class="v">{}</div></div>'.format(esc(label), md_block(val))
                 )
         cards.append(
             '<article class="card" id="{i}"><h3><span class="rid">{i}</span>'

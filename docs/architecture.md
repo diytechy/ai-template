@@ -861,6 +861,7 @@ Contracts (interfaces): IF-073, IF-074, IF-075, IF-118
 | `word_diff(before, after)` | A unified word-level diff as HTML: unchanged runs wrapped `.eq` (so the |  |
 | `changed_percent(before, after)` | How much of the cell moved, counting WORDS — whitespace runs are dropped |  |
 | `md_inline(text)` | The few markdown inline forms the reused pointer lines actually use — |  |
+| `md_block(text)` | The same inline forms, plus the three BLOCK forms a decision brief needs: |  |
 | `live_registry_rel(root)` | The open-items registry's path under whichever carrier is live, for the |  |
 | `render(root, since)` | The whole page. Deterministic: every input is sorted upstream. |  |
 | `pending_block_text(root)` | The pending-projection markdown item text, reused from gen_trajectory |  |

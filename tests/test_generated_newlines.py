@@ -220,9 +220,17 @@ def test_the_one_non_literal_site_in_the_kit_is_lf():
         for node, _label, _declared, value in text_write_calls(_parsed(path))
         if value == "<non-literal>"
     ]
-    assert sites == [("gen_open_items.py", 781)], sites
+    # The line number moves whenever anything above it in that module does —
+    # 781 -> 835 when `md_block` landed (2026-08-12). That churn is the price of
+    # pinning a SITE rather than a count, and it is the right trade: a count
+    # would stay green if this site were deleted and a different one added.
+    assert sites == [("gen_open_items.py", 835)], sites
     source = (SCRIPTS / "gen_open_items.py").read_text(encoding="utf-8").splitlines()
-    assert "chr(10)" in source[780], source[780]
+    # Derived from the pinned site above rather than hand-carried: two numbers
+    # for one fact drifted apart the moment the line moved (the second still
+    # read 780 while the first was corrected to 835, so the test failed on the
+    # WRONG assertion and pointed at an unrelated comment).
+    assert "chr(10)" in source[sites[0][1] - 1], source[sites[0][1] - 1]
 
 
 def test_a_non_literal_newline_is_reported_not_accepted(tmp_path):

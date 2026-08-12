@@ -13,15 +13,63 @@
 # `status` leaves `pending` when the ruling lands in docs/log.md's Decisions
 # log; `scripts/gen_open_items.py` renders every pending row into the generated
 # docs/open-items.html the owner actually reads.
+#
+# WRITE FOR A RULER, NOT FOR THE RECORD. These cells are read by a human
+# deciding, usually several at a sitting, and a brief that buries its question
+# under its history costs the ruling it was written to get. The renderer
+# supports three BLOCK forms — a blank line starts a paragraph, `- ` a bullet,
+# `### ` a sub-heading — plus inline `code`, **bold** and [links](target). Use
+# them; a cell written as one long paragraph arrives as a wall.
+#
+#   one_line       ONE sentence, <= ~35 words: the decision + the recommended
+#                  option + the deciding reason. No history, no measurements.
+#   decision       The unresolved question first, then ONLY the facts needed to
+#                  rule it. Open with <= ~60 words. BULLET measurements,
+#                  affected artifacts and separately-ruleable sub-questions.
+#                  `###` only when the item has genuinely independent parts.
+#   blast_radius   What choosing, deferring and REVERSING each cost. Bullet the
+#                  distinct classes (migration, re-attestation, downstream,
+#                  compatibility). Do not restate `decision`'s evidence.
+#   options        One bullet per option: the choice, then `FOR:` and
+#                  `AGAINST:`, one or two decisive points each — not a debate.
+#   recommendation Name the option in the FIRST sentence. Then <= 3 bullets:
+#                  the deciding reason, any required guard, the sequencing.
+#
+# WHAT DOES NOT BELONG IN A BRIEF: how the item came to be filed; which review
+# found what; defects already fixed; the implementation design (that is the
+# WI's job); and rebuttals of objections nobody has raised. History goes to
+# docs/log.md. A paragraph over ~80 words, or a sentence with more than three
+# clauses, is a signal to split — not a style preference: a ruler who has to
+# re-read a cell to find the question is being taxed for the author's
+# convenience.
 [open_item.OI-000]
 title = "Example row - the shape of an owner decision brief"
 status = "pending"
 raised = "2026-01-01"
-one_line = """the one-line form status.md projects - what is being decided, and the recommendation in a clause"""
-decision = """What is being decided, who raised it and when, and any context a ruler needs that is not obvious from the one-line."""
-blast_radius = """What breaks or changes if this is ruled either way - the honest cost, not the optimistic one."""
-options = """Option (a) ... · Option (b) ... · Option (c) ... - each with its FOR and AGAINST, separated by the middot the other registries use for lists-in-cells."""
-recommendation = "The driver's recommendation and WHY, in the same voice a reviewer would argue it."
+one_line = """ONE sentence the status surface projects: what is being decided, the recommended option, and the deciding reason - no history, no measurements"""
+decision = """The unresolved question in one short paragraph, then only the facts needed to rule it.
+
+Bullet what is countable rather than narrating it:
+
+- a measurement, with its date and what it was taken against;
+- an artifact the ruling touches;
+- a sub-question that could be ruled separately.
+
+Use a `###` sub-heading only when the item has genuinely independent parts."""
+blast_radius = """What choosing, deferring and REVERSING each cost - the honest cost, not the optimistic one. Bullet the distinct classes rather than running them together:
+
+- migration: what has to be rewritten, and how much of it;
+- re-attestation: whether ratified text moves, which opens a window;
+- downstream: what an adopting repo has to do;
+- reversal: what it costs to undo this later."""
+options = """- (a) THE CHOICE, named in a few words. FOR: its one or two decisive advantages. AGAINST: the honest cost, including the case where it is simply wrong.
+- (b) THE NEXT CHOICE. FOR: ... AGAINST: ...
+- (c) ... - keep each to its decisive points; a brief is not the place to hold both sides of a debate."""
+recommendation = """Name the option in the FIRST sentence, then at most three bullets:
+
+- the deciding reason - the one fact that makes this option right;
+- any guard the ruling needs to be safe;
+- the sequencing: what this must precede or follow, and why."""
 wi_refs = ["WI-000"]
 ruled_date = """the date the ruling landed (ISO), set together with status leaving `pending` — absent while the item is open."""
 ruling_ref = """where the ruling is recorded — the docs/log.md Decisions anchor, or the design doc section that carries it. Absent while the item is open."""

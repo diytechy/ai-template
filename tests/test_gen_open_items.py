@@ -456,6 +456,52 @@ def test_unsafe_link_target_is_not_clickable():
         assert 'href="{}"'.format(target) in gi.md_inline("[t]({})".format(target))
 
 
+def test_brief_cells_render_BLOCK_structure_not_one_wall():
+    """The owner, 2026-08-12: the briefs arrived as "huge blocks of single
+    bloated paragraphs". They were not written that way — `md_inline` renders a
+    cell as ONE run of text, so paragraphs, bullets and sub-headings were
+    flattened on the way to the screen. A RENDERING defect, so the fix belongs
+    here rather than in shorter cells (which would have traded away the
+    reasoning a ruler needs)."""
+    gi = load_script("gen_open_items")
+    out = gi.md_block(
+        "Opening line\nwrapped by the author.\n\n"
+        "### PART A\n"
+        "- first, with `code`\n"
+        "- second, with **bold**\n\n"
+        "Closing."
+    )
+    assert out.count("<p>") == 2, out
+    assert "<h4>PART A</h4>" in out
+    assert out.count("<li>") == 2 and "<ul>" in out
+    # A hard-wrapped paragraph joins into ONE <p>, never one per source line.
+    assert "<p>Opening line wrapped by the author.</p>" in out
+    # Inline forms still work INSIDE blocks.
+    assert "<code>code</code>" in out and "<strong>bold</strong>" in out
+
+
+def test_block_renderer_still_escapes_and_still_refuses_unsafe_links():
+    """The block path must not become an escape hatch around the two guarantees
+    the inline path already makes — 122-REVIEW-A's `javascript:` refusal is on
+    the one document a human reads, and it has to hold per-line too."""
+    gi = load_script("gen_open_items")
+    out = gi.md_block("- <script>alert(1)</script>\n- [click](javascript:alert(1))")
+    assert "<script>" not in out and "&lt;script&gt;" in out
+    assert 'href="javascript:' not in out
+    assert "click (javascript:alert(1))" in out
+
+
+def test_unknown_block_syntax_degrades_to_visible_text():
+    """The renderer knows three block forms. Everything else must still SHOW —
+    the same failure direction `_safe_link` chose, because a brief silently
+    losing a sentence is worse on a decision surface than one rendering it
+    plainly."""
+    gi = load_script("gen_open_items")
+    out = gi.md_block("| a | b |\n\n> quoted\n\n1. numbered")
+    for literal in ("| a | b |", "&gt; quoted", "1. numbered"):
+        assert literal in out, (literal, out)
+
+
 def test_whitespace_only_edit_does_not_fuse_neighbours():
     """122-REVIEW-A: `word_diff` dropped whitespace-only opcodes, so "a  b" ->
     "a b" rendered as "ab" — the reconstructed after-text must be the cell the
