@@ -26923,3 +26923,41 @@ lines are executable.
 `check_trajectory.py --strict` **rc 0**; `check_docs.py --stale` **0 broken**
 (388 docs, 1,112 links); all 13 pending briefs render in `open-items.html`
 (50 cards: 13 briefs + 37 attestations) and project into `status.md`.
+
+**Follow-up the same day — OI-14 and OI-15 MERGED, and the merged brief is
+better than either half.** The owner: *"they seem so interlinked I think they
+should be a single item."* Correct, and the tell was already in the record —
+**both briefs had independently ended up recommending "rule this in one
+sitting with the other."** The coupling is mechanical, not thematic:
+`cross_component_findings` makes a cross-component import edge a finding
+unless a covering interface row exists, so the partition **determines the
+interface population** the contract half writes rules for.
+
+**Executed:** OI-15's content folded into **OI-14** — which survived as the
+older and far more cited id (raised 2026-08-09; OI-15 was minted hours
+earlier and cited in exactly one hand-authored live line) — and **the OI-15
+row deleted**, per D-4's rule that supersession is deletion and an id is
+never re-minted. The mark held at **OI = 26** through the deletion, and a
+re-bump raised nothing: the property D-4 exists for, now actually enforced
+for this space by the morning's `_offspine_ids` fix. Its one surviving
+mention is inside OI-14's own decision cell, recording the merge.
+
+**The counter-precedent was surfaced rather than buried:** OI-12 and OI-13
+were *equally* coupled (OI-13's recommendation reads *"EXECUTE IT WITH
+OI-12"*) and were deliberately kept as two rows, then ruled a day apart. What
+two rows buy is the ability to **half-rule safely**. So the merged brief is
+structured to keep that: options are **A1–A3 (the partition)** and **B1–B3
+(the contract)** rather than one list.
+
+**And the merge made an asymmetry visible that two rows had hidden — the most
+useful thing to come out of it.** Part A is safe to rule alone; part B is
+not. A decides which rows exist, B decides what they must say, so B-first
+risks migrating cells on rows A then moves. That ordering constraint existed
+before and was stated nowhere; it is now the brief's headline and its
+recommendation (**A2 then B1, in that order — and if only one part can be
+taken, take A**). `repo-lock` §0 retitled from *"TWO rulings owed"* to *"ONE
+ruling owed, in two parts."*
+
+**The bar.** Smoke **984 passed, 2 skipped in 19.58s**; `trace --strict` and
+`check_trajectory --strict` **rc 0**; `check_docs` **0 broken** (388 docs,
+1,115 links); **12 pending briefs** render (OI-14, OI-16…OI-26).

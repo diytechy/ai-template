@@ -47,8 +47,7 @@ the map, and it must never grow depth again.**
 
 | owed | brief | still-relevant background here |
 |---|---|---|
-| the component **partition** — gates the most | **OI-15** | §0, §8.6 item 1 |
-| what an **IF row** is for + its schema tier | **OI-14** *(rewritten)* | §0 |
+| the component **partition** *(part A)* + what an **IF row** must say *(part B)* — gates the most | **OI-14** *(rewritten; the two were **merged** 2026-08-12 at the owner's direction, and the former OI-15 row deleted per D-4)* | §0, §8.6 item 1 |
 | the **prose-legibility batch** (29 SN + 17 SR) | **OI-22** | §8.4 |
 | the **carrier-falsified** ratified rows | **OI-23** | §8.4 item 7 |
 | **SN-005**'s unpinned CI obligation | **OI-24** | §8.4 item 1 |
@@ -102,8 +101,9 @@ duplicate a surface the generator maintains. → **§5 step 6**
   future carrier move re-opens it, and the general guard — a mark whose scan
   cannot see a registry should say so rather than read zero — does not exist.
   → **D-4**
-- **Finish batch-2** — `interfaces.csv` (after OI-14) and `components.csv`
-  (after the component model). `open-items` and `agents` are done. → **§8.1**
+- **Finish batch-2** — `interfaces.csv` and `components.csv`, **both after
+  OI-14** (part B rewrites what an IF row holds; part A is *about* the CMP
+  rows). `open-items` and `agents` are done. → **§8.1**
 - **Close WI-390** — the concurrency-v2 program close; it carries spine
   amendments, so it belongs with the sitting. The last open work item.
   → **§5 step 9**
@@ -119,20 +119,35 @@ and the four unfounded LLRs.
 
 ---
 
-## 0. Start here — TWO rulings owed
+## 0. Start here — ONE ruling owed, in two parts
 
-| # | question | where | recommendation |
+**Merged 2026-08-12 at the owner's direction** (*"they seem so interlinked I
+think they should be a single item"*). They had been filed as two — the
+component model, and what an IF row's `Contract` cell is for — and both briefs
+had independently ended up recommending *"rule this in one sitting with the
+other"*, which is the tell. The **brief is [`OI-14`](open-items.html)**; the
+former OI-15 row is **deleted** per D-4 (supersession is deletion; the id is
+never re-minted, and the mark now enforces that for the `OI` space too).
+
+| part | question | where | recommendation |
 |---|---|---|---|
-| **components** | The **component model**. `LLR.Component` is *traced*, so the partition moves with no re-attest window — and it **decides how many IF rows must exist**. **Direction received 2026-08-12** (§8.6): boundaries define SR I/O; the partition itself is still owed. | §6 F-11 (archived) · §8.6 | work the partition as an *optimization over system I/O* (§8.6 item 1), present it; the ruling stays the owner's |
-| **OI-14** | What an IF row's **`Contract` cell is for**. Measured: design narrative and history, 1% requirement voice, and the registry has **no schema tier at all**. **It inherits a sweep** — see below. **Narrowed 2026-08-12**: interfaces carry *interfaces only*, signals typed discrete vs variable. | §6 F-10 (archived) · §8.6 | **declare now, split gradually** — never a 95-row sweep |
+| **A · partition** | The **component model**. `LLR.Component` is *traced*, so the partition moves with **no re-attest window** — and it **decides how many IF rows must exist**. **Direction received 2026-08-12** (§8.6); the partition itself is still owed. | §6 F-11 (archived) · §8.6 | derive candidates against a declared objective (the method is researched — [knowledge pack](knowledge/system-decomposition-methods.md)), present a **ranked shortlist**; the ruling stays the owner's |
+| **B · contract** | What an IF row must **say**. Measured: design narrative and history, and the registry has **no schema tier at all**. **Narrowed 2026-08-12**: interfaces carry *interfaces only*, signals typed discrete vs variable. | §6 F-10 (archived) · §8.6 | **declare + build the schema tier**, split the cells gradually — never a 113-row sweep |
+
+**The order is an asymmetry, not a preference: A is safe to rule alone, B is
+not.** A decides which rows exist; B decides what they must say — so B-first
+risks migrating cells on rows A then moves. If only one part can be taken,
+take **A**.
 
 > **OI-14 has grown a second half, and it is the same finding twice.** F-10
 > measured `Contract` cells carrying design narrative and defect history rather
 > than contract, and noted the cost is not cosmetic: `plan_briefs`'
 > `IF_SURFACE_COLUMNS` feeds `Contract` **verbatim into LLM planning briefs**,
 > so history spends brief budget without constraining behaviour. **That pattern
-> then grew back** — 11 of 110 IF rows now cite `repo-lock D-n` in
-> `Contract`/`Notes`, most of it added by this program. The owner ruled the
+> then grew back** — **re-measured 2026-08-12: 14 of 113** IF rows now cite
+> `repo-lock D-n` in `Contract`/`Notes` (it was 11 of 110), most of it added
+> by this program, and **every other drift figure moved the same way while
+> the item sat unruled** — the full re-measurement is in the brief. The owner ruled the
 > general case on 2026-08-11: *"if someone wants to know the history and the
 > rationale, they should look in the archive"* — state the constraint, cite a
 > decision only where a reader could plausibly undo it, at most once per
@@ -140,10 +155,10 @@ and the four unfounded LLRs.
 > are deliberately NOT swept**, because OI-14 is going to rewrite what a
 > `Contract` cell may contain and sweeping first means sweeping twice.
 
-**Read them in that order:** OI-14 assumes today's IF rows are the right ones,
-and that rests on the unruled component model. §8.3 item 6 (SRs written against
-component-boundary interfaces) lands on the same question and should be ruled
-with it.
+**Why the two could not stay apart:** part B assumes today's IF rows are the
+right ones, and that rests on part A. §8.3 item 6 (SRs written against
+component-boundary interfaces) lands on the same question — it is now **SN-037**,
+a Draft need, and it is the obligation this ruling makes real.
 
 **Ruled and closed since:** ~~OI-12~~ (one TOML carrier — **D-5**, executed),
 ~~OI-13~~ (what `Status` means — **D-9**, ruled 2026-08-11; migration owed).
@@ -220,7 +235,7 @@ semantics landed; the SN batch applied as drafts).
 | integrity | `orphans=0 integrity=0 component-findings=0 interface-findings=0`; interfaces 113 |
 | strict modes | `trace --strict` **rc 0** · `check_trajectory --strict` **rc 0** |
 | full bar | **2298 passed, 5 skipped** (post stage-rework; re-run owed at session close) |
-| owner surface | **2 rulings** (components partition · OI-14) + **1 ratification** (WI-429) + the sitting's 25-row re-attest brief + the §8.7 review list (grown today) |
+| owner surface | **12 pending `OI-` briefs** (OI-14 and OI-16…OI-26 — read them in [`open-items.html`](open-items.html), not here) + the sitting's 25-row re-attest, which that surface also renders |
 
 **Predecessor records**, kept reachable because they are the account of the
 program *before* this one and are not superseded by it:
