@@ -131,7 +131,8 @@ never re-minted, and the mark now enforces that for the `OI` space too).
 
 | part | question | where | recommendation |
 |---|---|---|---|
-| **A · partition** | The **component model**. `LLR.Component` is *traced*, so the partition moves with **no re-attest window** — and it **decides how many IF rows must exist**. **Direction received 2026-08-12** (§8.6); the partition itself is still owed. | §6 F-11 (archived) · §8.6 | derive candidates against a declared objective (the method is researched — [knowledge pack](knowledge/system-decomposition-methods.md)), present a **ranked shortlist**; the ruling stays the owner's |
+| **A · partition** | The **component model**. `LLR.Component` is *traced*, so the partition moves with **no re-attest window** — and it **decides how many IF rows must exist**. **Direction + PURPOSE received 2026-08-12** (§8.6): the architecture is **formative**, and exists to stop a behaviour being built twice or two contradictory ways. | §6 F-11 (archived) · §8.6 | derive from the system's **declared I/O**, with **one home per behaviour as a hard constraint** and cut-count only the tie-breaker; present a **ranked shortlist carrying its rework cost**; the ruling stays the owner's |
+| **A′ · the boundary rung** | **Nothing declares the system boundary before SRs are written** — G1's bar asks for the vision tag, needs, non-goals and sign-offs, and not this. 15 of 113 IF rows name an external counterpart, so the mechanism half-exists; the *completeness* and *ordering* obligations do not. | §0 (2026-08-12) | require it with an **applies-when, warn-first** — real obligation, but a hard G1 bar would tax adopters whose boundary is obvious |
 | **B · contract** | What an IF row must **say**. Measured: design narrative and history, and the registry has **no schema tier at all**. **Narrowed 2026-08-12**: interfaces carry *interfaces only*, signals typed discrete vs variable. | §6 F-10 (archived) · §8.6 | **declare + build the schema tier**, split the cells gradually — never a 113-row sweep |
 
 **The order is an asymmetry, not a preference: A is safe to rule alone, B is
@@ -577,8 +578,12 @@ this file archived.
 
 ### Owed by the owner
 
-The **two rulings** in §0 (components → OI-14), and the **P0 sitting's part
-2**. Nothing mechanizable is waiting on anything else.
+**The 12 pending `OI-` briefs** — read them in
+[`open-items.html`](open-items.html), which is the decision surface; the
+[WHAT IS LEFT](#what-is-left--the-whole-list) map at the top of this file says
+which is which. Plus the **P0 sitting's part 2**, which that same surface
+renders as per-cell before/after. Nothing mechanizable is waiting on anything
+else.
 
 ### Then, in order
 
@@ -846,6 +851,17 @@ double-clickable `dev-setup` launcher per platform; **(3)** same for
 and SR decomposition simultaneous. Plus a draft SR: the loop addresses handback
 documents first, then works tier-by-tier, halting where attestation is
 required.
+
+> **Item 6 was REFINED by the owner on 2026-08-12** — kept above as the record
+> of what was asked, not as the live statement. Two changes: the architecture
+> is **formative** (it shapes what gets built) rather than a description fitted
+> around today's modules, and its **purpose is the objective function** — stop
+> a behaviour being built in more than one place, or in a way that contradicts
+> what was done elsewhere. "Simultaneous" resolved into an order:
+> boundary → functional decomposition → partition → SRs → **re-score**. The
+> live statement is `OI-14` part A; **SN-037** carries the obligation and
+> survives the refinement unchanged, because its acceptance says an SR
+> references *a declared interface* and never *a component* one.
 
 **The challenges that survive, honestly:**
 

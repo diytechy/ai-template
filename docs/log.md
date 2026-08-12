@@ -27143,3 +27143,34 @@ the ruled model is a *tier of the decomposition* and a boundary is not one.
 Corrections propagated to the knowledge pack and repo-lock §8.6 so the
 over-claims do not outlive this entry. Structure held: longest paragraph 76
 words; 63 lists, 254 bullets, 19 sub-headings.
+
+**Pre-review cleanup of both surfaces, 2026-08-12.** The owner asked whether
+the boundary rung was actually rulable yet, and what else was stale. Honest
+answer to the first: **it was not** — it sat in OI-14's `decision` and
+`recommendation` but had **no options**, and was absent from `one_line`, which
+is the only cell `status.md` projects. So a reader skimming the queue would not
+have known it was there, and a ruler could not have ruled it. Fixed: three
+options (A5 require at G1 · A6 require with an applies-when, warn-first · A7
+leave it implicit), a recommendation naming **A6**, and a `one_line` that now
+reads *"one ruling, three questions"*.
+
+Four stale surfaces found and corrected:
+
+- **§0's part-A recommendation predated the owner's correction** — it still
+  said "derive candidates against a declared objective", with no mention that
+  one home per behaviour is a CONSTRAINT and cut-count only the tie-breaker.
+  Rewritten, and a new **A′ row** added for the boundary rung.
+- **§8.3 item 6** carried the pre-refinement framing. Kept verbatim as the
+  record of what was asked, with a note that it was refined and that the live
+  statement is OI-14 part A — and that **SN-037 survives unchanged**, because
+  its acceptance says an SR references *a declared interface*, never a
+  *component* one.
+- **§5's "Owed by the owner"** still read *"the two rulings in §0"*. It now
+  points at the 12 pending briefs and the surface that renders them.
+- **OI-16's `one_line` was 70 words**, double the house limit this session
+  shipped — written by me, before the limit existed. Now 36.
+
+Every pending brief's `one_line` is 32–41 words; longest paragraph anywhere is
+76. Smoke **987 passed, 2 skipped**; `trace --strict` and `check_trajectory
+--strict` **rc 0**; `check_docs` **0 broken** (388 docs, 1,116 links); the
+queue renders 64 lists, 257 bullets, 20 sub-headings.

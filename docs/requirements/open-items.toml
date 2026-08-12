@@ -76,7 +76,7 @@ ruling_ref = "docs/repo-lock.md section 2, D-9"
 title = """The component partition AND the interface contract - which boundaries exist, and what a row at one must say"""
 status = "pending"
 raised = "2026-08-09"
-one_line = """One ruling in two parts - (A) which component boundaries exist, (B) what an interface row must say; recommendation is RULE A THEN B IN ONE SITTING, because A decides which rows exist and B what they must say"""
+one_line = """One ruling, three questions - (A) which component boundaries exist, (B) what an interface row must say, and whether G1 must require a declared system boundary first; rule A then B in one sitting"""
 decision = """Two parts of one ruling: PART A - which component boundaries exist. PART B - what an interface row must say. They are one item because `check_trajectory.cross_component_findings` makes an import edge between two components a FINDING unless a covering interface row exists, so the partition MECHANICALLY DETERMINES the interface population - Part B cannot be executed against a row set Part A may change.
 
 A caveat that must be read with that mechanism: `cross_component_findings` reports ZERO findings today, but its own docstring says it is DELIBERATELY VACUOUS for any endpoint carrying no component tag, delegating that coverage to the containment rule instead.
@@ -169,6 +169,14 @@ options = """TWO PARTS, RULED IN ORDER. Part A is safe to rule alone; Part B is 
 - (A3) DERIVE FROM THE SYSTEM'S I/O, RULE ONE - declare the boundary, take a first-cut functional decomposition from the needs, score candidate partitions with ONE HOME PER BEHAVIOUR as a hard constraint and cut-count as the tie-breaker, and bring a RANKED SHORTLIST for a human to name and choose from. FOR: it is the method the owner prescribed, it is formative rather than descriptive, and it produces the rework list as a by-product - the delta between the derived partition and today's tree. It leaves the reproducible record SN-040 requires. AGAINST: the most work of the three, it will surface rework the owner has accepted in principle but not yet sized, and the tie-breaker is a proxy that cannot see volatility - so the shortlist must be ranked FOR a human, never selected BY the tool.
 - (A4) DEFER PAST THE LOCK. FOR: keeps the lock program small. AGAINST: it strands Part B, the interfaces conversion and SN-037 behind an item explicitly deferred - which does not defer their cost, only moves it behind a wall.
 
+### PART A - the boundary rung (rulable separately)
+
+The sequence needs a declared system boundary BEFORE SRs are written, and G1's bar does not ask for one. Three ways to close that, and it is a shipped process change either way.
+
+- (A5) REQUIRE IT AT G1 - the boundary is a G1 deliverable: every crossing an interface row, typed, with the set declared complete. FOR: SRs stop being blessed without a frame to be written against, which is the gap; the mechanism half-exists already (15 of 113 rows name an external counterpart). AGAINST: it hardens G1 for every adopter, including projects small enough that the boundary is obvious.
+- (A6) REQUIRE IT WITH AN APPLIES-WHEN - same obligation, opt-in by project size or profile, warn-first until a project claims G2. FOR: proportionality (SN-012) says heavy layers cost a project that does not use them nothing; a three-file project genuinely does not need a formal context declaration. AGAINST: the projects most likely to skip it are the ones whose boundary later turns out to have been guessed.
+- (A7) LEAVE IT IMPLICIT - no boundary artifact; the external interfaces accumulate as they are noticed. FOR: zero process change; it is what happens today. AGAINST: it is also WHY only 15 rows are external - the set was never declared, so nothing says whether it is complete, and an SR can be written against a boundary nobody has stated.
+
 ### PART B - the contract
 
 The direction is already ruled, so these are about ENFORCEMENT and MIGRATION - what a check can honestly police, and what happens to 113 existing cells.
@@ -185,7 +193,7 @@ recommendation = """(A3) THEN (B1), IN ONE SITTING AND IN THAT ORDER - derive th
 ### Guards on Part A
 
 - The scorer's job is to make the trade VISIBLE - here are the candidate partitions, here is what each costs in cross-boundary interfaces, here is which behaviours straddle a boundary under each - and the owner's job is to name the components and decide which boundaries are worth their crossings.
-- RULE THE BOUNDARY RUNG WITH IT. The sequence needs a declared system boundary before SRs are blessed, and G1's bar does not ask for one today. Adding it there costs a shipped process change, so it is the owner's to rule - and proportionality (SN-012) argues for warn-first or an applies-when, since a three-file project does not need a formal context declaration.
+- ON THE BOUNDARY RUNG: take (A6) - require it, with an applies-when and warn-first. The obligation is real (SRs are blessed today against a frame nobody declared) but (A5) hardens G1 for every adopter including those who do not need it, and (A7) is the status quo that produced a boundary declared only by accident.
 - EXPECT REWORK AND SIZE IT BEFORE COMMITTING. The delta between the derived partition and today's tree is the rework list; the owner has accepted rework in principle, but the shortlist should carry its cost so the acceptance is informed rather than nominal.
 - The metric optimises COUPLING, not VOLATILITY: it cannot see that two modules co-occurring today will diverge tomorrow, which is the Parnas criterion and the one that most often decides whether a partition survives. Treat a top-ranked partition as a candidate, never a verdict.
 - Confirm the containment rule actually covers the rows `cross_component_findings` is vacuous for, rather than reading its zero as full coverage.
@@ -211,7 +219,7 @@ TWO THINGS THAT DO NOT WAIT ON ANY OF IT:
 title = """D-8: the common-module doctrine - RULED, with one step that cannot be built as stated"""
 status = "pending"
 raised = "2026-08-10"
-one_line = """the owner RULED the doctrine 2026-08-12 - bootstrap keeps its dependencies contained, shared code moves into one common file or themed library files, smallest total code wins - and only ONE narrow thing is still owed: step 2 (-import modules from bootstrap.py-) cannot be built as stated, because `bootstrap.py` is not shipped into a scaffold, so the recommendation is to INVERT it and let bootstrap import the common module instead"""
+one_line = """RULED 2026-08-12 - bootstrap contained, shared code into one common or themed library files; ONE thing owed: step 2 is unbuildable because `bootstrap.py` is not shipped to scaffolds, so INVERT it and let bootstrap import the common module"""
 decision = """RULED by the owner 2026-08-12, in three steps: (1) keep all necessary dependencies for `bootstrap.py` contained; (2) import modules from `bootstrap.py` where applicable; (3) put all other common or reusable chunks into a single common file, or several themed library files, so the result is the smallest amount of code across the board.
 
 The owner also corrected the reasoning this brief had used against a single large module: big files are not inherently a problem, and the monolith risk was always about FUNCTION size and complexity, not file length. That correction is accepted and has a consequence of its own, in the last bullet below.
