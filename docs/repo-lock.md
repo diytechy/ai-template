@@ -56,6 +56,22 @@ with it.
 **Ruled and closed since:** ~~OI-12~~ (one TOML carrier — **D-5**, executed),
 ~~OI-13~~ (what `Status` means — **D-9**, ruled 2026-08-11; migration owed).
 
+**A third question is now WORKED BUT UNRULED — the stage/gate semantics.**
+[`plans/2026-08-11-stage-gate-semantics.md`](plans/2026-08-11-stage-gate-semantics.md).
+In short: *gate* is an event used as a state, so "at G1" cannot say whether G1
+is ahead or behind — and `docs/gate` contradicts its own header, displaying
+`G1` while its basis line reads `computed=G0`. **`G0` is the root error: it is
+not a gate at all**, only "stage 0" in the wrong units. The proposal unifies
+them — **stages are the tiers of the decomposition; gates are the subset of
+boundaries that require a human to certify** — adds the missing
+**implementation rung** (today the entire implementation period reads
+"stage 3 — TCs in process", which is false while it is true), and retires the
+phrase "the active gate". It is unruled because it changes shipped vocabulary.
+**It has a blocking prerequisite:** `docs/specs/derived-gate-model.md` — the
+authority, cited **21 times** including by four live scripts and by
+`PROCESS_OPTIONS.md`, which ships — **does not exist**; it was archived. Fix
+that before ruling into it.
+
 **Also owed by the owner, and larger than a ruling:** the **P0 sitting's part
 2** — the 25-row re-attest brief (§5 step 6). It gates the ladder migration
 (Q11), the anchor half, and the schema batch. Everything mechanizable is now
@@ -322,6 +338,57 @@ Three already existed; the fourth was built.
   because per-token would red 31/149 on arrival; per-token misses are counted
   *untraced* so tightening stays available. **Hard under `--strict`**, argued
   from D-9: an advisory would make `Founded` vacuous for one of four tiers.
+
+### D-10 — approval provenance is an APPEND-ONLY LOG RECORD, never a registry cell
+
+**Owner ruling, 2026-08-11**, on the question D-9 left implicit: `Approved`
+records *that* a judgement was made, never *who* made it.
+
+**Why not a cell — the owner's two objections compose into a proof.** An
+`ApprovedBy` column holds only the **last** actor, and under the ladder a row
+goes `Drafted → Approved → Founded` where **`Founded` is computed** — so the
+machinery that observes the children exist would **overwrite the record that a
+human approved the text**. The only cell-based escape is one field per
+transition (`ApprovedBy`, `FoundedBy`, …), which is column growth. So *any*
+cell-based approach either destroys the fact or multiplies the schema.
+
+**Why not git, measured** — "it is in the commit history" is true in principle
+and false here, in the direction that fails silently:
+
+- **The author field already says the human for LLM work.** Every agent-driven
+  commit in this session reads `author=diytechy`, with the model only in a
+  trailer. The kit never sets identity (`setup.sh` prompts, `check_privacy`
+  reads), so loop commits inherit ambient config. Git's answer to "who approved
+  this?" is currently *the owner*, for work the owner did not do.
+- **The `Co-Authored-By` trailer is unenforced** — the two tests naming it only
+  check it passes the privacy floor.
+- **Squash misattributes rather than loses.** D-1 already rejected this class
+  when it killed ALT-1 on history rewriting; for authorship it is worse, since
+  a squash collapses N commits into one authored by the *merger*.
+
+**Ruled shape.** The transition is recorded as an **append-only entry in the
+log** — `row · from→to · actor · commit` — written by the machinery that
+performs the flip. The actor is valued as an **`agents` registry id** or a
+human marker, so "was this row blessed by a human or by a hat?" is answerable
+by query rather than by reading prose. It survives squash (file content, not
+git metadata), cannot be overwritten (append-only), and costs the registries
+nothing. It is the row-level sibling of `log.md`'s existing **Gate Sign-offs**
+table.
+
+**THE GUARDRAIL, and it is the whole reason this is not the ledger D-1 tore
+down: the row records the STATE, the log records the EVENT, and NOTHING JOINS
+ON THE LOG.** The retired `attestations.csv` was a *registry* — keyed, joined,
+and read by three checks, so deleting it silenced all three at once. This
+record is narrative: nothing gates on it, and deleting it loses history without
+breaking a check. **The day a check reads it to decide something, it has become
+the ledger again** — that is the tripwire, not a style note.
+
+**Sequencing: build it WITH D-9's migration (§5 step 7).** The status-flip
+machinery is being rewritten there anyway, so the writer is a small addition to
+scheduled work rather than a new mechanism. It also closes, at row granularity,
+the gap that nothing durably records who certified what — the Gate Sign-offs
+table being its gate-granularity twin, hand-maintained and last filled
+2026-07-07.
 
 **SEQUENCING — Q11 binds.** Fixing the vocabulary is safe; **migrating is
 not.** The 38 `Modified` rows must be resolved at the sitting first, or
