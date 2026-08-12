@@ -9,6 +9,16 @@ safety_class = "ordinary"
 
 ## Deliverable
 
+> **⚠ OVERTURNED BY THE OWNER, 2026-08-11 — read this first.** The ruling
+> below was made by an agent under this row's own license and has since been
+> **reversed**: the owner ruled that creating a file to switch something *off*
+> is confusing, and the six toggles now ship as explicit keys in
+> `docs/process.toml` (`[checks]`), keyed to their current defaults. Executed
+> as **WI-432**. The reasoning below is kept because it is accurate history and
+> because its *measurement* survives the reversal — it found this row's own
+> cost premise false, which is what made the reversal cheap. What did not
+> survive is its conclusion. See `docs/repo-lock.md` §8.5.
+
 **RULED (b): check-enablement toggles stay files.** The six —
 `docs/trajectory-check`, `docs/interfaces-check`, `docs/components-check`
 (check_trajectory.py), `docs/subagent-gate` (subagent_gate.py),

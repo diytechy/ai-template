@@ -779,7 +779,11 @@ rows), round 2 verification (4 residuals). Dispositions are in the document.
    the clear one ("…CSV structure", a column-count clause). Also worth reading:
    SR-025 · SR-129 · SR-147 · LLR-002 · LLR-025 · LLR-034 · LLR-041 · LLR-118 ·
    LLR-136 · LLR-165 · TC-025 · TC-129 · TC-160 · SN-026. Some may still be
-   true (the off-spine registries are still CSV). **Add `SR-049`**, whose
+   true (the off-spine registries are still CSV). **Add the rows that still
+   name the six toggle FILES as a dial's home** — WI-432 moved those dials into
+   `process.toml [checks]`, and the spine cells naming `docs/trajectory-check`
+   and its siblings are now imprecise; they were fenced out of that WI because
+   they are ratified text. **Add `SR-049`**, whose
    ratified `rationale` cites the pre-archive `docs/specs/derived-gate-model.md`
    path (§5 loose ends). **Add `LLR-150`**, whose
    `detail` repeats a docstring claim WI-429 proved false.
@@ -798,10 +802,25 @@ rows), round 2 verification (4 residuals). Dispositions are in the document.
   makes the reversal cheap: it found the row's stated cost premise **false**
   (the sh-parse hooks read only three keys, none of them these six), so
   option (a) is ~15-line `tomllib` reads in three stdlib checkers, not five
-  copies of a shell contract. **Owed:** fold the six into `process.toml` as
-  explicit `true` defaults, update the template header (which currently states
-  the overturned ruling), and re-state the F5 duplication where each local
-  reader lands.
+  copies of a shell contract. **EXECUTED as WI-432** (`6562239f`): the six now
+  ship in `[checks]`, both headers rewritten, the overturned text gone, and
+  WI-423's own closed spec carries a dated OVERTURNED banner so a reader cannot
+  mistake it for live.
+
+  > **My brief for that work was WRONG, and the builder caught it.** I said
+  > five of the six were on-by-default. Measured, **four** are:
+  > `agent_loop` read `read_declared(docs/live-status, "false")`, so an absent
+  > file **disabled** the live console. Shipping it `= true` would have changed
+  > every fresh scaffold's console behaviour **under cover of a re-homing** —
+  > the exact class of silent change this program keeps finding. My figure came
+  > from inferring the README dial table rather than reading the code. Shipped:
+  > `trajectory_check` · `interfaces_check` · `components_check` ·
+  > `okf_export` = `true`; `live_status` = `false`; `subagent_gate` = `"off"`
+  > (kept a **string**, since `ask` and `deny` are different restrictions).
+  > Measured F5 cost: three local readers (24/22/36 lines, 10/10/7 executable);
+  > `agent_loop` and `bootstrap` needed none. The migration rides SN-028's
+  > existing dual-read window rather than starting a second clock, so an
+  > adopter's window is **one re-sync long**.
 - **The `key = ""` refusal** (`49ab1c1c`) — **RATIFIED 2026-08-11**, with one
   correction the owner should see. Ruling: *"if it's restricted to the spine,
   draft state is the right approach"* — i.e. a half-written row is marked
@@ -825,9 +844,15 @@ rows), round 2 verification (4 residuals). Dispositions are in the document.
   which is plausibly peak for a US-centric service but is not a measurement.
   Since this ships to every adopter, the comment should read as the kit
   author's operating observation, not as an asserted fact about the vendor.
-  **Note the pinning test moves with it:** `conftest.py` currently pins that
-  the template ships `"12:00-19:00"` *and really blocks*, so the guard must be
-  re-aimed at "ships disabled" without becoming vacuous.
+  **EXECUTED as WI-433** (`231eb1de`). Verified on a real fresh scaffold:
+  `(720, 720)`, **0 waits across 504 probed clock times**, against **105** for
+  the populated window. The pin was **re-aimed, not deleted** — split into
+  four, with the non-vacuity moved to *"a populated window still blocks"*, and
+  this repo's own dial asserted present-and-parseable but deliberately **not
+  pinned to a value**, since it is the owner's. Red-proofed on four separate
+  breaks. The wording constraint is **mechanized**: a test requires the
+  observation framing and *refuses* the strings `Anthropic`, `Claude models
+  see`, `usage peaks` — so the unvalidated vendor claim cannot creep back in.
 
   *(Original entry, kept for the reasoning:)*
   **should the kit ship YOUR blackout window to every adopter?**
