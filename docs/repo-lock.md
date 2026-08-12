@@ -335,8 +335,29 @@ fresh word on it. The owner asked the better question — *"Can't that be derive
 from running the tests?"* — and it can: pass/fail is a live fact CI answers on
 every push, so a cell is a stale duplicate. Deleting it makes the ladder
 uniform, and **dissolves the word-reuse hazard rather than working around it** —
-`Verified` is not re-pointed, it ceases to exist. `derive_gate`'s G3 rung
-("decomposed AND `Status=Verified`") becomes simply "at `Founded`".
+`Verified` is not re-pointed, it ceases to exist.
+
+> **CORRECTION, 2026-08-11 — this paragraph originally said `derive_gate`'s G3
+> rung ("decomposed AND `Status=Verified`") "becomes simply at `Founded`".
+> That is WRONG, and the owner's question found it.** `Founded` **is** the old
+> G2 condition (decomposed — its LLR and TC exist), so mapping G3 onto it
+> collapses G2 into G3 and would declare implementation complete the moment the
+> tests are *written*. **Under D-9, nothing currently drives G2→G3.**
+>
+> The deeper finding is that today's rung was never sound either. `sr_gate`
+> reads `decomposed and is_verified(sr)` — a **hand-set cell asserting the
+> tests pass**, which is precisely the authored pass/fail claim **Q11 forbids**.
+> The tension predates D-9; deleting the pass rung exposed it rather than
+> causing it.
+>
+> **The fix is where `PROCESS.md` already puts it: the HARNESS is the signal** —
+> G3's bar is *"passes the full harness: format/lint, full test tier, coverage
+> ≥ threshold … no stubs."* `derive_gate` never read it; it read a cell that
+> claimed it. So the G2→G3 driver must become a harness result, not a status
+> value — which also makes the proposed **stage 4 → 5** boundary
+> (implementation → release candidate) harness-driven, consistently with the
+> rest of the ladder. **Owed with the step-7 batch**; it is the one piece of
+> D-9 whose consequence inventory was incomplete.
 
 **The `GreenOn` idea — right shape, deferred with a trigger.** Recording the
 commit a row was last green at is the anchor pattern and is sound; built
@@ -765,18 +786,51 @@ rows), round 2 verification (4 residuals). Dispositions are in the document.
 
 ### 8.5 · Agent rulings owed ratification, and one tabled question
 
-- **WI-423 — check-enablement toggles STAY FILES** (`a25637b6`). Agent-ruled
-  under the row's own license. It deliberately **discards the row's stated cost
-  premise** (measured: the sh-parse hooks read only three keys, none of the
-  six) and rests instead on **absence-as-declaration** (a TOML key cannot be
-  absent and still declare) plus the **F5 copy-ability ruling**. If those two
-  grounds are rejected, option (a) is cheaper than the row assumed.
-- **The `key = ""` refusal** (`49ab1c1c`). Repo-lock never ruled what an
-  explicit empty TOML value means. Taken **fail-closed**: a live read refuses
-  and names the row and key; a baseline read stays permissive, since history is
-  not editable. Ratify or re-rule.
+- ~~**WI-423 — check-enablement toggles STAY FILES**~~ **OVERTURNED BY THE
+  OWNER, 2026-08-11.** The agent ruling rested on **absence-as-declaration** —
+  no file means the check is on, and you create a file to switch it off. The
+  owner's ruling: *"creating files to toggle something off is also very
+  confusing … far better to tie those into `process.toml` and key them all to
+  on / true."* That answers the agent's objection rather than ignoring it:
+  the objection was "a TOML key cannot be absent and still declare, so folding
+  means shipping six visible keys" — and **shipping six visible `= true` keys
+  is the point**, because explicit beats implicit. The agent's own measurement
+  makes the reversal cheap: it found the row's stated cost premise **false**
+  (the sh-parse hooks read only three keys, none of them these six), so
+  option (a) is ~15-line `tomllib` reads in three stdlib checkers, not five
+  copies of a shell contract. **Owed:** fold the six into `process.toml` as
+  explicit `true` defaults, update the template header (which currently states
+  the overturned ruling), and re-state the F5 duplication where each local
+  reader lands.
+- **The `key = ""` refusal** (`49ab1c1c`) — **RATIFIED 2026-08-11**, with one
+  correction the owner should see. Ruling: *"if it's restricted to the spine,
+  draft state is the right approach"* — i.e. a half-written row is marked
+  `Drafted`, not blanked. **It is no longer spine-only:** WI-431 routed
+  `open-items` and `agents` through the same loader. That is still safe,
+  because the finding's actual remedy is *"delete the line"*, which works
+  everywhere — but the **`Drafted` remedy is spine-only**: `open-items` has a
+  `status` with a different vocabulary, and **`agents` has no status field at
+  all**. So off-spine, the answer to "not ready yet" is delete the key, not
+  mark it draft.
 - **WI-429's LLR discharge rule** — see D-9.
-- **TABLED: should the kit ship YOUR blackout window to every adopter?**
+- ~~**TABLED: should the kit ship YOUR blackout window to every adopter?**~~
+  **RULED 2026-08-11: ship it DISABLED, but keep the shape.** The template
+  becomes `blackout = "12:00-12:00"` — verified mechanically to disable
+  (`start == end`, probed across the day, runs at every hour) — with a comment
+  naming the window an adopter might want. **One caveat on the comment's
+  wording:** the reason offered was that Claude models see heavier usage
+  12:00–19:00 UTC, and **I cannot validate that** — I have no source for
+  Anthropic's aggregate load and will not manufacture one. What is checkable is
+  the mapping (12:00–19:00 UTC = 08:00–15:00 US Eastern, 05:00–12:00 Pacific),
+  which is plausibly peak for a US-centric service but is not a measurement.
+  Since this ships to every adopter, the comment should read as the kit
+  author's operating observation, not as an asserted fact about the vendor.
+  **Note the pinning test moves with it:** `conftest.py` currently pins that
+  the template ships `"12:00-19:00"` *and really blocks*, so the guard must be
+  re-aimed at "ships disabled" without becoming vacuous.
+
+  *(Original entry, kept for the reasoning:)*
+  **should the kit ship YOUR blackout window to every adopter?**
   `process.toml.template` ships `blackout = "12:00-19:00"` (UTC weekdays), and
   its comment records that as deliberate (*"a MOVE, not an occasion to
   re-decide it"*). **Nothing has changed the value.** But its cost is now
