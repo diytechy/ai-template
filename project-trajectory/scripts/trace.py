@@ -541,6 +541,27 @@ def _spine_ids(docs):
                 yield match.group(1), int(match.group(2))
 
 
+def _offspine_ids(docs):
+    """`(space, number)` per row of the numbered OFF-SPINE registries.
+
+    The same hole `_spine_ids` documents, one carrier batch later and found the
+    same way — by minting past the mark and getting no finding. Batch-2 moved
+    `open-items` off CSV, so `_csv_ids`' `requirements/*.csv` glob stopped
+    matching it and rule 2 went VACUOUS for the `OI` space: OI-26 was live
+    against a mark of 14 with `--strict` reporting nothing. That space has no
+    minter either, so a hand-authored id past the mark is again the only signal.
+
+    Read through `spine_carrier` for the same reason `_spine_ids` does — a glob
+    is un-wired by moving a file, a carrier resolve is not. `agents` is
+    deliberately absent: its ids are names (`ANTHROPIC-FABLE`), not numbers, so
+    it holds no watermark space to lose."""
+    for rel, id_col in (("docs/requirements/open-items.toml", "OI-ID"),):
+        for row in spine_carrier.load(docs.parent / rel, id_col):
+            match = _ANY_ID.match(str(row.get(id_col) or "").strip())
+            if match:
+                yield match.group(1), int(match.group(2))
+
+
 def _sn_ids(docs):
     """`("SN", number)` per declared stakeholder need, through the CARRIER.
 
@@ -590,7 +611,7 @@ def live_max_ids(root):
     id held anywhere is an id taken".)"""
     docs = Path(root) / "docs"
     top = {}
-    for reader in (_csv_ids, _spine_ids, _sn_ids, _wi_ids, _dp_ids):
+    for reader in (_csv_ids, _spine_ids, _offspine_ids, _sn_ids, _wi_ids, _dp_ids):
         for space, num in reader(docs):
             if space in WATERMARK_SPACES and num > top.get(space, 0):
                 top[space] = num

@@ -26849,3 +26849,77 @@ owner asked for mid-session: the stage-home call (`PROCESS.md`), the
 gates-keep-their-names reading of "retired", the launcher-tier disputes, the
 agent-resume copy-paste-slip reading, and the hats-include-downstream-users
 interpretation.
+
+## 2026-08-12b — the owner queue becomes the registry, and a second vacuous watermark
+
+**Why.** The owner asked that everything owed to them surface as `OI-` rows
+rather than as prose in [repo-lock.md](repo-lock.md), and asked whether OI-14
+was stale. Both halves were right: repo-lock had become a **second decision
+queue** beside the registry — the duplication its own first page forbids — and
+OI-14's measurements were three days old in a direction that mattered.
+
+**Twelve briefs minted, OI-15…OI-26**, each with blast radius, options and a
+recommendation, so the generated surfaces carry them: the component
+**partition** (OI-15), the **D-8** common-module doctrine (OI-16), the
+**launcher tier** disputes (OI-17), the **edge-tier dissolution** (OI-18), the
+**hats roster** (OI-19), **WI-429**'s ratification (OI-20), the
+**stage-semantics reading** and its execution calls (OI-21), the **prose
+batch** (OI-22), the **carrier-falsified** ratified rows (OI-23), **SN-005**'s
+unpinned CI obligation (OI-24), the **`gate_policy`** collision (OI-25), and
+what a **red test case** may produce (OI-26). `repo-lock`'s WHAT IS LEFT list
+collapsed to a **map** pointing at them.
+
+**Deliberately NOT minted:** a "hold the sitting" brief. `open-items.html`
+already renders every row owing ratification with its per-cell before/after,
+and a brief restating that is the duplication this exercise was correcting.
+
+**OI-14 REWRITTEN, and the re-measurement is the finding.** Every drift figure
+the item was raised about moved the WRONG way while it sat unruled: live rows
+**95 → 113**, requirement voice **1% → 7.1%**, `repo-lock` citations in cells
+**11 of 110 → 14 of 113**, median cell length **260 → 325**, cells over 500
+chars **21 → 34**, cross-registry citations **14% → 24.8%**. A rule with no
+enforcer did not hold for three days — which is the argument for building the
+schema tier rather than declaring again. Also measured: **nothing in the
+registry types a signal at all** (zero hits across all 113 rows), so the
+owner's ruled discrete-vs-variable typing is a new column plus a validator,
+not a convention to write down. The brief now answers the owner's open
+question (*"not sure of the best way to enforce this mechanically"*) with the
+honest split: intent cannot be mechanized, but **negative rules can** — refuse
+a work-item id in `Contract` (24% of rows today), refuse a `repo-lock D-n`
+citation (14 rows), warn on a rationale connective (24%), warn past a length
+ceiling (34 rows). Those make it impossible for a contract cell to be a
+changelog, which is the observed failure.
+
+**A SECOND VACUOUS WATERMARK, found by using it.** Minting OI-15…OI-26 raised
+the mark by **nothing** — and `--strict` reported nothing — because batch-2
+(WI-431) moved `open-items` off CSV and out from under `live_max_ids`'
+`requirements/*.csv` glob. **OI-26 was live against a mark of 14 with the
+integrity floor silent.** This is D-4's hole exactly, one carrier batch later
+and found the same way: by minting past the mark. Fixed with `_offspine_ids`
+reading through `spine_carrier` (a glob is un-wired by moving a file; a
+carrier resolve is not), **red-proofed** (the new test fails without the fix),
+and pinned by two tests — the finding itself, plus one pinning that `agents`
+is deliberately NOT scanned because its ids are names, so a later reader does
+not "fix" the omission with a scanner that parses a family name as a number.
+Mark bumped **OI 14 → 26**.
+
+**THE PATTERN IS NOW TWICE-OBSERVED AND IS NOT CLOSED.** Every carrier move
+silently un-wires whichever id scan globbed the old suffix, and nothing
+generic catches it — a scan that finds no registry reads **zero** rather than
+refusing. The instance is fixed; the class is not. Recorded at the ratchet
+baseline and in repo-lock: a third occurrence should build the general guard
+instead of adding a fourth reader.
+
+**The module-size ratchet fired and was bumped, not dodged** — `trace.py`
+3428 → 3449, a reviewed baseline edit with the reason at the entry, which is
+the path the check's own message sanctions. Trimming the docstring to squeak
+under was available and refused: that buys a green by editing the guard
+instead of the thing it measures, which is the standing rule. ~6 of the 21
+lines are executable.
+
+**The bar.** Smoke **984 passed, 2 skipped in 18.95s**.
+<!-- fig: cmd=".venv/bin/python -m pytest -q -n auto -m smoke" rev=6e79819b -->
+`trace.py --strict` **rc 0** (orphans=0 integrity=0, interfaces=113);
+`check_trajectory.py --strict` **rc 0**; `check_docs.py --stale` **0 broken**
+(388 docs, 1,112 links); all 13 pending briefs render in `open-items.html`
+(50 cards: 13 briefs + 37 attestations) and project into `status.md`.

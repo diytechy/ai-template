@@ -35,27 +35,36 @@ sections, and §5's checklist steps 6–12 — and a third would invite reading
 "item 7" as "§7". The arrow on each line is the only pointer that means
 anything.
 
-**Owner acts — everything below them waits on one of these:**
+**Owner acts — ALL OF THEM NOW LIVE AS `OI-` ROWS, 2026-08-12.** They used to
+live here as prose, which made this file a second decision queue beside the
+registry — the exact duplication it forbids on its first page. Each is now a
+brief in
+[`requirements/open-items.toml`](requirements/open-items.toml) with its own
+blast radius, options and recommendation, rendered for reading in
+[`open-items.html`](open-items.html) and projected into
+[`status.md`](status.md) automatically. **Read them there; this list is only
+the map, and it must never grow depth again.**
 
-- **Rule the component model's PARTITION** — the *direction* landed 2026-08-12
-  (§8.6): components define the boundaries SRs are written against; interfaces
-  carry interfaces only (each signal typed discrete vs variable). Still owed:
-  the actual partition and the IF schema rewrite, ruled *with* OI-14. → **§0**,
-  **§8.6**
-- **Rule OI-14** (what an IF row's `Contract` cell is for) — it inherits an
-  11-row citation sweep and decides when `interfaces.csv` may convert. The
-  2026-08-12 direction (interfaces-only) narrows it but does not close it.
-  → **§0**
-- **Hold the P0 sitting, part 2** — the 25-row re-attest brief, worked
-  *together with* the prose batch so two re-blessing windows collapse into one.
-  Gates the entire schema batch via Q11. → **§5 step 6**, **§8.4**
-- **Ratify ONE remaining agent decision** — WI-429's LLR discharge rule
-  (`CodeSymbol` must resolve), taken under a "proceed" and now gating hard
-  under `--strict`. The other three are settled: WI-423 **overturned** and
-  re-executed, the `key = ""` refusal **ratified**, the blackout dial
-  **ruled**. → **§8.5**
-- **Review the agent decisions taken executing the 2026-08-12 rulings** —
-  recorded as they were made. → **§8.7**
+| owed | brief | still-relevant background here |
+|---|---|---|
+| the component **partition** — gates the most | **OI-15** | §0, §8.6 item 1 |
+| what an **IF row** is for + its schema tier | **OI-14** *(rewritten)* | §0 |
+| the **prose-legibility batch** (29 SN + 17 SR) | **OI-22** | §8.4 |
+| the **carrier-falsified** ratified rows | **OI-23** | §8.4 item 7 |
+| **SN-005**'s unpinned CI obligation | **OI-24** | §8.4 item 1 |
+| `gate_policy` **names two things** | **OI-25** | §8.4 items 3–4 |
+| ratify **WI-429**'s LLR discharge rule | **OI-20** | §8.5, D-9 |
+| the **D-8** common-module doctrine | **OI-16** | §8.2 |
+| the **launcher tier** disputes | **OI-17** | §8.3, §8.7 |
+| dissolve the **edge-case tier** | **OI-18** | §8.6 item 2 |
+| the **hats roster** contents + home | **OI-19** | §8.6 item 2 |
+| confirm the **stage-semantics reading** | **OI-21** | §8.7 |
+| what a **red test case** may produce | **OI-26** | §5 loose ends |
+
+**Not an `OI-` row, deliberately:** the **P0 sitting's 25-row re-attest** —
+`open-items.html` already renders every row owing a ratification with its
+per-cell before/after, so minting a brief that says "hold the sitting" would
+duplicate a surface the generator maintains. → **§5 step 6**
 
 **Ruled 2026-08-12 (this sitting) — and EXECUTED the same day:**
 
@@ -83,10 +92,16 @@ anything.
   **Includes the one hole D-9 left: nothing drives G2→G3 once `Verified` is
   gone** — the fix is to read the harness rather than a cell, see D-9's
   correction note. Blocked on the sitting. → **§5 step 7**
-- **Repoint the `derived-gate-model.md` citations** — 23 across 18 files, of
-  which **14 are live** (8 kit source, 5 tests, 1 shipped doc). Unblocked
-  today; `SR-049` is fenced out of it as a spine amendment.
-  → **§5 loose ends**
+- ~~**Repoint the `derived-gate-model.md` citations**~~ — **DONE 2026-08-12**,
+  14 live sites. → **§5 loose ends**
+- **Un-vacuum the id watermark for the OFF-SPINE spaces** — **the instance is
+  FIXED 2026-08-12** (`OI` was live at 26 against a mark of 14 with `--strict`
+  silent, because batch-2 moved `open-items` off CSV and out from under
+  `_csv_ids`' glob — the same hole D-4 repaired for three spine tiers, one
+  carrier batch later). Pinned by two tests. **What is NOT closed:** every
+  future carrier move re-opens it, and the general guard — a mark whose scan
+  cannot see a registry should say so rather than read zero — does not exist.
+  → **D-4**
 - **Finish batch-2** — `interfaces.csv` (after OI-14) and `components.csv`
   (after the component model). `open-items` and `agents` are done. → **§8.1**
 - **Close WI-390** — the concurrency-v2 program close; it carries spine

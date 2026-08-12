@@ -183,6 +183,50 @@ def test_an_id_above_the_mark_is_a_finding_ON_THE_TOML_CARRIER(tmp_path):
     assert any("TC-005" in f and "stands at 1" in f for f in findings), findings
 
 
+def test_an_OI_above_the_mark_is_a_finding_ON_THE_TOML_CARRIER(tmp_path):
+    # THE SAME HOLE, ONE CARRIER BATCH LATER. WI-431 moved `open-items` off CSV,
+    # so `_csv_ids`' `requirements/*.csv` glob stopped matching it and rule 2
+    # went vacuous for the `OI` space too — found the way the spine one was, by
+    # minting past the mark and getting NO finding (OI-26 live against a mark of
+    # 14, `--strict` silent). `OI` has no minter either, so this rule is again
+    # the only thing between a deleted id and its silent re-use.
+    root = tmp_path
+    reg = root / "docs" / "requirements"
+    reg.mkdir(parents=True)
+    (reg / "open-items.toml").write_text(
+        '[open_item.OI-3]\ntitle = "t"\n\n[open_item.OI-9]\ntitle = "t"\n',
+        encoding="utf-8",
+    )
+    (root / TRACE.WATERMARK).write_text(
+        TRACE.render_watermark({s: 0 for s in TRACE.WATERMARK_SPACES} | {"OI": 4}),
+        encoding="utf-8",
+    )
+    findings = TRACE.watermark_findings(root)
+    assert any("OI-009" in f and "stands at 4" in f for f in findings), findings
+    # ...and the repair path sees it too, or the finding names a fix that fails.
+    marks, raised = TRACE.bump_watermark(root)
+    assert marks["OI"] == 9 and raised["OI"] == (4, 9)
+
+
+def test_the_agents_registry_holds_no_watermark_space(tmp_path):
+    # The deliberate asymmetry beside the test above: `agents` also moved to
+    # TOML in the same batch, and is deliberately NOT scanned — its ids are
+    # NAMES, not numbers, so it has no space to go vacuous. Pinned so a later
+    # reader does not "fix" the omission by adding a scanner that yields
+    # nothing, or worse, one that parses a family name as a number.
+    root = tmp_path
+    reg = root / "docs" / "requirements"
+    reg.mkdir(parents=True)
+    (root / "docs" / "agents.toml").write_text(
+        '[agent.ANTHROPIC-FABLE]\nfamily = "ANTHROPIC"\n', encoding="utf-8"
+    )
+    (root / TRACE.WATERMARK).write_text(
+        TRACE.render_watermark({s: 0 for s in TRACE.WATERMARK_SPACES}),
+        encoding="utf-8",
+    )
+    assert TRACE.watermark_findings(root) == []
+
+
 def test_bump_ids_covers_all_four_spine_tiers_over_the_toml_carrier(tmp_path):
     # `--bump-ids` is the documented repair path, and it reads the same
     # `live_max_ids`: if the scan cannot see a tier, the repair cannot fix it.

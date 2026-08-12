@@ -1207,7 +1207,7 @@ Contracts (interfaces): IF-020, IF-038
 | Public item | Summary | Implements |
 |---|---|---|
 | `read_process_policy(root)` | `[checks] subagent_gate` out of `docs/process.toml`, lowercased, or None |  |
-| `read_declared(path)` | First non-comment, non-blank line lowercased, or "" — the same |  |
+| `read_declared(path)` | First non-comment, non-blank line lowercased, or "" (kept local per the |  |
 | `decide(tool_name, policy, override)` | Pure decision core for one tool call. | LLR-040, SR-043 |
 | `emit(decision, reason)` | Map a decision to PreToolUse stdout + an exit code, returning the code. |  |
 | `log_decision(root, tool_name, decision, reason)` | Append one tab-separated decision to out/subagent-gate.log (best-effort; |  |

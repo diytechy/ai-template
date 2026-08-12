@@ -642,7 +642,19 @@ BASELINE = {
     # failure mode — the executable delta is ~7. Not decomposable: this IS the
     # decomposition, one reader per id source beside `_csv_ids`/`_sn_ids`/
     # `_wi_ids`/`_dp_ids`.
-    "trace.py": 3428,
+    # Then +21 (3428 -> 3449), 2026-08-12: THE SAME HOLE, ONE CARRIER BATCH
+    # LATER. Batch-2 (WI-431) moved `open-items` off CSV, so `_csv_ids`' glob
+    # stopped matching it and the watermark went vacuous for the `OI` space
+    # too — found the way the last one was, by minting past the mark and
+    # getting NO finding (OI-26 live against a mark of 14, `--strict` silent).
+    # `_offspine_ids` reads through `spine_carrier` for the same reason. Again
+    # mostly docstring: the executable delta is ~6. Not decomposable, for the
+    # reason directly above — this IS the decomposition. THE PATTERN IS NOW
+    # TWICE-OBSERVED AND WORTH NAMING: every carrier move silently un-wires
+    # whichever id scan globbed the old suffix, and nothing generic catches it
+    # (a scan that finds no registry reads zero rather than refusing). A third
+    # occurrence should build that guard instead of adding a fourth reader.
+    "trace.py": 3449,
     # +132 (1926 -> 2058; the last +10 is the F4 BOM hardening: read_rows utf-8-sig + git-show strips), WI-316: staged_spine_findings — the amend-without-
     # flip warn (--staged): content cells of a Verified spine row changed
     # without the Modified marker, suppressed when the owning SR flips in the
