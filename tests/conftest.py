@@ -971,7 +971,7 @@ def make_minimal_project(root):
     # on-by-default export exists and is fresh (its hook/G3 --check passes).
     proc = run_py(["scripts/gen_okf.py"], cwd=root)
     assert proc.returncode == 0, proc.stdout + proc.stderr
-    # The derived gate (docs/specs/derived-gate-model.md): this is a full G3 chain,
+    # The derived gate (docs/archive/specs/derived-gate-model.2026-07-20.md): this is a full G3 chain,
     # so docs/gate is regenerated from the artifact states — the scaffold shipped
     # the fresh-repo G1, and ratifying artifacts up to a G3-complete spine is what
     # advances the derived gate. Keeps the derived-gate freshness step green.

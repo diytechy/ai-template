@@ -750,7 +750,7 @@ def test_tc_citing_only_seam_ids_is_an_orphan(scaffold):
 
 
 # --- WI-089: the Draft artifact state + decomposition exemption ---------------
-# The derived-gate model (docs/specs/derived-gate-model.md §3) lets a requirement
+# The derived-gate model (docs/archive/specs/derived-gate-model.2026-07-20.md §3) lets a requirement
 # be drafted in the LIVE spine before it is decomposed: a `Draft` SR/LLR is exempt
 # from the child-completeness orphan rules and the --require-verified criterion,
 # retiring the -000/off-spine workaround. Parent-linkage + integrity still apply.

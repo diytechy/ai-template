@@ -3,7 +3,7 @@
 The derivation is the trust root of the whole model, so every per-artifact rule,
 the min-aggregation, the draft drop, and the --check rot guard get a red->green
 test here. The meta-repo smoke test proves the dogfood: the derived gate reads G3,
-byte-for-byte with today's declared docs/gate (docs/specs/derived-gate-model.md
+byte-for-byte with today's declared docs/gate (docs/archive/specs/derived-gate-model.2026-07-20.md
 §11 done-when).
 """
 

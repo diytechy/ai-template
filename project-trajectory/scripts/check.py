@@ -578,7 +578,7 @@ def steps(coverage, tier, gate, phase=None, profile=None):
             {"G1"},
             "process",
         ),
-        # Derived-gate freshness (docs/specs/derived-gate-model.md §5): docs/gate is
+        # Derived-gate freshness (docs/archive/specs/derived-gate-model.2026-07-20.md §5): docs/gate is
         # now GENERATED from artifact states by derive_gate.py, not hand-set —
         # `--check` recomputes and fails if the cache drifted (the arch-map/OKF/
         # dashboard freshness idiom, applied to the gate marker itself). Runs at
@@ -1059,7 +1059,7 @@ def resolve_gate(explicit):
     never a silently weaker one). The file is parsed by the declared-policy rule
     every reader shares (hooks, check_privacy.py, agent_loop.py): the first
     non-empty, non-comment line — which is now DERIVED by derive_gate.py from the
-    artifact states (docs/specs/derived-gate-model.md), not hand-set. The read is
+    artifact states (docs/archive/specs/derived-gate-model.2026-07-20.md), not hand-set. The read is
     unchanged (the derived value sits on that same first non-comment line, with the
     derivation basis in `#` comments above it); the `derived-gate` step guards the
     cache against drift, so a --gate resolved here is a fresh computed value."""

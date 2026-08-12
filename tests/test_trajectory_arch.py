@@ -1049,7 +1049,7 @@ def test_undecodable_module_is_skipped_lane_side_without_a_crash(tmp_path):
 
 
 # --- WI-093: the [phase]-[g*] archetype + phase-drop detector ------------------
-# The derived-gate model (docs/specs/derived-gate-model.md §7/§9.3): a phase's
+# The derived-gate model (docs/archive/specs/derived-gate-model.2026-07-20.md §7/§9.3): a phase's
 # pre-dev batch is a WI whose Title carries a `[<phase>]-[g<N>]` tag; the derived
 # gate dropping below a phase's closed anchor level warns to open a new phase-gate
 # WI. All warn-first; the logic is unit-tested via load_script.

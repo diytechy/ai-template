@@ -1662,7 +1662,7 @@ def spec_interface_findings(root):
 
 
 # --- the [phase]-[g*] archetype + phase-drop detector (WI-093) -----------------
-# The derived-gate model (docs/specs/derived-gate-model.md §7/§9.3) structures a
+# The derived-gate model (docs/archive/specs/derived-gate-model.2026-07-20.md §7/§9.3) structures a
 # phase's pre-dev work as a first-class WI whose Title carries a `[<phase>]-[g<N>]`
 # tag (g1 = requirement structuring, g2 = decomposition + TCs). The derived gate
 # DROPPING below a phase's last-closed level is the signal that new/reopened

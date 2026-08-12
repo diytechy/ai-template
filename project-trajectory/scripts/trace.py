@@ -44,7 +44,7 @@ restated here (the kit's decompose-don't-paraphrase rule applied to itself):
       Analysis/Inspection/Attest, a TC, and — when a needs file exists — an SN;
       LLR/TC parentage), the Draft child-completeness exemption, and the
       Draft->Planned->Verified ladder: process.md §4 + the derived-gate model
-      (docs/specs/derived-gate-model.md §3, and §4a for section-as-state SN
+      (docs/archive/specs/derived-gate-model.2026-07-20.md §3, and §4a for section-as-state SN
       maturity).
     - the always-on structural-integrity floor (a CSV data row whose column count
       differs from its header, a duplicate/malformed SR/LLR/TC/PB/REPO/CMP/IF id,

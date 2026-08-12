@@ -591,13 +591,20 @@ The **two rulings** in §0 (components → OI-14), and the **P0 sitting's part
   another dial grows blocking behavior the same false-green is available.
 - **The four unfounded LLRs need a ruling on what `CodeSymbol` may claim** —
   belongs with the ladder migration, not a rewrite of authored cells (WI-429).
-- **`docs/declared-absences:92`'s stated reason is discharged** — the repoint it
-  was waiting on landed. The line survives because the path is cited elsewhere,
-  but its justification is stale.
-- **The `derived-gate-model.md` citations point at a pre-archive path — 23
-  references across 18 files, 14 of them live.** The spec was archived
-  correctly; the citations were never repointed, which is the WI-425 shape
-  (live source naming something retired, with nothing validating it). Measured:
+- ~~**`docs/declared-absences:92`'s stated reason is discharged**~~ —
+  **WITHDRAWN 2026-08-12: this claim was a misreading.** The entry at that
+  line (now ~98) is about the `drive.py`→`dispatch.py` rename and LLR-143's
+  stale Module pointer, gated on **WI-390** — nothing to do with the
+  derived-gate-model repoint. The checker declined to edit it; it stays until
+  WI-390.
+- **The `derived-gate-model.md` citations — REPOINTED 2026-08-12.** The 13
+  live source/test citations (plus a 14th the inventory missed, in
+  `hooks/pre-commit:229`) now cite the archived spec; touched-module tests ran
+  green (163 passed, 1 skipped) and `check_docs` reports 0 broken links.
+  `PROCESS_OPTIONS.md`'s citation moves with the stage-semantics rework;
+  `docs/gate`'s header line self-corrects at next regeneration (generated
+  file, not hand-edited). `SR-049` remains fenced out (sitting territory,
+  §8.4 item 7). Original measurement, kept for the record:
 
   | class | citations | where |
   |---|---|---|

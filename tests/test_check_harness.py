@@ -225,7 +225,7 @@ def test_run_steps_batch_passes_on_clean_project(scaffold):
 
 
 def test_derived_gate_step_wired_at_every_gate_and_runs(scaffold):
-    # check.py consumes the derived gate (docs/specs/derived-gate-model.md §5):
+    # check.py consumes the derived gate (docs/archive/specs/derived-gate-model.2026-07-20.md §5):
     # the derived-gate freshness step is a process-layer step at every gate.
     check = load_script("check")
     for gate in ("G1", "G2", "G3"):

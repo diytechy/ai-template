@@ -226,7 +226,7 @@ fi
 #                        (a mid-G1 registry legitimately has SRs with no LLR/TC
 #                        yet); the floor must never block an early-stage commit.
 #      - derived-gate    docs/gate is GENERATED from artifact states by
-#                        derive_gate.py (docs/specs/derived-gate-model.md); --check
+#                        derive_gate.py (docs/archive/specs/derived-gate-model.2026-07-20.md); --check
 #                        fails if a ratify/reopen moved the gate but the cache did
 #                        not. A legacy hand-set gate (no `# basis:` line) is
 #                        compared value-only, so a not-yet-migrated repo is green.
