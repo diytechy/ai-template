@@ -21,9 +21,57 @@ collapses to a one-line pointer with the commit.**
 > this document's own log now live in
 > [`archive/repo-lock-decisions-2026-08.md`](archive/repo-lock-decisions-2026-08.md).
 > **Every `D-n` heading and every `§N` number survives here as a resolvable
-> pointer** — roughly twenty live source and test files cite them in prose
+> pointer** — **33 live source and test files** cite them in prose
 > (`repo-lock D-5`, `repo-lock §5's`) where nothing link-checks them, so the
 > ids must keep resolving. What remains below is what is still owed.
+
+---
+
+## WHAT IS LEFT — the whole list
+
+Ordered by what blocks what. **Owner acts are 1–6; everything else waits on
+them or on step 7.**
+
+1. **Rule the component model** — it gates OI-14, the `interfaces.csv`
+   conversion, and §8.3 item 6. Nothing else in the program is blocked by so
+   much. → **§0**
+2. **Rule OI-14** (what an IF row's `Contract` cell is for) — it inherits an
+   11-row citation sweep and decides when `interfaces.csv` may convert. → **§0**
+3. **Hold the P0 sitting, part 2** — the 25-row re-attest brief, worked
+   *together with* the prose batch so two re-blessing windows collapse into
+   one. Gates the entire schema batch via Q11. → **§5 step 6**, **§8.4**
+4. **Rule the stage/gate semantics** — worked and unruled: *gate* is an event
+   used as a state, `G0` is not a gate, and the implementation period has no
+   rung. Includes deciding its **home** — the evidence says `PROCESS.md`, not
+   `PROCESS_OPTIONS.md`. → **§0**, [proposal](plans/2026-08-11-stage-gate-semantics.md)
+5. **Rule the six SN-tier intake items** — plain-language needs, the launcher
+   items, the "hats" roster, and item 6 which must be ruled *with* the
+   component model. → **§8.3**
+6. **Ratify or re-rule four agent decisions** — WI-423 (toggles stay files),
+   the `key = ""` fail-closed refusal, WI-429's LLR discharge rule, and the
+   tabled question of whether the kit ships your blackout window to every
+   adopter. → **§8.5**
+7. **Build the schema batch ONCE** — D-1's anchor half, D-2's SN fields, D-3's
+   remaining columns, D-4's `SupersededBy` deletion, **D-9's ladder migration**
+   (closing the `Status` enum *first*), and **D-10's approval-log writer**.
+   Blocked on 3. → **§5 step 7**
+8. **Repoint the `derived-gate-model.md` citations** — 23 across 18 files, of
+   which **14 are live** (8 kit source, 5 tests, 1 shipped doc). Unblocked
+   today. → **§5 loose ends**
+9. **Finish batch-2** — `interfaces.csv` (after 2) and `components.csv` (after
+   1). `open-items` and `agents` are done. → **§8.1**
+10. **Close WI-390** — the concurrency-v2 program close; it carries spine
+    amendments, so it belongs with the sitting. The last open work item.
+    → **§5 step 9**
+11. **Regenerate, and confirm the gate rises** to its honest ceiling. A gate
+    that does *not* rise is a finding. → **§5 step 8**
+12. **Dispose the warn-only residue**, then re-run the full bar and merge.
+    → **§5 steps 10–12**
+
+**Not blocking, but owed to nobody and therefore easy to lose:** the loose ends
+in **§5** — `intake.py`'s monolith, the traced/ratified split `trace.py` cannot
+see (this one bites *at* the sitting), the un-reusable policy-scaffold census,
+and the four unfounded LLRs.
 
 ---
 
@@ -67,10 +115,29 @@ boundaries that require a human to certify** — adds the missing
 **implementation rung** (today the entire implementation period reads
 "stage 3 — TCs in process", which is false while it is true), and retires the
 phrase "the active gate". It is unruled because it changes shipped vocabulary.
-**It has a blocking prerequisite:** `docs/specs/derived-gate-model.md` — the
-authority, cited **21 times** including by four live scripts and by
-`PROCESS_OPTIONS.md`, which ships — **does not exist**; it was archived. Fix
-that before ruling into it.
+**Two things it needs settled with it, both measured 2026-08-11:**
+
+- **WHERE the semantics live — the evidence says `PROCESS.md`, not
+  `PROCESS_OPTIONS.md`.** The options file's own header states *"Nothing here
+  is required for the minimum profile"*, yet its table lists **`Derived gate
+  model | always, once you use gates`** — an always-on layer in a file of
+  opt-in layers. (`Proportionality doctrine` is marked "always" too, so this is
+  a pattern.) The stage axis is the stronger case: there is no applies-when
+  under which a project has a spine but no stage, and it drives the human-stop
+  decision. Sizes for the trade: `PROCESS.md` 64,466 bytes ·
+  `PROCESS_OPTIONS.md` 170,459; the guard enforces a hard 10,000 only on
+  `AGENTS.template.md` and *watches* these two, so moving the summary between
+  them is roughly budget-neutral across the pair.
+- **The authority is reachable — my earlier "restore it" was WRONG.**
+  `docs/specs/derived-gate-model.md` was a **design spec** (spec-of-record for
+  WI-089…096, WI-116, WI-117), archived **correctly** by the WI-251
+  spec-lifecycle sweep under rule R-F to
+  [`archive/specs/derived-gate-model.2026-07-20.md`](archive/specs/derived-gate-model.2026-07-20.md).
+  Nothing is lost. What was never done is repointing the citations — see §5's
+  loose ends. Note `PROCESS_OPTIONS.md` calls its own section *"the working
+  summary"* and defers to the spec for *"full design + rationale"*, so ruling
+  into the options file would mean **promoting the summary to the authority**
+  and dropping that deference clause, not just editing a paragraph.
 
 **Also owed by the owner, and larger than a ruling:** the **P0 sitting's part
 2** — the 25-row re-attest brief (§5 step 6). It gates the ladder migration
@@ -473,6 +540,33 @@ The **two rulings** in §0 (components → OI-14), and the **P0 sitting's part
 - **`docs/declared-absences:92`'s stated reason is discharged** — the repoint it
   was waiting on landed. The line survives because the path is cited elsewhere,
   but its justification is stale.
+- **The `derived-gate-model.md` citations point at a pre-archive path — 23
+  references across 18 files, 14 of them live.** The spec was archived
+  correctly; the citations were never repointed, which is the WI-425 shape
+  (live source naming something retired, with nothing validating it). Measured:
+
+  | class | citations | where |
+  |---|---|---|
+  | **live kit source** | **8** | `derive_gate.py` (4) · `check.py` (2) · `trace.py` · `check_trajectory.py` |
+  | **live kit tests** | **5** | `test_trajectory_arch` · `test_trace` · `test_derive_gate` · `test_check_harness` · `conftest` |
+  | **live shipped doc** | **1** | `PROCESS_OPTIONS.md` — the one an adopter reads, pointing at a path absent even from the kit |
+  | live docs | 7 | `log.md` (2) · `spine-restructure` · `reviews/003-REVIEW-A` · `repo-review-2026-07-21` · this file · the stage/gate proposal |
+  | generated | 1 | `okf/system-requirements/SR-049.md` |
+  | history — keeps it | 1 | `work/complete/WI-088-…` |
+
+  **Repoint the 14 live ones** at the archived spec, whose **§3 / §4a / §5 /
+  §7 / §9.3** the citations name precisely — `PROCESS_OPTIONS.md`'s summary is
+  unnumbered prose, so retargeting there would silently coarsen every one.
+  Four of the seven "live docs" are historical records and keep their citations
+  under the `check_doc_refs` doctrine.
+
+  **`SR-049` is NOT a repoint — checked, and it is sitting territory.** The
+  dead path sits in its **`rationale`** cell (*"SSOT applied to the gate itself
+  (docs/specs/derived-gate-model.md)"*), `spine_cell_class` classes `Rationale`
+  as **ratified**, and the row is **`Verified`**. So correcting it is a spine
+  amendment that opens a re-attest window, not a mechanical fix. It joins the
+  carrier-falsified list in §8.4 item 7 — the same batch, the same window, and
+  it must not be swept in with the other 14.
 - **`status.md` is ~450 lines against a 120-line warn budget** — pre-existing.
 - **`Priority` names two incompatible vocabularies** — D-3 rules it a float;
   the migration is owed (step 7).
@@ -655,7 +749,9 @@ rows), round 2 verification (4 residuals). Dispositions are in the document.
    the clear one ("…CSV structure", a column-count clause). Also worth reading:
    SR-025 · SR-129 · SR-147 · LLR-002 · LLR-025 · LLR-034 · LLR-041 · LLR-118 ·
    LLR-136 · LLR-165 · TC-025 · TC-129 · TC-160 · SN-026. Some may still be
-   true (the off-spine registries are still CSV). **Add `LLR-150`**, whose
+   true (the off-spine registries are still CSV). **Add `SR-049`**, whose
+   ratified `rationale` cites the pre-archive `docs/specs/derived-gate-model.md`
+   path (§5 loose ends). **Add `LLR-150`**, whose
    `detail` repeats a docstring claim WI-429 proved false.
 
 ### 8.5 · Agent rulings owed ratification, and one tabled question
