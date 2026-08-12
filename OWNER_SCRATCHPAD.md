@@ -694,11 +694,19 @@ Where are agents stored again?  Perhaps this should be a TOML file as well.
 
  Findings for post convert to TOML:
 
+ When a branch is created and the tiered agents are run, how are guardrails applied?  Is agents.md literally replaced?  Is process.md modified?  How do agents get the right scoping context when working in a branch?  Or should all of that be popped into the WI as prose it gets while digesting the WI (Which seems inefficient).  I tend to think this is part of the agents prose toml that is used to formulate the prompt handed over CLI.
+
+ Stakeholder needs must clarify if they are for the template (dowsntream adopters + this repo) or only for this repo itself.
+
+ Related, should all the prose templates (to construct the prompt mechanically that is fed into the LLM's CLI caller) also be TOML?  Why or why not?
+
+ ## Components, interfaces, and decomposition into implimentation:
+
  The component registry and interfaces need cleanup.
 
  Interfaces must be INTERFACES only (Descrete vs variable), and all component breaks must have all intefaces described by their interface.  I'm not sure of the best way to enforce this mechanically.
 
- Edge cases needs to dissolve into individual system requirements that relate to the stakeholder need, but this is awkward because each "hat" must be run against each stakeholder need to see where a new requirement needs to be built out.
+ Edge cases needs to dissolve into individual system requirements that relate to the stakeholder need, but this is awkward because each "hat" must be run against each stakeholder need to see where a new requirement needs to be built out.  To mechanize this, perhaps it is best to ALSO create a toml for "experts" that need to be a part of the system requirement reveiew and breakdown from stakeholder needs.  This is where things become a bit strange, because a domain expert may not be a staeholder (they don't have needs), but it means every seperate need should be broken down according to "hats", do hats need to be considerations built into a toml file to drive a stakeholder decomposer while considering these different persepctives?
 
  If we are at stakeholder needs, let's consider these items at the same time, or let me know what challenges might arise:
 
@@ -706,6 +714,7 @@ Where are agents stored again?  Perhaps this should be a TOML file as well.
 
  -A downstream adopter as well as this repo shall have a single "dev-setup" double-clickable launcher shall be available for each applicable platform (windows / linux / MacOS) which will install all dependencies a repo developer would need, downstream adopters should be aware of this capability and may adopt a similar stratagy if the repository if applicable.
 
+-The repository user choose the layer / stage they want to intercept at; below it a role-played review still happens against real evidence and leaves a record.
 
  -A downstream adopter as well as this repo shall have a single "agent-resume" double-clickable launcher shall be available for each applicable platform (windows / linux / MacOS) which will install all dependencies a repo developer would need, downstream adopters should be aware of this capability and may adopt a similar stratagy if the repository if applicable.  (Note this )
 
