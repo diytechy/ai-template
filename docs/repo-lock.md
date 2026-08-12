@@ -37,26 +37,37 @@ anything.
 
 **Owner acts — everything below them waits on one of these:**
 
-- **Rule the component model** — it gates OI-14, the `interfaces.csv`
-  conversion, and §8.3 item 6. Nothing else in the program is blocked by so
-  much. → **§0**
+- **Rule the component model's PARTITION** — the *direction* landed 2026-08-12
+  (§8.6): components define the boundaries SRs are written against; interfaces
+  carry interfaces only (each signal typed discrete vs variable). Still owed:
+  the actual partition and the IF schema rewrite, ruled *with* OI-14. → **§0**,
+  **§8.6**
 - **Rule OI-14** (what an IF row's `Contract` cell is for) — it inherits an
-  11-row citation sweep and decides when `interfaces.csv` may convert. → **§0**
+  11-row citation sweep and decides when `interfaces.csv` may convert. The
+  2026-08-12 direction (interfaces-only) narrows it but does not close it.
+  → **§0**
 - **Hold the P0 sitting, part 2** — the 25-row re-attest brief, worked
   *together with* the prose batch so two re-blessing windows collapse into one.
   Gates the entire schema batch via Q11. → **§5 step 6**, **§8.4**
-- **Rule the stage/gate semantics** — worked and unruled: *gate* is an event
-  used as a state, `G0` is not a gate, and the implementation period has no
-  rung. Includes deciding its **home** — the evidence says `PROCESS.md`, not
-  `PROCESS_OPTIONS.md`. → **§0**, [proposal](plans/2026-08-11-stage-gate-semantics.md)
-- **Rule the six SN-tier intake items** — plain-language needs, the launcher
-  items, the "hats" roster, and the sixth which must be ruled *with* the
-  component model. → **§8.3**
 - **Ratify ONE remaining agent decision** — WI-429's LLR discharge rule
   (`CodeSymbol` must resolve), taken under a "proceed" and now gating hard
   under `--strict`. The other three are settled: WI-423 **overturned** and
   re-executed, the `key = ""` refusal **ratified**, the blackout dial
   **ruled**. → **§8.5**
+- **Review the agent decisions taken executing the 2026-08-12 rulings** —
+  recorded as they were made. → **§8.7**
+
+**Ruled 2026-08-12 (this sitting), now mechanical:**
+
+- ~~**Rule the stage/gate semantics**~~ — **RULED: gate-as-state is retired
+  for stage semantics** per the
+  [proposal](plans/2026-08-11-stage-gate-semantics.md); the heavy rework is
+  accepted. Execution is underway this session. → **§0**, **§8.6**
+- ~~**Rule the six SN-tier intake items**~~ — **RULED: all six hold**, with
+  item 2 (and its launcher siblings) relaxed to double-clickable *where the
+  platform allows* (Linux needs the execute bit). They enter as Draft rows
+  together with the 2026-08-12 additions; attestation stays the sitting's.
+  → **§8.3**, **§8.6**
 
 **Mechanical work:**
 
@@ -91,8 +102,8 @@ and the four unfounded LLRs.
 
 | # | question | where | recommendation |
 |---|---|---|---|
-| **components** | The **component model**. `LLR.Component` is *traced*, so the partition moves with no re-attest window — and it **decides how many IF rows must exist**. | §6 F-11 (archived) | not filed on purpose; filing it would be an agent setting the sitting's agenda |
-| **OI-14** | What an IF row's **`Contract` cell is for**. Measured: design narrative and history, 1% requirement voice, and the registry has **no schema tier at all**. **It inherits a sweep** — see below. | §6 F-10 (archived) | **declare now, split gradually** — never a 95-row sweep |
+| **components** | The **component model**. `LLR.Component` is *traced*, so the partition moves with no re-attest window — and it **decides how many IF rows must exist**. **Direction received 2026-08-12** (§8.6): boundaries define SR I/O; the partition itself is still owed. | §6 F-11 (archived) · §8.6 | work the partition as an *optimization over system I/O* (§8.6 item 1), present it; the ruling stays the owner's |
+| **OI-14** | What an IF row's **`Contract` cell is for**. Measured: design narrative and history, 1% requirement voice, and the registry has **no schema tier at all**. **It inherits a sweep** — see below. **Narrowed 2026-08-12**: interfaces carry *interfaces only*, signals typed discrete vs variable. | §6 F-10 (archived) · §8.6 | **declare now, split gradually** — never a 95-row sweep |
 
 > **OI-14 has grown a second half, and it is the same finding twice.** F-10
 > measured `Contract` cells carrying design narrative and defect history rather
@@ -116,18 +127,19 @@ with it.
 **Ruled and closed since:** ~~OI-12~~ (one TOML carrier — **D-5**, executed),
 ~~OI-13~~ (what `Status` means — **D-9**, ruled 2026-08-11; migration owed).
 
-**A third question is now WORKED BUT UNRULED — the stage/gate semantics.**
-[`plans/2026-08-11-stage-gate-semantics.md`](plans/2026-08-11-stage-gate-semantics.md).
-In short: *gate* is an event used as a state, so "at G1" cannot say whether G1
-is ahead or behind — and `docs/gate` contradicts its own header, displaying
-`G1` while its basis line reads `computed=G0`. **`G0` is the root error: it is
-not a gate at all**, only "stage 0" in the wrong units. The proposal unifies
-them — **stages are the tiers of the decomposition; gates are the subset of
-boundaries that require a human to certify** — adds the missing
-**implementation rung** (today the entire implementation period reads
-"stage 3 — TCs in process", which is false while it is true), and retires the
-phrase "the active gate". It is unruled because it changes shipped vocabulary.
-**Two things it needs settled with it, both measured 2026-08-11:**
+**The stage/gate semantics are RULED — 2026-08-12, this file's third §0
+question closed.** The owner: *"gate semantics should be retired / archived
+for stage semantics even though it will result in some relatively heavy
+rework."* That adopts
+[`plans/2026-08-11-stage-gate-semantics.md`](plans/2026-08-11-stage-gate-semantics.md):
+**stages are the tiers of the decomposition; gates are the subset of
+boundaries that require a human to certify** — stage is the *state*, a gate is
+an *event you pass*, `G0` is retired (it was "stage 0" in the wrong units),
+the missing **implementation rung** is added, and the phrase "the active gate"
+leaves the vocabulary. Execution started 2026-08-12 (§8.7 records the
+judgment calls the rework forced). **The two questions the ruling needed
+settled with it, both measured 2026-08-11 — resolved as follows, recorded for
+review (§8.7):**
 
 - **WHERE the semantics live — the evidence says `PROCESS.md`, not
   `PROCESS_OPTIONS.md`.** The options file's own header states *"Nothing here
@@ -150,6 +162,15 @@ phrase "the active gate". It is unruled because it changes shipped vocabulary.
   summary"* and defers to the spec for *"full design + rationale"*, so ruling
   into the options file would mean **promoting the summary to the authority**
   and dropping that deference clause, not just editing a paragraph.
+
+> **Resolutions taken with the 2026-08-12 ruling (agent judgment, owed
+> review — §8.7):** the semantics' home is **`PROCESS.md`** (the owner adopted
+> the proposal without naming a home; the evidence above all points one way,
+> and the stage axis is always-on, which is disqualifying for a file of opt-in
+> layers). The 13 live source/test citations repoint to the **archived spec**
+> (its §-numbers are what they cite; `PROCESS.md` carries the ruled semantics,
+> not the gate-arithmetic detail). `PROCESS_OPTIONS.md`'s summary keeps only
+> the opt-in material and defers to `PROCESS.md`.
 
 **Also owed by the owner, and larger than a ruling:** the **P0 sitting's part
 2** — the 25-row re-attest brief (§5 step 6). It gates the ladder migration
@@ -534,9 +555,9 @@ The **two rulings** in §0 (components → OI-14), and the **P0 sitting's part
 7. **Build the schema batch ONCE**, on the D-5 carrier: D-1's anchor half,
    D-2's SN fields, D-3's unmigrated columns (`Phase` on SN, `Priority` float),
    D-4's `SupersededBy` deletion and its ~80-line validator, **D-9's ladder
-   migration** (closing the enum first — consequence 7), and every test
-   asserting a column shape. This is the batch that gets built twice if it
-   starts early.
+   migration** (closing the enum first — consequence 7), **the SN `Scope`
+   field** (template vs this-repo — §8.6 item 3), and every test asserting a
+   column shape. This is the batch that gets built twice if it starts early.
 8. **Regenerate the derived artifacts** and confirm the gate rises to its
    honest ceiling. A gate that does *not* rise is a finding, not a nuisance.
 9. ~~**Drain or dispose the open frontier**~~ — **DONE 2026-08-11** except
@@ -710,7 +731,17 @@ git-hook checkers run in constrained contexts, and ADOPTING's re-sync copies
 declared common sibling, with an explicit standalone-required list. **Execute
 after the lock**, as its own program: ~30 files plus the scaffold surface.
 
-### 8.3 · The stakeholder-need batch — six items + one draft SR
+### 8.3 · The stakeholder-need batch — six items + one draft SR — **RULED 2026-08-12**
+
+**The owner: all six hold**, with item 2 — and by the same reasoning items 3
+and 4 — relaxed from "double-clickable" to **double-clickable *where the
+platform allows*** (Linux desktops require the execute bit / a `.desktop`
+entry, so a bare double-click contract is unpromisable there). The batch
+enters as **Draft rows together with the §8.6 additions** ("sprinkled in
+along with the other needs … both directly and implied"); attestation stays
+the sitting's. The challenges below were part of the record the owner ruled
+over and stay binding on the drafting — especially item 6, which still lands
+with the component-model partition.
 
 The owner's six SN-tier items: **(1)** SNs written from the end-user's
 perspective, plain language, no implementation references; **(2)** a
@@ -877,7 +908,8 @@ under a "proceed" and is gating hard under `--strict` today.
   observation framing and *refuses* the strings `Anthropic`, `Claude models
   see`, `usage peaks` — so the unvalidated vendor claim cannot creep back in.
 
-  *(Original entry, kept for the reasoning:)*
+  *(Original entry, kept for the reasoning — see the executed WI-433 record
+  above it:)*
   **should the kit ship YOUR blackout window to every adopter?**
   `process.toml.template` ships `blackout = "12:00-19:00"` (UTC weekdays), and
   its comment records that as deliberate (*"a MOVE, not an occasion to
@@ -888,3 +920,91 @@ under a "proceed" and is gating hard under `--strict` today.
   dial). **The asymmetry when ruling:** a shipped-empty dial an adopter forgets
   costs odd-hours activity; a shipped-populated dial an adopter does not notice
   costs seven hours a day of a loop that looks broken.
+
+### 8.6 · Owner intake, 2026-08-12 — the sitting that ruled stage semantics and the SN batch
+
+Everything below is owner direction from one sitting, recorded before
+execution. Items 1–2 shape rulings still owed; 3–4 are new obligations; 5–8
+are questions the owner asked this session (answers land here as the analyses
+finish).
+
+1. **The component model's direction.** Components are architectural
+   breakdowns **and define the boundaries system requirements are written
+   against** — an SR's inputs and outputs must correspond to
+   component-boundary interfaces. Method: *"lay out the inputs/outputs of the
+   system first, and then break that into components with internal signals"* —
+   and the owner suspects the breakdown is an **optimization problem** with a
+   mathematical expression behind it, rather than something an LLM should
+   freestyle (which is what this repo has historically done). Research owed →
+   a knowledge pack at `docs/knowledge/system-decomposition-methods.md`.
+   **Interfaces must be INTERFACES only** — each signal typed **discrete vs
+   variable** — and every component boundary must have *all* its crossings
+   described by interface rows. Mechanical enforcement method: open, part of
+   the OI-14/components ruling.
+2. **The edge-case tier dissolves into per-need SRs via "hats."** Each SN is
+   decomposed wearing every applicable expert perspective; a domain expert is
+   not a stakeholder (no needs of their own) but their hat constrains the
+   decomposition. The roster is a declared **TOML** file the decomposer prose
+   injects — this is §8.3 item 5's roster, now with a carrier ruled. The hats
+   include the perspectives accessible to downstream users (the examples).
+3. **Every SN declares its scope** — template (downstream adopters + this
+   repo) or this repo only. The mechanical field is a registry-schema change
+   and **joins the §5 step-7 batch** (build the schema ONCE); until then new
+   drafts state scope in their text.
+4. **Everything the template provides chains back to a stakeholder need.**
+   Each document/file the kit ships fulfills a requirement, tied in — a
+   coverage obligation over the *shipped tree*, not just the code. Enters the
+   SN batch; the enforcement candidate is a shipped-file → requirement
+   mapping check.
+5. **Should the prose templates that mechanically build CLI prompts also be
+   TOML?** Asked with a why/why-not expected. Analysis running; answer lands
+   here.
+6. **The common-module question (§8.2, candidate D-8), re-posed** — the owner:
+   the single-file-copy advantage is *"basically moot given how things have
+   grown."* A fresh function-level duplication census is running; D-8 gets
+   decided on it.
+7. **How do guardrails reach a branch-scoped agent?** Is `AGENTS.md` replaced?
+   Is the process doc modified? The owner's hypothesis: scoping context
+   belongs in the **agents prose TOML** used to formulate the CLI prompt, not
+   re-stated per-WI. Analysis running; answer lands here.
+8. **The loop-ordering draft SR, restated:** under `agent-resume`, an agent
+   first addresses handback documents from executed work items (minting
+   follow-ups if needed), then works tier-by-tier in batch — SN (always
+   human-attested) → SR → LLR → TC — halting wherever the automation level
+   requires human/external attestation; after all TCs are laid out,
+   implementation proceeds autonomously through work-item construction.
+   **§8.4 finding 6 still stands** (collides with SR-141's adjudication-first
+   priority; "SN always human-attested" contradicts this repo's
+   `human_ratification_through = 0`) — intake as Draft, decompose against
+   what the loop already does, surface the collision at the sitting.
+
+### 8.7 · Agent decisions taken 2026-08-12, owed owner review
+
+The owner asked for every moderately-confident call to be recorded for later
+review. The §8.5 pattern, continued. Entries accumulate as the rework runs.
+
+- **Stage-semantics home = `PROCESS.md`.** The ruling adopted the proposal
+  without naming the home. Taken on the §0 evidence (the axis is always-on;
+  the options file's own header forbids always-on layers; sizes measured
+  budget-neutral across the pair). Reversal cost if overruled: move one
+  section and re-aim its links.
+- **Gates KEEP their names and their sign-off role.** "Retire gate semantics"
+  is executed as retiring gate-as-*state* (the "active gate", `G0`, "at G1"
+  phrasing) — G1/G2/G3 survive as the human-certified boundaries between
+  stages, because the proposal the owner adopted defines them that way and
+  the sign-off record depends on them. If the owner meant retiring the gate
+  *vocabulary entirely*, that is a different and larger rework — flagging the
+  reading explicitly.
+- **The 13 live source/test citations repoint to the archived spec**, not to
+  the new `PROCESS.md` section — they cite the archived §-numbers precisely,
+  and the new section carries ruled semantics, not gate arithmetic.
+- **SN scope field deferred into the step-7 schema batch** (§8.6 item 3) —
+  "build the schema ONCE" outweighs having the field now; drafts state scope
+  in text meanwhile.
+- **The launcher needs enter as Draft rows under the §8.3 challenge-3
+  facts** — `dev-setup` is a *placement* change, `run` is a *reversal* of this
+  repo's recorded non-goal ("no `run.*` product launchers"): the non-goal's
+  boundary changes from "no launchers" to "no *product* launch; an
+  actions-menu launcher is in scope". `status.md`'s Scope bullet and the SN
+  registry's NG prose need the same amendment — made with the intake, flagged
+  here because it edits a recorded non-goal.
