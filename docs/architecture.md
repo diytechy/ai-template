@@ -400,7 +400,7 @@ Contracts (interfaces): IF-015, IF-068, IF-099, IF-109
 | `map_preflight(root, template, args, cmd_map, prompt_map, tier_map, prefer_map, managed, registry, enabled, reg_errors, enable_errors)` | Assemble every up-front launchability failure (default template, |  |
 | `build_worker_assignment(args, root)` | The explicit worker assignment (--wi, on a claimed branch): parse the |  |
 | `run_interactive(args, root, model_map, cmd_map, template, guardrails_policy, warned_no_core)` | Boot exactly one hands-on session (stdio attached) and return its |  |
-| `print_run_banner(root, branch, worker, gate_policy, push_policy, review_policy, managed, enabled, registry, guardrails_policy, template, cmd_map, prompt_map, docs)` | The unattended-coordinator launch banner: the run's identity, its |  |
+| `print_run_banner(root, branch, worker, session_hold, push_policy, review_policy, managed, enabled, registry, guardrails_policy, template, cmd_map, prompt_map, docs)` | The unattended-coordinator launch banner: the run's identity, its |  |
 | `LoopContext (class)` | Everything one iteration reads, built once at loop start; the |  |
 | `route_session(ctx, i, current_wi, session, resume_reconcile, now)` | Pick the phase + model + prompt for this worker session (managed |  |
 | `adjudication_bookkeeping(plan, worker, st, managed, route_id, now)` | Record whether an ADJUDICATE session actually RULED. A no-op for every |  |

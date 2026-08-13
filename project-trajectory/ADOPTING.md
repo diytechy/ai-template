@@ -816,7 +816,7 @@ table.
   refresh). On re-sync, copy both new scripts and **delete your old
   `scripts/drive.py`** — a stale copy would shadow nothing (agent_loop imports
   `dispatch`) but would drift silently. The dispatcher now admits by the §A8
-  gate-policy table: spine-class WIs wait for the lanes to drain and then
+  session-hold table: spine-class WIs wait for the lanes to drain and then
   admit **together as one batch**, and a pending ratification drains the
   lanes and exits 0 naming the cards in `open-items.html` instead of
   refusing nonzero. The worker-lane count is a new declared dial —

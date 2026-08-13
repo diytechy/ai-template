@@ -1,10 +1,15 @@
 """Gate authority as declared policy (Thread 32, process.md §4).
 
-Who accepts a gate advance is a one-word `docs/gate-policy` value, stated
-canonically in process.md §4 and referenced (never restated) everywhere else;
-a non-default level ships with a repo-local deviation register. The tripwire
-test keeps the de-duplication honest: a future edit must not re-scatter the
-gate-authority claim across the kit's prose.
+Who accepts a gate advance is the `[attestation]` posture in
+`docs/process.toml`, stated canonically in process.md §4 and referenced (never
+restated) everywhere else; a non-default level ships with a repo-local
+deviation register. The tripwire test keeps the de-duplication honest: a future
+edit must not re-scatter the gate-authority claim across the kit's prose.
+
+WI-437 (OI-25) adds the second tripwire: the name `gate_policy` belongs to the
+RETIRED enum alone. The live runtime label — who is holding the session,
+`human-held`/`loop-held` — is `session_hold`, and nothing may take the spent
+name back.
 """
 
 import re
@@ -98,6 +103,66 @@ def test_gate_policy_explicit_attended_matches_default(tmp_path):
     dest = _bootstrap(tmp_path, "--gate-policy", "attended")
     assert _level(dest) == "attended"
     assert not (dest / "docs" / "gate-policy.md").exists()
+
+
+# --- WI-437 (OI-25): one name, one meaning ------------------------------------
+
+# The runtime hold's two values. They describe WHO IS HOLDING a session and are
+# derived (`agent_common.human_holds`), never declared — which is exactly why
+# naming them after a configuration enum produced false stale-text findings.
+_HOLD_VALUES = '"human-held" if human_held else "loop-held"'
+
+# The modules that DERIVE or PRINT the runtime hold. `bootstrap.py` is absent on
+# purpose: it owns the live `--gate-policy` flag and the `docs/gate-policy.md`
+# register, which are translated interface, not residue.
+_HOLD_READERS = ("agent_loop.py", "intake.py")
+
+
+def _hold_reader_source(name):
+    """Read a kit script BY NAME. The path is deliberately not spelled as a
+    literal here: conftest's `LOOP_LAUNCH_IDIOM` finds loop-LAUNCHING modules by
+    that exact text, and this module only reads the source."""
+    return (SCRIPTS / name).read_text(encoding="utf-8")
+
+
+def test_the_runtime_hold_is_named_session_hold_not_gate_policy():
+    for name in _HOLD_READERS:
+        text = _hold_reader_source(name)
+        assert "session_hold = " + _HOLD_VALUES in text, (
+            "{}: the derived runtime hold must be named `session_hold`".format(name)
+        )
+        assert not re.search(r"gate[_-]polic", text), (
+            "{}: `gate_policy`/`gate-policy` names the RETIRED enum only — the "
+            "runtime hold is `session_hold` (OI-25)".format(name)
+        )
+
+
+def test_the_run_banner_labels_the_hold_not_a_policy():
+    text = _hold_reader_source(_HOLD_READERS[0])
+    assert '"session-hold: {} | push-policy: {}' in text, (
+        "the launch banner must label the derived hold `session-hold`; a "
+        "`gate-policy` label reads as the retired configuration enum"
+    )
+
+
+def test_process_options_teaches_only_the_live_gate_policy_interface():
+    # The shipped options doc is what an adopter reads as operative process. The
+    # retired enum may not be taught there at all; the only survivors are the
+    # two hyphenated LIVE interfaces (the CLI flag, the register filename).
+    text = (KIT / "PROCESS_OPTIONS.md").read_text(encoding="utf-8")
+    assert "gate_policy" not in text, (
+        "PROCESS_OPTIONS.md instructs through the RETIRED `gate_policy` enum; "
+        "rewrite onto `[attestation] human_ratification_through` / "
+        "`keep_nondependent` and the `human-held`/`loop-held` session hold"
+    )
+    stray = [
+        hit
+        for hit in re.findall(r"\S*gate-policy\S*", text)
+        if "--gate-policy" not in hit and "gate-policy.md" not in hit
+    ]
+    assert not stray, "only the CLI flag and the register filename survive: {}".format(
+        stray
+    )
 
 
 # The gate-authority claim, in the variants the kit's prose has historically

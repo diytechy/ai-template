@@ -25,7 +25,7 @@ from.
 
 ADMISSION IS THE ONE SCHEDULING DECISION THIS MODULE OWNS (§A4.1/§A8, the
 authority the deleted `_claim_refusal` safety arm moved here). The §A8 policy
-table, per kind x gate-policy level: ordinary/critique dispatch parallel at
+table, per kind x session hold: ordinary/critique dispatch parallel at
 every level; high-risk/protected dispatch exclusive at every level; a `spine`
 row dispatches at every level — building a scope change is WORK, not a
 ratification — but EXCLUSIVELY and BATCHED: an exclusive-kind row on the
@@ -265,7 +265,7 @@ def _kind_action(kind, human_held):
 
     `human_held` is the SN-029 comparison already made: is the tier this repo's
     spine is currently in process at still the human's to ratify
-    (`agent_common.human_holds`)? It replaces the three-value gate-policy enum,
+    (`agent_common.human_holds`)? It replaces the three-value gate-authority enum,
     which could not express "TCs are human-held but LLRs are not" — the whole
     reason the ratification dial became an ordinal read against the 0-5 spine
     stage ladder (the dial's own levels stay 0-4: the four SPINE tiers plus

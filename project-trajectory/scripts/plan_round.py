@@ -19,7 +19,7 @@ Typed outcomes, not conversations: every step result is recorded as data
 (`ok`/`findings`/`verdict`/`selection`), and the machine's disposition is one
 of `CONTINUE` (more ready steps), `SELECTED` (agreed verdict), or `PAGE`
 (verdict disagreement, cap exhaustion, repeated coverage findings, or budget
-exhaustion) — the coordinator maps `PAGE` onto the `docs/gate-policy` failure
+exhaustion) — the coordinator maps `PAGE` onto the session-hold failure
 semantics via `page_action()`. A cap violation by the *caller* (recording a
 second critique, revising an approved plan) raises `RoundCapError`: that is a
 coordinator bug, never a legal transition.
@@ -64,7 +64,7 @@ PLAN_KEYS = ("A", "B")
 # headroom must still fit without weakening any per-step cap.
 DEFAULT_ROUND_BUDGET = 14
 
-# `page_action()` — the documented `docs/gate-policy` failure semantics
+# `page_action()` — the documented session-hold failure semantics
 # (process-options.md "Unattended operation", failure-semantics bullet). The
 # coordinator owns executing these; the map keeps the wording in one place.
 _PAGE_ACTIONS = {

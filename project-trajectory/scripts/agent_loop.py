@@ -23,9 +23,9 @@ Empty template -> guidance and exit 2 (the launchers ship inert, like run.*).
 
 CONSENT: an unattended run typically wires the agent CLI's permission-bypass
 flag into AGENT_CMD — sessions then run with no permission prompts. The human
-consents by filling the slot, declaring the gate policy (docs/gate-policy),
-and running this; git + CI remain the enforcement floor. The banner restates
-this every run.
+consents by filling the slot, declaring how far a human ratifies
+(docs/process.toml [attestation]), and running this; git + CI remain the
+enforcement floor. The banner restates this every run.
 
 During worker/review sessions this module:
   - picks the model per the in-process phase: --model-map
@@ -1757,7 +1757,7 @@ def print_run_banner(
     root,
     branch,
     worker,
-    gate_policy,
+    session_hold,
     push_policy,
     review_policy,
     managed,
@@ -1781,10 +1781,10 @@ def print_run_banner(
             )
         )
     print(
-        "gate-policy: {} | push-policy: {} (the coordinator never pushes "
+        "session-hold: {} | push-policy: {} (the coordinator never pushes "
         "under 'human') | review-policy: {} (docs/process.toml [policies] "
         "review_rounds — the reviewer dial: {})".format(
-            gate_policy,
+            session_hold,
             push_policy,
             review_policy,
             "LOOP-ENFORCED (managed routing on) — a committing build schedules "
@@ -2294,10 +2294,10 @@ def session_bookkeeping(
             pre_rounds = st.critique_rounds
             action = st.record_critique_verdict(merged)
             if action == "page":
-                # Budget exhausted -> the S8 page-the-human semantics, keyed
-                # to docs/gate-policy (same failure_action the review round
-                # uses). The critic gates iteration; the human owns final
-                # acceptance via Attest at gate closure.
+                # Budget exhausted -> the S8 page-the-human semantics, keyed to
+                # the session hold (same failure_action the review round uses).
+                # The critic gates iteration; the human owns final acceptance
+                # via Attest at gate closure.
                 fa = agent_route.failure_action(human_held, keep_going)
                 print(
                     "critique/budget ({}): {} CHANGES-REQUESTED round(s) >= "
@@ -2865,15 +2865,15 @@ def main():
 
     # SN-028: the four dials now read through the one policy home
     # (docs/process.toml, legacy one-word file as the migration fallback). The
-    # four LOCALS stay — `print_run_banner` takes them positionally and a dozen
-    # tests read the banner — so this is a reader swap, not a signature change.
-    # SN-029: the three-value gate-authority enum retires for an ORDINAL
-    # comparison — is the tier the spine is currently in process at still the
-    # human's to ratify? `human_holds` makes it once; `keep_nondependent` is
-    # the orthogonal dial the enum bundled and an ordinal cannot carry.
+    # four LOCALS stay — `print_run_banner` takes them positionally — so this
+    # is a reader swap, not a signature change. SN-029: the three-value
+    # gate-authority enum retires for an ORDINAL comparison — is the tier the
+    # spine is in process at still the human's to ratify? `human_holds` makes
+    # it once; `keep_nondependent` is the orthogonal dial the enum bundled.
+    # WI-437 (OI-25): the derived label is `session_hold` — WHO HOLDS this run.
     human_held = agent_common.human_holds(docs, agent_common.spine_stage_of(root))
     keep_going = agent_common.keep_nondependent(docs)
-    gate_policy = "human-held" if human_held else "loop-held"
+    session_hold = "human-held" if human_held else "loop-held"
     push_policy = declared_policy(docs, "push-policy", "human")
     review_policy = declared_policy(docs, "review-policy", "1")
     _, branch = git(root, "branch", "--show-current")
@@ -2989,22 +2989,22 @@ def main():
             return EXIT_DONE
         action = _plan_round.page_action(human_held, keep_going)
         print(
-            "agent_loop: dual-plan {} PAGED: {} (gate-policy {} -> {})".format(
-                wid, detail, gate_policy or "attended", action
+            "agent_loop: dual-plan {} PAGED: {} (session-hold {} -> {})".format(
+                wid, detail, session_hold, action
             ),
             file=sys.stderr,
         )
         if action == "stop-needs-human":
             stop_banner(docs / "status.md", "NEEDS-HUMAN", detail)
             return EXIT_NEEDS_HUMAN
-        # autonomous / single-ratify: honor the pause-free invariant (WI-204,
-        # WI-209): an attention-only outcome lands on EXIT_STALL, never a
-        # NEEDS-HUMAN gate. The PAGE evidence is on disk under docs/plans/DP-*;
-        # relaunching re-runs the round. (page_action's non-stop-needs-human
-        # strings are intent labels.)
+        # Every other action honors the pause-free invariant (WI-204, WI-209):
+        # an attention-only outcome lands on EXIT_STALL, never a NEEDS-HUMAN
+        # gate. The PAGE evidence is on disk under docs/plans/DP-*; relaunching
+        # re-runs the round. (page_action's non-stop-needs-human strings are
+        # intent labels.)
         stop_banner(
             docs / "status.md",
-            "dual-plan round paged — attention (autonomous: no human gate)",
+            "dual-plan round paged — attention (no human hold on this tier)",
             detail,
         )
         return EXIT_STALL
@@ -3013,7 +3013,7 @@ def main():
         root,
         branch,
         worker,
-        gate_policy,
+        session_hold,
         push_policy,
         review_policy,
         managed,
@@ -3119,7 +3119,7 @@ def main():
     ctx.tier_map = tier_map
     ctx.prefer_map = prefer_map
     ctx.weight_map = weight_map
-    ctx.gate_policy = gate_policy
+    ctx.session_hold = session_hold
     ctx.human_held = human_held
     ctx.keep_nondependent = keep_going
     ctx.guardrails_policy = guardrails_policy

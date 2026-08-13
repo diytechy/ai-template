@@ -513,7 +513,7 @@ def load_wis(rows):
 def kind_of(wi, *, structural=None):
     """The declared KIND both §A1 axis tables are keyed by — `classify`'s
     step-1 resolution on its own, because the dispatcher's §A8 admission
-    policy is keyed per kind per gate-policy level (WI-381) and must read the
+    policy is keyed per kind per session hold (WI-381) and must read the
     ONE resolution rather than re-derive it or parse it back out of reason
     codes. Returns a `SAFETY_CLASSES` member or `"critique"`, or None exactly
     where `classify` quarantines (missing/unknown/contradicting declarations —
