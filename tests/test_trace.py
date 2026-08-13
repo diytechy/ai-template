@@ -1395,3 +1395,20 @@ def test_integrity_flags_content_row_with_blank_id():
     assert any("non-empty cells but no SR-ID" in f for f in found), found
     # Fully blank rows stay a non-finding (a trailing newline is not damage).
     assert trace.integrity_findings("SR", [{"SR-ID": "", "Title": " "}]) == []
+
+
+def test_both_component_carriers_at_once_is_refused(scaffold):
+    # The same house rule, pinned for the OTHER registry WI-443 converted —
+    # the adversarial round found the components half untested, and a refusal
+    # held by one registry's test does not hold its sibling's.
+    make_minimal_project(scaffold)
+    req = scaffold / "docs" / "requirements"
+    assert (req / "components.toml").exists()
+    (req / "components.csv").write_text(
+        "CMP-ID,Name,Mission,State,Notes\n",
+        encoding="utf-8",
+    )
+    proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
+    assert proc.returncode != 0
+    assert "REFUSED" in (proc.stdout + proc.stderr)
+    assert "BOTH carriers" in (proc.stdout + proc.stderr)

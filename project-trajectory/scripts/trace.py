@@ -1286,7 +1286,15 @@ def schema_advisories(label, rows):
     a change to which list a caller appends to, never a second copy of the
     allowed values that can drift from this one. Returns advisory strings; the
     caller routes them into the warn pipe, and nothing here reaches an exit
-    code."""
+    code.
+
+    An adversarial round proposed HARDENING the required-field half to match
+    the CSV era and the proposal was REFUTED on measurement: the IF tier had
+    NO cell-level guarantee on CSV (no schema tier existed at all — the OI-14
+    finding), and the structural floor's TOML equivalent is the carrier parse
+    error plus the dual-carrier refusal, both already hard. Hardening
+    cell-emptiness here would red every migrating adopter for a guarantee the
+    registry never had; the ruled warn-first-then-promote path stands."""
     key = id_key(label)
     out = []
     for r in rows:
