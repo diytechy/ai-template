@@ -5,6 +5,8 @@ a generated scan surface over their frontmatter (like the code map). These tests
 pin the frontmatter contract and the generator's behavior.
 """
 
+import re
+
 from conftest import KIT, load_script
 
 SKILLS = KIT / "skills"
@@ -37,6 +39,30 @@ def test_index_row_count_matches_skill_dirs():
     rows = gen.collect_skills(SKILLS)
     n_dirs = len(list(SKILLS.glob("*/SKILL.md")))
     assert len(rows) == n_dirs
+
+
+def test_downstream_resync_skill_points_at_adopting_rather_than_restating_it():
+    """The re-sync recipes have ONE home: ADOPTING.md §6 (OI-27 defect 2).
+
+    The skill used to restate §6's migration recipes — including a
+    hand-maintained WI-381 note that had drifted from the authority within weeks
+    at zero re-sync traffic. It now carries the ORDER of the procedure and sends
+    the reader to §6 for every rule. This pin is deliberately shaped as
+    "no dated/WI-keyed recipe content", because that is the exact form the
+    duplication took and the exact form it would come back in: §6 keys its
+    recipes by WI id and date, so a WI id reappearing here means someone copied
+    a recipe across again instead of linking it.
+    """
+    text = (SKILLS / "downstream-resync" / "SKILL.md").read_text(encoding="utf-8")
+    body = text.split("---", 2)[2]  # frontmatter is not prose
+    assert "ADOPTING.md" in body, "the skill must name its authority"
+    assert "§6" in body or "section 6" in body.lower()
+    strays = sorted(set(re.findall(r"\bWI-\d+\b", body)))
+    assert not strays, (
+        "the skill restates ADOPTING.md §6 recipe content again ({}) — §6 keys "
+        "its recipes by WI id, so point at it instead of copying it across; "
+        "the copy is what drifted last time (OI-27)".format(", ".join(strays))
+    )
 
 
 def test_generator_rejects_name_dir_mismatch(tmp_path):

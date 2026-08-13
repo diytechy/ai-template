@@ -71,6 +71,14 @@ SLOW_MODULES = frozenset(
         "test_check_perf",  # perf gate step on a scaffold
         "test_check_flows",  # design-flow gate step on a scaffold
         "test_meta_repo_hook",  # meta pre-commit hook integration
+        # WI-439 (OI-27 defect 3): the old-kit re-sync. The heaviest scaffold
+        # shape in the suite — it extracts a pinned older kit from git history
+        # and runs FOUR bootstraps (one old, three current) plus a full harness
+        # over the result. Same class as test_bootstrap directly above, and the
+        # only module here that also reads git history, so it is the one module
+        # that SKIPS on a shallow clone; it belongs at close + CI, never in the
+        # commit bar.
+        "test_old_kit_resync",  # scaffold at an old kit commit, sync forward
         # Heavy end-to-end session/integrator modules — real subprocesses
         # driving live git repos, the same heavy-integration class as the
         # hook/scaffold runs above. (The v4 parallel-dispatch e2e modules that

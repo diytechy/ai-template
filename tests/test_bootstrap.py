@@ -2,6 +2,7 @@
 
 import ast
 import re
+import shutil
 
 from conftest import (
     KIT,
@@ -374,6 +375,58 @@ def test_scaffold_stamps_kit_version(scaffold):
     # + date) or the explicit unknown marker for a non-git kit copy.
     ident = [ln for ln in text.splitlines() if ln and not ln.startswith("#")][-1]
     assert ident.strip(), "kit-version must carry a non-empty identity line"
+
+
+def test_non_git_kit_copy_warns_that_the_scaffold_has_no_resync_anchor(tmp_path):
+    """The tarball adopter must be TOLD it has no anchor — loudly, exit 0 (OI-27).
+
+    Copying `project-trajectory/` out of the repo reproduces the tarball shape
+    exactly: git walks UP from the kit dir to find a checkout, so a kit sitting
+    outside any repo resolves to nothing and `kit_version()` can only stamp
+    `unknown`. That path used to be SILENT: the loud stamp warning fires on
+    `dirty`, which the no-git branch hard-codes False, so the one adopter with
+    NO anchor at all was the only one never told. Warning, not refusing — a
+    tarball is a documented way in, so the exit code stays 0 and the scaffold is
+    still produced; what changes is that the missing anchor is visible while the
+    operator still remembers which kit they downloaded.
+    """
+    loose_kit = tmp_path / "tarball" / "project-trajectory"
+    shutil.copytree(KIT, loose_kit)
+    assert not (tmp_path / "tarball" / ".git").exists()
+    dest = tmp_path / "adopter"
+    dest.mkdir()
+
+    proc = run_py([loose_kit / "scripts" / "bootstrap.py", "--dest", dest], cwd=dest)
+
+    # Exit code UNCHANGED — this is a warning, not a gate.
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    stamp = (dest / "docs" / "kit-version").read_text(encoding="utf-8")
+    assert "unknown (kit not a git checkout)" in stamp
+    # ...and the warning is loud, on stderr, and names the consequence rather
+    # than just the fact (a reader who sees "unknown" in a stamp file has to be
+    # told that the documented upgrade path is what it costs them).
+    assert "WARNING" in proc.stderr, (
+        "the no-git stamp path must warn on stderr, not ship silently:\n" + proc.stderr
+    )
+    lowered = proc.stderr.lower()
+    assert "no re-sync anchor" in lowered
+    assert "adopting.md" in lowered, "the warning must point at the re-sync guide"
+
+
+def test_kit_version_unknown_label_has_one_home():
+    """The `unknown` label is a constant both return paths and the warner share.
+
+    Three copies of the same string is how the warning came to fire on one path
+    and not the other: `write_stamps` can only branch on the label it is handed,
+    so the label and the branch must be the same literal by construction.
+    """
+    boot = load_script("bootstrap")
+    src = (SCRIPTS / "bootstrap.py").read_text(encoding="utf-8")
+    assert boot.KIT_VERSION_UNKNOWN == "unknown (kit not a git checkout)"
+    assert src.count('"' + boot.KIT_VERSION_UNKNOWN + '"') == 1, (
+        "the unknown-kit label must be written out once (KIT_VERSION_UNKNOWN); "
+        "every other site refers to the constant"
+    )
 
 
 def test_kit_license_travels_inside_the_portable_unit():

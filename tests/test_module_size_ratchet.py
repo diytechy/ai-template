@@ -1245,7 +1245,18 @@ BASELINE = {
     # saying which coercer preserves which legacy vocabulary. bootstrap grows
     # NO local TOML reader — it only converts and deletes, so it never reads
     # these keys, which is why the F5 cost lands in the three checkers instead.
-    "bootstrap.py": 2767,
+    # WI-439 (OI-27 defect 1): +26 (2767 -> 2793). REVIEWED BUMP, the escape
+    # hatch this docstring documents — not monolith drift. The no-git stamp path
+    # shipped an anchorless `unknown (kit not a git checkout)` SILENTLY at exit 0
+    # (the loud stamp warning branches on `dirty`, hard-coded False there), so
+    # the one adopter with no re-sync anchor at all was the only one never told.
+    # The delta is a `KIT_VERSION_UNKNOWN` constant (one home for the label, so
+    # the warner and both return paths cannot disagree — that disagreement IS the
+    # defect), one `elif` in `write_stamps`, and the warning text, which is long
+    # because it must name the consequence and the fix while the operator still
+    # knows which kit they downloaded. Decomposing bootstrap.py to buy back 26
+    # lines is WI-280's job, not a stamp fix's. Re-stamp downward with WI-280.
+    "bootstrap.py": 2793,
     # NEW ENTRY, +228 (1423 -> 1651), Phase 2b of the concurrency restructure
     # (docs/concurrency-restructure.md §7): the spec-folder work-item reader,
     # which crosses this module over THRESHOLD for the first time. It is one
