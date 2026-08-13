@@ -1022,7 +1022,7 @@ is a hard refusal). **The IF tier also changes shape — read before running:**
   is not an arch-map module. All ADVISORY — none of it changes an exit code
   at any gate — so an unmigrated repo goes noisy, never red.
 
-### The `G*` gate tags retire for the eight-rung stage ladder [since PACKSHA]
+### The `G*` gate tags retire for the eight-rung stage ladder [since 08c985cb]
 
 **The biggest vocabulary change the kit has shipped, and it reaches your own
 files.** `G0`/`G1`/`G2`/`G3`/`G-Release`/`G-Final` are gone as tags. In their
@@ -1148,7 +1148,7 @@ frontmatter key is deleted, not renamed.
 Delete your old `drive.py`: `agent_loop` imports `dispatch`, so the stale file
 shadows nothing and drifts silently.
 
-### `G0|G1|G2|G3|G-Release|G-Final` → the stage ladder [since PACKSHA]
+### `G0|G1|G2|G3|G-Release|G-Final` → the stage ladder [since 08c985cb]
 
 The tags retire; the traceability survives. Grep your own prose, scripts, CI,
 hooks and registry cells for the left-hand spelling — **as a whole-word TAG, not
