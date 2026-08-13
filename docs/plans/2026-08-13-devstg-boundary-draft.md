@@ -101,7 +101,9 @@ reading** with six stated uncertainties. WI-441's deliverable records the same:
 intake)."*
 
 **Reconciliation with the live registry, honestly.** The 15 X-rows all still
-exist and still name an external counterpart today. A filter for
+exist and still name an external counterpart today — though **four of them do not
+survive §1a's actor rule** (X-08/X-12 read internal, X-14/X-15 are mislabelled),
+so the honest count of declared *frame* crossings is 11. A filter for
 non-repo-path counterparts returns **16** rows — the extra is `IF-019`
 (`skills/INDEX.csv`), an internal generated file, not an actor. Of the 19
 M-rows, **13 have no IF row at all** (M-01, M-02, M-04, M-05, M-07, M-09, M-11,
@@ -118,24 +120,75 @@ acceptance: *"the record is kept with the architecture, not in session prose."*
 
 **The system** = the kit: `project-trajectory/` scripts + hooks + templates,
 verified by `tests/`, self-applied to this repo (`docs/architecture.md`, "Shape
-of the product"). Direction is stated from the kit's point of view: **IN** = the
-kit consumes; **OUT** = the kit provides. In the table below, **`·` separates
-distinct crossings** for one party — each one is its own row in the registry, not
-a single relationship described in parts.
+of the product").
 
-| # | External party | Crossings (typed) | IF today |
-|---|---|---|---|
-| **E1** | **Adopting team / contributor** | `dev-setup.*` invoke + toolchain probe (discrete) · `run.*` capability menu OUT (discrete) · terminal report OUT (variable) | M-01 **MISSING** · IF-048 (menu side only) · M-19 **MISSING** |
-| **E2** | **Human owner** (this repo, and every adopter's) | `agent-resume.*` trigger IN (discrete) · `docs/process.toml` dial surface IN (discrete) · ratifications / `Status` flips IN (discrete) · `docs/status.md` IN/OUT (variable) · `PROJECT_STATE.html` OUT (variable) · `open-items.html` OUT (variable) | M-02, M-11, M-09 **MISSING**; IF-037 / IF-074 name the *file*, not the reader |
-| **E3** | **Agent CLI (direct session)** — OI-28 seed 1 | instructions IN (variable) · artifact edits OUT, admitted only through the git hook floor (variable gated by discrete) · headless invoke + result (IF-041) · `PreToolUse` allow/deny (IF-020) | IF-020, IF-041 exist; M-12/M-13 **MISSING** |
-| **E4** | **Model provider API** behind every CLI | rate limit · auth expiry · retired model (discrete error class) | M-15 **MISSING** (the pack cites "SN-020's failure modes"; SN-020 was dissolved at OI-18, so **no live SN owns this crossing** — SR-026's backoff clause is its only home) |
-| **E5** | **External reviewer CLI** (codex; `sol`/`terra`) | hostile brief OUT, findings IN (variable) | M-14 **MISSING** (`docs/agents.csv` declares families via IF-045; no provider row) |
-| **E6** | **git** — the mutation floor | staged/outgoing content IN (IF-032) · commits, merges, pushes, advisory locks (discrete ref state + variable diff) · hook exit as the enforcement gate (discrete) | IF-032 read side only; M-16 otherwise **MISSING** |
-| **E7** | **GitHub / hosted CI** | push·PR·schedule trigger + OS×Python matrix IN (discrete) · job verdict + step log OUT (discrete + variable) | M-04, M-05 **MISSING** |
-| **E8** | **OS · filesystem · Python ≥3.11** | path semantics · encoding · kernel advisory lock · interpreter presence (discrete) | M-17 **MISSING** (SN-011 + SR-034/035/114 depend on it; the pack also cites SN-013, dissolved at OI-18) |
-| **E9** | **Test/coverage toolchain** (pytest, coverage) | results feeding the tier floors (discrete) · `coverage.json` percents (IF-070, variable) | IF-070 partial; M-18 otherwise **MISSING** |
-| **E10** | **Downstream adopted repo (tree)** | scaffold write + re-sync diff OUT (variable + discrete stamp) · harness verdict OUT (IF-013) · generator outputs OUT (IF-017, IF-018) · vendored-drift verdict (IF-016) · upstream source IN (IF-036) | IF-013…IF-018, IF-036; M-06 (the template→`docs/` **mapping**) **MISSING** |
-| **E11** | **The shipped template set as product** — OI-28 seed 2 | `*.template.*` + `registries/*` OUT as a traced artifact class (variable) | M-07 **MISSING** — one SR anchor owed, `test_dogfood_sync` as its verification |
+**How to read the table.** **One row per crossing** — each row is one directed
+seam and becomes exactly one `IF-###`, which is the shape `PROCESS.md` §8
+already rules ("record each directed seam once"). **Dir** is stated from the
+kit's point of view: **IN** = the crossing enters the system (the kit consumes),
+**OUT** = it leaves (the kit provides), **IN/OUT** = a genuine two-way surface
+that sitting 2 may choose to split into two rows. **IF today** names the live row
+if one exists. The **`#`** ids are the data pack's own (`X-` = the registry
+already carries it, `M-` = the pack found it missing) so every row here is
+traceable back to the WI-441 inventory; **`N-`** marks a crossing this draft adds
+*beyond* the pack's 34, which the completeness declaration has to absorb.
+
+Signal typing (`discrete`/`variable`) is deliberately **not** a column here — per
+§1a it is a property of the IF row, not of the frame.
+
+| # | Party | Dir | What crosses | IF today | State |
+|---|---|---|---|---|---|
+| M-01 | **E1** Adopting team / contributor | IN | a contributor runs `dev-setup.{sh,cmd,command}`; toolchain probe result | — | **MISSING** |
+| M-03 | **E1** | OUT | the runnable capability list a contributor reads | IF-048 | partial — menu side only |
+| M-19 | **E1** | OUT | every script's human-readable report to the terminal/console | — | **MISSING** |
+| X-12 | **E1** | OUT | `run_menu.py` → the `run.*` launcher scripts | IF-048 | reads **internal** — counterpart is the kit's own launchers, not the person |
+| M-02 | **E2** Human owner | IN | one-command autonomous-run trigger via root `agent-resume.*` | — | **MISSING** |
+| N-01 | **E2** | IN | `docs/process.toml` — the policy-dial surface the owner hand-edits | — | **MISSING, and NEW** (not among the pack's 34) |
+| M-11 | **E2** | IN | rulings, attestations and `Status` flips into the registries | — | **MISSING** |
+| M-10 | **E2** | IN/OUT | `docs/status.md` — the resume-from-text surface the owner also edits | IF-037 | partial — names the *file*, not the owner |
+| M-09 | **E2** | OUT | `PROJECT_STATE.html` trajectory dashboard | — | **MISSING** as an owner surface |
+| M-08 | **E2** | OUT | `open-items.html` decision-brief / signing surface | IF-074 | partial — names the *file*, not the reader |
+| M-12 | **E3** Agent CLI (direct session) — OI-28 seed 1 | IN | instructions / prompt into the repo from a direct session | — | **MISSING** |
+| M-13 | **E3** | OUT | artifact edits, admitted only through the git hook floor (`pre-commit`, `pre-push`, `commit-msg`) | — | **MISSING** |
+| X-07 | **E3** | OUT | `subagent_gate.py` PreToolUse spawn allow/deny | IF-020 | declared |
+| X-11 | **E3** | IN | `agent_session.py` launches the CLI and reads its result | IF-041 | declared |
+| M-15 | **E4** Model provider API | IN | rate limit, auth expiry, retired model | — | **MISSING** — and its SN owner (SN-020) was dissolved at OI-18, so **no live need owns it**; SR-026's backoff clause is its only home |
+| M-14 | **E5** External reviewer CLI (codex `sol`/`terra`) | IN/OUT | hostile-review brief out, findings in | — | **MISSING** — IF-045 declares model *families*, not the provider |
+| X-09 | **E6** git — the mutation floor | IN | `check_privacy.py` reads staged/outgoing content | IF-032 | declared |
+| M-16 | **E6** | IN/OUT | commits, merges, pushes, advisory locks, and the hook floor as enforcement | IF-032 | partial — read side only (§1c asks whether this is one crossing or three) |
+| M-04 | **E7** GitHub / hosted CI | IN | push · PR · schedule trigger; the OS × Python matrix | — | **MISSING** |
+| M-05 | **E7** | OUT | job verdict + step log | — | **MISSING** |
+| M-17 | **E8** OS · filesystem · Python ≥3.11 | IN | path semantics, encoding, kernel advisory lock, interpreter presence | — | **MISSING** (SN-011 + SR-034/035/114 depend on it; the pack also cited SN-013, dissolved at OI-18) |
+| M-18 | **E9** Test / coverage toolchain | IN | pytest results feeding the tier floors | IF-070 | partial — coverage side only |
+| X-13 | **E9** | IN | `check_coverage.py` reads `coverage.json` | IF-070 | declared, but the counterpart is a **file**, not the toolchain |
+| X-01 | **E10** Downstream adopted repo | OUT | `check.py` gate/tier harness verdict | IF-013 | declared |
+| X-02 | **E10** | OUT | `bootstrap.py` scaffold write + re-sync diff | IF-014 | declared |
+| X-03 | **E10** | OUT | `agent_loop.py` unattended coordinator run | IF-015 | declared |
+| X-04 | **E10** | OUT | `check_vendored.py` drift verdict | IF-016 | declared |
+| X-05 | **E10** | OUT | `gen_cases.py` permutation expansion | IF-017 | declared |
+| X-06 | **E10** | OUT | `gen_release_checklist.py` checklist | IF-018 | declared |
+| X-10 | **E10** | IN | `check_vendored.py` reads the vendored upstream source | IF-036 | declared |
+| M-06 | **E10** | OUT | the MAPPING: templates → the adopting repo's `docs/` tree, + kit-version stamp | IF-014 | partial — coarse; names the adopter, not the tree |
+| X-14 | **E10** | OUT | `integrate.py` serialized merge queue | IF-080 | **MISLABELLED** — claims `downstream adopter`, is an internal station seam |
+| X-15 | **E10** | OUT | `trunk_step.py` trunk step | IF-081 | **MISLABELLED** — same |
+| M-07 | **E11** The shipped template set as product — OI-28 seed 2 | OUT | `*.template.*` + `registries/*` as a traced product artifact class | — | **MISSING** — one SR anchor owed, `test_dogfood_sync` as its verification |
+| X-08 | *(unassigned)* | IN | `check_docs.py` reads the doc tree | IF-030 | reads **internal** — counterpart `docs` is an in-repo path, not an actor |
+
+**The tally, and it reconciles to the pack.** 35 rows = the pack's 34 (X-01…X-15
++ M-01…M-19) plus **N-01**. Of them: **11 declared** cleanly, **6 partial** (a
+row exists but names a file or module where the actor belongs), **13 MISSING**,
+**2 MISLABELLED** (X-14/X-15), **2 that read internal** under §1a's actor rule
+(X-08, X-12), and **1 new** (N-01). The 13 + 6 split is exactly the §0
+reconciliation, from the other direction.
+
+**Two things the tally says that the party-level view hid.** First, **`N-01` is a
+real gap in the completeness declaration**: `docs/process.toml` is the owner's
+single policy-dial home — SN-028's whole subject — and the WI-441 inventory has
+no crossing for it, so §1c's "complete to my best reading" is now known to be
+complete-minus-one. Second, **four of the 15 crossings the registry was credited
+with do not survive contact with the actor rule** (X-08, X-12 read internal;
+X-14, X-15 are mislabelled), so the honest count of declared *frame* crossings is
+**11, not 15**.
 
 ### 1a. What DEFINES a boundary — ruled by the owner, 2026-08-13
 
@@ -200,11 +253,14 @@ thermal · fluid · data) would travel. Not a decision for this repo's own frame
 recorded so the kit-level version of this rule is not written software-first by
 default.
 
-**Two rows that need re-reading, not re-typing.** `IF-080` (`integrate.py`) and
-`IF-081` (`trunk_step.py`) declare `downstream adopter` as counterpart but are
-the unattended station's *internal* serialization seams. They are counted in the
-data pack's 15 external rows; under §2's discriminator they read internal.
-Sitting 2 should say which.
+**The four rows the actor rule re-reads** are flagged in the table's State column
+and are sitting 2's to confirm: `IF-080`/`IF-081` (X-14/X-15) declare
+`downstream adopter` but are the unattended station's *internal* serialization
+seams, and X-08/X-12 name an in-repo path (`docs`, the kit's own `run.*`
+scripts) where an actor belongs. All four were counted toward the registry's 15
+"external" rows. **This is the case for making the actor a declared thing rather
+than free text:** none of the four is *wrong* in any way a check can currently
+see, because `counterpart` is prose — which is the §4 item 3 decision.
 
 **The data pack's six stated uncertainties (§1c) stand and are the ruler's, not
 mine:** is `downstream adopter` one actor or three (team / tree / their CI)? is
@@ -392,6 +448,22 @@ Bundle it into WI-451's window rather than opening a second one.
    downstream re-sync; cost of not: the rung's completeness half stays
    unmechanized and the frame is settled only by eye. Note also that `signal`
    stays untouched either way — it is an IF-row property, not the frame's.
+
+   **A third shape, proposed here and not yet ruled: declare the ACTORS, derive
+   the rest.** Make the external parties a closed set (E1…E11 as declared rows or
+   a vocabulary) and let *"is this a boundary crossing?"* be **derived** from
+   whether `counterpart` names one of them — instead of a hand-set flag that can
+   drift out of step with the contract beside it. It follows from §1a's ruling
+   (if the frame is actor **plus** interface, the actor is the half that should
+   be declared) and it is strictly stronger on the evidence in §1's table: the
+   four re-read rows and the six file-not-actor partials are all cases where
+   `counterpart` says something untrue and **nothing can catch it, because the
+   field is prose**. Under a declared vocabulary, an internal seam claiming
+   `downstream adopter` becomes unrepresentable rather than merely detectable —
+   the repo's own governing principle (`status.md`: *prefer a constraint that
+   makes a bad state unrepresentable over a check that detects it*). Cost: a
+   closed vocabulary every adopter must populate for their own frame, versus a
+   boolean they can set per row.
 4. **The five Experimental rows.** They hold the rung down today, and four of
    the five (IF-118/119/120 + IF-057) are internal carrier plumbing, not frame.
    Three dispositions: promote to `Stable` (the carrier sweep has converged);
