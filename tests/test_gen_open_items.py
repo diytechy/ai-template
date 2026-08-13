@@ -525,7 +525,7 @@ def test_retired_markdown_surface_is_reported(tmp_path):
     proc = gen(root, "--check")
     assert proc.returncode == 0, "warn-only — it must not red a repo mid-migration"
     assert "still present beside the registry" in proc.stdout
-    assert "ADOPTING.md section 6" in proc.stdout
+    assert "RESYNC_PACK.md" in proc.stdout  # the recipe's one home (OI-27)
     # The negative half: no stale file, no warning.
     (root / "docs" / "open-items.md").unlink()
     assert "still present" not in gen(root, "--check").stdout

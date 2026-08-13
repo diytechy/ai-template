@@ -788,7 +788,8 @@ def main(argv=None):
             "gen_open_items: WARN - docs/open-items.md is still present beside "
             "the registry. It was RETIRED by WI-322 and nothing regenerates its "
             "pending block, so anything it claims is now unmaintained. Migrate "
-            "any remaining briefs to rows and delete it (ADOPTING.md section 6)."
+            "any remaining briefs to rows and delete it (the migration recipe is "
+            "in the kit's RESYNC_PACK.md)."
         )
     if args.check:
         if not out.is_file():

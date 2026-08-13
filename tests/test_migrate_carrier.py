@@ -307,18 +307,21 @@ def test_cell_whitespace_is_CONTENT_and_survives_the_conversion(tmp_path):
     assert "requirement" not in out2["requirement"]["SR-001"]
 
 
-def test_the_ADOPTING_recipe_run_verbatim_leaves_the_registries_TRACKED(tmp_path):
+def test_the_pack_recipe_run_verbatim_leaves_the_registries_TRACKED(tmp_path):
     """The review's BLOCKER 1, driven as the adopter would run it.
 
     The recipe wrote four TOML files and then staged four DELETIONS with
     `git rm`, never staging the new files — so an adopter following it verbatim
     committed the removal of their whole spine. This lifts the fenced commands
-    OUT of ADOPTING.md and runs them, so the doc and the behaviour cannot drift:
-    a recipe nobody executes is prose.
+    OUT of the doc and runs them, so the doc and the behaviour cannot drift:
+    a recipe nobody executes is prose. (The recipe moved from ADOPTING.md §6 to
+    RESYNC_PACK.md at OI-27's one-home ruling; the extraction follows it.)
     """
     import re
 
-    adopting = (ROOT / "project-trajectory" / "ADOPTING.md").read_text(encoding="utf-8")
+    adopting = (ROOT / "project-trajectory" / "RESYNC_PACK.md").read_text(
+        encoding="utf-8"
+    )
     block = adopting.split("**Run it, check it, then stage BOTH sides")[1]
     recipe = block.split("```")[1]
     # The commands, with the doc's line continuations joined and comments cut.

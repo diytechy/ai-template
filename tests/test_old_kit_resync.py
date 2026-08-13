@@ -6,8 +6,10 @@ brings it forward, which is the only thing a real adopter ever does — and the
 field record names three distinct re-sync breakages, each caught downstream by a
 human rather than by this suite. This module builds the missing shape: extract a
 pinned older commit of THIS repo's own history, bootstrap a scaffold from it, run
-the re-sync procedure ADOPTING.md §6 documents today, and require the result to
-be a green harness.
+the re-sync procedure the kit documents today, and require the result to be a
+green harness. That procedure's home moved at OI-27's ruling — from ADOPTING.md
+§6 to `project-trajectory/RESYNC_PACK.md` §1, which is where the mechanical steps
+below are now written; §6 keeps the framing and points there.
 
 WHAT IT HONESTLY COVERS
   - The documented procedure RUNS, end to end, across a real three-week kit
@@ -30,9 +32,9 @@ WHAT IT DOES NOT COVER, stated plainly because the gap is the point
     does not show that an old scaffold ends up EQUAL to a fresh one — it shows
     the opposite, and pins it (`test_documented_resync_is_add_only_today`). After
     the documented run, most kit-owned scripts in the scaffold are still the old
-    ones. The rest of §6 — "overwrite freely", "re-apply your dials", the
-    per-change migration recipes — is prose an operator executes by hand, and
-    SR-036 declares that judgment deliberately non-mechanized
+    ones. The rest of the procedure — the pack's §2 deviation review and its §3
+    per-change entries — is prose an operator executes by hand, and SR-036
+    declares that judgment deliberately non-mechanized
     (`verification = "Inspection"`). None of that half is exercised here.
   - Consequently a GREEN here means "the documented mechanical steps leave a
     repo whose OWN harness passes", not "the repo is now on the current kit".
@@ -48,12 +50,16 @@ WHAT IT DOES NOT COVER, stated plainly because the gap is the point
   - The extracted old kit is not a git checkout, so the old scaffold is stamped
     `unknown (kit not a git checkout)` — the tarball-adopter shape. That is
     faithful to a real adoption route, but it means the "diff your recorded SHA"
-    step of §6 is the one step this fixture cannot perform, and does not.
+    step of the procedure is the one step this fixture cannot perform, and
+    does not.
 
-  When the OI-27 re-sync pack lands, THIS is its baseline: the pack's procedure
-  replaces the steps below and the same assertions must still hold, so any claim
-  it makes about carrying an old repo forward is measured rather than asserted in
-  prose.
+  The OI-27 re-sync pack HAS landed (`project-trajectory/RESYNC_PACK.md`), and
+  this module is its baseline: the pack re-homed the procedure without changing
+  the mechanical steps, so the same assertions still hold, and any future claim
+  the pack makes about carrying an old repo forward has to be re-measured HERE —
+  a change to the pack's §1 that this module does not reflect is a claim asserted
+  in prose. `tests/test_resync_pack.py` holds the pack's shape; this one holds
+  what the procedure actually does to a repo.
 """
 
 import collections
@@ -73,8 +79,9 @@ from conftest import ROOT, SCRIPTS, run_py, skip_without_env_gates
 #      real, documented kit change — the concurrency restructure's Phase 5
 #      dispatcher deletion, the `drive.py` -> `dispatch.py`/`lane.py` split, the
 #      WI-registry CSV -> spec-folder flip, the spine's CSV -> TOML carrier move,
-#      and `check_dupes.py`'s removal. Those are exactly the recipes ADOPTING.md
-#      §6 carries, so the test crosses recipes rather than a quiet week.
+#      and `check_dupes.py`'s removal. Those are exactly the entries
+#      RESYNC_PACK.md §3 carries, so the test crosses migrations rather
+#      than a quiet week.
 #   2. IT IS A CLEAN CLOSE POINT on the trunk's first-parent history (a "mark
 #      done + registry/dashboard close" commit), not a mid-claim state, so the
 #      scaffold it produces is a coherent kit rather than a half-landed one.
@@ -164,15 +171,15 @@ def _digests(root, rels):
 
 @pytest.fixture(scope="module")
 def resync(tmp_path_factory):
-    """Scaffold from the pinned old kit, then run §6's documented steps forward.
+    """Scaffold from the pinned old kit, then run the documented steps forward.
 
     Module-scoped: the chain is four bootstraps' worth of subprocesses and every
     test in this file interrogates the SAME run, which is also what makes the
     assertions comparable (they describe one re-sync, not four).
 
-    The steps below are exactly what ADOPTING.md §6 documents TODAY, in its
-    order, and nothing else — no repair the guide does not tell an adopter to
-    perform. That restraint is the point: if the documented procedure is
+    The steps below are exactly what RESYNC_PACK.md §1 documents TODAY, in
+    its order, and nothing else — no repair the pack does not tell an adopter
+    to perform. That restraint is the point: if the documented procedure is
     insufficient, this test must show it, not paper over it.
     """
     skip_without_env_gates("git")
@@ -196,11 +203,11 @@ def resync(tmp_path_factory):
     shutil.copytree(pristine, repo)
     before = _digests(repo, PROCESS_DOCS)
 
-    # (b) §6's mechanical step: re-run the CURRENT kit's bootstrap in place.
+    # (b) The pack's §1.3 step 2: re-run the CURRENT kit's bootstrap in place.
     plain = run_py([SCRIPTS / "bootstrap.py", "--dest", "."], cwd=repo)
     assert plain.returncode == 0, plain.stdout + plain.stderr
 
-    # (c) §6 "Regenerate, never raw-copy": the process docs are generated from
+    # (c) Pack §2.2 "Regenerate, never raw-copy": the process docs are generated from
     # the recorded docs/kit-profile, so taking the new ones means deleting them
     # and re-running — the ONE documented way a re-sync updates a file it has.
     for rel in PROCESS_DOCS:
@@ -209,7 +216,7 @@ def resync(tmp_path_factory):
     assert regen.returncode == 0, regen.stdout + regen.stderr
     after = _digests(repo, PROCESS_DOCS)
 
-    # (d) §6: refresh any materialized per-agent skill copies from source.
+    # (d) Pack §1.3 step 6: refresh materialized per-agent skill copies.
     # Vacuous on a scaffold with no agent dir, which is the default — run it
     # anyway, because "vacuous but exits 0" is itself the documented contract.
     sync = run_py([SCRIPTS / "bootstrap.py", "--dest", ".", "--sync"], cwd=repo)
@@ -272,7 +279,7 @@ def test_resync_restamps_the_kit_version_anchor(resync):
 
 
 def test_documented_regenerate_recipe_refreshes_the_process_docs(resync):
-    """§6's delete-then-re-run recipe is the one documented path by which a
+    """The delete-then-re-run recipe (pack §2.2) is the one documented path by which a
     re-sync UPDATES a file the repo already had. If it silently no-ops, an
     adopter's process docs stay frozen at their adoption date while the guide
     says otherwise."""
@@ -294,7 +301,7 @@ def test_documented_resync_is_add_only_today(resync):
 
     `bootstrap.py` is write-once. So the documented mechanical re-sync ADDS the
     files a repo lacks and updates none it has, and deletes nothing the kit has
-    retired. Everything else in §6 is an operator's hand-work, which SR-036
+    retired. Everything else in the pack is an operator's hand-work, which SR-036
     declares deliberately non-mechanized. This test asserts that state exactly —
     so that when the OI-27 re-sync pack changes it, the change is visible here as
     a failure to be re-baselined rather than an unnoticed silent shift.
@@ -332,7 +339,7 @@ def test_documented_resync_is_add_only_today(resync):
     )
 
     # 3. NOT DELETED: a script the current kit RETIRED survives the re-sync, so
-    #    §6's "delete your old scripts/<x>.py" recipes are load-bearing hand-work.
+    #    the pack's "delete your old scripts/<x>.py" entries are load-bearing.
     retired = sorted(n for n in old_scripts if n not in new_scripts)
     assert retired, "the pinned range retired no script — re-pin to cross one"
     assert all(n in got for n in retired), (
@@ -384,7 +391,7 @@ def test_the_green_holds_only_because_the_old_checkers_survived(resync):
 def test_force_resync_installs_current_checkers_and_the_tree_cannot_false_green(
     resync, tmp_path
 ):
-    """The OTHER half of §6 — the wholesale overwrite — probed with --force.
+    """The OTHER half of the procedure — the wholesale overwrite — with --force.
 
     The add-only leg above proves the DOCUMENTED DEFAULT and pins its known
     dishonest green (the surviving old checkers approve a tree the current kit

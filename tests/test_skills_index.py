@@ -41,27 +41,31 @@ def test_index_row_count_matches_skill_dirs():
     assert len(rows) == n_dirs
 
 
-def test_downstream_resync_skill_points_at_adopting_rather_than_restating_it():
-    """The re-sync recipes have ONE home: ADOPTING.md §6 (OI-27 defect 2).
+def test_downstream_resync_skill_points_at_the_pack_rather_than_restating_it():
+    """The re-sync rules have ONE home: RESYNC_PACK.md (OI-27, ruled 2026-08-13).
 
-    The skill used to restate §6's migration recipes — including a
-    hand-maintained WI-381 note that had drifted from the authority within weeks
-    at zero re-sync traffic. It now carries the ORDER of the procedure and sends
-    the reader to §6 for every rule. This pin is deliberately shaped as
-    "no dated/WI-keyed recipe content", because that is the exact form the
-    duplication took and the exact form it would come back in: §6 keys its
-    recipes by WI id and date, so a WI id reappearing here means someone copied
-    a recipe across again instead of linking it.
+    The skill used to restate ADOPTING.md §6's migration recipes — including a
+    hand-maintained note that had drifted from the authority within weeks at zero
+    re-sync traffic. §6's recipe half then moved into the pack, and the skill
+    became a router: it names the pack and nothing else. This pin is deliberately
+    shaped as "no WI-keyed content", because that is the exact form the
+    duplication took and the exact form it would come back in — the entries are
+    keyed by kit SHA now, so a WI id OR a `[since <sha>]` anchor reappearing here
+    means someone copied an entry across instead of linking it.
     """
     text = (SKILLS / "downstream-resync" / "SKILL.md").read_text(encoding="utf-8")
     body = text.split("---", 2)[2]  # frontmatter is not prose
-    assert "ADOPTING.md" in body, "the skill must name its authority"
-    assert "§6" in body or "section 6" in body.lower()
+    assert "RESYNC_PACK.md" in body, "the skill must name its authority"
     strays = sorted(set(re.findall(r"\bWI-\d+\b", body)))
     assert not strays, (
-        "the skill restates ADOPTING.md §6 recipe content again ({}) — §6 keys "
-        "its recipes by WI id, so point at it instead of copying it across; "
-        "the copy is what drifted last time (OI-27)".format(", ".join(strays))
+        "the skill restates pack entry content again ({}) — the entries are "
+        "keyed by WI id and kit SHA, so point at the pack instead of copying it "
+        "across; the copy is what drifted last time (OI-27)".format(", ".join(strays))
+    )
+    anchors = sorted(set(re.findall(r"\[since [0-9a-f]{7,40}\]", body)))
+    assert not anchors, (
+        "the skill carries a pack ENTRY anchor ({}) — an anchored entry belongs "
+        "in RESYNC_PACK.md §3/§4, never in a second home".format(", ".join(anchors))
     )
 
 
