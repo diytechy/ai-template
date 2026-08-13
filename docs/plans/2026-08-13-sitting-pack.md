@@ -593,6 +593,49 @@ mean the retired enum. These are therefore OI-23-class amendments, still owed.
 
 ---
 
+### 2.7 — System requirements that name implementation (raised by the owner, 2026-08-13)
+
+**The question.** Under the ruled decomposition (the OI-21 ladder: an SR states
+what a scope must PROVIDE at its boundary; an LLR is how the inside is
+realized), a system requirement that names a script is naming a solution.
+Measured on the live registry: **75 of 148 SRs name a `.py` script in their
+requirement text** — roughly 25 name only entry-point-class scripts
+(`check.py`, `bootstrap.py`, the launchers — the things the outside world
+invokes, where the script name arguably IS the boundary port), and **~50 name
+at least one internal module**, which no boundary reading defends.
+
+**Why it stands today.** `SR-126` (Verified) deliberately PERMITS this — its
+acceptance carves out that *"a script name, artifact path, rubric or sibling
+spine id does not"* open a re-attest window. That carve-out predates the
+ladder ruling and is now in tension with it. This session's amendments
+deliberately did NOT touch the class: the OI-23 repairs changed facts, never
+requirement shape, and the stage sweep changed vocabulary only.
+
+**Where it IS already scheduled, honestly:**
+- **SN-037 (Draft, in THIS sitting's ratification queue)** is the mechanization
+  vehicle: *"Every system-requirement input and output references a declared
+  interface; … unresolved references, uncovered crossings and incompatible
+  signal types are mechanical findings."* Ratifying it commissions exactly the
+  SR-tier boundary conformance the question asks for.
+- The OI-14 ruled sequence carries a **RE-SCORE** loop — SRs re-stated against
+  the derived boundaries after the partition ratifies — and Part B built the
+  typed interface schema those restatements will cite.
+- What did NOT exist until now: an execution row owning the pass. **WI-451**
+  (queued) now owns it: the port-vs-internal census over the 75 rows, then the
+  re-statement program, gated on this decision.
+
+**The decision:** rule the discriminator. (a) RECOMMENDED — an SR may name an
+artifact only where that artifact is a DECLARED BOUNDARY CROSSING (an IF row
+with an external counterpart: the harness entry, the launchers, the scaffold
+command); every internal-module mention re-states against the interface or
+demotes to the LLR tier, executed as WI-451 after this sitting, with SR-126's
+carve-out NARROWED to match in the same act. (b) Keep SR-126's blanket
+carve-out and accept the mixed tier as this repo's dev-tooling idiom — zero
+work, but the ladder's rung-2 definition stays aspirational for half the
+registry. Cost of (a): a large re-statement program over ~50 rows — but it
+rides the re-attest machinery this session already proved, and the census
+comes first so you size it before committing.
+
 ## 3. The provisional partition (P5) — accept or overturn
 
 Ruled at OI-14 (options A3 + A6), executed as WI-441 and **provisionally adopted
