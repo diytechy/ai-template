@@ -58,7 +58,7 @@ the map, and it must never grow depth again.**
 | dissolve the **edge-case tier** | **OI-18** | §8.6 item 2 |
 | the **hats roster** contents + home | **OI-19** | §8.6 item 2 |
 | the **gate-vocabulary retirement** — *re-ruled 2026-08-12: all G\* tags convert to an eight-rung stage ladder; four execution questions open, program sequenced after OI-14 part A* | **OI-21** | §8.7 |
-| what a **red test case** may produce | **OI-26** | §5 loose ends |
+| what a **red test case** may produce — *premise REFUTED 2026-08-12; the brief now records the corrected flow, recommended CLOSE* | **OI-26** | §5 loose ends |
 | the **LLM re-sync method** from older kit states *(raised 2026-08-12; post-lock program, but the brief carries three do-not-wait defects)* | **OI-27** | — |
 
 **Not an `OI-` row, deliberately:** the **P0 sitting's 25-row re-attest** —
@@ -678,16 +678,15 @@ else.
   amendment that opens a re-attest window, not a mechanical fix. It joins the
   carrier-falsified list in §8.4 item 7 — the same batch, the same window, and
   it must not be swept in with the other 14.
-- **A red test case cannot mint the work item that fixes it.** The
-  `adjudicate-red-tc` brief is wired (WI-424) and re-runs the census live, but
-  its typed verdict enum is **`DRAFTED | NEEDS-JUDGEMENT`** — neither of which
-  is *"mint a WI to plug the gap"*, which is the outcome the owner expects a
-  red TC to produce. Worth knowing that the repo **can** already tell the three
-  failure kinds apart, on three separate mechanisms: **not implemented** (the
-  symbol does not resolve → the LLR never reaches `Founded`, WI-429),
-  **implemented as a stub** (`check_stubs.py`, a G3 bar item), and
-  **implemented wrong** (substantive symbol, red test). So the discovery half
-  works; it is the *disposition* half that has no verdict word.
+- ~~**A red test case cannot mint the work item that fixes it.**~~ **REFUTED
+  2026-08-12 at the owner's question → OI-26:** the mint path exists and is
+  tested — the `adjudicate-red-tc` brief (WI-424) instructs the session to
+  draft one fix-to-green row per distinct cause under `## Dispositions`, and
+  `intake`'s **drafts-not-mints** arm parses that section at the row's merge
+  and mints trunk-side (R1-safe; malformed blocks refuse loudly). `DRAFTED`
+  *is* "mint these rows". The three-failure-kind discovery half noted here was
+  always right; the "disposition half has no verdict word" half misread the
+  mechanism. The corrected flow is recorded in OI-26, recommended CLOSE.
 - **`blackout.template` still ends `12:00-19:00`** — a value the kit no longer
   ships. Low risk (the kit README already labels it a *retired scaffold
   source*, and nothing scaffolds it), recorded rather than churned. Step 10.

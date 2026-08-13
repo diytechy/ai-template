@@ -687,7 +687,7 @@ Note: In a branch, a work item is non-mutable.  Work item definitions can only b
  #############
  
 
- Please continue the work of repo-lock.md, keeping mind of various notes below.  Spin up opus / sonnet agents where appropriate to keep your context window free to chew through all of these items as much as possible, only tabling low confidence items while moving forward with the rest.  Spin up OpenAI through CLI for adversarial reviews and for prose reviews when iterating through stakeholder needs, system requirements, etc.
+ Please continue the work of repo-lock.md, keeping mind of various notes below.  Spin up opus / sonnet agents where appropriate to keep your context window free to chew through all of these items as much as possible, only tabling low confidence items while moving forward with the rest.  Spin up OpenAI through CLI for adversarial reviews and for prose reviews when iterating through stakeholder needs, system requirements, etc.  Remember you do not need to follow the work item structure format of this repo itself since it's internal structures are being modified, but you can if desired.
 
 Related to repo-lock directly:
 
@@ -736,3 +736,55 @@ IMPORTANT: All items this template provides should chain back to a stakeholder n
 System Requirement:
 
 When a downstream adopter as well as this repo is undergoing autonomous or semi-autonomous development (launched through agent-resume) an llm agent shall first address handback documents from executed workitems (producing follow-up work items if needed), then address workitems in batch from stakeholder needs (which always require user attestation), system requirements, low level requirements, and test cases, each time stopping the process if the automation level requires human / external attestion.  Finally, after all test cases are laid out, impilmentation can continue autonomously through work item construction.
+
+----
+
+Add "Medium confidence autonomous decisions for review" to open items html?
+
+If A is clear, please impliment it now along with all related semantics so I am no longer at risk of conflating "G*" language with "stage *" semantics.
+
+What is the repo really providing:
+
+A method to ,.
+
+DevStg-0-Needs
+DevStg-1-Boundary
+DevStg-2-Arcitecture
+DevStg-3-CompReqs
+DevStg-4-LLReqs
+DevStg-5-Tests
+DevStg-6-Impliment
+DevStg-7-Release
+
+
+DevStg-00-Needs
+DevStg-14-Boundary
+DevStg-28-Arcitecture
+DevStg-42-CompReqs
+DevStg-56-LLReqs
+DevStg-70-Tests
+DevStg-85-Impliment
+DevStg-99-Release
+
+
+DevStg-Needs
+DevStg-Boundary
+DevStg-Arcitecture
+DevStg-CompReqs
+DevStg-LLReqs
+DevStg-Tests
+DevStg-Impliment
+DevStg-Release
+
+OI-14: Approve recommendation
+OI-17: Approve recommendation
+OI-18: Approve recommendation
+OI-19: Approve recommendation, note this does not conflict with SN-040, it supports it by showing how the SN breaks down with that perspective in mind.  This entire repo is LLM based judgement capable, but it needs to surface the rationale, and that is done in a large part to the spine.
+OI-20: Approve recommendation
+OI-21: Approve recommendation
+OI-22: Approve recommendation
+OI-23: Approve recommendation
+OI-24: RECHECK = What does a "human run"?  The smoke test or the full test?  I would say CI should at least be able to run smoke, but there perhaps should be a method to increase the CI test scope.  I'm not sure of the best way to mechanize it.
+OI-25: Approve recommendation, but note this needs to follow the new stage semantics.
+OI-26: Approve recommendation to close.
+OI-27: Approve recommendation.
