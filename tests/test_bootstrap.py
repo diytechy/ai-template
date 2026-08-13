@@ -50,6 +50,10 @@ def test_scaffold_contains_expected_files(scaffold):
         "docs/requirements/procurement.csv",
         "docs/requirements/assets.csv",
         "docs/requirements/components.csv",
+        # SN-036 / OI-19: the hats roster ships with CONTENT (six starting
+        # perspectives), so a fresh scaffold's planner brief carries questions
+        # on day one rather than a blank form.
+        "docs/requirements/hats.toml",
         # docs/requirements/work-items.csv left this list at the Phase 2c flip:
         # the WI registry scaffolds as docs/work/ below (the CSV template ships
         # unscaffolded, as the legacy-format reference wi_convert migrates).
@@ -99,6 +103,8 @@ def test_scaffold_contains_expected_files(scaffold):
         "scripts/plan_coverage.py",
         "scripts/plan_round.py",
         "scripts/plan_briefs.py",
+        # ...and the roster reader it imports (SN-036 / OI-19).
+        "scripts/hats.py",
         "scripts/plan_coverage_step.py",
         "scripts/plan_artifacts.py",
         "scripts/wi_convert.py",
@@ -146,6 +152,28 @@ def test_scaffold_stack_ini_declares_generated_artifact_set(scaffold):
         "| <!-- END GENERATED STATUS -->",
     ):
         assert row in ini, "scaffolded [generated] must carry the default: " + row
+
+
+def test_scaffold_hats_roster_is_readable_by_the_scaffolded_reader(scaffold):
+    """WI-446 / SN-036: the roster ships with CONTENT and its reader ships with
+    it, so a FRESH scaffold's decomposition brief carries real questions.
+
+    The standing lesson this pays: a scaffold-surface change is only verified by
+    bootstrapping a scaffold. The file list above proves the two files ARRIVE;
+    this proves they arrive USABLE — a roster that copied but did not parse, or
+    parsed but selected nothing, would satisfy the list and ship a form with
+    nothing behind it."""
+    hats = load_script("hats")
+    roster = hats.load(scaffold)
+    assert len(roster) >= 3, "the scaffolded roster is a blank form"
+    for hat in roster:
+        # The anti-ceremony rule, checked on what an adopter actually receives.
+        assert hat["asks"] and hat["listens_for"]
+    # Every hat's condition is evaluable, and the always-on ones fire even for a
+    # decomposition that declares no facts at all.
+    assert hats.applicable(roster, {}), "no hat applies to a bare decomposition"
+    block = hats.brief_block(hats.applicable(roster, {}))
+    assert block != hats.NO_HATS and "listens for:" in block
 
 
 def test_scaffold_stack_ini_seeds_the_lanes_dial(scaffold):

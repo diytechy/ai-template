@@ -71,6 +71,7 @@ graph LR
     m_scripts_gen_skills_index["scripts/gen_skills_index — Generate the skills applicability index from th…"]
     m_scripts_gen_trajectory["scripts/gen_trajectory — Generate the offline project-state dashboard (r…"]
     m_scripts_handback["scripts/handback — handback.py — the lane closes that are not a cl…"]
+    m_scripts_hats["scripts/hats — hats.py — the HATS ROSTER reader: which declare…"]
     m_scripts_intake["scripts/intake — intake.py — the unified trunk-side intake mint …"]
     m_scripts_integrate["scripts/integrate — integrate.py — the local integrator: the statio…"]
     m_scripts_lane["scripts/lane — lane.py — one lane's mechanics (docs/concurrenc…"]
@@ -165,6 +166,7 @@ graph LR
     m_scripts_lane --> m_scripts_integrate
     m_scripts_plan_artifacts --> m_scripts_trace
     m_scripts_plan_artifacts --> m_scripts_wi_convert
+    m_scripts_plan_briefs --> m_scripts_hats
     m_scripts_plan_briefs --> m_scripts_prompts
     m_scripts_plan_briefs --> m_scripts_spine_carrier
     m_scripts_plan_coverage --> m_scripts_spine_carrier
@@ -927,6 +929,23 @@ Contracts (interfaces): IF-080
 | `close_partial(root, branch, reason, fields)` | Close `branch` on the PARTIAL outcome. `(closed WI ids, None)`, or |  |
 | `quarantine(root, branch, why)` | Turn a RED non-merged lane into a BAR-INERT artefact. A refusal, or None. |  |
 
+### `scripts/hats`
+_hats.py — the HATS ROSTER reader: which declared expert perspectives apply to_
+
+| Public item | Summary | Implements |
+|---|---|---|
+| `HatsError (class)` | A roster that exists and cannot be trusted — the loud half of |  |
+| `roster_path(root, rel)` | The roster file for a repo root. |  |
+| `load(root, rel)` | The roster as a list of hat dicts in DECLARED ORDER — each |  |
+| `parse_condition(expr, where)` | `(join, [(field, op, value), ...])` for a condition, or `("always", [])`. |  |
+| `evaluate(condition, context)` | Whether a parsed condition holds for `context` — a dict that may carry |  |
+| `applicable(roster, context)` | The hats whose `applies_when` holds for `context`, in declared order. |  |
+| `context_from_need(row)` | The decomposition context for ONE stakeholder-need row: its declared |  |
+| `context_from_work_item(row)` | The decomposition context for a WORK-ITEM row — the shape the dual-plan |  |
+| `brief_block(hats)` | The markdown block a decomposition brief embeds: one entry per applicable |  |
+| `questions(hats)` | Just the `asks` texts, in order — for a caller that lays out its own |  |
+| `main(argv)` |  |  |
+
 ### `scripts/intake`
 _intake.py — the unified trunk-side intake mint (WI-388; docs/concurrency-v2.md §A5.2)._
 Imports (internal): `agent_common`, `check_trajectory`, `dispatch`, `schedule`, `spine_carrier`, `trace`, `wi_convert`
@@ -1014,7 +1033,7 @@ Contracts (interfaces): IF-061, IF-078, IF-116
 
 ### `scripts/plan_briefs`
 _Redacted dual-plan brief assembler + the three hat prompt-map keys (DP-001_
-Imports (internal): `prompts`, `spine_carrier`
+Imports (internal): `hats`, `prompts`, `spine_carrier`
 Contracts (interfaces): IF-059, IF-100, IF-108
 
 | Public item | Summary | Implements |
@@ -1022,6 +1041,8 @@ Contracts (interfaces): IF-059, IF-100, IF-108
 | `load_template(hat, override)` | The prompt-template TEXT for a hat: the operator's --prompt-map override |  |
 | `strip_dispatcher_block(text)` | Return the prompt body with a leading HTML-comment dispatcher block |  |
 | `build_surface(root)` | The allowlist-only registry surface the briefs embed, as `{slot: text}` |  |
+| `hat_surface(root, context)` | `{HAT_QUESTIONS: <block>}` — the declared perspectives this decomposition |  |
+| `declares_slot(template_text, name)` | Whether `template_text` declares the `{{name}}` placeholder. |  |
 | `assemble(hat, slots, template_text)` | Strict slot-fill of the `{{NAME}}` placeholders in `template_text`. |  |
 | `main(argv)` |  |  |
 

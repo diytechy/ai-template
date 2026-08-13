@@ -1,0 +1,83 @@
+# The HATS ROSTER — the declared expert perspectives every applicable
+# decomposition must face (SN-036; ruled at OI-19, 2026-08-13).
+#
+# THIS FILE IS OWNER TEXT, NOT AGENT TEXT. The six hats below are the kit's
+# STARTING roster, shipped as drafted on 2026-08-13. YOU ARE EXPECTED TO EDIT
+# IT — cut the hats that do not earn their place in your project, add the ones
+# your domain needs, and rewrite every `applies_when` against YOUR vocabulary.
+# That editing is not optional politeness: a roster inherited unread is
+# ceremony, and `applies_when` is only honest when someone who knows the
+# project wrote it.
+#
+# A HAT IS NOT A PERSON AND NOT A STAKEHOLDER ROW. It is a QUESTION that must
+# be put to every decomposition it applies to. A domain expert may have no
+# needs of their own, yet their perspective constrains someone else's need —
+# that constraint is what a hat carries.
+#
+# ONE TABLE PER HAT, keyed by the hat's NAME (upper-case, `-` joined):
+# `[hat.SECURITY]`. The name is the id; there is no numeric id space and
+# therefore no inert `-000` example row — this file ships CONTENT, because an
+# empty roster would be a form with nothing behind it. A duplicate name is a
+# parse error, which is the carrier doing what a check would otherwise have to.
+#
+# THREE KEYS, ALL REQUIRED (`scripts/hats.py` refuses a row missing any):
+#
+#   applies_when   The condition a composer EVALUATES to decide whether this
+#                  hat is put to a given decomposition. A closed, evaluable
+#                  grammar — never prose:
+#
+#                      always
+#                      scope == "template"        (also !=)
+#                      kind == "core"             (also !=)
+#                      tags contains "unattended"
+#
+#                  Clauses join with `or` OR with `and`, not both in one
+#                  expression (no precedence to guess at). A field the composer
+#                  did not declare satisfies NO condition — an undeclared fact
+#                  is not a true one — so a hat keyed on a fact your registries
+#                  do not yet carry stays silent rather than firing blindly.
+#   asks           The question put to the decomposition, in the second person.
+#                  This is the text that lands in the brief.
+#   listens_for    The FAILURE CLASS this hat catches. A hat that names no
+#                  failure is refused as ceremony — if you cannot say what goes
+#                  wrong when nobody wears it, delete the row.
+#
+# ABSENCE IS OPT-OUT, MALFORMED IS A REFUSAL. Delete this file and every
+# composer proceeds without hats; leave it here broken and the composer
+# refuses loudly rather than quietly decomposing with no perspective at all.
+#
+# WHAT IS NOT BUILT YET (stated so its absence is not mistaken for coverage):
+# SN-036 also requires a per-decomposition RECORD of which hats were applied
+# and what each produced. Injection is the half that changes what decompositions
+# produce; the record only proves it happened, and it is a later artifact class.
+# Nothing gates on a hat today.
+
+[hat.SECURITY]
+applies_when = "always"
+asks = """What secret, credential, or irreversible action does this touch — and which requirement says who may reach it?"""
+listens_for = """A decomposition that spends a secret, or takes an action nothing can undo, with no requirement naming the authority for it."""
+
+[hat.FIRST-RUN-ADOPTER]
+applies_when = 'scope == "template" or scope == "both" or tags contains "templates"'
+asks = """Does this hold for a stranger with only the shipped README and examples — no context from this project, no one to ask?"""
+listens_for = """A requirement only satisfiable by someone who already knows this project: an undocumented convention, an example that does not run as shipped, a step whose prerequisite is never stated."""
+
+[hat.UNATTENDED-OPS]
+applies_when = 'tags contains "unattended" or tags contains "loop"'
+asks = """What does this look like at 3am with no human — what happens when its input is missing, stale, or half-written?"""
+listens_for = """A failure that pages nobody: a silent degrade, a partial write left behind, an unbounded retry, a green that is green because nothing looked."""
+
+[hat.CROSS-PLATFORM]
+applies_when = 'tags contains "scripts" or tags contains "launcher" or tags contains "shell"'
+asks = """Which of Windows, macOS and Linux breaks this — path separators, line endings, console encoding, shell quoting, case sensitivity?"""
+listens_for = """A rule that is true only on the author's platform and shipped as if it were universal."""
+
+[hat.MAINTAINER]
+applies_when = "always"
+asks = """Can a reader two years from now tell why this exists, and what would break if they deleted it?"""
+listens_for = """A requirement whose reason lives only in the session that wrote it, leaving the next reviser unable to tell load-bearing from accident."""
+
+[hat.TEST-ENGINEER]
+applies_when = "always"
+asks = """What mechanical check fails if this is quietly violated — and can that check be shown to fail when it should?"""
+listens_for = """An obligation with no enforcer, or an enforcer that passes because it never actually looks at the thing it claims to check."""

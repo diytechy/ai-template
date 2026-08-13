@@ -32,6 +32,26 @@ script, the way bootstrap.py locates kit files).
 raise ValueError, so a half-filled brief (a hole where a redacted input should
 be) can never reach a session.
 
+THE HATS ROSTER RIDES THE PLANNER BRIEF (SN-036, ruled at OI-19 2026-08-13).
+The planner brief is what this repo mechanizes as *the decomposition brief*, so
+it is where a declared expert perspective has to arrive if it is to constrain a
+decomposition at all. `hat_surface(root, context)` fills `{{HAT_QUESTIONS}}`
+from `docs/requirements/hats.toml` via the `hats` sibling; every applicable
+hat's question lands in the brief, so the session faces each perspective rather
+than being trusted to remember it.
+
+That is a THIRD file read, and it is deliberately NOT inside `build_surface`:
+the two-file allowlist is `build_surface`'s own contract and stays exactly as
+it was. The redaction INVARIANT is unchanged either way — the roster is a
+declared registry of questions, not the driver's notes, not `docs/status.md`,
+not a self-assessment — but keeping the widening in a separately named function
+means the boundary that matters is still readable in one place.
+
+`{{HAT_QUESTIONS}}` is filled only when the (possibly operator-overridden)
+template DECLARES it — `declares_slot` is the guard. A strict fill rejects an
+unknown slot key, so unconditionally passing it would have broken every
+operator override authored before this slot existed.
+
 Small helpers (_utf8_console, the CSV loader) are duplicated from siblings per
 the kit's independently-copyable-script convention (F5). Usage (the CLI is a
 documentation aid; the module is library-first):
@@ -68,6 +88,16 @@ try:
 except ImportError:  # pragma: no cover - in-process fallback
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     import prompts
+
+# Sibling: the HATS ROSTER reader (SN-036 / OI-19) — the roster's parse rules,
+# its applies_when grammar and the absent-vs-malformed split have ONE home, so
+# a second composer that grows hats later inherits them rather than re-deciding
+# what a broken roster means.
+try:
+    import hats as hats_roster
+except ImportError:  # pragma: no cover - in-process fallback
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    import hats as hats_roster
 
 # --- the three dual-plan hats and their prompt-map override keys --------------
 # Each key is the phase key an operator wires on --prompt-map / AGENT_PROMPT_MAP
@@ -219,10 +249,44 @@ def build_surface(root):
     }
 
 
+# --- the hats roster surface (SN-036) -----------------------------------------
+# The planner-brief slot the applicable perspectives land in.
+HAT_QUESTIONS_SLOT = "HAT_QUESTIONS"
+
+# Re-exported so a composer needs one seam, not two, to put hats in a brief.
+HatsError = hats_roster.HatsError
+hat_context_for_work_item = hats_roster.context_from_work_item
+hat_context_for_need = hats_roster.context_from_need
+
+
+def hat_surface(root, context):
+    """`{HAT_QUESTIONS: <block>}` — the declared perspectives this decomposition
+    must face, as the markdown block the planner template embeds.
+
+    ABSENT IS OPT-OUT: with no `docs/requirements/hats.toml` the block is the
+    roster module's stated no-hats line and the brief goes out without hats — a
+    layer, not a floor. A roster that EXISTS and does not parse raises
+    `HatsError`, which the caller turns into a page: silently briefing a
+    decomposition with no perspective, because the file listing them was
+    broken, is the failure this refusal exists for."""
+    chosen = hats_roster.applicable(hats_roster.load(root), context)
+    return {HAT_QUESTIONS_SLOT: hats_roster.brief_block(chosen)}
+
+
 # --- strict slot fill ---------------------------------------------------------
 def _placeholders(text):
     """The set of `{{NAME}}` placeholder names present in `text`."""
     return set(PLACEHOLDER_RE.findall(text))
+
+
+def declares_slot(template_text, name):
+    """Whether `template_text` declares the `{{name}}` placeholder.
+
+    The guard for an OPTIONAL slot. `assemble` rejects a slot key the template
+    does not declare, so a caller adding a slot to the shipped template must
+    ask before filling it — otherwise every operator override written against
+    the older template stops composing at all."""
+    return name in _placeholders(template_text)
 
 
 def assemble(hat, slots, template_text):

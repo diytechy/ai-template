@@ -1269,6 +1269,14 @@ BASELINE = {
     # knows which kit they downloaded. Decomposing bootstrap.py to buy back 26
     # lines is WI-280's job, not a stamp fix's. Re-stamp downward with WI-280.
     "bootstrap.py": 2808,  # +15 2026-08-13: WI-439 review fix — the tracked-file anchor probe + the three-cause warning wording (reviewed bump, reason in the log)
+    # WI-446: +20 (2767 -> 2787). Two MAPPING rows registering the hats layer
+    # (SN-036 / OI-19) — the roster template and the `hats.py` reader its
+    # importer needs — plus their reason comments and the two docstring lines in
+    # the kit-contents listing. Registration, not monolith drift: the layer's
+    # own code is a new module under THRESHOLD, and a MAPPING row is the only
+    # way a scaffold ever receives a file. Reviewed bump; re-stamp down with
+    # WI-280.
+    "bootstrap.py": 2828,  # composed at the 2026-08-13 serial merge: WI-439 (+26) + its review fix (+15, the tracked-anchor probe) + WI-446's MAPPING rows (+20); measured, reasons above and at each contributing WI
     # NEW ENTRY, +228 (1423 -> 1651), Phase 2b of the concurrency restructure
     # (docs/concurrency-restructure.md §7): the spec-folder work-item reader,
     # which crosses this module over THRESHOLD for the first time. It is one
