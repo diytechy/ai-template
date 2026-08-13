@@ -23,5 +23,5 @@
 # read the first non-comment line below, exactly as before.
 #
 # basis: SN=27 SR=147 LLR=149 TC=146 drafts=46 modified=62 uncovered=0 computed=G0 ex-draft=G0 phase=4 per-phase=1=G2;2=G2;3=G2;4=G0;5=G0 stage=0
-# computed 2026-08-13 (as-of d2da3dd9)
+# computed 2026-08-13 (as-of c40bc8a5)
 G1

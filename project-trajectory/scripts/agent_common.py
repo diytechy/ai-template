@@ -104,7 +104,7 @@ EXIT_PAUSED = 8
 # way — check_docs.SCRATCHPAD). Because it is tracked and perpetually edited, an
 # owner-only-dirty tree is NOT interrupted-session residue: it must not fire the
 # WI-076 resume note or flip the done detection (WI-203). Mirrored, not imported
-# — importing the doc-checker into the coordinator would add a CMP-004→CMP-001
+# — importing the doc-checker into the coordinator would add a CMP-008→CMP-007
 # edge + an IF seam for one fixed filename; the name is a bootstrap contract
 # (test_bootstrap asserts the scaffold ships it), so the mirror cannot drift.
 OWNER_ONLY_PATHS = ("OWNER_SCRATCHPAD.md",)
@@ -952,7 +952,7 @@ def _declared_test_command(ini, py=None):
     """The repo's declared test command as a tokenized argv, read from a
     docs/stack.ini path — the stack-schema home a bar runner reads so it runs
     the bar the repo actually declares. Mirrors check.py's stack schema rather
-    than importing it — the OWNER_ONLY_PATHS precedent above: a CMP-004→CMP-001
+    than importing it — the OWNER_ONLY_PATHS precedent above: a CMP-008→CMP-007
     import for one small read would owe an IF seam; the tests pin it against
     drift. The kit schema is `[product] test` (with {py}/{src}/{tests} the same
     placeholders check.py fills), with the legacy raw `[stack] test` as a

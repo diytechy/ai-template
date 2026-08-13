@@ -694,10 +694,10 @@ def _fit_lines(text, budget, max_lines):
 def _drill_block_label(b, col_w, cx, cy):
     """The centred `<text>` for one drill block. A plain label renders as the bold
     label line over its sub-label. A block flagged `wrap` with an `ID — Name` label
-    (the CMP component blocks, "CMP-004 — Unattended loop & floor") WRAPS onto an id
+    (the CMP component blocks, "CMP-009 — W4 Human & adopter surfaces") WRAPS onto an id
     line over a name line — the `arch_icicle` id/name idiom (WI-246/075-CRITIQUE T4) —
     so the full component name reads at default zoom instead of truncating to
-    "CMP-004 — Unattended…"; the sub-label (module count) drops to a third line. The
+    "CMP-009 — W4 Human & adopter…"; the sub-label (module count) drops to a third line. The
     name line uses the smaller sub font, so its budget (and the right-sized column)
     fit the longest declared name. The explicit `wrap` flag (not a `" — "` string
     sniff) keeps an incidental em-dash in some other block's name from wrapping.
