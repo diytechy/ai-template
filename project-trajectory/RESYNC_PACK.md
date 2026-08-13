@@ -86,7 +86,9 @@ resolve by taking the kit's copy because it is newer.
    CI or registry cells still spell the old way.
 6. **Re-stamp last.** Re-run bootstrap to refresh generated pieces (it re-stamps
    `docs/kit-version` + `docs/kit-profile`), refresh materialized per-agent
-   skills with `bootstrap.py --dest . --sync`, and commit the stamps as the
+   skills with `bootstrap.py --dest . --sync` (scope guarantee: `--sync`
+   force-overwrites ONLY the `<agent>/skills/…` subtrees, nothing else — the
+   `skills-sync` gate flags a drifted copy), and commit the stamps as the
    **last** step so the record reflects the state you actually landed on.
 
 ### 1.4 Verify — and why a green can lie
@@ -677,7 +679,10 @@ frontier re-derived every cycle so mid-run-filed WIs are picked up in the same
 run.
 
 **The upgrade recipe:** re-sync the kit, convert the WI registry CSV to the spec
-folder (`wi_convert.py --verify` → `--to-specs` → delete the CSV), drain or
+folder (`wi_convert.py --verify` → `--to-specs` → delete the CSV — and DELETE
+it, not keep it beside the folder: the dual-read grace window is over, the
+folder wins when it holds real specs, and a repo carrying BOTH homes is an
+integrity ERROR on the current kit, not a fallback), drain or
 hand-finish any live train worktrees/branches from the old scheme, seed
 `docs/stack.ini [generated]`, then delete local reliance on the retired surfaces —
 `AGENT_JOBS`, `docs/run-state`, `docs/rework-wi`, `--track`/`docs/tracks/*`,
