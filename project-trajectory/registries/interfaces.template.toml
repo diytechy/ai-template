@@ -1,0 +1,14 @@
+[interface.IF-000]
+direction = "Provides"
+this_project = "EXAMPLE - delete on first real entry"
+counterpart = "another-module-or-file-or-external-actor"
+contract = """One directed seam, one testable line: CLI flags + exit codes, or the file schema. ThisProject is a module path; Counterpart is another module, a file path (module->file->module dataflow, so a shared file like docs/stack.ini is a hub node many modules Consume), or an external actor (downstream adopter / git / agent CLI)."""
+signal = "discrete"
+signal_note = """Signal is a CLOSED vocabulary: discrete (a finite enumerable alphabet - exit code, gate name, status enum, dial) or variable (unbounded content - prose, file bytes, a count, a duration). If BOTH cross, the row is variable, and this cell says why."""
+rationale = """WHY the seam is drawn here - the sentence that used to squat in Contract. Empty is allowed; a Contract cell that argues (because / rather than / so that / since) is what this column exists to take."""
+sr_refs = ["SR-000"]
+version = "v1"
+stability = "Experimental"
+component = "CMP-000"
+notes = """Honesty valve: put the word source (produces output, consumes nothing declared) or sink (consumes, produces nothing) here to silence the missing-direction coverage warn for ThisProject. Stability is the row's ONE maturity field and a CLOSED vocabulary (Experimental|Stable|Deprecated) - the undeclared Status column retired at OI-14 part B, 2026-08-13, and its Proposed rung is now Experimental: a seam a spec-of-record cites BEFORE a second consumer pins it is Experimental - cheap to revise, and the citing spec's ## Interfaces section names the nearest existing IF + why it does not suffice (WI-191; the forced anti-duplication search, process-options.md Spec-of-record)."""
+

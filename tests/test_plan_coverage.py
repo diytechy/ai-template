@@ -37,8 +37,15 @@ PLAN_B = """| Plan-WI | Title | Covers | Interfaces | Predecessors |
 """
 
 IFS = (
-    "IF-ID,Direction,ThisProject,Counterpart,Contract,SR-Refs,Version,Stability,Status,Component,Notes\n"
-    "IF-001,Provides,scripts/a,scripts/b,contract,SR-001,v1,Stable,Stable,,\n"
+    "[interface.IF-001]\n"
+    'direction = "Provides"\n'
+    'this_project = "scripts/a"\n'
+    'counterpart = "scripts/b"\n'
+    'contract = "contract"\n'
+    'signal = "discrete"\n'
+    'sr_refs = ["SR-001"]\n'
+    'version = "v1"\n'
+    'stability = "Stable"\n'
 )
 SRS = "SR-ID,Title,Requirement\nSR-001,One,shall\n"
 
@@ -53,7 +60,7 @@ def write_inputs(tmp_path, goal=GOAL, plans=(PLAN_A, PLAN_B), registries=True):
     if registries:
         req = tmp_path / "docs" / "requirements"
         req.mkdir(parents=True)
-        (req / "interfaces.csv").write_text(IFS, encoding="utf-8")
+        (req / "interfaces.toml").write_text(IFS, encoding="utf-8")
         (req / "system-requirements.csv").write_text(SRS, encoding="utf-8")
     return names
 
@@ -105,7 +112,7 @@ def test_unresolvable_if_and_rationale_less_proposed_fail(tmp_path):
     names = write_inputs(tmp_path, plans=(bad,))
     proc = run(tmp_path, names)
     assert proc.returncode == 1
-    assert "IF-042 which resolves to no interfaces.csv row" in proc.stdout
+    assert "IF-042 which resolves to no interfaces.toml row" in proc.stdout
     assert "proposes a seam with no rationale" in proc.stdout
 
 
@@ -149,7 +156,7 @@ def test_absent_registries_degrade_to_notes_not_findings(tmp_path):
     proc = run(tmp_path, names)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "no system-requirements.csv; SR refs unvalidated" in proc.stdout
-    assert "no interfaces.csv; IF refs unvalidated" in proc.stdout
+    assert "no interfaces.toml; IF refs unvalidated" in proc.stdout
 
 
 def test_goal_without_clauses_is_a_malformed_input(tmp_path):

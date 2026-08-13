@@ -124,6 +124,123 @@ def test_the_meta_repos_own_registries_convert_losslessly():
     assert written == []
 
 
+# --- WI-443 / OI-14 part B: the last two registries onto the carrier ----------
+
+IF_HEADER = [
+    "IF-ID",
+    "Direction",
+    "ThisProject",
+    "Counterpart",
+    "Contract",
+    "Signal",
+    "SignalNote",
+    "Rationale",
+    "SR-Refs",
+    "Version",
+    "Stability",
+    "Component",
+    "Notes",
+]
+IF_ROW = {
+    "IF-ID": "IF-001",
+    "Direction": "Provides",
+    "ThisProject": "scripts/trace",
+    "Counterpart": "scripts/check",
+    "Contract": 'trace.py CLI: --strict exits 1 on an orphan; writes "report.md"',
+    "Signal": "discrete",
+    "SignalNote": "",
+    "Rationale": "",
+    "SR-Refs": "SR-001;SR-002",
+    "Version": "v1",
+    "Stability": "Stable",
+    "Component": "",
+    "Notes": "source - consumes nothing declared",
+}
+CMP_HEADER = [
+    "CMP-ID",
+    "Name",
+    "Category",
+    "Knowledge",
+    "State",
+    "SupersededBy",
+    "PartOf",
+    "DetailDoc",
+    "Notes",
+]
+CMP_ROW = {
+    "CMP-ID": "CMP-001",
+    "Name": "W1 Registry & conformance",
+    "Category": "software",
+    "Knowledge": "registry-hygiene",
+    "State": "planned",
+    "SupersededBy": "",
+    "PartOf": "",
+    "DetailDoc": "",
+    "Notes": "the spine and everything that decides whether it holds",
+}
+
+
+@pytest.mark.parametrize(
+    "table,id_col,header,row",
+    [
+        ("interface", "IF-ID", IF_HEADER, IF_ROW),
+        ("component", "CMP-ID", CMP_HEADER, CMP_ROW),
+    ],
+)
+def test_the_two_new_tiers_round_trip_cell_for_cell(table, id_col, header, row):
+    """The cutover's own oracle, on the two registries WI-443 moved.
+
+    Both waited on OI-14 deliberately — converting a registry before the ruling
+    that rewrites what its rows ARE converts it twice — so this is the ONE
+    conversion each gets, and the round-trip is what proves no cell was spent
+    on it. `SR-Refs` re-joins on `;`, the separator the registries actually use;
+    an empty cell is an ABSENT KEY, never `""`."""
+    text = mc.rows_to_toml(table, id_col, [row], header)
+    expected = _expected([row], header=header, id_col=id_col)
+    assert mc.compare("f", table, expected, text) == []
+    parsed = tomllib.loads(text)[table][row[id_col]]
+    # The empty cells did not become empty strings.
+    for absent in ("signal_note", "rationale", "component", "superseded_by", "part_of"):
+        assert absent not in parsed or parsed[absent], absent
+    # ...and the ref cell is a typed array, not a `;`-joined string.
+    if table == "interface":
+        assert parsed["sr_refs"] == ["SR-001", "SR-002"]
+        assert parsed["signal"] == "discrete"
+
+
+def test_the_retired_if_status_column_has_no_carrier_key():
+    """OI-14 part B retired `Status` on the IF tier, and the absence is
+    LOAD-BEARING rather than cosmetic: with no `KEY` entry a stray `Status`
+    cell keys as the literal `Status`, where the schema tier sees it, instead
+    of being silently absorbed under a name a reader would trust."""
+    carrier = load_script("spine_carrier")
+    assert "status" not in carrier.REGISTRY_KEYS["IF-ID"]
+    assert "signal" in carrier.REGISTRY_KEYS["IF-ID"]
+    assert "rationale" in carrier.REGISTRY_KEYS["IF-ID"]
+    assert "stability" in carrier.REGISTRY_KEYS["IF-ID"]
+
+
+def test_neither_new_registry_survives_under_its_old_carrier():
+    """The house rule, asserted on the TREE rather than on a fixture: the
+    conversion is only finished when the CSV is GONE. Both homes at once is a
+    hard refusal (`spine_carrier.resolve`), so a lingering source file would
+    red every reader — this catches it in one place instead."""
+    for stale in (
+        "docs/requirements/interfaces.csv",
+        "docs/requirements/components.csv",
+        "project-trajectory/registries/interfaces.template.csv",
+        "project-trajectory/registries/components.template.csv",
+    ):
+        assert not (ROOT / stale).exists(), stale
+    for live in (
+        "docs/requirements/interfaces.toml",
+        "docs/requirements/components.toml",
+        "project-trajectory/registries/interfaces.template.toml",
+        "project-trajectory/registries/components.template.toml",
+    ):
+        assert (ROOT / live).is_file(), live
+
+
 SN_MD = (
     "## Core needs\n\n"
     "| SN-ID | Need (plain language) | Why it matters | Priority | Acceptance |\n"

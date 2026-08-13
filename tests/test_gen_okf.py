@@ -167,15 +167,14 @@ def test_prune_removes_emptied_tier_directory(scaffold):
     # A7: deleting the last row of a tier leaves no empty directory behind.
     make_minimal_project(scaffold)
     req = scaffold / "docs" / "requirements"
-    (req / "interfaces.csv").write_text(
-        "IF-ID,Name,Contract,Status\nIF-001,Seam,contract text,Verified\n",
+    (req / "interfaces.toml").write_text(
+        '[interface.IF-001]\nname = "Seam"\ncontract = "contract text"\n'
+        'stability = "Stable"\n',
         encoding="utf-8",
     )
     assert okf(scaffold).returncode == 0
     assert (bundle(scaffold) / "interfaces").is_dir()
-    (req / "interfaces.csv").write_text(
-        "IF-ID,Name,Contract,Status\n", encoding="utf-8"
-    )
+    (req / "interfaces.toml").write_text("", encoding="utf-8")
     assert okf(scaffold).returncode == 0
     assert not (bundle(scaffold) / "interfaces").exists()
 

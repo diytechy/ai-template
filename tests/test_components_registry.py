@@ -17,11 +17,22 @@ from conftest import make_minimal_project, run_py, record_ids
 CMP_HEADER = (
     "CMP-ID,Name,Category,Knowledge,State,SupersededBy,PartOf,DetailDoc,Notes\n"
 )
-ROW = "{cid},arm,physical,docs/knowledge/arm,{state},{sup},{partof},,note\n"
+# The TOML carrier since WI-443 (OI-14 part B). `superseded_by` and `part_of`
+# are typed arrays; an EMPTY cell is an ABSENT KEY, never `""` — writing the
+# empty string is itself a refusal (`spine_carrier.empty_value_findings`).
+ROW = (
+    "[component.{cid}]\n"
+    'name = "arm"\n'
+    'category = "physical"\n'
+    'knowledge = "docs/knowledge/arm"\n'
+    'state = "{state}"\n'
+    "{sup}{partof}"
+    'notes = "note"\n\n'
+)
 
 
 def cmp_path(root):
-    return root / "docs" / "requirements" / "components.csv"
+    return root / "docs" / "requirements" / "components.toml"
 
 
 def report_of(root):
@@ -29,12 +40,17 @@ def report_of(root):
 
 
 def write_cmps(root, *rows):
-    cmp_path(root).write_text(CMP_HEADER + "".join(rows), encoding="utf-8")
+    cmp_path(root).write_text("".join(rows), encoding="utf-8")
     record_ids(root)
 
 
 def row(cid, state="planned", sup="", partof=""):
-    return ROW.format(cid=cid, state=state, sup=sup, partof=partof)
+    return ROW.format(
+        cid=cid,
+        state=state,
+        sup='superseded_by = ["{}"]\n'.format(sup) if sup else "",
+        partof='part_of = ["{}"]\n'.format(partof) if partof else "",
+    )
 
 
 def test_scaffolded_placeholder_is_inert(scaffold):
@@ -116,7 +132,14 @@ def test_malformed_cmp_id_fails_strict(scaffold):
 # A CMP's Knowledge cell may name a `docs/knowledge/<label>` pack; trace.py resolves
 # it to a real file as a warn-only advisory (never a gate), and leaves skill names
 # and URLs in the same cell unchecked.
-KROW = "{cid},arm,software,{know},built,,,,note\n"
+KROW = (
+    "[component.{cid}]\n"
+    'name = "arm"\n'
+    'category = "software"\n'
+    'knowledge = "{know}"\n'
+    'state = "built"\n'
+    'notes = "note"\n\n'
+)
 
 
 def krow(cid, know):
@@ -212,18 +235,19 @@ def test_knowledge_ref_mixed_cell_checks_only_the_pack(scaffold):
 # was the one membership cell it never validated (the old comment predated
 # WI-056). An IF tagged with a phantom CMP is now the same finding an LLR one is.
 
-IF_HEADER = (
-    "IF-ID,Direction,ThisProject,Counterpart,Contract,SR-Refs,Version,"
-    "Stability,Status,Component,Notes\n"
-)
-
 
 def write_if(root, component):
-    (root / "docs" / "requirements" / "interfaces.csv").write_text(
-        IF_HEADER
-        + 'IF-001,Provides,src/demo,downstream,"call",SR-001,v1,Stable,Active,{},\n'.format(
-            component
-        ),
+    (root / "docs" / "requirements" / "interfaces.toml").write_text(
+        "[interface.IF-001]\n"
+        'direction = "Provides"\n'
+        'this_project = "src/demo"\n'
+        'counterpart = "downstream"\n'
+        'contract = "call"\n'
+        'signal = "discrete"\n'
+        'sr_refs = ["SR-001"]\n'
+        'version = "v1"\n'
+        'stability = "Stable"\n'
+        'component = "{}"\n'.format(component),
         encoding="utf-8",
     )
     record_ids(root)

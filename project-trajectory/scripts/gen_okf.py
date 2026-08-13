@@ -327,7 +327,10 @@ def emit(root):
     sr_src = source_path(root, "docs/requirements/system-requirements.toml")
     llr_src = source_path(root, "docs/requirements/low-level-requirements.toml")
     tc_src = source_path(root, "docs/test/test-cases.toml")
-    ifs = real_rows(read_rows(req / "interfaces.csv"), "IF-ID", "IF-")
+    if_src = source_path(root, "docs/requirements/interfaces.toml")
+    ifs = real_rows(
+        spine_carrier.load(req / "interfaces.toml", "IF-ID"), "IF-ID", "IF-"
+    )
     if not (sns or srs or llrs or tcs):
         return {}
 
@@ -473,12 +476,14 @@ def emit(root):
                 "Interface",
                 (r.get("Name") or "").strip(),
                 desc,
-                [(r.get("Status") or "").strip()],
-                "docs/requirements/interfaces.csv ({})".format(cid),
+                # `Stability`, not `Status`: the IF `Status` column retired at
+                # WI-443 (OI-14 part B) and `Stability` is the one maturity field.
+                [(r.get("Stability") or "").strip()],
+                "{} ({})".format(if_src, cid),
                 ["**Contract.** {}".format(desc)],
             )
             entries.append((cid, (r.get("Name") or "").strip()))
-        add_tier("interfaces", entries, "docs/requirements/interfaces.csv")
+        add_tier("interfaces", entries, if_src)
 
     # Layer B2: the process docs as `Process Guide` concepts (derived summary +
     # a resource pointer back to the untouched source). From a concept file at

@@ -164,9 +164,9 @@ WI_CSV = "docs/requirements/work-items.csv"
 WI_WORK = "docs/work"
 SR_CSV = "docs/requirements/system-requirements.toml"
 TC_CSV = "docs/test/test-cases.toml"
-IF_CSV = "docs/requirements/interfaces.csv"
+IF_CSV = "docs/requirements/interfaces.toml"
 LLR_CSV = "docs/requirements/low-level-requirements.toml"
-CMP_CSV = "docs/requirements/components.csv"
+CMP_CSV = "docs/requirements/components.toml"
 ARCH_MD = "docs/architecture.md"
 SPECS_DIR = "docs/specs"
 # Where R-F sends a spec at close ("close date appended, WI ids noted"), so the
@@ -933,7 +933,14 @@ def _norm_module(path):
 def load_ifs(rows):
     """Real (non-`-000`) IF-### interface rows as dicts. Lenient — `trace.py` owns
     IF integrity (malformed ids, SR-Ref resolution); this loader only feeds the
-    warn-first coverage views, so a malformed id is simply skipped here."""
+    warn-first coverage views, so a malformed id is simply skipped here.
+
+    `stability` REPLACES the `status` key this loader carried until WI-443. The
+    IF `Status` column retired with OI-14 part B — it was never one of the fields
+    process.md §8 declared, and `Stable` appeared in it and in `Stability` on the
+    same row meaning different things — so `Stability`
+    (`Experimental`/`Stable`/`Deprecated`) is the one maturity field both rules
+    that read it now key on."""
     out = []
     for r in rows:
         iid = (r.get("IF-ID") or "").strip()
@@ -945,7 +952,7 @@ def load_ifs(rows):
                 "direction": (r.get("Direction") or "").strip().lower(),
                 "this": (r.get("ThisProject") or "").strip(),
                 "counterpart": (r.get("Counterpart") or "").strip(),
-                "status": (r.get("Status") or "").strip().lower(),
+                "stability": (r.get("Stability") or "").strip().lower(),
                 "notes": (r.get("Notes") or "").strip().lower(),
             }
         )
@@ -1005,7 +1012,7 @@ def interface_findings(root):
     inventory, declared_contracts, _imports = arch_inventory(root)
     if len(inventory) <= 1:
         return []  # nothing to connect (or no arch-map yet) — vacuous
-    ifs = load_ifs(read_rows(root / IF_CSV))
+    ifs = load_ifs(spine_carrier.load(root / IF_CSV, "IF-ID"))
     out = []
     if not ifs:
         return [
@@ -1061,17 +1068,35 @@ def interface_findings(root):
                 "row Notes if it deliberately provides nothing)".format(module)
             )
 
-    # Seam-TC citation: each Active IF id should be cited by >=1 TC (the rung-2
-    # seam-TC rule, finally checkable now that trace reads the IF tier).
+    # Seam-TC citation: each `Stable` IF id should be cited by >=1 TC (the rung-2
+    # seam-TC rule, and process.md §8's "every interface is backed by an SR and a
+    # contract/fixture test").
+    #
+    # THE ARMING KEY CHANGED AT WI-443 AND THE OLD ONE WAS A TAUTOLOGY. Until the
+    # IF `Status` column retired this read `Status == Active`, and measured on the
+    # live registry that armed EXACTLY the 5 rows that were already TC-cited — so
+    # the rule reported zero findings by construction and could never report
+    # anything else. `Stability == Stable` is the honest successor under the one
+    # maturity field, and it says 103 of 108 Stable seams carry no contract test.
+    #
+    # SUMMARISED, not one line per row, and that is a deliberate ergonomic choice
+    # rather than a softening: this function runs in the shipped pre-commit hook,
+    # where 103 warn lines is a check nobody reads and therefore a check that does
+    # not work. One line carries the count, which is the number that has to fall.
     tc_cited = set()
     for r in spine_carrier.load(root / TC_CSV, "TC-ID"):
         tc_cited.update(IF_ID_RE.findall(r.get("Verifies", "") or ""))
-    for r in ifs:
-        if r["status"] == "active" and r["id"] not in tc_cited:
-            out.append(
-                "IF {} is Active but cited by no TC (a seam should carry a "
-                "contract/fixture test)".format(r["id"])
+    uncited = [
+        r["id"] for r in ifs if r["stability"] == "stable" and r["id"] not in tc_cited
+    ]
+    if uncited:
+        shown = ", ".join(uncited[:5])
+        out.append(
+            "{} Stable IF seam(s) are cited by no TC (a seam should carry a "
+            "contract/fixture test, process.md §8){}: {}".format(
+                len(uncited), " — first 5" if len(uncited) > 5 else "", shown
             )
+        )
 
     # Docstring citation: a `Contracts: IF-###` a script declares (harvested into
     # the arch-map) must exist in the registry; and, once the convention is in
@@ -1201,7 +1226,7 @@ def component_top_view(root):
         n = _norm_module(m)
         if n:
             inventory.setdefault(n, m)
-    cmps = load_cmps(read_rows(root / CMP_CSV))
+    cmps = load_cmps(spine_carrier.load(root / CMP_CSV, "CMP-ID"))
     by_id = {c["id"]: c for c in cmps}
     cmp_ids = set(by_id)
     roots_of = _cmp_roots(cmps)
@@ -1428,7 +1453,7 @@ def _declared_seam_pairs(root):
     """The IF registry's endpoint pairs, normalized and stored BOTH ways — a
     seam is one declared relationship, whichever side authored the row."""
     covered = set()
-    for r in load_ifs(read_rows(root / IF_CSV)):
+    for r in load_ifs(spine_carrier.load(root / IF_CSV, "IF-ID")):
         a, b = _norm_module(r["this"]), _norm_module(r["counterpart"])
         if a and b:
             covered.add((a, b))
@@ -1449,7 +1474,7 @@ def _classifiable_edges(root):
     names, _contracts, imports = arch_inventory(root)
     if not imports:
         return
-    cmp_ids = {c["id"] for c in load_cmps(read_rows(root / CMP_CSV))}
+    cmp_ids = {c["id"] for c in load_cmps(spine_carrier.load(root / CMP_CSV, "CMP-ID"))}
     if not cmp_ids:
         return
     raw = module_components(root)
@@ -1697,8 +1722,8 @@ def _armed_specs(root):
 def spec_interface_findings(root):
     """WI-191 — a spec-of-record acts on DECLARED interface boundaries. A spec's
     `## Interfaces` section must cite only IF-### seams that resolve in
-    `interfaces.csv` (the one seam home, PROCESS.md §8), and a cited
-    `Status=Proposed` seam must carry a non-empty rationale on its citation line
+    `interfaces.toml` (the one seam home, PROCESS.md §8), and a cited
+    `Stability=Experimental` seam must carry a non-empty rationale on its citation line
     (the forced nearest-existing-IF search that is the anti-duplication
     mechanism). WARN plain / ERROR under `--strict` (G2+), like
     `component_findings`; the caller owns that promotion.
@@ -1712,7 +1737,7 @@ def spec_interface_findings(root):
     specs = root / SPECS_DIR
     if not specs.is_dir():
         return []
-    if_rows = {r["id"]: r for r in load_ifs(read_rows(root / IF_CSV))}
+    if_rows = {r["id"]: r for r in load_ifs(spine_carrier.load(root / IF_CSV, "IF-ID"))}
     out = []
     for path in _armed_specs(root):
         section = _spec_interfaces_section(
@@ -1737,11 +1762,11 @@ def spec_interface_findings(root):
                     "{}: `## Interfaces` cites {} which resolves to no row in "
                     "{}".format(rel, iid, IF_CSV)
                 )
-            elif row["status"] == "proposed" and not _proposed_rationale_present(
+            elif row["stability"] == "experimental" and not _proposed_rationale_present(
                 section, iid
             ):
                 out.append(
-                    "{}: cites Proposed seam {} with no rationale — name the "
+                    "{}: cites Experimental seam {} with no rationale — name the "
                     "nearest existing IF-### and why it does not suffice (the "
                     "anti-duplication search, PROCESS.md §8)".format(rel, iid)
                 )
@@ -2753,7 +2778,7 @@ def _declared_packs(root):
     the `.md`). A Knowledge token that resolves to nothing (a skill name, a
     planned pack) is not a citation debt, so it never arms the warn."""
     packs = {}
-    for r in read_rows(root / CMP_CSV):
+    for r in spine_carrier.load(root / CMP_CSV, "CMP-ID"):
         cid = (r.get("CMP-ID") or "").strip()
         if not cid:
             continue

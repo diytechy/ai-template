@@ -912,9 +912,10 @@ repo in one command. See `EXAMPLE.md` for a complete worked SN→SR→LLR→TC c
 
 When this project provides or consumes a contract — shared with another repo, or
 between its **own modules** — record each directed seam once in
-`requirements/interfaces.csv` as an `IF-###` (see `INTERFACES.template.md`):
+`requirements/interfaces.toml` as an `IF-###` (see `INTERFACES.template.md`):
 direction, counterpart (another module, a file, or an external actor), contract,
-the `SR-Refs` that realize/rely on it, version, and stability. The owning
+its signal type, the `SR-Refs` that realize/rely on it, a rationale, version, and
+stability. The owning
 (`Provides`) side holds the authoritative spec; the consuming side links the same
 `IF-###` and pins the version. Every interface is backed by an SR and a
 contract/fixture test. This keeps interlinked projects — and a repo's own modules
@@ -924,10 +925,22 @@ its seams the same way, and the architecture-connectivity coverage over them is
 **opt-out/default-on** (process-options.md "Intra-repo interfaces & the
 architecture graph").
 
+**An IF row is an INTERFACE ONLY** (ruled, OI-14 part B). `Contract` states just
+*what crosses, typed*: the surface, plus a `Signal` of `discrete` (a finite
+enumerable alphabet — exit code, gate name, status enum, dial) or `variable`
+(unbounded content — prose, file bytes, a count, a duration). The **why** goes in
+`Rationale`, never in `Contract`; history goes in the log. Four warn-first rules
+police the difference by FORM, since no check reads intent: no work-item id and
+no decision citation in `Contract` (both age — a cancelled id still reads as
+authority), no rationale connective (*because* / *rather than* / *so that* /
+*since* — that sentence belongs in `Rationale`), and a 500-character ceiling.
+`Stability` (`Experimental` · `Stable` · `Deprecated`) is the row's **one**
+maturity field.
+
 **An IF row is machine-consumed, not just read.** `plan_briefs.IF_SURFACE_COLUMNS`
-feeds the row's surface — including `Contract` and `Status` — **verbatim** into
-the dual-plan LLM planning briefs, so every cell is handed to a planner as
-authority. Write them as contract, never as narrative or changelog.
+feeds the row's surface — `Contract` included — **verbatim** into the dual-plan
+LLM planning briefs, so every cell is handed to a planner as authority. Write
+them as contract, never as narrative or changelog.
 
 A **purchased/external part** the product buys rather than builds (a motor, board,
 camera) is owned the same way — a repo/coordinator-held `IF-###` is its

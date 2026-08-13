@@ -654,7 +654,7 @@ BASELINE = {
     # whichever id scan globbed the old suffix, and nothing generic catches it
     # (a scan that finds no registry reads zero rather than refusing). A third
     # occurrence should build that guard instead of adding a fourth reader.
-    "trace.py": 3449,
+    "trace.py": 3670,  # +221 2026-08-13: WI-443 — the IF/CMP schema tier (required fields, closed vocabularies), the four IF Contract negative rules, and the untagged-endpoint classifier, all warn-first (reviewed bump, reason in the log)
     # +132 (1926 -> 2058; the last +10 is the F4 BOM hardening: read_rows utf-8-sig + git-show strips), WI-316: staged_spine_findings — the amend-without-
     # flip warn (--staged): content cells of a Verified spine row changed
     # without the Modified marker, suppressed when the owning SR flips in the
@@ -998,7 +998,7 @@ BASELINE = {
     # complexity ratchet DELETE `cross_component_findings`' entry instead of
     # bumping it. The rest is the two docstrings recording why the direction is
     # the fix and why the advisory must never join the exit code.
-    "check_trajectory.py": 4050,  # +20 2026-08-13: WI-440 review fixes — the lazy covered-pairs read + the one-scan-per-run cache (reviewed bump, reason in the log)
+    "check_trajectory.py": 4075,  # +25 2026-08-13: WI-443 — the seam-TC rule re-keyed off the retired IF Status onto Stability, summarised (reviewed bump, reason in the log); earlier +20 2026-08-13: WI-440 review fixes — the lazy covered-pairs read + the one-scan-per-run cache (reviewed bump, reason in the log)
     # NEW ENTRY, +25 (1498 -> 1523), WI-357: the two-stage work-branch claim
     # signal — the on-disk fast path plus the branch-history probe that
     # survives the §2.3 close commit (git log -1 over the claim path), with
@@ -1690,7 +1690,7 @@ BASELINE = {
     # arms (a cancellation, a clean-close spot check) now declare NO brief and
     # say why. A false declaration would page a human for routine work, because
     # a declared-but-uncomposable brief is a hold.
-    "intake.py": 1670,
+    "intake.py": 1673,  # +3 2026-08-13: WI-443 — the components/interfaces reads move to spine_carrier.load (reviewed bump, reason in the log)
 }
 
 

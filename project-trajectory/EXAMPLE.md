@@ -277,12 +277,29 @@ SR-050,Deliver export to destination,SN-030,"The system shall upload a completed
 The boundary between the two is a **contract**, so it is an `IF-###` (process.md
 §8) — which applies *within* a repo just as across repos, the counterpart naming
 the other **module** rather than another repo, both rows in the one
-`interfaces.csv`:
+`interfaces.toml`:
 
-```csv
-IF-ID,Direction,ThisProject,Counterpart,Contract,SR-Refs,Version,Stability,Status
-IF-001,Provides,export,delivery,"Writes an RFC-4180 CSV at the agreed path with the documented schema (per SR-001).",SR-001,v1,Stable,Verified
-IF-002,Consumes,delivery,export,"Reads the export file produced per IF-001 v1 before uploading it.",SR-050,v1,Stable,Verified
+```toml
+[interface.IF-001]
+direction = "Provides"
+this_project = "export"
+counterpart = "delivery"
+contract = "Writes an RFC-4180 CSV at the agreed path with the documented schema (per SR-001)."
+signal = "variable"
+rationale = "One writer for the export file; delivery must not re-derive its schema."
+sr_refs = ["SR-001"]
+version = "v1"
+stability = "Stable"
+
+[interface.IF-002]
+direction = "Consumes"
+this_project = "delivery"
+counterpart = "export"
+contract = "Reads the export file produced per IF-001 v1 before uploading it."
+signal = "variable"
+sr_refs = ["SR-050"]
+version = "v1"
+stability = "Stable"
 ```
 
 And the seam gets its **own** integration TC — covered by neither module's internal

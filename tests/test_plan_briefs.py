@@ -21,7 +21,10 @@ SENTINEL = "TOPSECRET-SELF-ASSESSMENT-LEAK-42"
 
 SR_TITLE = "Redacted brief assembler"
 SR_REQ = "The system shall assemble briefs from an allowlist only."
-IF_CONTRACT = "plan_briefs Consumes system-requirements.csv and interfaces.csv"
+IF_CONTRACT = "plan_briefs Consumes system-requirements.toml and interfaces.toml"
+# WI-443: the why has its own column now, and it must NOT reach a brief — the
+# surface is the seam and its contract, not the row.
+IF_RATIONALE = "RATIONALE-THAT-MUST-NOT-REACH-A-BRIEF"
 
 
 def _write_csv(path, header, rows):
@@ -92,49 +95,31 @@ def _fixture_repo(root):
             ],
         ],
     )
-    _write_csv(
-        req / "interfaces.csv",
-        [
-            "IF-ID",
-            "Direction",
-            "ThisProject",
-            "Counterpart",
-            "Contract",
-            "SR-Refs",
-            "Version",
-            "Stability",
-            "Status",
-            "Component",
-            "Notes",
-        ],
-        [
-            [
-                "IF-059",
-                "Consumes",
-                "scripts/plan_briefs",
-                "docs/requirements/interfaces.csv",
-                IF_CONTRACT,
-                "SR-061",
-                "v1",
-                "Experimental",
-                "Proposed",
-                "CMP-004",
-                "note",
-            ],
-            [
-                "IF-000",
-                "Provides",
-                "scripts/example",
-                "scripts/other",
-                "example stub",
-                "SR-000",
-                "v1",
-                "Experimental",
-                "Proposed",
-                "",
-                "",
-            ],
-        ],
+    # The IF tier is TOML since WI-443. `notes = "note"` and `component` are
+    # here deliberately: they are cells the surface must NOT carry.
+    (req / "interfaces.toml").write_text(
+        "[interface.IF-059]\n"
+        'direction = "Consumes"\n'
+        'this_project = "scripts/plan_briefs"\n'
+        'counterpart = "docs/requirements/interfaces.toml"\n'
+        'contract = "{}"\n'
+        'signal = "variable"\n'
+        'rationale = "{}"\n'
+        'sr_refs = ["SR-061"]\n'
+        'version = "v1"\n'
+        'stability = "Experimental"\n'
+        'component = "CMP-004"\n'
+        'notes = "note"\n\n'
+        "[interface.IF-000]\n"
+        'direction = "Provides"\n'
+        'this_project = "scripts/example"\n'
+        'counterpart = "scripts/other"\n'
+        'contract = "example stub"\n'
+        'signal = "discrete"\n'
+        'sr_refs = ["SR-000"]\n'
+        'version = "v1"\n'
+        'stability = "Experimental"\n'.format(IF_CONTRACT, IF_RATIONALE),
+        encoding="utf-8",
     )
     return root
 
@@ -200,6 +185,41 @@ def test_build_surface_reads_only_the_two_registries(tmp_path):
     # ...and status.md / log.md content is unreachable by construction.
     assert SENTINEL not in surface["SR_SURFACE"]
     assert SENTINEL not in surface["IF_REGISTRY"]
+
+
+def test_if_surface_no_longer_hands_a_planner_the_retired_status_column():
+    """WI-443 / OI-14 part B — the change that made part B urgent rather than
+    tidy.
+
+    Every cell in this tuple is fed VERBATIM to a planning model as authority
+    (process.md §8). `Status` was an UNDECLARED column: absent from §8's field
+    list, validated by no check, and carrying `Stable` while the same row's
+    `Stability` cell said something different with the same word. It retired
+    with the ruling, and it must not come back through this surface.
+
+    The tuple is pinned WHOLE rather than only asserting Status' absence: a
+    surface that silently GAINS a column is the same defect in the other
+    direction, and `Signal`/`Rationale`/`Notes` are all cells a brief must not
+    carry — the planner needs the seam and its contract, not the row."""
+    assert pb.IF_SURFACE_COLUMNS == (
+        "IF-ID",
+        "Direction",
+        "ThisProject",
+        "Counterpart",
+        "Contract",
+    )
+    assert "Status" not in pb.IF_SURFACE_COLUMNS
+
+
+def test_if_surface_carries_no_rationale_notes_or_component_cell(tmp_path):
+    # The row-level half of the rule above, driven through a real fixture: the
+    # cells exist on IF-059 and must not appear in the assembled excerpt.
+    surface = pb.build_surface(_fixture_repo(tmp_path))
+    excerpt = surface["IF_REGISTRY"]
+    assert "IF-059" in excerpt  # not vacuous — the row IS on the surface
+    assert IF_RATIONALE not in excerpt
+    assert "CMP-004" not in excerpt
+    assert "Stability" not in excerpt and "Experimental" not in excerpt
 
 
 def test_build_surface_missing_registries_are_empty_not_a_crash(tmp_path):

@@ -33,11 +33,11 @@ What it creates in the destination:
     docs/requirements/stakeholder-needs.toml   <- registries/stakeholder-needs.template.toml
     docs/requirements/system-requirements.toml <- registries/system-requirements.template.toml
     docs/requirements/low-level-requirements.toml
-    docs/requirements/interfaces.csv           <- registries/interfaces.template.csv
+    docs/requirements/interfaces.toml          <- registries/interfaces.template.toml
     docs/requirements/performance-budgets.csv  <- registries/performance-budgets.template.csv
     docs/requirements/procurement.csv          <- registries/procurement.template.csv
     docs/requirements/assets.csv               <- registries/assets.template.csv
-    docs/requirements/components.csv           <- registries/components.template.csv
+    docs/requirements/components.toml          <- registries/components.template.toml
     docs/requirements/hats.toml                <- registries/hats.template.toml  (the
                                                 declared expert perspectives every
                                                 applicable decomposition faces; OWNER
@@ -159,7 +159,7 @@ launcher's `AGENT_CMD`/`AGENT_MODEL` slots with that agent's example command
 (including its permission-bypass flag — the launchers and the loop banner state
 the consent plainly); the slots stay an EDIT block the repo owns.
 
-The interface artifacts (`docs/interfaces.md`, `docs/requirements/interfaces.csv`)
+The interface artifacts (`docs/interfaces.md`, `docs/requirements/interfaces.toml`)
 are always scaffolded but ship **inert**: they hold only the `IF-000` placeholder
 row (ignored, like every `-000`), so a single-module project can simply leave
 them empty. Fill in `IF-###` rows when this repo declares a contract — with
@@ -1614,7 +1614,7 @@ MAPPING = [
         "registries/low-level-requirements.template.toml",
         "docs/requirements/low-level-requirements.toml",
     ),
-    ("registries/interfaces.template.csv", "docs/requirements/interfaces.csv"),
+    ("registries/interfaces.template.toml", "docs/requirements/interfaces.toml"),
     (
         "registries/performance-budgets.template.csv",
         "docs/requirements/performance-budgets.csv",
@@ -1628,8 +1628,8 @@ MAPPING = [
         "docs/requirements/assets.csv",
     ),
     (
-        "registries/components.template.csv",
-        "docs/requirements/components.csv",
+        "registries/components.template.toml",
+        "docs/requirements/components.toml",
     ),
     # The HATS ROSTER (SN-036, ruled at OI-19 2026-08-13): the declared expert
     # perspectives a decomposition must face, injected into the planner brief by

@@ -10,7 +10,7 @@ standalone deliverable skips it.
 
 It keeps interlinked projects honest without heavy multi-repo machinery: each
 shared contract gets one stable id, one home, and a link back into the same
-`SN→SR→LLR→TC` spine. The registry is `requirements/interfaces.csv`; this page
+`SN→SR→LLR→TC` spine. The registry is `requirements/interfaces.toml`; this page
 is the thin, human-readable index over it.
 
 ---
@@ -34,11 +34,13 @@ namespace, parallel to SN/SR/LLR/TC).
 | `Direction` | `Provides` (we expose it) or `Consumes` (we depend on it). |
 | `ThisProject` | This repo/project name (or, intra-repo, the module on this side of the seam). |
 | `Counterpart` | The other project/repo — or, intra-repo, another module, a file path, or an external actor — on the far side of the contract. |
-| `Contract` | One testable line naming the surface (REST route, CLI, file schema, event, library symbol) + a link to its spec. |
+| `Contract` | One testable line naming the surface (REST route, CLI, file schema, event, library symbol) + a link to its spec. **What crosses, typed — nothing else** (process.md §8): no rationale, no work-item id, no decision citation, ≤500 characters. |
+| `Signal` | **Closed**: `discrete` (a finite enumerable alphabet — exit code, gate name, status enum, dial) or `variable` (unbounded content — prose, file bytes, a count, a duration). If both cross, the row is `variable`. |
+| `SignalNote` | Optional. Why the typing is not obvious — a crossing that carries both kinds, or one the `Contract` does not type. |
+| `Rationale` | **Why the seam is drawn here.** Empty is allowed; this is the home the `Contract` cell's argument moves to. |
 | `SR-Refs` | The system requirement(s) here that realize or rely on it — ties the interface into the local spine. |
 | `Version` | Contract version the other side codes against (e.g. `v1`, a semver, a schema hash). |
-| `Stability` | `Experimental` · `Stable` · `Deprecated`. Sets the change-notice bar. |
-| `Status` | Open vocabulary (`Draft` \| `Proposed` \| `Active` \| `Stable` \| `Deprecated`): a seam a spec-of-record cites before a second consumer pins it is `Proposed` — cheap to revise. |
+| `Stability` | **Closed**, and the row's **one** maturity field: `Experimental` · `Stable` · `Deprecated`. Sets the change-notice bar. A seam a spec-of-record cites before a second consumer pins it is `Experimental` — cheap to revise. (An undeclared `Status` column shipped here until OI-14 part B retired it, 2026-08-13: it overlapped this one, and `Stable` appeared in both meaning different things.) |
 | `Component` | Optional `CMP-###` membership tag for the component layer; empty when unused. |
 | `Notes` | Free-form. The `source`/`sink` honesty valve lives here (silences the missing-direction coverage warn for `ThisProject` — see the registry's `-000` row). |
 
@@ -74,10 +76,27 @@ namespace, parallel to SN/SR/LLR/TC).
 
 ## Worked snippet
 
-```csv
-IF-ID,Direction,ThisProject,Counterpart,Contract,SR-Refs,Version,Stability,Status,Component,Notes
-IF-001,Provides,billing-api,reporting-etl,"GET /v1/invoices returns the documented JSON schema (see docs/openapi.yaml#/Invoice).",SR-014,v1,Stable,Active,,
-IF-002,Consumes,reporting-etl,billing-api,"Reads GET /v1/invoices; depends on IF-001 v1 schema (pinned fixture in tests/fixtures/invoice_v1.json).",SR-031,v1,Stable,Active,,
+```toml
+[interface.IF-001]
+direction = "Provides"
+this_project = "billing-api"
+counterpart = "reporting-etl"
+contract = "GET /v1/invoices returns the documented JSON schema (see docs/openapi.yaml#/Invoice)."
+signal = "variable"
+rationale = "One read model for invoices; the ETL must not re-derive totals."
+sr_refs = ["SR-014"]
+version = "v1"
+stability = "Stable"
+
+[interface.IF-002]
+direction = "Consumes"
+this_project = "reporting-etl"
+counterpart = "billing-api"
+contract = "Reads GET /v1/invoices; depends on IF-001 v1 schema (pinned fixture in tests/fixtures/invoice_v1.json)."
+signal = "variable"
+sr_refs = ["SR-031"]
+version = "v1"
+stability = "Stable"
 ```
 
 Read together: `billing-api` publishes `IF-001` (with a contract test on the

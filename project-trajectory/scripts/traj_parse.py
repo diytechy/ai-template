@@ -288,7 +288,9 @@ def sw_modules(root):
 
 def cmp_rows(root):
     """Real CMP-### component rows (the optional physical/component layer)."""
-    rows = ct.read_rows(root / "docs" / "requirements" / "components.csv")
+    rows = ct.spine_carrier.load(
+        root / "docs" / "requirements" / "components.toml", "CMP-ID"
+    )
     return [
         r
         for r in rows

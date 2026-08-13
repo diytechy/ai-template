@@ -51,7 +51,7 @@ calls.
 [spec-interface-hygiene](spec-interface-hygiene.md) B1).* A row's `Proposed:`
 seam near-duplicates an existing `IF-###` instead of consuming or amending it,
 or its rationale does not truly name the nearest existing seam. Judge as a
-first-time reader of `interfaces.csv`, not as the plan's author.
+first-time reader of `interfaces.toml`, not as the plan's author.
 
 **B2 — Coverage laundering.** A row cites clauses its title and deliverable do
 not actually deliver — citation as decoration to win the coverage diff. The

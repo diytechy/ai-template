@@ -100,19 +100,22 @@ def test_short_row_fails_strict_integrity(scaffold):
 
 def test_structure_swept_across_all_registry_csvs(scaffold):
     # The sweep must cover every *.csv under docs/requirements/ + docs/test/ —
-    # including registries trace.py never joins (interfaces.csv) — so a
-    # project-added off-spine registry can't rot silently.
+    # including registries trace.py never joins (procurement.csv) — so a
+    # project-added off-spine registry can't rot silently. (This used
+    # interfaces.csv until WI-443 moved that tier to the TOML carrier, where a
+    # mis-columned row is not representable at all: the structure sweep is a
+    # CSV-carrier rule, so it must be demonstrated on a registry still on CSV.)
     make_minimal_project(scaffold)
-    if_csv = scaffold / "docs" / "requirements" / "interfaces.csv"
-    header = if_csv.read_text(encoding="utf-8").splitlines()[0]
+    part_csv = scaffold / "docs" / "requirements" / "procurement.csv"
+    header = part_csv.read_text(encoding="utf-8").splitlines()[0]
     ncols = len(header.split(","))
-    if_csv.write_text(
+    part_csv.write_text(
         header + "\n" + ",".join("x" for _ in range(ncols + 2)) + "\n",
         encoding="utf-8",
     )
     proc = run_py(["scripts/trace.py", "--strict-integrity"], cwd=scaffold)
     assert proc.returncode == 1, proc.stdout + proc.stderr
-    assert "requirements/interfaces.csv" in report_of(scaffold)
+    assert "requirements/procurement.csv" in report_of(scaffold)
 
 
 def test_structure_ignores_blank_rows_and_quoted_newlines():

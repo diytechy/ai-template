@@ -13,7 +13,7 @@ rationale *true*, and is the new seam *actually* new?
 
 The verdict is `VERDICT: APPROVE|CHANGES-REQUESTED findings=N`, each finding
 citing an anchor id (`B1`…). Judge the seams as a first-time reader of
-[`interfaces.csv`](../requirements/interfaces.csv), not the spec's author.
+[`interfaces.toml`](../requirements/interfaces.toml), not the spec's author.
 
 ## Anchors
 

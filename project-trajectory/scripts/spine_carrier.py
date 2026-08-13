@@ -66,10 +66,11 @@ import tomllib
 SPINE_TABLE = {"SR-ID": "requirement", "LLR-ID": "design", "TC-ID": "test"}
 
 # BATCH-2 (repo-lock.md §8.1): the OFF-SPINE registries the same OI-12 ruling
-# covers, keyed the same way. `interfaces.csv` and `components.csv` are not here
-# yet BY SEQUENCE, not by exception — §8.1 holds the first behind OI-14 and the
-# second behind the components ruling, both of which rewrite what those rows
-# ARE, and converting a registry twice is the one cost the sequencing avoids.
+# covers, keyed the same way. `interfaces` and `components` JOINED at WI-443 —
+# §8.1 held the first behind OI-14 and the second behind the components ruling,
+# both of which rewrite what those rows ARE, and converting a registry twice is
+# the one cost the sequencing avoided. Both are ruled (OI-14 part B, 2026-08-13),
+# so each converted ONCE, with its new and retired columns in the same pass.
 #
 # THEY LIVE IN THIS MODULE RATHER THAN A SECOND ONE for D-6's reason exactly.
 # A second carrier module would not duplicate the *vocabulary* — the columns
@@ -78,7 +79,12 @@ SPINE_TABLE = {"SR-ID": "requirement", "LLR-ID": "design", "TC-ID": "test"}
 # behaviour this repo has already watched drift once per copy. The union maps
 # below are what the readers consult; the SPINE_* names stay exactly what they
 # were, so a spine consumer and its pins are untouched.
-OFFSPINE_TABLE = {"OI-ID": "open_item", "Id": "agent"}
+OFFSPINE_TABLE = {
+    "OI-ID": "open_item",
+    "Id": "agent",
+    "IF-ID": "interface",
+    "CMP-ID": "component",
+}
 REGISTRY_TABLE = dict(SPINE_TABLE, **OFFSPINE_TABLE)
 
 # The carrier's keys -> today's COLUMN NAMES. STATED, never derived. Two
@@ -146,6 +152,25 @@ OFFSPINE_COLUMN = {
     "version": "Version",
     "cmd_template": "CmdTemplate",
     "env": "Env",
+    # interfaces (IF-###, process.md §8; WI-443 / OI-14 part B). `sr_refs`,
+    # `rationale`, `component`, `notes` and `version` are already declared above
+    # and are NOT repeated — one column name, one meaning, repo-wide (D-3).
+    # There is deliberately no `status` entry for this tier: the IF `Status`
+    # column RETIRED at the conversion, and `stability` is the one maturity field.
+    "direction": "Direction",
+    "this_project": "ThisProject",
+    "counterpart": "Counterpart",
+    "contract": "Contract",
+    "stability": "Stability",
+    "signal": "Signal",
+    "signal_note": "SignalNote",
+    # components (CMP-###, process-options.md "Component layer"; WI-443).
+    "name": "Name",
+    "category": "Category",
+    "knowledge": "Knowledge",
+    "state": "State",
+    "part_of": "PartOf",
+    "detail_doc": "DetailDoc",
 }
 REGISTRY_COLUMN = dict(SPINE_COLUMN, **OFFSPINE_COLUMN)
 
@@ -235,6 +260,33 @@ OFFSPINE_KEYS = {
         "tier",
         "cmd_template",
         "env",
+        "notes",
+    ),
+    # WI-443 / OI-14 part B. `signal` and `rationale` are NEW (nothing in the
+    # registry typed a signal at all before this pass, and the why had nowhere
+    # in the row to go, so it squatted in `contract`); `status` is GONE.
+    "IF-ID": (
+        "direction",
+        "this_project",
+        "counterpart",
+        "contract",
+        "signal",
+        "signal_note",
+        "rationale",
+        "sr_refs",
+        "version",
+        "stability",
+        "component",
+        "notes",
+    ),
+    "CMP-ID": (
+        "name",
+        "category",
+        "knowledge",
+        "state",
+        "superseded_by",
+        "part_of",
+        "detail_doc",
         "notes",
     ),
 }

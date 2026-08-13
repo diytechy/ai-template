@@ -989,6 +989,32 @@ your log (the ids stay spent).
 exempt — needs a behavioural test that imports both and asserts they agree by
 VALUE. Duplicated *plumbing* is accepted without a bound.
 
+### Carrier batch 3 — `interfaces.csv` + `components.csv` to TOML; the IF tier changes SHAPE [since 2eb1c0c8]
+
+The last two registries join the TOML carrier (`[interface.IF-###]` and
+`[component.CMP-###]` tables), held back deliberately until the rulings that
+change what their rows *are* landed, so each converts once. Same command
+family as the earlier batches (`python scripts/migrate_carrier.py --check`,
+then without `--check`, then `git rm` the CSV — a repo carrying BOTH carriers
+is a hard refusal). **The IF tier also changes shape — read before running:**
+
+- **`Status` RETIRES.** It was never one of the fields process.md §8 declared,
+  nothing validated it, and it overlapped `Stability` — `Stable` appeared in
+  both columns of one row meaning different things. `Stability`
+  (`Experimental` · `Stable` · `Deprecated`) is now the row's one maturity
+  field. Map your values onto it before converting; a surviving
+  `status = ...` key is a column nothing reads.
+- **`Signal` is NEW and required**: `discrete` (a finite enumerable alphabet)
+  or `variable` (unbounded content). If both cross, the row is `variable`.
+- **`Rationale` is NEW and optional** — the home for the *why* that used to
+  have nowhere in the row to go except `Contract`.
+- **A warn-first schema tier arrives with them** (`trace.py`): required
+  fields, those closed vocabularies, `CMP.State`, four negative rules on
+  `Contract` (no work-item id, no decision citation, no rationale connective,
+  a 500-character ceiling), and an advisory classifying every endpoint that
+  is not an arch-map module. All ADVISORY — none of it changes an exit code
+  at any gate — so an unmigrated repo goes noisy, never red.
+
 ---
 
 ## 4. Translation helper — concept renames

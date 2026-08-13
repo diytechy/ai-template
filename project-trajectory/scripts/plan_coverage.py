@@ -40,7 +40,6 @@ Contracts: IF-057 — the interface seam this module declares (process.md §8; r
 """
 
 import argparse
-import csv
 import re
 import sys
 from pathlib import Path
@@ -141,20 +140,14 @@ def split_refs(cell):
     return [t for t in re.split(r"[;,\s]+", (cell or "").strip()) if t]
 
 
-def load_registry_ids(path, key):
-    """The id column of an optional CSV registry, or None when it is absent —
-    absence means 'cannot validate', never 'everything is unknown'."""
-    if not path.exists():
-        return None
-    with path.open(newline="", encoding="utf-8-sig") as f:
-        return {r[key] for r in csv.DictReader(f) if r.get(key)}
-
-
 def spine_ids(path, key):
-    """`load_registry_ids` for a SPINE registry, which reads through the
-    carrier, so it answers whether the tier is CSV or TOML.
+    """The id column of a registry, read through the CARRIER so it answers
+    whichever of TOML/CSV is live.
 
-    Keeps the absent-means-'cannot validate' contract exactly: None when the
+    (Its CSV-only twin `load_registry_ids` went dead at WI-443, when the IF tier
+    — the last caller — moved to the carrier with `interfaces.toml`.)
+
+    Absent means 'cannot validate', never 'everything is unknown': None when the
     registry does not exist under either carrier, never an empty set. The
     distinction is the whole value of this function — an empty set would report
     every SR reference in a proposed plan as unknown."""
@@ -244,7 +237,7 @@ def check_plan(name, rows, clauses, sr_ids, if_ids):
             for iid in cited:
                 if if_ids is not None and iid not in if_ids:
                     findings.append(
-                        "{}: {} cites {} which resolves to no interfaces.csv "
+                        "{}: {} cites {} which resolves to no interfaces.toml "
                         "row".format(name, rid, iid)
                     )
         if is_proposed and not proposed_rationale_present(cell):
@@ -350,7 +343,7 @@ def main():
 
     req = Path(args.root) / "docs" / "requirements"
     sr_ids = spine_ids(req / "system-requirements.toml", "SR-ID")
-    if_ids = load_registry_ids(req / "interfaces.csv", "IF-ID")
+    if_ids = spine_ids(req / "interfaces.toml", "IF-ID")
 
     findings, plans = [], []
     for p in args.plans:
@@ -376,7 +369,7 @@ def main():
     if sr_ids is None:
         print("plan_coverage: note - no system-requirements.csv; SR refs unvalidated")
     if if_ids is None:
-        print("plan_coverage: note - no interfaces.csv; IF refs unvalidated")
+        print("plan_coverage: note - no interfaces.toml; IF refs unvalidated")
     if findings:
         for f in findings:
             print("plan_coverage: FAIL - {}".format(f))

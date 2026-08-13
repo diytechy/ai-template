@@ -132,6 +132,64 @@ IF_HDR = (
 )
 
 
+# The IF/CMP tiers moved to the TOML carrier at WI-443 (OI-14 part B). The two
+# writers below TRANSLATE the CSV bodies this module's ~24 call sites already
+# hold rather than rewriting every one of them: what those tests are about is
+# coverage, cross-component edges and spec citations, not the carrier — and a
+# translating writer keeps the SUBJECT of each test visible instead of burying
+# it under a schema migration. The two tests that ARE about the vocabulary
+# (`test_seam_tc_citation_warn`, `test_spec_interfaces_experimental_needs_
+# rationale`) speak TOML directly, below.
+#
+# `Status` is DROPPED here, since it retired with the ruling: a body that set
+# `Status=Proposed` is translated to `stability = "Experimental"`, which is the
+# rung that value became.
+def _csv_body_to_toml(header, table, body):
+    import csv as _csv
+    import io as _io
+
+    keys = {
+        "Direction": "direction",
+        "ThisProject": "this_project",
+        "Counterpart": "counterpart",
+        "Contract": "contract",
+        "SR-Refs": "sr_refs",
+        "Version": "version",
+        "Stability": "stability",
+        "Component": "component",
+        "Notes": "notes",
+        "Name": "name",
+        "Category": "category",
+        "Knowledge": "knowledge",
+        "State": "state",
+        "SupersededBy": "superseded_by",
+        "PartOf": "part_of",
+        "DetailDoc": "detail_doc",
+    }
+    id_col = header.split(",", 1)[0]
+    out = []
+    for row in _csv.DictReader(_io.StringIO(header + body)):
+        rid = (row.get(id_col) or "").strip()
+        if not rid:
+            continue
+        if (row.get("Status") or "").strip().lower() == "proposed":
+            row["Stability"] = "Experimental"
+        out.append("[{}.{}]".format(table, rid))
+        if table == "interface":
+            out.append('signal = "discrete"')
+        for col, key in keys.items():
+            value = (row.get(col) or "").strip()
+            if not value:
+                continue
+            if key in ("sr_refs", "superseded_by", "part_of"):
+                items = ", ".join('"{}"'.format(t) for t in value.split(";") if t)
+                out.append("{} = [{}]".format(key, items))
+            else:
+                out.append('{} = """{}"""'.format(key, value))
+        out.append("")
+    return "\n".join(out) + "\n"
+
+
 def write_arch(root, text):
     (root / "docs").mkdir(parents=True, exist_ok=True)
     (root / "docs" / "architecture.md").write_text(text, encoding="utf-8")
@@ -140,7 +198,9 @@ def write_arch(root, text):
 def write_ifs(root, body):
     req = root / "docs" / "requirements"
     req.mkdir(parents=True, exist_ok=True)
-    (req / "interfaces.csv").write_text(IF_HDR + body, encoding="utf-8")
+    (req / "interfaces.toml").write_text(
+        _csv_body_to_toml(IF_HDR, "interface", body), encoding="utf-8"
+    )
 
 
 def test_interface_coverage_warns(tmp_path):
@@ -198,8 +258,16 @@ def test_source_sink_marker_suppresses_direction_warn(tmp_path):
 
 
 def test_seam_tc_citation_warn(tmp_path):
-    # A symmetric pair covers both directions, so only the Active-seam-TC warn
-    # fires; a TC that cites IF-001 suppresses its warn, IF-002 still warns.
+    # A symmetric pair covers both directions, so only the seam-TC warn fires; a
+    # TC that cites IF-001 suppresses its warn, IF-002 still warns.
+    #
+    # RE-KEYED AT WI-443, and the old key is why: this armed on `Status=Active`
+    # until OI-14 part B retired that column, and measured on the live registry
+    # `Active` marked EXACTLY the rows that were already TC-cited — the rule
+    # could only ever report zero. It now arms on `Stability=Stable`, the one
+    # maturity field, and reports a COUNT plus the first few ids rather than a
+    # line per row (this runs in the shipped pre-commit hook, where a hundred
+    # warn lines is a check nobody reads).
     write_arch(tmp_path, ARCH_2MOD)
     write_ifs(
         tmp_path,
@@ -215,8 +283,10 @@ def test_seam_tc_citation_warn(tmp_path):
     proc = run_traj(tmp_path)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "declares no Consumes seam" not in proc.stderr  # symmetric -> covered
-    assert "IF IF-001 is Active but cited by no TC" not in proc.stderr
-    assert "IF IF-002 is Active but cited by no TC" in proc.stderr
+    seam = [ln for ln in proc.stderr.splitlines() if "cited by no TC" in ln]
+    assert len(seam) == 1, proc.stderr
+    assert "1 Stable IF seam(s)" in seam[0] and "IF-002" in seam[0]
+    assert "IF-001" not in seam[0]  # the TC citation suppresses it
 
 
 def test_contracts_docstring_citation_warns(tmp_path):
@@ -275,7 +345,9 @@ def _arch_n(n):
 def write_cmps(root, body):
     req = root / "docs" / "requirements"
     req.mkdir(parents=True, exist_ok=True)
-    (req / "components.csv").write_text(CMP_HDR + body, encoding="utf-8")
+    (req / "components.toml").write_text(
+        _csv_body_to_toml(CMP_HDR, "component", body), encoding="utf-8"
+    )
 
 
 def write_tagged_llrs(root, pairs):
@@ -1520,11 +1592,11 @@ def test_spec_interfaces_unresolvable_warns_then_errors_under_strict(tmp_path):
     assert "IF-999 which resolves to no row" in strict.stderr
 
 
-def test_spec_interfaces_proposed_needs_rationale(tmp_path):
+def test_spec_interfaces_experimental_needs_rationale(tmp_path):
     bare = "# WI-001\n\n## Interfaces\n\n- IF-050 (Proposed)\n\n## Done-when\n"
     _spec_repo(tmp_path, "WI-001.md", bare, ifs=SPEC_IFS_PROPOSED)
     proc = run_traj(tmp_path)
-    assert "Proposed seam IF-050 with no rationale" in proc.stderr
+    assert "Experimental seam IF-050 with no rationale" in proc.stderr
     # A rationale naming the nearest existing seam + why it falls short -> clean.
     ok = (
         "# WI-001\n\n## Interfaces\n\n- IF-050 (Proposed): a new provide; nearest "
@@ -1532,7 +1604,7 @@ def test_spec_interfaces_proposed_needs_rationale(tmp_path):
         "direction.\n"
     )
     write_spec_file(tmp_path, "WI-001.md", ok)
-    assert "Proposed seam IF-050" not in run_traj(tmp_path).stderr
+    assert "Experimental seam IF-050" not in run_traj(tmp_path).stderr
 
 
 def test_spec_interfaces_empty_section_warns(tmp_path):

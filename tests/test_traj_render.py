@@ -16,7 +16,7 @@ import re
 from conftest import ROOT, SCRIPTS, load_script
 from traj_fixtures import (
     ARCH_MD,
-    IF_HDR,
+    if_row,
     SRS,
     TIER_UNION_WIS,
     _every_emitter_document,
@@ -62,8 +62,8 @@ def test_svg_nodes_carry_escaped_title_tooltips(tmp_path):
     )
     # the How-SW graph needs the module map + a declared seam (hostile external)
     (tmp_path / "docs" / "architecture.md").write_text(ARCH_MD, encoding="utf-8")
-    (tmp_path / "docs" / "requirements" / "interfaces.csv").write_text(
-        IF_HDR + 'IF-001,Provides,src/m,pip & git,"cli",SR-001,v1,Stable,Active,,\n',
+    (tmp_path / "docs" / "requirements" / "interfaces.toml").write_text(
+        if_row("IF-001", "Provides", "src/m", "pip & git", "cli"),
         encoding="utf-8",
     )
     assert gen_okf(tmp_path).returncode == 0  # the Knowledge tab's bundle
