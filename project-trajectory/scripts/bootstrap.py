@@ -1068,7 +1068,7 @@ def migrate_legacy_config(dest, dry_run=False):
 
     This is what makes plan §11.8's hard mixed-config refusal safe to ship: a
     downstream adopter never meets the refusal un-aided, because bootstrap runs
-    this on every scaffold pass and ADOPTING.md §6's re-sync names it. Deleting
+    this on every scaffold pass and RESYNC_PACK.md's entry names it. Deleting
     the legacy file is the point — leaving it would BE the mixed config.
 
     Idempotent: a repo with no legacy files answers `([], [])`. A legacy file
@@ -1193,7 +1193,7 @@ def _has_comment_lines(path):
 # dispatcher's --wi/--train worker assignment is the only lane concept, so
 # --tracks, tracks-README.template.md, and the per-track ID-block scaffold
 # are gone. An adopted repo's existing docs/tracks/ notes are its own files;
-# ADOPTING.md §6 carries the migration recipe.)
+# RESYNC_PACK.md §3 carries the migration entry.)
 
 
 # --- Conditional scaffold generation (Thread 34, Q8 ruling) -------------------
@@ -1644,7 +1644,7 @@ MAPPING = [
     # registries/work-items.template.csv is deliberately NOT mapped: since the
     # Phase 2c authority flip the work-item registry scaffolds as the docs/work/
     # spec folder below, and the CSV template survives only as the legacy-format
-    # reference wi_convert.py migrates from (ADOPTING.md §6).
+    # reference wi_convert.py migrates from (RESYNC_PACK.md §3).
     # The work-item registry's home (docs/concurrency-restructure.md §2):
     # one Markdown spec per work item, its STATUS encoded as the directory. Ships
     # ADDITIVE beside the CSV — the readers resolve to the folder only once it
@@ -2168,7 +2168,7 @@ def write_kit_version(dest, dry_run):
         "# Kit version stamp — the project-trajectory kit commit this repo was\n"
         "# scaffolded/re-synced from. Bump it when you re-sync from a *committed*\n"
         "# kit state (never a dirty tree); the delta to kit HEAD is your re-sync\n"
-        "# diff. See ADOPTING.md 'Re-syncing an existing adoption'.\n"
+        "# diff. See RESYNC_PACK.md (procedure) + ADOPTING.md section 6.\n"
         "{}\n".format(label)
     )
     target = dest / "docs" / "kit-version"

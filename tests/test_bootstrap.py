@@ -399,7 +399,12 @@ def test_scaffold_stamps_kit_version(scaffold):
     stamp = scaffold / "docs" / "kit-version"
     assert stamp.exists(), "bootstrap must write docs/kit-version"
     text = stamp.read_text(encoding="utf-8")
-    assert "ADOPTING.md" in text  # points the reader at the re-sync guidance
+    # ...and points the reader at the re-sync guidance. The stamp names the PACK
+    # (the procedure's one home since OI-27) as well as the framing section: for a
+    # tarball adopter with an `unknown` label this comment is the only pointer
+    # they have.
+    assert "RESYNC_PACK.md" in text
+    assert "ADOPTING.md" in text
     # The last non-comment line is the identity: a short SHA (+ optional -dirty
     # + date) or the explicit unknown marker for a non-git kit copy.
     ident = [ln for ln in text.splitlines() if ln and not ln.startswith("#")][-1]
