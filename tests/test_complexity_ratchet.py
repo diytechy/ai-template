@@ -117,7 +117,14 @@ BASELINE = {
     # (`_staged_wi_registry` / `_newly_closed`) and the chain-touched tail
     # (`_chain_untouched`) dropped both under the limit. This is the direction
     # the ratchet exists to hold: it tightens by default.
-    ("check_trajectory.py", "cross_component_findings"): 12,
+    # WI-440 (2026-08-13): `cross_component_findings` (12) is DELETED, not
+    # bumped. Adding OI-14's multi-membership overlap advisory beside the
+    # existing finding would have taken it to ~15; instead the edge walk went
+    # out to `_classifiable_edges` (10) and the IF-endpoint read to
+    # `_declared_seam_pairs` (3), leaving a 5-branch `_cross_component_scan`
+    # that decides the tier once, and two one-line public wrappers. Every
+    # resulting function is under the limit — decomposition, the escape this
+    # ratchet prefers over a bump.
     ("check_trajectory.py", "interface_findings"): 23,
     # WI-352 reviewed bump 21 -> 22, +1: the completion reconciler is
     # deliberately split across TWO tiers (spec evidence gates, trailer evidence

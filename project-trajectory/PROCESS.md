@@ -924,6 +924,11 @@ its seams the same way, and the architecture-connectivity coverage over them is
 **opt-out/default-on** (process-options.md "Intra-repo interfaces & the
 architecture graph").
 
+**An IF row is machine-consumed, not just read.** `plan_briefs.IF_SURFACE_COLUMNS`
+feeds the row's surface — including `Contract` and `Status` — **verbatim** into
+the dual-plan LLM planning briefs, so every cell is handed to a planner as
+authority. Write them as contract, never as narrative or changelog.
+
 A **purchased/external part** the product buys rather than builds (a motor, board,
 camera) is owned the same way — a repo/coordinator-held `IF-###` is its
 owner-of-record (MULTI_REPO.md §3.3) — with acquisition facts (vendor, cost,

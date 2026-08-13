@@ -986,7 +986,19 @@ BASELINE = {
     # docstring recording the fail-LOUD direction — plus the TOML-first arm on
     # each of the three readers. Reviewed bump; tests/test_rule_sync.py pins
     # this copy against gen_okf's and subagent_gate's by value (D-7).
-    "check_trajectory.py": 3957,
+    # WI-440 (OI-14's third do-not-wait): +73 (3957 -> 4030). The cross-CMP
+    # rule's overlap guard was authoring-silenceable fail-open — tagging a
+    # module into MORE components monotonically REDUCED findings (measured on
+    # this repo: 64 of 97 classifiable edges suppressed by set overlap, 17 via a
+    # multi-tagged endpoint) — so the overlap now REPORTS as its own warn-only
+    # advisory instead of suppressing. The line cost is mostly DECOMPOSITION
+    # rather than new behaviour: the edge walk moved out to
+    # `_classifiable_edges`, the IF-endpoint read to `_declared_seam_pairs`, and
+    # the tier decision to `_cross_component_scan`, which is what let the
+    # complexity ratchet DELETE `cross_component_findings`' entry instead of
+    # bumping it. The rest is the two docstrings recording why the direction is
+    # the fix and why the advisory must never join the exit code.
+    "check_trajectory.py": 4030,
     # NEW ENTRY, +25 (1498 -> 1523), WI-357: the two-stage work-branch claim
     # signal — the on-disk fast path plus the branch-history probe that
     # survives the §2.3 close commit (git log -1 over the claim path), with

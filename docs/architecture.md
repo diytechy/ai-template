@@ -701,6 +701,7 @@ Contracts (interfaces): IF-009, IF-023, IF-077
 | `shipped_modules(root)` | Normalized module keys ON DISK under the declared arch-map scan root — |  |
 | `added_module_findings(root, view, packs)` | The WI-399 early firing point of the knowledge⇒component containment |  |
 | `cross_component_findings(root)` | The cross-CMP-edge-without-IF rule (WI-064; the AXES ratified model's |  |
+| `cross_component_advisories(root)` | The multi-membership overlap advisory (WI-440, OI-14's third |  |
 | `component_findings(root)` | The How-SW component-coverage finding(s) (process-options.md "Component |  |
 | `spec_interface_findings(root)` | WI-191 — a spec-of-record acts on DECLARED interface boundaries. A spec's |  |
 | `read_derived_phases(root)` | `{phase-label: gate-level-int}` parsed from the `# basis:` line of the |  |

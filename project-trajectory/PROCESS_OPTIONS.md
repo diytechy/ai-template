@@ -2283,6 +2283,11 @@ is a finding — **WARN** at the plain/hook run, **ERROR under `--strict` (G2+)*
 (no imports lines, no real CMP rows, an untagged endpoint), so a non-adopting
 or small repo pays nothing. A *physical* repo's cross-CMP discipline stays
 gate-attested (`Inspection`) — the import graph is the software mechanization.
+An edge whose endpoints' component sets merely **overlap** is not that finding,
+but a module tagged into *more than one* component is evidence about the
+partition, not a licence to stay quiet — so it raises its own **advisory**
+(WI-440), **WARN-only, never the exit code even under `--strict`**, naming the
+multi-tagged module and the edge it silences.
 
 **The How-SW top view is bounded** (WI-073/FB5). The software-architecture panel
 of `PROJECT_STATE.html` shows at most **ten** first-view items — the **top-level**

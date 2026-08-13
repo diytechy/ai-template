@@ -1351,6 +1351,118 @@ def test_components_check_off_silences_cross_cmp(tmp_path):
     assert "cross-component import" not in proc.stderr
 
 
+# --- WI-440: the multi-membership overlap ADVISORY (OI-14's third do-not-wait) --
+# The old guard skipped an edge whose endpoint component sets merely OVERLAPPED,
+# so tagging a module into MORE components monotonically SILENCED the rule — a
+# fail-open the author controls. The overlap now REPORTS instead of suppressing:
+# warn-only, never the exit code (the partition it questions has not been ruled),
+# and the hard finding's semantics are untouched.
+
+ADVISORY = "suppress the cross-component seam rule on import"
+
+
+def _overlap_repo(tmp_path):
+    """mod_a is tagged into BOTH CMP-001 and CMP-002; mod_b only CMP-002 — so
+    the sets overlap on CMP-002 and the old guard skipped the a -> b edge."""
+    write_arch(tmp_path, ARCH_2MOD_IMPORT)
+    write_cmps(tmp_path, TWO_CMPS)
+    write_tagged_llrs(
+        tmp_path,
+        [
+            ("scripts/mod_a", "CMP-001"),
+            ("scripts/mod_a", "CMP-002"),
+            ("scripts/mod_b", "CMP-002"),
+        ],
+    )
+
+
+def test_multi_membership_overlap_advises_instead_of_silencing(tmp_path):
+    _overlap_repo(tmp_path)
+    plain = run_traj(tmp_path)
+    assert plain.returncode == 0, plain.stdout + plain.stderr
+    assert ADVISORY in plain.stderr
+    # It NAMES the multi-tagged module and the edge, so the partition work can
+    # consume the list.
+    assert "multi-component module(s) scripts/mod_a" in plain.stderr
+    assert "scripts/mod_a (CMP-001/CMP-002) -> scripts/mod_b (CMP-002)" in plain.stderr
+    # ...and it is NOT the hard finding: no seam error, and the message says so.
+    assert "has no declared IF-### seam" not in plain.stderr
+    assert "advisory only" in plain.stderr
+
+
+def test_overlap_advisory_never_reaches_the_exit_code(tmp_path):
+    # WARN-ONLY even under --strict, where the sibling FINDING is an error.
+    _overlap_repo(tmp_path)
+    strict = run_traj(tmp_path, "--strict")
+    assert strict.returncode == 0, strict.stdout + strict.stderr
+    assert ADVISORY in strict.stderr
+
+
+def test_overlap_advisory_yields_to_a_declared_seam(tmp_path):
+    # A declared IF row covering the pair means nothing was silenced BY the
+    # overlap — the seam is declared, so there is no partition question to raise.
+    _overlap_repo(tmp_path)
+    write_ifs(
+        tmp_path,
+        'IF-001,Consumes,scripts/mod_a,scripts/mod_b,"call",SR-001,v1,Stable,Active,,\n',
+    )
+    proc = run_traj(tmp_path, "--strict")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert ADVISORY not in proc.stderr
+
+
+def test_single_tagged_same_component_edge_raises_nothing(tmp_path):
+    # Both endpoints single-tagged into CMP-001: ordinary intra-component
+    # wiring, neither a finding nor an advisory. The advisory is about
+    # MULTI-membership, not about overlap as such.
+    _cross_cmp_repo(tmp_path, cmp_b="CMP-001")
+    proc = run_traj(tmp_path, "--strict")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert ADVISORY not in proc.stderr
+
+
+def test_disjoint_uncovered_edge_is_still_a_hard_finding(tmp_path):
+    # The scope guard: the FINDING's semantics are exactly as they were —
+    # disjoint sets, no covering IF row, WARN plain and ERROR under --strict —
+    # and it does not double-report as an advisory.
+    _cross_cmp_repo(tmp_path)
+    plain = run_traj(tmp_path)
+    assert plain.returncode == 0, plain.stdout + plain.stderr
+    assert (
+        "cross-component import scripts/mod_a (CMP-001) -> scripts/mod_b "
+        "(CMP-002) has no declared IF-### seam" in plain.stderr
+    )
+    assert ADVISORY not in plain.stderr
+    strict = run_traj(tmp_path, "--strict")
+    assert strict.returncode == 1
+    assert ADVISORY not in strict.stderr
+
+
+def test_untagged_endpoint_stays_vacuous_for_the_advisory_too(tmp_path):
+    # The deliberate vacuousness the docstring documents (containment rule's
+    # job) survives: mod_b has no Component tag, so mod_a's DOUBLE tag raises
+    # nothing here — an untagged endpoint is not a partition finding.
+    write_arch(tmp_path, ARCH_2MOD_IMPORT)
+    write_cmps(tmp_path, TWO_CMPS)
+    write_tagged_llrs(
+        tmp_path, [("scripts/mod_a", "CMP-001"), ("scripts/mod_a", "CMP-002")]
+    )
+    proc = run_traj(tmp_path, "--strict")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert ADVISORY not in proc.stderr
+    assert "cross-component import" not in proc.stderr
+
+
+def test_components_check_off_silences_the_overlap_advisory(tmp_path):
+    # It shares the component layer's opt-out — an adopter who turned the layer
+    # off does not get half of it back.
+    _overlap_repo(tmp_path)
+    (tmp_path / "docs" / "components-check").write_text("off\n", encoding="utf-8")
+    proc = run_traj(tmp_path, "--strict")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert ADVISORY not in proc.stderr
+
+
 # --- specs act on declared interface boundaries (WI-191) ----------------------
 
 # One Stable seam + one Proposed seam for the spec-citation checks.
