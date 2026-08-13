@@ -1424,38 +1424,36 @@ def added_module_findings(root, view, packs):
     ]
 
 
-def cross_component_findings(root):
-    """The cross-CMP-edge-without-IF rule (WI-064; the AXES ratified model's
-    "Enforceability" ruling, process-options.md "Component layer"): an internal
-    import edge whose endpoints belong to *different* CMP-### components must be
-    covered by a declared IF-### row — an undeclared cross-component coupling is
-    a finding, mechanized from the same committed artifacts the other component
-    rules read. The CALLER gates the opt-out (`component_findings` shares
-    `[checks] components_check`) and the WARN-plain / ERROR-under-`--strict`
-    promotion.
-
-    Vacuous by construction when any input is absent (never-breaking): no
-    arch-map `Imports (internal):` lines, no real CMP rows, an endpoint with no
-    `Component`-tag membership (coverage is the containment rule's job, not
-    this one's), or an import stem that resolves to no/multiple inventory
-    modules. A pair is covered when any real IF row's normalized
-    `(ThisProject, Counterpart)` matches the edge's endpoints in either
-    direction — a seam is one declared relationship, whichever side authored
-    the row."""
-    names, _contracts, imports = arch_inventory(root)
-    if not imports:
-        return []
-    cmp_ids = {c["id"] for c in load_cmps(read_rows(root / CMP_CSV))}
-    if not cmp_ids:
-        return []
-    raw = module_components(root)
-    membership = {n: tags & cmp_ids for n, tags in raw.items()}
+def _declared_seam_pairs(root):
+    """The IF registry's endpoint pairs, normalized and stored BOTH ways — a
+    seam is one declared relationship, whichever side authored the row."""
     covered = set()
     for r in load_ifs(read_rows(root / IF_CSV)):
         a, b = _norm_module(r["this"]), _norm_module(r["counterpart"])
         if a and b:
             covered.add((a, b))
             covered.add((b, a))
+    return covered
+
+
+def _classifiable_edges(root):
+    """Yield `(src, dst, src_cmps, dst_cmps)` for every internal import edge
+    the cross-CMP rules can classify — both endpoints normalized, both carrying
+    at least one REAL CMP membership.
+
+    The vacuity guards live here, so every caller inherits them: no arch-map
+    `Imports (internal):` lines, no real CMP rows, an endpoint with no
+    `Component`-tag membership (coverage is the containment rule's job, not
+    this one's), or an import stem that resolves to no/multiple inventory
+    modules."""
+    names, _contracts, imports = arch_inventory(root)
+    if not imports:
+        return
+    cmp_ids = {c["id"] for c in load_cmps(read_rows(root / CMP_CSV))}
+    if not cmp_ids:
+        return
+    raw = module_components(root)
+    membership = {n: tags & cmp_ids for n, tags in raw.items()}
     # A bare imported stem (`agent_route`) resolves against the inventory's
     # normalized module names (`scripts/agent_route`) by unique-stem match —
     # the same resolution gen_arch_map applied when it emitted the line.
@@ -1464,7 +1462,6 @@ def cross_component_findings(root):
         n = _norm_module(m)
         if n:
             by_stem.setdefault(n.rsplit("/", 1)[-1], set()).add(n)
-    out = []
     for src in sorted(imports):
         src_n = _norm_module(src)
         src_cmps = membership.get(src_n, set())
@@ -1476,21 +1473,88 @@ def cross_component_findings(root):
                 continue  # unknown/ambiguous stem — not this rule's finding
             dst_n = next(iter(targets))
             dst_cmps = membership.get(dst_n, set())
-            if not dst_cmps or (src_cmps & dst_cmps) or (src_n, dst_n) in covered:
-                continue
-            out.append(
-                "cross-component import {} ({}) -> {} ({}) has no declared "
-                "IF-### seam — declare the interface row in {} or retag the "
-                "membership, or set docs/process.toml [checks] "
-                "components_check = false".format(
-                    src_n,
-                    "/".join(sorted(src_cmps)),
-                    dst_n,
-                    "/".join(sorted(dst_cmps)),
-                    IF_CSV,
+            if dst_cmps:
+                yield src_n, dst_n, src_cmps, dst_cmps
+
+
+def _cross_component_scan(root):
+    """`(findings, advisories)` over the classifiable import edges — the two
+    tiers of the cross-CMP rule, computed in ONE pass so they can never disagree
+    about which edge is which.
+
+    A **finding** (unchanged since WI-064) is an edge whose endpoint component
+    sets are DISJOINT and which no declared IF-### row covers.
+
+    An **advisory** (WI-440, OI-14) is an edge the overlap guard SUPPRESSES only
+    because an endpoint is tagged into more than one component: the sets
+    intersect, no IF row covers the pair, and `len(cmps) > 1` somewhere. That
+    edge would be a finding under a partition where each module belongs to one
+    component, so the multi-membership is EVIDENCE ABOUT THE PARTITION (the file
+    splits, the shared part is its own component, or the boundary is drawn
+    wrong) rather than a licence to stay quiet. Reporting it reverses the
+    direction of the old rule, where authoring one more `Component` tag
+    monotonically silenced the check — a fail-open the author controls.
+
+    An edge whose endpoints are single-tagged into the SAME component is
+    ordinary intra-component wiring and is neither."""
+    covered = _declared_seam_pairs(root)
+    findings, advisories = [], []
+    for src_n, dst_n, src_cmps, dst_cmps in _classifiable_edges(root):
+        if (src_n, dst_n) in covered:
+            continue
+        edge = "{} ({}) -> {} ({})".format(
+            src_n,
+            "/".join(sorted(src_cmps)),
+            dst_n,
+            "/".join(sorted(dst_cmps)),
+        )
+        if src_cmps & dst_cmps:
+            multi = [m for m, c in ((src_n, src_cmps), (dst_n, dst_cmps)) if len(c) > 1]
+            if multi:
+                advisories.append(
+                    "multi-component module(s) {} suppress the cross-component "
+                    "seam rule on import {} — the shared tag, not a declared "
+                    "IF-### row, is what silences this edge; split the module, "
+                    "give the shared part its own component, or declare the "
+                    "seam in {} (advisory only — never the exit "
+                    "code)".format(", ".join(multi), edge, IF_CSV)
                 )
-            )
-    return out
+            continue
+        findings.append(
+            "cross-component import {} has no declared IF-### seam — declare "
+            "the interface row in {} or retag the membership, or set "
+            "docs/process.toml [checks] components_check = false".format(edge, IF_CSV)
+        )
+    return findings, advisories
+
+
+def cross_component_findings(root):
+    """The cross-CMP-edge-without-IF rule (WI-064; the AXES ratified model's
+    "Enforceability" ruling, process-options.md "Component layer"): an internal
+    import edge whose endpoints belong to *different* CMP-### components must be
+    covered by a declared IF-### row — an undeclared cross-component coupling is
+    a finding, mechanized from the same committed artifacts the other component
+    rules read. The CALLER gates the opt-out (`component_findings` shares
+    `[checks] components_check`) and the WARN-plain / ERROR-under-`--strict`
+    promotion. See `_cross_component_scan` for the tier split (this is tier one,
+    unchanged) and `_classifiable_edges` for the vacuity guards this rule
+    inherits — including the DELIBERATE vacuousness for an endpoint carrying no
+    `Component` tag, which stays the containment rule's job, not this one's."""
+    return _cross_component_scan(root)[0]
+
+
+def cross_component_advisories(root):
+    """The multi-membership overlap advisory (WI-440, OI-14's third
+    do-not-wait): the edges the overlap guard silences because an endpoint
+    carries more than one `Component` tag — see `_cross_component_scan`.
+
+    WARN-ONLY, never the exit code, not even under `--strict`: this reports a
+    question about the PARTITION, and no partition has been ruled yet, so it
+    must not block. Shares `component_findings`' `[checks] components_check`
+    opt-out, which the caller does NOT gate for it — this function does."""
+    if not read_components_check_enabled(root):
+        return []
+    return _cross_component_scan(root)[1]
 
 
 def component_findings(root):
@@ -1518,7 +1582,10 @@ def component_findings(root):
       module reds its own bar instead of the station's post-regeneration one.
     - **Cross-CMP edges need a declared seam** (WI-064): see
       `cross_component_findings` — an import edge between two components with
-      no covering IF-### row."""
+      no covering IF-### row. Its warn-only sibling
+      `cross_component_advisories` (WI-440) reports the edges a multi-tagged
+      endpoint silences; main() prints those, not this function, because they
+      must never reach the exit code."""
     if not read_components_check_enabled(root):
         return []
     view = component_top_view(root)
@@ -3790,7 +3857,13 @@ def main():
     # never an exit-code change (even under --strict). Runs before the WI vacuity
     # return so a repo with modules + seams but no work items is still covered;
     # vacuous under [checks] interfaces_check = false or a ≤1-module arch-map.
-    for w in interface_findings(root):
+    # ...and the multi-membership overlap advisory (WI-440; OI-14's third
+    # do-not-wait) shares this WARN-ONLY loop rather than the component block
+    # below: it reports the cross-component edges a multi-tagged endpoint
+    # SILENCES, which is a question about the PARTITION rather than a defect in
+    # the edge, and no partition has been ruled — so it must never join the exit
+    # code, not even under --strict, which the component block would do.
+    for w in interface_findings(root) + cross_component_advisories(root):
         print("check_trajectory: WARN - {}".format(w), file=sys.stderr)
 
     # Ratification-brief hierarchy-view lint (WI-146b) — warn-first prose-surface
