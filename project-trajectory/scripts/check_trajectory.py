@@ -1477,6 +1477,9 @@ def _classifiable_edges(root):
                 yield src_n, dst_n, src_cmps, dst_cmps
 
 
+_SCAN_CACHE = {}
+
+
 def _cross_component_scan(root):
     """`(findings, advisories)` over the classifiable import edges — the two
     tiers of the cross-CMP rule, computed in ONE pass so they can never disagree
@@ -1496,10 +1499,26 @@ def _cross_component_scan(root):
     monotonically silenced the check — a fail-open the author controls.
 
     An edge whose endpoints are single-tagged into the SAME component is
-    ordinary intra-component wiring and is neither."""
-    covered = _declared_seam_pairs(root)
+    ordinary intra-component wiring and is neither.
+
+    ONE scan per run, cached per root: the two public wrappers used to each
+    trigger their own scan from `main`, so the two tiers were computed from two
+    separate reads of the same registries — the exact could-disagree state this
+    function's contract forbids (and a review round demonstrated with a
+    mid-run registry change). The cache makes the docstring's "computed in ONE
+    pass" literally true for the process's lifetime.
+    """
+    cached = _SCAN_CACHE.get(str(root))
+    if cached is not None:
+        return cached
+    # `covered` is resolved LAZILY: with zero classifiable edges the old rule
+    # never read interfaces.csv at all, and an unreadable interfaces.csv must
+    # not turn a vacuous scan into a crash (review finding).
+    covered = None
     findings, advisories = [], []
     for src_n, dst_n, src_cmps, dst_cmps in _classifiable_edges(root):
+        if covered is None:
+            covered = _declared_seam_pairs(root)
         if (src_n, dst_n) in covered:
             continue
         edge = "{} ({}) -> {} ({})".format(
@@ -1525,6 +1544,7 @@ def _cross_component_scan(root):
             "the interface row in {} or retag the membership, or set "
             "docs/process.toml [checks] components_check = false".format(edge, IF_CSV)
         )
+    _SCAN_CACHE[str(root)] = (findings, advisories)
     return findings, advisories
 
 
