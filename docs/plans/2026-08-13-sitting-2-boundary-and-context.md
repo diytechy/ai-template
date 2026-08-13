@@ -1295,7 +1295,7 @@ source at the archive path, and a proposed disposition: **needs a ruling** ·
 **rides an existing window** · **pointer-only**. None is large; several are the
 kind that silently cost a re-attest window if executed alone.
 
-### 1. SN-007's ruled clause strike — **RIDES SITTING 3's WINDOW** ⚠ highest risk
+### 1. SN-007's ruled clause strike — **EXECUTED 2026-08-13, owner ruling in session** (superseding the ride-sitting-3 disposition)
 
 *Source:
 [`../archive/plans/2026-08-10-sn-sr-prose-rewrite.md`](../archive/plans/2026-08-10-sn-sr-prose-rewrite.md)
@@ -1326,23 +1326,30 @@ a re-attest window outside the batched one.* **Disposition: schedule it INSIDE
 sitting 3's window — never as a lone edit.** It is a one-cell deletion; the cost
 is entirely in *when* it lands.
 
-**OWNER-PROPOSED REPLACEMENT TEXT, 2026-08-13 — supersedes the plain strike if
-confirmed at this sitting.** Reviewing the post-strike remainder (*"…its own
-changes stay traceable and tested"*), the owner flagged that **"changes …
-tested" still reads as delta-testing** — as if something tests the A→B change
-itself — which nothing does: the suite tests the *state after* each change
-(the scaffold bootstrap), while "traceable" genuinely does attach to changes
-(change-intake, the WI registry, the log). The proposed `need` cell, keeping
-the stakeholder subject and claiming only what runs:
+**EXECUTED — OWNER RULING IN SESSION, 2026-08-13.** Reviewing the post-strike
+remainder (*"…its own changes stay traceable and tested"*), the owner flagged
+that **"changes … tested" still reads as delta-testing** — as if something
+tests the A→B change itself — which nothing does: the suite tests the *state
+after* each change (the scaffold bootstrap), while "traceable" genuinely does
+attach to changes (change-intake, the WI registry, the log). The owner then
+ruled the fix lands **NOW, before this sitting runs** — *"SNs are the first
+stage, so it should be changed before sitting 2 attempts to build boundary
+conditions that are built up on SNs"* — superseding both the plain strike and
+the ride-sitting-3 disposition. The `need` cell now reads:
 
-> "The people maintaining this kit hold it to its own standard: **it stays
-> traceable and tested through every change.**"
+> "The people maintaining this kit hold it to its own standard: it stays
+> traceable and tested through every change."
 
 A state claim at every landing, not a per-change coverage or delta-testing
 claim; the `acceptance` cell (unchanged) carries the mechanism at its own
-altitude. Same window, same act as the strike — one cell rewrite instead of
-one clause deletion. The sitting confirms the wording; the WI-444
-token-comparison bar applies to the application either way.
+altitude. **Blast radius, measured at execution:** the struck clause was the
+*undecomposed* one — zero SR descendants — and the four `Verified` SRs citing
+SN-007 (SR-010, SR-011, SR-036, SR-111) realize the surviving half, so no
+child's grounding moves and nothing flips. (The SN tier carries no `status`
+field; its maturity is `kind`, unchanged at `core`. The owner authored and
+ratified the wording in session, so no token-comparison transcription bar
+applies — there is no source text being transcribed.) The ruling is in
+[`../log.md`](../log.md)'s Decisions.
 
 ### 2. §E.5 — migration history inside the `Requirement` cell — **NEEDS A RULING**
 

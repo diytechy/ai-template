@@ -17,7 +17,7 @@ resource: "generated"
 | [SN-004](SN-004.md) | A team advances only through explicit approval gates (DevBar-Reqs→DevBar-Tests→DevBar-Rel… |
 | [SN-005](SN-005.md) | AI agents and humans work from the same playbook, and the process is enforced agent-neutr… |
 | [SN-006](SN-006.md) | An agent can run unattended and resume from repo text alone; such a run never blocks on a… |
-| [SN-007](SN-007.md) | The people maintaining this kit hold it to its own standard: its own changes stay traceab… |
+| [SN-007](SN-007.md) | The people maintaining this kit hold it to its own standard: it stays traceable and teste… |
 | [SN-008](SN-008.md) | A reader can believe a green: gates are honest, and a green never hides a skipped check, … |
 | [SN-009](SN-009.md) | A team is protected from publishing a secret or private identity: it is caught before it … |
 | [SN-010](SN-010.md) | A reader can navigate the documentation and trust it: navigable and honest — links resolv… |

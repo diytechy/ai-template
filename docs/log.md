@@ -36,6 +36,28 @@ applying that design to the kit itself.
 _Ratified or executed decisions only — the call, the alternatives passed over,
 why (one bullet each; cite ids)._
 
+- **2026-08-13h — SN-007 re-worded NOW, ahead of sitting 2 (owner, in
+  session).** The 2026-08-11 strike ruling (remove the undecomposed per-change
+  coverage clause) had never been executed, and its planned vehicle — sitting
+  3's batched window — was superseded by the owner on sequencing grounds:
+  *"SNs are the first stage, so it should be changed before sitting 2 attempts
+  to build boundary conditions that are built up on SNs."* Reviewing the
+  post-strike remainder, the owner also flagged that *"changes stay traceable
+  and tested"* still reads as **delta-testing** (testing the A→B change
+  itself), which nothing does — the suite tests the state after each change.
+  SN-007's `need` now reads: *"The people maintaining this kit hold it to its
+  own standard: it stays traceable and tested through every change."* — a
+  state claim at every landing; the `acceptance` cell (unchanged) carries the
+  mechanism. Alternatives passed over: the plain strike (kept the ambiguous
+  "changes … tested" verb attachment) and riding sitting 3's window (leaves a
+  known over-claim in the tier the boundary work builds on). Blast radius
+  measured at execution: the struck clause had **zero SR descendants** (it was
+  the undecomposed one), and SN-007's four `Verified` children (SR-010/011/
+  036/111) realize the surviving half, so no child grounding moves; the SN
+  tier carries no `status` field (`kind` unchanged at `core`). Owner-authored
+  wording ratified in session — no transcription bar applies. Record also in
+  the sitting-2 brief, housekeeping item 1 (EXECUTED).
+
 - **2026-08-13f — The operational CONTEXT is part of the boundary definition
   (owner, in session).** Modelling the operational context is not a later
   exercise: it is one step in determining **how this system lives in its
@@ -27815,3 +27837,17 @@ Smoke tier: 1091 passed, 3 skipped, 20.55s.
 <!-- fig: cmd=".venv/bin/python project-trajectory/scripts/check_docs.py --root . --ignore docs/test/report.md --ignore 'docs/work/*' --stale" rev=feb50dcb+consolidation-worktree -->
 
 Push and merge-to-main stay the owner's (`push = "human"`).
+
+## 2026-08-13h — SN-007 re-worded ahead of sitting 2 (owner ruling in session)
+
+The ruling and its full reasoning are the **2026-08-13h Decisions entry**; this
+is the execution record. `stakeholder-needs.toml` SN-007 `need` rewritten to
+the owner's text (*"…it stays traceable and tested through every change"*);
+the sitting-2 brief's housekeeping item 1 flipped to EXECUTED and sitting 3's
+precondition 9 became a still-holds check. OKF bundle regenerated (2 files);
+`derive_gate --check` and `gen_open_items` both already-fresh, as predicted —
+the SN tier has no `status`, `kind` is unchanged, and nothing flips.
+
+**Bars.** check_docs: OK — 400 docs, 1210 intra-repo links, 0 broken.
+Smoke tier: 1091 passed, 3 skipped, 21.44s.
+<!-- fig: cmd=".venv/bin/python -m pytest -q -n auto -m smoke" rev=6fe1d4fa+worktree -->

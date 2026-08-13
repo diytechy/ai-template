@@ -110,7 +110,7 @@ acceptance = """`agent_loop.py` resumes from `docs/status.md`, exits a **typed c
 
 [need.SN-007]
 kind = "core"
-need = """The people maintaining this kit hold it to its own standard: its **own** changes stay traceable and tested — a change to a script is covered by a test exercised end-to-end against a real scaffold."""
+need = """The people maintaining this kit hold it to its own standard: it stays traceable and tested through every change."""
 why = """The kit is a foundation many repos inherit; a regression here propagates downstream. (This need is what Thread 47 makes first-class.)"""
 priority = "M"
 acceptance = """The suite bootstraps a temp scaffold and runs every script; `pytest -q` green is required before each change lands."""
