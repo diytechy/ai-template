@@ -4,7 +4,7 @@ REM Agent-resume launcher (Windows) - double-click to boot the right agent
 REM session at the right tier, or the unattended coordinator loop, from the
 REM repo root (process-options.md "Unattended operation (walk-away runs)").
 REM The booted session inherits the whole committed context - AGENTS.md,
-REM docs/status.md, docs/gate + gate-policy - so resuming work
+REM docs/status.md, docs/gate + docs/process.toml - so resuming work
 REM never requires recalling an incantation. Read it first; it only exports
 REM the slots below and runs scripts/agent_loop.py.
 REM

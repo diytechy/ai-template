@@ -491,7 +491,7 @@ STATION_GEOM = {
 # dispatcher exports no constant for it (`dispatch._kind_action` returns these
 # as literals); the sync pin — test_station_barrier_and_admission_arms_pin_to_
 # the_dispatcher — recomputes the set from `_kind_action` over every kind x
-# gate-policy level and reds here the moment the dispatcher's vocabulary moves.
+# session hold and reds here the moment the dispatcher's vocabulary moves.
 _ADMISSION_ARMS = ("parallel", "exclusive", "batch", "surface")
 
 

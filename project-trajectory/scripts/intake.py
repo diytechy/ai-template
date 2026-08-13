@@ -1322,7 +1322,7 @@ def _cmd_sweep(args):
     return _cli_result(refusal, "sweep minted {} row(s).".format(len(minted)))
 
 
-# --- the gate-policy arms (ruled decision 2, owner 2026-07-31; §A8) ------------
+# --- the session-hold arms (ruled decision 2, owner 2026-07-31; §A8) -----------
 
 
 def adjudication_action(human_held):
@@ -1347,7 +1347,7 @@ def flip_verified(root, ids):
     rows judged no-scope-moved: `Modified` -> `Verified`. Returns
     `(action, flipped_ids, refusal)`.
 
-    The policy is read from `docs/gate-policy`, never passed by hand (the
+    The hold is derived from `docs/process.toml`, never passed by hand (the
     dial's one home). Under `recommend` NOTHING is touched and the prepared
     brief prints — the adjudication worker writes it into its spec and the
     open-items card carries the Modified rows to the sitting. Under `flip`
@@ -1370,7 +1370,7 @@ def flip_verified(root, ids):
     # reads the tier currently in process off the generated docs/gate basis
     # line; `human_holds` compares it against `human_ratification_through`.
     human_held = ac.human_holds(root / "docs", ac.spine_stage_of(root))
-    level = "human-held" if human_held else "loop-held"
+    session_hold = "human-held" if human_held else "loop-held"
     action = adjudication_action(human_held)
     wanted = {i.strip() for i in ids if i.strip()}
     located, tables = _locate_spine_rows(root, wanted)
@@ -1387,10 +1387,10 @@ def flip_verified(root, ids):
         for rid in sorted(wanted):
             _say(
                 "recommend re-verify: {} (Status={}) - judged no-scope-moved; "
-                "under gate-policy '{}' the flip is the human's (ruled "
+                "under session-hold '{}' the flip is the human's (ruled "
                 "decision 2). Write this brief into the adjudication row's "
                 "spec; the open-items card carries the Modified rows.".format(
-                    rid, located[rid][1], level
+                    rid, located[rid][1], session_hold
                 )
             )
         return action, [], None
@@ -1405,7 +1405,7 @@ def flip_verified(root, ids):
     # always fallen back to — which is where it stood before SN-029, since the
     # ledger never held a row.
     for rid in flipped:
-        _say("flipped {} Modified -> Verified (gate-policy '{}')".format(rid, level))
+        _say("flipped {} Modified -> Verified ({})".format(rid, session_hold))
     return action, flipped, None
 
 
@@ -1602,7 +1602,7 @@ def _cli_result(refusal, ok_message):
 
 def _cmd_adjudicate(args):
     """The adjudication worker's mechanical tool: enact (or recommend) the
-    no-scope-moved outcome per the declared gate-policy."""
+    no-scope-moved outcome per the derived session hold."""
     root = Path(args.root).resolve()
     action, flipped, refusal = flip_verified(root, _split(args.rows))
     return _cli_result(

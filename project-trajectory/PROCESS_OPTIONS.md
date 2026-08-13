@@ -24,7 +24,7 @@ required for the minimum profile). Rows are in document order; each maps to the
 | Derived gate model | **not opt-in** — the model is core ([`process.md`](process.md) §4 "Stages and gates"); this expands the mechanics | `docs/gate` (generated) + `derive_gate.py` |
 | Phased delivery | a roadmap ships phase 1 before 2/3 (a single-shot deliverable skips it) | a `Phase` on every ratified SR/LLR/TC + a derived current phase + a per-phase gate |
 | Lifecycle phase | install/startup/steady-state requirements are easy to miss (most non-trivial products) | lifecycle tags on SRs |
-| Gate authority levels | a repo declares a non-default `gate_policy` | `docs/process.toml` `[attestation] gate_policy` + an attestation / deviation register |
+| Gate authority levels | a repo ratifies fewer tiers by hand than the default | `docs/process.toml` `[attestation] human_ratification_through` + a deviation register |
 | Agent iteration branch & sync | you want agent-driven work to land as curated, reviewable history | a branch + sync cadence, wired into hooks |
 | Unattended operation | a coordinator grinds work from one entry point while nobody watches | `agent_loop.py` + `dispatch.py`/`lane.py`, `integrate.py`, `agents.toml`, the launchers |
 | Critique verification & the critique loop | a requirement's acceptance is **subjective** | a critique round + `Attest`/critique TCs |
@@ -352,20 +352,20 @@ the set when the scope needs them.
 
 ## Gate authority levels
 
-*Referenced from PROCESS.md §4.* **Applies when** a repo declares a
-non-default `gate_policy` — i.e. wants gates accepted by something other
-than a per-gate human pause. The default **`attended`** level needs none of
-this section — it is exactly the §4/§5 flow. Generalized
-from a field adoption's ratified deviation register (a spatial-capture
-pilot), which remains this layer's worked reference.
+*Referenced from PROCESS.md §4.* **Applies when** a repo lowers
+`[attestation] human_ratification_through` below its shipped `4` — i.e. wants
+some tier's gate accepted by something other than a per-gate human pause. The
+default (`4`, every tier **human-held**) needs none of this section — it is
+exactly the §4/§5 flow. Generalized from a field adoption's ratified
+deviation register (a spatial-capture pilot), this layer's worked reference.
 
 **Selection.** The level is chosen **before the kit is ported** — by the
 owner, with an agent recommendation from the project brief
 (`bootstrap.py --gate-policy`, or interactively at scaffold time;
 KICKOFF_PROMPT.md carries the recommendation step). Calibrate on the §6
 risk axis: safety, money, privacy, or irreversibility ⇒ `attended`; low-risk
-creative/tooling scopes are `autonomous`-eligible. Changing the level later is
-a reviewed commit that edits `[attestation] gate_policy` in `docs/process.toml`
+creative/tooling scopes are `autonomous`-eligible. Changing it later is a
+reviewed commit that edits the `[attestation]` dials in `docs/process.toml`
 and the register below.
 
 **The deviation register (`docs/gate-policy.md`).** The kit-owned process doc
@@ -380,7 +380,11 @@ scaffolds the skeleton pre-filled for the chosen level.
 identically at every level — authority is *who accepts*, not what runs. The
 harness is the bar everywhere; a red check is a red check.
 
-### The three levels
+### The three presets
+
+The three words are `--gate-policy` **presets**: each *translates* into the
+`[attestation]` dials (`human_ratification_through`, `keep_nondependent`,
+`final_review`) and is never stored. The dials are what the machinery reads.
 
 - **`attended`** *(default)* — a human approves each gate (G1/G2/G3/G-Release)
   and G-Final. The standard §4/§5 flow; nothing else in this section applies.
@@ -767,8 +771,8 @@ the same protocol with a person as the model map.
 `AGENT_CMD_MAP`).** `[policies] review_rounds` declares how many independent
 fresh-context review verdicts a completed work item gets before the integrator
 accepts it — **`0 | 1 | 2`, default `1`** (the key's comment block carries the
-full semantics). Floors sit *above* the dial: a gate advance under
-`gate_policy = "autonomous"` always needs ≥1 recorded verdict, and a WI touching
+full semantics). Floors sit *above* the dial: a gate advance on a
+**loop-held** tier always needs ≥1 recorded verdict, and a WI touching
 the spine registries recommends `2`. Two reviewers split **charters**, never
 duplicate coverage — A = method/risk/corner cases, B = process/trace/prose —
 because two samples of one model share blind spots; for the same reason
@@ -971,15 +975,16 @@ behavior**, so a fresh scaffold pays nothing.
   tripwire. The constants ship as legible **per-repo-overridable defaults**
   (`AGENT_ROUTE_MARGIN`, `AGENT_ROUTE_SWAP_AFTER`, `AGENT_ROUTE_PAGE_TOP_TIER_FAILS`)
   — calibration values, not spine facts.
-- **Failure semantics follow the declared `gate_policy`.** On a page-the-human condition
-  the causing WI **and its hard-edge dependents pause** in every mode; the mode
-  decides what happens around that — **attended:** start nothing new, let
+- **Failure semantics follow the session hold.** On a page-the-human condition
+  the causing WI **and its hard-edge dependents pause** either way; the hold
+  (is the tier still **human-held**, and `keep_nondependent`) decides the rest —
+  **human-held, `keep_nondependent = false`:** start nothing new, let
   in-flight sessions close out, then the loop stops `NEEDS-HUMAN` and alerts;
-  **single-ratify:** keep working non-dependent WIs to completion, surface the
-  block for ratification; **autonomous:** schedule a fresh **design-check
-  session** (different provider, strong tier) to rule grind-through vs. genuine
-  redesign, document every assumption, and continue — a redesign verdict
-  re-enters the change-intake flow (process.md §5).
+  **human-held, `keep_nondependent = true`:** keep working non-dependent WIs to
+  completion, surface the block for ratification; **loop-held:** schedule a
+  fresh **design-check session** (different provider, strong tier) to rule
+  grind-through vs. genuine redesign, document every assumption, and continue —
+  a redesign verdict re-enters the change-intake flow (process.md §5).
 
 **Session discipline.**
 
@@ -1069,7 +1074,7 @@ because "the agent didn't know how to judge it, it just shipped it"), and the
 original TC may have been lax. `Critique` gives another agent a **different hat**:
 an independent critical eye that says *where and why* something isn't good enough
 and drives rework toward a written bar. Built on the S8 chassis (fresh sessions,
-redacted prompts, verdict files, `gate_policy`-keyed escalation).
+redacted prompts, verdict files, hold-keyed escalation).
 
 - **`Critique` is a first-class Verification value** (PROCESS.md §4). A perceptual
   TC declares `Verification=Critique`; its `Method` names the critique procedure and
@@ -1093,11 +1098,11 @@ redacted prompts, verdict files, `gate_policy`-keyed escalation).
   available (`agent_route`), strong-tier by default.
 - **The optimization loop, bounded.** BUILD → CRITIQUE → rework, iterating until
   `APPROVE` or the budget (`AGENT_CRITIQUE_MAX`, default **3**, env-overridable
-  like the S8 knobs) trips the `gate_policy` page-the-human path. A WI row may
+  like the S8 knobs) trips the session-hold page-the-human path. A WI row may
   override that run-wide default with `CritiqueBudget=n|inf` (`inf` means iterate
   until `APPROVE`) and set `CritiqueExhaustion=move-on|block`; absent/invalid cells
   preserve the global default + move-on, while `block` forces `NEEDS-HUMAN` under
-  every gate policy. `inf` remains bounded operationally by `--max-iterations`,
+  either hold. `inf` remains bounded operationally by `--max-iterations`,
   the per-session CLI limits, and the declared pause/blackout controls. In a
   batched build, `inf` and `block` win; otherwise the largest budget wins. The trigger is a
   committing build whose WI touches a `Critique` SR (read straight off the spine);
@@ -1111,7 +1116,7 @@ redacted prompts, verdict files, `gate_policy`-keyed escalation).
 - **The arbiter split.** Working default: **the critic gates iteration; the human
   owns acceptance.** A critic `APPROVE` ends rework; gate closure still carries the
   human `Attest` (the strong-model floor and the attested-vs-mechanized split
-  stand). Under `gate_policy = "autonomous"` the critic verdict closes
+  stand). On a **loop-held** tier the critic verdict closes
   iteration-level acceptance and the recorded-verdict rules govern the gate as they
   do today. (This does not contradict the S8 "no LLM-judge tiebreaker" ruling —
   that ruled out an LLM arbitrating between *reviewers' scores*; here the quality
@@ -1188,7 +1193,7 @@ files, `agent_route` family heterogeneity, budgets) — **no new engine**:
    `verdict.md` with the ports), the verdict summarized in `log.md`. The
    selected plan's rows are then filed as real WIs through normal intake.
 7. **Acceptance:** human `Attest` closes the round per the gate philosophy;
-   under `gate_policy = "autonomous"` the recorded-verdict rules govern, as they
+   on a **loop-held** tier the recorded-verdict rules govern, as they
    do for the critique loop.
 
 The three hat prompts ship as kit templates —
@@ -2469,8 +2474,8 @@ composed tree **is** the candidate, by construction — a one-page merge
 queue), the trunk step folded into the merge commit, and the **declared bar**
 run on the composed tree read fail-closed — a missing or empty check
 declaration is a **refusal**, never a skip, and any SKIP in the report
-refuses (the fail-open lesson, stated as a contract). The `gate_policy` dial
-(RULING-7) is enforced by requiring the corresponding **verdict artifact**
+refuses (the fail-open lesson, stated as a contract). The `[attestation]` dials
+(RULING-7) are enforced by requiring the corresponding **verdict artifact**
 (review file `docs/reviews/WI-<n>-<PHASE>.md`, critique, attestation) with
 git-derived freshness before the trunk fast-forwards; a red queue parks
 loudly. `integrate.py audit` is the RULING-6 window check: coordinator

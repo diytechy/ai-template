@@ -96,7 +96,9 @@ chasing it.
     injects a vendored discipline core into weaker-tier sessions, drift-checked
     by `check_vendored.py`.
   - Consent is explicit via the dials scaffolded into `docs/process.toml`:
-    `gate_policy` (who advances gates), `push` (who may push), and
+    `human_ratification_through` (which tiers a human ratifies — the row
+    below; the retired `gate_policy` enum is **not** shipped), `push`
+    (who may push), and
     `privacy_check` (the PII/identity gate, enforced by the git hooks +
     `check_privacy.py`). That file is the **one home for every policy dial**
     (SN-028): a repo declaring the same dial twice — there and in a legacy
