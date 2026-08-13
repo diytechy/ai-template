@@ -1628,3 +1628,14 @@ automated = "Yes"
 evidence = "tests/test_adjudicate_brief.py"
 status = "Draft"
 phase = 5
+
+[test.TC-162]
+verifies = ["SR-103", "LLR-168"]
+level = "Unit"
+method = """Load well-formed, malformed (falsey table, unknown key, bad grammar) and absent rosters; select against declared and undeclared context fields; compose a brief with and without applicable hats and with multiline roster text."""
+tier = "Smoke"
+expected = """Malformed refuses as HatsError, absent reads opt-out; selection honors the closed grammar with undeclared-field silence; the composed block carries every applicable hat's question, no heading injection, and the template/instance structure pin holds."""
+automated = "Yes"
+evidence = "tests/test_hats.py"
+status = "Draft"
+phase = 4

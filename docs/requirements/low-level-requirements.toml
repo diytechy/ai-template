@@ -1704,3 +1704,14 @@ test_refs = "TC-161"
 status = "Draft"
 component = "CMP-008"
 phase = 5
+
+[design.LLR-168]
+sr_refs = ["SR-103"]
+title = "Hats roster reader + planner-brief injection"
+module = "project-trajectory/scripts/hats.py"
+code_symbol = "load/applicable/brief_block/parse_condition"
+detail = """Reads the declared expert-perspective roster (docs/requirements/hats.toml; SN-036 via OI-19, ruled 2026-08-13): validates the three required keys and the closed applies_when grammar at load (malformed refuses loudly and PAGES the round; absence is opt-out), selects the applicable hats for a decomposition context (an undeclared field satisfies no clause), and renders the one-line-per-hat markdown block the dual-plan planner brief embeds via its {{HAT_QUESTIONS}} slot. Whitespace collapses at load so roster text cannot mint a markdown heading inside the composed brief."""
+test_refs = "(see TC-162)"
+status = "Draft"
+component = "CMP-008"
+phase = 4

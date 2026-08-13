@@ -157,3 +157,4 @@ resource: "generated"
 | [TC-159](TC-159.md) | Run the carrier-converter suite: it converts the live spine, re-parses the emitted TOML w… |
 | [TC-160](TC-160.md) | Drive the carrier reader over a REAL repo whose spine is cut over from CSV to TOML in one… |
 | [TC-161](TC-161.md) | Drive the real loop against a fake agent CLI over throwaway git repos, one per ROUTED bri… |
+| [TC-162](TC-162.md) | Load well-formed, malformed (falsey table, unknown key, bad grammar) and absent rosters; … |
