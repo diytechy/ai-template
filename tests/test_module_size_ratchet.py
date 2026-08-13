@@ -654,7 +654,7 @@ BASELINE = {
     # whichever id scan globbed the old suffix, and nothing generic catches it
     # (a scan that finds no registry reads zero rather than refusing). A third
     # occurrence should build that guard instead of adding a fourth reader.
-    "trace.py": 3670,  # +221 2026-08-13: WI-443 — the IF/CMP schema tier (required fields, closed vocabularies), the four IF Contract negative rules, and the untagged-endpoint classifier, all warn-first (reviewed bump, reason in the log)
+    "trace.py": 3678,  # +221 2026-08-13: WI-443 — the IF/CMP schema tier (required fields, closed vocabularies), the four IF Contract negative rules, and the untagged-endpoint classifier, all warn-first; +8 the adversarial round's refutation recorded in schema_advisories' docstring (reviewed bumps, reasons in the log)
     # +132 (1926 -> 2058; the last +10 is the F4 BOM hardening: read_rows utf-8-sig + git-show strips), WI-316: staged_spine_findings — the amend-without-
     # flip warn (--staged): content cells of a Verified spine row changed
     # without the Modified marker, suppressed when the owning SR flips in the
