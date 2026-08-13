@@ -27264,3 +27264,82 @@ collision reproduced independently.
 generated view fresh. 13 briefs pending (OI-26 recommended CLOSE); the
 sitting's surface is `open-items.html` + repo-lock's WHAT IS LEFT, both
 current. Commits: fa472b86..42121a6c plus this record.
+
+## 2026-08-13b — the pre-absence charge-through: fourteen rulings executed at once
+
+The owner ruled every open item in one sitting (the Decisions entry of this
+date) and left with the direction to charge through as much as feasible
+before the reapproval sitting. This entry is the map of what the charge
+landed; every slice's depth is in its WI Deliverable under
+`docs/work/complete/`, and the owner's reading order is
+[plans/2026-08-13-sitting-pack.md](plans/2026-08-13-sitting-pack.md).
+
+**Method.** Fourteen execution rows minted (WI-436..449, later WI-450),
+built by parallel Opus worktree agents, merged serially with the commit bar
+at every merge and a codex (`gpt-5.6-sol`, medium, hostile brief) adversarial
+round per slice; every finding re-verified by the coordinator before fixing —
+the rounds earned their keep on every single slice. One systemic hazard
+surfaced early: agent worktrees were repeatedly created at a months-stale
+commit (`3abeb636`); every affected agent detected or was corrected, and
+every landed branch was verified to sit on the current tip.
+
+**Landed, in order.** WI-436 (the OI-26 loose end records its ruling).
+WI-438 (the CI moment→tier table declared once in `[ci-tiers]`, both
+workflows pinned; the review round killed an echo-defeat, a duplicate
+`--tier` misread, a bare-`run:` step hiding behind a neighbour's guard, and
+a job-level veto hole — each now a bite test). WI-444 in two halves: the
+twice-reviewed SN/SR prose batch applied exactly (12/12 previously-laundered
+rows verified by token-multiset; SR-082 correctly held on its unmet
+condition), then the judgment half — the edge tier dissolved (SN-013..022
+deleted under D-4, 38 ref arrays swept, re-anchors SR-021→SN-001 and
+SR-029→SN-025, `uncovered=0` parity both sides; the review round caught two
+obligations the dissolution would have orphaned, folded into SR-021/SR-026),
+the OI-17 reframe (SN-025 pure self-direction, SN-034 the one launcher
+home), the OI-23 stale-row batch (8 rows verified still-true and left; 15
+amended; the four adjacent `[policies]` rows ridden), SN-005 narrowed to
+per-moment equivalence. WI-439 (the tarball stamp warns; the skill points
+instead of restating; the first old-kit re-sync test — plus the review
+round's false-anchor fix, the `--force` leg, and `fetch-depth: 0` without
+which the module would have skipped forever in CI). WI-437 (`gate_policy`
+runtime label → `session_hold`; PROCESS_OPTIONS swept off the retired enum;
+the four blocked stale-text verdicts unblocked). WI-440 (the
+overlap-suppression direction reversed into a warn-only advisory — 15
+surfaced; the review round added the lazy seam read and the one-scan cache).
+WI-446 (the six-hat roster as owner text + the planner-brief injection;
+four review findings fixed, including a falsey-roster fail-open and a
+markdown-heading injection). WI-449 (the CodeSymbol grammar stated where it
+binds; the four unfounded rows re-confirmed and honestly kept; the non-py
+skip surfaced as a third ADVISORY ink, 5 rows). B10 closed early
+(`plan_coverage.split_refs` joins the canonical splitter, pinned in
+`test_rule_sync`). The E741 lint red both builders flagged, fixed.
+
+**Part A executed (WI-441).** The data pack measured the boundary (34
+crossings, 19 uncovered), refuted the containment-covers-the-vacuous-rows
+hope (45 IF rows policed by nothing — part B inherits it), and scored five
+candidate partitions; the ranked shortlist adopted **P5 narrow-waist
+provisionally, warn-first** per the owner's confirmed execution mode
+(CMP-006..009 minted, CMP-001..005 retired, 149 LLR + 54 IF cells
+re-pointed, no Status flipped anywhere); the WI-440 advisories dropped
+15→0 exactly as the pack predicted, with all 31 cut seams already covered.
+`SR.Area`'s verdict: retire the free-text column, keep the six spanning
+values as a closed aspect vocabulary in part B's schema. The one-home
+constraint was measured to be a property of the CODE, not the partition —
+the D-8 common-module program is what discharges it, D-8 superseding the
+F5-era acceptance by recency. Ratification package: sitting pack §3.
+
+**Reviewed bumps, reasons at the entries:** bootstrap.py ratchet
+2767→2828 composed across WI-439 (+26), its review fix (+15), WI-446's
+MAPPING rows (+20); check_trajectory.py 3957→4050 across WI-440 and its
+review fixes; PROCESS.md +311 (the §8 consumption declaration);
+PROCESS_OPTIONS.md +671 composed (+316 the OI-25 sweep, +355 the advisory
+documentation); smoke `max-tests` 1030→1090 (WI-446's in-process growth,
+signed figure at the stamp).
+
+**The state at this entry.** Gate honestly G1 (`modified=62`, `drafts=46`,
+`uncovered=0`, `components=4`, integrity 0); full unfiltered suite green at
+every close (2338→2351 passed across the day's tree states); smoke green at
+every commit. In flight when this entry was written: WI-443 (part B — the
+IF contract, schema tier, and the last two registries onto the carrier) and
+WI-447 (the SHA-anchored re-sync pack); then WI-445 (the stage ladder),
+WI-442 (the boundary seeds), WI-448 (the common-module inversion). The
+owner owes only the consolidated re-attest sitting and merge-to-main.
