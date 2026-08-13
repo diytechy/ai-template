@@ -63,14 +63,16 @@ jobs:
           #   pip install -e .                 # if you have a pyproject.toml
           #   pip install -r requirements.txt  # if you pin deps in a file
 
-      # Tier by trigger: cheap smoke on every push, the full suite on PRs, and
-      # the full release tier on a version tag. The GATE comes from the repo's
-      # committed `docs/gate` file (check.py reads it), so CI enforces the bar
-      # the project is actually at — a freshly-scaffolded G1 repo is green, and
-      # the bar rises when artifacts are ratified in a reviewed commit and
-      # docs/gate is regenerated (it is DERIVED from the artifact states by
-      # derive_gate.py, not hand-set; the derived-gate step guards its freshness). A
-      # release tag claims the full bar explicitly. In CI we do NOT pass
+      # Tier by moment. WHICH tier runs at which moment is declared ONCE in
+      # `docs/stack.ini` `[ci-tiers]`; the `if:` guards and `--tier` flags below
+      # are that declaration's CI half, and the kit pins the two together. To
+      # raise or lower CI scope, edit the declaration — not these lines.
+      #   The GATE is orthogonal and comes from the repo's committed `docs/gate`
+      # file (check.py reads it), so CI enforces the bar the project is actually
+      # at — a freshly-scaffolded G1 repo is green, and the bar rises when
+      # artifacts are ratified in a reviewed commit and docs/gate is regenerated
+      # (it is DERIVED from the artifact states by derive_gate.py, not hand-set;
+      # the derived-gate step guards its freshness). In CI we do NOT pass
       # --lenient: a missing required tool must fail, so checks can't be
       # silently skipped.
       - name: Smoke (push)

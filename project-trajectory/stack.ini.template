@@ -50,6 +50,29 @@ full = -m "not release"
 release =
 all =
 
+# --- CI moment -> tier: the ONE home for "which bar runs when" ---------------
+# The human bar is tiered BY MOMENT, and the reference CI workflow
+# (ci/check.yml -> .github/workflows/check.yml) mirrors it BY TRIGGER. That
+# correspondence is what makes "CI runs the same harness you run" true PER
+# MOMENT rather than as one command, so the table is declared HERE instead of
+# living only in a YAML comment: raising or lowering CI scope becomes a
+# reviewed edit to these rows, never a quiet workflow change. The rows below
+# ARE the table — nothing else may restate it.
+#   Each row: <ci-trigger> = <tier> | <the human moment it mirrors>
+# `tier` is one of the [tiers] names above. The triggers are the three the
+# reference workflow discriminates: `push` (a branch push that is not a tag),
+# `pull_request`, and `tag` (a push of a version tag). Delete a row whose
+# trigger your workflow does not fire; the moment half is required, because a
+# row that names no human moment is a trigger->tier table, not this one.
+#   WHAT IS PINNED, HONESTLY: the kit's own tests hold the SHIPPED reference
+# workflow to this table (entry point, guard, tier and step label). Nothing the
+# kit ships can reach YOUR copy of the workflow once you edit it — if that
+# correspondence matters to you, add the equivalent pin to your own suite.
+[ci-tiers]
+push = smoke | every commit
+pull_request = full | a work-item / slice close
+tag = release | a release
+
 [coverage]
 # Line-coverage threshold %, enforced at the full/release/all tiers only (the
 # smoke subset isn't held to it). `--coverage N` on the check.py CLI overrides.
