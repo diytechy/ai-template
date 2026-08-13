@@ -27174,3 +27174,46 @@ Every pending brief's `one_line` is 32–41 words; longest paragraph anywhere is
 76. Smoke **987 passed, 2 skipped**; `trace --strict` and `check_trajectory
 --strict` **rc 0**; `check_docs` **0 broken** (388 docs, 1,116 links); the
 queue renders 64 lists, 257 bullets, 20 sub-headings.
+
+## 2026-08-13 — the queue hardened for the sitting: two reviews, four owner corrections, and a premise that fell to a question
+
+The pre-sitting pass the owner asked for, spanning 2026-08-12 evening into
+2026-08-13. Everything below is in the briefs themselves — this is the map.
+
+**Verification (seven agents + terra + an opus sweep).** Every pending brief
+re-measured against the tree: all were genuinely open; four carried factual
+errors, fixed (OI-14's "no shipped definition" claim, two counts, a phantom
+copy-paste slip). A codex-terra medium round scored 5.5/6 confirmed; the opus
+sweep found the OI-21 dual-ladder contradiction, five factual drifts (incl.
+my own bad ~10.4 recompute — the true core-need mean is 12.50), and the
+unowned fifth execution question. All accepted findings applied; both reviews'
+overclaims refuted with evidence.
+
+**Ruled and recorded (owner, 2026-08-12).** OI-21 re-ruled: every G* tag
+retires for an eight-rung stage ladder; the ordering resolved
+requirements-BEFORE-architecture (the canonical ladder: Needs / Boundary /
+Reqs / Arch / LLReqs / Tests / Impl / Release — boundary happens once, LLR is
+the floor via OI-20's discharge rule, rungs 2–3 recurse in scope not tiers).
+Carrier: label-as-identifier, position derived. Five execution questions
+remain, sequenced after OI-14 part A. OI-27 minted (the LLM re-sync method;
+no kit version was ever designated), recommendation revised to the owner's
+option (e) — an LLM re-sync pack, SHA-anchored, promoting to the detector
+registry on a named trigger.
+
+**The owner's read-through then moved four briefs.** OI-26's premise is
+REFUTED — the mint path exists (`## Dispositions` drafts + intake's
+drafts-not-mints arm), so DRAFTED already means "mint these rows"; the brief
+survived both automated reviews because they checked its numbers, and fell to
+the owner asking "I don't follow this one." Recommended CLOSE. OI-17 gained
+option (d) REFRAME (SN-034 becomes THE launcher need; the launcher clause
+currently lives in two rows). OI-24's "what does a human run" answered: the
+bar is tiered by moment, the trigger→tier mapping already ships, and the pin
+upgrades to assert it. Evidence from the Core (Gilbert) adopter landed in
+OI-14: one boundary four views, made-vs-bought, the Module/Component
+collision reproduced independently.
+
+**Handoff state.** Full unfiltered bar **2308 passed, 5 skipped**
+(2026-08-13); `trace --strict` and `check_trajectory --strict` rc 0; every
+generated view fresh. 13 briefs pending (OI-26 recommended CLOSE); the
+sitting's surface is `open-items.html` + repo-lock's WHAT IS LEFT, both
+current. Commits: fa472b86..42121a6c plus this record.

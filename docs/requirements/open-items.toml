@@ -440,7 +440,7 @@ recommendation = """(a) RATIFY AS BUILT, and rule the cell-content question in t
 wi_refs = ["WI-429"]
 
 [open_item.OI-21]
-title = """The gate vocabulary retires ENTIRELY for an eight-rung stage ladder - direction ruled, four execution questions open"""
+title = """The gate vocabulary retires ENTIRELY for an eight-rung stage ladder - direction ruled, five execution questions open"""
 status = "pending"
 raised = "2026-08-12"
 one_line = """RULED 2026-08-12: every G* tag converts to stage semantics on a new eight-rung ladder (0 vision/needs .. 7 release-ready) - the tags die purposefully, because gate numbers will always be conflated with stage numbers; open for ruling: the string-vs-int carrier, the historical sweep's attestation carve-out, the sign-off successor shape, the automation-dial keying, and the per-rung predicates"""

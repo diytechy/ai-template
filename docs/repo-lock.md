@@ -57,7 +57,7 @@ the map, and it must never grow depth again.**
 | the **launcher tier** disputes | **OI-17** | §8.3, §8.7 |
 | dissolve the **edge-case tier** | **OI-18** | §8.6 item 2 |
 | the **hats roster** contents + home | **OI-19** | §8.6 item 2 |
-| the **gate-vocabulary retirement** — *re-ruled 2026-08-12: all G\* tags convert to an eight-rung stage ladder; four execution questions open, program sequenced after OI-14 part A* | **OI-21** | §8.7 |
+| the **gate-vocabulary retirement** — *re-ruled 2026-08-12: all G\* tags convert to an eight-rung stage ladder; five execution questions open, program sequenced after OI-14 part A* | **OI-21** | §8.7 |
 | what a **red test case** may produce — *premise REFUTED 2026-08-12; the brief now records the corrected flow, recommended CLOSE* | **OI-26** | §5 loose ends |
 | the **LLM re-sync method** from older kit states *(raised 2026-08-12; post-lock program, but the brief carries three do-not-wait defects)* | **OI-27** | — |
 
@@ -242,7 +242,7 @@ semantics landed; the SN batch applied as drafts).
 | spine | SN **37** · SR **147** · LLR 149 · TC 146 · **46 drafts** · **38 `Modified`** |
 | integrity | `orphans=0 integrity=0 component-findings=0 interface-findings=0`; interfaces 113 |
 | strict modes | `trace --strict` **rc 0** · `check_trajectory --strict` **rc 0** |
-| full bar | **2298 passed, 5 skipped** (post stage-rework; re-run owed at session close) |
+| full bar | **2308 passed, 5 skipped** (2026-08-13, pre-sitting handoff — the owed re-run done) |
 | owner surface | **13 pending `OI-` briefs** (OI-14 and OI-16…OI-27 — read them in [`open-items.html`](open-items.html), not here) + the sitting's 25-row re-attest, which that surface also renders |
 
 **Predecessor records**, kept reachable because they are the account of the

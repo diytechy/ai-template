@@ -27,7 +27,14 @@ home elsewhere — don't restate it here:
   model, and the audit's approved WI retirements executed. **Its spine
   amendment window is CLOSED** — attested at the 2026-07-29 sitting, ruling
   in [log.md](log.md)'s Decisions; the restructure has no open act.
-- **START HERE if you are picking up after 2026-08-01:**
+- **START HERE for the P0 approval sitting (current as of 2026-08-13):**
+  [repo-lock.md](repo-lock.md) "WHAT IS LEFT" is the map;
+  [open-items.html](open-items.html) is the ruling surface (13 pending briefs,
+  OI-26 recommended CLOSE); the session record through the queue-hardening
+  pass is [log.md](log.md) `2026-08-13`. Full bar 2308 passed / 5 skipped at
+  handoff; all strict checks rc 0.
+- **START HERE if you are picking up after 2026-08-01** (superseded by the
+  line above for the sitting itself):
   [handoff-2026-08-01.md](handoff-2026-08-01.md). Most of the concurrency-v2
   program is built and merged. **The refresh red that blocked both open lanes is
   RESOLVED** (§2's resolution box; the account is in [log.md](log.md)): it was
