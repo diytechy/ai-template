@@ -93,6 +93,10 @@ def declared(path):
     rows = {}
     for trigger in cp.options("ci-tiers"):
         raw = cp.get("ci-tiers", trigger)
+        assert raw.count("|") == 1, (
+            "%s [ci-tiers] %s = %r is not the `<tier> | <moment>` row shape "
+            "(exactly one `|`)" % (path, trigger, raw)
+        )
         tier, sep, moment = raw.partition("|")
         assert sep and moment.strip(), (
             "%s [ci-tiers] %s = %r names no human moment; the row shape is "
@@ -105,7 +109,9 @@ def declared(path):
 
 # --- reading a workflow -------------------------------------------------------
 
-_STEP = re.compile(r"(?m)^\s*-\s+(?:name|uses):")
+_STEP = re.compile(
+    r"(?m)^\s*-\s+(?:name|uses|run|if|id|env|with|shell|working-directory):"
+)
 
 
 def _step_blocks(text):
@@ -121,6 +127,21 @@ def _scalar(block, key):
 
 def _live_lines(text):
     return [ln for ln in text.splitlines() if not ln.lstrip().startswith("#")]
+
+
+def _harness_invocations(line):
+    """Command-position invocations of the harness on one live line.
+
+    `python <path ending in scripts/check.py>` at the start of the command (or
+    after a shell connector) — a line that merely MENTIONS the path (an `echo`,
+    a string argument) is not an invocation. The distinction is the point: the
+    pin is about what CI RUNS, and `run: echo python scripts/check.py` runs
+    nothing.
+    """
+    body = re.sub(r"^\s*(?:-\s+)?run:\s*", "", line.strip())
+    return re.findall(
+        r"(?:^|[;&|(]\s*)(?:python3?|py)\s+(\S*%s)\b" % re.escape(HARNESS), body
+    )
 
 
 def _check_py_default_tier():
@@ -146,14 +167,17 @@ def harness_steps(text):
     out = []
     for block in _step_blocks(text):
         for line in _live_lines(block):
-            if HARNESS not in line:
+            if not _harness_invocations(line):
                 continue
-            m = re.search(r"--tier\s+(\S+)", line)
+            # the LAST --tier wins, because that is what argparse executes — a
+            # first-match read would report `--tier smoke --tier all` as smoke
+            # while CI runs all.
+            tiers = re.findall(r"--tier\s+(\S+)", line)
             out.append(
                 (
                     _scalar(block, "name"),
                     _scalar(block, "if"),
-                    m.group(1) if m else DEFAULT_TIER,
+                    tiers[-1] if tiers else DEFAULT_TIER,
                 )
             )
     return out
@@ -230,9 +254,11 @@ def test_reference_workflow_step_labels_agree_with_what_they_run():
 
 def test_reference_workflow_runs_the_documented_human_entry_point():
     # (b) of the OI-24 build: ONE definition of passing. The shipped agent guide
-    # names `python scripts/check.py` as the bar; every check the workflow runs
-    # must go through that same script, and the workflow may execute nothing
-    # else but the release-checklist generator the release moment also owes.
+    # names `python scripts/check.py` as the bar; every PYTHON entry point the
+    # workflow touches must be the harness (or the release-checklist generator
+    # the release moment also owes). Honestly: the inventory sees `.py` tokens,
+    # so a non-Python check (npm test, a bare shell loop) is outside its reach —
+    # that class is an adopter edit, which OI-24 already places out of scope.
     agents = (KIT / "AGENTS.template.md").read_text(encoding="utf-8")
     assert "`python %s`" % HARNESS in agents, (
         "the agent guide no longer documents %s as the human bar; this pin's "
@@ -244,6 +270,19 @@ def test_reference_workflow_runs_the_documented_human_entry_point():
     assert invoked <= ALLOWED_INVOCATIONS, (
         "the reference workflow runs checks outside the harness (a second "
         "definition of passing): " + str(sorted(invoked - ALLOWED_INVOCATIONS))
+    )
+
+
+def test_no_job_level_guard_can_disable_a_declared_moment():
+    # The step guards above are only meaningful if nothing ABOVE them can veto
+    # the whole job: a job-level `if:` on the reference workflow would disable
+    # declared moments while every step-level pin stays green. The reference
+    # workflow has none, and growing one is a reviewed edit here.
+    ci = CI_REFERENCE.read_text(encoding="utf-8")
+    assert not re.search(r"(?m)^ {4}if:", ci), (
+        "the reference workflow grew a job-level `if:` — a veto above the "
+        "step guards the tier pins read; route the condition through the "
+        "step guards or name it here deliberately"
     )
 
 
@@ -296,19 +335,39 @@ def test_this_repos_own_gate_never_drops_below_its_declared_tier():
     )
     steps = harness_steps(CI_THIS_REPO.read_text(encoding="utf-8"))
     assert len(steps) == 1, "expected exactly one gate step, got " + str(steps)
-    _name, _guard, tier = steps[0]
+    _name, guard, tier = steps[0]
+    assert guard is None, (
+        "the gate STEP grew an `if:` guard (%r) — a step-level veto would "
+        "disable the gate while this pin still saw its tier; disabling or "
+        "conditioning the gate is a reviewed edit" % guard
+    )
     assert set(tiers.values()) == {tier}, (
         "the gate job runs --tier %s; docs/stack.ini [ci-tiers] declares %s"
         % (tier, tiers)
     )
+    # The gate JOB's only permitted guard is the known fork-PR dedup (runs on
+    # every push; PRs only from forks, because an internal PR's commits already
+    # ran at push). An unrecognised job guard is a failure, not a shrug —
+    # the GUARD_TRIGGER reviewed-edit property applied one level up.
+    ci = CI_THIS_REPO.read_text(encoding="utf-8")
+    dedup = (
+        "github.event_name == 'push' || "
+        "github.event.pull_request.head.repo.full_name != github.repository"
+    )
+    for m in re.finditer(r"(?m)^ {4}if:[ \t]*(.*)$", ci):
+        assert " ".join(m.group(1).split()) == dedup, (
+            "unrecognised job-level guard %r in test.yml — name it here "
+            "deliberately" % m.group(1)
+        )
 
 
 def test_this_repos_own_gate_runs_the_same_entry_point():
     # The same "one definition of passing" claim, dogfooded: the meta-repo's
     # gate job runs the kit's own check.py, not a hand-rolled command list.
     ci = CI_THIS_REPO.read_text(encoding="utf-8")
-    assert any(HARNESS in ln for ln in _live_lines(ci)), (
-        "this repo's CI no longer runs its own harness"
+    assert any(_harness_invocations(ln) for ln in _live_lines(ci)), (
+        "this repo's CI no longer INVOKES its own harness at command position "
+        "(a line that merely mentions the path does not count)"
     )
 
 
@@ -349,6 +408,46 @@ def test_bite_a_second_definition_of_passing_is_caught():
     )
     invoked = set(re.findall(r"[\w./-]*\.py", "\n".join(_live_lines(mutated))))
     assert not invoked <= ALLOWED_INVOCATIONS
+
+
+def test_bite_a_mentioned_but_not_invoked_harness_is_not_counted():
+    # The echo defeat from the adversarial round: a line that PRINTS the
+    # command must not satisfy a pin about what CI RUNS.
+    assert not _harness_invocations(
+        "      run: echo python scripts/check.py --tier full"
+    )
+    assert _harness_invocations("      run: python scripts/check.py --tier full")
+    assert _harness_invocations(
+        "      run: python project-trajectory/scripts/check.py --jobs 0"
+    )
+    assert _harness_invocations("      run: cd repo && python scripts/check.py")
+
+
+def test_bite_a_duplicate_tier_flag_reads_as_what_argparse_runs():
+    # `--tier smoke --tier all` executes all (argparse last-wins); a first-match
+    # read would have reported smoke and kept the pin green through a real
+    # scope change.
+    steps = harness_steps(
+        "      - name: sneaky\n"
+        "        if: github.event_name == 'pull_request'\n"
+        "        run: python scripts/check.py --tier smoke --tier all\n"
+    )
+    assert [t for _n, _g, t in steps] == ["all"]
+
+
+def test_bite_a_bare_run_step_cannot_ride_a_neighbours_guard():
+    # A `- run:`-first step is its OWN step: it must not glue onto the previous
+    # block and inherit its name/guard, which would let an added unguarded
+    # harness step hide behind a guarded neighbour.
+    text = (
+        "      - name: Full suite (pull request)\n"
+        "        if: github.event_name == 'pull_request'\n"
+        "        run: python scripts/check.py --tier full\n"
+        "      - run: python scripts/check.py --tier release\n"
+    )
+    steps = harness_steps(text)
+    assert len(steps) == 2
+    assert steps[1][0] is None and steps[1][1] is None  # no name, NO guard
 
 
 def test_bite_a_restated_table_in_a_comment_is_caught():

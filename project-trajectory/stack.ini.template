@@ -69,7 +69,7 @@ all =
 # kit ships can reach YOUR copy of the workflow once you edit it — if that
 # correspondence matters to you, add the equivalent pin to your own suite.
 [ci-tiers]
-push = smoke | every commit
+push = smoke | the per-commit bar (CI sees the pushed tip)
 pull_request = full | a work-item / slice close
 tag = release | a release
 
