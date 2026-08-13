@@ -118,6 +118,12 @@ check_vocab will warn now and error once promoted.
   stage=DevStg-Needs, DevBar-Reqs approaching); it will not rise until the
   sitting — that is the design. Final composed-tree full bar: 2452 passed /
   6 skipped, zero failures.
+- **Cap agents' full-suite runs in every brief.** The ladder builder spent
+  77 of its 149 minutes re-running the full unfiltered suite (8+ times,
+  ~7 min each) because its brief said "verify each stage" — instruct:
+  targeted modules per stage, the full bar ONCE at the end. The transcript
+  timing skeleton is extractable from the task output JSONL when a runtime
+  needs auditing.
 - Codex reviews: `codex exec --model gpt-5.6-sol -c
   model_reasoning_effort=medium --sandbox read-only "<hostile brief>"`.
 
