@@ -231,3 +231,88 @@ numerals — "and"/"The" were already present) and SR-042 (plan `+2`, measured
 - `check.py --run-steps <the pre-commit set>` → **12/12 PASS** after regeneration.
 - `check_docs.py --root .` → **exit 0**; 838 docs, 1131 links, 0 broken.
 - `pytest -q -n auto -m smoke` → **987 passed, 2 skipped** in 114 s.
+
+---
+
+# Part 2 — the judgment half (coordinator, 2026-08-13)
+
+Applied on top of the mechanical batch, per the 2026-08-13 rulings and the
+owner's apply-now direction. Every decision below is re-blessable at the
+sitting; the per-cell before/after renders in open-items.html.
+
+## OI-18 — the edge tier dissolved
+
+- SN-013..SN-022 deleted (D-4: supersession is deletion; watermark holds).
+  SN count 37 → 27. `uncovered=0` before AND after (parity verified on the
+  basis line) — ten needs leaving the denominator did not masquerade as
+  coverage improving.
+- 38 SR `sn_refs` arrays shed the edge ids; re-anchors as ruled:
+  SR-021 → SN-001, SR-029 → SN-025.
+- TWO OBLIGATIONS THE DISSOLUTION WOULD HAVE ORPHANED, caught by the
+  adversarial round (codex gpt-5.6-sol) and folded into carriers:
+  SN-013's launcher/coordinator interpreter-probe half → SR-021 (which had
+  carried only the hooks); SN-016's "a rate limit backs off; a stall aborts
+  to protect the budget" → SR-026's acceptance (no SR carried either clause).
+- RECORDED, NOT SWEPT: ~29 SR rationale cells still say "Realizes SN-01x"
+  for retired ids. Ruled as accurate history per D-4 ("any document citing a
+  retired id keeps its citation"); the parentheticals carry content worth
+  keeping. If the owner prefers a sweep, it is mechanical — one decision at
+  the sitting.
+
+## OI-17 — the launcher reframe
+
+- SN-025 rewritten to pure self-direction (launcher clause removed, pointer
+  to SN-034 left in place); SN-034's acceptance now declares itself the ONE
+  home for launcher-class obligations and sheds its sitting note; SN-035
+  sheds its sitting note. Exactly one rewrite of SN-025 (the prose batch
+  deliberately left it unchanged, so no double-edit occurred).
+
+## OI-23 — the stale-row amendments
+
+- Applied per the reading-verdicts table (scratchpad record; summarized):
+  8 rows confirmed TRUE and left alone; 15 rows / 16 defects amended —
+  carrier renames (SR-002 narrowed not rewritten, SR-129, SR-147's
+  parenthetical past-tensed, LLR-002, LLR-034, LLR-118, SN-026,
+  LLR-136 aligned), the dial re-homes on the SR-017 precedent pattern
+  (SR-042, SR-043 ×2, SR-067, SR-074, LLR-040 — which also lost its second
+  falsity, the log path now out/subagent-gate.log), the singletons (SR-049
+  rationale repoint; LLR-150's refuted parenthetical corrected, run_worker
+  kept as the declared seam), and the retired "active gate" vocabulary in
+  SR-006/SR-049 (shipped-artifact wording, not the proposal doc's).
+- SCOPE EXTENSION, recorded: the four adjacent [policies]-fold rows
+  (SR-018, LLR-018, SR-040, LLR-140) rode the batch — same class, same
+  window; SR-040's requirement half turned out already fixed by the prose
+  batch. LLR-018/LLR-140 initially omitted the migration-window
+  parenthetical; the adversarial round caught it; fixed.
+- MEASURED CORRECTIONS to the OI-23 brief: the "six dial rows" are six
+  cells across FIVE rows, and `components_check` / `live_status` are named
+  by no spine cell at all.
+- Draft-status rows delivered but not lifted (SR-147, LLR-165, TC-160):
+  text-only fixes here; the STATUS LIFT IS OWED AT THE SITTING (flagged so
+  the lift is a decision, not a drift).
+
+## OI-24 — SN-005 narrowed
+
+- SN-005 acceptance now states per-moment equivalence against the declared
+  [ci-tiers] table, shipped-workflow-only, with the not-claimed half
+  explicit. SR-019's acceptance carries the CI-mirror relation (amend, not
+  mint, per the ruling) pinned by tests/test_ci_tier_declaration.py.
+
+## Status honesty
+
+- Prose-amended Verified rows flipped Modified: SR-002, SR-006, SR-018,
+  SR-019, SR-021, SR-043, SR-067, SR-074, SR-129 + LLR-002, LLR-018,
+  LLR-034, LLR-040, LLR-118, LLR-136, LLR-140, LLR-150. Ref-array-only
+  edits did NOT flip (traced-cell reading; the sitting pack names them).
+- WI-419 chain-flip scoping DECISION: only rewritten rows flip. The batch
+  is certified text-only, so children's grounding is unchanged; flipping
+  ~100 untouched rows would drown the real re-blessings. Owner may overturn.
+- Net: modified 45 → 62, drafts 46, gate honestly G1, ex-draft G0.
+
+## Standing findings for the sitting (nothing hidden)
+
+1. The 6 one-obligation-per-row form findings the prose batch introduced
+   (SR-040/042/050/057/130/131) — a split mints ids: the sitting's act.
+2. SR-082's conditional rewrite still skipped (condition unmet).
+3. The Draft-status lifts above.
+4. The rationale-citation sweep decision (OI-18 bullet above).

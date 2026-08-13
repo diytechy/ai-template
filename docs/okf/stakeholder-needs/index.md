@@ -23,19 +23,9 @@ resource: "generated"
 | [SN-010](SN-010.md) | A reader can navigate the documentation and trust it: navigable and honest — links resolv… |
 | [SN-011](SN-011.md) | An adopting team can run every check on a clean Python 3.11+ with minimal, argued depende… |
 | [SN-012](SN-012.md) | A team can keep small changes small: the process is right-sized, not ceremony for its own… |
-| [SN-013](SN-013.md) | No Python 3 interpreter on PATH (or the Windows Store alias that resolves but exits nonze… |
-| [SN-014](SN-014.md) | A required harness tool is absent |
-| [SN-015](SN-015.md) | The working directory is not a git repository |
-| [SN-016](SN-016.md) | An unattended run must never block on a prompt at launch or mid-run |
-| [SN-017](SN-017.md) | The coordinator is killed / power-lost mid-session |
-| [SN-018](SN-018.md) | A second coordinator is launched in the same checkout |
-| [SN-019](SN-019.md) | A repo with no commits yet (HEAD absent) |
-| [SN-020](SN-020.md) | The agent CLI / model errors before doing work (retired model, expired auth) |
-| [SN-021](SN-021.md) | A generated artifact (arch map, trace view) drifts from its source |
-| [SN-022](SN-022.md) | A committed example row / placeholder is left in a registry at a gate |
 | [SN-023](SN-023.md) | A reviewer can see the project's progress and how its parts connect from one dashboard-li… |
 | [SN-024](SN-024.md) | A reviewer can trust subjective/perceptual acceptance — a realistic-looking render, an ar… |
-| [SN-025](SN-025.md) | A single command from the repo root (agent-resume) lets a configured LLM agent implement … |
+| [SN-025](SN-025.md) | With no human curating what comes next, a configured LLM agent implements toward the visi… |
 | [SN-026](SN-026.md) | The repo owner can configure several LLM families — selected per job and per capability l… |
 | [SN-027](SN-027.md) | A team gets more than one piece of ready work moving at once: ready work fans out across … |
 | [SN-028](SN-028.md) | The repo owner can find and change every policy dial in one home — a single hand-edited, … |

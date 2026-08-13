@@ -98,7 +98,7 @@ kind = "core"
 need = """AI agents and humans work from the **same playbook**, and the process is enforced **agent-neutrally** — by git hooks + CI — not by trusting whichever agent showed up."""
 why = """*AI agents and humans working from the same playbook*; enforcement can't depend on which agent showed up."""
 priority = "M"
-acceptance = """The enforcement floor is git + CI running the *same* harness a human runs; per-agent configs only mirror it, never replace it."""
+acceptance = """The enforcement floor is git + CI running the *same* harness a human runs — where "same" is ONE DEFINITION OF PASSING PER MOMENT: each CI trigger runs the documented entry point at the tier the declared moment-to-tier table (`docs/stack.ini [ci-tiers]`) assigns to that moment (per-commit bar, slice close, release), pinned by test for the SHIPPED reference workflow. An adopter-edited workflow copy is outside this repo's reach, and this need claims nothing about it. Per-agent configs only mirror the floor, never replace it. (Narrowed 2026-08-13 per OI-24: full local-CI equivalence on all inputs is not mechanizable and is not claimed.)"""
 
 [need.SN-006]
 kind = "core"
@@ -165,7 +165,7 @@ acceptance = """A `Verification=Critique` requirement is judged by a fresh, fami
 
 [need.SN-025]
 kind = "core"
-need = """A **single command from the repo root** (`agent-resume`) lets a configured LLM agent implement toward the vision — fully autonomously where enabled — with no human curating what comes next."""
+need = """**With no human curating what comes next**, a configured LLM agent implements toward the vision — fully autonomously where enabled — deriving its own next work from the repository's tracked state. (The launcher that starts it is SN-034's obligation; this need is the self-direction.)"""
 why = """Walk-away autonomy is the whole promise of the unattended layer: if a human must hand-maintain a next-step pointer, the loop is attended in practice and the pointer rots against the registry it paraphrases. Extends SN-006 (a *resumable* unattended run) into a *self-directing* one."""
 priority = "S"
 acceptance = """A plain launch derives what to do next from the tracked WI DAG plus Git — never from prose or a hand-maintained pointer (the `docs/next-wi` file this need made unnecessary, retired by WI-180) and never from predefined tracks; the ready frontier is ordered deterministically, so two readers of the same registry dispatch the same work; the status surface a human reads is generated, never hand-copied."""
@@ -175,7 +175,7 @@ kind = "core"
 need = """The repo owner can configure **several LLM families** — selected per job and per capability level — so that work benefiting from an independent second opinion is automatically routed to a *different* family wherever that is configured."""
 why = """One family is a single point of both failure and bias: an outage, a retired model or an expired auth stalls the whole loop, and a reviewer drawn from the implementer's own family shares its blind spots — so a same-family review reads like corroboration while adding little. Declaring the families and levels in a registry, rather than hard-coding one vendor, is also what keeps the kit vendor-neutral as models turn over."""
 priority = "S"
-acceptance = """`docs/agents.csv` declares (family × model × tier) pair-rows and `docs/agents-enabled` is the consent surface whose presence turns managed selection on; the coordinator resolves a row per in-process phase and tier, prefers a cross-family draw for the reviewer, critic and planner-pair sessions, degrades to the *documented* same-family mode when only one family is routable rather than silently skipping the second opinion, and logs every selection before launch — never a silent model swap."""
+acceptance = """`docs/agents.toml` declares (family × model × tier) pair-rows and `docs/agents-enabled` is the consent surface whose presence turns managed selection on; the coordinator resolves a row per in-process phase and tier, prefers a cross-family draw for the reviewer, critic and planner-pair sessions, degrades to the *documented* same-family mode when only one family is routable rather than silently skipping the second opinion, and logs every selection before launch — never a silent model swap."""
 
 [need.SN-027]
 kind = "core"
@@ -210,14 +210,14 @@ kind = "draft"
 priority = "S"
 need = """**Scope: template (adopters + this repo).** A person setting up to work on the repository can start each of the two universal contributor actions — preparing their development environment, and resuming the automated development loop — with a single action from the repository's front door, on Windows, macOS and Linux alike (one click where the platform allows it; one obvious command where it does not)."""
 why = """Setup friction is where a new contributor or fresh machine silently diverges from the declared toolchain, and a resume path that needs remembered commands is a resume path that rots. A single visible entry point per platform makes the sanctioned path the easy path. On Linux desktops a bare double-click is unpromisable (the platform requires marking a file executable first), so the promise there is one action, not one click."""
-acceptance = """Both entry points exist at the repository root for each supported platform in a fresh scaffold and in this repository; each launches its action as a single step on that platform, or documents the one platform-required step where a single click is impossible; the adopter-facing guide names the capability and invites reuse. (Sitting note: the adversarial review read this as two single-requirement items and recommended demotion to SR amendments under SN-001/SN-025 — kept at need tier because the owner's intake words it as needs; the sitting settles the level.)"""
+acceptance = """Both entry points exist at the repository root for each supported platform in a fresh scaffold and in this repository; each launches its action as a single step on that platform, or documents the one platform-required step where a single click is impossible; the adopter-facing guide names the capability and invites reuse. This row is the ONE home for launcher-class obligations — root visibility, one action per platform, both universal contributor actions; SN-025 (self-direction) no longer names a launcher. (Ruled 2026-08-13, OI-17 option (d): the reframe makes this a multi-requirement need, so the demotion test no longer applies.)"""
 
 [need.SN-035]
 kind = "draft"
 priority = "C"
 need = """**Scope: this repo (adopters advised).** A person working on this repository can open one launcher that lists the repository's available actions and runs the one they choose, on each platform this repository supports; adopters are told the pattern exists."""
 why = """This repository has a dozen legitimate actions whose invocations are buried in documentation; a menu makes them reachable without remembered commands. This deliberately proposes amending the recorded self-application boundary ("no product launchers" — this repo has no product) to "no product launch": a menu of repository actions is not a product. The boundary prose in the contributor guide and status scope amends only if this need is attested."""
-acceptance = """A root menu launcher exists for this repository's supported platforms, lists actions from one declared action inventory (so completeness is checkable against a single source), and runs the chosen action; the recorded non-goal is amended in the same change that lands the launcher, not before. (Sitting note: the adversarial review found the existing shipped requirement already specifies the menu launcher for adopters and recommended executing this as a one-requirement self-application amendment rather than a new need — kept at need tier for the sitting to settle.)"""
+acceptance = """A root menu launcher exists for this repository's supported platforms, lists actions from one declared action inventory (so completeness is checkable against a single source), and runs the chosen action; the recorded non-goal is amended in the same change that lands the launcher, not before. (Ruled 2026-08-13, OI-17: kept at need tier — the row's subject is the self-application boundary, a stakeholder-level scope decision no requirement cell can carry.)"""
 
 [need.SN-036]
 kind = "draft"
@@ -253,64 +253,3 @@ priority = "S"
 need = """**Scope: template (adopters + this repo).** A stakeholder can obtain a repeatable explanation for why the system was divided into its chosen components, based on the system's declared inputs, outputs and internal signal trade-offs rather than an unrecorded model judgment."""
 why = """A component breakdown invented free-form by a model (or a person) leaves no record of the alternatives weighed, so the next reviser cannot tell load-bearing boundaries from accidents. Deriving the partition from the system's own declared inputs and outputs, against a declared objective, leaves evidence the choice can be re-examined against."""
 acceptance = """A decomposition run records the candidate partitions considered, the declared objective and constraints they were scored against, the selected partition, and a comparison a reviewer can reproduce; the human names the components and rules the final choice; the record is kept with the architecture, not in session prose."""
-
-[need.SN-013]
-kind = "edge"
-lifecycle = "Provision"
-scenario = """No Python 3 interpreter on PATH (or the Windows Store alias that resolves but exits nonzero)"""
-expected = """The git hooks / coordinator **probe by running** a candidate and **skip-or-report clearly**; they never crash cryptically."""
-
-[need.SN-014]
-kind = "edge"
-lifecycle = "Provision"
-scenario = "A required harness tool is absent"
-expected = """`check.py` reports **`SKIP(missing)`** and **fails the gate** — a missing tool is never a silent pass."""
-
-[need.SN-015]
-kind = "edge"
-lifecycle = "Startup"
-scenario = "The working directory is not a git repository"
-expected = """The coordinator preflight reports 'not a git repo' and exits nonzero; it never hangs."""
-
-[need.SN-016]
-kind = "edge"
-lifecycle = "Startup→Runtime"
-scenario = "An unattended run must never block on a prompt at launch **or mid-run**"
-expected = """`agent_loop.py` runs headless (**stdin closed**); a rate limit backs off, a stall aborts to protect the budget — the loop is never wedged by a prompt."""
-
-[need.SN-017]
-kind = "edge"
-lifecycle = "Runtime"
-scenario = "The coordinator is killed / power-lost mid-session"
-expected = """The per-worktree lock is a kernel advisory lock the OS releases on death, so the next run is **not wedged** (no stale-pid file). *(tests/test_agent_loop.py::test_lock_auto_released_when_holder_dies)*"""
-
-[need.SN-018]
-kind = "edge"
-lifecycle = "Runtime"
-scenario = "A second coordinator is launched in the same checkout"
-expected = """A second coordinator is **refused** rather than risking a two-writer race. *(tests/test_agent_loop.py::test_lock_excludes_a_second_process)*"""
-
-[need.SN-019]
-kind = "edge"
-lifecycle = "Runtime"
-scenario = "A repo with **no commits yet** (HEAD absent)"
-expected = """The coordinator's rev-parse guard does not crash the loop. *(tests/test_agent_loop.py::test_zero_commit_repo_is_guarded)*"""
-
-[need.SN-020]
-kind = "edge"
-lifecycle = "Runtime"
-scenario = "The agent CLI / model errors before doing work (retired model, expired auth)"
-expected = """The session is logged **`ERROR`** and an **all-`ERROR`** stall is reported as an **unavailable agent**, not a work stall. *(tests/test_agent_loop.py — error region)*"""
-
-[need.SN-021]
-kind = "edge"
-lifecycle = "Runtime"
-scenario = "A generated artifact (arch map, trace view) drifts from its source"
-expected = """Its `--check` fails at the gate — a stale generated doc is a red, not a silent rot."""
-
-[need.SN-022]
-kind = "edge"
-lifecycle = "Runtime"
-scenario = "A committed example row / placeholder is left in a registry at a gate"
-expected = """`--no-placeholders` flags a leftover **`-000`** row from G2 on; a fresh scaffold stays green until it claims a gate."""
-

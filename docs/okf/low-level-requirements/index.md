@@ -12,7 +12,7 @@ resource: "generated"
 | id | summary |
 |---|---|
 | [LLR-001](LLR-001.md) | SN->SR->LLR->TC join + orphan set |
-| [LLR-002](LLR-002.md) | Id + CSV-structure + citation integrity |
+| [LLR-002](LLR-002.md) | Id + registry-CSV-structure + citation integrity |
 | [LLR-003](LLR-003.md) | Placeholder + schema checks |
 | [LLR-004](LLR-004.md) | Comparative-term advisory |
 | [LLR-005](LLR-005.md) | Off-spine integrity + back-links |

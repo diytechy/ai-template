@@ -11,13 +11,13 @@ phase = 1
 
 [design.LLR-002]
 sr_refs = ["SR-002"]
-title = "Id + CSV-structure + citation integrity"
+title = "Id + registry-CSV-structure + citation integrity"
 module = "project-trajectory/scripts/trace.py"
 code_symbol = "integrity_findings/structure_findings/triangle_findings"
-detail = """Duplicate/malformed id detection per ID_PATTERNS, a per-row column-count check, and SR/LLR citation coherence (triangle_findings); the always-valid --strict-integrity floor."""
+detail = """Duplicate/malformed id detection per ID_PATTERNS, a per-row column-count check over each CSV registry, and SR/LLR citation coherence (triangle_findings); the always-valid --strict-integrity floor."""
 rationale = """These three are wrong the moment they are written rather than at a gate, and each corrupts the join before the orphan rules could notice — so they run on every commit rather than waiting for a gate that would inherit an already-broken registry."""
 test_refs = "(see TC-002)"
-status = "Verified"
+status = "Modified"
 component = "CMP-001"
 phase = 1
 
@@ -191,9 +191,9 @@ sr_refs = ["SR-018"]
 title = "Two-axis privacy gating"
 module = "project-trajectory/scripts/check_privacy.py"
 code_symbol = "EXEMPT_EMAILS/email_ok"
-detail = """Adds the PII/identity classes when docs/privacy-check is on, exempting configured author identities."""
+detail = """Adds the PII/identity classes when docs/process.toml [policies] privacy_check is on (the legacy docs/privacy-check is still read through the migration window), exempting configured author identities."""
 test_refs = "(see TC-018)"
-status = "Verified"
+status = "Modified"
 component = "CMP-004"
 phase = 1
 
@@ -368,9 +368,9 @@ sr_refs = ["SR-067"]
 title = "WI dependency-DAG validation"
 module = "project-trajectory/scripts/check_trajectory.py"
 code_symbol = "load_wis/validate"
-detail = """Loads the WI registry - the docs/work/ spec folder, or a legacy work-items.csv via dual-read (folder wins when it holds real specs; both-present is an integrity error) -; validates WI ids, predecessor resolution, and hard-edge acyclicity; respects the absent/placeholder/opt-out vacuity rules."""
+detail = """Loads the WI registry - the docs/work/ spec folder, the ONE home since the CSV home retired at concurrency-restructure Phase 5 (a stray work-items.csv is itself an integrity finding, never a second home) -; validates WI ids, predecessor resolution, and hard-edge acyclicity; respects the absent/placeholder/opt-out vacuity rules."""
 test_refs = "(see TC-037)"
-status = "Verified"
+status = "Modified"
 component = "CMP-001"
 phase = 1
 
@@ -423,9 +423,9 @@ sr_refs = ["SR-043"]
 title = "Subagent spawn gate"
 module = "project-trajectory/scripts/subagent_gate.py"
 code_symbol = "decide/main"
-detail = """Pure decide(tool_name, policy, override) -> allow|ask|deny|defer over SPAWN_TOOLS={Task,Agent}; main reads the PreToolUse JSON payload, reads docs/subagent-gate via the shared declared-line parse, applies the SUBAGENT_GATE=allow override, emits permissionDecision (deny -> exit 2), and appends each decision to docs/subagent-gate.log; any exception fails OPEN (allow) and logs, so a broken gate never wedges the agent's tools."""
+detail = """Pure decide(tool_name, policy, override) -> allow|ask|deny|defer over SPAWN_TOOLS={Task,Agent}; main reads the PreToolUse JSON payload, reads docs/process.toml [checks] subagent_gate (falling back to the legacy one-word docs/subagent-gate through the migration window), applies the SUBAGENT_GATE=allow override, emits permissionDecision (deny -> exit 2), and appends each decision to out/subagent-gate.log; any exception fails OPEN (allow) and logs, so a broken gate never wedges the agent's tools."""
 test_refs = "(see TC-043)"
-status = "Verified"
+status = "Modified"
 component = "CMP-004"
 phase = 1
 
@@ -1169,10 +1169,10 @@ sr_refs = ["SR-049"]
 title = "Generated owner decision surface (registry + attestation depth)"
 module = "project-trajectory/scripts/gen_open_items.py"
 code_symbol = "render/_attestation_cards/word_diff/mask_local"
-detail = """The RENDERED half of the Modified/Draft attestation regime whose gate SR-049 derives. gen_open_items renders (a) every pending row of docs/requirements/open-items.csv as a decision brief and (b) every SR whose Status is Draft (ratification owed) or Modified (re-attest owed) with its whole chain's per-cell before/after. Two contracts the emitted file carries: the attestation-baseline STAMP (a --since render must be reproducible by the freshness gate, or --check compares against a different history) and the check-the-baseline empty state (an auto-derived baseline sitting AFTER a pre-regime amendment renders no cells, which must never read as nothing-changed). The machine-local advisory region is masked before comparing. SCOPE and its deliberate narrowings: this module RENDERS and owns no second opinion — the attestation model is trace.reattest_model and the pending pointers are gen_trajectory.pending_block, both imported, so a disagreement with `trace.py --ratify` means this view is the defect and the brief wins. NOT claimed: that the rendered page is legible or well-composed."""
+detail = """The RENDERED half of the Modified/Draft attestation regime whose gate SR-049 derives. gen_open_items renders (a) every pending row of docs/requirements/open-items.toml as a decision brief and (b) every SR whose Status is Draft (ratification owed) or Modified (re-attest owed) with its whole chain's per-cell before/after. Two contracts the emitted file carries: the attestation-baseline STAMP (a --since render must be reproducible by the freshness gate, or --check compares against a different history) and the check-the-baseline empty state (an auto-derived baseline sitting AFTER a pre-regime amendment renders no cells, which must never read as nothing-changed). The machine-local advisory region is masked before comparing. SCOPE and its deliberate narrowings: this module RENDERS and owns no second opinion — the attestation model is trace.reattest_model and the pending pointers are gen_trajectory.pending_block, both imported, so a disagreement with `trace.py --ratify` means this view is the defect and the brief wins. NOT claimed: that the rendered page is legible or well-composed."""
 rationale = """A human cannot bless a delta they cannot see, and the depth that makes a re-attest readable is a WORD-LEVEL diff — which the markdown surface this replaces could not mark, so a reviewer was asked to sign a change they could only read as a whole cell. Re-deriving the attestation model here was rejected: a second opinion that disagreed with the brief would leave the reviewer arbitrating between two surfaces. Both emitted contracts exist because their absence fails SILENTLY in front of someone about to attest, which is the worst place for a quiet failure."""
 test_refs = "(see TC-123)"
-status = "Verified"
+status = "Modified"
 component = "CMP-002"
 phase = 4
 
@@ -1325,10 +1325,10 @@ sr_refs = ["SR-129"]
 title = "Registry converter (CSV <-> spec folder)"
 module = "project-trajectory/scripts/wi_convert.py"
 code_symbol = "to_specs/to_csv/verify/write_spec_file"
-detail = """Converts between the registry homes per the Phase 2a grammar (TOML +++ frontmatter, Deliverable in the body, status from the directory, order key only as a CSV-order migration artifact). --verify round-trips CSV->specs->CSV in a temp dir, exits nonzero on any cell mismatch, and reports byte identity with a reason. write_spec_file is the single spec writer (to_specs and plan_artifacts filing both go through it). Refuses unknown statuses by row, non-empty targets without --force, and any in-flight active/<branch>/ claim by name (status is the FIRST path component, the loaders' rule; conversion is a drained-stop operation per §3.2 - the Phase 4 claim protocol made the state reachable)."""
+detail = """Converts between the spec folder and the retired CSV form per the Phase 2a grammar (TOML +++ frontmatter, Deliverable in the body, status from the directory, order key only as a CSV-order migration artifact). --verify round-trips CSV->specs->CSV in a temp dir, exits nonzero on any cell mismatch, and reports byte identity with a reason. write_spec_file is the single spec writer (to_specs and plan_artifacts filing both go through it). Refuses unknown statuses by row, non-empty targets without --force, and any in-flight active/<branch>/ claim by name (status is the FIRST path component, the loaders' rule; conversion is a drained-stop operation per §3.2 - the Phase 4 claim protocol made the state reachable)."""
 rationale = """One writer keeps migration and filing byte-compatible; refusal over catch-all keeps a malformed registry loud rather than silently reclassified."""
 test_refs = "(see TC-129)"
-status = "Verified"
+status = "Modified"
 component = "CMP-005"
 phase = 4
 
@@ -1373,10 +1373,10 @@ sr_refs = ["SR-132"]
 title = "Local integrator (claim + queue + audit)"
 module = "project-trajectory/scripts/integrate.py"
 code_symbol = "claim/finished_branches/_verdict_gate/integrate_one/audit"
-detail = """claim: §2.3 steps 1+2 with the refusal ladder (tracked pause via agent_common.tracked_pause, dirty tree, existing branch, unsafe name, non-ordinary safety_class, off-frontier id) before a git mv + trunk commit + branch cut. finished_branches: a claimed branch whose tip holds no spec under active/<branch>/ (the closing move IS the signal). integrate_one: --no-ff --no-commit merge, trunk_step.py folded into the merge commit so it passes its own floor, check.py --jobs 0 at the declared tier on the composed tree read fail-closed (nonzero exit OR any SKIP line refuses), verdict gate per docs/review-policy using score_reviews.parse_verdict with the verdict's last branch commit required no older than the last non-review non-fragment commit, ff-only trunk advance, branch deleted on green, candidate parked on red. audit: git log --first-parent --no-merges over --since..HEAD; paths outside docs/work/, docs/log.d/, docs/log.md and the stack.ini [generated] set flag the commit."""
+detail = """claim: §2.3 steps 1+2 with the refusal ladder (tracked pause via agent_common.tracked_pause, dirty tree, existing branch, unsafe name, non-ordinary safety_class, off-frontier id) before a git mv + trunk commit + branch cut. finished_branches: a claimed branch whose tip holds no spec under active/<branch>/ (the closing move IS the signal). integrate_one: --no-ff --no-commit merge, trunk_step.py folded into the merge commit so it passes its own floor, check.py --jobs 0 at the declared tier on the composed tree read fail-closed (nonzero exit OR any SKIP line refuses), verdict gate per docs/process.toml [policies] review_rounds (legacy docs/review-policy read through the migration window) using score_reviews.parse_verdict with the verdict's last branch commit required no older than the last non-review non-fragment commit, ff-only trunk advance, branch deleted on green, candidate parked on red. audit: git log --first-parent --no-merges over --since..HEAD; paths outside docs/work/, docs/log.d/, docs/log.md and the stack.ini [generated] set flag the commit."""
 rationale = """One serial actor, one page; every refusal names its reason; the queue stops at the first red rather than composing past it."""
 test_refs = "(see TC-132)"
-status = "Verified"
+status = "Modified"
 component = "CMP-004"
 phase = 4
 
@@ -1493,10 +1493,10 @@ sr_refs = ["SR-132"]
 title = "Lane mechanics: worktree, worker subprocess, §A2 refresh subprocess"
 module = "project-trajectory/scripts/lane.py"
 code_symbol = "ensure_worktree/worker_argv/spawn_worker/run_worker/spawn_refresh"
-detail = """One lane's mechanics extracted from the dispatcher (docs/concurrency-v2.md §A4.2): ensure the lane worktree (integrate.lane_worktree, the one home both the worker and the refresh agree on), build the worker argv with the plain launch's session dials forwarded explicitly, launch the worker subprocess (spawn_worker non-blocking for the lane table; run_worker its blocking form and the default worker seam), and run the §A2 station refresh as the lane's OWN subprocess (spawn_refresh - the invoker's integrate.py refresh CLI under the harness interpreter) so N lanes' bars overlap instead of queueing at the dispatcher (§A4.3). Reports outcomes, decides none: the tree signal (specs moved out of active/<branch>/) plus exit codes are the whole protocol - no state file, no back-channel."""
+detail = """One lane's mechanics extracted from the dispatcher (docs/concurrency-v2.md §A4.2): ensure the lane worktree (integrate.lane_worktree, the one home both the worker and the refresh agree on), build the worker argv with the plain launch's session dials forwarded explicitly, launch the worker subprocess (spawn_worker non-blocking for the lane table and dispatch._launch's own default; run_worker its blocking form - a DECLARED SEAM with no in-kit caller, kept for a synchronous single-lane run, and the shape dispatch._launch's worker= injection substitutes), and run the §A2 station refresh as the lane's OWN subprocess (spawn_refresh - the invoker's integrate.py refresh CLI under the harness interpreter) so N lanes' bars overlap instead of queueing at the dispatcher (§A4.3). Reports outcomes, decides none: the tree signal (specs moved out of active/<branch>/) plus exit codes are the whole protocol - no state file, no back-channel."""
 rationale = """The §A4.2 split keeps the deciding half (dispatch.py) apart from the running half, so at lanes=1 the dispatcher degenerates to the serial loop and the concurrency is a table size, not a second code path."""
 test_refs = "(see TC-144)"
-status = "Verified"
+status = "Modified"
 component = "CMP-004"
 phase = 4
 

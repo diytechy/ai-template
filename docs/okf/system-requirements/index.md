@@ -12,7 +12,7 @@ resource: "generated"
 | id | summary |
 |---|---|
 | [SR-001](SR-001.md) | Trace join reports orphans |
-| [SR-002](SR-002.md) | Integrity floor for ids and CSV structure |
+| [SR-002](SR-002.md) | Integrity floor for ids and registry-CSV structure |
 | [SR-003](SR-003.md) | Placeholder and schema checks |
 | [SR-004](SR-004.md) | Acceptance-criteria advisory |
 | [SR-005](SR-005.md) | Off-spine registries stay traceable |
