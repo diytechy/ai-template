@@ -696,7 +696,10 @@ else.
   and mints trunk-side (R1-safe; malformed blocks refuse loudly). `DRAFTED`
   *is* "mint these rows". The three-failure-kind discovery half noted here was
   always right; the "disposition half has no verdict word" half misread the
-  mechanism. The corrected flow is recorded in OI-26, recommended CLOSE.
+  mechanism. The corrected flow is recorded in OI-26 — **RULED CLOSED as
+  refuted (owner, 2026-08-13)**; the log's Decisions entry of that date
+  carries the meta-lesson (a brief's facts being verified is not its premise
+  being true). This loose end is settled — nothing here waits on anything.
 - **`blackout.template` still ends `12:00-19:00`** — a value the kit no longer
   ships. Low risk (the kit README already labels it a *retired scaffold
   source*, and nothing scaffolds it), recorded rather than churned. Step 10.
