@@ -9,7 +9,7 @@ Written after sitting 1 ratified
 SN-037…SN-040 and ruled decision **2.7(a)** — *an SR may name an artifact only
 where that artifact is a **declared boundary crossing***
 ([sitting-pack §2.7](2026-08-13-sitting-pack.md)) — which queued
-[`WI-451`](../work/queued/WI-451-sr-boundary-conformance-pass.md). That pass
+[`WI-451`](../../work/queued/WI-451-sr-boundary-conformance-pass.md). That pass
 re-states ~50 SRs *against the boundary*, so the boundary has to exist first.
 This document proposes it. Every figure names the command that produced it.
 

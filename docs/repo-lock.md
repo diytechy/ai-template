@@ -80,7 +80,7 @@ duplicate a surface the generator maintains. → **§5 step 6**
 
 - ~~**Rule the stage/gate semantics**~~ — **RULED and EXECUTED: gate-as-state
   is retired for stage semantics** per the
-  [proposal](plans/2026-08-11-stage-gate-semantics.md). The implementation
+  [proposal](archive/plans/2026-08-11-stage-gate-semantics.md). The implementation
   rung exists (stage 4; done is 5), `docs/gate`'s header tells the truth,
   `PROCESS.md` §4 carries the model, the sweep is done, full bar green.
   Judgment calls → **§8.7**.
@@ -89,7 +89,7 @@ duplicate a surface the generator maintains. → **§5 step 6**
   double-clickable *where the platform allows*. Applied as **SN-033…SN-040 +
   SR-148 + the SN-029 draft amendment** after a codex-sol adversarial round —
   the batch record is
-  [`plans/2026-08-12-sn-intake.md`](plans/2026-08-12-sn-intake.md), which
+  [`archive/plans/2026-08-12-sn-intake.md`](archive/plans/2026-08-12-sn-intake.md), which
   also carries the **two tier disputes**, the **edge-dissolution map** and
   the **hats sketch** as sitting inputs. Attestation stays the sitting's.
   → **§8.3**, **§8.6**
@@ -184,7 +184,7 @@ first shipped, which OI-21 supersedes.**
 question closed.** The owner: *"gate semantics should be retired / archived
 for stage semantics even though it will result in some relatively heavy
 rework."* That adopts
-[`plans/2026-08-11-stage-gate-semantics.md`](plans/2026-08-11-stage-gate-semantics.md):
+[`archive/plans/2026-08-11-stage-gate-semantics.md`](archive/plans/2026-08-11-stage-gate-semantics.md):
 **stages are the tiers of the decomposition; gates are the subset of
 boundaries that require a human to certify** — stage is the *state*, a gate is
 an *event you pass*, `DevBar-Below` is retired (it was "stage 0" in the wrong units),
@@ -491,7 +491,7 @@ spends the word six times meaning compress-to-essence) · `Grounded`
    returns False and **silently vanishes from the re-attest brief** — the exact
    laundering Q11 exists to prevent. **The migration's first act is to close
    the vocabulary.** Full checklist:
-   [`plans/2026-08-11-status-ladder-migration.md`](plans/2026-08-11-status-ladder-migration.md)
+   [`archive/plans/2026-08-11-status-ladder-migration.md`](archive/plans/2026-08-11-status-ladder-migration.md)
    (measured blast radius: 8 literal sites in scripts, 96 in tests, 8 shipped
    docs).
 
@@ -911,7 +911,7 @@ required.
 
 ### 8.4 · The prose legibility rewrite — PREPARED, adversarially reviewed twice
 
-[`plans/2026-08-10-sn-sr-prose-rewrite.md`](plans/2026-08-10-sn-sr-prose-rewrite.md)
+[`archive/plans/2026-08-10-sn-sr-prose-rewrite.md`](archive/plans/2026-08-10-sn-sr-prose-rewrite.md)
 — exact replacement text for all 29 SNs (form (i), qualifiers retained
 verbatim), a 17-SR exact-text batch (13 further rows *dropped* rather than
 shipped as outlines), the §B.0 obligation-coverage matrix, and the edge-case

@@ -42,12 +42,21 @@ home elsewhere — don't restate it here:
   split, the seven pack rulings and the record are in
   [log.md](log.md#decisions-log)): the SN foundation is ratified — 27 core
   needs, zero draft — and the re-attest window deliberately rotated onto the
-  SR tier. **Sitting 2 owes:** the boundary ruling from
-  [plans/2026-08-13-devstg-boundary-draft.md](plans/2026-08-13-devstg-boundary-draft.md),
-  the SR re-statement/retier against those agreed boundaries, the rotated
-  `Modified` window, the tabled one-obligation-per-row call (pack §2.1), the
-  LLR/TC draft ratifications, the pack's §3 partition + §4 hats acceptance —
-  and merge-to-main (`push = "human"`).
+  SR tier. **What remains was consolidated 2026-08-13 into TWO sitting
+  documents, the only live files in `docs/plans/`** (every older plan doc is
+  archived with per-file dispositions at
+  [archive/plans/](archive/plans/README.md); the carry audit is sitting 2 §7):
+  - **[plans/2026-08-13-sitting-2-boundary-and-context.md](plans/2026-08-13-sitting-2-boundary-and-context.md)**
+    rules the frame and structure — the depth-0 boundary and operational
+    context, the port list and its discriminator, where the external entities
+    live, the tabled one-obligation-per-row call, the P5 partition, the hats
+    roster, the gate-sign-off mechanization — and carries the downhill
+    re-scopes of the queued rows plus the housekeeping ledger of
+    ruled-but-unexecuted strays.
+  - **[plans/2026-08-13-sitting-3-spine-verification.md](plans/2026-08-13-sitting-3-spine-verification.md)**
+    verifies the adapted spine after those rulings execute — the re-attest
+    window close, the LLR/TC draft ratifications, the D-9 status-ladder
+    decision — and then merge-to-main (`push = "human"`).
 - **START HERE if you are picking up after 2026-08-01** (superseded by the
   line above for the sitting itself):
   [handoff-2026-08-01.md](handoff-2026-08-01.md). Most of the concurrency-v2
@@ -69,8 +78,8 @@ home elsewhere — don't restate it here:
   half done.** [repo-lock.md](repo-lock.md) **§2 D-5** ruled one TOML carrier and
   it is **executed**: all four spine tiers, then **§8.1's batch-2 first slice** —
   `open-items` and `agents`, with their templates. Nothing here needs applying;
-  `docs/plans/2026-08-10-carrier-cutover.patch` is **spent history**, not an
-  instruction.
+  `docs/archive/plans/2026-08-10-carrier-cutover.patch` is **spent history**,
+  not an instruction.
 
   **§8.1 is FINISHED (2026-08-13):** the last two registries —
   `interfaces` and `components` — joined the TOML carrier once their rulings

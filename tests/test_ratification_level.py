@@ -349,7 +349,7 @@ def test_an_unverified_SR_over_AUTHORED_tests_is_the_IMPL_rung():
     making them pass. This state persists for the entire implementation period,
     which is why reading it as the tests rung labelled the longest stretch of a
     project with the name of a tier that had already finished
-    (docs/plans/2026-08-11-stage-gate-semantics.md §3).
+    (docs/archive/plans/2026-08-11-stage-gate-semantics.md §3).
 
     Children are still checked FIRST: an SR reaches Verified only once its LLRs
     and TCs are green, so while a child is in flight the child's rung is the

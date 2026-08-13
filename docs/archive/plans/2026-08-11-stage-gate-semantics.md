@@ -14,7 +14,7 @@ boundary and partition rungs inserted. **Read `docs/process.md` §4 "The stage
 ladder" for the live model**; this document is kept as the reasoning that got
 there, and its `G*` spellings are historical. The approval-provenance half of the
 same conversation was ruled separately and is
-[`repo-lock.md`](../repo-lock.md) §2 **D-10**.
+[`repo-lock.md`](../../repo-lock.md) §2 **D-10**.
 
 ---
 
@@ -153,7 +153,7 @@ to derive the gate from the stage and silently drop the human half.
 — including by four live kit scripts (`derive_gate`, `check`,
 `check_trajectory`, `trace`), five test modules, and **`PROCESS_OPTIONS.md`,
 which ships to adopters**. It was archived to
-[`../archive/specs/derived-gate-model.2026-07-20.md`](../archive/specs/derived-gate-model.2026-07-20.md).
+[`../archive/specs/derived-gate-model.2026-07-20.md`](../../archive/specs/derived-gate-model.2026-07-20.md).
 
 The document that *defines* these semantics is unreachable from the code that
 implements them, which is a fair explanation for the drift. **Restore or

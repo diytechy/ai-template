@@ -10,7 +10,7 @@ decide is now quoted or summarised *here*.
 
 1. **Read this document top to bottom first.** It carries the context for every
    decision; you should never have to open another markdown file to rule.
-2. **Then open [`../open-items.html`](../open-items.html)** — the ONE outbound
+2. **Then open [`../open-items.html`](../../open-items.html)** — the ONE outbound
    pointer, and deliberately so. It is *generated* and it is the actual
    **signing surface**: per-cell before/after word-level diffs for every `Draft`
    and `Modified` row, with the baseline revision printed on every section, and
@@ -721,7 +721,7 @@ two OI-28 seeds inside it).
 
 ## 4. The hats roster — owner text, shipped as drafted
 
-Lives at [`../requirements/hats.toml`](../requirements/hats.toml); read by
+Lives at [`../requirements/hats.toml`](../../requirements/hats.toml); read by
 `project-trajectory/scripts/hats.py`. Ruled at OI-19 option (a): ship the
 six-hat starting roster, **injection first, record second**. A hat is **not a
 person and not a stakeholder row** — it is a QUESTION put to every decomposition

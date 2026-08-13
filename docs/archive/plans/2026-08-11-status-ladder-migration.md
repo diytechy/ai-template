@@ -1,6 +1,6 @@
 # The `Status` ladder migration — a measured checklist
 
-**What this is.** The execution checklist for **D-9** ([`repo-lock.md`](../repo-lock.md)
+**What this is.** The execution checklist for **D-9** ([`repo-lock.md`](../../repo-lock.md)
 §2): `Draft`/`Verified`/`Modified` → **`Drafted` → `Approved` → `Founded`**,
 uniform across SN · SR · LLR · TC. It exists so the migration lands as one
 reviewed act rather than a discovery exercise at the end of a sitting.

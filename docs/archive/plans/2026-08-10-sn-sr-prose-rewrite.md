@@ -4,7 +4,7 @@
 produce this document. It exists to be ruled on at the P0 sitting's part 2, row
 by row, and then executed as one batch.
 
-**Mandate.** [`repo-lock.md`](../repo-lock.md) §8.3 item (1): *"SNs written from
+**Mandate.** [`repo-lock.md`](../../repo-lock.md) §8.3 item (1): *"SNs written from
 the end-user's perspective, around accessible end-user interfaces, plain
 language, no implementation references."* The seven challenge notes recorded
 with that item are treated as binding constraints, not commentary.
@@ -86,7 +86,7 @@ uncommitted**; `HEAD` still carries CSV.
 ## A · Principles applied
 
 Five rules, derived from §8.3 item 1 and the
-[PROJECT-VISION](../../README.md#vision).
+[PROJECT-VISION](../../../README.md#vision).
 
 1. **The stakeholder is the grammatical subject.** A need says what a *person*
    can do, not what the kit *is*. Today 9 of 18 core needs open with "The kit…",

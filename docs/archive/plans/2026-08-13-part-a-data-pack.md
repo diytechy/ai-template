@@ -1,8 +1,8 @@
 # WI-441 part A — the analysis data pack
 
 **Status:** analysis input, **not a decision**. Produced for
-[`OI-14`](../requirements/open-items.toml) part A (ruled A3 + A6, 2026-08-13)
-under [`WI-441`](../work/complete/WI-441-part-a-boundary-decomposition-partition-shortlist.md).
+[`OI-14`](../../requirements/open-items.toml) part A (ruled A3 + A6, 2026-08-13)
+under [`WI-441`](../../work/complete/WI-441-part-a-boundary-decomposition-partition-shortlist.md).
 The coordinator ranks; the owner adopts. Nothing here selects a partition.
 
 **Measured at revision `81a142c2`** (`WI-436: the OI-26 loose end records its

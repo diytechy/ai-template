@@ -111,7 +111,7 @@ why (one bullet each; cite ids)._
   SR), while **SR→IF does not exist at all** — no check reads an SR's inputs and
   outputs for a declared interface. That direction is SN-037's ratified
   acceptance, and it lands on WI-451's re-statement plus a new checker. Drafted at
-  [plans/2026-08-13-devstg-boundary-draft.md](plans/2026-08-13-devstg-boundary-draft.md)
+  [archive/plans/2026-08-13-devstg-boundary-draft.md](archive/plans/2026-08-13-devstg-boundary-draft.md)
   §1b, open as its §4 item 5.
 - **2026-08-13e — What DEFINES a boundary: the actor AND the crossing
   interface (owner, in session).** A boundary declaration names both the
@@ -141,12 +141,12 @@ why (one bullet each; cite ids)._
   actor-plus-interface rule travels (a connector or bolt pattern is
   unmistakably the first design decision) but `discrete`/`variable` does not,
   so the kit-level rule must not be written software-first. Recorded in
-  [plans/2026-08-13-devstg-boundary-draft.md](plans/2026-08-13-devstg-boundary-draft.md)
+  [archive/plans/2026-08-13-devstg-boundary-draft.md](archive/plans/2026-08-13-devstg-boundary-draft.md)
   §1a; the open mechanics (mint an `external` flag? a crossing-class axis?) are
   its §4 item 3, for sitting 2.
 - **2026-08-13d — The re-attest sitting SPLIT IN TWO; sitting 1 ruled and
   executed (owner, in session).** Sitting 1 approves every SN and SR change as
-  shown in [plans/2026-08-13-sitting-pack.md](plans/2026-08-13-sitting-pack.md)
+  shown in [archive/plans/2026-08-13-sitting-pack.md](archive/plans/2026-08-13-sitting-pack.md)
   + `open-items.html`, establishing a clean SN foundation before the SR tier
   churns: the nine draft SNs ratified as written (`kind`→core; the SN registry
   is now 27 core, zero draft), the blessed `Modified` SRs →`Verified`, the
@@ -170,7 +170,7 @@ why (one bullet each; cite ids)._
   name an artifact only where it is a DECLARED BOUNDARY CROSSING; but the
   boundary must be AGREED before the pass runs, so the boundary needs are in
   (SN-037…SN-040 ratified) and the depth-0 frame is drafted for sitting 2's
-  ruling: [plans/2026-08-13-devstg-boundary-draft.md](plans/2026-08-13-devstg-boundary-draft.md)
+  ruling: [archive/plans/2026-08-13-devstg-boundary-draft.md](archive/plans/2026-08-13-devstg-boundary-draft.md)
   (its §0 also answers where boundaries live: `interfaces.toml` is the one
   home; no new registry was ever proposed). WI-451 slice 2 stays gated on that
   boundary agreement. **NOT ruled here:** the pack's §3 (P5 partition
@@ -9195,7 +9195,7 @@ Interfaces` updated to cite it. Dupes census: 4 new
 class, WI-193 precedent).
 
 **DP-001 dogfood (the Done-when's real run —
-[plans/DP-001-dual-plan-loop-wiring/](plans/DP-001-dual-plan-loop-wiring/goal.md)):**
+[archive/plans/DP-001-dual-plan-loop-wiring/](archive/plans/DP-001-dual-plan-loop-wiring/goal.md)):**
 goal = the declared `agent_loop`-wiring follow-up, 7 clauses. Planners
 **gpt-5.6-sol** (codex) and **claude-fable-5** — fresh sessions, isolated
 empty cwds (redaction by construction), identical briefs (goal + SR surface +
@@ -9209,7 +9209,7 @@ swapped — **both runs select the same underlying plan** (fable's revision:
 pure round state machine, edge-free P2/P3/P5, single P6 fan-in, in-row
 done-conditions) with **ports=0** (no coverage gap existed to port) and no
 residual gaps. Full de-anonymization + per-anchor record:
-[verdict.md](plans/DP-001-dual-plan-loop-wiring/verdict.md).
+[verdict.md](archive/plans/DP-001-dual-plan-loop-wiring/verdict.md).
 
 **Recorded degradations (honest):** no third family on this host — the
 arbiter shares the ANTHROPIC family with planner B (different model;
@@ -27009,7 +27009,7 @@ guardrails-on-branch).
   as the interim proxy. Execution judgment calls: repo-lock §8.7.
 - **The SN batch applied as Drafts** after a two-round OpenAI review
   (sol adversarial, terra verification — record in
-  [plans/2026-08-12-sn-intake.md](plans/2026-08-12-sn-intake.md)):
+  [archive/plans/2026-08-12-sn-intake.md](archive/plans/2026-08-12-sn-intake.md)):
   **SN-033…SN-040 + SR-148**, the SN-029 draft amended (delegated-review
   clause; round 2 killed the ambiguous spatial metaphor), watermark
   SN 32→40 / SR 147→148. Two tier disputes (launchers, run-menu) recorded
@@ -27430,7 +27430,7 @@ date) and left with the direction to charge through as much as feasible
 before the reapproval sitting. This entry is the map of what the charge
 landed; every slice's depth is in its WI Deliverable under
 `docs/work/complete/`, and the owner's reading order is
-[plans/2026-08-13-sitting-pack.md](plans/2026-08-13-sitting-pack.md).
+[archive/plans/2026-08-13-sitting-pack.md](archive/plans/2026-08-13-sitting-pack.md).
 
 **Method.** Fourteen execution rows minted (WI-436..449, later WI-450),
 built by parallel Opus worktree agents, merged serially with the commit bar
@@ -27678,7 +27678,7 @@ its review forward, recorded rather than skipped.
 
 **The phase close.** Handoff: [handoff-2026-08-13-charge-through.md]
 (handoff-2026-08-13-charge-through.md) — boot there. Sitting pack:
-[plans/2026-08-13-sitting-pack.md](plans/2026-08-13-sitting-pack.md).
+[archive/plans/2026-08-13-sitting-pack.md](archive/plans/2026-08-13-sitting-pack.md).
 Closed this session: WI-436..441, 443..447, 449, 450 (fifteen), plus B10
 and two spine seeds. Not started: WI-442, WI-448, the Area→aspect
 execution, SN-036's coverage record — queued in the handoff. The basis
@@ -27725,7 +27725,7 @@ holds until attestation, now due); WI-452 minted (LLR-165 resync resurface,
 decision 2.3) and the id watermark bumped 451→452.
 
 **The boundary draft for sitting 2** landed at
-[plans/2026-08-13-devstg-boundary-draft.md](plans/2026-08-13-devstg-boundary-draft.md):
+[archive/plans/2026-08-13-devstg-boundary-draft.md](archive/plans/2026-08-13-devstg-boundary-draft.md):
 provenance (OI-14 part A-prime minted the rung, OI-21/WI-445 shipped it;
 `interfaces.toml` is the one home, no new registry ever proposed), the
 eleven-party depth-0 frame with 13 crossings missing an IF row and 6 partial,
@@ -27759,3 +27759,59 @@ Full unfiltered suite at the composed tree: 2452 passed, 6 skipped, 0 failed.
 
 Push and merge-to-main stay the owner's (`push = "human"`). Sitting 2's queue
 is in `docs/status.md`.
+
+## 2026-08-13g — the plans surface consolidated: two sitting documents, everything else archived
+
+**Owner-directed session (no WI):** collapse `docs/plans/` — nine plan
+artifacts plus the closed DP-001 round — into a decision surface the remaining
+sittings can actually be run from, with nothing live lost to the archive.
+
+**Deliverables.**
+[plans/2026-08-13-sitting-2-boundary-and-context.md](plans/2026-08-13-sitting-2-boundary-and-context.md)
+(the frame, the port set, the external-entity/context registry question, the
+tabled §2.1 call, the P5 partition, the hats roster, the sign-off
+mechanization; §5 the per-WI downhill re-scopes; §6 a sixteen-item housekeeping
+ledger of ruled-but-unexecuted strays; §7 the per-file archive audit) and
+[plans/2026-08-13-sitting-3-spine-verification.md](plans/2026-08-13-sitting-3-spine-verification.md)
+(nine mechanical preconditions, the window contents as of assembly, the TC-159
+chain fix, the D-9 ladder decision with the `Planned`-outside-the-ladder
+collision, close mechanics). The owner's split honored: sitting 2 rules, sitting
+3 signs. Everything else moved to
+[archive/plans/](archive/plans/README.md) with per-file dispositions;
+`docs/orphans-allow` gained the `docs/archive/plans/*` glob.
+
+**Method, for the record:** two read-only survey passes (one over the nine
+archived artifacts for live-vs-spent content, one over the log's rulings and
+the five queued WI specs), then the drafting pass, then verification against
+sources. The surveys produced a 21-item rescue list (all placed — decisions and
+rulings carried in full, large execution-input tables carried as archive
+pointers) and an eight-entry correction ledger (sitting 2 §0.3) for claims
+measurement has falsified — among them WI-451's ~25/~50 port split (measured
+18/57), WI-442's already-sailed "part B schema pass" vehicle, and the boundary
+draft's SR-035-is-`Modified` premise (it is `Verified`). The sharpest finds:
+SN-007's 2026-08-11 ruled clause strike was never executed and now costs a
+re-attest window (sitting 2 §6 item 1 — it must ride sitting 3's window, never
+land alone), and IF-103's "Experimental until the conversion program ends" has
+no terminus once the 2.3 rider makes the converter a live resync helper
+(sitting 2 decision 4).
+
+**Link repairs on the move:** `repo-lock.md` ×5, the charge-through handoff ×3,
+this log's own history links, `tests/test_ratification_level.py`'s docstring,
+the byte-budget-guard skill's stamp citation (both copies, identical),
+`archive/repo-lock-decisions-2026-08.md`'s patch pointer, and the WI-451 /
+WI-452 `specref`s repointed at sitting 2's §5 subsections. The archived files'
+own relative links re-levelled for their new depth. `status.md`'s START-HERE
+bullet now points at the two sitting documents.
+
+**Deviations from spec:** none — owner-directed scope. Two registry strays from
+sitting 1's surfaced-not-fixed list (IF-064's inline SN-016 citation; the SN
+registry's empty Edge-case comment block) had no owner in any carried decision
+and were added as sitting 2 §6 item 16. Byte deltas on budgeted files: none
+(`AGENTS.template.md` / `PROCESS.md` / `PROCESS_OPTIONS.md` untouched).
+
+**Bars.** check_docs: OK — 400 docs, 1209 intra-repo links, 0 broken.
+Smoke tier: 1091 passed, 3 skipped, 20.55s.
+<!-- fig: cmd=".venv/bin/python -m pytest -q -n auto -m smoke" rev=feb50dcb+consolidation-worktree -->
+<!-- fig: cmd=".venv/bin/python project-trajectory/scripts/check_docs.py --root . --ignore docs/test/report.md --ignore 'docs/work/*' --stale" rev=feb50dcb+consolidation-worktree -->
+
+Push and merge-to-main stay the owner's (`push = "human"`).

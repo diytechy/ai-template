@@ -3,7 +3,7 @@
 **Boot order for a fresh session:** this file → `docs/status.md` START HERE →
 the log's `2026-08-13b` session entry → the Decisions entry of 2026-08-13 (the
 batch ruling that authorizes everything here) →
-[plans/2026-08-13-sitting-pack.md](plans/2026-08-13-sitting-pack.md) (the
+[archive/plans/2026-08-13-sitting-pack.md](archive/plans/2026-08-13-sitting-pack.md) (the
 owner's reading order at return). Branch: `infra/mechanized-loop`, local only —
 **push and merge-to-main are the owner's** (`push = "human"`).
 
@@ -41,7 +41,7 @@ itself refuted on measurement and the refutation recorded in-module).
   SR-021→SN-001, SR-029→SN-025; two orphaned obligations caught and folded
   into SR-021/SR-026), OI-17 reframe, OI-23 stale-row amendments (+ four
   adjacent [policies] rows), SN-005 narrowed. Ledger:
-  `plans/2026-08-13-wi444-batch-application.md`.
+  `archive/plans/2026-08-13-wi444-batch-application.md`.
 - **WI-446** six-hat roster (OWNER TEXT — edit at return) + planner-brief
   injection; coverage record deliberately deferred (SN-036's second half).
   LLR-168 + TC-162 (Draft) seed the machinery onto the spine.
@@ -129,5 +129,5 @@ check_vocab will warn now and error once promoted.
 
 ## The owner's return (the short list)
 
-Read [plans/2026-08-13-sitting-pack.md](plans/2026-08-13-sitting-pack.md).
+Read [archive/plans/2026-08-13-sitting-pack.md](archive/plans/2026-08-13-sitting-pack.md).
 One consolidated re-attest sitting covers everything; then merge-to-main.

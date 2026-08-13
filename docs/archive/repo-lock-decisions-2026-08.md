@@ -840,7 +840,7 @@ the ruling rather than resisting it — and worth knowing before the next step:
   guard can still fail, not the one that proves it passes.
 
 **Step 3 — THE CUTOVER — was RUN and is NOT LANDED.** It is preserved as
-`git stash@{0}` and as [`plans/2026-08-10-carrier-cutover.patch`](../plans/2026-08-10-carrier-cutover.patch);
+`git stash@{0}` and as [`plans/2026-08-10-carrier-cutover.patch`](plans/2026-08-10-carrier-cutover.patch);
 the branch stayed at the green commit rather than taking a red one. Run it, do
 not re-derive it — what it proved and what it exposed is the whole value:
 

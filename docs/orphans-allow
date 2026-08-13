@@ -54,6 +54,11 @@ docs/archive/specs/*
 # the verdict is summarized in log.md and selected rows are filed as real WIs.
 docs/plans/*
 
+# archived plan documents — the 2026-08-13 consolidation moved the spent/depth
+# plan set (and the closed DP-001 round) under docs/archive/plans/, indexed by
+# its README; same retained-evidence class as docs/archive/specs/*.
+docs/archive/plans/*
+
 # generated iteration-log index — freshness owned by its generator, not
 # hand-navigated (the same "never lint generated output" stance as docs/okf/).
 docs/iteration_index.md
