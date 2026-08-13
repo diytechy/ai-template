@@ -84,13 +84,33 @@ why (one bullet each; cite ids)._
   on the owner's own D-6 ruling (a duplicated vocabulary diverges silently) plus
   D-4 (ids never re-mean, so a crossing moving between internal and external
   would be delete-and-mint rather than an edit). Recommended instead:
-  `counterpart` becomes a resolvable reference — a declared external-entity id or an
-  in-repo path — making boundary-ness **derived** and X-14/X-15's mislabel
-  unrepresentable. Cheaper variant on the record: parties + context as prose in
-  `docs/architecture.md` (which SN-040 requires and which has no boundary section
-  today), registry only when something must mechanically read them. Decision
-  framing: **derived boundary-ness needs machine-readable actors; a record does
-  not.** Drafted at
+  `counterpart` becomes a resolvable reference — a declared external-entity id or
+  an in-repo path — making boundary-ness **derived** and X-14/X-15's mislabel
+  unrepresentable. **WHY THE REGISTRY EARNS IT (owner, same session): the
+  RENDERED VIEW.** The entities exist to build the architecture view, not to
+  validate the spine — and that justification is stronger than the derivation
+  one, because `docs/architecture.md` is **1,594 lines of which ~1,402 (88%) are
+  GENERATED** (the AST + IF dependency graph, the ~60-module symbol map, both
+  freshness-gated by `gen_arch_map.py --check`), and `PROJECT_STATE.html`'s
+  "How (SW architecture)" tab already renders that map. A registry joins that
+  pipeline; prose could only join it by being parsed. **The prose-first variant
+  an earlier draft offered is therefore WITHDRAWN** — a hand-written frame would
+  be the lone unGENERATED structure in that file. The narrative half keeps its
+  existing home: *Runtime flows* is already hand-authored, SR-cited and checked
+  by `check_flows.py`. **TIERING (owner):** a single **INPUTS / OUTPUTS** entity
+  pair is the kit-level light default — refined here to *the same schema with two
+  rows*, so growth is additive rather than a migration, and the derived check
+  still bites (an internal seam cannot claim `downstream adopter` when only
+  INPUTS/OUTPUTS are declared; it must name its path). **COST, CORRECTED BOTH
+  WAYS.** Lighter: the entity registry is **off-spine** (the PART/ASSET/PB/REPO
+  tier) — no SR back-refs on entity rows, advisory schema, a leftover example row
+  blocks nothing. Heavier, and the owner's explicit note: **SRs are still expected
+  to resolve back to the boundary interfaces, which IS a spine-validation cost.**
+  Measured: **IF→SR already exists and is clean** (`trace.interface_findings`
+  makes an empty/unknown `sr_refs` a --strict finding; 113/113 rows link a valid
+  SR), while **SR→IF does not exist at all** — no check reads an SR's inputs and
+  outputs for a declared interface. That direction is SN-037's ratified
+  acceptance, and it lands on WI-451's re-statement plus a new checker. Drafted at
   [plans/2026-08-13-devstg-boundary-draft.md](plans/2026-08-13-devstg-boundary-draft.md)
   §1b, open as its §4 item 5.
 - **2026-08-13e — What DEFINES a boundary: the actor AND the crossing

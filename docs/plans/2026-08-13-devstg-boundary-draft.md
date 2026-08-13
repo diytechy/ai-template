@@ -385,18 +385,60 @@ recommendation here is to **split by entity type, not by internal-versus-externa
   in-repo path. Boundary-ness becomes **derived**, which is what makes
   X-14/X-15's mislabel unrepresentable rather than merely visible.
 
-**The honest cost, and a cheaper first move.** This expands the rung from *list
-our crossings* to *model our operational context*; a new registry means a
-`bootstrap.py` MAPPING entry, a `RESYNC_PACK.md` recipe, a schema tier, test
-coverage and a downstream re-sync — the cost profile WI-443 just paid for
-interfaces and components. The rung's applies-when shape bounds the harm to
-adopters who never opt in. The cheaper variant: SN-040 already requires the
-boundary record *"kept with the architecture, not in session prose"*, and
-`docs/architecture.md` has **no boundary section today** — the parties and the
-context could land there as prose first, becoming a registry only when something
-must *mechanically read* them. The deciding question is narrow: **derived
-boundary-ness needs machine-readable actors.** Want the derivation, and the
-registry is required; want only the record, and architecture.md suffices.
+**Why the registry earns it: the RENDERED VIEW — and why the prose variant is
+withdrawn.** An earlier draft of this section offered a cheaper first move —
+park the entities and the context as prose in `docs/architecture.md`, mint a
+registry later. **That is withdrawn**, on the owner's reasoning and on the file's
+own shape. `docs/architecture.md` is **1,594 lines of which ~1,402 (88%) are
+GENERATED** — the AST-plus-`IF-###` dependency graph (L41-267) and the
+per-symbol module map over ~60 scripts (L276-1450), both written by
+`gen_arch_map.py` and freshness-gated by `--check`. Its hand-authored remainder
+is ~192 lines: the intro, *Shape of the product*, and *Runtime flows*. So the
+file's **structural** content is already a rendering target, and a hand-written
+frame would be the one piece of structure in it that nothing generates. There is
+a second consequence: `PROJECT_STATE.html`'s **"How (SW architecture)"** tab
+already renders that module map (`traj_views.py`: *"The module map from
+`docs/architecture.md`"*), so registry data joins an existing pipeline —
+registry → generated block → dashboard tab — while prose could only join it by
+being parsed.
+
+**The split by KIND, not by cost.** The entities and their interconnections are
+enumerable structural data → **registry**, feeding a *generated* context view
+emitted beside the dependency graph and rendered in the same tab. The
+operational **narrative** is what *Runtime flows* already is — hand-authored,
+SR-cited, checked by `check_flows.py` — so the frame is not introducing a new
+category but completing one.
+
+**The cost, corrected in both directions.** *Lighter than first stated:* the
+entity registry is **off-spine** — the `PART`/`ASSET`/`PB`/`REPO` tier — because
+it exists to build the view, not to gate the spine; so entity rows need no SR
+back-refs, no gate arithmetic, an advisory schema tier, and a leftover example
+row blocks nothing. *Heavier than first stated (owner's note, 2026-08-13):*
+**SRs are still expected to resolve back to the boundary interfaces, and that IS
+a spine-validation cost.** Measured, so the size is honest:
+
+- **IF → SR already exists and is clean.** `trace.interface_findings` makes an
+  IF row with an empty or unknown `sr_refs` a `--strict` finding; **all 113 live
+  rows link at least one valid SR**, the eleven declared frame crossings
+  included (IF-013 → SR-006/007/008, IF-015 → SR-026/027/028/030, and so on).
+- **SR → IF does NOT exist.** No check reads an SR's inputs and outputs and
+  asks whether each references a declared interface. That direction is exactly
+  **SN-037's ratified acceptance** (*"unresolved references, uncovered crossings
+  and incompatible signal types are mechanical findings"*), and it is the real
+  spine cost: a new checker, plus **WI-451's re-statement making the ~57
+  internal-naming SRs resolvable in the first place**. The registry is the cheap
+  half; this is not.
+
+**The light tier for a simpler adopter — a single INPUTS / OUTPUTS pair.**
+Recommended as the kit-level default, with one refinement: it must be **the same
+schema with two rows**, never a different mechanism, so growing from light to
+full is *adding rows* rather than migrating a file. A simple project then gets an
+honest one-blob context diagram, and — the part worth keeping — **the derived
+check still bites at that tier**: if `counterpart` must resolve to a declared
+entity *or* an in-repo path, an internal station seam cannot claim
+`downstream adopter` when the only declared entities are INPUTS and OUTPUTS; it
+has to name its path. X-14/X-15's defect is caught at the lightest tier the kit
+offers.
 
 ---
 
@@ -605,14 +647,23 @@ Bundle it into WI-451's window rather than opening a second one.
    not ruled).** Three shapes: an **external-entity registry** (the owner's
    `external.toml`, holding operational actors AND enabling systems under one
    cut) plus a resolvable `counterpart` in
-   `interfaces.toml` (recommended — gives derived boundary-ness, keeps one home
-   for seams); **the same file also absorbing the external interfaces**, the
-   owner's first impression (rejected in §1b on D-6 grounds — a duplicated
-   vocabulary, and reclassification becomes delete-and-mint under D-4); or the
-   **cheaper variant** — entities and context as prose in `docs/architecture.md`
-   first, registry later. The deciding question is whether you want boundary-ness
-   *derived* (needs machine-readable entities) or merely *recorded* (prose
-   suffices). Riders on whichever shape wins: retire **E11** as an entity (it is
+   `interfaces.toml` (**recommended** — derived boundary-ness, one home for
+   seams, and the entity data feeds a *generated* context view into
+   `docs/architecture.md` and the dashboard's existing "How (SW architecture)"
+   tab); **the same file also absorbing the external interfaces**, the owner's
+   first impression (rejected in §1b on D-6 grounds — a duplicated vocabulary,
+   and reclassification becomes delete-and-mint under D-4); or **prose in
+   `docs/architecture.md` first, registry later** — offered in an earlier draft
+   and now **WITHDRAWN** (§1b: that file's structural content is 88% generated,
+   so a hand-written frame would be its lone exception, and prose cannot join the
+   render pipeline). **Tier it:** a single **INPUTS / OUTPUTS** entity pair is the
+   kit-level light default — same schema, two rows, so growth is additive and the
+   derived check still bites. **Cost, both directions:** the entity registry is
+   **off-spine** (view-building, no SR back-refs, advisory schema) — but **SRs
+   still resolve to the boundary interfaces**, which is real spine cost: IF→SR is
+   enforced today and clean at 113/113, while **SR→IF does not exist** and is
+   SN-037's ratified obligation, landing on WI-451 plus a new checker.
+   Riders on whichever shape wins: retire **E11** as an entity (it is
    an artifact class, §1b), admit **E12** (the enabling development environment —
    external, tightly coupled, sharing personnel with E2/E3), and confirm that the
    operational/enabling class sits on the **entity** with the personnel overlap
