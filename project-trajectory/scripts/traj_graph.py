@@ -537,72 +537,83 @@ def _routed_label_xy(d, fx, fy):
 _ROUTE_TOKEN = re.compile(r"[MLC]|-?\d+(?:\.\d+)?")
 
 
+def _ortho_push(points, point):
+    """Append `point` to a rectilinear vertex list, collapsing a repeat and a
+    collinear middle vertex — so a straight edge stays one straight segment."""
+    if points and point == points[-1]:
+        return
+    if len(points) > 1:
+        a, b = points[-2], points[-1]
+        if (a[0] == b[0] == point[0]) or (a[1] == b[1] == point[1]):
+            points[-1] = point
+            return
+    points.append(point)
+
+
+def _ortho_points(toks, bend_x_of):
+    """The rectilinear vertices for one bend choice, or None when `toks` holds a
+    command this squaring does not understand (then the caller keeps the curve —
+    an unrecognised shape may be left alone, never mis-drawn). `bend_x_of` picks
+    the vertical leg's x from a cubic's two control x's."""
+    points, cur, i = [], None, 0
+    while i < len(toks):
+        cmd, i = toks[i], i + 1
+        if cmd in {"M", "L"} and i + 1 < len(toks):
+            cur = (float(toks[i]), float(toks[i + 1]))
+            i += 2
+            _ortho_push(points, cur)
+        elif cmd == "C" and cur is not None and i + 5 < len(toks):
+            c1x, _c1y, c2x, _c2y, ex, ey = map(float, toks[i : i + 6])
+            i += 6
+            bend_x = bend_x_of(c1x, c2x)
+            _ortho_push(points, (bend_x, cur[1]))
+            _ortho_push(points, (bend_x, ey))
+            cur = (ex, ey)
+            _ortho_push(points, cur)
+        else:
+            return None
+    return points
+
+
+# The bend x's tried in order, as (c1x, c2x) -> x: the control midpoint first (the
+# corridor the cubic itself chose), then each control on its own.
+_ORTHO_BENDS = (
+    lambda c1x, c2x: (c1x + c2x) / 2.0,
+    lambda c1x, _c2x: c1x,
+    lambda _c1x, c2x: c2x,
+)
+
+
 def orthogonal_route(d, obstacles=()):
     """Turn the router's horizontal-tangent cubics into rectilinear segments.
 
     The cubic controls already identify a clear bend corridor: their midpoint is
     where the curve changes height. Keeping that corridor but replacing each curve
     with horizontal/vertical legs removes the acute cusp where a curve met a lane.
-    Collinear and repeated vertices collapse so a straight edge stays straight.
-    """
+
+    Squaring a curve can CREATE a crossing the curve did not have, so every bend
+    candidate is scored by how many `obstacles` it cuts and the clearest wins; if
+    none is clear, each obstacle's own cleared left/right boundary is tried too."""
     toks = _ROUTE_TOKEN.findall(d)
 
-    def build(bend_choice):
-        points, cur, i = [], None, 0
-
-        def add(point):
-            if points and point == points[-1]:
-                return
-            if len(points) > 1:
-                a, b = points[-2], points[-1]
-                if (a[0] == b[0] == point[0]) or (a[1] == b[1] == point[1]):
-                    points[-1] = point
-                    return
-            points.append(point)
-
-        while i < len(toks):
-            cmd, i = toks[i], i + 1
-            if cmd in {"M", "L"} and i + 1 < len(toks):
-                cur = (float(toks[i]), float(toks[i + 1]))
-                i += 2
-                add(cur)
-            elif cmd == "C" and cur is not None and i + 5 < len(toks):
-                c1x, _c1y, c2x, _c2y, ex, ey = map(float, toks[i : i + 6])
-                i += 6
-                bend_x = (
-                    (c1x, (c1x + c2x) / 2.0, c2x)[bend_choice]
-                    if isinstance(bend_choice, int)
-                    else bend_choice
-                )
-                add((bend_x, cur[1]))
-                add((bend_x, ey))
-                cur = (ex, ey)
-                add(cur)
-            else:
-                return None
-        return points
-
-    def scored(bend):
-        candidate = build(bend)
+    def scored(bend_x_of):
+        candidate = _ortho_points(toks, bend_x_of)
         if not candidate:
             return None
-        hits = sum(_polyline_hits(candidate, (rect,)) for rect in obstacles)
-        return hits, candidate
+        return sum(_polyline_hits(candidate, (rect,)) for rect in obstacles), candidate
 
-    choices = [result for bend in (1, 0, 2) if (result := scored(bend))]
+    choices = [result for bend in _ORTHO_BENDS if (result := scored(bend))]
     if not choices:
         return d
-    hits, points = min(choices, key=lambda result: result[0])
-    if hits:
-        clear = _WIRE_HIT_MARGIN + 1.0
-        boundary_bends = [
-            x for rx, _ry, rw, _rh in obstacles for x in (rx - clear, rx + rw + clear)
+    clear = _WIRE_HIT_MARGIN + 1.0
+    boundaries = [
+        x for rx, _ry, rw, _rh in obstacles for x in (rx - clear, rx + rw + clear)
+    ]
+    if min(choices, key=lambda result: result[0])[0]:
+        choices += [
+            result for x in boundaries if (result := scored(lambda _c1x, _c2x, x=x: x))
         ]
-        boundary = [result for bend in boundary_bends if (result := scored(bend))]
-        if boundary:
-            hits, points = min(
-                [(hits, points), *boundary], key=lambda result: result[0]
-            )
+    _hits, points = min(choices, key=lambda result: result[0])
     return "M{:.1f},{:.1f}{}".format(
         points[0][0],
         points[0][1],

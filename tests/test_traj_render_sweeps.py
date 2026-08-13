@@ -189,6 +189,15 @@ A1_WIRED_SELECTORS = {
     "[data-descend]": "control",
     "[role=tab]": "control",
     ".edge": "hover-dim target — classes toggled on it, no listener attaches",
+    ".wire[data-from][data-to]": (
+        "focused-trace target (WI-434) — the controller reads its endpoints and "
+        "toggles trace-in/trace-out on it; the wire itself takes no listener, and "
+        "the reader reaches the same relationship through its two focusable blocks"
+    ),
+    ".trace-status": (
+        "the focused-trace summary's live region (WI-434) — written to, never "
+        "activated; the selection it reports is driven from the focusable blocks"
+    ),
     ".kedge": "hover-dim target, the knowledge-graph spelling",
     ".layer": "drill-layer bookkeeping — shown/hidden, never a focus stop",
     ".view, .tablescroll": "scroll containers — scroll-cue listeners only",

@@ -8,8 +8,14 @@
     --bg:#f8fafc; --surface:#ffffff; --border:#e2e8f0; --text:#0f172a;
     --muted:#64748b; --accent:#4f46e5;
     /* Focused dependency tracing: blue flows into the selected node; amber
-       flows out. Both are theme tokens because they carry foreground ink. */
-    --trace-in:#2563eb; --trace-out:#b45309;
+       flows out. Both carry foreground ink, so both are theme tokens — and both
+       sit deliberately OUTSIDE every declared concept palette. WI-435's first
+       pass reused SW_NODE_FILL's "module" ink and STATUS_FILL's "active" ink, so
+       one colour carried two meanings inside a single diagram: a module block
+       wired by same-blue "incoming" strands, an active work item wired by
+       same-amber "outgoing" ones. A3's sweep convicts that reuse — and it reads
+       THIS comment as paint too, which is why no hex is spelled out here. */
+    --trace-in:#1d4ed8; --trace-out:#ea580c;
     /* A4 (WI-293): the Process tab's emphasized node (the merge slot since the
        WI-389 station-cycle redraw; the hub before it) carries WHITE text on its
        own fill, so its fill is a THEME-INVARIANT token, not --accent. --accent
@@ -233,7 +239,7 @@
     <section class="hero">
       <h1>Vision</h1>
       <p class="vision">A reusable starting point for building maintainable, requirement-traced projects with AI agents and humans working from the same playbook. The goal: code and analytics that stay readable and correct over the long run, built test-first with explicit approval gates so you can trust what ships.</p>
-      <p class="asof">state as of commit db34b072 · 2026-08-12</p>
+      <p class="asof">state as of commit 3907d7c0 · 2026-08-12</p>
 
       <div class="cards">
         <div class="card">

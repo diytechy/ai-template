@@ -125,6 +125,8 @@ def _path_axis(d, axis):
             cmd, i = toks[i], i + 1
             continue
         if cmd in ("M", "L", "C", "Q"):  # absolute, x,y pairs
+            if i + 1 >= len(toks):
+                break  # a truncated pair: under-pad, never read past the end
             cx, cy, i = float(toks[i]), float(toks[i + 1]), i + 2
         elif cmd == "h":  # relative horizontal
             cx, i = cx + float(toks[i]), i + 1
@@ -744,7 +746,28 @@ def _drill_block_label(b, col_w, cx, cy):
     )
 
 
-def _drill_layer_svg(blocks, edges, marker_scope="drill"):
+def _edge_ports(side, px, cy, attached, offsets):
+    """The connector circles on ONE side of one block: a single centred ring when
+    no wire lands there, otherwise one ring per edge at that edge's own fan offset
+    (WI-435 — several edges sharing a side used to collapse into one centre-port
+    wedge). Each ring carries its edge's endpoints, so a connector and its wire
+    are attributable to each other in the markup as well as on screen."""
+    if not attached:
+        return (
+            '<circle class="port {}" cx="{:.1f}" cy="{:.1f}" r="{}"></circle>'.format(
+                side, px, cy, PORT_R
+            )
+        )
+    return "".join(
+        '<circle class="port {} wire-port" cx="{:.1f}" cy="{:.1f}" '
+        'data-from="{}" data-to="{}" r="{}"></circle>'.format(
+            side, px, cy + offsets[e], esc(e[0]), esc(e[1]), PORT_R
+        )
+        for e in attached
+    )
+
+
+def _drill_layer_svg(blocks, edges, marker_scope):
     """One drill layer as a plain SVG block diagram. Each block is a rectangle with
     an input port (left-middle) and an output port (right-middle); each aggregated
     `edges` entry (src_key, tgt_key, title) is a wire from the source block's OUTPUT
@@ -757,7 +780,10 @@ def _drill_layer_svg(blocks, edges, marker_scope="drill"):
     circles, so several edges no longer merge into one centre-port wedge. The end
     remains pulled back by PORT_R + 2 so a 12px focused arrowhead stays visible;
     marker ids are scoped per layer because duplicate ids resolved a visible path
-    through a hidden layer's marker definition."""
+    through a hidden layer's marker definition. `marker_scope` is REQUIRED for
+    that reason — a default would let a successor emitter re-mint the collision
+    silently, and the symptom (an arrowhead that vanishes in one layer only) is
+    invisible in the markup a test reads."""
     keys = [b["key"] for b in blocks]
     marker_scope = re.sub(r"[^A-Za-z0-9_-]", "-", marker_scope) or "drill"
     arrow = marker_scope + "-drillarrow"
@@ -840,27 +866,8 @@ def _drill_layer_svg(blocks, edges, marker_scope="drill"):
         label = _drill_block_label(b, col_w, cx, cy)
         incoming = sorted(e for e in wire_edges if e[1] == b["key"])
         outgoing = sorted(e for e in wire_edges if e[0] == b["key"])
-
-        def edge_ports(side, px, attached, offsets):
-            if not attached:
-                return '<circle class="port {}" cx="{:.1f}" cy="{:.1f}" r="{}"></circle>'.format(
-                    side, px, cy, PORT_R
-                )
-            return "".join(
-                '<circle class="port {} wire-port" cx="{:.1f}" cy="{:.1f}" '
-                'data-from="{}" data-to="{}" r="{}"></circle>'.format(
-                    side,
-                    px,
-                    cy + offsets[e],
-                    esc(e[0]),
-                    esc(e[1]),
-                    PORT_R,
-                )
-                for e in attached
-            )
-
-        ports = edge_ports("in", x, incoming, in_off) + edge_ports(
-            "out", x + col_w, outgoing, out_off
+        ports = _edge_ports("in", x, cy, incoming, in_off) + _edge_ports(
+            "out", x + col_w, cy, outgoing, out_off
         )
         attrs = 'class="block {}" data-tier="{}"'.format(
             b.get("cls", ""), esc(b.get("tier", ""))
