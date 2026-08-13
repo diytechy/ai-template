@@ -74,10 +74,14 @@ ruling_ref = "docs/repo-lock.md section 2, D-9"
 
 [open_item.OI-14]
 title = """The component partition AND the interface contract - which boundaries exist, and what a row at one must say"""
-status = "pending"
+status = "ruled"
 raised = "2026-08-09"
+ruled_date = "2026-08-13"
+ruling_ref = "docs/log.md#decisions-log"
 one_line = """One ruling, three questions - (A) which component boundaries exist, (B) what an interface row must say, and whether G1 must require a declared system boundary first; rule A then B in one sitting"""
-decision = """Two parts of one ruling: PART A - which component boundaries exist. PART B - what an interface row must say. They are one item because `check_trajectory.cross_component_findings` makes an import edge between two components a FINDING unless a covering interface row exists, so the partition MECHANICALLY DETERMINES the interface population - Part B cannot be executed against a row set Part A may change.
+decision = """RULED (owner, 2026-08-13): APPROVE THE RECOMMENDATION - (A3) then (B1) in that order, with the boundary rung taken as (A6): applies-when, warn-first. EXECUTION MODE, confirmed the same date for the owner's absence: when part A's ranked shortlist exists, its top candidate is PROVISIONALLY ADOPTED warn-first - safe because `LLR.Component` is a traced cell, so no re-attest window opens - so the dependent programs (OI-21, OI-16, OI-28, the IF/CMP conversions) proceed; the full shortlist with rework sizing is packaged for the owner's ratification at return, where the provisional choice can be overturned. The original brief follows.
+
+Two parts of one ruling: PART A - which component boundaries exist. PART B - what an interface row must say. They are one item because `check_trajectory.cross_component_findings` makes an import edge between two components a FINDING unless a covering interface row exists, so the partition MECHANICALLY DETERMINES the interface population - Part B cannot be executed against a row set Part A may change.
 
 A caveat that must be read with that mechanism: `cross_component_findings` reports ZERO findings today, but its own docstring says it is DELIBERATELY VACUOUS for any endpoint carrying no component tag, delegating that coverage to the containment rule instead.
 
@@ -251,10 +255,14 @@ THREE THINGS THAT DO NOT WAIT ON ANY OF IT:
 
 [open_item.OI-16]
 title = """D-8: the common-module doctrine - RULED, with one step that cannot be built as stated"""
-status = "pending"
+status = "ruled"
 raised = "2026-08-10"
+ruled_date = "2026-08-13"
+ruling_ref = "docs/log.md#decisions-log"
 one_line = """RULED 2026-08-12 - bootstrap contained, shared code into one common or themed library files; ONE thing owed: step 2 is unbuildable because `bootstrap.py` is not shipped to scaffolds, so INVERT it and let bootstrap import the common module"""
-decision = """RULED by the owner 2026-08-12, in three steps: (1) keep all necessary dependencies for `bootstrap.py` contained; (2) import modules from `bootstrap.py` where applicable; (3) put all other common or reusable chunks into a single common file, or several themed library files, so the result is the smallest amount of code across the board.
+decision = """RULED ADDENDUM (owner, 2026-08-13): the INVERSION IS CONFIRMED - option (a). Shared helpers live in the shipped common module, `bootstrap.py` imports FROM it, the common module joins `MAPPING`, and the replacing rule - bootstrap imports the common module and nothing else - lands as an assertion, with a real scaffold bootstrap in the execution WI. Sequenced after OI-14 part A, carrying the OI-27 migration-row obligation recorded below.
+
+RULED by the owner 2026-08-12, in three steps: (1) keep all necessary dependencies for `bootstrap.py` contained; (2) import modules from `bootstrap.py` where applicable; (3) put all other common or reusable chunks into a single common file, or several themed library files, so the result is the smallest amount of code across the board.
 
 The owner also corrected the reasoning this brief had used against a single large module: big files are not inherently a problem, and the monolith risk was always about FUNCTION size and complexity, not file length. That correction is accepted and has a consequence of its own, in the last bullet below.
 
@@ -293,10 +301,14 @@ recommendation = """(a) INVERT STEP 2, and confirm it - the ruling's intent is s
 
 [open_item.OI-17]
 title = """The launcher needs - are they NEEDS or REQUIREMENTS, and does the run-menu reverse a recorded non-goal"""
-status = "pending"
+status = "ruled"
 raised = "2026-08-12"
+ruled_date = "2026-08-13"
+ruling_ref = "docs/log.md#decisions-log"
 one_line = """rule whether SN-034 (one-action dev-setup + agent-resume) and SN-035 (a run menu for this repo) stay needs or demote to requirements; recommendation updated to REFRAME - SN-034 becomes THE launcher need and SN-025's launcher clause moves into it - with keep-SN-035 standing either way"""
-decision = """Are SN-034 and SN-035 needs, or single-requirement items belonging in an existing parent's decomposition? THE DISPUTE IS ABOUT LEVEL, NOT CONTENT, and it is recorded rather than resolved because the two authorities disagree: the owner's intake words each as a need, and an adversarial review found each decomposes into exactly ONE system requirement - the same low-decomposition test the 2026-08-10 sitting used to demote three needs (those three decomposed into 3, 2 and 1 SRs against a core-need mean of ~12.7, so these two are purer cases of the pattern than the precedent itself).
+decision = """RULED (owner, 2026-08-13): (d) REFRAME - SN-034 becomes THE launcher need and absorbs SN-025's launcher clause; SN-025 amends to pure self-direction; SN-035 is KEPT either way. The owner's note, recorded: the reframe does not conflict with the demotion precedent - a consolidated SN-034 decomposes into several SRs, so the test no longer applies to it. Coordination is binding: the SN-025 amendment executes as ONE rewrite with OI-22's prepared batch, never two independent edits of the same row. Applied ahead of the sitting under the owner's apply-now direction (2026-08-13); re-blessing at the consolidated sitting.
+
+Are SN-034 and SN-035 needs, or single-requirement items belonging in an existing parent's decomposition? THE DISPUTE IS ABOUT LEVEL, NOT CONTENT, and it is recorded rather than resolved because the two authorities disagree: the owner's intake words each as a need, and an adversarial review found each decomposes into exactly ONE system requirement - the same low-decomposition test the 2026-08-10 sitting used to demote three needs (those three decomposed into 3, 2 and 1 SRs against a core-need mean of ~12.7, so these two are purer cases of the pattern than the precedent itself).
 
 Both rows were admitted as Drafts on 2026-08-12 under the owner's ruling that all six SN-tier intake items hold, with the double-click promise relaxed to -where the platform allows- (a Linux desktop needs the execute bit, so a bare double-click is unpromisable there).
 
@@ -330,10 +342,14 @@ recommendation = """(d) REFRAME, with (c) as the fallback if the sitting prefers
 
 [open_item.OI-18]
 title = """Dissolve the edge-case need tier into per-need requirements"""
-status = "pending"
+status = "ruled"
 raised = "2026-08-12"
+ruled_date = "2026-08-13"
+ruling_ref = "docs/log.md#decisions-log"
 one_line = """rule whether the ten edge-case SNs retire into the requirements already carrying them; recommendation is DISSOLVE, inside the sitting's already-open amendment window, because eight of the ten already share their SR with a core need"""
-decision = """Should the ten edge-case stakeholder needs retire, their obligations dissolving into the system requirements that already carry them? The owner's direction, 2026-08-12: -Edge cases needs to dissolve into individual system requirements that relate to the stakeholder need- - the coverage they provide should be REGENERATED per-need by the hats mechanism (SN-036 - the roster machinery is OI-19's brief) rather than standing as a separate tier. This item is what that costs, MEASURED against the live registry rather than estimated.
+decision = """RULED (owner, 2026-08-13): (a) DISSOLVE ALL TEN, with the recommended re-anchors - SR-021 to SN-001, SR-029 to SN-025 - executed with the re-attest batch under the owner's apply-now direction. The `uncovered=` parity check (ten needs leaving the denominator must not read as coverage improving) is owed at execution.
+
+Should the ten edge-case stakeholder needs retire, their obligations dissolving into the system requirements that already carry them? The owner's direction, 2026-08-12: -Edge cases needs to dissolve into individual system requirements that relate to the stakeholder need- - the coverage they provide should be REGENERATED per-need by the hats mechanism (SN-036 - the roster machinery is OI-19's brief) rather than standing as a separate tier. This item is what that costs, MEASURED against the live registry rather than estimated.
 
 EIGHT OF THE TEN ARE ALREADY CO-ANCHORED - retiring them is deleting the edge id from a ref array, and the obligation stays exactly where it is:
 
@@ -365,10 +381,14 @@ recommendation = """(a) DISSOLVE ALL TEN, executed WITH the sitting's re-attest 
 
 [open_item.OI-19]
 title = """The hats roster - what perspectives, whose home, and who injects them"""
-status = "pending"
+status = "ruled"
 raised = "2026-08-12"
+ruled_date = "2026-08-13"
+ruling_ref = "docs/log.md#decisions-log"
 one_line = """rule the declared expert-perspective roster SN-036 requires - its contents, its home and its injection point; recommendation is a six-hat starting roster in `docs/requirements/hats.toml`, injected by the decomposition brief builder and edited as owner text"""
-decision = """SN-036 requires a declared roster of expert perspectives, and three parts of the machinery are unruled: the CONTENTS, the file's HOME, and the INJECTION POINT. The carrier is already ruled - TOML, per the owner.
+decision = """RULED (owner, 2026-08-13): (a) SHIP THE SIX-HAT ROSTER at `docs/requirements/hats.toml`, injection built first, coverage record second. The owner's note, recorded in substance: this does NOT conflict with SN-040 - it SUPPORTS it, by showing how a stakeholder need breaks down with each perspective in mind; the entire repo is LLM-judgement-capable, but it must SURFACE THE RATIONALE, and that surfacing happens in large part through the spine. The roster remains owner text - shipped as drafted, marked for the owner's edit at return.
+
+SN-036 requires a declared roster of expert perspectives, and three parts of the machinery are unruled: the CONTENTS, the file's HOME, and the INJECTION POINT. The carrier is already ruled - TOML, per the owner.
 
 The framing that makes this coherent, in the owner's words 2026-08-12: every stakeholder need should be decomposed -according to hats-, and a domain expert -may not be a stakeholder (they don't have needs)- but their perspective constrains someone else's need. So a hat is not a person and not a stakeholder row; it is a QUESTION that must be asked of every applicable need. SN-036 was admitted as a Draft on 2026-08-12 and states the obligation.
 
@@ -409,10 +429,14 @@ recommendation = """(a) SHIP THE SIX-HAT SKETCH, with the roster treated as OWNE
 
 [open_item.OI-20]
 title = """Ratify or overturn WI-429's LLR discharge rule - a CodeSymbol must resolve"""
-status = "pending"
+status = "ruled"
 raised = "2026-08-11"
+ruled_date = "2026-08-13"
+ruling_ref = "docs/log.md#decisions-log"
 one_line = """ratify the rule that an LLR's `CodeSymbol`/`Module` must bind to a real symbol before the row counts as discharged; recommendation is RATIFY AS BUILT, with the four unfounded rows left honestly unfounded"""
-decision = """Does the LLR discharge rule stand? It was built as WI-429 under the owner's -proceed- and never ratified - the last agent decision from the 2026-08-11 batch still owed a yes or no.
+decision = """RULED (owner, 2026-08-13): (a) RATIFY AS BUILT. The cell-content question, ruled in the same breath on the conservative default (an agent call under the owner's charge-through direction, flagged in the sitting pack for the owner's glance): a `CodeSymbol` may name a resolvable code symbol, a module path, or a designed PART SOURCE (per the Core evidence); a generated artifact or a prose contract is NOT admissible - the four rows stay honestly unfounded with their recorded reasons. Template paths: admissible in `Module` cells as realization artifacts, with the non-`.py` skip made VISIBLE (reported per row, never silent) rather than a fail-open - the OI-28 guard.
+
+Does the LLR discharge rule stand? It was built as WI-429 under the owner's -proceed- and never ratified - the last agent decision from the 2026-08-11 batch still owed a yes or no.
 
 THE RULE, stated precisely (corrected at the 2026-08-12 adversarial round - the earlier wording blurred which cell does what): an LLR is discharged when at least one identifier-shaped token in its `CodeSymbol` cell BINDS to a real symbol inside one of the `.py` modules its `Module` cell names - `CodeSymbol` supplies the tokens, `Module` supplies the SEARCH SCOPE, and the `;`-joined module list is read as a union. AND ONE FAIL-OPEN TO KNOW ABOUT BEFORE RATIFYING: a row whose modules are all non-`.py` (or absent, or unparseable) is SKIPPED ENTIRELY - not red, not untraced - so a non-Python row discharges by default today. That skip is deliberate (a hook or shell template has no Python name to bind) but it matters doubly now that this rule is cited as the decomposition floor. D-9's ladder needs a discharge test per tier - the computation that decides when a row's children EXIST - and three of the four tiers already had one; the LLR tier did not, which would have left `Founded` vacuous for a quarter of the spine.
 
@@ -441,10 +465,14 @@ wi_refs = ["WI-429"]
 
 [open_item.OI-21]
 title = """The gate vocabulary retires ENTIRELY for an eight-rung stage ladder - direction ruled, five execution questions open"""
-status = "pending"
+status = "ruled"
 raised = "2026-08-12"
+ruled_date = "2026-08-13"
+ruling_ref = "docs/log.md#decisions-log"
 one_line = """RULED 2026-08-12: every G* tag converts to stage semantics on a new eight-rung ladder (0 vision/needs .. 7 release-ready) - the tags die purposefully, because gate numbers will always be conflated with stage numbers; open for ruling: the string-vs-int carrier, the historical sweep's attestation carve-out, the sign-off successor shape, the automation-dial keying, and the per-rung predicates"""
-decision = """THIS ROW WAS A CONFIRMATION BRIEF AND THE ANSWER ARRIVED: the previous brief asked whether -retire gate semantics- meant keeping G1/G2/G3 as boundary names (the reading that shipped) or retiring the vocabulary entirely, and flagged -say so explicitly if the second was the intent.- The owner said so, 2026-08-12: all G* and G-Release tags are CONVERTED to stage semantics - traceability survives, the tags die, -very purposefully, because leaving them will always be conflated with stages, which have different numeric values.- The prior brief's confirm-the-shipped-reading recommendation is MOOT; what follows replaces it.
+decision = """RULED (owner, 2026-08-13): APPROVE THE RECOMMENDATION, all five execution questions - its own program AFTER OI-14 part A (the provisional partition adoption suffices to start it); the LABEL string carrier (`DevStg-<Label>`, position DERIVED, every comparison through a STAGE_ORDER lookup that RAISES on unknown); the historical sweep WITH the attestation carve-out; sittings stay their own axis; the dial MAPPED onto the ladder, not collapsed; and the rung-predicates work sequenced as ONE program with the D-9 ladder migration. The sweep lands WITH its refusal enforcer or not at all.
+
+THIS ROW WAS A CONFIRMATION BRIEF AND THE ANSWER ARRIVED: the previous brief asked whether -retire gate semantics- meant keeping G1/G2/G3 as boundary names (the reading that shipped) or retiring the vocabulary entirely, and flagged -say so explicitly if the second was the intent.- The owner said so, 2026-08-12: all G* and G-Release tags are CONVERTED to stage semantics - traceability survives, the tags die, -very purposefully, because leaving them will always be conflated with stages, which have different numeric values.- The prior brief's confirm-the-shipped-reading recommendation is MOOT; what follows replaces it.
 
 ### The ruled ladder - AS FIRST DRAFTED; the rung ORDER is superseded below
 
@@ -558,10 +586,14 @@ recommendation = """EXECUTE AS ITS OWN PROGRAM AFTER OI-14 PART A, with the stri
 
 [open_item.OI-22]
 title = """The SN/SR prose-legibility rewrite - adopt the prepared batch, or leave the rows as written"""
-status = "pending"
+status = "ruled"
 raised = "2026-08-10"
+ruled_date = "2026-08-13"
+ruling_ref = "docs/log.md#decisions-log"
 one_line = """rule whether the prepared exact-replacement text for 29 stakeholder needs and 17 system requirements is adopted; recommendation is ADOPT at the sitting alongside the 25-row re-attest, never piecemeal, so two re-blessing windows collapse into one"""
-decision = """Is the prepared replacement text adopted, or do the rows stay as written? The text is written, twice adversarially reviewed, and waiting.
+decision = """RULED (owner, 2026-08-13): (a) ADOPT THE BATCH. Apply-now mode confirmed the same date: the prepared text is applied ahead of the sitting - the window is already open, and widening it collapses into the same re-blessing - with the consolidated sitting pack listing the 12 previously-laundered rows FIRST, per this brief's own guard.
+
+Is the prepared replacement text adopted, or do the rows stay as written? The text is written, twice adversarially reviewed, and waiting.
 
 - Scope: ALL 29 stakeholder needs live when the batch was prepared - a single declarative form, with every qualifier retained verbatim so no obligation is silently dropped - plus a 17-row system-requirement batch. 13 further SR rows were DROPPED from that batch rather than shipped as outlines. NOTE 2026-08-12: the intake since added SN-033..SN-040 as Drafts, so the batch now covers 29 of 37 rows (the 29 include SN-029, itself a Draft; nine Drafts live in total); the eight NEW Drafts are unattested, owe no re-blessing, and can be written to the target form directly when attested rather than joining this batch.
 - Review round 1, adversarial (OpenAI gpt-5.6-sol, medium effort): 12 corrections, including 12 rows where a qualifier had been laundered out of the rewrite.
@@ -583,10 +615,14 @@ recommendation = """(a) ADOPT THE BATCH AT THE SITTING, worked alongside the 25-
 
 [open_item.OI-23]
 title = """Ratified rows the carrier migration and the dial re-homing made imprecise"""
-status = "pending"
+status = "ruled"
 raised = "2026-08-10"
+ruled_date = "2026-08-13"
+ruling_ref = "docs/log.md#decisions-log"
 one_line = """rule the spine rows whose RATIFIED text describes a world that no longer exists after the carrier move, the dial re-homing and two singleton errors; recommendation is AMEND ALL AS ONE BATCH inside the sitting's already-open window"""
-decision = """Which ratified spine rows are now false, and are they amended together? Three separate changes each falsified some ratified text, and each was correctly FENCED OUT of the work that caused it, because a work item is not allowed to open a re-attest window silently. They have accumulated and should now be settled together.
+decision = """RULED (owner, 2026-08-13): (a) AMEND ALL AS ONE BATCH - read after the prose batch, the six dial-naming rows folded as one group with a single correction pattern, (c)'s insight kept where it costs no scope. Apply-now mode as OI-22: applied ahead of the sitting, re-blessed in the consolidated pack.
+
+Which ratified spine rows are now false, and are they amended together? Three separate changes each falsified some ratified text, and each was correctly FENCED OUT of the work that caused it, because a work item is not allowed to open a re-attest window silently. They have accumulated and should now be settled together.
 
 ### First - the carrier
 
@@ -627,10 +663,14 @@ recommendation = """(a) AMEND ALL AS ONE BATCH at the sitting.
 
 [open_item.OI-24]
 title = """SN-005's CI obligation is shipped but pinned by nothing - reform the need or build the check"""
-status = "pending"
+status = "ruled"
 raised = "2026-08-10"
+ruled_date = "2026-08-13"
+ruling_ref = "docs/log.md#decisions-log"
 one_line = """rule SN-005's obligation that CI runs the SAME harness a human runs - true and shipped, yet pinned by no test; recommendation is BUILD THE CHEAP HALF (one string search) and narrow the need to what is checkable"""
-decision = """No system requirement carries SN-005's SAME-HARNESS obligation - the clause that -the enforcement floor is git plus CI running the SAME harness a human runs.- Four SRs DO cite SN-005 (SR-019 the pre-commit floor, SR-020 the pre-push scan, SR-031 the policy-reader agreement, SR-146 the prompt audit trail), and none of their texts states or pins the same-harness relation - so an amendment lands on one of those four, most naturally SR-019/SR-020, rather than minting a new row. Is the need narrowed, struck, or left as prose?
+decision = """RULED (owner, 2026-08-13): (a) BUILD THE CHEAP HALF AND NARROW THE NEED. The owner's RECHECK - what does a human run, the smoke test or the full test? - is resolved by this brief's own per-moment measurement, confirmed by the owner the same date: the human bar is TIERED BY MOMENT (smoke per commit, full at WI/slice close, release at tag), CI mirrors it BY TRIGGER (push=smoke, PR=full, tag=release), and the mechanization the owner asked for is the declared moment-to-tier table in one machine-readable home plus a stdlib pin asserting the workflow's trigger lines match it - so raising CI scope becomes a reviewed edit to the declaration, never a quiet workflow change. SN-005's narrowing joins the re-attest batch under apply-now.
+
+No system requirement carries SN-005's SAME-HARNESS obligation - the clause that -the enforcement floor is git plus CI running the SAME harness a human runs.- Four SRs DO cite SN-005 (SR-019 the pre-commit floor, SR-020 the pre-push scan, SR-031 the policy-reader agreement, SR-146 the prompt audit trail), and none of their texts states or pins the same-harness relation - so an amendment lands on one of those four, most naturally SR-019/SR-020, rather than minting a new row. Is the need narrowed, struck, or left as prose?
 
 - The obligation is TRUE AND SHIPPED: the reference CI workflow runs the kit's own check script, and this repo's workflow dogfoods it.
 - What is missing is the PIN: the existing tests assert triggers, pinned action versions and job names, and never once assert that a `run:` line invokes the same harness a human invokes. One adjacent test asserts the reference workflow mentions the check script AT ALL, but compares it to no documented local command - so the strongest claim in the need is still the one nothing would catch breaking.
@@ -662,10 +702,14 @@ recommendation = """(a) BUILD THE CHEAP HALF AND NARROW THE NEED.
 
 [open_item.OI-25]
 title = """gate_policy names two different things, and the shipped options doc still teaches the retired one"""
-status = "pending"
+status = "ruled"
 raised = "2026-08-10"
+ruled_date = "2026-08-13"
+ruling_ref = "docs/log.md#decisions-log"
 one_line = """rule the `gate_policy` naming collision - a retired configuration enum and a live runtime label share the name, and the shipped options document still teaches the retired one; recommendation is RENAME the label and sweep the doc as one change"""
-decision = """`gate_policy` names two different things, and the shipped options document still instructs through the retired one. Rename, sweep, or leave?
+decision = """RULED (owner, 2026-08-13): (a) RENAME AND SWEEP as one change, with the owner's condition recorded: the new name and the swept prose must follow the NEW STAGE SEMANTICS (OI-21's vocabulary) - the rename must not re-teach vocabulary the ladder retires.
+
+`gate_policy` names two different things, and the shipped options document still instructs through the retired one. Rename, sweep, or leave?
 
 - The collision generated TWO FALSE stale-text defects inside a single analysis pass, because a reader - human or agent - cannot tell which `gate_policy` a given mention means.
 - The two things sharing the name: a CONFIGURATION ENUM that was retired and replaced by a cumulative ratification ordinal, and a LIVE RUNTIME LABEL that describes how a session is being held (`human-held` / `loop-held`). The second is real, current and useful; it simply took a name that was already spent.
@@ -688,10 +732,14 @@ recommendation = """(a) RENAME AND SWEEP, as one change.
 
 [open_item.OI-26]
 title = """A red test case CAN mint the work item that fixes it - the premise refuted on measurement; recommend CLOSE"""
-status = "pending"
+status = "ruled"
 raised = "2026-08-11"
+ruled_date = "2026-08-13"
+ruling_ref = "docs/log.md#decisions-log"
 one_line = """the premise -a red TC cannot mint the WI that fixes it- is REFUTED on measurement: DRAFTED plus the adjudicator's `## Dispositions` drafts plus intake's drafts-not-mints arm IS the mint path, built and tested; recommendation is CLOSE, with the corrected flow recorded here"""
-decision = """REFUTED AT THE OWNER'S QUESTION, 2026-08-12. The owner asked what this item was actually claiming - and the answer is the brief (and the repo-lock loose end it was minted from) misread the mechanism. The claim was: the adjudicator's verdict vocabulary is DRAFTED or NEEDS-JUDGEMENT, neither of which schedules work. MEASURED: THE MINT PATH EXISTS AND IS TESTED. The `adjudicate-red-tc` template instructs the session to DRAFT one fix-to-green row per distinct cause under a `## Dispositions` heading (-do not create rows yourself; the machinery mints your drafts at this row's close-), and `intake`'s drafts-not-mints arm parses that section at the adjudication row's MERGE and mints the rows trunk-side - R1-safe (no lane ever chooses an id), refusing loudly on a malformed block rather than skipping it, and pinned by tests. So DRAFTED does not mean -I looked-; it means -here are the rows that close this, mint them.- The third verdict this brief recommended adding would have DUPLICATED that mechanism.
+decision = """RULED (owner, 2026-08-13): (a) CLOSE AS REFUTED - the corrected flow below is the record, the repo-lock section 5 loose end is corrected in the same pass, and the meta-lesson goes to the log.
+
+REFUTED AT THE OWNER'S QUESTION, 2026-08-12. The owner asked what this item was actually claiming - and the answer is the brief (and the repo-lock loose end it was minted from) misread the mechanism. The claim was: the adjudicator's verdict vocabulary is DRAFTED or NEEDS-JUDGEMENT, neither of which schedules work. MEASURED: THE MINT PATH EXISTS AND IS TESTED. The `adjudicate-red-tc` template instructs the session to DRAFT one fix-to-green row per distinct cause under a `## Dispositions` heading (-do not create rows yourself; the machinery mints your drafts at this row's close-), and `intake`'s drafts-not-mints arm parses that section at the adjudication row's MERGE and mints the rows trunk-side - R1-safe (no lane ever chooses an id), refusing loudly on a malformed block rather than skipping it, and pinned by tests. So DRAFTED does not mean -I looked-; it means -here are the rows that close this, mint them.- The third verdict this brief recommended adding would have DUPLICATED that mechanism.
 
 THE FLOW AS IT ACTUALLY RUNS, recorded because the owner asked where the verdicts trigger from:
 
@@ -711,10 +759,14 @@ recommendation = """(a) CLOSE AS REFUTED - and the meta-lesson is worth one line
 
 [open_item.OI-27]
 title = """The LLM re-sync method - no kit version was ever designated, and the mechanical paths are skip-all or clobber-all"""
-status = "pending"
+status = "ruled"
 raised = "2026-08-12"
+ruled_date = "2026-08-13"
+ruling_ref = "docs/log.md#decisions-log"
 one_line = """rule the method for re-syncing a repo on an older kit via LLM - no version was ever designated (the anchor is the write-only `docs/kit-version` SHA stamp), the mechanical paths are skip-all or clobber-all, and 34 migration recipes live as prose in two drifting homes; recommendation revised to (e) an LLM re-sync pack with SHA-anchored entries NOW, promoting to the (c) detector registry on a named trigger"""
-decision = """The owner's ask, 2026-08-12: -we need a method for resync to be achieved from older versions of this template via LLM.- The first question that ask raises - was a version ever designated? - has a measured answer: NO. Zero git tags, no changelog, no version number, ever. Everything below was measured 2026-08-12.
+decision = """RULED (owner, 2026-08-13): (e) NOW, (c) AS THE PROMOTION TARGET, exactly as recommended - every pack entry SHA-ANCHORED (non-negotiable), the pack REPLACES the recipe half of ADOPTING section 6 and the skill's duplicates (one home, never three), the promotion trigger stands as named (first out-of-sphere adopter OR the second observed drift incident), the old-kit re-sync test is built WITH the pack, and the three do-not-wait defects are taken immediately regardless.
+
+The owner's ask, 2026-08-12: -we need a method for resync to be achieved from older versions of this template via LLM.- The first question that ask raises - was a version ever designated? - has a measured answer: NO. Zero git tags, no changelog, no version number, ever. Everything below was measured 2026-08-12.
 
 ### What exists instead of a version
 
@@ -770,10 +822,14 @@ recommendation = """REVISED 2026-08-12 at the owner's lean: (e) NOW, (c) AS THE 
 
 [open_item.OI-28]
 title = """Templates are product, and the direct session is an actor - two boundary facts the spine does not carry"""
-status = "pending"
+status = "ruled"
 raised = "2026-08-13"
+ruled_date = "2026-08-13"
+ruling_ref = "docs/log.md#decisions-log"
 one_line = """rule how the shipped template set ties back to requirements and how the LLM-in-a-direct-session actor is declared - measured: 2 of ~37 shipped templates appear in any LLR cell, and the session actor exists only as two accidental IF counterparts; recommendation is SEED AT THE BOUNDARY, executed with OI-14's rung-1 work"""
-decision = """The owner's observation, 2026-08-13, in two connected halves. FIRST: the `*.template.*` files are minted primarily through LLM sessions, but they are OUTCOMES of this system - the reusable baseline other repositories copy is the product - so they need to tie back to the requirements like any other product artifact. SECOND: a CLI session is itself an INTERFACE into the system - an LLM agent outside the mechanization can contribute to and modify artifacts - and that is true of basically every downstream adopter too. The owner wants both expressed in the spine breakdown and surfaced in the architecture, seeding method open (-perhaps at the very end-).
+decision = """RULED (owner, 2026-08-13): (a) SEED AT THE BOUNDARY, executed with OI-14's rung-1 work - both seeds stand as recorded in the recommendation, and the OI-20 template-path guard rides along.
+
+The owner's observation, 2026-08-13, in two connected halves. FIRST: the `*.template.*` files are minted primarily through LLM sessions, but they are OUTCOMES of this system - the reusable baseline other repositories copy is the product - so they need to tie back to the requirements like any other product artifact. SECOND: a CLI session is itself an INTERFACE into the system - an LLM agent outside the mechanization can contribute to and modify artifacts - and that is true of basically every downstream adopter too. The owner wants both expressed in the spine breakdown and surfaced in the architecture, seeding method open (-perhaps at the very end-).
 
 MEASURED 2026-08-13, and both halves are genuine gaps:
 

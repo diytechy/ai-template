@@ -25,6 +25,53 @@ applying that design to the kit itself.
 _Ratified or executed decisions only — the call, the alternatives passed over,
 why (one bullet each; cite ids)._
 
+- **2026-08-13 — The pre-absence batch ruling: fourteen open items ruled in one
+  sitting (OI-14, OI-16…OI-28).** Ruled (owner, in session, before an absence,
+  with the direction to *charge through as much work as feasible before
+  stakeholder-need reapproval*). Each row in
+  [requirements/open-items.toml](requirements/open-items.toml) carries the full
+  ruling at the head of its `decision` cell; this entry is the map plus the
+  calls that shape execution. **The rulings:** **OI-14** (A3) partition derived
+  from the system's declared I/O with one-home-per-behaviour as a hard
+  constraint, then (B1) declare + schema tier, boundary rung as (A6)
+  applies-when warn-first — with the owner's framing preserved: the SN
+  breakdown *surfaces the rationale* an LLM-judgement-capable repo owes, which
+  is why the perspective work supports SN-040 rather than conflicting with it.
+  **OI-16** step-2 inversion CONFIRMED (bootstrap imports FROM the shipped
+  common module). **OI-17** (d) reframe — SN-034 becomes THE launcher need,
+  SN-025 returns to pure self-direction, SN-035 kept. **OI-18** (a) dissolve
+  all ten edge needs, re-anchors SR-021→SN-001 and SR-029→SN-025. **OI-19**
+  (a) six-hat roster at `docs/requirements/hats.toml`, injection before
+  coverage record, roster stays owner text. **OI-20** (a) ratify the LLR
+  discharge rule as built; cell grammar ruled conservatively (symbol / module
+  path / part source admissible; generated artifacts and prose contracts not;
+  four rows stay unfounded). **OI-21** approve all five execution answers
+  (label carrier, attestation carve-out, sittings-own-axis, dial mapped,
+  predicates with the D-9 migration), program after OI-14 part A. **OI-22**
+  (a) adopt the prose batch. **OI-23** (a) amend the stale ratified rows as
+  one batch. **OI-24** (a) — the owner's RECHECK (*what does a human run?*)
+  resolved: the bar is tiered by moment, CI mirrors it by trigger
+  (push=smoke, PR=full, tag=release), so declare the moment→tier table once
+  and pin the workflow to it. **OI-25** (a) rename + sweep, in stage
+  vocabulary. **OI-26** (a) close as refuted — meta-lesson, owed to this log:
+  the brief's recommendation to *build* a mechanism the repo already had
+  survived two verification passes focused on its numbers, and fell to the
+  owner asking one plain question; a brief's facts being verified is not its
+  premise being true. **OI-27** (e) LLM re-sync pack now with SHA-anchored
+  entries, (c) detector registry as the named promotion target. **OI-28** (a)
+  seed templates-as-product and the direct-session actor at the boundary with
+  OI-14 rung 1. **Execution-mode calls, confirmed with the owner in session:**
+  re-attest-bearing amendments (OI-17/18/22/23 + SN-005's narrowing) are
+  APPLIED NOW — the window is already open, so widening it collapses into the
+  one consolidated sitting owed at the owner's return, whose pack leads with
+  OI-22's twelve previously-laundered rows; and OI-14's ranked shortlist ends
+  in a PROVISIONAL warn-first adoption of the top candidate (safe: `Component`
+  is traced) so the dependent programs proceed, with the shortlist + rework
+  sizing packaged for ratification at return. Rejected: staging-only (leaves
+  the queue idle for the length of an absence to protect a window that is
+  already open); and holding OI-24 pending (its recheck was answered by
+  measurement already in the brief).
+
 - **2026-08-01 — R3: handback disposition is loop machinery; the arbitration
   row is minted at intake.** Ruled (owner,
   [rulings-context-2026-08-01.md](rulings-context-2026-08-01.md) §R3, confirmed

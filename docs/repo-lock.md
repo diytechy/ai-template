@@ -45,6 +45,15 @@ blast radius, options and recommendation, rendered for reading in
 [`status.md`](status.md) automatically. **Read them there; this list is only
 the map, and it must never grow depth again.**
 
+**ALL FOURTEEN RULED 2026-08-13** — the pre-absence batch ruling; the calls and
+the execution-mode decisions (apply-now re-attests, provisional warn-first
+partition adoption) are in [log.md](log.md#decisions-log)'s entry of that date,
+and each row's `decision` cell opens with its ruling. No owner act below is
+still *owed a ruling*; what remains owed is **execution** (sequenced per the
+rulings, OI-14 part A first among the blockers) and the **consolidated
+re-attest sitting** at the owner's return. The table stays as the map of
+briefs and their background.
+
 | owed | brief | still-relevant background here |
 |---|---|---|
 | the component **partition** *(part A)* + what an **IF row** must say *(part B)* — gates the most | **OI-14** *(rewritten; the two were **merged** 2026-08-12 at the owner's direction, and the former OI-15 row deleted per D-4)* | §0, §8.6 item 1 |
