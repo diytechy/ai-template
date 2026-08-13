@@ -78,9 +78,9 @@ def test_a_missing_space_is_a_finding_not_a_free_pass(tmp_path):
     path = root / TRACE.WATERMARK
     path.write_text(
         "\n".join(
-            l
-            for l in path.read_text(encoding="utf-8").splitlines()
-            if not l.startswith("CMP")
+            ln
+            for ln in path.read_text(encoding="utf-8").splitlines()
+            if not ln.startswith("CMP")
         )
         + "\n",
         encoding="utf-8",

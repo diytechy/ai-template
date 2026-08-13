@@ -165,22 +165,30 @@ def test_sn_edge_rows_keep_their_native_fields(tmp_path):
     assert set(parsed["SN-003"]) == {"kind", "lifecycle", "scenario", "expected"}
 
 
-def test_the_live_need_carrier_holds_the_edge_fields_unfolded():
-    """The same property on the REPO'S OWN needs registry, post-cutover.
+def test_the_live_need_carrier_holds_no_orphaned_edge_fields():
+    """The edge TIER retired from the live registry (OI-18, ruled 2026-08-13).
 
-    The fixture above can only prove the converter's rule; this proves the
-    conversion that actually shipped kept it — an edge need still carries
-    `lifecycle`/`scenario`/`expected` and NONE of the core four, so nothing has
-    quietly folded the tier on the way into the carrier. Non-vacuous by
-    construction: it fails if the repo has no edge needs at all.
+    The ten edge rows dissolved into the requirements that already carried
+    them, so the live registry now holds ZERO `kind = "edge"` rows — and no
+    surviving row may carry the edge-only fields (`lifecycle`/`scenario`/
+    `expected`), which would be a half-dissolved state no reader defines.
+    The converter's edge-field RULE stays proven by the fixture test above,
+    and the SHIPPED TEMPLATE still carries edge examples until the schema
+    batch sheds those fields (the OI-18 blast-radius sequencing).
     """
     live = ROOT / "docs" / "requirements" / "stakeholder-needs.toml"
     needs = tomllib.loads(live.read_text(encoding="utf-8"))["need"]
-    edges = [n for n in needs.values() if n.get("kind") == "edge"]
-    assert edges, "the repo declares no edge-case needs — this check would be vacuous"
-    for need in edges:
-        assert {"lifecycle", "scenario", "expected"} >= set(need) - {"kind"}
-        assert not {"need", "why", "priority", "acceptance"} & set(need)
+    edges = [nid for nid, n in needs.items() if n.get("kind") == "edge"]
+    assert not edges, (
+        "OI-18 dissolved the edge tier; a resurrected edge row is a "
+        "regression against the ruling: " + str(edges)
+    )
+    strays = {
+        nid: sorted({"lifecycle", "scenario", "expected"} & set(n))
+        for nid, n in needs.items()
+        if {"lifecycle", "scenario", "expected"} & set(n)
+    }
+    assert not strays, "edge-only fields on non-edge rows: " + str(strays)
 
 
 # --- the loss oracle must not be the thing under test ------------------------

@@ -379,3 +379,50 @@ def test_the_green_holds_only_because_the_old_checkers_survived(resync):
         "test relies on has moved:\n" + current.stdout + current.stderr
     )
     assert "BOTH carriers" in current.stdout + current.stderr
+
+
+def test_force_resync_installs_current_checkers_and_the_tree_cannot_false_green(
+    resync, tmp_path
+):
+    """The OTHER half of §6 — the wholesale overwrite — probed with --force.
+
+    The add-only leg above proves the DOCUMENTED DEFAULT and pins its known
+    dishonest green (the surviving old checkers approve a tree the current kit
+    refuses). This leg proves the overwrite path: after `bootstrap.py --force`
+    plus the documented `--migrate-config`, the tree's checkers ARE current —
+    so whatever they report is the CURRENT kit's honest verdict on a
+    July-era scaffold, and the one outcome this test forbids is a green that
+    hides un-run migrations (SN-008 one level up, the adversarial round's
+    point). Either the current harness runs green with substance, or it
+    refuses LOUDLY naming what a re-sync still owes — both are honest; silence
+    is the defect.
+    """
+    repo = tmp_path / "force-resynced"
+    shutil.copytree(resync.pristine, repo)
+    forced = run_py([SCRIPTS / "bootstrap.py", "--dest", ".", "--force"], cwd=repo)
+    assert forced.returncode == 0, forced.stdout + forced.stderr
+    migrated = run_py(
+        [SCRIPTS / "bootstrap.py", "--dest", ".", "--migrate-config"], cwd=repo
+    )
+    assert migrated.returncode == 0, migrated.stdout + migrated.stderr
+
+    # The overwritten checkers must BE the current kit's, byte-for-byte —
+    # otherwise this leg proves nothing about the current verdict.
+    for rel in ("scripts/check.py", "scripts/trace.py"):
+        assert (repo / rel).read_bytes() == (SCRIPTS.parent / rel).read_bytes(), (
+            "--force left a stale kit-owned checker in place: " + rel
+        )
+
+    verdict = run_py(["scripts/trace.py", "--strict-integrity"], cwd=repo)
+    out = verdict.stdout + verdict.stderr
+    if verdict.returncode == 0:
+        # Honest green: the current integrity floor really passed — require
+        # substance so a vacuous pass cannot slip through as approval.
+        assert "orphans=0" in out or "integrity=0" in out, (
+            "green with no substance is the false green this test exists "
+            "to refuse:\n" + out
+        )
+    else:
+        # Honest red: the refusal must NAME what is owed, so the operator
+        # is routed to the migration rather than left with a bare exit code.
+        assert out.strip(), "a silent nonzero teaches nothing:\n" + out

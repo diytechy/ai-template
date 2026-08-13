@@ -3,6 +3,7 @@
 import ast
 import re
 import shutil
+import subprocess
 
 from conftest import (
     KIT,
@@ -411,6 +412,38 @@ def test_non_git_kit_copy_warns_that_the_scaffold_has_no_resync_anchor(tmp_path)
     lowered = proc.stderr.lower()
     assert "no re-sync anchor" in lowered
     assert "adopting.md" in lowered, "the warning must point at the re-sync guide"
+
+
+def test_tarball_kit_inside_a_foreign_repo_does_not_steal_its_anchor(tmp_path):
+    """A kit extracted INSIDE someone else's git repo must stamp `unknown`.
+
+    `git rev-parse` searches parent directories, so before the tracked-file
+    probe this shape resolved to the ENCLOSING repo's HEAD — a false re-sync
+    anchor pointing at a commit that never contained the kit, which is worse
+    than no anchor at all (the adversarial round's finding). The kit is only
+    anchored when its own files are TRACKED in the checkout rev-parse found.
+    """
+    foreign = tmp_path / "someones-monorepo"
+    foreign.mkdir()
+    env_git = ["git", "-C", str(foreign), "-c", "user.name=t", "-c", "user.email=t@t"]
+    subprocess.run(env_git[:3] + ["init", "-q"], check=True)
+    (foreign / "unrelated.txt").write_text("not the kit\n", encoding="utf-8")
+    subprocess.run(env_git + ["add", "unrelated.txt"], check=True)
+    subprocess.run(env_git + ["commit", "-qm", "foreign history"], check=True)
+
+    loose_kit = foreign / "vendor" / "project-trajectory"
+    shutil.copytree(KIT, loose_kit)  # extracted, never `git add`ed
+    dest = tmp_path / "adopter"
+    dest.mkdir()
+
+    proc = run_py([loose_kit / "scripts" / "bootstrap.py", "--dest", dest], cwd=dest)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    stamp = (dest / "docs" / "kit-version").read_text(encoding="utf-8")
+    assert "unknown (kit not a git checkout)" in stamp, (
+        "an untracked kit inside a foreign repo must not inherit that repo's "
+        "HEAD as its anchor:\n" + stamp
+    )
+    assert "WARNING" in proc.stderr and "no re-sync anchor" in proc.stderr.lower()
 
 
 def test_kit_version_unknown_label_has_one_home():

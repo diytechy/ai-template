@@ -2100,6 +2100,19 @@ def kit_version():
         )
         if sha.returncode != 0 or not sha.stdout.strip():
             return KIT_VERSION_UNKNOWN, False
+        # rev-parse searches PARENT directories, so a tarball kit extracted
+        # anywhere inside an unrelated git repository resolves to THAT repo's
+        # HEAD — a false re-sync anchor, worse than none (the adversarial
+        # round's finding). The kit is only anchored to a commit if its own
+        # files are TRACKED in the checkout rev-parse found: probe with this
+        # very script, which every kit copy carries.
+        tracked = subprocess.run(
+            ["git", "ls-files", "--error-unmatch", Path(__file__).name],
+            cwd=str(Path(__file__).resolve().parent),
+            capture_output=True,
+        )
+        if tracked.returncode != 0:
+            return KIT_VERSION_UNKNOWN, False
         short = sha.stdout.strip()
         date = subprocess.run(
             ["git", "-C", str(KIT), "show", "-s", "--format=%cs", "HEAD"],
@@ -2693,7 +2706,9 @@ def write_stamps(dest, plan):
         # don't refuse: a tarball is a documented way in, and nothing downstream
         # ever re-derives the answer, so the moment to say it is now.
         print(
-            "WARNING: this kit copy is NOT a git checkout, so docs/kit-version "
+            "WARNING: this kit copy is not anchored to a kit commit (not a git "
+            "checkout, its files untracked in the enclosing repository, or git "
+            "itself unavailable), so docs/kit-version "
             "is stamped '{}' — the scaffold has NO RE-SYNC ANCHOR. Nothing "
             "records which kit state it came from, so the documented upgrade "
             "path (diff your recorded kit SHA against the target commit — "

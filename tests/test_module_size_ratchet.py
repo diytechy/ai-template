@@ -1256,7 +1256,7 @@ BASELINE = {
     # because it must name the consequence and the fix while the operator still
     # knows which kit they downloaded. Decomposing bootstrap.py to buy back 26
     # lines is WI-280's job, not a stamp fix's. Re-stamp downward with WI-280.
-    "bootstrap.py": 2793,
+    "bootstrap.py": 2808,  # +15 2026-08-13: WI-439 review fix — the tracked-file anchor probe + the three-cause warning wording (reviewed bump, reason in the log)
     # NEW ENTRY, +228 (1423 -> 1651), Phase 2b of the concurrency restructure
     # (docs/concurrency-restructure.md §7): the spec-folder work-item reader,
     # which crosses this module over THRESHOLD for the first time. It is one
