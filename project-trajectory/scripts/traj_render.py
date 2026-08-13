@@ -9,7 +9,7 @@ import html
 import math
 import re
 
-from traj_graph import GraphGeom, _layered_layout, route_graph
+from traj_graph import GraphGeom, _layered_layout, orthogonal_route, route_graph
 
 
 # --- shared When-view rendering helpers ---------------------------------------
@@ -94,7 +94,9 @@ def _svg_fit_style(width):
 # in SVG user units: the roadmap root layer's wires reach x=-17.5 and x=711.0
 # against a 0..692 box; the How-SW root layer reaches x=923.0 against 0..904.
 #
-# So the box is grown to the ink, not the ink shrunk to the box: pulling the U-turn
+# So the box is grown to the ink on all four sides, not the ink shrunk to the box:
+# WI-435 found the same omission vertically (`CMP-004 → CMP-002` at y=-9.1 while
+# the viewBox began at 0). Pulling the U-turn
 # back inside would push it through its own endpoint box, the exact defect WI-257
 # removed. The pad is measured from the BODY — like `_svg_role` above — so no
 # emitter has to remember it, a successor emitter cannot forget it, and a diagram
@@ -109,58 +111,68 @@ _INK_PAD = 2.0  # ink, not centerline: clears `--w-emph` 2.5's 1.25 half-width
 _PATH_TOKEN = re.compile(r"[A-Za-z]|-?\d+(?:\.\d+)?")
 
 
-def _path_xs(d):
-    """Every x coordinate a path `d` visits, endpoints AND cubic control points. A
+def _path_axis(d, axis):
+    """Every x or y coordinate a path visits, including cubic control points. A
     Bézier lies inside its control hull, so min/max over these bound the ink without
     sampling the curve — and on the shipped dashboard the bound is exact, because
     every outboard extreme is a lane's own `L` endpoint. An unrecognised command
     stops the scan rather than consuming its arguments as coordinates: a shape this
     helper has never seen can then only be under-padded, never mis-placed."""
     toks = _PATH_TOKEN.findall(d)
-    xs, cx, cmd, i = [], 0.0, "", 0
+    values, cx, cy, cmd, i = [], 0.0, 0.0, "", 0
     while i < len(toks):
         if toks[i].isalpha():
             cmd, i = toks[i], i + 1
             continue
         if cmd in ("M", "L", "C", "Q"):  # absolute, x,y pairs
-            cx, i = float(toks[i]), i + 2
+            cx, cy, i = float(toks[i]), float(toks[i + 1]), i + 2
         elif cmd == "h":  # relative horizontal
             cx, i = cx + float(toks[i]), i + 1
+        elif cmd == "v":  # relative vertical
+            cy, i = cy + float(toks[i]), i + 1
         else:
             break
-        xs.append(cx)
-    return xs
+        values.append((cx, cy)[axis])
+    return values
 
 
-def _ink_overflow(width, body):
-    """`(left, right)` — whole user units of wire ink lying outside the layout box
-    `[0, width]`, each already carrying `_INK_PAD` and 0 when nothing overflows (so
-    the common diagram pads by nothing). `<defs>` is cut first: a `<marker>`'s path
-    is drawn in the marker's own viewBox, not in user space."""
+def _path_xs(d):
+    return _path_axis(d, 0)
+
+
+def _path_ys(d):
+    return _path_axis(d, 1)
+
+
+def _ink_overflow(width, height, body):
+    """Whole units of wire ink outside the layout box: left/right/top/bottom."""
     ds = re.findall(r'\sd="([^"]+)"', re.sub(r"<defs>.*?</defs>", "", body, flags=re.S))
     xs = [x for d in ds for x in _path_xs(d)]
-    if not xs:
-        return 0, 0
+    ys = [y for d in ds for y in _path_ys(d)]
+    if not xs or not ys:
+        return 0, 0, 0, 0
     # Whole units, and INTS: a float pad would negate to `-0.0` and render every
     # unpadded diagram's viewBox as `-0 0 …`, churning the whole dashboard.
     return (
         max(0, math.ceil(_INK_PAD - min(xs))),
         max(0, math.ceil(max(xs) + _INK_PAD - width)),
+        max(0, math.ceil(_INK_PAD - min(ys))),
+        max(0, math.ceil(max(ys) + _INK_PAD - height)),
     )
 
 
 def _svg_frame(width, height, body):
     """The `viewBox` / `width` / `style` attribute triple every emitted diagram
-    opens with, its box widened left and right to whatever wire ink the router put
+    opens with, its box grown on every side to whatever wire ink the router put
     outside the layout box (WI-367). The declared natural width grows with it, so a
     diagram that already fits its card renders at exactly its former scale and only
     the clipped stubs appear; one that was already scaled to fit shrinks by the pad
     fraction (measured: the How-SW root layer 0.800 -> 0.782 CSS px per unit at
     1680px, its 12px labels 9.60 -> 9.38px, far above the `SHRINK_FLOOR` floor)."""
-    left, right = _ink_overflow(width, body)
-    box = width + left + right
-    return 'viewBox="{:d} 0 {:.0f} {:.0f}" width="{:.0f}" style="{}"'.format(
-        -left, box, height, box, _svg_fit_style(box)
+    left, right, top, bottom = _ink_overflow(width, height, body)
+    box_w, box_h = width + left + right, height + top + bottom
+    return 'viewBox="{:d} {:d} {:.0f} {:.0f}" width="{:.0f}" style="{}"'.format(
+        -left, -top, box_w, box_h, box_w, _svg_fit_style(box_w)
     )
 
 
@@ -506,6 +518,14 @@ DRILL_STYLE = (
     ".drill nav.crumbs .crumb[aria-current]{color:var(--text);font-weight:600;"
     "cursor:default;}"
     ".drill nav.crumbs .sep{color:var(--muted);}"
+    ".drill .tracebar{display:flex;flex-wrap:wrap;align-items:center;gap:.45rem 1rem;"
+    "margin:0 0 .65rem;padding:.55rem .7rem;border:1px solid var(--border);"
+    "border-radius:var(--r-ctl);background:var(--surface);font-size:var(--small);"
+    "color:var(--muted);}"
+    ".drill .tracebar strong{color:var(--text);}"
+    ".drill .tracekey{display:inline-flex;align-items:center;gap:.3rem;white-space:nowrap;}"
+    ".drill .tracekey i{display:inline-block;width:1.2rem;border-top:2px solid currentColor;}"
+    ".drill .tracekey.in{color:var(--trace-in);}.drill .tracekey.out{color:var(--trace-out);}"
     ".drill .layer[hidden]{display:none;}"
     ".drill svg.drillsvg{display:block;font-family:inherit;}"
     ".drill .block[data-descend]{cursor:pointer;}"
@@ -529,8 +549,22 @@ DRILL_STYLE = (
     ".drill .block .bsub{font-size:var(--nsub);}"
     ".drill .port{fill:var(--surface);stroke:var(--muted);stroke-width:var(--w-line);}"
     ".drill .port.in{stroke:var(--accent);}"
-    ".drill .wire{fill:none;stroke:var(--muted);stroke-width:var(--w-line);opacity:var(--o-muted);}"
+    ".drill .wire{fill:none;stroke:var(--muted);stroke-width:var(--w-line);opacity:var(--o-muted);"
+    "stroke-linejoin:round;stroke-linecap:round;marker-end:var(--arrow);}"
+    ".drill[data-focused-trace] .port.in{stroke:var(--trace-in);}"
+    ".drill[data-focused-trace] .port.out{stroke:var(--trace-out);}"
+    ".drill[data-focused-trace] .wire{opacity:var(--o-wash);"
+    "transition:opacity .12s ease,stroke .12s ease,stroke-width .12s ease;}"
+    ".drill[data-focused-trace] .wire.trace-in{stroke:var(--trace-in);stroke-width:var(--w-emph);opacity:var(--o-full);"
+    "marker-end:var(--arrow-in);}"
+    ".drill[data-focused-trace] .wire.trace-out{stroke:var(--trace-out);stroke-width:var(--w-emph);opacity:var(--o-full);"
+    "marker-end:var(--arrow-out);}"
+    ".drill[data-focused-trace] .block.trace-muted{opacity:var(--o-ghost);}"
+    ".drill[data-focused-trace] .block.trace-in rect{stroke:var(--trace-in);stroke-width:var(--w-emph);}"
+    ".drill[data-focused-trace] .block.trace-out rect{stroke:var(--trace-out);stroke-width:var(--w-emph);}"
+    ".drill[data-focused-trace] .block.trace-focus rect{stroke:var(--ring,var(--text));stroke-width:var(--w-emph);}"
     ".drill .warrow{fill:var(--muted);}"
+    ".drill .warrow-in{fill:var(--trace-in);}.drill .warrow-out{fill:var(--trace-out);}"
     # SR-056: one horizontal parent→child arrow per containment edge — a distinct
     # colour (vs. the muted dependency wire) marks it as a descend/containment edge.
     # WI-317 (T5): that colour was a fixed `var(--accent)`, and the arrow is drawn
@@ -555,6 +589,8 @@ DRILL_SCRIPT = (
     "const layers=[...drill.querySelectorAll('.layer')];"
     "const byId={};for(const l of layers)byId[l.getAttribute('data-layer')]=l;"
     "const crumbsEl=drill.querySelector('nav.crumbs');"
+    "const traceEl=drill.querySelector('.trace-status');"
+    "const tracing=drill.hasAttribute('data-focused-trace');"
     "let trail=[{id:drill.getAttribute('data-root'),"
     "crumb:drill.getAttribute('data-root-crumb')||'Top'}];"
     "function render(){"
@@ -571,7 +607,7 @@ DRILL_SCRIPT = (
     "s.textContent=' \\u203a ';crumbsEl.appendChild(s);}"
     # WI-256: a descend/crumb-nav swaps the visible layer, changing the outer
     # `.view` scrollWidth — refresh the overflow scroll cue for the new layer.
-    "});if(window.__syncCues)window.__syncCues();}"
+    "});if(tracing)selectDefault();if(window.__syncCues)window.__syncCues();}"
     "function descend(el){"
     "const id=el.getAttribute('data-descend');if(!id||!byId[id])return;"
     "if(trail.some(function(t){return t.id===id;}))return;"
@@ -583,14 +619,46 @@ DRILL_SCRIPT = (
     # SR-056: the highlight persists on the last-hovered/focused block (keyed by its
     # data-node id) until another takes it — no mouseleave clear, so no flash-on-exit.
     "let hl=null;"
+    "function visibleLayer(){return byId[trail[trail.length-1].id];}"
+    "function selectNode(el){"
+    "const layer=visibleLayer();if(!layer||!el)return;"
+    "const key=el.getAttribute('data-node');"
+    "const blocks=[...layer.querySelectorAll('.block[data-node]')];"
+    "const wires=[...layer.querySelectorAll('.wire[data-from][data-to]')];"
+    "for(const b of blocks)b.classList.remove('trace-focus','trace-in','trace-out','trace-muted');"
+    "for(const w of wires)w.classList.remove('trace-in','trace-out');"
+    "const incoming=[],outgoing=[];"
+    "for(const w of wires){const from=w.getAttribute('data-from'),to=w.getAttribute('data-to');"
+    "if(to===key){w.classList.add('trace-in');incoming.push(from);}"
+    "if(from===key){w.classList.add('trace-out');outgoing.push(to);}}"
+    "for(const b of blocks){const k=b.getAttribute('data-node');"
+    "if(k===key)b.classList.add('trace-focus');"
+    "else if(incoming.includes(k))b.classList.add('trace-in');"
+    "else if(outgoing.includes(k))b.classList.add('trace-out');"
+    "else b.classList.add('trace-muted');}"
+    "drill.setAttribute('data-trace',key||'');"
+    "if(traceEl){const label=el.getAttribute('data-label')||key;"
+    "const nameOf=k=>{const b=blocks.find(x=>x.getAttribute('data-node')===k);"
+    "return b?(b.getAttribute('data-label')||k):k;};"
+    "const names=xs=>xs.length?xs.map(nameOf).join(', '):'none';"
+    "traceEl.innerHTML='<strong>'+escapeHtml(label)+'</strong> · ← Needs: '+"
+    "escapeHtml(names(incoming))+' · Unlocks → '+escapeHtml(names(outgoing));}}"
+    "function escapeHtml(s){const x=document.createElement('span');x.textContent=s||'';return x.innerHTML;}"
+    "function selectDefault(){const layer=visibleLayer();if(!layer)return;"
+    "const blocks=[...layer.querySelectorAll('.block[data-node]')],"
+    "wires=[...layer.querySelectorAll('.wire[data-from][data-to]')];"
+    "let best=null,bestDegree=Infinity;for(const b of blocks){const k=b.getAttribute('data-node');"
+    "const d=wires.filter(w=>w.getAttribute('data-from')===k||w.getAttribute('data-to')===k).length;"
+    "if(d>0&&d<bestDegree){best=b;bestDegree=d;}}selectNode(best||blocks[0]);}"
     "function highlight(el){"
     "if(hl===el)return;"
     "if(hl)hl.classList.remove('hl');"
     "hl=el;el.classList.add('hl');"
-    "drill.setAttribute('data-hl',el.getAttribute('data-node')||'');}"
+    "drill.setAttribute('data-hl',el.getAttribute('data-node')||'');if(tracing)selectNode(el);}"
     "for(const el of drill.querySelectorAll('.block')){"
     "el.addEventListener('mouseover',function(){highlight(el);});"
-    "el.addEventListener('focus',function(){highlight(el);});}"
+    "el.addEventListener('focus',function(){highlight(el);});"
+    "if(tracing)el.addEventListener('click',function(){highlight(el);});}"
     "render();}"
     "})();</script>"
 )
@@ -676,7 +744,7 @@ def _drill_block_label(b, col_w, cx, cy):
     )
 
 
-def _drill_layer_svg(blocks, edges):
+def _drill_layer_svg(blocks, edges, marker_scope="drill"):
     """One drill layer as a plain SVG block diagram. Each block is a rectangle with
     an input port (left-middle) and an output port (right-middle); each aggregated
     `edges` entry (src_key, tgt_key, title) is a wire from the source block's OUTPUT
@@ -684,15 +752,17 @@ def _drill_layer_svg(blocks, edges):
     right by the shared layered pipeline over the edge set, so a producer sits left
     of its consumer and crossings are reduced. Byte-deterministic.
 
-    Two render-legibility fixes (both formerly silent since a screenshot, not the
-    raw markup, is what shows them — see the render-dashboard-critique skill):
-    (1) a wire's endpoint is pulled back by PORT_R so its `marker-end` arrowhead
-    lands just outside the port ring instead of dead center — the ring is drawn
-    AFTER wires (so it layers on top) and, at the former center-to-center length,
-    fully swallowed the arrowhead every time; (2) `_port_fan` spreads multiple
-    wires sharing one port across a small vertical band instead of bundling them
-    onto the exact same pixel, so a fan-in/fan-out reads as distinct strands."""
+    WI-435 keeps the shared obstacle-aware corridor calculation but presents drill
+    wires as orthogonal M/L paths. Fan offsets terminate at explicit per-edge port
+    circles, so several edges no longer merge into one centre-port wedge. The end
+    remains pulled back by PORT_R + 2 so a 12px focused arrowhead stays visible;
+    marker ids are scoped per layer because duplicate ids resolved a visible path
+    through a hidden layer's marker definition."""
     keys = [b["key"] for b in blocks]
+    marker_scope = re.sub(r"[^A-Za-z0-9_-]", "-", marker_scope) or "drill"
+    arrow = marker_scope + "-drillarrow"
+    arrow_in = marker_scope + "-drillarrow-in"
+    arrow_out = marker_scope + "-drillarrow-out"
     by_key = {b["key"]: b for b in blocks}
     order = {k: i for i, k in enumerate(sorted(keys))}
     pred_map = {k: [] for k in keys}
@@ -716,19 +786,47 @@ def _drill_layer_svg(blocks, edges):
     )
     _cw, _cg, row_h, row_gap, _pad = geom
 
-    # The start stays on the output port (no arrowhead there, so it reads as
-    # attached); the END is pulled PORT_R + 2 px short of the input-port center
-    # so its `marker-end` arrowhead draws in the clear gap just outside the ring
-    # (WI-249). A wire that would cut an unrelated block detours (`route_graph`
-    # -> `_route_edges`, WI-253) through a clear lane instead of straight
-    # through the box.
-    routes, _out_off, _in_off = route_graph(keys, wire_edges, pos, geom, 14, PORT_R + 2)
+    # Backward dependencies need an outboard lane. Reserve a visible top/bottom
+    # gutter before routing so those square U-turns stay inside the drawing instead
+    # of relying on a clipped negative-y lane at the card edge.
+    backward = sum(pos[b][0] <= pos[a][0] + col_w for a, b, _t in wire_edges)
+    if backward:
+        gutter = min(38, 8 + backward * 10)
+        pos = {key: (x, y + gutter) for key, (x, y) in pos.items()}
+        height += 2 * gutter
+
+    # Each route begins at its own output connector and ends PORT_R + 2 px before
+    # its own input connector, leaving the marker visible outside the ring. The
+    # shared router still chooses obstacle-clear corridors; `orthogonal_route`
+    # squares those corridors and rechecks candidate bends against every other box.
+    fan_span = row_h - 2 * (PORT_R + 3)
+    rects = {key: (x, y, col_w, row_h) for key, (x, y) in pos.items()}
+    routes, out_off, in_off = route_graph(
+        keys,
+        wire_edges,
+        pos,
+        geom,
+        14,
+        PORT_R + 2,
+        fan_terminals=True,
+        fan_span=fan_span,
+    )
     wires = []
     for e in sorted(wire_edges):
         title = e[2]
         wires.append(
-            '<path class="wire" d="{}" marker-end="url(#drillarrow)">{}</path>'.format(
-                routes[e],
+            '<path class="wire" d="{}" data-from="{}" data-to="{}" '
+            'style="--arrow:url(#{});--arrow-in:url(#{});--arrow-out:url(#{})">'
+            "{}</path>".format(
+                orthogonal_route(
+                    routes[e],
+                    [rect for key, rect in rects.items() if key not in e[:2]],
+                ),
+                esc(e[0]),
+                esc(e[1]),
+                esc(arrow),
+                esc(arrow_in),
+                esc(arrow_out),
                 "<title>{}</title>".format(esc(title)) if title else "",
             )
         )
@@ -740,11 +838,29 @@ def _drill_layer_svg(blocks, edges):
         cy = y + row_h / 2
         cx = x + col_w / 2
         label = _drill_block_label(b, col_w, cx, cy)
-        ports = (
-            '<circle class="port in" cx="{:.1f}" cy="{:.1f}" r="{}"></circle>'
-            '<circle class="port out" cx="{:.1f}" cy="{:.1f}" r="{}"></circle>'.format(
-                x, cy, PORT_R, x + col_w, cy, PORT_R
+        incoming = sorted(e for e in wire_edges if e[1] == b["key"])
+        outgoing = sorted(e for e in wire_edges if e[0] == b["key"])
+
+        def edge_ports(side, px, attached, offsets):
+            if not attached:
+                return '<circle class="port {}" cx="{:.1f}" cy="{:.1f}" r="{}"></circle>'.format(
+                    side, px, cy, PORT_R
+                )
+            return "".join(
+                '<circle class="port {} wire-port" cx="{:.1f}" cy="{:.1f}" '
+                'data-from="{}" data-to="{}" r="{}"></circle>'.format(
+                    side,
+                    px,
+                    cy + offsets[e],
+                    esc(e[0]),
+                    esc(e[1]),
+                    PORT_R,
+                )
+                for e in attached
             )
+
+        ports = edge_ports("in", x, incoming, in_off) + edge_ports(
+            "out", x + col_w, outgoing, out_off
         )
         attrs = 'class="block {}" data-tier="{}"'.format(
             b.get("cls", ""), esc(b.get("tier", ""))
@@ -763,7 +879,8 @@ def _drill_layer_svg(blocks, edges):
             # explicit (top-right, clear of the centred label), not merely implied.
             # WI-317: its head is the marker matching THIS block's ring ink.
             ax = x + col_w - CEDGE_LEN - 6
-            mid, ink = _cedge_marker(b.get("fill"))
+            marker, ink = _cedge_marker(b.get("fill"))
+            mid = marker_scope + "-" + marker
             cedge_markers[mid] = ink
             cedge = (
                 '<path class="cedge" d="M{:.1f},{:.1f} h{}" '
@@ -816,7 +933,9 @@ def _drill_layer_svg(blocks, edges):
         )
 
     defs = _arrow_markers(
-        ("drillarrow", "warrow"),
+        (arrow, "warrow"),
+        (arrow_in, "warrow-in", 12),
+        (arrow_out, "warrow-out", 12),
         *(
             (mid, "cedgehead", 8) if ink is None else (mid, "cedgehead", 8, ink)
             for mid, ink in sorted(cedge_markers.items())
@@ -840,8 +959,17 @@ def _render_drill(drill_id, root_id, root_crumb, layers):
         )
         for lid, svg in layers
     )
+    focused = drill_id in {"when", "sw"}
+    tracebar = (
+        '<div class="tracebar"><span class="trace-status" aria-live="polite">'
+        "Select a card to trace its direct relationships</span>"
+        '<span class="tracekey in"><i></i>→ selected: prerequisites</span>'
+        '<span class="tracekey out"><i></i>selected → dependents</span></div>'
+        if focused
+        else ""
+    )
     return (
-        '<div class="drill" data-drill="{did}" data-root="{root}" '
+        '<div class="drill" data-drill="{did}"{focused} data-root="{root}" '
         'data-root-crumb="{crumb}">'
         # A2 name QUALITY (WI-312): three drills each render a breadcrumb, and
         # all three used to be `aria-label="Breadcrumb"`. A screen-reader user
@@ -849,11 +977,13 @@ def _render_drill(drill_id, root_id, root_crumb, layers):
         # times with nothing to tell them apart — a name can be present, correct
         # and still useless. The root crumb already names the view, so it makes
         # each landmark self-identifying at no cost.
-        '<nav class="crumbs" aria-label="{crumb} breadcrumb"></nav>'
+        '<nav class="crumbs" aria-label="{crumb} breadcrumb"></nav>{tracebar}'
         '<div class="layers">{divs}</div></div>{script}'.format(
             did=esc(drill_id),
+            focused=' data-focused-trace="true"' if focused else "",
             root=esc(root_id),
             crumb=esc(root_crumb),
+            tracebar=tracebar,
             divs=divs,
             script=DRILL_SCRIPT,
         )

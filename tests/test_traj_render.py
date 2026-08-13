@@ -289,7 +289,7 @@ def test_every_multifill_panel_emits_a_palette_bijection_legend(tmp_path):
     page = html_of(tmp_path)
     # WI-294b: the phase legend is the `.legend` div immediately following the
     # When drill's summary paragraph (no more bespoke `phaselegend` marker class).
-    anchor = "crossing edges).</p>"
+    anchor = "faint lines preserve the full-map context.</p>"
     legend = page.split(anchor, 1)[1].split("</div>", 1)[0]
     swatches = re.findall(r'<i style="background:(#[0-9a-f]{6})">', legend)
     assert set(swatches) == set(gt.PHASE_ACCENTS[: len(swatches)])

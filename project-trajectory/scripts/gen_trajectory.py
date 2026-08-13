@@ -271,6 +271,9 @@ HTML_TEMPLATE = string.Template("""<!doctype html>
     color-scheme: light dark;
     --bg:#f8fafc; --surface:#ffffff; --border:#e2e8f0; --text:#0f172a;
     --muted:#64748b; --accent:#4f46e5;
+    /* Focused dependency tracing: blue flows into the selected node; amber
+       flows out. Both are theme tokens because they carry foreground ink. */
+    --trace-in:#2563eb; --trace-out:#b45309;
     /* A4 (WI-293): the Process tab's emphasized node (the merge slot since the
        WI-389 station-cycle redraw; the hub before it) carries WHITE text on its
        own fill, so its fill is a THEME-INVARIANT token, not --accent. --accent
@@ -331,6 +334,7 @@ HTML_TEMPLATE = string.Template("""<!doctype html>
   @media (prefers-color-scheme: dark) {
     :root { --bg:#0b1120; --surface:#0f172a; --border:#1e293b; --text:#e2e8f0;
             --muted:#94a3b8; --accent:#818cf8;
+            --trace-in:#60a5fa; --trace-out:#f59e0b;
             --shadow:0 1px 3px rgba(0,0,0,.4); }
   }
   * { box-sizing: border-box; }

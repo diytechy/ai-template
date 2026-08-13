@@ -455,15 +455,23 @@ def test_when_view_seams_wire_to_block_ports(tmp_path):
     root = _layer_with(html_of(tmp_path), 'data-tier="phase"')  # the phase layer
     out_ports = {
         round(float(cx), 1)
-        for cx in re.findall(r'<circle class="port out" cx="([\d.]+)"', root)
+        for cx in re.findall(
+            r'<circle class="port out(?: wire-port)?" cx="([\d.]+)"', root
+        )
     }
     in_ports = {
         round(float(cx), 1)
-        for cx in re.findall(r'<circle class="port in" cx="([\d.]+)"', root)
+        for cx in re.findall(
+            r'<circle class="port in(?: wire-port)?" cx="([\d.]+)"', root
+        )
     }
     assert out_ports and in_ports  # both port kinds render
-    wires = re.findall(r'<path class="wire" d="M([\d.]+),[\d.]+ C.* ([\d.]+),', root)
-    assert wires  # at least one wire
+    wire_ds = re.findall(r'<path class="wire" d="([^"]+)"', root)
+    assert wire_ds  # at least one wire
+    wires = []
+    for d in wire_ds:
+        nums = [float(v) for v in re.findall(r"-?[\d.]+", d)]
+        wires.append((nums[0], nums[-2]))
     # The start attaches on the OUT port; the arrow-bearing END lands PORT_R + 2
     # px short of the IN-port center so its arrowhead clears the port ring
     # (WI-249 render fix) — still "at" the port, just outside its circle.
@@ -547,6 +555,85 @@ def test_persistent_hover_highlight_keyed_to_last_node(tmp_path):
     assert gen(tmp_path).returncode == 0
     view = html_of(tmp_path)
     assert re.search(r'class="block[^"]*"[^>]*data-node="', view)  # blocks are keyed
+
+
+def test_drill_overviews_trace_one_nodes_incoming_and_outgoing_edges(tmp_path):
+    # WI-434: an overview no longer asks the reader to decode every aggregated
+    # wire with equal emphasis. Each wire names its source and destination; the
+    # shared controller selects a node, dims unrelated cards, and separately
+    # emphasizes prerequisites flowing in and dependents flowing out. Text and
+    # arrow glyphs carry the two meanings in addition to colour.
+    gt = load_script("gen_trajectory")
+    tiered_repo(tmp_path, TIER_UNION_WIS)
+    assert gen(tmp_path).returncode == 0
+    phase_layer = _layer_with(html_of(tmp_path), 'data-tier="phase"')
+    wires = re.findall(
+        r'<path class="wire"[^>]*data-from="([^"]+)" data-to="([^"]+)"',
+        phase_layer,
+    )
+    assert wires and all(source != target for source, target in wires)
+    assert "selectDefault()" in gt.DRILL_SCRIPT
+    assert "classList.add('trace-in')" in gt.DRILL_SCRIPT
+    assert "classList.add('trace-out')" in gt.DRILL_SCRIPT
+    assert "trace-muted" in gt.DRILL_SCRIPT
+    assert "← Needs:" in gt.DRILL_SCRIPT and "Unlocks →" in gt.DRILL_SCRIPT
+    page = html_of(tmp_path)
+    assert "→ selected: prerequisites" in page
+    assert "selected → dependents" in page
+    assert 'aria-live="polite"' in page
+    assert page.count('data-focused-trace="true"') == 1  # this fixture earns When
+    assert 'data-focused-trace="true"' in gt._render_drill(
+        "sw", "root", "Architecture", [("root", "<svg></svg>")]
+    )
+    assert 'data-focused-trace="true"' not in gt._render_drill(
+        "archdrill", "root", "What", [("root", "<svg></svg>")]
+    )
+    assert 'data-drill="archdrill" data-focused-trace' not in page
+
+
+def test_when_and_how_drills_use_bounded_orthogonal_wires_and_explicit_ports():
+    """WI-435: selected paths must remain attributable in the rendered geometry.
+
+    Curves produced acute cusps at lane changes, and several edges sharing one
+    centre port merged before reaching the node. Drill wires are rectilinear;
+    shared interfaces expose one connector circle per edge; and the focused
+    direction markers are large enough to remain visible beside those circles.
+    """
+    gt = load_script("gen_trajectory")
+    _tab, sw = gt.sw_containment(ROOT, gt.sw_modules(ROOT))
+    ct = load_script("check_trajectory")
+    wis, integrity = ct.load_wis(ct.read_registry_rows(ROOT / ct.WI_CSV))
+    assert not integrity
+    when = gt.when_view(ROOT, wis)
+    assert when is not None
+
+    for panel in (sw, when):
+        wires = re.findall(r'<path class="wire" d="([^"]+)"', panel)
+        assert wires
+        assert all(set(re.findall(r"[A-Za-z]", d)) <= {"M", "L"} for d in wires)
+
+    target_ports = re.findall(
+        r'<circle class="port in wire-port" cx="[^"]+" cy="([^"]+)" '
+        r'data-from="[^"]+" data-to="cmp:CMP-004"',
+        sw,
+    )
+    assert len(target_ports) == 3
+    assert len(set(target_ports)) == 3
+    assert "stroke-linejoin:round" in gt.DRILL_STYLE
+
+    marker_sizes = {
+        marker: float(size)
+        for marker, size in re.findall(
+            r'<marker id="([^"]+-drillarrow-(?:in|out))"[^>]*markerWidth="([^"]+)"',
+            sw,
+        )
+    }
+    assert marker_sizes
+    assert set(marker_sizes.values()) == {12.0}
+    marker_ids = re.findall(r'<marker id="([^"]+)"', sw)
+    assert len(marker_ids) == len(set(marker_ids))
+    assert "marker-end:var(--arrow-in)" in gt.DRILL_STYLE
+    assert "marker-end:var(--arrow-out)" in gt.DRILL_STYLE
 
 
 def test_leaf_wi_block_surfaces_delivery_phase(tmp_path):

@@ -244,13 +244,16 @@ def know_view(root):
     for t in ordered_types:
         lid = new_id()
         layers.append(
-            (lid, _drill_layer_svg(_okf_concept_blocks(groups[t], nodes), []))
+            (lid, _drill_layer_svg(_okf_concept_blocks(groups[t], nodes), [], lid))
         )
         type_layer[t] = lid
     root_blocks, type_details = _okf_root_blocks(ordered_types, groups, type_layer)
     root_id = new_id()
     layers.append(
-        (root_id, _drill_layer_svg(root_blocks, _okf_type_edges(edges, type_of)))
+        (
+            root_id,
+            _drill_layer_svg(root_blocks, _okf_type_edges(edges, type_of), root_id),
+        )
     )
     return _render_drill("know", root_id, "Concepts", layers), type_details
 

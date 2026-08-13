@@ -304,7 +304,7 @@ def arch_icicle(root):
             }
         )
         layers.append((lid, panel([s])))
-    layers.insert(0, (ARCH_ROOT_LAYER, _drill_layer_svg(blocks, [])))
+    layers.insert(0, (ARCH_ROOT_LAYER, _drill_layer_svg(blocks, [], ARCH_ROOT_LAYER)))
     return (
         _render_drill(ARCH_DRILL_ID, ARCH_ROOT_LAYER, "What (spine)", layers),
         details,
@@ -755,7 +755,7 @@ def sw_containment(root, mods):
         blocks = [cmp_block(c, emit_cmp_layer(c)) for c in child_cmps]
         blocks += [mod_block(m) for m in dmods]
         blocks += [ext_block(k, d, kind) for k, (d, kind) in sorted(externals.items())]
-        layers.append((lid, _drill_layer_svg(blocks, edges)))
+        layers.append((lid, _drill_layer_svg(blocks, edges, lid)))
         return lid
 
     # Root layer: top-level component blocks + uncontained module blocks, wired by
@@ -774,7 +774,7 @@ def sw_containment(root, mods):
     root_blocks = [cmp_block(r, emit_cmp_layer(r)) for r in view["top_roots"]]
     root_blocks += [mod_block(n) for n in view["uncontained"]]
     root_blocks += [ext_block(k, d, kind) for k, (d, kind) in sorted(root_ext.items())]
-    layers.append((root_id, _drill_layer_svg(root_blocks, root_edges)))
+    layers.append((root_id, _drill_layer_svg(root_blocks, root_edges, root_id)))
 
     tab = tab_button("sw", "How (SW architecture)")
     summary_line = (
@@ -783,7 +783,9 @@ def sw_containment(root, mods):
         '(process-options.md "Component layer"). Software items are '
         "<strong>containerized</strong>; <strong>double-click</strong> a component "
         "— or focus it and press Enter — to <strong>descend</strong> into its "
-        "members and internal seams, and the breadcrumb returns.</p>".format(
+        "members and internal seams, and the breadcrumb returns. Select or focus "
+        "a card to trace only its direct incoming prerequisites and outgoing "
+        "dependents; faint lines preserve the full-map context.</p>".format(
             view["count"],
             len(view["top_roots"]),
             len(view["uncontained"]),
@@ -1010,7 +1012,7 @@ def when_view(root, wis):
             _wi_block(w, phase_of) for w in sorted(members, key=lambda w: w["id"])
         ]
         edges = _agg_edges(members, {w["id"]: w["id"] for w in members})
-        layers.append((lid, _drill_layer_svg(blocks, edges)))
+        layers.append((lid, _drill_layer_svg(blocks, edges, lid)))
         return lid
 
     def build(subset, remaining):
@@ -1042,7 +1044,7 @@ def when_view(root, wis):
                     blk.update(fill="var(--surface)", stroke="var(--muted)")
                 blocks.append(blk)
             edges = _agg_edges(subset, {w["id"]: keyfn(w) for w in subset})
-            layers.append((lid, _drill_layer_svg(blocks, edges)))
+            layers.append((lid, _drill_layer_svg(blocks, edges, lid)))
             return lid
         # No tier crosses its threshold here -> the bottom-tier work-item layer.
         return wi_layer(subset)
@@ -1066,8 +1068,9 @@ def when_view(root, wis):
         "A tier renders as wired blocks only when it holds more than 3 members "
         "(phase ⊃ workstream ⊃ work item). <strong>Double-click</strong> a "
         "block — or focus it and press Enter — to <strong>descend</strong> a layer; "
-        "the <strong>breadcrumb</strong> returns. A block’s ports carry the aggregated "
-        "dependency edges (the deduped union of its members’ crossing edges).</p>"
+        "the <strong>breadcrumb</strong> returns. Select or focus a card to trace "
+        "only its direct incoming prerequisites and outgoing dependents; faint "
+        "lines preserve the full-map context.</p>"
         '<div class="legend">{}</div>'.format(len(phases), len(workstreams), legend)
     )
     return DRILL_STYLE + summary + _render_drill("when", root_id, "Roadmap", layers)
