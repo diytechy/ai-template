@@ -1245,7 +1245,14 @@ BASELINE = {
     # saying which coercer preserves which legacy vocabulary. bootstrap grows
     # NO local TOML reader — it only converts and deletes, so it never reads
     # these keys, which is why the F5 cost lands in the three checkers instead.
-    "bootstrap.py": 2767,
+    # WI-446: +20 (2767 -> 2787). Two MAPPING rows registering the hats layer
+    # (SN-036 / OI-19) — the roster template and the `hats.py` reader its
+    # importer needs — plus their reason comments and the two docstring lines in
+    # the kit-contents listing. Registration, not monolith drift: the layer's
+    # own code is a new module under THRESHOLD, and a MAPPING row is the only
+    # way a scaffold ever receives a file. Reviewed bump; re-stamp down with
+    # WI-280.
+    "bootstrap.py": 2787,
     # NEW ENTRY, +228 (1423 -> 1651), Phase 2b of the concurrency restructure
     # (docs/concurrency-restructure.md §7): the spec-folder work-item reader,
     # which crosses this module over THRESHOLD for the first time. It is one

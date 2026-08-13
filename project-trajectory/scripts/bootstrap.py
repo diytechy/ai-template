@@ -38,6 +38,10 @@ What it creates in the destination:
     docs/requirements/procurement.csv          <- registries/procurement.template.csv
     docs/requirements/assets.csv               <- registries/assets.template.csv
     docs/requirements/components.csv           <- registries/components.template.csv
+    docs/requirements/hats.toml                <- registries/hats.template.toml  (the
+                                                declared expert perspectives every
+                                                applicable decomposition faces; OWNER
+                                                text — adopters are expected to edit)
     docs/work/queued/WI-000-example.md         <- work/WI-000.template.md  (the
                                                 registry's spec-folder home; the
                                                 other status dirs get .gitkeep)
@@ -58,6 +62,8 @@ What it creates in the destination:
                                                (the WI-280 gen_trajectory.py split — copied with it, always)
     scripts/plan_coverage.py, plan_round.py, plan_briefs.py, plan_coverage_step.py, plan_artifacts.py
                                                (the dual-plan round set, process-options.md "Dual-plan decomposition")
+    scripts/hats.py                            (the hats-roster reader plan_briefs
+                                               injects from — SN-036 / OI-19)
     scripts/wi_convert.py                      (work-item registry CSV <-> spec-folder converter)
     scripts/trunk_step.py                      (the serial trunk step: compile log
                                                 fragments + regenerate the trunk artifacts)
@@ -1622,6 +1628,16 @@ MAPPING = [
         "registries/components.template.csv",
         "docs/requirements/components.csv",
     ),
+    # The HATS ROSTER (SN-036, ruled at OI-19 2026-08-13): the declared expert
+    # perspectives a decomposition must face, injected into the planner brief by
+    # `plan_briefs.hat_surface`. It ships with CONTENT rather than as a blank
+    # form — six starting hats — because an empty roster is a form with nothing
+    # behind it, and a roster is only useful if it says something on day one.
+    # OWNER TEXT: adopters are expected to EDIT it (cut, add, rewrite every
+    # `applies_when` against their own vocabulary), which is the only thing that
+    # keeps a roster inherited from a template honest. Deleting the file is a
+    # supported opt-out; the composers proceed without hats.
+    ("registries/hats.template.toml", "docs/requirements/hats.toml"),
     # registries/work-items.template.csv is deliberately NOT mapped: since the
     # Phase 2c authority flip the work-item registry scaffolds as the docs/work/
     # spec folder below, and the CSV template survives only as the legacy-format
@@ -1713,6 +1729,10 @@ MAPPING = [
     ("scripts/plan_coverage.py", "scripts/plan_coverage.py"),
     ("scripts/plan_round.py", "scripts/plan_round.py"),
     ("scripts/plan_briefs.py", "scripts/plan_briefs.py"),
+    # The hats-roster reader plan_briefs imports (SN-036 / OI-19). Ships with
+    # its importer, not optionally: a scaffold that got the roster and not its
+    # reader would fail to compose a planner brief at all.
+    ("scripts/hats.py", "scripts/hats.py"),
     # The prompt-template loader + strict single-brace fill (plan §8): every
     # brief the loop sends resolves through it, so it ships wherever
     # agent_loop.py does.

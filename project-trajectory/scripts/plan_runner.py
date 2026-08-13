@@ -184,6 +184,22 @@ def _repair_critique(coverage_fails, plan_name):
     return "MECHANICAL REPAIR ONLY - the coverage pre-pass found:\n" + body
 
 
+def _hat_slots(root, row, planner_tmpl):
+    """The `{{HAT_QUESTIONS}}` fill for this decomposition (SN-036 / OI-19), or
+    `{}` when the planner template does not declare the slot.
+
+    THE GUARD IS WHY THIS IS CONDITIONAL: `plan_briefs.assemble` rejects a slot
+    key the template does not declare, so filling it unconditionally would stop
+    every operator `--prompt-map` override authored before the slot existed
+    from composing at all. Raises `HatsError` on a roster that exists and is
+    broken — the caller pages on it."""
+    import plan_briefs
+
+    if not plan_briefs.declares_slot(planner_tmpl, plan_briefs.HAT_QUESTIONS_SLOT):
+        return {}
+    return plan_briefs.hat_surface(root, plan_briefs.hat_context_for_work_item(row))
+
+
 def run_dual_plan_round(root, wi, row, template, model, timeout, prompt_map=None):
     """Run one dual-plan decomposition round for `wi` unattended and return
     `(outcome, detail)` — outcome `SELECTED` (verdict recorded, the selected
@@ -219,8 +235,15 @@ def run_dual_plan_round(root, wi, row, template, model, timeout, prompt_map=None
         planner_tmpl = hat_template(plan_briefs.HAT_PLANNER)
         critic_tmpl = hat_template(plan_briefs.HAT_CRITIC)
         arbiter_tmpl = hat_template(plan_briefs.HAT_ARBITER)
+        hat_slots = _hat_slots(root, row, planner_tmpl)
     except OSError as exc:
         return "PAGE", "dual-plan hat template unreadable: {}".format(exc)
+    except plan_briefs.HatsError as exc:
+        # A MALFORMED roster PAGES rather than degrading: a decomposition
+        # briefed with no perspective because the file listing them was broken
+        # is exactly the silent miss the refusal exists for. An ABSENT roster
+        # is opt-out and never reaches here as an error.
+        return "PAGE", "the hats roster is unusable: {}".format(exc)
 
     routes, _registry, route_note = _dp_routes(root, "strong")
     if routes is None and _registry is not None:
@@ -276,13 +299,14 @@ def run_dual_plan_round(root, wi, row, template, model, timeout, prompt_map=None
                 crit = critique_text.get(plan, "")
             prompt = plan_briefs.assemble(
                 plan_briefs.HAT_PLANNER,
-                {
-                    "GOAL_BRIEF": goal_text,
-                    "SR_SURFACE": surface["SR_SURFACE"],
-                    "IF_REGISTRY": surface["IF_REGISTRY"],
-                    "OWN_PLAN": own if kind != plan_round.STEP_PLAN else _EMPTY_SLOT,
-                    "CRITIQUE": crit,
-                },
+                dict(
+                    hat_slots,
+                    GOAL_BRIEF=goal_text,
+                    SR_SURFACE=surface["SR_SURFACE"],
+                    IF_REGISTRY=surface["IF_REGISTRY"],
+                    OWN_PLAN=own if kind != plan_round.STEP_PLAN else _EMPTY_SLOT,
+                    CRITIQUE=crit,
+                ),
                 planner_tmpl,
             )
             _label, m, tmpl, env_cell, note = route_of[plan]

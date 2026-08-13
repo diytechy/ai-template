@@ -201,6 +201,9 @@ def test_repair_prompt_for_a_contains_no_plan_b_content():
             "IF_REGISTRY": "| IF-ID |\n|---|",
             "OWN_PLAN": "| P1 | ... |",
             "CRITIQUE": crit,
+            # WI-446: the planner template gained the hats slot (SN-036). Empty
+            # here — this test is about what must NOT reach a repair prompt.
+            pb.HAT_QUESTIONS_SLOT: "",
         },
         planner_tmpl,
     )

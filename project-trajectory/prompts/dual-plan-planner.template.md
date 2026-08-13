@@ -9,7 +9,10 @@ planner's output, never docs/status.md, docs/log.md, or any self-assessment.
 
 Slots: {{GOAL_BRIEF}} = the goal brief with numbered clauses (C1:, C2:, ...);
 {{SR_SURFACE}} = the relevant SR rows (id + text); {{IF_REGISTRY}} = the
-interfaces.csv rows (id, endpoints, contract, status).
+interfaces.csv rows (id, endpoints, contract, status); {{HAT_QUESTIONS}} = the
+declared expert perspectives that apply to this decomposition
+(docs/requirements/hats.toml, SN-036), filled by plan_briefs.hat_surface — an
+absent roster fills a stated no-hats line rather than failing.
 
 REVISION ROUND (one only, after the cross-critique): resend this same prompt
 with the two optional slots at the bottom filled ({{OWN_PLAN}},
@@ -34,6 +37,17 @@ toward what another planner might produce.
 ### Declared interface seams (the IF registry)
 
 {{IF_REGISTRY}}
+
+### Declared perspectives you must decompose from (the hats roster)
+
+Each bullet is a question this project has declared must be put to a
+decomposition of this kind, followed by the failure class it exists to catch.
+Answer **every** one of them in your `## Notes` — one line each, naming either
+the Plan-WI that carries the answer or an explicit no-finding. A perspective
+answered with reassurance rather than with a WI or a stated no-finding has not
+been answered.
+
+{{HAT_QUESTIONS}}
 
 ## Output contract — the commensurability rules
 

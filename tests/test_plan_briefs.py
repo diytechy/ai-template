@@ -158,6 +158,11 @@ def _slots_for(hat, surface):
             "IF_REGISTRY": surface["IF_REGISTRY"],
             "OWN_PLAN": "",
             "CRITIQUE": "",
+            # WI-446: the hats roster (SN-036) rides the DECOMPOSITION brief.
+            # It is not part of `build_surface`'s two-file allowlist — that
+            # contract is unchanged — so it is filled from its own producer
+            # (`pb.hat_surface`) and named here as its own slot.
+            pb.HAT_QUESTIONS_SLOT: "",
         }
     if hat == pb.HAT_CRITIC:
         return {

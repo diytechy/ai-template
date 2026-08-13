@@ -194,7 +194,14 @@ BASELINE = {
     ("plan_coverage.py", "main"): 12,
     ("plan_round.py", "record"): 29,
     ("plan_runner.py", "dispatch"): 16,
-    ("plan_runner.py", "run_dual_plan_round"): 30,
+    # WI-446: 30 -> 31. ONE new `except` arm — the hats roster (SN-036) that
+    # EXISTS and is broken PAGEs instead of composing a decomposition brief with
+    # no perspective in it. The rest of the layer was extracted to `_hat_slots`
+    # precisely so this bump is the refusal and nothing else; folding the
+    # refusal into the neighbouring `except OSError` is the only way to avoid
+    # the +1, and it would report a broken roster as an unreadable template.
+    # Reviewed bump; the fail-open it buys out of is the whole point of SN-036.
+    ("plan_runner.py", "run_dual_plan_round"): 31,
     # WI-259 reviewed bump 50 -> 53: the verification-basis split went binary ->
     # three-way (mechanized/demonstrated/attested, a new elif branch) and
     # --require-verified was widened to every ratified SR of any method, naming
