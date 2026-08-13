@@ -60,6 +60,7 @@ the map, and it must never grow depth again.**
 | the **gate-vocabulary retirement** — *re-ruled 2026-08-12: all G\* tags convert to an eight-rung stage ladder; five execution questions open, program sequenced after OI-14 part A* | **OI-21** | §8.7 |
 | what a **red test case** may produce — *premise REFUTED 2026-08-12; the brief now records the corrected flow, recommended CLOSE* | **OI-26** | §5 loose ends |
 | the **LLM re-sync method** from older kit states *(raised 2026-08-12; post-lock program, but the brief carries three do-not-wait defects)* | **OI-27** | — |
+| **templates as product + the direct-session actor** *(raised 2026-08-13; rides OI-14's rung-1 boundary work)* | **OI-28** | — |
 
 **Not an `OI-` row, deliberately:** the **P0 sitting's 25-row re-attest** —
 `open-items.html` already renders every row owing a ratification with its
@@ -243,7 +244,7 @@ semantics landed; the SN batch applied as drafts).
 | integrity | `orphans=0 integrity=0 component-findings=0 interface-findings=0`; interfaces 113 |
 | strict modes | `trace --strict` **rc 0** · `check_trajectory --strict` **rc 0** |
 | full bar | **2308 passed, 5 skipped** (2026-08-13, pre-sitting handoff — the owed re-run done) |
-| owner surface | **13 pending `OI-` briefs** (OI-14 and OI-16…OI-27 — read them in [`open-items.html`](open-items.html), not here) + the sitting's 25-row re-attest, which that surface also renders |
+| owner surface | **14 pending `OI-` briefs** (OI-14 and OI-16…OI-28 — read them in [`open-items.html`](open-items.html), not here) + the sitting's 25-row re-attest, which that surface also renders |
 
 **Predecessor records**, kept reachable because they are the account of the
 program *before* this one and are not superseded by it:
@@ -586,7 +587,7 @@ this file archived.
 
 ### Owed by the owner
 
-**The 13 pending `OI-` briefs** — read them in
+**The 14 pending `OI-` briefs** — read them in
 [`open-items.html`](open-items.html), which is the decision surface; the
 [WHAT IS LEFT](#what-is-left--the-whole-list) map at the top of this file says
 which is which. Plus the **P0 sitting's part 2**, which that same surface
