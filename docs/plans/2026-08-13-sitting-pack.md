@@ -47,7 +47,7 @@ text was re-compared to the plan's final text by token multiset:
 |---|---|---|
 | **SN-001** | **invented** *"the same day"* — a time bound with no clause behind it | no time bound appears; the change is subject/verb only ("A team can drop the kit into" → "An adopting team can add this process to") |
 | **SN-004** | **invented** an authority claim: wrote *"The repo owner decides when work advances"* | the predicate is verbatim — *"explicit approval gates"* and *"a gate passes only when its mechanical bar is met"*; no owner-authority clause |
-| **SN-006** | softened *"typed code"* → "a **named** outcome", and *"repo text alone"* → "repository-written state" | both are back verbatim in the acceptance cell; a name is not a typed exit code. (The plan proposed **no change** to the Need cell — it should be untouched) |
+| **SN-006** | softened *"typed code"* → "a **named** outcome", and *"repo text alone"* → "repository-written state" | both are back verbatim — *"typed code"* in the acceptance cell, *"repo text alone"* in the need cell (1a-ii quotes both); a name is not a typed exit code. (The plan proposed **no change** to either cell — both are byte-identical to the baseline) |
 | **SN-024** | **three drops in one row**: broadened the scoped cases to every *"judgement call"*; weakened *"independent critical eye"* / *"never by the session that authored the artifact"* to "someone other than the author"; **added** a new requirement that the rubric be written *"in advance"* | the scope clause, *"independent critical eye"* and *"never by the session that authored the artifact"* are all verbatim, and *"in advance"* is **absent** |
 | **SN-026** | dropped *"per capability level"* and *"wherever that is configured"* — the second is load-bearing, it makes the cross-family routing **conditional on configuration** rather than unconditional | both phrases present |
 | **SN-027** | dropped **bounded**, **parallel lanes**, and **serialized and gated** — the three constraints that are the entire content of the need | all three present |
@@ -73,10 +73,15 @@ each qualifier lives now:
   *"stdin closed"* is in SR-026's requirement.
 - **SN-014** → **SR-006** requirement: *"…reporting SKIP(missing) rather than
   silently passing."* ✅ token present.
-- **SN-020** → **SR-028** requirement: *"…report an all-ERROR stall as an
-  unavailable agent rather than a work stall."* ✅ both qualifiers present.
+- **SN-020** → **SR-028**, split across two cells (1a-ii quotes both): the
+  **all-ERROR** stall clause in its requirement — *"…report an all-ERROR stall
+  as an unavailable agent rather than a work stall"* — and the *logged
+  `ERROR`* half in its acceptance_criteria. ✅ both qualifiers present.
 - **SN-022** → **SR-003** requirement: *"…under --no-placeholders, flag any
-  leftover -000 example row…"* ✅ token present.
+  leftover -000 example row…"* ✅ the `-000` token is present in both its
+  requirement and acceptance — but ⚠ NEITHER cell restates the bar-scope
+  qualifier (the old *"from [DevBar-Tests] on"* clause). This is the weakest
+  of the three already-carried judgements (1a-ii quotes the cells).
 
 **Honest gap:** SN-013 and SN-016 were caught by an adversarial round; SN-014 /
 SN-020 / SN-022 were judged already-carried by the SRs above rather than folded.
