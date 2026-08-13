@@ -36,6 +36,37 @@ applying that design to the kit itself.
 _Ratified or executed decisions only — the call, the alternatives passed over,
 why (one bullet each; cite ids)._
 
+- **2026-08-13e — What DEFINES a boundary: the actor AND the crossing
+  interface (owner, in session).** A boundary declaration names both the
+  external party and the interface it crosses through — not the actor alone.
+  The owner's reasoning is the load-bearing half and is recorded as ruled:
+  naming the interface *technically starts implementation*, and that is
+  accepted deliberately, **because it is the only way system requirements end
+  up constrained to defined interfaces**. So the boundary encodes **the first
+  design decision — how the external parties interact with the system** — and
+  the SR tier's permission to name an artifact (decision 2.7(a)) descends from
+  it: with the crossing declared, an SR naming `check.py` cites the frame,
+  while an SR naming `trace.py` names something the frame never admitted.
+  **Ruled OUT as the frame's typing axis: `signal`.** The `discrete`/`variable`
+  vocabulary stays a real IF-row property — it is what makes SN-037's
+  incompatible-signal-type findings checkable between modules — but it does not
+  type the frame, for a measured reason: 106 of 113 live rows are `variable`
+  (15:2 on an outward cut) and 25 carry a `signal_note` marking a crossing the
+  conversion could not type cleanly, because any unbounded part makes the whole
+  crossing variable. A 94 %-one-value property is not typing. **Correction
+  carried with the ruling:** the rung's enforced predicate
+  (`derive_gate.boundary_incomplete`) reads `Stability` ONLY and never looks at
+  `signal`, so "each crossing typed" as *mechanized* today means only "nothing
+  is still Experimental" — an earlier session statement to the contrary was
+  wrong and is corrected in the draft. **Owner-flagged for the kit's
+  stack-agnostic reach, not decided:** for a mechanical system the crossings
+  are mounts, power rails, thermal paths, fluids, forces — the
+  actor-plus-interface rule travels (a connector or bolt pattern is
+  unmistakably the first design decision) but `discrete`/`variable` does not,
+  so the kit-level rule must not be written software-first. Recorded in
+  [plans/2026-08-13-devstg-boundary-draft.md](plans/2026-08-13-devstg-boundary-draft.md)
+  §1a; the open mechanics (mint an `external` flag? a crossing-class axis?) are
+  its §4 item 3, for sitting 2.
 - **2026-08-13d — The re-attest sitting SPLIT IN TWO; sitting 1 ruled and
   executed (owner, in session).** Sitting 1 approves every SN and SR change as
   shown in [plans/2026-08-13-sitting-pack.md](plans/2026-08-13-sitting-pack.md)

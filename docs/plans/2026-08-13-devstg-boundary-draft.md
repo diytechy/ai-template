@@ -1,6 +1,9 @@
 # The DevStg-Boundary draft — the kit's depth-0 frame, for sitting 2
 
-**Status: DRAFT FOR RULING, not a decision.** Written after sitting 1 ratified
+**Status: DRAFT FOR RULING — with ONE part already ruled.** §1a carries the
+owner's 2026-08-13 ruling on *what defines a boundary* (actor **and** crossing
+interface); everything else here is proposed and §4 lists what is still owed.
+Written after sitting 1 ratified
 SN-037…SN-040 and ruled decision **2.7(a)** — *an SR may name an artifact only
 where that artifact is a **declared boundary crossing***
 ([sitting-pack §2.7](2026-08-13-sitting-pack.md)) — which queued
@@ -52,6 +55,15 @@ by* a partition (PROCESS.md §4, "The boundary happens once"). The bar
 registry, the boundary inventory is settled — every declared crossing typed,
 none left at `Stability = Experimental` — or `DevStg-Boundary` honestly holds the
 ladder down."*
+
+**What "typed" does NOT mean today — a correction carried into this draft.**
+The rung's enforced predicate, `derive_gate.boundary_incomplete` (L569), reads
+**`Stability` only**. It never looks at the `signal` field. So the mechanized
+half of "each crossing typed" is today just *"no declared crossing is still
+`Experimental`"* — the predicate's own docstring says as much (*"the declared
+inventory is settled, or it is not"*). Any reading that treats
+`discrete`/`variable` as the rung's typing axis is a claim about intent, not
+about what runs. §1a rules what the axis actually is.
 
 **The honest current state — and it is weaker than it sounds.**
 `boundary_incomplete`'s own docstring (`derive_gate.py` L586-590) says the quiet
@@ -107,9 +119,9 @@ acceptance: *"the record is kept with the architecture, not in session prose."*
 **The system** = the kit: `project-trajectory/` scripts + hooks + templates,
 verified by `tests/`, self-applied to this repo (`docs/architecture.md`, "Shape
 of the product"). Direction is stated from the kit's point of view: **IN** = the
-kit consumes; **OUT** = the kit provides. Signal typing is OI-14 part B's ruled
-vocabulary (`PROCESS.md` §8): **discrete** = finite enumerable alphabet;
-**variable** = unbounded content.
+kit consumes; **OUT** = the kit provides. In the table below, **`·` separates
+distinct crossings** for one party — each one is its own row in the registry, not
+a single relationship described in parts.
 
 | # | External party | Crossings (typed) | IF today |
 |---|---|---|---|
@@ -124,6 +136,69 @@ vocabulary (`PROCESS.md` §8): **discrete** = finite enumerable alphabet;
 | **E9** | **Test/coverage toolchain** (pytest, coverage) | results feeding the tier floors (discrete) · `coverage.json` percents (IF-070, variable) | IF-070 partial; M-18 otherwise **MISSING** |
 | **E10** | **Downstream adopted repo (tree)** | scaffold write + re-sync diff OUT (variable + discrete stamp) · harness verdict OUT (IF-013) · generator outputs OUT (IF-017, IF-018) · vendored-drift verdict (IF-016) · upstream source IN (IF-036) | IF-013…IF-018, IF-036; M-06 (the template→`docs/` **mapping**) **MISSING** |
 | **E11** | **The shipped template set as product** — OI-28 seed 2 | `*.template.*` + `registries/*` OUT as a traced artifact class (variable) | M-07 **MISSING** — one SR anchor owed, `test_dogfood_sync` as its verification |
+
+### 1a. What DEFINES a boundary — ruled by the owner, 2026-08-13
+
+**The ruling.** A boundary is defined by **the actor AND the crossing
+interface** — not by the actor alone. The owner's reasoning, recorded because it
+is the load-bearing part: naming the interface *technically starts
+implementation*, and that is accepted deliberately, because **it is the only way
+system requirements end up constrained to defined interfaces**. So the boundary
+declaration **encodes the first design decision: how the external parties
+interact with the system.** Everything the SR tier is allowed to say about a
+port descends from that decision.
+
+This is what makes decision 2.7(a) executable rather than aspirational. "An SR
+may name an artifact only where it is a declared boundary crossing" has no
+referent unless the crossing names an interface; with the interface declared, an
+SR naming `check.py` is *citing the frame*, and an SR naming `trace.py` is
+naming something the frame never admitted.
+
+**What this rules OUT as the boundary's typing axis: `signal`.** The
+`discrete`/`variable` vocabulary (OI-14 part B, `PROCESS.md` §8) stays a real and
+useful property **of an IF row** — it is what makes SN-037's *"incompatible
+signal types are mechanical findings"* checkable between two modules. It is not
+what types the *frame*, for a measured reason: it is near-constant there. Over
+the 113 live rows, **106 are `variable` and 7 are `discrete`**; on a crude
+outward cut (a counterpart that is not an in-repo path) it is **15 `variable` to
+2 `discrete`**, and **25 rows carry a `signal_note`** — the marker the WI-443
+conversion left where it could not type the crossing cleanly. The cause is the
+absorbing rule visible on IF-020: any unbounded part makes the whole crossing
+`variable`, and almost every boundary crossing carries prose, a diff or file
+bytes somewhere inside it. A property that is 94 % one value over the set it is
+applied to is not typing that set.
+
+<!-- fig: cmd="python3 - … tomllib.load(interfaces.toml)['interface']; Counter over
+r['signal'], split on outward = counterpart NOT startswith
+('scripts/','docs/','project-trajectory/scripts','coverage'); signal_note = truthy
+count", rev=768b6d3a -->
+
+**The typing the frame needs instead**, and the honest state of each half: the
+**actor** (a real external party, never a file path — this is the IF-080/081
+mislabel and the six "names the file rather than the actor" partials below), the
+**direction** (present), the **contract** (present), and the **class of the
+crossing** — a CLI invocation, a process exit status, a file artifact, a VCS
+event, a network call, a human-read surface. That last axis is the one that
+genuinely discriminates at a frame and **has no field today**. It is adjacent to
+the `external` flag `boundary_incomplete` already admits nobody built, which is
+what would let the rung check frame *completeness* rather than only settledness.
+Whether to mint one, both, or neither is §4's to rule.
+
+**The nuance the owner flagged, recorded for the kit's downstream reach.** This
+kit ships stack-agnostic and already carries a physical tier (`PROCESS.md` §8's
+purchased/external parts, `PART-###` + `procurement.csv`; `MULTI_REPO.md` §3.3
+owner-of-record). For a **mechanical** system the crossings are not signals at
+all — they are mounts and mating features, power rails, thermal paths, fluid and
+pneumatic connections, forces and torques, plus regulatory and environmental
+exposure. The actor-plus-interface rule holds there and arguably holds *harder*
+(choosing a connector, a bolt pattern or a voltage rail is unmistakably a design
+decision that constrains everything inside). What does **not** travel is
+`discrete`/`variable`, which is a software-signal vocabulary: making it the
+frame's typing axis would ship a software-only assumption into a mechanical
+adopter's boundary. A class axis (medium/quantity: mechanical · electrical ·
+thermal · fluid · data) would travel. Not a decision for this repo's own frame —
+recorded so the kit-level version of this rule is not written software-first by
+default.
 
 **Two rows that need re-reading, not re-typing.** `IF-080` (`integrate.py`) and
 `IF-081` (`trunk_step.py`) declare `downstream adopter` as counterpart but are
@@ -305,7 +380,19 @@ Bundle it into WI-451's window rather than opening a second one.
    rows to decide explicitly: **IF-080/IF-081** (`integrate.py`,
    `trunk_step.py`) declare `downstream adopter` but read as internal;
    and whether a **generated surface** is a port while its generator is not.
-3. **The five Experimental rows.** They hold the rung down today, and four of
+3. **The frame's typing axis — ruled in principle (§1a), mechanics still open.**
+   The actor-plus-interface rule is the owner's ruling and needs no re-decision.
+   What it leaves open is whether the registry grows fields to carry it: an
+   **`external`** flag (which `boundary_incomplete` already names as missing, and
+   which is what would let the rung check completeness rather than settledness),
+   a **crossing-class** axis (CLI · exit status · file artifact · VCS event ·
+   network · human-read surface), both, or neither — with the frame's typing
+   living in `docs/architecture.md` prose instead while `interfaces.toml` carries
+   only what it carries today. Cost of minting: an IF schema change with a
+   downstream re-sync; cost of not: the rung's completeness half stays
+   unmechanized and the frame is settled only by eye. Note also that `signal`
+   stays untouched either way — it is an IF-row property, not the frame's.
+4. **The five Experimental rows.** They hold the rung down today, and four of
    the five (IF-118/119/120 + IF-057) are internal carrier plumbing, not frame.
    Three dispositions: promote to `Stable` (the carrier sweep has converged);
    leave and accept the rung stays down; or rule that **only external-counterpart
@@ -313,13 +400,13 @@ Bundle it into WI-451's window rather than opening a second one.
    `derive_gate.boundary_incomplete` says nobody has built yet. **IF-103**
    (`migrate_carrier`) is deliberately provisional and should stay Experimental
    until the conversion program ends.
-4. **The 13 missing crossings + 6 partial ones.** WI-442 (queued) owns OI-28's
+5. **The 13 missing crossings + 6 partial ones.** WI-442 (queued) owns OI-28's
    two seeds; the other ~17 need an owner. Ruling scope here decides whether
    rung 1 can honestly close at all.
-5. **The duplication policy for the re-statement pass** — §3's option 3, or an
+6. **The duplication policy for the re-statement pass** — §3's option 3, or an
    alternative — stated as a rule WI-451 slice 2 can apply per row, plus whether
    SR-035's merge rides that window.
-6. **Where the boundary record LIVES once ruled.** SN-040's acceptance requires
+7. **Where the boundary record LIVES once ruled.** SN-040's acceptance requires
    it *"kept with the architecture, not in session prose"*, and
    `docs/architecture.md` has no boundary section today. The frame belongs there
    (prose + a table); the typed crossings belong in `interfaces.toml`. **No new
