@@ -12,6 +12,7 @@ and no label ink outside the block it belongs to.
 
 import html
 import re
+import shutil
 
 from conftest import ROOT, load_script
 from traj_fixtures import (
@@ -31,6 +32,45 @@ from traj_fixtures import (
     make_repo,
     tiered_repo,
 )
+
+
+# --- WI-450: an atomic snapshot for the two real-meta-repo-reading tests ------
+# `test_meta_component_top_view_smoke` and the WI-435 when/how drill test below
+# both deliberately read the REAL repo's own docs/architecture.md and live
+# registries (they exist to check the META repo's own state, not synthetic
+# data) — but they used to read ROOT live, and a concurrent regeneration in
+# another checkout of this same machine (gen_arch_map.py / gen_trajectory.py
+# rewriting these same files mid-read) could torn-read them and fail the test
+# spuriously (observed twice, WI-449). The functions under test only take
+# `root` as a plain parameter, so nothing forces the read to be ROOT itself:
+# copying the exact files they read into an isolated tmp_path ONCE, before
+# either test starts parsing, makes the read atomic without changing what it
+# reads — real-repo semantics preserved, just insulated from a torn read.
+_REAL_ROOT_INPUTS = (
+    "docs/architecture.md",
+    "docs/requirements/low-level-requirements.toml",
+    "docs/requirements/components.csv",
+    "docs/requirements/interfaces.csv",
+    "docs/requirements/system-requirements.toml",
+    "docs/work",  # the folder WI registry (check_trajectory.read_registry_rows)
+)
+
+
+def _real_repo_snapshot(tmp_path):
+    """Copy the real ROOT's registry inputs the drill/top-view code paths read
+    into `tmp_path`, and return `tmp_path` to use as the `root` arg in their
+    place. See the WI-450 note above for why."""
+    for rel in _REAL_ROOT_INPUTS:
+        src = ROOT / rel
+        if not src.exists():
+            continue
+        dst = tmp_path / rel
+        dst.parent.mkdir(parents=True, exist_ok=True)
+        if src.is_dir():
+            shutil.copytree(src, dst)
+        else:
+            shutil.copy2(src, dst)
+    return tmp_path
 
 
 def test_how_sw_view_renders_from_the_module_map(tmp_path):
@@ -194,18 +234,22 @@ def test_nested_components_render_inside_their_parent(tmp_path):
     assert "CMP-003" in sw  # the nested child is rendered (inside CMP-001)
 
 
-def test_meta_component_top_view_smoke():
+def test_meta_component_top_view_smoke(tmp_path):
     # Over the real meta repo: 4 right-sized software components, 0 uncontained,
     # within the bound, and sw_containment renders the containerized panel.
     # (WI-441 adopted the P5 narrow-waist partition — CMP-006..009 replaced the
     # retired CMP-001..005, so the top view holds four roots, not five.)
+    # WI-450: read a snapshot of ROOT's own inputs, not ROOT live — see the
+    # _real_repo_snapshot note above (a concurrent regeneration elsewhere on
+    # this machine could otherwise torn-read docs/architecture.md mid-test).
+    root = _real_repo_snapshot(tmp_path)
     ct = load_script("check_trajectory")
-    v = ct.component_top_view(ROOT)
+    v = ct.component_top_view(root)
     assert v["count"] <= ct.TOP_VIEW_MAX
     assert v["uncontained"] == []
     assert len(v["top_roots"]) == 4
     gt = load_script("gen_trajectory")
-    cont = gt.sw_containment(ROOT, gt.sw_modules(ROOT))
+    cont = gt.sw_containment(root, gt.sw_modules(root))
     assert cont is not None
     tab, panel = cont
     assert 'data-tab="sw"' in tab and 'class="cmptree"' in panel
@@ -593,20 +637,28 @@ def test_drill_overviews_trace_one_nodes_incoming_and_outgoing_edges(tmp_path):
     assert 'data-drill="archdrill" data-focused-trace' not in page
 
 
-def test_when_and_how_drills_use_bounded_orthogonal_wires_and_explicit_ports():
+def test_when_and_how_drills_use_bounded_orthogonal_wires_and_explicit_ports(
+    tmp_path,
+):
     """WI-435: selected paths must remain attributable in the rendered geometry.
 
     Curves produced acute cusps at lane changes, and several edges sharing one
     centre port merged before reaching the node. Drill wires are rectilinear;
     shared interfaces expose one connector circle per edge; and the focused
     direction markers are large enough to remain visible beside those circles.
+
+    WI-450: reads a snapshot of ROOT's own inputs, not ROOT live — see the
+    _real_repo_snapshot note above (a concurrent regeneration elsewhere on this
+    machine could otherwise torn-read docs/architecture.md / the live
+    registries mid-test, observed twice).
     """
+    root = _real_repo_snapshot(tmp_path)
     gt = load_script("gen_trajectory")
-    _tab, sw = gt.sw_containment(ROOT, gt.sw_modules(ROOT))
+    _tab, sw = gt.sw_containment(root, gt.sw_modules(root))
     ct = load_script("check_trajectory")
-    wis, integrity = ct.load_wis(ct.read_registry_rows(ROOT / ct.WI_CSV))
+    wis, integrity = ct.load_wis(ct.read_registry_rows(root / ct.WI_CSV))
     assert not integrity
-    when = gt.when_view(ROOT, wis)
+    when = gt.when_view(root, wis)
     assert when is not None
 
     for panel in (sw, when):
@@ -614,17 +666,42 @@ def test_when_and_how_drills_use_bounded_orthogonal_wires_and_explicit_ports():
         assert wires
         assert all(set(re.findall(r"[A-Za-z]", d)) <= {"M", "L"} for d in wires)
 
-    # WI-441 re-partition (P5): the retired CMP-004 was the multi-inbound target;
-    # its successor is CMP-008 (W3 Autonomy), which carries 2 inbound seams. The
-    # pin is the NON-MERGING — one connector circle per edge, distinct cy — not
-    # the arity, which moves with the partition.
-    target_ports = re.findall(
+    # WI-450: this pin used to hardcode a component id AND its arity
+    # (data-to="cmp:CMP-008", 2 ports) — WI-441's re-partition already broke it
+    # once (CMP-004/3 ports -> CMP-008/2 ports), and it will re-break at every
+    # future re-partition, because neither the id nor the arity is what the
+    # test is actually defending. The invariant IS partition-independent: when
+    # a drill view renders a component with >=2 edges sharing one side (its
+    # incoming OR its outgoing ports), each edge gets its own connector circle
+    # at its own distinct cy — never a collapsed centre-port (the WI-435 fix).
+    # So discover a component that currently carries >=2 edges on one side
+    # from the render itself, rather than re-hardcoding a second guess about
+    # which id or how many.
+    by_side_target = {}
+    for cy, target in re.findall(
         r'<circle class="port in wire-port" cx="[^"]+" cy="([^"]+)" '
-        r'data-from="[^"]+" data-to="cmp:CMP-008"',
+        r'data-from="[^"]+" data-to="(cmp:CMP-[^"]+)"',
         sw,
+    ):
+        by_side_target.setdefault(("in", target), []).append(cy)
+    for cy, source in re.findall(
+        r'<circle class="port out wire-port" cx="[^"]+" cy="([^"]+)" '
+        r'data-from="(cmp:CMP-[^"]+)" data-to="[^"]+"',
+        sw,
+    ):
+        by_side_target.setdefault(("out", source), []).append(cy)
+    multi_edge = {k: v for k, v in by_side_target.items() if len(v) >= 2}
+    assert multi_edge, (
+        "no CMP-### component has >=2 edges on one side in this render, so "
+        "the per-edge-connector pin is untested here — vacuity is not a pass "
+        "(the meta repo always has at least one such component)"
     )
-    assert len(target_ports) == 2
-    assert len(set(target_ports)) == 2
+    (side, node), cys = sorted(multi_edge.items())[0]
+    assert len(set(cys)) == len(cys), (
+        "{} connector(s) on the {} side of {} share a cy — the edges "
+        "collapsed back onto a shared centre port instead of getting one "
+        "circle each (the WI-435 regression)".format(len(cys), side, node)
+    )
     assert "stroke-linejoin:round" in gt.DRILL_STYLE
 
     marker_sizes = {
