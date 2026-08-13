@@ -36,6 +36,63 @@ applying that design to the kit itself.
 _Ratified or executed decisions only — the call, the alternatives passed over,
 why (one bullet each; cite ids)._
 
+- **2026-08-13f — The operational CONTEXT is part of the boundary definition
+  (owner, in session).** Modelling the operational context is not a later
+  exercise: it is one step in determining **how this system lives in its
+  surroundings**, and the owner's reasoning is the ruling — that question *"can
+  sometimes only be well answered while knowing surrounding relationships."* So
+  `DevStg-Boundary` declares the parties around the system and the relationships
+  **among them**, not only the crossings into and out of it. **Half of this was
+  already ruled at OI-28** (same date, same batch: templates are OUTCOMES of the
+  system needing requirement anchors; a CLI session IS an interface into it) —
+  seeds M-07/M-12/M-13, owned by WI-442; recorded so the next reader does not
+  re-litigate it. **What the ruling ADDS.** (1) The **enabling vs operational**
+  distinction, standard SE vocabulary this kit does not carry today, which
+  dissolves the `dev-setup` puzzle: one OUT contract consumed by two different
+  external entities — an adopting contributor operationally, and this repo's own
+  development environment through self-adoption. (2) **The cut is the DESIGN
+  SCOPE** (owner correction, same session): an enabling system is *not part of
+  the system* even though tightly coupled to it, and it need not be an "actor"
+  at all — so **external** is the top-level division and *operational actor ·
+  enabling system · interoperating system* are kinds beneath it. This corrects
+  a first draft that put the class on the CROSSING (reasoning that E2 both
+  ratifies and authors): under the correction the operational owner and the
+  enabling development environment are **two distinct external entities sharing
+  personnel**, so the class sits on the **entity** — the simpler schema — and
+  the overlap becomes an external-to-external **relationship**, which is exactly
+  what the context ruling says the frame must model. Self-adoption stops being a
+  schema special case and becomes a declared coupling. (3) A crossing nobody had
+  declared: OI-28
+  noted the templates are minted through LLM sessions but declared only the
+  outbound artifact class, so the **inbound authoring flow** — a human + LLM
+  session outside the mechanization writing the content the kit ships — is now
+  `N-02` (with `N-01`, `docs/process.toml` as the owner's dial surface, the
+  WI-441 completeness declaration is known complete-minus-two). (4) **E11 is not
+  a party** — "the shipped template set" is an artifact class, and under the
+  split it resolves into OUT-to-E10 plus IN-from-the-enabling-author.
+  **On the registry the owner floated (`external.toml`, agents + external
+  interfaces): recommended SPLIT BY ENTITY TYPE, and NOT RULED.** An
+  **external-entity** registry is endorsed, and the owner's `external.toml`
+  NAMING is better than "actors" — under the design-scope correction the file
+  holds external ENTITIES, of which an operational actor is one kind and an
+  enabling system another, so E12 never has to pretend to be an actor to get a
+  row. It is a different entity type from a directed seam, has no home in the
+  kit today, is precedented off-spine (`PART`, `ASSET`, `PB`, `REPO` — the last
+  already models other repos as entities), and is the only place the context
+  ruling can live, because **`interfaces.toml` structurally cannot hold
+  external-to-external flows** (every IF row has `this_project` on one side). A **second interfaces** registry is argued against
+  on the owner's own D-6 ruling (a duplicated vocabulary diverges silently) plus
+  D-4 (ids never re-mean, so a crossing moving between internal and external
+  would be delete-and-mint rather than an edit). Recommended instead:
+  `counterpart` becomes a resolvable reference — a declared external-entity id or an
+  in-repo path — making boundary-ness **derived** and X-14/X-15's mislabel
+  unrepresentable. Cheaper variant on the record: parties + context as prose in
+  `docs/architecture.md` (which SN-040 requires and which has no boundary section
+  today), registry only when something must mechanically read them. Decision
+  framing: **derived boundary-ness needs machine-readable actors; a record does
+  not.** Drafted at
+  [plans/2026-08-13-devstg-boundary-draft.md](plans/2026-08-13-devstg-boundary-draft.md)
+  §1b, open as its §4 item 5.
 - **2026-08-13e — What DEFINES a boundary: the actor AND the crossing
   interface (owner, in session).** A boundary declaration names both the
   external party and the interface it crosses through — not the actor alone.

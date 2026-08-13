@@ -1,8 +1,10 @@
 # The DevStg-Boundary draft — the kit's depth-0 frame, for sitting 2
 
-**Status: DRAFT FOR RULING — with ONE part already ruled.** §1a carries the
+**Status: DRAFT FOR RULING — with TWO parts already ruled.** §1a carries the
 owner's 2026-08-13 ruling on *what defines a boundary* (actor **and** crossing
-interface); everything else here is proposed and §4 lists what is still owed.
+interface); §1b carries the ruling that *the operational context is part of the
+boundary*. Everything else here is proposed, and §4 lists what is still owed —
+including the registry shape §1b recommends but does not decide.
 Written after sitting 1 ratified
 SN-037…SN-040 and ruled decision **2.7(a)** — *an SR may name an artifact only
 where that artifact is a **declared boundary crossing***
@@ -25,6 +27,11 @@ registry" docs/plans docs/requirements docs/log.md docs/work project-trajectory`
 — the only hits are two dual-plan assumptions about a WI-registry *column* and
 WI-399's scope guard, none about boundaries.) The rung's own predicate reads the
 IF registry and nothing else (`derive_gate.boundary_incomplete`, line 574).
+
+*That is the answer to "was one proposed?" as a matter of history — nothing ever
+was. It is **not** a claim that none is needed: §1b, written after the
+2026-08-13 context ruling, proposes one for external **entities** (never for a
+second set of interfaces) and §4 item 5 leaves it open.*
 
 **How the rung appeared, in three steps:**
 
@@ -172,23 +179,26 @@ Signal typing (`discrete`/`variable`) is deliberately **not** a column here — 
 | X-14 | **E10** | OUT | `integrate.py` serialized merge queue | IF-080 | **MISLABELLED** — claims `downstream adopter`, is an internal station seam |
 | X-15 | **E10** | OUT | `trunk_step.py` trunk step | IF-081 | **MISLABELLED** — same |
 | M-07 | **E11** The shipped template set as product — OI-28 seed 2 | OUT | `*.template.*` + `registries/*` as a traced product artifact class | — | **MISSING** — one SR anchor owed, `test_dogfood_sync` as its verification |
+| N-02 | **E12** The kit's own ENABLING system (§1b) — the development environment: human + LLM session + agent CLI, *external, tightly coupled, shares personnel with E2/E3* | IN | template and registry CONTENT authored into the kit outside the mechanization — the inbound half of M-07 | — | **MISSING, and NEW** (OI-28 noted the minting; no crossing was ever declared for it) |
 | X-08 | *(unassigned)* | IN | `check_docs.py` reads the doc tree | IF-030 | reads **internal** — counterpart `docs` is an in-repo path, not an actor |
 
-**The tally, and it reconciles to the pack.** 35 rows = the pack's 34 (X-01…X-15
-+ M-01…M-19) plus **N-01**. Of them: **11 declared** cleanly, **6 partial** (a
-row exists but names a file or module where the actor belongs), **13 MISSING**,
-**2 MISLABELLED** (X-14/X-15), **2 that read internal** under §1a's actor rule
-(X-08, X-12), and **1 new** (N-01). The 13 + 6 split is exactly the §0
-reconciliation, from the other direction.
+**The tally, and it reconciles to the pack.** 36 rows = the pack's 34
+(X-01…X-15 + M-01…M-19) plus **N-01** and **N-02**. Of the pack's 34: **11
+declared** cleanly, **6 partial** (a row exists but names a file or module where
+the actor belongs), **13 MISSING**, **2 MISLABELLED** (X-14/X-15), and **2 that
+read internal** under §1a's actor rule (X-08, X-12). The 13 + 6 split is exactly
+the §0 reconciliation, from the other direction. Both **new** rows have no IF row
+either, so the honest missing count is **15**.
 
-**Two things the tally says that the party-level view hid.** First, **`N-01` is a
-real gap in the completeness declaration**: `docs/process.toml` is the owner's
+**Three things the tally says that the party-level view hid.** First, **`N-01` is
+a real gap in the completeness declaration**: `docs/process.toml` is the owner's
 single policy-dial home — SN-028's whole subject — and the WI-441 inventory has
 no crossing for it, so §1c's "complete to my best reading" is now known to be
-complete-minus-one. Second, **four of the 15 crossings the registry was credited
+complete-minus-two. Second, **four of the 15 crossings the registry was credited
 with do not survive contact with the actor rule** (X-08, X-12 read internal;
 X-14, X-15 are mislabelled), so the honest count of declared *frame* crossings is
-**11, not 15**.
+**11, not 15**. Third, **`N-02`** — the inbound half of the template artifact
+class, which §1b derives.
 
 ### 1a. What DEFINES a boundary — ruled by the owner, 2026-08-13
 
@@ -268,6 +278,125 @@ git one crossing or three (read / write / hooks)? is the terminal an actor at
 all? is the skills fan-out into a third-party agent's config namespace its own
 crossing? is a `docs/knowledge/` pack an input? and `MULTI_REPO.md`'s cross-repo
 rung was deliberately not audited.
+
+### 1b. The operational CONTEXT is part of the boundary — ruled by the owner, 2026-08-13
+
+**The ruling.** Modelling the operational context is **part of defining the
+boundary**, not a later exercise. The owner's reasoning: it is one step in
+determining **how this system lives in its surroundings**, and that question *"can
+sometimes only be well answered while knowing surrounding relationships."* So
+`DevStg-Boundary` declares the parties around the system and the relationships
+among them, not only the crossings into and out of it.
+
+**Already ruled — do not re-litigate this half (OI-28, 2026-08-13).** The batch
+ruling records the same observation in the owner's own earlier words, and ruled
+*(a) SEED AT THE BOUNDARY, executed with OI-14's rung-1 work*: the
+`*.template.*` files *"are minted primarily through LLM sessions, but they are
+OUTCOMES of this system — the reusable baseline other repositories copy is the
+product — so they need to tie back to the requirements like any other product
+artifact"*, and *"a CLI session is itself an INTERFACE into the system — an LLM
+agent outside the mechanization can contribute to and modify artifacts — and that
+is true of basically every downstream adopter too."* M-07, M-12 and M-13 in §1
+are those seeds; **WI-442** owns landing them.
+
+**The cut is the DESIGN SCOPE, and everything else is external — including the
+enabling system** (owner correction, 2026-08-13). The top-level division is not
+*actor versus other*; it is **inside the design scope versus outside it**. An
+enabling system — the development environment that produces the kit — is *not
+part of the system*, even though it is tightly coupled to it. It may not be an
+**actor** in the interaction sense at all; it is simply another external entity,
+of a different kind. So the taxonomy has two levels: **external** is the
+boundary cut, and *operational actor · enabling system · interoperating system*
+are kinds of external entity beneath it.
+
+Standard systems engineering carries this as the *system of interest* versus its
+**enabling systems** — systems that support it across its lifecycle without being
+part of it (the development environment, the build and test system, the training
+system). The kit has no such vocabulary today (searched: `PROCESS.md`,
+`PROCESS_OPTIONS.md`). Adopting it dissolves what otherwise reads as a paradox:
+**`dev-setup` is an OUT contract consumed by two different external entities** —
+an adopting contributor *operationally*, and this repo's own development
+environment *through self-adoption*. One contract, two crossings, distinguished
+by what stands on the far side.
+
+**So the class sits on the ENTITY, and the overlap is a RELATIONSHIP.** An
+earlier draft of this section put the class on the *crossing*, reasoning that E2
+both ratifies (operational) and authors the shipped templates (enabling). Under
+the correction that is the wrong shape: the operational owner and the enabling
+development environment are **two distinct external entities that happen to share
+personnel**, not one entity wearing two hats. Each entity then carries exactly one
+class, which is the simpler schema — and the sharing does not vanish, it becomes
+an **external-to-external relationship**, precisely the kind of surrounding
+relationship this ruling says the frame must model. Self-adoption is therefore
+not an awkward special case in the schema; it is a declared coupling between two
+external entities, and the frame can state it.
+
+**The crossing this exposes — `N-02`.** OI-28 observed that templates are minted
+through LLM sessions but declared only the OUT half (M-07, the artifact class
+leaving). **The inbound authoring flow was never given a crossing**: a human +
+LLM session outside the mechanization writes the template and registry content
+that the kit then ships. Under this ruling that is a real IN crossing from an
+enabling actor, and it is now `N-02` in §1.
+
+**A category error the per-crossing table made visible.** **E11 is not a party** —
+"the shipped template set as product" is an *artifact class*. Under the enabling
+/ operational split it resolves cleanly into two crossings against real parties:
+OUT to the adopting repo (E10), IN from the enabling author (N-02). Sitting 2
+should retire E11 as a party and keep it as what it is.
+
+**The registry question — PROPOSED, not ruled.** The owner's initial impression
+is an `external.toml` carrying both external agents and external interfaces. The
+recommendation here is to **split by entity type, not by internal-versus-external**:
+
+- **An EXTERNAL-ENTITY registry: YES — and the owner's `external.toml` naming is
+  better than "actors".** Under the design-scope correction above, the registry
+  does not hold *actors*; it holds **external entities**, of which an operational
+  actor is one kind and an enabling system another. Naming it for the cut
+  (external) rather than for one kind (actor) is what keeps E12 from having to
+  pretend to be an actor to get a row. An external entity is a different entity
+  type from a directed seam and has **no home in this kit today** — which is the
+  §4 item 3 gap. It is precedented rather than exotic: the kit already ships
+  off-spine
+  registries (`PART`, `ASSET`, `PB`, `REPO`), and `repos.template.csv` already
+  models *other repos* as entities with `Type = owned|external|reused`. It is
+  also the only place the owner's context requirement can live: **`interfaces.toml`
+  structurally cannot hold external-to-external flows**, because every IF row has
+  `this_project` on one side by construction. "The author mints a template, the
+  kit ships it, the adopter customizes it" is a chain with one link that never
+  touches the kit — and that chain is exactly the surrounding relationship the
+  ruling says the frame needs.
+- **A second INTERFACES registry: NO**, and the argument is the owner's own
+  ruling. **D-6** (2026-08-10, `repo-lock.md`): F5's copy-ability *"does not
+  cover a shared **vocabulary**, whose divergence is silent content loss."*
+  LLR-166's rationale states the failure: *"duplicating a vocabulary fails
+  silently — the copy that has not learned a column returns a row missing that
+  cell, which every consumer reads as 'the cell is empty'."* An external-interface
+  registry parallel to `interfaces.toml` is that duplication exactly — same
+  fields, two files, and four consumers (`plan_briefs.IF_SURFACE_COLUMNS`,
+  `check_trajectory` connectivity, `trace` integrity, `derive_gate`) that must
+  learn both or silently read one. There is a second cost specific to this repo:
+  as the partition recurses, crossings **move** between internal and external.
+  Under two registries that is a delete-and-mint, and D-4 says ids never re-mean,
+  so every reclassification loses its history; under one registry with a
+  resolvable counterpart it is an edit.
+- **So:** external entities (and the relationships among them) get a new home; every
+  directed seam that *touches* the system stays in `interfaces.toml`, with
+  `counterpart` becoming a **resolvable reference** — a declared external-entity id or an
+  in-repo path. Boundary-ness becomes **derived**, which is what makes
+  X-14/X-15's mislabel unrepresentable rather than merely visible.
+
+**The honest cost, and a cheaper first move.** This expands the rung from *list
+our crossings* to *model our operational context*; a new registry means a
+`bootstrap.py` MAPPING entry, a `RESYNC_PACK.md` recipe, a schema tier, test
+coverage and a downstream re-sync — the cost profile WI-443 just paid for
+interfaces and components. The rung's applies-when shape bounds the harm to
+adopters who never opt in. The cheaper variant: SN-040 already requires the
+boundary record *"kept with the architecture, not in session prose"*, and
+`docs/architecture.md` has **no boundary section today** — the parties and the
+context could land there as prose first, becoming a registry only when something
+must *mechanically read* them. The deciding question is narrow: **derived
+boundary-ness needs machine-readable actors.** Want the derivation, and the
+registry is required; want only the record, and architecture.md suffices.
 
 ---
 
@@ -472,14 +601,38 @@ Bundle it into WI-451's window rather than opening a second one.
    `derive_gate.boundary_incomplete` says nobody has built yet. **IF-103**
    (`migrate_carrier`) is deliberately provisional and should stay Experimental
    until the conversion program ends.
-5. **The 13 missing crossings + 6 partial ones.** WI-442 (queued) owns OI-28's
-   two seeds; the other ~17 need an owner. Ruling scope here decides whether
-   rung 1 can honestly close at all.
-6. **The duplication policy for the re-statement pass** — §3's option 3, or an
+5. **Where the external entities and the context LIVE (§1b's recommendation,
+   not ruled).** Three shapes: an **external-entity registry** (the owner's
+   `external.toml`, holding operational actors AND enabling systems under one
+   cut) plus a resolvable `counterpart` in
+   `interfaces.toml` (recommended — gives derived boundary-ness, keeps one home
+   for seams); **the same file also absorbing the external interfaces**, the
+   owner's first impression (rejected in §1b on D-6 grounds — a duplicated
+   vocabulary, and reclassification becomes delete-and-mint under D-4); or the
+   **cheaper variant** — entities and context as prose in `docs/architecture.md`
+   first, registry later. The deciding question is whether you want boundary-ness
+   *derived* (needs machine-readable entities) or merely *recorded* (prose
+   suffices). Riders on whichever shape wins: retire **E11** as an entity (it is
+   an artifact class, §1b), admit **E12** (the enabling development environment —
+   external, tightly coupled, sharing personnel with E2/E3), and confirm that the
+   operational/enabling class sits on the **entity** with the personnel overlap
+   recorded as an external-to-external relationship (§1b, per the owner's
+   design-scope correction).
+6. **The 15 missing crossings + 6 partial ones.** WI-442 (queued) owns OI-28's
+   two seeds; the rest need an owner, including the two this draft added
+   (**N-01** `docs/process.toml` as the owner's dial surface, **N-02** the
+   inbound template-authoring flow). Ruling scope here decides whether rung 1 can
+   honestly close at all — and note the completeness declaration (§1c) is now
+   known to be complete-minus-two.
+7. **The duplication policy for the re-statement pass** — §3's option 3, or an
    alternative — stated as a rule WI-451 slice 2 can apply per row, plus whether
    SR-035's merge rides that window.
-7. **Where the boundary record LIVES once ruled.** SN-040's acceptance requires
+8. **Where the boundary record LIVES once ruled.** SN-040's acceptance requires
    it *"kept with the architecture, not in session prose"*, and
-   `docs/architecture.md` has no boundary section today. The frame belongs there
-   (prose + a table); the typed crossings belong in `interfaces.toml`. **No new
-   registry.**
+   `docs/architecture.md` has **no boundary section today** — that gap is owed
+   under every option. The frame's prose belongs there; the typed crossings
+   belong in `interfaces.toml`. **Amended by §1b:** this draft opened at
+   "no new registry" — true of *interfaces*, and still recommended — but the
+   context ruling means the **parties** may need a home that neither file has,
+   which is item 5. So the honest statement is now: **no second interfaces
+   registry**; whether an external-entity registry is minted is open.
