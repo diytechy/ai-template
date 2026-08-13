@@ -91,6 +91,20 @@ import re
 import sys
 from pathlib import Path
 
+# Sibling: the registry CARRIER. Run as a subprocess this script's own dir is
+# sys.path[0] so a plain import resolves; the guard covers an in-process import
+# (a test) whose sys.path does not yet carry scripts/ — the sanctioned-sibling
+# idiom trace.py uses for trace_text and check_trajectory for this same module.
+# Taken at WI-443, when `interfaces` moved to the TOML carrier: the alternative
+# was a SECOND home for the IF column vocabulary inside this file, which is the
+# exact drift `spine_carrier`'s one-home rule exists to prevent, and bootstrap
+# already ships `spine_carrier.py` into every scaffold.
+try:
+    import spine_carrier
+except ImportError:  # pragma: no cover - in-process fallback
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    import spine_carrier
+
 
 def _utf8_console():
     """Emit UTF-8 to stdout/stderr whatever the OS console codepage is. Kit
@@ -126,15 +140,11 @@ DEFAULT_COMMENT_PREFIXES = ("#", "//", "--")
 
 
 def load_interfaces(path):
-    """The rows of an `interfaces.csv` (IF-### seam registry) as dicts, or [] when
-    the file is absent — an unused/absent registry adds no IF edges (vacuous)."""
-    import csv
-
-    p = Path(path)
-    if not p.exists():
-        return []
-    with p.open(newline="", encoding="utf-8-sig") as f:
-        return list(csv.DictReader(f))
+    """The rows of the IF-### seam registry as dicts, or [] when the registry is
+    absent under either carrier — an unused/absent registry adds no IF edges
+    (vacuous). Read through `spine_carrier`, so a repo that has not migrated off
+    `interfaces.csv` still resolves."""
+    return spine_carrier.load(Path(path), "IF-ID")
 
 
 def first_line(text):
@@ -787,7 +797,7 @@ def main():
     )
     ap.add_argument(
         "--interfaces",
-        default="docs/requirements/interfaces.csv",
+        default="docs/requirements/interfaces.toml",
         help="the IF-### interface-seam registry whose module<->module rows are "
         "merged into the dependency diagram as distinctly-styled edges (process.md "
         "§8); absent file = no IF edges (symbol mode only)",

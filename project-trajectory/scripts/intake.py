@@ -220,11 +220,12 @@ _BLOCK_LINES = 48
 _OPEN = frozenset({"draft", "queued", "active", "deferred"})
 
 
-# The registry CSV read and the ref-cell splitter are agent_common's
-# (`_read_csv_rows`: [] on absent/unreadable, BOM-safe; `_refs`) — imported,
-# not copied: intake is not one of the F5 independently-copyable three, so a
-# shared reader beats another verbatim copy.
-_csv_rows = ac._read_csv_rows
+# The ref-cell splitter is agent_common's (`_refs`) — imported, not copied:
+# intake is not one of the F5 independently-copyable three, so a shared reader
+# beats another verbatim copy. (`_csv_rows = ac._read_csv_rows` sat here until
+# WI-443 moved the last two registries this module reads — components and
+# interfaces — onto the TOML carrier; every registry read here now goes through
+# `spine_carrier.load`, which answers whichever carrier is live.)
 _split = ac._refs
 
 
@@ -359,7 +360,9 @@ def _pack_lines(root, llrs):
         "- {} {}: {}".format(
             c.get("CMP-ID"), _clip(c.get("Name"), 40), c.get("Knowledge")
         )
-        for c in _csv_rows(root / "docs/requirements/components.csv")
+        for c in spine_carrier.load(
+            root / "docs/requirements/components.toml", "CMP-ID"
+        )
         if c.get("CMP-ID") in comps and (c.get("Knowledge") or "").strip()
     ]
 
@@ -378,7 +381,7 @@ def _seam_lines(root, llrs):
             i.get("Counterpart"),
             _clip(i.get("Contract"), 110),
         )
-        for i in _csv_rows(root / "docs/requirements/interfaces.csv")
+        for i in spine_carrier.load(root / "docs/requirements/interfaces.toml", "IF-ID")
         if Path(i.get("ThisProject") or "").name in stems
         or Path(i.get("Counterpart") or "").name in stems
     ]

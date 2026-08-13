@@ -698,9 +698,9 @@ All optional; all vacuous when absent or `-000`-only.
 
 | Registry | Id | Back-link cell | Rule |
 |---|---|---|---|
-| `docs/requirements/interfaces.csv` | `IF-###` | `SR-Refs` | Back-links join the `--strict` failure set. The `ThisProject` ↔ LLR `Module` endpoint join is **warn-only**. Citable from a TC's `Verifies`. |
+| `docs/requirements/interfaces.toml` | `IF-###` | `SR-Refs` | Back-links join the `--strict` failure set. The `ThisProject` ↔ LLR `Module` endpoint join is **warn-only**. Citable from a TC's `Verifies`. |
 | performance budgets | `PB-###` | `Refs` | Must resolve to a real SR id, LLR id, **or LLR `Module` path**. Empty `Refs` → finding. |
-| `docs/requirements/components.csv` | `CMP-###` | `PartOf`, `SupersededBy` | Must name real CMP ids. When non-empty, every `Component` tag on LLR/IF/PART/ASSET must resolve. `Knowledge` refs under `docs/knowledge/` are **warn-only**. |
+| `docs/requirements/components.toml` | `CMP-###` | `PartOf`, `SupersededBy` | Must name real CMP ids. When non-empty, every `Component` tag on LLR/IF/PART/ASSET must resolve. `Knowledge` refs under `docs/knowledge/` are **warn-only**. |
 | procurement | `PART-###` | `Component` | membership only |
 | assets | `ASSET-###` | `Component` | membership only |
 | repos | `REPO-###` (legacy `MOD-###`) | `DelegatedSRs` | Must name real coordinator SRs; empty is allowed. Cross-repo reconciliation is deferred. |

@@ -358,7 +358,7 @@ def status_block(root):
     exactly like the arch-map / dashboard freshness gates."""
     gate, basis = _gate_facts(root)
     counts = _spine_counts(root, basis)
-    seams = len(ct.load_ifs(ct.read_rows(root / ct.IF_CSV)))
+    seams = len(ct.load_ifs(ct.spine_carrier.load(root / ct.IF_CSV, "IF-ID")))
     comps = len(cmp_rows(root))
 
     gate_bits = []

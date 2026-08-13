@@ -19,7 +19,8 @@ from traj_fixtures import (
     CONT_ARCH,
     CONT_CMPS,
     CONT_LLRS,
-    IF_HDR,
+    cmp_row,
+    if_row,
     LLRS,
     SMALL_WIS,
     TIER_HDR,
@@ -66,10 +67,9 @@ def test_how_sw_graph_renders_seams(tmp_path):
     # render is byte-deterministic so --check stays stable.
     make_repo(tmp_path)
     (tmp_path / "docs" / "architecture.md").write_text(ARCH_MD, encoding="utf-8")
-    (tmp_path / "docs" / "requirements" / "interfaces.csv").write_text(
-        IF_HDR
-        + 'IF-001,Provides,src/m,downstream adopter,"cli",SR-001,v1,Stable,Active,,\n'
-        + 'IF-002,Consumes,src/m,docs/stack.ini,"reads",SR-001,v1,Stable,Active,,\n',
+    (tmp_path / "docs" / "requirements" / "interfaces.toml").write_text(
+        if_row("IF-001", "Provides", "src/m", "downstream adopter", "cli")
+        + if_row("IF-002", "Consumes", "src/m", "docs/stack.ini", "reads"),
         encoding="utf-8",
     )
     assert gen(tmp_path).returncode == 0
@@ -150,12 +150,12 @@ def test_no_cmp_renders_flat_view_byte_identical(tmp_path):
 
     req = tmp_path / "docs" / "requirements"
     (req / "low-level-requirements.csv").write_text(CONT_LLRS, encoding="utf-8")
-    (req / "components.csv").write_text(CONT_CMPS, encoding="utf-8")
+    (req / "components.toml").write_text(CONT_CMPS, encoding="utf-8")
     assert gen(tmp_path).returncode == 0
     assert b'class="cmptree"' in (tmp_path / "PROJECT_STATE.html").read_bytes()
 
     (req / "low-level-requirements.csv").write_text(LLRS, encoding="utf-8")
-    (req / "components.csv").unlink()
+    (req / "components.toml").unlink()
     assert gen(tmp_path).returncode == 0
     assert (tmp_path / "PROJECT_STATE.html").read_bytes() == flat
 
@@ -177,8 +177,8 @@ def test_nested_components_render_inside_their_parent(tmp_path):
     # descend layer, and only the top-level root is a first-view item.
     containerize(tmp_path)
     req = tmp_path / "docs" / "requirements"
-    (req / "components.csv").write_text(
-        CONT_CMPS + "CMP-003,Sub,software,,built,,CMP-001,,\n", encoding="utf-8"
+    (req / "components.toml").write_text(
+        CONT_CMPS + cmp_row("CMP-003", "Sub", part_of="CMP-001"), encoding="utf-8"
     )
     (req / "low-level-requirements.csv").write_text(
         CONT_LLRS.replace(
@@ -666,11 +666,10 @@ LLR-004,SR-002,D,scripts/mod_d,emit,d,(see TC),Verified,CMP-004
 """
 
 FOUR_CMPS = (
-    "CMP-ID,Name,Category,Knowledge,State,SupersededBy,PartOf,DetailDoc,Notes\n"
-    "CMP-001,Core,software,,built,,,,\n"
-    "CMP-002,Two,software,,built,,,,\n"
-    "CMP-003,Three,software,,built,,,,\n"
-    "CMP-004,Four,software,,built,,,,\n"
+    cmp_row("CMP-001", "Core")
+    + cmp_row("CMP-002", "Two")
+    + cmp_row("CMP-003", "Three")
+    + cmp_row("CMP-004", "Four")
 )
 
 
@@ -680,7 +679,7 @@ def test_how_sw_collapses_above_component_threshold(tmp_path):
     containerize(tmp_path)
     req = tmp_path / "docs" / "requirements"
     (req / "low-level-requirements.csv").write_text(FOUR_CMP_LLRS, encoding="utf-8")
-    (req / "components.csv").write_text(FOUR_CMPS, encoding="utf-8")
+    (req / "components.toml").write_text(FOUR_CMPS, encoding="utf-8")
     assert gen(tmp_path).returncode == 0
     sw = sw_section(tmp_path)
     assert "Top view: 4 item" in sw

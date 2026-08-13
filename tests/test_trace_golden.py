@@ -70,12 +70,26 @@ RICH_ASSETS = """ASSET-ID,Name,Refs,Kind,Provenance,License,Attribution,Contract
 ASSET-001,logo,SR-001,image,made,MIT,none,none,assets/logo.png,abc,1,demo asset,CMP-001
 """
 
-RICH_CMPS = """CMP-ID,Name,Category,Knowledge,State,SupersededBy,PartOf,DetailDoc,Notes
-CMP-001,Adder,core,docs/knowledge/missing-pack,active,,,docs/cmp/adder.md,demo component
+RICH_CMPS = """[component.CMP-001]
+name = "Adder"
+category = "core"
+knowledge = "docs/knowledge/missing-pack"
+state = "built"
+detail_doc = "docs/cmp/adder.md"
+notes = "demo component"
 """
 
-RICH_IFS = """IF-ID,Direction,ThisProject,Counterpart,Contract,SR-Refs,Version,Stability,Status,Component,Notes
-IF-001,out,src/demo,acme/widget,call,SR-001,1,stable,active,CMP-001,demo seam
+RICH_IFS = """[interface.IF-001]
+direction = "out"
+this_project = "src/demo"
+counterpart = "acme/widget"
+contract = "call"
+signal = "discrete"
+sr_refs = ["SR-001"]
+version = "1"
+stability = "Stable"
+component = "CMP-001"
+notes = "demo seam"
 """
 
 ORPHAN_SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status
@@ -95,8 +109,8 @@ def _make_rich(root):
     (req / "repos.csv").write_text(RICH_REPOS, encoding="utf-8")
     (req / "procurement.csv").write_text(RICH_PARTS, encoding="utf-8")
     (req / "assets.csv").write_text(RICH_ASSETS, encoding="utf-8")
-    (req / "components.csv").write_text(RICH_CMPS, encoding="utf-8")
-    (req / "interfaces.csv").write_text(RICH_IFS, encoding="utf-8")
+    (req / "components.toml").write_text(RICH_CMPS, encoding="utf-8")
+    (req / "interfaces.toml").write_text(RICH_IFS, encoding="utf-8")
     record_ids(root)
 
 

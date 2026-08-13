@@ -9,7 +9,7 @@ planner's output, never docs/status.md, docs/log.md, or any self-assessment.
 
 Slots: {{GOAL_BRIEF}} = the goal brief with numbered clauses (C1:, C2:, ...);
 {{SR_SURFACE}} = the relevant SR rows (id + text); {{IF_REGISTRY}} = the
-interfaces.csv rows (id, endpoints, contract, status); {{HAT_QUESTIONS}} = the
+interfaces.toml rows (id, endpoints, contract); {{HAT_QUESTIONS}} = the
 declared expert perspectives that apply to this decomposition
 (docs/requirements/hats.toml, SN-036), filled by plan_briefs.hat_surface — an
 absent roster fills a stated no-hats line rather than failing.

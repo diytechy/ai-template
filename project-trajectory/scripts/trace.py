@@ -271,6 +271,29 @@ REQUIRED_FIELDS = {
         "Automated",
         "Status",
     ],
+    # IF and CMP joined at WI-443 (OI-14 part B), and their tier is ADVISORY:
+    # `schema_advisories` reads these same two dicts and never joins a failure
+    # set, so the exit code is untouched at any gate. That is the ruled
+    # warn-first sequencing, not a softer rule — the vocabularies are closed the
+    # moment they are stated, and the promotion to ERROR is a later, separate
+    # decision taken once the corpus has converged.
+    #
+    # `Rationale` is deliberately NOT required on an IF row: B1 migrates cells as
+    # rows are touched, so demanding one everywhere would manufacture 113 rushed
+    # sentences — the bulk rewrite the ruling refused. `SignalNote`, `Component`
+    # and `Notes` are optional by design.
+    "IF": [
+        "IF-ID",
+        "Direction",
+        "ThisProject",
+        "Counterpart",
+        "Contract",
+        "Signal",
+        "SR-Refs",
+        "Version",
+        "Stability",
+    ],
+    "CMP": ["CMP-ID", "Name", "Category", "State"],
 }
 
 # The only *closed* vocabularies the method defines (process.md §4). Priority and
@@ -288,7 +311,45 @@ ENUM_FIELDS = {
         }
     },
     "TC": {"Tier": {"Smoke", "Full", "Release"}},
+    # WI-443 / OI-14 part B — the IF tier's first closed vocabularies, advisory
+    # like its required fields above.
+    #
+    # `Signal` is the owner's ruled discrete-vs-variable typing and is NEW: all
+    # 113 live rows were searched before the ruling and NOTHING in the registry
+    # typed a signal at all, in any column. `Stability` was DECLARED by
+    # process.md §8 from the start and validated nowhere, which is how four rows
+    # came to carry `Provisional` — a value that was never in the shipped
+    # vocabulary. There is no `Status` entry because that column RETIRED: it was
+    # undeclared, it overlapped `Stability` (the word `Stable` appeared in both
+    # on one row meaning different things), and its only consumer was the LLM
+    # planning-brief surface, which was being handed it as fact.
+    "IF": {
+        "Signal": {"discrete", "variable"},
+        "Stability": {"Experimental", "Stable", "Deprecated"},
+    },
+    "CMP": {"State": {"planned", "built", "verified", "has-gap", "deprecated"}},
 }
+
+# --- the IF `Contract` negative rules (WI-443, warn-first) --------------------
+# Whether a sentence is a specification or a story CANNOT be mechanized — no
+# check reads intent. These four read FORM instead, and between them they make
+# it impossible for a `Contract` cell to be a CHANGELOG, which is the failure the
+# census actually measured (requirement voice 1% -> 7.1%, cross-registry
+# citations 14% -> 24%, median cell 260 -> 325 characters, all in three days
+# while the rule existed only as prose).
+#
+# The first two are REFUSE-CLASS — they name what may never appear, and they
+# read as errors that have not been promoted yet. The last two are genuinely
+# advisory: a long cell may be honest, and `since` has a temporal sense.
+_IF_WI_RE = re.compile(r"\bWI-\d+\b")
+#
+# The decision pattern is `D-<n>` EXACTLY, not a general `<LETTER>-<n>`: the
+# broader shape was tried and it read the data pack's own crossing ids (`M-10`)
+# as rulings, which is a check inventing a rule nobody wrote. What was ruled is
+# the repo-lock decision citation, and that is what this matches.
+_IF_DECISION_RE = re.compile(r"\bD-\d+\b")
+_IF_CONNECTIVE_RE = re.compile(r"\b(because|rather than|so that|since)\b", re.I)
+IF_CONTRACT_MAX = 500
 
 # --- Acceptance-criteria testability advisory (warn-only) --------------------
 # A comparative/absolute claim in an AcceptanceCriteria cell is untestable until
@@ -1214,6 +1275,153 @@ def schema_findings(label, rows):
                     "procedure-doc link)"
                 )
     return out
+
+
+def schema_advisories(label, rows):
+    """`schema_findings`' warn-first twin, for the tiers whose schema is stated
+    but not yet promoted to a gate (IF, CMP — WI-443 / OI-14 part B).
+
+    SAME two dictionaries, deliberately: the vocabulary of a tier has ONE home
+    whatever the enforcement level reads it at, so promoting IF to ERROR later is
+    a change to which list a caller appends to, never a second copy of the
+    allowed values that can drift from this one. Returns advisory strings; the
+    caller routes them into the warn pipe, and nothing here reaches an exit
+    code."""
+    key = id_key(label)
+    out = []
+    for r in rows:
+        rid = r.get(key) or "(unnamed row)"
+        for col in REQUIRED_FIELDS[label]:
+            if not (r.get(col) or "").strip():
+                out.append(f"{label} {rid} has empty required field {col}")
+        for col, allowed in ENUM_FIELDS.get(label, {}).items():
+            val = (r.get(col) or "").strip()
+            if val and val not in allowed:
+                out.append(
+                    f"{label} {rid} has {col}={val!r}, which is not in the closed "
+                    f"vocabulary (allowed: {', '.join(sorted(allowed))})"
+                )
+    return out
+
+
+def if_contract_advisories(ifs):
+    """The four ruled negative rules on an IF `Contract` cell (WI-443), all
+    warn-first. See the `_IF_*` constants above for why form is the only thing a
+    check can honestly read here."""
+    out = []
+    for r in ifs:
+        iid = r.get("IF-ID") or "(unnamed row)"
+        cell = (r.get("Contract") or "").strip()
+        if not cell:
+            continue
+        for token in dict.fromkeys(_IF_WI_RE.findall(cell)):
+            out.append(
+                f"IF {iid} Contract names {token} — a work-item id belongs in the "
+                "log, not in a live contract cell: it ages, and a cancelled id "
+                "still reads as authority. Move it to Rationale or drop it."
+            )
+        for token in dict.fromkeys(_IF_DECISION_RE.findall(cell)):
+            out.append(
+                f"IF {iid} Contract cites decision {token} — a contract states "
+                "what crosses, not which ruling shaped it. Move the citation to "
+                "Rationale."
+            )
+        connective = _IF_CONNECTIVE_RE.search(cell)
+        if connective:
+            out.append(
+                f"IF {iid} Contract argues ({connective.group(0)!r}) — that "
+                "sentence is a rationale; the Rationale column is its home "
+                "(process.md §8)."
+            )
+        if len(cell) > IF_CONTRACT_MAX:
+            out.append(
+                f"IF {iid} Contract is {len(cell)} characters (ceiling "
+                f"{IF_CONTRACT_MAX}) — an interface states what crosses, typed; "
+                "at this length it is carrying something else."
+            )
+    return out
+
+
+# Endpoint spellings that are ACTORS rather than paths. An actor has no `/`, no
+# file extension and no dot — `downstream adopter`, `agent CLI`, `git`.
+_PATHY_RE = re.compile(r"[/\\]|\.[A-Za-z0-9]{1,5}$")
+
+
+def if_endpoint_class_advisories(ifs, module_ids, root):
+    """Classify every IF endpoint that is NOT an arch-map module, warn-first.
+
+    THIS EXISTS BECAUSE THOSE ROWS WERE POLICED BY NOTHING, measured at
+    `81a142c2`: 45 of 113 IF rows have at least one endpoint carrying no
+    component tag, which makes `check_trajectory.cross_component_findings`
+    VACUOUS for them — and the containment rule that was assumed to cover them
+    cannot, because the two rules range over disjoint object classes. Containment
+    tests that every arch-map MODULE is in some CMP; the untagged endpoints are
+    data files, directories and external actors, which are never arch-map
+    modules. So a green from either rule said nothing at all about these rows.
+
+    It does not make them findings — a data-file endpoint and an external actor
+    are both legitimate. It makes them VISIBLE, which is the whole gap: the
+    summary counts each class, and only the endpoints that resolve to NOTHING —
+    path-shaped and absent from the tree — are named individually, because those
+    are the only ones a reader can act on."""
+    norm_modules = {_norm_module(m) for m in module_ids}
+    norm_modules.discard("")
+    files, actors, unknown, rows_hit = [], [], [], set()
+    for r in ifs:
+        iid = r.get("IF-ID") or "(unnamed row)"
+        for col in ("ThisProject", "Counterpart"):
+            # A `;`-joined cell is SEVERAL endpoints, and reading it as one is
+            # how a real seam gets reported as a dangling path (IF-097 names
+            # three modules). Split on `;` only — an endpoint may legitimately
+            # contain a space (`downstream adopter`) or a comma.
+            cell = (r.get(col) or "").strip()
+            for endpoint in [e.strip() for e in cell.split(";") if e.strip()]:
+                if _norm_module(endpoint) in norm_modules:
+                    continue
+                rows_hit.add(iid)
+                if _resolves_in_tree(root, endpoint):
+                    files.append(endpoint)
+                elif _PATHY_RE.search(endpoint):
+                    unknown.append((iid, col, endpoint))
+                else:
+                    actors.append(endpoint)
+    if not rows_hit:
+        return []
+    out = [
+        "IF endpoint coverage: {} of {} row(s) carry an endpoint that is not an "
+        "arch-map module, so the cross-component rules are VACUOUS for them — "
+        "{} resolve to a file or directory in the tree, {} read as external "
+        "actors, {} resolve to nothing".format(
+            len(rows_hit), len(ifs), len(files), len(actors), len(unknown)
+        )
+    ]
+    for iid, col, endpoint in unknown:
+        out.append(
+            "IF {} {}={!r} is path-shaped and resolves to no module, file or "
+            "directory — name a real endpoint, or spell it as the external "
+            "actor it is".format(iid, col, endpoint)
+        )
+    return out
+
+
+def _resolves_in_tree(root, endpoint):
+    """True when an IF endpoint names something that exists under `root`.
+
+    Tries the endpoint verbatim and under the kit's own script home, then with
+    each source suffix appended — `scripts/trace` is how the registry spells
+    `project-trajectory/scripts/trace.py`, and a classifier that could not see
+    that would report every module endpoint as missing."""
+    if not endpoint or root is None:
+        return False
+    bases = (endpoint, "project-trajectory/" + endpoint)
+    for base in bases:
+        for suffix in ("", ".py", ".md", ".toml", ".csv", ".ini", ".html", ".yml"):
+            try:
+                if (root / (base + suffix)).exists():
+                    return True
+            except (OSError, ValueError):  # pragma: no cover - exotic path text
+                return False
+    return False
 
 
 def phase_ratified_findings(real):
@@ -2256,8 +2464,9 @@ class Findings:
 
 def load_registries(docs):
     """Load the spine + off-spine registries under docs (loading only — no analysis)."""
-    # The three spine tiers read through the CARRIER. `load_csv`
-    # stays for the off-spine registries below, which did not move.
+    # The three spine tiers read through the CARRIER — as do the IF and CMP
+    # tiers since WI-443 (OI-14 part B). `load_csv` stays for the off-spine
+    # registries below that have not moved yet (PB/REPO/PART/ASSET).
     raw_srs = spine_carrier.load(
         docs / "requirements" / "system-requirements.toml", "SR-ID"
     )
@@ -2287,12 +2496,12 @@ def load_registries(docs):
     # "Component layer"): the set-grained knowledge + lifecycle home. Structure
     # is derived — membership is a `Component` tag on the primitive rows
     # (LLR/IF/ASSET/PART), never restated on the CMP row; absent file -> [].
-    raw_cmps = load_csv(docs / "requirements" / "components.csv")
+    raw_cmps = spine_carrier.load(docs / "requirements" / "components.toml", "CMP-ID")
     # Optional interface-seam registry (IF-###, process.md §8): one row per
     # directed seam (ThisProject module -> Counterpart module/file/external). Off
     # the joined spine like PART/ASSET, but its SR-Refs back-link and its endpoint
     # join keep it traceable (WI-056 closed the SR-002-era gap). Absent file -> [].
-    raw_ifs = load_csv(docs / "requirements" / "interfaces.csv")
+    raw_ifs = spine_carrier.load(docs / "requirements" / "interfaces.toml", "IF-ID")
 
     # The working sets exclude template example rows (ids ending "-000") so a
     # fresh scaffold has nothing to orphan; the raw lists above keep them for the
@@ -2528,6 +2737,18 @@ def analyze(reg, args):
     # is a warn-only advisory (module_ids reused from the PB back-link check above).
     interface_backlink_findings, interface_advisories = interface_findings(
         ifs, sr_ids, module_ids
+    )
+    # The IF/CMP schema tier and the IF `Contract` negative rules (WI-443 / OI-14
+    # part B) — ALWAYS ON and ALWAYS WARN. They ride the interface advisory pipe
+    # rather than `schema` on purpose: `schema` joins the --strict failure set,
+    # and the ruled sequencing is warn-first until the corpus converges. Not
+    # gated behind --strict-schema either, because a rule nobody runs is the
+    # state this item spent three days measuring the drift of.
+    interface_advisories += (
+        schema_advisories("IF", ifs)
+        + schema_advisories("CMP", cmps)
+        + if_contract_advisories(ifs)
+        + if_endpoint_class_advisories(ifs, module_ids, docs.parent)
     )
 
     phases = set(refs(args.phase)) if args.phase else None

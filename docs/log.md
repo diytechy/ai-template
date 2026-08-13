@@ -19414,7 +19414,7 @@ IF-080), run one worker session on the claimed branch's own worktree
 full gate bar (`integrate.py integrate`), repeat. `agent_loop.py`'s no-role
 branch now delegates there (+20 lines net, itemized below) under the
 coordinator lock;
-[IF-015 is amended to v3](requirements/interfaces.csv) — the contract
+[IF-015 is amended to v3](requirements/interfaces.toml) — the contract
 sentence "a plain launch refuses with the map" is exactly what changed.
 Packaging: bootstrap MAPPING row + docstring, kit README row,
 test_bootstrap file list. Thirteen tests in `tests/test_drive.py` (slow tier;

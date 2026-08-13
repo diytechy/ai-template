@@ -1433,7 +1433,7 @@ rows must exist*. How components themselves are defined is a two-part answer,
 and only the first part is authored:
 
 - **Declared** — one hand-written row per component in
-  [`docs/requirements/components.csv`](../requirements/components.csv): `CMP-ID`,
+  [`docs/requirements/components.csv`](../requirements/components.toml): `CMP-ID`,
   `Name`, `Category`, `Knowledge` (skill / pack refs), `State`,
   `SupersededBy`, `PartOf` (nesting), `DetailDoc`, `Notes`. Five rows live,
   all `State=built`, none nested.

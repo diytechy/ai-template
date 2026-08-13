@@ -49,7 +49,9 @@ def test_scaffold_contains_expected_files(scaffold):
         "docs/requirements/performance-budgets.csv",
         "docs/requirements/procurement.csv",
         "docs/requirements/assets.csv",
-        "docs/requirements/components.csv",
+        # The last two registries onto the TOML carrier (WI-443 / OI-14 part B).
+        "docs/requirements/components.toml",
+        "docs/requirements/interfaces.toml",
         # SN-036 / OI-19: the hats roster ships with CONTENT (six starting
         # perspectives), so a fresh scaffold's planner brief carries questions
         # on day one rather than a blank form.

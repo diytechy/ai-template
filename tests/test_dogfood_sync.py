@@ -57,8 +57,11 @@ REGISTRIES = {
     # The three SPINE tiers left it at the carrier cutover: they
     # are TOML now, have no header to order, and are held by the key-set rule
     # below instead. Only the registries that stayed CSV are checked here.
-    "docs/requirements/components.csv": "components.template.csv",
-    "docs/requirements/interfaces.csv": "interfaces.template.csv",
+    # (`interfaces` and `components` left this census at WI-443 / OI-14 part B —
+    # both are TOML now and have no header to order. Like the spine tiers and
+    # `open-items` before them, the drift they were watched for moves to the
+    # key-set rule below, which is strictly stronger: it catches a column the
+    # TEMPLATE drops, which an ordered-header comparison structurally cannot.)
     # (`open-items` left this census at the batch-2 carrier cutover, repo-lock
     # §8.1 — it is TOML now and has no header to order. The drift it was added
     # for is NOT dropped: it moves to the key-set rule below, together with
@@ -68,6 +71,14 @@ REGISTRIES = {
     # scaffold on that template then rendered "the owner queue is empty" for a
     # registry holding two pending decisions: exit 0, gate green, silent wrong
     # content on the surface a human rules from.)
+    #
+    # THIS CENSUS IS NOW EMPTY, and that is the carrier migration finishing
+    # rather than a rule being dropped: every registry with a shipped template
+    # is on TOML, so there is no header left to order. The ordered-header rule
+    # and its bite-proof are KEPT — a project may add a CSV registry of its own,
+    # and a rule deleted the moment its last subject moves is a rule that has to
+    # be rediscovered. With no live subject the bite-proof drives synthetic
+    # headers instead (below), so the rule stays demonstrably non-vacuous.
 }
 TEMPLATE_DIR = ROOT / "project-trajectory" / "registries"
 
@@ -255,6 +266,17 @@ TOML_REGISTRIES = {
         "OI-ID",
     ),
     "docs/agents.toml": ("agents.template.toml", "agent", "Id"),
+    # WI-443 / OI-14 part B — the last two registries onto the carrier.
+    "docs/requirements/interfaces.toml": (
+        "registries/interfaces.template.toml",
+        "interface",
+        "IF-ID",
+    ),
+    "docs/requirements/components.toml": (
+        "registries/components.template.toml",
+        "component",
+        "CMP-ID",
+    ),
 }
 KIT = ROOT / "project-trajectory"
 
@@ -366,6 +388,8 @@ def test_the_live_registries_carry_more_than_the_template_example(tmp_path):
         "docs/test/test-cases.toml": 10,
         "docs/requirements/open-items.toml": 2,
         "docs/agents.toml": 2,
+        "docs/requirements/interfaces.toml": 10,
+        "docs/requirements/components.toml": 2,
     }
     assert set(floors) == set(TOML_REGISTRIES), "a registry joined with no floor"
     for live_rel, (_t, table, _id) in TOML_REGISTRIES.items():
@@ -375,12 +399,19 @@ def test_the_live_registries_carry_more_than_the_template_example(tmp_path):
 
 # --- bite-proofs: each check FAILS on a mutated scratch copy -------------------
 def test_bite_removed_live_registry_column():
-    live = _header(ROOT / "docs/requirements/interfaces.csv")
-    tmpl = _header(TEMPLATE_DIR / "interfaces.template.csv")
-    assert registry_header_drift(tmpl, live) is None  # clean today
-    mutated = [c for c in live if c != "Status"]  # owner drops a live column
+    # Synthetic headers since WI-443: `interfaces.csv` was this rule's last live
+    # subject and it is TOML now (see the REGISTRIES note). The RULE is what is
+    # under test — a template column missing from the live header must be named
+    # — and it stays exercised for the day a project adds a CSV registry.
+    tmpl = ["IF-ID", "Direction", "Contract", "Stability", "Notes"]
+    live = ["IF-ID", "Direction", "Contract", "Stability", "Component", "Notes"]
+    assert registry_header_drift(tmpl, live) is None  # live may ADD a column
+    mutated = [c for c in live if c != "Stability"]  # owner drops a live column
     drift = registry_header_drift(tmpl, mutated)
-    assert drift is not None and "Status" in drift
+    assert drift is not None and "Stability" in drift
+    # Order is part of the rule, not only membership.
+    reordered = ["IF-ID", "Contract", "Direction", "Stability", "Notes"]
+    assert registry_header_drift(tmpl, reordered) is not None
 
 
 def test_bite_the_spine_key_rule_fails_on_a_planted_defect(tmp_path):

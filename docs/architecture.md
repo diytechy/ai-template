@@ -32,7 +32,7 @@ adopters. The requirement spine it renders lives in
 ## Module dependencies (generated)
 
 The internal-import graph + declared `IF-###` seams, harvested from the source
-AST and `docs/requirements/interfaces.csv`: a solid arrow is an import, a
+AST and `docs/requirements/interfaces.toml`: a solid arrow is an import, a
 dotted labeled arrow a declared seam — so an undeclared cross-component
 coupling is visible at a glance. The `check_trajectory.py` cross-CMP rule
 (LLR-067) reads this **committed** block; `gen_arch_map.py --check` gates its
@@ -133,6 +133,7 @@ graph LR
     m_scripts_dispatch --> m_scripts_lane
     m_scripts_dispatch --> m_scripts_schedule
     m_scripts_dispatch --> m_scripts_trace
+    m_scripts_gen_arch_map --> m_scripts_spine_carrier
     m_scripts_gen_okf --> m_scripts_spine_carrier
     m_scripts_gen_open_items --> m_scripts_gen_trajectory
     m_scripts_gen_open_items --> m_scripts_spine_carrier
@@ -792,11 +793,12 @@ Contracts (interfaces): IF-015
 
 ### `scripts/gen_arch_map`
 _Generate the module/function map for `architecture.md` from the source tree._
+Imports (internal): `spine_carrier`
 Contracts (interfaces): IF-010, IF-025
 
 | Public item | Summary | Implements |
 |---|---|---|
-| `load_interfaces(path)` | The rows of an `interfaces.csv` (IF-### seam registry) as dicts, or [] when |  |
+| `load_interfaces(path)` | The rows of the IF-### seam registry as dicts, or [] when the registry is |  |
 | `first_line(text)` | First non-empty line of a docstring, trimmed. |  |
 | `signature(node)` | Render a function/method signature from its AST args (names only). |  |
 | `implements(node, source_lines)` | Collect requirement ids annotated near a symbol (docstring + the few |  |
@@ -1057,8 +1059,7 @@ Contracts (interfaces): IF-057
 | `parse_goal(text)` | The goal brief's declared clauses: ordered {id: text}. Duplicate |  |
 | `parse_plan(text)` | The plan's proposed-WI rows from the first table whose header carries a |  |
 | `split_refs(cell)` | Ref tokens from a table cell — ids separated by `;`, `,` or whitespace. | SN-001, SN-002 |
-| `load_registry_ids(path, key)` | The id column of an optional CSV registry, or None when it is absent — |  |
-| `spine_ids(path, key)` | `load_registry_ids` for a SPINE registry, which reads through the |  |
+| `spine_ids(path, key)` | The id column of a registry, read through the CARRIER so it answers |  |
 | `proposed_rationale_present(cell)` | True when a `Proposed:` interfaces cell carries rationale text beyond |  |
 | `find_cycle(rows)` | A predecessor cycle among plan rows (list of ids), or None. Iterative |  |
 | `check_plan(name, rows, clauses, sr_ids, if_ids)` | One plan's findings + its covered-clause set. |  |
@@ -1272,6 +1273,9 @@ Contracts (interfaces): IF-001, IF-021, IF-042
 | `sn_cited_ids(srs)` | Every SN id cited by >=1 SR row's `SN-Refs` cell — the coverage set the |  |
 | `sn_integrity_findings(sn_text)` | Duplicate-id protection for the SN tier — the one tier stored as prose, |  |
 | `schema_findings(label, rows)` | Empty required fields and out-of-vocabulary Verification/Tier values, over |  |
+| `schema_advisories(label, rows)` | `schema_findings`' warn-first twin, for the tiers whose schema is stated |  |
+| `if_contract_advisories(ifs)` | The four ruled negative rules on an IF `Contract` cell (WI-443), all |  |
+| `if_endpoint_class_advisories(ifs, module_ids, root)` | Classify every IF endpoint that is NOT an arch-map module, warn-first. |  |
 | `phase_ratified_findings(real)` | The ratified-phase NUMERIC-ONLY rule (process.md §4 "Phased delivery"; owner |  |
 | `build_forest(sn_ids, srs, llrs, tcs, orphan_ids, sn_draft)` | The SN -> SR -> LLR -> TC chain as nested nodes, plus synthetic groups for |  |
 | `outline_lines(roots)` | Indented Markdown list of the forest — pure text, so it reviews line-by- |  |

@@ -125,7 +125,10 @@ BASELINE = {
     # that decides the tier once, and two one-line public wrappers. Every
     # resulting function is under the limit — decomposition, the escape this
     # ratchet prefers over a bump.
-    ("check_trajectory.py", "interface_findings"): 23,
+    (
+        "check_trajectory.py",
+        "interface_findings",
+    ): 22,  # -1 2026-08-13: WI-443 — the seam-TC loop became a comprehension plus one summary line when it re-keyed onto Stability
     # WI-352 reviewed bump 21 -> 22, +1: the completion reconciler is
     # deliberately split across TWO tiers (spec evidence gates, trailer evidence
     # only warns), so main() needs one warn loop beside the gated extend. Folding

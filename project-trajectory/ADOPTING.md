@@ -532,9 +532,30 @@ table.
   * **Your `docs/open-items.html` must be regenerated**, and any prose linking
     the old paths retargeted — `check_docs` reports those as broken links.
 
-  `interfaces.csv` and `components.csv` are deliberately NOT in this batch: they
-  move with the schema rulings that change what their rows *are*, so converting
-  them first would mean converting them twice.
+- **Batch 3 — `interfaces.csv` + `components.csv` (2026-08-13).** The last two,
+  held back deliberately until the rulings that change what their rows *are*
+  landed, so each converts once rather than twice. Same command
+  (`python scripts/migrate_carrier.py --check`, then without `--check`, then
+  `git rm` the CSV); the two tiers become `[interface.IF-###]` and
+  `[component.CMP-###]` tables. **The IF tier also changes SHAPE**, so read this
+  before running it:
+
+  * **`Status` RETIRES.** It was never one of the fields process.md §8 declared,
+    nothing validated it, and it overlapped `Stability` — `Stable` appeared in
+    both columns of one row meaning different things. `Stability`
+    (`Experimental` · `Stable` · `Deprecated`) is now the row's one maturity
+    field. Map your values onto it before converting; the converter drops no
+    cell, but a `status = ...` key that survives is a column nothing reads.
+  * **`Signal` is NEW and required**: `discrete` (a finite enumerable alphabet)
+    or `variable` (unbounded content). If both cross, the row is `variable`.
+  * **`Rationale` is NEW and optional** — the home for the *why* that used to
+    have nowhere in the row to go except `Contract`.
+  * **A warn-first schema tier arrives with them** (`trace.py`): required
+    fields, those closed vocabularies, `CMP.State`, four negative rules on
+    `Contract` (no work-item id, no decision citation, no rationale connective,
+    a 500-character ceiling), and an advisory classifying every endpoint that is
+    not an arch-map module. All ADVISORY — none of it changes an exit code, at
+    any gate — so an unmigrated repo goes noisy, never red.
 
 - **The spine gains a sibling: `scripts/spine_carrier.py` (2026-08).** The same
   rule as `trace_text.py` above, and a re-sync must copy it: `trace.py`,

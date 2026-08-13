@@ -279,7 +279,7 @@ SWB-007, HTTP boundary, software, verified, LLR-014;LLR-021, IF-003, , skill-ely
   verifiable though un-diffable — the *"track about the asset in text"* doctrine.
   Kind = `cad`/`drawing`/`model`; `Refs` back-links the LLR it realises.
 - **The mating constraint** (bolt pattern, datum faces, fit/clearance) → an
-  **`IF-###`** Contract ([interfaces.csv](../../project-trajectory/registries/interfaces.template.csv)):
+  **`IF-###`** Contract ([interfaces.csv](../../project-trajectory/registries/interfaces.template.toml)):
   the seam "in one testable line," linking the drawing. Verified by a TC with
   `Method = Inspection`/`Demonstration` (CMM report, fit check).
 - **The narrative** (GD&T rationale, assembly notes, revisions) → the part's **detail
@@ -438,7 +438,7 @@ exactly that. The swBlock is what iteration returns to.
 
 What the registries give you today, and the precise gap:
 
-- **The static contract exists.** [`interfaces.csv`](../../project-trajectory/registries/interfaces.template.csv)
+- **The static contract exists.** [`interfaces.csv`](../../project-trajectory/registries/interfaces.template.toml)
   `IF-###` has `Direction, Contract (one testable line, may link a spec), Version,
   Stability` — the seam's *what*.
 - **The consumed material exists.** [`procurement.csv`](../../project-trajectory/registries/procurement.template.csv)
@@ -937,7 +937,7 @@ the same graph through the HAL-style seams they program to.
   + validator that follow.
 - [`project-trajectory/registries/repos.template.csv`](../../project-trajectory/registries/repos.template.csv)
   (multi-repo `REPO-###`, formerly `MOD-###`) ·
-  [`interfaces.template.csv`](../../project-trajectory/registries/interfaces.template.csv)
+  [`interfaces.template.csv`](../../project-trajectory/registries/interfaces.template.toml)
   (`IF-###`) · [`procurement.template.csv`](../../project-trajectory/registries/procurement.template.csv)
   (`PART-###`) · [`assets.template.csv`](../../project-trajectory/registries/assets.template.csv)
   (`ASSET-###` — geometry/binary artifacts, §3b) — the physical-axis registries.

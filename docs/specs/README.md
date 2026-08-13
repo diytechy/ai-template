@@ -26,7 +26,7 @@ and `check_trajectory.py` fails a gate when an open WI names no reachable spec.
 
 A spec whose WIs act **across a module boundary** carries an `Interfaces`
 section citing each seam as an `IF-###` that resolves in
-[`docs/requirements/interfaces.csv`](../requirements/interfaces.csv) — the one seam
+[`docs/requirements/interfaces.toml`](../requirements/interfaces.toml) — the one seam
 home (`PROCESS.md §8`), so a spec never sketches its own near-duplicate. A
 **new** seam is filed as a `Status=Proposed` row *at filing*, and the citation
 names the **nearest existing** IF and why it falls short (the forced search is

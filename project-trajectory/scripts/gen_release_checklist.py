@@ -123,7 +123,7 @@ def main():
     ]
     ifs = [
         r
-        for r in load_csv(docs / "requirements" / "interfaces.csv")
+        for r in spine_carrier.load(docs / "requirements" / "interfaces.toml", "IF-ID")
         if r.get("IF-ID") and not is_example(r["IF-ID"])
     ]
     # Performance budgets (process.md §9): the warn-tier runtime budgets never

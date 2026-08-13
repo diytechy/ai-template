@@ -63,10 +63,13 @@ SPINE = {
 # exactly — two writers for one carrier drift, and their divergence is silent
 # content loss on the registries the kit exists to make trustworthy.
 #
-# `interfaces.csv` and `components.csv` are DELIBERATELY ABSENT and are not an
-# oversight: §8.1 sequences the first behind OI-14 (which rewrites what a
-# `Contract` cell may hold) and the second behind the components ruling (which
-# is ABOUT CMP rows). Converting either now means converting it twice.
+# `interfaces.csv` and `components.csv` JOINED at WI-443, and the wait was the
+# point: §8.1 sequenced the first behind OI-14 (which rewrites what a `Contract`
+# cell may hold) and the second behind the components ruling (which is ABOUT CMP
+# rows). Both are ruled now — OI-14 part B, 2026-08-13 — so each converts ONCE,
+# carrying its new columns (`Signal`, `SignalNote`, `Rationale`) and its retired
+# one (`Status`, undeclared since it shipped; `Stability` is the one maturity
+# field) in the same pass rather than in a second migration of the same rows.
 #
 # The TEMPLATE paths ride the same map rather than a second pass. They exist
 # only in the kit repo — a scaffold gets the filled `docs/` copy, never the
@@ -76,8 +79,12 @@ SPINE = {
 OFFSPINE = {
     "docs/requirements/open-items.csv": ("open_item", "OI-ID"),
     "docs/agents.csv": ("agent", "Id"),
+    "docs/requirements/interfaces.csv": ("interface", "IF-ID"),
+    "docs/requirements/components.csv": ("component", "CMP-ID"),
     "project-trajectory/registries/open-items.template.csv": ("open_item", "OI-ID"),
     "project-trajectory/agents.template.csv": ("agent", "Id"),
+    "project-trajectory/registries/interfaces.template.csv": ("interface", "IF-ID"),
+    "project-trajectory/registries/components.template.csv": ("component", "CMP-ID"),
 }
 
 # Cells that are REFERENCE LISTS become typed arrays. Everything else stays a
@@ -158,6 +165,26 @@ KEY = {
     "Version": "version",
     "CmdTemplate": "cmd_template",
     "Env": "env",
+    # interfaces (WI-443 / OI-14 part B). `SR-Refs`/`Rationale`/`Component`/
+    # `Notes`/`Version` are ALREADY above and deliberately not repeated — D-3's
+    # one-name-one-meaning rule again. `Status` has NO entry because the column
+    # RETIRES here (undeclared since it shipped, overlapping `Stability` on the
+    # same row); a stray `Status` cell would therefore key as `Status` and be
+    # caught by the schema tier rather than silently absorbed.
+    "Direction": "direction",
+    "ThisProject": "this_project",
+    "Counterpart": "counterpart",
+    "Contract": "contract",
+    "Stability": "stability",
+    "Signal": "signal",
+    "SignalNote": "signal_note",
+    # components (WI-443). `Notes`/`SupersededBy` are ALREADY above.
+    "Name": "name",
+    "Category": "category",
+    "Knowledge": "knowledge",
+    "State": "state",
+    "PartOf": "part_of",
+    "DetailDoc": "detail_doc",
 }
 
 

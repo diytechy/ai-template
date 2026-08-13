@@ -581,9 +581,49 @@ IF_HEADER = (
 )
 
 
+def _ifs_toml(body):
+    """The CSV bodies below as the TOML carrier the tier moved to at WI-443.
+
+    Translated rather than rewritten at every call site for the reason
+    test_trajectory_arch states: these tests are about back-links, endpoints and
+    seam citations, and burying their subject under a schema migration would
+    cost more than it proves. `Status` is DROPPED — the column retired with the
+    ruling. The CSV carrier itself keeps a test of its own
+    (`test_legacy_interfaces_csv_still_reads_through_the_carrier`)."""
+    import csv as _csv
+    import io as _io
+
+    keys = [
+        ("Direction", "direction"),
+        ("ThisProject", "this_project"),
+        ("Counterpart", "counterpart"),
+        ("Contract", "contract"),
+        ("Version", "version"),
+        ("Stability", "stability"),
+        ("Component", "component"),
+        ("Notes", "notes"),
+    ]
+    out = []
+    for r in _csv.DictReader(_io.StringIO(IF_HEADER + body)):
+        rid = (r.get("IF-ID") or "").strip()
+        if not rid:
+            continue
+        out.append("[interface.{}]".format(rid))
+        out.append('signal = "discrete"')
+        for col, key in keys:
+            value = (r.get(col) or "").strip()
+            if value:
+                out.append('{} = """{}"""'.format(key, value))
+        refs = [t for t in (r.get("SR-Refs") or "").split(";") if t.strip()]
+        if refs:
+            out.append("sr_refs = [{}]".format(", ".join('"%s"' % t for t in refs)))
+        out.append("")
+    return "\n".join(out) + "\n"
+
+
 def _write_ifs(scaffold, body):
-    (scaffold / "docs" / "requirements" / "interfaces.csv").write_text(
-        IF_HEADER + body, encoding="utf-8"
+    (scaffold / "docs" / "requirements" / "interfaces.toml").write_text(
+        _ifs_toml(body), encoding="utf-8"
     )
     record_ids(scaffold)
 
@@ -640,6 +680,204 @@ def test_if_endpoint_advisory_is_warn_only(scaffold):
     assert "endpoint advisories" in _report(scaffold).lower()
 
 
+# --- WI-443 / OI-14 part B: the IF+CMP schema tier, WARN-FIRST -----------------
+# The ruled sequencing is advisory-until-the-corpus-converges, so EVERY test in
+# this section asserts the WARN TEXT and `returncode == 0` under `--strict`. A
+# rule that reddens a gate here would be this slice overreaching its ruling; a
+# rule that says nothing would be the state OI-14 spent three days measuring the
+# drift of. Both halves are pinned, per rule.
+
+CLEAN_IF = (
+    'IF-001,Provides,src/demo,git,"reads the ref state",SR-001,v1,Stable,Active,,\n'
+)
+
+
+def _warn_run(scaffold, body):
+    """`--strict` over one IF row; returns stdout and asserts the exit is
+    UNTOUCHED — the warn-first contract, checked at every call site rather than
+    once, because 'advisory' is the property most easily lost by accident."""
+    _write_ifs(scaffold, body)
+    proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    return proc.stdout
+
+
+def test_clean_if_row_trips_none_of_the_new_rules(scaffold):
+    # The other half of every test below: a clean row must be SILENT, or a rule
+    # that fires on everything would pass each fires-on-a-defect assertion.
+    make_minimal_project(scaffold)
+    out = _warn_run(scaffold, CLEAN_IF)
+    for noise in (
+        "Contract names WI-",
+        "cites decision",
+        "Contract argues",
+        "ceiling 500",
+        "has empty required field",
+        "closed vocabulary",
+    ):
+        assert noise not in out, noise
+
+
+def test_signal_refuses_an_unknown_value_as_a_warn(scaffold):
+    # The owner's ruled typing is a CLOSED vocabulary. Written straight to TOML:
+    # `_write_ifs` supplies `signal = "discrete"`, and the point here is a value
+    # the vocabulary does not contain.
+    make_minimal_project(scaffold)
+    (scaffold / "docs" / "requirements" / "interfaces.toml").write_text(
+        "[interface.IF-001]\n"
+        'direction = "Provides"\n'
+        'this_project = "src/demo"\n'
+        'counterpart = "git"\n'
+        'contract = "reads the ref state"\n'
+        'signal = "analog"\n'
+        'sr_refs = ["SR-001"]\n'
+        'version = "v1"\n'
+        'stability = "Stable"\n',
+        encoding="utf-8",
+    )
+    record_ids(scaffold)
+    proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
+    assert proc.returncode == 0, proc.stdout + proc.stderr  # warn-first
+    assert "IF IF-001 has Signal='analog'" in proc.stdout
+    assert "not in the closed vocabulary" in proc.stdout
+    assert "discrete, variable" in proc.stdout
+
+
+def test_stability_refuses_an_unknown_value_as_a_warn(scaffold):
+    # `Provisional` is the real value four live rows carried while `Stability`
+    # was declared by process.md §8 and validated by nothing.
+    make_minimal_project(scaffold)
+    out = _warn_run(scaffold, CLEAN_IF.replace(",v1,Stable,", ",v1,Provisional,"))
+    assert "IF IF-001 has Stability='Provisional'" in out
+    assert "Deprecated, Experimental, Stable" in out
+
+
+def test_cmp_state_refuses_an_unknown_value_as_a_warn(scaffold):
+    make_minimal_project(scaffold)
+    (scaffold / "docs" / "requirements" / "components.toml").write_text(
+        '[component.CMP-001]\nname = "Core"\ncategory = "software"\n'
+        'state = "in-flight"\n',
+        encoding="utf-8",
+    )
+    record_ids(scaffold)
+    proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "CMP CMP-001 has State='in-flight'" in proc.stdout
+    assert "not in the closed vocabulary" in proc.stdout
+
+
+def test_missing_required_if_field_is_a_warn(scaffold):
+    make_minimal_project(scaffold)
+    (scaffold / "docs" / "requirements" / "interfaces.toml").write_text(
+        "[interface.IF-001]\n"
+        'direction = "Provides"\n'
+        'this_project = "src/demo"\n'
+        'counterpart = "git"\n'
+        'contract = "reads the ref state"\n'
+        'sr_refs = ["SR-001"]\n'
+        'version = "v1"\n'
+        'stability = "Stable"\n',  # no `signal`
+        encoding="utf-8",
+    )
+    record_ids(scaffold)
+    proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "IF IF-001 has empty required field Signal" in proc.stdout
+
+
+def test_work_item_id_in_contract_is_a_refuse_class_warn(scaffold):
+    # ~24% of live rows today. A work-item id AGES, and a cancelled row's id
+    # sitting in a Contract cell still reads as authority.
+    make_minimal_project(scaffold)
+    out = _warn_run(
+        scaffold,
+        CLEAN_IF.replace("reads the ref state", "reads the ref state (WI-374)"),
+    )
+    assert "IF IF-001 Contract names WI-374" in out
+    assert "belongs in the log" in out
+
+
+def test_decision_citation_in_contract_is_a_refuse_class_warn(scaffold):
+    make_minimal_project(scaffold)
+    out = _warn_run(
+        scaffold,
+        CLEAN_IF.replace("reads the ref state", "reads the ref state per D-9"),
+    )
+    assert "IF IF-001 Contract cites decision D-9" in out
+
+
+def test_a_crossing_id_is_not_read_as_a_decision(scaffold):
+    # The narrowing that a broader `<LETTER>-<n>` pattern got wrong: it read the
+    # part-A data pack's own crossing ids (M-10) as rulings, which is a check
+    # inventing a rule nobody wrote.
+    make_minimal_project(scaffold)
+    out = _warn_run(
+        scaffold, CLEAN_IF.replace("reads the ref state", "the M-10 crossing")
+    )
+    assert "cites decision" not in out
+
+
+def test_rationale_connective_in_contract_warns(scaffold):
+    make_minimal_project(scaffold)
+    for word in ("because", "rather than", "so that", "since"):
+        out = _warn_run(
+            scaffold,
+            CLEAN_IF.replace("reads the ref state", "reads it " + word + " it must"),
+        )
+        assert "Contract argues ('{}')".format(word) in out, word
+        assert "the Rationale column is its home" in out
+
+
+def test_contract_over_the_length_ceiling_warns(scaffold):
+    # 34 live rows exceed 500 characters; the longest is 968.
+    make_minimal_project(scaffold)
+    out = _warn_run(scaffold, CLEAN_IF.replace("reads the ref state", "x" * 501))
+    assert "IF IF-001 Contract is 501 characters (ceiling 500)" in out
+    # ...and 500 exactly is inside the ceiling (a boundary, not an off-by-one).
+    out = _warn_run(scaffold, CLEAN_IF.replace("reads the ref state", "y" * 500))
+    assert "ceiling 500" not in out
+
+
+def test_untagged_endpoint_advisory_classifies_instead_of_staying_silent(scaffold):
+    """The coverage fix the part-A data pack demands.
+
+    45 of 113 live rows have an endpoint carrying no component tag, which makes
+    `cross_component_findings` VACUOUS for them — and the containment rule that
+    was assumed to cover them CANNOT, because it ranges over arch-map modules
+    while these endpoints are data files, directories and external actors. Both
+    checks were green and neither was saying anything. This advisory does not
+    make them findings; it makes them VISIBLE, and it names individually only
+    the endpoints that resolve to nothing, which are the only actionable ones."""
+    make_minimal_project(scaffold)
+    out = _warn_run(
+        scaffold,
+        'IF-001,Provides,src/demo,docs/status.md,"writes",SR-001,v1,Stable,Active,,\n'
+        'IF-002,Provides,src/demo,downstream adopter,"cli",SR-001,v1,Stable,Active,,\n'
+        'IF-003,Provides,src/demo,docs/gone/nowhere.md,"x",SR-001,v1,Stable,Active,,\n',
+    )
+    assert "IF endpoint coverage:" in out
+    assert "1 resolve to a file or directory in the tree" in out
+    assert "1 read as external actors" in out
+    assert "1 resolve to nothing" in out
+    # Only the unresolved one is named individually.
+    assert "IF IF-003 Counterpart='docs/gone/nowhere.md' is path-shaped" in out
+    assert "IF IF-001 Counterpart" not in out
+    assert "IF IF-002 Counterpart" not in out
+
+
+def test_semicolon_joined_endpoint_is_several_endpoints(scaffold):
+    # A `;`-joined cell names SEVERAL endpoints; reading it as one reported a
+    # real three-module seam (IF-097) as a dangling path.
+    make_minimal_project(scaffold)
+    out = _warn_run(
+        scaffold,
+        'IF-001,Provides,src/demo,"docs/status.md;docs/log.md","x",'
+        "SR-001,v1,Stable,Active,,\n",
+    )
+    assert "2 resolve to a file or directory in the tree" in out
+    assert "resolve to nothing" in out and "0 resolve to nothing" in out
+
+
 def test_if_placeholder_and_absent_are_free(scaffold):
     # The scaffold ships an inert IF-000 placeholder: no interface section, green.
     make_minimal_project(scaffold)
@@ -647,20 +885,25 @@ def test_if_placeholder_and_absent_are_free(scaffold):
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "interfaces=" not in proc.stdout  # only the -000 placeholder
     # A truly absent registry is equally free.
-    (scaffold / "docs" / "requirements" / "interfaces.csv").unlink()
+    (scaffold / "docs" / "requirements" / "interfaces.toml").unlink()
     proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
     assert proc.returncode == 0, proc.stdout + proc.stderr
 
 
-def test_legacy_interfaces_csv_without_notes_column_parses(scaffold):
-    # A pre-WI-056 interfaces.csv (no Notes column) reads the missing cell as
-    # empty and never crashes — never-breaking.
+def test_legacy_interfaces_csv_still_reads_through_the_carrier(scaffold):
+    # NEVER-BREAKING, WI-443: the tier's home is `interfaces.toml` now, but an
+    # adopter who has not migrated still has `interfaces.csv` — and it must keep
+    # loading, including a pre-WI-056 file with no Notes column (the missing cell
+    # reads as empty) and the retired `Status` column (an unknown column is
+    # simply carried, not a crash).
     make_minimal_project(scaffold)
+    req = scaffold / "docs" / "requirements"
+    (req / "interfaces.toml").unlink()  # the CSV is the ONLY home, not a second
     legacy = (
         "IF-ID,Direction,ThisProject,Counterpart,Contract,SR-Refs,Version,"
         "Stability,Status,Component\n"
     )
-    (scaffold / "docs" / "requirements" / "interfaces.csv").write_text(
+    (req / "interfaces.csv").write_text(
         legacy + 'IF-001,Provides,src/demo,git,"x",SR-001,v1,Stable,Active,\n',
         encoding="utf-8",
     )
@@ -668,6 +911,25 @@ def test_legacy_interfaces_csv_without_notes_column_parses(scaffold):
     proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "interfaces=1 interface-findings=0" in proc.stdout
+
+
+def test_both_interface_carriers_at_once_is_refused(scaffold):
+    # THE HOUSE RULE (spine_carrier.resolve): two homes for one fact is the state
+    # a migration exists to LEAVE, so it is refused rather than resolved by
+    # precedence — a precedence rule lets a half-finished migration keep working
+    # while quietly reading the stale half, and nobody finds out.
+    make_minimal_project(scaffold)
+    req = scaffold / "docs" / "requirements"
+    assert (req / "interfaces.toml").exists()
+    (req / "interfaces.csv").write_text(
+        "IF-ID,Direction,ThisProject,Counterpart,Contract,SR-Refs,Version,"
+        "Stability,Component,Notes\n",
+        encoding="utf-8",
+    )
+    proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
+    assert proc.returncode != 0
+    assert "REFUSED" in (proc.stdout + proc.stderr)
+    assert "BOTH carriers" in (proc.stdout + proc.stderr)
 
 
 # --- WI-065: one ruled home for a seam citation — the TC's `Verifies` cell ------
@@ -726,8 +988,8 @@ def test_seam_citation_satisfies_trace_and_check_trajectory_together(scaffold):
     # Half two: the SAME cell satisfies the seam-TC warn — the cited seam is
     # quiet while its uncited sibling still warns, so this is not vacuous.
     proc = run_py(["scripts/check_trajectory.py"], cwd=scaffold)
-    assert "IF IF-001 is Active but cited by no TC" not in proc.stderr
-    assert "IF IF-002 is Active but cited by no TC" in proc.stderr
+    seam = [ln for ln in proc.stderr.splitlines() if "cited by no TC" in ln]
+    assert len(seam) == 1 and "IF-002" in seam[0] and "IF-001" not in seam[0]
 
 
 def test_unknown_seam_id_in_verifies_is_still_an_orphan(scaffold):

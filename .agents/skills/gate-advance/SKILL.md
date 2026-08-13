@@ -93,7 +93,7 @@ sign-off in `docs/log.md` (the append-only history `docs/status.md` points at).
   harness at G2 runs traceability + `--no-placeholders` + runnable tests + flow
   checks. `orphans=0`. **A `[g2]` batch also authors/updates the `IF-###`
   interface rows its new LLRs imply** — when a decomposition mints a seam
-  (a module now provides/consumes a contract), add its `interfaces.csv` row in
+  (a module now provides/consumes a contract), add its `interfaces.toml` row in
   the same batch rather than retrofitting later (PROCESS.md §8; the
   `registry-hygiene` skill).
 - **G3 (Implementation).** Code implements the LLRs with `Implements:` back-links;

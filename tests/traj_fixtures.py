@@ -160,10 +160,38 @@ _Demo module._
 <!-- END GENERATED MODULE MAP -->
 """
 
-IF_HDR = (
-    "IF-ID,Direction,ThisProject,Counterpart,Contract,SR-Refs,Version,"
-    "Stability,Status,Component,Notes\n"
-)
+
+def if_row(iid, direction, this, counterpart, contract="call", **cells):
+    """One `[interface.IF-###]` TOML table (the carrier since WI-443).
+
+    A helper rather than a header constant: under TOML there IS no header, an
+    absent key IS the empty cell, and building rows by hand in six fixtures is
+    how a schema change quietly diverges between them."""
+    lines = [
+        "[interface.{}]".format(iid),
+        'direction = "{}"'.format(direction),
+        'this_project = "{}"'.format(this),
+        'counterpart = "{}"'.format(counterpart),
+        'contract = "{}"'.format(contract),
+        'signal = "{}"'.format(cells.pop("signal", "discrete")),
+        'sr_refs = ["{}"]'.format(cells.pop("sr_refs", "SR-001")),
+        'version = "v1"',
+        'stability = "{}"'.format(cells.pop("stability", "Stable")),
+    ]
+    lines += ['{} = "{}"'.format(k, v) for k, v in sorted(cells.items())]
+    return "\n".join(lines) + "\n\n"
+
+
+def cmp_row(cid, name, state="built", **cells):
+    """One `[component.CMP-###]` TOML table (the carrier since WI-443)."""
+    lines = [
+        "[component.{}]".format(cid),
+        'name = "{}"'.format(name),
+        'category = "{}"'.format(cells.pop("category", "software")),
+        'state = "{}"'.format(state),
+    ]
+    lines += ['{} = "{}"'.format(k, v) for k, v in sorted(cells.items())]
+    return "\n".join(lines) + "\n\n"
 
 
 def gen_okf(root):
@@ -238,20 +266,15 @@ LLR-003,SR-002,C,scripts/mod_c,gen,d,(see TC),Verified,CMP-002
 LLR-004,SR-002,D,scripts/mod_d,emit,d,(see TC),Verified,CMP-002
 """
 
-CONT_CMPS = (
-    "CMP-ID,Name,Category,Knowledge,State,SupersededBy,PartOf,DetailDoc,Notes\n"
-    "CMP-001,Core,software,,built,,,,\n"
-    "CMP-002,Gen,software,,built,,,,\n"
-)
+CONT_CMPS = cmp_row("CMP-001", "Core") + cmp_row("CMP-002", "Gen")
 
 # Two seams a->c and b->c both cross CMP-001 -> CMP-002 (must aggregate to ONE
 # deduplicated edge); IF-003 is intra-CMP-001, IF-004 a boundary to a file hub.
 CONT_IFS = (
-    IF_HDR
-    + "IF-001,Provides,scripts/mod_a,scripts/mod_c,call,SR-001,v1,Stable,Active,,\n"
-    + "IF-002,Provides,scripts/mod_b,scripts/mod_c,call,SR-001,v1,Stable,Active,,\n"
-    + "IF-003,Provides,scripts/mod_a,scripts/mod_b,call,SR-001,v1,Stable,Active,,\n"
-    + "IF-004,Consumes,scripts/mod_a,docs/stack.ini,reads,SR-001,v1,Stable,Active,,\n"
+    if_row("IF-001", "Provides", "scripts/mod_a", "scripts/mod_c")
+    + if_row("IF-002", "Provides", "scripts/mod_b", "scripts/mod_c")
+    + if_row("IF-003", "Provides", "scripts/mod_a", "scripts/mod_b")
+    + if_row("IF-004", "Consumes", "scripts/mod_a", "docs/stack.ini", "reads")
 )
 
 
@@ -261,8 +284,8 @@ def containerize(root):
     make_repo(root)
     req = root / "docs" / "requirements"
     (req / "low-level-requirements.csv").write_text(CONT_LLRS, encoding="utf-8")
-    (req / "components.csv").write_text(CONT_CMPS, encoding="utf-8")
-    (req / "interfaces.csv").write_text(CONT_IFS, encoding="utf-8")
+    (req / "components.toml").write_text(CONT_CMPS, encoding="utf-8")
+    (req / "interfaces.toml").write_text(CONT_IFS, encoding="utf-8")
     (root / "docs" / "architecture.md").write_text(CONT_ARCH, encoding="utf-8")
     return root
 
@@ -393,10 +416,9 @@ def _how_sw_flat(root):
     place that list lives."""
     make_repo(root)
     (root / "docs" / "architecture.md").write_text(ARCH_MD, encoding="utf-8")
-    (root / "docs" / "requirements" / "interfaces.csv").write_text(
-        IF_HDR
-        + 'IF-001,Provides,src/m,downstream adopter,"cli",SR-001,v1,Stable,Active,,\n'
-        + 'IF-002,Consumes,src/m,docs/stack.ini,"reads",SR-001,v1,Stable,Active,,\n',
+    (root / "docs" / "requirements" / "interfaces.toml").write_text(
+        if_row("IF-001", "Provides", "src/m", "downstream adopter", "cli")
+        + if_row("IF-002", "Consumes", "src/m", "docs/stack.ini", "reads"),
         encoding="utf-8",
     )
     return root

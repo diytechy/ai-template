@@ -477,7 +477,7 @@ def sw_graph(root, mods):
     (`_layered_layout`), so producers sit left of consumers and crossings are
     reduced. Byte-deterministic: sorted inputs, fixed
     passes, no clocks — the `--check` freshness compare stays stable."""
-    ifs = ct.load_ifs(ct.read_rows(root / ct.IF_CSV))
+    ifs = ct.load_ifs(ct.spine_carrier.load(root / ct.IF_CSV, "IF-ID"))
     if not ifs or not mods:
         return None
     module_norm = {ct._norm_module(m["name"]): m["name"] for m in mods}
@@ -659,7 +659,7 @@ def sw_containment(root, mods):
     def subtree_modules(cid):
         return _subtree_modules(cid, direct, children_of)
 
-    ifs = ct.load_ifs(ct.read_rows(root / ct.IF_CSV))
+    ifs = ct.load_ifs(ct.spine_carrier.load(root / ct.IF_CSV, "IF-ID"))
     counter = [0]
     layers = []
     # U3: a per-block detail record (keyed by the block's `data-node`) so the How-SW

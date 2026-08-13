@@ -75,7 +75,7 @@ inside it, which lays down everything below; otherwise copy + rename by hand.
 - `docs/test/test-cases.toml` — **TC-###** ↔ requirements (Test Engineer owns).
 - `docs/architecture.md` — one-page overview + a **generated** module/function
   map (copy `ARCHITECTURE.template.md`; refresh it with `scripts/gen_arch_map.py`).
-- `docs/interfaces.md` + `docs/requirements/interfaces.csv` — **IF-###**
+- `docs/interfaces.md` + `docs/requirements/interfaces.toml` — **IF-###**
   cross-project contracts (copy `INTERFACES.template.md` + the registry).
   **If this project interlinks with another repo or has module-to-module seams**
   (process.md §8); a single-module standalone repo omits it.

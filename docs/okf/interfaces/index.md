@@ -5,7 +5,7 @@ description: "tier index"
 tags: []
 resource: "generated"
 ---
-> **GENERATED — a reference copy, not the source of truth.** Derived from docs/requirements/interfaces.csv by scripts/gen_okf.py; edit the registry/doc, then rerun it (docs/process.toml [checks] okf_export = false silences the layer).
+> **GENERATED — a reference copy, not the source of truth.** Derived from docs/requirements/interfaces.toml by scripts/gen_okf.py; edit the registry/doc, then rerun it (docs/process.toml [checks] okf_export = false silences the layer).
 
 # interfaces — index
 

@@ -9,8 +9,8 @@ into the planner/critic/arbiter prompts the coordinator sends to fresh sessions.
 Redaction is BY CONSTRUCTION, not by review — the module can read exactly two
 files under the repo root:
 
-    docs/requirements/system-requirements.csv  (the SR surface)
-    docs/requirements/interfaces.csv           (the IF registry excerpt)
+    docs/requirements/system-requirements.toml  (the SR surface)
+    docs/requirements/interfaces.toml           (the IF registry excerpt)
 
 plus the strings the caller passes in (the goal brief, the coverage report, the
 plan texts, the rubric). It never opens docs/status.md, docs/log.md, a
@@ -64,7 +64,6 @@ of record in docs/requirements/interfaces.csv).
 """
 
 import argparse
-import csv
 import re
 import sys
 from pathlib import Path
@@ -119,18 +118,26 @@ PROMPTS = KIT / "prompts"
 # The ONLY two files this module may read — the redaction allowlist, as paths
 # relative to the caller-supplied repo root.
 SR_CSV = "docs/requirements/system-requirements.toml"
-IF_CSV = "docs/requirements/interfaces.csv"
+IF_CSV = "docs/requirements/interfaces.toml"
 
 # The registry columns the IF surface exposes (a stable, minimal excerpt — never
 # the whole row, so Rationale/Notes prose never rides along into a brief). The SR
 # surface is a bullet list rather than a table, so it names its own cells in
 # `_sr_surface` instead of reading a column tuple.
+#
+# `Status` LEFT THIS TUPLE AT WI-443 and its departure is the reason OI-14 part B
+# was urgent rather than tidy. Every cell here is handed to a planning model as
+# authority (process.md §8), and `Status` was an UNDECLARED column — absent from
+# §8's field list, validated by no check, and carrying `Stable` while the row's
+# `Stability` cell said something different with the same word. The column
+# retired; `Signal` is deliberately NOT promoted in its place, because a brief
+# needs the surface, not the schema. What a planner sees is the seam and its
+# contract.
 IF_SURFACE_COLUMNS = (
     "IF-ID",
     "Direction",
     "ThisProject",
     "Counterpart",
-    "Status",
     "Contract",
 )
 
@@ -145,18 +152,6 @@ def _utf8_console():
             s.reconfigure(encoding="utf-8")
         except (AttributeError, ValueError):
             pass
-
-
-# --- small self-contained CSV loader (duplicated per the F5 rule) -------------
-def _load_rows(path):
-    """Read a CSV registry into a list of dict rows (utf-8-sig tolerates the BOM
-    some editors add), or [] when the file is absent — absence is 'nothing to
-    surface', never a crash."""
-    p = Path(path)
-    if not p.exists():
-        return []
-    with p.open(newline="", encoding="utf-8-sig") as fh:
-        return list(csv.DictReader(fh))
 
 
 # --- prompt-template loading (kit template or operator override) --------------
@@ -236,16 +231,16 @@ def _if_registry(rows):
 def build_surface(root):
     """The allowlist-only registry surface the briefs embed, as `{slot: text}`
     keyed by the planner/critic slot names: `SR_SURFACE` (the SR rows — id,
-    title, requirement) and `IF_REGISTRY` (the interfaces.csv excerpt — id,
-    direction, endpoints, status, contract).
+    title, requirement) and `IF_REGISTRY` (the interfaces registry excerpt — id,
+    direction, endpoints, contract).
 
-    Reads ONLY system-requirements.csv and interfaces.csv under `root`. That
+    Reads ONLY the SR and IF registries under `root`. That
     two-file read IS the redaction boundary: status.md, log.md, and every
     self-assessment are unreachable because this function never names them."""
     root = Path(root)
     return {
         "SR_SURFACE": _sr_surface(spine_carrier.load(root / SR_CSV, "SR-ID")),
-        "IF_REGISTRY": _if_registry(_load_rows(root / IF_CSV)),
+        "IF_REGISTRY": _if_registry(spine_carrier.load(root / IF_CSV, "IF-ID")),
     }
 
 
@@ -320,7 +315,7 @@ def _cmd_surface(args):
     surface = build_surface(args.root)
     print("## Requirement surface (system-requirements.csv)\n")
     print(surface["SR_SURFACE"] or "(no SR rows)")
-    print("\n## Declared interface seams (interfaces.csv)\n")
+    print("\n## Declared interface seams (interfaces.toml)\n")
     print(surface["IF_REGISTRY"])
     return 0
 
