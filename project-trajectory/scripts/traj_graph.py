@@ -6,6 +6,7 @@ gen_trajectory.py; the facade re-exports, so consumers are unchanged.
 """
 
 from dataclasses import dataclass
+import re
 
 
 @dataclass(frozen=True)
@@ -118,7 +119,7 @@ _PORT_LEAD = 11.0  # ...the run over which they reach it, before any routing ben
 _LEAD_RUNGS = 3  # ...and how many staggered turn-off points that run offers
 
 
-def _port_fan(groups, other_of, pos, row_h, row_gap):
+def _port_fan(groups, other_of, pos, row_h, row_gap, max_span=None):
     """Per-port vertical fan-out offsets (keyed by edge tuple) so several wires
     sharing one port spread across a small band instead of converging on the
     exact same pixel — the "knot" a plain center-to-center wire draws when 3+
@@ -150,7 +151,10 @@ def _port_fan(groups, other_of, pos, row_h, row_gap):
                 offsets[e] = 0.0
             continue
         items_sorted = sorted(items, key=lambda e: (pos[other_of(e)][1], e))
-        span = min(row_h + row_gap - _FAN_PITCH, (n - 1) * _FAN_PITCH)
+        slot_span = row_h + row_gap - _FAN_PITCH
+        if max_span is not None:
+            slot_span = min(slot_span, max_span)
+        span = min(slot_span, (n - 1) * _FAN_PITCH)
         step = span / (n - 1)
         start = -span / 2
         for i, e in enumerate(items_sorted):
@@ -530,12 +534,102 @@ def _routed_label_xy(d, fx, fy):
     return (seg[0] + seg[1]) / 2.0, seg[2]
 
 
-def _route_edges(edges, rects_by_id, min_dx, end_trim):
+_ROUTE_TOKEN = re.compile(r"[MLC]|-?\d+(?:\.\d+)?")
+
+
+def _ortho_push(points, point):
+    """Append `point` to a rectilinear vertex list, collapsing a repeat and a
+    collinear middle vertex — so a straight edge stays one straight segment."""
+    if points and point == points[-1]:
+        return
+    if len(points) > 1:
+        a, b = points[-2], points[-1]
+        if (a[0] == b[0] == point[0]) or (a[1] == b[1] == point[1]):
+            points[-1] = point
+            return
+    points.append(point)
+
+
+def _ortho_points(toks, bend_x_of):
+    """The rectilinear vertices for one bend choice, or None when `toks` holds a
+    command this squaring does not understand (then the caller keeps the curve —
+    an unrecognised shape may be left alone, never mis-drawn). `bend_x_of` picks
+    the vertical leg's x from a cubic's two control x's."""
+    points, cur, i = [], None, 0
+    while i < len(toks):
+        cmd, i = toks[i], i + 1
+        if cmd in {"M", "L"} and i + 1 < len(toks):
+            cur = (float(toks[i]), float(toks[i + 1]))
+            i += 2
+            _ortho_push(points, cur)
+        elif cmd == "C" and cur is not None and i + 5 < len(toks):
+            c1x, _c1y, c2x, _c2y, ex, ey = map(float, toks[i : i + 6])
+            i += 6
+            bend_x = bend_x_of(c1x, c2x)
+            _ortho_push(points, (bend_x, cur[1]))
+            _ortho_push(points, (bend_x, ey))
+            cur = (ex, ey)
+            _ortho_push(points, cur)
+        else:
+            return None
+    return points
+
+
+# The bend x's tried in order, as (c1x, c2x) -> x: the control midpoint first (the
+# corridor the cubic itself chose), then each control on its own.
+_ORTHO_BENDS = (
+    lambda c1x, c2x: (c1x + c2x) / 2.0,
+    lambda c1x, _c2x: c1x,
+    lambda _c1x, c2x: c2x,
+)
+
+
+def orthogonal_route(d, obstacles=()):
+    """Turn the router's horizontal-tangent cubics into rectilinear segments.
+
+    The cubic controls already identify a clear bend corridor: their midpoint is
+    where the curve changes height. Keeping that corridor but replacing each curve
+    with horizontal/vertical legs removes the acute cusp where a curve met a lane.
+
+    Squaring a curve can CREATE a crossing the curve did not have, so every bend
+    candidate is scored by how many `obstacles` it cuts and the clearest wins; if
+    none is clear, each obstacle's own cleared left/right boundary is tried too."""
+    toks = _ROUTE_TOKEN.findall(d)
+
+    def scored(bend_x_of):
+        candidate = _ortho_points(toks, bend_x_of)
+        if not candidate:
+            return None
+        return sum(_polyline_hits(candidate, (rect,)) for rect in obstacles), candidate
+
+    choices = [result for bend in _ORTHO_BENDS if (result := scored(bend))]
+    if not choices:
+        return d
+    clear = _WIRE_HIT_MARGIN + 1.0
+    boundaries = [
+        x for rx, _ry, rw, _rh in obstacles for x in (rx - clear, rx + rw + clear)
+    ]
+    if min(choices, key=lambda result: result[0])[0]:
+        choices += [
+            result for x in boundaries if (result := scored(lambda _c1x, _c2x, x=x: x))
+        ]
+    _hits, points = min(choices, key=lambda result: result[0])
+    return "M{:.1f},{:.1f}{}".format(
+        points[0][0],
+        points[0][1],
+        "".join(" L{:.1f},{:.1f}".format(x, y) for x, y in points[1:]),
+    )
+
+
+def _route_edges(edges, rects_by_id, min_dx, end_trim, fan_terminals=False):
     """The one wire router every layered emitter calls. `edges` is a list of
     (key, x1, y1, x2, y2, src_id, tgt_id): x1,y1 the source OUTPUT port, x2 the
     target block's LEFT edge (untrimmed — the legacy dx is measured from it), y2
     the target port. `rects_by_id` maps a node id to its (x,y,w,h) box. Returns
-    {key: d}. A wire whose direct cubic clears every non-endpoint box keeps the
+    {key: d}. `fan_terminals=True` keeps the per-edge fan offsets as the actual
+    endpoints instead of splicing them back to one centre port; the drill renderer
+    uses that mode because it draws an explicit connector circle per edge. A wire
+    whose direct cubic clears every non-endpoint box keeps the
     exact legacy `d` (byte-identical); a blocked wire detours (`_detour_d`).
 
     WI-256: the wire's TERMINALS snap to the port centers (rect mid-height) while
@@ -595,11 +689,13 @@ def _route_edges(edges, rects_by_id, min_dx, end_trim):
     for key, x1, y1, x2, y2, src, tgt in sorted(edges, key=lambda e: e[0]):
         xe = x2 - end_trim
         rs, rt = rects_by_id.get(src), rects_by_id.get(tgt)
-        sy = rs[1] + rs[3] / 2 if rs else y1  # source port center (terminal)
-        ty = rt[1] + rt[3] / 2 if rt else y2  # target port center (terminal)
+        sy = y1 if fan_terminals else (rs[1] + rs[3] / 2 if rs else y1)
+        ty = y2 if fan_terminals else (rt[1] + rt[3] / 2 if rt else y2)
         # The harness (WI-366) consumes the first/last stretch; what is left is routed,
         # and the strand — not the port center — is its terminal there.
-        lead, tail = _harness_ends(strand, key, sy, y1, ty, y2)
+        lead, tail = (
+            (0.0, 0.0) if fan_terminals else _harness_ends(strand, key, sy, y1, ty, y2)
+        )
         xs, xt = x1 + lead, xe - tail
         sy_r, ty_r = (y1 if lead else sy), (y2 if tail else ty)
         dx = _routed_dx(x2 - tail - xs, min_dx, lead or tail, xt - xs)
@@ -632,7 +728,9 @@ def _route_edges(edges, rects_by_id, min_dx, end_trim):
     return out
 
 
-def route_graph(nodes, edges, pos, geom, min_dx, end_trim):
+def route_graph(
+    nodes, edges, pos, geom, min_dx, end_trim, fan_terminals=False, fan_span=None
+):
     """The shared fan/rects/route sequence every layered emitter ran inline
     (WI-280 S8 — the census's `graph-layout` class, one copy per graph): group
     the edges by port, fan them (`_port_fan`), build the node boxes from `pos` +
@@ -640,13 +738,19 @@ def route_graph(nodes, edges, pos, geom, min_dx, end_trim):
     tuples of any arity (only e[0]/e[1] are read); `nodes` is the full node-id
     set, so a node with no edge still obstructs routing. Returns
     `(routes, out_off, in_off)` — the sw seam graph anchors its labels to the
-    fan offsets, the other emitters read only the routed paths."""
+    fan offsets, the other emitters read only the routed paths. `fan_span` can
+    constrain those offsets to a node edge, and `fan_terminals` makes those
+    positions the route endpoints for explicit per-edge ports."""
     out_groups, in_groups = {}, {}
     for e in edges:
         out_groups.setdefault(e[0], []).append(e)
         in_groups.setdefault(e[1], []).append(e)
-    out_off = _port_fan(out_groups, lambda e: e[1], pos, geom.row_h, geom.row_gap)
-    in_off = _port_fan(in_groups, lambda e: e[0], pos, geom.row_h, geom.row_gap)
+    out_off = _port_fan(
+        out_groups, lambda e: e[1], pos, geom.row_h, geom.row_gap, fan_span
+    )
+    in_off = _port_fan(
+        in_groups, lambda e: e[0], pos, geom.row_h, geom.row_gap, fan_span
+    )
 
     rects = {n: (pos[n][0], pos[n][1], geom.col_w, geom.row_h) for n in nodes}
     routes = _route_edges(
@@ -665,6 +769,7 @@ def route_graph(nodes, edges, pos, geom, min_dx, end_trim):
         rects,
         min_dx,
         end_trim,
+        fan_terminals,
     )
     return routes, out_off, in_off
 

@@ -162,6 +162,19 @@ def test_route_edges_leaves_a_clear_wire_byte_identical():
     assert "L" not in routes["A->B"]
 
 
+def test_orthogonal_route_moves_its_bend_outside_a_blocking_box():
+    # WI-435: converting a clear cubic to a midpoint elbow can CREATE a through-box
+    # crossing. This is the live roadmap's phase 4 -> unphased geometry, reduced to
+    # one obstacle: every control-based elbow lands inside phase 3, so the square
+    # router must use the box's clear right-hand boundary instead.
+    gt = load_script("gen_trajectory")
+    cubic = "M137.0,351.0 C232.6,351.0 273.9,230.5 369.5,230.5"
+    obstacle = (197.0, 192.0, 119.0, 46.0)
+    square = gt.traj_graph.orthogonal_route(cubic, [obstacle])
+    assert set(re.findall(r"[A-Za-z]", square)) <= {"M", "L"}
+    assert not _polyline_crosses(_sample_path_d(square), obstacle)
+
+
 def test_route_edges_reroutes_a_backward_seam():
     # A consumer→producer (right→left) seam used to sweep the whole width straight
     # through every box; the router lanes it around instead. C (right) → A (left)
@@ -511,7 +524,7 @@ WRAPAROUND_WIS = (
 
 
 def test_svg_viewbox_contains_every_routed_wire(tmp_path):
-    """No emitted wire is cut by its own viewBox — the WI-367 objective floor.
+    """No emitted wire is cut by its own viewBox on either axis.
 
     Swept over every emitter that really renders, on the SAMPLED polyline a viewer's
     eye follows (not the source `d`), and with the same `_INK_PAD` clearance the
@@ -533,28 +546,50 @@ def test_svg_viewbox_contains_every_routed_wire(tmp_path):
     assert gen(wrap).returncode == 0
     docs = [(lb, d) for lb, d in _every_emitter_document(tmp_path) if lb != "shipped"]
     docs.append(("wrap-around", html_of(wrap)))
+    # WI-435: the compact fixture set did not reproduce the real component root's
+    # top-lane overflow (CMP-004 -> CMP-002 reached y=-9.1). Generate the two live
+    # meta drills through the current emitter instead of reading the stale artifact.
+    ct = load_script("check_trajectory")
+    wis, integrity = ct.load_wis(ct.read_registry_rows(ROOT / ct.WI_CSV))
+    assert not integrity
+    sw = gt.sw_containment(ROOT, gt.sw_modules(ROOT))
+    when = gt.when_view(ROOT, wis)
+    assert sw is not None and when is not None
+    docs.extend((("meta-sw", sw[1]), ("meta-when", when)))
     # The fixture must really produce the shape, or the sweep is a tautology: an
     # emitter that never routes outboard trivially never clips. A padded box (a
     # negative viewBox min-x) is the visible proof that it did.
-    assert re.search(r'<svg viewBox="-\d', docs[-1][1]), "fixture lost its wrap-around"
+    wrap_doc = dict(docs)["wrap-around"]
+    assert re.search(r'<svg viewBox="-\d', wrap_doc), "fixture lost its wrap-around"
     clipped, outboard, swept = [], 0, 0
     for label, doc in docs:
         for svg in re.findall(r"<svg\b.*?</svg>", doc, re.S):
             tag = svg[: svg.index(">") + 1]
             if "viewBox" not in tag:
                 continue
-            vx, _vy, vw, _vh = _viewbox_of(tag)
+            vx, vy, vw, vh = _viewbox_of(tag)
             body = re.sub(r"<defs>.*?</defs>", "", svg, flags=re.S)
             for d in re.findall(r'\sd="([^"]+)"', body):
                 pts = _sample_path_d(d)
                 if len(pts) < 2:
                     continue  # not an M/L/C wire (the containment arrow, the loops arc)
                 swept += 1
-                lo = min(p[0] for p in pts)
-                hi = max(p[0] for p in pts)
-                outboard += lo < 0.0 or hi > vw + vx
-                if lo - vx < gt._INK_PAD or (vx + vw) - hi < gt._INK_PAD:
-                    clipped.append((label, round(lo, 1), round(hi, 1), tag[:60]))
+                lo, hi = min(p[0] for p in pts), max(p[0] for p in pts)
+                top, bottom = min(p[1] for p in pts), max(p[1] for p in pts)
+                outboard += lo < 0.0 or hi > vw + vx or top < 0.0 or bottom > vh + vy
+                x_cut = lo - vx < gt._INK_PAD or (vx + vw) - hi < gt._INK_PAD
+                y_cut = top - vy < gt._INK_PAD or (vy + vh) - bottom < gt._INK_PAD
+                if x_cut or y_cut:
+                    clipped.append(
+                        (
+                            label,
+                            round(lo, 1),
+                            round(hi, 1),
+                            round(top, 1),
+                            round(bottom, 1),
+                            tag[:60],
+                        )
+                    )
     assert swept > 30, "vacuous — the sweep found no routed wires"
     assert outboard, "vacuous — no wire in the sweep runs outboard of its layout box"
     assert not clipped, "wire(s) clipped by their viewBox: {}".format(clipped[:4])

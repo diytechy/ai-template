@@ -1289,7 +1289,8 @@ _Pure graph layout and wire routing for the project-state dashboard._
 | Public item | Summary | Implements |
 |---|---|---|
 | `GraphGeom (class)` | One layered graph's geometry — the (col_w, col_gap, row_h, row_gap, pad) |  |
-| `route_graph(nodes, edges, pos, geom, min_dx, end_trim)` | The shared fan/rects/route sequence every layered emitter ran inline |  |
+| `orthogonal_route(d, obstacles)` | Turn the router's horizontal-tangent cubics into rectilinear segments. |  |
+| `route_graph(nodes, edges, pos, geom, min_dx, end_trim, fan_terminals, fan_span)` | The shared fan/rects/route sequence every layered emitter ran inline |  |
 | `flat_graph(node_ids, edges, geom, min_dx, end_trim)` | Adjacency + layout + routing for a FLAT, id-seeded graph in one call — |  |
 
 ### `scripts/traj_panels`
