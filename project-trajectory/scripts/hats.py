@@ -143,7 +143,11 @@ def load(root, rel=ROSTER_REL):
             "{}: unknown top-level table(s) {} — a roster declares only "
             "[{}.<NAME>]".format(path, ", ".join(extra), TABLE)
         )
-    table = data.get(TABLE) or {}
+    # `.get(TABLE, {})`, never `or {}`: a falsey non-table (`hat = ""`,
+    # `hat = false`, `hat = []`) is a MALFORMED roster and must refuse loudly —
+    # coercing it to an empty roster is the silent opt-out this loader exists
+    # to forbid (review finding). Only true ABSENCE reads as opt-out.
+    table = data.get(TABLE, {})
     if not isinstance(table, dict):
         raise HatsError("{}: [{}] is not a table of hats".format(path, TABLE))
 
@@ -178,7 +182,12 @@ def _hat_from_row(name, row, where):
                 "question and the FAILURE CLASS it catches (a hat naming "
                 "no failure is ceremony)".format(where, key)
             )
-        hat[key] = value.strip()
+        # Whitespace is COLLAPSED at load: `asks`/`listens_for` render inside
+        # a one-line markdown bullet in the composed brief, and a multi-line
+        # value would put its later lines at column 0 — where `## ...` becomes
+        # a top-level heading that can override the brief's own structure
+        # (review finding). Inline text cannot mint a heading.
+        hat[key] = " ".join(value.split())
     hat["condition"] = parse_condition(hat["applies_when"], where)
     return hat
 

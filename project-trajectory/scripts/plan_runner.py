@@ -196,6 +196,19 @@ def _hat_slots(root, row, planner_tmpl):
     import plan_briefs
 
     if not plan_briefs.declares_slot(planner_tmpl, plan_briefs.HAT_QUESTIONS_SLOT):
+        # A legacy template composes fine WITHOUT hats — but if a roster
+        # EXISTS, the operator declared perspectives this round will not face,
+        # and silence here would be the miss SN-036 exists to surface (review
+        # finding). Warn-only: breaking every pre-slot --prompt-map override
+        # would be the worse failure.
+        if (root / "docs" / "requirements" / "hats.toml").exists():
+            print(
+                "plan_runner: WARN - a hats roster is declared but the planner "
+                "template carries no {{HAT_QUESTIONS}} slot — this "
+                "decomposition faces NO declared perspective; add the slot to "
+                "the override or drop the override",
+                file=sys.stderr,
+            )
         return {}
     return plan_briefs.hat_surface(root, plan_briefs.hat_context_for_work_item(row))
 
