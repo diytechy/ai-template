@@ -37,7 +37,7 @@ names how to verify it without reading prose.
 | 6 | **WI-442 has landed** — SN-037…SN-040 gain their first coverage | `docs/gate`'s basis line shows **`uncovered`** below 8; the `sn_refs` of the new SRs name which need each covers |
 | 7 | **The 2.4-sweep window and the decision-6 window are still open — deliberately.** Sitting 1's rationale sweep flipped rows `Modified` and called it *"a deliberately re-opened window, sitting 2's to close"*; sitting 2 rules structure and does not sign a spine | those rows are still `Modified` at this sitting's start, and the log records that as intent rather than as drift |
 | 8 | **Area→aspect is executed IF sitting 2 ruled it rides WI-451's window** | the `Area` column is gone from `system-requirements.toml` and the six aspect values are a closed vocabulary — or the ruling records that it does not ride |
-| 9 | **SN-007's ruled clause strike is applied INSIDE this window** (sitting 2 housekeeping item 1) | `stakeholder-needs.toml` SN-007's `need` no longer contains *"a change to a script is covered by a test exercised end-to-end against a real scaffold"* |
+| 9 | **SN-007's ruled strike — or the owner's 2026-08-13 proposed replacement text, if sitting 2 confirmed it — is applied INSIDE this window** (sitting 2 housekeeping item 1) | `stakeholder-needs.toml` SN-007's `need` no longer contains *"a change to a script is covered by a test exercised end-to-end against a real scaffold"*, and — if the replacement was confirmed — reads *"it stays traceable and tested through every change"* |
 
 **On precondition 9, specifically.** The strike was ruled 2026-08-11 and was
 supposed to land with the prose batch; it did not, and sitting 1 then ratified

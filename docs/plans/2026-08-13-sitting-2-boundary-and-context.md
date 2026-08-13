@@ -1326,6 +1326,24 @@ a re-attest window outside the batched one.* **Disposition: schedule it INSIDE
 sitting 3's window — never as a lone edit.** It is a one-cell deletion; the cost
 is entirely in *when* it lands.
 
+**OWNER-PROPOSED REPLACEMENT TEXT, 2026-08-13 — supersedes the plain strike if
+confirmed at this sitting.** Reviewing the post-strike remainder (*"…its own
+changes stay traceable and tested"*), the owner flagged that **"changes …
+tested" still reads as delta-testing** — as if something tests the A→B change
+itself — which nothing does: the suite tests the *state after* each change
+(the scaffold bootstrap), while "traceable" genuinely does attach to changes
+(change-intake, the WI registry, the log). The proposed `need` cell, keeping
+the stakeholder subject and claiming only what runs:
+
+> "The people maintaining this kit hold it to its own standard: **it stays
+> traceable and tested through every change.**"
+
+A state claim at every landing, not a per-change coverage or delta-testing
+claim; the `acceptance` cell (unchanged) carries the mechanism at its own
+altitude. Same window, same act as the strike — one cell rewrite instead of
+one clause deletion. The sitting confirms the wording; the WI-444
+token-comparison bar applies to the application either way.
+
 ### 2. §E.5 — migration history inside the `Requirement` cell — **NEEDS A RULING**
 
 *Source: prose-rewrite §E.5, verbatim:*
