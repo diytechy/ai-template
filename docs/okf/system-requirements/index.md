@@ -134,7 +134,7 @@ resource: "generated"
 | [SR-122](SR-122.md) | Dashboard freshness check |
 | [SR-123](SR-123.md) | Critique closure ratchet |
 | [SR-124](SR-124.md) | Contradiction-safe dual-plan dispatcher class |
-| [SR-125](SR-125.md) | PAGE maps through gate policy |
+| [SR-125](SR-125.md) | PAGE maps through the declared ratification level |
 | [SR-126](SR-126.md) | Spine stand-alone rule |
 | [SR-127](SR-127.md) | Requirement form: one testable obligation |
 | [SR-128](SR-128.md) | Paraphrase advisory |

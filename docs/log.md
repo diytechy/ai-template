@@ -29,12 +29,52 @@ applying that design to the kit itself.
 | G1 — Requirements/UX/Constraints | MET 2026-07-07 | MET 2026-07-07 | MET 2026-07-07 | n/a | ✅ Peter Johnson 2026-07-07 |
 | G2 — Decomposition & Test Coverage | n/a | n/a | MET 2026-07-07 | MET 2026-07-07 | ✅ Peter Johnson 2026-07-07 |
 | G3 — Implementation | n/a | n/a | MET 2026-07-07 | MET 2026-07-07 | ✅ Peter Johnson 2026-07-07 |
+| DevStg-Needs (sitting 1 of 2: the nine draft SNs ratified as written; the Modified SR texts re-attested as amended; SR re-statement/retier deliberately held open for sitting 2) | MET 2026-08-13 | n/a | MET 2026-08-13 | n/a | ✅ Peter Johnson 2026-08-13 (ruled in session; recorded by the coordinator) |
 
 ## Decisions log
 
 _Ratified or executed decisions only — the call, the alternatives passed over,
 why (one bullet each; cite ids)._
 
+- **2026-08-13d — The re-attest sitting SPLIT IN TWO; sitting 1 ruled and
+  executed (owner, in session).** Sitting 1 approves every SN and SR change as
+  shown in [plans/2026-08-13-sitting-pack.md](plans/2026-08-13-sitting-pack.md)
+  + `open-items.html`, establishing a clean SN foundation before the SR tier
+  churns: the nine draft SNs ratified as written (`kind`→core; the SN registry
+  is now 27 core, zero draft), the blessed `Modified` SRs →`Verified`, the
+  thirteen Draft SRs →`Planned`, and the 2.3 lifts (LLR-165/TC-160 →`Planned`).
+  The pack decisions: **2.1 TABLED** to sitting 2 — splitting mints ids into SR
+  text the retier may shuffle, so it waits for the boundary re-statement.
+  **2.2 YES** — the owner confirms "the separate drain dial" IS
+  `keep_nondependent`; the §E.1 replacement applied verbatim. **2.3 YES** —
+  with LLR-165's converter RESURFACED as the downstream-resync helper rather
+  than spent history (resync need not be mechanized; helper functions welcome)
+  — WI-452 minted to wire the resync surfaces to it. **2.4 SWEEP** (overriding
+  the pack's keep recommendation): the 29 SR rationale cells shed the retired
+  SN-013…SN-022 tokens, each parenthetical's content kept as "the dissolved
+  edge expectation that …"; the two in-cell fold annotations (SR-021/SR-026
+  acceptance) stay verbatim per their attestation. Swept rows flip/stay
+  `Modified` — a deliberately re-opened window, sitting 2's to close.
+  **2.5 CONFIRMED** — the narrow chain-flip scoping stands; the WI-419 wide
+  precedent is not extended. **2.6 YES** — the four `gate policy` stale cells
+  re-worded onto the declared ratification level + `session_hold` (SR-085 and
+  SR-108 flip `Modified`; SR-125 re-titled only). **2.7 (a) RULED** — an SR may
+  name an artifact only where it is a DECLARED BOUNDARY CROSSING; but the
+  boundary must be AGREED before the pass runs, so the boundary needs are in
+  (SN-037…SN-040 ratified) and the depth-0 frame is drafted for sitting 2's
+  ruling: [plans/2026-08-13-devstg-boundary-draft.md](plans/2026-08-13-devstg-boundary-draft.md)
+  (its §0 also answers where boundaries live: `interfaces.toml` is the one
+  home; no new registry was ever proposed). WI-451 slice 2 stays gated on that
+  boundary agreement. **NOT ruled here:** the pack's §3 (P5 partition
+  acceptance) and §4 (hats roster) ride sitting 2, which the owner expects to
+  carry significant SR churn and possible retiering. **What sitting 1
+  unmasked:** ratifying the eight SN-033…SN-040 needs turned `uncovered` 0→8 —
+  ratified needs with zero SR children (a Draft SN was exempt from the orphan
+  rule; ratification unmasked it). Expected, not a defect: those needs
+  commission the boundary-conformance pass, whose output is their first
+  coverage — but it bites at `trace.py --strict` from DevBar-Tests on. Basis
+  moved: drafts 51→27, modified 64→51, stage DevStg-Needs→DevStg-Boundary
+  (1/8), gate `DevBar-Reqs` unchanged.
 - **2026-08-13 — The pre-absence batch ruling: fourteen open items ruled in one
   sitting (OI-14, OI-16…OI-28).** Ruled (owner, in session, before an absence,
   with the direction to *charge through as much work as feasible before
@@ -27538,3 +27578,76 @@ line reads honestly: stage=DevStg-Needs, DevBar-Reqs approaching,
 modified=64, drafts=51, uncovered=0, components=4. The owner owes the
 consolidated re-attest sitting and merge-to-main; nothing else waits on a
 human.
+
+## 2026-08-13d — sitting 1 of 2: the SN foundation ratified, the window rotated onto the SR tier
+
+The owner returned and SPLIT the sitting (the ruling is the Decisions entry of
+this date): sitting 1 approves every SN/SR change as the pack shows it; sitting
+2 takes the SR re-statement/retier against agreed boundaries. Executed this
+session, by two subagents under the coordinator:
+
+**The ratification mechanics.** Nine draft SNs `kind`→core (SN registry: 27
+core, zero draft; the Draft-needs section comment now records itself empty as
+of this sitting). SR statuses moved Verified 92→105, Modified 43→30,
+Draft 13→0/Planned 13; LLR-165 and TC-160 Draft→Planned (decision 2.3). The
+30-row `Modified` set is exactly the deliberately re-opened window: the 29
+swept rationale cells (2.4) plus SR-085 (2.6); SR-082 carries the applied §E.1
+replacement (2.2, drain dial confirmed `keep_nondependent`) and the
+`session_hold` re-wording (2.6). Sweep no-loss held by word-multiset diff: the
+only dropped tokens registry-wide are the dead ids, the ruled SR-082
+periphrasis, and the four ruled `gate policy` phrases. Post-sweep scan: the
+only SN-013…SN-022 tokens left in the SR registry are the two attested fold
+annotations (SR-021/SR-026 acceptance), kept verbatim by design.
+
+**The basis moved honestly:** drafts 51→27, modified 64→51, phase 4→5, stage
+DevStg-Needs(0/8)→DevStg-Boundary(1/8), gate `DevBar-Reqs` unchanged — and
+`uncovered` 0→8, the sitting's one unmasked finding (ratified SN-033…SN-040
+have no SR children yet; the boundary-conformance pass is their first
+coverage; details in the Decisions entry).
+
+**Rode the ratification, as its direct consequences:** README gained one
+bullet group citing the seven newly-ratified Must/Should needs as
+"commissioned rather than shipped" (the need-citation floor hard-fails
+otherwise; the opt-out was deliberately not used);
+`tests/test_derive_gate.py`'s `phase=4` snapshot pin bumped to `phase=5` with
+its reason commented; CLAUDE.md and the status Scope carry SN-035's activated
+boundary-prose amendment ("no `run.*` launchers" → "no *product* launch; an
+actions-menu launcher is in scope" — the amendment repo-lock §"launcher needs"
+holds until attestation, now due); WI-452 minted (LLR-165 resync resurface,
+decision 2.3) and the id watermark bumped 451→452.
+
+**The boundary draft for sitting 2** landed at
+[plans/2026-08-13-devstg-boundary-draft.md](plans/2026-08-13-devstg-boundary-draft.md):
+provenance (OI-14 part A-prime minted the rung, OI-21/WI-445 shipped it;
+`interfaces.toml` is the one home, no new registry ever proposed), the
+eleven-party depth-0 frame with 13 crossings missing an IF row and 6 partial,
+the port-vs-internal discriminator (measured 18 port-only / 57 internal of the
+75 script-naming SRs — larger than the pack's ~25/~50 estimate), and the
+duplication answer: no SN has exactly one SR today (median 8; 82 of 148 SRs
+are multi-need), so the recommended invariant is one SR per (need, port), not
+1:1.
+
+**Surfaced, not fixed (sitting-2 / next-touch inputs):** IF-064's contract
+cell still cites SN-016 inline (outside the ruled 29-cell sweep scope); the SN
+registry's comment block still declares the now-empty Edge-case section;
+LLR-165's `test_refs` says TC-159 while TC-160 verifies SR-147/LLR-166 — the
+two 2.3-lifted rows don't point at each other; IF-080/IF-081 declare
+`downstream adopter` but read as internal station seams; SR-035 adds nothing
+over SN-011 (merge candidate — bundle into the re-statement window, don't open
+a second one); the data pack grounds crossings M-15/M-17 in dissolved SNs, so
+the model-provider failure crossing has no live SN owner.
+
+**Deviations from spec:** none against the ruling; the README bullet group and
+the derive-gate pin bump were unenumerated but forced by the ratification
+itself (both recorded above). Byte deltas on budgeted files: none
+(AGENTS.template.md / PROCESS.md / PROCESS_OPTIONS.md untouched).
+
+**Bars.** check_docs: OK — 397 docs, 1137 intra-repo links, 0 broken.
+Full unfiltered suite at the composed tree: 2452 passed, 6 skipped, 0 failed.
+<!-- fig: cmd=".venv/bin/python -m pytest -q -n auto" rev=94408245+sitting-1-worktree -->
+(The pre-watermark-bump runs each showed the single expected
+`test_id_watermark` red for the fresh WI-452 mint; green after
+`trace.py --bump-ids`.)
+
+Push and merge-to-main stay the owner's (`push = "human"`). Sitting 2's queue
+is in `docs/status.md`.

@@ -25,19 +25,20 @@
 #
 # ## Draft needs (unratified)
 #
-# The 2026-08-08 mechanized-loop program
-# (`docs/plan-2026-08-08-mechanized-loop.md`) was built against five needs;
-# the one still below is all the P0 sitting has left to rule on. The other
-# four were dispositioned on 2026-08-10 — one attested into Core needs, three
-# ruled **mis-levelled** and demoted to the requirement tier, their ids
-# retired and never re-minted. Each ruling is recorded in
+# **Empty as of the 2026-08-13 re-attest sitting**, which ratified every row that
+# stood here: the last unruled need of the 2026-08-08 mechanized-loop program
+# (`docs/plan-2026-08-08-mechanized-loop.md`, built against five needs) plus the
+# eight later-minted drafts that had joined it — nine rows, attested by the owner
+# as written and moved into Core needs (`kind = "core"`). That program's other
+# four needs were dispositioned earlier, on 2026-08-10 — one attested into Core
+# needs, three ruled **mis-levelled** and demoted to the requirement tier, their
+# ids retired and never re-minted. Each ruling is recorded in
 # [`log.md`](../log.md)'s Decisions section, **not here**: a prose `SN-###`
 # token anywhere in this file joins the id universe, and one written under
-# this heading reads as a Draft row. It sits here,
-# not in Core needs, for one reason: **ratification is the owner's act**, and
-# that program's own §10 reserves it for the P0 sitting. The machinery says
+# this heading reads as a Draft row. The heading stays declared, and empty, for
+# one reason: **ratification is the owner's act**, and the machinery says
 # so rather than trusting the prose — a Draft SN reads DevBar-Below, so the derived
-# gate DROPS while these are unratified, which is exactly the "a new phase is
+# gate DROPS while any need is unratified, which is exactly the "a new phase is
 # due" signal `docs/gate` exists to give.
 #
 # ## Edge-case expectations
@@ -192,63 +193,63 @@ priority = "S"
 acceptance = """`docs/process.toml` holds every process dial under **bare `[section]` headers**, one `key = value` per line. The SHAPE is checked rather than conventional, because two grammars read the file (`tomllib` and the hooks' sh) and every shape only one of them understands is a silent flip of a security gate; the two readings are pinned equal over a table of adversarial files. A legacy one-word file still present alongside its key is a REFUSAL naming both, and `bootstrap.py --migrate-config` — run by bootstrap and by the documented re-sync — converts and deletes the legacy files so an adopter never meets that refusal un-aided. A wrong-typed or out-of-range dial is refused, never defaulted."""
 
 [need.SN-029]
-kind = "draft"
+kind = "core"
 need = """**An autonomous run gets as far as it honestly can.** Once triggered, the coordinator stops for a human judgement only when the declared ratification level reserves that tier for a human, when a round cannot converge on its own, or when requirement/test documentation is introduced or amended such that the gate drops below what automation is permitted to attest. On every tier released to automation, an approval still happens as a review from a declared perspective against the row's actual evidence, and leaves a record naming who or what approved it — releasing a tier means the review is delegated, never skipped."""
 why = """The unattended layer only pays for itself if a walk-away run actually walks away — so what stops it must be exactly the set of judgements the owner reserved, and nothing else. The three-value gate-authority enum (`attended` / `single-ratify` / `autonomous`) could not express "TCs are human-held but LLRs are not", which is the distinction an owner actually wants to dial; four independent tables each re-interpreted the same word, each with its own fail-safe direction. And "has this been ratified?" was answered by walking git for the newest commit where a row read `Verified` — sound only while every amendment flips its row in the same commit, which is precisely the sanctioned path the amendment detector deliberately ignores. So the blessed way to amend an attested requirement was invisible to every consumer, and a stakeholder need had no anchor at all (an SN has no Status cell)."""
 priority = "S"
 acceptance = """A cumulative 0-4 level names the highest tier a human still ratifies, compared against a separately derived SPINE STAGE (which tier is in process) with a declared mapping to the harness gate; every failure direction — an unreadable stage, an out-of-range level, a wrong-typed dial — resolves toward MORE human involvement, because the failure that matters is a machine ratifying something a human meant to hold; each acceptance is anchored ON THE ACCEPTED ARTIFACT'S OWN ROW — the commit whose tree carries the accepted text, plus a digest of that row's normative cells — never in a second registry keyed on the same artifact; and text that has moved away from what was accepted surfaces regardless of any Status movement, which is the one signal the sanctioned amend-and-flip path would otherwise hide — so an AMENDED requirement drops the derived stage exactly as a newly introduced one does; and each automated approval on a released tier appends a durable record (row, transition, acting reviewer, commit) distinguishable from a human approval by query — releasing a tier means the review is delegated, never skipped."""
 
 [need.SN-033]
-kind = "draft"
+kind = "core"
 priority = "S"
 need = """**Scope: template (adopters + this repo).** A stakeholder can read each stakeholder need and recognize the outcome they asked for without knowing how the repository is built."""
 why = """A need written in internal engineering vocabulary can remain technically current while becoming unreadable to the person whose intent it is supposed to preserve. The resulting failure is an approved requirement spine that no stakeholder can independently validate."""
 acceptance = """The rule applies specifically to each SN `need` cell, not to engineering requirements or acceptance evidence. A declared check reports the row and phrase when a need cell contains an internal path, implementation-only identifier or process citation; a reviewed exception list distinguishes names that are themselves user-facing interfaces. The DevBar-Reqs review evidence includes the resulting findings."""
 
 [need.SN-034]
-kind = "draft"
+kind = "core"
 priority = "S"
 need = """**Scope: template (adopters + this repo).** A person setting up to work on the repository can start each of the two universal contributor actions — preparing their development environment, and resuming the automated development loop — with a single action from the repository's front door, on Windows, macOS and Linux alike (one click where the platform allows it; one obvious command where it does not)."""
 why = """Setup friction is where a new contributor or fresh machine silently diverges from the declared toolchain, and a resume path that needs remembered commands is a resume path that rots. A single visible entry point per platform makes the sanctioned path the easy path. On Linux desktops a bare double-click is unpromisable (the platform requires marking a file executable first), so the promise there is one action, not one click."""
 acceptance = """Both entry points exist at the repository root for each supported platform in a fresh scaffold and in this repository; each launches its action as a single step on that platform, or documents the one platform-required step where a single click is impossible; the adopter-facing guide names the capability and invites reuse. This row is the ONE home for launcher-class obligations — root visibility, one action per platform, both universal contributor actions; SN-025 (self-direction) no longer names a launcher. (Ruled 2026-08-13, OI-17 option (d): the reframe makes this a multi-requirement need, so the demotion test no longer applies.)"""
 
 [need.SN-035]
-kind = "draft"
+kind = "core"
 priority = "C"
 need = """**Scope: this repo (adopters advised).** A person working on this repository can open one launcher that lists the repository's available actions and runs the one they choose, on each platform this repository supports; adopters are told the pattern exists."""
 why = """This repository has a dozen legitimate actions whose invocations are buried in documentation; a menu makes them reachable without remembered commands. This deliberately proposes amending the recorded self-application boundary ("no product launchers" — this repo has no product) to "no product launch": a menu of repository actions is not a product. The boundary prose in the contributor guide and status scope amends only if this need is attested."""
 acceptance = """A root menu launcher exists for this repository's supported platforms, lists actions from one declared action inventory (so completeness is checkable against a single source), and runs the chosen action; the recorded non-goal is amended in the same change that lands the launcher, not before. (Ruled 2026-08-13, OI-17: kept at need tier — the row's subject is the self-application boundary, a stakeholder-level scope decision no requirement cell can carry.)"""
 
 [need.SN-036]
-kind = "draft"
+kind = "core"
 priority = "S"
 need = """**Scope: template (adopters + this repo).** When a stakeholder's need is turned into detailed requirements, it is examined from every relevant expert and downstream-user perspective so important failure cases are not lost."""
 why = """A decomposition produced from one perspective can omit security, operations, accessibility or first-use failures while still appearing complete. The omission remains invisible unless the review records which relevant perspectives were considered and what each contributed."""
 acceptance = """Each decomposition has a machine-readable record of the declared perspectives, the applicability decision for each perspective, and the requirements or explicit no-finding result produced from it. A check reports any applicable declared perspective missing from that record. The record proves coverage and provenance; an independent review judges whether the resulting requirements are adequate."""
 
 [need.SN-037]
-kind = "draft"
+kind = "core"
 priority = "M"
 need = """**Scope: template (adopters + this repo).** A stakeholder can see where each promised system behavior enters or leaves the system, and the architecture changes with those promises instead of being invented afterward."""
 why = """A requirement whose inputs and outputs cannot be located at a declared system boundary cannot be verified or assigned to a responsible component. Updating requirements and architecture separately also leaves periods in which each tells a different story."""
 acceptance = """Every system-requirement input and output references a declared interface; every referenced interface identifies its boundary endpoints and whether its signal is discrete or variable; every declared component-boundary crossing has an interface row; unresolved references, uncovered crossings and incompatible signal types are mechanical findings. A reviewed change that alters one side of the requirement/interface relationship must include or explicitly justify the corresponding change on the other side."""
 
 [need.SN-038]
-kind = "draft"
+kind = "core"
 priority = "M"
 need = """**Scope: template (adopters + this repo).** An adopter can determine why every file supplied by the kit exists and which stakeholder outcome it supports."""
 why = """A supplied file with no recorded purpose becomes inherited scope creep: adopters carry, maintain and trust it even though nobody can explain what failure its removal would cause. The absence must appear as a named coverage finding rather than remain hidden in the tree."""
 acceptance = """A declared shipped-file inventory defines the coverage universe and its exclusions. Every inventoried file maps to at least one system requirement whose references resolve to a stakeholder need; generated outputs may map through their generator. A mechanical check reports missing files, stale inventory entries, unresolved references and files with no mapping, and applies the declared warning-to-gating policy."""
 
 [need.SN-039]
-kind = "draft"
+kind = "core"
 priority = "S"
 need = """**Scope: template (adopters + this repo).** An adopter can tell whether each stakeholder need applies to the reusable template, this repository alone, or both, without inferring scope from surrounding prose."""
 why = """A need whose audience is ambiguous gets enforced against the wrong repositories: an obligation meant only for the template's own upkeep leaks into every adopter's process, or a template promise is quietly treated as one repository's habit. The scope must be a declared value a check can read, not a reading-between-the-lines exercise."""
 acceptance = """Every non-example stakeholder-need row carries a required scope value from a closed vocabulary (template / this repository / both); a checker reports a missing or invalid value; the scope field enters the registry schema in the scheduled schema batch rather than as a one-off column."""
 
 [need.SN-040]
-kind = "draft"
+kind = "core"
 priority = "S"
 need = """**Scope: template (adopters + this repo).** A stakeholder can obtain a repeatable explanation for why the system was divided into its chosen components, based on the system's declared inputs, outputs and internal signal trade-offs rather than an unrecorded model judgment."""
 why = """A component breakdown invented free-form by a model (or a person) leaves no record of the alternatives weighed, so the next reviser cannot tell load-bearing boundaries from accidents. Deriving the partition from the system's own declared inputs and outputs, against a declared objective, leaves evidence the choice can be re-examined against."""

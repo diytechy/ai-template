@@ -118,7 +118,10 @@ that easier to achieve in a real project — or get out of the way.
   `project-trajectory/scripts` + `tests/`. Keep these **distinct from the
   templates the kit ships** in `project-trajectory/registries/`: those are the
   blank forms an adopter fills; these are the kit's *own, filled* registries.
-  (`run.*` launchers stay un-self-applied — a meta-repo has no product to launch.)
+  (The self-application boundary is "no *product* launch" — a meta-repo has no
+  product to launch, so `run.*` product launchers stay un-self-applied; an
+  actions-menu launcher is in scope. Amended from "no `run.*` launchers" at the
+  2026-08-13 sitting, on SN-035's attestation.)
 - [`docs/enforcement-audit.md`](docs/enforcement-audit.md) — the kit's worked
   **enforcement audit** (dogfooding the `PROCESS_OPTIONS.md` discipline): each
   process/working-agreement rule mapped to its strongest enforcer

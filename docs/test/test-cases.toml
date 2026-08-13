@@ -1614,7 +1614,7 @@ tier = "Smoke"
 expected = "Satisfies SR-147 AcceptanceCriteria"
 automated = "Yes"
 evidence = "tests/test_trajectory_staged.py::test_baseline_read_survives_the_carrier_cutover"
-status = "Draft"
+status = "Planned"
 phase = 5
 
 

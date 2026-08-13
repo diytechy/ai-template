@@ -18,7 +18,7 @@ rationale = """Realizes SN-002 — a misaligned or duplicated id corrupts the jo
 acceptance_criteria = """--strict-integrity exits 1 on a duplicate/malformed SR/LLR/TC/PB/REPO/MOD/PART/ASSET/CMP/IF id, a mis-columned row, or an incoherent SR/LLR pairing in one TC, and 0 otherwise; orphans do not affect it. MOD is the legacy compatibility id for current REPO rows."""
 priority = "M"
 verification = "Test"
-status = "Modified"
+status = "Verified"
 phase = 1
 area = "Traceability"
 
@@ -26,11 +26,11 @@ area = "Traceability"
 title = "Placeholder and schema checks"
 sn_refs = ["SN-002"]
 requirement = """trace.py shall, under --no-placeholders, flag any leftover -000 example row, and under --strict-schema, require non-empty required fields and in-vocabulary Verification/Tier values."""
-rationale = """Realizes SN-022 (a committed placeholder at a gate is a finding) and SN-002 (a real row missing a required cell breaks the trace)."""
+rationale = """Realizes the dissolved edge expectation that a committed placeholder at a gate is a finding and SN-002 (a real row missing a required cell breaks the trace)."""
 acceptance_criteria = """--no-placeholders reports every -000 row across SR/LLR/TC and the SN doc; --strict-schema reports an empty required field or an out-of-vocabulary Verification/Tier value."""
 priority = "M"
 verification = "Test"
-status = "Verified"
+status = "Modified"
 phase = 1
 area = "Traceability"
 
@@ -42,7 +42,7 @@ rationale = """Realizes SN-002 by keeping acceptance criteria testable, while le
 acceptance_criteria = """A comparative claim with no pinning predicate marker emits a stdout WARNING and a report line; the exit code is unchanged."""
 priority = "S"
 verification = "Test"
-status = "Modified"
+status = "Verified"
 phase = 1
 area = "Traceability"
 
@@ -62,7 +62,7 @@ area = "Off-spine registries"
 title = "Gate/tier harness enforces required steps"
 sn_refs = ["SN-004", "SN-008"]
 requirement = """check.py shall run the required steps of the gate that must next be passed (the strictness selector cached in docs/gate) and fail that gate when a required tool is missing, reporting SKIP(missing) rather than silently passing."""
-rationale = """Realizes SN-004 (gates enforce their bar), SN-008 (no false green) and SN-014 (a missing tool fails, never skips). The work-branch lane skip is SR-133's obligation (one row, one obligation)."""
+rationale = """Realizes SN-004 (gates enforce their bar), SN-008 (no false green) and the dissolved edge expectation that a missing tool fails, never skips. The work-branch lane skip is SR-133's obligation (one row, one obligation)."""
 acceptance_criteria = """check.py --gate <bar> runs that bar's steps; a required-but-absent tool fails the gate with guidance (never a silent pass), and --lenient degrades it to SKIP; --tier selects the declared step subset."""
 priority = "M"
 verification = "Test"
@@ -198,7 +198,7 @@ rationale = """Realizes SN-009 — a credential that reaches a shared branch mus
 acceptance_criteria = """A staged PEM header, token, or key pattern is flagged and blocks; a clean diff passes; the floor runs with privacy-check off, and is disabled only by an explicit secrets_scan = false."""
 priority = "M"
 verification = "Test"
-status = "Modified"
+status = "Verified"
 phase = 1
 area = "Secrets + privacy lint"
 
@@ -210,7 +210,7 @@ rationale = """Realizes SN-009 — identity and PII classes are a policy choice 
 acceptance_criteria = """With privacy-check on, an identity/PII class is flagged unless the author is in EXEMPT_EMAILS; with it off, only the secrets floor runs."""
 priority = "M"
 verification = "Test"
-status = "Modified"
+status = "Verified"
 phase = 1
 area = "Secrets + privacy lint"
 
@@ -222,7 +222,7 @@ rationale = """Realizes SN-005 and SN-009 — a floor only CI enforces is one th
 acceptance_criteria = """The hook runs trace --strict-integrity and the secrets scan on staged content and blocks a commit that fails either; and the same git+CI floor shares one definition of passing per moment — the reference CI workflow invokes the same harness entry point at the tier the declared moment-to-tier table (docs/stack.ini [ci-tiers]) assigns to each trigger, pinned by tests/test_ci_tier_declaration.py (OI-24, 2026-08-13)."""
 priority = "M"
 verification = "Test"
-status = "Modified"
+status = "Verified"
 phase = 1
 area = "Git hooks"
 
@@ -242,7 +242,7 @@ area = "Git hooks"
 title = "Hook python probe"
 sn_refs = ["SN-001"]
 requirement = """The git hooks and the root launchers (dev-setup / agent-resume, the coordinator's entry) shall locate a working python3 by running a candidate and skip-or-report clearly when none resolves or a Store-alias exits nonzero."""
-rationale = """Realizes SN-013 — no cryptic crash when the interpreter is absent or a Windows Store alias."""
+rationale = """Realizes the dissolved edge expectation that the interpreter is probed by running a candidate — no cryptic crash when the interpreter is absent or a Windows Store alias."""
 acceptance_criteria = """With no working python3 the hook and each root launcher report clearly and do not crash cryptically; with one, they run their action. (The launcher half folded in from retired SN-013's expectation at the 2026-08-13 dissolution — the review round caught that SR-021 alone carried only the hooks.)"""
 priority = "M"
 verification = "Test"
@@ -266,11 +266,11 @@ area = "Vendored-doc drift"
 title = "Arch-map generation"
 sn_refs = ["SN-010"]
 requirement = """gen_arch_map.py shall regenerate the symbol map inside its marker block and, under --check, fail when the committed map has drifted from source."""
-rationale = """Realizes SN-010 and SN-021 — a generated view cannot silently rot; --check makes drift a red."""
+rationale = """Realizes SN-010 and the dissolved edge expectation that a generated artifact drifting from its source fails its --check — a generated view cannot silently rot; --check makes drift a red."""
 acceptance_criteria = """--check fails when the map is stale and passes when current; regeneration rewrites only the marker block."""
 priority = "S"
 verification = "Test"
-status = "Verified"
+status = "Modified"
 phase = 1
 area = "Arch-map generation"
 
@@ -290,11 +290,11 @@ area = "Permutation case gen"
 title = "Skills index + checked per-agent fan-out"
 sn_refs = ["SN-012"]
 requirement = """gen_skills_index.py shall regenerate skills/INDEX.csv from each SKILL.md applicability frontmatter."""
-rationale = """Realizes SN-012 (opt-in accelerators) and SN-021 — a hand-maintained index drifts from the skills it indexes, and an index that disagrees with its sources is worse than none, because it is trusted. Requiring each author to update the index by hand was rejected for the same reason the traceability matrix is generated: the discipline fails silently."""
+rationale = """Realizes SN-012 (opt-in accelerators) and the dissolved edge expectation that a generated artifact drifting from its source fails its --check — a hand-maintained index drifts from the skills it indexes, and an index that disagrees with its sources is worse than none, because it is trusted. Requiring each author to update the index by hand was rejected for the same reason the traceability matrix is generated: the discipline fails silently."""
 acceptance_criteria = """The regenerated INDEX.csv reflects the current SKILL.md frontmatter, and a drifted index is detectable."""
 priority = "C"
 verification = "Test"
-status = "Verified"
+status = "Modified"
 phase = 1
 area = "Skills index + fan-out"
 
@@ -308,7 +308,7 @@ resumes from its explicit claimed assignment plus the committed trailer evidence
 on its branch, and the integrator (SR-132) derives claim/queue state from trunk
 history alone.
 docs/status.md is a generated reference surface (SR-059), never a session input."""
-rationale = """Realizes SN-006 and SN-016 — an unattended run blocked on a prompt is indistinguishable from a hung one and holds its lane until a human notices. Keeping a separate serial resume path beside the dispatcher was rejected: two authorities over one decision drift, and the divergence surfaces as a run that resumes differently depending on how it was started."""
+rationale = """Realizes SN-006 and the dissolved edge expectation that an unattended run never blocks on a prompt, at launch or mid-run — an unattended run blocked on a prompt is indistinguishable from a hung one and holds its lane until a human notices. Keeping a separate serial resume path beside the dispatcher was rejected: two authorities over one decision drift, and the divergence surfaces as a run that resumes differently depending on how it was started."""
 acceptance_criteria = """A worker reconciles from its assignment + committed evidence and the integrator from trunk history; every mode runs with stdin closed and a prompt cannot wedge it; a model rate limit backs off rather than failing the run, and a stall aborts to protect the budget. (The backoff/budget clauses folded in from retired SN-016's expectation at the 2026-08-13 dissolution — the review round caught that no SR carried them.)"""
 priority = "S"
 verification = "Test"
@@ -320,11 +320,11 @@ area = "Unattended coordinator"
 title = "Coordinator preflight"
 sn_refs = ["SN-006"]
 requirement = """agent_loop.py shall refuse a broken footing in preflight — not a git repo, no agent CLI, or a private author under privacy-check — exiting a typed nonzero code rather than hanging."""
-rationale = """Realizes SN-006 and SN-015 — a run that starts on a broken footing fails later and further from the cause, and an unattended loop cannot be asked what went wrong. Continuing with a warning was rejected: each of these conditions makes every subsequent step meaningless, so a typed nonzero exit is what lets the caller act on it."""
+rationale = """Realizes SN-006 and the dissolved edge expectation that a preflight on a non-git working directory reports and exits nonzero rather than hanging — a run that starts on a broken footing fails later and further from the cause, and an unattended loop cannot be asked what went wrong. Continuing with a warning was rejected: each of these conditions makes every subsequent step meaningless, so a typed nonzero exit is what lets the caller act on it."""
 acceptance_criteria = """Outside a git repo, with no agent CLI, or with a private author under privacy-check, preflight exits a typed nonzero code."""
 priority = "S"
 verification = "Test"
-status = "Verified"
+status = "Modified"
 phase = 1
 area = "Unattended coordinator"
 
@@ -332,11 +332,11 @@ area = "Unattended coordinator"
 title = "Coordinator typed outcomes"
 sn_refs = ["SN-006"]
 requirement = """agent_loop.py shall end each session in a typed outcome code, guard a zero-commit HEAD, and report an all-ERROR stall as an unavailable agent rather than a work stall."""
-rationale = """Realizes SN-006, SN-019 and SN-020 — a coordinator ending in an untyped code forces its caller to parse prose; a session that produced no commit still has a HEAD to report, so without a guard an empty run is indistinguishable from a productive one in the record it leaves; and an all-ERROR run reported as a work stall sends a human looking for a blocked work item that does not exist. Treating an agent error as a stall was rejected for that reason: an unreachable agent and a blocked item need different responses, so they need different outcomes."""
+rationale = """Realizes SN-006 and the dissolved edge expectations that a repository with no commits yet (HEAD absent) does not crash the loop and that an all-ERROR run is an unavailable agent rather than a work stall — a coordinator ending in an untyped code forces its caller to parse prose; a session that produced no commit still has a HEAD to report, so without a guard an empty run is indistinguishable from a productive one in the record it leaves; and an all-ERROR run reported as a work stall sends a human looking for a blocked work item that does not exist. Treating an agent error as a stall was rejected for that reason: an unreachable agent and a blocked item need different responses, so they need different outcomes."""
 acceptance_criteria = """A repo with no commits does not crash the loop; an agent-CLI error is logged ERROR; an all-ERROR region is reported as an unavailable agent."""
 priority = "S"
 verification = "Test"
-status = "Verified"
+status = "Modified"
 phase = 1
 area = "Unattended coordinator"
 
@@ -344,11 +344,11 @@ area = "Unattended coordinator"
 title = "Coordinator lock auto-release"
 sn_refs = ["SN-025"]
 requirement = """The per-worktree coordinator lock shall be a kernel advisory lock the OS releases on process death, leaving no stale-pid wedge."""
-rationale = """Realizes SN-017 — the dispatcher, each worker and an interactive sitting all take this lock, so a holder that dies without releasing it wedges every one of them behind an entry nobody can safely clear. A pid file plus a liveness check was rejected because it cannot decide the case it exists for: if the pid has been reused the check sees a live process and keeps a dead lock forever, and if it guesses the other way it clears a lock that is still held. A kernel advisory lock releases on process death by construction, so the question never arises."""
+rationale = """Realizes the dissolved edge expectation that a coordinator killed mid-session leaves the next run un-wedged — the dispatcher, each worker and an interactive sitting all take this lock, so a holder that dies without releasing it wedges every one of them behind an entry nobody can safely clear. A pid file plus a liveness check was rejected because it cannot decide the case it exists for: if the pid has been reused the check sees a live process and keeps a dead lock forever, and if it guesses the other way it clears a lock that is still held. A kernel advisory lock releases on process death by construction, so the question never arises."""
 acceptance_criteria = "After the lock holder dies, the next run acquires the lock; no stale-pid file blocks it."
 priority = "S"
 verification = "Test"
-status = "Verified"
+status = "Modified"
 phase = 1
 area = "Parallel tracks"
 
@@ -356,11 +356,11 @@ area = "Parallel tracks"
 title = "Second coordinator refused"
 sn_refs = ["SN-006"]
 requirement = """agent_loop.py shall refuse a second coordinator in the same checkout, preventing a two-writer race."""
-rationale = """Realizes SN-018 and SN-006 — two coordinators in one checkout write the same working tree, and the loser's commits interleave into the winner's diff where no review will separate them. Coordinating by convention was rejected: the failure is silent and shows up only as a garbled history."""
+rationale = """Realizes the dissolved edge expectation that a second coordinator launched in the same checkout is refused, and SN-006 — two coordinators in one checkout write the same working tree, and the loser's commits interleave into the winner's diff where no review will separate them. Coordinating by convention was rejected: the failure is silent and shows up only as a garbled history."""
 acceptance_criteria = "A second coordinator on a held lock is refused; only one writer runs per checkout."
 priority = "S"
 verification = "Test"
-status = "Verified"
+status = "Modified"
 phase = 1
 area = "Parallel tracks"
 
@@ -372,7 +372,7 @@ rationale = """Realizes SN-004 (policies drive the gate) and SN-005 (one source,
 acceptance_criteria = """Every enforcer reads the same value for the same dial; the hooks' sh and tomllib return the same answer over the adversarial file-shape table (including a trailing-comment decoy, which once made the privacy gate fail OPEN); a legacy file present alongside its key is a refusal naming both."""
 priority = "M"
 verification = "Test"
-status = "Modified"
+status = "Verified"
 phase = 1
 area = "Declared-policy readers"
 
@@ -408,7 +408,7 @@ rationale = """Realizes SN-011 — the kit must impose no *unargued* dependency 
 acceptance_criteria = """An AST scan of scripts/*.py resolves every top-level import to stdlib, a local sibling, or a Kind=python row in docs/dependencies.md; an undeclared non-stdlib import fails the suite; every declared row names what it replaces, why hand-rolling is worse, and the ruling that admitted it; a shipped-tier row (one an adopter is forced to install) exists only with an owner ruling recorded in the ledger, stdlib remaining preferred there."""
 priority = "M"
 verification = "Analysis"
-status = "Modified"
+status = "Verified"
 phase = 1
 area = "Portability"
 
@@ -420,7 +420,7 @@ rationale = """Realizes SN-003 — a method that presumes one language is re-der
 acceptance_criteria = "The ID scheme is language-neutral."
 priority = "M"
 verification = "Analysis"
-status = "Modified"
+status = "Verified"
 phase = 1
 area = "Portability"
 
@@ -475,7 +475,7 @@ review_rounds, default 1; the legacy docs/review-policy is still read through
 the migration window) at run start without enforcing it.
 It shall warn (never block) when a lane resume surface exceeds the declared size
 threshold."""
-rationale = """Realizes SN-006 and SN-016 — two samples of one model share blind spots, so a review by the family that built the change agrees with it for the wrong reasons; cross-family routing is what makes the second opinion independent, and one model for every phase was rejected on that basis. Dispatch stays keyed off the in-process session phase because the alternative, a per-phase code branch, makes adding a phase a code change and so discourages adding one. The resume surface's growth tripwire warns rather than fails because a growing resume surface is a smell and not a defect, and failing on a smell trains an operator to bypass the check."""
+rationale = """Realizes SN-006 and the dissolved edge expectation that an unattended run never blocks on a prompt, at launch or mid-run — two samples of one model share blind spots, so a review by the family that built the change agrees with it for the wrong reasons; cross-family routing is what makes the second opinion independent, and one model for every phase was rejected on that basis. Dispatch stays keyed off the in-process session phase because the alternative, a per-phase code branch, makes adding a phase a code change and so discourages adding one. The resume surface's growth tripwire warns rather than fails because a growing resume surface is a smell and not a defect, and failing on a smell trains an operator to bypass the check."""
 acceptance_criteria = """A mapped session phase invokes its own command template and the default template does not fire; a broken map entry fails preflight before iteration 1; the banner surfaces the reviewer dial from docs/process.toml [policies] review_rounds; an oversized status.md warns on stderr while the run proceeds; AGENT_STATUS_WARN_BYTES=0 silences."""
 priority = "M"
 verification = "Test"
@@ -512,7 +512,7 @@ rationale = """Realizes SN-010 and SN-012 — traceability and process knowledge
 acceptance_criteria = """One frontmatter-typed file per real SN/SR/LLR/TC row whose graph links resolve; a Process Guide concept for each present process doc carrying a summary derived from the doc (not hand-authored) with the source left unmodified; regeneration is byte-identical; --check trips on a registry OR doc edit, a missing bundle and a hand-added file; the write mode prunes extras; off and placeholder-only registries pass silently, and process guides emit only alongside a real spine."""
 priority = "M"
 verification = "Test"
-status = "Modified"
+status = "Verified"
 phase = 1
 area = "Knowledge export"
 
@@ -524,7 +524,7 @@ rationale = """Realizes SN-006 (a walk-away run stays safe — bounded, supervis
 acceptance_criteria = """With [checks] subagent_gate = "deny": a Task/Agent spawn is refused (permissionDecision=deny, exit 2); ask defers to approval; off/absent and SUBAGENT_GATE=allow allow it; a non-spawn tool is not gated; a malformed payload fails open (allow) and is logged."""
 priority = "S"
 verification = "Test"
-status = "Modified"
+status = "Verified"
 phase = 1
 area = "Unattended coordinator"
 
@@ -572,7 +572,7 @@ rationale = """Realizes SN-001 - the evaluator's rungs make running the product 
 acceptance_criteria = """run_menu.py --list prints one name<TAB>desc line per declared capability in declaration order; run_menu.py <name> runs that capability's command and returns its exit code; the no-arg menu launches a stdin-selected capability non-interactively and does not hang on closed stdin; an absent/empty [run] section prints guidance and exits 1; a name.desc row renders in the menu and list; the run.* launchers delegate to run_menu.py with no RUN_CMD; the scaffold ships run_menu.py plus the delegate launchers."""
 priority = "S"
 verification = "Test"
-status = "Modified"
+status = "Verified"
 phase = 1
 area = "Onboarding + dev-setup"
 
@@ -619,7 +619,7 @@ rationale = """SSOT applied to the gate itself (docs/archive/specs/derived-gate-
 acceptance_criteria = """derive_gate.py --print on the meta computes the per-phase gates from the current states (a Modified SR's phase reads DevBar-Tests until re-attested); --check exits nonzero when a state change is not reflected in the cached docs/gate basis; the compared line includes the modified=N count."""
 priority = "M"
 verification = "Test"
-status = "Modified"
+status = "Verified"
 phase = 1
 
 [requirement.SR-050]
@@ -640,7 +640,7 @@ The tab shall be data-derived where a canonical source exists (docs/gate, the
 spine registries, the WI registry (docs/work/)); self-contained and
 byte-deterministic; a data-less repo renders byte-identically; --check
 freshness unchanged."""
-rationale = """Realizes SN-010 and SN-021 — the dashboard shows project state but not the method that produced it, so a reader sees what is happening without seeing why it is allowed to happen. Restating the process docs in-view was rejected because it creates a second home that drifts: the view links out wherever a canonical home exists and restates only relationships no single doc states. Generating it is the ideal; a static-authored panel downgrades verification to adjudication by an independent critical eye."""
+rationale = """Realizes SN-010 and the dissolved edge expectation that a generated artifact drifting from its source fails its --check — the dashboard shows project state but not the method that produced it, so a reader sees what is happening without seeing why it is allowed to happen. Restating the process docs in-view was rejected because it creates a second home that drifts: the view links out wherever a canonical home exists and restates only relationships no single doc states. Generating it is the ideal; a static-authored panel downgrades verification to adjudication by an independent critical eye."""
 acceptance_criteria = """The Process tab renders the three panels; the current-gate highlight reflects docs/gate and the tier counts match the registries; process-doc links resolve; a bundle-/data-less repo renders byte-identically; generation is byte-deterministic and --check trips on stale output."""
 priority = "C"
 verification = "Test"
@@ -681,7 +681,7 @@ rationale = """Realizes SN-024 and SN-023 — how alike is alike enough is subje
 acceptance_criteria = """A fresh family-heterogeneous CRITIQUE session judging the generated dashboard against docs/rubrics/dashboard-uniformity.md (authored at [v3]-[g2]) returns APPROVE citing numbered anchors; type scale, color vocabulary, per-emitter node/edge/legend styling, and interaction-idiom consistency are each a rubric anchor."""
 priority = "C"
 verification = "Test"
-status = "Modified"
+status = "Verified"
 phase = 3
 area = "Trajectory"
 
@@ -714,7 +714,7 @@ each stage links to its canonical home (status.md, the WI registry
 the panels stay data-derived where a canonical source exists, self-contained,
 byte-deterministic; a data-less repo renders byte-identically and --check
 freshness is unchanged."""
-rationale = """Realizes SN-010 and SN-021 — the Process tab shows the artifact lifecycle, the resume loop and the slice cadence, but not how work ENTERS or how the human decides, which are the two circular flows that close the method's loop; without them a reader sees the machine and not the way into it. Folding them into the existing panels was rejected: they are loops, and a linear lifecycle panel cannot show a cycle."""
+rationale = """Realizes SN-010 and the dissolved edge expectation that a generated artifact drifting from its source fails its --check — the Process tab shows the artifact lifecycle, the resume loop and the slice cadence, but not how work ENTERS or how the human decides, which are the two circular flows that close the method's loop; without them a reader sees the machine and not the way into it. Folding them into the existing panels was rejected: they are loops, and a linear lifecycle panel cannot show a cycle."""
 acceptance_criteria = """The Process tab renders both loop panels with the shared LLM_Agent entry point appearing once; every stage's link resolves to its canonical doc; the gate-ratification stage appears in loop B; a data-less repo renders byte-identically; generation is byte-deterministic and --check trips on stale output."""
 priority = "C"
 verification = "Test"
@@ -746,7 +746,7 @@ rationale = """Realizes SN-025 and SN-006 — readiness read from prose is a dec
 acceptance_criteria = """On a fixture registry the ready set contains exactly the WIs whose hard predecessors are done, and excludes each blocked/deferred/claimed/exclusive-conflicting WI with a stated reason code."""
 priority = "M"
 verification = "Test"
-status = "Modified"
+status = "Verified"
 phase = 4
 area = "Parallel dispatch"
 
@@ -776,7 +776,7 @@ rationale = """Realizes SN-025 and SN-010 — the WI DAG, gate class, Priority a
 acceptance_criteria = """A fresh scaffold ships no next-wi/run-phase and is parallel-by-default; no live instruction or executable surface reads, writes, validates, generates or links next-wi; a build-out lane's phase resolves from its {phase}-{gate} branch with run-phase absent."""
 priority = "M"
 verification = "Test"
-status = "Modified"
+status = "Verified"
 phase = 4
 area = "Parallel dispatch"
 
@@ -796,7 +796,7 @@ rationale = """Realizes SN-025 and SN-006 - dynamic lanes/traincars replace long
 acceptance_criteria = """A worker runs from an explicit claimed assignment with no lane files; two concurrent workers write non-colliding logs/review evidence; a worker branch never mutates root coordination truth."""
 priority = "M"
 verification = "Test"
-status = "Modified"
+status = "Verified"
 phase = 4
 area = "Parallel dispatch"
 
@@ -886,7 +886,7 @@ rationale = """Realizes SN-002;SN-012 by isolating one independently reviewable 
 acceptance_criteria = """Valid rows pass; malformed ids, unknown predecessors, and cycles name the offender and fail; absent, placeholder-only, and opted-out registries pass."""
 priority = "M"
 verification = "Test"
-status = "Modified"
+status = "Verified"
 phase = 1
 area = "Trajectory"
 
@@ -918,11 +918,11 @@ area = "Trajectory"
 title = "Offline project-state core"
 sn_refs = ["SN-010"]
 requirement = """gen_trajectory.py shall generate one self-contained root HTML file containing completeness tiles, the SN-to-SR-to-LLR-to-TC hierarchy, and the WI roadmap DAG."""
-rationale = """Realizes SN-010;SN-021 by isolating one independently reviewable obligation formerly carried by SR-038."""
+rationale = """Realizes SN-010 and the dissolved edge expectation that a generated artifact drifting from its source fails its --check, by isolating one independently reviewable obligation formerly carried by SR-038."""
 acceptance_criteria = """The root file renders all three registry-derived views without external fetches and remains usable offline."""
 priority = "M"
 verification = "Test"
-status = "Verified"
+status = "Modified"
 phase = 1
 area = "Trajectory"
 
@@ -930,11 +930,11 @@ area = "Trajectory"
 title = "Conditional dashboard architecture and knowledge views"
 sn_refs = ["SN-010"]
 requirement = """gen_trajectory.py shall render software/component and OKF knowledge views only when their source bundles exist, omitting each view when its source is absent."""
-rationale = """Realizes SN-010;SN-021 by isolating one independently reviewable obligation formerly carried by SR-038."""
+rationale = """Realizes SN-010 and the dissolved edge expectation that a generated artifact drifting from its source fails its --check, by isolating one independently reviewable obligation formerly carried by SR-038."""
 acceptance_criteria = """Each source-backed view renders when present; removing its source omits it, and a source-less repo remains byte-stable."""
 priority = "M"
 verification = "Test"
-status = "Verified"
+status = "Modified"
 phase = 1
 area = "Trajectory"
 
@@ -942,11 +942,11 @@ area = "Trajectory"
 title = "Deterministic responsive dashboard freshness"
 sn_refs = ["SN-010"]
 requirement = "gen_trajectory.py shall produce byte-deterministic responsive output."
-rationale = """Realizes SN-010 and SN-021 — a generated dashboard that differs between runs cannot be freshness-checked, because every check reports a diff and the real staleness hides among them. Comparing rendered screenshots was rejected: it is expensive and still non-deterministic."""
+rationale = """Realizes SN-010 and the dissolved edge expectation that a generated artifact drifting from its source fails its --check — a generated dashboard that differs between runs cannot be freshness-checked, because every check reports a diff and the real staleness hides among them. Comparing rendered screenshots was rejected: it is expensive and still non-deterministic."""
 acceptance_criteria = "Repeated generation is byte-identical, and mobile CSS is present."
 priority = "M"
 verification = "Test"
-status = "Verified"
+status = "Modified"
 phase = 1
 area = "Trajectory"
 
@@ -970,7 +970,7 @@ rationale = """Realizes SN-023;SN-002 by isolating one independently reviewable 
 acceptance_criteria = """Each uncovered condition warns without changing exit status; source/sink notes and docs/process.toml [checks] interfaces_check = false suppress their declared cases; a small or absent inventory is vacuous."""
 priority = "M"
 verification = "Test"
-status = "Modified"
+status = "Verified"
 phase = 1
 area = "Architecture connectivity"
 
@@ -1026,7 +1026,7 @@ area = "Architecture connectivity"
 title = "Agent pair-row routing"
 sn_refs = ["SN-026", "SN-006"]
 requirement = """agent_route.py shall parse and select the pair-row registry with enable-list resolution, version ordering, Env merge, cooldown, family preference/fallback, and tier-up-never-down."""
-rationale = """Realizes SN-026;SN-006;SN-016 by isolating one independently reviewable obligation formerly carried by SR-045."""
+rationale = """Realizes SN-026;SN-006 and the dissolved edge expectation that an unattended run never blocks on a prompt, at launch or mid-run, by isolating one independently reviewable obligation formerly carried by SR-045."""
 acceptance_criteria = """Selection obeys registry order and all routing constraints, resolves version-less tokens deterministically, merges Env, preserves legacy Provider compatibility, and reports no route honestly."""
 priority = "S"
 verification = "Test"
@@ -1038,7 +1038,7 @@ area = "Unattended loop"
 title = "Managed review-session scheduling"
 sn_refs = ["SN-026", "SN-006"]
 requirement = """The unattended coordinator shall schedule review-policy sessions with redacted prompt-map briefs, parse verdicts, and log selections while preserving unmanaged behavior without an enable-list."""
-rationale = """Realizes SN-026;SN-006;SN-016 by isolating one independently reviewable obligation formerly carried by SR-045."""
+rationale = """Realizes SN-026;SN-006 and the dissolved edge expectation that an unattended run never blocks on a prompt, at launch or mid-run, by isolating one independently reviewable obligation formerly carried by SR-045."""
 acceptance_criteria = """Policies 0/1/2 schedule zero/one/two reviewers; prompt-map preflight and redaction hold; every selection is logged; unmanaged mode retains legacy behavior."""
 priority = "S"
 verification = "Test"
@@ -1050,20 +1050,20 @@ area = "Unattended loop"
 title = "Review substance scoring"
 sn_refs = ["SN-006"]
 requirement = """score_reviews.py shall score review substance into advisory decay history while treating severity hygiene and anti-gaming tripwires as non-scored gates and never rewarding length."""
-rationale = """Realizes SN-006;SN-016 by isolating one independently reviewable obligation formerly carried by SR-045."""
+rationale = """Realizes SN-006 and the dissolved edge expectation that an unattended run never blocks on a prompt, at launch or mid-run, by isolating one independently reviewable obligation formerly carried by SR-045."""
 acceptance_criteria = """Component scores, corroboration, decay, and every tripwire match their fixtures; length adds no score; verdict and scoreboard round trips are deterministic."""
 priority = "S"
 verification = "Test"
-status = "Verified"
+status = "Modified"
 phase = 1
 area = "Unattended loop"
 
 [requirement.SR-082]
 title = "Fixed review escalation"
 sn_refs = ["SN-006"]
-requirement = """The coordinator shall apply fixed win-stay/lose-shift escalation and page for shared failure, contradictions and tripwires per the declared ratification level, keyed on whether the tier in process is still the human's to ratify and on the separate drain dial the retired three-value enum bundled into the same word."""
-rationale = """Realizes SN-006;SN-016 by isolating one independently reviewable obligation formerly carried by SR-045."""
-acceptance_criteria = """Two failed gates swap family, a failed swap raises tier, and shared top-tier failure, contradictions, or tripwires page according to gate policy."""
+requirement = """The coordinator shall apply fixed win-stay/lose-shift escalation and page for shared failure, contradictions and tripwires per the declared ratification level, keyed on two separate dials: whether the tier in process is still the human's to ratify (human_ratification_through), and whether non-dependent work keeps running while a ratification is queued (keep_nondependent)."""
+rationale = """Realizes SN-006 and the dissolved edge expectation that an unattended run never blocks on a prompt, at launch or mid-run, by isolating one independently reviewable obligation formerly carried by SR-045."""
+acceptance_criteria = """Two failed gates swap family, a failed swap raises tier, and shared top-tier failure, contradictions, or tripwires page according to the declared ratification level and the run's derived session_hold."""
 priority = "S"
 verification = "Test"
 status = "Modified"
@@ -1074,7 +1074,7 @@ area = "Unattended loop"
 title = "Dual-plan planner-pair selection"
 sn_refs = ["SN-026", "SN-006"]
 requirement = """agent_route.py shall select two fresh planner hats across families where possible and use the bounded runtime-nonresponse fallback."""
-rationale = """Realizes SN-026;SN-006;SN-016 by isolating one independently reviewable obligation formerly carried by SR-045."""
+rationale = """Realizes SN-026;SN-006 and the dissolved edge expectation that an unattended run never blocks on a prompt, at launch or mid-run, by isolating one independently reviewable obligation formerly carried by SR-045."""
 acceptance_criteria = """Two-family pools diversify; one-family and single-row pools create fresh sessions with reason codes; nonresponse excludes the dead family; no responder is explicit."""
 priority = "S"
 verification = "Test"
@@ -1090,19 +1090,19 @@ rationale = """Realizes SN-026;SN-024;SN-006 by isolating one independently revi
 acceptance_criteria = """Critique-scoped builds schedule the session; other builds do not; the prompt contains rubric/intent/recipe and excludes build transcript and self-assessment."""
 priority = "S"
 verification = "Test"
-status = "Modified"
+status = "Verified"
 phase = 1
 area = "Unattended loop"
 
 [requirement.SR-085]
 title = "Bounded critique rework loop"
 sn_refs = ["SN-024", "SN-006"]
-requirement = """The coordinator shall iterate BUILD-to-CRITIQUE rework within AGENT_CRITIQUE_MAX and page through gate policy when the cap is exhausted."""
+requirement = """The coordinator shall iterate BUILD-to-CRITIQUE rework within AGENT_CRITIQUE_MAX and page through the declared ratification level when the cap is exhausted."""
 rationale = """Realizes SN-024;SN-006 by isolating one independently reviewable obligation formerly carried by SR-047."""
-acceptance_criteria = """CHANGES-REQUESTED reworks and re-critiques; approval stops; the configured cap pages through the declared policy."""
+acceptance_criteria = """CHANGES-REQUESTED reworks and re-critiques; approval stops; the configured cap pages per the declared ratification level."""
 priority = "S"
 verification = "Test"
-status = "Verified"
+status = "Modified"
 phase = 1
 area = "Unattended loop"
 
@@ -1146,11 +1146,11 @@ area = "Architecture connectivity"
 title = "Tiered When roadmap view"
 sn_refs = ["SN-010"]
 requirement = """gen_trajectory.py shall tier the When view phase-to-workstream-to-WI by count, expose delivery phase, and aggregate parent edges from child edges."""
-rationale = """Realizes SN-010;SN-021 by isolating one independently reviewable obligation formerly carried by SR-051."""
+rationale = """Realizes SN-010 and the dissolved edge expectation that a generated artifact drifting from its source fails its --check, by isolating one independently reviewable obligation formerly carried by SR-051."""
 acceptance_criteria = """Tiers collapse only above threshold, leaf phases are visible, and each parent edge equals the deduplicated union of crossing child edges."""
 priority = "C"
 verification = "Test"
-status = "Verified"
+status = "Modified"
 phase = 2
 area = "Trajectory"
 
@@ -1158,11 +1158,11 @@ area = "Trajectory"
 title = "Tiered How-SW hierarchy"
 sn_refs = ["SN-010"]
 requirement = """gen_trajectory.py shall tier How-SW from components to modules whenever containment exists and bound the top level by TOP_VIEW_MAX."""
-rationale = """Realizes SN-010;SN-021 by isolating one independently reviewable obligation formerly carried by SR-051."""
+rationale = """Realizes SN-010 and the dissolved edge expectation that a generated artifact drifting from its source fails its --check, by isolating one independently reviewable obligation formerly carried by SR-051."""
 acceptance_criteria = """Contained inventories render component tiers that drill to modules and respect the shared top-view cap; uncontained inventories retain the flat view."""
 priority = "C"
 verification = "Test"
-status = "Verified"
+status = "Modified"
 phase = 2
 area = "Trajectory"
 
@@ -1170,11 +1170,11 @@ area = "Trajectory"
 title = "Interface-wired hierarchy ports"
 sn_refs = ["SN-010"]
 requirement = """gen_trajectory.py shall attach IF seams to visible block input/output ports and aggregate cross-container seams to container boundaries."""
-rationale = """Realizes SN-010;SN-021 by isolating one independently reviewable obligation formerly carried by SR-051."""
+rationale = """Realizes SN-010 and the dissolved edge expectation that a generated artifact drifting from its source fails its --check, by isolating one independently reviewable obligation formerly carried by SR-051."""
 acceptance_criteria = """At every visible tier seams terminate at the correct ports; crossing seams aggregate at their container boundary without duplication."""
 priority = "C"
 verification = "Test"
-status = "Verified"
+status = "Modified"
 phase = 2
 area = "Trajectory"
 
@@ -1182,11 +1182,11 @@ area = "Trajectory"
 title = "One-layer hierarchy navigation"
 sn_refs = ["SN-010"]
 requirement = """gen_trajectory.py shall descend one hierarchy layer by pointer or keyboard and restore parent views through a breadcrumb."""
-rationale = """Realizes SN-010;SN-021 by isolating one independently reviewable obligation formerly carried by SR-051."""
+rationale = """Realizes SN-010 and the dissolved edge expectation that a generated artifact drifting from its source fails its --check, by isolating one independently reviewable obligation formerly carried by SR-051."""
 acceptance_criteria = """Double-click and Enter/Space descend focused containers exactly one layer; breadcrumb actions restore prior levels; interactions remain self-contained."""
 priority = "C"
 verification = "Test"
-status = "Verified"
+status = "Modified"
 phase = 2
 area = "Trajectory"
 
@@ -1198,7 +1198,7 @@ rationale = """Realizes SN-027;SN-008 by isolating one independently reviewable 
 acceptance_criteria = """Every declared value and policy input maps deterministically; missing, unknown, or contradictory declarations fail closed only for the affected WI; all consumers agree."""
 priority = "M"
 verification = "Test"
-status = "Modified"
+status = "Verified"
 phase = 4
 area = "Parallel dispatch"
 
@@ -1210,7 +1210,7 @@ rationale = """Realizes SN-027;SN-008 by isolating one independently reviewable 
 acceptance_criteria = """Spine, critique, checkpoint, and dual-plan structure override dishonest declarations; the affected WI is quarantined with reasons while disjoint valid work remains schedulable."""
 priority = "M"
 verification = "Test"
-status = "Modified"
+status = "Verified"
 phase = 4
 area = "Parallel dispatch"
 
@@ -1380,12 +1380,12 @@ area = "Dual-plan decomposition"
 [requirement.SR-108]
 title = "Dual-plan round disposition"
 sn_refs = ["SN-024", "SN-006"]
-requirement = """The --dual-plan round shall commit SELECT as a docs-only disposition (children filed as queued specs, validated atomically with their generated views) and surface PAGE per gate policy, never silently."""
-rationale = """Realizes SN-024 and SN-016 — a disposition split across commits can land half-applied, and halting every lane for one round's outcome throws away the parallelism for work the outcome does not touch. Applying the disposition per-lane was rejected: the registries are shared, so concurrent writers conflict on every one."""
+requirement = """The --dual-plan round shall commit SELECT as a docs-only disposition (children filed as queued specs, validated atomically with their generated views) and surface PAGE per the declared ratification level, never silently."""
+rationale = """Realizes SN-024 and the dissolved edge expectation that an unattended run never blocks on a prompt, at launch or mid-run — a disposition split across commits can land half-applied, and halting every lane for one round's outcome throws away the parallelism for work the outcome does not touch. Applying the disposition per-lane was rejected: the registries are shared, so concurrent writers conflict on every one."""
 acceptance_criteria = """SELECT files children that pass the registry validator; a PAGE preserves the round's evidence on disk."""
 priority = "S"
 verification = "Test"
-status = "Verified"
+status = "Modified"
 phase = 4
 area = "Dual-plan decomposition"
 
@@ -1413,7 +1413,7 @@ rationale = """Realizes SN-008 and SN-012 — one aggregate coverage number lets
 acceptance_criteria = """A module below its floor exits 1 naming it; a declared module absent from the report exits 1; all floors holding exits 0; no coverage report (e.g. the smoke tier) SKIPs; an absent or empty census is a clean no-op; a malformed floor line fails loudly."""
 priority = "S"
 verification = "Test"
-status = "Modified"
+status = "Verified"
 phase = 1
 area = "Coverage floors"
 
@@ -1433,11 +1433,11 @@ area = "Scaffold generation"
 title = "Checked per-agent skill fan-out"
 sn_refs = ["SN-012"]
 requirement = """The per-agent skill copies (.claude/.gemini/.agents) shall be a checked, generated fan-out of the one neutral skills/ source."""
-rationale = """Realizes SN-021 — one skill maintained in three agent-specific copies rots into three different skills, and the copy an agent actually loads is the one nobody edited. Maintaining a single shared directory was rejected because each agent harness looks in its own path; the fan-out is forced, so the copies are generated and drift is a finding."""
+rationale = """Realizes the dissolved edge expectation that a generated artifact drifting from its source fails its --check — one skill maintained in three agent-specific copies rots into three different skills, and the copy an agent actually loads is the one nobody edited. Maintaining a single shared directory was rejected because each agent harness looks in its own path; the fan-out is forced, so the copies are generated and drift is a finding."""
 acceptance_criteria = """A per-agent copy that diverges byte-for-byte from source is detectable and refreshed by one command."""
 priority = "C"
 verification = "Test"
-status = "Verified"
+status = "Modified"
 phase = 1
 area = "Skills index + fan-out"
 
@@ -1461,7 +1461,7 @@ rationale = """Realizes SN-011 — a script that works only where its author ran
 acceptance_criteria = """The CI matrix spans Linux, Windows and macOS on Python 3.11 and latest (3.x) and is green; macOS runs on current Python only — the 3.11 floor is a platform-agnostic language/stdlib guarantee already exercised on Linux and Windows, while macOS's job is OS-specific behavior (fcntl.flock, paths, git worktrees) that does not vary by Python version, so the macOS+3.11 cell is excluded as a redundant-coverage call, not a runner-availability workaround (3.11 has arm64 macOS builds)."""
 priority = "M"
 verification = "Analysis"
-status = "Modified"
+status = "Verified"
 phase = 1
 area = "Portability"
 
@@ -1473,7 +1473,7 @@ rationale = """Realizes SN-025 — a frontier that is correct but unordered lets
 acceptance_criteria = """Ordering is identical across --explain and --format json; Priority outranks downstream-dependent count within one gate class; simulate --jobs 1 matches the serial order."""
 priority = "M"
 verification = "Test"
-status = "Modified"
+status = "Verified"
 phase = 4
 area = "Parallel dispatch"
 
@@ -1485,7 +1485,7 @@ rationale = """Realizes SN-010 — an agent-authored status surface drifts from 
 acceptance_criteria = """The status snapshot regenerates on the trunk after a merge and fails its freshness gate when stale; work branches skip the gate and never commit the artifact."""
 priority = "M"
 verification = "Test"
-status = "Modified"
+status = "Verified"
 phase = 4
 area = "Parallel dispatch"
 
@@ -1558,11 +1558,11 @@ superseded_by = ["SR-132"]
 title = "Dashboard freshness check"
 sn_refs = ["SN-010"]
 requirement = """gen_trajectory.py --check shall fail on stale or missing output, the visible git-derived as-of stamp being excluded from stamp-only comparisons."""
-rationale = """Realizes SN-021 — a committed dashboard that nobody re-checks becomes a confident picture of a project that has moved on, and the as-of stamp changes on every commit, so comparing it would make the check cry wolf and get disabled. Regenerating on read was rejected: the artifact is committed so it can be read without the toolchain."""
+rationale = """Realizes the dissolved edge expectation that a generated artifact drifting from its source fails its --check — a committed dashboard that nobody re-checks becomes a confident picture of a project that has moved on, and the as-of stamp changes on every commit, so comparing it would make the check cry wolf and get disabled. Regenerating on read was rejected: the artifact is committed so it can be read without the toolchain."""
 acceptance_criteria = "Stale or missing output fails --check, and as-of behavior is stable in and outside Git."
 priority = "M"
 verification = "Test"
-status = "Verified"
+status = "Modified"
 phase = 1
 area = "Trajectory"
 
@@ -1591,10 +1591,10 @@ phase = 4
 area = "Dual-plan decomposition"
 
 [requirement.SR-125]
-title = "PAGE maps through gate policy"
+title = "PAGE maps through the declared ratification level"
 sn_refs = ["SN-024", "SN-006"]
 requirement = """The --dual-plan single-shot round shall map a PAGE through the declared ratification level, hard-gating a human only while the tier in process is still HUMAN-HELD and otherwise reaching the pause-free attention (STALL) end state."""
-rationale = """Realizes SN-016 — a PAGE that always stops for a human makes the unattended loop attended in practice, while one that never stops discards the judgement the round asked for. Two separate mappings for the dispatcher and the single-shot round were rejected: they drift, and the drift shows up as a loop that hangs on one path only."""
+rationale = """Realizes the dissolved edge expectation that an unattended run never blocks on a prompt, at launch or mid-run — a PAGE that always stops for a human makes the unattended loop attended in practice, while one that never stops discards the judgement the round asked for. Two separate mappings for the dispatcher and the single-shot round were rejected: they drift, and the drift shows up as a loop that hangs on one path only."""
 acceptance_criteria = """A PAGE preserves evidence and follows the declared level (a human-held tier -> NEEDS-HUMAN exit; a loop-held tier -> STALL exit, no human gate); an unreadable level or stage resolves to human-held, so the failure direction is the gate, never past it."""
 priority = "S"
 verification = "Test"
@@ -1646,7 +1646,7 @@ rationale = """The 140-cell lesson: an unproven representation change is where a
 acceptance_criteria = """wi_convert --verify over a populated registry exits 0 reporting cell-exact equality; an unknown status refuses naming the row; folder->CSV->folder is parse-equal including a hand-filed spec with no order key; an in-flight claim refuses conversion by name."""
 priority = "C"
 verification = "Test"
-status = "Modified"
+status = "Verified"
 phase = 4
 area = "Trajectory"
 
@@ -1662,7 +1662,7 @@ rationale = """The §5.1/§5.2 shared-surface rules (concurrency-restructure): n
 acceptance_criteria = """Two committed fragments compile in git-add order with links rebased docs/-relative and the fragments deleted; an uncommitted or malformed fragment blocks the whole batch with nothing appended; a fragment-free run is a clean no-op."""
 priority = "M"
 verification = "Test"
-status = "Modified"
+status = "Verified"
 phase = 4
 area = "Trajectory"
 
@@ -1678,7 +1678,7 @@ rationale = """§5.6: pause means stop claiming and drain to a merged stop - nev
 acceptance_criteria = """A tracked pause file pauses the coordinator via pause_reason under the unchanged None/''/reason contract; a malformed file pauses with the pinned loud placeholder; a stray legacy docs/pause file is inert."""
 priority = "M"
 verification = "Test"
-status = "Modified"
+status = "Verified"
 phase = 4
 area = "Trajectory"
 
@@ -1700,7 +1700,7 @@ rationale = """The §1.2 seam's default backend: serial => composed-tree gating 
 acceptance_criteria = """A claim moves the spec and cuts the branch in one serial trunk step and is refused when paused, dirty, name-unsafe, not-ordinary or not-ready; a finished branch is detected from its tree alone; an absent or stale or CHANGES-REQUESTED verdict refuses the merge; a missing stack.ini or empty [product] test refuses; a red bar parks the candidate and stops the queue; the RULING-6 window audit flags a non-merge product commit."""
 priority = "M"
 verification = "Test"
-status = "Modified"
+status = "Verified"
 phase = 4
 area = "Trajectory"
 
@@ -1712,7 +1712,7 @@ rationale = """The skip is not a weakening: a work branch cannot commit generate
 acceptance_criteria = """on a claimed work branch the declared freshness steps SKIP with a §5.2 notice and exit code untouched while skills-sync, trajectory and registry-integrity still run; the closing commit and its successors keep the skip (the signal derives from branch history, not the working tree); the trunk lane never skips them."""
 priority = "M"
 verification = "Test"
-status = "Modified"
+status = "Verified"
 phase = 4
 area = "Gate harness"
 
@@ -1724,7 +1724,7 @@ rationale = """Stale-artifact merge conflicts become unrepresentable when only t
 acceptance_criteria = """--regen skips absent artifact families with a notice and stops loudly at the first failing generator; derive_gate runs before the dashboard/status/open-items regens."""
 priority = "M"
 verification = "Test"
-status = "Modified"
+status = "Verified"
 phase = 4
 area = "Trajectory"
 
@@ -1736,7 +1736,7 @@ rationale = """An open pause is a visible accruing cost, never a forgotten one (
 acceptance_criteria = """the pending block renders Paused since <date> - <reason> with the declared date verbatim (no clock), omits the stamp when since is empty, renders the pinned fail-closed placeholder on malformation, and clears when the file is deleted."""
 priority = "M"
 verification = "Test"
-status = "Modified"
+status = "Verified"
 phase = 4
 area = "Trajectory"
 
@@ -1765,7 +1765,7 @@ rationale = """Two grammars read this file — `tomllib` in Python and the three
 acceptance_criteria = """A dial declared in both homes produces a refusal naming the key and both files, at every guarded entry point (the dispatcher's pre-claim preflight, intake's adjudication arm, the integrator's verdict gate); a dotted key, inline table, multi-line string or hook-read key under the wrong section is refused by the shape check AND still reads ON in both readers; the hooks' sh and `tomllib` return the same answer over the adversarial file table; a wrong-typed or out-of-range dial is refused rather than defaulted."""
 priority = "S"
 verification = "Test"
-status = "Draft"
+status = "Planned"
 phase = 5
 area = "Process"
 
@@ -1777,7 +1777,7 @@ rationale = """The hard mixed-config refusal in SR-137 is only safe to ship if a
 acceptance_criteria = """A repo carrying legacy files converts in one pass and reports what moved; a second pass is a no-op; a legacy file whose value cannot be written is LEFT IN PLACE with its value intact and named in the report; the retired gate-authority word expands to all three dials it meant rather than to a single key."""
 priority = "S"
 verification = "Test"
-status = "Draft"
+status = "Planned"
 phase = 5
 area = "Process"
 
@@ -1789,7 +1789,7 @@ rationale = """The retired three-value enum could not express "TCs are human-hel
 acceptance_criteria = """Level N holds exactly the tiers the shipped template documents (cumulative, strictly-less-than the stage); stage 4 is held by no level, the end-of-run hold being its own dial; an unreadable stage, an absent dial, and a wrong-typed dial all read as human-held; an out-of-range level falls back to the conservative end AND is refused loudly; a legacy gate-policy word reads as all three dials it meant."""
 priority = "S"
 verification = "Test"
-status = "Draft"
+status = "Planned"
 phase = 5
 area = "Process"
 
@@ -1807,7 +1807,7 @@ rationale = """Attestation STATE is already the row's own Status - derive_gate c
 acceptance_criteria = """An artifact whose normative text has moved since its recorded anchor is reported whether or not its Status moved; an anchor that cannot be recomputed, or that names an artifact which is not a current row, is a finding rather than silence; a commit that writes an anchor cell while also changing that row's normative cells is refused, because a re-stamp in the same breath as an amendment hides the amendment; and the same rules hold for a stakeholder need, which has no Status cell for the amendment machinery to watch."""
 priority = "S"
 verification = "Test"
-status = "Draft"
+status = "Planned"
 phase = 5
 area = "Process"
 
@@ -1819,7 +1819,7 @@ rationale = """A ratification is the one act this loop cannot cheaply take back 
 acceptance_criteria = """An adjudication row admits ahead of a ready spine batch; the ruled rank table is unchanged, so `--explain` still reports it; the partition is stable (non-adjudication rows keep their relative order); a human-held attestation still drains and surfaces with the adjudication row waiting behind the stop."""
 priority = "S"
 verification = "Test"
-status = "Draft"
+status = "Planned"
 phase = 5
 area = "Process"
 
@@ -1831,7 +1831,7 @@ rationale = """The pair is a contradiction the registries state plainly and noth
 acceptance_criteria = """A not-green TC under a `done` citer is named; `Verified`, `Draft` and `Modified` are exempt (the last belongs to the amendment adjudication, and two judgement rows for one event is a double-count); an open, `partial` or `cancelled` citer makes nothing red; a TC verifying a mix of claimed and unclaimed targets is not red; the census line's grammar has exactly one reader."""
 priority = "S"
 verification = "Test"
-status = "Draft"
+status = "Planned"
 phase = 5
 area = "Process"
 
@@ -1843,7 +1843,7 @@ rationale = """A queue that silently grows two rows for one job is the failure; 
 acceptance_criteria = """Each overlapping OPEN pair is named once per signal with both ids, in deterministic order; a closed row never conflicts; the title bar is high enough that ordinary unrelated work is silent and a shared stopword is not a signal; the findings never join the exit code, not even under --strict."""
 priority = "S"
 verification = "Test"
-status = "Draft"
+status = "Planned"
 phase = 5
 area = "Process"
 
@@ -1855,7 +1855,7 @@ rationale = """Five successive dedup mechanisms leaked because each reconstructe
 acceptance_criteria = """A partial close is clean under the real validator (the terminal Deliverable rule is exempt, because an early close leaves the spec's definition byte-identical by design); a terminal spec with no report is LOUD rather than silently un-disposed; a second close is refused and leaves no residue in the lane; a multi-spec close that refuses restores every report it wrote."""
 priority = "S"
 verification = "Test"
-status = "Draft"
+status = "Planned"
 phase = 5
 area = "Process"
 
@@ -1867,7 +1867,7 @@ rationale = """The lane is entitled to assert what happened; what it MEANS is th
 acceptance_criteria = """A partial or cancelled close mints exactly one disposition; a re-sweep mints none; a genuinely second close is a second report and so a second row; a disposition row never mints a disposition for itself (refused at both ends); a successor's lineage survives the id change."""
 priority = "S"
 verification = "Test"
-status = "Draft"
+status = "Planned"
 phase = 5
 area = "Process"
 
@@ -1879,7 +1879,7 @@ rationale = """Prose steers the sessions this loop launches and had been reviewa
 acceptance_criteria = """An unknown or unfilled slot is a refusal; a missing shipped template is a named preflight refusal rather than a first-session crash; the catalogue lists every shipped prompt with its digest and `--check` fails when stale; a line-ending difference is not a digest change; an operator override is named in the session record rather than only in the launch flags."""
 priority = "S"
 verification = "Test"
-status = "Draft"
+status = "Planned"
 phase = 5
 area = "Process"
 
@@ -1891,7 +1891,7 @@ rationale = """The two-carrier split has no recorded rationale and costs on both
 acceptance_criteria = """migrate_carrier.py --check over the live registries exits 0 reporting the round-trip clean for every row of every tier; a cell that is dropped, truncated, re-typed or re-ordered is REFUSED with exit 1 and a finding naming the registry, the row id and the field; and the emitted text re-parses with tomllib."""
 priority = "C"
 verification = "Test"
-status = "Draft"
+status = "Planned"
 phase = 5
 area = "Trajectory"
 
@@ -1903,7 +1903,7 @@ rationale = """Without one precedence rule, the same repository can resume into 
 acceptance_criteria = """A ready adjudication row remains ahead of every class named here; otherwise an unresolved handback is selected before spine or implementation work and processing it either resolves the record or mints a provenance-linked successor exactly once. With no unresolved handback, only the earliest incomplete spine tier is eligible. At human_ratification_through = 0 no spine tier produces a human hold; levels 1 through 4 hold exactly their documented cumulative tiers. Implementation work is ineligible while any required test case remains unlaid. Every selection records the chosen class, source identifier and hold decision."""
 priority = "S"
 verification = "Test"
-status = "Draft"
+status = "Planned"
 phase = 5
 area = "Unattended loop"
 
@@ -1915,6 +1915,6 @@ rationale = """Realizes SN-004 (the ladder's vocabulary is the one the project i
 acceptance_criteria = """check_vocab.py reports a planted retired tag in a live authored file with its path and line, exits 0 under the default severity and 1 under --strict; reports nothing for a file under any declared carve-out class (archive, the project log, attestation briefs, closed and cancelled work-item specs, generated surfaces) including at arbitrary depth; reports nothing for a line carrying the allow marker or a file carrying the allow-file marker; and reports nothing for the word "gate" used to mean a check that can fail."""
 priority = "S"
 verification = "Test"
-status = "Draft"
+status = "Planned"
 phase = 5
 area = "Doc navigability"

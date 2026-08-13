@@ -115,6 +115,21 @@ chasing it.
   our readability/maintainability conventions and points agents at the
   process. It scaffolds to `AGENTS.md` (the cross-tool standard), with thin
   `CLAUDE.md`/`GEMINI.md` stubs pointing back at it.
+- **Ratified at the 2026-08-13 sitting, commissioned rather than shipped** —
+  seven needs the owner attested whose machinery is scheduled, not built. They
+  are listed here because a ratified promise should be visible before its code
+  is, not after: a stakeholder need readable without repo-internal vocabulary
+  (SN-033); one front-door action per platform for **each** of the two universal
+  contributor actions — preparing the dev environment and resuming the loop —
+  where today only `agent-resume.*` exists (SN-034); a machine-readable record of
+  which expert and downstream-user perspectives a decomposition was examined
+  from (SN-036); every system-requirement input and output resolving to a
+  declared interface, with unresolved references and uncovered boundary
+  crossings as mechanical findings (SN-037); every file the kit ships traceable
+  to the stakeholder outcome it serves (SN-038); a declared scope value on each
+  need saying whether it binds the template, this repo, or both (SN-039); and a
+  reproducible, reviewable record of *why* the system was divided into the
+  components it has (SN-040).
 
 ## The registries & trace artifacts — one map
 

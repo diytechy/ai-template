@@ -130,7 +130,11 @@ def test_meta_repo_phases_match_an_independent_derivation_and_cache_is_fresh():
     assert proc.returncode == 0, proc.stdout + proc.stderr
     for phase, gate in expect.items():
         assert "{}={}".format(phase, gate) in proc.stdout
-    assert "phase=4" in proc.stdout
+    # A deliberate SNAPSHOT of the meta-repo's own derived phase, so a silent
+    # phase drift reds here rather than passing unnoticed. Bump it when a
+    # ratification legitimately advances the phase (4 -> 5 at the 2026-08-13
+    # re-attest sitting, which ratified the last draft SNs and SR-137..149).
+    assert "phase=5" in proc.stdout
     assert "modified={}".format(result["modified"]) in proc.stdout
     check = run_py([SCRIPTS / "derive_gate.py", "--check", "--root", ROOT], cwd=ROOT)
     assert check.returncode == 0, check.stdout + check.stderr
