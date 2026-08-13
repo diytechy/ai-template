@@ -83,6 +83,253 @@ SN-020 / SN-022 were judged already-carried by the SRs above rather than folded.
 That judgement is the four sentences quoted immediately above — it is checkable
 by eye, and it is yours to reject. *(ledger part 2, OI-18)*
 
+### 1a-ii. Before → after, row by row
+
+The table above says *what was caught*. This says *what the cell reads now*, so
+you never have to diff by hand. **Before** is the pre-batch baseline
+`81a142c2` — the last commit before the prose batch applied. **After** is the
+live registry. Cells are quoted whole; nothing inside a quote is trimmed.
+
+Only the cell (or cells) carrying the laundered qualifier is quoted. Where a
+cell is byte-identical between the two revisions it is stated as such rather
+than printed twice.
+
+---
+
+**SN-001** — `need` cell.
+
+Before (`81a142c2`):
+> "A team can drop the kit into a new or existing repo and get a working gated, requirement-traced process without hand-building the tooling."
+
+After (live):
+> "An adopting team can add this process to a new or existing repository and get a working gated, requirement-traced process, without hand-building the tooling."
+
+**What moved:** round 1 **invented** *"the same day"* — a time bound with no
+clause behind it. Restored, the delta is subject/verb only ("A team can drop the
+kit into" → "An adopting team can add this process to"); no time bound appears.
+The `acceptance` cell is byte-identical to baseline.
+
+---
+
+**SN-004** — `need` cell.
+
+Before (`81a142c2`):
+> "Progress advances only through **explicit approval gates** (G1→G2→G3→…), and a gate passes only when its mechanical bar is met."
+
+After (live):
+> "A team advances only through **explicit approval gates** (DevBar-Reqs→DevBar-Tests→DevBar-Release→…), and a gate passes only when its mechanical bar is met."
+
+**What moved:** round 1 **invented** an authority claim — *"The repo owner
+decides when work advances"*. Restored, the predicate is verbatim (*"explicit
+approval gates"*, *"a gate passes only when its mechanical bar is met"*) and no
+owner-authority clause appears; the subject shifts "Progress" → "A team". The
+gate-tag change inside the parenthesis is **not** the prose batch: it is the
+WI-445 stage-ladder sweep (§1b), a vocabulary substitution. The `acceptance`
+cell is byte-identical to baseline.
+
+---
+
+**SN-006** — the two caught phrases live in different cells, so both are quoted.
+
+Before (`81a142c2`, `need`):
+> "An agent can run **unattended** and resume from repo text alone; such a run never blocks on a prompt and fails clearly."
+
+Before (`81a142c2`, `acceptance`):
+> "`agent_loop.py` resumes from `docs/status.md`, exits a **typed code** at each end state, and a preflight refuses a broken footing (no agent CLI, not a git repo, private author under privacy-check) rather than hanging."
+
+After (live): **both cells are byte-identical to the baseline above** — the plan
+proposed no change to either, and none was written.
+
+**What moved:** nothing. Round 1 had softened *"typed code"* → "a **named**
+outcome" (that phrase is in `acceptance`) and *"repo text alone"* →
+"repository-written state" (that phrase is in `need`); revision 2 restored both,
+and the batch then wrote neither cell. A name is not a typed exit code.
+
+---
+
+**SN-024** — `need` cell.
+
+Before (`81a142c2`):
+> "Subjective/perceptual acceptance — a realistic-looking render, an artifact comparison with no crisp measurable interface — is adjudicated by an **independent critical eye against a written rubric**, never by the session that authored the artifact."
+
+After (live):
+> "A reviewer can trust subjective/perceptual acceptance — a realistic-looking render, an artifact comparison with no crisp measurable interface — because it is adjudicated by an **independent critical eye against a written rubric**, never by the session that authored the artifact."
+
+**What moved:** three drops in one row, all restored — the scope clause (round 1
+broadened it to every *"judgement call"*), *"independent critical eye"* and
+*"never by the session that authored the artifact"* (weakened to "someone other
+than the author"), and the **added** requirement that the rubric be written *"in
+advance"*, which is absent from the live cell. The live delta is the stakeholder
+subject only ("A reviewer can trust … because it is"). The `acceptance` cell is
+byte-identical to baseline.
+
+---
+
+**SN-026** — `need` cell.
+
+Before (`81a142c2`):
+> "**Several LLM families are configurable** — selected per job and per capability level — and work that benefits from an independent second opinion is automatically routed to a *different* family wherever that is configured."
+
+After (live):
+> "The repo owner can configure **several LLM families** — selected per job and per capability level — so that work benefiting from an independent second opinion is automatically routed to a *different* family wherever that is configured."
+
+**What moved:** round 1 dropped *"per capability level"* and *"wherever that is
+configured"* — the second is load-bearing, it makes the cross-family routing
+**conditional on configuration** rather than unconditional. Both phrases are
+present. The `acceptance` cell also changed, by exactly one token —
+`docs/agents.csv` → `docs/agents.toml` — which is the OI-23 carrier rename
+(§1b), not the prose batch.
+
+---
+
+**SN-027** — `need` cell.
+
+Before (`81a142c2`):
+> "Ready work **fans out across bounded parallel lanes**, while mutation of the integration branch stays **serialized and gated**."
+
+After (live):
+> "A team gets more than one piece of ready work moving at once: ready work **fans out across bounded parallel lanes**, while mutation of the integration branch stays **serialized and gated**."
+
+**What moved:** round 1 dropped **bounded**, **parallel lanes** and **serialized
+and gated** — the three constraints that are the entire content of the need. All
+three are present; the live delta is a prepended stakeholder clause. The
+`acceptance` cell is byte-identical to baseline.
+
+---
+
+**SN-028** — both cells carried a catch, so both are quoted.
+
+Before (`81a142c2`, `need`):
+> "**Every policy dial has one home** — a single hand-edited, machine-read file — and a repo that declares the same dial twice is REFUSED rather than resolved by precedence."
+
+After (live, `need`):
+> "The repo owner can find and change every policy dial in **one home** — a **single hand-edited, machine-read file** — and a repo that declares the same dial twice is REFUSED rather than resolved by precedence."
+
+Before (`81a142c2`, `acceptance`):
+> "`docs/process.toml` holds every process dial under bare `[section]` headers, one `key = value` per line; the SHAPE is checked rather than conventional, because two grammars read the file (`tomllib` and the hooks' sh) and every shape only one of them understands is a silent flip of a security gate; the two readings are pinned equal over a table of adversarial files; a legacy one-word file still present alongside its key is a REFUSAL naming both, and `bootstrap.py --migrate-config` (run by bootstrap and by the documented re-sync) converts and deletes the legacy files so an adopter never meets that refusal un-aided; a wrong-typed or out-of-range dial is refused, never defaulted."
+
+After (live, `acceptance`):
+> "`docs/process.toml` holds every process dial under **bare `[section]` headers**, one `key = value` per line. The SHAPE is checked rather than conventional, because two grammars read the file (`tomllib` and the hooks' sh) and every shape only one of them understands is a silent flip of a security gate; the two readings are pinned equal over a table of adversarial files. A legacy one-word file still present alongside its key is a REFUSAL naming both, and `bootstrap.py --migrate-config` — run by bootstrap and by the documented re-sync — converts and deletes the legacy files so an adopter never meets that refusal un-aided. A wrong-typed or out-of-range dial is refused, never defaulted."
+
+**What moved:** round 1 reduced *"a single hand-edited, machine-read file"* to
+*"one place"* — all three qualifiers at once — and then claimed form (ii) would
+remove names form (i) had already removed. The phrase is verbatim in the live
+`need`. In `acceptance` the only edits are punctuation and emphasis: seven
+semicolon-to-full-stop / parenthesis-to-em-dash splits and one bolding
+(**zero** tokens removed). `docs/process.toml`, bare `[section]`, `tomllib`, the
+hooks' sh, the adversarial-file pinning and `bootstrap.py --migrate-config` are
+all still named.
+
+---
+
+**TRANSFORMED: SN-013 (edge need, deleted at the OI-18 dissolution) → SR-021 (its carrier)**
+
+Before (`81a142c2`, SN-013 `scenario`):
+> "No Python 3 interpreter on PATH (or the Windows Store alias that resolves but exits nonzero)"
+
+Before (`81a142c2`, SN-013 `expected`):
+> "The git hooks / coordinator **probe by running** a candidate and skip-or-report clearly; they never crash cryptically."
+
+After (live, SR-021 `requirement`):
+> "The git hooks and the root launchers (dev-setup / agent-resume, the coordinator's entry) shall locate a working python3 by running a candidate and skip-or-report clearly when none resolves or a Store-alias exits nonzero."
+
+After (live, SR-021 `acceptance_criteria`):
+> "With no working python3 the hook and each root launcher report clearly and do not crash cryptically; with one, they run their action. (The launcher half folded in from retired SN-013's expectation at the 2026-08-13 dissolution — the review round caught that SR-021 alone carried only the hooks.)"
+
+**What moved:** round 1 dropped *"skip-or-report"*, making reporting
+unconditional and so **changing the allowed outcome**. The words are in SR-021's
+requirement; the launcher/coordinator half of the probe was folded into SR-021
+at the dissolution and the fold is annotated in-cell with its date and reason.
+
+---
+
+**TRANSFORMED: SN-014 (edge need, deleted at the OI-18 dissolution) → SR-006 (its carrier)**
+
+Before (`81a142c2`, SN-014 `scenario`):
+> "A required harness tool is absent"
+
+Before (`81a142c2`, SN-014 `expected`):
+> "`check.py` reports `SKIP(missing)` and **fails the gate** — a missing tool is never a silent pass (SN-008)."
+
+After (live, SR-006 `requirement`):
+> "check.py shall run the required steps of the gate that must next be passed (the strictness selector cached in docs/gate) and fail that gate when a required tool is missing, reporting SKIP(missing) rather than silently passing."
+
+**What moved:** round 1 dropped the measurable **`SKIP(missing)`** token. The
+token is in SR-006's requirement, together with the fail-the-gate half. This is
+one of the three rows judged *already carried* rather than folded — the honest
+gap noted above.
+
+---
+
+**TRANSFORMED: SN-016 (edge need, deleted at the OI-18 dissolution) → SR-026 (its carrier)**
+
+Before (`81a142c2`, SN-016 `scenario`):
+> "An unattended run must never block on a prompt at launch **or mid-run**"
+
+Before (`81a142c2`, SN-016 `expected`):
+> "`agent_loop.py` runs headless (stdin closed); a rate limit backs off, a stall aborts to protect the budget — the loop is never wedged by a prompt."
+
+After (live, SR-026 `requirement`):
+> "agent_loop.py shall resume headless with stdin closed, never blocking on a
+> prompt.
+> Resume authority (one path - the serial resume loop is retired): a worker
+> resumes from its explicit claimed assignment plus the committed trailer evidence
+> on its branch, and the integrator (SR-132) derives claim/queue state from trunk
+> history alone.
+> docs/status.md is a generated reference surface (SR-059), never a session input."
+
+After (live, SR-026 `acceptance_criteria`):
+> "A worker reconciles from its assignment + committed evidence and the integrator from trunk history; every mode runs with stdin closed and a prompt cannot wedge it; a model rate limit backs off rather than failing the run, and a stall aborts to protect the budget. (The backoff/budget clauses folded in from retired SN-016's expectation at the 2026-08-13 dissolution — the review round caught that no SR carried them.)"
+
+**What moved:** round 1 dropped **stdin closed**, the headless *mechanism* —
+leaving the property with no stated means. It is in SR-026's requirement, and
+the rate-limit/stall clauses were folded into SR-026's acceptance at the
+dissolution, annotated in-cell.
+
+---
+
+**TRANSFORMED: SN-020 (edge need, deleted at the OI-18 dissolution) → SR-028 (its carrier)**
+
+Before (`81a142c2`, SN-020 `scenario`):
+> "The agent CLI / model errors before doing work (retired model, expired auth)"
+
+Before (`81a142c2`, SN-020 `expected`):
+> "The session is logged `ERROR` and an all-`ERROR` stall is reported as an **unavailable agent**, not a work stall. *(tests/test_agent_loop.py — error region)*"
+
+After (live, SR-028 `requirement`):
+> "agent_loop.py shall end each session in a typed outcome code, guard a zero-commit HEAD, and report an all-ERROR stall as an unavailable agent rather than a work stall."
+
+After (live, SR-028 `acceptance_criteria`):
+> "A repo with no commits does not crash the loop; an agent-CLI error is logged ERROR; an all-ERROR region is reported as an unavailable agent."
+
+**What moved:** round 1 dropped both the *logged `ERROR`* and the **all-`ERROR`**
+qualifier. Both survive, but in different cells: the **all-`ERROR`** stall
+clause is in SR-028's requirement, and the *logged `ERROR`* half is in its
+acceptance. Judged *already carried*, not folded.
+
+---
+
+**TRANSFORMED: SN-022 (edge need, deleted at the OI-18 dissolution) → SR-003 (its carrier)**
+
+Before (`81a142c2`, SN-022 `scenario`):
+> "A committed example row / placeholder is left in a registry at a gate"
+
+Before (`81a142c2`, SN-022 `expected`):
+> "`--no-placeholders` flags a leftover `-000` row from G2 on; a fresh scaffold stays green until it claims a gate."
+
+After (live, SR-003 `requirement`):
+> "trace.py shall, under --no-placeholders, flag any leftover -000 example row, and under --strict-schema, require non-empty required fields and in-vocabulary Verification/Tier values."
+
+After (live, SR-003 `acceptance_criteria`):
+> "--no-placeholders reports every -000 row across SR/LLR/TC and the SN doc; --strict-schema reports an empty required field or an out-of-vocabulary Verification/Tier value."
+
+**What moved:** round 1 dropped the **`-000`** class token and the bar-scope
+qualifier (round 1's text read *"from [DevBar-Tests] on"*, in the retired tag of
+that day). The **`-000`** token is present in both SR-003 cells. **The bar-scope
+half is not restated in either cell** — `--no-placeholders` is a flag the
+harness wires per bar rather than a clause SR-003 carries. This is the weakest
+of the three *already carried* judgements, and the most worth your eye.
+
 ### 1b. Everything else in the batch, by group
 
 **The prose batch itself (WI-444 part 1).** 29 SN rows + 17 SR rows from the
