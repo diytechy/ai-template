@@ -428,6 +428,8 @@ def registry_findings(
 # Evidence citation prose rather than inventing a grammar after the fact.
 SYMBOL_JOIN = re.compile(r"[/;+,]+")
 IDENTIFIER = re.compile(r"^[A-Za-z_]\w*$")
+LLR_REL = "docs/requirements/low-level-requirements.toml"
+LLR_ID = re.compile(r"\bLLR-\d+\b")
 
 
 def _module_bindings(path):
@@ -474,11 +476,41 @@ def _row_bindings(root, mods, cache):
 
 
 def symbol_findings(root):
-    """`(dangling, untraced)` for the LLR `CodeSymbol` ANCHOR rule (WI-429).
+    """`(dangling, untraced, advisory)` for the LLR `CodeSymbol` ANCHOR rule
+    (WI-429, ratified as built by owner ruling OI-20 2026-08-13).
 
     THE RULE: a live LLR row must carry at least ONE identifier-shaped
     `CodeSymbol` token that BINDS in one of the `.py` modules its `Module` cell
     names. Everything else about the cell is filed untraced.
+
+    THE GRAMMAR — WHAT A `CodeSymbol` CELL MAY NAME (ruled with the
+    ratification, OI-20, on the conservative default; before it the cell had no
+    stated grammar at all, which is the rot the census measured). ADMISSIBLE:
+
+    - a RESOLVABLE CODE SYMBOL — a function, class, method or constant that
+      exists at module scope in a named module (private `_`-names and constants
+      included: the oracle is `gen_arch_map.module_bindings`, not the rendered
+      public-API map);
+    - a MODULE PATH — the module itself is the realization artifact;
+    - a designed PART SOURCE — a physical part authored as parametric code.
+      It BINDS like any other symbol, so admitting it costs this rule nothing.
+      (A BOUGHT part never reaches this tier at all: it lives as a `PART` row
+      owned by an `IF` row.)
+
+    NOT ADMISSIBLE: a GENERATED ARTIFACT (its generator is the realization, and
+    the artifact is downstream of it) or a PROSE CONTRACT (a description of
+    behaviour, however accurate, is not a name). This is why four live rows stay
+    HONESTLY UNFOUNDED rather than being founded by widening the grammar to fit
+    them — a cell naming a local variable, a never-existing label or an HTML
+    attribute is out of scope for the cell, not a defect in the check.
+
+    THE WEIGHT OF THIS RULE — IT IS THE DECOMPOSITION FLOOR. Under OI-21's
+    ladder, rung 4 (LLR definition) TERMINATES WHERE A TOKEN BINDS. A
+    requirement that still needs allocating to sub-parts is an SR for that
+    sub-scope; one that binds to code is the bottom. So this is not only a
+    check on a cell — it is the computation that decides when decomposition is
+    FINISHED, which is why it is hard under `--strict` (an advisory version
+    would make D-9's `Founded` rung vacuous for one of four tiers).
 
     WHY AN ANCHOR AND NOT PER-TOKEN. This is the discharge test D-9 leaves open
     for the LLR tier — `Status = Founded` means "the artifacts this row calls
@@ -503,11 +535,22 @@ def symbol_findings(root):
     shell template) because there is no Python name to bind; a module absent
     from disk because the PATH tier already owns that finding and reporting it
     twice would double-count one rot; an unparseable module because a syntax
-    error is `--strict-parse`'s finding, not this one."""
-    rel = "docs/requirements/low-level-requirements.toml"
-    bad, untraced = [], []
+    error is `--strict-parse`'s finding, not this one.
+
+    THE NON-`.py` SKIP IS REPORTED, NOT SILENT (OI-20's ruling, the OI-28
+    guard). A row whose `Module` names ONLY non-Python modules used to discharge
+    by DEFAULT with no output at all — a fail-open, and one that matters more
+    now that template paths are ruled admissible in `Module` as realization
+    artifacts. Such a row now returns an ADVISORY naming the row and its
+    modules: skipped-with-reason, discharge NOT computed. Warn-only, never the
+    exit code, not even under `--strict` — the skip itself is unchanged and
+    still correct (there is no Python name to bind); only its VISIBILITY is.
+    The other two skips keep their silence because each is another tier's
+    finding, already reported there."""
+    rel = LLR_REL
+    bad, untraced, advisory = [], [], []
     if spine_carrier.resolve(root / rel) is None:
-        return bad, untraced
+        return bad, untraced, advisory
     cache = {}
     for row in spine_carrier.load(root / rel, "LLR-ID"):
         rid = (row.get("LLR-ID") or "").strip()
@@ -517,7 +560,19 @@ def symbol_findings(root):
         mods = [m.strip() for m in (row.get("Module") or "").split(";") if m.strip()]
         bound = _row_bindings(root, mods, cache)
         if bound is None:
-            continue  # nothing checkable in this row's modules
+            # Nothing checkable. ONE of the three skips is reported: the row
+            # that names only non-`.py` modules, whose silence was a fail-open
+            # (the other two are the PATH tier's and --strict-parse's findings).
+            if mods and not any(m.endswith(".py") for m in mods):
+                advisory.append(
+                    "{}: {} Module names only non-Python module(s) ({}) — the "
+                    "CodeSymbol discharge is NOT computed for this row (there "
+                    "is no Python name to bind); it is skipped, not founded "
+                    "(advisory only — never the exit code)".format(
+                        rel, rid, ", ".join(mods)
+                    )
+                )
+            continue
         tokens = [t.strip() for t in SYMBOL_JOIN.split(cell) if t.strip()]
         idents = [t for t in tokens if IDENTIFIER.match(t)]
         entry = "{}: {} CodeSymbol: `{}`".format(rel, rid, cell)
@@ -543,7 +598,34 @@ def symbol_findings(root):
                     entry, miss, " or ".join(mods), hit[0]
                 )
             )
-    return bad, untraced
+    return bad, untraced, advisory
+
+
+# Above this many skipped-with-reason rows, the per-row advisory stops being a
+# report and becomes a wall. Legibility is the point of making the skip visible,
+# so past the threshold it folds to ONE line that still names every row id —
+# nothing is dropped, only the repetition. Sized for a shell-heavy adopter whose
+# hooks and templates legitimately fill this list.
+ADVISORY_FOLD_ABOVE = 15
+
+
+def fold_advisories(advisory, rel=LLR_REL):
+    """The advisory list as it should PRINT — per row, or folded to one line
+    naming the count and every row id once the list passes
+    `ADVISORY_FOLD_ABOVE`.
+
+    The id is recovered by SHAPE, not by position in the sentence: the `LLR-###`
+    syntax is the registry's own contract and will outlive any rewording of the
+    advisory text, whereas an offset into the string would break silently the
+    first time someone edits it."""
+    if len(advisory) <= ADVISORY_FOLD_ABOVE:
+        return list(advisory)
+    ids = [m.group(0) for m in (LLR_ID.search(a) for a in advisory) if m]
+    return [
+        "{}: {} row(s) name only non-Python module(s), so the CodeSymbol "
+        "discharge is NOT computed for them — skipped, not founded: {} "
+        "(advisory only — never the exit code)".format(rel, len(ids), ", ".join(ids))
+    ]
 
 
 def authored_lines(doc):
@@ -682,11 +764,17 @@ def main():
     reg_bad, reg_untraced = registry_findings(root, kit_root, records, absences)
     findings += reg_bad
     untraced += reg_untraced
-    sym_bad, sym_untraced = symbol_findings(root)
+    sym_bad, sym_untraced, sym_advisory = symbol_findings(root)
     findings += sym_bad
     untraced += sym_untraced
     for f in findings:
         print("check_doc_refs: WARN - " + f, file=sys.stderr)
+    # A THIRD ink, because this module's other two both mean something else:
+    # `WARN` gates under --strict, `UNTRACED` is hidden unless asked for. An
+    # ADVISORY never gates and is never hidden — the skip it reports was silent,
+    # which is the fail-open OI-20 ruled out.
+    for a in fold_advisories(sym_advisory):
+        print("check_doc_refs: ADVISORY - " + a, file=sys.stderr)
     if args.show_untraced:
         for u in untraced:
             print("check_doc_refs: UNTRACED - " + u, file=sys.stderr)

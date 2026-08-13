@@ -232,7 +232,7 @@ amendment invalidated the evidence.
 | `SR-Refs` | ✔ | `;`-joined SR ids | **The canonical SR↔LLR link.** Empty → orphan ("no SR parent"); unknown target → orphan; citing a **superseded** SR → integrity. |
 | `Title` | ✔ | free text | Node label. |
 | `Module` | ✔ | repo path | Doubles as a **join target**: the set of `Module` values is added to the PB back-link target set and to the IF-endpoint advisory join. Normalised by stripping a leading `project-trajectory/` segment and any of `.py .sh .ps1 .ts .js .go .rs .cmd`. |
-| `CodeSymbol` | ✔ | function/type name | Required non-empty. **Not checked against real code** — read only by `gen_okf.py` for the knowledge bundle. |
+| `CodeSymbol` | ✔ | function/type name | Required non-empty, and **resolved against real code** — `check_doc_refs.py`'s `symbol_findings` is the LLR tier's *discharge* test (§4.2). Also read by `gen_okf.py` for the knowledge bundle. |
 | `Detail` | ✔ | decomposition detail, **not** an SR paraphrase | Ratified prose. |
 | `Rationale` | ✘ | free text | **Deliberately not required** — "a short decomposition row's why IS its parent SR's, so requiring one everywhere would manufacture the restatement the column exists to prevent." Ratified when present. |
 | `TestRefs` | ✘ | `(see TC)` | **Inert** — see §12.1. |
@@ -253,6 +253,57 @@ There is a **warn-only** lint for the resulting readout drift
 already `Verified`. Never promoted to an error, "because making LLR status gate
 would re-introduce the exact LLR-status coupling the derived-gate model dropped."
 A `Modified` LLR is exempt — its low status is the deliberate marker, not drift.
+
+### 4.2 `CodeSymbol` must BIND — the discharge test, and what the cell may name
+
+`symbol_findings` in `check_doc_refs.py` (WI-429; ratified as built by owner
+ruling **OI-20**, 2026-08-13). A live LLR row must carry **at least one**
+identifier-shaped `CodeSymbol` token that binds at module scope in one of the
+`.py` modules its `Module` cell names — `CodeSymbol` supplies the tokens,
+`Module` supplies the **search scope**, and the `;`-joined module list is read
+as a **union**, never as a positional pairing. Warn-first; **hard under
+`--strict`** at the `[step:doc-refs]` G3 step.
+
+**The grammar, ruled with the ratification.** ADMISSIBLE in `CodeSymbol`:
+
+- a **resolvable code symbol** — function, class, method or module constant.
+  Private `_`-names and constants count: the oracle is
+  `gen_arch_map.module_bindings`, not the rendered public-API module map, which
+  drops exactly what 41 of this repo's live rows name;
+- a **module path** — the module itself is the realization artifact;
+- a designed **PART SOURCE** — a physical part authored as parametric code. It
+  binds like any other symbol. (A *bought* part never reaches this tier: it is a
+  `PART` row owned by an `IF` row.)
+
+NOT admissible: a **generated artifact** (its generator is the realization) or a
+**prose contract** (a description of behaviour is not a name). Four live rows
+are therefore **honestly unfounded** rather than founded by widening the grammar
+to fit them — the cell names a function local, a label that never existed, or an
+HTML attribute that merely looks like an identifier.
+
+**Why anchor and not per-token.** A per-token rule reds 31 of 149 rows on
+arrival, 18 for tokens that were never symbol claims — enforcing a grammar no
+ruling had given the cell. Per-token misses file as *untraced* and are counted
+every run, so a later tightening stays available rather than hidden. Same trade
+ruling **R2** made on the sibling `Evidence` cell: validate the coarse claim,
+rule the fine one prose.
+
+**This rule is the decomposition FLOOR.** Under OI-21's ladder, rung 4
+terminates where a token binds: a requirement that still needs allocating to
+sub-parts is an SR for that sub-scope; one that binds to code is the bottom. An
+*advisory* version would make D-9's `Founded` rung vacuous for one of four
+tiers, which is why it gates.
+
+**The non-`.py` skip is REPORTED, never silent** (the OI-28 guard, WI-449). A
+row naming only non-Python modules — a hook, a shell template — has no Python
+name to bind, so discharge is not computed for it. That skip is correct and
+unchanged, but it used to produce **no output at all**, which is a fail-open now
+that template paths are ruled admissible in `Module` as realization artifacts.
+Each such row now prints one `ADVISORY -` line naming the row and its modules
+(folding to a single counted line past 15 rows). Advisory is a **third ink**
+with its own meaning here: `WARN` gates under `--strict`, `UNTRACED` never gates
+and is hidden without `--show-untraced`, `ADVISORY` never gates and is never
+hidden.
 
 ---
 
@@ -698,11 +749,18 @@ the test suite stops running in the gated plan.** `window_open` warns about
 exactly this, but the warning is the only thing between a window and a silently
 untested stretch.
 
-### 12.4 `LLR.CodeSymbol` is required but never resolved
+### 12.4 `LLR.CodeSymbol` was required but never resolved — CLOSED, with a residue
 
-`--strict-schema` demands it be non-empty; nothing checks it names a symbol that
-exists. Its neighbour `Module` genuinely *is* a join target (PB back-links, IF
-endpoints), so the two look equally load-bearing and are not.
+The finding as compiled: `--strict-schema` demanded the cell be non-empty and
+nothing checked it named a symbol that existed, while its neighbour `Module`
+genuinely *was* a join target (PB back-links, IF endpoints) — so the two looked
+equally load-bearing and were not.
+
+**Closed by WI-429's anchor rule and OI-20's ruling — see §4.2**, which also
+gave the cell the grammar it never had. Two residues remain, both deliberate:
+the rule is **coarse** (one binding token founds the row, and the per-token
+misses are counted *untraced* rather than gated), and four live rows are
+**unfounded with a stated reason** rather than guessed at.
 
 ### 12.5 SN has no schema tier at all
 
