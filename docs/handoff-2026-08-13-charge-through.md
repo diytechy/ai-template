@@ -62,22 +62,28 @@ itself refuted on measurement and the refutation recorded in-module).
 - **B10** `split_refs` joined the canonical splitter, pinned in
   `test_rule_sync`.
 
-## In flight at handoff (check `git log` / worktrees first)
+## WI-445 — LANDED COMPLETE, merged, closed (finalized at phase close)
 
-- **WI-445 — the stage-ladder program** (agent branch
-  `worktree-agent-aec1a1028e3d61ca4`): the eight-rung ladder
-  (Needs/Boundary/Reqs/Arch/LLReqs/Tests/Impl/Release), `DevStg-<Label>`
-  carrier with STAGE_ORDER raising on unknown, tag-scoped sweep + refusal
-  enforcer, attestation carve-out, six contract breaks, dial mapping, rung
-  predicates reading the CURRENT Status vocabulary (D-9's migration stays
-  behind the sitting), the pack's Reserved entry filled. **If it landed:
-  merge serially (expect PROCESS/generated conflicts — resolve ADOPTING-style:
-  compose, regenerate), run its codex round, close the spec. If it failed or
-  is partial: its final message states stages completed — land clean stages,
-  re-queue the rest.**
+The stage-ladder program shipped whole: the gate vocabulary is RETIRED
+repo-wide. `docs/gate` now reads `DevBar-Reqs` with
+`stage=DevStg-Needs stage-ord=0 stage-of=8` on the basis line; the three
+bars are DevBar-Reqs / DevBar-Tests / DevBar-Release (DevBar-Below the
+floor); `check_vocab` enforces the retirement warn-first (bite-proven);
+`--gate` keeps G1/G2/G3 as warned aliases; `## Gate Sign-offs` became
+`## Sittings`. Its own grep test caught a live lexical-sort bug in
+`check.py --list` on first run. New Draft spine rows: SR-149/LLR-169/TC-163
+(the enforcer's home, CMP-007). SR-004 + SR-053 flipped Modified by the
+sweep. Full account: the WI-445 Deliverable in docs/work/complete/. NOTE
+FOR EVERY FUTURE SESSION: author stage/bar vocabulary, never G-tags —
+check_vocab will warn now and error once promoted.
 
 ## NOT started — the next session's queue, in order
 
+0. **WI-445's codex round** — the program self-verified hard (bite tests, a
+   composed full bar) and the coordinator reviewed the merge, but the
+   per-slice hostile codex pass was deferred at context exhaustion; run it
+   over the 445 diff (8a0fb5ad..the merge) first, findings re-verified
+   before fixing, per the session's standing method.
 1. **WI-442 boundary seeds** (after 445): the 19 missing boundary IF rows
    (data pack §1b) as Draft rows on the NEW toml carrier, the direct-session
    actor declaration, the template-set SR, regularize the two accidental
@@ -108,8 +114,10 @@ itself refuted on measurement and the refutation recorded in-module).
   file, never discard either side's reasons.
 - `trace.py --ratify modified` PRINTS; regenerating the brief needs
   `--out docs/ratify/2026-08-13-wi444.md` (ratify-fresh reds otherwise).
-- The gate reads **G1 honestly** (`modified≈62, drafts=48, uncovered=0,
-  components=4`); it will not rise until the sitting — that is the design.
+- The gate reads **G1 honestly** (`modified=64, drafts=51, uncovered=0, components=4`,
+  stage=DevStg-Needs, DevBar-Reqs approaching); it will not rise until the
+  sitting — that is the design. Final composed-tree full bar: 2452 passed /
+  6 skipped, zero failures.
 - Codex reviews: `codex exec --model gpt-5.6-sol -c
   model_reasoning_effort=medium --sandbox read-only "<hostile brief>"`.
 

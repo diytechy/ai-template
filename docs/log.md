@@ -27493,3 +27493,48 @@ over 386 live authored files; a real scaffold bootstrapped from this tree runs
 its own harness green with `docs/gate`, `stack.ini`, hooks and CI all speaking
 the new vocabulary. The enforcer was bite-tested: a planted `G2`/`G3` in
 `docs/status.md` warned at exit 0 and errored at exit 1 under `--strict`.
+
+## 2026-08-13c — the ladder lands, and the phase closes for handoff
+
+The charge-through's final phase. **WI-443** (Part B) landed whole: the IF
+contract in PROCESS.md §8, interfaces + components onto the TOML carrier
+(the carrier program is now COMPLETE across every registry), IF `Status`
+retired, `signal`/`rationale` added, the warn-first schema tier with its
+live counts, and the endpoint advisory that immediately surfaced real rot.
+Its adversarial round produced one pinned fix (the components dual-carrier
+refusal test) and one REFUTED proposal — hardening required-field absence
+"back" to a CSV-era guarantee the IF tier never had; the refutation is
+recorded in `schema_advisories`' docstring so it cannot be re-proposed.
+**WI-447** shipped `RESYNC_PACK.md` (51+2 SHA-anchored entries, 100%
+coverage; ADOPTING §6 804→31 lines; the content-loss audit found 2 weakened
+qualifiers of 34 recipes, both restored). **WI-450** made the drill pin
+partition-independent and the top-view reads snapshot-atomic. **LLR-168 +
+TC-162** seeded the hats machinery onto the spine when the top view honestly
+reported `scripts/hats` uncontained.
+
+**WI-445 — the ladder.** All stages, nothing deferred: the eight rungs
+(DevStg-Needs..Release), bars DevBar-Reqs/Tests/Release with DevBar-Below
+the floor, label-as-identifier with STAGE_ORDER raising on unknown, the
+tag-scoped sweep (~1,900 conversions) with the attestation carve-out held
+verbatim, the check_vocab enforcer landing WITH the sweep (bite-proven),
+all six contract breaks disposed as ruled, the dial MAPPED with both
+inserted rungs riding the more-human direction, IF/CMP maturity joining the
+min-fold through one declared table, and the pack's gate→stage entry
+anchored. Its own grep test caught a live lexical-sort bug in
+`check.py --list` within the hour — the label carrier's argument
+demonstrated. New Draft rows SR-149/LLR-169/TC-163 (the enforcer's spine
+home); SR-004/SR-053 flipped Modified. The merge composed with zero
+conflicts; the codex round for this one slice is DEFERRED to the next
+session (handoff queue item 0) — the only slice of the sixteen to carry
+its review forward, recorded rather than skipped.
+
+**The phase close.** Handoff: [handoff-2026-08-13-charge-through.md]
+(handoff-2026-08-13-charge-through.md) — boot there. Sitting pack:
+[plans/2026-08-13-sitting-pack.md](plans/2026-08-13-sitting-pack.md).
+Closed this session: WI-436..441, 443..447, 449, 450 (fifteen), plus B10
+and two spine seeds. Not started: WI-442, WI-448, the Area→aspect
+execution, SN-036's coverage record — queued in the handoff. The basis
+line reads honestly: stage=DevStg-Needs, DevBar-Reqs approaching,
+modified=64, drafts=51, uncovered=0, components=4. The owner owes the
+consolidated re-attest sitting and merge-to-main; nothing else waits on a
+human.

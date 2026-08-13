@@ -27,18 +27,20 @@ home elsewhere — don't restate it here:
   model, and the audit's approved WI retirements executed. **Its spine
   amendment window is CLOSED** — attested at the 2026-07-29 sitting, ruling
   in [log.md](log.md)'s Decisions; the restructure has no open act.
-- **START HERE (current as of 2026-08-13): ALL FOURTEEN OPEN ITEMS ARE RULED**
-  — the pre-absence batch ruling ([log.md](log.md#decisions-log), entry
-  2026-08-13) ruled OI-14 and OI-16…OI-28 in one sitting, with two
-  execution-mode calls confirmed by the owner: re-attest-bearing amendments
-  are **applied now** (one consolidated re-attest pack waits for the owner's
-  return), and OI-14 part A ends in a **provisional warn-first adoption** of
-  the top-ranked partition so dependent programs proceed.
-  [repo-lock.md](repo-lock.md) "WHAT IS LEFT" is the map of what those rulings
-  open; each row's `decision` cell in
-  [requirements/open-items.toml](requirements/open-items.toml) opens with its
-  ruling. Full bar 2308 passed / 5 skipped at the pre-sitting handoff; all
-  strict checks rc 0.
+- **START HERE (current as of 2026-08-13, post-charge-through):**
+  [handoff-2026-08-13-charge-through.md](handoff-2026-08-13-charge-through.md)
+  is the boot document. The pre-absence batch ruling
+  ([log.md](log.md#decisions-log), 2026-08-13) ruled all fourteen open items;
+  the charge-through then EXECUTED fifteen of the sixteen opened programs —
+  the re-attest batch applied, P5 adopted provisionally, the carrier program
+  finished (every registry on TOML), the eight-rung stage ladder LIVE
+  (`docs/gate` speaks DevBar/DevStg; author stage vocabulary, never G-tags),
+  the hats roster, the re-sync pack. The remaining queue lives in the
+  handoff, in order — the ladder program's deferred codex round, the boundary
+  seeds, the common-module inversion, the Area→aspect execution, the
+  perspective-coverage record. The owner's return reads
+  [plans/2026-08-13-sitting-pack.md](plans/2026-08-13-sitting-pack.md); the
+  owed human acts are the consolidated re-attest sitting and merge-to-main.
 - **START HERE if you are picking up after 2026-08-01** (superseded by the
   line above for the sitting itself):
   [handoff-2026-08-01.md](handoff-2026-08-01.md). Most of the concurrency-v2

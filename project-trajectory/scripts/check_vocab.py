@@ -96,7 +96,20 @@ ALLOW_LINE = "check_vocab: allow"
 # --- THE SCOPE, declared as data ------------------------------------------------
 # Directories never scanned at all (tool/VCS noise, and vendored trees whose
 # vocabulary is not ours to rule).
-SKIP_DIRS = {".git", ".venv", "venv", "node_modules", "__pycache__", ".pytest_cache"}
+SKIP_DIRS = {
+    ".git",
+    ".venv",
+    "venv",
+    "node_modules",
+    "__pycache__",
+    ".pytest_cache",
+    # Agent worktrees are OTHER checkouts parked under this tree — their files
+    # are scanned in their own checkout, and a stale worktree must not red
+    # this one (found the day the enforcer shipped: a leftover worktree's
+    # scratchpad carried pre-sweep vocabulary).
+    "worktrees",
+    "out",
+}
 
 # HISTORICAL AND GENERATED SURFACES — the ruled carve-out, as repo-root-relative
 # globs. Each entry names its class in the comment above it so a later reader can
