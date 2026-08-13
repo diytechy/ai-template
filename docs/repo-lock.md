@@ -165,6 +165,11 @@ a Draft need, and it is the obligation this ruling makes real.
 **Ruled and closed since:** ~~OI-12~~ (one TOML carrier — **D-5**, executed),
 ~~OI-13~~ (what `Status` means — **D-9**, ruled 2026-08-11; migration owed).
 
+**RE-RULED the same day → OI-21: the G\* vocabulary retires *entirely* for an
+eight-rung stage ladder (requirements before architecture; five execution
+questions open). Read the brief — the paragraph below records the model as
+first shipped, which OI-21 supersedes.**
+
 **The stage/gate semantics are RULED — 2026-08-12, this file's third §0
 question closed.** The owner: *"gate semantics should be retired / archived
 for stage semantics even though it will result in some relatively heavy
@@ -215,13 +220,14 @@ review (§8.7):**
 (Q11), the anchor half, and the schema batch. Everything mechanizable is now
 done; the sitting is the critical path.
 
-**Two things need the owner's eye that are not on the ruling list:** the
-**edge-case SN tier may be mis-levelled** (measured: **seven** of ten rows
-decompose into exactly one SR against 12.6 for a core need, and SN-019/SN-020
-share the *same* single SR-028) — a **kit-level** finding, since that table
-ships to every adopter, and one the 2026-08-10 sitting already set precedent
-for by demoting three needs on this exact test. And the tabled items in
-**§8.4** and **§8.5**.
+**Two things that needed the owner's eye — both since minted onto the ruling
+list (OI-18, OI-19; 2026-08-12):** the **edge-case SN tier may be mis-levelled**
+(measured: **seven** of ten rows decompose into exactly one SR against 12.6 for
+a core need — re-verified 2026-08-12 at 12.50, and SN-019/SN-020 share the
+*same* single SR-028) — a **kit-level** finding, since that table ships to
+every adopter, and one the 2026-08-10 sitting already set precedent for by
+demoting three needs on this exact test. And the tabled items in **§8.4** and
+**§8.5**.
 
 ---
 
@@ -237,7 +243,7 @@ semantics landed; the SN batch applied as drafts).
 | integrity | `orphans=0 integrity=0 component-findings=0 interface-findings=0`; interfaces 113 |
 | strict modes | `trace --strict` **rc 0** · `check_trajectory --strict` **rc 0** |
 | full bar | **2298 passed, 5 skipped** (post stage-rework; re-run owed at session close) |
-| owner surface | **12 pending `OI-` briefs** (OI-14 and OI-16…OI-26 — read them in [`open-items.html`](open-items.html), not here) + the sitting's 25-row re-attest, which that surface also renders |
+| owner surface | **13 pending `OI-` briefs** (OI-14 and OI-16…OI-27 — read them in [`open-items.html`](open-items.html), not here) + the sitting's 25-row re-attest, which that surface also renders |
 
 **Predecessor records**, kept reachable because they are the account of the
 program *before* this one and are not superseded by it:
@@ -450,8 +456,9 @@ spends the word six times meaning compress-to-essence) · `Grounded`
    **write** it into the cell (anchor-cell precedent) or is it layered at read
    time? That decides what a human sees in the file — and whether an *authored*
    `Founded` should itself be an error.
-3. **The SN tier's `kind` sheds `draft`** (18 core · 10 edge · 1 draft today),
-   leaving `kind` holding only the tier distinction. One fact, one home.
+3. **The SN tier's `kind` sheds `draft`** (18 core · 10 edge · 9 draft today —
+   the count rose with the 2026-08-12 intake), leaving `kind` holding only the
+   tier distinction. One fact, one home.
 4. **The three F5-duplicated predicates change together** — `is_draft` /
    `is_verified` / `is_modified` across `trace_text` · `trace` · `derive_gate`,
    pinned by `test_rule_sync`. That pin is the migration's safety rail; it must
@@ -579,7 +586,7 @@ this file archived.
 
 ### Owed by the owner
 
-**The 12 pending `OI-` briefs** — read them in
+**The 13 pending `OI-` briefs** — read them in
 [`open-items.html`](open-items.html), which is the decision surface; the
 [WHAT IS LEFT](#what-is-left--the-whole-list) map at the top of this file says
 which is which. Plus the **P0 sitting's part 2**, which that same surface
@@ -1151,9 +1158,13 @@ review. The §8.5 pattern, continued. Entries accumulate as the rework runs.
   the options file's own header forbids always-on layers; sizes measured
   budget-neutral across the pair). Reversal cost if overruled: move one
   section and re-aim its links.
-- **Gates KEEP their names and their sign-off role.** "Retire gate semantics"
-  is executed as retiring gate-as-*state* (the "active gate", `G0`, "at G1"
-  phrasing) — G1/G2/G3 survive as the human-certified boundaries between
+- ~~**Gates KEEP their names and their sign-off role.**~~ **OVERTURNED
+  2026-08-12 → OI-21:** the owner answered the flag below the same day — the
+  G\* vocabulary retires *entirely* for an eight-rung stage ladder; the
+  sign-off successor is OI-21 execution question (3). Kept as the record of
+  the call as first taken: "Retire gate semantics"
+  was executed as retiring gate-as-*state* (the "active gate", `G0`, "at G1"
+  phrasing) — G1/G2/G3 survived as the human-certified boundaries between
   stages, because the proposal the owner adopted defines them that way and
   the sign-off record depends on them. If the owner meant retiring the gate
   *vocabulary entirely*, that is a different and larger rework — flagging the
