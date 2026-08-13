@@ -1,7 +1,7 @@
 # Agent routing and heterogeneous review
 
 This pack distills the evidence behind the unattended loop's routing choices.
-The implemented behavior remains authoritative in [CMP-004](../requirements/components.csv)
+The implemented behavior remains authoritative in [CMP-008](../requirements/components.csv)
 and its linked requirements; the full historical research input is
 [archived](../archive/AGENT_ROUTING_RESEARCH.md).
 

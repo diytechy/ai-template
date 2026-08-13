@@ -6,7 +6,7 @@ code_symbol = "main"
 detail = """Loads the four registries, computes the orphan set (SR without LLR/TC, LLR/TC without a parent, SN without an SR), and exits 1 under --strict."""
 test_refs = "(see TC-001)"
 status = "Verified"
-component = "CMP-001"
+component = "CMP-006"
 phase = 1
 
 [design.LLR-002]
@@ -18,7 +18,7 @@ detail = """Duplicate/malformed id detection per ID_PATTERNS, a per-row column-c
 rationale = """These three are wrong the moment they are written rather than at a gate, and each corrupts the join before the orphan rules could notice — so they run on every commit rather than waiting for a gate that would inherit an already-broken registry."""
 test_refs = "(see TC-002)"
 status = "Modified"
-component = "CMP-001"
+component = "CMP-006"
 phase = 1
 
 [design.LLR-003]
@@ -29,7 +29,7 @@ code_symbol = "placeholder_findings/schema_findings/phase_ratified_findings"
 detail = """-000 example-row scan and required-field + closed-vocabulary validation over the real (non-placeholder) rows, plus the ratified-phase NUMERIC-ONLY rule (owner ruling 2026-08-01): once any spine row is phased (digit-parse arming), a non-Draft SR/LLR/TC whose Phase is not a full-cell bare integer is a --strict-schema finding (vacuous until armed; a prefixed v2/P1 now fails - the --phase/--ratify filters and the phase-drop join match the cell literally, so a prefix disarms them silently; phase_num stays digit-extract for grandfathering)."""
 test_refs = "(see TC-003)"
 status = "Verified"
-component = "CMP-001"
+component = "CMP-006"
 phase = 1
 
 [design.LLR-004]
@@ -40,7 +40,7 @@ code_symbol = "ac_advisories"
 detail = """Flags an AcceptanceCriteria comparative term with no predicate marker in the cell; warn-only, never joins the failure set."""
 test_refs = "(see TC-004)"
 status = "Verified"
-component = "CMP-001"
+component = "CMP-006"
 phase = 1
 
 [design.LLR-005]
@@ -51,7 +51,7 @@ code_symbol = "integrity_findings/module_findings"
 detail = """Integrity-checks the PB/REPO/PART/ASSET ids plus legacy MOD compatibility and resolves REPO/MOD DelegatedSRs against the SR set; -000 example rows ignored."""
 test_refs = "(see TC-005)"
 status = "Verified"
-component = "CMP-001"
+component = "CMP-006"
 phase = 1
 
 [design.LLR-006]
@@ -62,7 +62,7 @@ code_symbol = "steps/run_step"
 detail = """Builds the required-step plan per gate/tier and reports SKIP(missing) with a nonzero exit when a required tool is absent; the plan listing still names every step. The work-branch lane skip is LLR-141 (SR-133)."""
 test_refs = "(see TC-006)"
 status = "Verified"
-component = "CMP-001"
+component = "CMP-007"
 phase = 1
 
 [design.LLR-007]
@@ -73,7 +73,7 @@ code_symbol = "load_profile"
 detail = """Reads format/lint/test/tiers/coverage/arch-map from docs/stack.ini and resolves each step's command from that profile."""
 test_refs = "(see TC-007)"
 status = "Verified"
-component = "CMP-001"
+component = "CMP-007"
 phase = 1
 
 [design.LLR-008]
@@ -84,7 +84,7 @@ code_symbol = "load_profile"
 detail = """Rejects a malformed profile, non-integer coverage threshold, or missing declared binary with a clear loud failure."""
 test_refs = "(see TC-008)"
 status = "Verified"
-component = "CMP-001"
+component = "CMP-007"
 phase = 1
 
 [design.LLR-009]
@@ -95,7 +95,7 @@ code_symbol = "select_skills/matches_scope"
 detail = """Selects the file/skill set per stack+domain scope; omits Python-only artifacts and seeds files-mode arch-map for a non-Python stack."""
 test_refs = "(see TC-009)"
 status = "Verified"
-component = "CMP-005"
+component = "CMP-009"
 phase = 1
 
 [design.LLR-010]
@@ -106,7 +106,7 @@ code_symbol = "MAPPING/main"
 detail = """Writes the mapped kit files into --dest so the generated harness runs green out of the box."""
 test_refs = "(see TC-010)"
 status = "Verified"
-component = "CMP-005"
+component = "CMP-009"
 phase = 1
 
 [design.LLR-011]
@@ -117,7 +117,7 @@ code_symbol = "write/--force + write_kit_version"
 detail = "Skips an existing file unless --force."
 test_refs = "(see TC-011)"
 status = "Verified"
-component = "CMP-005"
+component = "CMP-009"
 phase = 1
 
 [design.LLR-012]
@@ -128,7 +128,7 @@ code_symbol = "main"
 detail = """Resolves intra-repo links, requires a PROJECT-VISION tag, and checks generated-doc freshness under --stale."""
 test_refs = "(see TC-012)"
 status = "Verified"
-component = "CMP-003"
+component = "CMP-007"
 phase = 1
 
 [design.LLR-013]
@@ -139,7 +139,7 @@ code_symbol = "main"
 detail = """Validates an authored runtime-flow doc against its structural contract; a malformed flow fails."""
 test_refs = "(see TC-013)"
 status = "Verified"
-component = "CMP-003"
+component = "CMP-007"
 phase = 1
 
 [design.LLR-014]
@@ -150,7 +150,7 @@ code_symbol = "evaluate"
 detail = """Compares measured metrics to declared budgets and fails beyond tolerance at the row's block/warn level."""
 test_refs = "(see TC-014)"
 status = "Verified"
-component = "CMP-003"
+component = "CMP-007"
 phase = 1
 
 [design.LLR-015]
@@ -161,7 +161,7 @@ code_symbol = "budget_findings"
 detail = """Resolves each PB row's Refs to a real SR/LLR/Module id; an empty or unresolvable Refs is a finding."""
 test_refs = "(see TC-015)"
 status = "Verified"
-component = "CMP-001"
+component = "CMP-006"
 phase = 1
 
 [design.LLR-016]
@@ -172,7 +172,7 @@ code_symbol = "find_stubs/scan_source"
 detail = """Walks the AST for stub bodies (pass-only/NotImplemented/ellipsis public functions) at the declared gate."""
 test_refs = "(see TC-016)"
 status = "Verified"
-component = "CMP-003"
+component = "CMP-007"
 phase = 1
 
 [design.LLR-017]
@@ -183,7 +183,7 @@ code_symbol = "Scanner/KEY_RE"
 detail = """Always-on scan of staged diff/message/outgoing range for PEM/token/key patterns, independent of the privacy toggle."""
 test_refs = "(see TC-017)"
 status = "Verified"
-component = "CMP-004"
+component = "CMP-007"
 phase = 1
 
 [design.LLR-018]
@@ -194,7 +194,7 @@ code_symbol = "EXEMPT_EMAILS/email_ok"
 detail = """Adds the PII/identity classes when docs/process.toml [policies] privacy_check is on (the legacy docs/privacy-check is still read through the migration window), exempting configured author identities."""
 test_refs = "(see TC-018)"
 status = "Modified"
-component = "CMP-004"
+component = "CMP-007"
 phase = 1
 
 [design.LLR-019]
@@ -205,7 +205,7 @@ code_symbol = "pre-commit"
 detail = """Runs trace --strict-integrity and the check_privacy secrets scan on staged content and blocks a failing commit."""
 test_refs = "(see TC-019)"
 status = "Verified"
-component = "CMP-004"
+component = "CMP-007"
 phase = 1
 
 [design.LLR-020]
@@ -216,7 +216,7 @@ code_symbol = "pre-push"
 detail = """Scans the outgoing commit range and blocks a push that would publish a secret or a private identity under privacy-check."""
 test_refs = "(see TC-020)"
 status = "Verified"
-component = "CMP-004"
+component = "CMP-007"
 phase = 1
 
 [design.LLR-021]
@@ -227,7 +227,7 @@ code_symbol = "python3 probe"
 detail = """Probes candidate interpreters by running one and skip-or-reports clearly when none works or a Store-alias exits nonzero."""
 test_refs = "(see TC-021)"
 status = "Verified"
-component = "CMP-004"
+component = "CMP-007"
 phase = 1
 
 [design.LLR-022]
@@ -238,7 +238,7 @@ code_symbol = "main"
 detail = "Compares a vendored doc copy against its recorded upstream source and reports drift."
 test_refs = "(see TC-022)"
 status = "Verified"
-component = "CMP-003"
+component = "CMP-007"
 phase = 1
 
 [design.LLR-023]
@@ -249,7 +249,7 @@ code_symbol = "build_map/splice_region"
 detail = """Regenerates the symbol map inside the BEGIN/END marker block and fails --check when the committed map has drifted."""
 test_refs = "(see TC-023)"
 status = "Verified"
-component = "CMP-002"
+component = "CMP-006"
 phase = 1
 
 [design.LLR-024]
@@ -260,7 +260,7 @@ code_symbol = "main"
 detail = """Parses the Permutations grammar (range/set/bool with @full|@pairwise|@boundaries) and emits the concrete case set."""
 test_refs = "(see TC-024)"
 status = "Verified"
-component = "CMP-002"
+component = "CMP-009"
 phase = 1
 
 [design.LLR-025]
@@ -271,7 +271,7 @@ code_symbol = "main"
 detail = "Reads each SKILL.md applicability frontmatter and regenerates skills/INDEX.csv."
 test_refs = "(see TC-025)"
 status = "Verified"
-component = "CMP-002"
+component = "CMP-009"
 phase = 1
 
 [design.LLR-026]
@@ -283,7 +283,7 @@ detail = """Runs the agent CLI headless: build_argv substitutes {model} into arg
 rationale = """A large prompt passed as argv dies at the OS command-line cap (8191 characters through a Windows .CMD shim, 32767 via CreateProcess) and a round's briefs run to roughly 70k, so stdin is the only delivery that survives — both limits verified live rather than assumed. The last-message capture exists because that CLI echoes its banner and the whole prompt into stdout, so stdout is not the result."""
 test_refs = "(see TC-026)"
 status = "Verified"
-component = "CMP-004"
+component = "CMP-008"
 phase = 1
 
 [design.LLR-027]
@@ -294,7 +294,7 @@ code_symbol = "preflight/EXIT_PREFLIGHT"
 detail = """Refuses a non-git dir, a missing agent CLI, or a private author under privacy-check with a typed nonzero exit rather than hanging."""
 test_refs = "(see TC-027)"
 status = "Verified"
-component = "CMP-004"
+component = "CMP-008"
 phase = 1
 
 [design.LLR-028]
@@ -305,7 +305,7 @@ code_symbol = "classify_outcome/stall_verdict"
 detail = """Ends each session in a typed code, guards a zero-commit HEAD, and reports an all-ERROR region as an unavailable agent, not a work stall."""
 test_refs = "(see TC-028)"
 status = "Verified"
-component = "CMP-004"
+component = "CMP-008"
 phase = 1
 
 [design.LLR-029]
@@ -316,7 +316,7 @@ code_symbol = "acquire_lock/_take_os_lock"
 detail = """Takes an OS advisory lock the kernel releases on process death, so no stale-pid file wedges the next run."""
 test_refs = "(see TC-029)"
 status = "Verified"
-component = "CMP-004"
+component = "CMP-008"
 phase = 1
 
 [design.LLR-030]
@@ -327,7 +327,7 @@ code_symbol = "acquire_lock"
 detail = """Refuses a second coordinator holding the same per-worktree lock, preventing a two-writer race."""
 test_refs = "(see TC-030)"
 status = "Verified"
-component = "CMP-004"
+component = "CMP-008"
 phase = 1
 
 [design.LLR-031]
@@ -338,7 +338,7 @@ code_symbol = "_first_declared_line"
 detail = """The single first-non-comment-line reader the hooks, agent_loop.read_declared, and check_privacy all use so a declared policy value is read one way."""
 test_refs = "(see TC-031)"
 status = "Verified"
-component = "CMP-004"
+component = "CMP-007"
 phase = 1
 
 [design.LLR-032]
@@ -349,7 +349,7 @@ code_symbol = "onboard/dev-setup"
 detail = """The onboarding and dev-setup scaffold scripts that materialize and run to a green developer setup."""
 test_refs = "(see TC-032)"
 status = "Verified"
-component = "CMP-005"
+component = "CMP-009"
 phase = 1
 
 [design.LLR-033]
@@ -360,7 +360,7 @@ code_symbol = "main"
 detail = """Emits docs/release-checklist.md, including a Performance-budgets section listing each warn-tier PB (id + allocation) read from the budgets registry."""
 test_refs = "(see TC-033)"
 status = "Verified"
-component = "CMP-002"
+component = "CMP-009"
 phase = 1
 
 [design.LLR-034]
@@ -371,7 +371,7 @@ code_symbol = "load_wis/validate"
 detail = """Loads the WI registry - the docs/work/ spec folder, the ONE home since the CSV home retired at concurrency-restructure Phase 5 (a stray work-items.csv is itself an integrity finding, never a second home) -; validates WI ids, predecessor resolution, and hard-edge acyclicity; respects the absent/placeholder/opt-out vacuity rules."""
 test_refs = "(see TC-037)"
 status = "Modified"
-component = "CMP-001"
+component = "CMP-006"
 phase = 1
 
 [design.LLR-035]
@@ -382,7 +382,7 @@ code_symbol = "build_html/spine_stats/arch_icicle/dag_svg"
 detail = """Renders one self-contained root HTML file with completeness tiles, the spine hierarchy, and the WI roadmap DAG."""
 test_refs = "(see TC-038)"
 status = "Verified"
-component = "CMP-002"
+component = "CMP-009"
 phase = 1
 
 [design.LLR-037]
@@ -393,7 +393,7 @@ code_symbol = "session_template/status_size_warning"
 detail = """cmd_map parsed by parse_map (same KEY=value syntax; templates may not contain , or ; — the dispatcher wrapper covers those); session_template(phase) falls back to AGENT_CMD; every map entry preflighted (parse + executable); review-policy read via read_declared and printed in the banner; status_size_warning is pure and warn-only (limit<=0 disables)."""
 test_refs = "(see TC-040)"
 status = "Verified"
-component = "CMP-004"
+component = "CMP-008"
 phase = 1
 
 [design.LLR-038]
@@ -404,7 +404,7 @@ code_symbol = "findings_for/load_symbol_oracle/is_path_shaped"
 detail = """Scans root *.md + docs/**/*.md; a backticked token is path-shaped when it carries a separator plus a known extension or top-level prefix (URLs/globs/placeholders excluded); GENERATED marker blocks and path-ok lines are skipped; sym:<module>.<name> is resolved against the module map parsed from architecture.md (module tail -> public symbols); warn-first, --strict exits 1."""
 test_refs = "(see TC-041)"
 status = "Verified"
-component = "CMP-003"
+component = "CMP-007"
 phase = 1
 
 [design.LLR-039]
@@ -415,7 +415,7 @@ code_symbol = "emit/concept/_doc_title_and_summary/on_disk"
 detail = """emit() builds {relpath: content} for every real row (sorted, deterministic, no timestamps): frontmatter via JSON-quoted YAML scalars, bodies carrying the row prose plus up/down markdown links from locally built reverse maps, per-tier and root indexes, the UPSTREAM.md spec pin; on_disk() snapshots docs/okf for the byte-compare; write mode writes-if-changed and prunes; small loaders duplicated per the F5 rule (no new sibling import). Layer B2 adds a process-guides tier: _doc_title_and_summary derives each guide title+summary from the doc first heading/paragraph (inline links stripped so nothing dangles), emitted only after the vacuity gate so a fresh scaffold stays vacuous."""
 test_refs = "(see TC-042)"
 status = "Verified"
-component = "CMP-002"
+component = "CMP-009"
 phase = 1
 
 [design.LLR-040]
@@ -426,7 +426,7 @@ code_symbol = "decide/main"
 detail = """Pure decide(tool_name, policy, override) -> allow|ask|deny|defer over SPAWN_TOOLS={Task,Agent}; main reads the PreToolUse JSON payload, reads docs/process.toml [checks] subagent_gate (falling back to the legacy one-word docs/subagent-gate through the migration window), applies the SUBAGENT_GATE=allow override, emits permissionDecision (deny -> exit 2), and appends each decision to out/subagent-gate.log; any exception fails OPEN (allow) and logs, so a broken gate never wedges the agent's tools."""
 test_refs = "(see TC-043)"
 status = "Modified"
-component = "CMP-004"
+component = "CMP-007"
 phase = 1
 
 [design.LLR-041]
@@ -437,7 +437,7 @@ code_symbol = "interface_findings/integrity_findings"
 detail = """Loads interfaces.csv; validates IF ids, SR back-links and Component tags, and emits the best-effort endpoint-module advisory."""
 test_refs = "(see TC-044)"
 status = "Verified"
-component = "CMP-001"
+component = "CMP-006"
 phase = 1
 
 [design.LLR-042]
@@ -448,7 +448,7 @@ code_symbol = "interface_findings/arch_inventory"
 detail = """Emits opt-out warn-first findings for missing endpoints/directions, uncited Active seams, and dangling Contracts citations without changing exit status."""
 test_refs = "(see TC-080)"
 status = "Verified"
-component = "CMP-001"
+component = "CMP-006"
 phase = 1
 
 [design.LLR-043]
@@ -459,7 +459,7 @@ code_symbol = "check_agent_sync"
 detail = """gen_skills_index.check_agent_sync byte-compares each per-agent <agent>/skills/<name>/ file (.claude/.gemini/.agents) to the neutral project-trajectory/skills/<name>/ source; a copy that diverges is a --check-agents finding with a one-command fix, an orphan copy (no source) a non-failing warn, a source skill missing from a subset dir no finding. Vacuous without a source or per-agent dir; wired as the check.py skills-sync step + pre-commit floor (kit-only generator, so a scaffold no-ops). bootstrap.sync_agent_skills (--sync) force-refreshes only the <agent>/skills/<name>/ subtree from source."""
 test_refs = "(see TC-045)"
 status = "Verified"
-component = "CMP-002"
+component = "CMP-009"
 phase = 1
 
 [design.LLR-044]
@@ -470,7 +470,7 @@ code_symbol = "load_registry/resolve_enabled/parse_env/select"
 detail = """Parses pair rows and enable tokens; resolves versions; merges Env; selects by tier, family, cooldown, and order with legacy Provider compatibility."""
 test_refs = "(see TC-046)"
 status = "Verified"
-component = "CMP-004"
+component = "CMP-008"
 phase = 1
 
 [design.LLR-045]
@@ -481,7 +481,7 @@ code_symbol = "main/reviewer_prompt/phase_tier"
 detail = """Schedules review-policy sessions in managed mode, constructs redacted prompt-map briefs, parses verdicts, logs selections, and preserves unmanaged behavior."""
 test_refs = "(see TC-082)"
 status = "Verified"
-component = "CMP-004"
+component = "CMP-008"
 phase = 1
 
 [design.LLR-046]
@@ -492,7 +492,7 @@ code_symbol = "substance/fired_tripwires/record_round"
 detail = """Computes advisory substance components and decay history; treats tripwires as gates and never rewards length."""
 test_refs = "(see TC-083)"
 status = "Verified"
-component = "CMP-004"
+component = "CMP-008"
 phase = 1
 
 [design.LLR-047]
@@ -504,7 +504,7 @@ detail = """load_capabilities parses the docs/stack.ini [run] section (configpar
 rationale = """The command being run is the user's own declared line, so shell=True is the same trust boundary the declaration already establishes rather than a new one. EOF-safety is load-bearing: a menu that blocks on a closed stdin turns an unattended invocation into a hang, which is the failure this launcher exists to avoid."""
 test_refs = "(see TC-047)"
 status = "Verified"
-component = "CMP-005"
+component = "CMP-009"
 phase = 1
 
 [design.LLR-048]
@@ -515,7 +515,7 @@ code_symbol = "load_critique_srs/build_scope_srs/critique_brief/critique_prompt"
 detail = """Detects Critique-scoped builds and assembles a fresh family-heterogeneous rubric/intent/artifact brief with no self-assessment."""
 test_refs = "(see TC-048)"
 status = "Verified"
-component = "CMP-004"
+component = "CMP-008"
 phase = 1
 
 [design.LLR-049]
@@ -526,7 +526,7 @@ code_symbol = "component_top_view/component_findings/module_components/load_cmps
 detail = """Derives component roots and uncontained modules; enforces TOP_VIEW_MAX with nesting, opt-out, and vacuity rules."""
 test_refs = "(see TC-049)"
 status = "Verified"
-component = "CMP-001"
+component = "CMP-006"
 phase = 1
 
 [design.LLR-050]
@@ -537,7 +537,7 @@ code_symbol = "compute"
 detail = """Per-artifact gate rules (sr_gate/maturity_gate/sn_gate) + min-aggregation over in-scope artifacts + the cached docs/gate (basis line + --check rot guard, legacy value-only); the derived current phase (max over ratified rows via phase_num) rides the basis line and --print, the phase analogue of the derived gate. is_modified is recognized (F5-mirrored from trace.py, pinned by test_rule_sync) and counted across SR/LLR/TC onto the compared basis line as modified=N beside drafts=N - a surfacing count only, no gate arithmetic (a Modified SR reads G2 through the existing decomposed-unverified rung of sr_gate; maturity_gate stays Draft-only so a Modified child never caps)."""
 test_refs = "(see TC-050)"
 status = "Verified"
-component = "CMP-001"
+component = "CMP-006"
 phase = 1
 
 [design.LLR-051]
@@ -548,7 +548,7 @@ code_symbol = "process_panel/build_html"
 detail = """Renders the Process tab as a fully self-contained conditional panel registered in build_html (the Knowledge-tab pattern: nav button + section id=process): (1) the artifact-lifecycle x gates panel derived from the live registries + docs/gate (current-gate highlight; per-tier counts from the spine), (2) the resume-loop panel (the managed agent_loop flow with its escalation edges), (3) the slices -> phase -> gates panel derived from the WI registry (docs/work/); links out to the process masters wherever a canonical home exists (bounded in-view restatement only where no single doc states the relationship); sorted inputs, no clocks; a data-less repo renders byte-identically; --check unchanged (the trajectory-map step)."""
 test_refs = "(see TC-051)"
 status = "Verified"
-component = "CMP-002"
+component = "CMP-009"
 phase = 2
 
 [design.LLR-052]
@@ -559,7 +559,7 @@ code_symbol = "when_view/_wi_phases"
 detail = """Builds phase/workstream/WI tiers by threshold, surfaces delivery Phase, and aggregates parent edges from deduplicated child edges."""
 test_refs = "(see TC-052)"
 status = "Verified"
-component = "CMP-002"
+component = "CMP-009"
 phase = 2
 
 [design.LLR-055]
@@ -571,7 +571,7 @@ detail = """Adjudicated against the usability rubric (docs/rubrics/dashboard-usa
 rationale = """A critique that re-judges what a test already enforces spends its budget twice and can disagree with the harness, so an anchor whose bar becomes operational leaves this row entirely rather than being kept as a duplicate. T3 and T1 are the two that left whole: a critique cannot verify T3's return path from a static shot set while a test can click the crumb, and T1's 'obvious' was always glossed as labelled-not-unlabelled, which is mechanizable once written that way."""
 test_refs = "(see TC-055)"
 status = "Verified"
-component = "CMP-002"
+component = "CMP-009"
 phase = 3
 
 [design.LLR-056]
@@ -582,7 +582,7 @@ code_symbol = "process_panel/_station_panel"
 detail = """Extends SR-050's process_panel with the project's two circular working loops as linked flow panels: (A) the intake loop - owner/agent intake -> triage into work items with spec detail -> the scheduler-derived ready frontier in the WI registry (docs/work/) -> build/review -> merge; (B) the human-decision loop - open-items population (incl. the gate-ratification table) -> human review and ruling -> the log's Decisions record -> merge - with the LLM_Agent entry node rendered once and shared by both loops. Each stage links to its canonical home (status.md, the WI registry (docs/work/), open-items.html, log.md); data-derived where a canonical source exists; a data-less repo renders byte-identically; --check unchanged (the trajectory-map step)."""
 test_refs = "(see TC-056)"
 status = "Verified"
-component = "CMP-002"
+component = "CMP-009"
 phase = 3
 
 [design.LLR-057]
@@ -593,7 +593,7 @@ code_symbol = "when_view/_tier_column/_svg_node"
 detail = """Polishes the tiered decomposition render: each tier column is sized no wider than its content within a declared bound (a per-tier max-width cap MAX_TIER_COL, not the current uniform column); one horizontal parent->child arrow is drawn per containment edge so containment is explicit rather than implied by nesting alone; and the hover/focus highlight persists on the last-hovered item until another takes it (a stateful highlight keyed to the last-hovered node id, killing the flash-on-exit). Self-contained, byte-deterministic; --check unchanged. Composes with SR-089's tiering without changing its >3 thresholds."""
 test_refs = "(see TC-057)"
 status = "Verified"
-component = "CMP-002"
+component = "CMP-009"
 phase = 3
 
 [design.LLR-058]
@@ -604,7 +604,7 @@ code_symbol = "ready/frontier/evaluate"
 detail = """Derives the dependency-ready frontier from the WI registry + dispatcher reservations (never prose), excludes blocked/deferred/reserved/protected-/exclusive-conflicting WIs with reason codes, and exposes ready --explain / --format json and simulate --jobs N."""
 test_refs = "(see TC-058)"
 status = "Verified"
-component = "CMP-004"
+component = "CMP-008"
 phase = 4
 
 [design.LLR-059]
@@ -615,7 +615,7 @@ code_symbol = "classify/safety_class"
 detail = """Maps declared safety and policy inputs to one scheduling class and deterministic reason codes without side effects."""
 test_refs = "(see TC-059)"
 status = "Verified"
-component = "CMP-004"
+component = "CMP-008"
 phase = 4
 
 [design.LLR-060]
@@ -626,7 +626,7 @@ code_symbol = "REGEN_STEPS/regen"
 detail = """next-wi/run-phase are gone from every surface; the status snapshot is generated by gen_trajectory --status and re-derived by the trunk lane (trunk_step --regen) after each merge - never hand-copied, never written on a work branch. (The run-state generation half retired with the dispatcher at Phase 5.)"""
 test_refs = "(see TC-060)"
 status = "Verified"
-component = "CMP-004"
+component = "CMP-008"
 phase = 4
 
 [design.LLR-061]
@@ -637,7 +637,7 @@ code_symbol = "build_worker_assignment/worker_prompt"
 detail = """Replaces internal --track assumptions with explicit --wi/--train/worktree assignment; assembles the worker prompt from AGENTS.md + WI row + SpecRef + predecessor context + train diff + rework finding (never status.md/next-wi); collision-safe per-assignment logs/review evidence naming the exact reviewed commit; the --track lane machinery is retired outright."""
 test_refs = "(see TC-061)"
 status = "Verified"
-component = "CMP-004"
+component = "CMP-008"
 phase = 4
 
 [design.LLR-067]
@@ -648,7 +648,7 @@ code_symbol = "cross_component_findings/arch_inventory"
 detail = """Joins imports, component membership, and declared seams; reports uncovered cross-component edges with strict/plain and vacuity rules."""
 test_refs = "(see TC-067)"
 status = "Verified"
-component = "CMP-001"
+component = "CMP-006"
 phase = 1
 
 [design.LLR-068]
@@ -659,7 +659,7 @@ code_symbol = "spec_interface_findings/_spec_interfaces_section/_proposed_ration
 detail = """Validates armed spec interface ids, Proposed rationale, and the intra-module escape with warn-first/strict severity."""
 test_refs = "(see TC-068)"
 status = "Verified"
-component = "CMP-001"
+component = "CMP-006"
 phase = 1
 
 [design.LLR-069]
@@ -670,7 +670,7 @@ code_symbol = "parse_goal/parse_plan/check_plan/find_cycle/format_report"
 detail = """Parses rival plan tables; resolves clause/SR/IF coverage; validates dependencies; emits pairwise differences and distinct findings/malformed/absent-registry outcomes."""
 test_refs = "(see TC-069)"
 status = "Verified"
-component = "CMP-001"
+component = "CMP-006"
 phase = 1
 
 [design.LLR-070]
@@ -681,7 +681,7 @@ code_symbol = "new_round/ready_steps/record/disposition/page_action"
 detail = """Implements typed round steps, spend and action caps, position-swapped agreement, persistence, and PAGE mapping."""
 test_refs = "(see TC-070)"
 status = "Verified"
-component = "CMP-004"
+component = "CMP-008"
 phase = 4
 
 [design.LLR-071]
@@ -692,7 +692,7 @@ code_symbol = "build_surface/assemble/load_template/strip_dispatcher_block/HAT_K
 detail = """Builds planner/critic/arbiter briefs only from SR/IF registries with strict template slots and override/fallback loading."""
 test_refs = "(see TC-071)"
 status = "Verified"
-component = "CMP-004"
+component = "CMP-008"
 phase = 4
 
 [design.LLR-072]
@@ -703,7 +703,7 @@ code_symbol = "planner_pair/planner_fallback"
 detail = """Selects two fresh planner sessions across families where possible and applies the bounded nonresponse fallback with reason codes."""
 test_refs = "(see TC-072)"
 status = "Verified"
-component = "CMP-004"
+component = "CMP-008"
 phase = 1
 
 [design.LLR-073]
@@ -714,7 +714,7 @@ code_symbol = "run_coverage/to_record_kwargs/_implicated_plans"
 detail = """Converts coverage CLI results and report payload into clean, implicated-repair, repeated-failure, or malformed round records."""
 test_refs = "(see TC-073)"
 status = "Verified"
-component = "CMP-004"
+component = "CMP-008"
 phase = 4
 
 [design.LLR-074]
@@ -725,7 +725,7 @@ code_symbol = "allocate_round_dir/write_stage/file_selected_wis/append_log_summa
 detail = """Allocates stable round/stage artifacts and appends registry-valid selected child WIs with mapped predecessors and preserved line endings."""
 test_refs = "(see TC-074)"
 status = "Verified"
-component = "CMP-004"
+component = "CMP-008"
 phase = 4
 
 [design.LLR-075]
@@ -736,7 +736,7 @@ code_symbol = "status_forward_only_findings"
 detail = """Finds done WI tokens only in hand-edited status.md, with plain/strict severity, and stands down for the generated marker, open/unknown ids, opt-out, and absent status."""
 test_refs = "(see TC-075)"
 status = "Verified"
-component = "CMP-001"
+component = "CMP-006"
 phase = 1
 
 [design.LLR-076]
@@ -747,7 +747,7 @@ code_symbol = "run_dual_plan_round/_dp_routes/_dp_session"
 detail = """Runs planners, cross-critiques, bounded revisions and position-swapped arbiters as fresh sessions; selects only true-plan agreement."""
 test_refs = "(see TC-076)"
 status = "Verified"
-component = "CMP-004"
+component = "CMP-008"
 phase = 4
 
 [design.LLR-077]
@@ -758,7 +758,7 @@ code_symbol = "ssot_findings/spec_ref_findings"
 detail = """Enforces Deliverable iff done on every run and resolvable open-WI SpecRef under strict mode."""
 test_refs = "(see TC-077)"
 status = "Verified"
-component = "CMP-001"
+component = "CMP-006"
 phase = 1
 
 [design.LLR-078]
@@ -769,7 +769,7 @@ code_symbol = "sw_modules/cmp_rows/know_graph/_okf_nodes"
 detail = """Renders software/component and OKF views only when their source bundles exist; omits each otherwise."""
 test_refs = "(see TC-078)"
 status = "Verified"
-component = "CMP-002"
+component = "CMP-009"
 phase = 1
 
 [design.LLR-079]
@@ -780,7 +780,7 @@ code_symbol = "main/_asof/ASOF_RE"
 detail = "Produces deterministic responsive HTML."
 test_refs = "(see TC-079)"
 status = "Verified"
-component = "CMP-002"
+component = "CMP-009"
 phase = 1
 
 [design.LLR-080]
@@ -791,7 +791,7 @@ code_symbol = "sw_graph/build_html;build_module_map"
 detail = """Renders IF-labeled seams in dashboard and architecture views with deterministic table fallback when absent."""
 test_refs = "(see TC-081)"
 status = "Verified"
-component = "CMP-002"
+component = "CMP-009"
 phase = 1
 
 [design.LLR-081]
@@ -802,7 +802,7 @@ code_symbol = "escalate/failure_action"
 detail = """Applies win-stay/lose-shift family swap, tier escalation, and ratification-level-keyed paging for shared failure, contradiction, and tripwires."""
 test_refs = "(see TC-084)"
 status = "Modified"
-component = "CMP-004"
+component = "CMP-008"
 phase = 1
 
 [design.LLR-082]
@@ -813,7 +813,7 @@ code_symbol = "main/critique_rounds/critique_failure_action"
 detail = """Loops CHANGES-REQUESTED through rework and fresh critique within AGENT_CRITIQUE_MAX, then pages via gate policy."""
 test_refs = "(see TC-085)"
 status = "Verified"
-component = "CMP-004"
+component = "CMP-008"
 phase = 1
 
 [design.LLR-083]
@@ -824,7 +824,7 @@ code_symbol = "VERIFICATION_VALUES/llr_exempt"
 detail = """Accepts Critique as a verification value while retaining the LLR completeness requirement."""
 test_refs = "(see TC-086)"
 status = "Verified"
-component = "CMP-001"
+component = "CMP-006"
 phase = 1
 
 [design.LLR-084]
@@ -835,7 +835,7 @@ code_symbol = "critique_ratchet_findings"
 detail = """Warns when a Critique-scoped WI closes after CHANGES-REQUESTED with no TC, test, or rubric delta."""
 test_refs = "(see TC-086)"
 status = "Verified"
-component = "CMP-001"
+component = "CMP-006"
 phase = 1
 
 [design.LLR-085]
@@ -846,7 +846,7 @@ code_symbol = "sw_containment/sw_graph"
 detail = """Renders nested component membership and boundary-aggregated seams, falling back byte-identically to the flat view without containment."""
 test_refs = "(see TC-087)"
 status = "Verified"
-component = "CMP-002"
+component = "CMP-009"
 phase = 1
 
 [design.LLR-086]
@@ -857,7 +857,7 @@ code_symbol = "sw_containment/_descend"
 detail = "Tiers component containment to modules and bounds the visible top level by TOP_VIEW_MAX."
 test_refs = "(see TC-088)"
 status = "Verified"
-component = "CMP-002"
+component = "CMP-009"
 phase = 2
 
 [design.LLR-087]
@@ -868,7 +868,7 @@ code_symbol = "_drill_svg/_drill_edges"
 detail = """Attaches IF seams to visible input/output ports and aggregates cross-container seams at boundaries."""
 test_refs = "(see TC-089)"
 status = "Verified"
-component = "CMP-002"
+component = "CMP-009"
 phase = 2
 
 [design.LLR-088]
@@ -879,7 +879,7 @@ code_symbol = "_descend/_breadcrumb"
 detail = """Handles pointer and keyboard one-layer descent and breadcrumb restoration in self-contained views."""
 test_refs = "(see TC-090)"
 status = "Verified"
-component = "CMP-002"
+component = "CMP-009"
 phase = 2
 
 [design.LLR-089]
@@ -890,7 +890,7 @@ code_symbol = "structural_safety/classify"
 detail = """Cross-checks declarations against spine, critique, checkpoint, and dual-plan evidence; quarantines only the contradictory WI."""
 test_refs = "(see TC-091)"
 status = "Verified"
-component = "CMP-004"
+component = "CMP-008"
 phase = 4
 
 [design.LLR-095]
@@ -901,7 +901,7 @@ code_symbol = "classify"
 detail = "Rejects dual rows on the direct worker path."
 test_refs = "(see TC-097)"
 status = "Verified"
-component = "CMP-004"
+component = "CMP-008"
 phase = 4
 
 [design.LLR-096]
@@ -912,7 +912,7 @@ code_symbol = "main"
 detail = "Commits SELECT or PAGE as one docs-only disposition and regenerates validation."
 test_refs = "(see TC-098)"
 status = "Verified"
-component = "CMP-004"
+component = "CMP-008"
 phase = 4
 
 [design.LLR-097]
@@ -923,7 +923,7 @@ code_symbol = "spec_lifecycle_findings"
 detail = """Emits R-F findings - done WI with non-empty SpecRef; live docs/specs file (README/-000 excluded, the spec_interface_findings idiom) with no open-WI citer - message-only, riding main's warn-plain/error-under-strict tier with no new branch."""
 test_refs = "(see TC-100)"
 status = "Verified"
-component = "CMP-001"
+component = "CMP-006"
 phase = 4
 
 [design.LLR-098]
@@ -934,7 +934,7 @@ code_symbol = "load_floors/load_report/evaluate"
 detail = """Reads the docs/coverage-floors census (module + min percent; blank and # lines ignored) and coverage.py's JSON report (per-file percent_covered, path-normalized), fails on any module below its floor or absent from the report, SKIPs when the report is absent, is a no-op with an empty census, and fails loudly on a malformed floor line."""
 test_refs = "(see TC-101)"
 status = "Verified"
-component = "CMP-003"
+component = "CMP-007"
 phase = 1
 
 [design.LLR-099]
@@ -946,7 +946,7 @@ detail = """The mechanized core of usability anchor T2 (docs/rubrics/dashboard-u
 rationale = """Tiering imposed on a small project costs a click to reach what already fitted on one screen, so it is earned by scale rather than switched on globally. Capping DEPTH instead of collapsing was rejected and the emitter records why: height is leaf-proportional, so stopping at the SR lane still stacks one unit per SR and the wall returns. The What icicle is the case that forced the widening — it rendered the whole spine at LEAF scale, one unit per test case."""
 test_refs = "(see TC-102)"
 status = "Verified"
-component = "CMP-002"
+component = "CMP-009"
 phase = 3
 
 [design.LLR-100]
@@ -958,7 +958,7 @@ detail = """The mechanized core of usability anchor T3 (docs/rubrics/dashboard-u
 rationale = """A drill that descends with no way back strands the reader in a view they cannot leave, and 'keeps the reader oriented' never independently passed or failed a round — the breadcrumb IS that orientation, so the claim becomes testable only once it is the thing asserted. Leaving the anchor to critique was rejected because a critique CANNOT verify it: a shot matrix captures initial views only, so a round can pass on markup while the return path itself stays unverified, whereas TC-103 clicks the crumb. It follows that a critic finding T3 violated has found a gap in TC-103, which routes through change-intake to harden this test rather than through a verdict."""
 test_refs = "(see TC-103)"
 status = "Verified"
-component = "CMP-002"
+component = "CMP-009"
 phase = 3
 
 [design.LLR-101]
@@ -970,7 +970,7 @@ detail = """The mechanized core of accessibility anchor A2 (docs/rubrics/dashboa
 rationale = """role=img prunes its subtree from the accessibility tree, so declaring it over focusable descendants hides every one of them from assistive technology while the page still looks correct. The predicate must treat a native SVG <a href> as focusable and not tabindex alone: a tabindex-only predicate passes a diagram of linked stage cards that are tab-ordered without one. Setting the role at each call site was rejected — deriving it from the body is what stops a future emitter silently reintroducing the conflict."""
 test_refs = "(see TC-104)"
 status = "Verified"
-component = "CMP-002"
+component = "CMP-009"
 phase = 3
 
 [design.LLR-102]
@@ -982,7 +982,7 @@ detail = """The mechanized core of uniformity anchor U5 (docs/rubrics/dashboard-
 rationale = """One hex carrying two concepts makes the legend a lie in both directions, and a phase sharing the --accent token makes that phase's focus and hover ring invisible — a control the reader cannot see they have reached. Comparing only ADJACENT entries was rejected: a palette is read as a whole, so two members that collide are a collision wherever they sit in the list."""
 test_refs = "(see TC-105)"
 status = "Verified"
-component = "CMP-002"
+component = "CMP-009"
 phase = 3
 
 [design.LLR-103]
@@ -994,7 +994,7 @@ detail = """The mechanized core of uniformity anchor U3 (docs/rubrics/dashboard-
 rationale = """A highlight that changes hue between views teaches the reader a different interaction language per tab, and a legend built twice drifts in one copy while the other stays right. Per-emitter hues were the shipped state (an accent token in the drill views, a hardcoded amber elsewhere) and were rejected precisely because nothing held them equal: sharing one token means a change lands everywhere or nowhere."""
 test_refs = "(see TC-106)"
 status = "Verified"
-component = "CMP-002"
+component = "CMP-009"
 phase = 3
 
 [design.LLR-104]
@@ -1006,7 +1006,7 @@ detail = """The mechanized core of uniformity anchor U1 (docs/rubrics/dashboard-
 rationale = """A magic number is invisible to every later change: two independently-drifting literals doing one job diverge the first time somebody adjusts one of them. Collapsing all four selectors onto the node-label tokens was rejected because a once-per-diagram headline is a different role, and forcing one token onto two roles is the same defect in the other direction."""
 test_refs = "(see TC-107)"
 status = "Verified"
-component = "CMP-002"
+component = "CMP-009"
 phase = 3
 
 [design.LLR-105]
@@ -1018,7 +1018,7 @@ detail = """The mechanized core of usability anchor T5 (docs/rubrics/dashboard-u
 rationale = """A fixed hue vanishes on whichever fill happens to match it, and the failure is total where it lands: the measured collision put a control at 1.00:1 against its host, i.e. invisible. Fixing only the ring was rejected once the same fixed token was found on the descend ARROW — the very control a reader must find to descend a tier — measuring 1.06:1 light and 1.99:1 dark on a shipped phase fill. One control's fix does not generalise; deriving every such control from the host fill does."""
 test_refs = "(see TC-108)"
 status = "Verified"
-component = "CMP-002"
+component = "CMP-009"
 phase = 3
 
 [design.LLR-106]
@@ -1030,7 +1030,7 @@ detail = """The mechanized core of uniformity anchor U2 (docs/rubrics/dashboard-
 rationale = """A vocabulary is one vocabulary only if every member is in it: a bare hex literal outside the declared collection is invisible to the collision sweep and to the ring-ink enumeration alike, so it evades both the checks that would catch it. That is not hypothetical — a four-kind vocabulary declared only three because one badge fill sat inline in its emitter. Auditing hues by review was rejected: review cannot see a member that was never declared."""
 test_refs = "(see TC-109)"
 status = "Verified"
-component = "CMP-002"
+component = "CMP-009"
 phase = 3
 
 [design.LLR-107]
@@ -1042,7 +1042,7 @@ detail = """The mechanized core of uniformity anchor U4 (docs/rubrics/dashboard-
 rationale = """One node addressed two ways means every later consumer must handle both, and the second spelling is the one that gets forgotten. Proving that two emitters' handlers BEHAVE alike was considered and rejected as out of reach without a browser harness — what is provable from the markup is that they are wired through one vocabulary, and that is the narrowing this row accepts explicitly rather than claiming more than it checks."""
 test_refs = "(see TC-110)"
 status = "Verified"
-component = "CMP-002"
+component = "CMP-009"
 phase = 3
 
 [design.LLR-108]
@@ -1054,7 +1054,7 @@ detail = """The QUALITY half of accessibility anchor A2, mechanizing what LLR-10
 rationale = """A bare registry id tells a screen-reader user nothing about what the control is, and a reader listing landmarks hears a flat list in which two called 'Breadcrumb' are indistinguishable — which is what three drills produce unless the names are made distinct. Asserting over decorative graphics too was rejected: it would manufacture findings the accessibility standard does not make, and a check that cries wolf is one a reader stops reading."""
 test_refs = "(see TC-113)"
 status = "Verified"
-component = "CMP-002"
+component = "CMP-009"
 phase = 3
 
 [design.LLR-109]
@@ -1066,7 +1066,7 @@ detail = """Mechanizes what LLR-102 leaves perceptual: a PAIRWISE deltaE floor a
 rationale = """'A collision the identity check misses' looked like a judgement call only because the formula was already there and nobody had widened the set it ran over — the same arithmetic on more members. A cross-vocabulary floor of zero was rejected on evidence: a reader conflated a pair drawn from two different vocabularies, so sharing no legend reduces the risk without removing it. Three live conflations were sitting in the shipped palettes at the binding — sw external/component at deltaE 8.6, SR/phase[3] at 9.5, Interface/phase[7] at 10.5."""
 test_refs = "(see TC-114)"
 status = "Verified"
-component = "CMP-002"
+component = "CMP-009"
 phase = 3
 
 [design.LLR-110]
@@ -1078,7 +1078,7 @@ detail = """Mechanizes what LLR-103 leaves perceptual. Fourteen CSS tokens plus 
 rationale = """'Spacing and exact visual weight' was undecidable because the weights were never declared: the shipped page carried 8 stroke-widths, 7 opacities, 5 corner radii and 6 SVG rx values, of which five stroke widths were doing the single job 'draw a connector' and four rx values 'round a node box'. Nothing can be uniform against an undeclared scale, so declaring the roles is what turns the judgement into a check; leaving it to review was rejected because a near-duplicate weight is exactly what an eye does not catch."""
 test_refs = "(see TC-115)"
 status = "Verified"
-component = "CMP-002"
+component = "CMP-009"
 phase = 3
 
 [design.LLR-111]
@@ -1089,7 +1089,7 @@ code_symbol = "--nlabel/--nsub/--nhead + --tiny/--xsmall/--small/--body/--lead/-
 detail = """Mechanizes what LLR-104 left perceptual. 'Do the sizes read as visually uniform' was undecidable because the scale was never written down: 18 raw font-size literals against 5 tokens, with .7/.75rem, .9/.95/.98rem, 1.05/1.1rem and 8.5/9px each being near-duplicate steps for ONE role 3-7% apart. Eleven steps are now declared in THREE documented families - node (px, because SVG geometry is fixed px and a rem resizes labels out of their boxes), page (rem), and one relative step (em, for text sized against its parent) - and every emitted font-size must resolve to one. Claiming a single scale across those units would be false, so the LLR states three. SCOPE: step membership over paint surfaces. Whether the chosen steps are well-proportioned is not asserted."""
 test_refs = "(see TC-116)"
 status = "Verified"
-component = "CMP-002"
+component = "CMP-009"
 phase = 3
 
 [design.LLR-112]
@@ -1101,7 +1101,7 @@ detail = """The mechanized core of accessibility anchor A1 (docs/rubrics/dashboa
 rationale = """A control reachable only by pointer is unreachable for a keyboard user, and the page still looks complete, so nothing reports it. Enumerating the controls by hand was rejected: a per-element list goes stale the moment a selector is added, whereas deriving the wired set from the document's own calls means a new selector fails until someone classifies it. Two narrowings are load-bearing and must not be relaxed back: the derivation has to read every DOM-selecting API rather than one spelling of one call, or it silently misses wired controls; and the key-handler half has to be asserted statically rather than deferred to a browser, or mouse-only wiring ships."""
 test_refs = "(see TC-117)"
 status = "Verified"
-component = "CMP-002"
+component = "CMP-009"
 phase = 3
 
 [design.LLR-113]
@@ -1113,7 +1113,7 @@ detail = """The mechanized core of accessibility anchor A3: for every declared c
 rationale = """Colour alone excludes any reader who cannot resolve it, and the failure is silent: the page looks informative to everyone who can. A raw hex scan was rejected as the detection method because tokenised fills under-report it — the status legend paints through a CSS variable, and a hex scan finds one member of four. The substitution and the three guards exist because a hand-copied palette copy is the recurring defect here: one stale hex shipped in three separate places, and each copy that a test shares with its emitter is a copy the test cannot catch. The same-document narrowing costs a reader nothing today (every painted member is cued in its own tab panel) and a re-attestation should bless it knowingly."""
 test_refs = "(see TC-118)"
 status = "Verified"
-component = "CMP-002"
+component = "CMP-009"
 phase = 3
 
 [design.LLR-114]
@@ -1125,7 +1125,7 @@ detail = """Accessibility anchor A4 bound. The WCAG 2.1 AA arithmetic is owned b
 rationale = """Each sibling test sweeps a hand-copied list of the palettes, so a sixth vocabulary could ship outside every floor check while all six stayed green — the arithmetic was right and the SET was the hole. A new vocabulary must enter the arithmetic by EXISTING rather than by being remembered, which is what reflection buys and a seventh hand-copied list would not. Two shapes of that same defect must not return: a flat-dict-only walk misses nested and non-dict collections, and a hand-listed theme-token set is the very defect this row claims to close — both were live here, which is why the walk is recursive and the token set derived."""
 test_refs = "(see TC-119)"
 status = "Verified"
-component = "CMP-002"
+component = "CMP-009"
 phase = 3
 
 [design.LLR-115]
@@ -1137,7 +1137,7 @@ detail = """The mechanized core of usability anchor T1 (docs/rubrics/dashboard-u
 rationale = """'Obvious' was always glossed as labelled-rather-than-unlabelled, and that gloss is the whole bar — once it is written operationally there is nothing perceptual left to adjudicate, so the anchor can leave the critique instead of being re-judged every round. The rendered-artifact constraint is the load-bearing part and must not be relaxed to a structural check: a next-work surface can EXIST in the emitter and render nothing when no row is active, so a nav-skeleton check passes on exactly the artifact a reader finds empty."""
 test_refs = "(see TC-120)"
 status = "Verified"
-component = "CMP-002"
+component = "CMP-009"
 phase = 3
 
 [design.LLR-116]
@@ -1149,7 +1149,7 @@ detail = """The mechanized core of usability anchor T7 (docs/rubrics/dashboard-u
 rationale = """A fixed pixel width pins the rendered size whatever the container does, which is why every narrow view demanded sideways scroll and one graph clipped a component label mid-word. A viewBox alone cannot fix it — the fixed width still wins. The legibility floor exists because pure scale-to-fit TRADES this anchor for T4: a 900px graph squeezed into 390px shrinks a label past readable, so the floor stops the fix from creating the defect it is next to."""
 test_refs = "(see TC-121)"
 status = "Verified"
-component = "CMP-002"
+component = "CMP-009"
 phase = 3
 
 [design.LLR-117]
@@ -1161,7 +1161,7 @@ detail = """The mechanized core of usability anchor T6 (docs/rubrics/dashboard-u
 rationale = """A per-component theme override is a seam the reader crosses while scrolling, and a mixed pair reads correctly in the theme it was authored in and inverts in the other — both are invisible to the author working in one theme. Forbidding colour LITERALS was the obvious rule and is the wrong one: it fails a correct fixed-on-fixed pairing and passes a varying-on-invariant one, so it would flag the safe case and miss the defect. Deriving the families from the emitted document rather than listing them means a new token joins a family by existing."""
 test_refs = "(see TC-122)"
 status = "Verified"
-component = "CMP-002"
+component = "CMP-009"
 phase = 3
 
 [design.LLR-118]
@@ -1173,7 +1173,7 @@ detail = """The RENDERED half of the Modified/Draft attestation regime whose gat
 rationale = """A human cannot bless a delta they cannot see, and the depth that makes a re-attest readable is a WORD-LEVEL diff — which the markdown surface this replaces could not mark, so a reviewer was asked to sign a change they could only read as a whole cell. Re-deriving the attestation model here was rejected: a second opinion that disagreed with the brief would leave the reviewer arbitrating between two surfaces. Both emitted contracts exist because their absence fails SILENTLY in front of someone about to attest, which is the worst place for a quiet failure."""
 test_refs = "(see TC-123)"
 status = "Modified"
-component = "CMP-002"
+component = "CMP-009"
 phase = 4
 
 [design.LLR-119]
@@ -1185,7 +1185,7 @@ detail = """The mechanized floor of usability anchor T4 (docs/rubrics/dashboard-
 rationale = """A label is illegible AS a label the moment its ink leaves the box it names, which is the half of this anchor a reader cannot argue with. Column right-sizing (LLR-057, SR-056) cannot absorb it: right-sizing clamps at MAX_TIER_COL, so a 400-character need asks for a 2000px column and gets 172 — the overflow is structural, not a tuning problem. A FIXED character budget was the shipped approach on the next-work card and is rejected: it spends the same budget at every width, cutting a title mid-word on a wide screen with the card half empty. Native <details> is the point of the reveal — operable by pointer AND keyboard with no script, in a file opened from disk, which is what makes the affordance assertable from the markup instead of needing a browser. The height bound is measured over 320 registry rows: median 44, p90 126, max 609 characters of leading clause."""
 test_refs = "(see TC-124)"
 status = "Verified"
-component = "CMP-002"
+component = "CMP-009"
 phase = 4
 
 [design.LLR-120]
@@ -1197,7 +1197,7 @@ detail = """The mechanized floor of usability anchor T8 (docs/rubrics/dashboard-
 rationale = """A wire crossing an unrelated box reads as a connection that is not there, which is a wrong answer rather than an untidy one — geometry a reader cannot argue with. The claim about the ARTIFACT is deliberately separate from the router's own unit tests and is why this row exists: _detour_d returns a LEAST-BAD fallback when no candidate lane clears, so 'the algorithm detours' does not imply 'nothing shipped through a box', and the artifact-level claim had only ever been hand-verified once."""
 test_refs = "(see TC-125)"
 status = "Verified"
-component = "CMP-002"
+component = "CMP-009"
 phase = 4
 
 [design.LLR-121]
@@ -1209,7 +1209,7 @@ detail = """write_kit_version stamps docs/kit-version (SHA + date, -dirty on an 
 rationale = """Split from the idempotent-write row: the two obligations share a module but not a failure mode — a scaffold can write correctly and still leave the adopter unable to say what they scaffolded from."""
 test_refs = "(see TC)"
 status = "Verified"
-component = "CMP-005"
+component = "CMP-009"
 phase = 1
 
 [design.LLR-122]
@@ -1221,7 +1221,7 @@ detail = """dev-setup wires the pre-commit floor (core.hooksPath) from its basel
 rationale = """Split from the template row: reaching a green setup and being protected by the process floor fail independently, and the second is the one a contributor never notices is missing."""
 test_refs = "(see TC)"
 status = "Verified"
-component = "CMP-005"
+component = "CMP-009"
 phase = 1
 
 [design.LLR-123]
@@ -1233,7 +1233,7 @@ detail = """Orders eligible traincars by (gate, Priority desc, downstream-depend
 rationale = """Split from the frontier row: deriving WHICH traincars are eligible and deciding WHICH runs first fail independently, and only the second one makes a run replayable."""
 test_refs = "(see TC)"
 status = "Verified"
-component = "CMP-004"
+component = "CMP-008"
 phase = 4
 
 [design.LLR-124]
@@ -1245,7 +1245,7 @@ detail = """docs/status.md's generated block is maintained by the trunk lane onl
 rationale = """Split from the retirement row: removing the old pointer and generating the surfaces that replace it are separable, and the second is what keeps the replacement from rotting the same way."""
 test_refs = "(see TC)"
 status = "Verified"
-component = "CMP-004"
+component = "CMP-008"
 phase = 4
 
 [design.LLR-130]
@@ -1257,7 +1257,7 @@ detail = """Implements stale/missing --check with a git as-of stamp excluded fro
 rationale = """Split from the determinism row: determinism is what makes the check possible, but a deterministic artifact nobody re-checks still goes stale."""
 test_refs = "(see TC)"
 status = "Verified"
-component = "CMP-002"
+component = "CMP-009"
 phase = 1
 
 [design.LLR-131]
@@ -1269,7 +1269,7 @@ detail = """Derives contradiction-safe single-WI scheduling from PlanMode and qu
 rationale = """Split from the path-isolation row: refusing a wrong lane and deriving the right one are separate, and only the second sees a registry contradiction."""
 test_refs = "(see TC)"
 status = "Verified"
-component = "CMP-004"
+component = "CMP-008"
 phase = 4
 
 [design.LLR-132]
@@ -1281,7 +1281,7 @@ detail = """Applies the declared level's continuation semantics to a PAGE at bot
 rationale = """Split from the disposition row: committing the outcome and deciding whether it stops a human are independent, and the second is shared with a second entry point that would otherwise drift."""
 test_refs = "(see TC)"
 status = "Modified"
-component = "CMP-004"
+component = "CMP-008"
 phase = 4
 
 [design.LLR-133]
@@ -1293,7 +1293,7 @@ detail = """provenance_findings flags a WI id or a process-doc citation across t
 rationale = """A citation is a pointer a later reader may be unable to follow, and the row's reason travels with it: when the work item is closed and archived, the row keeps its claim and loses its justification, which is the failure this catches. Applied to every spine registry rather than the SR alone, because the layer the rule could not originally see held the largest pocket of violations — a narrower scope would guard the cleanest layer and miss the dirtiest."""
 test_refs = "(see TC)"
 status = "Verified"
-component = "CMP-001"
+component = "CMP-006"
 phase = 1
 
 [design.LLR-134]
@@ -1305,7 +1305,7 @@ detail = """form_findings applies six rules — one obligation per requirement, 
 rationale = """A row carrying two obligations reports neither when one fails, and undecidable wording is signed on impression rather than evidence — that is the failure all six rules exist to prevent. Draft is skipped because a Draft row is exempt from the child-completeness rules elsewhere in this harness and is by convention the state a requirement occupies while still being written, so an unfinished acceptance criterion is expected there rather than defective; flagging it would make the state unusable for the drafting it exists to allow. This cell says "obligation keyword" rather than quoting the keyword itself because the rule cannot distinguish a mention from a use, and an exemption a checker cannot see is one an author can reach for."""
 test_refs = "(see TC)"
 status = "Verified"
-component = "CMP-001"
+component = "CMP-006"
 phase = 1
 
 [design.LLR-135]
@@ -1317,7 +1317,7 @@ detail = """paraphrase_advisories compares a child cell's significant words (alp
 rationale = """A child that re-words its parent adds a second home for one fact and no decomposition, so a later amendment updates one copy and the two disagree with nothing to report it. The advisory has its own pipe rather than sharing the acceptance-criteria counter because a shared count would report 'ac-advisories' about a finding that is not one, and a reader acts on the counter name."""
 test_refs = "(see TC)"
 status = "Verified"
-component = "CMP-001"
+component = "CMP-006"
 phase = 1
 
 [design.LLR-136]
@@ -1329,7 +1329,7 @@ detail = """Converts between the spec folder and the retired CSV form per the Ph
 rationale = """One writer keeps migration and filing byte-compatible; refusal over catch-all keeps a malformed registry loud rather than silently reclassified."""
 test_refs = "(see TC-129)"
 status = "Modified"
-component = "CMP-005"
+component = "CMP-006"
 phase = 4
 
 [design.LLR-137]
@@ -1341,7 +1341,7 @@ detail = """Compiles docs/log.d/*.md into docs/log.md via plan_artifacts.append_
 rationale = "One serial actor per §5.5."
 test_refs = "(see TC-130)"
 status = "Verified"
-component = "CMP-004"
+component = "CMP-008"
 phase = 4
 
 [design.LLR-138]
@@ -1353,7 +1353,7 @@ detail = """pause_reason reads the ONE tracked home docs/work/pause via tracked_
 rationale = """A broken pause file must still pause; two homes during the migration window, one meaning."""
 test_refs = "(see TC-131)"
 status = "Verified"
-component = "CMP-004"
+component = "CMP-008"
 phase = 4
 
 [design.LLR-139]
@@ -1365,7 +1365,7 @@ detail = """Renders zero-or-one 'Paused since <since> - <reason>' bullet in the 
 rationale = "An open pause is a visible accruing cost, never a forgotten one."
 test_refs = "(see TC-136)"
 status = "Verified"
-component = "CMP-002"
+component = "CMP-009"
 phase = 4
 
 [design.LLR-140]
@@ -1377,7 +1377,7 @@ detail = """claim: §2.3 steps 1+2 with the refusal ladder (tracked pause via ag
 rationale = """One serial actor, one page; every refusal names its reason; the queue stops at the first red rather than composing past it."""
 test_refs = "(see TC-132)"
 status = "Modified"
-component = "CMP-004"
+component = "CMP-008"
 phase = 4
 
 [design.LLR-141]
@@ -1389,7 +1389,7 @@ detail = """On a claimed work branch the _TRUNK_FRESHNESS_STEPS set SKIPs with a
 rationale = """A false work-branch positive would relax the trunk's freshness bar, so every ambiguity resolves toward the trunk lane."""
 test_refs = "(see TC-134)"
 status = "Verified"
-component = "CMP-001"
+component = "CMP-007"
 phase = 4
 
 [design.LLR-142]
@@ -1401,7 +1401,7 @@ detail = """Regenerates arch-map, okf, derived-gate, dashboard, status block and
 rationale = """derive_gate runs before the dashboard/status regens because docs/gate is their input, not their output."""
 test_refs = "(see TC-135)"
 status = "Verified"
-component = "CMP-004"
+component = "CMP-008"
 phase = 4
 
 [design.LLR-143]
@@ -1413,7 +1413,7 @@ detail = """The serial scheduling front end a plain agent_loop.py launch runs: e
 rationale = """Ordering only, no new authority: every refusal stays where it already lives, and the driver is ~400 lines of composition against the 4,042-line dispatcher it replaces."""
 test_refs = "(see TC-137)"
 status = "Verified"
-component = "CMP-004"
+component = "CMP-008"
 phase = 4
 
 [design.LLR-144]
@@ -1425,7 +1425,7 @@ detail = """close_partial: commits the lane's work as-is, moves each claimed spe
 rationale = """Making the outcome the directory leaves no fourth answer and no state file that could hold one; partial work lands in trunk where a future WI can find it instead of on a branch nobody will look at."""
 test_refs = "(see TC-138)"
 status = "Modified"
-component = "CMP-004"
+component = "CMP-008"
 phase = 4
 
 [design.LLR-145]
@@ -1437,7 +1437,7 @@ detail = """move_spec moves a registry/spec file and keeps every markdown link i
 rationale = """A bare move strands both link directions and the break surfaces late, on the composed tree (measured: one probe archival took the broken-link count from 4 to 8 - 3 outbound, 1 inbound). Making move+relink one indivisible operation is a constraint that leaves the two-thirds state unrepresentable, rather than a check that detects it after the parallel work is done."""
 test_refs = "(see TC-139)"
 status = "Modified"
-component = "CMP-004"
+component = "CMP-008"
 phase = 4
 
 [design.LLR-146]
@@ -1449,7 +1449,7 @@ detail = """Scans root *.md + docs/**/*.md (check_doc_refs.doc_files - the same 
 rationale = """Would have flagged all three 2026-08-01 false figures; opt-in keeps the claim honest - declared figures carry provenance, not all figures do."""
 test_refs = "(see TC-140)"
 status = "Verified"
-component = "CMP-003"
+component = "CMP-007"
 phase = 1
 
 [design.LLR-147]
@@ -1461,7 +1461,7 @@ detail = """sn_gate reads the cited set sn_cited_ids builds from SR SN-Refs (an 
 rationale = """Before this rung SN->SR linkage was not a gate input at all: an unanswered ratified need left the gate untouched, orphaning only at G2 strictness (owner ruling 2026-08-01, dispatcher-flow review Q2). Measured safe before landing: the census on this repo read 25/25 SNs covered and zero ghost SN-Refs, so the rung lands green here and the uncovered case is constructed by fixture, not found."""
 test_refs = "(see TC-141)"
 status = "Verified"
-component = "CMP-001"
+component = "CMP-006"
 phase = 4
 
 [design.LLR-148]
@@ -1473,7 +1473,7 @@ detail = """--next-phase prints max(Phase over non-draft spine rows) + 1 - the b
 rationale = """One derived call keeps the boundary number mechanical - hand-picked numbers drift, and a spurious Modified window must not burn a phase number (the counterexample: 19 traced cells once flipped 11 SRs with no scope moved)."""
 test_refs = "(see TC-142)"
 status = "Verified"
-component = "CMP-001"
+component = "CMP-006"
 phase = 4
 
 [design.LLR-149]
@@ -1485,7 +1485,7 @@ detail = """The dispatcher's one scheduling decision (docs/concurrency-v2.md §A
 rationale = """The §A4.1 authority flip: admission replaced the claim rung's deleted safety_class refusal, so the policy must live at ONE decision point and be driven as a pure function."""
 test_refs = "(see TC-143)"
 status = "Modified"
-component = "CMP-004"
+component = "CMP-008"
 phase = 4
 
 [design.LLR-150]
@@ -1497,7 +1497,7 @@ detail = """One lane's mechanics extracted from the dispatcher (docs/concurrency
 rationale = """The §A4.2 split keeps the deciding half (dispatch.py) apart from the running half, so at lanes=1 the dispatcher degenerates to the serial loop and the concurrency is a table size, not a second code path."""
 test_refs = "(see TC-144)"
 status = "Modified"
-component = "CMP-004"
+component = "CMP-008"
 phase = 4
 
 [design.LLR-151]
@@ -1509,7 +1509,7 @@ detail = """The §A4.1 authority flip's integrator half (docs/concurrency-v2.md 
 rationale = """A constraint instead of a check: the state the old refusal guarded against (a claim written beside live lanes) is now unrepresentable, and the batch makes N spine changes cost one re-attest window (§A4)."""
 test_refs = "(see TC-145)"
 status = "Verified"
-component = "CMP-004"
+component = "CMP-008"
 phase = 4
 
 [design.LLR-152]
@@ -1521,7 +1521,7 @@ detail = """The `adjudication` kind (docs/concurrency-v2.md §A5.2) joins the de
 rationale = """Narrowing the amendment detector to ratified cells without the kind would move mis-fires from spurious window to MISSED window; the two are a pair (docs/concurrency-v2.md §A5.2)."""
 test_refs = "(see TC-146)"
 status = "Verified"
-component = "CMP-004"
+component = "CMP-008"
 phase = 4
 
 [design.LLR-153]
@@ -1533,7 +1533,7 @@ detail = """The R1/R3 invariant sealed (log.md Decisions 2026-08-01): a WI id is
 rationale = """A detected event must FORCE a row into the registry with nobody watching, and an id two lanes could pick at once must stay unrepresentable (R1)."""
 test_refs = "(see TC-147)"
 status = "Modified"
-component = "CMP-004"
+component = "CMP-008"
 phase = 4
 
 [design.LLR-154]
@@ -1545,7 +1545,7 @@ detail = """integrate_one's post-merge arm is the intake's one honest hook point
 rationale = """Minting anywhere else re-opens the two-lanes-one-id collision the trunk-only ruling ended; the slot is the only place trunk moves under a held lock."""
 test_refs = "(see TC-148)"
 status = "Verified"
-component = "CMP-004"
+component = "CMP-008"
 phase = 4
 
 [design.LLR-155]
@@ -1557,7 +1557,7 @@ detail = """`process_config` parses `docs/process.toml` once; `declared_policy` 
 rationale = """Five entry points read policy without passing through `agent_loop.main`, so the refusal has to live where the value is read. The comparison is stated once for the same reason the shape is checked: the failure modes here are silent, and a rule restated at four call sites is four chances to state it differently."""
 test_refs = "TC-150;TC-151"
 status = "Draft"
-component = "CMP-002"
+component = "CMP-008"
 phase = 5
 
 [design.LLR-156]
@@ -1569,7 +1569,7 @@ detail = """`set_process_key` answers THREE states (`wrote`/`unchanged`/`missing
 rationale = """This is duplicated POLICY, not plumbing: a migrator and a reader disagreeing about what `single-ratify` meant would let a repo scaffold with one posture and run with another — which is the shadowing defect the ordinal was introduced to remove, returning through the migration path."""
 test_refs = "TC-152"
 status = "Draft"
-component = "CMP-002"
+component = "CMP-009"
 phase = 5
 
 [design.LLR-157]
@@ -1581,7 +1581,7 @@ detail = """`spine_stage` returns the LOWEST unfinished tier, where a MISSING ar
 rationale = """Reading a missing child as the parent's tier made stages 2 and 3 unreachable during exactly the period they describe, leaving the axis unable to express the distinction it exists for. Appending rather than inserting the basis field is required: `check.py`'s basis regex depends on the existing field order."""
 test_refs = "TC-151"
 status = "Draft"
-component = "CMP-002"
+component = "CMP-006"
 phase = 5
 
 [design.LLR-158]
@@ -1593,7 +1593,7 @@ detail = """normative_text() joins a row's RATIFIED cells in header order with a
 rationale = """Integrity is hard because a ledger that does not parse is not an anchor at all and every reader silently falls back to the git-history derivation it replaces. Removal was the gap: it silenced all three rungs at once, so the strongest form of rewriting was the one form the guard could not see."""
 test_refs = "TC-153"
 status = "Draft"
-component = "CMP-001"
+component = "CMP-006"
 phase = 5
 
 [design.LLR-159]
@@ -1605,7 +1605,7 @@ detail = """`_judgement_first` is a STABLE PARTITION over the frontier, applied 
 rationale = """The alternative to the partition — renumbering `schedule._KIND_RANK` — would change ordering for every downstream repo for a rung that belongs to admission. The alternative to the parser is prose carrying control flow, which is the exact defect the typed `suggested_tier` field replaced."""
 test_refs = "TC-154"
 status = "Draft"
-component = "CMP-004"
+component = "CMP-008"
 phase = 5
 
 [design.LLR-160]
@@ -1617,7 +1617,7 @@ detail = """Three signals over OPEN rows only — Jaccard over title token sets 
 rationale = """A low similarity bar turns a useful warn into noise that gets ignored, which is worse than not having the warn: this rung catches the same job minted twice, not two rows in the same area."""
 test_refs = "TC-155"
 status = "Draft"
-component = "CMP-001"
+component = "CMP-006"
 phase = 5
 
 [design.LLR-161]
@@ -1629,7 +1629,7 @@ detail = """`close_partial` writes the report FIRST (it is the event's identity)
 rationale = """The path is the only token in the event's identity that cannot move. An earlier cut folded the report's `claimed_outcome` in as well, which re-read a MUTABLE field on every sweep, so one edit minted a second disposition for the same close — the starvation class returning through a new proxy."""
 test_refs = "TC-156"
 status = "Draft"
-component = "CMP-003"
+component = "CMP-008"
 phase = 5
 
 [design.LLR-162]
@@ -1641,7 +1641,7 @@ detail = """`load` reads a shipped template (or an operator override) and raises
 rationale = """Normalizing before hashing is not cosmetic: the same template checked out CRLF on Windows and LF on POSIX is the same prompt, and a telemetry field that said otherwise would report a model change on every clone."""
 test_refs = "TC-157"
 status = "Draft"
-component = "CMP-002"
+component = "CMP-008"
 phase = 5
 
 [design.LLR-163]
@@ -1653,7 +1653,7 @@ detail = """`split_cmd` recognises a JSON array ONLY when the value parses as a 
 rationale = """A silent coercion in a registry is a launch that does not match its declaration. And an adjudicator inheriting the implementer's escalation would silently re-tier a judgement because a different row's build went badly."""
 test_refs = "TC-157"
 status = "Draft"
-component = "CMP-002"
+component = "CMP-008"
 phase = 5
 
 [design.LLR-164]
@@ -1665,7 +1665,7 @@ detail = """`render` is PURE — it takes no arguments and reads only the shippe
 rationale = """A generated artifact nobody re-generates is a document that lies, and a lying catalogue is worse than none: it invites the operator to conclude the wrong thing about the session they are debugging. Same contract `gen_arch_map --check` and `gen_skills_index --check` hold."""
 test_refs = "TC-157"
 status = "Draft"
-component = "CMP-002"
+component = "CMP-009"
 phase = 5
 
 [design.LLR-165]
@@ -1677,7 +1677,7 @@ detail = """convert() walks the four tiers and returns (findings, written_paths)
 rationale = """The round-trip check is the requirement, not a convenience - and a check that cannot fail would be the false green SN-008 forbids, which is why the loss detector is driven against real corruption classes rather than only against a clean run. Ref cells compare on the TOKEN LIST because the conversion re-joins them with the canonical separator and the original spacing was never part of the meaning; comparing raw text there would report a loss that is not one. The edge-case fold that traj_parse._sn_fields performs is a PRESENTATION rule the markdown table forced, so it stays in the exporters - baking it into the carrier would make the exporter's reading the only reading there is."""
 test_refs = "TC-159"
 status = "Draft"
-component = "CMP-005"
+component = "CMP-006"
 phase = 5
 
 [design.LLR-166]
@@ -1689,7 +1689,7 @@ detail = """PURE like trace_text (text in, rows out; no git, no argv) except res
 rationale = """None-vs-{} and absent-vs-empty are the same defect twice: {} says the registry had no rows, which for a baseline read means re-bless everything with no diff and for a gate means nothing to check, so a carrier that cannot be read must be ABSENT rather than empty. The dual-home REFUSAL follows the rule bootstrap --migrate-config already applies to the policy dials: a precedence rule lets a half-finished migration keep working while quietly reading the stale half, so the conversion is never finished and nobody finds out. ONE HOME for the vocabulary is an owner ruling (2026-08-10, repo-lock D-6) amending F5: duplicating a vocabulary fails silently - the copy that has not learned a column returns a row missing that cell, which every consumer reads as "the cell is empty"."""
 test_refs = "TC-160"
 status = "Draft"
-component = "CMP-001"
+component = "CMP-006"
 phase = 5
 
 
@@ -1702,5 +1702,5 @@ detail = """The row's DECLARED `Brief` cell selects the template (`intake` write
 rationale = """Two rules decide the shape. A judge's brief must not carry the claim under judgement as its premise - a leaked self-assessment anchors the judgement to it - so every value is registry-, git- or report-derived and the one claim shown - the lane's report - is the template's own labelled subject. And a HALF-filled brief is worse than the generic prompt: hollow sections read as an investigation that was run and found nothing, which is the expensive way to be wrong, so there is no placeholder path at all. The discriminator is a declared cell rather than a SpecRef shape because that inference is unsound - an amendment to a test-case row and a red-TC census row both cite the TC registry while their briefs give contradictory instructions - and rather than a Title substring because that is the `NEEDS-HUMAN` fold (SR-145)."""
 test_refs = "TC-161"
 status = "Draft"
-component = "CMP-004"
+component = "CMP-008"
 phase = 5

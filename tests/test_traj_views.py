@@ -195,13 +195,15 @@ def test_nested_components_render_inside_their_parent(tmp_path):
 
 
 def test_meta_component_top_view_smoke():
-    # Over the real meta repo: 5 right-sized software components, 0 uncontained,
+    # Over the real meta repo: 4 right-sized software components, 0 uncontained,
     # within the bound, and sw_containment renders the containerized panel.
+    # (WI-441 adopted the P5 narrow-waist partition — CMP-006..009 replaced the
+    # retired CMP-001..005, so the top view holds four roots, not five.)
     ct = load_script("check_trajectory")
     v = ct.component_top_view(ROOT)
     assert v["count"] <= ct.TOP_VIEW_MAX
     assert v["uncontained"] == []
-    assert len(v["top_roots"]) == 5
+    assert len(v["top_roots"]) == 4
     gt = load_script("gen_trajectory")
     cont = gt.sw_containment(ROOT, gt.sw_modules(ROOT))
     assert cont is not None
@@ -612,13 +614,17 @@ def test_when_and_how_drills_use_bounded_orthogonal_wires_and_explicit_ports():
         assert wires
         assert all(set(re.findall(r"[A-Za-z]", d)) <= {"M", "L"} for d in wires)
 
+    # WI-441 re-partition (P5): the retired CMP-004 was the multi-inbound target;
+    # its successor is CMP-008 (W3 Autonomy), which carries 2 inbound seams. The
+    # pin is the NON-MERGING — one connector circle per edge, distinct cy — not
+    # the arity, which moves with the partition.
     target_ports = re.findall(
         r'<circle class="port in wire-port" cx="[^"]+" cy="([^"]+)" '
-        r'data-from="[^"]+" data-to="cmp:CMP-004"',
+        r'data-from="[^"]+" data-to="cmp:CMP-008"',
         sw,
     )
-    assert len(target_ports) == 3
-    assert len(set(target_ports)) == 3
+    assert len(target_ports) == 2
+    assert len(set(target_ports)) == 2
     assert "stroke-linejoin:round" in gt.DRILL_STYLE
 
     marker_sizes = {
