@@ -254,7 +254,10 @@ between the recorded commit and HEAD, not a guess (ADOPTING.md "Re-syncing an
 existing adoption"). **Sync only from a committed kit state**, never a dirty
 working tree — bootstrap refuses to stamp a real SHA when the kit tree is dirty
 (it writes `<sha>-dirty` and warns) so an adoption can't be pinned to an
-unreproducible mid-edit state.
+unreproducible mid-edit state. A kit copy that is not a git checkout at all (a
+tarball download) can only be stamped `unknown`, and that scaffold has **no
+re-sync anchor**: bootstrap warns loudly there too — same exit code, because a
+tarball is a supported way in, but never silently (OI-27).
 
 It also writes `docs/kit-license` — the kit's own Apache-2.0 text, prefixed by a
 header stating what it does and does not cover. Adopting the kit *is* copying it,
@@ -2072,15 +2075,21 @@ def initialize_generated_docs(dest, created):
             )
 
 
+KIT_VERSION_UNKNOWN = "unknown (kit not a git checkout)"
+
+
 def kit_version():
     """The kit's committed identity for the version stamp: (label, dirty).
 
     `label` is `<short-sha> <ISO-date>` from the kit's git checkout, or
-    `"unknown (kit not a git checkout)"` when git or the kit's history isn't
-    available (a tarball copy). `dirty` is True when the kit working tree has
-    uncommitted changes — the caller warns, because an adoption pinned to a
-    dirty tree can't be reproduced or diffed against later (see module docstring
-    / ADOPTING.md 're-sync only from a committed kit state')."""
+    `KIT_VERSION_UNKNOWN` when git or the kit's history isn't available (a
+    tarball copy). `dirty` is True when the kit working tree has uncommitted
+    changes — the caller warns, because an adoption pinned to a dirty tree
+    can't be reproduced or diffed against later (see module docstring /
+    ADOPTING.md 're-sync only from a committed kit state'). BOTH degraded labels
+    are the caller's to warn about, and the anchorless one is the WORSE: `-dirty`
+    still names a commit to diff from, `KIT_VERSION_UNKNOWN` names nothing at
+    all (OI-27 measured that path shipping silently at exit 0)."""
     try:
         sha = subprocess.run(
             ["git", "-C", str(KIT), "rev-parse", "--short", "HEAD"],
@@ -2090,7 +2099,7 @@ def kit_version():
             errors="replace",
         )
         if sha.returncode != 0 or not sha.stdout.strip():
-            return "unknown (kit not a git checkout)", False
+            return KIT_VERSION_UNKNOWN, False
         short = sha.stdout.strip()
         date = subprocess.run(
             ["git", "-C", str(KIT), "show", "-s", "--format=%cs", "HEAD"],
@@ -2115,7 +2124,7 @@ def kit_version():
         ).strip()
         return label, dirty
     except (OSError, ValueError):
-        return "unknown (kit not a git checkout)", False
+        return KIT_VERSION_UNKNOWN, False
 
 
 def write_kit_version(dest, dry_run):
@@ -2675,6 +2684,23 @@ def write_stamps(dest, plan):
             "WARNING: the kit working tree is DIRTY — this scaffold is stamped "
             "{} and cannot be reproduced or cleanly diffed later. Re-sync only "
             "from a committed kit state (commit the kit, then re-run).".format(label),
+            file=sys.stderr,
+        )
+    elif label == KIT_VERSION_UNKNOWN:
+        # The tarball-adopter path (OI-27). It used to ship SILENTLY at exit 0 —
+        # the warning above fires only on `dirty`, hard-coded False here — so the
+        # one adopter with NO anchor at all was the only one never told. Warn,
+        # don't refuse: a tarball is a documented way in, and nothing downstream
+        # ever re-derives the answer, so the moment to say it is now.
+        print(
+            "WARNING: this kit copy is NOT a git checkout, so docs/kit-version "
+            "is stamped '{}' — the scaffold has NO RE-SYNC ANCHOR. Nothing "
+            "records which kit state it came from, so the documented upgrade "
+            "path (diff your recorded kit SHA against the target commit — "
+            "ADOPTING.md 'Re-syncing an existing adoption') cannot be run "
+            "against it. Fix it now, while you still know the answer: re-run "
+            "from a git CLONE of the kit, or write the kit commit you copied "
+            "into docs/kit-version by hand.".format(label),
             file=sys.stderr,
         )
 

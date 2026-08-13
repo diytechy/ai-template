@@ -11,15 +11,30 @@ scope: kit
 # Downstream re-sync (upgrade an adopted repo to kit HEAD)
 
 Pull newer kit updates into a repo that adopted this kit earlier. This is **not**
-a fresh bootstrap — you merge kit changes into files you've filled in. The
-authority is `docs/process.md`'s companion **`ADOPTING.md` §6**; this is the
-checklist.
+a fresh bootstrap — you merge kit changes into files you've filled in.
+
+**`ADOPTING.md` §6 is the authority; this skill is the ORDER, not the content.**
+It gives you the sequence of moves and the traps in each one, and sends you to §6
+for every actual rule — which files to overwrite, which to preserve, and the
+per-change migration recipes. It deliberately does **not** repeat those lists.
+That is not tidiness: a recipe kept in two homes drifts, and this file's copy
+already did (OI-27 caught it stale within weeks, at zero re-sync traffic). If you
+find yourself wanting the specifics, open §6 — and if §6 is wrong, fix §6.
+
+Where §6 lives: it is a kit reference doc (`project-trajectory/ADOPTING.md`), not
+a scaffolded one, so read it in the **kit checkout you are re-syncing from** —
+the one you are diffing against, which you already need for this procedure.
 
 ## 1. Make it a diff, not a guess
 
 - Read `docs/kit-version` — the kit short-SHA + date this repo was last
   scaffolded/re-synced from — and `docs/kit-profile` — the structural choices
   (stack + omitted sections) its process docs were *generated* with.
+- **If the stamp reads `unknown (kit not a git checkout)`** the repo was
+  scaffolded from a tarball and has **no anchor**: there is no recorded commit to
+  diff from. Don't guess a range — reconstruct it from artifacts (which scripts
+  and docs the repo actually has), treat the whole of §6 as potentially
+  applicable, and re-stamp honestly at the end.
 - Choose the target kit commit. **Sync only from a committed kit state**, never a
   dirty kit tree (bootstrap stamps `<sha>-dirty` and warns — that stamp is
   unreproducible).
@@ -28,113 +43,57 @@ checklist.
 - While the diff is open, recheck the **new capability surface** across the
   range — new/updated skills (`skills/INDEX.csv`), opt-in layers added to
   process-options.md, new vendorable packs (guardrails / efficiency /
-  knowledge) — ADOPTING.md §6 "Re-weigh the opt-in layers".
+  knowledge) — §6 "Re-weigh the opt-in layers".
 
-## 2. Overwrite vs. preserve
+## 2. Sort the changed files, then move them
 
-- **Overwrite freely (kit-owned):** `scripts/trace.py`, `check_docs.py`,
-  `check_flows.py`, `check_perf.py`, `gen_arch_map.py`, `gen_*`, the pre-commit
-  hook, `pytest.ini` markers, **`check.py`**. `check.py` is take-wholesale: your
-  whole toolchain — format/lint/test commands, paths, tiers, coverage, arch-map
-  mode, **and any project-specific gates (`[step:<name>]` sections)** — lives in
-  `docs/stack.ini`, so nothing to re-apply. (Only if this repo still carries a
-  hand-added step inside a pre-`[step:]` `check.py`: move it into a
-  `[step:<name>]` section in `docs/stack.ini` this once, then take the kit
-  `check.py` wholesale — it survives every re-sync after.)
-- **Regenerate, never raw-copy (kit-owned but generated):**
-  `docs/process.md` + `docs/process-options.md` are *generated* from the kit
-  masters per the recorded `docs/kit-profile` — the masters carry
-  `kit-only`/`profile` markers and every permutation, so a raw copy would ship
-  marker comments and sections the repo opted out of. To take the new
-  versions: **delete the two files, then re-run `bootstrap.py --dest .`** — it
-  re-reads `docs/kit-profile`, regenerates them with the same structural
-  choices, and refreshes both stamps (ADOPTING.md §6).
-- **Overwrite, then re-apply your dials (kit-owned, hand-edited):**
-  `docs/process.toml` — the one home for every process dial. Unlike
-  `docs/stack.ini` it is kit-owned, so take the kit's copy and re-apply your
-  non-default values in the same commit (or re-run the scaffold pass with
-  `--gate-policy` / `--push-policy` / `--privacy-check`, which rewrite one key
-  in place). `--force` rewrites the file and resets **every** dial.
-- **Preserve always (yours):** every registry — the four spine TOMLs
-  (`stakeholder-needs.toml`, `system-requirements.toml`,
-  `low-level-requirements.toml`, `test-cases.toml`), the off-spine CSVs, and
-  the legacy `.md`/`.csv` forms if you have not run `migrate_carrier` yet,
-  `docs/status.md`, `docs/log.md`, `docs/plan.md` (your work plan — the kit
-  seeds the block-list skeleton once), `docs/architecture.md` hand-written overview
-  (regenerate only the marker blocks), `AGENTS.md` project content, `docs/gate`,
-  `.gitignore`/`.gitattributes` (merge new kit lines by hand). `bootstrap.py`
-  **skips existing files**, so a plain re-run won't clobber these — never run
-  `--force` against a live repo without a diff pass.
+Read §6 **"What to overwrite vs preserve"** and sort your diff into its four
+classes: *overwrite freely* (kit-owned), *regenerate, never raw-copy* (kit-owned
+but generated from your `docs/kit-profile`), *overwrite then re-apply your dials*
+(kit-owned but hand-edited), and *preserve always* (yours). The membership lists
+are §6's and change with the kit — read them there, per re-sync.
 
-## 3. Fold the legacy policy files into `docs/process.toml`
+Two traps worth naming up front, because they are the ones that bite mid-move:
 
-If this repo still carries the one-word policy files under `docs/` (the
-gate-authority word, the push policy, the reviewer count, the privacy toggle,
-the secrets floor, the privacy-review posture, guardrails, the blackout
-window), convert them **before running anything else**:
+- **A plain `bootstrap.py --dest .` re-run is ADD-ONLY.** It skips every existing
+  file, so it brings in what is *new* and updates *nothing* you already have —
+  and it never deletes a script the kit has since retired. It is the safe first
+  move, not the whole move: everything in the *overwrite* and *regenerate*
+  classes is still on you afterwards. `--force` is the opposite extreme
+  (overwrites everything, resets every dial) — never aim it at a live repo
+  without a diff pass.
+- **Set-together files.** Some kit-owned files only work as a set — take a newer
+  hook with an older `check.py` and every commit fails on a step that doesn't
+  exist. §6 flags each of these where it lists the file.
 
-```
-python scripts/bootstrap.py --migrate-config --dest .
-```
+## 3. Apply the migration recipes for your range
 
-It folds each legacy file into its `[section] key` and deletes the file; it is
-idempotent, and a full `bootstrap.py --dest .` scaffold pass runs it for you.
-Running with **both** homes live is refused, not resolved by precedence, so land
-the conversion in one commit. Two dials change type: `review_rounds` is an int
-and `privacy_check` / `secrets_scan` are booleans (the legacy `off` reads as
-`false`). Full recipe + what deliberately stays a file: ADOPTING.md §6 "One
-policy home".
+§6 **"Migration recipes for specific kit changes"** is the single home for these.
+Work through it and apply **only** the recipes your diff range actually contains
+— each one names the change it belongs to and its date/WI. Recipes cover things a
+file copy cannot: registry conversions, renamed or deleted scripts you must
+remove by hand, config folds, and state you must reconcile before a derived value
+is trustworthy.
 
-## 4. Apply the migration recipes
+Order matters in one place: if this repo still carries the **legacy one-word
+policy files** under `docs/`, fold them into `docs/process.toml` **before running
+anything else** (running with both homes live is refused, not resolved by
+precedence). §6 "One policy home" has the command and the type changes.
 
-Read the **"Migration recipes"** list in ADOPTING.md §6 for the specific changes
-in your diff range (e.g. `process.md` split into `process.md` +
-`process-options.md`; a legacy `UN-` → `SN-` rename keeping id numbers; a TC CSV
-gaining a required `Tier` column; a `gen_release_checklist.py` function rename).
-Apply only the ones your diff actually contains.
-
-- **Derived-gate migration:** after taking `derive_gate.py`, reconcile artifact
-  states against the registries **as of your last gate-bump commit** before
-  trusting the derived value — stage everything added since per the new model
-  (new SNs → the `## Draft needs` section; not-yet-re-reviewed SRs →
-  `Status=Draft`), or post-attestation additions launder into the ratified
-  gate. ADOPTING.md §6 has the exact recipe (`git log -- docs/gate` → diff).
-
-- **Integration-seam migration (crossing the concurrency restructure,
-  2026-07):** the v4 parallel dispatcher — reservations, `--jobs`/`AGENT_JOBS`,
-  worktree pools, `docs/run-state`, train branches — is **deleted** at Phase 5
-  of `concurrency-restructure`; claiming and merging now run through
-  `integrate.py` (`claim` = queued spec → `docs/work/active/<branch>/` +
-  branch cut; `integrate` = the serial fail-closed merge queue), and a
-  **plain `agent-resume` launch drives the loop** (frontier → claim →
-  worker → merge, re-derived every cycle; `dispatch.py` + `lane.py` — renamed
-  from `drive.py` at WI-381: delete the old `scripts/drive.py` copy when you
-  re-sync). To cross it:
-  1. **Registry flip** — convert `docs/requirements/work-items.csv` to the
-     spec folder (`scripts/wi_convert.py --verify`, then `--to-specs`, then
-     delete the CSV); status is the directory now. Map any status the
-     converter refuses deliberately (e.g. a legacy `superseded` row becomes
-     `cancelled/` with the superseding id named in its Deliverable) — never
-     bucket silently.
-  2. **Drain the old scheme** — finish or hand-merge any live train
-     worktrees/branches (`llm/train/*`, `llm/integrate/*`) BEFORE the flip;
-     the new claim model does not read them. Check worktrees for orphaned
-     files before deleting (dirt is evidence, not garbage).
-  3. **Delete retired-surface reliance** — `AGENT_JOBS` in the launchers,
-     `docs/run-state`, `docs/rework-wi`, `--track`/`docs/tracks/*`,
-     `docs/next-wi`/`docs/run-phase`, `refs/llm/*` reservation refs, and any
-     `docs/parallel-ready` sign-off (nothing reads it now). No former content
-     translates to scheduling state — the WI DAG + `Priority` are the whole
-     ordering contract.
-  4. **Seed `[generated]`** — the integrator's auto-resolution allowlist in
-     `docs/stack.ini` (the shipped template carries the default set).
-  A `SafetyClass` on every open WI still matters — the claim rung refuses
-  non-`ordinary` work (spine/gate classes run attended as the §3.2 barrier).
-
-## 5. Re-stamp and verify
+## 4. Re-stamp and verify
 
 - Re-run bootstrap to refresh generated pieces — it also **re-stamps
   `docs/kit-version` + `docs/kit-profile`**; commit them as the **last** step,
   so the record reflects the state you landed on.
+- Refresh any materialized per-agent skills from source (`bootstrap.py --dest .
+  --sync`) — a drifted copy is a gate finding.
 - End green: run the harness (`scripts/check.py` / `check.{sh,ps1}`) and
   `scripts/check_docs.py`; a re-sync that leaves the harness red isn't done.
+- **A green here is only as new as your checkers.** If step 2 left any kit-owned
+  script un-updated, the repo is being judged by the OLD one — which cannot see
+  what the new kit refuses. Measured on a three-week range: an add-only re-sync
+  leaves the spine registries under BOTH carriers, a state the current kit
+  hard-refuses, and the surviving old `trace.py` passes it. Before believing the
+  green, run the TARGET kit's `trace.py`/`check.py` against your tree
+  (`python <kit>/scripts/trace.py --strict` from your repo root); a disagreement
+  between the two is the list of moves step 2 still owes.

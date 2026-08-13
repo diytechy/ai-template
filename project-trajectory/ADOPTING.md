@@ -824,7 +824,8 @@ table.
   stack.ini > default). **An absent key means 1**: your repo stays exactly as
   serial as it was until you add the line (fresh scaffolds seed `lanes = 2`);
   no re-sync ever changes your lane count, because `docs/stack.ini` is yours. **The upgrade recipe** (the **downstream-resync skill**
-  walks it step by step): re-sync the kit, convert the WI registry CSV to the
+  sequences the whole re-sync and sends you here for this recipe's content —
+  one home, and this is it): re-sync the kit, convert the WI registry CSV to the
   spec folder (`wi_convert.py --verify` → `--to-specs` → delete the CSV),
   drain or hand-finish any live train worktrees/branches from the old scheme,
   seed `docs/stack.ini [generated]`, then delete local reliance on the
