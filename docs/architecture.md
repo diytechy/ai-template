@@ -553,7 +553,8 @@ Contracts (interfaces): IF-008, IF-028, IF-072, IF-104, IF-117
 | `judge_token(token, entry, bad, untraced, rel, root, kit_root, record_prefixes, absences)` | Judge one cited token and file its verdict under `entry` — the finding |  |
 | `path_findings(line, rel, n, root, kit_root, record_prefixes, absences)` | One line's path-tier verdicts as `(dangling, untraced)` (WI-062). |  |
 | `registry_findings(root, kit_root, record_prefixes, absences)` | `(dangling, untraced)` over the spine's Evidence-class cells (WI-394). |  |
-| `symbol_findings(root)` | `(dangling, untraced)` for the LLR `CodeSymbol` ANCHOR rule (WI-429). | LLR-080 |
+| `symbol_findings(root)` | `(dangling, untraced, advisory)` for the LLR `CodeSymbol` ANCHOR rule | LLR-080 |
+| `fold_advisories(advisory, rel)` | The advisory list as it should PRINT — per row, or folded to one line |  |
 | `authored_lines(doc)` | `(n, line)` pairs of the surface's hand-authored lines. Generated marker |  |
 | `findings_for(doc, root, oracle, kit_root, record_prefixes, absences)` | `(dangling, untraced)` — see the module docstring for the split. |  |
 | `main()` |  |  |

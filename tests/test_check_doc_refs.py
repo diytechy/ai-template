@@ -6,7 +6,7 @@ backticked word. Warn-first (exit 0) unless --strict; the sym: tier skips
 cleanly without a module-map inventory. Exercised over temp repos.
 """
 
-from conftest import SCRIPTS, run_py
+from conftest import SCRIPTS, load_script, run_py
 
 ARCH = """# Architecture
 
@@ -496,16 +496,85 @@ def test_llr_symbol_anchor_needs_only_one_resolving_token(tmp_path):
     assert "UNTRACED" in proc.stderr, "...as untraced, not as a gate"
 
 
+def _nonpy_repo(root, module="hooks/pre-commit"):
+    """A spine whose one LLR names only a non-Python module, on disk."""
+    spine_repo(root, "scripts/real.py", module=module, symbol="pre-commit")
+    (root / "hooks").mkdir(exist_ok=True)
+    (root / "hooks" / "pre-commit").write_text("#!/bin/sh\n", encoding="utf-8")
+    return root
+
+
 def test_llr_symbol_anchor_skips_a_non_python_module(tmp_path):
     # A hook or a shell template has no Python name to bind, so the rule has
     # nothing to say — it must skip, not convict.
+    _nonpy_repo(tmp_path)
+    proc = refs(tmp_path, "--strict")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+
+
+def test_llr_symbol_anchor_reports_the_non_python_skip_as_an_advisory(tmp_path):
+    # WI-449 / OI-20's OI-28 guard: the skip is CORRECT and unchanged, but it
+    # used to be SILENT, which is a fail-open now that template paths are ruled
+    # admissible in Module as realization artifacts. The row must be named,
+    # with its module and the reason discharge is not computed for it.
+    _nonpy_repo(tmp_path)
+    proc = refs(tmp_path)
+    assert "ADVISORY" in proc.stderr, proc.stdout + proc.stderr
+    assert "LLR-001" in proc.stderr
+    assert "hooks/pre-commit" in proc.stderr
+    assert "NOT computed" in proc.stderr
+    # ...and it is NEVER the exit code, not even under --strict, and never a
+    # WARN (which in this module is exactly the ink that gates under --strict).
+    strict = refs(tmp_path, "--strict")
+    assert strict.returncode == 0, strict.stdout + strict.stderr
+    assert "ADVISORY" in strict.stderr
+    assert "LLR-001 CodeSymbol" not in strict.stderr, "an advisory is not a finding"
+
+
+def test_llr_symbol_anchor_binds_through_the_py_half_of_a_mixed_module_cell(tmp_path):
+    # A row naming BOTH a hook and a `.py` module is checkable through its `.py`
+    # half, so the rule runs normally: it founds on the binding token and stays
+    # silent. The advisory is for rows with NO Python module at all.
     spine_repo(
-        tmp_path, "scripts/real.py", module="hooks/pre-commit", symbol="pre-commit"
+        tmp_path,
+        "scripts/real.py",
+        module="scripts/real.py;hooks/pre-commit",
+        symbol="load",
     )
     (tmp_path / "hooks").mkdir()
     (tmp_path / "hooks" / "pre-commit").write_text("#!/bin/sh\n", encoding="utf-8")
     proc = refs(tmp_path, "--strict")
     assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "ADVISORY" not in proc.stderr, "a checkable row must not be advised"
+
+
+def test_the_non_python_advisory_folds_to_one_line_when_the_list_is_long():
+    # Legibility is the point of making the skip visible, so past the threshold
+    # the per-row report folds to ONE line — which still names every row id, so
+    # nothing is dropped, only the repetition.
+    check_doc_refs = load_script("check_doc_refs")
+    n = check_doc_refs.ADVISORY_FOLD_ABOVE
+    rel = check_doc_refs.LLR_REL
+    rows = [
+        "{}: LLR-{:03d} Module names only ...".format(rel, i) for i in range(1, n + 1)
+    ]
+    assert check_doc_refs.fold_advisories(rows) == rows, "at the threshold, per row"
+    folded = check_doc_refs.fold_advisories(rows + [rows[0].replace("001", "900")])
+    assert len(folded) == 1
+    assert "{} row(s)".format(n + 1) in folded[0]
+    assert "LLR-001" in folded[0] and "LLR-900" in folded[0], "no row id is dropped"
+
+
+def test_the_codesymbol_grammar_is_stated_where_the_rule_binds():
+    # OI-20 ruled WHAT THE CELL MAY NAME, and a ruling nobody can find at the
+    # point of enforcement is a ruling that gets re-litigated. A light presence
+    # pin: the admissible list and the floor live in the rule's own docstring.
+    doc = load_script("check_doc_refs").symbol_findings.__doc__
+    for phrase in ("RESOLVABLE CODE SYMBOL", "MODULE PATH", "PART SOURCE"):
+        assert phrase in doc, "admissible: " + phrase
+    for phrase in ("NOT ADMISSIBLE", "GENERATED ARTIFACT", "PROSE CONTRACT"):
+        assert phrase in doc, "inadmissible: " + phrase
+    assert "DECOMPOSITION FLOOR" in doc, "the ruling's weight (OI-21 rung 4)"
 
 
 def test_llr_symbol_anchor_sees_private_names_and_constants(tmp_path):
