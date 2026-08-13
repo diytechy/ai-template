@@ -67,35 +67,35 @@
 
 [need.SN-001]
 kind = "core"
-need = """A team can drop the kit into a new or existing repo and get a working gated, requirement-traced process without hand-building the tooling."""
+need = """An adopting team can add this process to a new or existing repository and get a working gated, requirement-traced process, without hand-building the tooling."""
 why = "It is the kit's reason to exist — a *reusable starting point*."
 priority = "M"
 acceptance = """`bootstrap.py --dest <repo>` produces a scaffold whose harness runs green out of the box; a re-sync onto an existing repo never clobbers the repo's own files."""
 
 [need.SN-002]
 kind = "core"
-need = """The trace from need → requirement → design → test is **mechanically verified**, not manually asserted: every requirement links to a need and a test before a gate."""
+need = """A reviewer can trust the chain from need to requirement to design to test because it is **mechanically verified**, not manually asserted: every requirement links to a need and a test before a gate."""
 why = "*Requirement-traced … trust what ships*; a hand-maintained trace rots."
 priority = "M"
 acceptance = """`trace.py --strict` reports **zero orphans** across the joined `SN→SR→LLR→TC` spine; a malformed/duplicate id fails at any stage."""
 
 [need.SN-003]
 kind = "core"
-need = """The kit is **stack-agnostic** — a non-Python project uses it by re-pointing the harness at that stack's tools, with Python only as the reference."""
+need = """A team in any language can use this process: it is **stack-agnostic**, and a non-Python project adopts it by re-pointing the harness at that stack's tools, with Python only as the reference."""
 why = "*Stack-agnostic with Python-first reference scripts.*"
 priority = "M"
 acceptance = """The toolchain is declared once in `docs/stack.ini`; a stack swap edits that file, not a kit script; a non-Python bootstrap profile omits Python-only artifacts."""
 
 [need.SN-004]
 kind = "core"
-need = """Progress advances only through **explicit approval gates** (G1→G2→G3→…), and a gate passes only when its mechanical bar is met."""
+need = """A team advances only through **explicit approval gates** (G1→G2→G3→…), and a gate passes only when its mechanical bar is met."""
 why = "*Explicit approval gates so you can trust what ships.*"
 priority = "M"
 acceptance = """`check.py --gate GN` enforces that gate's required steps; a missing required tool **fails**, never silently skips."""
 
 [need.SN-005]
 kind = "core"
-need = """AI agents and humans work from the **same playbook**, with the process enforced **agent-neutrally** (git hooks + CI), not by trusting any one agent."""
+need = """AI agents and humans work from the **same playbook**, and the process is enforced **agent-neutrally** — by git hooks + CI — not by trusting whichever agent showed up."""
 why = """*AI agents and humans working from the same playbook*; enforcement can't depend on which agent showed up."""
 priority = "M"
 acceptance = """The enforcement floor is git + CI running the *same* harness a human runs; per-agent configs only mirror it, never replace it."""
@@ -109,42 +109,42 @@ acceptance = """`agent_loop.py` resumes from `docs/status.md`, exits a **typed c
 
 [need.SN-007]
 kind = "core"
-need = """The kit's **own** changes stay traceable and tested — a change to a script is covered by a test exercised end-to-end against a real scaffold."""
+need = """The people maintaining this kit hold it to its own standard: its **own** changes stay traceable and tested — a change to a script is covered by a test exercised end-to-end against a real scaffold."""
 why = """The kit is a foundation many repos inherit; a regression here propagates downstream. (This need is what Thread 47 makes first-class.)"""
 priority = "M"
 acceptance = """The suite bootstraps a temp scaffold and runs every script; `pytest -q` green is required before each change lands."""
 
 [need.SN-008]
 kind = "core"
-need = """Gates are **honest** — a green never hides a skipped check, a stub, or an unmet criterion."""
+need = """A reader can believe a green: gates are **honest**, and a green never hides a skipped check, a stub, or an unmet criterion."""
 why = "*Trust what ships*; a false green is worse than a red."
 priority = "M"
 acceptance = """`check.py` **fails** (not skips) on a missing required tool — the explicitly-requested `--lenient` local mode is the one sanctioned degrade to SKIP (SR-006), never a CI/gate default; the no-stub detector and the privacy/secrets floor run at their declared gate."""
 
 [need.SN-009]
 kind = "core"
-need = """A committed **secret or private identity** is caught before it publishes, in **every** repo, without extra setup."""
+need = """A team is protected from publishing a **secret or private identity**: it is caught before it publishes, in **every** repo, without extra setup."""
 why = "Trust + safety; a leaked key or PII is near-irreversible once pushed."
 priority = "M"
 acceptance = """`check_privacy.py`'s always-on secrets floor scans every commit's staged diff, message, and outgoing range; the privacy gate adds PII/identity classes when the `privacy_check` dial is on."""
 
 [need.SN-010]
 kind = "core"
-need = """Documentation stays **navigable and honest** — links resolve, the vision is declared once, and generated views cannot silently rot."""
+need = """A reader can navigate the documentation and trust it: **navigable and honest** — links resolve, the vision is declared once, and generated views cannot silently rot."""
 why = "*Readable and correct over the long run.*"
 priority = "S"
 acceptance = """`check_docs.py` fails on a broken intra-repo link or a missing `PROJECT-VISION` tag; every generated artifact carries a `--check` freshness contract."""
 
 [need.SN-011]
 kind = "core"
-need = """The kit's scripts run on a **clean Python 3.11+ with minimal, argued dependencies** — stdlib by default, a non-stdlib dependency admitted only through a reviewed ledger row — on Windows and POSIX (and macOS)."""
+need = """An adopting team can run every check on a **clean Python 3.11+ with minimal, argued dependencies** — stdlib by default, a non-stdlib dependency admitted only through a reviewed ledger row — on Windows and POSIX (and macOS)."""
 why = """Portability — the kit must not impose an *unargued* dependency stack on a downstream repo to run its checks. But a blanket "no dependencies" rule is itself a design constraint: it can force a worse hand-rolled alternative than a well-chosen tool, so the bar is **argument, not abstinence** (owner RULING-3, 2026-07-28)."""
 priority = "M"
 acceptance = """Every non-stdlib import in the kit's scripts is declared as a row in `docs/dependencies.md` naming what it replaces, why hand-rolling is worse, and the ruling that admitted it — `tests/test_dependency_ledger.py` fails the suite on an undeclared import; checks an adopter runs (`shipped` tier) stay stdlib-*preferred*, since a dependency there forces every adopter to install it; the CI matrix is green on Linux + Windows + macOS."""
 
 [need.SN-012]
 kind = "core"
-need = """The process is **right-sized**, not ceremony for its own sake — small changes stay cheap, and heavy layers are opt-in."""
+need = """A team can keep small changes small: the process is **right-sized**, not ceremony for its own sake — small changes stay cheap, and heavy layers are opt-in."""
 why = "An over-heavy process is abandoned; adoption depends on proportionality."
 priority = "S"
 acceptance = """Opt-in layers (perf, guardrails, unattended, parallel tracks, OKF export) cost a repo that doesn't use them nothing; the proportionality doctrine governs LLR/TC granularity."""
@@ -158,7 +158,7 @@ acceptance = """The root `PROJECT_STATE.html` renders both the roadmap/decomposi
 
 [need.SN-024]
 kind = "core"
-need = """Subjective/perceptual acceptance — a realistic-looking render, an artifact comparison with no crisp measurable interface — is adjudicated by an **independent critical eye against a written rubric**, never by the session that authored the artifact."""
+need = """A reviewer can trust subjective/perceptual acceptance — a realistic-looking render, an artifact comparison with no crisp measurable interface — because it is adjudicated by an **independent critical eye against a written rubric**, never by the session that authored the artifact."""
 why = """*Trust what ships*; an implementer session cannot judge its own output, and a lax test case lets awkward work ship because nothing gave it the critical eye — another agent wearing a different hat must say *where and why* it isn't good enough and drive rework."""
 priority = "S"
 acceptance = """A `Verification=Critique` requirement is judged by a fresh, family-heterogeneous critique session against a `docs/rubrics/` rubric derived from the SN/SR intent (not the possibly-lax TC); the verdict cites numbered rubric anchor ids, bounded iteration drives rework, and the loop escalates to the human on budget exhaustion."""
@@ -172,24 +172,24 @@ acceptance = """A plain launch derives what to do next from the tracked WI DAG p
 
 [need.SN-026]
 kind = "core"
-need = """**Several LLM families are configurable** — selected per job and per capability level — and work that benefits from an independent second opinion is automatically routed to a *different* family wherever that is configured."""
+need = """The repo owner can configure **several LLM families** — selected per job and per capability level — so that work benefiting from an independent second opinion is automatically routed to a *different* family wherever that is configured."""
 why = """One family is a single point of both failure and bias: an outage, a retired model or an expired auth stalls the whole loop, and a reviewer drawn from the implementer's own family shares its blind spots — so a same-family review reads like corroboration while adding little. Declaring the families and levels in a registry, rather than hard-coding one vendor, is also what keeps the kit vendor-neutral as models turn over."""
 priority = "S"
 acceptance = """`docs/agents.csv` declares (family × model × tier) pair-rows and `docs/agents-enabled` is the consent surface whose presence turns managed selection on; the coordinator resolves a row per in-process phase and tier, prefers a cross-family draw for the reviewer, critic and planner-pair sessions, degrades to the *documented* same-family mode when only one family is routable rather than silently skipping the second opinion, and logs every selection before launch — never a silent model swap."""
 
 [need.SN-027]
 kind = "core"
-need = """Ready work **fans out across bounded parallel lanes**, while mutation of the integration branch stays **serialized and gated**."""
+need = """A team gets more than one piece of ready work moving at once: ready work **fans out across bounded parallel lanes**, while mutation of the integration branch stays **serialized and gated**."""
 why = """Throughput: the WI DAG already encodes what may proceed, so a frontier that advances one item at a time idles for no reason. But parallel *integration* is precisely how a reviewed process ships an unreviewed tree — so the fan-out must narrow back to a single serialized, gated seam before anything lands."""
 priority = "S"
 acceptance = """A launch with independent ready WIs runs up to the configured worker ceiling (default 2) concurrently in isolated worktrees; every finished branch lands through one serial, fail-closed integrator that runs the declared bar on the composed tree; `--jobs 1` preserves the serial semantic; a declared pause stops claiming and drains what is already in flight; a crash at any lifecycle boundary recovers from Git history alone, without double-assignment or half-integrated authoritative state. Spec of record: `docs/archive/specs/parallel-wi-dispatch.2026-07-20.md` + `docs/concurrency-restructure.md`."""
 
 [need.SN-028]
 kind = "core"
-need = """**Every policy dial has one home** — a single hand-edited, machine-read file — and a repo that declares the same dial twice is REFUSED rather than resolved by precedence."""
+need = """The repo owner can find and change every policy dial in **one home** — a **single hand-edited, machine-read file** — and a repo that declares the same dial twice is REFUSED rather than resolved by precedence."""
 why = """The dials had accreted into ~10 one-word files under `docs/`, an idiom that was never ruled: it was held in place by the git hooks' pure-sh parse (a Python-less box must still fail closed on a declared privacy gate) and by a 3.8 floor with no `tomllib`. Both reasons are spent. Scattering costs an owner one file per question and a reader five ad-hoc parsers; worse, two sources for one dial is exactly the state where two readers disagree about the same policy, and a precedence rule makes that disagreement invisible instead of loud."""
 priority = "S"
-acceptance = """`docs/process.toml` holds every process dial under bare `[section]` headers, one `key = value` per line; the SHAPE is checked rather than conventional, because two grammars read the file (`tomllib` and the hooks' sh) and every shape only one of them understands is a silent flip of a security gate; the two readings are pinned equal over a table of adversarial files; a legacy one-word file still present alongside its key is a REFUSAL naming both, and `bootstrap.py --migrate-config` (run by bootstrap and by the documented re-sync) converts and deletes the legacy files so an adopter never meets that refusal un-aided; a wrong-typed or out-of-range dial is refused, never defaulted."""
+acceptance = """`docs/process.toml` holds every process dial under **bare `[section]` headers**, one `key = value` per line. The SHAPE is checked rather than conventional, because two grammars read the file (`tomllib` and the hooks' sh) and every shape only one of them understands is a silent flip of a security gate; the two readings are pinned equal over a table of adversarial files. A legacy one-word file still present alongside its key is a REFUSAL naming both, and `bootstrap.py --migrate-config` — run by bootstrap and by the documented re-sync — converts and deletes the legacy files so an adopter never meets that refusal un-aided. A wrong-typed or out-of-range dial is refused, never defaulted."""
 
 [need.SN-029]
 kind = "draft"
@@ -258,25 +258,25 @@ acceptance = """A decomposition run records the candidate partitions considered,
 kind = "edge"
 lifecycle = "Provision"
 scenario = """No Python 3 interpreter on PATH (or the Windows Store alias that resolves but exits nonzero)"""
-expected = """The git hooks / coordinator **probe by running** a candidate and skip-or-report clearly; they never crash cryptically."""
+expected = """The git hooks / coordinator **probe by running** a candidate and **skip-or-report clearly**; they never crash cryptically."""
 
 [need.SN-014]
 kind = "edge"
 lifecycle = "Provision"
 scenario = "A required harness tool is absent"
-expected = """`check.py` reports `SKIP(missing)` and **fails the gate** — a missing tool is never a silent pass (SN-008)."""
+expected = """`check.py` reports **`SKIP(missing)`** and **fails the gate** — a missing tool is never a silent pass."""
 
 [need.SN-015]
 kind = "edge"
 lifecycle = "Startup"
 scenario = "The working directory is not a git repository"
-expected = "The coordinator preflight reports \"not a git repo\" and exits nonzero; it never hangs."
+expected = """The coordinator preflight reports 'not a git repo' and exits nonzero; it never hangs."""
 
 [need.SN-016]
 kind = "edge"
 lifecycle = "Startup→Runtime"
 scenario = "An unattended run must never block on a prompt at launch **or mid-run**"
-expected = """`agent_loop.py` runs headless (stdin closed); a rate limit backs off, a stall aborts to protect the budget — the loop is never wedged by a prompt."""
+expected = """`agent_loop.py` runs headless (**stdin closed**); a rate limit backs off, a stall aborts to protect the budget — the loop is never wedged by a prompt."""
 
 [need.SN-017]
 kind = "edge"
@@ -288,7 +288,7 @@ expected = """The per-worktree lock is a kernel advisory lock the OS releases on
 kind = "edge"
 lifecycle = "Runtime"
 scenario = "A second coordinator is launched in the same checkout"
-expected = """It is **refused** rather than risking a two-writer race. *(tests/test_agent_loop.py::test_lock_excludes_a_second_process)*"""
+expected = """A second coordinator is **refused** rather than risking a two-writer race. *(tests/test_agent_loop.py::test_lock_excludes_a_second_process)*"""
 
 [need.SN-019]
 kind = "edge"
@@ -300,17 +300,17 @@ expected = """The coordinator's rev-parse guard does not crash the loop. *(tests
 kind = "edge"
 lifecycle = "Runtime"
 scenario = "The agent CLI / model errors before doing work (retired model, expired auth)"
-expected = """The session is logged `ERROR` and an all-`ERROR` stall is reported as an **unavailable agent**, not a work stall. *(tests/test_agent_loop.py — error region)*"""
+expected = """The session is logged **`ERROR`** and an **all-`ERROR`** stall is reported as an **unavailable agent**, not a work stall. *(tests/test_agent_loop.py — error region)*"""
 
 [need.SN-021]
 kind = "edge"
 lifecycle = "Runtime"
 scenario = "A generated artifact (arch map, trace view) drifts from its source"
-expected = """Its `--check` fails at the gate — a stale generated doc is a red, not a silent rot (SN-010)."""
+expected = """Its `--check` fails at the gate — a stale generated doc is a red, not a silent rot."""
 
 [need.SN-022]
 kind = "edge"
 lifecycle = "Runtime"
 scenario = "A committed example row / placeholder is left in a registry at a gate"
-expected = """`--no-placeholders` flags a leftover `-000` row from G2 on; a fresh scaffold stays green until it claims a gate."""
+expected = """`--no-placeholders` flags a leftover **`-000`** row from G2 on; a fresh scaffold stays green until it claims a gate."""
 
