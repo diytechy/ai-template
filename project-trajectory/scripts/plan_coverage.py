@@ -130,8 +130,15 @@ def parse_plan(text):
 
 
 def split_refs(cell):
-    """`;`-separated (commas tolerated) ref tokens from a table cell."""
-    return [t.strip() for t in re.split(r"[;,]", cell) if t.strip()]
+    """Ref tokens from a table cell — ids separated by `;`, `,` or whitespace.
+
+    The separator set matches `check_trajectory._split_refs` EXACTLY and the
+    two are pinned equal by `tests/test_rule_sync.py`: this function had
+    drifted to `[;,]` alone (B10 in the part-A census, 2026-08-13), so a
+    whitespace-separated pair in an LLM-authored plan cell read as ONE garbage
+    token and silently matched nothing — the same splitting defect class as
+    the SN-001/SN-002 orphan bug OI-12 records."""
+    return [t for t in re.split(r"[;,\s]+", (cell or "").strip()) if t]
 
 
 def load_registry_ids(path, key):

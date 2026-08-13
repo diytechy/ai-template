@@ -905,3 +905,26 @@ def test_is_example_agrees_across_all_three_copies_including_none():
     assert GATE.is_example("SR-123") is False
     assert GATE.is_example("") is False
     assert GATE.is_example(None) is False
+
+
+def test_ref_splitting_agrees_across_plan_coverage_and_check_trajectory():
+    """B10 (part-A census, 2026-08-13): `plan_coverage.split_refs` had drifted
+    to `[;,]` alone while `check_trajectory._split_refs` splits on `[;,\\s]+` —
+    six homes for one splitting rule, two of them disagreeing on whitespace,
+    the defect class behind the SN-001/SN-002 orphan bug (OI-12). This pins the
+    pair equal over the inputs that told them apart; the remaining homes
+    consolidate under the WI-448 common-module program."""
+    pc = load_script("plan_coverage")
+    ct = load_script("check_trajectory")
+    for cell in (
+        "SR-001;SR-002",
+        "SR-001, SR-002",
+        "SR-001 SR-002",
+        "SR-001\tSR-002",
+        "SR-001;  SR-002 ,SR-003",
+        "  SR-001  ",
+        "",
+        ";;",
+        "SR-001\nSR-002",
+    ):
+        assert pc.split_refs(cell) == ct._split_refs(cell), repr(cell)

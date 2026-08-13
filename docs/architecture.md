@@ -1055,7 +1055,7 @@ Contracts (interfaces): IF-057
 |---|---|---|
 | `parse_goal(text)` | The goal brief's declared clauses: ordered {id: text}. Duplicate |  |
 | `parse_plan(text)` | The plan's proposed-WI rows from the first table whose header carries a |  |
-| `split_refs(cell)` | `;`-separated (commas tolerated) ref tokens from a table cell. |  |
+| `split_refs(cell)` | Ref tokens from a table cell — ids separated by `;`, `,` or whitespace. | SN-001, SN-002 |
 | `load_registry_ids(path, key)` | The id column of an optional CSV registry, or None when it is absent — |  |
 | `spine_ids(path, key)` | `load_registry_ids` for a SPINE registry, which reads through the |  |
 | `proposed_rationale_present(cell)` | True when a `Proposed:` interfaces cell carries rationale text beyond |  |
