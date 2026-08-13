@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Design-time runtime-flow check: the G2 reviewer reads diagrams, not CSV rows.
+"""Design-time runtime-flow check: the DevBar-Tests reviewer reads diagrams, not CSV rows.
 
-The generated code map and `--flow` exist only once code exists (G3+). But the
-behavior most often misread at G2 — concurrency, background work, what blocks
+The generated code map and `--flow` exist only once code exists (DevBar-Release+). But the
+behavior most often misread at DevBar-Tests — concurrency, background work, what blocks
 on what — is decided *with the LLRs*. So PROCESS.md §3 requires a hand-authored
-**"Runtime flows"** section in the architecture doc at G2: Mermaid sequence
+**"Runtime flows"** section in the architecture doc at DevBar-Tests: Mermaid sequence
 diagrams of the key runtime scenarios, each citing the SR/LLR ids it renders,
 so a human can verify intended behavior by reading the flow instead of
 inferring it from registry rows.
@@ -22,7 +22,7 @@ Failures (exit 1):
 
 Placeholder ids ending in "-000" (the templates' examples) satisfy the
 "cites an id" rule and are never validated, so a fresh scaffold starts green.
---no-placeholders (wire it in from G2 on) instead *flags* every cited "-000"
+--no-placeholders (wire it in from DevBar-Tests on) instead *flags* every cited "-000"
 id, so a real authored flow can't keep citing the template's example ids.
 
 Contracts: IF-003, IF-029, IF-105 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.csv).
@@ -143,7 +143,7 @@ def main():
     ap.add_argument(
         "--no-placeholders",
         action="store_true",
-        help="flag cited '-000' template ids instead of ignoring them (G2 on)",
+        help="flag cited '-000' template ids instead of ignoring them (DevBar-Tests on)",
     )
     args = ap.parse_args()
 
@@ -156,7 +156,7 @@ def main():
     if section is None:
         print(
             f'check_flows: FAIL - no "Runtime flows" heading in {doc} '
-            "(required at G2; see process.md §3 'Design-time runtime flows')"
+            "(required at DevBar-Tests; see process.md §3 'Design-time runtime flows')"
         )
         sys.exit(1)
 

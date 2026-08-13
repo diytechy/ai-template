@@ -885,23 +885,23 @@ def process_panel(root, wis, stats):
 
     # Panel 1 — artifact lifecycle x gates. Live counts join the spine
     # registries; a TIER is highlighted when the derived gate falls in its
-    # gate span (G2 spans SR / LLR+architecture / TC — the tiers a project
-    # heading for G2 is working across). NB "stage" below is this panel's
+    # gate span (DevBar-Tests spans SR / LLR+architecture / TC — the tiers a project
+    # heading for DevBar-Tests is working across). NB "stage" below is this panel's
     # local name for a lifecycle TIER row, not the 0-5 spine stage of
     # process.md §4 — the two ladders are different axes.
     stages = [
         ("Vision", "", "one home (the README tag)"),
-        ("SN", "G1", "{} SN".format(stats["sn_total"])),
+        ("SN", "DevBar-Reqs", "{} SN".format(stats["sn_total"])),
         (
             "SR",
-            "G1→G2",
+            "DevBar-Reqs→DevBar-Tests",
             "{} SR · {} verified".format(stats["sr_total"], stats["sr_verified"]),
         ),
-        ("LLR + architecture", "G2", "{} LLR".format(stats["llr_total"])),
-        ("TC", "G2→G3", "{} TC".format(stats["tc_total"])),
+        ("LLR + architecture", "DevBar-Tests", "{} LLR".format(stats["llr_total"])),
+        ("TC", "DevBar-Tests→DevBar-Release", "{} TC".format(stats["tc_total"])),
         (
             "code + tests",
-            "G3",
+            "DevBar-Release",
             "{} of {} SR verified".format(stats["sr_verified"], stats["sr_total"]),
         ),
     ]

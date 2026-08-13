@@ -99,7 +99,7 @@ duplicate a surface the generator maintains. → **§5 step 6**
 - **Build the schema batch ONCE** — D-1's anchor half, D-2's SN fields, D-3's
   remaining columns, D-4's `SupersededBy` deletion, **D-9's ladder migration**
   (closing the `Status` enum *first*), and **D-10's approval-log writer**.
-  **Includes the one hole D-9 left: nothing drives G2→G3 once `Verified` is
+  **Includes the one hole D-9 left: nothing drives DevBar-Tests→DevBar-Release once `Verified` is
   gone** — the fix is to read the harness rather than a cell, see D-9's
   correction note. Blocked on the sitting. → **§5 step 7**
 - ~~**Repoint the `derived-gate-model.md` citations**~~ — **DONE 2026-08-12**,
@@ -143,7 +143,7 @@ never re-minted, and the mark now enforces that for the `OI` space too).
 | part | question | where | recommendation |
 |---|---|---|---|
 | **A · partition** | The **component model**. `LLR.Component` is *traced*, so the partition moves with **no re-attest window** — and it **decides how many IF rows must exist**. **Direction + PURPOSE received 2026-08-12** (§8.6): the architecture is **formative**, and exists to stop a behaviour being built twice or two contradictory ways. | §6 F-11 (archived) · §8.6 | derive from the system's **declared I/O**, with **one home per behaviour as a hard constraint** and cut-count only the tie-breaker; present a **ranked shortlist carrying its rework cost**; the ruling stays the owner's |
-| **A′ · the boundary rung** | **Nothing declares the system boundary before SRs are written** — G1's bar asks for the vision tag, needs, non-goals and sign-offs, and not this. 15 of 113 IF rows name an external counterpart, so the mechanism half-exists; the *completeness* and *ordering* obligations do not. | §0 (2026-08-12) | require it with an **applies-when, warn-first** — real obligation, but a hard G1 bar would tax adopters whose boundary is obvious |
+| **A′ · the boundary rung** | **Nothing declares the system boundary before SRs are written** — DevBar-Reqs's bar asks for the vision tag, needs, non-goals and sign-offs, and not this. 15 of 113 IF rows name an external counterpart, so the mechanism half-exists; the *completeness* and *ordering* obligations do not. | §0 (2026-08-12) | require it with an **applies-when, warn-first** — real obligation, but a hard DevBar-Reqs bar would tax adopters whose boundary is obvious |
 | **B · contract** | What an IF row must **say**. Measured: design narrative and history, and the registry has **no schema tier at all**. **Narrowed 2026-08-12**: interfaces carry *interfaces only*, signals typed discrete vs variable. | §6 F-10 (archived) · §8.6 | **declare + build the schema tier**, split the cells gradually — never a 113-row sweep |
 
 **The order is an asymmetry, not a preference: A is safe to rule alone, B is
@@ -187,7 +187,7 @@ rework."* That adopts
 [`plans/2026-08-11-stage-gate-semantics.md`](plans/2026-08-11-stage-gate-semantics.md):
 **stages are the tiers of the decomposition; gates are the subset of
 boundaries that require a human to certify** — stage is the *state*, a gate is
-an *event you pass*, `G0` is retired (it was "stage 0" in the wrong units),
+an *event you pass*, `DevBar-Below` is retired (it was "stage 0" in the wrong units),
 the missing **implementation rung** is added, and the phrase "the active gate"
 leaves the vocabulary. Execution started 2026-08-12 (§8.7 records the
 judgment calls the rework forced). **The two questions the ruling needed
@@ -248,7 +248,7 @@ semantics landed; the SN batch applied as drafts).
 
 | fact | value |
 |---|---|
-| stage / next gate | **stage 0** (needs in process — the new drafts hold it there) · next gate **G1**. Correct: everything that moves it waits on the sitting. |
+| stage / next gate | **stage 0** (needs in process — the new drafts hold it there) · next gate **DevBar-Reqs**. Correct: everything that moves it waits on the sitting. |
 | spine | SN **37** · SR **147** · LLR 149 · TC 146 · **46 drafts** · **38 `Modified`** |
 | integrity | `orphans=0 integrity=0 component-findings=0 interface-findings=0`; interfaces 113 |
 | strict modes | `trace --strict` **rc 0** · `check_trajectory --strict` **rc 0** |
@@ -267,7 +267,7 @@ files (naming one is accurate history; "fixing" it falsifies the record).
 
 **The gate has not moved and should not have.** One SN was attested and three
 demoted at the sitting's part 1, but every SR/LLR/TC under them is still
-`Draft`, and a `Draft` row reads G0. Worth knowing: a `[phase]-[g*]` detector
+`Draft`, and a `Draft` row reads DevBar-Below. Worth knowing: a `[phase]-[g*]` detector
 fires on phase 4 — per the derived-gate model that **is** the signal a new
 phase is due, not a regression.
 
@@ -416,12 +416,12 @@ every push, so a cell is a stale duplicate. Deleting it makes the ladder
 uniform, and **dissolves the word-reuse hazard rather than working around it** —
 `Verified` is not re-pointed, it ceases to exist.
 
-> **CORRECTION, 2026-08-11 — this paragraph originally said `derive_gate`'s G3
+> **CORRECTION, 2026-08-11 — this paragraph originally said `derive_gate`'s DevBar-Release
 > rung ("decomposed AND `Status=Verified`") "becomes simply at `Founded`".
 > That is WRONG, and the owner's question found it.** `Founded` **is** the old
-> G2 condition (decomposed — its LLR and TC exist), so mapping G3 onto it
-> collapses G2 into G3 and would declare implementation complete the moment the
-> tests are *written*. **Under D-9, nothing currently drives G2→G3.**
+> DevBar-Tests condition (decomposed — its LLR and TC exist), so mapping DevBar-Release onto it
+> collapses DevBar-Tests into DevBar-Release and would declare implementation complete the moment the
+> tests are *written*. **Under D-9, nothing currently drives DevBar-Tests→DevBar-Release.**
 >
 > The deeper finding is that today's rung was never sound either. `sr_gate`
 > reads `decomposed and is_verified(sr)` — a **hand-set cell asserting the
@@ -430,9 +430,9 @@ uniform, and **dissolves the word-reuse hazard rather than working around it** �
 > causing it.
 >
 > **The fix is where `PROCESS.md` already puts it: the HARNESS is the signal** —
-> G3's bar is *"passes the full harness: format/lint, full test tier, coverage
+> DevBar-Release's bar is *"passes the full harness: format/lint, full test tier, coverage
 > ≥ threshold … no stubs."* `derive_gate` never read it; it read a cell that
-> claimed it. So the G2→G3 driver must become a harness result, not a status
+> claimed it. So the DevBar-Tests→DevBar-Release driver must become a harness result, not a status
 > value — which also makes the proposed **stage 4 → 5** boundary
 > (implementation → release candidate) harness-driven, consistently with the
 > rest of the ladder. **Owed with the step-7 batch**; it is the one piece of
@@ -500,7 +500,7 @@ spends the word six times meaning compress-to-essence) · `Grounded`
 Three already existed; the fourth was built.
 
 - **SN** → `derive_gate`'s coverage rung, counted as `uncovered=N`.
-- **SR** → `derive_gate`'s existing G2 decomposition test.
+- **SR** → `derive_gate`'s existing DevBar-Tests decomposition test.
 - **TC** → the file-existence half of the `Evidence` check (sufficient under R2).
 - **LLR** → **BUILT as WI-429**, taken under the owner's *"proceed"*;
   **ratification owed with the ladder migration.** `CodeSymbol`/`Module`
@@ -549,7 +549,7 @@ performs the flip. The actor is valued as an **`agents` registry id** or a
 human marker, so "was this row blessed by a human or by a hat?" is answerable
 by query rather than by reading prose. It survives squash (file content, not
 git metadata), cannot be overwritten (append-only), and costs the registries
-nothing. It is the row-level sibling of `log.md`'s existing **Gate Sign-offs**
+nothing. It is the row-level sibling of `log.md`'s existing **Sittings**
 table.
 
 **THE GUARDRAIL, and it is the whole reason this is not the ledger D-1 tore
@@ -563,7 +563,7 @@ the ledger again** — that is the tripwire, not a style note.
 **Sequencing: build it WITH D-9's migration (§5 step 7).** The status-flip
 machinery is being rewritten there anyway, so the writer is a small addition to
 scheduled work rather than a new mechanism. It also closes, at row granularity,
-the gap that nothing durably records who certified what — the Gate Sign-offs
+the gap that nothing durably records who certified what — the Sittings
 table being its gate-granularity twin, hand-maintained and last filled
 2026-07-07.
 
@@ -901,7 +901,7 @@ required.
 4. **Item 5 changes machinery:** the "hat" roster needs a declared home and
    `trace.py --ratify` must inject it — a WI, not a prose edit.
 5. **Item 6 is the big one** and lands on the **unruled components model**
-   (§0). It reorders the process spine (SRs at G1, architecture at G2 today).
+   (§0). It reorders the process spine (SRs at DevBar-Reqs, architecture at DevBar-Tests today).
    It cannot be adopted as a sentence; rule it with components.
 6. **The draft SR** presumes the D-9 ladder and the attestation dials — intake
    as Draft, decompose against what the loop already does.
@@ -1175,8 +1175,8 @@ review. The §8.5 pattern, continued. Entries accumulate as the rework runs.
   G\* vocabulary retires *entirely* for an eight-rung stage ladder; the
   sign-off successor is OI-21 execution question (3). Kept as the record of
   the call as first taken: "Retire gate semantics"
-  was executed as retiring gate-as-*state* (the "active gate", `G0`, "at G1"
-  phrasing) — G1/G2/G3 survived as the human-certified boundaries between
+  was executed as retiring gate-as-*state* (the "active gate", `DevBar-Below`, "at DevBar-Reqs"
+  phrasing) — DevBar-Reqs/DevBar-Tests/DevBar-Release survived as the human-certified boundaries between
   stages, because the proposal the owner adopted defines them that way and
   the sign-off record depends on them. If the owner meant retiring the gate
   *vocabulary entirely*, that is a different and larger rework — flagging the
@@ -1185,12 +1185,12 @@ review. The §8.5 pattern, continued. Entries accumulate as the rework runs.
   the new `PROCESS.md` section — they cite the archived §-numbers precisely,
   and the new section carries ruled semantics, not gate arithmetic.
 - **Stage-rework execution calls (2026-08-12, builder's list, each owed a
-  glance):** (1) **`G0` survives as an internal constant** — the min-fold
-  needs a below-G1 value and `computed=G0` is a live cache format; it is
+  glance):** (1) **`DevBar-Below` survives as an internal constant** — the min-fold
+  needs a below-DevBar-Reqs value and `computed=DevBar-Below` is a live cache format; it is
   documented everywhere as "not a gate — say stage 0". (2) **Stage 5 maps to
-  G3** — G-Release/G-Final are named in prose only, no new rung mechanized.
+  DevBar-Release** — DevStg-Release/the owner's final read are named in prose only, no new rung mechanized.
   (3) The 3-vs-4 discriminator: stage 4 ⟺ every SR decomposed, every TC
-  authored and non-Draft, not all SRs `Verified`; the G2→G3 *driver* stays
+  authored and non-Draft, not all SRs `Verified`; the DevBar-Tests→DevBar-Release *driver* stays
   the `is_verified` cell (the D-9 harness fix stays owed to step 7, now
   documented in the docstring as the interim proxy). (4) `PROCESS.md` grew
   +2,591 bytes for the ruled subsection (§4, no §-renumbering) and the

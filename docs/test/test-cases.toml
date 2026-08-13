@@ -441,7 +441,7 @@ phase = 1
 [test.TC-042]
 verifies = ["SR-042", "LLR-039"]
 level = "Integration"
-method = """Run the gen-okf suite; typed linked concepts generate, Process Guide concepts emit for present docs with derived summaries and unmodified sources (and none on a vacuous scaffold), regeneration is byte-stable, --check trips on registry/doc edits/extras and recovers after regen, extras are pruned, placeholder-only is vacuous, off silences, and the okf step is wired at G3."""
+method = """Run the gen-okf suite; typed linked concepts generate, Process Guide concepts emit for present docs with derived summaries and unmodified sources (and none on a vacuous scaffold), regeneration is byte-stable, --check trips on registry/doc edits/extras and recovers after regen, extras are pruned, placeholder-only is vacuous, off silences, and the okf step is wired at DevBar-Release."""
 tier = "Full"
 expected = "Satisfies SR-042 AcceptanceCriteria"
 automated = "Yes"
@@ -531,7 +531,7 @@ verifies = ["SR-049", "LLR-050"]
 level = "Unit"
 method = """derive the gate from fixture states across every per-artifact rule and guard the cache; --print reports the derived current phase"""
 tier = "Full"
-expected = """derive_gate computes the correct gate per artifact state (draft drop, undecomposed G1, decomposed-unverified G2 - including a Modified SR, whose phase reads G2 with children counted-but-never-capping - and verified G3) and --check catches drift; the compared basis line carries modified=N beside drafts=N; --print shows the derived current phase (the meta reads phase=4)"""
+expected = """derive_gate computes the correct gate per artifact state (draft drop, undecomposed DevBar-Reqs, decomposed-unverified DevBar-Tests - including a Modified SR, whose phase reads DevBar-Tests with children counted-but-never-capping - and verified DevBar-Release) and --check catches drift; the compared basis line carries modified=N beside drafts=N; --print shows the derived current phase (the meta reads phase=4)"""
 automated = "Yes"
 evidence = "tests/test_derive_gate.py"
 status = "Verified"
@@ -1031,9 +1031,9 @@ phase = 3
 [test.TC-107]
 verifies = ["SR-053", "LLR-104"]
 level = "Unit"
-method = """Generate the dashboard with the Process tab enabled (G2 gate) and assert --nhead is declared, .stgt/.stgn resolve to var(--nlabel)/var(--nsub), .hooplab/.hubname resolve to var(--nhead), and none of the four selectors' rule bodies contain a raw px value."""
+method = """Generate the dashboard with the Process tab enabled (DevBar-Tests gate) and assert --nhead is declared, .stgt/.stgn resolve to var(--nlabel)/var(--nsub), .hooplab/.hubname resolve to var(--nhead), and none of the four selectors' rule bodies contain a raw px value."""
 tier = "Full"
-parameters = "tests/test_gen_trajectory.py (with_gate G2 fixture)"
+parameters = "tests/test_gen_trajectory.py (with_gate DevBar-Tests fixture)"
 expected = """No ad-hoc px font-size remains on .stgt/.stgn/.hooplab/.hubname; all four resolve to a declared CSS custom property."""
 automated = "Yes"
 evidence = "tests/test_traj_render.py::test_u1_process_tab_type_scale_matches_the_shared_tokens"
@@ -1400,7 +1400,7 @@ phase = 1
 [test.TC-141]
 verifies = ["SR-049", "LLR-147"]
 level = "Unit"
-method = """Fixture-drive the SN-coverage rung: an uncovered ratified SN caps raw at G0 (the runnable value floors to G1) with uncovered=1 on the basis line and drafts=0; citing the need from an SR's SN-Refs restores the prior level (uncovered=0, G3); a Draft SN keeps riding the draft rung with uncovered=0 (the double-counting seam - one fact, one rung); -000 rows on both sides of the join are ignored, so an example SR row cannot fake coverage of a real need; the ex-draft counterfactual rebuilds the cited set over the non-draft subset, so a need answered only by a Draft SR reads G0 there too; and the sn_cited_ids parse is pinned equal between trace.py and derive_gate.py across the separator/empty/absent-cell battery (tests/test_rule_sync.py)."""
+method = """Fixture-drive the SN-coverage rung: an uncovered ratified SN caps raw at DevBar-Below (the runnable value floors to DevBar-Reqs) with uncovered=1 on the basis line and drafts=0; citing the need from an SR's SN-Refs restores the prior level (uncovered=0, DevBar-Release); a Draft SN keeps riding the draft rung with uncovered=0 (the double-counting seam - one fact, one rung); -000 rows on both sides of the join are ignored, so an example SR row cannot fake coverage of a real need; the ex-draft counterfactual rebuilds the cited set over the non-draft subset, so a need answered only by a Draft SR reads DevBar-Below there too; and the sn_cited_ids parse is pinned equal between trace.py and derive_gate.py across the separator/empty/absent-cell battery (tests/test_rule_sync.py)."""
 tier = "Full"
 expected = "Satisfies SR-049 AcceptanceCriteria"
 automated = "Yes"
@@ -1455,7 +1455,7 @@ phase = 4
 [test.TC-146]
 verifies = ["SR-093", "LLR-152"]
 level = "Unit"
-method = """Run the schedule + integrate suites' adjudication cases: the kind classifies exclusive at rank 1 (the reserved slot, pinned by name); an adjudication-only lane's refresh runs NO bar yet still commits a verified Bar-Green attestation whose summary says no-bar, while a mixed batch bars as usual (fail toward the bar); bar = G2 reaches check.py as --gate G2 (asserted off the recording stub's own argv), an undeclared bar passes no --gate, and a malformed value refuses the refresh naming it."""
+method = """Run the schedule + integrate suites' adjudication cases: the kind classifies exclusive at rank 1 (the reserved slot, pinned by name); an adjudication-only lane's refresh runs NO bar yet still commits a verified Bar-Green attestation whose summary says no-bar, while a mixed batch bars as usual (fail toward the bar); bar = DevBar-Tests reaches check.py as --gate DevBar-Tests (asserted off the recording stub's own argv), an undeclared bar passes no --gate, and a malformed value refuses the refresh naming it."""
 tier = "Full"
 expected = "Satisfies SR-093 AcceptanceCriteria"
 automated = "Yes"
@@ -1639,3 +1639,14 @@ automated = "Yes"
 evidence = "tests/test_hats.py"
 status = "Draft"
 phase = 4
+
+[test.TC-163]
+verifies = ["SR-149", "LLR-169"]
+level = "Unit"
+method = """Plant a retired tag in a live authored file and one in each declared carve-out class (archive, the project log, an attestation brief, a closed work-item spec, a generated surface, the owner scratchpad), plus one at depth under a carved-out directory; run check_vocab.py at both severities; plant a line marker and a file marker; plant the word 'gate' in its surviving sense; and run the checker over the real meta-repo tree."""
+tier = "Smoke"
+expected = """The live file is reported with its path and line; the default severity exits 0 and --strict exits 1 on the same finding; no carve-out is ever reported, at any depth; a marked line is skipped while its unmarked neighbour is not, and a marked file is skipped whole; the surviving sense of 'gate' is clean; and the meta-repo itself is clean at the ERROR severity, so the assertions cannot pass against fixtures while the conversion rots."""
+automated = "Yes"
+evidence = "tests/test_stage_ladder.py"
+status = "Draft"
+phase = 5

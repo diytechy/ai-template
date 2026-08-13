@@ -1,10 +1,10 @@
 """trace.py acceptance-criteria testability advisory (WI-1.16, warn-only).
 
 Gilbert's SR-013 shipped an AC saying a consumer "cannot distinguish source by
-schema" — a comparative with no named predicate — and it sailed through G1.
+schema" — a comparative with no named predicate — and it sailed through DevBar-Reqs.
 The advisory flags comparative/absolute terms in AcceptanceCriteria cells that
 lack a nearby pinned predicate. It is a heuristic, so it WARNS and never joins
-any failure set: the G1 consistency review (process.md §4) makes the call.
+any failure set: the DevBar-Reqs consistency review (process.md §4) makes the call.
 """
 
 from conftest import make_minimal_project, run_py
@@ -97,11 +97,13 @@ def test_bare_identical_still_warns(scaffold):
 
 
 def test_advisory_surfaces_at_g1_via_registry_integrity_step(scaffold):
-    # The G1 harness run must show the warning (Gilbert's AC passed G1 unseen)
+    # The DevBar-Reqs harness run must show the warning (Gilbert's AC passed DevBar-Reqs unseen)
     # while the gate itself stays green — warn, not fail.
     make_minimal_project(scaffold)
     swap_ac(scaffold, "Behaves the same as the reference implementation")
-    proc = run_py(["scripts/check.py", "--gate", "G1", "--lenient"], cwd=scaffold)
+    proc = run_py(
+        ["scripts/check.py", "--gate", "DevBar-Reqs", "--lenient"], cwd=scaffold
+    )
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "RESULT: PASS" in proc.stdout
     assert "WARNING" in proc.stdout and "ac-advisories=1" in proc.stdout

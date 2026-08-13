@@ -735,7 +735,7 @@ def load_needs(path):
     `path` may name either suffix; `resolve` refuses both at once. `[]` when the
     registry is absent, and SystemExit when a carrier exists and cannot be read
     — an unreadable needs registry must not read as "this project has no needs",
-    which is a G0 gate and a vacuous orphan check at the same time."""
+    which is a DevBar-Below gate and a vacuous orphan check at the same time."""
     live = resolve(path, NEED_CARRIERS)
     if live is None:
         return []

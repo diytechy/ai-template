@@ -56,7 +56,7 @@ src/ — the kit's product is project-trajectory/ + tests/, not an application t
 docs/kit-license — a stamp bootstrap.py writes into a SCAFFOLD; the kit itself is the source
 docs/kit-profile — likewise a scaffold stamp, recording which kit rung a repo adopted
 docs/release-checklist.md — a scaffolded artifact for a repo that ships releases
-docs/releases/ — gen_release_checklist.py --version files the stamped, signed checklist here; a meta-repo performs no G-Release, so the directory is created by the first one that ships (see the line above)
+docs/releases/ — gen_release_checklist.py --version files the stamped, signed checklist here; a meta-repo performs no DevStg-Release, so the directory is created by the first one that ships (see the line above)
 
 # --- Retired surfaces: gone on purpose, and prose still names them -----------
 # A retired path is a deliberate absence with a reason, so it belongs here rather
@@ -90,7 +90,7 @@ docs/pause — the legacy untracked pause marker; retired at Phase 5 (the tracke
 docs/work/pause — LIFECYCLE: present only while a pause is DECLARED; absence = not paused, the documented default
 docs/work/active/ — LIFECYCLE: holds per-branch claim directories only while work is claimed; empty/absent at a drained stop
 docs/test/report.md — LIFECYCLE: the traceability matrix trace.py writes on demand (gitignored, never committed — .gitignore "Generated reports"); prose naming it describes the generator's destination, and absence until a run writes it is the documented state
-docs/test/report.html — LIFECYCLE: the html render of the same matrix, written when the bar's check.py passes --html to the trace step at G2/G3 (gitignored, never committed — the same .gitignore block); declared tool-residue since WI-407 (measured holding the wi-402 lane at unload, 2026-08-02), and absence until a bar run writes it is the documented state
+docs/test/report.html — LIFECYCLE: the html render of the same matrix, written when the bar's check.py passes --html to the trace step at DevBar-Tests/DevBar-Release (gitignored, never committed — the same .gitignore block); declared tool-residue since WI-407 (measured holding the wi-402 lane at unload, 2026-08-02), and absence until a bar run writes it is the documented state
 tools/wi_convert.py — the converter's pre-2c meta-repo home, named as history in the spec; it moved to project-trajectory/scripts/wi_convert.py
 # The dispatcher split (concurrency-v2 SA4.2): drive.py renamed dispatch.py
 # with lane.py extracted; historical records (closed WI specs) and the

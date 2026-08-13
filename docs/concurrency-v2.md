@@ -629,7 +629,7 @@ changed = sorted(k for k in set(head) | set(row)
 So `Module`, `CodeSymbol`, `TestRefs`, `Component` and `Phase` arm the
 re-attest warn as if requirement prose had changed. **That is what happened on
 WI-280**: 19 LLR `Module` cells followed code that moved → 11 owning SRs to
-`Modified` → gate G3→G2 → a ratify brief and four review rounds, for a change
+`Modified` → gate DevBar-Release→DevBar-Tests → a ratify brief and four review rounds, for a change
 that altered no requirement. Under this ruling **that window should never have
 opened.**
 
@@ -748,7 +748,7 @@ the adjudication WI** — one behaviour, one home, one owner.
 
 ## A8. Gate policy is the dispatcher's authority dial (OWNER premise, DERIVED table)
 
-> *"A full attended G1/G2/G3 would require a back and forth between the
+> *"A full attended DevBar-Reqs/DevBar-Tests/DevBar-Release would require a back and forth between the
 > detection of gate changes, which would then cause the agent-resume to exit
 > since no work could be taken, and those ratification items should surface in
 > open-items. That is how it works today, so I assumed that part would continue
@@ -757,7 +757,7 @@ the adjudication WI** — one behaviour, one home, one owner.
 **Confirmed against the code — the premise holds, with one honest correction.**
 
 - **Detection → gate drop** is real: `Modified`/`Draft` rows change what
-  `derive_gate.py` computes, `docs/gate` falls (e.g. G3→G2), and the window
+  `derive_gate.py` computes, `docs/gate` falls (e.g. DevBar-Release→DevBar-Tests), and the window
   *lowers* the bar without blinding it (the higher gate's steps run advisory).
 - **Surfacing is real**: `gen_open_items.py` renders one card per `Draft` (owes
   a first ratification) or `Modified` (owes a re-attest) SR **with its whole
@@ -780,8 +780,8 @@ the adjudication WI** — one behaviour, one home, one owner.
 | Level | Escalation action | `pause_wi` | Keeps non-dependent work? | Who ratifies a gate |
 |---|---|---|---|---|
 | `attended` (default) | `stop-needs-human` | yes | **no** — start nothing new | a human, per batch |
-| `single-ratify` | `surface-block-continue-others` | yes | **yes** | LLM-gate through G1+G2; the human ratifies the queued batch once at the phase's `[g2]` close, autonomous after |
-| `autonomous` (this repo) | `design-check-session` | yes | **yes** | an independent fresh-context LLM reviewer's recorded verdict, every gate except G-Final |
+| `single-ratify` | `surface-block-continue-others` | yes | **yes** | LLM-gate through DevBar-Reqs+DevBar-Tests; the human ratifies the queued batch once at the phase's `[g2]` close, autonomous after |
+| `autonomous` (this repo) | `design-check-session` | yes | **yes** | an independent fresh-context LLM reviewer's recorded verdict, every gate except the owner's final read |
 
 **What the dispatcher does with each kind, per level.** This is the table the
 barrier needs and the one place the design must not invent policy:
@@ -795,7 +795,7 @@ barrier needs and the one place the design must not invent policy:
 | `attestation` / `gate` — close a window | **do not dispatch.** Drain the lanes, surface the cards, exit 0 into the owner's queue | dispatch only the queued batch at the phase `[g2]` close; otherwise surface | dispatch (recorded reviewer verdict ratifies) |
 
 **Fixed points survive every level** and the dispatcher must not paper over
-them: G-Final is the human's; **no un-run greens**; the harness is still the
+them: the owner's final read is the human's; **no un-run greens**; the harness is still the
 bar; ratified owner decisions are never re-decided by an agent.
 
 **The open decision this exposes — may adjudication FLIP under `attended`?**

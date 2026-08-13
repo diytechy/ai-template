@@ -700,7 +700,9 @@ def test_a4_every_css_fill_token_is_classified_and_floor_checked(tmp_path):
     BOTH themes (the WI-293 lesson — a per-theme token passed light and shipped
     2.98:1 in dark), and `container-fill` roles keep the page's own `--text`
     readable on them in both themes."""
-    with_gate(tmp_path, "G2")  # the Process tab renders --slot, the widest set
+    with_gate(
+        tmp_path, "DevBar-Tests"
+    )  # the Process tab renders --slot, the widest set
     assert gen(tmp_path).returncode == 0
     css = html_of(tmp_path)
     used = set(re.findall(r"fill:\s*var\((--[\w-]+)", css))

@@ -49,7 +49,7 @@ rules:
     file (scaffold README/`-000` boilerplate excluded) is cited by at least one
     *open* WI — otherwise it belongs in `docs/archive/specs/` (the specs README
     lifecycle).
-R-E and R-F are **WARN by default, ERROR under `--strict`** (wired at G2+). R-B/R-C —
+R-E and R-F are **WARN by default, ERROR under `--strict`** (wired at DevBar-Tests+). R-B/R-C —
 every *open* WI repeated as a token in `status.md` — stay **retired** (WI-180):
 status becomes an integrator-generated snapshot, so open-id currency is enforced
 by generated freshness, not by copying the registry back into prose. **R-D is
@@ -100,7 +100,7 @@ layer"). The software-architecture diagram's *first view* must show at most
 ``TOP_VIEW_MAX`` (10) items: top-level components (a `CMP-###` with no `PartOf`
 that contains ≥1 arch-map module) plus **uncontained** modules (a module with no
 `Component`-tagged LLR). Exceeding the bound is a **finding** — WARN at the
-plain/hook run, **ERROR under `--strict` (G2+)** — that drives right-sizing of
+plain/hook run, **ERROR under `--strict` (DevBar-Tests+)** — that drives right-sizing of
 the component designations. Membership derives from the AXES join: a `Component`
 tag on an LLR row joins its `Module` → `CMP-###`; nesting via the CMP registry's
 `PartOf` (a module counts only at its top-level root). Opt-out is the one word
@@ -412,7 +412,7 @@ SPEC_SCALARS = (
     ("SafetyClass", "safety_class"),
     ("PlanMode", "planmode"),
     # WI-388: bar declares verification strictness for this row's lane; it
-    # never affects scheduling. (G1|G2|G3 — integrate.refresh passes it to
+    # never affects scheduling. (DevBar-Reqs|DevBar-Tests|DevBar-Release — integrate.refresh passes it to
     # check.py --gate; load_wis deliberately does not parse it.)
     ("Bar", "bar"),
     ("Supersedes", "supersedes"),
@@ -1605,7 +1605,7 @@ def cross_component_advisories(root):
 def component_findings(root):
     """The How-SW component-coverage finding(s) (process-options.md "Component
     layer"). Returns the finding strings ([] when opted out or clean). The caller
-    prints them WARN plain and promotes them to ERROR under `--strict` (G2+).
+    prints them WARN plain and promotes them to ERROR under `--strict` (DevBar-Tests+).
     Opt-out via `[checks] components_check = false`. Four rules, all off the arch-map ⇒
     CMP join:
 
@@ -1725,7 +1725,7 @@ def spec_interface_findings(root):
     `interfaces.toml` (the one seam home, PROCESS.md §8), and a cited
     `Stability=Experimental` seam must carry a non-empty rationale on its citation line
     (the forced nearest-existing-IF search that is the anti-duplication
-    mechanism). WARN plain / ERROR under `--strict` (G2+), like
+    mechanism). WARN plain / ERROR under `--strict` (DevBar-Tests+), like
     `component_findings`; the caller owns that promotion.
 
     **Vacuous-until-armed:** a spec with no `## Interfaces` heading is skipped, so
@@ -1773,27 +1773,47 @@ def spec_interface_findings(root):
     return out
 
 
-# --- the [phase]-[g*] archetype + phase-drop detector (WI-093) -----------------
-# The derived-gate model (docs/archive/specs/derived-gate-model.2026-07-20.md §7/§9.3) structures a
-# phase's pre-dev work as a first-class WI whose Title carries a `[<phase>]-[g<N>]`
-# tag (g1 = requirement structuring, g2 = decomposition + TCs). The derived gate
-# DROPPING below a phase's last-closed level is the signal that new/reopened
-# content entered and a new phase-gate WI is due; the committed anchor is where
-# phase identity + membership live (a git-history walk is rebase-sensitive and
-# carries no membership, §9.3). Both checks are WARN-FIRST — like the connectivity
-# coverage, they never change the exit code, at any gate.
+# --- the phase-anchor archetype + phase-drop detector (WI-093) -----------------
+# The derived model (docs/archive/specs/derived-gate-model.2026-07-20.md §7/§9.3)
+# structures a phase's pre-dev work as a first-class WI whose Title carries a
+# phase-anchor tag. The derived bar DROPPING below a phase's last-closed level is
+# the signal that new/reopened content entered and a new phase-anchor WI is due;
+# the committed anchor is where phase identity + membership live (a git-history
+# walk is rebase-sensitive and carries no membership, §9.3). Both checks are
+# WARN-FIRST — like the connectivity coverage, they never change the exit code.
+#
+# THE ARCHETYPE CONVERTED, THE LIVE ANCHORS DID NOT (OI-21 contract break 4).
+# New titles take `[<phase>]-[reqs]` (requirement structuring) and
+# `[<phase>]-[tests]` (decomposition + TCs) — the two bars those anchors certify.
+# The ~20 anchors already committed carry `[<phase>]-[g1]` / `[<phase>]-[g2]` and
+# STAY THAT WAY: a WI title is a citation, and D-4 refuses re-pointing history.
+# So the regex reads both spellings and normalizes to one internal level; the
+# retired spelling is accepted forever on the read side and never authored again.
 GATE_FILE = "docs/gate"
-PHASE_ANCHOR_RE = re.compile(r"^\[([^\]]+)\]-\[g([12])\]")
-_GATE_LEVEL = {"G0": 0, "G1": 1, "G2": 2, "G3": 3}
+PHASE_ANCHOR_RE = re.compile(r"^\[([^\]]+)\]-\[(g[12]|reqs|tests)\]", re.IGNORECASE)
+# Anchor token -> internal level. `g1`/`g2` are the retired spellings, kept for
+# the committed history only.
+_ANCHOR_LEVEL = {"reqs": 1, "tests": 2, "g1": 1, "g2": 2}
+# The canonical spelling of each level, for the messages a new anchor should copy.
+_ANCHOR_NAME = {1: "reqs", 2: "tests"}
+_BAR_LEVEL = {
+    "DevBar-Below": 0,
+    "DevBar-Reqs": 1,
+    "DevBar-Tests": 2,
+    "DevBar-Release": 3,
+}
 _PER_PHASE_RE = re.compile(r"per-phase=(\S+)")
 
 
 def read_derived_phases(root):
-    """`{phase-label: gate-level-int}` parsed from the `# basis:` line of the
+    """`{phase-label: bar-level-int}` parsed from the `# basis:` line of the
     generated docs/gate (derive_gate.py's hybrid cache — read the committed value,
     never recompute here). Empty when docs/gate is absent or a legacy hand-set gate
     with no basis line, so the drop detector is then vacuous. The basis format is
-    derive_gate.basis_line's `per-phase=<label>=G<n>;...` (a shared contract)."""
+    derive_gate.basis_line's `per-phase=<label>=DevBar-<Name>;...` (a shared
+    contract; a cache still carrying the retired G-values simply parses to nothing
+    and the detector goes vacuous until it is regenerated — the same
+    one-forced-regenerate migration the basis line itself takes)."""
     path = root / GATE_FILE
     if not path.exists():
         return {}
@@ -1806,38 +1826,44 @@ def read_derived_phases(root):
             out = {}
             for pair in m.group(1).split(";"):
                 if "=" in pair:
-                    label, gate = pair.rsplit("=", 1)
-                    if gate in _GATE_LEVEL:
-                        out[label] = _GATE_LEVEL[gate]
+                    label, bar = pair.rsplit("=", 1)
+                    if bar in _BAR_LEVEL:
+                        out[label] = _BAR_LEVEL[bar]
             return out
     return {}
 
 
 def phase_anchors(wis):
-    """`({(phase, gate): wi}, [shape-warnings])` — the `[phase]-[g*]` anchor WIs
-    parsed from Titles. A duplicate (phase, gate) anchor, and a `-g2` whose
-    predecessors omit its `-g1`, are warned (advisory only)."""
+    """`({(phase, level): wi}, [shape-warnings])` — the phase-anchor WIs parsed
+    from Titles, over BOTH the canonical `[phase]-[reqs|tests]` spelling and the
+    retired `[phase]-[g1|g2]` one the committed anchors carry. A duplicate
+    (phase, level) anchor — including one spelled each way, which is exactly the
+    collision worth catching during the changeover — and a `tests` anchor whose
+    predecessors omit its `reqs` anchor, are warned (advisory only)."""
     anchors, warns = {}, []
     for w in wis:
         m = PHASE_ANCHOR_RE.match(w["title"])
         if not m:
             continue
-        key = (m.group(1), int(m.group(2)))
+        level = _ANCHOR_LEVEL[m.group(2).lower()]
+        key = (m.group(1), level)
         if key in anchors:
             warns.append(
-                "duplicate phase-gate anchor [{}]-[g{}] ({} and {})".format(
-                    key[0], key[1], anchors[key]["id"], w["id"]
+                "duplicate phase anchor [{}]-[{}] ({} and {})".format(
+                    key[0], _ANCHOR_NAME[level], anchors[key]["id"], w["id"]
                 )
             )
             continue
         anchors[key] = w
-    for (phase, gate), w in anchors.items():
-        if gate == 2 and (phase, 1) in anchors:
-            g1 = anchors[(phase, 1)]["id"]
-            if g1 not in (w["preds"] + w["soft"]):
+    for (phase, level), w in anchors.items():
+        if level == 2 and (phase, 1) in anchors:
+            lower = anchors[(phase, 1)]["id"]
+            if lower not in (w["preds"] + w["soft"]):
                 warns.append(
-                    "phase-gate anchor {} ([{}]-[g2]) does not list its "
-                    "[{}]-[g1] ({}) as a predecessor".format(w["id"], phase, phase, g1)
+                    "phase anchor {} ([{}]-[tests]) does not list its "
+                    "[{}]-[reqs] ({}) as a predecessor".format(
+                        w["id"], phase, phase, lower
+                    )
                 )
     return anchors, warns
 
@@ -1846,23 +1872,33 @@ def phase_findings(root, wis):
     """The phase-archetype + phase-drop warns (WI-093; warn-first). Returns the
     warn strings ([] when vacuous — no anchors and no per-phase drop data, the
     single-phase meta case). The drop detector reads the derived per-phase levels
-    from docs/gate's basis: for each phase with a **done** `[phase]-[gN]` anchor
-    (its recorded closed level), if the current derived level for that phase is
-    below N, new/reopened content dropped it — warn to open a new phase-gate WI."""
+    from docs/gate's basis: for each phase with a **done** phase anchor (its
+    recorded closed level), if the current derived level for that phase is below
+    it, new/reopened content dropped it — warn to open a new phase-anchor WI. The
+    message names the CANONICAL anchor spelling even when the closed anchor it
+    read used the retired one, because the WI it is asking for is a NEW row."""
     anchors, warns = phase_anchors(wis)
     derived = read_derived_phases(root)
-    closed = {}  # phase -> highest gN whose [phase]-[gN] anchor is done
-    for (phase, gate), w in anchors.items():
+    # phase -> the highest anchor level whose anchor WI is done
+    closed = {}
+    for (phase, level), w in anchors.items():
         if w["status"] == "done":
-            closed[phase] = max(closed.get(phase, 0), gate)
+            closed[phase] = max(closed.get(phase, 0), level)
+    bar_of = {v: k for k, v in _BAR_LEVEL.items()}
     for phase, level in sorted(closed.items()):
         cur = derived.get(phase)
         if cur is not None and cur < level:
             warns.append(
-                "phase {!r} dropped to G{} but its closed [{}]-[g{}] anchor recorded "
-                "level G{} — new or reopened content entered; open a new "
-                "[{}]-[g*] work item to structure it (derived-gate model §9.3)".format(
-                    phase, cur, phase, level, level, phase
+                "phase {!r} dropped to {} but its closed [{}]-[{}] anchor recorded "
+                "level {} — new or reopened content entered; open a new "
+                "[{}]-[reqs|tests] work item to structure it (derived model "
+                "§9.3)".format(
+                    phase,
+                    bar_of.get(cur, cur),
+                    phase,
+                    _ANCHOR_NAME[level],
+                    bar_of.get(level, level),
+                    phase,
                 )
             )
     return warns
@@ -2182,7 +2218,7 @@ def spec_lifecycle_findings(root, wis):
     SpecRefs before the rule existed. Two findings, both message-only (the
     caller tags `R-F` and owns the warn-plain / error-under-`--strict`
     promotion, the R-E warn tier — so a rotting spec surface cannot reach a
-    green G2/G3 gate while a plain commit stays warn-first):
+    green DevBar-Tests/DevBar-Release gate while a plain commit stays warn-first):
 
       - a **terminal** WI (`done` or `cancelled`, WI-267) whose `SpecRef` is still
         set — the terminal transition clears it (the Deliverable + log carry the
@@ -2443,7 +2479,7 @@ def tier_completion_findings(findings):
     DEVIATION from the WI row, which asked for the whole reconciler at the
     warn-plain / error-under-`--strict` tier. Taken on the row's own reasoning:
     WI-336's code landed while its row CORRECTLY stayed `queued`, a review having
-    refuted three of its claims. An error-under-strict trailer rule blocks the G3
+    refuted three of its claims. An error-under-strict trailer rule blocks the DevBar-Release
     gate for the length of that rework, and the only ways out are a false close
     or an untracked exception."""
     warn_only = [msg for kind, msg in findings if kind == "trailer-claims-it"]
@@ -2503,7 +2539,7 @@ def status_forward_only_findings(root, wis):
     done-id check in a mode-aware form. `docs/status.md` holds only what must
     happen **next**; a closed WI's record lives in `docs/log.md`. So a `done` WI
     id appearing as a token in status.md is a finding — WARN plain, ERROR under
-    `--strict` (G2+), the pre-WI-180 severity (the caller owns that promotion, the
+    `--strict` (DevBar-Tests+), the pre-WI-180 severity (the caller owns that promotion, the
     `spec_interface_findings` pattern).
 
     A repo-state rule evaluated every run (like R-A cross-reads the registry +
@@ -3147,7 +3183,7 @@ def _spine_rows_at(root, rev_prefix, rel_path, id_col):
 # Only what is RATIFIED arms the re-attest warn. Traceability is TRACED, not
 # ratified: re-pointing an LLR at the module the code moved to amends no
 # attested prose. WI-280 paid for the conflation — 19 `Module` cells followed
-# moved code -> 11 owning SRs to `Modified` -> the gate dropped G3->G2 -> a
+# moved code -> 11 owning SRs to `Modified` -> the gate dropped DevBar-Release->DevBar-Tests -> a
 # ratify brief and four review rounds, for a change that altered no requirement.
 #
 # BOTH halves are declared per registry, and the RESIDUAL RULE FAILS SAFE: a
@@ -3528,8 +3564,12 @@ CRITIQUE_VERDICT_RE = re.compile(
 # The registry names its DESTINATION carrier; `spine_carrier.resolve` picks
 # whichever of the two is live (repo-lock §8.1).
 OPEN_ITEMS_REL = "docs/requirements/open-items.toml"
-# A `[<phase>]-[g1|g2]` bracketed anchor appearing anywhere in a brief cell.
-RATIFY_ANCHOR_RE = re.compile(r"\[[^\]\[]+\]-\[g[12]\]")
+# A phase anchor appearing anywhere in a brief cell — the canonical
+# `[<phase>]-[reqs|tests]` spelling and the retired `[<phase>]-[g1|g2]` one the
+# committed briefs carry (OI-21 break 4: the archetype converted, the anchors did
+# not). Kept a SEPARATE pattern from PHASE_ANCHOR_RE because that one is anchored
+# to the start of a Title and this one matches mid-cell.
+RATIFY_ANCHOR_RE = re.compile(r"\[[^\]\[]+\]-\[(?:g[12]|reqs|tests)\]", re.IGNORECASE)
 # The brief satisfies the rule only by naming a ratification/hierarchy VIEW — a
 # bare `trace.py --ratify` command mention no longer counts (WI-146 REVIEW-A): a
 # command can be unexecuted or wrong-scope, so it is not proof the generated view
@@ -3800,7 +3840,7 @@ def critique_staleness_findings(root):
     render. Returns finding strings ([] when not applicable).
 
     TIERED severity (set by the caller): WARN at the commit bar, ERROR under
-    `--strict` (the G3 gate) — fail-closed per the owner's 2026-07-20 ruling, a
+    `--strict` (the DevBar-Release gate) — fail-closed per the owner's 2026-07-20 ruling, a
     stale render surface cannot reach a green gate; main() routes it through the
     strict-promotable findings loop (the R-E warn tier). Silent off-git
     and vacuous when the repo declares no perceptual SR (so a downstream repo
@@ -3854,7 +3894,7 @@ def main():
         action="store_true",
         help="promote the registry coherence rules R-E (open-WI SpecRef resolves) "
         "and R-F (done WI clears SpecRef; a live spec has an open citer) "
-        "from WARN to ERROR (wired at gate G2+; R-A always fails regardless)",
+        "from WARN to ERROR (wired at gate DevBar-Tests+; R-A always fails regardless)",
     )
     ap.add_argument(
         "--staged",
@@ -3918,7 +3958,7 @@ def main():
         print("check_trajectory: WARN - {}".format(w), file=sys.stderr)
 
     # How-SW top-view right-sizing (WI-073/FB5) — WARN plain, ERROR under --strict
-    # (G2+). Runs before the WI vacuity return too (the bound is a property of the
+    # (DevBar-Tests+). Runs before the WI vacuity return too (the bound is a property of the
     # arch-map inventory + the component registry, independent of work items), so
     # a repo with a big arch-map and no CMP rows still trips even with no WIs.
     comp_errors = []
@@ -3964,14 +4004,14 @@ def main():
 
     errors = comp_errors + integrity + validate(wis, load_known_srs(root))
     # Specs act on declared interface boundaries (WI-191) — WARN plain, ERROR
-    # under --strict (G2+); vacuous until a spec adopts an `## Interfaces` section.
+    # under --strict (DevBar-Tests+); vacuous until a spec adopts an `## Interfaces` section.
     for msg in spec_interface_findings(root):
         if args.strict:
             errors.append(msg)
         else:
             print("check_trajectory: WARN - {}".format(msg), file=sys.stderr)
     # status.md forward-only (WI-200; the mode-aware R-D restoration) — WARN plain,
-    # ERROR under --strict (G2+); yields to a status.md generated-block marker.
+    # ERROR under --strict (DevBar-Tests+); yields to a status.md generated-block marker.
     for msg in status_forward_only_findings(root, wis):
         if args.strict:
             errors.append(msg)
@@ -4007,7 +4047,7 @@ def main():
     findings.extend(("dead-dep", False, msg) for msg in dead_dependency_findings(wis))
     # Perceptual re-fire (WI-243) — a Verification=Critique SR whose latest CRITIQUE
     # evidence predates a dashboard render-surface change is judging an older render.
-    # WARN at the commit bar; **fail-closed under --strict** (the G3 gate) per the
+    # WARN at the commit bar; **fail-closed under --strict** (the DevBar-Release gate) per the
     # owner's 2026-07-20 ruling — a stale render surface cannot reach a green gate.
     # hard=False rides the same warn-plain / error-under-strict tier as R-E,
     # so main() gains no branch. Vacuous when no perceptual SR / evidence / render
@@ -4030,7 +4070,7 @@ def main():
     # attestation precisely because a trailer means "a commit claims this WI",
     # not "the work is right", and cites WI-336 — code landed, row correctly left
     # `queued`, a review having refuted three of its claims. Under an
-    # error-under-strict trailer rule that legitimate state blocks the G3 gate
+    # error-under-strict trailer rule that legitimate state blocks the DevBar-Release gate
     # for as long as the rework takes, and the only ways out are to close the row
     # falsely or to carry an untracked exception. Spec evidence is different in
     # kind: a ticked box IS an attestation, so its disagreement with the row is a

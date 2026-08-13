@@ -12,7 +12,7 @@ are given as a reading aid and will drift; the function names will not.
 
 **Scope.** The four spine tiers in full, the gate derivation in full, the
 harness's gate→tier→coverage path in full, and what sits outside the derived
-range (`G-Release`/`G-Final`, §9.5). The off-spine registries
+range (`DevStg-Release`/`the owner's final read`, §9.5). The off-spine registries
 (IF / PB / CMP / PART / ASSET / REPO) get a summary in §10. The **work-item**
 registry (`docs/work/`) is a different machine with its own states and fields and
 is deliberately not covered here.
@@ -66,8 +66,8 @@ There is **no Status column.** Maturity is the *heading the row sits under*:
 
 | Section | State | Effect |
 |---|---|---|
-| any heading whose text contains **"draft"** (case-insensitive) | **Draft** (G0) | exempt from "every SN needs an SR"; **drops the derived gate to G0** |
-| any other heading (`## Core needs`, `## Edge-case expectations`) | **Ratified** (G1) | must have ≥1 SR referencing it — an uncovered ratified SN is both an orphan finding (§6) **and caps the derived gate at G0** (the WI-401 coverage rung, §8.1) |
+| any heading whose text contains **"draft"** (case-insensitive) | **Draft** (DevBar-Below) | exempt from "every SN needs an SR"; **drops the derived gate to DevBar-Below** |
+| any other heading (`## Core needs`, `## Edge-case expectations`) | **Ratified** (DevBar-Reqs) | must have ≥1 SR referencing it — an uncovered ratified SN is both an orphan finding (§6) **and caps the derived gate at DevBar-Below** (the WI-401 coverage rung, §8.1) |
 
 Ratifying a need = **moving the table row up** in a reviewed commit. That commit
 *is* the sign-off, and its date is the ratification date — git-derived, no
@@ -76,7 +76,7 @@ and collects `SN-###` tokens under draft ones). The id *universe* those states
 partition is a **whole-text scrape** (`sn_all_ids`, an F5 twin at
 derive_gate/trace pinned by `test_rule_sync`): any `SN-###` token anywhere in
 the file counts, tables and prose alike — so an SN id mentioned only in
-ratified *prose* and cited by no SR caps the derived gate at G0 (§8.1) exactly
+ratified *prose* and cited by no SR caps the derived gate at DevBar-Below (§8.1) exactly
 as an uncovered table row does.
 
 ### 2.2 Fields
@@ -109,12 +109,12 @@ Two tables ship, with **different columns**.
 | SN id on >1 table row | `sn_integrity_findings` | **integrity** (wrong at any stage) |
 | SN id under **both** a draft and a non-draft heading | `sn_integrity_findings` | **integrity** |
 | `SN-###` with no SR referencing it (and not Draft) | `analyze` | **orphan** (fails `--strict`) |
-| leftover `SN-000` placeholder | `scan_sn_placeholders` | **placeholder** (fails `--no-placeholders`, on from G2) |
+| leftover `SN-000` placeholder | `scan_sn_placeholders` | **placeholder** (fails `--no-placeholders`, on from DevBar-Tests) |
 
 **Note the asymmetry:** SN gets *no* required-field check and *no* enum check —
 `--strict-schema` covers SR/LLR/TC only. An SN row with an empty
 `Why it matters` and a blank `Acceptance intent` passes every gate. Prose tier,
-prose enforcement; the G1 consistency review is the human backstop.
+prose enforcement; the DevBar-Reqs consistency review is the human backstop.
 
 ---
 
@@ -139,7 +139,7 @@ all key off the SR row.
 | `Phase` | ✘ | bare integer (`2`) on ratified rows once armed | Optional delivery phase — §3.3. |
 | `Area` | ✘ | free text | **Reporting only** — `trace.py` emits per-Area SR counts and never gates on it. |
 
-¹ under `--strict-schema` (G3). ² `name=range[min..max]`; `name=set{a,b,c}`;
+¹ under `--strict-schema` (DevBar-Release). ² `name=range[min..max]`; `name=set{a,b,c}`;
 `name=bool`; `@full|@pairwise|@boundaries`.
 
 Plus two **optional extension columns** not in the shipped template:
@@ -168,19 +168,19 @@ Three separate mechanisms read this cell.
    bucket, so an unknown method is never counted as a runnable check.
 3. **`--strict-schema`** rejects any value outside the closed set.
 
-**Important:** `--require-verified` (the G3 bar) applies to **every ratified SR
+**Important:** `--require-verified` (the DevBar-Release bar) applies to **every ratified SR
 regardless of method**. It was once Test-only, which let a `Demonstration` SR
-sitting at `Implemented` pass `trace.py` while `derive_gate` refused it G3 — the
+sitting at `Implemented` pass `trace.py` while `derive_gate` refused it DevBar-Release — the
 two scripts disagreeing about the gate.
 
 ### 3.2 `Status` — the three magic values
 
 | Value | Predicate | Gate effect | Rule effect |
 |---|---|---|---|
-| `Draft` | `is_draft` | **G0 — drops the repo gate** | Exempt from *child-completeness*: needs no LLR, no TC. SN linkage and all integrity rules still apply. Exempt from `--require-verified`. |
-| `Verified` | `is_verified` | G3 (when decomposed) | Satisfies the G3 criterion. |
-| `Modified` | `is_modified` | reads G2 (decomposed-but-not-Verified) | Post-attestation amendment; a re-attest is owed. The gate pull is deliberate — it makes a pending re-attest visible. Feeds the `modified=N` basis count and the `--ratify modified` brief. |
-| anything else | — | G1 if ratified-undecomposed, else G2 | Inert. |
+| `Draft` | `is_draft` | **DevBar-Below — drops the repo gate** | Exempt from *child-completeness*: needs no LLR, no TC. SN linkage and all integrity rules still apply. Exempt from `--require-verified`. |
+| `Verified` | `is_verified` | DevBar-Release (when decomposed) | Satisfies the DevBar-Release criterion. |
+| `Modified` | `is_modified` | reads DevBar-Tests (decomposed-but-not-Verified) | Post-attestation amendment; a re-attest is owed. The gate pull is deliberate — it makes a pending re-attest visible. Feeds the `modified=N` basis count and the `--ratify modified` brief. |
+| anything else | — | DevBar-Reqs if ratified-undecomposed, else DevBar-Tests | Inert. |
 
 `Modified` → `Verified` blesses the amendment; `Modified` → `Planned` says the
 amendment invalidated the evidence.
@@ -195,7 +195,7 @@ amendment invalidated the evidence.
   vacuous until ≥1 spine row is phased (digit-parse arming — a `v2` cell arms
   it too); once *anything* is phased, **every ratified SR/LLR/TC `Phase` must
   be a full-cell bare integer** — digits only, no prefix — under
-  `--strict-schema` (G3, where the schema tier already bites). A Draft row may
+  `--strict-schema` (DevBar-Release, where the schema tier already bites). A Draft row may
   always leave it blank. Numeric-only is a correctness rule, not a style: two
   joins match the cell **literally**, never by parse — the `--phase`/`--ratify`
   scope filters (`in_phase`/`_scope_srs`) and check_trajectory's phase-drop
@@ -236,17 +236,17 @@ amendment invalidated the evidence.
 | `Detail` | ✔ | decomposition detail, **not** an SR paraphrase | Ratified prose. |
 | `Rationale` | ✘ | free text | **Deliberately not required** — "a short decomposition row's why IS its parent SR's, so requiring one everywhere would manufacture the restatement the column exists to prevent." Ratified when present. |
 | `TestRefs` | ✘ | `(see TC)` | **Inert** — see §12.1. |
-| `Status` | ✔ | open; magic as SR | `Draft` → G0 and exempt from "no TC". Otherwise **does not gate** — §4.1. |
+| `Status` | ✔ | open; magic as SR | `Draft` → DevBar-Below and exempt from "no TC". Otherwise **does not gate** — §4.1. |
 | `Component` | ✘ | `CMP-###` | Optional membership tag, validated against the CMP registry only when that registry is non-empty. |
 | `Phase` | ✘ | digit-parseable | = the parent SR's Phase by convention. Same arming rule. |
 
 ### 4.1 LLR Status does not gate — on purpose
 
 `maturity_gate` in `derive_gate.py`: an LLR caps the gate **only** when it is
-`Draft` (G0, the new-phase signal). Once present, its own Status is irrelevant —
-the SR's `Verified` drives G2→G3, matching `--require-verified`, which checks SRs
+`Draft` (DevBar-Below, the new-phase signal). Once present, its own Status is irrelevant —
+the SR's `Verified` drives DevBar-Tests→DevBar-Release, matching `--require-verified`, which checks SRs
 and not children. A downstream repo whose LLRs all read `Implemented` still
-reaches G3.
+reaches DevBar-Release.
 
 There is a **warn-only** lint for the resulting readout drift
 (`llr_status_advisories`): an LLR below `Verified` while *every* citing TC is
@@ -262,7 +262,7 @@ identifier-shaped `CodeSymbol` token that binds at module scope in one of the
 `.py` modules its `Module` cell names — `CodeSymbol` supplies the tokens,
 `Module` supplies the **search scope**, and the `;`-joined module list is read
 as a **union**, never as a positional pairing. Warn-first; **hard under
-`--strict`** at the `[step:doc-refs]` G3 step.
+`--strict`** at the `[step:doc-refs]` DevBar-Release step.
 
 **The grammar, ruled with the ratification.** ADMISSIBLE in `CodeSymbol`:
 
@@ -322,7 +322,7 @@ hidden.
 | `Expected` | ✔ | cite the AcceptanceCriteria **by id** | Ratified prose. |
 | `Automated` | ✔ | `Yes` / `No` (open) | **Conditional rule:** `Yes` + empty `Evidence` → schema finding ("a claimed-automated test with no cited location is a soft false-green"). |
 | `Evidence` | ✘* | pytest node / path / procedure link | *Required only when `Automated=Yes`. |
-| `Status` | ✔ | open; magic as SR | `Draft` → G0. Otherwise does not gate (same as LLR). |
+| `Status` | ✔ | open; magic as SR | `Draft` → DevBar-Below. Otherwise does not gate (same as LLR). |
 | `Phase` | ✘ | digit-parseable | = the max Phase of what it verifies. Same arming rule. |
 
 ### 5.1 The SR/LLR/TC triangle rule
@@ -355,11 +355,11 @@ gate-scoped orphan set.
 | 13 | no LLR grounds on a superseded SR | — (Draft LLRs are **not** exempt) | **integrity** |
 
 Rules 1–11 are **gate-scoped** — they fail `--strict`, which the harness runs
-from G2. Rules 12–13 are **always wrong** and sit on the integrity floor the
+from DevBar-Tests. Rules 12–13 are **always wrong** and sit on the integrity floor the
 pre-commit hook runs on every commit.
 
 Rule 1 also has a **gate-input twin** since WI-401: an uncovered ratified SN
-caps the *derived gate* at G0 (§8.1) — same cited set, same Draft exemption, so
+caps the *derived gate* at DevBar-Below (§8.1) — same cited set, same Draft exemption, so
 the itemized listing and the cap can never disagree on one registry state.
 
 ---
@@ -392,24 +392,24 @@ it; you ratify artifacts and regenerate.
 
 `derive_gate.py` asks each in-scope artifact what level it has reached.
 
-| Tier | G0 | G1 | G2 | G3 |
+| Tier | DevBar-Below | DevBar-Reqs | DevBar-Tests | DevBar-Release |
 |---|---|---|---|---|
-| **SN** | under a "draft" heading, **or ratified with no covering SR** (the WI-401 coverage rung) | — | — | ratified **and cited by ≥1 SR `SN-Refs`**: such an SN owes nothing past G1, so it contributes G3 and **never caps** |
+| **SN** | under a "draft" heading, **or ratified with no covering SR** (the WI-401 coverage rung) | — | — | ratified **and cited by ≥1 SR `SN-Refs`**: such an SN owes nothing past DevBar-Reqs, so it contributes DevBar-Release and **never caps** |
 | **SR** | `Status=Draft` | ratified, **not decomposed** | **decomposed** = has its required LLR (unless `Verification ∈ LLR_EXEMPT`) **AND** a TC | decomposed **AND** `Status=Verified` |
-| **LLR / TC** | `Status=Draft` | — | — | once present, contributes G3 and **never caps** |
+| **LLR / TC** | `Status=Draft` | — | — | once present, contributes DevBar-Release and **never caps** |
 
 A `Modified` SR needs no rule of its own: it is decomposed-but-not-Verified, so
-it reads **G2**. That is the deliberate gate pull that makes a pending re-attest
+it reads **DevBar-Tests**. That is the deliberate gate pull that makes a pending re-attest
 visible.
 
-The SN column's two G0 rungs are deliberately disjoint (WI-401, owner ruling
+The SN column's two DevBar-Below rungs are deliberately disjoint (WI-401, owner ruling
 2026-08-01). A **Draft** SN fires only the draft rung — it is exempt from the
 coverage rung exactly as it is exempt from trace.py's orphan rule, so one fact
 never fires two findings at once. A **ratified** SN cited by zero SR `SN-Refs`
-is an unanswered need: G1 is not earned, so it caps the raw level at G0. The
+is an unanswered need: DevBar-Reqs is not earned, so it caps the raw level at DevBar-Below. The
 split of labor with `trace.py` is the module pair's usual one — this rung is
 the *gate input*; the itemized `SN … has no SR` listing stays trace.py's orphan
-finding at G2 strictness — and both read the **same cited set**
+finding at DevBar-Tests strictness — and both read the **same cited set**
 (`sn_cited_ids`, an F5 duplicate pinned equal by `test_rule_sync`), so the gate
 and the listing cannot contradict on one registry state. The cited set is
 built from the rows in scope: in the raw view a Draft SR's citation counts
@@ -420,15 +420,15 @@ fabricates coverage.
 ### 8.2 Aggregation
 
 **The repo gate = `min()` over every in-scope artifact.** One Draft row anywhere
-therefore drops the whole repo to G0. Phase gates are the min over that phase's
+therefore drops the whole repo to DevBar-Below. Phase gates are the min over that phase's
 artifacts, reported per-phase alongside the repo number.
 
 Two floors keep the answer honest:
 
-- A repo with **no real SRs yet** (a fresh scaffold) is **G1** — the
-  requirements-drafting start — never a vacuous G3.
-- The **cached runnable value is floored at G1**, because the harness's gate
-  vocabulary is `G1|G2|G3|all`. The raw computed level, G0 drops included, is
+- A repo with **no real SRs yet** (a fresh scaffold) is **DevBar-Reqs** — the
+  requirements-drafting start — never a vacuous DevBar-Release.
+- The **cached runnable value is floored at DevBar-Reqs**, because the harness's gate
+  vocabulary is `DevBar-Reqs|DevBar-Tests|DevBar-Release|all`. The raw computed level, DevBar-Below drops included, is
   recorded in the `# basis:` comment so nothing hides.
 
 ### 8.3 The cache: `docs/gate`
@@ -438,15 +438,15 @@ file** every reader in the kit shares: *the first non-empty, non-comment line*.
 Everything above it is commentary, including the machine-readable basis:
 
 ```
-# basis: SN=25 SR=136 LLR=130 TC=127 drafts=0 modified=0 uncovered=0 computed=G3 ex-draft=G3 phase=4 per-phase=1=G3;2=G3;3=G3;4=G3
+# basis: SN=25 SR=136 LLR=130 TC=127 drafts=0 modified=0 uncovered=0 computed=DevBar-Release ex-draft=DevBar-Release phase=4 per-phase=1=DevBar-Release;2=DevBar-Release;3=DevBar-Release;4=DevBar-Release
 # computed 2026-08-02 (as-of d35c3b93)
-G3
+DevBar-Release
 ```
 
 `uncovered=N` (WI-401) counts the ratified SNs no SR cites — normally the count
-behind the coverage rung's G0 cap, so a `computed=G0` with `drafts=0` names its
-cause (before the rung, a G0 always implied a draft). One corner parts them:
-with **zero real SRs** the vacuous-G1 branch returns before the rung ever runs,
+behind the coverage rung's DevBar-Below cap, so a `computed=DevBar-Below` with `drafts=0` names its
+cause (before the rung, a DevBar-Below always implied a draft). One corner parts them:
+with **zero real SRs** the vacuous-DevBar-Reqs branch returns before the rung ever runs,
 so a requirements-drafting repo legitimately shows `uncovered>0` with nothing
 capped — the count staying visible there is deliberate. Like `ex-draft=`, it is an
 additive field, but the basis line is **compared whole** by `--check`: adding
@@ -459,7 +459,7 @@ regenerate-a-generated-artifact step.
 - **No file → `all`**, i.e. the *full* bar. A repo without the marker never gets
   a silently weaker one.
 - Freshness is guarded by `derive_gate.py --check`, wired as the `derived-gate`
-  step at **every** gate (G1, G2 and G3) and in the pre-commit hook. It
+  step at **every** gate (DevBar-Reqs, DevBar-Tests and DevBar-Release) and in the pre-commit hook. It
   recomputes and fails on drift. A legacy hand-set gate with no `# basis:` line
   is compared value-only, so a not-yet-migrated repo stays green.
 
@@ -480,15 +480,15 @@ good evidence, which is the subtlety:
 - **`modified>0` is conclusive on its own.** `Modified` is *defined* as a
   post-attestation amendment, so the row can only exist in a spine that has
   already been ratified. A window by construction.
-- **`drafts>0` is ambiguous** — a Draft reads G0 in a mature repo starting a new
+- **`drafts>0` is ambiguous** — a Draft reads DevBar-Below in a mature repo starting a new
   phase *and* in a project that has never ratified anything. The `ex-draft` basis
   figure disambiguates: it is the level the same arithmetic computes with the
-  draft rows removed. If that clears G2 and sits above the level the drafts
+  draft rows removed. If that clears DevBar-Tests and sits above the level the drafts
   produced, the spine has demonstrably climbed and the drafts alone are holding
   it down.
 
 Since WI-401 an **uncovered ratified SN** opens the same kind of window (the
-gate drops to G1, the G2/G3 steps stop running), with `uncovered>0` on the
+gate drops to DevBar-Reqs, the DevBar-Tests/DevBar-Release steps stop running), with `uncovered>0` on the
 basis line naming the cause. `window_open` does **not** read that field — its
 signals remain `drafts`/`modified` — an honest gap: the warn is absent, but the
 drop itself and its count are on the basis line in plain sight.
@@ -513,24 +513,24 @@ keeps only the steps whose `gates` set contains the resolved gate.
 
 | Step | Gates | Layer | Notes |
 |---|---|---|---|
-| `format` | **G3** | product | |
-| `lint` | **G3** | product | |
-| `tests+coverage` | **G3** | product | the whole test run is G3-tagged |
-| `registry-integrity` | **G1** | process | `trace.py --strict-integrity` — the always-valid floor, so a broken CSV cannot hide until G2 |
-| `derived-gate` | G1, G2, G3 | process | the freshness guard on `docs/gate` |
-| `privacy` | G1, G2, G3 | process | a leak is wrong at any stage |
-| `doc-navigability` | G1, G2, G3 | process | |
-| `traceability` | **G2, G3** | process | `trace.py --strict --no-placeholders --html` |
-| `design-flows` | **G2, G3** | process | |
-| `trajectory` | **G2, G3** | process | gains `--strict` here |
-| `arch-map` | **G3** | process | |
-| `perf-budgets` | **G3** | process | |
-| declared `[step:*]` | per section | product | this repo declares `doc-refs`, `figures`, `module-coverage`, all at **G3** |
+| `format` | **DevBar-Release** | product | |
+| `lint` | **DevBar-Release** | product | |
+| `tests+coverage` | **DevBar-Release** | product | the whole test run is DevBar-Release-tagged |
+| `registry-integrity` | **DevBar-Reqs** | process | `trace.py --strict-integrity` — the always-valid floor, so a broken CSV cannot hide until DevBar-Tests |
+| `derived-gate` | DevBar-Reqs, DevBar-Tests, DevBar-Release | process | the freshness guard on `docs/gate` |
+| `privacy` | DevBar-Reqs, DevBar-Tests, DevBar-Release | process | a leak is wrong at any stage |
+| `doc-navigability` | DevBar-Reqs, DevBar-Tests, DevBar-Release | process | |
+| `traceability` | **DevBar-Tests, DevBar-Release** | process | `trace.py --strict --no-placeholders --html` |
+| `design-flows` | **DevBar-Tests, DevBar-Release** | process | |
+| `trajectory` | **DevBar-Tests, DevBar-Release** | process | gains `--strict` here |
+| `arch-map` | **DevBar-Release** | process | |
+| `perf-budgets` | **DevBar-Release** | process | |
+| declared `[step:*]` | per section | product | this repo declares `doc-refs`, `figures`, `module-coverage`, all at **DevBar-Release** |
 
 Two consequences worth internalising:
 
-- **The entire product bar — format, lint and the test suite — is G3-only.** At
-  G1 and G2 the harness runs process checks and does not run the tests.
+- **The entire product bar — format, lint and the test suite — is DevBar-Release-only.** At
+  DevBar-Reqs and DevBar-Tests the harness runs process checks and does not run the tests.
 - `--gate` on the command line wins; a *defaulted* gate for `--run-step` /
   `--run-steps` resolves to `all`, never `docs/gate`, so the pre-commit hook's
   floor stays warn-first.
@@ -611,22 +611,22 @@ trunk lane for exactly that one run.
 trunk, including the `derived-gate` freshness check. The gate a branch reports is
 the value as-of-base.
 
-### 9.5 What sits OUTSIDE the derived range: G-Release and G-Final
+### 9.5 What sits OUTSIDE the derived range: DevStg-Release and the owner's final read
 
-G1–G3 are the derivable gates. `G-Release` and `G-Final` are **not derived, not
+DevBar-Reqs–DevBar-Release are the derivable gates. `DevStg-Release` and `the owner's final read` are **not derived, not
 cached, and not known to the harness at all** — `check.py`'s vocabulary is
-`GATES = ["G1", "G2", "G3", "all"]`, so there is no `--gate G-Release` to run.
+`GATES = ["DevBar-Reqs", "DevBar-Tests", "DevBar-Release", "all"]`, so there is no `--gate DevStg-Release` to run.
 They are release milestones recorded separately.
 
-The distinction is one of kind, not of degree: **G3 is a state the spine reaches
-and holds; G-Release is an event performed per release** (and skipped entirely
-for a one-off deliverable). A repo can sit at G3 indefinitely without ever
+The distinction is one of kind, not of degree: **DevBar-Release is a state the spine reaches
+and holds; DevStg-Release is an event performed per release** (and skipped entirely
+for a one-off deliverable). A repo can sit at DevBar-Release indefinitely without ever
 performing one.
 
 Four things separate them, only the first of which is a test run:
 
 1. **The `release` test tier runs** — the marker filter is dropped, so
-   release-marked tests execute. G3's own exit criteria name the **full** tier.
+   release-marked tests execute. DevBar-Release's own exit criteria name the **full** tier.
 2. **The generated release checklist is completed and signed** —
    `gen_release_checklist.py` harvests what no automated test covers: every
    `Demonstration`/`Manual`/`Inspection` SR, every TC with `Tier=Release` or
@@ -638,8 +638,8 @@ Four things separate them, only the first of which is a test run:
    `warn` and therefore fail no gate at any tier. The checklist is the only place
    they are confirmed.
 4. **Release admin and different sign-offs** — version bump, changed `Stable`
-   interface versions communicated to counterparts, changelog. G3 signs off
-   System Engineer + Test Engineer; G-Release adds the active domain hats and the
+   interface versions communicated to counterparts, changelog. DevBar-Release signs off
+   System Engineer + Test Engineer; DevStg-Release adds the active domain hats and the
    **Human**.
 
 **How a Release-tier TC is authored** — two populations, built nothing alike:
@@ -677,7 +677,7 @@ When a **Verified** spine row is amended, `staged_spine_amendments` in
 | TC | `Verifies`, `Evidence`, `Automated`, `Phase` | `Method`, `Expected`, `Parameters`, `Level`, `Tier` |
 
 **Why it exists:** WI-280 moved code, 19 LLR `Module` cells followed it, 11
-owning SRs flipped to `Modified`, the gate dropped G3→G2, and it cost a ratify
+owning SRs flipped to `Modified`, the gate dropped DevBar-Release→DevBar-Tests, and it cost a ratify
 brief and four review rounds — for a change that altered no requirement.
 
 **The residual rule fails safe:** a column in *neither* set is treated as
@@ -725,7 +725,7 @@ nothing maintains. The template already hints at this by shipping the literal
 
 `TC.Tier` is genuinely load-bearing in one place: `gen_release_checklist.py`
 selects checklist items on `Tier == "Release"` **or** `Automated` not-yes, so the
-cell decides what reaches a human at G-Release (§9.5). It is also required
+cell decides what reaches a human at DevStg-Release (§9.5). It is also required
 non-empty, enum-checked against `{Smoke, Full, Release}`, and emitted into the
 OKF bundle.
 
@@ -741,10 +741,10 @@ suite** while the registry still reads as pre-merge-covered. Same for a TC
 declared `Smoke` whose test carries no `smoke` marker: absent from the cheap
 gate, covered on paper.
 
-### 12.3 The entire product bar is G3-only
+### 12.3 The entire product bar is DevBar-Release-only
 
-`format`, `lint` and `tests+coverage` are tagged `{"G3"}`. Combined with §8.4,
-this is the sharp edge: **one Draft or Modified row drops the gate below G3 and
+`format`, `lint` and `tests+coverage` are tagged `{"DevBar-Release"}`. Combined with §8.4,
+this is the sharp edge: **one Draft or Modified row drops the gate below DevBar-Release and
 the test suite stops running in the gated plan.** `window_open` warns about
 exactly this, but the warning is the only thing between a window and a silently
 untested stretch.
@@ -766,7 +766,7 @@ misses are counted *untraced* rather than gated), and four live rows are
 
 Every CSV tier gets required-field and enum checks; SN gets duplicate-id and
 draft/ratified-collision only. An SN row with `Priority`, `Why it matters` and
-`Acceptance intent` all blank passes G3.
+`Acceptance intent` all blank passes DevBar-Release.
 
 ### 12.6 Required-but-unvalidated cells
 
@@ -808,10 +808,10 @@ not.
 # integrity floor only (what the pre-commit hook runs)
 python project-trajectory/scripts/trace.py --strict-integrity
 
-# the G2 bar
+# the DevBar-Tests bar
 python project-trajectory/scripts/trace.py --strict --no-placeholders --html
 
-# the G3 bar
+# the DevBar-Release bar
 python project-trajectory/scripts/trace.py --strict --no-placeholders --html \
     --require-verified --strict-schema [--phase 2]
 
@@ -822,7 +822,7 @@ python project-trajectory/scripts/derive_gate.py --next-phase  # the number a ne
                                                 # confirmed phase takes (§3.3)
 
 # the whole harness at a chosen gate/tier
-python project-trajectory/scripts/check.py --gate G3 --tier full
+python project-trajectory/scripts/check.py --gate DevBar-Release --tier full
 python project-trajectory/scripts/check.py --list             # show the plan only
 
 # per-module coverage floors (needs a coverage.json from a covered tier)

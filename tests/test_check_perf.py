@@ -160,18 +160,22 @@ def test_update_baseline_writes_file(scaffold):
 
 
 def test_harness_runs_perf_at_g3(scaffold):
-    # A hard-gated breach must fail the G3 gate through check.py's perf step.
+    # A hard-gated breach must fail the DevBar-Release gate through check.py's perf step.
     make_minimal_project(scaffold)
     write_budgets(scaffold, pb_row("PB-001", 500, gate="fail", tier="Full"))
     write_metrics(scaffold, {"PB-001": 560})
-    proc = run_py(["scripts/check.py", "--gate", "G3", "--tier", "full"], cwd=scaffold)
+    proc = run_py(
+        ["scripts/check.py", "--gate", "DevBar-Release", "--tier", "full"], cwd=scaffold
+    )
     assert proc.returncode != 0
     assert "perf-budgets" in proc.stdout
     assert "RESULT: FAIL" in proc.stdout
 
 
 def test_perf_step_is_process_layer_in_list(scaffold):
-    proc = run_py(["scripts/check.py", "--gate", "G3", "--list"], cwd=scaffold)
+    proc = run_py(
+        ["scripts/check.py", "--gate", "DevBar-Release", "--list"], cwd=scaffold
+    )
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert any(
         "perf-budgets" in ln and "[process]" in ln for ln in proc.stdout.splitlines()

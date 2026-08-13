@@ -13,7 +13,7 @@ decomposition non-redundant?
 Every verdict **cites anchor ids**. The critic's verdict line is
 `VERDICT: APPROVE|CHANGES-REQUESTED findings=N`; the arbiter's is
 `VERDICT: SELECT <plan> ports=N`, each port a cited delta
-("port B-3 — closes C4, anchored G2").
+("port B-3 — closes C4, anchored DevBar-Tests").
 
 **Transfer caveat (state wherever this rubric is applied):** the
 debate/selection evidence behind this protocol comes from QA, math, and code
@@ -25,17 +25,17 @@ This rubric is the best-supported extrapolation, not a proven instrument
 
 ## Anchors
 
-**G1 — Solvable unit.** Each proposed WI is completable by one build session at
+**DevBar-Reqs — Solvable unit.** Each proposed WI is completable by one build session at
 its tier: a first-time implementer could name the deliverable and a checkable
 done-condition from the row alone. *Bad:* "improve the dispatch layer" (no
 deliverable); a row whose scope needs three sessions and two design rulings.
 
-**G2 — Complete coverage.** Every goal clause is covered by some WI **or its
+**DevBar-Tests — Complete coverage.** Every goal clause is covered by some WI **or its
 exclusion is declared** in the plan's notes as a non-goal with a reason —
 never silence. The coverage report computes the gap; the critic judges whether
 a declared exclusion is honest.
 
-**G3 — Non-redundant decomposition.** No two WIs cover the same clause without
+**DevBar-Release — Non-redundant decomposition.** No two WIs cover the same clause without
 a declared split reason; scope boundaries are crisp enough that two
 implementers would not collide. Multi-covered clauses in the coverage report
 are the tripwire; the judgment is whether the overlap is a real seam or a

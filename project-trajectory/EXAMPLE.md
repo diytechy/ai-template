@@ -11,7 +11,7 @@ as its own requirement**.
 ## 1. Stakeholder Need — `requirements/stakeholder-needs.md`
 
 The needs sit under the project's vision — one tagged statement in the README
-(`README.md#vision`, the canonical home every other doc points at) that G1
+(`README.md#vision`, the canonical home every other doc points at) that DevBar-Reqs
 checks each need against. A worked one for this project:
 
 > **PROJECT-VISION:** For spreadsheet-first users who keep their records in
@@ -69,7 +69,7 @@ TC-002,SR-002;LLR-002,Integration,"Abort write_atomic mid-write; assert no file 
 The `Evidence` column names the **concrete test that provides the proof** — a
 pytest node id, a script path, or a procedure-doc link (inspection-only text,
 never a mechanized resolve). It is optional in general, but a row claiming
-`Automated=Yes` must cite it under `--strict-schema` (G3): a claimed-automated
+`Automated=Yes` must cite it under `--strict-schema` (DevBar-Release): a claimed-automated
 test with no cited location is a soft false-green. Keep `Parameters` for the
 *dimensional inputs* a test exercises (the `gen_cases.py` grammar below) — the
 test's location never belongs there.
@@ -178,7 +178,7 @@ that writes only the failover SR has silently skipped two:
 | **Runtime** | `SR-101` — promote the standby on primary loss (above) | SRE/Ops |
 
 Each is a real SR with its own LLR + TC; tagging them by lifecycle is what makes
-the missing Provision/Startup rows obvious at G1. The failover *logic* is still
+the missing Provision/Startup rows obvious at DevBar-Reqs. The failover *logic* is still
 real code, so `SR-101` keeps an LLR (`LLR-101 reconnect/promote-on-primary-loss`,
 owned by the same hat) — only `Analysis`/`Inspection`/`Attest` SRs skip the LLR
 (§7.1 shows an `Attest` one). The TC
@@ -191,7 +191,7 @@ TC-101,SR-101;LLR-101,System,"Kill the primary DB; observe promotion and that a 
 ```
 
 `Tier=Release` keeps this slow, environment-heavy test out of the per-push and
-pre-merge runs; it executes at `G-Release`, where the human signs the generated
+pre-merge runs; it executes at `DevStg-Release`, where the human signs the generated
 checklist. Same registries, same traceability join, same gates — only the
 verification method, the owning hat, and the `Area` tag change.
 
@@ -424,7 +424,7 @@ coordinator sequences and reads status; it never builds or runs anything.
 - **Quantitative budgets go off the spine** (§8) — `PB-###` in
   `performance-budgets.csv`, owned by the Integration hat, back-linked to the
   SR/LLR/Module they bound.
-- **Substance, not just existence** (G3) — the implementing symbol must do real
+- **Substance, not just existence** (DevBar-Release) — the implementing symbol must do real
   work, not a `pass`/`...`/`NotImplementedError` stub that still satisfies its
   trace links. It's an Inspection call; `scripts/check_stubs.py` is the optional,
   warn-first Python tripwire that surfaces candidates (process.md §4).

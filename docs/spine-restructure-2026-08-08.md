@@ -11,7 +11,7 @@ registries, and [`log.md`](log.md).
 > that waiver does and does not switch off — the distinction is load-bearing and
 > a session that gets it wrong will land a red.
 
-Measured against the tree at `f1ba5fa0`. Gate **G2**; basis `SN=27 SR=136
+Measured against the tree at `f1ba5fa0`. Gate **DevBar-Tests**; basis `SN=27 SR=136
 LLR=137 TC=135 drafts=0 modified=21 uncovered=0`.
 <!-- fig: cmd="cat docs/gate" rev=f1ba5fa0 -->
 
@@ -83,7 +83,7 @@ Four reasons, in order of weight:
 2. **Downstream would lose it exactly when it's needed most.** `PROCESS.md`
    scaffolds to `docs/process.md` in every adopting repo. `PROJECT_STATE.html` is
    generated per-repo, and `process_panel()` **returns `None` when `docs/gate` is
-   absent** — so a pre-G1 repo renders no Process tab at all. Change-intake is
+   absent** — so a pre-DevBar-Reqs repo renders no Process tab at all. Change-intake is
    triage guidance; a young repo needs it before it has a gate.
 3. **It would be the only panel with no data source.** Panels 1–3 are
    data-derived or derived-from-constants. Change-intake is 100% static, so it
@@ -117,7 +117,7 @@ rulings at once, each independently blocking:
 | Ruling | Where | Why it blocks |
 |---|---|---|
 | Offline-render principle | `PROCESS_OPTIONS.md:1460-1464` | a mermaid→SVG step makes the renderer a build dependency |
-| Byte-stable freshness | `gen_trajectory.py:42-45` | `--check` is a byte-compare; any nondeterministic render breaks the G3 gate |
+| Byte-stable freshness | `gen_trajectory.py:42-45` | `--check` is a byte-compare; any nondeterministic render breaks the DevBar-Release gate |
 | No CDN / no JS layout library | `gen_trajectory.py:16-19` (Thread 52 ruling A) | direct contradiction |
 
 It would additionally need a `docs/dependencies.md` row — a ledger that declares
@@ -132,7 +132,7 @@ argument *for* the hand-built SVG, not against it.
 requires "always one [`sequenceDiagram`] for any concurrent / asynchronous /
 non-blocking behavior", and the mermaid runtime-flow contract is backed by a full
 ratified chain **SN-010 → SR-013 → LLR-013 → TC-013** plus IF-003/IF-029, wired at
-G2/G3 as `check.py`'s `design-flows` step. Retiring that is a spine amendment
+DevBar-Tests/DevBar-Release as `check.py`'s `design-flows` step. Retiring that is a spine amendment
 needing a ratification window, not a doc edit.
 
 ### The real defect, which nobody filed
@@ -150,7 +150,7 @@ Nothing compares them. **Recommendation:** keep Flow 4 as the canonical id-citin
 artifact; demote `concurrency-v2.md`'s two duplicates to pointers (keep `:55` — it
 draws a different subject); add a participant comparator. The comparator ships
 **WARN-first as its own flag that `check.py` does not wire** — *not* folded into
-`--no-placeholders`, which is wired from G2 for every adopter and would red
+`--no-placeholders`, which is wired from DevBar-Tests for every adopter and would red
 `tests/test_check_flows.py:34-39`'s fresh-scaffold assertion. Evaluate `tests/` as
 its home first: the invariant is id-specific to *this* repo's Flow 4, and
 CLAUDE.md draws that line explicitly.
@@ -273,7 +273,7 @@ They coincide today only because all comments precede the value.
 "replace" would strand five consumers. `gate-policy` says *who may act without a
 human*; the depth says *how far the human's signature reaches*.
 
-**The collision you need to know about:** your 0–3 scale and the kit's G1/G2/G3 are
+**The collision you need to know about:** your 0–3 scale and the kit's DevBar-Reqs/DevBar-Tests/DevBar-Release are
 **not the same space**. `docs/gate` publishes what the artifacts have **met** —
 the inverse of your question, which is how deep the human's signature has
 **travelled**. They share inputs but answer opposite questions, so the depth must
@@ -317,7 +317,7 @@ comparison baseline is *the newest commit where the derived gate was at or above
 
 > **Corrected from the draft:** an earlier version put the numeric→tier mapping in
 > `gate.template`. That is wrong — `gate.template` is a **one-line file containing
-> `G1`**, and `derive_gate.py:594` rewrites `docs/gate` **whole**, so anything
+> `DevBar-Reqs`**, and `derive_gate.py:594` rewrites `docs/gate` **whole**, so anything
 > placed there survives only until the scaffold's first run. The mapping's single
 > home is `derive_gate`'s `HEADER` constant, which ships downstream and
 > regenerates verbatim.
@@ -471,7 +471,7 @@ no gaps), so SN-028..032 are free.
 
 > ⚠ **Do not write the tokens `SN-031`/`SN-032` into
 > `docs/requirements/stakeholder-needs.md`.** One draft or uncited SN token drops
-> the derived gate **G2 → G1**, and at G1 the traceability, design-flows,
+> the derived gate **DevBar-Tests → DevBar-Reqs**, and at DevBar-Reqs the traceability, design-flows,
 > trajectory `--strict` and ratify-fresh steps all leave the required plan. The
 > reservation's home is **this document plus the WI spec** until real content
 > exists. A named step in §5 owns retiring it.
@@ -541,7 +541,7 @@ work. *Blocks everything.*
 (a) `status.md:276-281` claims a plain `agent-resume` launch "refuses with the map"
 — the code sends it to `dispatch.run` (`agent_loop.py:2650`), and C.1's entire
 premise is what resume does *today*. (b) `status.md:152-155` (the retired hoops
-render). (c) `README.md:324` says gate "G3 (derived)" while `docs/gate` reads G2.
+render). (c) `README.md:324` says gate "DevBar-Release (derived)" while `docs/gate` reads DevBar-Tests.
 
 **S2 · Land every needs-text edit inside the currently-open window — free ones
 first.** `PROCESS.md:333-337` is explicit: *"Sequence requirement-text work INTO an
@@ -597,7 +597,7 @@ carry-forward. **Do not close earlier.**
 
 ## 6 · What the waiver does and does not switch off
 
-The waiver means **not running the full G1/G2/G3 ratification ceremony** for each
+The waiver means **not running the full DevBar-Reqs/DevBar-Tests/DevBar-Release ratification ceremony** for each
 step of a change to the infrastructure that implements those gates. It does **not**
 stop:
 

@@ -1,74 +1,93 @@
 #!/usr/bin/env python3
-"""Derive the harness gate from artifact states — the hybrid, cached gate.
+"""Derive the harness BAR from artifact states — the hybrid, cached selector.
+
+RETIRED-VOCABULARY DECLARATION SITE (check_vocab: allow-file) — this module is
+the ONE home of the `G0`/`G1`/`G2`/`G3` -> `DevBar-*` translation table, so the
+retired tags appear here by design and the vocabulary enforcer exempts the file.
+Nowhere else in the kit may name them outside a read-side alias lookup.
 
 Stack-agnostic, standard-library only. This replaces the hand-set `docs/gate`
 marker with one *computed* from the spine's own maturity states
-(docs/archive/specs/derived-gate-model.2026-07-20.md; the ruled stage/gate
-semantics are process.md §4 "Stages and gates — state vs. certified boundary").
-**A repo is IN a stage; it PASSES a gate.** The value written to `docs/gate` is
-therefore not a claim that the repo "is at" that gate: it is the gate the repo
-must next pass, taken as the **min** over every in-scope SN/SR/LLR/TC, so the
+(docs/archive/specs/derived-gate-model.2026-07-20.md; the ruled stage/bar
+semantics are process.md §4 "The stage ladder — state vs. certified boundary").
+**A repo is IN a stage; it CLEARS a bar.** The value written to `docs/gate` is
+therefore not a claim that the repo "is at" that bar: it is the bar the repo
+must next clear, taken as the **min** over every in-scope SN/SR/LLR/TC, so the
 least-mature row selects the strictness the harness holds everyone to. SSOT
 applied to that selector — you no longer bump a line, you ratify artifacts (in a
 reviewed commit) and the derived value follows.
 
+(The FILE keeps its name. `docs/gate` and `derive_gate.py` are paths adopters'
+hooks and CI invoke literally, and OI-21 retired the G-TAGS, not the word "gate"
+where it means a check that can fail. Renaming the file would break every adopter
+for a cosmetic gain; renaming the vocabulary inside it is the whole point.)
+
 The model is **hybrid**: the computed value is *cached* to `docs/gate` (now a
-generated file) with a compute date, so the gate is known on checkout with no
+generated file) with a compute date, so the bar is known on checkout with no
 recompute; `--check` recomputes and guards the cache against rot, the same
 freshness discipline the kit already runs for the arch-map / OKF / dashboard.
 `check.py`'s `resolve_gate()` still reads the first non-comment line of
 `docs/gate` — the value is simply derived now, not declared.
 
-Per-artifact gate (docs/archive/specs/derived-gate-model.2026-07-20.md §3), on the
-internal ladder G0 < G1 < G2 < G3. **`G0` is NOT a gate** — the 2026-08-12 ruling
-retired it as a name for a repo state (it was "stage 0" in the wrong units). It
-survives here only as the arithmetic sentinel for *below G1*, because the min-fold
-needs a value under the lowest runnable gate and because `computed=G0` on the
-`# basis:` line is a cache format older files carry. Say "stage 0/1" of the repo;
-say `G0` only of this internal fold:
-  - **SN** — Draft (under a stakeholder-needs.md heading containing "draft",
-    section-as-state §4a) => G0; ratified AND cited by >=1 SR `SN-Refs` => it has
-    no obligation past G1, so it never caps the repo (contributes G3 to the min);
-    ratified but cited by NO SR (WI-401) => G0 — a ratified-but-unanswered need
-    means G1 is not earned. The `uncovered=N` basis count surfaces the cause
-    beside `drafts=N`/`modified=N` (a Draft SN is exempt from the coverage rung —
-    it already reads G0 via the draft rung, one fact one rung; the itemized
-    "SN has no SR" listing stays trace.py's orphan finding at G2 strictness,
-    this rung being the gate-input half of that same split).
-  - **SR** — Draft (Status) => G0; ratified but not decomposed => G1; decomposed
-    (has its required LLR — unless the Verification is LLR-exempt
-    Analysis/Inspection/Attest — AND a TC) => G2; decomposed AND Status=Verified
-    => G3. A `Modified` SR (post-attestation amendment, WI-316) needs no rule of
-    its own: it is decomposed-but-not-Verified, so it reads G2 — the deliberate
-    gate pull that makes a pending re-attest visible. The `modified=N` basis
-    count surfaces it beside `drafts=N`.
-  - **LLR / TC** — Draft => G0 (the new-phase signal). Once present, its Status
-    does not independently gate: the SR's Verified status drives G2->G3 (matching
-    trace.py's --require-verified, which checks SRs, not LLR/TC status), so a
-    present LLR/TC never caps below G3.
+Per-artifact bar (docs/archive/specs/derived-gate-model.2026-07-20.md §3), on the
+internal ladder DevBar-Below < DevBar-Reqs < DevBar-Tests < DevBar-Release.
+**`DevBar-Below` is NOT a bar** — nothing clears it. It survives only as the
+arithmetic sentinel for *below the lowest runnable bar*, because the min-fold
+needs a value under `DevBar-Reqs`. Say "stage Needs / Boundary" of the repo; say
+`DevBar-Below` only of this internal fold:
+  - **SN** — Draft => `DevBar-Below`; ratified AND cited by >=1 SR `SN-Refs` => it
+    has no obligation past `DevBar-Reqs`, so it never caps the repo (contributes
+    `DevBar-Release` to the min); ratified but cited by NO SR (WI-401) =>
+    `DevBar-Below` — a ratified-but-unanswered need means `DevBar-Reqs` is not
+    earned. The `uncovered=N` basis count surfaces the cause beside
+    `drafts=N`/`modified=N` (a Draft SN is exempt from the coverage rung — it
+    already reads `DevBar-Below` via the draft rung, one fact one rung; the
+    itemized "SN has no SR" listing stays trace.py's orphan finding at
+    `DevBar-Tests` strictness, this rung being the bar-input half of that split).
+  - **SR** — Draft (Status) => `DevBar-Below`; ratified but not decomposed =>
+    `DevBar-Reqs`; decomposed (has its required LLR — unless the Verification is
+    LLR-exempt Analysis/Inspection/Attest — AND a TC) => `DevBar-Tests`;
+    decomposed AND Status=Verified => `DevBar-Release`. A `Modified` SR
+    (post-attestation amendment, WI-316) needs no rule of its own: it is
+    decomposed-but-not-Verified, so it reads `DevBar-Tests` — the deliberate pull
+    that makes a pending re-attest visible. The `modified=N` basis count surfaces
+    it beside `drafts=N`.
+  - **LLR / TC** — Draft => `DevBar-Below` (the new-phase signal). Once present,
+    its Status does not independently gate: the SR's Verified status drives
+    `DevBar-Tests` -> `DevBar-Release` (matching trace.py's --require-verified,
+    which checks SRs, not LLR/TC status), so a present LLR/TC never caps below
+    `DevBar-Release`.
 
 Aggregation: the derived value = **min over all in-scope artifacts** (a phase's
 value is the min over that phase's artifacts; the repo's is the min over phases,
 which is the same set — also reported per-phase). A repo with **no** real SRs yet
-(a fresh scaffold) derives **G1** (the requirements-drafting start), never a
-vacuous G3. A draft artifact reads G0, so introducing draft/reopened content
-**drops** the derived value — the signal that a new phase is due (the
-`[phase]-[g*]` detector lives in check_trajectory). The cached runnable value is
-floored at G1 (check.py's gate vocabulary is G1..G3); the raw computed level,
-including a G0 drop, is recorded in the `# basis:` comment so nothing hides.
-Because it is a min and a floor, the value answers **"what must still be passed"**,
-never "what has been achieved": a mature spine with one reopened draft derives G1
-exactly as a fresh scaffold does, and it is `ex-draft=`/`stage=` on the basis line
-that tell the two apart.
+(a fresh scaffold) derives **`DevBar-Reqs`** (the requirements-drafting start),
+never a vacuous `DevBar-Release`. A draft artifact reads `DevBar-Below`, so
+introducing draft/reopened content **drops** the derived value — the signal that a
+new phase is due (the phase-anchor detector lives in check_trajectory). The cached
+runnable value is floored at `DevBar-Reqs` (check.py's bar vocabulary is the three
+runnable bars); the raw computed level, including a `DevBar-Below` drop, is
+recorded in the `# basis:` comment so nothing hides. Because it is a min and a
+floor, the value answers **"what must still be cleared"**, never "what has been
+achieved": a mature spine with one reopened draft derives `DevBar-Reqs` exactly as
+a fresh scaffold does, and it is `ex-draft=`/`stage=` on the basis line that tell
+the two apart.
+
+THE SECOND AXIS, and the one this module's vocabulary is named for: the EIGHT-RUNG
+STAGE LADDER (OI-21, ruled 2026-08-13) — Needs, Boundary, Reqs, Arch, LLReqs,
+Tests, Impl, Release. A repo is IN a stage and CLEARS a bar. Stages are
+`DevStg-<Label>` over a closed vocabulary with the position DERIVED; the three
+bars partition the ladder. See the ladder block below `sn_bar` for the full model,
+the recursion argument and the applies-when on the two inserted rungs.
 
 This script reads STATES and picks the LEVEL; `trace.py` (run by check.py at that
 level) ENFORCES the structure — orphans/decomposition/verified — at the derived
-gate. The two compose: a draft is exempt from trace's orphan rule (so it can live
-in the live spine) yet sits at G0 here (so it drops the gate). Auditing
+bar. The two compose: a draft is exempt from trace's orphan rule (so it can live
+in the live spine) yet sits at `DevBar-Below` here (so it drops the bar). Auditing
 correctness is the whole point, so every rule is fixture-tested.
 
-Note: the derived range is G1..G3 (the SN/SR/LLR/TC-derivable gates). G-Release /
-G-Final are release milestones beyond the spine and stay separately recorded.
+Note: the derived range is the three runnable bars (the SN/SR/LLR/TC-derivable
+ones). Release milestones beyond the spine stay separately recorded.
 
 Usage:
     python scripts/derive_gate.py [--root .] [--docs DIR]   # compute + write docs/gate
@@ -101,12 +120,78 @@ except ImportError:  # pragma: no cover - in-process fallback
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     import spine_carrier
 
-# The derived ladder. G1..G3 are the runnable gates check.py knows; G0 is the
-# INTERNAL sentinel for "below G1" (pre-ratification / draft), not a gate anyone
-# passes or sits at — see the module docstring. GATE_NAMES maps the internal int
-# back to the marker string.
-G0, G1, G2, G3 = 0, 1, 2, 3
-GATE_NAMES = {G0: "G0", G1: "G1", G2: "G2", G3: "G3"}
+# --- THE BAR LADDER (the strictness axis) --------------------------------------
+# The derived bar. `DevBar-Reqs` / `DevBar-Tests` / `DevBar-Release` are the three
+# runnable bars check.py knows; `DevBar-Below` is the INTERNAL sentinel for "below
+# the lowest runnable bar" (pre-ratification / drafted), not a bar anyone clears
+# or sits at — see the module docstring. BAR_NAMES maps the internal int back to
+# the marker string.
+#
+# THESE REPLACE THE RETIRED `G0`/`G1`/`G2`/`G3` TAGS (OI-21, ruled 2026-08-13).
+# Each bar is named for the TOP RUNG OF THE LADDER IT CERTIFIES, so the name says
+# what was cleared instead of a number a reader must decode:
+#
+#     DevBar-Reqs     certifies rungs 0-2  (Needs, Boundary, Reqs)      was G1
+#     DevBar-Tests    certifies rungs 3-5  (Arch, LLReqs, Tests)        was G2
+#     DevBar-Release  certifies rungs 6-7  (Impl, Release)              was G3
+#
+# The retired tags survive ONLY as read-side aliases (check.py's `--gate`, this
+# repo's `docs/stack.ini` `gates=`, a WI's `bar:` frontmatter) so an adopter's
+# hooks and CI keep working across the re-sync; nothing authored anew uses them.
+BAR_BELOW, BAR_REQS, BAR_TESTS, BAR_RELEASE = 0, 1, 2, 3
+BAR_NAMES = {
+    BAR_BELOW: "DevBar-Below",
+    BAR_REQS: "DevBar-Reqs",
+    BAR_TESTS: "DevBar-Tests",
+    BAR_RELEASE: "DevBar-Release",
+}
+# The runnable bars, lowest first — the vocabulary check.py selects steps from.
+BAR_ORDER = [BAR_NAMES[BAR_REQS], BAR_NAMES[BAR_TESTS], BAR_NAMES[BAR_RELEASE]]
+
+# THE RETIRED-TAG ALIASES, stated ONCE here and imported by every reader (check.py,
+# the stack.ini step loader, the WI `bar:` loader). One home, so the translation
+# cannot drift between the three places an adopter's old value can arrive.
+RETIRED_BAR_ALIASES = {
+    "G1": BAR_NAMES[BAR_REQS],
+    "G2": BAR_NAMES[BAR_TESTS],
+    "G3": BAR_NAMES[BAR_RELEASE],
+}
+
+
+def bar_ord(name):
+    """The position of a bar name on BAR_ORDER — and it RAISES on an unknown value
+    rather than degrading, exactly as `stage_ord` does for the stage axis.
+
+    This is the rule the retired vocabulary broke: `check.py` used to compare gate
+    NAMES as strings, which was correct only because `G1 < G2 < G3` happens to
+    alphabetize. `DevBar-Release < DevBar-Reqs < DevBar-Tests` lexically, so a
+    lexical comparison on the new vocabulary is WRONG — and obviously wrong, which
+    is the point. Route every comparison through here."""
+    try:
+        return BAR_ORDER.index(name)
+    except ValueError:
+        raise ValueError(
+            "derive_gate: {!r} is not a bar on the ladder — expected one of {}"
+            " (the retired G1/G2/G3 tags translate via RETIRED_BAR_ALIASES)".format(
+                name, ", ".join(BAR_ORDER)
+            )
+        ) from None
+
+
+def resolve_bar(value):
+    """A caller-supplied bar name, with any retired gate tag translated via
+    RETIRED_BAR_ALIASES.
+
+    Returns `(canonical_name, was_retired)` so the caller can decide its own
+    deprecation posture — check.py WARNS on the CLI (an adopter's hook passes the
+    literal string and only a message will move them), while the stack.ini and WI
+    `bar:` readers translate SILENTLY and leave the nagging to check_vocab.py,
+    which sees the authored file and can name the line."""
+    v = (value or "").strip()
+    if v in RETIRED_BAR_ALIASES:
+        return RETIRED_BAR_ALIASES[v], True
+    return v, False
+
 
 # SR Verification methods with no code to decompose, so they need a TC but no LLR.
 # This is the same policy as trace.py's orphan rule (trace.LLR_EXEMPT); the promise
@@ -180,7 +265,7 @@ def sn_all_ids(text):
     """The SN id UNIVERSE: every `SN-###` token anywhere in stakeholder-needs.md
     — a whole-text scrape, so a prose mention counts exactly like a table row
     (registry-machinery-reference §2.1 records the sharp edge: a ratified,
-    uncited prose mention caps the gate at G0 via the coverage rung). `-000`
+    uncited prose mention caps the bar at DevBar-Below via the coverage rung). `-000`
     excluded. Duplicated from trace.py per the F5 rule; pinned equal by
     test_rule_sync (WI-408) — a divergence here would let the gate and trace's
     itemized listing disagree about which ids the rules run over."""
@@ -220,97 +305,252 @@ def sn_cited_ids(srs):
     return {x for r in srs for x in refs(r.get("SN-Refs"))}
 
 
-# --- per-artifact gate rules (docs/archive/specs/derived-gate-model.2026-07-20.md §3) -------------
-def sr_gate(sr, has_llr, has_tc):
-    """The gate an SR row has reached, from its Status + whether it is decomposed."""
+# --- per-artifact bar rules (docs/archive/specs/derived-gate-model.2026-07-20.md §3) -------------
+def sr_bar(sr, has_llr, has_tc):
+    """The bar an SR row has reached, from its Status + whether it is decomposed."""
     if is_draft(sr):
-        return G0
+        return BAR_BELOW
     exempt = llr_exempt(sr)
     decomposed = (exempt or has_llr) and has_tc
     verified = is_verified(sr)
     if decomposed and verified:
-        return G3
+        return BAR_RELEASE
     if decomposed:
-        return G2
-    return G1  # a ratified requirement not yet decomposed
+        return BAR_TESTS
+    return BAR_REQS  # a ratified requirement not yet decomposed
 
 
-def maturity_gate(row):
-    """An LLR/TC caps the gate only when it is Draft (G0 — the new-phase signal).
-    Once present, its own Status does NOT independently gate G3: the SR's Verified
-    status drives G2->G3 (matching trace.py's --require-verified bar, which checks
-    SRs, not LLR/TC status), and the LLR/TC's *existence* is what makes its SR
-    decomposed (G2, decided in sr_gate). So a present LLR/TC contributes G3 and
-    never caps — a downstream repo whose LLRs read `Implemented` still reaches G3
-    on its SRs, exactly as trace.py's gate does."""
-    return G0 if is_draft(row) else G3
+def maturity_bar(row):
+    """An LLR/TC caps the bar only when it is Draft (`DevBar-Below` — the new-phase
+    signal). Once present, its own Status does NOT independently gate the top bar:
+    the SR's Verified status drives DevBar-Tests -> DevBar-Release (matching
+    trace.py's --require-verified bar, which checks SRs, not LLR/TC status), and
+    the LLR/TC's *existence* is what makes its SR decomposed (DevBar-Tests, decided
+    in sr_bar). So a present LLR/TC contributes DevBar-Release and never caps — a
+    downstream repo whose LLRs read `Implemented` still reaches the top bar on its
+    SRs, exactly as trace.py's does."""
+    return BAR_BELOW if is_draft(row) else BAR_RELEASE
 
 
 def is_modified(row):
     """The post-attestation `Modified` state (WI-316, process.md §7): content
     changed after the last attestation, re-attest owed. NO gate arithmetic of its
-    own — a Modified SR is simply not Verified, so sr_gate already derives G2
+    own — a Modified SR is simply not Verified, so sr_bar already derives DevBar-Tests
     (decomposed-unverified); recognized here only for the `modified=N` basis
     count, so the pending state never hides. Duplicated from trace.py per the F5
     no-shared-module rule; pinned equal by test_rule_sync."""
     return (row.get("Status") or "").strip().lower() == "modified"
 
 
-def sn_gate(sn_id, draft_ids, cited_ids):
-    """A Draft SN (section-as-state) is G0 — and that is the ONLY rung that fires
-    on a draft: it is exempt from the coverage rung below exactly as it is exempt
-    from trace.py's orphan rule, so one fact never fires two findings at once.
-    A RATIFIED SN must be cited by >=1 SR's `SN-Refs` (WI-401, owner ruling
-    2026-08-01): ratified-but-uncovered caps the raw level at G0, because a
-    ratified need no SR answers has not earned G1. This rung is the GATE INPUT;
-    the itemized "SN {id} has no SR" listing stays trace.py's orphan finding at
-    G2 strictness — the same states-here/structure-there split the module
-    docstring describes. A covered ratified SN has no obligation past G1 and
-    never caps the repo (contributes G3 to the min)."""
+def sn_bar(sn_id, draft_ids, cited_ids):
+    """A Draft SN is `DevBar-Below` — and that is the ONLY rung that fires on a
+    draft: it is exempt from the coverage rung below exactly as it is exempt from
+    trace.py's orphan rule, so one fact never fires two findings at once. A
+    RATIFIED SN must be cited by >=1 SR's `SN-Refs` (WI-401, owner ruling
+    2026-08-01): ratified-but-uncovered caps the raw level at `DevBar-Below`,
+    because a ratified need no SR answers has not earned `DevBar-Reqs`. This rung
+    is the BAR INPUT; the itemized "SN {id} has no SR" listing stays trace.py's
+    orphan finding at DevBar-Tests strictness — the same states-here /
+    structure-there split the module docstring describes. A covered ratified SN
+    has no obligation past `DevBar-Reqs` and never caps the repo (contributes
+    `DevBar-Release` to the min)."""
     if sn_id in draft_ids:
-        return G0
-    return G3 if sn_id in cited_ids else G0
+        return BAR_BELOW
+    return BAR_RELEASE if sn_id in cited_ids else BAR_BELOW
 
 
-# --- SN-029: the SECOND derived axis — the STAGE ladder -------------------------
-# WHY TWO AXES. The gate answers "how strict is the harness right now" — its
-# vocabulary is `G1|G2|G3` and `check.py` selects steps from it. The human
-# ratification level answers a different question: "how far up the spine is a
-# HUMAN still the acceptor". Those are not the same ladder, and G-numbering
-# cannot express the second: G2 conflates "LLRs and TCs exist" AND doubles as
-# the pull a `Modified` row applies, so there is no G that means "TCs are in
-# process". Forcing one axis to carry both is how a dial ends up meaning
-# something subtly different at each of its five reading sites.
+# --- SN-029 / OI-21: the SECOND derived axis — the EIGHT-RUNG STAGE LADDER ------
+# WHY TWO AXES. The bar answers "how strict is the harness right now" — its
+# vocabulary is `DevBar-Reqs|DevBar-Tests|DevBar-Release` and `check.py` selects
+# steps from it. The human ratification level answers a different question: "how
+# far up the ladder is a HUMAN still the acceptor". Those are not the same ladder,
+# and the retired G-numbering could express neither cleanly: `G2` conflated "LLRs
+# and TCs exist" AND doubled as the pull a `Modified` row applies, so there was no
+# G that meant "TCs are in process". Forcing one axis to carry both is how a dial
+# ends up meaning something subtly different at each of its five reading sites.
 #
-# THE RULED MODEL (owner, 2026-08-12; process.md §4 "Stages and gates"):
-# **stages are the tiers of the decomposition — a repo is IN one; gates are the
-# subset of stage boundaries a human must certify — you PASS one.** The stage is
-# state, the gate is an event, and the boundaries that are NOT gates (0->1 and
-# 2->3) are exactly the ones with no sign-off row: you draft needs then
-# requirements without a sitting between, and designs then tests without one
-# either.
+# THE RULED MODEL (owner, 2026-08-12; the ladder re-ruled 2026-08-13 as OI-21):
+# **stages are the rungs of the decomposition — a repo is IN one; bars are the
+# subset of rung boundaries a human must certify — you CLEAR one.** The stage is
+# state, the bar is an event.
 #
-#   stage 0  needs in process
-#   stage 1  requirements in process
-#      == G1 ==  Stakeholder · UX · System Engineer
-#   stage 2  design (LLR) in process
-#   stage 3  tests in process
-#      == G2 ==  System Engineer · Test Engineer
-#   stage 4  IMPLEMENTATION in process
-#      == G3 ==  System Engineer · Test Engineer
-#   stage 5  nothing in process (G3 passed)
+# THE LADDER — REQUIREMENTS BEFORE ARCHITECTURE. Architecture is a RESPONSE to
+# requirements: a scope is partitioned in the way that best satisfies its
+# obligations, so partitioning first means partitioning against nothing but the
+# frame. The boundary happens ONCE (only the system's own frame comes from the
+# needs and the context; every boundary below it is PRODUCED BY a partition),
+# rungs 2 and 3 RECURSE as the decomposition descends, and rung 4 is TERMINAL by
+# OI-20's binding rule — a requirement that still needs allocating to sub-parts is
+# a rung-2 requirement for that sub-scope; one that BINDS to a realization
+# artifact is an LLR, and that is the bottom.
 #
-# Stage 4 is the rung this ladder was MISSING until 2026-08-12: with 4 meaning
-# "done", the whole implementation period — the longest stretch of a project —
-# read as stage 3, "TCs in process", labelling it with the name of a tier that
-# had already finished. G-Release / G-Final sit above stage 5 in prose only; no
-# rung past 5 is mechanized, so stage 5 stays held to the G3 bar.
+#   0 DevStg-Needs      vision and stakeholder needs in work
+#   1 DevStg-Boundary   the system's frame: what is outside, what crosses,
+#                       each crossing typed.  HAPPENS ONCE.
+#      ══ DevBar-Reqs ══  Stakeholder · UX · System Engineer     (was G1)
+#   2 DevStg-Reqs       the obligations at the current level's boundaries,
+#                       system and component alike.  RECURSES.
+#   3 DevStg-Arch       partition each scope into sub-boundaries.  RECURSES;
+#                       exits when no child needs partitioning.
+#   4 DevStg-LLReqs     the inside of a leaf, bound to a realization artifact
+#                       (a code symbol, or a part source).  TERMINAL.
+#   5 DevStg-Tests      the test set for those obligations in work
+#      ══ DevBar-Tests ══  System Engineer · Test Engineer       (was G2)
+#   6 DevStg-Impl       IMPLEMENTATION in work
+#      ══ DevBar-Release ══  System Engineer · Test Engineer     (was G3)
+#   7 DevStg-Release    all complete; release checklist and version tagging
 #
-# `spine_stage` is derived SEPARATELY on this 0-5 ladder and `stage_to_gate` is
-# the declared mapping between the axes — one auditable place rather than an
-# arithmetic coincidence. The runnable gate value is untouched; the stage rides
-# the `# basis:` line as an appended field.
-STAGE_SN, STAGE_SR, STAGE_LLR, STAGE_TC, STAGE_IMPL, STAGE_DONE = 0, 1, 2, 3, 4, 5
+# THE LABEL IS THE IDENTIFIER; POSITION IS DERIVED. A stage is `DevStg-<Label>`
+# over a CLOSED vocabulary — not a minted id, so it takes no `docs/id-watermark`
+# space and no retire-never-remint rule applies. The ordinal is NOT in the key,
+# because position changes when the ladder changes and this kit's standing rule is
+# that derived facts are generated and rendered, never authored into a key: the
+# basis line carries `stage=DevStg-LLReqs stage-ord=4 stage-of=8` and renderers
+# show "stage 4 of 8, <description>", so inserting a rung self-corrects every
+# ordinal with no citation moved. That is exactly the failure an integer ladder
+# produced here on 2026-08-12: an inserted rung shifted every cached number
+# silently, in the direction of LESS human involvement.
+#
+# THE LADDER IS NOT MONOTONIC, and that is the truth about iterative
+# decomposition rather than a defect in the report. Rungs 2 and 3 oscillate as
+# the recursion descends: a newly identified sub-component landing a drafted CMP
+# row, or an untyped seam landing an experimental IF row, DROPS the reported
+# stage back to Arch or Boundary at a lower scope with nobody deciding to. That
+# is what makes the recursion self-reporting and needs no ladder machinery at
+# all. If a monotonic reading is ever wanted it is a SECOND derived number (a
+# high-water mark) shown BESIDE the honest one, never instead of it.
+STAGE_NEEDS = "DevStg-Needs"
+STAGE_BOUNDARY = "DevStg-Boundary"
+STAGE_REQS = "DevStg-Reqs"
+STAGE_ARCH = "DevStg-Arch"
+STAGE_LLREQS = "DevStg-LLReqs"
+STAGE_TESTS = "DevStg-Tests"
+STAGE_IMPL = "DevStg-Impl"
+STAGE_RELEASE = "DevStg-Release"
+
+# THE CLOSED VOCABULARY, in ladder order. Every comparison routes through
+# `stage_ord` below; ordering operators on the raw value are BANNED (pinned by
+# tests/test_stage_ladder.py, which greps the kit's scripts for them).
+STAGE_ORDER = [
+    STAGE_NEEDS,
+    STAGE_BOUNDARY,
+    STAGE_REQS,
+    STAGE_ARCH,
+    STAGE_LLREQS,
+    STAGE_TESTS,
+    STAGE_IMPL,
+    STAGE_RELEASE,
+]
+STAGE_OF = len(STAGE_ORDER)
+
+# One-line descriptions, for renderers that show "stage N of 8, <description>".
+STAGE_DESC = {
+    STAGE_NEEDS: "vision and stakeholder needs in work",
+    STAGE_BOUNDARY: "system boundary interfaces in work",
+    STAGE_REQS: "requirement definition in work",
+    STAGE_ARCH: "architecture (partition) in work",
+    STAGE_LLREQS: "LLR definition in work",
+    STAGE_TESTS: "test-case definition in work",
+    STAGE_IMPL: "implementation in work",
+    STAGE_RELEASE: "nothing in work; release checklist available",
+}
+
+
+def stage_ord(stage):
+    """The 0-based position of a stage label on STAGE_ORDER.
+
+    THIS IS THE ONLY LEGAL WAY TO COMPARE TWO STAGES, and it RAISES on an unknown
+    label rather than degrading to a default. The reason is the whole argument for
+    the label carrier: an unknown stage means the ladder moved under a cached
+    value, and the wrong-answer direction of a silent default is LESS human
+    involvement (`human_holds` compares against this axis). Failing loudly turns a
+    silent policy change into a visible one.
+
+    Ordering operators on the raw label are banned for the same reason they were
+    wrong on the retired tags: `DevStg-Arch < DevStg-Boundary` lexically, which
+    inverts rungs 1 and 3."""
+    try:
+        return STAGE_ORDER.index(stage)
+    except ValueError:
+        raise ValueError(
+            "derive_gate: {!r} is not a rung on the stage ladder — expected one of "
+            "{}".format(stage, ", ".join(STAGE_ORDER))
+        ) from None
+
+
+# --- THE MATURITY MAPPING TABLE — ONE HOME (OI-21 question 5b) -----------------
+# THE PROBLEM IT SOLVES. The min-fold folded over SN/SR/LLR/TC only, which is why
+# rung 1 (Boundary) had no machine-readable state and rung 3's `CMP.State` was
+# read by nothing that gates. Folding IF and CMP in is what makes the recursion
+# self-reporting — but those two registries carry their OWN maturity vocabularies,
+# and the spine carries a third (`Draft`/`Modified`/`Verified`, which D-9's ladder
+# migration will replace with `Drafted`/`Approved`/`Founded`).
+#
+# So every vocabulary maps onto ONE set of ladder semantics, stated here and
+# nowhere else:
+#
+#   DRAFTED   the row exists but is not settled — it CAPS its rung (work in flight)
+#   APPROVED  the row is settled at its tier — it does not cap
+#   FOUNDED   the row is settled AND demonstrated — it does not cap
+#
+# D-9's migration is then a TABLE EDIT rather than a predicate rewrite: the spine
+# still reads through `is_draft`/`is_verified`/`is_modified` below (D-9 is held
+# behind the sitting and is NOT this program's work), and when it lands only the
+# spine rows of this table move.
+DRAFTED, APPROVED, FOUNDED = "Drafted", "Approved", "Founded"
+
+# IF rows — the boundary inventory (rung 1). `Stability` is the tier's ONE maturity
+# field (the undeclared `Status` column retired at WI-443's conversion).
+IF_MATURITY = {
+    # An experimental seam is a crossing whose contract is still moving — the
+    # boundary is declared but not settled, which is precisely DRAFTED.
+    "Experimental": DRAFTED,
+    # A stable seam is settled at its tier. NOT Founded: `Stability` says the
+    # contract will not move, it says nothing about the crossing having been
+    # demonstrated, and claiming Founded here would let the boundary rung report
+    # more confidence than the registry holds.
+    "Stable": APPROVED,
+    # A deprecated seam is settled too — it is on its way out, which is a decided
+    # state, not work in flight. Treating it as DRAFTED would hold the boundary
+    # rung open for exactly the rows nobody intends to touch again.
+    "Deprecated": APPROVED,
+}
+
+# CMP rows — the partition (rung 3).
+CMP_MATURITY = {
+    # A planned component is a partition proposed and not yet realized: the
+    # architecture rung's own work-in-flight state.
+    "planned": DRAFTED,
+    # Built means the partition exists in the tree — settled as a partition, which
+    # is all rung 3 asks. Whether it WORKS is rungs 5-6's question.
+    "built": APPROVED,
+    # Verified adds the demonstration, so this is the one CMP state that earns
+    # FOUNDED.
+    "verified": FOUNDED,
+    # `has-gap` is an explicit statement that the partition does NOT yet hold —
+    # the strongest possible DRAFTED signal, and the one place a lenient mapping
+    # would let a known-broken partition report a finished architecture rung.
+    "has-gap": DRAFTED,
+    # Deprecated, as for IF: a decided state, not work in flight.
+    "deprecated": APPROVED,
+}
+
+
+def _maturity(value, table):
+    """A registry cell's ladder semantic through `table`, matched case-insensitively.
+
+    An UNRECOGNIZED value reads DRAFTED — the fail-honest direction. These two
+    tiers are schema-ADVISORY (WI-443 ruled the enums warn-first, so a typo never
+    fails the harness), which means an unknown value genuinely can reach here; the
+    choice is between "an unreadable row reports finished" and "an unreadable row
+    holds its rung open", and only the second is safe on an axis the automation
+    dial reads."""
+    return table.get((value or "").strip(), DRAFTED)
+
+
+def _caps(semantic):
+    """True when a ladder semantic means work is still in flight at its rung."""
+    return semantic == DRAFTED
 
 
 def _decomposed_sr_ids(llrs, tcs):
@@ -326,153 +566,239 @@ def _decomposed_sr_ids(llrs, tcs):
     )
 
 
-def spine_stage(srs, llrs, tcs, sn_ids, sn_draft):
-    """The tier currently IN PROCESS, 0-5 — the STATE axis (a repo is *in* a
-    stage), and the one a human-ratification level is compared against.
+def boundary_incomplete(ifs, have_registry):
+    """Rung 1's predicate — is the BOUNDARY INVENTORY still in work?
 
-      0  SNs in process: a need is a draft, none is ratified, or a ratified one
-         has no SR answering it
-      1  SNs settled, SRs in process: a requirement is Draft, or one is
-         `Modified` (amended after attestation, so its RE-ratification is owed)
-      2  ...and the LLRs are in process: one is missing or Draft
-      3  ...and the TCs are in process: one is missing or Draft
-      4  ...and the IMPLEMENTATION is in process: every SR is decomposed and
-         every TC is authored and non-Draft, but some SR is not yet `Verified`
-      5  nothing in process: every tier is decomposed and Verified
+    APPLIES-WHEN (OI-14's ruled A6 shape, warn-first): the rung applies only when
+    an interfaces registry FILE exists. A project that never adopts the IF tier is
+    NOT held at DevStg-Boundary forever — `have_registry` is False and the rung is
+    skipped. That is the whole difference between a rung that ships to every
+    adopter and one that ships to the adopters who declared a boundary.
 
-    Read as the LOWEST unfinished tier — the one work is happening at, and
+    WARN-HONEST WHEN IT DOES APPLY. A registry that exists but declares NO real
+    crossing is honestly incomplete: the file says the project intends to type its
+    frame and has not. And any crossing at DRAFTED maturity (`Stability =
+    Experimental`) is a contract still moving, so the boundary is declared but not
+    settled. Both cap the rung.
+
+    NOTE WHAT THIS DOES *NOT* CLAIM. It does not verify that every external
+    crossing is covered — nothing in the schema types a crossing as external
+    today, and inventing that field is OI-14 part B's business, not this rung's.
+    What it reports is the honest weaker fact: the declared inventory is settled,
+    or it is not."""
+    if not have_registry:
+        return False
+    if not ifs:
+        return True
+    return any(_caps(_maturity(r.get("Stability"), IF_MATURITY)) for r in ifs)
+
+
+def arch_incomplete(cmps, have_registry):
+    """Rung 3's predicate — is the PARTITION still in work?
+
+    Same applies-when shape as `boundary_incomplete`: no components registry, no
+    rung. With one, a partition of nothing is incomplete, and any component at
+    DRAFTED maturity (`planned` or `has-gap`) is a scope proposed and not yet
+    realized.
+
+    THIS IS THE RUNG THAT MAKES THE RECURSION SELF-REPORTING. Rungs 2 and 3
+    oscillate as the decomposition descends, and the mechanism is exactly this
+    predicate reading a newly minted `planned` CMP row: identifying a
+    sub-component DROPS the reported stage back to Arch with nobody deciding to,
+    which is the honest report."""
+    if not have_registry:
+        return False
+    if not cmps:
+        return True
+    return any(_caps(_maturity(r.get("State"), CMP_MATURITY)) for r in cmps)
+
+
+def spine_stage(
+    srs,
+    llrs,
+    tcs,
+    sn_ids,
+    sn_draft,
+    ifs=None,
+    cmps=None,
+    have_ifs=False,
+    have_cmps=False,
+):
+    """The rung currently IN WORK — the STATE axis (a repo is *in* a stage), and
+    the one a human-ratification level is compared against. Returns a
+    `DevStg-<Label>` from STAGE_ORDER.
+
+    Read as the LOWEST unfinished rung — the one work is happening at, and
     therefore the one a human boundary has to be compared against.
 
-    STAGE 4 IS WHERE THE TESTS ARE WRITTEN BUT NOT YET GREEN. It is the rung
-    inserted 2026-08-12 (owner ruling; process.md §4 "Stages and gates"): before
-    it, the entire implementation period read as stage 3 — "TCs in process" —
-    which named the longest phase of a project after a tier that had already
-    finished. The discriminator between 3 and 4 is exactly the TC rung falling
-    through: stage 3 while any SR still lacks a TC or any TC is `Draft`, stage 4
-    once the test set is authored and ratified and only `Verified` is missing.
+      DevStg-Needs      a need is a draft, none is ratified, or a ratified one
+                        has no SR answering it
+      DevStg-Boundary   ...and the declared boundary inventory is in work
+      DevStg-Reqs       ...and a requirement is Draft, or one is `Modified`
+                        (amended after attestation, so RE-ratification is owed)
+      DevStg-Arch       ...and the declared partition is in work
+      DevStg-LLReqs     ...and an LLR is missing or Draft
+      DevStg-Tests      ...and a TC is missing or Draft
+      DevStg-Impl       ...and every SR is decomposed and every TC authored and
+                        non-Draft, but some SR is not yet `Verified`
+      DevStg-Release    nothing in work: every rung is settled and Verified
 
-    CAVEAT ON THE G2->G3 DRIVER. Stage 4 ends when every SR reads `Verified`,
-    which is a registry CELL, not a harness run. The intended signal is the
-    harness (green tests at the declared tier and coverage); the cell is today's
-    interim proxy for it, and repo-lock D-9's correction owes the swap to a later
-    batch. Nothing here should be read as proof the tests passed.
+    THE TWO INSERTED RUNGS (OI-21) read from the IF and CMP registries, which
+    joined the fold here — see `boundary_incomplete` / `arch_incomplete` for the
+    applies-when that keeps them free for a project that adopts neither.
 
-    WHICH TIER OWNS A MISSING ARTIFACT: the tier the artifact belongs to, not
-    its parent. An SR with no LLR yet puts the spine at stage 2, because what is
-    being written is an LLR. Reading it as stage 1 (the older shape) made stages
-    2 and 3 unreachable during exactly the period they describe — every SR had
-    to be fully decomposed before a Draft child could be seen at all — which
-    left the axis unable to express "TCs are human-held but LLRs are not", the
-    distinction the axis exists for.
+    THE SPINE RUNGS READ TODAY'S VOCABULARY through `is_draft`/`is_verified`/
+    `is_modified` deliberately. D-9's Status-ladder migration
+    (Draft/Verified/Modified -> Drafted/Approved/Founded) is held behind the
+    sitting and is NOT this program's work; MATURITY-mapping the spine here would
+    have pre-empted a ruling nobody has taken. When D-9 lands it is a table edit.
 
-    WHICH TIER OWNS AN UNVERIFIED SR: `Modified` is the SR's own tier and is
+    CAVEAT ON THE Impl->Release DRIVER. DevStg-Impl ends when every SR reads
+    `Verified`, which is a registry CELL, not a harness run. The intended signal is
+    the harness (green tests at the declared tier and coverage); the cell is
+    today's interim proxy for it, and repo-lock D-9's correction owes the swap to a
+    later batch. Nothing here should be read as proof the tests passed.
+
+    WHICH RUNG OWNS A MISSING ARTIFACT: the rung the artifact belongs to, not its
+    parent. An SR with no LLR yet is DevStg-LLReqs, because what is being written
+    is an LLR. Reading it as DevStg-Reqs (the older shape) made the lower rungs
+    unreachable during exactly the period they describe — every SR had to be fully
+    decomposed before a Draft child could be seen at all — which left the axis
+    unable to express "TCs are human-held but LLRs are not", the distinction the
+    axis exists for.
+
+    WHICH RUNG OWNS AN UNVERIFIED SR: `Modified` is the SR's own rung and is
     checked FIRST, because it means the requirement's text moved after it was
     attested and a fresh ratification is owed on the SR itself. Any OTHER
     not-yet-Verified SR is checked LAST, after the children: an SR reaches
     Verified only once its LLRs and TCs are green, so while a child is still in
-    flight the child's tier is the honest answer.
+    flight the child's rung is the honest answer.
 
-    Two corners are explicit. A repo with no real SRs at all is stage 0, NOT
-    stage 5 — the vacuous-G1 short circuit in `_raw_level` exists for the gate's
-    own arithmetic and would read as "everything is finished" here, which is
-    precisely backwards. And a RATIFIED-BUT-UNCITED SN is stage 0, applying
-    WI-401's coverage rung on the same subset `_raw_level` uses: a need with no
-    requirement answering it is unfinished work at the SN tier, and without this
-    such a spine read stage 5 while the gate arithmetic put it at G0."""
+    Two corners are explicit. A repo with no real SRs at all is DevStg-Needs, NOT
+    DevStg-Release — the vacuous-lowest-bar short circuit in `_raw_level` exists
+    for the bar's own arithmetic and would read as "everything is finished" here,
+    which is precisely backwards. And a RATIFIED-BUT-UNCITED SN is DevStg-Needs,
+    applying WI-401's coverage rung on the same subset `_raw_level` uses: a need
+    with no requirement answering it is unfinished work at the needs rung."""
+    ifs = ifs or []
+    cmps = cmps or []
     if any(u in sn_draft for u in sn_ids) or not sn_ids:
-        return STAGE_SN
+        return STAGE_NEEDS
     if not srs:
-        return STAGE_SN
+        return STAGE_NEEDS
+    if boundary_incomplete(ifs, have_ifs):
+        return STAGE_BOUNDARY
     if any(is_draft(r) for r in srs):
-        return STAGE_SR
+        return STAGE_REQS
     if any(u not in sn_cited_ids(srs) for u in sn_ids):
-        return STAGE_SN
+        return STAGE_NEEDS
     if any(is_modified(r) for r in srs):
-        return STAGE_SR
+        return STAGE_REQS
+    if arch_incomplete(cmps, have_cmps):
+        return STAGE_ARCH
     llr_sr_refs, tc_refs = _decomposed_sr_ids(llrs, tcs)
     if any(
         not llr_exempt(sr) and sr.get("SR-ID") not in llr_sr_refs for sr in srs
     ) or any(is_draft(r) for r in llrs):
-        return STAGE_LLR
+        return STAGE_LLREQS
     if any(sr.get("SR-ID") not in tc_refs for sr in srs) or any(
         is_draft(r) for r in tcs
     ):
-        return STAGE_TC
-    # THE 3-vs-4 DISCRIMINATOR. Falling through both rungs above means every SR
-    # is decomposed and every TC is authored and non-Draft — the test set is
-    # written, so "TCs in process" is no longer true. What remains is making them
-    # pass, which is stage 4. (`is_verified` is the interim proxy for that; the
-    # intended signal is the harness — see the CAVEAT above.)
+        return STAGE_TESTS
+    # THE Tests-vs-Impl DISCRIMINATOR. Falling through both rungs above means
+    # every SR is decomposed and every TC is authored and non-Draft — the test set
+    # is written, so "TCs in work" is no longer true. What remains is making them
+    # pass, which is DevStg-Impl. (`is_verified` is the interim proxy for that;
+    # the intended signal is the harness — see the CAVEAT above.)
     if not all(is_verified(r) for r in srs):
         return STAGE_IMPL
-    return STAGE_DONE
+    return STAGE_RELEASE
 
 
-def stage_to_gate(stage):
+# THE DECLARED STAGE -> BAR MAPPING (OI-21). Each bar is named for the top rung it
+# certifies, so the reconciliation is a partition of the ladder rather than an
+# arithmetic coincidence: rungs 0-2 sit under DevBar-Reqs, 3-5 under
+# DevBar-Tests, 6-7 under DevBar-Release.
+STAGE_BAR = {
+    STAGE_NEEDS: BAR_NAMES[BAR_REQS],
+    STAGE_BOUNDARY: BAR_NAMES[BAR_REQS],
+    STAGE_REQS: BAR_NAMES[BAR_REQS],
+    STAGE_ARCH: BAR_NAMES[BAR_TESTS],
+    STAGE_LLREQS: BAR_NAMES[BAR_TESTS],
+    STAGE_TESTS: BAR_NAMES[BAR_TESTS],
+    STAGE_IMPL: BAR_NAMES[BAR_RELEASE],
+    STAGE_RELEASE: BAR_NAMES[BAR_RELEASE],
+}
+
+
+def stage_to_bar(stage):
     """THE DECLARED MAPPING between the two axes — stated once, here, so the
     reconciliation is auditable instead of implied.
 
-    THE RULE IS UNIFORM: `stage_to_gate(s)` is **the next gate you must pass**.
-    Since 2026-08-12's inserted implementation rung it needs no exception —
+    THE RULE IS UNIFORM: `stage_to_bar(s)` is **the next bar you must clear**,
+    and under the eight-rung ladder it needs no exception. `DevStg-Release` has
+    already cleared `DevBar-Release` and no rung past it is mechanized, so it
+    stays held to that bar rather than reporting one the harness does not know.
+    The strictness selector and the approaching bar are the same value for a good
+    reason: you are held to the bar you are trying to clear.
 
-        0 -> G1   1 -> G1   2 -> G2   3 -> G2   4 -> G3   5 -> G3
+    A LOOKUP, NOT ARITHMETIC — `stage_ord` exists and this could compare through
+    it, but a table states the partition where a reader looks, and an inserted
+    rung then fails LOUDLY here (a missing key) instead of silently landing under
+    whichever bar the inequality happens to put it.
 
-    — because exactly two tiers sit between each pair of sittings, so two stages
-    share the gate ahead of them. Stage 5 has already passed G3 and no rung past
-    it is mechanized (G-Release / G-Final are named in prose only), so it stays
-    held to the G3 bar rather than reporting a gate the harness does not know.
-    The strictness selector and the approaching gate are the same value for a
-    good reason: you are held to the bar you are trying to clear.
-
-    Nothing derives the gate FROM the stage in production — `compute` still
-    computes the gate from the artifact states exactly as it always did — so
-    this is a reader's reconciliation, not a second source of truth. Keep that
-    reading: a gate is NOT a pure function of stage (G1's bar includes non-goals
-    and a UX sign-off; G2's includes diagrammed runtime flows), and deriving one
-    from the other would silently drop the human half."""
-    if stage >= STAGE_IMPL:
-        return "G3"
-    if stage >= STAGE_LLR:
-        return "G2"
-    return "G1"
+    Nothing derives the bar FROM the stage in production — `compute` still
+    computes the bar from the artifact states exactly as it always did — so this
+    is a reader's reconciliation, not a second source of truth. Keep that reading:
+    a bar is NOT a pure function of stage (DevBar-Reqs's bar includes non-goals
+    and a UX sign-off; DevBar-Tests's includes diagrammed runtime flows), and
+    deriving one from the other would silently drop the human half."""
+    try:
+        return STAGE_BAR[stage]
+    except KeyError:
+        raise ValueError(
+            "derive_gate: no bar declared for stage {!r} — add it to STAGE_BAR "
+            "(every rung on STAGE_ORDER needs one)".format(stage)
+        ) from None
 
 
 def _raw_level(srs, llrs, tcs, sn_ids, sn_draft):
-    """`(raw_level, sr_gates)` over ONE set of spine rows.
+    """`(raw_level, sr_bars)` over ONE set of spine rows.
 
-    The raw level is the min over every in-scope artifact's gate (SN drafts, SR
+    The raw level is the min over every in-scope artifact's bar (SN drafts, SR
     maturity, LLR/TC maturity — including WI-401's SN-coverage rung, whose cited
-    set is built from THIS call's `srs`); a set with no real SRs is G1
-    (requirements-drafting), never a vacuous G3 from ratified-SN-only. Taken as
-    a function of its rows rather than of `docs` so `compute` can ask it the
-    counterfactual question too — the same arithmetic, over the non-draft
-    subset (`ex-draft`), which is what tells a mature spine held down by drafts
-    apart from an early one (WI-341). The coverage rung rides that subset
-    consistently: a citation on a removed Draft SR leaves with its row, so the
-    counterfactual never fabricates coverage a ratified spine does not have.
+    set is built from THIS call's `srs`); a set with no real SRs is `DevBar-Reqs`
+    (requirements-drafting), never a vacuous `DevBar-Release` from
+    ratified-SN-only. Taken as a function of its rows rather than of `docs` so
+    `compute` can ask it the counterfactual question too — the same arithmetic,
+    over the non-draft subset (`ex-draft`), which is what tells a mature spine
+    held down by drafts apart from an early one (WI-341). The coverage rung rides
+    that subset consistently: a citation on a removed Draft SR leaves with its
+    row, so the counterfactual never fabricates coverage a ratified spine does not
+    have.
     """
     llr_sr_refs, tc_refs = _decomposed_sr_ids(llrs, tcs)
     cited = sn_cited_ids(srs)
     sr_g = {
-        r["SR-ID"]: sr_gate(r, r["SR-ID"] in llr_sr_refs, r["SR-ID"] in tc_refs)
+        r["SR-ID"]: sr_bar(r, r["SR-ID"] in llr_sr_refs, r["SR-ID"] in tc_refs)
         for r in srs
     }
     if not srs:
-        return G1, sr_g
+        return BAR_REQS, sr_g
     raw = min(
         [sr_g[k] for k in sr_g]
-        + [sn_gate(u, sn_draft, cited) for u in sn_ids]
-        + [maturity_gate(r) for r in llrs]
-        + [maturity_gate(r) for r in tcs]
+        + [sn_bar(u, sn_draft, cited) for u in sn_ids]
+        + [maturity_bar(r) for r in llrs]
+        + [maturity_bar(r) for r in tcs]
     )
     return raw, sr_g
 
 
 def compute(docs):
     """Derive the gate from the spine registries under `docs`. Returns a result
-    dict: counts, the raw computed level (may be G0), the same level recomputed
+    dict: counts, the raw computed level (may be DevBar-Below), the same level recomputed
     with the drafts removed (`ex_draft`), the per-phase breakdown, and the
-    runnable gate name (raw floored to G1)."""
+    runnable bar name (raw floored to DevBar-Reqs)."""
     # The three spine tiers read through the CARRIER, which
     # resolves TOML or CSV and hands back rows under today's column names — so
     # the gate derivation below is untouched by the migration. `load_csv` stays
@@ -503,6 +829,41 @@ def compute(docs):
         sn_ids = sn_all_ids(text)
         sn_draft = sn_draft_ids(text)
 
+    # THE TWO OFF-SPINE REGISTRIES THE LADDER'S INSERTED RUNGS READ (OI-21). Both
+    # are resolved through the carrier and both are APPLIES-WHEN: `have_*` is the
+    # file's existence, and a project that adopts neither registry simply never
+    # sits at DevStg-Boundary or DevStg-Arch. They feed the STAGE axis only —
+    # `_raw_level` is untouched, so the runnable bar is computed from exactly the
+    # rows it always was and no adopter's strictness moves because of this change.
+    if_path = spine_carrier.resolve(
+        docs / "requirements" / "interfaces.toml", spine_carrier.CARRIERS
+    )
+    cmp_path = spine_carrier.resolve(
+        docs / "requirements" / "components.toml", spine_carrier.CARRIERS
+    )
+    ifs = (
+        [
+            r
+            for r in spine_carrier.load(
+                docs / "requirements" / "interfaces.toml", "IF-ID"
+            )
+            if r.get("IF-ID") and not is_example(r["IF-ID"])
+        ]
+        if if_path is not None
+        else []
+    )
+    cmps = (
+        [
+            r
+            for r in spine_carrier.load(
+                docs / "requirements" / "components.toml", "CMP-ID"
+            )
+            if r.get("CMP-ID") and not is_example(r["CMP-ID"])
+        ]
+        if cmp_path is not None
+        else []
+    )
+
     raw, sr_g = _raw_level(srs, llrs, tcs, sn_ids, sn_draft)
 
     n_draft = (
@@ -515,15 +876,16 @@ def compute(docs):
     # Counted across the three registries exactly like drafts (SNs have no Status
     # cell — a changed ratified SN rides its SR chain's Modified) and surfaced on
     # the basis line so the pending state never hides. No gate arithmetic here:
-    # a Modified SR already computes G2 via sr_gate's decomposed-unverified rung.
+    # a Modified SR already computes DevBar-Tests via sr_bar's decomposed rung.
     n_modified = (
         sum(1 for r in srs if is_modified(r))
         + sum(1 for r in llrs if is_modified(r))
         + sum(1 for r in tcs if is_modified(r))
     )
     # Ratified SNs no SR answers (WI-401): normally the count behind the coverage
-    # rung's G0 cap, surfaced on the basis line so a computed=G0 with drafts=0
-    # names its cause. Not always a cap: with zero real SRs the vacuous-G1 branch
+    # rung's DevBar-Below cap, surfaced on the basis line so a computed=DevBar-Below
+    # with drafts=0 names its cause. Not always a cap: with zero real SRs the
+    # vacuous-lowest-bar branch
     # in _raw_level returns before the rung runs, so the count can be nonzero
     # with nothing capped — the requirements-drafting corner, deliberately
     # visible. Counted over ALL SRs' citations (Draft included) — the same set
@@ -534,14 +896,14 @@ def compute(docs):
     n_uncovered = sum(1 for u in sn_ids if u not in sn_draft and u not in cited)
 
     # The same arithmetic with the DRAFT rows taken out — "what would the gate be
-    # if nothing were pending?" (WI-341). A Draft reads G0, so it drops the repo's
+    # if nothing were pending?" (WI-341). A Draft reads DevBar-Below, so it drops the repo's
     # min AND its own phase's, which erases the only evidence a consumer had that
     # this spine had ever climbed: in a single-phase repo the whole per-phase
-    # breakdown goes to G0 and a mature repo reopening becomes indistinguishable
+    # breakdown goes to DevBar-Below and a mature repo reopening is indistinguishable
     # from a project that has never ratified anything (128-REVIEW-A MAJOR 3).
     # Excluding the drafts recovers it WITHOUT history or a stored high-water:
     # the rows the draft did not touch are still standing right here, and if they
-    # all read G2/G3 then the drafts are the only thing holding the gate down.
+    # all read DevBar-Tests/DevBar-Release then the drafts are the only thing holding it.
     ex_draft, _ = _raw_level(
         [r for r in srs if not is_draft(r)],
         [r for r in llrs if not is_draft(r)],
@@ -560,10 +922,23 @@ def compute(docs):
     phase_nums = [p for p in phase_nums if p is not None]
     cur_phase = max(phase_nums) if phase_nums else None
 
+    stage = spine_stage(
+        srs,
+        llrs,
+        tcs,
+        sn_ids,
+        sn_draft,
+        ifs=ifs,
+        cmps=cmps,
+        have_ifs=if_path is not None,
+        have_cmps=cmp_path is not None,
+    )
     return {
         "counts": {"SN": len(sn_ids), "SR": len(srs), "LLR": len(llrs), "TC": len(tcs)},
-        # SN-029's second axis, derived from the same rows (never from the gate).
-        "stage": spine_stage(srs, llrs, tcs, sn_ids, sn_draft),
+        # SN-029's second axis, derived from the same rows (never from the bar).
+        "stage": stage,
+        "stage_ord": stage_ord(stage),
+        "stage_of": STAGE_OF,
         "drafts": n_draft,
         "modified": n_modified,
         "uncovered": n_uncovered,
@@ -571,22 +946,24 @@ def compute(docs):
         "ex_draft": ex_draft,
         "per_phase": per_phase,
         "phase": cur_phase,
-        "gate": GATE_NAMES[max(G1, raw)],  # the runnable value (floored to G1)
+        # the runnable value (floored to the lowest runnable bar)
+        "gate": BAR_NAMES[max(BAR_REQS, raw)],
     }
 
 
 def _per_phase(srs, sr_g, llrs, tcs):
-    """`{phase-label: gate-name}` — the SRs grouped by their optional `Phase` column
-    (blank => "(default)"), each phase's gate the **raw** min over its SRs and the
-    LLR/TC that decompose/verify them (NOT floored to G1, unlike the runnable repo
-    value): a phase carrying a draft reads `G0`, so check_trajectory's phase-drop
-    detector (WI-093) can see a phase fall below its closed `[phase]-[g*]` level.
-    The `[phase]-[g*]` archetype + the drop warning live in check_trajectory."""
+    """`{phase-label: bar-name}` — the SRs grouped by their optional `Phase` column
+    (blank => "(default)"), each phase's bar the **raw** min over its SRs and the
+    LLR/TC that decompose/verify them (NOT floored to `DevBar-Reqs`, unlike the
+    runnable repo value): a phase carrying a draft reads `DevBar-Below`, so
+    check_trajectory's phase-drop detector (WI-093) can see a phase fall below the
+    level its own closed phase anchor recorded. The phase archetype + the drop
+    warning live in check_trajectory."""
     llr_by_sr = {}
     llr_srs = {}
     for r in llrs:
         for s in refs(r.get("SR-Refs")):
-            llr_by_sr.setdefault(s, []).append(maturity_gate(r))
+            llr_by_sr.setdefault(s, []).append(maturity_bar(r))
             llr_srs.setdefault(r.get("LLR-ID") or "", []).append(s)
     # A TC that cites only its LLR (a legal shape the orphan rules accept) must
     # still land in its SR's phase bucket, or a Draft TC in that shape drops the
@@ -597,16 +974,16 @@ def _per_phase(srs, sr_g, llrs, tcs):
     for r in tcs:
         for ref in refs(r.get("Verifies")):
             for s in llr_srs.get(ref, [ref]):
-                tc_by_ref.setdefault(s, []).append(maturity_gate(r))
+                tc_by_ref.setdefault(s, []).append(maturity_bar(r))
 
     phases = {}
     for r in srs:
         label = (r.get("Phase") or "").strip() or "(default)"
         sid = r["SR-ID"]
-        gates = [sr_g[sid]] + llr_by_sr.get(sid, []) + tc_by_ref.get(sid, [])
-        phases.setdefault(label, []).extend(gates)
+        bars = [sr_g[sid]] + llr_by_sr.get(sid, []) + tc_by_ref.get(sid, [])
+        phases.setdefault(label, []).extend(bars)
     return {
-        label: GATE_NAMES[min(gs)] if gs else GATE_NAMES[G1]
+        label: BAR_NAMES[min(gs)] if gs else BAR_NAMES[BAR_REQS]
         for label, gs in sorted(phases.items())
     }
 
@@ -641,19 +1018,23 @@ def basis_line(result):
     by rerunning derive_gate once — the ordinary regenerate-a-generated-artifact
     step.
 
-    THE 2026-08-12 RUNG INSERT IS FIELD-COMPATIBLE, not value-compatible: a
-    cache written before it carries `stage=4` meaning "done", which now means
-    "implementation in process". Nothing reads it differently — `human_holds`
-    answers identically for stages 4 and 5 at every declared ratification level
-    (0-4) — and `--check` reports the line as stale on the first recompute, so
-    the stale meaning cannot persist past one regeneration.
+    THE OI-21 LADDER CONVERSION IS FIELD-COMPATIBLE, not value-compatible — the
+    same precedent the 2026-08-12 rung insert set, applied deliberately this time.
+    Every field keeps its name and position; the VALUES move to the new closed
+    vocabularies (`computed=`/`ex-draft=`/`per-phase=` now carry `DevBar-*`,
+    `stage=` now carries `DevStg-<Label>`), and two DERIVED companions join it:
+    `stage-ord=` and `stage-of=`, so a raw-file reader gets the position without
+    the identifier carrying it. `--check` reports the line as stale on the first
+    recompute, so the retired vocabulary cannot persist past one regeneration.
+    There is deliberately NO COMPAT SHIM: a reader that silently accepted both
+    vocabularies is exactly how the retired tags would grow back.
     """
     c = result["counts"]
     per_phase = ";".join(f"{k}={v}" for k, v in result["per_phase"].items())
     return (
         "# basis: SN={SN} SR={SR} LLR={LLR} TC={TC} drafts={d} modified={m} "
         "uncovered={u} computed={raw} ex-draft={ed} phase={ph} per-phase={pp} "
-        "stage={st}".format(
+        "stage={st} stage-ord={so} stage-of={sof}".format(
             SN=c["SN"],
             SR=c["SR"],
             LLR=c["LLR"],
@@ -661,38 +1042,41 @@ def basis_line(result):
             d=result["drafts"],
             m=result["modified"],
             u=result["uncovered"],
-            raw=GATE_NAMES[result["raw"]],
-            ed=GATE_NAMES[result["ex_draft"]],
+            raw=BAR_NAMES[result["raw"]],
+            ed=BAR_NAMES[result["ex_draft"]],
             ph=result["phase"] if result["phase"] is not None else "(none)",
             pp=per_phase or "(none)",
             st=result["stage"],
+            so=result["stage_ord"],
+            sof=result["stage_of"],
         )
     )
 
 
 HEADER = [
-    "# DERIVED GATE — generated by scripts/derive_gate.py (do not hand-edit).",
+    "# DERIVED BAR — generated by scripts/derive_gate.py (do not hand-edit).",
     "#",
-    '# WHAT THIS VALUE IS. NOT "the gate the repo is at": a repo is IN a stage',
-    '# and PASSES a gate (process.md section 4, "Stages and gates"; the model:',
+    '# WHAT THIS VALUE IS. NOT "the rung the repo is at": a repo is IN a stage',
+    '# and CLEARS a bar (process.md section 4, "The stage ladder"; the model:',
     "# docs/archive/specs/derived-gate-model.2026-07-20.md). The value on the last",
-    "# line is the gate that must next be PASSED — and therefore the STRICTNESS",
+    "# line is the bar that must next be CLEARED — and therefore the STRICTNESS",
     "# SELECTOR check.py runs at. It is COMPUTED, not declared: the MIN over every",
-    "# in-scope SN/SR/LLR/TC's own bar, floored to G1. So the least-mature row",
-    "# picks it, and a Draft or Modified row DROPS it (the signal that a new phase",
-    "# is due) — which means a mature spine held down by one draft displays exactly",
-    "# what a fresh scaffold displays. The `# basis:` line below is what tells them",
-    "# apart: `stage=` is the tier actually in process (0 needs, 1 requirements,",
-    "# 2 design, 3 tests, 4 implementation, 5 done), `ex-draft=` is the value",
-    "# the same arithmetic gives with the pending rows removed, and `computed=`",
-    "# is the raw level before the G1 floor (`G0` there is the internal below-G1",
-    "# sentinel, not a gate).",
+    "# in-scope SN/SR/LLR/TC's own bar, floored to DevBar-Reqs. So the least-mature",
+    "# row picks it, and a Draft or Modified row DROPS it (the signal that a new",
+    "# phase is due) — which means a mature spine held down by one draft displays",
+    "# exactly what a fresh scaffold displays. The `# basis:` line below is what",
+    "# tells them apart: `stage=` is the rung actually in work on the eight-rung",
+    "# ladder (Needs, Boundary, Reqs, Arch, LLReqs, Tests, Impl, Release — with",
+    "# `stage-ord=`/`stage-of=` carrying its DERIVED position), `ex-draft=` is the",
+    "# value the same arithmetic gives with the pending rows removed, and",
+    "# `computed=` is the raw level before the DevBar-Reqs floor (`DevBar-Below`",
+    "# there is the internal below-the-lowest-bar sentinel, not a bar).",
     "#",
     "# HOW IT MOVES. By RATIFYING artifacts in a reviewed commit (Draft->Planned,",
     "# or moving an SN out of a draft section; a Modified row re-attests the same",
     "# way, Modified->Verified — process.md section 4), never by editing this line.",
     "# Regenerate: python scripts/derive_gate.py",
-    "# Freshness is guarded by `--check` (a pre-commit + gate step). check.py / CI",
+    "# Freshness is guarded by `--check` (a pre-commit + bar step). check.py / CI",
     "# read the first non-comment line below, exactly as before.",
     "#",
 ]

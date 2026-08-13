@@ -70,7 +70,7 @@ namespace, parallel to SN/SR/LLR/TC).
 - **Stability gates change.** Changing a `Stable` contract requires a notice to
   the counterpart and a version bump; `Experimental` may change freely. Note
   breaking changes in the audit log and bump `Version`.
-- **Direction drives ownership.** Only the `Provides` side may close G-Final on
+- **Direction drives ownership.** Only the `Provides` side may close the owner's final read on
   the contract's correctness; the `Consumes` side verifies against the pinned
   version.
 

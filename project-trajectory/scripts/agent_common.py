@@ -409,7 +409,7 @@ def declared_policy(docs, legacy_name, default):
 # tables then re-interpreted, each with its own fail-safe direction. What the
 # dispatcher actually needs is an ORDINAL comparison — is the tier this row sits
 # at still human-held? — and an enum cannot express "TCs are human-held but LLRs
-# are not", which is the distinction the 0-5 spine stage exists to make.
+# are not", which is the distinction the eight-rung stage ladder exists to make.
 #
 # THE LEGACY TRANSLATION, stated as all THREE dials rather than as a level.
 # The enum's three words were never one axis: each of them bundled a tier hold,
@@ -419,10 +419,11 @@ def declared_policy(docs, legacy_name, default):
 # became "level 2" and so silently acquired a per-tier hold it never had.
 #
 #   attended       every tier is the human's; lanes drain at a ratification
-#   single-ratify  LLM-gate review through G1+G2, ONE human sitting at the
-#                  close — so NO per-tier hold (level 0), a final read, and
-#                  the non-dependent work kept running that distinguished it
-#   autonomous     every gate but G-Final closes on a recorded LLM verdict
+#   single-ratify  LLM review through DevBar-Reqs+DevBar-Tests, ONE human sitting
+#                  at the close — so NO per-tier hold (level 0), a final read,
+#                  and the non-dependent work kept running that distinguished it
+#   autonomous     every bar but the owner's final read closes on a recorded
+#                  LLM verdict
 LEGACY_RATIFICATION = {
     "attended": {
         "human_ratification_through": 4,
@@ -482,48 +483,110 @@ def ratification_level(docs):
     return RATIFICATION_FALLBACK if legacy is None else legacy
 
 
+# --- OI-21: THE DECLARED DIAL -> LADDER MAPPING, one home ----------------------
+# THE DIAL DOES NOT MOVE. `human_ratification_through` stays the RATIFIABLE-TIER
+# ORDINAL 0-4 that SN-029 defined (0 = nothing held, 1 = SNs, 2 = ...and SRs,
+# 3 = ...and LLRs, 4 = ...and TCs). It was NOT re-keyed onto the eight rungs and
+# it was NOT re-keyed to artifact depth: OI-21 ruled shape (i), MAP the dial onto
+# the ladder, and ruled explicitly that re-keying approval to the depth and tier
+# of the artifact touched is a change to WHEN A HUMAN IS RE-ENGAGED whose
+# wrong-answer direction is silently LESS human involvement — so it is decided on
+# its own, once IF/CMP maturity joins the ratifiable fold, never defaulted here.
+#
+# WHAT DID CHANGE is that the stage axis is now eight labelled rungs instead of
+# six integers, so `stage < level` — an arithmetic coincidence between two
+# ladders that happened to line up — is no longer expressible, and should never
+# have been. The relation is now STATED: each level names the exact set of rungs
+# it holds.
+#
+# WHERE THE TWO NEW RUNGS LAND, and why. `DevStg-Boundary` and `DevStg-Arch`
+# produce artifacts (IF and CMP rows) that are not yet RATIFIABLE tiers — the
+# dial has no notch for them. Each is therefore held whenever the rung BELOW it
+# is held: Boundary rides Needs, Arch rides Reqs. That direction is chosen, not
+# arbitrary — it is the one that errs toward MORE human involvement, which is the
+# safe side of the only mistake this table can make. Attaching them to the rung
+# ABOVE would have let a level-1 repo do its boundary work unattended.
+#
+# EVERY PRE-EXISTING ANSWER IS PRESERVED EXACTLY for the four ratifiable rungs:
+# level 1 holds Needs; 2 adds Reqs; 3 adds LLReqs; 4 adds Tests. `DevStg-Impl`
+# and `DevStg-Release` are held by level 4 ALONE (implementation is not a
+# ratification tier — SN-029; the separate end-of-run read is `final_review`).
+#
+# `LADDER_RUNGS` names the whole closed vocabulary — not just the held subsets —
+# because "is this a rung I recognize" and "is this rung held" are different
+# questions and only the first can be answered from the held sets. Without it an
+# unrecognized label (`""`, a typo, a rung from a newer kit) falls through the
+# membership test and reads NOT HELD, which is the permissive direction. This
+# module cannot import `derive_gate` (the F5 no-shared-module rule), so the set is
+# restated here and pinned equal to `derive_gate.STAGE_ORDER` by
+# tests/test_ratification_level.py.
+LADDER_RUNGS = frozenset(
+    {
+        "DevStg-Needs",
+        "DevStg-Boundary",
+        "DevStg-Reqs",
+        "DevStg-Arch",
+        "DevStg-LLReqs",
+        "DevStg-Tests",
+        "DevStg-Impl",
+        "DevStg-Release",
+    }
+)
+
+DIAL_HOLDS = {
+    0: frozenset(),
+    1: frozenset({"DevStg-Needs", "DevStg-Boundary"}),
+    2: frozenset({"DevStg-Needs", "DevStg-Boundary", "DevStg-Reqs", "DevStg-Arch"}),
+    3: frozenset(
+        {
+            "DevStg-Needs",
+            "DevStg-Boundary",
+            "DevStg-Reqs",
+            "DevStg-Arch",
+            "DevStg-LLReqs",
+        }
+    ),
+    # Level 4 holds EVERYTHING, including the top two rungs — stated as the
+    # absolute it is rather than as a set that must be kept in step with
+    # STAGE_ORDER. `human_holds` short-circuits on it before consulting the map.
+    4: None,
+}
+
+
 def human_holds(docs, stage):
     """Is work at spine `stage` still the HUMAN's to ratify?
 
     The one comparison every consumer makes, stated once. `stage` is
-    `derive_gate.spine_stage`'s 0-5 answer — the tier currently in process —
-    and a row at or below the declared level surfaces rather than dispatching.
+    `derive_gate.spine_stage`'s `DevStg-<Label>` answer — the rung currently in
+    work — and a rung the declared level holds surfaces rather than dispatching.
 
-    THE COMPARISON IS STRICTLY LESS-THAN, and the off-by-one it avoids is not
-    academic. The stages are 0=SN, 1=SR, 2=LLR, 3=TC, 4=impl, 5=nothing; the
-    levels are cumulative COUNTS ("through this tier"), so level 1 = "the human
-    ratifies SNs" = hold stage 0 only. Written `stage <= level` there is no
-    setting that holds SNs without also holding SRs, and level 3 becomes
-    behaviourally identical to level 4 in every state where work exists.
+    THE COMPARISON IS A DECLARED LOOKUP, NOT ARITHMETIC (OI-21). It reads through
+    `DIAL_HOLDS` above, which states for each level the exact set of rungs it
+    holds. The retired form was `stage < level` over two integer ladders, correct
+    only while they happened to line up — and that coincidence is precisely what
+    the 2026-08-12 rung insert nearly broke, silently, in the direction of less
+    human involvement.
 
-    BOTH ENDS OF THE LADDER ARE ABSOLUTE, and the top end is not symmetry for
-    its own sake — it closes a hole the strictly-less-than fix opened. The top
-    stage means "nothing in process: every tier decomposed and Verified" — the
-    state a gate-advance row runs in. With `top < 4` reading as not-held, the
-    shipped default — documented as "every tier human-held; the
-    most conservative setting" — let the loop dispatch and self-ratify the final
-    gate. So level 4 holds everything including the close, and level 0 holds
-    nothing; only the middle consults the stage.
+    BOTH ENDS OF THE LADDER ARE ABSOLUTE. Level 4 holds everything including the
+    close, because `DevStg-Release` means "nothing in work: every rung settled and
+    Verified" — the state a bar-advance row runs in, and the shipped default is
+    documented as "every tier human-held; the most conservative setting". Level 0
+    holds nothing; only the middle consults the stage.
 
-    Level 0 is stated explicitly even though `stage < 0` can never be true: it
-    is a declaration the owner made outright ("nothing is human-held") and
-    saying so here means no later stage arithmetic — including a negative stage
-    from some future caller — can reach past it.
-
-    Stages 4 and 5 are held by level 4 ALONE, and the 2026-08-12 rung insert
-    moved no level's meaning: the ratification tiers are the SPINE ones and
-    implementation is not one. The separate end-of-run read is `final_review`,
-    its own dial rather than a fifth rung here. An UNREADABLE stage is treated
-    as human-held — the same conservative direction as an unreadable level:
-    the failure that matters is a machine ratifying what a human meant to hold."""
+    AN UNREADABLE STAGE IS HELD, and so is an UNRECOGNIZED rung label — the same
+    conservative direction as an unreadable level. Note the deliberate asymmetry
+    with `derive_gate.stage_ord`, which RAISES on an unknown label: there, an
+    unknown stage means the ladder moved under a cached value and the operator
+    must see it; here, the question is who ratifies, and the only safe answer to
+    "I do not recognize this rung" is "the human does"."""
     level = ratification_level(docs)
     if level <= 0:
         return False
     if level >= 4:
         return True
-    if not isinstance(stage, int) or isinstance(stage, bool):
+    if stage not in LADDER_RUNGS:
         return True
-    return stage < level
+    return stage in DIAL_HOLDS.get(level, frozenset())
 
 
 def final_review(docs):
@@ -598,15 +661,24 @@ def spine_stage_of(root):
     Read rather than recomputed: `docs/gate` is a freshness-gated generated
     artifact, so the cached value is either current or the `derived-gate` step
     is already red. Returns None when the file predates the field, which
-    `human_holds` treats as human-held."""
+    `human_holds` treats as human-held.
+
+    THE FIELD CARRIES A `DevStg-<Label>` (OI-21), and this reader accepts ONLY
+    that form. A cache written before the conversion carries a bare integer,
+    which no longer matches — so it reads None and `human_holds` holds the work
+    for a human until `derive_gate.py` is rerun. That is the deliberate
+    field-compatible-not-value-compatible migration: the one state a stale cache
+    can produce is MORE human involvement, and `--check` reports the line stale on
+    the first recompute anyway. A regex that accepted both would be the compat
+    shim OI-21 refused."""
     try:
         text = (Path(root) / "docs" / "gate").read_text(
             encoding="utf-8", errors="replace"
         )
     except OSError:
         return None
-    match = re.search(r"#\s*basis:.*\bstage=(\d+)\b", text)
-    return int(match.group(1)) if match else None
+    match = re.search(r"#\s*basis:.*\bstage=(DevStg-[A-Za-z]+)\b", text)
+    return match.group(1) if match else None
 
 
 def _legacy_present(docs, legacy_name):
@@ -1239,7 +1311,7 @@ SPEC_SCALARS = (
     ("SafetyClass", "safety_class"),
     ("PlanMode", "planmode"),
     # WI-388: bar declares verification strictness for this row's lane; it
-    # never affects scheduling. (G1|G2|G3 — integrate.refresh passes it to
+    # never affects scheduling. (a DevBar-* value — integrate.refresh passes it to
     # check.py --gate; load_wis deliberately does not parse it.)
     ("Bar", "bar"),
     ("Supersedes", "supersedes"),
@@ -1700,8 +1772,8 @@ def release_lock(lock_path=None):
 
 def parse_map(spec):
     """Parse a KEY=value phase map — shared by --model-map/--cmd-map/--prompt-map/
-    --tier-map/--prefer-map: "P0=model-a,G3=model-b" -> {"P0": "model-a",
-    "G3": "model-b"}."""
+    --tier-map/--prefer-map: "P0=model-a,strong=model-b" -> {"P0": "model-a",
+    "strong": "model-b"}."""
     mapping = {}
     for pair in (spec or "").replace(";", ",").split(","):
         pair = pair.strip()

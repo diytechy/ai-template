@@ -161,3 +161,4 @@ resource: "generated"
 | [LLR-166](LLR-166.md) | The spine carrier's one reader, and the dual-home refusal |
 | [LLR-167](LLR-167.md) | The adjudicator briefs' evidence, and the refusal that keeps a half-filled one unsent |
 | [LLR-168](LLR-168.md) | Hats roster reader + planner-brief injection |
+| [LLR-169](LLR-169.md) | Retired-vocabulary enforcer |

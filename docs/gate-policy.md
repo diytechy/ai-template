@@ -6,7 +6,7 @@ through their gates without a human g2-close sitting. **Reversible / temporary:*
 the owner may restore a lower level at any time. Keep in version control.
 
 _Prior level:_ **`single-ratify`** — RATIFIED 2026-07-13 (OI-2; owner review of
-the WI-107 enablement commit, [log.md](log.md) "GATE: G3 re-attestation" +
+the WI-107 enablement commit, [log.md](log.md) "GATE: DevBar-Release re-attestation" +
 Decisions). That level and its ratification stand as history and may be restored
 by raising `human_ratification_through` in [process.toml](process.toml) + this
 register.
@@ -33,7 +33,7 @@ fixed points at the bottom, which nothing overrides.**
 
 **This repo (the ai-template META-repo):** the kit's own unattended layer,
 self-applied (adopted via **WI-107**, `docs/archive/specs/WI-107.2026-07-20.md`). Under
-`autonomous`, every gate **except G-Final** closes on an **independent
+`autonomous`, every gate **except the owner's final read** closes on an **independent
 fresh-context LLM reviewer's recorded verdict** — no human batch sitting. This
 is config-layer only: **no spine change**, so the flip does **not** move the
 derived gate (`docs/gate` is always whatever `derive_gate.py` computes — the
@@ -46,14 +46,14 @@ in-chat directive + this register update, 2026-07-15.)_
 
 | process.md clause | Standard behavior | This repo (`autonomous`) |
 |---|---|---|
-| §4 acceptor, G1+G2 | a human approves each gate | an **independent fresh-context LLM reviewer's recorded verdict** ratifies the gate; no human sitting |
+| §4 acceptor, DevBar-Reqs+DevBar-Tests | a human approves each gate | an **independent fresh-context LLM reviewer's recorded verdict** ratifies the gate; no human sitting |
 | §4 ratification point | per-gate approval | each gate closes on its recorded reviewer verdict (LLM-gate); a human call is queued as a `Needs <human>` Open item only when a **fixed point** below forces it |
-| §4 acceptor, G3→G-Release | a human approves each gate | autonomous (LLM-gate verdicts) |
+| §4 acceptor, DevBar-Release→DevStg-Release | a human approves each gate | autonomous (LLM-gate verdicts) |
 | §4 consistency review 'pause and ask' | solicit the human | route by revert-cost: LOW → decide + record (log.md Decisions log); MEDIUM/HIGH → the Blocked register; never a mid-run pause |
 
 ## Fixed points (nothing in this file overrides these)
 
-- **G-Final is the human's.**
+- **the owner's final read is the human's.**
 - **No un-run greens** — a verdict or test result that wasn't actually
   executed is a process violation regardless of tier. _(This is why a
   perceptual `Critique` — e.g. WI-144's rendered dashboard judgment — still

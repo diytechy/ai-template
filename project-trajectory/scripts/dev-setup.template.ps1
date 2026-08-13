@@ -172,4 +172,4 @@ if (($selected -contains "code") -and (Interactive)) {
 Write-Host ""
 Write-Host "Done. Workstation ready; the pre-commit floor is wired."
 Write-Host "If you skipped it above, run scripts/setup.ps1 for the product toolchain, then"
-Write-Host ".\scripts\check.ps1 --gate G3 to run the gates."
+Write-Host ".\scripts\check.ps1 --gate DevBar-Release to run the gates."

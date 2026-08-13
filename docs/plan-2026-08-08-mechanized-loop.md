@@ -17,7 +17,7 @@ for it.
 
 ## 1. Where the new needs land on the current spine
 
-Current spine: **SN-001..027, SR=136, LLR=137, TC=135**, derived gate **G2**
+Current spine: **SN-001..027, SR=136, LLR=137, TC=135**, derived gate **DevBar-Tests**
 with **21 `Modified` SRs** — the 2026-08-07 cleanup (SN-011 amended, SN-025
 narrowed, SN-026 multi-family routing + SN-027 parallel lanes minted) already
 owes one re-attest sitting. That matters: several "new" needs below are
@@ -38,7 +38,7 @@ combined drafting-plus-re-attest sitting**, not two.
 Drafting mechanics: new SNs go under a `## Draft needs` heading in
 `stakeholder-needs.md` — `derive_gate.py`'s section-as-state rule then holds the
 gate down honestly while they're worked (`sn_draft_ids`), and `ex-draft=` keeps
-the window arithmetic honest. Expect the gate to read G0/G1 during the sitting;
+the window arithmetic honest. Expect the gate to read DevBar-Below/DevBar-Reqs during the sitting;
 that is the design working, not a regression.
 
 ---
@@ -144,7 +144,7 @@ enum would re-introduce string tokens into five consumers.
 - "A meaning-change forces the level back down" **is built**: a ratified-cell
   edit without a same-commit `Modified` flip warns at stage
   (`check_trajectory.staged_spine_findings`, WI-316), the flip pulls the derived
-  gate down (`derive_gate.sr_gate` — `Modified` reads G2, `Draft` reads G0), and
+  gate down (`derive_gate.sr_gate` — `Modified` reads DevBar-Tests, `Draft` reads DevBar-Below), and
   every merge-slot ratified-cell diff **deterministically mints an adjudication
   WI** with before/after in its body (`intake.py` trigger (a)).
 - "Which comparison baseline?" — answered, and **without a per-row hash
@@ -421,10 +421,10 @@ where they conflict:
    it structurally lacks today (SNs have no Status cell). No per-row hash
    columns, as both plans agree.
 3. **Two derived axes instead of one.** The owner's 0–3 scale separates LLRs
-   (2) from TCs (3); the current `G0–G3` arithmetic cannot express that (G2
+   (2) from TCs (3); the current `DevBar-Below–DevBar-Release` arithmetic cannot express that (DevBar-Tests
    conflates "LLRs and TCs exist" and also doubles as the Modified pull). So:
    `spine_stage` 0–4 (workflow/admission input, the axis the human boundary
-   compares against) derived separately from `verification_gate` G1–G3 (the
+   compares against) derived separately from `verification_gate` DevBar-Reqs–DevBar-Release (the
    unchanged `check.py` harness contract), with a declared mapping function.
    §3's "compare the level against the existing derived gate" is superseded.
 4. **Naming**: `human_ratification_through` (cumulative, "through" this tier)

@@ -1416,7 +1416,7 @@ def parse_args():
     ap.add_argument(
         "--model-map",
         default=None,
-        help='per-phase tier map "P0=strong-model,G3=strong-model" matched '
+        help='per-phase tier map "P0=strong-model,DevBar-Release=strong-model" matched '
         "against the in-process phase; precedence CLI flag > AGENT_MODEL_MAP env "
         "> docs/stack.ini [agent-loop] model-map > '' (IF-068, resolved in main)",
     )

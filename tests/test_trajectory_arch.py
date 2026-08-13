@@ -319,7 +319,7 @@ def test_interface_warns_never_fail_strict(tmp_path):
 # --- WI-073/FB5: the How-SW top-view right-sizing rule -------------------------
 # The software-architecture top view is bounded at 10 items (top-level CMP
 # components that contain a module + uncontained modules); over the bound is a
-# finding — WARN plain, ERROR under --strict (G2+). Opt-out docs/components-check;
+# finding — WARN plain, ERROR under --strict (DevBar-Tests+). Opt-out docs/components-check;
 # vacuous below the bound or with no arch-map inventory (the bound is the rule).
 
 CMP_HDR = "CMP-ID,Name,Category,Knowledge,State,SupersededBy,PartOf,DetailDoc,Notes\n"
@@ -1158,7 +1158,44 @@ def test_phase_anchors_parse_and_duplicate_warn():
     anchors, warns = ct.phase_anchors(wis)
     assert ("v2", 1) in anchors and ("v2", 2) in anchors
     assert anchors[("v2", 2)]["id"] == "WI-202"  # first wins
-    assert any("duplicate phase-gate anchor [v2]-[g2]" in w for w in warns)
+    # The RETIRED `[phase]-[g2]` spelling still PARSES (the ~20 committed anchors
+    # carry it and D-4 refuses re-pointing history), but the message names the
+    # CANONICAL spelling, because what it is asking for is a NEW row.
+    assert any("duplicate phase anchor [v2]-[tests]" in w for w in warns)
+
+
+def test_the_CANONICAL_anchor_spelling_parses_to_the_same_levels():
+    """OI-21 contract break 4: the ARCHETYPE converted, the live anchors did not.
+    `[phase]-[reqs|tests]` is what a new title takes; `[phase]-[g1|g2]` is read
+    forever so the committed history keeps resolving. Both must land on ONE
+    internal level, or a phase would carry two independent anchor sets."""
+    ct = load_script("check_trajectory")
+    wis = _wis(
+        ct,
+        [
+            {"WI-ID": "WI-301", "Title": "[v9]-[reqs] structure", "Status": "done"},
+            {
+                "WI-ID": "WI-302",
+                "Title": "[v9]-[tests] decompose",
+                "Predecessors": "WI-301",
+                "Status": "queued",
+            },
+        ],
+    )
+    anchors, warns = ct.phase_anchors(wis)
+    assert set(anchors) == {("v9", 1), ("v9", 2)}
+    assert warns == []
+    # ...and a phase spelled BOTH ways is one anchor set, so the changeover
+    # collision is caught rather than silently doubling the phase's anchors.
+    mixed = _wis(
+        ct,
+        [
+            {"WI-ID": "WI-311", "Title": "[v9]-[g1] old", "Status": "done"},
+            {"WI-ID": "WI-312", "Title": "[v9]-[reqs] new", "Status": "queued"},
+        ],
+    )
+    _, mixed_warns = ct.phase_anchors(mixed)
+    assert any("duplicate phase anchor [v9]-[reqs]" in w for w in mixed_warns)
 
 
 def test_phase_anchor_g2_without_g1_predecessor_warns():
@@ -1171,10 +1208,10 @@ def test_phase_anchor_g2_without_g1_predecessor_warns():
         ],
     )
     _, warns = ct.phase_anchors(wis)
-    assert any("does not list its [v3]-[g1]" in w for w in warns)
+    assert any("does not list its [v3]-[reqs]" in w for w in warns)
 
 
-def _write_gate(root, per_phase, value="G1"):
+def _write_gate(root, per_phase, value="DevBar-Reqs"):
     (root / "docs").mkdir(parents=True, exist_ok=True)
     (root / "docs" / "gate").write_text(
         "# header\n# basis: SN=1 SR=3 LLR=3 TC=3 drafts=0 computed={} "
@@ -1187,7 +1224,7 @@ def _write_gate(root, per_phase, value="G1"):
 
 def test_read_derived_phases_parses_basis(tmp_path):
     ct = load_script("check_trajectory")
-    _write_gate(tmp_path, "v1=G3;v2=G0")
+    _write_gate(tmp_path, "v1=DevBar-Release;v2=DevBar-Below")
     assert ct.read_derived_phases(tmp_path) == {"v1": 3, "v2": 0}
     # A legacy hand-set gate with no basis line yields no phase data (vacuous).
     (tmp_path / "docs" / "gate").write_text("# legacy\nG3\n", encoding="utf-8")
@@ -1196,8 +1233,8 @@ def test_read_derived_phases_parses_basis(tmp_path):
 
 def test_phase_drop_detector_warns(tmp_path):
     ct = load_script("check_trajectory")
-    # v2 closed at [g2] (done) but the derived level for v2 is now G0 (a reopen).
-    _write_gate(tmp_path, "v1=G3;v2=G0")
+    # v2 closed at [g2] (done) but the derived level for v2 is now DevBar-Below (a reopen).
+    _write_gate(tmp_path, "v1=DevBar-Release;v2=DevBar-Below")
     wis = _wis(
         ct,
         [
@@ -1211,15 +1248,19 @@ def test_phase_drop_detector_warns(tmp_path):
         ],
     )
     warns = ct.phase_findings(tmp_path, wis)
-    assert any("phase 'v2' dropped to G0" in w and "[v2]-[g2]" in w for w in warns)
-    # Back at G2: no drop warn (the phase re-cleared its anchor level).
-    _write_gate(tmp_path, "v1=G3;v2=G2", value="G2")
+    assert any(
+        "phase 'v2' dropped to DevBar-Below" in w and "[v2]-[tests]" in w for w in warns
+    )
+    # Back at DevBar-Tests: no drop warn (the phase re-cleared its anchor level).
+    _write_gate(tmp_path, "v1=DevBar-Release;v2=DevBar-Tests", value="DevBar-Tests")
     assert ct.phase_findings(tmp_path, wis) == []
 
 
 def test_phase_findings_vacuous_without_anchors(tmp_path):
     ct = load_script("check_trajectory")
-    _write_gate(tmp_path, "v1=G0")  # a phase at G0 but NO anchor records a close
+    _write_gate(
+        tmp_path, "v1=DevBar-Below"
+    )  # a phase at DevBar-Below but NO anchor records a close
     wis = _wis(ct, [{"WI-ID": "WI-220", "Title": "ordinary", "Status": "queued"}])
     assert ct.phase_findings(tmp_path, wis) == []
 

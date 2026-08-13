@@ -82,7 +82,7 @@ def test_gate_policy_autonomous_scaffolds_register(tmp_path):
     assert "LLM-GATE" in register  # the verdict mechanism is pre-filled
     # The fixed points nothing overrides ship with every register.
     for point in (
-        "G-Final is the human's",
+        "the owner's final read is the human's",
         "No un-run greens",
         "The harness is still the bar",
         "never re-decided by an agent",
@@ -94,9 +94,9 @@ def test_gate_policy_single_ratify_scaffolds_register(tmp_path):
     dest = _bootstrap(tmp_path, "--gate-policy", "single-ratify")
     assert _level(dest) == "single-ratify"
     register = (dest / "docs" / "gate-policy.md").read_text(encoding="utf-8")
-    assert "G2 close" in register  # the fixed ratification point (Q5)
+    assert "DevBar-Tests close" in register  # the fixed ratification point (Q5)
     assert "Blocked register" in register  # MEDIUM/HIGH routing (Q6 Hybrid)
-    assert "G-Final is the human's" in register
+    assert "the owner's final read is the human's" in register
 
 
 def test_gate_policy_explicit_attended_matches_default(tmp_path):

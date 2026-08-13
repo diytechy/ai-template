@@ -17,17 +17,17 @@ the right check for where you are, then read and fix the findings.
 ## Which command, when
 
 ```
-# Always-valid floor (pre-commit + check.py at G1): duplicate/malformed ids
+# Always-valid floor (pre-commit + check.py at DevBar-Reqs): duplicate/malformed ids
 # and CSV structure (every registry data row parses to the header's column count).
 python scripts/trace.py --strict-integrity
 
 # Full orphan check (aim for orphans=0 before any gate).
 python scripts/trace.py --strict
 
-# G2+: also reject leftover template example rows (ids ending -000).
+# DevBar-Tests+: also reject leftover template example rows (ids ending -000).
 python scripts/trace.py --strict --no-placeholders
 
-# G3: required fields non-empty + closed Verification/Tier vocabularies + Verified.
+# DevBar-Release: required fields non-empty + closed Verification/Tier vocabularies + Verified.
 python scripts/trace.py --strict --no-placeholders --strict-schema --require-verified
 ```
 
@@ -38,7 +38,7 @@ call `trace.py` directly to iterate on a specific finding.
 ## Reading findings
 
 - **orphan** — a row not joined end-to-end. Common causes: an SR with no LLR/TC
-  yet (fine early; a real orphan at G2+), a `Refs`/`SN-Refs`/`SR-Refs` id that
+  yet (fine early; a real orphan at DevBar-Tests+), a `Refs`/`SN-Refs`/`SR-Refs` id that
   points at nothing, a TC that verifies no real id. Fix the back-link, don't
   delete the evidence.
 - **integrity** (duplicate/malformed id, or a CSV structure break) — two rows
@@ -58,14 +58,14 @@ call `trace.py` directly to iterate on a specific finding.
 - **AC advisory** (`WARNING (advisory)`, warn-only — never fails a run) — an
   `AcceptanceCriteria` uses a comparative term (identical / indistinguishable /
   equivalent / "same as" / matches) without naming its predicate. Pin it: say
-  identical *in what*, judged *how* — or accept the wording knowingly at the G1
+  identical *in what*, judged *how* — or accept the wording knowingly at the DevBar-Reqs
   consistency review (process.md §4).
 - **LLR status-coherence advisory** (`WARNING (advisory)`, warn-only — never
   fails a run) — an LLR reads below `Verified` while every TC that cites it is
   `Verified`, so the evidence to lift it already exists. Fix: edit the LLR's
   `Status` cell to `Verified` (registries are hand-owned — no generator writes
   them back). It never gates: LLR status is non-gating under the derived-gate
-  model (the SR's `Verified` drives G2→G3), so a lagging LLR is a readout drift,
+  model (the SR's `Verified` drives DevBar-Tests→DevBar-Release), so a lagging LLR is a readout drift,
   not a coverage hole. A `Modified` LLR is exempt — that below-Verified status
   is the deliberate re-attest marker (process.md §7), not a drift; do NOT lift
   it to silence a warn.

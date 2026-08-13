@@ -20,11 +20,11 @@ graph LR
 
 _Describe the data flow in a few nodes. Keep it readable at a glance._
 
-## Runtime flows (authored at G2)
+## Runtime flows (authored at DevBar-Tests)
 
-Hand-written **with the LLRs, before the G2 review** — these diagrams are how a
+Hand-written **with the LLRs, before the DevBar-Tests review** — these diagrams are how a
 human verifies *behavior* (ordering, concurrency, what blocks on what) without
-reverse-engineering it from registry rows. Required from G2 on and checked by
+reverse-engineering it from registry rows. Required from DevBar-Tests on and checked by
 `python scripts/check_flows.py` (wired into the harness): the section must
 exist, hold at least one Mermaid diagram, and every cited `SR-`/`LLR-` id must
 exist in the registries (so the flows stay traceable as requirements evolve).

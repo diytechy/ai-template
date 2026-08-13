@@ -8,7 +8,7 @@ diff. The continuous per-commit sweep (the embedded `REVIEWER_PROMPT`) is
 untouched; this is its phase-close complement.
 **Used by:** an independent whole-registry audit session — the WI-206 occasion
 wired in PROCESS_OPTIONS ("Trajectory / work-items layer", Phase cadence), at
-phase close (with the gate bar) and before G-Final.
+phase close (with the gate bar) and before the owner's final read.
 
 **Scope.** All-vs-all over the **SN** rows
 ([`stakeholder-needs.toml`](../requirements/stakeholder-needs.toml)) and **SR** rows

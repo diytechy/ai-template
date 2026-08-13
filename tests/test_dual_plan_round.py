@@ -32,7 +32,7 @@ GOAL = """# Goal brief - demo
 
 RUBRIC = """# Rubric - plan decomposition (fixture)
 
-G1 solvable; G2 complete; B3 padding.
+DevBar-Reqs solvable; DevBar-Tests complete; B3 padding.
 """
 
 # The fake CLI reads the prompt on argv, recognizes which hat it is by the
@@ -46,7 +46,7 @@ prompt = " ".join(sys.argv[1:])
 if "You are the arbiter" in prompt:
     a = prompt.split("### Plan A", 1)[1].split("### Plan B", 1)[0]
     label = "A" if "ALPHA" in a else "B"
-    print("PER-ANCHOR:\n- [G1] even: fixture\nVERDICT: SELECT {} ports=0\nRESIDUAL GAPS: none".format(label))
+    print("PER-ANCHOR:\n- [DevBar-Reqs] even: fixture\nVERDICT: SELECT {} ports=0\nRESIDUAL GAPS: none".format(label))
 elif "You are a plan critic" in prompt:
     print("VERDICT: APPROVE findings=0")
 elif "You are an independent planner" in prompt:

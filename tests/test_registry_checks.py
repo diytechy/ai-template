@@ -42,10 +42,10 @@ def test_malformed_id_fails_strict(scaffold):
 
 
 # --- Structure: parsed column count must match the header (WI-1.15) ------------
-# The Gilbert G2 finding: unquoted commas inside Permutations sets (set{a,b,c})
+# The Gilbert DevBar-Tests finding: unquoted commas inside Permutations sets (set{a,b,c})
 # or free-text Rationale cells silently shift every later column; a compliant
 # parser sees 12 columns against a 10-column header, and nothing failed until
-# G3 --strict-schema. Structure is integrity-class: wrong at any stage.
+# DevBar-Release --strict-schema. Structure is integrity-class: wrong at any stage.
 
 # Permutations cell `set{a,b}` unquoted -> 11 parsed columns vs the 10-col header.
 UNQUOTED_COMMA_SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status
@@ -136,19 +136,23 @@ def test_structure_ignores_blank_rows_and_quoted_newlines():
 
 
 def test_harness_runs_registry_integrity_at_g1(scaffold):
-    # Gate wiring: G1 gets the always-valid integrity floor (the Gilbert defect
-    # class must fail at the FIRST gate, not surface at G3 --strict-schema).
+    # Gate wiring: DevBar-Reqs gets the always-valid integrity floor (the Gilbert defect
+    # class must fail at the FIRST gate, not surface at DevBar-Release --strict-schema).
     check = load_script("check")
-    g1 = [s for s in check.steps(80, "full", "G1") if "G1" in s[3]]
+    g1 = [s for s in check.steps(80, "full", "DevBar-Reqs") if "DevBar-Reqs" in s[3]]
     (step,) = [s for s in g1 if s[0] == "registry-integrity"]
     assert step[4] == "process" and step[1] == ()
     assert "--strict-integrity" in step[2]
-    # End-to-end: a fresh scaffold passes G1; a seeded misquote fails it.
-    proc = run_py(["scripts/check.py", "--gate", "G1", "--lenient"], cwd=scaffold)
+    # End-to-end: a fresh scaffold passes DevBar-Reqs; a seeded misquote fails it.
+    proc = run_py(
+        ["scripts/check.py", "--gate", "DevBar-Reqs", "--lenient"], cwd=scaffold
+    )
     assert proc.returncode == 0, proc.stdout + proc.stderr
     make_minimal_project(scaffold)
     sr_path(scaffold).write_text(UNQUOTED_COMMA_SRS, encoding="utf-8")
-    proc = run_py(["scripts/check.py", "--gate", "G1", "--lenient"], cwd=scaffold)
+    proc = run_py(
+        ["scripts/check.py", "--gate", "DevBar-Reqs", "--lenient"], cwd=scaffold
+    )
     assert proc.returncode != 0
     assert "RESULT: FAIL" in proc.stdout
 
@@ -269,8 +273,8 @@ def test_no_placeholders_flags_template_rows(scaffold):
 
 
 def test_harness_g2_fails_on_unfilled_scaffold(scaffold):
-    # The key F3 behavior: you cannot claim G2 with placeholder-only registries.
-    proc = run_py(["scripts/check.py", "--gate", "G2"], cwd=scaffold)
+    # The key F3 behavior: you cannot claim DevBar-Tests with placeholder-only registries.
+    proc = run_py(["scripts/check.py", "--gate", "DevBar-Tests"], cwd=scaffold)
     assert proc.returncode != 0
     assert "RESULT: FAIL" in proc.stdout
 
@@ -335,7 +339,7 @@ def tc_path(root):
 
 def test_strict_schema_requires_evidence_on_automated_yes(scaffold):
     # Thread 51 (owner-ruled 2026-07-09): a TC claiming Automated=Yes with no
-    # cited Evidence is a soft false-green -> a --strict-schema (G3) finding.
+    # cited Evidence is a soft false-green -> a --strict-schema (DevBar-Release) finding.
     # Plain --strict stays green (the chain is structurally fine).
     make_minimal_project(scaffold)
     csv = tc_path(scaffold)
@@ -368,8 +372,8 @@ def test_strict_schema_evidence_optional_when_not_automated(scaffold):
 
 def test_strict_schema_flags_legacy_tc_header_without_evidence(scaffold):
     # A pre-Thread-51 CSV has no Evidence column at all: its Automated=Yes rows
-    # read as empty and are flagged the same way at G3 — the deliberate
-    # migration nudge (ADOPTING section 6 adds the column). Below G3 (no
+    # read as empty and are flagged the same way at DevBar-Release — the deliberate
+    # migration nudge (ADOPTING section 6 adds the column). Below DevBar-Release (no
     # --strict-schema) the legacy file keeps passing untouched.
     make_minimal_project(scaffold)
     tc_path(scaffold).write_text(
@@ -393,9 +397,9 @@ def test_harness_wires_new_flags():
     def cmd_of(plan, name):
         return next(s[2] for s in plan if s[0] == name)
 
-    g2 = check.steps(80, "full", "G2")
+    g2 = check.steps(80, "full", "DevBar-Tests")
     allg = check.steps(80, "full", "all")
-    # --no-placeholders is on from G2; --strict-schema is G3/all only.
+    # --no-placeholders is on from DevBar-Tests; --strict-schema is DevBar-Release/all only.
     assert "--no-placeholders" in cmd_of(g2, "traceability")
     assert "--strict-schema" not in cmd_of(g2, "traceability")
     assert "--strict-schema" in cmd_of(allg, "traceability")

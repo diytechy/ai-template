@@ -1,4 +1,4 @@
-"""gen_release_checklist.py: the G-Release human sign-off record (M-17).
+"""gen_release_checklist.py: the DevStg-Release human sign-off record (M-17).
 
 The script collects the human-verified items — Demonstration/Manual/Inspection
 SRs, release-tier + manual TCs, provided IFs, PB budgets — into a tick-box

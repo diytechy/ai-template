@@ -592,7 +592,7 @@ def test_specref_anchor_on_a_non_markdown_target_is_not_judged(tmp_path):
     # Anchors are a markdown concept. A SpecRef into a non-markdown in-repo file
     # keeps the pre-WI-354 path-only behaviour rather than inventing a finding.
     (tmp_path / "docs").mkdir(parents=True, exist_ok=True)
-    (tmp_path / "docs" / "gate").write_text("G3\n", encoding="utf-8")
+    (tmp_path / "docs" / "gate").write_text("DevBar-Release\n", encoding="utf-8")
     write_wis_sr(tmp_path, "WI-001,A,scripts,,,queued,,docs/gate#anything\n")
     proc = run_traj(tmp_path, "--strict")
     assert proc.returncode == 0, proc.stdout + proc.stderr

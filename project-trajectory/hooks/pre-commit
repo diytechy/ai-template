@@ -219,11 +219,11 @@ fi
 #                        at gate=all: only R-A (Deliverable non-empty iff done)
 #                        is a hard ERROR here — a commit is the agent handoff
 #                        point, so an incoherent WI state launches the next
-#                        session wrong; R-B…R-E warn at commit, gate at G2+.
+#                        session wrong; R-B…R-E warn at commit, gate at DevBar-Tests+.
 #      - registry-integrity  trace.py --strict-integrity: no duplicate/malformed
 #                        ids — wrong at any stage. Deliberately NOT the full
-#                        --strict orphan check: orphans are a G2+ gate criterion
-#                        (a mid-G1 registry legitimately has SRs with no LLR/TC
+#                        --strict orphan check: orphans are a DevBar-Tests+ gate criterion
+#                        (a mid-DevBar-Reqs registry legitimately has SRs with no LLR/TC
 #                        yet); the floor must never block an early-stage commit.
 #      - derived-gate    docs/gate is GENERATED from artifact states by
 #                        derive_gate.py (docs/archive/specs/derived-gate-model.2026-07-20.md); --check

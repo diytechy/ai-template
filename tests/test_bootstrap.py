@@ -344,17 +344,20 @@ def test_agents_template_stays_within_size_budget():
 
 def test_status_is_working_surface_history_lives_in_log(scaffold):
     # Thread 36: status.md holds only what must be performed next; the history
-    # sections (Gate Sign-offs, Audit log) live in the pointed-to docs/log.md,
+    # sections (Sittings, Audit log) live in the pointed-to docs/log.md,
     # headings preserved verbatim so downstream greps and the §5 prose survive.
     status = (scaffold / "docs" / "status.md").read_text(encoding="utf-8")
-    for heading in ("## Gate Sign-offs", "## Audit log", "## Decisions log"):
+    for heading in ("## Sittings", "## Audit log", "## Decisions log"):
         assert heading not in status, "history section left in status.md: " + heading
     assert "log.md" in status, "status.md must point at the history log"
     assert "blocks:" in status, "Open-items format must seed the blocks: clause"
     log = (scaffold / "docs" / "log.md").read_text(encoding="utf-8")
-    for heading in ("## Gate Sign-offs", "## Audit log", "## Decisions log"):
+    for heading in ("## Sittings", "## Audit log", "## Decisions log"):
         assert heading in log, "log.md must carry the history heading: " + heading
-    assert "G-Final — Acceptance" in log  # the sign-off table moved intact
+    # The sittings table moved intact, and each row names the RUNG RANGE it
+    # certifies (OI-21 break 6) rather than being one row per boundary.
+    assert "| Sitting | Rungs certified |" in log
+    assert "| Acceptance | `DevStg-Release` (the owner's final read)" in log
 
 
 def test_plan_build_cadence_surfaces(scaffold):

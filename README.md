@@ -30,7 +30,7 @@ chasing it.
 ## The kit's headline pieces
 
 - **A gated process** ([`PROCESS.md`](project-trajectory/PROCESS.md)) — roles as
-  "hats", approval gates (G1→G2→G3→G-Release→G-Final; G-Release only for
+  "hats", approval bars (DevBar-Reqs→DevBar-Tests→DevBar-Release, then DevStg-Release and the owner's final read; DevStg-Release only for
   versioned releases), and a verdict protocol; each gate's bar **fails, never
   silently skips** (SN-004, SN-008).
 - **A traceability spine** — `SN → SR → LLR → TC` registries joined by a
@@ -67,7 +67,7 @@ chasing it.
     each scoped by its WI row, spec, and train context, never a `status.md`
     resume — and the stop banner + exit codes carry the run's
     outcome.
-  - **Parallel-by-default execution** *(delivered — phase `v4` at G3;
+  - **Parallel-by-default execution** *(delivered — phase `v4` at DevBar-Release;
     [`parallel-wi-dispatch.md`](docs/archive/specs/parallel-wi-dispatch.2026-07-20.md))*: a plain
     launch **is** the dispatcher: it fans out every dependency-ready work item
     across bounded worker lanes, while mutation of the integration branch
@@ -163,7 +163,7 @@ graph LR
 | [`stakeholder-needs`](project-trajectory/registries/stakeholder-needs.template.toml) | `SN-###` | Why the project exists — one need per row, in the stakeholder's words. The root every other row must trace back to. |
 | [`system-requirements`](project-trajectory/registries/system-requirements.template.toml) | `SR-###` | One testable *shall*-statement per row, with measurable acceptance criteria and input `Permutations` for test design; cites the `SN` it serves. |
 | [`low-level-requirements`](project-trajectory/registries/low-level-requirements.template.toml) | `LLR-###` | The design decomposition — pins an SR onto real code (`Module` + `CodeSymbol`). Adds detail; never paraphrases its parent. |
-| [`test-cases`](project-trajectory/registries/test-cases.template.toml) | `TC-###` | Verifies SR/LLR ids; states its `Method` (how it runs) and `Tier`. The verification class (Test / Demonstration / Inspection / Attest) rides the SR's `Verification` column. Written failing-first at G2. |
+| [`test-cases`](project-trajectory/registries/test-cases.template.toml) | `TC-###` | Verifies SR/LLR ids; states its `Method` (how it runs) and `Tier`. The verification class (Test / Demonstration / Inspection / Attest) rides the SR's `Verification` column. Written failing-first at DevBar-Tests. |
 
 [`trace.py`](project-trajectory/scripts/trace.py) joins the four tiers into the
 traceability matrix (`docs/test/report.md`; `--html` adds a collapsible map) and
@@ -204,7 +204,7 @@ Each is regenerated from the registries or source and freshness-gated
 | `docs/architecture.md` code map | `gen_arch_map.py` | Per-module summary, Mermaid dependency diagram, `Implements:` back-links — beneath the hand-written one-page overview and the authored runtime flows `check_flows.py` verifies. |
 | root `PROJECT_STATE.html` | `gen_trajectory.py` | The offline dashboard: spine icicle, WI DAG, module map, an OKF knowledge-graph tab (when `docs/okf/` exists), definition/execution meters, a git-derived as-of stamp. |
 | `docs/okf/` | `gen_okf.py` | The same graph exported as an Open Knowledge Format bundle — consumed by the dashboard's Knowledge tab. |
-| `docs/release-checklist.md` | `gen_release_checklist.py` | Every human-verified item (Demonstration / Manual / Inspection SRs, Release-tier TCs) as back-linked tick-boxes for G-Release. |
+| `docs/release-checklist.md` | `gen_release_checklist.py` | Every human-verified item (Demonstration / Manual / Inspection SRs, Release-tier TCs) as back-linked tick-boxes for DevStg-Release. |
 
 ## Quick start — bootstrap a new project
 
@@ -247,7 +247,7 @@ Then:
 2. Install the harness tooling for your stack (Python reference: `ruff pytest
    pytest-cov`). Commands are declared once in `docs/stack.ini` — a
    non-Python stack edits that one file.
-3. Start **gate G1** — see the new repo's `docs/process.md`.
+3. Start **gate DevBar-Reqs** — see the new repo's `docs/process.md`.
 
 ### Or kick off with an agent
 
@@ -260,7 +260,7 @@ same artifacts and run the gates with you.
 
 - **Traceability** — every line of intent ties back to a stakeholder need and
   forward to a test; orphans are caught mechanically.
-- **Test-driven** — the G2 test case for each requirement is written as a
+- **Test-driven** — the DevBar-Tests test case for each requirement is written as a
   *failing* test before the code that satisfies it (red → green → refactor), so
   implementation is pulled by the spec, not retrofitted to it.
 - **Single source of truth** — facts live once and are referenced by id, so docs
@@ -315,7 +315,7 @@ process**, traced by its own `SN→SR→LLR→TC` spine and gated by its own
 - The meta-repo's needs, requirements, and tests live under
   [`docs/requirements/`](docs/requirements/) + [`docs/test/`](docs/test/) —
   distinct from the blank templates the kit *ships*.
-- It currently passes its own gates at **G3** (gate-walk record:
+- It currently passes its own gates at **DevBar-Release** (gate-walk record:
   [`docs/log.md`](docs/log.md)).
 
 ### Configuration at a glance (defaults vs. this repo)
@@ -333,7 +333,7 @@ set:
 
 | Option (`docs/…`) | Fresh-scaffold default | Turn on / off | This repo |
 |---|---|---|---|
-| `gate` | **generated** — `derive_gate.py` computes it from artifact states (a fresh scaffold reads `G1`) | never hand-edited; advances by *ratifying* artifacts | `G3` (derived) |
+| `gate` | **generated** — `derive_gate.py` computes it from artifact states (a fresh scaffold reads `DevBar-Reqs`) | never hand-edited; advances by *ratifying* artifacts | `DevBar-Release` (derived) |
 | `process.toml` `gate_policy` | **not shipped** — SN-029 retired the enum for the ordinal below; a legacy key is read only as a migration fallback | `bootstrap.py --gate-policy <word>` still takes `"attended"` / `"single-ratify"` / `"autonomous"`, but **translates** it to the dials rather than storing it (and scaffolds a deviation register) | not declared; the `"autonomous"` posture is recorded in its [register](docs/gate-policy.md) |
 | `process.toml` `human_ratification_through` | `4` (every tier human-held) | lower the ordinal — `3` SNs+SRs+LLRs, … `0` nothing human-held | `0` |
 | `process.toml` `push` | `"human"` | opt-in `"agent-iteration"` / `"agent"` | `"human"` |
@@ -367,23 +367,23 @@ and caches it (generated, never hand-edited) as **the gate that must next be
 passed**, which is also the strictness the harness runs at. It advances when a
 batch of artifacts is **ratified** in a reviewed `Status`-change commit, and it
 *pulls back* when attested content is amended — a `Status=Modified` row owes a
-re-attest and derives G2 until the sitting blesses it (`trace.py --ratify
+re-attest and derives DevBar-Tests until the sitting blesses it (`trace.py --ratify
 modified` emits the before/after brief; semantics: PROCESS.md §7)
 (process-options.md "Derived gate model").
 
-- **G1 — Requirements/UX/Constraints.** Needs + requirements are complete,
+- **DevBar-Reqs — Requirements/UX/Constraints.** Needs + requirements are complete,
   measurable, and consistent with the vision; every requirement links a need;
   usability/doc needs, constraints, and non-goals are captured.
-- **G2 — Decomposition & test coverage.** Every requirement decomposes to design
+- **DevBar-Tests — Decomposition & test coverage.** Every requirement decomposes to design
   (LLR) and a test (TC), each TC written **failing-first**; zero trace orphans;
   no placeholder rows; key runtime flows diagrammed.
-- **G3 — Implementation.** Code is written **test-first** and passes the full
+- **DevBar-Release — Implementation.** Code is written **test-first** and passes the full
   harness: format/lint, full test tier, coverage ≥ threshold, schema, every
   in-scope requirement `Verified`, no stubs.
-- **G-Release — Release readiness** *(per release)*. The release test tier
+- **DevStg-Release — Release readiness** *(per release)*. The release test tier
   passes; the generated release checklist is completed and signed; version
   bumped; changelog + interface versions updated.
-- **G-Final — Acceptance.** A human exercises the real product (including
+- **Acceptance — the owner's final read.** A human exercises the real product (including
   manual/demonstration items) and approves.
 
 See [`project-trajectory/README.md`](project-trajectory/README.md) for the full

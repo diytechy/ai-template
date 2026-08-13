@@ -208,7 +208,7 @@ trajectory_check = true
 # inventory. `false` silences the layer.
 interfaces_check = true
 # The How-SW top-view right-sizing bound and the knowledge⇒component coupling
-# (WI-073 / WI-153). WARN at the plain run, ERROR under `--strict` (G2+);
+# (WI-073 / WI-153). WARN at the plain run, ERROR under `--strict` (DevBar-Tests+);
 # trivially passed below the 10-item bound. `false` silences both.
 components_check = true
 # The OKF knowledge-bundle export (gen_okf.py) and its freshness gate.
