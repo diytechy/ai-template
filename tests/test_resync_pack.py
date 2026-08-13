@@ -138,7 +138,14 @@ def test_a_reserved_placeholder_stays_anchor_free():
     A change that has not landed has no commit, so a `Reserved:` heading must NOT
     carry an anchor — writing a speculative one would put a SHA that does not
     exist into the very field the selection logic trusts.
-    """
+
+    THERE IS NO RESERVED HEADING TODAY, and that is the correct state rather than
+    a hole: the pack's only reserved slot was the gate → stage vocabulary
+    conversion, and OI-21 landed it (WI-445), so it was replaced by two real
+    anchored entries — the §3 recipe and the §4 translation row. This test
+    therefore asserts the RULE, over however many reserved headings exist
+    (currently zero), instead of requiring one to exist. Requiring one would mean
+    the pack could never finish a reservation."""
     changed, renames = _entry_sections()
     reserved = [
         h
@@ -146,10 +153,6 @@ def test_a_reserved_placeholder_stays_anchor_free():
         for h in _headings(body)
         if h.startswith(RESERVED_PREFIX)
     ]
-    assert reserved, (
-        "the translation helper's reserved placeholder is gone — if the gate->"
-        "stage conversion landed, replace it with a real anchored entry"
-    )
     for h in reserved:
         assert not ENTRY_RE.match(h), (
             "a reserved (not-yet-landed) heading carries a SHA anchor, which "

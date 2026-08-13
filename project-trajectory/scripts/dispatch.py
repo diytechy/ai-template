@@ -41,7 +41,7 @@ batch once nothing else remains; on a LOOP-HELD tier they dispatch outright (a
 recorded fresh-context reviewer verdict ratifies). The three retired enum words
 (`attended` / `single-ratify` / `autonomous`) each named one cell of that
 two-dial table, which is why they could not express the fourth. The fixed
-points hold at every level: G-Final is the human's, no un-run greens, the
+points hold at every level: the owner's final read is the human's, no un-run greens, the
 harness is still the bar, ratified owner decisions are never re-decided.
 
 Beyond admission it adds ORDERING only, no authority: every refusal stays

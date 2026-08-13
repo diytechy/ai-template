@@ -1,9 +1,19 @@
-# Stage vs gate — the semantics, a PROPOSAL
+# Stage vs gate — the semantics (RULED, SHIPPED, then SUPERSEDED in part)
 
-**Status: PROPOSAL, not ruled.** Worked out with the owner 2026-08-11. It
-changes shipped vocabulary (`PROCESS.md`, `PROCESS_OPTIONS.md`, the README,
-`status.md`), so it needs an explicit ruling before anything is built. The
-approval-provenance half of the same conversation **was** ruled and is
+**Status: RULED 2026-08-12, SHIPPED — and its ladder superseded 2026-08-13 by
+OI-21.** Worked out with the owner 2026-08-11 as a proposal; the owner ruled it
+the next day and the six-rung ladder plus the inserted implementation rung
+shipped. **The half that still stands** is this document's core argument — a gate
+is a moment and the repo was using it as a state; `G0` is not a gate; stage and
+gate are separate axes; and §5's "a gate is not a pure function of stage", which
+the ruling required be kept in any successor. **The half that is superseded** is
+the six-rung ladder itself and the `G*` vocabulary it is written in: OI-21 (ruled
+2026-08-13) retired the tags entirely for an eight-rung `DevStg-<Label>` ladder
+with three `DevBar-<Label>` bars, requirements before architecture, and the
+boundary and partition rungs inserted. **Read `docs/process.md` §4 "The stage
+ladder" for the live model**; this document is kept as the reasoning that got
+there, and its `G*` spellings are historical. The approval-provenance half of the
+same conversation was ruled separately and is
 [`repo-lock.md`](../repo-lock.md) §2 **D-10**.
 
 ---

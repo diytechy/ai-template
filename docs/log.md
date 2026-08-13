@@ -12,7 +12,17 @@ applying that design to the kit itself.
 
 ---
 
-## Gate Sign-offs
+## Sittings
+
+> **RETIRED VOCABULARY, PRESERVED VERBATIM (OI-21, 2026-08-13).** The rows below
+> record a named human certifying boundaries that were called `G1`/`G2`/`G3` on
+> the day they were signed. The `G*` tags retired for the eight-rung stage ladder
+> and every live surface converted — these rows did not, because re-wording an
+> attestation makes the record claim something was signed that was not. Read them
+> through the translation: `G1` → the `DevStg-Needs`…`DevStg-Reqs` range,
+> `G2` → `DevStg-Arch`…`DevStg-Tests`, `G3` → `DevStg-Impl`. The same carve-out
+> covers this file's dated sign-off and ratification entries throughout, and the
+> quoted registry cells in `docs/ratify/`.
 
 | Gate | Stakeholder | UX/Docs | System Eng | Test Eng | Human |
 |---|---|---|---|---|---|
@@ -27343,3 +27353,143 @@ IF contract, schema tier, and the last two registries onto the carrier) and
 WI-447 (the SHA-anchored re-sync pack); then WI-445 (the stage ladder),
 WI-442 (the boundary seeds), WI-448 (the common-module inversion). The
 owner owes only the consolidated re-attest sitting and merge-to-main.
+
+## 2026-08-13c — the gate vocabulary retires: the eight-rung stage ladder lands (WI-445, OI-21)
+
+**The tags died, the word survived.** OI-21's five execution questions were ruled
+2026-08-13 and this session executed all of them as one program. `G0`/`G1`/`G2`/
+`G3`/`G-Release`/`G-Final` are gone as TAGS from every live authored surface;
+the word "gate" survives wherever it means a check that can fail — `docs/gate`,
+`derive_gate.py`, `--gate`, `test_env_gates`, `subagent_gate`, `check_perf`'s
+budget gates all keep their names, because renaming paths adopters invoke
+literally would break every one of them for a cosmetic gain.
+
+**THE LADDER, requirements before architecture.** Eight rungs —
+`DevStg-Needs · Boundary · Reqs · Arch · LLReqs · Tests · Impl · Release` — with
+three bars across them: `DevBar-Reqs` (certifies rungs 0-2), `DevBar-Tests`
+(3-5), `DevBar-Release` (6-7), each named for the TOP RUNG IT CERTIFIES so the
+reconciliation is a partition rather than arithmetic. The boundary happens ONCE;
+rungs 2 and 3 recurse; rung 4 is terminal by OI-20's binding rule. Both ruled
+typo candidates were fixed before they became identifiers — never `Arcitecture`,
+never `Impliment`.
+
+**The label IS the identifier; position is DERIVED.** `STAGE_ORDER` is a closed
+vocabulary (no watermark space, no retire-never-remint rule) and every comparison
+routes through `stage_ord`, which RAISES on an unknown label. The basis line
+carries `stage=DevStg-<Label> stage-ord=<n> stage-of=8`; renderers show "stage n
+of 8, <description>". `tests/test_stage_ladder.py` greps the kit's scripts for
+ordering operators on a ladder value — **and it caught a real one on its first
+run**: `check.py --list` was sorting each step's bars lexically, which printed
+`DevBar-Release,DevBar-Reqs,DevBar-Tests`. Under the retired tags that sort was
+accidentally right (`G1 < G2 < G3` alphabetizes); the new labels do not
+alphabetize, so the accident is gone and the bug was visible. That is the whole
+argument for the label carrier, demonstrated within an hour of writing it.
+
+**THE SIX CONTRACT BREAKS, each disposed of deliberately.**
+
+1. **`check.py --gate`** — the retired tags stay as ALIASES listed in `choices=`
+   (argparse rejects an out-of-choices value before our code runs, so listing
+   them is what lets us explain instead of dying), translated at the argparse
+   layer, `metavar` teaching only the canonical form. **Posture: ACCEPTED AND
+   WARNED**, one stderr line per run. Silent acceptance is how the vocabulary
+   grows back; refusal breaks every adopter's CI at the re-sync. A warning is the
+   only posture that keeps the pipeline green AND guarantees the operator is told.
+2. **`docs/stack.ini` `gates=`** — translated on read, SILENTLY. The shipped
+   template converts. Silent because `check_vocab.py` sees the authored file and
+   can name the line, which is a better message than a per-step reader could give.
+3. **The WI `bar:` enum** — same silent translation in both readers (`intake`,
+   `integrate`). The retired matching was `.upper()` + an uppercase tuple, which
+   would have refused every correctly-authored `DevBar-Reqs`; `normalize_bar` /
+   `_normalize_bar` replace it.
+4. **The `[phase]-[gN]` title archetype** — converts to `[phase]-[reqs|tests]`
+   for NEW titles; the ~20 committed anchors keep their spelling and parse
+   forever (D-4: a title is a citation). One regex, one internal level.
+5. **The `docs/gate` basis line** — field-compatible, NOT value-compatible; one
+   forced regenerate, `--check` reports stale on the first recompute, NO COMPAT
+   SHIM. The failure direction is safe: a stale cache makes `spine_stage_of` read
+   None, and an unreadable stage is treated as human-held, so the one state it
+   can produce is MORE human involvement.
+6. **`## Gate Sign-offs` → `## Sittings`** — heading, `trunk_step.RESERVED_HEADINGS`
+   and its test moved together. Sittings stay their own axis: a project holds
+   fewer sittings than it has rungs, so a row names the **rung range it
+   certifies**. The role columns and the `Human` column stay distinct (D-10's
+   approval log is this table's row-level twin — not built here, shapes kept
+   compatible).
+
+**THE DIAL MAPPED, NOT RE-KEYED.** `human_ratification_through` stays the 0-4
+ratifiable-tier ordinal. `agent_common.DIAL_HOLDS` is the declared lookup from
+level to the rungs it holds, replacing `stage < level` — an arithmetic
+coincidence between two ladders that happened to line up, and the thing the
+2026-08-12 rung insert nearly broke silently in the direction of LESS human
+involvement. Every pre-existing answer for the four spine rungs is preserved
+exactly (pinned as its own test). The two inserted rungs each ride the rung
+BELOW them (Boundary rides Needs, Arch rides Reqs) — the direction that errs
+toward more human involvement. Approval was **not** re-keyed to artifact depth;
+the ruling holds that for when IF/CMP maturity joins the ratifiable fold.
+
+**THE PREDICATES, and the applies-when that makes them safe.** Rung 1 computes
+from the IF registry's boundary inventory, rung 3 from CMP rows' `State`, folded
+in through ONE declared maturity table (`IF_MATURITY` / `CMP_MATURITY` →
+Drafted/Approved/Founded) with each mapping defended in place. Both rungs are
+**applies-when**: the rung applies only when the registry FILE exists, so an
+adopter who never adopts those registries is never held at `DevStg-Boundary`
+forever. An unrecognized maturity value reads DRAFTED (fail-honest — those enums
+are schema-ADVISORY, so a typo really does arrive there, and "an unreadable row
+reports finished" is the unsafe half). The spine still reads TODAY's vocabulary
+through `is_draft`/`is_verified`/`is_modified` — D-9's Status-ladder migration is
+held behind the sitting and is NOT this program's work; when it lands it is a
+table edit. **This is what makes the recursion self-reporting**: minting a
+`planned` CMP row drops the reported stage back to `DevStg-Arch` with nobody
+deciding to.
+
+**THE ENFORCER LANDED WITH THE SWEEP**, as the ruling required. `check_vocab.py`
+(new, shipped downstream) refuses retired tags in live authored surfaces —
+tag-scoped, warn-first, promoted to ERROR under `--strict` which the harness
+wires from `DevBar-Tests` on, exactly like `check_trajectory`. Wired at EVERY bar
+deliberately: the surfaces the tags grow back into are authored hardest at the
+LOWEST bar, and a `DevBar-Release`-only step would not run in this kit's own CI
+for the whole of its requirements phase — which is the window the drift this
+guards against actually happened in. Declaration sites carry an explicit
+`check_vocab: allow` / `allow-file` marker rather than a heuristic, because a
+heuristic that can be satisfied by accident is how the vocabulary grows back
+through the enforcer meant to stop it.
+
+**THE CARVE-OUT, and why it is not laziness.** `docs/archive/`, `docs/okf/`,
+`docs/log.md`'s dated entries, `docs/ratify/`, the closed/cancelled WI specs, the
+iteration logs, the review records and the dated handoffs/plans/repo-reviews all
+stay VERBATIM. The log's Sittings table and `docs/ratify/README.md` (new) carry
+the one-line header note naming the retired vocabulary and its translation.
+Re-wording an attestation makes a signed record claim something was signed that
+was not — the one place "the meaning is the same" does not hold.
+
+**Registry rows flipped (the window is open, WI-444 precedent):** the sweep
+touched 2 SN cells, 3 SR, 3 LLR and 5 TC rows; six SRs owe a re-attest and two of
+them were `Verified` — **SR-004 and SR-053 flipped Verified → Modified**. The
+other four (SR-042, SR-049, SR-050, SR-093) were already non-Verified.
+
+**Reviewed bumps, reasons at the entries:** `check.py` 1638→1775 (the bar
+vocabulary, `bar_ord`/`_window_ord` replacing the lexical comparisons, the alias
+layer, the vocabulary step); `agent_common.py` 2467→2539 (`DIAL_HOLDS` /
+`LADDER_RUNGS`); `check_trajectory.py` 4075→4115 (the dual-spelling anchor
+archetype); `integrate.py` 2493→2524 and `intake.py` 1673→1710 (break 3);
+`bootstrap.py` 2828→2834 (the shipped `check_vocab.py`); complexity
+`derive_gate.py:spine_stage` 10→11 (the ladder IS the function; both inserted
+rungs' predicates are already extracted, so splitting an eight-rung cascade would
+raise the branch count nowhere and make the ORDER unreadable); smoke `max-tests`
+1090→1150 (the required `test_stage_ladder.py`, 0.6 s, wall clock moved DOWN);
+`PROCESS.md` +4,221 (the §4 ladder subsection rewritten onto the eight rungs with
+the recursion argument, the carrier conditions and the retired-vocabulary
+translation); `AGENTS.template.md` 10,070 → **9,994** bytes, PAID FOR by tightening
+five other rules rather than raising the budget.
+
+**Inherited fix, not this WI's:** `test_forward_only_unit_over_the_real_meta_repo`
+was ALREADY RED at 8a0fb5ad — WI-443's close left its own id token in
+`docs/status.md`, which `status.md` is forward-only about. Scrubbed here because
+the sweep was editing that file anyway and a red suite cannot report a green.
+
+**The state at this entry.** Full unfiltered suite green; smoke green; trace
+`--strict-integrity` rc 0 (orphans=0, integrity=0); `check_vocab --strict` clean
+over 386 live authored files; a real scaffold bootstrapped from this tree runs
+its own harness green with `docs/gate`, `stack.ini`, hooks and CI all speaking
+the new vocabulary. The enforcer was bite-tested: a planted `G2`/`G3` in
+`docs/status.md` warned at exit 0 and errored at exit 1 under `--strict`.

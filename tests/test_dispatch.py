@@ -571,7 +571,7 @@ def add(a, b):
 
 
 def scaffold_with_queued_wi(tmp_path):
-    """A bootstrapped, G3-complete scaffold with WI-401 queued — the state a
+    """A bootstrapped, DevBar-Release-complete scaffold with WI-401 queued — the state a
     plain launch starts from. Mirrors test_integrate.scaffolded_closed_branch
     (fixture notes there), except the WI is still QUEUED: claiming it is the
     driver's job under test."""

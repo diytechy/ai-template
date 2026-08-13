@@ -86,7 +86,14 @@ LOG_D = "docs/log.d"
 # `docs/log.md`'s three history sections (pinned by tests/test_bootstrap.py). A
 # fragment claiming one of them would splice narrative INTO a structural section
 # — the log's shape is not a work branch's to redefine.
-RESERVED_HEADINGS = ("## Gate Sign-offs", "## Decisions log", "## Audit log")
+#
+# `## Gate Sign-offs` BECAME `## Sittings` at OI-21 (contract break 6): sittings
+# are their own axis under the eight-rung ladder — a project holds fewer sittings
+# than it has rungs, so a row names the RUNG RANGE it certifies rather than being
+# one-per-boundary. This constant, `LOG.template.md`'s heading and
+# tests/test_trunk_step.py move together; an adopter's existing log renames the
+# heading at re-sync (the rows underneath stay verbatim — they are attestations).
+RESERVED_HEADINGS = ("## Sittings", "## Decisions log", "## Audit log")
 
 # `<id>-<slug>.md`. The `WI-<n>-<slug>` form is the house convention; a bare
 # `<token>-<slug>` is accepted too (a repo whose work ids are not `WI-` still

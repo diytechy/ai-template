@@ -54,7 +54,7 @@ def test_off_root_fails_loudly(tmp_path):
     # rather than silently fall back to the built-in commands and gate `all` (a
     # different, weaker plan). tmp_path has no docs/, so this stands in for "off
     # the repo root". SCRIPTS is absolute, so check.py is still found to run.
-    proc = run_py([SCRIPTS / "check.py", "--gate", "G1"], cwd=tmp_path)
+    proc = run_py([SCRIPTS / "check.py", "--gate", "DevBar-Reqs"], cwd=tmp_path)
     assert proc.returncode != 0, proc.stdout + proc.stderr
     assert "must run at the repo root" in (proc.stdout + proc.stderr)
 
@@ -85,7 +85,9 @@ def test_unmarked_test_runs_in_full_tier(scaffold):
         "def test_unmarked_runs():\n    assert True\n",
         encoding="utf-8",
     )
-    proc = run_py(["scripts/check.py", "--gate", "G3", "--tier", "full"], cwd=scaffold)
+    proc = run_py(
+        ["scripts/check.py", "--gate", "DevBar-Release", "--tier", "full"], cwd=scaffold
+    )
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "2 passed" in proc.stdout  # the smoke test AND the unmarked one
 
@@ -97,7 +99,10 @@ def test_smoke_tier_runs_only_smoke_and_skips_coverage_gate(scaffold):
         "def test_unmarked_runs():\n    assert True\n",
         encoding="utf-8",
     )
-    proc = run_py(["scripts/check.py", "--gate", "G3", "--tier", "smoke"], cwd=scaffold)
+    proc = run_py(
+        ["scripts/check.py", "--gate", "DevBar-Release", "--tier", "smoke"],
+        cwd=scaffold,
+    )
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "1 passed" in proc.stdout  # only the @pytest.mark.smoke test
 
@@ -108,7 +113,9 @@ def test_failing_test_fails_the_harness(scaffold):
         '"""Deliberately failing test."""\n\n\ndef test_broken():\n    assert False\n',
         encoding="utf-8",
     )
-    proc = run_py(["scripts/check.py", "--gate", "G3", "--tier", "full"], cwd=scaffold)
+    proc = run_py(
+        ["scripts/check.py", "--gate", "DevBar-Release", "--tier", "full"], cwd=scaffold
+    )
     assert proc.returncode != 0
     assert "RESULT: FAIL" in proc.stdout
 
@@ -121,17 +128,17 @@ def test_step_plan_wiring():
     def cmd_of(plan, name):
         return next(s[2] for s in plan if s[0] == name)
 
-    smoke = check.steps(80, "smoke", "G3")
+    smoke = check.steps(80, "smoke", "DevBar-Release")
     full = check.steps(80, "full", "all")
     smoke_pytest = cmd_of(smoke, "tests+coverage")
     full_pytest = cmd_of(full, "tests+coverage")
     # Coverage threshold applies to full/release, never to the smoke subset.
     assert not any(a.startswith("--cov-fail-under") for a in smoke_pytest)
     assert "--cov-fail-under=80" in full_pytest
-    # G3/all adds the SR status criterion to traceability.
+    # DevBar-Release/all adds the SR status criterion to traceability.
     assert "--require-verified" in cmd_of(full, "traceability")
     assert "--require-verified" not in cmd_of(
-        check.steps(80, "all", "G2"), "traceability"
+        check.steps(80, "all", "DevBar-Tests"), "traceability"
     )
     # Tools run via this interpreter (-m), not a bare PATH lookup.
     assert full_pytest[1:3] == ["-m", "pytest"]
@@ -228,12 +235,12 @@ def test_derived_gate_step_wired_at_every_gate_and_runs(scaffold):
     # check.py consumes the derived gate (docs/archive/specs/derived-gate-model.2026-07-20.md §5):
     # the derived-gate freshness step is a process-layer step at every gate.
     check = load_script("check")
-    for gate in ("G1", "G2", "G3"):
+    for gate in ("DevBar-Reqs", "DevBar-Tests", "DevBar-Release"):
         plan = [s for s in check.steps(80, "full", gate) if gate in s[3]]
         match = [s for s in plan if s[0] == "derived-gate"]
         assert match, "derived-gate missing at {}".format(gate)
         assert match[0][4] == "process" and match[0][1] == ()  # stdlib, no tool
-    # End-to-end: on a G3-complete project (docs/gate regenerated to G3) the step
+    # End-to-end: on a DevBar-Release-complete project (docs/gate regenerated to DevBar-Release) the step
     # passes; un-verifying an SR without regenerating docs/gate makes it FAIL.
     make_minimal_project(scaffold)
     ok = run_py(["scripts/check.py", "--run-step", "derived-gate"], cwd=scaffold)
@@ -273,35 +280,35 @@ def test_run_steps_reports_every_failure(scaffold):
 
 def test_step_gate_honours_an_explicit_gate(scaffold):
     # WI-355: --run-step/--run-steps used to resolve their plan at gate "all"
-    # unconditionally, so `--gate G3 --run-steps trajectory` ran the WARN-first
-    # command while `--gate G3 --list` advertised the --strict one. _step_gate is
+    # unconditionally, so `--gate DevBar-Release --run-steps trajectory` ran the WARN-first
+    # command while `--gate DevBar-Release --list` advertised the --strict one. _step_gate is
     # the explicit-vs-defaulted sentinel: an explicitly passed --gate builds the
     # command AT that gate; a defaulted one (argparse default=None — what the
     # pre-commit hook passes) stays "all" and must NEVER consult docs/gate, or
     # the commit floor would arm --strict (see the trajectory step's comment).
     check = load_script("check")
-    assert check._step_gate("G3") == "G3"
-    assert check._step_gate("G1") == "G1"
+    assert check._step_gate("DevBar-Release") == "DevBar-Release"
+    assert check._step_gate("DevBar-Reqs") == "DevBar-Reqs"
     assert check._step_gate(None) == "all"
     assert check._step_gate("") == "all"
 
     # And the sentinel really changes the command built for the step that carries
-    # the R-B..R-E promotions — the only step keying on gate in ("G2","G3").
+    # the R-B..R-E promotions — the only step keying on gate in ("DevBar-Tests","DevBar-Release").
     def traj_cmd(gate):
         match = [s for s in check.steps(80, "full", gate) if s[0] == "trajectory"]
         assert match, "no trajectory step at gate {}".format(gate)
         return match[0][2]
 
-    assert "--strict" in traj_cmd("G3")
-    assert "--strict" in traj_cmd("G2")
+    assert "--strict" in traj_cmd("DevBar-Release")
+    assert "--strict" in traj_cmd("DevBar-Tests")
     assert "--strict" not in traj_cmd("all")
-    # Name lookup stays unfiltered at any gate: `format` is a G3-only step but the
+    # Name lookup stays unfiltered at any gate: `format` is a DevBar-Release-only step but the
     # hook resolves it with no --gate, so it must still be findable at "all"...
     assert [s for s in check.steps(80, "full", "all") if s[0] == "format"]
     # ...and at an explicit LOW gate too (WI-360, WI-355-REVIEW-A MINOR 2). The
     # "all" assertion alone would stay green if steps() started filtering its
-    # returned table by gate — G1 is the case that would break, so pin it.
-    assert [s for s in check.steps(80, "full", "G1") if s[0] == "format"]
+    # returned table by gate — DevBar-Reqs is the case that would break, so pin it.
+    assert [s for s in check.steps(80, "full", "DevBar-Reqs") if s[0] == "format"]
 
 
 def test_run_steps_unknown_name_fails_loudly(scaffold):
@@ -372,7 +379,7 @@ def test_declared_lane_serializes_a_dependent_step_under_jobs(tmp_path):
             "p=pathlib.Path('{f}');"
             "p.write_text((p.read_text() if p.exists() else '')+'{t}')"
         ).format(s=sleep, f=order.as_posix(), t=token)
-        return (name, (), [sys.executable, "-c", code], {"G3"}, "product")
+        return (name, (), [sys.executable, "-c", code], {"DevBar-Release"}, "product")
 
     # The producer sleeps; an un-laned consumer would win the race under jobs=2.
     # Sharing the producer's lane forces the consumer to run AFTER it, in plan
@@ -393,7 +400,9 @@ def test_bad_lane_fails_loudly(scaffold):
         + "lane = no-such-step\n",
         encoding="utf-8",
     )
-    proc = run_py(["scripts/check.py", "--gate", "G3", "--list"], cwd=scaffold)
+    proc = run_py(
+        ["scripts/check.py", "--gate", "DevBar-Release", "--list"], cwd=scaffold
+    )
     assert proc.returncode != 0, proc.stdout + proc.stderr
     assert "names no known step" in proc.stdout + proc.stderr
 
@@ -407,7 +416,7 @@ def test_tier_substitution_available_to_declared_steps():
     cp = configparser.ConfigParser(interpolation=None)
     cp.read_string("[step:cov]\ncommand = {py} c.py --tier {tier}\n")
     for tier in ("smoke", "full"):
-        plan = check.steps(80, tier, "G3", None, cp)
+        plan = check.steps(80, tier, "DevBar-Release", None, cp)
         cov = next(s for s in plan if s[0] == "cov")
         assert "--tier" in cov[2] and tier in cov[2], (tier, cov[2])
 
@@ -426,7 +435,7 @@ def test_module_coverage_full_then_smoke_run_scopes_the_report(scaffold):
     text += (
         "\n[step:module-coverage]\n"
         "command = {py} scripts/check_coverage.py --tier {tier} --skip-tiers smoke\n"
-        "gates = G3\nlayer = product\nlane = tests+coverage\n"
+        "gates = DevBar-Release\nlayer = product\nlane = tests+coverage\n"
     )
     stack.write_text(text, encoding="utf-8")
     (scaffold / "docs" / "coverage-floors").write_text(
@@ -435,7 +444,15 @@ def test_module_coverage_full_then_smoke_run_scopes_the_report(scaffold):
 
     # Full tier: coverage.json is produced and the floor is graded and holds.
     full = run_py(
-        ["scripts/check.py", "--gate", "G3", "--tier", "full", "--jobs", "0"],
+        [
+            "scripts/check.py",
+            "--gate",
+            "DevBar-Release",
+            "--tier",
+            "full",
+            "--jobs",
+            "0",
+        ],
         cwd=scaffold,
     )
     assert full.returncode == 0, full.stdout + full.stderr
@@ -445,7 +462,15 @@ def test_module_coverage_full_then_smoke_run_scopes_the_report(scaffold):
     # Smoke tier: the stale full report is cleared before the (no-coverage) run,
     # the step SKIPs instead of grading it, and the run stays honest-green.
     smoke = run_py(
-        ["scripts/check.py", "--gate", "G3", "--tier", "smoke", "--jobs", "0"],
+        [
+            "scripts/check.py",
+            "--gate",
+            "DevBar-Release",
+            "--tier",
+            "smoke",
+            "--jobs",
+            "0",
+        ],
         cwd=scaffold,
     )
     assert smoke.returncode == 0, smoke.stdout + smoke.stderr
@@ -456,25 +481,25 @@ def test_module_coverage_full_then_smoke_run_scopes_the_report(scaffold):
 
 def test_default_gate_comes_from_gate_file(scaffold):
     # check.py without --gate reads the committed docs/gate (bootstrap writes
-    # G1), so CI enforces the bar the project is actually at — a fresh scaffold
-    # must be green, not red-until-G3 (the day-one false-red regression).
+    # DevBar-Reqs), so CI enforces the bar the project is actually at — a fresh scaffold
+    # must be green, not red-until-DevBar-Release (the day-one false-red regression).
     gate_file = scaffold / "docs" / "gate"
-    assert gate_file.read_text(encoding="utf-8").strip() == "G1"
+    assert gate_file.read_text(encoding="utf-8").strip() == "DevBar-Reqs"
     proc = run_py(["scripts/check.py", "--list"], cwd=scaffold)
     assert proc.returncode == 0, proc.stdout + proc.stderr
-    assert "Plan for gate G1" in proc.stdout
-    # And the G1 plan actually passes on the untouched scaffold (the CI path).
+    assert "Plan for gate DevBar-Reqs" in proc.stdout
+    # And the DevBar-Reqs plan actually passes on the untouched scaffold (the CI path).
     proc = run_py(["scripts/check.py", "--tier", "smoke", "--lenient"], cwd=scaffold)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "RESULT: PASS" in proc.stdout
 
     # Bumping the gate raises the bar; an explicit --gate always wins; garbage
     # in the file fails loudly rather than running a silently wrong plan.
-    gate_file.write_text("G2\n", encoding="utf-8")
+    gate_file.write_text("DevBar-Tests\n", encoding="utf-8")
     proc = run_py(["scripts/check.py", "--list"], cwd=scaffold)
-    assert "Plan for gate G2" in proc.stdout
-    proc = run_py(["scripts/check.py", "--gate", "G1", "--list"], cwd=scaffold)
-    assert "Plan for gate G1" in proc.stdout
+    assert "Plan for gate DevBar-Tests" in proc.stdout
+    proc = run_py(["scripts/check.py", "--gate", "DevBar-Reqs", "--list"], cwd=scaffold)
+    assert "Plan for gate DevBar-Reqs" in proc.stdout
     gate_file.write_text("banana\n", encoding="utf-8")
     proc = run_py(["scripts/check.py", "--list"], cwd=scaffold)
     assert proc.returncode != 0
@@ -483,10 +508,21 @@ def test_default_gate_comes_from_gate_file(scaffold):
     # Comment lines are tolerated — every declared-policy file shares one
     # parse rule (first non-empty, non-comment line): a docs/gate annotated
     # like the sibling gate-policy/push-policy files must still resolve.
-    gate_file.write_text("# active gate (see process.md §7)\nG2\n", encoding="utf-8")
+    gate_file.write_text(
+        "# active bar (see process.md §7)\nDevBar-Tests\n", encoding="utf-8"
+    )
     proc = run_py(["scripts/check.py", "--list"], cwd=scaffold)
     assert proc.returncode == 0, proc.stdout + proc.stderr
-    assert "Plan for gate G2" in proc.stdout
+    assert "Plan for gate DevBar-Tests" in proc.stdout
+
+    # THE RETIRED VOCABULARY IS REFUSED IN docs/gate — no compat shim, by ruling
+    # (OI-21 break 5). docs/gate is GENERATED, so a retired value there means the
+    # cache predates the conversion and the fix is one regenerate, not a reader
+    # that quietly accepts both spellings forever.
+    gate_file.write_text("G2\n", encoding="utf-8")  # check_vocab: allow
+    proc = run_py(["scripts/check.py", "--list"], cwd=scaffold)
+    assert proc.returncode != 0
+    assert "docs/gate contains 'G2'" in proc.stdout + proc.stderr  # check_vocab: allow
 
 
 def test_list_tags_process_and_product_layers(scaffold):

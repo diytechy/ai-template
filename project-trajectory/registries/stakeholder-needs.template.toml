@@ -5,7 +5,7 @@
 # setting it to "". A duplicate id is a parse error, which is the carrier
 # doing what a check used to (the reader is scripts/spine_carrier.py).
 #
-# Every need below serves the [PROJECT-VISION](../../README.md#vision) — the G1
+# Every need below serves the [PROJECT-VISION](../../README.md#vision) — the DevBar-Reqs
 # consistency review checks each against it: a need serving no part of the
 # vision is scope creep (or a missing vision clause); a need contradicting it
 # is a finding. (The link is kept in markdown form so the pointer stays
@@ -20,7 +20,7 @@
 # MATURITY IS A FIELD, NOT A SECTION. `kind` is one of:
 #
 #   core   a ratified need (the steady state)
-#   draft  still being drafted — G0. trace.py exempts it from the "every SN
+#   draft  still being drafted — DevBar-Below. trace.py exempts it from the "every SN
 #          needs an SR" rule, so it can sit in the live registry before its SR
 #          decomposition exists. RATIFY it by changing `kind` to "core" in a
 #          reviewed commit; that commit is the sign-off and its date is the

@@ -55,7 +55,7 @@ TC-002,SR-002,Manual,read the page,Full,,"The page exists",No,,Verified
 """
 
 RICH_PBS = """PB-ID,Metric,Refs,Budget,Unit,Tolerance,Direction,Tier,Gate,Owner,Notes
-PB-001,latency,SR-001,10,ms,1,<=,Smoke,G3,core,demo budget
+PB-001,latency,SR-001,10,ms,1,<=,Smoke,DevBar-Release,core,demo budget
 """
 
 RICH_REPOS = """REPO-ID,Name,Repo,DelegatedSRs,Version,Type,Owner,Notes

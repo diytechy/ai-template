@@ -158,3 +158,4 @@ resource: "generated"
 | [SR-146](SR-146.md) | Prompts are reviewable files with a per-session audit trail |
 | [SR-147](SR-147.md) | One machine-parseable carrier for the requirement spine |
 | [SR-148](SR-148.md) | Autonomous loop phase order |
+| [SR-149](SR-149.md) | Retired-vocabulary refusal in authored surfaces |

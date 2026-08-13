@@ -1,7 +1,7 @@
 # THE PROSE BELOW IS THIS REGISTRY'S DOCUMENTATION, carried verbatim from the
 # markdown carrier it replaced (repo-lock D-5). The rows became TOML tables;
 # the surrounding prose — what this file is, the maturity rule, and the
-# NON-GOALS section, which is a G1 deliverable with no other home — is not a
+# NON-GOALS section, which is a DevBar-Reqs deliverable with no other home — is not a
 # row and would otherwise have been dropped by a converter that only reads
 # rows. Section headings are kept as written so every reference still lands.
 #
@@ -9,7 +9,7 @@
 #
 # Every need below serves the [PROJECT-VISION](../../README.md#vision) — a
 # *reusable starting point for building maintainable, requirement-traced projects
-# with AI agents and humans working from the same playbook*. The G1 consistency
+# with AI agents and humans working from the same playbook*. The DevBar-Reqs consistency
 # review checks each row against it: a need serving no part of the vision is scope
 # creep; a need contradicting it is a finding.
 #
@@ -36,7 +36,7 @@
 # this heading reads as a Draft row. It sits here,
 # not in Core needs, for one reason: **ratification is the owner's act**, and
 # that program's own §10 reserves it for the P0 sitting. The machinery says
-# so rather than trusting the prose — a Draft SN reads G0, so the derived
+# so rather than trusting the prose — a Draft SN reads DevBar-Below, so the derived
 # gate DROPS while these are unratified, which is exactly the "a new phase is
 # due" signal `docs/gate` exists to give.
 #
@@ -50,7 +50,7 @@
 # ## Non-goals
 #
 # Explicit scope boundaries — what the kit deliberately does **not** do, recorded
-# so a later contributor treats them as decisions, not oversights (G1 requires
+# so a later contributor treats them as decisions, not oversights (DevBar-Reqs requires
 # non-goals to be captured; [PROCESS.md](../../project-trajectory/PROCESS.md) §4).
 #
 # - **NG-1 · Internationalization / localization.** The kit's display strings,
@@ -88,7 +88,7 @@ acceptance = """The toolchain is declared once in `docs/stack.ini`; a stack swap
 
 [need.SN-004]
 kind = "core"
-need = """A team advances only through **explicit approval gates** (G1→G2→G3→…), and a gate passes only when its mechanical bar is met."""
+need = """A team advances only through **explicit approval gates** (DevBar-Reqs→DevBar-Tests→DevBar-Release→…), and a gate passes only when its mechanical bar is met."""
 why = "*Explicit approval gates so you can trust what ships.*"
 priority = "M"
 acceptance = """`check.py --gate GN` enforces that gate's required steps; a missing required tool **fails**, never silently skips."""
@@ -203,7 +203,7 @@ kind = "draft"
 priority = "S"
 need = """**Scope: template (adopters + this repo).** A stakeholder can read each stakeholder need and recognize the outcome they asked for without knowing how the repository is built."""
 why = """A need written in internal engineering vocabulary can remain technically current while becoming unreadable to the person whose intent it is supposed to preserve. The resulting failure is an approved requirement spine that no stakeholder can independently validate."""
-acceptance = """The rule applies specifically to each SN `need` cell, not to engineering requirements or acceptance evidence. A declared check reports the row and phrase when a need cell contains an internal path, implementation-only identifier or process citation; a reviewed exception list distinguishes names that are themselves user-facing interfaces. The G1 review evidence includes the resulting findings."""
+acceptance = """The rule applies specifically to each SN `need` cell, not to engineering requirements or acceptance evidence. A declared check reports the row and phrase when a need cell contains an internal path, implementation-only identifier or process citation; a reviewed exception list distinguishes names that are themselves user-facing interfaces. The DevBar-Reqs review evidence includes the resulting findings."""
 
 [need.SN-034]
 kind = "draft"

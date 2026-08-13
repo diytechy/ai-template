@@ -302,39 +302,58 @@ def pending_block(root):
     return "{}\n\n{}".format(pure_lead, pure_body)
 
 
-# The stage ladder's labels, for the generated snapshot line. STATE units: a repo
-# is IN a stage and PASSES a gate (process.md §4 "Stages and gates"). Derived by
-# derive_gate.py and read here off `docs/gate`'s `# basis:` line, never recomputed.
+# The eight-rung stage ladder's descriptions, for the generated snapshot line.
+# STATE units: a repo is IN a stage and CLEARS a bar (process.md §4 "The stage
+# ladder"). Derived by derive_gate.py and read here off `docs/gate`'s `# basis:`
+# line, never recomputed.
+#
+# THE ORDINAL IS NOT IN THIS TABLE, and that is the whole point of the label
+# carrier (OI-21): the renderer reads `stage-ord=`/`stage-of=` off the same basis
+# line, so inserting a rung self-corrects every rendered "stage N of M" with no
+# edit here. This map holds only the human sentence each label expands to.
 _STAGE_LABELS = {
-    "0": "needs in process",
-    "1": "requirements in process",
-    "2": "design (LLR) in process",
-    "3": "tests in process",
-    "4": "implementation in process",
-    "5": "nothing in process",
+    "DevStg-Needs": "vision and stakeholder needs in work",
+    "DevStg-Boundary": "system boundary interfaces in work",
+    "DevStg-Reqs": "requirement definition in work",
+    "DevStg-Arch": "architecture (partition) in work",
+    "DevStg-LLReqs": "LLR definition in work",
+    "DevStg-Tests": "test-case definition in work",
+    "DevStg-Impl": "implementation in work",
+    "DevStg-Release": "nothing in work; release checklist available",
 }
 
 
 def _stage_line(gate, basis, gate_detail):
     """The snapshot's first bullet, STAGE-first.
 
-    The gate value alone cannot say whether a gate is ahead or behind, and — being
-    a min floored by any Draft row — it reads identically for a fresh scaffold and
-    a mature spine holding one draft. The stage is the state; the gate is what
-    must next be passed, which is also the strictness the harness runs at.
+    The bar value alone cannot say whether a boundary is ahead or behind, and —
+    being a min floored by any Draft row — it reads identically for a fresh
+    scaffold and a mature spine holding one draft. The stage is the state; the bar
+    is what must next be cleared, which is also the strictness the harness runs at.
 
-    A `docs/gate` predating the `stage=` field (or carrying a stage this ladder
-    does not name) degrades to the gate-only wording rather than inventing a
-    stage — the same absent-means-absent direction derive_gate takes."""
+    A `docs/gate` predating the `stage=` field, or carrying a label this ladder
+    does not name (including a cache still holding the retired integer form),
+    degrades to the bar-only wording rather than inventing a stage — the same
+    absent-means-absent direction derive_gate takes."""
     gate_txt = gate or "(none)"
     stage = basis.get("stage")
     link = "[`derive_gate.py`](../project-trajectory/scripts/derive_gate.py)"
     if stage in _STAGE_LABELS:
+        ord_txt = basis.get("stage-ord")
+        of_txt = basis.get("stage-of")
+        # The position rides the basis line; when an older cache omits it, name
+        # the rung without a position rather than guessing one.
+        where = (
+            "stage {o} of {n}".format(o=ord_txt, n=of_txt)
+            if ord_txt is not None and of_txt is not None
+            else "stage"
+        )
         return (
-            "- **Stage:** **{s}** ({label}) · next gate: **{g}**{detail} — a repo "
-            "is IN a stage and PASSES a gate; the harness at that gate is the "
-            "bar. {link} derives both, cached to [`docs/gate`](gate).".format(
+            "- **Stage:** **{s}** ({where}, {label}) · next bar: **{g}**{detail} "
+            "— a repo is IN a stage and CLEARS a bar; the harness at that bar is "
+            "the bar. {link} derives both, cached to [`docs/gate`](gate).".format(
                 s=stage,
+                where=where,
                 label=_STAGE_LABELS[stage],
                 g=gate_txt,
                 detail=gate_detail,
@@ -342,7 +361,7 @@ def _stage_line(gate, basis, gate_detail):
             )
         )
     return (
-        "- **Next gate:** derived **{g}**{detail} — the harness at that gate is "
+        "- **Next bar:** derived **{g}**{detail} — the harness at that bar is "
         "the bar. {link} derives it, cached to [`docs/gate`](gate).".format(
             g=gate_txt, detail=gate_detail, link=link
         )

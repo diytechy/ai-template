@@ -105,11 +105,11 @@ that easier to achieve in a real project — or get out of the way.
   self-applied**: the launchers (wired for Claude, strong tier) run
   `project-trajectory/scripts/agent_loop.py --root .`, resuming from
   `docs/status.md` under the declared policies (this repo runs `human_ratification_through = 0` — loop-held — with `push = "human"` and the privacy gate off).
-- **The kit's own `SN→SR→LLR→TC` spine** (Thread 47 self-adoption, *at G3*):
+- **The kit's own `SN→SR→LLR→TC` spine** (Thread 47 self-adoption, *at DevBar-Release*):
   [`docs/requirements/stakeholder-needs.toml`](docs/requirements/stakeholder-needs.toml)
   + `system-requirements.toml` + `low-level-requirements.toml` +
   `docs/test/test-cases.toml` + [`docs/architecture.md`](docs/architecture.md)
-  (one-page + the G2 Runtime flows) + `docs/gate` + `docs/stack.ini` +
+  (one-page + the DevBar-Tests Runtime flows) + `docs/gate` + `docs/stack.ini` +
   `docs/log.md` + the `docs/work/` WI spec registry + root `PROJECT_STATE.html`
   (the **Thread 52 trajectory layer, dogfooded** — the kit's own work-item DAG +
   its generated, freshness-gated dashboard; regenerate with

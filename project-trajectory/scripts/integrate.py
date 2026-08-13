@@ -1414,10 +1414,41 @@ def _run_trunk_step(wt, root):
     return _run([str(py), str(step), "--root", "."], wt)
 
 
-# The `bar` frontmatter key's vocabulary (WI-388): bar declares verification
-# strictness for this row's lane; it never affects scheduling. Ordered weakest
-# to strictest so a batch takes the max.
-_BAR_GATES = ("G1", "G2", "G3")
+# The `bar` frontmatter key's vocabulary (WI-388; the stage-ladder names since
+# OI-21): bar declares verification strictness for this row's lane; it never
+# affects scheduling. Ordered weakest to strictest so a batch takes the
+# STRICTEST — by LADDER POSITION, never by `max()` on the string. The retired
+# tags alphabetized, so `max()` was accidentally right; `DevBar-Tests` sorts
+# above `DevBar-Release`, so it is now accidentally WRONG in the permissive
+# direction, which is exactly the class of bug the label carrier makes loud.
+_BAR_GATES = ("DevBar-Reqs", "DevBar-Tests", "DevBar-Release")
+
+# A WI `bar:` is AUTHOR-WRITTEN, so the retired tags translate on read (OI-21
+# contract break 3) — silently, because check_vocab.py sees the spec file and can
+# name the line. Duplicated from intake.normalize_bar per the F5 rule.
+_RETIRED_BARS = {
+    "g1": "DevBar-Reqs",
+    "g2": "DevBar-Tests",
+    "g3": "DevBar-Release",
+}
+
+
+def _normalize_bar(value):
+    """A `bar:` cell as a canonical `DevBar-*` name ("" when blank), retired tags
+    translated. Matched case-insensitively — the retired reader did `.upper()`,
+    which would turn a correctly-authored `DevBar-Reqs` into `DEVBAR-REQS` and
+    refuse it."""
+    raw = str(value or "").strip()
+    if not raw:
+        return ""
+    low = raw.lower()
+    if low in _RETIRED_BARS:
+        return _RETIRED_BARS[low]
+    for canonical in _BAR_GATES:
+        if low == canonical.lower():
+            return canonical
+    return raw
+
 
 # The surfaces an adjudication lane's non-refresh delta may touch and still
 # take the NO-BAR path (WI-388 REVIEW-A finding 1) — §A5.2's premise ("it
@@ -1503,7 +1534,7 @@ def _lane_bar_directives(root, branch):
       work registry, nothing a product bar can speak to; that is why the kind
       needs its own no-bar arm rather than a tier). Fails TOWARD the bar: an
       unreadable frontmatter or a mixed batch runs it.
-    * `gate` — the strictest `bar` key among the claimed rows (G1 < G2 < G3),
+    * `gate` — the strictest `bar` key among the claimed rows (DevBar-Reqs < DevBar-Tests < DevBar-Release),
       handed to check.py --gate. None when no row declares one.
     * `refusal` — a malformed bar value. Refused loudly rather than silently
       barred at whatever the derived gate happens to read (the drift the key
@@ -1521,7 +1552,7 @@ def _lane_bar_directives(root, branch):
         except (OSError, ValueError):
             return False, None, None  # unreadable: run the bar, fail toward it
         kinds.append(str(meta.get("safety_class") or "").strip().lower())
-        declared = str(meta.get("bar") or "").strip().upper()
+        declared = _normalize_bar(meta.get("bar"))
         if declared and declared not in _BAR_GATES:
             return (
                 False,
@@ -1541,7 +1572,8 @@ def _lane_bar_directives(root, branch):
     # no-bar path — the branch's delta must LOOK like adjudication too.
     if skip and not _adjudication_scope_ok(root, branch):
         skip = False
-    return skip, (max(bars) if bars else None), None
+    strictest = max(bars, key=_BAR_GATES.index) if bars else None
+    return skip, strictest, None
 
 
 def _worktree_holding(root, branch):
@@ -1594,7 +1626,7 @@ def _worktree_dirt(wt):
 # next trace.py run. A short enumerated list on purpose - not a glob
 # configuration surface and not a dial; everything outside it stays evidence.
 # Widened on measurement, once (WI-407): check.py passes --html to its trace
-# step at G2/G3, so the declared bar writes docs/test/report.html in whatever
+# step at DevBar-Tests/DevBar-Release, so the declared bar writes docs/test/report.html in whatever
 # lane it runs in, and on 2026-08-02 the wi-402 lane was measured holding
 # exactly that file at unload - same class as report.md, rebuilt by the next
 # bar run, sole-copy evidence never.

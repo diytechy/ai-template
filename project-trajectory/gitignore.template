@@ -24,7 +24,7 @@ docs/test/report.html
 docs/test/perf-report.md
 docs/test/perf-metrics.json
 
-# No-stub / substance detector report (process.md §4 G3) — a regenerated
+# No-stub / substance detector report (process.md §4 DevBar-Release) — a regenerated
 # composite from scripts/check_stubs.py; review the code, not this list.
 docs/test/stub-report.md
 

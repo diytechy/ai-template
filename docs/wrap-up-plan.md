@@ -21,18 +21,18 @@ Read the generated block at the top of [status.md](status.md) for live numbers.
 As of 2026-07-26 (branch `dualplan-routing-fix` @ `d09b8d0`, NOT pushed):
 spine SN=25 SR=110 LLR=112 TC=115, `drafts=0`, **`modified=4`**.
 
-**The derived gate reads G2 DELIBERATELY — do not "fix" it.** This is the
+**The derived gate reads DevBar-Tests DELIBERATELY — do not "fix" it.** This is the
 WI-316 `Modified` re-attest window (canonical semantics: process.md §7), not a
 regression: SR-049/052/053/054 carry `Status=Modified` (post-attestation
-amendments awaiting the owner sitting), per-phase `1=G2;3=G2`. The sitting
+amendments awaiting the owner sitting), per-phase `1=DevBar-Tests;3=DevBar-Tests`. The sitting
 flips each row `Modified`→`Verified` (bless) or →`Planned` (evidence
-invalidated) in a reviewed commit and **G3 re-derives on its own** — no checker
+invalidated) in a reviewed commit and **DevBar-Release re-derives on its own** — no checker
 edits. Sitting inputs, both committed: the generated pending block in
 [open-items.html](open-items.html) (one line per Modified SR) and the before/after
 brief [ratify/2026-07-26-reattest.md](ratify/2026-07-26-reattest.md)
 (regenerate: `trace.py --ratify modified`; a pre-regime streak needs
-`--since <rev>`). While the window is open the harness bar is the **G2 bar**
-(the G3-only steps drop out) — don't let it sprawl.
+`--since <rev>`). While the window is open the harness bar is the **DevBar-Tests bar**
+(the DevBar-Release-only steps drop out) — don't let it sprawl.
 
 The last full-suite run: **1557 passed, 7 skipped**; `check.py` at the derived
 gate 5/6 PASS, the sole red the owner-parked `perceptual-stale` on SR-054
@@ -40,7 +40,7 @@ gate 5/6 PASS, the sole red the owner-parked `perceptual-stale` on SR-054
 the marker is registry state now, the `--staged` hook warn polices the write
 side, and `derive_gate`'s basis line counts it (`modified=N`).
 
-**Environment note (still true):** until 2026-07-25 the G3 harness had never
+**Environment note (still true):** until 2026-07-25 the DevBar-Release harness had never
 been runnable on the owner's machine. Treat any pre-2026-07-25 "all passing"
 claim as a partial run.
 
@@ -49,7 +49,7 @@ claim as a partial run.
 `check_trajectory --strict` has a fail-closed `perceptual-stale` finding: when
 `gen_trajectory.py` (or `shoot.mjs`) changes **after** the latest
 `docs/reviews/*-CRITIQUE.md`, any `Verification=Critique` SR (currently SR-052,
-SR-053, SR-054) is judged stale and the gate reds at G2/G3. This is **git-time-based
+SR-053, SR-054) is judged stale and the gate reds at DevBar-Tests/DevBar-Release. This is **git-time-based
 and mechanical** — it does not care who wrote the critique, only when.
 
 **On "family-heterogeneous."** SR-084/SR-085's own text says a CRITIQUE session
@@ -146,7 +146,7 @@ acted on all four recommendations the same day** — WI-278/WI-062/WI-065 are no
 
 **WI-278 — branch integration & CI-on-branch.** *Why:* this session produced
 decisive evidence. The local gate had a **total blind spot** — the entire
-`agent_loop_*` layer (~104 tests) could not execute on this machine, and the G3
+`agent_loop_*` layer (~104 tests) could not execute on this machine, and the DevBar-Release
 harness had never run, concealing two failing steps including four
 pre-existing duplicate blocks. Hosted CI on Linux + Windows would have caught
 both immediately. The branch is also ~845 commits ahead of `main` with **no CI
@@ -225,7 +225,7 @@ it). Not itself evidence for or against WI-280, but the ratchet's discipline
   means the interpreter, not the branch.
 - **`status.md` is forward-only and it is enforced.** A `done` WI id anywhere in
   its hand-authored prose (not just the obvious spots) WARNs at the commit bar,
-  ERRORs under `--strict` at G3. This bit twice this session — once for a `done`
+  ERRORs under `--strict` at DevBar-Release. This bit twice this session — once for a `done`
   id in a sentence explaining *why* a row was still queued, once for a WI that had
   actually been closed in an *earlier* session and was still referenced as if
   open. Before writing status.md prose, check the WI's actual `Status` in the
@@ -290,9 +290,9 @@ evidence). WI-308 is the only queue row exempt — non-render, land it any time.
    expected verdict for the first time.
 3. **Hold the ONE owner sitting**: read the regenerated brief
    (`trace.py --ratify modified`; `--since` for the pre-regime streak), flip
-   every `Modified` row →`Verified`/`Planned` in a reviewed commit. G3
+   every `Modified` row →`Verified`/`Planned` in a reviewed commit. DevBar-Release
    re-derives all phases on its own.
-4. **Run `check.py --gate G3 --jobs 0`** — the target is all-17 green with no
+4. **Run `check.py --gate DevBar-Release --jobs 0`** — the target is all-17 green with no
    parked red, for the first time with nothing waived.
 5. ~~**Rule OI-7**~~ **done 2026-07-27** (WI-123 `retired`; no pending brief
    remains) — still owed: disposition **WI-061/063**, so the archive-anchored
@@ -300,5 +300,5 @@ evidence). WI-308 is the only queue row exempt — non-render, land it any time.
 6. **Push the branch** → hosted CI validates on three OSes → **merge to
    `main`** and push. Decide `guardrails-fable-method` in the same sitting.
 
-After step 6: 0 queued, 0 blocked, 0 `Modified`, open-items empty, gate G3,
+After step 6: 0 queued, 0 blocked, 0 `Modified`, open-items empty, gate DevBar-Release,
 CI green on an independent machine — wrapped, in this repo's own terms.

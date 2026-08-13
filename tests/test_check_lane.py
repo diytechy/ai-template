@@ -279,16 +279,16 @@ def test_skills_sync_is_not_skipped_on_a_work_branch(check, tmp_path, monkeypatc
 
 
 def test_branch_edit_gates_still_run_in_the_g3_plan(check, tmp_path, monkeypatch):
-    # --gate G3 on a work branch: the registry/DAG/navigability gates grade the
+    # --gate DevBar-Release on a work branch: the registry/DAG/navigability gates grade the
     # branch's OWN edits and must survive the lane rule. Asserted over the real
-    # G3 plan, so a step renamed in the table is caught here too.
+    # DevBar-Release plan, so a step renamed in the table is caught here too.
     git_repo(tmp_path, branch="wi-360")
     claim(tmp_path, "wi-360")
     monkeypatch.chdir(tmp_path)
-    plan = check.steps(80, "all", "G3")
+    plan = check.steps(80, "all", "DevBar-Release")
     names = {s[0] for s in plan}
     for required in ("trajectory", "registry-integrity", "doc-navigability"):
-        assert required in names, "{} left the G3 plan".format(required)
+        assert required in names, "{} left the DevBar-Release plan".format(required)
         assert check._work_branch_skip(required) is None, required
     # ...while the plan still LISTS the skipped freshness steps. The skip is at
     # execution, never by deleting rows, so `--list` cannot understate the gate.

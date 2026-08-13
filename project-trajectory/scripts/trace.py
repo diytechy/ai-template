@@ -36,7 +36,7 @@ Writes:
 Exit: 0 normally; --strict -> 1 on any orphan / status / off-spine finding;
 --strict-integrity -> 1 on an integrity finding ONLY (the always-valid floor the
 pre-commit hook runs on every commit — a duplicate/malformed id is wrong at any
-stage, while orphans are a G2+ gate criterion).
+stage, while orphans are a DevBar-Tests+ gate criterion).
 
 The method rules this script mechanizes are stated ONCE elsewhere — they are NOT
 restated here (the kit's decompose-don't-paraphrase rule applied to itself):
@@ -56,9 +56,9 @@ restated here (the kit's decompose-don't-paraphrase rule applied to itself):
       and the closed vocabularies --strict-schema enforces (SR Verification, TC
       Tier): process.md §4.
 
-Flags in brief: --require-verified adds the G3 criterion "a Verification=Test SR
+Flags in brief: --require-verified adds the DevBar-Release criterion "a Verification=Test SR
 is Status=Verified" (Draft SRs exempt); --no-placeholders flags leftover "-000"
-example rows (wire in from G2 on); --strict-schema adds required-field,
+example rows (wire in from DevBar-Tests on); --strict-schema adds required-field,
 closed-vocabulary, and "Automated=Yes cites Evidence" checks over the real rows;
 --ratify SCOPE emits ONLY the batch-scoped ratification hierarchy (a phase tag or
 an SR-id list) to stdout or --out and runs no checks (WI-146); the reserved scope
@@ -134,7 +134,7 @@ def is_verified(row):
     """The terminal `Verified` state, matched case-insensitively so it follows the
     SAME rule as is_draft (the one Status-casing rule, process.md §4): both magic
     Status values are recognized in any case. Status is open-vocabulary; `Verified`
-    is the value the G3 --require-verified criterion and the gate derivation act on.
+    is the value the DevBar-Release --require-verified criterion and the gate derivation act on.
     Duplicated in derive_gate.py per the F5 rule; pinned equal by test_rule_sync."""
     return (row.get("Status") or "").strip().lower() == "verified"
 
@@ -146,7 +146,7 @@ def is_modified(row):
     evidence still verifies the amended text), `Modified`→`Planned` when the
     amendment invalidated the evidence. Recognized for SURFACING, not gate
     arithmetic: a Modified SR is simply not Verified, so `derive_gate.sr_gate`
-    already reads it as decomposed-unverified G2 with no code of its own — this
+    already reads it as decomposed-unverified DevBar-Tests with no code of its own — this
     predicate exists for the `modified=N` basis count, the pending-owner-actions
     projection, the chain-consistency warns, and the `--ratify modified` brief.
     Same case-insensitive one-casing rule as the other two recognized values;
@@ -354,9 +354,9 @@ IF_CONTRACT_MAX = 500
 # --- Acceptance-criteria testability advisory (warn-only) --------------------
 # A comparative/absolute claim in an AcceptanceCriteria cell is untestable until
 # it names its predicate: identical *in what*, judged *how*. (Gilbert's SR-013
-# shipped "cannot distinguish source by schema" through G1 and had to be pinned
-# by hand at G2.) Both lists are heuristics — the advisory WARNS and never joins
-# a failure set; the G1 consistency review (process.md §4) makes the call.
+# shipped "cannot distinguish source by schema" through DevBar-Reqs and had to be pinned
+# by hand at DevBar-Tests.) Both lists are heuristics — the advisory WARNS and never joins
+# a failure set; the DevBar-Reqs consistency review (process.md §4) makes the call.
 
 
 def llr_status_advisories(llrs, tcs):
@@ -364,7 +364,7 @@ def llr_status_advisories(llrs, tcs):
     while *every* TC that cites it is already `Verified`. The evidence to lift it
     exists, so the gap is a readout drift, not a coverage hole — mechanically
     harmless (the derived gate ignores LLR/TC Status past `Draft`; only the SR's
-    `Verified` drives G2->G3, derive_gate.maturity_gate), but confusing at a
+    `Verified` drives DevBar-Tests->DevBar-Release, derive_gate.maturity_gate), but confusing at a
     ratification review, where an `Implemented` LLR under a `Verified` SR reads
     like an unfinished decomposition. Warn only: never promoted to an error (not
     under --strict or --strict-integrity), because making LLR status gate would
@@ -1160,8 +1160,8 @@ def scan_sn_placeholders(sn_md):
 
 # SN maturity lives in section-as-state (derived-gate model §4a): a stakeholder-
 # needs.md heading whose text contains "draft" (case-insensitive, e.g. `## Draft
-# needs (unratified)`) marks the SNs under it as Draft (unratified, G0); SNs under
-# any other heading are ratified (G1). No new column — the state IS the section,
+# needs (unratified)`) marks the SNs under it as Draft (unratified, DevBar-Below); SNs under
+# any other heading are ratified (DevBar-Reqs). No new column — the state IS the section,
 # and the ratification date is git-derived (the commit that moved the row out of
 # the draft section). This is the SN analogue of the `Status=Draft` bit on
 # SR/LLR/TC rows.
@@ -1172,7 +1172,7 @@ def sn_all_ids(text):
     """The SN id UNIVERSE: every `SN-###` token anywhere in stakeholder-needs.md
     `text`, whole-text — a prose mention counts exactly like a table row, which
     is the sharp edge registry-machinery-reference §2.1 records (ratified +
-    uncited caps the derived gate at G0 since WI-401). `-000` placeholders
+    uncited caps the derived gate at DevBar-Below since WI-401). `-000` placeholders
     excluded. Duplicated in derive_gate.py per the F5 rule; pinned equal by
     test_rule_sync (WI-408), because this scrape decides which ids BOTH
     surfaces run their rules over."""
@@ -1206,7 +1206,7 @@ def sn_cited_ids(srs):
     """Every SN id cited by >=1 SR row's `SN-Refs` cell — the coverage set the
     "SN has no SR" orphan rule reads (and, since WI-401, the gate input behind
     derive_gate.py's SN-coverage rung: that rung caps the raw level, this
-    listing itemizes the ids at G2 strictness). No filtering here: -000 rows
+    listing itemizes the ids at DevBar-Tests strictness). No filtering here: -000 rows
     are excluded by the caller's row filter, and a Draft SR's citation is
     deliberately in the set. Duplicated in derive_gate.py per the F5 rule;
     pinned equal by test_rule_sync."""
@@ -1439,8 +1439,8 @@ def phase_ratified_findings(real):
     derived max while this rule migrates the live cells. The rule is **vacuous
     until >=1 artifact is phased** — the arming idiom the component checks use —
     so a fully-blank downstream registry stays green (a `Draft` row may always
-    leave `Phase` blank). SN is covered transitively: at G1+ every ratified SN
-    has >=1 SR (the orphan rule) and SRs are phased; pre-G1 it is vacuously
+    leave `Phase` blank). SN is covered transitively: at DevBar-Reqs+ every ratified SN
+    has >=1 SR (the orphan rule) and SRs are phased; pre-DevBar-Reqs it is vacuously
     exempt. Part of --strict-schema; extends the schema tier rather than forking
     it."""
     all_rows = [r for label in real for r in real[label]]
@@ -1602,7 +1602,7 @@ def outline_lines(roots):
 # --- ratification hierarchy view (WI-146) --------------------------------------
 # A batch-scoped SN->SR->LLR->TC tree that, unlike the whole-spine outline above,
 # carries the *prose* a ratifier needs (SR Requirement/AC, LLR Detail, TC
-# Method/Expected, and any rubric it cites) so a G1/G2 ratification brief can
+# Method/Expected, and any rubric it cites) so a DevBar-Reqs/DevBar-Tests ratification brief can
 # *link* the generated view instead of hand-copying registry rows. Generated, so
 # it never drifts from the CSVs — review the CSVs, not this render (process.md §3).
 
@@ -2539,7 +2539,7 @@ def load_registries(docs):
         sn_text = sn_md.read_text(encoding="utf-8-sig", errors="replace")
         sn_ids = sn_all_ids(sn_text)
         # Section-as-state maturity (derived-gate §4a): SNs under a "draft" heading
-        # are unratified (G0) and exempt from the "SN with no SR" child rule below.
+        # are unratified (DevBar-Below) and exempt from the "SN with no SR" child rule below.
         sn_draft = sn_draft_ids(sn_text)
         sn_meta = _sn_prose(sn_text)
         sn_integrity = sn_integrity_findings(sn_text)
@@ -2599,7 +2599,7 @@ def analyze(reg, args):
             orphans.append(f"SR {sid} has no test (TC)")
             orphan_ids.add(sid)
         sn_parents = refs(r.get("SN-Refs"))
-        # G1's "every SR links >=1 SN", machine-checked — but only when the SN
+        # DevBar-Reqs's "every SR links >=1 SN", machine-checked — but only when the SN
         # registry actually provides real ids (a project without a needs file,
         # or one holding only -000 placeholders, has no SN tier to link yet).
         if sn_ids and not sn_parents:
@@ -2799,14 +2799,14 @@ def analyze(reg, args):
             demonstrated_verified.append(r["SR-ID"])
     if args.require_verified:
         for r in srs:
-            # The G3 status bar applies to every ratified SR regardless of
+            # The DevBar-Release status bar applies to every ratified SR regardless of
             # Verification method — matching derive_gate.sr_gate, which already
-            # demands is_verified for any decomposed SR before G3 with no
+            # demands is_verified for any decomposed SR before DevBar-Release with no
             # per-method carve-out (WI-259, review-2026-07-21 M-5: a Demonstration/
-            # Analysis/Inspection SR left Implemented can never derive G3 yet used
+            # Analysis/Inspection SR left Implemented can never derive DevBar-Release yet used
             # to pass this Test-only check — the two scripts disagreeing about the
             # gate is the false-green the kit exists to prevent). A Draft SR is
-            # pre-ratification (below G1, derived-gate §3): it makes no Verified
+            # pre-ratification (below DevBar-Reqs, derived-gate §3): it makes no Verified
             # claim yet, so the bar stands down — surfaced in the draft count so
             # the exemption stays auditable. Pinned equivalent to sr_gate's
             # is_verified-for-decomposed rule by test_rule_sync.
@@ -2823,7 +2823,7 @@ def analyze(reg, args):
                 method = (r.get("Verification") or "").strip() or "(blank)"
                 status_findings.append(
                     f"SR {r['SR-ID']} is Verification={method} but Status="
-                    f"{val or '(blank)'} (G3 requires Verified for every ratified "
+                    f"{val or '(blank)'} (DevBar-Release requires Verified for every ratified "
                     "SR regardless of method — the magic Status values are matched "
                     "case-insensitively, so this is a real mismatch, not a casing "
                     "near-miss)"
@@ -3120,7 +3120,7 @@ def render_report(reg, findings, args, forest):
         else [f"- {f}" for f in integrity]
     )
     # Warn-only advisory section (never a failure): comparative acceptance-
-    # criteria wording that names no predicate. The G1 consistency review
+    # criteria wording that names no predicate. The DevBar-Reqs consistency review
     # (process.md §4) decides — pin the predicate or accept it knowingly.
     lines += ["", "## Acceptance-criteria advisories (warn-only)", ""]
     lines += (
@@ -3192,7 +3192,7 @@ def render_report(reg, findings, args, forest):
         lines += ["", "## Draft artifacts (decomposition-exempt)", ""]
         lines += [
             "_`Draft` rows are exempt from the child-completeness orphan rules and "
-            "the G3 Verified criterion (derived-gate model §3): a requirement lives "
+            "the DevBar-Release Verified criterion (derived-gate model §3): a requirement lives "
             "in the live spine while it is drafted. Listed so the exemption is "
             "auditable._",
             "",
@@ -3482,7 +3482,7 @@ def main():
     ap.add_argument(
         "--require-verified",
         action="store_true",
-        help="G3 criterion: flag Verification=Test SRs not Status=Verified",
+        help="DevBar-Release criterion: flag Verification=Test SRs not Status=Verified",
     )
     ap.add_argument(
         "--phase",
@@ -3493,7 +3493,7 @@ def main():
     ap.add_argument(
         "--no-placeholders",
         action="store_true",
-        help="flag any leftover '-000' template example row (use from G2 on)",
+        help="flag any leftover '-000' template example row (use from DevBar-Tests on)",
     )
     ap.add_argument(
         "--strict-schema",
@@ -3513,7 +3513,7 @@ def main():
         default=None,
         help="emit ONLY the batch-scoped ratification hierarchy (SN->SR->LLR->TC "
         "with prose) for SCOPE — a phase tag (e.g. v3) or an SR-id list "
-        "(e.g. 'SR-052,SR-053'); a G1/G2 brief links this instead of hand-copying "
+        "(e.g. 'SR-052,SR-053'); a DevBar-Reqs/DevBar-Tests brief links this instead of hand-copying "
         "rows (WI-146). The reserved scope 'modified' (WI-316) emits the "
         "RE-ATTESTATION brief instead: per-cell before/after for every Modified "
         "SR's chain vs its attested baseline (see --since). Prints to stdout "

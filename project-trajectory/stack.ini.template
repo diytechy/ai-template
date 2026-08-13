@@ -177,14 +177,14 @@ lanes = 2
 #   command  (required) the command to run; {py}/{src}/{tests}/{coverage} expand
 #            as above. A `{py} -m <mod>` command auto-fails on a missing module;
 #            any other executable's absence on PATH is the same designed failure.
-#   gates    (optional, default G3) space/comma list of G1|G2|G3 — which gates
+#   gates    (optional, default DevBar-Release) space/comma list of DevBar-Reqs|DevBar-Tests|DevBar-Release — which gates
 #            require it (check.py --gate GN runs only that gate's steps).
 #   layer    (optional, default product) process|product — the --list tag only.
 # The name may not shadow a built-in step (format, lint, tests+coverage,
 # traceability, …). Example (commented — delete the # to activate):
 # [step:capability-integrity]
 # command = {py} scripts/check_capabilities.py {src}
-# gates = G2 G3
+# gates = DevBar-Tests DevBar-Release
 #
 # [step:license-lint]
 # command = npx license-checker --production --failOn GPL

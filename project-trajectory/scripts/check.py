@@ -24,8 +24,8 @@ Design choices that keep it honest and CI-friendly:
     - **One interpreter.** Tools run as `python -m ruff` / `python -m pytest` with
       the same interpreter running this script, so the launchers' venv python is
       enough — no activated venv or PATH entry required.
-    - **Gate-scoped.** `--gate G2` runs only what that gate needs (e.g. G2 needs
-      traceability + a runnable harness; G3 needs the full suite). Default runs all.
+    - **Gate-scoped.** `--gate DevBar-Tests` runs only what that gate needs (e.g. DevBar-Tests needs
+      traceability + a runnable harness; DevBar-Release needs the full suite). Default runs all.
     - **Tiered tests.** `--tier smoke` runs only the fast subset so you can check
       every iteration; `release` runs everything including slow/hardware tests.
       Tiers map to pytest markers (`-m`); the `Tier` column in test-cases.csv is
@@ -46,17 +46,17 @@ Design choices that keep it honest and CI-friendly:
     - **Non-interactive.** No prompts; deterministic exit codes for automation.
 
 Usage:
-    python scripts/check.py [--gate G1|G2|G3|all] [--tier smoke|full|release|all]
+    python scripts/check.py [--gate DevBar-Reqs|DevBar-Tests|DevBar-Release|all] [--tier smoke|full|release|all]
                             [--coverage N] [--phase LIST] [--lenient] [--list]
                             [--jobs N] [--run-step NAME] [--run-steps A,B,...]
 
     --gate      Which gate's checks to run. Default: the repo's **derived gate**
                 from `docs/gate` — the gate it must next PASS (a fresh scaffold
-                derives G1), computed by derive_gate.py, never hand-set;
+                derives DevBar-Reqs), computed by derive_gate.py, never hand-set;
                 closing a gate = ratifying artifacts in a reviewed commit +
                 regenerating. Else `all` when no gate file exists. This keeps a young
                 project's CI green-and-honest: it enforces the bar the project
-                is working toward, not the end-state bar. G3 (and all) also
+                is working toward, not the end-state bar. DevBar-Release (and all) also
                 requires every Verification=Test SR to be Status=Verified
                 (trace.py --require-verified).
     --tier      Which test tier to run (default: all). Mark fast critical-path
@@ -196,6 +196,7 @@ BUILTIN_STEP_NAMES = frozenset(
         "derived-gate",
         "registry-integrity",
         "traceability",
+        "vocabulary",
         "privacy",
         "doc-navigability",
         "perf-budgets",
@@ -309,7 +310,7 @@ def extra_steps(profile, subs):
 
         [step:capability-integrity]
         command = {py} scripts/check_capabilities.py {src}   # required
-        gates   = G2 G3                                # optional, default G3
+        gates   = DevBar-Tests DevBar-Release                                # optional, default DevBar-Release
         layer   = product                             # optional, default product
         lane    = tests+coverage                       # optional (see below)
 
@@ -337,18 +338,27 @@ def extra_steps(profile, subs):
                 "check: docs/stack.ini [{}] needs a `command =` line".format(section)
             )
         cmd = _expand(profile.get(section, "command"), subs)
+        # `gates =` IS AN ADOPTER-AUTHORED VALUE, so the retired `G1|G2|G3` tags  check_vocab: allow
+        # translate on read (OI-21 contract break 2) — SILENTLY here, deliberately:
+        # check_vocab.py sees this same file, can name the offending line, and
+        # warns once per file instead of once per step per run. The shipped
+        # template authors the new vocabulary; an adopter's existing file keeps
+        # working until their re-sync updates it.
         gates = set()
         for tok in (
-            profile.get(section, "gates", fallback="G3").replace(",", " ").split()
+            profile.get(section, "gates", fallback=BAR_RELEASE)
+            .replace(",", " ")
+            .split()
         ):
-            if tok not in ("G1", "G2", "G3"):
+            tok = RETIRED_BAR_ALIASES.get(tok, tok)
+            if tok not in BAR_ORDER:
                 sys.exit(
                     "check: docs/stack.ini [{}] gates has {!r}; expected a "
-                    "space/comma list of G1|G2|G3".format(section, tok)
+                    "space/comma list of {}".format(section, tok, "|".join(BAR_ORDER))
                 )
             gates.add(tok)
         if not gates:
-            gates = {"G3"}
+            gates = {BAR_RELEASE}
         layer = profile.get(section, "layer", fallback="product").strip() or "product"
         if layer not in ("process", "product"):
             sys.exit(
@@ -444,9 +454,9 @@ def steps(coverage, tier, gate, phase=None, profile=None):
         marker = TIERS.get(tier)
         if marker:
             test_cmd += ["-m", marker]
-    # The traceability step only runs at G2/G3, where placeholder rows must be
+    # The traceability step only runs at DevBar-Tests/DevBar-Release, where placeholder rows must be
     # gone, so --no-placeholders is always on here (a fresh scaffold is exempt
-    # only because nothing past G1 runs against it). --html also regenerates the
+    # only because nothing past DevBar-Reqs runs against it). --html also regenerates the
     # scalable full-graph view (a gitignored composite artifact) every run.
     trace_cmd = [
         sys.executable,
@@ -455,10 +465,17 @@ def steps(coverage, tier, gate, phase=None, profile=None):
         "--no-placeholders",
         "--html",
     ]
-    if gate in ("G3", "all"):  # G3 criterion: test-verifiable SRs are Verified
+    if gate in (
+        BAR_RELEASE,
+        "all",
+    ):  # DevBar-Release criterion: test-verifiable SRs are Verified
         trace_cmd.append("--require-verified")
-        trace_cmd.append("--strict-schema")  # G3: required fields + valid enums
-        if phase:  # phased delivery: close G3 for this phase only (process.md §4)
+        trace_cmd.append(
+            "--strict-schema"
+        )  # DevBar-Release: required fields + valid enums
+        if (
+            phase
+        ):  # phased delivery: close DevBar-Release for this phase only (process.md §4)
             trace_cmd += ["--phase", phase]
     # Arch-map mode from the profile ([arch-map] mode = symbols|files): a
     # non-Python stack declares `files` for the stack-neutral fallback instead
@@ -470,16 +487,24 @@ def steps(coverage, tier, gate, phase=None, profile=None):
             "check: docs/stack.ini [arch-map] mode is {!r}; expected "
             "symbols|files".format(arch_mode)
         )
-    # The trajectory validator gains --strict at G2/G3 — the gates promote the
+    # The trajectory validator gains --strict at DevBar-Tests/DevBar-Release — the gates promote the
     # status↔registry coherence rules R-B…R-E from WARN to ERROR (R-A always
     # fails). "all" is deliberately EXCLUDED so the pre-commit floor, which runs
     # this step with NO --gate (so _step_gate resolves it to "all"), stays
     # warn-first: a plain commit must not block on status.md/SpecRef drift, only
     # on the R-A handoff-incoherence rule (process-options.md "Trajectory /
     # work-items layer").
+    # The retired-vocabulary enforcer (OI-21) rides check_trajectory's severity
+    # ladder EXACTLY — same condition, same `if`, deliberately not a second one.
+    # The reason is the same too: a repo mid-conversion must SEE every remaining
+    # site without being blocked by it, while a repo past its requirements bar has
+    # no excuse. "all" is excluded so the pre-commit floor (which passes no
+    # --gate) stays warn-first for both.
     traj_cmd = [sys.executable, str(_SCRIPTS / "check_trajectory.py")]
-    if gate in ("G2", "G3"):
+    vocab_cmd = [sys.executable, str(_SCRIPTS / "check_vocab.py"), "--root", "."]
+    if gate in (BAR_TESTS, BAR_RELEASE):
         traj_cmd.append("--strict")
+        vocab_cmd.append("--strict")
     arch_cmd = [
         sys.executable,
         str(_SCRIPTS / "gen_arch_map.py"),
@@ -544,16 +569,16 @@ def steps(coverage, tier, gate, phase=None, profile=None):
     )
     return [
         # --- product checks: language-specific, declared in docs/stack.ini -----
-        ("format", _requires(fmt_cmd), fmt_cmd, {"G3"}, "product"),
-        ("lint", _requires(lint_cmd), lint_cmd, {"G3"}, "product"),
-        ("tests+coverage", _requires(test_cmd), test_cmd, {"G3"}, "product"),
+        ("format", _requires(fmt_cmd), fmt_cmd, {BAR_RELEASE}, "product"),
+        ("lint", _requires(lint_cmd), lint_cmd, {BAR_RELEASE}, "product"),
+        ("tests+coverage", _requires(test_cmd), test_cmd, {BAR_RELEASE}, "product"),
         # --- project-declared product steps: docs/stack.ini [step:<name>] ------
         # Product-specific gates a project adds (dup-code, license-lint, …) live
         # in the declared profile, NOT hand-edited into this take-wholesale file
         # (see extra_steps above). They slot in here with the other product steps.
         *extra_steps(profile, subs),
         # Optional PRODUCT-layer detector, not wired into the required floor:
-        # `scripts/check_stubs.py` is the Python-reference tripwire for the G3
+        # `scripts/check_stubs.py` is the Python-reference tripwire for the DevBar-Release
         # no-stub / substance criterion (process.md §4). It is warn-first and
         # language-specific (a stub's shape differs per stack), so — like the perf
         # *meters* — a project opts in. Prefer a docs/stack.ini `[step:no-stubs]`
@@ -563,11 +588,11 @@ def steps(coverage, tier, gate, phase=None, profile=None):
         # (drop --strict to warn instead of fail). A non-Python stack swaps or
         # drops it. Left out of the default plan to keep the floor honest.
         # --- process checks: kit-owned, stdlib-only, identical everywhere -----
-        # Registry integrity floor at G1: the traceability step below already
-        # fails on integrity findings via --strict, but it only runs from G2 —
+        # Registry integrity floor at DevBar-Reqs: the traceability step below already
+        # fails on integrity findings via --strict, but it only runs from DevBar-Tests —
         # so a structurally broken registry CSV (unquoted commas misaligning
-        # every later column) or a duplicated/malformed id would pass the G1
-        # gate and hide until G2/G3. This runs trace.py's always-valid subset
+        # every later column) or a duplicated/malformed id would pass the DevBar-Reqs
+        # gate and hide until DevBar-Tests/DevBar-Release. This runs trace.py's always-valid subset
         # (duplicate/malformed ids + CSV column structure) at the first gate;
         # the pre-commit hook runs the same command on every commit. Listed
         # before traceability so at --gate all the fuller report.md wins.
@@ -575,7 +600,7 @@ def steps(coverage, tier, gate, phase=None, profile=None):
             "registry-integrity",
             (),
             [sys.executable, str(_SCRIPTS / "trace.py"), "--strict-integrity"],
-            {"G1"},
+            {BAR_REQS},
             "process",
         ),
         # Derived-gate freshness (docs/archive/specs/derived-gate-model.2026-07-20.md §5): docs/gate is
@@ -590,10 +615,24 @@ def steps(coverage, tier, gate, phase=None, profile=None):
             "derived-gate",
             (),
             [sys.executable, str(_SCRIPTS / "derive_gate.py"), "--check"],
-            {"G1", "G2", "G3"},
+            {BAR_REQS, BAR_TESTS, BAR_RELEASE},
             "process",
         ),
-        ("traceability", (), trace_cmd, {"G2", "G3"}, "process"),
+        ("traceability", (), trace_cmd, {BAR_TESTS, BAR_RELEASE}, "process"),
+        # Retired-vocabulary enforcer (OI-21). AT EVERY BAR, deliberately: the
+        # whole point is that the retired tags cannot grow back, and the surface
+        # they grow back into (registries, briefs, status prose) is authored
+        # hardest at the LOWEST bar — a DevBar-Release-only step would not run in
+        # this kit's own CI for the whole of its requirements phase, which is
+        # exactly the window the drift it guards against happened in. The
+        # severity, not the wiring, is what stays warn-first.
+        (
+            "vocabulary",
+            (),
+            vocab_cmd,
+            {BAR_REQS, BAR_TESTS, BAR_RELEASE},
+            "process",
+        ),
         # Secrets + privacy sweep (process-options.md "Commit identity &
         # privacy"): every tracked text file is swept for the always-on
         # secrets floor (key/token shapes, all repos) plus — when
@@ -606,12 +645,12 @@ def steps(coverage, tier, gate, phase=None, profile=None):
             "privacy",
             (),
             [sys.executable, str(_SCRIPTS / "check_privacy.py"), "--repo"],
-            {"G1", "G2", "G3"},
+            {BAR_REQS, BAR_TESTS, BAR_RELEASE},
             "process",
         ),
         # Doc navigability (process.md §3 "Reviewability"): broken intra-repo
         # links fail; orphans warn; the README vision tag + SN inventory are
-        # checked. Runs from G1 on (docs exist early). --stale adds the
+        # checked. Runs from DevBar-Reqs on (docs exist early). --stale adds the
         # git-gated, warn-only "lying map" heuristic (degrades to a clean skip
         # off-git). The generated, gitignored trace report is dropped.
         (
@@ -635,7 +674,7 @@ def steps(coverage, tier, gate, phase=None, profile=None):
                 "docs/handbacks/*",
                 "--stale",
             ],
-            {"G1", "G2", "G3"},
+            {BAR_REQS, BAR_TESTS, BAR_RELEASE},
             "process",
         ),
         # Performance budgets (process.md §9): the kit-owned *comparator* (stdlib,
@@ -648,17 +687,17 @@ def steps(coverage, tier, gate, phase=None, profile=None):
             "perf-budgets",
             (),
             [sys.executable, str(_SCRIPTS / "check_perf.py"), "--tier", tier],
-            {"G3"},
+            {BAR_RELEASE},
             "process",
         ),
         # Authored runtime-flow diagrams (process.md §3 "Design-time runtime
-        # flows"): required from G2 on, so reviewers verify behavior from the
+        # flows"): required from DevBar-Tests on, so reviewers verify behavior from the
         # diagrams, not from registry rows.
         (
             "design-flows",
             (),
             [sys.executable, str(_SCRIPTS / "check_flows.py"), "--no-placeholders"],
-            {"G2", "G3"},
+            {BAR_TESTS, BAR_RELEASE},
             "process",
         ),
         # Work-item trajectory (process-options.md "Trajectory / work-items
@@ -666,16 +705,16 @@ def steps(coverage, tier, gate, phase=None, profile=None):
         # — id integrity, resolvable predecessors, an acyclic graph (SR refs warn)
         # — plus the status.md↔registry SSOT rules (R-A Deliverable-iff-done, a
         # hard error always; R-B…R-E status coherence + SpecRef resolution, warn
-        # here and ERROR under --strict, added at G2/G3 via traj_cmd above).
+        # here and ERROR under --strict, added at DevBar-Tests/DevBar-Release via traj_cmd above).
         # An OPT-OUT layer: an absent or placeholder-only registry passes
         # vacuously and [checks] trajectory_check = false silences it, so a repo that
         # never adopts it pays nothing (the docs/secrets-scan floor's posture).
-        # From G2 on, where execution planning has begun.
+        # From DevBar-Tests on, where execution planning has begun.
         (
             "trajectory",
             (),
             traj_cmd,
-            {"G2", "G3"},
+            {BAR_TESTS, BAR_RELEASE},
             "process",
         ),
         # Add `--doc AGENTS.md` / `--doc CLAUDE.md` to route the map there too, and
@@ -686,13 +725,13 @@ def steps(coverage, tier, gate, phase=None, profile=None):
             "arch-map",
             (),
             arch_cmd,
-            {"G3"},
+            {BAR_RELEASE},
             "process",
         ),
         # Trajectory dashboard freshness (process-options.md "Trajectory /
         # work-items layer"): the generated-artifact freshness gate for
         # the root PROJECT_STATE.html — gen_trajectory.py --check regenerates in memory
-        # and byte-compares, exactly like arch-map. G3 only (like arch-map — the
+        # and byte-compares, exactly like arch-map. DevBar-Release only (like arch-map — the
         # generated view churns while the plan is still forming). Vacuous on an
         # absent/placeholder-only registry and silent under
         # [checks] trajectory_check = false, so a repo without work items pays nothing.
@@ -700,7 +739,7 @@ def steps(coverage, tier, gate, phase=None, profile=None):
             "trajectory-map",
             (),
             [sys.executable, str(_SCRIPTS / "gen_trajectory.py"), "--check"],
-            {"G3"},
+            {BAR_RELEASE},
             "process",
         ),
         # status.md derived-snapshot freshness (WI-202): the generated
@@ -711,7 +750,7 @@ def steps(coverage, tier, gate, phase=None, profile=None):
         # freshness successor to the WI-200 forward-only token guard, which stands
         # its rule down once the marker is present (check_trajectory). Vacuous when
         # status.md is absent or carries no marker pair (the opt-in posture), so a
-        # repo that never adopts the block pays nothing. G3 only, like the sibling
+        # repo that never adopts the block pays nothing. DevBar-Release only, like the sibling
         # generated-artifact gates.
         (
             "status-map",
@@ -722,7 +761,7 @@ def steps(coverage, tier, gate, phase=None, profile=None):
                 "--status",
                 "--check",
             ],
-            {"G3"},
+            {BAR_RELEASE},
             "process",
         ),
         # Owner decision-surface freshness (WI-322, OI-10 ruled option (b)):
@@ -738,7 +777,7 @@ def steps(coverage, tier, gate, phase=None, profile=None):
             "open-items",
             (),
             [sys.executable, str(_SCRIPTS / "gen_open_items.py"), "--check"],
-            {"G3"},
+            {BAR_RELEASE},
             "process",
         ),
         # OKF knowledge-bundle freshness (Thread 48): docs/okf/ is a generated
@@ -751,7 +790,7 @@ def steps(coverage, tier, gate, phase=None, profile=None):
             "okf",
             (),
             [sys.executable, str(_SCRIPTS / "gen_okf.py"), "--check"],
-            {"G3"},
+            {BAR_RELEASE},
             "process",
         ),
         # Re-attestation brief freshness (WI-325). Every other generated surface
@@ -784,7 +823,7 @@ def steps(coverage, tier, gate, phase=None, profile=None):
                 "modified",
                 "--check",
             ],
-            {"G2", "G3"},
+            {BAR_TESTS, BAR_RELEASE},
             "process",
         ),
         # Cross-agent skill-sync freshness (S7): every per-agent skill copy
@@ -793,12 +832,12 @@ def steps(coverage, tier, gate, phase=None, profile=None):
         # okf. A drifted copy fails with a one-command fix (bootstrap.py --sync).
         # Vacuous when a repo has no neutral source or no per-agent dir (a
         # scaffold: the generator isn't beside check.py, so skills_sync_cmd is a
-        # no-op). G3 only, like the other generated-artifact freshness gates.
+        # no-op). DevBar-Release only, like the other generated-artifact freshness gates.
         (
             "skills-sync",
             (),
             skills_sync_cmd,
-            {"G3"},
+            {BAR_RELEASE},
             "process",
         ),
         # skills/INDEX.csv freshness against the SKILL.md frontmatter, and
@@ -810,8 +849,8 @@ def steps(coverage, tier, gate, phase=None, profile=None):
         # UNIVERSAL over generated artifacts, and a universal is false at one
         # instance.
         #
-        # AT EVERY GATE, not {G3} like the siblings above. That family
-        # (arch-map / trajectory-map / status-map / open-items / okf) is G3-only
+        # AT EVERY GATE, not {DevBar-Release} like the siblings above. That family
+        # (arch-map / trajectory-map / status-map / open-items / okf) is DevBar-Release-only
         # for a stated reason — those are views of the project's own evolving
         # spine and "churn while the plan is still forming", so gating them early
         # reds a repo for drift in an artifact whose inputs are still being
@@ -824,47 +863,134 @@ def steps(coverage, tier, gate, phase=None, profile=None):
         # template that produced it, i.e. while debugging a session that already
         # behaved oddly. That is `derived-gate`'s shape (an artifact the
         # machinery's own honesty rests on), not the dashboards'. Concretely:
-        # this kit's own docs/gate reads G1 while its ratification window is
-        # open, so a {G3} step would not run in the kit's own CI for the whole
+        # this kit's own docs/gate reads DevBar-Reqs while its ratification window is
+        # open, so a {DevBar-Release} step would not run in the kit's own CI for the whole
         # duration of that window — the gap, re-created.
         (
             "skills-index",
             (),
             skills_index_cmd,
-            {"G1", "G2", "G3"},
+            {BAR_REQS, BAR_TESTS, BAR_RELEASE},
             "process",
         ),
         (
             "prompt-catalog",
             (),
             prompt_catalog_cmd,
-            {"G1", "G2", "G3"},
+            {BAR_REQS, BAR_TESTS, BAR_RELEASE},
             "process",
         ),
     ]
 
 
-GATES = ["G1", "G2", "G3", "all"]
+# --- THE BAR VOCABULARY (OI-21) -------------------------------------------------
+# The three runnable bars, lowest first — each named for the TOP RUNG of the
+# eight-rung stage ladder it certifies. Duplicated from derive_gate.py per the F5
+# independently-copyable-script rule and pinned equal by tests/test_rule_sync.py:
+# check.py must stay a wholesale drop-in that never imports a sibling.
+#
+#     DevBar-Reqs     certifies Needs, Boundary, Reqs
+#     DevBar-Tests    certifies Arch, LLReqs, Tests
+#     DevBar-Release  certifies Impl, Release
+BAR_REQS, BAR_TESTS, BAR_RELEASE = "DevBar-Reqs", "DevBar-Tests", "DevBar-Release"
+BAR_ORDER = [BAR_REQS, BAR_TESTS, BAR_RELEASE]
+GATES = BAR_ORDER + ["all"]
 
-# The machine-readable derived gate (process.md §4/§7). One line, e.g. "G1".
+# THE RETIRED-TAG ALIASES (check_vocab: allow-file is NOT used — only these
+# declaration lines are marked). `--gate G2` is a string an adopter's hook  check_vocab: allow
+# and CI workflow pass LITERALLY, so refusing it would break every adopter's
+# pipeline at the re-sync — and this kit's own rule is that a breaking change to
+# a downstream-visible CLI needs a migration, not a cliff. So the retired tags
+# are ACCEPTED here and WARNED about (`_resolve_bar_alias` prints the canonical
+# form to stderr once per run).
+#
+# WHY WARNED RATHER THAN SILENT OR REFUSED. Silent acceptance is how the retired
+# vocabulary grows back — the tags would live in adopters' hooks forever with
+# nothing ever telling anyone. Refusal breaks working pipelines for a vocabulary
+# change. A warning is the only posture that both keeps the pipeline green and
+# guarantees the operator is told; it costs one stderr line per run and it stops
+# the moment the hook is updated. The AUTHORED surfaces (docs/stack.ini `gates=`,
+# a WI's `bar:` frontmatter) translate SILENTLY instead, because check_vocab.py
+# can see those files and name the offending line — a far better message than a
+# reader could produce.
+RETIRED_BAR_ALIASES = {  # check_vocab: allow
+    "G1": BAR_REQS,  # check_vocab: allow
+    "G2": BAR_TESTS,  # check_vocab: allow
+    "G3": BAR_RELEASE,  # check_vocab: allow
+}
+
+
+def bar_ord(name):
+    """The ladder position of a bar name; RAISES on anything else.
+
+    EVERY COMPARISON BETWEEN BARS ROUTES THROUGH HERE. The retired vocabulary let
+    this module compare gate names as raw strings, which was correct only because
+    `G1 < G2 < G3` happens to alphabetize (check_vocab: allow) — a form that looks
+    ordered while being
+    ordered by accident. The new names are NOT alphabetical (`DevBar-Release`
+    sorts before `DevBar-Reqs` before `DevBar-Tests`), so the accident is gone and
+    a lexical comparison is now obviously, loudly wrong instead of quietly right.
+    tests/test_stage_ladder.py greps the kit's scripts to keep it that way."""
+    try:
+        return BAR_ORDER.index(name)
+    except ValueError:
+        raise ValueError(
+            "check: {!r} is not a runnable bar — expected one of {}".format(
+                name, "|".join(BAR_ORDER)
+            )
+        ) from None
+
+
+def _resolve_bar_alias(value, what):
+    """Translate a retired `G1`/`G2`/`G3` tag to a canonical bar, warning once.  check_vocab: allow
+    Anything else passes through untouched for the caller's own validation."""
+    v = (value or "").strip()
+    if v in RETIRED_BAR_ALIASES:
+        canonical = RETIRED_BAR_ALIASES[v]
+        print(
+            "check: {} {!r} uses the RETIRED gate vocabulary — reading it as {!r}. "
+            "The tags retired at OI-21; update to the stage-ladder bar names "
+            "({}).".format(what, v, canonical, "|".join(BAR_ORDER)),
+            file=sys.stderr,
+        )
+        return canonical
+    return v
+
+
+# The machine-readable derived bar (process.md §4/§7). One line, e.g. "DevBar-Reqs".
 GATE_FILE = Path("docs/gate")
 
 # `derive_gate.py` writes its inputs into a `# basis:` comment above the value.
-# The two counts below say whether the gate is SUPPRESSED by an open ratification
+# The two counts below say whether the bar is SUPPRESSED by an open ratification
 # window rather than reflecting the project's real maturity.
 _BASIS_RE = re.compile(r"#\s*basis:.*\bdrafts=(\d+)\b.*\bmodified=(\d+)\b")
-# The other two fields the window test needs: the raw computed level (may be G0,
-# unlike the runnable value on the line below it) and the per-phase breakdown,
-# which is what distinguishes "drafts are holding a MATURE spine down" from
-# "this project is simply early".
-_COMPUTED_RE = re.compile(r"\bcomputed=(G\d)\b")
+# The other two fields the window test needs: the raw computed level (may be
+# `DevBar-Below`, unlike the runnable value on the line below it) and the
+# per-phase breakdown, which is what distinguishes "drafts are holding a MATURE
+# spine down" from "this project is simply early".
+_COMPUTED_RE = re.compile(r"\bcomputed=(DevBar-\w+)\b")
 _PER_PHASE_RE = re.compile(r"\bper-phase=(\S+)")
 # The level the spine would compute with the DRAFT rows removed (WI-341). This
-# is the direct answer to "are the drafts the only thing holding this gate
+# is the direct answer to "are the drafts the only thing holding this bar
 # down?", and unlike the per-phase breakdown a draft cannot erase it: the rows
 # it did not touch are still there. Absent from gate files written before
 # WI-341 — the per-phase fallback below covers those until they regenerate.
-_EX_DRAFT_RE = re.compile(r"\bex-draft=(G\d)\b")
+_EX_DRAFT_RE = re.compile(r"\bex-draft=(DevBar-\w+)\b")
+
+
+def _window_ord(name):
+    """A basis-line level as a comparable ordinal, with `DevBar-Below` sitting
+    UNDER every runnable bar. Separate from `bar_ord` because the basis line
+    legitimately carries the below-the-floor sentinel that `--gate` never can, and
+    an unreadable value reads as the floor so a malformed cache never manufactures
+    a window."""
+    if name == "DevBar-Below":
+        return -1
+    try:
+        return BAR_ORDER.index(name)
+    except ValueError:
+        return -1
+
 
 # Steps kept OUT of the advisory pass, by name and with the reason — an
 # unexplained exclusion list is how a warn tier quietly stops covering things.
@@ -875,7 +1001,7 @@ _EX_DRAFT_RE = re.compile(r"\bex-draft=(G\d)\b")
 # would re-run the whole suite plus coverage on EVERY gate run for the life of a
 # window — measured 55.8 s at the smoke tier and ~11 min unfiltered on a
 # 24-thread box — which buys no signal and would train people to skip the gate.
-# The steps that ARE included (lint, the freshness gates, the G3 traceability
+# The steps that ARE included (lint, the freshness gates, the DevBar-Release traceability
 # criterion) are cheap, read-only, and genuinely stop running.
 #
 # `module-coverage` follows its PRODUCER out (127-REVIEW-A MAJOR 6). It grades
@@ -902,33 +1028,33 @@ def window_open(gate_file=None):
     census's, and the census itself was torn down later, D-7/WI-426; the ruling
     is about the blind spot, not about which step fell into it).
 
-    Deliberately NOT "any gate below G3": a project genuinely at G1 has not
+    Deliberately NOT "any gate below DevBar-Release": a project genuinely at DevBar-Reqs has not
     earned those steps and should not be told about them on every run. The
     signal is specifically that the gate was *suppressed*.
 
     The two counts are not equally good evidence of that, which the first cut
-    got wrong (127-REVIEW-A MAJOR 5 — it fired on `drafts>0`, ordinary G0/G1
+    got wrong (127-REVIEW-A MAJOR 5 — it fired on `drafts>0`, ordinary DevBar-Below/DevBar-Reqs
     state, contradicting the very claim above):
 
       * `modified>0` IS conclusive on its own. `Modified` is *defined* as a
         post-attestation amendment (derive_gate's model, WI-316), so the row can
         only exist in a spine that has already been ratified. Something that was
         Verified is pending again — that is a window by construction.
-      * `drafts>0` is ambiguous. A Draft reads G0, so drafts drop the gate in a
+      * `drafts>0` is ambiguous. A Draft reads DevBar-Below, so drafts drop the gate in a
         mature repo starting a new phase AND in a project that has never
         ratified anything. The counts cannot tell those apart — `ex-draft` can,
         by answering the question directly: it is the level the same arithmetic
-        computes with the draft rows REMOVED. If that clears G2 and sits above
+        computes with the draft rows REMOVED. If that clears DevBar-Tests and sits above
         the level the drafts produced, then the spine has demonstrably climbed
         and the drafts are the only thing holding it down. A window.
 
     `ex-draft` replaced a per-phase heuristic that read the phase breakdown for
     the same evidence (WI-341). The heuristic could not see a SINGLE-phase
-    repo's maturity at all: a Draft added there drops that phase to G0, so no
+    repo's maturity at all: a Draft added there drops that phase to DevBar-Below, so no
     phase remains above `computed` and the mature repo reads exactly like a new
     one — the very blind spot this tier exists to close, reopened by one row
     (128-REVIEW-A MAJOR 3). It is kept below ONLY as the fallback for a gate
-    file written before `ex-draft` existed, and it keeps its own G2 floor,
+    file written before `ex-draft` existed, and it keeps its own DevBar-Tests floor,
     which fixed the mirror-image false positive on an early multi-phase repo.
 
     Both routes are conservative when the evidence is missing (no `ex-draft`
@@ -954,18 +1080,21 @@ def window_open(gate_file=None):
     ex_draft = _EX_DRAFT_RE.search(text)
     if ex_draft:
         # Two conditions, not one: the drafts-removed level must clear the bar
-        # the advisory tier reports on (G2+), and it must actually be ABOVE what
+        # the advisory tier reports on (DevBar-Tests+), and it must actually be ABOVE what
         # the drafts produced — otherwise the drafts are not what is holding the
         # gate down and there is nothing being suppressed.
-        return ex_draft.group(1) >= "G2" and ex_draft.group(1) > computed.group(1)
-    # Fallback for a pre-WI-341 gate file (no `ex-draft`), with its own G2 floor.
+        return _window_ord(ex_draft.group(1)) >= _window_ord(BAR_TESTS) and (
+            _window_ord(ex_draft.group(1)) > _window_ord(computed.group(1))
+        )
+    # Fallback for a pre-WI-341 gate file (no `ex-draft`), with its own DevBar-Tests floor.
     per_phase = _PER_PHASE_RE.search(text)
     if not per_phase or per_phase.group(1) == "(none)":
         return False
-    levels = re.findall(r"=(G\d)", per_phase.group(1))
+    levels = re.findall(r"=(DevBar-\w+)", per_phase.group(1))
     if not levels:
         return False
-    return max(levels) >= "G2" and max(levels) > computed.group(1)
+    top = max(_window_ord(v) for v in levels)
+    return top >= _window_ord(BAR_TESTS) and top > _window_ord(computed.group(1))
 
 
 def run_advisory(advisory, jobs, lane_map):
@@ -997,10 +1126,10 @@ def advisory_plan(gate, plan, steps_at):
     Built by ASKING `steps()` for each higher gate's own plan (`steps_at`), not
     by filtering this gate's. That distinction is the whole of 127-REVIEW-A
     BLOCKER 4: the step table is *specialized to the gate it was built for*, so
-    `traceability` built at G2 carries no `--require-verified`, and no filter
+    `traceability` built at DevBar-Tests carries no `--require-verified`, and no filter
     over it could ever produce the stronger variant — which the owner explicitly
     ruled IN ("a `Planned` row also fails it, and that is real signal"). The
-    first cut filtered, so it silently ran neither the G3 command nor anything
+    first cut filtered, so it silently ran neither the DevBar-Release command nor anything
     in its place, while a test asserted traceability was *not* advisory and
     entrenched it.
 
@@ -1022,10 +1151,11 @@ def advisory_plan(gate, plan, steps_at):
         gating.setdefault(name, []).append(list(cmd))
     out, seen = [], set()
     # HIGHEST gate first, and one entry per step name: a step required at both
-    # G2 and G3 gets its G3 form, which is the stronger one. Ascending order ran
-    # `traceability` twice at G1 — once without `--require-verified` and once
+    # DevBar-Tests and DevBar-Release gets its DevBar-Release form, which is the stronger one. Ascending order ran
+    # `traceability` twice at DevBar-Reqs — once without `--require-verified` and once
     # with — which is pure duplication, since the stronger form subsumes it.
-    for higher in sorted((g for g in GATES if g != "all" and g > gate), reverse=True):
+    higher_bars = [g for g in BAR_ORDER if bar_ord(g) > bar_ord(gate)]
+    for higher in sorted(higher_bars, key=bar_ord, reverse=True):
         for step in steps_at(higher):
             name, _requires, cmd, gates, _layer = step
             if higher not in gates or name in ADVISORY_EXCLUDE or name in seen:
@@ -1046,9 +1176,13 @@ def _print_steps(plan):
     copy the moment it appeared; that census was torn down in D-7/WI-426, so the
     extraction now stands on its own reason rather than on a tool's verdict.)"""
     for name, _requires, cmd, gates, layer in plan:
+        # Sorted by LADDER POSITION, not lexically: `DevBar-Release` alphabetizes
+        # FIRST, so an unkeyed sort here printed the step's bars in nonsense order
+        # the moment the vocabulary changed. Caught by tests/test_stage_ladder.py's
+        # grep, which is exactly the class of accidentally-right code OI-21 banned.
         print(
             "  - {:16} [{:7}] [{}]  {}".format(
-                name, layer, ",".join(sorted(gates)), " ".join(cmd)
+                name, layer, ",".join(sorted(gates, key=bar_ord)), " ".join(cmd)
             )
         )
 
@@ -1086,7 +1220,7 @@ def resolve_gate(explicit):
 
 def _step_gate(explicit):
     """The gate that BUILDS a --run-step/--run-steps command: an explicit --gate
-    is honoured (so `--gate G3 --run-steps trajectory` really gates), but a
+    is honoured (so `--gate DevBar-Release --run-steps trajectory` really gates), but a
     DEFAULTED one resolves to "all", never docs/gate — the pre-commit hook passes
     no --gate and its floor must stay warn-first (see the trajectory step's
     comment). Name lookup stays unfiltered, so `format` is findable at any gate."""
@@ -1439,11 +1573,19 @@ def main():
     ap = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )
+    # THE CLI CONTRACT, OI-21 break 1. `choices=` deliberately lists the retired
+    # tags TOO, because argparse rejects an out-of-choices value before any code of
+    # ours runs — so an adopter's `--gate G2` dies with a bare argparse usage  check_vocab: allow
+    # error naming no migration. Listing them lets `_resolve_bar_alias` translate
+    # and explain instead. The `metavar` keeps `--help` teaching only the canonical
+    # form, so the aliases are reachable without being advertised.
     ap.add_argument(
         "--gate",
-        choices=GATES,
+        choices=GATES + list(RETIRED_BAR_ALIASES),
+        metavar="{" + ",".join(GATES) + "}",
         default=None,
-        help="gate to run (default: the derived gate in docs/gate, else all)",
+        help="bar to run (default: the derived bar in docs/gate, else all). "
+        "The retired DevBar-Reqs/DevBar-Tests/DevBar-Release tags are accepted as aliases and warn.",
     )
     ap.add_argument("--tier", choices=list(TIERS), default="all")
     ap.add_argument(
@@ -1456,7 +1598,7 @@ def main():
     ap.add_argument(
         "--phase",
         default=None,
-        help="delivery phase(s) in scope, e.g. v1 or v1,v2 — scopes the G3 "
+        help="delivery phase(s) in scope, e.g. v1 or v1,v2 — scopes the DevBar-Release "
         "Verified criterion to that phase (process.md §4 'Phased delivery')",
     )
     ap.add_argument(
@@ -1521,6 +1663,9 @@ def main():
                 Path.cwd()
             )
         )
+    # Translate a retired `--gate G2` (warning once) before anything consumes it,  check_vocab: allow
+    # so `resolve_gate` and `_step_gate` both see only canonical bar names.
+    args.gate = _resolve_bar_alias(args.gate, "--gate") if args.gate else args.gate
     gate = resolve_gate(args.gate)
     profile = load_profile()
 
@@ -1542,7 +1687,7 @@ def main():
     lane_map = _resolve_lane_map(profile, coverage, args.tier, args.phase)
 
     # Run one named step and exit (the hook's format delegation). Search the
-    # unfiltered plan so a gate-scoped step (format is G3-only) is still found,
+    # unfiltered plan so a gate-scoped step (format is DevBar-Release-only) is still found,
     # and be lenient about a missing tool so a not-yet-set-up repo can commit —
     # a real failure still exits nonzero.
     step_gate = _step_gate(args.gate)  # explicit --gate gates; defaulted = "all"
@@ -1592,7 +1737,7 @@ def main():
         _print_steps(plan)
         # The advisory tier is part of what this invocation WILL run, so --list
         # must show it or the option lies (128-REVIEW-A MINOR 5: a real window
-        # listed only the weaker G2 traceability while the run executed the G3
+        # listed only the weaker DevBar-Tests traceability while the run executed the DevBar-Release
         # one). Marked, and separated, so it cannot be read as the bar.
         if advisory:
             print(

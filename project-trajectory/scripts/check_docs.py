@@ -34,12 +34,12 @@ finding classes:
     under `--strict-orphans`) — the no-new-orphan ratchet, baselining history
     without freezing it. Absent file => today's behavior unchanged, so the kit
     never surprises an existing repo.
-  - **the vision tag** (process.md §4 G1's mechanizable half): the root README
+  - **the vision tag** (process.md §4 DevBar-Reqs's mechanizable half): the root README
     must carry the singleton `PROJECT-VISION:` tag exactly once — zero (the
     canonical vision statement is missing) or several (a re-authored variant;
     other docs point at the tag, never restate it) is a hard finding; exit 1.
     No root README at all degrades to a warning (a louder, different problem).
-  - **README need coverage** (**opt-out**; process.md §4 G1): traceability is the
+  - **README need coverage** (**opt-out**; process.md §4 DevBar-Reqs): traceability is the
     kit's core value, so the root README is held to it too — every SN id cited
     anywhere in it must exist in the stakeholder-needs registry, and every
     Must/Should need in that registry must be cited somewhere in the README, so a
@@ -163,10 +163,10 @@ SCRATCHPAD = "OWNER_SCRATCHPAD.md"
 # links" are noise by definition for a doc that is deliberately frozen. Hardcoded
 # like OKF_DIR (the archive lives under docs/ by convention, regardless of --docs).
 ARCHIVE_DIR = "docs/archive"
-# The singleton tag opening the root README's vision statement (process.md §4 G1).
+# The singleton tag opening the root README's vision statement (process.md §4 DevBar-Reqs).
 VISION_TOKEN = "PROJECT-VISION:"
 # README need coverage is ON by default (opt-out); a README disables it with this
-# comment on its own line (process.md §4 G1). Anchored to a whole line so prose
+# comment on its own line (process.md §4 DevBar-Reqs). Anchored to a whole line so prose
 # that merely *documents* the opt-out (inline, mid-sentence) can't trip it — a
 # real opt-out puts the marker on its own line. Citations are any SN-### in the
 # README — no delimiter markers.
@@ -504,7 +504,7 @@ def _root_readme(docs, root):
 
 
 def check_vision(docs, root):
-    """The root README must state the vision exactly once (process.md §4 G1).
+    """The root README must state the vision exactly once (process.md §4 DevBar-Reqs).
 
     The `PROJECT-VISION:` tag is the purpose fact's canonical home — other docs
     point at it and never restate it — so a missing tag and a re-authored
@@ -522,7 +522,7 @@ def check_vision(docs, root):
     if n == 0:
         return [
             "{}: missing the {} tag (the canonical vision statement; "
-            "process.md §4 G1)".format(src, VISION_TOKEN)
+            "process.md §4 DevBar-Reqs)".format(src, VISION_TOKEN)
         ], []
     if n > 1:
         return [
@@ -563,7 +563,7 @@ def _registry_needs(path):
 
 
 def check_inventory(docs, root, docs_dir):
-    """The root README honors the traceability spine (process.md §4 G1).
+    """The root README honors the traceability spine (process.md §4 DevBar-Reqs).
 
     ON by default (opt-out): every SN id cited anywhere in the README must exist
     in the stakeholder-needs registry, and every Must/Should need in that registry

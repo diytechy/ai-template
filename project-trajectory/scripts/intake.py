@@ -82,6 +82,44 @@ import wi_convert
 SCRIPTS = Path(__file__).resolve().parent
 WORK = "docs/work"
 
+# --- the WI `bar:` vocabulary (OI-21 contract break 3) -------------------------
+# The bar a work item is held to, in the stage-ladder vocabulary. A WI's `bar:`
+# frontmatter is a value the AUTHOR writes, so the retired `DevBar-Reqs|DevBar-Tests|DevBar-Release` tags
+# translate on read — silently, like `docs/stack.ini`'s `gates=` and for the same
+# reason: check_vocab.py sees the authored spec file and can name the line, which
+# is a better message than a loader could produce. New rows author the new form.
+#
+# The retired matching was `.upper()` + an uppercase tuple, which is why this is a
+# named helper now rather than an inline expression: `"DevBar-Reqs".upper()` is
+# `"DEVBAR-REQS"`, so a case-folding comparison would have silently rejected every
+# correctly-authored new value.
+WI_BARS = ("DevBar-Reqs", "DevBar-Tests", "DevBar-Release")
+_RETIRED_WI_BARS = {
+    "g1": "DevBar-Reqs",
+    "g2": "DevBar-Tests",
+    "g3": "DevBar-Release",
+}
+
+
+def normalize_bar(value):
+    """A `bar:` cell as a canonical `DevBar-*` name ("" when blank).
+
+    Retired tags translate case-insensitively; a canonical value is matched
+    case-insensitively too and returned in its declared casing, so `devbar-reqs`
+    is accepted without the value ever being stored mis-cased. Anything else comes
+    back stripped and unchanged, for the caller to refuse by name."""
+    raw = str(value or "").strip()
+    if not raw:
+        return ""
+    low = raw.lower()
+    if low in _RETIRED_WI_BARS:
+        return _RETIRED_WI_BARS[low]
+    for canonical in WI_BARS:
+        if low == canonical.lower():
+            return canonical
+    return raw
+
+
 # The traced cells that ROUTE to adjudication rather than staying silent
 # (§A5.1 for `SN-Refs`/`Verifies`; the WI-388 ruling for LLR `SR-Refs` —
 # recorded at check_trajectory.SPINE_TRACED_CELLS, the cell-split table's
@@ -916,10 +954,10 @@ def _draft_refusal(data, where, index):
             "kind is DERIVED from the dual signal (single-source); drop the "
             "cell; nothing minted".format(at, declared)
         )
-    bar = str(data.get("bar") or "").strip().upper()
-    if bar and bar not in ("G1", "G2", "G3"):
-        return "{} declares bar = {!r} (G1|G2|G3) - nothing minted".format(
-            at, data.get("bar")
+    bar = normalize_bar(data.get("bar"))
+    if bar and bar not in WI_BARS:
+        return "{} declares bar = {!r} ({}) - nothing minted".format(
+            at, data.get("bar"), "|".join(WI_BARS)
         )
     return None
 
@@ -1104,7 +1142,7 @@ def _draft_row(wi_id, draft):
     row["SafetyClass"] = str(draft.get("kind") or "")
     row["Brief"] = str(draft.get("brief") or "")
     row["PlanMode"] = str(draft.get("planmode") or "")
-    row["Bar"] = str(draft.get("bar") or "").upper()
+    row["Bar"] = normalize_bar(draft.get("bar"))
     row["SR-Refs"] = ";".join(draft.get("sr_refs") or [])
     row["Predecessors"] = ";".join(draft.get("needs") or [])
     if draft.get("priority") is not None:

@@ -30,7 +30,7 @@ A rubric file is `rubric-<name>.md` (see the worked example
 
 - **An intent statement** — one paragraph naming what acceptance means, in the
   stakeholder's terms, traced to the SN/SR it derives from.
-- **Numbered good anchors (`G1`, `G2`, …) and bad anchors (`B1`, `B2`, …)** —
+- **Numbered good anchors (`DevBar-Reqs`, `DevBar-Tests`, …) and bad anchors (`B1`, `B2`, …)** —
   definite, citable entries describing what constitutes good and known-bad
   patterns (seam artifacts, impossible shadows, floating geometry), *the same way
   test cases are called out*. Each anchor is a numbered, referenceable line; a

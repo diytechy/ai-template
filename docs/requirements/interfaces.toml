@@ -2,7 +2,7 @@
 direction = "Provides"
 this_project = "scripts/trace"
 counterpart = "scripts/check"
-contract = """trace.py CLI: --strict-integrity exits 1 on a duplicate/malformed id or mis-columned row; --strict adds orphan + IF/PB back-link findings; --require-verified adds the G3 status check; writes docs/test/report.md"""
+contract = """trace.py CLI: --strict-integrity exits 1 on a duplicate/malformed id or mis-columned row; --strict adds orphan + IF/PB back-link findings; --require-verified adds the DevBar-Release status check; writes docs/test/report.md"""
 signal = "variable"
 signal_note = """derived at the WI-443 conversion: the Contract names BOTH a typed outcome and unbounded content, and any unbounded part makes the whole crossing variable - re-type it by hand when this row is next touched (B1)"""
 sr_refs = ["SR-001", "SR-002", "SR-005"]
@@ -118,7 +118,7 @@ stability = "Stable"
 direction = "Provides"
 this_project = "scripts/check"
 counterpart = "downstream adopter"
-contract = """check.py CLI: --gate G1|G2|G3|all with --tier/--coverage/--lenient runs the active gate's steps as subprocesses and exits nonzero on any required failure (never a silent pass)"""
+contract = """check.py CLI: --gate DevBar-Reqs|DevBar-Tests|DevBar-Release|all with --tier/--coverage/--lenient runs the active gate's steps as subprocesses and exits nonzero on any required failure (never a silent pass)"""
 signal = "discrete"
 sr_refs = ["SR-006", "SR-007", "SR-008"]
 version = "v1"
@@ -863,7 +863,7 @@ notes = """WI-280 slice 11: the guarded import moved to traj_parse (its one home
 direction = "Provides"
 this_project = "scripts/check_figures"
 counterpart = "scripts/check"
-contract = """check_figures.py CLI: flags a declared fig: figure marker that carries neither a non-empty cmd= plus rev= pair nor a non-empty derived= derivation, over root+docs markdown and docs/stack.ini; presence only, warn-first (exit 0), --strict exits 1 - wired as the opt-in [step:figures] G3 product step"""
+contract = """check_figures.py CLI: flags a declared fig: figure marker that carries neither a non-empty cmd= plus rev= pair nor a non-empty derived= derivation, over root+docs markdown and docs/stack.ini; presence only, warn-first (exit 0), --strict exits 1 - wired as the opt-in [step:figures] DevBar-Release product step"""
 signal = "variable"
 signal_note = """derived at the WI-443 conversion: the Contract names BOTH a typed outcome and unbounded content, and any unbounded part makes the whole crossing variable - re-type it by hand when this row is next touched (B1)"""
 sr_refs = ["SR-136"]

@@ -682,8 +682,10 @@ def _declare_level(root, level):
         fh.write(
             "# DERIVED GATE\n"
             "# basis: SN=1 SR=2 LLR=1 TC=0 drafts=0 modified=2 uncovered=0 "
-            "computed=G2 ex-draft=G2 phase=1 per-phase=1=G2 stage=3\n"
-            "G2\n"
+            "computed=DevBar-Tests ex-draft=DevBar-Tests phase=1 "
+            "per-phase=1=DevBar-Tests stage=DevStg-Tests stage-ord=5 "
+            "stage-of=8\n"
+            "DevBar-Tests\n"
         )
 
 
@@ -709,7 +711,8 @@ def test_below_the_human_level_the_flip_is_enacted(tmp_path):
     # ratification level, a recorded LLM verdict already carries ratification
     # authority, so the helper flips Modified -> Verified — and ONLY the Status
     # cells move (the registries stay byte-identical elsewhere; a re-run is an
-    # idempotent no-op). The fixture's spine stage is 3, so levels 0..2 are the
+    # idempotent no-op). The fixture's rung is `DevStg-Tests`, which only level 4
+    # holds (the dial's four notches are the SPINE tiers), so levels 0..2 are the
     # loop-held side; both ends of that range are driven.
     for i, level in enumerate((0, 2)):
         (tmp_path / str(i)).mkdir()

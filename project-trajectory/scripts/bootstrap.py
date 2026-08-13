@@ -17,7 +17,7 @@ What it creates in the destination:
     GEMINI.md                                  <- GEMINI.stub.template.md (points to AGENTS.md)
     docs/process.md                            <- PROCESS.md  (load-bearing core)
     docs/process-options.md                    <- PROCESS_OPTIONS.md  (opt-in layers)
-    docs/gate                                  <- gate.template  (derived gate: G1)
+    docs/gate                                  <- gate.template  (derived gate: DevBar-Reqs)
     docs/id-watermark                          <- id-watermark.template  (id high-water marks)
     docs/process.toml                          <- process.toml.template  (EVERY policy dial:
                                                   gate authority, the human-ratification level,
@@ -134,7 +134,7 @@ The per-agent skill copies are a **checked fan-out of the one neutral source**
 `--sync` is the deliberate refresh that force-overwrites each existing per-agent
 skills subtree from `skills/` so "edit source → re-materialize" is one command.
 `gen_skills_index.py --check-agents` is the drift gate (byte-identity of every
-per-agent copy to source), wired into the pre-commit floor + G3 like the arch-map
+per-agent copy to source), wired into the pre-commit floor + DevBar-Release like the arch-map
 / OKF freshness steps and vacuous when a repo has no per-agent skills dir.
 
 The README and the root `run.{cmd,sh,command}` launchers (WI-1.12) are the
@@ -201,7 +201,7 @@ the SN->SR->LLR->TC spine: each row is a work item decomposing *how* work runs �
 it delivers SR(s), sits on a track, and depends on predecessor WIs (the DAG
 edges), moving `queued->active->done`. `scripts/check_trajectory.py` validates it
 (id integrity, resolvable predecessors, an acyclic graph, SR refs that exist)
-as the `trajectory` gate step from G2 on. Like the always-on secrets floor it is
+as the `trajectory` gate step from DevBar-Tests on. Like the always-on secrets floor it is
 OPT-OUT and vacuous by default: the shipped inert `WI-000` placeholder makes a
 fresh scaffold pass for free, and a repo that never wants the layer sets
 `docs/process.toml` `[checks] trajectory_check = false`. It is off-spine (like procurement / assets);
@@ -209,7 +209,7 @@ fresh scaffold pass for free, and a repo that never wants the layer sets
 `scripts/gen_trajectory.py` renders the registry + spine into a self-contained,
 fully-offline root `PROJECT_STATE.html` dashboard — an SVG icicle of the spine and a
 plain-SVG layered DAG of the work items, no CDN; its `--check` is the
-`trajectory-map` freshness gate at G3 (regenerate + byte-compare, like `arch-map`).
+`trajectory-map` freshness gate at DevBar-Release (regenerate + byte-compare, like `arch-map`).
 Both are generated *views*, never a source of truth.
 
 `docs/privacy-check` (process-options.md "Commit identity & privacy") toggles
@@ -296,7 +296,7 @@ scaffold starts green — `check.py` would otherwise fail on the template
 placeholder between the architecture markers.
 
 After running: open AGENTS.md and docs/status.md, fill the PROJECT BRIEF, then
-start gate G1 (see docs/process.md).
+start gate DevBar-Reqs (see docs/process.md).
 
 Contracts: IF-014, IF-039 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.csv).
 """
@@ -745,7 +745,7 @@ GATE_POLICY_CHOICES = ("attended", "single-ratify", "autonomous")
 GATE_POLICY_DEVIATIONS = {
     "single-ratify": [
         (
-            "§4 acceptor, G1+G2",
+            "§4 acceptor, DevBar-Reqs+DevBar-Tests",
             "a human approves each gate",
             "LLM-gate review; every human call queued as a `Needs <human>` "
             "Open item (+ provisional decision where the driver proceeded)",
@@ -753,12 +753,12 @@ GATE_POLICY_DEVIATIONS = {
         (
             "§4 ratification point",
             "per-gate approval",
-            "one human sitting at **G2 close** ratifies/amends the queue; "
+            "one human sitting at **DevBar-Tests close** ratifies/amends the queue; "
             "ratified decisions move to docs/log.md (relocating the point = "
             "amending this register)",
         ),
         (
-            "§4 acceptor, G3→G-Release",
+            "§4 acceptor, DevBar-Release→DevBar-Release",
             "a human approves each gate",
             "autonomous rules after ratification (LLM-gate verdicts)",
         ),
@@ -771,7 +771,7 @@ GATE_POLICY_DEVIATIONS = {
     ],
     "autonomous": [
         (
-            "§4 acceptor, G1→G-Release",
+            "§4 acceptor, DevBar-Reqs→DevBar-Release",
             "a human approves each gate",
             "LLM-gate: an independent fresh-context reviewer runs the harness "
             "itself; verdict recorded in docs/log.md with `Model:` + "
@@ -801,7 +801,7 @@ GATE_POLICY_DEVIATIONS = {
 
 GATE_POLICY_FIXED_POINTS = """## Fixed points (nothing in this file overrides these)
 
-- **G-Final is the human's.**
+- **the owner's final read is the human's.**
 - **No un-run greens** — a verdict or test result that wasn't actually
   executed is a process violation regardless of tier.
 - **The harness is still the bar** — LLM judgment supplements the checks; it
@@ -981,7 +981,7 @@ def apply_privacy_check(dest, value, dry_run):
 #
 # What each word meant, and why one key could not hold it: `attended` held every
 # tier and drained the station at a ratification; `single-ratify` held NO tier
-# (LLM-gate review ran through G1+G2) but sat ONE human at the close and kept
+# (LLM-gate review ran through DevBar-Reqs+DevBar-Tests) but sat ONE human at the close and kept
 # non-dependent work running; `autonomous` did the same without the final read.
 LEGACY_RATIFICATION = {
     "attended": {
@@ -1327,7 +1327,7 @@ def write_kit_profile(dest, stack, omit, dry_run):
 # template's seeded examples, so the checklist starts at OI-3.
 STACK_NEEDS_HUMAN = (
     "    - OI-3 — decide: the {stack} toolchain commands (format / lint / "
-    "test) in docs/stack.ini's [product] section (blocks: G1) → "
+    "test) in docs/stack.ini's [product] section (blocks: DevBar-Reqs) → "
     "[stack.ini](stack.ini)\n"
 )
 STACK_IN_FLIGHT = (
@@ -1369,7 +1369,7 @@ STACK_OI3_ROW = (
     (
         "decision",
         "the format / lint / test commands for the {stack} stack in "
-        "docs/stack.ini's [product] section (blocks: G1).",
+        "docs/stack.ini's [product] section (blocks: DevBar-Reqs).",
     ),
     (
         "blast_radius",
@@ -1508,7 +1508,7 @@ MAPPING = [
     ("GEMINI.stub.template.md", "GEMINI.md"),
     ("PROCESS.md", "docs/process.md"),
     ("PROCESS_OPTIONS.md", "docs/process-options.md"),
-    # The machine-readable derived gate (first non-comment line: G1|G2|G3) — the
+    # The machine-readable derived gate (first non-comment line: DevBar-Reqs|DevBar-Tests|DevBar-Release) — the
     # gate the repo must next PASS. check.py and CI read it, so a young project's
     # CI enforces the bar it is actually working toward. It is DERIVED from the
     # artifact states by derive_gate.py (not hand-set); closing a gate =
@@ -1704,6 +1704,12 @@ MAPPING = [
     ("scripts/check_coverage.py", "scripts/check_coverage.py"),
     ("scripts/check_privacy.py", "scripts/check_privacy.py"),
     ("scripts/check_vendored.py", "scripts/check_vendored.py"),
+    # The retired-vocabulary enforcer (OI-21). Shipped, not kit-only: an adopter
+    # re-syncing across the conversion has their OWN authored surfaces carrying
+    # the retired `G*` tags (their WI `bar:` values, their `stack.ini` `gates=`,
+    # their status prose), and the recipe that tells them to convert is worth
+    # exactly as much as the check that tells them they missed one.
+    ("scripts/check_vocab.py", "scripts/check_vocab.py"),
     ("scripts/check_trajectory.py", "scripts/check_trajectory.py"),
     # The ready-frontier/safety-classification library (IF-053). Shipped
     # because it is a SIBLING IMPORT of the integration seam, not a nicety:
@@ -2818,7 +2824,7 @@ def main():
     if not plan.dry_run and outcome.created:
         print(
             "Next: fill the PROJECT BRIEF in AGENTS.md + docs/status.md, then "
-            "run gate G1 (docs/process.md)."
+            "run gate DevBar-Reqs (docs/process.md)."
         )
     if outcome.missing:
         sys.exit(1)

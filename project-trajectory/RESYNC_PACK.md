@@ -7,6 +7,13 @@ concept renames. `ADOPTING.md` §6 frames the job and points here; the
 `downstream-resync` skill sequences it and points here. **If a rule is wrong,
 fix it here** — there is no second copy to keep in step.
 
+<!-- check_vocab: allow-file — this pack is the DECLARED home of every concept
+rename the kit has shipped, so it necessarily spells out retired vocabulary on
+both sides of each arrow (§4 is literally the translation table). Exempting the
+whole file is correct here and correct nowhere else: an entry that could not name
+what it replaces would be useless to the reader it exists for. -->
+
+
 **Where this lives, and which copy to read.** This is a kit reference doc
 (`project-trajectory/RESYNC_PACK.md`), like `ADOPTING.md` and `EXAMPLE.md` — it
 is **not** scaffolded into an adopting repo, deliberately. A copy frozen in your
@@ -224,7 +231,7 @@ range. Entries are ordered **oldest first** — apply them in that order.
 
 Adoptions created `docs/test/test-cases.csv` before the `Tier` column existed.
 `trace.py --strict-schema` requires `Tier` as a non-empty field (it validates the
-full TC schema at G3). Migration is mechanical: add a `Tier` column and set a
+full TC schema at DevBar-Release). Migration is mechanical: add a `Tier` column and set a
 default of `Full`; mark hardware/network/interactive cases `Release` so they
 don't run on unattended CI. Once the column is present, `--strict-schema` also
 validates that values are in `{Smoke, Full, Release}`, so tighten any free-text
@@ -345,7 +352,7 @@ even under `--strict-schema`.
 
 The blackboard splits: `status.md` is the **working surface** — only what the
 agent or human must perform next — and `docs/log.md` is the **append-only
-history** it points at (the Gate Sign-offs table, verdict blocks, ratified
+history** it points at (the Sittings table, verdict blocks, ratified
 decisions, session notes; process.md §5). Migration is **optional and
 proportionate — never forced**: an adopted repo may keep its merged file. To
 adopt: copy `LOG.template.md` → `docs/log.md`, cut the accreted history sections
@@ -392,12 +399,12 @@ out of the kit's scope; decide that deliberately before publishing.
 The test-case registry gains an **`Evidence`** field (between `Automated` and
 `Status`) naming the concrete test — a pytest node, a script path, or a
 procedure-doc link (inspection-only text, never mechanically resolved). Optional
-in general, but from G3 `--strict-schema` **requires it non-empty on
+in general, but from DevBar-Release `--strict-schema` **requires it non-empty on
 `Automated=Yes` rows** — a claimed-automated test with no cited location is a soft
 false-green; a legacy registry without the column reads as empty and is flagged
 the same way. Migration: add the field, then move any test pointers you had
 squeezed into `Parameters` (the old `node=…` workaround) into `Evidence`,
-restoring `Parameters` to dimensional inputs only. Below G3 a legacy file keeps
+restoring `Parameters` to dimensional inputs only. Below DevBar-Release a legacy file keeps
 passing untouched.
 
 ### The component / workstream schema bundle [since 73313e69]
@@ -421,7 +428,7 @@ legacy file + ids are still read, and both may coexist mid-migration.
 ### The OKF knowledge bundle [since 27ebc29d]
 
 Newer kits export the spine registries as a generated `docs/okf/` bundle, **on by
-default** with a pre-commit + G3 freshness gate. After a re-sync, either run
+default** with a pre-commit + DevBar-Release freshness gate. After a re-sync, either run
 `python scripts/gen_okf.py` once and commit the bundle (it stays fresh via the
 hook from then on), or opt out with `okf_export = false` under `[checks]` in
 `docs/process.toml` — a repo with placeholder-only registries needs neither
@@ -448,7 +455,7 @@ the SR-002-era gap), the interfaces template gains a `Notes` column (legacy rows
 read it empty), and `check_trajectory.py` runs a warn-first **connectivity
 coverage** over the arch-map inventory. It is **opt-out, default-on**, so after a
 re-sync a **multi-module** repo with no declared seams starts warning
-"connectivity undeclared" at the hook and G3. That never fails a gate — the warns
+"connectivity undeclared" at the hook and DevBar-Release. That never fails a gate — the warns
 only nudge. To act on them, declare `IF-###` rows (process.md §8; use a
 `source`/`sink` first-word `Notes` marker for a deliberate pure source/sink) and
 regenerate the arch-map + `PROJECT_STATE.html`; to silence the whole layer, set
@@ -515,10 +522,10 @@ vocabulary rule).
 
 ### `--require-verified` widened to method-blind [since a686bcc8]
 
-The G3 traceability floor `trace.py --require-verified` now demands
+The DevBar-Release traceability floor `trace.py --require-verified` now demands
 `Status=Verified` for **every** ratified, in-phase SR regardless of its
 `Verification` method (was `Verification=Test` only), matching
-`derive_gate.sr_gate` — which already blocked G3 for any unverified decomposed SR.
+`derive_gate.sr_gate` — which already blocked DevBar-Release for any unverified decomposed SR.
 **Downstream impact:** a repo passing `--require-verified` today with a non-Test SR
 (Demonstration / Manual / Analysis / Inspection / Attest / Critique) still below
 `Verified` will now fail — it was never actually at the derived gate, only
@@ -623,7 +630,7 @@ who never used the surface pays nothing.
 
 Spine `Status` gains a third recognized value, **`Modified`** — a
 post-attestation amendment owing a re-attest (canonical semantics: process.md
-§7): the derived gate reads G2 for its phase until the sitting flips it back
+§7): the derived gate reads DevBar-Tests for its phase until the sitting flips it back
 (`Modified`→`Verified`, or →`Planned` when the amendment invalidated the
 evidence), the pending-owner-actions projection carries one line per
 Draft/Modified SR, a warn-first `--staged` check flags an amendment without the
@@ -1015,6 +1022,78 @@ is a hard refusal). **The IF tier also changes shape — read before running:**
   is not an arch-map module. All ADVISORY — none of it changes an exit code
   at any gate — so an unmigrated repo goes noisy, never red.
 
+### The `G*` gate tags retire for the eight-rung stage ladder [since PACKSHA]
+
+**The biggest vocabulary change the kit has shipped, and it reaches your own
+files.** `G0`/`G1`/`G2`/`G3`/`G-Release`/`G-Final` are gone as tags. In their
+place:
+
+- **Eight stage rungs** — `DevStg-Needs` · `Boundary` · `Reqs` · `Arch` ·
+  `LLReqs` · `Tests` · `Impl` · `Release`. A repo is **IN** a stage. The label is
+  the identifier; the position is DERIVED (`stage-ord=`/`stage-of=` on the basis
+  line), so an inserted rung re-numbers everything and moves no citation.
+- **Three bars** — `DevBar-Reqs` · `DevBar-Tests` · `DevBar-Release`, each named
+  for the top rung it certifies (Needs…Reqs, Arch…Tests, Impl…Release). You
+  **CLEAR** a bar. `DevBar-Below` is an internal sentinel, not a bar.
+
+**The word "gate" survives** wherever it means a check that can fail — the
+`docs/gate` path, `derive_gate.py`, `check.py --gate`, "the freshness gate". Only
+the TAGS retired. Do **not** run a blanket find-replace on the word; the
+conversion is tag-scoped, and `scripts/check_vocab.py` (new, shipped) tells you
+which of your own lines still carry a tag.
+
+**Nothing breaks on day one.** Every reader that could receive a retired tag
+translates it: `check.py --gate G2` runs `DevBar-Tests` and warns once;
+`docs/stack.ini` `gates = G2 G3` translates silently; a WI's `bar: G3`
+translates silently. So your pipeline stays green through the re-sync and you
+convert at your own pace.
+
+**The recipe — six moves, in this order:**
+
+1. **REGENERATE `docs/gate`. This OVERRIDES §1's preserve-classes rule and
+   ADOPTING §6's "preserve always" classification for that one file.** The cache
+   is *field*-compatible but not *value*-compatible: your committed file carries
+   `G1` on its value line and `computed=G0 … stage=4` in its basis, and `stage=4`
+   means something DIFFERENT under the eight-rung ladder than it did under the
+   six-integer one. Run `python scripts/derive_gate.py` once and commit the
+   result. There is **no compat shim** — `--check` reports the old cache STALE on
+   the first recompute, deliberately, because a reader that accepted both
+   vocabularies is how the retired tags grow back. The failure direction is safe:
+   a stale cache makes the stage unreadable, and an unreadable stage is treated
+   as **human-held**, so the one state it can produce is *more* human
+   involvement.
+2. **Re-apply your `docs/process.toml` dials.** `human_ratification_through`
+   keeps its 0–4 meaning — it was **mapped** onto the ladder, not re-keyed — so
+   your declared value still means what it meant. Confirm it survived the
+   re-sync; every pre-existing answer for the four spine tiers is unchanged.
+3. **Hand-check anything of yours that passes `--gate` LITERALLY** — your own
+   git hooks, CI workflow steps, Makefile targets, editor tasks. They keep
+   working via the alias, but each will print a deprecation line every run until
+   you update it. This is the one class the re-sync cannot fix for you.
+4. **Convert your own WI rows' `Bar` values** and your `docs/stack.ini`
+   `[step:*] gates =` keys to the new spelling. Both translate on read, so this
+   is cleanup, not a break — but `check_vocab.py` will name each line.
+5. **Your own log sign-offs stay VERBATIM.** The attestation carve-out applies to
+   adopters too: a row recording a named human certifying `G1` recorded exactly
+   that, and re-wording it makes the record claim something was signed that was
+   not. Add a one-line header note naming the retired vocabulary instead —
+   `check_vocab.py` already exempts `docs/log.md`, `docs/ratify/`,
+   `docs/archive/` and the closed-WI specs. **Do rename the heading**
+   `## Gate Sign-offs` → `## Sittings` (it is code-pinned in
+   `trunk_step.RESERVED_HEADINGS`); the rows underneath do not change, and each
+   new row names the **rung range** it certifies.
+6. **`--sync` any materialized per-agent skills** — `gate-advance` is a full
+   rewrite onto the ladder, and `registry-hygiene` / `session-protocol` took
+   passes. `python scripts/bootstrap.py --dest . --sync`.
+
+**Then run `python scripts/check_vocab.py --root .`** and work the list. It is
+**warn-first** at the requirements bar and promotes to ERROR from `DevBar-Tests`
+on, so a repo mid-conversion sees every site without being blocked.
+
+**Also converted, for reference:** the `[phase]-[g1|g2]` WI-title archetype
+becomes `[phase]-[reqs|tests]` for NEW titles — your committed anchors keep their
+spelling and still parse forever (a title is a citation).
+
 ---
 
 ## 4. Translation helper — concept renames
@@ -1069,14 +1148,28 @@ frontmatter key is deleted, not renamed.
 Delete your old `drive.py`: `agent_loop` imports `dispatch`, so the stale file
 shadows nothing and drifts silently.
 
-### Reserved: the gate → stage vocabulary conversion
+### `G0|G1|G2|G3|G-Release|G-Final` → the stage ladder [since PACKSHA]
 
-**Not yet written, deliberately.** The `gate` → `stage` retirement lands with the
-ladder program; its adopter-side conversion recipe is authored **with** that
-program and takes its `[since <sha>]` from the commit that lands it. Do not write a
-speculative entry here — an anchored entry for a change that has not landed is a
-SHA that does not exist, which is the one failure mode the anchoring discipline
-exists to prevent.
+The tags retire; the traceability survives. Grep your own prose, scripts, CI,
+hooks and registry cells for the left-hand spelling — **as a whole-word TAG, not
+as the word "gate"**, which survives wherever it means a check that can fail
+(`docs/gate`, `derive_gate.py`, `--gate`, "the freshness gate" all stay).
+
+| retired tag | now | what it names |
+|---|---|---|
+| `G1` | `DevBar-Reqs` | the bar certifying `DevStg-Needs` … `DevStg-Reqs` |
+| `G2` | `DevBar-Tests` | the bar certifying `DevStg-Arch` … `DevStg-Tests` |
+| `G3` | `DevBar-Release` | the bar certifying `DevStg-Impl` |
+| `G0` | `DevBar-Below` | the internal below-the-floor sentinel — never a bar |
+| `G-Release` | `DevStg-Release` | the release-readiness **rung** (never a mechanized bar) |
+| `G-Final` | the owner's final read | the `final_review` dial, which is its own axis |
+| `[phase]-[g1]` / `-[g2]` | `[phase]-[reqs]` / `-[tests]` | the phase-anchor archetype for NEW titles only |
+| `## Gate Sign-offs` | `## Sittings` | code-pinned; each row now names a rung RANGE |
+
+Every reader accepts the left-hand column as an alias, so this is a
+convert-at-your-pace rename — with two exceptions that are **not** aliased:
+`docs/gate`'s own contents (regenerate it) and a stage value in a basis line
+(same regenerate). Full recipe: the §3 entry above.
 
 ---
 

@@ -52,7 +52,9 @@ def process_entry_scripts() -> set[str]:
     changes layer or command cannot drift away from this bar.
     """
     check = load_script("check")
-    plan = check.steps(coverage=80, tier="full", gate="G3", phase=None, profile=None)
+    plan = check.steps(
+        coverage=80, tier="full", gate="DevBar-Release", phase=None, profile=None
+    )
     stems = set()
     for _name, _requires, cmd, _gates, layer in plan:
         if layer != "process":

@@ -68,7 +68,7 @@ def test_is_draft_agrees():
 
 
 def test_is_verified_agrees():
-    # Both files decide the terminal Verified state (the G3 --require-verified
+    # Both files decide the terminal Verified state (the DevBar-Release --require-verified
     # criterion in trace.py, the gate derivation in derive_gate.py). Matched
     # case-insensitively — the one Status-casing rule (M3 -> WI-101) — so pin the
     # two equivalent across the same casing/whitespace/None battery as is_draft.
@@ -123,7 +123,7 @@ def test_is_modified_agrees():
 
 def test_llr_exempt_agrees():
     # Both files decide the LLR-exemption at their own decision point (trace's
-    # orphan rule, derive_gate's sr_gate). Review 017 caught them disagreeing on
+    # orphan rule, derive_gate's sr_bar). Review 017 caught them disagreeing on
     # a whitespace-padded valid method (derive_gate stripped, trace did not) —
     # the exact false-green/false-red divergence WI-099 promised away. Pin the
     # predicate equivalent, and pin the padded case to the fixed direction.
@@ -146,15 +146,15 @@ def test_llr_exempt_agrees():
 
 
 def test_require_verified_bar_matches_sr_gate_regardless_of_method(scaffold):
-    # WI-259 (repo-review-2026-07-21 M-5): trace's --require-verified G3 bar and
-    # derive_gate.sr_gate must agree about which SRs must be Verified before G3.
-    # sr_gate has always demanded is_verified for ANY decomposed SR with no
+    # WI-259 (repo-review-2026-07-21 M-5): trace's --require-verified DevBar-Release bar and
+    # derive_gate.sr_bar must agree about which SRs must be Verified before DevBar-Release.
+    # sr_bar has always demanded is_verified for ANY decomposed SR with no
     # per-method carve-out; trace's bar used to fire only for Verification=Test, so
     # a decomposed Demonstration/Analysis/Inspection SR left Implemented could never
-    # derive G3 yet passed trace's check — two scripts disagreeing about the gate.
+    # derive DevBar-Release yet passed trace's check — two scripts disagreeing about the gate.
     # Option A widened trace's bar: its loop now gates only on is_draft (skip) then
     # is_verified (pass) and NEVER reads Verification, so it is method-blind exactly
-    # like sr_gate. Pin the equivalence on the predicates each side actually uses,
+    # like sr_bar. Pin the equivalence on the predicates each side actually uses,
     # across the full Verification vocabulary, so neither re-grows a method filter.
     methods = [
         "Test",
@@ -175,15 +175,15 @@ def test_require_verified_bar_matches_sr_gate_regardless_of_method(scaffold):
         assert TRACE.is_draft(verified) is False, m  # bar applies (ratified)
         assert TRACE.is_verified(verified) is True, m  # Verified -> passes
         assert TRACE.is_verified(implemented) is False, m  # not Verified -> flagged
-        # sr_gate's G3 for a decomposed SR is the SAME is_verified predicate, also
-        # method-blind: Verified reaches G3, Implemented caps at G2 — every method.
-        assert GATE.sr_gate(verified, True, True) == GATE.G3, m
-        assert GATE.sr_gate(implemented, True, True) == GATE.G2, m
+        # sr_bar's DevBar-Release for a decomposed SR is the SAME is_verified predicate, also
+        # method-blind: Verified reaches DevBar-Release, Implemented caps at DevBar-Tests — every method.
+        assert GATE.sr_bar(verified, True, True) == GATE.BAR_RELEASE, m
+        assert GATE.sr_bar(implemented, True, True) == GATE.BAR_TESTS, m
     # A Draft SR is pre-ratification and exempt from BOTH: trace's bar stands down
-    # (is_draft True, so the loop `continue`s) and sr_gate returns G0 (below G1).
+    # (is_draft True, so the loop `continue`s) and sr_bar returns DevBar-Below (below DevBar-Reqs).
     draft = {"Verification": "Test", "Status": "Draft"}
     assert TRACE.is_draft(draft) is True
-    assert GATE.sr_gate(draft, True, True) == GATE.G0
+    assert GATE.sr_bar(draft, True, True) == GATE.BAR_BELOW
 
     # The predicate pins above are necessary but not sufficient: because is_draft/
     # is_verified read Status (not Verification), restoring a Verification=="Test"
@@ -243,7 +243,7 @@ def test_sn_all_ids_agrees():
         assert TRACE.sn_all_ids(text) == GATE.sn_all_ids(text), text
     # Semantics pins: the scrape is WHOLE-TEXT — a prose-mentioned id is in the
     # universe exactly like a table row (the §2.1 sharp edge: ratified + uncited
-    # means the coverage rung caps the gate at G0). Draft-section ids are
+    # means the coverage rung caps the gate at DevBar-Below). Draft-section ids are
     # included (the draft/coverage split happens later, on sn_draft_ids); only
     # -000 placeholders are excluded.
     assert GATE.sn_all_ids("prose SN-010\n## Draft\nSN-011 and SN-000\n") == {

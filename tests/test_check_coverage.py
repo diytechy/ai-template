@@ -232,7 +232,7 @@ def test_cli_skips_when_tier_does_not_measure_coverage(tmp_path):
 
 # --- harness wiring -----------------------------------------------------------
 def test_module_coverage_step_wires_into_the_harness(scaffold):
-    # The opt-in step slots into check.py's plan as a G3 product step with no
+    # The opt-in step slots into check.py's plan as a DevBar-Release product step with no
     # kit-script edit (the extra_steps contract), and passes as a no-op until a
     # docs/coverage-floors census is authored.
     make_minimal_project(scaffold)
@@ -241,10 +241,12 @@ def test_module_coverage_step_wires_into_the_harness(scaffold):
         stack.read_text(encoding="utf-8")
         + "\n[step:module-coverage]\n"
         + "command = {py} scripts/check_coverage.py\n"
-        + "gates = G3\nlayer = product\n",
+        + "gates = DevBar-Release\nlayer = product\n",
         encoding="utf-8",
     )
-    listed = run_py(["scripts/check.py", "--gate", "G3", "--list"], cwd=scaffold)
+    listed = run_py(
+        ["scripts/check.py", "--gate", "DevBar-Release", "--list"], cwd=scaffold
+    )
     assert listed.returncode == 0, listed.stdout + listed.stderr
     assert "module-coverage" in listed.stdout
 

@@ -246,7 +246,7 @@ SPEC_SCALARS = (
     ("SafetyClass", "safety_class"),
     ("PlanMode", "planmode"),
     # WI-388: bar declares verification strictness for this row's lane; it
-    # never affects scheduling. (G1|G2|G3 — integrate.refresh passes it to
+    # never affects scheduling. (DevBar-Reqs|DevBar-Tests|DevBar-Release — integrate.refresh passes it to
     # check.py --gate; load_wis deliberately does not parse it.)
     ("Bar", "bar"),
     ("Supersedes", "supersedes"),

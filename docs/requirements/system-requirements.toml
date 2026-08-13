@@ -38,11 +38,11 @@ area = "Traceability"
 title = "Acceptance-criteria advisory"
 sn_refs = ["SN-002"]
 requirement = """trace.py shall warn (never fail) when an SR AcceptanceCriteria uses a comparative term with no pinning predicate in the cell."""
-rationale = """Realizes SN-002 by keeping acceptance criteria testable, while leaving the call to the G1 review — a heuristic lint must not gate."""
+rationale = """Realizes SN-002 by keeping acceptance criteria testable, while leaving the call to the DevBar-Reqs review — a heuristic lint must not gate."""
 acceptance_criteria = """A comparative claim with no pinning predicate marker emits a stdout WARNING and a report line; the exit code is unchanged."""
 priority = "S"
 verification = "Test"
-status = "Verified"
+status = "Modified"
 phase = 1
 area = "Traceability"
 
@@ -63,7 +63,7 @@ title = "Gate/tier harness enforces required steps"
 sn_refs = ["SN-004", "SN-008"]
 requirement = """check.py shall run the required steps of the gate that must next be passed (the strictness selector cached in docs/gate) and fail that gate when a required tool is missing, reporting SKIP(missing) rather than silently passing."""
 rationale = """Realizes SN-004 (gates enforce their bar), SN-008 (no false green) and SN-014 (a missing tool fails, never skips). The work-branch lane skip is SR-133's obligation (one row, one obligation)."""
-acceptance_criteria = """check.py --gate GN runs that gate's steps; a required-but-absent tool fails the gate with guidance (never a silent pass), and --lenient degrades it to SKIP; --tier selects the declared step subset."""
+acceptance_criteria = """check.py --gate <bar> runs that bar's steps; a required-but-absent tool fails the gate with guidance (never a silent pass), and --lenient degrades it to SKIP; --tier selects the declared step subset."""
 priority = "M"
 verification = "Test"
 status = "Modified"
@@ -609,14 +609,14 @@ requirement = """derive_gate.py shall compute the gate that must next be passed 
 section-state + SR/LLR/TC Status maturity) and cache it to docs/gate rather than
 accept a hand-set value, so a gate advances only when the mechanical states do.
 Three Status values are recognized case-insensitively:
-(1) Draft (G0 + decomposition exemptions);
-(2) Verified (G3); and
-(3) Modified — a post-attestation amendment owing a re-attest, deriving G2
+(1) Draft (DevBar-Below + decomposition exemptions);
+(2) Verified (DevBar-Release); and
+(3) Modified — a post-attestation amendment owing a re-attest, deriving DevBar-Tests
 through the existing decomposed-unverified rung with no arithmetic of its own.
 The cached basis line carries modified=N beside drafts=N so the pending state
 never hides."""
 rationale = """SSOT applied to the gate itself (docs/archive/specs/derived-gate-model.2026-07-20.md): a hand-set marker can be bumped without the work; deriving it makes gate advancement mechanical (SN-004) and un-gameable (SN-008). The hybrid cache keeps the value readable on checkout; --check guards rot."""
-acceptance_criteria = """derive_gate.py --print on the meta computes the per-phase gates from the current states (a Modified SR's phase reads G2 until re-attested); --check exits nonzero when a state change is not reflected in the cached docs/gate basis; the compared line includes the modified=N count."""
+acceptance_criteria = """derive_gate.py --print on the meta computes the per-phase gates from the current states (a Modified SR's phase reads DevBar-Tests until re-attested); --check exits nonzero when a state change is not reflected in the cached docs/gate basis; the compared line includes the modified=N count."""
 priority = "M"
 verification = "Test"
 status = "Modified"
@@ -628,8 +628,8 @@ sn_refs = ["SN-010"]
 requirement = """gen_trajectory.py shall render a Process reference tab in PROJECT_STATE.html
 beside the existing views, presenting how the project is built as three linked
 panels:
-(1) artifact lifecycle x gates - Vision -> SN (G1) -> SR (G1->G2) -> LLR +
-architecture (G2) -> TC (G2->G3) -> code+tests (G3), each stage linked to its
+(1) artifact lifecycle x gates - Vision -> SN (DevBar-Reqs) -> SR (DevBar-Reqs->DevBar-Tests) -> LLR +
+architecture (DevBar-Tests) -> TC (DevBar-Tests->DevBar-Release) -> code+tests (DevBar-Release), each stage linked to its
 process-doc section and annotated with this repo live tier counts;
 (2) the resume loop - the managed agent_loop flow (read status -> PLAN -> BUILD
 -> REVIEW -> INTEGRATE -> commit -> hook/gate -> repeat) with its escalation
@@ -681,7 +681,7 @@ rationale = """Realizes SN-024 and SN-023 — how alike is alike enough is subje
 acceptance_criteria = """A fresh family-heterogeneous CRITIQUE session judging the generated dashboard against docs/rubrics/dashboard-uniformity.md (authored at [v3]-[g2]) returns APPROVE citing numbered anchors; type scale, color vocabulary, per-emitter node/edge/legend styling, and interaction-idiom consistency are each a rubric anchor."""
 priority = "C"
 verification = "Test"
-status = "Verified"
+status = "Modified"
 phase = 3
 area = "Trajectory"
 
@@ -1907,3 +1907,14 @@ status = "Draft"
 phase = 5
 area = "Unattended loop"
 
+[requirement.SR-149]
+title = "Retired-vocabulary refusal in authored surfaces"
+sn_refs = ["SN-004", "SN-010"]
+requirement = """The harness shall report every occurrence of a retired process tag in a live authored surface, naming the file and line and the vocabulary that replaces it, at a severity that warns by default and fails under --strict; and it shall report none in a declared historical, generated or attestation-quoting surface, nor in a line or file marked as a declaration site."""
+rationale = """Realizes SN-004 (the ladder's vocabulary is the one the project is held to) and SN-010 (docs stay honest). OI-21 made this check a CONDITION of the vocabulary conversion rather than a follow-up, on measured evidence: an earlier sweep removed a retired-tag construct from this repo's own open-items registry and it REGENERATED within days, caught only by an audit. A ~2,500-edit conversion held in place by attention is a conversion that comes undone. The carve-outs are as load-bearing as the rule: history is not rewritten and an attestation is never re-worded, because a swept sign-off makes a signed record claim something was signed that was not."""
+acceptance_criteria = """check_vocab.py reports a planted retired tag in a live authored file with its path and line, exits 0 under the default severity and 1 under --strict; reports nothing for a file under any declared carve-out class (archive, the project log, attestation briefs, closed and cancelled work-item specs, generated surfaces) including at arbitrary depth; reports nothing for a line carrying the allow marker or a file carrying the allow-file marker; and reports nothing for the word "gate" used to mean a check that can fail."""
+priority = "S"
+verification = "Test"
+status = "Draft"
+phase = 5
+area = "Doc navigability"

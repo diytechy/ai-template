@@ -4,7 +4,7 @@ and cites only real requirement ids (process.md §3 'Design-time runtime flows')
 from conftest import make_minimal_project, run_py
 
 FLOWS_OK = """
-## Runtime flows (authored at G2)
+## Runtime flows (authored at DevBar-Tests)
 
 ```mermaid
 sequenceDiagram
@@ -15,7 +15,7 @@ sequenceDiagram
 """
 
 FLOWS_NO_IDS = """
-## Runtime flows (authored at G2)
+## Runtime flows (authored at DevBar-Tests)
 
 ```mermaid
 sequenceDiagram
@@ -75,10 +75,10 @@ def test_unknown_id_fails(scaffold):
 
 
 def test_harness_runs_design_flows_at_g2(scaffold):
-    # check.py --gate G2 must include and enforce the design-flows step.
+    # check.py --gate DevBar-Tests must include and enforce the design-flows step.
     make_minimal_project(scaffold)
     arch_path(scaffold).write_text("# Architecture\nno flows\n", encoding="utf-8")
-    proc = run_py(["scripts/check.py", "--gate", "G2"], cwd=scaffold)
+    proc = run_py(["scripts/check.py", "--gate", "DevBar-Tests"], cwd=scaffold)
     assert proc.returncode != 0
     assert "design-flows" in proc.stdout
     assert "RESULT: FAIL" in proc.stdout

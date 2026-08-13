@@ -16,9 +16,9 @@
 # (Status Draft->Planned, or an SN moved out of a draft section). This level
 # governs WHO may make that ratifying commit:
 #   attended      — a human ratifies each batch (the default; standard §4).
-#   single-ratify — LLM-gate review through G1+G2; the human ratifies the
+#   single-ratify — LLM-gate review through DevBar-Reqs+DevBar-Tests; the human ratifies the
 #                   queued batch once at the phase's [g2] close; autonomous after.
-#   autonomous    — every gate except G-Final closes on an independent
+#   autonomous    — every gate except the owner's final read closes on an independent
 #                   fresh-context LLM reviewer's recorded verdict.
 # A non-default level is amended into the repo by the deviation register
 # (docs/gate-policy.md — scaffolded by `bootstrap.py --gate-policy`); the §4

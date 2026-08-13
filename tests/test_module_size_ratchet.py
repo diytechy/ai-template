@@ -75,7 +75,7 @@ BASELINE = {
     # The bump is the `_FOCUSABLE` pattern plus the comment recording WHY the
     # predicate has two shapes, which is the part a successor would otherwise
     # "simplify" straight back into the defect. Reviewed bump, log 2026-07-25.
-    # -1 (4633 -> 4632), WI-297 dedupe: the G3 `dupes` step flagged the per-site
+    # -1 (4633 -> 4632), WI-297 dedupe: the DevBar-Release `dupes` step flagged the per-site
     # svg wrapper the WI-297 edits had left duplicated across dag/sw/know, so the
     # three now share `_svg_wrap`, which also folds `_svg_role` in — a call site
     # can no longer emit a container without the content-driven role. Ratcheted
@@ -525,7 +525,7 @@ BASELINE = {
     # derive_gate.py with NO test_rule_sync pin, extracted to a named twin so
     # the third SN policy duplicate is pinned like its siblings. The growth is
     # the docstring recording the whole-text sharp edge (a ratified prose
-    # mention caps the gate at G0). Reviewed bump, log 2026-08-02.
+    # mention caps the gate at DevBar-Below). Reviewed bump, log 2026-08-02.
     # +44 (2930 -> 2974), SN-029: `docs/requirements/attestations.csv` joins the
     # registry schema (loader row + column contract) so the ledger the
     # attestation rungs read is traced like every other spine registry rather
@@ -559,7 +559,7 @@ BASELINE = {
     # is the home ON PURPOSE: the two rules are integrity-class, and trace.py's
     # `--strict-integrity` pass is the only always-on floor the pre-commit hook
     # runs at every gate. In check_trajectory they would sit behind
-    # `docs/trajectory-check: off`; as a G3 step they would never run in a G1
+    # `docs/trajectory-check: off`; as a DevBar-Release step they would never run in a DevBar-Reqs
     # repo like this one. Note the check is appended in main(), NOT in
     # analyze() — that function's contract is "Pure … No I/O" and it stays true.
     # 3222 -> 3248 in the same reviewed bump: the complexity ratchet refused
@@ -998,7 +998,7 @@ BASELINE = {
     # complexity ratchet DELETE `cross_component_findings`' entry instead of
     # bumping it. The rest is the two docstrings recording why the direction is
     # the fix and why the advisory must never join the exit code.
-    "check_trajectory.py": 4075,  # +25 2026-08-13: WI-443 — the seam-TC rule re-keyed off the retired IF Status onto Stability, summarised (reviewed bump, reason in the log); earlier +20 2026-08-13: WI-440 review fixes — the lazy covered-pairs read + the one-scan-per-run cache (reviewed bump, reason in the log)
+    "check_trajectory.py": 4115,  # +40 2026-08-13: WI-445 — OI-21's phase-anchor archetype reads BOTH the canonical [phase]-[reqs|tests] and the retired [g1|g2] spelling, plus the bar-level table and the reworded drop message (reviewed bump, reason in the log); earlier +25 2026-08-13: WI-443 — the seam-TC rule re-keyed off the retired IF Status onto Stability, summarised (reviewed bump, reason in the log); earlier +20 2026-08-13: WI-440 review fixes — the lazy covered-pairs read + the one-scan-per-run cache (reviewed bump, reason in the log)
     # NEW ENTRY, +25 (1498 -> 1523), WI-357: the two-stage work-branch claim
     # signal — the on-disk fast path plus the branch-history probe that
     # survives the §2.3 close commit (git log -1 over the claim path), with
@@ -1054,13 +1054,13 @@ BASELINE = {
     # step declared anywhere else is the 130-REVIEW-A failure (an adopter's
     # older stack.ini blocking every commit with `no step named`). Most of the
     # 82 is the reasoning this row was required to record in code — why the gate
-    # set is {G1,G2,G3} and not the {G3} family's, why the index check is its
+    # set is {DevBar-Reqs,DevBar-Tests,DevBar-Release} and not the {DevBar-Release} family's, why the index check is its
     # own step rather than folded into skills-sync, why --skills is passed
     # explicitly (the default is a vacuous pass), and why neither step joins
     # _TRUNK_FRESHNESS_STEPS. Trimmed once before stamping (1649 -> 1638) by
     # merging the two step rationales into one block. Reviewed bump; re-stamp
     # down with WI-280, which owns this module's decomposition.
-    "check.py": 1638,
+    "check.py": 1783,  # +145 2026-08-13: WI-445 — OI-21's bar vocabulary, the bar_ord/_window_ord ordinal lookups replacing the lexical gate comparisons, the retired-tag alias layer with its deprecation posture, and the vocabulary step (reviewed bump, reason in the log)
     # +1 (1916 -> 1917), WI-279: one MAPPING row registering the new
     # scripts/check_coverage.py kit gate so it ships downstream — a required
     # one-line registration, not monolith growth (the reviewed-bump escape the
@@ -1276,7 +1276,7 @@ BASELINE = {
     # own code is a new module under THRESHOLD, and a MAPPING row is the only
     # way a scaffold ever receives a file. Reviewed bump; re-stamp down with
     # WI-280.
-    "bootstrap.py": 2828,  # composed at the 2026-08-13 serial merge: WI-439 (+26) + its review fix (+15, the tracked-anchor probe) + WI-446's MAPPING rows (+20); measured, reasons above and at each contributing WI
+    "bootstrap.py": 2834,  # +6 2026-08-13: WI-445 — check_vocab.py joins the shipped script manifest with its reason (reviewed bump, reason in the log); composed at the 2026-08-13 serial merge: WI-439 (+26) + its review fix (+15, the tracked-anchor probe) + WI-446's MAPPING rows (+20); measured, reasons above and at each contributing WI
     # NEW ENTRY, +228 (1423 -> 1651), Phase 2b of the concurrency restructure
     # (docs/concurrency-restructure.md §7): the spec-folder work-item reader,
     # which crosses this module over THRESHOLD for the first time. It is one
@@ -1433,7 +1433,7 @@ BASELINE = {
     # WI-433: +1 (2466 -> 2467). The `BLACKOUT_RE` header comment states what a
     # fresh scaffold ships; the template stopped shipping the owner's window, so
     # the comment stops claiming it does.
-    "agent_common.py": 2467,
+    "agent_common.py": 2539,  # +72 2026-08-13: WI-445 — OI-21's DIAL_HOLDS/LADDER_RUNGS declared dial-to-ladder mapping replacing the `stage < level` arithmetic, with the argument for where the two inserted rungs land (reviewed bump, reason in the log)
     # NEW ENTRY, WI-387 — integrate.py crossed THRESHOLD (1418 -> 1588) adding
     # the third terminal outcome. The extraction the ratchet asks for was TAKEN
     # FIRST, not argued away: `hand_back` and `quarantine`, the largest unit and
@@ -1643,7 +1643,7 @@ BASELINE = {
     # adjudication-scope allowlist names BOTH open-items carriers — an
     # allowlist that names one suffix fails the lane toward the full bar on a
     # migrated repo, invisibly.
-    "integrate.py": 2493,
+    "integrate.py": 2525,  # +32 2026-08-13: WI-445 — OI-21 break 3, the WI `bar:` retired-tag translation and the ladder-position (not lexical max) strictest-bar fold (reviewed bump, reason in the log)
     # NEW ENTRY, 1503, D-5 step 2d — the re-entry the D-1 removal note above
     # predicted, arriving from the CARRIER half rather than the anchor half:
     # "it re-enters as a NEW ENTRY if the anchor half puts it back over."
@@ -1690,7 +1690,7 @@ BASELINE = {
     # arms (a cancellation, a clean-close spot check) now declare NO brief and
     # say why. A false declaration would page a human for routine work, because
     # a declared-but-uncomposable brief is a hold.
-    "intake.py": 1673,  # +3 2026-08-13: WI-443 — the components/interfaces reads move to spine_carrier.load (reviewed bump, reason in the log)
+    "intake.py": 1711,  # +38 2026-08-13: WI-445 — OI-21 break 3, normalize_bar replacing the `.upper()` match that would have refused every correctly-authored DevBar-* value (reviewed bump, reason in the log); earlier +3 2026-08-13: WI-443 — the components/interfaces reads move to spine_carrier.load (reviewed bump, reason in the log)
 }
 
 

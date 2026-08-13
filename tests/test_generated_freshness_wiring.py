@@ -145,17 +145,17 @@ def test_every_wired_enforcer_is_a_real_step_and_runs_in_the_commit_floor():
 
 
 def test_the_two_new_steps_gate_at_every_gate():
-    # The gate-set decision, pinned. These two are NOT the {G3} doc-freshness
-    # family: that family is G3-only because those views are of the project's own
+    # The gate-set decision, pinned. These two are NOT the {DevBar-Release} doc-freshness
+    # family: that family is DevBar-Release-only because those views are of the project's own
     # evolving spine and churn while the plan forms. These index the APPARATUS
     # (the loop's prompt templates, the skill library) — kit source that does not
     # move as a downstream plan matures — and their consumers (session forensics,
     # an agent choosing a skill) are live from the first session. Concretely: this
-    # kit's own docs/gate reads G1 while its ratification window is open, so a
-    # {G3} step would not run in the kit's own CI at all for the window's whole
+    # kit's own docs/gate reads DevBar-Reqs while its ratification window is open, so a
+    # {DevBar-Release} step would not run in the kit's own CI at all for the window's whole
     # duration, which is the gap re-created rather than closed.
     for name in ("skills-index", "prompt-catalog"):
-        assert _step(name)[3] == {"G1", "G2", "G3"}, name
+        assert _step(name)[3] == {"DevBar-Reqs", "DevBar-Tests", "DevBar-Release"}, name
 
 
 def test_the_reference_ci_inherits_new_steps_without_editing_it():

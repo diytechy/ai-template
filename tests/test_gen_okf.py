@@ -236,4 +236,4 @@ def test_okf_step_wired_at_g3(scaffold):
     cmd = next(s[2] for s in allg if s[0] == "okf")
     assert any("gen_okf.py" in str(t) for t in cmd) and "--check" in cmd
     gates = next(s[3] for s in allg if s[0] == "okf")
-    assert gates == {"G3"}
+    assert gates == {"DevBar-Release"}

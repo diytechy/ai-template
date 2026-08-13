@@ -27,42 +27,43 @@ Project facts live in `docs/`; this file points at them.
 
 ## How we work here (the process)
 
-This repo follows a **gated, requirement-traced process** — read
+This repo follows a **staged, requirement-traced process** — read
 [docs/process.md](docs/process.md) once; it is the source of truth for roles,
-gates, and the ID scheme. The short version needed every session:
+the ladder, and the ID scheme. The short version needed every session:
 
 - **One driver wears role "hats" in sequence** (Stakeholder → UX/Docs → System
   Engineer → Software Engineer → Test Engineer). Spawn subagents deliberately
   (process.md §6).
 - **Everything traces:** `SN → SR → LLR → TC`. Intent lives once, as an id;
   children link to it. The matrix is generated (`scripts/trace.py`) and must
-  report **0 orphans** before a gate.
-- **Write the test first (TDD).** A requirement's G2 test case is a *failing*
-  test before the code that satisfies it: red → green → refactor. This is *how*
-  G3 code gets written — within the traceability spine, not instead of it.
-- **Gates G1→G2→G3→(G-Release)→G-Final close per the declared gate authority**
-  (`docs/process.toml`). Never self-advance a gate; log it in `docs/log.md`.
+  report **0 orphans** before a bar.
+- **Write the test first (TDD).** A requirement's test case is a *failing*
+  test before the code that satisfies it: red → green → refactor — within the
+  traceability spine, not instead of it.
+- **The stage ladder:** `DevStg-` Needs · Boundary · Reqs · Arch · LLReqs ·
+  Tests · Impl · Release. You are IN a stage and CLEAR a bar (`DevBar-Reqs` →
+  `-Tests` → `-Release`) per `docs/process.toml`. Never self-advance; log it.
 - **The check harness is the bar:** `python scripts/check.py` runs format,
-  lint, tests, coverage, traceability, flow checks, and map freshness at the
-  repo's derived gate (`docs/gate`); `--tier smoke` is the fast subset. Never report a result you didn't run —
-  paste the real output.
+  lint, tests, coverage, traceability, flow checks and map freshness at the
+  derived bar (`docs/gate`); `--tier smoke` is the fast subset. Never report a
+  result you didn't run — paste the real output.
 - **Behavior is reviewed as diagrams, not rows:** runtime flows (especially
-  concurrent/non-blocking ones) are authored Mermaid sequence diagrams in
+  concurrent ones) are authored Mermaid sequence diagrams in
   [docs/architecture.md](docs/architecture.md) "Runtime flows", kept current
   with the LLRs (`scripts/check_flows.py` enforces; §3).
-- **Releases (if versioned):** G-Release runs the `release` tier plus the
-  generated checklist (`scripts/gen_release_checklist.py`).
+- **Releases (if versioned):** `DevStg-Release` runs the `release` tier plus
+  the generated checklist (`scripts/gen_release_checklist.py`).
 - **The code map is generated** (`scripts/gen_arch_map.py`): per-module
-  summary, internal dependencies, and public symbols with `Implements:`
+  summary, internal dependencies and public symbols with `Implements:`
   back-links, in [docs/architecture.md](docs/architecture.md). **Read it to
   find where a capability lives before searching the tree**; the harness keeps
-  it (and the Mermaid dependency diagram) fresh — never hand-edit it or
-  between `GENERATED` markers; never commit exported diagrams.
+  it (and the Mermaid diagram) fresh — never hand-edit between `GENERATED`
+  markers; never commit exported diagrams.
 - **Start each session** with *Current State* in
-  [docs/status.md](docs/status.md); end each turn by updating it (gate, what
+  [docs/status.md](docs/status.md); end each turn by updating it (stage, what
   changed, next action). **Commit early and often** — small and green per
   logical step. Pushing follows the `push` dial (default: the human
-  publishes). End sessions with a clean tree.
+  publishes). End with a clean tree.
 
 ## Code we want (readability for humans *and* agents)
 
@@ -137,7 +138,7 @@ contract is worse than none.
 - **Notebooks explore; modules ship.** Promote anything reused or tested into
   `src/` so it can be imported and unit-tested.
 - **Separate data I/O from transforms:** pure transforms unit-tested on small
-  fixtures; validate schema/shape at the boundary and fail loudly on surprises.
+  fixtures; validate schema/shape at the boundary, failing loudly on surprises.
 - **Test the math on hand-checked cases**, and **exercise the input space** —
   `scripts/gen_cases.py` derives boundary + combination cases from the SR's
   `Permutations` (process.md "Dimensional coverage").
@@ -150,11 +151,11 @@ Direct and concrete; explain the *why* before the *how*.
   before writing code — one question, with a **recommended default**.
   Unattended: pick the most reasonable reading, proceed, and **record it**
   under *Assumptions* in `docs/status.md` to confirm or revert at the next
-  gate. When reality contradicts the plan, **the contradiction is the
+  bar. When reality contradicts the plan, **the contradiction is the
   deliverable**: raise the conflict as a finding — never silently resolve,
   average, or route around it (process.md §4 "Consistency review"). The
   **decision dial** (process.md §6) sets asking eagerness: high-risk ratifies
-  often; low-risk decides-and-records.
+  often, low-risk decides-and-records.
 - **Right-size the solution.** The simplest thing that satisfies the
   requirement; no speculative flexibility — **every line is a liability**, so
   before adding, ask what you can delete. Judge "simple" against the whole
@@ -163,20 +164,20 @@ Direct and concrete; explain the *why* before the *how*.
   silent extra is what destroys trust; surface a design smell as a separate
   finding to its owner, not an inline fix.
 - **Flag uncertainty honestly — and distrust certainty**, yours or a
-  reviewer's: a finding is a claim — confirm or refute it first
-  (process-options.md "finding lifecycle"). An experiment with
-  hypothesis + result beats confident guessing. Peak confidence is when the
-  30-second recheck is cheapest (process.md §6).
+  reviewer's: a finding is a claim, so confirm or refute it first
+  (process-options.md "finding lifecycle"). An experiment with hypothesis +
+  result beats confident guessing; peak confidence is when the 30-second
+  recheck is cheapest (process.md §6).
 - **No sunk-cost shipping, keeping, or blind retries.** An approach found
   wrong late is still wrong — drop it; never retry past a failure whose cause
   you haven't found (process.md §6). A wrong design is escalated as a written
   case to its owner, never patched around or parked — costly rework is
   sanctioned.
 - **Repo text is the project's memory; yours is scratch.** Durable facts — a
-  decision, constraint, or gotcha — belong in `docs/` (status, registries,
+  decision, constraint or gotcha — belong in `docs/` (status, registries,
   AGENTS.md), not in agent-private memory. Promote them before closing a
-  session (process.md §7). Undoing takes the same evidence as doing: read
-  the record behind landed work before reverting it.
+  session (process.md §7). Undoing takes the same evidence as doing: read the
+  record behind landed work before reverting it.
 - **State the constraint, not its history.** Cite a decision record only where
   a reader could plausibly undo it — **at most once per module**, a header
   pointer, never a per-site sprinkle. Provenance belongs in the archive.
