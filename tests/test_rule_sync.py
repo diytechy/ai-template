@@ -867,9 +867,9 @@ def test_the_carrier_value_writer_and_reader_are_the_exact_inverse():
         ["a", 2, "c"],  # a ref array with a non-str element — the crash case
     ]
     for value in cases:
-        assert MIGRATE.value_to_cell("SN-Refs", value) == SPINE.value_to_cell(
+        assert MIGRATE.value_to_cell("SN-Refs", value) == SPINE.value_to_cell(value), (
             value
-        ), value
+        )
 
     # And the concrete round trip both docstrings describe: a CSV ref cell,
     # converted to a value by cell_to_value, converted back by each
