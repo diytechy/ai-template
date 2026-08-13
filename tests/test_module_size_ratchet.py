@@ -998,7 +998,7 @@ BASELINE = {
     # complexity ratchet DELETE `cross_component_findings`' entry instead of
     # bumping it. The rest is the two docstrings recording why the direction is
     # the fix and why the advisory must never join the exit code.
-    "check_trajectory.py": 4030,
+    "check_trajectory.py": 4050,  # +20 2026-08-13: WI-440 review fixes — the lazy covered-pairs read + the one-scan-per-run cache (reviewed bump, reason in the log)
     # NEW ENTRY, +25 (1498 -> 1523), WI-357: the two-stage work-branch claim
     # signal — the on-disk fast path plus the branch-history probe that
     # survives the §2.3 close commit (git log -1 over the claim path), with
