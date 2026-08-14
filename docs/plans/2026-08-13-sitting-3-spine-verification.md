@@ -81,8 +81,23 @@ figures govern):
 **Two census calls only this sitting can make** (they change slice 2's row
 math, so they are ruled BEFORE slice 2 dispatches):
 
-1. **The 26 tombstones** — one CLASS ruling (supersession bookkeeping exempt
-   from the one-shall form, a single recorded waiver) or 26 per-row waivers.
+1. **The 26 tombstones — DELETE per the D-4 precedent (recommended;
+   census §5-F2's class-waiver framing is superseded by this).** The owner
+   challenged the waiver framing (2026-08-14) and the record agrees: the
+   D-1/D-4 doctrine — *"a registry states what IS; git is the history"* — was
+   performed on 2026-08-11 (`SR-039 → LLR-036 → TC-039` **deleted, not
+   marked**, the log entry the forwarding pointer, ids spent forever, citing
+   IF rows deleted with their rows, watermarks untouched). The 26 tombstones
+   are the OLDER mark-in-place pattern from before D-4 was first performed;
+   under the doctrine they are history wearing row ids. Deleting them takes
+   SR 149 → 123 and removes 26 waivers from slice 2's math. The mechanical
+   follow-through slice 2 owes if ruled so: one log entry as the forwarding
+   home for all 26; their citing IF rows go with them (the SR-039 rule);
+   `sn_refs` coverage re-checked against the replacement rows; and
+   `trace.py`'s supersession machinery (`sr_supersession_findings` et al.)
+   plus **TC-099** (inspects the frozen migration map) shrink or retire with
+   the class — by ruling, not by lapse. Keep-with-class-waiver remains the
+   alternative only if an in-registry pointer is wanted over the log's.
 2. **The four package-wide B-05 properties** (SR-031/034/035/114, e.g.
    stdlib-only/cross-platform) — a declared sixth bucket, or forced into the
    five-capability split each carries only partially.
