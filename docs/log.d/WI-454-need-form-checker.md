@@ -106,3 +106,27 @@ dirty the tier is the one that reports.
   <!-- fig: cmd=".venv/bin/python project-trajectory/scripts/check_need_form.py --root ." rev=464ec259 -->;
   `trace.py` rc=0, `check_trajectory.py --strict` rc=0, `derive_gate.py
   --check` up to date.
+
+## REVIEW-A round 2 fix (ce8e351c)
+
+- **Four genuine finds from the round-2 re-verdict, fixed:** (1) the path
+  charset let a sentence-final token drag its full stop into the phrase —
+  `docs/status.md.` was reported instead of the token, so its reviewed
+  exception could never match; the stop is stripped before judging, which
+  also keeps a sentence-final either/or pair (`requirement/test.`) from
+  reading its punctuation as a file suffix; (2) scheme-less `www.` addresses
+  reported as internal paths against LLR-170's own external-address promise —
+  the `_URL` suppression covers them, and a genuine path sharing the cell
+  still reports; (3+4) LLR-170's detail and IF-121's contract stated the
+  allow-list separator as ASCII `' - '` where the parser requires the em-dash
+  — the exact hyphen-authored silent-voiding confusion the loud-direction
+  rule exists for; both cells state the literal separator now.
+- **Measured on the fix commit ce8e351c (clean tree):** module suite
+  15 passed in 0.60s
+  <!-- fig: cmd=".venv/bin/python -m pytest -q tests/test_check_need_form.py" rev=ce8e351c -->;
+  smoke tier 1129 passed / 7 skipped in 29.46s
+  <!-- fig: cmd=".venv/bin/python -m pytest -q -n auto -m smoke" rev=ce8e351c -->;
+  live checker clean over 27 need cells at both severities
+  <!-- fig: cmd=".venv/bin/python project-trajectory/scripts/check_need_form.py --root . --strict" rev=ce8e351c -->;
+  `trace.py` rc=0, `check_trajectory.py --strict` rc=0, `derive_gate.py
+  --check` up to date.
