@@ -130,3 +130,25 @@ dirty the tier is the one that reports.
   <!-- fig: cmd=".venv/bin/python project-trajectory/scripts/check_need_form.py --root . --strict" rev=ce8e351c -->;
   `trace.py` rc=0, `check_trajectory.py --strict` rc=0, `derive_gate.py
   --check` up to date.
+
+## REVIEW-A round 3 fix (90f9bbbb)
+
+- **One genuine find (two silent-miss arms), fixed:** the URL span's `\S+`
+  greed swallowed a separate genuine token abutting the address through a
+  comma (`...status.md,docs/gate.md` scanned clean), and the `www.` form
+  swallowed a single-label LOCAL path (`www.assets/logo.png`, directory on
+  disk, scanned clean). The span now stops at `,`/`;` and the `www.` form
+  requires a multi-label host before its first slash. Round 3 re-drove the
+  full round-1/round-2 surface green: sentence-final phrases, separator
+  wording, vacuous/absent/scaffold arms, warn-first wiring at all three
+  bars, live registry clean at 27 cells.
+- **Measured on the fix commit 90f9bbbb (clean tree):** module suite
+  17 passed in 0.64s
+  <!-- fig: cmd=".venv/bin/python -m pytest -q tests/test_check_need_form.py" rev=90f9bbbb -->;
+  smoke tier 1131 passed / 7 skipped in 28.85s
+  <!-- fig: cmd=".venv/bin/python -m pytest -q -n auto -m smoke" rev=90f9bbbb -->;
+  live checker clean over 27 need cells at both severities
+  <!-- fig: cmd=".venv/bin/python project-trajectory/scripts/check_need_form.py --root . --strict" rev=90f9bbbb -->;
+  both new regression tests fail against the pre-fix checker (ce8e351c);
+  `trace.py` rc=0, `check_trajectory.py --strict` rc=0, `derive_gate.py
+  --check` up to date.
