@@ -56,9 +56,9 @@ def test_scaffold_contains_expected_files(scaffold):
         # Scaffolded unconditionally beside interfaces.toml, and inert until its
         # `-000` rows are replaced.
         "docs/requirements/external.toml",
-        # SN-036 / OI-19: the hats roster ships with CONTENT (six starting
-        # perspectives), so a fresh scaffold's planner brief carries questions
-        # on day one rather than a blank form.
+        # SN-036 / OI-19: the hats roster ships with CONTENT (thirteen starting
+        # perspectives since WI-453), so a fresh scaffold's planner brief
+        # carries questions on day one rather than a blank form.
         "docs/requirements/hats.toml",
         # docs/requirements/work-items.csv left this list at the Phase 2c flip:
         # the WI registry scaffolds as docs/work/ below (the CSV template ships
