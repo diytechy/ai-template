@@ -36,6 +36,22 @@ applying that design to the kit itself.
 _Ratified or executed decisions only — the call, the alternatives passed over,
 why (one bullet each; cite ids)._
 
+- **2026-08-13m — Decision 2 CONFIRMED (ports get concrete IF rows; the
+  tie-back field goes directional) + the brief cleaned (owner, in session).**
+  Confirmed: every port is the system-side surface of a `BIF` row AND gets a
+  realizing IF row in `interfaces.toml`; the tie-back field naming is the
+  owner's directional form — **`interface_from_external = "BIF-###"`** for an
+  IN crossing, **`interface_to_external = "BIF-###"`** for OUT, both for
+  in/out — **superseding the provider/consumer field names** in 13i/13l's
+  wording. The concrete IF-side list is deliberately undecidable until
+  decision 1's table locks; it falls out of §1R.2's "IF today" column at
+  execution. Also ruled: *"archive anything that has been ruled on to keep
+  this document clean"* — the brief's superseded material (the drafted §1
+  frame + §1a/§1b analysis, the 13k long-form, decisions 1/3/4/5/6's original
+  questions) moved to
+  `docs/archive/plans/2026-08-13-sitting-2-superseded-material.md`, each spot
+  leaving a stub pointer; the live brief now reads ruled-summary-first.
+
 - **2026-08-13l — Decisions 1–6 pass: entities adopted, frame rebuilt, the
   registry shape INVERTED (owner, in session).** Working the sitting-2 brief
   top to bottom: **D1** the eight 13k entities ADOPTED as described and the
