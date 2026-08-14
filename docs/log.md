@@ -36,6 +36,17 @@ applying that design to the kit itself.
 _Ratified or executed decisions only — the call, the alternatives passed over,
 why (one bullet each; cite ids)._
 
+- **2026-08-13v — The single-shall rule is a GUIDELINE, not a law (owner, in
+  session).** Amending §3R consequence 1: *"I did indicate requirements should
+  have a single shall, but that is also just a guideline — there may be times
+  to bend that rule where sensible; let's not be too rigid in rulings here to
+  the point it creates design pains instead of design efficiency and
+  maintainability."* Recorded with its mechanical consequence: the
+  `trace.py --strict` form finding stays **advisory-with-a-recorded-waiver**
+  per row, never an unconditional gate — a row keeping multiple shalls does so
+  with a stated reason rather than by drift, and the enforcement tier follows
+  the guideline's nature. The re-tier campaign inherits this reading.
+
 - **2026-08-13u — SITTING 2's DECISION SURFACE CLOSES: all twelve ruled
   (owner, in session).** **D2:** IF-080/081 internal confirmed, and the
   generated-surface question produced a deeper correction the owner took —

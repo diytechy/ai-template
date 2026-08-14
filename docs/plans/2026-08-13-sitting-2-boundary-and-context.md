@@ -274,9 +274,7 @@ states an observable AT the crossing, and the tier below pins the bundle's
 members.** Two shapes:
 
 - **Artifact-shaped crossings — the observable is a standing thing.**
-  **B-03:** the validation/status surfaces are *generated and fresh*; LLRs
-  name the exact files and expectations; the `--check` freshness steps are the
-  mechanical verification. **B-05:** the package *exists, is complete, and is
+  **B-05:** the package *exists, is complete, and is
   consumable downstream*; the manifest is already pinned (`bootstrap.py`
   MAPPING + `test_bootstrap` file lists + `test_dogfood_sync`). **B-06/B-07:**
   the job files are *present and declare the same bar the local moments run*
@@ -290,6 +288,12 @@ members.** Two shapes:
   pre-commit refuses with the finding named; drive `subagent_gate` with an
   allowed and a denied spawn → allow/deny verdicts + the record in
   `out/subagent-gate.log`; malformed `commit-msg` input → refusal.
+
+*(The former B-03's surfaces — `PROJECT_STATE.html`, `open-items.html`,
+`docs/status.md`, `docs/gate` — are **not** system outputs (13u); they are
+REL-002 adopted-toolkit outputs. Their freshness obligations survive as
+requirements on the delivered generators, i.e. **B-05 content**, not as a
+crossing of their own.)*
 
 **The honest limit to write INTO the B-04 SR:** a local hook floor is
 bypassable (`git commit --no-verify`), so *"no unchecked write enters governed
@@ -318,6 +322,15 @@ The one deliberate exclusion: `MULTI_REPO.md`'s cross-repo rung stays
 unaudited. **Decision 1 is CLOSED.**
 
 ## 2. The port set and the discriminator — what WI-451 executes against
+
+> **⚠ SUPERSEDED as the discriminator — kept as sizing.** §3R's form rule (13s)
+> replaced this section's port-list test, and 13u removed B-03, so **the rule
+> is now: an SR's shall names one of §1R.2's six crossings** (or a B-05
+> delivered property). This section's measurement (75 rows naming a `.py`;
+> 18/57) stays valid as **sizing** for the re-tier campaign; its port list is
+> **not** the classification rule, four of its "declared surfaces" are the
+> removed B-03 set, and `docs/architecture.md` is ruled to die (D8). The
+> worked-examples table's entity labels are v1 numbering.
 
 *Carried in full from the boundary draft §2, now archived.*
 
@@ -532,10 +545,18 @@ rather than opening a second one. (Correction ledger #2.)
 
 Three consequences, stated so a builder can apply them per row:
 
-1. **One `shall` per requirement row — mandatory, at every tier.** This settles
-   the pack's §2.1 form question affirmatively (decision 9): the answer is
-   neither *waive* nor *split-these-six-now*, it is **the rule holds and is
-   applied as rows are re-tiered.**
+1. **One `shall` per requirement row — the NORM at every tier, as a GUIDELINE,
+   not a rigid law** (owner amendment, 2026-08-13v: *"that is also just a
+   guideline, there may be times to bend that rule where sensible — let's not
+   be too rigid in rulings here to the point it creates design pains instead
+   of design efficiency and maintainability"*). This settles the pack's §2.1
+   form question (decision 9): the answer is neither *waive* nor
+   *split-these-six-now* — **the rule holds as the default and is applied as
+   rows are re-tiered**, and a row that keeps multiple shalls does so with a
+   stated reason rather than by drift. Mechanically that means the
+   `trace.py --strict` form finding stays **advisory-with-a-recorded-waiver**
+   per row, never an unconditional gate — the enforcement tier follows the
+   guideline's nature.
 2. **The shall's subject is an interface at that row's own component level.**
    The rule is *recursive*, which is what lets one sentence govern the whole
    spine: an **SR** states a shall against a **boundary interface** (§1R.2's
@@ -617,9 +638,9 @@ system creates does not make each used tool an input* — reclassified the v1
 rows: `dev-setup`/`agent-resume` invocation are NOT inputs, the delivered
 contracts are Template content under one deliverable crossing, and the
 provider/reviewer flows are session relationships. **The live frame is §1R
-v2, CONFIRMED and LOCKED 2026-08-13o** (5 entities · 7 crossings · 3
-relationships; the five §1R.7 confirmations all ruled). **Decision 1 is
-CLOSED.**
+v2, CONFIRMED and LOCKED 2026-08-13o** (5 entities · **6 crossings** · 3
+relationships — 7 → 6 at 13u, when B-03 was ruled not a system output; the
+five §1R.7 confirmations all ruled). **Decision 1 is CLOSED.**
 
 **The reframe in one paragraph (RULED 2026-08-13k; long form archived).** The
 repository IS the system; the template is NOT the system but what it DELIVERS
@@ -1681,170 +1702,32 @@ is what the enforcement audit would record as a Prose-tier rule.
 
 ---
 
-## 5. Downhill impacts on the queued work items
+## 5. Downhill impacts on the queued work items — EXECUTED INTO THE SPECS (2026-08-13w)
 
-Five specs sit in [`../work/queued/`](../work/queued/), all dependency-ready
-(every `needs` edge resolves to a complete WI). Each carries text this sitting's
-rulings make stale. **Re-scope them in the ruling; do not let a builder discover
-the staleness mid-slice.**
-
-### 5.1 WI-390 — concurrency-v2 program close
-
-[`../work/queued/WI-390-concurrency-v2-program-close.md`](../work/queued/WI-390-concurrency-v2-program-close.md)
-· `safety_class = "spine"` · `buildtier = medium` · **no `priority` key** (worth
-ruling if it is meant to sort last).
-
-**What the spec says, and what changed:**
-
-- **Stale status claims.** Its `## Context` (WI-414 re-scope) states
-  *"`SR-055` — still requires 'two circular working loops' … still `Verified`."*
-  **SR-055 is `Modified`; so is SR-050.** SR-093/124/131/132/133 are still
-  `Verified`; LLR-051/056 and TC-051/056 still `Verified`. (Correction ledger #3.)
-- **Its central premise now collides with two other windows.** The spec's own
-  point is *"per §A4 all spine WIs admit together as ONE re-attest window and ONE
-  owner sitting."* **Three windows now compete:** sitting 1's deliberately
-  re-opened 2.4-sweep `Modified` window, WI-451's 57-SR re-statement window, and
-  WI-390's own batch.
-- **IF-080/IF-081 change meaning.** WI-390 treats them as connectivity drift
-  (*"IF-055, IF-080 and IF-081 are in the registry with no script declaring
-  them"*); §1 flags them **MISLABELLED**. Under a resolvable `counterpart`
-  (decision 3/5) the mislabel becomes *unrepresentable*, which changes what
-  "closing the drift" even means.
-- **An unassigned prose home.** WI-390 owns the `PROCESS_OPTIONS.md` /
-  `AGENTS.template.md` prose pass. The §1a actor-plus-interface rule and the
-  "enabling system" vocabulary have **no process-doc home today** (searched:
-  `PROCESS.md`, `PROCESS_OPTIONS.md`). Whether WI-390's pass absorbs them is
-  unassigned.
-
-**What this sitting should order.** Rule the **window sequencing** explicitly:
-does WI-390's spine amendment ride WI-451's window, ride the 2.4-sweep window, or
-open its own? Re-point its stale status list to "re-measure at claim, do not
-quote". Say whether the boundary vocabulary lands in WI-390's prose pass or its
-own row.
-
-### 5.2 WI-442 — OI-28 seeds landed on the spine
-
-[`../work/queued/WI-442-oi-28-seeds-landed-on-the-spine.md`](../work/queued/WI-442-oi-28-seeds-landed-on-the-spine.md)
-· priority 2 · spine · `needs = ["WI-441"]` (complete) · `sr_refs = []`.
-**This is the highest-impact staleness in the queue.**
-
-- **Its vehicle has sailed.** The title says the two accidental "agent CLI" IF
-  rows are regularized *"during part B's schema pass"*. **Part B is WI-443 and is
-  COMPLETE.** The two rows are **IF-020** and **IF-041** (both declared under E3
-  in §1). The clause needs a new home. (Correction ledger #4.)
-- **E11's retirement doubles its SR clause.** Clause (b) — "one SR declaring the
-  shipped template set a traced product artifact class" — now anchors **TWO
-  crossings**: **OUT M-07** to the adopting repo (E10) and **IN N-02** from the
-  enabling author (E12). WI-442's scope never contemplated an inbound crossing.
-- **§1a raises the bar on clause (a).** An actor declaration *alone* is
-  insufficient — a boundary is actor **AND** crossing interface. E3's **M-12** (IN,
-  prompt into the repo) and **M-13** (OUT, edits through the hook floor) both lack
-  IF rows, so clause (a) grows to **at least two typed IF rows**.
-- **It is a coverage-relief vehicle and does not know it.** SN-037…SN-040 are
-  ratified with zero `sr_refs` (`uncovered=8`). WI-442's SR could cite **SN-040**;
-  neither WI-442 nor WI-451 declares which SN it covers.
-- **Its home moves with decision 5.** If `external.toml` is minted, clause (a)'s
-  declaration lands as an **entity row**, not an IF row. WI-442 assumes
-  `interfaces.toml` is the only home.
-
-**What this sitting should order.** Re-home the part-B clause; grow clause (a) to
-typed IF rows for M-12 and M-13; state that clause (b) covers both M-07 and N-02;
-declare the SN it covers; and re-point its registry home per decision 5.
-
-**⚠ AMENDED BY THE 2026-08-13k REFRAME (decision 1).** Under the owner's
-re-drawn frame the third bullet **simplifies**: E12 and **N-02 are dissolved**
-— authoring is the SESSION entity's ordinary hook-floor crossing, i.e. exactly
-M-12/M-13 — so clause (b)'s SR anchors **M-07 alone** (the ONE deliverable
-crossing to the ADOPTER), and the "inbound half" WI-442 never contemplated
-turns out not to exist as a separate crossing. Clause (a)'s "boundary-actor
-declaration" lands as the **SESSION entity row** in `external.toml` (decision
-5) plus the M-12/M-13 IF rows. The rest of the order stands.
-
-### 5.3 WI-448 — common-module inversion program (OI-16 / D-8)
-
-[`../work/queued/WI-448-common-module-inversion-program.md`](../work/queued/WI-448-common-module-inversion-program.md)
-· priority 3 · `buildtier = strong` · spine · `needs = ["WI-441", "~WI-447"]`
-(both complete).
-
-- **Its basis is provisional.** The spec says *"Sequenced after OI-14 part A
-  (component ownership turns import doctrine into a lookup)."* Part A shipped —
-  but **P5 is only provisionally adopted warn-first** (CMP-006…009 all
-  `state = planned`; decision 10 is unruled). If you overturn P5, **P3 is the named
-  fallback** and the lookup basis changes. The pack's "overturn costs nothing
-  else" costing **did not account for WI-448 consuming the component tags as
-  doctrine.**
-- **The must-land-together coupling is stated in the pack, not in the spec.**
-  Decision 10's constraint finding says *"P2's measurement is the proof the two
-  must land together"* — extraction without deletion makes every number worse.
-  WI-448's spec says only *"sequenced after"*. **Reconcile:** "sequenced after" and
-  "must land together" are different obligations.
-- **MAPPING is a declared boundary crossing.** The spec's whole downstream risk
-  surface is *"the module joins MAPPING (the single line that is the whole
-  downstream risk surface, and the line the repo has got wrong once)"*. MAPPING is
-  now **M-06 (IF-014, partial)** — a crossing to E10. Whether adding a module to a
-  declared crossing obliges an **IF-row update** is unruled.
-
-**What this sitting should order.** Rule decision 10 first (it gates this row's
-premise); state whether WI-448 and the partition land together or merely in
-order; and rule whether a MAPPING addition is an IF-row edit.
-
-### 5.4 WI-451 — SR-tier boundary conformance pass
-
-[`../work/queued/WI-451-sr-boundary-conformance-pass.md`](../work/queued/WI-451-sr-boundary-conformance-pass.md)
-· priority 2 · `buildtier = strong` · spine · `needs = []`. **The central row this
-sitting unblocks — and its central numbers are superseded.**
-
-- **The split is 18/57, not ~25/~50.** Its title's estimate is wrong in the
-  direction that **moves the program up**. Restate it. (Correction ledger #1, §2.)
-- **The gate is restated.** Its guard says *"Do not begin slice 2 without the
-  sitting's ruling"* — but **2.7(a) IS already ruled**. What remains gated is the
-  **boundary-inventory agreement** (decisions 1 + 2), not the discriminator. Say so,
-  or a builder reads the guard as unsatisfied forever.
-- **Slice 1 has no referent yet.** The census is *"against the boundary
-  inventory"*, and no authoritative artifact holds one — the 34-crossing inventory
-  lives only in an analysis-input plan doc whose own header says *"analysis input,
-  not a decision."* **Adopting the frame at this sitting creates the referent.**
-- **The SR→IF checker is an UNOWNED deliverable.** IF→SR is enforced today and
-  clean at 113/113; **SR→IF does not exist**, and it is SN-037's ratified
-  acceptance. WI-451 names the mechanization but **assigns no build**. Either give
-  it to WI-451 explicitly or mint a row.
-- **It needs the duplication rule as an input.** Decision 7's rule is applied
-  **per row** in slice 2, and WI-451's spec contains no duplication rule at all.
-- **It is the coverage-relief vehicle.** WI-451's output is SN-033…SN-040's first
-  coverage; its spec says nothing about SN coverage. `uncovered=8` bites at
-  `trace.py --strict` from **DevBar-Tests** on.
-- **Its "internal seam" definition is pinned to unruled tags.** It reads internal
-  against CMP-006…009 (P5), which decision 10 has not ratified.
-- **Area→aspect rides here or nowhere.** The conversion is *"queued for the next
-  SR-registry touch"* — **WI-451 slice 2 IS that touch**, and WI-451 never mentions
-  `Area`. Decide whether it rides.
-
-### 5.5 WI-452 — LLR-165 resync-helper resurface
-
-[`../work/queued/WI-452-llr-165-resync-helper-resurface.md`](../work/queued/WI-452-llr-165-resync-helper-resurface.md)
-· priority 3 · medium · `safety_class = ordinary` · workstream `docs` ·
-`sr_refs = ["SR-147"]` — the only queued row carrying an SR ref.
-
-- **Part (1) is real work, not a verification no-op — measured.**
-  `project-trajectory/RESYNC_PACK.md` **HAS** the pointer (8 mentions of
-  `migrate_carrier.py`, with runnable commands). **`ADOPTING.md` §6 has ZERO
-  mentions. `project-trajectory/skills/downstream-resync/SKILL.md` has ZERO.** Two
-  of the three named surfaces are empty.
-- **The TC-159 lift gap.** Pack §2.3 lifted SR-147 / LLR-165 / **TC-160** — never
-  **TC-159**, which is the TC that actually verifies LLR-165. Live: TC-159 `Draft`
-  (verifies SR-147 + LLR-165); LLR-165 `Planned` with `test_refs = TC-159`. WI-452
-  part (2) says *"confirm … that TC-159/TC-160 still exercise the path"* — it will
-  walk straight into a `Draft` row. **Lift it or re-point it deliberately**
-  (sitting 3 §2). (Correction ledger #8.)
-- **The IF-103 tension.** Decision 4 above. WI-452's ruled thesis (the converter
-  has a forward obligation) contradicts the draft's "Experimental until the
-  conversion program ends."
-- **A possible fourth surface.** If `external.toml` is minted (decision 5), the
-  resync pack gains an entry and **WI-452 part (1)'s surface list grows**.
-
----
+The per-WI impact notes this section carried were **applied directly into the
+queued WI specs** on 2026-08-13w (post-audit): WI-390 gained its corrections
+section; WI-442 was **re-minted in place** as the `external.toml` schema
+execution row; WI-448 gained its P5-ratification-input note; WI-451 was
+**re-titled as THE SR RE-TIER CAMPAIGN row**; WI-452 gained its two guards;
+WI-453/454 were minted post-§5 and never had entries here. A new **WI-455**
+carries the `architecture.md` retirement program (D8). The superseded §5 text
+— parts of which predate the final frame (B-03's removal, the entity merges) —
+is archived at
+[`../archive/plans/2026-08-13-sitting-2-superseded-material.md`](../archive/plans/2026-08-13-sitting-2-superseded-material.md).
+**Read the WI specs, not an impact note, when claiming.**
 
 ## 6. Housekeeping ledger — ruled-but-unexecuted, and homeless
+
+> **§6.0 DISPOSITION NOTE (2026-08-13w)** — where each item now rides, so
+> nothing is executed twice or orphaned: **item 1 is EXECUTED** (read only its
+> EXECUTED block). **Items 2, 5, 7** (migration history in `Requirement`
+> cells; SR-060's dead clause) **ride the re-tier campaign's window** — their
+> rows are demotion candidates, and editing a row about to move is the
+> double-window problem. **Item 6** (IF-038's counterpart) and **item 16's
+> IF-064 stray** ride the `external.toml` schema row — `counterpart` is a
+> field the slimming deletes. **Item 13** rides the combined D-9 + D12
+> vocabulary program (sitting 3). **Item 16's SN comment block** rides
+> WI-454's registry touch. The rest are pointer-only or need no vehicle.
 
 Fifteen small items rescued from the plan docs being archived. Each names its
 source at the archive path, and a proposed disposition: **needs a ruling** ·
@@ -1869,18 +1752,6 @@ kind that silently cost a re-attest window if executed alone.
 > the clause makes the row self-consistent rather than weakening it. Lands
 > with the prose batch at the sitting (a lone edit to a ratified need would
 > open a re-attest window outside the batched one — §F).
-
-**Measured NOT EXECUTED.** `docs/requirements/stakeholder-needs.toml` SN-007
-`need` still reads *"…a change to a script is covered by a test exercised
-end-to-end against a real scaffold."* The prose batch it was ruled to ride has
-been and gone.
-
-**Why this is the sharpest item in the ledger.** Sitting 1 **ratified the SN
-registry** (all 27 rows `kind = "core"`, zero draft). So the strike now does
-exactly what its own ruling said to avoid: *a lone edit to a ratified need opens
-a re-attest window outside the batched one.* **Disposition: schedule it INSIDE
-sitting 3's window — never as a lone edit.** It is a one-cell deletion; the cost
-is entirely in *when* it lands.
 
 **EXECUTED — OWNER RULING IN SESSION, 2026-08-13.** Reviewing the post-strike
 remainder (*"…its own changes stay traceable and tested"*), the owner flagged

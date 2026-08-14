@@ -52,3 +52,32 @@ moved there.
 This section also re-dates this row against its amended SpecRef
 (`docs/concurrency-v2.md`), which is the re-affirmation the standing
 `check_trajectory` SpecRef-clock warning asks for.
+
+### Post-sitting-2 corrections (2026-08-13w — read before claiming)
+
+- **Do not quote a Status from this file — re-measure at claim.** The WI-414
+  re-scope bullet above says SR-055 "still `Verified`" — true when written,
+  false now. (Measured 2026-08-13: SR-055 `Modified`, SR-050 `Modified`;
+  SR-093/124/131/132/133 `Verified`; LLR-051/056 and TC-051/056 `Verified`.)
+- **IF-080/081 are ruled, not drift (13m · 13u).** Decision 2 confirmed both
+  internal; the `counterpart = "downstream adopter"` label is the mislabel, and
+  it is the external-schema row's to fix — under sitting-2 §1R.5 `counterpart`,
+  `direction` and `stability` are all fields the slimming deletes. **This row's
+  connectivity scope covers IF-055 and the arch-map/`Contracts:` declarations
+  only.** Record the IF-080/081 finding as inherited-and-owned-elsewhere; do
+  not edit those two rows here.
+- **Window sequencing vs. the SR re-tier (13q · 13s).** Four of this row's five
+  amendment targets (SR-093/124/131/132/133) name internal scheduling
+  machinery, not a boundary crossing — they are re-tier *demotion* candidates
+  under §3R, not merely amendment candidates. **This row's spine amendment does
+  not open its own window: it runs INSIDE the re-tier campaign's window, after
+  the campaign's census has classified these five rows.** If the census demotes
+  a row, its amendment is written at the LLR tier the demotion lands it in and
+  this row's obligation is discharged there; if the census keeps it at SR, the
+  amendment lands here as written. §A4's one-window principle is honoured by
+  joining the larger window, not by opening a competing one.
+- **The boundary/entity vocabulary is NOT this row's prose pass.** The §1a
+  entity-plus-interface rule and the "enabling system" vocabulary are kit-facing
+  process doctrine produced by the external-schema row's program; WI-390's
+  prose pass stays scoped to the concurrency seam model.
+
