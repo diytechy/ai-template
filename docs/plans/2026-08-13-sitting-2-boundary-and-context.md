@@ -69,14 +69,16 @@ file is the brief you rule from.
 
 ### 0.2b Vocabulary — RULED 2026-08-13j (owner): the noun is ENTITY, never "actor"
 
-The going-forward semantic for the parties around the system is **entity**. The
+The going-forward semantic for what surrounds the system is **entity**. The
 noun lives on the registry table (`[entity.EXT-###]`), so the class values
-carry none: **`operational` · `enabling` · `interoperating`**. Sections of this
-document carried verbatim from the archived draft (§1, §1a, §1b) and quoted
-rulings keep their original words as provenance — read **"actor"** there as
-*operational entity*, and the §1 table's **"Party"** column header as *entity*.
-Everything written from here on — kit-facing schema, process prose, the
-`external.toml` field vocabulary — uses entity vocabulary. ("Entity" is also
+carry none: **`operational` · `enabling` · `interoperating`**. Applied to this
+document's live surfaces (owner-confirmed 2026-08-13): the §1 table's column
+header is renamed **Party → Entity**, the §2 discriminator rule now reads
+*"external entity from §1"*, and decisions 1/3 speak entity. Quoted rulings
+and the carried analytical prose inside §1/§1a/§1b keep their original words
+("actor", "parties") as provenance — read them as *operational entity* /
+*entities*. Everything written from here on — kit-facing schema, process
+prose, the `external.toml` field vocabulary — uses entity vocabulary. ("Entity" is also
 the standard context-diagram term — *external entity* — and coheres with the
 IF registry's `counterpart` field; "stakeholder" was passed over because it
 already names the SN tier's subject.)
@@ -138,7 +140,7 @@ traceable back to the WI-441 inventory; **`N-`** marks a crossing this draft add
 Signal typing (`discrete`/`variable`) is deliberately **not** a column here — per
 §1a it is a property of the IF row, not of the frame.
 
-| # | Party | Dir | What crosses | IF today | State |
+| # | Entity | Dir | What crosses | IF today | State |
 |---|---|---|---|---|---|
 | M-01 | **E1** Adopting team / contributor | IN | a contributor runs `dev-setup.{sh,cmd,command}`; toolchain probe result | — | **MISSING** |
 | M-03 | **E1** | OUT | the runnable capability list a contributor reads | IF-048 | partial — menu side only |
@@ -417,7 +419,7 @@ spine-validation cost.** Measured:
 **The discriminator, stated as a rule WI-451 can apply mechanically:**
 
 > An artifact may be named in SR text **iff** it is the *this-project* side of an
-> IF row whose `counterpart` is an **external party from §1** — i.e. it is a
+> IF row whose `counterpart` is an **external entity from §1** — i.e. it is a
 > **port**. Everything else is an **internal seam**: it belongs to the LLR tier
 > (or is re-stated against the IF row that types the seam).
 
@@ -584,7 +586,7 @@ says so.**
 ### Decision 1 — Adopt or amend the depth-0 frame (§1)
 
 **The question.** Do the 36 crossings in §1's table, against the twelve external
-parties E1…E12, constitute the kit's declared frame?
+entities E1…E12, constitute the kit's declared frame?
 
 **Context.** Adopting also means adopting the **completeness declaration** — the
 claim that this set is the whole frame — which is what the rung actually
