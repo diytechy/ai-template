@@ -171,13 +171,12 @@ test/coverage toolchain (v1 EXT-008). Their obligations survive as
 **requirements on Template content** (portability, hook behavior, tier floors)
 and as the mechanics of the B-01/B-04 crossings — not as frame entities.
 
-### 1R.2 The system's boundary crossings (v2 — seven; B-08 removed 2026-08-13o)
+### 1R.2 The system's boundary crossings (v2 — **six**; B-08 removed 13o, **B-03 removed 13u**)
 
 | BIF | Dir | What crosses | Absorbs (v1 / draft ids) |
 |---|---|---|---|
 | **B-01** | IN | **Governed writes**: artifact, registry and config edits admitted **only through the git hook floor** (privacy, format, gate checks) — the one write path from the session into the system's governed state | BIF-004/N-01, BIF-006/M-13, BIF-007-in/M-10, BIF-025/X-09 (the guardrail's read is this crossing's mechanism), the write half of BIF-026/M-16 |
 | **B-02** | IN | **Authority**: rulings, attestations, `Status` flips — the distinguished input the process advances on | BIF-005/M-11 |
-| **B-03** | OUT | **Validation & status feedback to the session**: `PROJECT_STATE.html`, `open-items.html`, `docs/status.md`, `docs/gate`, console reports, the run menu | BIF-007-out/M-10, BIF-008/M-03, BIF-009/M-19, BIF-010/M-09, BIF-011/M-08 |
 | **B-04** | OUT | **Guardrail verdicts during a session**: hook-floor accept/reject, `subagent_gate` PreToolUse allow/deny | BIF-012/X-07, the verdict halves of BIF-006/BIF-026 |
 | **B-05** | OUT | **THE TEMPLATE — the packaged deliverable** to EXT-002. The delivered scripts' contracts (`check.py`, `bootstrap.py` + MAPPING, `agent_loop.py`, `check_vendored.py`, `gen_cases.py`, `gen_release_checklist.py`, the hooks, the launchers) are **IF definitions tied `interface_to_external = "B-05"`** — content of the package, not separate system crossings | BIF-014/M-07, BIF-015/M-06, BIF-016…021/X-01…X-06, and BIF-001/M-01 + BIF-002/M-02 as CONTENT (their invocation is the session's, per 13n) |
 | **B-06** | IN | Hosted CI trigger: push · PR · schedule; the OS × Python matrix | BIF-027/M-04 |
@@ -188,14 +187,15 @@ and as the mechanics of the B-01/B-04 crossings — not as frame entities.
 | REL | From → To | Flow |
 |---|---|---|
 | **REL-001** | Template → Adopter | full content provided; adopted into their repo (their scaffold, their loop, their hooks) |
-| **REL-002** | Template → Development session | **self-adoption**: this repo's session adopts the same content and activates autonomous builds from it (`agent-resume`) — the 13n NOT-an-input ruling lives here |
+| **REL-002** | Template → Development session | **self-adoption**: this repo's session adopts the same content and activates autonomous builds from it (`agent-resume`) — the 13n NOT-an-input ruling lives here. **Absorbed 13u:** the session then *runs* that adopted toolkit to produce `PROJECT_STATE.html`, `open-items.html`, `docs/status.md`, `docs/gate` and the console reports, and surfaces them to the human reading from that session. **Those outputs are NOT system outputs** — the system delivered the generators (B-05 content); the workflow that runs them is adopted, exactly as an adopter's would be |
 | **REL-003** | Development session ↔ Model provider API(s)/CLI(s) | the LLM runner surface, primary and adversarial alike: rate limit, auth expiry, model retirement (old M-15) and hostile-review briefs out / findings in (old M-14) — the backoff obligation reads as a requirement on delivered loop content, exercised session-side |
 
 ### 1R.4 The reclassification ledger — every v1 row dispositioned
 
-**Stay system crossings (folded):** v1 BIF-004/005/006/007/025/026 → B-01/B-02
-(+ verdict halves → B-04); BIF-008…011 → B-03; BIF-012 → B-04; BIF-027/028 →
-B-06/B-07.
+**Stay system crossings (folded):** v1 BIF-004/005/006/007-in/025/026 →
+B-01/B-02 (+ verdict halves → B-04); BIF-012 → B-04; BIF-027/028 → B-06/B-07.
+**Move to REL-002 (13u):** BIF-007-out/M-10, BIF-008/M-03, BIF-009/M-19,
+BIF-010/M-09, BIF-011/M-08 — the former B-03 set.
 **Become Template content (IF definitions under B-05):** BIF-014, BIF-015,
 BIF-016…021 — *strictly outputs*; plus BIF-001 (`dev-setup`) and BIF-002
 (`agent-resume`), **explicitly ruled NOT inputs**.
@@ -211,9 +211,10 @@ the tool itself ships as B-05 content; ruled 2026-08-13o).
 Python), BIF-030/M-18 (pytest results) and BIF-031/X-13 (`coverage.json`) —
 their obligations survive as **requirements on Template content** (portability;
 the tier floors) and as B-01/B-03/B-04 mechanics, not as crossings.
-**Count check:** 13 stay (→ B-01…B-04, B-06…B-07) + 10 become Template content
-(→ B-05) + 2 become relationships (→ REL-003) + 3 dissolve into the session +
-3 dissolve with their entities = **31**; none dropped silently.
+**Count check:** 8 stay (→ B-01/B-02/B-04/B-06/B-07) + 10 become Template
+content (→ B-05) + **5 move to REL-002 (the former B-03)** + 2 become
+relationships (→ REL-003) + 3 dissolve into the session + 3 dissolve with their
+entities = **31**; none dropped silently.
 
 ### 1R.5 The registry shape around them (decisions 3/4/5 as ruled)
 
@@ -311,7 +312,8 @@ entity dissolutions stand (compactness). **(5)** the skills fan-out and
 `docs/knowledge/` packs fold into **B-05**: they are template content,
 available from the package whether an adopter uses them or not.
 
-**The declared frame: 5 entities · 7 boundary crossings · 3 relationships.**
+**The declared frame: 5 entities · 6 boundary crossings · 3 relationships**
+*(7 → 6 at 13u, when B-03 was ruled not a system output).*
 The one deliberate exclusion: `MULTI_REPO.md`'s cross-repo rung stays
 unaudited. **Decision 1 is CLOSED.**
 
@@ -569,25 +571,33 @@ failure of it.
 Twelve. Items 1–8 are the boundary draft's §4, updated; items 9–12 are the
 pack's tabled and deferred calls plus one rescued design question.
 
-### 4.0 STATE OF PLAY — what is still open (as of 2026-08-13s)
+### 4.0 STATE OF PLAY — **ALL TWELVE DECISIONS ARE RULED** (as of 2026-08-13u)
 
-Nine of the twelve are closed. **Six calls remain**, all small; none blocks the
-frame, which is locked.
+Sitting 2's decision surface is **complete**. Nothing on this list awaits you;
+what remains is execution, then sitting 3.
 
-| # | State | What is still owed |
+| # | Ruled | The call |
 |---|---|---|
-| **1** | ✅ CLOSED | frame locked 13o — 5 entities · 7 crossings · 3 relationships |
-| **2** | ⚠ **OPEN ×2** | the two explicit calls: **IF-080/IF-081 fall internal** (they have no BIF under §1R v2 — confirming licenses WI-451 to demote the SRs naming them), and **a generated surface is a port while its generator is not** (B-03 embodies this; §2 says yes). Both are near-formalities now |
-| **3** | ✅ CLOSED | inversion ruled 13l |
-| **4** | ⚠ **OPEN (residue)** | the question dissolved, but two things survive: **confirm the `boundary_incomplete` re-key** onto BIF completeness, and **dispose the five `Experimental` rows' content findings** as ordinary registry hygiene (IF-057's undeclared consumer seam; three never-re-reviewed carrier seams; IF-103 now free) |
-| **5** | ✅ CLOSED | `external.toml` approved, re-confirmed 13l |
-| **6** | ⏸ DEFERRED **by ruling** | re-lands mechanically post-schema as *BIF rows with no realizing IF* |
-| **7** | ⚠ **OPEN (riders)** | rule text ruled 13q; two riders to ORDER: **SR-035's disposition** (merge or re-state; rides WI-451's window) and **SN-033's unowned need-cell checker** |
-| **8** | ⚠ **OPEN ×1** | architecture-as-derived ruled 13q; confirm the boundary: does *"the entire structure retires"* include the **narrative** Runtime flows (SR-cited, `check_flows.py`-checked, not registry-derivable), or do those stay authored-and-checked? |
-| **9** | ✅ CLOSED | resolved by §3R's form rule; row-level execution rides the re-tier |
-| **10** | ✅ CLOSED | ruled DEFER 13s — P5 stays warn-first provisional until the re-tier; re-ratify on re-derived numbers |
-| **11** | ⚠ **OPEN (text)** | ruled 13q/r/s; the seven proposed rows are **agent-drafted and owe your text** before landing — execution filed as **the queued hats WI** |
-| **12** | ⚠ **OPEN (the invariant)** | mechanism ruled unchanged 13q; still to rule: **every rung-generated registry row carries an approval element** as a schema invariant, and how the **three measured gaps** close (hats: none; `interfaces`: `stability` retiring with no replacement; `external.toml`: must design one in from its first commit) |
+| **1** | 13k · 13l · 13o | frame locked — **5 entities · 6 crossings · 3 relationships** |
+| **2** | 13m · **13u** | IF-080/081 internal **confirmed**; **B-03 removed** — the status/validation surfaces are not system outputs, they are adopted-toolkit outputs, folded into REL-002 |
+| **3** | 13l | the inversion: boundary interfaces live in `external.toml`; SRs form around them; IF rows tie back directionally |
+| **4** | **13u** | **`Stability` retires — IF rows follow the approval schema**; the five `Experimental` rows become ordinary approve-or-fix work |
+| **5** | 13i · 13l | `external.toml` minted: entities · relationships · boundary interfaces |
+| **6** | 13l (deferred **by ruling**) | re-lands mechanically post-schema as *BIF rows with no realizing IF* |
+| **7** | 13q · 13s · **13u** | rule text ruled; **SR-035 deferred into the re-tier** (a real obligation lacking an observable, not a duplicate); **SN-033's checker filed as a placeholder WI** |
+| **8** | 13q · **13u** | **`docs/architecture.md` DIES** — architecture renders in `PROJECT_STATE.html` from the registries; ten scripts and `check_flows.py`'s input are the execution shape |
+| **9** | 13q · 13s | dissolves into the re-tier; §3R's form rule governs |
+| **10** | 13s | **DEFER** P5 ratification until after the re-tier; warn-first stands; WI-448 proceeds on provisional tags |
+| **11** | 13q · 13r · **13u** | roster determined at `DevStg-Boundary`; `FIRST-RUN-ADOPTER` kept + fixed; seven hats added (five off by default); **proposed text accepted** |
+| **12** | **13u** | **one shared status vocabulary across every registry**, per-registry subsets allowed, **change detection deferred** |
+
+**What is NOT decided, deliberately** — three items that re-land as execution
+reaches them: decision 6's crossing ownership (post-schema); the **human-agent
+entity** follow-on from decision 2 (recommendation: keep the human inside
+EXT-001 per 13k, and say so deliberately if you reverse it); and
+**`check_flows.py`'s Runtime-flows obligation** when `architecture.md` goes
+(decision 8 — move the flows or retire the check, but do not let a deletion
+silently retire it).
 
 **Two unowned mechanizations sit across these** and belong to whichever
 execution row takes the schema: the **SR→IF checker** (SN-037's ratified
@@ -672,6 +682,38 @@ size.
 
 **Two rows to decide explicitly:**
 
+**RULED 2026-08-13u.** (1) **IF-080 / IF-081 fall internal — CONFIRMED.**
+(2) The generated-surface question produced a **deeper correction, and the
+owner took it**: those surfaces are **not outputs of this system at all.**
+
+> **B-03 is REMOVED as a boundary crossing.** The system generates *the
+> toolkit* that produces those outputs. `docs/status.md`, `docs/gate`,
+> `PROJECT_STATE.html` and `open-items.html` are **derivatives of the workflow
+> adopted from the template kit runner itself** — generator scripts that ship
+> in the Template (B-05) and come back into the development session through
+> self-adoption. So the surfacing folds into **REL-002**: the session runs the
+> adopted toolkit, produces those outputs, and shows them to the human reading
+> from that session.
+
+This is the §1R principle applied one level further than v2 had carried it —
+*using what the system creates is not a system crossing* — and it makes the
+frame smaller again: **6 crossings, not 7.** It also retires the
+"is a generated surface a port?" question rather than answering it: neither the
+surface nor its generator is a system port; both are delivered content.
+
+**⚠ One follow-on to confirm.** The ruling names *"a human agent … an external
+user seeing that from the development session"*. If that human is a **distinct
+entity**, the surfacing becomes a declared entity-to-entity relationship and the
+frame gains a sixth entity. **Recommendation: keep the human inside EXT-001 and
+fold the surfacing into REL-002 (as applied above)** — because 13k ruled
+explicitly that human-vs-loop *"survives as policy and record, never as an
+entity split"*, and splitting a Human entity out to receive B-03's old content
+would re-open exactly that. If you want the human declared anyway, say so and
+the split is mechanical — but it should be a deliberate reversal of 13k, not a
+side effect of this ruling.
+
+**The original two calls, for the record:**
+
 1. **IF-080 / IF-081** — `integrate.py`'s serialized merge queue and
    `trunk_step.py`'s trunk step. Their rows *claim* `counterpart = "downstream
    adopter"`, but both are the unattended station's **internal** serialization
@@ -717,6 +759,36 @@ the "declare the entities, derive the rest" proposal that anticipated this
 ruling are archived at [`../archive/plans/2026-08-13-sitting-2-superseded-material.md`](../archive/plans/2026-08-13-sitting-2-superseded-material.md).*
 
 ### Decision 4 — The five `Experimental` rows, and the IF-103 tension
+
+**RULED 2026-08-13u: `Stability` RETIRES — IF rows follow the APPROVAL schema
+(draft vs approved), like every other tier.** *"I would actually like to follow
+the approval schema (draft vs approved). Perhaps I misunderstand."* — no
+misunderstanding; the two were different axes and you are choosing the right
+one. **`Stability`** (`Experimental`/`Provisional`/`Stable`) is a *contract-
+maturity* claim: how much the interface is expected to move. **Approval** is
+*has this row been ratified*. The five `Experimental` rows show why the
+distinction collapsed in practice — four were carrier plumbing that was simply
+**never re-reviewed**, i.e. *unapproved*, wearing a maturity word. So the axis
+that was doing the real work was approval all along.
+
+**Consequences, and it closes two decisions at once:**
+
+- `interfaces.toml` gains the **same approval element as SN/SR/LLR/TC** (the
+  one closed vocabulary D-9 lands) and **`stability` is deleted, not
+  duplicated** — this is decision 12's `interfaces` gap closed, on the same
+  ruling.
+- **`external.toml`'s entity / boundary / relationship rows carry it from their
+  first commit** — the frame's own rows become ratifiable, which is what
+  decision 12 asked for.
+- `derive_gate.boundary_incomplete` re-keys onto **boundary-interface
+  completeness** as already ruled, now reading an *approval* state rather than
+  `Stability`: rung 1 clears when every declared boundary interface is
+  approved.
+- The five rows' content findings (IF-057's undeclared consumer seam; the three
+  never-re-reviewed carrier seams) become ordinary **approve-or-fix** work —
+  no longer a special class.
+
+The earlier direction, which this supersedes:
 
 **RULED DIRECTION 2026-08-13l — the question largely DISSOLVES.** Two owner
 points recorded: (1) **`stability` is questioned as an attribute at all** —
@@ -842,20 +914,65 @@ multi-need).
 
 **Two riders to order with it:**
 
-1. **SR-035's disposition** — the one measured *true* echo (no crossing, no
-   mechanism, no measurable acceptance). Merge it, or re-state it as a B-05
-   delivered property with a real observable. It is `Verified`, so it opens a
-   window either way — **bundle it into WI-451's**, never a second one.
-2. **SN-033's checker is unowned.** Its ratified acceptance commissions *"a
-   declared check [that] reports the row and phrase when a need cell contains
-   an internal path, implementation-only identifier or process citation"* with
-   a reviewed exception list. It does not exist. It would currently report
-   **zero findings**, which makes it cheap to build and — the point — it would
-   **lock the clean state in** rather than trusting the churn ahead not to
-   dirty it. Sits alongside the SR→IF checker as the second unowned
-   mechanization (§5.4).
+1. **SR-035's disposition — DEFERRED to the re-tier (ruled 2026-08-13u).**
+   The owner: *"ironically SR-035 is truly a requirement, but I'm not sure of
+   the best way it can be tested — let's consider this during the SR
+   re-tiering."* That is the right call and it sharpens the row's status: it is
+   **not** a duplication case to merge away, it is a **genuine obligation with
+   no known observable** — which is precisely the class §1R.6 exists to
+   resolve, and precisely what the re-tier is for. Carry it into WI-451 as a
+   named row rather than a general instruction. *(A candidate observable to
+   test against when it comes up: the shipped registries and ID scheme carry no
+   language-specific token, and a non-Python adopter's scaffold passes
+   `trace.py` — a B-05 delivered property, testable by scaffolding.)*
+2. **SN-033's checker — AGREED as a PLACEHOLDER (ruled 2026-08-13u).** Its
+   ratified acceptance commissions *"a declared check [that] reports the row
+   and phrase when a need cell contains an internal path, implementation-only
+   identifier or process citation"* with a reviewed exception list. It does not
+   exist, and it would report **zero findings today** — which is exactly why it
+   should land now: it **locks the clean state in** before the re-tier churn.
+   **On "not sure of the best way to do that" — the shape the kit already
+   has:** a stdlib `check_need_form.py` in the `check_*` lint family, run from
+   `check.py`'s step table **warn-first** (the DEFAULTED tier), scanning each
+   `need` cell for path-like and identifier-like tokens against a declared
+   exception list for names that are themselves user-facing interfaces. It
+   ships with its exception list empty and its finding count at zero, so the
+   *first* row that dirties the tier is the one that reports. Filed as its own
+   WI rather than carried as prose.
 
 ### Decision 8 — Where the boundary record LIVES once ruled
+
+**RULED 2026-08-13u — going further than 13q: `docs/architecture.md` DIES.**
+*"architecture.md can die, instead the available tables should produce full
+architecture in the ProjectState.html, much of that exists already today."*
+Correct on the last point — `traj_views.py` already renders a **"How (SW
+architecture)"** tab. So the target is: **registries → the dashboard**, with no
+markdown way-station.
+
+**This answers the 13q open question by dissolving it:** there is no
+"narrative remainder stays authored" if the file itself is gone. What was owed
+becomes a disposition for each of the file's ~192 hand-authored lines.
+
+**⚠ The execution shape, measured — this is a real program, not a delete.**
+**Ten scripts touch `docs/architecture.md`** (`gen_arch_map`, `traj_parse`,
+`gen_trajectory`, `check_trajectory`, `check.py`, `check_doc_refs`,
+`check_flows`, `traj_status`, `trunk_step`, `bootstrap`), and the current data
+path is **registries → `gen_arch_map` → `architecture.md` → `traj_parse` → the
+dashboard tab**. Retiring the file means re-pointing that chain to
+**registries → dashboard** directly. Two specific consequences to rule with it:
+
+- **`check_flows.py` loses its input.** It reads the *"Runtime flows"* section
+  from this file and enforces that every flow diagram cites an SR/LLR id. Those
+  flows are **narrative and SR-cited — not registry-derivable** — so they need
+  a disposition: move them into the dashboard as authored-and-checked content
+  (the check follows them), or retire the obligation deliberately. **Do not let
+  the file's deletion silently retire a check.**
+- **`bootstrap.py`'s MAPPING and the scaffold surface change**, which is a
+  downstream-visible change for adopters (a re-sync entry), and the standing
+  lesson applies: *a scaffold-surface change is only verified by bootstrapping
+  a scaffold.*
+
+The earlier, narrower ruling this supersedes:
 
 **RULED 2026-08-13q: the hand-authored architecture structure RETIRES — the
 architecture becomes a DERIVED FACT.** The owner's reasoning: with the boundary
@@ -1353,7 +1470,12 @@ are silent **by design** (they wait for a tag). `FIRST-RUN-ADOPTER` is silent
 reader must not have to guess which is which — say it in the roster's header
 comment.
 
-**Proposed rows (owner text to confirm; all ship OFF):**
+**ACCEPTED 2026-08-13u** — *"recommendations and proposals look sufficient."*
+The rows below and the `FIRST-RUN-ADOPTER` predicate fix are the text
+**WI-453** executes; the template-vs-this-repo split follows the recommendation
+(UX pair unconditional here, render/ui-gated in the shipped starting roster).
+
+**The rows (all five aspect hats ship OFF):**
 
 - **`SAFETY`** — `applies_when = 'tags contains "safety"'`
   · *asks:* "How can this harm a person, property or the environment if it behaves incorrectly, and what requirement bounds that harm?"
@@ -1467,6 +1589,41 @@ are exactly two gaps, and the second is about to be created:**
 | **hats** | **NONE** | ⚠ **GAP** — a roster row cannot be approved-or-not today |
 | **interfaces** | `stability` | ⚠ **GAP IN THE MAKING** — decision 4's direction retires it, and nothing replaces it |
 | **`external.toml`** (entities · boundary interfaces · relationships) | *does not exist yet* | ⚠ **DESIGN IT IN** — the frame's own rows must carry an approval element from the first commit, or the boundary is un-ratifiable |
+
+**RULED 2026-08-13u: ONE shared status designation across every registry —
+with per-registry SUBSETS, and change detection DEFERRED.** The owner: *"I
+don't see another alternative in order to track these … Ideally they all hold
+the same status designation, it's just that 'Founded' may not be applicable to
+every registry"*, and *"for now don't worry about change detection like exists
+on the requirement rows — that can be deferred down the line."* So:
+
+- **One vocabulary, defined once** — the D-9 ladder's words (`Drafted` →
+  `Approved` → `Founded`), so a reader learns one set for the whole repo and no
+  registry invents a private synonym. This is why decision 12 and the D-9
+  migration (sitting 3 §3) are **one program, not two**: the invariant is what
+  D-9's vocabulary is *for*.
+- **A registry may declare a SUBSET.** `Founded` — the rung that means
+  *discharged by evidence below* — has no meaning where nothing hangs beneath a
+  row, so an off-spine registry may legitimately use only `Drafted`/`Approved`.
+  The subset is **declared per registry**, not left to inference, so a missing
+  third value reads as *not applicable* rather than *not reached*.
+- **Change detection is DEFERRED and that is a real simplification.** The
+  spine's `Modified` state and its re-attest window stay a **spine-tier**
+  mechanism; off-spine rows get approval **without** drift tracking for now.
+  Nothing is being given up permanently — it is a later increment, and D-9's
+  own hard coupling (drift-as-derived needs D-1's `TextHash` anchor, sitting 3
+  §3.2) is exactly why deferring it here is the *consistent* call rather than a
+  shortcut.
+
+**How the three measured gaps close under this:** `interfaces.toml` takes the
+shared vocabulary as `stability` retires (decision 4, same ruling);
+**`external.toml` carries it from its first commit**, so entities, boundary
+interfaces and relationships are ratifiable from day one; and the **hats roster
+either takes it or is declared not rung-generated content** — it is owner text,
+not derived, which is a defensible exemption *if stated* (WI-453 carries the
+call).
+
+The question as originally posed:
 
 **What to rule:** that **every registry row a rung generates carries an approval
 element** as a schema invariant, and how the three gaps close — the `external.toml`

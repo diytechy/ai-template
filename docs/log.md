@@ -36,6 +36,50 @@ applying that design to the kit itself.
 _Ratified or executed decisions only — the call, the alternatives passed over,
 why (one bullet each; cite ids)._
 
+- **2026-08-13u — SITTING 2's DECISION SURFACE CLOSES: all twelve ruled
+  (owner, in session).** **D2:** IF-080/081 internal confirmed, and the
+  generated-surface question produced a deeper correction the owner took —
+  **B-03 is REMOVED as a crossing**: *"B-03 is NOT an output of this system. It
+  only generates the toolkit to produce those outputs … status.md and docs/gate
+  are derivatives of the workflow adopted from the template kit runner itself,
+  and the html generators are in the same boat."* The surfacing folds into
+  **REL-002** (self-adoption); the frame drops to **6 crossings**. Follow-on
+  flagged, not assumed: whether the *human agent* becomes a distinct entity —
+  recommendation is to keep it inside EXT-001, since 13k ruled human-vs-loop
+  survives as policy and record, never as an entity split. **D4: `Stability`
+  RETIRES — IF rows follow the approval schema** (*"I would actually like to
+  follow the approval schema (draft vs approved)"*). The two were different
+  axes: stability is contract maturity, approval is ratified-or-not — and the
+  five `Experimental` rows proved the point, four being carrier plumbing that
+  was simply never re-reviewed, i.e. *unapproved* wearing a maturity word.
+  Closes decision 12's `interfaces` gap on the same ruling and re-keys
+  `boundary_incomplete` onto approval. **D7 riders: SR-035 DEFERRED into the
+  re-tier** — the owner's read sharpens it, *"ironically SR-035 is truly a
+  requirement, but I'm not sure of the best way it can be tested"*, so it is a
+  genuine obligation with no known observable rather than a duplicate to merge;
+  and **SN-033's checker agreed as a placeholder**, filed as **WI-454** with
+  the kit's own shape (a stdlib `check_*` lint, warn-first, exception list
+  shipping empty, zero findings today — landing it now LOCKS the clean state
+  ahead of the re-tier churn). **D8: `docs/architecture.md` DIES** — *"instead
+  the available tables should produce full architecture in the
+  ProjectState.html, much of that exists already today"* (correct: the "How (SW
+  architecture)" tab renders it). This dissolves 13q's open narrative question.
+  Execution shape measured and recorded: **ten scripts touch the file**, the
+  path is registries → `gen_arch_map` → `architecture.md` → `traj_parse` →
+  dashboard and must become registries → dashboard, **`check_flows.py` loses
+  its input** so the Runtime-flows obligation needs an explicit disposition
+  (move or retire — not a silent lapse), and the scaffold surface changes for
+  adopters. **D11: proposed text ACCEPTED** (*"recommendations and proposals
+  look sufficient"*) — WI-453 executes it. **D12 RULED: ONE shared status
+  designation across every registry**, with **per-registry subsets** (*"'Founded'
+  may not be applicable to every registry"*) and **change detection DEFERRED**
+  (*"don't worry about change detection like exists on the requirement rows"*)
+  — so the spine keeps `Modified` + re-attest, off-spine rows get approval
+  without drift tracking, and this makes decision 12 and the D-9 migration ONE
+  program rather than two. **Sitting 2 owes no further decision**; three items
+  re-land as execution reaches them (decision 6's crossing ownership, the
+  human-agent entity call, `check_flows`'s obligation). Watermark 453 → 454.
+
 - **2026-08-13s — The requirement FORM rule ruled; P5 ratification deferred;
   aspect hats added off-by-default (owner, in session).** **The form rule,
   verbatim:** *"A single 'shall' statement is permitted, and must be applied to
