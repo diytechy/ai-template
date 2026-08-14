@@ -36,6 +36,20 @@ applying that design to the kit itself.
 _Ratified or executed decisions only — the call, the alternatives passed over,
 why (one bullet each; cite ids)._
 
+- **2026-08-14e — sitting-3 ledger decision 5 RULED, 6–7 SCHEDULED (owner,
+  in session): the D-9 + D12 vocabulary program executes as ONE SEQUENCE
+  with the ratification wave.** Timing ruled: right after slice 2's re-tier
+  drafts land — so the largest approval wave this repo will run signs ONCE,
+  in the new semantics, instead of signing in the old vocabulary and
+  re-writing every just-ratified status token in a second window. The
+  sequence's fixed points, per sitting-3 §3: the first commit closes the
+  `Status` enum; the §3.3 drift-coverage gap (no drift detector between the
+  migration and D-1's anchor) is recorded owner-visibly; the rung-predicate
+  work lands in the same sequence (OI-21 5c). Decisions 6 (`Planned`'s fate
+  — 16 live rows) and 7 (authority over the off-spine approval flips, and
+  the dial's form) are SCHEDULED into that sequence with their substance
+  ruled at its execution — riding by name, not by lapse. Ledger: sitting-3
+  §0.3 rows 5–7.
 - **2026-08-14d — sitting-3 ledger decisions 8–9 RULED (owner, in session):
   crossing ownership DEFERRED with a named re-land; the human stays inside
   EXT-001 — CONFIRMED.** Decision 8 (sitting-2 D6's re-land, restated over
