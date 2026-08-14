@@ -36,6 +36,39 @@ applying that design to the kit itself.
 _Ratified or executed decisions only — the call, the alternatives passed over,
 why (one bullet each; cite ids)._
 
+- **2026-08-13k — The depth-0 frame RE-DRAWN: the repository is the system,
+  the template is the deliverable (owner, in session).** The drafted frame
+  (system = "the kit", twelve external entities) did not match the owner's
+  concept, and the staged sequence caught it before the SR re-statement ran —
+  which is what the stage is for. The ruling: **this repository IS the
+  system; the template is NOT the system but what the system DELIVERS** —
+  other repositories adopt the template, never the repository, and the
+  template files are all of the system's adopter-facing outputs. A **human or
+  LLM terminal session — including the `agent-resume` loop agent — is ONE
+  external entity** touching both the spine and the test scripts; the test
+  scripts act on the spine and feed back `open-items.html` /
+  `PROJECT_STATE.html` to that session; self-adoption is the system
+  validating what it builds with the structure it delivers — an internal
+  loop, not external crossings. Implementation closure accepted deliberately
+  (same grounds as 2026-08-13e): the deliverable is known to be a template of
+  files and test scripts, and a different solution space would need an
+  incompatible boundary — bounding the problem this way is the method.
+  **Consequences:** the twelve drafted entities become EIGHT (SESSION and
+  ADOPTER as the two `operational` entities; provider, reviewer CLI, git,
+  hosted CI, OS/Python, test toolchain `interoperating`); **E12 and N-02
+  dissolve** (authoring is the session's ordinary hook-floor crossing);
+  E1 splits between SESSION (this-repo contributor rows) and ADOPTER
+  (downstream); M-07 stays the ONE deliverable crossing; at this repo's
+  depth 0 **no entity is `enabling`** — developing the template IS the
+  repo's operation, and the delivered template is the enabling system in the
+  ADOPTER's frame; who-holds-authority (human vs LLM) survives as policy and
+  record, never as an entity split; the §2 port list, the 2.7(a)
+  discriminator and the 18/57 census are unchanged. Two of the data pack's
+  six uncertainties largely resolve (`downstream adopter` is one entity; the
+  terminal is the session's medium, not an entity). Full block: the sitting-2
+  brief, decision 1. The sitting's remaining act there: confirm the
+  re-derived crossing table and the completeness declaration over it.
+
 - **2026-08-13j — Vocabulary: the noun is ENTITY, never "actor" (owner, in
   session).** The owner's stated aversion to "actor" ruled into the frame's
   going-forward vocabulary: the parties around the system are **entities**;

@@ -585,6 +585,64 @@ says so.**
 
 ### Decision 1 — Adopt or amend the depth-0 frame (§1)
 
+**AMENDED BY OWNER REFRAME — RULED IN SESSION, 2026-08-13k.** The drafted frame
+does not match the owner's concept of where the system boundary sits, and the
+owner re-drew it (the staged sequence exists precisely to catch this before the
+SR re-statement runs). The ruling, in the owner's terms:
+
+> **This repository IS the system. The template is NOT the system — it is what
+> the system delivers.** Other repositories do not adopt this repository; they
+> adopt the template it provides. The template files are the system's
+> adopter-facing outputs — all of them. A **human or LLM session in a terminal
+> — including the loop agent `agent-resume` launches — is ONE external
+> entity**, which touches both the spine and the test scripts. The test
+> scripts act on the spine content to validate it and feed back
+> `open-items.html` and `PROJECT_STATE.html` to that session — outputs of the
+> same scripts that are also packaged into the template. **The template is
+> what the system delivers through development by the human/LLM entity, and
+> it is validated by the same structure it builds.** The implementation
+> closure this implies is accepted deliberately (the same grounds as the §1a
+> ruling): the deliverable is known to be a template — a set of files and
+> test scripts — and a different solution space would need a boundary
+> incompatible with the entire structure that exists. Bounding the problem
+> this way is the method.
+
+**What the reframe does to the drafted entity roster — twelve become eight:**
+
+| New entity | Class | Absorbs from the draft |
+|---|---|---|
+| **SESSION** — the development session: human or LLM in a terminal, attended or the unattended loop | `operational` | E2 (owner) + E3 (agent CLI) + E12 (enabling environment, **dissolved**) + E1's this-repo contributor rows (M-01/M-03/M-19). **N-02 dissolves** — authoring is the session's ordinary IN crossing through the hook floor (M-12/M-13). N-01, M-02, M-08…M-11 re-attribute here. |
+| **ADOPTER** — the downstream team + their repo, receiving the template | `operational` | E1-downstream + E10. **M-07 stays the ONE deliverable crossing** (the template artifact class OUT; `test_dogfood_sync` its verification). |
+| **MODEL PROVIDER** | `interoperating` | E4, unchanged (M-15) |
+| **EXTERNAL REVIEWER CLI** | `interoperating` | E5, unchanged (M-14) |
+| **GIT** | `interoperating` | E6, unchanged (X-09, M-16) |
+| **HOSTED CI** | `interoperating` | E7, unchanged (M-04, M-05) |
+| **OS · FILESYSTEM · PYTHON** | `interoperating` | E8, unchanged (M-17) |
+| **TEST / COVERAGE TOOLCHAIN** | `interoperating` | E9, unchanged (M-18, X-13) |
+
+**Recorded with the ruling, so it is not lost:** (a) at this repo's depth 0
+**no entity is class `enabling`** — developing the template IS this
+repository's operation; the class stays in the `external.toml` schema and
+lands downstream, where **the delivered template is precisely an enabling
+system from the ADOPTER's frame**. (b) Merging human and LLM into one SESSION
+entity means the frame no longer expresses **who holds authority** — that
+distinction survives as **policy and record** (`human_ratification_through`,
+the log's Sittings table, decision 12's Human-column constraint), never as an
+entity split; do not re-split the entity to get it back. (c) The owner's
+"tooling acts as external entities" reads formally as: the tooling stays
+**internal**, and self-adoption is the system consuming its own outputs
+through internal seams — which is what lets rung 1 gate on genuinely external
+crossings only (decision 4's direction). (d) The §2 port list and the 2.7(a)
+discriminator survive unchanged — the ten port scripts are the template's
+entry points plus the session's surfaces, so the 18/57 census and WI-451 do
+not move. (e) The §1 table's 36 crossings survive as crossings; what changes
+is their **entity attribution** per the Absorbs column above. **The sitting's
+remaining act on this decision: confirm the re-derived table** (crossings
+re-attributed to the eight entities, X-08/X-12/X-14/X-15 falling internal as
+already flagged) **and the completeness declaration over it.**
+
+The original question and context, for the record:
+
 **The question.** Do the 36 crossings in §1's table, against the twelve external
 entities E1…E12, constitute the kit's declared frame?
 
@@ -1245,6 +1303,15 @@ own row.
 **What this sitting should order.** Re-home the part-B clause; grow clause (a) to
 typed IF rows for M-12 and M-13; state that clause (b) covers both M-07 and N-02;
 declare the SN it covers; and re-point its registry home per decision 5.
+
+**⚠ AMENDED BY THE 2026-08-13k REFRAME (decision 1).** Under the owner's
+re-drawn frame the third bullet **simplifies**: E12 and **N-02 are dissolved**
+— authoring is the SESSION entity's ordinary hook-floor crossing, i.e. exactly
+M-12/M-13 — so clause (b)'s SR anchors **M-07 alone** (the ONE deliverable
+crossing to the ADOPTER), and the "inbound half" WI-442 never contemplated
+turns out not to exist as a separate crossing. Clause (a)'s "boundary-actor
+declaration" lands as the **SESSION entity row** in `external.toml` (decision
+5) plus the M-12/M-13 IF rows. The rest of the order stands.
 
 ### 5.3 WI-448 — common-module inversion program (OI-16 / D-8)
 
