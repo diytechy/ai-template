@@ -67,6 +67,20 @@ file is the brief you rule from.
   real new crossing; the external-entity registry is **recommended and NOT
   RULED**. Full summary: §1b below.
 
+### 0.2b Vocabulary — RULED 2026-08-13j (owner): the noun is ENTITY, never "actor"
+
+The going-forward semantic for the parties around the system is **entity**. The
+noun lives on the registry table (`[entity.EXT-###]`), so the class values
+carry none: **`operational` · `enabling` · `interoperating`**. Sections of this
+document carried verbatim from the archived draft (§1, §1a, §1b) and quoted
+rulings keep their original words as provenance — read **"actor"** there as
+*operational entity*, and the §1 table's **"Party"** column header as *entity*.
+Everything written from here on — kit-facing schema, process prose, the
+`external.toml` field vocabulary — uses entity vocabulary. ("Entity" is also
+the standard context-diagram term — *external entity* — and coheres with the
+IF registry's `counterpart` field; "stakeholder" was passed over because it
+already names the SN tier's subject.)
+
 ### 0.3 CORRECTION LEDGER — eight cross-document corrections this document carries
 
 Every one of these is a place where a still-live artifact states something that
@@ -622,14 +636,15 @@ the rung's completeness half stays unmechanized and the frame is settled only by
 eye. Note `signal` stays untouched either way — it is an IF-row property, not the
 frame's.
 
-**A third shape, proposed and not yet ruled: declare the ACTORS, derive the
-rest.** Make the external parties a closed set (E1…E12 as declared rows or a
+**A third shape, proposed and not yet ruled: declare the ENTITIES, derive the
+rest** *(drafted as "declare the actors" — §0.2b's vocabulary ruling renames
+it)*. Make the external entities a closed set (E1…E12 as declared rows or a
 vocabulary) and let *"is this a boundary crossing?"* be **derived** from whether
 `counterpart` names one of them — instead of a hand-set flag that can drift out of
 step with the contract beside it. It follows from §1a's ruling (if the frame is
-actor **plus** interface, the actor is the half that should be declared) and it is
-strictly stronger on the evidence in §1's table: the four re-read rows and the
-six file-not-actor partials are all cases where `counterpart` says something
+entity **plus** interface, the entity is the half that should be declared) and it
+is strictly stronger on the evidence in §1's table: the four re-read rows and the
+six file-not-entity partials are all cases where `counterpart` says something
 untrue and **nothing can catch it, because the field is prose**. Under a declared
 vocabulary, an internal seam claiming `downstream adopter` becomes
 *unrepresentable* rather than merely detectable — the repo's own governing

@@ -36,6 +36,20 @@ applying that design to the kit itself.
 _Ratified or executed decisions only — the call, the alternatives passed over,
 why (one bullet each; cite ids)._
 
+- **2026-08-13j — Vocabulary: the noun is ENTITY, never "actor" (owner, in
+  session).** The owner's stated aversion to "actor" ruled into the frame's
+  going-forward vocabulary: the parties around the system are **entities**;
+  the noun lives on the registry table (`[entity.EXT-###]`), so the class
+  values carry none — **`operational` · `enabling` · `interoperating`**.
+  Alternatives passed over: "party" (the draft's §1 column header — connotes
+  persons and agreements where entities include systems and environments) and
+  "stakeholder" (already the SN tier's subject). Historical/carried text and
+  quoted rulings keep their original words as provenance, translated by the
+  sitting-2 §0.2b note ("actor" reads as *operational entity*); everything
+  written forward — `external.toml`'s schema, kit-facing process prose — uses
+  entity vocabulary. Sitting-2 decision 3's third shape renamed accordingly
+  ("declare the ENTITIES, derive the rest").
+
 - **2026-08-13i — The external-entity registry APPROVED: `external.toml`
   (owner, in session).** Sitting-2 decision 5 shape 1 ruled: `external.toml`
   is minted as the **off-spine** home (PART/ASSET/PB/REPO tier — view-building,
