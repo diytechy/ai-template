@@ -57,7 +57,7 @@ What it creates in the destination:
     docs/rubrics/README.md, docs/rubrics/rubric-000.md <- rubrics/*.template.md  (critique rubrics)
     docs/test/test-cases.toml                  <- registries/test-cases.template.toml
     scripts/trace.py, trace_text.py, derive_gate.py, check.py, check_flows.py, check_docs.py, check_perf.py,
-    scripts/check_stubs.py, check_coverage.py, check_doc_refs.py, check_figures.py, check_privacy.py, check_vendored.py, check_trajectory.py,
+    scripts/check_stubs.py, check_coverage.py, check_doc_refs.py, check_figures.py, check_need_form.py, check_privacy.py, check_vendored.py, check_trajectory.py,
     scripts/subagent_gate.py, gen_arch_map.py, gen_release_checklist.py, gen_cases.py, gen_trajectory.py, gen_open_items.py, gen_okf.py
     scripts/traj_graph.py, traj_parse.py, traj_render.py, traj_views.py, traj_panels.py, traj_status.py
                                                (the WI-280 gen_trajectory.py split — copied with it, always)
@@ -1720,6 +1720,10 @@ MAPPING = [
     # their status prose), and the recipe that tells them to convert is worth
     # exactly as much as the check that tells them they missed one.
     ("scripts/check_vocab.py", "scripts/check_vocab.py"),
+    # The need-form check (SN-033, WI-454): warn-first lint keeping SN `need`
+    # cells in stakeholder language. Shipped because the registry it scans is
+    # the adopter's own, and check.py's step table names it at every bar.
+    ("scripts/check_need_form.py", "scripts/check_need_form.py"),
     ("scripts/check_trajectory.py", "scripts/check_trajectory.py"),
     # The ready-frontier/safety-classification library (IF-053). Shipped
     # because it is a SIBLING IMPORT of the integration seam, not a nicety:

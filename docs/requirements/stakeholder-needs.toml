@@ -41,12 +41,12 @@
 # gate DROPS while any need is unratified, which is exactly the "a new phase is
 # due" signal `docs/gate` exists to give.
 #
-# ## Edge-case expectations
-#
-# How the kit behaves when things go wrong — the highest-value rows, and (for a
-# dev-tooling product) mostly **Provision/Startup** and unattended-**Runtime**
-# failures. Each becomes a measurable SR in phase 3; several map directly to
-# tests that already exist (noted).
+# (The Edge-case expectations section that stood here is GONE, not empty by
+# accident: the OI-18 dissolution (2026-08-13) demoted its rows to the
+# requirement tier, and the header prose it left behind was struck by WI-454
+# on sitting-2 §6 item 16's ruling — a declared-empty section heading with no
+# machinery behind it reads as a place to add rows, which is exactly what the
+# dissolution decided against.)
 #
 # ## Non-goals
 #

@@ -159,3 +159,4 @@ resource: "generated"
 | [TC-161](TC-161.md) | Drive the real loop against a fake agent CLI over throwaway git repos, one per ROUTED bri… |
 | [TC-162](TC-162.md) | Load well-formed, malformed (falsey table, unknown key, bad grammar) and absent rosters; … |
 | [TC-163](TC-163.md) | Plant a retired tag in a live authored file and one in each declared carve-out class (arc… |
+| [TC-164](TC-164.md) | Construct a needs registry whose need cell plants one token of each declared class (an in… |
