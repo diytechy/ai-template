@@ -36,6 +36,23 @@ applying that design to the kit itself.
 _Ratified or executed decisions only — the call, the alternatives passed over,
 why (one bullet each; cite ids)._
 
+- **2026-08-14b — sitting-3 ledger decisions 1–2 RULED (owner, in session):
+  the census is RATIFIED; the 26 tombstones DELETE per D-4.** The slice-1
+  census (34 HOLDS / 15 RE-STATES / 73 DEMOTES / 26 tombstones over all 148
+  SRs, `docs/plans/2026-08-14-wi451-slice1-sr-census.md`) is approved as the
+  shape slice 2 executes — with the owner's stated expectation that iteration
+  will follow at this scope, and the judgment that the overhead moves in the
+  right direction. The tombstone ruling SUPERSEDES census §5-F2's
+  class-waiver recommendation (owner challenge upheld against the record):
+  the D-1/D-4 doctrine — *"a registry states what IS; git is the history"* —
+  was performed 2026-08-11 on SR-039's chain (deleted, not marked), and the
+  26 mark-in-place rows predate that first performance. Slice 2 therefore
+  deletes them (SR 149 → 123): one log entry as the forwarding home for all
+  26, citing IF rows deleted with their rows, `sn_refs` coverage re-checked
+  against the replacement rows, and `trace.py`'s supersession machinery plus
+  TC-099 retired by ruling, not by lapse — all under the WI-444 bar.
+  Alternatives passed over: keep + one class waiver, keep + 26 per-row
+  waivers. Ledger: sitting-3 §0.3 rows 1–2, marked ruled.
 - **2026-08-14a — `human_ratification_through` 0 → 4: every spine tier
   human-held (owner, in session).** The owner's expectation — *"at least a
   pause to approve stakeholder needs"* — did not hold at 0: the dial's own
