@@ -125,10 +125,11 @@ row per boundary.
 
 - **`DevBar-Reqs` (Needs · Boundary · Reqs certified).** Real SN/SR rows (no
   `-000` placeholders where committed), acceptance criteria measurable, the
-  UX/edge-case lens applied. If the repo declares an `interfaces` registry, the
-  boundary inventory is settled — every declared crossing typed, none left at
-  `Stability = Experimental` — or `DevStg-Boundary` honestly holds the ladder
-  down. Sign-offs recorded in `docs/log.md`.
+  UX/edge-case lens applied. If the repo declares an `external.toml` frame, the
+  boundary inventory is settled — every declared `[boundary.B-##]` crossing
+  `approved` — or `DevStg-Boundary` honestly holds the ladder down (WI-442
+  re-key; a repo with no `external.toml` skips the rung). Sign-offs recorded
+  in `docs/log.md`.
 - **`DevBar-Tests` (Arch · LLReqs · Tests certified).** If the repo declares a
   `components` registry, no component is still `planned` or `has-gap`. Every SR
   decomposes to LLR/TC; each requirement's TC exists as a **failing test first**

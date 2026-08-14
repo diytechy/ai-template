@@ -289,7 +289,7 @@ signal = "variable"
 rationale = "One writer for the export file; delivery must not re-derive its schema."
 sr_refs = ["SR-001"]
 version = "v1"
-stability = "Stable"
+approval = "approved"
 
 [interface.IF-002]
 direction = "Consumes"
@@ -299,7 +299,7 @@ contract = "Reads the export file produced per IF-001 v1 before uploading it."
 signal = "variable"
 sr_refs = ["SR-050"]
 version = "v1"
-stability = "Stable"
+approval = "approved"
 ```
 
 And the seam gets its **own** integration TC — covered by neither module's internal

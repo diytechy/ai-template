@@ -19,7 +19,7 @@ is the thin, human-readable index over it.
 
 A cross-project link is a requirement with an *external* counterpart, so it
 needs the things ordinary requirements have — an owner, an acceptance contract,
-a test — **plus** a version and a stability promise the other side can rely on.
+a test — **plus** a version and an `Approval` state the other side can rely on.
 Putting these in one place stops the classic failure of interlinked projects:
 each side assumes a slightly different contract and they rot apart silently.
 
@@ -87,7 +87,7 @@ signal = "variable"
 rationale = "One read model for invoices; the ETL must not re-derive totals."
 sr_refs = ["SR-014"]
 version = "v1"
-stability = "Stable"
+approval = "approved"
 
 [interface.IF-002]
 direction = "Consumes"
@@ -97,7 +97,7 @@ contract = "Reads GET /v1/invoices; depends on IF-001 v1 schema (pinned fixture 
 signal = "variable"
 sr_refs = ["SR-031"]
 version = "v1"
-stability = "Stable"
+approval = "approved"
 ```
 
 Read together: `billing-api` publishes `IF-001` (with a contract test on the

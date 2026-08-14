@@ -973,8 +973,8 @@ When this project provides or consumes a contract — shared with another repo, 
 between its **own modules** — record each directed seam once in
 `requirements/interfaces.toml` as an `IF-###` (see `INTERFACES.template.md`):
 direction, counterpart (another module, a file, or an external actor), contract,
-its signal type, the `SR-Refs` that realize/rely on it, a rationale, version, and
-stability. The owning
+its signal type, the `SR-Refs` that realize/rely on it, a rationale, a version,
+and its `Approval` state. The owning
 (`Provides`) side holds the authoritative spec; the consuming side links the same
 `IF-###` and pins the version. Every interface is backed by an SR and a
 contract/fixture test. This keeps interlinked projects — and a repo's own modules
