@@ -955,9 +955,9 @@ def make_minimal_project(root):
     # A DevStg-Tests-complete project replaces the template's placeholder Runtime-flows
     # citations (SR-000/LLR-000) with its real ids, so the harness's
     # check_flows --no-placeholders step is satisfied.
-    arch = root / "docs" / "architecture.md"
-    arch.write_text(
-        arch.read_text(encoding="utf-8")
+    flows = root / "docs" / "runtime-flows.md"
+    flows.write_text(
+        flows.read_text(encoding="utf-8")
         .replace("SR-000", "SR-001")
         .replace("LLR-000", "LLR-001"),
         encoding="utf-8",

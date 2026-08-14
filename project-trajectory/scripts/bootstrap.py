@@ -1622,6 +1622,10 @@ MAPPING = [
     # the lean resume surface and points at it.
     ("PLAN.template.md", "docs/plan.md"),
     ("ARCHITECTURE.template.md", "docs/architecture.md"),
+    # The authored-narrative half of the architecture record (sitting-2
+    # decision 8): the Runtime flows check_flows.py verifies from
+    # DevStg-Tests on live in their own doc, not inside architecture.md.
+    ("RUNTIME_FLOWS.template.md", "docs/runtime-flows.md"),
     ("INTERFACES.template.md", "docs/interfaces.md"),
     (
         "registries/stakeholder-needs.template.toml",

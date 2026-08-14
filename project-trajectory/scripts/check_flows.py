@@ -1,17 +1,20 @@
 #!/usr/bin/env python3
 """Design-time runtime-flow check: the DevStg-Tests reviewer reads diagrams, not CSV rows.
 
-The generated code map and `--flow` exist only once code exists (DevStg-Impl+). But the
+The derived architecture views exist only once code exists (DevStg-Impl+). But the
 behavior most often misread at DevStg-Tests — concurrency, background work, what blocks
 on what — is decided *with the LLRs*. So PROCESS.md §3 requires a hand-authored
-**"Runtime flows"** section in the architecture doc at DevStg-Tests: Mermaid sequence
-diagrams of the key runtime scenarios, each citing the SR/LLR ids it renders,
-so a human can verify intended behavior by reading the flow instead of
-inferring it from registry rows.
+**"Runtime flows"** section in `docs/runtime-flows.md` at DevStg-Tests: Mermaid
+sequence diagrams of the key runtime scenarios, each citing the SR/LLR ids it
+renders, so a human can verify intended behavior by reading the flow instead of
+inferring it from registry rows. (The flows doc is the authored-narrative half
+of the architecture record; it lived inside the retired `docs/architecture.md`
+until the sitting-2 decision-8 program moved it — the obligation follows the
+home, it does not die with the file. The dashboard embeds the flows.)
 
 This checker keeps that section honest (stdlib only, like trace.py):
 
-    python scripts/check_flows.py [--doc docs/architecture.md] [--docs docs]
+    python scripts/check_flows.py [--doc docs/runtime-flows.md] [--docs docs]
                                   [--require N] [--no-placeholders]
 
 Failures (exit 1):
@@ -129,8 +132,8 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument(
         "--doc",
-        default="docs/architecture.md",
-        help="doc holding the Runtime flows section (default: docs/architecture.md)",
+        default="docs/runtime-flows.md",
+        help="doc holding the Runtime flows section (default: docs/runtime-flows.md)",
     )
     ap.add_argument("--docs", default="docs", help="docs directory (default: docs)")
     ap.add_argument(

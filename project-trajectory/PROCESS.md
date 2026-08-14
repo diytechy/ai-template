@@ -342,12 +342,12 @@ the hand-written flow overview.
 harvested from code, so none of it exists at DevStg-Tests — yet DevStg-Tests is when a human reviews
 the LLRs, and runtime *behavior* (ordering, concurrency, background work, what
 blocks on what) is the thing most easily misread from registry rows. So the Software
-Engineer hat authors a **"Runtime flows"** section in `architecture.md` **with
+Engineer hat authors **`docs/runtime-flows.md`** ("Runtime flows") **with
 the LLRs, before the DevStg-Tests review**: one Mermaid `sequenceDiagram` per key
 user-visible scenario, and always one for any concurrent / asynchronous /
 non-blocking behavior. Participants are the planned modules (the LLR `Module`
 column); each diagram cites the SR/LLR ids it renders. `scripts/check_flows.py`
-(DevStg-Tests/DevStg-Impl) fails when the section is missing, has no diagrams, a diagram cites no
+(DevStg-Tests/DevStg-Impl) fails when the doc is missing, has no diagrams, a diagram cites no
 SR/LLR id, or a cited id doesn't exist. The human's DevStg-Tests review starts from these
 diagrams — verify the flow there, then spot-check the rows. Update a flow in the
 same change that alters its LLRs; from DevStg-Impl on the generated map/flow corroborates

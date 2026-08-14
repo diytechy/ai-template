@@ -49,7 +49,7 @@ the ladder, and the ID scheme. The short version needed every session:
   result you didn't run — paste the real output.
 - **Behavior is reviewed as diagrams, not rows:** runtime flows (especially
   concurrent ones) are authored Mermaid sequence diagrams in
-  [docs/architecture.md](docs/architecture.md) "Runtime flows", kept current
+  [docs/runtime-flows.md](docs/runtime-flows.md), kept current
   with the LLRs (`scripts/check_flows.py` enforces; §3).
 - **Releases (if versioned):** `DevStg-Release` runs the `release` tier plus
   the generated checklist (`scripts/gen_release_checklist.py`).

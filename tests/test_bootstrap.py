@@ -45,6 +45,9 @@ def test_scaffold_contains_expected_files(scaffold):
         "docs/log.md",
         "docs/plan.md",
         "docs/architecture.md",
+        # WI-455 (sitting-2 decision 8): the authored Runtime flows live in
+        # their own scaffolded doc, no longer inside architecture.md.
+        "docs/runtime-flows.md",
         "docs/requirements/system-requirements.toml",
         "docs/requirements/performance-budgets.csv",
         "docs/requirements/procurement.csv",
