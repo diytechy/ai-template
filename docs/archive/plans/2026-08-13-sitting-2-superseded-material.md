@@ -680,7 +680,7 @@ own row.
 
 ### 5.2 WI-442 — OI-28 seeds landed on the spine
 
-[`../work/queued/WI-442-oi-28-seeds-landed-on-the-spine.md`](../../work/queued/WI-442-oi-28-seeds-landed-on-the-spine.md)
+[`../work/queued/WI-442-oi-28-seeds-landed-on-the-spine.md`](../../work/active/wi442-external-schema/WI-442-oi-28-seeds-landed-on-the-spine.md)
 · priority 2 · spine · `needs = ["WI-441"]` (complete) · `sr_refs = []`.
 **This is the highest-impact staleness in the queue.**
 
