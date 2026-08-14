@@ -1623,3 +1623,32 @@ version = "v1"
 status = "Drafted"
 component = "CMP-009"
 notes = """MINTED 2026-08-16 (WI-463, log 2026-08-16a) for the one ERROR check_trajectory --strict reported on a clean tree: traj_status (CMP-009, W4 human/adopter surfaces) genuinely imports derive_gate (CMP-006, W1 registry & conformance) to call bar_label(gate) in _stage_line, the ONE home for the OI-30 D2 release-ceiling note (`derive_gate.py`'s own docstring: "the ONE rendering home"). Component membership per docs/requirements/components.toml is correct on both sides, so this is a real seam, not a mistagging. Owner is SR-049 — the SR whose obligation most directly answers for the seam's contract: SR-049 states the derived-bar value itself (computed from artifact states, cached, never hand-set), and bar_label is that value's one rendering; SR-159's family owns the connectivity rule that SURFACED the finding, never the contract the finding names. No design row fits: of derive_gate.py's four LLRs (LLR-050 `compute`, LLR-147 `sn_gate`/`sn_cited_ids`, LLR-148 `main`, LLR-157 `spine_stage`/`stage_to_gate`), none names `bar_label`, and traj_status's LLR-139 covers `_pause_pending` only. OWNER RESOLVED 2026-08-17 (item 18, round-2 F2): the 17c module-match set the cell to LLR-050 against this note's own survey; re-verified today — bar_label is a module-scope function of derive_gate.py, _stage_line calls it, and still no design row names it — so SR-049 takes the cell under 2026-08-17c's fallback and the contradiction is closed. In the same act a false claim in this note was corrected: it read "req_refs carries SR-070 for the consuming side", but the live cell has carried SR-168 (LLR-139's parent — the status snapshot this stage line renders) since the ref was added, and never SR-070. CORRECTED at the adversarial round (log 2026-08-16b): the mint cited a nonexistent "R4 fallback" and the wrong log entry, overstated SR-049 as naming human-facing surfaces, and surveyed one of the four LLRs. PROVISIONAL, for the review sitting to overturn."""
+
+[interface.IF-131]
+direction = "Consumes"
+this_project = "scripts/check_trajectory"
+counterpart = "scripts/gen_arch_map"
+contract = """the ARCH-INVENTORY seam behind arch_inventory (WI-455, sitting-2 decision 8): consumes gen_arch_map.scan_inventory(src_roots) -> the per-module (rel, summary, imports, contracts, rows) records of the declared [paths] src tree, so the coverage/containment/cross-CMP rules read the LIVE source AST instead of parsing the retired docs/architecture.md MODULE MAP block back. One walk, one grammar: the module keys and import names are exactly what the map rendered, so every downstream join (stem resolution, CMP membership) is unchanged."""
+signal = "variable"
+signal_note = """typed at mint (WI-455): the Contract names unbounded content (the scanned records), which makes the whole crossing variable (B1)"""
+req_refs = ["SR-147"]
+owner = "LLR-080"
+version = "v1"
+status = "Drafted"
+component = "CMP-006"
+notes = """intra-CMP-006 import, declared anyway because gen_arch_map is multi-tagged (CMP-006/CMP-009 via LLR-080) and the WI-440 advisory names an undeclared edge into a multi-tagged module; the seam of record is honest coverage, not silence. The IF-117 why-an-import-and-not-a-copy reasoning applies verbatim: a second AST walk in the consumer is the D-6/F5 silent-divergence hazard. MINTED 2026-08-14 on the wi455 branch as IF-123; RENUMBERED to IF-131 when the branch landed 2026-08-18, because the id space had moved on (HEAD had minted IF-123..IF-130 for the baseline-snapshot seams) — the mint is the same crossing, only the number is new."""
+
+[interface.IF-132]
+direction = "Consumes"
+this_project = "scripts/traj_parse"
+counterpart = "scripts/gen_arch_map"
+contract = """the dashboard's How-SW module source (WI-455, sitting-2 decision 8): sw_modules consumes gen_arch_map.scan_inventory(src_roots) over the declared [paths] src root and keeps only modules with >=1 public function symbol, replacing the retired parse of docs/architecture.md's committed MODULE MAP block - registries/source -> dashboard, no markdown way-station."""
+signal = "variable"
+signal_note = """typed at mint (WI-455): the Contract names unbounded content (the scanned records), which makes the whole crossing variable (B1)"""
+req_refs = ["SR-147"]
+owner = "LLR-080"
+carried_by = "IF-131"
+version = "v1"
+status = "Drafted"
+component = "CMP-009"
+notes = """cross-component crossing declared per the architecture rule: this module is CMP-009 and gen_arch_map straddles CMP-006/CMP-009 (LLR-080). Same scan_inventory seam as IF-131; declared separately because the two consumers sit in different components and the rule covers PAIRS. MINTED 2026-08-14 on the wi455 branch as IF-124; RENUMBERED to IF-132 when the branch landed 2026-08-18 (HEAD had minted through IF-130)."""

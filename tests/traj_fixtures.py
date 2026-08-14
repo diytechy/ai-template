@@ -147,18 +147,28 @@ def html_of(root):
     return (root / "PROJECT_STATE.html").read_text(encoding="utf-8")
 
 
-ARCH_MD = """# Architecture
+# The How-SW source fixture (WI-455): a REAL `src/m.py` the AST scan
+# inventories as module `src/m` with public symbols add/sub — the replacement
+# for the retired committed-MODULE-MAP markdown fixture (`sw_modules` and
+# `arch_inventory` read the source tree now, not docs/architecture.md).
+ARCH_SRC = '''"""Demo module."""
 
-<!-- BEGIN GENERATED MODULE MAP -->
-### `src/m`
-_Demo module._
 
-| Public item | Summary | Implements |
-|---|---|---|
-| `add(a, b)` | Adds. |  |
-| `sub(a, b)` | Subtracts. |  |
-<!-- END GENERATED MODULE MAP -->
-"""
+def add(a, b):
+    """Adds."""
+    return a + b
+
+
+def sub(a, b):
+    """Subtracts."""
+    return a - b
+'''
+
+
+def write_arch_src(root):
+    """Write the `src/m` demo module the default `[paths] src` profile scans."""
+    (root / "src").mkdir(parents=True, exist_ok=True)
+    (root / "src" / "m.py").write_text(ARCH_SRC, encoding="utf-8")
 
 
 def if_row(iid, direction, this, counterpart, contract="call", **cells):
@@ -227,37 +237,31 @@ def _flat_bundle(root):
     return root
 
 
-CONT_ARCH = """# Architecture
-<!-- BEGIN GENERATED MODULE MAP -->
-### `scripts/mod_a`
-_Module A._
+# The four-module containment source tree (WI-455): real `scripts/mod_*.py`
+# files plus a declared `[paths] src = scripts` profile, inventoried as
+# `scripts/mod_a`..`mod_d` — the replacement for the retired CONT_ARCH
+# markdown fixture.
+CONT_MODULES = (
+    ("mod_a", "Module A.", "run", "x"),
+    ("mod_b", "Module B.", "go", ""),
+    ("mod_c", "Module C.", "gen", ""),
+    ("mod_d", "Module D.", "emit", ""),
+)
 
-| Public item | Summary | Implements |
-|---|---|---|
-| `run(x)` | Runs. |  |
 
-### `scripts/mod_b`
-_Module B._
-
-| Public item | Summary | Implements |
-|---|---|---|
-| `go()` | Go. |  |
-
-### `scripts/mod_c`
-_Module C._
-
-| Public item | Summary | Implements |
-|---|---|---|
-| `gen()` | Gen. |  |
-
-### `scripts/mod_d`
-_Module D._
-
-| Public item | Summary | Implements |
-|---|---|---|
-| `emit()` | Emit. |  |
-<!-- END GENERATED MODULE MAP -->
-"""
+def write_cont_src(root):
+    """Write the 4-module `scripts/` tree + the stack.ini profile that scans it."""
+    (root / "scripts").mkdir(parents=True, exist_ok=True)
+    for name, summary, fn, args in CONT_MODULES:
+        (root / "scripts" / (name + ".py")).write_text(
+            '"""{}"""\n\n\ndef {}({}):\n    """{}"""\n    return None\n'.format(
+                summary, fn, args, summary
+            ),
+            encoding="utf-8",
+        )
+    ini = root / "docs" / "stack.ini"
+    ini.parent.mkdir(parents=True, exist_ok=True)
+    ini.write_text("[paths]\nsrc = scripts\n", encoding="utf-8")
 
 CONT_LLRS = """LLR-ID,SR-Refs,Title,Module,CodeSymbol,Detail,TestRefs,Status,Component
 LLR-001,SR-001,A,scripts/mod_a,run,d,(see TC),Approved,CMP-001
@@ -279,14 +283,15 @@ CONT_IFS = (
 
 
 def containerize(root):
-    """make_repo + a 4-module arch-map, two software components tagging them via
-    LLR Component tags, and the cross/intra/boundary seams."""
+    """make_repo + a 4-module source tree (real files, WI-455), two software
+    components tagging them via LLR Component tags, and the cross/intra/
+    boundary seams."""
     make_repo(root)
     req = root / "docs" / "requirements"
     (req / "low-level-requirements.csv").write_text(CONT_LLRS, encoding="utf-8")
     (req / "components.toml").write_text(CONT_CMPS, encoding="utf-8")
     (req / "interfaces.toml").write_text(CONT_IFS, encoding="utf-8")
-    (root / "docs" / "architecture.md").write_text(CONT_ARCH, encoding="utf-8")
+    write_cont_src(root)
     return root
 
 
@@ -415,7 +420,7 @@ def _how_sw_flat(root):
     the per-layer drill read), which is why `_every_emitter_document` is the one
     place that list lives."""
     make_repo(root)
-    (root / "docs" / "architecture.md").write_text(ARCH_MD, encoding="utf-8")
+    write_arch_src(root)
     (root / "docs" / "requirements" / "interfaces.toml").write_text(
         if_row("IF-001", "Provides", "src/m", "downstream adopter", "cli")
         + if_row("IF-002", "Consumes", "src/m", "docs/stack.ini", "reads"),

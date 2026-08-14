@@ -21,7 +21,7 @@ import re
 
 from conftest import SCRIPTS, load_script
 from traj_fixtures import (
-    ARCH_MD,
+    write_arch_src,
     GOOD_WIS,
     gen,
     html_of,
@@ -129,7 +129,7 @@ def test_wide_views_carry_horizontal_scroll_affordance(tmp_path):
     make_repo(tmp_path)
     # architecture.md exercises the module-map table's scroll wrapper too, not just
     # the icicle / DAG SVG views.
-    (tmp_path / "docs" / "architecture.md").write_text(ARCH_MD, encoding="utf-8")
+    write_arch_src(tmp_path)
     assert gen(tmp_path).returncode == 0
     text = html_of(tmp_path)
     # the cue is a real element, hidden by default, with the narrow breakpoint kept
@@ -165,7 +165,7 @@ def test_clip_edge_marker_is_gated_on_actual_overflow(tmp_path):
     one, and never unconditional on the card itself."""
     make_repo(tmp_path)
     # exercise the table scroller (.tablescroll) too, not just the SVG cards
-    (tmp_path / "docs" / "architecture.md").write_text(ARCH_MD, encoding="utf-8")
+    write_arch_src(tmp_path)
     assert gen(tmp_path).returncode == 0
     text = html_of(tmp_path)
     # the edge marker is a right-edge fade gated on the `.clipr` class, on both the

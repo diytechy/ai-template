@@ -8,25 +8,30 @@ cleanly without a module-map inventory. Exercised over temp repos.
 
 from conftest import SCRIPTS, load_script, run_py
 
-ARCH = """# Architecture
+# The sym: oracle scans the source AST under the default `[paths] src` root
+# (WI-455 — the committed architecture.md map it once parsed is retired), so
+# the fixture ships a real src/demo.py; with_arch=False leaves src/ absent and
+# the tier skips, the same posture the missing doc used to produce.
+DEMO_SRC = '''"""Demo module."""
 
-<!-- BEGIN GENERATED MODULE MAP -->
-### `src/demo`
-_Demo module._
 
-| Public item | Summary | Implements |
-|---|---|---|
-| `add(a, b)` | Adds. |  |
-| `sub(a, b)` | Subtracts. |  |
-<!-- END GENERATED MODULE MAP -->
-"""
+def add(a, b):
+    """Adds."""
+    return a + b
+
+
+def sub(a, b):
+    """Subtracts."""
+    return a - b
+'''
 
 
 def make_repo(root, body, with_arch=True):
     (root / "docs").mkdir(parents=True, exist_ok=True)
     (root / "README.md").write_text(body, encoding="utf-8")
     if with_arch:
-        (root / "docs" / "architecture.md").write_text(ARCH, encoding="utf-8")
+        (root / "src").mkdir(exist_ok=True)
+        (root / "src" / "demo.py").write_text(DEMO_SRC, encoding="utf-8")
     (root / "scripts").mkdir(exist_ok=True)
     # `load`/`save` are the names the spine fixtures' LLR CodeSymbol cites, and
     # they are DEFINED here so those rows are FOUNDED under the WI-429 anchor

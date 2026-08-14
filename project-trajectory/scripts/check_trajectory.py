@@ -130,7 +130,7 @@ anchors (the meta case) or a legacy `docs/gate` with no basis line.
 Usage:  python scripts/check_trajectory.py [--root .] [--strict] [--staged]
 Exit codes: 0 clean / vacuous / opted-out, 1 a hard error, 2 usage/environment.
 
-Contracts: IF-009, IF-023, IF-077 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.csv). IF-077 (WI-354) is the ANCHOR-resolution seam: R-E resolves a SpecRef's `#anchor` through check_docs.parse_doc so one slugifier defines an anchor in both homes — a lazy import that degrades to path-only, since this module runs in the shipped pre-commit hook.
+Contracts: IF-009, IF-023, IF-077, IF-131 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.csv). IF-131 (WI-455) is the arch-inventory seam: arch_inventory consumes gen_arch_map.scan_inventory over the declared src root, replacing the retired committed-map parse. IF-077 (WI-354) is the ANCHOR-resolution seam: R-E resolves a SpecRef's `#anchor` through check_docs.parse_doc so one slugifier defines an anchor in both homes — a lazy import that degrades to path-only, since this module runs in the shipped pre-commit hook.
 """
 
 import argparse
@@ -154,6 +154,21 @@ try:
 except ImportError:  # pragma: no cover - in-process fallback
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     import spine_carrier
+
+# Sibling: the arch-map AST walk (`gen_arch_map.scan_inventory`) —
+# `arch_inventory`'s source since WI-455 retired the committed
+# docs/architecture.md block it used to parse back. OPTIONAL like traj_parse's
+# schedule import: a fixture that copies check_trajectory.py alone (the
+# hook-scaffold tests) simply has no inventory, which is the same vacuity the
+# absent committed map produced before.
+try:
+    import gen_arch_map
+except ImportError:
+    try:  # pragma: no cover - in-process fallback
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        import gen_arch_map
+    except ImportError:
+        gen_arch_map = None
 
 WI_CSV = "docs/requirements/work-items.csv"
 # The spec-folder home the CSV above gives way to (Phase 2b of
@@ -959,41 +974,35 @@ def load_ifs(rows):
 
 
 def arch_inventory(root):
-    """`(module_names, {module: {IF ids}}, {module: {imported stems}})` parsed
-    from `docs/architecture.md`'s generated MODULE MAP block — the committed
-    arch-map artifact (the same block `gen_trajectory.sw_modules` reads for the
-    How-SW view, and `gen_arch_map` writes). `module_names` are the
-    ``### `name``` headers; the IF map harvests the
-    `Contracts (interfaces): IF-###, ...` line `gen_arch_map` emits from a
-    module's `Contracts:` docstring; the import map harvests the
-    `Imports (internal): `a`, `b`` line (bare backticked module stems — the
-    cross-CMP rule's edge source, WI-064). A small stable parser duplicated per
-    the F5 convention (sw_modules also collects symbols; this one collects the
-    Contracts citations) — keep the header/line grammar in sync with
-    `gen_arch_map.build_map`. Empty when the doc/block is absent, so the
-    coverage layers are vacuous pre-arch-map."""
-    md = root / ARCH_MD
-    if not md.exists():
+    """`(module_names, {module: {IF ids}}, {module: {imported stems}})` derived
+    STRAIGHT from the source tree under the declared arch-map scan root
+    (`[paths] src` + `[arch-map] mode`, the same profile check.py reads),
+    through `gen_arch_map.scan_inventory` — the one AST walk the map's
+    consumers share. Until WI-455 (sitting-2 decision 8) this parsed the
+    committed MODULE MAP block back out of `docs/architecture.md`; the
+    registries→dashboard re-pointing retired that way-station, so the
+    inventory is now the LIVE tree — on a work branch too, which is what
+    dissolved the WI-399 committed-vs-disk delta rule (`shipped_modules` and
+    the station-first firing gap died with it). `module_names` keep the map's
+    grammar (`scripts/check`-style keys relative to the scan root's parent);
+    the IF map carries each module's `Contracts: IF-###` docstring
+    declarations; the import map carries the internal-import names — the
+    cross-CMP rule's edge source (WI-064). Empty when the root is absent,
+    files-mode (no parser), or `gen_arch_map` is not beside this script, so
+    the coverage layers stay vacuous exactly where the committed map was."""
+    if gen_arch_map is None:
         return set(), {}, {}
-    names, contracts, imports, current, inside = [], {}, {}, None, False
-    for line in md.read_text(encoding="utf-8", errors="replace").splitlines():
-        if "BEGIN GENERATED MODULE MAP" in line:
-            inside = True
-            continue
-        if "END GENERATED" in line:
-            inside = False
-            current = None
-            continue
-        if not inside:
-            continue
-        m = re.match(r"^### `([^`]+)`", line)
-        if m:
-            current = m.group(1)
-            names.append(current)
-        elif current and line.strip().startswith("Contracts (interfaces):"):
-            contracts.setdefault(current, set()).update(IF_ID_RE.findall(line))
-        elif current and line.strip().startswith("Imports (internal):"):
-            imports.setdefault(current, set()).update(re.findall(r"`([^`]+)`", line))
+    src, mode = _arch_scan_profile(root)
+    if mode == "files":
+        return set(), {}, {}
+    src_dir = root / src.strip().replace("\\", "/").rstrip("/")
+    names, contracts, imports = [], {}, {}
+    for rel, _summary, imps, cons, _rows in gen_arch_map.scan_inventory([src_dir], strict=False):
+        names.append(rel)
+        if cons:
+            contracts.setdefault(rel, set()).update(cons)
+        if imps:
+            imports.setdefault(rel, set()).update(imps)
     return set(names), contracts, imports
 
 
@@ -1283,19 +1292,11 @@ def knowledge_packs(root):
     return sorted(p.stem for p in d.glob("*.md") if p.name.lower() != "readme.md")
 
 
-# --- WI-399: containment owed where a module is ADDED --------------------------
-# docs/architecture.md is trunk-owned: its freshness gate SKIPs on a claimed work
-# branch (SR-006, concurrency-restructure §5.2), so a module a branch adds enters
-# the committed arch-map inventory only when the trunk lane's refresh regenerates
-# the map — AFTER the last review round, which made the station the FIRST place
-# the knowledge⇒component red could exist (WI-374/drive.py, WI-387/handback.py:
-# identical two-registry-row remedies, each costing a review round). The delta
-# below is what the LANE can see with no regeneration: shipped source files on
-# disk under the declared arch-map scan root that the committed inventory lacks.
-# `component_findings` applies the SAME containment rule to those ADDED modules —
-# same pack arming, same opt-out, same WARN-plain/ERROR-strict tier — so the red
-# surfaces beside the module's first commit; the station's own rule is untouched
-# and stays the backstop.
+# --- the declared arch-map scan profile -------------------------------------
+# (The WI-399 committed-vs-disk delta machinery that lived here —
+# _has_internal_import / _would_be_inventoried / shipped_modules /
+# added_module_findings — RETIRED at WI-455: arch_inventory reads the live
+# source tree, so the delta it bridged no longer exists.)
 
 
 def _stack_ini_get(root, section, option):
@@ -1325,132 +1326,6 @@ def _arch_scan_profile(root):
         _stack_ini_get(root, "paths", "src") or "src",
         _stack_ini_get(root, "arch-map", "mode") or "symbols",
     )
-
-
-def _has_internal_import(tree, internal_names):
-    """Whether `gen_arch_map.internal_imports` would find ≥1 in-tree import: a
-    relative import, or an absolute one whose first segment names a scanned
-    module/package. Non-emptiness only — the mirror needs no edge list."""
-    for node in ast.walk(tree):
-        if isinstance(node, ast.ImportFrom):
-            if node.level or (node.module or "").split(".")[0] in internal_names:
-                return True
-        elif isinstance(node, ast.Import):
-            if any(a.name.split(".")[0] in internal_names for a in node.names):
-                return True
-    return False
-
-
-def _would_be_inventoried(path, internal_names):
-    """Mirror of `gen_arch_map.build_map`'s symbol-emptiness skip (its
-    `if not (summary or imports or contracts or rows): continue`, REVIEW-A
-    finding 1): a module with no docstring summary, no internal import, no
-    top-of-file `Contracts: IF-###` comment and no public top-level symbol —
-    a bare `__init__.py`, a comment-only or private-only file — never enters
-    the MODULE MAP, so the delta must not red it: the regeneration could never
-    absorb it and the red would be permanent. A syntax-broken module IS kept
-    by the generator (rendered `PARSE ERROR`), so it counts here too; an
-    unreadable file cannot be judged and is left out (fail-quiet, warn-tier).
-    A `Contracts` line inside the docstring needs no arm of its own — any
-    docstring line at all already makes the summary non-empty."""
-    try:
-        tree = ast.parse(text := path.read_text(encoding="utf-8"))
-    except (OSError, UnicodeDecodeError):
-        return False
-    except SyntaxError:
-        return True  # rendered as a PARSE ERROR entry — still inventoried
-    if (ast.get_docstring(tree) or "").strip():
-        return True  # a summary line exists
-    if any(
-        isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef))
-        and not n.name.startswith("_")
-        for n in tree.body
-    ):
-        return True  # a public row exists
-    if _has_internal_import(tree, internal_names):
-        return True
-    for line in text.splitlines()[:8]:
-        if "Contracts" in line and line.lstrip().startswith("#"):
-            if IF_ID_RE.search(line):
-                return True  # a Contracts declaration exists
-    return False
-
-
-def shipped_modules(root):
-    """Normalized module keys ON DISK under the declared arch-map scan root —
-    the shipped-module set a trunk-lane regeneration would inventory. Mirrors
-    `gen_arch_map`'s symbol-mode collector exactly (keys relative to the scan
-    root's PARENT; an absolute declared src scanned as the path it names; dot-
-    and `__pycache__`-parts under the root skipped; symbol-EMPTY modules
-    skipped — `_would_be_inventoried`), so the delta against `arch_inventory`
-    is exactly the modules the refresh WOULD add — no more. Empty when the
-    root is absent, so a repo with no declared source tree costs nothing.
-    Files mode returns empty by design (REVIEW-A finding 2): a real files-mode
-    map is a table with no `### ` module headers, `arch_inventory` reads it as
-    EMPTY, and the whole containment family is dormant there — station rule
-    and early firing point alike; scanning anyway would invent a delta the
-    regeneration could never absorb."""
-    src, mode = _arch_scan_profile(root)
-    if mode == "files":
-        return set()
-    # An absolute [paths] src stays the path it names (pathlib: an absolute
-    # right operand replaces the left), exactly as gen_arch_map treats --src.
-    src_dir = root / src.strip().replace("\\", "/").rstrip("/")
-    if not src_dir.is_dir():
-        return set()
-    # gen_arch_map keys a module relative to the root's parent (`scripts/check`
-    # for --src project-trajectory/scripts); a root that IS the repo root keys
-    # relative to itself (its `root.name == ""` arm).
-    base = src_dir.parent if src_dir != root else src_dir
-    files, names = [], set()
-    for path in src_dir.rglob("*.py"):
-        if not path.is_file():
-            continue
-        rel = path.relative_to(src_dir)
-        if any(p.startswith((".", "__pycache__")) for p in rel.parts):
-            continue
-        files.append(path)
-        # The coupling-name universe build_map hands internal_imports: every
-        # scanned module stem + every package directory part.
-        names.add(path.stem)
-        names.update(rel.parts[:-1])
-    out = set()
-    for path in files:
-        if not _would_be_inventoried(path, names):
-            continue
-        key = _norm_module(path.relative_to(base).as_posix())
-        if key:
-            out.add(key)
-    return out
-
-
-def added_module_findings(root, view, packs):
-    """The WI-399 early firing point of the knowledge⇒component containment
-    rule: shipped modules the committed inventory LACKS (the would-be
-    regeneration delta) that no LLR `Component` cell joins to a real CMP.
-    Same arming as the station rule (a real pack + a non-empty committed
-    inventory); the caller shares the opt-out and the WARN/ERROR promotion. A
-    fresh map (delta empty — every trunk checkout after the refresh) is
-    vacuous, so this never double-reports what the station rule already
-    finds."""
-    if not (packs and view["inventory"]):
-        return []
-    added = sorted(shipped_modules(root) - set(view["inventory"]))
-    if not added:
-        return []
-    cmp_ids = set(view["by_id"])
-    raw = module_components(root)
-    missing = [n for n in added if not (raw.get(n, set()) & cmp_ids)]
-    if not missing:
-        return []
-    return [
-        "docs/knowledge/ holds {} pack(s) but {} shipped module(s) not yet in "
-        "the committed arch-map are in no CMP-### component ({}); tag them via "
-        "LLR `Component` cells in the commit that adds them — the arch-map "
-        "regenerates only on the trunk lane (SR-006), and the station must not "
-        "be the first to see this red — or set docs/process.toml [checks] "
-        "components_check = false".format(len(packs), len(missing), ", ".join(missing))
-    ]
 
 
 def _declared_seam_pairs(root):
@@ -1625,10 +1500,10 @@ def component_findings(root):
       the *how* and that web must be robust wherever packs are enabled. Arms the
       existing join from pack presence; invents no new join, and is dormant (no
       cost to a non-adopter) until `docs/knowledge/` holds a real pack.
-    - **Containment owed where a module is ADDED** (WI-399): the SAME
-      knowledge⇒component rule fired early, on the shipped modules the committed
-      arch-map inventory lacks (`added_module_findings`) — so a lane that adds a
-      module reds its own bar instead of the station's post-regeneration one.
+    - (The WI-399 "containment owed where a module is ADDED" delta rule is
+      RETIRED — WI-455 made the inventory the LIVE source tree, so a lane's
+      added module is simply IN the inventory and the coupling rule above
+      fires on it directly; there is no committed-vs-disk gap left to bridge.)
     - **Cross-CMP edges need a declared seam** (WI-064): see
       `cross_component_findings` — an import edge between two components with
       no covering IF-### row. Its warn-only sibling
@@ -1641,15 +1516,21 @@ def component_findings(root):
     out = []
     packs = knowledge_packs(root)
     if packs and view["inventory"] and view["uncontained"]:
+        # The module NAMES ride in the finding (capped): the retired WI-399
+        # delta message carried them so a lane knew WHICH file to tag, and
+        # under the live inventory (WI-455) this rule is that lane's first
+        # and only firing point.
+        shown = ", ".join(view["uncontained"][:8]) + (
+            ", …" if len(view["uncontained"]) > 8 else ""
+        )
         out.append(
             "docs/knowledge/ holds {} pack(s) but {} arch-map module(s) are in no "
-            "CMP-### component ({}); tag them via LLR `Component` cells so the "
-            "knowledge⇒component web is complete, or set docs/process.toml "
+            "CMP-### component ({}); tag them via LLR `Component` cells in {} so "
+            "the knowledge⇒component web is complete, or set docs/process.toml "
             "[checks] components_check = false".format(
-                len(packs), len(view["uncontained"]), CMP_CSV
+                len(packs), len(view["uncontained"]), shown, CMP_CSV
             )
         )
-    out.extend(added_module_findings(root, view, packs))
     if len(view["inventory"]) > TOP_VIEW_MAX and view["count"] > TOP_VIEW_MAX:
         out.append(
             "How-SW top view has {} items ({} top-level component(s) + {} "

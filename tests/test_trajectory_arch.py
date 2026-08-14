@@ -9,7 +9,9 @@ acting on declared interface boundaries (WI-191).
 """
 
 import csv
+import re
 import shutil
+from pathlib import Path
 
 
 from conftest import SCRIPTS, load_script, run_py
@@ -204,8 +206,58 @@ def _csv_body_to_toml(header, table, body):
 
 
 def write_arch(root, text):
+    """TRANSLATING writer (the WI-443 _csv_body_to_toml idiom, applied at
+    WI-455): the ~30 call sites state their inventory as the old committed
+    MODULE-MAP markdown because a table is how an inventory fixture reads —
+    but `arch_inventory` now scans the SOURCE TREE under the declared
+    `[paths] src` root, so this parses the fixture and writes real `.py`
+    files (docstring summary, `Contracts:` docstring line, public defs) plus
+    the `[paths] src = scripts` profile (kept if the test wrote its own).
+    What each test is ABOUT — coverage, containment, seams — stays visible
+    at its call site; the carrier change lives here once."""
     (root / "docs").mkdir(parents=True, exist_ok=True)
-    (root / "docs" / "architecture.md").write_text(text, encoding="utf-8")
+    ini = root / "docs" / "stack.ini"
+    if not ini.exists():
+        ini.write_text("[paths]\nsrc = scripts\n", encoding="utf-8")
+    mods, current = [], None
+    for line in text.splitlines():
+        m = re.match(r"^### `([^`]+)`", line)
+        if m:
+            current = {"name": m.group(1), "summary": "", "contracts": [],
+                       "imports": [], "funcs": []}
+            mods.append(current)
+            continue
+        if current is None:
+            continue
+        s = re.match(r"^\| `(\w+)\(([^)]*)\)`", line)
+        if s:
+            current["funcs"].append((s.group(1), s.group(2)))
+            continue
+        if line.strip().startswith("Contracts (interfaces):"):
+            current["contracts"] += re.findall(r"IF-\d+", line)
+            continue
+        if line.strip().startswith("Imports (internal):"):
+            current["imports"] += re.findall(r"`([^`]+)`", line)
+            continue
+        d = re.match(r"^_(.+)_$", line.strip())
+        if d and not current["summary"]:
+            current["summary"] = d.group(1)
+    for mod in mods:
+        rel = Path(mod["name"] + ".py")
+        dest = root / rel
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        doc = mod["summary"] or ""
+        body = ""
+        if doc or mod["contracts"]:
+            body += '"""' + doc
+            if mod["contracts"]:
+                body += "\n\nContracts: " + ", ".join(mod["contracts"])
+            body += '"""\n'
+        for imp in mod["imports"]:
+            body += "import {}\n".format(imp)
+        for fn, args in mod["funcs"]:
+            body += "\n\ndef {}({}):\n    return None\n".format(fn, args)
+        dest.write_text(body or "# empty\n", encoding="utf-8")
 
 
 def write_ifs(root, body):
@@ -624,24 +676,16 @@ def test_rows_without_declared_packs_stay_silent(tmp_path):
     assert PACK_MSG not in proc.stderr
 
 
-# --- WI-399: containment owed where a module is ADDED --------------------------
-# docs/architecture.md is trunk-owned, so its freshness gate SKIPs on a claimed
-# work branch (SR-006) and a module a branch adds enters the committed arch-map
-# inventory only when the trunk lane's refresh regenerates it — AFTER the last
-# review round, which made the station the FIRST place the knowledge⇒component
-# red could exist (WI-374/drive.py, WI-387/handback.py). The same rule now also
-# fires in the lane's own bar on the ADDED modules: shipped source files on disk
-# under the declared arch-map scan root that the committed inventory lacks. Same
-# pack arming, same components-check opt-out, same WARN-plain/ERROR-strict tier;
-# the station's own rule is untouched (the backstop).
+# --- WI-455: the inventory is the LIVE source tree ----------------------------
+# The WI-399/406/410/411 committed-vs-disk delta family that lived here is
+# RETIRED with its machinery: arch_inventory reads the source AST directly
+# (gen_arch_map.scan_inventory — ONE walk, so there is no mirror left to
+# drift), and a module a lane adds is simply IN the inventory, where the
+# station containment rule fires on it at once. What stays pinned below:
+# the profile reads (declared src root, absolute src, files-mode dormancy),
+# the walk's keep/skip shapes as arch_inventory consumes them, and the
+# fail-quiet posture on an undecodable file.
 
-ADDED_MSG = "not yet in the committed arch-map"
-
-# A module body gen_arch_map WOULD inventory (docstring summary + a public
-# symbol). The fixtures must ship real-symbol modules: build_map SKIPS
-# symbol-empty files (bare __init__.py, comment-only, private-only) from the
-# MODULE MAP, and the lane delta mirrors that skip (REVIEW-A finding 1), so an
-# empty body could never red anything on either side.
 MODULE_BODY = '"""M."""\n\n\ndef run():\n    """go"""\n'
 
 
@@ -651,10 +695,9 @@ def write_module(root, name, text=MODULE_BODY, src="scripts"):
     (d / name).write_text(text, encoding="utf-8")
 
 
-def write_arch_src(root, files, src="scripts", mode=None):
-    """Write docs/stack.ini declaring the arch-map scan root (+ optional mode)
-    and the shipped module files on disk under it — the lane-visible set. `.py`
-    files get a real inventoried body (MODULE_BODY), anything else a comment."""
+def write_src_profile(root, files, src="scripts", mode=None):
+    """docs/stack.ini declaring the scan root (+ optional mode) and the module
+    files on disk under it."""
     (root / "docs").mkdir(parents=True, exist_ok=True)
     ini = "[paths]\nsrc = {}\n".format(src)
     if mode:
@@ -664,53 +707,34 @@ def write_arch_src(root, files, src="scripts", mode=None):
         write_module(root, name, MODULE_BODY if name.endswith(".py") else "# m\n", src)
 
 
-def regen_map(root, src="scripts", mode=None):
-    """Run the REAL gen_arch_map over the fixture tree — the differential pin
-    (REVIEW-A finding 1): the lane delta must be empty exactly when the
-    regenerated map absorbs a module, so the mirror of build_map's
-    symbol-emptiness skip cannot drift without a red here."""
-    cmd = [SCRIPTS / "gen_arch_map.py", "--src", src, "--doc", "docs/architecture.md"]
-    if mode:
-        cmd += ["--mode", mode]
-    proc = run_py(cmd, cwd=root)
-    assert proc.returncode == 0, proc.stdout + proc.stderr
-
-
 def _contained_two_module_tree(tmp_path, src="scripts"):
-    """A pack-armed tree whose committed 2-module arch-map is fully contained —
-    clean under the station rule — with the map's modules also on disk."""
-    write_arch(tmp_path, _arch_n(2))
+    """A pack-armed tree whose 2-module source inventory is fully contained —
+    clean under the containment rule."""
     write_pack(tmp_path, "prompt-image")
     write_cmps(tmp_path, "CMP-001,Core,software,,built,,,,\n")
     write_tagged_llrs(
         tmp_path, [("scripts/mod_0", "CMP-001"), ("scripts/mod_1", "CMP-001")]
     )
-    write_arch_src(tmp_path, ["mod_0.py", "mod_1.py"], src=src)
+    write_src_profile(tmp_path, ["mod_0.py", "mod_1.py"], src=src)
 
 
-def test_added_module_without_component_tag_reds_the_lane_bar(tmp_path):
-    # The wi-387 topology, the class this row closes: the committed arch-map is
-    # STALE (trunk-vintage — no regeneration on a work branch) and clean under
-    # the station rule, yet the tree ships a new module with no Component tag.
-    # The lane bar itself reds, so the station can never be the first to know.
+def test_untagged_module_on_disk_reds_the_containment_rule(tmp_path):
+    # The WI-387 topology under the live inventory: a new module on disk with
+    # no Component tag is uncontained the moment it exists — the lane's own
+    # bar reds; no committed-map staleness can hide it from anyone.
     _contained_two_module_tree(tmp_path)
     write_module(tmp_path, "mod_new.py")
     plain = run_traj(tmp_path)
     assert plain.returncode == 0, plain.stdout + plain.stderr
-    assert ADDED_MSG in plain.stderr
-    assert "scripts/mod_new" in plain.stderr
-    # The station rule has nothing to say here (the stale map IS contained) —
-    # only the early firing point sees the red. That is the station-first shape.
-    assert KN_MSG not in plain.stderr
+    assert KN_MSG in plain.stderr and "scripts/mod_new" in plain.stderr
     strict = run_traj(tmp_path, "--strict")
     assert strict.returncode == 1
-    assert ADDED_MSG in strict.stderr
-    assert "1 shipped module(s)" in strict.stderr
+    assert KN_MSG in strict.stderr
 
 
-def test_added_module_greens_when_the_component_tag_lands(tmp_path):
-    # The two-registry-row remedy (an LLR Component cell) clears the finding in
-    # the same tree — no arch-map regeneration required.
+def test_component_tag_clears_the_added_module(tmp_path):
+    # The two-registry-row remedy (an LLR Component cell) clears it — no map
+    # regeneration exists to wait for anymore.
     _contained_two_module_tree(tmp_path)
     write_module(tmp_path, "mod_new.py")
     write_tagged_llrs(
@@ -723,422 +747,93 @@ def test_added_module_greens_when_the_component_tag_lands(tmp_path):
     )
     proc = run_traj(tmp_path, "--strict")
     assert proc.returncode == 0, proc.stdout + proc.stderr
-    assert ADDED_MSG not in proc.stderr
+    assert KN_MSG not in proc.stderr
 
 
-def test_fresh_map_module_is_the_station_rules_not_the_deltas(tmp_path):
-    # A module IN the committed map but untagged is the existing rule's finding;
-    # the added-module firing point must not double-report it (the delta is
-    # exactly the modules the map lacks).
-    write_arch(tmp_path, _arch_n(3))
-    write_pack(tmp_path, "prompt-image")
-    write_cmps(tmp_path, "CMP-001,Core,software,,built,,,,\n")
-    write_tagged_llrs(
-        tmp_path, [("scripts/mod_0", "CMP-001"), ("scripts/mod_1", "CMP-001")]
-    )
-    write_arch_src(tmp_path, ["mod_0.py", "mod_1.py", "mod_2.py"])
+def test_absolute_declared_src_scans_like_the_generator(tmp_path):
+    # An absolute [paths] src scans the directory it names (gen_arch_map
+    # treats --src as a path, absolute or not) — no silent repo-relative miss.
+    _contained_two_module_tree(tmp_path, src=str(tmp_path / "scripts"))
+    write_module(tmp_path, "mod_new.py")
     strict = run_traj(tmp_path, "--strict")
     assert strict.returncode == 1
-    assert KN_MSG in strict.stderr
-    assert ADDED_MSG not in strict.stderr
+    assert KN_MSG in strict.stderr and "scripts/mod_new" in strict.stderr
 
 
-def test_added_module_check_shares_the_pack_arming(tmp_path):
-    # No pack -> dormant at the early firing point too: this row moves WHERE the
-    # containment rule fires, never WHEN it arms (no new policy).
-    write_arch(tmp_path, _arch_n(2))
-    write_arch_src(tmp_path, ["mod_0.py", "mod_1.py", "mod_new.py"])
-    strict = run_traj(tmp_path, "--strict")
-    assert strict.returncode == 0, strict.stdout + strict.stderr
-    assert ADDED_MSG not in strict.stderr
-
-
-def test_added_module_check_respects_components_check_off(tmp_path):
-    # The one opt-out silences the early firing point exactly as it does the
-    # station rule (shared switch, shared policy).
-    _contained_two_module_tree(tmp_path)
-    write_module(tmp_path, "mod_new.py")
-    (tmp_path / "docs" / "components-check").write_text("off\n", encoding="utf-8")
-    strict = run_traj(tmp_path, "--strict")
-    assert strict.returncode == 0, strict.stdout + strict.stderr
-    assert ADDED_MSG not in strict.stderr
-
-
-def test_added_module_check_needs_an_arch_map_inventory(tmp_path):
-    # A pack + shipped modules but NO committed arch-map -> dormant, exactly as
-    # the station rule is (a pre-arch-map repo is not punished for adopting it
-    # late; the arming is shared, not new).
+def test_files_mode_keeps_the_whole_family_dormant(tmp_path):
+    # [arch-map] mode = files has no parser, so the inventory is EMPTY and the
+    # containment family stays dormant — the same posture the files-mode
+    # committed map produced (a table has no module headers).
     write_pack(tmp_path, "prompt-image")
-    write_arch_src(tmp_path, ["mod_new.py"])
+    write_src_profile(tmp_path, ["mod_0.py", "helper.sh"], mode="files")
     strict = run_traj(tmp_path, "--strict")
     assert strict.returncode == 0, strict.stdout + strict.stderr
-    assert ADDED_MSG not in strict.stderr
+    assert KN_MSG not in strict.stderr
 
 
-def test_added_module_delta_symbols_mode_sees_only_python(tmp_path):
-    # Default symbols mode scans `*.py` exactly as gen_arch_map does: a .sh file
-    # the regeneration would never inventory must not red the lane either — the
-    # delta mirrors what the refresh WOULD add, no more.
+def test_symbols_mode_sees_only_python(tmp_path):
+    # Default symbols mode scans *.py exactly as the generator does: a .sh
+    # file never enters the inventory, so it cannot be "uncontained".
     _contained_two_module_tree(tmp_path)
     (tmp_path / "scripts" / "helper.sh").write_text("# h\n", encoding="utf-8")
     strict = run_traj(tmp_path, "--strict")
     assert strict.returncode == 0, strict.stdout + strict.stderr
-    assert ADDED_MSG not in strict.stderr
 
 
-def test_files_mode_real_map_keeps_the_whole_family_dormant(tmp_path):
-    # REVIEW-A finding 2, the honest claim: a REAL files-mode map (gen_arch_map
-    # --mode files) is a table with no `### ` module headers, so arch_inventory
-    # reads it as EMPTY and the whole containment family is dormant there —
-    # station rule and early firing point alike. Parity, no lane-only hole: the
-    # lane must NOT invent a delta the regeneration could never absorb.
-    write_arch(tmp_path, _arch_n(0))  # just the marker pair
-    write_pack(tmp_path, "prompt-image")
-    write_arch_src(tmp_path, ["mod_0.py", "helper.sh"], mode="files")
-    regen_map(tmp_path, mode="files")
-    strict = run_traj(tmp_path, "--strict")
-    assert strict.returncode == 0, strict.stdout + strict.stderr
-    assert ADDED_MSG not in strict.stderr
-    assert KN_MSG not in strict.stderr
-
-
-def test_added_module_delta_skips_hidden_and_pycache(tmp_path):
-    # The scan mirrors gen_arch_map's hidden-part rule (dot- and __pycache__-
-    # prefixed parts under the root are not source), so caches never red a lane
-    # — pinned with REAL module bodies, so the skip is the hidden rule, not the
-    # symbol-emptiness mirror.
+def test_inventory_skips_hidden_and_pycache(tmp_path):
+    # The hidden-part rule (dot-/__pycache__-prefixed parts under the root are
+    # not source) holds in the live scan, so caches never red a lane.
     _contained_two_module_tree(tmp_path)
     for sub in ("__pycache__", ".vendored"):
         write_module(tmp_path, "mod_cache.py", src="scripts/" + sub)
     strict = run_traj(tmp_path, "--strict")
     assert strict.returncode == 0, strict.stdout + strict.stderr
-    assert ADDED_MSG not in strict.stderr
 
 
-def test_differential_delta_empties_exactly_when_the_regen_absorbs(tmp_path):
-    # REVIEW-A finding 1's pin, the wi-387 lifecycle against the REAL
-    # generator: the lane reds on the added public-symbol module BEFORE any
-    # regeneration; the real gen_arch_map run absorbs it and the delta empties
-    # (ADDED_MSG gone) with the station rule now holding the same red — the
-    # backstop equivalence — and the Component tag clears both.
-    _contained_two_module_tree(tmp_path)
-    write_module(tmp_path, "mod_new.py")
-    strict = run_traj(tmp_path, "--strict")
-    assert strict.returncode == 1
-    assert ADDED_MSG in strict.stderr and "scripts/mod_new" in strict.stderr
-    regen_map(tmp_path)
-    strict = run_traj(tmp_path, "--strict")
-    assert strict.returncode == 1
-    assert ADDED_MSG not in strict.stderr  # the delta emptied on absorption
-    assert KN_MSG in strict.stderr  # the station rule holds the same red
-    write_tagged_llrs(
-        tmp_path,
-        [
-            ("scripts/mod_0", "CMP-001"),
-            ("scripts/mod_1", "CMP-001"),
-            ("scripts/mod_new", "CMP-001"),
-        ],
-    )
-    strict = run_traj(tmp_path, "--strict")
-    assert strict.returncode == 0, strict.stdout + strict.stderr
-
-
-def test_symbol_empty_module_reds_neither_side_of_the_regen(tmp_path):
-    # REVIEW-A finding 1, the class: build_map SKIPS symbol-empty modules
-    # (bare __init__.py, comment-only, private-only), so the regeneration can
-    # never absorb one — a lane red on it would be PERMANENT (still red after
-    # regen, forever), which is new policy by accident. The mirror must skip
-    # exactly what the generator skips: green in the lane AND green after the
-    # real regen (the differential, both sides).
-    _contained_two_module_tree(tmp_path)
-    write_module(tmp_path, "__init__.py", "", src="scripts/pkg")
-    write_module(tmp_path, "notes.py", "# comment-only, no symbols\n")
-    write_module(tmp_path, "priv.py", "def _hidden():\n    pass\n")
-    strict = run_traj(tmp_path, "--strict")
-    assert strict.returncode == 0, strict.stdout + strict.stderr
-    assert ADDED_MSG not in strict.stderr
-    regen_map(tmp_path)
-    strict = run_traj(tmp_path, "--strict")
-    assert strict.returncode == 0, strict.stdout + strict.stderr
-    assert ADDED_MSG not in strict.stderr
-
-
-def test_absolute_declared_src_scans_like_the_generator(tmp_path):
-    # REVIEW-A finding 3: an absolute [paths] src must scan the directory the
-    # generator would (gen_arch_map treats --src as a path, absolute or not),
-    # not remap to a silent repo-relative miss.
-    _contained_two_module_tree(tmp_path, src=str(tmp_path / "scripts"))
-    write_module(tmp_path, "mod_new.py")
-    strict = run_traj(tmp_path, "--strict")
-    assert strict.returncode == 1
-    assert ADDED_MSG in strict.stderr
-    assert "scripts/mod_new" in strict.stderr
-
-
-# --- WI-406: the unpinned mirror arms, pinned (REVIEW-A round-2 finding 4) -----
-# The finding-1 differential fixtures above drive only the arms they contain
-# (public-symbol, bare __init__, comment-only, private-only, hidden-skip,
-# absolute src); the import-only, contracts-comment-only and parse-error arms of
-# _would_be_inventoried were consistent with the generator but UNPINNED — an
-# edit to either side of the mirror could drift them without a red. Each fixture
-# below drives one arm through the full differential: the lane reds on the
-# untagged module BEFORE any regeneration (the mirror KEEPS it), the REAL
-# gen_arch_map run absorbs it and the delta empties (the generator keeps it
-# too — a mirror-only keep would leave ADDED_MSG as a permanent red here) with
-# the station rule holding the same red, and the Component tag clears both.
-
-
-def _tag_three(tmp_path, third):
-    write_tagged_llrs(
-        tmp_path,
-        [
-            ("scripts/mod_0", "CMP-001"),
-            ("scripts/mod_1", "CMP-001"),
-            (third, "CMP-001"),
-        ],
-    )
-
-
-def test_reexporting_init_is_inventoried_on_both_sides_of_the_regen(tmp_path):
-    # The import-only arm, in its most common downstream shape: a re-exporting
-    # __init__.py whose ONLY content is a relative import of a sibling.
-    # internal_imports keeps it (node.level), so _has_internal_import must too,
-    # under the same /__init__-stripped key (scripts/pkg) _norm_module and
-    # scan_module share. `from . import notes` (module=None) isolates the
-    # node.level arm — `from .notes import x` would survive losing it via the
-    # absolute-segment-in-names arm, since the sibling's stem is in the names
-    # universe (watched: that mutation stayed green until this shape). The
-    # comment-only sibling pins the flip side in the same tree: the
-    # symbol-emptiness skip holds inside a package too, on both sides.
-    _contained_two_module_tree(tmp_path)
-    write_module(tmp_path, "__init__.py", "from . import notes\n", src="scripts/pkg")
-    write_module(tmp_path, "notes.py", "# comment-only sibling\n", src="scripts/pkg")
-    strict = run_traj(tmp_path, "--strict")
-    assert strict.returncode == 1
-    assert ADDED_MSG in strict.stderr and "scripts/pkg" in strict.stderr
-    assert "1 shipped module(s)" in strict.stderr  # the sibling is not a delta
-    assert "scripts/pkg/notes" not in strict.stderr
-    regen_map(tmp_path)
-    strict = run_traj(tmp_path, "--strict")
-    assert strict.returncode == 1
-    assert ADDED_MSG not in strict.stderr  # the real generator absorbed the key
-    assert KN_MSG in strict.stderr  # the station rule holds the same red
-    _tag_three(tmp_path, "scripts/pkg")
-    strict = run_traj(tmp_path, "--strict")
-    assert strict.returncode == 0, strict.stdout + strict.stderr
-
-
-def test_contracts_comment_only_module_is_inventoried_on_both_sides(tmp_path):
-    # The contracts-comment arm: a module whose only content is a first-8-lines
-    # `# Contracts: IF-###` comment. module_contracts keeps it (CONTRACTS_RE on
-    # comment lines), so the mirror's first-8-lines arm must too.
-    _contained_two_module_tree(tmp_path)
-    write_module(tmp_path, "seam.py", "# Contracts: IF-001\n")
-    strict = run_traj(tmp_path, "--strict")
-    assert strict.returncode == 1
-    assert ADDED_MSG in strict.stderr and "scripts/seam" in strict.stderr
-    regen_map(tmp_path)
-    strict = run_traj(tmp_path, "--strict")
-    assert strict.returncode == 1
-    assert ADDED_MSG not in strict.stderr
-    assert KN_MSG in strict.stderr
-    _tag_three(tmp_path, "scripts/seam")
-    strict = run_traj(tmp_path, "--strict")
-    assert strict.returncode == 0, strict.stdout + strict.stderr
-
-
-def test_parse_error_module_stays_inventoried_on_both_sides(tmp_path):
-    # The parse-error arm: a syntax-broken module is KEPT by the generator
-    # (rendered as a PARSE ERROR summary, rc still 0 without --strict-parse —
-    # regen_map's rc==0 assert pins that half), so the mirror's SyntaxError ->
-    # True arm must red the lane rather than skip: a skip here would let a
-    # broken shipped file dodge containment until the trunk refresh.
-    _contained_two_module_tree(tmp_path)
-    write_module(tmp_path, "broken.py", "def broken(:\n    pass\n")
-    strict = run_traj(tmp_path, "--strict")
-    assert strict.returncode == 1
-    assert ADDED_MSG in strict.stderr and "scripts/broken" in strict.stderr
-    regen_map(tmp_path)
-    strict = run_traj(tmp_path, "--strict")
-    assert strict.returncode == 1
-    assert ADDED_MSG not in strict.stderr  # the PARSE ERROR entry absorbed it
-    assert KN_MSG in strict.stderr
-    _tag_three(tmp_path, "scripts/broken")
-    strict = run_traj(tmp_path, "--strict")
-    assert strict.returncode == 0, strict.stdout + strict.stderr
-
-
-# --- WI-410: the absolute-import arms, pinned (WI-406 REVIEW-A finding 1) ------
-# The WI-406 fixtures above never drive _has_internal_import's ABSOLUTE arms:
-# reducing the ImportFrom test to `if node.level:` and deleting the whole
-# ast.Import branch left all 60 tests green, so an absolute-import-ONLY module
-# could drift mirror-side without a red — the wi-387 station-first topology
-# back, for exactly that shape. The two arms are disjoint syntactic branches
-# (one import statement trips exactly one), so no single module can pin both:
-# the fixture tree ships BOTH flat-layout shapes as separately driftable
-# modules, and dropping EITHER arm alone drops exactly its module from the
-# delta and reds this one test on the name assert (watched: each single-arm
-# scratch mutation reds this fixture and nothing else; the review's
-# both-dropped probe empties the delta and reds it on the rc assert).
-
-
-def test_absolute_import_only_modules_are_inventoried_on_both_sides(tmp_path):
-    # No relative form anywhere and no other inventoried content (docstring,
-    # public symbol, Contracts comment): each module's ONLY internal reference
-    # is one absolute import, so only an absolute arm can keep it. The names
-    # universe BOTH sides build is module stems + package directory parts —
-    # the scan root's own name (`scripts`) is in NEITHER, so the flat stem
-    # (`mod_0`) is the internal shape; `from scripts import mod_0` would be
-    # external on both sides alike.
-    _contained_two_module_tree(tmp_path)
-    write_module(tmp_path, "abs_imp.py", "import mod_0\n")
-    write_module(tmp_path, "abs_from.py", "from mod_0 import run\n")
-    strict = run_traj(tmp_path, "--strict")
-    assert strict.returncode == 1
-    assert ADDED_MSG in strict.stderr
-    assert "scripts/abs_imp" in strict.stderr  # the ast.Import arm keeps it
-    assert "scripts/abs_from" in strict.stderr  # the names-membership arm keeps it
-    assert "2 shipped module(s)" in strict.stderr
-    regen_map(tmp_path)
-    strict = run_traj(tmp_path, "--strict")
-    assert strict.returncode == 1
-    assert ADDED_MSG not in strict.stderr  # the real generator absorbed both
-    assert KN_MSG in strict.stderr  # the station rule holds the same red
-    write_tagged_llrs(
-        tmp_path,
-        [
-            ("scripts/mod_0", "CMP-001"),
-            ("scripts/mod_1", "CMP-001"),
-            ("scripts/abs_imp", "CMP-001"),
-            ("scripts/abs_from", "CMP-001"),
-        ],
-    )
-    strict = run_traj(tmp_path, "--strict")
-    assert strict.returncode == 0, strict.stdout + strict.stderr
-
-
-# --- WI-411: the dotted-absolute first segment, pinned (WI-410 REVIEW-A f.1) ---
-# The WI-410 modules above pin the two absolute ARMS, but their flat stems are
-# whole names IN the names universe, so dropping the `.split(".")[0]`
-# first-segment read inside either arm (whole-name membership) left all 61
-# tests green: a module whose ONLY internal reference is a DOTTED absolute
-# import — first segment a scanned package directory, the whole dotted name in
-# the universe on NEITHER side — could drift mirror-side station-first, the
-# WI-406-finding-1 way. The WI-410 lesson holds one grain finer: the arms are
-# disjoint syntactic branches, so each arm's split must be dropped against its
-# own one-form module — two dotted modules, and dropping EITHER split alone
-# drops exactly its module from the delta and reds this one test on the name
-# assert (watched: each single-split scratch mutation reds this fixture and
-# nothing else; the review's both-dropped probe empties the delta and reds it
-# on the rc assert). REVIEW-A drove two corrections, folded in below. (1) The
-# docstring and public-symbol arms were MASKED, not pinned: MODULE_BODY
-# satisfies both at once, so dropping either alone left the whole suite green
-# — a docstring-ONLY and a public-symbol-ONLY module pin the pair (watched:
-# each single-arm drop reds exactly its fixture, on the rc assert — the
-# mutated mirror empties that tree's one-module delta). (2) The honest
-# terminus: every arm of _would_be_inventoried (parse-error keep, docstring,
-# public symbol, internal import, Contracts comment, symbol-empty skip) and
-# of _has_internal_import (relative node.level, absolute ImportFrom
-# membership, ast.Import membership, the first-segment read inside both) is
-# fixture-pinned EXCEPT the read-failure branch (OSError/UnicodeDecodeError
-# -> False), which the green-green differential cannot drive: gen_arch_map
-# itself CRASHES on a non-UTF-8 .py (probed: UnicodeDecodeError in
-# scan_module's read_text, rc 1), so there is no absorb side to run. Its
-# UnicodeDecodeError half is pinned LANE-SIDE only below; the OSError half
-# (an unreadable file — not stageable portably) stays the argued exception.
-# That is the pinning series' recorded terminus, with the one named residue.
-
-
-def test_dotted_absolute_import_modules_are_inventoried_on_both_sides(tmp_path):
-    # The comment-only pkg/notes.py is the names-universe donor: both sides
-    # collect stems + package directory parts from every scanned file BEFORE
-    # the symbol-emptiness filter, so it contributes `pkg` and `notes` while
-    # never itself entering the delta or the map. `pkg.notes` as a whole is in
-    # the universe on neither side: only a first-segment read keeps these two.
-    _contained_two_module_tree(tmp_path)
-    write_module(tmp_path, "notes.py", "# names-universe donor\n", src="scripts/pkg")
-    write_module(tmp_path, "dot_imp.py", "import pkg.notes\n")
-    write_module(tmp_path, "dot_from.py", "from pkg.notes import go\n")
-    strict = run_traj(tmp_path, "--strict")
-    assert strict.returncode == 1
-    assert ADDED_MSG in strict.stderr
-    assert "scripts/dot_imp" in strict.stderr  # the ast.Import first segment
-    assert "scripts/dot_from" in strict.stderr  # the ImportFrom first segment
-    assert "2 shipped module(s)" in strict.stderr  # the donor is not a delta
-    regen_map(tmp_path)
-    strict = run_traj(tmp_path, "--strict")
-    assert strict.returncode == 1
-    assert ADDED_MSG not in strict.stderr  # the real generator absorbed both
-    assert KN_MSG in strict.stderr  # the station rule holds the same red
-    write_tagged_llrs(
-        tmp_path,
-        [
-            ("scripts/mod_0", "CMP-001"),
-            ("scripts/mod_1", "CMP-001"),
-            ("scripts/dot_imp", "CMP-001"),
-            ("scripts/dot_from", "CMP-001"),
-        ],
-    )
-    strict = run_traj(tmp_path, "--strict")
-    assert strict.returncode == 0, strict.stdout + strict.stderr
-
-
-def test_docstring_only_module_is_inventoried_on_both_sides(tmp_path):
-    # REVIEW-A finding 1, first of the masked pair: every MODULE_BODY fixture
-    # carries a docstring AND a public symbol, so each arm alone was covered
-    # by the other. This module's ONLY inventoried content is its docstring —
-    # the generator keeps it (summary non-empty), so only the mirror's
-    # docstring arm can keep it lane-side.
+def test_inventory_keeps_every_generator_shape(tmp_path):
+    # The walk's keep-arms, pinned at the consumer: docstring-only,
+    # public-symbol-only, contracts-comment-only, re-exporting __init__,
+    # absolute and dotted-absolute import-only, and a parse-error module all
+    # enter the inventory (each is real code the generator inventoried);
+    # symbol-EMPTY files (bare __init__, comment-only, private-only) do not.
     _contained_two_module_tree(tmp_path)
     write_module(tmp_path, "doc_only.py", '"""Docstring-only module."""\n')
-    strict = run_traj(tmp_path, "--strict")
-    assert strict.returncode == 1
-    assert ADDED_MSG in strict.stderr and "scripts/doc_only" in strict.stderr
-    regen_map(tmp_path)
-    strict = run_traj(tmp_path, "--strict")
-    assert strict.returncode == 1
-    assert ADDED_MSG not in strict.stderr  # the real generator absorbed it
-    assert KN_MSG in strict.stderr  # the station rule holds the same red
-    _tag_three(tmp_path, "scripts/doc_only")
-    strict = run_traj(tmp_path, "--strict")
-    assert strict.returncode == 0, strict.stdout + strict.stderr
-
-
-def test_public_symbol_only_module_is_inventoried_on_both_sides(tmp_path):
-    # REVIEW-A finding 1, second of the masked pair: no docstring, one public
-    # def — the generator keeps it (a public row exists), so only the mirror's
-    # public-symbol arm can keep it lane-side.
-    _contained_two_module_tree(tmp_path)
     write_module(tmp_path, "sym_only.py", "def run():\n    pass\n")
+    write_module(tmp_path, "seam.py", "# Contracts: IF-001\n")
+    write_module(tmp_path, "__init__.py", "from . import notes\n", src="scripts/pkg")
+    write_module(tmp_path, "notes.py", "# comment-only sibling\n", src="scripts/pkg")
+    write_module(tmp_path, "abs_imp.py", "import mod_0\n")
+    write_module(tmp_path, "dot_from.py", "from pkg.notes import go\n")
+    write_module(tmp_path, "broken.py", "def broken(:\n    pass\n")
+    write_module(tmp_path, "priv.py", "def _hidden():\n    pass\n")
     strict = run_traj(tmp_path, "--strict")
     assert strict.returncode == 1
-    assert ADDED_MSG in strict.stderr and "scripts/sym_only" in strict.stderr
-    regen_map(tmp_path)
-    strict = run_traj(tmp_path, "--strict")
-    assert strict.returncode == 1
-    assert ADDED_MSG not in strict.stderr
-    assert KN_MSG in strict.stderr
-    _tag_three(tmp_path, "scripts/sym_only")
-    strict = run_traj(tmp_path, "--strict")
-    assert strict.returncode == 0, strict.stdout + strict.stderr
+    kn = [ln for ln in strict.stderr.splitlines() if KN_MSG in ln]
+    assert len(kn) == 1, strict.stderr
+    line = kn[0]
+    for kept in (
+        "scripts/doc_only",
+        "scripts/sym_only",
+        "scripts/seam",
+        "scripts/pkg",
+        "scripts/abs_imp",
+        "scripts/dot_from",
+        "scripts/broken",
+    ):
+        assert kept in line, (kept, line)
+    assert "7 " + KN_MSG in line  # the symbol-empty files are NOT in it
+    assert "scripts/pkg/notes" not in line
+    assert "scripts/priv" not in line
 
 
-def test_undecodable_module_is_skipped_lane_side_without_a_crash(tmp_path):
-    # REVIEW-A finding 2, the read-failure branch — the one arm the
-    # green-green differential CANNOT drive: gen_arch_map itself crashes on a
-    # non-UTF-8 .py (probed: UnicodeDecodeError in scan_module's read_text,
-    # rc 1), so there is no absorb side. Lane-side pin only: the mirror's
-    # UnicodeDecodeError -> False must skip the file quietly — no delta red,
-    # no crash (either drift direction reds here: a raise crashes the run, a
-    # True puts the never-absorbable file in the delta). \xff is an invalid
-    # UTF-8 start byte on every platform, so the fixture is deterministic;
-    # the OSError half (an unreadable file — not stageable portably) stays
-    # the argued exception.
+def test_undecodable_module_is_skipped_without_a_crash(tmp_path):
+    # The fail-quiet arm: a non-UTF-8 .py cannot be judged, so the strict=False
+    # consumer read skips that file rather than crashing a warn-tier rule
+    # (\xff is an invalid UTF-8 start byte on every platform).
     _contained_two_module_tree(tmp_path)
     (tmp_path / "scripts" / "bin_mod.py").write_bytes(b"\xff\xfe\x00not utf-8")
     strict = run_traj(tmp_path, "--strict")
     assert strict.returncode == 0, strict.stdout + strict.stderr
-    assert ADDED_MSG not in strict.stderr
 
 
 # --- WI-093: the [phase]-[g*] archetype + phase-drop detector ------------------
