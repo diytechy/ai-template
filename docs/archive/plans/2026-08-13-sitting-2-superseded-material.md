@@ -746,7 +746,7 @@ order; and rule whether a MAPPING addition is an IF-row edit.
 
 ### 5.4 WI-451 — SR-tier boundary conformance pass
 
-[`../work/queued/WI-451-sr-boundary-conformance-pass.md`](../../work/queued/WI-451-sr-boundary-conformance-pass.md)
+[`../work/queued/WI-451-sr-boundary-conformance-pass.md`](../../work/active/wi451-sr-retier-campaign/WI-451-sr-boundary-conformance-pass.md)
 · priority 2 · `buildtier = strong` · spine · `needs = []`. **The central row this
 sitting unblocks — and its central numbers are superseded.**
 
