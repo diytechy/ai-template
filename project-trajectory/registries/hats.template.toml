@@ -1,8 +1,9 @@
 # The HATS ROSTER — the declared expert perspectives every applicable
 # decomposition must face (SN-036; ruled at OI-19, 2026-08-13).
 #
-# THIS FILE IS OWNER TEXT, NOT AGENT TEXT. The six hats below are the kit's
-# STARTING roster, shipped as drafted on 2026-08-13. YOU ARE EXPECTED TO EDIT
+# THIS FILE IS OWNER TEXT, NOT AGENT TEXT. The thirteen hats below are the
+# kit's STARTING roster (six drafted 2026-08-13; the UX pair and the five
+# aspect hats added by ruling 2026-08-13q/s). YOU ARE EXPECTED TO EDIT
 # IT — cut the hats that do not earn their place in your project, add the ones
 # your domain needs, and rewrite every `applies_when` against YOUR vocabulary.
 # That editing is not optional politeness: a roster inherited unread is
@@ -51,6 +52,17 @@
 # and what each produced. Injection is the half that changes what decompositions
 # produce; the record only proves it happened, and it is a later artifact class.
 # Nothing gates on a hat today.
+#
+# TWO KINDS OF SILENCE, DISTINGUISHED. Several hats below ship SILENT BY
+# DESIGN: each keys on a tag (`render`, `ui`, `safety`, `legal`,
+# `personal-data`, `a11y`, `perf`) that your project may not use yet, and
+# switches on the moment you tag work with it — opt-in by tagging, no
+# `enabled` field, using the grammar's own rule that an undeclared field
+# satisfies no condition. That is different from a hat silent BY DEFECT — one
+# keyed on a fact your registries will never carry, which can never fire and
+# should be re-pointed or cut (the kit's own FIRST-RUN-ADOPTER once keyed on
+# an undeclared `scope` field; fixed at WI-453). When you edit this roster,
+# make sure every silent hat is silent on purpose.
 
 [hat.SECURITY]
 applies_when = "always"
@@ -58,7 +70,7 @@ asks = """What secret, credential, or irreversible action does this touch — an
 listens_for = """A decomposition that spends a secret, or takes an action nothing can undo, with no requirement naming the authority for it."""
 
 [hat.FIRST-RUN-ADOPTER]
-applies_when = 'scope == "template" or scope == "both" or tags contains "templates"'
+applies_when = 'tags contains "scripts" or tags contains "templates" or tags contains "process"'
 asks = """Does this hold for a stranger with only the shipped README and examples — no context from this project, no one to ask?"""
 listens_for = """A requirement only satisfiable by someone who already knows this project: an undocumented convention, an example that does not run as shipped, a step whose prerequisite is never stated."""
 
@@ -81,3 +93,38 @@ listens_for = """A requirement whose reason lives only in the session that wrote
 applies_when = "always"
 asks = """What mechanical check fails if this is quietly violated — and can that check be shown to fail when it should?"""
 listens_for = """An obligation with no enforcer, or an enforcer that passes because it never actually looks at the thing it claims to check."""
+
+[hat.UX-DESIGNER]
+applies_when = 'tags contains "render" or tags contains "ui"'
+asks = """Who reads this surface, what decision are they making on it, and does the layout put that first?"""
+listens_for = """A surface that renders every fact it has instead of the one the reader came for."""
+
+[hat.UX-ENGINEER]
+applies_when = 'tags contains "render" or tags contains "ui"'
+asks = """Does this hold up at the real widths, themes and content volumes — and what does it do when the data is empty, huge, or malformed?"""
+listens_for = """A view verified only by reading its generator, never by looking at it rendered."""
+
+[hat.SAFETY]
+applies_when = 'tags contains "safety"'
+asks = """How can this harm a person, property or the environment if it behaves incorrectly, and what requirement bounds that harm?"""
+listens_for = """A hazardous outcome with no requirement naming its bound, or a mitigation asserted with nothing verifying it."""
+
+[hat.LEGAL]
+applies_when = 'tags contains "legal"'
+asks = """What licence, contract or regulation constrains this, and does the decomposition record which obligation each part discharges?"""
+listens_for = """An obligation assumed to be someone else's, or a dependency whose licence terms nothing states."""
+
+[hat.DATA-PROTECTION]
+applies_when = 'tags contains "personal-data"'
+asks = """What personal data does this touch, on what basis, for how long, and who can reach it?"""
+listens_for = """Personal data crossing a boundary with no stated basis, retention limit or access rule."""
+
+[hat.ACCESSIBILITY]
+applies_when = 'tags contains "a11y"'
+asks = """Can someone using a keyboard, a screen reader, or a low-vision setting complete this — and is that stated as a requirement rather than hoped for?"""
+listens_for = """A surface whose acceptance names only how it looks to a sighted mouse user."""
+
+[hat.PERFORMANCE]
+applies_when = 'tags contains "perf"'
+asks = """What is the declared budget here, measured on what, and what happens when it is exceeded?"""
+listens_for = """A speed or size claim with no declared budget, or a budget with no measurement behind it."""

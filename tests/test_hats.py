@@ -177,21 +177,37 @@ def test_selection_filters_on_the_declared_condition(tmp_path):
     assert names({"tags": ["docs"]}) == ["SECURITY"]
 
 
-def test_the_shipped_roster_selects_the_three_always_on_hats_at_minimum():
-    """The kit's own roster, read from disk. The three `always` hats are the
-    floor every decomposition faces; the other three are conditional, which is
-    the whole point of `applies_when`."""
+LIVE_NAMES = [
+    "SECURITY",
+    "FIRST-RUN-ADOPTER",
+    "UNATTENDED-OPS",
+    "CROSS-PLATFORM",
+    "MAINTAINER",
+    "TEST-ENGINEER",
+    "UX-DESIGNER",
+    "UX-ENGINEER",
+    "SAFETY",
+    "LEGAL",
+    "DATA-PROTECTION",
+    "ACCESSIBILITY",
+    "PERFORMANCE",
+]
+
+# The floor every decomposition in THIS repo faces: the three original `always`
+# hats plus the UX pair, unconditional here because PROJECT_STATE.html /
+# open-items.html are real owner-facing surfaces (WI-453, ruling 2026-08-13q).
+LIVE_ALWAYS = ["SECURITY", "MAINTAINER", "TEST-ENGINEER", "UX-DESIGNER", "UX-ENGINEER"]
+
+
+def test_the_shipped_roster_selects_the_always_on_hats_at_minimum():
+    """The kit's own roster, read from disk. The `always` hats are the floor
+    every decomposition faces; the rest are conditional, which is the whole
+    point of `applies_when` — and the five aspect hats are silent BY DESIGN
+    until this repo tags work with their tags (WI-453, ruling 2026-08-13s)."""
     roster = hats.load(ROOT)
-    assert [h["name"] for h in roster] == [
-        "SECURITY",
-        "FIRST-RUN-ADOPTER",
-        "UNATTENDED-OPS",
-        "CROSS-PLATFORM",
-        "MAINTAINER",
-        "TEST-ENGINEER",
-    ]
+    assert [h["name"] for h in roster] == LIVE_NAMES
     minimum = [h["name"] for h in hats.applicable(roster, {})]
-    assert minimum == ["SECURITY", "MAINTAINER", "TEST-ENGINEER"]
+    assert minimum == LIVE_ALWAYS
     unattended = [h["name"] for h in hats.applicable(roster, {"tags": ["unattended"]})]
     assert "UNATTENDED-OPS" in unattended
     assert "CROSS-PLATFORM" not in unattended
@@ -322,13 +338,15 @@ def test_the_kit_template_and_the_live_roster_share_a_STRUCTURE():
     assert len(kit) >= 3
 
 
-def test_template_and_instance_share_structure_and_the_template_ships_six():
+def test_template_and_instance_share_structure_and_the_template_ships_thirteen():
     """The dogfood rule applied to the roster (review finding): STRUCTURE must
     not drift between the shipped template and this repo's instance — same
     table name, same required key set per row, both non-empty — while VALUES
-    (which hats an owner keeps) may. Separately, the SHIPPED template is kit
-    product: it carries exactly the six ruled starting hats (OI-19,
-    2026-08-13) until a reviewed edit changes the shipped roster."""
+    (which hats an owner keeps, and their conditions) may. Separately, the
+    SHIPPED template is kit product: it carries exactly the thirteen ruled
+    starting hats (the six of OI-19 plus the UX pair and five aspect hats of
+    Decision 11, rulings 2026-08-13q/s, executed at WI-453) until a reviewed
+    edit changes the shipped roster."""
     import tomllib
 
     inst = tomllib.loads(
@@ -342,14 +360,122 @@ def test_template_and_instance_share_structure_and_the_template_ships_six():
             assert set(row) == {"applies_when", "asks", "listens_for"}, (
                 "%s [hat.%s] key set drifted" % (name, hid)
             )
-    assert set(tmpl["hat"]) == {
-        "SECURITY",
-        "FIRST-RUN-ADOPTER",
-        "UNATTENDED-OPS",
-        "CROSS-PLATFORM",
-        "MAINTAINER",
-        "TEST-ENGINEER",
-    }, "the shipped template's six-hat starting roster changed — reviewed edit?"
+    assert set(tmpl["hat"]) == set(LIVE_NAMES), (
+        "the shipped template's thirteen-hat starting roster changed — "
+        "reviewed edit?"
+    )
+
+
+# --- WI-453: the roster executed at the boundary (Decision 11, 13q/r/s) ------
+def _real_work_item_contexts():
+    """The context of every REAL work-item row in this repo's registry — the
+    population the roster's conditions actually run against. Parsed from the
+    `+++` TOML front matter of every spec under docs/work/."""
+    import tomllib
+
+    contexts = {}
+    for spec in sorted((ROOT / "docs" / "work").rglob("*.md")):
+        lines = spec.read_text(encoding="utf-8").split("\n")
+        if not lines or lines[0].strip() != "+++":
+            continue
+        try:
+            end = lines[1:].index("+++") + 1
+        except ValueError:
+            continue
+        try:
+            row = tomllib.loads("\n".join(lines[1:end]))
+        except tomllib.TOMLDecodeError:
+            continue
+        contexts[row.get("id", spec.name)] = hats.context_from_work_item(row)
+    return contexts
+
+
+def test_the_old_first_run_adopter_predicate_was_defective_and_the_new_one_fires():
+    """THE DEFECT AND ITS FIX, DRIVEN (WI-453; ruling 2026-08-13s: the hat is
+    KEPT, its predicate re-pointed). The old predicate's three `scope ==`
+    clauses keyed on a field NO work-item context declares (SN-039's job), so
+    they fire on ZERO real rows — silence BY DEFECT. Its `templates` tag
+    clause fired on exactly ONE historical row in the whole registry (WI-131,
+    2026-07-13, a workstream label no later row uses) — the census refinement
+    over Decision 11's 'silent': effectively voiceless, its entity (EXT-003
+    Adopter) unheard in review. The NEW predicate, read from the live roster,
+    fires on the deliverable's real tags (`scripts`, `process`, `templates` —
+    the kit's product IS its shipped scripts, templates and process docs)."""
+    contexts = _real_work_item_contexts()
+    assert len(contexts) > 100, "the census should cover the real registry"
+    # No work-item context declares `scope` — the defect, structurally: the
+    # scope clauses can never fire.
+    assert all("scope" not in ctx for ctx in contexts.values())
+    scope_only = hats.parse_condition('scope == "template" or scope == "both"')
+    assert not any(hats.evaluate(scope_only, ctx) for ctx in contexts.values())
+
+    old = hats.parse_condition(
+        'scope == "template" or scope == "both" or tags contains "templates"'
+    )
+    old_matches = {wi for wi, ctx in contexts.items() if hats.evaluate(old, ctx)}
+    assert old_matches == {"WI-131"}, (
+        "the census behind WI-453 found exactly one historical row the old "
+        "predicate fired on; got %s — re-derive before trusting this text"
+        % sorted(old_matches)
+    )
+
+    roster = {h["name"]: h for h in hats.load(ROOT)}
+    new = roster["FIRST-RUN-ADOPTER"]["condition"]
+    new_matches = {wi for wi, ctx in contexts.items() if hats.evaluate(new, ctx)}
+    assert len(new_matches) > len(old_matches), (
+        "the re-pointed predicate must fire on real rows the old one missed"
+    )
+    assert old_matches <= new_matches, "the fix must not silence the one old hit"
+    # And on THIS work item's own row — the WI that edited a shipped template
+    # is exactly the work the adopter's hat exists to question.
+    assert hats.evaluate(new, {"tags": ["process", "ordinary"]})
+
+
+def test_aspect_hats_ship_silent_by_design_and_switch_on_by_tag():
+    """The ruled off-by-default mechanism (2026-08-13s): no `enabled` field —
+    hats.py refuses unknown keys — but each aspect hat keys on its OWN tag, so
+    it is silent on every real row today (BY DESIGN, unlike the old
+    FIRST-RUN-ADOPTER's silence BY DEFECT) and fires the moment a project tags
+    work with it."""
+    roster = {h["name"]: h for h in hats.load(ROOT)}
+    aspects = {
+        "SAFETY": "safety",
+        "LEGAL": "legal",
+        "DATA-PROTECTION": "personal-data",
+        "ACCESSIBILITY": "a11y",
+        "PERFORMANCE": "perf",
+    }
+    contexts = _real_work_item_contexts()
+    for name, tag in aspects.items():
+        condition = roster[name]["condition"]
+        silent_on = [wi for wi, ctx in contexts.items() if hats.evaluate(condition, ctx)]
+        assert silent_on == [], "%s must ship silent, fired on %s" % (name, silent_on)
+        assert hats.evaluate(condition, {"tags": [tag]}), (
+            "%s must switch on when work is tagged %r" % (name, tag)
+        )
+
+
+def test_the_ux_pair_is_unconditional_here_and_render_gated_in_the_template():
+    """The template-vs-this-repo split, made deliberately (Decision 11,
+    accepted 2026-08-13u): VALUES may diverge under the dogfood rule. HERE the
+    UX pair is `always` — PROJECT_STATE.html / open-items.html are real
+    owner-facing surfaces every decomposition may shape. The SHIPPED starting
+    roster gates them on `render`/`ui`, silent-by-design for adopters with no
+    UI rather than falsely universal."""
+    live = {h["name"]: h for h in hats.load(ROOT)}
+    kit = {
+        h["name"]: h
+        for h in hats.load(ROOT, rel=str(KIT_ROSTER.relative_to(ROOT)))
+    }
+    for name in ("UX-DESIGNER", "UX-ENGINEER"):
+        assert live[name]["applies_when"] == "always"
+        assert not hats.evaluate(kit[name]["condition"], {})
+        assert hats.evaluate(kit[name]["condition"], {"tags": ["render"]})
+        assert hats.evaluate(kit[name]["condition"], {"tags": ["ui"]})
+        # The QUESTION is the owner's ruled text, identical in both copies —
+        # only the condition diverges.
+        assert live[name]["asks"] == kit[name]["asks"]
+        assert live[name]["listens_for"] == kit[name]["listens_for"]
 
 
 def test_falsey_hat_table_refuses_rather_than_reading_empty(tmp_path):
