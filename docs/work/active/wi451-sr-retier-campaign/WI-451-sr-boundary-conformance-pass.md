@@ -9,3 +9,38 @@ buildtier = "strong"
 safety_class = "spine"
 priority = 2
 +++
+
+## Context
+
+**SLICE 2 RUNS LAYER-BY-LAYER, NOT ROW-BY-ROW (owner-ruled 2026-08-14g).**
+The title's row-centric phrasing — *"every demoted row needs a PARENT SR"* —
+states a true constraint but a misleading METHOD: taken literally it mints a
+parent per demotion, and ~73 thin ad-hoc parents would be a worse registry
+than the 148 mis-tiered rows this campaign started with. The ruled method is a
+**blank-slate breakdown that reattaches valid work**:
+
+1. **SN → SR.** Decide what the SR layer *should* be, from the needs and
+   §1R.2's six crossings — not by transforming the old rows. Then REATTACH:
+   the census's 34 HOLDS and 15 RE-STATES are existing rows that earn their
+   place in that layer (49 parents), and the 26 tombstones are DELETED per
+   D-4 (`2026-08-14b`) rather than carried down.
+2. **SR → LLR.** Decompose each surviving SR to component-level seams,
+   reattaching the 73 demoted rows as the LLRs they always were — a demotion
+   lands under the parent its obligation belongs to, which is knowable only
+   once step 1's layer exists. B-05 splits by delivered capability plus the
+   ruled **package-wide-property** sixth bucket (`2026-08-14c`).
+3. **LLR → TC.** Re-point test cases to the rows that now carry their
+   obligation.
+4. **RE-ITERATE — top-down again, and bottom-up for orphans.** The sweep back
+   up is what catches dangling or unattached test cases; `trace.py` already
+   reports `orphans=9` on the live spine, so this pass has a real detector to
+   run against rather than judgment alone. Iterate until the orphan set is
+   the intended one.
+
+**What slice 2 does NOT do:** the D-9/D12 vocabulary migration. It is ruled
+(`2026-08-14e`) to run as ONE ATOMIC ACT after these drafts land — the
+archived checklist's step 3, whose enum close *"must land with step 3, since
+the enum and the data must agree at every commit"*, and whose half-migrated
+state is §3.1's silent failure direction. Rows here land in in-process states
+in the CURRENT vocabulary; the migration relabels them once, and the signing
+wave then happens once, in the new semantics.

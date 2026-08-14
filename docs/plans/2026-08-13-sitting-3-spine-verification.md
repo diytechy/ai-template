@@ -109,6 +109,19 @@ on §2's signing surface once slice 2's ledger exists. §2.1 is re-measured
 2026-08-14 (the WI-454 mints included, the census's slated exits as its last
 column) — regenerate once more at convening, per its own rule.
 
+**Slice 2 runs LAYER-BY-LAYER (ruled `2026-08-14g`; method recorded in the
+WI-451 spec's `## Context`).** SN→SR decides what the SR layer *should* be
+and reattaches the 49 holding/re-stating rows (the 26 tombstones delete, not
+descend); SR→LLR decomposes and lands the 73 demotions under the parent each
+obligation belongs to; LLR→TC re-points; then **re-iterate — top-down again,
+and bottom-up for dangling/unattached TCs**, against `trace.py`'s orphan
+count (9 on the live spine today) rather than judgment. The row-centric
+reading — a parent minted per demotion — was rejected as producing ~73 thin
+ad-hoc parents. The **D-9/D12 migration stays out of the layers** (`14e`):
+per-layer interleaving was weighed and rejected on the global row predicates
+and §3.1's silent direction; the order is layered re-tier → one atomic
+migration → one signing wave.
+
 ### 0.3 THE DECISION LEDGER — every ruling this sitting owes, in one table
 
 *(The sitting-2 §4.0 pattern. Rule top-down: 1–3 unblock slice 2; 4–7 are the

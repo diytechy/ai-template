@@ -36,6 +36,34 @@ applying that design to the kit itself.
 _Ratified or executed decisions only — the call, the alternatives passed over,
 why (one bullet each; cite ids)._
 
+- **2026-08-14g — slice 2's EXECUTION METHOD ruled: layer-by-layer, not
+  row-by-row (owner, in session).** The owner proposed working the spine
+  *"like a real blank-slate breakdown, but reattaching valid work, and then
+  reiterating either from the top down again or from the bottom up if there
+  are dangling / unattached test cases"*, and it is adopted as WI-451 slice
+  2's declared method. **Why it beats the row-centric reading:** the campaign
+  row's own phrasing (*"every demoted row needs a PARENT SR"*) states a true
+  constraint but implies minting a parent per demotion — ~73 thin ad-hoc
+  parents, a worse registry than the 148 mis-tiered rows the campaign began
+  with. Layer-first fixes the order of knowledge: what the SR layer should BE
+  is decided from the needs + the six crossings, the 49 holding/re-stating
+  rows reattach to it, and only then can a demoted row land under the parent
+  its obligation actually belongs to. The bottom-up sweep has a mechanical
+  detector rather than judgment — `trace.py` reports `orphans=9` on the live
+  spine today. Recorded in the WI-451 spec's `## Context` and sitting-3 §0.2.
+  **The migration stays OUT of the layers**, on the evidence the owner asked
+  for: interleaving D-9/D12 per layer was WEIGHED AND REJECTED because
+  `is_draft`/`is_verified`/`is_modified` are global row predicates (only
+  `ENUM_FIELDS` is per-tier), so a partial migration either cannot close the
+  enum (*"a claim with no mechanism"*, §0) or fires §3.1's silent direction
+  (*"`Modified` unmigrated, read by a new `is_drifted` → the row silently
+  vanishes from the re-attest brief"*); the archived checklist independently
+  names step 3 *"the atomic act"* and requires the enum close to land with it
+  *"since the enum and the data must agree at every commit"*. Migrating
+  FIRST was also weighed and rejected: it would open §3.3's
+  no-drift-detector gap across the largest text-change event in the repo's
+  history, and would migrate 26 rows about to be deleted. Order stands:
+  layered re-tier → one atomic migration → one signing wave (`2026-08-14e`).
 - **2026-08-14f — sitting-3 ledger decision 4 RULED and EXECUTED (owner, in
   session): TC-159 lifted — and the §2.3 lift's crossed pairs aligned both
   ways.** The evidence decided it: TC-159's procedure drives the CONVERTER
