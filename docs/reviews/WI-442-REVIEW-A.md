@@ -22,10 +22,11 @@ artifacts; this is the fresh verdict round the merge gate requires. Findings
 were re-verified by the session author against the real tree before any fix
 (the author-re-verifies convention); every finding below reproduced.
 
-**Final verdict: APPROVE at round 2849616e (the round-2 fix commit)** — round 1 CHANGES-REQUESTED
-(1 MAJOR, gen_okf exporting the retired column), round 2 CHANGES-REQUESTED
-(1 MAJOR, shipped docs still teaching the retired column), round 3 APPROVE on
-the fixed tip. The machine line that governs is the last one in this file.
+**Final verdict: APPROVE at 1473e00c** — round 1 CHANGES-REQUESTED (1 MAJOR,
+gen_okf exporting the retired column), round 2 CHANGES-REQUESTED (1 MAJOR,
+shipped docs still teaching the retired column), round 3 APPROVE at 2849616e,
+round 4 APPROVE at 1473e00c (the freshness round on the trunk merge that
+staled round 3). The machine line that governs is the last one in this file.
 
 ---
 
@@ -231,5 +232,53 @@ clean-sweep claims were spot-checked against the real tree (residual
 registries carry zero `approved` cells; skills copies byte-match source).
 The machine line below is the governing verdict — `parse_verdict` takes
 the last matching line in this file.
+
+VERDICT: APPROVE findings=0
+
+---
+
+## Round 4 — at 1473e00c (the trunk-merge freshness round)
+
+Round 3's APPROVE at 8513f0dd was staled by a non-record commit: the trunk
+advanced (096f6b72 WI-452 SpecRef repoint; 255bb980 WI-451 claim) and the
+integrator's refresh conflicted on regenerated artifacts, so the lane merged
+trunk 255bb980 and regenerated docs/gate, PROJECT_STATE.html and the status
+snapshot from the MERGED tree (1473e00c). This round reviews only
+`git diff 8513f0dd..1473e00c` — is the resolution honest?
+
+Merge commit 1473e00c refreshes WI-442’s branch with trunk’s WI-451/WI-452 bookkeeping and regenerates its derived artifacts; it does not alter the WI-442 schema, scripts, registries, or shipped-kit surface. The derived gate remains `DevBar-Reqs` on the unchanged `DevStg-Boundary` basis.
+
+### Failure classes hunted, worst-first
+
+- Hand-resolved or stale generated artifacts.
+- Smuggled non-generated changes under the merge.
+- WI-442 surface or gate-derivation regression.
+- Hand deletion of WI-442 from the status snapshot.
+- Smoke-tier regression.
+
+### Exact commands and driven output
+
+- `derive_gate.py --root . --check` → `docs/gate up to date (DevBar-Reqs)`.
+- `gen_trajectory.py --root . --check` → dashboard up to date.
+- `gen_trajectory.py --root . --status --check` → status snapshot up to date.
+- Parent/blob and hunk comparison: WI-452 and one archive link file byte-match trunk; WI-451 is trunk’s byte-identical rename; the remaining archive file is the exact union of trunk’s WI-451 link change and the branch’s existing WI-442 link change.
+- `git diff 8513f0dd..1473e00c --stat` / scoped path check: no `external.toml`, `interfaces.toml`, `derive_gate.py`, `trace.py`, `gen_okf.py`, shipped-kit, or test changes.
+- `pytest -q -n auto -m smoke` → `1114 passed, 7 skipped in 30.77s`.
+- Final `git status --porcelain` and `git diff --check` clean.
+
+### Findings
+
+None reproduced.
+
+**Author re-verification.** Every reviewer claim was independently driven
+by the session author BEFORE dispatch and matched: the three generators
+report byte-stable on the merged tree; the WI-452 spec and the
+devstg-boundary archive doc are byte-identical to trunk; the WI-451 spec is
+trunk's byte-identical rename at docs/work/active/wi451-sr-retier-campaign/;
+the superseded-material archive doc is the exact two-parent union (trunk's
+WI-451 link repoint + the branch's own WI-442 queued->complete repoint);
+status.md's dropped WI-442 active line is the snapshot generator's own
+output on the merged tree, proven by `--status --check` reporting
+up-to-date. No WI-442 surface file changed in the merge.
 
 VERDICT: APPROVE findings=0
