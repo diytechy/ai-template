@@ -1,8 +1,10 @@
 # Sitting 3 — verify the adapted spine
 
-**Status: PRECONDITIONS NOT YET MET.** This sitting runs **after** sitting 2's
-rulings are executed — WI-451 both slices, WI-442, and whatever sweeps sitting 2
-orders. Its subject is not the frame: it is whether **the re-stated system
+**Status: PARTIALLY MET — §0 is the measured scoreboard (2026-08-14).** The
+build half of sitting 2's rulings is executed; **slice 2 of the re-tier is
+deliberately parked on this sitting's census ratification**, so the sitting
+opens with two ruling movements (§0.2) before its verification half can run.
+Its subject is not the frame: it is whether **the re-stated system
 requirements are functional**, and whether the re-attest windows that sitting 2
 deliberately left open **close honestly**.
 
@@ -22,6 +24,74 @@ are archived at
 [`../archive/plans/2026-08-13-sitting-pack.md`](../archive/plans/2026-08-13-sitting-pack.md)
 and
 [`../archive/plans/2026-08-13-devstg-boundary-draft.md`](../archive/plans/2026-08-13-devstg-boundary-draft.md).
+
+---
+
+## 0. State of play — measured 2026-08-14, after the mechanized tranche
+
+*(Added 2026-08-14 so the sitting can open from one document. Everything below
+was measured on trunk at the basis line `SN=27 SR=149 LLR=152 TC=149 drafts=29
+modified=51 uncovered=7`; re-derive at convening per §2.1's own rule.)*
+
+**What landed since assembly (all through adversarial verdict rounds):** the
+schema row is merged — `external.toml` live, `interfaces.toml` slimmed to the
+approval schema (`stability` retired), the SR-side `Boundary-Refs` field and
+SN-037's SR→boundary checker live, both sharp hazards held in-commit. SN-033's
+need-form checker is live warn-first with its chain (SR-150 · LLR-170 ·
+TC-164 — three NEW rows in the draft window, which is why `drafts` reads 29,
+not §2.1's 27). The hats roster is executed per decision 11. `architecture.md`
+is retired **through the deletion on the still-open retirement lane** (flows
+moved to `docs/runtime-flows.md`, obligation never lapsed; the dashboard's
+How-SW tab renders the architecture and embeds the flows) — the lane holds the
+measured **D-3 `direction`/`counterpart` shed** (115 rows each; ~85
+consumption-shaped IF re-authorings) and the `external.toml` context view as
+its honest remainder, sequenced behind this sitting's census ruling.
+
+### 0.1 Preconditions scoreboard (§1's table, measured)
+
+| # | State | Measured fact |
+|---|---|---|
+| 1 | **PARTIAL** | derived view + flows landed on the retirement lane, not yet merged; `check_flows` disposition = **moved**, never lapsed |
+| 2 | **MET** | `external.toml` live on trunk; `trace.py --strict` clean |
+| 3 | **MET in letter** | IF-080/IF-081 carry no boundary tie-back field; `direction`/`counterpart` themselves still live — their shed is the retirement lane's held remainder |
+| 4 | **MET** | the census is complete — §0.2 below; the WI's Deliverable fills at campaign close, the census doc is the ledger |
+| 5 | **OPEN, deliberately** | slice 2 is parked on this sitting's census ratification — no row edited before it (owner-held spine, `human_ratification_through = 4`) |
+| 6 | **MET** | `uncovered` 8 → **7** (SN-033 covered); the remaining 7 are the campaign's to supply |
+| 7 | **OPEN, deliberately** | the `Modified` rows are untouched since sitting 1 — intent, not drift |
+| 8 | rides slice 2 | `Area` still live on 148/149 rows |
+| 9 | **MET** | SN-007's `need` reads *"it stays traceable and tested through every change"* — verified verbatim 2026-08-14 |
+
+### 0.2 The census — what this sitting ratifies FIRST
+
+Full per-row ledger: [`2026-08-14-wi451-slice1-sr-census.md`](2026-08-14-wi451-slice1-sr-census.md)
+(all 148 rows: crossing · classification · reason class · B-05 capability ·
+flags). Headline, re-derived from scratch (13q's ~100 was sizing, and the
+prior session's shall-shape stats did **not** reproduce — the census's own
+figures govern):
+
+- **HOLDS 34 · RE-STATES 15 · DEMOTES 73 · supersession-tombstones 26** — 88
+  rows change text in slice 2; the demotion splits **27 harness-verdict · 30
+  unattended-loop · 16 generators** on the B-05 delivered-capability axis
+  (scaffold/MAPPING and hook-floor rows hold or re-state).
+- Findings the census surfaces as deliverables (13s): **B-06/B-07 have no
+  dedicated SR** (the CI-mirror obligation rides SR-019's acceptance cell);
+  the migration-history class is ~10 rows larger than the known
+  SR-040/059/131; SR-141/SR-148 overlap; SR-049 lacks `area`.
+
+**Two census calls only this sitting can make** (they change slice 2's row
+math, so they are ruled BEFORE slice 2 dispatches):
+
+1. **The 26 tombstones** — one CLASS ruling (supersession bookkeeping exempt
+   from the one-shall form, a single recorded waiver) or 26 per-row waivers.
+2. **The four package-wide B-05 properties** (SR-031/034/035/114, e.g.
+   stdlib-only/cross-platform) — a declared sixth bucket, or forced into the
+   five-capability split each carries only partially.
+
+**Movement order for the sitting:** ratify the census + rule the two calls
+(and §2.2's TC-159 pick) → dispatch slice 2 under the WI-444 bar → reconvene
+on §2's signing surface once slice 2's ledger exists. §2.1's row lists are
+2026-08-13 figures and now also exclude the three WI-454 mints — regenerate,
+as that section already instructs.
 
 ---
 
