@@ -36,6 +36,18 @@ applying that design to the kit itself.
 _Ratified or executed decisions only — the call, the alternatives passed over,
 why (one bullet each; cite ids)._
 
+- **2026-08-14c — sitting-3 ledger decision 3 RULED (owner, in session): the
+  B-05 decomposition axis gains the declared sixth bucket, *package-wide
+  property*.** SR-031 (policy readers agree), SR-034 (stdlib + ledger),
+  SR-035 (stack-agnostic) and SR-114 (cross-OS) each stay ONE SR attached to
+  B-05 in the new bucket — a property of every delivered capability at once,
+  never re-stated per capability group. The 13p invariant already admits the
+  shape (*"one SR per (need, crossing-or-delivered-property)"*); the census's
+  `pkg-wide` label becomes the bucket's name in slice 2's decomposition.
+  Alternative passed over: re-statement inside the five capability groups
+  (~4×5 partial rows — the fragmentation the anti-duplication rule refuses;
+  a rule change would then cost five edits and five re-attestations instead
+  of one). Ledger: sitting-3 §0.3 row 3, marked ruled.
 - **2026-08-14b — sitting-3 ledger decisions 1–2 RULED (owner, in session):
   the census is RATIFIED; the 26 tombstones DELETE per D-4.** The slice-1
   census (34 HOLDS / 15 RE-STATES / 73 DEMOTES / 26 tombstones over all 148
