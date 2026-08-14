@@ -39,10 +39,12 @@ THE THREE TOKEN CLASSES, from SN-033's acceptance verbatim:
     `www.` forms alike — are deliberately NOT matched: an address a need
     names is an external, stakeholder-visible reference, not repository
     internals. The exclusion is enforced by suppressing the whole URL span,
-    so a path-shaped tail (`https://host/docs/status.md`) never reports
-    (review rounds 1 and 2). A sentence-final token's trailing full stop is
-    stripped before the phrase is judged or reported, so its reviewed
-    exception matches.
+    so a path-shaped tail (`https://host/docs/status.md`) never reports —
+    with the span stopping at prose delimiters (`,`/`;`) and the `www.` form
+    requiring a multi-label host, so a genuine token abutting a URL and a
+    local `www.assets/logo.png` both still report (review rounds 1–3). A
+    sentence-final token's trailing full stop is stripped before the phrase
+    is judged or reported, so its reviewed exception matches.
   - **implementation-only identifier** — a code-suffixed filename
     (`trace.py`, `stack.ini`), an underscore-joined identifier
     (`human_ratification_through`), or a `--flag` token.
@@ -142,13 +144,21 @@ CLASSES = (
 )
 
 
-# A URL span: `scheme://` — or the scheme-less `www.` form — through the next
-# whitespace. Findings inside one are suppressed whole: an external address is
-# stakeholder-visible however path-shaped its tail, and suppressing the SPAN
-# (not just refusing the match start) is what keeps the identifier class from
-# re-matching a `status.md` inside it. (`www.` joined at review round 2: a
-# scheme-less address is the same external reference.)
-_URL = re.compile(r"(?:\b[a-z][a-z0-9+.-]*://|\bwww\.)\S+", re.IGNORECASE)
+# A URL span: `scheme://` — or the scheme-less `www.` form — up to the next
+# whitespace or prose delimiter. Findings inside one are suppressed whole: an
+# external address is stakeholder-visible however path-shaped its tail, and
+# suppressing the SPAN (not just refusing the match start) is what keeps the
+# identifier class from re-matching a `status.md` inside it. Two round-3
+# narrowings, both silent-miss classes the adversarial review drove: the span
+# STOPS at `,`/`;` so an abutting separate token (`...status.md,docs/gate.md`)
+# still reports, and the `www.` form requires a MULTI-LABEL host
+# (`www.example.test`) so a local `www.assets/logo.png` is a path, not an
+# address — a real scheme-less URL practically always carries a second dot
+# before its first slash. (`www.` joined at round 2: a scheme-less address is
+# the same external reference.)
+_URL = re.compile(
+    r"(?:\b[a-z][a-z0-9+.-]*://|\bwww\.(?=[^\s/,;]+\.))[^\s,;]+", re.IGNORECASE
+)
 
 
 def _looks_like_path(token, root=None):

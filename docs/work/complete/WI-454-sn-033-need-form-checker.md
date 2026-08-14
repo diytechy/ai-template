@@ -44,11 +44,16 @@ its punctuation as a file suffix); scheme-less `www.` addresses now suppress
 like their `scheme://` forms; and LLR-170/IF-121 mis-stated the allow-list
 separator as an ASCII hyphen where the parser requires the em-dash (the exact
 silent-voiding confusion the loud-direction rule exists for) — both cells now
-state the literal separator. Verification: 15 in-process smoke tests
+state the literal separator. Round 3 drove one more, fixed: the URL span's
+greed swallowed genuine neighbours (a comma-abutting `docs/gate.md`) and the
+`www.` form swallowed a single-label LOCAL path (`www.assets/logo.png`) — the
+span now stops at prose delimiters and the `www.` form requires a multi-label
+host. Verification: 17 in-process smoke tests
 (`tests/test_check_need_form.py`) covering the dirty-cell row+phrase case,
 `--strict`, the exception list and its malformed-entry arm, the exemptions,
-the resolving-path, URL and sentence-final arms, the vacuous-registry arms,
-and the live registry clean at zero findings over 27 need cells.
+the resolving-path, URL, delimiter and sentence-final arms, the
+vacuous-registry arms, and the live registry clean at zero findings over 27
+need cells.
 Spine: SR-150 (Planned, cites SN-033 — its first coverage, orphans 10 → 9) →
 LLR-170 (Draft, CMP-007) → TC-164 (Draft, Smoke), plus IF-121/IF-122
 (approval=draft) and the id watermark at SR=150 LLR=170 TC=164 IF=122.

@@ -199,6 +199,33 @@ def test_a_scheme_less_www_address_is_suppressed_like_a_url(tmp_path):
     assert "guide.md" not in proc.stdout
 
 
+def test_a_single_label_www_token_is_a_path_not_an_address(tmp_path):
+    # Round-3 review find: the www. suppression swallowed a LOCAL path whose
+    # first segment merely looks host-ish. A real scheme-less address carries
+    # a second dot before its first slash (www.example.test); a single-label
+    # `www.assets/logo.png` is repository internals and reports.
+    make_repo(tmp_path, "Assets ship from www.assets/logo.png nightly.")
+    (tmp_path / "www.assets").mkdir()
+    proc = form(tmp_path)
+    assert "'www.assets/logo.png'" in proc.stdout, proc.stdout
+
+
+def test_a_url_span_stops_at_prose_delimiters(tmp_path):
+    # Round-3 review find: the span's \S+ greediness swallowed a SEPARATE
+    # genuine token abutting the URL through a comma. The span now stops at
+    # `,`/`;`, so the neighbour reports while the URL itself stays exempt.
+    make_repo(
+        tmp_path,
+        "See www.example.test/docs/status.md,docs/gate.md nightly; the "
+        "mirror is https://example.test/a/b.md;docs/log.md holds the rest.",
+    )
+    proc = form(tmp_path)
+    assert "'docs/gate.md'" in proc.stdout, proc.stdout
+    assert "'docs/log.md'" in proc.stdout, proc.stdout
+    assert "status.md'" not in proc.stdout
+    assert "b.md'" not in proc.stdout
+
+
 def test_a_present_but_vacuous_registry_is_reported_not_clean(tmp_path):
     # The round-1 review's driven find: an emptied registry scanned as a clean
     # tier, and at DevBar-Reqs nothing else in the harness hard-fails on it —
