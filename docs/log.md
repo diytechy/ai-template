@@ -36,6 +36,35 @@ applying that design to the kit itself.
 _Ratified or executed decisions only — the call, the alternatives passed over,
 why (one bullet each; cite ids)._
 
+- **2026-08-14a — `human_ratification_through` 0 → 4: every spine tier
+  human-held (owner, in session).** The owner's expectation — *"at least a
+  pause to approve stakeholder needs"* — did not hold at 0: the dial's own
+  docstring reads *"0 = nothing is human-held (the loop ratifies every tier
+  itself)"*, and on a loop-held tier attestation rows dispatch outright with
+  *"a recorded fresh-context reviewer verdict ratifies"*. The 0 was the spent
+  2026-07-15 pre-absence charge-through directive. **The full-breakdown
+  concern resolves in the safe direction:** the dial holds only
+  ATTESTATION-class work (`dispatch._kind_action`: attestation/gate rows
+  *surface* on a held tier; ordinary, critique, high-risk and spine build
+  work dispatch at every level) — so at 4 the re-tier campaign still runs the
+  whole SN→SR→LLR→TC reshuffle to completion as Draft/Modified rows, and
+  every ratification of all four tiers waits for the owner's sitting, now
+  guaranteed by the dial rather than by the campaign's design. Also answered:
+  **no item exists to switch the dial to a string** — the int ordinal was
+  itself the ruled replacement of the retired three-word enum, hardened at
+  OI-21 into the DIAL_HOLDS declared lookup. **The genuine gap the question
+  surfaced:** the dial speaks only for the four spine tiers (*"implementation
+  is not a ratification tier"*), and the D4/D12 approval elements landing
+  off-spine (`interfaces.toml` as `stability` retires; `external.toml` from
+  its first commit) have **no declared flip authority at any level** — filed
+  as sitting-3 §3.6 (the D-9+D12 program extends the authority declaration to
+  every registry gaining the shared vocabulary; the string/tier-set form is
+  re-openable there, as one act, if the coverage extends) and as a prose
+  obligation on the schema row until then. Sitting-3 preconditions 1/3/4/5
+  re-worded to the final 13u rulings in the same pass (derived architecture,
+  no `counterpart`, the 148-row census universe). `process.toml` comment and
+  `CLAUDE.md` updated with the new directive.
+
 - **2026-08-13v — The single-shall rule is a GUIDELINE, not a law (owner, in
   session).** Amending §3R consequence 1: *"I did indicate requirements should
   have a single shall, but that is also just a guideline — there may be times

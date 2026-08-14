@@ -58,12 +58,15 @@
 # Named `human_ratification_through`, never "attest level": `Attest` is already
 # a Verification method in the SR vocabulary and the collision would be
 # permanent.
-# THIS REPO RUNS LOOP-HELD (owner directive 2026-07-15, re-expressed on
-# SN-029's ordinal). The retired `gate_policy = "autonomous"` that used
+# THIS REPO RUNS EVERY-TIER-HUMAN-HELD (owner directive 2026-08-14, ahead of
+# the SR re-tier campaign: the full breakdown to TCs RUNS at any level — the
+# dial holds only attestation-class work — and every spine ratification
+# surfaces to the owner's sitting; supersedes the spent 2026-07-15 loop-held
+# charge-through directive). The retired `gate_policy = "autonomous"` that used
 # to sit above is DELETED rather than left inert: shipping it beside the
 # ordinal is the shadowing defect the template names, and the kit must
 # not carry in its own config the shape it refuses downstream.
-human_ratification_through = 0
+human_ratification_through = 4
 # The separate "always show me the full breakdown at the end" hold, split out
 # because it is flipped far more often than the level itself.
 #   "always" — the loop stops for a final human read even when the level would

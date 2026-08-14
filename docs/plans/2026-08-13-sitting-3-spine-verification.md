@@ -10,7 +10,10 @@ This document exists now, before it can be run, on purpose: **it defines the bar
 so the executing sessions aim at it.** A builder re-stating 57 SRs should know
 what will be asked of the result before they write the first row, and the
 windows that must stay open should stay open deliberately rather than by
-oversight.
+oversight. *(Preconditions re-worded 2026-08-14a to the final 13u rulings:
+architecture derives, `counterpart` retires with the slimming, and the census
+universe is all 148 SRs — the re-tier campaign, not the old 57-row
+re-statement.)*
 
 Assembled 2026-08-13 alongside its sibling
 [`2026-08-13-sitting-2-boundary-and-context.md`](2026-08-13-sitting-2-boundary-and-context.md),
@@ -29,11 +32,11 @@ names how to verify it without reading prose.
 
 | # | Precondition | How to verify |
 |---|---|---|
-| 1 | **The frame is adopted and RECORDED.** Sitting 2 decision 1 ruled; decision 8 requires the record *"kept with the architecture, not in session prose"* (SN-040's ratified acceptance) | `grep -n "boundary\|external entit\|operational context" docs/architecture.md` returns a real hand-authored section, not the three generated function-summary rows it returns today |
+| 1 | **The frame is adopted and RECORDED as a DERIVED view.** Decision 1 CLOSED (13o); decision 8 (13u) rules `architecture.md` dies and the record renders from the registries in `PROJECT_STATE.html` — which SATISFIES SN-040 (*"kept with the architecture, not in session prose"*) | the dashboard's architecture tab renders the entities/boundary/relationship rows from `external.toml` (the WI-455 program or its context-view slice landed), and `check_flows`'s obligation has an explicit disposition — moved or retired by ruling, never lapsed |
 | 2 | **The registry shape is executed per sitting 2 decision 5.** Either `external.toml` (or whatever name won) exists with entity rows and a resolvable `counterpart` in `interfaces.toml`, or the ruling explicitly chose not to mint it | the file exists and loads; `python project-trajectory/scripts/trace.py --strict` is clean on it; or the log's Decisions entry records the no-mint |
-| 3 | **The port list is adopted** (decision 2), including the IF-080/IF-081 disposition | those two rows' `counterpart` no longer claims `downstream adopter`, **or** the ruling records why it still does |
-| 4 | **WI-451 slice 1 (CENSUS) is done** — each of the 75 script-naming SRs classified port / internal / mixed against the adopted inventory, with the re-statement sized per row | the WI's `## Deliverable` is filled and the row sits in `docs/work/complete/` |
-| 5 | **WI-451 slice 2 (RE-STATEMENT) is applied under the WI-444 token-verification bar** — no obligation weakened; every re-stated cell token-compared to its predecessor | the slice's own ledger reproduces the WI-444 method: per-row token multiset comparison, with the count of rows passing stated as a real number |
+| 3 | **IF-080/IF-081's ruled-internal disposition is executed** (decision 2, 13u; `counterpart` itself retires with the slimming) | under the slimmed schema the two rows carry **no boundary tie-back** (`interface_from_external`/`interface_to_external` absent) — or the schema row's ledger records why one does |
+| 4 | **The re-tier census (slice 1) is done** — every one of the 148 SRs classified holds / demotes / re-states against §1R.2's six crossings, the demotion sized per row (13q: the ~100 figure is sizing, never a target) | the campaign row's census ledger exists with all 148 rows dispositioned; the WI's `## Deliverable` records the totals |
+| 5 | **The re-tier execution (slice 2) is applied under the WI-444 token-verification bar** — no obligation weakened; every re-stated cell token-compared; every demoted row parented under a surviving SR, its LLR minted, TCs re-pointed, `sn_refs` re-homed; one-shall waivers recorded per row (13v) | the slice's ledger reproduces the WI-444 method with real counts: rows held / demoted / re-stated, LLR ids minted, waivers recorded |
 | 6 | **WI-442 has landed** — SN-037…SN-040 gain their first coverage | `docs/gate`'s basis line shows **`uncovered`** below 8; the `sn_refs` of the new SRs name which need each covers |
 | 7 | **The 2.4-sweep window and the decision-6 window are still open — deliberately.** Sitting 1's rationale sweep flipped rows `Modified` and called it *"a deliberately re-opened window, sitting 2's to close"*; sitting 2 rules structure and does not sign a spine | those rows are still `Modified` at this sitting's start, and the log records that as intent rather than as drift |
 | 8 | **Area→aspect is executed IF sitting 2 ruled it rides WI-451's window** | the `Area` column is gone from `system-requirements.toml` and the six aspect values are a closed vocabulary — or the ruling records that it does not ride |
@@ -59,8 +62,9 @@ markdown, which is why it stays a pointer.
 ### 2.1 The window as of assembly — **regenerate before the sitting**
 
 Measured 2026-08-13 against the live registries. **These lists will have moved by
-the time this sitting runs** — WI-451's re-statement alone touches up to 57 SR
-rows. Re-derive; do not sign from this table.
+the time this sitting runs** — the re-tier campaign touches most of the SR
+registry (census-sized, plausibly ~100 demotions). Re-derive; do not sign from
+this table.
 
 | Tier | Total | Verified | Modified | Draft | Planned |
 |---|---|---|---|---|---|
@@ -228,6 +232,24 @@ it. **D-9's target vocabulary has exactly three values** (`Drafted`, `Approved`,
 Whichever way it goes, it must be ruled **before** the window closes, because
 after the window every one of those rows is a ratified row and moving it costs a
 new window.
+
+### 3.6 ⚠ The authority dial does not speak for the new approval elements (2026-08-14a)
+
+`human_ratification_through` is defined over **the four spine tiers plus
+"nothing"** (`dispatch._kind_action`: *"implementation is not a ratification
+tier"*; the comparison is the OI-21 declared lookup over the stage rungs). The
+D4/D12 rulings just commissioned approval elements **off-spine** — on
+`interfaces.toml` as `stability` retires, and on `external.toml` from its
+first commit — and **no value of the dial declares who may flip those**. This
+program (D-9 + D12, this section's decision) must extend the authority
+declaration to every registry that gains the shared vocabulary — and this is
+also where the dial's FORM is worth re-opening if needed: a tier-set (e.g. a
+declared list of held registries) covers the off-spine expansion naturally,
+where the 0–4 ordinal cannot. (Owner asked 2026-08-14 whether a string-form
+item exists: none does — the int ordinal was itself the ruled replacement of
+the retired three-word enum. If the form changes, it changes HERE, as one act
+with the vocabulary.) Until then, the schema row states `external.toml`'s
+flip authority in prose from the first commit.
 
 ---
 
