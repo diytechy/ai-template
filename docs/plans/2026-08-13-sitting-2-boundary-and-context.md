@@ -567,7 +567,32 @@ failure of it.
 ## 4. THE DECISIONS
 
 Twelve. Items 1–8 are the boundary draft's §4, updated; items 9–12 are the
-pack's tabled and deferred calls plus one rescued design question. Each is
+pack's tabled and deferred calls plus one rescued design question.
+
+### 4.0 STATE OF PLAY — what is still open (as of 2026-08-13s)
+
+Nine of the twelve are closed. **Six calls remain**, all small; none blocks the
+frame, which is locked.
+
+| # | State | What is still owed |
+|---|---|---|
+| **1** | ✅ CLOSED | frame locked 13o — 5 entities · 7 crossings · 3 relationships |
+| **2** | ⚠ **OPEN ×2** | the two explicit calls: **IF-080/IF-081 fall internal** (they have no BIF under §1R v2 — confirming licenses WI-451 to demote the SRs naming them), and **a generated surface is a port while its generator is not** (B-03 embodies this; §2 says yes). Both are near-formalities now |
+| **3** | ✅ CLOSED | inversion ruled 13l |
+| **4** | ⚠ **OPEN (residue)** | the question dissolved, but two things survive: **confirm the `boundary_incomplete` re-key** onto BIF completeness, and **dispose the five `Experimental` rows' content findings** as ordinary registry hygiene (IF-057's undeclared consumer seam; three never-re-reviewed carrier seams; IF-103 now free) |
+| **5** | ✅ CLOSED | `external.toml` approved, re-confirmed 13l |
+| **6** | ⏸ DEFERRED **by ruling** | re-lands mechanically post-schema as *BIF rows with no realizing IF* |
+| **7** | ⚠ **OPEN (riders)** | rule text ruled 13q; two riders to ORDER: **SR-035's disposition** (merge or re-state; rides WI-451's window) and **SN-033's unowned need-cell checker** |
+| **8** | ⚠ **OPEN ×1** | architecture-as-derived ruled 13q; confirm the boundary: does *"the entire structure retires"* include the **narrative** Runtime flows (SR-cited, `check_flows.py`-checked, not registry-derivable), or do those stay authored-and-checked? |
+| **9** | ✅ CLOSED | resolved by §3R's form rule; row-level execution rides the re-tier |
+| **10** | ✅ CLOSED | ruled DEFER 13s — P5 stays warn-first provisional until the re-tier; re-ratify on re-derived numbers |
+| **11** | ⚠ **OPEN (text)** | ruled 13q/r/s; the seven proposed rows are **agent-drafted and owe your text** before landing — execution filed as **the queued hats WI** |
+| **12** | ⚠ **OPEN (the invariant)** | mechanism ruled unchanged 13q; still to rule: **every rung-generated registry row carries an approval element** as a schema invariant, and how the **three measured gaps** close (hats: none; `interfaces`: `stability` retiring with no replacement; `external.toml`: must design one in from its first commit) |
+
+**Two unowned mechanizations sit across these** and belong to whichever
+execution row takes the schema: the **SR→IF checker** (SN-037's ratified
+acceptance, §5.4) and **SN-033's need-cell checker** (decision 7's rider) —
+each a stated obligation with no enforcer. Each is
 self-contained: the question, the context you need, what each option costs, and
 the recommendation where one is on record. **Where no recommendation exists, it
 says so.**

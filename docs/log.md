@@ -28180,3 +28180,24 @@ the SN tier has no `status`, `kind` is unchanged, and nothing flips.
 **Bars.** check_docs: OK — 400 docs, 1210 intra-repo links, 0 broken.
 Smoke tier: 1091 passed, 3 skipped, 21.44s.
 <!-- fig: cmd=".venv/bin/python -m pytest -q -n auto -m smoke" rev=6fe1d4fa+worktree -->
+
+## 2026-08-13t — the hats execution row filed; sitting-2 state of play recorded
+
+The `FIRST-RUN-ADOPTER` predicate defect and the roster additions ruled at
+2026-08-13q/r/s are filed as a queued work item rather than left in prose:
+fix the dead `scope ==` clauses, add the seven hats (two UX unconditional here,
+five aspect hats keyed on their own tags so they ship silent), and state the
+silence-by-design vs silence-by-defect distinction in the roster header. Id
+watermark bumped 452 → 453; dashboard regenerated.
+
+Sitting 2's brief gains **§4.0 STATE OF PLAY**: nine of twelve decisions
+closed, six small calls remaining (decision 2's two explicit rows, decision 4's
+re-key confirmation + the five Experimental rows' content findings, decision 7's
+two riders, decision 8's narrative-vs-structure boundary, decision 11's owner
+text, decision 12's approval-element invariant). Recorded with it: the two
+unowned mechanizations that sit across those calls — the SR→IF checker
+(SN-037's ratified acceptance) and SN-033's need-cell checker.
+
+**Bars.** check_docs: OK — 401 docs, 1223 intra-repo links, 0 broken.
+Smoke tier: 1091 passed, 3 skipped.
+<!-- fig: cmd=".venv/bin/python -m pytest -q -n auto -m smoke" rev=f3c957d9+worktree -->
