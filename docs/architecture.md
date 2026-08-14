@@ -55,6 +55,7 @@ graph LR
     m_scripts_check_docs["scripts/check_docs — Doc navigability & staleness check: keep the ha…"]
     m_scripts_check_figures["scripts/check_figures — Declared-figure provenance — a driven figure ca…"]
     m_scripts_check_flows["scripts/check_flows — Design-time runtime-flow check: the DevBar-Test…"]
+    m_scripts_check_need_form["scripts/check_need_form — Need-form check: stakeholder-need cells stay in…"]
     m_scripts_check_perf["scripts/check_perf — Performance budget & regression comparator: tra…"]
     m_scripts_check_privacy["scripts/check_privacy — Secrets + privacy-leak lint — the deterministic…"]
     m_scripts_check_stubs["scripts/check_stubs — No-stub / substance detector: flag implementati…"]
@@ -123,6 +124,7 @@ graph LR
     m_scripts_check_docs --> m_scripts_spine_carrier
     m_scripts_check_figures --> m_scripts_check_doc_refs
     m_scripts_check_flows --> m_scripts_spine_carrier
+    m_scripts_check_need_form --> m_scripts_spine_carrier
     m_scripts_check_trajectory --> m_scripts_check_docs
     m_scripts_check_trajectory --> m_scripts_spine_carrier
     m_scripts_derive_gate --> m_scripts_spine_carrier
@@ -210,6 +212,7 @@ graph LR
     m_scripts_check_docs -. IF-077 .-> m_scripts_check_trajectory
     m_scripts_check_figures -. IF-086 .-> m_scripts_check
     m_scripts_check_flows -. IF-003 .-> m_scripts_check
+    m_scripts_check_need_form -. IF-121 .-> m_scripts_check
     m_scripts_check_perf -. IF-004 .-> m_scripts_check
     m_scripts_check_privacy -. IF-005 .-> m_scripts_check
     m_scripts_check_stubs -. IF-006 .-> m_scripts_check
@@ -247,6 +250,7 @@ graph LR
     m_scripts_spine_carrier -. IF-104 .-> m_scripts_check_doc_refs
     m_scripts_spine_carrier -. IF-112 .-> m_scripts_check_docs
     m_scripts_spine_carrier -. IF-105 .-> m_scripts_check_flows
+    m_scripts_spine_carrier -. IF-122 .-> m_scripts_check_need_form
     m_scripts_spine_carrier -. IF-106 .-> m_scripts_gen_okf
     m_scripts_spine_carrier -. IF-118 .-> m_scripts_gen_open_items
     m_scripts_spine_carrier -. IF-107 .-> m_scripts_gen_release_checklist
@@ -612,6 +616,18 @@ Contracts (interfaces): IF-003, IF-029, IF-105
 | `load_ids(docs)` | Collect the known ids per kind from the registries (trace.py's sources). |  |
 | `flows_section(text)` | Return the 'Runtime flows' section body, or None when the heading is |  |
 | `mermaid_blocks(section)` | The ```mermaid fenced blocks inside the section, in order. |  |
+| `main()` |  |  |
+
+### `scripts/check_need_form`
+_Need-form check: stakeholder-need cells stay in stakeholder language._
+Imports (internal): `spine_carrier`
+Contracts (interfaces): IF-121, IF-122
+
+| Public item | Summary | Implements |
+|---|---|---|
+| `load_allow(root)` | The reviewed exception tokens from `docs/need-form-allow`, as a set. |  |
+| `need_findings(needs, allow, root)` | `[(row_id, class_label, phrase)]` over the `need` cells of `needs`. | SN-033 |
+| `scan(root)` | `(findings, scanned_count, vacuous)` for the repo at `root`. |  |
 | `main()` |  |  |
 
 ### `scripts/check_perf`

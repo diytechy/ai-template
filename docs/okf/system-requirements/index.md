@@ -159,3 +159,4 @@ resource: "generated"
 | [SR-147](SR-147.md) | One machine-parseable carrier for the requirement spine |
 | [SR-148](SR-148.md) | Autonomous loop phase order |
 | [SR-149](SR-149.md) | Retired-vocabulary refusal in authored surfaces |
+| [SR-150](SR-150.md) | Stakeholder-need cells stay in stakeholder language |
