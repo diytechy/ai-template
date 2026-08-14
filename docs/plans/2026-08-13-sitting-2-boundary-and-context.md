@@ -520,6 +520,50 @@ rather than opening a second one. (Correction ledger #2.)
 
 ---
 
+## 3R. The requirement FORM rule — RULED 2026-08-13s
+
+**The ruling, in the owner's words:**
+
+> **A single "shall" statement is permitted, and must be applied to interfaces
+> going to the respective component level. An "interface" can still be a bundle
+> as long as it's broken down or clearly stated in the component details.**
+
+Three consequences, stated so a builder can apply them per row:
+
+1. **One `shall` per requirement row — mandatory, at every tier.** This settles
+   the pack's §2.1 form question affirmatively (decision 9): the answer is
+   neither *waive* nor *split-these-six-now*, it is **the rule holds and is
+   applied as rows are re-tiered.**
+2. **The shall's subject is an interface at that row's own component level.**
+   The rule is *recursive*, which is what lets one sentence govern the whole
+   spine: an **SR** states a shall against a **boundary interface** (§1R.2's
+   B-01…B-07); an **LLR** states a shall against a **component-level
+   interface** (the depth-1 partition's seams). A row whose shall names
+   something below its own level is mis-tiered — which is exactly the finding
+   the re-tier will surface, row by row.
+3. **A bundle is a legitimate interface, IF it is broken down below.** An
+   interface may bundle others provided the decomposition *"is broken down or
+   clearly stated in the component details."*
+
+**This resolves the B-05 mega-node risk** flagged at decision 9. B-05 (the
+Template) is the largest bundle in the frame, and a single shall against it is
+**legitimate under this rule** — the obligation to discriminate moves to the
+component details, where the delivered capabilities (harness verdict, scaffold
+and MAPPING, unattended loop, generators, hook floor) are broken out. The
+bundle does not have to be pre-split at the SR tier to be honest; it has to be
+*decomposed somewhere and stated*.
+
+**The owner's acceptance of the cost, recorded because it governs how the
+re-tier is judged:** *"a decomposition will result in significant retiering,
+and I'm accepting that because most of it should just be shifting items around,
+but the repo should follow its own definition, and it should help to expose if
+there are some other issues in the way this system has been decomposed."* So
+the re-tier is **not** a defect-remediation program: it is the repo applying
+its own rule, and the *findings it exposes* are a deliverable of it, not a
+failure of it.
+
+---
+
 ## 4. THE DECISIONS
 
 Twelve. Items 1–8 are the boundary draft's §4, updated; items 9–12 are the
@@ -863,10 +907,14 @@ carries two structural problems worth ruling before it runs:
    obligation of the package with its own observable per §1R.6. Those are the
    old ports — no longer crossings, now *properties of the deliverable*.
 
-**What to rule here:** confirm the re-tier (vs. holding the SR tier as-is), and
-whether B-05 decomposes by delivered capability as above. The per-row census
-(WI-451 slice 1) is what sizes it honestly — **do not commit to a row count
-before that census runs.**
+**RESOLVED 2026-08-13s by the form rule (§3R).** The rule is *one shall per
+row, against an interface at that row's own component level; a bundle is
+legitimate if broken down in the component details.* So: the six rows are not
+split now — **the rule is applied as rows are re-tiered**, and B-05's
+bundle-ness is no longer a problem to design around (§3R). **Deferred to the
+re-tier:** the per-row execution. **Still owed at this sitting:** nothing on
+form; the census (WI-451 slice 1) sizes the program, and **no row count should
+be committed before it runs.**
 
 *Carried in full from the sitting pack §2.1, now archived. It was tabled to this
 sitting because splitting mints ids into SR text the retier may shuffle.*
@@ -954,13 +1002,38 @@ the re-tier means re-tagging afterwards anyway.
 
 **So the real call is sequencing, and it is cheap either way** — `LLR.Component`
 is a traced cell, so adopting or overturning opens **no re-attest window**
-(pack §3's "cheapest decision in the pack" finding still holds). Options:
-**(a)** ratify P5 now and re-tag the demoted rows as they land; **(b)** keep the
-warn-first provisional adoption and ratify after the re-tier, when the full row
-set is visible. Note WI-448 consumes the partition as import doctrine, so (b)
-delays it — and pack §3's own constraint finding says the partition and the
-common-module program *"must land together."* The full ranking, the four
-components as minted, and the accept-vs-overturn costs follow below unchanged.
+(pack §3's "cheapest decision in the pack" finding still holds).
+
+**RECOMMENDATION, ruled 2026-08-13s (the owner deferred to it): DEFER
+ratification — keep P5 provisionally adopted, warn-first, and do not touch it
+until the re-tier lands.** Three reasons:
+
+1. **The re-tier changes the input.** ~100 rows demoting SR→LLR arrive needing
+   `Component` values. Ratifying a partition over the pre-demotion row set, then
+   re-tagging, ratifies a picture that no longer exists.
+2. **It costs nothing to wait.** The tags are already applied (149
+   `LLR.Component` + 54 IF cells re-pointed; advisories 15 → 0). Warn-first
+   means the machinery already behaves as if adopted; ratification only removes
+   the "provisional" label.
+3. **It does not block the thing you actually care about.** Your stated goal for
+   the decomposition is *not duplicating behavior* — and pack §3's own
+   constraint finding says the duplication is in the **copies**, not the
+   boundaries: *one-home-per-behaviour is unsatisfiable by ANY partition of
+   today's tree; the 12 behaviours live as 39 (behaviour, home) pairs across 16
+   modules.* **WI-448 (the common-module program) is what deletes the copies**,
+   and it can proceed against the provisional tags — it needs to know which home
+   OWNS each behaviour, which the tagging already tells it. Deferring
+   ratification does not defer the anti-duplication work.
+
+**The one caveat to carry:** pack §3 says the partition and the common-module
+program *"must land together"* — read precisely, that means the partition must
+not be **ratified as final** while the copies still exist, because the straddle
+numbers it was chosen on still move. Deferring is therefore the *consistent*
+reading of that finding, not a violation of it. **Re-ratify after WI-448 and
+the re-tier, on re-derived numbers.**
+
+The full ranking, the four components as minted, and the accept-vs-overturn
+costs follow below unchanged.
 
 *Carried in full from the sitting pack §3, now archived, with three rescued
 caveats and four pointers appended.*
@@ -1234,6 +1307,49 @@ only if** you judge the authoring-time half adequately covered by
 `MAINTAINER` — a defensible call, but it should be made deliberately, and
 `MAINTAINER` asks a different question (*why does this exist?* vs *can a
 stranger use it?*).
+
+**RULED 2026-08-13s: `FIRST-RUN-ADOPTER` is KEPT** (fix its predicate, per the
+assessment above), and **aspect hats are ADDED for safety, legal and the other
+common aspects — OFF BY DEFAULT.**
+
+**How "off by default" works, and it needs NO schema change.** `hats.py`'s
+`REQUIRED_KEYS` are exactly `applies_when · asks · listens_for` and it
+**refuses any unknown key**, so there is no `enabled = false` to add without
+changing a shipped script, its template and its tests. But the grammar already
+provides the mechanism, deliberately: *"A FIELD THE COMPOSER DID NOT DECLARE
+SATISFIES NO CONDITION … a hat keyed on a fact this project does not yet record
+stays silent rather than firing on every decomposition."* So an aspect hat keyed
+on **its own tag** ships silent and switches on the moment a project tags work
+with it — opt-in by tagging, no dead code, no new field.
+
+**⚠ Distinguish this silence from a defect, in the roster itself.** These hats
+are silent **by design** (they wait for a tag). `FIRST-RUN-ADOPTER` is silent
+**by accident** (it keys on a `scope` field SN rows do not carry). A future
+reader must not have to guess which is which — say it in the roster's header
+comment.
+
+**Proposed rows (owner text to confirm; all ship OFF):**
+
+- **`SAFETY`** — `applies_when = 'tags contains "safety"'`
+  · *asks:* "How can this harm a person, property or the environment if it behaves incorrectly, and what requirement bounds that harm?"
+  · *listens_for:* "A hazardous outcome with no requirement naming its bound, or a mitigation asserted with nothing verifying it."
+- **`LEGAL`** — `applies_when = 'tags contains "legal"'`
+  · *asks:* "What licence, contract or regulation constrains this, and does the decomposition record which obligation each part discharges?"
+  · *listens_for:* "An obligation assumed to be someone else's, or a dependency whose licence terms nothing states."
+- **`DATA-PROTECTION`** — `applies_when = 'tags contains "personal-data"'`
+  · *asks:* "What personal data does this touch, on what basis, for how long, and who can reach it?"
+  · *listens_for:* "Personal data crossing a boundary with no stated basis, retention limit or access rule."
+- **`ACCESSIBILITY`** — `applies_when = 'tags contains "a11y"'`
+  · *asks:* "Can someone using a keyboard, a screen reader, or a low-vision setting complete this — and is that stated as a requirement rather than hoped for?"
+  · *listens_for:* "A surface whose acceptance names only how it looks to a sighted mouse user."
+- **`PERFORMANCE`** — `applies_when = 'tags contains "perf"'`
+  · *asks:* "What is the declared budget here, measured on what, and what happens when it is exceeded?"
+  · *listens_for:* "A speed or size claim with no declared budget, or a budget with no measurement behind it."
+
+*(`PERFORMANCE` pairs with the kit's existing NFR/perf layer and
+`performance-budgets.template.csv`; `ACCESSIBILITY` pairs with the two UX hats
+above — together they are the aspect set most likely to be switched on by an
+adopter with a UI.)*
 
 The existing six hats and the two honest limits follow below.
 

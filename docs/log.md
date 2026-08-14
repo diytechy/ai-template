@@ -36,6 +36,47 @@ applying that design to the kit itself.
 _Ratified or executed decisions only — the call, the alternatives passed over,
 why (one bullet each; cite ids)._
 
+- **2026-08-13s — The requirement FORM rule ruled; P5 ratification deferred;
+  aspect hats added off-by-default (owner, in session).** **The form rule,
+  verbatim:** *"A single 'shall' statement is permitted, and must be applied to
+  interfaces going to the respective component level. An 'interface' can still
+  be a bundle as long as it's broken down or clearly stated in the component
+  details."* Recorded as the brief's new **§3R** with three consequences: one
+  `shall` per row **mandatory at every tier** (settling pack §2.1 / decision 9
+  affirmatively — the rule holds and is applied AS ROWS ARE RE-TIERED, not as a
+  standalone split of six rows); the shall's subject is **an interface at that
+  row's own component level**, which makes the rule recursive (SR → boundary
+  interface; LLR → component-level interface) and makes "mis-tiered" a
+  detectable property; and **a bundle is a legitimate interface if broken down
+  in the component details** — which **resolves the B-05 mega-node risk**
+  flagged at 13q: a single shall against the Template is honest, with the
+  discrimination living in the component details. The owner's acceptance of the
+  cost is recorded as governing how the re-tier is judged: *"most of it should
+  just be shifting items around, but the repo should follow its own definition,
+  and it should help to expose if there are some other issues in the way this
+  system has been decomposed"* — so the findings the re-tier exposes are a
+  **deliverable of it, not a failure of it**. **Decision 10 — owner deferred to
+  the recommendation; ruled DEFER:** keep P5 provisionally adopted warn-first
+  and do not ratify until the re-tier lands, because the re-tier delivers ~100
+  rows needing `Component` values, waiting costs nothing (tags already applied,
+  advisories 15 → 0), and it does not delay the anti-duplication goal — pack
+  §3's constraint finding puts the violation in the **copies** (39
+  behaviour-home pairs across 16 modules), so **WI-448 can proceed against the
+  provisional tags**. Deferring is the consistent reading of *"the partition and
+  the common-module program must land together"*, not a violation of it:
+  re-ratify after WI-448 and the re-tier on re-derived numbers. **Decision 11 —
+  `FIRST-RUN-ADOPTER` KEPT** (predicate to be fixed), and **aspect hats ADDED
+  off by default**: `SAFETY`, `LEGAL`, `DATA-PROTECTION`, `ACCESSIBILITY`,
+  `PERFORMANCE`. Mechanism finding: `hats.py` **refuses unknown keys**
+  (`REQUIRED_KEYS` is exactly `applies_when · asks · listens_for`), so there is
+  no `enabled` field to add without changing a shipped script, its template and
+  its tests — but the grammar's own rule (*"a field the composer did not declare
+  satisfies no condition"*) already provides opt-in-by-tag, so each aspect hat
+  keys on its own tag and ships silent. Recorded with it: the roster must
+  **distinguish silence-by-design (these) from silence-by-defect**
+  (`FIRST-RUN-ADOPTER`'s dead `scope` clauses) in its header, or a future reader
+  cannot tell them apart.
+
 - **2026-08-13r — The hats roster is determined at `DevStg-Boundary` (owner,
   in session); `FIRST-RUN-ADOPTER`'s necessity raised and assessed.** Ruled:
   hats are settled at the boundary rung, with the entities rather than after
