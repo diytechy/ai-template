@@ -18,20 +18,18 @@ narrated is in those homes.
   decisions ruled** (`2026-08-13l`…`v`); it ruled the frame and deliberately
   signed no spine. The rulings live in
   [plans/2026-08-13-sitting-2-boundary-and-context.md](plans/2026-08-13-sitting-2-boundary-and-context.md)
-  (§1R the frame · §3R the form rule · §4.0 the closed-decision ledger). What
-  executes next, in order: **mint `external.toml`** (entities +
-  `[boundary.BIF-###]` + relationships, an approval element from its first
-  commit) and slim `interfaces.toml`, retiring `stability` for the approval
-  schema — the schema row carries the two sharp hazards (the
-  `boundary_incomplete` re-key must land in the same commit; the SR-side
-  interface-reference field must be minted before SN-037's checker can exist)
-  — then **re-tier the SR registry against the 6 crossings**: census first,
-  **no row count committed before it**; every demotion needs a parent SR;
-  B-05 decomposes by delivered capability; the one-shall rule applies as a
-  **guideline with recorded waivers** (`2026-08-13v`). The findings the
-  campaign exposes are **a deliverable of it, not a failure of it** (owner,
-  13s). The rows are in [work/queued/](work/queued/); the generated frontier
-  below names them in build order.
+  (§1R the frame · §3R the form rule · §4.0 the closed-decision ledger). The
+  schema row is **LANDED** (2026-08-14: `external.toml` minted,
+  `interfaces.toml` slimmed to the approval schema, both sharp hazards held
+  in-commit) and the re-tier's slice-1 **census is COMPLETE on its open lane**
+  (all 148 SRs classified against the 6 crossings, demotion sized; the census
+  doc rides the lane under [work/active/](work/active/)). What executes next:
+  **sitting 3 ratifies the census before any row is edited**; every demotion
+  needs a parent SR; B-05 decomposes by delivered capability; the one-shall
+  rule applies as a **guideline with recorded waivers** (`2026-08-13v`). The
+  findings the campaign exposes are **a deliverable of it, not a failure of
+  it** (owner, 13s). The remaining rows are in [work/queued/](work/queued/);
+  the generated frontier below names them in build order.
 - **The amendment window closes at SITTING 3, not before.** `drafts=27
   modified=51 uncovered=8`, gate `DevBar-Reqs`, stage `DevStg-Boundary` (1/8)
   — the snapshot below. The window stays open **deliberately** through the
@@ -44,8 +42,10 @@ narrated is in those homes.
   program** (checklist archived at
   [archive/plans/2026-08-11-status-ladder-migration.md](archive/plans/2026-08-11-status-ladder-migration.md);
   figures stale — re-derive). Three items re-land as execution reaches them:
-  decision 6's crossing ownership (post-schema), the human-agent entity call,
-  and `check_flows`'s Runtime-flows obligation when `architecture.md` retires.
+  decision 6's crossing ownership (the schema is landed — sitting-3 ready),
+  the human-agent entity call, and `check_flows`'s Runtime-flows obligation
+  (moved with the flows to `docs/runtime-flows.md` on the retirement lane —
+  never lapsed; re-check at that lane's merge).
 - **Standing owner acts the loop will not make:** merge-to-main + push for
   `dualplan-routing-fix`, `guardrails-fable-method`, `ConcurrencyTrainRewrite`
   and this branch (`push = "human"`). Known residue, kept deliberately: the
