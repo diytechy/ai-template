@@ -127,7 +127,7 @@ def test_wide_views_carry_horizontal_scroll_affordance(tmp_path):
     carries a narrow-width scroll cue (SR-054 no truncation-without-affordance); no
     bare overflow wrapper survives."""
     make_repo(tmp_path)
-    # architecture.md exercises the module-map table's scroll wrapper too, not just
+    # a source module exercises the module-map table's scroll wrapper too, not just
     # the icicle / DAG SVG views.
     write_arch_src(tmp_path)
     assert gen(tmp_path).returncode == 0

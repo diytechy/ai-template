@@ -197,6 +197,19 @@ def test_symbols_mode_unaffected_by_files_addition(two_module_src):
     assert "--mode files" not in out  # not the fallback note
 
 
+def _map_doc(scaffold):
+    """A routed --doc target with the marker pair (WI-455: no scaffolded
+    docs/architecture.md exists, so the CLI is exercised the way an adopter
+    routes the map — an explicit --doc)."""
+    doc = scaffold / "docs" / "code-map.md"
+    doc.write_text(
+        "# Map\n<!-- BEGIN GENERATED MODULE MAP -->\n"
+        "<!-- END GENERATED MODULE MAP -->\n",
+        encoding="utf-8",
+    )
+    return "docs/code-map.md"
+
+
 def test_files_mode_end_to_end_and_staleness(scaffold):
     from conftest import run_py
 
@@ -205,19 +218,24 @@ def test_files_mode_end_to_end_and_staleness(scaffold):
     (src / "app.ts").write_text(
         "// The TS entry point.\nexport const x = 1\n", encoding="utf-8"
     )
-    proc = run_py(["scripts/gen_arch_map.py", "--mode", "files"], cwd=scaffold)
-    assert proc.returncode == 0, proc.stdout + proc.stderr
-    arch = (scaffold / "docs" / "architecture.md").read_text(encoding="utf-8")
-    assert "src/app.ts" in arch and "The TS entry point." in arch
-    # freshly generated ⇒ --check is green (the arch-map step passes)
+    doc = _map_doc(scaffold)
     proc = run_py(
-        ["scripts/gen_arch_map.py", "--mode", "files", "--check"], cwd=scaffold
+        ["scripts/gen_arch_map.py", "--mode", "files", "--doc", doc], cwd=scaffold
+    )
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    arch = (scaffold / doc).read_text(encoding="utf-8")
+    assert "src/app.ts" in arch and "The TS entry point." in arch
+    # freshly generated ⇒ --check is green
+    proc = run_py(
+        ["scripts/gen_arch_map.py", "--mode", "files", "--doc", doc, "--check"],
+        cwd=scaffold,
     )
     assert proc.returncode == 0, proc.stdout + proc.stderr
     # add a file ⇒ stale ⇒ --check fails (the drift lever works for a TS/Go repo)
     (src / "util.go").write_text("// Helpers.\npackage util\n", encoding="utf-8")
     proc = run_py(
-        ["scripts/gen_arch_map.py", "--mode", "files", "--check"], cwd=scaffold
+        ["scripts/gen_arch_map.py", "--mode", "files", "--doc", doc, "--check"],
+        cwd=scaffold,
     )
     assert proc.returncode == 1
     assert "STALE" in proc.stderr
@@ -227,7 +245,9 @@ def test_files_mode_rejects_flow(scaffold):
     from conftest import run_py
 
     proc = run_py(
-        ["scripts/gen_arch_map.py", "--mode", "files", "--flow", "run"], cwd=scaffold
+        ["scripts/gen_arch_map.py", "--mode", "files", "--flow", "run",
+         "--doc", _map_doc(scaffold)],
+        cwd=scaffold,
     )
     assert proc.returncode != 0
     assert "flow" in (proc.stdout + proc.stderr).lower()
@@ -238,7 +258,10 @@ def test_files_mode_zero_source_warns_without_self_reference(scaffold):
     # user to switch to the mode they're already in.
     from conftest import run_py
 
-    proc = run_py(["scripts/gen_arch_map.py", "--mode", "files"], cwd=scaffold)
+    proc = run_py(
+        ["scripts/gen_arch_map.py", "--mode", "files", "--doc", _map_doc(scaffold)],
+        cwd=scaffold,
+    )
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "no source scanned" in proc.stderr
     assert "--mode files" not in proc.stderr
@@ -251,7 +274,11 @@ def test_zero_source_scan_warns_loudly(scaffold):
     # points at the porting contract (ADOPTING.md).
     from conftest import run_py
 
-    proc = run_py(["scripts/gen_arch_map.py", "--check"], cwd=scaffold)
+    doc = _map_doc(scaffold)
+    run_py(["scripts/gen_arch_map.py", "--doc", doc], cwd=scaffold)
+    proc = run_py(
+        ["scripts/gen_arch_map.py", "--doc", doc, "--check"], cwd=scaffold
+    )
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "no source scanned" in proc.stderr
     assert "ADOPTING.md" in proc.stderr
@@ -323,7 +350,8 @@ def test_zero_modules_from_a_hidden_only_src_warns(scaffold):
 
     # A fresh scaffold's src holds only .gitkeep — empty by design, so the
     # sharper warning must not cry wolf (a dot-prefixed FILE is not the shape).
-    proc = run_py(["scripts/gen_arch_map.py"], cwd=scaffold)
+    doc = _map_doc(scaffold)
+    proc = run_py(["scripts/gen_arch_map.py", "--doc", doc], cwd=scaffold)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "no source scanned" in proc.stderr
     assert "skipped as hidden" not in proc.stderr
@@ -332,7 +360,7 @@ def test_zero_modules_from_a_hidden_only_src_warns(scaffold):
     (scaffold / "src" / ".vendor" / "app.py").write_text(
         '"""App."""\n', encoding="utf-8"
     )
-    proc = run_py(["scripts/gen_arch_map.py"], cwd=scaffold)
+    proc = run_py(["scripts/gen_arch_map.py", "--doc", doc], cwd=scaffold)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "skipped as hidden" in proc.stderr
     assert "src/.vendor" in proc.stderr  # names the directory, not just the root

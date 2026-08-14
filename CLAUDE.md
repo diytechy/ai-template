@@ -108,8 +108,9 @@ that easier to achieve in a real project — or get out of the way.
 - **The kit's own `SN→SR→LLR→TC` spine** (Thread 47 self-adoption; the derived bar is [`docs/gate`](docs/gate) — currently re-opened to *DevStg-Reqs* for the 2026-08 boundary/re-tier program):
   [`docs/requirements/stakeholder-needs.toml`](docs/requirements/stakeholder-needs.toml)
   + `system-requirements.toml` + `low-level-requirements.toml` +
-  `docs/test/test-cases.toml` + [`docs/architecture.md`](docs/architecture.md)
-  (one-page + the DevStg-Tests Runtime flows) + `docs/gate` + `docs/stack.ini` +
+  `docs/test/test-cases.toml` + [`docs/runtime-flows.md`](docs/runtime-flows.md)
+  (the authored DevStg-Tests Runtime flows; the structural architecture is
+  DERIVED into the dashboard — WI-455) + `docs/gate` + `docs/stack.ini` +
   `docs/log.md` + the `docs/work/` WI spec registry + root `PROJECT_STATE.html`
   (the **Thread 52 trajectory layer, dogfooded** — the kit's own work-item DAG +
   its generated, freshness-gated dashboard; regenerate with

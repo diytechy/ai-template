@@ -535,7 +535,6 @@ keeps only the steps whose `gates` set contains the resolved gate.
 | `traceability` | **DevStg-Tests, DevStg-Impl** | process | `trace.py --strict --no-placeholders --html` |
 | `design-flows` | **DevStg-Tests, DevStg-Impl** | process | |
 | `trajectory` | **DevStg-Tests, DevStg-Impl** | process | gains `--strict` here |
-| `arch-map` | **DevStg-Impl** | process | |
 | `perf-budgets` | **DevStg-Impl** | process | |
 | declared `[step:*]` | per section | product | this repo declares `doc-refs`, `figures`, `module-coverage`, all at **DevStg-Impl** |
 
@@ -609,7 +608,7 @@ silently not enforcing the floors.
 
 Generated-artifact freshness is the **trunk lane's** job. On a claimed work
 branch — one with a `docs/work/active/<branch>/` spec directory — the steps in
-`_TRUNK_FRESHNESS_STEPS` (`derived-gate`, `arch-map`, `trajectory-map`,
+`_TRUNK_FRESHNESS_STEPS` (`derived-gate`, `trajectory-map`,
 `status-map`, `open-items`, `okf`, `ratify-fresh`) are reported SKIP with their
 reason instead of running. Gating a branch on freshness would red every branch
 for drift it is forbidden to fix.

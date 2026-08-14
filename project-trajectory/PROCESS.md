@@ -59,7 +59,7 @@ hats' shared context.
 | Stakeholder | `requirements/stakeholder-needs.toml` (SN-###), failure-mode expectations included |
 | UX / Docs | documentation quality, quick-reference, usability findings |
 | System Engineer | `requirements/system-requirements.toml` (SR-###); **gatekeeper** |
-| Software Engineer | `requirements/low-level-requirements.toml` (LLR-###) + code + `architecture.md` |
+| Software Engineer | `requirements/low-level-requirements.toml` (LLR-###) + code + `runtime-flows.md` |
 | Test Engineer | `test/test-cases.toml` (TC-###) + the check harness + coverage/trace reports |
 
 A hat only edits artifacts it owns; to change another, file a finding addressed
@@ -313,17 +313,17 @@ map") directly improves the map. Reference generator: `scripts/gen_arch_map.py`
 ts-morph version) writing into the **same marker block** — that block is the only
 contract.
 
-**Routing (where the map lands).** `gen_arch_map.py --doc` is repeatable; put the
-marker pair wherever agents read and the generator keeps it fresh — *full map in
-`architecture.md`, the agent guide links to it* (one home, one hop; the default
-for large codebases) or *embedded directly in `AGENTS.md`/`CLAUDE.md`* (zero
+**Routing (where the map lands).** The map's ONE rendered home is the
+dashboard's "How (SW architecture)" tab, derived live from the source AST —
+no committed markdown copy to rot. `gen_arch_map.py --doc` (repeatable) can
+ALSO splice it *directly into `AGENTS.md`/`CLAUDE.md`* (zero
 hops, but the guide's diff churns with the code; good when the map fits on a
-screen). Either way `--check` fails the gate if stale, so it never rots. Don't
+screen); there `--check` fails the gate if stale, so it never rots. Don't
 hand-maintain a code map.
 
-**The committed map is a contract, not a search index.** `gen_arch_map.py`
-produces a **committed, diff-reviewable, drift-gated** artifact — part of the
-source of truth, read to learn the code's *intended* shape. Query-time
+**The derived map is a contract, not a search index.** The AST inventory is
+**derived, deterministic and drift-proof** — the dashboard and the checks read
+the source itself, learning the code's *actual* shape. Query-time
 **semantic-retrieval tools** (LSP-backed code-graph servers, Serena-style MCP
 indexes) are a *different* thing: not committed, language-server-dependent,
 rebuilt on demand. They are a legitimate **optional downstream accelerator** for
@@ -334,8 +334,8 @@ server/LSP dependency). Use one if it helps; keep it off the required path.
 **Generated high-level flow.** `gen_arch_map.py --flow <entry>` emits an
 entry/orchestrator function's ordered internal calls (each with the callee's
 summary) into a `GENERATED FLOW` marker block — a drift-proof rendering of the
-"Thin orchestrators" rule. Put the markers in `architecture.md` (and/or the agent
-file) and add `--flow` to the harness's map step. It complements, not replaces,
+"Thin orchestrators" rule. Put the markers in the agent
+file if you route a map there. It complements, not replaces,
 the hand-written flow overview.
 
 **Design-time runtime flows (authored at DevStg-Tests, checked).** Everything above is
@@ -359,9 +359,9 @@ GitHub/GitLab/Gitea and the VS Code preview (offline-capable), so no diagram
 toolchain is required and the source diffs like prose. Hand-written diagrams (the
 one-page flow, sequence diagrams) follow the same anti-duplication rule: reference
 IDs, don't restate requirements. The module **dependency diagram is generated** —
-`gen_arch_map.py` splices a Mermaid graph of the internal imports into the
-`GENERATED DEPENDENCY DIAGRAM` markers wherever a routed doc carries them
-(`architecture.md` ships the pair), covered by the same `--check`, so the layering
+the dashboard renders the internal-import graph live, and `gen_arch_map.py`
+splices a Mermaid twin into the `GENERATED DEPENDENCY DIAGRAM` markers
+wherever a routed doc carries them, covered by its `--check`, so the layering
 picture can't drift. Don't commit exported diagram images; the text block is the
 source. A project that genuinely outgrows Mermaid (PlantUML/C4/BPMN, AsciiDoc
 sources) wires a Kroki/PlantUML toolchain as *project* tooling — deliberately
@@ -900,8 +900,8 @@ retried past without understanding is a landmine re-armed.
 `scripts/check` (and the CI workflow) must run, and fail nonzero on any failure:
 format check · linter (warnings as errors) · unit + integration tests · coverage
 (≥ threshold) · the traceability check (0 orphans at the derived gate). Emit the
-coverage + traceability reports as artifacts. Prefer a generated architecture
-map step so `architecture.md` stays current.
+coverage + traceability reports as artifacts. The architecture views are
+derived from source + registries, so no map step is owed.
 
 **The derived gate is cached, and CI reads it.** The gate the repo must next
 pass lives on the first non-comment line of `docs/gate` — now **generated** by
@@ -1053,11 +1053,11 @@ pip needed to run them):
   so it ships like the perf *meters*: **opt-in and warn-first** (exit 0 unless
   `--strict`), **not** wired into `check.py`'s required floor. A Python project runs
   it to inform the DevStg-Impl Inspection; a non-Python stack swaps or drops it.
-- `scripts/gen_arch_map.py` — regenerates the module/function map in
-  `architecture.md` from the source tree (and surfaces `Implements:` back-links),
-  plus the Mermaid **dependency diagram** between its markers; `--check` fails
-  when the doc is stale, so neither can drift. `--strict-parse` additionally
-  fails on any module that won't parse (the DevStg-Impl run passes it).
+- `scripts/gen_arch_map.py` — the module/function AST walk the derived
+  architecture reads (`scan_inventory`: summaries, `Implements:` back-links,
+  imports, seams); its CLI splices the rendered map + Mermaid **dependency
+  diagram** into opt-in `--doc` marker blocks, where `--check` fails on drift
+  and `--strict-parse` fails on any module that won't parse.
 - `scripts/gen_release_checklist.py` — generates the human **release checklist**
   for `DevStg-Release` from the registries: every Demonstration/Manual/Inspection SR,
   every Release-tier/manual TC, the SN acceptance intents, and provided

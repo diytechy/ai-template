@@ -5180,7 +5180,7 @@ LLR per `Test`-verified SR — the `trace.py` orphan floor), **35 TC**
 SR-033/034/035 are `Inspection`/`Analysis` (release-checklist has no dedicated
 test yet; stdlib-only + stack-agnostic/portability are inspected, not executed) —
 legitimately LLR-exempt, each still carrying a TC. Every SN-001..022 is cited by
-≥1 SR. Authored [`docs/architecture.md`](architecture.md) with the **G2 Runtime
+≥1 SR. Authored [`docs/architecture.md`](runtime-flows.md) with the **G2 Runtime
 flows** (3 Mermaid sequence diagrams — coordinator, scaffold/re-sync, secrets
 floor — citing 24 real SR/LLR ids) that `check_flows.py` requires at G2
 (PROCESS.md §3); the *generated* module map stays deferred to phase 6.
@@ -16229,7 +16229,7 @@ Merge-to-`main` stays owner (push-policy: human) — nothing pushed.
 **Session type:** build (`docs`, strong; spine re-attestation). Built + closed the
 requirements-change WI filed above. The spine + current-state docs moved 3.8 → 3.11
 to match the floor already shipped: **SN-011 · SR-034 · SR-035 · TC-035** +
-[architecture.md](architecture.md) + [status.md](status.md) Scope + the WI-064
+[architecture.md](runtime-flows.md) + [status.md](status.md) Scope + the WI-064
 build-note. **SR-035's AC narrative rewritten** to match `test.yml`'s actual matrix
 — `{ubuntu,windows,macos} × {3.11, 3.x}` with **macOS+3.11 excluded** as a
 redundant-coverage call (M-27), *not* the retired arm64-availability story (3.11
@@ -24971,7 +24971,7 @@ the rule from the single scan it governs.
 
 **Budgeted files:** none touched (`AGENTS.template.md`, `PROCESS.md`,
 `PROCESS_OPTIONS.md` all unchanged — 0 bytes). No spine amendment, no new
-module. [`../architecture.md`](architecture.md)'s generated module map was
+module. [`../architecture.md`](../PROJECT_STATE.html)'s generated module map was
 regenerated for the two new public symbols (a 3-line diff, confined to the
 `check_trajectory` block).
 

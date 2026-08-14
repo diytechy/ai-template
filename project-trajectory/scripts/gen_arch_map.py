@@ -1,12 +1,16 @@
 #!/usr/bin/env python3
-"""Generate the module/function map for `architecture.md` from the source tree.
+"""The module/function AST walk behind the DERIVED architecture (WI-455).
 
 Stack-agnostic kit, **Python reference implementation** (stdlib only — uses
-`ast`, no pip installs). It keeps `architecture.md` honest: the hand-written
-overview stays, and everything between the GENERATED markers is regenerated
-here so it cannot drift from the code. Swap this script for an equivalent in
-your stack (e.g. `tsc`/ts-morph for TypeScript, `go doc` for Go) — the contract
-is only the marker block it fills.
+`ast`, no pip installs). `scan_inventory()` is the ONE walk the derived
+architecture reads — the dashboard's How-SW tab, check_trajectory's
+coverage/containment rules and check_doc_refs' sym: oracle all consume it
+live, so the picture cannot drift from the code. The CLI additionally splices
+the RENDERED map into opt-in `--doc` marker blocks (an agent guide, a doc you
+keep); swap it for an equivalent in your stack (e.g. `tsc`/ts-morph for
+TypeScript, `go doc` for Go) — there the contract is only the marker block it
+fills. (The scaffolded `docs/architecture.md` default target retired at
+WI-455, sitting-2 decision 8.)
 
 What it emits, per module (one section each):
     - the module's one-line **summary** (its module docstring) — so an agent
@@ -24,8 +28,8 @@ from your docstrings/headers, which is one more reason to comment for humans
 (see AGENTS.template.md "Comment for humans — and the map").
 
 Routing: `--doc` is repeatable, so the same generated block can be spliced into
-`docs/architecture.md` AND the agent's primary file (`AGENTS.md` / `CLAUDE.md`) —
-wherever the marker pair lives. Embed it where agents actually read.
+several files — wherever the marker pair lives (`AGENTS.md` / `CLAUDE.md`, a
+kept doc). Embed it where agents actually read.
 
 Program flow (`--flow ENTRY`): emit the **ordered internal calls** an entry/
 orchestrator function makes, each with the callee's one-line summary, into a
@@ -37,7 +41,7 @@ that.)
 
 Dependency diagram: the same internal imports the map lists, rendered as a
 Mermaid `graph LR` and spliced into the DEPENDENCY DIAGRAM markers wherever a
---doc has them (architecture.md ships with the pair). Output is plain text —
+--doc has them. Output is plain text —
 GitHub/GitLab and the VS Code Markdown preview render mermaid fences natively,
 so the kit needs no diagram toolchain — and layering violations (e.g. an arrow
 from `common` into `engine`) are visible at a glance.
@@ -60,13 +64,13 @@ tokens scanned (default `#`, `//`, `--`). `--flow` and the dependency diagram
 are symbol-mode only (they need a parser).
 
 Usage:
-    python scripts/gen_arch_map.py [--src SRC ...] [--doc FILE ...] [--flow ENTRY]
+    python scripts/gen_arch_map.py --doc FILE [--src SRC ...] [--flow ENTRY]
                                    [--mode symbols|files] [--comment-prefix TOK ...]
                                    [--check] [--strict-parse]
 
     --src            One or more source roots to scan (default: src). Repeatable.
-    --doc            File(s) to update in place (default: docs/architecture.md).
-                     Repeatable — each must contain the MODULE MAP marker pair.
+    --doc            File(s) to update in place (required; repeatable) — each
+                     must contain the MODULE MAP marker pair.
     --flow           Entry function (e.g. `run` or `module:run`) whose call
                      sequence is spliced into the FLOW markers of any --doc.
     --mode           `symbols` (default; Python-AST symbol map + diagram/flow) or
@@ -805,8 +809,9 @@ def main():
         "--doc",
         action="append",
         default=None,
-        help="file(s) to update; repeatable (default: docs/architecture.md). "
-        "Point at AGENTS.md / CLAUDE.md too to route the map there.",
+        help="file(s) to update; repeatable, REQUIRED (the scaffolded "
+        "docs/architecture.md default retired at WI-455). Point at AGENTS.md "
+        "/ CLAUDE.md to route the map where agents read.",
     )
     ap.add_argument(
         "--flow",
@@ -848,7 +853,13 @@ def main():
     args = ap.parse_args()
 
     src_roots = args.src or ["src"]
-    docs = [Path(d) for d in (args.doc or ["docs/architecture.md"])]
+    if not args.doc:
+        raise SystemExit(
+            "gen_arch_map: pass --doc <file carrying the MODULE MAP marker "
+            "pair> — the scaffolded docs/architecture.md default retired at "
+            "WI-455 (the derived architecture reads scan_inventory directly)"
+        )
+    docs = [Path(d) for d in args.doc]
     if args.mode == "files" and args.flow:
         raise SystemExit("--flow needs a parser; it is not available in --mode files")
 

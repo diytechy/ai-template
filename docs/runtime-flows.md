@@ -9,8 +9,8 @@ architecture record: the **structural** half (module map, import graph,
 declared `IF-###` seams, components) is *derived* from the registries and the
 source tree and rendered in [`PROJECT_STATE.html`](../PROJECT_STATE.html)'s
 "How (SW architecture)" tab, which also embeds these flows (owner ruling
-2026-08-13u, sitting-2 decision 8 — the retired hand-authored
-`docs/architecture.md` is this doc's ancestor). The requirement spine it cites
+2026-08-13u, sitting-2 decision 8 — the retired hand-authored architecture
+doc is this doc's ancestor). The requirement spine it cites
 lives in [`requirements/`](requirements/) + [`test/`](test/).
 
 ## Shape of the product

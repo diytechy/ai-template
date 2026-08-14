@@ -142,7 +142,7 @@ syncing them**:
 
 | Home | Technology | Pinned to |
 |---|---|---|
-| `docs/architecture.md:1316` (Flow 4) | mermaid `sequenceDiagram` | registry ids, via `check_flows.ID_RE` |
+| `docs/runtime-flows.md` Flow 4 (measured at architecture.md:1316, pre-WI-455 move) | mermaid `sequenceDiagram` | registry ids, via `check_flows.ID_RE` |
 | `docs/concurrency-v2.md:236` and `:464` | mermaid `flowchart TD` | nothing |
 | `traj_panels._station_svg` | hand-built SVG | Python constants |
 

@@ -514,7 +514,7 @@ def test_ten_module_inventory_is_vacuous(tmp_path):
 
 
 def test_absent_inventory_top_view_is_vacuous(tmp_path):
-    # No architecture.md at all -> nothing to bound (pre-arch-map / files-mode).
+    # No source tree at all -> nothing to bound (pre-code / files-mode).
     (tmp_path / "docs").mkdir(parents=True, exist_ok=True)
     proc = run_traj(tmp_path, "--strict")
     assert proc.returncode == 0, proc.stdout + proc.stderr

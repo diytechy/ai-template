@@ -112,3 +112,9 @@ prompts/dual-plan-planner.template.md — see the `prompts/` line above (kit hom
 prompts/dual-plan-critic.template.md — see the `prompts/` line above (kit home: project-trajectory/prompts/dual-plan-critic.template.md).
 prompts/dual-plan-arbiter.template.md — see the `prompts/` line above (kit home: project-trajectory/prompts/dual-plan-arbiter.template.md).
 docs/archive/last_approved/README.md — LIFECYCLE: the `last_approved` snapshot's prose stamp, scaffolded into every new project by bootstrap's MAPPING (owner directive 2026-08-15; docs/plans/2026-08-15-baseline-snapshot-design.md §A3). THIS repo has not signed yet, so the directory does not exist here: `copy_live` refuses to CREATE it, and the first snapshot rides the owner's signing commit via `intake.py snapshot --seed` — after every pending row has been ruled, so nothing blesses text nobody read. Marked LIFECYCLE because its presence is the ordinary post-signing state; the moment this repo signs, the path materializes and stays.
+
+# WI-455 (sitting-2 decision 8, owner 2026-08-13u): the architecture way-station
+# retired. The authored narrative (Shape of the product + Runtime flows) moved
+# to docs/runtime-flows.md; the structure derives live from the registries +
+# source AST into PROJECT_STATE.html. Records citing the old path stay verbatim.
+docs/architecture.md — retired at WI-455; narrative moved to docs/runtime-flows.md, structure derives into PROJECT_STATE.html

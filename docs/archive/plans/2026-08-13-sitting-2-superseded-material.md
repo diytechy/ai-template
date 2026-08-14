@@ -24,7 +24,7 @@ here is an instruction.
 
 **The system** = the kit: `project-trajectory/` scripts + hooks + templates,
 verified by `tests/`, self-applied to this repo
-([`../architecture.md`](../../architecture.md), "Shape of the product").
+([`../architecture.md`](../../runtime-flows.md), "Shape of the product").
 
 **How to read the table.** **One row per crossing** — each row is one directed
 seam and becomes exactly one `IF-###`, which is the shape `PROCESS.md` §8

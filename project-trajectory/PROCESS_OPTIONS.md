@@ -38,7 +38,7 @@ required for the minimum profile). Rows are in document order; each maps to the
 | Commit identity & privacy | you must keep a real, contactable identity out of published commits | `docs/process.toml` `[policies] privacy_check` + commit-identity config |
 | §8 purchased parts | the product incorporates purchased/external parts it buys rather than builds | a parts registry (`PB`/`PART`) |
 | Binary assets | the project ships unavoidably-binary deliverables (art, audio, video) | an assets registry (provenance / license / hash) |
-| Intra-repo interfaces & the architecture graph | more than one module, and you want the arch view to show how they connect | an `IF-###` seam registry + the `architecture.md` graph |
+| Intra-repo interfaces & the architecture graph | more than one module, and you want the arch view to show how they connect | an `IF-###` seam registry + the dashboard How-SW graph |
 | Research track & knowledge packs | findings must outlive their research session, or a spec rests on a load-bearing unknown | `WI` research rows + `docs/knowledge/` packs |
 | Component layer | you want a durable home for set-grained knowledge & lifecycle (a subsystem, an assembly) | a `CMP` component registry |
 | §9 NFR checklist | deciding which non-functional concerns a project must consider at DevStg-Reqs | an NFR checklist |
