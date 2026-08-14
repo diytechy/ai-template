@@ -104,9 +104,9 @@ math, so they are ruled BEFORE slice 2 dispatches):
 
 **Movement order for the sitting:** ratify the census + rule the two calls
 (and §2.2's TC-159 pick) → dispatch slice 2 under the WI-444 bar → reconvene
-on §2's signing surface once slice 2's ledger exists. §2.1's row lists are
-2026-08-13 figures and now also exclude the three WI-454 mints — regenerate,
-as that section already instructs.
+on §2's signing surface once slice 2's ledger exists. §2.1 is re-measured
+2026-08-14 (the WI-454 mints included, the census's slated exits as its last
+column) — regenerate once more at convening, per its own rule.
 
 ---
 
@@ -144,19 +144,21 @@ untouched cells. A diff says what moved; an attestation asks whether the evidenc
 still verifies what the row now *says*. It cannot be honestly reproduced in
 markdown, which is why it stays a pointer.
 
-### 2.1 The window as of assembly — **regenerate before the sitting**
+### 2.1 The window — **re-measured 2026-08-14; regenerate again before the sitting**
 
-Measured 2026-08-13 against the live registries. **These lists will have moved by
-the time this sitting runs** — the re-tier campaign touches most of the SR
-registry (census-sized, plausibly ~100 demotions). Re-derive; do not sign from
-this table.
+Measured 2026-08-14 against the live registries (assembly figures of
+2026-08-13 superseded). **The last column is the census's slated exits** —
+rows that will LEAVE the tier once §0.2's rulings execute in slice 2; the
+status columns describe today's registry, the exits column describes the
+pending structural change, and signing happens only after the exits are real
+rows-moved. Re-derive at convening; do not sign from this table.
 
-| Tier | Total | Verified | Modified | Draft | Planned |
-|---|---|---|---|---|---|
-| SN | 27 | — | — | 0 | — |
-| SR | 148 | 105 | 30 | 0 | 13 |
-| LLR | 151 | 122 | 14 | 14 | 1 |
-| TC | 148 | 127 | 7 | 13 | 1 |
+| Tier | Total | Verified | Modified | Draft | Planned | Slated exit (census · pending §0.2) |
+|---|---|---|---|---|---|---|
+| SN | 27 | — | — | 0 | — | — |
+| SR | 149 | 105 | 30 | 0 | 14 | **−26 deleted** (D-4, if ruled) · **−73 demoted** to LLR → ~50 SRs remain |
+| LLR | 152 | 122 | 14 | 15 | 1 | +~73 inbound demotion mints (plus parent-SR joins) |
+| TC | 149 | 127 | 7 | 14 | 1 | re-points only (demoted rows' TCs follow their LLRs; TC-099 retires with the tombstones if D-4 is ruled) |
 
 *(The SN registry has no `status` field at all — its fields are `acceptance ·
 kind · need · priority · why`, and maturity is `kind`. All 27 rows are
@@ -173,16 +175,19 @@ LLR-118, LLR-132, LLR-136, LLR-140, LLR-144, LLR-145, LLR-149, LLR-150, LLR-153.
 **The 7 `Modified` TCs** — TC-031, TC-034, TC-084, TC-085, TC-098, TC-138,
 TC-147.
 
-**The 14 `Draft` LLRs to ratify** — LLR-155, LLR-156, LLR-157, LLR-158, LLR-159,
-LLR-160, LLR-161, LLR-162, LLR-163, LLR-164, LLR-166, LLR-167, LLR-168, LLR-169.
+**The 15 `Draft` LLRs to ratify** — LLR-155, LLR-156, LLR-157, LLR-158, LLR-159,
+LLR-160, LLR-161, LLR-162, LLR-163, LLR-164, LLR-166, LLR-167, LLR-168, LLR-169,
+and **LLR-170** (the need-form checker, minted 2026-08-14).
 
-**The 13 `Draft` TCs to ratify** — TC-150, TC-151, TC-152, TC-153, TC-154,
-TC-155, TC-156, TC-157, TC-158, TC-159, TC-161, TC-162, TC-163.
+**The 14 `Draft` TCs to ratify** — TC-150, TC-151, TC-152, TC-153, TC-154,
+TC-155, TC-156, TC-157, TC-158, TC-159, TC-161, TC-162, TC-163, and **TC-164**
+(the need-form dirty-cell case, minted 2026-08-14).
 
-That is the **LLR/TC draft ratification** sitting 1 deferred: **14 + 13 = 27
-rows**, and it reconciles exactly to `drafts=27` in the current basis line.
-The 13 `Planned` SRs (SR-137…SR-149) and the two `Planned` rows LLR-165 /
-TC-160 were lifted at sitting 1 and are not in this window.
+That is the **LLR/TC draft ratification** sitting 1 deferred plus the two
+2026-08-14 mints: **15 + 14 = 29 rows**, reconciling exactly to `drafts=29`
+in the current basis line. The 14 `Planned` SRs — SR-137…SR-149 lifted at
+sitting 1, plus **SR-150** (the need-form checker SR, minted 2026-08-14) —
+and the two `Planned` rows LLR-165 / TC-160 are not in this window.
 
 ### 2.2 The chain-integrity fix this sitting owes — TC-159
 
