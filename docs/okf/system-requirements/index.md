@@ -124,7 +124,6 @@ resource: "generated"
 | [SR-138](SR-138.md) | Legacy config converts automatically and totally |
 | [SR-139](SR-139.md) | Ratification as an ordinal over a derived spine stage |
 | [SR-140](SR-140.md) | The attestation anchor lives on the artifact's own row |
-| [SR-141](SR-141.md) | The loop's priority order is stated and pinned |
 | [SR-142](SR-142.md) | Red test cases under a closed implementation are named and judged |
 | [SR-143](SR-143.md) | Queue overlap is made visible, never blocked |
 | [SR-144](SR-144.md) | Every lane close is a terminal state with an immutable record |
@@ -134,3 +133,18 @@ resource: "generated"
 | [SR-148](SR-148.md) | Autonomous loop phase order |
 | [SR-149](SR-149.md) | Retired-vocabulary refusal in authored surfaces |
 | [SR-150](SR-150.md) | Stakeholder-need cells stay in stakeholder language |
+| [SR-151](SR-151.md) | Hosted CI runs the declared bar per trigger |
+| [SR-152](SR-152.md) | Hosted CI verdict is the harness's own |
+| [SR-153](SR-153.md) | Ready work derives from tracked state |
+| [SR-154](SR-154.md) | Independent review routed across families |
+| [SR-155](SR-155.md) | Contested planning rounds for marked work |
+| [SR-156](SR-156.md) | Serialized, gated integration of parallel lanes |
+| [SR-157](SR-157.md) | Spine and work-registry rules red the harness verdict |
+| [SR-158](SR-158.md) | Documentation drift reds or warns per its declared tier |
+| [SR-159](SR-159.md) | Declared-architecture connectivity gaps are reported |
+| [SR-160](SR-160.md) | Front-door launchers for the two universal contributor actions |
+| [SR-161](SR-161.md) | Decompositions carry a perspective record |
+| [SR-162](SR-162.md) | Requirement boundary references resolve against the declared frame |
+| [SR-163](SR-163.md) | Every shipped file maps to a stakeholder outcome |
+| [SR-164](SR-164.md) | Stakeholder-need scope is a declared, checked value |
+| [SR-165](SR-165.md) | The component partition carries a reproducible derivation record |

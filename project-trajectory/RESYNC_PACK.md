@@ -699,6 +699,9 @@ scheduling state.
 
 ### An LLR grounding on a superseded SR is an integrity ERROR [since 871625ec]
 
+*(Superseded by the SR-tier `SupersededBy` retirement below — the validator this
+entry describes no longer ships.)*
+
 If your SR registry uses the optional `SupersededBy` field, an LLR whose `SR-Refs`
 cites a superseded SR reds `trace.py` at every gate after this re-sync (`--strict`
 and `--strict-integrity`) — re-ground each such LLR on the successor SR, or delete
@@ -1135,6 +1138,26 @@ stage means** — read that item before re-syncing scripts.
   value, so your uncited-seam count may RISE. WI-191's "a cited `Experimental`
   seam needs a rationale" arm is GONE — its input no longer exists, and
   re-keying it onto `draft` would have armed it on every row.
+
+### The SR tier's `SupersededBy` column RETIRES; supersession is deletion [since fd26a966]
+
+The optional SR `superseded_by` key, its ~110-line `trace.py` validator
+(semicolon-list shape, unknown target, self-link, cycle, the LLR re-grounding
+error above) and its ratified-cell classification are all GONE, on the ruling
+that a supersession row is history wearing a row id: **a registry states what
+IS; git and the log are the history.** A retired row is *deleted*, its id spent
+forever (the id watermark's committed mark keeps the headroom), and one log
+entry is the forwarding home naming the replacement rows.
+
+- **If your SR registry carries `superseded_by` keys:** the carrier now REFUSES
+  the key on an SR row (it is no longer in the tier's declared key set). Before
+  re-syncing scripts, delete each tombstone row, re-point any citing IF rows at
+  the replacement rows, re-check `sn_refs` coverage against the replacements,
+  and record one forwarding log entry for the batch.
+- **TC rows whose `verifies` cite only superseded SRs** must retire with them —
+  a test case verifying nothing is not evidence.
+- The **CMP registry's own `PartOf`/`SupersededBy`** is a different rule and is
+  unchanged.
 
 ---
 

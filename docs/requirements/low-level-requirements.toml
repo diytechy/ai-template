@@ -1597,7 +1597,7 @@ component = "CMP-006"
 phase = 5
 
 [design.LLR-159]
-sr_refs = ["SR-141", "SR-142"]
+sr_refs = ["SR-148", "SR-142"]
 title = "Admission order and the red-TC census"
 module = "project-trajectory/scripts/dispatch.py"
 code_symbol = "_judgement_first/_admission/red_tc_census/parse_red_tc/_implemented_ids"

@@ -1519,11 +1519,11 @@ status = "Draft"
 phase = 5
 
 [test.TC-154]
-verifies = ["SR-141", "SR-142", "LLR-159"]
+verifies = ["SR-148", "SR-142", "LLR-159"]
 level = "Integration"
 method = """Run the loop-order suite: an adjudication row admits ahead of a ready spine batch while the ruled rank table is unchanged; the partition is stable and cannot move work past a human-held stop; a red TC is named only under a `done` citer, with the three exempt statuses and the mixed-target case driven; the census grammar round-trips and matches nothing else."""
 tier = "Smoke"
-expected = "Satisfies SR-141 and SR-142 AcceptanceCriteria"
+expected = "Satisfies SR-148 and SR-142 AcceptanceCriteria"
 automated = "Yes"
 evidence = "tests/test_loop_order.py"
 status = "Draft"
