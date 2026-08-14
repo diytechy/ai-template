@@ -36,6 +36,29 @@ applying that design to the kit itself.
 _Ratified or executed decisions only — the call, the alternatives passed over,
 why (one bullet each; cite ids)._
 
+- **2026-08-13i — The external-entity registry APPROVED: `external.toml`
+  (owner, in session).** Sitting-2 decision 5 shape 1 ruled: `external.toml`
+  is minted as the **off-spine** home (PART/ASSET/PB/REPO tier — view-building,
+  no SR back-refs, advisory schema) for **external entities** — operational
+  actors, enabling systems, interoperating systems under the one design-scope
+  cut — **and the relationships among them**. No second interfaces registry
+  (D-6: a duplicated vocabulary diverges silently). Confirmed with the
+  approval, on the owner's question: **every crossing that touches the system
+  stays an IF row in `interfaces.toml`**, inbound and outbound — the entity
+  registry holds only what the IF registry structurally cannot (every IF row
+  has `this_project` on one side), and boundary-ness derives from
+  `counterpart` resolving to a declared entity id. **Layout of
+  external-to-external relationships:** a relationship sub-table, one directed
+  row per relationship (`from`/`to` resolvable entity ids + `kind` + `flow`
+  prose; symmetric kinds read unordered), mirroring the record-each-seam-once
+  shape so one renderer draws entities as nodes and IF + REL rows as edges;
+  per-entity link lists passed over (two-sided declarations drift, and a
+  phantom endpoint must stay unrepresentable). A relationship row carries no
+  interface vocabulary — that line is what keeps D-6 satisfied. Riders (E11
+  retire, E12 admit, class-on-entity) and the `counterpart` field mechanics
+  stay with sitting-2 decisions 3/5's execution; the schema lands with the
+  WI-442 re-scope (sitting-2 §5.2).
+
 - **2026-08-13h — SN-007 re-worded NOW, ahead of sitting 2 (owner, in
   session).** The 2026-08-11 strike ruling (remove the undecomposed per-change
   coverage clause) had never been executed, and its planned vehicle — sitting

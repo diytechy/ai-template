@@ -683,6 +683,31 @@ options, and none is on record as recommended:
 
 ### Decision 5 — Where the external entities and the CONTEXT live
 
+**RULED IN SESSION, 2026-08-13 (owner): shape 1 APPROVED — `external.toml` is
+minted** as the off-spine home for external entities and the relationships
+among them; no second interfaces registry. Two clarifications recorded with
+the approval (log Decisions 2026-08-13i):
+
+- **Every system-touching crossing stays an IF row** — the owner's read,
+  confirmed: information flowing from/to an external entity to/from the system
+  is and remains `interfaces.toml`'s to describe, IN and OUT. `external.toml`
+  holds only entities and the external-to-external flows the IF registry
+  structurally cannot express (`this_project` is always one side of an IF row).
+  Boundary-ness derives from `counterpart` resolving to a declared entity.
+- **External-to-external relationships are laid out as a relationship
+  sub-table** — one directed row per relationship (`from` / `to` = resolvable
+  entity ids, a `kind`, and `flow` prose), mirroring §8's record-each-seam-once
+  shape so the context view renders entities as nodes and IF + REL rows as
+  edges with one renderer. Per-entity link lists were passed over (two-sided
+  declarations drift; one row cannot). A relationship row deliberately carries
+  NO interface vocabulary (`contract`/`signal`/`stability`) — growing those
+  fields would rebuild the second registry D-6 rejects. Symmetric kinds
+  (e.g. `shares-personnel`) read as unordered.
+
+The riders (E11 retire, E12 admit, class-on-entity) and the `counterpart`
+mechanics field-work remain with decision 3 and the execution rows. The
+original question, for the record:
+
 **The question.** §1b recommends but does not rule. Three shapes:
 
 1. **An external-entity registry** (your `external.toml`, holding operational
