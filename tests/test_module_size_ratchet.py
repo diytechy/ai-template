@@ -1690,7 +1690,7 @@ BASELINE = {
     # arms (a cancellation, a clean-close spot check) now declare NO brief and
     # say why. A false declaration would page a human for routine work, because
     # a declared-but-uncomposable brief is a hold.
-    "intake.py": 1711,  # +38 2026-08-13: WI-445 — OI-21 break 3, normalize_bar replacing the `.upper()` match that would have refused every correctly-authored DevBar-* value (reviewed bump, reason in the log); earlier +3 2026-08-13: WI-443 — the components/interfaces reads move to spine_carrier.load (reviewed bump, reason in the log)
+    "intake.py": 1713,  # +2 2026-08-14: ruff-format catch-up — three lane worktrees' hooks skipped the format step (ruff not importable by their system python), trunk's hook then bit on the drift; mechanical reformat, no behavior change (reviewed bump, reason in the log); earlier +38 2026-08-13: WI-445 — OI-21 break 3, normalize_bar replacing the `.upper()` match that would have refused every correctly-authored DevBar-* value (reviewed bump, reason in the log); earlier +3 2026-08-13: WI-443 — the components/interfaces reads move to spine_carrier.load (reviewed bump, reason in the log)
 }
 
 

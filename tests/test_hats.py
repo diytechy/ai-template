@@ -361,8 +361,7 @@ def test_template_and_instance_share_structure_and_the_template_ships_thirteen()
                 "%s [hat.%s] key set drifted" % (name, hid)
             )
     assert set(tmpl["hat"]) == set(LIVE_NAMES), (
-        "the shipped template's thirteen-hat starting roster changed — "
-        "reviewed edit?"
+        "the shipped template's thirteen-hat starting roster changed — reviewed edit?"
     )
 
 
@@ -448,7 +447,9 @@ def test_aspect_hats_ship_silent_by_design_and_switch_on_by_tag():
     contexts = _real_work_item_contexts()
     for name, tag in aspects.items():
         condition = roster[name]["condition"]
-        silent_on = [wi for wi, ctx in contexts.items() if hats.evaluate(condition, ctx)]
+        silent_on = [
+            wi for wi, ctx in contexts.items() if hats.evaluate(condition, ctx)
+        ]
         assert silent_on == [], "%s must ship silent, fired on %s" % (name, silent_on)
         assert hats.evaluate(condition, {"tags": [tag]}), (
             "%s must switch on when work is tagged %r" % (name, tag)
@@ -463,10 +464,7 @@ def test_the_ux_pair_is_unconditional_here_and_render_gated_in_the_template():
     roster gates them on `render`/`ui`, silent-by-design for adopters with no
     UI rather than falsely universal."""
     live = {h["name"]: h for h in hats.load(ROOT)}
-    kit = {
-        h["name"]: h
-        for h in hats.load(ROOT, rel=str(KIT_ROSTER.relative_to(ROOT)))
-    }
+    kit = {h["name"]: h for h in hats.load(ROOT, rel=str(KIT_ROSTER.relative_to(ROOT)))}
     for name in ("UX-DESIGNER", "UX-ENGINEER"):
         assert live[name]["applies_when"] == "always"
         assert not hats.evaluate(kit[name]["condition"], {})

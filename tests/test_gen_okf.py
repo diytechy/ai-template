@@ -176,9 +176,7 @@ def test_an_IF_one_pager_exports_the_live_approval_value(scaffold):
         encoding="utf-8",
     )
     assert okf(scaffold).returncode == 0
-    page = (bundle(scaffold) / "interfaces" / "IF-001.md").read_text(
-        encoding="utf-8"
-    )
+    page = (bundle(scaffold) / "interfaces" / "IF-001.md").read_text(encoding="utf-8")
     assert 'tags: ["draft"]' in page
 
 

@@ -824,9 +824,7 @@ def _drop_key(src, key):
         ("REL-ID", "[relationship.REL-001]"),
     ],
 )
-def test_bite_the_key_rule_fails_on_a_planted_batch2_defect(
-    tmp_path, id_col, plant_at
-):
+def test_bite_the_key_rule_fails_on_a_planted_batch2_defect(tmp_path, id_col, plant_at):
     """The batch-2 registries get the same bite-proof, in BOTH directions.
 
     Reusing the spine's rule is only worth claiming if the rule actually bites

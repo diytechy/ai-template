@@ -234,9 +234,9 @@ def test_the_frame_rules_are_VACUOUS_without_the_registry(scaffold):
     (scaffold / "docs" / "requirements" / "external.toml").unlink()
     proc = _run(scaffold, "--strict")
     assert "FINDING (frame)" not in proc.stdout
-    assert "depth-0 frame" not in (
-        scaffold / "docs" / "test" / "report.md"
-    ).read_text(encoding="utf-8")
+    assert "depth-0 frame" not in (scaffold / "docs" / "test" / "report.md").read_text(
+        encoding="utf-8"
+    )
 
 
 def test_a_tieback_is_vacuous_when_no_crossing_is_declared(scaffold):

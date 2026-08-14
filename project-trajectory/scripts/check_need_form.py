@@ -295,9 +295,7 @@ def main():
             "{} - the needs registry is present but yields no scannable need "
             "cell (empty file, or rows with no need field) — a vacuous read "
             "is not a clean tier: the registry this check guards has been "
-            "emptied or lost its schema (SN-008; round-1 review find)".format(
-                label
-            )
+            "emptied or lost its schema (SN-008; round-1 review find)".format(label)
         )
     for rid, cls, phrase in findings:
         article = "an" if cls[0] in "aeiou" else "a"
