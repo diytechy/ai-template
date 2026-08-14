@@ -30,8 +30,9 @@ and
 ## 0. State of play — measured 2026-08-14, after the mechanized tranche
 
 *(Added 2026-08-14 so the sitting can open from one document. Everything below
-was measured on trunk at the basis line `SN=27 SR=149 LLR=152 TC=149 drafts=29
-modified=51 uncovered=7`; re-derive at convening per §2.1's own rule.)*
+was measured on trunk at the basis line `SN=27 SR=149 LLR=152 TC=149 drafts=27
+modified=51 uncovered=7` (drafts moved 29 → 27 by the 2026-08-14f carrier-pair
+lifts); re-derive at convening per §2.1's own rule.)*
 
 **What landed since assembly (all through adversarial verdict rounds):** the
 schema row is merged — `external.toml` live, `interfaces.toml` slimmed to the
@@ -120,7 +121,7 @@ comes only after slice 2's ledger exists.)*
 | 1 | **Ratify the census** — the 148-row classification (34 / 15 / 73 / 26) as the shape slice 2 executes | **RULED 2026-08-14b — RATIFIED** (owner: iteration expected at this scope; overhead direction approved) | §0.2 · [the ledger](2026-08-14-wi451-slice1-sr-census.md) |
 | 2 | **The 26 tombstones** | **RULED 2026-08-14b — DELETE per D-4**; follow-through named in §0.2, executed by slice 2 | §0.2 call 1 |
 | 3 | **The four package-wide B-05 properties** — SR-031 (policy readers agree) · SR-034 (stdlib + ledger) · SR-035 (stack-agnostic) · SR-114 (cross-OS): each is a property of EVERY delivered capability at once, so none fits a single one of B-05's five ruled buckets | **RULED 2026-08-14c — option A**: the decomposition axis gains the declared sixth bucket *package-wide property*; each stays ONE SR (the 13p invariant's own "crossing-or-**delivered-property**" wording admits it). Re-statement across the five groups passed over | §0.2 call 2 |
-| 4 | **TC-159** — lift to `Planned` beside the rows it verifies, or re-point LLR-165's `test_refs` | none — pick deliberately; do not let a slice resolve it silently | §2.2 |
+| 4 | **TC-159** — lift to `Planned` beside the rows it verifies, or re-point LLR-165's `test_refs` | **RULED 2026-08-14f — LIFTED, both halves**: the §2.3 lift had CROSSED the subject pairs (converter TC-159↔LLR-165, reader TC-160↔LLR-166); re-pointing would have forged a converter-requirement→reader-test edge. TC-159 and LLR-166 both `Draft`→`Planned`; drafts 29→27 | §2.2 |
 | 5 | **The D-9 + D12 vocabulary program** — execute, sequence, or defer | **RULED 2026-08-14e — ONE SEQUENCE with the ratification wave**, right after slice 2's drafts land: the signing acts ARE the transition (first commit closes the enum; §3.3 gap recorded owner-visibly; rung-predicate work in the same sequence per §3.4) | §3 |
 | 6 | **`Planned`'s fate** under the three-word ladder (16 live rows) | **SCHEDULED 2026-08-14e into #5's sequence** — substance (fourth rung vs ruled out) decided at its execution, before the enum closes | §3.5 |
 | 7 | **Authority over the off-spine approval elements**, and the dial's form | **SCHEDULED 2026-08-14e into #5's sequence** — the declaration extends as one act with the vocabulary; tier-set form re-opens there if at all | §3.6 |
@@ -182,8 +183,8 @@ rows-moved. Re-derive at convening; do not sign from this table.
 |---|---|---|---|---|---|---|
 | SN | 27 | — | — | 0 | — | — |
 | SR | 149 | 105 | 30 | 0 | 14 | **−26 deleted** (D-4, if ruled) · **−73 demoted** to LLR → ~50 SRs remain |
-| LLR | 152 | 122 | 14 | 15 | 1 | +~73 inbound demotion mints (plus parent-SR joins) |
-| TC | 149 | 127 | 7 | 14 | 1 | re-points only (demoted rows' TCs follow their LLRs; TC-099 retires with the tombstones if D-4 is ruled) |
+| LLR | 152 | 122 | 14 | 14 | 2 | +~73 inbound demotion mints (plus parent-SR joins) |
+| TC | 149 | 127 | 7 | 13 | 2 | re-points only (demoted rows' TCs follow their LLRs; TC-099 retires with the tombstones — D-4 ruled 2026-08-14b) |
 
 *(The SN registry has no `status` field at all — its fields are `acceptance ·
 kind · need · priority · why`, and maturity is `kind`. All 27 rows are
@@ -200,19 +201,20 @@ LLR-118, LLR-132, LLR-136, LLR-140, LLR-144, LLR-145, LLR-149, LLR-150, LLR-153.
 **The 7 `Modified` TCs** — TC-031, TC-034, TC-084, TC-085, TC-098, TC-138,
 TC-147.
 
-**The 15 `Draft` LLRs to ratify** — LLR-155, LLR-156, LLR-157, LLR-158, LLR-159,
-LLR-160, LLR-161, LLR-162, LLR-163, LLR-164, LLR-166, LLR-167, LLR-168, LLR-169,
+**The 14 `Draft` LLRs to ratify** — LLR-155, LLR-156, LLR-157, LLR-158, LLR-159,
+LLR-160, LLR-161, LLR-162, LLR-163, LLR-164, LLR-167, LLR-168, LLR-169,
 and **LLR-170** (the need-form checker, minted 2026-08-14).
 
-**The 14 `Draft` TCs to ratify** — TC-150, TC-151, TC-152, TC-153, TC-154,
-TC-155, TC-156, TC-157, TC-158, TC-159, TC-161, TC-162, TC-163, and **TC-164**
+**The 13 `Draft` TCs to ratify** — TC-150, TC-151, TC-152, TC-153, TC-154,
+TC-155, TC-156, TC-157, TC-158, TC-161, TC-162, TC-163, and **TC-164**
 (the need-form dirty-cell case, minted 2026-08-14).
 
 That is the **LLR/TC draft ratification** sitting 1 deferred plus the two
-2026-08-14 mints: **15 + 14 = 29 rows**, reconciling exactly to `drafts=29`
+2026-08-14 mints: **14 + 13 = 27 rows**, reconciling exactly to `drafts=27`
 in the current basis line. The 14 `Planned` SRs — SR-137…SR-149 lifted at
 sitting 1, plus **SR-150** (the need-form checker SR, minted 2026-08-14) —
-and the two `Planned` rows LLR-165 / TC-160 are not in this window.
+and the four `Planned` rows LLR-165 / LLR-166 / TC-159 / TC-160 (the carrier
+pairs, aligned by the 2026-08-14f ruling) are not in this window.
 
 ### 2.2 The chain-integrity fix this sitting owes — TC-159
 

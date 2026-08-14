@@ -1603,7 +1603,7 @@ tier = "Smoke"
 expected = "Satisfies SR-147 AcceptanceCriteria"
 automated = "Yes"
 evidence = "tests/test_migrate_carrier.py"
-status = "Draft"
+status = "Planned"
 phase = 5
 
 [test.TC-160]

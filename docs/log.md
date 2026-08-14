@@ -36,6 +36,21 @@ applying that design to the kit itself.
 _Ratified or executed decisions only — the call, the alternatives passed over,
 why (one bullet each; cite ids)._
 
+- **2026-08-14f — sitting-3 ledger decision 4 RULED and EXECUTED (owner, in
+  session): TC-159 lifted — and the §2.3 lift's crossed pairs aligned both
+  ways.** The evidence decided it: TC-159's procedure drives the CONVERTER
+  (round-trip + loss detector) and verifies LLR-165 ("the spine carrier
+  converter"); TC-160's drives the READER and verifies LLR-166 ("the spine
+  carrier's one reader") — so §2.3 had lifted the converter's LLR without
+  its TC, and the reader's TC without its LLR, one crossed lift making both
+  §2.2 mismatches. Re-pointing LLR-165's `test_refs` at TC-160 (the
+  alternative passed over) would have forged a converter-requirement →
+  reader-test verification edge — false forever, surviving any vocabulary
+  relabeling — where the status mismatch was transient bookkeeping. Executed
+  in the same act: TC-159 and LLR-166 both `Draft` → `Planned`, restoring
+  pair-consistency in both directions; `drafts` 29 → 27, gate regenerated,
+  `check_trajectory --strict` and `trace.py` integrity clean. WI-452 part
+  (2) is unblocked. Ledger: sitting-3 §0.3 row 4; §2.1/§2.2 updated.
 - **2026-08-14e — sitting-3 ledger decision 5 RULED, 6–7 SCHEDULED (owner,
   in session): the D-9 + D12 vocabulary program executes as ONE SEQUENCE
   with the ratification wave.** Timing ruled: right after slice 2's re-tier
