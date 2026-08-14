@@ -185,6 +185,43 @@ def test_an_IF_tieback_naming_an_undeclared_crossing_is_a_FINDING(scaffold):
     assert proc.returncode == 1
 
 
+def test_crossings_with_NO_entity_declared_is_a_FINDING_not_a_vacuous_pass(scaffold):
+    """THE FALSE GREEN AN ADVERSARIAL ROUND CAUGHT, pinned so it cannot return.
+
+    The first version returned `[]` the moment the entity set was empty,
+    reasoning that the rules below had nothing to resolve against. They did: six
+    crossings referencing five entities that do not exist resolved to SILENCE,
+    and the report then printed "every crossing Entity ... resolves" over the
+    top of it — a literal false green in the checker whose job is to prevent
+    one. Not an exotic state either: it is the natural authoring order (draw the
+    boundary, then name who is on the far side) and what a refactor that drops
+    an entity block leaves behind.
+
+    An empty frame stays vacuous; an empty entity set UNDER crossings or
+    relationships is the finding."""
+    make_minimal_project(scaffold)
+    entity, rest = CLEAN_FRAME.split("[boundary.B-01]", 1)
+    _frame(scaffold, "[boundary.B-01]" + rest)  # crossings + relationship, no entity
+    proc = _run(scaffold, "--strict")
+    assert "but NO entity" in proc.stdout
+    assert proc.returncode == 1
+    # ...and the report must not print the clean sentence over the top of it.
+    report = (scaffold / "docs" / "test" / "report.md").read_text(encoding="utf-8")
+    assert "relationship From/To and IF tie-back \nresolves" not in report
+    assert "IF tie-back resolves" not in report.replace("\n", " ")
+
+
+def test_a_frame_declaring_NOTHING_stays_vacuous(scaffold):
+    """The other side of the rule above, so the fix cannot over-correct into "an
+    empty external.toml is broken" — an adopter who creates the file before
+    filling it is mid-authoring, not in error."""
+    make_minimal_project(scaffold)
+    _frame(scaffold, "# nothing declared yet\n")
+    proc = _run(scaffold, "--strict")
+    assert "but NO entity" not in proc.stdout
+    assert proc.returncode == 0
+
+
 def test_the_frame_rules_are_VACUOUS_without_the_registry(scaffold):
     """The applies-when, at the checker tier. A project that declares no boundary
     has no `external.toml`, and every rule above must then say nothing at all —
@@ -330,8 +367,12 @@ def test_an_out_of_vocabulary_frame_value_WARNS_and_never_fails(scaffold):
     proc = _run(scaffold, "--strict")
     assert "EXT EXT-001 has Class='vendor'" in proc.stdout
     assert "not in the closed vocabulary" in proc.stdout
-    # ...and it did not join the failure set.
+    # ...and it did not join the failure set. The EXIT CODE is the half this
+    # test is NAMED for, and asserting only the absent FINDING line left "never
+    # fails" untested — promoting the frame schema tier to --strict would have
+    # kept this green.
     assert "FINDING (frame)" not in proc.stdout
+    assert proc.returncode == 0
 
 
 def test_an_empty_required_frame_field_WARNS(scaffold):
@@ -339,6 +380,7 @@ def test_an_empty_required_frame_field_WARNS(scaffold):
     _frame(scaffold, CLEAN_FRAME.replace('carries = "the delivered package"\n', ""))
     proc = _run(scaffold, "--strict")
     assert "B B-01 has empty required field Carries" in proc.stdout
+    assert proc.returncode == 0  # warn-first, like the IF/CMP schema tier
 
 
 def test_the_example_rows_are_inert(scaffold):

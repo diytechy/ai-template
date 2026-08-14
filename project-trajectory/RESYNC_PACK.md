@@ -1094,6 +1094,48 @@ on, so a repo mid-conversion sees every site without being blocked.
 becomes `[phase]-[reqs|tests]` for NEW titles — your committed anchors keep their
 spelling and still parse forever (a title is a citation).
 
+### The depth-0 FRAME registry; IF `Stability` → `Approval`; rung 1 re-keys [since 0ff33a95]
+
+Four migrations in one commit, and the third one **changes what your reported
+stage means** — read that item before re-syncing scripts.
+
+- **NEW: `docs/requirements/external.toml`**, scaffolded by `bootstrap.py` from
+  `registries/external.template.toml`. It holds your **depth-0 frame** in three
+  tiers on one path: `[entity.EXT-###]` (who is outside), `[boundary.B-##]`
+  (what crosses your system boundary), `[relationship.REL-###]` (external-to-
+  external flows you are not a party to). This is the tier your **system
+  requirements form around**. An `IF-###` row is a concrete interface
+  definition and ties BACK to a crossing only when it realizes one.
+- **RUNG 1's APPLIES-WHEN MOVED, and your stage may RISE silently.**
+  `derive_gate.boundary_incomplete` used to read `interfaces.toml` and cap you
+  at `DevStg-Boundary` while any IF row read `Stability = Experimental`. It now
+  reads `external.toml`'s crossing `Approval`. **A repo that carries
+  `interfaces.toml` and no `external.toml` therefore SKIPS rung 1 entirely**
+  where it was previously held. That is the correction — internal seam
+  definitions never typed a boundary — but it is not a no-op: if you want the
+  rung, scaffold `external.toml` and declare your crossings. If you never
+  declared a boundary, the rung is now correctly free.
+- **IF `Stability` RETIRES for `Approval`** (`draft` · `approved`), the tier's
+  one maturity field, shared with the new boundary tier. Map your values before
+  or during the re-sync — `Experimental` → `draft` is the direct reading;
+  `Stable`/`Deprecated` → `approved` **only if you mean it**, because `Stable`
+  was a MATURITY claim (the contract has settled) and `approved` is a
+  RATIFICATION one. The kit's own registry mapped all 113 rows to `draft`
+  rather than manufacture approvals nobody signed. A surviving `stability = ...`
+  key is a column nothing reads.
+- **NEW optional IF keys:** `interface_from_external` / `interface_to_external`,
+  the directional tie-back naming a `B-##` crossing. Present ONLY on a row that
+  realizes one; a row with neither is an internal seam.
+- **NEW optional SR key: `boundary_refs`** (`Boundary-Refs`), the crossing(s) a
+  requirement states an observable AT. An id that does not resolve is a HARD
+  finding under `--strict`; leaving the cell blank is a warn-first coverage
+  count, so an unmigrated spine goes noisy, never red.
+- **Two checks changed arming, both warn-first, neither newly red.** The
+  seam-TC citation rule now arms on every IF row instead of on a maturity
+  value, so your uncited-seam count may RISE. WI-191's "a cited `Experimental`
+  seam needs a rationale" arm is GONE — its input no longer exists, and
+  re-keying it onto `draft` would have armed it on every row.
+
 ---
 
 ## 4. Translation helper — concept renames

@@ -133,3 +133,81 @@ ratified", and the swap would have multiplied its arming set from ~4% to 100% at
 a severity that ERRORS under `--strict`. A rule whose blast radius multiplies
 twentyfold while its sentence stays the same is not the same rule. Both losses
 are pinned by tests that assert the removal, so neither can drift back half-fed.
+
+## Review rounds
+
+Two independent reviews on the closed work, both hostile-briefed: an adversarial
+correctness pass (Opus, separate context, told to assume the commit messages
+oversell) and a cross-family legibility pass (OpenAI gpt-5.6-terra via codex).
+One iteration on both, below. The adversarial round's procedural complaint is
+recorded and is the author's fault: the worktree was being edited while it ran,
+which cost it two items it had to drop — both already fixed by the edits it saw.
+
+**BLOCKER, reproduced and fixed.** `frame_findings` returned `[]` the moment the
+entity set was empty. Six crossings referencing five entities that do not exist
+resolved to SILENCE, and `_frame_report_section` then printed "every crossing
+Entity ... resolves" over the top of it — a false green in the checker whose job
+is to prevent one, in the natural authoring order (draw the boundary, then name
+who is on the far side). Now a finding of its own; an empty frame stays vacuous;
+both sides pinned.
+
+**MAJOR — the fixture disarmed its own test.** `_csv_body_to_toml` assigned
+`row["Stability"]` unconditionally, discarding the caller's value, so
+`test_seam_tc_citation_warn`'s comment claiming its two rows were `draft` and
+`approved` was FALSE and re-arming the seam-TC rule on `approval == "approved"`
+— the exact tautology this WI wrote a paragraph about avoiding — passed the
+whole file. Default-never-overwrite now; the reviewer's mutation was re-run and
+the test fails on it.
+
+**MAJOR — every shipped doc still declared the retired column.** `PROCESS.md`
+§8, `INTERFACES.template.md` (the adopter's IF-tier reference), `EXAMPLE.md`'s
+worked header and two `MULTI_REPO.md` paragraphs named `Stability`, and nothing
+anywhere named `Approval`. An adopter following the shipped docs would author a
+column nothing reads. This repo's own single-source rule, inverted.
+
+**MAJOR — no `RESYNC_PACK.md` entry**, though WI-443's smaller IF-tier change
+got one. Added, leading with the item that actually bites: rung 1's applies-when
+moved, so an adopted repo carrying `interfaces.toml` and no `external.toml`
+SKIPS the rung where it was previously held, and its reported stage can rise by
+up to six rungs on a script-only re-sync.
+
+**MINORS, all fixed.** The registry header claimed "no row carries migration
+history" while four `notes` cells did (scrubbed). `_maturity`'s docstring gave a
+FALSE reason for the case-fold — every live cell already matched exactly; what
+it actually buys is a defence against a hand-authored `Approved`, and it says so
+now. "The shared path costs nothing" was an unbacked measurement claim (six
+reads, six parses). "THE ONE watched collision" undercounted: `check_perf` reads
+a third `Direction` vocabulary. The `(at_fault_id, finding)` tuple was
+documented three times and consumed nowhere — plain strings now. Two tests named
+"never fails" never asserted the exit code, and one proved a signature change
+with a bare `TypeError`. `registry-machinery-reference.md` — the doc CLAUDE.md
+names for "every field, every join rule" — had neither the new tier nor
+`Boundary-Refs`.
+
+**What the adversarial round REFUSED to substantiate**, recorded because a
+review that only finds things is not being read: the `Direction` name collision
+it was pointed at directly. It traced every reader and reported it clean rather
+than padding. It also independently verified the row counts, the 113-row
+`Approval` conversion against `git show`, the re-key's bite (by mutation), the
+`-000` filtering on both sides of the SR rule, the malformed-TOML refusal path,
+and the ratchet arithmetic.
+
+**From the legibility round:** `BIF-Refs` renamed `Boundary-Refs` — this change
+RETIRES `BIF-###` as an id shape, and naming the SR column after it kept a dead
+acronym alive beside the `B-##` ids that replaced it. The held-clause rationale
+was written into four code files plus the registry header; the argument now has
+one home (`interfaces.toml`'s header) and the code carries pointers. Its
+suggestion to point the D-9 migration block at a canonical decision was DECLINED
+with a reason: none exists — D-9 is held behind sitting 3 — so this header is
+that home until then, and the template's copy must stay self-contained because
+it ships where the live file does not exist.
+
+**One reviewer point answered rather than fixed.** `trace.py` took a +260
+reviewed bump where `test_module_size_ratchet`'s own comment names decomposition
+as the preferred escape, and this file is already 2.4x THRESHOLD with a split
+precedent (`trace_text.py`). The escape was available and NOT taken: the frame
+tier is ~90 lines of rules plus their reasoning, and splitting it out would put
+the boundary checks in a different module from the spine checks they compose
+with. The honest reading is that `trace.py` owes a decomposition for its size,
+not for this WI — which is a row somebody should file, not a thing to do inside
+a schema migration.

@@ -788,9 +788,9 @@ Contracts (interfaces): IF-050, IF-051
 | `is_modified(row)` | The post-attestation `Modified` state (WI-316, process.md §7): content |  |
 | `sn_bar(sn_id, draft_ids, cited_ids)` | A Draft SN is `DevBar-Below` — and that is the ONLY rung that fires on a |  |
 | `stage_ord(stage)` | The 0-based position of a stage label on STAGE_ORDER. |  |
-| `boundary_incomplete(ifs, have_registry)` | Rung 1's predicate — is the BOUNDARY INVENTORY still in work? |  |
+| `boundary_incomplete(bifs, have_registry)` | Rung 1's predicate — is the BOUNDARY INVENTORY still in work? |  |
 | `arch_incomplete(cmps, have_registry)` | Rung 3's predicate — is the PARTITION still in work? |  |
-| `spine_stage(srs, llrs, tcs, sn_ids, sn_draft, ifs, cmps, have_ifs, have_cmps)` | The rung currently IN WORK — the STATE axis (a repo is *in* a stage), and |  |
+| `spine_stage(srs, llrs, tcs, sn_ids, sn_draft, bifs, cmps, have_bifs, have_cmps)` | The rung currently IN WORK — the STATE axis (a repo is *in* a stage), and |  |
 | `stage_to_bar(stage)` | THE DECLARED MAPPING between the two axes — stated once, here, so the |  |
 | `compute(docs)` | Derive the gate from the spine registries under `docs`. Returns a result |  |
 | `basis_line(result)` | The single, deterministic `# basis:` comment line compared by --check | SN-029 |
@@ -1294,6 +1294,9 @@ Contracts (interfaces): IF-001, IF-021, IF-042
 | `sn_integrity_findings(sn_text)` | Duplicate-id protection for the SN tier — the one tier stored as prose, |  |
 | `schema_findings(label, rows)` | Empty required fields and out-of-vocabulary Verification/Tier values, over |  |
 | `schema_advisories(label, rows)` | `schema_findings`' warn-first twin, for the tiers whose schema is stated |  |
+| `frame_findings(exts, bifs, rels)` | Reference resolution inside `external.toml` (WI-442, §1R.5) as a list of |  |
+| `sr_boundary_findings(srs, bifs, ifs)` | SN-037's SR->boundary rule (WI-442), as `(findings, advisories)` — both | SN-037 |
+| `tieback_findings(ifs, bifs)` | An IF row's directional tie-back must name a DECLARED crossing (WI-442, |  |
 | `if_contract_advisories(ifs)` | The four ruled negative rules on an IF `Contract` cell (WI-443), all |  |
 | `if_endpoint_class_advisories(ifs, module_ids, root)` | Classify every IF endpoint that is NOT an arch-map module, warn-first. |  |
 | `phase_ratified_findings(real)` | The ratified-phase NUMERIC-ONLY rule (process.md §4 "Phased delivery"; owner |  |

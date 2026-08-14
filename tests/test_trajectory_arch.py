@@ -137,9 +137,11 @@ IF_HDR = (
 # hold rather than rewriting every one of them: what those tests are about is
 # coverage, cross-component edges and spec citations, not the carrier — and a
 # translating writer keeps the SUBJECT of each test visible instead of burying
-# it under a schema migration. The two tests that ARE about the vocabulary
-# (`test_seam_tc_citation_warn`, `test_spec_interfaces_experimental_needs_
-# rationale`) speak TOML directly, below.
+# it under a schema migration. `test_seam_tc_citation_warn` is ABOUT the
+# vocabulary and still goes through this translator, which is why the
+# default-never-overwrite rule below is load-bearing rather than tidy. (Its
+# former sibling `test_spec_interfaces_experimental_needs_rationale` was
+# replaced at WI-442 by the test that pins that arm's REMOVAL.)
 #
 # `Status` is DROPPED here, since it retired with the ruling: a body that set
 # `Status=Proposed` is translated to `approval = "draft"`, which is the rung
@@ -172,11 +174,19 @@ def _csv_body_to_toml(header, table, body):
         rid = (row.get(id_col) or "").strip()
         if not rid:
             continue
-        row["Stability"] = (
-            "draft"
-            if (row.get("Status") or "").strip().lower() == "proposed"
-            else "approved"
-        )
+        # DEFAULT, never overwrite. The first version of this line assigned
+        # unconditionally and silently discarded whatever maturity the caller's
+        # fixture set — which made `test_seam_tc_citation_warn` unable to detect
+        # the very re-arming its comment reasons about (its two rows both became
+        # `approved`, so re-keying the rule on `approval == "approved"` passed
+        # the whole file). A fixture translator that rewrites the cell under
+        # test is a test that cannot fail.
+        if not (row.get("Stability") or "").strip():
+            row["Stability"] = (
+                "draft"
+                if (row.get("Status") or "").strip().lower() == "proposed"
+                else "approved"
+            )
         out.append("[{}.{}]".format(table, rid))
         if table == "interface":
             out.append('signal = "discrete"')

@@ -23,6 +23,8 @@ Three things this module pins, each because a cut got it wrong:
     which reads as "nothing is human-held" and disarms every hold in the repo.
 """
 
+import inspect
+
 import pytest
 from conftest import load_script, set_process_key
 
@@ -417,10 +419,13 @@ def test_rung_1_gates_on_APPROVAL_and_NOT_on_realization_coverage():
     hypothetical."""
     assert _stage(bifs=[BIF_APPROVED], have_bifs=True) == dg.STAGE_RELEASE
     # ...and `spine_stage` no longer takes the IF registry at all, which is the
-    # structural half of the same statement: rung 1 cannot read realization
+    # structural half of the same statement: rung 1 CANNOT read realization
     # coverage, because it is no longer handed the rows that would show it.
-    with pytest.raises(TypeError):
-        _stage(bifs=[BIF_APPROVED], have_bifs=True, ifs=[], have_ifs=True)
+    # Asserted on the SIGNATURE — a bare `pytest.raises(TypeError)` also passes
+    # for any unrelated arity error and would pass against a two-arg stub.
+    params = inspect.signature(dg.spine_stage).parameters
+    assert "bifs" in params and "have_bifs" in params
+    assert "ifs" not in params and "have_ifs" not in params
 
 
 def test_a_PLANNED_component_holds_the_ARCH_rung_open():

@@ -198,9 +198,13 @@ OFFSPINE_COLUMN = {
     # §1R). Shared columns already declared above (`name`, `notes`) are NOT
     # repeated — one column name, one meaning, repo-wide (D-3).
     #
-    # `direction` IS THE ONE WATCHED COLLISION, stated rather than hidden. It is
-    # declared once, above, and the boundary tier reads it as in|out|inout while
-    # the IF tier still reads it as Provides|Consumes. The vocabularies are
+    # `direction` IS THE WATCHED COLLISION IN THIS MAP, stated rather than
+    # hidden — and "in this map" is the honest scope, because `Direction` carries
+    # a THIRD vocabulary repo-wide that this file cannot see: `check_perf.py`
+    # reads `lower-better`/`higher-better` off the perf-budget registry, which is
+    # not on the carrier. It is declared once, above, and the boundary tier reads
+    # it as in|out|inout while the IF tier still reads it as
+    # Provides|Consumes. The vocabularies are
     # disambiguated per tier by `trace.ENUM_FIELDS`, and they never appear in one
     # file — but two meanings under one name is the D-3 defect however tidily it
     # is scoped. It is temporary BY CONSTRUCTION: the collision closes itself the

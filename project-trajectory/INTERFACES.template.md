@@ -40,7 +40,8 @@ namespace, parallel to SN/SR/LLR/TC).
 | `Rationale` | **Why the seam is drawn here.** Empty is allowed; this is the home the `Contract` cell's argument moves to. |
 | `SR-Refs` | The system requirement(s) here that realize or rely on it — ties the interface into the local spine. |
 | `Version` | Contract version the other side codes against (e.g. `v1`, a semver, a schema hash). |
-| `Stability` | **Closed**, and the row's **one** maturity field: `Experimental` · `Stable` · `Deprecated`. Sets the change-notice bar. A seam a spec-of-record cites before a second consumer pins it is `Experimental` — cheap to revise. (An undeclared `Status` column shipped here until OI-14 part B retired it, 2026-08-13: it overlapped this one, and `Stable` appeared in both meaning different things.) |
+| `Approval` | **Closed**, and the row's **one** maturity field: `draft` · `approved`. Flipping a cell to `approved` is a human act in a reviewed commit. (Two columns retired into this one: an undeclared `Status` at OI-14 part B, 2026-08-13, and `Stability` — `Experimental`/`Stable`/`Deprecated` — at WI-442, 2026-08-14. Each overlapped its predecessor, which is why the tier now carries exactly one.) |
+| `interface_from_external` / `interface_to_external` | The directional tie-back to a `B-##` crossing in `external.toml`, present **only** when this row REALIZES one — `from` for an IN crossing, `to` for an OUT one, both for in/out. A row with neither is an internal seam; that absence IS the statement, so there is no "internal" value to set wrongly. |
 | `Component` | Optional `CMP-###` membership tag for the component layer; empty when unused. |
 | `Notes` | Free-form. The `source`/`sink` honesty valve lives here (silences the missing-direction coverage warn for `ThisProject` — see the registry's `-000` row). |
 
@@ -67,8 +68,8 @@ namespace, parallel to SN/SR/LLR/TC).
   validates the far side of a cross-repo reference — it is a text convention;
   keep the trail two-way by recording the counterpart repo + matching id on
   both rows.
-- **Stability gates change.** Changing a `Stable` contract requires a notice to
-  the counterpart and a version bump; `Experimental` may change freely. Note
+- **Approval gates change.** Changing an `approved` contract requires a notice
+  to the counterpart and a version bump; a `draft` one may change freely. Note
   breaking changes in the audit log and bump `Version`.
 - **Direction drives ownership.** Only the `Provides` side may close the owner's final read on
   the contract's correctness; the `Consumes` side verifies against the pinned

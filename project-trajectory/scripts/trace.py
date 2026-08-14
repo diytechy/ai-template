@@ -1344,8 +1344,13 @@ def schema_advisories(label, rows):
 
 
 def frame_findings(exts, bifs, rels):
-    """Reference resolution inside `external.toml` (WI-442, §1R.5), as
-    ``[(at_fault_id, finding), ...]`` — the frame's own join rules.
+    """Reference resolution inside `external.toml` (WI-442, §1R.5) as a list of
+    finding strings — the frame's own join rules.
+
+    PLAIN STRINGS, not the `(at_fault_id, finding)` pairs the spine's older rules
+    return. The pair shape was written here first and NO caller ever read the id,
+    which documents a contract that does not exist; `tc_citation_findings` keeps
+    its pairs because its caller genuinely keys on them.
 
     It checks three reference fields — a boundary row's `Entity`, and a
     relationship's `From` and `To` — and they are the only structural claims the
@@ -1358,30 +1363,45 @@ def frame_findings(exts, bifs, rels):
     vocabulary; it is a dangling reference, exactly like an SR citing an SN that
     was deleted, and the spine's other reference rules have been hard since they
     shipped. Note what it does NOT check: a relationship carries no interface
-    vocabulary by design, so there is nothing here that could grow one."""
+    vocabulary by design, so there is nothing here that could grow one.
+
+    NO ENTITIES IS ONLY VACUOUS WHEN NOTHING REFERENCES THEM, and getting that
+    wrong was a false green — the one failure this file exists to prevent. The
+    first version returned `[]` on an empty entity set, reasoning that the rules
+    below had nothing to resolve against. They did: 6 crossings referencing 5
+    entities that do not exist resolved to silence, and `_frame_report_section`
+    then printed "every crossing Entity ... resolves" over the top of it. That is
+    the natural state of a half-authored frame (you draw the boundary, then name
+    who is on the far side) and of a refactor that drops an entity block. An
+    empty frame is still vacuous; an empty entity set under a non-empty crossing
+    or relationship set is a finding of its own."""
     out = []
     ext_ids = {r["EXT-ID"] for r in exts}
     if not ext_ids:
-        return out  # no entities declared: every rule below is vacuous
+        if bifs or rels:
+            out.append(
+                "external.toml declares {} crossing(s) and {} relationship(s) "
+                "but NO entity — every reference in them resolves to "
+                "nothing".format(len(bifs), len(rels))
+            )
+        return out
     for r in bifs:
         bid = r["B-ID"]
         for x in refs(r.get("Entity")):
             if x not in ext_ids:
-                out.append((bid, f"boundary {bid} Entity references unknown {x}"))
+                out.append(f"boundary {bid} Entity references unknown {x}")
     for r in rels:
         rid = r["REL-ID"]
         for col in ("From", "To"):
             for x in refs(r.get(col)):
                 if x not in ext_ids:
-                    out.append(
-                        (rid, f"relationship {rid} {col} references unknown {x}")
-                    )
+                    out.append(f"relationship {rid} {col} references unknown {x}")
     return out
 
 
 def sr_boundary_findings(srs, bifs, ifs):
-    """SN-037's SR->boundary rule (WI-442), as
-    ``([(sr_id, finding), ...], [advisory, ...])``.
+    """SN-037's SR->boundary rule (WI-442), as `(findings, advisories)` — both
+    plain lists of strings, per `frame_findings`' note on the pair shape.
 
     SN-037's ratified acceptance asks that *"every system-requirement input and
     output references a declared interface"* and that *"unresolved references ...
@@ -1422,7 +1442,7 @@ def sr_boundary_findings(srs, bifs, ifs):
         for x in cited:
             if x not in bif_ids:
                 findings.append(
-                    (sid, f"SR {sid} Boundary-Refs references unknown crossing {x}")
+                    f"SR {sid} Boundary-Refs references unknown crossing {x}"
                 )
     uncovered = sum(1 for r in srs if not refs(r.get("Boundary-Refs")))
     if uncovered:
@@ -1459,7 +1479,7 @@ def sr_boundary_findings(srs, bifs, ifs):
 
 def tieback_findings(ifs, bifs):
     """An IF row's directional tie-back must name a DECLARED crossing (WI-442,
-    owner naming 13m), as ``[(if_id, finding), ...]``.
+    owner naming 13m), as a list of finding strings.
 
     Vacuous with no frame registry, which is the applies-when: a project without
     `external.toml` has no crossings to name, and a stray tie-back there is a
@@ -1478,7 +1498,7 @@ def tieback_findings(ifs, bifs):
         for col in ("InterfaceFromExternal", "InterfaceToExternal"):
             for x in refs(r.get(col)):
                 if x not in bif_ids:
-                    out.append((iid, f"IF {iid} {col} references unknown crossing {x}"))
+                    out.append(f"IF {iid} {col} references unknown crossing {x}")
     return out
 
 
@@ -2703,9 +2723,13 @@ def load_registries(docs):
     # one file — who is outside (EXT-###), what crosses the system boundary
     # (B-##), and the external-to-external flows the system is not a party to
     # (REL-###). One `load` per tier; the carrier keys by ID COLUMN, so the
-    # shared path costs nothing. Absent file -> [] three times, and every rule
-    # below is then vacuous, which is the applies-when a project that declares
-    # no boundary needs.
+    # shared path needs no new loader. It is NOT free, and saying so beats an
+    # unbacked "costs nothing": `load` reads and parses the file twice per call
+    # (once for the rows, once for the nested-table check), so three tiers is six
+    # reads and six parses of one small file per run — negligible at this size,
+    # and the number to revisit if the frame ever stops being small. Absent
+    # file -> [] three times, and every rule below is then vacuous, which is the
+    # applies-when a project that declares no boundary needs.
     raw_exts = spine_carrier.load(docs / "requirements" / "external.toml", "EXT-ID")
     raw_bifs = spine_carrier.load(docs / "requirements" / "external.toml", "B-ID")
     raw_rels = spine_carrier.load(docs / "requirements" / "external.toml", "REL-ID")
@@ -2958,12 +2982,9 @@ def analyze(reg, args):
     # them out by name and "Interface findings: relationship REL-002 From
     # references unknown EXT-009" would be a label lying about its contents.
     sr_frame, sr_frame_advisories = sr_boundary_findings(srs, bifs, ifs)
-    frame_backlink_findings = [
-        f
-        for _id, f in frame_findings(exts, bifs, rels)
-        + tieback_findings(ifs, bifs)
-        + sr_frame
-    ]
+    frame_backlink_findings = (
+        frame_findings(exts, bifs, rels) + tieback_findings(ifs, bifs) + sr_frame
+    )
     # The IF/CMP schema tier and the IF `Contract` negative rules (WI-443 / OI-14
     # part B) — ALWAYS ON and ALWAYS WARN. They ride the interface advisory pipe
     # rather than `schema` on purpose: `schema` joins the --strict failure set,

@@ -1101,7 +1101,7 @@ sr_refs = ["SR-147"]
 version = "v1"
 approval = "draft"
 component = "CMP-006"
-notes = """source - reads the registries and writes beside them; consumes no kit module. Stability is PROVISIONAL on purpose: this is migration scaffolding with a defined end. It ships to adopters because every adopting repo migrates too and the round-trip proof is the migration's evidence (SR-129's 140-cell lesson), and it is RETIRABLE once no supported repo is still on the legacy carriers - the same expiry the CSV fallback in spine_carrier and both module-size ratchet entries carry. Stability was `Provisional` until WI-443 and maps to `Experimental`: `Provisional` was never in the shipped vocabulary (Experimental|Stable|Deprecated) and was validated nowhere."""
+notes = """source - reads the registries and writes beside them; consumes no kit module. Its approval is deliberately unsettled: this is migration scaffolding with a defined end. It ships to adopters because every adopting repo migrates too and the round-trip proof is the migration's evidence (SR-129's 140-cell lesson), and it is RETIRABLE once no supported repo is still on the legacy carriers - the same expiry the CSV fallback in spine_carrier and both module-size ratchet entries carry."""
 
 [interface.IF-104]
 direction = "Consumes"
@@ -1282,7 +1282,7 @@ sr_refs = ["SR-147"]
 version = "v1"
 approval = "draft"
 component = "CMP-009"
-notes = """cross-component crossing declared per the architecture rule: this module is CMP-002 and spine_carrier is CMP-001. Added by the batch-2 carrier sweep (repo-lock section 8.1), which moved open-items onto the spine's carrier. Stability was `Provisional` until WI-443 and maps to `Experimental`: `Provisional` was never in the shipped vocabulary (Experimental|Stable|Deprecated) and was validated nowhere."""
+notes = """cross-component crossing declared per the architecture rule: this module is CMP-002 and spine_carrier is CMP-001. Added by the batch-2 carrier sweep (repo-lock section 8.1), which moved open-items onto the spine's carrier."""
 
 [interface.IF-119]
 direction = "Consumes"
@@ -1294,7 +1294,7 @@ sr_refs = ["SR-079"]
 version = "v1"
 approval = "draft"
 component = "CMP-008"
-notes = """cross-component crossing declared per the architecture rule: this module is CMP-004 and spine_carrier is CMP-001. Added by the batch-2 carrier sweep (repo-lock section 8.1). The `# tag-rank:` line load_tag_rank parses is a TOML comment now and survives byte-for-byte; only finding the file changed. Stability was `Provisional` until WI-443 and maps to `Experimental`: `Provisional` was never in the shipped vocabulary (Experimental|Stable|Deprecated) and was validated nowhere."""
+notes = """cross-component crossing declared per the architecture rule: this module is CMP-004 and spine_carrier is CMP-001. Added by the batch-2 carrier sweep (repo-lock section 8.1). The `# tag-rank:` line load_tag_rank parses is a TOML comment now and survives byte-for-byte; only finding the file changed."""
 
 [interface.IF-120]
 direction = "Consumes"
@@ -1307,4 +1307,4 @@ sr_refs = ["SR-147"]
 version = "v1"
 approval = "draft"
 component = "CMP-008"
-notes = """cross-component crossing declared per the architecture rule: this module is CMP-004 and spine_carrier is CMP-001. Added by the batch-2 carrier sweep (repo-lock section 8.1). Stability was `Provisional` until WI-443 and maps to `Experimental`: `Provisional` was never in the shipped vocabulary (Experimental|Stable|Deprecated) and was validated nowhere."""
+notes = """cross-component crossing declared per the architecture rule: this module is CMP-004 and spine_carrier is CMP-001. Added by the batch-2 carrier sweep (repo-lock section 8.1)."""

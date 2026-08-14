@@ -993,8 +993,10 @@ police the difference by FORM, since no check reads intent: no work-item id and
 no decision citation in `Contract` (both age — a cancelled id still reads as
 authority), no rationale connective (*because* / *rather than* / *so that* /
 *since* — that sentence belongs in `Rationale`), and a 500-character ceiling.
-`Stability` (`Experimental` · `Stable` · `Deprecated`) is the row's **one**
-maturity field.
+`Approval` (`draft` · `approved`) is the row's **one** maturity field, shared
+with the boundary tier. A row ties back to a declared boundary crossing —
+`interface_from_external` / `interface_to_external` — only when it REALIZES one;
+a row with neither is an internal seam.
 
 **An IF row is machine-consumed, not just read.** `plan_briefs.IF_SURFACE_COLUMNS`
 feeds the row's surface — `Contract` included — **verbatim** into the dual-plan

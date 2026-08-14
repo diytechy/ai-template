@@ -371,7 +371,7 @@ contract's spec lives once in its **owner**; the coordinator's catalog only refe
 the owner `IF-###`:
 
 ```csv
-IF-ID,Direction,ThisProject,Counterpart,Contract,SR-Refs,Version,Stability,Status
+IF-ID,Direction,ThisProject,Counterpart,Contract,SR-Refs,Version,Approval
 IF-010,Provides,export,delivery,"RFC-4180 CSV at the agreed path (spec owned by the export repo, per its SR-009).",SR-009,v2,Stable,Verified
 IF-011,Consumes,delivery,object-store,"S3 PutObject API of the purchased store; the coordinator catalog is the owner of record and links the vendor datasheet.",SR-010,vendor-2024,Stable,Verified
 ```
@@ -384,7 +384,7 @@ These `IF-###` ids are **owner-local** — each repo has its own `IF-001…`, so
 coordinator references them by a stable coordinator-level id (`CIF-###`) that also
 records the owner's current version and each consumer's pin. That mapping is what lets
 the coordinator catch **drift**: if the `export` repo ships `IF-010@v3` while `delivery`
-still pins `@v2`, the coordinator flags the stale pin (weighted by `Stability`) and
+still pins `@v2`, the coordinator flags the stale pin (weighted by `Approval`) and
 sequences `delivery`'s contract-test re-run against v3 — the interface's own §8 fixture
 judges actual compatibility, the human signs a real break. The catalog registry and
 that check are deferred tooling (`MULTI_REPO.md` §3.3, §3.7, §7).

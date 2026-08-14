@@ -86,6 +86,27 @@ Ratchets re-stamped deliberately in both directions: `trace.py` 3678 → 3917,
 `interface_findings` 22 → 13, `build_dependency_diagram` deleted from the
 complexity census.
 
+**Two hostile-briefed reviews, one iteration.** An adversarial correctness pass
+(Opus, separate context) and a cross-family legibility pass (OpenAI gpt-5.6-terra
+via codex). The correctness pass found a **BLOCKER** — `frame_findings` returned
+`[]` on an empty entity set, so crossings referencing entities that do not exist
+resolved to silence while the report printed "every crossing Entity ...
+resolves" over the top of it — plus a fixture that had disarmed its own test,
+every shipped doc still declaring the retired column, and a missing
+`RESYNC_PACK.md` entry for a migration that silently raises an adopted repo's
+reported stage. All fixed and pinned. The full accounting, including what the
+review refused to substantiate and the one point answered rather than fixed
+(`trace.py`'s bump-vs-decompose choice), is in
+[WI-442](../work/complete/WI-442-oi-28-seeds-landed-on-the-spine.md)'s Deliverable.
+
+**Byte deltas.** `AGENTS.template.md` 9,994 → 9,994 (unchanged; 6 bytes of
+headroom under 10,000). `PROCESS.md` 73,420 → **73,604 (+184)**: §8's
+one-maturity-field sentence re-worded off the retired `Stability` onto
+`Approval` and given the directional tie-back rule — the retirement was landing
+in the registry and the scripts while the load-bearing core still declared the
+dead column. Baseline re-stamped in both `byte-budget-guard` copies.
+`PROCESS_OPTIONS.md` 171,916 → 171,916 (unchanged).
+
 **Deviations from spec.** One clause held (`direction`/`counterpart`, above) and
 one id-shape deviation (`B-##`, above). Both are recorded in
 [WI-442](../work/complete/WI-442-oi-28-seeds-landed-on-the-spine.md)'s Deliverable.

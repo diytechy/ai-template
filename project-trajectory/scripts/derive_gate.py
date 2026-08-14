@@ -551,10 +551,13 @@ def _maturity(value, table):
 
     The case-insensitive match is real, not aspirational: the tables are keyed
     lower-cased below. It used to be a docstring claim only — every key happened
-    to be spelled exactly as the registries spelled it — and WI-442's `approval`
-    tier is the first one whose cells are authored lower-case while the ladder
-    constants are capitalized, which is precisely where an unbacked claim would
-    have started mapping live rows to DRAFTED."""
+    to be spelled exactly as the registries spelled it, so the claim cost nothing
+    and bought nothing. WHAT THE FOLD ACTUALLY BUYS, stated accurately after an
+    adversarial round caught the first version overclaiming: it defends against a
+    hand-authored `Approved`/`Draft`, which no other check validates — the enums
+    are schema-ADVISORY, so a capitalized cell reaches here and would otherwise
+    read DRAFTED. It does NOT fix any live or shipped value; every one of those
+    already matched exactly."""
     return table.get((value or "").strip().lower(), DRAFTED)
 
 
