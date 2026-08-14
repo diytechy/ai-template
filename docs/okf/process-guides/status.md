@@ -1,7 +1,7 @@
 ---
 type: "Process Guide"
 title: "Meta-Repo Status \u2014 Blackboard"
-description: "The **working surface** for developing the kit itself \u2014 the same `status.md` pattern the kit scaffolds downstream, self-applied. This file is **forward-only**: only what must happen **next** lives here. Everything backward-looking has a ho\u2026"
+description: "The **working surface** for developing the kit itself \u2014 the same `status.md` pattern the kit scaffolds downstream, self-applied. This file is **forward-only**: only what must happen **next** lives here. Backward-looking homes: log.md (sess\u2026"
 tags: []
 resource: "docs/status.md"
 ---
@@ -9,6 +9,6 @@ resource: "docs/status.md"
 
 # status — Meta-Repo Status — Blackboard
 
-**Summary.** The **working surface** for developing the kit itself — the same `status.md` pattern the kit scaffolds downstream, self-applied. This file is **forward-only**: only what must happen **next** lives here. Everything backward-looking has a ho…
+**Summary.** The **working surface** for developing the kit itself — the same `status.md` pattern the kit scaffolds downstream, self-applied. This file is **forward-only**: only what must happen **next** lives here. Backward-looking homes: log.md (sess…
 
 **Source (unmodified).** [docs/status.md](../../../docs/status.md).

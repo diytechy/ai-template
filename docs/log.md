@@ -28256,3 +28256,56 @@ unowned mechanizations that sit across those calls — the SR→IF checker
 **Bars.** check_docs: OK — 401 docs, 1223 intra-repo links, 0 broken.
 Smoke tier: 1091 passed, 3 skipped.
 <!-- fig: cmd=".venv/bin/python -m pytest -q -n auto -m smoke" rev=f3c957d9+worktree -->
+
+## 2026-08-13w — the post-sitting cleanup: the repo handed to the re-tier campaign clean
+
+Owner-directed close-of-day pass, executed on a three-agent audit
+(status/repo-lock currency · queued-WI sufficiency · docs-root census). Three
+commits:
+
+**(1) The queue is the campaign's now.** Every queued WI re-checked against
+the 13d–13v rulings and edited where minted on older information: the
+re-tier campaign row re-titled with its true universe (all 148 SRs), census
+discipline, structural work (parent SRs, LLR mints, TC re-pointing) and
+riders; the schema row re-minted in place (external.toml + IF slimming +
+approval element + boundary_incomplete re-key, with its two sharp hazards
+stated — the predicate reads Stability and nothing else, and the SR-side
+interface-reference field must exist before SN-037's checker can); the
+program-close row gained sequencing into the re-tier window; the resync row
+its two guards; the hats and need-form-checker rows their corrections; and a
+new row minted for the architecture.md retirement program (D8) with the
+check_flows disposition and scaffold-surface change stated. Sitting-2's
+stale blocks corrected (6 crossings; §2 superseded-as-discriminator banner;
+§5 archived — the impacts now live in the specs; §6 dispositions mapped).
+
+**(2) The docs root is live-only.** Twenty-three files — the July handoff
+chain, the 2026-08-01/08/13 handoffs and plan, seven root repo-reviews,
+wrap-up-plan, rulings-context, handback-contract, backlog-plan, and the
+signed parallel-ready artifact — moved to
+[archive/history/](archive/history/README.md) with per-file dispositions;
+links re-levelled and 35 referrers repaired. Four files stay in root, each
+with a live anchor named in the archive README (concurrency-v2.md is an open
+specref; concurrency-restructure.md sits in a ratified SN cell; the
+spine-restructure doc holds three unruled §7 residues + the §8 dead-symbol
+table; architecture.md dies by its own program row, not a cleanup).
+
+**(3) The surfaces stopped lying.** status.md rewritten to its forward-only
+shape (501 → 125 lines, inside the 120-line warn budget's neighborhood for
+the first time), leading with the re-tier campaign; the three standing rules
+with no other home kept verbatim (id-in-prose refusal; never green a step by
+sanctioning its check; signed-claims/one-machine humility) plus the EOL rule
+and the --strict habit. repo-lock §1 (a second, drifting source of truth —
+every row measurably wrong) deleted in favor of the generated surfaces, its
+citation count corrected to the measured 21, and a D-9 banner added (the
+mapping predates `Planned`, live on 13 SRs; D-9+D12 are one program, sitting
+3's). README/CLAUDE's "at DevBar-Release" claims corrected to the honest
+derived state (DevBar-Reqs, DevStg-Boundary 1/8, deliberately re-opened).
+Byte-budget baselines reconciled to the tree (PROCESS.md 68,197 → 73,420;
+PROCESS_OPTIONS 171,289 → 171,916; all three skill copies synced) so the
+coming D4/D8 doc edits measure against fact. Known residue kept
+deliberately: the wi416 parked branch (271-line pre-ruling draft, sole
+copy) — recorded in status.md rather than silently deleted.
+
+**Bars.** check_docs: OK — 402 docs, 0 broken. Smoke tier: 1091 passed,
+3 skipped (per-commit runs in each commit's message).
+<!-- fig: cmd=".venv/bin/python -m pytest -q -n auto -m smoke" rev=659f9b84+worktree -->

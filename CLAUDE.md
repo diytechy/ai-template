@@ -105,7 +105,7 @@ that easier to achieve in a real project — or get out of the way.
   self-applied**: the launchers (wired for Claude, strong tier) run
   `project-trajectory/scripts/agent_loop.py --root .`, resuming from
   `docs/status.md` under the declared policies (this repo runs `human_ratification_through = 0` — loop-held — with `push = "human"` and the privacy gate off).
-- **The kit's own `SN→SR→LLR→TC` spine** (Thread 47 self-adoption, *at DevBar-Release*):
+- **The kit's own `SN→SR→LLR→TC` spine** (Thread 47 self-adoption; the derived bar is [`docs/gate`](docs/gate) — currently re-opened to *DevBar-Reqs* for the 2026-08 boundary/re-tier program):
   [`docs/requirements/stakeholder-needs.toml`](docs/requirements/stakeholder-needs.toml)
   + `system-requirements.toml` + `low-level-requirements.toml` +
   `docs/test/test-cases.toml` + [`docs/architecture.md`](docs/architecture.md)

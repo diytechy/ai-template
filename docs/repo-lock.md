@@ -21,7 +21,7 @@ collapses to a one-line pointer with the commit.**
 > this document's own log now live in
 > [`archive/repo-lock-decisions-2026-08.md`](archive/repo-lock-decisions-2026-08.md).
 > **Every `D-n` heading and every `§N` number survives here as a resolvable
-> pointer** — **33 live source and test files** cite them in prose
+> pointer** — **21 live source and test files** cite them in prose (re-measured 2026-08-13w)
 > (`repo-lock D-5`, `repo-lock §5's`) where nothing link-checks them, so the
 > ids must keep resolving. What remains below is what is still owed.
 
@@ -243,35 +243,18 @@ demoting three needs on this exact test. And the tabled items in **§8.4** and
 
 ## 1. Where the repo stands
 
-Re-measured 2026-08-12 after the sitting's rulings were executed (stage
-semantics landed; the SN batch applied as drafts).
+**DELETED 2026-08-13w — this section was a second, drifting source of truth.**
+Every row it carried (stage, spine counts, pending-brief count, last full bar)
+had gone measurably wrong against the generated surfaces. Read the facts where
+they are derived: [`docs/gate`](gate) (the basis line), the generated snapshot
+in [`status.md`](status.md), and [`open-items.html`](open-items.html). The
+2026-08-13 sitting rulings that re-scope this file's still-owed items are in
+[`log.md`](log.md) Decisions 13d–13v; note for **D-9**: its migration mapping
+below predates `Planned` (live on 13 SRs since sitting 1) and 13u's ruling
+that D-9 and decision 12 are **one cross-registry vocabulary program** with
+per-registry subsets — sitting 3 §3 owns that decision, and the mapping here
+must be re-derived, not trusted.
 
-| fact | value |
-|---|---|
-| stage / next gate | **stage 0** (needs in process — the new drafts hold it there) · next gate **DevBar-Reqs**. Correct: everything that moves it waits on the sitting. |
-| spine | SN **37** · SR **147** · LLR 149 · TC 146 · **46 drafts** · **38 `Modified`** |
-| integrity | `orphans=0 integrity=0 component-findings=0 interface-findings=0`; interfaces 113 |
-| strict modes | `trace --strict` **rc 0** · `check_trajectory --strict` **rc 0** |
-| full bar | **2308 passed, 5 skipped** (2026-08-13, pre-sitting handoff — the owed re-run done) |
-| owner surface | **14 pending `OI-` briefs** (OI-14 and OI-16…OI-28 — read them in [`open-items.html`](open-items.html), not here) + the sitting's 25-row re-attest, which that surface also renders |
-
-**Predecessor records**, kept reachable because they are the account of the
-program *before* this one and are not superseded by it:
-[`handoff-2026-08-08-mechanized-loop.md`](archive/history/handoff-2026-08-08-mechanized-loop.md)
-and its build-out plan
-[`spine-restructure-2026-08-08.md`](spine-restructure-2026-08-08.md) — how the
-five needs the sitting has now ruled on were decomposed in the first place.
-Both are **history**: they keep their `SN-030`/`SN-031`/`SN-032` citations after
-those ids were retired, on the doctrine `check_doc_refs` applies to retired
-files (naming one is accurate history; "fixing" it falsifies the record).
-
-**The gate has not moved and should not have.** One SN was attested and three
-demoted at the sitting's part 1, but every SR/LLR/TC under them is still
-`Draft`, and a `Draft` row reads DevBar-Below. Worth knowing: a `[phase]-[g*]` detector
-fires on phase 4 — per the derived-gate model that **is** the signal a new
-phase is due, not a regression.
-
----
 
 ## 2. Decisions — pointers, and the ones still owed
 

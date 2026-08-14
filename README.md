@@ -330,7 +330,7 @@ process**, traced by its own `SN→SR→LLR→TC` spine and gated by its own
 - The meta-repo's needs, requirements, and tests live under
   [`docs/requirements/`](docs/requirements/) + [`docs/test/`](docs/test/) —
   distinct from the blank templates the kit *ships*.
-- It currently passes its own gates at **DevBar-Release** (gate-walk record:
+- Its own derived bar is honest rather than flattering: [`docs/gate`](docs/gate) currently reads **DevBar-Reqs**, stage **DevStg-Boundary** (1 of 8) — the spine re-opened deliberately for the 2026-08 boundary/re-tier program after passing **DevBar-Release** (gate-walk record:
   [`docs/log.md`](docs/log.md)).
 
 ### Configuration at a glance (defaults vs. this repo)
@@ -348,7 +348,7 @@ set:
 
 | Option (`docs/…`) | Fresh-scaffold default | Turn on / off | This repo |
 |---|---|---|---|
-| `gate` | **generated** — `derive_gate.py` computes it from artifact states (a fresh scaffold reads `DevBar-Reqs`) | never hand-edited; advances by *ratifying* artifacts | `DevBar-Release` (derived) |
+| `gate` | **generated** — `derive_gate.py` computes it from artifact states (a fresh scaffold reads `DevBar-Reqs`) | never hand-edited; advances by *ratifying* artifacts | `DevBar-Reqs` (derived; re-opened for the 2026-08 re-tier program after DevBar-Release) |
 | `process.toml` `gate_policy` | **not shipped** — SN-029 retired the enum for the ordinal below; a legacy key is read only as a migration fallback | `bootstrap.py --gate-policy <word>` still takes `"attended"` / `"single-ratify"` / `"autonomous"`, but **translates** it to the dials rather than storing it (and scaffolds a deviation register) | not declared; the `"autonomous"` posture is recorded in its [register](docs/gate-policy.md) |
 | `process.toml` `human_ratification_through` | `4` (every tier human-held) | lower the ordinal — `3` SNs+SRs+LLRs, … `0` nothing human-held | `0` |
 | `process.toml` `push` | `"human"` | opt-in `"agent-iteration"` / `"agent"` | `"human"` |
